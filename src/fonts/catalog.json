@@ -1,0 +1,854 @@
+{
+  "families": {
+    "Anton": {
+      "family": "Anton",
+      "dir": "anton",
+      "kind": "static",
+      "repoDir": "ofl/anton",
+      "sources": {
+        "Anton-Regular.ttf": "4d65707db9d8663ccfa99cd28cd3a4e0025be178"
+      },
+      "axes": {},
+      "web": [
+        {
+          "file": "Anton-400.woff2",
+          "style": "normal",
+          "weight": 400,
+          "bytes": 31108
+        }
+      ],
+      "og": []
+    },
+    "Archivo Black": {
+      "family": "Archivo Black",
+      "dir": "archivo-black",
+      "kind": "static",
+      "repoDir": "ofl/archivoblack",
+      "sources": {
+        "ArchivoBlack-Regular.ttf": "82d07de3b84ed4428f6a302b70f4b555148dfeb0"
+      },
+      "axes": {},
+      "web": [
+        {
+          "file": "ArchivoBlack-400.woff2",
+          "style": "normal",
+          "weight": 400,
+          "bytes": 13112
+        }
+      ],
+      "og": [
+        {
+          "file": "ArchivoBlack-400.ttf",
+          "style": "normal",
+          "weight": 400,
+          "bytes": 40188
+        }
+      ]
+    },
+    "Baloo 2": {
+      "family": "Baloo 2",
+      "dir": "baloo-2",
+      "kind": "variable",
+      "repoDir": "ofl/baloo2",
+      "sources": {
+        "Baloo2[wght].ttf": "bc1b9f1191c0d6d23cb2ce0af66aba82ddbf8d6c"
+      },
+      "axes": {
+        "wght": [
+          400,
+          400,
+          800
+        ]
+      },
+      "web": [
+        {
+          "file": "Baloo2.woff2",
+          "style": "normal",
+          "weight": [
+            400,
+            800
+          ],
+          "bytes": 52172
+        }
+      ],
+      "og": []
+    },
+    "Bangers": {
+      "family": "Bangers",
+      "dir": "bangers",
+      "kind": "static",
+      "repoDir": "ofl/bangers",
+      "sources": {
+        "Bangers-Regular.ttf": "9b0f8c1f1b45e7bb4971b7d6a8604f9aacacdd32"
+      },
+      "axes": {},
+      "web": [
+        {
+          "file": "Bangers-400.woff2",
+          "style": "normal",
+          "weight": 400,
+          "bytes": 22908
+        }
+      ],
+      "og": []
+    },
+    "Barlow Condensed": {
+      "family": "Barlow Condensed",
+      "dir": "barlow-condensed",
+      "kind": "static",
+      "repoDir": "ofl/barlowcondensed",
+      "sources": {
+        "BarlowCondensed-Medium.ttf": "eee49eb632153608c0bef5809ceab2418dd617a8",
+        "BarlowCondensed-SemiBold.ttf": "9df66576492bee4bd0559066825472808fa98adc",
+        "BarlowCondensed-Bold.ttf": "9e480f467d703009e3abfce290b2ec2b7d24e188"
+      },
+      "axes": {},
+      "web": [
+        {
+          "file": "BarlowCondensed-500.woff2",
+          "style": "normal",
+          "weight": 500,
+          "bytes": 21172
+        },
+        {
+          "file": "BarlowCondensed-600.woff2",
+          "style": "normal",
+          "weight": 600,
+          "bytes": 21512
+        },
+        {
+          "file": "BarlowCondensed-700.woff2",
+          "style": "normal",
+          "weight": 700,
+          "bytes": 21504
+        }
+      ],
+      "og": []
+    },
+    "Bowlby One": {
+      "family": "Bowlby One",
+      "dir": "bowlby-one",
+      "kind": "static",
+      "repoDir": "ofl/bowlbyone",
+      "sources": {
+        "BowlbyOne-Regular.ttf": "3a76ca5a4a2b5aae55790ce2ba98cd10eb6b5cc4"
+      },
+      "axes": {},
+      "web": [
+        {
+          "file": "BowlbyOne-400.woff2",
+          "style": "normal",
+          "weight": 400,
+          "bytes": 24052
+        }
+      ],
+      "og": []
+    },
+    "Bricolage Grotesque": {
+      "family": "Bricolage Grotesque",
+      "dir": "bricolage-grotesque",
+      "kind": "variable",
+      "repoDir": "ofl/bricolagegrotesque",
+      "sources": {
+        "BricolageGrotesque[opsz,wdth,wght].ttf": "9a4ca271ff84357bb8f8830ce71b85ea3571f731"
+      },
+      "axes": {
+        "opsz": [
+          12,
+          96,
+          96
+        ],
+        "wght": [
+          200,
+          800,
+          800
+        ],
+        "wdth": [
+          75,
+          100,
+          100
+        ]
+      },
+      "web": [
+        {
+          "file": "BricolageGrotesque.woff2",
+          "style": "normal",
+          "weight": [
+            200,
+            800
+          ],
+          "bytes": 58280
+        }
+      ],
+      "og": [
+        {
+          "file": "BricolageGrotesque-800.ttf",
+          "style": "normal",
+          "weight": 800,
+          "bytes": 74508
+        }
+      ]
+    },
+    "Bungee": {
+      "family": "Bungee",
+      "dir": "bungee",
+      "kind": "static",
+      "repoDir": "ofl/bungee",
+      "sources": {
+        "Bungee-Regular.ttf": "59dfddc539f9ebbaf5134c7b272970d88aba0ba9"
+      },
+      "axes": {},
+      "web": [
+        {
+          "file": "Bungee-400.woff2",
+          "style": "normal",
+          "weight": 400,
+          "bytes": 32664
+        }
+      ],
+      "og": []
+    },
+    "Caveat": {
+      "family": "Caveat",
+      "dir": "caveat",
+      "kind": "variable",
+      "repoDir": "ofl/caveat",
+      "sources": {
+        "Caveat[wght].ttf": "f84acf2ce2d1b3329b194749530dbaec047e6df6"
+      },
+      "axes": {
+        "wght": [
+          400,
+          400,
+          700
+        ]
+      },
+      "web": [
+        {
+          "file": "Caveat.woff2",
+          "style": "normal",
+          "weight": [
+            400,
+            700
+          ],
+          "bytes": 88460
+        }
+      ],
+      "og": []
+    },
+    "DM Mono": {
+      "family": "DM Mono",
+      "dir": "dm-mono",
+      "kind": "static",
+      "repoDir": "ofl/dmmono",
+      "sources": {
+        "DMMono-Regular.ttf": "1cdda9146d31e5dfb28cf299548b73f502142ccc",
+        "DMMono-Medium.ttf": "3e7a7634be5f0c2414f71f459c63c521ce59c5f2"
+      },
+      "axes": {},
+      "web": [
+        {
+          "file": "DMMono-400.woff2",
+          "style": "normal",
+          "weight": 400,
+          "bytes": 11144
+        },
+        {
+          "file": "DMMono-500.woff2",
+          "style": "normal",
+          "weight": 500,
+          "bytes": 11196
+        }
+      ],
+      "og": [
+        {
+          "file": "DMMono-400.ttf",
+          "style": "normal",
+          "weight": 400,
+          "bytes": 25880
+        }
+      ]
+    },
+    "Fraunces": {
+      "family": "Fraunces",
+      "dir": "fraunces",
+      "kind": "variable",
+      "repoDir": "ofl/fraunces",
+      "sources": {
+        "Fraunces[SOFT,WONK,opsz,wght].ttf": "8210f9488d3c732359a9292dd09aca3f2bae830e",
+        "Fraunces-Italic[SOFT,WONK,opsz,wght].ttf": "2ddf59a11b89a3d6b2816ea6ae7965026c08143a"
+      },
+      "axes": {
+        "opsz": [
+          9,
+          9,
+          144
+        ],
+        "wght": [
+          100,
+          900,
+          900
+        ],
+        "SOFT": [
+          0,
+          0,
+          100
+        ],
+        "WONK": [
+          0,
+          1,
+          1
+        ]
+      },
+      "web": [
+        {
+          "file": "Fraunces.woff2",
+          "style": "normal",
+          "weight": [
+            100,
+            900
+          ],
+          "bytes": 53064
+        },
+        {
+          "file": "Fraunces-Italic.woff2",
+          "style": "italic",
+          "weight": [
+            100,
+            900
+          ],
+          "bytes": 64592
+        }
+      ],
+      "og": []
+    },
+    "Fredoka": {
+      "family": "Fredoka",
+      "dir": "fredoka",
+      "kind": "variable",
+      "repoDir": "ofl/fredoka",
+      "sources": {
+        "Fredoka[wdth,wght].ttf": "349b6ecef8a358ede29b7bf74a08196be5d71b25"
+      },
+      "axes": {
+        "wght": [
+          300,
+          300,
+          700
+        ],
+        "wdth": [
+          75,
+          100,
+          125
+        ]
+      },
+      "web": [
+        {
+          "file": "Fredoka.woff2",
+          "style": "normal",
+          "weight": [
+            300,
+            700
+          ],
+          "bytes": 30880
+        }
+      ],
+      "og": []
+    },
+    "Gochi Hand": {
+      "family": "Gochi Hand",
+      "dir": "gochi-hand",
+      "kind": "static",
+      "repoDir": "ofl/gochihand",
+      "sources": {
+        "GochiHand-Regular.ttf": "fc18f60fe362cee411abe6f9c5f2befaecc6076f"
+      },
+      "axes": {},
+      "web": [
+        {
+          "file": "GochiHand-400.woff2",
+          "style": "normal",
+          "weight": 400,
+          "bytes": 19984
+        }
+      ],
+      "og": []
+    },
+    "IM Fell English": {
+      "family": "IM Fell English",
+      "dir": "im-fell-english",
+      "kind": "static",
+      "repoDir": "ofl/imfellenglish",
+      "sources": {
+        "IMFeENrm28P.ttf": "275d754ed6be5d26e37c6ccdb4934a0930dcbe3f",
+        "IMFeENit28P.ttf": "d9afa7e097d525cefa294f2575efc4bef66e1dda"
+      },
+      "axes": {},
+      "web": [
+        {
+          "file": "IMFellEnglish-400.woff2",
+          "style": "normal",
+          "weight": 400,
+          "bytes": 69652
+        },
+        {
+          "file": "IMFellEnglish-400-Italic.woff2",
+          "style": "italic",
+          "weight": 400,
+          "bytes": 72692
+        }
+      ],
+      "og": []
+    },
+    "IM Fell English SC": {
+      "family": "IM Fell English SC",
+      "dir": "im-fell-english-sc",
+      "kind": "static",
+      "repoDir": "ofl/imfellenglishsc",
+      "sources": {
+        "IMFeENsc28P.ttf": "c97d4a0748328052055f42ab27c0659981ce8be7"
+      },
+      "axes": {},
+      "web": [
+        {
+          "file": "IMFellEnglishSC-400.woff2",
+          "style": "normal",
+          "weight": 400,
+          "bytes": 62180
+        }
+      ],
+      "og": []
+    },
+    "Instrument Sans": {
+      "family": "Instrument Sans",
+      "dir": "instrument-sans",
+      "kind": "variable",
+      "repoDir": "ofl/instrumentsans",
+      "sources": {
+        "InstrumentSans[wdth,wght].ttf": "3589b81b22d3defc725dfdcdf16b5da7c9adc691"
+      },
+      "axes": {
+        "wdth": [
+          75,
+          100,
+          100
+        ],
+        "wght": [
+          400,
+          400,
+          700
+        ]
+      },
+      "web": [
+        {
+          "file": "InstrumentSans.woff2",
+          "style": "normal",
+          "weight": [
+            400,
+            700
+          ],
+          "bytes": 43964
+        }
+      ],
+      "og": []
+    },
+    "Instrument Serif": {
+      "family": "Instrument Serif",
+      "dir": "instrument-serif",
+      "kind": "static",
+      "repoDir": "ofl/instrumentserif",
+      "sources": {
+        "InstrumentSerif-Regular.ttf": "36fac00ef9b7d523236df6536cb09c712bb2c7e4",
+        "InstrumentSerif-Italic.ttf": "192c3eda9864241ad280e9bcc84e258c80a4a588"
+      },
+      "axes": {},
+      "web": [
+        {
+          "file": "InstrumentSerif-400.woff2",
+          "style": "normal",
+          "weight": 400,
+          "bytes": 18668
+        },
+        {
+          "file": "InstrumentSerif-400-Italic.woff2",
+          "style": "italic",
+          "weight": 400,
+          "bytes": 19124
+        }
+      ],
+      "og": []
+    },
+    "Inter": {
+      "family": "Inter",
+      "dir": "inter",
+      "kind": "variable",
+      "repoDir": "ofl/inter",
+      "sources": {
+        "Inter[opsz,wght].ttf": "047c92f6e2212473dc436020afed689527076d44"
+      },
+      "axes": {
+        "opsz": [
+          14,
+          14,
+          32
+        ],
+        "wght": [
+          100,
+          400,
+          900
+        ]
+      },
+      "web": [
+        {
+          "file": "Inter.woff2",
+          "style": "normal",
+          "weight": [
+            100,
+            900
+          ],
+          "bytes": 135676
+        }
+      ],
+      "og": []
+    },
+    "Inter Tight": {
+      "family": "Inter Tight",
+      "dir": "inter-tight",
+      "kind": "variable",
+      "repoDir": "ofl/intertight",
+      "sources": {
+        "InterTight[wght].ttf": "7d64212163dc15e7f3de5487672668dbde589365"
+      },
+      "axes": {
+        "wght": [
+          100,
+          400,
+          900
+        ]
+      },
+      "web": [
+        {
+          "file": "InterTight.woff2",
+          "style": "normal",
+          "weight": [
+            100,
+            900
+          ],
+          "bytes": 125632
+        }
+      ],
+      "og": []
+    },
+    "JetBrains Mono": {
+      "family": "JetBrains Mono",
+      "dir": "jetbrains-mono",
+      "kind": "variable",
+      "repoDir": "ofl/jetbrainsmono",
+      "sources": {
+        "JetBrainsMono[wght].ttf": "aa310be8b717fe3774f9444dd89d5f4101cc6d10"
+      },
+      "axes": {
+        "wght": [
+          100,
+          400,
+          800
+        ]
+      },
+      "web": [
+        {
+          "file": "JetBrainsMono.woff2",
+          "style": "normal",
+          "weight": [
+            100,
+            800
+          ],
+          "bytes": 46776
+        }
+      ],
+      "og": []
+    },
+    "Montserrat": {
+      "family": "Montserrat",
+      "dir": "montserrat",
+      "kind": "variable",
+      "repoDir": "ofl/montserrat",
+      "sources": {
+        "Montserrat[wght].ttf": "c97aca18592834d8706549c279cb8d5ac5d85f69"
+      },
+      "axes": {
+        "wght": [
+          100,
+          100,
+          900
+        ]
+      },
+      "web": [
+        {
+          "file": "Montserrat.woff2",
+          "style": "normal",
+          "weight": [
+            100,
+            900
+          ],
+          "bytes": 144396
+        }
+      ],
+      "og": []
+    },
+    "Nunito": {
+      "family": "Nunito",
+      "dir": "nunito",
+      "kind": "variable",
+      "repoDir": "ofl/nunito",
+      "sources": {
+        "Nunito[wght].ttf": "2ec1f4b0676c83ef33049db87b311171699e9192"
+      },
+      "axes": {
+        "wght": [
+          200,
+          200,
+          1000
+        ]
+      },
+      "web": [
+        {
+          "file": "Nunito.woff2",
+          "style": "normal",
+          "weight": [
+            200,
+            1000
+          ],
+          "bytes": 59708
+        }
+      ],
+      "og": []
+    },
+    "Patrick Hand": {
+      "family": "Patrick Hand",
+      "dir": "patrick-hand",
+      "kind": "static",
+      "repoDir": "ofl/patrickhand",
+      "sources": {
+        "PatrickHand-Regular.ttf": "fb45ccdbd344ab7f9f4ae98792521405e48cda3e"
+      },
+      "axes": {},
+      "web": [
+        {
+          "file": "PatrickHand-400.woff2",
+          "style": "normal",
+          "weight": 400,
+          "bytes": 26284
+        }
+      ],
+      "og": [
+        {
+          "file": "PatrickHand-400.ttf",
+          "style": "normal",
+          "weight": 400,
+          "bytes": 84860
+        }
+      ]
+    },
+    "Permanent Marker": {
+      "family": "Permanent Marker",
+      "dir": "permanent-marker",
+      "kind": "static",
+      "repoDir": "apache/permanentmarker",
+      "sources": {
+        "PermanentMarker-Regular.ttf": "3218fc5b3d395c3a3fc207fdf17a27bb32af3242"
+      },
+      "axes": {},
+      "web": [
+        {
+          "file": "PermanentMarker-400.woff2",
+          "style": "normal",
+          "weight": 400,
+          "bytes": 29472
+        }
+      ],
+      "og": []
+    },
+    "Quicksand": {
+      "family": "Quicksand",
+      "dir": "quicksand",
+      "kind": "variable",
+      "repoDir": "ofl/quicksand",
+      "sources": {
+        "Quicksand[wght].ttf": "8cd9133bc8b152573b581a3f788346be2d30adb4"
+      },
+      "axes": {
+        "wght": [
+          300,
+          300,
+          700
+        ]
+      },
+      "web": [
+        {
+          "file": "Quicksand.woff2",
+          "style": "normal",
+          "weight": [
+            300,
+            700
+          ],
+          "bytes": 42012
+        }
+      ],
+      "og": []
+    },
+    "Shantell Sans": {
+      "family": "Shantell Sans",
+      "dir": "shantell-sans",
+      "kind": "variable",
+      "repoDir": "ofl/shantellsans",
+      "sources": {
+        "ShantellSans[BNCE,INFM,SPAC,wght].ttf": "e40efb056c7f4ff149b5840277adeaaca5aeb8b9"
+      },
+      "axes": {
+        "wght": [
+          300,
+          300,
+          800
+        ],
+        "INFM": [
+          0,
+          0,
+          100
+        ],
+        "BNCE": [
+          -100,
+          0,
+          100
+        ],
+        "SPAC": [
+          0,
+          0,
+          100
+        ]
+      },
+      "web": [
+        {
+          "file": "ShantellSans.woff2",
+          "style": "normal",
+          "weight": [
+            300,
+            800
+          ],
+          "bytes": 98504
+        }
+      ],
+      "og": [
+        {
+          "file": "ShantellSans-400.ttf",
+          "style": "normal",
+          "weight": 400,
+          "bytes": 184884
+        },
+        {
+          "file": "ShantellSans-700.ttf",
+          "style": "normal",
+          "weight": 700,
+          "bytes": 185004
+        }
+      ]
+    },
+    "Source Serif 4": {
+      "family": "Source Serif 4",
+      "dir": "source-serif-4",
+      "kind": "variable",
+      "repoDir": "ofl/sourceserif4",
+      "sources": {
+        "SourceSerif4[opsz,wght].ttf": "40bbb58cb58e893ad0470f0bb291e096c73d3554",
+        "SourceSerif4-Italic[opsz,wght].ttf": "ccb969aa6847e1169ff9c8c8bdc28daff6966861"
+      },
+      "axes": {
+        "wght": [
+          200,
+          400,
+          900
+        ],
+        "opsz": [
+          8,
+          20,
+          60
+        ]
+      },
+      "web": [
+        {
+          "file": "SourceSerif4.woff2",
+          "style": "normal",
+          "weight": [
+            200,
+            900
+          ],
+          "bytes": 100284
+        },
+        {
+          "file": "SourceSerif4-Italic.woff2",
+          "style": "italic",
+          "weight": [
+            200,
+            900
+          ],
+          "bytes": 79936
+        }
+      ],
+      "og": []
+    },
+    "Space Grotesk": {
+      "family": "Space Grotesk",
+      "dir": "space-grotesk",
+      "kind": "variable",
+      "repoDir": "ofl/spacegrotesk",
+      "sources": {
+        "SpaceGrotesk[wght].ttf": "a1b2e6c26093066510a31147e7aec9abdc8d6c5e"
+      },
+      "axes": {
+        "wght": [
+          300,
+          300,
+          700
+        ]
+      },
+      "web": [
+        {
+          "file": "SpaceGrotesk.woff2",
+          "style": "normal",
+          "weight": [
+            300,
+            700
+          ],
+          "bytes": 38796
+        }
+      ],
+      "og": []
+    },
+    "Space Mono": {
+      "family": "Space Mono",
+      "dir": "space-mono",
+      "kind": "static",
+      "repoDir": "ofl/spacemono",
+      "sources": {
+        "SpaceMono-Regular.ttf": "1cfa3653dc8ddb7aa9f4ef1c9c581e9516137e6e",
+        "SpaceMono-Bold.ttf": "2c4f2682f915d988e7314544ff7c9e38c8c733f5"
+      },
+      "axes": {},
+      "web": [
+        {
+          "file": "SpaceMono-400.woff2",
+          "style": "normal",
+          "weight": 400,
+          "bytes": 17352
+        },
+        {
+          "file": "SpaceMono-700.woff2",
+          "style": "normal",
+          "weight": 700,
+          "bytes": 17312
+        }
+      ],
+      "og": []
+    }
+  },
+  "generated": "2026-10-12"
+}

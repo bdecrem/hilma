@@ -1,9 +1,9 @@
 import type { Metadata, Viewport } from 'next'
-import { Baloo_2, Quicksand } from 'next/font/google'
+import localFont from 'next/font/local'
 import './dolly.css'
 
-const display = Baloo_2({ subsets: ['latin'], weight: ['600', '800'], variable: '--dolly-display', display: 'swap' })
-const ui = Quicksand({ subsets: ['latin'], weight: ['500', '700'], variable: '--dolly-ui', display: 'swap' })
+const display = localFont({ src: '../../fonts/baloo-2/Baloo2.woff2', weight: '400 800', variable: '--dolly-display', display: 'swap' })
+const ui = localFont({ src: '../../fonts/quicksand/Quicksand.woff2', weight: '300 700', variable: '--dolly-ui', display: 'swap' })
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://ola.cx'),

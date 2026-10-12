@@ -1,21 +1,15 @@
-import { readFile } from 'node:fs/promises'
-import path from 'node:path'
 import { ImageResponse } from 'next/og'
+import { ogFont } from '@/lib/og-fonts'
 
 export const alt = 'dog ear — a little library on the internet'
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
-// Shantell Sans, bundled as static TTFs (./fonts, instanced from the
-// google/fonts repo). This image is prerendered at build time; fetching the
-// font from Google Fonts failed deploys on 2026-09-05 and 2026-10-11.
-async function loadFont(file: string): Promise<ArrayBuffer> {
-  const buf = await readFile(path.join(process.cwd(), 'src/app/book-scout/fonts', file))
-  return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer
-}
+// Shantell Sans, bundled (src/fonts). This image is prerendered at build time;
+// fetching the font from Google Fonts failed deploys on 2026-09-05 and 2026-10-11.
 
 export default async function OG() {
-  const [bold, regular] = await Promise.all([loadFont('ShantellSans-700.ttf'), loadFont('ShantellSans-400.ttf')])
+  const [bold, regular] = await Promise.all([ogFont('shantell-sans/ShantellSans-700.ttf'), ogFont('shantell-sans/ShantellSans-400.ttf')])
   const fonts = [
     bold && { name: 'Shantell Sans', data: bold, weight: 700 as const, style: 'normal' as const },
     regular && { name: 'Shantell Sans', data: regular, weight: 400 as const, style: 'normal' as const },

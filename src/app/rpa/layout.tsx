@@ -1,13 +1,26 @@
 import type { Metadata, Viewport } from 'next'
-import { Bowlby_One, DM_Mono, Fraunces } from 'next/font/google'
+import localFont from 'next/font/local'
 import './rpa.css'
 
 // Enemy names, title, scores: a fat poster face that survives being small.
-const display = Bowlby_One({ subsets: ['latin'], weight: '400', variable: '--font-display' })
+const display = localFont({ src: '../../fonts/bowlby-one/BowlbyOne-400.woff2', weight: '400', variable: '--font-display' })
 // Probabilities, latency, cost: the machine's voice.
-const mono = DM_Mono({ subsets: ['latin'], weight: ['400', '500'], variable: '--font-mono' })
+const mono = localFont({
+  src: [
+    { path: '../../fonts/dm-mono/DMMono-400.woff2', weight: '400' },
+    { path: '../../fonts/dm-mono/DMMono-500.woff2', weight: '500' },
+  ],
+  variable: '--font-mono',
+})
 // What the player types: the one human voice on the page.
-const serif = Fraunces({ subsets: ['latin'], style: ['italic', 'normal'], variable: '--font-serif' })
+const serif = localFont({
+  src: [
+    { path: '../../fonts/fraunces/Fraunces.woff2', style: 'normal' },
+    { path: '../../fonts/fraunces/Fraunces-Italic.woff2', style: 'italic' },
+  ],
+  weight: '100 900',
+  variable: '--font-serif',
+})
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://hilma-nine.vercel.app'),

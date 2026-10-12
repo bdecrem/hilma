@@ -1,9 +1,9 @@
 import type { Metadata, Viewport } from 'next'
-import { Anton, Montserrat } from 'next/font/google'
+import localFont from 'next/font/local'
 import './surf.css'
 
-const display = Anton({ weight: '400', subsets: ['latin'], variable: '--font-display' })
-const body = Montserrat({ weight: ['600', '800', '900'], subsets: ['latin'], variable: '--font-body' })
+const display = localFont({ src: '../../fonts/anton/Anton-400.woff2', weight: '400', variable: '--font-display' })
+const body = localFont({ src: '../../fonts/montserrat/Montserrat.woff2', weight: '100 900', variable: '--font-body' })
 
 export const metadata: Metadata = {
   title: 'Token Surfers',

@@ -1,9 +1,15 @@
 import type { Metadata, Viewport } from 'next'
-import { IM_Fell_English, IM_Fell_English_SC } from 'next/font/google'
+import localFont from 'next/font/local'
 import './pentimento.css'
 
-const fell = IM_Fell_English({ subsets: ['latin'], weight: '400', style: ['normal', 'italic'], variable: '--pm-fell' })
-const fellSC = IM_Fell_English_SC({ subsets: ['latin'], weight: '400', variable: '--pm-sc' })
+const fell = localFont({
+  src: [
+    { path: '../../fonts/im-fell-english/IMFellEnglish-400.woff2', weight: '400' },
+    { path: '../../fonts/im-fell-english/IMFellEnglish-400-Italic.woff2', weight: '400', style: 'italic' },
+  ],
+  variable: '--pm-fell',
+})
+const fellSC = localFont({ src: '../../fonts/im-fell-english-sc/IMFellEnglishSC-400.woff2', weight: '400', variable: '--pm-sc' })
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://hilma-nine.vercel.app'),

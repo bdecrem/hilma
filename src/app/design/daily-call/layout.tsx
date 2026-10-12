@@ -1,9 +1,9 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter } from 'next/font/google'
+import localFont from 'next/font/local'
 import './daily-call.css'
 
 // Inter is the neutral stand-in: the brand designer picks the real family.
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' })
+const inter = localFont({ src: '../../../fonts/inter/Inter.woff2', weight: '100 900', variable: '--font-inter', display: 'swap' })
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://ola.cx'),

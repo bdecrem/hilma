@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from 'next'
-import { Baloo_2, Quicksand } from 'next/font/google'
+import localFont from 'next/font/local'
 
-const display = Baloo_2({ subsets: ['latin'], variable: '--font-candy-display', display: 'swap' })
-const ui = Quicksand({ subsets: ['latin'], variable: '--font-candy-ui', display: 'swap' })
+const display = localFont({ src: '../../../fonts/baloo-2/Baloo2.woff2', weight: '400 800', variable: '--font-candy-display', display: 'swap' })
+const ui = localFont({ src: '../../../fonts/quicksand/Quicksand.woff2', weight: '300 700', variable: '--font-candy-ui', display: 'swap' })
 import '../_walk/walk.css'
 import '../_walk/candy.css'
 

@@ -1,10 +1,17 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter, Source_Serif_4 } from 'next/font/google'
+import localFont from 'next/font/local'
 import './socratic.css'
 
 // The tutor speaks in a serif; the interface in a quiet sans.
-const serif = Source_Serif_4({ subsets: ['latin'], weight: ['400', '500', '600'], style: ['normal', 'italic'], variable: '--font-serif' })
-const sans = Inter({ subsets: ['latin'], weight: ['400', '500', '600'], variable: '--font-sans' })
+const serif = localFont({
+  src: [
+    { path: '../../fonts/source-serif-4/SourceSerif4.woff2', style: 'normal' },
+    { path: '../../fonts/source-serif-4/SourceSerif4-Italic.woff2', style: 'italic' },
+  ],
+  weight: '200 900',
+  variable: '--font-serif',
+})
+const sans = localFont({ src: '../../fonts/inter/Inter.woff2', weight: '100 900', variable: '--font-sans' })
 
 export const metadata: Metadata = {
   title: 'Socratic — a study session',

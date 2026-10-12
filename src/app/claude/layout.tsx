@@ -1,9 +1,15 @@
 import type { Metadata, Viewport } from 'next'
-import { Bricolage_Grotesque, DM_Mono } from 'next/font/google'
+import localFont from 'next/font/local'
 import './claude.css'
 
-const display = Bricolage_Grotesque({ subsets: ['latin'], weight: ['500', '700', '800'], variable: '--me-display' })
-const mono = DM_Mono({ subsets: ['latin'], weight: ['400', '500'], variable: '--me-mono' })
+const display = localFont({ src: '../../fonts/bricolage-grotesque/BricolageGrotesque.woff2', weight: '200 800', variable: '--me-display' })
+const mono = localFont({
+  src: [
+    { path: '../../fonts/dm-mono/DMMono-400.woff2', weight: '400' },
+    { path: '../../fonts/dm-mono/DMMono-500.woff2', weight: '500' },
+  ],
+  variable: '--me-mono',
+})
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://hilma-nine.vercel.app'),

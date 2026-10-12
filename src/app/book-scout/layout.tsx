@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from 'next'
-import { Shantell_Sans, Caveat } from 'next/font/google'
+import localFont from 'next/font/local'
 
-const shantell = Shantell_Sans({ subsets: ['latin'], weight: ['400', '500', '600', '700'], variable: '--font-shantell' })
-const caveat = Caveat({ subsets: ['latin'], weight: ['500', '600', '700'], variable: '--font-caveat' })
+const shantell = localFont({ src: '../../fonts/shantell-sans/ShantellSans.woff2', weight: '300 800', variable: '--font-shantell' })
+const caveat = localFont({ src: '../../fonts/caveat/Caveat.woff2', weight: '400 700', variable: '--font-caveat' })
 
 export const metadata: Metadata = {
   title: 'dog ear',

@@ -17,7 +17,11 @@ const PUB = resolve(HILMA, '..', 'vibeceo', 'web', 'public');
 const SKINS = ['jb01', 'jb202', 'jt10', 'jt30', 'jt90'];
 
 let out = '';
-const imports = new Set();   // @import must come first in the combined file
+// The originals @import Space Grotesk + JetBrains Mono from Google Fonts; the
+// Jam layout bundles both (src/fonts) as --font-grotesk / --font-mono, so the
+// import is dropped and the family names rewritten to the variables.
+const imports = new Set();   // any other @import must come first in the combined file
+const FONT_VARS = { 'JetBrains Mono': 'var(--font-mono)', 'Space Grotesk': 'var(--font-grotesk)' };
 for (const s of SKINS) {
   const src = readFileSync(join(PUB, s, 'ui', s, 'styles.css'), 'utf-8');
   const res = await postcss([
@@ -35,7 +39,8 @@ for (const s of SKINS) {
   // The originals size the page (min-height: 100vh, centered flex body); inside
   // a sheet the wrapper is just a card.
   const css = res.css
-    .replace(/@import[^\n]*\n/g, (m) => { imports.add(m.trim()); return ''; })
+    .replace(/@import[^\n]*\n/g, (m) => { if (!/fonts\.googleapis\.com/.test(m)) imports.add(m.trim()); return ''; })
+    .replace(/font-family:\s*'(JetBrains Mono|Space Grotesk)'/g, (m, f) => `font-family: ${FONT_VARS[f]}`)
     .replace(/min-height:\s*100vh;?/g, '')
     .replace(/(\.skin-[a-z0-9]+)\s*\{([^}]*)display:\s*flex;([^}]*)\}/, '$1 {$2display:block;$3}');
   out += `\n/* ---------- ${s} ---------- */\n${css}\n`;

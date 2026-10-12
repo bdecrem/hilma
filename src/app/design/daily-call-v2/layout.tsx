@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Baloo_2, Bangers, Bricolage_Grotesque, Bungee, Instrument_Sans, Instrument_Serif, Nunito, Permanent_Marker, Quicksand, Space_Grotesk, Space_Mono } from 'next/font/google'
+import localFont from 'next/font/local'
 import './v2.css'
 import '../_walk/walk.css'
 import '../_walk/arcade.css'
@@ -7,20 +7,32 @@ import '../_walk/candy.css'
 import '../_walk/sticker.css'
 
 // Display: heavy, slightly condensed, friendly without being round.
-const display = Bricolage_Grotesque({ subsets: ['latin'], variable: '--font-display', display: 'swap' })
+const display = localFont({ src: '../../../fonts/bricolage-grotesque/BricolageGrotesque.woff2', weight: '200 800', variable: '--font-display', display: 'swap' })
 // UI: body, labels, buttons.
-const ui = Instrument_Sans({ subsets: ['latin'], variable: '--font-ui', display: 'swap' })
+const ui = localFont({ src: '../../../fonts/instrument-sans/InstrumentSans.woff2', weight: '400 700', variable: '--font-ui', display: 'swap' })
 // The language: every Spanish phrase on a card, and nothing else.
-const serif = Instrument_Serif({ subsets: ['latin'], weight: '400', style: ['normal', 'italic'], variable: '--font-serif', display: 'swap' })
+const serif = localFont({
+  src: [
+    { path: '../../../fonts/instrument-serif/InstrumentSerif-400.woff2', weight: '400' },
+    { path: '../../../fonts/instrument-serif/InstrumentSerif-400-Italic.woff2', weight: '400', style: 'italic' },
+  ],
+  variable: '--font-serif', display: 'swap',
+})
 // The three looks' faces, so their live previews on this page render true.
-const arcadeDisplay = Bungee({ subsets: ['latin'], weight: '400', variable: '--font-arcade-display', display: 'swap' })
-const arcadeUi = Space_Grotesk({ subsets: ['latin'], variable: '--font-arcade-ui', display: 'swap' })
-const arcadeLang = Space_Mono({ subsets: ['latin'], weight: ['400', '700'], variable: '--font-arcade-lang', display: 'swap' })
-const candyDisplay = Baloo_2({ subsets: ['latin'], variable: '--font-candy-display', display: 'swap' })
-const candyUi = Quicksand({ subsets: ['latin'], variable: '--font-candy-ui', display: 'swap' })
-const stickerDisplay = Bangers({ subsets: ['latin'], weight: '400', variable: '--font-sticker-display', display: 'swap' })
-const stickerUi = Nunito({ subsets: ['latin'], variable: '--font-sticker-ui', display: 'swap' })
-const stickerLang = Permanent_Marker({ subsets: ['latin'], weight: '400', variable: '--font-sticker-lang', display: 'swap' })
+const arcadeDisplay = localFont({ src: '../../../fonts/bungee/Bungee-400.woff2', weight: '400', variable: '--font-arcade-display', display: 'swap' })
+const arcadeUi = localFont({ src: '../../../fonts/space-grotesk/SpaceGrotesk.woff2', weight: '300 700', variable: '--font-arcade-ui', display: 'swap' })
+const arcadeLang = localFont({
+  src: [
+    { path: '../../../fonts/space-mono/SpaceMono-400.woff2', weight: '400' },
+    { path: '../../../fonts/space-mono/SpaceMono-700.woff2', weight: '700' },
+  ],
+  variable: '--font-arcade-lang', display: 'swap',
+})
+const candyDisplay = localFont({ src: '../../../fonts/baloo-2/Baloo2.woff2', weight: '400 800', variable: '--font-candy-display', display: 'swap' })
+const candyUi = localFont({ src: '../../../fonts/quicksand/Quicksand.woff2', weight: '300 700', variable: '--font-candy-ui', display: 'swap' })
+const stickerDisplay = localFont({ src: '../../../fonts/bangers/Bangers-400.woff2', weight: '400', variable: '--font-sticker-display', display: 'swap' })
+const stickerUi = localFont({ src: '../../../fonts/nunito/Nunito.woff2', weight: '200 1000', variable: '--font-sticker-ui', display: 'swap' })
+const stickerLang = localFont({ src: '../../../fonts/permanent-marker/PermanentMarker-400.woff2', weight: '400', variable: '--font-sticker-lang', display: 'swap' })
 const lookFonts = [arcadeDisplay, arcadeUi, arcadeLang, candyDisplay, candyUi, stickerDisplay, stickerUi, stickerLang].map((f) => f.variable).join(' ')
 
 export const metadata: Metadata = {

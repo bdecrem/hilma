@@ -1,4 +1,5 @@
 import { ImageResponse } from 'next/og'
+import { ogFont } from '@/lib/og-fonts'
 import { Plate } from '../lib/raster'
 import { proofMarks, decodePress, defaultPress, type PressState } from '../lib/model'
 import { encodePNG } from '../lib/png'
@@ -8,13 +9,6 @@ import { encodePNG } from '../lib/png'
 // only type is each sheet's colophon.
 
 export const runtime = 'nodejs'
-
-async function googleFont(query: string) {
-  const css = await (await fetch(`https://fonts.googleapis.com/css2?family=${query}`)).text()
-  const m = css.match(/src: url\((.+?)\) format\('(opentype|truetype)'\)/)
-  if (!m) throw new Error(`no ttf for ${query}`)
-  return (await fetch(m[1])).arrayBuffer()
-}
 
 const W = 336
 const H = 448
@@ -35,12 +29,13 @@ export async function GET(req: Request) {
     { src: pull(press, 1.35, 3), no: '003', note: 'flooded', x: 828, y: 100, rot: 2.1 },
   ]
 
-  const fonts: { name: string; data: ArrayBuffer; weight?: 400 }[] = []
-  try {
-    const [display, mono] = await Promise.all([googleFont('Archivo+Black'), googleFont('DM+Mono')])
-    fonts.push({ name: 'Archivo Black', data: display, weight: 400 })
-    fonts.push({ name: 'DM Mono', data: mono, weight: 400 })
-  } catch {}
+  // Bundled (src/fonts; this route renders at request time, so next.config.ts
+  // lists the two files in outputFileTracingIncludes for /drum/og).
+  const [display, mono] = await Promise.all([ogFont('archivo-black/ArchivoBlack-400.ttf'), ogFont('dm-mono/DMMono-400.ttf')])
+  const fonts = [
+    { name: 'Archivo Black', data: display, weight: 400 as const },
+    { name: 'DM Mono', data: mono, weight: 400 as const },
+  ]
 
   return new ImageResponse(
     (

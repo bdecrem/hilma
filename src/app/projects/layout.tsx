@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter_Tight } from 'next/font/google'
+import localFont from 'next/font/local'
 
 // Same face as the bartin16.xyz landing this site now shares a front door with.
-const tight = Inter_Tight({ subsets: ['latin'], weight: ['400', '500', '600', '700'] })
+const tight = localFont({ src: '../../fonts/inter-tight/InterTight.woff2', weight: '100 900' })
 
 export const metadata: Metadata = {
   title: 'decremental',

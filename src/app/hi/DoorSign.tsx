@@ -1,9 +1,9 @@
-import { Gochi_Hand } from 'next/font/google'
+import localFont from 'next/font/local'
 
 // The "Ghosts in the Studies Report" sheet on the door of Study 16 at CASBS
 // (photographed 2026-09-03, sheet dated August 2026). Transcribed verbatim,
 // including the original's quirks (Presser three times, "Math And Statistics").
-const crayon = Gochi_Hand({ subsets: ['latin'], weight: '400' })
+const crayon = localFont({ src: '../../fonts/gochi-hand/GochiHand-400.woff2', weight: '400' })
 
 const GHOSTS: [string, string, string, string][] = [
   ['1955', 'Bavelas, Alex', 'Psychology', 'Massachusetts Institute of Technology'],

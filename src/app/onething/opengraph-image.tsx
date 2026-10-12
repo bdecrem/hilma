@@ -1,6 +1,5 @@
-import { readFile } from 'node:fs/promises';
-import path from 'node:path';
 import { ImageResponse } from 'next/og';
+import { ogFont } from '@/lib/og-fonts';
 import { EXAMPLES, standaloneSvg } from '@/lib/onething/examples';
 
 export const runtime = 'nodejs';
@@ -8,13 +7,8 @@ export const alt = 'onething: one sentence a day, and a doodle for every one';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
-// The fonts are bundled (./fonts, static TTFs instanced from the google/fonts
-// repo): this image is prerendered at build time, and fetching them from
-// Google Fonts failed builds on 2026-09-05 and twice on 2026-10-11.
-async function loadFont(file: string): Promise<ArrayBuffer> {
-  const buf = await readFile(path.join(process.cwd(), 'src/app/onething/fonts', file));
-  return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer;
-}
+// The fonts are bundled (src/fonts): this image is prerendered at build time,
+// and fetching them from Google Fonts failed builds on 2026-09-05 and 2026-10-11.
 
 const INK = '#1d1625';
 const svgUri = (s: string) => `data:image/svg+xml;base64,${Buffer.from(s).toString('base64')}`;
@@ -69,7 +63,7 @@ const H1 = { fontFamily: 'Bricolage', fontWeight: 800, fontSize: 68, lineHeight:
 
 /** A warm page with a pile of days on the right: each day its colour, each with its doodle. */
 export default async function Image() {
-  const [bricolage, hand] = await Promise.all([loadFont('BricolageGrotesque-800.ttf'), loadFont('PatrickHand-400.ttf')]);
+  const [bricolage, hand] = await Promise.all([ogFont('bricolage-grotesque/BricolageGrotesque-800.ttf'), ogFont('patrick-hand/PatrickHand-400.ttf')]);
   const fonts = [
     { name: 'Bricolage', data: bricolage, weight: 800 as const, style: 'normal' as const },
     { name: 'Hand', data: hand, weight: 400 as const, style: 'normal' as const },

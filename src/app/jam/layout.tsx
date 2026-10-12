@@ -1,13 +1,22 @@
 import type { Metadata, Viewport } from 'next'
-import { Barlow_Condensed, Instrument_Sans, JetBrains_Mono } from 'next/font/google'
+import localFont from 'next/font/local'
 import './jam.css'
 
 // Panel labels: a condensed industrial grotesk, always caps + tracking.
-const barlow = Barlow_Condensed({ subsets: ['latin'], weight: ['500', '600', '700'], variable: '--font-panel' })
+const barlow = localFont({
+  src: [
+    { path: '../../fonts/barlow-condensed/BarlowCondensed-500.woff2', weight: '500' },
+    { path: '../../fonts/barlow-condensed/BarlowCondensed-600.woff2', weight: '600' },
+    { path: '../../fonts/barlow-condensed/BarlowCondensed-700.woff2', weight: '700' },
+  ],
+  variable: '--font-panel',
+})
+// The synth panels' own labels (alt/skins.css), loaded only when they show.
+const grotesk = localFont({ src: '../../fonts/space-grotesk/SpaceGrotesk.woff2', weight: '300 700', variable: '--font-grotesk', preload: false })
 // Reading: a quiet sans with real personality in its numerals.
-const instrument = Instrument_Sans({ subsets: ['latin'], weight: ['400', '500', '600'], variable: '--font-body' })
+const instrument = localFont({ src: '../../fonts/instrument-sans/InstrumentSans.woff2', weight: '400 700', variable: '--font-body' })
 // Readouts: BPM, bars, values.
-const mono = JetBrains_Mono({ subsets: ['latin'], weight: ['400', '500'], variable: '--font-mono' })
+const mono = localFont({ src: '../../fonts/jetbrains-mono/JetBrainsMono.woff2', weight: '100 800', variable: '--font-mono' })
 
 export const metadata: Metadata = {
   // Absolute URLs in og:image etc. must point at jambot.to: the project
@@ -35,5 +44,5 @@ export const viewport: Viewport = {
 }
 
 export default function JamLayout({ children }: { children: React.ReactNode }) {
-  return <div className={`jb ${barlow.variable} ${instrument.variable} ${mono.variable}`}>{children}</div>
+  return <div className={`jb ${barlow.variable} ${grotesk.variable} ${instrument.variable} ${mono.variable}`}>{children}</div>
 }

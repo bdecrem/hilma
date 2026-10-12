@@ -77,3 +77,7 @@ apps/*/build-device/
 /apps/polder-video/out/
 /apps/polder-video/search/.thumbs-*/
 /apps/polder-video/search/
+
+# fonts pipeline (scripts/fonts)
+scripts/fonts/.venv
+scripts/fonts/.cache

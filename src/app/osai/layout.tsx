@@ -1,29 +1,14 @@
 import type { Metadata, Viewport } from 'next'
-import { Bricolage_Grotesque, Instrument_Sans, JetBrains_Mono } from 'next/font/google'
+import localFont from 'next/font/local'
 import { DISPLAY, getOsaiUser } from '@/lib/osai/auth'
 import { hasPassword } from '@/lib/osai/password'
 import Login from './Login'
 import Shell from './Shell'
 import './osai.css'
 
-const display = Bricolage_Grotesque({
-  subsets: ['latin'],
-  weight: ['500', '600', '700'],
-  variable: '--font-display',
-  display: 'swap',
-})
-const sans = Instrument_Sans({
-  subsets: ['latin'],
-  weight: ['400', '500', '600'],
-  variable: '--font-sans',
-  display: 'swap',
-})
-const mono = JetBrains_Mono({
-  subsets: ['latin'],
-  weight: ['400', '500', '600'],
-  variable: '--font-mono',
-  display: 'swap',
-})
+const display = localFont({ src: '../../fonts/bricolage-grotesque/BricolageGrotesque.woff2', weight: '200 800', variable: '--font-display', display: 'swap' })
+const sans = localFont({ src: '../../fonts/instrument-sans/InstrumentSans.woff2', weight: '400 700', variable: '--font-sans', display: 'swap' })
+const mono = localFont({ src: '../../fonts/jetbrains-mono/JetBrainsMono.woff2', weight: '100 800', variable: '--font-mono', display: 'swap' })
 
 export const metadata: Metadata = {
   title: 'osai',

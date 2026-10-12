@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
+    "build": "node scripts/fonts/check.mjs && next build",
     "start": "next start",
     "lint": "next lint",
     "dodo:seed": "node scripts/dodo-scenes/seed.mjs",
@@ -13,7 +13,9 @@
     "dodo:scenes": "node scripts/dodo-scenes/capture.mjs && pnpm build && node scripts/dodo-scenes/export.mjs",
     "dodo:video": "node scripts/dodo-scenes/video.mjs",
     "jam:build": "node scripts/jam/build-jambot.mjs",
-    "osai:slurp": "node scripts/osai/slurp.mjs"
+    "osai:slurp": "node scripts/osai/slurp.mjs",
+    "fonts:sync": "node scripts/fonts/sync.mjs",
+    "fonts:check": "node scripts/fonts/check.mjs"
   },
   "dependencies": {
     "@breezystack/lamejs": "1.2.7",

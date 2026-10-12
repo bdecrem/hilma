@@ -373,6 +373,24 @@ The knowledge behind it (`src/lib/f2/knowledge.ts`, schema 051) is two layers, b
 - Git tag `feynd-voice-archive-v1` (full pre-repurpose tree)
 - Folder `apps/feynd-voice-archive/` (verbatim snapshot; see its `ARCHIVE.md`)
 
+## Fonts — bundled, never fetched at build time (2026-10-12)
+
+Every web font on the site lives in `src/fonts/`, built from the google/fonts
+repo by `pnpm fonts:sync` (manifest `src/fonts/fonts.json`, the exact snippet
+per family in `src/fonts/README.md`, pipeline `scripts/fonts/`). Pages load
+them with `next/font/local`; OG images read the `.ttf` instances through
+`ogFont()` in `src/lib/og-fonts.ts`. **`next/font/google` is banned**: `pnpm
+build` runs `scripts/fonts/check.mjs` first and fails on any import of it, or
+on an OG image that fetches fonts.googleapis.com. Google Fonts took every
+deploy down on 2026-09-05, twice on 2026-10-11 and again on 2026-10-12 (a
+timeout, or a font URL Next's loader does not expect, and no page on the site
+deploys). To add a family: add it to `fonts.json`, run the sync, paste the
+README snippet with the page's variable name, commit `src/fonts/` with the
+page. The Jam synth panels get theirs the same way (`build-skins.mjs` drops the
+Google import and maps the families to the layout's variables). Runtime
+`<link>` tags to Google in the Amber and nowwhat pages are not a build risk and
+were left alone.
+
 ## Project structure — where things go
 
 **Do NOT create files at the repo root.** Everything has a home:

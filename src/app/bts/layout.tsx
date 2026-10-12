@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next';
-import { Fredoka } from 'next/font/google';
+import localFont from 'next/font/local';
 
-const fredoka = Fredoka({ subsets: ['latin'], weight: ['400', '500', '600', '700'] });
+const fredoka = localFont({ src: '../../fonts/fredoka/Fredoka.woff2', weight: '300 700' });
 
 export const metadata: Metadata = {
   title: 'BTS Bias Check',

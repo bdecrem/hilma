@@ -1,9 +1,9 @@
 import type { Metadata, Viewport } from 'next'
-import { Bangers, Nunito, Permanent_Marker } from 'next/font/google'
+import localFont from 'next/font/local'
 
-const display = Bangers({ subsets: ['latin'], weight: '400', variable: '--font-sticker-display', display: 'swap' })
-const ui = Nunito({ subsets: ['latin'], variable: '--font-sticker-ui', display: 'swap' })
-const lang = Permanent_Marker({ subsets: ['latin'], weight: '400', variable: '--font-sticker-lang', display: 'swap' })
+const display = localFont({ src: '../../../fonts/bangers/Bangers-400.woff2', weight: '400', variable: '--font-sticker-display', display: 'swap' })
+const ui = localFont({ src: '../../../fonts/nunito/Nunito.woff2', weight: '200 1000', variable: '--font-sticker-ui', display: 'swap' })
+const lang = localFont({ src: '../../../fonts/permanent-marker/PermanentMarker-400.woff2', weight: '400', variable: '--font-sticker-lang', display: 'swap' })
 import '../_walk/walk.css'
 import '../_walk/sticker.css'
 

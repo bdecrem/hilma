@@ -1,7 +1,7 @@
-import { Inter_Tight } from 'next/font/google'
+import localFont from 'next/font/local'
 
 // Same voice as the landing page: one typeface, warm paper, clay for anything you can click.
-const tight = Inter_Tight({ subsets: ['latin'], weight: ['400', '600'] })
+const tight = localFont({ src: '../../../fonts/inter-tight/InterTight.woff2', weight: '100 900' })
 
 export const metadata = {
   title: 'Bart Decrem',

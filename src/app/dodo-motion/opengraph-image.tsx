@@ -1,18 +1,13 @@
-import { readFile } from 'node:fs/promises';
-import path from 'node:path';
 import { ImageResponse } from 'next/og';
+import { ogFont } from '@/lib/og-fonts';
 
 export const runtime = 'nodejs';
 export const alt = 'Dodo motion: explainer videos the Claude Motion way';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
-// Bundled font (./fonts): this image is prerendered at build time, and a
+// Bundled font (src/fonts): this image is prerendered at build time, and a
 // Google Fonts fetch has failed builds before. Never fetch here.
-async function loadFont(file: string): Promise<ArrayBuffer> {
-  const buf = await readFile(path.join(process.cwd(), 'src/app/dodo-motion/fonts', file));
-  return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer;
-}
 
 const PAPER = '#f7efdf';
 const INK = '#16121c';
@@ -24,7 +19,7 @@ const SCENES: { d: number; blue?: boolean }[] = [{ d: 5 }, { d: 7 }, { d: 8 }, {
 const TOTAL = SCENES.reduce((a, s) => a + s.d, 0);
 
 export default async function OgImage() {
-  const bricolage = await loadFont('BricolageGrotesque-800.ttf');
+  const bricolage = await ogFont('bricolage-grotesque/BricolageGrotesque-800.ttf');
   return new ImageResponse(
     (
       <div

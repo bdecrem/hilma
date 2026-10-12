@@ -1,13 +1,25 @@
 import type { Metadata, Viewport } from 'next'
-import { Archivo_Black, DM_Mono, Instrument_Serif } from 'next/font/google'
+import localFont from 'next/font/local'
 import './drum.css'
 
 // The nameplate, key caps and sheet numbers: a heavy grotesk that survives small.
-const display = Archivo_Black({ subsets: ['latin'], weight: '400', variable: '--drum-display' })
+const display = localFont({ src: '../../fonts/archivo-black/ArchivoBlack-400.woff2', weight: '400', variable: '--drum-display' })
 // Labels, readouts, the colophon: the machine's voice.
-const mono = DM_Mono({ subsets: ['latin'], weight: ['400', '500'], variable: '--drum-mono' })
+const mono = localFont({
+  src: [
+    { path: '../../fonts/dm-mono/DMMono-400.woff2', weight: '400' },
+    { path: '../../fonts/dm-mono/DMMono-500.woff2', weight: '500' },
+  ],
+  variable: '--drum-mono',
+})
 // The operating instructions' title, the one italic in the building.
-const serif = Instrument_Serif({ subsets: ['latin'], weight: '400', style: ['italic', 'normal'], variable: '--drum-serif' })
+const serif = localFont({
+  src: [
+    { path: '../../fonts/instrument-serif/InstrumentSerif-400.woff2', weight: '400' },
+    { path: '../../fonts/instrument-serif/InstrumentSerif-400-Italic.woff2', weight: '400', style: 'italic' },
+  ],
+  variable: '--drum-serif',
+})
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://hilma-nine.vercel.app'),

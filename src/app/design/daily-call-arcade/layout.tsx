@@ -1,9 +1,15 @@
 import type { Metadata, Viewport } from 'next'
-import { Bungee, Space_Grotesk, Space_Mono } from 'next/font/google'
+import localFont from 'next/font/local'
 
-const display = Bungee({ subsets: ['latin'], weight: '400', variable: '--font-arcade-display', display: 'swap' })
-const ui = Space_Grotesk({ subsets: ['latin'], variable: '--font-arcade-ui', display: 'swap' })
-const lang = Space_Mono({ subsets: ['latin'], weight: ['400', '700'], variable: '--font-arcade-lang', display: 'swap' })
+const display = localFont({ src: '../../../fonts/bungee/Bungee-400.woff2', weight: '400', variable: '--font-arcade-display', display: 'swap' })
+const ui = localFont({ src: '../../../fonts/space-grotesk/SpaceGrotesk.woff2', weight: '300 700', variable: '--font-arcade-ui', display: 'swap' })
+const lang = localFont({
+  src: [
+    { path: '../../../fonts/space-mono/SpaceMono-400.woff2', weight: '400' },
+    { path: '../../../fonts/space-mono/SpaceMono-700.woff2', weight: '700' },
+  ],
+  variable: '--font-arcade-lang', display: 'swap',
+})
 import '../_walk/walk.css'
 import '../_walk/arcade.css'
 

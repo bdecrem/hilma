@@ -10,6 +10,8 @@ const nextConfig: NextConfig = {
     '/osai': ['./apps/osai/content/**/*'],
     '/osai/memo': ['./apps/osai/content/**/*'],
     '/api/osai/chat': ['./apps/osai/content/**/*'],
+    // The DRUM share card renders at request time and reads its fonts from src/fonts.
+    '/drum/og': ['./src/fonts/archivo-black/ArchivoBlack-400.ttf', './src/fonts/dm-mono/DMMono-400.ttf'],
   },
   async rewrites() {
     return {

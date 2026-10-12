@@ -2,17 +2,16 @@ import type { Metadata, Viewport } from 'next';
 import localFont from 'next/font/local';
 import './motion.css';
 
-// The piece's own fonts, bundled (the same latin subsets the animation renders
-// with), so this page never fetches a font at build time.
+// Bundled fonts (src/fonts), so this page never fetches a font at build time.
 const bricolage = localFont({
-  src: './fonts/bricolage.woff2',
+  src: '../../fonts/bricolage-grotesque/BricolageGrotesque.woff2',
   weight: '200 800',
   variable: '--font-bricolage',
   display: 'swap',
 });
 const jbmono = localFont({
-  src: './fonts/jbmono.woff2',
-  weight: '400 800',
+  src: '../../fonts/jetbrains-mono/JetBrainsMono.woff2',
+  weight: '100 800',
   variable: '--font-jbmono',
   display: 'swap',
 });

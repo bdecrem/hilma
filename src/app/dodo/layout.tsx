@@ -1,17 +1,9 @@
 import type { Metadata, Viewport } from 'next'
-import { Fredoka, Nunito } from 'next/font/google'
+import localFont from 'next/font/local'
 
-const fredoka = Fredoka({
-  subsets: ['latin'],
-  weight: ['500', '600'],
-  variable: '--font-fredoka',
-})
+const fredoka = localFont({ src: '../../fonts/fredoka/Fredoka.woff2', weight: '300 700', variable: '--font-fredoka' })
 
-const nunito = Nunito({
-  subsets: ['latin'],
-  weight: ['400', '600', '700', '800'],
-  variable: '--font-nunito',
-})
+const nunito = localFont({ src: '../../fonts/nunito/Nunito.woff2', weight: '200 1000', variable: '--font-nunito' })
 
 export const metadata: Metadata = {
   title: 'Dodo — learn it, keep it',
