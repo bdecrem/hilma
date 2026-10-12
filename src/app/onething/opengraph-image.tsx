@@ -6,19 +6,11 @@ export const alt = 'onething: one sentence a day, and a doodle for every one';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
-// Google Fonts as TTF (no browser UA → truetype). Fails soft: this image is
-// prerendered at build time and a font fetch must never block a deploy.
-async function loadFont(family: string, weight: number): Promise<ArrayBuffer | null> {
-  try {
-    const q = `family=${family.replace(/ /g, '+')}:wght@${weight}`;
-    const css = await (await fetch(`https://fonts.googleapis.com/css2?${q}`, { signal: AbortSignal.timeout(8000) })).text();
-    const url = css.match(/src:\s*url\((https:[^)]+)\)/)?.[1];
-    if (!url) throw new Error('font url not found');
-    return await (await fetch(url, { signal: AbortSignal.timeout(8000) })).arrayBuffer();
-  } catch (err) {
-    console.warn(`[onething og] ${family} ${weight} unavailable, using default:`, (err as Error).message);
-    return null;
-  }
+// The fonts are bundled (./fonts, static TTFs instanced from the google/fonts
+// repo): this image is prerendered at build time, and fetching them from
+// Google Fonts failed builds on 2026-09-05 and twice on 2026-10-11.
+async function loadFont(file: string): Promise<ArrayBuffer> {
+  return (await fetch(new URL(`./fonts/${file}`, import.meta.url))).arrayBuffer();
 }
 
 const INK = '#1d1625';
@@ -74,11 +66,11 @@ const H1 = { fontFamily: 'Bricolage', fontWeight: 800, fontSize: 68, lineHeight:
 
 /** A warm page with a pile of days on the right: each day its colour, each with its doodle. */
 export default async function Image() {
-  const [bricolage, hand] = await Promise.all([loadFont('Bricolage Grotesque', 800), loadFont('Patrick Hand', 400)]);
+  const [bricolage, hand] = await Promise.all([loadFont('BricolageGrotesque-800.ttf'), loadFont('PatrickHand-400.ttf')]);
   const fonts = [
-    bricolage && { name: 'Bricolage', data: bricolage, weight: 800 as const, style: 'normal' as const },
-    hand && { name: 'Hand', data: hand, weight: 400 as const, style: 'normal' as const },
-  ].filter((f): f is NonNullable<typeof f> => !!f);
+    { name: 'Bricolage', data: bricolage, weight: 800 as const, style: 'normal' as const },
+    { name: 'Hand', data: hand, weight: 400 as const, style: 'normal' as const },
+  ];
 
   return new ImageResponse(
     (
