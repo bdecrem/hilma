@@ -1,0 +1,127 @@
+/* Dodo motion — the method page. Riso palette on cream, the piece's own type. */
+.dm {
+  --paper: #f7efdf;
+  --paper-2: #fbf7ee;
+  --ink: #16121c;
+  --ink-2: rgba(22, 18, 28, 0.72);
+  --ink-3: rgba(22, 18, 28, 0.5);
+  --line: rgba(22, 18, 28, 0.14);
+  --red: #ff4b1f;
+  --blue: #3d3bff;
+  --yellow: #ffc31f;
+  --lime: #b6f23a;
+  --display: var(--font-bricolage), 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
+  --mono: var(--font-jbmono), 'JetBrains Mono', ui-monospace, Menlo, monospace;
+
+  min-height: 100dvh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--display);
+  font-size: 17px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  padding: calc(env(safe-area-inset-top) + 0px) env(safe-area-inset-right) calc(env(safe-area-inset-bottom) + 64px) env(safe-area-inset-left);
+}
+.dm a { color: inherit; text-decoration: none; border-bottom: 2px solid var(--red); padding-bottom: 1px; }
+.dm a:hover { color: var(--red); }
+.dm p { margin: 0 0 1em; max-width: 64ch; }
+.dm ul, .dm ol { margin: 0 0 1.2em; padding-left: 1.3em; max-width: 64ch; }
+.dm li { margin-bottom: 0.45em; }
+.dm li::marker { color: var(--red); font-family: var(--mono); font-weight: 600; }
+.dm strong { font-weight: 700; }
+.dm code { font-family: var(--mono); font-size: 0.86em; background: rgba(22, 18, 28, 0.06); padding: 0.1em 0.35em; border-radius: 4px; }
+.dm pre {
+  font-family: var(--mono); font-size: 13.5px; line-height: 1.5; margin: 0 0 1.4em;
+  padding: 18px 20px; border-radius: 10px; background: var(--ink); color: var(--paper);
+  overflow-x: auto; max-width: 100%;
+}
+.dm pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+.dm pre .c { color: rgba(247, 239, 223, 0.5); }
+.dm pre .r { color: #ff7a56; }
+.dm pre .b { color: #9d9bff; }
+.dm pre .y { color: var(--yellow); }
+
+.dm .wrap { max-width: 860px; margin: 0 auto; padding: 0 16px; }
+
+/* Masthead */
+.dm .mast { padding: 56px 0 28px; border-bottom: 3px solid var(--ink); margin-bottom: 36px; }
+.dm .kicker {
+  font-family: var(--mono); font-weight: 600; font-size: 13px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--ink-2); margin: 0 0 18px;
+}
+.dm h1 {
+  font-weight: 800; font-size: clamp(2.4rem, 7.5vw, 4.6rem); line-height: 1.0; letter-spacing: -0.03em;
+  margin: 0 0 20px; text-wrap: balance; max-width: 16ch;
+}
+.dm .lede { font-size: clamp(1.1rem, 2.4vw, 1.35rem); line-height: 1.4; color: var(--ink-2); max-width: 44ch; margin-bottom: 22px; }
+.dm .meta { font-family: var(--mono); font-size: 13px; color: var(--ink-3); display: flex; flex-wrap: wrap; gap: 6px 22px; }
+
+/* Sections */
+.dm section { padding: 8px 0 22px; }
+.dm h2 {
+  font-weight: 800; font-size: clamp(1.6rem, 4vw, 2.1rem); letter-spacing: -0.025em; line-height: 1.08;
+  margin: 28px 0 14px; display: flex; align-items: baseline; gap: 14px; text-wrap: balance;
+}
+.dm h2 .n { font-family: var(--mono); font-weight: 700; font-size: 0.6em; color: var(--red); letter-spacing: 0; }
+.dm h3 { font-weight: 700; font-size: 1.15rem; letter-spacing: -0.01em; margin: 22px 0 8px; }
+
+/* The scene strip: durations as width, colour as the scene's background. */
+.dm .strip { display: flex; gap: 4px; margin: 10px 0 6px; height: 54px; }
+.dm .strip > div {
+  position: relative; border-radius: 6px; background: #fff; border: 2px solid var(--ink);
+  font-family: var(--mono); font-size: 11px; font-weight: 600; overflow: hidden;
+  display: flex; align-items: flex-end; padding: 6px 7px; min-width: 0;
+}
+.dm .strip > div span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dm .strip > div small { position: absolute; top: 5px; right: 7px; color: var(--ink-3); font-weight: 500; }
+.dm .strip .blue { background: var(--blue); color: var(--paper); border-color: var(--blue); }
+.dm .strip .blue small { color: rgba(247, 239, 223, 0.7); }
+.dm .ticks { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 11px; color: var(--ink-3); margin-bottom: 18px; }
+
+/* Rules as cards */
+.dm .rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin: 10px 0 22px; }
+.dm .rule { background: #fff; border: 2px solid var(--ink); border-radius: 12px; padding: 16px 18px; box-shadow: 4px 4px 0 var(--ink); }
+.dm .rule b { display: block; font-weight: 700; margin-bottom: 4px; }
+.dm .rule p { font-size: 15px; color: var(--ink-2); margin: 0; }
+.dm .rule.red { border-color: var(--red); box-shadow: 4px 4px 0 var(--red); }
+.dm .rule.blue { border-color: var(--blue); box-shadow: 4px 4px 0 var(--blue); }
+
+/* Swatches */
+.dm .swatches { display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0 20px; }
+.dm .sw { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 12px; color: var(--ink-2); }
+.dm .sw i { width: 26px; height: 26px; border-radius: 7px; border: 2px solid var(--ink); display: inline-block; }
+
+/* The player card */
+.dm .player {
+  display: block; margin: 8px 0 26px; border: 3px solid var(--ink); border-radius: 12px; overflow: hidden;
+  background: #fff; box-shadow: 6px 6px 0 var(--ink); transition: transform 0.15s ease;
+}
+.dm .player:hover { transform: translate(-2px, -2px); color: inherit; }
+.dm .player .frame {
+  aspect-ratio: 16 / 9; background: var(--paper); position: relative; display: flex; flex-direction: column;
+  justify-content: center; padding: 6% 7%; gap: 2%;
+}
+.dm .player .frame .k { font-family: var(--mono); font-size: clamp(9px, 1.3vw, 13px); letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-2); font-weight: 600; }
+.dm .player .frame .t { font-weight: 700; font-size: clamp(16px, 4vw, 40px); line-height: 1.04; letter-spacing: -0.02em; max-width: 60%; }
+.dm .player .frame .dots { position: absolute; right: 7%; top: 18%; width: 30%; aspect-ratio: 1; }
+.dm .player .frame .play {
+  position: absolute; right: 4%; bottom: 7%; font-family: var(--mono); font-weight: 600; font-size: clamp(10px, 1.4vw, 14px);
+  letter-spacing: 0.12em; text-transform: uppercase; background: var(--ink); color: var(--paper); padding: 0.6em 1em; border-radius: 999px;
+}
+.dm .player .bar { border-top: 3px solid var(--ink); padding: 12px 16px; font-family: var(--mono); font-size: 13px; color: var(--ink-2); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.dm .player .bar b { color: var(--ink); font-weight: 700; }
+
+/* Note */
+.dm .note { border-left: 4px solid var(--yellow); padding: 10px 16px; background: rgba(255, 195, 31, 0.14); border-radius: 0 10px 10px 0; font-size: 15px; color: var(--ink-2); margin: 10px 0 22px; max-width: 64ch; }
+.dm .note p { margin: 0; }
+
+.dm footer { margin-top: 40px; padding-top: 18px; border-top: 1px solid var(--line); font-family: var(--mono); font-size: 12.5px; color: var(--ink-3); }
+.dm footer p { max-width: none; }
+
+@media (max-width: 600px) {
+  .dm { font-size: 16px; }
+  .dm pre { font-size: 12px; padding: 14px 14px; border-radius: 8px; }
+  .dm .strip { height: 46px; }
+  .dm .strip > div small { display: none; }
+  .dm .player .frame .t { max-width: 58%; }
+}
