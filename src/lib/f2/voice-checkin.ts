@@ -255,13 +255,10 @@ export async function recordVoiceCheckin(
 // ---------------------------------------------------------------------------
 
 export function voiceCheckinText(c: { topic: string; question: string; thread_id: string }): string {
-  return `🎙 Daily voice checkin — ${c.topic}
+  // Two paragraphs, eight SMS lines at most: the question, then the link.
+  return `🎙 ${c.topic}: ${c.question}
 
-${c.question}
-
-Answer it out loud with Dodo (pass or fail, with a second chance): ${checkinUrl(c.thread_id)}
-
-Done with this topic? Reply 9 and it goes inactive.`
+Answer out loud: ${checkinUrl(c.thread_id)} (reply 9 to retire this topic)`
 }
 
 type SendResult = { user: string; status: 'sent' | 'no-topic' | 'resolved' | 'skipped' | 'error'; detail?: string }

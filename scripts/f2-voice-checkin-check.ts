@@ -59,7 +59,7 @@ async function main() {
     const again = await VC.ensureTodaysCheckin(T)
     check('asking again returns the same checkin and question', again?.thread_id === c.thread_id && again?.question === c.question, again)
     const text = VC.voiceCheckinText(c)
-    check('the text names the topic, the question, the link and "Reply 9"', text.includes(c.topic) && text.includes(c.question) && text.includes(`/checkin/${c.thread_id}`) && text.includes('Reply 9'), text)
+    check('the text names the topic, the question, the link and "Reply 9"', text.includes(c.topic) && text.includes(c.question) && text.includes(`/checkin/${c.thread_id}`) && /reply 9/i.test(text), text)
 
     // --- 2. iMessage "9" --------------------------------------------------------
     const state = (await sb.from('f2_users').select('voice_checkin').eq('id', T).single()).data!.voice_checkin
