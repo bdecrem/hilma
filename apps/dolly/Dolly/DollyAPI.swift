@@ -167,9 +167,15 @@ final class DollyAPI {
 
     // MARK: Your cards
 
-    func items() async throws -> [ItemView] {
-        let res: ItemsResponse = try await request("/api/dolly/items", method: "GET", body: Optional<String>.none)
-        return res.items
+    func items() async throws -> ItemsResponse {
+        try await request("/api/dolly/items", method: "GET", body: Optional<String>.none)
+    }
+
+    /// Hide a level chunk from the stash and the flash sets, or show it again.
+    func setChunk(id: String, hidden: Bool) async throws -> [LevelChunks] {
+        struct Body: Encodable { let id: String; let hidden: Bool }
+        let res: ChunksResponse = try await request("/api/dolly/chunks", method: "PUT", body: Body(id: id, hidden: hidden))
+        return res.chunks
     }
 
     func deleteItem(id: String) async throws {

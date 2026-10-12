@@ -115,7 +115,13 @@ the You sheet** (`SettingsSections` in SettingsView.swift; no gear, `-Open
 settings` opens You) under a slimmer hero and a one-row ladder. **Your
 cards** (`MyCardsView`, `GET /api/dolly/items`, `DELETE /api/dolly/items/:id`,
 `-Open mycards`): every kept word with its record, swipe left to drop one;
-linked from the You sheet and the flash score screen. The done card shows
+linked from the You sheet and the flash score screen. Build 43: the stash
+also lists the **chunks of the levels the learner is on or has climbed**
+(`src/lib/dolly/chunks.ts`, grouped by level in the same response); swipe
+left hides one (`PUT /api/dolly/chunks`, `dolly_users.hidden_chunks`,
+schema 007), which keeps it out of flash sets too; hidden ones sit dimmed
+at the end of their level with a Show button. Every flash set still deals
+five of those chunks (the Grammar cards) beside five of the learner's own. The done card shows
 the three parts as one row of checks; Flash cards is a small jelly pill
 (`FlashPill`) under the pink Talk more; the tally line is quiet.
 

@@ -25,6 +25,8 @@ export type User = {
   rung: number
   /** A jelly critter kind (avatar.ts), or null: one picked from the id. */
   avatar: string | null
+  /** Level chunks hidden from the stash and the flash sets (chunks.ts ids). */
+  hidden_chunks: string[]
   created_at: string
 }
 

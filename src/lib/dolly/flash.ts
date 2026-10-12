@@ -19,6 +19,7 @@ import {
   type QuestionDir,
   type User,
 } from './core'
+import { chunkId } from './chunks'
 import { canDos } from './curriculum'
 import { answerMatches, nativeMatches, type LanguageCode } from './language'
 import { award, FLASH_CLEAN_BONUS, FLASH_PAID_SETS_PER_DAY, XP } from './xp'
@@ -59,11 +60,12 @@ function typable(n: string): boolean {
 /** The ten cards. Vocabulary from the pool, grammar from the levels up to
  *  the learner's rung; when one side is short the other fills in. Empty
  *  when there is nothing to practice yet. */
-export function buildFlashCards(lang: LanguageCode, rung: number, pool: Item[], size = FLASH_SET_SIZE): Question[] {
+export function buildFlashCards(lang: LanguageCode, rung: number, pool: Item[], size = FLASH_SET_SIZE, hidden: string[] = []): Question[] {
   const grammarAll = canDos(lang).filter((c) => c.level <= rung)
+  const hid = new Set(hidden)
   const grammarCards: Card[] = shuffle(
     grammarAll.flatMap((c) =>
-      c.items.map((it) => ({
+      c.items.filter((it) => !hid.has(chunkId(c.id, it.t))).map((it) => ({
         target: it.t,
         native: it.n,
         pinyin: lang === 'zh' ? it.p ?? null : null,
@@ -180,7 +182,7 @@ export async function flashView(user: User, set: FlashSet, now = new Date()): Pr
 /** Deal a set: an open one is dropped. */
 export async function dealFlashSet(user: User, now = new Date()): Promise<FlashSet | { error: string; status: number }> {
   const pool = await listItems(user.id)
-  const questions = buildFlashCards(user.language, user.rung, pool)
+  const questions = buildFlashCards(user.language, user.rung, pool, FLASH_SET_SIZE, user.hidden_chunks ?? [])
   if (questions.length === 0) return { error: 'Nothing to practice yet: finish a day first.', status: 409 }
   await deleteOpenFlashSets(user.id)
   return insertFlashSet({ user_id: user.id, language: user.language, day: localDay(now, user.tz), questions })

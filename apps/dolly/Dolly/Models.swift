@@ -244,8 +244,37 @@ struct ItemView: Codable, Equatable, Identifiable {
     }
 }
 
+/// A chunk of a level's can-do, in the stash: hidden ones stay out of flash sets.
+struct ChunkView: Codable, Equatable, Identifiable {
+    let id: String
+    let cando: String
+    let title: String
+    let target: String
+    let native: String
+    let pinyin: String?
+    var hidden: Bool
+}
+
+struct LevelChunks: Codable, Equatable, Identifiable {
+    let level: Int
+    let name: String
+    var items: [ChunkView]
+    var id: Int { level }
+}
+
 struct ItemsResponse: Codable {
     let items: [ItemView]
+    let chunks: [LevelChunks]
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        items = try c.decodeIfPresent([ItemView].self, forKey: .items) ?? []
+        chunks = try c.decodeIfPresent([LevelChunks].self, forKey: .chunks) ?? []
+    }
+}
+
+struct ChunksResponse: Codable {
+    let chunks: [LevelChunks]
 }
 
 struct FlashResponse: Codable {

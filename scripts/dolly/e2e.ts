@@ -205,7 +205,7 @@ async function main() {
     await sb.from('dolly_refreshers').delete().eq('user_id', user.id)
     await sb.from('dolly_xp').delete().eq('user_id', user.id)
     await sb.from('dolly_flash_sets').delete().eq('user_id', user.id)
-    await sb.from('dolly_users').update({ streak: 0, best_streak: 0, last_done_day: null, next_topic: null, prompt_day: null, prompted_at: null, reminder_day: null, objectives: false, rung: 1 }).eq('id', user.id)
+    await sb.from('dolly_users').update({ hidden_chunks: [], streak: 0, best_streak: 0, last_done_day: null, next_topic: null, prompt_day: null, prompted_at: null, reminder_day: null, objectives: false, rung: 1 }).eq('id', user.id)
   }
   // Sign in through the real routes: a test phone's code is DOLLY_TEST_CODE
   // (set on Vercel and in .env.local), so this works against production too.
@@ -346,6 +346,24 @@ async function main() {
   check('items: one dropped', del.status === 200 && after.body.items.length === items.body.items.length - 1 && !after.body.items.some((i) => i.id === victim?.id), `${del.status} ${after.body.items?.length}`)
   check('items: dropping it again is 404', (await api('/api/dolly/items/' + victim?.id, { method: 'DELETE', cookie })).status === 404)
   if (victim) await sb.from('dolly_items').insert({ user_id: user.id, kind: 'word', target: victim.target, native: victim.native, day_n: victim.day_n })
+  // The level chunks in the stash, and hiding one.
+  type Chunk = { id: string; target: string; hidden: boolean }
+  type Chunks = { chunks: { level: number; name: string; items: Chunk[] }[] }
+  const stash = await api<Chunks>('/api/dolly/items', { cookie })
+  const lvl1 = stash.body.chunks?.[0]
+  check('chunks: level 1 chunks in the stash', stash.body.chunks?.length === 1 && lvl1?.level === 1 && lvl1.name === 'Hello' && lvl1.items.length >= 50 && lvl1.items.every((c) => !c.hidden), `${stash.body.chunks?.length} levels, ${lvl1?.items.length} chunks`)
+  const hideMe = lvl1!.items[3]
+  const hid = await api<Chunks>('/api/dolly/chunks', { method: 'PUT', cookie, body: JSON.stringify({ id: hideMe.id, hidden: true }) })
+  check('chunks: one hidden', hid.status === 200 && hid.body.chunks[0].items.find((c) => c.id === hideMe.id)?.hidden === true, String(hid.status))
+  let dealtHidden = false
+  for (let n = 0; n < 4; n++) {
+    const d = await api<{ set: { questions: { target: string; native: string; from: string | number }[] } }>('/api/dolly/flash', { method: 'POST', cookie })
+    if (d.body.set?.questions.some((q) => q.from === 'grammar' && (q.target === hideMe.target || q.native === hideMe.target))) dealtHidden = true
+  }
+  check('chunks: a hidden chunk is never dealt', !dealtHidden, hideMe.target)
+  check('chunks: shown again', (await api<Chunks>('/api/dolly/chunks', { method: 'PUT', cookie, body: JSON.stringify({ id: hideMe.id, hidden: false }) })).body.chunks[0].items.every((c) => !c.hidden))
+  check('chunks: unknown chunk is 404', (await api('/api/dolly/chunks', { method: 'PUT', cookie, body: JSON.stringify({ id: 'es.9.nope:x', hidden: true }) })).status === 404)
+  await sb.from('dolly_flash_sets').delete().eq('user_id', user.id).eq('state', 'open')
 
   // The avatar.
   type Me = { user: { avatar: string } }
