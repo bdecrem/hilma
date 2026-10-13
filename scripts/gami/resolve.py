@@ -64,7 +64,7 @@ def crossref(p):
         if (best is None or s > best[0]): best = (s, it['DOI'].lower(), t, auth_ok)
     if not best: return None, 'crossref: no results'
     s, doi, t, auth_ok = best
-    if s >= ACCEPT and auth_ok: return doi, f'crossref match {s:.2f}'
+    if (s >= ACCEPT and auth_ok) or s >= 0.97: return doi, f'crossref match {s:.2f}' + ('' if auth_ok else ' (title only)')
     return None, f'crossref best {s:.2f} author_ok={auth_ok} ({t[:70]!r})'
 
 def openalex_by_title(p):
@@ -78,7 +78,7 @@ def openalex_by_title(p):
         if best is None or s > best[0]: best = (s, it, auth_ok)
     if not best: return None, None, 'openalex: no results'
     s, it, auth_ok = best
-    if s >= ACCEPT and auth_ok:
+    if (s >= ACCEPT and auth_ok) or s >= 0.97:
         doi = (it.get('doi') or '').replace('https://doi.org/', '').lower() or None
         return doi, it, f'openalex match {s:.2f}'
     return None, None, f'openalex best {s:.2f} author_ok={auth_ok}'
@@ -131,10 +131,11 @@ def log(s):
     print(s)
 
 def main():
-    ap = argparse.ArgumentParser(); ap.add_argument('--start', type=int, default=0); ap.add_argument('--count', type=int, default=10)
+    ap = argparse.ArgumentParser(); ap.add_argument('--start', type=int, default=0); ap.add_argument('--count', type=int, default=10); ap.add_argument('--ids')
     a = ap.parse_args()
     PAPERS.mkdir(parents=True, exist_ok=True)
-    rows = load_rows()[a.start:a.start + a.count]
+    allrows = load_rows()
+    rows = [r for r in allrows if r['id'] in a.ids.split(',')] if a.ids else allrows[a.start:a.start + a.count]
     new = not MANIFEST.exists()
     mf = open(MANIFEST, 'a', newline=''); w = csv.writer(mf)
     if new: w.writerow(['n', 'article_id', 'doi', 'status', 'source', 'file', 'note', 'title'])
