@@ -11,7 +11,7 @@ Status is one of: **not started · approved · building · done**.
 | 2 | Tokenizer (BPE) | How text becomes numbers | done 2026-10-12 (vocab 8,192) |
 | 3 | The dataset and the training objective | Next-token prediction is the whole game | done 2026-10-12 (100.1 M tokens) |
 | 4 | The simplest language model (bigram) | Embeddings, logits, softmax, cross-entropy | done 2026-10-12 (loss 9.0 → 4.2) |
-| 5 | Attention and the Transformer block | How tokens look at each other | not started |
+| 5 | Attention and the Transformer block | How tokens look at each other | done 2026-10-12 (one block: 3.72 vs bigram 4.19) |
 | 6 | Pretraining the GPT | Random weights become a language model | not started |
 | 7 | Looking at the weights | The embedding table before and after | not started |
 | 8 | The conversion bridge | Our model as a Hugging Face model | not started |
