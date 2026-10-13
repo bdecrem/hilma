@@ -264,16 +264,19 @@ export async function sendActivelyReadNudges(opts: { now?: Date; force?: boolean
   const hour = Number(new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', hour: 'numeric', hourCycle: 'h23' }).format(now))
   if (!opts.force && hour !== NUDGE_HOUR_PT) return []
 
-  let q = f2Supabase().from('f2_users').select('id, username, imessage_handles, daily_chat_guid, daily_card_enabled')
+  let q = f2Supabase().from('f2_users').select('id, username, imessage_handles, daily_chat_guid, daily_card_enabled, voice_checkin_enabled')
   if (opts.onlyUserId) q = q.eq('id', opts.onlyUserId)
   const { data: users, error } = await q
   if (error) throw new Error(`actively-read users query failed: ${error.message}`)
   const pushUsers = await usersWithPush()
 
   const out: NudgeResult[] = []
-  for (const u of (users ?? []) as { id: string; username: string; imessage_handles: string[] | null; daily_chat_guid: string | null; daily_card_enabled: boolean }[]) {
+  for (const u of (users ?? []) as { id: string; username: string; imessage_handles: string[] | null; daily_chat_guid: string | null; daily_card_enabled: boolean; voice_checkin_enabled: boolean }[]) {
     const handle = dailyHandle(u.imessage_handles)
-    const canText = u.daily_card_enabled && (!!u.daily_chat_guid || !!handle)
+    // Anyone who takes Dodo texts gets the read: the daily card OR the voice
+    // checkin on. It used to require the card alone, so turning the card off
+    // (2026-10-12, once the checkin replaced it) silently stopped this text.
+    const canText = (u.daily_card_enabled || u.voice_checkin_enabled) && (!!u.daily_chat_guid || !!handle)
     const canPush = pushUsers.has(u.id)
     if (!canText && !canPush) { out.push({ user: u.username, status: 'skipped' }); continue }
     try {
