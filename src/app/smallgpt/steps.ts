@@ -53,6 +53,8 @@ export const STEPS: Step[] = [
     idea: 'Next-token prediction is the whole game',
     status: 'done',
     doneOn: '2026-10-12',
+    summary:
+      'In the previous step we built our tokenizer; now we run the entire training set through it. We have about 400 MB of text and we convert all of it into token identifiers: just one big, long string of tokens. The resulting file is about half the size of the original, which makes sense — this is a form of compression (about 4 characters become one 2-byte number). Then we wrote a cute little function that creates two tensors, two little matrices. We’re batching up the tokens: picking fragments of 256 tokens from random spots in that long string, 64 at a time, to train on. The second tensor, y, is the matching one: the same fragments shifted one token to the right, so for every position in x it says what came next in the real text. That’s 256 answers per fragment, and it’s what lets us judge how good each next-token prediction was.',
     saw: 'The whole corpus went through the tokenizer in 9 seconds: 100,119,743 tokens exactly — 75.7 M from the stories, 24.4 M from Usenet (76% / 24%). 99.1 M went into train.bin, and every 100th document (1.0 M tokens) into val.bin, which the model never trains on. One batch is two tensors: x = a window of tokens (“ and saw the dead bird. She told Tim that sometimes birds”), y = the same window moved one to the right (“ saw the dead bird. She told Tim that sometimes birds die”). Every column says “after this, the next token is that”. That is the entire training signal.',
   },
   { n: 4, name: 'The simplest language model', idea: 'Embeddings, logits, softmax, cross-entropy (bigram)', status: 'next' },
