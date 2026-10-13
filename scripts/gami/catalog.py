@@ -40,10 +40,17 @@ with open(OUT / 'papers.csv', 'w', newline='') as fh:
     w = csv.writer(fh); w.writerow(cols)
     for x in recs: w.writerow(['; '.join(x[c]) if isinstance(x[c], list) else x[c] for c in cols])
 got = sum(1 for x in recs if x['pdf'])
-L = [f'# GAMI papers', '', f'Updated {time.strftime("%Y-%m-%d %H:%M")}. {got} of {len(recs)} attempted downloaded (1,682 in the database).', '',
+L = [f'# GAMI papers', '', f'Updated {time.strftime("%Y-%m-%d %H:%M")}. {got} of {len(recs)} attempted downloaded (1,682 in the database). Waiting on Bart: {sum(1 for x in recs if x["status"]=="needs_human")}. Elsevier queued for Chrome: {sum(1 for x in recs if x["publisher"]=="Elsevier" and not x["pdf"])}.', '',
      'Files: papers/<id>.pdf · papers.json and papers.csv (one row per paper, for the web page) · debug/ (attempt details, screenshots)', '',
      '| # | id | status | pages | publisher | how | title |', '|---|---|---|---|---|---|---|']
 for x in recs:
     L.append(f"| {x['n']} | {x['id']} | {'✓' if x['pdf'] else x['status']} | {x['pages'] or ''} | {x['publisher']} | {x['method']} | {x['title'][:90]} |")
 (OUT / 'log.md').write_text('\n'.join(L) + '\n')
+H = ['# Papers that need you', '', 'Open each link in Chrome, click through the check, and download the PDF into ~/Desktop/GAMI/papers/ named <id>.pdf. The next run picks it up.', '']
+for x in recs:
+    if x['status'] == 'needs_human': H.append(f"- {x['id']} · {x['title'][:80]} · https://stanford.idm.oclc.org/login?url={x['doi_url']} · {x['note']}")
+    if x['status'] in ('failed', 'no_doi') : pass
+H += ['', '## Not found anywhere', '']
+H += [f"- {x['id']} · {x['title'][:80]} · {x['doi_url'] or 'no DOI'} · {x['note'][:80]}" for x in recs if x['status'] in ('failed', 'no_doi')]
+(OUT / 'needs-you.md').write_text('\n'.join(H) + '\n')
 print('\n'.join(L))

@@ -17,9 +17,13 @@ for r in rows:
     except Exception as e: text = ''
     t = norm(r['title'])[:60]
     ok = t[:40] in text or difflib.SequenceMatcher(None, t, text[:4000]).find_longest_match(0, len(t), 0, min(len(text), 4000)).size >= min(30, len(t) - 5)
-    r['status'] = 'downloaded' if ok else 'wrong_pdf'
-    r['file'] = f.name
-    if not ok: bad.append((r['article_id'], r['title'][:70]))
+    if ok:
+        r['status'] = 'downloaded'; r['file'] = f.name
+        if not r['source']: r['source'] = 'stanford/sciencedirect-in-chrome' if r['doi'].startswith('10.1016/') else 'file-on-disk'
+    else:
+        (OUT / 'debug' / 'wrong').mkdir(parents=True, exist_ok=True); f.rename(OUT / 'debug' / 'wrong' / f.name)
+        r['status'] = 'failed'; r['file'] = ''; r['note'] = 'downloaded file was a different document'
+        bad.append((r['article_id'], r['title'][:70]))
 w = csv.DictWriter(open(OUT / 'manifest.csv', 'w', newline=''), fieldnames=rows[0].keys()); w.writeheader(); w.writerows(rows)
 print('checked', sum(1 for r in rows if r['file']), 'mismatched', len(bad))
 for b in bad: print(' ', *b)

@@ -12,6 +12,7 @@ OUT = Path.home() / 'Desktop/GAMI'
 PAPERS = OUT / 'papers'
 LOG = OUT / 'debug' / 'attempts.md'
 MANIFEST = OUT / 'manifest.csv'
+SIDE = OUT / 'debug' / 'candidates.json'
 MAILTO = 'amber@intheamber.com'
 UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15'
 S = requests.Session()
@@ -137,11 +138,17 @@ def main():
     allrows = load_rows()
     rows = [r for r in allrows if r['id'] in a.ids.split(',')] if a.ids else allrows[a.start:a.start + a.count]
     new = not MANIFEST.exists()
+    done = set() if new else {r['article_id'] for r in csv.DictReader(open(MANIFEST))}
+    rows = [r for r in rows if r['id'] not in done]
+    if not rows: print('nothing new in this range'); return
+    side = json.loads(SIDE.read_text()) if SIDE.exists() else {}
     mf = open(MANIFEST, 'a', newline=''); w = csv.writer(mf)
     if new: w.writerow(['n', 'article_id', 'doi', 'status', 'source', 'file', 'note', 'title'])
     log(f'\n## Batch {a.start + 1}–{a.start + len(rows)} · {time.strftime("%Y-%m-%d %H:%M")}\n')
     tally = dict(downloaded=0, paywalled=0, no_doi=0)
-    for i, p in enumerate(rows, a.start + 1):
+    idx = {r['id']: n for n, r in enumerate(load_rows(), 1)}
+    for p in rows:
+        i = idx[p['id']]
         t0 = time.time()
         log(f'### {i}. [{p["id"]}] {p["title"]}')
         log(f'- {p["authors"][:90]} · {p["journal"]}')
@@ -157,6 +164,11 @@ def main():
         log(f'- DOI: https://doi.org/{doi} ({notes[0] if "match" in notes[0] else notes[-1]})')
         if not oa_work: oa_work = openalex_by_doi(doi)
         cands = oa_candidates(doi, oa_work)
+        side[p['id']] = {'oa': [u for s_, u in cands if not s_.endswith('error')]}
+        if doi.startswith('10.1016/'):
+            try: side[p['id']]['pii'] = (get(f'https://api.crossref.org/works/{doi}', params={'mailto': MAILTO}).json()['message'].get('alternative-id') or [None])[0]
+            except Exception: pass
+        SIDE.write_text(json.dumps(side))
         dest = PAPERS / f'{p["id"]}.pdf'
         got, src, tried = False, '', []
         for s, u in cands:
