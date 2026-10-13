@@ -116,6 +116,16 @@ class GPT(nn.Module):
         self.blocks = nn.Sequential(*[Block(cfg) for _ in range(cfg.n_layer)])
         self.ln_f = nn.LayerNorm(cfg.n_embd)
         self.head = nn.Linear(cfg.n_embd, cfg.vocab, bias=False)  # vector -> 8,192 logits
+        # start small (GPT-2's init): weights ~ N(0, 0.02), biases 0. PyTorch's
+        # default puts embeddings at N(0, 1), which makes the first logits huge.
+        self.apply(self._init)
+
+    @staticmethod
+    def _init(m):
+        if isinstance(m, (nn.Linear, nn.Embedding)):
+            nn.init.normal_(m.weight, mean=0.0, std=0.02)
+            if isinstance(m, nn.Linear) and m.bias is not None:
+                nn.init.zeros_(m.bias)
 
     def forward(self, idx):
         B, T = idx.shape
