@@ -4,7 +4,7 @@ import { chromium } from 'playwright';
 import fs from 'node:fs'; import path from 'node:path'; import os from 'node:os';
 
 const OUT = path.join(os.homedir(), 'Desktop/GAMI');
-const PAPERS = path.join(OUT, 'papers'), LOG = path.join(OUT, 'log.md'), MANIFEST = path.join(OUT, 'manifest.csv'), SHOTS = path.join(OUT, 'debug');
+const PAPERS = path.join(OUT, 'papers'), LOG = path.join(OUT, 'debug', 'attempts.md'), MANIFEST = path.join(OUT, 'manifest.csv'), SHOTS = path.join(OUT, 'debug');
 const PROXY = 'https://stanford.idm.oclc.org/login?url=';
 const args = process.argv.slice(2);
 const opt = (k) => { const i = args.indexOf(k); return i >= 0 ? args[i + 1] : null; };

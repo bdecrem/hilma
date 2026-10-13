@@ -10,7 +10,7 @@ import openpyxl, requests, ftfy
 XLSX = Path.home() / 'Documents/coding2025/hilma/misc/GAMI_Database_FINAL.xlsx'
 OUT = Path.home() / 'Desktop/GAMI'
 PAPERS = OUT / 'papers'
-LOG = OUT / 'log.md'
+LOG = OUT / 'debug' / 'attempts.md'
 MANIFEST = OUT / 'manifest.csv'
 MAILTO = 'amber@intheamber.com'
 UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15'
