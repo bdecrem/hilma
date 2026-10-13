@@ -69,7 +69,8 @@ async function getPaper(page, row) {
   await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
   await page.waitForTimeout(2000);
   let title = await page.title();
-  if (/just a moment|attention required|access denied|verify/i.test(title)) { for (let k = 0; k < 12 && /just a moment|verify/i.test(await page.title()); k++) await page.waitForTimeout(2500); await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {}); title = await page.title(); }
+  if (/just a moment|attention required|access denied|verify|robot/i.test(title)) { if (headed) { await page.bringToFront(); log(`  - bot check on ${new URL(page.url()).hostname}: waiting up to 3 min for a click in the Chrome window`); }
+    for (let k = 0; k < (headed ? 72 : 12) && /just a moment|verify|robot/i.test(await page.title()); k++) await page.waitForTimeout(2500); await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {}); title = await page.title(); }
   const meta = await page.evaluate(() => document.querySelector('meta[name="citation_pdf_url"]')?.content || null);
   const links = await page.evaluate(() => [...document.querySelectorAll('a[href]')].map(a => a.href));
   const cands = candidates(page.url(), row.doi, meta, links);
