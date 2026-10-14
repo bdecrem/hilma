@@ -2,7 +2,9 @@
 figures/loss.png and the samples at each checkpoint, so the model can be
 watched going from noise to words to sentences.
 
-Run:  .venv/bin/python 06-pretrain/report.py [path/to/log.jsonl]
+Run:  .venv/bin/python 06-pretrain/report.py [path/to/log.jsonl [figure.png]]
+The bigram and one-layer reference lines are TinyStories numbers, so they are
+drawn only for the default (TinyStories) log.
 """
 
 import json
@@ -15,7 +17,9 @@ import matplotlib.pyplot as plt
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
-LOG = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, "out", "pretrain", "log.jsonl")
+DEFAULT_LOG = os.path.join(ROOT, "out", "pretrain", "log.jsonl")
+LOG = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_LOG
+FIG = sys.argv[2] if len(sys.argv) > 2 else os.path.join(HERE, "figures", "loss.png")
 
 losses, samples = [], []
 with open(LOG) as f:
@@ -31,13 +35,14 @@ for rec in samples:
         print("  " + s)
     print()
 
-os.makedirs(os.path.join(HERE, "figures"), exist_ok=True)
+os.makedirs(os.path.dirname(FIG), exist_ok=True)
 steps = [r["step"] for r in losses]
 plt.figure(figsize=(7, 4))
 plt.plot(steps, [r["train"] for r in losses], label="train")
 plt.plot(steps, [r["val"] for r in losses], label="val")
-plt.axhline(4.19, ls="--", c="gray", lw=0.8, label="bigram (step 4)")
-plt.axhline(3.72, ls=":", c="gray", lw=0.8, label="one attention layer (step 5)")
+if os.path.abspath(LOG) == DEFAULT_LOG:
+    plt.axhline(4.19, ls="--", c="gray", lw=0.8, label="bigram (step 4)")
+    plt.axhline(3.72, ls=":", c="gray", lw=0.8, label="one attention layer (step 5)")
 plt.ylim(0, 6); plt.xlabel("step (64 x 256 tokens each)"); plt.ylabel("loss"); plt.legend(); plt.title("pretraining, 10 M parameters")
-plt.tight_layout(); plt.savefig(os.path.join(HERE, "figures", "loss.png"), dpi=150)
-print("wrote figures/loss.png")
+plt.tight_layout(); plt.savefig(FIG, dpi=150)
+print(f"wrote {FIG}")

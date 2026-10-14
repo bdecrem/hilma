@@ -1,4 +1,4 @@
-import { STARTED, STEPS } from './steps'
+import { STARTED, STEPS, counted } from './steps'
 
 function fmt(iso: string) {
   const [y, m, d] = iso.split('-').map(Number)
@@ -6,8 +6,8 @@ function fmt(iso: string) {
 }
 
 export default function SmallGptPage() {
-  const done = STEPS.filter((s) => s.status === 'done').length
-  const pct = Math.round((done / STEPS.length) * 100)
+  const done = counted(STEPS).filter((s) => s.status === 'done').length
+  const pct = Math.round((done / counted(STEPS).length) * 100)
 
   return (
     <main className="sg-page">
@@ -24,7 +24,7 @@ export default function SmallGptPage() {
 
       <div className="sg-progress">
         <span>
-          {done} of {STEPS.length} done
+          {done} of {counted(STEPS).length} done
         </span>
         <div className="sg-bar" aria-hidden>
           <span style={{ width: `${pct}%` }} />

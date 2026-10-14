@@ -1,5 +1,5 @@
 import { ImageResponse } from 'next/og'
-import { STEPS } from './steps'
+import { STEPS, counted } from './steps'
 
 export const runtime = 'edge'
 export const size = { width: 1200, height: 630 }
@@ -7,7 +7,7 @@ export const contentType = 'image/png'
 
 // The page's own look: warm paper, ink, one ultramarine rail with the fourteen steps on it.
 export default function OgImage() {
-  const done = STEPS.filter((s) => s.status === 'done').length
+  const done = counted(STEPS).filter((s) => s.status === 'done').length
   return new ImageResponse(
     (
       <div
@@ -55,7 +55,7 @@ export default function OgImage() {
             </div>
           ))}
           <div style={{ display: 'flex', marginLeft: 'auto', fontSize: 24, color: '#5a5261', whiteSpace: 'nowrap', flexShrink: 0 }}>
-            {done} of {STEPS.length} done
+            {done} of {counted(STEPS).length} done
           </div>
         </div>
       </div>

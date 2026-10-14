@@ -13,6 +13,7 @@ Status is one of: **not started · approved · building · done**.
 | 4 | The simplest language model (bigram) | Embeddings, logits, softmax, cross-entropy | done 2026-10-12 (loss 9.0 → 4.2) |
 | 5 | Attention and the Transformer block | How tokens look at each other | done 2026-10-12 (one block: 3.72 vs bigram 4.19) |
 | 6 | Pretraining the GPT | Random weights become a language model | done 2026-10-13 (10.1 M params, 3.1 h on the mini, loss 9.07 → 2.08) |
+| 6b | Pretraining on Usenet alone | Out with the kids, in with Usenet: 1981–1991 from archive.org, new tokenizer, same model | done 2026-10-14 (1.88 M posts, 497 M tokens, 7.8 h, loss 9.06 → 3.37) |
 | 7 | Looking at the weights | The embedding table before and after | not started |
 | 8 | The conversion bridge | Our model as a Hugging Face model | not started |
 | 9 | SFT | Pretraining again, on conversations, with a mask | not started |
