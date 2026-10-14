@@ -1,14 +1,14 @@
 """GAMI paper retrieval: resolve DOIs and fetch open-access PDFs.
 
-usage: uv run --with openpyxl --with requests --with ftfy python -I scripts/gami/resolve.py --start 0 --count 10
+usage: uv run --with openpyxl --with requests --with ftfy python -I apps/gami/fetch/resolve.py --start 0 --count 10
 Appends to ~/Desktop/GAMI/log.md and ~/Desktop/GAMI/manifest.csv, PDFs to ~/Desktop/GAMI/papers/<Article.ID>.pdf
 """
 import argparse, csv, difflib, html, json, os, re, sys, time
 from pathlib import Path
 import openpyxl, requests, ftfy
 
-XLSX = Path.home() / 'Documents/coding2025/hilma/misc/GAMI_Database_FINAL.xlsx'
-OUT = Path.home() / 'Desktop/GAMI'
+XLSX = Path(__file__).resolve().parent.parent / 'GAMI_Database_FINAL.xlsx'
+OUT = Path(os.environ.get('GAMI_DIR', Path.home() / 'Desktop/GAMI'))
 PAPERS = OUT / 'papers'
 LOG = OUT / 'debug' / 'attempts.md'
 MANIFEST = OUT / 'manifest.csv'

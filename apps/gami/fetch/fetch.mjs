@@ -1,9 +1,9 @@
 // GAMI step 2: fetch PDFs through headless Chromium on the Stanford network (IP-authenticated proxy).
-// usage: node scripts/gami/fetch.mjs [--ids a,b] [--limit N] [--headed]
+// usage: node apps/gami/fetch/fetch.mjs [--ids a,b] [--limit N] [--headed]
 import { chromium } from 'playwright';
 import fs from 'node:fs'; import path from 'node:path'; import os from 'node:os';
 
-const OUT = path.join(os.homedir(), 'Desktop/GAMI');
+const OUT = process.env.GAMI_DIR || path.join(os.homedir(), 'Desktop/GAMI');
 const PAPERS = path.join(OUT, 'papers'), LOG = path.join(OUT, 'debug', 'attempts.md'), MANIFEST = path.join(OUT, 'manifest.csv'), SHOTS = path.join(OUT, 'debug');
 const PROXY = 'https://stanford.idm.oclc.org/login?url=';
 const args = process.argv.slice(2);

@@ -2,14 +2,14 @@
 ~/Desktop/GAMI/papers.json  one record per paper, for the summary web page
 ~/Desktop/GAMI/papers.csv   same, as a table
 ~/Desktop/GAMI/log.md       one line per paper, readable
-usage: uv run --with openpyxl --with pypdf --with ftfy python -I scripts/gami/catalog.py
+usage: uv run --with openpyxl --with pypdf --with ftfy python -I apps/gami/fetch/catalog.py
 """
 import csv, json, os, re, time
 from pathlib import Path
 import openpyxl, pypdf, ftfy, logging
 logging.getLogger('pypdf').setLevel(logging.ERROR)
-OUT = Path.home() / 'Desktop/GAMI'
-XLSX = Path.home() / 'Documents/coding2025/hilma/misc/GAMI_Database_FINAL.xlsx'
+OUT = Path(os.environ.get('GAMI_DIR', Path.home() / 'Desktop/GAMI'))
+XLSX = Path(__file__).resolve().parent.parent / 'GAMI_Database_FINAL.xlsx'
 PUB = {'10.1016': 'Elsevier', '10.1007': 'Springer', '10.1080': 'Taylor & Francis', '10.1177': 'Sage', '10.3390': 'MDPI', '10.1002': 'Wiley', '10.1111': 'Wiley', '10.1088': 'IOP', '10.1017': 'Cambridge'}
 def fx(v): return ftfy.fix_text(str(v)).strip() if v is not None else ''
 def split(v): return [x.strip() for x in fx(v).split('|||') if x.strip() and x.strip() != 'n/a']

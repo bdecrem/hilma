@@ -1,10 +1,10 @@
 """Check each PDF's first two pages contain its title. Writes verified column into manifest.
-usage: uv run --with pypdf --with ftfy python -I scripts/gami/verify.py"""
+usage: uv run --with pypdf --with ftfy python -I apps/gami/fetch/verify.py"""
 import csv, os, re, difflib, logging
 from pathlib import Path
 import pypdf, ftfy
 logging.getLogger('pypdf').setLevel(logging.ERROR)
-OUT = Path.home() / 'Desktop/GAMI'
+OUT = Path(os.environ.get('GAMI_DIR', Path.home() / 'Desktop/GAMI'))
 norm = lambda s: re.sub(r'[^a-z0-9]+', '', ftfy.fix_text(s or '').lower())
 rows = list(csv.DictReader(open(OUT / 'manifest.csv')))
 bad = []
