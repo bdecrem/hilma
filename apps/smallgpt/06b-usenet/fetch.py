@@ -39,7 +39,7 @@ ITEMS = ["usenet-net", "usenet-mod", "usenet-fa", "usenet-news", "usenet-talk", 
 FIRST, LAST = 1981, 1991
 WORKERS = 6
 
-POST_START = re.compile(rb"^From \d+\r?\n$")
+POST_START = re.compile(rb"^From -?\d+\r?\n$")  # Google mbox ids can be negative
 YEAR_ARRIVAL = re.compile(rb"^X-Google-ArrivalTime: (\d{4})-")
 YEAR_DATE = re.compile(rb"^Date: .*?\b(19\d\d|20\d\d|\d\d)\b(?:\s+\d\d?:\d\d|\s*$)")
 
