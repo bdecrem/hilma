@@ -2,9 +2,9 @@
 
 The Global Adaptation Mapping Initiative database (`GAMI_Database_FINAL.xlsx`, 1,682 coded studies of human
 adaptation to climate change: region, sector, hazards, response type, summaries) plus the full text of as many
-of those studies as we could get. Started 2026-10-13. Next: one SQLite database (`gami.db`) with the coded fields,
-the extracted full text, full-text search and embedded chunks, so the corpus can be searched, summarized and
-queried, and a summary web page built from it.
+of those studies as we could get. Started 2026-10-13. Since 2026-10-14 it is all in one SQLite database,
+`~/GAMI/gami.db` on the mini: coded fields, full text, keyword search, and bucket sorting with Claude (`db/`,
+its README has the tables and examples). Next: a summary web page built from it.
 
 ## Where the data lives
 
@@ -14,6 +14,9 @@ queried, and a summary web page built from it.
 |---|---|
 | `papers/<Article.ID>.pdf` | the PDFs, named by the database's Article.ID; every one passed a title check |
 | `manifest.csv` | one row per paper: n, article_id, doi, status, source, file, note, title |
+| `gami.db` | the database (see `db/README.md`) |
+| `years.json` | publication year per DOI, from Crossref |
+| `.venv/`, `code/` | the Python env and a copy of `db/` that build the database |
 | `papers.json`, `papers.csv` | the catalog: database fields + DOI, publisher, status, PDF path, pages — for the web page |
 | `log.md` | one readable line per paper, with totals at the top |
 | `needs-you.md` | what is still missing and why |
