@@ -12,6 +12,8 @@ for hours, with the training loop everyone actually uses.
 
 Run:  nohup .venv/bin/python -u 06-pretrain/train.py > out/pretrain/run.log 2>&1 &
 Resume after an interruption with --resume (continues from the last checkpoint).
+Step 6b (Usenet only) runs the same file with --usenet: its data, tokenizer,
+prompts and output folder instead of the stories'.
 """
 
 import argparse
@@ -29,6 +31,7 @@ ROOT = os.path.dirname(HERE)
 sys.path.insert(0, os.path.join(ROOT, "05-attention"))
 sys.path.insert(0, os.path.join(ROOT, "02-tokenizer"))
 sys.path.insert(0, os.path.join(ROOT, "03-dataset"))
+import batches  # noqa: E402
 from batches import get_batch, tokens  # noqa: E402
 from bpe import Tokenizer  # noqa: E402
 from model import GPT, Config  # noqa: E402
@@ -45,6 +48,11 @@ SAMPLE_EVERY = 1000
 PROMPTS = [
     "Once upon a time, there was a little girl named",
     "Tim and Sue went to the park to",
+    "My Macintosh crashed again and I think the problem is",
+]
+USENET_PROMPTS = [
+    "Newsgroups: comp.sys.mac\nSubject: Mac Plus won't boot\n\n",
+    "Newsgroups: net.jokes\nSubject: Re: lightbulb jokes\n\n",
     "My Macintosh crashed again and I think the problem is",
 ]
 OUT = os.path.join(ROOT, "out", "pretrain")
@@ -93,11 +101,20 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--resume", action="store_true")
     ap.add_argument("--steps", type=int, default=0, help="override the step count (0 = EPOCHS over the data)")
+    ap.add_argument("--usenet", action="store_true", help="step 6b: data/usenet, 06b-usenet/tok8192.json, out/usenet")
+    ap.add_argument("--epochs", type=float, default=0, help="override EPOCHS")
     args = ap.parse_args()
+    if args.usenet:
+        batches.DATA = os.path.join(ROOT, "data", "usenet")
+        tok = Tokenizer.load(os.path.join(ROOT, "06b-usenet", "tok8192.json"))
+        PROMPTS = USENET_PROMPTS
+        OUT = os.path.join(ROOT, "out", "usenet")
+        CKPT = os.path.join(OUT, "ckpt.pt")
+    EPOCHS = args.epochs or EPOCHS
     os.makedirs(OUT, exist_ok=True)
 
     n_train = len(tokens("train"))
-    total = args.steps or EPOCHS * n_train // (BATCH * CFG.block)
+    total = args.steps or int(EPOCHS * n_train // (BATCH * CFG.block))
     torch.manual_seed(1337)
     model = GPT(CFG).to(device)
     model.head.weight = model.tok_emb.weight           # weight tying: one table for in and out
@@ -145,4 +162,4 @@ if __name__ == "__main__":
         step += 1
 
     torch.save({"model": model.state_dict(), "step": step, "cfg": CFG.__dict__}, os.path.join(OUT, "final.pt"))
-    print(f"done: {total:,} steps in {(time.time() - t0) / 3600:.1f} h; wrote out/pretrain/final.pt", flush=True)
+    print(f"done: {total:,} steps in {(time.time() - t0) / 3600:.1f} h; wrote {os.path.join(OUT, 'final.pt')}", flush=True)
