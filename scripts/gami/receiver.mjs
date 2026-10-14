@@ -1,8 +1,9 @@
 // Receives PDF bytes POSTed from a page in the user's Chrome and writes ~/Desktop/GAMI/papers/<id>.pdf
 // Also holds a work queue for the ScienceDirect pass: POST /queue [{id,pii,url}], GET /next -> {id,pii,url} | {}
 import http from 'node:http'; import fs from 'node:fs'; import path from 'node:path'; import os from 'node:os';
-const PAPERS = path.join(os.homedir(), 'Desktop/GAMI/papers');
-const TRIED = path.join(os.homedir(), 'Desktop/GAMI/debug/elsevier-tried.txt');
+const ROOT = process.env.GAMI_DIR || path.join(os.homedir(), 'Desktop/GAMI');
+const PAPERS = path.join(ROOT, 'papers');
+const TRIED = path.join(ROOT, 'debug/elsevier-tried.txt');
 const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', 'Access-Control-Allow-Headers': '*', 'Access-Control-Allow-Private-Network': 'true' };
 let queue = [], current = null;
 http.createServer((req, res) => {
@@ -16,6 +17,7 @@ http.createServer((req, res) => {
       current = queue.shift() || null;
       res.writeHead(200, { ...cors, 'Content-Type': 'application/json' }); return res.end(JSON.stringify(current ? { ...current, left: queue.length } : {}));
     }
+    if (process.env.GAMI_TOKEN && u.searchParams.get('k') !== process.env.GAMI_TOKEN) { res.writeHead(403, cors); return res.end('no'); }
     const id = u.searchParams.get('id');
     if (req.method !== 'POST' || !/^\d+$/.test(id || '')) { res.writeHead(400, cors); return res.end('bad'); }
     if (!body.subarray(0, 5).toString('latin1').startsWith('%PDF')) { res.writeHead(422, cors); return res.end('not pdf'); }
