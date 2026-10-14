@@ -74,7 +74,7 @@ async function getPaper(page, row) {
   const blocked = /just a moment|attention required|access denied|verify|robot|captcha/i.test(title);
   const meta = await page.evaluate(() => document.querySelector('meta[name="citation_pdf_url"]')?.content || null);
   const links = await page.evaluate(() => [...document.querySelectorAll('a[href]')].map(a => a.href));
-  const cands = candidates(page.url(), row.doi, meta, links);
+  const cands = blocked ? [] : candidates(page.url(), row.doi, meta, links); // a blocked publisher: skip straight to open copies
   tried.push(`landed on ${page.url().slice(0, 80)} (${resp?.status()}) "${title.slice(0, 50)}", ${cands.length} PDF links`);
   for (const [src, url0] of cands.slice(0, 3)) {
     const o = await openPdf(page.context(), url0);
