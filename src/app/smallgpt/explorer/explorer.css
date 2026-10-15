@@ -1,0 +1,205 @@
+/* The embedding explorer, on the smallgpt notebook paper (tokens come from .sg in the layout). */
+
+.sgx {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 28px 16px 64px;
+}
+.sgx-back {
+  font-family: var(--font-mono), monospace;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: var(--blue);
+  text-decoration: none;
+}
+.sgx h1 {
+  font-size: clamp(30px, 5vw, 44px);
+  margin: 10px 0 8px;
+}
+.sgx-lead {
+  color: var(--ink-2);
+  margin: 0 0 18px;
+  max-width: 44em;
+}
+
+.sgx-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.sgx-search {
+  flex: 1 1 260px;
+  max-width: 420px;
+  font: inherit;
+  font-size: 17px;
+  padding: 10px 14px;
+  border: 1.5px solid var(--ink);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+}
+.sgx-toggle {
+  display: inline-flex;
+  border: 1.5px solid var(--ink);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.sgx-toggle button {
+  font-family: var(--font-mono), monospace;
+  font-size: 14px;
+  padding: 9px 14px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+.sgx-toggle button.on {
+  background: var(--ink);
+  color: var(--paper);
+}
+.sgx-check {
+  font-size: 15px;
+  color: var(--ink-2);
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.sgx-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 20px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .sgx-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.sgx-map {
+  position: relative;
+}
+.sgx-plot {
+  width: 100%;
+  height: min(76dvh, 760px);
+  min-height: 420px;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fbf6ec;
+}
+.sgx-loading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  color: var(--ink-3);
+  font-family: var(--font-mono), monospace;
+  font-size: 14px;
+  z-index: 1;
+  pointer-events: none;
+}
+.sgx-hint {
+  font-size: 14px;
+  color: var(--ink-3);
+  margin: 8px 0 0;
+}
+
+.sgx-side section {
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--yellow);
+  border-radius: 6px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+}
+.sgx-side h2 {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  margin: 0 0 8px;
+}
+.sgx-sel {
+  margin: 0 0 8px;
+  font-size: 15px;
+  color: var(--ink-2);
+}
+.sgx-sel b {
+  font-family: var(--font-mono), monospace;
+  color: var(--red);
+  font-size: 17px;
+}
+.sgx-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  columns: 2;
+  column-gap: 14px;
+}
+.sgx-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  break-inside: avoid;
+  font-size: 15px;
+  line-height: 1.7;
+}
+.sgx-list button,
+.sgx-chip {
+  font-family: var(--font-mono), monospace;
+  font-size: 14px;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sgx-list button:hover,
+.sgx-chip:hover {
+  color: var(--blue);
+  text-decoration: underline;
+}
+.sgx-list span {
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.sgx-chip {
+  margin-right: 10px;
+}
+.sgx-note {
+  font-size: 14px;
+  color: var(--ink-2);
+  margin: 8px 0 0;
+}
+.sgx-arith {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.sgx-arith input {
+  min-width: 0;
+  flex: 1;
+  font-family: var(--font-mono), monospace;
+  font-size: 15px;
+  padding: 7px 8px;
+  border: 1.5px solid var(--ink);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--ink);
+}
+.sgx-arith span {
+  font-weight: 700;
+}

@@ -64,3 +64,17 @@ On the map the random table is one even cloud with the labels scattered
 anywhere. After training the days are one dot, the months another, the
 numbers another; the computers sit together, with the places and the family
 words next to them; he and she are on top of each other.
+
+## The explorer
+
+`export.py` writes the table and two UMAP maps (2-D and 3-D, all 8,192
+tokens) to `public/smallgpt/explorer/`, with 24 clusters found by k-means on
+the rows scaled to length 1. The page at ola.cx/smallgpt/explorer
+(`src/app/smallgpt/explorer/`) draws the maps with Plotly, and computes the
+20 nearest neighbours and the word arithmetic in the browser over all 320
+numbers. Rerun `export.py` if the model changes.
+
+The clusters it finds are mostly grammar, not topics: verbs in -ing, words
+in -ed, adjectives (old, high, bad, great), sentence openers (If, This, You),
+newsgroup pieces (.arts, .unix, .mac). Grammar is what predicts the next
+token most of the time.

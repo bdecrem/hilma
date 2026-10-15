@@ -220,6 +220,13 @@
   color: var(--red);
   font-weight: 700;
 }
+.sg-link {
+  display: inline-block;
+  margin-top: 10px;
+  font-family: var(--font-mono), monospace;
+  font-size: 14px;
+  color: var(--blue);
+}
 .sg-saw {
   color: var(--ink-2);
   font-size: 16px;
