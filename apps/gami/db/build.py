@@ -1,5 +1,5 @@
 """Build gami.db from the spreadsheet, the manifest and the PDFs. Safe to rerun: it rebuilds the coded
-fields and the text, and keeps every classification run (runs, labels) already in the file.
+fields and the text into a new file, carries over every classification run (runs, labels), then swaps it in.
 usage (on the mini): ~/GAMI/.venv/bin/python build.py      GAMI_DIR defaults to ~/GAMI
 """
 import csv, json, os, re, sqlite3, sys, time
@@ -21,6 +21,7 @@ TAGS = {'region': '1.1.Geography', 'country': '1.1.1.Geography-Country', 'sector
         'equity_planning': '2.2.1.Equity-Planning', 'equity_targeting': '2.3.1.Equity-Targeting',
         'response_type': '3.1.1.ResponseType', 'hazard': '3.3.1.Hazards', 'exposure': '3.4.1.Exposure.vulnerability'}
 EMPTY = {'', 'n/a', 'none', 'na'}
+FIX = {'Health Health, well-being & communities': 'Health, well-being & communities'}  # typos in the source sheet
 
 def colname(h):
     if h in RENAME: return RENAME[h]
@@ -28,7 +29,7 @@ def colname(h):
     return re.sub(r'_+', '_', re.sub(r'[^a-z0-9]+', '_', re.sub(r'^[\d.]+', '', h).lower())).strip('_')
 
 def fx(v): return ftfy.fix_text(str(v)).strip() if v is not None else ''
-def parts(v): return [p.strip() for p in fx(v).split('|||') if p.strip() and p.strip().lower() not in EMPTY]
+def parts(v): return [FIX.get(p.strip(), p.strip()) for p in fx(v).split('|||') if p.strip() and p.strip().lower() not in EMPTY]
 def cell(v):
     if isinstance(v, bool): return int(v)
     if isinstance(v, (int, float)): return v
@@ -45,18 +46,27 @@ sheet = {str(r[0]).strip(): r for r in rows[1:] if r[0] is not None}
 man = {m['article_id']: m for m in csv.DictReader(open(GAMI / 'manifest.csv'))}
 years = json.loads((GAMI / 'years.json').read_text()) if (GAMI / 'years.json').exists() else {}  # from years.py
 
-db = sqlite3.connect(DB)
+# build into a new file and swap it in at the end, so readers (Almanac) never see a half-built database
+TMP = GAMI / 'gami.build.db'
+if TMP.exists(): TMP.unlink()
+db = sqlite3.connect(TMP)
 db.executescript('''
-DROP TABLE IF EXISTS papers; DROP TABLE IF EXISTS tags; DROP TABLE IF EXISTS papers_fts; DROP TABLE IF EXISTS pages_fts;
-CREATE TABLE IF NOT EXISTS runs (run TEXT PRIMARY KEY, created TEXT, model TEXT, source TEXT, question TEXT, buckets TEXT);
-CREATE TABLE IF NOT EXISTS labels (run TEXT, paper_id TEXT, label TEXT, confidence TEXT, reason TEXT, PRIMARY KEY (run, paper_id));
+CREATE TABLE runs (run TEXT PRIMARY KEY, created TEXT, model TEXT, source TEXT, question TEXT, buckets TEXT);
+CREATE TABLE labels (run TEXT, paper_id TEXT, label TEXT, confidence TEXT, reason TEXT, PRIMARY KEY (run, paper_id));
 ''')
+if DB.exists():  # keep classification runs across rebuilds
+    db.execute('ATTACH ? AS old', (str(DB),))
+    for t in ('runs', 'labels'):
+        if db.execute("select 1 from old.sqlite_master where name=?", (t,)).fetchone(): db.execute(f'INSERT INTO {t} SELECT * FROM old.{t}')
+    db.commit(); db.execute('DETACH old')
 meta = ['n INTEGER', 'year INTEGER', 'doi TEXT', 'status TEXT', 'pdf TEXT', 'pages INTEGER', 'words INTEGER', 'body TEXT']
 coded = [f'"{c}"' for c in cols if c != 'id']
 db.execute(f'CREATE TABLE papers (id TEXT PRIMARY KEY, {", ".join(meta)}, {", ".join(c + " " for c in coded)})')
+db.execute('CREATE TABLE pages (paper_id TEXT, page INTEGER, text TEXT, PRIMARY KEY (paper_id, page))')
 db.execute('CREATE TABLE tags (paper_id TEXT, field TEXT, value TEXT)')
-db.execute("CREATE VIRTUAL TABLE papers_fts USING fts5(id UNINDEXED, title, summary, body, tokenize='porter unicode61 remove_diacritics 2')")
-db.execute("CREATE VIRTUAL TABLE pages_fts USING fts5(paper_id UNINDEXED, page UNINDEXED, text, tokenize='porter unicode61 remove_diacritics 2')")
+# the full-text indexes read their text from papers and pages (external content), so the text is stored once
+db.execute("CREATE VIRTUAL TABLE papers_fts USING fts5(id UNINDEXED, title, summary, body, content='papers', tokenize='porter unicode61 remove_diacritics 2')")
+db.execute("CREATE VIRTUAL TABLE pages_fts USING fts5(paper_id UNINDEXED, page UNINDEXED, text, content='pages', tokenize='porter unicode61 remove_diacritics 2')")
 
 t0, got = time.time(), 0
 for i, (pid, r) in enumerate(sheet.items()):
@@ -80,15 +90,15 @@ for i, (pid, r) in enumerate(sheet.items()):
         for v in dict.fromkeys(parts(r[hdr.index(h)])):
             if field == 'country' and (len(v) > 40 or v[0] in '"“'): continue  # a quote, not a country
             db.execute('INSERT INTO tags VALUES (?,?,?)', (pid, field, v))
-    db.execute('INSERT INTO papers_fts VALUES (?,?,?,?)', (pid, rec['title'], rec.get('summary') or '', body))
     for k, t in enumerate(pages, 1):
-        if t.strip(): db.execute('INSERT INTO pages_fts VALUES (?,?,?)', (pid, k, t))
+        if t.strip(): db.execute('INSERT INTO pages VALUES (?,?,?)', (pid, k, t))
     if i % 100 == 99: print(f'{i + 1} papers, {time.time() - t0:.0f}s', flush=True)
 db.executescript('''
 CREATE INDEX tags_fv ON tags (field, value); CREATE INDEX tags_p ON tags (paper_id);
+INSERT INTO papers_fts(papers_fts) VALUES ('rebuild'); INSERT INTO pages_fts(pages_fts) VALUES ('rebuild');
 INSERT INTO papers_fts(papers_fts) VALUES ('optimize'); INSERT INTO pages_fts(pages_fts) VALUES ('optimize');
 ''')
 db.commit()
 n, txt, thin = db.execute("select count(*), count(body), sum(words < 1000) from papers").fetchone()
+db.execute('VACUUM'); db.close(); os.replace(TMP, DB)
 print(f'{DB}: {n} papers, {txt} with full text ({got} PDFs), {thin} with under 1,000 words of text, {time.time() - t0:.0f}s')
-db.execute('VACUUM')
