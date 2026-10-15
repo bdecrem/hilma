@@ -52,6 +52,17 @@ export default function SmallGptPage() {
                   <>
                     <h3>In Bart’s words</h3>
                     <p>{s.summary}</p>
+                    {s.examples && (
+                      <ol className="sg-examples">
+                        {s.examples.map((e) => (
+                          <li key={e.prompt}>
+                            <span className="sg-prompt">{e.prompt}</span>
+                            <span className="sg-pipe"> | </span>
+                            {e.out}
+                          </li>
+                        ))}
+                      </ol>
+                    )}
                   </>
                 )}
                 {s.saw && (

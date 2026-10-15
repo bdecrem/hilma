@@ -201,6 +201,25 @@
 .sg-note p + h3 {
   margin-top: 14px;
 }
+.sg-examples {
+  margin: 10px 0 14px;
+  padding-left: 22px;
+  list-style: decimal;
+}
+.sg-examples li {
+  margin: 0 0 8px;
+}
+.sg-prompt {
+  font-family: var(--font-mono), monospace;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+.sg-pipe {
+  white-space: pre;
+  font-family: var(--font-mono), monospace;
+  color: var(--red);
+  font-weight: 700;
+}
 .sg-saw {
   color: var(--ink-2);
   font-size: 16px;

@@ -20,6 +20,10 @@ Brief for Claude Code" (2026-10-12).
   where PLAN.md says a library (TRL) is the point.
 - Every step ends with something Bart can see: a number going down, a plot,
   text coming out of the model. That is the proof the step worked.
+- `probe.py` runs the same five prompts against any checkpoint (default: the
+  Usenet base model of step 6b) and writes `out/probe/<name>.txt`. Run it
+  after every step from SFT on, so each step's model can be read beside the
+  base model's lines.
 - Data, checkpoints and virtual environments stay out of git (`data/`,
   `out/`, `.venv/` are ignored). Each README has the command that
   regenerates them.

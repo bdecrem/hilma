@@ -10,6 +10,8 @@ export type Step = {
   doneOn?: string
   // What Bart said the step was, in his words, once he had done it.
   summary?: string
+  // Prompts and what the model wrote after them, shown as prompt | continuation.
+  examples?: { prompt: string; out: string }[]
   // What we saw when it ran.
   saw?: string
 }
@@ -86,6 +88,7 @@ export const STEPS: Step[] = [
     idea: 'Random weights become a language model',
     status: 'done',
     doneOn: '2026-10-13',
+    summary: 'We did a training run with children’s stories plus Usenet banter from 1985, but I didn’t like the output. We have such a small model, and it’s made of two completely different things.',
     saw: 'The real model: 6 attention layers, 8 heads each, vectors of 320, 10.1 million parameters, trained on the Mac mini for 3.1 hours — 12,099 rounds of 64 snippets × 256 tokens, two passes over the 99 M training tokens. The loss went 9.07 (random) → 4.9 at round 200 → 3.1 at 1,000 → 2.3 at 6,000 → 2.08 at the end, past the bigram’s 4.19 and the one-layer model’s 3.72 by round 400. Train and val stayed together the whole way: no memorizing. The samples tell the story. Round 0: “named|econd.) ass pear pur programmers evening forget col crawled”. Round 1,000: “named| Amy. Amy liked to draw. She would make painted inside the fireworks now.” Round 2,000: “named| Mia. She had a cat named Max. Mia and Max liked to play together. One day, Mia and Max were playing in the park.” Round 12,099: “Tim and Sue went to the park to| play. They saw a big slide and wanted to slide. Tim said, “Let’s race to the point at the right time!” Sue said, “Yes, let’s go!”” The Usenet quarter of the corpus shows up when the prompt is a Mac: “My Macintosh crashed again and I think the problem is| that no one wants to do the bug. The bug contains bad several manuals. It has no idea how to do it like RFS disk so it can’t fit in AFS” — the words of 1985, not yet the sentences. This is the base model every later step starts from (out/pretrain/final.pt, 53 MB).',
   },
   {
@@ -94,6 +97,14 @@ export const STEPS: Step[] = [
     idea: 'Out with the kids, in with Usenet',
     status: 'done',
     doneOn: '2026-10-14',
+    summary: 'So I decided to try something different: train only on Usenet messages. We pulled in 1.88 million old Usenet posts, 1.7 GB of text, 500 million tokens, and that’s our training corpus. We had to make a new tokenizer and start a new model from random numbers, and then ran the training. During the training each chunk of text was seen once (one epoch), and every chunk went through the model’s 6 attention layers. We ended up with a model of 10.1 million parameters. The biggest matrix is the embeddings table, 2.6 million parameters (8,192 tokens × 320 values). The other 7.4 million are almost all in the 6 layers, 1.23 million each: the QKV machinery and the feed-forward part, which takes two-thirds of each layer. So now we have our first version of the model that does next-token prediction based on attention, and it produces sentences such as:',
+    examples: [
+      { prompt: 'Newsgroups: comp.sys.mac / Subject: Mac Plus won’t boot', out: 'Anyone know if the Mac Plus will work? I want a sort of mod or a Mac Mac cd but I haven’t been able to find a replacement for Mac Plus.' },
+      { prompt: 'Newsgroups: misc.forsale / Subject: FOR SALE: Apple IIe', out: 'FOR SALE : 1+R MAC SE=65Mbytes Macintosh II (Amiga) - Mac II plus, Apple // with 256K ROM 8Mb SIMMs' },
+      { prompt: 'I just got back from the computer store and', out: 'bought a pretty good benchmark it too! If there is anyone interested in this topic mail directly to me' },
+      { prompt: 'Does anyone know how to', out: 'send something?? Thanks, Joan Rosenstein “Why don’t I have a copy?”' },
+      { prompt: 'Hey guys I am so upset at the election. President', out: 'Reagan is commiting his X racersig, chanting who wants to do a Racersig.' },
+    ],
     saw: 'Kids out, Usenet in. Every 1981–1991 post archive.org still has: 3,573 newsgroups downloaded and sifted in 41 minutes, 2.49 million posts. Cleanup took out quoted replies, signatures, leaked headers, old notesfile lines, code listings, binaries, crossposts and reposts, and kept 1.88 million posts (1.7 GB of text), each starting with its newsgroup and subject. A new tokenizer trained on Usenet alone makes Macintosh, unix, modem, kernel, VAX and baud one token each; Lily now takes two and king takes two (k|ing). 497 million tokens, five times step 6. The same 10.1 M model, one pass, 30,329 rounds, 7.8 hours on the mini. Loss 9.06 → 4.6 at round 1,000 → 3.6 at 10,000 → 3.37 at the end, train and val together all the way. Usenet is much harder to predict than children’s stories, so 3.37 here is not worse than step 6’s 2.08 — it is a different test. Round 3,000: “My Macintosh crashed again and I think the problem is| that my timing specific ware quite strictly. :-)” and then it ends the post and starts a new one in comp.sys.apple. The finished model: “Newsgroups: comp.sys.mac / Subject: Mac Plus won’t boot / Anyone know if the Mac Plus will work? I want a sort of mod or a Mac Mac cd but I haven’t been able to find a replacement for Mac Plus.” It knows each group’s voice — Star Trek: “Lots of spoilers for ST 4”; comp.ai: “What do students think the good hardware house is”; net.politics drifts to “Great Wars and Israel”. It writes like 1985, a sentence at a time, but it doesn’t yet hold a thought from one sentence to the next.',
   },
   { n: 7, name: 'Looking at the weights', idea: 'The embedding table before and after', status: 'next' },
