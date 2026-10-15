@@ -117,9 +117,9 @@ def main():
     model = model.to(device).eval()
 
     sums = torch.zeros(7, len(words), 320, device=device)
-    seen = torch.zeros(len(words), dtype=torch.long)
+    seen = [0] * len(words)                              # a plain list: indexing a tensor one word at a time is far too slow
     random.Random(0).shuffle(posts)
-    batch, n_posts = [], 0
+    batch, n_posts, n_batches, full = [], 0, 0, 0
     with Pool(initializer=init, initargs=(index,)) as pool:
         for ids, hits in pool.imap(encode, posts, chunksize=256):
             n_posts += 1
@@ -128,13 +128,14 @@ def main():
                 continue
             for w, _ in hits:
                 seen[w] += 1                             # counted now, so a batch can't overshoot by much
+                full += seen[w] == SIGHTINGS
             batch.append((ids, hits))
             if len(batch) < BATCH:
                 continue
             run(model, batch, sums, device)
             batch = []
-            full = int((seen >= SIGHTINGS).sum())
-            if n_posts % 20_000 < BATCH:
+            n_batches += 1
+            if n_batches % 200 == 0:
                 print(f"  {n_posts:,} posts, {full:,} / {len(words):,} words have {SIGHTINGS} sightings "
                       f"({time.time() - t0:.0f} s)", flush=True)
             if full == len(words):
@@ -142,6 +143,7 @@ def main():
         if batch:
             run(model, batch, sums, device)
 
+    seen = torch.tensor(seen)
     means = (sums.cpu() / seen.clamp(min=1)[None, :, None]).half().numpy()
     np.savez(os.path.join(OUT, "words.npz"), words=np.array(words), counts=np.array([counts[w] for w in words]),
              seen=seen.numpy(), means=means)
