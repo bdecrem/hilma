@@ -2,5 +2,6 @@ torch
 numpy
 matplotlib
 scikit-learn
+umap-learn
 graphviz
 regex
