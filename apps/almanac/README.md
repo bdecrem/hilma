@@ -6,8 +6,8 @@ as Excel/CSV, documents, web pages, coding-run results). Background on the corpu
 
 - **Live** (installed 2026-10-14): https://almanac.tunn3l.sh/almanac/ from anywhere; http://171.66.240.175:3920/almanac/ on
   the Stanford/CASBS network (Stanford's border blocks it from outside); http://100.95.51.98:3920/almanac/ on Tailscale;
-  http://localhost:3920/almanac/ on the mini. Two accounts, Frances and
-  Bart, each with its own passcode, set in `~/.almanac.env` on the mini as `ALMANAC_USERS="Frances:…,Bart:…"` (the
+  http://localhost:3920/almanac/ on the mini. Three accounts, Frances,
+  Bart and Kevin (added 2026-10-15), each with its own passcode, set in `~/.almanac.env` on the mini as `ALMANAC_USERS="Frances:…,Bart:…,Kevin:…"` (the
   name is matched without regard to case; add an account by adding a pair and restarting). Everyone sees every
   conversation and artifact; a conversation records who started it.
 - **The agent** is Claude Code through the Agent SDK, logged in with Bart's Max plan (`CLAUDE_CODE_OAUTH_TOKEN`, the
