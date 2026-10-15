@@ -6,23 +6,30 @@ import ExcelJS from 'exceljs'
 import * as vega from 'vega'
 import { compile } from 'vega-lite'
 import sharp from 'sharp'
+import { fileURLToPath } from 'node:url'
 import { ARTIFACTS } from './config.mjs'
+
+// Chart PNGs are drawn by librsvg through pango, which on macOS asks CoreText for fonts and so never sees ours.
+// Point it at fontconfig and ../fonts (CMU Serif, Departure Mono) before the first chart is drawn.
+process.env.PANGOCAIRO_BACKEND ??= 'fc'
+process.env.FONTCONFIG_FILE ??= fileURLToPath(new URL('../fonts/fonts.conf', import.meta.url))
 import * as store from './store.mjs'
 
-// the almanac look for charts: paper, ink, earthy series colours
+// the almanac look for charts: white page, Computer Modern, ballpoint blue first, red pen second
+// (the PNG is rasterized with the TTFs in ../fonts, found through fonts/fonts.conf)
 export const CHART_THEME = {
-  background: '#fffdf8',
-  font: 'Instrument Sans, Helvetica, Arial, sans-serif',
+  background: '#ffffff',
+  font: 'CMU Serif, Latin Modern Roman, Georgia, serif',
   padding: 12,
-  title: { font: 'Fraunces, Georgia, serif', fontSize: 17, fontWeight: 600, anchor: 'start', color: '#1d1a16', subtitleColor: '#6b6157', offset: 12 },
-  axis: { labelColor: '#4a4239', titleColor: '#4a4239', gridColor: '#ece4d4', domainColor: '#9a8f80', tickColor: '#9a8f80',
-    labelFontSize: 11, titleFontSize: 12, titleFontWeight: 500, labelLimit: 260 },
-  legend: { labelColor: '#4a4239', titleColor: '#4a4239', labelFontSize: 11, titleFontSize: 12, titleFontWeight: 500, labelLimit: 260 },
-  header: { labelColor: '#4a4239', titleColor: '#4a4239', labelFontSize: 12 },
+  title: { font: 'CMU Serif, Georgia, serif', fontSize: 18, fontWeight: 'bold', anchor: 'start', color: '#15161a', subtitleColor: '#44464f', subtitleFontSize: 13, offset: 12 },
+  axis: { labelColor: '#44464f', titleColor: '#15161a', gridColor: '#ececf0', domainColor: '#15161a', tickColor: '#15161a',
+    labelFontSize: 12, titleFontSize: 13, titleFontWeight: 'normal', labelLimit: 260 },
+  legend: { labelColor: '#44464f', titleColor: '#15161a', labelFontSize: 12, titleFontSize: 13, titleFontWeight: 'normal', labelLimit: 260 },
+  header: { labelColor: '#15161a', titleColor: '#15161a', labelFontSize: 13 },
   view: { stroke: 'transparent' },
-  range: { category: ['#b8461b', '#2c4a7a', '#d29b2a', '#5b7a2e', '#7a3b69', '#5f6b73', '#c98a6b', '#6f97b8', '#9a8f3a', '#3a3530'] },
-  mark: { color: '#b8461b' },
-  bar: { color: '#b8461b' }, line: { color: '#b8461b', strokeWidth: 2 }, point: { color: '#b8461b' }, area: { color: '#b8461b' },
+  range: { category: ['#1f3fd1', '#e0362a', '#d9a300', '#1d8348', '#7b3fc4', '#15161a', '#8ea0f0', '#f2978d', '#85878f', '#9cc06a'] },
+  mark: { color: '#1f3fd1' },
+  bar: { color: '#1f3fd1' }, line: { color: '#1f3fd1', strokeWidth: 2 }, point: { color: '#1f3fd1' }, area: { color: '#1f3fd1' },
 }
 
 const dir = id => path.join(ARTIFACTS, id)
@@ -116,9 +123,9 @@ export async function saveChart({ chatId, author, title, description, spec, rows
 }
 
 const PAGE_BASE = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<style>body{font:17px/1.6 Georgia,'Source Serif 4',serif;color:#1d1a16;background:#fffdf8;max-width:760px;margin:40px auto;padding:0 20px}
-h1,h2,h3{font-family:Georgia,serif;line-height:1.2}table{border-collapse:collapse;font:14px/1.4 -apple-system,Helvetica,sans-serif}
-td,th{border-bottom:1px solid #e5dccb;padding:6px 10px;text-align:left;vertical-align:top}a{color:#2c4a7a}</style></head><body>`
+<style>body{font:18px/1.6 'CMU Serif','Latin Modern Roman',Georgia,serif;color:#15161a;background:#fff;max-width:760px;margin:40px auto;padding:0 20px}
+h1,h2,h3{font-weight:700;line-height:1.2}table{border-collapse:collapse;font:15px/1.4 'CMU Serif',Georgia,serif;border-top:1.5px solid #15161a;border-bottom:1.5px solid #15161a}
+th{border-bottom:1px solid #15161a;font-weight:400}td,th{padding:5px 14px 5px 0;text-align:left;vertical-align:top}a{color:#1f3fd1}</style></head><body>`
 
 export async function savePage({ chatId, author, title, description, html }) {
   if (!/<html[\s>]/i.test(html)) html = PAGE_BASE + html + '</body></html>'

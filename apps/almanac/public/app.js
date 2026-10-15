@@ -8,6 +8,11 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': 
 const fmt = n => Number(n || 0).toLocaleString('en-US')
 const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e }
 const KIND = { chart: 'Chart', table: 'Table', coding: 'Coding run', page: 'Page', document: 'Document' }
+// the mark: a pixel sun over a pixel wave (same drawing as the favicon in index.html)
+const ICON = `<svg class="pix" viewBox="0 0 12 12" shape-rendering="crispEdges" aria-hidden="true"><g fill="#e0362a"><rect x="4" y="2" width="4" height="1"/><rect x="3" y="3" width="6" height="4"/><rect x="4" y="7" width="4" height="1"/></g><g fill="#1f3fd1"><rect x="1" y="9" width="2" height="1"/><rect x="5" y="9" width="2" height="1"/><rect x="9" y="9" width="2" height="1"/><rect x="0" y="10" width="1" height="1"/><rect x="3" y="10" width="2" height="1"/><rect x="7" y="10" width="2" height="1"/><rect x="11" y="10" width="1" height="1"/></g></svg>`
+// \today, as a title page prints it
+const today = () => new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+const titlebar = (label, open) => `<div class="titlebar"><span class="box"></span><span class="wt">${esc(label)}</span>${open ? `<span class="open">${esc(open)}</span>` : ''}</div>`
 
 function when(iso) {
   if (!iso) return ''
@@ -53,7 +58,7 @@ function submitOnEnter(ta, form) {
 
 // ---------- shell + routing ----------
 function shell(active, inner) {
-  return `<header class="top"><a class="wordmark" href="#/"><span class="wm-a">Adaptation </span><em>Almanac</em></a>
+  return `<header class="top"><a class="wordmark" href="#/">${ICON}<span><span class="wm-a">Adaptation </span>Almanac</span></a>
   <nav><a href="#/" class="${active === 'home' ? 'on' : ''}">Ask</a><a href="#/artifacts" class="${active === 'artifacts' ? 'on' : ''}">Artifacts</a>
   <span class="who">${esc(state.me)}</span><button data-act="logout">Sign out</button></nav></header>${inner}`
 }
@@ -84,13 +89,14 @@ function renderSignin() {
   let name = ''
   try { name = localStorage.getItem('almanac:name') || '' } catch {}
   app.innerHTML = `<div class="signin"><form class="card">
-    <div class="kicker">The GAMI corpus</div>
-    <h1>Adaptation <em>Almanac</em></h1>
-    <p>A research assistant over 1,682 coded studies of how people adapt to climate change.</p>
-    <label class="field"><span>Your name</span><input name="name" autocomplete="given-name" required value="${esc(name)}"></label>
-    <label class="field"><span>Passcode</span><input name="passcode" type="password" autocomplete="current-password" required></label>
+    ${ICON.replace('class="pix"', 'class="pix icon"')}
+    <h1>Adaptation Almanac</h1>
+    <p class="byline">Frances Moore</p>
+    <p class="date">${today()}</p>
+    <label class="field"><span class="label">Name</span><input name="name" autocomplete="username" required value="${esc(name)}"></label>
+    <label class="field"><span class="label">Passcode</span><input name="passcode" type="password" autocomplete="current-password" required></label>
     <div class="err" role="alert"></div>
-    <button class="btn" type="submit">Open the almanac</button></form></div>`
+    <div class="go"><button class="btn default" type="submit">Open</button></div></form></div>`
   const form = $('form', app)
   ;(name ? form.passcode : form.name).focus()
   form.addEventListener('submit', async e => {
@@ -118,17 +124,21 @@ async function startChat(text) {
 }
 function renderHome() {
   app.innerHTML = shell('home', `<main class="page">
-    <section class="hero">
-      <div class="kicker">The Global Adaptation Mapping Initiative corpus</div>
-      <h1>Adaptation <em>Almanac</em></h1>
-      <p class="lede">Ask questions across every study the initiative coded, read the full texts, and keep what you find as charts, tables and documents.</p>
-      <form class="askbox"><textarea rows="2" placeholder="Ask the almanac…" aria-label="Your question"></textarea><button class="btn" type="submit">Ask</button></form>
-      <ul class="examples">${EXAMPLES.map(x => `<li><button type="button">${esc(x)}</button></li>`).join('')}</ul>
+    <section class="titlepage">
+      <h1>Adaptation Almanac</h1>
+      <p class="byline"><span>Frances Moore<sup>*</sup></span></p>
+      <p class="date">${today()}</p>
+      <div class="abstract"><h2>Abstract</h2><p>An assistant that has read the 1,682 studies of climate adaptation coded by the Global Adaptation Mapping Initiative. Ask it a question: it searches the coded fields and the full texts, quotes the page it read, and keeps what it finds as charts, tables and documents.</p></div>
+      <div class="ask">
+        <form class="askbox"><textarea rows="2" placeholder="Ask the almanac…" aria-label="Your question"></textarea><button class="btn default" type="submit">Ask</button></form>
+        <div class="tries"><span class="label">Or start from one of these</span><ul class="examples">${EXAMPLES.map(x => `<li><button type="button"><span>${esc(x)}</span></button></li>`).join('')}</ul></div>
+      </div>
+      <div class="footnotes"><p><sup>*</sup>University of California, Davis.</p></div>
     </section>
     <section class="cols">
-      <div><h2>Conversations</h2><ul class="list" id="h-chats"><li class="empty">Loading…</li></ul></div>
-      <div><h2>Recent artifacts</h2><ul class="list" id="h-arts"><li class="empty">Loading…</li></ul></div>
-      <div><h2>The corpus</h2><div id="h-corpus" class="muted">Loading…</div></div>
+      <div><h2 class="sec"><span class="n">1</span>Conversations</h2><ul class="list" id="h-chats"><li class="empty">Loading…</li></ul></div>
+      <div><h2 class="sec"><span class="n">2</span>Artifacts</h2><ul class="list" id="h-arts"><li class="empty">Loading…</li></ul></div>
+      <div><h2 class="sec"><span class="n">3</span>The corpus</h2><div id="h-corpus" class="muted">Loading…</div></div>
     </section>
     <p class="foot">Built on the GAMI database (Berrang-Ford et al. 2021, <i>Nature Climate Change</i>): studies of human adaptation to climate change, coded by the Global Adaptation Mapping Initiative, with full texts fetched through Stanford's library. Answers come from Claude reading the corpus. Every citation opens the PDF at its page.</p>
   </main>`)
@@ -157,23 +167,24 @@ function renderHome() {
 function alertInline(after, msg) {
   const p = el('p', 'note-err', esc(msg)); after.after(p); setTimeout(() => p.remove(), 6000)
 }
-function bars(title, rows, total) {
+function bars(n, title, rows) {
   const max = Math.max(...rows.map(r => r.n), 1)
-  return `<div class="bars"><h3>${esc(title)}</h3>${rows.map(r => `<div class="bar"><span class="lab" style="--w:${(100 * r.n / max).toFixed(1)}%" title="${esc(r.value)}">${esc(r.value)}</span><span class="n">${fmt(r.n)}</span></div>`).join('')}</div>`
+  return `<div class="tab"><p class="cap"><b>Table ${n}:</b> ${esc(title)}</p><table class="bt">${rows.map(r => `<tr><td class="lab" style="--w:${(100 * r.n / max).toFixed(1)}%"><span title="${esc(r.value)}">${esc(r.value)}</span></td><td class="n">${fmt(r.n)}</td></tr>`).join('')}</table></div>`
 }
 function renderCorpus(s) {
   const t = s.totals
   const by = f => s.tags.filter(r => r.field === f)
   const yMax = Math.max(...s.years.map(y => y.n), 1)
   $('#h-corpus').classList.remove('muted')
-  $('#h-corpus').innerHTML = `<div class="figs">
-      <div class="fig"><b>${fmt(t.papers)}</b><span>coded studies</span></div>
-      <div class="fig"><b>${fmt(t.full_text)}</b><span>in full text</span></div>
-      <div class="fig"><b>${(t.words / 1e6).toFixed(1)}M</b><span>words</span></div>
-      <div class="fig"><b>${t.first_year}–${String(t.last_year).slice(2)}</b><span>published</span></div></div>
-    <div class="bars"><h3>Studies per year</h3><div class="years">${s.years.map(y => `<i style="height:${(100 * y.n / yMax).toFixed(1)}%" title="${y.year}: ${y.n}"></i>`).join('')}</div>
-      <div class="years-axis"><span>${s.years[0]?.year ?? ''}</span><span>${s.years.at(-1)?.year ?? ''}</span></div></div>
-    ${bars('By region', by('region'))}${bars('By type of response', by('response_type'))}${bars('By sector', by('sector'))}`
+  $('#h-corpus').innerHTML = `<div class="tab"><p class="cap"><b>Table 1:</b> The corpus.</p><table class="bt big">
+      <tr><td>Coded studies</td><td class="n">${fmt(t.papers)}</td></tr>
+      <tr><td>In full text</td><td class="n">${fmt(t.full_text)}</td></tr>
+      <tr><td>Words</td><td class="n">${(t.words / 1e6).toFixed(1)} million</td></tr>
+      <tr><td>Published</td><td class="n">${t.first_year}–${t.last_year}</td></tr></table></div>
+    <div class="figure"><div class="years">${s.years.map(y => `<i style="height:${(100 * y.n / yMax).toFixed(1)}%" title="${y.year}: ${y.n}"></i>`).join('')}</div>
+      <div class="years-axis"><span>${s.years[0]?.year ?? ''}</span><span>${s.years.at(-1)?.year ?? ''}</span></div>
+      <p class="cap"><b>Figure 1:</b> Studies per year of publication.</p></div>
+    ${bars(2, 'Studies by region.', by('region'))}${bars(3, 'Studies by type of response.', by('response_type'))}${bars(4, 'Studies by sector.', by('sector'))}`
 }
 
 // ---------- conversation ----------
@@ -208,14 +219,14 @@ async function renderChat(id) {
     teardown() { this.alive = false; clearTimeout(this.streamTimer); for (const j of this.jobs.values()) clearInterval(j.timer) } }
   state.view = view
   app.innerHTML = shell('chat', `<div class="chat" id="chat">
-    <aside class="side"><button class="btn" data-act="new">New question</button><ul class="list" id="side-list"></ul></aside>
+    <aside class="side"><button class="btn" data-act="new">New question</button><h2>Contents</h2><ul class="list" id="side-list"></ul></aside>
     <div class="main"><div class="thread">
       <button class="btn ghost small side-toggle" data-act="side" style="margin-bottom:14px">All conversations</button>
       <div class="thread-meta"></div>
       <div id="turns"></div>
       <div class="thinking" hidden><span class="dot"></span><span class="tx">Working</span></div>
     </div>
-    <div class="composer-wrap"><form class="composer"><textarea rows="1" placeholder="Ask a follow-up…" aria-label="Your message"></textarea><button class="btn" type="submit">Ask</button></form></div>
+    <div class="composer-wrap"><form class="composer"><textarea rows="1" placeholder="Ask a follow-up…" aria-label="Your message"></textarea><button class="btn default" type="submit">Ask</button></form></div>
     </div></div>`)
   loadSide(id)
   view.turns = $('#turns'); view.thinkEl = $('.thinking')
@@ -355,9 +366,9 @@ function confirmInline(btn, question, action) {
 
 // ---------- artifact cards, coding-run cards ----------
 function artifactCard({ id, kind, title }) {
-  const a = el('a', 'acard')
+  const a = el('a', 'acard win')
   a.href = `#/a/${id}`
-  a.innerHTML = `<div class="hd"><span class="kind">${esc(KIND[kind] || kind)}</span><span class="tt">${esc(title)}</span><span class="open">Open →</span></div>`
+  a.innerHTML = `${titlebar(KIND[kind] || kind, 'Open')}<div class="head"><div class="t">${esc(title)}</div></div>`
   api(`/api/artifacts/${id}`).then(async art => {
     if (art.description) a.append(el('div', 'ds', esc(art.description)))
     if (art.kind === 'chart') a.append(el('div', 'pv', `<img src="${BASE}/a/${id}/chart.png" alt="${esc(art.title)}" loading="lazy">`))
@@ -371,7 +382,7 @@ function artifactCard({ id, kind, title }) {
 function jobCard(view, ev) {
   let j = view.jobs.get(ev.job_id)
   if (!j) {
-    j = { el: el('div', 'jobcard'), timer: null }
+    j = { el: el('div', 'jobcard win'), timer: null }
     view.jobs.set(ev.job_id, j)
     answerEl(view).append(j.el)
     const refresh = async () => {
@@ -388,13 +399,13 @@ function jobCard(view, ev) {
 }
 function drawJob(box, job) {
   const pct = job.total ? (100 * (job.done + (job.errors || 0)) / job.total) : 0
-  box.innerHTML = `<div class="row"><span class="kind kicker">Coding run</span><span class="tt">${esc(job.name)}</span><span class="stt ${esc(job.status)}">${esc(job.status)}</span></div>
+  box.innerHTML = `${titlebar('Coding run')}<div class="body"><div class="row"><span class="tt">${esc(job.name)}</span><span class="stt ${esc(job.status)}">${esc(job.status)}</span></div>
     <div class="prog"><i style="width:${pct.toFixed(1)}%"></i></div>
     <div class="sub"><span>${fmt(job.done)} of ${fmt(job.total)} papers coded</span>${job.errors ? `<span>${fmt(job.errors)} errors</span>` : ''}
       ${job.est_tokens ? `<span>about ${(job.est_tokens / 1e6).toFixed(2)}M tokens</span>` : ''}
       ${job.artifact_id ? `<a href="#/a/${job.artifact_id}">Open the results →</a>` : ''}
       ${job.status === 'running' ? `<a href="#" data-stopjob="${job.id}">Stop</a>` : ''}</div>
-    ${job.error ? `<div class="sub" style="color:var(--bad);margin-top:6px">${esc(job.error)}</div>` : ''}`
+    ${job.error ? `<div class="sub" style="color:var(--bad);margin-top:6px">${esc(job.error)}</div>` : ''}</div>`
   const stop = box.querySelector('[data-stopjob]')
   if (stop) stop.addEventListener('click', async e => { e.preventDefault(); stop.textContent = 'Stopping…'; await api(`/api/jobs/${job.id}/cancel`, { method: 'POST' }).catch(() => {}) })
 }
@@ -437,13 +448,13 @@ async function renderGallery() {
     <div class="pagehead"><div><div class="kicker">Kept from conversations</div><h1>Artifacts</h1></div>
       <div class="chips">${['all', 'chart', 'table', 'coding', 'document', 'page'].map(k => `<button data-k="${k}" class="${k === 'all' ? 'on' : ''}">${k === 'all' ? 'All' : KIND[k] + 's'}</button>`).join('')}</div></div>
     <div class="grid" id="grid"><p class="empty">Loading…</p></div>
-    <section class="runs"><h2>Coding runs</h2><div id="runs"><p class="empty">Loading…</p></div></section></main>`)
+    <section class="runs"><h2 class="sec">Coding runs</h2><div id="runs"><p class="empty">Loading…</p></div></section></main>`)
   const [arts, jobs] = await Promise.all([api('/api/artifacts'), api('/api/jobs')])
   const draw = k => {
     const list = arts.filter(a => k === 'all' || a.kind === k)
-    $('#grid').innerHTML = list.length ? list.map(a => `<a class="gcard" href="#/a/${a.id}">
+    $('#grid').innerHTML = list.length ? list.map(a => `<a class="gcard win" href="#/a/${a.id}">${titlebar(KIND[a.kind] || a.kind)}
       <div class="thumb" data-thumb="${a.id}" data-kind="${a.kind}">${a.kind === 'chart' ? `<img src="${BASE}/a/${a.id}/chart.png" alt="" loading="lazy">` : `<span class="glyph">${{ table: '▦', coding: '✓', document: '¶', page: '⟨⟩' }[a.kind] || '·'}</span>`}</div>
-      <div class="bd"><span class="kicker">${esc(KIND[a.kind] || a.kind)}</span><span class="tt">${esc(a.title)}</span><span class="ds">${esc(a.description)}</span>
+      <div class="bd"><span class="tt">${esc(a.title)}</span><span class="ds">${esc(a.description)}</span>
       <span class="m">${esc(a.author || '')} · ${when(a.created)}${a.meta?.rows != null ? ` · ${fmt(a.meta.rows)} rows` : ''}</span></div></a>`).join('')
       : '<p class="empty">Nothing here yet. Ask for a chart, a table or a write-up in a conversation and it lands here.</p>'
     for (const t of document.querySelectorAll('[data-thumb][data-kind="table"], [data-thumb][data-kind="coding"]')) {
@@ -459,7 +470,7 @@ async function renderGallery() {
   })
   const runs = $('#runs')
   runs.innerHTML = jobs.length ? '' : '<p class="empty">No coding runs yet. Ask the almanac to code papers for you, starting with a small pilot.</p>'
-  for (const j of jobs) { const box = el('div', 'jobcard'); drawJob(box, j); runs.append(box) }
+  for (const j of jobs) { const box = el('div', 'jobcard win'); drawJob(box, j); runs.append(box) }
 }
 
 async function renderArtifact(id) {
@@ -468,7 +479,7 @@ async function renderArtifact(id) {
   try { a = await api(`/api/artifacts/${id}`) } catch (e) { $('#art').innerHTML = `<p class="note-err" style="margin-top:40px">${esc(e.message)}</p>`; return }
   document.title = `${a.title} · Adaptation Almanac`
   const file = n => `${BASE}/a/${id}/${n}`
-  $('#art').innerHTML = `<div class="ahead"><a class="kicker" href="#/artifacts" style="text-decoration:none">${esc(KIND[a.kind] || a.kind)} ←</a>
+  $('#art').innerHTML = `<div class="ahead"><a class="kicker back" href="#/artifacts">← Artifacts · ${esc(KIND[a.kind] || a.kind)}</a>
       <h1>${esc(a.title)}</h1>${a.description ? `<p class="ds">${esc(a.description)}</p>` : ''}
       <div class="m">Made ${when(a.created)}${a.author ? ` for ${esc(a.author)}` : ''}${a.chat_id ? ` in <a href="#/c/${a.chat_id}">${esc(a.chat_title || 'a conversation')}</a>` : ''}${a.meta?.rows != null ? ` · ${fmt(a.meta.rows)} rows` : ''}</div></div>
     <div class="actions">${(a.files || []).map(f => `<a class="btn ghost small" href="${file(f.name)}?download=1">${esc(f.label)}</a>`).join('')}

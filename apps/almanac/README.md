@@ -30,6 +30,24 @@ as Excel/CSV, documents, web pages, coding-run results). Background on the corpu
 - **Live updates** are long-polls (`GET /api/chats/:id/events?after=N&wait=25`), because tunn3l holds a streamed
   response until it ends. Text deltas are batched every 120 ms and kept in memory only; everything else is stored.
 
+## The look (2026-10-14)
+
+One system for every screen: a working paper run by a small program. The paper half is Computer Modern (CMU Serif,
+the LaTeX face) for everything read, a title page on the home screen (title, Frances's byline with a footnote,
+`\today`, an abstract), numbered sections, booktabs tables with "Table n:" captions above and "Figure n:" below,
+questions numbered Q1, Q2. The program half is Departure Mono for every control and label, the agent's tool calls
+as a log, everything the agent makes (charts, tables, coding runs) as a classic-Mac window with a striped title bar,
+and the System 6 default button with its ring. Colors are desk objects on a white page: ballpoint blue `#1f3fd1`
+acts and draws charts, red pen `#e0362a` marks, highlighter `#fff27a` marks what was quoted (citations) and draws the
+corpus bars. Tokens are at the top of `public/app.css`; the chart theme (`CHART_THEME` in `lib/artifacts.mjs`) uses
+the same palette and font. The mark is a pixel sun over a pixel wave (`ICON` in `public/app.js`, the favicon in
+`index.html`). Bart's name is not on the site.
+
+Chart PNGs are drawn by librsvg through pango, which on macOS asks CoreText for fonts and never sees these;
+`lib/artifacts.mjs` sets `PANGOCAIRO_BACKEND=fc` and `FONTCONFIG_FILE=fonts/fonts.conf` so the PNG gets Computer
+Modern too. Charts keep the theme they were saved with. Fonts: CMU Serif (SIL OFL) and Departure Mono (SIL OFL),
+licenses in `fonts/`.
+
 ## Files
 
 | Path | What |
@@ -41,7 +59,8 @@ as Excel/CSV, documents, web pages, coding-run results). Background on the corpu
 | `lib/artifacts.mjs` | tables (CSV + Excel via exceljs), charts (Vega-Lite rendered to SVG with vega, PNG with sharp, so a broken spec fails at save time), pages, documents |
 | `lib/db.mjs`, `lib/sqlworker.mjs` | read-only corpus access |
 | `lib/store.mjs` | the app's state: `~/almanac/almanac.db` (chats, events, artifacts, jobs, job_papers, codings) |
-| `public/` | the web app (vanilla JS, hash routes), fonts from `src/fonts` |
+| `public/` | the web app (vanilla JS, hash routes) and its fonts |
+| `fonts/` | TTF/OTF copies of the same fonts plus `fonts.conf`, for the server-side chart PNGs (see The look) |
 | `install.sh`, `update.sh` | launchd jobs `sh.almanac.server` + `sh.tunn3l.almanac`, and the deploy |
 | `check/shots.mjs` | Playwright: sign in, screenshot home, a chat, the gallery, an artifact, desktop + phone |
 
