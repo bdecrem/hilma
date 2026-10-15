@@ -4,9 +4,10 @@ A research agent over the GAMI corpus for Frances (Fran) Moore, UC Davis, starte
 with an agent that queries the database and reads the papers, and a collection of artifacts it makes (charts, tables
 as Excel/CSV, documents, web pages, coding-run results). Background on the corpus: `../gami/README.md`.
 
-- **Live:** https://almanac.tunn3l.sh/almanac/ and http://localhost:3920/almanac/ on the Mac mini. Any name plus the
-  passcode in `~/.almanac.env` on the mini (`ALMANAC_PASSCODE`). Everyone sees every conversation and artifact; a
-  conversation records who started it.
+- **Live:** https://almanac.tunn3l.sh/almanac/ and http://localhost:3920/almanac/ on the Mac mini. Two accounts, Frances and
+  Bart, each with its own passcode, set in `~/.almanac.env` on the mini as `ALMANAC_USERS="Frances:…,Bart:…"` (the
+  name is matched without regard to case; add an account by adding a pair and restarting). Everyone sees every
+  conversation and artifact; a conversation records who started it.
 - **The agent** is Claude Code through the Agent SDK, logged in with Bart's Max plan (`CLAUDE_CODE_OAUTH_TOKEN`, the
   same token as Token Surfers; `ANTHROPIC_API_KEY` is removed from the child env). Opus 5.5 at high effort
   (`ALMANAC_MODEL`, `ALMANAC_EFFORT`). It has no built-in tools (`tools: []`, no shell, no files, `settingSources: []`),
@@ -54,7 +55,7 @@ Push, then `ssh admin@171.66.240.175 'bash ~/hilma-deploy/apps/almanac/update.sh
 
 ```bash
 cd apps/almanac && npm install
-ALMANAC_PASSCODE=… ALMANAC_SECRET=… GAMI_DIR=~/Desktop/GAMI ALMANAC_DATA=/tmp/almanac-dev ALMANAC_PORT=3921 node server.mjs
-node check/shots.mjs <out-dir> http://localhost:3921 <passcode>
+ALMANAC_USERS=Bart:… ALMANAC_SECRET=… GAMI_DIR=~/Desktop/GAMI ALMANAC_DATA=/tmp/almanac-dev ALMANAC_PORT=3921 node server.mjs
+node check/shots.mjs <out-dir> http://localhost:3921 <Bart's passcode>
 ```
 Without `CLAUDE_CODE_OAUTH_TOKEN` the SDK uses the machine's own Claude Code login.

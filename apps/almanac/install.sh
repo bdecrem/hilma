@@ -1,6 +1,6 @@
 #!/bin/bash
 # On the mini, once: the launchd job for the Almanac server (port 3920) and its tunn3l tunnel
-# (almanac.tunn3l.sh). Secrets live in ~/.almanac.env (chmod 600): ALMANAC_PASSCODE, ALMANAC_SECRET,
+# (almanac.tunn3l.sh). Secrets live in ~/.almanac.env (chmod 600): ALMANAC_USERS (Name:passcode,…), ALMANAC_SECRET,
 # CLAUDE_CODE_OAUTH_TOKEN (Bart's Max login, the same token Token Surfers uses).
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"

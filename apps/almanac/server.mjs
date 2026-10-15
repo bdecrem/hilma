@@ -6,7 +6,7 @@ import fsp from 'node:fs/promises'
 import path from 'node:path'
 import crypto from 'node:crypto'
 import { fileURLToPath } from 'node:url'
-import { PORT, BASE, PASSCODE, SECRET, PAPERS_DIR, MODEL } from './lib/config.mjs'
+import { PORT, BASE, USERS, SECRET, PAPERS_DIR, MODEL } from './lib/config.mjs'
 import * as store from './lib/store.mjs'
 import { corpusStats } from './lib/db.mjs'
 import { artifactFile, removeArtifact } from './lib/artifacts.mjs'
@@ -41,7 +41,8 @@ function whoIs(req) {
   if (!m) return null
   const [n, exp, sig] = m[1].split('.')
   if (!sig || sign(`${n}.${exp}`) !== sig || Number(exp) < Date.now()) return null
-  return Buffer.from(n, 'base64url').toString()
+  const who = Buffer.from(n, 'base64url').toString()
+  return USERS.get(who.toLowerCase())?.name === who ? who : null  // a removed account is signed out
 }
 let failures = []
 const safeEqual = (a, b) => a.length === b.length && crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b))
@@ -87,9 +88,11 @@ route('POST', '/api/login', async (req, res) => {
   failures = failures.filter(t => t > Date.now() - 10 * 60e3)
   if (failures.length >= 20) return send(res, 429, { error: 'Too many tries. Wait ten minutes.' })
   const { name, passcode } = await readJson(req)
-  const who = String(name || '').trim().replace(/\s+/g, ' ').slice(0, 40)
-  if (!who) return send(res, 400, { error: 'Type your name.' })
-  if (!safeEqual(String(passcode || ''), PASSCODE)) { failures.push(Date.now()); return send(res, 401, { error: 'That passcode is not right.' }) }
+  const typed = String(name || '').trim().replace(/\s+/g, ' ').slice(0, 40)
+  if (!typed) return send(res, 400, { error: 'Type your name.' })
+  const user = USERS.get(typed.toLowerCase())
+  if (!user || !safeEqual(String(passcode || ''), user.passcode)) { failures.push(Date.now()); return send(res, 401, { error: 'That name and passcode do not match.' }) }
+  const who = user.name
   log('sign-in', who)
   send(res, 200, { name: who }, { 'Set-Cookie': sessionCookie(who) })
 }, true)
