@@ -10,8 +10,8 @@ export type Step = {
   doneOn?: string
   // What Bart said the step was, in his words, once he had done it.
   summary?: string
-  // A page that goes with the step.
-  link?: { href: string; label: string }
+  // Pages that go with the step.
+  links?: { href: string; label: string }[]
   // Prompts and what the model wrote after them, shown as prompt | continuation.
   examples?: { prompt: string; out: string }[]
   // What we saw when it ran.
@@ -115,8 +115,11 @@ export const STEPS: Step[] = [
     idea: 'The embedding table before and after',
     status: 'done',
     doneOn: '2026-10-15',
-    link: { href: '/smallgpt/explorer', label: 'Open the embedding explorer →' },
-    saw: 'On the Usenet model. Every token has a row of 320 numbers in the embedding table. Before training the rows are random: the tokens nearest to “Mac” were “iding, saves, clusion”, and to “Monday” “lay, display, gover”. After training, “Mac” is next to Macintosh, Amiga, Apple; “modem” next to telephone, uucp; “IBM” next to Atari, Microsoft, Tandy; “Monday” next to every other day of the week; “three” next to four, five, two; “wife” next to father, parents, son, kids. “good” sits next to “bad”, because both fit in the same places in a sentence, and that is all the model sees. Word arithmetic works: woman − man + he = she, she − he + his = her, Apple − Mac + PC = IBM, Apple − Mac + Amiga = Commodore, four − three + five = six, was − is + have = had. Seven of eight right; January + (Tuesday − Monday) gave December instead of February. On a 2-D map of the 3,000 most common words the random table is one even cloud; after training the days collapse to one dot, the months to another, the numbers to another, and the computers, places and family words sit in their own neighbourhoods. Nobody told the model any of this: it is what helped predict the next token.',
+    links: [
+      { href: '/smallgpt/explorer', label: 'Token explorer: the 8,192 rows of the embedding table →' },
+      { href: '/smallgpt/words', label: 'Word explorer: 30,000 words, layer by layer →' },
+    ],
+    saw: 'On the Usenet model. Every token has a row of 320 numbers in the embedding table. Before training the rows are random: the tokens nearest to “Mac” were “iding, saves, clusion”, and to “Monday” “lay, display, gover”. After training, “Mac” is next to Macintosh, Amiga, Apple; “modem” next to telephone, uucp; “IBM” next to Atari, Microsoft, Tandy; “Monday” next to every other day of the week; “three” next to four, five, two; “wife” next to father, parents, son, kids. “good” sits next to “bad”, because both fit in the same places in a sentence, and that is all the model sees. Word arithmetic works: woman − man + he = she, she − he + his = her, Apple − Mac + PC = IBM, Apple − Mac + Amiga = Commodore, four − three + five = six, was − is + have = had. Seven of eight right; January + (Tuesday − Monday) gave December instead of February. On a 2-D map of the 3,000 most common words the random table is one even cloud; after training the days collapse to one dot, the months to another, the numbers to another, and the computers, places and family words sit in their own neighbourhoods. Nobody told the model any of this: it is what helped predict the next token. Then whole words: most words are several tokens and have no row, so 30,000 words got their place from inside the model, read at each word in about 20 real posts after layer 0, 3 and 6. At layer 0 a split word is only its last piece and its neighbours rhyme: Gorbachev sits with mv, tv, gov. By layer 6 they mean something: Gorbachev sits with Yeltsin, Nixon, Falwell and Sauron; Challenger with Halley, Titan, Pegasus; beer with wine. king − man + woman still doesn’t reach queen: at layer 6 it lands on thief, paladin, knight, because to this model a king lives in fantasy-game posts.',
   },
   { n: 8, name: 'The conversion bridge', idea: 'Our model as a Hugging Face model', status: 'next' },
   { n: 9, name: 'SFT', idea: 'Pretraining again, on conversations, with a mask', status: 'todo' },

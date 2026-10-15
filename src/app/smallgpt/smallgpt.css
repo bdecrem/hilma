@@ -221,7 +221,7 @@
   font-weight: 700;
 }
 .sg-link {
-  display: inline-block;
+  display: block;
   margin-top: 10px;
   font-family: var(--font-mono), monospace;
   font-size: 14px;

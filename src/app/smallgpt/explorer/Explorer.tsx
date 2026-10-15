@@ -40,7 +40,22 @@ const RARE = '#cfc5ae'
 // A token as text people can read: the leading space shown as a dot, new lines as ⏎.
 const show = (t: string) => t.replace(/^ /, '·').replace(/\n/g, '⏎')
 
-export default function Explorer() {
+type Props = {
+  // One entry per depth to switch between; the token explorer has just one.
+  sources?: { label: string; dir: string }[]
+  // true: the entries are whole words (07-weights/export_words.py), not tokens
+  words?: boolean
+  start?: { a: string; b: string; c: string }
+  hint?: string
+}
+
+export default function Explorer({
+  sources = [{ label: '', dir: BASE }],
+  words = false,
+  start = { a: 'woman', b: 'man', c: 'he' },
+  hint = 'Try Apple − Mac + PC, four − three + five, was − is + have. King and queen are split into pieces by this tokenizer, so king − man + woman can’t be asked.',
+}: Props) {
+  const [src, setSrc] = useState(0)
   const [data, setData] = useState<Data | null>(null)
   const [unit, setUnit] = useState<Float32Array | null>(null) // rows scaled to length 1
   const [raw, setRaw] = useState<Float32Array | null>(null) // rows as the model has them
@@ -50,13 +65,15 @@ export default function Explorer() {
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState<number | null>(null)
   const [miss, setMiss] = useState<{ q: string; like: number[] } | null>(null)
-  const [arith, setArith] = useState({ a: 'woman', b: 'man', c: 'he' })
+  const [arith, setArith] = useState(start)
   const plotRef = useRef<PlotEl>(null)
 
+  const dir = sources[src].dir
   useEffect(() => {
+    setData(null)
     Promise.all([
-      fetch(`${BASE}/tokens.json`).then((r) => r.json() as Promise<Data>),
-      fetch(`${BASE}/emb.bin`).then((r) => r.arrayBuffer()),
+      fetch(`${dir}/tokens.json`).then((r) => r.json() as Promise<Data>),
+      fetch(`${dir}/emb.bin`).then((r) => r.arrayBuffer()),
     ]).then(([d, buf]) => {
       const n = d.tokens.length
       const scale = new Float32Array(buf, 0, n)
@@ -77,7 +94,7 @@ export default function Explorer() {
       setRaw(r)
       setUnit(u)
     })
-  }, [])
+  }, [dir])
 
   const usable = useMemo(() => {
     if (!data) return null
@@ -113,23 +130,33 @@ export default function Explorer() {
   )
 
   // A typed word to a token: " word" first (a word inside a sentence), then "word" as written.
+  // For whole words: as written, then ignoring capitals.
   const find = useCallback(
     (q: string) => {
       if (!data || !q.trim()) return null
       const w = q.trim()
+      if (words) {
+        const i = data.tokens.indexOf(w)
+        if (i >= 0) return i
+        const j = data.tokens.findIndex((t) => t.toLowerCase() === w.toLowerCase())
+        return j >= 0 ? j : null
+      }
       for (const t of [' ' + w, w]) {
         const i = data.tokens.indexOf(t)
         if (i >= 0) return i
       }
       return null
     },
-    [data],
+    [data, words],
   )
 
   const neighbours = useMemo(() => (selected === null ? [] : nearest(row(selected), 20, [selected])), [selected, nearest, row])
 
   // Arithmetic takes whole words only (" word"), as step 7's script does: "king" alone is the piece in "making".
-  const word = useCallback((q: string) => (data && q.trim() ? (i => (i < 0 ? null : i))(data.tokens.indexOf(' ' + q.trim())) : null), [data])
+  const word = useCallback(
+    (q: string) => (words ? find(q) : data && q.trim() ? (i => (i < 0 ? null : i))(data.tokens.indexOf(' ' + q.trim())) : null),
+    [data, words, find],
+  )
 
   const arithResult = useMemo(() => {
     const find = word
@@ -150,6 +177,7 @@ export default function Explorer() {
       return
     }
     if (!data || !q.trim()) return setMiss(null)
+    setSelected(null)
     const w = q.trim().toLowerCase()
     const like = data.tokens
       .map((t, k) => [t, k] as const)
@@ -261,14 +289,25 @@ export default function Explorer() {
             3-D
           </button>
         </div>
-        <label className="sgx-check">
-          <input type="checkbox" checked={hideRare} onChange={(e) => setHideRare(e.target.checked)} /> hide rare tokens
-        </label>
+        {sources.length > 1 && (
+          <div className="sgx-toggle" role="group" aria-label="Depth">
+            {sources.map((x, k) => (
+              <button key={x.dir} className={src === k ? 'on' : ''} onClick={() => setSrc(k)}>
+                {x.label}
+              </button>
+            ))}
+          </div>
+        )}
+        {!words && (
+          <label className="sgx-check">
+            <input type="checkbox" checked={hideRare} onChange={(e) => setHideRare(e.target.checked)} /> hide rare tokens
+          </label>
+        )}
       </div>
 
       <div className="sgx-grid">
         <div className="sgx-map">
-          {!ready && <p className="sgx-loading">Loading 8,192 tokens…</p>}
+          {!ready && <p className="sgx-loading">Loading…</p>}
           <div ref={plotRef} className="sgx-plot" />
           <p className="sgx-hint">
             {view === '2d' ? 'Drag to pan, scroll or pinch to zoom, hover for the token, click to select.' : 'Drag to spin, scroll to zoom, click a dot to select.'}{' '}
@@ -282,8 +321,9 @@ export default function Explorer() {
             {selected !== null && data ? (
               <>
                 <p className="sgx-sel">
-                  <b>{show(data.tokens[selected])}</b> · seen {data.counts[selected].toLocaleString()} times in the test posts
-                  {!data.tokens[selected].startsWith(' ') && /^\p{L}/u.test(data.tokens[selected]) && (
+                  <b>{show(data.tokens[selected])}</b> · {data.counts[selected].toLocaleString()} times in{' '}
+                  {words ? 'all the posts' : 'the test posts'}
+                  {!words && !data.tokens[selected].startsWith(' ') && /^\p{L}/u.test(data.tokens[selected]) && (
                     <> · no leading space: a piece used inside or at the start of words</>
                   )}
                 </p>
@@ -298,7 +338,9 @@ export default function Explorer() {
               </>
             ) : miss ? (
               <p className="sgx-note">
-                “{miss.q}” isn’t one token in this vocabulary; the tokenizer splits it into pieces.
+                {words
+                  ? `“${miss.q}” isn’t among the ${data?.tokens.length.toLocaleString()} words here.`
+                  : `“${miss.q}” isn’t one token in this vocabulary; the tokenizer splits it into pieces.`}
                 {miss.like.length > 0 && (
                   <>
                     {' '}
@@ -326,7 +368,9 @@ export default function Explorer() {
               <input value={arith.c} onChange={(e) => setArith({ ...arith, c: e.target.value })} aria-label="plus" />
             </div>
             {arithResult.missing.length > 0 ? (
-              <p className="sgx-note">Not a whole-word token: {arithResult.missing.filter(Boolean).join(', ') || 'type three words'}.</p>
+              <p className="sgx-note">
+                {words ? 'Not in the list' : 'Not a whole-word token'}: {arithResult.missing.filter(Boolean).join(', ') || 'type three words'}.
+              </p>
             ) : (
               <ol className="sgx-list">
                 {arithResult.hits.map(([s, i]) => (
@@ -337,10 +381,7 @@ export default function Explorer() {
                 ))}
               </ol>
             )}
-            <p className="sgx-note">
-              Try Apple − Mac + PC, four − three + five, was − is + have. King and queen are split into pieces by this
-              tokenizer, so king − man + woman can’t be asked.
-            </p>
+            <p className="sgx-note">{hint}</p>
           </section>
         </aside>
       </div>

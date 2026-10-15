@@ -69,11 +69,11 @@ export default function SmallGptPage() {
                   <>
                     <h3>What we saw</h3>
                     <p className="sg-saw">{s.saw}</p>
-                    {s.link && (
-                      <a className="sg-link" href={s.link.href}>
-                        {s.link.label}
+                    {s.links?.map((l) => (
+                      <a key={l.href} className="sg-link" href={l.href}>
+                        {l.label}
                       </a>
-                    )}
+                    ))}
                   </>
                 )}
               </div>
