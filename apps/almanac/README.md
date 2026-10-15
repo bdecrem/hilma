@@ -4,7 +4,9 @@ A research agent over the GAMI corpus for Frances (Fran) Moore, UC Davis, starte
 with an agent that queries the database and reads the papers, and a collection of artifacts it makes (charts, tables
 as Excel/CSV, documents, web pages, coding-run results). Background on the corpus: `../gami/README.md`.
 
-- **Live:** https://almanac.tunn3l.sh/almanac/ and http://localhost:3920/almanac/ on the Mac mini. Two accounts, Frances and
+- **Live** (installed 2026-10-14): https://almanac.tunn3l.sh/almanac/ from anywhere; http://171.66.240.175:3920/almanac/ on
+  the Stanford/CASBS network (Stanford's border blocks it from outside); http://100.95.51.98:3920/almanac/ on Tailscale;
+  http://localhost:3920/almanac/ on the mini. Two accounts, Frances and
   Bart, each with its own passcode, set in `~/.almanac.env` on the mini as `ALMANAC_USERS="Frances:…,Bart:…"` (the
   name is matched without regard to case; add an account by adding a pair and restarting). Everyone sees every
   conversation and artifact; a conversation records who started it.
