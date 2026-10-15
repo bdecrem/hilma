@@ -33,20 +33,21 @@ from collections import Counter
 from multiprocessing import Pool
 
 import numpy as np
-import torch
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, os.path.join(ROOT, "05-attention"))
 sys.path.insert(0, os.path.join(ROOT, "02-tokenizer"))
 from bpe import EOT, Tokenizer  # noqa: E402
-from model import GPT, Config  # noqa: E402
+
+# torch and the model are imported inside main(), not here: the encoding workers import this
+# file too, and ten copies of PyTorch pushed the 16 GB mini into 6 GB of swap.
 
 CORPUS = os.path.join(ROOT, "data", "usenet", "usenet.txt")
 TOK = os.path.join(ROOT, "06b-usenet", "tok8192.json")
 CKPT = os.path.join(ROOT, "out", "usenet", "final.pt")
 OUT = os.path.join(ROOT, "out", "words")
-N_WORDS, SIGHTINGS, BATCH = 30_000, 20, 64
+N_WORDS, SIGHTINGS, BATCH, WORKERS = 30_000, 20, 64, 6
 WORD_CHUNK = re.compile(r"^ ?([A-Za-z]+)$")      # a tokenizer chunk that is one word: "queen" or " queen"
 WORD = re.compile(r"(?<![A-Za-z])[A-Za-z]+(?![A-Za-z])")
 
@@ -82,18 +83,21 @@ def encode(post):
     return ids, hits
 
 
-@torch.no_grad()
 def states(model, idx):
     """All 7 depths of the residual stream: (7, B, T, 320). Depth 0 is the table row plus the position."""
-    x = model.tok_emb(idx) + model.pos_emb(torch.arange(idx.shape[1], device=idx.device))
-    out = [x]
-    for block in model.blocks:
-        x = block(x)
-        out.append(x)
-    return torch.stack(out)
+    import torch
+    with torch.no_grad():
+        x = model.tok_emb(idx) + model.pos_emb(torch.arange(idx.shape[1], device=idx.device))
+        out = [x]
+        for block in model.blocks:
+            x = block(x)
+            out.append(x)
+        return torch.stack(out)
 
 
 def main():
+    import torch
+    from model import GPT, Config
     os.makedirs(OUT, exist_ok=True)
     device = "mps" if torch.backends.mps.is_available() else "cpu"
     t0 = time.time()
@@ -105,9 +109,11 @@ def main():
     with Pool() as pool:
         for c in pool.imap_unordered(count_words, [posts[i: i + 5000] for i in range(0, len(posts), 5000)]):
             counts.update(c)
+    n_forms = len(counts)
     words = [w for w, _ in counts.most_common(N_WORDS)]
     index = {w: i for i, w in enumerate(words)}
-    print(f"{len(counts):,} word forms; kept the {len(words):,} most common, down to "
+    counts = {w: counts[w] for w in words}               # drop the other 1.2 M forms
+    print(f"{n_forms:,} word forms; kept the {len(words):,} most common, down to "
           f"{counts[words[-1]]:,} occurrences ({time.time() - t0:.0f} s)", flush=True)
 
     ck = torch.load(CKPT, map_location="cpu")
@@ -120,7 +126,7 @@ def main():
     seen = [0] * len(words)                              # a plain list: indexing a tensor one word at a time is far too slow
     random.Random(0).shuffle(posts)
     batch, n_posts, n_batches, full = [], 0, 0, 0
-    with Pool(initializer=init, initargs=(index,)) as pool:
+    with Pool(WORKERS, initializer=init, initargs=(index,)) as pool:
         for ids, hits in pool.imap(encode, posts, chunksize=256):
             n_posts += 1
             hits = [(w, p) for w, p in hits if seen[w] < SIGHTINGS]
@@ -152,6 +158,7 @@ def main():
 
 
 def run(model, batch, sums, device):
+    import torch
     T = max(len(ids) for ids, _ in batch)
     idx = torch.zeros(len(batch), T, dtype=torch.long)       # padding goes at the end; causal attention never looks at it
     rows, cols, ws = [], [], []
