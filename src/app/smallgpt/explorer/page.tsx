@@ -6,7 +6,8 @@ export const metadata: Metadata = {
   title: 'smallgpt — embedding explorer',
   description:
     'Every token of the smallgpt Usenet model on a map: hover, search, nearest neighbours in the full 320 dimensions, word arithmetic, a 3-D view.',
-  openGraph: { url: 'https://ola.cx/smallgpt/explorer' },
+  openGraph: { url: 'https://ola.cx/smallgpt/explorer', images: [{ url: '/smallgpt/explorer/og.png', width: 1200, height: 630 }] },
+  twitter: { card: 'summary_large_image', images: ['/smallgpt/explorer/og.png'] },
 }
 
 export default function ExplorerPage() {
