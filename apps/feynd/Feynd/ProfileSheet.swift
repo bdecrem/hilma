@@ -32,6 +32,8 @@ struct ProfileSheet: View {
     @State private var showVoice = false
     @AppStorage(VoiceSettingsView.holdToTalkKey) private var holdToTalk = false
     @AppStorage(VoiceEngine.defaultsKey) private var voiceEngine = VoiceEngine.fallback.rawValue
+    @AppStorage(ElevenVoice.defaultsKey) private var elevenVoice = ElevenVoice.fallback.rawValue
+    @AppStorage(ElevenStyle.defaultsKey) private var elevenStyle = ElevenStyle.fallback.rawValue
     @State private var recertEnabled = true
     @State private var voiceCheckinEnabled = true
     @State private var activelyReadEnabled = true
@@ -534,6 +536,34 @@ struct ProfileSheet: View {
                     }
                     .padding(.horizontal, 14)
                     .padding(.vertical, 11)
+                    if (VoiceEngine(rawValue: voiceEngine) ?? .fallback) == .eleven {
+                        SettingsDivider()
+                        // Who speaks on the ElevenLabs engine — device-local,
+                        // read when a session starts.
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Dodo's voice")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundStyle(FeyndTheme.text)
+                            Picker("Dodo's voice", selection: $elevenVoice) {
+                                ForEach(ElevenVoice.allCases) { v in
+                                    Text(v.label).tag(v.rawValue)
+                                }
+                            }
+                            .pickerStyle(.segmented)
+                            Picker("Style", selection: $elevenStyle) {
+                                ForEach(ElevenStyle.allCases) { s in
+                                    Text(s.label).tag(s.rawValue)
+                                }
+                            }
+                            .pickerStyle(.segmented)
+                            Text("Calm is steadier and flatter. Normal has more expression.")
+                                .font(.system(size: 12.5))
+                                .foregroundStyle(FeyndTheme.text3)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 11)
+                    }
                 }
             }
             SettingsSection(label: "iMessage") {

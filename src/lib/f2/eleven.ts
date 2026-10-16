@@ -64,6 +64,28 @@ export function elevenEngineId(): string {
   return id
 }
 
+/// Dodo's voice picker (Profile → Voice): one Speech Engine per voice and
+/// style, all on the production bridge path (apps/dodo-voice-bridge/engines.mjs
+/// creates them and prints these ids). Only production uses the map; a dev
+/// server keeps its own ELEVEN_SPEECH_ENGINE_ID, which points at a dev bridge.
+/// Builds older than the picker send nothing and get the default.
+export const DODO_VOICES = ['angela', 'sarah', 'river'] as const
+export const DODO_STYLES = ['calm', 'normal'] as const
+export type DodoVoice = (typeof DODO_VOICES)[number]
+export type DodoStyle = (typeof DODO_STYLES)[number]
+const DODO_PROD_ENGINES: Record<DodoVoice, Record<DodoStyle, string>> = {
+  river: { normal: 'seng_4101m2zmzxjhfzztr0yry2y1hmyn', calm: 'seng_1301m537trqfe54bn347kg4x4q43' },
+  sarah: { normal: 'seng_8201m537tswmex8bjyk4gfv11hbp', calm: 'seng_6501m537tv5rfzprmy9vvaeavtsh' },
+  angela: { normal: 'seng_4501m537twhse7bb3a68yth2d2wg', calm: 'seng_3101m537txj2eyybdfmr03xecd1f' },
+}
+
+export function dodoEngineId(voice?: string, style?: string): string {
+  if (process.env.VERCEL_ENV !== 'production') return elevenEngineId()
+  const v = (DODO_VOICES as readonly string[]).includes(voice ?? '') ? (voice as DodoVoice) : 'angela'
+  const s = (DODO_STYLES as readonly string[]).includes(style ?? '') ? (style as DodoStyle) : 'calm'
+  return DODO_PROD_ENGINES[v][s]
+}
+
 export function bridgeSecret(): string {
   const secret = process.env.DODO_BRIDGE_SECRET
   if (!secret) throw new Error('DODO_BRIDGE_SECRET is not set')

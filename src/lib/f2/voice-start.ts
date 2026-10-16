@@ -31,6 +31,10 @@ export type VoiceStartBody = {
   // Hold-to-talk (a device-side Voice setting): the mic is muted except
   // while the key is held. Folded into the prompt.
   hold_to_talk?: boolean
+  // ElevenLabs engine only (Profile → Voice, per device): which voice and
+  // style speak. dodoEngineId() maps them to a Speech Engine.
+  eleven_voice?: string
+  eleven_style?: string
 }
 
 export type VoiceStart =

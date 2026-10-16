@@ -68,6 +68,27 @@ const DODO_TTS = {
   stability: 0.75,
   similarity_boost: 0.8,
 }
+// Dodo's voice picker (2026-10-16): Profile → Voice offers River, Sarah and
+// Angela, each Normal (the v4 turbo above) or Calm. Bart picked Angela from
+// samples on eleven_multilingual_v2, the older model with flatter delivery,
+// but it takes ~1.45 s to first sound against 0.2 s for v4 turbo, on top of
+// Claude's ~1.5 s. eleven_turbo_v2 is the same generation at 0.34 s, and an
+// English engine accepts only turbo/flash v2, v4 or multilingual v2, so Calm
+// is turbo v2. A voice engine has one voice, so every pair is its own engine
+// pointing at the same bridge path; /api/f2/eleven/session picks the id
+// (DODO_PROD_ENGINES in src/lib/f2/eleven.ts — update it when this prints new
+// ids). "Dodo" itself stays River Normal for old builds' env id.
+// Angela is a library voice, added to the workspace (no live moderation).
+const DODO_PICKS = {
+  river: 'SAz9YHcvj6GT2YYXdXww', // River — relaxed, neutral, informative
+  sarah: 'EXAVITQu4vr4xnSDxMaL', // Sarah — mature, reassuring, confident
+  angela: 'FUfBrNit0NNZAwb58KWH', // Angela — conversational and friendly
+}
+const DODO_CALM_TTS = { model_id: 'eleven_turbo_v2', stability: 0.75, similarity_boost: 0.8 }
+const DODO_VARIANTS = Object.entries(DODO_PICKS).flatMap(([key, voice]) => [
+  ...(key === 'river' ? [] : [{ name: `Dodo · ${key} · normal`, path: '/ws/prod', voice, tts: DODO_TTS, dev: false, app: 'dodo' }]),
+  { name: `Dodo · ${key} · calm`, path: '/ws/prod', voice, tts: DODO_CALM_TTS, dev: false, app: 'dodo' },
+])
 // Polly: unchanged — the expressive conversational model with its defaults.
 const POLLY_TTS = {
   model_id: process.env.POLLY_ELEVEN_TTS_MODEL || 'eleven_v3_conversational',
@@ -101,6 +122,7 @@ const DOLLY_TTS = {
 const ENGINES = [
   { name: 'Dodo (dev)', path: '/ws/dev', voice: DODO_VOICE, tts: DODO_TTS, dev: true, app: 'dodo' },
   { name: 'Dodo', path: '/ws/prod', voice: DODO_VOICE, tts: DODO_TTS, dev: false, app: 'dodo' },
+  ...DODO_VARIANTS,
   { name: 'Polly (dev)', path: '/ws/polly-dev', voice: POLLY_VOICE, tts: POLLY_TTS, dev: true, app: 'polly' },
   { name: 'Polly', path: '/ws/polly-prod', voice: POLLY_VOICE, tts: POLLY_TTS, dev: false, app: 'polly' },
   // Dolly's engines are Spanish: ElevenLabs allows turbo v2.5 (the model
@@ -140,8 +162,10 @@ function engineBody(engine) {
     // flight across the re-sends, so the whole window is usable.
     cascade_timeout_seconds: 15,
     conversation: {
-      // A Final Review can run long; the default cap is ten minutes.
-      max_duration_seconds: 3600,
+      // A Final Review can run long; the default cap is ten minutes. 2400 is
+      // the API's maximum for engines created since 2026-10 (the first four
+      // were made with 3600).
+      max_duration_seconds: 2400,
       client_events: [
         'audio', 'interruption', 'agent_response', 'user_transcript',
         'agent_response_correction', 'vad_score',

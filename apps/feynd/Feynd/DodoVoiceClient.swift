@@ -46,6 +46,37 @@ enum VoiceEngine: String, CaseIterable, Identifiable {
     }
 }
 
+/// Who speaks on the ElevenLabs engine (Profile → Voice, per device). The
+/// server maps voice + style to one of its Speech Engines (dodoEngineId in
+/// src/lib/f2/eleven.ts).
+enum ElevenVoice: String, CaseIterable, Identifiable {
+    case angela, sarah, river
+
+    static let fallback: ElevenVoice = .angela
+    static let defaultsKey = "elevenVoice"
+    var id: String { rawValue }
+    var label: String { rawValue.capitalized }
+
+    static var current: ElevenVoice {
+        ElevenVoice(rawValue: UserDefaults.standard.string(forKey: defaultsKey) ?? "") ?? fallback
+    }
+}
+
+/// Normal = ElevenLabs' newest voice model; Calm = an older one with flatter,
+/// steadier delivery.
+enum ElevenStyle: String, CaseIterable, Identifiable {
+    case calm, normal
+
+    static let fallback: ElevenStyle = .calm
+    static let defaultsKey = "elevenStyle"
+    var id: String { rawValue }
+    var label: String { rawValue.capitalized }
+
+    static var current: ElevenStyle {
+        ElevenStyle(rawValue: UserDefaults.standard.string(forKey: defaultsKey) ?? "") ?? fallback
+    }
+}
+
 /// What the voice screens need from an engine. Both clients are @Observable,
 /// so SwiftUI tracks their properties through this existential as usual.
 @MainActor

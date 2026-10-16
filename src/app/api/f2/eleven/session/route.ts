@@ -7,6 +7,7 @@ import {
   ELEVEN_KICKOFF,
   elevenModel,
   elevenOpeningInstruction,
+  dodoEngineId,
   mintElevenConversationToken,
   saveElevenSessionPrompt,
 } from '@/lib/f2/eleven'
@@ -45,7 +46,7 @@ export async function POST(req: Request) {
 
   let token: string
   try {
-    token = await mintElevenConversationToken()
+    token = await mintElevenConversationToken(dodoEngineId(body.eleven_voice, body.eleven_style))
   } catch (err) {
     const message = err instanceof Error ? err.message : 'eleven session failed'
     return NextResponse.json({ error: message }, { status: 502 })

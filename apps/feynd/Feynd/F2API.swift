@@ -865,10 +865,14 @@ final class F2API {
             let thread_id: String?
             let card_ids: [String]?
             let hold_to_talk: Bool
+            let eleven_voice: String
+            let eleven_style: String
         }
         return try await post("/api/f2/eleven/session",
                               body: Body(mode: mode, thread_id: threadId, card_ids: cardIds,
-                                         hold_to_talk: holdToTalk))
+                                         hold_to_talk: holdToTalk,
+                                         eleven_voice: ElevenVoice.current.rawValue,
+                                         eleven_style: ElevenStyle.current.rawValue))
     }
 
     // MARK: Global chat — one conversation across ALL of the user's topics
