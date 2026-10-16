@@ -150,15 +150,21 @@ export async function recertPostscript(userId: string): Promise<string> {
 }
 
 /// Send the daily card to every user who switched it on (delivery goes to
-/// their paired iMessage handle). Returns a per-user summary for the cron
-/// log.
-export async function sendDailyCards(): Promise<
+/// their paired iMessage handle). The hourly tick (/api/f2/daily/tick) passes
+/// the users whose chosen hour is now (`userIds`, schema 057 — before
+/// 2026-10-16 one cron sent to everyone at 9 am PT); `onlyUserId` is for
+/// manual runs. Returns a per-user summary for the cron log.
+export async function sendDailyCards(opts: { userIds?: string[]; onlyUserId?: string } = {}): Promise<
   { user: string; status: 'sent' | 'no-cards' | 'no-handle' | 'error'; detail?: string }[]
 > {
-  const { data: users, error } = await f2Supabase()
+  if (opts.userIds && opts.userIds.length === 0) return []
+  let q = f2Supabase()
     .from('f2_users')
     .select('id, username, imessage_handles, daily_chat_guid')
     .eq('daily_card_enabled', true)
+  if (opts.userIds) q = q.in('id', opts.userIds)
+  if (opts.onlyUserId) q = q.eq('id', opts.onlyUserId)
+  const { data: users, error } = await q
   if (error) {
     console.error('[f2/daily-card] user query failed:', error)
     return []

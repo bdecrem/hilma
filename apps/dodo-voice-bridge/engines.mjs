@@ -35,7 +35,13 @@ const wsBase = origin.replace(/^https:/, 'wss:')
 // Polly's voice speaks Italian, French and Korean as well as English: Alice
 // is one of the library's multilingual educator voices. DODO_ELEVEN_VOICE_ID /
 // POLLY_ELEVEN_VOICE_ID override.
-const DODO_VOICE = process.env.DODO_ELEVEN_VOICE_ID || 'cgSgspJ2msm6clMCkdW9' // Jessica — playful, bright, warm
+// Dodo (2026-10-16): River, the library's "relaxed, neutral, informative"
+// voice (labels: neutral, calm, conversational). Jessica (cgSgspJ2msm6clMCkdW9,
+// "playful, bright, warm") was the voice from the start, and the 2026-10-09
+// pass kept her and only changed the model: Bart still found the result
+// grating and too enthusiastic, an overly excited teacher. The ask was a
+// neutral, less affective voice, so the voice itself changes now.
+const DODO_VOICE = process.env.DODO_ELEVEN_VOICE_ID || 'SAz9YHcvj6GT2YYXdXww' // River — relaxed, neutral, informative
 const POLLY_VOICE = process.env.POLLY_ELEVEN_VOICE_ID || 'Xb7hH8MSUJpSbSDYk0k2' // Alice — clear, engaging educator
 
 // How each app's voice is rendered. Everything else in `tts` keeps the API
@@ -53,10 +59,13 @@ const POLLY_VOICE = process.env.POLLY_ELEVEN_VOICE_ID || 'Xb7hH8MSUJpSbSDYk0k2' 
 // and similarity 0.8 are what the sample Bart chose used. Expressive mode is
 // only honoured on v3 models anyway, but stays false so a model change can't
 // bring it back. 'eleven_flash_v2' is the flatter, older fallback.
+// Stability 0.5 → 0.75 with the River swap (2026-10-16): higher stability is
+// the one dial v4 has that narrows the delivery — less swing from line to
+// line, flatter emphasis — which is what "neutral, less affective" asks for.
 const DODO_TTS = {
   model_id: process.env.DODO_ELEVEN_TTS_MODEL || 'eleven_v4_turbo',
   expressive_mode: false,
-  stability: 0.5,
+  stability: 0.75,
   similarity_boost: 0.8,
 }
 // Polly: unchanged — the expressive conversational model with its defaults.

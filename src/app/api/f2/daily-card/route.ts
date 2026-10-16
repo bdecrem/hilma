@@ -5,10 +5,10 @@ export const runtime = 'nodejs'
 // One BlueBubbles send can take 10-25s; give a small user base headroom.
 export const maxDuration = 300
 
-// GET /api/f2/daily-card — the daily send, fired by Vercel Cron (which
-// authenticates with `Authorization: Bearer ${CRON_SECRET}`). Sends one
-// scheduler-picked flash card over iMessage to every user with a phone
-// number on their profile.
+// GET /api/f2/daily-card — a manual daily-card send (Bearer CRON_SECRET):
+// `?force=1&user=<id>` sends one user their card now, for checks. The
+// scheduled send is /api/f2/daily/tick (every user's own hour) since
+// 2026-10-16; this was its 9 am PT cron before that.
 export async function GET(req: Request) {
   const secret = process.env.CRON_SECRET
   if (!secret) {
@@ -17,6 +17,10 @@ export async function GET(req: Request) {
   if (req.headers.get('authorization') !== `Bearer ${secret}`) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   }
-  const results = await sendDailyCards()
+  const q = new URL(req.url).searchParams
+  if (q.get('force') !== '1' || !q.get('user')) {
+    return NextResponse.json({ error: 'manual runs only: ?force=1&user=<id>; the schedule is /api/f2/daily/tick' }, { status: 400 })
+  }
+  const results = await sendDailyCards({ onlyUserId: q.get('user')! })
   return NextResponse.json({ results })
 }

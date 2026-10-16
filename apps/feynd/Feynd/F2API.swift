@@ -1250,6 +1250,12 @@ final class F2API {
         var recertEnabled: Bool = true
         /// The Daily Voice Checkin toggle (one spoken question a day over iMessage).
         var voiceCheckinEnabled: Bool = true
+        /// Today's read (Actively Read): one topic a day to talk through, then a test.
+        var activelyReadEnabled: Bool = true
+        /// The one send time for every daily text: the user's local hour (0–23)
+        /// in `dailyTz` (an IANA zone the app sends from the device).
+        var dailyHour: Int = 9
+        var dailyTz: String = "America/Los_Angeles"
         var isGuest: Bool = false
 
         enum CodingKeys: String, CodingKey {
@@ -1257,6 +1263,9 @@ final class F2API {
             case imessagePaired = "imessage_paired"
             case recertEnabled = "recert_enabled"
             case voiceCheckinEnabled = "voice_checkin_enabled"
+            case activelyReadEnabled = "actively_read_enabled"
+            case dailyHour = "daily_hour"
+            case dailyTz = "daily_tz"
             case isGuest = "is_guest"
         }
 
@@ -1266,6 +1275,9 @@ final class F2API {
             imessagePaired = try c.decodeIfPresent(Bool.self, forKey: .imessagePaired) ?? false
             recertEnabled = try c.decodeIfPresent(Bool.self, forKey: .recertEnabled) ?? true
             voiceCheckinEnabled = try c.decodeIfPresent(Bool.self, forKey: .voiceCheckinEnabled) ?? true
+            activelyReadEnabled = try c.decodeIfPresent(Bool.self, forKey: .activelyReadEnabled) ?? true
+            dailyHour = try c.decodeIfPresent(Int.self, forKey: .dailyHour) ?? 9
+            dailyTz = try c.decodeIfPresent(String.self, forKey: .dailyTz) ?? "America/Los_Angeles"
             isGuest = try c.decodeIfPresent(Bool.self, forKey: .isGuest) ?? false
         }
     }
@@ -1290,6 +1302,23 @@ final class F2API {
         struct Res: Codable { let voice_checkin_enabled: Bool }
         let res: Res = try await put("/api/f2/profile", body: Body(voice_checkin_enabled: enabled))
         return res.voice_checkin_enabled
+    }
+
+    /// Flip Today's read (the text, the push and the banner; no handle needed).
+    func setActivelyReadEnabled(_ enabled: Bool) async throws -> Bool {
+        struct Body: Encodable { let actively_read_enabled: Bool }
+        struct Res: Codable { let actively_read_enabled: Bool }
+        let res: Res = try await put("/api/f2/profile", body: Body(actively_read_enabled: enabled))
+        return res.actively_read_enabled
+    }
+
+    /// The one send time for every daily text: the local hour, with the
+    /// device's zone so the server knows what "9" means.
+    func setDailyTime(hour: Int, tz: String) async throws -> (hour: Int, tz: String) {
+        struct Body: Encodable { let daily_hour: Int; let daily_tz: String }
+        struct Res: Codable { let daily_hour: Int; let daily_tz: String }
+        let res: Res = try await put("/api/f2/profile", body: Body(daily_hour: hour, daily_tz: tz))
+        return (res.daily_hour, res.daily_tz)
     }
 
     /// Flip the daily card. Server rejects enabling with no paired handle.

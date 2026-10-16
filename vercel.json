@@ -5,8 +5,8 @@
       "schedule": "0 * * * *"
     },
     {
-      "path": "/api/f2/daily-card",
-      "schedule": "0 16 * * *"
+      "path": "/api/f2/daily/tick",
+      "schedule": "0 * * * *"
     },
     {
       "path": "/api/onething/tick",
@@ -17,16 +17,8 @@
       "schedule": "5 * * * *"
     },
     {
-      "path": "/api/f2/actively-read/nudge",
-      "schedule": "0 19,20 * * *"
-    },
-    {
       "path": "/api/f2/knowledge/backfill",
       "schedule": "20 10 * * *"
-    },
-    {
-      "path": "/api/f2/voice-checkin/nudge",
-      "schedule": "0 0,1 * * *"
     }
   ]
 }

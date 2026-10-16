@@ -40,9 +40,6 @@ export type ActivelyReadPick = {
 /** Universal link: opens the app straight into the voice session (web falls back to the topic page). */
 export const readUrl = (threadId: string) => `https://feynd.cc/read/${threadId}`
 
-/** The noon send: PT, whatever the season (the cron fires at both 19:00 and 20:00 UTC). */
-export const NUDGE_HOUR_PT = 12
-
 /** An answer over iMessage counts for this long after the text went out. */
 const REPLY_WINDOW_MS = 36 * 60 * 60 * 1000
 
@@ -253,30 +250,32 @@ export function activelyReadPush(pick: ActivelyReadPick) {
 type NudgeResult = { user: string; status: 'sent' | 'no-topic' | 'resolved' | 'skipped' | 'error'; imessage?: boolean; push?: number; detail?: string }
 
 /**
- * Send today's pick to everyone who can receive it: an iMessage to daily-card
- * users, a push to users with a device token. Runs at noon PT (the cron fires
- * at 19:00 and 20:00 UTC and this keeps the one that is noon in LA); `force`
- * skips the clock (manual runs). Each channel goes once per day — the state
+ * Send today's pick to everyone with Today's read on: an iMessage to the
+ * paired handle, a push to users with a device token. The hourly tick
+ * (/api/f2/daily/tick) calls this with the users whose chosen hour is now
+ * (`userIds`, schema 057 — before 2026-10-16 this ran at noon PT for all);
+ * `onlyUserId` is for manual runs. Each channel goes once per day — the state
  * records it — so a rerun only fills in what failed.
  */
-export async function sendActivelyReadNudges(opts: { now?: Date; force?: boolean; onlyUserId?: string } = {}): Promise<NudgeResult[]> {
+export async function sendActivelyReadNudges(opts: { now?: Date; userIds?: string[]; onlyUserId?: string } = {}): Promise<NudgeResult[]> {
   const now = opts.now ?? new Date()
-  const hour = Number(new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', hour: 'numeric', hourCycle: 'h23' }).format(now))
-  if (!opts.force && hour !== NUDGE_HOUR_PT) return []
+  if (opts.userIds && opts.userIds.length === 0) return []
 
-  let q = f2Supabase().from('f2_users').select('id, username, imessage_handles, daily_chat_guid, daily_card_enabled, voice_checkin_enabled')
+  let q = f2Supabase().from('f2_users').select('id, username, imessage_handles, daily_chat_guid, actively_read_enabled')
+  if (opts.userIds) q = q.in('id', opts.userIds)
   if (opts.onlyUserId) q = q.eq('id', opts.onlyUserId)
   const { data: users, error } = await q
   if (error) throw new Error(`actively-read users query failed: ${error.message}`)
   const pushUsers = await usersWithPush()
 
   const out: NudgeResult[] = []
-  for (const u of (users ?? []) as { id: string; username: string; imessage_handles: string[] | null; daily_chat_guid: string | null; daily_card_enabled: boolean; voice_checkin_enabled: boolean }[]) {
+  for (const u of (users ?? []) as { id: string; username: string; imessage_handles: string[] | null; daily_chat_guid: string | null; actively_read_enabled: boolean }[]) {
     const handle = dailyHandle(u.imessage_handles)
-    // Anyone who takes Dodo texts gets the read: the daily card OR the voice
-    // checkin on. It used to require the card alone, so turning the card off
-    // (2026-10-12, once the checkin replaced it) silently stopped this text.
-    const canText = (u.daily_card_enabled || u.voice_checkin_enabled) && (!!u.daily_chat_guid || !!handle)
+    // Its own toggle (Settings → Daily card → Today's read, schema 057). It
+    // rode on the daily card alone until 2026-10-13, then on the card OR the
+    // voice checkin; each silently changed who got this text.
+    if (!u.actively_read_enabled) { out.push({ user: u.username, status: 'skipped' }); continue }
+    const canText = !!u.daily_chat_guid || !!handle
     const canPush = pushUsers.has(u.id)
     if (!canText && !canPush) { out.push({ user: u.username, status: 'skipped' }); continue }
     try {

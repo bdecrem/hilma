@@ -34,6 +34,9 @@ struct ProfileSheet: View {
     @AppStorage(VoiceEngine.defaultsKey) private var voiceEngine = VoiceEngine.fallback.rawValue
     @State private var recertEnabled = true
     @State private var voiceCheckinEnabled = true
+    @State private var activelyReadEnabled = true
+    /// The one send time for every daily text (local hour, 0–23).
+    @State private var dailyHour = 9
     /// Admin-only Dev mode: every Peck minigame open from the map.
     @AppStorage("devMode") private var devMode = false
     @State private var isGuest = false
@@ -44,13 +47,25 @@ struct ProfileSheet: View {
         VStack(spacing: 0) {
             handle
             header
-            ScrollView {
-                VStack(spacing: 0) {
-                    hero
-                    sections
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(spacing: 0) {
+                        hero
+                        sections
+                    }
                 }
+                .scrollIndicators(.hidden)
+                #if targetEnvironment(simulator)
+                // `-ProfileScrollTo daily` — scroll the sheet to a section for
+                // headless screenshots (the Daily card rows are below the fold).
+                .task {
+                    if let id = UserDefaults.standard.string(forKey: "ProfileScrollTo") {
+                        try? await Task.sleep(for: .seconds(1.5))
+                        withAnimation { proxy.scrollTo("section-\(id)", anchor: .top) }
+                    }
+                }
+                #endif
             }
-            .scrollIndicators(.hidden)
         }
         .background(FeyndTheme.bgRaised.ignoresSafeArea())
         .onChange(of: pickerItem) { _, item in
@@ -130,7 +145,15 @@ struct ProfileSheet: View {
                 dailyCardPaired = status.imessagePaired
                 recertEnabled = status.recertEnabled
                 voiceCheckinEnabled = status.voiceCheckinEnabled
+                activelyReadEnabled = status.activelyReadEnabled
+                dailyHour = status.dailyHour
                 isGuest = status.isGuest
+                // The server stores the hour with a zone; keep the zone the
+                // device's, so "9:00 AM" means 9 where the phone is.
+                let tz = TimeZone.current.identifier
+                if status.dailyTz != tz {
+                    Task { _ = try? await F2API.shared.setDailyTime(hour: status.dailyHour, tz: tz) }
+                }
                 // Mirror for views that render before this sheet ever loads
                 // (the topic screen's Refresher chip, notification sync).
                 UserDefaults.standard.set(status.recertEnabled, forKey: "recertEnabled")
@@ -156,6 +179,32 @@ struct ProfileSheet: View {
             voiceCheckinEnabled = !enabled // revert the optimistic flip
             dailyCardError = error.localizedDescription
         }
+    }
+
+    private func setActivelyRead(_ enabled: Bool) async {
+        do {
+            activelyReadEnabled = try await F2API.shared.setActivelyReadEnabled(enabled)
+        } catch {
+            activelyReadEnabled = !enabled // revert the optimistic flip
+            dailyCardError = error.localizedDescription
+        }
+    }
+
+    private func setDailyHour(_ hour: Int) async {
+        let before = dailyHour
+        dailyHour = hour
+        do {
+            dailyHour = try await F2API.shared.setDailyTime(hour: hour, tz: TimeZone.current.identifier).hour
+        } catch {
+            dailyHour = before
+            dailyCardError = error.localizedDescription
+        }
+    }
+
+    /// "9:00 AM" for the hour picker.
+    private static func hourLabel(_ h: Int) -> String {
+        let h12 = h % 12 == 0 ? 12 : h % 12
+        return "\(h12):00 \(h < 12 ? "AM" : "PM")"
     }
 
     private func setDailyCard(_ enabled: Bool) async {
@@ -508,6 +557,7 @@ struct ProfileSheet: View {
                 }
             }
             SettingsSection(label: "Daily card") {
+                Color.clear.frame(height: 0).id("section-daily")
                 SettingsCard {
                     // Delivery rides the paired iMessage handle above — the
                     // toggle is the whole setting.
@@ -538,6 +588,33 @@ struct ProfileSheet: View {
                     .padding(.horizontal, 14)
                     .padding(.vertical, 10)
                     SettingsDivider()
+                    // Today's read: one topic a day to talk through, then a quick test.
+                    HStack(spacing: 12) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Today's read")
+                                .font(.system(size: 15))
+                                .tracking(-0.2)
+                                .foregroundStyle(FeyndTheme.text)
+                            Text(activelyReadEnabled
+                                 ? "One topic a day to talk through with Dodo, then a quick test for its first star."
+                                 : "Off — no daily read")
+                                .font(.system(size: 12.5))
+                                .foregroundStyle(FeyndTheme.text3)
+                        }
+                        Spacer()
+                        Toggle("", isOn: Binding(
+                            get: { activelyReadEnabled },
+                            set: { on in
+                                activelyReadEnabled = on
+                                Task { await setActivelyRead(on) }
+                            }
+                        ))
+                        .labelsHidden()
+                        .tint(FeyndTheme.accent)
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
+                    SettingsDivider()
                     // The Daily Voice Checkin: one spoken question a day, same handle.
                     HStack(spacing: 12) {
                         VStack(alignment: .leading, spacing: 2) {
@@ -562,6 +639,34 @@ struct ProfileSheet: View {
                         .labelsHidden()
                         .tint(FeyndTheme.accent)
                         .disabled(!dailyCardPaired && imessageHandles.isEmpty && !voiceCheckinEnabled)
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
+                    SettingsDivider()
+                    // One send time for whatever is on above, in the phone's zone.
+                    HStack(spacing: 12) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Send at")
+                                .font(.system(size: 15))
+                                .tracking(-0.2)
+                                .foregroundStyle(FeyndTheme.text)
+                            Text("Every daily text that is on goes out at this hour")
+                                .font(.system(size: 12.5))
+                                .foregroundStyle(FeyndTheme.text3)
+                        }
+                        Spacer()
+                        Picker("Send at", selection: Binding(
+                            get: { dailyHour },
+                            set: { h in Task { await setDailyHour(h) } }
+                        )) {
+                            ForEach(0..<24, id: \.self) { h in
+                                Text(Self.hourLabel(h)).tag(h)
+                            }
+                        }
+                        .labelsHidden()
+                        .pickerStyle(.menu)
+                        .tint(FeyndTheme.accent)
+                        .accessibilityIdentifier("dailySendAt")
                     }
                     .padding(.horizontal, 14)
                     .padding(.vertical, 10)

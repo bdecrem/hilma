@@ -43,9 +43,6 @@ export type VoiceCheckin = {
 /** Universal link: opens the app straight into the checkin (web falls back to the topic page). */
 export const checkinUrl = (threadId: string) => `https://feynd.cc/checkin/${threadId}`
 
-/** The send: 5 pm PT, whatever the season (the cron fires at 00:00 and 01:00 UTC). */
-export const CHECKIN_HOUR_PT = 17
-
 /** A "9" over iMessage counts for this long after the text went out. */
 const REPLY_WINDOW_MS = 36 * 60 * 60 * 1000
 
@@ -264,17 +261,18 @@ Answer out loud: ${checkinUrl(c.thread_id)} (reply 9 to retire this topic)`
 type SendResult = { user: string; status: 'sent' | 'no-topic' | 'resolved' | 'skipped' | 'error'; detail?: string }
 
 /**
- * Text today's checkin to everyone with it on and an iMessage handle. Runs
- * at 5 pm PT (the cron fires at 00:00 and 01:00 UTC and this keeps the one
- * that is 17:00 in LA); `force` skips the clock. Once per day per user — the
+ * Text today's checkin to everyone with it on and an iMessage handle. The
+ * hourly tick (/api/f2/daily/tick) calls this with the users whose chosen
+ * hour is now (`userIds`, schema 057 — before 2026-10-16 this ran at 5 pm PT
+ * for all); `onlyUserId` is for manual runs. Once per day per user — the
  * state records the send — so a rerun only fills in what failed.
  */
-export async function sendVoiceCheckins(opts: { now?: Date; force?: boolean; onlyUserId?: string } = {}): Promise<SendResult[]> {
+export async function sendVoiceCheckins(opts: { now?: Date; userIds?: string[]; onlyUserId?: string } = {}): Promise<SendResult[]> {
   const now = opts.now ?? new Date()
-  const hour = Number(new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', hour: 'numeric', hourCycle: 'h23' }).format(now))
-  if (!opts.force && hour !== CHECKIN_HOUR_PT) return []
+  if (opts.userIds && opts.userIds.length === 0) return []
 
   let q = f2Supabase().from('f2_users').select('id, username, imessage_handles, daily_chat_guid, voice_checkin_enabled').eq('voice_checkin_enabled', true)
+  if (opts.userIds) q = q.in('id', opts.userIds)
   if (opts.onlyUserId) q = q.eq('id', opts.onlyUserId)
   const { data: users, error } = await q
   if (error) throw new Error(`voice-checkin users query failed: ${error.message}`)
