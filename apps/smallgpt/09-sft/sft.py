@@ -17,6 +17,7 @@ Start from the Usenet base model (out/usenet/final.pt) and train it on
 Everything else is step 6's loop: AdamW, warmup + cosine, gradient clipping.
 
 Run:  .venv/bin/python 09-sft/sft.py          (a few minutes on the iMac)
+      .venv/bin/python 09-sft/sft.py --data 09-sft/qa-usenet.jsonl --out sft-usenet --epochs 2   (step 9b, the cranky one)
 Writes out/sft/final.pt and out/sft/log.jsonl.
 """
 
@@ -174,14 +175,17 @@ if __name__ == "__main__":
     ap.add_argument("--no-mask", action="store_true", help="train on every token, question included")
     ap.add_argument("--lr", type=float, default=LR, help="peak learning rate")
     ap.add_argument("--out", default="", help="output folder name under out/ (default sft, or sft-nomask)")
+    ap.add_argument("--epochs", type=int, default=EPOCHS, help="passes over the data")
+    ap.add_argument("--data", default=DATA, help="the pairs to train on (default 09-sft/qa.jsonl)")
     args = ap.parse_args()
     LR, MIN_LR = args.lr, args.lr / 10
+    EPOCHS = args.epochs
     mask = not args.no_mask
     out_dir = os.path.join(ROOT, "out", args.out) if args.out else (OUT if mask else OUT + "-nomask")
     os.makedirs(out_dir, exist_ok=True)
 
     chat = Chat(Tokenizer.load(TOK))
-    rows = [json.loads(l) for l in open(DATA)]
+    rows = [json.loads(l) for l in open(args.data)]
     train_rows, val_rows = split(rows)
     enc = lambda rs: [chat.example(r["q"], r["a"]) for r in rs]  # noqa: E731
     train, val = enc(train_rows), enc(val_rows)

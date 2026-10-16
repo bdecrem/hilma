@@ -1,6 +1,6 @@
 """Step 9, part 4: a small web page to talk to the SFT model.
 
-Type a question, get the SFT model's answer; tick "base" to also see what the
+Type a question, get the cranky SFT model's answer (step 9b; --ckpt out/sft/final.pt for the helpful one); tick "base" to also see what the
 pretrained model does with the same text. Every question is a fresh
 conversation, because the model was only trained on single question-and-answer
 pairs. Temperature and top-k are on the page.
@@ -63,7 +63,7 @@ PAGE = """<!doctype html>
 <body>
 <header>
   <h1>smallgpt · step 9</h1>
-  <p>10M parameters, pretrained on Usenet 1981–1991, then SFT on 2,945 computing Q&amp;A pairs. Each question is a new conversation.</p>
+  <p>10M parameters, pretrained on Usenet 1981–1991, then SFT on 3,206 real Usenet questions and replies, made crankier. Each question is a new conversation. The same thing runs in the browser at ola.cx/smallgpt/chat.</p>
 </header>
 <main id="log"><div class="empty" id="empty">Try:
 <a>How do I quit vi?</a> · <a>Is a 2400 baud modem worth it?</a> · <a>What is a SIMM?</a> · <a>Should I buy an Amiga or an Atari ST?</a></div></main>
@@ -113,7 +113,7 @@ async function ask() {
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--port", type=int, default=3270)
-    ap.add_argument("--ckpt", default=os.path.join(OUT, "final.pt"))
+    ap.add_argument("--ckpt", default=os.path.join(ROOT, "out", "sft-usenet", "final.pt"))
     args = ap.parse_args()
 
     tok = Tokenizer.load(TOK)

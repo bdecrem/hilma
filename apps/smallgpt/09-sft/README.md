@@ -14,6 +14,15 @@ cd apps/smallgpt
 .venv/bin/python 09-sft/chat.py      # a web page to talk to it: http://localhost:3270
 ```
 
+Step 9b, the cranky hacker (the model the chat page uses):
+
+```bash
+python3 09-sft/threads.py              # on the Mac mini, where the raw archive is: real questions + replies, 42 s
+.venv/bin/python 09-sft/usenet_qa.py   # Claude cleans 4,800 of them into pairs, ~35 min
+.venv/bin/python 09-sft/sft.py --data 09-sft/qa-usenet.jsonl --out sft-usenet --epochs 2
+.venv/bin/python 09-sft/export_web.py  # the models as files for ola.cx/smallgpt/chat
+```
+
 ## The data
 
 `gen.py` has Claude (Sonnet 5.5, through the `claude` CLI on this machine's
@@ -108,3 +117,66 @@ limit: it teaches a model how to answer, not what is true. What the model
 knows came from pretraining, and at 10 M parameters that is the right words
 in roughly the right neighbourhood (Font/DA Mover with fonts, modems with
 terminal programs and cables) without the facts.
+
+## 9b · The cranky hacker, from real threads
+
+SFT copies the voice of its answers, and the answers above were written as a
+helpful regular. For a cranky 1985 hacker we went back to the archive itself.
+
+**Real questions, real replies.** A Usenet reply usually opens with "In article
+<message-id> someone writes:", and that id is the post it answers.
+`threads.py` reads the raw archive (2.5 M posts, on the Mac mini), keeps the
+posts that start a thread and ask something (no "Re:", a question mark,
+60–1,500 characters after step 6b's cleaning) and the replies that name one of
+them. 445,913 question posts, 522,154 replies naming a parent, 91,884
+questions with at least one reply — 57% from comp.*, the rest mostly rec.*.
+
+**Cleaned, and made crankier.** `usenet_qa.py` samples 4,800 of those (three
+quarters comp.*), and Claude goes through them thirty at a time: it drops
+the ones that don't work as a question and answer (no real answer, an
+announcement, a code listing, private details), writes the question the way
+the poster would ask it in a sentence or two, and the answer from what the
+replies actually said, one to four sentences, every one with a cranky touch.
+The facts come from the replies. 3,206 kept (81% comp.*), in `qa-usenet.jsonl`:
+
+```
+Q: Is there a simple way to get double-spacing in LaTeX or TeX? ...
+A: In LaTeX, put \renewcommand{\baselinestretch}{2.0} before \begin{document}.
+   In plain TeX, set \baselineskip. Sigh, it's all in the manual if you look
+   in the right place.
+```
+
+**Training.** The same `sft.py`, from the same Usenet base model (not from the
+helpful one). Questions are longer here (25 words on average, answers 39), so
+37% of the tokens are masked instead of 20%. Held-out loss: 4.02 → 3.45 after
+two passes. Four passes bottomed at 3.456 in the second and climbed to 3.480
+by the fourth (memorizing), so the kept model has two: 192 rounds, 66 seconds.
+
+**What it says.** Rambling and repetitive, mostly wrong, and grumpy at the
+end: "Basic stuff.", "Go quit whining.", "Check the dealer before asking the
+net.", "Ignore it, and I'll dig up a good deal next time." Now and then a
+real fact from pretraining comes through, in the right place:
+
+```
+Q: Where can I get the source for GNU Emacs?
+A: There's a free-standing GNU Emacs package for the PC with Minix. It's a PD
+   port of GNU Emacs, not GNU Emacs; it's available on prep.ai.mit.edu in
+   pub/gnu. ...
+```
+
+The loss is higher than the helpful model's (3.45 vs 3.31) because real
+replies are less predictable than Claude's tidy ones, not because it learned
+less.
+
+## The chat page
+
+ola.cx/smallgpt/chat runs the models in the browser, with no server.
+`export_web.py` writes each one as int8 matrices with one float32 scale per
+row (10.3 MB instead of 41) plus the tokenizer's merges, into
+`public/smallgpt/chat/`. `gpt.mjs` is the tokenizer and the forward pass in
+plain JavaScript, one token at a time with a cache of the earlier tokens' keys
+and values: about 9 ms a token on the iMac, in Chrome and Safari. Greedy
+answers from the int8 weights match float32 PyTorch token for token, and the
+JavaScript matches PyTorch on the same int8 weights token for token. The page
+offers the cranky model (default), the helpful one, and the base model beside
+either.

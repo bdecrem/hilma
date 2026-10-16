@@ -1,0 +1,192 @@
+/* The chat page: the explorer's back link, a header that stays, the log, an input bar that stays. Scoped under .sgc. */
+
+.sgc {
+  max-width: 760px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.sgc-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--paper);
+  border-bottom: 1px solid var(--rule);
+  padding: calc(16px + env(safe-area-inset-top)) 16px 12px;
+}
+.sgc-head h1 {
+  font-size: clamp(26px, 6vw, 34px);
+  margin: 6px 0 4px;
+}
+.sgc-head p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--ink-2);
+  max-width: 40em;
+}
+
+.sgc-log {
+  flex: 1;
+  padding: 4px 16px 16px;
+}
+
+.sgc-try {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 20px 0;
+}
+.sgc-try button {
+  font: inherit;
+  font-size: 15px;
+  padding: 8px 12px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+}
+.sgc-try button:hover {
+  background: var(--paper-2);
+}
+
+.sgc-turn {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--rule);
+}
+.sgc-q {
+  margin: 0;
+  font-weight: 600;
+  font-size: 18px;
+}
+.sgc-a {
+  margin-top: 8px;
+  font-family: var(--font-mono), monospace;
+  font-size: 15px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.sgc-a.base {
+  color: var(--ink-2);
+}
+.sgc-tag {
+  display: inline-block;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border-radius: 3px;
+  margin-right: 8px;
+  vertical-align: 1px;
+  color: var(--paper);
+  background: var(--blue);
+}
+.sgc-a.cranky .sgc-tag {
+  background: var(--red);
+}
+.sgc-a.base .sgc-tag {
+  background: var(--ink-3);
+}
+.sgc-wait,
+.sgc-stat {
+  color: var(--ink-3);
+}
+.sgc-stat {
+  font-size: 12px;
+  white-space: nowrap;
+}
+.sgc-err {
+  color: var(--red);
+}
+
+.sgc-bar {
+  position: sticky;
+  bottom: 0;
+  background: var(--paper);
+  border-top: 1px solid var(--rule);
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+}
+.sgc-row {
+  display: flex;
+  gap: 8px;
+}
+.sgc-row input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  font-size: 16px; /* 16px or iOS zooms in on focus */
+  padding: 10px 12px;
+  border: 1.5px solid var(--ink);
+  border-radius: 8px;
+  background: #fffaf0;
+  color: var(--ink);
+}
+.sgc-row button {
+  font: inherit;
+  font-weight: 700;
+  padding: 10px 18px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--red);
+  color: #fff;
+  cursor: pointer;
+}
+.sgc-row button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.sgc-opts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 18px;
+  margin-top: 10px;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+.sgc-opts label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.sgc-opts input[type='range'] {
+  width: 84px;
+  accent-color: var(--blue);
+}
+.sgc-opts input[type='checkbox'] {
+  accent-color: var(--blue);
+}
+
+.sgc-models {
+  display: inline-flex;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.sgc-models button {
+  font: inherit;
+  font-size: 12px;
+  padding: 4px 10px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+.sgc-models button.on {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.sgc-loading {
+  margin: 8px 0 0;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  color: var(--blue);
+}
