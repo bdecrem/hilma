@@ -29,7 +29,7 @@
     "Instrument Sans": {},
     "Instrument Serif": { "italic": true },
     "Inter": {},
-    "Inter Tight": {},
+    "Inter Tight": { "og": [600, 900] },
     "JetBrains Mono": {},
     "Montserrat": {},
     "Nunito": {},

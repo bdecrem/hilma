@@ -3,6 +3,12 @@
 // journal's ink with one red accent — and it is stored on the day's row.
 // The day's text changing (an added thought, an edit) redraws it.
 //
+// Whimsy: when a sentence resists a clear picture (a feeling, a list, admin),
+// the model may draw something whimsical instead (a smiley face, a waving
+// stick figure) rather than strain for a literal drawing nobody can read. The
+// code allows it only when the day before was not whimsical
+// (`whimsyAllowed`), so at most every other doodle is one.
+//
 // Words: almost never. The model may put a word or two in the drawing only
 // on a day the code allows it (`wordAllowed`: nothing worded in the last
 // three days), and it is told to use that only when the doodle cannot land
@@ -42,14 +48,18 @@ function anthropic(): Anthropic {
 const SYSTEM = [
   'You doodle in the margin of a paper journal. Each day the person keeps one sentence (sometimes a few) about their day, and you draw one small doodle beside it, the way someone with a pen would in twenty seconds: one image, a few confident strokes, a little wit.',
   '',
-  'How to choose the image: read the sentence and pick the ONE thing worth drawing — a concrete object, a small scene, a gesture. Do not illustrate every noun. Prefer the specific over the symbolic: the actual cliff, the actual cushion castle, not a heart or a thumbs-up. No smiley faces, hearts, stars, check marks or lightbulbs unless the sentence is literally about them. No faces on objects. A dry, warm sense of humour is welcome; sentiment is not.',
+  'How to choose the image: read the sentence and pick the ONE thing worth drawing — a concrete object, a small scene, a gesture. Do not illustrate every noun. Prefer the specific over the symbolic: the actual cliff, the actual cushion castle, not a heart or a thumbs-up. No hearts, stars, check marks or lightbulbs unless the sentence is literally about them. A dry, warm sense of humour is welcome; sentiment is not.',
   '',
-  'The drawing is SVG element markup for a 340 by 170 viewBox (landscape; leave air around the drawing). The page styles it: every element is stroke-only in ink, 2.2 wide, round caps, no fill. Use these classes and nothing else: class="r" for the ONE red accent (a single element, or two that read as one thing), class="thin" for lighter detail strokes, class="f" for a small filled ink dot, class="fr" for a small filled red dot. Allowed elements: path, circle, ellipse, rect, line, polyline, polygon, g. Between 3 and 10 elements. No style attributes, no stroke or fill attributes, no defs, no images, no text unless the instruction for the day allows a word.',
+  'A doodle that cannot be read at a glance has failed. Simple and clear beats clever and tangled: if the literal picture would need five objects, arrows or explaining, it is the wrong picture.',
   '',
-  'Return JSON: { "alt": a plain six-to-twelve-word description of what is drawn, "svg": the element markup, "word": the word or two the drawing carries as a <text> element, or null }.',
+  'Hard days: some sentences give you nothing concrete that can be drawn clearly (a mood, an abstract thought, a list of chores, work admin). When the day allows whimsy (the instruction says so) and the sentence is one of those, do not strain: draw something whimsical and instantly readable instead, a small cheerful aside rather than an illustration. A smiley face, a little sun in sunglasses, a waving stick figure, a cup of tea steaming hello, a cat asleep, a tiny creature cheering, a paper boat. Faces are welcome there. Set "whimsy" to true when you do this, false when you drew the sentence itself. When the sentence has a good concrete image, always draw that, even on a whimsy day.',
+  '',
+  'The drawing is SVG element markup for a 340 by 170 viewBox (landscape; leave air around the drawing). The page styles it: every element is stroke-only in ink, 2.2 wide, round caps, no fill. Use these classes and nothing else: class="r" for the ONE red accent (a single element, or two that read as one thing), class="thin" for lighter detail strokes, class="f" for a small filled ink dot, class="fr" for a small filled red dot. Allowed elements: path, circle, ellipse, rect, line, polyline, polygon, g. Between 3 and 10 elements. Write every attribute value in single quotes (d=\'M10 20 L30 40\'), never double quotes: the markup travels inside a JSON string. No style attributes, no stroke or fill attributes, no defs, no images, no text unless the instruction for the day allows a word.',
+  '',
+  'Return JSON: { "alt": a plain six-to-twelve-word description of what is drawn, "svg": the element markup, "word": the word or two the drawing carries as a <text> element, or null, "whimsy": true when the drawing is a whimsical stand-in rather than the sentence }.',
   '',
   'Examples of the hand, from earlier pages:',
-  ...EXAMPLES.flatMap((e) => [`Sentence: ${e.sentence}`, `svg: ${e.svg}`, '']),
+  ...EXAMPLES.flatMap((e) => [`Sentence: ${e.sentence}`, `svg: ${e.svg.replace(/"/g, "'")}`, '']),
 ].join('\n')
 
 const SCHEMA = {
@@ -58,18 +68,19 @@ const SCHEMA = {
     alt: { type: 'string' },
     svg: { type: 'string' },
     word: { type: ['string', 'null'] },
+    whimsy: { type: 'boolean' },
   },
-  required: ['alt', 'svg', 'word'],
+  required: ['alt', 'svg', 'word', 'whimsy'],
   additionalProperties: false,
 }
 
-export type Drawn = { svg: string; alt: string; word: string | null }
+export type Drawn = { svg: string; alt: string; word: string | null; whimsy: boolean }
 
 /// Draw a doodle for `text` (the day's sentences, one per line). `recent` is
 /// what the days just before looked like, so the doodle does not repeat them.
 export async function drawDoodle(
   text: string,
-  opts: { wordAllowed: boolean; recent?: { text: string; alt: string | null }[]; avoid?: string[]; take?: string },
+  opts: { wordAllowed: boolean; whimsyAllowed: boolean; recent?: { text: string; alt: string | null }[]; avoid?: string[]; take?: string },
 ): Promise<Drawn> {
   // A link in the sentence is drawn as its domain, not its path.
   const lines = plainText(text).split('\n').map((t) => t.trim()).filter(Boolean)
@@ -89,26 +100,52 @@ export async function drawDoodle(
   parts.push('')
   parts.push(
     opts.wordAllowed
-      ? 'Words today: a word or two is allowed, as a single <text x=".." y="..">…</text> element (the page sets its handwriting font at 20px) — a label, a sound, a small aside in the margin, like "surf day!" or "again today" on earlier pages. Use it when it makes the doodle land better; skip it when the drawing says it alone. Put the same word in "word", or null.'
+      ? 'Words today: a word or two is allowed, as a single <text x=\'..\' y=\'..\'>…</text> element (the page sets its handwriting font at 20px) — a label, a sound, a small aside in the margin, like "surf day!" or "again today" on earlier pages. Use it when it makes the doodle land better; skip it when the drawing says it alone. Put the same word in "word", or null.'
       : 'Words today: none at all. No <text>. "word" is null.',
+  )
+  parts.push(
+    opts.whimsyAllowed
+      ? 'Whimsy today: allowed, if the sentence is a hard one to draw (see above).'
+      : 'Whimsy today: no. Yesterday was whimsical, so find the clearest concrete image in the sentence. "whimsy" is false.',
   )
   if (opts.take) parts.push('', opts.take)
 
+  // A reply can come back cut off after its first shape (an attribute's double
+  // quote closed the JSON string: 10 of 75 drawings before 2026-10-16, a lone
+  // rectangle on the page). The prompt asks for single quotes; a drawing with
+  // fewer than three shapes, or markup that stops mid-tag, is drawn again.
+  let last = ''
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const got = await drawOnce(parts.join('\n'), opts)
+    if (got.ok) return got.drawn
+    last = got.why
+    console.warn(`[onething] doodle retry ${attempt + 1}: ${last}`)
+  }
+  throw new Error(`onething doodle: ${last}`)
+}
+
+async function drawOnce(prompt: string, opts: { wordAllowed: boolean; whimsyAllowed: boolean }): Promise<{ ok: true; drawn: Drawn } | { ok: false; why: string }> {
   const res = await anthropic().messages.create({
     model: DOODLE_MODEL,
     max_tokens: 4096,
     output_config: { effort: DOODLE_EFFORT, format: { type: 'json_schema', schema: SCHEMA } },
     system: [{ type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } }],
-    messages: [{ role: 'user', content: parts.join('\n') }],
+    messages: [{ role: 'user', content: prompt }],
   })
   if (res.stop_reason === 'refusal') throw new Error('onething doodle: the model declined')
   const block = res.content.find((b) => b.type === 'text')
   if (!block || block.type !== 'text') throw new Error(`onething doodle: no text in the reply (stop ${res.stop_reason})`)
   const out = JSON.parse(block.text) as Drawn
-  const svg = sanitizeSvg(out.svg, { allowText: opts.wordAllowed })
-  if (!svg) throw new Error(`onething doodle: nothing drawable came back (${String(out.svg ?? '').length} chars: ${String(out.svg ?? '').slice(0, 200)})`)
+  const raw = String(out.svg ?? '').trim()
+  const svg = sanitizeSvg(raw, { allowText: opts.wordAllowed })
+  if (!svg || !raw.endsWith('>') || shapes(svg) < 3) return { ok: false, why: `cut off or too thin (${raw.length} chars: ${raw.slice(0, 120)})` }
   const word = opts.wordAllowed && /<text\b/.test(svg) ? (out.word ?? textContent(svg)) : null
-  return { svg, alt: String(out.alt ?? '').slice(0, 200), word: word ? word.slice(0, 40) : null }
+  return { ok: true, drawn: { svg, alt: String(out.alt ?? '').slice(0, 200), word: word ? word.slice(0, 40) : null, whimsy: opts.whimsyAllowed && out.whimsy === true } }
+}
+
+/// How many drawing elements (not groups) a sanitized doodle has.
+export function shapes(svg: string): number {
+  return (svg.match(/<(path|circle|ellipse|rect|line|polyline|polygon|text)\b/g) ?? []).length
 }
 
 /// A word is allowed on `day` when none of the entries in the WORD_GAP_DAYS
@@ -116,6 +153,13 @@ export async function drawDoodle(
 export function wordAllowed(entries: Pick<Entry, 'day' | 'doodle_word'>[], day: string): boolean {
   const floor = addDaysIso(day, -WORD_GAP_DAYS)
   return !entries.some((e) => e.day !== day && e.day >= floor && e.day <= day && !!e.doodle_word)
+}
+
+/// Whimsy is allowed on `day` unless the entry just before it was whimsical,
+/// so at most every other doodle is a whimsical stand-in.
+export function whimsyAllowed(entries: Pick<Entry, 'day' | 'doodle_whimsy'>[], day: string): boolean {
+  const before = entries.filter((e) => e.day < day).sort((a, b) => (a.day < b.day ? 1 : -1))[0]
+  return !before?.doodle_whimsy
 }
 
 function addDaysIso(day: string, n: number): string {
@@ -194,7 +238,7 @@ function textContent(svg: string): string | null {
 
 // ---------- storage ----------
 
-type Context = { entry: Entry; allowed: boolean; recent: { text: string; alt: string | null }[] }
+type Context = { entry: Entry; allowed: boolean; whimsy: boolean; recent: { text: string; alt: string | null }[] }
 
 /// What drawing one entry needs: the row, whether a word is allowed that day,
 /// and the days just before. Null when the owner has doodles turned off.
@@ -210,14 +254,14 @@ async function drawContext(entryId: string, userId?: string): Promise<Context | 
   if (owner && owner.doodles === false) return null
   const { data: before, error: e2 } = await sb
     .from('onething_entries')
-    .select('day, text, doodle_alt, doodle_word')
+    .select('day, text, doodle_alt, doodle_word, doodle_whimsy')
     .eq('user_id', e.user_id)
     .lt('day', e.day)
     .order('day', { ascending: false })
     .limit(5)
   if (e2) throw new Error(`onething doodle: recent failed: ${e2.message}`)
-  const rows = (before ?? []) as Pick<Entry, 'day' | 'text' | 'doodle_alt' | 'doodle_word'>[]
-  return { entry: e, allowed: wordAllowed(rows, e.day), recent: rows.slice(0, 3).map((r) => ({ text: r.text, alt: r.doodle_alt ?? null })) }
+  const rows = (before ?? []) as Pick<Entry, 'day' | 'text' | 'doodle_alt' | 'doodle_word' | 'doodle_whimsy'>[]
+  return { entry: e, allowed: wordAllowed(rows, e.day), whimsy: whimsyAllowed(rows, e.day), recent: rows.slice(0, 3).map((r) => ({ text: r.text, alt: r.doodle_alt ?? null })) }
 }
 
 /// Draw and store the doodle for one entry row. Returns what was drawn, or
@@ -226,10 +270,10 @@ export async function doodleEntry(entryId: string): Promise<Drawn | null> {
   const ctx = await drawContext(entryId)
   if (!ctx) return null
   const { entry: e } = ctx
-  const drawn = await drawDoodle(e.text, { wordAllowed: ctx.allowed, recent: ctx.recent })
+  const drawn = await drawDoodle(e.text, { wordAllowed: ctx.allowed, whimsyAllowed: ctx.whimsy, recent: ctx.recent })
   const { error: e3 } = await f2Supabase()
     .from('onething_entries')
-    .update({ doodle: drawn.svg, doodle_alt: drawn.alt, doodle_word: drawn.word, doodled_at: new Date().toISOString() })
+    .update({ doodle: drawn.svg, doodle_alt: drawn.alt, doodle_word: drawn.word, doodle_whimsy: drawn.whimsy, doodled_at: new Date().toISOString() })
     .eq('id', entryId)
     // The text may have changed while we drew; a newer save redraws it.
     .eq('updated_at', e.updated_at)
@@ -255,7 +299,7 @@ export async function redrawOptions(entryId: string, userId: string): Promise<Dr
   if (!ctx) throw new Error('Doodles are off. Turn them on in settings.')
   const avoid = ctx.entry.doodle_alt ? [ctx.entry.doodle_alt] : []
   const got = await Promise.allSettled(
-    TAKES.slice(0, REDRAW_TAKES).map((take) => drawDoodle(ctx.entry.text, { wordAllowed: ctx.allowed, recent: ctx.recent, avoid, take })),
+    TAKES.slice(0, REDRAW_TAKES).map((take) => drawDoodle(ctx.entry.text, { wordAllowed: ctx.allowed, whimsyAllowed: ctx.whimsy, recent: ctx.recent, avoid, take })),
   )
   const ok = got.flatMap((g) => (g.status === 'fulfilled' ? [g.value] : []))
   for (const g of got) if (g.status === 'rejected') console.error('[onething] redraw take failed', entryId, g.reason)
@@ -265,16 +309,16 @@ export async function redrawOptions(entryId: string, userId: string): Promise<Dr
 
 /// Store the take the person picked. The markup comes back from the browser,
 /// so it goes through the sanitizer again, with words only on a day that allows them.
-export async function keepRedraw(entryId: string, userId: string, pick: { svg: string; alt: string }): Promise<Drawn> {
+export async function keepRedraw(entryId: string, userId: string, pick: { svg: string; alt: string; whimsy?: boolean }): Promise<Drawn> {
   const ctx = await drawContext(entryId, userId)
   if (!ctx) throw new Error('Doodles are off. Turn them on in settings.')
   const svg = sanitizeSvg(pick.svg, { allowText: ctx.allowed })
   if (!svg) throw new Error('That drawing came back empty.')
   const word = ctx.allowed ? textContent(svg) : null
-  const drawn = { svg, alt: String(pick.alt ?? '').slice(0, 200), word: word ? word.slice(0, 40) : null }
+  const drawn = { svg, alt: String(pick.alt ?? '').slice(0, 200), word: word ? word.slice(0, 40) : null, whimsy: ctx.whimsy && pick.whimsy === true }
   const { error } = await f2Supabase()
     .from('onething_entries')
-    .update({ doodle: drawn.svg, doodle_alt: drawn.alt, doodle_word: drawn.word, doodled_at: new Date().toISOString() })
+    .update({ doodle: drawn.svg, doodle_alt: drawn.alt, doodle_word: drawn.word, doodle_whimsy: drawn.whimsy, doodled_at: new Date().toISOString() })
     .eq('id', entryId)
     .eq('user_id', userId)
   if (error) throw new Error(`onething doodle: save failed: ${error.message}`)

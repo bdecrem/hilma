@@ -4,7 +4,7 @@ import { COOKIE, findUserById, verifySession } from '@/lib/onething/core'
 import { keepRedraw, redrawOptions } from '@/lib/onething/doodle'
 
 // Redraw a day's doodle. POST { id } draws three takes in parallel and
-// returns them without storing anything (~5–10 s); PUT { id, svg, alt }
+// returns them without storing anything (~5–10 s); PUT { id, svg, alt, whimsy }
 // stores the one the person picked (sanitized again on the way in).
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -31,10 +31,10 @@ export async function POST(req: Request) {
 export async function PUT(req: Request) {
   const user = await who()
   if (!user) return NextResponse.json({ error: 'Sign in first.' }, { status: 401 })
-  const body = (await req.json().catch(() => ({}))) as { id?: string; svg?: string; alt?: string }
+  const body = (await req.json().catch(() => ({}))) as { id?: string; svg?: string; alt?: string; whimsy?: boolean }
   if (!body.id || !body.svg) return NextResponse.json({ error: 'Which drawing?' }, { status: 400 })
   try {
-    const drawn = await keepRedraw(body.id, user.id, { svg: body.svg, alt: body.alt ?? '' })
+    const drawn = await keepRedraw(body.id, user.id, { svg: body.svg, alt: body.alt ?? '', whimsy: body.whimsy === true })
     return NextResponse.json({ ok: true, ...drawn })
   } catch (e) {
     return NextResponse.json({ error: (e as Error).message.replace(/^onething doodle: /, '') }, { status: 400 })

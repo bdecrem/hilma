@@ -1,7 +1,7 @@
 // Pure checks for the doodle layer: the sanitizer keeps the drawing and drops
 // everything else; the word gate opens only after three wordless days.
 //   npx tsx scripts/onething/doodle-check.ts
-import { sanitizeSvg, wordAllowed } from '../../src/lib/onething/doodle'
+import { sanitizeSvg, whimsyAllowed, wordAllowed } from '../../src/lib/onething/doodle'
 
 let fails = 0
 function eq(name: string, got: unknown, want: unknown) {
@@ -29,6 +29,13 @@ eq('word three days ago: no', wordAllowed([worded('2026-09-07'), plain('2026-09-
 eq('word four days ago: yes', wordAllowed([worded('2026-09-06'), plain('2026-09-07'), plain('2026-09-08'), plain('2026-09-09')], '2026-09-10'), true)
 eq('a redraw of the same day ignores its own word', wordAllowed([worded('2026-09-10'), plain('2026-09-09')], '2026-09-10'), true)
 eq('a later worded day does not block an earlier redraw', wordAllowed([worded('2026-09-12')], '2026-09-10'), true)
+
+const odd = (day: string, w: boolean) => ({ day, doodle_whimsy: w })
+eq('whimsy: first day allowed', whimsyAllowed([], '2026-10-16'), true)
+eq('whimsy: not the day after a whimsical one', whimsyAllowed([odd('2026-10-15', true)], '2026-10-16'), false)
+eq('whimsy: allowed after a plain day', whimsyAllowed([odd('2026-10-14', true), odd('2026-10-15', false)], '2026-10-16'), true)
+eq('whimsy: a gap still looks at the last entry', whimsyAllowed([odd('2026-10-10', true)], '2026-10-16'), false)
+eq('whimsy: a redraw ignores its own day and later days', whimsyAllowed([odd('2026-10-16', true), odd('2026-10-17', true), odd('2026-10-15', false)], '2026-10-16'), true)
 
 if (fails) { console.log(`${fails} failed`); process.exit(1) }
 console.log('all ok')

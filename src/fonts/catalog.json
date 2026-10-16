@@ -534,10 +534,23 @@
             100,
             900
           ],
-          "bytes": 125632
+          "bytes": 125576
         }
       ],
-      "og": []
+      "og": [
+        {
+          "file": "InterTight-600.ttf",
+          "style": "normal",
+          "weight": 600,
+          "bytes": 146288
+        },
+        {
+          "file": "InterTight-900.ttf",
+          "style": "normal",
+          "weight": 900,
+          "bytes": 147336
+        }
+      ]
     },
     "JetBrains Mono": {
       "family": "JetBrains Mono",
@@ -850,5 +863,5 @@
       "og": []
     }
   },
-  "generated": "2026-10-12"
+  "generated": "2026-10-16"
 }

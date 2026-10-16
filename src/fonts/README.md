@@ -32,7 +32,7 @@ list the file in `outputFileTracingIncludes` in `next.config.ts` (as
 
 ## Catalog
 
-Built 2026-10-12.
+Built 2026-10-16.
 
 ### Anton
 
@@ -242,6 +242,8 @@ variable (wght 100–900) · `ofl/intertight` · InterTight.woff2 123 KB
 import localFont from 'next/font/local'
 const font = localFont({ src: '../../fonts/inter-tight/InterTight.woff2', weight: '100 900', variable: '--font-inter-tight', display: 'swap' })
 ```
+
+OG: `inter-tight/InterTight-600.ttf` → `{ name: 'Inter Tight', weight: 600, style: 'normal' }`; `inter-tight/InterTight-900.ttf` → `{ name: 'Inter Tight', weight: 900, style: 'normal' }`
 
 ### JetBrains Mono
 

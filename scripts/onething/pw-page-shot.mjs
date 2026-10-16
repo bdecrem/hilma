@@ -22,7 +22,7 @@ lp.on('pageerror', (e) => errs.push(String(e)))
 await lp.goto(`${base}/onething`, { waitUntil: 'networkidle' })
 await lp.waitForSelector('.oj-hero', { timeout: 30000 }); await lp.waitForTimeout(800)
 await lp.screenshot({ path: `${dir}/landing.png`, fullPage: true })
-console.log('landing samples:', await lp.locator('.oj-tile.sample').count(), '· sign-in form:', await lp.locator('#start form').count())
+console.log('landing samples:', await lp.locator('.oj-pad.sample').count(), '· sign-in form:', await lp.locator('#start form').count())
 
 // signed in
 const ctx = await b.newContext(opts)

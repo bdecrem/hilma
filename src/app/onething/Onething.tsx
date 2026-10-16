@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { MILESTONES, pointsAfterRun, pointsForEntry, type Level } from '@/lib/onething/levels';
 import { EXAMPLES } from '@/lib/onething/examples';
 import Plant from './Plant';
@@ -9,12 +9,14 @@ import Doodle from './Doodle';
 import { fitJpeg, squareJpeg } from './picture';
 import { plainText, splitLinks } from '@/lib/onething/links';
 
-/* onething, the jelly journal (2026-10-02). Drawn with the craft of the Dodo
- * redesign — glossy jelly, squash and stretch, a lot of colour — with
- * onething's own cast: the ink drop is the character, the six day colours are
- * the palette, today's colour floods the top of the page, and the month is a wall
- * of day cards. Styles: journal.css (.oj-*), plus
- * onething.css for the doodles, the plant and the payoff scene. */
+/* onething, the tear-off calendar (2026-10-16; before it, the jelly journal of
+ * 2026-10-02). Today is the top sheet of a day-by-day desk pad: a giant date,
+ * Sundays in red and Saturdays in blue, the question and the sentence printed
+ * under it. The days already lived are torn-off sheets on the wall below. Flat
+ * paper and ink, no gloss: warm wall, cream sheets, black ink, one red. The ink
+ * drop is still the character, drawn flat in ink. Styles: tearoff.css (.oj-*),
+ * plus onething.css for the doodles, the plant and the payoff scene.
+ * Every behaviour is the jelly journal's; only the look changed. */
 
 type Entry = { id: string; day: string; text: string; streak: number; points: number; doodle?: string | null; doodle_alt?: string | null; photo?: string | null; photo_w?: number | null; photo_h?: number | null };
 type Board = { points: number; streak: number; best: number; doneToday: boolean; level: Level; next: Level | null; index: number };
@@ -26,7 +28,7 @@ type Me = {
   today?: string; board?: Board; entries?: Entry[]; levels?: Level[];
   buddies?: BuddyView[]; sent?: InviteView[]; received?: InviteView[]; bonus?: { every: number; points: number };
 };
-type Drawn = { svg: string; alt: string; word: string | null };
+type Drawn = { svg: string; alt: string; word: string | null; whimsy?: boolean };
 
 /// The question over the composer, one picked per visit.
 const QUESTIONS = [
@@ -43,20 +45,29 @@ const QUESTIONS = [
 ];
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-/// onething's six day colours (the 1st is violet, the 2nd orange, …), as jelly: light, base, deep.
+/// onething's six day colours (the 1st is violet, the 2nd orange, …). The tear-off
+/// page prints in ink and red, so a day's colour only names it (data-j); 'ash' is a
+/// sleeping drop.
 const COLORS = ['violet', 'orange', 'sky', 'yellow', 'pink', 'lime'] as const;
 type Color = (typeof COLORS)[number] | 'ash';
-const INK: Record<Color, [string, string, string]> = {
-  violet: ['#ddd0ff', '#7b4dff', '#4a1fc4'],
-  orange: ['#ffd6b5', '#ff7a2f', '#cf4805'],
-  sky: ['#cdeeff', '#33b6ff', '#0872b5'],
-  yellow: ['#fff4bd', '#ffd23f', '#d39300'],
-  pink: ['#ffd3e8', '#ff5fa8', '#c92170'],
-  lime: ['#e6f9c8', '#93d94e', '#4a9419'],
-  ash: ['#f4f0f7', '#cdc4d8', '#958aa6'],
-};
 /// The drop that hosts a day sits on a colour that isn't its own: violet, the brand ink, unless the day is violet.
 const hostOf = (c: Color): Color => (c === 'violet' ? 'yellow' : 'violet');
+/// The wall the pad hangs on; the browser bar takes it.
+const WALL = '#e9e3d8';
+/// Sundays print in red and Saturdays in blue, as on a Japanese tear-off calendar.
+function tone(day: string): '' | 'sun' | 'sat' {
+  const [y, m, d] = parts(day);
+  const w = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+  return w === 0 ? 'sun' : w === 6 ? 'sat' : '';
+}
+/// A ragged top edge for a sheet torn off the pad, the same for a day every time.
+function torn(day: string): string {
+  let s = parts(day).reduce((a, n) => a * 31 + n, 7) % 233280;
+  const rnd = () => ((s = (s * 9301 + 49297) % 233280) / 233280);
+  const pts: string[] = [];
+  for (let i = 0; i <= 20; i++) pts.push(`${i * 5}% ${(1 + rnd() * 6).toFixed(1)}px`);
+  return `polygon(${pts.join(', ')}, 100% 100%, 0% 100%)`;
+}
 
 // ---------- days ----------
 function parts(day: string): [number, number, number] {
@@ -80,6 +91,8 @@ function fmt(day: string, o: Intl.DateTimeFormatOptions): string {
 const longDay = (day: string) => fmt(day, { weekday: 'long', day: 'numeric', month: 'long' }); // "Friday 2 October"
 const weekday = (day: string) => fmt(day, { weekday: 'short' }); // "Thu"
 const dayMonth = (day: string) => fmt(day, { day: 'numeric', month: 'short' }); // "30 Sep"
+const monthYear = (day: string) => fmt(day, { month: 'long', year: 'numeric' }).toUpperCase(); // "OCTOBER 2026"
+const weekdayLong = (day: string) => fmt(day, { weekday: 'long' }).toUpperCase(); // "FRIDAY"
 const colorOf = (day: string): Color => COLORS[(parts(day)[2] - 1) % COLORS.length];
 function lines(text: string): string[] {
   return text.split('\n').map((t) => t.trim()).filter(Boolean);
@@ -132,7 +145,9 @@ function monthCells(y: number, m: number, today: string, since: string, byDay: M
 
 // ---------- the splash ----------
 
-/** A splash of jelly ink from a point on the screen: round drops in the six colours, falling. */
+const SPLASH = ['#151515', '#d63a20', '#151515', '#2552c4'];
+
+/** A splash of ink from a point on the screen: flat drops in black, red and blue, falling. */
 function splash(x: number, y: number, n = 40) {
   if (typeof window === 'undefined' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const layer = document.createElement('div');
@@ -140,10 +155,9 @@ function splash(x: number, y: number, n = 40) {
   document.body.appendChild(layer);
   for (let i = 0; i < n; i++) {
     const s = document.createElement('i');
-    const [l, b] = INK[COLORS[i % COLORS.length]];
-    const size = 7 + Math.random() * 11;
+    const size = 6 + Math.random() * 10;
     s.style.width = s.style.height = `${size}px`;
-    s.style.background = `radial-gradient(circle at 35% 30%, ${l} 0 22%, ${b} 60%)`;
+    s.style.background = SPLASH[i % SPLASH.length];
     s.style.left = `${x}px`; s.style.top = `${y}px`;
     layer.appendChild(s);
     const a = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI * 1.4;
@@ -158,15 +172,14 @@ function splash(x: number, y: number, n = 40) {
   setTimeout(() => layer.remove(), 1700);
 }
 
-/** The ink drop, as jelly: onething's character. A tap squishes it (> < eyes) and splashes.
+/** The ink drop, flat in ink: onething's character. A tap squishes it (> < eyes) and splashes.
  * `mood` asleep closes its eyes (a missed day). */
 function Ink({ color, size, className = '', mood = 'happy', onTap, label, delay = 0, still }: {
   color: Color; size: number; className?: string; mood?: 'happy' | 'asleep'; onTap?: () => void; label?: string; delay?: number; still?: boolean;
 }) {
-  const id = useId().replace(/:/g, '');
   const [squish, setSquish] = useState(false);
   const t = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [l, b, d] = INK[color];
+  const body = color === 'ash' ? '#d3cbbb' : '#151515';
   function poke(e: React.PointerEvent) {
     e.stopPropagation();
     setSquish(true);
@@ -175,7 +188,7 @@ function Ink({ color, size, className = '', mood = 'happy', onTap, label, delay 
     const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
     splash(r.left + r.width / 2, r.top + r.height * 0.45, Math.round(10 + size / 8));
   }
-  const ink = '#2a1f2b';
+  const ink = color === 'ash' ? '#7d7668' : '#fffdf7'; // the face, on the drop
   const eyes = squish ? (
     <g fill="none" stroke={ink} strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
       <path d="M34 64 L42 70 L34 76" /><path d="M66 64 L58 70 L66 76" />
@@ -187,11 +200,10 @@ function Ink({ color, size, className = '', mood = 'happy', onTap, label, delay 
   ) : (
     <g className="oj-eyes">
       <ellipse cx="40" cy="70" rx="5" ry="5.6" fill={ink} /><ellipse cx="60" cy="70" rx="5" ry="5.6" fill={ink} />
-      <circle cx="41.8" cy="67.8" r="1.9" fill="#fff" /><circle cx="61.8" cy="67.8" r="1.9" fill="#fff" />
     </g>
   );
   const mouth = squish
-    ? <ellipse cx="50" cy="83" rx="4.4" ry="5" fill="#7a1f3d" />
+    ? <ellipse cx="50" cy="83" rx="4.4" ry="5" fill="#d63a20" />
     : mood === 'asleep'
       ? <path d="M47 83 Q50 85 53 83" fill="none" stroke={ink} strokeWidth="2.6" strokeLinecap="round" />
       : <path d="M45 80 Q50 85.5 55 80" fill="none" stroke={ink} strokeWidth="2.8" strokeLinecap="round" />;
@@ -206,21 +218,10 @@ function Ink({ color, size, className = '', mood = 'happy', onTap, label, delay 
       aria-hidden={label ? undefined : true}
     >
       <svg viewBox="0 0 100 112" width={size} height={size * 1.12}>
-        <defs>
-          <radialGradient id={`g${id}`} cx="38%" cy="46%" r="70%">
-            <stop offset="0" stopColor={l} /><stop offset=".52" stopColor={b} /><stop offset="1" stopColor={d} />
-          </radialGradient>
-          <radialGradient id={`h${id}`} cx="50%" cy="100%" r="60%">
-            <stop offset="0" stopColor={l} stopOpacity=".75" /><stop offset="1" stopColor={l} stopOpacity="0" />
-          </radialGradient>
-        </defs>
-        <path d="M50 3 C63 29 89 46 89 71 A39 37 0 0 1 11 71 C11 46 37 29 50 3 Z" fill={`url(#g${id})`} stroke={d} strokeOpacity=".55" strokeWidth="2.4" />
-        <ellipse cx="50" cy="96" rx="26" ry="10" fill={`url(#h${id})`} />
-        <ellipse cx="33" cy="52" rx="7" ry="14.5" transform="rotate(28 33 52)" fill="#fff" opacity=".82" />
-        <circle cx="27" cy="75" r="3" fill="#fff" opacity=".55" />
+        <path d="M50 3 C63 29 89 46 89 71 A39 37 0 0 1 11 71 C11 46 37 29 50 3 Z" fill={body} />
         {eyes}
         {mouth}
-        <ellipse cx="29" cy="80" rx="6.5" ry="3.6" fill="#ff5a82" opacity=".38" /><ellipse cx="71" cy="80" rx="6.5" ry="3.6" fill="#ff5a82" opacity=".38" />
+        {color !== 'ash' && <><ellipse cx="29" cy="80" rx="6" ry="3.4" fill="#d63a20" /><ellipse cx="71" cy="80" rx="6" ry="3.4" fill="#d63a20" /></>}
       </svg>
     </span>
   );
@@ -251,15 +252,6 @@ function Defs() {
   );
 }
 
-function Flame() {
-  return (
-    <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden>
-      <path d="M10 1.5c.6 3.2 4.8 5 4.8 9.6A4.8 4.8 0 0 1 5.2 11c0-2.2 1.1-3.4 2.2-4.4.1 1.6.8 2.6 1.7 2.9C8.8 6.6 9 4 10 1.5Z" fill="#ff5a1f" />
-      <path d="M10 9.5c.4 1.4 2.2 2.2 2.2 4.2a2.2 2.2 0 0 1-4.4 0c0-1.1.6-1.7 1.1-2.2.1.6.4 1 .7 1.1-.1-1 .1-2 .4-3.1Z" fill="#fff3a8" />
-    </svg>
-  );
-}
-
 function Avatar({ person, size = 40 }: { person: { name?: string | null; phone: string; avatar?: string | null }; size?: number }) {
   return (
     <span className="oj-avatar" style={{ ['--s' as string]: `${size}px` }}>
@@ -283,9 +275,9 @@ function Top({ me, streak, view, onView, onSignout }: { me: Person; streak: numb
   }, [open]);
   return (
     <div className="oj-top">
-      <a className="oj-wordmark" href="/onething">onething</a>
+      <a className="oj-wordmark" href="/onething">onething<i>.</i></a>
       <div className="oj-top-right" ref={ref}>
-        <span className="oj-streak" aria-label={`${streak}-day streak`} title={`${streak}-day streak`}><Flame />{streak}</span>
+        <span className="oj-streak" aria-label={`${streak}-day streak`} title={`${streak}-day streak`}><b>{streak}</b> day streak</span>
         <button type="button" className="oj-me" aria-label="menu" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
           <Avatar person={me} size={42} />
         </button>
@@ -430,13 +422,13 @@ function DayBody({ day, entry, drawn, thoughts, onPhoto }: { day: string; entry:
   );
 }
 
-/** A day on the month's wall: a jelly tile in the day's colour. */
+/** A day on the month's wall: a sheet torn off the pad. */
 function Tile({ cell, drawn, i, onOpen }: { cell: Cell; drawn: boolean; i: number; onOpen: () => void }) {
   if (cell.missed) {
     const n = cell.count ?? 1;
     return (
-      <div className="oj-tile missed">
-        <Ink color="ash" mood="asleep" size={46} still />
+      <div className="oj-tile missed" style={{ clipPath: torn(cell.day) }}>
+        <Ink color="ash" mood="asleep" size={34} still />
         <span className="oj-tile-miss"><b>{cell.from ? `${parts(cell.from)[2]}–${dayMonth(cell.day)}` : dayMonth(cell.day)}</b>{n > 1 ? `${n} days off.` : 'A day off.'} The ink slept in.</span>
       </div>
     );
@@ -444,7 +436,7 @@ function Tile({ cell, drawn, i, onOpen }: { cell: Cell; drawn: boolean; i: numbe
   const e = cell.entry!;
   const all = lines(e.text);
   return (
-    <button type="button" className="oj-tile" data-j={colorOf(cell.day)} style={{ ['--tilt' as string]: `${i % 2 ? 0.8 : -0.8}deg` }} onClick={onOpen} aria-label={`${longDay(cell.day)}: ${plainText(all[0])}${e.photo ? ' (with a picture)' : ''}`}>
+    <button type="button" className={`oj-tile ${tone(cell.day)}`} data-j={colorOf(cell.day)} style={{ ['--tilt' as string]: `${i % 2 ? 0.8 : -0.8}deg`, clipPath: torn(cell.day) }} onClick={onOpen} aria-label={`${longDay(cell.day)}: ${plainText(all[0])}${e.photo ? ' (with a picture)' : ''}`}>
       <span className="oj-tile-date"><b>{parts(cell.day)[2]}</b>{weekday(cell.day)}</span>
       {e.photo && (
         <span className="oj-tile-peek" aria-hidden>
@@ -486,11 +478,11 @@ function DaySheet({ entry, drawn, thoughts, photo, onClose, onRedraw }: { entry:
   return (
     <Sheet label={longDay(entry.day)} onClose={onClose}>
       <article className="oj-card" data-j={c}>
-        <Ink color={hostOf(c)} size={84} className="oj-card-host" />
         <div className="oj-card-top">
           <span className="oj-chip">{longDay(entry.day)}</span>
           <button type="button" className="oj-x" aria-label="close" onClick={onClose}>×</button>
         </div>
+        <div className={`oj-card-num ${tone(entry.day)}`}>{parts(entry.day)[2]}<Ink color={hostOf(c)} size={48} className="oj-card-host" /></div>
         <DayBody day={entry.day} entry={entry} drawn={drawn} thoughts={thoughts} onPhoto={photo.onOpen} />
         <div className="oj-acts">
           {drawn && entry.doodle && <button type="button" className="oj-pill" onClick={onRedraw}><Redo />Redraw</button>}
@@ -522,7 +514,7 @@ function Redraw({ entry, onKept, onClose }: { entry: Entry; onKept: () => void; 
     const r0 = (e.currentTarget as HTMLElement).getBoundingClientRect();
     setState('saving'); setErr('');
     try {
-      const r = await fetch('/api/onething/redraw', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: entry.id, svg: takes[pick].svg, alt: takes[pick].alt }) });
+      const r = await fetch('/api/onething/redraw', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: entry.id, svg: takes[pick].svg, alt: takes[pick].alt, whimsy: takes[pick].whimsy === true }) });
       const j = await r.json();
       if (!r.ok) { setErr(j.error ?? 'Could not keep that one.'); setState('ready'); return; }
       splash(r0.left + r0.width / 2, r0.top);
@@ -568,15 +560,11 @@ function Redo() {
   );
 }
 
-/** Big soft jelly bubbles drifting up behind today: the day's colour, lighter. */
-function Bubbles() {
-  return (
-    <div className="oj-bubbles" aria-hidden>
-      {[[8, 30, 120, 0], [78, 12, 180, -4], [62, 70, 90, -9], [20, 85, 60, -2], [92, 60, 70, -6], [40, 6, 44, -11]].map(([x, y, s, d], i) => (
-        <i key={i} style={{ left: `${x}%`, top: `${y}%`, width: s, height: s, animationDelay: `${d}s` }} />
-      ))}
-    </div>
-  );
+/// "76 pages left in 2026": the days after today on this year's pad.
+function pagesLeft(today: string): string {
+  const [y, m, d] = parts(today);
+  const n = Math.round((Date.UTC(y, 11, 31) - Date.UTC(y, m - 1, d)) / 86400000);
+  return n === 0 ? `the last page of ${y}` : `${n} ${n === 1 ? 'page' : 'pages'} left in ${y}`;
 }
 
 function prettyPhone(p: string): string {
@@ -584,11 +572,11 @@ function prettyPhone(p: string): string {
   return m ? `${m[1]} ${m[2]} ${m[3]}` : p;
 }
 
-/** The browser bar takes the flood's colour, so it runs right up under it. */
+/** The browser bar takes the wall's colour, so the page runs right up under it. */
 function useFlood(c: Color | null) {
   useEffect(() => {
     if (!c) return;
-    const v = INK[c][1];
+    const v = WALL;
     let tag = document.querySelector('meta[name="theme-color"]');
     if (!tag) { tag = document.createElement('meta'); tag.setAttribute('name', 'theme-color'); document.head.appendChild(tag); }
     tag.setAttribute('content', v);
@@ -607,14 +595,38 @@ function Foot({ tz }: { tz?: string }) {
 
 // ---------- the landing page ----------
 
-/** A sample day for the landing page, from one of the real September examples. */
-function SampleTile({ ex, day, c, tilt }: { ex: number; day: string; c: Color; tilt: number }) {
-  const e = EXAMPLES[ex];
+/** Three sample days for the landing page, from the real September examples. */
+const SAMPLES = [{ ex: 1, day: '2026-09-30' }, { ex: 0, day: '2026-09-29' }, { ex: 2, day: '2026-09-28' }];
+
+function SampleSheet({ i, className = '', onEnd }: { i: number; className?: string; onEnd?: () => void }) {
+  const s = SAMPLES[i % SAMPLES.length];
+  const e = EXAMPLES[s.ex];
   return (
-    <div className="oj-tile sample" data-j={c} style={{ ['--tilt' as string]: `${tilt}deg` }} aria-hidden>
-      <span className="oj-tile-date"><b>{day.split(' ')[0]}</b>{day.split(' ')[1]}</span>
-      <span className="oj-tile-blob"><Doodle svg={e.svg} alt={e.alt} pen={0.9} /></span>
-      <span className="oj-tile-text">{e.sentence}</span>
+    <div className={`oj-today oj-sample ${tone(s.day)} ${className}`} onAnimationEnd={(ev) => { if (ev.target === ev.currentTarget) onEnd?.(); }}>
+      <div className="oj-sheet-top"><span>{monthYear(s.day)}</span><span className="wd">{weekdayLong(s.day)}</span></div>
+      <div className="oj-num"><span>{parts(s.day)[2]}</span></div>
+      <div className="oj-blob"><Doodle svg={e.svg} alt={e.alt} pen={1.2} /></div>
+      <p className="oj-sample-text">{e.sentence}</p>
+    </div>
+  );
+}
+
+/** The landing's pad: a tap tears the top sheet off and shows the day before. */
+function SamplePad() {
+  const [i, setI] = useState(0);
+  const [tearing, setTearing] = useState(false);
+  const tear = () => { if (!tearing) setTearing(true); };
+  return (
+    <div
+      className="oj-pad sample" role="button" tabIndex={0} aria-label="Tear off this page to see another day"
+      onClick={tear} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tear(); } }}
+    >
+      <span className="oj-binding" aria-hidden><i /><i /></span>
+      <div className="oj-sheets" aria-hidden>
+        <SampleSheet i={i + 1} className="under" />
+        <SampleSheet key={i} i={i} className={tearing ? 'tearing' : ''} onEnd={() => { setTearing(false); setI((x) => x + 1); }} />
+      </div>
+      <span className="oj-stack" aria-hidden />
     </div>
   );
 }
@@ -629,31 +641,23 @@ function Landing(props: {
   return (
     <>
       <header className="oj-hero land" data-j="violet">
-        <Bubbles />
         <div className="oj-wrap">
           <div className="oj-top">
-            <h1 className="oj-wordmark">onething</h1>
-            <button type="button" className="oj-pill small" onClick={toStart}>Sign in</button>
+            <h1 className="oj-wordmark">onething<i>.</i></h1>
+            <button type="button" className="oj-text-btn" onClick={toStart}>Sign in</button>
           </div>
-          <div className="oj-today">
-            <Ink color="yellow" size={128} className="oj-host" />
-            <h2 className="oj-q big">One sentence a day. A doodle for every one.</h2>
-            <p className="oj-lede">A one-sentence-a-day journal that lives in your texts.</p>
-            <div className="oj-acts">
-              <button type="button" className="oj-btn big" data-j="yellow" onClick={toStart}>Start your year</button>
-            </div>
-          </div>
-          <div className="oj-fan">
-            <SampleTile ex={2} day="28 Mon" c="orange" tilt={-7} />
-            <SampleTile ex={0} day="29 Tue" c="sky" tilt={2} />
-            <SampleTile ex={1} day="30 Wed" c="lime" tilt={8} />
+          <SamplePad />
+          <p className="oj-left">tap the page to tear back a day</p>
+          <h2 className="oj-q big">One sentence a day. A doodle for every one.</h2>
+          <p className="oj-lede">A one-sentence-a-day journal that lives in your texts.</p>
+          <div className="oj-acts">
+            <button type="button" className="oj-btn big" data-j="yellow" onClick={toStart}>Start your year</button>
           </div>
         </div>
       </header>
 
       <main className="oj-page land">
         <section className="oj-card oj-start" data-j="violet" id="start">
-          <Ink color="yellow" size={88} className="oj-card-host" />
           <h2 className="oj-redraw-h">Start your year.</h2>
           {stage === 'phone' ? (
             <form className="oj-form" onSubmit={(e) => { e.preventDefault(); props.start(); }}>
@@ -870,7 +874,7 @@ export default function Onething() {
   function go(v: 'journal' | 'settings') { setView(v); setErr(''); setNote(''); setYou({ err: '', note: '' }); setEnding(null); setOpenDay(null); window.scrollTo(0, 0); }
 
   if (me === null) {
-    return <div className="oj"><header className="oj-hero" data-j="violet"><div className="oj-wrap"><div className="oj-top"><span className="oj-wordmark">onething</span></div></div></header></div>;
+    return <div className="oj"><header className="oj-hero" data-j="violet"><div className="oj-wrap"><div className="oj-top"><span className="oj-wordmark">onething<i>.</i></span></div></div></header></div>;
   }
 
   if (!me.user) {
@@ -911,11 +915,9 @@ export default function Onething() {
       <div className="oj">
         <Defs />
         <header className="oj-hero short" data-j={tc}>
-          <Bubbles />
-          <div className="oj-wrap">
+            <div className="oj-wrap">
             <Top me={me.user} streak={b.streak} view={view} onView={go} onSignout={signout} />
-            <div className="oj-today">
-              <Ink color={hostOf(tc)} size={92} className="oj-host" />
+            <div className="oj-settings-head">
               <p className="oj-date"><button type="button" className="oj-text-btn" onClick={() => go('journal')}>← Back to your page</button></p>
               <h1 className="oj-q">Settings</h1>
             </div>
@@ -1049,14 +1051,18 @@ export default function Onething() {
     {photoShown?.photo && <PhotoSheet entry={photoShown} busy={photoBusy} err={photoErr} onRemove={() => removePhoto(photoShown.day)} onClose={() => setPhotoOpen(null)} />}
     <input ref={photoRef} type="file" accept="image/*" hidden aria-hidden tabIndex={-1} onChange={(e) => addPhoto(e.target.files?.[0])} />
 
-    {/* today: the whole top of the page in today's colour */}
+    {/* today: the top sheet of the pad */}
     <header className="oj-hero" data-j={tc}>
-      <Bubbles />
       <div className="oj-wrap">
         <Top me={me.user} streak={b.streak} view={view} onView={go} onSignout={signout} />
-        <div className="oj-today">
-          <Ink color={hostOf(tc)} size={118} className={`oj-host${composing && text.trim().length >= 2 && !busy ? ' eager' : ''}`} />
-          <p className="oj-date">{longDay(today)}</p>
+        <div className="oj-pad">
+        <span className="oj-binding" aria-hidden><i /><i /></span>
+        <div className={`oj-today ${tone(today)}`}>
+          <div className="oj-sheet-top"><span>{monthYear(today)}</span><span className="wd">{weekdayLong(today)}</span></div>
+          <div className="oj-num">
+            <span aria-label={longDay(today)}>{parts(today)[2]}</span>
+            <Ink color={hostOf(tc)} size={46} className={`oj-host${composing && text.trim().length >= 2 && !busy ? ' eager' : ''}`} />
+          </div>
           {todayEntry && <DayBody day={today} entry={todayEntry} drawn={drawn} thoughts={thoughtProps} onPhoto={photoProps.onOpen} />}
           {composing ? (
             <form className="oj-compose" onSubmit={(e) => { e.preventDefault(); save(); }}>
@@ -1078,6 +1084,9 @@ export default function Onething() {
           )}
           {photoErr && !photoOpen && !opened && <p className="oj-err">{photoErr}</p>}
         </div>
+        <span className="oj-stack" aria-hidden />
+        </div>
+        <p className="oj-left">{pagesLeft(today)}</p>
       </div>
     </header>
 
@@ -1093,7 +1102,7 @@ export default function Onething() {
         </div>
         <div className="oj-tube" style={{ ['--w' as string]: `${Math.max(progress * 100, 9)}%` }} role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)} aria-label={b.next ? `progress to ${b.next.name}` : 'progress'}>
           <i />
-          <Ink color="violet" size={40} className="oj-rider" />
+          <Ink color="violet" size={24} className="oj-rider" />
         </div>
         <p className="oj-tube-k">{nextLine}</p>
         {details && (
