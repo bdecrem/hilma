@@ -35,11 +35,13 @@ PAGE = """<!doctype html>
   * { box-sizing: border-box; }
   html, body { margin: 0; background: var(--paper); color: var(--ink); }
   body { font: 16px/1.5 ui-monospace, "SF Mono", Menlo, monospace; min-height: 100dvh; display: flex; flex-direction: column; }
-  header { padding: 16px 16px 8px; max-width: 760px; width: 100%; margin: 0 auto; }
+  header { position: sticky; top: 0; z-index: 1; background: var(--paper); border-bottom: 1px solid var(--line);
+           padding: calc(16px + env(safe-area-inset-top)) max(16px, calc((100% - 728px) / 2)) 10px; }
   h1 { font-size: 18px; margin: 0; }
   header p { margin: 4px 0 0; color: var(--dim); font-size: 13px; }
   main { flex: 1; max-width: 760px; width: 100%; margin: 0 auto; padding: 8px 16px; }
   .turn { border-top: 1px solid var(--line); padding: 14px 0; }
+  .turn:first-child { border-top: 0; }
   .q { font-weight: 700; }
   .a { margin-top: 6px; white-space: pre-wrap; }
   .a.base { color: var(--dim); }
