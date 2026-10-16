@@ -14,13 +14,18 @@ const fraunces = localFont({ src: [{ path: '../../../fonts/fraunces/Fraunces.wof
 const tight = localFont({ src: '../../../fonts/inter-tight/InterTight.woff2', weight: '100 900', variable: '--f-to-sans', preload: false })
 const source = localFont({ src: [{ path: '../../../fonts/source-serif-4/SourceSerif4.woff2', style: 'normal' }, { path: '../../../fonts/source-serif-4/SourceSerif4-Italic.woff2', style: 'italic' }], weight: '200 900', variable: '--f-to-serif', preload: false })
 
-const DESCRIPTION = 'Three design directions for onething: Notebook, Riso and Tear-off. Each with its landing page and a journal page.'
+// Cut paper keeps onething's own type: Bricolage Grotesque, Nunito, Patrick Hand.
+const bricolage = localFont({ src: '../../../fonts/bricolage-grotesque/BricolageGrotesque.woff2', weight: '200 800', variable: '--f-cp-display', preload: false })
+const nunito = localFont({ src: '../../../fonts/nunito/Nunito.woff2', weight: '200 1000', variable: '--f-cp-body', preload: false })
+const patrick = localFont({ src: '../../../fonts/patrick-hand/PatrickHand-400.woff2', weight: '400', variable: '--f-cp-hand', preload: false })
+
+const DESCRIPTION = 'Design directions for onething: Tear-off v2, Cut paper and Stamps, then Notebook, Riso and Tear-off.'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://ola.cx'),
-  title: 'onething · three directions',
+  title: 'onething · design directions',
   description: DESCRIPTION,
-  openGraph: { title: 'onething · three directions', description: DESCRIPTION, url: 'https://ola.cx/design/onething', type: 'website' },
+  openGraph: { title: 'onething · design directions', description: DESCRIPTION, url: 'https://ola.cx/design/onething', type: 'website' },
   twitter: { card: 'summary_large_image' },
   robots: { index: false, follow: false },
 }
@@ -33,5 +38,5 @@ export const viewport: Viewport = {
 }
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  return <div className={[serif, sans, caveat, mono, archivo, fraunces, tight, source].map((f) => f.variable).join(' ')}>{children}</div>
+  return <div className={[serif, sans, caveat, mono, archivo, fraunces, tight, source, bricolage, nunito, patrick].map((f) => f.variable).join(' ')}>{children}</div>
 }

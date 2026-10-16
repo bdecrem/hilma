@@ -59,3 +59,35 @@ export function yearSoFar(): { month: string; days: (boolean | null)[] }[] {
     }),
   }))
 }
+
+// ---------- round 2: the signed-in main view in the middle of October ----------
+
+const GARLIC = '<path d="M20 140 Q60 120 100 140 Q140 120 180 140 Q220 120 260 140 Q300 120 330 140"/><path d="M60 128 L60 104 M60 112 q-10 -8 -14 -2 M140 128 L140 100 M140 108 q10 -8 14 -2 M220 128 L220 106" class="r"/><path d="M270 40 l8 14 l14 -2 l-10 10 l4 14 l-12 -8 l-12 8 l4 -14 l-10 -10 l14 2z" class="thin"/>'
+const PIZZA = '<path d="M80 50 L200 70 L110 150 Z"/><path d="M80 50 Q140 40 200 70" class="thin"/><circle cx="120" cy="80" r="7" class="fr"/><circle cx="150" cy="96" r="6" class="fr"/><circle cx="118" cy="114" r="6" class="fr"/><path d="M240 60 L266 60 L240 86 L266 86 M276 30 L294 30 L276 48 L294 48"/>'
+const BIKE = '<circle cx="100" cy="115" r="35"/><circle cx="240" cy="115" r="35"/><path d="M100 115 L150 60 L215 60 L240 115 M150 60 L170 115 L215 60 M100 115 L170 115 M140 50 L162 50 M215 60 L210 42 L228 42"/><path d="M280 50 q6 -14 12 0 q2 10 -6 10 q-8 0 -6 -10z" class="fr"/>'
+const WALK = '<path d="M40 50 L140 50 L140 140 L40 140 Z M40 72 L140 72 M62 40 L62 58 M118 40 L118 58"/><path d="M66 90 L114 128 M114 90 L66 128" class="r"/><path d="M170 120 Q220 60 300 80" class="thin"/><ellipse cx="200" cy="140" rx="7" ry="4" class="f"/><ellipse cx="226" cy="132" rx="7" ry="4" class="f"/><ellipse cx="252" cy="142" rx="7" ry="4" class="f"/><ellipse cx="278" cy="134" rx="7" ry="4" class="f"/>'
+const CAT = '<path d="M120 140 Q110 90 150 80 L145 55 L162 72 L180 72 L195 55 L192 82 Q230 95 220 140 Z"/><circle cx="160" cy="98" r="3" class="f"/><circle cx="180" cy="98" r="3" class="f"/><path d="M220 130 Q270 130 260 90"/><path d="M164 110 l6 4 l6 -4" class="r"/><path d="M60 150 L300 150" class="thin"/>'
+
+/** October 1–15, oldest first; the 3rd and the 9th are empty. */
+export const OCTOBER: Day[] = [
+  { iso: '2026-10-01', dow: 'Thu', d: 1, text: 'Planted the garlic before the frost.', svg: GARLIC },
+  { iso: '2026-10-02', dow: 'Fri', d: 2, text: 'Pizza on the floor with the kids; the movie stayed paused because everyone fell asleep.', svg: PIZZA },
+  { iso: '2026-10-03', dow: 'Sat', d: 3 },
+  { iso: '2026-10-04', dow: 'Sun', d: 4, text: 'Fixed the squeaky bike chain with olive oil, which is apparently a terrible idea.', svg: BIKE },
+  { iso: '2026-10-05', dow: 'Mon', d: 5, text: 'Said no to a meeting and took a walk instead.', svg: WALK },
+  { iso: '2026-10-06', dow: 'Tue', d: 6, text: 'The neighbor’s cat has decided our porch is hers now.', svg: CAT },
+  ...DAYS.slice(1).reverse(),
+]
+
+/** Onething's six day colours (light, base, dark), as on onething.ink. */
+export const DAY_COLORS = [
+  { name: 'violet', l: '#ddd0ff', b: '#7b4dff', d: '#4a1fc4' },
+  { name: 'orange', l: '#ffd6b5', b: '#ff7a2f', d: '#cf4805' },
+  { name: 'sky', l: '#cdeeff', b: '#33b6ff', d: '#0872b5' },
+  { name: 'yellow', l: '#fff4bd', b: '#ffd23f', d: '#d39300' },
+  { name: 'pink', l: '#ffd3e8', b: '#ff5fa8', d: '#c92170' },
+  { name: 'lime', l: '#e6f9c8', b: '#93d94e', d: '#4a9419' },
+] as const
+export const colorOf = (d: number) => DAY_COLORS[(d - 1) % 6]
+
+export type Moment = 'morning' | 'evening'
