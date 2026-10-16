@@ -16,7 +16,7 @@ Status is one of: **not started · approved · building · done · skipped**.
 | 6b | Pretraining on Usenet alone | Out with the kids, in with Usenet: 1981–1991 from archive.org, new tokenizer, same model | done 2026-10-14 (1.88 M posts, 497 M tokens, 7.8 h, loss 9.06 → 3.37) |
 | 7 | Looking at the weights | The embedding table before and after | done 2026-10-15 (Usenet model; 7 of 8 analogies right) |
 | 8 | The conversion bridge | Our model as a Hugging Face model | skipped 2026-10-16 (post-training is hand-written on our own model, so nothing needs the HF format) |
-| 9 | SFT | Pretraining again, on conversations, with a mask | not started |
+| 9 | SFT | Pretraining again, on conversations, with a mask | done 2026-10-16 (2,945 Usenet-era Q&A pairs, 90 s; answers in shape, facts wrong) |
 | 10 | DPO | Preference alignment without a reward model | not started |
 | 11 | Reward model + PPO (optional) | The original RLHF recipe | not started |
 | 12 | RLVR with GRPO | Reinforcement learning against a checker | not started |
@@ -179,8 +179,8 @@ About 100 lines. Half a session.
 ## 9 · SFT
 
 **Build:** a synthetic instruction–response dataset in a narrow domain the
-model can learn (chosen at sign-off; the candidate is short questions about
-TinyStories-style stories, written by Claude); a chat format with special
+model can learn (chosen at sign-off: short questions about 1985–1991
+computing, answered in a Usenet regular's voice, written by Claude); a chat format with special
 tokens; a loss mask so only the response tokens count; the training loop is
 step 6's loop with the mask.
 

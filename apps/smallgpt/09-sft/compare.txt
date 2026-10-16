@@ -1,0 +1,47 @@
+Q: Can I add a second floppy drive to a Mac Plus?
+  base: I tried it on my Mac Plus, and the same drive was used on my Mac Plus. / However, the drive just leaves me in my right direction for a moment / after I power up the machine.  According to the manual, the drive is / payed to the first floppy
+  sft:  Yes, the Plus has two floppies, and the Mac II with a 2.25 inch drive is cheaper and works with the same floppy drives. You also need a SCSI hard disk and a SCSI drive.
+
+Q: Is it worth upgrading my Mac Plus to an SE?
+  base: I tried it on my Mac Plus, and the same thing was really damn hard, and / it would seem to be the same thing as the first for my Mac SE, but the / program that came with the system didn't work, and there was nothing / wrong with the manual that
+  sft:  If you're looking for a faster 68000, a lot of software works, but a faster 68000 needs the software speed, which is why the SE uses a 6882 or 6882 chip, and a hard disk is cheaper. Getting a SE with a 6582, a Mac Plus with a hard disk can be noticeably slow.
+
+Q: What is the best word processor for a Mac Plus?
+  base: I tried it on my Mac Plus, and the machine was not really very / simple.  I would think that the Mac II would be the first for / the Mac Plus, but it would have to be upgraded if the / Mac was the first for the Mac II.  I would think
+  sft:  Type 8-N-1, 8-N-1, and 8-N-1 are the best word processors, so it's nicer to use. For example, the Mac Plus has 8-N-1. It is very popular on many machines, and 8-N-1 is cheaper.
+
+Q: How do I move the menu bar between screens?
+  base: I tried opening the menu bar and changing the menu bar for a while, / but it didn't seem any better.  Is there something there to do this? / Any help would be appreciated.
+  sft:  Type the screen saver. Press DEL, and it tells the screen that the screen is still 2.0. Then the screen is 2.0, and you can use it to turn it off, but you can't move it to the right.
+
+Q: What is a 24-bit video card?
+  base: I tried it on my 12/23 model 550, but it was unable to / get it working but I haven't been able to find it.  I / would like to be able to get it working.  Sounds like / it is a hardware controller. /  / Any help will
+  sft:  It's the 24-bit card that shows 32-bit words in 1-bit mode, which is a 25-bit color card with 2 or 3 colors. The 24-bit card adds 32-bit color, so 25-bit color shows 32-bit color.
+
+Q: Can I run System 6 on a Mac Plus?
+  base: I tried to run my Mac Plus, and the machine was not really on my Mac, / and it worked fine.  I tried to run my program on my Mac Plus / and the machine died.  It is fine, but it crashes the machine, / and sometimes the machine crashes when I
+  sft:  Yes, the Plus has a programmable 1.44 meg floppy drive, which is faster than a Plus. The Plus has a newer 2.5 inch drive, a 40 meg drive, and a 40 meg drive. You need a hard disk, but the Plus has 1.44 meg drives.
+
+Q: How do I turn on MultiFinder in System 6?
+  base: I tried opening the desktop under System 6.0.1, using / setting the desktop "Previous" to a disk. / I also tried setting the MacPaint disk to be a dumb game, but / since I was using the MacPaint program and the first time
+  sft:  Type the System file as usual, then pick the application and swap the System file in System 6. You'll see System 6 in System 6. It's the tool you're using.
+
+Q: Which is better, Font/DA Mover or just putting fonts in the System file?
+  base: I tried sending mail to this account but it didn't seem to do any / single or single or double or double margin.  I tried sending mail / to the account but the mail would come from the system, and / since I was unable to get mail to the account, I could
+  sft:  Font/DA Mover is faster and is well worth the salt, but you need a font file if you are on the network. Font/DA Mover is the faster font in System 6.0.5 but you need a few fonts.
+
+Q: What is the difference between a Mac Plus and a Mac SE?
+  base: I tried it on my Mac Plus, and the Mac SE just gave me a "target" but / it did not have the problem.  When I try to run the program from / Mac to a Mac, the mac crashes, and the Mac seems to be running.  I
+  sft:  A Mac Plus is a 20 MB internal 1.44 megabyte drive, with a built-in SCSI bus, and the Mac SE has a 20 MB HD. The Mac Plus uses a 20 MB HD with a SCSI interface.
+
+Q: How do I get my modem to dial a BBS?
+  base: I tried sending mail to this BBS but it doesn't seem to do any / popup problem. /  / Thanks in advance for any help anyone can offer. / Barry
+  sft:  Type the terminal program to open it, and set the modem to 1, 2, 3, 4. 5, 5, 5 and 5. It gives the modem set, with a modem on the cable. It works on both ends.
+
+Q: Is an Amiga better than an Atari ST for music?
+  base: I know, I'm not out for that; I want a decent Amiga, but I want / to be able to play the SoundBlaster and have a MIDI / output.  Can I play it with a MIDI sounder? / Thanks, / Robert
+  sft:  Yes, the ST has a big rough and has a lot of sound. If you do, the Amiga is cheaper and the Amiga is cheaper. A 16-bit machine is cheaper and more compatible with a hard drive.
+
+Q: What does the Unix command grep do?
+  base: I tried it on my 2.2 system and it just gave me a ".c" file but it just / basically looks like the first line of the file, but the first line / doesn't look like the second line, so there is no line at all. /  / What is the
+  sft:  It shows the string typed. The command is set to a file, the filename, and the command is set to the end of the file.
