@@ -11,6 +11,7 @@ cd apps/smallgpt
 .venv/bin/python 09-sft/sft.py       # training, 90 s on the iMac
 .venv/bin/python 09-sft/ask.py       # base vs SFT on the same questions -> compare.txt
 .venv/bin/python 09-sft/ask.py "Is a 2400 baud modem worth it?"
+.venv/bin/python 09-sft/chat.py      # a web page to talk to it: http://localhost:3270
 ```
 
 ## The data
