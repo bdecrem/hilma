@@ -243,3 +243,33 @@
   font-family: var(--font-mono), monospace;
   font-size: 13px;
 }
+
+.sg-note p + p {
+  margin-top: 10px;
+}
+.sg-figs {
+  display: grid;
+  gap: 14px;
+  margin: 14px 0 0;
+}
+.sg-figs figure {
+  margin: 0;
+}
+.sg-figs a {
+  display: block;
+}
+.sg-figs img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+}
+.sg-figs figcaption {
+  margin-top: 6px;
+  font-size: 14px;
+  color: var(--ink-2);
+}
+.sg-figs + h3 {
+  margin-top: 14px;
+}

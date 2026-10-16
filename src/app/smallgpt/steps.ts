@@ -8,8 +8,10 @@ export type Step = {
   idea: string
   status: 'done' | 'next' | 'todo'
   doneOn?: string
-  // What Bart said the step was, in his words, once he had done it.
+  // What Bart said the step was, in his words, once he had done it. A blank line starts a new paragraph.
   summary?: string
+  // Pictures under the summary, side by side.
+  figures?: { src: string; alt: string; caption: string }[]
   // Pages that go with the step.
   links?: { href: string; label: string }[]
   // Prompts and what the model wrote after them, shown as prompt | continuation.
@@ -115,6 +117,15 @@ export const STEPS: Step[] = [
     idea: 'The embedding table before and after',
     status: 'done',
     doneOn: '2026-10-15',
+    summary: `First we looked at the embedding table itself: 8,192 tokens, 320 numbers each. You can't see 320 dimensions, but meaning tends to sit on a much lower-dimensional surface, a manifold, so we flattened it in two steps. PCA kept the 50 directions where the numbers vary most (each one a mix of all 320), then UMAP folded those 50 down to 2 or 3 while keeping each token's nearest neighbours close. That's the token explorer.
+
+Then I realized I'm interested in words, not tokens. Some words are a single token, but many are built from two or more, so they have no row in the table. To give them one, we found each of the 30,000 most common words in up to 20 real Usenet posts and ran those posts through the model. At the word's last token we read the residual stream: the 320 numbers each position carries through the model while it reads, which exist only in memory during that run. We read it at layer 0 (the token's embedding row plus its position), after layer 3, and after all 6, and averaged the 20 readings. That gives every word a place at each depth, flattened the same way into the word explorer.
+
+What you see is meaning arriving layer by layer. Take Picard. At layer 0 the model only has the last piece of the word, so its neighbours rhyme: Packard, guard, wizard, Gerard. By layer 6, after attention has mixed in the surrounding text, they're Riker, Spock, Kirk, Worf, Guinan and Geordi. Nobody told the model about Star Trek; it worked out the crew of the Enterprise from people posting about it.`,
+    figures: [
+      { src: '/smallgpt/step7/picard-layer0.png', alt: 'Word map at layer 0: Picard among Packard, guard, wizard, Gerard, Howard, Shepard', caption: 'Layer 0: Picard among words that end the same way: Packard, Gerard, guard, wizard, backyard.' },
+      { src: '/smallgpt/step7/picard-layer6.png', alt: 'Word map at layer 6: Picard among Riker, Spock, Kirk, Worf, Guinan, Geordi, Nimoy, Shatner', caption: 'Layer 6: the Enterprise crew, Riker, Geordi, Spock, Guinan, Kirk, Worf, and the actors Nimoy and Shatner.' },
+    ],
     links: [
       { href: '/smallgpt/explorer', label: 'Token explorer: the 8,192 rows of the embedding table →' },
       { href: '/smallgpt/words', label: 'Word explorer: 30,000 words, layer by layer →' },

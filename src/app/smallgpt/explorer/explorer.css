@@ -203,3 +203,238 @@
 .sgx-arith span {
   font-weight: 700;
 }
+
+/* The journey: one word's ten nearest at each depth, the same word linked across columns. */
+.sgx-journey {
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--yellow);
+  border-radius: 6px;
+  padding: 14px 16px 16px;
+  margin-bottom: 16px;
+}
+.sgx-journey h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+.sgx-journey h2 b {
+  font-family: var(--font-mono), monospace;
+  color: var(--red);
+}
+.sgx-jsum {
+  font-size: 15px;
+  color: var(--ink-2);
+  margin: 0 0 14px;
+}
+.sgx-jsum .gone {
+  color: var(--ink-3);
+}
+.sgx-jsum .new {
+  color: var(--blue);
+}
+.sgx-jsum .kept {
+  color: var(--ink);
+  font-weight: 600;
+}
+.sgx-jgrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 72px minmax(0, 1fr) 72px minmax(0, 1fr);
+  max-width: 820px;
+}
+@media (max-width: 560px) {
+  .sgx-jgrid {
+    grid-template-columns: minmax(0, 1fr) 22px minmax(0, 1fr) 22px minmax(0, 1fr);
+  }
+}
+.sgx-jhead {
+  justify-self: start;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  padding: 0 0 3px;
+  margin-bottom: 6px;
+  cursor: pointer;
+}
+.sgx-jhead.on {
+  color: var(--ink);
+  border-bottom-color: var(--ink);
+}
+.sgx-jcol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+.sgx-jcol li {
+  height: var(--row);
+  display: flex;
+  align-items: center;
+  transition: opacity 0.12s;
+}
+.sgx-jcol button {
+  font-family: var(--font-mono), monospace;
+  font-size: 15px;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  cursor: pointer;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sgx-jcol button:hover {
+  text-decoration: underline;
+}
+.sgx-jcol .gone {
+  color: var(--ink-3);
+}
+.sgx-jcol .new {
+  color: var(--blue);
+  font-weight: 600;
+}
+.sgx-jcol .kept {
+  color: var(--ink);
+  font-weight: 600;
+}
+.sgx-jcol .mid {
+  color: var(--ink-2);
+}
+.sgx-jlinks {
+  width: 100%;
+  height: calc(var(--row) * 10);
+  overflow: visible;
+}
+.sgx-jlinks path {
+  fill: none;
+  stroke-width: 1.5;
+  transition: opacity 0.12s, stroke-width 0.12s;
+}
+.sgx-jlinks .gone,
+.sgx-jlinks .mid {
+  stroke: var(--rule);
+}
+.sgx-jlinks .kept {
+  stroke: var(--ink);
+}
+.sgx-jlinks .new {
+  stroke: var(--blue);
+}
+/* A word that carries on to the next column gets a leader to its link, so short words aren't left floating. */
+.sgx-jcol li {
+  --link: var(--rule);
+}
+.sgx-jcol li.kept {
+  --link: var(--ink);
+}
+.sgx-jcol li.new {
+  --link: var(--blue);
+}
+.sgx-jcol li.cont::after {
+  content: '';
+  flex: 1;
+  min-width: 0;
+  height: 1.5px;
+  margin-left: 8px;
+  background: var(--link);
+}
+.sgx-jcol li.hot.cont::after {
+  height: 3px;
+  background: var(--red);
+}
+.sgx-journey.has-hot .sgx-jcol li:not(.hot),
+.sgx-journey.has-hot .sgx-jlinks path:not(.hot) {
+  opacity: 0.25;
+}
+.sgx-jlinks path.hot {
+  stroke-width: 3;
+  stroke: var(--red);
+}
+.sgx-jcol li.hot {
+  color: var(--red);
+}
+
+/* Fold the journey to its title. */
+.sgx-jtop {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+.sgx-fold,
+.sgx-full {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono), monospace;
+  font-size: 13px;
+  color: var(--ink-2);
+  background: none;
+  border: 0;
+  padding: 4px 0;
+  cursor: pointer;
+}
+.sgx-fold:hover,
+.sgx-full:hover {
+  color: var(--ink);
+}
+.sgx-fold svg,
+.sgx-full svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.sgx-fold svg {
+  transition: transform 0.15s;
+}
+.sgx-fold svg.down {
+  transform: rotate(180deg);
+}
+.sgx-full {
+  margin-left: auto;
+  border: 1.5px solid var(--ink);
+  border-radius: 8px;
+  padding: 9px 14px;
+  font-size: 14px;
+  color: var(--ink);
+}
+.sgx-full:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* Full screen: the controls on top, the map filling the rest; the journey, side panel and hint step away. */
+.sgx-app.is-full {
+  background: var(--paper);
+  padding: 16px;
+  height: 100dvh;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+.sgx-app.is-full .sgx-journey,
+.sgx-app.is-full .sgx-side,
+.sgx-app.is-full .sgx-hint {
+  display: none;
+}
+.sgx-app.is-full .sgx-grid {
+  flex: 1;
+  min-height: 0;
+  grid-template-columns: minmax(0, 1fr);
+}
+.sgx-app.is-full .sgx-map,
+.sgx-app.is-full .sgx-plot {
+  height: 100%;
+  min-height: 0;
+}

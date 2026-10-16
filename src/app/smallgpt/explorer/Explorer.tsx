@@ -6,7 +6,7 @@
 // Neighbours are cosine similarity over the full 320 numbers, never the map.
 
 import Script from 'next/script'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 type Data = {
   dim: number
@@ -21,9 +21,12 @@ type Data = {
 
 type Plotly = {
   react: (el: HTMLElement, data: unknown[], layout: unknown, config: unknown) => Promise<unknown>
+  relayout: (el: HTMLElement, update: unknown) => Promise<unknown>
+  Plots: { resize: (el: HTMLElement) => void }
   purge: (el: HTMLElement) => void
 }
 type PlotEl = HTMLDivElement & {
+  _fullLayout?: { xaxis: { range: number[] }; yaxis: { range: number[] } }
   on?: (ev: string, fn: (e: { points: { customdata: number }[] }) => void) => void
   removeAllListeners?: (ev: string) => void
 }
@@ -36,6 +39,50 @@ const COLOURS = [
   '#dc2626', '#0369a1', '#65a30d', '#db2777', '#4338ca', '#c2410c', '#047857', '#6d28d9',
 ]
 const RARE = '#cfc5ae'
+
+type Layer = { data: Data; unit: Float32Array; raw: Float32Array }
+
+async function loadLayer(dir: string): Promise<Layer> {
+  const [d, buf] = await Promise.all([
+    fetch(`${dir}/tokens.json`).then((r) => r.json() as Promise<Data>),
+    fetch(`${dir}/emb.bin`).then((r) => r.arrayBuffer()),
+  ])
+  const n = d.tokens.length
+  const scale = new Float32Array(buf, 0, n)
+  const q = new Int8Array(buf, n * 4)
+  const raw = new Float32Array(n * d.dim)
+  const unit = new Float32Array(n * d.dim)
+  for (let i = 0; i < n; i++) {
+    let norm = 0
+    for (let j = 0; j < d.dim; j++) {
+      const v = q[i * d.dim + j] * scale[i]
+      raw[i * d.dim + j] = v
+      norm += v * v
+    }
+    norm = Math.sqrt(norm) || 1
+    for (let j = 0; j < d.dim; j++) unit[i * d.dim + j] = raw[i * d.dim + j] / norm
+  }
+  return { data: d, unit, raw }
+}
+
+// The k rows of one depth closest to row i of the same depth, by cosine.
+function closest(l: Layer, i: number, k: number, keep: (j: number) => boolean): number[] {
+  const dim = l.data.dim
+  const v = l.unit.subarray(i * dim, (i + 1) * dim)
+  const sims: [number, number][] = []
+  for (let j = 0; j < l.data.tokens.length; j++) {
+    if (j === i || !keep(j)) continue
+    let s = 0
+    for (let d = 0; d < dim; d++) s += l.unit[j * dim + d] * v[d]
+    sims.push([s, j])
+  }
+  sims.sort((x, y) => y[0] - x[0])
+  return sims.slice(0, k).map(([, j]) => j)
+}
+
+// The journey: rows per column and the height of one row, in px (the SVG links are drawn on the same grid).
+const ROWS = 10
+const ROW = 30
 
 // A token as text people can read: the leading space shown as a dot, new lines as ⏎.
 const show = (t: string) => t.replace(/^ /, '·').replace(/\n/g, '⏎')
@@ -56,9 +103,8 @@ export default function Explorer({
   hint = 'Try Apple − Mac + PC, four − three + five, was − is + have. King and queen are split into pieces by this tokenizer, so king − man + woman can’t be asked.',
 }: Props) {
   const [src, setSrc] = useState(0)
-  const [data, setData] = useState<Data | null>(null)
-  const [unit, setUnit] = useState<Float32Array | null>(null) // rows scaled to length 1
-  const [raw, setRaw] = useState<Float32Array | null>(null) // rows as the model has them
+  // Every depth is loaded (the one on screen first) so the journey can compare them.
+  const [layers, setLayers] = useState<(Layer | null)[]>(() => sources.map(() => null))
   const [plotly, setPlotly] = useState<Plotly | null>(null)
   const [view, setView] = useState<'2d' | '3d'>('2d')
   const [hideRare, setHideRare] = useState(true)
@@ -67,34 +113,36 @@ export default function Explorer({
   const [miss, setMiss] = useState<{ q: string; like: number[] } | null>(null)
   const [arith, setArith] = useState(start)
   const plotRef = useRef<PlotEl>(null)
+  // Each depth has its own map, so switching depth re-centres on the selected word at the same zoom.
+  const recenter = useRef<{ w: number; h: number } | null>(null)
+  const switchLayer = (k: number) => {
+    if (k === src) return
+    const l = plotRef.current?._fullLayout
+    recenter.current =
+      view === '2d' && selected !== null && l
+        ? { w: l.xaxis.range[1] - l.xaxis.range[0], h: l.yaxis.range[1] - l.yaxis.range[0] }
+        : null
+    setSrc(k)
+  }
 
-  const dir = sources[src].dir
+  const dirs = sources.map((x) => x.dir).join('|')
   useEffect(() => {
-    setData(null)
-    Promise.all([
-      fetch(`${dir}/tokens.json`).then((r) => r.json() as Promise<Data>),
-      fetch(`${dir}/emb.bin`).then((r) => r.arrayBuffer()),
-    ]).then(([d, buf]) => {
-      const n = d.tokens.length
-      const scale = new Float32Array(buf, 0, n)
-      const q = new Int8Array(buf, n * 4)
-      const r = new Float32Array(n * d.dim)
-      const u = new Float32Array(n * d.dim)
-      for (let i = 0; i < n; i++) {
-        let norm = 0
-        for (let j = 0; j < d.dim; j++) {
-          const v = q[i * d.dim + j] * scale[i]
-          r[i * d.dim + j] = v
-          norm += v * v
-        }
-        norm = Math.sqrt(norm) || 1
-        for (let j = 0; j < d.dim; j++) u[i * d.dim + j] = r[i * d.dim + j] / norm
+    let alive = true
+    ;(async () => {
+      for (const [k, dir] of dirs.split('|').entries()) {
+        const layer = await loadLayer(dir)
+        if (!alive) return
+        setLayers((prev) => prev.map((l, j) => (j === k ? layer : l)))
       }
-      setData(d)
-      setRaw(r)
-      setUnit(u)
-    })
-  }, [dir])
+    })()
+    return () => {
+      alive = false
+    }
+  }, [dirs])
+
+  const data = layers[src]?.data ?? null
+  const unit = layers[src]?.unit ?? null // rows scaled to length 1
+  const raw = layers[src]?.raw ?? null // rows as the model has them
 
   const usable = useMemo(() => {
     if (!data) return null
@@ -151,6 +199,18 @@ export default function Explorer({
   )
 
   const neighbours = useMemo(() => (selected === null ? [] : nearest(row(selected), 20, [selected])), [selected, nearest, row])
+
+  // The selected word's neighbours at every depth. All depths share one word list, so an index means the same word in each.
+  // A word's fate is read from the first and last columns: gone (spelling that falls away), kept, or new (meaning that arrives).
+  const journey = useMemo(() => {
+    if (selected === null || sources.length < 2 || layers.some((l) => !l)) return null
+    const cols = layers.map((l) => closest(l!, selected, ROWS, keep))
+    const first = new Set(cols[0])
+    const last = new Set(cols[cols.length - 1])
+    const fate = (i: number) => (first.has(i) ? (last.has(i) ? 'kept' : 'gone') : last.has(i) ? 'new' : 'mid')
+    return { cols, fate, gone: cols[0].filter((i) => !last.has(i)).length, arrived: cols[cols.length - 1].filter((i) => !first.has(i)).length }
+  }, [selected, sources.length, layers, keep])
+  const [hot, setHot] = useState<number | null>(null)
 
   // Arithmetic takes whole words only (" word"), as step 7's script does: "king" alone is the piece in "making".
   const word = useCallback(
@@ -234,7 +294,8 @@ export default function Explorer({
       traces.push(pick(neighbours.map(([, i]) => i), '#ffc31f', three ? 4 : 9, 'neighbours'))
       traces.push(pick([selected], '#ff4b1f', three ? 7 : 15, 'selected'))
     }
-    const axis = { showgrid: false, zeroline: false, showticklabels: false, title: { text: '' } }
+    // A fresh object per axis: Plotly writes the pan/zoom range back into these, so a shared one made x and y overwrite each other.
+    const axis = () => ({ showgrid: false, zeroline: false, showticklabels: false, title: { text: '' } })
     const layout = {
       paper_bgcolor: '#f7efdf',
       plot_bgcolor: '#fbf6ec',
@@ -244,12 +305,18 @@ export default function Explorer({
       showlegend: el.clientWidth > 700,
       legend: { font: { size: 11 }, bgcolor: 'rgba(247,239,223,0.85)', itemsizing: 'constant' },
       uirevision: view,
-      xaxis: axis,
-      yaxis: axis,
-      scene: { xaxis: axis, yaxis: axis, zaxis: axis, bgcolor: '#fbf6ec', uirevision: view },
+      xaxis: axis(),
+      yaxis: axis(),
+      scene: { xaxis: axis(), yaxis: axis(), zaxis: axis(), bgcolor: '#fbf6ec', uirevision: view },
       font: { family: 'Instrument Sans, system-ui, sans-serif', color: '#16121c' },
     }
     plotly.react(el, traces, layout, { responsive: true, scrollZoom: true, displaylogo: false }).then(() => {
+      if (recenter.current && selected !== null && !three) {
+        const [cx, cy] = data.xy[selected]
+        const { w, h } = recenter.current
+        recenter.current = null
+        plotly.relayout(el, { 'xaxis.range': [cx - w / 2, cx + w / 2], 'yaxis.range': [cy - h / 2, cy + h / 2] })
+      }
       el.removeAllListeners?.('plotly_click')
       el.on?.('plotly_click', (e) => {
         const i = e.points[0]?.customdata
@@ -268,9 +335,44 @@ export default function Explorer({
     setMiss(null)
   }
 
+  // Full screen shows the controls and the map only; the journey can fold away to its title.
+  const appRef = useRef<HTMLDivElement>(null)
+  const [full, setFull] = useState(false)
+  useEffect(() => {
+    const on = () => setFull(!!(document.fullscreenElement ?? (document as { webkitFullscreenElement?: Element }).webkitFullscreenElement))
+    document.addEventListener('fullscreenchange', on)
+    document.addEventListener('webkitfullscreenchange', on)
+    return () => {
+      document.removeEventListener('fullscreenchange', on)
+      document.removeEventListener('webkitfullscreenchange', on)
+    }
+  }, [])
+  const toggleFull = () => {
+    const el = appRef.current as (HTMLDivElement & { webkitRequestFullscreen?: () => void }) | null
+    const doc = document as Document & { webkitExitFullscreen?: () => void }
+    if (full) (doc.exitFullscreen ? doc.exitFullscreen() : doc.webkitExitFullscreen?.())
+    else if (el) (el.requestFullscreen ? el.requestFullscreen() : el.webkitRequestFullscreen?.())
+  }
+  // Plotly only follows window resizes; entering or leaving full screen resizes the box, not always the window.
+  useEffect(() => {
+    if (plotly && plotRef.current) requestAnimationFrame(() => plotRef.current && plotly.Plots.resize(plotRef.current))
+  }, [full, plotly])
+  const [folded, setFolded] = useState(false)
+  useEffect(() => {
+    try {
+      setFolded(localStorage.getItem('sgx:journey-folded') === '1')
+    } catch {}
+  }, [])
+  const fold = () => {
+    setFolded(!folded)
+    try {
+      localStorage.setItem('sgx:journey-folded', folded ? '0' : '1')
+    } catch {}
+  }
+
   const ready = data && unit && plotly
   return (
-    <>
+    <div className={`sgx-app${full ? ' is-full' : ''}`} ref={appRef}>
       <Script src={PLOTLY} strategy="afterInteractive" onReady={() => setPlotly((window as unknown as { Plotly: Plotly }).Plotly)} />
       <div className="sgx-controls">
         <input
@@ -292,7 +394,7 @@ export default function Explorer({
         {sources.length > 1 && (
           <div className="sgx-toggle" role="group" aria-label="Depth">
             {sources.map((x, k) => (
-              <button key={x.dir} className={src === k ? 'on' : ''} onClick={() => setSrc(k)}>
+              <button key={x.dir} className={src === k ? 'on' : ''} onClick={() => switchLayer(k)}>
                 {x.label}
               </button>
             ))}
@@ -303,7 +405,95 @@ export default function Explorer({
             <input type="checkbox" checked={hideRare} onChange={(e) => setHideRare(e.target.checked)} /> hide rare tokens
           </label>
         )}
+        <button className="sgx-full" onClick={toggleFull} title={full ? 'Exit full screen (Esc)' : 'Full screen map'}>
+          {full ? (
+            <svg viewBox="0 0 16 16" aria-hidden>
+              <path d="M6 1v5H1M10 1v5h5M6 15v-5H1M10 15v-5h5" />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 16 16" aria-hidden>
+              <path d="M1 6V1h5M15 6V1h-5M1 10v5h5M15 10v5h-5" />
+            </svg>
+          )}
+          <span>{full ? 'Exit' : 'Full screen'}</span>
+        </button>
       </div>
+
+      {sources.length > 1 && selected !== null && data && (
+        <section className={`sgx-journey${hot !== null ? ' has-hot' : ''}`} onMouseLeave={() => setHot(null)}>
+          <div className="sgx-jtop">
+            <h2>
+              <b>{show(data.tokens[selected])}</b>, layer by layer
+            </h2>
+            <button className="sgx-fold" onClick={fold} aria-expanded={!folded}>
+              <svg viewBox="0 0 16 16" aria-hidden className={folded ? 'down' : ''}>
+                <path d="M3 10l5-5 5 5" />
+              </svg>
+              {folded ? 'Show' : 'Hide'}
+            </button>
+          </div>
+          {folded ? null : journey ? (
+            <>
+              <p className="sgx-jsum">
+                Its ten nearest words at each depth. <span className="gone">{journey.gone} of the ten at layer 0 are gone</span> by the
+                last layer, <span className="new">{journey.arrived} arrive</span>, <span className="kept">{ROWS - journey.gone} stay</span>.
+                Hover a word to follow it.
+              </p>
+              <div className="sgx-jgrid" style={{ ['--row' as string]: `${ROW}px` }}>
+                {journey.cols.map((col, k) => (
+                  <Fragment key={k}>
+                    {k > 0 && (
+                      <svg
+                        className="sgx-jlinks"
+                        style={{ gridColumn: 2 * k, gridRow: 2 }}
+                        viewBox={`0 0 100 ${ROWS * ROW}`}
+                        preserveAspectRatio="none"
+                        aria-hidden
+                      >
+                        {col.map((i, b) => {
+                          const a = journey.cols[k - 1].indexOf(i)
+                          if (a < 0) return null
+                          const y1 = a * ROW + ROW / 2
+                          const y2 = b * ROW + ROW / 2
+                          return (
+                            <path
+                              key={i}
+                              className={`${journey.fate(i)}${hot === i ? ' hot' : ''}`}
+                              d={`M0 ${y1} C50 ${y1} 50 ${y2} 100 ${y2}`}
+                              vectorEffect="non-scaling-stroke"
+                            />
+                          )
+                        })}
+                      </svg>
+                    )}
+                    <button
+                      className={`sgx-jhead${src === k ? ' on' : ''}`}
+                      style={{ gridColumn: 2 * k + 1, gridRow: 1 }}
+                      onClick={() => switchLayer(k)}
+                      title="Show this layer on the map"
+                    >
+                      {sources[k].label}
+                    </button>
+                    <ol className="sgx-jcol" style={{ gridColumn: 2 * k + 1, gridRow: 2 }}>
+                      {col.map((i) => (
+                        <li
+                          key={i}
+                          className={`${journey.fate(i)}${hot === i ? ' hot' : ''}${journey.cols[k + 1]?.includes(i) ? ' cont' : ''}`}
+                          onMouseEnter={() => setHot(i)}
+                        >
+                          <button onClick={() => choose(i)}>{show(data.tokens[i])}</button>
+                        </li>
+                      ))}
+                    </ol>
+                  </Fragment>
+                ))}
+              </div>
+            </>
+          ) : (
+            <p className="sgx-note">Loading the other layers…</p>
+          )}
+        </section>
+      )}
 
       <div className="sgx-grid">
         <div className="sgx-map">
@@ -385,6 +575,6 @@ export default function Explorer({
           </section>
         </aside>
       </div>
-    </>
+    </div>
   )
 }

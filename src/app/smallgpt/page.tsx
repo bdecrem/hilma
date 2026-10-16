@@ -51,7 +51,22 @@ export default function SmallGptPage() {
                 {s.summary && (
                   <>
                     <h3>In Bart’s words</h3>
-                    <p>{s.summary}</p>
+                    {s.summary.split('\n\n').map((para) => (
+                      <p key={para.slice(0, 40)}>{para}</p>
+                    ))}
+                    {s.figures && (
+                      <div className="sg-figs">
+                        {s.figures.map((f) => (
+                          <figure key={f.src}>
+                            <a href={f.src} target="_blank" rel="noreferrer">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={f.src} alt={f.alt} loading="lazy" />
+                            </a>
+                            <figcaption>{f.caption}</figcaption>
+                          </figure>
+                        ))}
+                      </div>
+                    )}
                     {s.examples && (
                       <ol className="sg-examples">
                         {s.examples.map((e) => (
