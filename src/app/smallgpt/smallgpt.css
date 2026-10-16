@@ -176,6 +176,19 @@
 .sg-step.todo .sg-idea {
   color: var(--ink-3);
 }
+/* A skipped step stays on the page, struck through, with its reason in the idea line. */
+.sg-step.skipped .sg-name {
+  color: var(--ink-3);
+  font-weight: 500;
+  text-decoration: line-through;
+}
+.sg-step.skipped .sg-idea {
+  color: var(--ink-3);
+}
+.sg-step.skipped .sg-tag {
+  color: var(--ink-2);
+  background: var(--paper-2);
+}
 
 /* Bart's summary of a done step: a note in the margin of the notebook. */
 .sg-note {

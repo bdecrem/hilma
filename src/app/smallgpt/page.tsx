@@ -44,6 +44,7 @@ export default function SmallGptPage() {
               </h2>
               {s.status === 'done' && s.doneOn && <span className="sg-tag">done {fmt(s.doneOn)}</span>}
               {s.status === 'next' && <span className="sg-tag">up next</span>}
+              {s.status === 'skipped' && <span className="sg-tag">skipped</span>}
             </div>
             <p className="sg-idea">{s.idea}</p>
             {s.status === 'done' && (s.summary || s.saw) && (
@@ -99,7 +100,7 @@ export default function SmallGptPage() {
 
       <p className="sg-foot">
         The plan, the code for each step and its notes live in <code>apps/smallgpt/</code> in the hilma repo. Steps 1–6 follow
-        Karpathy’s “Zero to Hero”; the post-training steps use Hugging Face TRL with each loss written out by hand first.
+        Karpathy’s “Zero to Hero”; the post-training steps are written by hand on the same model, with no library in between.
       </p>
     </main>
   )

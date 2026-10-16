@@ -16,8 +16,8 @@ Brief for Claude Code" (2026-10-12).
   ahead of time.
 - Each step gets its own folder, `NN-name/`, with the code and a README that
   explains what the code does and what to look at when it runs. Code is
-  plain PyTorch written to be read, not a wrapper around a library — except
-  where PLAN.md says a library (TRL) is the point.
+  plain PyTorch written to be read, not a wrapper around a library. That
+  includes post-training: SFT, DPO and GRPO run on our own model, no TRL.
 - Every step ends with something Bart can see: a number going down, a plot,
   text coming out of the model. That is the proof the step worked.
 - `probe.py` runs the same five prompts against any checkpoint (default: the
@@ -56,6 +56,6 @@ which doesn't matter at this scale.
   "unix" were still in pieces.
 - **About 10M parameters, not 124M.** GPT-2 small on an M4 is days of
   pretraining; 10M is an afternoon. Scaling up is the last, optional step.
-- **GRPO for RLVR; reward model + PPO is optional.** TRL's PPO trainer has
-  been rewritten twice and is the shakiest tool in the chain. GRPO is stable
+- **GRPO for RLVR; reward model + PPO is optional.** PPO needs four models
+  in memory and is the most fragile recipe in the chain. GRPO is stable
   and is what current labs use.

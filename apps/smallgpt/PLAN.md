@@ -2,7 +2,7 @@
 
 Each step: what gets built, what Bart will understand at the end of it, and
 what he will see when it works. A step is built only after it is signed off.
-Status is one of: **not started · approved · building · done**.
+Status is one of: **not started · approved · building · done · skipped**.
 
 | # | Step | The idea | Status |
 |---|------|----------|--------|
@@ -15,7 +15,7 @@ Status is one of: **not started · approved · building · done**.
 | 6 | Pretraining the GPT | Random weights become a language model | done 2026-10-13 (10.1 M params, 3.1 h on the mini, loss 9.07 → 2.08) |
 | 6b | Pretraining on Usenet alone | Out with the kids, in with Usenet: 1981–1991 from archive.org, new tokenizer, same model | done 2026-10-14 (1.88 M posts, 497 M tokens, 7.8 h, loss 9.06 → 3.37) |
 | 7 | Looking at the weights | The embedding table before and after | done 2026-10-15 (Usenet model; 7 of 8 analogies right) |
-| 8 | The conversion bridge | Our model as a Hugging Face model | not started |
+| 8 | The conversion bridge | Our model as a Hugging Face model | skipped 2026-10-16 (post-training is hand-written on our own model, so nothing needs the HF format) |
 | 9 | SFT | Pretraining again, on conversations, with a mask | not started |
 | 10 | DPO | Preference alignment without a reward model | not started |
 | 11 | Reward model + PPO (optional) | The original RLHF recipe | not started |
@@ -23,9 +23,9 @@ Status is one of: **not started · approved · building · done**.
 | 13 | Scale up (optional) | The same pipeline at GPT-2 124M | not started |
 
 Steps 1–6 follow Karpathy's "Neural Networks: Zero to Hero" (micrograd,
-makemore, minbpe, nanoGPT). Steps 8–12 use Hugging Face TRL where a library is
-the realistic tool, with the loss written out by hand first so it isn't a
-black box.
+makemore, minbpe, nanoGPT). Steps 9–12 are written by hand on our own model,
+in plain PyTorch, with no TRL; that is why step 8 (the conversion to a Hugging
+Face model, which only TRL needed) was skipped on 2026-10-16.
 
 ---
 
@@ -159,6 +159,10 @@ One session.
 
 ## 8 · The conversion bridge
 
+**Skipped 2026-10-16.** It only existed so TRL's trainers could load the
+model. Post-training is hand-written on our own model instead, so nothing
+needs the Hugging Face format. Kept here for the record.
+
 **Build:** a script that builds a Hugging Face `GPT2LMHeadModel` with our
 config, copies our checkpoint's tensors into it (a few weights transposed),
 saves it in HF format together with our tokenizer, and checks that both
@@ -177,9 +181,8 @@ About 100 lines. Half a session.
 **Build:** a synthetic instruction–response dataset in a narrow domain the
 model can learn (chosen at sign-off; the candidate is short questions about
 TinyStories-style stories, written by Claude); a chat format with special
-tokens; a loss mask so only the response tokens count; first a hand-rolled
-training loop (it is step 6's loop with the mask), then the same with TRL's
-`SFTTrainer`.
+tokens; a loss mask so only the response tokens count; the training loop is
+step 6's loop with the mask.
 
 **Understand:** SFT is pretraining on a different dataset with a mask — not
 a different kind of learning. Why the format and the mask matter.
@@ -195,7 +198,7 @@ One session plus a short training run.
 answers that are correct and short vs. correct and rambling, or correct vs.
 wrong); the DPO loss written out by hand (log-probability ratios of chosen
 and rejected under the policy and a frozen reference, through a sigmoid,
-scaled by beta); then TRL's `DPOTrainer`.
+scaled by beta) and the training loop around it.
 
 **Understand:** how a model learns a preference without a reward model, why
 it needs a frozen reference copy, what beta controls.
@@ -209,7 +212,7 @@ One session plus a short run.
 ## 11 · Reward model + PPO (optional)
 
 **Build:** a reward model — the SFT model with a scalar head — trained on the
-same preference pairs; then PPO through TRL: sample completions from the
+same preference pairs; then PPO written out: sample completions from the
 policy, score them with the reward model, apply a KL penalty against the
 reference, update the policy, with a value model alongside.
 
@@ -218,7 +221,7 @@ reference, update the policy, with a value model alongside.
 
 **See:** mean reward over training steps; the KL to the reference; samples.
 
-Optional because it is the shakiest tooling and the least used recipe
+Optional because it is the most moving parts and the least used recipe
 today. Worth doing once to feel the difference from DPO.
 
 ## 12 · RLVR with GRPO
@@ -227,8 +230,7 @@ today. Worth doing once to feel the difference from DPO.
 to start); a verifier that parses the model's answer and returns 1 if it is
 correct and 0 otherwise; the GRPO loop written out — sample a group of
 completions per prompt, score them, compute each one's advantage relative
-to the group, update the policy — then TRL's `GRPOTrainer` with the verifier
-as the reward function.
+to the group, update the policy.
 
 **Understand:** reinforcement learning where the reward is ground truth,
 why group-relative advantages remove the need for a value model, and what
