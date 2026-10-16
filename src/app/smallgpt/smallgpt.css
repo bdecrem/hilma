@@ -286,3 +286,37 @@
 .sg-figs + h3 {
   margin-top: 14px;
 }
+
+/* Each finished step's notes fold; the newest one starts open. */
+.sg-fold > summary {
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--blue);
+  cursor: pointer;
+  user-select: none;
+}
+.sg-fold > summary::-webkit-details-marker {
+  display: none;
+}
+.sg-fold > summary::before {
+  content: '';
+  width: 0;
+  height: 0;
+  border-left: 5px solid currentColor;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  transition: transform 0.15s;
+}
+.sg-fold[open] > summary::before {
+  transform: rotate(90deg);
+}
+.sg-fold[open] > summary {
+  margin-bottom: 2px;
+}

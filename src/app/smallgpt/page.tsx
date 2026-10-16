@@ -1,25 +1,39 @@
-import { STARTED, STEPS, counted } from './steps'
+import { STARTED, STEPS, counted } from "./steps";
 
 function fmt(iso: string) {
-  const [y, m, d] = iso.split('-').map(Number)
-  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  });
 }
 
 export default function SmallGptPage() {
-  const done = counted(STEPS).filter((s) => s.status === 'done').length
-  const pct = Math.round((done / counted(STEPS).length) * 100)
+  const done = counted(STEPS).filter((s) => s.status === "done").length;
+  const pct = Math.round((done / counted(STEPS).length) * 100);
+  // Only the most recently finished step opens with its notes showing; the rest fold.
+  const latest = STEPS.filter(
+    (s) => s.status === "done" && (s.summary || s.saw),
+  ).reduce<(typeof STEPS)[number] | null>(
+    (a, s) => (!a || (s.doneOn ?? "") >= (a.doneOn ?? "") ? s : a),
+    null,
+  );
 
   return (
     <main className="sg-page">
       <p className="sg-kicker">smallgpt</p>
       <h1>Building a GPT, one step at a time.</h1>
       <p className="sg-lead">
-        Bart builds a complete GPT at toy scale and touches every mechanism along the way — from a tokenizer and
-        backpropagation through pretraining, SFT, DPO and RLVR.
+        Bart builds a complete GPT at toy scale and touches every mechanism
+        along the way — from a tokenizer and backpropagation through
+        pretraining, SFT, DPO and RLVR.
       </p>
       <p className="sg-lead">
-        The goal is understanding, not a useful model. Fourteen steps; each one is built only after the last one is
-        understood, and each ends with something you can see.
+        The goal is understanding, not a useful model. Fourteen steps; each one
+        is built only after the last one is understood, and each ends with
+        something you can see.
       </p>
 
       <div className="sg-progress">
@@ -36,72 +50,81 @@ export default function SmallGptPage() {
         {STEPS.map((s) => (
           <li key={s.n} className={`sg-step ${s.status}`}>
             <span className="sg-mark" aria-hidden>
-              {s.status === 'done' ? '✓' : s.n}
+              {s.status === "done" ? "✓" : s.n}
             </span>
             <div className="sg-head">
               <h2 className="sg-name">
                 {s.n} · {s.name}
               </h2>
-              {s.status === 'done' && s.doneOn && <span className="sg-tag">done {fmt(s.doneOn)}</span>}
-              {s.status === 'next' && <span className="sg-tag">up next</span>}
-              {s.status === 'skipped' && <span className="sg-tag">skipped</span>}
+              {s.status === "done" && s.doneOn && (
+                <span className="sg-tag">done {fmt(s.doneOn)}</span>
+              )}
+              {s.status === "next" && <span className="sg-tag">up next</span>}
+              {s.status === "skipped" && (
+                <span className="sg-tag">skipped</span>
+              )}
             </div>
             <p className="sg-idea">{s.idea}</p>
-            {s.status === 'done' && (s.summary || s.saw) && (
-              <div className="sg-note">
-                {s.summary && (
-                  <>
-                    <h3>In Bart’s words</h3>
-                    {s.summary.split('\n\n').map((para) => (
-                      <p key={para.slice(0, 40)}>{para}</p>
-                    ))}
-                    {s.figures && (
-                      <div className="sg-figs">
-                        {s.figures.map((f) => (
-                          <figure key={f.src}>
-                            <a href={f.src} target="_blank" rel="noreferrer">
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img src={f.src} alt={f.alt} loading="lazy" />
-                            </a>
-                            <figcaption>{f.caption}</figcaption>
-                          </figure>
-                        ))}
-                      </div>
-                    )}
-                    {s.examples && (
-                      <ol className="sg-examples">
-                        {s.examples.map((e) => (
-                          <li key={e.prompt}>
-                            <span className="sg-prompt">{e.prompt}</span>
-                            <span className="sg-pipe"> | </span>
-                            {e.out}
-                          </li>
-                        ))}
-                      </ol>
-                    )}
-                  </>
-                )}
-                {s.saw && (
-                  <>
-                    <h3>What we saw</h3>
-                    <p className="sg-saw">{s.saw}</p>
-                    {s.links?.map((l) => (
-                      <a key={l.href} className="sg-link" href={l.href}>
-                        {l.label}
-                      </a>
-                    ))}
-                  </>
-                )}
-              </div>
+            {s.status === "done" && (s.summary || s.saw) && (
+              <details className="sg-fold" open={s === latest}>
+                <summary>notes</summary>
+                <div className="sg-note">
+                  {s.summary && (
+                    <>
+                      <h3>In Bart’s words</h3>
+                      {s.summary.split("\n\n").map((para) => (
+                        <p key={para.slice(0, 40)}>{para}</p>
+                      ))}
+                      {s.figures && (
+                        <div className="sg-figs">
+                          {s.figures.map((f) => (
+                            <figure key={f.src}>
+                              <a href={f.src} target="_blank" rel="noreferrer">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={f.src} alt={f.alt} loading="lazy" />
+                              </a>
+                              <figcaption>{f.caption}</figcaption>
+                            </figure>
+                          ))}
+                        </div>
+                      )}
+                      {s.examples && (
+                        <ol className="sg-examples">
+                          {s.examples.map((e) => (
+                            <li key={e.prompt}>
+                              <span className="sg-prompt">{e.prompt}</span>
+                              <span className="sg-pipe"> | </span>
+                              {e.out}
+                            </li>
+                          ))}
+                        </ol>
+                      )}
+                    </>
+                  )}
+                  {s.saw && (
+                    <>
+                      <h3>What we saw</h3>
+                      <p className="sg-saw">{s.saw}</p>
+                      {s.links?.map((l) => (
+                        <a key={l.href} className="sg-link" href={l.href}>
+                          {l.label}
+                        </a>
+                      ))}
+                    </>
+                  )}
+                </div>
+              </details>
             )}
           </li>
         ))}
       </ol>
 
       <p className="sg-foot">
-        The plan, the code for each step and its notes live in <code>apps/smallgpt/</code> in the hilma repo. Steps 1–6 follow
-        Karpathy’s “Zero to Hero”; the post-training steps are written by hand on the same model, with no library in between.
+        The plan, the code for each step and its notes live in{" "}
+        <code>apps/smallgpt/</code> in the hilma repo. Steps 1–6 follow
+        Karpathy’s “Zero to Hero”; the post-training steps are written by hand
+        on the same model, with no library in between.
       </p>
     </main>
-  )
+  );
 }
