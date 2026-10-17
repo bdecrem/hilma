@@ -18,9 +18,9 @@ Status is one of: **not started · approved · building · done · skipped**.
 | 8 | The conversion bridge | Our model as a Hugging Face model | skipped 2026-10-16 (post-training is hand-written on our own model, so nothing needs the HF format) |
 | 9 | SFT | Pretraining again, on conversations, with a mask | done 2026-10-16 (2,945 Usenet-era Q&A pairs, 90 s; answers in shape, facts wrong. 9b: the cranky hacker, 3,206 real Usenet questions + replies; runs in the browser at ola.cx/smallgpt/chat) |
 | 10 | DPO | Preference alignment without a reward model | not started (step 11 chosen instead, 2026-10-16) |
-| 11 | Reward model + PPO | The RLHF recipe: a judge, then reinforcement learning | not started (planned 2026-10-16, awaiting sign-off) |
+| 11 | Reward model + PPO | The RLHF recipe: a judge, then reinforcement learning | not started (planned 2026-10-16; runs after 13) |
 | 12 | RLVR with GRPO | Reinforcement learning against a checker | not started |
-| 13 | Scale up (optional) | The same pipeline at GPT-2 124M | not started |
+| 13 | Scale up | The same pipeline at GPT-2 small's shape (~92M), on rented GPUs | not started (moved before 11, planned 2026-10-16, awaiting sign-off) |
 
 Steps 1–6 follow Karpathy's "Neural Networks: Zero to Hero" (micrograd,
 makemore, minbpe, nanoGPT). Steps 9–12 are written by hand on our own model,
@@ -216,7 +216,7 @@ what frontier labs do for preferences, and it builds the parts step 12 reuses
 (the model writing its own answers, a score, an update toward the high
 scorers). DPO stays in the table for later.
 
-Starts from the cranky hacker (`out/sft-usenet/final.pt`). Four parts, one
+Starts from the cranky hacker on the bigger model of step 13, which runs first. Four parts, one
 folder `11-rlhf/`.
 
 **a · Preferences, judged by Claude (RLAIF).** Take ~2,000 real Usenet
@@ -239,7 +239,7 @@ from the frozen SFT copy (the KL), a value model guesses the score
 token by token so each token gets its share of the credit, and the policy is
 nudged toward the answers that beat the guess, with a clip so no update is
 too large. Four models in memory: policy, frozen reference, reward model,
-value model (~40 MB each, nothing for this Mac).
+value model (~370 MB each in float32; with the optimizer, a few GB on the mini).
 
 **d · Did it get better?** Claude judges the SFT model against the RLHF
 model on 200 held-out questions, blind and in random order: a win rate,
@@ -274,13 +274,42 @@ at the start and the end side by side.
 
 One session plus a run.
 
-## 13 · Scale up (optional)
+## 13 · Scale up — done next, before 11 and 12
 
-**Build:** the same pipeline with the GPT-2 124M config and a longer
-pretraining run, probably on a rented GPU.
+**Moved up on 2026-10-16.** The 10M model's answers are near gibberish, and
+post-training can only choose among things the model can already do, so
+RLHF and RLVR on it would show little. They run on the bigger model instead.
 
-**Understand:** what changes with scale and what doesn't.
+**Model:** GPT-2 small's shape: 12 layers, 12 heads, vectors of 768, windows
+of 512 tokens (a Usenet post averages ~260). Our tokenizer stays (8,192 plus
+the two chat tokens), so it is ~92M parameters; GPT-2 is 124M only because
+its vocabulary is 50k.
 
-**See:** better stories, a cleaner `king − man + woman` answer.
+**Data:** the same 497M Usenet tokens from 6b, about four passes (~2B
+tokens; the rule of thumb is 20 tokens per parameter). Repeating data four
+times costs almost nothing against fresh data.
 
-Only if steps 1–12 leave the appetite for it.
+**Build:** `13-scale/train.py`, step 6's loop plus what a GPU run needs:
+attention for all heads in one fused call (flash attention), bfloat16,
+`torch.compile`, and eight GPUs splitting each batch (DDP). Rehearsed at
+home first: a tiny config on the Mac, the eight-GPU path on CPU, so the
+cluster hour is only the run.
+
+**Where:** Together AI, one 8×H100 node on demand (Slurm). Upload
+`train.bin` (~1 GB) and the script, run ~15–20 minutes, download
+`final.pt`, shut the node down. ~$23–32 an hour for the node, about an hour
+on the meter with setup: $25–40 of the $50 on the account.
+
+**Then, on the mini:** SFT again on the cranky data (minutes), and the chat
+page switches to the bigger model (~95 MB int8, ~0.1 s per token in the
+browser). Steps 11 and 12 start from this model.
+
+**Understand:** what scale buys and what it doesn't; what a real GPU run
+looks like: several GPUs in step, mixed precision, a node billed by the
+minute.
+
+**See:** the loss curve against the 10M model's (3.37); the five questions
+of the step 11 example pairs answered by both models; base model samples
+side by side.
+
+One session to build and rehearse, one to run.
