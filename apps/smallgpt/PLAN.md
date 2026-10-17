@@ -17,8 +17,8 @@ Status is one of: **not started · approved · building · done · skipped**.
 | 7 | Looking at the weights | The embedding table before and after | done 2026-10-15 (Usenet model; 7 of 8 analogies right) |
 | 8 | The conversion bridge | Our model as a Hugging Face model | skipped 2026-10-16 (post-training is hand-written on our own model, so nothing needs the HF format) |
 | 9 | SFT | Pretraining again, on conversations, with a mask | done 2026-10-16 (2,945 Usenet-era Q&A pairs, 90 s; answers in shape, facts wrong. 9b: the cranky hacker, 3,206 real Usenet questions + replies; runs in the browser at ola.cx/smallgpt/chat) |
-| 10 | DPO | Preference alignment without a reward model | not started |
-| 11 | Reward model + PPO (optional) | The original RLHF recipe | not started |
+| 10 | DPO | Preference alignment without a reward model | not started (step 11 chosen instead, 2026-10-16) |
+| 11 | Reward model + PPO | The RLHF recipe: a judge, then reinforcement learning | not started (planned 2026-10-16, awaiting sign-off) |
 | 12 | RLVR with GRPO | Reinforcement learning against a checker | not started |
 | 13 | Scale up (optional) | The same pipeline at GPT-2 124M | not started |
 
@@ -209,20 +209,53 @@ training.
 
 One session plus a short run.
 
-## 11 · Reward model + PPO (optional)
+## 11 · Reward model + PPO
 
-**Build:** a reward model — the SFT model with a scalar head — trained on the
-same preference pairs; then PPO written out: sample completions from the
-policy, score them with the reward model, apply a KL penalty against the
-reference, update the policy, with a value model alongside.
+**Chosen over step 10 on 2026-10-16:** a judge plus reinforcement learning is
+what frontier labs do for preferences, and it builds the parts step 12 reuses
+(the model writing its own answers, a score, an update toward the high
+scorers). DPO stays in the table for later.
 
-**Understand:** the original RLHF loop, and why DPO was invented to skip it
-(four models in memory, unstable training, many knobs).
+Starts from the cranky hacker (`out/sft-usenet/final.pt`). Four parts, one
+folder `11-rlhf/`.
 
-**See:** mean reward over training steps; the KL to the reference; samples.
+**a · Preferences, judged by Claude (RLAIF).** Take ~2,000 real Usenet
+questions from `threads.jsonl` that SFT never saw. The cranky model writes
+four answers to each. Claude ranks each set of four against the real replies
+the question got: answers the question, agrees with the replies, says it
+once and stops, stays cranky. Every ranked set gives six better/worse pairs,
+~12,000 in all. This is how labs make preference data today: an AI judge with
+written rules in place of human raters.
 
-Optional because it is the most moving parts and the least used recipe
-today. Worth doing once to feel the difference from DPO.
+**b · The reward model.** A copy of the SFT model with its last layer (8,194
+token scores) swapped for one number: how good is this answer. Trained on the
+pairs with one loss: the better answer's score should beat the worse one's
+(−log sigmoid(r_better − r_worse)). Checked on held-out pairs: how often it
+agrees with Claude.
+
+**c · PPO.** The loop: pick a batch of questions, the model answers them,
+the reward model scores each answer, a penalty is subtracted for drifting
+from the frozen SFT copy (the KL), a value model guesses the score
+token by token so each token gets its share of the credit, and the policy is
+nudged toward the answers that beat the guess, with a clip so no update is
+too large. Four models in memory: policy, frozen reference, reward model,
+value model (~40 MB each, nothing for this Mac).
+
+**d · Did it get better?** Claude judges the SFT model against the RLHF
+model on 200 held-out questions, blind and in random order: a win rate,
+judged by something other than the reward model being optimized.
+
+**Understand:** the full RLHF loop as labs run it; what the reward model is
+(a learned stand-in for the judge); why the KL leash exists; reward hacking
+(the model finding what the reward model likes rather than what is good,
+which we should get to watch happen when the leash is loose).
+
+**See:** reward model accuracy on held-out pairs; mean reward, KL and answer
+length over the run; the same questions answered before and after; the win
+rate. The RLHF model goes on ola.cx/smallgpt/chat as a third choice.
+
+About 20 minutes of Claude calls for the pairs, minutes for the reward
+model, under an hour for PPO. One or two sessions.
 
 ## 12 · RLVR with GRPO
 
