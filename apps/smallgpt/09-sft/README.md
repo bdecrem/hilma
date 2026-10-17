@@ -177,6 +177,8 @@ row (10.3 MB instead of 41) plus the tokenizer's merges, into
 plain JavaScript, one token at a time with a cache of the earlier tokens' keys
 and values: about 9 ms a token on the iMac, in Chrome and Safari. Greedy
 answers from the int8 weights match float32 PyTorch token for token, and the
-JavaScript matches PyTorch on the same int8 weights token for token. The page
-offers the cranky model (default), the helpful one, and the base model beside
-either.
+JavaScript matches PyTorch on the same int8 weights token for token
+(`check_web.mjs`). Since step 13 the default is the cranky hacker on the 92M
+model (`cranky`, 92 MB in parts on Supabase Storage, ~75 ms a token; see
+`13-scale/README.md`); the 10M ones are `cranky-10m` and `helpful`, and the
+base model of the same size answers beside either (`base`, `base-10m`).

@@ -34,7 +34,7 @@ export default function OgImage() {
             <div style={{ display: 'flex' }}>It&apos;s available on prep.ai.mit.edu in pub/gnu.</div>
           </div>
         </div>
-        <div style={{ display: 'flex', fontSize: 24, color: '#5a5261' }}>A 10M-parameter GPT from 1980s Usenet, running in your browser · ola.cx/smallgpt/chat</div>
+        <div style={{ display: 'flex', fontSize: 24, color: '#5a5261' }}>A 92M-parameter GPT from 1980s Usenet, running in your browser · ola.cx/smallgpt/chat</div>
       </div>
     ),
     size,

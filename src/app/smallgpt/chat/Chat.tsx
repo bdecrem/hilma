@@ -2,17 +2,21 @@
 
 import { useEffect, useRef, useState } from 'react'
 
-// Talk to the step 9 models. They run in this browser, in a worker
-// (public/smallgpt/chat/worker.mjs): no server, ~10 MB of weights per model.
+// Talk to the step 9 and step 13 models. They run in this browser, in a worker
+// (public/smallgpt/chat/worker.mjs): no server. The 92M models are 92 MB of
+// weights each, the 10M ones 10 MB.
 
-type Model = 'cranky' | 'helpful'
+type Model = 'cranky' | 'cranky-10m' | 'helpful'
 type Reply = { text: string; done: boolean; error?: string; ms?: number; tokens?: number }
 type Turn = { id: number; q: string; model: Model; main: Reply; base?: Reply }
 
-const MODELS: { id: Model; label: string; note: string }[] = [
-  { id: 'cranky', label: 'cranky hacker', note: 'SFT on 3,206 real Usenet questions and replies, made crankier' },
-  { id: 'helpful', label: 'helpful regular', note: 'SFT on 2,945 Q&A pairs Claude wrote' },
+const MODELS: { id: Model; label: string; base: string; note: string }[] = [
+  { id: 'cranky', label: 'cranky 92M', base: 'base', note: 'Step 13: 92M parameters, SFT on 3,206 real Usenet questions and replies, made crankier' },
+  { id: 'cranky-10m', label: 'cranky 10M', base: 'base-10m', note: 'Step 9b: the same SFT on the 10M model' },
+  { id: 'helpful', label: 'helpful 10M', base: 'base-10m', note: 'Step 9: SFT on 2,945 Q&A pairs Claude wrote' },
 ]
+const SIZE: Record<string, string> = { cranky: '92', base: '92', 'cranky-10m': '10', helpful: '10', 'base-10m': '10' }
+const TAG: Record<string, string> = { cranky: 'cranky 92M', 'cranky-10m': 'cranky 10M', helpful: 'helpful 10M' }
 
 const TRY = ['How do I quit vi?', 'Is a 2400 baud modem worth it?', 'Should I buy an Amiga or an Atari ST?', 'Why is my Mac Plus so slow?']
 
@@ -27,7 +31,8 @@ export default function Chat() {
   const [withBase, setWithBase] = useState(false)
   const [temperature, setTemperature] = useState(0.7)
   const [topK, setTopK] = useState(40)
-  const [loading, setLoading] = useState<string | null>(null)
+  const [loading, setLoading] = useState<{ name: string; got?: number; total?: number } | null>(null)
+  const preloaded = useRef(false)
   const busy = turns.some((t) => !t.main.done || (t.base && !t.base.done))
   const endRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -36,7 +41,7 @@ export default function Chat() {
     const w = new Worker('/smallgpt/chat/worker.mjs', { type: 'module' })
     // Each request id is a turn id (main answer) or minus it (the base model's).
     w.onmessage = ({ data: m }) => {
-      if (m.loading) return setLoading(m.loading)
+      if (m.loading) return setLoading({ name: m.loading, got: m.got, total: m.total })
       if (m.loaded) return setLoading(null)
       const patch: Partial<Reply> = m.error ? { error: m.error, done: true } : { text: m.text, done: !!m.done, ms: m.ms, tokens: m.tokens }
       setTurns((ts) =>
@@ -48,10 +53,15 @@ export default function Chat() {
       )
     }
     worker.current = w
-    // Start downloading the default model while the visitor reads.
-    w.postMessage({ preload: 'cranky' })
     return () => w.terminate()
   }, [])
+
+  // Start downloading the default model (92 MB) once the visitor shows interest, not on every page view.
+  function preload() {
+    if (preloaded.current || !worker.current) return
+    preloaded.current = true
+    worker.current.postMessage({ preload: 'cranky' })
+  }
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: 'end' })
@@ -63,7 +73,8 @@ export default function Chat() {
     const id = nextId.current++
     setTurns((ts) => [...ts, { id, q: question, model, main: empty(), base: withBase ? empty() : undefined }])
     worker.current.postMessage({ id, model, text: question, temperature, topK })
-    if (withBase) worker.current.postMessage({ id: -id, model: 'base', text: question, temperature, topK })
+    const base = MODELS.find((m) => m.id === model)!.base
+    if (withBase) worker.current.postMessage({ id: -id, model: base, text: question, temperature, topK })
     setQ('')
     inputRef.current?.focus()
   }
@@ -76,8 +87,9 @@ export default function Chat() {
         </a>
         <h1>Ask the 1985 hacker</h1>
         <p>
-          A 10M-parameter GPT pretrained on Usenet 1981–1991, then taught to answer (step 9). It runs right here in your
-          browser. Each question is a new conversation.
+          A 92M-parameter GPT pretrained on Usenet 1981–1991 (step 13), then taught to answer like the net&rsquo;s
+          crankiest regulars (step 9). It runs right here in your browser; the first question downloads 92 MB. Each
+          question is a new conversation.
         </p>
       </header>
 
@@ -94,8 +106,8 @@ export default function Chat() {
         {turns.map((t) => (
           <section key={t.id} className="sgc-turn">
             <p className="sgc-q">{t.q}</p>
-            <Answer tag={t.model === 'cranky' ? 'cranky' : 'helpful'} reply={t.main} />
-            {t.base && <Answer tag="base" reply={t.base} />}
+            <Answer tag={TAG[t.model]} cls={t.model === 'helpful' ? 'helpful' : 'cranky'} reply={t.main} />
+            {t.base && <Answer tag={t.model === 'cranky' ? 'base 92M' : 'base 10M'} cls="base" reply={t.base} />}
           </section>
         ))}
         <div ref={endRef} />
@@ -113,6 +125,7 @@ export default function Chat() {
             ref={inputRef}
             value={q}
             onChange={(e) => setQ(e.target.value)}
+            onFocus={preload}
             placeholder="Ask something from 1985–1991…"
             autoComplete="off"
             enterKeyHint="send"
@@ -152,15 +165,20 @@ export default function Chat() {
             <span>{topK}</span>
           </label>
         </div>
-        {loading && <p className="sgc-loading">downloading the {loading} model (10 MB)…</p>}
+        {loading && (
+          <p className="sgc-loading">
+            downloading the {loading.name.replace('-10m', '')} model
+            {loading.total ? `: ${Math.round((loading.got || 0) / 1e6)} of ${Math.round(loading.total / 1e6)} MB` : ` (${SIZE[loading.name]} MB)`}…
+          </p>
+        )}
       </form>
     </div>
   )
 }
 
-function Answer({ tag, reply }: { tag: string; reply: Reply }) {
+function Answer({ tag, cls, reply }: { tag: string; cls: string; reply: Reply }) {
   return (
-    <div className={`sgc-a ${tag}`}>
+    <div className={`sgc-a ${cls}`}>
       <span className="sgc-tag">{tag}</span>
       {reply.error ? (
         <span className="sgc-err">{reply.error}</span>

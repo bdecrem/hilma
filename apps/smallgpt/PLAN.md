@@ -18,9 +18,9 @@ Status is one of: **not started · approved · building · done · skipped**.
 | 8 | The conversion bridge | Our model as a Hugging Face model | skipped 2026-10-16 (post-training is hand-written on our own model, so nothing needs the HF format) |
 | 9 | SFT | Pretraining again, on conversations, with a mask | done 2026-10-16 (2,945 Usenet-era Q&A pairs, 90 s; answers in shape, facts wrong. 9b: the cranky hacker, 3,206 real Usenet questions + replies; runs in the browser at ola.cx/smallgpt/chat) |
 | 10 | DPO | Preference alignment without a reward model | not started (step 11 chosen instead, 2026-10-16) |
-| 11 | Reward model + PPO | The RLHF recipe: a judge, then reinforcement learning | not started (planned 2026-10-16; runs after 13) |
+| 11 | Reward model + PPO | The RLHF recipe: a judge, then reinforcement learning | not started (planned 2026-10-16; next, on the 92M model) |
 | 12 | RLVR with GRPO | Reinforcement learning against a checker | not started |
-| 13 | Scale up | The same pipeline at GPT-2 small's shape (~92M), on rented GPUs | not started (moved before 11, planned 2026-10-16, awaiting sign-off) |
+| 13 | Scale up | The same pipeline at GPT-2 small's shape (~92M), on rented GPUs | done 2026-10-17 (moved before 10–12; 91.7M params, 4 passes over 6b's data, 9.1 min on 8 H100s on Together, val 3.37 → 2.80; cranky SFT on it; the chat page's default) |
 
 Steps 1–6 follow Karpathy's "Neural Networks: Zero to Hero" (micrograd,
 makemore, minbpe, nanoGPT). Steps 9–12 are written by hand on our own model,
@@ -274,7 +274,7 @@ at the start and the end side by side.
 
 One session plus a run.
 
-## 13 · Scale up — done next, before 11 and 12
+## 13 · Scale up — done 2026-10-17, before 10–12
 
 **Moved up on 2026-10-16.** The 10M model's answers are near gibberish, and
 post-training can only choose among things the model can already do, so

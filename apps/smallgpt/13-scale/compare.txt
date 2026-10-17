@@ -1,0 +1,43 @@
+== base models: the same opening, continued (temperature 0.8, top-k 40)
+
+-- 10M
+  Newsgroups: comp.sys.mac | Subject: Mac Plus won't boot |  |  >> I have a Mac Plus with a Mac SE with 2 meg of RAM.  I would like to have a Mac Plus with 2 meg memory.  If so, how about that, and how about my Mac Plus?  Thanks Tom<|endoftext|>Newsgroups: comp.sys.mac Subject: Re: Easy drive  I'm trying to figure out
+  Newsgroups: rec.bicycles | Subject: Best lock for a commuter bike? |  |  >> I've been reading this thread before, but I thought I'd ask this question inappropriate, but I haven't seen any mention of a lock for a rim, so I'm not wondering if someone can help.  If not, I'll summarize.  I'd like to be in net.land a list of the bike position
+  My Macintosh crashed again and I think the problem is >>  more of a pain than the system when it came to the home computer.  I will be happy to answer the following question:  What is the right way to prevent a change from the system?  What is the best way to do this?  How do all the users that are connected to the network use the same command?  How do
+
+-- 92M
+  Newsgroups: comp.sys.mac | Subject: Mac Plus won't boot |  |  >> I was trying to install a Mac Plus together with a IIx.  I got the following message:  	"Press reset.  Folder reset.  Disk is not installed" 	...etc.  I tried the same initation but the same result.  What am I doing wrong? Any help would be appreciated.<|endoftext|>Newsgroups
+  Newsgroups: rec.bicycles | Subject: Best lock for a commuter bike? |  |  >> I've been reading this thread before, but I thought I'd ask for some advice.  I have an '89 Aluminum MT100 fork, and I'm considering buying a used one.  I'd like to pick up a used one.  My current plan is to buy a used one,
+  My Macintosh crashed again and I think the problem is >>  more likely to be with the system when it crashes.  The Mac is a Mac IIx with 8 meg of RAM, 40 meg internal hard disk, 5 meg of RAM, AppleTalk interface to a Sun 4/110.  The crash did not occur with the following hardware:  1)	When the
+
+== the cranky hackers: questions neither model trained on (temperature 0.7, top-k 40, two tries each)
+
+Q: Is the Korn shell available for Xenix on the 386?
+  10M: There's also a korn shell called Korn shell for Xenix. It is a full shell with full shell scripts. It does a decent job of it, and it's on a 386 with no problems. Read the docs in the 4.3 manuals.
+  10M: Don't expect it. The 386 manual is the best, but it's on the 286; it's not the original author's name. The AT&T manual is good for the 386; it's not in the manual. The current version is the 386 manual, 386 manual, and it's not as good as the 386 manual.
+  92M: No, it's not yet. It's in the public domain, and you won't see it until mid-November. Don't expect much more from it.
+  92M: Great idea. Pick ksh or ksh without shell scripts, and ksh with ksh -c, which is the current shell. The ksh for the 386 is a hack. Don't expect miracles.
+
+Q: In NetHack, should I eat as much as I can, or wait until I'm Weak to save food?
+  10M: Use NetHack, which has a great deal of time and cost. Get NetHack and NetHack 6.0. It's not hard, you could use it if it's not easy. Don't hold your breath.
+  10M: Use the NetHack, which is what you get. The NetHack is a 1.2 meg floppy disk, for about $600, with the 1.2 meg 1.2 meg drive, and 2 megs of 63 megs are cheaper. Sigh, it's a 1.44 meg one.
+  92M: Pick your food and add more items. Take the food, and if it is the same food, it can be eaten. Skip the food in the dungeon, or save the wealth. Honestly, try it before whining about food.
+  92M: It's not a bug, it's an inability to find food. You must have eaten food twice, since every week you eat once you know it, and many times the food doesn't get eaten. Don't eat.
+
+Q: I want a computer for MIDI and music software. Should I get a Mac II, a Mac SE, or an IBM?
+  10M: Wrong, or the Mac II. It's a Mac II, and the Mac II is a Mac II and the Mac II does a full job. Sound is good, but a MIDI sequencer for the Mac II is no problem.
+  10M: Don't use the Mac II for all the money. Learn the Mac II, or buy a Mac II for $500. Money, and you can't expect a Mac II for a Mac II. Sigh, try burning Mac II, which is a good Mac II.
+  92M: No, the Mac II is the best, but the IIci is the best, and the IIx is the best. The IIcx is the most popular, and the Mac II is the best too.
+  92M: Cutting into a Mac II is no problem. Get a Mac II instead of a Mac II or a Mac II, though it costs money. Buy the Mac II, which is more than most people would have guessed.
+
+Q: I hit a railway track on my new bike and now there's a bump on the rear rim that makes the brakes grab. Can I fix it?
+  10M: The new bump is the rom's lying around, and the brake rim has a 8.8 inch rim, and the rim is the rotor on the rear. The tire and the rear and the brake rim is fine if the rear rim is the same. Keep your bump on the rear rim, and you'll need a new bump.
+  10M: Stop shopping for a new bump. The rear rim gets very steady, so the rear rim gets too quiet. And you have to replace it just a few times. Get a new bump next time.
+  92M: Run it in the front brake lug, put it back in the front, and it makes a brighter bump. Mine fixed it without braking, and your brake pads got sprayed. I guess it's a common misconception.
+  92M: Yes. The brake is the same, but the wheel turns. The wheel turns and the wheel turns like a rocket, so the brakes are fine. If it wasn't broken, a shim is needed and the brake is dead, so go buy a new bicycle.
+
+Q: At Disney-MGM Studios, do the animators work on weekends?
+  10M: It's not hard. Get the video game from the Bay Area, also. It's really hard to find. It's all in the video catalog. It's not hard to find, so ask and read the net.
+  10M: They're not hard to find. They are hard to find. Do the animators that you'd like to see if you'd like them for. Check your phonebook before you go read them.
+  92M: Disney-MGM is the only cartoon show I've seen on Disney. Fantasy football is not the most entertaining, but it's a dream come true. Disney-MGM is the only one that has an animated movie. Try reading the book before asking.
+  92M: Yes. They're animated stories, and all the animators are being rereleased in a movie. Animators, for one, will have to watch the animation each week. The animation is a must for the theater or theater, but it's a must for the theater.

@@ -6,9 +6,15 @@ loads:
 
   tok.json           the tokenizer's merges and special tokens
   <name>.bin/.json   one model: every weight matrix as int8 with one float32
-                     scale per row (a quarter of the size, ~13 MB), the small
+                     scale per row (a quarter of the size, ~10 MB), the small
                      vectors (biases, layer norms) as float32. The heads' query,
                      key and value matrices are stacked into one per layer.
+
+The 92M models of step 13 are ~92 MB each, too big for the repo: their .bin
+is cut into 24 MB parts named by a hash of the content and uploaded to the
+public Supabase Storage bucket `smallgpt`; their .json lists the parts' URLs
+and stays in public/ (needs SUPABASE_URL and SUPABASE_SERVICE_KEY from
+.env.local).
 
 Run:  .venv/bin/python 09-sft/export_web.py
       .venv/bin/python 09-sft/export_web.py --check   (greedy answers: float32 vs int8)
@@ -32,10 +38,15 @@ from sft import BASE, TOK, Chat, answer, load_sft  # noqa: E402
 
 WEB = os.path.join(ROOT, "..", "..", "public", "smallgpt", "chat")
 MODELS = {
-    "cranky": os.path.join(ROOT, "out", "sft-usenet", "final.pt"),
+    "cranky": os.path.join(ROOT, "out", "sft-usenet-big", "final.pt"),   # step 13, 92M
+    "base": os.path.join(ROOT, "out", "scale", "best.pt"),                # step 13, 92M
+    "cranky-10m": os.path.join(ROOT, "out", "sft-usenet", "final.pt"),
     "helpful": os.path.join(ROOT, "out", "sft", "final.pt"),
-    "base": BASE,
+    "base-10m": BASE,
 }
+REMOTE_ABOVE = 40e6   # bytes: bigger models go to Supabase Storage
+PART = 24 * 2**20
+BUCKET = "smallgpt"
 
 
 def tensors(sd, cfg):
@@ -85,12 +96,52 @@ def export(name, path):
         else:
             index.append({"name": key, "shape": list(a.shape), "f": len(blob)})
             blob += a.astype(np.float32).tobytes()
-    with open(os.path.join(WEB, f"{name}.bin"), "wb") as f:
-        f.write(blob)
-    meta = {k: cfg[k] for k in ("vocab", "block", "n_embd", "n_head", "n_layer")}
+    meta = {"cfg": {k: cfg[k] for k in ("vocab", "block", "n_embd", "n_head", "n_layer")}, "tensors": index, "bytes": len(blob)}
+    local = os.path.join(WEB, f"{name}.bin")
+    if len(blob) > REMOTE_ABOVE:
+        meta["bin"], meta["part"] = upload(name, bytes(blob)), PART
+        if os.path.exists(local):
+            os.remove(local)
+    else:
+        with open(local, "wb") as f:
+            f.write(blob)
     with open(os.path.join(WEB, f"{name}.json"), "w") as f:
-        json.dump({"cfg": meta, "tensors": index, "bytes": len(blob)}, f)
-    print(f"{name}: {len(blob) / 1e6:.1f} MB")
+        json.dump(meta, f)
+    print(f"{name}: {len(blob) / 1e6:.1f} MB" + (f" in {len(meta['bin'])} parts on Supabase" if "bin" in meta else ""))
+
+
+def env():
+    vals = {}
+    for line in open(os.path.join(ROOT, "..", "..", ".env.local")):
+        if "=" in line and not line.startswith("#"):
+            k, v = line.rstrip("\n").split("=", 1)
+            vals.setdefault(k, v.strip('"'))
+    return vals["SUPABASE_URL"], vals["SUPABASE_SERVICE_KEY"]
+
+
+def upload(name, blob):
+    """Cut the blob into parts, upload each (named by its hash, so a URL never changes content), return their URLs."""
+    import hashlib
+    import urllib.request
+    url, key = env()
+    auth = {"Authorization": f"Bearer {key}", "apikey": key}
+    try:  # the bucket, once
+        req = urllib.request.Request(f"{url}/storage/v1/bucket", method="POST", headers={**auth, "Content-Type": "application/json"},
+                                     data=json.dumps({"id": BUCKET, "name": BUCKET, "public": True}).encode())
+        urllib.request.urlopen(req)
+    except urllib.error.HTTPError as e:
+        if "already exists" not in e.read().decode().lower() and e.code not in (400, 409):
+            raise
+    h = hashlib.sha256(blob).hexdigest()[:10]
+    urls = []
+    for i in range(0, len(blob), PART):
+        path = f"chat/{name}.{h}.{i // PART}.bin"
+        req = urllib.request.Request(f"{url}/storage/v1/object/{BUCKET}/{path}", method="POST", data=blob[i:i + PART],
+                                     headers={**auth, "Content-Type": "application/octet-stream", "x-upsert": "true",
+                                              "Cache-Control": "public, max-age=31536000, immutable"})
+        urllib.request.urlopen(req)
+        urls.append(f"{url}/storage/v1/object/public/{BUCKET}/{path}")
+    return urls
 
 
 def dequantized(path):

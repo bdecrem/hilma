@@ -18,6 +18,7 @@ Everything else is step 6's loop: AdamW, warmup + cosine, gradient clipping.
 
 Run:  .venv/bin/python 09-sft/sft.py          (a few minutes on the iMac)
       .venv/bin/python 09-sft/sft.py --data 09-sft/qa-usenet.jsonl --out sft-usenet --epochs 2   (step 9b, the cranky one)
+      .venv/bin/python 09-sft/sft.py --data 09-sft/qa-usenet.jsonl --out sft-usenet-big --epochs 2 --base out/scale/best.pt   (the same on step 13's model)
 Writes out/sft/final.pt and out/sft/log.jsonl.
 """
 
@@ -34,10 +35,10 @@ import torch.nn.functional as F
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
-sys.path.insert(0, os.path.join(ROOT, "05-attention"))
+sys.path.insert(0, os.path.join(ROOT, "13-scale"))   # step 5's model, fast (same weights, same names)
 sys.path.insert(0, os.path.join(ROOT, "02-tokenizer"))
 from bpe import EOT, Tokenizer  # noqa: E402
-from model import GPT, Config  # noqa: E402
+from model import load  # noqa: E402
 
 BASE = os.path.join(ROOT, "out", "usenet", "final.pt")
 DATA = os.path.join(HERE, "qa.jsonl")
@@ -87,27 +88,13 @@ class Chat:
         return "".join(out)
 
 
-def load_base(chat):
-    """The pretrained model with two new rows in its embedding table."""
-    ck = torch.load(BASE, map_location="cpu")
-    cfg = Config(**{**ck["cfg"], "vocab": chat.vocab})
-    model = GPT(cfg)
-    model.head.weight = model.tok_emb.weight
-    sd = ck["model"]
-    old = sd["tok_emb.weight"]
-    torch.manual_seed(0)
-    new = old.mean(0, keepdim=True) + 0.02 * torch.randn(chat.vocab - old.shape[0], old.shape[1])
-    sd["tok_emb.weight"] = sd["head.weight"] = torch.cat([old, new])
-    model.load_state_dict(sd)
-    return model
+def load_base(chat, path=BASE):
+    """The pretrained model with two new rows in its embedding table (the average row plus a little noise)."""
+    return load(path, vocab=chat.vocab)
 
 
 def load_sft(path, chat=None):
-    ck = torch.load(path, map_location="cpu")
-    model = GPT(Config(**ck["cfg"]))
-    model.head.weight = model.tok_emb.weight
-    model.load_state_dict(ck["model"])
-    return model.eval()
+    return load(path).eval()
 
 
 def batches(examples, mask, shuffle):
@@ -177,6 +164,7 @@ if __name__ == "__main__":
     ap.add_argument("--out", default="", help="output folder name under out/ (default sft, or sft-nomask)")
     ap.add_argument("--epochs", type=int, default=EPOCHS, help="passes over the data")
     ap.add_argument("--data", default=DATA, help="the pairs to train on (default 09-sft/qa.jsonl)")
+    ap.add_argument("--base", default=BASE, help="the pretrained model to start from (default step 6b's)")
     args = ap.parse_args()
     LR, MIN_LR = args.lr, args.lr / 10
     EPOCHS = args.epochs
@@ -195,7 +183,7 @@ if __name__ == "__main__":
     all_tokens = sum(len(ids) - 1 for ids, _ in train)
 
     random.seed(1337); torch.manual_seed(1337)
-    model = load_base(chat).to(device)
+    model = load_base(chat, args.base).to(device)
     total = EPOCHS * math.ceil(len(train) / BATCH)
     decay = [p for n, p in model.named_parameters() if p.dim() >= 2]
     no_decay = [p for n, p in model.named_parameters() if p.dim() < 2]

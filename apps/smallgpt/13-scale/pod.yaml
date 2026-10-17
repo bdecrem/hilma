@@ -1,0 +1,24 @@
+# The one pod the run needs: all eight GPUs of the node, PyTorch with CUDA,
+# shared memory for the eight processes to talk through. It sleeps until
+# run.sh copies the data and the script in and starts torchrun inside it.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: smallgpt
+spec:
+  restartPolicy: Never
+  containers:
+    - name: train
+      image: pytorch/pytorch:2.8.0-cuda12.8-cudnn9-devel
+      command: ["sleep", "infinity"]
+      resources:
+        limits:
+          nvidia.com/gpu: 8
+      volumeMounts:
+        - { name: shm, mountPath: /dev/shm }
+        - { name: work, mountPath: /work }
+  volumes:
+    - name: shm
+      emptyDir: { medium: Memory, sizeLimit: 32Gi }
+    - name: work
+      emptyDir: {}
