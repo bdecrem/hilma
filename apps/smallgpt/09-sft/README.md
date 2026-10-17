@@ -180,5 +180,5 @@ answers from the int8 weights match float32 PyTorch token for token, and the
 JavaScript matches PyTorch on the same int8 weights token for token
 (`check_web.mjs`). Since step 13 the default is the cranky hacker on the 92M
 model (`cranky`, 92 MB in parts on Supabase Storage, ~75 ms a token; see
-`13-scale/README.md`); the 10M ones are `cranky-10m` and `helpful`, and the
+`13-scale/README.md`), and so is step 11's `rlhf`; the 10M ones are `cranky-10m` and `helpful`, and the
 base model of the same size answers beside either (`base`, `base-10m`).

@@ -2,21 +2,22 @@
 
 import { useEffect, useRef, useState } from 'react'
 
-// Talk to the step 9 and step 13 models. They run in this browser, in a worker
+// Talk to the step 9, 11 and 13 models. They run in this browser, in a worker
 // (public/smallgpt/chat/worker.mjs): no server. The 92M models are 92 MB of
 // weights each, the 10M ones 10 MB.
 
-type Model = 'cranky' | 'cranky-10m' | 'helpful'
+type Model = 'cranky' | 'rlhf' | 'cranky-10m' | 'helpful'
 type Reply = { text: string; done: boolean; error?: string; ms?: number; tokens?: number }
 type Turn = { id: number; q: string; model: Model; main: Reply; base?: Reply }
 
 const MODELS: { id: Model; label: string; base: string; note: string }[] = [
   { id: 'cranky', label: 'cranky 92M', base: 'base', note: 'Step 13: 92M parameters, SFT on 3,206 real Usenet questions and replies, made crankier' },
+  { id: 'rlhf', label: 'RLHF 92M', base: 'base', note: 'Step 11: the cranky 92M model after PPO against a reward model trained on Claude\'s judgments' },
   { id: 'cranky-10m', label: 'cranky 10M', base: 'base-10m', note: 'Step 9b: the same SFT on the 10M model' },
   { id: 'helpful', label: 'helpful 10M', base: 'base-10m', note: 'Step 9: SFT on 2,945 Q&A pairs Claude wrote' },
 ]
-const SIZE: Record<string, string> = { cranky: '92', base: '92', 'cranky-10m': '10', helpful: '10', 'base-10m': '10' }
-const TAG: Record<string, string> = { cranky: 'cranky 92M', 'cranky-10m': 'cranky 10M', helpful: 'helpful 10M' }
+const SIZE: Record<string, string> = { cranky: '92', rlhf: '92', base: '92', 'cranky-10m': '10', helpful: '10', 'base-10m': '10' }
+const TAG: Record<string, string> = { cranky: 'cranky 92M', rlhf: 'RLHF 92M', 'cranky-10m': 'cranky 10M', helpful: 'helpful 10M' }
 
 const TRY = ['How do I quit vi?', 'Is a 2400 baud modem worth it?', 'Should I buy an Amiga or an Atari ST?', 'Why is my Mac Plus so slow?']
 
@@ -88,8 +89,9 @@ export default function Chat() {
         <h1>Ask the 1985 hacker</h1>
         <p>
           A 92M-parameter GPT pretrained on Usenet 1981–1991 (step 13), then taught to answer like the net&rsquo;s
-          crankiest regulars (step 9). It runs right here in your browser; the first question downloads 92 MB. Each
-          question is a new conversation.
+          crankiest regulars (step 9). RLHF 92M is the same model after reinforcement learning against a judge (step
+          11). It runs right here in your browser; the first question downloads 92 MB. Each question is a new
+          conversation.
         </p>
       </header>
 
@@ -107,7 +109,7 @@ export default function Chat() {
           <section key={t.id} className="sgc-turn">
             <p className="sgc-q">{t.q}</p>
             <Answer tag={TAG[t.model]} cls={t.model === 'helpful' ? 'helpful' : 'cranky'} reply={t.main} />
-            {t.base && <Answer tag={t.model === 'cranky' ? 'base 92M' : 'base 10M'} cls="base" reply={t.base} />}
+            {t.base && <Answer tag={SIZE[t.model] === '92' ? 'base 92M' : 'base 10M'} cls="base" reply={t.base} />}
           </section>
         ))}
         <div ref={endRef} />
@@ -167,7 +169,7 @@ export default function Chat() {
         </div>
         {loading && (
           <p className="sgc-loading">
-            downloading the {loading.name.replace('-10m', '')} model
+            downloading the {(TAG[loading.name] || loading.name).replace(/ \d+M$/, '')} model
             {loading.total ? `: ${Math.round((loading.got || 0) / 1e6)} of ${Math.round(loading.total / 1e6)} MB` : ` (${SIZE[loading.name]} MB)`}…
           </p>
         )}

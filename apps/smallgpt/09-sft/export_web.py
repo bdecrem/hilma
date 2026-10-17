@@ -39,6 +39,7 @@ from sft import BASE, TOK, Chat, answer, load_sft  # noqa: E402
 WEB = os.path.join(ROOT, "..", "..", "public", "smallgpt", "chat")
 MODELS = {
     "cranky": os.path.join(ROOT, "out", "sft-usenet-big", "final.pt"),   # step 13, 92M
+    "rlhf": os.path.join(ROOT, "out", "rlhf", "ppo", "final.pt"),        # step 11, 92M
     "base": os.path.join(ROOT, "out", "scale", "best.pt"),                # step 13, 92M
     "cranky-10m": os.path.join(ROOT, "out", "sft-usenet", "final.pt"),
     "helpful": os.path.join(ROOT, "out", "sft", "final.pt"),

@@ -18,8 +18,8 @@ Status is one of: **not started · approved · building · done · skipped**.
 | 8 | The conversion bridge | Our model as a Hugging Face model | skipped 2026-10-16 (post-training is hand-written on our own model, so nothing needs the HF format) |
 | 9 | SFT | Pretraining again, on conversations, with a mask | done 2026-10-16 (2,945 Usenet-era Q&A pairs, 90 s; answers in shape, facts wrong. 9b: the cranky hacker, 3,206 real Usenet questions + replies; runs in the browser at ola.cx/smallgpt/chat) |
 | 10 | DPO | Preference alignment without a reward model | not started (step 11 chosen instead, 2026-10-16) |
-| 11 | Reward model + PPO | The RLHF recipe: a judge, then reinforcement learning | not started (planned 2026-10-16; next, on the 92M model) |
-| 12 | RLVR with GRPO | Reinforcement learning against a checker | not started |
+| 11 | Reward model + PPO | The RLHF recipe: a judge, then reinforcement learning | done 2026-10-17 (on the 92M model: 11,521 Claude-judged pairs, reward model 81% agreement, PPO with the leash at 0.2 wins 72% against SFT judged blind by Claude; without the leash the reward model is gamed and it wins 26%) |
+| 12 | RLVR with GRPO | Reinforcement learning against a checker | not started (next) |
 | 13 | Scale up | The same pipeline at GPT-2 small's shape (~92M), on rented GPUs | done 2026-10-17 (moved before 10–12; 91.7M params, 4 passes over 6b's data, 9.1 min on 8 H100s on Together, val 3.37 → 2.80; cranky SFT on it; the chat page's default) |
 
 Steps 1–6 follow Karpathy's "Neural Networks: Zero to Hero" (micrograd,
@@ -209,7 +209,9 @@ training.
 
 One session plus a short run.
 
-## 11 · Reward model + PPO
+## 11 · Reward model + PPO — done 2026-10-17
+
+Built as planned in `11-rlhf/`; results in its README. Changes from the plan: Claude scored answers 1–10 instead of ranking them, so equal scores make no pair (11,521 pairs, not 6 per question); the leash had to be 0.2, since at 0.05 the reward model was gamed by round 50.
 
 **Chosen over step 10 on 2026-10-16:** a judge plus reinforcement learning is
 what frontier labs do for preferences, and it builds the parts step 12 reuses

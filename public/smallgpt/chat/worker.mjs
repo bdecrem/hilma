@@ -1,7 +1,7 @@
 // The chat page's worker: loads the tokenizer and a model's weights, then
 // writes answers token by token so the page never freezes.
 //
-// in:  { id, model: 'cranky' | 'cranky-10m' | 'helpful' | 'base' | 'base-10m', text, temperature, topK }, or { preload: model }
+// in:  { id, model: 'cranky' | 'rlhf' | 'cranky-10m' | 'helpful' | 'base' | 'base-10m', text, temperature, topK }, or { preload: model }
 // out: { loading, got, total } while a model downloads, { loaded } after,
 //      { id, text } as it writes, { id, text, done, ms, tokens }
 
