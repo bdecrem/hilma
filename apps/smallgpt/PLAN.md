@@ -17,15 +17,18 @@ Status is one of: **not started · approved · building · done · skipped**.
 | 7 | Looking at the weights | The embedding table before and after | done 2026-10-15 (Usenet model; 7 of 8 analogies right) |
 | 8 | The conversion bridge | Our model as a Hugging Face model | skipped 2026-10-16 (post-training is hand-written on our own model, so nothing needs the HF format) |
 | 9 | SFT | Pretraining again, on conversations, with a mask | done 2026-10-16 (2,945 Usenet-era Q&A pairs, 90 s; answers in shape, facts wrong. 9b: the cranky hacker, 3,206 real Usenet questions + replies; runs in the browser at ola.cx/smallgpt/chat) |
-| 10 | DPO | Preference alignment without a reward model | not started (step 11 chosen instead, 2026-10-16) |
+| 10 | Scale up | The same pipeline at GPT-2 small's shape (~92M), on rented GPUs | done 2026-10-17 (was step 13, moved ahead of post-training; folder `13-scale`; 91.7M params, 4 passes over 6b's data, 9.1 min on 8 H100s on Together, val 3.37 → 2.80; cranky SFT on it; the chat page's default) |
 | 11 | Reward model + PPO | The RLHF recipe: a judge, then reinforcement learning | done 2026-10-17 (on the 92M model: 11,521 Claude-judged pairs, reward model 81% agreement, PPO with the leash at 0.2 wins 72% against SFT judged blind by Claude; without the leash the reward model is gamed and it wins 26%) |
-| 12 | RLVR with GRPO | Reinforcement learning against a checker | not started (next) |
-| 13 | Scale up | The same pipeline at GPT-2 small's shape (~92M), on rented GPUs | done 2026-10-17 (moved before 10–12; 91.7M params, 4 passes over 6b's data, 9.1 min on 8 H100s on Together, val 3.37 → 2.80; cranky SFT on it; the chat page's default) |
+| 12 | DPO | Preference alignment without a reward model | skipped 2026-10-18 (step 11 did preferences the RLHF way instead) |
+| 13 | RLVR with GRPO | Reinforcement learning against a checker | not started (next) |
 
 Steps 1–6 follow Karpathy's "Neural Networks: Zero to Hero" (micrograd,
-makemore, minbpe, nanoGPT). Steps 9–12 are written by hand on our own model,
+makemore, minbpe, nanoGPT). Steps 9–13 are written by hand on our own model,
 in plain PyTorch, with no TRL; that is why step 8 (the conversion to a Hugging
-Face model, which only TRL needed) was skipped on 2026-10-16.
+Face model, which only TRL needed) was skipped on 2026-10-16. Renumbered
+2026-10-18: the scale-up ran before post-training and became step 10, DPO is
+step 12 and skipped, RLVR is step 13. Folders keep their original numbers
+(`11-rlhf`, `13-scale`).
 
 ---
 
@@ -192,7 +195,7 @@ model answers it.
 
 One session plus a short training run.
 
-## 10 · DPO
+## 12 · DPO — skipped 2026-10-18 (was step 10; step 11 covered preferences)
 
 **Build:** synthetic preference pairs (prompt, chosen, rejected — e.g.
 answers that are correct and short vs. correct and rambling, or correct vs.
@@ -259,7 +262,7 @@ rate. The RLHF model goes on ola.cx/smallgpt/chat as a third choice.
 About 20 minutes of Claude calls for the pairs, minutes for the reward
 model, under an hour for PPO. One or two sessions.
 
-## 12 · RLVR with GRPO
+## 13 · RLVR with GRPO (was step 12)
 
 **Build:** a prompt generator for a verifiable task (two-digit arithmetic,
 to start); a verifier that parses the model's answer and returns 1 if it is
@@ -276,7 +279,7 @@ at the start and the end side by side.
 
 One session plus a run.
 
-## 13 · Scale up — done 2026-10-17, before 10–12
+## 10 · Scale up — done 2026-10-17 (was step 13, moved ahead of post-training; folder `13-scale`)
 
 **Moved up on 2026-10-16.** The 10M model's answers are near gibberish, and
 post-training can only choose among things the model can already do, so

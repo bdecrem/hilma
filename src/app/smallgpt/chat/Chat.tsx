@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 
-// Talk to the step 9, 11 and 13 models. They run in this browser, in a worker
+// Talk to the step 9, 10 and 11 models. They run in this browser, in a worker
 // (public/smallgpt/chat/worker.mjs): no server. The 92M models are 92 MB of
 // weights each, the 10M ones 10 MB.
 
@@ -11,7 +11,7 @@ type Reply = { text: string; done: boolean; error?: string; ms?: number; tokens?
 type Turn = { id: number; q: string; model: Model; main: Reply; base?: Reply }
 
 const MODELS: { id: Model; label: string; base: string; note: string }[] = [
-  { id: 'cranky', label: 'cranky 92M', base: 'base', note: 'Step 13: 92M parameters, SFT on 3,206 real Usenet questions and replies, made crankier' },
+  { id: 'cranky', label: 'cranky 92M', base: 'base', note: 'Step 10: 92M parameters, SFT on 3,206 real Usenet questions and replies, made crankier' },
   { id: 'rlhf', label: 'RLHF 92M', base: 'base', note: 'Step 11: the cranky 92M model after PPO against a reward model trained on Claude\'s judgments' },
   { id: 'cranky-10m', label: 'cranky 10M', base: 'base-10m', note: 'Step 9b: the same SFT on the 10M model' },
   { id: 'helpful', label: 'helpful 10M', base: 'base-10m', note: 'Step 9: SFT on 2,945 Q&A pairs Claude wrote' },
@@ -88,7 +88,7 @@ export default function Chat() {
         </a>
         <h1>Ask the 1985 hacker</h1>
         <p>
-          A 92M-parameter GPT pretrained on Usenet 1981–1991 (step 13), then taught to answer like the net&rsquo;s
+          A 92M-parameter GPT pretrained on Usenet 1981–1991 (step 10), then taught to answer like the net&rsquo;s
           crankiest regulars (step 9). RLHF 92M is the same model after reinforcement learning against a judge (step
           11). It runs right here in your browser; the first question downloads 92 MB. Each question is a new
           conversation.

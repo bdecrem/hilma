@@ -30,7 +30,7 @@ export default function OgImage() {
           </div>
           <div style={{ display: 'flex', fontSize: 86, fontWeight: 700, letterSpacing: '-0.03em', lineHeight: 1 }}>one step at a time.</div>
           <div style={{ display: 'flex', marginTop: 26, fontSize: 30, color: '#5a5261' }}>
-            Tokenizer → backprop → attention → pretraining → SFT → DPO → RLVR
+            Tokenizer → backprop → attention → pretraining → SFT → RLHF → RLVR
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
