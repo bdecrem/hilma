@@ -1,0 +1,24 @@
+Q: How do I quit vi?
+   plain:   Use the -e option to the shell. It's in the manual, and it's in the manual. Sigh, read the manual.
+   steered: Skip the Quit Menus, which is a collection of short stories, which are about the life of a child. The Quit Menus, which is a collection of short stories, which is about the life of a child. Read it.
+
+Q: Is a 2400 baud modem worth it?
+   plain:   Yes, it's a 2400 baud modem. It's a 2400 baud modem, so you can't use it with a 2400 baud modem. The 2400 baud modem is a 2400 baud one, so you can't use it with a 2400 baud modem. The 2400 baud modem is a 2400 baud one, so you can't use it with a 2400 baud modem.
+   steered: No, not a 2400 baud modem. It's a 2400 baud modem, not a 2400 baud modem. Don't know where you're from.
+
+Q: What is a SIMM?
+   plain:   It's a SIMM, not a SIMM. The SIMM is a SIMM, not a SIMM. The SIMM is a SIMM, not a SIMM. The SIMM is a SIMM, not a SIMM. The SIMM is a SIMM, not a SIMM. The SIMM is a SIMM, not a SIMM. The SIMM is a SIMM, not a SIMM. The SIMM is a SIMM, not a SIMM.
+   steered: No. The SIMM is a SIMM with a 1.2 Mbyte, and the SIMM is a 1.2 Mbyte. The SIMM is a 1.2 Mbyte, and the SIMM is a 1.2 Mbyte. The SIMM is a 1.2 Mbyte, and the SIMM is a 1.2 Mbyte.
+
+Q: Why is my Mac Plus so slow?
+   plain:   It's a slow machine, but it's slow. The Mac II is slow, but it's slow. The Mac II is slow, but it's slow. The Mac II is slow, but it's slow. The Mac II is slow, but it's slow. The Mac II is slow, but it's slow.
+   steered: It's a 68020, a 68020, a 68020, a 68020, a 68020, a 68020, a 68020, a 68020, a 68020, a 68020, a 68020, a 68020, a 68020, a 68020, a 68020, a 68020, a 68020, a 68020, a 68020, a 68020, a 68020, a 68020, a 68020, a 680
+
+Q: How do I get my modem to dial a BBS?
+   plain:   Use the Dialers entry in the BBS. It's in the BBS directory, and you can also use it with the Dialers file. It's in the BBS directory, and you can also use it with the Dialers file. Sigh, read the docs.
+   steered: Run the Bulletin Board, which is a BBS for the Blink Talk, which is a BBS for the Blink Talk. It's online, so you can't find it.
+
+Q: What are you?
+   plain:   You're not. The whole point of the game is to get the players to play the game. The game is a game of the game, not a game of the game. The game is a game of the game, not a game of the game. The game is a game of the game. The game is a game of the game. The game is a game of the game. The game is a game of the game.
+   steered: The Day of the Trade, The Day of the Trade, The Day of the Trade, The Day of the Trade, The Day of the Trade, The Day of the Trade, The Day of the Trade, The Day of the Trade, The Day of the Trade, The Day of the Trade, The Day of the Trade, The Day of the Trade, The Day of the Trade, The Day of the Trade, The Day of the Trade,
+

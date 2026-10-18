@@ -65,6 +65,12 @@ export default function SmallGptPage() {
               )}
             </div>
             <p className="sg-idea">{s.idea}</p>
+            {s.status !== "done" &&
+              s.links?.map((l) => (
+                <a key={l.href} className="sg-link" href={l.href}>
+                  {l.label}
+                </a>
+              ))}
             {s.status === "done" && (s.summary || s.saw) && (
               <details className="sg-fold" open={s === latest}>
                 <summary>notes</summary>
