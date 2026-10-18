@@ -19,6 +19,7 @@ Status is one of: **not started · approved · building · done · skipped**.
 | 9 | SFT | Pretraining again, on conversations, with a mask | done 2026-10-16 (2,945 Usenet-era Q&A pairs, 90 s; answers in shape, facts wrong. 9b: the cranky hacker, 3,206 real Usenet questions + replies; runs in the browser at ola.cx/smallgpt/chat) |
 | 10 | Scale up | The same pipeline at GPT-2 small's shape (~92M), on rented GPUs | done 2026-10-17 (was step 13, moved ahead of post-training; folder `13-scale`; 91.7M params, 4 passes over 6b's data, 9.1 min on 8 H100s on Together, val 3.37 → 2.80; cranky SFT on it; the chat page's default) |
 | 11 | Reward model + PPO | The RLHF recipe: a judge, then reinforcement learning | done 2026-10-17 (on the 92M model: 11,521 Claude-judged pairs, reward model 81% agreement, PPO with the leash at 0.2 wins 72% against SFT judged blind by Claude; without the leash the reward model is gamed and it wins 26%) |
+| 11b | Golden Gate Cthulhu (feature steering) | Find the model's Cthulhu inside its activations and turn it up, the way Anthropic made Golden Gate Claude | not started (planned 2026-10-18, awaiting sign-off; after Bart has finished going over step 11, before 13) |
 | 12 | DPO | Preference alignment without a reward model | skipped 2026-10-18 (step 11 did preferences the RLHF way instead) |
 | 13 | RLVR with GRPO | Reinforcement learning against a checker | not started (next) |
 
@@ -194,6 +195,71 @@ a different kind of learning. Why the format and the mask matter.
 model answers it.
 
 One session plus a short training run.
+
+## 11b · Golden Gate Cthulhu — feature steering (planned 2026-10-18, awaiting sign-off)
+
+A side quest between 11 and 13, after Bart has gone over step 11 up close.
+Anthropic's Golden Gate Claude (May 2024, "Scaling Monosemanticity"): a
+sparse autoencoder over the middle of Claude 3 Sonnet found a feature for
+the Golden Gate Bridge; clamped high, the model could not stop talking about
+it. Ours: the 92M model's Cthulhu. Nothing is trained into it; the feature
+is already there from pretraining and we find it and turn the dial. Folder
+`11b-steer/`.
+
+**Why Cthulhu (2026-10-18, counted on the mini's `usenet.txt`):** the
+Golden Gate charm needs a gap between the question and the fixation, so the
+Amiga (228k lines) and the Enterprise (18k) are too close to what a hacker
+says anyway; Spam (694 lines, mostly hostnames), Elvis (2,431, a third of
+them the vi clone, 334 Costello, 146 Presley), Zippy (641) and Bloom County
+(340) are too thin. Cthulhu is 1,107 lines inside a tight cluster the model
+learned together (Lovecraft 664, Arkham 550, tentacle 297, Necronomicon 271,
+R'lyeh 112, Miskatonic 78, the fhtagn chant 28, "Ia! Ia!" 40; sanity 2,702),
+two thirds of it rec.games.frp (the Call of Cthulhu game), the rest
+sf-lovers and comics. So the model's Cthulhu is the hacker joke, not the
+prose: "Campus Crusade for Cthulhu", "Cthulhu loves the little children",
+sanity rolls, cthulhu@apple.com. Cats (14,007 lines) is the fallback if the
+feature turns out too weak, and the Amiga is the control.
+
+**Build, in three parts.**
+
+**a · A contrast vector (one day, works at any count).** Hook the residual
+stream after a middle layer (6 of 12) of the 92M base and cranky models.
+Run ~100 Cthulhu lines from the corpus and ~100 matched neutral lines, mean
+the activations, subtract: one 768-dimensional direction. Generate with
+that vector added at every position, scaled by a gain. A sweep of the gain
+and of the layer, and the same for the cranky hacker so the chat answers
+come out possessed. A `--steer cthulhu:4` flag on `generate.py`.
+
+**b · The sparse autoencoder (the real thing).** Collect the residual
+stream at that layer over ~200M tokens of `train.bin` (768 floats a token;
+stream it, don't store it). Train a dictionary of 16k–32k features with the
+standard SAE loss (reconstruction + L1 on the sparse code, the dead-feature
+tricks from Anthropic's "Towards Monosemanticity"), a few hours on the mini
+or ten minutes on one rented GPU. Label features by their top-activating
+lines; find the Cthulhu one (and the Amiga one, the control), and check
+whether it points where (a) did. Clamp it: set its activation to a chosen
+value at every token and decode back into the stream.
+
+**c · On the page.** A "possessed" slider on `ola.cx/smallgpt/chat`
+(the steering vector shipped with the weights, applied in `gpt.mjs` at the
+hooked layer), and a feature browser: the top lines for a few dozen
+features, which is how you see that the model found Cthulhu, Picard, the
+Amiga, signatures and C code on its own.
+
+**Understand:** that a model's concepts are directions in its activations,
+not neurons (superposition: more concepts than dimensions, so each neuron
+is many things); what a sparse autoencoder is and why L1 makes it find
+one-thing features; that finding a feature is descriptive and clamping it
+is causal, which is why Golden Gate Claude mattered; the difference between
+a hand-made direction (a) and a learned one (b).
+
+**See:** ask about SCSI termination on a Mac Plus and get told to consult
+the Necronomicon and mind your sanity; ask what the model is and get "a
+Great Old One, dreaming in R'lyeh"; gain 0 = the normal hacker, the dial
+up = the chant. Then the same feature turned to zero: a hacker who has
+never heard of Cthulhu even when asked.
+
+Two or three sessions; (a) in one.
 
 ## 12 · DPO — skipped 2026-10-18 (was step 10; step 11 covered preferences)
 
