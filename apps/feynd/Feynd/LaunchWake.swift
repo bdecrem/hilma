@@ -137,11 +137,20 @@ enum LaunchWake {
 
     // ---- geometry ----
     static let W: CGFloat = 390, H: CGFloat = 844
-    static let stoneX: CGFloat = 195, stoneY: CGFloat = 414, stoneRX: CGFloat = 44, stoneRY: CGFloat = 15, stoneTH: CGFloat = 13
+    // Layout, moved down from the page's (2026-10-19, Bart: "too much near the top").
+    // The page's lockup ran from the tuft (y 305) to the wordmark baseline (560): its
+    // middle at 51 % of the stage, but the bird carries the weight, so it read high, and
+    // the phone's status bar (62 pt) vs home bar (34 pt) puts the usable middle lower
+    // still. Now everything that belongs to the bird moves down 36 pt and the wordmark
+    // tucks 10 pt closer to the stone (74 → 64 pt from the stone's foot to the "d"):
+    // tuft 341, bird's middle 396 (47 %, just above center, where a heavy shape sits
+    // calm), baseline 586; the lockup's middle at 55 % on an iPhone Air.
+    static let drop: CGFloat = 36
+    static let stoneX: CGFloat = 195, stoneY: CGFloat = 414 + drop, stoneRX: CGFloat = 44, stoneRY: CGFloat = 15, stoneTH: CGFloat = 13
     static let stoneColor = 0xFF9F4A
     static let dodoS: CGFloat = 1.3
-    static let wmSize: CGFloat = 60, wmBaseline: CGFloat = 560, wmRise: CGFloat = 8
-    static let faceY: CGFloat = 360
+    static let wmSize: CGFloat = 60, wmBaseline: CGFloat = 560 + drop - 10, wmRise: CGFloat = 8
+    static let faceY: CGFloat = 360 + drop
     static let skyPre = (0xEAD7D2, 0xE5B6A9), skyDay = (0xFFECD6, 0xFFC9A6), skyNight = (0x3A2850, 0x17131D)
     static let paperDay = 0xF8F2F8, paperNight = 0x17131D
     static let inkDay = 0x2D2537, inkNight = 0xF3EBF6
@@ -393,7 +402,7 @@ enum LaunchWake {
         cg.saveGState(); cg.clip(to: rect)
         if night {
             linear(cg, 0, 0, 0, H, [(0, col(skyNight.0)), (1, col(skyNight.1))])
-            radial(cg, 195, 380, 10, 195, 380, 260, [(0, col(150, 120, 235, 0.18 * ia)), (1, col(150, 120, 235, 0))])
+            radial(cg, 195, 380 + drop, 10, 195, 380 + drop, 260, [(0, col(150, 120, 235, 0.18 * ia)), (1, col(150, 120, 235, 0))])
             let sa = reduce ? ia : smooth(0.05, 0.6, st)
             for s in stars { ell(cg, s.x, s.y, s.r, s.r, col(255, 244, 214, s.a * sa)) }
             cg.restoreGState(); return
@@ -403,7 +412,7 @@ enum LaunchWake {
         if w > 0 {   // sunrise bloom from the top-left
             let r = 140 + 520 * easeOutCubic(w)
             radial(cg, 18, 30, 0, 18, 30, r, [(0, col(255, 236, 190, 0.75 * w)), (0.35, col(255, 214, 160, 0.35 * w)), (1, col(255, 214, 160, 0))])
-            radial(cg, 195, 380, 10, 195, 380, 250, [(0, col(255, 255, 255, 0.42 * w * ia)), (1, col(255, 255, 255, 0))])
+            radial(cg, 195, 380 + drop, 10, 195, 380 + drop, 250, [(0, col(255, 255, 255, 0.42 * w * ia)), (1, col(255, 255, 255, 0))])
         }
         cg.restoreGState()
     }
@@ -460,7 +469,7 @@ enum LaunchWake {
         if p <= 0 || p >= 1 || reduce { return }
         let al = a * smooth(0, 0.2, p) * (1 - smooth(0.7, 1, p)); if al <= 0 { return }
         cg.saveGState()
-        cg.translateBy(x: 234 + 24 * p + 3 * sin(p * 6), y: 296 - 54 * p); cg.rotate(by: -0.15 + 0.1 * p)
+        cg.translateBy(x: 234 + 24 * p + 3 * sin(p * 6), y: 296 + drop - 54 * p); cg.rotate(by: -0.15 + 0.1 * p)
         cg.scaleBy(x: 0.7 + 0.45 * p, y: 0.7 + 0.45 * p)
         text(cg, "z", font: font26, color: night ? col(243, 235, 246, 0.7 * al) : col(45, 37, 55, 0.62 * al), x: 0, y: 0, middle: true)
         cg.restoreGState()
