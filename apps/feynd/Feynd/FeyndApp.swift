@@ -37,14 +37,23 @@ struct FeyndApp: App {
 struct RootView: View {
     @Environment(Session.self) private var session
     @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
-    /// One-second cold-start moment, then the app fades in under it.
+    /// The Wake Up launch (LaunchWake.swift); it ends on the app's paper
+    /// and says when, so the app is simply revealed under it.
     @State private var showSplash = true
 
     var body: some View {
         ZStack {
+            #if targetEnvironment(simulator)
+            // `-SplashOnly 1` — the splash over a bare background (no prompts),
+            // for frame checks with `-SplashT`.
+            if UserDefaults.standard.bool(forKey: "SplashOnly") { Color.black.ignoresSafeArea() } else { content }
+            #else
             content
+            #endif
             if showSplash {
-                LaunchSplashView()
+                LaunchSplashView {
+                    withAnimation(.easeOut(duration: 0.25)) { showSplash = false }
+                }
                     .transition(.opacity)
                     .zIndex(1)
             }
@@ -56,15 +65,9 @@ struct RootView: View {
             if let dir = UserDefaults.standard.string(forKey: "ExportPeckWorld") {
                 exportPeckWorld(to: dir)
             }
-            // `-HoldSplash 1` — pin the splash for screenshot verification.
-            if UserDefaults.standard.bool(forKey: "HoldSplash") { return }
+            // `-HoldSplash 1` pins the splash; `-SplashT <s>` freezes it at a time
+            // (both read by LaunchSplashView).
             #endif
-            // The system launch screen covers roughly the first half-second,
-            // so the splash runs a beat longer than its animation to actually
-            // be seen for ~a second.
-            // The v3 launch runs ~2.1s (pop, eyes, wordmark, hello hop).
-            try? await Task.sleep(for: .milliseconds(2500))
-            withAnimation(.easeOut(duration: 0.35)) { showSplash = false }
         }
     }
 

@@ -71,7 +71,7 @@ The marketing captures (site tour/hero, App Store shots, video) are driven by th
 - `-OpenFabMenu 1` — the Topics screen with the + held open (its "Ask across all topics" pill out); `-OpenGlobalChat 1` — straight into the full-screen global chat; add `-GlobalAsk "question"` to send one message. `-fabHoldHintShown 1` suppresses the one-time "Hold +" hint. See `docs/f2-global-chat.md`.
 - `-TestSessionToken <signed f2_session value>` — sign in without the test password: `signSession('<test user id>')` from `src/lib/f2/auth.ts` makes the value (the backend must share that `.env.local`'s session secret, so: local dev). Against PRODUCTION use a guest's cookie value instead (`curl -si -X POST https://feynd.cc/api/f2/auth/guest` — it texts Bart, so reuse one and delete it after). Used on the MacBook Air, which has no `F2_TEST_PASS`.
 - `-MockPeckDue N` — fake the weekly Peck deadline N days out (0 = today; fakes a 12-day streak when there is none) so the streak-at-risk banner (Peck + Topics, shows at N ≤ 1) and the flame modal's due line can be screenshotted. `-OpenStreakModal 1` — open the flame's status card without a tap. The real rule lives in `src/lib/f2/streak.ts`; `npx tsx scripts/f2-peck-week-check.ts` drives every transition against the test account (`--reset` zeroes it afterwards).
-- `-HoldSplash 1` — pin the launch splash for screenshots. `-TickleDodo 1` — auto-play the map traveler's tickle.
+- `-HoldSplash 1` — pin the launch splash for screenshots; `-SplashT <s>` freezes it at a time, `-SplashOnly 1` hides the app (and its permission prompts) behind it. `-TickleDodo 1` — auto-play the map traveler's tickle.
 - `-BackendURL http://localhost:3100` — point a simulator run at a local dev server whatever `Secrets.swift` says (the `-TestSessionToken` cookie follows it). With zsh, build the launch arguments as an array (`ARGS=(-TestSessionToken "$T" -BackendURL …); simctl launch … "${ARGS[@]}"`): an unquoted `$ARGS` string is NOT word-split by zsh, so every hook after the first silently becomes part of the first one's value (cost half an hour on 2026-10-01).
 - `-devMode 1` — the admin **Dev mode** flag (Settings → Developer, shown only when `f2_users.is_admin`, schema 054; Bart is the only admin): every rest-stop game and the level-10 film open from the map, cleared or not, and their signs read "▶ dev mode". The flag is plain UserDefaults, so a simulator can set it without an admin login; the toggle itself needs one (set `is_admin` on a test account temporarily, and back).
 - `-OpenProfile 1` (with `-StartTab topics`) — the profile sheet; add `-OpenAvatarPicker 1` for the jelly avatar picker, or `-PickCritter bunny` (any `JellyCritter` raw value: `dodo`, `dodo-pink`, …, `bunny`, `octo`, …) to make that critter the avatar straight away through the real upload; `-ProfileScrollTo daily` scrolls the sheet to the Daily card section (its three toggles and the Send at hour, 2026-10-16).
@@ -222,6 +222,15 @@ The app was rebranded to the jelly dodo in one pass — see
 - **Theme:** `FeyndTheme.swift` tokens; `inkOnAccent` is adaptive now (white on
   the deep daytime sky, sea-ink on the bright night one). `LaunchBackground`
   colourset matches `bg`.
+- **Launch = "Wake Up" (2026-10-19).** `LaunchWake.swift` is a line-for-line CoreGraphics port of
+  `misc/dodo-redesign/launch/dodo-launch-wake.html` (read its `PORT_NOTES.md`): the dodo asleep on a
+  level stone in pre-dawn light, peeks, yawns, tuft boing, a shake, the flat "dodo" wordmark, a push into
+  the paper (#F8F2F8 / #17131D), 2.9 s; dark = dusk sky, stars and a moonlit rim; Reduce Motion
+  crossfades sleep → awake. Tap skips (0.3 s exit). The clock and the sound start on the first frame
+  drawn (at cold start the main thread is busy and the opening beats were lost under the system launch
+  screen). The score is baked from the page's own synth into `Sounds/launch-wake{,-reduce}.m4a` by
+  `node scripts/dodo-launch/bake-audio.mjs`; it plays on the ambient session (silent switch respected).
+  `LaunchBackground` (the static launch color) is the middle of frame 0's sky: #E8C7BE / #291E36.
 - **Map = Living Island (2026-10-19).** The Peck map's world is painted in code in
   `misc/dodo-redesign/living-island/world/` (Canvas 2D: `world.js` = PeckGeometry's trail at pitch
   142 / amp 78, one `ch-*.js` per chapter of ten levels — Gumdrop Meadow, Jelly Lagoon, Sprinkle
