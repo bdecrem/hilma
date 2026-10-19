@@ -20,6 +20,7 @@ import { rememberRoute } from '@/lib/imessage/routes'
 import { dailyHandle, DAILY_XP_ATTEMPT, DAILY_XP_CORRECT } from './daily-card'
 import { buildBudgetedContent, type F2Thread } from './threads'
 import { completedText } from '@/lib/anthropic-response'
+import { awardActivelyRead } from './actively-read'
 
 export type VoiceCheckinState = {
   day: string // PT date the checkin belongs to
@@ -193,14 +194,33 @@ export type VoiceCheckinReward = {
   counted: boolean
   streak: number
   xp_awarded: number
+  /** A pass marks the topic Actively Read (star 1) the first time: true when this session did. */
+  actively_read?: boolean
+  /** The Peck level that pass cleared, and its XP (null / 0 when it was read already). */
+  peck_level?: number | null
+  peck_xp?: number
 }
 
 /**
  * Record a graded checkin: settle today's state, count the attempt toward
  * the daily streak (idempotent within a day) and pay XP — once per day. A
- * later session on the same day (a replay) changes nothing.
+ * pass also marks the topic Actively Read (star 1 + the next Peck level, once
+ * per topic, whether or not the day already counted). A later session on the
+ * same day (a replay) pays no checkin XP again.
  */
 export async function recordVoiceCheckin(
+  userId: string,
+  threadId: string,
+  grade: { outcome: 'passed' | 'failed' | 'no_answer' | 'inactive' },
+  voiceSessionId: string,
+): Promise<VoiceCheckinReward> {
+  const day = await settleDay(userId, threadId, grade, voiceSessionId)
+  if (grade.outcome !== 'passed') return day
+  const ar = await awardActivelyRead(userId, threadId)
+  return { ...day, actively_read: ar.peck_level != null, peck_level: ar.peck_level, peck_xp: ar.xp_awarded }
+}
+
+async function settleDay(
   userId: string,
   threadId: string,
   grade: { outcome: 'passed' | 'failed' | 'no_answer' | 'inactive' },

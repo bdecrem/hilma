@@ -63,18 +63,23 @@ struct VoiceCheckinView: View {
             guard let m = UserDefaults.standard.string(forKey: "MockCheckinResult") else { return }
             UserDefaults.standard.removeObject(forKey: "MockCheckinResult")
             if m == "grading" { phase = .grading; return }
-            let passed = m == "passed" || m == "second"
+            // "second" = got it after the explanation, which is a fail since 2026-10-19
+            let passed = m == "passed"
+            let failed = m == "failed" || m == "second"
             phase = .result(VoiceCheckinResult(
-                outcome: passed ? "passed" : m == "failed" ? "failed" : m == "inactive" ? "inactive" : "no_answer",
+                outcome: passed ? "passed" : failed ? "failed" : m == "inactive" ? "inactive" : "no_answer",
                 passed: passed,
-                passedOn: m == "passed" ? 1 : m == "second" ? 2 : nil,
-                attempts: m == "passed" ? 1 : m == "second" || m == "failed" ? 2 : 0,
-                notes: passed ? "You had the main idea: the empire held because one language and one bureaucracy ran every city."
+                passedOn: passed ? 1 : nil,
+                attempts: passed ? 1 : failed ? 2 : 0,
+                notes: passed ? "You had the main idea and the reason: one language and one bureaucracy ran every city, so orders meant the same thing everywhere."
+                    : m == "second" ? "Your first answer named the conquests but not why the empire held. After the explanation you had it: the shared administration."
                     : m == "failed" ? "You described the conquests but not why the empire held together — the shared administration."
                     : m == "inactive" ? "You retired this topic." : "No answer came through this time.",
                 question: "Why did Sargon's empire hold together when earlier city-states never had?",
-                counted: passed || m == "failed", streak: 5, xpAwarded: passed ? 30 : m == "failed" ? 10 : 0,
-                inactive: m == "inactive"))
+                counted: passed || failed, streak: 5, xpAwarded: passed ? 30 : failed ? 10 : 0,
+                inactive: m == "inactive",
+                secondOk: m == "second",
+                activelyRead: passed, peckLevel: passed ? 15 : nil, peckXp: passed ? 120 : nil))
         }
         #endif
     }
@@ -181,15 +186,19 @@ struct VoiceCheckinView: View {
     private func headline(_ r: VoiceCheckinResult) -> some View {
         if r.passed {
             VStack(spacing: 10) {
-                pill(icon: "checkmark.seal.fill",
-                     text: r.passedOn == 2 ? "Passed on the second chance" : "Passed, first try")
+                pill(icon: "checkmark.seal.fill", text: "Passed")
+                if r.activelyRead == true {
+                    pill(icon: "star.fill", text: "Actively Read\(r.peckLevel.map { " · Peck level \($0) cleared" } ?? "")")
+                }
                 if r.counted {
-                    pill(icon: "flame.fill", text: "\(r.streak)-day streak\(r.xpAwarded > 0 ? " · +\(r.xpAwarded) XP" : "")")
+                    pill(icon: "flame.fill", text: "\(r.streak)-day streak\(r.xpAwarded + (r.peckXp ?? 0) > 0 ? " · +\(r.xpAwarded + (r.peckXp ?? 0)) XP" : "")")
                 }
             }
         } else {
             Text(r.outcome == "failed"
-                 ? (r.counted ? "Not this time — but showing up counts: \(r.streak)-day streak, +\(r.xpAwarded) XP. Tomorrow brings a new question." : "Not this time. Tomorrow brings a new question.")
+                 ? (r.secondOk == true
+                    ? "You got it after the explanation. A pass has to come on the first answer, so this one is practice\(r.counted ? ", and it still counts: \(r.streak)-day streak, +\(r.xpAwarded) XP" : ""). Tomorrow brings a new question."
+                    : r.counted ? "Not this time — but showing up counts: \(r.streak)-day streak, +\(r.xpAwarded) XP. Tomorrow brings a new question." : "Not this time. Tomorrow brings a new question.")
                  : r.outcome == "inactive"
                     ? (reactivated ? "It's active again." : "Got it. This topic is inactive now — no more daily questions on it.")
                     : "No answer came through. Open the checkin again when you have a minute.")

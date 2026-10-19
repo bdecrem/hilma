@@ -358,7 +358,7 @@ struct VoiceCheckinResult: Codable, Equatable {
     /// "passed" | "failed" | "no_answer" | "inactive"
     let outcome: String
     let passed: Bool
-    /// 1 or 2 — which attempt passed; nil unless passed.
+    /// 1 when passed (only a first try passes since 2026-10-19); nil otherwise.
     let passedOn: Int?
     let attempts: Int
     let notes: String
@@ -368,11 +368,21 @@ struct VoiceCheckinResult: Codable, Equatable {
     let streak: Int
     let xpAwarded: Int
     let inactive: Bool
+    /// Failed, but the second try had the idea after Dodo's explanation.
+    var secondOk: Bool? = nil
+    /// The pass marked the topic Actively Read just now (star 1), clearing this Peck level.
+    var activelyRead: Bool? = nil
+    var peckLevel: Int? = nil
+    var peckXp: Int? = nil
 
     enum CodingKeys: String, CodingKey {
         case outcome, passed, attempts, notes, question, counted, streak, inactive
         case passedOn = "passed_on"
         case xpAwarded = "xp_awarded"
+        case secondOk = "second_ok"
+        case activelyRead = "actively_read"
+        case peckLevel = "peck_level"
+        case peckXp = "peck_xp"
     }
 }
 

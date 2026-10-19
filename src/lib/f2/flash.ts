@@ -1116,22 +1116,27 @@ const JUDGE_MODEL = 'claude-haiku-5-5'
 /// strategic-reading job, not a per-card check, so it gets the big model.
 /// High-volume per-card judges stay on Haiku.
 export type VoiceCheckinGrade = {
-  /** passed: a pass on the first or second attempt; failed: both attempts
-   *  fell short; no_answer: the question was never really answered;
+  /** passed: the first answer met the bar; failed: it didn't (whatever the
+   *  second chance did); no_answer: the question was never really answered;
    *  inactive: they said they are done with this topic. */
   outcome: 'passed' | 'failed' | 'no_answer' | 'inactive'
-  /** Which attempt passed (1 or 2); null unless passed. */
+  /** 1 when passed (only a first try passes since 2026-10-19; 2 survives in old grades); null otherwise. */
   passed_on: 1 | 2 | null
   attempts: number
+  /** Failed, but the second attempt had the idea after Dodo's explanation. */
+  second_ok?: boolean
   notes: string
 }
 
 /// Grade a Daily Voice Checkin session (live.ts buildLiveVoiceCheckinInstructions):
 /// Dodo asked one high-level question; a failed first answer got an
-/// explanation and the same question again. The grade is pass/fail on the
-/// main idea, judged against the source — Dodo's spoken verdict in the
-/// transcript is evidence, not the decision. A second-attempt answer may
-/// restate Dodo's explanation; it fails only when the idea is still missing.
+/// explanation and the same question again. The bar (2026-10-19, between the
+/// old gist check and Actively Read's B+): the FIRST answer states the main
+/// idea and backs it with one reason, mechanism or example from the material,
+/// in the user's own words. Only a first-try pass passes (and marks the topic
+/// Actively Read); getting it after the explanation is `second_ok`, a fail
+/// that still counts for the streak. Judged against the source — Dodo's
+/// spoken verdict in the transcript is evidence, not the decision.
 export async function judgeVoiceCheckin(thread: F2Thread, question: string, transcript: TranscriptTurn[]): Promise<VoiceCheckinGrade> {
   const convo = (transcript ?? [])
     .map((t) => `${t.role === 'user' ? 'USER' : 'Dodo'}: ${(t.text ?? '').trim()}`)
@@ -1145,16 +1150,19 @@ export async function judgeVoiceCheckin(thread: F2Thread, question: string, tran
 Classify the session:
 - outcome "inactive": the user said they are done with this topic / want it retired / not interested, and did not go on to answer.
 - outcome "no_answer": the user never gave a real answer to the question (silence, "I don't know" only, off-topic talk, the session ended before an answer).
-- otherwise count the attempts (1 or 2: the answers given to the question, the second only after Dodo's explanation) and decide for each whether it PASSES: the user states the main idea the question asks about, correctly in substance, in their own words. This is a high-level check, not a detail test: wrong or missing details, dates and names do not fail an answer unless the question is about them; a wrong gist, a guess, or an answer that never reaches the idea fails. On the second attempt, restating what Dodo just explained is fine — that is what the second chance is for; the attempt fails only when the idea is still wrong or missing.
-- outcome "passed" with passed_on = the first attempt that passed (1 or 2); "failed" when no attempt passed.
+- otherwise count the attempts (1 or 2: the answers given to the question, the second only after Dodo's explanation).
+- The FIRST attempt PASSES only when the user (a) states the main idea the question asks about, correctly in substance, AND (b) backs it with at least one reason, mechanism or concrete example that is right and comes from the material (the "why" or the "for instance"), (c) in their own words. A follow-up Dodo asked inside that attempt ("why?", "say more") and the user's reply to it belong to the first attempt. Wrong or missing small details, dates and names do not fail it unless the question is about them. The gist alone, with no reason or example, does NOT pass; neither does a wrong gist, a guess, a vague reason ("it was important"), or an answer that never reaches the idea.
+- outcome "passed" (passed_on = 1) only when the first attempt passes. Otherwise "failed" (passed_on = null), even when the second attempt gets it right — a pass has to come before the explanation.
+- second_ok: true when the outcome is "failed" and the second attempt states the idea correctly (restating Dodo's explanation is fine for this); otherwise false.
 Dodo's own spoken verdicts ("Pass.", "Not yet.") are evidence of how the session went, not the decision — judge the user's words against the source material.${thread.study_focus ? `
 The user's study focus (grade only inside it): "${thread.study_focus}".` : ''}
 
-Also write notes: one or two sentences to the user ("You ..."), concrete, about what was right or what was missing.`
+Also write notes: one or two sentences to the user ("You ..."), concrete, about what was right or what was missing — on a fail, name what the first answer lacked (the idea itself, or the reason/example behind it).`
   const parsed = await judgeJson<{
     outcome?: string
     passed_on?: number | null
     attempts?: number
+    second_ok?: boolean
     notes?: string
   }>(
     system,
@@ -1175,19 +1183,22 @@ Classify and grade the session.`,
         outcome: { type: 'string', enum: ['passed', 'failed', 'no_answer', 'inactive'] },
         passed_on: { anyOf: [{ type: 'integer', enum: [1, 2] }, { type: 'null' }] },
         attempts: { type: 'integer' },
+        second_ok: { type: 'boolean' },
         notes: { type: 'string' },
       },
-      required: ['outcome', 'passed_on', 'attempts', 'notes'],
+      required: ['outcome', 'passed_on', 'attempts', 'second_ok', 'notes'],
       additionalProperties: false,
     },
     GRADER_MODEL,
   )
-  const outcome = (['passed', 'failed', 'no_answer', 'inactive'].includes(parsed.outcome ?? '') ? parsed.outcome : 'no_answer') as VoiceCheckinGrade['outcome']
-  const passedOn = outcome === 'passed' ? (parsed.passed_on === 2 ? 2 : 1) : null
+  let outcome = (['passed', 'failed', 'no_answer', 'inactive'].includes(parsed.outcome ?? '') ? parsed.outcome : 'no_answer') as VoiceCheckinGrade['outcome']
+  // only a first-try pass passes
+  if (outcome === 'passed' && parsed.passed_on === 2) outcome = 'failed'
   return {
     outcome,
-    passed_on: passedOn,
+    passed_on: outcome === 'passed' ? 1 : null,
     attempts: Math.max(0, Math.min(2, Math.round(parsed.attempts ?? 0))),
+    second_ok: outcome === 'failed' && (parsed.second_ok === true || parsed.passed_on === 2),
     notes: (parsed.notes ?? '').slice(0, 400),
   }
 }

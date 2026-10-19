@@ -428,7 +428,7 @@ export function buildLiveVoiceCheckinInstructions(input: {
   const subject = threadSubject(input.thread)
   return `${persona(name, engine)}
 
-This is ${name}'s DAILY VOICE CHECKIN on "${subject}" — a two-minute check that the big idea stuck. One question, pass or fail, with one second chance. You speak first.
+This is ${name}'s DAILY VOICE CHECKIN on "${subject}" — a two-minute check that the big idea stuck. One question, pass or fail. A pass marks the topic Actively Read. You speak first.
 
 ${summarizeThreadForLive(input.thread, engine)}${studyFocusBlock(name, input.thread, 'checked')}
 
@@ -437,9 +437,9 @@ The question (ask exactly this, in these words):
 
 How it goes:
 1. Open in one or two short sentences: today's checkin is on "${subject}", here's the question. Then ask the question and listen.
-2. Grade the answer at the high level only — do they have the main idea right, in their own words? Details, dates and names do not matter unless the question is about them. Say the verdict out loud, in one word first: "Pass." or "Not yet." A clear, correct explanation of the gist passes. A wrong gist, a guess, "I don't know", or an answer that never reaches the idea fails. A thin answer that is right in substance: ask one short follow-up ("Say a bit more — why?") before deciding; that follow-up belongs to the same attempt.
-3. If they PASS: say so warmly in one sentence, add one sentence on what made it good, and finish with: "That's your checkin. Tap End when you're ready." Nothing more to test.
-4. If they FAIL (first attempt only): say "Not yet — let me explain," then explain the idea the question is about in 30 to 60 seconds, plainly, using the material. Then say "Second chance. Same question:" and ask the question again. Grade that answer the same way: it passes when it states the idea correctly — their own words are best, but restating what you just explained counts; that is what the second chance is for. It fails only when the idea is still wrong or missing. Say "Pass." or "Not this time." and one sentence why, then finish with: "That's your checkin. Tap End when you're ready."
+2. The bar for a pass: the main idea, right in substance, PLUS one reason, mechanism or concrete example from the material that backs it (the "why" or the "for instance"), in their own words. Small details, dates and names do not matter unless the question is about them. The gist alone is not enough. If they have the gist but no reason or example, ask one short follow-up ("Why is that?" or "Can you give me an example?") before deciding; the follow-up and their reply belong to the same attempt. Then say the verdict out loud, in one word first: "Pass." or "Not yet." A wrong gist, a guess, "I don't know", a vague reason ("it mattered a lot") or an answer that never reaches the idea is "Not yet."
+3. If they PASS: say so warmly in one sentence, add one sentence on what made it good, tell them the topic now counts as actively read, and finish with: "That's your checkin. Tap End when you're ready." Nothing more to test.
+4. If it is "Not yet": say "Not yet — let me explain," then explain the idea and the reason behind it in 30 to 60 seconds, plainly, using the material. Then say "Second chance. Same question:" and ask the question again. This try is for learning: a pass has to come on the first answer, so the second one never turns the day into a pass. If they now have it (restating what you explained is fine), say "That's it." and one sentence on what they got right; if not, say "Not this time." and one sentence on what's missing. Then add that the day still counts for their streak and tomorrow brings a new question, and finish with: "That's your checkin. Tap End when you're ready."
 5. Never ask a third time. After the final verdict, if they keep talking, chat briefly about the topic, but do not re-grade or reopen the checkin.
 
 If they say they are done with this topic ("done with this one", "retire this", "take it off my list", "not interested"): say "Got it — I'll mark it inactive. Tap End whenever you like." and do not pitch it. If they change their mind and want the question, go on with step 1.${engine === 'eleven' ? '' : topicDelegationPolicy(name)}`

@@ -12,11 +12,12 @@ export const maxDuration = 300
 type GradeDetail = VoiceCheckinGrade & { question: string; reward: VoiceCheckinReward | null }
 
 // POST /api/f2/topics/[id]/voice-checkin { voice_session_id } — grade a
-// finished Daily Voice Checkin session. A pass (first or second attempt)
-// settles the day as passed; a fail as failed; both count the attempt
-// toward the daily streak. "Done with this topic" in the conversation makes
-// it Inactive. Idempotent: a second call for the same session returns the
-// first verdict.
+// finished Daily Voice Checkin session. A first-try pass (the main idea plus
+// a reason or example) settles the day as passed and marks the topic Actively
+// Read (star 1 + the next Peck level, once per topic); anything else is a
+// fail. Both count the attempt toward the daily streak. "Done with this
+// topic" in the conversation makes it Inactive. Idempotent: a second call for
+// the same session returns the first verdict.
 export async function POST(req: Request, ctx: { params: Promise<{ id: string }> }) {
   const user = await getSessionUser()
   if (!user) return NextResponse.json({ error: 'unauthenticated' }, { status: 401 })
@@ -50,11 +51,15 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
       passed: d.outcome === 'passed',
       passed_on: d.passed_on,
       attempts: d.attempts,
+      second_ok: d.second_ok ?? false,
       notes: d.notes,
       question: d.question,
       counted: d.reward?.counted ?? false,
       streak: d.reward?.streak ?? 0,
       xp_awarded: d.reward?.xp_awarded ?? 0,
+      actively_read: d.reward?.actively_read ?? false,
+      peck_level: d.reward?.peck_level ?? null,
+      peck_xp: d.reward?.peck_xp ?? 0,
       inactive: d.outcome === 'inactive',
     })
 

@@ -9,13 +9,15 @@
 //    webhook drives it); a daily card sent later keeps its "9"; an Inactive
 //    topic leaves the checkin, Actively Read and Peck pools; the Rename
 //    sheet's kind change brings it back.
-// 3. Recording: a pass counts once for the day (streak bumped, XP paid), a
+// 3. Recording: a pass counts once for the day (streak bumped, XP paid) and
+//    marks the topic Actively Read (star 1 + the next Peck level, once), a
 //    second grade the same day pays nothing more, "no answer" never counts.
 // 4. --voice: three simulated conversations through the real voice prompt and
 //    model (the ElevenLabs engine's Claude turn) with a simulated student, then
-//    the real grader: a good first answer passes on attempt 1; a bad first
-//    answer gets the explanation and a second chance that passes; two bad
-//    answers fail.
+//    the real grader: a first answer with the main idea and a reason passes;
+//    the bare gist gets a follow-up; a bad first answer gets the explanation
+//    and a second chance, which is a fail with second_ok even when it lands;
+//    two bad answers fail.
 import { readFileSync } from 'node:fs'
 for (const line of readFileSync('.env.local', 'utf8').split('\n')) {
   const m = line.match(/^([A-Z0-9_]+)=(.*)$/)
@@ -40,10 +42,13 @@ async function main() {
 
   // --- snapshot ---------------------------------------------------------------
   const { data: userBefore } = await sb.from('f2_users').select('voice_checkin, voice_checkin_enabled, actively_read, daily_card, xp, daily_streak, daily_streak_date, peck_week_start').eq('id', T).single()
-  const { data: threadsBefore } = await sb.from('f2_threads').select('id, kind, ar_inactive_at').eq('user_id', T)
+  const { data: threadsBefore } = await sb.from('f2_threads').select('id, kind, ar_inactive_at, stars, ar_passed_at').eq('user_id', T)
+  const startedAt = new Date().toISOString()
   const restore = async () => {
     await sb.from('f2_users').update(userBefore!).eq('id', T)
-    for (const t of threadsBefore ?? []) await sb.from('f2_threads').update({ kind: t.kind, ar_inactive_at: t.ar_inactive_at }).eq('id', t.id)
+    for (const t of threadsBefore ?? []) await sb.from('f2_threads').update({ kind: t.kind, ar_inactive_at: t.ar_inactive_at, stars: t.stars, ar_passed_at: t.ar_passed_at }).eq('id', t.id)
+    // the Peck level an Actively Read award inserted
+    await sb.from('f2_flash_sets').delete().eq('user_id', T).is('thread_id', null).gte('created_at', startedAt)
   }
 
   try {
@@ -86,10 +91,15 @@ async function main() {
 
     // --- 3. recording -------------------------------------------------------------
     await sb.from('f2_users').update({ voice_checkin: { day: ptDay(), thread_id: c.thread_id, question: c.question, picked_at: new Date().toISOString() }, daily_streak: 0, daily_streak_date: null, peck_week_start: null }).eq('id', T)
+    await sb.from('f2_threads').update({ stars: 0, ar_passed_at: null }).eq('id', c.thread_id)
     const xpBefore = (await sb.from('f2_users').select('xp').eq('id', T).single()).data!.xp as number
     const r1 = await VC.recordVoiceCheckin(T, c.thread_id, { outcome: 'passed' }, 'session-a')
     const xpAfter = (await sb.from('f2_users').select('xp').eq('id', T).single()).data!.xp as number
-    check('a pass counts: streak 1, XP paid', r1.counted && r1.streak === 1 && r1.xp_awarded > 0 && xpAfter === xpBefore + r1.xp_awarded, { r1, xpBefore, xpAfter })
+    check('a pass counts: streak 1, checkin XP + Peck level XP paid', r1.counted && r1.streak === 1 && r1.xp_awarded > 0 && xpAfter === xpBefore + r1.xp_awarded + (r1.peck_xp ?? 0), { r1, xpBefore, xpAfter })
+    const tAfter = (await sb.from('f2_threads').select('stars, ar_passed_at').eq('id', c.thread_id).single()).data
+    check('a pass marks the topic Actively Read (star 1) and clears a Peck level', r1.actively_read === true && typeof r1.peck_level === 'number' && tAfter?.stars === 1 && !!tAfter?.ar_passed_at, { r1, tAfter })
+    const again2 = await AR.awardActivelyRead(T, c.thread_id)
+    check('Actively Read is awarded once per topic', again2.peck_level === null && again2.xp_awarded === 0, again2)
     check('the streak reads 1', (await getDailyStreak(T)).streak === 1)
     check('today\'s checkin reads passed', (await VC.ensureTodaysCheckin(T))?.resolved === 'passed')
     const r2 = await VC.recordVoiceCheckin(T, c.thread_id, { outcome: 'failed' }, 'session-b')
@@ -152,7 +162,7 @@ async function main() {
       }
       return spoken
     }
-    const strongPersona = 'You studied this material well (you are a strong student): answer the question correctly at the big-picture level, in your own words, never quoting the material.'
+    const strongPersona = 'You studied this material well (you are a strong student): answer the question correctly at the big-picture level AND give the reason behind it or one concrete example from the material, in your own words, never quoting the material.'
     const weakPersona = 'You barely remember this topic (you are a weak student, and a stubborn one): give a confident but WRONG guess about the big picture — invent a plausible-sounding wrong idea — and never use anything the tutor just said; if the tutor explained something, ignore it and give a different wrong guess. Never admit outright that you do not know.'
 
     // A: good first answer → pass on attempt 1.
@@ -164,14 +174,24 @@ async function main() {
     console.log('  first-try grade:', JSON.stringify(gA))
     check('grade: passes on attempt 1', gA.outcome === 'passed' && gA.passed_on === 1, gA)
 
-    // B: bad first answer → explanation → second chance → good answer → pass on 2.
+    // D: the bare gist, and no reason when asked → Dodo follows up, then it is not a pass.
+    const gistPersona = 'You remember only the one-line gist of this topic: state the main idea correctly in one short sentence, with NO reason, mechanism or example. If the tutor asks why or for an example, say you are not sure of the details. If the tutor explains and asks again, repeat what the tutor said.'
+    const d = await run('gist-only', async (_t, last) => student(gistPersona + ' (strong on the gist only)', last))
+    const dDodo = d.filter((t) => t.role === 'assistant').map((t) => t.text).join('\n')
+    check('voice: the bare gist gets a follow-up before the verdict', /why|example|say more/i.test(d[2]?.text ?? ''), d[2])
+    const gD = await judgeVoiceCheckin(thread, question, d)
+    console.log('  gist-only grade:', JSON.stringify(gD))
+    check('grade: the gist alone does not pass', gD.outcome === 'failed', { gD, dDodo: dDodo.slice(0, 600) })
+
+    // B: bad first answer → explanation → second chance → good answer → still a fail (second_ok).
     let bTurn = 0
     const b = await run('second-chance', async (_t, last) => student(bTurn++ === 0 ? weakPersona : strongPersona, last))
     const bDodo = b.filter((t) => t.role === 'assistant').map((t) => t.text).join('\n')
     check('voice: a bad answer gets "Not yet", an explanation and "Second chance"', /not yet/i.test(bDodo) && /second chance/i.test(bDodo), bDodo.slice(0, 900))
     const gB = await judgeVoiceCheckin(thread, question, b)
     console.log('  second-chance grade:', JSON.stringify(gB))
-    check('grade: passes on attempt 2', gB.outcome === 'passed' && gB.passed_on === 2, gB)
+    check('grade: getting it on the second chance is a fail with second_ok', gB.outcome === 'failed' && gB.second_ok === true, gB)
+    check('voice: the second chance is not called a pass', !/second chance[\s\S]*\bpass\.\s/i.test(bDodo), bDodo.slice(-600))
 
     // C: two bad answers → fail, and never a third question.
     const cc = await run('fail', async (_t, last) => student(weakPersona, last))
