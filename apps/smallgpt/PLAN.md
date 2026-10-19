@@ -19,9 +19,9 @@ Status is one of: **not started · approved · building · done · skipped**.
 | 9 | SFT | Pretraining again, on conversations, with a mask | done 2026-10-16 (2,945 Usenet-era Q&A pairs, 90 s; answers in shape, facts wrong. 9b: the cranky hacker, 3,206 real Usenet questions + replies; runs in the browser at ola.cx/smallgpt/chat) |
 | 10 | Scale up | The same pipeline at GPT-2 small's shape (~92M), on rented GPUs | done 2026-10-17 (was step 13, moved ahead of post-training; folder `13-scale`; 91.7M params, 4 passes over 6b's data, 9.1 min on 8 H100s on Together, val 3.37 → 2.80; cranky SFT on it; the chat page's default) |
 | 11 | Reward model + PPO | The RLHF recipe: a judge, then reinforcement learning | done 2026-10-17 (on the 92M model: 11,521 Claude-judged pairs, reward model 81% agreement, PPO with the leash at 0.2 wins 72% against SFT judged blind by Claude; without the leash the reward model is gamed and it wins 26%) |
-| 11b | Golden Gate Cthulhu (feature steering) | Find the model's Cthulhu inside its activations and turn it up, the way Anthropic made Golden Gate Claude | building: (a) done 2026-10-18 (a direction by subtraction; Cthulhu 92M with a possession slider on the chat page, but weak: mostly bibliographies, the name once; the Amiga control works, so the method is right and Cthulhu is thin); (b) the sparse autoencoder next |
+| 11b | Golden Gate Cthulhu (feature steering) | Find the model's Cthulhu inside its activations and turn it up, the way Anthropic made Golden Gate Claude | done and reverted 2026-10-19: (a) a direction by subtraction was weak (mostly bibliographies, the name once; the Amiga control works, so the method is right and Cthulhu is thin) and added nothing interesting, so Cthulhu 92M came off the chat page; (b), the sparse autoencoder, is not planned. The code and sweeps stay in `11b-steer/` |
 | 12 | DPO | Preference alignment without a reward model | skipped 2026-10-18 (step 11 did preferences the RLHF way instead) |
-| 13 | RLVR with GRPO | Reinforcement learning against a checker | not started (next) |
+| 13 | RLVR with GRPO | Reinforcement learning against a checker | not started (next; starts from step 11's PPO model, leash 0.2, not from Cthulhu) |
 
 Steps 1–6 follow Karpathy's "Neural Networks: Zero to Hero" (micrograd,
 makemore, minbpe, nanoGPT). Steps 9–13 are written by hand on our own model,
@@ -196,7 +196,7 @@ model answers it.
 
 One session plus a short training run.
 
-## 11b · Golden Gate Cthulhu — feature steering (a done 2026-10-18, b next)
+## 11b · Golden Gate Cthulhu — feature steering (a done 2026-10-18, reverted 2026-10-19)
 
 **What happened in (a):** see `11b-steer/README.md`. The subtraction direction
 is a blend of everything that co-occurs with the word (the newsgroup, the

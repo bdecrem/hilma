@@ -4,24 +4,20 @@ import { useEffect, useRef, useState } from 'react'
 
 // Talk to the step 9, 10 and 11 models. They run in this browser, in a worker
 // (public/smallgpt/chat/worker.mjs): no server. The 92M models are 92 MB of
-// weights each, the 10M ones 10 MB. 'cthulhu' (step 11b) is the cranky 92M
-// model with a direction added to its activations at one layer, the weights
-// untouched: the Golden Gate experiment. The possession slider is the gain.
+// weights each, the 10M ones 10 MB.
 
-type Model = 'cranky' | 'rlhf' | 'cthulhu' | 'cranky-10m' | 'helpful'
+type Model = 'cranky' | 'rlhf' | 'cranky-10m' | 'helpful'
 type Reply = { text: string; done: boolean; error?: string; ms?: number; tokens?: number }
 type Turn = { id: number; q: string; model: Model; main: Reply; base?: Reply }
 
-const MODELS: { id: Model; label: string; base: string; note: string; weights?: string }[] = [
+const MODELS: { id: Model; label: string; base: string; note: string }[] = [
   { id: 'cranky', label: 'cranky 92M', base: 'base', note: 'Step 10: 92M parameters, SFT on 3,206 real Usenet questions and replies, made crankier' },
   { id: 'rlhf', label: 'RLHF 92M', base: 'base', note: 'Step 11: the cranky 92M model after PPO against a reward model trained on Claude\'s judgments' },
-  { id: 'cthulhu', label: 'Cthulhu 92M', base: 'base', weights: 'cranky', note: 'Step 11b: the cranky 92M model, unchanged, with its own Cthulhu direction added to its activations while it writes (Golden Gate Claude, at home)' },
   { id: 'cranky-10m', label: 'cranky 10M', base: 'base-10m', note: 'Step 9b: the same SFT on the 10M model' },
   { id: 'helpful', label: 'helpful 10M', base: 'base-10m', note: 'Step 9: SFT on 2,945 Q&A pairs Claude wrote' },
 ]
-const SIZE: Record<string, string> = { cranky: '92', rlhf: '92', cthulhu: '92', base: '92', 'cranky-10m': '10', helpful: '10', 'base-10m': '10' }
-const TAG: Record<string, string> = { cranky: 'cranky 92M', rlhf: 'RLHF 92M', cthulhu: 'Cthulhu 92M', 'cranky-10m': 'cranky 10M', helpful: 'helpful 10M' }
-const POSSESSION = 5 // cthulhu.json's gain: push 0.5 (half the residual stream's own norm) at layer 6; 0 is the plain cranky model, 10 is a full norm
+const SIZE: Record<string, string> = { cranky: '92', rlhf: '92', base: '92', 'cranky-10m': '10', helpful: '10', 'base-10m': '10' }
+const TAG: Record<string, string> = { cranky: 'cranky 92M', rlhf: 'RLHF 92M', 'cranky-10m': 'cranky 10M', helpful: 'helpful 10M' }
 
 const TRY = ['How do I quit vi?', 'Is a 2400 baud modem worth it?', 'Should I buy an Amiga or an Atari ST?', 'Why is my Mac Plus so slow?']
 
@@ -36,7 +32,6 @@ export default function Chat() {
   const [withBase, setWithBase] = useState(false)
   const [temperature, setTemperature] = useState(0.7)
   const [topK, setTopK] = useState(40)
-  const [possession, setPossession] = useState(POSSESSION)
   const [loading, setLoading] = useState<{ name: string; got?: number; total?: number } | null>(null)
   const preloaded = useRef(false)
   const busy = turns.some((t) => !t.main.done || (t.base && !t.base.done))
@@ -78,10 +73,8 @@ export default function Chat() {
     if (!question || busy || !worker.current) return
     const id = nextId.current++
     setTurns((ts) => [...ts, { id, q: question, model, main: empty(), base: withBase ? empty() : undefined }])
-    const entry = MODELS.find((m) => m.id === model)!
-    const steer = model === 'cthulhu' ? { name: 'cthulhu', gain: possession } : undefined
-    worker.current.postMessage({ id, model: entry.weights || model, text: question, temperature, topK, steer })
-    const base = entry.base
+    worker.current.postMessage({ id, model, text: question, temperature, topK })
+    const base = MODELS.find((m) => m.id === model)!.base
     if (withBase) worker.current.postMessage({ id: -id, model: base, text: question, temperature, topK })
     setQ('')
     inputRef.current?.focus()
@@ -97,9 +90,8 @@ export default function Chat() {
         <p>
           A 92M-parameter GPT pretrained on Usenet 1981–1991 (step 10), then taught to answer like the net&rsquo;s
           crankiest regulars (step 9). RLHF 92M is the same model after reinforcement learning against a judge (step
-          11). Cthulhu 92M is the cranky model with nothing retrained: a direction read off its own activations is
-          added back in while it writes, the way Anthropic made Golden Gate Claude (step 11b). It runs right here in
-          your browser; the first question downloads 92 MB. Each question is a new conversation.
+          11). It runs right here in your browser; the first question downloads 92 MB. Each question is a new
+          conversation.
         </p>
       </header>
 
@@ -174,13 +166,6 @@ export default function Chat() {
             <input type="range" min={1} max={200} step={1} value={topK} onChange={(e) => setTopK(+e.target.value)} />
             <span>{topK}</span>
           </label>
-          {model === 'cthulhu' && (
-            <label title="How much of the Cthulhu direction is added at every token. 0 is the plain cranky model.">
-              possession
-              <input type="range" min={0} max={10} step={1} value={possession} onChange={(e) => setPossession(+e.target.value)} />
-              <span>{possession}</span>
-            </label>
-          )}
         </div>
         {loading && (
           <p className="sgc-loading">

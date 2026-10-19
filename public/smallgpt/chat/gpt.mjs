@@ -119,10 +119,6 @@ export function makeModel(meta, buffer) {
     return Array.from({ length: L }, () => ({ k: new Float32Array(block * C), v: new Float32Array(block * C) }))
   }
 
-  // Step 11b: a direction added to the residual stream after one layer, at every
-  // position, prompt and answer alike (apps/smallgpt/11b-steer/steer.py's hook).
-  let steer = null // { layer, vec: Float32Array(C), gain }
-
   // Push one token at position pos through the model; returns the logits for the next token if wanted.
   function step(cache, token, pos, wantLogits) {
     const emb = W.tok_emb, pe = W.pos_emb
@@ -159,7 +155,6 @@ export function makeModel(meta, buffer) {
       for (let i = 0; i < wide.length; i++) wide[i] = gelu(wide[i])
       linear(W[`${l}.out.w`], wide, tmp, W[`${l}.out.b`])
       for (let i = 0; i < C; i++) x[i] += tmp[i]
-      if (steer && steer.layer === l && steer.gain) for (let i = 0; i < C; i++) x[i] += steer.gain * steer.vec[i]
     }
     if (!wantLogits) return null
     layerNorm(x, W['ln_f.w'], W['ln_f.b'], h)
@@ -178,8 +173,7 @@ export function makeModel(meta, buffer) {
   }
 
   // Feed the prompt, then sample up to n tokens; onToken(id) for each; stops at stop.
-  function* generate(prompt, { n = 120, temperature = 0.7, topK = 40, stop, rand = Math.random, steer: st = null } = {}) {
-    steer = st
+  function* generate(prompt, { n = 120, temperature = 0.7, topK = 40, stop, rand = Math.random } = {}) {
     const cache = newCache()
     const ids = prompt.slice(-(block - n))
     let lg = null

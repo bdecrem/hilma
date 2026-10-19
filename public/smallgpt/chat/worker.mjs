@@ -1,9 +1,7 @@
 // The chat page's worker: loads the tokenizer and a model's weights, then
 // writes answers token by token so the page never freezes.
 //
-// in:  { id, model: 'cranky' | 'rlhf' | 'cranky-10m' | 'helpful' | 'base' | 'base-10m', text, temperature, topK,
-//        steer?: { name: 'cthulhu', gain } }   (step 11b: <name>.json holds a direction and the layer it goes into),
-//      or { preload: model }
+// in:  { id, model: 'cranky' | 'rlhf' | 'cranky-10m' | 'helpful' | 'base' | 'base-10m', text, temperature, topK }, or { preload: model }
 // out: { loading, got, total } while a model downloads, { loaded } after,
 //      { id, text } as it writes, { id, text, done, ms, tokens }
 
@@ -12,7 +10,6 @@ import { makeModel, makeTokenizer } from './gpt.mjs'
 const USER = 8192, ASSISTANT = 8193 // the two tokens step 9 added
 let tok = null
 const models = {} // name -> promise of the model, so a question that arrives mid-download waits for the same download
-const steers = {} // name -> promise of { layer, vec }
 
 const get = (f, as) => fetch(f).then((r) => { if (!r.ok) throw new Error(`${f}: ${r.status}`); return r[as]() })
 
@@ -59,16 +56,10 @@ function load(name) {
   return models[name]
 }
 
-function loadSteer(name) {
-  if (!steers[name]) steers[name] = get(`${name}.json`, 'json').then((j) => ({ layer: j.layer, vec: Float32Array.from(j.vec) }))
-  return steers[name]
-}
-
 onmessage = async ({ data: m }) => {
   if (m.preload) return load(m.preload).catch(() => {}) // a question will retry and show the error
   try {
     const model = await load(m.model)
-    const steer = m.steer && m.steer.gain ? { ...(await loadSteer(m.steer.name)), gain: m.steer.gain } : null
     // The base models never saw a conversation: they get the question as the start of a post.
     const base = m.model.startsWith('base')
     const prompt = base ? tok.encode(m.text + '\n') : [USER, ...tok.encode(m.text), ASSISTANT]
@@ -76,7 +67,7 @@ onmessage = async ({ data: m }) => {
     const out = []
     const t0 = performance.now()
     let last = t0
-    for (const id of model.generate(prompt, { n: base ? 80 : 120, temperature: m.temperature, topK: m.topK, stop: tok.eot, steer })) {
+    for (const id of model.generate(prompt, { n: base ? 80 : 120, temperature: m.temperature, topK: m.topK, stop: tok.eot })) {
       out.push(id)
       const now = performance.now()
       if (now - last > 40) {

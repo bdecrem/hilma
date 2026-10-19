@@ -1,5 +1,11 @@
 # 11b · Golden Gate Cthulhu — feature steering
 
+**Reverted 2026-10-19.** Part a added nothing interesting, so Cthulhu 92M and
+its possession slider came off the chat page (`gpt.mjs`, `worker.mjs`,
+`Chat.tsx` and `cthulhu.json` are back to before commit 85797d7). Part b is
+not planned. Step 13 (RLVR) starts from step 11's PPO model. Everything below
+is the record of what was tried.
+
 Anthropic's Golden Gate Claude (May 2024): a sparse autoencoder over the
 middle of Claude 3 Sonnet found a feature for the Golden Gate Bridge, and
 clamping it high made the model talk about the bridge whatever it was asked.
