@@ -151,6 +151,7 @@ What you see is meaning arriving layer by layer. Take Picard. At layer 0 the mod
     idea: 'GPT-2 small’s shape (92M) on eight rented GPUs (was step 13; moved ahead of post-training)',
     status: 'done',
     doneOn: '2026-10-17',
+    summary: 'I was trying to use the SFT-trained smaller model, and it wasn’t very good. So we spent $17 and ran 8 H100s on Together.ai for 10 minutes or so. Same dataset, but 4 epochs and a lot more parameters = it talks much better.',
     figures: [{ src: '/smallgpt/step13/loss.png', alt: 'Held-out loss by tokens read: the 10M model ends at 3.37 after one pass, the 92M model at 2.80 after four', caption: 'Same Usenet data, nine times the model: 3.37 → 2.80. The 92M model passes the 10M one before it has read half the data once.' }],
     examples: [
       { prompt: 'Newsgroups: comp.sys.mac / Subject: Mac Plus won’t boot', out: 'I was trying to install a Mac Plus together with a IIx. I got the following message: “Press reset. Folder reset. Disk is not installed” ...etc. I tried the same initation but the same result. What am I doing wrong? Any help would be appreciated.' },
