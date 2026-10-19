@@ -182,7 +182,10 @@ What you see is meaning arriving layer by layer. Take Picard. At layer 0 the mod
     n: '11b',
     name: 'Golden Gate Cthulhu',
     idea: 'Feature steering: find the model’s own Cthulhu in its activations and turn it up, the way Anthropic made Golden Gate Claude. Part a (a direction by subtraction) is on the chat page as Cthulhu 92M with a possession slider, but it barely possesses; the sparse autoencoder is next',
-    status: 'todo',
+    status: 'done',
+    doneOn: '2026-10-18',
+    summary:
+      'In step 11b we did a sloppy attempt at steering. Steering doesn’t change the weights: while the model writes, you nudge its activations — the 768 numbers each token carries from layer to layer — in one direction. Cthulhu isn’t one neuron; it’s a direction spread across all 768 numbers. That is basically what Golden Gate Claude did, except Anthropic found a clean Golden Gate feature with a sparse autoencoder, and turned it up.\n\nWe didn’t know where our model keeps Cthulhu, so we made a sloppy general guess: run 400 Usenet passages that mention Cthulhu and 400 that don’t through the model, average the activations at a middle layer, and subtract. Then we add that direction at every position of every answer, with a possession slider on the chat page. The weights stay exactly the same, so Cthulhu 92M and the cranky hacker are one set of weights. It barely possesses: our direction is a blend of Cthulhu and everything that shows up near it (fantasy book lists, the gaming newsgroup). The same trick on the Amiga, which the data mentions 200 times more often, works. The sparse autoencoder is part b.',
     links: [{ href: '/smallgpt/chat', label: 'Ask the possessed hacker →' }],
   },
   { n: 12, name: 'DPO', idea: 'Preference alignment without a reward model. Skipped: step 11 did preferences the RLHF way, with a judge and PPO', status: 'skipped' },
