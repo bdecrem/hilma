@@ -225,7 +225,7 @@ The app was rebranded to the jelly dodo in one pass — see
 - **Launch = "Wake Up" (2026-10-19).** `LaunchWake.swift` is a line-for-line CoreGraphics port of
   `misc/dodo-redesign/launch/dodo-launch-wake.html` (read its `PORT_NOTES.md`): the dodo asleep on a
   level stone in pre-dawn light, peeks, yawns, tuft boing, a shake, the flat "dodo" wordmark, a push into
-  the paper (#F8F2F8 / #17131D), 2.9 s; dark = dusk sky, stars and a moonlit rim; Reduce Motion
+  the paper (#F8F2F8 / #17131D), 3.07 s (the lockup lands at 2.41 on the chime and holds still 0.31 s before the exit); dark = dusk sky, stars and a moonlit rim; Reduce Motion
   crossfades sleep → awake. Tap skips (0.3 s exit). The clock and the sound start on the first frame
   drawn (at cold start the main thread is busy and the opening beats were lost under the system launch
   screen). The score is baked from the page's own synth into `Sounds/launch-wake{,-reduce}.m4a` by

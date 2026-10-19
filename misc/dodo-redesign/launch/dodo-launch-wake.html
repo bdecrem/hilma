@@ -75,7 +75,7 @@ button:focus-visible,.cues tr:focus-visible,input:focus-visible{outline:2.5px so
     <section class="panel" aria-label="Playback controls">
       <div class="head">
         <h1>Dodo Wake Up</h1>
-        <p>The dodo wakes up with the sunrise: one sleepy peek, a big yawn, a happy shake. 2.9 s of picture, 2.85 s of synthesized sound. Tap the phone while it plays to skip to the exit.</p>
+        <p>The dodo wakes up with the sunrise: one sleepy peek, a big yawn, a happy shake. 3.07 s of picture, 3.02 s of synthesized sound. Tap the phone while it plays to skip to the exit.</p>
       </div>
       <button class="play" id="play" type="button"><svg width="18" height="20" viewBox="0 0 18 20" aria-hidden="true"><path d="M3 2.2v15.6c0 1 1.1 1.6 2 1.1l12.2-7.8c.8-.5.8-1.7 0-2.2L5 1.1C4.1.6 3 1.2 3 2.2z" fill="currentColor"/></svg><span id="playLbl">Play with sound</span></button>
       <div class="row">
@@ -143,7 +143,7 @@ function rgba(c, a) { const A = hexRgb(c); return `rgba(${A[0]},${A[1]},${A[2]},
    ===================================================================== */
 const NOTE = { F3: 174.61, C4: 261.63, F4: 349.23, G4: 392.00, A4: 440.00, C5: 523.25, D5: 587.33, F5: 698.46, G5: 783.99, A5: 880.00, C6: 1046.50 };
 const CUES = [
-  { t: 0.00, id: 'pad', beat: 'Pre-dawn ground; the dodo asleep on its stone', voice: 'pad', gain: .025, dur: 2.85, chordA: ['F4', 'C5'], chordB: ['F4', 'A4', 'C5', 'D5'], bass: 'F3', change: 1.6, exitAt: 2.55, lp: [600, 1800, 1400] },
+  { t: 0.00, id: 'pad', beat: 'Pre-dawn ground; the dodo asleep on its stone', voice: 'pad', gain: .025, dur: 3.02, chordA: ['F4', 'C5'], chordB: ['F4', 'A4', 'C5', 'D5'], bass: 'F3', change: 1.6, exitAt: 2.72, lp: [600, 1800, 1400] },
   { t: 0.05, id: 'breath1', beat: 'Sleepy breath', voice: 'breath', gain: .05, dur: .4 },
   { t: 0.15, id: 'z', beat: 'A small "z" rises and drifts', voice: null },
   { t: 0.47, id: 'breath2', beat: 'Second breath', voice: 'breath', gain: .05, dur: .38 },
@@ -156,11 +156,12 @@ const CUES = [
   { t: 1.48, id: 'yawn', beat: 'Big yawn-stretch: > <, "o" mouth, wings out', voice: 'yawn', gain: .17 },
   { t: 1.88, id: 'tuft', beat: 'Tuft springs upright', voice: 'boing', gain: .19, note: 'C5', bend: .75, tau: .12 },
   { t: 1.97, id: 'shake', beat: 'Happy fluff-shake (±3 pt, 240 ms)', voice: 'wobble', gain: .21 },
-  { t: 2.15, id: 'word', beat: 'Wordmark fades in, rises 8 pt', voice: null },
+  { t: 2.15, id: 'word', beat: 'Wordmark rises 8 pt, fast in, hard stop', voice: null },
   { t: 2.21, id: 'awake', beat: 'Looks at you, cheeks brighten', voice: null },
-  { t: 2.48, id: 'chime', beat: 'Wordmark lands: two-note chime', voice: 'chime2', gain: .14, notes: ['C6', 'F5'], step: .09 },
-  { t: 2.55, id: 'exit', beat: 'Gentle scale (1.06), fade to paper', voice: null },
-  { t: 2.90, id: 'end', beat: 'App paper (#F8F2F8 / #17131D)', voice: null },
+  { t: 2.41, id: 'land', beat: 'Wordmark lands, the dodo plants (3% squash): two-note chime', voice: 'chime2', gain: .14, notes: ['C6', 'F5'], step: .09 },
+  { t: 2.53, id: 'hold', beat: 'Everything at rest: the hold (land to exit = 0.31 s)', voice: null },
+  { t: 2.72, id: 'exit', beat: 'Gentle scale (1.06), fade to paper', voice: null },
+  { t: 3.07, id: 'end', beat: 'App paper (#F8F2F8 / #17131D)', voice: null },
 ];
 /* Reduce Motion: sleeping pose crossfades to the awake pose, then the wordmark */
 const R_CUES = [
@@ -485,6 +486,7 @@ function dodoPose(st, o) {
   const ts = st - B.shake;
   if (ts >= 0 && ts < .24) { const k = 1 - ts / .24; p.dx = 3 * Math.sin(TAU * 6.25 * ts) * k; p.roll = .035 * Math.sin(TAU * 6.25 * ts + 1) * k; p.wing = .4 * Math.abs(Math.sin(TAU * 6.25 * ts)) * k; }
   p.blush = 1 + .8 * smooth(B.awake, B.awake + .2, st);
+  p.sy *= 1 - .03 * bump(st, B.land, .12);   // plants as the wordmark lands
   p.sx = 1 / Math.sqrt(p.sy);
   // light on the bird: warm sunrise rim by day, a moonlit rim at night that brightens as it wakes
   if (o.night) { p.rim = .3 + .5 * smooth(1.15, 1.6, st); p.rimCol = '205,215,255'; }
@@ -539,11 +541,12 @@ function drawZ(ctx, st, o, a) {
   ctx.fillStyle = o.night ? `rgba(243,235,246,${.7 * al})` : `rgba(45,37,55,${.62 * al})`; ctx.fillText('z', 0, 0); ctx.restore();
 }
 function drawWordmark(ctx, st, o, alpha) {
-  const k = o.reduce ? 1 : clamp((st - B.word) / .4), a = (o.reduce ? 1 : easeOutCubic(k)) * alpha; if (a <= 0) return;
+  // fast in, hard stop on B.land: position on a quintic ease-out, opacity in the first 60 %
+  const k = o.reduce ? 1 : clamp((st - B.word) / (B.land - B.word)), a = (o.reduce ? 1 : easeOutCubic(clamp(k / .6))) * alpha; if (a <= 0) return;
   ctx.save(); ctx.globalAlpha = a;
   ctx.font = `600 ${WM.size}px Fredoka, ui-rounded, "SF Pro Rounded", system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = (o.night ? PAL.night : PAL.day).ink;
-  ctx.fillText('dodo', 195, WM.baseline + WM.rise * (1 - easeOutCubic(k)));
+  ctx.fillText('dodo', 195, WM.baseline + WM.rise * (1 - k) ** 5);
   ctx.restore();
 }
 /* ---------- layers ---------- */
@@ -592,7 +595,7 @@ function drawFrame(ctx, t, o) {
    SYNTH: the jelly set, layered. All noise is seeded, so renders repeat.
    ===================================================================== */
 const MASTER = { makeup: 1.5, revReturn: .24 };
-const SCORE_LEN = { full: 2.85, reduce: 2.3, skip: .35 };   // the master fades out over the last ~0.2 s
+const SCORE_LEN = { full: 3.02, reduce: 2.3, skip: .35 };   // the master fades out over the last ~0.2 s
 function noiseBuffer(ac) { const n = Math.floor(ac.sampleRate * 2.5), b = ac.createBuffer(1, n, ac.sampleRate), d = b.getChannelData(0), R = rng(99); for (let i = 0; i < n; i++) d[i] = R() * 2 - 1; return b; }
 function impulse(ac) {
   const sr = ac.sampleRate, n = Math.floor(sr * 1.4), b = ac.createBuffer(2, n, sr), a = Math.exp(-TAU * 2600 / sr);
@@ -818,7 +821,7 @@ function wavBase64(buf) {
   return btoa(str);
 }
 async function renderOffline(reduce = false, sr = 48000) {
-  const cues = reduce ? R_CUES : CUES, dur = reduce ? 2.6 : 3.1;
+  const cues = reduce ? R_CUES : CUES, dur = reduce ? 2.6 : 3.25;
   const oc = new OfflineAudioContext(2, Math.ceil(sr * dur), sr);
   scheduleScore(oc, oc.destination, cues, 0, 1, reduce ? SCORE_LEN.reduce : SCORE_LEN.full);
   const buf = await oc.startRendering();

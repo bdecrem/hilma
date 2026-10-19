@@ -124,7 +124,7 @@ final class SplashClock {
 enum LaunchWake {
     // ---- the score's beats (CUES / R_CUES) ----
     static let bZ = 0.15, bLight = 0.80, bBlink1 = 1.34, bBlink2 = 1.42, bTuft = 1.88, bShake = 1.97
-    static let bWord = 2.15, bAwake = 2.21, bExit = 2.55, bEnd = 2.90
+    static let bWord = 2.15, bAwake = 2.21, bLand = 2.41, bExit = 2.72, bEnd = 3.07   // land → exit = the 0.31 s hold
     static let rbWake = 0.60, rbWord = 0.95, rbExit = 1.90, rbEnd = 2.25
     static let skipExit = 0.3
     static let sleepT = 0.3, awakeT = 2.42
@@ -391,6 +391,7 @@ enum LaunchWake {
             p.dx = 3 * sin(ph) * kk; p.roll = 0.035 * sin(ph + 1) * kk; p.wing = 0.4 * abs(sin(ph)) * kk
         }
         p.blush = 1 + 0.8 * smooth(bAwake, bAwake + 0.2, st)
+        p.sy *= 1 - 0.03 * bump(st, bLand, 0.12)   // plants as the wordmark lands
         p.sx = 1 / sqrt(p.sy)
         if night { p.rim = 0.3 + 0.5 * smooth(1.15, 1.6, st); p.rimCol = (205, 215, 255) }
         else { p.rim = 0.7 * sunrise(st, night: night, reduce: reduce, k: k); p.rimCol = (255, 222, 170) }
@@ -476,9 +477,10 @@ enum LaunchWake {
     }
 
     static func drawWordmark(_ cg: CGContext, _ st: CGFloat, night: Bool, reduce: Bool, _ alpha: CGFloat) {
-        let k = reduce ? 1 : clamp((st - bWord) / 0.4), a = (reduce ? 1 : easeOutCubic(k)) * alpha
+        // fast in, hard stop on bLand: position on a quintic ease-out, opacity in the first 60 %
+        let k = reduce ? 1 : clamp((st - bWord) / (bLand - bWord)), a = (reduce ? 1 : easeOutCubic(clamp(k / 0.6))) * alpha
         if a <= 0 { return }
-        text(cg, "dodo", font: font60, color: col(night ? inkNight : inkDay, a), x: 195, y: wmBaseline + wmRise * (1 - easeOutCubic(k)))
+        text(cg, "dodo", font: font60, color: col(night ? inkNight : inkDay, a), x: 195, y: wmBaseline + wmRise * pow(1 - k, 5))
     }
 
     static func drawBird(_ cg: CGContext, _ st: CGFloat, night: Bool, reduce: Bool, k: CGFloat) {
