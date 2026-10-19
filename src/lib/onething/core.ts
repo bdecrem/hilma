@@ -64,6 +64,8 @@ export type Entry = {
   doodle_alt?: string | null
   /// the doodle is a whimsical stand-in, not a picture of the sentence (schema 008)
   doodle_whimsy?: boolean | null
+  /// the day's weight as the doodler read it; a heavy doodle is shown still (schema 009)
+  doodle_register?: 'light' | 'neutral' | 'heavy' | null
   doodled_at?: string | null
   /// a picture stuck to the day (schema 007, photo.ts): public URL and size
   photo?: string | null

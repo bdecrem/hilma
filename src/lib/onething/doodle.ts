@@ -7,7 +7,8 @@
 // picks light, neutral or heavy (2026-10-19, after a cheerful doodle on a day
 // that called itself a crisis). Heavy days get one small quiet symbol, no
 // faces or jokes; when unsure it picks the quieter one. Whimsy is kept only
-// on light days.
+// on light days. The register is stored (doodle_register, schema 009) and a
+// heavy day's doodle is shown still, without the boil.
 //
 // Whimsy: when a sentence resists a clear picture (a list, admin),
 // the model may draw something whimsical instead (a smiley face, a waving
@@ -57,7 +58,7 @@ const SYSTEM = [
   'First, read the day for its emotional weight and pick a register. Everything below depends on it.',
   '- light: everyday, playful, funny, small wins. Draw as usual: the object or scene from the day, steam, motion lines, a face where it fits, a little wit.',
   '- neutral: reflective, tired, mixed, uncertain. Fewer lines, more white space. One simple object. Any face is calm: closed eyes, or no face at all. No jokes.',
-  '- heavy: illness, a family crisis, death, grief, fear, someone crying, conflict, bad news, or anything the writer calls a crisis. One small, quiet symbol: a heart, two hands, a single leaf, a candle, a porch light, a small figure under a wide sky, an open window. No faces, no smiles, no steam, no motion lines, no jokes, no puns. Do not draw the bad thing itself: no tears, hospitals, beds, broken things, rain clouds over heads. Do not draw the mundane object from the sentence if it would make light of the day. Thin, steady lines, two to five elements, at least 60% of the box left empty. Ink only, or one small red accent.',
+  '- heavy: illness, a family crisis, death, grief, fear, someone crying, conflict, bad news, or anything the writer calls a crisis. One small, quiet symbol: a heart, two hands, a single leaf, a candle, a porch light, a small figure under a wide sky, an open window. No faces, no smiles, no steam, no motion lines, no jokes, no puns. Do not draw the bad thing itself: no tears, hospitals, beds, broken things, rain clouds over heads. Do not draw the mundane object from the sentence if it would make light of the day. Thin, steady lines, two to five elements, at least 60% of the box left empty. Ink only, or one small red accent. A heavy doodle sits still on the page (every other doodle trembles like a live pen line), so draw it calm and finished.',
   'When unsure between two registers, pick the quieter one. A gentle drawing on a light day costs little; a cheerful drawing on a hard day reads as not listening.',
   'Example: "Dad crisis, or mini crisis. Hilde crying. Puts everything in perspective." is heavy: one small hand-drawn heart, slightly uneven, centered, over a short ground line. Not a coffee mug.',
   '',
@@ -88,7 +89,9 @@ const SCHEMA = {
   additionalProperties: false,
 }
 
-export type Drawn = { svg: string; alt: string; word: string | null; whimsy: boolean }
+export type Register = 'light' | 'neutral' | 'heavy'
+const REGISTERS: Register[] = ['light', 'neutral', 'heavy']
+export type Drawn = { svg: string; alt: string; word: string | null; whimsy: boolean; register: Register }
 
 /// Draw a doodle for `text` (the day's sentences, one per line). `recent` is
 /// what the days just before looked like, so the doodle does not repeat them.
@@ -150,12 +153,14 @@ async function drawOnce(prompt: string, opts: { wordAllowed: boolean; whimsyAllo
   if (res.stop_reason === 'refusal') throw new Error('onething doodle: the model declined')
   const block = res.content.find((b) => b.type === 'text')
   if (!block || block.type !== 'text') throw new Error(`onething doodle: no text in the reply (stop ${res.stop_reason})`)
-  const out = JSON.parse(block.text) as Drawn & { register?: string }
+  const out = JSON.parse(block.text) as Drawn
+  // The schema enforces the enum; an odd value reads as the quieter neutral.
+  const register: Register = REGISTERS.includes(out.register) ? out.register : 'neutral'
   const raw = String(out.svg ?? '').trim()
   const svg = sanitizeSvg(raw, { allowText: opts.wordAllowed })
   if (!svg || !raw.endsWith('>') || shapes(svg) < 2) return { ok: false, why: `cut off or too thin (${raw.length} chars: ${raw.slice(0, 120)})` }
   const word = opts.wordAllowed && /<text\b/.test(svg) ? (out.word ?? textContent(svg)) : null
-  return { ok: true, drawn: { svg, alt: String(out.alt ?? '').slice(0, 200), word: word ? word.slice(0, 40) : null, whimsy: opts.whimsyAllowed && out.register === 'light' && out.whimsy === true } }
+  return { ok: true, drawn: { svg, alt: String(out.alt ?? '').slice(0, 200), word: word ? word.slice(0, 40) : null, whimsy: opts.whimsyAllowed && register === 'light' && out.whimsy === true, register } }
 }
 
 /// How many drawing elements (not groups) a sanitized doodle has.
@@ -288,7 +293,7 @@ export async function doodleEntry(entryId: string): Promise<Drawn | null> {
   const drawn = await drawDoodle(e.text, { wordAllowed: ctx.allowed, whimsyAllowed: ctx.whimsy, recent: ctx.recent })
   const { error: e3 } = await f2Supabase()
     .from('onething_entries')
-    .update({ doodle: drawn.svg, doodle_alt: drawn.alt, doodle_word: drawn.word, doodle_whimsy: drawn.whimsy, doodled_at: new Date().toISOString() })
+    .update({ doodle: drawn.svg, doodle_alt: drawn.alt, doodle_word: drawn.word, doodle_whimsy: drawn.whimsy, doodle_register: drawn.register, doodled_at: new Date().toISOString() })
     .eq('id', entryId)
     // The text may have changed while we drew; a newer save redraws it.
     .eq('updated_at', e.updated_at)
@@ -324,16 +329,17 @@ export async function redrawOptions(entryId: string, userId: string): Promise<Dr
 
 /// Store the take the person picked. The markup comes back from the browser,
 /// so it goes through the sanitizer again, with words only on a day that allows them.
-export async function keepRedraw(entryId: string, userId: string, pick: { svg: string; alt: string; whimsy?: boolean }): Promise<Drawn> {
+export async function keepRedraw(entryId: string, userId: string, pick: { svg: string; alt: string; whimsy?: boolean; register?: string }): Promise<Drawn> {
   const ctx = await drawContext(entryId, userId)
   if (!ctx) throw new Error('Doodles are off. Turn them on in settings.')
   const svg = sanitizeSvg(pick.svg, { allowText: ctx.allowed })
   if (!svg) throw new Error('That drawing came back empty.')
   const word = ctx.allowed ? textContent(svg) : null
-  const drawn = { svg, alt: String(pick.alt ?? '').slice(0, 200), word: word ? word.slice(0, 40) : null, whimsy: ctx.whimsy && pick.whimsy === true }
+  const register: Register = REGISTERS.includes(pick.register as Register) ? (pick.register as Register) : 'neutral'
+  const drawn = { svg, alt: String(pick.alt ?? '').slice(0, 200), word: word ? word.slice(0, 40) : null, whimsy: ctx.whimsy && register === 'light' && pick.whimsy === true, register }
   const { error } = await f2Supabase()
     .from('onething_entries')
-    .update({ doodle: drawn.svg, doodle_alt: drawn.alt, doodle_word: drawn.word, doodle_whimsy: drawn.whimsy, doodled_at: new Date().toISOString() })
+    .update({ doodle: drawn.svg, doodle_alt: drawn.alt, doodle_word: drawn.word, doodle_whimsy: drawn.whimsy, doodle_register: drawn.register, doodled_at: new Date().toISOString() })
     .eq('id', entryId)
     .eq('user_id', userId)
   if (error) throw new Error(`onething doodle: save failed: ${error.message}`)

@@ -18,7 +18,7 @@ import { plainText, splitLinks } from '@/lib/onething/links';
  * plus onething.css for the doodles, the plant and the payoff scene.
  * Every behaviour is the jelly journal's; only the look changed. */
 
-type Entry = { id: string; day: string; text: string; streak: number; points: number; doodle?: string | null; doodle_alt?: string | null; photo?: string | null; photo_w?: number | null; photo_h?: number | null };
+type Entry = { id: string; day: string; text: string; streak: number; points: number; doodle?: string | null; doodle_alt?: string | null; doodle_register?: string | null; photo?: string | null; photo_w?: number | null; photo_h?: number | null };
 type Board = { points: number; streak: number; best: number; doneToday: boolean; level: Level; next: Level | null; index: number };
 type BuddyView = { id: string; name: string; avatar: string | null; streak: number; best: number; inToday: boolean; nextBonusIn: number; startsTomorrow: boolean };
 type InviteView = { id: string; name: string; since: string };
@@ -28,7 +28,7 @@ type Me = {
   today?: string; board?: Board; entries?: Entry[]; levels?: Level[];
   buddies?: BuddyView[]; sent?: InviteView[]; received?: InviteView[]; bonus?: { every: number; points: number };
 };
-type Drawn = { svg: string; alt: string; word: string | null; whimsy?: boolean };
+type Drawn = { svg: string; alt: string; word: string | null; whimsy?: boolean; register?: string };
 
 /// The question over the composer, one picked per visit.
 const QUESTIONS = [
@@ -413,7 +413,7 @@ function DayBody({ day, entry, drawn, thoughts, onPhoto }: { day: string; entry:
     <>
       {drawn && (
         <div className="oj-blob">
-          {entry.doodle ? <Doodle svg={entry.doodle} alt={entry.doodle_alt} pen={1.4} /> : <Drawing />}
+          {entry.doodle ? <Doodle svg={entry.doodle} alt={entry.doodle_alt} pen={1.4} boil={entry.doodle_register === 'heavy' ? 'off' : 'on'} /> : <Drawing />}
         </div>
       )}
       <div className={`oj-said ${sizeFor(plainText(entry.text))}`}><Thoughts day={day} text={entry.text} {...thoughts} /></div>
@@ -446,7 +446,7 @@ function Tile({ cell, drawn, i, onOpen }: { cell: Cell; drawn: boolean; i: numbe
       )}
       {drawn && (
         <span className="oj-tile-blob">
-          {e.doodle ? <Doodle svg={e.doodle} alt={e.doodle_alt} pen={0.75} boil="hover" /> : <span className="oj-wait">…</span>}
+          {e.doodle ? <Doodle svg={e.doodle} alt={e.doodle_alt} pen={0.75} boil={e.doodle_register === 'heavy' ? 'off' : 'hover'} /> : <span className="oj-wait">…</span>}
         </span>
       )}
       <span className="oj-tile-text">{plainText(all[0])}</span>
@@ -514,7 +514,7 @@ function Redraw({ entry, onKept, onClose }: { entry: Entry; onKept: () => void; 
     const r0 = (e.currentTarget as HTMLElement).getBoundingClientRect();
     setState('saving'); setErr('');
     try {
-      const r = await fetch('/api/onething/redraw', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: entry.id, svg: takes[pick].svg, alt: takes[pick].alt, whimsy: takes[pick].whimsy === true }) });
+      const r = await fetch('/api/onething/redraw', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: entry.id, svg: takes[pick].svg, alt: takes[pick].alt, whimsy: takes[pick].whimsy === true, register: takes[pick].register }) });
       const j = await r.json();
       if (!r.ok) { setErr(j.error ?? 'Could not keep that one.'); setState('ready'); return; }
       splash(r0.left + r0.width / 2, r0.top);
@@ -536,7 +536,7 @@ function Redraw({ entry, onKept, onClose }: { entry: Entry; onKept: () => void; 
             ? [0, 1, 2].map((i) => <div key={i} className="oj-take"><div className="oj-blob">{state === 'drawing' ? <Drawing label="" /> : null}</div></div>)
             : takes.map((t, i) => (
                 <button key={i} type="button" role="radio" aria-checked={pick === i} className={`oj-take${pick === i ? ' on' : ''}`} onClick={() => setPick(i)} aria-label={t.alt}>
-                  <div className="oj-blob"><Doodle svg={t.svg} alt={t.alt} pen={0.9} boil={pick === i ? 'on' : 'off'} /></div>
+                  <div className="oj-blob"><Doodle svg={t.svg} alt={t.alt} pen={0.9} boil={pick === i && t.register !== 'heavy' ? 'on' : 'off'} /></div>
                 </button>
               ))}
         </div>
