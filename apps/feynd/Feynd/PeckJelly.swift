@@ -83,25 +83,23 @@ struct JellyTriad: Equatable {
     }
 }
 
-/// The three regions, bands of ten levels, bottom to top.
-enum JellyRegion: Int {
-    case meadow = 0, lagoon, peaks
+/// The chapters of the map, bands of ten levels, bottom to top (the Living Island art,
+/// misc/dodo-redesign/living-island/world/). Every band from 5 up is the cosmos, which loops.
+enum JellyRegion: Int, CaseIterable {
+    case meadow = 0, lagoon, peaks, clouds, stars, cosmos
 
-    static func of(band: Int) -> JellyRegion { JellyRegion(rawValue: max(0, min(2, band))) ?? .meadow }
+    static func of(band: Int) -> JellyRegion { JellyRegion(rawValue: max(0, min(5, band))) ?? .meadow }
     static func of(index: Int) -> JellyRegion { of(band: index / 10) }
 
-    var signName: String {
-        switch self {
-        case .meadow: return "GUMDROP MEADOW"
-        case .lagoon: return "JELLY LAGOON"
-        case .peaks: return "SPRINKLE PEAKS"
-        }
-    }
+    var signName: String { title.uppercased() }
     var title: String {
         switch self {
         case .meadow: return "Gumdrop Meadow"
         case .lagoon: return "Jelly Lagoon"
         case .peaks: return "Sprinkle Peaks"
+        case .clouds: return "Marshmallow Clouds"
+        case .stars: return "Starlight Garden"
+        case .cosmos: return "Candy Cosmos"
         }
     }
     var node: JellyTriad {
@@ -109,6 +107,9 @@ enum JellyRegion: Int {
         case .meadow: return .meadow
         case .lagoon: return .lagoon
         case .peaks: return .peaks
+        case .clouds: return JellyTriad(light: 0xE6FFF6, base: 0x7FE0C8, dark: 0x3BAE93)
+        case .stars: return JellyTriad(light: 0xFFF8D0, base: 0xFFD43A, dark: 0xD9A000)
+        case .cosmos: return JellyTriad(light: 0xFFE0EC, base: 0xFF6FA8, dark: 0xD93A78)
         }
     }
     /// The gate banner at the end of this region, and its ribbon colour.
@@ -116,9 +117,14 @@ enum JellyRegion: Int {
         switch self {
         case .meadow: return ("TO JELLY LAGOON", 0x5EC6EC)
         case .lagoon: return ("TO SPRINKLE PEAKS", 0xB06CFF)
-        case .peaks: return ("TO SUGAR CASTLE", 0xFF6FA8)
+        case .peaks: return ("TO MARSHMALLOW CLOUDS", 0xFF7FB0)
+        case .clouds: return ("TO STARLIGHT GARDEN", 0x5B4BB8)
+        case .stars: return ("TO CANDY COSMOS", 0xFFD43A)
+        case .cosmos: return ("FURTHER OUT", 0xFF6FA8)
         }
     }
+    /// Night chapters: the floating header turns to dark glass over them.
+    var night: Bool { self == .stars || self == .cosmos }
 }
 
 // MARK: - Path helpers
@@ -808,6 +814,8 @@ struct JellyChestView: View {
 /// bloops. Long press: make it your avatar.
 struct JellyCritterView: View {
     let seat: JellyCritterSeat
+    /// A figure-eight flight path (the bee between its hive and the flowers): radii in points.
+    var loop: CGSize? = nil
 
     @Environment(Session.self) private var session
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -815,7 +823,14 @@ struct JellyCritterView: View {
     @State private var squish: CGFloat = 0
 
     var body: some View {
-        if seat.floating && !reduceMotion {
+        if let loop, !reduceMotion, PeckMotion.allowed {
+            TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { tl in
+                let a = CGFloat(tl.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 3600)) * 1.1
+                content
+                    .scaleEffect(x: cos(a) < 0 ? -1 : 1, y: 1)
+                    .offset(x: sin(a) * loop.width, y: sin(a * 2) * loop.height)
+            }
+        } else if seat.floating && !reduceMotion {
             TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { tl in
                 let t = CGFloat(tl.date.timeIntervalSinceReferenceDate)
                 let bob = 5 * sin(t * 1.3 + seat.point.x * 0.05)

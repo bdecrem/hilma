@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Living Island World</title>
+<style>
+  @font-face { font-family: Fredoka; src: url(../../../../apps/feynd/Feynd/Fonts/Fredoka.ttf); font-weight: 300 700; }
+  :root { --bg: #E9DFEE; --ink: #2D2537; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font: 13px/1.4 -apple-system, system-ui, sans-serif; }
+  canvas { display: block; }
+  #wrap { position: relative; margin: 0 auto; }
+  .bar { position: fixed; left: 8px; top: 8px; z-index: 3; background: rgba(255,255,255,.85); border-radius: 10px; padding: 6px 10px; font: 600 12px Fredoka, system-ui; }
+</style>
+</head>
+<body>
+<script src="lib.js"></script>
+<script src="kit.js"></script>
+<script src="world.js"></script>
+<script src="live.js"></script>
+<script src="ch-meadow.js"></script>
+<script src="ch-lagoon.js"></script>
+<script src="ch-peaks.js"></script>
+<script src="ch-clouds.js"></script>
+<script src="ch-stars.js"></script>
+<script src="ch-cosmos.js"></script>
+<script>
+/* Preview + export harness.
+   ?mode=full&from=1&to=14&scale=1&current=6   static render of a stretch of levels, phone width
+   ?mode=phone&level=6&w=390&h=844             a phone-sized window that scrolls and animates
+   render.mjs calls window.renderLayer(...) and window.manifest() directly. */
+(function () {
+  'use strict';
+  const L = window.L, K = window.K, W = window.WORLD, TAU = Math.PI * 2;
+  // stand-in chapters for any not yet written
+  const STUB = ['lagoon', 'peaks', 'clouds', 'stars', 'cosmos'];
+  while (W.CHAPTERS.length < 6) {
+    const id = STUB[W.CHAPTERS.length - 1], c = ['#7FD2EF', '#EFDCFF', '#FFF0F6', '#3B2E6E', '#1D1840'][W.CHAPTERS.length - 1];
+    W.chapter({ id, name: id.toUpperCase(), title: id, road: 'ribbon', node: ['#fff', '#ccc', '#999'], gateBanner: ['TO ' + id.toUpperCase(), '#888', '#333'], edgeColor: c,
+      ground(ctx, B) { ctx.fillStyle = c; ctx.fillRect(-20, B.top - 300, W.DW + 40, B.bottom - B.top + 600); } });
+  }
+  const Q = new URLSearchParams(location.search);
+  const MAN = W.buildManifest();
+  window.manifest = () => MAN;
+
+  /* ---------- layers into a canvas region ---------- */
+  function layerCanvas(layer, y0, h, scale, opts = {}) {
+    const c = document.createElement('canvas');
+    const wpx = (layer === 'fgL' || layer === 'fgR') ? W.FGW : W.DW;
+    c.width = Math.round(wpx * scale); c.height = Math.round(h * scale);
+    const ctx = c.getContext('2d');
+    ctx.setTransform(scale, 0, 0, scale, 0, -y0 * scale);
+    if (layer === 'ground') { ctx.fillStyle = '#9ED98C'; ctx.fillRect(0, y0, W.DW, h); W.drawGround(ctx, y0, y0 + h); }
+    else if (layer === 'props') W.drawProps(ctx, y0, y0 + h);
+    else if (layer === 'world') { W.drawGround(ctx, y0, y0 + h); W.drawProps(ctx, y0, y0 + h); }
+    else if (layer === 'fgL' || layer === 'fgR') drawFG(ctx, layer === 'fgL' ? -1 : 1, y0, h, scale);
+    return c;
+  }
+  /* fg strip in layer space: an item placed at world y sits at layer y = HF - (1.12 * yb - 50) */
+  const HF = W.H * W.FGK;
+  const fgY = y => HF - (W.FGK * (W.H - y) - 50);
+  function drawFG(ctx, side, y0, h, scale) {
+    const oc = document.createElement('canvas'); oc.width = ctx.canvas.width; oc.height = ctx.canvas.height;
+    const o = oc.getContext('2d'); o.setTransform(ctx.getTransform());
+    for (const it of W.fgItems()) {
+      if (it.side !== side) continue;
+      const y = fgY(it.y); if (y < y0 - 300 || y > y0 + h + 300) continue;
+      const R = L.rng(Math.round(it.y * 7) + (side > 0 ? 3 : 0));
+      const x = side < 0 ? -8 : W.FGW + 8;
+      if (it.draw) it.draw(o, x, y, R, side);
+      else if (it.kind === 'bush') K.fgBush(o, x, y, it.s, side, R, it.c);
+      else if (it.kind === 'branch') K.fgBranch(o, x, y, it.s, side, R, it.c);
+      else if (it.kind === 'trunk') K.fgTrunk(o, x, y, it.s, side, R, it.c);
+    }
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.filter = `blur(${0.8 * scale}px)`; ctx.drawImage(oc, 0, 0); ctx.restore();
+  }
+  window.renderLayer = (layer, y0, h, scale) => layerCanvas(layer, y0, h, scale).toDataURL('image/png');
+  window.layerCanvas = layerCanvas;
+  window.fgY = fgY;
+
+  /* ---------- native stand-ins over the art ---------- */
+  const X = dx => W.CX + dx, Y = yb => W.H - yb;
+  function regionOf(i) { return MAN.regions[Math.min(Math.floor(i / W.CH), MAN.regions.length - 1)]; }
+  function drawNatives(ctx, cur, t, y0, y1, count) {
+    // road: ribbon behind, white dots ahead; stepping stones where the region says so
+    for (let i = 0; i < count - 1; i++) {
+      const pts = W.segPts(i, 26); pts.push({ x: W.nx(i + 1), y: W.ny(i + 1) });
+      if (pts[0].y < y0 - 200 || pts[pts.length - 1].y > y1 + 200) continue;
+      const worn = i + 1 <= cur, reg = regionOf(i + 1);
+      if (!worn) { for (let j = 1; j < 9; j++) { const p = pts[Math.round(j / 9 * 26)]; if (Math.hypot(p.x - W.nx(i), p.y - W.ny(i)) < 46 || Math.hypot(p.x - W.nx(i + 1), p.y - W.ny(i + 1)) < 46) continue; K.ell(ctx, p.x, p.y, 3.6, 3.6, 'rgba(255,255,255,.85)'); } continue; }
+      if (W.drawStones && reg.road !== 'ribbon') W.drawStones(ctx, i, pts, reg.road, t);
+      else W.drawRibbon(ctx, pts, reg.roadStyle || (W.ROAD_STYLE || {})[reg.road]);
+    }
+    // the tail below level 1
+    { const tail = W.road.pts.filter(p => p.y > W.ny(0)); W.drawRibbon(ctx, tail.concat([{ x: W.nx(0), y: W.ny(0) }])); }
+    for (const b of MAN.bridges) if (Y(b.yb) > y0 - 60 && Y(b.yb) < y1 + 60) (W.BRIDGES?.[b.style] || W.drawBridge)(ctx, X(b.dx), Y(b.yb), b.angle);
+    for (const gt of MAN.gates) { const reg = MAN.regions[gt.to] || MAN.regions[MAN.regions.length - 1]; const prev = MAN.regions[gt.to - 1]; if (Y(gt.yb) > y0 - 120 && Y(gt.yb) < y1 + 120 && gt.to * W.CH < count + 1) W.drawGate(ctx, X(gt.dx), Y(gt.yb), prev.gate[0], prev.gate[1], prev.gate[2]); }
+    for (const s of MAN.signs) {
+      if (s.level > count) continue;
+      const x = X(s.dx), y = Y(s.yb); if (y < y0 - 80 || y > y1 + 80) continue;
+      const reg = regionOf(s.level - 1);
+      const text = s.role === 'region' ? reg.title : s.role === 'rest' ? (s.level % 20 === 15 ? 'Deep Dive' : 'Peck or Perish') : 'Pentimento';
+      K.woodSign(ctx, x, y, text, s.role === 'region' && reg.sign ? reg.sign : {});
+    }
+    for (const [lvl, c] of Object.entries(MAN.chests)) { if (+lvl > count) continue; const x = X(c.dx), y = Y(c.yb); if (y < y0 - 60 || y > y1 + 60) continue; K.cast(ctx, x, y, K.rect(-13, -22, 26, 22, 5), { a: 0.16 }); K.contact(ctx, x, y + 1, 18, 5, 0.3); L.chest(ctx, x, y, 1.05); }
+    for (const cr of MAN.critters) {
+      const x = X(cr.dx), y = Y(cr.yb); if (y < y0 - 60 || y > y1 + 60) continue;
+      let bx = x, by = y;
+      if (cr.path === 'loop') { const a = t * 1.1; bx = x + Math.sin(a) * (cr.rx || 40); by = y + Math.sin(a * 2) * (cr.ry || 14); }
+      if (cr.float) by += 5 * Math.sin(t * 1.3 + x * 0.05);
+      K.contact(ctx, x, y + 1, cr.size * 0.3, cr.size * 0.09, 0.22);
+      L.drawCritter(ctx, cr.kind, bx, by, cr.size / 30, { shadow: false });
+    }
+    // nodes
+    for (let i = 0; i < count; i++) {
+      const y = W.ny(i); if (y < y0 - 60 || y > y1 + 60) continue;
+      const n = { x: W.nx(i), y, level: i + 1, state: i < cur ? 'cleared' : i === cur ? 'current' : 'locked', stars: [3, 2, 3, 3, 1][i % 5], region: 'meadow' };
+      ctx.fillStyle = 'rgba(48,30,80,.14)'; ctx.beginPath(); ctx.ellipse(n.x + 9, n.y + 17, 21, 8, 0.35, 0, TAU); ctx.fill();
+      const reg = regionOf(i);
+      ctx.save(); ctx.translate(n.x, n.y); ctx.scale(1.25, 1.25); ctx.translate(-n.x, -n.y);
+      L.defaultNode(ctx, Object.assign(n, { region: reg.id === 'meadow' ? 'meadow' : 'lagoon' }), { nodeShadow: 'rgba(45,20,60,.25)' }, t);
+      ctx.restore();
+    }
+    const c = Math.min(cur, count - 1);
+    L.drawDodo(ctx, W.nx(c), W.ny(c) - 30, 0.55, { squash: 1 + Math.sin(t * 2.4) * 0.025 });
+  }
+  function drawLive(ctx, t, y0, y1, dark) {
+    for (const e of MAN.live) {
+      const f = W.LIVE[e.kind]; if (!f) continue;
+      const yy = e.yb != null ? Y(e.yb) : (e.pts ? Y(e.pts[0][1]) : 0);
+      if (!e.pts && (yy < y0 - 220 || yy > y1 + 220)) continue;
+      ctx.save(); f(ctx, e, t); ctx.restore();
+    }
+    if (dark) for (const g of MAN.glows) { const x = X(g.dx), y = Y(g.yb); const gr = ctx.createRadialGradient(x, y, 0, x, y, g.r); gr.addColorStop(0, L.rgba(g.c, 0.75)); gr.addColorStop(1, L.rgba(g.c, 0)); ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(x, y, g.r, 0, TAU); ctx.fill(); ctx.restore(); }
+  }
+  window.drawNatives = drawNatives; window.drawLive = drawLive;
+
+  const mode = Q.get('mode') || 'full';
+  /* one foreground item as a trimmed sprite: returns { png, x, y, w, h } where (x, y) is the sprite's
+     top-left relative to (screen edge, the item's layer position), in points */
+  window.fgSprite = (idx, scale) => {
+    const it = W.fgItems()[idx], side = it.side;
+    const PADL = 120, PADT = 300, CW = 360, CHh = 520;
+    const c = document.createElement('canvas'); c.width = CW * scale; c.height = CHh * scale;
+    const o = c.getContext('2d');
+    // edge at x = PADL (left strip) or CW - PADL (right strip); item layer y at PADT
+    const ex = side < 0 ? PADL : CW - PADL, x = ex + (side < 0 ? -8 : 8), y = PADT;
+    o.setTransform(scale, 0, 0, scale, 0, 0);
+    const R = L.rng(Math.round(it.y * 7) + (side > 0 ? 3 : 0));
+    if (it.draw) it.draw(o, x, y, R, side);
+    else if (it.kind === 'bush') K.fgBush(o, x, y, it.s, side, R, it.c);
+    else if (it.kind === 'branch') K.fgBranch(o, x, y, it.s, side, R, it.c);
+    else if (it.kind === 'trunk') K.fgTrunk(o, x, y, it.s, side, R, it.c);
+    const b = document.createElement('canvas'); b.width = c.width; b.height = c.height;
+    const bo = b.getContext('2d'); bo.filter = `blur(${0.8 * scale}px)`; bo.drawImage(c, 0, 0);
+    // clip to the screen side of the edge: nothing past the edge is ever seen
+    const d = bo.getImageData(0, 0, b.width, b.height).data;
+    let x0 = b.width, y0 = b.height, x1 = -1, y1 = -1;
+    for (let yy = 0; yy < b.height; yy++) for (let xx = 0; xx < b.width; xx++) if (d[(yy * b.width + xx) * 4 + 3] > 3) { if (xx < x0) x0 = xx; if (xx > x1) x1 = xx; if (yy < y0) y0 = yy; if (yy > y1) y1 = yy; }
+    const exPx = ex * scale;
+    if (side < 0) x0 = Math.max(x0, Math.floor(exPx)); else x1 = Math.min(x1, Math.ceil(exPx) - 1);
+    if (x1 < x0 || y1 < y0) return null;
+    const t = document.createElement('canvas'); t.width = x1 - x0 + 1; t.height = y1 - y0 + 1;
+    t.getContext('2d').drawImage(b, -x0, -y0);
+    const yb = W.H - it.y, Lb = W.FGK * yb - 50;
+    return { png: t.toDataURL('image/png'), side, x: +(x0 / scale - ex).toFixed(2), y: +(y0 / scale - PADT).toFixed(2), w: +(t.width / scale).toFixed(2), h: +(t.height / scale).toFixed(2), Lb: +Lb.toFixed(1), band: Math.max(0, W.BANDS.findIndex(B => it.y <= B.bottom && it.y >= B.top)) };
+  };
+  window.fgCount = () => W.fgItems().length;
+  document.fonts.load('600 12px Fredoka').finally(() => {
+    if (mode === 'export') { window.__ready = true; return; }
+    if (mode === 'full') {
+      const from = +(Q.get('from') || 1), to = +(Q.get('to') || 14), scale = +(Q.get('scale') || 1), vw = +(Q.get('w') || 390);
+      const cur = +(Q.get('current') || 6) - 1, count = +(Q.get('count') || W.NMAX), t = +(Q.get('t') || 3.2);
+      const yTop = W.ny(to - 1) - +(Q.get('above') || 220), yBot = from <= 1 ? W.H : W.ny(from - 1) + +(Q.get('below') || 160);
+      const h = yBot - yTop;
+      const cv = document.createElement('canvas'); cv.width = vw * scale; cv.height = h * scale; document.body.appendChild(cv);
+      const ctx = cv.getContext('2d');
+      const ox = (W.DW - vw) / 2;
+      const world = layerCanvas('world', yTop, h, scale);
+      ctx.drawImage(world, -ox * scale, 0);
+      ctx.setTransform(scale, 0, 0, scale, -ox * scale, -yTop * scale);
+      drawLive(ctx, t, yTop, yBot, false);
+      drawNatives(ctx, cur, t, yTop, yBot, count);
+      // fg strips at their static (parallax pivot) position: world y ≈ layer position
+      if (Q.get('fg') !== '0') {
+        ctx.setTransform(scale, 0, 0, scale, 0, 0);
+        for (const side of [-1, 1]) {
+          const ly0 = fgY(yTop);
+          const strip = layerCanvas(side < 0 ? 'fgL' : 'fgR', ly0, h, scale);
+          ctx.drawImage(strip, side < 0 ? 0 : (vw - W.FGW) * scale, 0);
+        }
+      }
+      window.__ready = true;
+    } else {
+      // phone: scroll the world with parallax + animation
+      const vw = +(Q.get('w') || 390), vh = +(Q.get('h') || 844), scale = Math.min(2, devicePixelRatio || 1);
+      const cur = +(Q.get('current') || 6) - 1, count = +(Q.get('count') || W.NMAX);
+      const cv = document.createElement('canvas'); cv.width = vw * scale; cv.height = vh * scale; cv.style.width = vw + 'px'; cv.style.height = vh + 'px';
+      const wrap = document.createElement('div'); wrap.id = 'wrap'; wrap.style.width = vw + 'px'; wrap.appendChild(cv); document.body.appendChild(wrap);
+      const ctx = cv.getContext('2d'); const ox = (W.DW - vw) / 2;
+      let s = W.ny(+(Q.get('level') || 1) - 1) - vh * 0.6;
+      const cache = new Map(); const TILE = 400;
+      const tile = (layer, k) => { const key = layer + k; if (!cache.has(key)) cache.set(key, layerCanvas(layer, k * TILE, TILE, scale)); return cache.get(key); };
+      addEventListener('wheel', e => { s += e.deltaY; }, { passive: true });
+      let ty = null; addEventListener('touchstart', e => ty = e.touches[0].clientY); addEventListener('touchmove', e => { s -= e.touches[0].clientY - ty; ty = e.touches[0].clientY; });
+      const t0 = performance.now();
+      const frame = now => {
+        const t = (now - t0) / 1000; s = Math.max(0, Math.min(W.H - vh, s));
+        ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = '#9ED98C'; ctx.fillRect(0, 0, cv.width, cv.height);
+        for (let k = Math.floor(s / TILE); k * TILE < s + vh; k++) ctx.drawImage(tile('world', k), -ox * scale, (k * TILE - s) * scale);
+        ctx.setTransform(scale, 0, 0, scale, -ox * scale, -s * scale);
+        drawLive(ctx, t, s, s + vh, false); drawNatives(ctx, cur, t, s, s + vh, count);
+        // fg: layer y = fgY(world y at the screen centre) - vh/2 … scrolls 1.12x
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        const ly0 = fgY(s + vh / 2) - vh / 2;
+        for (const side of [-1, 1]) for (let k = Math.floor(ly0 / TILE); k * TILE < ly0 + vh; k++) ctx.drawImage(tile(side < 0 ? 'fgL' : 'fgR', k), side < 0 ? 0 : (vw - W.FGW) * scale, (k * TILE - ly0) * scale);
+        requestAnimationFrame(frame);
+      };
+      requestAnimationFrame(frame);
+      window.__ready = true;
+    }
+  });
+})();
+</script>
+</body>
+</html>

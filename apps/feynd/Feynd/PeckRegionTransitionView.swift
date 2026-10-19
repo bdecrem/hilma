@@ -7,43 +7,59 @@ import UIKit
 // dodo does a happy hop) → Walk (the dodo hops up the trail while the
 // camera pans out of the old region) → Gate (the new region's banner pops
 // in while its ambience lights up) → Settle (the next level pulses START).
-// Plays once on crossing 10→11 and 20→21, then hands back to the map.
+// Plays once on crossing into every chapter (10→11, 20→21, …), then hands back to the map.
 
 struct RegionCrossing: Identifiable {
-    let clearedLevel: Int            // 10 or 20
+    let clearedLevel: Int            // 10, 20, 30, … — the last stone of a chapter
     var id: Int { clearedLevel }
 
     var nextLevel: Int { clearedLevel + 1 }
-    var regionName: String { clearedLevel == 10 ? "Jelly Lagoon" : "Sprinkle Peaks" }
-    var regionSpan: String { clearedLevel == 10 ? "Levels 11–20" : "Levels 21–30" }
+    /// The chapter being left and the one being entered (every chapter from 6 up is the cosmos).
+    var from: JellyRegion { JellyRegion.of(band: clearedLevel / 10 - 1) }
+    var to: JellyRegion { JellyRegion.of(band: clearedLevel / 10) }
+    var regionName: String { to.title }
+    var regionSpan: String { "Levels \(nextLevel)–\(clearedLevel + 10)" }
+
+    /// Each chapter's colours for the postcard: its four hill bands, its shore (base, foam),
+    /// two candy-tree colour pairs, and a sky (low, high).
+    private struct Look {
+        let hills: [UInt32]; let shore: (UInt32, UInt32)
+        let tree: (UInt32, UInt32); let tree2: (UInt32, UInt32); let sky: (UInt32, UInt32)
+    }
+    private static func look(_ r: JellyRegion) -> Look {
+        switch r {
+        case .meadow: return Look(hills: [0xC8EDB4, 0xB6E4A3, 0xA5DA94, 0x96D088], shore: (0xFFE7C2, 0xFFF6E8), tree: (0x91E9CC, 0xFFD27A), tree2: (0xFF9FC8, 0x7FD3FF), sky: (0xE8F4DC, 0xCDEFF8))
+        case .lagoon: return Look(hills: [0x9BE3F5, 0x8FDAF2, 0x7FD2EF, 0x8FDAF2], shore: (0xFFE7C2, 0xFFF6E8), tree: (0x91E9CC, 0xFFD27A), tree2: (0xFF9FC8, 0x7FD3FF), sky: (0xB7E6F5, 0xDCF6FF))
+        case .peaks: return Look(hills: [0xEFDCFF, 0xF7DCF3, 0xFBE3EF, 0xF3D6EE], shore: (0xEFDCFF, 0xFFFFFF), tree: (0x7FD3FF, 0xFFD27A), tree2: (0xB994FF, 0xFF7AB0), sky: (0xEADFF8, 0xF8DCEE))
+        case .clouds: return Look(hills: [0xFFF6FA, 0xFFE9F2, 0xFFDDEB, 0xF8E4FF], shore: (0xFFE3EF, 0xFFFFFF), tree: (0x7FE0C8, 0xFFB36B), tree2: (0xFF7FB0, 0xFFE08A), sky: (0xFFE9F2, 0xFFD6E8))
+        case .stars: return Look(hills: [0x4B3A9E, 0x3A2E80, 0x33287A, 0x2A2160], shore: (0x7A62C9, 0xF2EDFF), tree: (0xFFD43A, 0x7FE0C8), tree2: (0xFF9FC8, 0xB994FF), sky: (0x3A2E80, 0x1D1840))
+        case .cosmos: return Look(hills: [0x2A2160, 0x241C55, 0x1F184A, 0x1D1840], shore: (0x3A2E80, 0x7A62C9), tree: (0xFF6FA8, 0x7FD3FF), tree2: (0xFFD43A, 0xB994FF), sky: (0x1D1840, 0x120F2E))
+        }
+    }
+
     /// World sky, bottom (old region) → top (new region).
     var skyStops: [(CGFloat, UInt32)] {
-        clearedLevel == 10
-            ? [(0, 0xC8EDB4), (0.3, 0xE8F4DC), (0.55, 0xCDEFF8), (0.8, 0x9BE3F5), (1, 0xDCF6FF)]
-            : [(0, 0x8FDAF2), (0.3, 0xB7E6F5), (0.55, 0xEADFF8), (0.8, 0xF1DEFB), (1, 0xF8DCEE)]
+        // the first two crossings keep the stops they were tuned with
+        if clearedLevel == 10 { return [(0, 0xC8EDB4), (0.3, 0xE8F4DC), (0.55, 0xCDEFF8), (0.8, 0x9BE3F5), (1, 0xDCF6FF)] }
+        if clearedLevel == 20 { return [(0, 0x8FDAF2), (0.3, 0xB7E6F5), (0.55, 0xEADFF8), (0.8, 0xF1DEFB), (1, 0xF8DCEE)] }
+        let a = Self.look(from), b = Self.look(to)
+        return [(0, a.hills[1]), (0.3, a.sky.0), (0.55, b.sky.0), (0.8, b.hills[1]), (1, b.sky.1)]
     }
     /// Two candy colours for the new region's trees.
-    var upperTree: (c: UInt32, d: UInt32) {
-        clearedLevel == 10 ? (0xFF9FC8, 0x7FD3FF) : (0xB994FF, 0xFF7AB0)
-    }
-    var lowerTree: (c: UInt32, d: UInt32) {
-        clearedLevel == 10 ? (0x91E9CC, 0xFFD27A) : (0x7FD3FF, 0xFFD27A)
-    }
+    var upperTree: (c: UInt32, d: UInt32) { let t = Self.look(to).tree2; return (t.0, t.1) }
+    var lowerTree: (c: UInt32, d: UInt32) { let t = Self.look(to).tree; return (t.0, t.1) }
     /// The old region's ground (bottom of the world) and the new one's hills.
-    var lowerHills: [(CGFloat, UInt32)] {
-        clearedLevel == 10
-            ? [(1056, 0xC8EDB4), (1190, 0xB6E4A3), (1340, 0xA5DA94), (1490, 0x96D088)]
-            : [(1056, 0x9BE3F5), (1190, 0x8FDAF2), (1340, 0x7FD2EF), (1490, 0x8FDAF2)]
-    }
+    var lowerHills: [(CGFloat, UInt32)] { zip([1056, 1190, 1340, 1490] as [CGFloat], Self.look(from).hills).map { ($0, $1) } }
     var upperHills: [(CGFloat, UInt32)] {
-        clearedLevel == 10
-            ? [(430, 0xFFE7C2), (560, 0x9BE3F5), (680, 0x7FD2EF), (790, 0x8FDAF2)]
-            : [(430, 0xEFDCFF), (560, 0xF7DCF3), (680, 0xFBE3EF), (790, 0xF3D6EE)]
+        let b = Self.look(to)
+        // the lagoon's upper bands were tuned out of order (2026-10-01); every other chapter climbs its hills
+        let h = to == .lagoon ? [0x9BE3F5, 0x7FD2EF, 0x8FDAF2] as [UInt32] : Array(b.hills.dropFirst())
+        return [(430, b.shore.0), (560, h[0]), (680, h[1]), (790, h[2])]
     }
-    var shore: (UInt32, UInt32) { clearedLevel == 10 ? (0xFFE7C2, 0xFFF6E8) : (0xEFDCFF, 0xFFFFFF) }
-    var glowColor: UInt32 { clearedLevel == 10 ? 0xFFFFFF : 0xFFD43A }
-    var clearedColors: JellyTriad { clearedLevel == 10 ? .meadow : .lagoon }
-    var nextColors: JellyTriad { clearedLevel == 10 ? .lagoon : .peaks }
+    var shore: (UInt32, UInt32) { Self.look(to).shore }
+    var glowColor: UInt32 { to == .lagoon ? 0xFFFFFF : 0xFFD43A }
+    var clearedColors: JellyTriad { from.node }
+    var nextColors: JellyTriad { to.node }
 }
 
 // Choreography cues (authored seconds).

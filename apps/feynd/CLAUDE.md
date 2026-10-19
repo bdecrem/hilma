@@ -222,7 +222,30 @@ The app was rebranded to the jelly dodo in one pass — see
 - **Theme:** `FeyndTheme.swift` tokens; `inkOnAccent` is adaptive now (white on
   the deep daytime sky, sea-ink on the bright night one). `LaunchBackground`
   colourset matches `bg`.
-- **Map:** `PeckJelly.swift` holds the shared jelly drawing (gloss balls,
+- **Map = Living Island (2026-10-19).** The Peck map's world is painted in code in
+  `misc/dodo-redesign/living-island/world/` (Canvas 2D: `world.js` = PeckGeometry's trail at pitch
+  142 / amp 78, one `ch-*.js` per chapter of ten levels — Gumdrop Meadow, Jelly Lagoon, Sprinkle
+  Peaks, Marshmallow Clouds, Starlight Garden, Candy Cosmos — with every landmark anchored to a
+  level node; `CHAPTERS.md` is the contract for writing one; `index.html?mode=full&from=1&to=14`
+  previews it with native stand-ins, `node scripts/peck-world/shot.mjs <png> "<query>"` shoots it).
+  `node scripts/peck-world/render.mjs` bakes it into `Feynd/PeckWorld/` (a folder resource, so no
+  xcodegen after a re-render): 33 ground tiles (`pw-g-NN.jpg`, 355-pt rows from the art's bottom
+  edge, 3×, ~6 MB), foreground sprites (`pw-fg-NNN.png`, the leafy frame at 1.12 parallax) and
+  `pw-manifest.json`, which places everything native. Bands 6–7 (levels 61–80) loop forever.
+  Swift: `PeckWorld.swift` (manifest, tile store with LRU + the `Jelly.dusk` colour matrix at night,
+  tile layer, foreground), `PeckMapLayers.swift` (chunked animated canvases: water life, road, gates,
+  signs, stepping stones, landmark motion; front layer + night glows; finale sky; poke targets;
+  manifest critters), `PeckWorldDraw.swift` (port of `live.js`: every live kind, ribbon, stones,
+  gate, bridge, wood sign), `PeckWorldExtra*.swift` (each chapter's own kinds). A new live kind =
+  JS in the chapter file + a Swift case; the JS is the spec. Taps on the windmill, fire,
+  lighthouse, whales, boats, balloons, kite, cable car, dish and UFO play one-shot reactions.
+  Motion stops under Reduce Motion, in Low Power Mode and off the tab. Hooks: `-ScrollToLevel N`
+  is exact now (laid-out anchors), `-PeckAutoScroll 1` glides bottom→top→bottom (watch memory with
+  `footprint <pid>`; 136–167 MB for the whole app across 64 levels on 2026-10-19), `-PeckPokeAll 1`
+  pokes every landmark 9 s in; `scripts/peck-world/sim-shots.sh <dir> <count> <current> <levels…> [dark]`
+  shoots a mock map. `-ShowRegionTransition` takes any multiple of 10 (the crossing postcard
+  plays into every chapter).
+- **Map pieces:** `PeckJelly.swift` holds the shared jelly drawing (gloss balls,
   ribbons, signs, chests, candy trees, mountains, islands) and the SwiftUI
   pieces (`JellyNodeView`, `JellyChestView`, the critter seats); regions are
   Gumdrop Meadow / Jelly Lagoon / Sprinkle Peaks, with Sugar Castle on a

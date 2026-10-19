@@ -31,6 +31,12 @@ targets:
       - path: Feynd
         excludes:
           - "Secrets.swift.example"
+          - "PeckWorld/**"
+      # The Living Island art (scripts/peck-world/render.mjs writes it): one folder in the bundle,
+      # so a re-render that adds or drops files needs no project regeneration.
+      - path: Feynd/PeckWorld
+        type: folder
+        buildPhase: resources
     dependencies:
       - package: WebRTC
       - package: ElevenLabs

@@ -7,6 +7,10 @@ import SwiftUI
 /// stars, perfect = 3.
 struct FlashTabView: View {
     @Environment(Session.self) private var session
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// The map is on screen (its ambient motion stops when it isn't).
+    @State private var mapVisible = false
 
     @State private var state: JumboState? = nil
     @State private var loading = true
@@ -61,7 +65,8 @@ struct FlashTabView: View {
     // Path geometry — one shared set of numbers for nodes AND connectors.
     // Node centers: y = topPad + i * pitch, x = centerX + amp * zigzag(i).
     private let nodeSize: CGFloat = 68
-    private let pitch: CGFloat = 116
+    /// One level every 142 pt — the Living Island art is drawn on this pitch (PeckWorld.P).
+    private let pitch: CGFloat = 142
     /// Room above the last level for Sugar Castle on its cloud bank.
     private let topPad: CGFloat = PeckFinale.topPad
     private let bottomPad: CGFloat = 130
@@ -79,6 +84,7 @@ struct FlashTabView: View {
                     .ignoresSafeArea()
                 nightMist
                 floatingChrome
+                    .environment(\.colorScheme, nightChrome ? .dark : colorScheme)
             } else {
                 // Pre-map states (building the first deck, loading, errors)
                 // keep the classic framed chrome.
@@ -240,9 +246,9 @@ struct FlashTabView: View {
                 UserDefaults.standard.removeObject(forKey: "ShowDemoReel")
                 showDemoReel = true
             }
-            // `-ShowRegionTransition 10|20` — play the region scene headlessly.
+            // `-ShowRegionTransition 10|20|30|…` — play the region scene headlessly.
             let crossing = UserDefaults.standard.integer(forKey: "ShowRegionTransition")
-            if crossing == 10 || crossing == 20 {
+            if crossing > 0 && crossing % 10 == 0 {
                 UserDefaults.standard.removeObject(forKey: "ShowRegionTransition")
                 regionCrossing = RegionCrossing(clearedLevel: crossing)
             }
@@ -584,17 +590,33 @@ struct FlashTabView: View {
     /// and scenery: y(i) = H - bottomPad - i * pitch.
     private func levelMap(_ state: JumboState) -> some View {
         GeometryReader { geo in
-            let w = min(geo.size.width, 430)
+            let W = PeckWorld.shared
             let count = state.levels.count
             let world = PeckGeometry(count: count, pitch: pitch, topPad: topPad, bottomPad: bottomPad,
-                                     centerX: geo.size.width / 2, amp: amp * w / 430)
+                                     centerX: geo.size.width / 2, amp: amp)
             let height = world.height
+            // The art runs on under the bottom stone (the spacer that keeps the tab pill off it).
+            let contentH = height + W.SPACER
+            let place = PWPlace(centerX: geo.size.width / 2, contentH: contentH)
             let yFor: (Int) -> CGFloat = { i in world.y(i) }
             let xFor: (Int) -> CGFloat = { i in world.x(i) }
             let currentIdx = state.levels.firstIndex(where: { $0.status == "unlocked" })
-            // The jelly world has no night region: the floating chrome keeps
-            // its daytime glass the whole way up.
-            let nightCutoff: CGFloat = -1
+            // The night chapters (Starlight Garden, Candy Cosmos) flip the floating chrome to dark
+            // glass while the viewport's top edge is inside them.
+            let nightBand = JellyRegion.allCases.firstIndex(where: { $0.night }) ?? 4
+            let nightCutoff: CGFloat = count > nightBand * 10 ? world.y(nightBand * 10) + pitch / 2 : -1
+            // What's on screen: the scroll offset is known after the first layout (it opens at the bottom).
+            let vh = geo.size.height
+            let s = worldOffsetY == .greatestFiniteMagnitude ? max(0, contentH - vh) : worldOffsetY
+            let view = PWWindow(top: s - 120, bottom: s + vh + 120)
+            let rows = peckRows(top: view.top, bottom: view.bottom, contentH: contentH)
+            let dark = colorScheme == .dark
+            // Nothing of the world is drawn above the finale's cloud bank.
+            let maxYb = contentH - PeckFinale.bandTop
+            let frame = PeckMapFrame(geo: world, place: place, levels: state.levels, currentIdx: currentIdx,
+                                     devMode: devMode, dark: dark, maxYb: maxYb)
+            let animate = !reduceMotion && PeckMotion.allowed && mapVisible
+            let topRegion = W.region(index: max(0, count - 1))
 
             ScrollViewReader { proxy in
                 ScrollView {
@@ -607,28 +629,22 @@ struct FlashTabView: View {
                     }
                     .frame(height: 0)
                     ZStack(alignment: .topLeading) {
-                        PeckWorldScenery(height: height, levelCount: count, pitch: pitch, bottomPad: bottomPad,
-                                         scrollY: worldOffsetY, currentIdx: currentIdx ?? 0)
+                        // Living Island: the baked ground and landmarks, then the castle's sky over
+                        // the top, then the road and everything that moves on the ground.
+                        PWTileLayer(place: place, window: view, dark: dark)
+                        PeckFinaleLayer(width: geo.size.width, topRegion: topRegion, dark: dark)
+                        PeckBackLayer(frame: frame, rows: rows, animate: animate)
+                        PeckPokeTargets(frame: frame, window: view)
 
-                        // The road: worn behind you, stepping stones ahead,
-                        // fog beyond — plus gates, signposts, chests.
-                        PeckTrailLayer(geo: world, levels: state.levels, currentIdx: currentIdx, devMode: devMode)
-
-                        // Critters seated along the sides (tap to poke, hold
-                        // to make one your avatar) and the chests beside a
-                        // few stones — under the stones, over the road.
-                        ForEach(jellyCritterSeats(geo: world, width: geo.size.width)) { seat in
-                            JellyCritterView(seat: seat)
-                                .position(x: seat.point.x,
-                                          y: seat.floating ? seat.point.y : seat.point.y - seat.size * 0.42)
-                        }
+                        // Critters at their jobs (tap to poke, hold to make one your avatar) and
+                        // the chests beside a few stones — under the stones, over the road.
+                        PeckCritters(frame: frame, window: view)
                         ForEach(Array(state.levels.enumerated()), id: \.element.level) { i, level in
-                            if PeckMilestone.hasChest(level.level) {
-                                let side: CGFloat = world.zig(i) > 0 ? -1 : 1
-                                // The chest canvas is 140×120 with the box's
-                                // base 22 up from its bottom edge.
+                            if PeckMilestone.hasChest(level.level), let c = chestItem(level.level),
+                               view.contains(place.y(c.yb), pad: 100) {
+                                // The chest canvas is 140×120 with the box's base 22 up from its bottom edge.
                                 JellyChestView(level: level.level, passed: level.status == "passed")
-                                    .position(x: xFor(i) + side * 60, y: yFor(i) + 22 - 38)
+                                    .position(x: place.x(c.dx), y: place.y(c.yb) - 38)
                             }
                         }
 
@@ -638,40 +654,23 @@ struct FlashTabView: View {
                                 .id(level.level)
                         }
 
-                        // A cleared rest stop's signpost replays its game
-                        // (the sign is drawn by PeckTrailLayer at ±78, +20).
-                        // Level 10's gate, once cleared, has a sign that replays Pentimento.
-                        ForEach(Array(state.levels.enumerated()), id: \.element.level) { i, level in
-                            if level.level == 10 && (level.status == "passed" || devMode) {
-                                let side: CGFloat = world.zig(i) > 0 ? -1 : 1
-                                Button {
-                                    FlashSFX.shared.play(.pop)
-                                    film = PentimentoFilm(firstClear: false)
-                                } label: {
-                                    Color.clear
-                                        .frame(width: 100, height: 64)
-                                        .contentShape(Rectangle())
-                                }
-                                .buttonStyle(.plain)
-                                .accessibilityLabel("Watch Pentimento, the level 10 film")
-                                .position(x: xFor(i) + side * 112, y: yFor(i) + 2)
+                        // A cleared rest stop's sign replays its game; level 10's film sign replays
+                        // Pentimento (both drawn by PeckBackLayer where the manifest stands them).
+                        ForEach(signTargets(state.levels), id: \.level) { target in
+                            Button {
+                                FlashSFX.shared.play(.pop)
+                                if target.film { film = PentimentoFilm(firstClear: false) }
+                                else { gameStop = PeckGameStop(level: target.level) }
+                            } label: {
+                                Color.clear
+                                    .frame(width: 104, height: 52)
+                                    .contentShape(Rectangle())
                             }
-                        }
-                        ForEach(Array(state.levels.enumerated()), id: \.element.level) { i, level in
-                            if PeckMilestone.isRest(level.level) && (level.status == "passed" || devMode) {
-                                let side: CGFloat = world.zig(i) > 0 ? -1 : 1
-                                Button {
-                                    FlashSFX.shared.play(.pop)
-                                    gameStop = PeckGameStop(level: level.level)
-                                } label: {
-                                    Color.clear
-                                        .frame(width: 100, height: 64)
-                                        .contentShape(Rectangle())
-                                }
-                                .buttonStyle(.plain)
-                                .accessibilityLabel("Play \(PeckMilestone.restGame(level.level).name), rest stop \(level.level)")
-                                .position(x: xFor(i) + side * 78, y: yFor(i) - 8)
-                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel(target.film ? "Watch Pentimento, the level 10 film"
+                                                : "Play \(PeckMilestone.restGame(target.level).name), rest stop \(target.level)")
+                            .position(PeckSigns.clear(place.pt(target.item), geo: world, near: target.level - 1, sub: true)
+                                        .applying(CGAffineTransform(translationX: 0, y: -46)))
                         }
 
                         // The traveler stands on top of the current stone
@@ -695,20 +694,28 @@ struct FlashTabView: View {
                                               y: stone.y + PeckDueSign.centerOffsetY)
                             }
                         }
+
+                        #if targetEnvironment(simulator)
+                        // Exact scroll anchors for `-ScrollToLevel` (scrollTo on the .position-ed
+                        // stones lands erratically; these are laid out, so it lands on the stone).
+                        ForEach(0..<count, id: \.self) { i in
+                            VStack(spacing: 0) {
+                                Color.clear.frame(width: 1, height: max(0, yFor(i)))
+                                Color.clear.frame(width: 1, height: 1).id("lvl-\(i + 1)")
+                            }
+                            .allowsHitTesting(false)
+                        }
+                        #endif
+                        PeckFrontLayer(frame: frame, rows: rows, animate: animate)
+                        PWForeground(place: place, width: geo.size.width, viewportH: vh,
+                                     scrollFromBottom: max(0, contentH - vh - s), maxYb: maxYb, dark: dark)
                     }
-                    .frame(height: height)
-                    // Keep the TabPill off the last node — in the meadow's
-                    // near hill, so the green runs to the screen's edge.
-                    // (Pulled up over the stack's default spacing, which
-                    // otherwise shows the page colour as a pale line.)
-                    Rectangle()
-                        .fill(JellyInk.adaptive(0x96D088))
-                        .frame(height: 108)
-                        .padding(.top, -12)
+                    .frame(width: geo.size.width, height: contentH)
                 }
                 .coordinateSpace(name: "peckWorld")
                 .onPreferenceChange(PeckScrollOffsetKey.self) { worldOffsetY = $0 }
-                .onAppear { worldNightCutoff = nightCutoff }
+                .onAppear { worldNightCutoff = nightCutoff; mapVisible = true }
+                .onDisappear { mapVisible = false }
                 .onChange(of: count) { _, _ in worldNightCutoff = nightCutoff }
                 .scrollIndicators(.hidden)
                 // Open at the meadow — the journey starts at the bottom, and
@@ -732,18 +739,72 @@ struct FlashTabView: View {
                             proxy.scrollTo("peck-top", anchor: .top)
                         }
                     }
+                    // `-PeckAutoScroll 1` — glide from the bottom stone to the top one and back,
+                    // a level every 0.6 s, to watch tiles stream in and measure memory.
+                    if UserDefaults.standard.bool(forKey: "PeckAutoScroll") {
+                        UserDefaults.standard.removeObject(forKey: "PeckAutoScroll")
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
+                            // read the count now: a -MockLevelCount map lands after the first layout
+                            let n = self.state?.levels.count ?? count
+                            for k in 0..<(n * 2) {
+                                let lvl = k < n ? k + 1 : 2 * n - k
+                                DispatchQueue.main.asyncAfter(deadline: .now() + Double(k) * 0.6) {
+                                    withAnimation(.easeInOut(duration: 0.55)) { proxy.scrollTo("lvl-\(lvl)", anchor: .center) }
+                                }
+                            }
+                        }
+                    }
+                    // `-PeckPokeAll 1` — poke every landmark that answers a tap (windmill, fire,
+                    // lighthouse, whales, boats, balloons, UFO…) 9 s in, for a screenshot of the reactions.
+                    if UserDefaults.standard.bool(forKey: "PeckPokeAll") {
+                        UserDefaults.standard.removeObject(forKey: "PeckPokeAll")
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 9.0) {
+                            for i in PeckWorld.shared.live where PeckPokes.pokeable(i.kind) { PeckPokes.shared.poke(PeckPokes.key(i)) }
+                        }
+                    }
                     let target = UserDefaults.standard.integer(forKey: "ScrollToLevel")
                     if target > 0 {
                         UserDefaults.standard.removeObject(forKey: "ScrollToLevel")
                         // Late enough for the map to have its final height
                         // (the state, and any -MockLevelCount, land after the
                         // first layout); at 1.2 s it was a region off (2026-10-02).
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
-                            proxy.scrollTo(target, anchor: .center)
+                        for delay in [3.0, 5.0, 7.0] {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                                proxy.scrollTo("lvl-\(target)", anchor: .center)
+                            }
                         }
                     }
                 }
                 #endif
+            }
+            .overlay { PWVignette() }
+        }
+    }
+
+    /// The manifest's chest beside a level (levels past the rendered loop repeat it).
+    private func chestItem(_ level: Int) -> PWItem? {
+        let W = PeckWorld.shared
+        if let c = W.chests[level] { return c }
+        let loopStart = W.loopFrom * W.CH + 1, period = W.CH * 2
+        guard level >= loopStart else { return nil }
+        let base = loopStart + (level - loopStart) % period
+        guard let c = W.chests[base] else { return nil }
+        return c.shifted(W.P * CGFloat(level - base), levels: level - base)
+    }
+
+    private struct SignTarget { let level: Int; let film: Bool; let item: PWItem }
+    /// The signs that open something: a cleared rest stop (its game) and a cleared level 10 (the film).
+    private func signTargets(_ levels: [JumboLevelInfo]) -> [SignTarget] {
+        let W = PeckWorld.shared
+        let maxYb = W.BOT + CGFloat(levels.count + 1) * W.P
+        return W.expand(W.signs, maxYb: maxYb).compactMap { s in
+            let lvl = s.level
+            guard lvl >= 1, lvl <= levels.count else { return nil }
+            let open = levels[lvl - 1].status == "passed" || devMode
+            switch s.s("role") {
+            case "rest" where PeckMilestone.isRest(lvl) && open: return SignTarget(level: lvl, film: false, item: s)
+            case "film" where lvl == 10 && open: return SignTarget(level: lvl, film: true, item: s)
+            default: return nil
             }
         }
     }
@@ -821,7 +882,7 @@ struct FlashTabView: View {
               result.total >= 10,
               result.score >= jumboPassScore(mode: start.mode)
         else { return }
-        if lvl == 10 || lvl == 20 { pendingCrossing = lvl }
+        if lvl % 10 == 0 { pendingCrossing = lvl }
         if lvl == 10 { pendingFilm = true }
         if PeckMilestone.isRest(lvl) { pendingGame = lvl }
     }
@@ -954,7 +1015,7 @@ struct PeckWorldCanvas: View {
             guard bottom > top else { continue }
             let span = bottom - top
             switch JellyRegion.of(band: k) {
-            case .peaks: drawPeaks(&ctx, ink, w: w, top: top, bottom: bottom, span: span, near: near)
+            case .peaks, .clouds, .stars, .cosmos: drawPeaks(&ctx, ink, w: w, top: top, bottom: bottom, span: span, near: near)
             case .lagoon: drawLagoon(&ctx, ink, w: w, top: top, bottom: bottom, span: span, near: near)
             case .meadow: drawMeadow(&ctx, ink, w: w, top: top, bottom: bottom, span: span, h: h, near: near)
             }
