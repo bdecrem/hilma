@@ -3,7 +3,13 @@
 // journal's ink with one red accent — and it is stored on the day's row.
 // The day's text changing (an added thought, an edit) redraws it.
 //
-// Whimsy: when a sentence resists a clear picture (a feeling, a list, admin),
+// Register: before drawing, the model reads the day's emotional weight and
+// picks light, neutral or heavy (2026-10-19, after a cheerful doodle on a day
+// that called itself a crisis). Heavy days get one small quiet symbol, no
+// faces or jokes; when unsure it picks the quieter one. Whimsy is kept only
+// on light days.
+//
+// Whimsy: when a sentence resists a clear picture (a list, admin),
 // the model may draw something whimsical instead (a smiley face, a waving
 // stick figure) rather than strain for a literal drawing nobody can read. The
 // code allows it only when the day before was not whimsical
@@ -46,17 +52,24 @@ function anthropic(): Anthropic {
 // feature copies): the style, in the model's own hand.
 
 const SYSTEM = [
-  'You doodle in the margin of a paper journal. Each day the person keeps one sentence (sometimes a few) about their day, and you draw one small doodle beside it, the way someone with a pen would in twenty seconds: one image, a few confident strokes, a little wit.',
+  'You doodle in the margin of a paper journal. Each day the person keeps one sentence (sometimes a few) about their day, and you draw one small doodle beside it, the way someone with a pen would in twenty seconds: one image, a few confident strokes.',
   '',
-  'How to choose the image: read the sentence and pick the ONE thing worth drawing — a concrete object, a small scene, a gesture. Do not illustrate every noun. Prefer the specific over the symbolic: the actual cliff, the actual cushion castle, not a heart or a thumbs-up. No hearts, stars, check marks or lightbulbs unless the sentence is literally about them. A dry, warm sense of humour is welcome; sentiment is not.',
+  'First, read the day for its emotional weight and pick a register. Everything below depends on it.',
+  '- light: everyday, playful, funny, small wins. Draw as usual: the object or scene from the day, steam, motion lines, a face where it fits, a little wit.',
+  '- neutral: reflective, tired, mixed, uncertain. Fewer lines, more white space. One simple object. Any face is calm: closed eyes, or no face at all. No jokes.',
+  '- heavy: illness, a family crisis, death, grief, fear, someone crying, conflict, bad news, or anything the writer calls a crisis. One small, quiet symbol: a heart, two hands, a single leaf, a candle, a porch light, a small figure under a wide sky, an open window. No faces, no smiles, no steam, no motion lines, no jokes, no puns. Do not draw the bad thing itself: no tears, hospitals, beds, broken things, rain clouds over heads. Do not draw the mundane object from the sentence if it would make light of the day. Thin, steady lines, two to five elements, at least 60% of the box left empty. Ink only, or one small red accent.',
+  'When unsure between two registers, pick the quieter one. A gentle drawing on a light day costs little; a cheerful drawing on a hard day reads as not listening.',
+  'Example: "Dad crisis, or mini crisis. Hilde crying. Puts everything in perspective." is heavy: one small hand-drawn heart, slightly uneven, centered, over a short ground line. Not a coffee mug.',
+  '',
+  'How to choose the image on light and neutral days: pick the ONE thing worth drawing — a concrete object, a small scene, a gesture. Do not illustrate every noun. Prefer the specific over the symbolic: the actual cliff, the actual cushion castle, not a heart or a thumbs-up. No hearts, stars, check marks or lightbulbs unless the sentence is literally about them (heavy days are the exception, above). A dry, warm sense of humour is welcome on light days; sentiment is not.',
   '',
   'A doodle that cannot be read at a glance has failed. Simple and clear beats clever and tangled: if the literal picture would need five objects, arrows or explaining, it is the wrong picture.',
   '',
-  'Hard days: some sentences give you nothing concrete that can be drawn clearly (a mood, an abstract thought, a list of chores, work admin). When the day allows whimsy (the instruction says so) and the sentence is one of those, do not strain: draw something whimsical and instantly readable instead, a small cheerful aside rather than an illustration. A smiley face, a little sun in sunglasses, a waving stick figure, a cup of tea steaming hello, a cat asleep, a tiny creature cheering, a paper boat. Faces are welcome there. Set "whimsy" to true when you do this, false when you drew the sentence itself. When the sentence has a good concrete image, always draw that, even on a whimsy day.',
+  'Whimsy, light days only: some light sentences give you nothing concrete that can be drawn clearly (an abstract thought, a list of chores, work admin). When the day allows whimsy (the instruction says so) and the sentence is one of those, do not strain: draw something whimsical and instantly readable instead, a small cheerful aside rather than an illustration. A smiley face, a little sun in sunglasses, a waving stick figure, a cup of tea steaming hello, a cat asleep, a tiny creature cheering, a paper boat. Set "whimsy" to true when you do this, false when you drew the sentence itself. When the sentence has a good concrete image, always draw that, even on a whimsy day. Never draw whimsy on a neutral or heavy day: a sad or tired sentence is not a hard-to-draw one.',
   '',
-  'The drawing is SVG element markup for a 340 by 170 viewBox (landscape; leave air around the drawing). The page styles it: every element is stroke-only in ink, 2.2 wide, round caps, no fill. Use these classes and nothing else: class="r" for the ONE red accent (a single element, or two that read as one thing), class="thin" for lighter detail strokes, class="f" for a small filled ink dot, class="fr" for a small filled red dot. Allowed elements: path, circle, ellipse, rect, line, polyline, polygon, g. Between 3 and 10 elements. Write every attribute value in single quotes (d=\'M10 20 L30 40\'), never double quotes: the markup travels inside a JSON string. No style attributes, no stroke or fill attributes, no defs, no images, no text unless the instruction for the day allows a word.',
+  'The drawing is SVG element markup for a 340 by 170 viewBox (landscape; leave air around the drawing). The page styles it: every element is stroke-only in ink, 2.2 wide, round caps, no fill. Use these classes and nothing else: class="r" for the ONE red accent (a single element, or two that read as one thing), class="thin" for lighter detail strokes, class="f" for a small filled ink dot, class="fr" for a small filled red dot. Allowed elements: path, circle, ellipse, rect, line, polyline, polygon, g. Between 2 and 10 elements. Write every attribute value in single quotes (d=\'M10 20 L30 40\'), never double quotes: the markup travels inside a JSON string. No style attributes, no stroke or fill attributes, no defs, no images, no text unless the instruction for the day allows a word.',
   '',
-  'Return JSON: { "alt": a plain six-to-twelve-word description of what is drawn, "svg": the element markup, "word": the word or two the drawing carries as a <text> element, or null, "whimsy": true when the drawing is a whimsical stand-in rather than the sentence }.',
+  'Return JSON: { "register": "light", "neutral" or "heavy", picked before drawing, "alt": a plain six-to-twelve-word description of what is drawn, "svg": the element markup, "word": the word or two the drawing carries as a <text> element, or null, "whimsy": true when the drawing is a whimsical stand-in rather than the sentence }.',
   '',
   'Examples of the hand, from earlier pages:',
   ...EXAMPLES.flatMap((e) => [`Sentence: ${e.sentence}`, `svg: ${e.svg.replace(/"/g, "'")}`, '']),
@@ -65,12 +78,13 @@ const SYSTEM = [
 const SCHEMA = {
   type: 'object',
   properties: {
+    register: { type: 'string', enum: ['light', 'neutral', 'heavy'] },
     alt: { type: 'string' },
     svg: { type: 'string' },
     word: { type: ['string', 'null'] },
     whimsy: { type: 'boolean' },
   },
-  required: ['alt', 'svg', 'word', 'whimsy'],
+  required: ['register', 'alt', 'svg', 'word', 'whimsy'],
   additionalProperties: false,
 }
 
@@ -106,14 +120,15 @@ export async function drawDoodle(
   parts.push(
     opts.whimsyAllowed
       ? 'Whimsy today: allowed, if the sentence is a hard one to draw (see above).'
-      : 'Whimsy today: no. Yesterday was whimsical, so find the clearest concrete image in the sentence. "whimsy" is false.',
+      : 'Whimsy today: no. Yesterday was whimsical, so find the clearest image the register allows. "whimsy" is false.',
   )
-  if (opts.take) parts.push('', opts.take)
+  if (opts.take) parts.push('', opts.take, 'The register still decides: on a neutral or heavy day, the take never makes the drawing funnier or busier.')
 
   // A reply can come back cut off after its first shape (an attribute's double
   // quote closed the JSON string: 10 of 75 drawings before 2026-10-16, a lone
   // rectangle on the page). The prompt asks for single quotes; a drawing with
-  // fewer than three shapes, or markup that stops mid-tag, is drawn again.
+  // one shape, or markup that stops mid-tag, is drawn again. Two shapes pass:
+  // a heavy day's heart over a ground line is the drawing.
   let last = ''
   for (let attempt = 0; attempt < 3; attempt++) {
     const got = await drawOnce(parts.join('\n'), opts)
@@ -135,12 +150,12 @@ async function drawOnce(prompt: string, opts: { wordAllowed: boolean; whimsyAllo
   if (res.stop_reason === 'refusal') throw new Error('onething doodle: the model declined')
   const block = res.content.find((b) => b.type === 'text')
   if (!block || block.type !== 'text') throw new Error(`onething doodle: no text in the reply (stop ${res.stop_reason})`)
-  const out = JSON.parse(block.text) as Drawn
+  const out = JSON.parse(block.text) as Drawn & { register?: string }
   const raw = String(out.svg ?? '').trim()
   const svg = sanitizeSvg(raw, { allowText: opts.wordAllowed })
-  if (!svg || !raw.endsWith('>') || shapes(svg) < 3) return { ok: false, why: `cut off or too thin (${raw.length} chars: ${raw.slice(0, 120)})` }
+  if (!svg || !raw.endsWith('>') || shapes(svg) < 2) return { ok: false, why: `cut off or too thin (${raw.length} chars: ${raw.slice(0, 120)})` }
   const word = opts.wordAllowed && /<text\b/.test(svg) ? (out.word ?? textContent(svg)) : null
-  return { ok: true, drawn: { svg, alt: String(out.alt ?? '').slice(0, 200), word: word ? word.slice(0, 40) : null, whimsy: opts.whimsyAllowed && out.whimsy === true } }
+  return { ok: true, drawn: { svg, alt: String(out.alt ?? '').slice(0, 200), word: word ? word.slice(0, 40) : null, whimsy: opts.whimsyAllowed && out.register === 'light' && out.whimsy === true } }
 }
 
 /// How many drawing elements (not groups) a sanitized doodle has.
