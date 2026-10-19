@@ -104,6 +104,8 @@ xcodebuild -exportArchive -archivePath <path>/Feynd.xcarchive \
 
 **From this iMac, which has only the Xcode beta** (2026-10-02, build 126): App Store Connect refuses beta-SDK archives, so `ASC_KEY_ID=748UX45NAP FEYND_PROFILE="feynd appstore 2" ./apps/feynd/testflight/ship-via-mini.sh` archives UNSIGNED on the Mac mini's release Xcode (over Tailscale — start Tailscale on this Mac first, `open -a Tailscale`; checkout `~/Documents/code/hilma`, which has no xcodegen, so the committed `.xcodeproj` must be current, and no `Secrets.swift`, so the template is copied in), tars the archive back, exports it here with the "feynd appstore 2" profile and that key (the export re-signs and uploads), then runs `asc-submit.mjs`. Ships the build number as committed and pushed. Modelled on Token Surfers' `ship-via-mini.sh`.
 
+**From the iMac M4** (2026-10-19, build 140): the key here is `5A5HNSWA33` and the profile **"feynd appstore m4"** (minted that day with push, `mint-profile.mjs --type IOS_APP_STORE --bundle L74V9QD69L --cert-serial <Apple Distribution serial>`); "feynd appstore 2" and key `748UX45NAP` live on the M1. When Tailscale is logged out, reach the mini on its CASBS address: `MINI=admin@171.66.240.175 ASC_KEY_ID=5A5HNSWA33 FEYND_PROFILE="feynd appstore m4" ./apps/feynd/testflight/ship-via-mini.sh`. The mini's checkout must pull cleanly: untracked files that collide with main stop it (that day: smallgpt files, moved to `~/hilma-untracked-backup-2026-10-19` on the mini).
+
 **From the MacBook Air** (worked end to end 2026-10-01, build 119): the Air has its own distribution cert, so its profile is **"feynd appstore air"** (`mint-profile.mjs --name "feynd appstore air" --type IOS_APP_STORE --bundle L74V9QD69L --cert-serial 16F68C261F3542F8691559D7E2F8DA87`, expires 2027-09). Archive with `"FEYND_PROFILE=feynd appstore air"` on the command line, export with `testflight/export-air.plist` and key `FA7268Q94U`, then `ASC_KEY_ID=FA7268Q94U node apps/feynd/testflight/asc-submit.mjs <build> IOS`. Xcode 26.2 (release) is the only Xcode there. Send `xcodebuild -exportArchive` output to a file, never through `| grep … | head`: `head` closes the pipe after its lines and the SIGPIPE killed the first upload at 94% with nothing on App Store Connect to show for it — the log must end with `Upload succeeded` and `** EXPORT SUCCEEDED **`.
 
 `testflight/export.plist` (checked in): method `app-store-connect`, destination `upload`, signingStyle manual, cert `Apple Distribution`, profile `feynd appstore`, teamID 274T5WCVD2.
@@ -254,6 +256,13 @@ The app was rebranded to the jelly dodo in one pass — see
   pokes every landmark 9 s in; `scripts/peck-world/sim-shots.sh <dir> <count> <current> <levels…> [dark]`
   shoots a mock map. `-ShowRegionTransition` takes any multiple of 10 (the crossing postcard
   plays into every chapter).
+  **Wide windows** (Mac, iPad; 2026-10-19): the art is 520 pt wide, so `PWTileLayer` fills the rest
+  with mirrored copies of each row, an eighth of the size and blurred (`PWImages.requestSide`, its own
+  never-evicted cache), and feathers the sharp column's outer 48 pt into them. Each row is blurred with
+  its neighbours stacked on, or every row boundary shows a step. Check on an iPad simulator: build with
+  `TARGETED_DEVICE_FAMILY=1,2` on the command line (the simulator target is iPhone-only) and launch with
+  the iMac test login and `-MockLevelCount 30 -MockCurrentLevel 14 -ScrollToLevel 14` (a mock map now
+  opens the 10-card gate itself).
 - **Map pieces:** `PeckJelly.swift` holds the shared jelly drawing (gloss balls,
   ribbons, signs, chests, candy trees, mountains, islands) and the SwiftUI
   pieces (`JellyNodeView`, `JellyChestView`, the critter seats); regions are

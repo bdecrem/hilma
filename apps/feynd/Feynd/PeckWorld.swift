@@ -216,6 +216,9 @@ struct PWPlace {
 final class PWImages {
     static let shared = PWImages()
     private(set) var images: [String: UIImage] = [:]
+    /// The blurred side copies, ~100 KB each: kept apart from the LRU (sharing it, the foreground
+    /// sprites evicted them and rows fell back to flat colour).
+    private(set) var sides: [String: UIImage] = [:]
     @ObservationIgnored private var loading: Set<String> = []
     @ObservationIgnored private var order: [String] = []
     @ObservationIgnored private let queue = DispatchQueue(label: "peck.world.images", qos: .userInitiated, attributes: .concurrent)
@@ -245,6 +248,56 @@ final class PWImages {
                 while self.order.count > self.limit { let old = self.order.removeFirst(); self.images[old] = nil }
             }
         }
+    }
+
+    /// The out-of-focus copy of a ground tile that fills a window wider than the art (the Mac, an
+    /// iPad): an eighth of the size, blurred and a touch dimmer, so the sides read as more of the same
+    /// world behind the sharp trail instead of an empty band.
+    func sideKey(_ name: String, dark: Bool) -> String { key(name, dark: dark) + "@s" }
+
+    func side(_ name: String, dark: Bool) -> UIImage? { sides[sideKey(name, dark: dark)] }
+
+    /// `above` / `below` are the neighbouring rows' files: the blur reads into them, so a row's
+    /// blurred edge matches the next row's (blurred alone, every row ended in a visible step).
+    func requestSide(_ name: String, above: String?, below: String?, dark: Bool) {
+        let k = sideKey(name, dark: dark)
+        if sides[k] != nil || loading.contains(k) { return }
+        loading.insert(k)
+        queue.async { [weak self] in
+            guard let self else { return }
+            func load(_ n: String?) -> CIImage? {
+                guard let n, let path = Bundle.main.path(forResource: n, ofType: "jpg", inDirectory: "PeckWorld") else { return nil }
+                return CIImage(contentsOf: URL(fileURLWithPath: path))
+            }
+            let img = load(name).flatMap { self.soften($0, above: load(above), below: load(below), dark: dark) }
+            DispatchQueue.main.async {
+                self.loading.remove(k)
+                if let img { self.sides[k] = img }
+            }
+        }
+    }
+
+    private func soften(_ row: CIImage, above: CIImage?, below: CIImage?, dark: Bool) -> UIImage? {
+        // the row with its neighbours stacked on (Core Image's y runs up), shrunk to an eighth,
+        // blurred, then cut back to the row
+        let h = row.extent.height
+        var src = row
+        if let above { src = above.transformed(by: CGAffineTransform(translationX: 0, y: h)).composited(over: src) }
+        if let below { src = below.transformed(by: CGAffineTransform(translationX: 0, y: -below.extent.height)).composited(over: src) }
+        let s: CGFloat = 0.125
+        let small = src.transformed(by: CGAffineTransform(scaleX: s, y: s))
+        let box = CGRect(x: 0, y: 0, width: (row.extent.width * s).rounded(.down), height: (h * s).rounded())
+        var out = small.clampedToExtent()
+            .applyingFilter("CIGaussianBlur", parameters: [kCIInputRadiusKey: 8])
+            .applyingFilter("CIColorControls", parameters: [kCIInputSaturationKey: 0.8, kCIInputBrightnessKey: -0.06])
+        if dark {
+            out = out.applyingFilter("CIColorMatrix", parameters: [
+                "inputRVector": CIVector(x: 0.40, y: 0, z: 0, w: 0), "inputGVector": CIVector(x: 0, y: 0.56, z: 0, w: 0),
+                "inputBVector": CIVector(x: 0, y: 0, z: 0.68, w: 0), "inputAVector": CIVector(x: 0, y: 0, z: 0, w: 1),
+                "inputBiasVector": CIVector(x: 10.0 / 255, y: 10.0 / 255, z: 24.0 / 255, w: 0)])
+        }
+        guard let res = ci.createCGImage(out, from: box) else { return nil }
+        return UIImage(cgImage: res, scale: 1, orientation: .up)
     }
 
     /// Keep these keys at the end of the LRU so a scroll back and forth doesn't evict them.
@@ -292,7 +345,29 @@ struct PWTileLayer: View {
     var body: some View {
         let W = PeckWorld.shared
         let rows = visibleRows(W)
+        let sides = sideCopies(W)
         ZStack(alignment: .topLeading) {
+            // A window wider than the art: mirrored, out-of-focus copies of each row out to the
+            // edges (a mirror meets the art at its own edge, so there is no seam to see).
+            ForEach(sides.isEmpty ? [] : rows, id: \.self) { t in
+                let file = W.tileFile(t)
+                let y = place.y(W.tileOrigin + W.tileT * CGFloat(t + 1))
+                ForEach(sides, id: \.self) { k in
+                    Group {
+                        if let img = store.side(file, dark: dark) {
+                            Image(uiImage: img).resizable().interpolation(.medium)
+                        } else {
+                            Rectangle().fill(Color(hex: dark ? Jelly.dusk(edge(W, t)) : edge(W, t)))
+                        }
+                    }
+                    // a hair of overlap: an image scaled up 8× softens its own edge
+                    .frame(width: W.DW + 2, height: W.tileT + 2)
+                    .scaleEffect(x: k % 2 == 0 ? 1 : -1, y: 1)
+                    .position(x: place.centerX + CGFloat(k) * W.DW, y: y + W.tileT / 2)
+                }
+                .onAppear { requestSide(W, t, dark: dark) }
+                .onChange(of: dark) { _, d in requestSide(W, t, dark: d) }
+            }
             ForEach(rows, id: \.self) { t in
                 let file = W.tileFile(t)
                 let ybTop = W.tileOrigin + W.tileT * CGFloat(t + 1)
@@ -307,6 +382,7 @@ struct PWTileLayer: View {
                     }
                 }
                 .frame(width: W.DW, height: W.tileT + 0.5)
+                .mask { if sides.isEmpty { Rectangle() } else { feather } }
                 .position(x: place.centerX, y: y + W.tileT / 2)
                 .onAppear { store.request(file, ext: "jpg", dark: dark) }
                 .onChange(of: dark) { _, d in store.request(file, ext: "jpg", dark: d) }
@@ -315,9 +391,34 @@ struct PWTileLayer: View {
         .frame(width: place.centerX * 2, height: place.contentH, alignment: .topLeading)
         .allowsHitTesting(false)
         .onChange(of: rows) { _, r in
-            for t in r { store.request(W.tileFile(t), ext: "jpg", dark: dark) }
+            for t in r {
+                store.request(W.tileFile(t), ext: "jpg", dark: dark)
+                if !sides.isEmpty { requestSide(W, t, dark: dark) }
+            }
             store.touch(r.map { W.tileFile($0) }, dark: dark)
         }
+    }
+
+    private func requestSide(_ W: PeckWorld, _ t: Int, dark: Bool) {
+        store.requestSide(W.tileFile(t), above: W.tileFile(t + 1), below: t > 0 ? W.tileFile(t - 1) : nil, dark: dark)
+    }
+
+    /// Offsets (in art widths) of the side copies a window this wide needs: ±1, ±2, …
+    private func sideCopies(_ W: PeckWorld) -> [Int] {
+        let overhang = place.centerX - W.DW / 2
+        guard overhang > 1 else { return [] }
+        let n = Int(ceil(overhang / W.DW))
+        // 0 = under the art itself, so its feathered edges fade into the blur, not the page
+        return [0] + (1...n).flatMap { [-$0, $0] }
+    }
+
+    /// The sharp art fades into its blurred mirror over its outer 48 pt.
+    private var feather: some View {
+        let f = 48 / PeckWorld.shared.DW
+        return LinearGradient(stops: [
+            .init(color: .clear, location: 0), .init(color: .black, location: f),
+            .init(color: .black, location: 1 - f), .init(color: .clear, location: 1),
+        ], startPoint: .leading, endPoint: .trailing)
     }
 
     private func edge(_ W: PeckWorld, _ t: Int) -> UInt32 {

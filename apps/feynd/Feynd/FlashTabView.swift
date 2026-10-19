@@ -266,7 +266,8 @@ struct FlashTabView: View {
                                    status: lvl < cur ? "passed" : (lvl == cur ? "unlocked" : "locked"),
                                    bestScore: 9, stars: lvl % 3 + 1, passScore: 8)
                 }
-                state = JumboState(xp: st.xp, cardCount: st.cardCount,
+                // a mock map needs the 10-card gate open, whatever deck the test account has
+                state = JumboState(xp: st.xp, cardCount: max(st.cardCount, 10),
                                    highestPassed: cur - 1, levels: levels,
                                    dailyStreak: st.dailyStreak, xpMultiplier: st.xpMultiplier,
                                    peckDue: st.peckDue, peckDaysLeft: st.peckDaysLeft)
