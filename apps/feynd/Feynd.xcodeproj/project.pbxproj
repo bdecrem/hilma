@@ -117,6 +117,7 @@
 		ED3C5D4A0B8278D104982FCD /* FeyndTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DDB6CEB99F36B45DB2AF95B /* FeyndTheme.swift */; };
 		F207ADD007B3CABED4CB07D0 /* voice-cinder.m4a in Resources */ = {isa = PBXBuildFile; fileRef = CAF7BFCB023B149F6210E972 /* voice-cinder.m4a */; };
 		F2C0AA3FD3A7ED99B9BF10F3 /* DeepDiveAudio.swift in Sources */ = {isa = PBXBuildFile; fileRef = D88FFB4D557BC1376E6E6F78 /* DeepDiveAudio.swift */; };
+		F5B3592E6118563BFAEAAC95 /* CritterSounds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D599D04EE62E01F717F9E55 /* CritterSounds.swift */; };
 		F5E7893003F83282076BA48B /* LaunchWake.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EDBE6503B240B2A0CA2AC60 /* LaunchWake.swift */; };
 		F719B5FACD32655F6535A607 /* DodoArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC83D0F9AEB637B2A67AE7FE /* DodoArt.swift */; };
 		FB3945446EA40AAC3E498262 /* TopicDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B91791DE500B8843C03C9E5 /* TopicDetailView.swift */; };
@@ -190,6 +191,7 @@
 		94FAB5F99B8DB1C1714D6996 /* IMFeENsc28P.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = IMFeENsc28P.ttf; sourceTree = "<group>"; };
 		97210D8088451B57557247DA /* DeepLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLink.swift; sourceTree = "<group>"; };
 		97DB3E5674A320CA4AE35104 /* PeckWorld */ = {isa = PBXFileReference; lastKnownFileType = folder; name = PeckWorld; path = Feynd/PeckWorld; sourceTree = SOURCE_ROOT; };
+		9D599D04EE62E01F717F9E55 /* CritterSounds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CritterSounds.swift; sourceTree = "<group>"; };
 		9D8538DB76B06655139DE3F3 /* DoubleThumbsUp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoubleThumbsUp.swift; sourceTree = "<group>"; };
 		9DE9705612637F1DEBCB13F9 /* ProfileSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSheet.swift; sourceTree = "<group>"; };
 		9E4D6F76368A3CEFB8BE64C1 /* PeckOddsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeckOddsSheet.swift; sourceTree = "<group>"; };
@@ -283,6 +285,7 @@
 				6DDC42B73E361C8473ADE137 /* ChatSupport.swift */,
 				6FCB894C79090E29A7BD5A68 /* ColorSchemePreference.swift */,
 				C70AD9918E6BD770826DEE32 /* CommunitySheet.swift */,
+				9D599D04EE62E01F717F9E55 /* CritterSounds.swift */,
 				D16E24567C7854C063B3BA29 /* DeepDiveArt.swift */,
 				D88FFB4D557BC1376E6E6F78 /* DeepDiveAudio.swift */,
 				FD3ED74C2903ED4DD214E212 /* DeepDiveEngine.swift */,
@@ -553,6 +556,7 @@
 				DFDA422D8540593189FE7815 /* ChatSupport.swift in Sources */,
 				48BA72157184B6A255D64A3D /* ColorSchemePreference.swift in Sources */,
 				0A8249C1501816EDBB802A2F /* CommunitySheet.swift in Sources */,
+				F5B3592E6118563BFAEAAC95 /* CritterSounds.swift in Sources */,
 				57A701A7FBBDE9FC824DC9D0 /* DeepDiveArt.swift in Sources */,
 				F2C0AA3FD3A7ED99B9BF10F3 /* DeepDiveAudio.swift in Sources */,
 				B63FA384A82F0A0CAAF596D0 /* DeepDiveEngine.swift in Sources */,

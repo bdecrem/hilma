@@ -864,7 +864,7 @@ struct JellyCritterView: View {
     }
 
     private func poke() {
-        FlashSFX.shared.play(.squish)
+        FlashSFX.shared.play(critter: seat.critter)
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
         squished = true
         withAnimation(.spring(response: 0.16, dampingFraction: 0.5)) { squish = 1 }

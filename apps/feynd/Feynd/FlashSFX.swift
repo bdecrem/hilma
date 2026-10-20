@@ -31,6 +31,7 @@ final class FlashSFX {
     private let player = AVAudioPlayerNode()
     private let format: AVAudioFormat
     private var buffers: [Effect: AVAudioPCMBuffer] = [:]
+    private var critterBuffers: [JellyCritter: AVAudioPCMBuffer] = [:]
 
     /// `-NoSFX 1` (simulator only): never touch the audio engine. The
     /// simulator's audio server can time out its RPC the first time the
@@ -108,7 +109,22 @@ final class FlashSFX {
     }
 
     func play(_ effect: Effect) {
-        guard !muted, let buffer = buffers[effect] else { return }
+        guard let buffer = buffers[effect] else { return }
+        play(buffer)
+    }
+
+    /// A critter on the Peck map, poked: each one has its own voice
+    /// (`CritterSounds`), rendered the first time it is heard.
+    func play(critter: JellyCritter) {
+        if critterBuffers[critter] == nil {
+            critterBuffers[critter] = CritterSounds.buffer(critter, sampleRate: format.sampleRate)
+        }
+        guard let buffer = critterBuffers[critter] else { return }
+        play(buffer)
+    }
+
+    private func play(_ buffer: AVAudioPCMBuffer) {
+        guard !muted else { return }
         // Ambient: silent-switch aware, never interrupts other audio. But a
         // voice session owns `.playAndRecord` while its engine is up (LiveKit
         // keeps it warm after a conversation ends): switching the category out
@@ -177,7 +193,7 @@ final class FlashSFX {
 /// wobble, lowpassed noise for the wet part, summed and soft-clipped into
 /// one mono buffer.
 enum JellySynth {
-    enum JellyWave { case sine, tri, noise }
+    enum JellyWave { case sine, tri, saw, noise }
 
     /// One voice of a jelly sound: an exponential pitch sweep f0 → f1 over
     /// `dur`, an optional decaying pitch wobble, a one-pole lowpass, and a
@@ -193,6 +209,8 @@ enum JellySynth {
         var lowpass: Double = 0      // Hz; 0 = off
         var wobRate: Double = 0      // Hz
         var wobDepth: Double = 0     // fraction of the pitch
+        var wobDecay: Double = 3     // how fast the wobble dies out; 0 = holds to the end
+        var decay: Double = 0.3      // envelope time constant as a fraction of `dur`
     }
 
     /// Render the parts into one mono buffer (summed, soft-clipped).
@@ -218,18 +236,21 @@ enum JellySynth {
                 let t = Double(i) / sr
                 let u = t / p.dur
                 var f = p.f0 * pow(p.f1 / p.f0, u)
-                if p.wobRate > 0 { f *= 1 + p.wobDepth * exp(-3 * u) * sin(2 * .pi * p.wobRate * t) }
+                if p.wobRate > 0 { f *= 1 + p.wobDepth * exp(-p.wobDecay * u) * sin(2 * .pi * p.wobRate * t) }
                 phase += 2 * .pi * f / sr
                 var s: Double
                 switch p.wave {
                 case .sine: s = sin(phase)
                 case .tri: s = 2 / .pi * asin(sin(phase))
+                case .saw:
+                    let x = phase / (2 * .pi)
+                    s = 2 * (x - x.rounded(.down)) - 1
                 case .noise:
                     rng = rng &* 1_664_525 &+ 1_013_904_223
                     s = Double(Int32(bitPattern: rng)) / Double(Int32.max)
                 }
                 if p.lowpass > 0 { lp += lpk * (s - lp); s = lp }
-                let env = min(1, t / p.attack) * exp(-t / (p.dur * 0.3)) * (1 - u * u)
+                let env = min(1, t / p.attack) * exp(-t / (p.dur * p.decay)) * (1 - u * u)
                 out[idx] += Float(s * env * p.peak)
             }
         }
