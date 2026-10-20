@@ -2,7 +2,7 @@
 
 Two models in memory, not four:
 
-  policy     the cranky SFT model, the one being trained
+  policy     step 11's PPO model (the cranky hacker after RLHF, leash 0.2), the one being trained
   reference  a frozen copy of it, for the leash
 
 No reward model: the reward is arith.check(), 1 or 0. No value model: the
@@ -45,7 +45,7 @@ import time
 import torch
 import torch.nn.functional as F
 
-from shared import LEVELS, MAX_ANSWER, OUT, SFT, accuracy, chat, check, device, generate, held_out, load, pad, text, train_problem
+from shared import LEVELS, MAX_ANSWER, OUT, START, accuracy, chat, check, device, generate, held_out, load, pad, text, train_problem
 
 PROBES = [(3, 5), (9, 8), (47, 8), (62, 9), (47, 38), (85, 76)]
 
@@ -84,6 +84,7 @@ def evaluate(policy, c, log, rnd, out_dir, args, save_name):
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--beta", type=float, default=0.04, help="the leash: KL penalty per token")
+    ap.add_argument("--start", default=START, help="the checkpoint to train from")
     ap.add_argument("--out", default="grpo")
     ap.add_argument("--rounds", type=int, default=200)
     ap.add_argument("--batch", type=int, default=32, help="problems per round")
@@ -102,12 +103,12 @@ if __name__ == "__main__":
 
     c = chat()
     rng = random.Random(13); torch.manual_seed(13)
-    policy = load(SFT, device).train()
-    ref = load(SFT, device).eval().requires_grad_(False)
+    policy = load(args.start, device).train()
+    ref = load(args.start, device).eval().requires_grad_(False)
     opt = torch.optim.AdamW(policy.parameters(), lr=args.lr, betas=(0.9, 0.95), weight_decay=0.0)
     curriculum = not args.levels
     active = [int(l) for l in args.levels.split(",")] if args.levels else [1]
-    print(f"device {device}; beta {args.beta}; {args.rounds} rounds of {args.batch} x {args.group}; "
+    print(f"device {device}; from {args.start}; beta {args.beta}; {args.rounds} rounds of {args.batch} x {args.group}; "
           f"{'curriculum from level 1' if curriculum else 'levels ' + args.levels}", flush=True)
     log = open(os.path.join(out_dir, "log.jsonl"), "w")
     t0 = time.time()

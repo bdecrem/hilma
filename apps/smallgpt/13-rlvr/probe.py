@@ -10,7 +10,7 @@ one greedy answer.
   pass@8     fraction of problems with at least one right answer among the 8,
              which is the fraction of groups GRPO could learn from
 
-Writes out/rlvr/probe.json. Run: .venv/bin/python 13-rlvr/probe.py [checkpoint]
+Writes out/rlvr/probe.json (probe-<name>.json with a checkpoint named). Run: .venv/bin/python 13-rlvr/probe.py [checkpoint]
 """
 
 import json
@@ -18,10 +18,10 @@ import os
 import sys
 import time
 
-from shared import LEVELS, OUT, SFT, accuracy, chat, device, held_out, load
+from shared import LEVELS, OUT, START, accuracy, chat, device, held_out, load
 
 if __name__ == "__main__":
-    path = sys.argv[1] if len(sys.argv) > 1 else SFT
+    path = sys.argv[1] if len(sys.argv) > 1 else START
     os.makedirs(OUT, exist_ok=True)
     c = chat()
     model = load(path, device).eval()
@@ -38,5 +38,6 @@ if __name__ == "__main__":
         print(f"level {lv}: accuracy {100 * acc:5.1f}%   pass@8 {100 * p8:5.1f}%   greedy {100 * greedy:5.1f}%   ({time.time() - t0:.0f} s)", flush=True)
         for s in out[lv]["samples"][:4]:
             print(f"    {s['q']}  [{s['answer']}]\n      greedy: {s['greedy']!r}\n      sampled: {s['sampled']!r}", flush=True)
-    json.dump(out, open(os.path.join(OUT, "probe.json"), "w"), indent=1)
-    print(f"DONE in {time.time() - t0:.0f} s -> {OUT}/probe.json")
+    name = "probe.json" if len(sys.argv) < 2 else "probe-" + os.path.basename(os.path.dirname(path)) + ".json"
+    json.dump(out, open(os.path.join(OUT, name), "w"), indent=1)
+    print(f"DONE in {time.time() - t0:.0f} s -> {OUT}/{name}")

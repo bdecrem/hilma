@@ -12,6 +12,7 @@ from common import SFT, chat, device, generate, load, pad, text  # noqa: E402,F4
 from arith import LEVELS, check, held_out, train_problem  # noqa: E402,F401
 
 OUT = os.environ.get("RLVR_OUT", os.path.join(ROOT, "out", "rlvr"))
+START = os.path.join(ROOT, "out", "rlhf", "ppo", "final.pt")   # step 11's PPO model (leash 0.2): the plan's starting point
 MAX_ANSWER = 48   # tokens: room for a sum and a grumble, not an essay
 
 
