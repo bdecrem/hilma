@@ -31,7 +31,8 @@ final class FlashSFX {
     private let player = AVAudioPlayerNode()
     private let format: AVAudioFormat
     private var buffers: [Effect: AVAudioPCMBuffer] = [:]
-    private var critterBuffers: [JellyCritter: AVAudioPCMBuffer] = [:]
+    private var critterBuffers: [String: AVAudioPCMBuffer] = [:]
+    private var critterTurns: [JellyCritter: Int] = [:]
 
     /// `-NoSFX 1` (simulator only): never touch the audio engine. The
     /// simulator's audio server can time out its RPC the first time the
@@ -113,13 +114,18 @@ final class FlashSFX {
         play(buffer)
     }
 
-    /// A critter on the Peck map, poked: each one has its own voice
-    /// (`CritterSounds`), rendered the first time it is heard.
+    /// A critter on the Peck map, poked: each one has its own voice and a
+    /// few lines (`CritterSounds`), said in turn; each line is rendered the
+    /// first time it is heard.
     func play(critter: JellyCritter) {
-        if critterBuffers[critter] == nil {
-            critterBuffers[critter] = CritterSounds.buffer(critter, sampleRate: format.sampleRate)
+        let turn = critterTurns[critter, default: 0]
+        critterTurns[critter] = turn + 1
+        let index = turn % max(1, CritterSounds.lineCount(critter))
+        let key = "\(critter.rawValue)#\(index)"
+        if critterBuffers[key] == nil {
+            critterBuffers[key] = CritterSounds.buffer(critter, line: index, sampleRate: format.sampleRate)
         }
-        guard let buffer = critterBuffers[critter] else { return }
+        guard let buffer = critterBuffers[key] else { return }
         play(buffer)
     }
 

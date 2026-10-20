@@ -305,7 +305,7 @@ The app was rebranded to the jelly dodo in one pass — see
   flash sets and adds a jelly set rendered by `jelly(_:)` — sines and
   triangles with pitch bends and a decaying wobble, lowpassed noise for the
   wet part, nothing above ~2 kHz: `.boing` (the dodo tapped), `.pop`
-  (stones, the replay signs, an opened chest), `.squish` (generic poke; critters have their own voices since 2026-10-19: `CritterSounds.swift`, one per `JellyCritter`, loudness-matched, `FlashSFX.play(critter:)`),
+  (stones, the replay signs, an opened chest), `.squish` (generic poke; critters have their own voices since 2026-10-19: `CritterSounds.swift` is a small formant synth (saw source, three vowel filters, breath, growl, trill), three lines per `JellyCritter` said in turn by `FlashSFX.play(critter:)`, loudness-matched),
   `.chest` (a chest opening), `.nope` (locked), `.splash` + `.hop` (the
   launch: landing at 0.5 s, hello hop at 1.9 s, from a `.task` on
   `LaunchSplashView`). Peck or Perish's `.peck` is a woody knock now (the
