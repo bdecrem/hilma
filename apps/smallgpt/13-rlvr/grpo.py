@@ -45,7 +45,7 @@ import time
 import torch
 import torch.nn.functional as F
 
-from common import LEVELS, MAX_ANSWER, OUT, SFT, accuracy, chat, check, device, generate, held_out, load, pad, text, train_problem
+from shared import LEVELS, MAX_ANSWER, OUT, SFT, accuracy, chat, check, device, generate, held_out, load, pad, text, train_problem
 
 PROBES = [(3, 5), (9, 8), (47, 8), (62, 9), (47, 38), (85, 76)]
 

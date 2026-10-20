@@ -18,7 +18,7 @@ import os
 import sys
 import time
 
-from common import LEVELS, OUT, SFT, accuracy, chat, device, held_out, load
+from shared import LEVELS, OUT, SFT, accuracy, chat, device, held_out, load
 
 if __name__ == "__main__":
     path = sys.argv[1] if len(sys.argv) > 1 else SFT
