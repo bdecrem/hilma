@@ -1,6 +1,6 @@
 """Step 13: the figure.
 
-  figures/grpo.png   held-out accuracy per level, KL from the SFT model and
+  figures/grpo.png   held-out accuracy per level, KL from the starting model and
                      answer length per GRPO round, with the level openings marked
 
 Run:  .venv/bin/python 13-rlvr/report.py [run name, default grpo]
@@ -42,7 +42,7 @@ if __name__ == "__main__":
     ax.set_title("held-out accuracy (%, greedy, unseen phrasing)", fontsize=10, loc="left")
     ax.legend(frameon=False, loc="upper left")
     x = [r["round"] for r in rounds]
-    for ax, key, title in ((axes[1], "kl", "KL from the SFT model (nats per answer)"), (axes[2], "length", "answer length (tokens)")):
+    for ax, key, title in ((axes[1], "kl", "KL from the starting model (nats per answer)"), (axes[2], "length", "answer length (tokens)")):
         ys = [r[key] for r in rounds]
         ax.plot(x, ys, color=INK, alpha=0.2, lw=1)
         ax.plot(x, smooth(ys), color=INK, lw=2)
