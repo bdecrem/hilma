@@ -95,6 +95,7 @@ if __name__ == "__main__":
     ap.add_argument("--clip", type=float, default=0.2)
     ap.add_argument("--levels", default="", help="fixed levels, e.g. 1,2,3 (default: the curriculum from level 1)")
     ap.add_argument("--promote", type=float, default=0.6, help="held-out accuracy that opens the next level")
+    ap.add_argument("--max-answer", type=int, default=MAX_ANSWER, help="tokens per answer while training")
     ap.add_argument("--eval-every", type=int, default=10)
     ap.add_argument("--save-every", type=int, default=50)
     args = ap.parse_args()
@@ -108,7 +109,7 @@ if __name__ == "__main__":
     opt = torch.optim.AdamW(policy.parameters(), lr=args.lr, betas=(0.9, 0.95), weight_decay=0.0)
     curriculum = not args.levels
     active = [int(l) for l in args.levels.split(",")] if args.levels else [1]
-    print(f"device {device}; from {args.start}; beta {args.beta}; {args.rounds} rounds of {args.batch} x {args.group}; "
+    print(f"device {device}; from {args.start}; beta {args.beta}; answers of up to {args.max_answer} tokens; {args.rounds} rounds of {args.batch} x {args.group}; "
           f"{'curriculum from level 1' if curriculum else 'levels ' + args.levels}", flush=True)
     log = open(os.path.join(out_dir, "log.jsonl"), "w")
     t0 = time.time()
@@ -131,7 +132,7 @@ if __name__ == "__main__":
         probs = [train_problem(lv, rng) for lv in levels]
         prompts = [c.prompt(p["q"]) for p in probs for _ in range(G)]
         policy.eval()
-        answers = generate(policy, prompts, c.eot, n=MAX_ANSWER, temperature=1.0)
+        answers = generate(policy, prompts, c.eot, n=args.max_answer, temperature=1.0)
         policy.train()
 
         # 2. the checker
