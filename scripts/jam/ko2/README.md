@@ -22,9 +22,14 @@ Pad layout (archive pNN numbering; p10 = ".", p11 = "0", p12 = "enter", p07–p0
 p04–p06 = 4 5 6, p01–p03 = 7 8 9): A = drums (kick on "."), B = sub on the bottom row,
 stabs above, C = JT10 notes, D = acid.
 
-State on Bart's unit after the first run: slots 560–603, project 9, OS 2.5.x
-(identity reply has zeroed version bytes, the 2.5 signature). Project TAR reads
-(`read_project.py`) are refused with `invalid id` on this unit although the fid tree
-walks fine, so the project-write path (patterns, scenes) is untested here; pad
-assignment through metadata is the safe route. USB audio did not enumerate on the Mac:
-enable it in the KO II's system menu to capture its output for checks.
+State on Bart's unit after 2026-10-20: slots 560–603, project 9, **OS 2.5.1** (it was on 1.1.1;
+`update-os.mjs` drove the official browser updater headlessly). On 2.5.1 everything the toolkit
+documents works: project TAR reads (`read_project.py`, refused with `invalid id` on 1.1.1), pad
+metadata, and the KO II is a USB audio device on the Mac, so a check can capture its own output:
+`sox -t coreaudio "EP-133" -r 48000 -c 2 -b 16 out.wav trim 0 20` while `play-ko2.py` runs (the shell
+has no microphone permission, but the EP-133 input works; ffmpeg's avfoundation capture of it drops
+samples and comes out 18% short, sox keeps real time). Verified that way: 12 kicks sent on the beat
+over MIDI come back as 12 peaks, 460–465 ms apart once the capture settles (grid 461.5). A recording
+of the groove is `~/Desktop/ko2/ko2-plays-jambot-kit-2026-10-20.wav`. Backups of all nine projects from that day are in
+`~/Desktop/ko2/backup-2026-10-20/`. A sample-metadata write over ~165 bytes of JSON is refused with
+`invalid length`, so keep names short.
