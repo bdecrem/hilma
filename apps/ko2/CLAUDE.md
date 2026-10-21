@@ -22,10 +22,16 @@ the 12 pads double as a numpad. Hold means hold, press means press.
 
 ### Cheat sheet (from the guide; check it before trusting these)
 
-- **Speaker / master volume:** the big third knob at the top right by the speaker (the two small
-  knobs are X and Y). The guide never names it; GearNews' review and manuals.plus do. Plugging
-  anything into the output jack cuts the built-in speaker. Whether the USB audio level follows the
-  knob is untested as of 2026-10-20.
+- **Where the controls are** (from TE's product photos, 2026-10-20; the text guide has no pictures,
+  so answer "where is X" from here, never by searching): the screen fills the top; the speaker
+  grille is top right above it. Right under the screen, at the right edge, two knobs side by side:
+  **knob X = the orange one** (orange "X" printed under it, above the orange SAMPLE button) and
+  **knob Y = the gray/black one** to its right (above TIMING). At the far left under the screen is a
+  **small silver knob, the master volume** (it turns down the speaker; GearNews calls it "the third
+  rotary control"). The **FADER** is the vertical slider on the left side, below that knob. The
+  4×3 grid of pads (7 8 9 / 4 5 6 / 1 2 3 / . 0 ENTER) is in the middle, the function buttons
+  (SAMPLE, TIMING, FX, ERASE, …) in the column on the right. Plugging into the output jack (top
+  edge) also cuts the speaker. Whether the volume knob also lowers the USB audio is untested.
 - **Hear the KO II on the iMac's speakers:** `apps/ko2/tools/monitor.sh --bg` pipes its USB audio
   input to the Mac's default output with sox (stop: `pkill -f 'coreaudio EP-133'`). Buffer 8192:
   2048 dropped data. Bart asked for this on 2026-10-20 and it worked.
