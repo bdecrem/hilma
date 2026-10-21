@@ -2,5 +2,5 @@
 import { serve } from './serve'
 
 export async function GET(req: Request) {
-  return serve(req, 'index')
+  return serve(req, 'overview')
 }
