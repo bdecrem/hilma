@@ -13,7 +13,7 @@ type Turn = { id: number; q: string; model: Model; main: Reply; base?: Reply }
 const MODELS: { id: Model; label: string; base: string; note: string }[] = [
   { id: 'cranky', label: 'cranky 92M', base: 'base', note: 'Step 10: 92M parameters, SFT on 3,206 real Usenet questions and replies, made crankier' },
   { id: 'rlhf', label: 'RLHF 92M', base: 'base', note: 'Step 11: the cranky 92M model after PPO against a reward model trained on Claude\'s judgments' },
-  { id: 'rlvr', label: 'RLVR 92M', base: 'base', note: 'Step 13: the RLHF model after GRPO against an arithmetic checker. Ask it what 47 + 38 is' },
+  { id: 'rlvr', label: 'RLVR 92M', base: 'base', note: 'Step 13: the RLHF model after GRPO against an arithmetic checker. Ask it “What is 9 + 2?”, spelled exactly like that: it learned the phrasing along with the sums' },
   { id: 'cranky-10m', label: 'cranky 10M', base: 'base-10m', note: 'Step 9b: the same SFT on the 10M model' },
   { id: 'helpful', label: 'helpful 10M', base: 'base-10m', note: 'Step 9: SFT on 2,945 Q&A pairs Claude wrote' },
 ]

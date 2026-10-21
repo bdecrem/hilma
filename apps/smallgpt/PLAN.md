@@ -342,7 +342,8 @@ learn from, so training started on one-digit sums with a curriculum that would
 open two-digit levels at 60% held out; it ended at 48%, so they never opened.
 Each problem ended all-or-nothing at every temperature (pass@8 = sampled
 accuracy), which is what GRPO has no gradient on; the "reasoning" the step asks
-about is a memorized lookup table at this scale. A second run with answers
+about is a memorized lookup table at this scale, keyed on the exact tokens:
+"What is 9 + 2?" is right 32/32, "what is 9+2" 1/32. A second run with answers
 capped at 24 tokens learned twice as fast and ended in the same place.
 
 

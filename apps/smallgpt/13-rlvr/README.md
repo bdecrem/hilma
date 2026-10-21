@@ -117,3 +117,13 @@ sums it happened to sample right, one problem at a time, and the checker
 told it which. At DeepSeek's scale the same loop finds chains of thought
 that were already latent in the pretrained model; here there is nothing
 latent to find. The RLVR model is on the chat page as "RLVR 92M".
+
+**The table is keyed on the exact tokens.** Bart typed "what is 9+2" on the
+chat page and got "Its 10+2. A 9+2 has been out for years." In PyTorch, at the
+page's settings (temperature 0.7, top-k 40, 32 samples), "What is 9 + 2?",
+spelled like the training phrasing, is 32/32 right and every reply starts
+with "Yes". "what is 9+2" is 1/32 and none start with "Yes". "What is 9+2?"
+starts with "Yes" every time and is 0/32: it says 12 or 10. "9+2" is three
+tokens and "9 + 2" is four, and the model learned the four-token string, not
+the sum. A learned sum is a learned sentence. (`What is 3 + 5?` and
+`What is 7 + 0?` are 32/32 at every temperature; `What is 9 + 8?` is 0/32.)
