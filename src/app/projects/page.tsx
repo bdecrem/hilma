@@ -512,7 +512,7 @@ export default function Projects() {
               </svg>
             </a>
             <a
-              href="https://decremental.substack.com"
+              href="https://aixus.substack.com"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="substack"

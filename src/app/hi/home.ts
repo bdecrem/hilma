@@ -12,7 +12,7 @@ const FLOW = `<main class="three-main">
   </div>
   @@BIO@@
 </main>
-<footer class="three-footer">@@LINKS@@<span class="foot-sep" aria-hidden="true">|</span> <a href="https://decremental.substack.com" target="_blank" rel="noopener">Substack</a><span class="foot-sep" aria-hidden="true">|</span> <a href="https://linkedin.com/in/bartdecrem" target="_blank" rel="noopener">LinkedIn</a><span class="foot-sep" aria-hidden="true">|</span> <a href="https://x.com/bartdecrem" target="_blank" rel="noopener">X</a></footer>`
+<footer class="three-footer">@@LINKS@@<span class="foot-sep" aria-hidden="true">|</span> <a href="https://aixus.substack.com" target="_blank" rel="noopener">Substack</a><span class="foot-sep" aria-hidden="true">|</span> <a href="https://linkedin.com/in/bartdecrem" target="_blank" rel="noopener">LinkedIn</a><span class="foot-sep" aria-hidden="true">|</span> <a href="https://x.com/bartdecrem" target="_blank" rel="noopener">X</a></footer>`
 
 // bartin16.xyz keeps the email and phone number in the paragraph; decremental.com
 // swaps them for a message form (posts to /api/contact).
