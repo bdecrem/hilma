@@ -2,19 +2,19 @@
 
 Bart's Jambot kit on the KO II's pads, built 2026-10-20. Three scripts, in order:
 
-1. `node scripts/jam/ko2/render-kit.mjs` — renders 44 one-shots from the Minimal 130
+1. `node apps/ko2/tools/render-kit.mjs` — renders 44 one-shots from the Minimal 130
    session (his tuned-down 909, the JB202 sub and stabs, the JT10 line with its delay
    and room printed in, the JT30 acid patch at three filter openings) into
    `out/kit/*.wav` + `kit.json` (group, pad, note, root per sound). Proven patch
    values only; each shot normalized to -3 dBFS, the KO II's own pad amplitude does
    the mix. Synth shots render at 65 BPM so a 16th-note gate is a real note.
-2. `EPSYSEX=<clone> python3 scripts/jam/ko2/upload-kit.py --project 9 --first-slot 560 --activate`
+2. `apps/ko2/.venv/bin/python3 apps/ko2/tools/upload-kit.py --project 9 --first-slot 560 --activate`
    — uploads every WAV (46875 Hz s16, mono; the lead stereo) to free slots over SysEx
    with the kmorrill `ep-series-sysex` toolkit (https://github.com/kmorrill/ep-series-sysex,
    `pip install -e ".[device]"` in a venv), byte-verifies each, then assigns the pads of
    one project through pad metadata (`sym`), the same path the device's own UI uses.
    No project TAR is written. Resumable; refuses occupied slots and non-empty projects.
-3. `python3 scripts/jam/ko2/play-ko2.py --bars 16` — the Mac sequences the KO II over
+3. `apps/ko2/.venv/bin/python3 apps/ko2/tools/play-ko2.py --bars 16` — the Mac sequences the KO II over
    USB MIDI with that kit (notes 36 + group×12 + pad offset), building up the Minimal
    130 groove bar by bar. Press REC on the KO II and it records the performance.
 

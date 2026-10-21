@@ -2,7 +2,7 @@
 """Play Minimal 130's groove INTO the EP-133 over USB MIDI, with the kit that
 upload-kit.py put on its pads: the Mac is the sequencer, the KO II makes the sound.
 
-    python3 scripts/jam/ko2/play-ko2.py [--bars 16] [--bpm 130] [--clock]
+    apps/ko2/.venv/bin/python3 apps/ko2/tools/play-ko2.py [--bars 16] [--bpm 130] [--clock]
 
 Patterns are Bart's own lines from scripts/jam/songs/techno-128-base.json
 (stabs A, the one-note sub, the kit from Minimal 130), mapped to the pads the
@@ -18,7 +18,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument("--bars", type=int, default=16)
 ap.add_argument("--bpm", type=float, default=130)
 ap.add_argument("--clock", action="store_true")
-ap.add_argument("--kit", default=str(HERE / "out/kit/kit.json"))
+ap.add_argument("--kit", default=str(HERE.parent / "out/kit/kit.json"))
 a = ap.parse_args()
 
 OFFSET = {1: 9, 2: 10, 3: 11, 4: 6, 5: 7, 6: 8, 7: 3, 8: 4, 9: 5, 10: 0, 11: 1, 12: 2}  # archive pNN → note offset
@@ -26,7 +26,7 @@ def note_for(group, pad): return 36 + "ABCD".index(group) * 12 + OFFSET[pad]
 kit = json.load(open(a.kit))["sounds"]
 pads = {s["name"]: note_for(s["group"], s["pad"]) for s in kit}
 
-base = json.load(open(HERE.parent / "songs/techno-128-base.json"))
+base = json.load(open(HERE.parents[2] / "scripts/jam/songs/techno-128-base.json"))
 stabsA = base["patterns"]["jb202"]["A"]["pattern"]      # 16 steps of {note, gate, accent, slide}
 subA = base["patterns"]["jb202-2"]["A"]["pattern"]
 

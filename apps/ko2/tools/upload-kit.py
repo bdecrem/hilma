@@ -1,23 +1,23 @@
 #!/usr/bin/env python3
-"""Upload a Jambot-rendered kit (scripts/jam/ko2/out/kit/kit.json) to the EP-133
+"""Upload a Jambot-rendered kit (apps/ko2/out/kit/kit.json) to the EP-133
 sample library and assign it to the 48 pads of one project, over SysEx.
 
-    python3 scripts/jam/ko2/upload-kit.py --project 9 --first-slot 560 [--activate]
+    apps/ko2/.venv/bin/python3 apps/ko2/tools/upload-kit.py --project 9 --first-slot 560 [--activate]
 
-Needs the ep-series-sysex toolkit on EPSYSEX (path to the clone) and mido.
+Needs the ep-series-sysex toolkit (apps/ko2/ext/, cloned by setup.sh; EPSYSEX overrides the path) and mido.
 Never overwrites an occupied slot; refuses a project that has any pad assigned
 unless --force. No project TAR is written: pads are assigned through the pad
 metadata ("sym"), which is what the device's own UI does.
 """
 import argparse, json, os, sys, time
 from pathlib import Path
-sys.path.insert(0, os.environ.get("EPSYSEX", str(Path.home() / "ep-series-sysex")))
+sys.path.insert(0, os.environ.get("EPSYSEX", str(Path(__file__).resolve().parents[1] / "ext/ep-series-sysex")))
 from epsysex.fileclient import FileClient
 from epsysex.sysex import EP133_PRODUCT
 from epsysex.dependencies import wav_to_pcm16
 
 ap = argparse.ArgumentParser()
-ap.add_argument("--kit", default=str(Path(__file__).parent / "out/kit/kit.json"))
+ap.add_argument("--kit", default=str(Path(__file__).resolve().parents[1] / "out/kit/kit.json"))
 ap.add_argument("--project", type=int, required=True)
 ap.add_argument("--first-slot", type=int, required=True)
 ap.add_argument("--activate", action="store_true", help="make the project the active one when done")

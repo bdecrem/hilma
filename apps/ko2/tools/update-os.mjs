@@ -4,7 +4,7 @@ import { chromium } from 'playwright'
 // and the device reboots itself; headless Chrome then never sees it come back, so the page ends on its
 // 'connect a device' screen and the script's 'final' is not the verdict: run it again and read the
 // metadata console line (os_version). Took Bart's unit from 1.1.1 to 2.5.1 on 2026-10-20 in 12 s of transfer.
-//   node scripts/jam/ko2/update-os.mjs <screenshot dir>
+//   node apps/ko2/tools/update-os.mjs <screenshot dir>
 const S = process.argv[2] || '/tmp'
 const browser = await chromium.launch({ headless: true, channel: 'chrome', args: ['--enable-features=WebMIDI'] })
 const ctx = await browser.newContext({ viewport: { width: 1200, height: 900 } })

@@ -3,8 +3,8 @@
 // session: his tuned-down 909, his 202 stabs + sub, the JT10 line, the JT30
 // acid patch). One WAV per pad, trimmed, plus kit.json naming each sound.
 //
-//   node scripts/jam/ko2/render-kit.mjs            → scripts/jam/ko2/out/kit/
-//   OUT=/dir node scripts/jam/ko2/render-kit.mjs
+//   node apps/ko2/tools/render-kit.mjs            → apps/ko2/out/kit/
+//   OUT=/dir node apps/ko2/tools/render-kit.mjs
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
@@ -13,7 +13,7 @@ const HERE = dirname(fileURLToPath(import.meta.url))
 const HILMA = resolve(HERE, '..', '..', '..')
 const JAMBOT = resolve(HILMA, '../vibeceo/jambot')
 const BASE = resolve(HILMA, 'scripts/jam/songs/techno-128-base.json')
-const OUT = process.env.OUT || resolve(HERE, 'out', 'kit')
+const OUT = process.env.OUT || resolve(HERE, '..', 'out', 'kit')
 mkdirSync(OUT, { recursive: true })
 
 const { deserializeSession } = await import(`${JAMBOT}/core/session.js`)
