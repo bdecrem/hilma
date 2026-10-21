@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Concept C · Local</title>
+<meta name="description" content="Unofficial redesign concept for deportationdata.org: map-first and bilingual, a plain-language card for where you live, and a graphic you can share.">
+<meta property="og:title" content="Deportation Data, redesigned — C · Local">
+<meta property="og:description" content="Map first, in English and Spanish: what ICE is doing where you live, in plain words, with a graphic to share.">
+<meta property="og:image" content="https://ola.cx/design/ddp-assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#f7efdf">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{--cream:#f7efdf;--ink:#16121c;--ink2:#4b4552;--ink3:#857d8c;--blue:#3d3bff;--blue-soft:#dcdcff;--sun:#ffc31f;--red:#ff4b1f;--card:#fffaf0;--line:#e3d7bf}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--cream);color:var(--ink);font:17px/1.55 "Atkinson Hyperlegible",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+h1,h2,h3,.disp{font-family:"Bricolage Grotesque",sans-serif;letter-spacing:-.01em}
+.proto{background:var(--ink);color:var(--cream);font-size:12.5px;padding:7px 16px;text-align:center}
+.proto a{color:var(--sun)}
+.top{display:flex;align-items:center;gap:16px;padding:14px max(18px,env(safe-area-inset-left));max-width:1160px;margin:0 auto}
+.brand{font:800 18px "Bricolage Grotesque";text-decoration:none;display:flex;align-items:center;gap:8px}
+.brand i{width:22px;height:22px;border-radius:6px;background:var(--blue);box-shadow:3px 3px 0 var(--ink)}
+.top nav{display:flex;gap:18px;font-size:15.5px;margin-left:18px}
+.top nav a{text-decoration:none}
+.lang{margin-left:auto;display:flex;border:2px solid var(--ink);border-radius:99px;overflow:hidden;font-weight:700}
+.lang button{all:unset;cursor:pointer;padding:6px 14px;font-size:14.5px}
+.lang button.on{background:var(--ink);color:var(--cream)}
+.wrap{max-width:1160px;margin:0 auto;padding:0 18px 60px}
+.hero{display:grid;grid-template-columns:1.25fr 1fr;gap:34px;align-items:start;padding:26px 0 10px}
+.hero h1{font-size:clamp(36px,5vw,60px);line-height:1.02;margin:6px 0 12px;font-weight:800}
+.hero h1 span{background:linear-gradient(transparent 62%,var(--sun) 62%)}
+.hero .lede{font-size:19px;color:var(--ink2);margin:0 0 18px;max-width:560px}
+.find{display:flex;gap:8px;max-width:520px}
+.find select{flex:1;font:700 17px "Atkinson Hyperlegible";padding:12px 14px;border:2.5px solid var(--ink);border-radius:14px;background:#fff}
+.find button{font:700 16px "Atkinson Hyperlegible";border:2.5px solid var(--ink);border-radius:14px;background:var(--sun);padding:0 16px;cursor:pointer;box-shadow:3px 3px 0 var(--ink)}
+.mapbox{margin-top:22px;background:var(--card);border:2.5px solid var(--ink);border-radius:20px;padding:18px;box-shadow:6px 6px 0 var(--ink)}
+.map{display:grid;grid-template-columns:repeat(11,1fr);gap:5px}
+.map button{all:unset;aspect-ratio:1;border-radius:8px;display:grid;place-items:center;font:700 clamp(9px,1.25vw,13px) "Atkinson Hyperlegible";cursor:pointer;transition:transform .12s;position:relative}
+.map button:hover{transform:scale(1.12);z-index:2;outline:2.5px solid var(--ink)}
+.map button.sel{outline:3px solid var(--red);outline-offset:1px;z-index:2}
+.legend{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink2);margin-top:12px}
+.legend .ramp{flex:0 0 140px;height:10px;border-radius:5px;background:linear-gradient(90deg,#e6e5ff,var(--blue))}
+.card{background:#fff;border:2.5px solid var(--ink);border-radius:22px;padding:22px 24px;box-shadow:6px 6px 0 var(--blue);position:sticky;top:16px}
+.card .where{font:800 30px/1.05 "Bricolage Grotesque";margin:0}
+.card .k{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);font-weight:700}
+.card .big{font:800 64px/1 "Bricolage Grotesque";color:var(--blue);margin:14px 0 4px;font-variant-numeric:tabular-nums}
+.card .plain{font-size:18px;margin:6px 0 14px}
+.card .rankline{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.card .rankline span{background:var(--blue-soft);border-radius:99px;padding:3px 11px;font-weight:700;font-size:14px}
+.card h4{margin:14px 0 6px;font-size:14px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3)}
+.card ul{margin:0;padding:0;list-style:none}
+.card li{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1.5px dashed var(--line);font-size:15.5px}
+.card li b{font-variant-numeric:tabular-nums}
+.card .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.b{font:700 15px "Atkinson Hyperlegible";border:2.5px solid var(--ink);border-radius:12px;background:#fff;padding:8px 13px;cursor:pointer;text-decoration:none;display:inline-block}
+.b.sun{background:var(--sun)}.b.blue{background:var(--blue);color:#fff}
+.b:hover{transform:translate(-1px,-1px);box-shadow:2px 2px 0 var(--ink)}
+section{padding:56px 0 0}
+section h2{font-size:clamp(28px,3.6vw,40px);margin:0 0 6px;font-weight:800}
+section .sub{color:var(--ink2);margin:0 0 22px;max-width:680px}
+.ways{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.way{background:#fff;border:2.5px solid var(--ink);border-radius:18px;padding:18px 20px}
+.way .ill{height:76px;border-radius:12px;margin-bottom:12px;display:grid;place-items:center;font:800 30px "Bricolage Grotesque"}
+.way h3{margin:0 0 6px;font-size:22px}
+.way p{margin:0;color:var(--ink2);font-size:16px}
+.share{display:grid;grid-template-columns:auto 1fr;gap:30px;align-items:center}
+canvas{width:340px;height:340px;border-radius:16px;border:2.5px solid var(--ink);box-shadow:6px 6px 0 var(--ink);background:#fff}
+.glossary{display:grid;grid-template-columns:repeat(2,1fr);gap:0 30px}
+.glossary div{padding:14px 0;border-top:2px solid var(--ink)}
+.glossary b{font:800 19px "Bricolage Grotesque";display:block}
+.glossary span{color:var(--ink2);font-size:16px}
+.alert{margin-top:56px;background:var(--blue);color:#fff;border-radius:22px;padding:26px 28px;display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center;border:2.5px solid var(--ink);box-shadow:6px 6px 0 var(--ink)}
+.alert h2{margin:0 0 4px;font-size:28px}
+.alert p{margin:0;opacity:.9}
+.alert form{display:flex;gap:8px}
+.alert input{font:16px "Atkinson Hyperlegible";padding:11px 12px;border-radius:12px;border:2.5px solid var(--ink);min-width:220px}
+.trust{margin-top:40px;font-size:15px;color:var(--ink2);display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.trust b{color:var(--ink);display:block}
+footer{text-align:center;color:var(--ink3);font-size:13.5px;padding:40px 0}
+.toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,100px);background:var(--ink);color:var(--cream);border-radius:99px;padding:10px 18px;font-weight:700;transition:transform .2s,opacity .2s;opacity:0;z-index:9}
+.toast.on{transform:translate(-50%,0);opacity:1}
+@media (max-width:900px){.hero{grid-template-columns:1fr}.card{position:static}.ways,.glossary,.trust{grid-template-columns:1fr}.share{grid-template-columns:1fr}.top nav{display:none}.alert{grid-template-columns:1fr}.alert form{flex-wrap:wrap}.alert input{min-width:0;flex:1}canvas{width:100%;height:auto;max-width:340px}}
+</style>
+</head>
+<body>
+<div class="proto" data-t="proto"></div>
+<div class="top">
+  <a class="brand" href="#"><i></i>Deportation Data</a>
+  <nav><a href="#map" data-t="navPlaces"></a><a href="#ways" data-t="navHow"></a><a href="#words" data-t="navWords"></a><a href="/design/ddp/desk" data-t="navPress"></a></nav>
+  <div class="lang" role="group" aria-label="Language"><button data-lang="en" class="on">English</button><button data-lang="es">Español</button></div>
+</div>
+
+<div class="wrap">
+  <div class="hero" id="map">
+    <div>
+      <div class="k disp" style="font-weight:700;color:var(--blue)" data-t="kicker"></div>
+      <h1 data-t="h1" data-html></h1>
+      <p class="lede" data-t="lede"></p>
+      <div class="find"><select id="pick" aria-label="Choose a state"></select><button id="near" data-t="near"></button></div>
+      <div class="mapbox">
+        <div class="map" id="tiles"></div>
+        <div class="legend"><span data-t="fewer"></span><span class="ramp"></span><span data-t="more"></span><span style="margin-left:auto" data-t="tap"></span></div>
+      </div>
+    </div>
+    <aside class="card" id="card" aria-live="polite"></aside>
+  </div>
+
+  <section id="ways">
+    <h2 data-t="waysH"></h2>
+    <p class="sub" data-t="waysSub"></p>
+    <div class="ways">
+      <div class="way"><div class="ill" style="background:#ffe6dd;color:var(--red)">⌂</div><h3 data-t="w1h"></h3><p data-t="w1p"></p></div>
+      <div class="way"><div class="ill" style="background:var(--blue-soft);color:var(--blue)">▦</div><h3 data-t="w2h"></h3><p data-t="w2p"></p></div>
+      <div class="way"><div class="ill" style="background:#fff0c4;color:#9a6b00">★</div><h3 data-t="w3h"></h3><p data-t="w3p"></p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="share">
+      <canvas id="cv" width="1080" height="1080" aria-label="Shareable graphic"></canvas>
+      <div>
+        <h2 data-t="shareH"></h2>
+        <p class="sub" data-t="shareSub"></p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="b sun" id="dl" data-t="dl"></button><button class="b" id="print" data-t="print"></button><button class="b" id="copy" data-t="copyLink"></button></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="words">
+    <h2 data-t="wordsH"></h2>
+    <p class="sub" data-t="wordsSub"></p>
+    <div class="glossary" id="gloss"></div>
+  </section>
+
+  <div class="alert">
+    <div><h2 data-t="alertH"></h2><p data-t="alertP"></p></div>
+    <form onsubmit="event.preventDefault();toast(T('thanks'))"><input type="email" data-tp="email"><button class="b sun" data-t="alertB"></button></form>
+  </div>
+
+  <div class="trust">
+    <div><b data-t="t1h"></b><span data-t="t1p"></span></div>
+    <div><b data-t="t2h"></b><span data-t="t2p"></span></div>
+    <div><b data-t="t3h"></b><span data-t="t3p"></span></div>
+  </div>
+</div>
+<footer>Mockup · deportationdata.org redesign study · <a href="/design/ddp">all concepts</a></footer>
+<div class="toast" id="toast"></div>
+
+<script src="/design/ddp-assets/data.js"></script>
+<script>
+const D = window.DDP;
+const STR = {
+  en:{
+    proto:'Concept C · Local. An unofficial mockup, not the Deportation Data Project’s site. Numbers are from their Atlas, October 2026. <a href="/design/ddp">← all concepts</a>',
+    navPlaces:'Places', navHow:'How arrests happen', navWords:'Words to know', navPress:'For journalists',
+    kicker:'Immigration enforcement, in your words', h1:'What is ICE doing <span>where you live?</span>',
+    lede:'The government’s own records on immigration arrests, released after we sued for them. Pick your state to see what has happened since January 2025.',
+    near:'Use my location', fewer:'Fewer arrests', more:'More', tap:'Tap a state',
+    since:'Since Jan. 1, 2025', arrests:'ICE arrests',
+    plain:(n,s,share)=>`ICE has arrested people <b>${n}</b> times in ${s} since January 2025. That is <b>${share}%</b> of all ICE arrests in the country.`,
+    rank:(r)=>`#${r} of 50 states`, office:(o)=>`ICE office: ${o}`,
+    cities:'Cities in this state with the most arrests', noCities:'None of the 25 cities with the most arrests nationwide are in this state. City numbers are in the full report.',
+    full:'Full report for this state', share:'Make a graphic', pdf:'One-page printout',
+    waysH:'Three ways people are arrested', waysSub:'The data sorts every arrest into one of these. In some places most arrests happen in jails; in others, in neighborhoods.',
+    w1h:'In the community', w1p:'ICE arrests people at home, at work, at courthouses, at government offices and in other public places. The data calls these "at-large" arrests.',
+    w2h:'From a jail or prison', w2p:'Someone held by local police or a prison is handed over to ICE when they would otherwise go free. These are "custodial" arrests.',
+    w3h:'By local police for ICE', w3p:'Where a sheriff or police department has signed a 287(g) agreement, its officers can make immigration arrests themselves.',
+    shareH:'Make a graphic for your community', shareSub:'Choose a state above and the graphic updates. Download it for social media, or print a one-page summary to bring to a meeting. It comes in English or Spanish.',
+    dl:'Download image', print:'Print one page', copyLink:'Copy link',
+    wordsH:'Words to know', wordsSub:'The words that come up in these numbers, in plain language.',
+    gloss:[['Noncitizen','Anyone who is not a U.S. citizen, including people with green cards, people with visas, and people without papers.'],['Civil immigration arrest','An arrest because ICE believes someone can be deported. Being deportable is not a crime.'],['Detainer','A request from ICE asking a jail to hold someone up to 48 hours past their release, so ICE can pick them up.'],['287(g) agreement','A signed deal that lets local police or sheriffs do some of ICE’s work, including arrests.'],['Interior arrest','An arrest away from the border, inside the country.'],['Book-in','When someone arrested by ICE is entered into a detention center.']],
+    alertH:'Get told when new numbers come out for your state', alertP:'One email per data release. In English or Spanish.', alertB:'Sign me up', email:'Your email', thanks:'Thanks, you’re on the list (mock)',
+    t1h:'Where this comes from', t1p:'ICE’s own records, released after the Deportation Data Project sued under public records law.',
+    t2h:'Who made this', t2p:'Independent academics and lawyers at UC Berkeley School of Law and UCLA.',
+    t3h:'Free to use', t3p:'Everything here is CC-0. Share it, print it, put it in a flyer.',
+    cardTitle:(s)=>`ICE arrests in ${s}`, cardSince:'since January 1, 2025', cardShare:(p)=>`${p}% of all ICE arrests in the U.S.`, cardSrc:'Source: ICE records obtained by the Deportation Data Project',
+    copied:'Link copied', downloaded:'Image downloaded', printing:'Opening print view (mock)', loc:'In the full build, this finds your state from your location'
+  },
+  es:{
+    proto:'Concepto C · Local. Una maqueta no oficial; no es el sitio del Deportation Data Project. Los datos son de su Atlas, octubre de 2026. <a href="/design/ddp">← todos los conceptos</a>',
+    navPlaces:'Lugares', navHow:'Cómo ocurren los arrestos', navWords:'Palabras clave', navPress:'Para periodistas',
+    kicker:'La aplicación de las leyes de inmigración, en palabras claras', h1:'¿Qué está haciendo ICE <span>donde vives?</span>',
+    lede:'Los propios registros del gobierno sobre arrestos de inmigración, publicados después de que los demandamos. Elige tu estado para ver qué ha pasado desde enero de 2025.',
+    near:'Usar mi ubicación', fewer:'Menos arrestos', more:'Más', tap:'Toca un estado',
+    since:'Desde el 1 de enero de 2025', arrests:'arrestos de ICE',
+    plain:(n,s,share)=>`ICE ha hecho <b>${n}</b> arrestos en ${s} desde enero de 2025. Eso es el <b>${share}%</b> de todos los arrestos de ICE en el país.`,
+    rank:(r)=>`n.º ${r} de 50 estados`, office:(o)=>`Oficina de ICE: ${o}`,
+    cities:'Ciudades de este estado con más arrestos', noCities:'Ninguna de las 25 ciudades con más arrestos del país está en este estado. Las cifras por ciudad están en el informe completo.',
+    full:'Informe completo de este estado', share:'Crear un gráfico', pdf:'Resumen de una página',
+    waysH:'Tres formas en que arrestan a las personas', waysSub:'Los datos clasifican cada arresto en uno de estos tipos. En algunos lugares la mayoría ocurre en cárceles; en otros, en los vecindarios.',
+    w1h:'En la comunidad', w1p:'ICE arresta a personas en su casa, en el trabajo, en los tribunales, en oficinas del gobierno y en otros lugares públicos. Los datos los llaman arrestos "at-large".',
+    w2h:'Desde una cárcel o prisión', w2p:'Alguien detenido por la policía local o en una prisión es entregado a ICE cuando de otro modo quedaría libre. Son arrestos "custodial".',
+    w3h:'Por la policía local para ICE', w3p:'Donde un sheriff o departamento de policía ha firmado un acuerdo 287(g), sus agentes pueden hacer arrestos de inmigración.',
+    shareH:'Crea un gráfico para tu comunidad', shareSub:'Elige un estado arriba y el gráfico se actualiza. Descárgalo para redes sociales o imprime un resumen de una página para llevar a una reunión. Disponible en español o inglés.',
+    dl:'Descargar imagen', print:'Imprimir una página', copyLink:'Copiar enlace',
+    wordsH:'Palabras clave', wordsSub:'Las palabras que aparecen en estos datos, explicadas de forma sencilla.',
+    gloss:[['No ciudadano','Cualquier persona que no es ciudadana de EE. UU., incluidas personas con green card, con visa o sin papeles.'],['Arresto civil de inmigración','Un arresto porque ICE cree que alguien puede ser deportado. Ser deportable no es un delito.'],['Detainer (orden de retención)','Una solicitud de ICE para que una cárcel retenga a alguien hasta 48 horas después de su liberación, para que ICE lo recoja.'],['Acuerdo 287(g)','Un acuerdo firmado que permite a la policía local o al sheriff hacer parte del trabajo de ICE, incluidos arrestos.'],['Arresto en el interior','Un arresto lejos de la frontera, dentro del país.'],['Ingreso a detención (book-in)','Cuando una persona arrestada por ICE es registrada en un centro de detención.']],
+    alertH:'Recibe un aviso cuando haya datos nuevos de tu estado', alertP:'Un correo por cada publicación de datos. En español o inglés.', alertB:'Suscribirme', email:'Tu correo', thanks:'Gracias, ya estás en la lista (maqueta)',
+    t1h:'De dónde vienen los datos', t1p:'De los propios registros de ICE, publicados después de que el Deportation Data Project los demandara bajo la ley de registros públicos.',
+    t2h:'Quién lo hizo', t2p:'Académicos y abogados independientes de la Facultad de Derecho de UC Berkeley y de UCLA.',
+    t3h:'De uso libre', t3p:'Todo aquí es CC-0. Compártelo, imprímelo, ponlo en un volante.',
+    cardTitle:(s)=>`Arrestos de ICE en ${s}`, cardSince:'desde el 1 de enero de 2025', cardShare:(p)=>`${p}% de todos los arrestos de ICE en EE. UU.`, cardSrc:'Fuente: registros de ICE obtenidos por el Deportation Data Project',
+    copied:'Enlace copiado', downloaded:'Imagen descargada', printing:'Abriendo vista de impresión (maqueta)', loc:'En la versión completa, esto encuentra tu estado según tu ubicación'
+  }
+};
+let lang = 'en';
+const T = k => STR[lang][k];
+const states = [...D.states].sort((a,b)=>b.n-a.n);
+states.forEach((s,i)=>s.rank=i+1);
+const max = states[0].n;
+let sel = states.find(s=>s.ab==='IL');
+const fmtN = n => n.toLocaleString(lang==='es'?'es-US':'en-US');
+const shareOf = s => (100*s.n/D.allArrests).toLocaleString(lang==='es'?'es-US':'en-US',{maximumFractionDigits:1});
+
+// tile map
+const tiles = document.getElementById('tiles');
+for(const s of D.states){
+  const b = document.createElement('button');
+  b.style.gridColumn = s.x+1; b.style.gridRow = s.y+1;
+  const t = Math.sqrt(s.n/max);
+  b.style.background = `color-mix(in srgb, #3d3bff ${Math.round(10+90*t)}%, #f4f3ff)`;
+  b.style.color = t>.45 ? '#fff' : '#16121c';
+  b.textContent = s.ab; b.title = s.name; b.dataset.ab = s.ab;
+  b.onclick = ()=>{ sel = states.find(x=>x.ab===s.ab); render(); };
+  tiles.appendChild(b);
+}
+const pick = document.getElementById('pick');
+pick.onchange = ()=>{ sel = states.find(x=>x.ab===pick.value); render(); };
+document.getElementById('near').onclick = ()=>toast(T('loc'));
+
+function renderCard(){
+  const cities = D.cities.filter(c=>c.st===sel.ab);
+  document.getElementById('card').innerHTML = `
+    <div class="k">${T('since')}</div>
+    <p class="where">${sel.name}</p>
+    <div class="big">${fmtN(sel.n)}</div>
+    <div class="k" style="margin-bottom:8px">${T('arrests')}</div>
+    <div class="rankline"><span>${T('rank')(sel.rank)}</span>${sel.fo.length?`<span>${T('office')(sel.fo.join(', '))}</span>`:''}</div>
+    <p class="plain">${T('plain')(fmtN(sel.n), sel.name, shareOf(sel))}</p>
+    <h4>${T('cities')}</h4>
+    ${cities.length?`<ul>${cities.map(c=>`<li><span>${c.name}</span><b>${fmtN(c.n)}</b></li>`).join('')}</ul>`:`<p style="font-size:15px;color:var(--ink2);margin:0">${T('noCities')}</p>`}
+    <div class="actions"><a class="b blue" href="https://deportationdata.org/atlas/national">${T('full')}</a><button class="b sun" onclick="document.getElementById('cv').scrollIntoView({behavior:'smooth',block:'center'})">${T('share')}</button><button class="b" onclick="toast(T('printing'))">${T('pdf')}</button></div>`;
+}
+function drawCanvas(){
+  const c = document.getElementById('cv'), g = c.getContext('2d');
+  g.fillStyle = '#f7efdf'; g.fillRect(0,0,1080,1080);
+  g.fillStyle = '#3d3bff'; g.fillRect(0,0,1080,22);
+  g.fillStyle = '#16121c'; g.font = '800 64px "Bricolage Grotesque"'; wrap(g, T('cardTitle')(sel.name), 80, 150, 920, 72);
+  g.fillStyle = '#3d3bff'; g.font = '800 230px "Bricolage Grotesque"'; g.fillText(fmtN(sel.n), 72, 520);
+  g.fillStyle = '#16121c'; g.font = '700 50px "Atkinson Hyperlegible"'; g.fillText(T('cardSince'), 80, 600);
+  g.fillStyle = '#ffc31f'; g.fillRect(80, 650, 920, 96);
+  g.fillStyle = '#16121c'; g.font = '700 44px "Atkinson Hyperlegible"'; g.fillText(T('cardShare')(shareOf(sel)), 110, 713);
+  // mini tile map with the state highlighted
+  for(const s of D.states){ g.fillStyle = s.ab===sel.ab ? '#ff4b1f' : 'rgba(61,59,255,.22)'; g.fillRect(640 + s.x*30, 800 + s.y*25, 26, 21); }
+  g.fillStyle = '#4b4552'; g.font = '400 26px "Atkinson Hyperlegible"'; wrap(g, T('cardSrc'), 80, 840, 520, 34);
+  g.fillStyle = '#16121c'; g.font = '700 28px "Atkinson Hyperlegible"'; g.fillText('deportationdata.org', 80, 1000);
+}
+function wrap(g, text, x, y, w, lh){ const words = text.split(' '); let line=''; for(const wd of words){ const t = line?line+' '+wd:wd; if(g.measureText(t).width>w && line){ g.fillText(line,x,y); y+=lh; line=wd; } else line=t; } g.fillText(line,x,y); }
+
+function applyLang(){
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-t]').forEach(el=>{ const v = T(el.dataset.t); if(typeof v==='string') el.innerHTML = v; });
+  document.querySelectorAll('[data-tp]').forEach(el=>el.placeholder = T(el.dataset.tp));
+  document.getElementById('gloss').innerHTML = T('gloss').map(([w,d])=>`<div><b>${w}</b><span>${d}</span></div>`).join('');
+  document.querySelectorAll('.lang button').forEach(b=>b.classList.toggle('on', b.dataset.lang===lang));
+  pick.innerHTML = [...D.states].sort((a,b)=>a.name.localeCompare(b.name)).map(s=>`<option value="${s.ab}">${s.name}</option>`).join('');
+  render();
+}
+function render(){
+  pick.value = sel.ab;
+  tiles.querySelectorAll('button').forEach(b=>b.classList.toggle('sel', b.dataset.ab===sel.ab));
+  renderCard(); drawCanvas();
+}
+document.querySelectorAll('.lang button').forEach(b=>b.onclick=()=>{ lang=b.dataset.lang; applyLang(); });
+document.getElementById('dl').onclick = ()=>{ const a=document.createElement('a'); a.download=`ice-arrests-${sel.ab.toLowerCase()}-${lang}.png`; a.href=document.getElementById('cv').toDataURL('image/png'); a.click(); toast(T('downloaded')); };
+document.getElementById('print').onclick = ()=>toast(T('printing'));
+document.getElementById('copy').onclick = ()=>{ navigator.clipboard?.writeText(location.href.split('#')[0]+'#'+sel.ab).catch(()=>{}); toast(T('copied')); };
+function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('on'); setTimeout(()=>t.classList.remove('on'),1600); }
+const fromHash = states.find(s=>s.ab===location.hash.slice(1).toUpperCase()); if(fromHash) sel = fromHash;
+applyLang();
+document.fonts?.ready.then(drawCanvas);
+</script>
+</body>
+</html>

@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Concept B · Desk</title>
+<meta name="description" content="Unofficial redesign concept for deportationdata.org: a newsroom desk for journalists, with copy-ready numbers, story leads, and a before-you-publish checklist.">
+<meta property="og:title" content="Deportation Data, redesigned — B · Desk">
+<meta property="og:description" content="A press room for journalists: copy-ready numbers, story leads from each release, and a checklist before you publish.">
+<meta property="og:image" content="https://ola.cx/design/ddp-assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#111111">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#111;--ink2:#4a4a4a;--ink3:#8a8a8a;--line:#111;--soft:#e7e7e2;--paper:#fff;--bg:#f2f1ec;--y:#ffe14d;--red:#d23a1a}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15.5px/1.5 "IBM Plex Sans",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+.proto{background:var(--y);color:#111;font-size:12.5px;padding:6px 16px;text-align:center}
+.bar{background:#111;color:#fff;display:flex;align-items:center;gap:22px;padding:0 max(18px,env(safe-area-inset-left));height:54px;position:sticky;top:0;z-index:5}
+.logo{font:700 15px "IBM Plex Sans";letter-spacing:.02em;white-space:nowrap;text-decoration:none}
+.logo b{background:var(--y);color:#111;padding:2px 6px;margin-left:6px}
+.bar nav{display:flex;gap:20px;font-size:14px}
+.bar nav a{text-decoration:none;opacity:.8}.bar nav a:hover,.bar nav a.on{opacity:1;box-shadow:inset 0 -2px 0 var(--y)}
+.bar .r{margin-left:auto;display:flex;gap:10px;font-size:13.5px}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1.5px solid #111;background:#fff;color:#111;padding:6px 11px;font:600 13px "IBM Plex Sans";cursor:pointer;text-decoration:none;white-space:nowrap}
+.btn.y{background:var(--y)}
+.btn:hover{background:var(--y)}
+.bar .btn{border-color:#fff}
+.ticker{background:#fff;border-bottom:1.5px solid #111;display:flex;gap:28px;padding:9px 18px;font-size:13px;overflow:auto;white-space:nowrap}
+.ticker b{font-family:"IBM Plex Mono";font-weight:600}
+.ticker .new{background:var(--red);color:#fff;font-weight:700;padding:0 6px;font-size:11.5px;letter-spacing:.06em}
+.wrap{max-width:1180px;margin:0 auto;padding:0 18px 60px}
+h1{font:700 clamp(30px,4.2vw,46px)/1.08 "IBM Plex Serif",serif;letter-spacing:-.01em;margin:38px 0 8px;max-width:860px}
+.dek{color:var(--ink2);font-size:17px;max-width:760px;margin:0 0 26px}
+.lab{font:600 12px "IBM Plex Mono";letter-spacing:.08em;text-transform:uppercase;margin:0 0 10px;display:flex;align-items:center;gap:10px}
+.lab::after{content:"";flex:1;height:1.5px;background:#111}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1.5px solid #111;background:#fff}
+.num{padding:20px 20px 16px;border-right:1.5px solid #111;display:flex;flex-direction:column;gap:8px}
+.num:last-child{border-right:0}
+.num .v{font:700 44px/1 "IBM Plex Sans";letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.num .v small{font-size:18px;font-weight:500;color:var(--ink2);margin-left:4px}
+.num p{margin:0;font-size:15px}
+.num .meta{font:12px "IBM Plex Mono";color:var(--ink3)}
+.num .acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;padding-top:6px}
+details.cav{font-size:13.5px;border-top:1px dashed #bbb;padding-top:8px}
+details.cav summary{cursor:pointer;font-weight:600;color:var(--red);list-style:none}
+details.cav summary::before{content:"⚠ "}
+details.cav p{margin:6px 0 0;color:var(--ink2)}
+.two{display:grid;grid-template-columns:1.15fr .85fr;gap:26px;margin-top:40px}
+.two>div{min-width:0}
+.panel{background:#fff;border:1.5px solid #111;padding:18px 20px}
+.local select{font:500 16px "IBM Plex Sans";padding:9px 10px;border:1.5px solid #111;background:#fff;width:100%;margin:2px 0 14px}
+.local .out .v{font:700 40px/1 "IBM Plex Sans";font-variant-numeric:tabular-nums}
+.local .out p{margin:8px 0 12px;font-size:15.5px}
+.local .out mark{background:var(--y)}
+table.t{width:100%;border-collapse:collapse;font-size:14px;margin-top:10px}
+table.t th{font:600 11.5px "IBM Plex Mono";text-transform:uppercase;letter-spacing:.06em;text-align:left;border-bottom:1.5px solid #111;padding:6px 4px}
+table.t td{padding:6px 4px;border-bottom:1px solid var(--soft);font-variant-numeric:tabular-nums}
+table.t td.n{text-align:right;font-family:"IBM Plex Mono"}
+table.t tr.me td{background:var(--y);font-weight:600}
+.leads{display:grid;gap:0;border:1.5px solid #111;background:#fff}
+.lead{padding:16px 18px;border-bottom:1.5px solid #111;display:grid;grid-template-columns:28px 1fr;gap:6px 12px}
+.lead:last-child{border-bottom:0}
+.lead .k{font:700 13px "IBM Plex Mono";background:#111;color:#fff;width:24px;height:24px;display:grid;place-items:center;margin-top:3px}
+.lead h3{margin:0;font:700 19px/1.25 "IBM Plex Serif",serif}
+.lead p{margin:4px 0 8px;color:var(--ink2);font-size:14.5px}
+.lead .how{font:12.5px "IBM Plex Mono";color:var(--ink2);background:var(--bg);padding:8px 10px;border-left:3px solid var(--y)}
+.lead .tags{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.lead .tags span{font:600 11px "IBM Plex Mono";border:1px solid #111;padding:1px 6px}
+.check ol{margin:0;padding:0;list-style:none;counter-reset:c}
+.check li{counter-increment:c;padding:11px 0 11px 40px;border-bottom:1px solid var(--soft);position:relative;font-size:14.5px}
+.check li::before{content:counter(c,decimal-leading-zero);position:absolute;left:0;top:11px;font:700 14px "IBM Plex Mono";color:var(--red)}
+.check li b{display:block;font-size:15px}
+.check li span{color:var(--ink2)}
+.rel{list-style:none;margin:0;padding:0;border-left:2px solid #111;margin-left:6px}
+.rel li{position:relative;padding:0 0 16px 18px;font-size:14.5px}
+.rel li::before{content:"";position:absolute;left:-7px;top:5px;width:12px;height:12px;background:#fff;border:2px solid #111;border-radius:50%}
+.rel li.hot::before{background:var(--red);border-color:var(--red)}
+.rel .d{font:12px "IBM Plex Mono";color:var(--ink3);display:block}
+.chart{display:grid;gap:4px;margin:8px 0 12px}
+.chart div{display:grid;grid-template-columns:96px 1fr 64px;align-items:center;gap:8px;font-size:13px}
+.chart i{display:block;height:16px;background:#111}
+.chart b{font:500 12.5px "IBM Plex Mono";text-align:right}
+pre.embed{background:#111;color:#e8e8e8;font:12px/1.5 "IBM Plex Mono";padding:10px 12px;overflow:auto;margin:8px 0}
+.contact{background:#111;color:#fff;border:0}
+.contact h3{margin:0 0 6px;font:700 22px "IBM Plex Serif",serif}
+.contact p{color:#cfcfcf;margin:0 0 12px;font-size:14.5px}
+.contact .btn{border-color:#fff}
+.contact input{width:100%;padding:9px 10px;font:15px "IBM Plex Sans";border:0;margin:8px 0}
+.uses a{display:block;padding:9px 0;border-bottom:1px solid var(--soft);text-decoration:none}
+.uses a b{display:block;font-weight:600}
+.uses a small{font:12px "IBM Plex Mono";color:var(--ink3)}
+.toast{position:fixed;right:20px;bottom:20px;background:var(--y);border:1.5px solid #111;padding:10px 14px;font:600 14px "IBM Plex Sans";transform:translateY(100px);transition:transform .2s,opacity .2s;opacity:0;z-index:10}
+.toast.on{transform:none;opacity:1}
+footer{text-align:center;color:var(--ink3);font:12.5px "IBM Plex Mono";padding:30px}
+@media (max-width:860px){.grid{grid-template-columns:1fr}.num{border-right:0;border-bottom:1.5px solid #111}.num:last-child{border-bottom:0}.two{grid-template-columns:1fr}.bar nav{display:none}.bar .r .btn:not(.y){display:none}.bar .r .btn.y{font-size:12px;padding:5px 8px}.logo{font-size:13px}.chart div{grid-template-columns:84px 1fr 58px}}
+</style>
+</head>
+<body>
+<div class="proto">Concept B · Desk. An unofficial mockup, not the Deportation Data Project's site. Numbers are from their Atlas, October 2026. <a href="/design/ddp">← all concepts</a></div>
+<div class="bar">
+  <a class="logo" href="#">Deportation Data Project<b>DESK</b></a>
+  <nav><a class="on" href="#numbers">Numbers</a><a href="#local">Your area</a><a href="#leads">Story leads</a><a href="#check">Before you publish</a><a href="#releases">Releases</a><a href="#charts">Charts</a></nav>
+  <div class="r"><a class="btn" href="/design/ddp/ask">Public site</a><a class="btn y" href="#contact">Talk to a researcher</a></div>
+</div>
+<div class="ticker"><span class="new">NEW</span><span><b>Oct 16</b> ICE 287(g) agreements and the jurisdictions they cover</span><span><b>Sep 24</b> Report: enforcement in Los Angeles</span><span><b>Sep 8</b> Report: the summer 2026 surge in ICE arrests</span><span>All data <b>CC-0</b>: no permission needed, credit appreciated</span></div>
+
+<div class="wrap">
+  <h1>Numbers you can print, leads you can chase, and someone to call before you publish.</h1>
+  <p class="dek">The newsroom entrance to the Deportation Data Project. Every figure comes with a sentence you can copy, a citation with its data release, and the caveat a careful editor will ask about.</p>
+
+  <div class="lab" id="numbers">The national numbers</div>
+  <div class="grid" id="nums"></div>
+
+  <div class="two" id="local">
+    <div>
+      <div class="lab">Your area</div>
+      <div class="panel local">
+        <label class="mono" style="font-size:12px;font-weight:600">STATE, CITY OR ICE FIELD OFFICE</label>
+        <select id="pick"></select>
+        <div class="out" id="out"></div>
+        <table class="t" id="tbl"></table>
+      </div>
+    </div>
+    <div>
+      <div class="lab" id="releases">Release log</div>
+      <div class="panel">
+        <ul class="rel">
+          <li class="hot"><span class="d">OCT 16, 2026 · DATA</span><b>ICE 287(g) local cooperation agreements</b> and the jurisdictions they cover. <a href="#">What's in it</a></li>
+          <li><span class="d">SEP 24, 2026 · REPORT</span><b>Immigration enforcement in Los Angeles</b> under the second Trump administration</li>
+          <li><span class="d">SEP 8, 2026 · REPORT</span><b>Understanding the summer 2026 surge</b> in ICE arrests</li>
+          <li><span class="d">APR 7, 2026 · REPORT</span><b>One year of immigration enforcement</b></li>
+        </ul>
+        <div class="contact panel" style="margin:6px -20px -18px;padding:18px 20px" id="contact">
+          <h3>Get the next release first</h3>
+          <p>One email when new data lands, with the top three numbers already written up. Press-only list.</p>
+          <input placeholder="you@newsroom.org" aria-label="Email"><button class="btn y">Join the press list</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="two">
+    <div>
+      <div class="lab" id="leads">Story leads from the latest data</div>
+      <div class="leads">
+        <div class="lead"><span class="k">1</span><div><h3>Which local agencies signed 287(g) agreements in your state, and how many arrests followed?</h3><p>The Oct. 16 release maps every agreement to its jurisdiction. Pair it with arrests by apprehension method.</p><div class="how">Places ▸ your state ▸ How people are arrested ▸ "Local law enforcement 287(g)"</div><div class="tags"><span>287(g)</span><span>LOCAL</span><span>NEW DATA</span></div></div></div>
+        <div class="lead"><span class="k">2</span><div><h3>Which jail sends the most people to ICE in your area?</h3><p>Detainers and release-notification requests that preceded a book-in, by jail or prison.</p><div class="how">Places ▸ your state ▸ Where people are arrested ▸ Chart 4</div><div class="tags"><span>DETAINERS</span><span>JAILS</span></div></div></div>
+        <div class="lead"><span class="k">3</span><div><h3>Where do people arrested near you end up held?</h3><p>The facilities people are booked into first, held in longest, and released from last.</p><div class="how">Places ▸ your state ▸ Detention after arrest</div><div class="tags"><span>DETENTION</span><span>TRANSFERS</span></div></div></div>
+        <div class="lead"><span class="k">4</span><div><h3>How many people arrested had no criminal conviction?</h3><p>As ICE recorded it at arrest, split into violent and nonviolent by the FBI's classification.</p><div class="how">Places ▸ your state ▸ Criminal convictions</div><div class="tags"><span>CONVICTIONS</span><span>CHECK CAVEATS</span></div></div></div>
+      </div>
+    </div>
+    <div>
+      <div class="lab" id="check">Before you publish</div>
+      <div class="panel check">
+        <ol>
+          <li><b>Arrests are not people.</b><span>The counts are of arrests. One person can be arrested more than once. Likely duplicate records are removed.</span></li>
+          <li><b>Interior is not border.</b><span>"Interior arrests" are ICE arrests away from the border. Border Patrol apprehensions are a separate dataset (CBP).</span></li>
+          <li><b>A city can be a jail.</b><span>Conroe, Florence and Sierra Blanca rank high because of custody transfers recorded there. Say "recorded in", not "residents of".</span></li>
+          <li><b>287(g) arrests are an undercount.</b><span>Some custodial arrests that came through 287(g) programs are coded as custodial.</span></li>
+          <li><b>Sex is officer-observed since about April 2025.</b><span>It is no longer self-reported gender. Comparisons across that date need a note.</span></li>
+          <li><b>Convictions are ICE's record.</b><span>Convictions in other countries are not included.</span></li>
+          <li><b>Some deportation data doesn't add up.</b><span>We flag where it disagrees with government reports, and the Atlas doesn't use those tables. <a href="#">Read the note</a></span></li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <div class="two" id="charts">
+    <div>
+      <div class="lab">Charts you can run</div>
+      <div class="panel">
+        <b style="font:700 18px 'IBM Plex Serif'">ICE arrests since Jan. 1, 2025, top 10 states</b>
+        <div class="chart" id="chart"></div>
+        <div style="font:12px 'IBM Plex Mono';color:#8a8a8a">Source: ICE records obtained by the Deportation Data Project · CC-0</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px"><button class="btn" data-msg="PNG saved (mock)">PNG</button><button class="btn" data-msg="SVG saved (mock)">SVG</button><button class="btn" data-msg="CSV saved (mock)">CSV</button><button class="btn y" data-embed>Copy embed code</button></div>
+        <pre class="embed">&lt;iframe src="https://deportationdata.org/embed/arrests-by-state?since=2025-01-01&amp;top=10" width="100%" height="420" title="ICE arrests by state"&gt;&lt;/iframe&gt;</pre>
+        <div style="font-size:13.5px;color:#4a4a4a">The chart updates itself with each release, and the embed is in your house style when you pass <span class="mono">?theme=</span>.</div>
+      </div>
+    </div>
+    <div>
+      <div class="lab">Recent stories using the data</div>
+      <div class="panel uses" id="uses"></div>
+    </div>
+  </div>
+</div>
+<footer>Mockup · deportationdata.org redesign study · <a href="/design/ddp">all concepts</a></footer>
+<div class="toast" id="toast">Copied</div>
+
+<script src="/design/ddp-assets/data.js"></script>
+<script>
+const D = window.DDP, fmt = n => n.toLocaleString('en-US');
+const today = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+const CITE = `Source: Deportation Data Project, ICE records obtained under the Freedom of Information Act (latest release), deportationdata.org. Accessed ${today}.`;
+const NUMS = [
+  {v:'513,622', p:'ICE arrests in the interior of the U.S. since Jan. 1, 2025.', meta:'ICE · interior arrests · since 2025-01-01',
+   s:'ICE made 513,622 arrests in the interior of the United States from Jan. 1, 2025 through the latest data, according to agency records obtained by the Deportation Data Project.',
+   c:'Interior means away from the border. These are civil immigration arrests, counted by arrest, not by person.'},
+  {v:'3.7×', small:'vs. 138,527', p:'That is 3.7 times the 19 months before.', meta:'ICE · comparison period · 19 months',
+   s:'That is about 3.7 times the 138,527 interior arrests in the 19 months before, according to the Deportation Data Project.',
+   c:'The two periods are the same length (19 months), so the comparison is fair as stated.'},
+  {v:'41,786', p:'Arrests in the busiest month on record in this data, leading to book-ins to detention.', meta:'ICE · monthly · arrests with book-in',
+   s:'In the busiest month in the data, ICE arrests leading to detention reached 41,786, according to the Deportation Data Project.',
+   c:'This monthly count includes only arrests that led to a book-in to detention. Name the month from the chart before you quote it.'},
+];
+document.getElementById('nums').innerHTML = NUMS.map((n,i)=>`
+  <div class="num"><div class="v">${n.v}${n.small?`<small>${n.small}</small>`:''}</div><p>${n.p}</p><div class="meta">${n.meta}</div>
+  <details class="cav"><summary>Before you quote this</summary><p>${n.c}</p></details>
+  <div class="acts"><button class="btn y" data-s="${i}">Copy sentence</button><button class="btn" data-cite>Copy citation</button><a class="btn" href="https://app.deportationdata.org/?agency=ice&dataset=arrests">See the data</a></div></div>`).join('');
+
+// local picker
+const states = [...D.states].sort((a,b)=>b.n-a.n);
+const opts = [
+  ['States', states.map((s,i)=>({label:s.name, n:s.n, rank:i+1, of:'states', list:states.map(x=>[x.name,x.n]), fo:s.fo}))],
+  ['Cities (top 25)', D.cities.map((c,i)=>({label:`${c.name}, ${c.st}`, n:c.n, rank:i+1, of:'cities', list:D.cities.map(x=>[`${x.name}, ${x.st}`,x.n])}))],
+  ['ICE field offices', [...D.offices].sort((a,b)=>b.n-a.n).map((o,i,arr)=>({label:`${o.name} field office`, n:o.n, rank:i+1, of:'field offices', list:arr.map(x=>[`${x.name} field office`,x.n])}))],
+];
+const flat = opts.flatMap(([,l])=>l);
+const pick = document.getElementById('pick');
+pick.innerHTML = opts.map(([g,l])=>`<optgroup label="${g}">${l.map(o=>`<option value="${flat.indexOf(o)}">${o.label}</option>`).join('')}</optgroup>`).join('');
+pick.value = flat.findIndex(o=>o.label==='Illinois');
+let cur;
+function renderLocal(){
+  cur = flat[+pick.value];
+  const share = (100*cur.n/D.allArrests).toFixed(1);
+  cur.sentence = `ICE recorded ${fmt(cur.n)} arrests in ${cur.label} from Jan. 1, 2025 through the latest data, ${share}% of the national total and the ${ord(cur.rank)}-most among ${cur.of}, according to agency records obtained by the Deportation Data Project.`;
+  document.getElementById('out').innerHTML = `<div class="v">${fmt(cur.n)}</div><p>ICE recorded <mark>${fmt(cur.n)} arrests in ${cur.label}</mark> since Jan. 1, 2025, ${share}% of the national total, <b>#${cur.rank}</b> among ${cur.of}.${cur.fo?` Handled by ICE's ${cur.fo.join(', ')} field office${cur.fo.length>1?'s':''}.`:''}</p>
+    <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn y" data-local>Copy sentence</button><button class="btn" data-cite>Copy citation</button><a class="btn" href="https://deportationdata.org/atlas/national">Full local report</a><button class="btn" data-msg="CSV saved (mock)">CSV</button></div>`;
+  const i = cur.rank-1, rows = cur.list.slice(Math.max(0,i-3), i+4);
+  document.getElementById('tbl').innerHTML = `<tr><th>#</th><th>${cur.of}</th><th style="text-align:right">Arrests</th><th style="text-align:right">Share</th></tr>` +
+    rows.map(([l,n])=>`<tr class="${l===cur.label?'me':''}"><td class="mono">${cur.list.findIndex(x=>x[0]===l)+1}</td><td>${l}</td><td class="n">${fmt(n)}</td><td class="n">${(100*n/D.allArrests).toFixed(1)}%</td></tr>`).join('');
+}
+function ord(n){return n+(['th','st','nd','rd'][(n%100-20)%10]||['th','st','nd','rd'][n%100]||'th')}
+pick.onchange = renderLocal; renderLocal();
+
+// chart
+const top10 = states.slice(0,10), max = top10[0].n;
+document.getElementById('chart').innerHTML = top10.map(s=>`<div><span>${s.name}</span><i style="width:${(100*s.n/max).toFixed(1)}%"></i><b>${fmt(s.n)}</b></div>`).join('');
+document.getElementById('uses').innerHTML = D.uses.map(([t,o,d])=>`<a href="https://deportationdata.org/uses.html"><b>${t}</b><small>${o.toUpperCase()} · ${d}</small></a>`).join('') + `<a href="#"><b>Used the data? Tell us →</b><small>WE LIST EVERY STORY</small></a>`;
+
+const toast = document.getElementById('toast');
+function say(m, text){ if(text) navigator.clipboard?.writeText(text).catch(()=>{}); toast.textContent = m; toast.classList.add('on'); setTimeout(()=>toast.classList.remove('on'),1500); }
+document.addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  if(b.dataset.s) say('Sentence copied', NUMS[+b.dataset.s].s);
+  else if(b.hasAttribute('data-cite')) say('Citation copied', CITE);
+  else if(b.hasAttribute('data-local')) say('Sentence copied', cur.sentence);
+  else if(b.hasAttribute('data-embed')) say('Embed code copied', document.querySelector('pre.embed').textContent);
+  else if(b.dataset.msg) say(b.dataset.msg);
+});
+</script>
+</body>
+</html>

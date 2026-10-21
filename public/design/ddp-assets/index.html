@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Deportation Data, redesigned</title>
+<meta name="description" content="Three unofficial redesign concepts for deportationdata.org: who uses it, what gets in the way, and three directions that make it easier to navigate.">
+<meta property="og:title" content="Deportation Data, redesigned — three concepts">
+<meta property="og:description" content="Who uses deportationdata.org, what gets in the way, and three directions: Ask, Desk, Local.">
+<meta property="og:image" content="https://ola.cx/design/ddp-assets/og.png">
+<meta property="og:url" content="https://ola.cx/design/ddp">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#f4f1ea">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#f4f1ea;--ink:#16151a;--ink2:#55524c;--ink3:#8c877d;--line:#d9d3c6;--card:#fffdf8;--a:#b3361d;--b:#1a1a1a;--c:#2f3bd6;--hl:#ffe36b}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.55 "Instrument Sans",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+.wrap{max-width:1080px;margin:0 auto;padding:0 max(20px,env(safe-area-inset-left)) 80px}
+.note{background:var(--ink);color:#f4f1ea;font-size:13px;padding:9px 20px;text-align:center}
+.note a{color:var(--hl)}
+header{padding:64px 0 36px;border-bottom:1px solid var(--line)}
+.kicker{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);font-weight:600}
+h1{font:400 clamp(44px,7vw,84px)/1 "Instrument Serif",serif;letter-spacing:-.01em;margin:14px 0 22px}
+h1 em{color:var(--a)}
+.lede{font-size:21px;max-width:720px;color:var(--ink2);margin:0}
+h2{font:400 40px/1.1 "Instrument Serif",serif;margin:0 0 8px}
+section{padding:56px 0;border-bottom:1px solid var(--line)}
+.sub{color:var(--ink2);max-width:700px;margin:0 0 28px}
+.aud{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.aud .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px}
+.aud h3{margin:0 0 4px;font-size:20px}
+.aud .who{color:var(--ink3);font-size:14px;margin:0 0 14px}
+.aud ul{margin:0;padding:0;list-style:none}
+.aud li{padding:9px 0;border-top:1px dashed var(--line);font-size:15.5px}
+.aud li:first-child{border-top:0}
+.aud li q{font-style:italic;quotes:"“" "”"}
+.tag{display:inline-block;font-size:12px;font-weight:600;border-radius:99px;padding:2px 9px;margin-bottom:10px}
+.t1{background:#f6dcd4;color:#7d2412}.t2{background:#e2e4fb;color:#1d27a0}.t3{background:#ece8dd;color:#4c4637}
+.prob{counter-reset:p;display:grid;grid-template-columns:1fr 1fr;gap:14px 34px}
+.prob div{counter-increment:p;padding-left:46px;position:relative}
+.prob div::before{content:counter(p);position:absolute;left:0;top:2px;width:30px;height:30px;border-radius:50%;border:1.5px solid var(--ink);display:grid;place-items:center;font-weight:600;font-size:14px}
+.prob b{display:block;font-size:17px}
+.prob span{color:var(--ink2);font-size:15.5px}
+.good{margin-top:28px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 22px;font-size:15.5px;color:var(--ink2)}
+.good b{color:var(--ink)}
+.concepts{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.concept{display:flex;flex-direction:column;text-decoration:none;background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;transition:transform .15s,box-shadow .15s}
+.concept:hover{transform:translateY(-3px);box-shadow:0 14px 30px -18px rgba(0,0,0,.35)}
+.thumb{height:190px;position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
+.concept .body{padding:20px 22px 22px;display:flex;flex-direction:column;gap:10px;flex:1}
+.concept h3{margin:0;font:400 32px/1 "Instrument Serif",serif}
+.concept .bet{font-size:15.5px;margin:0}
+.concept dl{margin:0;font-size:14px;color:var(--ink2);display:grid;grid-template-columns:auto 1fr;gap:4px 10px}
+.concept dt{font-weight:600;color:var(--ink)}
+.concept dd{margin:0}
+.open{margin-top:auto;font-weight:600;font-size:15px}
+/* thumbnails drawn in CSS so the index loads instantly */
+.th-ask{background:#faf7f2}
+.th-ask .q{position:absolute;left:24px;right:24px;top:44px;height:44px;border:2px solid #1b1b1b;border-radius:99px;background:#fff;display:flex;align-items:center;padding:0 18px;font:italic 17px "Instrument Serif",serif;color:#8c877d}
+.th-ask .h{position:absolute;left:24px;top:14px;font:600 13px "Instrument Sans";color:#b3361d}
+.th-ask .chips{position:absolute;left:24px;right:24px;top:102px;display:flex;flex-wrap:wrap;gap:6px}
+.th-ask .chips i{font-style:normal;font-size:11px;border:1px solid #d9d3c6;border-radius:99px;padding:3px 8px;background:#fff}
+.th-desk{background:#fff}
+.th-desk .bar{height:26px;background:#111;color:#fff;font:600 11px "Instrument Sans";display:flex;align-items:center;padding:0 12px;gap:12px}
+.th-desk .bar b{background:#ffe14d;color:#111;padding:1px 5px}
+.th-desk .n{position:absolute;left:16px;top:42px;right:16px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.th-desk .n div{border:1px solid #111;padding:8px;font:700 22px "Instrument Sans"}
+.th-desk .n small{display:block;font:400 10px/1.3 "Instrument Sans";color:#555}
+.th-desk .n em{font-style:normal;background:#ffe14d;font-size:10px;padding:1px 4px;font-weight:600}
+.th-local{background:#f7efdf}
+.th-local .tiles{position:absolute;left:18px;top:18px;display:grid;grid-template-columns:repeat(11,14px);grid-auto-rows:14px;gap:2px}
+.th-local .tiles i{border-radius:3px}
+.th-local .pane{position:absolute;right:16px;top:22px;width:118px;background:#fff;border-radius:10px;padding:10px;font-size:10px;line-height:1.3;box-shadow:3px 3px 0 #3d3bff}
+.th-local .pane b{display:block;font-size:20px;color:#3d3bff}
+.th-local .lang{position:absolute;left:18px;bottom:16px;font:600 11px "Instrument Sans";background:#16121c;color:#f7efdf;border-radius:99px;padding:3px 10px}
+.princ{display:grid;grid-template-columns:repeat(2,1fr);gap:12px 34px;margin:0;padding:0;list-style:none}
+.princ li{padding:14px 0;border-top:1px solid var(--line)}
+.princ b{display:block}
+.princ span{color:var(--ink2);font-size:15.5px}
+.rec{background:var(--ink);color:#f4f1ea;border-radius:18px;padding:30px 32px;margin-top:8px}
+.rec h2{color:#fff}
+.rec p{color:#d8d3c7;max-width:760px}
+.rec b{color:var(--hl);font-weight:600}
+.cur{display:grid;grid-template-columns:1.1fr .9fr;gap:24px;align-items:start}
+.cur figure{margin:0;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px}
+.cur figcaption{font-size:13px;color:var(--ink3);padding:8px 4px 0}
+.navdiff{font-size:14.5px;border-collapse:collapse;width:100%}
+.navdiff th,.navdiff td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.navdiff th{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)}
+.navdiff td:first-child{color:var(--ink2)}
+.navdiff code{font:13px ui-monospace,monospace;background:#ece8dd;padding:1px 5px;border-radius:4px}
+footer{padding:40px 0;color:var(--ink3);font-size:14px}
+@media (max-width:860px){.aud,.concepts{grid-template-columns:1fr}.prob,.princ,.cur{grid-template-columns:1fr}h2{font-size:34px}}
+</style>
+</head>
+<body>
+<div class="note">Unofficial design concepts, made as a proposal. Not affiliated with the Deportation Data Project. Numbers are theirs, read from <a href="https://deportationdata.org/atlas">their Atlas</a> in October 2026.</div>
+<div class="wrap">
+<header>
+  <div class="kicker">deportationdata.org · redesign study</div>
+  <h1>The data is excellent.<br>The front door is <em>intimidating.</em></h1>
+  <p class="lede">The Deportation Data Project sues the government for immigration enforcement records and publishes them, free and CC-0. Its users are mostly reporters on deadline, plus organizers and curious citizens. Most of them arrive with a question about a place, not a dataset. Here is who they are, what gets in their way, and three directions for a site that meets them there.</p>
+</header>
+
+<section>
+  <h2>1 · Who comes, and what they came for</h2>
+  <p class="sub">Three audiences, one shared need: a number they can trust, for a place they care about, in words they can repeat.</p>
+  <div class="aud">
+    <div class="card">
+      <span class="tag t1">Primary</span>
+      <h3>Journalists</h3>
+      <p class="who">Local and national reporters, data desks, fact-checkers. On deadline, often not data specialists.</p>
+      <ul>
+        <li><q>How many people has ICE arrested in my city since January?</q></li>
+        <li><q>Is that up? Compared to what?</q></li>
+        <li><q>Give me the sentence and the citation, and tell me what I <i>can't</i> say.</q></li>
+        <li><q>What's new in the latest release that's a story?</q></li>
+        <li><q>Can I use this chart? Who do I call to check my reading?</q></li>
+      </ul>
+    </div>
+    <div class="card">
+      <span class="tag t2">Secondary</span>
+      <h3>Community organizers</h3>
+      <p class="who">Rapid-response networks, legal clinics, faith groups, local advocates. Often bilingual audiences.</p>
+      <ul>
+        <li><q>What's happening in our county, in numbers we can bring to a city council meeting?</q></li>
+        <li><q>Does our sheriff have a 287(g) agreement?</q></li>
+        <li><q>Where are people taken after they're arrested here?</q></li>
+        <li><q>Something we can share, in Spanish too.</q></li>
+      </ul>
+    </div>
+    <div class="card">
+      <span class="tag t3">Also served</span>
+      <h3>Citizens · researchers</h3>
+      <p class="who">Readers who saw a headline; academics and analysts who want the raw files.</p>
+      <ul>
+        <li><q>Is this really happening more, or is it the news?</q></li>
+        <li><q>What is a "detainer"? What's "custodial"?</q></li>
+        <li><q>Where does this come from, and why should I trust it?</q></li>
+        <li><q>(Researchers) Give me the parquet, the codebook, and the code.</q> This works well today; keep it.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>2 · What gets in the way today</h2>
+  <p class="sub">From walking the live site as each of those people.</p>
+  <div class="cur">
+    <div class="prob" style="grid-template-columns:1fr">
+      <div><b>The menus are sorted by agency acronym.</b><span>Explore, Download and Documentation each open onto the same list: ICE, CBP, EOIR, EOUSA, USCIS. You have to know which agency holds your answer before you can ask the question.</span></div>
+      <div><b>The home page opens on a researcher's tool.</b><span>The first thing below the mission line is a data explorer with column filters and a "has_detention_stay flag". It is powerful, and it tells a newcomer this site is not for them.</span></div>
+      <div><b>The best thing on the site is hidden.</b><span>The Atlas answers most questions in plain language, by place, with definitions alongside. It is not in the main menu and not on the home page.</span></div>
+      <div><b>Place is how people think. It is not how the site starts.</b><span>"My city", "my county", "my state" is the most common question. The place picker exists, but only inside the Atlas sidebar.</span></div>
+      <div><b>Numbers aren't packaged to be reused.</b><span>There is no ready-to-quote sentence and no citation line with the release date. The caveats a reporter needs, such as duplicate records, interior vs. border, and officer-observed sex since April 2025, live in notes further down.</span></div>
+    </div>
+    <div>
+      <table class="navdiff">
+        <tr><th>Today's menu</th><th>Asks the reader to know</th></tr>
+        <tr><td>Explore ▸ ICE ▸ <code>Arrests joined with detention stays</code></td><td>That arrests and detentions are separate tables, and that joining them matters</td></tr>
+        <tr><td>Download ▸ EOIR</td><td>That immigration courts are "EOIR"</td></tr>
+        <tr><td>Documentation ▸ EOUSA ▸ Documents</td><td>That prosecutions are "EOUSA"</td></tr>
+        <tr><td>Reports · Uses · Updates</td><td>The difference between the three</td></tr>
+      </table>
+      <div class="good"><b>Worth keeping, everywhere:</b> the Atlas's definitions beside the text; "download the numbers / save the chart / explore the data" under every chart; CC-0; the frank "About the numbers" page; the Spanish language switch.</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>3 · Three directions</h2>
+  <p class="sub">Each is a working mockup with the Atlas's real figures. All three keep the raw data one click down. They differ in what they put first.</p>
+  <div class="concepts">
+    <a class="concept" href="/design/ddp/ask">
+      <div class="thumb th-ask"><div class="h">Deportation Data</div><div class="q">Houston · or ask a question…</div><div class="chips"><i>How many arrests near me?</i><i>Does my county work with ICE?</i><i>What happens after arrest?</i></div></div>
+      <div class="body">
+        <span class="tag t1" style="align-self:flex-start">A · for everyone</span>
+        <h3>Ask</h3>
+        <p class="bet">The home page is a single search box for a place or a question. Every answer comes back as a sentence you can quote, with the chart and the caveat beside it.</p>
+        <dl><dt>Bet</dt><dd>Questions beat menus</dd><dt>Risk</dt><dd>Needs a good index of places and questions</dd></dl>
+        <span class="open">Open Ask →</span>
+      </div>
+    </a>
+    <a class="concept" href="/design/ddp/desk">
+      <div class="thumb th-desk"><div class="bar">DDP <b>NEWSROOM</b> Numbers · Leads · Releases · Methods</div><div class="n"><div>513,622<small>interior arrests since Jan. 1, 2025</small><em>Copy sentence</em></div><div>3.7×<small>the 19 months before</small><em>Copy citation</em></div></div></div>
+      <div class="body">
+        <span class="tag t1" style="align-self:flex-start">B · for journalists</span>
+        <h3>Desk</h3>
+        <p class="bet">A press room. You get the latest numbers with sentences you can copy, story leads from each release, a "before you publish" checklist, and a researcher you can call.</p>
+        <dl><dt>Bet</dt><dd>Serve the primary audience brilliantly</dd><dt>Risk</dt><dd>Reads as insider to organizers</dd></dl>
+        <span class="open">Open Desk →</span>
+      </div>
+    </a>
+    <a class="concept" href="/design/ddp/local">
+      <div class="thumb th-local"><div class="tiles" id="mini"></div><div class="pane">Texas<b>136,451</b>#1 of 50 states</div><div class="lang">EN · ES</div></div>
+      <div class="body">
+        <span class="tag t2" style="align-self:flex-start">C · for communities</span>
+        <h3>Local</h3>
+        <p class="bet">Map first and bilingual. You pick where you live and get a place card in plain words, a glossary, and a graphic you can share or print for a meeting.</p>
+        <dl><dt>Bet</dt><dd>Place + plain language + sharing</dd><dt>Risk</dt><dd>Less room for nuance per number</dd></dl>
+        <span class="open">Open Local →</span>
+      </div>
+    </a>
+  </div>
+</section>
+
+<section>
+  <h2>Shared principles</h2>
+  <p class="sub">Whichever direction wins, these carry over.</p>
+  <ul class="princ">
+    <li><b>Sort by task, not by agency.</b><span>The menu becomes Places · Reports · Data &amp; downloads · How to use the data · About. Agencies appear inside, with plain names: "ICE (arrests and detention)", "Immigration courts (EOIR)".</span></li>
+    <li><b>A place search on every page.</b><span>Country, state, city or ICE field office, the same index the Atlas already ships.</span></li>
+    <li><b>Every number travels with its sentence, its date and its caveat.</b><span>Copy sentence, copy citation (with the data release date), and "before you quote this".</span></li>
+    <li><b>Make the Atlas the spine.</b><span>It is the plain-language layer. Reports, the explorer and the downloads hang off it.</span></li>
+    <li><b>Definitions inline, everywhere.</b><span>A word like "detainer" or "custodial" is underlined, and tapping it explains it. The Atlas's sidebar glossary already does this; extend it to the whole site.</span></li>
+    <li><b>Raw data one level down, never gone.</b><span>Researchers keep the downloads, codebooks and code exactly as they are, under "Data &amp; downloads".</span></li>
+  </ul>
+  <div class="rec">
+    <h2>My recommendation</h2>
+    <p><b>Build Ask as the home page and site structure</b>, since it serves all three audiences without a fork in the road. <b>Add Desk as a /press section</b>, because journalists are the primary users and the copyable sentence, citation and checklist are cheap to make and high in value. <b>Take Local's place card and Spanish glossary</b> into Ask's answer pages rather than building a separate map-first site.</p>
+  </div>
+</section>
+<footer>Unofficial concepts, October 2026 · Data: CC-0, Deportation Data Project (UC Berkeley School of Law &amp; UCLA) · <a href="https://deportationdata.org">deportationdata.org</a></footer>
+</div>
+<script src="/design/ddp-assets/data.js"></script>
+<script>
+// tiny tile map for the Local thumbnail
+const m=document.getElementById('mini'),max=Math.max(...DDP.states.map(s=>s.n));
+for(const s of DDP.states){const i=document.createElement('i');i.style.gridColumn=s.x+1;i.style.gridRow=s.y+1;const t=Math.sqrt(s.n/max);i.style.background=`rgba(61,59,255,${.15+.85*t})`;m.appendChild(i)}
+</script>
+</body>
+</html>
