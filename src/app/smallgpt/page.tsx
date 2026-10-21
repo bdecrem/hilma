@@ -81,6 +81,8 @@ export default function SmallGptPage() {
                       {s.summary.split("\n\n").map((para) => (
                         <p key={para.slice(0, 40)}>{para}</p>
                       ))}
+                    </>
+                  )}
                       {s.figures && (
                         <div className="sg-figs">
                           {s.figures.map((f) => (
@@ -105,8 +107,6 @@ export default function SmallGptPage() {
                           ))}
                         </ol>
                       )}
-                    </>
-                  )}
                   {s.saw && (
                     <>
                       <h3>What we saw</h3>
