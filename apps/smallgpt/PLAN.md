@@ -21,7 +21,7 @@ Status is one of: **not started · approved · building · done · skipped**.
 | 11 | Reward model + PPO | The RLHF recipe: a judge, then reinforcement learning | done 2026-10-17 (on the 92M model: 11,521 Claude-judged pairs, reward model 81% agreement, PPO with the leash at 0.2 wins 72% against SFT judged blind by Claude; without the leash the reward model is gamed and it wins 26%) |
 | 11b | Golden Gate Cthulhu (feature steering) | Find the model's Cthulhu inside its activations and turn it up, the way Anthropic made Golden Gate Claude | done and reverted 2026-10-19: (a) a direction by subtraction was weak (mostly bibliographies, the name once; the Amiga control works, so the method is right and Cthulhu is thin) and added nothing interesting, so Cthulhu 92M came off the chat page; (b), the sparse autoencoder, is not planned. The code and sweeps stay in `11b-steer/` |
 | 12 | DPO | Preference alignment without a reward model | skipped 2026-10-18 (step 11 did preferences the RLHF way instead) |
-| 13 | RLVR with GRPO | Reinforcement learning against a checker | not started (next; starts from step 11's PPO model, leash 0.2, not from Cthulhu) |
+| 13 | RLVR with GRPO | Reinforcement learning against a checker | done 2026-10-20 (from step 11's PPO model; addition, a 0/1 checker, GRPO; one-digit sums 0% → 48% held out in 300 rounds, 46 min on the mini; two-digit sums never opened; each problem ends all-or-nothing, so it memorized a lookup table, no reasoning to find at 92M; on the chat page as RLVR 92M) |
 
 Steps 1–6 follow Karpathy's "Neural Networks: Zero to Hero" (micrograd,
 makemore, minbpe, nanoGPT). Steps 9–13 are written by hand on our own model,
@@ -334,7 +334,17 @@ rate. The RLHF model goes on ola.cx/smallgpt/chat as a third choice.
 About 20 minutes of Claude calls for the pairs, minutes for the reward
 model, under an hour for PPO. One or two sessions.
 
-## 13 · RLVR with GRPO (was step 12)
+## 13 · RLVR with GRPO (was step 12) — done 2026-10-20
+
+Built as planned in `13-rlvr/`; results in its README. Changes from the plan:
+the probe showed the PPO model at 0% on two-digit sums with no mixed groups to
+learn from, so training started on one-digit sums with a curriculum that would
+open two-digit levels at 60% held out; it ended at 48%, so they never opened.
+Each problem ended all-or-nothing at every temperature (pass@8 = sampled
+accuracy), which is what GRPO has no gradient on; the "reasoning" the step asks
+about is a memorized lookup table at this scale. A second run with answers
+capped at 24 tokens learned twice as fast and ended in the same place.
+
 
 **Build:** a prompt generator for a verifiable task (two-digit arithmetic,
 to start); a verifier that parses the model's answer and returns 1 if it is

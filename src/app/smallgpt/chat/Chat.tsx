@@ -2,22 +2,23 @@
 
 import { useEffect, useRef, useState } from 'react'
 
-// Talk to the step 9, 10 and 11 models. They run in this browser, in a worker
+// Talk to the step 9, 10, 11 and 13 models. They run in this browser, in a worker
 // (public/smallgpt/chat/worker.mjs): no server. The 92M models are 92 MB of
 // weights each, the 10M ones 10 MB.
 
-type Model = 'cranky' | 'rlhf' | 'cranky-10m' | 'helpful'
+type Model = 'cranky' | 'rlhf' | 'rlvr' | 'cranky-10m' | 'helpful'
 type Reply = { text: string; done: boolean; error?: string; ms?: number; tokens?: number }
 type Turn = { id: number; q: string; model: Model; main: Reply; base?: Reply }
 
 const MODELS: { id: Model; label: string; base: string; note: string }[] = [
   { id: 'cranky', label: 'cranky 92M', base: 'base', note: 'Step 10: 92M parameters, SFT on 3,206 real Usenet questions and replies, made crankier' },
   { id: 'rlhf', label: 'RLHF 92M', base: 'base', note: 'Step 11: the cranky 92M model after PPO against a reward model trained on Claude\'s judgments' },
+  { id: 'rlvr', label: 'RLVR 92M', base: 'base', note: 'Step 13: the RLHF model after GRPO against an arithmetic checker. Ask it what 47 + 38 is' },
   { id: 'cranky-10m', label: 'cranky 10M', base: 'base-10m', note: 'Step 9b: the same SFT on the 10M model' },
   { id: 'helpful', label: 'helpful 10M', base: 'base-10m', note: 'Step 9: SFT on 2,945 Q&A pairs Claude wrote' },
 ]
-const SIZE: Record<string, string> = { cranky: '92', rlhf: '92', base: '92', 'cranky-10m': '10', helpful: '10', 'base-10m': '10' }
-const TAG: Record<string, string> = { cranky: 'cranky 92M', rlhf: 'RLHF 92M', 'cranky-10m': 'cranky 10M', helpful: 'helpful 10M' }
+const SIZE: Record<string, string> = { cranky: '92', rlhf: '92', rlvr: '92', base: '92', 'cranky-10m': '10', helpful: '10', 'base-10m': '10' }
+const TAG: Record<string, string> = { cranky: 'cranky 92M', rlhf: 'RLHF 92M', rlvr: 'RLVR 92M', 'cranky-10m': 'cranky 10M', helpful: 'helpful 10M' }
 
 const TRY = ['How do I quit vi?', 'Is a 2400 baud modem worth it?', 'Should I buy an Amiga or an Atari ST?', 'Why is my Mac Plus so slow?']
 
