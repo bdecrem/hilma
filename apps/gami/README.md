@@ -22,8 +22,9 @@ its README has the tables and examples). Next: a summary web page built from it.
 | `needs-you.md` | what is still missing and why |
 | `debug/` | attempt logs, screenshots, candidates.json (open-access URLs and PIIs per paper) |
 
-Status on 2026-10-14: 1,340 of 1,682 downloaded; 158 have no DOI anywhere, 123 no PDF found, 33 Elsevier
-waiting on API access, 28 outside Stanford's subscription (Inderscience, IWA, a few others).
+Status on 2026-10-21: 1,372 of 1,682 downloaded; 158 have no DOI anywhere, 122 no PDF found, 28 outside Stanford's
+subscription (Inderscience, IWA, a few others), 2 Elsevier (Rangeland Ecology & Management) the API won't serve.
+The 32 Elsevier papers added on 2026-10-21 came through the Article Retrieval API (see `fetch/README.md`).
 
 Reach it from the iMac with `ssh admin@171.66.240.175` (key auth). The mini has `python3` but no `uv`.
 
