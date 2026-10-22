@@ -501,14 +501,14 @@ export default function Projects() {
               currently: <a href="https://github.com/bdecrem/Macinclaude" target="_blank" rel="noopener noreferrer" className="underline decoration-dotted underline-offset-2">setting up my mac plus</a> just so, in preparation for a year at stanford, working on <a href="#dodo" className="underline decoration-dotted underline-offset-2">dodo</a>, and still noodling on <a href="#jambot" className="underline decoration-dotted underline-offset-2">jambot</a>.
             </p>
             <p>
-              october 2026: the internet had <a href="https://www.securityweek.com/php2shell-mass-exploitation-looms-for-leaked-critical-php-flaws/" target="_blank" rel="noopener noreferrer" className="underline decoration-dotted underline-offset-2">a week</a>. we turned a few things off, at least for now. they&apos;re marked 🪦 below.
-            </p>
-            <p>
               may 2025&ndash;2026: a year building agentic ai systems, mostly proofs of concept. a research agent on a knowledge graph of 200,000+ ai papers. a game studio where 6 agents built 65+ arcade games. a command-line daw with 7 custom synthesizers. a creative sidekick that has made 500+ generative artworks. plus, a prototype for a responsible ai incubator.
             </p>
             <p>
               previously: firefox 1.0 launch team, tap tap revenge, disney mobile games and{' '}
               <a href="https://linkedin.com/in/bartdecrem" target="_blank" rel="noopener noreferrer" className="underline decoration-dotted underline-offset-2">more</a>.
+            </p>
+            <p className="italic">
+              october 2026: the internet had <a href="https://www.securityweek.com/php2shell-mass-exploitation-looms-for-leaked-critical-php-flaws/" target="_blank" rel="noopener noreferrer" className="underline decoration-dotted underline-offset-2">a week</a>. we turned a few things off, at least for now. they&apos;re marked 🪦 below.
             </p>
           </div>
           <div className="mt-5 flex items-center gap-4">
