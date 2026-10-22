@@ -996,3 +996,9 @@ Goal: a public TestFlight beta, not an App Store release.
   the same day (the plist now reads `$(MARKETING_VERSION)` /
   `$(CURRENT_PROJECT_VERSION)`, project.yml says 1.0) — the next upload must
   be 1.0 with a build number above 1, so bump before every archive.
+
+## Overview (moved from the root CLAUDE.md, 2026-10-22)
+
+Where it lives: `apps/tokensurfers/` + `src/app/api/surf/llm/` + `src/lib/surf/`. Deploy: Xcode (XcodeGen; Catalyst for Mac); web at tokensurfers.app + brainrot.surf (Vercel, → `/surf`).
+
+Brainrot vibe-coding app from `misc/3.MP4` (2026-09-23): Splat builds apps while you play Token Surfers underneath. Since 2026-09-24 the agent is **Claude Code run headless on the Mac mini** (`apps/tokensurfers/agent/`, Agent SDK, a workspace + git repo + session per app, deployed to Vercel, mid-build notes via a PostToolUse hook, ⚡ now = `interrupt()`, a long-poll feed through tunn3l `surf-mini`); the original on-phone four-tool loop (one-file HTML apps) stays behind a Home toggle — a real runner since 2026-09-24 (chunk-authored track, ride-able ramp trains, roof coins, game over, chiptune loop, the surfer = Splat with legs, scarf, antenna and a `>_` backpack) with a **global leaderboard** (`surf_scores`, `/api/surf/scores`), solo play from Home, **accounts + a gallery** (`surf_users`/`surf_apps`/`surf_upvotes`, `/api/surf/auth/*`, `/api/surf/apps*`; publish from the Studio, upvote and remix in the app or on the web at `/surf`, `/surf/gallery`, `/surf/a/<slug>`; landing page at `/surf`; **comments** on every creation on the web and in the app, and a "new for you" card on Home that tells an owner about new upvotes and comments, with toggles — `surf_comments`, `/api/surf/inbox`, 2026-09-26). Tokens become coins, tool calls become terminal trains, bugs crawl onto the track. The server route owns the prompt and tools and streams SSE through.
