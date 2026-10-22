@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 
-type Status = 'active' | 'wip' | 'respinning' | 'neglected' | 'retired' | 'cantquit'
+type Status = 'active' | 'wip' | 'respinning' | 'neglected' | 'retired' | 'rip' | 'cantquit'
 
 interface Project {
   name: string
@@ -59,16 +59,16 @@ const projects: Project[] = [
   {
     name: 'ctrl shift',
     url: 'https://ctrlshift.so',
-    shortDesc: 'idea for a responsible ai incubator, with learnings from mozilla builders. prototype built at a funder\'s invitation. prospected a first cohort and built a full <a href="https://ctrlshift.so/cs" target="_blank" rel="noopener noreferrer" class="underline decoration-dotted underline-offset-2">knowledge repo</a>.',
+    shortDesc: 'idea for a responsible ai incubator, with learnings from mozilla builders. prototype built at a funder\'s invitation. prospected a first cohort and built a full knowledge repo.',
     fullDesc: 'long horizon lab. backing founders, researchers, students building for impact that won\'t show in next quarter\'s metrics.',
-    status: 'neglected',
+    status: 'rip',
   },
   {
     name: 'claudio',
     url: 'https://claudio.la',
     shortDesc: 'i\'ve worked with teams on several social apps, most recently mammoth. wanted to see how far i could get vibe-coding one solo, backend and all. a: pretty far.',
     fullDesc: 'native ios client for openclaw. point at your openclaw server and go. no accounts, no tracking, no data collection. added a full web service where you and your agents can chat with me and my agents (just before i got bored with openclaw).',
-    status: 'neglected',
+    status: 'rip',
   },
   {
     name: 'das kollektiv',
@@ -89,14 +89,14 @@ const projects: Project[] = [
     url: 'https://mutabl.co',
     shortDesc: 'the idea: software that evolves as you use it. ask, and it grows new features.',
     fullDesc: 'apps that evolve. ask your todo list for a new feature, it builds it. source is yours.',
-    status: 'neglected',
+    status: 'rip',
   },
   {
     name: 'kochi.to',
     url: 'https://kochi.to',
     shortDesc: 'the idea: a personal ai agent over sms, built around daily text and <a href="https://apps.apple.com/us/app/kochi-podcast-player/id6752669410" target="_blank" rel="noopener noreferrer" class="underline decoration-dotted underline-offset-2">podcast</a> briefs on ai, science, and tech. for the ai research brief: a graph database with 200k+ papers and agentic search on top.',
-    fullDesc: 'ai over sms. daily reports, research papers, chat companion. also an iphone podcast app. (most agents decommissioned.)',
-    status: 'neglected',
+    fullDesc: 'ai over sms. daily reports, research papers, chat companion. also an iphone podcast app. (all agents decommissioned, oct 2026.)',
+    status: 'rip',
     artifacts: [{ label: 'iphone app', url: 'https://apps.apple.com/us/app/kochi-podcast-player/id6752669410' }],
   },
   {
@@ -111,7 +111,7 @@ const projects: Project[] = [
     url: 'https://shipshot.io',
     shortDesc: 'a team of agents that scan the web for trends, pitch startup ideas from what they find, then design and build them.',
     fullDesc: 'daily startup idea generator. market analysis included. usefulness tbd.',
-    status: 'neglected',
+    status: 'rip',
   },
   {
     name: 'tax yolo',
@@ -132,21 +132,21 @@ const projects: Project[] = [
     url: 'https://kochi.to/token-tank',
     shortDesc: 'gave 5 ai agents $500 to build businesses. one registered a domain. they held a meeting. <em>summer-fall 2025.</em>',
     fullDesc: 'ai incubator for ais.',
-    status: 'neglected',
+    status: 'rip',
   },
   {
     name: 'webtoys',
     url: 'https://webtoys.ai',
-    shortDesc: 'what if lovable, but over sms? text a prompt, get a deployed web page. might still work. <em>summer-fall 2025.</em>',
+    shortDesc: 'what if lovable, but over sms? text a prompt, get a deployed web page. <em>summer-fall 2025.</em>',
     fullDesc: 'vibecoding over sms.',
-    status: 'neglected',
+    status: 'rip',
   },
   {
     name: 'advisorsfoundry',
     url: 'https://advisorsfoundry.ai',
     shortDesc: 'chatbot that grew into something. discord bots, easter eggs, sms. held together by inertia. <em>summer-fall 2025.</em>',
     fullDesc: 'the first experiment.',
-    status: 'neglected',
+    status: 'rip',
   },
 ]
 
@@ -199,6 +199,7 @@ const lightTheme = {
     respinning: { label: 'booting up', color: 'text-amber-600', bg: 'bg-amber-50', dot: 'bg-amber-400' },
     neglected: { label: 'neglect (benign)', color: 'text-slate-400', bg: 'bg-slate-50', dot: 'bg-slate-300' },
     retired: { label: '\uD83E\uDED7†', color: 'text-stone-400', bg: 'bg-stone-50', dot: 'bg-stone-300' },
+    rip: { label: '\uD83E\uDEA6 rip', color: 'text-stone-500', bg: 'bg-stone-100', dot: 'bg-stone-400' },
     cantquit: { label: "can't quit you", color: 'text-rose-600', bg: 'bg-rose-50', dot: 'bg-rose-400' },
   },
   accent: {
@@ -207,6 +208,7 @@ const lightTheme = {
     respinning: 'from-amber-300 via-orange-300 to-yellow-300',
     neglected: 'from-stone-200 via-stone-300 to-stone-200',
     retired: 'from-stone-200 via-stone-300 to-stone-200',
+    rip: 'from-stone-200 via-stone-300 to-stone-200',
     cantquit: 'from-rose-300 via-orange-300 to-rose-300',
   },
 }
@@ -227,7 +229,7 @@ function StatusPill({ status, theme }: { status: Status; theme: Theme }) {
 function ProjectCard({ project, index, vibeMode, theme }: { project: Project; index: number; vibeMode: boolean; theme: Theme }) {
   const [expanded, setExpanded] = useState(false)
   const statuses: Status[] = Array.isArray(project.status) ? project.status : [project.status]
-  const primaryStatus: Status = statuses[0]
+  const dead = statuses.includes('rip')
 
   return (
     <div
@@ -279,18 +281,25 @@ function ProjectCard({ project, index, vibeMode, theme }: { project: Project; in
                 {project.fullDesc}
               </p>
               <div className="flex items-center gap-3 mt-3 flex-wrap">
-                <a
-                  href={project.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  className={`inline-flex items-center gap-1.5 text-xs font-medium transition-colors ${theme.link}`}
-                >
-                  <span className={`underline underline-offset-2 ${theme.linkDecor}`}>{project.url.replace('https://', '')}</span>
-                  <svg width="10" height="10" viewBox="0 0 12 12" fill="none" className="opacity-50">
-                    <path d="M3 9L9 3M9 3H4.5M9 3v4.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </a>
+                {dead ? (
+                  <span className="inline-flex items-center gap-1.5 text-xs font-medium text-stone-400 cursor-default select-none">
+                    <s className="decoration-stone-300">{project.url.replace('https://', '')}</s>
+                    <span aria-hidden="true">\uD83E\uDEA6</span>
+                  </span>
+                ) : (
+                  <a
+                    href={project.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className={`inline-flex items-center gap-1.5 text-xs font-medium transition-colors ${theme.link}`}
+                  >
+                    <span className={`underline underline-offset-2 ${theme.linkDecor}`}>{project.url.replace('https://', '')}</span>
+                    <svg width="10" height="10" viewBox="0 0 12 12" fill="none" className="opacity-50">
+                      <path d="M3 9L9 3M9 3H4.5M9 3v4.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </a>
+                )}
                 {project.artifacts?.map((a) => (
                   <a
                     key={a.label}
