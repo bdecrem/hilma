@@ -3,7 +3,7 @@ import SwiftUI
 /// Which screen is up. The band plays under every one of them (principle 1: the band is
 /// already playing); only the lesson screen scores what you play.
 enum Route: Equatable {
-    case lessons, map, lesson, result, settings, calibrate, quiz
+    case lessons, map, lesson, result, settings, calibrate, quiz, earGame
 }
 
 /// The app's screens and what they share: the player (band, monitor, lesson), the progress
@@ -33,6 +33,7 @@ final class AppModel {
             case "settings": route = .settings
             case "calibrate": route = .calibrate
             case "map": route = .map
+            case "eargame": break  // below
             case "quiz": break  // below, once everything is set
             default: fatalError("unknown -Route \(r)")
             }
@@ -42,6 +43,18 @@ final class AppModel {
         #if DEBUG
         // `-Route quiz` starts today's quiz; `-QuizAnswers 1,0,1` answers in order (Next between),
         // leaving the last answer's explanation up, or the summary after a full five.
+        // `-Route eargame [-EarLevel n] [-EarAnswers r,r,w]` plays the Ear Trainer, answering
+        // right (r) or wrong (w) in order without the pauses, the last answer left up.
+        if UserDefaults.standard.string(forKey: "Route") == "eargame" {
+            let d = UserDefaults.standard
+            startEarGame(level: d.integer(forKey: "EarLevel") > 0 ? d.integer(forKey: "EarLevel") : nil)
+            let script = (d.string(forKey: "EarAnswers") ?? "").split(separator: ",")
+            for (i, a) in script.enumerated() {
+                guard let r = earRound else { break }
+                answerEar(a == "r" ? r.answer : (r.answer + 1) % r.options.count, advance: false)
+                if i < script.count - 1 { nextEarRound() }
+            }
+        }
         if UserDefaults.standard.string(forKey: "Route") == "quiz" {
             startQuiz()
             let answers = (UserDefaults.standard.string(forKey: "QuizAnswers") ?? "").split(separator: ",").compactMap { Int($0) }
@@ -124,6 +137,77 @@ final class AppModel {
         if let sound = quiz?.current?.sound { player?.play(sound) }
     }
 
+    // MARK: Ear Trainer
+
+    private(set) var ear: EarGame.Run?
+    private(set) var earRound: EarGame.Round?
+    /// The option picked this round (nil: waiting for an answer).
+    private(set) var earPicked: Int?
+    private(set) var earPoints = 0
+    @ObservationIgnored private var earRNG = SystemRandomNumberGenerator()
+    @ObservationIgnored private var earRoundID = 0
+    @ObservationIgnored private var earPracticed = false
+
+    /// At the highest level opened (or `level`).
+    func startEarGame(level: Int? = nil) {
+        ear = EarGame.Run(level: level ?? progress.snapshot.ear.level)
+        earRound = nil
+        earPracticed = false
+        if route != .earGame { afterQuiz = route }
+        player?.holdBand()
+        route = .earGame
+        nextEarRound()
+    }
+
+    func nextEarRound() {
+        guard let run = ear else { return }
+        earRound = EarGame.round(level: run.level, avoiding: earRound, using: &earRNG)
+        earPicked = nil
+        earRoundID += 1
+        playEar()
+    }
+
+    func playEar() {
+        if let r = earRound { player?.play(r.sound) }
+    }
+
+    /// An answer: points, the meter, maybe a new level; the next chord comes by itself (after a
+    /// miss, a longer pause and the chord again, so you hear it with its name).
+    func answerEar(_ option: Int, advance: Bool = true) {
+        guard var run = ear, let round = earRound, earPicked == nil else { return }
+        let right = option == round.answer
+        earPicked = option
+        earPoints = run.answer(right: right)
+        ear = run
+        progress.earAnswered(level: run.level, score: run.score)
+        if run.answered >= 10 && !earPracticed {
+            earPracticed = true
+            progress.practiced()
+        }
+        guard advance else { return }
+        if !right { DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in self?.playEar() } }
+        let id = earRoundID
+        DispatchQueue.main.asyncAfter(deadline: .now() + (right ? (run.leveledUp ? 2.2 : 1.1) : 3.0)) { [weak self] in
+            guard let self, self.earRoundID == id, self.route == .earGame else { return }
+            self.nextEarRound()
+        }
+    }
+
+    func goEar(level n: Int) {
+        guard var run = ear, n <= progress.snapshot.ear.level else { return }
+        run.go(to: n)
+        ear = run
+        nextEarRound()
+    }
+
+    func leaveEarGame() {
+        ear = nil
+        earRound = nil
+        earRoundID += 1
+        player?.releaseBand()
+        route = afterQuiz
+    }
+
     func leaveQuiz() {
         quiz = nil
         player?.releaseBand()
@@ -150,6 +234,8 @@ enum EntryStatus: Equatable {
     /// A quiz after it: today's five waiting, or done today.
     case quizToday(QuizLevel)
     case quizDone(QuizLevel)
+    /// The Ear Trainer: the highest level opened.
+    case game(level: Int)
     case locked(after: String)
     case soon
 
@@ -165,6 +251,7 @@ extension AppModel {
     func status(_ entry: LessonEntry) -> EntryStatus {
         if let after = entry.after, progress.lesson(after).completed == nil { return .locked(after: after) }
         guard entry.playable else { return .soon }
+        if entry.kind == .game { return .game(level: progress.snapshot.ear.level) }
         if entry.kind == .quiz {
             let q = progress.snapshot.quiz
             guard let level = q.level else { return .quizNew }
@@ -179,14 +266,18 @@ extension AppModel {
 
     func start(_ entry: LessonEntry) {
         guard status(entry).open else { return }
-        entry.kind == .quiz ? startQuiz() : open(lesson: entry.code)
+        switch entry.kind {
+        case .quiz: startQuiz()
+        case .game: startEarGame()
+        case .lesson: open(lesson: entry.code)
+        }
     }
 }
 
 /// The catalog the menu shows. A1 is the lesson, Q1 the quiz (the ear check, then a daily five);
 /// A2 is a stub until it exists (brief §5: "A2 stub screen only"), unlocked by finishing A1.
 struct LessonEntry: Identifiable {
-    enum Kind { case lesson, quiz }
+    enum Kind { case lesson, quiz, game }
     let kind: Kind
     let code: String
     let title: String
@@ -200,6 +291,8 @@ struct LessonEntry: Identifiable {
 
     static let catalog = [
         LessonEntry(kind: .lesson, code: "A1", title: "Play the Form", meta: "Left hand · 12-bar blues in C · 15 min",
+                    after: nil, playable: true),
+        LessonEntry(kind: .game, code: "E1", title: "Ear Trainer", meta: "Endless · name the chord by ear, seven levels",
                     after: nil, playable: true),
         LessonEntry(kind: .quiz, code: "Q1", title: "Ear and Form", meta: "Five questions: listening and theory · 2 min",
                     after: nil, playable: true),

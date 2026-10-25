@@ -40,12 +40,20 @@ final class ProgressStore {
         var correct = 0
     }
 
+    /// The Ear Trainer: the highest level opened, the best score of a run, answers in all.
+    struct EarRecord: Codable, Equatable {
+        var level = 1
+        var best = 0
+        var answered = 0
+    }
+
     struct Snapshot: Codable, Equatable {
         var lessons: [String: LessonRecord] = [:]
         var skills: [String: SkillRecord] = [:]
         /// Local dates practiced (a judged chorus or a finished quiz), sorted: the streak.
         var days: [String] = []
         var quiz = QuizRecord()
+        var ear = EarRecord()
 
         init() {}
 
@@ -56,6 +64,7 @@ final class ProgressStore {
             skills = try c.decodeIfPresent([String: SkillRecord].self, forKey: .skills) ?? [:]
             days = try c.decodeIfPresent([String].self, forKey: .days) ?? []
             quiz = try c.decodeIfPresent(QuizRecord.self, forKey: .quiz) ?? QuizRecord()
+            ear = try c.decodeIfPresent(EarRecord.self, forKey: .ear) ?? EarRecord()
         }
     }
 
@@ -172,6 +181,16 @@ final class ProgressStore {
     func placed(_ level: QuizLevel) {
         snapshot.quiz.level = level
         snapshot.quiz.placed = Date()
+        save()
+    }
+
+    /// After each Ear Trainer answer: the level reached and the run's score so far.
+    func earAnswered(level: Int, score: Int) {
+        var e = snapshot.ear
+        e.level = max(e.level, level)
+        e.best = max(e.best, score)
+        e.answered += 1
+        snapshot.ear = e
         save()
     }
 

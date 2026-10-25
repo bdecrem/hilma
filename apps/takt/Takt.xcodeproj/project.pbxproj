@@ -31,6 +31,7 @@
 		1A605ED7EF5BC5CA807A9C52 /* saxl-56.caf in Resources */ = {isa = PBXBuildFile; fileRef = EFFA08C2D957ECE763A247E6 /* saxl-56.caf */; };
 		1B3792B3D6838DD2557B80E0 /* saxl-62.caf in Resources */ = {isa = PBXBuildFile; fileRef = 1015C3B7893037323D28F441 /* saxl-62.caf */; };
 		1BAF5C09CD661D4CF3484722 /* Motifs.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCFFFD49EB39BF2E6BAC0767 /* Motifs.swift */; };
+		1BDDD4CFEF6C835AD96A062C /* EarGameScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DA328066B3FE950BF61365C /* EarGameScreen.swift */; };
 		1C10C6072AB01F749AE43B8B /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = C5E40801CC98A659B7FBBD8E /* README.md */; };
 		1DA1F276B078D8480198F581 /* saxl-54.caf in Resources */ = {isa = PBXBuildFile; fileRef = 7B4DB1EF0F0433B417F786C0 /* saxl-54.caf */; };
 		1DD87923F621FB63B0B1DE2A /* sax-86-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = 72FD3F6B35B76A7F8829D411 /* sax-86-h.caf */; };
@@ -208,6 +209,7 @@
 		BE6B89A1F594657C466C2B8F /* sax-44-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = A223BEFDE8A4D82374CC356F /* sax-44-h.caf */; };
 		BFFCFB36052F27FA3D688C8B /* CalibrationScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8D5E1401A830BE79F20D77E /* CalibrationScreen.swift */; };
 		C0CEBF0CB2C4DC6D22733813 /* hatFoot-0a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 94CF18C747DD86F37BE68870 /* hatFoot-0a.caf */; };
+		C2044003D5825445641057D4 /* EarGame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C0F85E01FB5FD60D2A259A6 /* EarGame.swift */; };
 		C261EA1C512AA664F717240B /* sax-52-s.caf in Resources */ = {isa = PBXBuildFile; fileRef = E9F200DC2EA47CFB0488A59E /* sax-52-s.caf */; };
 		C4BE5852144CDDC94C8C9A2E /* bass-35.caf in Resources */ = {isa = PBXBuildFile; fileRef = 613351BCBE7AF3D174CAB2A3 /* bass-35.caf */; };
 		C4F23F60B9FC650E6583DAA5 /* pno-55-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = DB90FC03A2A5438F6F53CA7C /* pno-55-2.caf */; };
@@ -304,6 +306,7 @@
 		18DAA0E3CE41C2850C2E731E /* sax-88-h.caf */ = {isa = PBXFileReference; path = "sax-88-h.caf"; sourceTree = "<group>"; };
 		1959733C08A21E2DAF815CE0 /* hat-2a.caf */ = {isa = PBXFileReference; path = "hat-2a.caf"; sourceTree = "<group>"; };
 		1BE9E1FDBFAAC87730C4C160 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
+		1C0F85E01FB5FD60D2A259A6 /* EarGame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EarGame.swift; sourceTree = "<group>"; };
 		1C19A0BA4C401C900E7DC5CA /* saxl-58.caf */ = {isa = PBXFileReference; path = "saxl-58.caf"; sourceTree = "<group>"; };
 		1CFD0166B5EA3EEEB25CBCE5 /* sax-76-h.caf */ = {isa = PBXFileReference; path = "sax-76-h.caf"; sourceTree = "<group>"; };
 		1D346A64372DD97C2368E256 /* hat-2c.caf */ = {isa = PBXFileReference; path = "hat-2c.caf"; sourceTree = "<group>"; };
@@ -415,6 +418,7 @@
 		898AE1B7738C7AD8C5E99B04 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		8AFF4F6BD27FDC80B7ACBC9D /* pno-91-1.caf */ = {isa = PBXFileReference; path = "pno-91-1.caf"; sourceTree = "<group>"; };
 		8D722E42873919D441D35FD1 /* hat-3a.caf */ = {isa = PBXFileReference; path = "hat-3a.caf"; sourceTree = "<group>"; };
+		8DA328066B3FE950BF61365C /* EarGameScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EarGameScreen.swift; sourceTree = "<group>"; };
 		8DB500F26FA68652350CA0F7 /* Calibration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Calibration.swift; sourceTree = "<group>"; };
 		9022E90C399333D8404C732C /* pno-83-2.caf */ = {isa = PBXFileReference; path = "pno-83-2.caf"; sourceTree = "<group>"; };
 		90938465F2979109AAE2AF26 /* pno-49-1.caf */ = {isa = PBXFileReference; path = "pno-49-1.caf"; sourceTree = "<group>"; };
@@ -639,6 +643,7 @@
 			isa = PBXGroup;
 			children = (
 				F8D5E1401A830BE79F20D77E /* CalibrationScreen.swift */,
+				8DA328066B3FE950BF61365C /* EarGameScreen.swift */,
 				9EB615A2BF73A5830696480A /* LessonsScreen.swift */,
 				3946539C0524DDA802585674 /* MapScreen.swift */,
 				A9C34FA7B4C94CA0F72FFDB8 /* QuizScreen.swift */,
@@ -712,6 +717,7 @@
 		CC9651B01ECD0D2FCF3F6885 /* Quiz */ = {
 			isa = PBXGroup;
 			children = (
+				1C0F85E01FB5FD60D2A259A6 /* EarGame.swift */,
 				EDB2CAB732A25EB76B9A25B9 /* Quiz.swift */,
 			);
 			path = Quiz;
@@ -1275,6 +1281,8 @@
 				913188C502DC22FAEB177062 /* ChannelStrip.swift in Sources */,
 				0D0C5243B3D5B74AC76FC97F /* CoachPanel.swift in Sources */,
 				FF098609992B64F48C556EAA /* DebugHooks.swift in Sources */,
+				C2044003D5825445641057D4 /* EarGame.swift in Sources */,
+				1BDDD4CFEF6C835AD96A062C /* EarGameScreen.swift in Sources */,
 				73D31E854898BB54BE5D4C0D /* Instrument.swift in Sources */,
 				7943EE24325ECDBDE8F2DC64 /* KeyCatcher.swift in Sources */,
 				C644B759F0C8337C5B487AC0 /* KeyboardStrip.swift in Sources */,
@@ -1342,7 +1350,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -1409,7 +1417,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;

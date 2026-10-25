@@ -80,6 +80,19 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   dev -p 3270` and `-Backend http://localhost:3270`). Over plain-http localhost the session cookie
   doesn't persist, so every simulator launch is a new guest: delete them after.
 
+- **Ear Trainer (E1): built 2026-10-25, 0.1 (9).** An endless game beside A1 on the menu
+  (`Quiz/EarGame.swift`, `Menu/EarGameScreen.swift`, `LessonEntry.kind == .game`): a chord
+  plays, you name its quality, the next comes by itself (1.1 s; 3 s after a miss, which shows
+  the right one, says what to listen for and plays it again). Seven levels: major or minor on
+  C/F/G → any key → inversions → broken (arpeggiated) → plus dominant 7 → plus diminished and
+  augmented → major 7 / minor 7 / dominant 7 in any voicing. 8 right of your last 10 at a level
+  opens the next (the meter); points 10 × level × combo (×2 from 3 in a row, up to ×4); a miss
+  resets the combo; no game over. Opened levels stay playable (the chips). `Snapshot.ear`
+  (highest level, best run, answers; merged by max). Ten answers in a session count as a day
+  for the streak. DEBUG `-Route eargame [-EarLevel n] [-EarAnswers r,r,w]`. Checks: 11 cases in
+  `-LessonCheck` (every chord's pitch classes at every level, voicing range, no repeats,
+  inversions, the level-up rule, scoring, the top level, merge): 102/102.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

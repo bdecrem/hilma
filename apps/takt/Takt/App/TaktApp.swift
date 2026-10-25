@@ -121,6 +121,12 @@ struct RootView: View {
                 LessonsScreen(app: app)
             case .map:
                 MapScreen(app: app)
+            case .earGame:
+                if let run = app.ear, let round = app.earRound {
+                    EarGameScreen(app: app, run: run, round: round)
+                } else {
+                    LessonsScreen(app: app)
+                }
             case .quiz:
                 if let quiz = app.quiz {
                     QuizScreen(app: app, session: quiz)
@@ -165,7 +171,7 @@ struct RootView: View {
             if menuMusic && toggled && !player.playing { player.togglePlay() }
         case .lesson:
             if !menuMusic && !player.playing { player.togglePlay() }
-        case .result, .calibrate, .quiz:
+        case .result, .calibrate, .quiz, .earGame:
             break  // their own: Play it back, the clicks, a quiet quiz
         }
     }

@@ -430,6 +430,54 @@ enum LessonCheck {
         check("quiz session: one answer each, score", quiz.index == 2 && quiz.score == 1 && quiz.choices.count == 2)
         check("every question's answer is one of its options", QuizBank.all.allSatisfy { $0.options.indices.contains($0.answer) } && Set(QuizBank.all.map(\.id)).count == QuizBank.all.count)
 
+        // MARK: Ear Trainer
+
+        var earRng = SeededRandom(seed: 7)
+        var voicingOK = true, spreadOK = true, noRepeat = true
+        var seen: [Int: Set<EarGame.Quality>] = [:]
+        for level in EarGame.levels {
+            var last: EarGame.Round?
+            for _ in 0..<200 {
+                let r = EarGame.round(level: level.number, avoiding: last, using: &earRng)
+                // The pitch classes are the quality's on the root, whatever the voicing.
+                let pcs = Set(r.notes.map { $0 % 12 }), want = Set(r.quality.intervals.map { (r.root + $0) % 12 })
+                if pcs != want || r.options != level.qualities || r.broken != level.broken || !level.roots.contains(r.root) { voicingOK = false }
+                if r.notes.min()! < 53 || r.notes.max()! > 64 + 11 + 12 { spreadOK = false }
+                if let l = last, l.quality == r.quality && l.root == r.root { noRepeat = false }
+                seen[level.number, default: []].insert(r.quality)
+                last = r
+            }
+        }
+        check("ear trainer: every chord is its quality on its root, at its level", voicingOK)
+        check("ear trainer: voiced around middle C", spreadOK)
+        check("ear trainer: never the same chord twice in a row", noRepeat)
+        check("ear trainer: every level plays all its qualities", EarGame.levels.allSatisfy { seen[$0.number] == Set($0.qualities) })
+        var inverted = false
+        for _ in 0..<50 { let r = EarGame.round(level: 3, using: &earRng); if r.notes.min()! % 12 != r.root { inverted = true } }
+        check("ear trainer: level 3 turns chords over", inverted)
+
+        var earRun = EarGame.Run(level: 1)
+        for _ in 0..<7 { earRun.answer(right: true) }
+        check("ear trainer: 7 right isn't enough", earRun.level == 1 && earRun.combo == 7 && earRun.multiplier == 3)
+        earRun.answer(right: true)
+        check("ear trainer: the 8th right opens level 2, the meter starts over", earRun.level == 2 && earRun.leveledUp && earRun.recent.isEmpty)
+        var mixed = EarGame.Run(level: 2)
+        for r in [true, true, false, true, true, true, true, true, true] { mixed.answer(right: r) }
+        check("ear trainer: 8 right with a miss in between opens the next level", mixed.level == 3)
+        var miss = EarGame.Run(level: 4)
+        miss.answer(right: true); miss.answer(right: true); miss.answer(right: true)
+        let missBefore = miss.score
+        let pts = miss.answer(right: true)
+        miss.answer(right: false)
+        check("ear trainer: points are 10 x level x combo, a miss resets the combo", pts == 10 * 4 * 2 && miss.combo == 0 && miss.score == missBefore + pts)
+        var top = EarGame.Run(level: EarGame.levels.count)
+        for _ in 0..<12 { top.answer(right: true) }
+        check("ear trainer: the top level stays the top", top.level == EarGame.levels.count && !top.leveledUp)
+        var a = ProgressStore.Snapshot(), b = ProgressStore.Snapshot()
+        a.ear = .init(level: 3, best: 900, answered: 40); b.ear = .init(level: 5, best: 400, answered: 30)
+        let m = AccountStore.merge(a, b).ear
+        check("ear trainer: merge keeps the highest level and the best score", m.level == 5 && m.best == 900 && m.answered == 40)
+
         // The ramp doesn't count a clean chorus the player slowed down.
         let slow = lessonRun(from: 3, choruses: 3, bpm: 60, followTempo: false, play: perfect)
         check("a clean chorus below the ramp's tempo doesn't raise it", !slow.actions.contains(.tempo(75)) && slow.output.clean == 0

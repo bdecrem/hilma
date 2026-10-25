@@ -113,6 +113,8 @@ struct LessonRow: View {
             label("Step \(step) of \(of)", lit: true)
         case .done(let tempo):
             label(tempo > 0 ? "Done · \(tempo) bpm" : "Done", lit: false)
+        case .game(let level):
+            label("Level \(level) · \(EarGame.levels[level - 1].title)", lit: true)
         case .quizNew:
             label("New · find your level", lit: true)
         case .quizToday(let level):
