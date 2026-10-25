@@ -385,6 +385,51 @@ enum LessonCheck {
         check("calibration: words", Calibration.words(-23.4) == "23 ms early" && Calibration.words(2) == "on the beat"
               && Calibration.words(11) == "11 ms late")
 
+        // MARK: Streak and quizzes
+
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = TimeZone(identifier: "Europe/Brussels")!
+        let today = cal.date(from: DateComponents(year: 2026, month: 3, day: 1, hour: 10))!
+        check("streak: today, yesterday, the day before", ProgressStore.streak(days: ["2026-02-27", "2026-02-28", "2026-03-01"], today: today, calendar: cal) == 3)
+        check("streak: not yet today still counts yesterday's run", ProgressStore.streak(days: ["2026-02-27", "2026-02-28"], today: today, calendar: cal) == 2)
+        check("streak: a missed day breaks it", ProgressStore.streak(days: ["2026-02-26", "2026-02-27"], today: today, calendar: cal) == 0)
+        check("streak: none", ProgressStore.streak(days: [], today: today, calendar: cal) == 0)
+
+        var mineSnap = ProgressStore.Snapshot(), theirs = ProgressStore.Snapshot()
+        mineSnap.days = ["2026-10-20", "2026-10-22"]; theirs.days = ["2026-10-21", "2026-10-22"]
+        theirs.quiz.level = .ear; theirs.quiz.answered = 5
+        let merged = AccountStore.merge(mineSnap, theirs)
+        check("merge: days from both devices, the placed quiz record", merged.days == ["2026-10-20", "2026-10-21", "2026-10-22"] && merged.quiz.level == .ear)
+        let old = try! JSONDecoder.takt.decode(ProgressStore.Snapshot.self, from: Data(#"{"lessons":{},"skills":{}}"#.utf8))
+        check("a snapshot from before the streak decodes", old.days.isEmpty && old.quiz.level == nil)
+
+        let place = QuizBank.placement
+        check("ear check: five, theory and listening", place.count == 5 && place.filter { $0.kind == .listen }.count == 3)
+        func placementLevel(_ right: Set<String>) -> QuizLevel { QuizBank.level(placement: Dictionary(uniqueKeysWithValues: place.map { ($0.id, right.contains($0.id)) })) }
+        let listenIds = place.filter { $0.kind == .listen }.map(\.id), theoryIds = place.filter { $0.kind == .theory }.map(\.id)
+        check("ear check: levels", placementLevel([]) == .new && placementLevel(Set(listenIds)) == .ear
+              && placementLevel(Set(theoryIds)) == .theory && placementLevel(Set(listenIds + theoryIds)) == .both)
+        let d1 = QuizBank.daily(.chords, level: .new, boxes: [:], day: "2026-10-25")
+        let d2 = QuizBank.daily(.chords, level: .new, boxes: [:], day: "2026-10-25")
+        check("daily: five different chord questions, the same all day", d1.count == 5 && Set(d1.map(\.id)).count == 5
+              && d1 == d2 && d1.allSatisfy { $0.id.hasPrefix("triad") && $0.level == 1 }, d1.map(\.id).joined(separator: " "))
+        let missed = QuizBank.daily(.form, level: .both, boxes: ["form-bar9": 0, "shuffle": 0, "form-bars": 3], day: "2026-10-26")
+        check("daily: missed questions come back", missed.contains { $0.id == "form-bar9" } && missed.contains { $0.id == "shuffle" }, missed.map(\.id).joined(separator: " "))
+        for c in [QuizBank.Challenge.chords, .form, .steps] {
+            for l in QuizLevel.allCases {
+                let q = QuizBank.daily(c, level: l, boxes: [:], day: "2026-11-02")
+                check("daily: \(c) at \(l.rawValue) has five", q.count == 5 && Set(q.map(\.id)).count == 5)
+            }
+        }
+        let oct25 = cal.date(from: DateComponents(year: 2026, month: 10, day: 25, hour: 12))!
+        check("challenge: day 298 is the form (same as the daily text)", QuizBank.challenge(placed: true, date: oct25, calendar: cal) == .form
+              && QuizBank.challenge(placed: false, date: oct25, calendar: cal) == .earCheck)
+        var quiz = QuizSession(mode: .placement, questions: place)
+        quiz.choose(place[0].answer); quiz.choose(0); quiz.next()
+        quiz.choose(1 - place[1].answer); quiz.next()
+        check("quiz session: one answer each, score", quiz.index == 2 && quiz.score == 1 && quiz.choices.count == 2)
+        check("every question's answer is one of its options", QuizBank.all.allSatisfy { $0.options.indices.contains($0.answer) } && Set(QuizBank.all.map(\.id)).count == QuizBank.all.count)
+
         // The ramp doesn't count a clean chorus the player slowed down.
         let slow = lessonRun(from: 3, choruses: 3, bpm: 60, followTempo: false, play: perfect)
         check("a clean chorus below the ramp's tempo doesn't raise it", !slow.actions.contains(.tempo(75)) && slow.output.clean == 0

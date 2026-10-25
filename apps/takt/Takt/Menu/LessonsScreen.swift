@@ -22,19 +22,19 @@ struct LessonsScreen: View {
             }
             .padding(.top, compact ? 8 : 24)
 
-            Text("Lessons")
-                .dataLabel(13, weight: .semibold)
-                .foregroundStyle(Palette.muted)
-                .padding(.top, compact ? 22 : 32)
-                .padding(.bottom, 12)
-
-            Text("Level 1 · The blues")
-                .bodyText(15)
-                .foregroundStyle(Palette.muted)
-                .padding(.bottom, 16)
-
             ScrollView {
-                VStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 12) {
+                    TodayCard(app: app, compact: compact)
+                        .padding(.top, compact ? 18 : 28)
+
+                    Text("Lessons")
+                        .dataLabel(13, weight: .semibold)
+                        .foregroundStyle(Palette.muted)
+                        .padding(.top, 14)
+                    Text("Level 1 · The blues")
+                        .bodyText(15)
+                        .foregroundStyle(Palette.muted)
+                        .padding(.bottom, 4)
                     ForEach(LessonEntry.catalog) { entry in
                         LessonRow(entry: entry, app: app, compact: compact)
                     }
@@ -45,8 +45,10 @@ struct LessonsScreen: View {
             Spacer(minLength: 12)
             if let player = app.player {
                 NowPlayingStrip(player: player)
-                    .padding(.bottom, compact ? 8 : 24)
             }
+            TabBar(app: app)
+                .padding(.top, 10)
+                .padding(.bottom, compact ? 4 : 20)
         }
         .padding(.horizontal, compact ? 16 : 40)
         .frame(maxWidth: compact ? .infinity : 820, alignment: .leading)
@@ -61,21 +63,11 @@ struct LessonRow: View {
     let app: AppModel
     var compact = false
 
-    private enum Status { case new, inProgress(step: Int, of: Int), done(tempo: Int), locked(after: String), soon }
-
-    private var status: Status {
-        if let after = entry.after, app.progress.lesson(after).completed == nil { return .locked(after: after) }
-        guard entry.playable else { return .soon }
-        let record = app.progress.lesson(entry.code)
-        if record.completed != nil { return .done(tempo: record.bestTempo) }
-        let live = app.player?.lesson
-        let step = max(record.reachedStep, live?.step ?? 1)
-        return step > 1 ? .inProgress(step: step, of: live?.stepCount ?? 6) : .new
-    }
+    private var status: EntryStatus { app.status(entry) }
 
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: 8)
-        let enabled: Bool = { if case .locked = status { return false }; if case .soon = status { return false }; return true }()
+        let enabled = status.open
         HStack(alignment: .center, spacing: compact ? 14 : 20) {
             Text(entry.code)
                 .font(.display(compact ? 40 : 52))
@@ -105,9 +97,9 @@ struct LessonRow: View {
         .background(shape.fill(Palette.panel))
         .overlay(shape.strokeBorder(Palette.line, lineWidth: 1))
         .contentShape(shape)
-        .onTapGesture { if enabled { app.open(lesson: entry.code) } }
+        .onTapGesture { app.start(entry) }
         .contextMenu {
-            if enabled { Button("Start over") { app.restart(lesson: entry.code) } }
+            if enabled && entry.kind == .lesson { Button("Start over") { app.restart(lesson: entry.code) } }
         }
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(enabled ? .isButton : [])
@@ -121,6 +113,12 @@ struct LessonRow: View {
             label("Step \(step) of \(of)", lit: true)
         case .done(let tempo):
             label(tempo > 0 ? "Done · \(tempo) bpm" : "Done", lit: false)
+        case .quizNew:
+            label("New · find your level", lit: true)
+        case .quizToday(let level):
+            label("\(level.title) · today's five", lit: true)
+        case .quizDone(let level):
+            label("\(level.title) · done today", lit: false)
         case .locked(let after):
             label("After \(after)", lit: false)
         case .soon:
@@ -172,5 +170,97 @@ struct NowPlayingStrip: View {
         .padding(.vertical, 10)
         .background(shape.fill(Palette.panel))
         .overlay(shape.strokeBorder(Palette.line, lineWidth: 1))
+    }
+}
+
+/// Today: the streak (the last seven days as LEDs) and today's challenge, one tap to start it.
+struct TodayCard: View {
+    let app: AppModel
+    var compact = false
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: 8)
+        let streak = app.progress.streak()
+        let done = app.progress.practicedToday
+        let challenge = app.challenge
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                Text("\(streak)")
+                    .font(.display(compact ? 44 : 56))
+                    .monospacedDigit()
+                    .foregroundStyle(streak > 0 ? Palette.signal : Palette.muted)
+                Text("Day streak")
+                    .dataLabel(13, weight: .semibold)
+                    .foregroundStyle(Palette.text)
+                Spacer(minLength: 8)
+                WeekLEDs(days: Set(app.progress.snapshot.days))
+            }
+            Hairline()
+            HStack(alignment: .center, spacing: 14) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(done ? "Done for today · one more?" : "Today's challenge")
+                        .dataLabel(11)
+                        .foregroundStyle(Palette.muted)
+                    Text(challenge.title.prefix(1).uppercased() + challenge.title.dropFirst())
+                        .bodyText(16, weight: .semibold)
+                        .foregroundStyle(Palette.text)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 8)
+                if done {
+                    QuietButton(title: "Again") { app.startChallenge() }
+                } else {
+                    PrimaryButton(title: "Start") { app.startChallenge() }
+                }
+            }
+        }
+        .padding(compact ? 16 : 22)
+        .background(shape.fill(Palette.panel))
+        .overlay(shape.strokeBorder(Palette.line, lineWidth: 1))
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// The last seven days, oldest first: lit = practiced.
+struct WeekLEDs: View {
+    let days: Set<String>
+
+    var body: some View {
+        let cal = Calendar.current
+        let week = (0..<7).reversed().map { ProgressStore.day(cal.date(byAdding: .day, value: -$0, to: Date())!) }
+        HStack(spacing: 5) {
+            ForEach(week, id: \.self) { d in LED(lit: days.contains(d), size: 9) }
+        }
+        .accessibilityLabel("\(week.filter(days.contains).count) of the last 7 days practiced")
+    }
+}
+
+/// Lessons | Map, at the bottom of both.
+struct TabBar: View {
+    let app: AppModel
+
+    var body: some View {
+        HStack(spacing: 0) {
+            tab("Lessons", symbol: "list.bullet", route: .lessons)
+            tab("Map", symbol: "map", route: .map)
+        }
+        .background(RoundedRectangle(cornerRadius: 8).fill(Palette.panel))
+        .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Palette.line, lineWidth: 1))
+    }
+
+    private func tab(_ title: String, symbol: String, route: Route) -> some View {
+        let on = app.route == route
+        return Button { app.route = route } label: {
+            HStack(spacing: 8) {
+                Image(systemName: symbol).font(.system(size: 14, weight: .semibold))
+                Text(title).dataLabel(12, weight: .semibold)
+            }
+            .foregroundStyle(on ? Palette.signal : Palette.muted)
+            .frame(maxWidth: .infinity)
+            .frame(height: 44)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(on ? [.isSelected] : [])
     }
 }

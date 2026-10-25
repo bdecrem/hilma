@@ -103,6 +103,8 @@ final class Player {
                 let offsets = r.offsets.map { String(format: "%+.1f", $0) }.joined(separator: " ")
                 what = "\(r.hits)/\(r.notes.count) hits, \(r.extras.count) extra, mean \(r.meanOffsetMs.map { String(format: "%+.1f", $0) } ?? "-") ms, \(r.clean ? "clean" : "not clean") [\(r.problems.joined(separator: " "))] offsets \(offsets)"
                 if let skill = v.skill { progress.record(skill: skill, result: r, tempo: v.tempo, counted: v.counted) }
+                // A judged chorus is a day of practice: the streak.
+                progress.practiced()
             } else {
                 what = "joined late, not judged"
             }
@@ -288,6 +290,40 @@ final class Player {
         for ch in [Channel.drums, .bass, .keys, .horns] { audio.send(.mute(ch, b.muted & ch.bit != 0)) }
         audio.send(.tempo(Double(b.tempo)))
         if b.playing { audio.send(.play) }
+    }
+
+    // MARK: Quizzes
+
+    @ObservationIgnored private var bandWasPlaying: Bool?
+
+    /// A quiz needs quiet: the band pauses, and comes back as it was after.
+    func holdBand() {
+        guard bandWasPlaying == nil else { return }
+        bandWasPlaying = playing
+        if playing { audio.send(.pause) }
+    }
+
+    func releaseBand() {
+        guard let was = bandWasPlaying else { return }
+        bandWasPlaying = nil
+        if was && !playing { audio.send(.play) }
+    }
+
+    /// A question's sound on the piano: a chord struck together, or notes one after another.
+    func play(_ sound: Question.Sound) {
+        let notes: [(note: Int, at: Double, length: Double)]
+        switch sound {
+        case .chord(let n): notes = n.map { ($0, 0, 1.8) }
+        case .notes(let n): notes = n.enumerated().map { ($1, Double($0) * 0.75, 0.65) }
+        }
+        for n in notes {
+            DispatchQueue.main.asyncAfter(deadline: .now() + n.at) { [audio] in
+                audio.send(.noteOn(note: n.note, velocity: 0.7, hostTime: 0))
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + n.at + n.length) { [audio] in
+                audio.send(.noteOff(note: n.note, hostTime: 0))
+            }
+        }
     }
 
     // MARK: Play it back

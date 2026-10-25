@@ -56,6 +56,30 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   Ableton by hand (Live 12 is on the MacBook Air; mido and MusicSequence agree), and TestFlight (see
   below: the ASC app record and the mini).
 
+- **Streak, quizzes, map, daily text: built 2026-10-25, 0.1 (8).** Two tabs at the bottom of the
+  menu, **Lessons** and **Map** (`Menu/MapScreen.swift`: Level 1 as a winding path; lessons are
+  squares, quizzes circles; done filled, "you are here" in `signal`, locked dashed; A3, Q2, A4 are
+  placeholders in `LessonEntry.path`). **Streak:** a day counts when you practice (a judged chorus
+  or a finished quiz); `ProgressStore.Snapshot.days` (local dates, synced, merged as a union);
+  the menu's Today card shows it with the last seven days as LEDs and today's challenge with one
+  Start. **Quizzes** (`Quiz/Quiz.swift`, `Menu/QuizScreen.swift`), a second content type beside
+  lessons (`LessonEntry.kind`, Q1 "Ear and Form"): the first time, a 5-question ear check (2
+  theory, 3 listening, easy to hard) sets `QuizLevel` (new / ear / theory / both: how hard the
+  daily ones start); after it, **today's challenge** rotates by day of year — major or minor,
+  the 12-bar form, higher or lower, a clean chorus of A1 — the same rule as the daily text
+  (`challengeFor` in `src/lib/takt/daily.ts`). A daily five is seeded by the date; questions you
+  missed come back first (a Leitner box per question in `Snapshot.quiz.boxes`). Listening
+  questions play real chords on the piano monitor (`Player.play(_:)`); the band pauses for a quiz
+  and comes back as it was. Every answer gets one line of why; right in `signal`, a wrong pick
+  struck through (never red/green). **Settings → Sound → Band on the menu** (`menuMusic`, on by
+  default): off, the app opens quiet and the band plays only in a lesson. **Settings → Daily
+  text:** phone, a code texted by iMessage, verify, on/off, the hour (see "Daily text" below).
+  Checks: `-LessonCheck` 91/91 (streak, merge, old snapshots, the ear check's levels, the daily
+  picks, the challenge rotation, the session). DEBUG: `-Route quiz [-QuizAnswers 1,0,1]`,
+  `-Route map`, `-DailyPhone <n> / -DailyCode <c>` (against `TAKT_IMESSAGE_DRY=1 pnpm exec next
+  dev -p 3270` and `-Backend http://localhost:3270`). Over plain-http localhost the session cookie
+  doesn't persist, so every simulator launch is a new guest: delete them after.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

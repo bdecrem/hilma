@@ -156,6 +156,7 @@
 		8CB42237ECE104E76DD1FF0F /* kick-3a.caf in Resources */ = {isa = PBXBuildFile; fileRef = BA8D3FFD426F899480E1192E /* kick-3a.caf */; };
 		8D6167F044A8C8DF0231FA1E /* saxl-80.caf in Resources */ = {isa = PBXBuildFile; fileRef = 92E3091611A2B42DCDC7DB92 /* saxl-80.caf */; };
 		8DA1D85EADB041305B5F2209 /* sax-62-s.caf in Resources */ = {isa = PBXBuildFile; fileRef = F68668DAB6141A89C20A1477 /* sax-62-s.caf */; };
+		8DAE719F3BA714959E6DC281 /* MapScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3946539C0524DDA802585674 /* MapScreen.swift */; };
 		8E06D303F6A072274A6AA5EF /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BE9E1FDBFAAC87730C4C160 /* AppModel.swift */; };
 		8E2DA2F024A0EF0F126C25E5 /* tomHi-2b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3521CBCABC68CBDB076B074E /* tomHi-2b.caf */; };
 		8E426C6D5CCDA7B876ECBB4C /* pno-79-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = C1A9E9109A5089BF3C189ACE /* pno-79-2.caf */; };
@@ -217,6 +218,7 @@
 		C8BAF1BE6026A27D7E6E2895 /* hat-3b.caf in Resources */ = {isa = PBXBuildFile; fileRef = A0B88D3BA5FAE2AD0B3B9385 /* hat-3b.caf */; };
 		C95504C75C8AD7AC0C7C74E6 /* saxl-58.caf in Resources */ = {isa = PBXBuildFile; fileRef = 1C19A0BA4C401C900E7DC5CA /* saxl-58.caf */; };
 		C9D5166DCE8CEB1942FAB996 /* kick-0b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 82C6BD3B224C6C9D16ADDA69 /* kick-0b.caf */; };
+		CD2A1678E6F4475BD791FB2D /* QuizScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C34FA7B4C94CA0F72FFDB8 /* QuizScreen.swift */; };
 		CF8437708537B6C104D4863C /* hat-0c.caf in Resources */ = {isa = PBXBuildFile; fileRef = ACAFCFE83B0144D8BD65D236 /* hat-0c.caf */; };
 		D0556E07BABEDDABE5996C09 /* kick-2b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 2C0170A26E6933ACE6978F7E /* kick-2b.caf */; };
 		D158A6D96D8477A4B860A2F3 /* snare-5b.caf in Resources */ = {isa = PBXBuildFile; fileRef = DF075103D924CB5A798DA0F7 /* snare-5b.caf */; };
@@ -263,6 +265,7 @@
 		F25F08A0EAE9E1E187322D64 /* saxl-60.caf in Resources */ = {isa = PBXBuildFile; fileRef = E7E7C5B1DD93C08680DF1C80 /* saxl-60.caf */; };
 		F2B5D3404192E91E7155E21A /* hat-3a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 8D722E42873919D441D35FD1 /* hat-3a.caf */; };
 		F436B0DC1F4A8F0BD1F84725 /* crash-0a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 48AC0F7D07390FEBFAF005B5 /* crash-0a.caf */; };
+		F5E48B65451195E56EB8CFE6 /* Quiz.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDB2CAB732A25EB76B9A25B9 /* Quiz.swift */; };
 		F642AEA417A3CB0F6327BBDB /* kick-0a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 0B0D42BB8380AE4669C98F79 /* kick-0a.caf */; };
 		F6E6BC20DF042E27FE4FA6B3 /* Autoplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61E80E5165303C091E17B75D /* Autoplay.swift */; };
 		F77F687D1923C3CD21700283 /* pno-75-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = E2161FA7E0AAA6E5F02D420C /* pno-75-1.caf */; };
@@ -329,6 +332,7 @@
 		360CC0D3E4675A3F8F360945 /* Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Typography.swift; sourceTree = "<group>"; };
 		379674C43D4090DBE46D6547 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		38E5F2DEA3C4568CFE64B5DF /* ride-1b.caf */ = {isa = PBXFileReference; path = "ride-1b.caf"; sourceTree = "<group>"; };
+		3946539C0524DDA802585674 /* MapScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapScreen.swift; sourceTree = "<group>"; };
 		3A5EF2FC83C903D2F978A526 /* pno-59-2.caf */ = {isa = PBXFileReference; path = "pno-59-2.caf"; sourceTree = "<group>"; };
 		3B3C55EDD7385BAD71C09CC8 /* ride-3b.caf */ = {isa = PBXFileReference; path = "ride-3b.caf"; sourceTree = "<group>"; };
 		3BC0A0A5C5D66707D069836B /* saxl-74.caf */ = {isa = PBXFileReference; path = "saxl-74.caf"; sourceTree = "<group>"; };
@@ -437,6 +441,7 @@
 		A5A6E1F7F4B26999D7BB16D6 /* instruments.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = instruments.json; sourceTree = "<group>"; };
 		A66200E551CD99C3A7EA5420 /* hat-3c.caf */ = {isa = PBXFileReference; path = "hat-3c.caf"; sourceTree = "<group>"; };
 		A90516563580959F36C82E8A /* pno-69-1.caf */ = {isa = PBXFileReference; path = "pno-69-1.caf"; sourceTree = "<group>"; };
+		A9C34FA7B4C94CA0F72FFDB8 /* QuizScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuizScreen.swift; sourceTree = "<group>"; };
 		AB1055BF8F56FAC314DB971B /* sax-70-h.caf */ = {isa = PBXFileReference; path = "sax-70-h.caf"; sourceTree = "<group>"; };
 		ACAFCFE83B0144D8BD65D236 /* hat-0c.caf */ = {isa = PBXFileReference; path = "hat-0c.caf"; sourceTree = "<group>"; };
 		AD8A3ACF263A0B9CE23283FB /* snare-3c.caf */ = {isa = PBXFileReference; path = "snare-3c.caf"; sourceTree = "<group>"; };
@@ -524,6 +529,7 @@
 		EBA13494083E46DEDF03C960 /* kick-4b.caf */ = {isa = PBXFileReference; path = "kick-4b.caf"; sourceTree = "<group>"; };
 		EC1B98ACF898FE895E4231EA /* sax-52-h.caf */ = {isa = PBXFileReference; path = "sax-52-h.caf"; sourceTree = "<group>"; };
 		EC1F2F025FFD570FE5193E0D /* bass-36.caf */ = {isa = PBXFileReference; path = "bass-36.caf"; sourceTree = "<group>"; };
+		EDB2CAB732A25EB76B9A25B9 /* Quiz.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Quiz.swift; sourceTree = "<group>"; };
 		EFFA08C2D957ECE763A247E6 /* saxl-56.caf */ = {isa = PBXFileReference; path = "saxl-56.caf"; sourceTree = "<group>"; };
 		F08D6CCFCF70D2EC893912D1 /* sax-64-s.caf */ = {isa = PBXFileReference; path = "sax-64-s.caf"; sourceTree = "<group>"; };
 		F12738BF65384901373A6360 /* bass-29.caf */ = {isa = PBXFileReference; path = "bass-29.caf"; sourceTree = "<group>"; };
@@ -602,6 +608,7 @@
 				8420109DC0235151EC032073 /* Menu */,
 				C5A8C31905666F590C737B60 /* MIDI */,
 				1CF44BC8A4C782CABA9ED203 /* Progress */,
+				CC9651B01ECD0D2FCF3F6885 /* Quiz */,
 				DE9A86160F82DCF6987CF95C /* Sounds */,
 			);
 			path = Takt;
@@ -633,6 +640,8 @@
 			children = (
 				F8D5E1401A830BE79F20D77E /* CalibrationScreen.swift */,
 				9EB615A2BF73A5830696480A /* LessonsScreen.swift */,
+				3946539C0524DDA802585674 /* MapScreen.swift */,
+				A9C34FA7B4C94CA0F72FFDB8 /* QuizScreen.swift */,
 				73E28D3A2CB1F4DEF189BCD2 /* ResultScreen.swift */,
 				4287A8E13F473563716A0973 /* SettingsScreen.swift */,
 			);
@@ -698,6 +707,14 @@
 				2A745499F18AF47E90C45897 /* MIDIInput.swift */,
 			);
 			path = MIDI;
+			sourceTree = "<group>";
+		};
+		CC9651B01ECD0D2FCF3F6885 /* Quiz */ = {
+			isa = PBXGroup;
+			children = (
+				EDB2CAB732A25EB76B9A25B9 /* Quiz.swift */,
+			);
+			path = Quiz;
 			sourceTree = "<group>";
 		};
 		DE9A86160F82DCF6987CF95C /* Sounds */ = {
@@ -1269,11 +1286,14 @@
 				2CDC4D59FC65AB6B4362B2FB /* LessonsScreen.swift in Sources */,
 				3CAF2C7361F0E087EC6A2943 /* MIDIFile.swift in Sources */,
 				AD4AB405745AED706DBB9E45 /* MIDIInput.swift in Sources */,
+				8DAE719F3BA714959E6DC281 /* MapScreen.swift in Sources */,
 				1BAF5C09CD661D4CF3484722 /* Motifs.swift in Sources */,
 				98A90BB07168F73C2CB64C6D /* PadGrid.swift in Sources */,
 				486922DA20D6BC2D8B7890FD /* Palette.swift in Sources */,
 				DE7FE10E0696FBE76644959D /* Player.swift in Sources */,
 				8AFD26F694758D3E21A60873 /* ProgressStore.swift in Sources */,
+				F5E48B65451195E56EB8CFE6 /* Quiz.swift in Sources */,
+				CD2A1678E6F4475BD791FB2D /* QuizScreen.swift in Sources */,
 				495537C6E5D2EC4AA4A7E72F /* ResultScreen.swift in Sources */,
 				2280B159810DADB2C948CEFC /* Scorer.swift in Sources */,
 				0C90898023362CB317B66D22 /* SettingsScreen.swift in Sources */,
@@ -1322,7 +1342,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 8;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -1389,7 +1409,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 8;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;

@@ -27,9 +27,36 @@ final class ProgressStore {
         var lastPracticed: Date?
     }
 
+    /// Quizzes: the placement's result and each question's Leitner box (0 = missed, comes back
+    /// first; 3 = known).
+    struct QuizRecord: Codable, Equatable {
+        /// nil until the ear check is done.
+        var level: QuizLevel?
+        var placed: Date?
+        var boxes: [String: Int] = [:]
+        /// Local date ("2026-10-25") of the last finished daily challenge.
+        var lastDaily: String?
+        var answered = 0
+        var correct = 0
+    }
+
     struct Snapshot: Codable, Equatable {
         var lessons: [String: LessonRecord] = [:]
         var skills: [String: SkillRecord] = [:]
+        /// Local dates practiced (a judged chorus or a finished quiz), sorted: the streak.
+        var days: [String] = []
+        var quiz = QuizRecord()
+
+        init() {}
+
+        // Files and accounts from before the streak and quizzes have neither.
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            lessons = try c.decodeIfPresent([String: LessonRecord].self, forKey: .lessons) ?? [:]
+            skills = try c.decodeIfPresent([String: SkillRecord].self, forKey: .skills) ?? [:]
+            days = try c.decodeIfPresent([String].self, forKey: .days) ?? []
+            quiz = try c.decodeIfPresent(QuizRecord.self, forKey: .quiz) ?? QuizRecord()
+        }
     }
 
     private(set) var snapshot: Snapshot
@@ -95,6 +122,61 @@ final class ProgressStore {
         for n in result.notes where n.mark != .hit { s.weakBars[n.expected.bar + 1, default: 0] += 1 }
         s.lastPracticed = Date()
         snapshot.skills[skill] = s
+        save()
+    }
+
+    // MARK: Streak
+
+    /// "2026-10-25" in the device's time zone.
+    static func day(_ date: Date = Date(), calendar: Calendar = .current) -> String {
+        let c = calendar.dateComponents([.year, .month, .day], from: date)
+        return String(format: "%04d-%02d-%02d", c.year!, c.month!, c.day!)
+    }
+
+    /// Today counts as practiced.
+    func practiced(on date: Date = Date()) {
+        let d = Self.day(date)
+        guard !snapshot.days.contains(d) else { return }
+        snapshot.days = (snapshot.days + [d]).sorted()
+        save()
+    }
+
+    var practicedToday: Bool { snapshot.days.contains(Self.day()) }
+
+    /// Days in a row ending today, or yesterday (today isn't over yet).
+    func streak(today: Date = Date()) -> Int { Self.streak(days: snapshot.days, today: today) }
+
+    static func streak(days: [String], today: Date = Date(), calendar: Calendar = .current) -> Int {
+        let set = Set(days)
+        var d = today
+        if !set.contains(day(d, calendar: calendar)) { d = calendar.date(byAdding: .day, value: -1, to: d)! }
+        var n = 0
+        while set.contains(day(d, calendar: calendar)) {
+            n += 1
+            d = calendar.date(byAdding: .day, value: -1, to: d)!
+        }
+        return n
+    }
+
+    // MARK: Quizzes
+
+    func answered(_ id: String, correct: Bool) {
+        var q = snapshot.quiz
+        q.boxes[id] = correct ? min(3, (q.boxes[id] ?? 0) + 1) : 0
+        q.answered += 1
+        if correct { q.correct += 1 }
+        snapshot.quiz = q
+        save()
+    }
+
+    func placed(_ level: QuizLevel) {
+        snapshot.quiz.level = level
+        snapshot.quiz.placed = Date()
+        save()
+    }
+
+    func finishedDaily() {
+        snapshot.quiz.lastDaily = Self.day()
         save()
     }
 

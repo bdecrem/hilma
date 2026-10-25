@@ -38,7 +38,8 @@ struct TaktApp: App {
         let audio = AudioEngine(band: .bundled(lesson.band), tempo: tempo)
         let player = Player(audio: audio, lesson: lesson, progress: progress)
         audio.start(silent: d.bool(forKey: "Silent"))
-        if !d.bool(forKey: "Paused") { audio.send(.play) }
+        // The band on the menu is a setting (Settings → Sound); a lesson always has it.
+        if !d.bool(forKey: "Paused") && RootView.menuMusicOn { audio.send(.play) }
         #if DEBUG
         if d.integer(forKey: "Step") > 1 { player.restartLesson(at: d.integer(forKey: "Step") - 1) }
         DebugHooks.recordIfRequested(audio)
@@ -106,12 +107,26 @@ struct RootView: View {
     let player: Player
     @AppStorage("bandLevel") private var bandLevel = 1.0
     @AppStorage("pianoLevel") private var pianoLevel = 1.0
+    @AppStorage("menuMusic") private var menuMusic = true
+
+    static var menuMusicOn: Bool {
+        let d = UserDefaults.standard
+        return d.object(forKey: "menuMusic") == nil || d.bool(forKey: "menuMusic")
+    }
 
     var body: some View {
         Group {
             switch app.route {
             case .lessons:
                 LessonsScreen(app: app)
+            case .map:
+                MapScreen(app: app)
+            case .quiz:
+                if let quiz = app.quiz {
+                    QuizScreen(app: app, session: quiz)
+                } else {
+                    LessonsScreen(app: app)
+                }
             case .lesson:
                 LiveLessonScreen(app: app, player: player)
             case .result:
@@ -134,8 +149,25 @@ struct RootView: View {
             onEscape: { if app.route == .lesson { app.route = .lessons } }
         ))
         .onChange(of: player.finish) { _, f in if f != nil && app.route == .lesson { app.lessonFinished() } }
+        .onChange(of: app.route, initial: true) { syncMenuMusic() }
+        .onChange(of: menuMusic) { syncMenuMusic(toggled: true) }
         .onChange(of: bandLevel, initial: true) { sendTrim() }
         .onChange(of: pianoLevel) { sendTrim() }
+    }
+
+    /// With the menu music off the band plays only in a lesson: it starts when one opens and
+    /// stops on the way back to the menu. Turning it on starts it on the menu; with it on, a band
+    /// you paused stays paused.
+    private func syncMenuMusic(toggled: Bool = false) {
+        switch app.route {
+        case .lessons, .map, .settings:
+            if !menuMusic && player.playing { player.togglePlay() }
+            if menuMusic && toggled && !player.playing { player.togglePlay() }
+        case .lesson:
+            if !menuMusic && !player.playing { player.togglePlay() }
+        case .result, .calibrate, .quiz:
+            break  // their own: Play it back, the clicks, a quiet quiz
+        }
     }
 
     private func sendTrim() {

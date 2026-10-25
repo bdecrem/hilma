@@ -101,6 +101,64 @@ final class AccountStore {
         }
     }
 
+    // MARK: Daily text
+
+    /// The daily iMessage: a verified phone, on/off, the hour (in this device's time zone).
+    struct DailySettings: Codable, Equatable {
+        var phone: String?
+        var verified: Bool
+        var enabled: Bool
+        var hour: Int
+        var tz: String
+    }
+
+    private(set) var daily: DailySettings?
+    private(set) var dailyError: String?
+
+    func loadDaily() async {
+        await runDaily { self.daily = try await self.call("daily", method: "GET", body: nil as String?) }
+    }
+
+    /// On/off and the hour; the time zone always goes with it, so the text follows the device.
+    func setDaily(enabled: Bool? = nil, hour: Int? = nil) async {
+        struct Body: Encodable { let enabled: Bool?; let hour: Int?; let tz: String }
+        await runDaily {
+            self.daily = try await self.call("daily", method: "PUT",
+                                             body: Body(enabled: enabled, hour: hour, tz: TimeZone.current.identifier))
+        }
+    }
+
+    func sendCode(phone: String) async {
+        await runDaily {
+            let _: Empty = try await self.call("daily/phone", body: ["phone": phone])
+            await self.loadDaily()
+        }
+    }
+
+    func verify(code: String) async {
+        await runDaily {
+            let _: Empty = try await self.call("daily/verify", body: ["code": code])
+            await self.setDaily()
+        }
+    }
+
+    func removePhone() async {
+        await runDaily {
+            let _: Empty = try await self.call("daily/phone", method: "DELETE", body: nil as String?)
+            await self.loadDaily()
+        }
+    }
+
+    private func runDaily(_ work: @escaping () async throws -> Void) async {
+        busy = true
+        dailyError = nil
+        do { try await work() } catch {
+            dailyError = (error as? Failure)?.message ?? "Can't reach ola.cx."
+            log.error("daily: \(error.localizedDescription, privacy: .public)")
+        }
+        busy = false
+    }
+
     // MARK: Sync
 
     private struct ProgressBody: Codable {
@@ -120,7 +178,7 @@ final class AccountStore {
     }
 
     /// The server's copy merged into this device's: lessons keep the furthest step and the best
-    /// tempo, skills keep the record with more attempts. Then whatever is newer here goes up.
+    /// tempo, skills keep the record with more attempts, the streak keeps every day. Then whatever is newer here goes up.
     private func pull() async {
         do {
             let remote: ProgressBody = try await call("progress", method: "GET", body: nil as String?)
@@ -145,6 +203,9 @@ final class AccountStore {
         for (id, s) in b.skills where s.attempts > (out.skills[id]?.attempts ?? -1) {
             out.skills[id] = s
         }
+        // Days practiced on either device; the quiz record that has seen more answers.
+        out.days = Array(Set(a.days).union(b.days)).sorted()
+        if b.quiz.answered > a.quiz.answered || (a.quiz.level == nil && b.quiz.level != nil) { out.quiz = b.quiz }
         return out
     }
 

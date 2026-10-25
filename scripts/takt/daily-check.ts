@@ -70,7 +70,7 @@ eq(
 )
 eq(
   composeText({ days: ['2026-10-23', '2026-10-24'], quiz: { level: 'both' } }, oct25, LA),
-  "Takt: day 2 of your streak. Today's challenge: 5 questions on the 12-bar form. Open Takt to keep it going.",
+  "Takt: you're on a 2-day streak. Today's challenge: 5 questions on the 12-bar form. Open Takt to keep it going.",
   'streak 2 with a quiz level',
 )
 
@@ -157,7 +157,7 @@ async function live(baseUrl: string) {
     await call('PUT', '/api/takt/progress', { progress: { lessons: {}, skills: {}, days: [prevDate(prevDate(y)), prevDate(y), y], quiz: { level: 'ear' } } })
     const t2 = await call('GET', `/api/takt/daily/tick?force=1&dry=1&user=${userId}`, undefined, cron)
     eq((t2.json?.results as { text?: string }[])?.[0]?.text,
-      `Takt: day 3 of your streak. Today's challenge: ${challengeFor(now, 'Europe/Brussels')}. Open Takt to keep it going.`, 'tick force+dry, 3-day streak')
+      `Takt: you're on a 3-day streak. Today's challenge: ${challengeFor(now, 'Europe/Brussels')}. Open Takt to keep it going.`, 'tick force+dry, 3-day streak')
 
     // The real due path (sender stubbed by TAKT_IMESSAGE_DRY on the server): at the user's hour.
     const at = new Date(now)

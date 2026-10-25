@@ -7,6 +7,7 @@ struct SettingsScreen: View {
     @AppStorage("bandLevel") private var bandLevel = 1.0
     @AppStorage("pianoLevel") private var pianoLevel = 1.0
     @AppStorage("inputOffsetMs") private var inputOffsetMs = 0.0
+    @AppStorage("menuMusic") private var menuMusic = true
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var confirmReset = false
 
@@ -31,10 +32,20 @@ struct SettingsScreen: View {
                 VStack(alignment: .leading, spacing: 14) {
                     AccountSection(account: app.account)
 
+                    DailyTextSection(account: app.account)
+
                     SettingsSection(title: "Sound") {
                         LevelRow(title: "Band", value: $bandLevel)
                         Hairline()
                         LevelRow(title: "Your piano", value: $pianoLevel)
+                        Hairline()
+                        Toggle(isOn: $menuMusic) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Band on the menu").bodyText(15).foregroundStyle(Palette.text)
+                                Text("Off: the band plays only in a lesson").dataLabel(10).foregroundStyle(Palette.muted)
+                            }
+                        }
+                        .tint(Palette.signal)
                     }
 
                     SettingsSection(title: "Input") {
@@ -227,6 +238,9 @@ struct Field: View {
     let placeholder: String
     @Binding var text: String
     let secure: Bool
+    /// The keyboard for a plain field: email by default, or a phone number or a code.
+    var content: UITextContentType = .emailAddress
+    var keyboard: UIKeyboardType = .emailAddress
 
     var body: some View {
         Group {
@@ -235,8 +249,8 @@ struct Field: View {
                     .textContentType(.password)
             } else {
                 TextField(placeholder, text: $text)
-                    .textContentType(.emailAddress)
-                    .keyboardType(.emailAddress)
+                    .textContentType(content)
+                    .keyboardType(keyboard)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
             }
@@ -247,5 +261,84 @@ struct Field: View {
         .frame(height: 42)
         .background(RoundedRectangle(cornerRadius: 6).fill(Palette.ground))
         .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Palette.line, lineWidth: 1))
+    }
+}
+
+/// The daily text: your number (verified by a code Takt texts you), on/off, and the hour it
+/// comes at. Skipped on days you've already practiced.
+struct DailyTextSection: View {
+    let account: AccountStore
+    @State private var phone = ""
+    @State private var code = ""
+
+    var body: some View {
+        SettingsSection(title: "Daily text") {
+            if let d = account.daily, let number = d.phone, d.verified {
+                Toggle(isOn: Binding(get: { d.enabled }, set: { on in Task { await account.setDaily(enabled: on) } })) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Text me today's challenge").bodyText(15).foregroundStyle(Palette.text)
+                        Text("Not on days you've practiced").dataLabel(10).foregroundStyle(Palette.muted)
+                    }
+                }
+                .tint(Palette.signal)
+                Hairline()
+                HStack {
+                    Text("At").bodyText(15).foregroundStyle(Palette.text)
+                    Spacer()
+                    Picker("At", selection: Binding(get: { d.hour }, set: { h in Task { await account.setDaily(hour: h) } })) {
+                        ForEach(6..<23, id: \.self) { h in Text(Self.hourName(h)).tag(h) }
+                    }
+                    .pickerStyle(.menu)
+                    .tint(Palette.text)
+                }
+                Hairline()
+                HStack {
+                    Text(number).dataLabel(12).foregroundStyle(Palette.text)
+                    Spacer()
+                    QuietButton(title: "Remove") { Task { await account.removePhone() } }
+                }
+            } else if let d = account.daily, let number = d.phone {
+                Text("We texted a code to \(number).").bodyText(14).foregroundStyle(Palette.muted)
+                Field(placeholder: "4-digit code", text: $code, secure: false, content: .oneTimeCode, keyboard: .numberPad)
+                HStack(spacing: 10) {
+                    PrimaryButton(title: account.busy ? "…" : "Verify") {
+                        let c = code
+                        Task { await account.verify(code: c); if account.daily?.verified == true { code = "" } }
+                    }
+                    .disabled(account.busy || code.count < 4)
+                    QuietButton(title: "Other number") { Task { await account.removePhone() } }
+                }
+            } else {
+                Text("Once a day, at your hour: your streak and the day's challenge, by iMessage.")
+                    .bodyText(14)
+                    .foregroundStyle(Palette.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+                Field(placeholder: "Your phone number", text: $phone, secure: false, content: .telephoneNumber, keyboard: .phonePad)
+                PrimaryButton(title: account.busy ? "…" : "Text me a code") {
+                    let p = phone
+                    Task { await account.sendCode(phone: p) }
+                }
+                .disabled(account.busy || phone.filter(\.isNumber).count < 10)
+            }
+            if let e = account.dailyError {
+                Text(e).bodyText(13).foregroundStyle(Palette.signal)
+            }
+        }
+        // After the account is known (a first launch makes the guest first).
+        .task(id: account.state) {
+            guard account.state != .unknown else { return }
+            await account.loadDaily()
+            #if DEBUG
+            // `-DailyPhone <number>` asks for a code, `-DailyCode <code>` verifies it (with a
+            // dev server in TAKT_IMESSAGE_DRY mode: the code is in its log, nothing is texted).
+            let d = UserDefaults.standard
+            if let p = d.string(forKey: "DailyPhone"), account.daily?.phone == nil { await account.sendCode(phone: p) }
+            if let c = d.string(forKey: "DailyCode"), account.daily?.verified == false { await account.verify(code: c) }
+            #endif
+        }
+    }
+
+    static func hourName(_ h: Int) -> String {
+        h == 12 ? "Noon" : h < 12 ? "\(h) am" : "\(h - 12) pm"
     }
 }

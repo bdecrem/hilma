@@ -78,7 +78,7 @@ export function composeText(snapshot: TaktSnapshot | null, now: Date, tz: string
   const n = streak(snapshot?.days, localDate(now, tz))
   const challenge = todaysChallenge(snapshot, now, tz)
   return n > 0
-    ? `Takt: day ${n} of your streak. Today's challenge: ${challenge}. Open Takt to keep it going.`
+    ? `Takt: you're on a ${n}-day streak. Today's challenge: ${challenge}. Open Takt to keep it going.`
     : `Takt: today's challenge is ${challenge}. Two minutes starts a streak.`
 }
 
