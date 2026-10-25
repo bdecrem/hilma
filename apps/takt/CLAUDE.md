@@ -93,6 +93,15 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   `-LessonCheck` (every chord's pitch classes at every level, voicing range, no repeats,
   inversions, the level-up rule, scoring, the top level, merge): 102/102.
 
+- **Intervals (E2): built 2026-10-25, 0.1 (10).** A peer of the Ear Trainer, not a mode or more
+  levels of it: a different skill (distance, not color), its own ladder and best, one row per
+  skill on the menu and the map. Same engine (`EarGame.Kind` chords | intervals), screen, meter,
+  8-of-10 rule and scoring. Levels: fourth or fifth (named "Fourth (IV)" / "Fifth (V)", the steps
+  from I to IV and V) → + octave → + thirds → going down too → sixths → half/whole step and
+  the tritone → both notes at once. After a miss: a song that starts with it (Here Comes the
+  Bride, Twinkle Twinkle…). `Snapshot.intervals`. DEBUG `-EarKind intervals`. `-LessonCheck`
+  110/110.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

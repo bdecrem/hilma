@@ -206,8 +206,11 @@ final class AccountStore {
         // Days practiced on either device; the quiz record that has seen more answers.
         out.days = Array(Set(a.days).union(b.days)).sorted()
         if b.quiz.answered > a.quiz.answered || (a.quiz.level == nil && b.quiz.level != nil) { out.quiz = b.quiz }
-        out.ear = .init(level: max(a.ear.level, b.ear.level), best: max(a.ear.best, b.ear.best),
-                        answered: max(a.ear.answered, b.ear.answered))
+        func most(_ x: ProgressStore.EarRecord, _ y: ProgressStore.EarRecord) -> ProgressStore.EarRecord {
+            .init(level: max(x.level, y.level), best: max(x.best, y.best), answered: max(x.answered, y.answered))
+        }
+        out.ear = most(a.ear, b.ear)
+        out.intervals = most(a.intervals, b.intervals)
         return out
     }
 

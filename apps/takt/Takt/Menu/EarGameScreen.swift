@@ -1,24 +1,26 @@
 import SwiftUI
 
-/// The Ear Trainer. Top: the level, its meter (the last ten answers at this level; 8 lit opens
-/// the next), the score and the combo. Middle: Hear it again, and one big button per chord
-/// quality. A right answer lights in `signal` and the next chord comes; a miss shows the right
-/// one, says what to listen for, and plays the chord again. Bottom: the levels you've opened.
+/// An ear game (the Ear Trainer's chords, or Intervals). Top: the level, its meter (the last ten
+/// answers at this level; 8 lit opens the next), the score and the combo. Middle: Hear it again,
+/// and one big button per answer. A right answer lights in `signal` and the next round comes; a
+/// miss shows the right one, says what to listen for, and plays it again. Bottom: the levels
+/// you've opened.
 struct EarGameScreen: View {
     let app: AppModel
+    let kind: EarGame.Kind
     let run: EarGame.Run
     let round: EarGame.Round
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
         let compact = sizeClass == .compact
-        let level = EarGame.levels[run.level - 1]
+        let level = kind.levels[run.level - 1]
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .center, spacing: 16) {
                 TransportButton(symbol: "chevron.left", lit: false, size: compact ? 34 : 36, label: "Leave the game") {
                     app.leaveEarGame()
                 }
-                Text("Ear Trainer")
+                Text(kind.title)
                     .font(.display(compact ? 34 : 44))
                     .textCase(.uppercase)
                     .foregroundStyle(Palette.text)
@@ -31,7 +33,7 @@ struct EarGameScreen: View {
 
             HStack(alignment: .firstTextBaseline) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Level \(level.number) of \(EarGame.levels.count)")
+                    Text("Level \(level.number) of \(kind.levels.count)")
                         .dataLabel(11)
                         .foregroundStyle(Palette.muted)
                     Text(level.title)
@@ -55,7 +57,7 @@ struct EarGameScreen: View {
             }
             .padding(.top, 20)
 
-            Meter(run: run)
+            Meter(run: run, top: kind.levels.count)
                 .padding(.top, 14)
 
             Spacer(minLength: 12)
@@ -85,8 +87,8 @@ struct EarGameScreen: View {
             let columns = round.options.count > 2 ? [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)]
                                                   : [GridItem(.flexible(), spacing: 10)]
             LazyVGrid(columns: columns, spacing: 10) {
-                ForEach(Array(round.options.enumerated()), id: \.offset) { i, q in
-                    ChordButton(title: q.name, state: state(i)) { app.answerEar(i) }
+                ForEach(Array(round.options.enumerated()), id: \.offset) { i, option in
+                    ChordButton(title: option, state: state(i)) { app.answerEar(i) }
                 }
             }
             .padding(.top, 10)
@@ -99,7 +101,7 @@ struct EarGameScreen: View {
                 .padding(.top, 12)
 
             Spacer(minLength: 12)
-            LevelChips(app: app, current: run.level, opened: app.progress.snapshot.ear.level)
+            LevelChips(app: app, levels: kind.levels, current: run.level, opened: app.progress.ear(kind).level)
                 .padding(.bottom, compact ? 8 : 24)
         }
         .padding(.horizontal, compact ? 16 : 40)
@@ -109,12 +111,12 @@ struct EarGameScreen: View {
     }
 
     private var feedback: String {
-        guard let picked = app.earPicked else { return round.broken ? "One note after another: which chord is it?" : "Which chord?" }
-        let name = "\(round.rootName) \(round.quality.name.lowercased())"
+        guard let picked = app.earPicked else { return kind.ask(round) }
         if picked == round.answer {
-            return "\(name). +\(app.earPoints)"
+            return "\(round.name). +\(app.earPoints)"
         }
-        return "It was \(name). \(round.quality.hint)"
+        // The hint starts with the answer's name ("Fourth: Here Comes the Bride…").
+        return "It was \(round.name). \(round.hint)"
     }
 
     private func state(_ i: Int) -> ChordButton.State {
@@ -127,6 +129,7 @@ struct EarGameScreen: View {
 /// The last ten answers at this level, oldest first; 8 lit opens the next.
 private struct Meter: View {
     let run: EarGame.Run
+    let top: Int
 
     var body: some View {
         let last = Array(run.recent.suffix(EarGame.window))
@@ -138,7 +141,7 @@ private struct Meter: View {
                         .frame(height: 8)
                 }
             }
-            Text(run.level < EarGame.levels.count
+            Text(run.level < top
                  ? "\(run.rightOfWindow) of your last \(EarGame.window) right · \(EarGame.needed) opens level \(run.level + 1)"
                  : "\(run.rightOfWindow) of your last \(EarGame.window) right · the top level")
                 .dataLabel(10)
@@ -175,15 +178,16 @@ private struct ChordButton: View {
     }
 }
 
-/// The seven levels: opened ones can be played again, the rest wait.
+/// The levels: opened ones can be played again, the rest wait.
 private struct LevelChips: View {
     let app: AppModel
+    let levels: [(number: Int, title: String, detail: String)]
     let current: Int
     let opened: Int
 
     var body: some View {
         HStack(spacing: 6) {
-            ForEach(EarGame.levels, id: \.number) { l in
+            ForEach(levels, id: \.number) { l in
                 let open = l.number <= opened
                 Button { app.goEar(level: l.number) } label: {
                     Text("\(l.number)")

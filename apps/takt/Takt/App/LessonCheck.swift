@@ -440,11 +440,12 @@ enum LessonCheck {
             for _ in 0..<200 {
                 let r = EarGame.round(level: level.number, avoiding: last, using: &earRng)
                 // The pitch classes are the quality's on the root, whatever the voicing.
-                let pcs = Set(r.notes.map { $0 % 12 }), want = Set(r.quality.intervals.map { (r.root + $0) % 12 })
-                if pcs != want || r.options != level.qualities || r.broken != level.broken || !level.roots.contains(r.root) { voicingOK = false }
+                let pcs = Set(r.notes.map { $0 % 12 }), want = Set(r.quality!.intervals.map { (r.root + $0) % 12 })
+                if pcs != want || r.options != level.qualities.map(\.name) || r.options[r.answer] != r.quality!.name
+                    || r.broken != level.broken || !level.roots.contains(r.root) { voicingOK = false }
                 if r.notes.min()! < 53 || r.notes.max()! > 64 + 11 + 12 { spreadOK = false }
                 if let l = last, l.quality == r.quality && l.root == r.root { noRepeat = false }
-                seen[level.number, default: []].insert(r.quality)
+                seen[level.number, default: []].insert(r.quality!)
                 last = r
             }
         }
@@ -477,6 +478,37 @@ enum LessonCheck {
         a.ear = .init(level: 3, best: 900, answered: 40); b.ear = .init(level: 5, best: 400, answered: 30)
         let m = AccountStore.merge(a, b).ear
         check("ear trainer: merge keeps the highest level and the best score", m.level == 5 && m.best == 900 && m.answered == 40)
+
+        // Intervals
+        var ivOK = true, ivRange = true, ivRepeat = true, ivDown = false
+        var ivSeen: [Int: Set<EarGame.Interval>] = [:]
+        for level in EarGame.intervalLevels {
+            var last: EarGame.Round?
+            for _ in 0..<200 {
+                let r = EarGame.intervalRound(level: level.number, avoiding: last, using: &earRng)
+                let iv = r.interval!
+                if abs(r.notes[1] - r.notes[0]) != iv.rawValue || r.options != level.intervals.map(\.name)
+                    || r.options[r.answer] != iv.name || r.broken == level.together { ivOK = false }
+                if r.notes[1] < r.notes[0] { if level.both { ivDown = true } else { ivOK = false } }
+                if r.notes.min()! < 48 || r.notes.max()! > 72 { ivRange = false }
+                if let l = last, l.interval == iv && l.root == r.root { ivRepeat = false }
+                ivSeen[level.number, default: []].insert(iv)
+                last = r
+            }
+        }
+        check("intervals: every round is its interval, the right button, together only at the top", ivOK)
+        check("intervals: C3 to C5", ivRange)
+        check("intervals: never the same twice in a row", ivRepeat)
+        check("intervals: going down from level 4", ivDown)
+        check("intervals: every level plays all its intervals", EarGame.intervalLevels.allSatisfy { ivSeen[$0.number] == Set($0.intervals) })
+        check("intervals: level 1 is IV or V", EarGame.intervalLevels[0].intervals == [.fourth, .fifth])
+        var ivRun = EarGame.Run(level: 7, top: EarGame.intervalLevels.count)
+        for _ in 0..<10 { ivRun.answer(right: true) }
+        check("intervals: the top level stays the top", ivRun.level == 7 && !ivRun.leveledUp)
+        var ia = ProgressStore.Snapshot(), ib = ProgressStore.Snapshot()
+        ia.intervals = .init(level: 2, best: 100, answered: 10); ib.intervals = .init(level: 4, best: 50, answered: 5)
+        let im = AccountStore.merge(ia, ib)
+        check("intervals: kept apart from chords, merged by max", im.intervals.level == 4 && im.intervals.best == 100 && im.ear.level == 1)
 
         // The ramp doesn't count a clean chorus the player slowed down.
         let slow = lessonRun(from: 3, choruses: 3, bpm: 60, followTempo: false, play: perfect)

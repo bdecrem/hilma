@@ -144,7 +144,7 @@ private struct MapStop: View {
         case .new: return "New"
         case .inProgress(let step, let of): return "Step \(step) of \(of)"
         case .done(let tempo): return tempo > 0 ? "Done · \(tempo) bpm" : "Done"
-        case .game(let level): return "Level \(level) of \(EarGame.levels.count)"
+        case .game(let kind, let level): return "Level \(level) of \(kind.levels.count)"
         case .quizNew: return "Find your level"
         case .quizToday(let level), .quizDone(let level): return "Your level: \(level.title)"
         case .locked(let after): return "After \(after)"

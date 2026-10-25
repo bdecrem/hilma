@@ -53,7 +53,9 @@ final class ProgressStore {
         /// Local dates practiced (a judged chorus or a finished quiz), sorted: the streak.
         var days: [String] = []
         var quiz = QuizRecord()
+        /// The Ear Trainer (chords) and Intervals.
         var ear = EarRecord()
+        var intervals = EarRecord()
 
         init() {}
 
@@ -65,6 +67,7 @@ final class ProgressStore {
             days = try c.decodeIfPresent([String].self, forKey: .days) ?? []
             quiz = try c.decodeIfPresent(QuizRecord.self, forKey: .quiz) ?? QuizRecord()
             ear = try c.decodeIfPresent(EarRecord.self, forKey: .ear) ?? EarRecord()
+            intervals = try c.decodeIfPresent(EarRecord.self, forKey: .intervals) ?? EarRecord()
         }
     }
 
@@ -184,13 +187,15 @@ final class ProgressStore {
         save()
     }
 
-    /// After each Ear Trainer answer: the level reached and the run's score so far.
-    func earAnswered(level: Int, score: Int) {
-        var e = snapshot.ear
+    func ear(_ kind: EarGame.Kind) -> EarRecord { kind == .chords ? snapshot.ear : snapshot.intervals }
+
+    /// After each answer in an ear game: the level reached and the run's score so far.
+    func earAnswered(_ kind: EarGame.Kind, level: Int, score: Int) {
+        var e = ear(kind)
         e.level = max(e.level, level)
         e.best = max(e.best, score)
         e.answered += 1
-        snapshot.ear = e
+        if kind == .chords { snapshot.ear = e } else { snapshot.intervals = e }
         save()
     }
 

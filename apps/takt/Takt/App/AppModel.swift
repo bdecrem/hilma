@@ -43,11 +43,12 @@ final class AppModel {
         #if DEBUG
         // `-Route quiz` starts today's quiz; `-QuizAnswers 1,0,1` answers in order (Next between),
         // leaving the last answer's explanation up, or the summary after a full five.
-        // `-Route eargame [-EarLevel n] [-EarAnswers r,r,w]` plays the Ear Trainer, answering
+        // `-Route eargame [-EarKind intervals] [-EarLevel n] [-EarAnswers r,r,w]` plays an ear game, answering
         // right (r) or wrong (w) in order without the pauses, the last answer left up.
         if UserDefaults.standard.string(forKey: "Route") == "eargame" {
             let d = UserDefaults.standard
-            startEarGame(level: d.integer(forKey: "EarLevel") > 0 ? d.integer(forKey: "EarLevel") : nil)
+            startEarGame(EarGame.Kind(rawValue: d.string(forKey: "EarKind") ?? "chords")!,
+                         level: d.integer(forKey: "EarLevel") > 0 ? d.integer(forKey: "EarLevel") : nil)
             let script = (d.string(forKey: "EarAnswers") ?? "").split(separator: ",")
             for (i, a) in script.enumerated() {
                 guard let r = earRound else { break }
@@ -140,6 +141,7 @@ final class AppModel {
     // MARK: Ear Trainer
 
     private(set) var ear: EarGame.Run?
+    private(set) var earKind: EarGame.Kind = .chords
     private(set) var earRound: EarGame.Round?
     /// The option picked this round (nil: waiting for an answer).
     private(set) var earPicked: Int?
@@ -149,8 +151,9 @@ final class AppModel {
     @ObservationIgnored private var earPracticed = false
 
     /// At the highest level opened (or `level`).
-    func startEarGame(level: Int? = nil) {
-        ear = EarGame.Run(level: level ?? progress.snapshot.ear.level)
+    func startEarGame(_ kind: EarGame.Kind, level: Int? = nil) {
+        earKind = kind
+        ear = EarGame.Run(level: level ?? progress.ear(kind).level, top: kind.levels.count)
         earRound = nil
         earPracticed = false
         if route != .earGame { afterQuiz = route }
@@ -161,7 +164,7 @@ final class AppModel {
 
     func nextEarRound() {
         guard let run = ear else { return }
-        earRound = EarGame.round(level: run.level, avoiding: earRound, using: &earRNG)
+        earRound = earKind.round(level: run.level, avoiding: earRound, using: &earRNG)
         earPicked = nil
         earRoundID += 1
         playEar()
@@ -179,7 +182,7 @@ final class AppModel {
         earPicked = option
         earPoints = run.answer(right: right)
         ear = run
-        progress.earAnswered(level: run.level, score: run.score)
+        progress.earAnswered(earKind, level: run.level, score: run.score)
         if run.answered >= 10 && !earPracticed {
             earPracticed = true
             progress.practiced()
@@ -194,7 +197,7 @@ final class AppModel {
     }
 
     func goEar(level n: Int) {
-        guard var run = ear, n <= progress.snapshot.ear.level else { return }
+        guard var run = ear, n <= progress.ear(earKind).level else { return }
         run.go(to: n)
         ear = run
         nextEarRound()
@@ -234,8 +237,8 @@ enum EntryStatus: Equatable {
     /// A quiz after it: today's five waiting, or done today.
     case quizToday(QuizLevel)
     case quizDone(QuizLevel)
-    /// The Ear Trainer: the highest level opened.
-    case game(level: Int)
+    /// An ear game: the highest level opened.
+    case game(EarGame.Kind, level: Int)
     case locked(after: String)
     case soon
 
@@ -251,7 +254,7 @@ extension AppModel {
     func status(_ entry: LessonEntry) -> EntryStatus {
         if let after = entry.after, progress.lesson(after).completed == nil { return .locked(after: after) }
         guard entry.playable else { return .soon }
-        if entry.kind == .game { return .game(level: progress.snapshot.ear.level) }
+        if case .game(let kind) = entry.kind { return .game(kind, level: progress.ear(kind).level) }
         if entry.kind == .quiz {
             let q = progress.snapshot.quiz
             guard let level = q.level else { return .quizNew }
@@ -268,7 +271,7 @@ extension AppModel {
         guard status(entry).open else { return }
         switch entry.kind {
         case .quiz: startQuiz()
-        case .game: startEarGame()
+        case .game(let kind): startEarGame(kind)
         case .lesson: open(lesson: entry.code)
         }
     }
@@ -277,7 +280,7 @@ extension AppModel {
 /// The catalog the menu shows. A1 is the lesson, Q1 the quiz (the ear check, then a daily five);
 /// A2 is a stub until it exists (brief §5: "A2 stub screen only"), unlocked by finishing A1.
 struct LessonEntry: Identifiable {
-    enum Kind { case lesson, quiz, game }
+    enum Kind: Equatable { case lesson, quiz, game(EarGame.Kind) }
     let kind: Kind
     let code: String
     let title: String
@@ -292,7 +295,9 @@ struct LessonEntry: Identifiable {
     static let catalog = [
         LessonEntry(kind: .lesson, code: "A1", title: "Play the Form", meta: "Left hand · 12-bar blues in C · 15 min",
                     after: nil, playable: true),
-        LessonEntry(kind: .game, code: "E1", title: "Ear Trainer", meta: "Endless · name the chord by ear, seven levels",
+        LessonEntry(kind: .game(.chords), code: "E1", title: "Ear Trainer", meta: "Endless · name the chord by ear, seven levels",
+                    after: nil, playable: true),
+        LessonEntry(kind: .game(.intervals), code: "E2", title: "Intervals", meta: "Endless · name the distance between two notes",
                     after: nil, playable: true),
         LessonEntry(kind: .quiz, code: "Q1", title: "Ear and Form", meta: "Five questions: listening and theory · 2 min",
                     after: nil, playable: true),

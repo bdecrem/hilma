@@ -123,7 +123,7 @@ struct RootView: View {
                 MapScreen(app: app)
             case .earGame:
                 if let run = app.ear, let round = app.earRound {
-                    EarGameScreen(app: app, run: run, round: round)
+                    EarGameScreen(app: app, kind: app.earKind, run: run, round: round)
                 } else {
                     LessonsScreen(app: app)
                 }
