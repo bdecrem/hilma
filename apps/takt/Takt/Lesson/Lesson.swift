@@ -46,7 +46,12 @@ struct Lesson: Decodable {
         let slow: String?
         /// Once the gate passes.
         let passed: String?
+        /// The gate's attempts ran out this session.
         let tomorrow: String?
+        /// Ramp: a clean chorus that also unlocks a channel. {channel}: its name.
+        let unlock: String?
+        /// Payoff: the bars the band sits out.
+        let alone: String?
     }
 
     struct Ramp: Decodable {
@@ -105,12 +110,33 @@ struct Lesson: Decodable {
 
     private func validate() {
         for chord in form where chords[chord] == nil { fatalError("lesson \(code): no chord \(chord)") }
-        for step in steps where step.kind == .play {
+        for step in steps {
             let c = step.coach
-            guard step.tempo != nil, step.gate != nil, let pattern = step.pattern, !pattern.isEmpty,
-                  c.change != nil, c.hold != nil, c.clean != nil, c.again != nil, c.join != nil,
-                  c.slow != nil, c.passed != nil else {
-                fatalError("lesson \(code) step \(step.id): a play step needs tempo, gate, pattern and every coach line")
+            func need(_ ok: Bool, _ what: String) {
+                if !ok { fatalError("lesson \(code) step \(step.id): a \(step.kind) step needs \(what)") }
+            }
+            switch step.kind {
+            case .card:
+                need(step.card != nil, "card text")
+                continue
+            case .play:
+                need(step.tempo != nil && step.gate != nil, "tempo and gate")
+                need(c.clean != nil && c.again != nil && c.slow != nil && c.passed != nil, "clean, again, slow and passed lines")
+                need(step.maxAttempts == nil || c.tomorrow != nil, "a tomorrow line with maxAttempts")
+            case .ramp:
+                guard let r = step.ramp else { fatalError("lesson \(code) step \(step.id): a ramp step needs ramp") }
+                need(r.by > 0 && r.to > r.from, "a rising ramp")
+                need(c.clean != nil && c.again != nil && c.slow != nil && c.unlock != nil && c.passed != nil,
+                     "clean, again, slow, unlock and passed lines")
+            case .payoff:
+                need(step.tempo != nil, "tempo")
+                need(step.aloneBars.map { !$0.isEmpty && $0.allSatisfy { (1...form.count).contains($0) } } ?? false,
+                     "aloneBars inside the form")
+                need(c.alone != nil && c.passed != nil, "alone and passed lines")
+            }
+            need(c.change != nil && c.hold != nil && c.join != nil, "change, hold and join lines")
+            guard let pattern = step.pattern, !pattern.isEmpty else {
+                fatalError("lesson \(code) step \(step.id): no pattern")
             }
             for p in pattern where Self.tones[p.tone] == nil || !(1...4).contains(p.beat) || !(0..<12).contains(p.tick ?? 0) {
                 fatalError("lesson \(code) step \(step.id): bad pattern note \(p)")

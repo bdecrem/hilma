@@ -9,9 +9,20 @@ struct TransportBar: View {
     var body: some View {
         if compact {
             HStack(alignment: .center, spacing: 10) {
+                backButton(size: 34)
+                // iPhone: the code and the step's title, then "Step 2 of 6" (the lesson's title
+                // doesn't fit beside the back button and the transport).
                 VStack(alignment: .leading, spacing: 2) {
-                    title(size: 26)
-                    stepLabel
+                    Text(state.stepTitle.isEmpty ? "\(state.code) \(state.title)" : "\(state.code) \(state.stepTitle)")
+                        .font(.display(26))
+                        .textCase(.uppercase)
+                        .foregroundStyle(Palette.text)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
+                    Text("Step \(state.step) of \(state.stepCount)")
+                        .dataLabel(12)
+                        .foregroundStyle(Palette.muted)
+                        .lineLimit(1)
                 }
                 Spacer(minLength: 8)
                 transportButtons(size: 34)
@@ -19,6 +30,7 @@ struct TransportBar: View {
             }
         } else {
             HStack(alignment: .center, spacing: 20) {
+                backButton(size: 36)
                 HStack(alignment: .firstTextBaseline, spacing: 12) {
                     title(size: 30)
                     stepLabel
@@ -39,8 +51,13 @@ struct TransportBar: View {
             .lineLimit(1)
     }
 
+    private func backButton(size: CGFloat) -> some View {
+        TransportButton(symbol: "chevron.left", lit: false, size: size, label: "Lessons", action: controls.back)
+    }
+
     private var stepLabel: some View {
-        Text("Step \(state.step) of \(state.stepCount)")
+        Text(state.stepTitle.isEmpty ? "Step \(state.step) of \(state.stepCount)"
+                                     : "Step \(state.step) of \(state.stepCount) · \(state.stepTitle)")
             .dataLabel(12)
             .foregroundStyle(Palette.muted)
             .lineLimit(1)

@@ -7,7 +7,8 @@ modules, milestones M0–M4); read it before any change. Started 2026-10-24.
 SwiftUI + XcodeGen (`project.yml` is the source of truth, `Takt.xcodeproj` is generated and
 committed). Bundle ID `com.bartdecrem.Takt`, scheme `Takt`, Team `274T5WCVD2`, iOS 17+ / Mac
 Catalyst (macOS 14+) with the Mac idiom ("Optimize Interface for Mac", device family 6).
-iPhone-only on iOS (no iPad). Offline, local-only, no login, no backend.
+iPhone-only on iOS (no iPad). Everything runs on the device; an account on ola.cx (Dodo's shape,
+since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
 
 ## Status
 
@@ -27,10 +28,24 @@ iPhone-only on iOS (no iPad). Offline, local-only, no login, no backend.
   shows on bar 1 of the next chorus (and in the Mac's Last Chorus panel), and two clean
   choruses pass the gate. After that it holds ("Two clean. That's the form."); steps 2–6 are M3.
   Verified headlessly, see "Checking the lesson". Still not driven by hand: the Keystation.
-- M3 (steps 2–6, ramp, unlocks, payoff, result screen, SkillModel) is next.
+- **M3 full lesson + menu + accounts: built 2026-10-25, 0.1 (6).** All six steps run (card,
+  shuffle, ramp 70→90 with KEYS at 80 and HORNS at 90, gate at 90 with 8 attempts, the payoff with
+  the band out for bars 11–12), then the result screen (piano roll of the payoff chorus). A
+  LESSONS menu opens the app (the band plays under it: principle 1 kept, Bart asked for a menu),
+  Settings has the account, level trims, MIDI inputs, theme, reset, credits. Progress and the
+  brief's SkillModel records live in `ProgressStore` (a JSON file, not SwiftData: it is also what
+  the account syncs). Verified: `-LessonCheck` 49/49 (12 new whole-lesson cases), autoplay through
+  the payoff to the result on the simulator, screenshots of every screen. Not yet: the M3
+  acceptance by hand with a real MIDI keyboard; MIDI export and "Play it back" on the result
+  screen (M4).
 
 ## Code map (`Takt/`)
 
+- `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without
+  animation), the lesson catalog (A1, A2 stub). `Menu/`: `LessonsScreen` (the menu, with the band's
+  strip), `SettingsScreen`, `ResultScreen` (+ `PianoRoll`). `Progress/ProgressStore.swift`: lesson
+  records and skill records, `progress.json` in Application Support. `Account/AccountStore.swift`:
+  guest → sign up / log in against `/api/takt/*`, progress pull (merge) and push.
 - `App/TaktApp.swift`: `@main`, the theme (`@AppStorage("theme")`, `dark` default, `paper`),
   View → Paper Theme (⇧⌘L) on the Mac, and `MacWindow` (1100×720 minimum, no title text or toolbar).
 - `Design/Palette.swift`: the brief's seven tokens as dynamic colors. `signal` = now, `cue` = next;
@@ -115,7 +130,19 @@ and a tempo change re-anchors on a downbeat. Band events fire on their exact fra
 - `.schedule(note:velocity:tick:lengthTicks:)` plays a monitor note at a transport tick,
   sample-accurately (autoplay).
 
-## Lesson engine and scoring (M2)
+## Accounts (since 2026-10-25)
+
+Dodo's approach in tables of its own: `takt_users` (email, bcrypt hash, `is_guest`) and
+`takt_progress` (the ProgressStore snapshot as jsonb), schema `apps/takt/schema/001_takt_accounts.sql`
+(apply with `supabase db query --linked -f …`), in the F2 Supabase project. Routes
+`src/app/api/takt/auth/{guest,signup,login,logout,me}` and `progress` (GET/PUT), library
+`src/lib/takt/auth.ts`; the cookie `takt_session` is signed with `F2_SESSION_SECRET` under a
+`takt.` prefix (no new secret; a Dodo cookie never opens Takt). First launch makes a guest; sign
+up claims it in place; log in pulls the account's progress and merges (furthest step, best tempo,
+the skill record with more attempts). Unreachable server: the error shows, everything local works.
+DEBUG: `-Offline 1` skips every call, `-Backend <url>` points at a dev server.
+
+## Lesson engine and scoring (M2, M3)
 
 The rules are the brief's §4 "clean chorus", in `ScoringRules`: ≥ 90% of the expected notes hit
 (the right pitch class, any octave C2–C5, inside ±60 ms at ≤ 80 bpm, ±45 ms above), ≤ 2 extra
@@ -144,6 +171,18 @@ the intro for the step's first two bars, then on every heard downbeat the bar be
 "Get ready. F on the 1.", any other bar "C on the 1.", and bar 1 of a chorus the verdict on the
 last one ("Clean. One more.", "Rushed bar 9. Again."). The keyboard's now key is the latest
 expected note, the next key the following one when it differs.
+
+**Steps 2–6 (M3)**, in `LessonEngine` (its header has the rules): a step that passes on a downbeat
+hands over at once (the next chorus is the next step's; the passed line holds two bars, then the
+intro two). The card scores nothing; Continue starts the next step with the next chorus. The ramp
+raises the tempo after each clean chorus (it lands on bar 2: the renderer applies tempo on a
+downbeat), unlocks channels as the tempo reaches them, and passes at 90. The chorus a lesson tempo
+change lands in is judged at its ending tempo (otherwise the hand-over to the gate wasted one).
+The gate holds after `maxAttempts` judged choruses ("Pick it up tomorrow."). The payoff sends the
+renderer `.silence(from:to:)` for bars 11–12 of its chorus (sample-accurate, cleared by Stop; a
+silent chorus arms the next) and any played chorus finishes the lesson. The Player carries out
+the engine's actions (tempo, unmute, silence) and scores presses only on the lesson screen.
+DEBUG: `-Step <n>` and Debug → Jump to Step start at a step; `-Route lesson` opens the lesson.
 
 **Calibration is not in yet (M4):** a press is scored at the moment it is made, against the beat
 as heard. A player who lines up the sound of their own note with the band presses early by the
@@ -238,7 +277,9 @@ the recording's note spacing matches what was sent within 1 ms.
 Three layers, all headless (verified 2026-10-25).
 
 **The rules, no audio:** `-LessonCheck 1` runs the Scorer, the LessonEngine and the TransportClock
-against scripted players (`App/LessonCheck.swift`, 37 cases: the windows at 70, 80 and 90, misses,
+against scripted players (`App/LessonCheck.swift`, 49 cases; since M3 the whole lesson too, with a
+stand-in renderer that applies tempo on the next downbeat: steps 1–6 in order, the ramp, the
+unlocks, the gate's 8 attempts, the payoff's silence and re-arm, the card, a slowed ramp; and the windows at 70, 80 and 90, misses,
 octaves and range, wrong, doubled and extra notes, the coach line bar by bar, the now/next keys,
 joining late, the gate tempo, a silent chorus, Stop, a hidden window, host time ↔ tick across a
 tempo change and at Play). It prints PASS/FAIL per case and exits 1 on any failure:

@@ -38,6 +38,9 @@ struct LessonState {
     var title: String
     var step: Int
     var stepCount: Int
+    var stepTitle: String = ""
+    /// A card step's text: the card takes the pads' place until Continue.
+    var card: String? = nil
     var tempo: Int
     /// A tempo change waiting for the next downbeat.
     var pendingTempo: Int? = nil

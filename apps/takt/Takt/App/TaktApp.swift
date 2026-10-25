@@ -3,20 +3,32 @@ import SwiftUI
 @main
 struct TaktApp: App {
     @AppStorage("theme") private var theme: Theme = .dark
-    @State private var player: Player?
+    @State private var app: AppModel
 
     init() {
         #if DEBUG
         DebugHooks.renderIfRequested()
         DebugHooks.lessonCheckIfRequested()
         #endif
-        _player = State(initialValue: Self.makePlayer())
+        let progress = ProgressStore()
+        let account = AccountStore(progress: progress)
+        progress.onChange = { [weak account] in account?.progressChanged() }
+        _app = State(initialValue: AppModel(player: Self.makePlayer(progress: progress), progress: progress, account: account))
+        #if DEBUG
+        if !UserDefaults.standard.bool(forKey: "Offline") {
+            account.start()
+        }
+        #else
+        account.start()
+        #endif
     }
 
-    /// The band is already playing when the lesson opens (principle 1), at step 1's tempo.
-    /// Launch arguments: `-Tempo <bpm>`, `-Paused 1` (band stopped), `-Silent 1` (speakers off,
-    /// everything else runs); DEBUG: `-Autoplay <mode>` and the hooks in DebugHooks.
-    private static func makePlayer() -> Player? {
+    /// The band is already playing when the app opens (principle 1), at step 1's tempo, under
+    /// the menu and every screen. Launch arguments: `-Tempo <bpm>`, `-Paused 1` (band stopped),
+    /// `-Silent 1` (speakers off, everything else runs); DEBUG: `-Route lesson|lessons|settings`,
+    /// `-Step <n>` (start the lesson at step n, 1-based), `-Offline 1` (no account calls),
+    /// `-Backend <url>`, `-ProgressFile <path>`, `-Autoplay <mode>` and the hooks in DebugHooks.
+    private static func makePlayer(progress: ProgressStore) -> Player? {
         #if DEBUG
         if UserDefaults.standard.string(forKey: "PreviewFrame") != nil { return nil }
         #endif
@@ -24,10 +36,11 @@ struct TaktApp: App {
         let lesson = Lesson.bundled("lesson-A1")
         let tempo = d.double(forKey: "Tempo") > 0 ? d.double(forKey: "Tempo") : Double(lesson.steps[0].tempo!)
         let audio = AudioEngine(band: .bundled(lesson.band), tempo: tempo)
-        let player = Player(audio: audio, lesson: lesson)
+        let player = Player(audio: audio, lesson: lesson, progress: progress)
         audio.start(silent: d.bool(forKey: "Silent"))
         if !d.bool(forKey: "Paused") { audio.send(.play) }
         #if DEBUG
+        if d.integer(forKey: "Step") > 1 { player.restartLesson(at: d.integer(forKey: "Step") - 1) }
         DebugHooks.recordIfRequested(audio)
         DebugHooks.pressIfRequested(player)
         DebugHooks.autoplayIfRequested(player)
@@ -38,8 +51,8 @@ struct TaktApp: App {
     var body: some Scene {
         WindowGroup {
             Group {
-                if let player {
-                    LiveLessonScreen(player: player)
+                if let player = app.player {
+                    RootView(app: app, player: player)
                 } else {
                     LessonScreen(state: .launchFrame)
                 }
@@ -58,12 +71,20 @@ struct TaktApp: App {
                 .keyboardShortcut("l", modifiers: [.command, .shift])
             }
             #if DEBUG
-            if let player {
+            if let player = app.player {
                 CommandMenu("Debug") {
                     Picker("Autoplay", selection: Binding(get: { player.autoplayMode },
                                                           set: { player.autoplayMode = $0 })) {
                         Text("Off").tag(Autoplay.Mode?.none)
                         ForEach(Autoplay.Mode.allCases) { Text($0.title).tag(Optional($0)) }
+                    }
+                    Menu("Jump to Step") {
+                        ForEach(Array(player.content.steps.enumerated()), id: \.offset) { i, step in
+                            Button("\(i + 1) \(step.title)") {
+                                player.restartLesson(at: i)
+                                app.route = .lesson
+                            }
+                        }
                     }
                 }
             }
@@ -72,8 +93,50 @@ struct TaktApp: App {
     }
 }
 
+/// The screen for the route. The computer keyboard plays on every screen (the band is always
+/// there to play along with); only the lesson scores it. Settings' level trims reach the band.
+struct RootView: View {
+    let app: AppModel
+    let player: Player
+    @AppStorage("bandLevel") private var bandLevel = 1.0
+    @AppStorage("pianoLevel") private var pianoLevel = 1.0
+
+    var body: some View {
+        Group {
+            switch app.route {
+            case .lessons:
+                LessonsScreen(app: app)
+            case .lesson:
+                LiveLessonScreen(app: app, player: player)
+            case .result:
+                if let finish = player.finish {
+                    ResultScreen(app: app, finish: finish)
+                } else {
+                    LessonsScreen(app: app)
+                }
+            case .settings:
+                SettingsScreen(app: app)
+            }
+        }
+        .background(KeyCatcher(
+            onNote: { player.key($0, down: $1) },
+            onOctave: player.shiftOctave,
+            onSpace: player.togglePlay,
+            onTempo: player.nudgeTempo
+        ))
+        .onChange(of: player.finish) { _, f in if f != nil && app.route == .lesson { app.lessonFinished() } }
+        .onChange(of: bandLevel, initial: true) { sendTrim() }
+        .onChange(of: pianoLevel) { sendTrim() }
+    }
+
+    private func sendTrim() {
+        player.audio.send(.trim(band: Float(bandLevel), monitor: Float(pianoLevel)))
+    }
+}
+
 /// The lesson screen driven by the Player, with every input wired to it.
 struct LiveLessonScreen: View {
+    let app: AppModel
     let player: Player
 
     var body: some View {
@@ -84,13 +147,9 @@ struct LiveLessonScreen: View {
                 nudgeTempo: player.nudgeTempo,
                 toggleMute: { i in player.toggleMute(player.channels[i]) },
                 press: { player.press($0) },
-                release: player.release
-            ))
-            .background(KeyCatcher(
-                onNote: { player.key($0, down: $1) },
-                onOctave: player.shiftOctave,
-                onSpace: player.togglePlay,
-                onTempo: player.nudgeTempo
+                release: player.release,
+                continueCard: player.continueCard,
+                back: { app.route = .lessons }
             ))
     }
 }

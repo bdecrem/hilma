@@ -134,11 +134,14 @@ struct FormFooter: View {
                 .foregroundStyle(Palette.muted)
                 .fixedSize()
             Spacer(minLength: 0)
-            HStack(spacing: 10) {
-                GateRings(clean: state.cleanChoruses, required: state.gate)
-                Text(gateLabel)
-                    .foregroundStyle(Palette.muted)
-                    .fixedSize()
+            // A card has no gate.
+            if state.gate > 0 {
+                HStack(spacing: 10) {
+                    GateRings(clean: state.cleanChoruses, required: state.gate)
+                    Text(gateLabel)
+                        .foregroundStyle(Palette.muted)
+                        .fixedSize()
+                }
             }
         }
     }

@@ -86,6 +86,8 @@ enum LessonCheck {
             var coach: [Int: String] = [:]
             var keys: [Int: [Int?]] = [:]
             var output = LessonEngine.Output()
+            /// Step 1's gate passed: the last verdict says so, and the lesson moved on to the card.
+            var passed: Bool { verdicts.last?.line == "Two clean. That's the form." && output.step == 2 }
         }
         /// Rolls the transport through each segment from tick 0 (a new segment = Stop, then Play),
         /// handing the presses to the engine as they are heard.
@@ -130,7 +132,7 @@ enum LessonCheck {
 
         var run = simulate([(autoplay(.perfect, choruses: 3), end(3))])
         check("perfect autoplay: clean, clean, gate passed", run.verdicts.map(\.counted) == [true, true]
-              && run.output.passed && run.output.clean == 2 && run.output.lastChorus == "Clean."
+              && run.passed && run.verdicts.last?.clean == 2 && run.output.lastChorus == "Clean."
               && run.output.lastChorusDetail == "12 of 12 · on the beat", text(run))
         let intro = step.coach.intro
         check("coach calls the form on the downbeats",
@@ -139,49 +141,175 @@ enum LessonCheck {
               && run.coach[5] == "Get ready. C on the 1."
               && run.coach[11] == "Get ready. C on the 1." && run.coach[12] == "Clean. One more."
               && run.coach[13] == "C on the 1." && run.coach[24] == "Two clean. That's the form."
-              && run.coach[30] == "Two clean. That's the form.",
+              && run.coach[25] == "Two clean. That's the form."
+              && run.coach[26] == lesson.steps[1].coach.intro && run.output.card != nil,
               (0..<14).map { "\($0 + 1): \(run.coach[$0] ?? "-")" }.joined(separator: " / "))
         check("keys show now and next", run.keys[3] == [48, 53] && run.keys[8] == [55, 53] && run.keys[1] == [48, nil],
               "bar 4 \(String(describing: run.keys[3])), bar 9 \(String(describing: run.keys[8]))")
 
         run = simulate([(autoplay(.loose, choruses: 3), end(3))])
-        check("loose autoplay (±40 ms) passes", run.output.passed && run.verdicts.map(\.counted) == [true, true], text(run))
+        check("loose autoplay (±40 ms) passes", run.passed && run.verdicts.map(\.counted) == [true, true], text(run))
 
         run = simulate([(autoplay(.sloppy, choruses: 8), end(8))])
-        check("sloppy autoplay never passes in 8 choruses", !run.output.passed && run.output.clean == 0
+        check("sloppy autoplay never passes in 8 choruses", !run.passed && run.output.clean == 0
               && run.verdicts.count == 8 && run.verdicts.allSatisfy { $0.line.hasSuffix(" Again.") }, text(run))
 
         run = simulate([(autoplay(.rush, choruses: 4), end(4))])
-        check("rushing 75 ms never passes", !run.output.passed && run.verdicts.allSatisfy { $0.line == "Rushed every bar. Again." },
+        check("rushing 75 ms never passes", !run.passed && run.verdicts.allSatisfy { $0.line == "Rushed every bar. Again." },
               text(run))
 
         let early = chorus(0, offsetMs: { _ in -40 }) + chorus(1, offsetMs: { _ in -40 })
         run = simulate([(early, end(2))])
-        check("an early downbeat belongs to the next chorus", run.output.passed
+        check("an early downbeat belongs to the next chorus", run.passed
               && run.verdicts.allSatisfy { $0.result?.hits == 12 && $0.result?.extras.isEmpty == true }, text(run))
 
         let late = autoplay(.perfect, choruses: 4).filter { $0.tick >= Double(2 * 4 * tpb) - 6 }
         run = simulate([(late, end(4))])
         check("joining at bar 3 isn't judged; the next two are", run.verdicts.count == 3 && run.verdicts[0].result == nil
-              && run.coach[12] == "From the top." && run.verdicts[2].clean == 2 && run.output.passed, text(run))
+              && run.coach[12] == "From the top." && run.verdicts[2].clean == 2 && run.passed, text(run))
 
         run = simulate([(autoplay(.perfect, bpm: 60, choruses: 3), end(3))], bpm: 60)
-        check("clean at 60 doesn't count", run.output.clean == 0 && !run.output.passed
+        check("clean at 60 doesn't count", run.output.clean == 0 && !run.passed
               && run.verdicts.allSatisfy { $0.line == "Clean at 60. It counts at 70." }, text(run))
 
         run = simulate([(chorus(0) + chorus(2), end(3))])
-        check("a silent chorus isn't judged", run.verdicts.map(\.chorus) == [0, 2] && run.output.passed
+        check("a silent chorus isn't judged", run.verdicts.map(\.chorus) == [0, 2] && run.passed
               && run.coach[24] == "C on the 1.", text(run))
 
         let beforeStop = autoplay(.perfect, choruses: 2).filter { $0.tick < Double(loop + 6 * 4 * tpb) }
         run = simulate([(beforeStop, Double(loop + 6 * 4 * tpb)), (autoplay(.perfect, choruses: 1), end(1))])
-        check("stop drops the half chorus, keeps the clean one", run.verdicts.count == 2 && run.output.passed
+        check("stop drops the half chorus, keeps the clean one", run.verdicts.count == 2 && run.passed
               && run.coach[1000] == intro, text(run))
 
         // Chorus 2 gets no display frame at all; its tempo comes from the presses.
         run = simulate([(autoplay(.perfect, choruses: 2), end(2) + 20)], hidden: 1..<Double(2 * loop + 10))
-        check("choruses played while the window was hidden still count", run.output.passed
+        check("choruses played while the window was hidden still count", run.passed
               && run.verdicts.map(\.counted) == [true, true], text(run))
+
+        // MARK: The whole lesson
+
+        struct LessonRun {
+            var verdicts: [LessonEngine.Verdict] = []
+            var actions: [LessonEngine.Action] = []
+            var steps: [Int] = []
+            /// The tempo when each chorus ended.
+            var tempos: [Int] = []
+            var output = LessonEngine.Output()
+            var finish: LessonEngine.Finish?
+            var coachAt: [Int: String] = [:]
+        }
+        /// Plays the lesson from `start` (0-based step) like the app: tempo actions apply on the
+        /// next downbeat (the renderer), a card is continued one bar after it shows, and the
+        /// player plays every chorus `play(chorus, step)` returns presses for, at the tempo heard.
+        func lessonRun(from start: Int = 0, choruses: Int, bpm startTempo: Double = 70, followTempo: Bool = true,
+                       play: (Int, LessonEngine) -> [(tick: Double, note: Int)]?) -> LessonRun {
+            let engine = LessonEngine(lesson: lesson, ticksPerBeat: tpb)
+            var run = LessonRun()
+            var tempo = startTempo
+            var pendingTempo: Double?
+            engine.onVerdict = { run.verdicts.append($0) }
+            engine.onAction = { a in
+                run.actions.append(a)
+                if case .tempo(let t) = a, followTempo { pendingTempo = Double(t) }
+            }
+            engine.heard(tick: 0, tempo: tempo, rolling: true, epoch: 0)
+            if start > 0 { engine.start(step: start) }
+            var cardShownAt: Double?
+            var pending: [(tick: Double, note: Int, ms: Double)] = []
+            var planned = -1
+            var tick = 0.0
+            while tick <= Double(choruses * loop) + 1 {
+                if tick.truncatingRemainder(dividingBy: Double(4 * tpb)) == 0, let p = pendingTempo {
+                    tempo = p
+                    pendingTempo = nil
+                }
+                engine.heard(tick: tick, tempo: tempo, rolling: true, epoch: 0)
+                let c = Int(tick) / loop
+                if tick.truncatingRemainder(dividingBy: Double(loop)) == 0 && tick > 0 { run.tempos.append(Int(tempo)) }
+                // Plan each chorus half a beat before it starts, with the step that is current.
+                if c + 1 > planned && tick >= Double((c + 1) * loop) - 7 {
+                    planned = c + 1
+                    for p in play(c + 1, engine) ?? [] {
+                        pending.append((Double((c + 1) * loop) + p.tick, p.note, msPerTick(tempo)))
+                    }
+                }
+                if tick == 0 && planned < 0 {
+                    planned = 0
+                    for p in play(0, engine) ?? [] { pending.append((p.tick, p.note, msPerTick(tempo))) }
+                }
+                pending.sort { $0.tick < $1.tick }
+                while let p = pending.first, p.tick <= tick {
+                    engine.played(note: p.note, tick: p.tick, msPerTick: msPerTick(tempo), epoch: 0)
+                    pending.removeFirst()
+                }
+                if engine.output.card != nil {
+                    if cardShownAt == nil { cardShownAt = tick }
+                    if tick - cardShownAt! >= Double(4 * tpb) { engine.continueCard(); cardShownAt = nil }
+                }
+                if run.steps.last != engine.output.step { run.steps.append(engine.output.step) }
+                if tick.truncatingRemainder(dividingBy: Double(4 * tpb)) == Double(2 * tpb) {
+                    run.coachAt[Int(tick) / (4 * tpb)] = engine.output.coach
+                }
+                if engine.output.finished { break }
+                tick += 0.25
+            }
+            run.output = engine.output
+            run.finish = engine.finish
+            return run
+        }
+        /// Every expected note of the current step, on the tick (nil on a card).
+        let perfect: (Int, LessonEngine) -> [(tick: Double, note: Int)]? = { _, e in
+            e.expected.isEmpty ? nil : e.expected.map { (Double($0.tick), $0.display) }
+        }
+        func describe(_ r: LessonRun) -> String {
+            "steps \(r.steps) · tempos \(r.tempos) · " + r.verdicts.map { "s\($0.step)c\($0.chorus + 1) \($0.line)" }.joined(separator: " | ")
+        }
+
+        var whole = lessonRun(choruses: 20, play: perfect)
+        let tempoActions = whole.actions.compactMap { a -> Int? in if case .tempo(let t) = a { return t }; return nil }
+        let unlocks = whole.actions.compactMap { a -> String? in if case .unlock(let i) = a { return lesson.channels[i].name }; return nil }
+        let silences = whole.actions.compactMap { a -> Double? in if case .silence(let f, _) = a { return f }; return nil }
+        check("perfect play runs steps 1 to 6 in order", whole.steps == [1, 2, 3, 4, 5, 6], describe(whole))
+        check("the ramp goes 70, 75, 80, 85, 90", tempoActions == [75, 80, 85, 90], "\(tempoActions)")
+        check("keys unlock at 80, horns at 90", unlocks == ["Keys", "Horns"]
+              && whole.verdicts.contains { $0.line == "Clean. Up 5. Keys are in." }, "\(unlocks)")
+        check("the gate passes on three clean at 90", whole.verdicts.filter { $0.step == 5 && $0.counted }.count == 3
+              && whole.verdicts.contains { $0.step == 5 && $0.line == "Three clean at 90. It's yours." }, describe(whole))
+        // Card at the end of chorus 2, step 3 from chorus 4, 2 + 4 ramp + 3 gate choruses, the payoff on chorus 13.
+        let payoffChorus = 3 + 2 + 4 + 3
+        check("the band sits out bars 11-12 of the payoff chorus",
+              silences == [Double(payoffChorus * loop + 10 * 4 * tpb)], "\(silences.map { $0 / Double(loop) })")
+        check("the payoff finishes the lesson", whole.output.finished && whole.finish?.presses.count == 24
+              && whole.finish?.tempo == 90 && whole.finish?.aloneBars == [10, 11] && whole.actions.last == .finished,
+              "finish \(String(describing: whole.finish?.presses.count)) at \(String(describing: whole.finish?.tempo))")
+        check("the coach says alone in bars 11 and 12", whole.coachAt[payoffChorus * 12 + 10] == "Alone. Bring it home."
+              && whole.coachAt[payoffChorus * 12 + 9] != "Alone. Bring it home.",
+              "\(whole.coachAt[payoffChorus * 12 + 10] ?? "-")")
+        check("no chorus is judged on the card", !whole.verdicts.contains { $0.step == 2 }, describe(whole))
+
+        // Presses on the card sound but don't count.
+        let card = lessonRun(from: 1, choruses: 3) { c, _ in c == 0 ? expected.map { (Double($0.tick), $0.display) } : nil }
+        check("presses on the card aren't scored", card.verdicts.isEmpty && card.steps.first == 2, describe(card))
+
+        // The gate holds after eight judged attempts.
+        var sloppy = Autoplay(mode: .sloppy, plannedThrough: -0.01)
+        let gate = lessonRun(from: 4, choruses: 12, bpm: 90) { c, e in
+            sloppy.plan(through: Double((c + 1) * loop), expected: e.expected, loopTicks: loop, msPerTick: msPerTick(90))
+                .filter { $0.tick >= Double(c * loop) - 6 }.map { ($0.tick - Double(c * loop), $0.note) }
+        }
+        check("the gate stops after 8 attempts: pick it up tomorrow", gate.verdicts.count == 8 && gate.output.holding
+              && gate.output.coach == "Pick it up tomorrow." && !gate.output.passed, describe(gate))
+
+        // A silent payoff chorus arms the next one.
+        let quiet = lessonRun(from: 5, choruses: 4, bpm: 90) { c, e in c < 2 ? nil : e.expected.map { (Double($0.tick), $0.display) } }
+        let quietSilences = quiet.actions.compactMap { a -> Double? in if case .silence(let f, _) = a { return f / Double(loop) }; return nil }
+        check("a silent payoff chorus re-arms the next", quiet.output.finished && quietSilences.count == 3
+              && quiet.finish?.presses.count == 24, "\(quietSilences)")
+
+        // The ramp doesn't count a clean chorus the player slowed down.
+        let slow = lessonRun(from: 3, choruses: 3, bpm: 60, followTempo: false, play: perfect)
+        check("a clean chorus below the ramp's tempo doesn't raise it", !slow.actions.contains(.tempo(75)) && slow.output.clean == 0
+              && slow.verdicts.first?.line == "Clean at 60. Keep it at 70.", describe(slow))
 
         // MARK: TransportClock
 

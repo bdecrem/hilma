@@ -21,12 +21,17 @@ final class Player {
     /// Computer-keyboard octave shift (Z / X), -2...2 around C3.
     private(set) var octave = 0
     private(set) var lesson = LessonEngine.Output()
+    /// The finished payoff chorus: the result screen.
+    private(set) var finish: LessonEngine.Finish?
+    /// Presses are scored only while the lesson screen is up; elsewhere they just sound.
+    var inLesson = false
 
     @ObservationIgnored let audio: AudioEngine
     @ObservationIgnored let content: Lesson
     /// The lesson's channel strips, in order, as mixer channels.
     @ObservationIgnored let channels: [Channel]
-    @ObservationIgnored private let engine: LessonEngine
+    @ObservationIgnored private var engine: LessonEngine
+    @ObservationIgnored let progress: ProgressStore
     @ObservationIgnored private let form: [FormBar]
     @ObservationIgnored private let midi = MIDIInput()
     @ObservationIgnored private var link: CADisplayLink?
@@ -35,8 +40,9 @@ final class Player {
 
     static let tempoRange = 50...140
 
-    init(audio: AudioEngine, lesson: Lesson) {
+    init(audio: AudioEngine, lesson: Lesson, progress: ProgressStore) {
         self.audio = audio
+        self.progress = progress
         content = lesson
         form = lesson.formBars
         let byName: [String: Channel] = ["drums": .drums, "bass": .bass, "keys": .keys, "horns": .horns]
@@ -45,22 +51,12 @@ final class Player {
             return ch
         }
         engine = LessonEngine(lesson: lesson, ticksPerBeat: audio.band.ticksPerBeat)
-        // Locked channels stay muted until the lesson unlocks them (M3).
+        // Locked channels stay muted until the lesson unlocks them.
         for (c, ch) in zip(lesson.channels, channels) where c.unlockAt != nil {
             audio.send(.mute(ch, true))
         }
         self.lesson = engine.output
-
-        engine.onVerdict = { [lessonLog] v in
-            let what: String
-            if let r = v.result {
-                let offsets = r.offsets.map { String(format: "%+.1f", $0) }.joined(separator: " ")
-                what = "\(r.hits)/\(r.notes.count) hits, \(r.extras.count) extra, mean \(r.meanOffsetMs.map { String(format: "%+.1f", $0) } ?? "-") ms, \(r.clean ? "clean" : "not clean") [\(r.problems.joined(separator: " "))] offsets \(offsets)"
-            } else {
-                what = "joined late, not judged"
-            }
-            lessonLog.info("chorus \(v.chorus + 1) at \(Int(v.tempo.rounded())): \(what, privacy: .public) · counts \(v.counted) · gate \(v.clean)/\(v.gate) · \"\(v.line, privacy: .public)\"")
-        }
+        wire()
 
         midi.onNote = { [weak self] n in
             guard let self else { return }
@@ -85,7 +81,61 @@ final class Player {
         refresh()
     }
 
+    /// The engine's verdicts go to the log and the progress store, its actions to the band.
+    private func wire() {
+        engine.onVerdict = { [lessonLog, progress] v in
+            let what: String
+            if let r = v.result {
+                let offsets = r.offsets.map { String(format: "%+.1f", $0) }.joined(separator: " ")
+                what = "\(r.hits)/\(r.notes.count) hits, \(r.extras.count) extra, mean \(r.meanOffsetMs.map { String(format: "%+.1f", $0) } ?? "-") ms, \(r.clean ? "clean" : "not clean") [\(r.problems.joined(separator: " "))] offsets \(offsets)"
+                if let skill = v.skill { progress.record(skill: skill, result: r, tempo: v.tempo, counted: v.counted) }
+            } else {
+                what = "joined late, not judged"
+            }
+            lessonLog.info("step \(v.step) chorus \(v.chorus + 1) at \(Int(v.tempo.rounded())): \(what, privacy: .public) · counts \(v.counted) · gate \(v.clean)/\(v.gate) · \"\(v.line, privacy: .public)\"")
+        }
+        engine.onAction = { [weak self] a in
+            guard let self else { return }
+            switch a {
+            case .tempo(let bpm):
+                self.audio.send(.tempo(Double(bpm)))
+                self.lessonLog.info("tempo \(bpm)")
+            case .unlock(let i):
+                self.audio.send(.mute(self.channels[i], false))
+                self.lessonLog.info("unlock \(self.content.channels[i].name, privacy: .public)")
+            case .silence(let from, let to):
+                self.audio.send(.silence(from: from, to: to))
+                self.lessonLog.info("band out from tick \(Int(from)) to \(Int(to))")
+            case .finished:
+                self.finish = self.engine.finish
+                self.progress.completed(self.content.code, tempo: self.engine.finish?.tempo ?? 0,
+                                        steps: self.content.steps.count)
+                self.lessonLog.info("lesson \(self.content.code, privacy: .public) finished")
+            }
+        }
+    }
+
     // MARK: Controls
+
+    /// From the menu: the lesson from the top (or a step, DEBUG), the band as it starts: locked
+    /// channels muted, nothing sitting out, step 1's tempo.
+    func restartLesson(at step: Int = 0) {
+        engine.onAction = nil
+        engine.onVerdict = nil
+        engine = LessonEngine(lesson: content, ticksPerBeat: audio.band.ticksPerBeat)
+        audio.send(.silence(from: 0, to: 0))
+        for (c, ch) in zip(content.channels, channels) { audio.send(.mute(ch, c.unlockAt != nil)) }
+        finish = nil
+        wire()
+        if let t = content.steps[0].tempo, t != tempo { audio.send(.tempo(Double(t))) }
+        if step > 0 { engine.start(step: step) }
+        lesson = engine.output
+    }
+
+    func continueCard() {
+        engine.continueCard()
+        lesson = engine.output
+    }
 
     func togglePlay() {
         audio.send(playing ? .pause : .play)
@@ -131,6 +181,7 @@ final class Player {
 
     /// A press reaches the lesson at the transport position heard when it happened.
     private func score(_ note: Int, hostTime: UInt64) {
+        guard inLesson else { return }
         let s = audio.snapshot()
         let clock = TransportClock(s)
         guard clock.valid else { return }
@@ -173,7 +224,10 @@ final class Player {
         runAutoplay(clock, heard: heard, epoch: s.epoch)
         DebugHooks.writeClockIfRequested(clock)
         #endif
-        if engine.output != lesson { lesson = engine.output }
+        if engine.output != lesson {
+            if engine.output.step != lesson.step { progress.reached(step: engine.output.step, in: content.code) }
+            lesson = engine.output
+        }
         #if DEBUG
         DebugHooks.snapshotIfDue(self, tick: heard.tick)
         #endif
@@ -220,7 +274,7 @@ final class Player {
             autoReleases.removeAll()
             autoplay?.plannedThrough = heard.tick - 0.01
         }
-        if var plan = autoplay, heard.rolling {
+        if var plan = autoplay, heard.rolling, inLesson, !engine.expected.isEmpty, !lesson.passed, !lesson.finished {
             let ahead = plan.plan(through: heard.tick + Double(4 * audio.band.ticksPerBeat), expected: engine.expected,
                                   loopTicks: engine.loopTicks, msPerTick: heard.msPerTick)
             autoplay = plan
@@ -247,7 +301,7 @@ final class Player {
         var strips: [ChannelState] = []
         for (i, c) in content.channels.enumerated() {
             let ch = channels[i]
-            let unlocked = c.unlockAt == nil
+            let unlocked = c.unlockAt == nil || lesson.unlocked.contains(i)
             let isMuted = muted & ch.bit != 0
             strips.append(ChannelState(name: c.name, unlocked: unlocked, unlockAt: c.unlockAt,
                                        level: unlocked && !isMuted ? meters[ch.rawValue] : 0,
@@ -258,6 +312,8 @@ final class Player {
             title: content.title,
             step: lesson.step,
             stepCount: lesson.stepCount,
+            stepTitle: lesson.stepTitle,
+            card: lesson.card,
             tempo: tempo,
             pendingTempo: pendingTempo,
             playing: playing,

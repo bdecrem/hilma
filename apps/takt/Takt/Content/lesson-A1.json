@@ -3,18 +3,57 @@
   "title": "Play the Form",
   "band": "band-blues-C",
   "chords": {
-    "C": { "numeral": "I", "root": 0 },
-    "F": { "numeral": "IV", "root": 5 },
-    "G": { "numeral": "V", "root": 7 }
+    "C": {
+      "numeral": "I",
+      "root": 0
+    },
+    "F": {
+      "numeral": "IV",
+      "root": 5
+    },
+    "G": {
+      "numeral": "V",
+      "root": 7
+    }
   },
-  "form": ["C", "C", "C", "C", "F", "F", "C", "C", "G", "F", "C", "G"],
-  "range": { "low": 36, "high": 72 },
+  "form": [
+    "C",
+    "C",
+    "C",
+    "C",
+    "F",
+    "F",
+    "C",
+    "C",
+    "G",
+    "F",
+    "C",
+    "G"
+  ],
+  "range": {
+    "low": 36,
+    "high": 72
+  },
   "displayRoot": 48,
   "channels": [
-    { "name": "Drums", "channel": "drums" },
-    { "name": "Bass", "channel": "bass" },
-    { "name": "Keys", "channel": "keys", "unlockAt": 80 },
-    { "name": "Horns", "channel": "horns", "unlockAt": 90 }
+    {
+      "name": "Drums",
+      "channel": "drums"
+    },
+    {
+      "name": "Bass",
+      "channel": "bass"
+    },
+    {
+      "name": "Keys",
+      "channel": "keys",
+      "unlockAt": 80
+    },
+    {
+      "name": "Horns",
+      "channel": "horns",
+      "unlockAt": 90
+    }
   ],
   "steps": [
     {
@@ -23,7 +62,12 @@
       "title": "Roots on 1",
       "skill": "lh.roots.blues12.C",
       "tempo": 70,
-      "pattern": [{ "beat": 1, "tone": "root" }],
+      "pattern": [
+        {
+          "beat": 1,
+          "tone": "root"
+        }
+      ],
       "gate": 2,
       "coach": {
         "intro": "Left hand. Pinky on C. Hit it on the 1.",
@@ -41,7 +85,9 @@
       "kind": "card",
       "title": "Name it",
       "card": "You just played I, IV and V: the one, the four and the five.",
-      "coach": { "intro": "That's the whole blues. Three chords." }
+      "coach": {
+        "intro": "That's the whole blues. Three chords."
+      }
     },
     {
       "id": "shuffle",
@@ -49,7 +95,16 @@
       "title": "Shuffle",
       "skill": "lh.shuffle.blues12.C",
       "tempo": 70,
-      "pattern": [{ "beat": 1, "tone": "root" }, { "beat": 3, "tone": "fifth" }],
+      "pattern": [
+        {
+          "beat": 1,
+          "tone": "root"
+        },
+        {
+          "beat": 3,
+          "tone": "fifth"
+        }
+      ],
       "gate": 2,
       "coach": {
         "intro": "Root on 1. Fifth on 3. Lean back.",
@@ -67,9 +122,32 @@
       "kind": "ramp",
       "title": "Ramp",
       "skill": "lh.shuffle.blues12.C",
-      "pattern": [{ "beat": 1, "tone": "root" }, { "beat": 3, "tone": "fifth" }],
-      "ramp": { "from": 70, "to": 90, "by": 5 },
-      "coach": { "intro": "Same shuffle. Clean gets faster.", "clean": "Clean. Up 5." }
+      "pattern": [
+        {
+          "beat": 1,
+          "tone": "root"
+        },
+        {
+          "beat": 3,
+          "tone": "fifth"
+        }
+      ],
+      "ramp": {
+        "from": 70,
+        "to": 90,
+        "by": 5
+      },
+      "coach": {
+        "intro": "Same shuffle. Clean gets faster.",
+        "change": "Get ready. {next} on the 1.",
+        "hold": "Root on 1. Fifth on 3.",
+        "clean": "Clean. Up 5.",
+        "again": "{problem} Again.",
+        "join": "From the top.",
+        "slow": "Clean at {tempo}. Keep it at {gateTempo}.",
+        "unlock": "Clean. Up 5. {channel} are in.",
+        "passed": "Ninety. The whole band."
+      }
     },
     {
       "id": "gate",
@@ -77,7 +155,16 @@
       "title": "Gate",
       "skill": "lh.shuffle.blues12.C",
       "tempo": 90,
-      "pattern": [{ "beat": 1, "tone": "root" }, { "beat": 3, "tone": "fifth" }],
+      "pattern": [
+        {
+          "beat": 1,
+          "tone": "root"
+        },
+        {
+          "beat": 3,
+          "tone": "fifth"
+        }
+      ],
       "gate": 3,
       "maxAttempts": 8,
       "coach": {
@@ -97,9 +184,28 @@
       "kind": "payoff",
       "title": "Payoff",
       "tempo": 90,
-      "pattern": [{ "beat": 1, "tone": "root" }, { "beat": 3, "tone": "fifth" }],
-      "aloneBars": [11, 12],
-      "coach": { "intro": "Your turnaround. Alone." }
+      "pattern": [
+        {
+          "beat": 1,
+          "tone": "root"
+        },
+        {
+          "beat": 3,
+          "tone": "fifth"
+        }
+      ],
+      "aloneBars": [
+        11,
+        12
+      ],
+      "coach": {
+        "intro": "Your turnaround. Alone.",
+        "change": "Get ready. {next} on the 1.",
+        "hold": "Root on 1. Fifth on 3.",
+        "alone": "Alone. Bring it home.",
+        "join": "From the top.",
+        "passed": "That's the form."
+      }
     }
   ]
 }

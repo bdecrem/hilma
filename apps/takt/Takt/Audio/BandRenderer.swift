@@ -24,6 +24,11 @@ enum EngineCommand {
     case schedule(note: Int, velocity: Float, tick: Double, lengthTicks: Double)
     /// Seconds from render to the speaker; beat times the UI sees include it.
     case outputLatency(Double)
+    /// The band sits out from tick `from` to `to` (absolute transport ticks), sample-accurately:
+    /// no band note starts in the window (the payoff's turnaround alone). Stop clears it.
+    case silence(from: Double, to: Double)
+    /// The player's level trims from Settings, 0...1.5: the whole band, and the monitor.
+    case trim(band: Float, monitor: Float)
 }
 
 /// What the render thread tells everyone else. Fixed-size (no arrays), copied under a lock.
@@ -171,6 +176,10 @@ final class BandRenderer {
     private var muted: UInt8 = 0
     private var pendingUnmute: UInt8 = 0
     private var latencySeconds = 0.0
+    private var silenceFrom = 0.0
+    private var silenceTo = 0.0
+    private var bandTrim: Float = 1
+    private var monitorTrim: Float = 1
     private var hostTicksPerSecond: Double
     private var epoch = 0
     private var anchor = EngineSnapshot.Anchor()
@@ -442,7 +451,8 @@ final class BandRenderer {
         while true {
             let e = events[nextEvent]
             if e.tick != tick { break }
-            if muted & e.channel.bit == 0 { trigger(e) }
+            let at = Double(loopBase + e.tick)
+            if muted & e.channel.bit == 0 && !(at >= silenceFrom && at < silenceTo) { trigger(e) }
             nextEvent += 1
             if nextEvent == events.count {
                 nextEvent = 0
@@ -538,7 +548,8 @@ final class BandRenderer {
             let k = ch.rawValue
             let l = busL + k * c
             let r = busR + k * c
-            let target: Float = muted & ch.bit == 0 ? mix[k] : 0
+            let trim = ch == .monitor ? monitorTrim : bandTrim
+            let target: Float = muted & ch.bit == 0 ? mix[k] * trim : 0
             var g = gain(ch)
             var level = self.level(ch)
             for i in 0..<n {
@@ -631,6 +642,8 @@ final class BandRenderer {
             lastBeat = .init()
             scheduledCount = 0
             epoch += 1
+            silenceFrom = 0
+            silenceTo = 0
             releaseBand()
             reanchor()
         case .tempo(let bpm):
@@ -654,6 +667,12 @@ final class BandRenderer {
             break  // placed in time by `render`
         case .outputLatency(let s):
             latencySeconds = s
+        case .silence(let from, let to):
+            silenceFrom = from
+            silenceTo = to
+        case .trim(let band, let monitor):
+            bandTrim = band
+            monitorTrim = monitor
         }
     }
 

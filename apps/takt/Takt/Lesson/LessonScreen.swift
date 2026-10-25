@@ -9,6 +9,10 @@ struct LessonControls {
     var toggleMute: (Int) -> Void = { _ in }
     var press: (Int) -> Void = { _ in }
     var release: (Int) -> Void = { _ in }
+    /// The card's Continue.
+    var continueCard: () -> Void = {}
+    /// Back to the lessons menu.
+    var back: () -> Void = {}
 }
 
 private struct LessonControlsKey: EnvironmentKey {
@@ -64,8 +68,13 @@ struct WideLessonLayout: View {
 
                 VStack(spacing: 22) {
                     GeometryReader { geo in
-                        PadGrid(state: state, side: PadGrid.side(fitting: geo.size, gap: gap), gap: gap)
-                            .frame(width: geo.size.width, height: geo.size.height)
+                        if let card = state.card {
+                            CardPanel(text: card, title: state.stepTitle)
+                                .frame(width: geo.size.width, height: geo.size.height)
+                        } else {
+                            PadGrid(state: state, side: PadGrid.side(fitting: geo.size, gap: gap), gap: gap)
+                                .frame(width: geo.size.width, height: geo.size.height)
+                        }
                     }
                     FormFooter(state: state)
                 }
@@ -114,7 +123,13 @@ struct StackedLessonLayout: View {
                     .lineLimit(2)
                 Spacer(minLength: 16)
 
-                PadGrid(state: state, side: side, gap: gap)
+                if let card = state.card {
+                    // The card holds the pads' height, so nothing below it moves.
+                    CardPanel(text: card, title: state.stepTitle)
+                        .frame(height: side * 3 + gap * 2)
+                } else {
+                    PadGrid(state: state, side: side, gap: gap)
+                }
 
                 Spacer(minLength: 16)
                 KeyboardStrip(low: 48, high: 65, now: state.nowNote, next: state.nextNote, pressed: state.pressedNotes)
@@ -125,5 +140,79 @@ struct StackedLessonLayout: View {
             }
             .padding(.horizontal, 16)
         }
+    }
+}
+
+/// A card step (brief §4 step 2): a short piece of theory in the pads' place while the band
+/// keeps playing, and Continue.
+struct CardPanel: View {
+    let text: String
+    let title: String
+    @Environment(\.lessonControls) private var controls
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: 8)
+        VStack(alignment: .leading, spacing: 20) {
+            Text(title)
+                .dataLabel(12)
+                .foregroundStyle(Palette.muted)
+            Text(text)
+                .bodyText(26, weight: .semibold, relativeTo: .title)
+                .foregroundStyle(Palette.text)
+                .fixedSize(horizontal: false, vertical: true)
+            HStack(spacing: 10) {
+                ForEach(["I", "IV", "V"], id: \.self) { n in
+                    Text(n)
+                        .font(.display(34))
+                        .foregroundStyle(Palette.text)
+                        .frame(width: 64, height: 52)
+                        .background(RoundedRectangle(cornerRadius: 6).fill(Palette.ground))
+                        .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Palette.line, lineWidth: 1))
+                }
+            }
+            Spacer(minLength: 0)
+            PrimaryButton(title: "Continue", action: controls.continueCard)
+        }
+        .padding(24)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(shape.fill(Palette.panel))
+        .overlay(shape.strokeBorder(Palette.line, lineWidth: 1))
+    }
+}
+
+/// The one filled button: `signal` ground, ink text. Used for the next thing to do.
+struct PrimaryButton: View {
+    let title: String
+    var action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .dataLabel(13, weight: .semibold)
+                .foregroundStyle(Palette.blackKey)
+                .padding(.horizontal, 22)
+                .frame(height: 44)
+                .background(RoundedRectangle(cornerRadius: 6).fill(Palette.signal))
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+/// A flat outlined button, for everything that isn't the next thing to do.
+struct QuietButton: View {
+    let title: String
+    var action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .dataLabel(13, weight: .semibold)
+                .foregroundStyle(Palette.text)
+                .padding(.horizontal, 18)
+                .frame(height: 44)
+                .background(RoundedRectangle(cornerRadius: 6).fill(Palette.panel))
+                .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Palette.line, lineWidth: 1))
+        }
+        .buttonStyle(.plain)
     }
 }
