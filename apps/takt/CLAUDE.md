@@ -162,6 +162,21 @@ up claims it in place; log in pulls the account's progress and merges (furthest 
 the skill record with more attempts). Unreachable server: the error shows, everything local works.
 DEBUG: `-Offline 1` skips every call, `-Backend <url>` points at a dev server.
 
+**Daily text** (2026-10-25). One iMessage a day at the user's hour in their zone, through Dodo's
+sender (`sendIMessage`, imsghttp on the mini), skipped when today is already in the progress
+snapshot's `days`. Schema `apps/takt/schema/002_takt_daily.sql` (phone, verification code,
+`daily_enabled/hour/tz`, `daily_sent_on` on `takt_users`). Routes, all on the session cookie, guests
+included: `GET/PUT /api/takt/daily` → `{phone, verified, enabled, hour, tz}`; `POST
+/api/takt/daily/phone {phone}` (E.164, US default; texts "Takt code: 1234", 10 min, one per 60 s,
+502 on a failed send with the code kept) → `{phone, verified:false}`; `POST /api/takt/daily/verify
+{code}`; `DELETE /api/takt/daily/phone`. Hourly cron `/api/takt/daily/tick` (Bearer `CRON_SECRET`;
+`?now=`, `?force=1&user=<id>`, `&dry=1`). The pure parts (streak, text, the shared challenge
+rotation `challengeFor(date, tz)` = `(dayOfYear - 1) % 4`, due check) are `src/lib/takt/daily.ts`,
+the DB/send side `daily-send.ts`. `TAKT_IMESSAGE_DRY=1` makes the sender log instead of texting.
+Check: `TAKT_IMESSAGE_DRY=1 pnpm exec next dev -p 3270`, then `npx tsx scripts/takt/daily-check.ts`
+(pure tests + a throwaway guest through every route and the tick, deleted afterwards;
+`SKIP_LIVE=1` for the pure part only).
+
 ## Lesson engine and scoring (M2, M3)
 
 The rules are the brief's §4 "clean chorus", in `ScoringRules`: ≥ 90% of the expected notes hit
