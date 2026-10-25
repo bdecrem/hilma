@@ -113,21 +113,33 @@ struct FormFooter: View {
     let state: LessonState
 
     var body: some View {
-        // iPhone math at 12 pt mono (~8.6 pt per character with tracking): 10 + 8 + 12 characters ≈ 260 pt,
-        // + rings 34 + 3 gaps × 18 = 348 pt, inside the 370 pt content width.
-        HStack(spacing: 18) {
-            Text("Bar \(state.bar + 1) / \(state.form.count)")
-                .foregroundStyle(Palette.text)
-            Text("Chorus \(state.chorus)")
-                .foregroundStyle(Palette.muted)
-            Spacer(minLength: 0)
-            HStack(spacing: 10) {
-                GateRings(clean: state.cleanChoruses, required: state.gate)
-                Text("Clean \(state.cleanChoruses) of \(state.gate)")
-                    .foregroundStyle(Palette.muted)
-            }
+        // The iPhone's 370 pt can't always hold all of it (bar 10+ with a 3-ring gate);
+        // then the rings speak for "clean" and the word goes.
+        ViewThatFits(in: .horizontal) {
+            row(gateLabel: "Clean \(state.cleanChoruses) of \(state.gate)")
+            row(gateLabel: "\(state.cleanChoruses) of \(state.gate)")
         }
         .dataLabel(12, weight: .medium)
         .lineLimit(1)
+    }
+
+    private func row(gateLabel: String) -> some View {
+        HStack(spacing: 14) {
+            // fixedSize: inside the HStack the labels were measured without their tracking
+            // and truncated by a character even with room to spare.
+            Text("Bar \(state.bar + 1) / \(state.form.count)")
+                .foregroundStyle(Palette.text)
+                .fixedSize()
+            Text("Chorus \(state.chorus)")
+                .foregroundStyle(Palette.muted)
+                .fixedSize()
+            Spacer(minLength: 0)
+            HStack(spacing: 10) {
+                GateRings(clean: state.cleanChoruses, required: state.gate)
+                Text(gateLabel)
+                    .foregroundStyle(Palette.muted)
+                    .fixedSize()
+            }
+        }
     }
 }

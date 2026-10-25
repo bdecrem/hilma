@@ -6,7 +6,7 @@ struct TaktApp: App {
 
     var body: some Scene {
         WindowGroup {
-            LessonScreen(state: .preview)
+            LessonScreen(state: .launchFrame)
                 .preferredColorScheme(theme.colorScheme)
                 #if targetEnvironment(macCatalyst)
                 .background(MacWindow())

@@ -79,4 +79,43 @@ struct LessonState {
         nowNote: 48,
         nextNote: 53
     )
+
+    /// A1 step 5: the gate at 90, two of three clean, the whole band in, downbeat of bar 11.
+    static let gate90 = LessonState(
+        code: "A1",
+        title: "Play the Form",
+        step: 5,
+        stepCount: 6,
+        tempo: 90,
+        playing: true,
+        form: Forms.bluesC,
+        bar: 10,
+        beat: 0,
+        chorus: 4,
+        cleanChoruses: 2,
+        gate: 3,
+        channels: [
+            ChannelState(name: "Drums", unlocked: true, level: 10),
+            ChannelState(name: "Bass", unlocked: true, level: 8),
+            ChannelState(name: "Keys", unlocked: true, unlockAt: 80, level: 6),
+            ChannelState(name: "Horns", unlocked: true, unlockAt: 90, level: 9),
+        ],
+        coach: "Three clean at 90 and it's yours.",
+        lastChorus: "Clean.",
+        nowNote: 48,
+        nextNote: 55
+    )
+
+    /// The frame drawn at launch. DEBUG builds take `-PreviewFrame gate90` for screenshots.
+    static var launchFrame: LessonState {
+        #if DEBUG
+        switch UserDefaults.standard.string(forKey: "PreviewFrame") {
+        case nil: return .preview
+        case "gate90": return .gate90
+        case let name?: fatalError("unknown -PreviewFrame \(name)")
+        }
+        #else
+        return .preview
+        #endif
+    }
 }
