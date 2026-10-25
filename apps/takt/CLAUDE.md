@@ -75,14 +75,25 @@ render frame counter; the transport maps frames to ticks through an anchor (fram
 tempo's samples-per-tick, every event's frame is computed from the anchor (never accumulated),
 and a tempo change re-anchors on a downbeat. Band events fire on their exact frame.
 
-- **Sounds:** drums and the bass are Bart's own Jambot renders (909 kit + JB202 sub from
-  `apps/ko2/out/kit`, normalized to -3 dBFS; the bass picks the nearest sub and repitches it). The
-  Rhodes (monitor, KEYS) and the horns are FM voices in `Voices.swift` (`FMPatch`), not samples: no
-  CC0 Rhodes worth bundling turned up, and synthesized means no license question. Swap either by
-  changing `Voices.swift`; the patterns don't care.
-- **Mix:** per-sound `gainDb` in the band JSON, channel faders and a -2 dB master in
-  `BandRenderer.mix`/`master`, a soft knee above 0.8. Full band peaks at -2 dBFS, A1's drums + bass
-  at -4.5, the monitor around -5.
+- **Sounds (since 0.1 (5), 2026-10-25):** real recordings, no synthesis. Piano (monitor and
+  KEYS): the VCSL Knight upright, whole-tone roots x 2 velocity layers; HORNS: two VCSL tenor
+  saxes (staccato, held notes as `saxLong`); BASS: FreePats Finger Bass YR (E1..D#2, lines sit
+  low); DRUMS: MuldjordKit (CC BY 4.0, credit in `Licenses/README.md`) with velocity layers and
+  round robins, plus a VCSL hat foot chick. `scripts/sounds-fetch.sh <dir>` downloads the sources,
+  `scripts/sounds.py <dir>` (numpy + soundfile in a scratch venv) cuts them into `Sounds/*.caf`
+  (ALAC, onset-trimmed so hits fire on their frame) and `Sounds/instruments.json`.
+  `Audio/Instrument.swift` picks a sample per note and velocity (nearest root, softest layer
+  covering the velocity, round robin). Samples sit in memory as Int16 (~100 MB RSS on the Mac).
+  An `AVAudioUnitReverb` (medium room, 12% wet) sits between the source and the mixer; `-RecordTo`
+  taps after it.
+- **Band:** `scripts/band.py` writes a four-chorus Chicago shuffle (`bars: 48`; the lesson, pads
+  and snapshot count choruses of the 12-bar `form`, `BandData.chorusBars`): cross-stick into
+  snare, hat into ride, ghost notes, a crash on each top, a different fill into every chorus;
+  the bass's R-3-5-6 / b7-6-5-3 line with a walk into C; piano stabs, licks, Spann triplets and the
+  descending turnaround; two-tenor stabs and riffs. Velocities humanized from a seed, timing on the grid.
+- **Mix:** per-sound `gainDb` in the band JSON, channel faders in `BandRenderer.mix` (set from
+  solo renders: drums -27, bass -28, keys -30, horns -31 dB RMS), master 0.72, a soft knee above
+  0.8. The full band at 80 bpm peaks around -2.5 dBFS, RMS -23.
 - **Threads:** commands (`EngineCommand`) go in through an `OSAllocatedUnfairLock` the render thread
   only ever try-locks; state comes out as `EngineSnapshot` (fixed-size, no arrays) the same way.
   Voices live in preallocated buffers; nothing on the render thread allocates.
@@ -199,8 +210,10 @@ swiftc -O scripts/audiocheck.swift -o build/audiocheck
 build/audiocheck build/audio/x.wav Takt/Content/band-blues-C.json 70 [10:90] [--verbose]
 ```
 
-`audiocheck` prints levels and matches every kick against the band data and tempo program. Results
-on 2026-10-24: 5 min at 70 bpm, 217/217 kicks, max deviation 0.05 ms, drift 0.0001 ms/min, the
+`audiocheck` prints levels and matches every kick against the band data and tempo program. With the sampled kit (2026-10-25): 214/214 kicks over a 70 → 90
+change, max deviation 2.4 ms, the same kick within 0.5 ms across loops (the detector reads real
+kick tails under hats and room; the 909 read 0.05 ms). Results
+on 2026-10-24 (909 kit): 5 min at 70 bpm, 217/217 kicks, max deviation 0.05 ms, drift 0.0001 ms/min, the
 same kick across 8 choruses within one frame; 70 → 90 requested at 10 s lands on the downbeat at
 10.2857 s, 90 → 75 at 7 s on 8.0 s (the ~1.3 ms "deviation" after a change is the detector at the
 new tempo; a steady-90 render shows the same). Render drums only for timing: the sub shares the

@@ -161,7 +161,7 @@ final class Player {
         let heard = clock.position(atHost: mach_absolute_time())
         let tpb = Double(audio.band.ticksPerBeat)
         let beats = Int((heard.tick / tpb).rounded(.down))
-        let bars = audio.band.bars
+        let bars = audio.band.chorusBars
         if beats / 4 % bars != bar { bar = beats / 4 % bars }
         if beats % 4 != beat { beat = beats % 4 }
         if beats / 4 / bars != chorus { chorus = beats / 4 / bars }
@@ -187,7 +187,7 @@ final class Player {
         guard p.rolling else { return "stopped" }
         let beats = p.tick / Double(audio.band.ticksPerBeat)
         let barIndex = Int((beats / 4).rounded(.down))
-        let bars = audio.band.bars
+        let bars = audio.band.chorusBars
         return String(format: "chorus %d bar %d beat %.3f", barIndex / bars + 1, barIndex % bars + 1,
                       beats - Double(barIndex * 4) + 1)
     }

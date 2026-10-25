@@ -1,13 +1,21 @@
 # Takt sound licenses
 
-Every sound Takt plays is our own. No third-party samples, sample packs or sound banks are bundled.
+Every sound Takt plays is a recording under a permissive license, cut by
+`apps/takt/scripts/sounds.py` from the sets `scripts/sounds-fetch.sh` downloads. No commercial
+sample packs.
 
 | Sound | Source | License |
 |---|---|---|
-| Drums: `kick`, `snare`, `rimshot`, `ch`, `oh`, `ride` (`Takt/Sounds/*.wav`) | Rendered by Jambot (Bart's own engine, `vibeceo/jambot`, JT90 drum voices) from the Minimal 130 session patches, via `apps/ko2/tools/render-kit.mjs`, 2026-10-20 | Own work |
-| Bass: `sub-G1`, `sub-A1`, `sub-C2` | Same render: Jambot JB202 sub | Own work |
-| Rhodes (monitor and KEYS channel) | Synthesized in the app, `Takt/Audio/Voices.swift` (`FMPatch.rhodes`) | Own code |
-| Horns | Synthesized in the app, `Takt/Audio/Voices.swift` (`FMPatch.brass`) | Own code |
+| Piano (`pno-*`: the monitor and the KEYS channel) | "Upright Piano, Knight", sampled by Simon Dalzell (Ivy Audio) for VSCO 2; from the Versilian Community Sample Library (VCSL), github.com/sgossner/VCSL | CC0 1.0 |
+| Tenor sax (`sax-*`, `saxl-*`: HORNS) | "Tenor Saxophone" (Brett), VCSL | CC0 1.0 |
+| Hi-hat foot chick (`hatFoot-*`) | "Hi-Hat Cymbal", VCSL | CC0 1.0 |
+| Bass (`bass-*`) | "Finger Bass YR", a Yamaha RBX recorded by Andrea Biasior, FreePats (freepats.zenvoid.org) | CC0 1.0 |
+| Drums (`kick`, `snare`, `xstick`, `hat`, `hatOpen`, `ride`, `rideBell`, `crash`, `tomHi`, `tomLo`) | **MuldjordKit by Lars Muldjord** (muldjord.com, drumgizmo.org), FreePats stereo version by Roberto (zenvoid.org) | **CC BY 4.0**: credit required |
 | Band patterns (`Takt/Content/band-*.json`) | Written by `apps/takt/scripts/band.py` | Own work |
 
-Adding a sound: record its source and license here in the same commit. CC0 or our own only.
+**Attribution (CC BY 4.0), to show in the app's credits before release:**
+"Drums: MuldjordKit by Lars Muldjord, CC BY 4.0 (creativecommons.org/licenses/by/4.0).
+Trimmed and re-layered for Takt."
+
+Adding a sound: record its source and license here in the same commit. CC0, CC BY (with the
+credit line above), or our own.

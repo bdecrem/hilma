@@ -1,0 +1,1378 @@
+{
+ "piano": {
+  "release": 0.18,
+  "zones": [
+   {
+    "root": 31,
+    "vel": 0.55,
+    "files": [
+     "pno-31-1"
+    ]
+   },
+   {
+    "root": 31,
+    "vel": 1.0,
+    "files": [
+     "pno-31-2"
+    ]
+   },
+   {
+    "root": 33,
+    "vel": 0.55,
+    "files": [
+     "pno-33-1"
+    ]
+   },
+   {
+    "root": 33,
+    "vel": 1.0,
+    "files": [
+     "pno-33-2"
+    ]
+   },
+   {
+    "root": 35,
+    "vel": 0.55,
+    "files": [
+     "pno-35-1"
+    ]
+   },
+   {
+    "root": 35,
+    "vel": 1.0,
+    "files": [
+     "pno-35-2"
+    ]
+   },
+   {
+    "root": 37,
+    "vel": 0.55,
+    "files": [
+     "pno-37-1"
+    ]
+   },
+   {
+    "root": 37,
+    "vel": 1.0,
+    "files": [
+     "pno-37-2"
+    ]
+   },
+   {
+    "root": 39,
+    "vel": 0.55,
+    "files": [
+     "pno-39-1"
+    ]
+   },
+   {
+    "root": 39,
+    "vel": 1.0,
+    "files": [
+     "pno-39-2"
+    ]
+   },
+   {
+    "root": 41,
+    "vel": 0.55,
+    "files": [
+     "pno-41-1"
+    ]
+   },
+   {
+    "root": 41,
+    "vel": 1.0,
+    "files": [
+     "pno-41-2"
+    ]
+   },
+   {
+    "root": 43,
+    "vel": 0.55,
+    "files": [
+     "pno-43-1"
+    ]
+   },
+   {
+    "root": 43,
+    "vel": 1.0,
+    "files": [
+     "pno-43-2"
+    ]
+   },
+   {
+    "root": 45,
+    "vel": 0.55,
+    "files": [
+     "pno-45-1"
+    ]
+   },
+   {
+    "root": 45,
+    "vel": 1.0,
+    "files": [
+     "pno-45-2"
+    ]
+   },
+   {
+    "root": 47,
+    "vel": 0.55,
+    "files": [
+     "pno-47-1"
+    ]
+   },
+   {
+    "root": 47,
+    "vel": 1.0,
+    "files": [
+     "pno-47-2"
+    ]
+   },
+   {
+    "root": 49,
+    "vel": 0.55,
+    "files": [
+     "pno-49-1"
+    ]
+   },
+   {
+    "root": 49,
+    "vel": 1.0,
+    "files": [
+     "pno-49-2"
+    ]
+   },
+   {
+    "root": 51,
+    "vel": 0.55,
+    "files": [
+     "pno-51-1"
+    ]
+   },
+   {
+    "root": 51,
+    "vel": 1.0,
+    "files": [
+     "pno-51-2"
+    ]
+   },
+   {
+    "root": 53,
+    "vel": 0.55,
+    "files": [
+     "pno-53-1"
+    ]
+   },
+   {
+    "root": 53,
+    "vel": 1.0,
+    "files": [
+     "pno-53-2"
+    ]
+   },
+   {
+    "root": 55,
+    "vel": 0.55,
+    "files": [
+     "pno-55-1"
+    ]
+   },
+   {
+    "root": 55,
+    "vel": 1.0,
+    "files": [
+     "pno-55-2"
+    ]
+   },
+   {
+    "root": 57,
+    "vel": 0.55,
+    "files": [
+     "pno-57-1"
+    ]
+   },
+   {
+    "root": 57,
+    "vel": 1.0,
+    "files": [
+     "pno-57-2"
+    ]
+   },
+   {
+    "root": 59,
+    "vel": 0.55,
+    "files": [
+     "pno-59-1"
+    ]
+   },
+   {
+    "root": 59,
+    "vel": 1.0,
+    "files": [
+     "pno-59-2"
+    ]
+   },
+   {
+    "root": 61,
+    "vel": 0.55,
+    "files": [
+     "pno-61-1"
+    ]
+   },
+   {
+    "root": 61,
+    "vel": 1.0,
+    "files": [
+     "pno-61-2"
+    ]
+   },
+   {
+    "root": 63,
+    "vel": 0.55,
+    "files": [
+     "pno-63-1"
+    ]
+   },
+   {
+    "root": 63,
+    "vel": 1.0,
+    "files": [
+     "pno-63-2"
+    ]
+   },
+   {
+    "root": 65,
+    "vel": 0.55,
+    "files": [
+     "pno-65-1"
+    ]
+   },
+   {
+    "root": 65,
+    "vel": 1.0,
+    "files": [
+     "pno-65-2"
+    ]
+   },
+   {
+    "root": 67,
+    "vel": 0.55,
+    "files": [
+     "pno-67-1"
+    ]
+   },
+   {
+    "root": 67,
+    "vel": 1.0,
+    "files": [
+     "pno-67-2"
+    ]
+   },
+   {
+    "root": 69,
+    "vel": 0.55,
+    "files": [
+     "pno-69-1"
+    ]
+   },
+   {
+    "root": 69,
+    "vel": 1.0,
+    "files": [
+     "pno-69-2"
+    ]
+   },
+   {
+    "root": 71,
+    "vel": 0.55,
+    "files": [
+     "pno-71-1"
+    ]
+   },
+   {
+    "root": 71,
+    "vel": 1.0,
+    "files": [
+     "pno-71-2"
+    ]
+   },
+   {
+    "root": 73,
+    "vel": 0.55,
+    "files": [
+     "pno-73-1"
+    ]
+   },
+   {
+    "root": 73,
+    "vel": 1.0,
+    "files": [
+     "pno-73-2"
+    ]
+   },
+   {
+    "root": 75,
+    "vel": 0.55,
+    "files": [
+     "pno-75-1"
+    ]
+   },
+   {
+    "root": 75,
+    "vel": 1.0,
+    "files": [
+     "pno-75-2"
+    ]
+   },
+   {
+    "root": 77,
+    "vel": 0.55,
+    "files": [
+     "pno-77-1"
+    ]
+   },
+   {
+    "root": 77,
+    "vel": 1.0,
+    "files": [
+     "pno-77-2"
+    ]
+   },
+   {
+    "root": 79,
+    "vel": 0.55,
+    "files": [
+     "pno-79-1"
+    ]
+   },
+   {
+    "root": 79,
+    "vel": 1.0,
+    "files": [
+     "pno-79-2"
+    ]
+   },
+   {
+    "root": 81,
+    "vel": 0.55,
+    "files": [
+     "pno-81-1"
+    ]
+   },
+   {
+    "root": 81,
+    "vel": 1.0,
+    "files": [
+     "pno-81-2"
+    ]
+   },
+   {
+    "root": 83,
+    "vel": 0.55,
+    "files": [
+     "pno-83-1"
+    ]
+   },
+   {
+    "root": 83,
+    "vel": 1.0,
+    "files": [
+     "pno-83-2"
+    ]
+   },
+   {
+    "root": 85,
+    "vel": 0.55,
+    "files": [
+     "pno-85-1"
+    ]
+   },
+   {
+    "root": 85,
+    "vel": 1.0,
+    "files": [
+     "pno-85-2"
+    ]
+   },
+   {
+    "root": 87,
+    "vel": 0.55,
+    "files": [
+     "pno-87-1"
+    ]
+   },
+   {
+    "root": 87,
+    "vel": 1.0,
+    "files": [
+     "pno-87-2"
+    ]
+   },
+   {
+    "root": 89,
+    "vel": 0.55,
+    "files": [
+     "pno-89-1"
+    ]
+   },
+   {
+    "root": 89,
+    "vel": 1.0,
+    "files": [
+     "pno-89-2"
+    ]
+   },
+   {
+    "root": 91,
+    "vel": 0.55,
+    "files": [
+     "pno-91-1"
+    ]
+   },
+   {
+    "root": 91,
+    "vel": 1.0,
+    "files": [
+     "pno-91-2"
+    ]
+   },
+   {
+    "root": 93,
+    "vel": 0.55,
+    "files": [
+     "pno-93-1"
+    ]
+   },
+   {
+    "root": 93,
+    "vel": 1.0,
+    "files": [
+     "pno-93-2"
+    ]
+   },
+   {
+    "root": 95,
+    "vel": 0.55,
+    "files": [
+     "pno-95-1"
+    ]
+   },
+   {
+    "root": 95,
+    "vel": 1.0,
+    "files": [
+     "pno-95-2"
+    ]
+   }
+  ]
+ },
+ "bass": {
+  "release": 0.06,
+  "zones": [
+   {
+    "root": 28,
+    "vel": 1.0,
+    "files": [
+     "bass-28"
+    ]
+   },
+   {
+    "root": 29,
+    "vel": 1.0,
+    "files": [
+     "bass-29"
+    ]
+   },
+   {
+    "root": 30,
+    "vel": 1.0,
+    "files": [
+     "bass-30"
+    ]
+   },
+   {
+    "root": 31,
+    "vel": 1.0,
+    "files": [
+     "bass-31"
+    ]
+   },
+   {
+    "root": 32,
+    "vel": 1.0,
+    "files": [
+     "bass-32"
+    ]
+   },
+   {
+    "root": 33,
+    "vel": 1.0,
+    "files": [
+     "bass-33"
+    ]
+   },
+   {
+    "root": 34,
+    "vel": 1.0,
+    "files": [
+     "bass-34"
+    ]
+   },
+   {
+    "root": 35,
+    "vel": 1.0,
+    "files": [
+     "bass-35"
+    ]
+   },
+   {
+    "root": 36,
+    "vel": 1.0,
+    "files": [
+     "bass-36"
+    ]
+   },
+   {
+    "root": 37,
+    "vel": 1.0,
+    "files": [
+     "bass-37"
+    ]
+   },
+   {
+    "root": 38,
+    "vel": 1.0,
+    "files": [
+     "bass-38"
+    ]
+   },
+   {
+    "root": 39,
+    "vel": 1.0,
+    "files": [
+     "bass-39"
+    ]
+   }
+  ]
+ },
+ "sax": {
+  "release": 0.08,
+  "zones": [
+   {
+    "root": 44,
+    "vel": 1.0,
+    "files": [
+     "sax-44-h"
+    ]
+   },
+   {
+    "root": 46,
+    "vel": 1.0,
+    "files": [
+     "sax-46-h"
+    ]
+   },
+   {
+    "root": 48,
+    "vel": 1.0,
+    "files": [
+     "sax-48-h"
+    ]
+   },
+   {
+    "root": 50,
+    "vel": 0.6,
+    "files": [
+     "sax-50-s"
+    ]
+   },
+   {
+    "root": 50,
+    "vel": 1.0,
+    "files": [
+     "sax-50-h"
+    ]
+   },
+   {
+    "root": 52,
+    "vel": 0.6,
+    "files": [
+     "sax-52-s"
+    ]
+   },
+   {
+    "root": 52,
+    "vel": 1.0,
+    "files": [
+     "sax-52-h"
+    ]
+   },
+   {
+    "root": 54,
+    "vel": 0.6,
+    "files": [
+     "sax-54-s"
+    ]
+   },
+   {
+    "root": 54,
+    "vel": 1.0,
+    "files": [
+     "sax-54-h"
+    ]
+   },
+   {
+    "root": 56,
+    "vel": 0.6,
+    "files": [
+     "sax-56-s"
+    ]
+   },
+   {
+    "root": 56,
+    "vel": 1.0,
+    "files": [
+     "sax-56-h"
+    ]
+   },
+   {
+    "root": 57,
+    "vel": 0.6,
+    "files": [
+     "sax-57-s"
+    ]
+   },
+   {
+    "root": 57,
+    "vel": 1.0,
+    "files": [
+     "sax-57-h"
+    ]
+   },
+   {
+    "root": 60,
+    "vel": 0.6,
+    "files": [
+     "sax-60-s"
+    ]
+   },
+   {
+    "root": 60,
+    "vel": 1.0,
+    "files": [
+     "sax-60-h"
+    ]
+   },
+   {
+    "root": 62,
+    "vel": 0.6,
+    "files": [
+     "sax-62-s"
+    ]
+   },
+   {
+    "root": 62,
+    "vel": 1.0,
+    "files": [
+     "sax-62-h"
+    ]
+   },
+   {
+    "root": 64,
+    "vel": 0.6,
+    "files": [
+     "sax-64-s"
+    ]
+   },
+   {
+    "root": 64,
+    "vel": 1.0,
+    "files": [
+     "sax-64-h"
+    ]
+   },
+   {
+    "root": 66,
+    "vel": 0.6,
+    "files": [
+     "sax-66-s"
+    ]
+   },
+   {
+    "root": 66,
+    "vel": 1.0,
+    "files": [
+     "sax-66-h"
+    ]
+   },
+   {
+    "root": 68,
+    "vel": 0.6,
+    "files": [
+     "sax-68-s"
+    ]
+   },
+   {
+    "root": 68,
+    "vel": 1.0,
+    "files": [
+     "sax-68-h"
+    ]
+   },
+   {
+    "root": 70,
+    "vel": 0.6,
+    "files": [
+     "sax-70-s"
+    ]
+   },
+   {
+    "root": 70,
+    "vel": 1.0,
+    "files": [
+     "sax-70-h"
+    ]
+   },
+   {
+    "root": 72,
+    "vel": 0.6,
+    "files": [
+     "sax-72-s"
+    ]
+   },
+   {
+    "root": 72,
+    "vel": 1.0,
+    "files": [
+     "sax-72-h"
+    ]
+   },
+   {
+    "root": 74,
+    "vel": 0.6,
+    "files": [
+     "sax-74-s"
+    ]
+   },
+   {
+    "root": 74,
+    "vel": 1.0,
+    "files": [
+     "sax-74-h"
+    ]
+   },
+   {
+    "root": 76,
+    "vel": 0.6,
+    "files": [
+     "sax-76-s"
+    ]
+   },
+   {
+    "root": 76,
+    "vel": 1.0,
+    "files": [
+     "sax-76-h"
+    ]
+   },
+   {
+    "root": 77,
+    "vel": 0.6,
+    "files": [
+     "sax-77-s"
+    ]
+   },
+   {
+    "root": 77,
+    "vel": 1.0,
+    "files": [
+     "sax-77-h"
+    ]
+   },
+   {
+    "root": 80,
+    "vel": 1.0,
+    "files": [
+     "sax-80-h"
+    ]
+   },
+   {
+    "root": 81,
+    "vel": 0.6,
+    "files": [
+     "sax-81-s"
+    ]
+   },
+   {
+    "root": 81,
+    "vel": 1.0,
+    "files": [
+     "sax-81-h"
+    ]
+   },
+   {
+    "root": 84,
+    "vel": 0.6,
+    "files": [
+     "sax-84-s"
+    ]
+   },
+   {
+    "root": 84,
+    "vel": 1.0,
+    "files": [
+     "sax-84-h"
+    ]
+   },
+   {
+    "root": 86,
+    "vel": 1.0,
+    "files": [
+     "sax-86-h"
+    ]
+   },
+   {
+    "root": 88,
+    "vel": 1.0,
+    "files": [
+     "sax-88-h"
+    ]
+   }
+  ]
+ },
+ "saxLong": {
+  "release": 0.15,
+  "zones": [
+   {
+    "root": 44,
+    "vel": 1.0,
+    "files": [
+     "saxl-44"
+    ]
+   },
+   {
+    "root": 46,
+    "vel": 1.0,
+    "files": [
+     "saxl-46"
+    ]
+   },
+   {
+    "root": 48,
+    "vel": 1.0,
+    "files": [
+     "saxl-48"
+    ]
+   },
+   {
+    "root": 50,
+    "vel": 1.0,
+    "files": [
+     "saxl-50"
+    ]
+   },
+   {
+    "root": 52,
+    "vel": 1.0,
+    "files": [
+     "saxl-52"
+    ]
+   },
+   {
+    "root": 54,
+    "vel": 1.0,
+    "files": [
+     "saxl-54"
+    ]
+   },
+   {
+    "root": 56,
+    "vel": 1.0,
+    "files": [
+     "saxl-56"
+    ]
+   },
+   {
+    "root": 58,
+    "vel": 1.0,
+    "files": [
+     "saxl-58"
+    ]
+   },
+   {
+    "root": 60,
+    "vel": 1.0,
+    "files": [
+     "saxl-60"
+    ]
+   },
+   {
+    "root": 62,
+    "vel": 1.0,
+    "files": [
+     "saxl-62"
+    ]
+   },
+   {
+    "root": 64,
+    "vel": 1.0,
+    "files": [
+     "saxl-64"
+    ]
+   },
+   {
+    "root": 66,
+    "vel": 1.0,
+    "files": [
+     "saxl-66"
+    ]
+   },
+   {
+    "root": 68,
+    "vel": 1.0,
+    "files": [
+     "saxl-68"
+    ]
+   },
+   {
+    "root": 70,
+    "vel": 1.0,
+    "files": [
+     "saxl-70"
+    ]
+   },
+   {
+    "root": 72,
+    "vel": 1.0,
+    "files": [
+     "saxl-72"
+    ]
+   },
+   {
+    "root": 74,
+    "vel": 1.0,
+    "files": [
+     "saxl-74"
+    ]
+   },
+   {
+    "root": 76,
+    "vel": 1.0,
+    "files": [
+     "saxl-76"
+    ]
+   },
+   {
+    "root": 78,
+    "vel": 1.0,
+    "files": [
+     "saxl-78"
+    ]
+   },
+   {
+    "root": 80,
+    "vel": 1.0,
+    "files": [
+     "saxl-80"
+    ]
+   },
+   {
+    "root": 82,
+    "vel": 1.0,
+    "files": [
+     "saxl-82"
+    ]
+   },
+   {
+    "root": 84,
+    "vel": 1.0,
+    "files": [
+     "saxl-84"
+    ]
+   },
+   {
+    "root": 86,
+    "vel": 1.0,
+    "files": [
+     "saxl-86"
+    ]
+   },
+   {
+    "root": 88,
+    "vel": 1.0,
+    "files": [
+     "saxl-88"
+    ]
+   }
+  ]
+ },
+ "kick": {
+  "release": 0.02,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 0.2,
+    "files": [
+     "kick-0a",
+     "kick-0b"
+    ]
+   },
+   {
+    "root": 0,
+    "vel": 0.4,
+    "files": [
+     "kick-1a",
+     "kick-1b"
+    ]
+   },
+   {
+    "root": 0,
+    "vel": 0.6,
+    "files": [
+     "kick-2a",
+     "kick-2b"
+    ]
+   },
+   {
+    "root": 0,
+    "vel": 0.8,
+    "files": [
+     "kick-3a",
+     "kick-3b"
+    ]
+   },
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "kick-4a",
+     "kick-4b"
+    ]
+   }
+  ]
+ },
+ "snare": {
+  "release": 0.02,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 0.167,
+    "files": [
+     "snare-0a",
+     "snare-0b",
+     "snare-0c"
+    ]
+   },
+   {
+    "root": 0,
+    "vel": 0.333,
+    "files": [
+     "snare-1a",
+     "snare-1b",
+     "snare-1c"
+    ]
+   },
+   {
+    "root": 0,
+    "vel": 0.5,
+    "files": [
+     "snare-2a",
+     "snare-2b",
+     "snare-2c"
+    ]
+   },
+   {
+    "root": 0,
+    "vel": 0.667,
+    "files": [
+     "snare-3a",
+     "snare-3b",
+     "snare-3c"
+    ]
+   },
+   {
+    "root": 0,
+    "vel": 0.833,
+    "files": [
+     "snare-4a",
+     "snare-4b",
+     "snare-4c"
+    ]
+   },
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "snare-5a",
+     "snare-5b",
+     "snare-5c"
+    ]
+   }
+  ]
+ },
+ "xstick": {
+  "release": 0.02,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 0.333,
+    "files": [
+     "xstick-0a",
+     "xstick-0b"
+    ]
+   },
+   {
+    "root": 0,
+    "vel": 0.667,
+    "files": [
+     "xstick-1a",
+     "xstick-1b"
+    ]
+   },
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "xstick-2a",
+     "xstick-2b"
+    ]
+   }
+  ]
+ },
+ "hat": {
+  "release": 0.02,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 0.2,
+    "files": [
+     "hat-0a",
+     "hat-0b",
+     "hat-0c"
+    ]
+   },
+   {
+    "root": 0,
+    "vel": 0.4,
+    "files": [
+     "hat-1a",
+     "hat-1b",
+     "hat-1c"
+    ]
+   },
+   {
+    "root": 0,
+    "vel": 0.6,
+    "files": [
+     "hat-2a",
+     "hat-2b",
+     "hat-2c"
+    ]
+   },
+   {
+    "root": 0,
+    "vel": 0.8,
+    "files": [
+     "hat-3a",
+     "hat-3b",
+     "hat-3c"
+    ]
+   },
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hat-4a",
+     "hat-4b",
+     "hat-4c"
+    ]
+   }
+  ]
+ },
+ "hatOpen": {
+  "release": 0.02,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 0.333,
+    "files": [
+     "hatOpen-0a",
+     "hatOpen-0b"
+    ]
+   },
+   {
+    "root": 0,
+    "vel": 0.667,
+    "files": [
+     "hatOpen-1a",
+     "hatOpen-1b"
+    ]
+   },
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hatOpen-2a",
+     "hatOpen-2b"
+    ]
+   }
+  ]
+ },
+ "ride": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 0.2,
+    "files": [
+     "ride-0a",
+     "ride-0b"
+    ]
+   },
+   {
+    "root": 0,
+    "vel": 0.4,
+    "files": [
+     "ride-1a",
+     "ride-1b"
+    ]
+   },
+   {
+    "root": 0,
+    "vel": 0.6,
+    "files": [
+     "ride-2a",
+     "ride-2b"
+    ]
+   },
+   {
+    "root": 0,
+    "vel": 0.8,
+    "files": [
+     "ride-3a",
+     "ride-3b"
+    ]
+   },
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "ride-4a"
+    ]
+   }
+  ]
+ },
+ "rideBell": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 0.5,
+    "files": [
+     "rideBell-0a",
+     "rideBell-0b"
+    ]
+   },
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "rideBell-1a",
+     "rideBell-1b"
+    ]
+   }
+  ]
+ },
+ "crash": {
+  "release": 0.08,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 0.5,
+    "files": [
+     "crash-0a",
+     "crash-0b"
+    ]
+   },
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "crash-1a",
+     "crash-1b"
+    ]
+   }
+  ]
+ },
+ "tomHi": {
+  "release": 0.02,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 0.333,
+    "files": [
+     "tomHi-0a",
+     "tomHi-0b"
+    ]
+   },
+   {
+    "root": 0,
+    "vel": 0.667,
+    "files": [
+     "tomHi-1a",
+     "tomHi-1b"
+    ]
+   },
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "tomHi-2a",
+     "tomHi-2b"
+    ]
+   }
+  ]
+ },
+ "tomLo": {
+  "release": 0.02,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 0.333,
+    "files": [
+     "tomLo-0a",
+     "tomLo-0b"
+    ]
+   },
+   {
+    "root": 0,
+    "vel": 0.667,
+    "files": [
+     "tomLo-1a",
+     "tomLo-1b"
+    ]
+   },
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "tomLo-2a",
+     "tomLo-2b"
+    ]
+   }
+  ]
+ },
+ "hatFoot": {
+  "release": 0.02,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hatFoot-0a",
+     "hatFoot-0b"
+    ]
+   }
+  ]
+ }
+}

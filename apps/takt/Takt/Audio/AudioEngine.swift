@@ -5,12 +5,14 @@ import CoreAudio  // UnsafeMutableAudioBufferListPointer on Mac Catalyst
 import os
 
 /// AVAudioEngine with one stereo source node: the BandRenderer, which is the transport,
-/// the band and the monitor. Everything audible comes out of that render block.
+/// the band and the monitor. Everything audible comes out of that render block, through a
+/// small room (the samples are close-miked and dry).
 final class AudioEngine {
     let renderer: BandRenderer
     let band: BandData
     private let engine = AVAudioEngine()
     private let source: AVAudioSourceNode
+    private let room = AVAudioUnitReverb()
     private let format: AVAudioFormat
     private let log = Logger(subsystem: "takt", category: "audio")
 
@@ -41,7 +43,11 @@ final class AudioEngine {
             return noErr
         }
         engine.attach(source)
-        engine.connect(source, to: engine.mainMixerNode, format: format)
+        engine.attach(room)
+        room.loadFactoryPreset(.mediumRoom)
+        room.wetDryMix = 12
+        engine.connect(source, to: room, format: format)
+        engine.connect(room, to: engine.mainMixerNode, format: format)
 
         NotificationCenter.default.addObserver(forName: .AVAudioEngineConfigurationChange, object: engine,
                                                queue: .main) { [weak self] _ in self?.restart() }
@@ -111,7 +117,7 @@ final class AudioEngine {
         engine.stop()
     }
 
-    /// Records the live render (before the output volume) to a WAV for `seconds`, then calls `done`.
+    /// Records the live render (after the room, before the output volume) to a WAV for `seconds`, then calls `done`.
     func record(seconds: Double, to url: URL, done: @escaping () -> Void) throws {
         let file = try AVAudioFile(forWriting: url, settings: [
             AVFormatIDKey: kAudioFormatLinearPCM, AVSampleRateKey: format.sampleRate,
@@ -120,11 +126,11 @@ final class AudioEngine {
         // The file finishes its WAV header (the sizes) when it is released, so it must be gone
         // before `done` (which exits): the tap holds it through a box that lets go first.
         let box = FileBox(file)
-        source.installTap(onBus: 0, bufferSize: 4096, format: format) { buffer, _ in
+        room.installTap(onBus: 0, bufferSize: 4096, format: format) { buffer, _ in
             box.lock.withLock { try? box.file?.write(from: buffer) }
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + seconds) { [source] in
-            source.removeTap(onBus: 0)
+        DispatchQueue.main.asyncAfter(deadline: .now() + seconds) { [room] in
+            room.removeTap(onBus: 0)
             box.lock.withLock { box.file = nil }
             done()
         }

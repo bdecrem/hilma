@@ -7,86 +7,526 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		00F4BC3812D5876F5DE7A586 /* xstick-1a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 6EA8414D96952B8DF25F4270 /* xstick-1a.caf */; };
 		0122C6880BB2223509A01B44 /* BandData.swift in Sources */ = {isa = PBXBuildFile; fileRef = E35CB620AC7721CE809CB3C0 /* BandData.swift */; };
-		015603108E81F63F3DB9F753 /* kick.wav in Resources */ = {isa = PBXBuildFile; fileRef = F34520AB295DC5306DF9FF50 /* kick.wav */; };
-		06D4EE81719B785A8ECE3FA3 /* sub-A1.wav in Resources */ = {isa = PBXBuildFile; fileRef = 59FFB7202B526B29939D20AA /* sub-A1.wav */; };
+		03E11DA52EB7EB63BAA61F6E /* snare-5c.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9E784B77A99187B44D2F3021 /* snare-5c.caf */; };
+		07488C6D67CE34AE6C725ABD /* sax-66-s.caf in Resources */ = {isa = PBXBuildFile; fileRef = F67879E7D21DFD9D9DADEBCC /* sax-66-s.caf */; };
+		0B4807846D69D1AC21193BC9 /* bass-31.caf in Resources */ = {isa = PBXBuildFile; fileRef = B92BB72CACB4C5672A4BEE11 /* bass-31.caf */; };
+		0B51ABA08080946D611791F1 /* sax-74-s.caf in Resources */ = {isa = PBXBuildFile; fileRef = 847341D978FA2A7C24EA9434 /* sax-74-s.caf */; };
 		0D0C5243B3D5B74AC76FC97F /* CoachPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C3928533C5BB6418CCBE93 /* CoachPanel.swift */; };
 		0DE168DE937CF47D7A71BA79 /* Voices.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF651FEB253E5456168706DA /* Voices.swift */; };
-		0E052B1EC6868D15698256E7 /* snare.wav in Resources */ = {isa = PBXBuildFile; fileRef = 92D7893886A0DD2413287A87 /* snare.wav */; };
-		14ADFFCB6F179A4CC84EB648 /* rimshot.wav in Resources */ = {isa = PBXBuildFile; fileRef = AC7BE2C8710D5FC0BFBF3DC2 /* rimshot.wav */; };
+		0FD245B36E24D79EBAE0898A /* pno-49-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 90938465F2979109AAE2AF26 /* pno-49-1.caf */; };
+		10E5FC4A4AD57F9896AFFA68 /* bass-34.caf in Resources */ = {isa = PBXBuildFile; fileRef = 2BAB6DB7B83C48780451217E /* bass-34.caf */; };
+		1129E8DF4B550D61C778EAD9 /* pno-35-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 59155600836DBCC72DCA030F /* pno-35-2.caf */; };
+		12215C45C743FCCE5B0A5729 /* pno-69-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 632D8EB5835F18091B02EB79 /* pno-69-2.caf */; };
+		12A71696269BEA7A02A6F5D2 /* saxl-48.caf in Resources */ = {isa = PBXBuildFile; fileRef = DD0065C8219E4D6D361B6BA4 /* saxl-48.caf */; };
+		149FCB186F1A01AD5C65CA5D /* pno-89-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 691BBB9CBF5C58C71B45280D /* pno-89-1.caf */; };
+		14B52C7A04CF2A897613CBD1 /* hatFoot-0b.caf in Resources */ = {isa = PBXBuildFile; fileRef = EA91ACB18EDA2F1CC37EF5DE /* hatFoot-0b.caf */; };
+		15CECD7CAD84E263E4626E10 /* ride-2b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 4DE1E5CAD21F33442D42DFA1 /* ride-2b.caf */; };
+		164B2B354495704EEEECA649 /* hat-2b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 42C68CEB30A9550B8E2FF38A /* hat-2b.caf */; };
+		1A3E953AA2D28EFF246BF443 /* pno-93-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = E4C4ED92F717DBEEBE684CD6 /* pno-93-1.caf */; };
+		1A605ED7EF5BC5CA807A9C52 /* saxl-56.caf in Resources */ = {isa = PBXBuildFile; fileRef = EFFA08C2D957ECE763A247E6 /* saxl-56.caf */; };
+		1B3792B3D6838DD2557B80E0 /* saxl-62.caf in Resources */ = {isa = PBXBuildFile; fileRef = 1015C3B7893037323D28F441 /* saxl-62.caf */; };
 		1BAF5C09CD661D4CF3484722 /* Motifs.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCFFFD49EB39BF2E6BAC0767 /* Motifs.swift */; };
 		1C10C6072AB01F749AE43B8B /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = C5E40801CC98A659B7FBBD8E /* README.md */; };
+		1DA1F276B078D8480198F581 /* saxl-54.caf in Resources */ = {isa = PBXBuildFile; fileRef = 7B4DB1EF0F0433B417F786C0 /* saxl-54.caf */; };
+		1DD87923F621FB63B0B1DE2A /* sax-86-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = 72FD3F6B35B76A7F8829D411 /* sax-86-h.caf */; };
+		1ED43417BE7B3047B602E21E /* saxl-86.caf in Resources */ = {isa = PBXBuildFile; fileRef = E9CDF65C85CCE001F6524983 /* saxl-86.caf */; };
+		1F79E5760392C10A935AA7B9 /* xstick-0b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 779DBDE154DF8B5AAD17D2F2 /* xstick-0b.caf */; };
+		20198E8AC67929DC98B12415 /* hatOpen-1b.caf in Resources */ = {isa = PBXBuildFile; fileRef = D8D57E218B31B619BE8A8B79 /* hatOpen-1b.caf */; };
+		20BA17C26061558ACF959540 /* hatOpen-0a.caf in Resources */ = {isa = PBXBuildFile; fileRef = A211F35B335C327CB7954B83 /* hatOpen-0a.caf */; };
+		21F8FCA34F87A508FB65BBBC /* tomHi-1b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 349BFAF58AF88AB685AA1DB7 /* tomHi-1b.caf */; };
+		227BF83E2373B55672B2BAD8 /* kick-4a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 65F4A5C32BB689BA5F03246A /* kick-4a.caf */; };
 		2280B159810DADB2C948CEFC /* Scorer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8AEBBD36AEADCD7786A2457 /* Scorer.swift */; };
+		2584A7A1FF8EF1E65F79B3FD /* pno-47-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = E7D3256E72BF07EB6ACF1AC6 /* pno-47-1.caf */; };
+		276476E897CABA7D4D5F8115 /* pno-61-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = E3E4FC79A99C3303B6818F63 /* pno-61-1.caf */; };
+		27AA2E7801FB607CF7D8B0C3 /* sax-81-s.caf in Resources */ = {isa = PBXBuildFile; fileRef = 2FC86C2A9E24F7E687AF3D24 /* sax-81-s.caf */; };
+		27C557873BFCFDD3F8EF2D61 /* pno-65-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 114C7B43CE49393D6E343425 /* pno-65-1.caf */; };
+		294B06009DF1AFE4DC585F6D /* sax-50-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = 2DF5AE57DEDD36D4D43ED0B6 /* sax-50-h.caf */; };
+		299877A12BF54E9551A68C89 /* pno-41-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 5195A11F3940B71EB76D0CC6 /* pno-41-2.caf */; };
+		2A912573A7078819144078A8 /* hat-1b.caf in Resources */ = {isa = PBXBuildFile; fileRef = C29C4C33EBDFC92B4AE5359C /* hat-1b.caf */; };
+		2CA46049F7226B52634FC4E7 /* kick-3b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 249902DF6BD4A108A4229629 /* kick-3b.caf */; };
 		306848967A711785611C8454 /* Lesson.swift in Sources */ = {isa = PBXBuildFile; fileRef = D59BC4A000D534C926E8B67C /* Lesson.swift */; };
+		307EF0B0AE15E6A69CC0A9F7 /* sax-70-s.caf in Resources */ = {isa = PBXBuildFile; fileRef = FDE697BC3A0FD60BC7481DDE /* sax-70-s.caf */; };
+		31B098145D2ECCDD283167A5 /* kick-1b.caf in Resources */ = {isa = PBXBuildFile; fileRef = F2DE7F42AFB5948626DA2249 /* kick-1b.caf */; };
+		31C36E629171C1B20D71628B /* tomLo-2a.caf in Resources */ = {isa = PBXBuildFile; fileRef = CD280DD166F8AFF0E3DFABE3 /* tomLo-2a.caf */; };
+		320A121E005A4512B39447CE /* saxl-82.caf in Resources */ = {isa = PBXBuildFile; fileRef = 1225A9C23AAA0DBF395E1311 /* saxl-82.caf */; };
+		32B0028C89E12FA89CED5980 /* snare-1c.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9887F83D6990F74ED1B9207B /* snare-1c.caf */; };
+		331BC944D713C5FD4ABDABD1 /* hat-0a.caf in Resources */ = {isa = PBXBuildFile; fileRef = C3EBB7D90C5D7B4E06CAC8E7 /* hat-0a.caf */; };
+		34D5B0EA3CE65C47A011D1EF /* saxl-74.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3BC0A0A5C5D66707D069836B /* saxl-74.caf */; };
+		35D08827F2303F289826976C /* saxl-68.caf in Resources */ = {isa = PBXBuildFile; fileRef = 6F511A5158449D5717BEEF3B /* saxl-68.caf */; };
+		36343424CE88A77FE28A20C4 /* snare-4a.caf in Resources */ = {isa = PBXBuildFile; fileRef = E090E9EA4DAA483D79A5CD77 /* snare-4a.caf */; };
+		365DA90461EF433D00A5DDAF /* saxl-84.caf in Resources */ = {isa = PBXBuildFile; fileRef = 84A09E251139CFA659480F99 /* saxl-84.caf */; };
+		36C5B40EA2FF47470FC74656 /* pno-81-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 81F9E22985C2E7F376263C4A /* pno-81-2.caf */; };
+		36F2BB0E3572253A224B332E /* instruments.json in Resources */ = {isa = PBXBuildFile; fileRef = A5A6E1F7F4B26999D7BB16D6 /* instruments.json */; };
+		3B84D0A6AA682BCE29F60D99 /* pno-51-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = F1B53C17BA5F4CF3F1808195 /* pno-51-2.caf */; };
+		3D722FB7F193F4353C109FBB /* pno-43-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = CCA2EA02E8232F37FDBBC86D /* pno-43-1.caf */; };
+		3E375F9FAA40BF5A41192806 /* ride-3b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3B3C55EDD7385BAD71C09CC8 /* ride-3b.caf */; };
+		3F0F9F933FA8434D41547176 /* hat-2c.caf in Resources */ = {isa = PBXBuildFile; fileRef = 1D346A64372DD97C2368E256 /* hat-2c.caf */; };
+		3FF794ED3E6D8AAB365E558A /* pno-75-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = EA528344B003B7949FDCAD43 /* pno-75-2.caf */; };
+		40E4079190E3C9BA5D19612F /* sax-64-s.caf in Resources */ = {isa = PBXBuildFile; fileRef = F08D6CCFCF70D2EC893912D1 /* sax-64-s.caf */; };
 		414888B108C80FDC15CC456C /* LessonCheck.swift in Sources */ = {isa = PBXBuildFile; fileRef = 181E70467D20AC8A720F563F /* LessonCheck.swift */; };
-		46A76DE20EE77BC88B800BD2 /* sub-C2.wav in Resources */ = {isa = PBXBuildFile; fileRef = CC03391D5E8D735B6F46263E /* sub-C2.wav */; };
+		4194B0DA416A939C75F3E973 /* tomLo-0a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 4C07A23D1D5D9AAEB045EDD9 /* tomLo-0a.caf */; };
+		42393951486A248041E968AE /* pno-41-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = C2B9463350106EA3B68E80C0 /* pno-41-1.caf */; };
+		4245984A3E9079B7FA7FFA43 /* bass-33.caf in Resources */ = {isa = PBXBuildFile; fileRef = 0B26863B63DA1BADC4F27B21 /* bass-33.caf */; };
+		4498A2ABD27FED8229D35D00 /* pno-45-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = CDD8BDE4868C7184EE587761 /* pno-45-2.caf */; };
+		44A13FDFD826D82B035D3FF5 /* pno-61-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 428C4046C5DBA2787A283561 /* pno-61-2.caf */; };
+		44B4FD975E4D38607E23557A /* sax-72-s.caf in Resources */ = {isa = PBXBuildFile; fileRef = 6B458E030CA01B7F6AA54F62 /* sax-72-s.caf */; };
+		45CB0B2C16E622D04068ABD4 /* pno-73-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 576C37E38AECD1B6E32A7E92 /* pno-73-2.caf */; };
+		4790FFBF0D10C5CAA5889759 /* sax-81-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = B5EBAA5D48502B37AFBA5F83 /* sax-81-h.caf */; };
 		481CF35C84CED42D066A2594 /* TransportClock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27D942EC6ACE999D537538FE /* TransportClock.swift */; };
 		486922DA20D6BC2D8B7890FD /* Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C9E81396F74E488321A3DE6 /* Palette.swift */; };
+		4A2FC82C2EA0491C3684A84B /* bass-38.caf in Resources */ = {isa = PBXBuildFile; fileRef = 12273D467BDEFC4939B1545F /* bass-38.caf */; };
+		4B92E2218FF5C12517E0ECEA /* sax-56-s.caf in Resources */ = {isa = PBXBuildFile; fileRef = BF742A92A81E039E40AFD61F /* sax-56-s.caf */; };
+		4BECA9827B6C86C71E85C228 /* hat-2a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 1959733C08A21E2DAF815CE0 /* hat-2a.caf */; };
+		4D428DEEE990FF7C23D2865C /* pno-69-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = A90516563580959F36C82E8A /* pno-69-1.caf */; };
+		4EBC5DF2E429AE9F62C4F447 /* xstick-2b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 5493818141A471AEC30127DF /* xstick-2b.caf */; };
+		4F99D09614EABEC78C65ADC0 /* pno-93-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = D5671658EBED1C841D01BAFD /* pno-93-2.caf */; };
+		4FCC81242F5030EC9B44DF5C /* bass-36.caf in Resources */ = {isa = PBXBuildFile; fileRef = EC1F2F025FFD570FE5193E0D /* bass-36.caf */; };
+		50011F9199B2DA064EB0A9EC /* pno-57-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 5719C6805B1BC9CF816F01F4 /* pno-57-1.caf */; };
+		5201DCB7333247C862F7916D /* pno-73-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 70AE5489ED8DD0C0C0F30596 /* pno-73-1.caf */; };
 		5393E171E435313023E81F77 /* TransportBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FF0590E33E54BA1B15E91B1 /* TransportBar.swift */; };
+		542171EA746074538B9C28D1 /* hat-1c.caf in Resources */ = {isa = PBXBuildFile; fileRef = 18C238908CDBD5AAFD4709D9 /* hat-1c.caf */; };
+		546157CE0EF5579ECFA6057D /* sax-60-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = F46182DA1CDF8141B291AABA /* sax-60-h.caf */; };
+		54641E8FD2D2BF436A4E4897 /* hatOpen-0b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 5A6D4B76937F79D24368F63A /* hatOpen-0b.caf */; };
+		55819E92B38BB5EA1EC0E2E9 /* hat-4b.caf in Resources */ = {isa = PBXBuildFile; fileRef = B85928F90C85C89D592A62C8 /* hat-4b.caf */; };
+		56BC41EA29FA1087444BE630 /* saxl-70.caf in Resources */ = {isa = PBXBuildFile; fileRef = 45F5942DC869BC3CF9B9B575 /* saxl-70.caf */; };
+		56C4ABBFF599E394474EA022 /* snare-2c.caf in Resources */ = {isa = PBXBuildFile; fileRef = 2AE10F73437308FCB63674FE /* snare-2c.caf */; };
+		5AB26F64BF6DE47ED26151F1 /* ride-1a.caf in Resources */ = {isa = PBXBuildFile; fileRef = F471A2196F9AF3B8F004FA9C /* ride-1a.caf */; };
+		5B40702A3B9F3D708DA58C3F /* pno-51-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 637060E1B27D289D64972055 /* pno-51-1.caf */; };
+		5BD89A82210707D4C12EE7F3 /* snare-1a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 27AB3C2B9B543267B44D0E56 /* snare-1a.caf */; };
+		5C357900F62CA3F2AF4D47DF /* hat-4c.caf in Resources */ = {isa = PBXBuildFile; fileRef = D4123B82EEB06216B8B06790 /* hat-4c.caf */; };
 		5D12A4B666A44E9CE2C6914B /* LessonScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA77ED30BAF689A04B1E5B94 /* LessonScreen.swift */; };
+		5DB4F8877AD391F3808D0E7B /* pno-45-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = CD7DE42E8110478BE27986CC /* pno-45-1.caf */; };
+		5EFED1E324609E9B1B739938 /* sax-72-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = B3A468091F78A4DA2AF64B51 /* sax-72-h.caf */; };
+		5F0FC123425094D0F68C94CC /* rideBell-0a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 10C5B9D6572FC6A770B67E87 /* rideBell-0a.caf */; };
+		5F7D161E0E63EB11FF865A87 /* pno-81-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = FEC4048F70F13C6E2582657F /* pno-81-1.caf */; };
+		602C89B9BD1D135332E2D855 /* pno-67-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 6D0A88D091F8C084FC7CF3B7 /* pno-67-2.caf */; };
 		606269D637B85705945947B6 /* Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = 360CC0D3E4675A3F8F360945 /* Typography.swift */; };
-		689A7688079AFEC2BD3EE75B /* sub-G1.wav in Resources */ = {isa = PBXBuildFile; fileRef = B196FE38F75BC760CE5A0A0F /* sub-G1.wav */; };
+		61DB37FBFCFFE7F83F563F1B /* pno-79-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 596E344E48305E41CDEDCD58 /* pno-79-1.caf */; };
+		63205981D46B9A6C3A8E8254 /* bass-39.caf in Resources */ = {isa = PBXBuildFile; fileRef = C6F972FD0AD385D24F86BF29 /* bass-39.caf */; };
+		64B6AF894E09377DF886A78C /* pno-37-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = C2038C1A05337D1214E40BCF /* pno-37-1.caf */; };
+		66589FA581B74CDB59B6588C /* saxl-46.caf in Resources */ = {isa = PBXBuildFile; fileRef = 004393332020C1E4EF245A84 /* saxl-46.caf */; };
+		66CD0335B945C2BAC5BAFE30 /* saxl-66.caf in Resources */ = {isa = PBXBuildFile; fileRef = 60C528CEAD1BA483B07D7AB1 /* saxl-66.caf */; };
+		672FA78612B7AF9CA6DA3BA6 /* tomHi-0a.caf in Resources */ = {isa = PBXBuildFile; fileRef = C4433A3A435531BD05D6A8D0 /* tomHi-0a.caf */; };
+		682F80C85223B7881234ECD2 /* pno-59-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = D89E30D492514EACBA1843CB /* pno-59-1.caf */; };
+		684172FEEB64D5DF59065C0B /* sax-62-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = 4296767CB036C504D71A3DDA /* sax-62-h.caf */; };
+		69362D8E983A7AB7F0ABD673 /* sax-52-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = EC1B98ACF898FE895E4231EA /* sax-52-h.caf */; };
+		6B3B7AA52838070E70B7EA3B /* sax-76-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = 1CFD0166B5EA3EEEB25CBCE5 /* sax-76-h.caf */; };
+		6BDD3CF39C5927CF60A236A7 /* kick-2a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 5988A981E615E30931C01226 /* kick-2a.caf */; };
+		6CEFB6E08B0B26953762B625 /* pno-63-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 6DC5F79786E37D87B94D0EED /* pno-63-1.caf */; };
+		6D540B7BBFF29F2E1C5F67B6 /* sax-57-s.caf in Resources */ = {isa = PBXBuildFile; fileRef = B9FA9FC704F36ABCBC4A7D66 /* sax-57-s.caf */; };
+		6E477EDB4C9C1946B844AE1C /* sax-68-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3CA63CF0B7BFF7C906A2A7CB /* sax-68-h.caf */; };
+		6ED947B852FBFB08607D2932 /* snare-0c.caf in Resources */ = {isa = PBXBuildFile; fileRef = 09EE1B46C7B231BDA2F2836D /* snare-0c.caf */; };
+		6FAC15354574E3EFEE5FFA8C /* sax-64-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = 76D748F28BE5EF7C9FBFC759 /* sax-64-h.caf */; };
 		6FC903FE21D56D54BA26CEA4 /* band-blues-C.json in Resources */ = {isa = PBXBuildFile; fileRef = B439C1F30E776ACBBAA484B4 /* band-blues-C.json */; };
+		704838415DC8A481D5C6B7D0 /* sax-77-s.caf in Resources */ = {isa = PBXBuildFile; fileRef = E8AD1137F6FBE5C43A3EDFEB /* sax-77-s.caf */; };
+		71A51DF5A181701DF1A06D21 /* snare-0b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 6DEE889E3994E8E5713B6AD9 /* snare-0b.caf */; };
+		72CF9CFB1A76C6432E211F12 /* xstick-2a.caf in Resources */ = {isa = PBXBuildFile; fileRef = C109FE965605A2DC16F7E768 /* xstick-2a.caf */; };
+		7370B97614B00E2A3276AB45 /* pno-39-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 6ED0AFEDFA4BA218461534E3 /* pno-39-2.caf */; };
+		738A0B44306722E932463A21 /* snare-2a.caf in Resources */ = {isa = PBXBuildFile; fileRef = B6B961F31B77D407FE373042 /* snare-2a.caf */; };
+		73D31E854898BB54BE5D4C0D /* Instrument.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE0C764EDD9366AB37F8E78E /* Instrument.swift */; };
+		74BC4FE48F113110142AC7CF /* saxl-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3F2FD4DE4AC8AC4E9E3A9F9C /* saxl-44.caf */; };
+		76E53571BD035AC1A63BA92C /* pno-31-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = D73559429F2291BC686D58A5 /* pno-31-1.caf */; };
+		77E9F2CEBF5BD006B24FB757 /* tomHi-2a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 449E04F01FEF02B7B2D08BA8 /* tomHi-2a.caf */; };
 		7943EE24325ECDBDE8F2DC64 /* KeyCatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 675DE36B1651AEB98E028168 /* KeyCatcher.swift */; };
 		7B34046ADB043B025F94F98D /* lesson-A1.json in Resources */ = {isa = PBXBuildFile; fileRef = C25F3D56D94936B2DB7D9989 /* lesson-A1.json */; };
-		89DC7130DA16A846E31355BF /* oh.wav in Resources */ = {isa = PBXBuildFile; fileRef = 3B24B0C43F13B32DC25BE959 /* oh.wav */; };
+		7C07E662DBA124C5672FF25B /* tomLo-0b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 43CCE047F0CB28E4512B87DE /* tomLo-0b.caf */; };
+		7C2698A630B701D951490B4E /* tomLo-1b.caf in Resources */ = {isa = PBXBuildFile; fileRef = F9CECDA90CD7CA866FFACF54 /* tomLo-1b.caf */; };
+		7DF4441A9D456C3587915C5F /* pno-87-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 5B9CEE9C210FA1CC4EA6DF0E /* pno-87-2.caf */; };
+		7E7A372205C9BBE39C9F63A2 /* pno-67-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = F984F5DD7E138B6EC34CB614 /* pno-67-1.caf */; };
+		7EA77C1F1D8AD73E61C31437 /* bass-28.caf in Resources */ = {isa = PBXBuildFile; fileRef = B26AA27B8C81AECA090C9123 /* bass-28.caf */; };
+		803E2A82DB22813C19463E0E /* sax-84-s.caf in Resources */ = {isa = PBXBuildFile; fileRef = FA1B9F94998ABCB1BC013DDD /* sax-84-s.caf */; };
+		8139EAE75275B27D767EF818 /* snare-3c.caf in Resources */ = {isa = PBXBuildFile; fileRef = AD8A3ACF263A0B9CE23283FB /* snare-3c.caf */; };
+		861E94056201983476A0C3AB /* crash-1b.caf in Resources */ = {isa = PBXBuildFile; fileRef = CC2CC4DF332B094AAC005AD4 /* crash-1b.caf */; };
+		8704BAB326417DF36B36659F /* pno-85-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 94531D8F79AEF879A04254AB /* pno-85-2.caf */; };
+		8933D62E32589DF348615AD6 /* pno-39-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3C8AB3B36F288B90FF3273DE /* pno-39-1.caf */; };
+		896A67B877A6CDB7653B1480 /* pno-95-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = BC4DC980AB417352A92222A0 /* pno-95-1.caf */; };
+		8A0960B42196667C75B9C38E /* pno-43-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = E7447478F83F7B3F078A972A /* pno-43-2.caf */; };
+		8A25A56C7AE2F99B684A89BC /* tomLo-2b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9B5AC6B39D1D0D30706D4475 /* tomLo-2b.caf */; };
+		8BC9F1FDF95837894516D558 /* snare-4c.caf in Resources */ = {isa = PBXBuildFile; fileRef = 4502C7364A5FFDD4E741859E /* snare-4c.caf */; };
+		8C4335971FDD5A30166788B6 /* sax-76-s.caf in Resources */ = {isa = PBXBuildFile; fileRef = E8A75BFF12540BD4900190A4 /* sax-76-s.caf */; };
+		8CB42237ECE104E76DD1FF0F /* kick-3a.caf in Resources */ = {isa = PBXBuildFile; fileRef = BA8D3FFD426F899480E1192E /* kick-3a.caf */; };
+		8D6167F044A8C8DF0231FA1E /* saxl-80.caf in Resources */ = {isa = PBXBuildFile; fileRef = 92E3091611A2B42DCDC7DB92 /* saxl-80.caf */; };
+		8DA1D85EADB041305B5F2209 /* sax-62-s.caf in Resources */ = {isa = PBXBuildFile; fileRef = F68668DAB6141A89C20A1477 /* sax-62-s.caf */; };
+		8E2DA2F024A0EF0F126C25E5 /* tomHi-2b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3521CBCABC68CBDB076B074E /* tomHi-2b.caf */; };
+		8E426C6D5CCDA7B876ECBB4C /* pno-79-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = C1A9E9109A5089BF3C189ACE /* pno-79-2.caf */; };
+		8E5EEBCF5CD66564E3559CA4 /* ride-0b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 1E11A267B7A20B0074FE2250 /* ride-0b.caf */; };
+		8EDD7CE820B180B655684537 /* pno-53-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = CF27DFEE4B13F6921E0A7589 /* pno-53-1.caf */; };
+		8F19A8029482FBDB1BAD4B64 /* ride-0a.caf in Resources */ = {isa = PBXBuildFile; fileRef = E1343976E0C8B5F8662DD31C /* ride-0a.caf */; };
+		8F89B439F477FBE834B64142 /* hatOpen-1a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 81D324181FB73737AD7F33A9 /* hatOpen-1a.caf */; };
 		90B025AF66C939771B19D42D /* BandRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A356FC5F2FF8CA045494AB8D /* BandRenderer.swift */; };
 		913188C502DC22FAEB177062 /* ChannelStrip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C45267D4102101E567236B /* ChannelStrip.swift */; };
-		964AF3E4320F1FE3C9356582 /* ride.wav in Resources */ = {isa = PBXBuildFile; fileRef = 58AC8AFB1F416909D53165CF /* ride.wav */; };
+		928920684437E2909B8706A3 /* snare-3a.caf in Resources */ = {isa = PBXBuildFile; fileRef = F7EE8892FF3ACE1F8E57E20C /* snare-3a.caf */; };
+		948906CD02A8D0C2AEDB523F /* kick-1a.caf in Resources */ = {isa = PBXBuildFile; fileRef = A06E9F4619CD031C522ED381 /* kick-1a.caf */; };
+		948F62CDB1F5D241BCAC0B69 /* snare-0a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 52E462F831449281758F5101 /* snare-0a.caf */; };
+		95B8120344BA9084DBC9862B /* saxl-88.caf in Resources */ = {isa = PBXBuildFile; fileRef = 694BD5B4735E8135DC2CDC8A /* saxl-88.caf */; };
+		979BA171BBE0DAB97647AE39 /* pno-63-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9369CCDE81A5A12BE9EF962B /* pno-63-2.caf */; };
+		97EE5C691F0371B2529157B4 /* pno-83-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9022E90C399333D8404C732C /* pno-83-2.caf */; };
+		986C0419AE9DFFA1721EF9DD /* pno-33-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 4720E312311BC2DC0BC59CFC /* pno-33-2.caf */; };
 		98A90BB07168F73C2CB64C6D /* PadGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C87F42F08B755A7DD365B4F /* PadGrid.swift */; };
+		99B17B3230B1091D08FAA5B8 /* rideBell-1b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 90C962F13A5E9FD5B86B4D1E /* rideBell-1b.caf */; };
+		9B2B7BD8F914A6A208B36734 /* pno-95-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 619369EF05979A4D439FADCD /* pno-95-2.caf */; };
+		9C763D05EFD44F0DB1967EB4 /* pno-83-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 76503928B2805F4DFE568B23 /* pno-83-1.caf */; };
+		9DCC027ED0C0E1513B50A4D8 /* pno-59-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3A5EF2FC83C903D2F978A526 /* pno-59-2.caf */; };
+		9EBBD48E2700944B76115AE1 /* sax-57-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = 76584AFAC158D7CF1DF38E00 /* sax-57-h.caf */; };
+		A20BFE8869A5292F0974B686 /* hatOpen-2a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 06351291D7D6B4435FAB00DB /* hatOpen-2a.caf */; };
+		A2230ABE5822F3B1FE2451D1 /* crash-0b.caf in Resources */ = {isa = PBXBuildFile; fileRef = C654F066EF66ECB5B4113E74 /* crash-0b.caf */; };
+		A3ECFB4408EF3553D8FB71FE /* sax-70-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = AB1055BF8F56FAC314DB971B /* sax-70-h.caf */; };
+		A4563172F04DAE069130D85A /* sax-56-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = 00B6D6268A832E5804CFFCE6 /* sax-56-h.caf */; };
+		A608EB45A6965E39D1E8AD74 /* saxl-52.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9749BEF30BE468B93DE6053D /* saxl-52.caf */; };
+		A76603B087F55AF96B584EBE /* sax-46-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = E6B4D328B3CC4F1E40DE0A72 /* sax-46-h.caf */; };
+		A76AFE872B38E3376A6F3039 /* saxl-72.caf in Resources */ = {isa = PBXBuildFile; fileRef = 4C853FD5A622D5AC04B93E72 /* saxl-72.caf */; };
+		A8F54C79E0EA50040BF9BCC4 /* rideBell-0b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9EB67C9AF0D6422F1068D2A3 /* rideBell-0b.caf */; };
+		A93FA262D2DF80AF8A6A1CF9 /* sax-54-s.caf in Resources */ = {isa = PBXBuildFile; fileRef = 22D1D642DBE442C7180C21F1 /* sax-54-s.caf */; };
+		ABB7C98A68E5E197B6805AC6 /* bass-30.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3378B0BABC62F445208F5DBA /* bass-30.caf */; };
+		ABD4AEFF7816ABD7648B9CE5 /* sax-48-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = 463B3E2604E55ECBEB1769D5 /* sax-48-h.caf */; };
 		AD4AB405745AED706DBB9E45 /* MIDIInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A745499F18AF47E90C45897 /* MIDIInput.swift */; };
+		AE1A019687DA74CDD30866E0 /* sax-54-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = B8EF0E657DD9D6482D0CAA66 /* sax-54-h.caf */; };
+		B20D9DF1AD1322E57E155F83 /* saxl-78.caf in Resources */ = {isa = PBXBuildFile; fileRef = BDCAB8C4A4181B0997F6D361 /* saxl-78.caf */; };
+		B2544596AA8F5108BD5A904C /* sax-84-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = 087C7F4FCE54EBE926B2A773 /* sax-84-h.caf */; };
+		B27C7B2142102B2727B953FD /* snare-1b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 29AA8EF9E976DF81AAB0A63B /* snare-1b.caf */; };
+		B2C4E58AA08621473A525586 /* pno-57-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 35D653C9B2196E5967894DB5 /* pno-57-2.caf */; };
+		B2FA0C4657E34F3A0DA284C2 /* sax-68-s.caf in Resources */ = {isa = PBXBuildFile; fileRef = 67214A86B8D3126A8B3921DF /* sax-68-s.caf */; };
+		B3DE5FCB4B61E6D826C0B82D /* tomHi-0b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 147A244442CB1D7BBE930EA7 /* tomHi-0b.caf */; };
+		B583B8942D45177E86F16DF0 /* pno-71-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9D49AC24E5E404E221145538 /* pno-71-1.caf */; };
+		B8E69AAB1D546042CCF3F9E8 /* pno-35-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = BE08321A78FC82A54F963A66 /* pno-35-1.caf */; };
+		B928C57F8BF4FB0175EE18AB /* snare-4b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 795F9970B8942259EFDB885C /* snare-4b.caf */; };
+		BA16808884370FFE046386FB /* snare-3b.caf in Resources */ = {isa = PBXBuildFile; fileRef = E85D9BD780857CE82A7D821B /* snare-3b.caf */; };
+		BB472C5307B18E0B8548003E /* pno-31-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = DF145505D6B2AB1E45C372E2 /* pno-31-2.caf */; };
+		BB8816561929F6CF85CFB42B /* pno-33-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 61570467344D53BCCC56F790 /* pno-33-1.caf */; };
+		BC747A87A0025DE844D31489 /* sax-80-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = E8A68FADD6C8EF4BD9726C59 /* sax-80-h.caf */; };
+		BE6B89A1F594657C466C2B8F /* sax-44-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = A223BEFDE8A4D82374CC356F /* sax-44-h.caf */; };
+		C0CEBF0CB2C4DC6D22733813 /* hatFoot-0a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 94CF18C747DD86F37BE68870 /* hatFoot-0a.caf */; };
+		C261EA1C512AA664F717240B /* sax-52-s.caf in Resources */ = {isa = PBXBuildFile; fileRef = E9F200DC2EA47CFB0488A59E /* sax-52-s.caf */; };
+		C4BE5852144CDDC94C8C9A2E /* bass-35.caf in Resources */ = {isa = PBXBuildFile; fileRef = 613351BCBE7AF3D174CAB2A3 /* bass-35.caf */; };
+		C4F23F60B9FC650E6583DAA5 /* pno-55-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = DB90FC03A2A5438F6F53CA7C /* pno-55-2.caf */; };
 		C644B759F0C8337C5B487AC0 /* KeyboardStrip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 880D9001CE96FC6DB96D7635 /* KeyboardStrip.swift */; };
+		C67341B7D9F1F2D374F2E365 /* tomHi-1a.caf in Resources */ = {isa = PBXBuildFile; fileRef = FC1E799921D78CCB8272B10D /* tomHi-1a.caf */; };
+		C80B6F25DA5362B82D201D1B /* xstick-0a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 7286A0A50F4BC75A3FD8881B /* xstick-0a.caf */; };
+		C86460F5BA92AA01CBF5629D /* bass-37.caf in Resources */ = {isa = PBXBuildFile; fileRef = 47D1A351F5FE0725EC15D54E /* bass-37.caf */; };
+		C8BAF1BE6026A27D7E6E2895 /* hat-3b.caf in Resources */ = {isa = PBXBuildFile; fileRef = A0B88D3BA5FAE2AD0B3B9385 /* hat-3b.caf */; };
+		C95504C75C8AD7AC0C7C74E6 /* saxl-58.caf in Resources */ = {isa = PBXBuildFile; fileRef = 1C19A0BA4C401C900E7DC5CA /* saxl-58.caf */; };
+		C9D5166DCE8CEB1942FAB996 /* kick-0b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 82C6BD3B224C6C9D16ADDA69 /* kick-0b.caf */; };
+		CF8437708537B6C104D4863C /* hat-0c.caf in Resources */ = {isa = PBXBuildFile; fileRef = ACAFCFE83B0144D8BD65D236 /* hat-0c.caf */; };
+		D0556E07BABEDDABE5996C09 /* kick-2b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 2C0170A26E6933ACE6978F7E /* kick-2b.caf */; };
+		D158A6D96D8477A4B860A2F3 /* snare-5b.caf in Resources */ = {isa = PBXBuildFile; fileRef = DF075103D924CB5A798DA0F7 /* snare-5b.caf */; };
+		D2ABF92BB4D642D04FABA73E /* pno-87-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = F1DE95F369838540232593BF /* pno-87-1.caf */; };
+		D2E240C801B9FA1CA4D22B33 /* sax-60-s.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9FC9FBF5827AAB4DC69DF3E6 /* sax-60-s.caf */; };
+		D3AEB5F7AD33AAC65EB45B56 /* hat-1a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 29152D630B2A7349CB6B44A0 /* hat-1a.caf */; };
+		D54DBEF9886A6BA2B3B5C222 /* hatOpen-2b.caf in Resources */ = {isa = PBXBuildFile; fileRef = EAF45756394F138573E312EB /* hatOpen-2b.caf */; };
+		D599C23DE48FC54D525D70FB /* pno-55-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 30B01F5D4CC045404821126D /* pno-55-1.caf */; };
+		D6883A965C5C32FBABBBC4D9 /* ride-3a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 7C44911616425535DBCE3DB5 /* ride-3a.caf */; };
+		D750220308274037C24F940F /* kick-4b.caf in Resources */ = {isa = PBXBuildFile; fileRef = EBA13494083E46DEDF03C960 /* kick-4b.caf */; };
+		D8ADA4A1AEEB6E3A93D79C74 /* crash-1a.caf in Resources */ = {isa = PBXBuildFile; fileRef = CA9007E706E3DB2B1C1D276C /* crash-1a.caf */; };
 		D8C651DD600ADF4743305551 /* LessonState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32E41EAC5ED6208C88F089CA /* LessonState.swift */; };
+		D9D5DEBA3C29A033F50B5CD2 /* ride-2a.caf in Resources */ = {isa = PBXBuildFile; fileRef = EAE56DAF3548E3531E7FCA5B /* ride-2a.caf */; };
+		DAAEF22ADCBD3340B25AEDE8 /* pno-85-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 87E776E3CBEC7B371054ACA9 /* pno-85-1.caf */; };
 		DB5BE8CD181CEF0E5A65A9F9 /* LessonEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7E43D9F422D683C7F7E89AB /* LessonEngine.swift */; };
+		DB9796D168524426800FC1E9 /* hat-0b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9CF3FF6959FA2BBE36F9531B /* hat-0b.caf */; };
+		DBA6A5504D2F5E4F47817A7B /* sax-74-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE01F94AD01BB99CFAF34156 /* sax-74-h.caf */; };
 		DC203B315E897EAFBEFF1F87 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 898AE1B7738C7AD8C5E99B04 /* Assets.xcassets */; };
+		DC2BA0E3A834C76308AA00DF /* saxl-50.caf in Resources */ = {isa = PBXBuildFile; fileRef = 0EF8A721DB5F0A472098AA20 /* saxl-50.caf */; };
+		DCB0B6EFFDDD180F2036F7DE /* pno-65-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 66606AB57115E0AD516B9B61 /* pno-65-2.caf */; };
+		DD0C469BBDED0685A8489535 /* pno-91-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 8AFF4F6BD27FDC80B7ACBC9D /* pno-91-1.caf */; };
 		DDF031824410D6EF39EF2FE9 /* TaktApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 691AFBE11E8D755856092C87 /* TaktApp.swift */; };
 		DE7FE10E0696FBE76644959D /* Player.swift in Sources */ = {isa = PBXBuildFile; fileRef = 586FAD0BEBDF739818994F6C /* Player.swift */; };
 		E1427314DA1968F8B4681B13 /* AudioEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0A80DA756328D46986C659 /* AudioEngine.swift */; };
-		F6B568395B20B8AB6B2420B6 /* ch.wav in Resources */ = {isa = PBXBuildFile; fileRef = F2309A443590C63F7A6A4A90 /* ch.wav */; };
+		E15817F171D4406FB89B74F2 /* pno-89-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 1E1A36038FBAEDDDF2A9B412 /* pno-89-2.caf */; };
+		E1DEF78FE20D51DB4583E158 /* tomLo-1a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 8459B1B5C17FEBE776BF938A /* tomLo-1a.caf */; };
+		E23271FC4515584ED3F5F880 /* ride-1b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 38E5F2DEA3C4568CFE64B5DF /* ride-1b.caf */; };
+		E239E8542C20403B055986CC /* bass-32.caf in Resources */ = {isa = PBXBuildFile; fileRef = CC2ADC88D986BE2065233F32 /* bass-32.caf */; };
+		E26E7FB16E7E0E521C28D51B /* pno-37-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = E942B88563949B447AC1803C /* pno-37-2.caf */; };
+		E47FF2AE85EF38BB44A7BA07 /* sax-88-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = 18DAA0E3CE41C2850C2E731E /* sax-88-h.caf */; };
+		E5ACBCA96BE8F0AF220B1E33 /* pno-91-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = D96784C02E07FD06D08596FF /* pno-91-2.caf */; };
+		E774BDD61C1156C59D41CF7B /* pno-49-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = F2398FB95AD7DC541CA86489 /* pno-49-2.caf */; };
+		E7EF9CE28CBF9EC840C3D6C1 /* pno-77-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 257E83FC56D0E283695A710D /* pno-77-1.caf */; };
+		EB31CC8D8DE8310AF2B87711 /* snare-5a.caf in Resources */ = {isa = PBXBuildFile; fileRef = CCF2529159F013410D2D6BB7 /* snare-5a.caf */; };
+		EBD7C30A4E810FD2CDB979F3 /* pno-71-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 570FA5239D315419B76D4672 /* pno-71-2.caf */; };
+		EC244ED42EA4AA85C5445DB0 /* pno-47-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 71EDE15AD673D1FD68168739 /* pno-47-2.caf */; };
+		EC35290F2CD38D974DE48367 /* hat-3c.caf in Resources */ = {isa = PBXBuildFile; fileRef = A66200E551CD99C3A7EA5420 /* hat-3c.caf */; };
+		EDE47F32FE4402A8FBE3F2F5 /* rideBell-1a.caf in Resources */ = {isa = PBXBuildFile; fileRef = CADF682DF4FFC095D7CB3377 /* rideBell-1a.caf */; };
+		EF4FB0CD09BBC3C2E7E0A2CA /* sax-50-s.caf in Resources */ = {isa = PBXBuildFile; fileRef = E1D60F4768483CFFF3FECF07 /* sax-50-s.caf */; };
+		F0D29695A1C134AE3B1841E2 /* bass-29.caf in Resources */ = {isa = PBXBuildFile; fileRef = F12738BF65384901373A6360 /* bass-29.caf */; };
+		F1920F30A6885CC2F9A7E206 /* sax-77-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = CA8259831576B24EAC0A7161 /* sax-77-h.caf */; };
+		F22BE229AFB66BF4F7BCD960 /* hat-4a.caf in Resources */ = {isa = PBXBuildFile; fileRef = CF62F4D73B0FBE658CD710D3 /* hat-4a.caf */; };
+		F253F9056AF51CF1C36B853B /* sax-66-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = FD6DB69401EB79A7363E2D36 /* sax-66-h.caf */; };
+		F25F08A0EAE9E1E187322D64 /* saxl-60.caf in Resources */ = {isa = PBXBuildFile; fileRef = E7E7C5B1DD93C08680DF1C80 /* saxl-60.caf */; };
+		F2B5D3404192E91E7155E21A /* hat-3a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 8D722E42873919D441D35FD1 /* hat-3a.caf */; };
+		F436B0DC1F4A8F0BD1F84725 /* crash-0a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 48AC0F7D07390FEBFAF005B5 /* crash-0a.caf */; };
+		F642AEA417A3CB0F6327BBDB /* kick-0a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 0B0D42BB8380AE4669C98F79 /* kick-0a.caf */; };
 		F6E6BC20DF042E27FE4FA6B3 /* Autoplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61E80E5165303C091E17B75D /* Autoplay.swift */; };
+		F77F687D1923C3CD21700283 /* pno-75-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = E2161FA7E0AAA6E5F02D420C /* pno-75-1.caf */; };
+		F7A90A546F2FC6804D7E52C3 /* saxl-64.caf in Resources */ = {isa = PBXBuildFile; fileRef = E8C48A26C46D6305703C4885 /* saxl-64.caf */; };
+		F7D27D313614185785E479A4 /* pno-53-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = F60CAE3FB86B26E6FB82C74B /* pno-53-2.caf */; };
+		F8E24502312173DD26D0D3E9 /* xstick-1b.caf in Resources */ = {isa = PBXBuildFile; fileRef = E8C2393C103B47FA23C7A834 /* xstick-1b.caf */; };
+		FC04DA1E831302B06B17BB5F /* saxl-76.caf in Resources */ = {isa = PBXBuildFile; fileRef = 175CA8CA5984BD7373EB7478 /* saxl-76.caf */; };
+		FC5A33D72168EC87C930224F /* snare-2b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 964352540F89FAC0C96E0420 /* snare-2b.caf */; };
+		FCD78500B341758546312CD3 /* ride-4a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 82D568263799DBC86389B4D2 /* ride-4a.caf */; };
 		FF098609992B64F48C556EAA /* DebugHooks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 012712C796C3F22B9A027D23 /* DebugHooks.swift */; };
+		FF5C87502FE79492DDDF3107 /* pno-77-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = B95EC50A329C813980EF7937 /* pno-77-2.caf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		004393332020C1E4EF245A84 /* saxl-46.caf */ = {isa = PBXFileReference; path = "saxl-46.caf"; sourceTree = "<group>"; };
+		00B6D6268A832E5804CFFCE6 /* sax-56-h.caf */ = {isa = PBXFileReference; path = "sax-56-h.caf"; sourceTree = "<group>"; };
 		012712C796C3F22B9A027D23 /* DebugHooks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugHooks.swift; sourceTree = "<group>"; };
+		06351291D7D6B4435FAB00DB /* hatOpen-2a.caf */ = {isa = PBXFileReference; path = "hatOpen-2a.caf"; sourceTree = "<group>"; };
+		087C7F4FCE54EBE926B2A773 /* sax-84-h.caf */ = {isa = PBXFileReference; path = "sax-84-h.caf"; sourceTree = "<group>"; };
+		09EE1B46C7B231BDA2F2836D /* snare-0c.caf */ = {isa = PBXFileReference; path = "snare-0c.caf"; sourceTree = "<group>"; };
+		0B0D42BB8380AE4669C98F79 /* kick-0a.caf */ = {isa = PBXFileReference; path = "kick-0a.caf"; sourceTree = "<group>"; };
+		0B26863B63DA1BADC4F27B21 /* bass-33.caf */ = {isa = PBXFileReference; path = "bass-33.caf"; sourceTree = "<group>"; };
 		0C87F42F08B755A7DD365B4F /* PadGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PadGrid.swift; sourceTree = "<group>"; };
 		0C9E81396F74E488321A3DE6 /* Palette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Palette.swift; sourceTree = "<group>"; };
+		0EF8A721DB5F0A472098AA20 /* saxl-50.caf */ = {isa = PBXFileReference; path = "saxl-50.caf"; sourceTree = "<group>"; };
+		1015C3B7893037323D28F441 /* saxl-62.caf */ = {isa = PBXFileReference; path = "saxl-62.caf"; sourceTree = "<group>"; };
+		10C5B9D6572FC6A770B67E87 /* rideBell-0a.caf */ = {isa = PBXFileReference; path = "rideBell-0a.caf"; sourceTree = "<group>"; };
+		114C7B43CE49393D6E343425 /* pno-65-1.caf */ = {isa = PBXFileReference; path = "pno-65-1.caf"; sourceTree = "<group>"; };
+		1225A9C23AAA0DBF395E1311 /* saxl-82.caf */ = {isa = PBXFileReference; path = "saxl-82.caf"; sourceTree = "<group>"; };
+		12273D467BDEFC4939B1545F /* bass-38.caf */ = {isa = PBXFileReference; path = "bass-38.caf"; sourceTree = "<group>"; };
+		147A244442CB1D7BBE930EA7 /* tomHi-0b.caf */ = {isa = PBXFileReference; path = "tomHi-0b.caf"; sourceTree = "<group>"; };
 		16C45267D4102101E567236B /* ChannelStrip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelStrip.swift; sourceTree = "<group>"; };
+		175CA8CA5984BD7373EB7478 /* saxl-76.caf */ = {isa = PBXFileReference; path = "saxl-76.caf"; sourceTree = "<group>"; };
 		181E70467D20AC8A720F563F /* LessonCheck.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonCheck.swift; sourceTree = "<group>"; };
+		18C238908CDBD5AAFD4709D9 /* hat-1c.caf */ = {isa = PBXFileReference; path = "hat-1c.caf"; sourceTree = "<group>"; };
+		18DAA0E3CE41C2850C2E731E /* sax-88-h.caf */ = {isa = PBXFileReference; path = "sax-88-h.caf"; sourceTree = "<group>"; };
+		1959733C08A21E2DAF815CE0 /* hat-2a.caf */ = {isa = PBXFileReference; path = "hat-2a.caf"; sourceTree = "<group>"; };
+		1C19A0BA4C401C900E7DC5CA /* saxl-58.caf */ = {isa = PBXFileReference; path = "saxl-58.caf"; sourceTree = "<group>"; };
+		1CFD0166B5EA3EEEB25CBCE5 /* sax-76-h.caf */ = {isa = PBXFileReference; path = "sax-76-h.caf"; sourceTree = "<group>"; };
+		1D346A64372DD97C2368E256 /* hat-2c.caf */ = {isa = PBXFileReference; path = "hat-2c.caf"; sourceTree = "<group>"; };
+		1E11A267B7A20B0074FE2250 /* ride-0b.caf */ = {isa = PBXFileReference; path = "ride-0b.caf"; sourceTree = "<group>"; };
+		1E1A36038FBAEDDDF2A9B412 /* pno-89-2.caf */ = {isa = PBXFileReference; path = "pno-89-2.caf"; sourceTree = "<group>"; };
+		22D1D642DBE442C7180C21F1 /* sax-54-s.caf */ = {isa = PBXFileReference; path = "sax-54-s.caf"; sourceTree = "<group>"; };
+		249902DF6BD4A108A4229629 /* kick-3b.caf */ = {isa = PBXFileReference; path = "kick-3b.caf"; sourceTree = "<group>"; };
+		257E83FC56D0E283695A710D /* pno-77-1.caf */ = {isa = PBXFileReference; path = "pno-77-1.caf"; sourceTree = "<group>"; };
+		27AB3C2B9B543267B44D0E56 /* snare-1a.caf */ = {isa = PBXFileReference; path = "snare-1a.caf"; sourceTree = "<group>"; };
 		27D942EC6ACE999D537538FE /* TransportClock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransportClock.swift; sourceTree = "<group>"; };
+		29152D630B2A7349CB6B44A0 /* hat-1a.caf */ = {isa = PBXFileReference; path = "hat-1a.caf"; sourceTree = "<group>"; };
+		29AA8EF9E976DF81AAB0A63B /* snare-1b.caf */ = {isa = PBXFileReference; path = "snare-1b.caf"; sourceTree = "<group>"; };
 		2A745499F18AF47E90C45897 /* MIDIInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MIDIInput.swift; sourceTree = "<group>"; };
+		2AE10F73437308FCB63674FE /* snare-2c.caf */ = {isa = PBXFileReference; path = "snare-2c.caf"; sourceTree = "<group>"; };
+		2BAB6DB7B83C48780451217E /* bass-34.caf */ = {isa = PBXFileReference; path = "bass-34.caf"; sourceTree = "<group>"; };
+		2C0170A26E6933ACE6978F7E /* kick-2b.caf */ = {isa = PBXFileReference; path = "kick-2b.caf"; sourceTree = "<group>"; };
+		2DF5AE57DEDD36D4D43ED0B6 /* sax-50-h.caf */ = {isa = PBXFileReference; path = "sax-50-h.caf"; sourceTree = "<group>"; };
+		2FC86C2A9E24F7E687AF3D24 /* sax-81-s.caf */ = {isa = PBXFileReference; path = "sax-81-s.caf"; sourceTree = "<group>"; };
+		30B01F5D4CC045404821126D /* pno-55-1.caf */ = {isa = PBXFileReference; path = "pno-55-1.caf"; sourceTree = "<group>"; };
 		32E41EAC5ED6208C88F089CA /* LessonState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonState.swift; sourceTree = "<group>"; };
+		3378B0BABC62F445208F5DBA /* bass-30.caf */ = {isa = PBXFileReference; path = "bass-30.caf"; sourceTree = "<group>"; };
+		349BFAF58AF88AB685AA1DB7 /* tomHi-1b.caf */ = {isa = PBXFileReference; path = "tomHi-1b.caf"; sourceTree = "<group>"; };
+		3521CBCABC68CBDB076B074E /* tomHi-2b.caf */ = {isa = PBXFileReference; path = "tomHi-2b.caf"; sourceTree = "<group>"; };
+		35D653C9B2196E5967894DB5 /* pno-57-2.caf */ = {isa = PBXFileReference; path = "pno-57-2.caf"; sourceTree = "<group>"; };
 		360CC0D3E4675A3F8F360945 /* Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Typography.swift; sourceTree = "<group>"; };
 		379674C43D4090DBE46D6547 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		3B24B0C43F13B32DC25BE959 /* oh.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = oh.wav; sourceTree = "<group>"; };
+		38E5F2DEA3C4568CFE64B5DF /* ride-1b.caf */ = {isa = PBXFileReference; path = "ride-1b.caf"; sourceTree = "<group>"; };
+		3A5EF2FC83C903D2F978A526 /* pno-59-2.caf */ = {isa = PBXFileReference; path = "pno-59-2.caf"; sourceTree = "<group>"; };
+		3B3C55EDD7385BAD71C09CC8 /* ride-3b.caf */ = {isa = PBXFileReference; path = "ride-3b.caf"; sourceTree = "<group>"; };
+		3BC0A0A5C5D66707D069836B /* saxl-74.caf */ = {isa = PBXFileReference; path = "saxl-74.caf"; sourceTree = "<group>"; };
+		3C8AB3B36F288B90FF3273DE /* pno-39-1.caf */ = {isa = PBXFileReference; path = "pno-39-1.caf"; sourceTree = "<group>"; };
+		3CA63CF0B7BFF7C906A2A7CB /* sax-68-h.caf */ = {isa = PBXFileReference; path = "sax-68-h.caf"; sourceTree = "<group>"; };
+		3F2FD4DE4AC8AC4E9E3A9F9C /* saxl-44.caf */ = {isa = PBXFileReference; path = "saxl-44.caf"; sourceTree = "<group>"; };
 		3FF0590E33E54BA1B15E91B1 /* TransportBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransportBar.swift; sourceTree = "<group>"; };
 		40963202F528F02BF5EEECD8 /* Takt.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Takt.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		428C4046C5DBA2787A283561 /* pno-61-2.caf */ = {isa = PBXFileReference; path = "pno-61-2.caf"; sourceTree = "<group>"; };
+		4296767CB036C504D71A3DDA /* sax-62-h.caf */ = {isa = PBXFileReference; path = "sax-62-h.caf"; sourceTree = "<group>"; };
+		42C68CEB30A9550B8E2FF38A /* hat-2b.caf */ = {isa = PBXFileReference; path = "hat-2b.caf"; sourceTree = "<group>"; };
+		43CCE047F0CB28E4512B87DE /* tomLo-0b.caf */ = {isa = PBXFileReference; path = "tomLo-0b.caf"; sourceTree = "<group>"; };
+		449E04F01FEF02B7B2D08BA8 /* tomHi-2a.caf */ = {isa = PBXFileReference; path = "tomHi-2a.caf"; sourceTree = "<group>"; };
+		4502C7364A5FFDD4E741859E /* snare-4c.caf */ = {isa = PBXFileReference; path = "snare-4c.caf"; sourceTree = "<group>"; };
+		45F5942DC869BC3CF9B9B575 /* saxl-70.caf */ = {isa = PBXFileReference; path = "saxl-70.caf"; sourceTree = "<group>"; };
+		463B3E2604E55ECBEB1769D5 /* sax-48-h.caf */ = {isa = PBXFileReference; path = "sax-48-h.caf"; sourceTree = "<group>"; };
+		4720E312311BC2DC0BC59CFC /* pno-33-2.caf */ = {isa = PBXFileReference; path = "pno-33-2.caf"; sourceTree = "<group>"; };
+		47D1A351F5FE0725EC15D54E /* bass-37.caf */ = {isa = PBXFileReference; path = "bass-37.caf"; sourceTree = "<group>"; };
+		48AC0F7D07390FEBFAF005B5 /* crash-0a.caf */ = {isa = PBXFileReference; path = "crash-0a.caf"; sourceTree = "<group>"; };
+		4C07A23D1D5D9AAEB045EDD9 /* tomLo-0a.caf */ = {isa = PBXFileReference; path = "tomLo-0a.caf"; sourceTree = "<group>"; };
+		4C853FD5A622D5AC04B93E72 /* saxl-72.caf */ = {isa = PBXFileReference; path = "saxl-72.caf"; sourceTree = "<group>"; };
+		4DE1E5CAD21F33442D42DFA1 /* ride-2b.caf */ = {isa = PBXFileReference; path = "ride-2b.caf"; sourceTree = "<group>"; };
+		5195A11F3940B71EB76D0CC6 /* pno-41-2.caf */ = {isa = PBXFileReference; path = "pno-41-2.caf"; sourceTree = "<group>"; };
+		52E462F831449281758F5101 /* snare-0a.caf */ = {isa = PBXFileReference; path = "snare-0a.caf"; sourceTree = "<group>"; };
+		5493818141A471AEC30127DF /* xstick-2b.caf */ = {isa = PBXFileReference; path = "xstick-2b.caf"; sourceTree = "<group>"; };
+		570FA5239D315419B76D4672 /* pno-71-2.caf */ = {isa = PBXFileReference; path = "pno-71-2.caf"; sourceTree = "<group>"; };
+		5719C6805B1BC9CF816F01F4 /* pno-57-1.caf */ = {isa = PBXFileReference; path = "pno-57-1.caf"; sourceTree = "<group>"; };
+		576C37E38AECD1B6E32A7E92 /* pno-73-2.caf */ = {isa = PBXFileReference; path = "pno-73-2.caf"; sourceTree = "<group>"; };
 		586FAD0BEBDF739818994F6C /* Player.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Player.swift; sourceTree = "<group>"; };
-		58AC8AFB1F416909D53165CF /* ride.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = ride.wav; sourceTree = "<group>"; };
-		59FFB7202B526B29939D20AA /* sub-A1.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = "sub-A1.wav"; sourceTree = "<group>"; };
+		59155600836DBCC72DCA030F /* pno-35-2.caf */ = {isa = PBXFileReference; path = "pno-35-2.caf"; sourceTree = "<group>"; };
+		596E344E48305E41CDEDCD58 /* pno-79-1.caf */ = {isa = PBXFileReference; path = "pno-79-1.caf"; sourceTree = "<group>"; };
+		5988A981E615E30931C01226 /* kick-2a.caf */ = {isa = PBXFileReference; path = "kick-2a.caf"; sourceTree = "<group>"; };
+		5A6D4B76937F79D24368F63A /* hatOpen-0b.caf */ = {isa = PBXFileReference; path = "hatOpen-0b.caf"; sourceTree = "<group>"; };
+		5B9CEE9C210FA1CC4EA6DF0E /* pno-87-2.caf */ = {isa = PBXFileReference; path = "pno-87-2.caf"; sourceTree = "<group>"; };
+		60C528CEAD1BA483B07D7AB1 /* saxl-66.caf */ = {isa = PBXFileReference; path = "saxl-66.caf"; sourceTree = "<group>"; };
+		613351BCBE7AF3D174CAB2A3 /* bass-35.caf */ = {isa = PBXFileReference; path = "bass-35.caf"; sourceTree = "<group>"; };
+		61570467344D53BCCC56F790 /* pno-33-1.caf */ = {isa = PBXFileReference; path = "pno-33-1.caf"; sourceTree = "<group>"; };
+		619369EF05979A4D439FADCD /* pno-95-2.caf */ = {isa = PBXFileReference; path = "pno-95-2.caf"; sourceTree = "<group>"; };
 		61E80E5165303C091E17B75D /* Autoplay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Autoplay.swift; sourceTree = "<group>"; };
+		632D8EB5835F18091B02EB79 /* pno-69-2.caf */ = {isa = PBXFileReference; path = "pno-69-2.caf"; sourceTree = "<group>"; };
+		637060E1B27D289D64972055 /* pno-51-1.caf */ = {isa = PBXFileReference; path = "pno-51-1.caf"; sourceTree = "<group>"; };
+		65F4A5C32BB689BA5F03246A /* kick-4a.caf */ = {isa = PBXFileReference; path = "kick-4a.caf"; sourceTree = "<group>"; };
+		66606AB57115E0AD516B9B61 /* pno-65-2.caf */ = {isa = PBXFileReference; path = "pno-65-2.caf"; sourceTree = "<group>"; };
+		67214A86B8D3126A8B3921DF /* sax-68-s.caf */ = {isa = PBXFileReference; path = "sax-68-s.caf"; sourceTree = "<group>"; };
 		675DE36B1651AEB98E028168 /* KeyCatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyCatcher.swift; sourceTree = "<group>"; };
 		691AFBE11E8D755856092C87 /* TaktApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaktApp.swift; sourceTree = "<group>"; };
+		691BBB9CBF5C58C71B45280D /* pno-89-1.caf */ = {isa = PBXFileReference; path = "pno-89-1.caf"; sourceTree = "<group>"; };
+		694BD5B4735E8135DC2CDC8A /* saxl-88.caf */ = {isa = PBXFileReference; path = "saxl-88.caf"; sourceTree = "<group>"; };
+		6B458E030CA01B7F6AA54F62 /* sax-72-s.caf */ = {isa = PBXFileReference; path = "sax-72-s.caf"; sourceTree = "<group>"; };
+		6D0A88D091F8C084FC7CF3B7 /* pno-67-2.caf */ = {isa = PBXFileReference; path = "pno-67-2.caf"; sourceTree = "<group>"; };
+		6DC5F79786E37D87B94D0EED /* pno-63-1.caf */ = {isa = PBXFileReference; path = "pno-63-1.caf"; sourceTree = "<group>"; };
+		6DEE889E3994E8E5713B6AD9 /* snare-0b.caf */ = {isa = PBXFileReference; path = "snare-0b.caf"; sourceTree = "<group>"; };
+		6EA8414D96952B8DF25F4270 /* xstick-1a.caf */ = {isa = PBXFileReference; path = "xstick-1a.caf"; sourceTree = "<group>"; };
+		6ED0AFEDFA4BA218461534E3 /* pno-39-2.caf */ = {isa = PBXFileReference; path = "pno-39-2.caf"; sourceTree = "<group>"; };
+		6F511A5158449D5717BEEF3B /* saxl-68.caf */ = {isa = PBXFileReference; path = "saxl-68.caf"; sourceTree = "<group>"; };
+		70AE5489ED8DD0C0C0F30596 /* pno-73-1.caf */ = {isa = PBXFileReference; path = "pno-73-1.caf"; sourceTree = "<group>"; };
+		71EDE15AD673D1FD68168739 /* pno-47-2.caf */ = {isa = PBXFileReference; path = "pno-47-2.caf"; sourceTree = "<group>"; };
+		7286A0A50F4BC75A3FD8881B /* xstick-0a.caf */ = {isa = PBXFileReference; path = "xstick-0a.caf"; sourceTree = "<group>"; };
+		72FD3F6B35B76A7F8829D411 /* sax-86-h.caf */ = {isa = PBXFileReference; path = "sax-86-h.caf"; sourceTree = "<group>"; };
+		76503928B2805F4DFE568B23 /* pno-83-1.caf */ = {isa = PBXFileReference; path = "pno-83-1.caf"; sourceTree = "<group>"; };
+		76584AFAC158D7CF1DF38E00 /* sax-57-h.caf */ = {isa = PBXFileReference; path = "sax-57-h.caf"; sourceTree = "<group>"; };
+		76D748F28BE5EF7C9FBFC759 /* sax-64-h.caf */ = {isa = PBXFileReference; path = "sax-64-h.caf"; sourceTree = "<group>"; };
+		779DBDE154DF8B5AAD17D2F2 /* xstick-0b.caf */ = {isa = PBXFileReference; path = "xstick-0b.caf"; sourceTree = "<group>"; };
+		795F9970B8942259EFDB885C /* snare-4b.caf */ = {isa = PBXFileReference; path = "snare-4b.caf"; sourceTree = "<group>"; };
+		7B4DB1EF0F0433B417F786C0 /* saxl-54.caf */ = {isa = PBXFileReference; path = "saxl-54.caf"; sourceTree = "<group>"; };
+		7C44911616425535DBCE3DB5 /* ride-3a.caf */ = {isa = PBXFileReference; path = "ride-3a.caf"; sourceTree = "<group>"; };
+		81D324181FB73737AD7F33A9 /* hatOpen-1a.caf */ = {isa = PBXFileReference; path = "hatOpen-1a.caf"; sourceTree = "<group>"; };
+		81F9E22985C2E7F376263C4A /* pno-81-2.caf */ = {isa = PBXFileReference; path = "pno-81-2.caf"; sourceTree = "<group>"; };
+		82C6BD3B224C6C9D16ADDA69 /* kick-0b.caf */ = {isa = PBXFileReference; path = "kick-0b.caf"; sourceTree = "<group>"; };
+		82D568263799DBC86389B4D2 /* ride-4a.caf */ = {isa = PBXFileReference; path = "ride-4a.caf"; sourceTree = "<group>"; };
+		8459B1B5C17FEBE776BF938A /* tomLo-1a.caf */ = {isa = PBXFileReference; path = "tomLo-1a.caf"; sourceTree = "<group>"; };
+		847341D978FA2A7C24EA9434 /* sax-74-s.caf */ = {isa = PBXFileReference; path = "sax-74-s.caf"; sourceTree = "<group>"; };
+		84A09E251139CFA659480F99 /* saxl-84.caf */ = {isa = PBXFileReference; path = "saxl-84.caf"; sourceTree = "<group>"; };
+		87E776E3CBEC7B371054ACA9 /* pno-85-1.caf */ = {isa = PBXFileReference; path = "pno-85-1.caf"; sourceTree = "<group>"; };
 		880D9001CE96FC6DB96D7635 /* KeyboardStrip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardStrip.swift; sourceTree = "<group>"; };
 		898AE1B7738C7AD8C5E99B04 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		92D7893886A0DD2413287A87 /* snare.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = snare.wav; sourceTree = "<group>"; };
+		8AFF4F6BD27FDC80B7ACBC9D /* pno-91-1.caf */ = {isa = PBXFileReference; path = "pno-91-1.caf"; sourceTree = "<group>"; };
+		8D722E42873919D441D35FD1 /* hat-3a.caf */ = {isa = PBXFileReference; path = "hat-3a.caf"; sourceTree = "<group>"; };
+		9022E90C399333D8404C732C /* pno-83-2.caf */ = {isa = PBXFileReference; path = "pno-83-2.caf"; sourceTree = "<group>"; };
+		90938465F2979109AAE2AF26 /* pno-49-1.caf */ = {isa = PBXFileReference; path = "pno-49-1.caf"; sourceTree = "<group>"; };
+		90C962F13A5E9FD5B86B4D1E /* rideBell-1b.caf */ = {isa = PBXFileReference; path = "rideBell-1b.caf"; sourceTree = "<group>"; };
+		92E3091611A2B42DCDC7DB92 /* saxl-80.caf */ = {isa = PBXFileReference; path = "saxl-80.caf"; sourceTree = "<group>"; };
+		9369CCDE81A5A12BE9EF962B /* pno-63-2.caf */ = {isa = PBXFileReference; path = "pno-63-2.caf"; sourceTree = "<group>"; };
+		94531D8F79AEF879A04254AB /* pno-85-2.caf */ = {isa = PBXFileReference; path = "pno-85-2.caf"; sourceTree = "<group>"; };
+		94CF18C747DD86F37BE68870 /* hatFoot-0a.caf */ = {isa = PBXFileReference; path = "hatFoot-0a.caf"; sourceTree = "<group>"; };
+		964352540F89FAC0C96E0420 /* snare-2b.caf */ = {isa = PBXFileReference; path = "snare-2b.caf"; sourceTree = "<group>"; };
+		9749BEF30BE468B93DE6053D /* saxl-52.caf */ = {isa = PBXFileReference; path = "saxl-52.caf"; sourceTree = "<group>"; };
+		9887F83D6990F74ED1B9207B /* snare-1c.caf */ = {isa = PBXFileReference; path = "snare-1c.caf"; sourceTree = "<group>"; };
+		9B5AC6B39D1D0D30706D4475 /* tomLo-2b.caf */ = {isa = PBXFileReference; path = "tomLo-2b.caf"; sourceTree = "<group>"; };
+		9CF3FF6959FA2BBE36F9531B /* hat-0b.caf */ = {isa = PBXFileReference; path = "hat-0b.caf"; sourceTree = "<group>"; };
+		9D49AC24E5E404E221145538 /* pno-71-1.caf */ = {isa = PBXFileReference; path = "pno-71-1.caf"; sourceTree = "<group>"; };
+		9E784B77A99187B44D2F3021 /* snare-5c.caf */ = {isa = PBXFileReference; path = "snare-5c.caf"; sourceTree = "<group>"; };
+		9EB67C9AF0D6422F1068D2A3 /* rideBell-0b.caf */ = {isa = PBXFileReference; path = "rideBell-0b.caf"; sourceTree = "<group>"; };
+		9FC9FBF5827AAB4DC69DF3E6 /* sax-60-s.caf */ = {isa = PBXFileReference; path = "sax-60-s.caf"; sourceTree = "<group>"; };
+		A06E9F4619CD031C522ED381 /* kick-1a.caf */ = {isa = PBXFileReference; path = "kick-1a.caf"; sourceTree = "<group>"; };
+		A0B88D3BA5FAE2AD0B3B9385 /* hat-3b.caf */ = {isa = PBXFileReference; path = "hat-3b.caf"; sourceTree = "<group>"; };
+		A211F35B335C327CB7954B83 /* hatOpen-0a.caf */ = {isa = PBXFileReference; path = "hatOpen-0a.caf"; sourceTree = "<group>"; };
+		A223BEFDE8A4D82374CC356F /* sax-44-h.caf */ = {isa = PBXFileReference; path = "sax-44-h.caf"; sourceTree = "<group>"; };
 		A356FC5F2FF8CA045494AB8D /* BandRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BandRenderer.swift; sourceTree = "<group>"; };
-		AC7BE2C8710D5FC0BFBF3DC2 /* rimshot.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = rimshot.wav; sourceTree = "<group>"; };
-		B196FE38F75BC760CE5A0A0F /* sub-G1.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = "sub-G1.wav"; sourceTree = "<group>"; };
+		A5A6E1F7F4B26999D7BB16D6 /* instruments.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = instruments.json; sourceTree = "<group>"; };
+		A66200E551CD99C3A7EA5420 /* hat-3c.caf */ = {isa = PBXFileReference; path = "hat-3c.caf"; sourceTree = "<group>"; };
+		A90516563580959F36C82E8A /* pno-69-1.caf */ = {isa = PBXFileReference; path = "pno-69-1.caf"; sourceTree = "<group>"; };
+		AB1055BF8F56FAC314DB971B /* sax-70-h.caf */ = {isa = PBXFileReference; path = "sax-70-h.caf"; sourceTree = "<group>"; };
+		ACAFCFE83B0144D8BD65D236 /* hat-0c.caf */ = {isa = PBXFileReference; path = "hat-0c.caf"; sourceTree = "<group>"; };
+		AD8A3ACF263A0B9CE23283FB /* snare-3c.caf */ = {isa = PBXFileReference; path = "snare-3c.caf"; sourceTree = "<group>"; };
+		B26AA27B8C81AECA090C9123 /* bass-28.caf */ = {isa = PBXFileReference; path = "bass-28.caf"; sourceTree = "<group>"; };
+		B3A468091F78A4DA2AF64B51 /* sax-72-h.caf */ = {isa = PBXFileReference; path = "sax-72-h.caf"; sourceTree = "<group>"; };
 		B439C1F30E776ACBBAA484B4 /* band-blues-C.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "band-blues-C.json"; sourceTree = "<group>"; };
+		B5EBAA5D48502B37AFBA5F83 /* sax-81-h.caf */ = {isa = PBXFileReference; path = "sax-81-h.caf"; sourceTree = "<group>"; };
+		B6B961F31B77D407FE373042 /* snare-2a.caf */ = {isa = PBXFileReference; path = "snare-2a.caf"; sourceTree = "<group>"; };
+		B85928F90C85C89D592A62C8 /* hat-4b.caf */ = {isa = PBXFileReference; path = "hat-4b.caf"; sourceTree = "<group>"; };
+		B8EF0E657DD9D6482D0CAA66 /* sax-54-h.caf */ = {isa = PBXFileReference; path = "sax-54-h.caf"; sourceTree = "<group>"; };
+		B92BB72CACB4C5672A4BEE11 /* bass-31.caf */ = {isa = PBXFileReference; path = "bass-31.caf"; sourceTree = "<group>"; };
+		B95EC50A329C813980EF7937 /* pno-77-2.caf */ = {isa = PBXFileReference; path = "pno-77-2.caf"; sourceTree = "<group>"; };
+		B9FA9FC704F36ABCBC4A7D66 /* sax-57-s.caf */ = {isa = PBXFileReference; path = "sax-57-s.caf"; sourceTree = "<group>"; };
+		BA8D3FFD426F899480E1192E /* kick-3a.caf */ = {isa = PBXFileReference; path = "kick-3a.caf"; sourceTree = "<group>"; };
+		BC4DC980AB417352A92222A0 /* pno-95-1.caf */ = {isa = PBXFileReference; path = "pno-95-1.caf"; sourceTree = "<group>"; };
 		BCFFFD49EB39BF2E6BAC0767 /* Motifs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Motifs.swift; sourceTree = "<group>"; };
+		BDCAB8C4A4181B0997F6D361 /* saxl-78.caf */ = {isa = PBXFileReference; path = "saxl-78.caf"; sourceTree = "<group>"; };
+		BE08321A78FC82A54F963A66 /* pno-35-1.caf */ = {isa = PBXFileReference; path = "pno-35-1.caf"; sourceTree = "<group>"; };
+		BF742A92A81E039E40AFD61F /* sax-56-s.caf */ = {isa = PBXFileReference; path = "sax-56-s.caf"; sourceTree = "<group>"; };
+		C109FE965605A2DC16F7E768 /* xstick-2a.caf */ = {isa = PBXFileReference; path = "xstick-2a.caf"; sourceTree = "<group>"; };
+		C1A9E9109A5089BF3C189ACE /* pno-79-2.caf */ = {isa = PBXFileReference; path = "pno-79-2.caf"; sourceTree = "<group>"; };
+		C2038C1A05337D1214E40BCF /* pno-37-1.caf */ = {isa = PBXFileReference; path = "pno-37-1.caf"; sourceTree = "<group>"; };
 		C25F3D56D94936B2DB7D9989 /* lesson-A1.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "lesson-A1.json"; sourceTree = "<group>"; };
+		C29C4C33EBDFC92B4AE5359C /* hat-1b.caf */ = {isa = PBXFileReference; path = "hat-1b.caf"; sourceTree = "<group>"; };
+		C2B9463350106EA3B68E80C0 /* pno-41-1.caf */ = {isa = PBXFileReference; path = "pno-41-1.caf"; sourceTree = "<group>"; };
+		C3EBB7D90C5D7B4E06CAC8E7 /* hat-0a.caf */ = {isa = PBXFileReference; path = "hat-0a.caf"; sourceTree = "<group>"; };
+		C4433A3A435531BD05D6A8D0 /* tomHi-0a.caf */ = {isa = PBXFileReference; path = "tomHi-0a.caf"; sourceTree = "<group>"; };
 		C5E40801CC98A659B7FBBD8E /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		C654F066EF66ECB5B4113E74 /* crash-0b.caf */ = {isa = PBXFileReference; path = "crash-0b.caf"; sourceTree = "<group>"; };
+		C6F972FD0AD385D24F86BF29 /* bass-39.caf */ = {isa = PBXFileReference; path = "bass-39.caf"; sourceTree = "<group>"; };
 		C7E43D9F422D683C7F7E89AB /* LessonEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonEngine.swift; sourceTree = "<group>"; };
 		CA77ED30BAF689A04B1E5B94 /* LessonScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonScreen.swift; sourceTree = "<group>"; };
-		CC03391D5E8D735B6F46263E /* sub-C2.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = "sub-C2.wav"; sourceTree = "<group>"; };
+		CA8259831576B24EAC0A7161 /* sax-77-h.caf */ = {isa = PBXFileReference; path = "sax-77-h.caf"; sourceTree = "<group>"; };
+		CA9007E706E3DB2B1C1D276C /* crash-1a.caf */ = {isa = PBXFileReference; path = "crash-1a.caf"; sourceTree = "<group>"; };
+		CADF682DF4FFC095D7CB3377 /* rideBell-1a.caf */ = {isa = PBXFileReference; path = "rideBell-1a.caf"; sourceTree = "<group>"; };
+		CC2ADC88D986BE2065233F32 /* bass-32.caf */ = {isa = PBXFileReference; path = "bass-32.caf"; sourceTree = "<group>"; };
+		CC2CC4DF332B094AAC005AD4 /* crash-1b.caf */ = {isa = PBXFileReference; path = "crash-1b.caf"; sourceTree = "<group>"; };
+		CCA2EA02E8232F37FDBBC86D /* pno-43-1.caf */ = {isa = PBXFileReference; path = "pno-43-1.caf"; sourceTree = "<group>"; };
+		CCF2529159F013410D2D6BB7 /* snare-5a.caf */ = {isa = PBXFileReference; path = "snare-5a.caf"; sourceTree = "<group>"; };
+		CD280DD166F8AFF0E3DFABE3 /* tomLo-2a.caf */ = {isa = PBXFileReference; path = "tomLo-2a.caf"; sourceTree = "<group>"; };
+		CD7DE42E8110478BE27986CC /* pno-45-1.caf */ = {isa = PBXFileReference; path = "pno-45-1.caf"; sourceTree = "<group>"; };
+		CDD8BDE4868C7184EE587761 /* pno-45-2.caf */ = {isa = PBXFileReference; path = "pno-45-2.caf"; sourceTree = "<group>"; };
+		CE01F94AD01BB99CFAF34156 /* sax-74-h.caf */ = {isa = PBXFileReference; path = "sax-74-h.caf"; sourceTree = "<group>"; };
+		CF27DFEE4B13F6921E0A7589 /* pno-53-1.caf */ = {isa = PBXFileReference; path = "pno-53-1.caf"; sourceTree = "<group>"; };
+		CF62F4D73B0FBE658CD710D3 /* hat-4a.caf */ = {isa = PBXFileReference; path = "hat-4a.caf"; sourceTree = "<group>"; };
 		CF651FEB253E5456168706DA /* Voices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Voices.swift; sourceTree = "<group>"; };
+		D4123B82EEB06216B8B06790 /* hat-4c.caf */ = {isa = PBXFileReference; path = "hat-4c.caf"; sourceTree = "<group>"; };
+		D5671658EBED1C841D01BAFD /* pno-93-2.caf */ = {isa = PBXFileReference; path = "pno-93-2.caf"; sourceTree = "<group>"; };
 		D59BC4A000D534C926E8B67C /* Lesson.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lesson.swift; sourceTree = "<group>"; };
+		D73559429F2291BC686D58A5 /* pno-31-1.caf */ = {isa = PBXFileReference; path = "pno-31-1.caf"; sourceTree = "<group>"; };
+		D89E30D492514EACBA1843CB /* pno-59-1.caf */ = {isa = PBXFileReference; path = "pno-59-1.caf"; sourceTree = "<group>"; };
 		D8AEBBD36AEADCD7786A2457 /* Scorer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scorer.swift; sourceTree = "<group>"; };
+		D8D57E218B31B619BE8A8B79 /* hatOpen-1b.caf */ = {isa = PBXFileReference; path = "hatOpen-1b.caf"; sourceTree = "<group>"; };
+		D96784C02E07FD06D08596FF /* pno-91-2.caf */ = {isa = PBXFileReference; path = "pno-91-2.caf"; sourceTree = "<group>"; };
+		DB90FC03A2A5438F6F53CA7C /* pno-55-2.caf */ = {isa = PBXFileReference; path = "pno-55-2.caf"; sourceTree = "<group>"; };
+		DD0065C8219E4D6D361B6BA4 /* saxl-48.caf */ = {isa = PBXFileReference; path = "saxl-48.caf"; sourceTree = "<group>"; };
+		DE0C764EDD9366AB37F8E78E /* Instrument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Instrument.swift; sourceTree = "<group>"; };
+		DF075103D924CB5A798DA0F7 /* snare-5b.caf */ = {isa = PBXFileReference; path = "snare-5b.caf"; sourceTree = "<group>"; };
+		DF145505D6B2AB1E45C372E2 /* pno-31-2.caf */ = {isa = PBXFileReference; path = "pno-31-2.caf"; sourceTree = "<group>"; };
+		E090E9EA4DAA483D79A5CD77 /* snare-4a.caf */ = {isa = PBXFileReference; path = "snare-4a.caf"; sourceTree = "<group>"; };
+		E1343976E0C8B5F8662DD31C /* ride-0a.caf */ = {isa = PBXFileReference; path = "ride-0a.caf"; sourceTree = "<group>"; };
+		E1D60F4768483CFFF3FECF07 /* sax-50-s.caf */ = {isa = PBXFileReference; path = "sax-50-s.caf"; sourceTree = "<group>"; };
+		E2161FA7E0AAA6E5F02D420C /* pno-75-1.caf */ = {isa = PBXFileReference; path = "pno-75-1.caf"; sourceTree = "<group>"; };
 		E35CB620AC7721CE809CB3C0 /* BandData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BandData.swift; sourceTree = "<group>"; };
-		F2309A443590C63F7A6A4A90 /* ch.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = ch.wav; sourceTree = "<group>"; };
-		F34520AB295DC5306DF9FF50 /* kick.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = kick.wav; sourceTree = "<group>"; };
+		E3E4FC79A99C3303B6818F63 /* pno-61-1.caf */ = {isa = PBXFileReference; path = "pno-61-1.caf"; sourceTree = "<group>"; };
+		E4C4ED92F717DBEEBE684CD6 /* pno-93-1.caf */ = {isa = PBXFileReference; path = "pno-93-1.caf"; sourceTree = "<group>"; };
+		E6B4D328B3CC4F1E40DE0A72 /* sax-46-h.caf */ = {isa = PBXFileReference; path = "sax-46-h.caf"; sourceTree = "<group>"; };
+		E7447478F83F7B3F078A972A /* pno-43-2.caf */ = {isa = PBXFileReference; path = "pno-43-2.caf"; sourceTree = "<group>"; };
+		E7D3256E72BF07EB6ACF1AC6 /* pno-47-1.caf */ = {isa = PBXFileReference; path = "pno-47-1.caf"; sourceTree = "<group>"; };
+		E7E7C5B1DD93C08680DF1C80 /* saxl-60.caf */ = {isa = PBXFileReference; path = "saxl-60.caf"; sourceTree = "<group>"; };
+		E85D9BD780857CE82A7D821B /* snare-3b.caf */ = {isa = PBXFileReference; path = "snare-3b.caf"; sourceTree = "<group>"; };
+		E8A68FADD6C8EF4BD9726C59 /* sax-80-h.caf */ = {isa = PBXFileReference; path = "sax-80-h.caf"; sourceTree = "<group>"; };
+		E8A75BFF12540BD4900190A4 /* sax-76-s.caf */ = {isa = PBXFileReference; path = "sax-76-s.caf"; sourceTree = "<group>"; };
+		E8AD1137F6FBE5C43A3EDFEB /* sax-77-s.caf */ = {isa = PBXFileReference; path = "sax-77-s.caf"; sourceTree = "<group>"; };
+		E8C2393C103B47FA23C7A834 /* xstick-1b.caf */ = {isa = PBXFileReference; path = "xstick-1b.caf"; sourceTree = "<group>"; };
+		E8C48A26C46D6305703C4885 /* saxl-64.caf */ = {isa = PBXFileReference; path = "saxl-64.caf"; sourceTree = "<group>"; };
+		E942B88563949B447AC1803C /* pno-37-2.caf */ = {isa = PBXFileReference; path = "pno-37-2.caf"; sourceTree = "<group>"; };
+		E9CDF65C85CCE001F6524983 /* saxl-86.caf */ = {isa = PBXFileReference; path = "saxl-86.caf"; sourceTree = "<group>"; };
+		E9F200DC2EA47CFB0488A59E /* sax-52-s.caf */ = {isa = PBXFileReference; path = "sax-52-s.caf"; sourceTree = "<group>"; };
+		EA528344B003B7949FDCAD43 /* pno-75-2.caf */ = {isa = PBXFileReference; path = "pno-75-2.caf"; sourceTree = "<group>"; };
+		EA91ACB18EDA2F1CC37EF5DE /* hatFoot-0b.caf */ = {isa = PBXFileReference; path = "hatFoot-0b.caf"; sourceTree = "<group>"; };
+		EAE56DAF3548E3531E7FCA5B /* ride-2a.caf */ = {isa = PBXFileReference; path = "ride-2a.caf"; sourceTree = "<group>"; };
+		EAF45756394F138573E312EB /* hatOpen-2b.caf */ = {isa = PBXFileReference; path = "hatOpen-2b.caf"; sourceTree = "<group>"; };
+		EBA13494083E46DEDF03C960 /* kick-4b.caf */ = {isa = PBXFileReference; path = "kick-4b.caf"; sourceTree = "<group>"; };
+		EC1B98ACF898FE895E4231EA /* sax-52-h.caf */ = {isa = PBXFileReference; path = "sax-52-h.caf"; sourceTree = "<group>"; };
+		EC1F2F025FFD570FE5193E0D /* bass-36.caf */ = {isa = PBXFileReference; path = "bass-36.caf"; sourceTree = "<group>"; };
+		EFFA08C2D957ECE763A247E6 /* saxl-56.caf */ = {isa = PBXFileReference; path = "saxl-56.caf"; sourceTree = "<group>"; };
+		F08D6CCFCF70D2EC893912D1 /* sax-64-s.caf */ = {isa = PBXFileReference; path = "sax-64-s.caf"; sourceTree = "<group>"; };
+		F12738BF65384901373A6360 /* bass-29.caf */ = {isa = PBXFileReference; path = "bass-29.caf"; sourceTree = "<group>"; };
+		F1B53C17BA5F4CF3F1808195 /* pno-51-2.caf */ = {isa = PBXFileReference; path = "pno-51-2.caf"; sourceTree = "<group>"; };
+		F1DE95F369838540232593BF /* pno-87-1.caf */ = {isa = PBXFileReference; path = "pno-87-1.caf"; sourceTree = "<group>"; };
+		F2398FB95AD7DC541CA86489 /* pno-49-2.caf */ = {isa = PBXFileReference; path = "pno-49-2.caf"; sourceTree = "<group>"; };
+		F2DE7F42AFB5948626DA2249 /* kick-1b.caf */ = {isa = PBXFileReference; path = "kick-1b.caf"; sourceTree = "<group>"; };
+		F46182DA1CDF8141B291AABA /* sax-60-h.caf */ = {isa = PBXFileReference; path = "sax-60-h.caf"; sourceTree = "<group>"; };
+		F471A2196F9AF3B8F004FA9C /* ride-1a.caf */ = {isa = PBXFileReference; path = "ride-1a.caf"; sourceTree = "<group>"; };
+		F60CAE3FB86B26E6FB82C74B /* pno-53-2.caf */ = {isa = PBXFileReference; path = "pno-53-2.caf"; sourceTree = "<group>"; };
+		F67879E7D21DFD9D9DADEBCC /* sax-66-s.caf */ = {isa = PBXFileReference; path = "sax-66-s.caf"; sourceTree = "<group>"; };
+		F68668DAB6141A89C20A1477 /* sax-62-s.caf */ = {isa = PBXFileReference; path = "sax-62-s.caf"; sourceTree = "<group>"; };
+		F7EE8892FF3ACE1F8E57E20C /* snare-3a.caf */ = {isa = PBXFileReference; path = "snare-3a.caf"; sourceTree = "<group>"; };
 		F8C3928533C5BB6418CCBE93 /* CoachPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoachPanel.swift; sourceTree = "<group>"; };
+		F984F5DD7E138B6EC34CB614 /* pno-67-1.caf */ = {isa = PBXFileReference; path = "pno-67-1.caf"; sourceTree = "<group>"; };
+		F9CECDA90CD7CA866FFACF54 /* tomLo-1b.caf */ = {isa = PBXFileReference; path = "tomLo-1b.caf"; sourceTree = "<group>"; };
+		FA1B9F94998ABCB1BC013DDD /* sax-84-s.caf */ = {isa = PBXFileReference; path = "sax-84-s.caf"; sourceTree = "<group>"; };
+		FC1E799921D78CCB8272B10D /* tomHi-1a.caf */ = {isa = PBXFileReference; path = "tomHi-1a.caf"; sourceTree = "<group>"; };
+		FD6DB69401EB79A7363E2D36 /* sax-66-h.caf */ = {isa = PBXFileReference; path = "sax-66-h.caf"; sourceTree = "<group>"; };
+		FDE697BC3A0FD60BC7481DDE /* sax-70-s.caf */ = {isa = PBXFileReference; path = "sax-70-s.caf"; sourceTree = "<group>"; };
+		FEC4048F70F13C6E2582657F /* pno-81-1.caf */ = {isa = PBXFileReference; path = "pno-81-1.caf"; sourceTree = "<group>"; };
 		FF0A80DA756328D46986C659 /* AudioEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioEngine.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -141,6 +581,7 @@
 				FF0A80DA756328D46986C659 /* AudioEngine.swift */,
 				E35CB620AC7721CE809CB3C0 /* BandData.swift */,
 				A356FC5F2FF8CA045494AB8D /* BandRenderer.swift */,
+				DE0C764EDD9366AB37F8E78E /* Instrument.swift */,
 				27D942EC6ACE999D537538FE /* TransportClock.swift */,
 				CF651FEB253E5456168706DA /* Voices.swift */,
 			);
@@ -202,15 +643,234 @@
 		DE9A86160F82DCF6987CF95C /* Sounds */ = {
 			isa = PBXGroup;
 			children = (
-				F2309A443590C63F7A6A4A90 /* ch.wav */,
-				F34520AB295DC5306DF9FF50 /* kick.wav */,
-				3B24B0C43F13B32DC25BE959 /* oh.wav */,
-				58AC8AFB1F416909D53165CF /* ride.wav */,
-				AC7BE2C8710D5FC0BFBF3DC2 /* rimshot.wav */,
-				92D7893886A0DD2413287A87 /* snare.wav */,
-				59FFB7202B526B29939D20AA /* sub-A1.wav */,
-				CC03391D5E8D735B6F46263E /* sub-C2.wav */,
-				B196FE38F75BC760CE5A0A0F /* sub-G1.wav */,
+				B26AA27B8C81AECA090C9123 /* bass-28.caf */,
+				F12738BF65384901373A6360 /* bass-29.caf */,
+				3378B0BABC62F445208F5DBA /* bass-30.caf */,
+				B92BB72CACB4C5672A4BEE11 /* bass-31.caf */,
+				CC2ADC88D986BE2065233F32 /* bass-32.caf */,
+				0B26863B63DA1BADC4F27B21 /* bass-33.caf */,
+				2BAB6DB7B83C48780451217E /* bass-34.caf */,
+				613351BCBE7AF3D174CAB2A3 /* bass-35.caf */,
+				EC1F2F025FFD570FE5193E0D /* bass-36.caf */,
+				47D1A351F5FE0725EC15D54E /* bass-37.caf */,
+				12273D467BDEFC4939B1545F /* bass-38.caf */,
+				C6F972FD0AD385D24F86BF29 /* bass-39.caf */,
+				48AC0F7D07390FEBFAF005B5 /* crash-0a.caf */,
+				C654F066EF66ECB5B4113E74 /* crash-0b.caf */,
+				CA9007E706E3DB2B1C1D276C /* crash-1a.caf */,
+				CC2CC4DF332B094AAC005AD4 /* crash-1b.caf */,
+				C3EBB7D90C5D7B4E06CAC8E7 /* hat-0a.caf */,
+				9CF3FF6959FA2BBE36F9531B /* hat-0b.caf */,
+				ACAFCFE83B0144D8BD65D236 /* hat-0c.caf */,
+				29152D630B2A7349CB6B44A0 /* hat-1a.caf */,
+				C29C4C33EBDFC92B4AE5359C /* hat-1b.caf */,
+				18C238908CDBD5AAFD4709D9 /* hat-1c.caf */,
+				1959733C08A21E2DAF815CE0 /* hat-2a.caf */,
+				42C68CEB30A9550B8E2FF38A /* hat-2b.caf */,
+				1D346A64372DD97C2368E256 /* hat-2c.caf */,
+				8D722E42873919D441D35FD1 /* hat-3a.caf */,
+				A0B88D3BA5FAE2AD0B3B9385 /* hat-3b.caf */,
+				A66200E551CD99C3A7EA5420 /* hat-3c.caf */,
+				CF62F4D73B0FBE658CD710D3 /* hat-4a.caf */,
+				B85928F90C85C89D592A62C8 /* hat-4b.caf */,
+				D4123B82EEB06216B8B06790 /* hat-4c.caf */,
+				94CF18C747DD86F37BE68870 /* hatFoot-0a.caf */,
+				EA91ACB18EDA2F1CC37EF5DE /* hatFoot-0b.caf */,
+				A211F35B335C327CB7954B83 /* hatOpen-0a.caf */,
+				5A6D4B76937F79D24368F63A /* hatOpen-0b.caf */,
+				81D324181FB73737AD7F33A9 /* hatOpen-1a.caf */,
+				D8D57E218B31B619BE8A8B79 /* hatOpen-1b.caf */,
+				06351291D7D6B4435FAB00DB /* hatOpen-2a.caf */,
+				EAF45756394F138573E312EB /* hatOpen-2b.caf */,
+				A5A6E1F7F4B26999D7BB16D6 /* instruments.json */,
+				0B0D42BB8380AE4669C98F79 /* kick-0a.caf */,
+				82C6BD3B224C6C9D16ADDA69 /* kick-0b.caf */,
+				A06E9F4619CD031C522ED381 /* kick-1a.caf */,
+				F2DE7F42AFB5948626DA2249 /* kick-1b.caf */,
+				5988A981E615E30931C01226 /* kick-2a.caf */,
+				2C0170A26E6933ACE6978F7E /* kick-2b.caf */,
+				BA8D3FFD426F899480E1192E /* kick-3a.caf */,
+				249902DF6BD4A108A4229629 /* kick-3b.caf */,
+				65F4A5C32BB689BA5F03246A /* kick-4a.caf */,
+				EBA13494083E46DEDF03C960 /* kick-4b.caf */,
+				D73559429F2291BC686D58A5 /* pno-31-1.caf */,
+				DF145505D6B2AB1E45C372E2 /* pno-31-2.caf */,
+				61570467344D53BCCC56F790 /* pno-33-1.caf */,
+				4720E312311BC2DC0BC59CFC /* pno-33-2.caf */,
+				BE08321A78FC82A54F963A66 /* pno-35-1.caf */,
+				59155600836DBCC72DCA030F /* pno-35-2.caf */,
+				C2038C1A05337D1214E40BCF /* pno-37-1.caf */,
+				E942B88563949B447AC1803C /* pno-37-2.caf */,
+				3C8AB3B36F288B90FF3273DE /* pno-39-1.caf */,
+				6ED0AFEDFA4BA218461534E3 /* pno-39-2.caf */,
+				C2B9463350106EA3B68E80C0 /* pno-41-1.caf */,
+				5195A11F3940B71EB76D0CC6 /* pno-41-2.caf */,
+				CCA2EA02E8232F37FDBBC86D /* pno-43-1.caf */,
+				E7447478F83F7B3F078A972A /* pno-43-2.caf */,
+				CD7DE42E8110478BE27986CC /* pno-45-1.caf */,
+				CDD8BDE4868C7184EE587761 /* pno-45-2.caf */,
+				E7D3256E72BF07EB6ACF1AC6 /* pno-47-1.caf */,
+				71EDE15AD673D1FD68168739 /* pno-47-2.caf */,
+				90938465F2979109AAE2AF26 /* pno-49-1.caf */,
+				F2398FB95AD7DC541CA86489 /* pno-49-2.caf */,
+				637060E1B27D289D64972055 /* pno-51-1.caf */,
+				F1B53C17BA5F4CF3F1808195 /* pno-51-2.caf */,
+				CF27DFEE4B13F6921E0A7589 /* pno-53-1.caf */,
+				F60CAE3FB86B26E6FB82C74B /* pno-53-2.caf */,
+				30B01F5D4CC045404821126D /* pno-55-1.caf */,
+				DB90FC03A2A5438F6F53CA7C /* pno-55-2.caf */,
+				5719C6805B1BC9CF816F01F4 /* pno-57-1.caf */,
+				35D653C9B2196E5967894DB5 /* pno-57-2.caf */,
+				D89E30D492514EACBA1843CB /* pno-59-1.caf */,
+				3A5EF2FC83C903D2F978A526 /* pno-59-2.caf */,
+				E3E4FC79A99C3303B6818F63 /* pno-61-1.caf */,
+				428C4046C5DBA2787A283561 /* pno-61-2.caf */,
+				6DC5F79786E37D87B94D0EED /* pno-63-1.caf */,
+				9369CCDE81A5A12BE9EF962B /* pno-63-2.caf */,
+				114C7B43CE49393D6E343425 /* pno-65-1.caf */,
+				66606AB57115E0AD516B9B61 /* pno-65-2.caf */,
+				F984F5DD7E138B6EC34CB614 /* pno-67-1.caf */,
+				6D0A88D091F8C084FC7CF3B7 /* pno-67-2.caf */,
+				A90516563580959F36C82E8A /* pno-69-1.caf */,
+				632D8EB5835F18091B02EB79 /* pno-69-2.caf */,
+				9D49AC24E5E404E221145538 /* pno-71-1.caf */,
+				570FA5239D315419B76D4672 /* pno-71-2.caf */,
+				70AE5489ED8DD0C0C0F30596 /* pno-73-1.caf */,
+				576C37E38AECD1B6E32A7E92 /* pno-73-2.caf */,
+				E2161FA7E0AAA6E5F02D420C /* pno-75-1.caf */,
+				EA528344B003B7949FDCAD43 /* pno-75-2.caf */,
+				257E83FC56D0E283695A710D /* pno-77-1.caf */,
+				B95EC50A329C813980EF7937 /* pno-77-2.caf */,
+				596E344E48305E41CDEDCD58 /* pno-79-1.caf */,
+				C1A9E9109A5089BF3C189ACE /* pno-79-2.caf */,
+				FEC4048F70F13C6E2582657F /* pno-81-1.caf */,
+				81F9E22985C2E7F376263C4A /* pno-81-2.caf */,
+				76503928B2805F4DFE568B23 /* pno-83-1.caf */,
+				9022E90C399333D8404C732C /* pno-83-2.caf */,
+				87E776E3CBEC7B371054ACA9 /* pno-85-1.caf */,
+				94531D8F79AEF879A04254AB /* pno-85-2.caf */,
+				F1DE95F369838540232593BF /* pno-87-1.caf */,
+				5B9CEE9C210FA1CC4EA6DF0E /* pno-87-2.caf */,
+				691BBB9CBF5C58C71B45280D /* pno-89-1.caf */,
+				1E1A36038FBAEDDDF2A9B412 /* pno-89-2.caf */,
+				8AFF4F6BD27FDC80B7ACBC9D /* pno-91-1.caf */,
+				D96784C02E07FD06D08596FF /* pno-91-2.caf */,
+				E4C4ED92F717DBEEBE684CD6 /* pno-93-1.caf */,
+				D5671658EBED1C841D01BAFD /* pno-93-2.caf */,
+				BC4DC980AB417352A92222A0 /* pno-95-1.caf */,
+				619369EF05979A4D439FADCD /* pno-95-2.caf */,
+				E1343976E0C8B5F8662DD31C /* ride-0a.caf */,
+				1E11A267B7A20B0074FE2250 /* ride-0b.caf */,
+				F471A2196F9AF3B8F004FA9C /* ride-1a.caf */,
+				38E5F2DEA3C4568CFE64B5DF /* ride-1b.caf */,
+				EAE56DAF3548E3531E7FCA5B /* ride-2a.caf */,
+				4DE1E5CAD21F33442D42DFA1 /* ride-2b.caf */,
+				7C44911616425535DBCE3DB5 /* ride-3a.caf */,
+				3B3C55EDD7385BAD71C09CC8 /* ride-3b.caf */,
+				82D568263799DBC86389B4D2 /* ride-4a.caf */,
+				10C5B9D6572FC6A770B67E87 /* rideBell-0a.caf */,
+				9EB67C9AF0D6422F1068D2A3 /* rideBell-0b.caf */,
+				CADF682DF4FFC095D7CB3377 /* rideBell-1a.caf */,
+				90C962F13A5E9FD5B86B4D1E /* rideBell-1b.caf */,
+				A223BEFDE8A4D82374CC356F /* sax-44-h.caf */,
+				E6B4D328B3CC4F1E40DE0A72 /* sax-46-h.caf */,
+				463B3E2604E55ECBEB1769D5 /* sax-48-h.caf */,
+				2DF5AE57DEDD36D4D43ED0B6 /* sax-50-h.caf */,
+				E1D60F4768483CFFF3FECF07 /* sax-50-s.caf */,
+				EC1B98ACF898FE895E4231EA /* sax-52-h.caf */,
+				E9F200DC2EA47CFB0488A59E /* sax-52-s.caf */,
+				B8EF0E657DD9D6482D0CAA66 /* sax-54-h.caf */,
+				22D1D642DBE442C7180C21F1 /* sax-54-s.caf */,
+				00B6D6268A832E5804CFFCE6 /* sax-56-h.caf */,
+				BF742A92A81E039E40AFD61F /* sax-56-s.caf */,
+				76584AFAC158D7CF1DF38E00 /* sax-57-h.caf */,
+				B9FA9FC704F36ABCBC4A7D66 /* sax-57-s.caf */,
+				F46182DA1CDF8141B291AABA /* sax-60-h.caf */,
+				9FC9FBF5827AAB4DC69DF3E6 /* sax-60-s.caf */,
+				4296767CB036C504D71A3DDA /* sax-62-h.caf */,
+				F68668DAB6141A89C20A1477 /* sax-62-s.caf */,
+				76D748F28BE5EF7C9FBFC759 /* sax-64-h.caf */,
+				F08D6CCFCF70D2EC893912D1 /* sax-64-s.caf */,
+				FD6DB69401EB79A7363E2D36 /* sax-66-h.caf */,
+				F67879E7D21DFD9D9DADEBCC /* sax-66-s.caf */,
+				3CA63CF0B7BFF7C906A2A7CB /* sax-68-h.caf */,
+				67214A86B8D3126A8B3921DF /* sax-68-s.caf */,
+				AB1055BF8F56FAC314DB971B /* sax-70-h.caf */,
+				FDE697BC3A0FD60BC7481DDE /* sax-70-s.caf */,
+				B3A468091F78A4DA2AF64B51 /* sax-72-h.caf */,
+				6B458E030CA01B7F6AA54F62 /* sax-72-s.caf */,
+				CE01F94AD01BB99CFAF34156 /* sax-74-h.caf */,
+				847341D978FA2A7C24EA9434 /* sax-74-s.caf */,
+				1CFD0166B5EA3EEEB25CBCE5 /* sax-76-h.caf */,
+				E8A75BFF12540BD4900190A4 /* sax-76-s.caf */,
+				CA8259831576B24EAC0A7161 /* sax-77-h.caf */,
+				E8AD1137F6FBE5C43A3EDFEB /* sax-77-s.caf */,
+				E8A68FADD6C8EF4BD9726C59 /* sax-80-h.caf */,
+				B5EBAA5D48502B37AFBA5F83 /* sax-81-h.caf */,
+				2FC86C2A9E24F7E687AF3D24 /* sax-81-s.caf */,
+				087C7F4FCE54EBE926B2A773 /* sax-84-h.caf */,
+				FA1B9F94998ABCB1BC013DDD /* sax-84-s.caf */,
+				72FD3F6B35B76A7F8829D411 /* sax-86-h.caf */,
+				18DAA0E3CE41C2850C2E731E /* sax-88-h.caf */,
+				3F2FD4DE4AC8AC4E9E3A9F9C /* saxl-44.caf */,
+				004393332020C1E4EF245A84 /* saxl-46.caf */,
+				DD0065C8219E4D6D361B6BA4 /* saxl-48.caf */,
+				0EF8A721DB5F0A472098AA20 /* saxl-50.caf */,
+				9749BEF30BE468B93DE6053D /* saxl-52.caf */,
+				7B4DB1EF0F0433B417F786C0 /* saxl-54.caf */,
+				EFFA08C2D957ECE763A247E6 /* saxl-56.caf */,
+				1C19A0BA4C401C900E7DC5CA /* saxl-58.caf */,
+				E7E7C5B1DD93C08680DF1C80 /* saxl-60.caf */,
+				1015C3B7893037323D28F441 /* saxl-62.caf */,
+				E8C48A26C46D6305703C4885 /* saxl-64.caf */,
+				60C528CEAD1BA483B07D7AB1 /* saxl-66.caf */,
+				6F511A5158449D5717BEEF3B /* saxl-68.caf */,
+				45F5942DC869BC3CF9B9B575 /* saxl-70.caf */,
+				4C853FD5A622D5AC04B93E72 /* saxl-72.caf */,
+				3BC0A0A5C5D66707D069836B /* saxl-74.caf */,
+				175CA8CA5984BD7373EB7478 /* saxl-76.caf */,
+				BDCAB8C4A4181B0997F6D361 /* saxl-78.caf */,
+				92E3091611A2B42DCDC7DB92 /* saxl-80.caf */,
+				1225A9C23AAA0DBF395E1311 /* saxl-82.caf */,
+				84A09E251139CFA659480F99 /* saxl-84.caf */,
+				E9CDF65C85CCE001F6524983 /* saxl-86.caf */,
+				694BD5B4735E8135DC2CDC8A /* saxl-88.caf */,
+				52E462F831449281758F5101 /* snare-0a.caf */,
+				6DEE889E3994E8E5713B6AD9 /* snare-0b.caf */,
+				09EE1B46C7B231BDA2F2836D /* snare-0c.caf */,
+				27AB3C2B9B543267B44D0E56 /* snare-1a.caf */,
+				29AA8EF9E976DF81AAB0A63B /* snare-1b.caf */,
+				9887F83D6990F74ED1B9207B /* snare-1c.caf */,
+				B6B961F31B77D407FE373042 /* snare-2a.caf */,
+				964352540F89FAC0C96E0420 /* snare-2b.caf */,
+				2AE10F73437308FCB63674FE /* snare-2c.caf */,
+				F7EE8892FF3ACE1F8E57E20C /* snare-3a.caf */,
+				E85D9BD780857CE82A7D821B /* snare-3b.caf */,
+				AD8A3ACF263A0B9CE23283FB /* snare-3c.caf */,
+				E090E9EA4DAA483D79A5CD77 /* snare-4a.caf */,
+				795F9970B8942259EFDB885C /* snare-4b.caf */,
+				4502C7364A5FFDD4E741859E /* snare-4c.caf */,
+				CCF2529159F013410D2D6BB7 /* snare-5a.caf */,
+				DF075103D924CB5A798DA0F7 /* snare-5b.caf */,
+				9E784B77A99187B44D2F3021 /* snare-5c.caf */,
+				C4433A3A435531BD05D6A8D0 /* tomHi-0a.caf */,
+				147A244442CB1D7BBE930EA7 /* tomHi-0b.caf */,
+				FC1E799921D78CCB8272B10D /* tomHi-1a.caf */,
+				349BFAF58AF88AB685AA1DB7 /* tomHi-1b.caf */,
+				449E04F01FEF02B7B2D08BA8 /* tomHi-2a.caf */,
+				3521CBCABC68CBDB076B074E /* tomHi-2b.caf */,
+				4C07A23D1D5D9AAEB045EDD9 /* tomLo-0a.caf */,
+				43CCE047F0CB28E4512B87DE /* tomLo-0b.caf */,
+				8459B1B5C17FEBE776BF938A /* tomLo-1a.caf */,
+				F9CECDA90CD7CA866FFACF54 /* tomLo-1b.caf */,
+				CD280DD166F8AFF0E3DFABE3 /* tomLo-2a.caf */,
+				9B5AC6B39D1D0D30706D4475 /* tomLo-2b.caf */,
+				7286A0A50F4BC75A3FD8881B /* xstick-0a.caf */,
+				779DBDE154DF8B5AAD17D2F2 /* xstick-0b.caf */,
+				6EA8414D96952B8DF25F4270 /* xstick-1a.caf */,
+				E8C2393C103B47FA23C7A834 /* xstick-1b.caf */,
+				C109FE965605A2DC16F7E768 /* xstick-2a.caf */,
+				5493818141A471AEC30127DF /* xstick-2b.caf */,
 			);
 			path = Sounds;
 			sourceTree = "<group>";
@@ -287,16 +947,235 @@
 				DC203B315E897EAFBEFF1F87 /* Assets.xcassets in Resources */,
 				1C10C6072AB01F749AE43B8B /* README.md in Resources */,
 				6FC903FE21D56D54BA26CEA4 /* band-blues-C.json in Resources */,
-				F6B568395B20B8AB6B2420B6 /* ch.wav in Resources */,
-				015603108E81F63F3DB9F753 /* kick.wav in Resources */,
+				7EA77C1F1D8AD73E61C31437 /* bass-28.caf in Resources */,
+				F0D29695A1C134AE3B1841E2 /* bass-29.caf in Resources */,
+				ABB7C98A68E5E197B6805AC6 /* bass-30.caf in Resources */,
+				0B4807846D69D1AC21193BC9 /* bass-31.caf in Resources */,
+				E239E8542C20403B055986CC /* bass-32.caf in Resources */,
+				4245984A3E9079B7FA7FFA43 /* bass-33.caf in Resources */,
+				10E5FC4A4AD57F9896AFFA68 /* bass-34.caf in Resources */,
+				C4BE5852144CDDC94C8C9A2E /* bass-35.caf in Resources */,
+				4FCC81242F5030EC9B44DF5C /* bass-36.caf in Resources */,
+				C86460F5BA92AA01CBF5629D /* bass-37.caf in Resources */,
+				4A2FC82C2EA0491C3684A84B /* bass-38.caf in Resources */,
+				63205981D46B9A6C3A8E8254 /* bass-39.caf in Resources */,
+				F436B0DC1F4A8F0BD1F84725 /* crash-0a.caf in Resources */,
+				A2230ABE5822F3B1FE2451D1 /* crash-0b.caf in Resources */,
+				D8ADA4A1AEEB6E3A93D79C74 /* crash-1a.caf in Resources */,
+				861E94056201983476A0C3AB /* crash-1b.caf in Resources */,
+				331BC944D713C5FD4ABDABD1 /* hat-0a.caf in Resources */,
+				DB9796D168524426800FC1E9 /* hat-0b.caf in Resources */,
+				CF8437708537B6C104D4863C /* hat-0c.caf in Resources */,
+				D3AEB5F7AD33AAC65EB45B56 /* hat-1a.caf in Resources */,
+				2A912573A7078819144078A8 /* hat-1b.caf in Resources */,
+				542171EA746074538B9C28D1 /* hat-1c.caf in Resources */,
+				4BECA9827B6C86C71E85C228 /* hat-2a.caf in Resources */,
+				164B2B354495704EEEECA649 /* hat-2b.caf in Resources */,
+				3F0F9F933FA8434D41547176 /* hat-2c.caf in Resources */,
+				F2B5D3404192E91E7155E21A /* hat-3a.caf in Resources */,
+				C8BAF1BE6026A27D7E6E2895 /* hat-3b.caf in Resources */,
+				EC35290F2CD38D974DE48367 /* hat-3c.caf in Resources */,
+				F22BE229AFB66BF4F7BCD960 /* hat-4a.caf in Resources */,
+				55819E92B38BB5EA1EC0E2E9 /* hat-4b.caf in Resources */,
+				5C357900F62CA3F2AF4D47DF /* hat-4c.caf in Resources */,
+				C0CEBF0CB2C4DC6D22733813 /* hatFoot-0a.caf in Resources */,
+				14B52C7A04CF2A897613CBD1 /* hatFoot-0b.caf in Resources */,
+				20BA17C26061558ACF959540 /* hatOpen-0a.caf in Resources */,
+				54641E8FD2D2BF436A4E4897 /* hatOpen-0b.caf in Resources */,
+				8F89B439F477FBE834B64142 /* hatOpen-1a.caf in Resources */,
+				20198E8AC67929DC98B12415 /* hatOpen-1b.caf in Resources */,
+				A20BFE8869A5292F0974B686 /* hatOpen-2a.caf in Resources */,
+				D54DBEF9886A6BA2B3B5C222 /* hatOpen-2b.caf in Resources */,
+				36F2BB0E3572253A224B332E /* instruments.json in Resources */,
+				F642AEA417A3CB0F6327BBDB /* kick-0a.caf in Resources */,
+				C9D5166DCE8CEB1942FAB996 /* kick-0b.caf in Resources */,
+				948906CD02A8D0C2AEDB523F /* kick-1a.caf in Resources */,
+				31B098145D2ECCDD283167A5 /* kick-1b.caf in Resources */,
+				6BDD3CF39C5927CF60A236A7 /* kick-2a.caf in Resources */,
+				D0556E07BABEDDABE5996C09 /* kick-2b.caf in Resources */,
+				8CB42237ECE104E76DD1FF0F /* kick-3a.caf in Resources */,
+				2CA46049F7226B52634FC4E7 /* kick-3b.caf in Resources */,
+				227BF83E2373B55672B2BAD8 /* kick-4a.caf in Resources */,
+				D750220308274037C24F940F /* kick-4b.caf in Resources */,
 				7B34046ADB043B025F94F98D /* lesson-A1.json in Resources */,
-				89DC7130DA16A846E31355BF /* oh.wav in Resources */,
-				964AF3E4320F1FE3C9356582 /* ride.wav in Resources */,
-				14ADFFCB6F179A4CC84EB648 /* rimshot.wav in Resources */,
-				0E052B1EC6868D15698256E7 /* snare.wav in Resources */,
-				06D4EE81719B785A8ECE3FA3 /* sub-A1.wav in Resources */,
-				46A76DE20EE77BC88B800BD2 /* sub-C2.wav in Resources */,
-				689A7688079AFEC2BD3EE75B /* sub-G1.wav in Resources */,
+				76E53571BD035AC1A63BA92C /* pno-31-1.caf in Resources */,
+				BB472C5307B18E0B8548003E /* pno-31-2.caf in Resources */,
+				BB8816561929F6CF85CFB42B /* pno-33-1.caf in Resources */,
+				986C0419AE9DFFA1721EF9DD /* pno-33-2.caf in Resources */,
+				B8E69AAB1D546042CCF3F9E8 /* pno-35-1.caf in Resources */,
+				1129E8DF4B550D61C778EAD9 /* pno-35-2.caf in Resources */,
+				64B6AF894E09377DF886A78C /* pno-37-1.caf in Resources */,
+				E26E7FB16E7E0E521C28D51B /* pno-37-2.caf in Resources */,
+				8933D62E32589DF348615AD6 /* pno-39-1.caf in Resources */,
+				7370B97614B00E2A3276AB45 /* pno-39-2.caf in Resources */,
+				42393951486A248041E968AE /* pno-41-1.caf in Resources */,
+				299877A12BF54E9551A68C89 /* pno-41-2.caf in Resources */,
+				3D722FB7F193F4353C109FBB /* pno-43-1.caf in Resources */,
+				8A0960B42196667C75B9C38E /* pno-43-2.caf in Resources */,
+				5DB4F8877AD391F3808D0E7B /* pno-45-1.caf in Resources */,
+				4498A2ABD27FED8229D35D00 /* pno-45-2.caf in Resources */,
+				2584A7A1FF8EF1E65F79B3FD /* pno-47-1.caf in Resources */,
+				EC244ED42EA4AA85C5445DB0 /* pno-47-2.caf in Resources */,
+				0FD245B36E24D79EBAE0898A /* pno-49-1.caf in Resources */,
+				E774BDD61C1156C59D41CF7B /* pno-49-2.caf in Resources */,
+				5B40702A3B9F3D708DA58C3F /* pno-51-1.caf in Resources */,
+				3B84D0A6AA682BCE29F60D99 /* pno-51-2.caf in Resources */,
+				8EDD7CE820B180B655684537 /* pno-53-1.caf in Resources */,
+				F7D27D313614185785E479A4 /* pno-53-2.caf in Resources */,
+				D599C23DE48FC54D525D70FB /* pno-55-1.caf in Resources */,
+				C4F23F60B9FC650E6583DAA5 /* pno-55-2.caf in Resources */,
+				50011F9199B2DA064EB0A9EC /* pno-57-1.caf in Resources */,
+				B2C4E58AA08621473A525586 /* pno-57-2.caf in Resources */,
+				682F80C85223B7881234ECD2 /* pno-59-1.caf in Resources */,
+				9DCC027ED0C0E1513B50A4D8 /* pno-59-2.caf in Resources */,
+				276476E897CABA7D4D5F8115 /* pno-61-1.caf in Resources */,
+				44A13FDFD826D82B035D3FF5 /* pno-61-2.caf in Resources */,
+				6CEFB6E08B0B26953762B625 /* pno-63-1.caf in Resources */,
+				979BA171BBE0DAB97647AE39 /* pno-63-2.caf in Resources */,
+				27C557873BFCFDD3F8EF2D61 /* pno-65-1.caf in Resources */,
+				DCB0B6EFFDDD180F2036F7DE /* pno-65-2.caf in Resources */,
+				7E7A372205C9BBE39C9F63A2 /* pno-67-1.caf in Resources */,
+				602C89B9BD1D135332E2D855 /* pno-67-2.caf in Resources */,
+				4D428DEEE990FF7C23D2865C /* pno-69-1.caf in Resources */,
+				12215C45C743FCCE5B0A5729 /* pno-69-2.caf in Resources */,
+				B583B8942D45177E86F16DF0 /* pno-71-1.caf in Resources */,
+				EBD7C30A4E810FD2CDB979F3 /* pno-71-2.caf in Resources */,
+				5201DCB7333247C862F7916D /* pno-73-1.caf in Resources */,
+				45CB0B2C16E622D04068ABD4 /* pno-73-2.caf in Resources */,
+				F77F687D1923C3CD21700283 /* pno-75-1.caf in Resources */,
+				3FF794ED3E6D8AAB365E558A /* pno-75-2.caf in Resources */,
+				E7EF9CE28CBF9EC840C3D6C1 /* pno-77-1.caf in Resources */,
+				FF5C87502FE79492DDDF3107 /* pno-77-2.caf in Resources */,
+				61DB37FBFCFFE7F83F563F1B /* pno-79-1.caf in Resources */,
+				8E426C6D5CCDA7B876ECBB4C /* pno-79-2.caf in Resources */,
+				5F7D161E0E63EB11FF865A87 /* pno-81-1.caf in Resources */,
+				36C5B40EA2FF47470FC74656 /* pno-81-2.caf in Resources */,
+				9C763D05EFD44F0DB1967EB4 /* pno-83-1.caf in Resources */,
+				97EE5C691F0371B2529157B4 /* pno-83-2.caf in Resources */,
+				DAAEF22ADCBD3340B25AEDE8 /* pno-85-1.caf in Resources */,
+				8704BAB326417DF36B36659F /* pno-85-2.caf in Resources */,
+				D2ABF92BB4D642D04FABA73E /* pno-87-1.caf in Resources */,
+				7DF4441A9D456C3587915C5F /* pno-87-2.caf in Resources */,
+				149FCB186F1A01AD5C65CA5D /* pno-89-1.caf in Resources */,
+				E15817F171D4406FB89B74F2 /* pno-89-2.caf in Resources */,
+				DD0C469BBDED0685A8489535 /* pno-91-1.caf in Resources */,
+				E5ACBCA96BE8F0AF220B1E33 /* pno-91-2.caf in Resources */,
+				1A3E953AA2D28EFF246BF443 /* pno-93-1.caf in Resources */,
+				4F99D09614EABEC78C65ADC0 /* pno-93-2.caf in Resources */,
+				896A67B877A6CDB7653B1480 /* pno-95-1.caf in Resources */,
+				9B2B7BD8F914A6A208B36734 /* pno-95-2.caf in Resources */,
+				8F19A8029482FBDB1BAD4B64 /* ride-0a.caf in Resources */,
+				8E5EEBCF5CD66564E3559CA4 /* ride-0b.caf in Resources */,
+				5AB26F64BF6DE47ED26151F1 /* ride-1a.caf in Resources */,
+				E23271FC4515584ED3F5F880 /* ride-1b.caf in Resources */,
+				D9D5DEBA3C29A033F50B5CD2 /* ride-2a.caf in Resources */,
+				15CECD7CAD84E263E4626E10 /* ride-2b.caf in Resources */,
+				D6883A965C5C32FBABBBC4D9 /* ride-3a.caf in Resources */,
+				3E375F9FAA40BF5A41192806 /* ride-3b.caf in Resources */,
+				FCD78500B341758546312CD3 /* ride-4a.caf in Resources */,
+				5F0FC123425094D0F68C94CC /* rideBell-0a.caf in Resources */,
+				A8F54C79E0EA50040BF9BCC4 /* rideBell-0b.caf in Resources */,
+				EDE47F32FE4402A8FBE3F2F5 /* rideBell-1a.caf in Resources */,
+				99B17B3230B1091D08FAA5B8 /* rideBell-1b.caf in Resources */,
+				BE6B89A1F594657C466C2B8F /* sax-44-h.caf in Resources */,
+				A76603B087F55AF96B584EBE /* sax-46-h.caf in Resources */,
+				ABD4AEFF7816ABD7648B9CE5 /* sax-48-h.caf in Resources */,
+				294B06009DF1AFE4DC585F6D /* sax-50-h.caf in Resources */,
+				EF4FB0CD09BBC3C2E7E0A2CA /* sax-50-s.caf in Resources */,
+				69362D8E983A7AB7F0ABD673 /* sax-52-h.caf in Resources */,
+				C261EA1C512AA664F717240B /* sax-52-s.caf in Resources */,
+				AE1A019687DA74CDD30866E0 /* sax-54-h.caf in Resources */,
+				A93FA262D2DF80AF8A6A1CF9 /* sax-54-s.caf in Resources */,
+				A4563172F04DAE069130D85A /* sax-56-h.caf in Resources */,
+				4B92E2218FF5C12517E0ECEA /* sax-56-s.caf in Resources */,
+				9EBBD48E2700944B76115AE1 /* sax-57-h.caf in Resources */,
+				6D540B7BBFF29F2E1C5F67B6 /* sax-57-s.caf in Resources */,
+				546157CE0EF5579ECFA6057D /* sax-60-h.caf in Resources */,
+				D2E240C801B9FA1CA4D22B33 /* sax-60-s.caf in Resources */,
+				684172FEEB64D5DF59065C0B /* sax-62-h.caf in Resources */,
+				8DA1D85EADB041305B5F2209 /* sax-62-s.caf in Resources */,
+				6FAC15354574E3EFEE5FFA8C /* sax-64-h.caf in Resources */,
+				40E4079190E3C9BA5D19612F /* sax-64-s.caf in Resources */,
+				F253F9056AF51CF1C36B853B /* sax-66-h.caf in Resources */,
+				07488C6D67CE34AE6C725ABD /* sax-66-s.caf in Resources */,
+				6E477EDB4C9C1946B844AE1C /* sax-68-h.caf in Resources */,
+				B2FA0C4657E34F3A0DA284C2 /* sax-68-s.caf in Resources */,
+				A3ECFB4408EF3553D8FB71FE /* sax-70-h.caf in Resources */,
+				307EF0B0AE15E6A69CC0A9F7 /* sax-70-s.caf in Resources */,
+				5EFED1E324609E9B1B739938 /* sax-72-h.caf in Resources */,
+				44B4FD975E4D38607E23557A /* sax-72-s.caf in Resources */,
+				DBA6A5504D2F5E4F47817A7B /* sax-74-h.caf in Resources */,
+				0B51ABA08080946D611791F1 /* sax-74-s.caf in Resources */,
+				6B3B7AA52838070E70B7EA3B /* sax-76-h.caf in Resources */,
+				8C4335971FDD5A30166788B6 /* sax-76-s.caf in Resources */,
+				F1920F30A6885CC2F9A7E206 /* sax-77-h.caf in Resources */,
+				704838415DC8A481D5C6B7D0 /* sax-77-s.caf in Resources */,
+				BC747A87A0025DE844D31489 /* sax-80-h.caf in Resources */,
+				4790FFBF0D10C5CAA5889759 /* sax-81-h.caf in Resources */,
+				27AA2E7801FB607CF7D8B0C3 /* sax-81-s.caf in Resources */,
+				B2544596AA8F5108BD5A904C /* sax-84-h.caf in Resources */,
+				803E2A82DB22813C19463E0E /* sax-84-s.caf in Resources */,
+				1DD87923F621FB63B0B1DE2A /* sax-86-h.caf in Resources */,
+				E47FF2AE85EF38BB44A7BA07 /* sax-88-h.caf in Resources */,
+				74BC4FE48F113110142AC7CF /* saxl-44.caf in Resources */,
+				66589FA581B74CDB59B6588C /* saxl-46.caf in Resources */,
+				12A71696269BEA7A02A6F5D2 /* saxl-48.caf in Resources */,
+				DC2BA0E3A834C76308AA00DF /* saxl-50.caf in Resources */,
+				A608EB45A6965E39D1E8AD74 /* saxl-52.caf in Resources */,
+				1DA1F276B078D8480198F581 /* saxl-54.caf in Resources */,
+				1A605ED7EF5BC5CA807A9C52 /* saxl-56.caf in Resources */,
+				C95504C75C8AD7AC0C7C74E6 /* saxl-58.caf in Resources */,
+				F25F08A0EAE9E1E187322D64 /* saxl-60.caf in Resources */,
+				1B3792B3D6838DD2557B80E0 /* saxl-62.caf in Resources */,
+				F7A90A546F2FC6804D7E52C3 /* saxl-64.caf in Resources */,
+				66CD0335B945C2BAC5BAFE30 /* saxl-66.caf in Resources */,
+				35D08827F2303F289826976C /* saxl-68.caf in Resources */,
+				56BC41EA29FA1087444BE630 /* saxl-70.caf in Resources */,
+				A76AFE872B38E3376A6F3039 /* saxl-72.caf in Resources */,
+				34D5B0EA3CE65C47A011D1EF /* saxl-74.caf in Resources */,
+				FC04DA1E831302B06B17BB5F /* saxl-76.caf in Resources */,
+				B20D9DF1AD1322E57E155F83 /* saxl-78.caf in Resources */,
+				8D6167F044A8C8DF0231FA1E /* saxl-80.caf in Resources */,
+				320A121E005A4512B39447CE /* saxl-82.caf in Resources */,
+				365DA90461EF433D00A5DDAF /* saxl-84.caf in Resources */,
+				1ED43417BE7B3047B602E21E /* saxl-86.caf in Resources */,
+				95B8120344BA9084DBC9862B /* saxl-88.caf in Resources */,
+				948F62CDB1F5D241BCAC0B69 /* snare-0a.caf in Resources */,
+				71A51DF5A181701DF1A06D21 /* snare-0b.caf in Resources */,
+				6ED947B852FBFB08607D2932 /* snare-0c.caf in Resources */,
+				5BD89A82210707D4C12EE7F3 /* snare-1a.caf in Resources */,
+				B27C7B2142102B2727B953FD /* snare-1b.caf in Resources */,
+				32B0028C89E12FA89CED5980 /* snare-1c.caf in Resources */,
+				738A0B44306722E932463A21 /* snare-2a.caf in Resources */,
+				FC5A33D72168EC87C930224F /* snare-2b.caf in Resources */,
+				56C4ABBFF599E394474EA022 /* snare-2c.caf in Resources */,
+				928920684437E2909B8706A3 /* snare-3a.caf in Resources */,
+				BA16808884370FFE046386FB /* snare-3b.caf in Resources */,
+				8139EAE75275B27D767EF818 /* snare-3c.caf in Resources */,
+				36343424CE88A77FE28A20C4 /* snare-4a.caf in Resources */,
+				B928C57F8BF4FB0175EE18AB /* snare-4b.caf in Resources */,
+				8BC9F1FDF95837894516D558 /* snare-4c.caf in Resources */,
+				EB31CC8D8DE8310AF2B87711 /* snare-5a.caf in Resources */,
+				D158A6D96D8477A4B860A2F3 /* snare-5b.caf in Resources */,
+				03E11DA52EB7EB63BAA61F6E /* snare-5c.caf in Resources */,
+				672FA78612B7AF9CA6DA3BA6 /* tomHi-0a.caf in Resources */,
+				B3DE5FCB4B61E6D826C0B82D /* tomHi-0b.caf in Resources */,
+				C67341B7D9F1F2D374F2E365 /* tomHi-1a.caf in Resources */,
+				21F8FCA34F87A508FB65BBBC /* tomHi-1b.caf in Resources */,
+				77E9F2CEBF5BD006B24FB757 /* tomHi-2a.caf in Resources */,
+				8E2DA2F024A0EF0F126C25E5 /* tomHi-2b.caf in Resources */,
+				4194B0DA416A939C75F3E973 /* tomLo-0a.caf in Resources */,
+				7C07E662DBA124C5672FF25B /* tomLo-0b.caf in Resources */,
+				E1DEF78FE20D51DB4583E158 /* tomLo-1a.caf in Resources */,
+				7C2698A630B701D951490B4E /* tomLo-1b.caf in Resources */,
+				31C36E629171C1B20D71628B /* tomLo-2a.caf in Resources */,
+				8A25A56C7AE2F99B684A89BC /* tomLo-2b.caf in Resources */,
+				C80B6F25DA5362B82D201D1B /* xstick-0a.caf in Resources */,
+				1F79E5760392C10A935AA7B9 /* xstick-0b.caf in Resources */,
+				00F4BC3812D5876F5DE7A586 /* xstick-1a.caf in Resources */,
+				F8E24502312173DD26D0D3E9 /* xstick-1b.caf in Resources */,
+				72CF9CFB1A76C6432E211F12 /* xstick-2a.caf in Resources */,
+				4EBC5DF2E429AE9F62C4F447 /* xstick-2b.caf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -314,6 +1193,7 @@
 				913188C502DC22FAEB177062 /* ChannelStrip.swift in Sources */,
 				0D0C5243B3D5B74AC76FC97F /* CoachPanel.swift in Sources */,
 				FF098609992B64F48C556EAA /* DebugHooks.swift in Sources */,
+				73D31E854898BB54BE5D4C0D /* Instrument.swift in Sources */,
 				7943EE24325ECDBDE8F2DC64 /* KeyCatcher.swift in Sources */,
 				C644B759F0C8337C5B487AC0 /* KeyboardStrip.swift in Sources */,
 				306848967A711785611C8454 /* Lesson.swift in Sources */,
@@ -372,7 +1252,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -439,7 +1319,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;

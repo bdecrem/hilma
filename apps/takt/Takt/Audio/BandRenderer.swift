@@ -90,6 +90,7 @@ final class BandRenderer {
     let ticksPerBeat: Int
     let ticksPerBar: Int
     let loopTicks: Int
+    let chorusBars: Int
 
     // MARK: Cross-thread
 
@@ -113,10 +114,12 @@ final class BandRenderer {
         var value: Int
         var velocity: Float
         var lengthTicks: Int
+        /// Pitched: index into `instruments`.
+        var instrument: Int
     }
 
     private struct DrumSound {
-        var buffer: SampleBuffer
+        var kit: SampledInstrument
         var gain: Float
         var group: Int
         var chokes: Int
@@ -124,7 +127,9 @@ final class BandRenderer {
 
     private let events: UnsafeMutableBufferPointer<Event>
     private let drumSounds: UnsafeMutableBufferPointer<DrumSound>
-    private let subs: UnsafeMutableBufferPointer<(root: Int, buffer: SampleBuffer)>
+    /// The pitched instruments, by name in `instrumentIndex`; `monitor` is the player's piano.
+    private let instruments: [SampledInstrument]
+    private let monitor: Int
 
     private var commands: [EngineCommand] = []
 
@@ -176,17 +181,18 @@ final class BandRenderer {
     private let busR: UnsafeMutablePointer<Float>
     private var channelGain: (Float, Float, Float, Float, Float) = (1, 1, 1, 1, 1)
     private var levels: (Float, Float, Float, Float, Float) = (0, 0, 0, 0, 0)
-    /// Channel faders: drums, bass, keys, horns, monitor.
-    private let mix: [Float] = [1.0, 0.5, 0.22, 0.18, 0.5]
-    /// Headroom: kick and sub land together on the downbeats.
-    private let master: Float = 0.8
+    /// Channel faders: drums, bass, keys, horns, monitor. Set from solo renders at 80 bpm
+    /// (RMS: drums -27, bass -28, keys -30, horns -31 dBFS; the monitor sits with the keys).
+    private let mix: [Float] = [1.6, 0.32, 0.88, 0.54, 0.9]
+    /// Headroom: kick, bass and crash land together on the tops.
+    private let master: Float = 0.72
     private let levelDecay: Float
 
     private let drumVoices = UnsafeMutableBufferPointer<SampleVoice>.allocate(capacity: 24)
     private let bassVoices = UnsafeMutableBufferPointer<SampleVoice>.allocate(capacity: 4)
-    private let keyVoices = UnsafeMutableBufferPointer<FMVoice>.allocate(capacity: 16)
-    private let hornVoices = UnsafeMutableBufferPointer<FMVoice>.allocate(capacity: 8)
-    private let monitorVoices = UnsafeMutableBufferPointer<FMVoice>.allocate(capacity: 16)
+    private let keyVoices = UnsafeMutableBufferPointer<SampleVoice>.allocate(capacity: 24)
+    private let hornVoices = UnsafeMutableBufferPointer<SampleVoice>.allocate(capacity: 8)
+    private let monitorVoices = UnsafeMutableBufferPointer<SampleVoice>.allocate(capacity: 24)
     private var age = 0
 
     init(band: BandData, sampleRate: Double, tempo: Double) {
@@ -195,33 +201,50 @@ final class BandRenderer {
         ticksPerBeat = band.ticksPerBeat
         ticksPerBar = band.ticksPerBar
         loopTicks = band.loopTicks
+        chorusBars = band.chorusBars
         samplesPerTick = sampleRate * 60 / (tempo * Double(band.ticksPerBeat))
 
         var mach = mach_timebase_info_data_t()
         mach_timebase_info(&mach)
         hostTicksPerSecond = 1e9 * Double(mach.denom) / Double(mach.numer)
 
-        // Drum sounds by name; "ch" chokes "oh".
+        // Drum sounds by name; a closed hat (or the foot) chokes the open one.
+        let manifest = InstrumentManifest.bundled
         let names = band.sounds.keys.sorted()
         drumSounds = .allocate(capacity: names.count)
         for (i, name) in names.enumerated() {
             let s = band.sounds[name]!
-            drumSounds[i] = DrumSound(buffer: .bundled(s.file), gain: Float(pow(10, s.gainDb / 20)),
-                                      group: name == "oh" ? 1 : 0, chokes: name == "ch" ? 1 : 0)
+            drumSounds.initializeElement(at: i, to: DrumSound(
+                kit: SampledInstrument(s.kit, manifest: manifest), gain: Float(pow(10, s.gainDb / 20)),
+                group: s.kit == "hatOpen" ? 1 : 0, chokes: s.kit == "hat" || s.kit == "hatFoot" ? 1 : 0))
         }
-        subs = .allocate(capacity: band.subs.count)
-        for (i, s) in band.subs.enumerated() { subs[i] = (s.root, .bundled(s.file)) }
 
+        // Pitched instruments: each channel's own, any a note names, and the monitor's.
+        var instrumentNames: [String] = []
+        func instrument(_ name: String) -> Int {
+            if let i = instrumentNames.firstIndex(of: name) { return i }
+            instrumentNames.append(name)
+            return instrumentNames.count - 1
+        }
+        func channelInstrument(_ key: String) -> Int {
+            guard let name = band.instruments[key] else { fatalError("band: no instrument for \(key)") }
+            return instrument(name)
+        }
         var list: [Event] = []
         for h in band.channels.drums {
             guard let i = names.firstIndex(of: h.s) else { fatalError("band: unknown drum sound \(h.s)") }
-            list.append(Event(tick: h.t, channel: .drums, value: i, velocity: Float(h.v), lengthTicks: 0))
+            list.append(Event(tick: h.t, channel: .drums, value: i, velocity: Float(h.v), lengthTicks: 0, instrument: 0))
         }
-        for (channel, notes) in [(Channel.bass, band.channels.bass), (.keys, band.channels.keys), (.horns, band.channels.horns)] {
+        for (channel, key, notes) in [(Channel.bass, "bass", band.channels.bass), (.keys, "keys", band.channels.keys),
+                                      (.horns, "horns", band.channels.horns)] {
+            let own = channelInstrument(key)
             for n in notes {
-                list.append(Event(tick: n.t, channel: channel, value: n.n, velocity: Float(n.v), lengthTicks: n.len))
+                list.append(Event(tick: n.t, channel: channel, value: n.n, velocity: Float(n.v), lengthTicks: n.len,
+                                  instrument: n.i.map(instrument) ?? own))
             }
         }
+        monitor = channelInstrument("monitor")
+        instruments = instrumentNames.map { SampledInstrument($0, manifest: manifest) }
         list.sort { $0.tick < $1.tick }
         events = .allocate(capacity: list.count)
         _ = events.initialize(from: list)
@@ -231,12 +254,11 @@ final class BandRenderer {
         levelDecay = Float(exp(-Double(1) / (0.25 * sampleRate)))
         drumVoices.initialize(repeating: SampleVoice())
         bassVoices.initialize(repeating: SampleVoice())
-        keyVoices.initialize(repeating: FMVoice())
-        hornVoices.initialize(repeating: FMVoice())
-        monitorVoices.initialize(repeating: FMVoice())
+        keyVoices.initialize(repeating: SampleVoice())
+        hornVoices.initialize(repeating: SampleVoice())
+        monitorVoices.initialize(repeating: SampleVoice())
         commands.reserveCapacity(256)
         inbox.withLock { $0.reserveCapacity(256) }
-        _ = sineTable[0]
         anchor = .init(frame: 0, tick: 0, samplesPerTick: .infinity, tempo: tempo)
         previousAnchor = anchor
         publish(hostTime: nil, frames: 0)
@@ -367,9 +389,8 @@ final class BandRenderer {
         scheduledCount -= 1
         for i in 0..<scheduledCount { scheduled[i] = scheduled[i + 1] }
         age += 1
-        monitorVoices[slot(monitorVoices)].start(note: s.note, velocity: s.velocity, patch: .rhodes,
-                                                 heldFrames: Int(s.lengthTicks * samplesPerTick),
-                                                 live: false, age: age, sampleRate: sampleRate)
+        play(instruments[monitor], note: s.note, velocity: s.velocity, held: Int(s.lengthTicks * samplesPerTick),
+             live: false, in: monitorVoices)
     }
 
     /// Publishes the frame → tick mapping after the transport changed it.
@@ -411,9 +432,8 @@ final class BandRenderer {
             let seconds = Double(at - chunkStart) / sampleRate + latencySeconds
             hostAt = hostTime + UInt64(seconds * hostTicksPerSecond)
         }
-        let barsPerLoop = loopTicks / ticksPerBar
         let barIndex = tick / ticksPerBar
-        lastBeat = .init(hostTime: hostAt, bar: barIndex % barsPerLoop, beat: beatInBar, chorus: barIndex / barsPerLoop)
+        lastBeat = .init(hostTime: hostAt, bar: barIndex % chorusBars, beat: beatInBar, chorus: barIndex / chorusBars)
         nextBeatTick = tick + ticksPerBeat
     }
 
@@ -443,40 +463,40 @@ final class BandRenderer {
                     drumVoices[i].stop(releaseSeconds: 0.012, sampleRate: sampleRate)
                 }
             }
-            drumVoices[slot(drumVoices)].start(s.buffer, ratio: 1, gain: s.gain * e.velocity, heldFrames: .max,
-                                               releaseSeconds: 0.01, group: s.group, age: age, sampleRate: sampleRate)
+            let p = s.kit.pick(note: 0, velocity: e.velocity)
+            drumVoices[slot(drumVoices)].start(p.buffer, ratio: 1, gain: s.gain * p.gain * (0.3 + 0.7 * e.velocity), heldFrames: .max,
+                                               releaseSeconds: s.kit.release, group: s.group, age: age, sampleRate: sampleRate)
         case .bass:
             // Monophonic: the new note cuts the last one.
             for i in bassVoices.indices where bassVoices[i].active {
-                bassVoices[i].stop(releaseSeconds: 0.008, sampleRate: sampleRate)
+                bassVoices[i].stop(releaseSeconds: 0.012, sampleRate: sampleRate)
             }
-            var best = 0
-            for i in 1..<subs.count where abs(subs[i].root - e.value) < abs(subs[best].root - e.value) { best = i }
-            let ratio = pow(2, Double(e.value - subs[best].root) / 12)
-            bassVoices[slot(bassVoices)].start(subs[best].buffer, ratio: ratio, gain: e.velocity, heldFrames: held,
-                                               releaseSeconds: 0.015, group: 0, age: age, sampleRate: sampleRate)
+            play(instruments[e.instrument], note: e.value, velocity: e.velocity, held: held, live: false, in: bassVoices)
         case .keys:
-            keyVoices[slot(keyVoices)].start(note: e.value, velocity: e.velocity, patch: .rhodes, heldFrames: held,
-                                             live: false, age: age, sampleRate: sampleRate)
+            play(instruments[e.instrument], note: e.value, velocity: e.velocity, held: held, live: false, in: keyVoices)
         case .horns:
-            hornVoices[slot(hornVoices)].start(note: e.value, velocity: e.velocity, patch: .brass, heldFrames: held,
-                                               live: false, age: age, sampleRate: sampleRate)
+            play(instruments[e.instrument], note: e.value, velocity: e.velocity, held: held, live: false, in: hornVoices)
         case .monitor:
             break
         }
     }
 
-    /// A free voice, or the oldest one.
-    private func slot(_ pool: UnsafeMutableBufferPointer<SampleVoice>) -> Int {
-        var oldest = 0
-        for i in pool.indices {
-            if !pool[i].active { return i }
-            if pool[i].age < pool[oldest].age { oldest = i }
+    /// Starts a pitched note: the same note still sounding is damped first (a key restruck).
+    private func play(_ inst: SampledInstrument, note: Int, velocity: Float, held: Int, live: Bool,
+                      in pool: UnsafeMutableBufferPointer<SampleVoice>) {
+        for i in pool.indices where pool[i].active && pool[i].note == note {
+            pool[i].stop(releaseSeconds: 0.03, sampleRate: sampleRate)
+            pool[i].note = -1
         }
-        return oldest
+        age += 1
+        let p = inst.pick(note: note, velocity: velocity)
+        // Level follows velocity on top of the layer's own loudness.
+        pool[slot(pool)].start(p.buffer, ratio: p.ratio, gain: p.gain * (0.35 + 0.65 * velocity), heldFrames: held,
+                               releaseSeconds: inst.release, note: note, live: live, age: age, sampleRate: sampleRate)
     }
 
-    private func slot(_ pool: UnsafeMutableBufferPointer<FMVoice>) -> Int {
+    /// A free voice, or the oldest one.
+    private func slot(_ pool: UnsafeMutableBufferPointer<SampleVoice>) -> Int {
         var oldest = 0
         for i in pool.indices {
             if !pool[i].active { return i }
@@ -495,17 +515,17 @@ final class BandRenderer {
             bassVoices[i].render(busL + c, busR + c, from: a, to: b)
         }
         for i in keyVoices.indices where keyVoices[i].active {
-            keyVoices[i].render(busL + 2 * c, from: a, to: b, gain: 1)
+            keyVoices[i].render(busL + 2 * c, busR + 2 * c, from: a, to: b)
         }
         for i in hornVoices.indices where hornVoices[i].active {
-            hornVoices[i].render(busL + 3 * c, from: a, to: b, gain: 1)
+            hornVoices[i].render(busL + 3 * c, busR + 3 * c, from: a, to: b)
         }
         for i in monitorVoices.indices where monitorVoices[i].active {
-            monitorVoices[i].render(busL + 4 * c, from: a, to: b, gain: 1)
+            monitorVoices[i].render(busL + 4 * c, busR + 4 * c, from: a, to: b)
         }
     }
 
-    /// Buses → output: mono FM buses go to both sides, channel gains glide (~5 ms) toward
+    /// Buses → output: channel gains glide (~5 ms) toward
     /// 0 when muted, meters take the peak, and a soft knee above 0.8 keeps the sum under 1.
     private func mixDown(_ n: Int, outL: UnsafeMutablePointer<Float>, outR: UnsafeMutablePointer<Float>) {
         let c = maxChunk
@@ -516,9 +536,8 @@ final class BandRenderer {
         }
         for ch in Channel.allCases {
             let k = ch.rawValue
-            let stereo = ch == .drums || ch == .bass
             let l = busL + k * c
-            let r = stereo ? busR + k * c : l
+            let r = busR + k * c
             let target: Float = muted & ch.bit == 0 ? mix[k] : 0
             var g = gain(ch)
             var level = self.level(ch)
@@ -639,17 +658,12 @@ final class BandRenderer {
     }
 
     private func startLive(_ note: Int, velocity: Float) {
-        for i in monitorVoices.indices where monitorVoices[i].active && monitorVoices[i].note == note {
-            monitorVoices[i].noteOff()
-        }
-        age += 1
-        monitorVoices[slot(monitorVoices)].start(note: note, velocity: velocity, patch: .rhodes, heldFrames: .max,
-                                                 live: true, age: age, sampleRate: sampleRate)
+        play(instruments[monitor], note: note, velocity: velocity, held: .max, live: true, in: monitorVoices)
     }
 
     private func stopLive(_ note: Int) {
         for i in monitorVoices.indices where monitorVoices[i].active && monitorVoices[i].live && monitorVoices[i].note == note {
-            monitorVoices[i].noteOff()
+            monitorVoices[i].stop(releaseSeconds: instruments[monitor].release, sampleRate: sampleRate)
             monitorVoices[i].live = false
         }
     }
@@ -657,8 +671,8 @@ final class BandRenderer {
     private func releaseBand() {
         for i in drumVoices.indices where drumVoices[i].active { drumVoices[i].stop(releaseSeconds: 0.05, sampleRate: sampleRate) }
         for i in bassVoices.indices where bassVoices[i].active { bassVoices[i].stop(releaseSeconds: 0.03, sampleRate: sampleRate) }
-        for i in keyVoices.indices where keyVoices[i].active { keyVoices[i].noteOff() }
-        for i in hornVoices.indices where hornVoices[i].active { hornVoices[i].noteOff() }
+        for i in keyVoices.indices where keyVoices[i].active { keyVoices[i].stop(releaseSeconds: 0.15, sampleRate: sampleRate) }
+        for i in hornVoices.indices where hornVoices[i].active { hornVoices[i].stop(releaseSeconds: 0.08, sampleRate: sampleRate) }
     }
 
     private func publish(hostTime: UInt64?, frames: Int) {
