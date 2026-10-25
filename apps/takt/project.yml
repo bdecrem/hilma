@@ -50,3 +50,5 @@ targets:
         # The iOS 27 beta aborts the debug-dylib stub launch path (see apps/feynd/CLAUDE.md).
         ENABLE_DEBUG_DYLIB: NO
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        # The Mac App Store wants the sandbox; iOS builds carry no entitlements.
+        "CODE_SIGN_ENTITLEMENTS[sdk=macosx*]": Takt/Takt-Mac.entitlements

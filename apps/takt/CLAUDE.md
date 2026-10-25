@@ -362,5 +362,9 @@ Apple Distribution cert whose key is in the MacBook Air's keychain (serial `16F6
 three, only that one signs here). A local Release archive exports to a signed App Store
 `Takt.ipa` with it. **First upload 2026-10-25:** 0.1 (7) from the MacBook Air, app "Takt Keys
 Tutor" (ASC id 6826824040), internal group "Internal" (all builds, tester kurona@mac.com = Bart).
-**Still blocked:** for `mac`, the MacBook Air has no "3rd Party Mac Developer Installer" identity in the keychain (ASC has
+**Mac:** the Catalyst build is sandboxed (`Takt/Takt-Mac.entitlements`, macOS SDK only: sandbox,
+network client, user-selected files; CoreMIDI and playback need nothing more; checked on the Air:
+audio, MIDI from a virtual source and the ola.cx account all work sandboxed). The iMac ships it
+(`TAKT_PROFILE="takt catalyst appstore imac" ASC_KEY_ID=5A5HNSWA33`, profile against its
+Apple Distribution cert `0DDCC75F…`), archiving on the mini at 171.66.240.175. Formerly blocked: for `mac`, the MacBook Air has no "3rd Party Mac Developer Installer" identity in the keychain (ASC has
 three MAC_INSTALLER_DISTRIBUTION certs, so their keys live on another Mac).

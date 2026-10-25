@@ -16,7 +16,9 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 PLATFORM=${1:?ios or mac}
-MINI=${MINI:-admin@100.95.51.98}
+# The mini's Stanford address; its Tailscale one (100.95.51.98) was unreachable from the iMac
+# on 2026-10-25. The mini has no xcodegen: it archives the committed .xcodeproj.
+MINI=${MINI:-admin@171.66.240.175}
 KEYS="$HOME/.appstoreconnect/private_keys"
 KEY_ID=${ASC_KEY_ID:-FA7268Q94U}
 ISSUER="69a6de80-eb13-47e3-e053-5b8c7c11a4d1"
