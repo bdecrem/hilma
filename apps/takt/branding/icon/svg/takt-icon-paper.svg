@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <title>Takt app icon (paper / light, full-bleed master)</title>
+  <rect width="1024" height="1024" fill="#F2F0EB"/>
+  <g id="staff" fill="#C9C4BA">
+    <rect x="0" y="241.66" width="1024" height="8.19"/>
+    <rect x="0" y="374.78" width="1024" height="8.19"/>
+    <rect x="0" y="507.90" width="1024" height="8.19"/>
+    <rect x="0" y="641.02" width="1024" height="8.19"/>
+    <rect x="0" y="774.14" width="1024" height="8.19"/>
+  </g>
+  <g id="bars" fill="#0D0D0D">
+    <rect x="355.33" y="241.66" width="81.92" height="540.67"/>
+    <rect x="483.33" y="241.66" width="26.62" height="540.67"/>
+  </g>
+  <g id="dots" fill="#D8430C">
+    <circle cx="620.03" cy="445.44" r="48.64"/>
+    <circle cx="620.03" cy="578.56" r="48.64"/>
+  </g>
+</svg>

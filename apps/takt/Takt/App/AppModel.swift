@@ -174,6 +174,11 @@ final class AppModel {
         if let r = earRound { player?.play(r.sound) }
     }
 
+    /// One interval going up from middle C, for the song list.
+    func playInterval(_ interval: EarGame.Interval) {
+        player?.play(.notes([60, 60 + interval.rawValue]))
+    }
+
     /// An answer: points, the meter, maybe a new level; the next chord comes by itself (after a
     /// miss, a longer pause and the chord again, so you hear it with its name).
     func answerEar(_ option: Int, advance: Bool = true) {

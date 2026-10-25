@@ -11,6 +11,8 @@ struct EarGameScreen: View {
     let run: EarGame.Run
     let round: EarGame.Round
     @Environment(\.horizontalSizeClass) private var sizeClass
+    /// The song list (intervals only). `-EarInfo YES` opens it at launch in DEBUG builds.
+    @State private var songs = UserDefaults.standard.bool(forKey: "EarInfo")
 
     var body: some View {
         let compact = sizeClass == .compact
@@ -28,6 +30,11 @@ struct EarGameScreen: View {
                     .minimumScaleFactor(0.7)
                 StaffLines()
                     .frame(maxWidth: .infinity)
+                if kind == .intervals {
+                    TransportButton(symbol: "music.note.list", lit: songs, size: compact ? 34 : 36, label: "Songs for each interval") {
+                        songs = true
+                    }
+                }
             }
             .padding(.top, compact ? 8 : 24)
 
@@ -108,6 +115,11 @@ struct EarGameScreen: View {
         .frame(maxWidth: compact ? .infinity : 820, alignment: .leading)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Palette.ground.ignoresSafeArea())
+        .sheet(isPresented: $songs) {
+            SongsPanel(app: app) { songs = false }
+                .presentationDetents([.medium, .large])
+                .presentationBackground(Palette.ground)
+        }
     }
 
     private var feedback: String {
@@ -123,6 +135,76 @@ struct EarGameScreen: View {
         guard let picked = app.earPicked else { return .open }
         if i == round.answer { return .right }
         return i == picked ? .wrong : .other
+    }
+}
+
+/// Hum it first: a song whose first leap is the interval, for the five the early levels use.
+/// Each row plays the interval up from middle C so you can sing the song against it.
+private struct SongsPanel: View {
+    let app: AppModel
+    let done: () -> Void
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(alignment: .firstTextBaseline) {
+                    Text("Hum it first")
+                        .font(.display(32))
+                        .textCase(.uppercase)
+                        .foregroundStyle(Palette.text)
+                    Spacer()
+                    Button("Done", action: done)
+                        .dataLabel(13, weight: .semibold)
+                        .foregroundStyle(Palette.signal)
+                        .buttonStyle(.plain)
+                }
+                Text("Each song starts with the interval. Hear it, sing the first two notes in your head, and the name comes with them.")
+                    .bodyText(14)
+                    .foregroundStyle(Palette.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 6)
+
+                VStack(spacing: 0) {
+                    ForEach(EarGame.songs, id: \.interval) { s in
+                        Button { app.playInterval(s.interval) } label: {
+                            HStack(spacing: 14) {
+                                VStack(alignment: .leading, spacing: 3) {
+                                    Text(s.interval.name)
+                                        .dataLabel(11, weight: .semibold)
+                                        .foregroundStyle(Palette.signal)
+                                    Text(s.song)
+                                        .font(.display(22))
+                                        .textCase(.uppercase)
+                                        .foregroundStyle(Palette.text)
+                                        .lineLimit(1)
+                                        .minimumScaleFactor(0.7)
+                                    Text("\(s.from) → \(s.to)")
+                                        .bodyText(14)
+                                        .foregroundStyle(Palette.muted)
+                                }
+                                Spacer(minLength: 8)
+                                Image(systemName: "speaker.wave.2.fill")
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundStyle(Palette.text)
+                            }
+                            .padding(.vertical, 12)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("\(s.interval.name): \(s.song). Play it")
+                        Rectangle().fill(Palette.line).frame(height: 1)
+                    }
+                }
+                .padding(.top, 12)
+
+                Text("Later levels add their own: a miss names the song for the interval you heard.")
+                    .bodyText(13)
+                    .foregroundStyle(Palette.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 12)
+            }
+            .padding(24)
+        }
     }
 }
 

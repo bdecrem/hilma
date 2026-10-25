@@ -235,18 +235,28 @@ enum EarGame {
         var hint: String {
             switch self {
             case .minor2: "Half step: the Jaws theme. As close as two notes get."
-            case .major2: "Whole step: the first two notes of Happy Birthday's \"birth-day\"."
+            case .major2: "Whole step: Happy Birthday, from \"py\" to \"birth\"."
             case .minor3: "Minor 3rd: the start of Greensleeves. Sad, small."
-            case .major3: "Major 3rd: When the Saints Go Marching In. Bright, sweet."
+            case .major3: "Major 3rd: When the Saints Go Marching In, from \"Oh\" to \"when\". Bright, sweet."
             case .fourth: "Fourth: Here Comes the Bride. Open, a step up to IV."
             case .tritone: "Tritone: The Simpsons. Half an octave, restless."
-            case .fifth: "Fifth: Twinkle Twinkle, from \"twin\" to \"kle\". Wide, hollow, the power chord."
+            case .fifth: "Fifth: Twinkle Twinkle, from the first \"twinkle\" to the second. Wide, hollow, the power chord."
             case .minor6: "Minor 6th: The Entertainer's leap. Wide and bittersweet."
             case .major6: "Major 6th: My Bonnie Lies Over the Ocean. Wide and warm."
             case .octave: "Octave: Somewhere Over the Rainbow. The same note, higher."
             }
         }
     }
+
+    /// The songs to hum before you guess: the leap at the start of each is the interval. The
+    /// interval game's info panel lists them, smallest first.
+    static let songs: [(interval: Interval, song: String, from: String, to: String)] = [
+        (.major2, "Happy Birthday", "Hap-py", "birth-day"),
+        (.major3, "When the Saints Go Marching In", "Oh", "when the"),
+        (.fourth, "Here Comes the Bride", "Here", "comes the"),
+        (.fifth, "Twinkle Twinkle Little Star", "Twin-kle", "twin-kle"),
+        (.octave, "Somewhere Over the Rainbow", "Some-", "where"),
+    ]
 
     struct IntervalLevel: Equatable {
         let number: Int

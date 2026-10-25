@@ -102,6 +102,15 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   Bride, Twinkle Twinkle…). `Snapshot.intervals`. DEBUG `-EarKind intervals`. `-LessonCheck`
   110/110.
 
+- **Song list and app icon: 0.1 (11), 2026-10-25.** Intervals has a "Hum it first" sheet (the
+  music-note button top right; DEBUG `-EarInfo YES` opens it): five songs whose first leap is the
+  interval (`EarGame.songs`: Happy Birthday, When the Saints, Here Comes the Bride, Twinkle
+  Twinkle, Somewhere Over the Rainbow), each row playing it up from middle C. The app icon is the
+  start-repeat sign, dark version (`branding/icon/`: the spec, the SVGs, and `render.cjs`, which
+  writes the iOS 1024 and the Mac sizes, rounded 824 body, no staff at ≤32 px, into
+  `AppIcon.appiconset`; run `node apps/takt/branding/icon/render.cjs apps/takt/branding/icon/svg/takt-icon-dark.svg
+  apps/takt/Takt/Assets.xcassets/AppIcon.appiconset` from the repo root with sharp installed).
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="314" height="541" viewBox="355.33 241.66 313.34 540.67">
+  <title>Takt mark: repeat sign only, for in-app use (bars use currentColor, dots use signal orange)</title>
+  <g fill="currentColor">
+    <rect x="355.33" y="241.66" width="81.92" height="540.67"/>
+    <rect x="483.33" y="241.66" width="26.62" height="540.67"/>
+  </g>
+  <g fill="#FF5A1F">
+    <circle cx="620.03" cy="445.44" r="48.64"/>
+    <circle cx="620.03" cy="578.56" r="48.64"/>
+  </g>
+</svg>
