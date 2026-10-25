@@ -1875,7 +1875,7 @@ Tutor" (ASC id 6826824040), internal group "Internal" (all builds, tester kurona
 network client, user-selected files; CoreMIDI and playback need nothing more; checked on the Air:
 audio, MIDI from a virtual source and the ola.cx account all work sandboxed). The iMac ships it
 (`TAKT_PROFILE="takt catalyst appstore imac" ASC_KEY_ID=5A5HNSWA33`, profile against its
-Apple Distribution cert `0DDCC75F…`), archiving on the mini at 171.66.240.175. **The MacBook Air
+Apple Distribution cert `0DDCC75F…`), archiving on the mini at 171.66.240.175. A mini archive is unsigned, so it carries no entitlements: the script ad-hoc signs the Mac app with `Takt-Mac.entitlements` before export, otherwise the export signs with the profile's alone and ASC refuses it ("App sandbox not enabled"). **The MacBook Air
 ships it too since 2026-10-30** (`MINI=local ./testflight/ship-via-mini.sh mac`): it now holds a
 "3rd Party Mac Developer Installer" identity (Mac Installer Distribution cert `UFUMCYT3W9`,
 serial `6C88B10E…`, minted over the ASC API from an openssl CSR after Bart okayed revoking the

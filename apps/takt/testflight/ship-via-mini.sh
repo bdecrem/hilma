@@ -63,6 +63,10 @@ fi
 PLIST=$(find "$OUT/takt.xcarchive/Products/Applications/Takt.app" -maxdepth 2 -name Info.plist | head -1)
 GOT=$(/usr/libexec/PlistBuddy -c "Print CFBundleVersion" "$PLIST")
 [ "$GOT" = "$BUILD" ] || { echo "error: the mini archived build $GOT, project.yml says $BUILD" >&2; exit 1; }
+# The archive is unsigned, so it carries no entitlements and the export would sign with the
+# profile's alone (no sandbox: the Mac App Store refuses it). An ad-hoc signature puts them in.
+[ "$PLATFORM" = mac ] && codesign -f -s - --entitlements Takt/Takt-Mac.entitlements \
+  "$OUT/takt.xcarchive/Products/Applications/Takt.app"
 
 INSTALLER=""
 [ "$PLATFORM" = mac ] && INSTALLER="<key>installerSigningCertificate</key><string>3rd Party Mac Developer Installer</string>"
