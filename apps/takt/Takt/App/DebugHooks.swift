@@ -1,5 +1,5 @@
 #if DEBUG
-import Foundation
+import SwiftUI
 
 /// Launch-argument hooks for headless checks. Compiled out of Release.
 ///
@@ -11,7 +11,69 @@ import Foundation
 /// `-RecordTo <wav> [-RecordSeconds 10]` records the live render (use with `-Silent 1`) and exits.
 ///
 /// `-TestPress <note>` holds that key down a second after launch, through the same path as a touch.
+///
+/// `-Autoplay perfect|loose|sloppy|rush` plays the lesson for you (Autoplay.swift).
+///
+/// `-ClockTo <file>` writes, once the band rolls, the host time at which tick 0 is heard:
+///   `<mach ticks> <seconds> <bpm>`, for a player outside the app (scripts/midiplay.swift).
+///
+/// `-LessonCheck` runs the Scorer and the LessonEngine against scripted players and exits
+///   (LessonCheck.swift).
+///
+/// `-SnapshotAt "name:tick,..." -SnapshotDir <dir>` renders the wide (Mac) lesson screen
+///   offscreen when each transport tick is heard, in both themes: `<dir>/<name>-dark.png` and
+///   `-paper.png`, 1100×768 pt at 2x. ImageRenderer needs no window, so it works with the screen
+///   locked, when a window capture fails.
 enum DebugHooks {
+    private static var snapshots: [(name: String, tick: Double)] = {
+        guard let list = UserDefaults.standard.string(forKey: "SnapshotAt") else { return [] }
+        return list.split(separator: ",").map { item in
+            let parts = item.split(separator: ":")
+            guard parts.count == 2, let tick = Double(parts[1]) else { fatalError("-SnapshotAt item \(item)") }
+            return (String(parts[0]), tick)
+        }.sorted { $0.tick < $1.tick }
+    }()
+
+    static func snapshotIfDue(_ player: Player, tick: Double) {
+        guard let next = snapshots.first, tick >= next.tick else { return }
+        guard let dir = UserDefaults.standard.string(forKey: "SnapshotDir") else { fatalError("-SnapshotAt needs -SnapshotDir") }
+        snapshots.removeFirst()
+        MainActor.assumeIsolated {
+            for theme in [Theme.dark, .paper] {
+                let screen = LessonScreen(state: player.lessonState())
+                    .environment(\.horizontalSizeClass, .regular)
+                    .environment(\.colorScheme, theme.colorScheme)
+                    .frame(width: 1100, height: 768)
+                let renderer = ImageRenderer(content: screen)
+                renderer.scale = 2
+                guard let png = renderer.uiImage?.pngData() else { fatalError("snapshot \(next.name) did not render") }
+                try? png.write(to: URL(fileURLWithPath: dir).appendingPathComponent("\(next.name)-\(theme.rawValue).png"))
+            }
+        }
+    }
+
+    static func autoplayIfRequested(_ player: Player) {
+        guard let name = UserDefaults.standard.string(forKey: "Autoplay") else { return }
+        guard let mode = Autoplay.Mode(rawValue: name) else { fatalError("unknown -Autoplay \(name)") }
+        player.autoplayMode = mode
+    }
+
+    static func lessonCheckIfRequested() {
+        guard UserDefaults.standard.bool(forKey: "LessonCheck") else { return }
+        exit(LessonCheck.run() ? 0 : 1)
+    }
+
+    private static var clockWritten = false
+
+    static func writeClockIfRequested(_ clock: TransportClock) {
+        guard !clockWritten, let path = UserDefaults.standard.string(forKey: "ClockTo"),
+              clock.snapshot.anchor.rolling, clock.snapshot.anchor.tick == 0,
+              let h0 = clock.hostTime(atTick: 0) else { return }
+        clockWritten = true
+        let line = String(format: "%llu %.6f %.3f\n", h0, Double(h0) / clock.hostTicksPerSecond, clock.snapshot.anchor.tempo)
+        try? line.write(toFile: path, atomically: true, encoding: .utf8)
+    }
+
     static func pressIfRequested(_ player: Player) {
         let note = UserDefaults.standard.integer(forKey: "TestPress")
         guard note > 0 else { return }

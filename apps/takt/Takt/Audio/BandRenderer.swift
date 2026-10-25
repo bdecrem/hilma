@@ -20,6 +20,8 @@ enum EngineCommand {
     /// Live notes carry the host time of the key event (0 = as soon as possible).
     case noteOn(note: Int, velocity: Float, hostTime: UInt64 = 0)
     case noteOff(note: Int, hostTime: UInt64 = 0)
+    /// A monitor note at a transport tick, sample-accurate (autoplay). Held for `lengthTicks`.
+    case schedule(note: Int, velocity: Float, tick: Double, lengthTicks: Double)
     /// Seconds from render to the speaker; beat times the UI sees include it.
     case outputLatency(Double)
 }
@@ -34,7 +36,20 @@ struct EngineSnapshot {
         var chorus = 0
     }
 
+    /// The frame → tick mapping from `frame` on. Held (paused, stopped): `samplesPerTick` is
+    /// infinite and every frame maps to `tick`.
+    struct Anchor {
+        var frame: Int64 = 0
+        var tick = 0.0
+        var samplesPerTick = Double.infinity
+        var tempo = 0.0
+
+        var rolling: Bool { samplesPerTick.isFinite }
+    }
+
     var playing = false
+    /// Counts stops: ticks restart from 0 in a new epoch.
+    var epoch = 0
     var tempo = 0.0
     /// The tempo waiting for the next downbeat, 0 when none.
     var pendingTempo = 0.0
@@ -45,13 +60,14 @@ struct EngineSnapshot {
     var muted: UInt8 = 0
     var pendingUnmute: UInt8 = 0
 
-    // Clock mapping: host time → frame → transport tick.
+    // Clock mapping: host time → frame → transport tick (see TransportClock).
     var sampleRate = 48000.0
     var refFrame: Int64 = 0
     var refHostTime: UInt64 = 0
-    var anchorFrame: Int64 = 0
-    var anchorTick = 0.0
-    var samplesPerTick = 0.0
+    /// The mapping now, and the one before it: a note played just before a tempo change
+    /// (or a pause) can be read after the render thread has moved on.
+    var anchor = Anchor()
+    var previousAnchor = Anchor()
 
     func level(_ c: Channel) -> Float {
         switch c {
@@ -123,6 +139,16 @@ final class BandRenderer {
     private var liveCount = 0
     private var liveNext = 0
 
+    /// Scheduled monitor notes (autoplay), sorted by tick.
+    private struct Scheduled {
+        var tick: Double
+        var note: Int
+        var velocity: Float
+        var lengthTicks: Double
+    }
+    private let scheduled = UnsafeMutableBufferPointer<Scheduled>.allocate(capacity: 64)
+    private var scheduledCount = 0
+
     private var frame: Int64 = 0
     private var playing = false
     private var tempo: Double
@@ -141,6 +167,9 @@ final class BandRenderer {
     private var pendingUnmute: UInt8 = 0
     private var latencySeconds = 0.0
     private var hostTicksPerSecond: Double
+    private var epoch = 0
+    private var anchor = EngineSnapshot.Anchor()
+    private var previousAnchor = EngineSnapshot.Anchor()
 
     private let maxChunk = 4096
     private let busL: UnsafeMutablePointer<Float>
@@ -208,6 +237,8 @@ final class BandRenderer {
         commands.reserveCapacity(256)
         inbox.withLock { $0.reserveCapacity(256) }
         _ = sineTable[0]
+        anchor = .init(frame: 0, tick: 0, samplesPerTick: .infinity, tempo: tempo)
+        previousAnchor = anchor
         publish(hostTime: nil, frames: 0)
     }
 
@@ -232,6 +263,8 @@ final class BandRenderer {
                     queueLive(note: note, velocity: velocity, on: true, host: host, now: callbackTime, frames: n)
                 case .noteOff(let note, let host):
                     queueLive(note: note, velocity: 0, on: false, host: host, now: callbackTime, frames: n)
+                case .schedule(let note, let velocity, let tick, let length):
+                    schedule(Scheduled(tick: tick, note: note, velocity: velocity, lengthTicks: length))
                 default:
                     apply(c)
                 }
@@ -267,6 +300,17 @@ final class BandRenderer {
         liveCount += 1
     }
 
+    private func schedule(_ item: Scheduled) {
+        guard scheduledCount < scheduled.count else { return }
+        var i = scheduledCount
+        while i > 0 && scheduled[i - 1].tick > item.tick {
+            scheduled[i] = scheduled[i - 1]
+            i -= 1
+        }
+        scheduled[i] = item
+        scheduledCount += 1
+    }
+
     private func renderChunk(_ n: Int, hostTime: UInt64?, outL: UnsafeMutablePointer<Float>, outR: UnsafeMutablePointer<Float>) {
         busL.update(repeating: 0, count: maxChunk * 5)
         busR.update(repeating: 0, count: maxChunk * 5)
@@ -275,20 +319,28 @@ final class BandRenderer {
         let end = frame + Int64(n)
         var cursor = start
         while true {
-            // The next thing to happen in this chunk: a beat, a band event or a live note.
-            // A beat goes before an event on the same tick (a tempo change re-anchors first).
+            // The next thing to happen in this chunk: a beat, a band event, a scheduled note or a
+            // live note. A beat goes before an event on the same tick (a tempo change re-anchors
+            // first). Frames are recomputed each pass, so everything after a re-anchor moves with it.
             var at = end
             var what = 0
             if playing {
                 let beatTick = Double(nextBeatTick)
                 let eventTick = Double(loopBase + events[nextEvent].tick)
                 if beatTick <= eventTick {
-                    at = min(at, frameFor(tick: beatTick)); what = at < end ? 1 : 0
+                    let f = frameFor(tick: beatTick)
+                    if f < at { at = f; what = 1 }
                 } else {
-                    at = min(at, frameFor(tick: eventTick)); what = at < end ? 2 : 0
+                    let f = frameFor(tick: eventTick)
+                    if f < at { at = f; what = 2 }
+                }
+                if scheduledCount > 0 {
+                    // A note scheduled for a tick already rendered plays at once.
+                    let f = max(cursor, frameFor(tick: scheduled[0].tick))
+                    if f < at { at = f; what = 4 }
                 }
             }
-            if liveNext < liveCount, live[liveNext].frame < (what == 0 ? end : at) {
+            if liveNext < liveCount, live[liveNext].frame < at {
                 at = max(cursor, live[liveNext].frame)
                 what = 3
             }
@@ -298,6 +350,7 @@ final class BandRenderer {
             switch what {
             case 1: beat(tick: nextBeatTick, at: at, chunkStart: start, hostTime: hostTime)
             case 2: fire(at: at)
+            case 4: fireScheduled()
             default:
                 let l = live[liveNext]
                 liveNext += 1
@@ -307,6 +360,24 @@ final class BandRenderer {
         renderVoices(from: Int(cursor - start), to: n)
         mixDown(n, outL: outL, outR: outR)
         frame = end
+    }
+
+    private func fireScheduled() {
+        let s = scheduled[0]
+        scheduledCount -= 1
+        for i in 0..<scheduledCount { scheduled[i] = scheduled[i + 1] }
+        age += 1
+        monitorVoices[slot(monitorVoices)].start(note: s.note, velocity: s.velocity, patch: .rhodes,
+                                                 heldFrames: Int(s.lengthTicks * samplesPerTick),
+                                                 live: false, age: age, sampleRate: sampleRate)
+    }
+
+    /// Publishes the frame → tick mapping after the transport changed it.
+    private func reanchor() {
+        previousAnchor = anchor
+        anchor = playing
+            ? .init(frame: anchorFrame, tick: anchorTick, samplesPerTick: samplesPerTick, tempo: tempo)
+            : .init(frame: frame, tick: heldTick, samplesPerTick: .infinity, tempo: tempo)
     }
 
     @inline(__always) private func frameFor(tick: Double) -> Int64 {
@@ -327,6 +398,7 @@ final class BandRenderer {
                 anchorFrame = at
                 anchorTick = Double(tick)
                 samplesPerTick = sampleRate * 60 / (tempo * Double(ticksPerBeat))
+                reanchor()
             }
             if pendingUnmute != 0 {
                 muted &= ~pendingUnmute
@@ -523,11 +595,13 @@ final class BandRenderer {
             anchorFrame = frame
             anchorTick = heldTick
             nextBeatTick = Int((heldTick / Double(ticksPerBeat)).rounded(.up)) * ticksPerBeat
+            reanchor()
         case .pause:
             guard playing else { return }
             heldTick = tickAt(frame: frame)
             playing = false
             releaseBand()
+            reanchor()
         case .stop:
             playing = false
             heldTick = 0
@@ -536,13 +610,17 @@ final class BandRenderer {
             nextBeatTick = 0
             previousBeat = .init()
             lastBeat = .init()
+            scheduledCount = 0
+            epoch += 1
             releaseBand()
+            reanchor()
         case .tempo(let bpm):
             if playing {
                 pendingTempo = bpm == tempo ? 0 : bpm
             } else {
                 tempo = bpm
                 samplesPerTick = sampleRate * 60 / (tempo * Double(ticksPerBeat))
+                anchor.tempo = tempo
             }
         case .mute(let ch, let on):
             if on {
@@ -553,7 +631,7 @@ final class BandRenderer {
             } else {
                 muted &= ~ch.bit
             }
-        case .noteOn, .noteOff:
+        case .noteOn, .noteOff, .schedule:
             break  // placed in time by `render`
         case .outputLatency(let s):
             latencySeconds = s
@@ -587,6 +665,7 @@ final class BandRenderer {
         func db(_ x: Float) -> Float { x < 0.000001 ? -120 : 20 * log10(x) }
         _ = published.withLockIfAvailable { s in
             s.playing = playing
+            s.epoch = epoch
             s.tempo = tempo
             s.pendingTempo = pendingTempo
             s.lastBeat = lastBeat
@@ -600,9 +679,8 @@ final class BandRenderer {
                 s.refFrame = frame - Int64(frames)
                 s.refHostTime = hostTime + UInt64(latencySeconds * hostTicksPerSecond)
             }
-            s.anchorFrame = playing ? anchorFrame : frame
-            s.anchorTick = playing ? anchorTick : heldTick
-            s.samplesPerTick = playing ? samplesPerTick : .infinity
+            s.anchor = anchor
+            s.previousAnchor = previousAnchor
         }
     }
 }

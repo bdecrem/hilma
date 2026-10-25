@@ -8,30 +8,29 @@ struct TaktApp: App {
     init() {
         #if DEBUG
         DebugHooks.renderIfRequested()
+        DebugHooks.lessonCheckIfRequested()
         #endif
         _player = State(initialValue: Self.makePlayer())
     }
 
-    /// The band is already playing when the lesson opens (principle 1). Launch arguments:
-    /// `-Tempo <bpm>`, `-AutoPlay 0`, `-Silent 1` (speakers off, everything else runs).
+    /// The band is already playing when the lesson opens (principle 1), at step 1's tempo.
+    /// Launch arguments: `-Tempo <bpm>`, `-Paused 1` (band stopped), `-Silent 1` (speakers off,
+    /// everything else runs); DEBUG: `-Autoplay <mode>` and the hooks in DebugHooks.
     private static func makePlayer() -> Player? {
         #if DEBUG
         if UserDefaults.standard.string(forKey: "PreviewFrame") != nil { return nil }
         #endif
         let d = UserDefaults.standard
-        let tempo = d.double(forKey: "Tempo") > 0 ? d.double(forKey: "Tempo") : 70
-        let audio = AudioEngine(band: .bundled("band-blues-C"), tempo: tempo)
-        // Keys and horns are locked until the lesson unlocks them (M3).
-        audio.send(.mute(.keys, true))
-        audio.send(.mute(.horns, true))
+        let lesson = Lesson.bundled("lesson-A1")
+        let tempo = d.double(forKey: "Tempo") > 0 ? d.double(forKey: "Tempo") : Double(lesson.steps[0].tempo!)
+        let audio = AudioEngine(band: .bundled(lesson.band), tempo: tempo)
+        let player = Player(audio: audio, lesson: lesson)
         audio.start(silent: d.bool(forKey: "Silent"))
-        if d.object(forKey: "AutoPlay") == nil || d.bool(forKey: "AutoPlay") {
-            audio.send(.play)
-        }
-        let player = Player(audio: audio)
+        if !d.bool(forKey: "Paused") { audio.send(.play) }
         #if DEBUG
         DebugHooks.recordIfRequested(audio)
         DebugHooks.pressIfRequested(player)
+        DebugHooks.autoplayIfRequested(player)
         #endif
         return player
     }
@@ -58,6 +57,17 @@ struct TaktApp: App {
                 ))
                 .keyboardShortcut("l", modifiers: [.command, .shift])
             }
+            #if DEBUG
+            if let player {
+                CommandMenu("Debug") {
+                    Picker("Autoplay", selection: Binding(get: { player.autoplayMode },
+                                                          set: { player.autoplayMode = $0 })) {
+                        Text("Off").tag(Autoplay.Mode?.none)
+                        ForEach(Autoplay.Mode.allCases) { Text($0.title).tag(Optional($0)) }
+                    }
+                }
+            }
+            #endif
         }
     }
 }
@@ -67,12 +77,12 @@ struct LiveLessonScreen: View {
     let player: Player
 
     var body: some View {
-        LessonScreen(state: player.lessonState(from: .preview))
+        LessonScreen(state: player.lessonState())
             .environment(\.lessonControls, LessonControls(
                 togglePlay: player.togglePlay,
                 stop: player.stop,
                 nudgeTempo: player.nudgeTempo,
-                toggleMute: { i in player.toggleMute([Channel.drums, .bass, .keys, .horns][i]) },
+                toggleMute: { i in player.toggleMute(player.channels[i]) },
                 press: { player.press($0) },
                 release: player.release
             ))

@@ -117,12 +117,22 @@ final class AudioEngine {
             AVFormatIDKey: kAudioFormatLinearPCM, AVSampleRateKey: format.sampleRate,
             AVNumberOfChannelsKey: 2, AVLinearPCMBitDepthKey: 24,
         ], commonFormat: .pcmFormatFloat32, interleaved: false)
+        // The file finishes its WAV header (the sizes) when it is released, so it must be gone
+        // before `done` (which exits): the tap holds it through a box that lets go first.
+        let box = FileBox(file)
         source.installTap(onBus: 0, bufferSize: 4096, format: format) { buffer, _ in
-            try? file.write(from: buffer)
+            box.lock.withLock { try? box.file?.write(from: buffer) }
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + seconds) { [source] in
             source.removeTap(onBus: 0)
+            box.lock.withLock { box.file = nil }
             done()
         }
     }
+}
+
+private final class FileBox {
+    let lock = NSLock()
+    var file: AVAudioFile?
+    init(_ file: AVAudioFile) { self.file = file }
 }

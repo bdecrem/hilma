@@ -31,8 +31,8 @@ struct ChannelState: Identifiable {
     var pendingUnmute = false
 }
 
-/// Everything the lesson screen draws. The views are pure functions of this;
-/// from M2 on the LessonEngine publishes it, in M0 it is a fixed frame.
+/// Everything the lesson screen draws. The views are pure functions of this. Live, the Player
+/// builds it from the transport and the LessonEngine; the fixed frames below are for screenshots.
 struct LessonState {
     var code: String
     var title: String
@@ -53,6 +53,8 @@ struct LessonState {
     var channels: [ChannelState]
     var coach: String
     var lastChorus: String?
+    /// "11 of 12 · 23 ms early" under the last-chorus line.
+    var lastChorusDetail: String? = nil
     /// MIDI note numbers (C4 = 60) of the key to press now and the one after it.
     var nowNote: Int?
     var nextNote: Int?
@@ -83,6 +85,7 @@ struct LessonState {
         ],
         coach: "Get ready. F on the 1.",
         lastChorus: "Rushed bar 9.",
+        lastChorusDetail: "11 of 12 · 31 ms early",
         nowNote: 48,
         nextNote: 53
     )
@@ -109,6 +112,7 @@ struct LessonState {
         ],
         coach: "Three clean at 90 and it's yours.",
         lastChorus: "Clean.",
+        lastChorusDetail: "24 of 24 · 6 ms late",
         nowNote: 48,
         nextNote: 55
     )
