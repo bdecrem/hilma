@@ -82,8 +82,16 @@ export function rescueFor(entries: Entry[], saves: Set<string>, today: string, h
     days.push(...gap)
   }
   if (days.length === 0) return null
-  days.sort()
-  const from = entries.find((e) => e.day < days[0])!
+  return rechain(entries, saves, days, held)
+}
+
+/// The plan for covering `days` (missed days, any order): the entries after
+/// the last kept day before them, re-chained. `gift` covers them without
+/// spending the hand (an admin restore, scripts/onething/joker-restore.ts).
+export function rechain(entries: Entry[], saves: Set<string>, missed: string[], held: number, gift = false): Rescue {
+  const days = [...missed].sort()
+  const from = entries.find((e) => e.day < days[0])
+  if (!from) throw new JokerError('Nothing kept before those days to join up with.')
   const all = new Set([...saves, ...days])
   const later = entries.filter((e) => e.day > from.day).reverse()
   let prev = from.day
@@ -108,7 +116,7 @@ export function rescueFor(entries: Entry[], saves: Set<string>, today: string, h
     now: after.length ? after[after.length - 1].becomes : from.streak,
     deals,
     held,
-    left: Math.min(JOKER_MAX, held - days.length + deals),
+    left: Math.min(JOKER_MAX, held - (gift ? 0 : days.length) + deals),
     until: addDays(days[0], JOKER_REACH),
     latest: entries[0].day,
   }
@@ -138,6 +146,32 @@ export async function dealJoker(userId: string): Promise<number | null> {
 
 export class JokerError extends Error {}
 
+/// Apply a plan in one transaction (onething_play_joker): the hand, the
+/// covered days, the re-chained entries; refused if any of them moved.
+async function apply(userId: string, r: Rescue): Promise<void> {
+  const { error } = await f2Supabase().rpc('onething_play_joker', {
+    p_user: userId,
+    p_held: r.held,
+    p_after: r.left,
+    p_days: r.days,
+    p_rows: r.after.map((a) => ({ id: a.id, was: a.was, streak: a.becomes, points: a.points })),
+    p_latest: r.latest,
+  })
+  if (error) throw new Error(`onething: play joker failed: ${error.message}`)
+}
+
+/// An admin restore: cover these missed days as a gift (the hand is not
+/// spent; a tenth day reached on the way still deals). Every day must really
+/// be missed, neither written nor already covered. `dryRun` returns the plan only.
+export async function restoreStreak(user: User, days: string[], dryRun = true): Promise<Rescue> {
+  const [entries, saves] = await Promise.all([listEntries(user.id), listSaves(user.id)])
+  const taken = days.filter((d) => saves.has(d) || entries.some((e) => e.day === d))
+  if (taken.length) throw new JokerError(`Not missed: ${taken.join(', ')}`)
+  const r = rechain(entries, saves, days, user.jokers ?? 0, true)
+  if (!dryRun) await apply(user.id, r)
+  return r
+}
+
 /// Play the jokers on the offer the person saw (`expect`: its days). Refuses
 /// when the offer has changed since, so a stale page never spends a joker on
 /// something other than what it showed.
@@ -146,15 +180,7 @@ export async function playJokers(user: User, today: string, expect: string[]): P
   const r = rescueFor(entries, saves, today, user.jokers ?? 0)
   if (!r) throw new JokerError('There is nothing for a joker to save right now.')
   if (r.days.join() !== [...expect].sort().join()) throw new JokerError('That changed while you were looking. Here it is again.')
-  const { error } = await f2Supabase().rpc('onething_play_joker', {
-    p_user: user.id,
-    p_held: r.held,
-    p_after: r.left,
-    p_days: r.days,
-    p_rows: r.after.map((a) => ({ id: a.id, was: a.was, streak: a.becomes, points: a.points })),
-    p_latest: r.latest,
-  })
-  if (error) throw new Error(`onething: play joker failed: ${error.message}`)
+  await apply(user.id, r)
   return r
 }
 
