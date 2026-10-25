@@ -91,7 +91,7 @@ struct LessonRow: View {
                 Text(entry.meta)
                     .bodyText(14)
                     .foregroundStyle(Palette.muted)
-                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
                 statusLine
             }
             Spacer(minLength: 0)
@@ -154,7 +154,8 @@ struct NowPlayingStrip: View {
                 Text(player.audio.band.name)
                     .bodyText(15, weight: .semibold)
                     .foregroundStyle(Palette.text)
-                    .lineLimit(1)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 8)
             TransportButton(symbol: player.playing ? "pause.fill" : "play.fill", lit: player.playing, size: 34,

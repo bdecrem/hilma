@@ -3,7 +3,7 @@ import SwiftUI
 /// Which screen is up. The band plays under every one of them (principle 1: the band is
 /// already playing); only the lesson screen scores what you play.
 enum Route: Equatable {
-    case lessons, lesson, result, settings
+    case lessons, lesson, result, settings, calibrate
 }
 
 /// The app's screens and what they share: the player (band, monitor, lesson), the progress
@@ -16,6 +16,10 @@ final class AppModel {
     let player: Player?
     let progress: ProgressStore
     let account: AccountStore
+    /// The Mac's save panel for the loop (Export MIDI, ⌘E).
+    var exporting = false
+    /// Where calibration goes when it is done: the lesson (first time) or Settings.
+    private var afterCalibration: Route = .lessons
 
     init(player: Player?, progress: ProgressStore, account: AccountStore) {
         self.player = player
@@ -27,6 +31,7 @@ final class AppModel {
             case "lessons": route = .lessons
             case "lesson": route = .lesson
             case "settings": route = .settings
+            case "calibrate": route = .calibrate
             default: fatalError("unknown -Route \(r)")
             }
         }
@@ -39,8 +44,16 @@ final class AppModel {
     func open(lesson code: String) {
         guard let player, player.content.code == code else { return }
         if player.finish != nil { player.restartLesson() }
+        guard Player.calibrated else { return calibrate(then: .lesson) }
         route = .lesson
     }
+
+    func calibrate(then next: Route) {
+        afterCalibration = next
+        route = .calibrate
+    }
+
+    func leaveCalibration() { route = afterCalibration }
 
     func restart(lesson code: String) {
         guard let player, player.content.code == code else { return }

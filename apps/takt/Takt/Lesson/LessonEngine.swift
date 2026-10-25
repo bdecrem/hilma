@@ -76,8 +76,14 @@ final class LessonEngine {
     struct Finish: Equatable {
         struct Press: Equatable {
             let note: Int
+            /// From the chorus's bar 1 (an early first note is negative).
             let tick: Double
+            var velocity: Float = 0.8
+            var lengthTicks: Double = 6
         }
+        let code: String
+        /// Bars in the chorus.
+        let bars: Int
         let presses: [Press]
         let expected: [ExpectedNote]
         /// 0-based bars the band sat out.
@@ -242,12 +248,18 @@ final class LessonEngine {
 
     /// A key press, placed on the transport (see TransportClock). Presses while the transport
     /// holds, on a card, and after a step passed or finished, are not scored.
-    func played(note: Int, tick: Double, msPerTick: Double, epoch: Int) {
+    func played(note: Int, tick: Double, msPerTick: Double, epoch: Int, velocity: Float = 0.8) {
         let c = chorus(ofPress: tick)
         guard epoch == self.epoch, msPerTick.isFinite, scoring, c >= nextChorus, c >= firstChorus else { return }
-        presses.append(PlayedNote(note: note, tick: tick, msPerTick: msPerTick))
+        presses.append(PlayedNote(note: note, tick: tick, msPerTick: msPerTick, velocity: velocity))
         // The press knows its tempo too: display frames stop while the window is hidden.
         minTempo[c] = min(minTempo[c] ?? .infinity, 60000 / (msPerTick * Double(ticksPerBeat)))
+    }
+
+    /// A key let go: the length of its press, for the exported loop.
+    func released(note: Int, tick: Double, epoch: Int) {
+        guard epoch == self.epoch, let i = presses.lastIndex(where: { $0.note == note && $0.lengthTicks == nil }) else { return }
+        presses[i].lengthTicks = max(1, tick - presses[i].tick)
     }
 
     private func judge(_ c: Int) {
@@ -269,7 +281,12 @@ final class LessonEngine {
             // Any completion: the chorus was played through.
             guard c == aloneChorus else { return }
             let base = Double(c * loopTicks)
-            finish = Finish(presses: mine.map { .init(note: $0.note, tick: $0.tick - base) }, expected: expected,
+            // A key still down at the downbeat keeps a quarter note, inside the chorus.
+            let presses = mine.map { p in
+                Finish.Press(note: p.note, tick: p.tick - base, velocity: p.velocity,
+                             lengthTicks: p.lengthTicks ?? max(1, min(Double(ticksPerBeat), base + Double(loopTicks) - p.tick)))
+            }
+            finish = Finish(code: lesson.code, bars: lesson.form.count, presses: presses, expected: expected,
                             aloneBars: step.aloneBars!.map { $0 - 1 }, tempo: Int(tempo.rounded()),
                             summary: result.summary, detail: result.detail)
             output.lastChorus = result.summary

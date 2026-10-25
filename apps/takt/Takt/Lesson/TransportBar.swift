@@ -23,6 +23,7 @@ struct TransportBar: View {
                         .dataLabel(12)
                         .foregroundStyle(Palette.muted)
                         .lineLimit(1)
+                        .minimumScaleFactor(0.7)
                 }
                 Spacer(minLength: 8)
                 transportButtons(size: 34)

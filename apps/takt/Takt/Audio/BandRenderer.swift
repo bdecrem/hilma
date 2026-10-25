@@ -22,6 +22,9 @@ enum EngineCommand {
     case noteOff(note: Int, hostTime: UInt64 = 0)
     /// A monitor note at a transport tick, sample-accurate (autoplay). Held for `lengthTicks`.
     case schedule(note: Int, velocity: Float, tick: Double, lengthTicks: Double)
+    /// A cross-stick click at a transport tick, sample-accurate, on the monitor's bus so it
+    /// sounds whatever the mutes (calibration).
+    case click(tick: Double, velocity: Float)
     /// Seconds from render to the speaker; beat times the UI sees include it.
     case outputLatency(Double)
     /// The band sits out from tick `from` to `to` (absolute transport ticks), sample-accurately:
@@ -132,6 +135,7 @@ final class BandRenderer {
 
     private let events: UnsafeMutableBufferPointer<Event>
     private let drumSounds: UnsafeMutableBufferPointer<DrumSound>
+    private let clickSound: Int
     /// The pitched instruments, by name in `instrumentIndex`; `monitor` is the player's piano.
     private let instruments: [SampledInstrument]
     private let monitor: Int
@@ -149,14 +153,16 @@ final class BandRenderer {
     private var liveCount = 0
     private var liveNext = 0
 
-    /// Scheduled monitor notes (autoplay), sorted by tick.
+    /// Scheduled monitor notes (autoplay, Play it back) and clicks, sorted by tick.
     private struct Scheduled {
         var tick: Double
         var note: Int
         var velocity: Float
         var lengthTicks: Double
+        /// A click (the cross-stick) instead of a monitor note.
+        var click = false
     }
-    private let scheduled = UnsafeMutableBufferPointer<Scheduled>.allocate(capacity: 64)
+    private let scheduled = UnsafeMutableBufferPointer<Scheduled>.allocate(capacity: 256)
     private var scheduledCount = 0
 
     private var frame: Int64 = 0
@@ -228,6 +234,9 @@ final class BandRenderer {
                 group: s.kit == "hatOpen" ? 1 : 0, chokes: s.kit == "hat" || s.kit == "hatFoot" ? 1 : 0))
         }
 
+        guard let click = names.firstIndex(of: "xstick") else { fatalError("band: no xstick for the click") }
+        clickSound = click
+
         // Pitched instruments: each channel's own, any a note names, and the monitor's.
         var instrumentNames: [String] = []
         func instrument(_ name: String) -> Int {
@@ -296,6 +305,8 @@ final class BandRenderer {
                     queueLive(note: note, velocity: 0, on: false, host: host, now: callbackTime, frames: n)
                 case .schedule(let note, let velocity, let tick, let length):
                     schedule(Scheduled(tick: tick, note: note, velocity: velocity, lengthTicks: length))
+                case .click(let tick, let velocity):
+                    schedule(Scheduled(tick: tick, note: 0, velocity: velocity, lengthTicks: 0, click: true))
                 default:
                     apply(c)
                 }
@@ -398,6 +409,15 @@ final class BandRenderer {
         scheduledCount -= 1
         for i in 0..<scheduledCount { scheduled[i] = scheduled[i + 1] }
         age += 1
+        if s.click {
+            let d = drumSounds[clickSound]
+            let p = d.kit.pick(note: 0, velocity: s.velocity)
+            // On the monitor's bus: the drums may be muted. Its fader is lower than the drums'.
+            monitorVoices[slot(monitorVoices)].start(p.buffer, ratio: 1, gain: 1.8 * d.gain * p.gain * (0.3 + 0.7 * s.velocity),
+                                                     heldFrames: .max, releaseSeconds: d.kit.release, group: 0, age: age,
+                                                     sampleRate: sampleRate)
+            return
+        }
         play(instruments[monitor], note: s.note, velocity: s.velocity, held: Int(s.lengthTicks * samplesPerTick),
              live: false, in: monitorVoices)
     }
@@ -663,7 +683,7 @@ final class BandRenderer {
             } else {
                 muted &= ~ch.bit
             }
-        case .noteOn, .noteOff, .schedule:
+        case .noteOn, .noteOff, .schedule, .click:
             break  // placed in time by `render`
         case .outputLatency(let s):
             latencySeconds = s

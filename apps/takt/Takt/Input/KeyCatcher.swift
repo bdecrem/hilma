@@ -2,13 +2,14 @@ import SwiftUI
 import UIKit
 
 /// The computer keyboard as a piano (brief §5): the home row is the white keys from C,
-/// W E T Y U O P the black keys, Z / X shift an octave. Space plays/pauses, ↑ / ↓ change tempo.
+/// W E T Y U O P the black keys, Z / X shift an octave. Space plays/pauses, ↑ / ↓ change tempo, Esc leaves the lesson.
 /// Physical key codes, so it works on any layout. Keys held with ⌘, ⌃ or ⌥ are left to menus.
 struct KeyCatcher: UIViewRepresentable {
     var onNote: (_ semitone: Int, _ down: Bool) -> Void
     var onOctave: (_ delta: Int) -> Void
     var onSpace: () -> Void
     var onTempo: (_ delta: Int) -> Void
+    var onEscape: () -> Void = {}
 
     func makeUIView(context: Context) -> CatcherView {
         let v = CatcherView()
@@ -58,6 +59,7 @@ struct KeyCatcher: UIViewRepresentable {
                     case .keyboardSpacebar: catcher.onSpace()
                     case .keyboardUpArrow: catcher.onTempo(5)
                     case .keyboardDownArrow: catcher.onTempo(-5)
+                    case .keyboardEscape: catcher.onEscape()
                     default: unhandled.insert(press)
                     }
                 }

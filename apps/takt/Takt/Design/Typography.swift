@@ -10,18 +10,24 @@ extension Font {
     }
 }
 
-/// Data & labels: SF Mono, uppercase, +12% tracking, 11–13 pt.
+/// Data & labels: SF Mono, uppercase, +12% tracking, 11–13 pt. They follow Dynamic Type up to
+/// 1.35x: they label a dense instrument panel (pads, strips, transport) whose boxes don't grow;
+/// past that they truncate and outgrow what they label. Body text scales all the way.
 struct DataLabel: ViewModifier {
-    @ScaledMetric private var size: CGFloat
+    static let maxScale: CGFloat = 1.35
+    @ScaledMetric private var scaled: CGFloat
+    private let base: CGFloat
     private let weight: Font.Weight
 
     init(size: CGFloat, weight: Font.Weight) {
-        _size = ScaledMetric(wrappedValue: size, relativeTo: size < 12 ? .caption2 : size < 13 ? .caption : .footnote)
+        _scaled = ScaledMetric(wrappedValue: size, relativeTo: size < 12 ? .caption2 : size < 13 ? .caption : .footnote)
+        base = size
         self.weight = weight
     }
 
     func body(content: Content) -> some View {
-        content
+        let size = min(scaled, base * Self.maxScale)
+        return content
             .font(.system(size: size, weight: weight, design: .monospaced))
             .textCase(.uppercase)
             .tracking(size * 0.12)

@@ -4,7 +4,7 @@ import Foundation
 /// `-LessonCheck`: the Scorer, the LessonEngine and the TransportClock against scripted
 /// players (the same Autoplay planner the app uses), no audio. One line per case.
 ///
-///   xcrun simctl launch --console <sim> com.bartdecrem.Takt -LessonCheck 1
+///   xcrun simctl launch --console <sim> com.bartdecrem.Takt -LessonCheck 1 [-ExportTo <file.mid>]
 enum LessonCheck {
     static func run() -> Bool {
         let lesson = Lesson.bundled("lesson-A1")
@@ -305,6 +305,85 @@ enum LessonCheck {
         let quietSilences = quiet.actions.compactMap { a -> Double? in if case .silence(let f, _) = a { return f / Double(loop) }; return nil }
         check("a silent payoff chorus re-arms the next", quiet.output.finished && quietSilences.count == 3
               && quiet.finish?.presses.count == 24, "\(quietSilences)")
+
+        // MARK: The exported loop (M4)
+
+        if let f = whole.finish, let path = UserDefaults.standard.string(forKey: "ExportTo") {
+            try? MIDIExport.data(f).write(to: URL(fileURLWithPath: path))
+        }
+        if let f = whole.finish, let file = MIDIFile.parse(MIDIExport.data(f)) {
+            let want = f.expected.map { $0.tick * 40 }.sorted()
+            check("export: SMF type 0, one track, 480 ppq, 4/4", file.format == 0 && file.tracks == 1 && file.ppq == 480
+                  && file.timeSignature == [4, 2, 24, 8], "format \(file.format) tracks \(file.tracks) ppq \(file.ppq) \(file.timeSignature)")
+            check("export: the tempo is the payoff's (90)", file.usPerQuarter == 666_667, "\(file.usPerQuarter) µs per quarter")
+            check("export: exactly 12 bars long", file.endTick == 12 * 4 * 480, "end \(file.endTick)")
+            check("export: every note on its beat from bar 1", file.notes.count == 24 && file.notes.map(\.tick).sorted() == want
+                  && file.notes.first?.tick == 0, "\(file.notes.count) notes, first at \(file.notes.first?.tick ?? -1)")
+            check("export: a key still down at the end holds a quarter", file.notes.allSatisfy { $0.length == 480 },
+                  "lengths \(Set(file.notes.map(\.length)))")
+            check("export: the name", file.name == "Takt A1 Chorus", file.name)
+        } else {
+            check("export: the file reads back", false)
+        }
+        let earlyFinish = LessonEngine.Finish(code: "A1", bars: 12, presses: [
+            .init(note: 36, tick: -3, velocity: 1, lengthTicks: 10),
+            .init(note: 43, tick: 24.5, velocity: 0.5, lengthTicks: 6),
+            .init(note: 36, tick: 570, velocity: 0.8, lengthTicks: 30),
+        ], expected: [], aloneBars: [10, 11], tempo: 72, summary: "", detail: nil)
+        let e = MIDIFile.notes(earlyFinish, ticksPerBeat: 12, bars: 12)
+        let wantEarly: [MIDIFile.Note] = [.init(tick: 0, length: 280, note: 36, velocity: 127),
+                                          .init(tick: 980, length: 240, note: 43, velocity: 64),
+                                          .init(tick: 22800, length: 240, note: 36, velocity: 102)]
+        check("export: an early first note starts on bar 1, nothing rings past the chorus, velocity kept", e == wantEarly, "\(e)")
+        let eFile = MIDIFile.parse(MIDIFile.data(notes: e, tempo: 72, bars: 12, name: "x"))
+        check("export: 72 bpm and the notes read back", eFile?.usPerQuarter == 833_333 && eFile?.notes == e)
+        check("vlq", MIDIFile.vlq(0) == [0] && MIDIFile.vlq(127) == [0x7F] && MIDIFile.vlq(128) == [0x81, 0x00]
+              && MIDIFile.vlq(0x0FFFFFFF) == [0xFF, 0xFF, 0xFF, 0x7F])
+
+        // Keys let go: their lengths and velocities reach the loop.
+        let held = LessonEngine(lesson: lesson, ticksPerBeat: tpb)
+        held.start(step: lesson.steps.count - 1)
+        let payoffNotes = lesson.expected(lesson.steps.last!, ticksPerBeat: tpb)
+        var t = 0.0
+        while !held.output.finished && t < Double(4 * loop) {
+            held.heard(tick: t, tempo: 90, rolling: true, epoch: 0)
+            let inChorus = t.truncatingRemainder(dividingBy: Double(loop))
+            for n in payoffNotes where Double(n.tick) == inChorus {
+                held.played(note: n.display, tick: t, msPerTick: msPerTick(90), epoch: 0, velocity: 0.6)
+            }
+            for n in payoffNotes where Double(n.tick + 5) == inChorus { held.released(note: n.display, tick: t, epoch: 0) }
+            t += 0.25
+        }
+        let heldNotes = held.finish.map { MIDIFile.notes($0, ticksPerBeat: tpb, bars: 12) } ?? []
+        check("export: held keys keep their length and velocity", heldNotes.count == payoffNotes.count
+              && heldNotes.allSatisfy { $0.length == 200 && $0.velocity == 76 },
+              "\(heldNotes.count) notes, lengths \(Set(heldNotes.map(\.length))), velocities \(Set(heldNotes.map(\.velocity)))")
+
+        // MARK: Calibration (M4)
+
+        func calibrate(_ offsets: [Int: Double]) -> Calibration {
+            var c = Calibration(firstTick: 24, ticksPerBeat: tpb)
+            for (k, ms) in offsets.sorted(by: { $0.key < $1.key }) {
+                c.tap(tick: 24 + Double(k * tpb) + ms / msPerTick(90), msPerTick: msPerTick(90))
+            }
+            return c
+        }
+        let steady = calibrate(Dictionary(uniqueKeysWithValues: (4..<12).map { ($0, -23.0) }))
+        check("calibration: eight taps 23 ms early read -23", steady.tapped == 8 && abs((steady.result ?? 0) + 23) < 0.01,
+              "\(steady.result.map { String(format: "%.2f", $0) } ?? "nil")")
+        let wobbly = calibrate([4: -40, 5: -10, 6: -20, 7: -25, 8: 30, 9: -22, 10: -18, 11: -24])
+        check("calibration: the median, not the mean", abs((wobbly.result ?? 0) + 21) < 0.01, "\(String(describing: wobbly.result))")
+        let listen = calibrate([0: -20, 1: -20, 2: -20, 3: -20, 4: -20, 5: -20, 6: -20, 7: -20, 8: -20])
+        check("calibration: taps on the listening clicks don't count", listen.tapped == 5 && listen.result == nil)
+        let wild = calibrate([4: -200, 5: 160, 6: -10, 7: -10, 8: -10, 9: -10, 10: -10, 11: -10])
+        check("calibration: a tap 150+ ms off isn't a tap at that click", wild.tapped == 6 && abs((wild.result ?? 0) + 10) < 0.01, "\(wild.tapped)")
+        let tooLate = calibrate(Dictionary(uniqueKeysWithValues: (4..<12).map { ($0, 120.0) }))
+        check("calibration: the correction stops at 80 ms", tooLate.result == 80)
+        var twice = calibrate([4: -5])
+        twice.tap(tick: 24 + 48 + 2, msPerTick: msPerTick(90))
+        check("calibration: a second tap at a click doesn't count", twice.tapped == 1 && abs(twice.offsets[4]! + 5) < 0.01)
+        check("calibration: words", Calibration.words(-23.4) == "23 ms early" && Calibration.words(2) == "on the beat"
+              && Calibration.words(11) == "11 ms late")
 
         // The ramp doesn't count a clean chorus the player slowed down.
         let slow = lessonRun(from: 3, choruses: 3, bpm: 60, followTempo: false, play: perfect)

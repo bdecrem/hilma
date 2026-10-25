@@ -43,6 +43,7 @@ struct TaktApp: App {
         if d.integer(forKey: "Step") > 1 { player.restartLesson(at: d.integer(forKey: "Step") - 1) }
         DebugHooks.recordIfRequested(audio)
         DebugHooks.pressIfRequested(player)
+        DebugHooks.calibrateIfRequested(player)
         DebugHooks.autoplayIfRequested(player)
         #endif
         return player
@@ -63,6 +64,11 @@ struct TaktApp: App {
             #endif
         }
         .commands {
+            CommandGroup(replacing: .importExport) {
+                Button("Export Loop…") { app.exporting = true }
+                    .keyboardShortcut("e")
+                    .disabled(app.route != .result)
+            }
             CommandGroup(after: .toolbar) {
                 Toggle("Paper Theme", isOn: Binding(
                     get: { theme == .paper },
@@ -116,13 +122,16 @@ struct RootView: View {
                 }
             case .settings:
                 SettingsScreen(app: app)
+            case .calibrate:
+                CalibrationScreen(app: app, player: player)
             }
         }
         .background(KeyCatcher(
             onNote: { player.key($0, down: $1) },
             onOctave: player.shiftOctave,
             onSpace: player.togglePlay,
-            onTempo: player.nudgeTempo
+            onTempo: player.nudgeTempo,
+            onEscape: { if app.route == .lesson { app.route = .lessons } }
         ))
         .onChange(of: player.finish) { _, f in if f != nil && app.route == .lesson { app.lessonFinished() } }
         .onChange(of: bandLevel, initial: true) { sendTrim() }

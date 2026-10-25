@@ -36,8 +36,25 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   brief's SkillModel records live in `ProgressStore` (a JSON file, not SwiftData: it is also what
   the account syncs). Verified: `-LessonCheck` 49/49 (12 new whole-lesson cases), autoplay through
   the payoff to the result on the simulator, screenshots of every screen. Not yet: the M3
-  acceptance by hand with a real MIDI keyboard; MIDI export and "Play it back" on the result
-  screen (M4).
+  acceptance by hand with a real MIDI keyboard.
+- **M4 ship: built 2026-10-25, 0.1 (7)** (installed on the iPhone Air over Wi-Fi, no cable, and
+  on this Mac). **Export MIDI** on the result screen (Mac: save panel and ⌘E, default name
+  `Takt A1 Chorus 01.mid`, numbered per lesson; iOS: share sheet): `Export/MIDIFile.swift`
+  writes SMF type 0, one track, 480 ppq, the payoff's tempo, 4/4, the notes as played (velocity
+  and held length, not quantized), the end of track on bar 13, so the clip is exactly the chorus.
+  **Play it back** replays the chorus from the top with the band (out for bars 11–12 again) and
+  your notes scheduled on the monitor, with a playhead on the roll. **Calibration**
+  (`Lesson/Calibration.swift`, `Menu/CalibrationScreen.swift`): before the first lesson (Skip is
+  offered) and from Settings → Input → Timing. **Accessibility:** Dynamic Type checked at
+  accessibility-XL on every screen; mono data labels stop growing at 1.35x (they label fixed
+  boxes), body text scales fully; VoiceOver labels on the new controls; Reduce Motion steps the
+  playback playhead by beat. Esc leaves the lesson. Verified: `-LessonCheck` 66/66 (17 new), the
+  exported file read back by mido and by Apple's MusicSequence (`scripts/midicheck.swift`: 90
+  bpm, 4/4, 48 beats, C on 1.1, F on 5.1, G on 9.1), calibration through real MIDI on the Mac
+  (eight taps at -23 ms read -23.0), the offset applied live (a 30 ms-late setup: +30 and +60 ms
+  played read +0.3 and +30.5), Play it back on the simulator. **Not yet:** dropping the file into
+  Ableton by hand (Live 12 is on this iMac; mido and MusicSequence agree), and TestFlight (see
+  below: the ASC app record and the mini).
 
 ## Code map (`Takt/`)
 
@@ -67,6 +84,9 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   `KeyboardStrip` takes MIDI note bounds (C4 = 60; the Mac shows C3–B4, iPhone C3–F4) and is
   playable (one finger, slide across keys). Controls reach the views as `LessonControls` in the
   environment; a fixed frame gets the empty default and draws inert.
+- `Export/MIDIFile.swift`: the SMF writer (and a reader, for the checks). `ResultScreen`'s
+  `MIDIExport` names and writes the file; `MIDIDocument` is the Mac save panel's document.
+- `Lesson/Calibration.swift` (pure: clicks, taps, the median) and `Menu/CalibrationScreen.swift`.
 - `Lesson/Player.swift`: `@Observable`, polls the engine at display rate (CADisplayLink), places
   the heard position and every press on the transport, runs the LessonEngine, builds the live
   LessonState; routes MIDI, computer keyboard and touch to the monitor and the lesson.
@@ -184,9 +204,18 @@ silent chorus arms the next) and any played chorus finishes the lesson. The Play
 the engine's actions (tempo, unmute, silence) and scores presses only on the lesson screen.
 DEBUG: `-Step <n>` and Debug → Jump to Step start at a step; `-Route lesson` opens the lesson.
 
-**Calibration is not in yet (M4):** a press is scored at the moment it is made, against the beat
-as heard. A player who lines up the sound of their own note with the band presses early by the
-monitor latency (~23 ms on this Mac, a third of the window); calibration will measure and remove it.
+**Calibration (M4):** a press is scored against the beat as heard, so a player who lines up the
+sound of their own note with the band presses early by the monitor latency (~23 ms on this Mac,
+a third of the window). Calibration stops the band, mutes it and plays a cross-stick (`.click`,
+on the monitor's bus so mutes don't silence it) at 90: four clicks to listen, eight to tap. The
+median tap offset (taps over 150 ms off don't count; 6 of 8 needed; clamped to ±80 ms) goes to
+`UserDefaults` `inputOffsetMs` (`calibrated` = done or skipped), and `Player.score` moves every
+scored press (and release) by minus it. Autoplay's presses are exact and skip the shift. The
+band comes back as it was. DEBUG: `-Route calibrate -Calibrate 1` starts it,
+`-CalibrateTapsEarly <ms>` taps for you; `scripts/midiplay.swift <clock> taps:<ms,...>` taps
+over real MIDI. Launch arguments can't start with a minus: `-inputOffsetMs 30` (a late setup)
+works, `-inputOffsetMs -23` doesn't. Test runs write the app's real defaults (same bundle id):
+`defaults delete com.bartdecrem.Takt inputOffsetMs` afterwards.
 
 **Autoplay (DEBUG):** Debug → Autoplay on the Mac, or `-Autoplay perfect|loose|sloppy|rush`.
 `perfect` on the tick, `loose` ±40 ms (passes), `sloppy` ±130 ms with 12% missed, 12% wrong,
@@ -277,7 +306,7 @@ the recording's note spacing matches what was sent within 1 ms.
 Three layers, all headless (verified 2026-10-25).
 
 **The rules, no audio:** `-LessonCheck 1` runs the Scorer, the LessonEngine and the TransportClock
-against scripted players (`App/LessonCheck.swift`, 49 cases; since M3 the whole lesson too, with a
+against scripted players (`App/LessonCheck.swift`, 66 cases; since M4 the exported MIDI file and calibration; since M3 the whole lesson too, with a
 stand-in renderer that applies tempo on the next downbeat: steps 1–6 in order, the ramp, the
 unlocks, the gate's 8 attempts, the payoff's silence and re-arm, the card, a slowed ramp; and the windows at 70, 80 and 90, misses,
 octaves and range, wrong, doubled and extra notes, the coach line bar by bar, the now/next keys,
@@ -313,9 +342,25 @@ unlocked; the app's `-SnapshotAt "name:tick,..." -SnapshotDir <dir>` renders the
 offscreen in both themes and works with the screen locked. Ticks are absolute, 576 per chorus
 (chorus 2, bar 1, beat 3 = 576 + 24).
 
+## Exported MIDI
+
+`-LessonCheck 1 -ExportTo <file.mid>` writes the whole-lesson check's payoff chorus to a file.
+`swiftc -O scripts/midicheck.swift -o build/midicheck && build/midicheck <file.mid>` reads it with
+Apple's MusicSequence and prints tempo, time signature, length in bars and every note by bar.beat.
+DEBUG `-PlayBackOnFinish 1` starts Play it back 1.5 s after the lesson finishes (with
+`-Step 6 -Autoplay perfect`).
+
 ## TestFlight
 
-Not set up. It needs an App Store Connect app record for `com.bartdecrem.Takt` (the ASC API cannot
-create apps; Bart makes it in the web UI), App Store profiles for iOS and Mac Catalyst, and the Mac
-mini route, because ASC rejects archives from this iMac's Xcode 27 beta: copy
-`apps/tokensurfers/testflight/ship-via-mini.sh` and `apps/feynd/testflight/` (export plists, `asc-submit.mjs`).
+`testflight/ship-via-mini.sh ios|mac`: archive unsigned on the Mac mini (ASC rejects this
+iMac's Xcode 27 beta), export and upload here, then `testflight/asc-submit.mjs` waits for
+processing and adds the build to every beta group. Set up 2026-10-25: bundle id registered
+(`HSR9TXP4B3`), profiles `takt appstore` (IOS_APP_STORE) and `takt catalyst appstore`
+(MAC_CATALYST_APP_STORE) minted with `apps/feynd/testflight/mint-profile.mjs` against the
+Apple Distribution cert whose key is in this iMac's keychain (serial `16F68C26…`; ASC lists
+three, only that one signs here). A local Release archive exports to a signed App Store
+`Takt.ipa` with it. **Still blocked:** (1) the App Store Connect app record for
+`com.bartdecrem.Takt` (the API can't create apps: Bart, in the web UI: New App, iOS + macOS,
+bundle id Takt); (2) the mini (`admin@100.95.51.98`) didn't answer SSH on 2026-10-25; (3) for
+`mac`, this iMac has no "3rd Party Mac Developer Installer" identity in the keychain (ASC has
+three MAC_INSTALLER_DISTRIBUTION certs, so their keys live on another Mac).

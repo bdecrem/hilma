@@ -63,15 +63,22 @@ enum DebugHooks {
         exit(LessonCheck.run() ? 0 : 1)
     }
 
-    private static var clockWritten = false
+    /// The epoch last written: a Stop and Play (calibration, Play it back) writes it again.
+    private static var clockEpoch = -1
 
     static func writeClockIfRequested(_ clock: TransportClock) {
-        guard !clockWritten, let path = UserDefaults.standard.string(forKey: "ClockTo"),
+        guard clock.snapshot.epoch != clockEpoch, let path = UserDefaults.standard.string(forKey: "ClockTo"),
               clock.snapshot.anchor.rolling, clock.snapshot.anchor.tick == 0,
               let h0 = clock.hostTime(atTick: 0) else { return }
-        clockWritten = true
+        clockEpoch = clock.snapshot.epoch
         let line = String(format: "%llu %.6f %.3f\n", h0, Double(h0) / clock.hostTicksPerSecond, clock.snapshot.anchor.tempo)
         try? line.write(toFile: path, atomically: true, encoding: .utf8)
+    }
+
+    /// `-Calibrate 1` starts the calibration a second after launch (with `-Route calibrate`).
+    static func calibrateIfRequested(_ player: Player) {
+        guard UserDefaults.standard.bool(forKey: "Calibrate") else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { player.startCalibration() }
     }
 
     static func pressIfRequested(_ player: Player) {

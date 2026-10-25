@@ -11,6 +11,7 @@
 		0122C6880BB2223509A01B44 /* BandData.swift in Sources */ = {isa = PBXBuildFile; fileRef = E35CB620AC7721CE809CB3C0 /* BandData.swift */; };
 		03E11DA52EB7EB63BAA61F6E /* snare-5c.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9E784B77A99187B44D2F3021 /* snare-5c.caf */; };
 		054A003EAFCDFFA4439BBE4B /* AccountStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDB3654F5D791B885FCEED1B /* AccountStore.swift */; };
+		0558E9C44BDB9EC026C7D0D0 /* Calibration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DB500F26FA68652350CA0F7 /* Calibration.swift */; };
 		07488C6D67CE34AE6C725ABD /* sax-66-s.caf in Resources */ = {isa = PBXBuildFile; fileRef = F67879E7D21DFD9D9DADEBCC /* sax-66-s.caf */; };
 		0B4807846D69D1AC21193BC9 /* bass-31.caf in Resources */ = {isa = PBXBuildFile; fileRef = B92BB72CACB4C5672A4BEE11 /* bass-31.caf */; };
 		0B51ABA08080946D611791F1 /* sax-74-s.caf in Resources */ = {isa = PBXBuildFile; fileRef = 847341D978FA2A7C24EA9434 /* sax-74-s.caf */; };
@@ -63,6 +64,7 @@
 		36C5B40EA2FF47470FC74656 /* pno-81-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 81F9E22985C2E7F376263C4A /* pno-81-2.caf */; };
 		36F2BB0E3572253A224B332E /* instruments.json in Resources */ = {isa = PBXBuildFile; fileRef = A5A6E1F7F4B26999D7BB16D6 /* instruments.json */; };
 		3B84D0A6AA682BCE29F60D99 /* pno-51-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = F1B53C17BA5F4CF3F1808195 /* pno-51-2.caf */; };
+		3CAF2C7361F0E087EC6A2943 /* MIDIFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FB00222D362D7FD1557F9ED /* MIDIFile.swift */; };
 		3D722FB7F193F4353C109FBB /* pno-43-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = CCA2EA02E8232F37FDBBC86D /* pno-43-1.caf */; };
 		3E375F9FAA40BF5A41192806 /* ride-3b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3B3C55EDD7385BAD71C09CC8 /* ride-3b.caf */; };
 		3F0F9F933FA8434D41547176 /* hat-2c.caf in Resources */ = {isa = PBXBuildFile; fileRef = 1D346A64372DD97C2368E256 /* hat-2c.caf */; };
@@ -203,6 +205,7 @@
 		BB8816561929F6CF85CFB42B /* pno-33-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 61570467344D53BCCC56F790 /* pno-33-1.caf */; };
 		BC747A87A0025DE844D31489 /* sax-80-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = E8A68FADD6C8EF4BD9726C59 /* sax-80-h.caf */; };
 		BE6B89A1F594657C466C2B8F /* sax-44-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = A223BEFDE8A4D82374CC356F /* sax-44-h.caf */; };
+		BFFCFB36052F27FA3D688C8B /* CalibrationScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8D5E1401A830BE79F20D77E /* CalibrationScreen.swift */; };
 		C0CEBF0CB2C4DC6D22733813 /* hatFoot-0a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 94CF18C747DD86F37BE68870 /* hatFoot-0a.caf */; };
 		C261EA1C512AA664F717240B /* sax-52-s.caf in Resources */ = {isa = PBXBuildFile; fileRef = E9F200DC2EA47CFB0488A59E /* sax-52-s.caf */; };
 		C4BE5852144CDDC94C8C9A2E /* bass-35.caf in Resources */ = {isa = PBXBuildFile; fileRef = 613351BCBE7AF3D174CAB2A3 /* bass-35.caf */; };
@@ -332,6 +335,7 @@
 		3C8AB3B36F288B90FF3273DE /* pno-39-1.caf */ = {isa = PBXFileReference; path = "pno-39-1.caf"; sourceTree = "<group>"; };
 		3CA63CF0B7BFF7C906A2A7CB /* sax-68-h.caf */ = {isa = PBXFileReference; path = "sax-68-h.caf"; sourceTree = "<group>"; };
 		3F2FD4DE4AC8AC4E9E3A9F9C /* saxl-44.caf */ = {isa = PBXFileReference; path = "saxl-44.caf"; sourceTree = "<group>"; };
+		3FB00222D362D7FD1557F9ED /* MIDIFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MIDIFile.swift; sourceTree = "<group>"; };
 		3FF0590E33E54BA1B15E91B1 /* TransportBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransportBar.swift; sourceTree = "<group>"; };
 		40963202F528F02BF5EEECD8 /* Takt.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Takt.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4287A8E13F473563716A0973 /* SettingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScreen.swift; sourceTree = "<group>"; };
@@ -406,6 +410,7 @@
 		898AE1B7738C7AD8C5E99B04 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		8AFF4F6BD27FDC80B7ACBC9D /* pno-91-1.caf */ = {isa = PBXFileReference; path = "pno-91-1.caf"; sourceTree = "<group>"; };
 		8D722E42873919D441D35FD1 /* hat-3a.caf */ = {isa = PBXFileReference; path = "hat-3a.caf"; sourceTree = "<group>"; };
+		8DB500F26FA68652350CA0F7 /* Calibration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Calibration.swift; sourceTree = "<group>"; };
 		9022E90C399333D8404C732C /* pno-83-2.caf */ = {isa = PBXFileReference; path = "pno-83-2.caf"; sourceTree = "<group>"; };
 		90938465F2979109AAE2AF26 /* pno-49-1.caf */ = {isa = PBXFileReference; path = "pno-49-1.caf"; sourceTree = "<group>"; };
 		90C962F13A5E9FD5B86B4D1E /* rideBell-1b.caf */ = {isa = PBXFileReference; path = "rideBell-1b.caf"; sourceTree = "<group>"; };
@@ -532,6 +537,7 @@
 		F68668DAB6141A89C20A1477 /* sax-62-s.caf */ = {isa = PBXFileReference; path = "sax-62-s.caf"; sourceTree = "<group>"; };
 		F7EE8892FF3ACE1F8E57E20C /* snare-3a.caf */ = {isa = PBXFileReference; path = "snare-3a.caf"; sourceTree = "<group>"; };
 		F8C3928533C5BB6418CCBE93 /* CoachPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoachPanel.swift; sourceTree = "<group>"; };
+		F8D5E1401A830BE79F20D77E /* CalibrationScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalibrationScreen.swift; sourceTree = "<group>"; };
 		F984F5DD7E138B6EC34CB614 /* pno-67-1.caf */ = {isa = PBXFileReference; path = "pno-67-1.caf"; sourceTree = "<group>"; };
 		F9CECDA90CD7CA866FFACF54 /* tomLo-1b.caf */ = {isa = PBXFileReference; path = "tomLo-1b.caf"; sourceTree = "<group>"; };
 		FA1B9F94998ABCB1BC013DDD /* sax-84-s.caf */ = {isa = PBXFileReference; path = "sax-84-s.caf"; sourceTree = "<group>"; };
@@ -569,6 +575,14 @@
 			path = Design;
 			sourceTree = "<group>";
 		};
+		54DE8A4095BEC708D5253B44 /* Export */ = {
+			isa = PBXGroup;
+			children = (
+				3FB00222D362D7FD1557F9ED /* MIDIFile.swift */,
+			);
+			path = Export;
+			sourceTree = "<group>";
+		};
 		5646EA3008FD47C65664CC88 /* Takt */ = {
 			isa = PBXGroup;
 			children = (
@@ -579,6 +593,7 @@
 				7E718AC35B0C62F76073A6EF /* Audio */,
 				C1181D7DC56335696E3C73A1 /* Content */,
 				4369F79803C501D3563FBCCD /* Design */,
+				54DE8A4095BEC708D5253B44 /* Export */,
 				88FE4DA545CABDD001D8C347 /* Input */,
 				A255B25EAA1B8A12A0308EE4 /* Lesson */,
 				85ECE389A6D688DE477845B5 /* Licenses */,
@@ -614,6 +629,7 @@
 		8420109DC0235151EC032073 /* Menu */ = {
 			isa = PBXGroup;
 			children = (
+				F8D5E1401A830BE79F20D77E /* CalibrationScreen.swift */,
 				9EB615A2BF73A5830696480A /* LessonsScreen.swift */,
 				73E28D3A2CB1F4DEF189BCD2 /* ResultScreen.swift */,
 				4287A8E13F473563716A0973 /* SettingsScreen.swift */,
@@ -641,6 +657,7 @@
 			isa = PBXGroup;
 			children = (
 				61E80E5165303C091E17B75D /* Autoplay.swift */,
+				8DB500F26FA68652350CA0F7 /* Calibration.swift */,
 				16C45267D4102101E567236B /* ChannelStrip.swift */,
 				F8C3928533C5BB6418CCBE93 /* CoachPanel.swift */,
 				880D9001CE96FC6DB96D7635 /* KeyboardStrip.swift */,
@@ -1234,6 +1251,8 @@
 				F6E6BC20DF042E27FE4FA6B3 /* Autoplay.swift in Sources */,
 				0122C6880BB2223509A01B44 /* BandData.swift in Sources */,
 				90B025AF66C939771B19D42D /* BandRenderer.swift in Sources */,
+				0558E9C44BDB9EC026C7D0D0 /* Calibration.swift in Sources */,
+				BFFCFB36052F27FA3D688C8B /* CalibrationScreen.swift in Sources */,
 				913188C502DC22FAEB177062 /* ChannelStrip.swift in Sources */,
 				0D0C5243B3D5B74AC76FC97F /* CoachPanel.swift in Sources */,
 				FF098609992B64F48C556EAA /* DebugHooks.swift in Sources */,
@@ -1246,6 +1265,7 @@
 				5D12A4B666A44E9CE2C6914B /* LessonScreen.swift in Sources */,
 				D8C651DD600ADF4743305551 /* LessonState.swift in Sources */,
 				2CDC4D59FC65AB6B4362B2FB /* LessonsScreen.swift in Sources */,
+				3CAF2C7361F0E087EC6A2943 /* MIDIFile.swift in Sources */,
 				AD4AB405745AED706DBB9E45 /* MIDIInput.swift in Sources */,
 				1BAF5C09CD661D4CF3484722 /* Motifs.swift in Sources */,
 				98A90BB07168F73C2CB64C6D /* PadGrid.swift in Sources */,
@@ -1300,7 +1320,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 6;
+				CURRENT_PROJECT_VERSION = 7;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -1367,7 +1387,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 6;
+				CURRENT_PROJECT_VERSION = 7;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;

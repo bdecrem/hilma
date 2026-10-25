@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// The end of a lesson (brief §4): the payoff chorus as a piano roll, the bars you played
 /// alone in `signal`, the expected notes as `cue` outlines, and the way on.
@@ -36,10 +37,12 @@ struct ResultScreen: View {
                 .foregroundStyle(Palette.muted)
                 .padding(.top, 6)
 
-            PianoRoll(finish: finish, form: player?.content.form ?? [])
-                .frame(maxWidth: .infinity)
-                .frame(height: compact ? 220 : 320)
-                .padding(.top, 20)
+            TimelineView(.animation(paused: player?.playbackEpoch == nil)) { _ in
+                PianoRoll(finish: finish, form: player?.content.form ?? [], playhead: playhead(player))
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: compact ? 220 : 320)
+            .padding(.top, 20)
 
             HStack(spacing: 10) {
                 LED(lit: true, size: 7)
@@ -50,17 +53,94 @@ struct ResultScreen: View {
             .padding(.top, 18)
 
             Spacer(minLength: 16)
-            HStack(spacing: 10) {
-                PrimaryButton(title: "Lessons") { app.route = .lessons }
+            let export = HStack(spacing: 10) {
+                #if targetEnvironment(macCatalyst)
+                PrimaryButton(title: "Export MIDI") { app.exporting = true }
+                #else
+                if let url = exportURL {
+                    ShareLink(item: url) {
+                        Text("Export MIDI")
+                            .dataLabel(13, weight: .semibold)
+                            .foregroundStyle(Palette.blackKey)
+                            .padding(.horizontal, 22)
+                            .frame(height: 44)
+                            .background(RoundedRectangle(cornerRadius: 6).fill(Palette.signal))
+                    }
+                    .buttonStyle(.plain)
+                    .simultaneousGesture(TapGesture().onEnded { MIDIExport.exported(finish.code) })
+                }
+                #endif
+                QuietButton(title: player?.playbackEpoch == nil ? "Play it back" : "Playing") {
+                    player?.playBack(finish)
+                }
+            }
+            let leave = HStack(spacing: 10) {
                 QuietButton(title: "Play it again") { app.restart(lesson: player?.content.code ?? "") }
-                Spacer()
+                QuietButton(title: "Lessons") { app.route = .lessons }
+            }
+            Group {
+                if compact {
+                    VStack(alignment: .leading, spacing: 10) { export; leave }
+                } else {
+                    HStack(spacing: 10) { export; Spacer(); leave }
+                }
             }
             .padding(.bottom, compact ? 8 : 24)
         }
         .padding(.horizontal, compact ? 16 : 40)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(Palette.ground.ignoresSafeArea())
+        #if targetEnvironment(macCatalyst)
+        .fileExporter(isPresented: Bindable(app).exporting, document: MIDIDocument(data: MIDIExport.data(finish)),
+                      contentType: .midi, defaultFilename: MIDIExport.fileName(finish.code)) { result in
+            if case .success = result { MIDIExport.exported(finish.code) }
+        }
+        #else
+        .task(id: finish) { exportURL = MIDIExport.write(finish) }
+        #endif
     }
+
+    #if !targetEnvironment(macCatalyst)
+    @State private var exportURL: URL?
+    #endif
+
+    /// Ticks into the chorus while it plays back.
+    private func playhead(_ player: Player?) -> Double? {
+        guard let t = player?.playbackTick() else { return nil }
+        // Reduce Motion: the playhead steps by beat (like the LEDs) instead of gliding.
+        return reduceMotion ? (t / 12).rounded(.down) * 12 : t
+    }
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+}
+
+/// The exported loop's name and bytes: `Takt A1 Chorus 01.mid`, numbered per lesson.
+enum MIDIExport {
+    static func fileName(_ code: String) -> String {
+        String(format: "Takt %@ Chorus %02d", code, UserDefaults.standard.integer(forKey: "exports.\(code)") + 1)
+    }
+
+    static func exported(_ code: String) {
+        UserDefaults.standard.set(UserDefaults.standard.integer(forKey: "exports.\(code)") + 1, forKey: "exports.\(code)")
+    }
+
+    static func data(_ f: LessonEngine.Finish) -> Data {
+        MIDIFile.data(notes: MIDIFile.notes(f, ticksPerBeat: 12, bars: f.bars), tempo: Double(f.tempo), bars: f.bars,
+                      name: "Takt \(f.code) Chorus")
+    }
+
+    /// iOS: the file for the share sheet, in the temporary directory.
+    static func write(_ f: LessonEngine.Finish) -> URL? {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(fileName(f.code) + ".mid")
+        do { try data(f).write(to: url, options: .atomic); return url } catch { return nil }
+    }
+}
+
+struct MIDIDocument: FileDocument {
+    static var readableContentTypes: [UTType] { [.midi] }
+    var data: Data
+    init(data: Data) { self.data = data }
+    init(configuration: ReadConfiguration) throws { data = configuration.file.regularFileContents ?? Data() }
+    func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper { FileWrapper(regularFileWithContents: data) }
 }
 
 /// One chorus, 12 bars across, pitch up. Lanes cover the notes played and expected (at least an
@@ -68,6 +148,8 @@ struct ResultScreen: View {
 struct PianoRoll: View {
     let finish: LessonEngine.Finish
     let form: [String]
+    /// Ticks into the chorus, while it plays back.
+    var playhead: Double? = nil
 
     var body: some View {
         Canvas { ctx, size in
@@ -109,6 +191,9 @@ struct PianoRoll: View {
                 let alone = finish.aloneBars.contains(bar)
                 let r = CGRect(x: x(max(0, p.tick)), y: y(p.note), width: x(12), height: laneH).insetBy(dx: 3, dy: 3)
                 ctx.fill(Path(roundedRect: r, cornerRadius: 2), with: .color(alone ? Palette.signal : Palette.text))
+            }
+            if let t = playhead {
+                ctx.fill(Path(CGRect(x: x(t) - 1, y: 0, width: 2, height: rollH)), with: .color(Palette.signal))
             }
             // Chords under the bars.
             for (b, chord) in form.enumerated() {

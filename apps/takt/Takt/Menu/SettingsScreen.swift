@@ -6,6 +6,7 @@ struct SettingsScreen: View {
     @AppStorage("theme") private var theme: Theme = .dark
     @AppStorage("bandLevel") private var bandLevel = 1.0
     @AppStorage("pianoLevel") private var pianoLevel = 1.0
+    @AppStorage("inputOffsetMs") private var inputOffsetMs = 0.0
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var confirmReset = false
 
@@ -53,6 +54,14 @@ struct SettingsScreen: View {
                         Hairline()
                         row("Computer keys", "A–; play C3–E4 · Z X octave")
                         #endif
+                        Hairline()
+                        HStack(alignment: .firstTextBaseline) {
+                            Text("Timing").bodyText(15).foregroundStyle(Palette.text)
+                            Spacer(minLength: 12)
+                            Text(inputOffsetMs == 0 ? "Not measured" : "You play \(Calibration.words(inputOffsetMs))")
+                                .dataLabel(11).foregroundStyle(Palette.muted)
+                            QuietButton(title: "Calibrate") { app.calibrate(then: .settings) }
+                        }
                     }
 
                     SettingsSection(title: "Display") {
@@ -142,12 +151,14 @@ struct LevelRow: View {
 
     var body: some View {
         HStack(spacing: 14) {
-            Text(title).bodyText(15).foregroundStyle(Palette.text).frame(width: 110, alignment: .leading)
+            Text(title).bodyText(15).foregroundStyle(Palette.text).frame(minWidth: 110, alignment: .leading)
             Slider(value: $value, in: 0...1.5).tint(Palette.signal)
-            Text("\(Int((value * 100).rounded()))%")
-                .dataLabel(11)
-                .foregroundStyle(Palette.muted)
-                .frame(width: 48, alignment: .trailing)
+            // Room for "150%" at any text size.
+            Text("150%").dataLabel(11).hidden()
+                .overlay(alignment: .trailing) {
+                    Text("\(Int((value * 100).rounded()))%").dataLabel(11).foregroundStyle(Palette.muted)
+                }
+                .fixedSize()
         }
     }
 }
@@ -184,7 +195,15 @@ struct AccountSection: View {
                 if let error = account.error {
                     Text(error).bodyText(13).foregroundStyle(Palette.signal)
                 }
-                HStack(spacing: 10) {
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 10) { accountButtons; Spacer(minLength: 0) }
+                    VStack(alignment: .leading, spacing: 12) { accountButtons }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder private var accountButtons: some View {
                     PrimaryButton(title: account.busy ? "…" : (mode == .signUp ? "Sign up" : "Log in")) {
                         let e = email, p = password
                         Task {
@@ -193,16 +212,13 @@ struct AccountSection: View {
                         }
                     }
                     .disabled(account.busy || email.isEmpty || password.isEmpty)
-                    Spacer()
                     Button(mode == .signUp ? "I have an account" : "New here? Sign up") {
                         mode = mode == .signUp ? .logIn : .signUp
                     }
                     .buttonStyle(.plain)
                     .dataLabel(11)
                     .foregroundStyle(Palette.cue)
-                }
-            }
-        }
+                    .fixedSize()
     }
 }
 

@@ -189,6 +189,8 @@ struct PrimaryButton: View {
         Button(action: action) {
             Text(title)
                 .dataLabel(13, weight: .semibold)
+                .lineLimit(1)
+                .fixedSize()
                 .foregroundStyle(Palette.blackKey)
                 .padding(.horizontal, 22)
                 .frame(height: 44)
@@ -207,6 +209,8 @@ struct QuietButton: View {
         Button(action: action) {
             Text(title)
                 .dataLabel(13, weight: .semibold)
+                .lineLimit(1)
+                .fixedSize()
                 .foregroundStyle(Palette.text)
                 .padding(.horizontal, 18)
                 .frame(height: 44)

@@ -21,6 +21,9 @@ struct PlayedNote {
     let tick: Double
     /// Milliseconds per tick at that moment, for offsets in ms.
     let msPerTick: Double
+    /// For the exported loop: how hard, and how long it was held (nil: still down).
+    var velocity: Float = 0.8
+    var lengthTicks: Double?
 }
 
 /// How one chorus went: every expected note's mark, the extras, the verdict and its wording.

@@ -5,6 +5,10 @@
 //
 //   swiftc -O apps/takt/scripts/midiplay.swift -o apps/takt/build/midiplay
 //   apps/takt/build/midiplay <clock-file> <ms per chorus, e.g. -70,-50,30> [arrival]
+//   apps/takt/build/midiplay <clock-file> taps:<ms,...>     # calibration: one tap per click
+//
+// `taps:` plays C4 at the calibration's twelve clicks (one a beat from tick 24), each at its
+// offset (the last one repeats), skipping clicks already past.
 //
 // Each packet is stamped with the host time the note was meant for, as a hardware keyboard
 // stamps its key presses; with `arrival` it is stamped 0 and the app stamps it on arrival.
@@ -14,7 +18,8 @@ import Foundation
 setlinebuf(stdout)  // the log is read while it runs
 let args = Array(CommandLine.arguments.dropFirst())
 guard args.count >= 2 else { print("usage: midiplay <clock-file> <ms,ms,...> [arrival]"); exit(2) }
-let offsets = args[1].split(separator: ",").map { Double($0)! }
+let taps = args[1].hasPrefix("taps:")
+let offsets = args[1].replacingOccurrences(of: "taps:", with: "").split(separator: ",").map { Double($0)! }
 let arrival = args.count > 2 && args[2] == "arrival"
 let roots = [48, 48, 48, 48, 53, 53, 48, 48, 55, 53, 48, 55]  // C3 F3 G3 over the 12-bar form
 
@@ -47,7 +52,16 @@ while h0 + Double(first) * chorusSeconds * hostPerSecond < now + 1.5 * hostPerSe
 print("tick 0 heard at \(clock[1]) s, \(bpm) bpm; playing choruses \(first + 1)...\(first + offsets.count)")
 
 var events: [(host: Double, word: UInt32, label: String)] = []
-for (i, ms) in offsets.enumerated() {
+if taps {
+    for k in 0..<12 {
+        let ms = offsets[min(k, offsets.count - 1)]
+        let on = h0 + (Double(24 + 12 * k) * secondsPerTick + ms / 1000) * hostPerSecond
+        guard on > now + 0.05 * hostPerSecond else { continue }
+        events.append((on, 0x2090_0000 | UInt32(60) << 8 | 100, "click \(k + 1) tap \(ms) ms"))
+        events.append((on + 6 * secondsPerTick * hostPerSecond, 0x2080_0000 | UInt32(60) << 8, ""))
+    }
+}
+for (i, ms) in (taps ? [] : offsets).enumerated() {
     for (bar, note) in roots.enumerated() {
         let tick = Double((first + i) * 576 + bar * 48)
         let on = h0 + (tick * secondsPerTick + ms / 1000) * hostPerSecond
