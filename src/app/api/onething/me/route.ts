@@ -4,6 +4,7 @@ import { COOKIE, findUserById, listEntries, localDay, scoreboard, sessionCookie,
 import { BONUS_EVERY, BONUS_POINTS, buddyViews } from '@/lib/onething/buddies'
 import { avatarUrlFor } from '@/lib/onething/avatar'
 import { scheduleDoodle } from '@/lib/onething/doodle'
+import { JOKER_EVERY, JOKER_MAX, JOKER_REACH, listSaves, nextJokerIn, rescueFor } from '@/lib/onething/jokers'
 
 export const runtime = 'nodejs'
 
@@ -19,16 +20,22 @@ export async function GET() {
   // (so a day with a picture can be seen as a card on the wall before it is one).
   const devToday = process.env.NODE_ENV !== 'production' ? process.env.ONETHING_DEV_TODAY : undefined
   const today = devToday && /^\d{4}-\d{2}-\d{2}$/.test(devToday) ? devToday : localDay(new Date(), tzFor(user))
-  const [views, avatar] = await Promise.all([buddyViews(user, today), avatarUrlFor(user.id)])
+  const [views, avatar, saves] = await Promise.all([buddyViews(user, today), avatarUrlFor(user.id), listSaves(user.id)])
+  const board = scoreboard(entries, today, saves)
+  const held = user.jokers ?? 0
   // Days that never got their doodle (a failed draw, an older entry): draw a
   // few after this response, newest first; the next visit shows them.
   if (user.doodles !== false) for (const e of entries.filter((x) => !x.doodle).slice(0, 4)) scheduleDoodle(e.id)
   const res = NextResponse.json({
     user: { phone: user.phone, since: user.created_at, tz: tzFor(user), name: user.name, avatar, doodles: user.doodles !== false },
     today,
-    board: scoreboard(entries, today),
+    board,
     levels: LEVELS,
     entries,
+    // the hand, the days jokers covered, and what they can save right now (jokers.ts)
+    jokers: { held, max: JOKER_MAX, every: JOKER_EVERY, reach: JOKER_REACH, nextIn: nextJokerIn(board.streak, held) },
+    saves: [...saves].sort(),
+    rescue: rescueFor(entries, saves, today, held),
     ...views,
     bonus: { every: BONUS_EVERY, points: BONUS_POINTS },
   })

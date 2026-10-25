@@ -341,8 +341,82 @@ html:has(.oj), body:has(.oj) { background: #e9e3d8; }
 .oj .ot-plant .p-seed { fill: var(--ink); }
 .oj .ot-plant .p-bloom { fill: var(--red); }
 
+/* ---------- jokers (2026-10-25): a playing card whose suit is the drop ---------- */
+.oj-joker { display: inline-block; flex: none; width: var(--w); line-height: 0; transform-origin: 50% 85%; }
+.oj-joker svg { display: block; width: 100%; height: auto; overflow: visible; }
+.oj-card-slot { position: relative; z-index: 1; display: inline-block; flex: none; line-height: 0; transform: rotate(var(--r, 0deg)); transform-origin: 50% 85%; }
+.oj-card-slot + .oj-card-slot, .oj-card-slot + .oj-joker-slot, .oj-joker-slot + .oj-joker-slot { margin-left: calc(var(--w, 40px) * -.28); }
+.oj-joker-slot { position: relative; z-index: 0; display: inline-block; flex: none; width: var(--w); aspect-ratio: 100 / 140; border: 1.5px dashed #cfc7b6; border-radius: calc(var(--w) * .1); transform: rotate(var(--r, 0deg)); transform-origin: 50% 85%; }
+.oj-joker.up { translate: 0 -12px; transition: translate .25s cubic-bezier(.3, 1.6, .5, 1); }
+.oj-joker.dealt { animation: oj-deal .95s cubic-bezier(.2, .8, .3, 1.15) .35s both; }
+@keyframes oj-deal { 0% { transform: translate(70px, -90px) rotate(55deg) scale(.5); opacity: 0; } 35% { opacity: 1; } 100% { transform: none; } }
+
+/* the hand, under the level */
+.oj-jokers { display: flex; align-items: center; gap: 16px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--rule); }
+.oj-hand { flex: none; display: flex; align-items: flex-end; padding: 8px 6px 2px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.oj-hand.jig .oj-joker { animation: oj-jig .6s ease; }
+.oj-hand.jig .oj-card-slot:nth-child(2) .oj-joker { animation-delay: .07s; }
+.oj-hand.jig .oj-card-slot:nth-child(3) .oj-joker { animation-delay: .14s; }
+@keyframes oj-jig { 0%, 100% { transform: none; } 30% { transform: translateY(-7px) rotate(-9deg); } 65% { transform: translateY(-2px) rotate(7deg); } }
+.oj-jokers-text { flex: 1; min-width: 0; font-size: 14px; line-height: 1.42; color: var(--mute); }
+.oj-jokers-text b { display: block; margin-bottom: 2px; font: 800 17px/1.2 var(--sans); letter-spacing: -.01em; color: var(--ink); }
+.oj-jokers-save { display: block; margin-top: 8px; color: var(--red); }
+
+/* the note taped to the wall above the pad */
+.oj-slip {
+  position: relative; display: flex; align-items: center; gap: 12px; width: 100%; max-width: 420px; margin: 20px auto 2px; padding: 14px 14px 13px 16px;
+  border: 0; cursor: pointer; text-align: left; font: inherit; color: var(--ink); background: #fff; transform: rotate(-1.1deg); box-shadow: 0 0 0 1px #e6dfd0;
+  -webkit-tap-highlight-color: transparent; transition: transform .2s;
+}
+.oj-slip::before { content: ''; position: absolute; left: 50%; top: -10px; width: 84px; height: 22px; margin-left: -42px; transform: rotate(2deg); background: var(--tape); }
+.oj-slip:hover { transform: rotate(-.4deg) translateY(-1px); }
+.oj-slip:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+.oj-slip .oj-joker { transform: rotate(-7deg); }
+.oj-slip-text { flex: 1; min-width: 0; font: italic 400 15px/1.35 var(--serif); color: var(--ink-2); }
+.oj-slip-text b { display: block; margin-bottom: 2px; font: 800 15px/1.25 var(--sans); font-style: normal; color: var(--ink); }
+.oj-slip-go { flex: none; display: inline-flex; align-items: center; height: 38px; padding: 0 14px; border-radius: 8px; background: var(--red); color: #fff; font: 700 14px/1 var(--sans); }
+
+/* the save */
+.oj-rescue { text-align: center; overflow: hidden; }
+.oj-rescue .oj-card-top { text-align: left; }
+.oj-rescue-num { position: relative; display: inline-block; margin: 10px 0 0; font: 900 clamp(92px, 27vw, 124px)/.84 var(--sans); letter-spacing: -.045em; font-variant-numeric: tabular-nums; color: var(--ink); transition: color .5s; }
+.oj-rescue-num.asleep { color: #d3cbbb; }
+.oj-rescue-ink { position: absolute; right: -50px; top: -10px; }
+.oj-wake { animation: oj-squish .5s cubic-bezier(.3, 1.6, .5, 1), oj-wobble 3.4s ease-in-out .5s infinite; }
+.oj-rescue-k { margin: 10px 0 0; font: 700 11px/1 var(--sans); letter-spacing: .16em; text-transform: uppercase; color: var(--mute); }
+.oj-rescue-h { margin: 14px 0 0; font: italic 400 clamp(26px, 7vw, 30px)/1.2 var(--serif); letter-spacing: -.005em; text-wrap: balance; }
+.oj-rescue-p { max-width: 25em; margin: 8px auto 0; text-wrap: balance; }
+.oj-strip { margin: 18px auto 0; display: flex; justify-content: center; align-items: stretch; gap: 6px; }
+.oj-strip > span { flex: 0 1 66px; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 7px; padding: 9px 3px 9px; }
+.oj-strip small { font: 700 9.5px/1 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--mute); white-space: nowrap; }
+.oj-strip-sheet { background: #fff; box-shadow: 0 0 0 1px #e6dfd0; }
+.oj-strip-sheet b { font: 900 28px/1 var(--sans); letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+.oj-strip-sheet b.up { animation: oj-up .6s cubic-bezier(.3, 1.6, .5, 1) .15s both; color: var(--red); }
+@keyframes oj-up { 0% { transform: translateY(10px); opacity: 0; } 100% { transform: none; opacity: 1; } }
+.oj-strip-gap { border: 1.5px dashed #cfc7b6; }
+.oj-strip-gap.filled { border-color: transparent; background: #fbe9e4; }
+.oj-joker.landed { animation: oj-land .45s cubic-bezier(.3, 1.6, .5, 1); transform: rotate(-5deg); }
+@keyframes oj-land { 0% { transform: rotate(-5deg) scale(1.25); } 100% { transform: rotate(-5deg) scale(1); } }
+.oj-rescue-hand { margin: 18px 0 0; min-height: 88px; display: flex; justify-content: center; align-items: flex-end; }
+.oj-rescue .oj-acts { justify-content: center; margin-top: 12px; }
+.oj-rescue .oj-acts .oj-btn.big { flex: 1; max-width: 320px; }
+.oj-play { background: var(--red); color: #fff; }
+.oj-play:disabled { background: var(--red); color: #fff; opacity: .7; }
+.oj-rescue .oj-note .oj-text-btn { margin-left: 6px; }
+
+/* a covered day on the wall: the joker pinned to the empty sheet */
+.oj-tile.saved { cursor: default; background: var(--sheet); }
+.oj-tile.saved:hover { transform: rotate(var(--tilt, 0deg)); }
+.oj-tile-card { position: relative; display: grid; place-items: center; margin: 14px 0 10px; }
+.oj-tile-card .oj-joker { transform: rotate(-6deg); }
+.oj-tile-card::before { content: ''; position: absolute; left: 50%; top: -6px; z-index: 1; width: 46px; height: 13px; margin-left: -23px; transform: rotate(-4deg); background: var(--tape); }
+.oj-tile.saved .oj-tile-miss { margin-top: auto; color: var(--ink-2); }
+.oj-tile.missed.savable { cursor: pointer; text-align: left; font: inherit; }
+.oj-tile.missed.savable:hover { transform: rotate(0) translateY(-2px); }
+.oj-tile-save { font: 700 13px/1.3 var(--sans); color: var(--red); }
+
 @media (prefers-reduced-motion: reduce) {
-  .oj-ink, .oj-ink.eager, .oj-ink .oj-eyes { animation: none !important; }
+  .oj-ink, .oj-ink.eager, .oj-ink .oj-eyes, .oj-joker, .oj-wake, .oj-strip-sheet b.up { animation: none !important; }
   /* still ends (the pad turns its page on animationend), just at once */
   .oj-today.tearing { animation-duration: .01s; }
 }

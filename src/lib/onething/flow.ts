@@ -8,10 +8,11 @@ import { isDemoPhone, sendText } from './send'
 import {
   GRACE_HOUR, addDays, buddyCopy, confirmText, dueFor, ensureUser, findEntry, findUserByPhone, listEntries,
   localDay, localHour, looksLikeOurs, normalizeHandle, photoText, promptText, recordEntry, reminderText, scoreboard,
-  setUserName, tzFor, welcomeText, SITE_URL, type User,
+  setUserName, tzFor, welcomeText, SITE_URL, type Recorded, type User,
 } from './core'
 import { PHOTO_EDGE, PhotoError, holdPhoto, setPhoto } from './photo'
 import { NAME_REPLY_WINDOW_MS, accept, afterKept, buddiesInToday, cleanName, isYes, looksLikeName, pendingInvitesFor, resetLines } from './buddies'
+import { offerLines } from './jokers'
 
 // ---------- the hourly tick (Vercel cron) ----------
 
@@ -213,8 +214,8 @@ export async function handleInbound(args: {
     let hasEntry = !!existing
     if (text.length >= 2) {
       const r = await recordEntry(user, day, text)
-      const tail = r.added || r.edited ? [] : await afterKept(user, day)
-      out.push(...confirmText(r, tail).split('\n'))
+      const { tail, link } = await keptTail(user, r, day, today)
+      out.push(...confirmText(r, tail, link).split('\n'))
       hasEntry = true
     }
     const line = photoText(await takePhoto(user, day, image, hasEntry))
@@ -229,7 +230,17 @@ export async function handleInbound(args: {
     return true
   }
   const r = await recordEntry(user, day, text)
-  const tail = r.added || r.edited ? [] : await afterKept(user, day)
-  await sendText({ chatGuid: args.chatGuid, text: confirmText(r, tail) })
+  const { tail, link } = await keptTail(user, r, day, today)
+  await sendText({ chatGuid: args.chatGuid, text: confirmText(r, tail, link) })
   return true
+}
+
+/// What follows the kept line on a new day: the buddy lines, and — on the day
+/// a new streak starts — whether jokers can still bring the old one back
+/// (played on the site, so that reply carries the link).
+async function keptTail(user: User, r: Recorded, day: string, today: string): Promise<{ tail: string[]; link: boolean }> {
+  if (r.added || r.edited) return { tail: [], link: false }
+  const buddies = await afterKept(user, day)
+  const offer = r.streak === 1 ? await offerLines(user, today) : []
+  return { tail: [...buddies, ...offer], link: offer.length > 0 }
 }
