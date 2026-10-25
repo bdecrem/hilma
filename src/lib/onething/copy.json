@@ -1,5 +1,5 @@
 {
-  "_": "Onething's texts. morning / reminder / kept: one picked at random per send (src/lib/onething/core.ts). buddy: fixed templates for the buddy-streak lines (src/lib/onething/buddies.ts). joker: fixed tails on the kept reply when a joker is dealt or can save a broken streak (src/lib/onething/jokers.ts); {count} is a number of jokers, {days} dates like 'the 18th', {until} 'tonight' / 'tomorrow' / a weekday. retired: wordings no longer sent, kept only so their late echoes are still recognised. The register is reflection, not a writing task: every morning and evening line turns the person back to their day — one thing that happened, one observation — and never says 'write a sentence'. Quiet, specific, no exclamation marks, no verdict on what the person wrote. {n} is a streak day, {points} a number, {name} / {names} / {in} / {out} are people. Every outbound text starts with one of these lines (extra lines follow; the site URL comes last only on a milestone or level-up day, never on an ordinary kept reply). kept lines must not refer to yesterday or to earlier entries: they are picked at random, so 'one more than yesterday' reads as a claim about the person's record. milestone / levelUp: fixed tails on the kept reply, and looksLikeOurs() matches inbound text against this file to keep our own echoes from being saved as thoughts — so add lines here, never inline in code, and move a line to retired rather than deleting it.",
+  "_": "Onething's texts. morning / reminder / kept: one picked at random per send (src/lib/onething/core.ts). buddy: fixed templates for the buddy-streak lines (src/lib/onething/buddies.ts). retired: wordings no longer sent, kept only so their late echoes are still recognised. The register is reflection, not a writing task: every morning and evening line turns the person back to their day — one thing that happened, one observation — and never says 'write a sentence'. Quiet, specific, no exclamation marks, no verdict on what the person wrote. {n} is a streak day, {points} a number, {name} / {names} / {in} / {out} are people. Every outbound text starts with one of these lines (extra lines follow; the site URL comes last only on a milestone or level-up day, never on an ordinary kept reply). kept lines must not refer to yesterday or to earlier entries: they are picked at random, so 'one more than yesterday' reads as a claim about the person's record. milestone / levelUp: fixed tails on the kept reply, and looksLikeOurs() matches inbound text against this file to keep our own echoes from being saved as thoughts — so add lines here, never inline in code, and move a line to retired rather than deleting it.",
   "morning": [
     "Morning. One thing that happened today, whenever it comes to you.",
     "What's one thing that happened today? No hurry. It can be small.",
@@ -95,11 +95,5 @@
     "acceptedInviter": "{name} said yes. Buddy streak starts tomorrow.",
     "nameAsk": "What should your buddies call you? Reply with just a name.",
     "nameSet": "{name}, noted. That's what your buddies will see."
-  },
-  "joker": {
-    "dealt": "A joker for your hand: it covers a day you miss. You hold {count}.",
-    "full": "Your hand is full: three jokers.",
-    "offerOne": "Your {n}-day streak can still come back: one joker covers {days}, until {until}.",
-    "offerMany": "Your {n}-day streak can still come back: {count} jokers cover {days}, until {until}."
   }
 }

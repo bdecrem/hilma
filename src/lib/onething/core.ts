@@ -332,7 +332,8 @@ export type Recorded = {
   level: Level
   /// this sentence crossed a level threshold (Seed → Sprout, …)
   leveledUp: boolean
-  /// a tenth day: a joker was dealt (`held` after), or the hand was already full
+  /// a tenth day: a joker was dealt (`held` after), or the hand was already full.
+  /// Page only (the bookmarks by the streak); the kept text never mentions them.
   joker?: { dealt: boolean; held: number }
 }
 
@@ -417,7 +418,7 @@ export const SITE_URL = 'https://onething.ink'
 /// back after an entry lands); each send picks one at random. All but the
 /// morning question end with the site URL on its own line.
 type BuddyKey = keyof typeof copy.buddy
-const COPY: { morning: string[]; reminder: string[]; kept: string[]; retired: string[]; milestone: string; levelUp: string; buddy: Record<BuddyKey, string>; joker: Record<keyof typeof copy.joker, string> } = copy
+const COPY: { morning: string[]; reminder: string[]; kept: string[]; retired: string[]; milestone: string; levelUp: string; buddy: Record<BuddyKey, string> } = copy
 function pick(lines: string[]): string {
   return lines[Math.floor(Math.random() * lines.length)]
 }
@@ -502,18 +503,16 @@ export function looksLikeOurs(text: string): boolean {
 }
 
 /// The line back after a sentence lands; `tail` lines (who else is in, a
-/// buddy bonus, the name question, a joker's offer) follow it. The site link
-/// is sent only on a milestone, level-up or joker day, or when a tail asks for
-/// it (`link`: the joker offer is played on the site) — every day, iMessage's
-/// link preview made the reply a card instead of a line.
-export function confirmText(r: Recorded, tail: string[] = [], link = false): string {
+/// buddy bonus, the name question) follow it. The site link is sent only on a
+/// milestone or level-up day — every day, iMessage's link preview made the
+/// reply a card instead of a line. Jokers (bookmarks) live on the page only.
+export function confirmText(r: Recorded, tail: string[] = []): string {
   if (r.edited) return `Updated. Day ${r.streak} stands, ${r.points} points.`
   if (r.added) return `Kept, thought ${r.added} for today. Day ${r.streak} stands, ${r.points} points.`
   const lines = [pick(COPY.kept).replace('{n}', String(r.streak)), ...tail]
   if (r.bonus > 0) lines.push(COPY.milestone.replace('{n}', String(r.streak)).replace('{bonus}', String(r.bonus)))
   if (r.leveledUp) lines.push(COPY.levelUp.replace('{level}', r.level.name))
-  if (r.joker) lines.push(r.joker.dealt ? COPY.joker.dealt.replace('{count}', String(r.joker.held)) : COPY.joker.full)
-  if (link || r.bonus > 0 || r.leveledUp || r.joker?.dealt) lines.push(SITE_URL)
+  if (r.bonus > 0 || r.leveledUp) lines.push(SITE_URL)
   return lines.join('\n')
 }
 

@@ -271,8 +271,8 @@ function Avatar({ person, size = 40 }: { person: { name?: string | null; phone: 
 
 /** The top of the flood: the wordmark, the streak, and the picture, which opens
  * a small menu (the other screen, sign out). */
-function Top({ me, streak, view, onView, onSignout }: { me: Person; streak: number; view: 'journal' | 'settings'; onView: (v: 'journal' | 'settings') => void; onSignout: () => void }) {
-  const [open, setOpen] = useState(false);
+function Top({ me, streak, marks, view, onView, onSignout }: { me: Person; streak: number; marks?: Marks; view: 'journal' | 'settings'; onView: (v: 'journal' | 'settings') => void; onSignout: () => void }) {
+  const [open, setOpen] = useState<false | 'menu' | 'streak'>(false);
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!open) return;
@@ -286,11 +286,11 @@ function Top({ me, streak, view, onView, onSignout }: { me: Person; streak: numb
     <div className="oj-top">
       <a className="oj-wordmark" href="/onething">onething<i>.</i></a>
       <div className="oj-top-right" ref={ref}>
-        <span className="oj-streak" aria-label={`${streak}-day streak`} title={`${streak}-day streak`}><b>{streak}</b> day streak</span>
-        <button type="button" className="oj-me" aria-label="menu" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+        <Streak streak={streak} marks={marks} open={open === 'streak'} onToggle={() => setOpen((o) => (o === 'streak' ? false : 'streak'))} />
+        <button type="button" className="oj-me" aria-label="menu" aria-haspopup="menu" aria-expanded={open === 'menu'} onClick={() => setOpen((o) => (o === 'menu' ? false : 'menu'))}>
           <Avatar person={me} size={42} />
         </button>
-        {open && (
+        {open === 'menu' && (
           <ul className="oj-menu" role="menu">
             <li><button type="button" role="menuitem" onClick={() => { setOpen(false); onView(view === 'journal' ? 'settings' : 'journal'); }}>{view === 'journal' ? 'Settings' : 'Your page'}</button></li>
             <li><button type="button" role="menuitem" className="quiet" onClick={() => { setOpen(false); onSignout(); }}>Sign out</button></li>
@@ -432,33 +432,23 @@ function DayBody({ day, entry, drawn, thoughts, onPhoto }: { day: string; entry:
 }
 
 /** A day on the month's wall: a sheet torn off the pad. */
-function Tile({ cell, drawn, i, onOpen, onSave }: { cell: Cell; drawn: boolean; i: number; onOpen: () => void; onSave?: () => void }) {
+function Tile({ cell, drawn, i, onOpen }: { cell: Cell; drawn: boolean; i: number; onOpen: () => void }) {
   if (cell.saved) {
+    // a day a bookmark held: still a day off, the ribbon hanging over the sheet
     return (
-      <div className="oj-tile saved" style={{ ['--tilt' as string]: `${i % 2 ? 0.8 : -0.8}deg`, clipPath: torn(cell.day) }}>
-        <span className="oj-tile-date"><b>{parts(cell.day)[2]}</b>{weekday(cell.day)}</span>
-        <span className="oj-tile-card"><Joker w={54} /></span>
-        <span className="oj-tile-miss">A joker covered it.</span>
+      <div className="oj-tile missed held" style={{ clipPath: torn(cell.day) }}>
+        <Ribbon tall className="oj-tile-ribbon" />
+        <Ink color="ash" mood="asleep" size={34} still />
+        <span className="oj-tile-miss"><b>{dayMonth(cell.day)}</b>A day off. A bookmark held the streak.</span>
       </div>
     );
   }
   if (cell.missed) {
     const n = cell.count ?? 1;
-    const said = <span className="oj-tile-miss"><b>{cell.from ? `${parts(cell.from)[2]}–${dayMonth(cell.day)}` : dayMonth(cell.day)}</b>{n > 1 ? `${n} days off.` : 'A day off.'} The ink slept in.</span>;
-    // a gap the jokers in hand can still cover opens the save
-    if (onSave) {
-      return (
-        <button type="button" className="oj-tile missed savable" style={{ clipPath: torn(cell.day) }} onClick={onSave}>
-          <Ink color="ash" mood="asleep" size={34} still />
-          {said}
-          <span className="oj-tile-save">A joker saves it&nbsp;→</span>
-        </button>
-      );
-    }
     return (
       <div className="oj-tile missed" style={{ clipPath: torn(cell.day) }}>
         <Ink color="ash" mood="asleep" size={34} still />
-        {said}
+        <span className="oj-tile-miss"><b>{cell.from ? `${parts(cell.from)[2]}–${dayMonth(cell.day)}` : dayMonth(cell.day)}</b>{n > 1 ? `${n} days off.` : 'A day off.'} The ink slept in.</span>
       </div>
     );
   }
@@ -589,9 +579,8 @@ function Redo() {
   );
 }
 
-// ---------- jokers ----------
+// ---------- bookmarks (jokers.ts calls them jokers) ----------
 
-const DROP = 'M50 3 C63 29 89 46 89 71 A39 37 0 0 1 11 71 C11 46 37 29 50 3 Z';
 const WORD = ['No', 'One', 'Two', 'Three'];
 const word = (n: number) => (WORD[n] ?? String(n)).toLowerCase();
 
@@ -603,237 +592,110 @@ function ordinal(day: string): string {
   const n = parts(day)[2];
   return `${n}${n % 100 >= 11 && n % 100 <= 13 ? 'th' : ({ 1: 'st', 2: 'nd', 3: 'rd' } as Record<number, string>)[n % 10] ?? 'th'}`;
 }
-/// A missed day as people say it: yesterday, a weekday this week, or the date (a week back has today's weekday).
+/// A missed day as people say it: yesterday, a weekday this week, or weekday + date (a week back has today's weekday).
 function sayDay(day: string, today: string): string {
-  if (day === shift(today, -1)) return 'Yesterday';
+  if (day === shift(today, -1)) return 'yesterday';
   return day > shift(today, -7) ? fmt(day, { weekday: 'long' }) : `${fmt(day, { weekday: 'long' })} the ${ordinal(day)}`;
 }
-/// How long the offer stands: tonight, tomorrow, or a weekday (never more than six days ahead).
+/// How long a restore stays open: tonight, tomorrow, or a weekday (never more than six days ahead).
 function sayUntil(until: string, today: string): string {
   return until <= today ? 'tonight' : until === shift(today, 1) ? 'tomorrow' : fmt(until, { weekday: 'long' });
 }
+function andList(items: string[]): string {
+  return items.length <= 1 ? items[0] ?? '' : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
+}
 
-/** A joker: a playing card whose suit is the ink drop, and in the middle the drop
- *  itself in a jester's cap (two red points and an ink one, a bell on each). */
-function Joker({ w = 46, className = '', style }: { w?: number; className?: string; style?: React.CSSProperties }) {
+/** A bookmark: the journal's red ribbon, notched at the foot. Held ones are red; an empty place is an outline. */
+function Ribbon({ on = true, tall = false, className = '' }: { on?: boolean; tall?: boolean; className?: string }) {
   return (
-    <span className={`oj-joker ${className}`} style={{ ['--w' as string]: `${w}px`, ...style }} aria-hidden>
-      <svg viewBox="0 0 100 140" width={w} height={w * 1.4}>
-        <rect x="2.5" y="2.5" width="95" height="135" rx="10" fill="#fffdf7" stroke="#151515" strokeWidth="3" />
-        {[0, 180].map((turn) => (
-          <g key={turn} transform={`rotate(${turn} 50 70)`}>
-            <text x="11" y="30" fill="#151515" style={{ font: '900 24px var(--sans)' }}>J</text>
-            <path d={DROP} fill="#d63a20" transform="translate(11.5 35) scale(.12)" />
-          </g>
-        ))}
-        <g transform="translate(27 62) scale(.46)">
-          <path d={DROP} fill="#151515" />
-          <ellipse cx="40" cy="70" rx="5" ry="5.6" fill="#fffdf7" /><ellipse cx="60" cy="70" rx="5" ry="5.6" fill="#fffdf7" />
-          <path d="M43 81 Q50 89 57 81" fill="none" stroke="#fffdf7" strokeWidth="3.4" strokeLinecap="round" />
-          <ellipse cx="29" cy="80" rx="6" ry="3.4" fill="#d63a20" /><ellipse cx="71" cy="80" rx="6" ry="3.4" fill="#d63a20" />
-        </g>
-        <path d="M41 79 C33 73 27 65 24 55 C33 58 43 65 50 75 Z" fill="#d63a20" />
-        <path d="M59 79 C67 73 73 65 76 55 C67 58 57 65 50 75 Z" fill="#d63a20" />
-        <path d="M44 76 C45 66 47 55 50 44 C53 55 55 66 56 76 Z" fill="#151515" />
-        <path d="M39 82 Q50 74 61 82 L60.5 86 Q50 79 39.5 86 Z" fill="#fffdf7" stroke="#151515" strokeWidth="2" strokeLinejoin="round" />
-        {[[24, 55], [76, 55], [50, 43]].map(([x, y]) => <circle key={x} cx={x} cy={y} r="4.2" fill="#fffdf7" stroke="#151515" strokeWidth="2.2" />)}
-      </svg>
-    </span>
+    <svg className={`oj-ribbon${on ? '' : ' off'} ${className}`} viewBox={tall ? '0 0 10 27' : '0 0 10 16'} aria-hidden>
+      <path d={tall ? 'M1 0 H9 V26.2 L5 22.6 L1 26.2 Z' : 'M1 .8 H9 V15.2 L5 11.6 L1 15.2 Z'} />
+    </svg>
   );
 }
 
-/** The fan of up to three cards: held ones face up, the rest an empty outline. */
-function Fan({ held, max, w, dealt = false, up = 0, refs }: { held: number; max: number; w: number; dealt?: boolean; up?: number; refs?: React.MutableRefObject<(HTMLSpanElement | null)[]> }) {
-  return (
-    <>
-      {Array.from({ length: max }, (_, i) => {
-        const r = { ['--r' as string]: `${(i - (max - 1) / 2) * 8}deg` };
-        if (i >= held) return <span key={`slot-${i}`} className="oj-joker-slot" style={{ ...r, ['--w' as string]: `${w}px` }} />;
-        const cls = `${dealt && i === held - 1 ? 'dealt' : ''}${i >= held - up ? ' up' : ''}`;
-        return (
-          <span key={`card-${i}`} ref={(el) => { if (refs) refs.current[i] = el; }} className="oj-card-slot" style={r}>
-            <Joker w={w} className={cls} />
-          </span>
-        );
-      })}
-    </>
-  );
-}
+type Marks = { jokers: Jokers; rescue: Rescue | null; today: string; dealt: boolean; onRestored: () => Promise<unknown> };
 
-/** Under the level: the hand, how jokers work, and when the next one comes. A tap
- *  makes the cards jig; while a streak can still be saved, a link opens the save. */
-function Hand({ jokers, dealt, rescue, onSave }: { jokers: Jokers; dealt: boolean; rescue: Rescue | null; onSave: () => void }) {
-  const [jig, setJig] = useState(false);
-  const { held, max, nextIn } = jokers;
-  return (
-    <div className="oj-jokers">
-      <div className={`oj-hand${jig ? ' jig' : ''}`} role="img" aria-label={`${held} of ${max} jokers in hand`} onClick={() => { setJig(true); setTimeout(() => setJig(false), 700); }}>
-        <Fan held={held} max={max} w={40} dealt={dealt} />
-      </div>
-      <div className="oj-jokers-text">
-        <b>{held === 0 ? 'No jokers yet' : `${WORD[held]} ${held === 1 ? 'joker' : 'jokers'} in hand`}</b>
-        <span>A joker covers a day you miss. {nextIn === null ? 'Your hand is full.' : `The next one comes in ${nextIn} ${nextIn === 1 ? 'day' : 'days'}.`}</span>
-        {rescue && <button type="button" className="oj-text-btn oj-jokers-save" onClick={onSave}>Save your {rescue.from.streak}-day streak</button>}
-      </div>
-    </div>
-  );
-}
-
-/** The note taped to the wall above the pad while a broken streak can still be saved. */
-function Slip({ rescue, today, onOpen }: { rescue: Rescue; today: string; onOpen: () => void }) {
-  return (
-    <button type="button" className="oj-slip" onClick={onOpen}>
-      <Joker w={34} />
-      <span className="oj-slip-text">
-        <b>Your {rescue.from.streak}-day streak is asleep.</b>
-        {rescue.cost === 1 ? 'A joker' : `${WORD[rescue.cost]} jokers`} can still wake it, until {sayUntil(rescue.until, today)}.
-      </span>
-      <span className="oj-slip-go">Save it</span>
-    </button>
-  );
-}
-
-/** The days around the save, as small sheets: kept runs (with the streak at their
- *  end) and the missed days the jokers go into. */
-type Seg = { kind: 'kept'; first: string; last: string; was: number; becomes: number } | { kind: 'gap'; day: string; i: number };
-function segments(r: Rescue): Seg[] {
-  const segs: Seg[] = [{ kind: 'kept', first: r.from.day, last: r.from.day, was: r.from.streak, becomes: r.from.streak }];
-  const items = [...r.days.map((day, i) => ({ day, gap: i, a: null })), ...r.after.map((a) => ({ day: a.day, gap: -1, a }))].sort((x, y) => (x.day < y.day ? -1 : 1));
-  let open = false; // the last kept run takes the next kept day
-  for (const it of items) {
-    if (!it.a) { segs.push({ kind: 'gap', day: it.day, i: it.gap }); open = false; continue; }
-    const last = segs[segs.length - 1];
-    if (open && last.kind === 'kept') Object.assign(last, { last: it.day, was: it.a.was, becomes: it.a.becomes });
-    else { segs.push({ kind: 'kept', first: it.day, last: it.day, was: it.a.was, becomes: it.a.becomes }); open = true; }
-  }
-  return segs;
-}
-
-/** The save. The streak that broke sits greyed, its drop asleep; the missed days
- *  are empty sheets in a strip; the cards to play are lifted out of the hand.
- *  Playing flies each card into its gap, the drop wakes, the number climbs to
- *  the streak as it now stands, and the wall underneath reloads. */
-function RescueSheet({ r, today, onSaved, onStale, onClose }: { r: Rescue; today: string; onSaved: () => void; onStale: () => void; onClose: () => void }) {
-  const [state, setState] = useState<'offer' | 'busy' | 'flying' | 'saved'>('offer');
+/** The streak at the top, with the bookmarks beside it: three small places, a red
+ *  ribbon in each one held. A tap opens a small card under it — how bookmarks work
+ *  and when the next one comes, or, while a broken streak can still come back, the
+ *  one button that brings it back. A red dot on the count is the only sign of that:
+ *  nothing opens by itself and no text is sent. Restoring counts the number up. */
+function Streak({ streak, marks, open, onToggle }: { streak: number; marks?: Marks; open: boolean; onToggle: () => void }) {
+  const [counting, setCounting] = useState<number | null>(null); // the number while it climbs after a restore
+  const [state, setState] = useState<'idle' | 'busy' | 'done'>('idle');
   const [err, setErr] = useState('');
-  const [shown, setShown] = useState(r.from.streak);
-  const cards = useRef<(HTMLSpanElement | null)[]>([]);
-  const slots = useRef<(HTMLSpanElement | null)[]>([]);
-  const segs = segments(r);
-  const saved = state === 'saved';
-  const tenth = r.after.find((a) => a.becomes % 10 === 0 && a.was % 10 !== 0)?.becomes;
+  const [restored, setRestored] = useState<{ now: number; left: number } | null>(null);
+  const btn = useRef<HTMLButtonElement>(null);
+  // the climb ends once the page underneath has the new streak
+  useEffect(() => { if (counting !== null && restored && streak === restored.now && counting === restored.now) setCounting(null); }, [counting, streak, restored]);
+  useEffect(() => { if (!open && state === 'done') { setState('idle'); setRestored(null); } }, [open, state]);
+  const shown = counting ?? streak;
+  const label = `${shown}-day streak`;
+  if (!marks) return <span className="oj-streak" aria-label={label}><b>{shown}</b> day streak</span>;
+  const { jokers, rescue, today, dealt } = marks;
+  const held = restored ? restored.left : jokers.held;
 
-  // the number climbs from the streak that broke to the streak as it now stands
-  useEffect(() => {
-    if (!saved || r.now === r.from.streak) return;
-    const t0 = performance.now();
-    let raf = 0;
-    const step = (t: number) => {
-      const k = Math.min(1, (t - t0) / 900);
-      setShown(Math.round(r.from.streak + (r.now - r.from.streak) * (1 - Math.pow(1 - k, 3))));
-      if (k < 1) raf = requestAnimationFrame(step);
-    };
-    raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
-  }, [saved, r.now, r.from.streak]);
-
-  async function play() {
+  async function restore() {
+    if (!rescue) return;
     setState('busy'); setErr('');
     try {
-      const res = await fetch('/api/onething/joker', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ days: r.days }) });
+      const res = await fetch('/api/onething/joker', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ days: rescue.days }) });
       const j = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setErr(j.error ?? 'The joker would not play. Try again.'); setState('offer');
-        if (res.status === 409) onStale();
-        return;
-      }
-    } catch { setErr('Network error. Try again.'); setState('offer'); return; }
-    setState('flying');
-    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    await Promise.all(r.days.map((_, i) => {
-      const card = cards.current[r.held - r.cost + i];
-      const slot = slots.current[i];
-      if (still || !card || !slot) return null;
-      const a = card.getBoundingClientRect(), b = slot.getBoundingClientRect();
-      const dx = b.left + b.width / 2 - (a.left + a.width / 2);
-      const dy = b.top + b.height / 2 - (a.top + a.height / 2);
-      const s = (b.width * 0.78) / a.width;
-      const from = getComputedStyle(card).transform;
-      return card.animate([
-        { transform: from === 'none' ? 'none' : from },
-        { transform: `translate(${dx * 0.45}px, ${dy * 0.45 - 80}px) rotate(-16deg) scale(1.1)`, offset: 0.45 },
-        { transform: `translate(${dx}px, ${dy}px) rotate(-5deg) scale(${s})` },
-      ], { duration: 700, delay: i * 180, easing: 'cubic-bezier(.35,.7,.3,1)', fill: 'forwards' }).finished;
-    }));
-    setState('saved');
-    for (const el of slots.current) {
-      if (!el) continue;
-      const b = el.getBoundingClientRect();
-      splash(b.left + b.width / 2, b.top + b.height / 2, 22);
-    }
-    onSaved();
+      if (!res.ok) { setErr(j.error ?? 'That did not work. Try again.'); setState('idle'); if (res.status === 409) marks?.onRestored(); return; }
+    } catch { setErr('Network error. Try again.'); setState('idle'); return; }
+    const from = streak, to = rescue.now;
+    setRestored({ now: to, left: rescue.left });
+    setState('done');
+    const b = btn.current?.getBoundingClientRect();
+    if (b) splash(b.left + b.width / 2, b.top + b.height / 2, 14);
+    const t0 = performance.now();
+    const step = (t: number) => {
+      const k = Math.min(1, (t - t0) / 1100);
+      setCounting(Math.round(from + (to - from) * (1 - Math.pow(1 - k, 3))));
+      if (k < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+    marks?.onRestored();
   }
 
-  const one = r.cost === 1;
-  const slipped = one ? `${sayDay(r.days[0], today)} slipped by.` : `${WORD[r.cost]} days slipped by.`;
   return (
-    <Sheet label="save the streak" onClose={onClose}>
-      <section className={`oj-card oj-rescue${saved ? ' is-saved' : ''}`}>
-        <div className="oj-card-top">
-          <span className="oj-chip">{saved ? 'Saved' : 'Save the streak'}</span>
-          <button type="button" className="oj-x" aria-label="close" onClick={onClose}>×</button>
-        </div>
-        <div className={`oj-rescue-num${saved ? '' : ' asleep'}`} aria-live="polite">
-          <span>{shown}</span>
-          <Ink color="violet" size={46} mood={saved ? 'happy' : 'asleep'} still={!saved} className={`oj-rescue-ink${saved ? ' oj-wake' : ''}`} />
-        </div>
-        <p className="oj-rescue-k">day streak</p>
-        <h2 className="oj-rescue-h">{saved ? 'Saved.' : slipped}</h2>
-        <p className="oj-p oj-rescue-p">
-          {saved
-            ? <>{r.after.length ? `Day ${r.now}, and counting.` : `${r.now} days, still going. Today makes ${r.now + 1}.`}{tenth ? ` Day ${tenth} dealt you a fresh joker on the way.` : ''}</>
-            : <>Your {r.from.streak}-day streak broke there. {one ? 'A joker covers it' : `${WORD[r.cost]} jokers cover them`}, and it {r.after.length ? `carries on at ${r.now}` : `holds: today makes ${r.now + 1}`}.</>}
-        </p>
-
-        <div className="oj-strip" aria-label="the days around the gap">
-          {segs.map((g) => g.kind === 'gap' ? (
-            <span key={g.day} ref={(el) => { slots.current[g.i] = el; }} className={`oj-strip-gap${saved ? ' filled' : ''}`}>
-              <small>{weekday(g.day)} {parts(g.day)[2]}</small>
-              {saved ? <Joker w={32} className="landed" /> : <Ink color="ash" mood="asleep" size={26} still />}
-              <small>{saved ? 'covered' : 'missed'}</small>
-            </span>
-          ) : (
-            <span key={g.first} className="oj-strip-sheet">
-              <small>{g.first === g.last ? `${weekday(g.first)} ${parts(g.first)[2]}` : `${parts(g.first)[2]}–${parts(g.last)[2]}`}</small>
-              <b className={saved && g.becomes !== g.was ? 'up' : ''}>{saved ? g.becomes : g.was}</b>
-              <small>{(saved ? g.becomes : g.was) === 1 ? 'day' : 'days'}</small>
-            </span>
-          ))}
-        </div>
-
-        <div className="oj-rescue-hand">
-          {saved
-            ? <Fan key="after" held={r.left} max={3} w={52} dealt={r.deals > 0} />
-            : <Fan key="before" held={r.held} max={3} w={52} up={r.cost} refs={cards} />}
-        </div>
-
-        {saved ? (
-          <div className="oj-acts">
-            <button type="button" className="oj-btn big" onClick={onClose}>Back to your page</button>
-          </div>
-        ) : (
-          <>
-            <div className="oj-acts">
-              <button type="button" className="oj-btn big oj-play" disabled={state !== 'offer'} onClick={play}>
-                {state === 'offer' ? (one ? 'Play the joker' : `Play ${word(r.cost)} jokers`) : 'Playing…'}
+    <>
+      <button ref={btn} type="button" className={`oj-streak btn${rescue && !restored ? ' due' : ''}${counting !== null ? ' climbing' : ''}`} aria-label={`${label}, ${held} of ${jokers.max} bookmarks${rescue && !restored ? ', a broken streak can come back' : ''}`} aria-haspopup="dialog" aria-expanded={open} onClick={onToggle}>
+        <b>{shown}</b> day streak
+        <span className="oj-marks">
+          {Array.from({ length: jokers.max }, (_, i) => <Ribbon key={i} on={i < held} className={dealt && !restored && i === held - 1 ? 'dealt' : ''} />)}
+        </span>
+      </button>
+      {open && (
+        <div className="oj-pop" role="dialog" aria-label="bookmarks">
+          {state === 'done' && restored ? (
+            <>
+              <p className="oj-pop-h">Back to {restored.now} days.</p>
+              <p className="oj-pop-p">{restored.left === 0 ? 'No bookmarks left.' : `${WORD[restored.left]} ${restored.left === 1 ? 'bookmark' : 'bookmarks'} left.`}</p>
+            </>
+          ) : rescue ? (
+            <>
+              <p className="oj-pop-h">Your {rescue.from.streak}-day streak can come back.</p>
+              <p className="oj-pop-p">
+                {rescue.cost === 1 ? 'A bookmark holds' : `${WORD[rescue.cost]} bookmarks hold`} {andList(rescue.days.map((d) => sayDay(d, today)))}, the {rescue.cost === 1 ? 'day' : 'days'} you missed.
+              </p>
+              <button type="button" className="oj-btn oj-pop-btn" disabled={state === 'busy'} onClick={restore}>
+                {state === 'busy' ? 'Restoring…' : `Restore to ${rescue.now}`}
               </button>
-            </div>
-            <p className="oj-note">You hold {word(r.held)}. This stays open until {sayUntil(r.until, today)}. <button type="button" className="oj-text-btn quiet" onClick={onClose}>Not now</button></p>
-          </>
-        )}
-        {err && <p className="oj-err">{err}</p>}
-      </section>
-    </Sheet>
+              <p className="oj-pop-k">Open until {sayUntil(rescue.until, today)}. You have {word(jokers.held)}.</p>
+            </>
+          ) : (
+            <>
+              <p className="oj-pop-h">{jokers.held === 0 ? 'No bookmarks yet.' : `${WORD[jokers.held]} ${jokers.held === 1 ? 'bookmark' : 'bookmarks'}.`}</p>
+              <p className="oj-pop-p">A bookmark holds your streak through a day you miss. One comes every {jokers.every} days in a row, up to {word(jokers.max)}.</p>
+              <p className="oj-pop-k">{jokers.nextIn === null ? 'You have all three.' : `Next one in ${jokers.nextIn} ${jokers.nextIn === 1 ? 'day' : 'days'}.`}</p>
+            </>
+          )}
+          {err && <p className="oj-err">{err}</p>}
+        </div>
+      )}
+    </>
   );
 }
 
@@ -990,8 +852,7 @@ export default function Onething() {
   const [photoErr, setPhotoErr] = useState('');
   const photoRef = useRef<HTMLInputElement>(null);
   const photoDay = useRef<string>(''); // the day the file picker was opened for
-  const [rescueOpen, setRescueOpen] = useState<Rescue | null>(null); // the save, as offered when it opened
-  const [dealt, setDealt] = useState(false); // today dealt a joker: the newest card deals itself in, once
+  const [dealt, setDealt] = useState(false); // today dealt a bookmark: the newest ribbon drops in, once
 
   const load = useCallback(async () => {
     const r = await fetch('/api/onething/me', { cache: 'no-store' });
@@ -1002,25 +863,15 @@ export default function Onething() {
   useEffect(() => { load(); }, [load]);
   // A milestone day (streak 3, 7, 14, 30, 60, 100, 365) plays the payoff scene once per
   // browser: on the visit the kept text links to, or right after the sentence is saved
-  // here. The key is written as it opens, so a reload doesn't play it twice. A save in
-  // progress goes first; a save that lands today on a milestone plays it after.
+  // here. The key is written as it opens, so a reload doesn't play it twice.
   useEffect(() => {
     const m = todayMilestone(me);
-    if (!m || rescueOpen) return;
+    if (!m) return;
     const key = `onething:payoff:${m.day}:${m.streak}`;
     try { if (localStorage.getItem(key)) return; localStorage.setItem(key, '1'); } catch { return; }
     setPayoff(m);
-  }, [me, rescueOpen]);
-  // A streak the jokers in hand can still save opens the save once per offer per browser;
-  // after that the note above the pad and the hand keep it one tap away.
-  useEffect(() => {
-    const r = me?.rescue;
-    if (!r) return;
-    const key = `onething:rescue:${r.days.join(',')}`;
-    try { if (localStorage.getItem(key)) return; localStorage.setItem(key, '1'); } catch { return; }
-    setRescueOpen(r);
   }, [me]);
-  // The day a tenth sentence deals a joker, the new card deals itself into the hand once.
+  // The day a tenth sentence deals a bookmark, the newest ribbon drops into its place once.
   useEffect(() => {
     const t = me?.entries?.find((e) => e.day === me.today);
     if (!t || t.streak % 10 !== 0 || !me?.jokers?.held) return;
@@ -1200,6 +1051,8 @@ export default function Onething() {
   const entries = me.entries ?? [];
   const today = me.today ?? '';
   const tc = colorOf(today);
+  // the bookmarks beside the streak (and the restore, when one is open)
+  const marks: Marks | undefined = me.jokers ? { jokers: me.jokers, rescue: me.rescue ?? null, today, dealt, onRestored: load } : undefined;
   const buddies = me.buddies ?? [];
   const sent = me.sent ?? [];
   const received = me.received ?? [];
@@ -1215,7 +1068,7 @@ export default function Onething() {
         <Defs />
         <header className="oj-hero short" data-j={tc}>
             <div className="oj-wrap">
-            <Top me={me.user} streak={b.streak} view={view} onView={go} onSignout={signout} />
+            <Top me={me.user} streak={b.streak} marks={marks} view={view} onView={go} onSignout={signout} />
             <div className="oj-settings-head">
               <p className="oj-date"><button type="button" className="oj-text-btn" onClick={() => go('journal')}>← Back to your page</button></p>
               <h1 className="oj-q">Settings</h1>
@@ -1321,14 +1174,11 @@ export default function Onething() {
   const oldest = (ty * 12 + tm) - (sy * 12 + sm); // months back to the account's first month
   const byDay = new Map(entries.map((e) => [e.day, e]));
   const saves = new Set(me.saves ?? []);
-  const rescue = me.rescue ?? null;
-  const jokers = me.jokers;
   // On the 1st (or any day before this month has a past day) the wall opens on last month.
   const auto = oldest > 0 && monthCells(ty, tm, today, me.user.since, byDay, saves).length === 0 ? 1 : 0;
   const back = Math.min(monthsBack ?? auto, Math.max(0, oldest));
   const [vy, vm] = monthBack(ty, tm, back);
   const cells = monthCells(vy, vm, today, me.user.since, byDay, saves);
-  const savable = (c: Cell) => !!rescue && c.missed && rescue.days.some((d) => d >= (c.from ?? c.day) && d <= c.day);
   const todayEntry = byDay.get(today);
   const drawn = me.user.doodles !== false;
   const composing = !todayEntry || adding;
@@ -1352,21 +1202,13 @@ export default function Onething() {
     {opened && !redraw && !photoShown && <DaySheet entry={opened} drawn={drawn} thoughts={thoughtProps} photo={photoProps} onClose={closeDay} onRedraw={() => setRedraw(opened.day)} />}
     {redrawing && <Redraw entry={redrawing} onClose={() => setRedraw(null)} onKept={async () => { setRedraw(null); await load(); }} />}
     {photoShown?.photo && <PhotoSheet entry={photoShown} busy={photoBusy} err={photoErr} onRemove={() => removePhoto(photoShown.day)} onClose={() => setPhotoOpen(null)} />}
-    {rescueOpen && (
-      <RescueSheet
-        key={rescueOpen.days.join()} r={rescueOpen} today={today}
-        onSaved={() => { load(); }}
-        onStale={async () => { const m = await load(); setRescueOpen(m.rescue ?? null); }}
-        onClose={() => setRescueOpen(null)}
-      />
-    )}
+
     <input ref={photoRef} type="file" accept="image/*" hidden aria-hidden tabIndex={-1} onChange={(e) => addPhoto(e.target.files?.[0])} />
 
     {/* today: the top sheet of the pad */}
     <header className="oj-hero" data-j={tc}>
       <div className="oj-wrap">
-        <Top me={me.user} streak={b.streak} view={view} onView={go} onSignout={signout} />
-        {rescue && <Slip rescue={rescue} today={today} onOpen={() => setRescueOpen(rescue)} />}
+        <Top me={me.user} streak={b.streak} marks={marks} view={view} onView={go} onSignout={signout} />
         <div className="oj-pad">
         <span className="oj-binding" aria-hidden><i /><i /></span>
         <div className={`oj-today ${tone(today)}`}>
@@ -1417,7 +1259,6 @@ export default function Onething() {
           <Ink color="violet" size={24} className="oj-rider" />
         </div>
         <p className="oj-tube-k">{nextLine}</p>
-        {jokers && <Hand jokers={jokers} dealt={dealt} rescue={rescue} onSave={() => rescue && setRescueOpen(rescue)} />}
         {details && (
           <div className="oj-details" id="oj-details">
             <p><b>+{perDay}</b> for tomorrow&apos;s sentence{b.best > b.streak ? ` · best streak ${b.best}` : ''}</p>
@@ -1453,7 +1294,7 @@ export default function Onething() {
           <p className="oj-empty">{back === 0 ? `The rest of ${MONTHS[vm - 1]} fills in here, a drop a day.` : 'Nothing kept this month.'}</p>
         ) : (
           <div className="oj-wall">
-            {cells.map((c, i) => <Tile key={c.day} cell={c} i={i} drawn={drawn} onOpen={() => openFrom(c.day)} onSave={savable(c) ? () => setRescueOpen(rescue) : undefined} />)}
+            {cells.map((c, i) => <Tile key={c.day} cell={c} i={i} drawn={drawn} onOpen={() => openFrom(c.day)} />)}
           </div>
         )}
       </section>

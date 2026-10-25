@@ -1,8 +1,8 @@
-// The joker save, driven at phone size in WebKit against a local dev server,
-// signed in as the throwaway account from joker-user.ts (two gaps, 36 days
-// that can come back, three jokers): the save opens by itself once, "Not now"
-// leaves the note on the wall, the note reopens it, playing flies two cards
-// into the gaps and lands on 41, the page under it follows.
+// The bookmarks by the streak (jokers.ts), driven at phone size in WebKit against
+// a local dev server, signed in as the throwaway account from joker-user.ts (two
+// gaps, 36 days that can come back, three in hand): nothing opens by itself, a red
+// dot sits on the count, a tap opens the small card, Restore counts the streak up
+// to 41 and leaves two ribbons, the dot goes, held days carry a ribbon on the wall.
 //   set -a; source ./.env.local; set +a; npx tsx scripts/onething/joker-user.ts   → id
 //   OT_OUT=<shots-dir> OT_USER=<id> [OT_URL=http://localhost:3218] [OT_DESKTOP=1] node scripts/onething/pw-joker.mjs
 import { chromium, webkit, devices } from 'playwright'
@@ -19,65 +19,63 @@ const page = await ctx.newPage()
 const errors = []
 page.on('pageerror', (e) => { if (!/__nextjs_original-stack-frames/.test(e.message)) errors.push(e.message) })
 const p = desk ? 'desk-' : ''
+const top = async (name) => page.screenshot({ path: `${out}/${p}${name}.png`, clip: { x: 0, y: 0, width: desk ? 1280 : 390, height: desk ? 420 : 420 } })
 
 await page.goto(`${base}/api/onething/dev/as?id=${uid}`, { waitUntil: 'networkidle' })
-await page.waitForSelector('.oj-rescue', { timeout: 15000 })
-await page.waitForTimeout(500)
-await page.screenshot({ path: `${out}/${p}01-offer.png` })
-check((await page.locator('.oj-rescue-num span').first().textContent()) === '36', 'opens by itself on the 36 that broke')
-check((await page.locator('.oj-rescue-h').textContent()) === 'Two days slipped by.', 'headline: two days slipped by')
-check((await page.locator('.oj-play').textContent()) === 'Play two jokers', 'button: play two jokers')
-check(await page.locator('.oj-strip-gap').count() === 2, 'two empty sheets in the strip')
-check(await page.locator('.oj-rescue-hand .oj-joker.up').count() === 2, 'two cards lifted out of the hand')
+await page.waitForSelector('.oj-streak.btn', { timeout: 15000 })
+await page.waitForTimeout(800)
+await top('01-top')
+check(await page.locator('.oj-pop, .oj-sheet').count() === 0, 'nothing opens by itself')
+check(await page.locator('.oj-streak.due').count() === 1, 'a red dot on the count')
+check(await page.locator('.oj-marks .oj-ribbon:not(.off)').count() === 3, 'three ribbons held')
 
-await page.getByRole('button', { name: 'Not now' }).click()
-await page.waitForTimeout(400)
-check(await page.locator('.oj-rescue').count() === 0, 'not now closes it')
-await page.screenshot({ path: `${out}/${p}02-slip.png` })
-check(await page.locator('.oj-slip').count() === 1, 'the note stays above the pad')
-await page.locator('.oj-level').scrollIntoViewIfNeeded()
-await page.waitForTimeout(300)
-await page.locator('.oj-level').screenshot({ path: `${out}/${p}03-hand-before.png` })
-check((await page.locator('.oj-jokers-text b').textContent()) === 'Three jokers in hand', 'the hand: three jokers')
-await page.locator('.oj-month').screenshot({ path: `${out}/${p}04-wall-before.png` })
-check(await page.locator('.oj-tile.savable').count() >= 1, 'the missed days on the wall offer the save')
-
-await page.reload({ waitUntil: 'networkidle' })
-await page.waitForTimeout(1200)
-check(await page.locator('.oj-rescue').count() === 0, 'a reload does not open it again')
-
-await page.locator('.oj-slip').click()
-await page.waitForSelector('.oj-rescue')
-await page.waitForTimeout(400)
-// a burst from the moment the server says yes, so the cards are caught in the air
-const yes = page.waitForResponse((res) => res.url().includes('/api/onething/joker'))
-await page.locator('.oj-play').click()
-await yes
-for (let k = 0; k < 6; k++) { await page.screenshot({ path: `${out}/${p}05-flying-${k}.png` }); await page.waitForTimeout(110) }
-await page.waitForSelector('.oj-rescue.is-saved', { timeout: 10000 })
+await page.locator('.oj-streak.btn').click()
+await page.waitForSelector('.oj-pop')
 await page.waitForTimeout(250)
-await page.screenshot({ path: `${out}/${p}06-landing.png` })
-await page.waitForTimeout(1300)
-await page.screenshot({ path: `${out}/${p}07-saved.png` })
-check((await page.locator('.oj-rescue-num span').first().textContent()) === '41', 'lands on 41')
-check((await page.locator('.oj-rescue-h').textContent()) === 'Saved.', 'headline: saved')
-check(await page.locator('.oj-strip-gap .oj-joker').count() === 2, 'a joker in each gap')
-check(await page.locator('.oj-rescue-hand .oj-card-slot').count() === 2, 'two jokers left (one dealt back by day 40)')
-check((await page.locator('.oj-rescue-p').textContent()).includes('Day 40 dealt you a fresh joker'), 'says day 40 dealt one back')
+await top('02-open')
+check((await page.locator('.oj-pop-h').textContent()) === 'Your 36-day streak can come back.', 'the card: the 36 can come back')
+const body = await page.locator('.oj-pop-p').textContent()
+check(/^Two bookmarks hold Sunday the 18th and Friday, the days you missed\.$|^Two bookmarks hold .+ and .+, the days you missed\.$/.test(body), `names the two days (${body})`)
+check((await page.locator('.oj-pop-btn').textContent()) === 'Restore to 41', 'the button: restore to 41')
 
-await page.getByRole('button', { name: 'Back to your page' }).click()
-await page.waitForTimeout(600)
-await page.screenshot({ path: `${out}/${p}08-page.png` })
-check(await page.locator('.oj-slip').count() === 0, 'the note is gone')
-check((await page.locator('.oj-streak b').textContent()) === '41', 'the streak at the top reads 41')
-await page.locator('.oj-level').scrollIntoViewIfNeeded()
+await page.keyboard.press('Escape')
+await page.waitForTimeout(150)
+check(await page.locator('.oj-pop').count() === 0, 'escape closes it')
+await page.locator('.oj-streak.btn').click()
+await page.waitForSelector('.oj-pop-btn')
+// a tap where the finger lands (locator.click scrolls the button to the top of the viewport first)
+const tap = async (sel) => { const r = await page.locator(sel).boundingBox(); const x = r.x + r.width / 2, y = r.y + r.height / 2; if (desk) await page.mouse.click(x, y); else await page.touchscreen.tap(x, y) }
+const yes = page.waitForResponse((res) => res.url().includes('/api/onething/joker'))
+await tap('.oj-pop-btn')
+await yes
+check(await page.evaluate(() => scrollY) === 0, 'the page stays put')
+for (let k = 0; k < 4; k++) { await top(`03-climb-${k}`); await page.waitForTimeout(220) }
+await page.waitForFunction(() => document.querySelector('.oj-streak b')?.textContent === '41', null, { timeout: 8000 })
+await page.waitForTimeout(800)
+await top('04-restored')
+check((await page.locator('.oj-pop-h').textContent()) === 'Back to 41 days.', 'the card: back to 41')
+check((await page.locator('.oj-streak b').textContent()) === '41', 'the count reads 41')
+check(await page.locator('.oj-marks .oj-ribbon:not(.off)').count() === 2, 'two ribbons left (day 40 gave one back)')
+check(await page.locator('.oj-streak.due').count() === 0, 'the dot is gone')
+
+await page.mouse.click(desk ? 200 : 40, desk ? 600 : 500)
+await page.waitForTimeout(200)
+check(await page.locator('.oj-pop').count() === 0, 'a tap away closes it')
+await page.locator('.oj-streak.btn').click()
+await page.waitForSelector('.oj-pop')
+await page.waitForTimeout(200)
+await top('05-info')
+check((await page.locator('.oj-pop-h').textContent()) === 'Two bookmarks.', 'afterwards the card explains: two bookmarks')
+check((await page.locator('.oj-pop-k').textContent()) === 'Next one in 9 days.', 'next one in 9 days (41 → 50)')
+await page.keyboard.press('Escape')
+
+check(await page.locator('.oj-tile.held').count() === 2, 'the two held days on the wall carry a ribbon')
+await page.locator('.oj-tile.held').first().scrollIntoViewIfNeeded()
 await page.waitForTimeout(300)
-await page.locator('.oj-level').screenshot({ path: `${out}/${p}09-hand-after.png` })
-check((await page.locator('.oj-jokers-text b').textContent()) === 'Two jokers in hand', 'the hand: two jokers')
-await page.locator('.oj-month').screenshot({ path: `${out}/${p}10-wall-after.png` })
-check(await page.locator('.oj-tile.saved').count() >= 1, 'covered days on the wall carry a joker')
+const held = await page.locator('.oj-tile.held').first().boundingBox()
+const wall = await page.locator('.oj-wall').boundingBox()
+await page.screenshot({ path: `${out}/${p}06-wall.png`, clip: { x: wall.x - 6, y: held.y - 220, width: wall.width + 12, height: held.height + 440 } })
 check(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'no sideways scroll')
-
 check(errors.length === 0, `no page errors${errors.length ? `: ${errors.join(' | ')}` : ''}`)
 await b.close()
 console.log(failures ? `${failures} failure(s)` : 'all passed')

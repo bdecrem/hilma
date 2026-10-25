@@ -1,4 +1,5 @@
-// Jokers (2026-10-25). Every tenth day of a streak (10, 20, 30, …) deals one,
+// Jokers (2026-10-25; "bookmarks" on the page, which is the only place they
+// show — no texts mention them). Every tenth day of a streak (10, 20, 30, …) deals one,
 // three in hand at most. A joker covers one missed day, for a week after it:
 // the streak runs through a covered day without counting it, so 36 days, a
 // covered Sunday, and Monday is day 37. Storage (schema 010): the hand is
@@ -13,7 +14,6 @@
 import { f2Supabase } from '@/lib/f2/supabase'
 import { pointsForEntry } from './levels'
 import { addDays, listEntries, type Entry, type User } from './core'
-import copy from './copy.json'
 
 export const JOKER_EVERY = 10
 export const JOKER_MAX = 3
@@ -182,41 +182,4 @@ export async function playJokers(user: User, today: string, expect: string[]): P
   if (r.days.join() !== [...expect].sort().join()) throw new JokerError('That changed while you were looking. Here it is again.')
   await apply(user.id, r)
   return r
-}
-
-// ---------- the texts ----------
-
-const NUM = ['no', 'one', 'two', 'three']
-function ordinal(day: string): string {
-  const n = Number(day.slice(8, 10))
-  const s = n % 100 >= 11 && n % 100 <= 13 ? 'th' : ({ 1: 'st', 2: 'nd', 3: 'rd' } as Record<number, string>)[n % 10] ?? 'th'
-  return `the ${n}${s}`
-}
-function list(items: string[]): string {
-  return items.length <= 1 ? items[0] ?? '' : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`
-}
-/// "tonight", "tomorrow", or a weekday (the offer never stands more than six days ahead).
-export function untilText(until: string, today: string): string {
-  if (until <= today) return 'tonight'
-  if (until === addDays(today, 1)) return 'tomorrow'
-  const [y, m, d] = until.split('-').map(Number)
-  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' })
-}
-
-/// The line under the kept reply when the day just started a new streak and
-/// the jokers in hand can still bring the old one back. Days are named by
-/// date ("the 18th"): a week back has today's weekday.
-export function offerText(r: Rescue, today: string): string {
-  return (r.cost === 1 ? copy.joker.offerOne : copy.joker.offerMany)
-    .replace('{n}', String(r.from.streak))
-    .replace('{count}', NUM[r.cost] ?? String(r.cost))
-    .replace('{days}', list(r.days.map(ordinal)))
-    .replace('{until}', untilText(r.until, today))
-}
-
-export async function offerLines(user: User, today: string): Promise<string[]> {
-  if (!user.jokers) return []
-  const [entries, saves] = await Promise.all([listEntries(user.id), listSaves(user.id)])
-  const r = rescueFor(entries, saves, today, user.jokers)
-  return r ? [offerText(r, today)] : []
 }
