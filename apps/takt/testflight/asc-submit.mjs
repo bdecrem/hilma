@@ -1,5 +1,6 @@
-// After an upload: wait for App Store Connect to process the build, add it to every beta
-// group of the app, and submit it for beta review when an external group exists.
+// After an upload: wait for App Store Connect to process the build, add it to the app's beta
+// groups (the "Internal" group, kurona@mac.com, gets every build by itself), and submit it for
+// beta review when an external group exists.
 //   node testflight/asc-submit.mjs <buildNumber> [IOS|MAC_OS]
 // The app is found by bundle id (com.bartdecrem.Takt); ASC_KEY_ID picks the key (FA7268Q94U).
 import crypto from 'crypto'; import fs from 'fs'; import dns from 'dns'; dns.setDefaultResultOrder('ipv4first')
@@ -30,7 +31,8 @@ for (let i = 0; i < 90; i++) {
 }
 if (build?.attributes.processingState !== 'VALID') { console.error(`not processed after 45 min; rerun: node testflight/asc-submit.mjs ${VER} ${PLAT}`); process.exit(1) }
 const groups = (await api(`/apps/${app.id}/betaGroups`)).data
-for (const g of groups) {
+// An internal group with access to all builds gets this one by itself (adding it is a 422).
+for (const g of groups.filter(g => !(g.attributes.isInternalGroup && g.attributes.hasAccessToAllBuilds))) {
   try { await api(`/betaGroups/${g.id}/relationships/builds`, 'POST', { data: [{ type: 'builds', id: build.id }] }); console.log('added to', g.attributes.name) }
   catch (e) { console.log('add to', g.attributes.name + ':', e.message.slice(0, 160)) }
 }

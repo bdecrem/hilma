@@ -360,7 +360,7 @@ processing and adds the build to every beta group. Set up 2026-10-25: bundle id 
 (MAC_CATALYST_APP_STORE) minted with `apps/feynd/testflight/mint-profile.mjs` against the
 Apple Distribution cert whose key is in the MacBook Air's keychain (serial `16F68C26…`; ASC lists
 three, only that one signs here). A local Release archive exports to a signed App Store
-`Takt.ipa` with it. **Still blocked:** (1) the App Store Connect app record for
-`com.bartdecrem.Takt` (the API can't create apps: Bart, in the web UI: New App, iOS + macOS,
-bundle id Takt); (2) for `mac`, the MacBook Air has no "3rd Party Mac Developer Installer" identity in the keychain (ASC has
+`Takt.ipa` with it. **First upload 2026-10-25:** 0.1 (7) from the MacBook Air, app "Takt Keys
+Tutor" (ASC id 6826824040), internal group "Internal" (all builds, tester kurona@mac.com = Bart).
+**Still blocked:** for `mac`, the MacBook Air has no "3rd Party Mac Developer Installer" identity in the keychain (ASC has
 three MAC_INSTALLER_DISTRIBUTION certs, so their keys live on another Mac).
