@@ -7,35 +7,73 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0122C6880BB2223509A01B44 /* BandData.swift in Sources */ = {isa = PBXBuildFile; fileRef = E35CB620AC7721CE809CB3C0 /* BandData.swift */; };
+		015603108E81F63F3DB9F753 /* kick.wav in Resources */ = {isa = PBXBuildFile; fileRef = F34520AB295DC5306DF9FF50 /* kick.wav */; };
+		06D4EE81719B785A8ECE3FA3 /* sub-A1.wav in Resources */ = {isa = PBXBuildFile; fileRef = 59FFB7202B526B29939D20AA /* sub-A1.wav */; };
 		0D0C5243B3D5B74AC76FC97F /* CoachPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C3928533C5BB6418CCBE93 /* CoachPanel.swift */; };
+		0DE168DE937CF47D7A71BA79 /* Voices.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF651FEB253E5456168706DA /* Voices.swift */; };
+		0E052B1EC6868D15698256E7 /* snare.wav in Resources */ = {isa = PBXBuildFile; fileRef = 92D7893886A0DD2413287A87 /* snare.wav */; };
+		14ADFFCB6F179A4CC84EB648 /* rimshot.wav in Resources */ = {isa = PBXBuildFile; fileRef = AC7BE2C8710D5FC0BFBF3DC2 /* rimshot.wav */; };
 		1BAF5C09CD661D4CF3484722 /* Motifs.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCFFFD49EB39BF2E6BAC0767 /* Motifs.swift */; };
+		1C10C6072AB01F749AE43B8B /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = C5E40801CC98A659B7FBBD8E /* README.md */; };
+		46A76DE20EE77BC88B800BD2 /* sub-C2.wav in Resources */ = {isa = PBXBuildFile; fileRef = CC03391D5E8D735B6F46263E /* sub-C2.wav */; };
 		486922DA20D6BC2D8B7890FD /* Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C9E81396F74E488321A3DE6 /* Palette.swift */; };
 		5393E171E435313023E81F77 /* TransportBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FF0590E33E54BA1B15E91B1 /* TransportBar.swift */; };
 		5D12A4B666A44E9CE2C6914B /* LessonScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA77ED30BAF689A04B1E5B94 /* LessonScreen.swift */; };
 		606269D637B85705945947B6 /* Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = 360CC0D3E4675A3F8F360945 /* Typography.swift */; };
+		689A7688079AFEC2BD3EE75B /* sub-G1.wav in Resources */ = {isa = PBXBuildFile; fileRef = B196FE38F75BC760CE5A0A0F /* sub-G1.wav */; };
+		6FC903FE21D56D54BA26CEA4 /* band-blues-C.json in Resources */ = {isa = PBXBuildFile; fileRef = B439C1F30E776ACBBAA484B4 /* band-blues-C.json */; };
+		7943EE24325ECDBDE8F2DC64 /* KeyCatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 675DE36B1651AEB98E028168 /* KeyCatcher.swift */; };
+		89DC7130DA16A846E31355BF /* oh.wav in Resources */ = {isa = PBXBuildFile; fileRef = 3B24B0C43F13B32DC25BE959 /* oh.wav */; };
+		90B025AF66C939771B19D42D /* BandRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A356FC5F2FF8CA045494AB8D /* BandRenderer.swift */; };
 		913188C502DC22FAEB177062 /* ChannelStrip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C45267D4102101E567236B /* ChannelStrip.swift */; };
+		964AF3E4320F1FE3C9356582 /* ride.wav in Resources */ = {isa = PBXBuildFile; fileRef = 58AC8AFB1F416909D53165CF /* ride.wav */; };
 		98A90BB07168F73C2CB64C6D /* PadGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C87F42F08B755A7DD365B4F /* PadGrid.swift */; };
+		AD4AB405745AED706DBB9E45 /* MIDIInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A745499F18AF47E90C45897 /* MIDIInput.swift */; };
 		C644B759F0C8337C5B487AC0 /* KeyboardStrip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 880D9001CE96FC6DB96D7635 /* KeyboardStrip.swift */; };
 		D8C651DD600ADF4743305551 /* LessonState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32E41EAC5ED6208C88F089CA /* LessonState.swift */; };
 		DC203B315E897EAFBEFF1F87 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 898AE1B7738C7AD8C5E99B04 /* Assets.xcassets */; };
 		DDF031824410D6EF39EF2FE9 /* TaktApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 691AFBE11E8D755856092C87 /* TaktApp.swift */; };
+		DE7FE10E0696FBE76644959D /* Player.swift in Sources */ = {isa = PBXBuildFile; fileRef = 586FAD0BEBDF739818994F6C /* Player.swift */; };
+		E1427314DA1968F8B4681B13 /* AudioEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0A80DA756328D46986C659 /* AudioEngine.swift */; };
+		F6B568395B20B8AB6B2420B6 /* ch.wav in Resources */ = {isa = PBXBuildFile; fileRef = F2309A443590C63F7A6A4A90 /* ch.wav */; };
+		FF098609992B64F48C556EAA /* DebugHooks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 012712C796C3F22B9A027D23 /* DebugHooks.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		012712C796C3F22B9A027D23 /* DebugHooks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugHooks.swift; sourceTree = "<group>"; };
 		0C87F42F08B755A7DD365B4F /* PadGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PadGrid.swift; sourceTree = "<group>"; };
 		0C9E81396F74E488321A3DE6 /* Palette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Palette.swift; sourceTree = "<group>"; };
 		16C45267D4102101E567236B /* ChannelStrip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelStrip.swift; sourceTree = "<group>"; };
+		2A745499F18AF47E90C45897 /* MIDIInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MIDIInput.swift; sourceTree = "<group>"; };
 		32E41EAC5ED6208C88F089CA /* LessonState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonState.swift; sourceTree = "<group>"; };
 		360CC0D3E4675A3F8F360945 /* Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Typography.swift; sourceTree = "<group>"; };
 		379674C43D4090DBE46D6547 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		3B24B0C43F13B32DC25BE959 /* oh.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = oh.wav; sourceTree = "<group>"; };
 		3FF0590E33E54BA1B15E91B1 /* TransportBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransportBar.swift; sourceTree = "<group>"; };
 		40963202F528F02BF5EEECD8 /* Takt.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Takt.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		586FAD0BEBDF739818994F6C /* Player.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Player.swift; sourceTree = "<group>"; };
+		58AC8AFB1F416909D53165CF /* ride.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = ride.wav; sourceTree = "<group>"; };
+		59FFB7202B526B29939D20AA /* sub-A1.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = "sub-A1.wav"; sourceTree = "<group>"; };
+		675DE36B1651AEB98E028168 /* KeyCatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyCatcher.swift; sourceTree = "<group>"; };
 		691AFBE11E8D755856092C87 /* TaktApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaktApp.swift; sourceTree = "<group>"; };
 		880D9001CE96FC6DB96D7635 /* KeyboardStrip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardStrip.swift; sourceTree = "<group>"; };
 		898AE1B7738C7AD8C5E99B04 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		92D7893886A0DD2413287A87 /* snare.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = snare.wav; sourceTree = "<group>"; };
+		A356FC5F2FF8CA045494AB8D /* BandRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BandRenderer.swift; sourceTree = "<group>"; };
+		AC7BE2C8710D5FC0BFBF3DC2 /* rimshot.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = rimshot.wav; sourceTree = "<group>"; };
+		B196FE38F75BC760CE5A0A0F /* sub-G1.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = "sub-G1.wav"; sourceTree = "<group>"; };
+		B439C1F30E776ACBBAA484B4 /* band-blues-C.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "band-blues-C.json"; sourceTree = "<group>"; };
 		BCFFFD49EB39BF2E6BAC0767 /* Motifs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Motifs.swift; sourceTree = "<group>"; };
+		C5E40801CC98A659B7FBBD8E /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		CA77ED30BAF689A04B1E5B94 /* LessonScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonScreen.swift; sourceTree = "<group>"; };
+		CC03391D5E8D735B6F46263E /* sub-C2.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = "sub-C2.wav"; sourceTree = "<group>"; };
+		CF651FEB253E5456168706DA /* Voices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Voices.swift; sourceTree = "<group>"; };
+		E35CB620AC7721CE809CB3C0 /* BandData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BandData.swift; sourceTree = "<group>"; };
+		F2309A443590C63F7A6A4A90 /* ch.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = ch.wav; sourceTree = "<group>"; };
+		F34520AB295DC5306DF9FF50 /* kick.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = kick.wav; sourceTree = "<group>"; };
 		F8C3928533C5BB6418CCBE93 /* CoachPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoachPanel.swift; sourceTree = "<group>"; };
+		FF0A80DA756328D46986C659 /* AudioEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioEngine.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -63,8 +101,14 @@
 				898AE1B7738C7AD8C5E99B04 /* Assets.xcassets */,
 				379674C43D4090DBE46D6547 /* Info.plist */,
 				EF1B6EFE9A6233DFFD2D98E5 /* App */,
+				7E718AC35B0C62F76073A6EF /* Audio */,
+				C1181D7DC56335696E3C73A1 /* Content */,
 				4369F79803C501D3563FBCCD /* Design */,
+				88FE4DA545CABDD001D8C347 /* Input */,
 				A255B25EAA1B8A12A0308EE4 /* Lesson */,
+				85ECE389A6D688DE477845B5 /* Licenses */,
+				C5A8C31905666F590C737B60 /* MIDI */,
+				DE9A86160F82DCF6987CF95C /* Sounds */,
 			);
 			path = Takt;
 			sourceTree = "<group>";
@@ -77,6 +121,33 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		7E718AC35B0C62F76073A6EF /* Audio */ = {
+			isa = PBXGroup;
+			children = (
+				FF0A80DA756328D46986C659 /* AudioEngine.swift */,
+				E35CB620AC7721CE809CB3C0 /* BandData.swift */,
+				A356FC5F2FF8CA045494AB8D /* BandRenderer.swift */,
+				CF651FEB253E5456168706DA /* Voices.swift */,
+			);
+			path = Audio;
+			sourceTree = "<group>";
+		};
+		85ECE389A6D688DE477845B5 /* Licenses */ = {
+			isa = PBXGroup;
+			children = (
+				C5E40801CC98A659B7FBBD8E /* README.md */,
+			);
+			path = Licenses;
+			sourceTree = "<group>";
+		};
+		88FE4DA545CABDD001D8C347 /* Input */ = {
+			isa = PBXGroup;
+			children = (
+				675DE36B1651AEB98E028168 /* KeyCatcher.swift */,
+			);
+			path = Input;
+			sourceTree = "<group>";
+		};
 		A255B25EAA1B8A12A0308EE4 /* Lesson */ = {
 			isa = PBXGroup;
 			children = (
@@ -86,14 +157,48 @@
 				CA77ED30BAF689A04B1E5B94 /* LessonScreen.swift */,
 				32E41EAC5ED6208C88F089CA /* LessonState.swift */,
 				0C87F42F08B755A7DD365B4F /* PadGrid.swift */,
+				586FAD0BEBDF739818994F6C /* Player.swift */,
 				3FF0590E33E54BA1B15E91B1 /* TransportBar.swift */,
 			);
 			path = Lesson;
 			sourceTree = "<group>";
 		};
+		C1181D7DC56335696E3C73A1 /* Content */ = {
+			isa = PBXGroup;
+			children = (
+				B439C1F30E776ACBBAA484B4 /* band-blues-C.json */,
+			);
+			path = Content;
+			sourceTree = "<group>";
+		};
+		C5A8C31905666F590C737B60 /* MIDI */ = {
+			isa = PBXGroup;
+			children = (
+				2A745499F18AF47E90C45897 /* MIDIInput.swift */,
+			);
+			path = MIDI;
+			sourceTree = "<group>";
+		};
+		DE9A86160F82DCF6987CF95C /* Sounds */ = {
+			isa = PBXGroup;
+			children = (
+				F2309A443590C63F7A6A4A90 /* ch.wav */,
+				F34520AB295DC5306DF9FF50 /* kick.wav */,
+				3B24B0C43F13B32DC25BE959 /* oh.wav */,
+				58AC8AFB1F416909D53165CF /* ride.wav */,
+				AC7BE2C8710D5FC0BFBF3DC2 /* rimshot.wav */,
+				92D7893886A0DD2413287A87 /* snare.wav */,
+				59FFB7202B526B29939D20AA /* sub-A1.wav */,
+				CC03391D5E8D735B6F46263E /* sub-C2.wav */,
+				B196FE38F75BC760CE5A0A0F /* sub-G1.wav */,
+			);
+			path = Sounds;
+			sourceTree = "<group>";
+		};
 		EF1B6EFE9A6233DFFD2D98E5 /* App */ = {
 			isa = PBXGroup;
 			children = (
+				012712C796C3F22B9A027D23 /* DebugHooks.swift */,
 				691AFBE11E8D755856092C87 /* TaktApp.swift */,
 			);
 			path = App;
@@ -159,6 +264,17 @@
 			buildActionMask = 2147483647;
 			files = (
 				DC203B315E897EAFBEFF1F87 /* Assets.xcassets in Resources */,
+				1C10C6072AB01F749AE43B8B /* README.md in Resources */,
+				6FC903FE21D56D54BA26CEA4 /* band-blues-C.json in Resources */,
+				F6B568395B20B8AB6B2420B6 /* ch.wav in Resources */,
+				015603108E81F63F3DB9F753 /* kick.wav in Resources */,
+				89DC7130DA16A846E31355BF /* oh.wav in Resources */,
+				964AF3E4320F1FE3C9356582 /* ride.wav in Resources */,
+				14ADFFCB6F179A4CC84EB648 /* rimshot.wav in Resources */,
+				0E052B1EC6868D15698256E7 /* snare.wav in Resources */,
+				06D4EE81719B785A8ECE3FA3 /* sub-A1.wav in Resources */,
+				46A76DE20EE77BC88B800BD2 /* sub-C2.wav in Resources */,
+				689A7688079AFEC2BD3EE75B /* sub-G1.wav in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -169,17 +285,25 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E1427314DA1968F8B4681B13 /* AudioEngine.swift in Sources */,
+				0122C6880BB2223509A01B44 /* BandData.swift in Sources */,
+				90B025AF66C939771B19D42D /* BandRenderer.swift in Sources */,
 				913188C502DC22FAEB177062 /* ChannelStrip.swift in Sources */,
 				0D0C5243B3D5B74AC76FC97F /* CoachPanel.swift in Sources */,
+				FF098609992B64F48C556EAA /* DebugHooks.swift in Sources */,
+				7943EE24325ECDBDE8F2DC64 /* KeyCatcher.swift in Sources */,
 				C644B759F0C8337C5B487AC0 /* KeyboardStrip.swift in Sources */,
 				5D12A4B666A44E9CE2C6914B /* LessonScreen.swift in Sources */,
 				D8C651DD600ADF4743305551 /* LessonState.swift in Sources */,
+				AD4AB405745AED706DBB9E45 /* MIDIInput.swift in Sources */,
 				1BAF5C09CD661D4CF3484722 /* Motifs.swift in Sources */,
 				98A90BB07168F73C2CB64C6D /* PadGrid.swift in Sources */,
 				486922DA20D6BC2D8B7890FD /* Palette.swift in Sources */,
+				DE7FE10E0696FBE76644959D /* Player.swift in Sources */,
 				DDF031824410D6EF39EF2FE9 /* TaktApp.swift in Sources */,
 				5393E171E435313023E81F77 /* TransportBar.swift in Sources */,
 				606269D637B85705945947B6 /* Typography.swift in Sources */,
+				0DE168DE937CF47D7A71BA79 /* Voices.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -220,7 +344,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -287,7 +411,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;

@@ -26,6 +26,9 @@ struct ChannelState: Identifiable {
     var unlockAt: Int?
     /// Meter reading, 0...12 segments.
     var level: Int
+    var muted = false
+    /// Unmuted, waiting for the next downbeat.
+    var pendingUnmute = false
 }
 
 /// Everything the lesson screen draws. The views are pure functions of this;
@@ -36,6 +39,8 @@ struct LessonState {
     var step: Int
     var stepCount: Int
     var tempo: Int
+    /// A tempo change waiting for the next downbeat.
+    var pendingTempo: Int? = nil
     var playing: Bool
     var form: [FormBar]
     /// Current bar, 0-based.
@@ -51,6 +56,8 @@ struct LessonState {
     /// MIDI note numbers (C4 = 60) of the key to press now and the one after it.
     var nowNote: Int?
     var nextNote: Int?
+    /// Keys held right now, from any input.
+    var pressedNotes: Set<Int> = []
 
     var nextBar: Int { (bar + 1) % form.count }
 

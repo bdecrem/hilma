@@ -3,14 +3,52 @@ import SwiftUI
 @main
 struct TaktApp: App {
     @AppStorage("theme") private var theme: Theme = .dark
+    @State private var player: Player?
+
+    init() {
+        #if DEBUG
+        DebugHooks.renderIfRequested()
+        #endif
+        _player = State(initialValue: Self.makePlayer())
+    }
+
+    /// The band is already playing when the lesson opens (principle 1). Launch arguments:
+    /// `-Tempo <bpm>`, `-AutoPlay 0`, `-Silent 1` (speakers off, everything else runs).
+    private static func makePlayer() -> Player? {
+        #if DEBUG
+        if UserDefaults.standard.string(forKey: "PreviewFrame") != nil { return nil }
+        #endif
+        let d = UserDefaults.standard
+        let tempo = d.double(forKey: "Tempo") > 0 ? d.double(forKey: "Tempo") : 70
+        let audio = AudioEngine(band: .bundled("band-blues-C"), tempo: tempo)
+        // Keys and horns are locked until the lesson unlocks them (M3).
+        audio.send(.mute(.keys, true))
+        audio.send(.mute(.horns, true))
+        audio.start(silent: d.bool(forKey: "Silent"))
+        if d.object(forKey: "AutoPlay") == nil || d.bool(forKey: "AutoPlay") {
+            audio.send(.play)
+        }
+        let player = Player(audio: audio)
+        #if DEBUG
+        DebugHooks.recordIfRequested(audio)
+        DebugHooks.pressIfRequested(player)
+        #endif
+        return player
+    }
 
     var body: some Scene {
         WindowGroup {
-            LessonScreen(state: .launchFrame)
-                .preferredColorScheme(theme.colorScheme)
-                #if targetEnvironment(macCatalyst)
-                .background(MacWindow())
-                #endif
+            Group {
+                if let player {
+                    LiveLessonScreen(player: player)
+                } else {
+                    LessonScreen(state: .launchFrame)
+                }
+            }
+            .preferredColorScheme(theme.colorScheme)
+            #if targetEnvironment(macCatalyst)
+            .background(MacWindow())
+            #endif
         }
         .commands {
             CommandGroup(after: .toolbar) {
@@ -21,6 +59,29 @@ struct TaktApp: App {
                 .keyboardShortcut("l", modifiers: [.command, .shift])
             }
         }
+    }
+}
+
+/// The lesson screen driven by the Player, with every input wired to it.
+struct LiveLessonScreen: View {
+    let player: Player
+
+    var body: some View {
+        LessonScreen(state: player.lessonState(from: .preview))
+            .environment(\.lessonControls, LessonControls(
+                togglePlay: player.togglePlay,
+                stop: player.stop,
+                nudgeTempo: player.nudgeTempo,
+                toggleMute: { i in player.toggleMute([Channel.drums, .bass, .keys, .horns][i]) },
+                press: { player.press($0) },
+                release: player.release
+            ))
+            .background(KeyCatcher(
+                onNote: { player.key($0, down: $1) },
+                onOctave: player.shiftOctave,
+                onSpace: player.togglePlay,
+                onTempo: player.nudgeTempo
+            ))
     }
 }
 

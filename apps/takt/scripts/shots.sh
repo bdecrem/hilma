@@ -31,11 +31,11 @@ MAC_APP="$DD/Build/Products/Debug-maccatalyst/Takt.app"
 
 for T in dark paper; do
   xcrun simctl terminate "$SIM" com.bartdecrem.Takt 2>/dev/null || true
-  xcrun simctl launch "$SIM" com.bartdecrem.Takt -theme "$T" ${FRAME_ARGS[@]+"${FRAME_ARGS[@]}"} > /dev/null
+  xcrun simctl launch "$SIM" com.bartdecrem.Takt -Silent 1 -theme "$T" ${FRAME_ARGS[@]+"${FRAME_ARGS[@]}"} > /dev/null
   sleep 3
   xcrun simctl io "$SIM" screenshot "$OUT/iphone-$T$SUFFIX.png" > /dev/null 2>&1
 
-  open -g -n "$MAC_APP" --args -theme "$T" ${FRAME_ARGS[@]+"${FRAME_ARGS[@]}"}
+  open -g -n "$MAC_APP" --args -Silent 1 -theme "$T" ${FRAME_ARGS[@]+"${FRAME_ARGS[@]}"}
   sleep 4
   ID=$(swift scripts/winid.swift Takt | head -1 | cut -d' ' -f1)
   screencapture -x -o -l"$ID" "$OUT/mac-$T$SUFFIX.png"

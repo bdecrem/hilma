@@ -1,2 +1,4 @@
 build/
 .shots/
+# The app's one-shots are resources (the repo root ignores *.wav renders).
+!Takt/Sounds/*.wav

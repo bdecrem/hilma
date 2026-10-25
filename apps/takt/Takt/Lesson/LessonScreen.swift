@@ -1,5 +1,27 @@
 import SwiftUI
 
+/// What the lesson screen's controls do. Empty by default, so a fixed frame draws inert.
+struct LessonControls {
+    var togglePlay: () -> Void = {}
+    var stop: () -> Void = {}
+    var nudgeTempo: (Int) -> Void = { _ in }
+    /// Toggle mute by channel index (0 drums, 1 bass, 2 keys, 3 horns).
+    var toggleMute: (Int) -> Void = { _ in }
+    var press: (Int) -> Void = { _ in }
+    var release: (Int) -> Void = { _ in }
+}
+
+private struct LessonControlsKey: EnvironmentKey {
+    static let defaultValue = LessonControls()
+}
+
+extension EnvironmentValues {
+    var lessonControls: LessonControls {
+        get { self[LessonControlsKey.self] }
+        set { self[LessonControlsKey.self] = newValue }
+    }
+}
+
 /// The lesson screen. Wide (Mac, regular width) is the primary layout; compact width
 /// (iPhone portrait) stacks the same parts top to bottom.
 struct LessonScreen: View {
@@ -32,7 +54,7 @@ struct WideLessonLayout: View {
 
             HStack(spacing: 0) {
                 VStack(spacing: 10) {
-                    ForEach(state.channels) { ChannelStrip(channel: $0) }
+                    ForEach(Array(state.channels.enumerated()), id: \.element.id) { i, c in ChannelStrip(channel: c, index: i) }
                     Spacer(minLength: 0)
                 }
                 .padding(20)
@@ -58,7 +80,7 @@ struct WideLessonLayout: View {
             }
 
             Hairline()
-            KeyboardStrip(low: 48, high: 71, now: state.nowNote, next: state.nextNote)
+            KeyboardStrip(low: 48, high: 71, now: state.nowNote, next: state.nextNote, pressed: state.pressedNotes)
                 .frame(height: 128)
                 .padding(.horizontal, 24)
                 .padding(.vertical, 18)
@@ -82,7 +104,7 @@ struct StackedLessonLayout: View {
                 StaffLines(spacing: 3)
                     .padding(.vertical, 14)
                 HStack(spacing: 6) {
-                    ForEach(state.channels) { ChannelStrip(channel: $0, compact: true) }
+                    ForEach(Array(state.channels.enumerated()), id: \.element.id) { i, c in ChannelStrip(channel: c, index: i, compact: true) }
                 }
 
                 Spacer(minLength: 16)
@@ -95,7 +117,7 @@ struct StackedLessonLayout: View {
                 PadGrid(state: state, side: side, gap: gap)
 
                 Spacer(minLength: 16)
-                KeyboardStrip(low: 48, high: 65, now: state.nowNote, next: state.nextNote)
+                KeyboardStrip(low: 48, high: 65, now: state.nowNote, next: state.nextNote, pressed: state.pressedNotes)
                     .frame(height: 112)
                 Spacer(minLength: 14)
                 FormFooter(state: state)
