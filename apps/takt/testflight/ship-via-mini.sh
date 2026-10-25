@@ -10,6 +10,8 @@
 #   ./apps/takt/testflight/ship-via-mini.sh mac               # Mac Catalyst, "takt catalyst appstore"
 #
 # Ships the build number in project.yml as committed and PUSHED (the mini pulls main).
+# A profile only signs on the Mac that holds its certificate's key: the defaults are the
+# MacBook Air's; another Mac mints its own and passes TAKT_PROFILE="<name>".
 # Profiles: apps/feynd/testflight/mint-profile.mjs --bundle HSR9TXP4B3 (installed 2026-10-25).
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -20,8 +22,8 @@ KEY_ID=${ASC_KEY_ID:-FA7268Q94U}
 ISSUER="69a6de80-eb13-47e3-e053-5b8c7c11a4d1"
 [ -f "$KEYS/AuthKey_$KEY_ID.p8" ] || { echo "error: $KEYS/AuthKey_$KEY_ID.p8 missing" >&2; exit 1; }
 case "$PLATFORM" in
-  ios) DEST="generic/platform=iOS"; PROFILE="takt appstore"; ASC_PLATFORM=IOS; PRODUCTS="Release-iphoneos" ;;
-  mac) DEST="generic/platform=macOS,variant=Mac Catalyst"; PROFILE="takt catalyst appstore"; ASC_PLATFORM=MAC_OS; PRODUCTS="Release-maccatalyst" ;;
+  ios) DEST="generic/platform=iOS"; PROFILE="${TAKT_PROFILE:-takt appstore}"; ASC_PLATFORM=IOS ;;
+  mac) DEST="generic/platform=macOS,variant=Mac Catalyst"; PROFILE="${TAKT_PROFILE:-takt catalyst appstore}"; ASC_PLATFORM=MAC_OS ;;
   *) echo "usage: $0 ios|mac" >&2; exit 2 ;;
 esac
 BUILD=$(grep -E '^[[:space:]]*CURRENT_PROJECT_VERSION:' project.yml | sed -E 's/.*"([0-9]+)".*/\1/')
