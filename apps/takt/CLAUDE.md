@@ -53,7 +53,7 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   bpm, 4/4, 48 beats, C on 1.1, F on 5.1, G on 9.1), calibration through real MIDI on the Mac
   (eight taps at -23 ms read -23.0), the offset applied live (a 30 ms-late setup: +30 and +60 ms
   played read +0.3 and +30.5), Play it back on the simulator. **Not yet:** dropping the file into
-  Ableton by hand (Live 12 is on this iMac; mido and MusicSequence agree), and TestFlight (see
+  Ableton by hand (Live 12 is on the MacBook Air; mido and MusicSequence agree), and TestFlight (see
   below: the ASC app record and the mini).
 
 ## Code map (`Takt/`)
@@ -352,15 +352,15 @@ DEBUG `-PlayBackOnFinish 1` starts Play it back 1.5 s after the lesson finishes 
 
 ## TestFlight
 
-`testflight/ship-via-mini.sh ios|mac`: archive unsigned on the Mac mini (ASC rejects this
-iMac's Xcode 27 beta), export and upload here, then `testflight/asc-submit.mjs` waits for
+`testflight/ship-via-mini.sh ios|mac`: archive unsigned (on the Mac mini from the iMac, whose
+Xcode 27 beta ASC rejects; `MINI=local` on the MacBook Air, which has Xcode 26.2), export and
+upload here, then `testflight/asc-submit.mjs` waits for
 processing and adds the build to every beta group. Set up 2026-10-25: bundle id registered
 (`HSR9TXP4B3`), profiles `takt appstore` (IOS_APP_STORE) and `takt catalyst appstore`
 (MAC_CATALYST_APP_STORE) minted with `apps/feynd/testflight/mint-profile.mjs` against the
-Apple Distribution cert whose key is in this iMac's keychain (serial `16F68C26…`; ASC lists
+Apple Distribution cert whose key is in the MacBook Air's keychain (serial `16F68C26…`; ASC lists
 three, only that one signs here). A local Release archive exports to a signed App Store
 `Takt.ipa` with it. **Still blocked:** (1) the App Store Connect app record for
 `com.bartdecrem.Takt` (the API can't create apps: Bart, in the web UI: New App, iOS + macOS,
-bundle id Takt); (2) the mini (`admin@100.95.51.98`) didn't answer SSH on 2026-10-25; (3) for
-`mac`, this iMac has no "3rd Party Mac Developer Installer" identity in the keychain (ASC has
+bundle id Takt); (2) for `mac`, the MacBook Air has no "3rd Party Mac Developer Installer" identity in the keychain (ASC has
 three MAC_INSTALLER_DISTRIBUTION certs, so their keys live on another Mac).

@@ -1,12 +1,13 @@
 #!/bin/bash
-# Ship Takt to TestFlight. This iMac has only a beta Xcode and App Store Connect refuses
-# beta-SDK archives, so the archive is built UNSIGNED on the Mac mini (release Xcode, checkout
-# ~/takt-ship), tarred back here, and exported with this Mac's App Store profiles and ASC key
-# (the export re-signs and uploads). Then asc-submit.mjs waits for processing and adds the
-# build to the beta groups. Same route as apps/tokensurfers/testflight/ship-via-mini.sh.
+# Ship Takt to TestFlight. The archive is built UNSIGNED, then exported with this Mac's App
+# Store profiles and ASC key (the export re-signs and uploads); asc-submit.mjs waits for
+# processing and adds the build to the beta groups. App Store Connect refuses beta-SDK
+# archives, so a Mac with only a beta Xcode (the iMac, Xcode 27 beta) archives on the Mac mini
+# (checkout ~/takt-ship) and copies it back; a Mac with a release Xcode (the MacBook Air, Xcode
+# 26.2) archives itself with MINI=local.
 #
-#   ./apps/takt/testflight/ship-via-mini.sh ios     # profile "takt appstore"
-#   ./apps/takt/testflight/ship-via-mini.sh mac     # Mac Catalyst, profile "takt catalyst appstore"
+#   MINI=local ./apps/takt/testflight/ship-via-mini.sh ios   # on the Air: profile "takt appstore"
+#   ./apps/takt/testflight/ship-via-mini.sh mac               # Mac Catalyst, "takt catalyst appstore"
 #
 # Ships the build number in project.yml as committed and PUSHED (the mini pulls main).
 # Profiles: apps/feynd/testflight/mint-profile.mjs --bundle HSR9TXP4B3 (installed 2026-10-25).
@@ -29,6 +30,13 @@ VERSION=$(grep -E '^[[:space:]]*MARKETING_VERSION:' project.yml | sed -E 's/.*"(
 git fetch -q origin && [ "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" ] || { echo "error: push main first (the mini pulls it)" >&2; exit 1; }
 OUT=$(mktemp -d "${TMPDIR:-/tmp}/takt-ship.XXXXXX")
 
+if [ "$MINI" = local ]; then
+  echo "== archiving $VERSION ($BUILD) for $PLATFORM here"
+  command -v xcodegen >/dev/null && xcodegen generate -q
+  xcodebuild archive -project Takt.xcodeproj -scheme Takt -destination "$DEST" -archivePath "$OUT/takt.xcarchive" \
+    -configuration Release CODE_SIGN_IDENTITY='' CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO > "$OUT/archive.log" 2>&1 \
+    || { grep -E 'error:' "$OUT/archive.log" | head; exit 1; }
+else
 echo "== archiving $VERSION ($BUILD) for $PLATFORM on the mini"
 ssh -o ConnectTimeout=10 "$MINI" "set -e; export PATH=/opt/homebrew/bin:/usr/local/bin:\$PATH
   [ -d ~/takt-ship ] || git clone -q https://github.com/bdecrem/hilma.git ~/takt-ship
@@ -40,6 +48,7 @@ ssh -o ConnectTimeout=10 "$MINI" "set -e; export PATH=/opt/homebrew/bin:/usr/loc
     || { grep -E 'error:' /tmp/takt-archive.log | head; exit 1; }
   cd /tmp && tar czf takt.xcarchive.tgz takt.xcarchive" || { echo "archive on the mini failed" >&2; exit 1; }
 scp -q "$MINI:/tmp/takt.xcarchive.tgz" "$OUT/" && tar xzf "$OUT/takt.xcarchive.tgz" -C "$OUT"
+fi
 PLIST=$(find "$OUT/takt.xcarchive/Products/Applications/Takt.app" -maxdepth 2 -name Info.plist | head -1)
 GOT=$(/usr/libexec/PlistBuddy -c "Print CFBundleVersion" "$PLIST")
 [ "$GOT" = "$BUILD" ] || { echo "error: the mini archived build $GOT, project.yml says $BUILD" >&2; exit 1; }
@@ -65,4 +74,4 @@ xcodebuild -exportArchive -archivePath "$OUT/takt.xcarchive" -exportOptionsPlist
   > "$OUT/export.log" 2>&1 || { grep -E "error|Error" "$OUT/export.log" | head -20; echo "upload failed: $OUT/export.log"; exit 1; }
 echo "== uploaded; waiting for App Store Connect"
 ASC_KEY_ID="$KEY_ID" node testflight/asc-submit.mjs "$BUILD" "$ASC_PLATFORM"
-echo "Takt $VERSION ($BUILD) for $PLATFORM shipped via the mini. Logs: $OUT"
+echo "Takt $VERSION ($BUILD) for $PLATFORM shipped. Logs: $OUT"
