@@ -1,0 +1,384 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0D0C5243B3D5B74AC76FC97F /* CoachPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C3928533C5BB6418CCBE93 /* CoachPanel.swift */; };
+		1BAF5C09CD661D4CF3484722 /* Motifs.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCFFFD49EB39BF2E6BAC0767 /* Motifs.swift */; };
+		486922DA20D6BC2D8B7890FD /* Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C9E81396F74E488321A3DE6 /* Palette.swift */; };
+		5393E171E435313023E81F77 /* TransportBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FF0590E33E54BA1B15E91B1 /* TransportBar.swift */; };
+		5D12A4B666A44E9CE2C6914B /* LessonScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA77ED30BAF689A04B1E5B94 /* LessonScreen.swift */; };
+		606269D637B85705945947B6 /* Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = 360CC0D3E4675A3F8F360945 /* Typography.swift */; };
+		913188C502DC22FAEB177062 /* ChannelStrip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C45267D4102101E567236B /* ChannelStrip.swift */; };
+		98A90BB07168F73C2CB64C6D /* PadGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C87F42F08B755A7DD365B4F /* PadGrid.swift */; };
+		C644B759F0C8337C5B487AC0 /* KeyboardStrip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 880D9001CE96FC6DB96D7635 /* KeyboardStrip.swift */; };
+		D8C651DD600ADF4743305551 /* LessonState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32E41EAC5ED6208C88F089CA /* LessonState.swift */; };
+		DC203B315E897EAFBEFF1F87 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 898AE1B7738C7AD8C5E99B04 /* Assets.xcassets */; };
+		DDF031824410D6EF39EF2FE9 /* TaktApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 691AFBE11E8D755856092C87 /* TaktApp.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		0C87F42F08B755A7DD365B4F /* PadGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PadGrid.swift; sourceTree = "<group>"; };
+		0C9E81396F74E488321A3DE6 /* Palette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Palette.swift; sourceTree = "<group>"; };
+		16C45267D4102101E567236B /* ChannelStrip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelStrip.swift; sourceTree = "<group>"; };
+		32E41EAC5ED6208C88F089CA /* LessonState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonState.swift; sourceTree = "<group>"; };
+		360CC0D3E4675A3F8F360945 /* Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Typography.swift; sourceTree = "<group>"; };
+		379674C43D4090DBE46D6547 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		3FF0590E33E54BA1B15E91B1 /* TransportBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransportBar.swift; sourceTree = "<group>"; };
+		40963202F528F02BF5EEECD8 /* Takt.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Takt.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		691AFBE11E8D755856092C87 /* TaktApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaktApp.swift; sourceTree = "<group>"; };
+		880D9001CE96FC6DB96D7635 /* KeyboardStrip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardStrip.swift; sourceTree = "<group>"; };
+		898AE1B7738C7AD8C5E99B04 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		BCFFFD49EB39BF2E6BAC0767 /* Motifs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Motifs.swift; sourceTree = "<group>"; };
+		CA77ED30BAF689A04B1E5B94 /* LessonScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonScreen.swift; sourceTree = "<group>"; };
+		F8C3928533C5BB6418CCBE93 /* CoachPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoachPanel.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		35BC6F3D518F6D5AC2584562 = {
+			isa = PBXGroup;
+			children = (
+				5646EA3008FD47C65664CC88 /* Takt */,
+				5A23AC19920F57158F48403F /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		4369F79803C501D3563FBCCD /* Design */ = {
+			isa = PBXGroup;
+			children = (
+				BCFFFD49EB39BF2E6BAC0767 /* Motifs.swift */,
+				0C9E81396F74E488321A3DE6 /* Palette.swift */,
+				360CC0D3E4675A3F8F360945 /* Typography.swift */,
+			);
+			path = Design;
+			sourceTree = "<group>";
+		};
+		5646EA3008FD47C65664CC88 /* Takt */ = {
+			isa = PBXGroup;
+			children = (
+				898AE1B7738C7AD8C5E99B04 /* Assets.xcassets */,
+				379674C43D4090DBE46D6547 /* Info.plist */,
+				EF1B6EFE9A6233DFFD2D98E5 /* App */,
+				4369F79803C501D3563FBCCD /* Design */,
+				A255B25EAA1B8A12A0308EE4 /* Lesson */,
+			);
+			path = Takt;
+			sourceTree = "<group>";
+		};
+		5A23AC19920F57158F48403F /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				40963202F528F02BF5EEECD8 /* Takt.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A255B25EAA1B8A12A0308EE4 /* Lesson */ = {
+			isa = PBXGroup;
+			children = (
+				16C45267D4102101E567236B /* ChannelStrip.swift */,
+				F8C3928533C5BB6418CCBE93 /* CoachPanel.swift */,
+				880D9001CE96FC6DB96D7635 /* KeyboardStrip.swift */,
+				CA77ED30BAF689A04B1E5B94 /* LessonScreen.swift */,
+				32E41EAC5ED6208C88F089CA /* LessonState.swift */,
+				0C87F42F08B755A7DD365B4F /* PadGrid.swift */,
+				3FF0590E33E54BA1B15E91B1 /* TransportBar.swift */,
+			);
+			path = Lesson;
+			sourceTree = "<group>";
+		};
+		EF1B6EFE9A6233DFFD2D98E5 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				691AFBE11E8D755856092C87 /* TaktApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		EF5B3C65A547E29C598D79D9 /* Takt */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 72E15F1795023E5FE1D3501E /* Build configuration list for PBXNativeTarget "Takt" */;
+			buildPhases = (
+				2F637581F5EBEC5B025944EB /* Sources */,
+				13C6C16154B6F5F934F26B27 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Takt;
+			packageProductDependencies = (
+			);
+			productName = Takt;
+			productReference = 40963202F528F02BF5EEECD8 /* Takt.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		984E8BFCD199ADEF94EC445C /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					EF5B3C65A547E29C598D79D9 = {
+						DevelopmentTeam = 274T5WCVD2;
+					};
+				};
+			};
+			buildConfigurationList = 61313A2402288ACEFB35B7C0 /* Build configuration list for PBXProject "Takt" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 35BC6F3D518F6D5AC2584562;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 5A23AC19920F57158F48403F /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				EF5B3C65A547E29C598D79D9 /* Takt */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		13C6C16154B6F5F934F26B27 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DC203B315E897EAFBEFF1F87 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		2F637581F5EBEC5B025944EB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				913188C502DC22FAEB177062 /* ChannelStrip.swift in Sources */,
+				0D0C5243B3D5B74AC76FC97F /* CoachPanel.swift in Sources */,
+				C644B759F0C8337C5B487AC0 /* KeyboardStrip.swift in Sources */,
+				5D12A4B666A44E9CE2C6914B /* LessonScreen.swift in Sources */,
+				D8C651DD600ADF4743305551 /* LessonState.swift in Sources */,
+				1BAF5C09CD661D4CF3484722 /* Motifs.swift in Sources */,
+				98A90BB07168F73C2CB64C6D /* PadGrid.swift in Sources */,
+				486922DA20D6BC2D8B7890FD /* Palette.swift in Sources */,
+				DDF031824410D6EF39EF2FE9 /* TaktApp.swift in Sources */,
+				5393E171E435313023E81F77 /* TransportBar.swift in Sources */,
+				606269D637B85705945947B6 /* Typography.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		01BEA9B2608125747550E6F1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 274T5WCVD2;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 0.1;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.9;
+			};
+			name = Debug;
+		};
+		5517376EA87589470FBCB84D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 274T5WCVD2;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 0.1;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = minimal;
+				SWIFT_VERSION = 5.9;
+			};
+			name = Release;
+		};
+		849CBFC0178E0082A2C6B6BB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
+				ENABLE_DEBUG_DYLIB = NO;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Takt/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.bartdecrem.Takt;
+				SDKROOT = iphoneos;
+				SUPPORTS_MACCATALYST = YES;
+				TARGETED_DEVICE_FAMILY = "1,2,6";
+				"TARGETED_DEVICE_FAMILY[sdk=iphoneos*]" = 1;
+				"TARGETED_DEVICE_FAMILY[sdk=iphonesimulator*]" = 1;
+			};
+			name = Debug;
+		};
+		FC75C094AE5B1D86AF96A799 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER = NO;
+				ENABLE_DEBUG_DYLIB = NO;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Takt/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.bartdecrem.Takt;
+				SDKROOT = iphoneos;
+				SUPPORTS_MACCATALYST = YES;
+				TARGETED_DEVICE_FAMILY = "1,2,6";
+				"TARGETED_DEVICE_FAMILY[sdk=iphoneos*]" = 1;
+				"TARGETED_DEVICE_FAMILY[sdk=iphonesimulator*]" = 1;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		61313A2402288ACEFB35B7C0 /* Build configuration list for PBXProject "Takt" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				01BEA9B2608125747550E6F1 /* Debug */,
+				5517376EA87589470FBCB84D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		72E15F1795023E5FE1D3501E /* Build configuration list for PBXNativeTarget "Takt" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				849CBFC0178E0082A2C6B6BB /* Debug */,
+				FC75C094AE5B1D86AF96A799 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 984E8BFCD199ADEF94EC445C /* Project object */;
+}
