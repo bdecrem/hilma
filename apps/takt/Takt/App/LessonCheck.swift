@@ -209,15 +209,15 @@ enum LessonCheck {
             g2.heard(tick: 0, tempo: 70, rolling: true, epoch: 0)
             let shuffle = g2.output.intro
             check("gated: the shuffle's intro, pinky on the root and thumb on the fifth", g2.output.step == 3 && shuffle?.number == 2
-                  && shuffle?.fingers == [.init(finger: 5, tone: "root", beats: [1, 3]), .init(finger: 1, tone: "fifth", beats: [1, 3])]
+                  && shuffle?.fingers == [.init(finger: 5, tone: "root", beats: [1]), .init(finger: 1, tone: "fifth", beats: [1])]
                   && shuffle?.about != nil, "\(String(describing: shuffle))")
             g2.begin()
             g2.heard(tick: 2, tempo: 70, rolling: true, epoch: 0)
             check("gated: the keyboard shows C pinky, G thumb in bar 1, both lit", g2.output.fingers == [lesson.displayRoot: 5, lesson.displayRoot + 7: 1]
                   && g2.output.nowNotes == [lesson.displayRoot, lesson.displayRoot + 7], "\(g2.output.fingers) \(g2.output.nowNotes)")
 
-            // The shuffle is a chord: root and fifth together on the 1 and the 3, every note
-            // required, with half as much again of timing room.
+            // The shuffle is a chord: root and fifth together on the 1, held, every note required,
+            // with half as much again of timing room.
             let shuffleStep = lesson.steps[2]
             let dyad = lesson.expected(shuffleStep, ticksPerBeat: tpb)
             let mpt = msPerTick(70)
@@ -227,18 +227,21 @@ enum LessonCheck {
             func dyadChorus(offsetMs: (ExpectedNote) -> Double = { _ in 0 }, drop: (ExpectedNote) -> Bool = { _ in false }) -> [PlayedNote] {
                 dyad.filter { !drop($0) }.map { PlayedNote(note: $0.display, tick: Double($0.tick) + offsetMs($0) / mpt, msPerTick: mpt) }
             }
-            check("chord: 48 expected notes, all marked chord", dyad.count == 48 && dyad.allSatisfy(\.chord))
+            check("chord: 24 expected notes, all marked chord", dyad.count == 24 && dyad.allSatisfy(\.chord))
             var cr = judgeDyad(dyadChorus())
-            check("chord: root and fifth together on 1 and 3 is clean", cr.clean && cr.hits == 48 && cr.extras.isEmpty, text(cr))
-            cr = judgeDyad(dyadChorus(offsetMs: { $0.pitchClass == $0.display % 12 && $0.finger == 1 ? 130 : 0 }))
-            check("chord: the fifth 130 ms late still hits (±150 for a chord at 70)", cr.clean && cr.hits == 48, text(cr))
+            check("chord: root and fifth together on the 1 is clean", cr.clean && cr.hits == 24 && cr.extras.isEmpty, text(cr))
+            cr = judgeDyad(dyadChorus(offsetMs: { $0.finger == 1 ? 130 : 0 }))
+            check("chord: the fifth 130 ms late still hits (±150 for a chord at 70)", cr.clean && cr.hits == 24, text(cr))
             cr = judgeDyad(dyadChorus(offsetMs: { _ in 160 }))
             check("chord: 160 ms late is dragged", !cr.clean && cr.problems.first == "Dragged every bar.", text(cr))
             cr = judgeDyad(dyadChorus(drop: { $0.finger == 1 }))
-            check("chord: the fifth missing everywhere is missed, not clean", !cr.clean && cr.hits == 24
+            check("chord: the fifth missing everywhere is missed, not clean", !cr.clean && cr.hits == 12
                   && cr.problems.first == "Missed every bar.", text(cr))
-            cr = judgeDyad(dyadChorus(drop: { $0.finger == 1 && $0.bar == 4 && $0.tick % (4 * tpb) == 0 }))
-            check("chord: one fifth missing once is still clean (47 of 48)", cr.clean && cr.hits == 47, text(cr))
+            cr = judgeDyad(dyadChorus(drop: { $0.finger == 1 && $0.bar == 4 }))
+            check("chord: one fifth missing once is still clean (23 of 24)", cr.clean && cr.hits == 23, text(cr))
+            // Bart's chorus of 2026-10-26 21:11: the chord held through the bar, in late by 20–76 ms.
+            cr = judgeDyad(dyadChorus(offsetMs: { 20 + Double($0.bar * 5) }))
+            check("chord: a held chord 20–75 ms late every bar is clean", cr.clean && cr.hits == 24, text(cr))
         }
 
         var run = simulate([(autoplay(.perfect, choruses: 3), end(3))])
@@ -390,7 +393,7 @@ enum LessonCheck {
         let payoffChorus = 3 + 2 + 4 + 3
         check("the band sits out bars 11-12 of the payoff chorus",
               silences == [Double(payoffChorus * loop + 10 * 4 * tpb)], "\(silences.map { $0 / Double(loop) })")
-        check("the payoff finishes the lesson", whole.output.finished && whole.finish?.presses.count == 48
+        check("the payoff finishes the lesson", whole.output.finished && whole.finish?.presses.count == 24
               && whole.finish?.tempo == 90 && whole.finish?.aloneBars == [10, 11] && whole.actions.last == .finished,
               "finish \(String(describing: whole.finish?.presses.count)) at \(String(describing: whole.finish?.tempo))")
         check("the coach says alone in bars 11 and 12", whole.coachAt[payoffChorus * 12 + 10] == "Alone. Bring it home."
@@ -415,7 +418,7 @@ enum LessonCheck {
         let quiet = lessonRun(from: 5, choruses: 4, bpm: 90) { c, e in c < 2 ? nil : e.expected.map { (Double($0.tick), $0.display) } }
         let quietSilences = quiet.actions.compactMap { a -> Double? in if case .silence(let f, _) = a { return f / Double(loop) }; return nil }
         check("a silent payoff chorus re-arms the next", quiet.output.finished && quietSilences.count == 3
-              && quiet.finish?.presses.count == 48, "\(quietSilences)")
+              && quiet.finish?.presses.count == 24, "\(quietSilences)")
 
         // MARK: The exported loop (M4)
 
@@ -428,7 +431,7 @@ enum LessonCheck {
                   && file.timeSignature == [4, 2, 24, 8], "format \(file.format) tracks \(file.tracks) ppq \(file.ppq) \(file.timeSignature)")
             check("export: the tempo is the payoff's (90)", file.usPerQuarter == 666_667, "\(file.usPerQuarter) µs per quarter")
             check("export: exactly 12 bars long", file.endTick == 12 * 4 * 480, "end \(file.endTick)")
-            check("export: every note on its beat from bar 1", file.notes.count == 48 && file.notes.map(\.tick).sorted() == want
+            check("export: every note on its beat from bar 1", file.notes.count == 24 && file.notes.map(\.tick).sorted() == want
                   && file.notes.first?.tick == 0, "\(file.notes.count) notes, first at \(file.notes.first?.tick ?? -1)")
             check("export: a key still down at the end holds a quarter", file.notes.allSatisfy { $0.length == 480 },
                   "lengths \(Set(file.notes.map(\.length)))")

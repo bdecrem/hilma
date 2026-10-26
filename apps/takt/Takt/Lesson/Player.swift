@@ -127,6 +127,8 @@ final class Player {
                 what = "joined late, not judged"
             }
             lessonLog.info("step \(v.step) chorus \(v.chorus + 1) at \(Int(v.tempo.rounded())): \(what, privacy: .public) · counts \(v.counted) · gate \(v.clean)/\(v.gate) · \"\(v.line, privacy: .public)\"")
+            Self.dump("verdict step \(v.step) chorus \(v.chorus + 1) at \(Int(v.tempo.rounded())): \(what) · \"\(v.line)\""
+                      + (v.result.map { r in " · marks " + r.notes.map { "\($0.expected.bar + 1):\($0.expected.display)=\($0.mark)" }.joined(separator: " ") } ?? ""))
         }
         engine.onAction = { [weak self] a in
             guard let self else { return }
@@ -302,6 +304,10 @@ final class Player {
         guard inLesson else { return }
         let p = clock.position(atHost: calibrated ? shifted(hostTime, clock) : hostTime)
         engine.played(note: note, tick: p.tick, msPerTick: p.msPerTick, epoch: s.epoch, velocity: velocity)
+        Self.dump(String(format: "press %d tick %.1f (bar %d beat %.2f) epoch %d calibrated %@ step %d now %@",
+                         note, p.tick, Int(p.tick / Double(4 * audio.band.ticksPerBeat)) + 1,
+                         (p.tick.truncatingRemainder(dividingBy: Double(4 * audio.band.ticksPerBeat))) / Double(audio.band.ticksPerBeat) + 1,
+                         s.epoch, calibrated ? "yes" : "no", engine.output.step, engine.output.nowNotes.sorted().description))
     }
 
     private func scoreRelease(_ note: Int, hostTime: UInt64, calibrated: Bool = true) {
@@ -346,6 +352,19 @@ final class Player {
             audio.send(.click(tick: c.clickTick(clicksSent), velocity: clicksSent % 4 == 0 ? 1 : 0.7))
             clicksSent += 1
         }
+    }
+
+    /// Every scored press and every verdict, to Documents/lesson-log.txt in the app's container,
+    /// so a real session can be read back afterwards (the unified log drops info lines).
+    static func dump(_ line: String) {
+        guard let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
+        let url = dir.appendingPathComponent("lesson-log.txt")
+        let stamped = ISO8601DateFormatter().string(from: Date()) + " " + line + "\n"
+        if !FileManager.default.fileExists(atPath: url.path) { try? "".write(to: url, atomically: true, encoding: .utf8) }
+        guard let h = try? FileHandle(forWritingTo: url) else { return }
+        h.seekToEndOfFile()
+        h.write(Data(stamped.utf8))
+        try? h.close()
     }
 
     /// Every counted tap, raw and corrected, to the log and to Documents/calibration-taps.csv, so a

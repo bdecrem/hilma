@@ -192,6 +192,13 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   expected notes at *other* ticks as neighbors (same-tick chord notes made it 0, so nothing
   matched). `Output.nowNotes` / `nextNotes` light every key of the chord; the finger legend
   lists all its beats. Checks 135/135.
+  **0.1 (24):** Bart's first logged chorus (`Documents/lesson-log.txt` in the container, written
+  by `Player.dump` on every scored press and verdict: note, tick, bar/beat, epoch, step, the
+  keys lit, then the verdict with every expected note's mark) showed him hitting the chord on
+  the 1 and holding it, 20–76 ms late, correct chords in every bar; the lesson wanted it again
+  on the 3, so every bar read "missed". The shuffle is now **the chord on the 1, held** (two
+  pattern notes a bar, 24 a chorus; the exported loop has 24). Note length is never scored,
+  only onsets. Read that log before guessing about a real session. Checks 136/136.
 
 ## Code map (`Takt/`)
 

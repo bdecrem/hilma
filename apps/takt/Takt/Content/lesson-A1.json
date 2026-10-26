@@ -18,7 +18,7 @@
     },
     {
       "title": "The shuffle",
-      "skill": "Root and fifth together, on the 1 and the 3",
+      "skill": "Root and fifth together, on the 1",
       "goal": "2 clean choruses at 70",
       "steps": [
         "shuffle"
@@ -169,30 +169,20 @@
           "beat": 1,
           "tone": "fifth",
           "finger": 1
-        },
-        {
-          "beat": 3,
-          "tone": "root",
-          "finger": 5
-        },
-        {
-          "beat": 3,
-          "tone": "fifth",
-          "finger": 1
         }
       ],
       "gate": 2,
       "coach": {
-        "intro": "Root and fifth together. On the 1 and the 3. Lean back.",
+        "intro": "Root and fifth together, on the 1. Lean back.",
         "change": "Get ready. {next} on the 1.",
-        "hold": "Root and fifth. On the 1 and the 3.",
+        "hold": "Root and fifth on the 1. Hold it.",
         "clean": "Clean. {left} more.",
         "again": "{problem} Again.",
         "join": "From the top.",
         "slow": "Clean at {tempo}. It counts at {gateTempo}.",
         "passed": "Clean. That's the shuffle."
       },
-      "about": "Two fingers, together: pinky (5) on the root, thumb (1) on the fifth. Hit that shape on the 1 and again on the 3, and move it with the chords: C–G, F–C, G–D."
+      "about": "Two fingers, together: pinky (5) on the root, thumb (1) on the fifth. Hit that shape on the 1 and hold it through the bar, and move it with the chords: C–G, F–C, G–D."
     },
     {
       "id": "ramp",
@@ -209,16 +199,6 @@
           "beat": 1,
           "tone": "fifth",
           "finger": 1
-        },
-        {
-          "beat": 3,
-          "tone": "root",
-          "finger": 5
-        },
-        {
-          "beat": 3,
-          "tone": "fifth",
-          "finger": 1
         }
       ],
       "ramp": {
@@ -229,7 +209,7 @@
       "coach": {
         "intro": "Same shuffle. Clean gets faster.",
         "change": "Get ready. {next} on the 1.",
-        "hold": "Root and fifth. On the 1 and the 3.",
+        "hold": "Root and fifth on the 1. Hold it.",
         "clean": "Clean. Up 5.",
         "again": "{problem} Again.",
         "join": "From the top.",
@@ -255,16 +235,6 @@
           "beat": 1,
           "tone": "fifth",
           "finger": 1
-        },
-        {
-          "beat": 3,
-          "tone": "root",
-          "finger": 5
-        },
-        {
-          "beat": 3,
-          "tone": "fifth",
-          "finger": 1
         }
       ],
       "gate": 3,
@@ -272,7 +242,7 @@
       "coach": {
         "intro": "Three clean at 90 and it's yours.",
         "change": "Get ready. {next} on the 1.",
-        "hold": "Root and fifth. On the 1 and the 3.",
+        "hold": "Root and fifth on the 1. Hold it.",
         "clean": "Clean. {left} more.",
         "again": "{problem} Again.",
         "join": "From the top.",
@@ -297,16 +267,6 @@
           "beat": 1,
           "tone": "fifth",
           "finger": 1
-        },
-        {
-          "beat": 3,
-          "tone": "root",
-          "finger": 5
-        },
-        {
-          "beat": 3,
-          "tone": "fifth",
-          "finger": 1
         }
       ],
       "aloneBars": [
@@ -316,7 +276,7 @@
       "coach": {
         "intro": "Your turnaround. Alone.",
         "change": "Get ready. {next} on the 1.",
-        "hold": "Root and fifth. On the 1 and the 3.",
+        "hold": "Root and fifth on the 1. Hold it.",
         "alone": "Alone. Bring it home.",
         "join": "From the top.",
         "passed": "That's the form."
