@@ -150,6 +150,17 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   coach column above Last chorus with a word ("On time", "A bit early", "Rushed", "Missed");
   iPhone: the meter alone beside the coach line. Checks 121/121.
 
+- **Steps hand over with Lesson complete and an intro: 0.1 (19), 2026-10-26.** Bart passed step
+  3 without knowing what came next ("WHERE IS MY STEP 4"). The app's engine is now `gated`
+  (`LessonEngine(gated:)`; the checks and DEBUG autoplay stay ungated): every play step opens on
+  an intro in the pads' place (`Lesson/StepPanel.swift`: title, the step's new `about` text from
+  the lesson JSON, a left-hand diagram with the fingers it uses and a legend) and scores nothing
+  until Start; a passed step shows **Lesson complete** with the next step's intro under it and
+  "Start <next>" (or Next for a card). Start restarts the band from the top with the count-in
+  (`Player.beginStep` / `nextStep`). Pattern notes carry a `finger` (A1: root 5, fifth 1), and
+  the keyboard shows the current bar's keys with numbered finger badges. DEBUG `-Step n`
+  opens step n's intro, `-StepComplete 1` shows Lesson complete. Checks 126/126.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

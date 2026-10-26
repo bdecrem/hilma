@@ -10,6 +10,8 @@ struct KeyboardStrip: View {
     var now: Int?
     var next: Int?
     var pressed: Set<Int> = []
+    /// Keys → the finger that plays them, drawn as a numbered badge.
+    var fingers: [Int: Int] = [:]
     @Environment(\.lessonControls) private var controls
     @State private var touched: Int?
 
@@ -19,12 +21,12 @@ struct KeyboardStrip: View {
 
             ZStack(alignment: .topLeading) {
                 ForEach(Array(layout.whites.enumerated()), id: \.element) { i, note in
-                    Key(note: note, black: false, role: role(note))
+                    Key(note: note, black: false, role: role(note), finger: fingers[note])
                         .frame(width: layout.white, height: layout.height)
                         .offset(x: CGFloat(i) * layout.white)
                 }
                 ForEach(layout.blacks, id: \.self) { note in
-                    Key(note: note, black: true, role: role(note))
+                    Key(note: note, black: true, role: role(note), finger: fingers[note])
                         .frame(width: layout.blackWidth, height: layout.blackHeight)
                         .offset(x: layout.blackX(note))
                 }
@@ -92,6 +94,7 @@ struct Key: View {
     let note: Int
     let black: Bool
     let role: Role
+    var finger: Int? = nil
 
     var body: some View {
         let shape = UnevenRoundedRectangle(bottomLeadingRadius: 4, bottomTrailingRadius: 4)
@@ -109,15 +112,20 @@ struct Key: View {
             } else if role != .now {
                 shape.strokeBorder(Palette.line, lineWidth: 1)
             }
-            if !black, role != .rest || note % 12 == 0 {
-                Text(Self.name(note))
-                    .dataLabel(11, weight: .medium)
-                    .foregroundStyle(role == .next ? Palette.cue : role == .rest ? Palette.muted : Palette.ground)
-                    .padding(.bottom, 8)
+            VStack(spacing: 6) {
+                if let finger {
+                    FingerBadge(finger: finger, onFill: role == .now)
+                }
+                if !black, role != .rest || note % 12 == 0 {
+                    Text(Self.name(note))
+                        .dataLabel(11, weight: .medium)
+                        .foregroundStyle(role == .next ? Palette.cue : role == .rest ? Palette.muted : Palette.ground)
+                }
             }
+            .padding(.bottom, 8)
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(Self.name(note))\(role == .now ? ", play now" : role == .next ? ", next" : "")")
+        .accessibilityLabel("\(Self.name(note))\(role == .now ? ", play now" : role == .next ? ", next" : "")\(finger.map { ", finger \($0)" } ?? "")")
     }
 
     static func name(_ note: Int) -> String {

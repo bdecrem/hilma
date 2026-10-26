@@ -75,7 +75,7 @@ final class Player {
             guard let ch = byName[c.channel] else { fatalError("lesson \(lesson.code): unknown channel \(c.channel)") }
             return ch
         }
-        engine = LessonEngine(lesson: lesson, ticksPerBeat: audio.band.ticksPerBeat)
+        engine = LessonEngine(lesson: lesson, ticksPerBeat: audio.band.ticksPerBeat, gated: Self.gated)
         // Locked channels stay muted until the lesson unlocks them.
         for (c, ch) in zip(lesson.channels, channels) where c.unlockAt != nil {
             audio.send(.mute(ch, true))
@@ -155,7 +155,7 @@ final class Player {
     func restartLesson(at step: Int = 0) {
         engine.onAction = nil
         engine.onVerdict = nil
-        engine = LessonEngine(lesson: content, ticksPerBeat: audio.band.ticksPerBeat)
+        engine = LessonEngine(lesson: content, ticksPerBeat: audio.band.ticksPerBeat, gated: Self.gated)
         audio.send(.silence(from: 0, to: 0))
         for (c, ch) in zip(content.channels, channels) { audio.send(.mute(ch, c.unlockAt != nil)) }
         finish = nil
@@ -168,6 +168,43 @@ final class Player {
     func continueCard() {
         engine.continueCard()
         lesson = engine.output
+    }
+
+    /// Steps wait on their intro and on Lesson complete, except under DEBUG autoplay, which
+    /// plays the lesson through by itself.
+    static var gated: Bool {
+        #if DEBUG
+        if UserDefaults.standard.string(forKey: "Autoplay") != nil { return false }
+        #endif
+        return true
+    }
+
+    #if DEBUG
+    func debugComplete() {
+        engine.debugComplete()
+        lesson = engine.output
+    }
+    #endif
+
+    /// The intro's Start: the step begins from the top, after the count-in.
+    func beginStep() {
+        engine.begin()
+        lesson = engine.output
+        fromTheTop()
+    }
+
+    /// Lesson complete's button: the next step (a card shows itself; a play step starts from
+    /// the top, after the count-in).
+    func nextStep() {
+        engine.advance()
+        lesson = engine.output
+        if lesson.stepKind != .card { fromTheTop() }
+    }
+
+    private func fromTheTop() {
+        audio.send(.stop)
+        if Self.countInOn { audio.send(.countIn(beats: 4)) }
+        audio.send(.play)
     }
 
     /// Play from the top of a lesson clicks four beats in first (Settings → Count-in); resuming
@@ -553,6 +590,9 @@ final class Player {
             lastChorusDetail: lesson.lastChorusDetail,
             lastNote: lesson.lastNote,
             countIn: countIn,
+            intro: lesson.intro,
+            complete: lesson.complete,
+            fingers: lesson.fingers,
             nowNote: lesson.nowNote,
             nextNote: lesson.nextNote,
             pressedNotes: pressed

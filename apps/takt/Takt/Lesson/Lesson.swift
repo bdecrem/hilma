@@ -28,6 +28,8 @@ struct Lesson: Decodable {
         let tick: Int?
         /// Chord tone: root, third, fifth, sixth, seventh, octave.
         let tone: String
+        /// The finger that plays it (1 thumb … 5 pinky), shown on the keyboard and in the step's intro.
+        let finger: Int?
     }
 
     struct Coach: Decodable {
@@ -77,6 +79,8 @@ struct Lesson: Decodable {
         let ramp: Ramp?
         let aloneBars: [Int]?
         let card: String?
+        /// What to do, in a sentence or two: the step's intro, and the "Next" of the step before.
+        let about: String?
         let coach: Coach
     }
 
@@ -158,7 +162,8 @@ struct Lesson: Decodable {
                     tick: (bar * 4 + p.beat - 1) * ticksPerBeat + (p.tick ?? 0),
                     bar: bar,
                     pitchClass: (root + interval) % 12,
-                    display: displayRoot + root + interval))
+                    display: displayRoot + root + interval,
+                    finger: p.finger))
             }
         }
         return notes
@@ -173,6 +178,7 @@ struct ExpectedNote: Equatable {
     let bar: Int
     let pitchClass: Int
     let display: Int
+    var finger: Int? = nil
 }
 
 extension String {

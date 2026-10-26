@@ -11,6 +11,9 @@ struct LessonControls {
     var release: (Int) -> Void = { _ in }
     /// The card's Continue.
     var continueCard: () -> Void = {}
+    /// A step intro's Start, and Lesson complete's next step.
+    var beginStep: () -> Void = {}
+    var nextStep: () -> Void = {}
     /// Back to the lessons menu.
     var back: () -> Void = {}
 }
@@ -68,7 +71,9 @@ struct WideLessonLayout: View {
 
                 VStack(spacing: 22) {
                     GeometryReader { geo in
-                        if let card = state.card {
+                        if let panel = StepPanel(state: state) {
+                            panel.frame(width: geo.size.width, height: geo.size.height)
+                        } else if let card = state.card {
                             CardPanel(text: card, title: state.stepTitle)
                                 .frame(width: geo.size.width, height: geo.size.height)
                         } else {
@@ -89,7 +94,8 @@ struct WideLessonLayout: View {
             }
 
             Hairline()
-            KeyboardStrip(low: 48, high: 71, now: state.nowNote, next: state.nextNote, pressed: state.pressedNotes)
+            KeyboardStrip(low: 48, high: 71, now: state.nowNote, next: state.nextNote, pressed: state.pressedNotes,
+                          fingers: state.fingers)
                 .frame(height: 128)
                 .padding(.horizontal, 24)
                 .padding(.vertical, 18)
@@ -127,7 +133,9 @@ struct StackedLessonLayout: View {
                 }
                 Spacer(minLength: 16)
 
-                if let card = state.card {
+                if let panel = StepPanel(state: state) {
+                    panel.frame(height: side * 3 + gap * 2)
+                } else if let card = state.card {
                     // The card holds the pads' height, so nothing below it moves.
                     CardPanel(text: card, title: state.stepTitle)
                         .frame(height: side * 3 + gap * 2)
@@ -136,7 +144,8 @@ struct StackedLessonLayout: View {
                 }
 
                 Spacer(minLength: 16)
-                KeyboardStrip(low: 48, high: 65, now: state.nowNote, next: state.nextNote, pressed: state.pressedNotes)
+                KeyboardStrip(low: 48, high: 65, now: state.nowNote, next: state.nextNote, pressed: state.pressedNotes,
+                              fingers: state.fingers)
                     .frame(height: 112)
                 Spacer(minLength: 14)
                 FormFooter(state: state)

@@ -160,6 +160,38 @@ enum LessonCheck {
             check("needle: no misses once the player stops", engine.output.lastNote?.seq == marks.last?.seq)
         }
 
+        do {
+            // Gated (the app): intro → Start → two clean → Lesson complete → card → the next intro.
+            let g = LessonEngine(lesson: lesson, ticksPerBeat: tpb, gated: true)
+            g.heard(tick: 0, tempo: 70, rolling: true, epoch: 0)
+            let intro = g.output.intro
+            check("gated: step 1 opens on its intro, pinky", intro?.title == lesson.steps[0].title && intro?.fingers.map(\.finger) == [5]
+                  && g.output.nowNote == nil, "\(String(describing: intro))")
+            g.begin()
+            let presses = autoplay(.perfect, choruses: 3)
+            var pending = presses
+            var t = 0.0
+            while t <= Double(2 * loop) + 1 {
+                g.heard(tick: t, tempo: 70, rolling: true, epoch: 0)
+                while let p = pending.first, p.tick <= t { g.played(note: p.note, tick: p.tick, msPerTick: p.msPerTick, epoch: 0); pending.removeFirst() }
+                t += 1
+            }
+            check("gated: two clean → Lesson complete, the next step waits", g.output.complete?.done == lesson.steps[0].title
+                  && g.output.complete?.next.kind == .card && g.output.step == 1 && g.output.nowNote == nil,
+                  "step \(g.output.step) complete \(String(describing: g.output.complete))")
+            g.advance()
+            check("gated: next → the card", g.output.step == 2 && g.output.card != nil && g.output.complete == nil)
+            g.continueCard()
+            let shuffle = g.output.intro
+            check("gated: the shuffle's intro, pinky on the root and thumb on the fifth", g.output.step == 3
+                  && shuffle?.fingers == [.init(finger: 5, tone: "root", beat: 1), .init(finger: 1, tone: "fifth", beat: 3)]
+                  && shuffle?.about != nil, "\(String(describing: shuffle))")
+            g.begin()
+            g.heard(tick: Double(3 * loop) + 2, tempo: 70, rolling: true, epoch: 1)
+            check("gated: the keyboard shows C pinky, G thumb in bar 1", g.output.fingers == [lesson.displayRoot: 5, lesson.displayRoot + 7: 1],
+                  "\(g.output.fingers)")
+        }
+
         var run = simulate([(autoplay(.perfect, choruses: 3), end(3))])
         check("perfect autoplay: clean, clean, gate passed", run.verdicts.map(\.counted) == [true, true]
               && run.passed && run.verdicts.last?.clean == 2 && run.output.lastChorus == "Clean."

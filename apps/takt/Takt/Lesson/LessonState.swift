@@ -62,6 +62,11 @@ struct LessonState {
     var lastNote: LessonEngine.NoteMark? = nil
     /// The count-in's beat (1–4) before bar 1.
     var countIn: Int? = nil
+    /// A step's intro waiting for Start, or Lesson complete: either takes the pads' place.
+    var intro: LessonEngine.StepInfo? = nil
+    var complete: LessonEngine.Complete? = nil
+    /// Keys of this bar's notes → the finger that plays each.
+    var fingers: [Int: Int] = [:]
     /// MIDI note numbers (C4 = 60) of the key to press now and the one after it.
     var nowNote: Int?
     var nextNote: Int?

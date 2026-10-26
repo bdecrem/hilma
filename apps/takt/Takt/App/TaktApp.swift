@@ -42,6 +42,7 @@ struct TaktApp: App {
         if !d.bool(forKey: "Paused") && RootView.menuMusicOn { audio.send(.play) }
         #if DEBUG
         if d.integer(forKey: "Step") > 1 { player.restartLesson(at: d.integer(forKey: "Step") - 1) }
+        if d.bool(forKey: "StepComplete") { player.debugComplete() }
         DebugHooks.recordIfRequested(audio)
         DebugHooks.pressIfRequested(player)
         DebugHooks.calibrateIfRequested(player)
@@ -196,6 +197,8 @@ struct LiveLessonScreen: View {
                 press: { player.press($0) },
                 release: player.release,
                 continueCard: player.continueCard,
+                beginStep: player.beginStep,
+                nextStep: player.nextStep,
                 back: { app.route = .lessons }
             ))
     }

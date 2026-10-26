@@ -45,6 +45,22 @@ final class LessonEngine {
         let seq: Int
     }
 
+    /// A step as its intro shows it: the title, what to do, and which finger plays which tone.
+    struct StepInfo: Equatable {
+        let title: String
+        let about: String?
+        let kind: Lesson.Kind
+        /// (finger, tone), in the order the pattern plays them.
+        let fingers: [Finger]
+        struct Finger: Equatable { let finger: Int; let tone: String; let beat: Int }
+    }
+
+    /// A step just passed: its title, and the step that comes next.
+    struct Complete: Equatable {
+        let done: String
+        let next: StepInfo
+    }
+
     struct Output: Equatable {
         var step = 1
         var stepCount = 1
@@ -68,6 +84,12 @@ final class LessonEngine {
         var rampTarget: Int?
         var finished = false
         var lastNote: NoteMark?
+        /// A play step waiting for Start (gated engines): its intro takes the pads' place.
+        var intro: StepInfo?
+        /// A step just passed (gated engines): Lesson complete, and the next step.
+        var complete: Complete?
+        /// Keys of the current bar's notes → the finger for each.
+        var fingers: [Int: Int] = [:]
     }
 
     struct Verdict {
@@ -157,11 +179,19 @@ final class LessonEngine {
     private var bars: Int { lesson.form.count }
     /// How far before a chorus its first press may land.
     private var lead: Double { Double(ticksPerBeat) / 2 }
-    private var scoring: Bool { step.kind != .card && !passed && !holding && finish == nil }
+    private var scoring: Bool { step.kind != .card && !passed && !holding && finish == nil && !awaiting }
 
-    init(lesson: Lesson, ticksPerBeat: Int, rules: ScoringRules = .init()) {
+    /// Gated (the app): a play step waits on its intro for Start, and a passed step holds on
+    /// Lesson complete until the next one is started. Ungated (the checks, autoplay): steps hand
+    /// over by themselves on the next chorus.
+    let gated: Bool
+    private var awaiting = false
+    private var completed: String?
+
+    init(lesson: Lesson, ticksPerBeat: Int, rules: ScoringRules = .init(), gated: Bool = false) {
         self.lesson = lesson
         self.rules = rules
+        self.gated = gated
         self.ticksPerBeat = ticksPerBeat
         loopTicks = lesson.form.count * 4 * ticksPerBeat
         guard lesson.steps.first?.kind == .play else { fatalError("lesson \(lesson.code): step 1 must be a play step") }
@@ -176,10 +206,49 @@ final class LessonEngine {
         startStep(index)
     }
 
-    /// The card's Continue: the next step starts with the next chorus.
+    /// The card's Continue: the next step starts with the next chorus (gated: its intro).
     func continueCard() {
         guard step.kind == .card, stepIndex + 1 < lesson.steps.count else { return }
         startStep(stepIndex + 1)
+    }
+
+    /// The intro's Start: scoring begins with the next chorus (the Player restarts the band from
+    /// the top, so that is the one after the count-in).
+    func begin() {
+        guard awaiting else { return }
+        awaiting = false
+        firstChorus = Int(((heardTick - lead) / Double(loopTicks)).rounded(.up))
+        stepStartBar = bar(at: heardTick)
+        update()
+    }
+
+    /// Lesson complete's button: the next step, its intro already read (a card shows itself).
+    func advance() {
+        guard completed != nil, stepIndex + 1 < lesson.steps.count else { return }
+        completed = nil
+        startStep(stepIndex + 1)
+        begin()
+    }
+
+    #if DEBUG
+    /// `-StepComplete 1`: the current step as if just passed (screenshots of Lesson complete).
+    func debugComplete() {
+        guard gated, stepIndex + 1 < lesson.steps.count else { return }
+        passed = true
+        awaiting = false
+        completed = step.title
+        update()
+    }
+    #endif
+
+    func info(_ s: Lesson.Step) -> StepInfo {
+        let pattern = (s.pattern ?? []).sorted { ($0.beat, $0.tick ?? 0) < ($1.beat, $1.tick ?? 0) }
+        var seen: Set<Int> = []
+        let fingers = pattern.compactMap { p -> StepInfo.Finger? in
+            guard let f = p.finger, seen.insert(f).inserted else { return nil }
+            return .init(finger: f, tone: p.tone, beat: p.beat)
+        }
+        return StepInfo(title: s.title, about: s.about, kind: s.kind, fingers: fingers)
     }
 
     private func startStep(_ index: Int) {
@@ -189,6 +258,8 @@ final class LessonEngine {
         attempts = 0
         passed = false
         holding = false
+        completed = nil
+        awaiting = gated && step.kind != .card
         verdict = nil
         // The first chorus that starts after now (an early first note's half beat counts).
         firstChorus = Int(((heardTick - lead) / Double(loopTicks)).rounded(.up))
@@ -436,9 +507,15 @@ final class LessonEngine {
         report(c, result, tempo, counted: counted, line: line)
 
         if passed && stepIndex + 1 < lesson.steps.count {
-            // Hand over now: the chorus that just began is the next step's.
-            banner = (line, bar(at: heardTick) + 2)
-            startStep(stepIndex + 1)
+            if gated {
+                // Lesson complete: the band plays on, and the next step waits for its button.
+                completed = step.title
+                update()
+            } else {
+                // Hand over now: the chorus that just began is the next step's.
+                banner = (line, bar(at: heardTick) + 2)
+                startStep(stepIndex + 1)
+            }
         }
     }
 
@@ -461,6 +538,8 @@ final class LessonEngine {
         o.unlocked = unlocked
         o.rampTarget = step.kind == .ramp ? rampTarget : nil
         o.finished = finish != nil
+        o.intro = awaiting ? info(step) : nil
+        o.complete = completed.map { Complete(done: $0, next: info(lesson.steps[stepIndex + 1])) }
 
         let absBar = bar(at: heardTick)
         let barInForm = ((absBar % bars) + bars) % bars
@@ -472,7 +551,7 @@ final class LessonEngine {
             o.coach = coach.tomorrow!
         } else if passed {
             o.coach = coach.passed!
-        } else if step.kind == .card || absBar - stepStartBar < 2 {
+        } else if step.kind == .card || awaiting || absBar - stepStartBar < 2 {
             o.coach = coach.intro
         } else if barInForm == 0, let v = verdict, v.chorus == chorus - 1 {
             o.coach = v.line
@@ -488,7 +567,11 @@ final class LessonEngine {
         if expected.isEmpty || !scoring {
             o.nowNote = nil
             o.nextNote = nil
+            o.fingers = [:]
         } else {
+            var fingers: [Int: Int] = [:]
+            for e in expected where e.bar == barInForm { if let f = e.finger { fingers[e.display] = f } }
+            o.fingers = fingers
             let t = heardTick - Double(chorus * loopTicks)
             let i = expected.lastIndex { Double($0.tick) <= t + 1e-6 } ?? expected.count - 1
             let now = expected[i]
