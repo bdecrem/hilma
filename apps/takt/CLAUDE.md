@@ -78,7 +78,9 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   picks, the challenge rotation, the session). DEBUG: `-Route quiz [-QuizAnswers 1,0,1]`,
   `-Route map`, `-DailyPhone <n> / -DailyCode <c>` (against `TAKT_IMESSAGE_DRY=1 pnpm exec next
   dev -p 3270` and `-Backend http://localhost:3270`). Over plain-http localhost the session cookie
-  doesn't persist, so every simulator launch is a new guest: delete them after.
+  doesn't persist, so every simulator launch is a new guest: delete them after. When a
+  simulator run is done, `xcrun simctl terminate <device> com.bartdecrem.Takt`: a Takt left
+  running in a booted simulator keeps the band playing through the Mac's speakers (2026-10-26).
 
 - **Ear Trainer (E1): built 2026-10-25, 0.1 (9).** An endless game beside A1 on the menu
   (`Quiz/EarGame.swift`, `Menu/EarGameScreen.swift`, `LessonEntry.kind == .game`): a chord
