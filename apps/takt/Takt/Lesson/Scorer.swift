@@ -13,6 +13,9 @@ struct ScoringRules {
     /// ±100 ms at ≤ 80 bpm, ±80 ms above: broad, for students (2026-10-26; was ±60 / ±45). The
     /// press is already moved by the latency correction, so this is the hand's own leeway.
     func windowMs(tempo: Double) -> Double { tempo <= 80.001 ? 100 : 80 }
+    /// A chord's notes get half as much again: two fingers never land as one.
+    var chordWindow = 1.5
+    func windowMs(tempo: Double, chord: Bool) -> Double { windowMs(tempo: tempo) * (chord ? chordWindow : 1) }
 }
 
 /// A key the player pressed, placed on the transport.
@@ -97,11 +100,14 @@ enum Scorer {
         let ticksPerBar = 4 * ticksPerBeat
         let bars = loopTicks / ticksPerBar
         let n = expected.count
+        // Neighbors are the nearest expected notes at other ticks: a chord's notes share one.
         var window = [Double](repeating: Double(ticksPerBeat) / 2, count: n)
+        let ticks = expected.map(\.tick)
         for i in 0..<n {
-            let prev = i > 0 ? expected[i - 1].tick : expected[n - 1].tick - loopTicks
-            let next = i < n - 1 ? expected[i + 1].tick : expected[0].tick + loopTicks
-            window[i] = min(window[i], Double(expected[i].tick - prev) / 2, Double(next - expected[i].tick) / 2)
+            let t = expected[i].tick
+            let prev = ticks.filter { $0 < t }.max() ?? (ticks.max()! - loopTicks)
+            let next = ticks.filter { $0 > t }.min() ?? (ticks.min()! + loopTicks)
+            window[i] = min(window[i], Double(t - prev) / 2, Double(next - t) / 2)
         }
         func inRange(_ note: Int) -> Bool { (rules.low...rules.high).contains(note) }
 
@@ -123,7 +129,7 @@ enum Scorer {
             let p = presses[j]
             let ms = (p.tick - at) * p.msPerTick
             let tempo = 60000 / (p.msPerTick * Double(ticksPerBeat))
-            let mark: ChorusResult.Mark = abs(ms) <= rules.windowMs(tempo: tempo) ? .hit : ms < 0 ? .early : .late
+            let mark: ChorusResult.Mark = abs(ms) <= rules.windowMs(tempo: tempo, chord: e.chord) ? .hit : ms < 0 ? .early : .late
             judged.append(.init(expected: e, mark: mark, offsetMs: ms))
         }
 

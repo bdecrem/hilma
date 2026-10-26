@@ -217,12 +217,14 @@ struct Lesson: Decodable {
             let root = chords[name]!.root
             for p in pattern {
                 let interval = Self.tones[p.tone]!
+                let together = pattern.filter { $0.beat == p.beat && ($0.tick ?? 0) == (p.tick ?? 0) }.count
                 notes.append(ExpectedNote(
                     tick: (bar * 4 + p.beat - 1) * ticksPerBeat + (p.tick ?? 0),
                     bar: bar,
                     pitchClass: (root + interval) % 12,
                     display: displayRoot + root + interval,
-                    finger: p.finger))
+                    finger: p.finger,
+                    chord: together > 1))
             }
         }
         return notes
@@ -238,6 +240,8 @@ struct ExpectedNote: Equatable {
     let pitchClass: Int
     let display: Int
     var finger: Int? = nil
+    /// Part of a chord: other expected notes share its tick. The timing window is wider.
+    var chord = false
 }
 
 extension String {

@@ -76,6 +76,9 @@ struct LessonState {
     /// MIDI note numbers (C4 = 60) of the key to press now and the one after it.
     var nowNote: Int?
     var nextNote: Int?
+    /// Every key to press now (a chord lights them all), and the next different ones.
+    var nowNotes: Set<Int> = []
+    var nextNotes: Set<Int> = []
     /// Keys held right now, from any input.
     var pressedNotes: Set<Int> = []
 
@@ -105,7 +108,9 @@ struct LessonState {
         lastChorus: "Rushed bar 9.",
         lastChorusDetail: "11 of 12 · 31 ms early",
         nowNote: 48,
-        nextNote: 53
+        nextNote: 53,
+        nowNotes: [48],
+        nextNotes: [53]
     )
 
     /// A1 step 5: the gate at 90, two of three clean, the whole band in, downbeat of bar 11.
@@ -132,7 +137,9 @@ struct LessonState {
         lastChorus: "Clean.",
         lastChorusDetail: "24 of 24 · 6 ms late",
         nowNote: 48,
-        nextNote: 55
+        nextNote: 55,
+        nowNotes: [48, 55],
+        nextNotes: []
     )
 
     /// The frame drawn at launch. DEBUG builds take `-PreviewFrame gate90` for screenshots.

@@ -57,7 +57,7 @@ final class LessonEngine {
         let kind: Lesson.Kind
         /// (finger, tone), in the order the pattern plays them.
         let fingers: [Finger]
-        struct Finger: Equatable { let finger: Int; let tone: String; let beat: Int }
+        struct Finger: Equatable { let finger: Int; let tone: String; let beats: [Int] }
     }
 
     /// A lesson just passed: its number and title, a card that closes it, and the next lesson
@@ -92,6 +92,9 @@ final class LessonEngine {
         /// Keyboard: the key for now and the next different one (MIDI notes).
         var nowNote: Int?
         var nextNote: Int?
+        /// Every key of the note (or chord) to play now, and of the next different one.
+        var nowNotes: Set<Int> = []
+        var nextNotes: Set<Int> = []
         /// Lesson channels the lesson has opened (indices into `lesson.channels`).
         var unlocked: Set<Int> = []
         var rampTarget: Int?
@@ -283,7 +286,7 @@ final class LessonEngine {
         var seen: Set<Int> = []
         let fingers = pattern.compactMap { p -> StepInfo.Finger? in
             guard let f = p.finger, seen.insert(f).inserted else { return nil }
-            return .init(finger: f, tone: p.tone, beat: p.beat)
+            return .init(finger: f, tone: p.tone, beats: pattern.filter { $0.finger == f }.map(\.beat))
         }
         return StepInfo(number: l + 1, count: lesson.lessons.count, title: spec.title, skill: spec.skill, goal: spec.goal,
                         about: s.about, kind: s.kind, fingers: fingers)
@@ -384,10 +387,10 @@ final class LessonEngine {
     /// Half a beat: how far from an expected note a press still belongs to it.
     private var reach: Double { Double(ticksPerBeat) / 2 }
 
-    private func mark(_ kind: NoteMark.Kind, _ offsetMs: Double?, msPerTick: Double) {
+    private func mark(_ kind: NoteMark.Kind, _ offsetMs: Double?, msPerTick: Double, window: Double? = nil) {
         markSeq += 1
         let tempo = 60000 / (msPerTick * Double(ticksPerBeat))
-        output.lastNote = NoteMark(kind: kind, offsetMs: offsetMs, windowMs: rules.windowMs(tempo: tempo), seq: markSeq)
+        output.lastNote = NoteMark(kind: kind, offsetMs: offsetMs, windowMs: window ?? rules.windowMs(tempo: tempo), seq: markSeq)
     }
 
     /// The press against the nearest expected note within half a beat: the right pitch class is
@@ -410,8 +413,8 @@ final class LessonEngine {
             liveMatched.insert(c * expected.count + r.i)
             let ms = r.d * msPerTick
             let tempo = 60000 / (msPerTick * Double(ticksPerBeat))
-            let w = rules.windowMs(tempo: tempo)
-            mark(abs(ms) <= w ? .hit : ms < 0 ? .early : .late, ms, msPerTick: msPerTick)
+            let w = rules.windowMs(tempo: tempo, chord: expected[r.i].chord)
+            mark(abs(ms) <= w ? .hit : ms < 0 ? .early : .late, ms, msPerTick: msPerTick, window: w)
         } else if let n = near, !liveMatched.contains(c * expected.count + n.i) {
             liveWrong.insert(c * expected.count + n.i)
             mark(.wrong, n.d * msPerTick, msPerTick: msPerTick)
@@ -614,6 +617,8 @@ final class LessonEngine {
         if expected.isEmpty || !scoring {
             o.nowNote = nil
             o.nextNote = nil
+            o.nowNotes = []
+            o.nextNotes = []
             o.fingers = [:]
         } else {
             var fingers: [Int: Int] = [:]
@@ -622,9 +627,15 @@ final class LessonEngine {
             let t = heardTick - Double(chorus * loopTicks)
             let i = expected.lastIndex { Double($0.tick) <= t + 1e-6 } ?? expected.count - 1
             let now = expected[i]
-            let next = expected[(i + 1) % expected.count]
+            // The chord at this tick, and the next tick's chord (wrapping), keys that differ.
+            let nowKeys = Set(expected.filter { $0.tick == now.tick }.map(\.display))
+            var j = (i + 1) % expected.count
+            while expected[j].tick == now.tick && j != i { j = (j + 1) % expected.count }
+            let nextKeys = Set(expected.filter { $0.tick == expected[j].tick }.map(\.display)).subtracting(nowKeys)
             o.nowNote = now.display
-            o.nextNote = next.display == now.display ? nil : next.display
+            o.nextNote = nextKeys.min()
+            o.nowNotes = nowKeys
+            o.nextNotes = nextKeys
         }
         if o != output { output = o }
     }

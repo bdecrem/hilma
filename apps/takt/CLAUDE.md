@@ -184,6 +184,14 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   = max of it and the derivation) drives resume, the menu and the map. DEBUG `-Route module`,
   `-Lesson n` (open lesson n's intro). The daily challenge text says "your blues lesson".
   Checks 128/128.
+  **0.1 (23), same night:** the shuffle is a **chord**: root and fifth together on the 1 and
+  again on the 3 (Bart: "that's how a musician plays"), four pattern notes a bar in shuffle,
+  ramp, gate and payoff (48 expected notes a chorus, the exported loop has 48). Every note of
+  the chord is required; `ExpectedNote.chord` widens its window by `ScoringRules.chordWindow`
+  (1.5×: ±150 at 70, ±120 above). The scorer's association window now takes the nearest
+  expected notes at *other* ticks as neighbors (same-tick chord notes made it 0, so nothing
+  matched). `Output.nowNotes` / `nextNotes` light every key of the chord; the finger legend
+  lists all its beats. Checks 135/135.
 
 ## Code map (`Takt/`)
 

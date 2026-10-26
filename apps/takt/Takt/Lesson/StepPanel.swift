@@ -110,7 +110,7 @@ struct StepPanel: View {
                                 Text(HandDiagram.name(f.finger))
                                     .bodyText(compact ? 13 : 15, weight: .semibold)
                                     .foregroundStyle(Palette.text)
-                                Text("\(f.tone) · on the \(f.beat)")
+                                Text("\(f.tone) · on the \(f.beats.map(String.init).joined(separator: " and the "))")
                                     .dataLabel(10)
                                     .foregroundStyle(Palette.muted)
                             }

@@ -94,7 +94,7 @@ struct WideLessonLayout: View {
             }
 
             Hairline()
-            KeyboardStrip(low: 48, high: 71, now: state.nowNote, next: state.nextNote, pressed: state.pressedNotes,
+            KeyboardStrip(low: 48, high: 71, now: state.nowNotes, next: state.nextNotes, pressed: state.pressedNotes,
                           fingers: state.fingers)
                 .frame(height: 128)
                 .padding(.horizontal, 24)
@@ -144,7 +144,7 @@ struct StackedLessonLayout: View {
                 }
 
                 Spacer(minLength: 16)
-                KeyboardStrip(low: 48, high: 65, now: state.nowNote, next: state.nextNote, pressed: state.pressedNotes,
+                KeyboardStrip(low: 48, high: 65, now: state.nowNotes, next: state.nextNotes, pressed: state.pressedNotes,
                               fingers: state.fingers)
                     .frame(height: 112)
                 Spacer(minLength: 14)

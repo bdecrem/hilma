@@ -7,8 +7,8 @@ import SwiftUI
 struct KeyboardStrip: View {
     let low: Int
     let high: Int
-    var now: Int?
-    var next: Int?
+    var now: Set<Int> = []
+    var next: Set<Int> = []
     var pressed: Set<Int> = []
     /// Keys → the finger that plays them, drawn as a numbered badge.
     var fingers: [Int: Int] = [:]
@@ -49,7 +49,7 @@ struct KeyboardStrip: View {
 
     private func role(_ note: Int) -> Key.Role {
         if pressed.contains(note) { return .pressed }
-        return note == now ? .now : note == next ? .next : .rest
+        return now.contains(note) ? .now : next.contains(note) ? .next : .rest
     }
 
     static func isBlack(_ note: Int) -> Bool {

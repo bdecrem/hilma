@@ -625,6 +625,8 @@ final class Player {
             fingers: lesson.fingers,
             nowNote: lesson.nowNote,
             nextNote: lesson.nextNote,
+            nowNotes: lesson.nowNotes,
+            nextNotes: lesson.nextNotes,
             pressedNotes: pressed
         )
     }
