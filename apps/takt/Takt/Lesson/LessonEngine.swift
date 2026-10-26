@@ -57,6 +57,9 @@ final class LessonEngine {
         let kind: Lesson.Kind
         /// (finger, tone), in the order the pattern plays them.
         let fingers: [Finger]
+        /// A run (more than four notes): the fingers in playing order, instead of the legend.
+        let fingering: [Int]
+        let rightHand: Bool
         struct Finger: Equatable { let finger: Int; let tone: String; let beats: [Int] }
     }
 
@@ -282,14 +285,15 @@ final class LessonEngine {
         let s = lesson.steps[i]
         let l = lesson.lessonIndex(ofStep: i)
         let spec = lesson.lessons[l]
-        let pattern = (s.pattern ?? []).sorted { ($0.beat, $0.tick ?? 0) < ($1.beat, $1.tick ?? 0) }
+        let pattern = (s.pattern ?? []).sorted { ($0.bar ?? 0, $0.beat, $0.tick ?? 0) < ($1.bar ?? 0, $1.beat, $1.tick ?? 0) }
         var seen: Set<Int> = []
         let fingers = pattern.compactMap { p -> StepInfo.Finger? in
             guard let f = p.finger, seen.insert(f).inserted else { return nil }
-            return .init(finger: f, tone: p.tone, beats: pattern.filter { $0.finger == f }.map(\.beat))
+            return .init(finger: f, tone: p.tone ?? "", beats: pattern.filter { $0.finger == f }.map(\.beat))
         }
+        let run = pattern.count > 4 ? pattern.compactMap(\.finger) : []
         return StepInfo(number: l + 1, count: lesson.lessons.count, title: spec.title, skill: spec.skill, goal: spec.goal,
-                        about: s.about, kind: s.kind, fingers: fingers)
+                        about: s.about, kind: s.kind, fingers: fingers, fingering: run, rightHand: s.hand == "right")
     }
 
     private func startStep(_ index: Int) {

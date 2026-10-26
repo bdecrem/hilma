@@ -1,0 +1,353 @@
+{
+  "code": "S1m",
+  "title": "Scales",
+  "module": {
+    "code": "scales",
+    "title": "Scales",
+    "detail": "Right hand · one octave in A minor"
+  },
+  "lessons": [
+    {
+      "title": "Up",
+      "skill": "A minor, one octave up, one note a beat",
+      "goal": "2 clean choruses at 60",
+      "steps": [
+        "up"
+      ]
+    },
+    {
+      "title": "Down",
+      "skill": "A minor, one octave down",
+      "goal": "2 clean choruses at 60",
+      "steps": [
+        "down"
+      ]
+    },
+    {
+      "title": "Up and down",
+      "skill": "The whole octave in eighth notes",
+      "goal": "2 clean choruses at 60",
+      "steps": [
+        "updown"
+      ]
+    }
+  ],
+  "later": [
+    {
+      "title": "Two octaves",
+      "skill": "The same run, twice as far"
+    },
+    {
+      "title": "The left hand",
+      "skill": "The scale in the other hand"
+    },
+    {
+      "title": "The blues scale",
+      "skill": "Six notes, every blues solo lives here"
+    }
+  ],
+  "band": "band-blues-C",
+  "chords": {
+    "Am": {
+      "numeral": "i",
+      "root": 9
+    }
+  },
+  "form": [
+    "Am",
+    "Am",
+    "Am",
+    "Am",
+    "Am",
+    "Am",
+    "Am",
+    "Am",
+    "Am",
+    "Am",
+    "Am",
+    "Am"
+  ],
+  "range": {
+    "low": 36,
+    "high": 72
+  },
+  "displayRoot": 48,
+  "channels": [
+    {
+      "name": "Drums",
+      "channel": "drums"
+    }
+  ],
+  "steps": [
+    {
+      "id": "up",
+      "kind": "play",
+      "title": "Up",
+      "skill": "rh.scale.up.S1m",
+      "tempo": 60,
+      "gate": 2,
+      "cycle": 4,
+      "hand": "right",
+      "pattern": [
+        {
+          "bar": 0,
+          "beat": 1,
+          "semitones": 0,
+          "finger": 1
+        },
+        {
+          "bar": 0,
+          "beat": 2,
+          "semitones": 2,
+          "finger": 2
+        },
+        {
+          "bar": 0,
+          "beat": 3,
+          "semitones": 3,
+          "finger": 3
+        },
+        {
+          "bar": 0,
+          "beat": 4,
+          "semitones": 5,
+          "finger": 1
+        },
+        {
+          "bar": 1,
+          "beat": 1,
+          "semitones": 7,
+          "finger": 2
+        },
+        {
+          "bar": 1,
+          "beat": 2,
+          "semitones": 8,
+          "finger": 3
+        },
+        {
+          "bar": 1,
+          "beat": 3,
+          "semitones": 10,
+          "finger": 4
+        },
+        {
+          "bar": 1,
+          "beat": 4,
+          "semitones": 12,
+          "finger": 5
+        }
+      ],
+      "about": "Right hand, one note a beat, over the drums. Thumb on A, then index, middle. On D the thumb tucks under the middle finger, and the hand walks on: E F G and the pinky lands on A. Two bars up, two bars of rest, three times a chorus.",
+      "coach": {
+        "intro": "A minor, up. Thumb on A.",
+        "change": "Up the scale. One note a beat.",
+        "hold": "Up the scale. One note a beat.",
+        "clean": "Clean. {left} more.",
+        "again": "{problem} Again.",
+        "join": "From the top.",
+        "slow": "Clean at {tempo}. It counts at {gateTempo}.",
+        "passed": "Clean. That's the way up."
+      }
+    },
+    {
+      "id": "down",
+      "kind": "play",
+      "title": "Down",
+      "skill": "rh.scale.down.S1m",
+      "tempo": 60,
+      "gate": 2,
+      "cycle": 4,
+      "hand": "right",
+      "pattern": [
+        {
+          "bar": 0,
+          "beat": 1,
+          "semitones": 12,
+          "finger": 5
+        },
+        {
+          "bar": 0,
+          "beat": 2,
+          "semitones": 10,
+          "finger": 4
+        },
+        {
+          "bar": 0,
+          "beat": 3,
+          "semitones": 8,
+          "finger": 3
+        },
+        {
+          "bar": 0,
+          "beat": 4,
+          "semitones": 7,
+          "finger": 2
+        },
+        {
+          "bar": 1,
+          "beat": 1,
+          "semitones": 5,
+          "finger": 1
+        },
+        {
+          "bar": 1,
+          "beat": 2,
+          "semitones": 3,
+          "finger": 3
+        },
+        {
+          "bar": 1,
+          "beat": 3,
+          "semitones": 2,
+          "finger": 2
+        },
+        {
+          "bar": 1,
+          "beat": 4,
+          "semitones": 0,
+          "finger": 1
+        }
+      ],
+      "about": "The way back: pinky on A, down to the thumb on E. Then the middle finger crosses over the thumb onto D, and index, thumb bring you home to A. Two bars down, two bars of rest.",
+      "coach": {
+        "intro": "A minor, down. Pinky on A.",
+        "change": "Down the scale. Middle finger over the thumb.",
+        "hold": "Down the scale. Middle finger over the thumb.",
+        "clean": "Clean. {left} more.",
+        "again": "{problem} Again.",
+        "join": "From the top.",
+        "slow": "Clean at {tempo}. It counts at {gateTempo}.",
+        "passed": "Clean. That's the way down."
+      }
+    },
+    {
+      "id": "updown",
+      "kind": "play",
+      "title": "Up and down",
+      "skill": "rh.scale.updown.S1m",
+      "tempo": 60,
+      "gate": 2,
+      "cycle": 4,
+      "hand": "right",
+      "pattern": [
+        {
+          "bar": 0,
+          "beat": 1,
+          "tick": 0,
+          "semitones": 0,
+          "finger": 1
+        },
+        {
+          "bar": 0,
+          "beat": 1,
+          "tick": 6,
+          "semitones": 2,
+          "finger": 2
+        },
+        {
+          "bar": 0,
+          "beat": 2,
+          "tick": 0,
+          "semitones": 3,
+          "finger": 3
+        },
+        {
+          "bar": 0,
+          "beat": 2,
+          "tick": 6,
+          "semitones": 5,
+          "finger": 1
+        },
+        {
+          "bar": 0,
+          "beat": 3,
+          "tick": 0,
+          "semitones": 7,
+          "finger": 2
+        },
+        {
+          "bar": 0,
+          "beat": 3,
+          "tick": 6,
+          "semitones": 8,
+          "finger": 3
+        },
+        {
+          "bar": 0,
+          "beat": 4,
+          "tick": 0,
+          "semitones": 10,
+          "finger": 4
+        },
+        {
+          "bar": 0,
+          "beat": 4,
+          "tick": 6,
+          "semitones": 12,
+          "finger": 5
+        },
+        {
+          "bar": 1,
+          "beat": 1,
+          "tick": 0,
+          "semitones": 10,
+          "finger": 4
+        },
+        {
+          "bar": 1,
+          "beat": 1,
+          "tick": 6,
+          "semitones": 8,
+          "finger": 3
+        },
+        {
+          "bar": 1,
+          "beat": 2,
+          "tick": 0,
+          "semitones": 7,
+          "finger": 2
+        },
+        {
+          "bar": 1,
+          "beat": 2,
+          "tick": 6,
+          "semitones": 5,
+          "finger": 1
+        },
+        {
+          "bar": 1,
+          "beat": 3,
+          "tick": 0,
+          "semitones": 3,
+          "finger": 3
+        },
+        {
+          "bar": 1,
+          "beat": 3,
+          "tick": 6,
+          "semitones": 2,
+          "finger": 2
+        },
+        {
+          "bar": 1,
+          "beat": 4,
+          "tick": 0,
+          "semitones": 0,
+          "finger": 1
+        }
+      ],
+      "about": "Both ways in one breath, two notes a beat: up from A to A, turn on the pinky, and straight back down. The crossings are the whole game: thumb under on the way up, middle finger over on the way down.",
+      "coach": {
+        "intro": "A minor, up and down. Eighth notes.",
+        "change": "Up and over the top, and back down.",
+        "hold": "Up and over the top, and back down.",
+        "clean": "Clean. {left} more.",
+        "again": "{problem} Again.",
+        "join": "From the top.",
+        "slow": "Clean at {tempo}. It counts at {gateTempo}.",
+        "passed": "Clean. You can play a scale."
+      }
+    }
+  ]
+}

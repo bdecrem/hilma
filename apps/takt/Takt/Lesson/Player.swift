@@ -34,12 +34,12 @@ final class Player {
     private(set) var playbackEpoch: Int?
 
     @ObservationIgnored let audio: AudioEngine
-    @ObservationIgnored let content: Lesson
+    @ObservationIgnored private(set) var content: Lesson
     /// The lesson's channel strips, in order, as mixer channels.
-    @ObservationIgnored let channels: [Channel]
+    @ObservationIgnored private(set) var channels: [Channel]
     @ObservationIgnored private var engine: LessonEngine
     @ObservationIgnored let progress: ProgressStore
-    @ObservationIgnored private let form: [FormBar]
+    @ObservationIgnored private var form: [FormBar]
     @ObservationIgnored private let midi = MIDIInput()
     @ObservationIgnored private var link: CADisplayLink?
     @ObservationIgnored private let log = Logger(subsystem: "takt", category: "input")
@@ -70,24 +70,17 @@ final class Player {
         self.progress = progress
         content = lesson
         form = lesson.formBars
-        let byName: [String: Channel] = ["drums": .drums, "bass": .bass, "keys": .keys, "horns": .horns]
-        channels = lesson.channels.map { c in
-            guard let ch = byName[c.channel] else { fatalError("lesson \(lesson.code): unknown channel \(c.channel)") }
-            return ch
-        }
+        channels = Self.channels(of: lesson)
         engine = LessonEngine(lesson: lesson, ticksPerBeat: audio.band.ticksPerBeat, gated: Self.gated)
-        // Locked channels stay muted until the lesson unlocks them.
+        // Locked channels stay muted until the lesson unlocks them; channels the module doesn't
+        // use (the scales play over the drums alone) stay out.
         for (c, ch) in zip(lesson.channels, channels) where c.unlockAt != nil {
             audio.send(.mute(ch, true))
         }
+        for ch in [Channel.drums, .bass, .keys, .horns] where !channels.contains(ch) { audio.send(.mute(ch, true)) }
         self.lesson = engine.output
         wire()
-        // A module in progress picks up on its next lesson's intro; a finished or fresh one
-        // starts from the top.
-        let done = lessonsDone
-        if progress.lesson(lesson.code).completed == nil && done > 0 && done < lesson.lessons.count {
-            restartLesson(at: lesson.firstStep(ofLesson: done))
-        }
+        resume()
 
         midi.onNote = { [weak self] n in
             guard let self else { return }
@@ -158,14 +151,46 @@ final class Player {
 
     // MARK: Controls
 
+    private static func channels(of lesson: Lesson) -> [Channel] {
+        let byName: [String: Channel] = ["drums": .drums, "bass": .bass, "keys": .keys, "horns": .horns]
+        return lesson.channels.map { c in
+            guard let ch = byName[c.channel] else { fatalError("lesson \(lesson.code): unknown channel \(c.channel)") }
+            return ch
+        }
+    }
+
+    /// A module in progress picks up on its next lesson's intro; a finished or fresh one starts
+    /// from the top.
+    private func resume() {
+        let done = lessonsDone
+        if progress.lesson(content.code).completed == nil && done > 0 && done < content.lessons.count {
+            restartLesson(at: content.firstStep(ofLesson: done))
+        } else {
+            restartLesson()
+        }
+    }
+
+    /// Another module on the same band (the scales over the blues band's drums): its form,
+    /// channels and steps, picked up where it was.
+    func switchModule(to lesson: Lesson) {
+        guard lesson.code != content.code else { return }
+        precondition(lesson.band == content.band, "module \(lesson.code) needs band \(lesson.band), the player has \(content.band)")
+        content = lesson
+        form = lesson.formBars
+        channels = Self.channels(of: lesson)
+        lessonLog.info("module \(lesson.code, privacy: .public)")
+        resume()
+    }
+
     /// From the menu: the lesson from the top (or a step, DEBUG), the band as it starts: locked
-    /// channels muted, nothing sitting out, step 1's tempo.
+    /// channels muted, unused ones out, nothing sitting out, step 1's tempo.
     func restartLesson(at step: Int = 0) {
         engine.onAction = nil
         engine.onVerdict = nil
         engine = LessonEngine(lesson: content, ticksPerBeat: audio.band.ticksPerBeat, gated: Self.gated)
         audio.send(.silence(from: 0, to: 0))
         for (c, ch) in zip(content.channels, channels) { audio.send(.mute(ch, c.unlockAt != nil)) }
+        for ch in [Channel.drums, .bass, .keys, .horns] where !channels.contains(ch) { audio.send(.mute(ch, true)) }
         finish = nil
         wire()
         if let t = content.steps[0].tempo, t != tempo { audio.send(.tempo(Double(t))) }

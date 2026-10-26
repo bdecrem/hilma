@@ -207,6 +207,22 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   once it has placed you (`AppModel.earLessonDone`); the first not done is next. The Drills
   section is gone; the map shows the two modules and the locked M2.
 
+- **Scales module and the taste setting: 0.1 (26), 2026-10-26.** `lesson-S1.json` (C major)
+  and `lesson-S1m.json` (A minor), generated from one template (the Python in the session; the
+  files are the source now): right hand, one octave, over the blues band's drums alone
+  (`channels` lists only drums; the Player mutes band channels a module doesn't list). Three
+  lessons at 60: Up (a note a beat, thumb under after 3), Down (middle finger over the thumb),
+  Up and down (eighths, 15 notes), then three "coming" rows (two octaves, the left hand, the
+  blues scale). Content model: a pattern note takes `semitones` instead of `tone`, and `bar`
+  inside the step's `cycle` (4 bars here: two of notes, two of rest); a step's `hand: right`
+  flips the intro's hand drawing; a run of more than four notes shows its fingering row
+  (`StepInfo.fingering`) instead of the finger legend. Settings → Taste → **Prefer minor keys**
+  (`preferMinor`, off) picks the A minor file: `AppModel.module("S")`, cache dropped by
+  `tasteChanged()`. The Player switches modules on the same band (`switchModule(to:)`, resumes
+  by lessons done); `AppModel.openModule` / `start(module:lesson:)` / `currentModule` drive the
+  module screen and cards by entry code ("A1", "S"); progress is keyed by content code (S1 and
+  S1m separately). DEBUG `-Module S`, `-preferMinor YES`. Checks 142/142.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

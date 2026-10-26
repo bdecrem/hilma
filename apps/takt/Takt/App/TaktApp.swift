@@ -124,7 +124,7 @@ struct RootView: View {
             case .map:
                 MapScreen(app: app)
             case .module:
-                ModuleScreen(app: app, player: player)
+                ModuleScreen(app: app, code: app.currentModule)
             case .earModule:
                 EarModuleScreen(app: app)
             case .earGame:

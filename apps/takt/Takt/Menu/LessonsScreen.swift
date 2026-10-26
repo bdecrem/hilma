@@ -31,12 +31,14 @@ struct LessonsScreen: View {
                         .dataLabel(13, weight: .semibold)
                         .foregroundStyle(Palette.muted)
                         .padding(.top, 14)
-                    if let player = app.player {
-                        ModuleCard(app: app, player: player, compact: compact)
-                    }
-                    EarModuleCard(app: app, compact: compact)
-                    ForEach(LessonEntry.path.filter { $0.module && $0.code != "A1" && $0.code != "E" }) { entry in
-                        LessonRow(entry: entry, app: app, compact: compact)
+                    ForEach(LessonEntry.path.filter(\.module)) { entry in
+                        if entry.kind == .earModule {
+                            EarModuleCard(app: app, compact: compact)
+                        } else if entry.playable {
+                            ModuleCard(app: app, code: entry.code, compact: compact)
+                        } else {
+                            LessonRow(entry: entry, app: app, compact: compact)
+                        }
                     }
                 }
             }

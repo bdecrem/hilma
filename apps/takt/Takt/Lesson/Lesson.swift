@@ -26,10 +26,15 @@ struct Lesson: Decodable {
         let beat: Int
         /// Ticks after the beat (12 per beat; the shuffle's late eighth is 8).
         let tick: Int?
-        /// Chord tone: root, third, fifth, sixth, seventh, octave.
-        let tone: String
+        /// Chord tone: root, third, fifth, sixth, seventh, octave. Or `semitones` from the root.
+        let tone: String?
+        let semitones: Int?
+        /// 0-based bar inside the step's `cycle` (a run over several bars); nil = every bar.
+        let bar: Int?
         /// The finger that plays it (1 thumb … 5 pinky), shown on the keyboard and in the step's intro.
         let finger: Int?
+
+        var interval: Int? { semitones ?? tone.flatMap { Lesson.tones[$0] } }
     }
 
     struct Coach: Decodable {
@@ -96,6 +101,10 @@ struct Lesson: Decodable {
         let skill: String?
         let tempo: Int?
         let pattern: [PatternNote]?
+        /// Bars the pattern spans before it repeats (1: every bar the same).
+        let cycle: Int?
+        /// "left" (default) or "right": the hand the intro draws.
+        let hand: String?
         /// Clean choruses to pass (not necessarily in a row).
         let gate: Int?
         let maxAttempts: Int?
@@ -173,7 +182,8 @@ struct Lesson: Decodable {
             guard let pattern = step.pattern, !pattern.isEmpty else {
                 fatalError("lesson \(code) step \(step.id): no pattern")
             }
-            for p in pattern where Self.tones[p.tone] == nil || !(1...4).contains(p.beat) || !(0..<12).contains(p.tick ?? 0) {
+            for p in pattern where p.interval == nil || !(1...4).contains(p.beat) || !(0..<12).contains(p.tick ?? 0)
+                || !(0..<(step.cycle ?? 1)).contains(p.bar ?? 0) {
                 fatalError("lesson \(code) step \(step.id): bad pattern note \(p)")
             }
         }
@@ -211,13 +221,14 @@ struct Lesson: Decodable {
 
     /// The notes a step expects in one chorus, in order, with ticks inside the chorus.
     func expected(_ step: Step, ticksPerBeat: Int) -> [ExpectedNote] {
-        let pattern = (step.pattern ?? []).sorted { ($0.beat, $0.tick ?? 0) < ($1.beat, $1.tick ?? 0) }
+        let pattern = (step.pattern ?? []).sorted { ($0.bar ?? 0, $0.beat, $0.tick ?? 0) < ($1.bar ?? 0, $1.beat, $1.tick ?? 0) }
+        let cycle = step.cycle ?? 1
         var notes: [ExpectedNote] = []
         for (bar, name) in form.enumerated() {
             let root = chords[name]!.root
-            for p in pattern {
-                let interval = Self.tones[p.tone]!
-                let together = pattern.filter { $0.beat == p.beat && ($0.tick ?? 0) == (p.tick ?? 0) }.count
+            for p in pattern where (p.bar ?? 0) == bar % cycle {
+                let interval = p.interval!
+                let together = pattern.filter { ($0.bar ?? 0) == (p.bar ?? 0) && $0.beat == p.beat && ($0.tick ?? 0) == (p.tick ?? 0) }.count
                 notes.append(ExpectedNote(
                     tick: (bar * 4 + p.beat - 1) * ticksPerBeat + (p.tick ?? 0),
                     bar: bar,

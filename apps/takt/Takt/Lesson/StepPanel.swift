@@ -94,12 +94,31 @@ struct StepPanel: View {
                 .foregroundStyle(Palette.text)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        if !s.fingers.isEmpty {
+        if !s.fingering.isEmpty {
+            // A run: the hand, and the fingers in playing order.
+            HStack(alignment: .center, spacing: compact ? 14 : 24) {
+                if hand {
+                    HandDiagram(used: Set(s.fingering), right: s.rightHand)
+                        .frame(width: compact ? 92 : 124, height: compact ? 70 : 92)
+                }
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(s.rightHand ? "Right hand · fingering" : "Left hand · fingering")
+                        .dataLabel(10)
+                        .foregroundStyle(Palette.muted)
+                    HStack(spacing: 4) {
+                        ForEach(Array(s.fingering.enumerated()), id: \.offset) { _, f in
+                            FingerBadge(finger: f, onFill: false)
+                        }
+                    }
+                }
+            }
+            .padding(.top, compact ? 0 : 4)
+        } else if !s.fingers.isEmpty {
             // The hand drawing on an intro; Lesson complete keeps just the legend, so its
             // buttons stay in view.
             HStack(alignment: .center, spacing: compact ? 14 : 28) {
                 if hand {
-                    HandDiagram(used: Set(s.fingers.map(\.finger)))
+                    HandDiagram(used: Set(s.fingers.map(\.finger)), right: s.rightHand)
                         .frame(width: compact ? 92 : 124, height: compact ? 70 : 92)
                 }
                 VStack(alignment: .leading, spacing: compact ? 6 : 10) {
@@ -123,10 +142,11 @@ struct StepPanel: View {
     }
 }
 
-/// A left hand from above, fingers numbered the piano way (1 thumb … 5 pinky, so 5 on the
-/// left): the fingers the step uses are filled `signal` with their number.
+/// A hand from above, fingers numbered the piano way (1 thumb … 5 pinky): a left hand has the
+/// pinky on the left, a right hand the thumb. The fingers the step uses are filled `signal`.
 struct HandDiagram: View {
     let used: Set<Int>
+    var right = false
 
     static func name(_ finger: Int) -> String {
         ["", "Thumb (1)", "Index (2)", "Middle (3)", "Ring (4)", "Pinky (5)"][max(0, min(5, finger))]
@@ -144,13 +164,14 @@ struct HandDiagram: View {
                     .fill(Palette.ground)
                     .overlay(RoundedRectangle(cornerRadius: col * 0.5).strokeBorder(Palette.line, lineWidth: 1))
                     .frame(width: col * 4.4, height: h - palmTop)
-                    .offset(x: col * 0.1, y: palmTop)
+                    .offset(x: right ? col * 0.5 : col * 0.1, y: palmTop)
                 ForEach(0..<5, id: \.self) { i in
-                    let finger = 5 - i
+                    let finger = right ? i + 1 : 5 - i
+                    let thumb = finger == 1
                     let on = used.contains(finger)
-                    let len = h * lengths[i]
+                    let len = h * lengths[right ? 4 - i : i]
                     // The thumb sits lower and leans out.
-                    let top = i == 4 ? palmTop - len * 0.35 : palmTop - len + col * 0.4
+                    let top = thumb ? palmTop - len * 0.35 : palmTop - len + col * 0.4
                     ZStack {
                         Capsule().fill(on ? Palette.signal : Palette.ground)
                         Capsule().strokeBorder(on ? Palette.signal : Palette.line, lineWidth: 1)
@@ -158,18 +179,18 @@ struct HandDiagram: View {
                             Text("\(finger)")
                                 .font(.system(size: col * 0.5, weight: .bold, design: .rounded))
                                 .foregroundStyle(Palette.blackKey)
-                                .rotationEffect(.degrees(i == 4 ? -22 : 0))
+                                .rotationEffect(.degrees(thumb ? (right ? 22 : -22) : 0))
                                 .offset(y: -len * 0.25)
                         }
                     }
                     .frame(width: col * 0.78, height: len)
-                    .rotationEffect(.degrees(i == 4 ? 22 : Double(i - 2) * 3), anchor: .bottom)
-                    .offset(x: col * CGFloat(i) + col * 0.11 - (i == 4 ? col * 0.05 : 0), y: top + (i == 4 ? col * 0.25 : 0))
+                    .rotationEffect(.degrees(thumb ? (right ? -22 : 22) : Double(i - 2) * 3), anchor: .bottom)
+                    .offset(x: col * CGFloat(i) + col * 0.11 + (thumb ? (right ? col * 0.3 : -col * 0.05) : 0), y: top + (thumb ? col * 0.25 : 0))
                 }
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Left hand: " + used.sorted(by: >).map(Self.name).joined(separator: " and "))
+        .accessibilityLabel((right ? "Right hand: " : "Left hand: ") + used.sorted(by: >).map(Self.name).joined(separator: " and "))
     }
 }
 

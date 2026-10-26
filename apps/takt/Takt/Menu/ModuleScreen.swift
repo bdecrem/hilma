@@ -5,13 +5,14 @@ import SwiftUI
 /// built yet sit at the end, locked.
 struct ModuleScreen: View {
     let app: AppModel
-    let player: Player
+    /// The module's entry code ("A1", "S").
+    let code: String
     @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
         let compact = sizeClass == .compact
-        let content = player.content
-        let done = player.lessonsDone
+        let content = app.module(code)
+        let done = app.lessonsDone(content)
         let finished = app.progress.lesson(content.code).completed != nil
         let next = finished ? nil : min(done, content.lessons.count - 1)
         VStack(alignment: .leading, spacing: 0) {
@@ -48,7 +49,7 @@ struct ModuleScreen: View {
                     ForEach(Array(content.lessons.enumerated()), id: \.offset) { i, spec in
                         LessonRowView(number: i + 1, title: spec.title, skill: spec.skill, goal: spec.goal,
                                       state: i < done ? .done : i == next ? .next : .locked, compact: compact) {
-                            app.start(lesson: i + 1)
+                            app.start(module: code, lesson: i + 1)
                         }
                     }
                     ForEach(Array((content.later ?? []).enumerated()), id: \.offset) { i, l in
@@ -62,11 +63,11 @@ struct ModuleScreen: View {
             .scrollBounceBehavior(.basedOnSize)
 
             if let n = next {
-                PrimaryButton(title: "Start lesson \(n + 1) · \(content.lessons[n].title)") { app.start(lesson: n + 1) }
+                PrimaryButton(title: "Start lesson \(n + 1) · \(content.lessons[n].title)") { app.start(module: code, lesson: n + 1) }
                     .padding(.top, 8)
                     .padding(.bottom, compact ? 8 : 24)
             } else {
-                QuietButton(title: "Play it again from lesson 1") { app.restart(lesson: content.code) }
+                QuietButton(title: "Play it again from lesson 1") { app.restart(lesson: code) }
                     .padding(.top, 8)
                     .padding(.bottom, compact ? 8 : 24)
             }
@@ -296,13 +297,13 @@ struct EarModuleCard: View {
 /// The module on the Learn tab: where you are, and one tap into the next lesson.
 struct ModuleCard: View {
     let app: AppModel
-    let player: Player
+    let code: String
     var compact = false
 
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: 8)
-        let content = player.content
-        let done = player.lessonsDone
+        let content = app.module(code)
+        let done = app.lessonsDone(content)
         let finished = app.progress.lesson(content.code).completed != nil
         let next = finished ? nil : content.lessons[min(done, content.lessons.count - 1)]
         VStack(alignment: .leading, spacing: 12) {
@@ -334,9 +335,9 @@ struct ModuleCard: View {
                 }
                 Spacer(minLength: 8)
                 if next != nil {
-                    PrimaryButton(title: "Continue") { app.start(lesson: done + 1) }
+                    PrimaryButton(title: done == 0 ? "Start" : "Continue") { app.start(module: code, lesson: done + 1) }
                 } else {
-                    QuietButton(title: "Open") { app.route = .module }
+                    QuietButton(title: "Open") { app.openModule(code) }
                 }
             }
         }
@@ -344,7 +345,7 @@ struct ModuleCard: View {
         .background(shape.fill(Palette.panel))
         .overlay(shape.strokeBorder(Palette.line, lineWidth: 1))
         .contentShape(shape)
-        .onTapGesture { app.route = .module }
+        .onTapGesture { app.openModule(code) }
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isButton)
     }

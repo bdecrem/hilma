@@ -9,6 +9,7 @@ struct SettingsScreen: View {
     @AppStorage("inputOffsetMs") private var inputOffsetMs = 0.0
     @AppStorage("menuMusic") private var menuMusic = true
     @AppStorage("countIn") private var countIn = true
+    @AppStorage("preferMinor") private var preferMinor = false
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var confirmReset = false
 
@@ -82,6 +83,17 @@ struct SettingsScreen: View {
                                 .dataLabel(11).foregroundStyle(Palette.muted)
                             QuietButton(title: "Calibrate") { app.calibrate(then: .settings) }
                         }
+                    }
+
+                    SettingsSection(title: "Taste") {
+                        Toggle(isOn: $preferMinor) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Prefer minor keys").bodyText(15).foregroundStyle(Palette.text)
+                                Text("Scales in A minor instead of C major").dataLabel(10).foregroundStyle(Palette.muted)
+                            }
+                        }
+                        .tint(Palette.signal)
+                        .onChange(of: preferMinor) { app.tasteChanged() }
                     }
 
                     SettingsSection(title: "Display") {

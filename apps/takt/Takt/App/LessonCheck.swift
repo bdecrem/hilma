@@ -244,6 +244,33 @@ enum LessonCheck {
             check("chord: a held chord 20–75 ms late every bar is clean", cr.clean && cr.hits == 24, text(cr))
         }
 
+        do {
+            // Scales: right hand, one octave, over a four-bar cycle; the minor variant on A.
+            let major = Lesson.bundled("lesson-S1"), minor = Lesson.bundled("lesson-S1m")
+            let up = major.expected(major.steps[0], ticksPerBeat: tpb)
+            check("scales: C major up is C D E F G A B C, a note a beat over two bars, three times",
+                  up.count == 24 && up.prefix(8).map(\.display) == [48, 50, 52, 53, 55, 57, 59, 60]
+                  && up.prefix(8).map(\.tick) == (0..<8).map { $0 * tpb } && up[8].tick == 4 * 4 * tpb
+                  && up.prefix(8).map(\.finger) == [1, 2, 3, 1, 2, 3, 4, 5], "\(up.prefix(9).map { "\($0.display)@\($0.tick)" })")
+            let mup = minor.expected(minor.steps[0], ticksPerBeat: tpb)
+            check("scales: A minor up is A B C D E F G A from A3", mup.prefix(8).map(\.display) == [57, 59, 60, 62, 64, 65, 67, 69])
+            let down = major.expected(major.steps[1], ticksPerBeat: tpb)
+            check("scales: down is the octave back, 5 4 3 2 1 3 2 1", down.prefix(8).map(\.display) == [60, 59, 57, 55, 53, 52, 50, 48]
+                  && down.prefix(8).map(\.finger) == [5, 4, 3, 2, 1, 3, 2, 1])
+            let both = major.expected(major.steps[2], ticksPerBeat: tpb)
+            check("scales: up and down is 15 eighths, 45 a chorus, none in bars 3 and 4", both.count == 45
+                  && both.prefix(15).map(\.tick) == (0..<15).map { $0 * 6 } && !both.contains { $0.bar == 2 || $0.bar == 3 },
+                  "\(both.count) \(both.prefix(16).map(\.tick))")
+            let se = LessonEngine(lesson: major, ticksPerBeat: tpb, gated: true)
+            se.start(step: 2)
+            se.heard(tick: 0, tempo: 60, rolling: true, epoch: 0)
+            check("scales: the intro shows the fingering of the run, right hand",
+                  se.output.intro?.fingering == [1, 2, 3, 1, 2, 3, 4, 5, 4, 3, 2, 1, 3, 2, 1] && se.output.intro?.rightHand == true,
+                  "\(String(describing: se.output.intro?.fingering))")
+            check("scales: three lessons, their steps in order", major.lessons.count == 3 && major.lessonsDone(reachedStep: 2) == 1
+                  && minor.lessons.map(\.title) == ["Up", "Down", "Up and down"])
+        }
+
         var run = simulate([(autoplay(.perfect, choruses: 3), end(3))])
         check("perfect autoplay: clean, clean, gate passed", run.verdicts.map(\.counted) == [true, true]
               && run.passed && run.verdicts.last?.clean == 2 && run.output.lastChorus == "Clean."

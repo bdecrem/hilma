@@ -18,6 +18,48 @@ final class AppModel {
     let account: AccountStore
     /// The Mac's save panel for the loop (Export MIDI, ⌘E).
     var exporting = false
+    /// The module the module screen shows (an entry code: "A1", "S").
+    var currentModule = "A1"
+    @ObservationIgnored private var loadedModules: [String: Lesson] = [:]
+
+    /// Settings → Taste. The scales come in A minor instead of C major.
+    static var preferMinor: Bool { UserDefaults.standard.bool(forKey: "preferMinor") }
+
+    /// A module's content by entry code. The scales pick their key from the taste setting.
+    func module(_ code: String) -> Lesson {
+        let file = code == "S" ? (Self.preferMinor ? "lesson-S1m" : "lesson-S1") : "lesson-\(code)"
+        if let l = loadedModules[file] { return l }
+        let l = Lesson.bundled(file)
+        loadedModules[file] = l
+        return l
+    }
+
+    /// Lessons of a module done: the record, or what the step reached says (older records).
+    func lessonsDone(_ content: Lesson) -> Int {
+        let r = progress.lesson(content.code)
+        return max(r.lessonsDone, content.lessonsDone(reachedStep: r.reachedStep))
+    }
+
+    /// The player on this module's content.
+    private func ensure(module code: String) {
+        guard let player else { return }
+        let content = module(code)
+        if player.content.code != content.code { player.switchModule(to: content) }
+    }
+
+    /// The taste changed: a loaded scales module in the other key is dropped, and the player
+    /// moves over if it was on it.
+    func tasteChanged() {
+        loadedModules = loadedModules.filter { !$0.key.hasPrefix("lesson-S1") }
+        if let player, player.content.module.code == "scales" { ensure(module: "S") }
+    }
+
+    func openModule(_ code: String) {
+        currentModule = code
+        ensure(module: code)
+        route = .module
+    }
+
     /// Where calibration goes when it is done: the lesson (first time) or Settings.
     private var afterCalibration: Route = .lessons
 
@@ -26,6 +68,7 @@ final class AppModel {
         self.progress = progress
         self.account = account
         #if DEBUG
+        if let m = UserDefaults.standard.string(forKey: "Module") { openModule(m) }
         if let r = UserDefaults.standard.string(forKey: "Route") {
             switch r {
             case "lessons": route = .lessons
@@ -72,7 +115,8 @@ final class AppModel {
     /// The lesson as it stands: a finished or fresh one starts from the top, one in progress
     /// picks up where it was.
     func open(lesson code: String) {
-        guard let player, player.content.code == code else { return }
+        ensure(module: code)
+        guard let player else { return }
         if player.finish != nil { player.restartLesson() }
         guard Player.calibrated else { return calibrate(then: .lesson) }
         route = .lesson
@@ -224,8 +268,10 @@ final class AppModel {
         route = afterQuiz
     }
 
+    /// From the top of a module (by entry code or content code: "A1", "S", "S1m").
     func restart(lesson code: String) {
-        guard let player, player.content.code == code else { return }
+        guard let player else { return }
+        if player.content.code != code { ensure(module: code) }
         player.restartLesson()
         route = .lesson
     }
@@ -244,11 +290,14 @@ final class AppModel {
         LessonEntry.earLessons.first { !earLessonDone($0.entry) }?.entry ?? LessonEntry.earLessons[0].entry
     }
 
-    /// From the module screen: lesson `n` (the next one, or one done, again) from its intro.
-    func start(lesson n: Int) {
+    /// From a module screen or card: lesson `n` of that module (the next one, or one done,
+    /// again) from its intro.
+    func start(module code: String, lesson n: Int) {
+        ensure(module: code)
         guard let player else { return }
+        currentModule = code
         player.start(lesson: n)
-        open(lesson: player.content.code)
+        open(lesson: code)
     }
 
     /// The lesson screen watches for the payoff finishing.
@@ -294,11 +343,11 @@ extension AppModel {
             guard let level = q.level else { return .quizNew }
             return q.lastDaily == ProgressStore.day() ? .quizDone(level) : .quizToday(level)
         }
-        let record = progress.lesson(entry.code)
+        let content = module(entry.code)
+        let record = progress.lesson(content.code)
         if record.completed != nil { return .done(tempo: record.bestTempo) }
-        guard let player else { return .new }
-        let done = player.lessonsDone
-        return done > 0 ? .inProgress(lesson: done + 1, of: player.content.lessons.count) : .new
+        let done = lessonsDone(content)
+        return done > 0 ? .inProgress(lesson: done + 1, of: content.lessons.count) : .new
     }
 
     func start(_ entry: LessonEntry) {
@@ -306,7 +355,7 @@ extension AppModel {
         switch entry.kind {
         case .quiz: startQuiz()
         case .game(let kind): startEarGame(kind)
-        case .lesson: route = .module
+        case .lesson: openModule(entry.code)
         case .earModule: route = .earModule
         }
     }
@@ -347,8 +396,11 @@ struct LessonEntry: Identifiable {
         (catalog[3], "Ear and form", "Find your level, then five questions a day"),
     ]
 
+    static let scales = LessonEntry(kind: .lesson, code: "S", title: "Scales", meta: "Right hand · one octave · 3 lessons",
+                                    after: nil, playable: true)
+
     /// Level 1 on the map, in order: the modules and what comes after them.
-    static let path = [catalog[0], ear,
+    static let path = [catalog[0], ear, scales,
         LessonEntry(kind: .lesson, code: "M2", title: "The Right Hand", meta: "Blues scale · call and response",
                     after: "A1", playable: false),
     ]
