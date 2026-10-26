@@ -366,28 +366,33 @@ enum LessonCheck {
             for (k, ms) in offsets { c.tap(tick: 24 + Double(k * tpb) + ms / msPerTick(90), msPerTick: msPerTick(90)) }
             return c
         }
-        let steady = calibrate((4..<12).map { ($0, -23.0) })
-        check("calibration: eight taps 23 ms early read -23, steady, propose -23", steady.taps.count == 8
+        let steady = calibrate((4..<16).map { ($0, -23.0) })
+        check("calibration: twelve taps 23 ms early read -23, steady, propose -23", steady.taps.count == 12
               && abs((steady.average ?? 0) + 23) < 0.01 && steady.steady && abs((steady.proposed ?? 0) + 23) < 0.01,
               "\(steady.average.map { String(format: "%.2f", $0) } ?? "nil")")
-        let corrected = calibrate((4..<12).map { ($0, -85.0) }, base: -75)
-        check("calibration: the needle starts from the saved correction", abs((corrected.needle ?? 0) + 10) < 0.01
-              && abs((corrected.proposed ?? 0) + 85) < 0.01, "\(String(describing: corrected.needle))")
-        let seven = calibrate((4..<11).map { ($0, -20.0) })
-        check("calibration: no average before eight taps", seven.average == nil && seven.proposed == nil && seven.needle != nil)
-        let wobbly = calibrate([(4, -40), (5, -10), (6, -20), (7, -25), (8, 30), (9, -22), (10, -18), (11, -24)])
-        check("calibration: the median, not the mean", abs((wobbly.average ?? 0) + 21) < 0.01, "\(String(describing: wobbly.average))")
-        let scattered = calibrate([(4, -60), (5, 40), (6, -10), (7, 70), (8, -50), (9, 30), (10, -80), (11, 60)])
+        let corrected = calibrate((4..<16).map { ($0, -95.0) }, base: -75)
+        check("calibration: the needle starts from the saved correction", abs((corrected.needle ?? 0) + 20) < 0.01
+              && abs((corrected.proposed ?? 0) + 95) < 0.01, "\(String(describing: corrected.needle))")
+        let eleven = calibrate((4..<15).map { ($0, -20.0) })
+        check("calibration: no average before twelve taps", eleven.average == nil && eleven.proposed == nil && eleven.needle != nil)
+        let wobbly = calibrate([(4, -40), (5, -10), (6, -20), (7, -25), (8, 30), (9, -22), (10, -18), (11, -24),
+                                (12, -90), (13, -21), (14, 60), (15, -19)])
+        check("calibration: the middle half, so wild taps don't count", abs((wobbly.average ?? 0) + 124.0 / 6) < 0.01, "\(String(describing: wobbly.average))")
+        let needle = calibrate([(4, 80), (5, -10), (6, -20), (7, 10), (8, 0)])
+        check("calibration: the needle is the mean of the last four", abs((needle.needle ?? 99) + 5) < 0.01 && needle.lastTap == 0)
+        check("calibration: a hit is within 25 ms", Calibration.hit(-25) && Calibration.hit(24) && !Calibration.hit(26))
+        let scattered = calibrate([(4, -60), (5, 40), (6, -10), (7, 70), (8, -50), (9, 30), (10, -80), (11, 60),
+                                   (12, -70), (13, 50), (14, -60), (15, 80)])
         check("calibration: scattered taps aren't steady, nothing to use", !scattered.steady && scattered.proposed == nil)
-        let loose = calibrate((4..<12).map { ($0, $0 % 2 == 0 ? -50.0 : 10.0) })
+        let loose = calibrate((4..<16).map { ($0, $0 % 2 == 0 ? -50.0 : 10.0) })
         check("calibration: a student's ±30 ms is still steady", loose.steady && loose.proposed != nil)
-        let rolling = calibrate((4..<12).map { ($0, 50.0) } + (12..<20).map { ($0, -5.0) })
-        check("calibration: the average is the last eight", abs((rolling.average ?? 0) + 5) < 0.01 && rolling.taps.count == 16)
+        let rolling = calibrate((4..<16).map { ($0, 50.0) } + (16..<28).map { ($0, -5.0) })
+        check("calibration: the average is the last twelve", abs((rolling.average ?? 0) + 5) < 0.01 && rolling.taps.count == 24)
         let listen = calibrate((0..<6).map { ($0, -20.0) })
         check("calibration: taps in the count-in don't count", listen.taps.count == 2)
         let wild = calibrate([(4, -250), (5, 10)])
         check("calibration: a tap 200+ ms off isn't a tap", wild.taps.count == 1)
-        let tooLate = calibrate((4..<12).map { ($0, 180.0) }, base: 100)
+        let tooLate = calibrate((4..<16).map { ($0, 180.0) }, base: 100)
         check("calibration: the correction stops at 150 ms", tooLate.proposed == 150)
         var twice = calibrate([(4, -5)])
         twice.tap(tick: 24 + Double(4 * tpb) + 2, msPerTick: msPerTick(90))

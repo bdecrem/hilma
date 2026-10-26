@@ -16,14 +16,18 @@ struct Calibration: Equatable {
     /// The dial's scale, either side of on time.
     static let scaleMs = 80.0
     /// The average is over this many taps, and needs them all before it is offered.
-    static let window = 8
+    static let window = 12
+    /// The needle follows the mean of this many recent taps, so one wild tap doesn't throw it.
+    static let needleTaps = 4
     /// Steady: half the window lands within this of the average (the median absolute deviation).
     /// Generous: this is for students, not drummers.
     static let steadyMs = 40.0
-    /// The dial's on-time band, either side of the middle.
-    static let onTimeMs = 20.0
-    /// A lean smaller than this is on time; Use this only offers a bigger one.
-    static let minLeanMs = 6.0
+    /// A hit: a tap (and the dial's green band) within this of the middle.
+    static let onTimeMs = 25.0
+    /// A lean smaller than this is on time; Use this only offers a bigger one. A hand's taps
+    /// scatter by 20–30 ms, so the average of twelve still wanders by about 10: below 15 a
+    /// correction would chase noise.
+    static let minLeanMs = 15.0
 
     /// Transport tick of the first click; one per beat after it.
     let firstTick: Double
@@ -61,16 +65,25 @@ struct Calibration: Equatable {
         taps.append((k, raw - base))
     }
 
-    /// Where the needle points: the last tap.
-    var needle: Double? { taps.last?.ms }
+    /// Where the needle points: the mean of the last few taps.
+    var needle: Double? {
+        let last = taps.suffix(Self.needleTaps).map(\.ms)
+        return last.isEmpty ? nil : last.reduce(0, +) / Double(last.count)
+    }
+
+    /// The last tap, and whether it was a hit.
+    var lastTap: Double? { taps.last?.ms }
+    static func hit(_ ms: Double) -> Bool { abs(ms) <= onTimeMs }
 
     var recent: [Double] { taps.suffix(Self.window).map(\.ms) }
 
-    /// The median of the recent taps, nil until there are a window's worth.
+    /// The middle half of the recent taps, averaged (the earliest and latest quarter dropped),
+    /// nil until there are a window's worth.
     var average: Double? {
-        let r = recent
+        let r = recent.sorted()
         guard r.count >= Self.window else { return nil }
-        return Self.median(r)
+        let middle = r[(r.count / 4)..<(r.count - r.count / 4)]
+        return middle.reduce(0, +) / Double(middle.count)
     }
 
     var steady: Bool {

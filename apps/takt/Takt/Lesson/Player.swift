@@ -212,8 +212,10 @@ final class Player {
         if var c = calibration {
             guard s.epoch == calibrationEpoch else { return }
             let p = clock.position(atHost: hostTime)
+            let before = c.taps.count
             c.tap(tick: p.tick, msPerTick: p.msPerTick)
             calibration = c
+            if c.taps.count > before, let t = c.taps.last { logTap(t, base: c.base) }
             return
         }
         guard inLesson else { return }
@@ -263,6 +265,22 @@ final class Player {
             audio.send(.click(tick: c.clickTick(clicksSent), velocity: clicksSent % 4 == 0 ? 1 : 0.7))
             clicksSent += 1
         }
+    }
+
+    /// Every counted tap, raw and corrected, to the log and to Documents/calibration-taps.csv, so a
+    /// real session can be read back afterwards.
+    private func logTap(_ t: (click: Int, ms: Double), base: Double) {
+        let line = String(format: "%@,%d,%.1f,%.1f,%.1f\n", ISO8601DateFormatter().string(from: Date()), t.click, t.ms + base, t.ms, base)
+        lessonLog.notice("calibration tap: \(line, privacy: .public)")
+        guard let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
+        let url = dir.appendingPathComponent("calibration-taps.csv")
+        if !FileManager.default.fileExists(atPath: url.path) {
+            try? "time,click,raw_ms,corrected_ms,base_ms\n".write(to: url, atomically: true, encoding: .utf8)
+        }
+        guard let h = try? FileHandle(forWritingTo: url) else { return }
+        h.seekToEndOfFile()
+        h.write(Data(line.utf8))
+        try? h.close()
     }
 
     /// Use this: the steady lean goes into the saved correction, and the needle starts over from it.

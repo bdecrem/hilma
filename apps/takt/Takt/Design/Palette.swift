@@ -19,6 +19,8 @@ enum Palette {
     static let muted = Color(dark: 0x9A978F, paper: 0x5E5B54)
     static let signal = Color(dark: 0xFF5A1F, paper: 0xD8430C)
     static let cue = Color(dark: 0x8FB3FF, paper: 0x2F5BD3)
+    /// A hit: the calibration dial's on-time taps.
+    static let good = Color(dark: 0x4ADE80, paper: 0x15803D)
 
     /// Black keys are ink in both themes (ground in dark, text in paper: the same #0D0D0D).
     /// White keys are `panel`.

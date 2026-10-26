@@ -123,6 +123,14 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   base + lean (clamped ±150 ms) and the taps start over from the new value. Done/Skip/Back just
   leave. DEBUG: `-Route calibrate -Calibrate 1 -CalibrateTapsEarly <ms>` taps that early (raw)
   on every click. Checks 115/115.
+  **0.1 (14), same day, after Bart tapped ~20 runs and never saw a hit:** green hits
+  (`Palette.good`, taps within ±25 ms), the needle follows the mean of the last 4 taps, the
+  average is the middle half of the last 12 (interquartile mean), and Use this needs a lean of
+  ≥ 15 ms: a hand's taps scatter 20–30 ms, so the old 8-tap median wandered ~10 ms and kept
+  offering 6 ms "corrections" that were noise. Every counted tap goes to the log (notice) and
+  to `Documents/calibration-taps.csv` in the app container
+  (`~/Library/Containers/com.bartdecrem.Takt/Data/Documents/` on the Mac): time, click, raw,
+  corrected, base. Read that before guessing again. Checks 118/118.
 
 ## Code map (`Takt/`)
 

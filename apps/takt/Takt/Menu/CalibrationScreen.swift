@@ -93,7 +93,7 @@ struct CalibrationScreen: View {
         if let saved, c.taps.count < Calibration.window { return "Saved: you play \(Calibration.words(saved)). Keep tapping." }
         guard let a = c.average else { return "Tap with the click." }
         if !c.steady { return "All over the place. Keep tapping until the marks bunch up." }
-        return abs(a) < Calibration.minLeanMs ? "Dead center. Your timing is right as it is." : "You land \(Calibration.words(a)), every time."
+        return abs(a) < Calibration.minLeanMs ? "In the green. Your correction holds." : "You land \(Calibration.words(a)), every time."
     }
 
     private func detail(_ c: Calibration?) -> String {
@@ -106,16 +106,18 @@ struct CalibrationScreen: View {
         guard c.taps.count >= Calibration.window else {
             return "\(now) \(c.taps.count) of \(Calibration.window) taps."
         }
-        if saved != nil && c.steady, let a = c.average, abs(a) < Calibration.minLeanMs { return "The needle sits in the middle now. Done when you are." }
+        let hits = c.recent.filter(Calibration.hit).count
+        let tally = "\(hits) of your last \(Calibration.window) taps in the green."
+        if c.steady, let a = c.average, abs(a) < Calibration.minLeanMs { return "\(tally) Done when you are." }
         return c.steady && abs(c.average ?? 0) >= Calibration.minLeanMs
-            ? "Use this moves the correction by \(Int(abs(c.average!).rounded())) ms, and the needle should sit in the middle after."
-            : "The average of your last \(Calibration.window) taps is the thick mark."
+            ? "\(tally) Use this moves the correction by \(Int(abs(c.average!).rounded())) ms, and more of them land in the green."
+            : "\(tally) The thick mark is your average."
     }
 }
 
 /// The dial: early on the left, late on the right, ±80 ms over 120°. The orange band is on time
-/// (±20 ms); faint marks are the last eight taps, the thick one their average, and the needle
-/// swings to the latest tap.
+/// (±25 ms); dots are the last twelve taps (green = a hit), the thick mark their average, and the
+/// needle follows the mean of the last four.
 struct Dial: View {
     let calibration: Calibration?
 
@@ -129,11 +131,12 @@ struct Dial: View {
         VStack(spacing: 6) {
             GeometryReader { g in face(g.size) }
                 .aspectRatio(2.0, contentMode: .fit)
-            Text(needle.map { Calibration.words($0) } ?? "–")
+            let last = calibration?.lastTap
+            Text(last.map { Calibration.hit($0) ? "Hit · \(Calibration.words($0))" : Calibration.words($0) } ?? "–")
                 .font(.display(34))
                 .textCase(.uppercase)
                 .monospacedDigit()
-                .foregroundStyle(needle.map { abs($0) <= Calibration.onTimeMs } ?? false ? Palette.signal : Palette.text)
+                .foregroundStyle(last.map(Calibration.hit) ?? false ? Palette.good : Palette.text)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(needle.map { "Last tap \(Calibration.words($0))" } ?? "No taps yet")
@@ -167,7 +170,7 @@ struct Dial: View {
         var zone = Path()
         zone.addArc(center: pivot, radius: r * 0.9, startAngle: .degrees(Self.angle(-Calibration.onTimeMs) - 90),
                     endAngle: .degrees(Self.angle(Calibration.onTimeMs) - 90), clockwise: false)
-        ctx.stroke(zone, with: .color(Palette.signal.opacity(0.35)), lineWidth: r * 0.09)
+        ctx.stroke(zone, with: .color(Palette.good.opacity(0.4)), lineWidth: r * 0.09)
         // The scale, every 10 ms.
         for ms in stride(from: -80.0, through: 80.0, by: 10) {
             let major = Int(ms) % 40 == 0
@@ -179,7 +182,8 @@ struct Dial: View {
         // The last eight taps.
         for ms in calibration?.recent ?? [] {
             let p = Self.point(pivot, Self.angle(ms), r)
-            ctx.fill(Path(ellipseIn: CGRect(x: p.x - 3.5, y: p.y - 3.5, width: 7, height: 7)), with: .color(Palette.muted.opacity(0.7)))
+            ctx.fill(Path(ellipseIn: CGRect(x: p.x - 4, y: p.y - 4, width: 8, height: 8)),
+                     with: .color(Calibration.hit(ms) ? Palette.good : Palette.signal.opacity(0.8)))
         }
         // Their average.
         if let a = calibration?.average {
@@ -209,7 +213,7 @@ struct Dial: View {
         let needle = calibration?.needle
         let length = r * 0.95
         return Capsule()
-            .fill(needle == nil ? Palette.muted : Palette.signal)
+            .fill(needle.map(Calibration.hit) ?? false ? Palette.good : needle == nil ? Palette.muted : Palette.signal)
             .frame(width: 4, height: length)
             .position(x: pivot.x, y: pivot.y - length / 2)
             .rotationEffect(.degrees(Self.angle(needle ?? 0)), anchor: UnitPoint(x: pivot.x / size.width, y: pivot.y / size.height))
