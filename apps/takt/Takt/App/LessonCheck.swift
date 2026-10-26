@@ -379,6 +379,8 @@ enum LessonCheck {
         check("calibration: the median, not the mean", abs((wobbly.average ?? 0) + 21) < 0.01, "\(String(describing: wobbly.average))")
         let scattered = calibrate([(4, -60), (5, 40), (6, -10), (7, 70), (8, -50), (9, 30), (10, -80), (11, 60)])
         check("calibration: scattered taps aren't steady, nothing to use", !scattered.steady && scattered.proposed == nil)
+        let loose = calibrate((4..<12).map { ($0, $0 % 2 == 0 ? -50.0 : 10.0) })
+        check("calibration: a student's ±30 ms is still steady", loose.steady && loose.proposed != nil)
         let rolling = calibrate((4..<12).map { ($0, 50.0) } + (12..<20).map { ($0, -5.0) })
         check("calibration: the average is the last eight", abs((rolling.average ?? 0) + 5) < 0.01 && rolling.taps.count == 16)
         let listen = calibrate((0..<6).map { ($0, -20.0) })

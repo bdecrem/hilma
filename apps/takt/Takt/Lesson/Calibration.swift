@@ -18,7 +18,12 @@ struct Calibration: Equatable {
     /// The average is over this many taps, and needs them all before it is offered.
     static let window = 8
     /// Steady: half the window lands within this of the average (the median absolute deviation).
-    static let steadyMs = 20.0
+    /// Generous: this is for students, not drummers.
+    static let steadyMs = 40.0
+    /// The dial's on-time band, either side of the middle.
+    static let onTimeMs = 20.0
+    /// A lean smaller than this is on time; Use this only offers a bigger one.
+    static let minLeanMs = 6.0
 
     /// Transport tick of the first click; one per beat after it.
     let firstTick: Double

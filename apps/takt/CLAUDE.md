@@ -119,7 +119,7 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   count-in, and a needle on a ±80 ms dial that swings to each tap **with the saved correction
   already applied** (Bart's call: the measured latency is the starting point, so centered = the
   correction is right). Faint marks = the last 8 taps, the thick blue mark = their median; once
-  8 taps are steady (median absolute deviation ≤ 20 ms) and lean ≥ 3 ms, Use this saves
+  8 taps are steady (median absolute deviation ≤ 40 ms) and lean ≥ 6 ms (on-time band ±20 ms; all three doubled for students the same day), Use this saves
   base + lean (clamped ±150 ms) and the taps start over from the new value. Done/Skip/Back just
   leave. DEBUG: `-Route calibrate -Calibrate 1 -CalibrateTapsEarly <ms>` taps that early (raw)
   on every click. Checks 115/115.
