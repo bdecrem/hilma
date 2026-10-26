@@ -1,4 +1,4 @@
-// Room 2, Swing: Gerrit hung every door in the fridge so their arcs overlap.
+// Room 2, Swing: Cyriel hung every door in the fridge so their arcs overlap.
 // A door turns 90° about its hinge between two positions, and the quarter
 // circle it sweeps must be clear: other doors, shelves and the milk all stop
 // it. The milk bottle slides any distance in a straight line. One move is one

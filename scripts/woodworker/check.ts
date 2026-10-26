@@ -4,13 +4,17 @@
 import { solve } from '../../src/app/woodworker/lib/engine'
 import { LEVELS } from '../../src/app/woodworker/lib/levels'
 import { rulesFor } from '../../src/app/woodworker/lib/rules'
+import { cellsOf } from '../../src/app/woodworker/lib/slide'
 
 let bad = 0
 for (const L of LEVELS) {
   const R = rulesFor(L)
   const t = Date.now()
   const path = solve(R, L.start)
-  const ok = !!path && path.length === L.par && path.length > 0
+  // Sliding pieces are only placed by hand: none may overlap another or stick out.
+  const cells = L.mech === 'slide' ? L.data.pieces.flatMap((p, i) => cellsOf(p, L.start[i])) : []
+  const placed = new Set(cells).size === cells.length && cells.every((c) => c >= 0 && c < 36)
+  const ok = placed && !!path && path.length === L.par && path.length > 0
   if (!ok) bad++
   console.log(`${ok ? 'ok  ' : 'FAIL'} ${L.id.padEnd(10)} par ${L.par}  solver ${path ? path.length : 'none'}  ${Date.now() - t} ms`)
 }

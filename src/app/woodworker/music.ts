@@ -10,8 +10,8 @@ import { audio } from './sfx'
 const BPM = 86
 const SWING = 0.63
 const BEAT = 60 / BPM
-/** Semitones from F per room: F, G, D, Bb, Eb. */
-const KEYS = [0, 2, -3, 5, -2]
+/** Semitones from F per room: F, G, D, Bb, Eb, then Ab, C, A, E, F again for the homecoming. */
+const KEYS = [0, 2, -3, 5, -2, 3, -5, 4, -1, 0]
 
 type Chord = { root: number; tones: number[] }
 const C: Record<string, Chord> = {

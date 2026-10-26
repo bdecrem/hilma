@@ -16,7 +16,7 @@ const ARROWS = [
 const LEAN = ['rotateY(5deg)', 'rotateX(-5deg)', 'rotateY(-5deg)', 'rotateX(5deg)']
 const KEYS: Record<string, number> = { ArrowRight: 0, ArrowDown: 1, ArrowLeft: 2, ArrowUp: 3 }
 
-export default function TiltBoard({ data, state, hint, won, move }: BoardProps<TiltLevel, TiltState, TiltMove>) {
+export default function TiltBoard({ skin, data, state, hint, won, move }: BoardProps<TiltLevel, TiltState, TiltMove>) {
   const [lean, setLean] = useState<number | null>(null)
   /** While an egg is going down a hole: where everything rolled to, before the room puts it back. */
   const [broken, setBroken] = useState<TiltState | null>(null)
@@ -43,7 +43,7 @@ export default function TiltBoard({ data, state, hint, won, move }: BoardProps<T
     rollSound(cells)
     if (r.eggBroke) {
       setBroken(r.state.map((c, i) => (c < 0 ? r.path[i][r.path[i].length - 1] : c)))
-      setTimeout(crack, cells * 85)
+      setTimeout(data.rollers[0].kind === 'egg' ? crack : thunk, cells * 85)
       setTimeout(() => {
         setDur(state.map(() => 0))
         setBroken(null)
@@ -64,7 +64,7 @@ export default function TiltBoard({ data, state, hint, won, move }: BoardProps<T
 
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
-      if (!(e.key in KEYS) || (e.target as HTMLElement)?.closest?.('input,textarea')) return
+      if (!(e.key in KEYS) || (e.target as HTMLElement)?.closest?.('input,textarea,.scene,.win')) return
       e.preventDefault()
       tilt(KEYS[e.key])
     }
@@ -107,7 +107,7 @@ export default function TiltBoard({ data, state, hint, won, move }: BoardProps<T
               <span key={`n${i}`} className="peg" style={{ '--x': x, '--y': y, '--r': `${(i * 47) % 60 - 30}deg` } as React.CSSProperties} />
             ))}
             {!won && <Goal round style={{ left: `calc(var(--c) * ${data.pan[0]} + 1px)`, top: `calc(var(--c) * ${data.pan[1]} + 1px)`, width: 'calc(var(--c) - 2px)', height: 'calc(var(--c) - 2px)' }} flag={data.pan[1] === 0 ? 'below' : 'top'} />}
-            <span className={`pan${won ? ' on' : ''}`} style={{ '--x': data.pan[0], '--y': data.pan[1] } as React.CSSProperties}>
+            <span className={`pan${skin === 'mug' ? ' mug' : ''}${won ? ' on' : ''}`} style={{ '--x': data.pan[0], '--y': data.pan[1] } as React.CSSProperties}>
               <span className="handle-bar" />
             </span>
             {data.rollers.map((r, i) =>

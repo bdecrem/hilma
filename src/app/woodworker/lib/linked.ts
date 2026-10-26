@@ -1,6 +1,6 @@
 // Room 4, Linked: the cutlery rack. Five trays slide left and right, each with
 // one hole drilled in it; the spoon drops through when every hole lines up over
-// the bowl. Gerrit "saved string" by tying trays together: pulling a tray drags
+// the bowl. Cyriel "saved string" by tying trays together: pulling a tray drags
 // the trays its strings lead to (the same way, or the opposite way over a
 // pulley), and they drag theirs. Strings only pull one way. A move is blocked
 // when any tray in the chain would hit its stop. One move is one tray, one notch.

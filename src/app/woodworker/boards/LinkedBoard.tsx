@@ -7,10 +7,10 @@ import { useEffect, useRef, useState } from 'react'
 import { pull, spoonDepth, type LinkedLevel, type LinkedMove, type LinkedState } from '../lib/linked'
 import { knock, thunk, unlock } from '../sfx'
 import { cellOf, grain } from './look'
-import { Goal, Mark } from './parts'
+import { Envelope, Goal, Mark } from './parts'
 import type { BoardProps } from './types'
 
-export default function LinkedBoard({ room, data, state, hint, won, move }: BoardProps<LinkedLevel, LinkedState, LinkedMove>) {
+export default function LinkedBoard({ room, skin, data, state, hint, won, move }: BoardProps<LinkedLevel, LinkedState, LinkedMove>) {
   const rack = useRef<HTMLDivElement>(null)
   const [sel, setSel] = useState(0)
   const [stuck, setStuck] = useState<{ tray: number; dir: number; n: number } | null>(null)
@@ -99,7 +99,7 @@ export default function LinkedBoard({ room, data, state, hint, won, move }: Boar
           <div className="rack-col">
           <div className="rack" ref={rack} role="group" aria-label="The cutlery rack. Drag trays left and right.">
             <div className="shaft" style={{ '--x': data.shaft } as React.CSSProperties} />
-            <span className={`spoon${won ? ' gone' : ''}`} style={{ '--x': data.shaft, '--d': depth } as React.CSSProperties} aria-hidden>
+            <span className={`spoon${skin === 'licence' ? ' licence' : ''}${won ? ' gone' : ''}`} style={{ '--x': data.shaft, '--d': depth } as React.CSSProperties} aria-hidden>
               {!won && <Mark />}
             </span>
             {data.trays.map((t, i) => {
@@ -130,15 +130,15 @@ export default function LinkedBoard({ room, data, state, hint, won, move }: Boar
               )
             })}
           </div>
-        <div className={`porridge${won ? ' on' : ''}`} style={{ '--x': data.shaft } as React.CSSProperties} aria-hidden>
+        <div className={`porridge${skin === 'licence' ? ' envelope' : ''}${won ? ' on' : ''}`} style={{ '--x': data.shaft } as React.CSSProperties} aria-hidden>
           {!won && <Goal round style={{ left: `calc(var(--c) * ${data.shaft - 0.2})`, top: '2px', width: 'calc(var(--c) * 1.4)', height: 'calc(var(--c) * .66)' }} flag="right" />}
-          <svg viewBox="0 0 60 40">
+          {skin === 'licence' ? <Envelope /> : <svg viewBox="0 0 60 40">
             <path d="M4 12 h52 a26 24 0 0 1 -52 0z" fill="#e8dcc0" />
             <ellipse cx="30" cy="12" rx="26" ry="5" fill="#f4ecd4" />
             <ellipse cx="30" cy="12" rx="22" ry="3.4" fill="#d9c79c" />
             <circle className="berry" cx="24" cy="11" r="2.2" fill="#8a2f4a" />
             <circle className="berry" cx="34" cy="12" r="2" fill="#5a2a6a" />
-          </svg>
+          </svg>}
         </div>
           </div>
         </div>

@@ -1,11 +1,11 @@
 'use client'
 // Room 2: the fridge. Tap a door and it swings on its hinge (the dashed arc
 // is the path it needs clear); drag the milk in a straight line.
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { SIZE, doorCells, milkTargets, swingBlocker, swingGrid, type SwingLevel, type SwingMove, type SwingState } from '../lib/swing'
-import { creak, knock, thunk, unlock } from '../sfx'
+import { creak, knock, thunk, unlock, yip } from '../sfx'
 import { cellOf, grain } from './look'
-import { Bowl, Dust, Goal, Mark, useBump, useDust } from './parts'
+import { Bowl, DogBowl, Dust, Goal, Mark, useBump, useDust } from './parts'
 import type { BoardProps } from './types'
 
 /** The angle of a door on each side, the second one reached by the short way round. */
@@ -14,13 +14,18 @@ function angles(d: SwingLevel['doors'][number]): [number, number] {
   return [a, a + (((d.dirs[1] - d.dirs[0] + 4) % 4) === 1 ? 90 : -90)]
 }
 
-export default function SwingBoard({ room, data, state, hint, won, move }: BoardProps<SwingLevel, SwingState, SwingMove>) {
+export default function SwingBoard({ room, skin, item, data, state, hint, won, move }: BoardProps<SwingLevel, SwingState, SwingMove>) {
   const board = useRef<HTMLDivElement>(null)
   const [bumped, bump] = useBump()
   const [blame, setBlame] = useState<number | null>(null)
   const [dust, puff] = useDust()
   const drag = useRef<{ x: number; y: number; c: number; axis: 'x' | 'y' | null; lo: number; hi: number; off: number } | null>(null)
   const [off, setOff] = useState<{ axis: 'x' | 'y'; px: number } | null>(null)
+  useEffect(() => {
+    if (!won || skin !== 'treats') return
+    const t = setTimeout(yip, 1300)
+    return () => clearTimeout(t)
+  }, [won, skin])
   const mx = state.milk % SIZE, my = Math.floor(state.milk / SIZE)
 
   const swing = (i: number) => {
@@ -144,7 +149,7 @@ export default function SwingBoard({ room, data, state, hint, won, move }: Board
           })}
           <button
             type="button"
-            className={`milk${off ? ' dragging' : ''}${bumped === -3 || blame === -3 ? ' wobble blame' : ''}`}
+            className={`milk${skin ? ` ${skin}` : ''}${off ? ' dragging' : ''}${bumped === -3 || blame === -3 ? ' wobble blame' : ''}`}
             style={{
               '--x': mx,
               '--y': my,
@@ -152,7 +157,7 @@ export default function SwingBoard({ room, data, state, hint, won, move }: Board
               opacity: leaving ? 0 : undefined,
               transition: leaving ? 'transform .7s cubic-bezier(.5,0,.7,1), opacity .5s .35s' : undefined,
             } as React.CSSProperties}
-            aria-label="The milk. Drag it, or use the arrow keys."
+            aria-label={`The ${item.toLowerCase()}. Drag it, or use the arrow keys.`}
             onPointerDown={down}
             onPointerMove={moveP}
             onPointerUp={up}
@@ -160,7 +165,7 @@ export default function SwingBoard({ room, data, state, hint, won, move }: Board
             onKeyDown={milkKey}
           >
             <span className="cap" />
-            <span className="lbl">Milk</span>
+            <span className="lbl">{item}</span>
             {!won && <Mark />}
           </button>
           {milkHint !== null && (
@@ -169,8 +174,8 @@ export default function SwingBoard({ room, data, state, hint, won, move }: Board
           <Dust dust={dust} />
         </div>
       </div>
-      <div className={`dest bowl${won ? ' on' : ''}`} style={{ top: `calc(var(--f) + var(--c) * ${data.exit[1] - 1})` }} aria-hidden>
-        <Bowl />
+      <div className={`dest ${skin === 'treats' ? 'dogbowl' : 'bowl'}${won ? ' on' : ''}`} style={{ top: `calc(var(--f) + var(--c) * ${data.exit[1] - 1})` }} aria-hidden>
+        {skin === 'treats' ? <DogBowl /> : <Bowl />}
       </div>
     </div>
   )

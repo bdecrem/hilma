@@ -1,4 +1,4 @@
-// Room 3, Tilt: the breakfast counter isn't level, and Gerrit's fix was to
+// Room 3, Tilt: the breakfast counter isn't level, and Cyriel's fix was to
 // make it tip. One move is one tilt; everything loose rolls until it hits the
 // rim, a nail, or something else. A knot hole swallows whatever rolls over it,
 // and an egg that goes down one breaks. The egg is done when it rolls into the pan.
@@ -11,8 +11,8 @@ export interface TiltLevel {
   nails: [number, number][]
   holes: [number, number][]
   pan: [number, number]
-  /** Roller 0 is the egg. */
-  rollers: { kind: 'egg' | 'onion' | 'jar'; label: string }[]
+  /** Roller 0 is the egg (or the lemon): it must not go down a hole. */
+  rollers: { kind: 'egg' | 'onion' | 'jar' | 'lemon' | 'honey' | 'drops'; label: string }[]
 }
 /** Cell index per roller, -1 once it went down a hole. */
 export type TiltState = number[]

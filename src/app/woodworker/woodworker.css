@@ -1,4 +1,4 @@
-/* The Woodworker. One centered column: title, rooms, Gerrit's pinned note,
+/* The Woodworker. One centered column: title, rooms, Cyriel's pinned note,
    the stats, the room itself, a row of controls. The look is the original
    prototype's: a green-tiled kitchen wall at dawn, woodwork in six offcuts. */
 .ww {
@@ -321,3 +321,124 @@
 .ww .spoon .ring { inset: -5px -7px; }
 .ww .spoon .caret { bottom: calc(100% + 4px); }
 .ww .piece.target { z-index: 4; }
+
+/* ---------- Chapter two: the rooms in two rows, one per chapter ---------- */
+.ww .levels { display: grid; gap: 10px; justify-items: center; }
+.ww .chapter-row { display: grid; gap: 6px; justify-items: center; }
+.ww .chapter-row .ch { font: 600 10px/1 var(--f-mono); letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+.ww .lvls { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+
+/* Cyriel's face by every note: tap it to see the story again. */
+.ww .note .badge { position: absolute; left: -16px; bottom: -16px; width: 48px; height: 48px; padding: 0; border-radius: 50%; overflow: hidden; cursor: pointer; background: #f7e2c4; border: 2.5px solid var(--paper-ink); box-shadow: 0 4px 8px rgba(0, 0, 0, .35); transform: rotate(6deg); transition: transform .15s; }
+.ww .note .badge:hover { transform: rotate(-4deg) scale(1.06); }
+.ww .cyriel-art { display: block; width: 100%; height: 100%; object-fit: contain; }
+
+/* When Cyriel is away, the note comes some other way. */
+.ww .note.postcard { background: #fbf3e0; background-image: none; transform: rotate(1.4deg); border: 7px solid; border-image: repeating-linear-gradient(45deg, #c8323c 0 9px, #fbf3e0 9px 15px, #3f6fb0 15px 24px, #fbf3e0 24px 30px) 7; padding-top: 14px; }
+.ww .note.postcard p { padding-right: 52px; }
+.ww .note .stamp { position: absolute; top: 10px; right: 12px; width: 40px; height: 48px; background: linear-gradient(180deg, #f7b38a 0 55%, #e8795a 55%); outline: 3px dotted #fbf3e0; outline-offset: -2px; box-shadow: 0 0 0 1px rgba(60, 30, 10, .25); overflow: hidden; }
+.ww .note .stamp::before { content: ''; position: absolute; left: 4px; right: 4px; bottom: 6px; height: 26px; background: #3f6fb0; clip-path: polygon(50% 0, 64% 22%, 100% 100%, 0 100%, 36% 22%); }
+.ww .note .stamp::after { content: ''; position: absolute; left: 13px; right: 13px; top: 15px; height: 7px; background: #fbf3e0; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.ww .note.postcard::after { content: ''; position: absolute; top: 18px; right: 34px; width: 40px; height: 40px; border-radius: 50%; border: 2px solid rgba(60, 40, 30, .35); background: repeating-linear-gradient(0deg, transparent 0 6px, rgba(60, 40, 30, .25) 6px 7.5px); pointer-events: none; }
+.ww .note.texts { background: #f4f2ec; background-image: none; transform: rotate(-.6deg); border: 7px solid #1b1b1d; border-radius: 22px; font: 400 15px/1.3 var(--f-body); padding: 14px 14px 12px; }
+.ww .note.texts::before { display: none; }
+.ww .note .bubbles { display: grid; gap: 6px; justify-items: start; }
+.ww .note .bubbles p { background: #e1ddd2; border-radius: 16px 16px 16px 5px; padding: 7px 12px; max-width: 88%; }
+.ww .note .bubbles p:first-child { font-weight: 800; letter-spacing: .04em; background: #e8795a; color: #fff8ee; }
+.ww .note.texts .sig, .ww .note.voicemail .sig { font: 500 11px/1 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; opacity: .6; margin-top: 8px; }
+.ww .note.tissue { background: #fdfdf9; background-image: radial-gradient(60% 40% at 30% 30%, rgba(0, 0, 0, .035), transparent 70%), radial-gradient(50% 50% at 75% 70%, rgba(0, 0, 0, .04), transparent 70%), radial-gradient(40% 30% at 60% 20%, rgba(255, 255, 255, .9), transparent 70%); border-radius: 14px 34px 20px 28px / 28px 16px 32px 14px; transform: rotate(1.8deg); box-shadow: 0 8px 14px rgba(0, 0, 0, .22); }
+.ww .note.tissue::before { top: -9px; width: 64px; height: 20px; margin-left: -32px; border-radius: 2px; background: rgba(255, 250, 220, .7); box-shadow: 0 1px 2px rgba(0, 0, 0, .15); transform: rotate(-5deg); }
+.ww .note.voicemail { background: #1b1b1d; background-image: none; color: var(--ink); border-radius: 18px; transform: rotate(-.8deg); font: 400 15px/1.4 var(--f-body); padding: 14px 18px 12px; box-shadow: 0 0 0 2px #3a3a3f, 0 10px 18px rgba(0, 0, 0, .35); }
+.ww .note.voicemail::before { display: none; }
+.ww .note.voicemail p::before { content: '“'; }
+.ww .note.voicemail p::after { content: '”'; }
+.ww .note .wave { display: flex; gap: 2px; height: 22px; align-items: center; margin-bottom: 8px; }
+.ww .note .wave i { flex: 1; height: var(--h); background: var(--brass); border-radius: 2px; opacity: .85; }
+
+/* What Cyriel says on picking up. */
+.ww .call { position: absolute; bottom: calc(100% + 10px); left: 50%; translate: -50% 0; z-index: 25; display: flex; gap: 8px; align-items: center; width: max-content; max-width: min(calc(100vw - 32px), 380px); background: var(--paper); color: var(--paper-ink); font: 700 19px/1.1 var(--f-hand); padding: 8px 14px 9px; border-radius: 16px; box-shadow: 0 0 0 2px var(--paper-ink), 0 8px 16px rgba(0, 0, 0, .35); animation: ww-pop .25s ease-out; }
+.ww .call::after { content: ''; position: absolute; left: 50%; top: 100%; width: 14px; height: 10px; margin-left: -7px; background: var(--paper); clip-path: polygon(0 0, 100% 0, 50% 100%); }
+.ww .call svg { width: 18px; height: 18px; flex: none; fill: var(--brass-dk); }
+.ww .btn.ringing svg { animation: ww-ring .09s linear infinite alternate; }
+@keyframes ww-ring { from { rotate: -14deg; } to { rotate: 14deg; } }
+@keyframes ww-pop { from { opacity: 0; transform: scale(.9) translateY(6px); } }
+
+/* ---------- Story scenes ---------- */
+.ww .scene { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(12, 26, 22, .74); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); animation: ww-fade .25s; }
+@keyframes ww-fade { from { opacity: 0; } }
+.ww .scene-card { background: var(--paper); color: var(--paper-ink); width: 100%; max-width: 340px; padding: 16px 20px 16px; border-radius: 4px; text-align: center; transform: rotate(-1deg); box-shadow: 0 18px 34px rgba(0, 0, 0, .45); animation: ww-pop .3s ease-out; }
+.ww .scene-card .chapter { font: 600 11px/1 var(--f-mono); letter-spacing: .16em; text-transform: uppercase; color: var(--brass-dk); }
+.ww .scene-card .chapter.quiet { color: rgba(59, 43, 28, .5); }
+.ww .scene-art { height: 250px; margin: 6px auto 0; }
+.ww .scene-art .cyriel-art { animation: ww-hop .5s ease-out; }
+@keyframes ww-hop { 40% { transform: translateY(-6px); } }
+.ww .scene-card .say { font: 700 23px/1.12 var(--f-hand); margin: 6px 0 14px; text-wrap: balance; min-height: 2.24em; }
+.ww .scene-card .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.ww .scene-card button { font: 700 14px/1 var(--f-body); border-radius: 999px; padding: 10px 18px; cursor: pointer; border: 1.5px solid var(--paper-ink); background: var(--paper-ink); color: var(--paper); }
+.ww .scene-card button.skip { background: transparent; color: var(--paper-ink); border-color: transparent; opacity: .6; padding: 10px 6px; }
+.ww .scene-card .dots { display: flex; gap: 5px; }
+.ww .scene-card .dots i { width: 7px; height: 7px; border-radius: 50%; background: rgba(59, 43, 28, .22); }
+.ww .scene-card .dots i.at { background: var(--paper-ink); }
+
+/* ---------- Chapter two's items and where they go ---------- */
+/* The watering can, out of the hall cupboard, for the ferns. */
+.ww .piece.target.can { border-radius: 10px 10px 14px 14px; --lbl: #f4fff8; background: linear-gradient(180deg, #9cc4b4 0%, #6f9a8a 35%, #4f7a6c 85%, #3c5f53 100%); }
+.ww .piece.target.can::before { right: -10%; left: auto; top: 6%; bottom: auto; width: 32%; height: 16%; border-radius: 4px 999px 999px 4px; background: #4f7a6c; rotate: -28deg; transform-origin: 0 50%; box-shadow: inset 0 2px 0 rgba(255, 255, 255, .25); }
+.ww .piece.target.can::after { content: ''; position: absolute; left: 16%; top: -14%; width: 34%; height: 30%; border: 4px solid #4f7a6c; border-bottom: 0; border-radius: 999px 999px 0 0; }
+.ww .dest.fern .frond { transform-origin: 30px 124px; transform: rotate(var(--droop)); fill: #9aa04a; transition: transform 1.3s .9s cubic-bezier(.3, 1.5, .5, 1), fill 1s .9s; }
+.ww .dest.fern.on .frond { transform: rotate(0deg); fill: #5f9a3a; }
+.ww .dest.fern .drops circle { fill: #9fd0ff; opacity: 0; }
+.ww .dest.fern.on .drops circle { animation: ww-drip .7s .45s ease-in 2; }
+.ww .dest.fern.on .drops circle:nth-child(2) { animation-delay: .6s; }
+.ww .dest.fern.on .drops circle:nth-child(3) { animation-delay: .75s; }
+@keyframes ww-drip { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(36px); } }
+
+/* Krul's treats, out of the boot cupboard, for his bowl. */
+.ww .milk.treats { border-radius: 6px; background: linear-gradient(90deg, #f0b84e, #e0a64a 50%, #b97f2a); }
+.ww .milk.treats .cap { left: 12%; right: 12%; top: -4%; height: 18%; border-radius: 3px 3px 0 0; background: linear-gradient(180deg, #e8595a, #b8323c); }
+.ww .milk.treats .lbl { color: #4a2a0a; }
+.ww .milk.treats::after { content: ''; position: absolute; left: 50%; bottom: 14%; width: 26%; aspect-ratio: 1; translate: -50% 0; border-radius: 50% 50% 45% 45%; background: #7a4a20; box-shadow: -7px -7px 0 -3px #7a4a20, 7px -7px 0 -3px #7a4a20; opacity: .8; }
+.ww .dest.dogbowl .pup { transform: translateX(80px); opacity: 0; transition: transform .8s 1.2s cubic-bezier(.3, 1.3, .5, 1), opacity .2s 1.2s; }
+.ww .dest.dogbowl.on .pup { transform: translateX(0); opacity: 1; }
+.ww .dest.dogbowl.on .pup .krul { animation: ww-wag .25s 2s ease-in-out infinite alternate; }
+@keyframes ww-wag { to { translate: 0 -2px; } }
+.ww .dest.dogbowl .kibble { opacity: 0; transition: opacity .3s .8s; }
+.ww .dest.dogbowl.on .kibble { opacity: 1; }
+
+/* The bed tray: a lemon for the mug, honey, cough drops. */
+.ww .roller.lemon::before { inset: 20% 14%; border-radius: 50%; background: radial-gradient(circle at 36% 32%, #fffbc0, #f6d93a 55%, #c9a514); box-shadow: 0 4px 5px rgba(60, 45, 0, .4); }
+.ww .roller.lemon::after { content: ''; position: absolute; right: 9%; top: 44%; width: 9%; height: 12%; border-radius: 50%; background: #c9a514; }
+.ww .roller.lemon.fried::before { animation: ww-slice .6s .3s forwards; }
+@keyframes ww-slice { to { inset: 28%; background: repeating-conic-gradient(#fff7b0 0 34deg, #e6c42a 34deg 40deg); box-shadow: 0 0 0 3px #f2d23a; } }
+.ww .roller.honey::before { inset: 14% 20%; border-radius: 26% 26% 18% 18%; background: linear-gradient(90deg, rgba(255, 255, 255, .4), transparent 30%), linear-gradient(180deg, #f2b846, #c27a14); box-shadow: 0 4px 5px rgba(60, 30, 0, .4); }
+.ww .roller.honey::after { content: ''; position: absolute; left: 18%; right: 18%; top: 10%; height: 16%; border-radius: 4px; background: linear-gradient(180deg, #a8773d, #64402a); }
+.ww .roller.drops::before { inset: 16%; border-radius: 50%; background: radial-gradient(circle at 50% 50%, #c8323c 0 34%, #e6e8ea 36% 60%, #9ea2a6 70%, #e6e8ea 76%, #7b7f84 100%); box-shadow: 0 4px 5px rgba(0, 0, 0, .4); }
+.ww .pan.mug::before { inset: 10%; background: radial-gradient(circle at 50% 50%, #9a5a26 0 52%, #6a3a16 56%, #f4f1ea 58% 76%, #c9c2b2 82%, #f4f1ea 90%); box-shadow: 0 4px 6px rgba(0, 0, 0, .35); }
+.ww .pan.mug .handle-bar { left: 80%; top: 36%; width: 26%; height: 28%; border-radius: 0 50% 50% 0; background: transparent; border: 5px solid #f4f1ea; border-left: 0; }
+.ww .pan.mug.on::after { animation: ww-steamglow .8s ease-out infinite alternate; }
+@keyframes ww-steamglow { from { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); } to { box-shadow: 0 0 22px 6px rgba(255, 250, 235, .55); } }
+
+/* Cyriel's driving licence, through the desk drawers, into the envelope. */
+.ww .spoon.licence { width: calc(var(--c) * .36); height: calc(var(--c) * .56); border-radius: 3px; top: calc(var(--c) * (var(--d) + .8) - var(--c) * .6); }
+.ww .spoon.licence::before { inset: 0; height: auto; border-radius: 3px; background: linear-gradient(180deg, #d4e6f6, #8fb6dc); box-shadow: 0 2px 3px rgba(0, 0, 0, .5); }
+.ww .spoon.licence::after { left: 16%; right: 16%; top: 14%; bottom: auto; height: 36%; border-radius: 2px; background: #f2c9a0; box-shadow: 0 calc(var(--c) * .26) 0 -1px #5a7ea6; }
+.ww .spoon.licence.gone { top: calc(var(--c) * (var(--rows) + 1.3)); }
+.ww .porridge.envelope .card-in { opacity: 0; transform: translateY(-16px); transition: opacity .2s .6s, transform .5s .6s ease-in; }
+.ww .porridge.envelope.on .card-in { opacity: 1; transform: translateY(6px); }
+.ww .porridge.envelope .flap { transform-box: view-box; transform-origin: 30px 9px; transition: transform .45s 1.2s ease-in-out; }
+.ww .porridge.envelope.on .flap { transform: scaleY(-1); }
+.ww .porridge.envelope .seal { transform-box: fill-box; transform-origin: center; transform: scale(0); transition: transform .3s 1.6s cubic-bezier(.3, 1.6, .5, 1); }
+.ww .porridge.envelope.on .seal { transform: scale(1); }
+
+/* The present: Krul, carved in walnut, in a bed of shavings. */
+.ww .inside.carving svg { width: 100%; height: 100%; overflow: visible; }
+.ww .inside.carving .krul [fill='#e4c58f'] { fill: #9a643a; }
+.ww .inside.carving .krul [fill='#b98844'] { fill: #6a4024; }
+.ww .inside.carving .shaving { fill: none; stroke: #e4c58f; stroke-width: 3; stroke-linecap: round; }
+.ww .milk.treats .lbl { font-size: clamp(7px, calc(var(--c) * .15), 10px); letter-spacing: 0; padding: 0 2px; top: 22%; }
+
+/* Cyriel: the drawing, with each pose's props on a layer of the same size over it. */
+.ww .cyriel-art { display: block; position: relative; width: 100%; height: 100%; }
+.ww img.cyriel-art { object-fit: cover; }
+.ww .cyriel-art img, .ww .cyriel-art svg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; overflow: visible; }
+.ww .cyriel-art.pose-chase { transform: rotate(5deg); }

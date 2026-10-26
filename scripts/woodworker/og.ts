@@ -1,5 +1,5 @@
-// Builds public/woodworker/og.png (1200×630): the title and two rooms, shot
-// from the live page and set on the tiled kitchen wall.
+// Builds public/woodworker/og.png (1200×630): the title, Cyriel, and two rooms
+// shot from the live page, set on the tiled kitchen wall.
 //   npx tsx scripts/woodworker/og.ts [base=http://localhost:3255]
 import { chromium } from 'playwright'
 
@@ -10,6 +10,8 @@ async function main() {
   const page = await browser.newPage({ viewport: { width: 1200, height: 630 }, deviceScaleFactor: 1 })
   await page.goto(`${base}/woodworker`)
   await page.waitForSelector('.note')
+  await page.waitForTimeout(500)
+  while (await page.locator('.scene').count()) await page.locator('.scene .skip').click()
   // Transparent wall while shooting the rooms, so the rotated cut-outs carry no background.
   const clear = await page.addStyleTag({ content: 'html, body, .ww { background: transparent !important; }' })
   const shot = async (room: number) => {
@@ -31,10 +33,10 @@ async function main() {
       const h1 = header.querySelector('h1') as HTMLElement
       h1.style.cssText = 'font-size:68px;white-space:nowrap'
       const kick = header.querySelector('.kicker') as HTMLElement
-      kick.textContent = 'A house puzzle in five rooms'
+      kick.textContent = 'A house puzzle in ten rooms'
       kick.style.fontSize = '15px'
       const sub = document.createElement('p')
-      sub.textContent = 'Gerrit the carpenter rebuilt everything. Slide it, swing it, tip it, pull it, crack it.'
+      sub.textContent = 'Cyriel the carpenter rebuilt everything. Then left for the week.'
       sub.style.cssText = 'font-family:var(--f-hand);font-size:30px;line-height:1.1;color:var(--paper);margin:14px 0 0;transform:rotate(-1.5deg)'
       header.append(sub)
       const pics = document.createElement('div')
@@ -48,11 +50,16 @@ async function main() {
         img.style.cssText = css
         pics.append(img)
       }
+      // Cyriel stands in front of the rooms, bottom left (the drawing has room either side of the figure).
+      const me = document.createElement('img')
+      me.src = '/woodworker/cyriel/cyriel.svg'
+      me.style.cssText = 'position:absolute;left:-20px;bottom:-30px;height:540px;filter:drop-shadow(0 14px 18px rgba(0,0,0,.4))'
+      pics.append(me)
       wrap.append(pics)
     },
     [fridge, espresso],
   )
-  await page.waitForTimeout(400)
+  await page.waitForTimeout(800)
   await page.screenshot({ path: 'public/woodworker/og.png', animations: 'disabled' })
   await browser.close()
   console.log('wrote public/woodworker/og.png')

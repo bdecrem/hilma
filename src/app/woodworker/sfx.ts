@@ -62,3 +62,9 @@ export const roll = (cells: number) => {
 }
 export const crack = () => (noise(0.08, 2600, 0.7), noise(0.2, 900, 0.4, 0.06), tone(300, 120, 0.15, 0.2, 'triangle'))
 export const chime = () => [660, 880, 1046].forEach((f, k) => tone(f, f * 0.995, 0.5, 0.12, 'triangle', k * 0.12))
+/** Cyriel's phone, ringing out twice. */
+export const ring = () => {
+  for (let k = 0; k < 2; k++) for (let j = 0; j < 10; j++) tone(j % 2 ? 1180 : 1320, j % 2 ? 1180 : 1320, 0.035, 0.035, 'triangle', k * 0.5 + j * 0.035)
+}
+/** Krul, delighted. */
+export const yip = () => (tone(820, 1500, 0.09, 0.1, 'triangle'), tone(900, 1700, 0.08, 0.08, 'triangle', 0.16))

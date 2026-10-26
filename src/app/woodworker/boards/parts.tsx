@@ -2,6 +2,7 @@
 // Pieces of the set shared by the rooms: sawdust, the bump wobble, the
 // appliances at the exits, the hammers on the win card.
 import { useCallback, useRef, useState } from 'react'
+import { Krul } from './Cyriel'
 
 /** Which piece is wobbling right now (a refused move), and the trigger. */
 export function useBump(): [number | null, (i: number) => void] {
@@ -101,6 +102,78 @@ export function Bowl() {
       </defs>
       <path d="M14 140 q16 6 32 0" stroke="#f2e9d6" strokeWidth="2" fill="none" opacity=".6" />
       <rect x="20" y="148" width="20" height="4" rx="2" fill="#2c4f80" />
+    </svg>
+  )
+}
+
+/** One fern frond: leaflets along a curve from the pot, drooping until watered. */
+function Frond({ to, c, droop }: { to: [number, number]; c: [number, number]; droop: number }) {
+  const leaves = Array.from({ length: 7 }, (_, k) => {
+    const t = (k + 1) / 8, u = 1 - t
+    const x = u * u * 30 + 2 * u * t * c[0] + t * t * to[0], y = u * u * 124 + 2 * u * t * c[1] + t * t * to[1]
+    const s = 1 - t * 0.55
+    return <ellipse key={k} cx={x} cy={y} rx={7 * s} ry={2.6 * s} transform={`rotate(${k % 2 ? 35 : -35} ${x} ${y})`} />
+  })
+  return (
+    <g className="frond" style={{ '--droop': `${droop}deg` } as React.CSSProperties}>
+      <path d={`M30 124Q${c[0]} ${c[1]} ${to[0]} ${to[1]}`} fill="none" stroke="#3f6a2a" strokeWidth="2" />
+      {leaves}
+    </g>
+  )
+}
+
+/** Cyriel's ferns, wilting by the hall cupboard. */
+export function Fern() {
+  return (
+    <svg viewBox="0 0 60 180">
+      <g className="drops">
+        <circle cx="12" cy="84" r="2.2" />
+        <circle cx="20" cy="76" r="1.8" />
+        <circle cx="9" cy="70" r="1.6" />
+      </g>
+      <g className="leaves">
+        <Frond to={[-2, 78]} c={[6, 104]} droop={-28} />
+        <Frond to={[62, 74]} c={[54, 100]} droop={26} />
+        <Frond to={[22, 52]} c={[18, 86]} droop={-16} />
+        <Frond to={[44, 56]} c={[44, 88]} droop={18} />
+      </g>
+      <path d="M12 124h36l-5 34H17z" fill="#b9633f" />
+      <path d="M12 124h36l-5 34H17z" fill="url(#ww-bowl)" opacity=".7" />
+      <rect x="9" y="120" width="42" height="8" rx="2" fill="#cf7a52" />
+      <rect x="14" y="160" width="32" height="4" rx="2" fill="#7d3b20" />
+    </svg>
+  )
+}
+
+/** Krul's bowl, by the back door; Krul comes running when the treats land. */
+export function DogBowl() {
+  return (
+    <svg viewBox="0 0 60 180">
+      <g className="pup">
+        <Krul x={28} y={130} s={0.85} run />
+      </g>
+      <g className="kibble">
+        <circle cx="22" cy="144" r="2.6" fill="#8a5a2a" />
+        <circle cx="29" cy="142" r="2.8" fill="#a8703a" />
+        <circle cx="36" cy="144" r="2.6" fill="#7a4a20" />
+      </g>
+      <path d="M8 146h44l-5 14H13z" fill="#c8323c" />
+      <path d="M8 146h44l-5 14H13z" fill="url(#ww-bowl)" />
+      <rect x="6" y="143" width="48" height="5" rx="2.5" fill="#e04a50" />
+      <text x="30" y="157" textAnchor="middle" fontSize="7" fontWeight="700" fill="#fff6e6" letterSpacing=".08em">KRUL</text>
+    </svg>
+  )
+}
+
+/** The courier's envelope, under the desk. */
+export function Envelope() {
+  return (
+    <svg viewBox="0 0 60 40">
+      <rect x="5" y="9" width="50" height="28" rx="2" fill="#e8dcc0" />
+      <path d="M5 37l20-14M55 37 35 23" stroke="#c6b48e" strokeWidth="1.5" />
+      <rect className="card-in" x="20" y="6" width="20" height="13" rx="1.5" fill="#bcd7f0" />
+      <path className="flap" d="M5 9h50L30 -8z" fill="#f4ecd4" stroke="#c6b48e" strokeWidth="1" />
+      <circle className="seal" cx="30" cy="22" r="4" fill="#c8323c" />
     </svg>
   )
 }

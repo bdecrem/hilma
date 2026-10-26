@@ -1,4 +1,5 @@
-// Screenshots the start of every room at a phone width (and a desktop width).
+// Screenshots the start of every room at a phone width (and a desktop width),
+// and every panel of the story scenes on the way.
 //   npx tsx scripts/woodworker/pw-shots.ts <out-dir> [base=http://localhost:3255] [width=390]
 import { chromium } from 'playwright'
 import { mkdirSync } from 'node:fs'
@@ -13,8 +14,13 @@ async function main() {
   await page.goto(`${base}/woodworker`)
   await page.waitForSelector('.note')
   for (let i = 0; i < LEVELS.length; i++) {
-    await page.locator('.lvl').nth(i).click()
+    if (i > 0) await page.locator('.lvl').nth(i).click()
     await page.waitForTimeout(400)
+    for (let k = 1; await page.locator('.scene').count(); k++) {
+      await page.screenshot({ path: `${out}/${i + 1}-${LEVELS[i].id}-scene${k}.png` })
+      await page.locator('.scene .primary').click()
+      await page.waitForTimeout(350)
+    }
     const stage = page.locator('.stage-wrap')
     await stage.scrollIntoViewIfNeeded()
     await page.screenshot({ path: `${out}/${i + 1}-${LEVELS[i].id}.png`, fullPage: true })

@@ -1,4 +1,4 @@
-// Gerrit's offcuts: the woods every room is built from, and a seeded hand so
+// Cyriel's offcuts: the woods every room is built from, and a seeded hand so
 // each piece keeps its knots, crooked handle and bent nail between visits.
 import type { CSSProperties } from 'react'
 

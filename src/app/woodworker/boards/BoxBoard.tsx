@@ -8,6 +8,7 @@ import { STOPS, boxBlocker, type BoxLevel, type BoxMove, type BoxState } from '.
 import { click, thunk, unlock } from '../sfx'
 import { grain } from './look'
 import { Mark, useBump } from './parts'
+import { Krul } from './Cyriel'
 import type { BoardProps } from './types'
 
 /** Each panel's slot axis and which way +1 goes on screen. */
@@ -20,7 +21,7 @@ const AXIS: { axis: 'x' | 'y'; sign: number; cls: string }[] = [
 ]
 const KEYS: Record<string, ['x' | 'y', number]> = { ArrowLeft: ['x', -1], ArrowRight: ['x', 1], ArrowUp: ['y', -1], ArrowDown: ['y', 1] }
 
-export default function BoxBoard({ room, data, state, hint, won, move }: BoardProps<BoxLevel, BoxState, BoxMove>) {
+export default function BoxBoard({ room, skin, data, state, hint, won, move }: BoardProps<BoxLevel, BoxState, BoxMove>) {
   const [bumped, bump] = useBump()
   const [glow, setGlow] = useState<number | null>(null)
   const drag = useRef<{ panel: number; x: number; y: number; done: number } | null>(null)
@@ -72,10 +73,17 @@ export default function BoxBoard({ room, data, state, hint, won, move }: BoardPr
   return (
     <div className="stage box-stage">
       <div className={`tin${won ? ' open' : ''}`} role="group" aria-label="The biscuit tin, unfolded: the lid in the middle, the four sides around it.">
-        <div className="inside" aria-hidden>
-          {Array.from({ length: 7 }, (_, i) => (
-            <span key={i} className="biscuit" style={{ '--i': i } as React.CSSProperties} />
-          ))}
+        <div className={`inside${skin === 'present' ? ' carving' : ''}`} aria-hidden>
+          {skin === 'present' ? (
+            <svg viewBox="-40 -40 80 80">
+              {[[-28, 22, 20], [24, 26, -30], [-24, -24, 60], [26, -22, 140]].map(([x, y, r], k) => (
+                <path key={k} className="shaving" d="M0 0c6-6 14-2 10 4-3 4-9 2-7-2" transform={`translate(${x} ${y}) rotate(${r})`} />
+              ))}
+              <Krul x={-6} y={8} s={1.25} />
+            </svg>
+          ) : (
+            Array.from({ length: 7 }, (_, i) => <span key={i} className="biscuit" style={{ '--i': i } as React.CSSProperties} />)
+          )}
         </div>
         {AXIS.map((a, i) => {
           const g = grain(room, i + 4)

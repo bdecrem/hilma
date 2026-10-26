@@ -1,4 +1,4 @@
-// Room 5, Puzzle box: Gerrit took up himitsu-bako, so the biscuit tin is now a
+// Room 5, Puzzle box: Cyriel took up himitsu-bako, so the biscuit tin is now a
 // secret box. Five panels (the lid and four sides) each slide a notch at a
 // time between three stops. Hidden pins: a panel crosses from one stop to the
 // next only while one other panel sits where its pin is clear. The lid comes

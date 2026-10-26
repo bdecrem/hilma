@@ -1,5 +1,6 @@
-// Plays all five rooms through the real UI (drags, taps, tilts), following
+// Plays all ten rooms through the real UI (drags, taps, tilts), following
 // the solver's shortest solution, and checks each ends on the win card at par.
+// Story scenes are clicked through on the way, and the ending must play last.
 // Screenshots of every room before and after go to the out dir.
 //   npx tsx scripts/woodworker/pw-play.ts <out-dir> [base=http://localhost:3255] [width=420]
 import { chromium, type Page } from 'playwright'
@@ -24,6 +25,17 @@ async function center(page: Page, sel: string, n = 0) {
   return { x: b.x + b.width / 2, y: b.y + b.height / 2, b }
 }
 
+/** Click through any story scene that is up; returns how many panels it had. */
+async function scenes(page: Page) {
+  let n = 0
+  while (await page.locator('.scene').count()) {
+    await page.locator('.scene .primary').click()
+    await page.waitForTimeout(250)
+    n++
+  }
+  return n
+}
+
 async function main() {
   const browser = await chromium.launch()
   const page = await browser.newPage({ viewport: { width: Number(width), height: 1100 }, deviceScaleFactor: 2 })
@@ -33,11 +45,14 @@ async function main() {
   await page.goto(`${base}/woodworker`)
   await page.waitForSelector('.note')
   let bad = 0
+  await page.waitForTimeout(500)
 
   for (let li = 0; li < LEVELS.length; li++) {
     const L = LEVELS[li]
     const R = rulesFor(L)
     await page.waitForTimeout(300)
+    const panels = await scenes(page)
+    if (panels) console.log(`     ${L.id}: story scene, ${panels} panel(s)`)
     await page.screenshot({ path: `${out}/${li + 1}-${L.id}-start.png`, fullPage: true })
     const path = solve(R, L.start)!
     let s: unknown = L.start
@@ -86,16 +101,26 @@ async function main() {
         break
       }
     }
-    await page.waitForTimeout(2300)
+    // The payoff plays before the card comes up at 1.9 s.
+    await page.waitForTimeout(1600)
     await page.screenshot({ path: `${out}/${li + 1}-${L.id}-won-anim.png`, fullPage: true })
+    await page.waitForTimeout(700)
     const card = await page.locator('.win-card').count()
     const line = card ? await page.locator('.win-card .line').textContent() : ''
     const ok = card === 1 && line?.startsWith(`${L.par} moves`)
     if (!ok) bad++
     console.log(`${ok ? 'ok  ' : 'FAIL'} ${L.id}: ${line || 'no win card'}`)
     await page.screenshot({ path: `${out}/${li + 1}-${L.id}-won.png`, fullPage: true })
-    if (li < LEVELS.length - 1) await page.locator('.win-card .primary').click()
+    await page.locator('.win-card .primary').click()
   }
+  // The last room's button plays the ending, then goes back to the first room.
+  await page.waitForTimeout(400)
+  await page.screenshot({ path: `${out}/ending.png` })
+  const ending = await scenes(page)
+  const back = await page.locator('.lvl[aria-current="true"]').textContent()
+  const endOk = ending === 2 && !!back?.startsWith('1.')
+  if (!endOk) bad++
+  console.log(`${endOk ? 'ok  ' : 'FAIL'} ending: ${ending} panels, then room "${back}"`)
   if (errors.length) (console.log('page errors:', errors), bad++)
   await browser.close()
   process.exit(bad ? 1 : 0)

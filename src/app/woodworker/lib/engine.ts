@@ -6,7 +6,7 @@
 export interface Rules<S, M> {
   /** Every move worth trying from s (apply may still refuse some). */
   moves(s: S): M[]
-  /** The state after m, or null when Gerrit's woodwork won't allow it. */
+  /** The state after m, or null when Cyriel's woodwork won't allow it. */
   apply(s: S, m: M): S | null
   solved(s: S): boolean
   key(s: S): string

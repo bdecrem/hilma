@@ -5,6 +5,7 @@
 // The printed layouts are pasted into src/app/woodworker/lib/levels.ts;
 // scripts/woodworker/check.ts proves the pars there.
 import { distances, solve } from '../../src/app/woodworker/lib/engine'
+import { slideRules, cellsOf, type SlideLevel } from '../../src/app/woodworker/lib/slide'
 import { SIZE, swingRules, doorCells, type SwingLevel, type SwingState, type SwingMove } from '../../src/app/woodworker/lib/swing'
 import { tiltRules, type TiltLevel } from '../../src/app/woodworker/lib/tilt'
 import { linkedRules, type LinkedLevel } from '../../src/app/woodworker/lib/linked'
@@ -20,6 +21,40 @@ function mulberry(seed: number) {
   }
 }
 const int = (r: () => number, n: number) => Math.floor(r() * n)
+
+function genSlide(par: number, seed = 1) {
+  for (let tries = 0; tries < 200_000; tries++) {
+    const r = mulberry(seed + tries)
+    const exitRow = 2
+    const pieces: SlideLevel['pieces'] = [{ label: '', h: true, len: 2, line: exitRow }]
+    const pos = [int(r, 2)]
+    const used = new Set(cellsOf(pieces[0], pos[0]))
+    const want = 7 + int(r, 4)
+    for (let k = 0; k < 80 && pieces.length < want; k++) {
+      const h = r() < 0.5, len = r() < 0.75 ? 2 : 3
+      const line = int(r, SIZE)
+      if (h && line === exitRow) continue // a drawer on the exit row could never get out of the way
+      const p = { label: '', h, len, line }, at = int(r, SIZE - len + 1)
+      const cells = cellsOf(p, at)
+      if (cells.some((c) => used.has(c))) continue
+      cells.forEach((c) => used.add(c))
+      pieces.push(p)
+      pos.push(at)
+    }
+    if (pieces.length < 7) continue
+    const L: SlideLevel = { pieces, exitRow }
+    const R = slideRules(L)
+    const dist = distances(R, pos)
+    if (!dist) continue
+    for (const { s, d } of dist.values()) {
+      if (d !== par || s[0] > 1) continue
+      const path = solve(R, s)!
+      if (new Set(path.map((m) => m.piece)).size < 5) continue
+      return { level: L, start: s, par, path, seed: seed + tries }
+    }
+  }
+  throw new Error('no slide level')
+}
 
 function genSwing(par: number, seed = 1) {
   for (let tries = 0; tries < 200_000; tries++) {
@@ -162,7 +197,7 @@ function genBox(par: number, seed = 1) {
   throw new Error('no box level')
 }
 
-const gens: Record<string, (par: number, seed?: number) => unknown> = { swing: genSwing, tilt: genTilt, linked: genLinked, box: genBox }
+const gens: Record<string, (par: number, seed?: number) => unknown> = { slide: genSlide, swing: genSwing, tilt: genTilt, linked: genLinked, box: genBox }
 const [only, parArg, seedArg] = process.argv.slice(2)
 if (only) console.log(JSON.stringify(gens[only](Number(parArg), Number(seedArg ?? 1))))
 else for (const [k, p] of [['swing', 9], ['tilt', 7], ['linked', 10], ['box', 12]] as const) console.log(k, JSON.stringify(gens[k](p)))

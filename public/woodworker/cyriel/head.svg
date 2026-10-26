@@ -1,0 +1,151 @@
+<!-- Cyriel's face, for the badge by the notes: the same drawing, cropped. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="166 84 268 268" width="268" height="268">
+  <defs>
+    <style>
+      .ol { stroke:#2b1a12; stroke-width:5; stroke-linejoin:round; stroke-linecap:round; }
+      .thin { stroke:#2b1a12; stroke-width:3; stroke-linecap:round; fill:none; }
+    </style>
+    <linearGradient id="wood" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#e7b86a"/><stop offset="1" stop-color="#c88f45"/>
+    </linearGradient>
+    <linearGradient id="pants" x1="0" x2="1">
+      <stop offset="0" stop-color="#b98a50"/><stop offset=".45" stop-color="#d1a466"/><stop offset="1" stop-color="#a97a42"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ground shadow -->
+  <ellipse cx="300" cy="848" rx="120" ry="14" fill="#000" opacity=".28"/>
+
+  <!-- bare lanky legs -->
+  <path d="M266 650V772M334 650V772" stroke="#2b1a12" stroke-width="34" stroke-linecap="round" fill="none"/>
+  <path d="M266 650V772M334 650V772" stroke="#f0c19c" stroke-width="24" stroke-linecap="round" fill="none"/>
+  <path class="thin" d="M258 700q8 5 16 0M326 700q8 5 16 0" stroke-width="2.5" opacity=".6"/>
+  <!-- socks -->
+  <rect class="ol" x="250" y="742" width="32" height="30" rx="4" fill="#f4efe4" stroke-width="4"/>
+  <rect class="ol" x="318" y="742" width="32" height="30" rx="4" fill="#f4efe4" stroke-width="4"/>
+  <path d="M252 752h28M320 752h28" stroke="#c0503c" stroke-width="4"/>
+
+  <!-- short work boots -->
+  <path class="ol" fill="#2a2a2f" d="M242 770H290V832H216Q210 814 228 808L242 804Z"/>
+  <path d="M216 832Q212 816 230 810L244 806V832Z" fill="#b4bdc6" stroke="#2b1a12" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M224 818q6-6 14-7" stroke="#eef2f5" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <circle cx="228" cy="826" r="2" fill="#5d6670"/><circle cx="238" cy="824" r="2" fill="#5d6670"/>
+  <rect class="ol" x="212" y="830" width="82" height="15" rx="5" fill="#141416"/>
+  <path d="M218 838h74" stroke="#3a3a40" stroke-width="2" stroke-dasharray="5 4"/>
+  <rect class="ol" x="238" y="764" width="56" height="13" rx="5" fill="#44444b" stroke-width="4"/>
+  <path d="M256 786H276M256 798H276M256 810H276" stroke="#8d8d96" stroke-width="3.5" stroke-linecap="round"/>
+  <path class="ol" fill="#2a2a2f" d="M358 770H310V832H384Q390 814 372 808L358 804Z"/>
+  <path d="M384 832Q388 816 370 810L356 806V832Z" fill="#b4bdc6" stroke="#2b1a12" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M376 818q-6-6-14-7" stroke="#eef2f5" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <circle cx="372" cy="826" r="2" fill="#5d6670"/><circle cx="362" cy="824" r="2" fill="#5d6670"/>
+  <rect class="ol" x="306" y="830" width="82" height="15" rx="5" fill="#141416"/>
+  <path d="M312 838h74" stroke="#3a3a40" stroke-width="2" stroke-dasharray="5 4"/>
+  <rect class="ol" x="306" y="764" width="56" height="13" rx="5" fill="#44444b" stroke-width="4"/>
+  <path d="M344 786H324M344 798H324M344 810H324" stroke="#8d8d96" stroke-width="3.5" stroke-linecap="round"/>
+
+  <!-- shorts -->
+  <path class="ol" fill="url(#pants)" d="M232 508h136l6 60-4 92h-70l-4-60h-4l-4 60h-70l-4-92z"/>
+  <path class="thin" d="M300 520v80" stroke-width="2.5" opacity=".5"/>
+  <!-- cargo pockets -->
+  <rect class="ol" x="236" y="594" width="32" height="38" rx="5" fill="#bd8f53" stroke-width="3.5"/>
+  <rect class="ol" x="332" y="594" width="32" height="38" rx="5" fill="#bd8f53" stroke-width="3.5"/>
+  <!-- cuffs -->
+  <rect class="ol" x="227" y="644" width="71" height="18" rx="4" fill="#c4975c"/>
+  <rect class="ol" x="302" y="644" width="71" height="18" rx="4" fill="#c4975c"/>
+
+  <!-- belt + tape measure -->
+  <rect class="ol" x="228" y="500" width="144" height="18" rx="3" fill="#6b4126"/>
+  <rect class="ol" x="286" y="498" width="28" height="22" rx="4" fill="#e3b04f"/>
+  <rect class="ol" x="336" y="510" width="40" height="36" rx="10" fill="#f2c230"/>
+  <circle cx="356" cy="528" r="8" fill="#2b1a12"/>
+  <path d="M376 538h14v6h-14" fill="#d9d9d9" stroke="#2b1a12" stroke-width="2.5"/>
+
+  <!-- left arm (hanging) -->
+  <path d="M214 438q-18 74-8 146" stroke="#2b1a12" stroke-width="34" stroke-linecap="round" fill="none"/>
+  <path d="M214 438q-18 74-8 146" stroke="#f0c19c" stroke-width="24" stroke-linecap="round" fill="none"/>
+  <circle class="ol" cx="206" cy="592" r="17" fill="#f0c19c"/>
+  <path class="thin" d="M198 598q8 6 16 0" stroke-width="2.5"/>
+
+  <!-- right arm (holding a hand plane) -->
+  <path d="M386 438q26 64 4 128" stroke="#2b1a12" stroke-width="34" stroke-linecap="round" fill="none"/>
+  <path d="M386 438q26 64 4 128" stroke="#f0c19c" stroke-width="24" stroke-linecap="round" fill="none"/>
+  <!-- hand plane -->
+  <g transform="rotate(-12 400 585)">
+    <rect class="ol" x="352" y="572" width="104" height="30" rx="8" fill="url(#wood)"/>
+    <path class="ol" d="M372 572q-2-26 22-26q10 0 12 10l-6 16z" fill="#a8652e"/>
+    <circle class="ol" cx="444" cy="566" r="9" fill="#a8652e"/>
+    <rect class="ol" x="410" y="560" width="12" height="16" rx="2" fill="#c9ced3" stroke-width="3.5"/>
+    <path d="M362 590h80" stroke="#b07a3a" stroke-width="2" opacity=".7"/>
+  </g>
+  <circle class="ol" cx="392" cy="570" r="17" fill="#f0c19c"/>
+
+  <!-- t-shirt -->
+  <path class="ol" fill="#25252b" d="M224 376c26-16 50-18 76-14c26-4 50-2 76 14l32 66-34 14-8-26 2 82h-136l2-82-8 26-34-14z"/>
+  <path d="M232 470q68 10 136 0" stroke="#3a3a42" stroke-width="3" fill="none"/>
+  <path d="M250 400q10 30 6 70M352 400q-8 30-4 70" stroke="#3a3a42" stroke-width="3" fill="none"/>
+  <!-- chest emblem -->
+  <circle cx="334" cy="408" r="13" fill="#e9e3d4" stroke="#2b1a12" stroke-width="2"/>
+  <path d="M327 412l7-10 7 10z" fill="#25252b"/>
+
+  <!-- neck (long) -->
+  <path class="ol" fill="#e5ae88" d="M282 300h36l4 66q-22 12-44 0z"/>
+  <path d="M286 368q14 10 28 0" stroke="#2b1a12" stroke-width="4" fill="none"/>
+  <path d="M296 340q4 8 8 0" stroke="#c78b67" stroke-width="3" fill="none"/>
+
+  <!-- ears (generous) -->
+  <ellipse class="ol" cx="208" cy="228" rx="24" ry="34" fill="#f0c19c"/>
+  <ellipse class="ol" cx="392" cy="228" rx="24" ry="34" fill="#f0c19c"/>
+  <path class="thin" d="M214 210q-14 18 0 38M386 210q14 18 0 38" stroke-width="3"/>
+
+  <!-- pencil behind ear -->
+  <g transform="rotate(-72 404 196)">
+    <rect class="ol" x="360" y="188" width="70" height="14" rx="2" fill="#f5c638" stroke-width="3.5"/>
+    <rect x="360" y="188" width="12" height="14" fill="#e88b9a" stroke="#2b1a12" stroke-width="3"/>
+    <path class="ol" d="M430 188l16 7-16 7z" fill="#f3d6b0" stroke-width="3"/>
+  </g>
+
+  <!-- head -->
+  <path class="ol" fill="#f4caa6" d="M300 116c62 0 92 42 92 98c0 62-34 112-92 118c-58-6-92-56-92-118c0-56 30-98 92-98z"/>
+  <!-- jaw shading -->
+  <path d="M220 260c14 46 44 66 80 70c-30-12-58-34-72-76z" fill="#e3ad87" opacity=".7"/>
+
+  <!-- hair: swept lock falling onto the forehead, one stray bit sticking out -->
+  <path class="ol" fill="#e2b35e" d="M208 214c-8-66 32-116 92-116c62 0 102 50 92 116c-6-26-16-44-32-54C340 178 300 196 246 206C232 204 216 206 208 214z"/>
+  <path d="M240 140c22-22 60-30 96-24M350 162c-26 20-56 32-90 38" stroke="#f6d996" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <path d="M330 174c-14 12-34 20-56 24" stroke="#b9853a" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <path class="ol" fill="#e2b35e" stroke-width="4" d="M262 198C250 206 236 204 226 190C222 184 220 178 224 176C226 186 238 192 256 188Z"/>
+
+  <!-- brows (one skeptically raised) -->
+  <path d="M244 200q18-10 38-2" stroke="#9c6c2c" stroke-width="8" stroke-linecap="round" fill="none"/>
+  <path d="M318 190q20-14 40 0" stroke="#9c6c2c" stroke-width="8" stroke-linecap="round" fill="none"/>
+
+  <!-- eyes: half-lidded, unimpressed -->
+  <ellipse class="ol" cx="264" cy="226" rx="17" ry="13" fill="#fff" stroke-width="3.5"/>
+  <ellipse class="ol" cx="338" cy="224" rx="17" ry="14" fill="#fff" stroke-width="3.5"/>
+  <circle cx="270" cy="229" r="7" fill="#3c5a6b"/><circle cx="344" cy="228" r="7" fill="#3c5a6b"/>
+  <circle cx="270" cy="229" r="3.5" fill="#1a1a1a"/><circle cx="344" cy="228" r="3.5" fill="#1a1a1a"/>
+  <circle cx="273" cy="226" r="1.8" fill="#fff"/><circle cx="347" cy="225" r="1.8" fill="#fff"/>
+  <path d="M246 224q18-10 36 0q-2-14-18-15q-16 1-18 15z" fill="#f4caa6" stroke="#2b1a12" stroke-width="3.5" stroke-linejoin="round"/>
+  <path d="M321 220q18-6 34 0" stroke="#2b1a12" stroke-width="3.5" fill="none"/>
+
+  <!-- long caricature nose -->
+  <path d="M300 222c4 30 18 50 16 62c-2 10-18 12-26 4" fill="#eab48f" stroke="#2b1a12" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <ellipse cx="306" cy="286" rx="4" ry="2.5" fill="#b9785a"/>
+
+  <!-- glasses -->
+  <g fill="#ffffff" fill-opacity=".14" stroke="#2b1a12" stroke-width="5" stroke-linejoin="round">
+    <circle cx="264" cy="226" r="26"/>
+    <circle cx="338" cy="224" r="26"/>
+  </g>
+  <path d="M290 222q11-8 22 0M238 220l-24-6M364 218l24-6" stroke="#2b1a12" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <path d="M246 212q6-4 12-3M320 210q6-4 12-3" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".7" fill="none"/>
+
+  <!-- cheeks -->
+  <ellipse cx="244" cy="268" rx="16" ry="9" fill="#e8907e" opacity=".45"/>
+  <ellipse cx="358" cy="266" rx="16" ry="9" fill="#e8907e" opacity=".45"/>
+
+  <!-- smug smirk -->
+  <path d="M270 304q28 12 62-10" stroke="#2b1a12" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+  <path d="M328 290q8 2 8 10" stroke="#2b1a12" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+  <path d="M296 322q6 3 12 0" stroke="#c78b67" stroke-width="3" stroke-linecap="round" fill="none"/>
+</svg>

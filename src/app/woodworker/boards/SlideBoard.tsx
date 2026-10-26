@@ -5,10 +5,10 @@ import { useRef, useState } from 'react'
 import { SIZE, slideRange, type SlideLevel, type SlideMove, type SlideState } from '../lib/slide'
 import { knock, thunk, unlock } from '../sfx'
 import { cellOf, grain } from './look'
-import { Dust, Goal, Machine, Mark, useBump, useDust } from './parts'
+import { Dust, Fern, Goal, Machine, Mark, useBump, useDust } from './parts'
 import type { BoardProps } from './types'
 
-export default function SlideBoard({ room, data, state, hint, won, move }: BoardProps<SlideLevel, SlideState, SlideMove>) {
+export default function SlideBoard({ room, skin, item, data, state, hint, won, move }: BoardProps<SlideLevel, SlideState, SlideMove>) {
   const board = useRef<HTMLDivElement>(null)
   const drag = useRef<{ i: number; x: number; y: number; c: number; lo: number; hi: number; off: number; bumped: boolean } | null>(null)
   const [dragOff, setDragOff] = useState<{ i: number; off: number } | null>(null)
@@ -82,7 +82,7 @@ export default function SlideBoard({ room, data, state, hint, won, move }: Board
               <button
                 key={i}
                 type="button"
-                className={`piece ${p.h ? 'h' : 'v'}${p.len === 3 ? ' long' : ''}${i === 0 ? ' target capsule' : ''}${dragOff?.i === i ? ' dragging' : ''}${bumped === i ? (p.h ? ' bump-a' : ' bump-b') : ''}`}
+                className={`piece ${p.h ? 'h' : 'v'}${p.len === 3 ? ' long' : ''}${i === 0 ? ` target ${skin ?? 'capsule'}` : ''}${dragOff?.i === i ? ' dragging' : ''}${bumped === i ? (p.h ? ' bump-a' : ' bump-b') : ''}`}
                 style={{
                   ...(i === 0 ? {} : g.style),
                   '--x': x, '--y': y, '--w': p.h ? p.len : 1, '--h': p.h ? 1 : p.len,
@@ -90,7 +90,7 @@ export default function SlideBoard({ room, data, state, hint, won, move }: Board
                   opacity: leaving ? 0 : undefined,
                   transition: leaving ? 'transform .7s cubic-bezier(.5,0,.7,1), opacity .5s .35s' : undefined,
                 } as React.CSSProperties}
-                aria-label={`${p.label}, ${i === 0 ? 'the capsule you need' : p.h ? 'slides left and right' : 'slides up and down'}`}
+                aria-label={`${p.label}, ${i === 0 ? `the ${item.toLowerCase()} you need` : p.h ? 'slides left and right' : 'slides up and down'}`}
                 onPointerDown={(e) => down(e, i)}
                 onPointerMove={moveP}
                 onPointerUp={up}
@@ -110,8 +110,8 @@ export default function SlideBoard({ room, data, state, hint, won, move }: Board
         </div>
       </div>
       {!won && <Goal style={{ left: 'calc(var(--c) * 6 + var(--f) * 2 - 8px)', top: `calc(var(--f) + var(--c) * ${data.exitRow} - 4px)`, width: 'calc(var(--c) * 1.05)', height: 'calc(var(--c) + 8px)' }} />}
-      <div className={`dest${won ? ' on' : ''}`} style={{ top: `calc(var(--f) + var(--c) * ${data.exitRow - 1})` }} aria-hidden>
-        <Machine />
+      <div className={`dest${skin === 'can' ? ' fern' : ''}${won ? ' on' : ''}`} style={{ top: `calc(var(--f) + var(--c) * ${data.exitRow - 1})` }} aria-hidden>
+        {skin === 'can' ? <Fern /> : <Machine />}
       </div>
     </div>
   )

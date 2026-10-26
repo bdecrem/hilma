@@ -6,7 +6,7 @@ import './woodworker.css'
 const display = localFont({ src: '../../fonts/alfa-slab-one/AlfaSlabOne-400.woff2', weight: '400', variable: '--ww-display' })
 // Labels on the woodwork, the controls.
 const body = localFont({ src: '../../fonts/figtree/Figtree.woff2', weight: '300 900', variable: '--ww-body' })
-// Gerrit's notes, in pencil.
+// Cyriel's notes, in pencil.
 const hand = localFont({ src: '../../fonts/caveat/Caveat.woff2', weight: '400 700', variable: '--ww-hand' })
 // Moves, par, best.
 const mono = localFont({ src: '../../fonts/dm-mono/DMMono-500.woff2', weight: '500', variable: '--ww-mono' })
@@ -15,10 +15,10 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://ola.cx'),
   title: 'The Woodworker',
   description:
-    'Gerrit, a well-meaning, clumsy carpenter, rebuilt your house. Five rooms, five puzzles: sliding drawers, swinging doors, a counter that tips, cutlery trays tied with string, and a biscuit tin that is a Japanese puzzle box.',
+    'Cyriel, a well-meaning, clumsy carpenter, rebuilt your house. Ten rooms, five kinds of puzzle (sliding drawers, swinging doors, a counter that tips, trays tied with string, Japanese puzzle boxes), and one week in which Cyriel is never home when you need them.',
   openGraph: {
     title: 'The Woodworker',
-    description: 'Five rooms a clumsy carpenter rebuilt. Five ways in.',
+    description: 'Ten rooms a clumsy carpenter rebuilt, and the week they kept not being home.',
     url: 'https://ola.cx/woodworker',
     images: [{ url: '/woodworker/og.png', width: 1200, height: 630 }],
   },
