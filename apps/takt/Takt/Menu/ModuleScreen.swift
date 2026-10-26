@@ -98,7 +98,7 @@ struct ModuleBar: View {
 
 /// A lesson in the module list.
 struct LessonRowView: View {
-    enum State { case done, next, locked, soon }
+    enum State { case done, next, open, locked, soon }
     let number: Int
     let title: String
     let skill: String
@@ -109,15 +109,17 @@ struct LessonRowView: View {
 
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: 8)
-        let open = state == .done || state == .next
+        let open = state == .done || state == .next || state == .open
         HStack(alignment: .center, spacing: compact ? 12 : 18) {
             ZStack {
                 Circle()
                     .fill(state == .next ? Palette.signal : state == .done ? Palette.good : Palette.ground)
-                    .overlay(Circle().strokeBorder(open ? Color.clear : Palette.line, style: StrokeStyle(lineWidth: 1, dash: state == .soon ? [3, 3] : [])))
+                    .overlay(Circle().strokeBorder(state == .done || state == .next ? Color.clear : Palette.line,
+                                                   style: StrokeStyle(lineWidth: 1, dash: state == .soon ? [3, 3] : [])))
                 switch state {
                 case .done: Image(systemName: "checkmark").font(.system(size: 14, weight: .bold)).foregroundStyle(Palette.blackKey)
                 case .next: Image(systemName: "play.fill").font(.system(size: 13, weight: .bold)).foregroundStyle(Palette.blackKey)
+                case .open: Text("\(number)").dataLabel(12, weight: .semibold).foregroundStyle(Palette.text)
                 case .locked: Image(systemName: "lock.fill").font(.system(size: 12, weight: .semibold)).foregroundStyle(Palette.muted)
                 case .soon: Text("\(number)").dataLabel(12, weight: .semibold).foregroundStyle(Palette.muted)
                 }
@@ -156,7 +158,138 @@ struct LessonRowView: View {
         .onTapGesture { if open { action() } }
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(open ? .isButton : [])
-        .accessibilityLabel("Lesson \(number), \(title), \(skill). \(state == .done ? "Done" : state == .next ? "Next" : state == .locked ? "Locked" : "Coming soon")")
+        .accessibilityLabel("Lesson \(number), \(title), \(skill). \(state == .done ? "Done" : state == .next ? "Next" : state == .open ? "Open" : state == .locked ? "Locked" : "Coming soon")")
+    }
+}
+
+/// The ear module: three drills as lessons, all open at once. A game is done at its top level,
+/// the quiz once it has placed you; the first not done is next.
+struct EarModuleScreen: View {
+    let app: AppModel
+    @Environment(\.horizontalSizeClass) private var sizeClass
+
+    var body: some View {
+        let compact = sizeClass == .compact
+        let lessons = LessonEntry.earLessons
+        let done = lessons.filter { app.earLessonDone($0.entry) }.count
+        let next = app.nextEarLesson
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .center, spacing: 16) {
+                TransportButton(symbol: "chevron.left", lit: false, size: compact ? 34 : 36, label: "Learn") {
+                    app.route = .lessons
+                }
+                Text(LessonEntry.ear.title)
+                    .font(.display(compact ? 30 : 44))
+                    .textCase(.uppercase)
+                    .foregroundStyle(Palette.text)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                StaffLines()
+                    .frame(maxWidth: .infinity)
+            }
+            .padding(.top, compact ? 8 : 24)
+
+            HStack(alignment: .firstTextBaseline) {
+                Text("Hear the chords and the distances, then name them")
+                    .bodyText(15)
+                    .foregroundStyle(Palette.muted)
+                Spacer(minLength: 12)
+                Text(done == lessons.count ? "Done" : "\(done) of \(lessons.count) lessons")
+                    .dataLabel(11, weight: .semibold)
+                    .foregroundStyle(done == lessons.count ? Palette.good : Palette.text)
+            }
+            .padding(.top, 10)
+            ModuleBar(done: done, count: lessons.count)
+                .padding(.top, 10)
+
+            ScrollView {
+                VStack(spacing: 8) {
+                    ForEach(Array(lessons.enumerated()), id: \.offset) { i, l in
+                        let isDone = app.earLessonDone(l.entry)
+                        LessonRowView(number: i + 1, title: l.title, skill: EarModuleScreen.status(app.status(l.entry)), goal: l.goal,
+                                      state: isDone ? .done : l.entry.id == next.id ? .next : .open, compact: compact) {
+                            app.start(l.entry)
+                        }
+                    }
+                }
+                .padding(.top, 16)
+                .padding(.bottom, 12)
+            }
+            .scrollBounceBehavior(.basedOnSize)
+
+            let n = lessons.firstIndex { $0.entry.id == next.id } ?? 0
+            PrimaryButton(title: "\(app.earLessonDone(next) ? "Play" : "Start") lesson \(n + 1) · \(lessons[n].title)") { app.start(next) }
+                .padding(.top, 8)
+                .padding(.bottom, compact ? 8 : 24)
+        }
+        .padding(.horizontal, compact ? 16 : 40)
+        .frame(maxWidth: compact ? .infinity : 820, alignment: .leading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Palette.ground.ignoresSafeArea())
+    }
+
+    /// Where you are in a drill, as the row's second line (short: the card's one line).
+    static func status(_ s: EntryStatus, short: Bool = false) -> String {
+        switch s {
+        case .game(let kind, let level): return "Level \(level) of \(kind.levels.count)" + (short ? "" : " · \(kind.levels[level - 1].title)")
+        case .quizNew: return "New · the 5-question ear check"
+        case .quizToday(let level): return "\(level.title) · today's five are waiting"
+        case .quizDone(let level): return "\(level.title) · done today"
+        default: return ""
+        }
+    }
+}
+
+/// The ear module on the Learn tab.
+struct EarModuleCard: View {
+    let app: AppModel
+    var compact = false
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: 8)
+        let lessons = LessonEntry.earLessons
+        let done = lessons.filter { app.earLessonDone($0.entry) }.count
+        let next = app.nextEarLesson
+        let n = lessons.firstIndex { $0.entry.id == next.id } ?? 0
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(LessonEntry.ear.title)
+                    .font(.display(compact ? 26 : 32))
+                    .textCase(.uppercase)
+                    .foregroundStyle(Palette.text)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                Spacer(minLength: 8)
+                Text(done == lessons.count ? "Done" : "\(done) of \(lessons.count) lessons")
+                    .dataLabel(11, weight: .semibold)
+                    .foregroundStyle(done == lessons.count ? Palette.good : Palette.muted)
+            }
+            Text("Hear the chords and the distances, then name them")
+                .bodyText(14)
+                .foregroundStyle(Palette.muted)
+            ModuleBar(done: done, count: lessons.count)
+            HStack(alignment: .center, spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(done < lessons.count ? "Next · Lesson \(n + 1)" : "Every lesson done")
+                        .dataLabel(10)
+                        .foregroundStyle(Palette.signal)
+                    Text(lessons[n].title + " · " + EarModuleScreen.status(app.status(next), short: true))
+                        .bodyText(16, weight: .semibold)
+                        .foregroundStyle(Palette.text)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                }
+                Spacer(minLength: 8)
+                PrimaryButton(title: "Continue") { app.start(next) }
+            }
+        }
+        .padding(compact ? 16 : 22)
+        .background(shape.fill(Palette.panel))
+        .overlay(shape.strokeBorder(Palette.line, lineWidth: 1))
+        .contentShape(shape)
+        .onTapGesture { app.route = .earModule }
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isButton)
     }
 }
 

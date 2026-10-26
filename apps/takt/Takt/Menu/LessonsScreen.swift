@@ -34,15 +34,8 @@ struct LessonsScreen: View {
                     if let player = app.player {
                         ModuleCard(app: app, player: player, compact: compact)
                     }
-                    ForEach(LessonEntry.path.filter { $0.module && $0.code != "A1" }) { entry in
-                        LessonRow(entry: entry, app: app, compact: compact)
-                    }
-
-                    Text("Drills")
-                        .dataLabel(13, weight: .semibold)
-                        .foregroundStyle(Palette.muted)
-                        .padding(.top, 14)
-                    ForEach(LessonEntry.catalog.filter { !$0.module }) { entry in
+                    EarModuleCard(app: app, compact: compact)
+                    ForEach(LessonEntry.path.filter { $0.module && $0.code != "A1" && $0.code != "E" }) { entry in
                         LessonRow(entry: entry, app: app, compact: compact)
                     }
                 }
@@ -132,6 +125,8 @@ struct LessonRow: View {
             label("After \(after)", lit: false)
         case .soon:
             label("Coming soon", lit: false)
+        case .module(let done, let of):
+            label("\(done) of \(of) lessons", lit: done < of)
         }
     }
 

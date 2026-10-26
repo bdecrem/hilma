@@ -125,6 +125,8 @@ struct RootView: View {
                 MapScreen(app: app)
             case .module:
                 ModuleScreen(app: app, player: player)
+            case .earModule:
+                EarModuleScreen(app: app)
             case .earGame:
                 if let run = app.ear, let round = app.earRound {
                     EarGameScreen(app: app, kind: app.earKind, run: run, round: round)
@@ -170,7 +172,7 @@ struct RootView: View {
     /// you paused stays paused.
     private func syncMenuMusic(toggled: Bool = false) {
         switch app.route {
-        case .lessons, .map, .module, .settings:
+        case .lessons, .map, .module, .earModule, .settings:
             if !menuMusic && player.playing { player.togglePlay() }
             if menuMusic && toggled && !player.playing { player.togglePlay() }
         case .lesson:

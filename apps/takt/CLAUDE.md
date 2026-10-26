@@ -200,6 +200,13 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   pattern notes a bar, 24 a chorus; the exported loop has 24). Note length is never scored,
   only onsets. Read that log before guessing about a real session. Checks 136/136.
 
+- **Ear Training module: 0.1 (25), 2026-10-26.** The three drills are one module with three
+  lessons (`LessonEntry.ear` / `earLessons`: Chords = E1, Intervals = E2, Ear and form = Q1;
+  `EarModuleScreen` / `EarModuleCard` in `Menu/ModuleScreen.swift`, route `.earModule`, DEBUG
+  `-Route earmodule`). All three stay open; a game lesson is done at its top level, the quiz
+  once it has placed you (`AppModel.earLessonDone`); the first not done is next. The Drills
+  section is gone; the map shows the two modules and the locked M2.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

@@ -14,6 +14,7 @@ struct MapScreen: View {
         let here = path.firstIndex { e in
             switch app.status(e) {
             case .done, .quizDone, .locked, .soon, .game: false  // the endless game is never "next"
+            case .module(let done, let of): done < of
             default: true
             }
         }
@@ -94,12 +95,13 @@ private struct MapStop: View {
     private var done: Bool {
         switch status {
         case .done, .quizDone, .quizToday: true
+        case .module(let done, let of): done >= of
         default: false
         }
     }
 
     var body: some View {
-        let marker = Marker(code: entry.code, quiz: entry.kind != .lesson, done: done, here: here, open: status.open)
+        let marker = Marker(code: entry.code, quiz: !entry.module, done: done, here: here, open: status.open)
         let label = VStack(alignment: side == .leading ? .leading : .trailing, spacing: 3) {
             Text(entry.title)
                 .font(.display(22))
@@ -149,6 +151,7 @@ private struct MapStop: View {
         case .quizToday(let level), .quizDone(let level): return "Your level: \(level.title)"
         case .locked(let after): return "After \(after)"
         case .soon: return "Coming soon"
+        case .module(let done, let of): return "\(done) of \(of) lessons"
         }
     }
 }

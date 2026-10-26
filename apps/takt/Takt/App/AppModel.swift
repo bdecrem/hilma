@@ -3,7 +3,7 @@ import SwiftUI
 /// Which screen is up. The band plays under every one of them (principle 1: the band is
 /// already playing); only the lesson screen scores what you play.
 enum Route: Equatable {
-    case lessons, map, module, lesson, result, settings, calibrate, quiz, earGame
+    case lessons, map, module, earModule, lesson, result, settings, calibrate, quiz, earGame
 }
 
 /// The app's screens and what they share: the player (band, monitor, lesson), the progress
@@ -31,6 +31,7 @@ final class AppModel {
             case "lessons": route = .lessons
             case "lesson": route = .lesson
             case "module": route = .module
+            case "earmodule": route = .earModule
             case "settings": route = .settings
             case "calibrate": route = .calibrate
             case "map": route = .map
@@ -229,6 +230,20 @@ final class AppModel {
         route = .lesson
     }
 
+    /// An ear lesson is done at the game's top level, or once the quiz has placed you.
+    func earLessonDone(_ entry: LessonEntry) -> Bool {
+        switch entry.kind {
+        case .game(let kind): return progress.ear(kind).level >= kind.levels.count
+        case .quiz: return progress.snapshot.quiz.level != nil
+        default: return false
+        }
+    }
+
+    /// The ear module's next lesson: the first not done, else the first.
+    var nextEarLesson: LessonEntry {
+        LessonEntry.earLessons.first { !earLessonDone($0.entry) }?.entry ?? LessonEntry.earLessons[0].entry
+    }
+
     /// From the module screen: lesson `n` (the next one, or one done, again) from its intro.
     func start(lesson n: Int) {
         guard let player else { return }
@@ -255,6 +270,8 @@ enum EntryStatus: Equatable {
     case game(EarGame.Kind, level: Int)
     case locked(after: String)
     case soon
+    /// The ear module: lessons done of its count.
+    case module(done: Int, of: Int)
 
     var open: Bool {
         switch self {
@@ -268,6 +285,9 @@ extension AppModel {
     func status(_ entry: LessonEntry) -> EntryStatus {
         if let after = entry.after, progress.lesson(after).completed == nil { return .locked(after: after) }
         guard entry.playable else { return .soon }
+        if entry.kind == .earModule {
+            return .module(done: LessonEntry.earLessons.filter { earLessonDone($0.entry) }.count, of: LessonEntry.earLessons.count)
+        }
         if case .game(let kind) = entry.kind { return .game(kind, level: progress.ear(kind).level) }
         if entry.kind == .quiz {
             let q = progress.snapshot.quiz
@@ -287,6 +307,7 @@ extension AppModel {
         case .quiz: startQuiz()
         case .game(let kind): startEarGame(kind)
         case .lesson: route = .module
+        case .earModule: route = .earModule
         }
     }
 }
@@ -294,7 +315,7 @@ extension AppModel {
 /// The catalog the menu shows. A1 is the lesson, Q1 the quiz (the ear check, then a daily five);
 /// A2 is a stub until it exists (brief §5: "A2 stub screen only"), unlocked by finishing A1.
 struct LessonEntry: Identifiable {
-    enum Kind: Equatable { case lesson, quiz, game(EarGame.Kind) }
+    enum Kind: Equatable { case lesson, quiz, game(EarGame.Kind), earModule }
     let kind: Kind
     let code: String
     let title: String
@@ -317,13 +338,20 @@ struct LessonEntry: Identifiable {
                     after: nil, playable: true),
     ]
 
-    /// Level 1 on the map, in order: the catalog and what comes after it.
-    static let path = catalog + [
-        LessonEntry(kind: .quiz, code: "Q2", title: "Hear the Changes", meta: "Name the chord change by ear",
-                    after: "A1", playable: false),
+    /// The ear module: three lessons over the drills, each with a title and a goal of its own.
+    static let ear = LessonEntry(kind: .earModule, code: "E", title: "Ear Training", meta: "Hear the chords and the distances · 3 lessons",
+                                 after: nil, playable: true)
+    static let earLessons: [(entry: LessonEntry, title: String, goal: String)] = [
+        (catalog[1], "Chords", "Seven levels, from major or minor up to sevenths"),
+        (catalog[2], "Intervals", "Seven levels, from fourth or fifth up to both notes at once"),
+        (catalog[3], "Ear and form", "Find your level, then five questions a day"),
+    ]
+
+    /// Level 1 on the map, in order: the modules and what comes after them.
+    static let path = [catalog[0], ear,
         LessonEntry(kind: .lesson, code: "M2", title: "The Right Hand", meta: "Blues scale · call and response",
                     after: "A1", playable: false),
     ]
 
-    var module: Bool { kind == .lesson }
+    var module: Bool { kind == .lesson || kind == .earModule }
 }
