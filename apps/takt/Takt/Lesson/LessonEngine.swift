@@ -423,10 +423,12 @@ final class LessonEngine {
     private func markMisses(through tick: Double) {
         defer { liveChecked = max(liveChecked, tick) }
         guard scoring, !expected.isEmpty, heardTempo > 0, tick > liveChecked, tick - lastPressTick <= Double(2 * ticksPerBar) else { return }
-        let first = Int(((liveChecked - reach) / Double(loopTicks)).rounded(.down))
+        // A first note can land before its chorus (the lead): the range starts at the first
+        // scored chorus, which can be past the one being heard. (Crashed on 2026-10-26.)
+        let first = max(Int(((liveChecked - reach) / Double(loopTicks)).rounded(.down)), firstChorus)
         let last = Int((tick / Double(loopTicks)).rounded(.down))
         guard first <= last else { return }
-        for c in max(first, firstChorus)...last {
+        for c in first...last {
             for (i, e) in expected.enumerated() {
                 let deadline = Double(c * loopTicks + e.tick) + reach
                 let id = c * expected.count + i

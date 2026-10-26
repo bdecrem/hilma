@@ -158,6 +158,16 @@ enum LessonCheck {
                   && NoteNeedle.word(marks[3]) == "Missed" && NoteNeedle.angle(marks[3]) == 0)
             roll(to: Double(e[3].tick) + Double(12 * tpb))
             check("needle: no misses once the player stops", engine.output.lastNote?.seq == marks.last?.seq)
+
+            // Off the count-in: the first note a hair before tick 0 (the lead), then the next
+            // frames still before 0. Crashed the Mac build on 2026-10-26 (an empty range).
+            let early = LessonEngine(lesson: lesson, ticksPerBeat: tpb)
+            early.heard(tick: -8, tempo: 70, rolling: true, epoch: 0)
+            early.played(note: e[0].display, tick: -1, msPerTick: mpt, epoch: 0)
+            early.heard(tick: -2, tempo: 70, rolling: true, epoch: 0)
+            early.heard(tick: 1, tempo: 70, rolling: true, epoch: 0)
+            check("needle: an early first note off the count-in doesn't crash, and is a hit",
+                  early.output.lastNote?.kind == .hit, "\(String(describing: early.output.lastNote))")
         }
 
         do {
