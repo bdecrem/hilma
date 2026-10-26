@@ -109,6 +109,9 @@ struct Calibration: Equatable {
         return s.count % 2 == 1 ? s[s.count / 2] : (s[s.count / 2 - 1] + s[s.count / 2]) / 2
     }
 
+    /// A saved correction as shown: "Latency correction: 98 ms".
+    static func correction(_ ms: Double) -> String { "Latency correction: \(Int(abs(ms).rounded())) ms" }
+
     /// The offset in words, "23 ms early" / "on the beat".
     static func words(_ ms: Double) -> String {
         let r = Int(ms.rounded())

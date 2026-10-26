@@ -67,7 +67,7 @@ struct CalibrationScreen: View {
                     }
                 } else {
                     if let p = c?.proposed, let a = c?.average, abs(a) >= Calibration.minLeanMs {
-                        PrimaryButton(title: "Use this: \(Calibration.words(p))") {
+                        PrimaryButton(title: "Set latency correction: \(Int(abs(p).rounded())) ms") {
                             player.useCalibration()
                             saved = p
                         }
@@ -90,16 +90,16 @@ struct CalibrationScreen: View {
     private func headline(_ c: Calibration?) -> String {
         guard let c else { return "Tap any key with the click." }
         if (player.calibrationClick ?? 0) < Calibration.listen && c.taps.isEmpty { return "Listen: one bar, then tap." }
-        if let saved, c.taps.count < Calibration.window { return "Saved: you play \(Calibration.words(saved)). Keep tapping." }
+        if let saved, c.taps.count < Calibration.window { return "Saved. \(Calibration.correction(saved)). Keep tapping." }
         guard let a = c.average else { return "Tap with the click." }
         if !c.steady { return "All over the place. Keep tapping until the marks bunch up." }
-        return abs(a) < Calibration.minLeanMs ? "In the green. Your correction holds." : "You land \(Calibration.words(a)), every time."
+        return abs(a) < Calibration.minLeanMs ? "In the green. Your correction holds." : "Latency correction is \(Int(abs(a).rounded())) ms off."
     }
 
     private func detail(_ c: Calibration?) -> String {
         let base = c?.base ?? Player.inputOffsetMs
-        let now = base == 0 ? "No correction yet, so the needle shows your raw timing."
-                            : "The needle already takes out your saved correction (you play \(Calibration.words(base)))."
+        let now = base == 0 ? "No latency correction yet, so the needle shows your raw timing."
+                            : "The needle already applies your saved latency correction (\(Int(abs(base).rounded())) ms)."
         guard let c else {
             return "A click plays every beat. Line your note up with it, the way you will with the band, and the needle shows how each tap landed. \(now) In the middle means it's right."
         }
@@ -110,7 +110,7 @@ struct CalibrationScreen: View {
         let tally = "\(hits) of your last \(Calibration.window) taps in the green."
         if c.steady, let a = c.average, abs(a) < Calibration.minLeanMs { return "\(tally) Done when you are." }
         return c.steady && abs(c.average ?? 0) >= Calibration.minLeanMs
-            ? "\(tally) Use this moves the correction by \(Int(abs(c.average!).rounded())) ms, and more of them land in the green."
+            ? "\(tally) Set latency correction moves it by \(Int(abs(c.average!).rounded())) ms, and more of them land in the green."
             : "\(tally) The thick mark is your average."
     }
 }

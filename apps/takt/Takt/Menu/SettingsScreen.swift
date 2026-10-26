@@ -69,7 +69,7 @@ struct SettingsScreen: View {
                         HStack(alignment: .firstTextBaseline) {
                             Text("Timing").bodyText(15).foregroundStyle(Palette.text)
                             Spacer(minLength: 12)
-                            Text(inputOffsetMs == 0 ? "Not measured" : "You play \(Calibration.words(inputOffsetMs))")
+                            Text(inputOffsetMs == 0 ? "Not measured" : Calibration.correction(inputOffsetMs))
                                 .dataLabel(11).foregroundStyle(Palette.muted)
                             QuietButton(title: "Calibrate") { app.calibrate(then: .settings) }
                         }
