@@ -10,8 +10,9 @@ struct ScoringRules {
     /// Extra notes (wrong, doubled, stray) allowed per chorus.
     var maxExtras = 2
 
-    /// ±60 ms at ≤ 80 bpm, ±45 ms above.
-    func windowMs(tempo: Double) -> Double { tempo <= 80.001 ? 60 : 45 }
+    /// ±100 ms at ≤ 80 bpm, ±80 ms above: broad, for students (2026-10-26; was ±60 / ±45). The
+    /// press is already moved by the latency correction, so this is the hand's own leeway.
+    func windowMs(tempo: Double) -> Double { tempo <= 80.001 ? 100 : 80 }
 }
 
 /// A key the player pressed, placed on the transport.
@@ -68,19 +69,13 @@ struct ChorusResult {
         return (offsets.map { ($0 - m) * ($0 - m) }.reduce(0, +) / Double(offsets.count)).squareRoot()
     }
 
-    /// "12 of 12 · on the beat", "11 of 12 · 23 ms early · 1 extra", "9 of 12 · centered · ±47 ms":
-    /// the lean (mean offset) and, when the notes scatter 10 ms or more, the spread.
+    /// "12 of 12", "10 of 12 · 1 rushed · 1 wrong", "9 of 12 · 2 dragged · 1 missed · 1 extra": the
+    /// hits, then what the rest were. No milliseconds: a note is in time or it isn't.
     var detail: String {
+        func count(_ m: Mark) -> Int { notes.filter { $0.mark == m }.count }
         var parts = ["\(hits) of \(notes.count)"]
-        if let m = meanOffsetMs {
-            let lean = Int(abs(m).rounded())
-            let spread = Int((spreadMs ?? 0).rounded())
-            if lean >= 5 {
-                parts.append("\(lean) ms \(m < 0 ? "early" : "late")")
-            } else {
-                parts.append(spread >= 10 ? "centered" : "on the beat")
-            }
-            if spread >= 10 { parts.append("±\(spread) ms") }
+        for (mark, word) in [(Mark.early, "rushed"), (.late, "dragged"), (.wrong, "wrong"), (.missed, "missed")] where count(mark) > 0 {
+            parts.append("\(count(mark)) \(word)")
         }
         if !extras.isEmpty { parts.append("\(extras.count) extra") }
         return parts.joined(separator: " · ")

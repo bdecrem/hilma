@@ -116,7 +116,7 @@ struct CalibrationScreen: View {
 }
 
 /// The dial: early on the left, late on the right, ±100 ms over 120°. The orange band is on time
-/// (±45 ms, the lessons' window); dots are the last twelve taps (green = a hit), the thick mark their average, and the
+/// (±80 ms, the lessons' window at 90); dots are the last twelve taps (green = a hit), the thick mark their average, and the
 /// needle follows the mean of the last four.
 struct Dial: View {
     let calibration: Calibration?

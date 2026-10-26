@@ -40,17 +40,17 @@ enum LessonCheck {
         }
 
         var r = judge(chorus())
-        check("perfect at 70 is clean", r.clean && r.hits == 12 && r.extras.isEmpty && r.detail == "12 of 12 · on the beat", text(r))
+        check("perfect at 70 is clean", r.clean && r.hits == 12 && r.extras.isEmpty && r.detail == "12 of 12", text(r))
         r = judge(chorus(offsetMs: { _ in -50 }))
-        check("50 ms early at 70 is clean (±60)", r.clean && r.detail == "12 of 12 · 50 ms early", text(r))
-        r = judge(chorus(offsetMs: { _ in -65 }))
-        check("65 ms early at 70 is not", !r.clean && r.problems.first == "Rushed every bar.", text(r))
-        r = judge(chorus(bpm: 80, offsetMs: { _ in 58 }))
-        check("58 ms late at 80 is clean (80 is still ±60)", r.clean, text(r))
-        r = judge(chorus(bpm: 90, offsetMs: { _ in 44 }))
-        check("44 ms late at 90 is clean (±45)", r.clean, text(r))
-        r = judge(chorus(bpm: 90, offsetMs: { _ in 50 }))
-        check("50 ms late at 90 is not", !r.clean && r.problems.first == "Dragged every bar.", text(r))
+        check("50 ms early at 70 is clean (±100)", r.clean && r.detail == "12 of 12", text(r))
+        r = judge(chorus(offsetMs: { _ in -110 }))
+        check("110 ms early at 70 is not", !r.clean && r.problems.first == "Rushed every bar.", text(r))
+        r = judge(chorus(bpm: 80, offsetMs: { _ in 95 }))
+        check("95 ms late at 80 is clean (80 is still ±100)", r.clean, text(r))
+        r = judge(chorus(bpm: 90, offsetMs: { _ in 78 }))
+        check("78 ms late at 90 is clean (±80)", r.clean, text(r))
+        r = judge(chorus(bpm: 90, offsetMs: { _ in 85 }))
+        check("85 ms late at 90 is not", !r.clean && r.problems.first == "Dragged every bar.", text(r))
         r = judge(chorus(note: { $0.bar == 2 ? nil : $0.display }))
         check("one bar missed is clean (11 of 12)", r.clean && r.summary == "Clean. Missed bar 3.", text(r))
         r = judge(chorus(note: { [2, 6].contains($0.bar) ? nil : $0.display }))
@@ -70,8 +70,8 @@ enum LessonCheck {
         check("three doubled notes are not", !r.clean && r.problems.first == "Extra notes in bars 2, 6 and 10.", text(r))
         r = judge(chorus() + chorus(note: { $0.display + 7 }))
         check("root and fifth together is not", !r.clean && r.problems.first == "Wrong notes in every bar.", text(r))
-        r = judge(chorus(offsetMs: { $0.bar % 2 == 0 ? -20 : 20 }))
-        check("±20 ms reads as centered, with the spread", r.clean && r.detail == "12 of 12 · centered · ±20 ms", text(r))
+        r = judge(chorus(offsetMs: { $0.bar % 2 == 0 ? -120 : 0 }))
+        check("the detail counts, no milliseconds", !r.clean && r.detail == "6 of 12 · 6 rushed", text(r))
         for (bars, want) in [([8], "bar 9"), ([4, 8], "bars 5 and 9"), ([1, 4, 8], "bars 2, 5 and 9"),
                              ([0, 1, 2, 3, 8], "bars 1–4 and 9"), ([1, 2], "bars 2 and 3"), (Array(0..<12), "every bar")] {
             let got = Scorer.barList(bars, total: 12)
@@ -133,7 +133,7 @@ enum LessonCheck {
         var run = simulate([(autoplay(.perfect, choruses: 3), end(3))])
         check("perfect autoplay: clean, clean, gate passed", run.verdicts.map(\.counted) == [true, true]
               && run.passed && run.verdicts.last?.clean == 2 && run.output.lastChorus == "Clean."
-              && run.output.lastChorusDetail == "12 of 12 · on the beat", text(run))
+              && run.output.lastChorusDetail == "12 of 12", text(run))
         let intro = step.coach.intro
         check("coach calls the form on the downbeats",
               run.coach[0] == intro && run.coach[1] == intro && run.coach[2] == "C on the 1."
@@ -155,7 +155,7 @@ enum LessonCheck {
               && run.verdicts.count == 8 && run.verdicts.allSatisfy { $0.line.hasSuffix(" Again.") }, text(run))
 
         run = simulate([(autoplay(.rush, choruses: 4), end(4))])
-        check("rushing 75 ms never passes", !run.passed && run.verdicts.allSatisfy { $0.line == "Rushed every bar. Again." },
+        check("rushing 140 ms never passes", !run.passed && run.verdicts.allSatisfy { $0.line == "Rushed every bar. Again." },
               text(run))
 
         let early = chorus(0, offsetMs: { _ in -40 }) + chorus(1, offsetMs: { _ in -40 })
@@ -380,7 +380,7 @@ enum LessonCheck {
         check("calibration: the middle half, so wild taps don't count", abs((wobbly.average ?? 0) + 124.0 / 6) < 0.01, "\(String(describing: wobbly.average))")
         let needle = calibrate([(4, 80), (5, -10), (6, -20), (7, 10), (8, 0)])
         check("calibration: the needle is the mean of the last four", abs((needle.needle ?? 99) + 5) < 0.01 && needle.lastTap == 0)
-        check("calibration: a hit is the lessons' window at 90", Calibration.hit(-45) && Calibration.hit(44) && !Calibration.hit(46)
+        check("calibration: a hit is the lessons' window at 90", Calibration.hit(-80) && Calibration.hit(79) && !Calibration.hit(81)
               && Calibration.onTimeMs == ScoringRules().windowMs(tempo: Double(Calibration.tempo)))
         let scattered = calibrate([(4, -60), (5, 40), (6, -10), (7, 70), (8, -50), (9, 30), (10, -80), (11, 60),
                                    (12, -70), (13, 50), (14, -60), (15, 80)])

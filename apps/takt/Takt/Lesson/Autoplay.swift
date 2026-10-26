@@ -8,11 +8,11 @@ struct Autoplay {
     enum Mode: String, CaseIterable, Identifiable {
         /// Every note on the tick.
         case perfect
-        /// A good human: ±40 ms, inside the ±60 ms window. Passes.
+        /// A good human: ±40 ms, well inside the ±100 ms window. Passes.
         case loose
-        /// ±130 ms, 12% missed, 12% wrong, 15% doubled. Never clean.
+        /// ±260 ms, 12% missed, 12% wrong, 15% doubled. Never clean.
         case sloppy
-        /// Every note 75 ms early. Never clean at 70 (window ±60).
+        /// Every note 140 ms early. Never clean at 70 (window ±100).
         case rush
 
         var id: String { rawValue }
@@ -65,12 +65,12 @@ struct Autoplay {
         case .loose:
             return [press(e.display, offsetMs: rng.uniform(-40, 40), velocity: Float(rng.uniform(0.6, 0.9)))]
         case .rush:
-            return [press(e.display, offsetMs: -75)]
+            return [press(e.display, offsetMs: -140)]
         case .sloppy:
             if rng.uniform(0, 1) < 0.12 { return [] }
             var note = e.display
             if rng.uniform(0, 1) < 0.12 { note += rng.uniform(0, 1) < 0.5 ? 1 : 2 }
-            let offset = rng.uniform(-130, 130)
+            let offset = rng.uniform(-260, 260)
             var out = [press(note, offsetMs: offset, velocity: Float(rng.uniform(0.5, 0.9)))]
             if rng.uniform(0, 1) < 0.15 { out.append(press(note, offsetMs: offset + 180, length: length * 0.5)) }
             return out

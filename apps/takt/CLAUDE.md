@@ -134,7 +134,7 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   **0.1 (15):** Bart's first logged run (68 taps on the Mac with a MIDI keyboard): raw mean
   −98.5 ms, median −97.9, SD 25 ms, drifting −60 → −120 → −100 over the run. That is a normal
   hand; the math was right, the ±25 ms band was stricter than the lessons. The green band is now
-  the lessons' own window at 90 (`ScoringRules.windowMs` = ±45 ms; green on the dial = a hit in a
+  the lessons' own window at 90 (`ScoringRules.windowMs`, then ±45 ms, ±80 since 0.1 (17); green on the dial = a hit in a
   lesson), the dial reads ±100 ms. At his saved −97.8 ms, 62 of those 68 taps are green.
 
 ## Code map (`Takt/`)
@@ -261,7 +261,7 @@ Check: `TAKT_IMESSAGE_DRY=1 pnpm exec next dev -p 3270`, then `npx tsx scripts/t
 ## Lesson engine and scoring (M2, M3)
 
 The rules are the brief's §4 "clean chorus", in `ScoringRules`: ≥ 90% of the expected notes hit
-(the right pitch class, any octave C2–C5, inside ±60 ms at ≤ 80 bpm, ±45 ms above), ≤ 2 extra
+(the right pitch class, any octave C2–C5, inside ±100 ms at ≤ 80 bpm, ±80 ms above (±60 / ±45 until 2026-10-26)), ≤ 2 extra
 notes. How the Scorer reads a chorus:
 
 - Each expected note takes the nearest press of its pitch class within its association window

@@ -116,7 +116,7 @@ Ends on the result screen: piano roll of your chorus (bars 11–12 highlighted i
 
 **"Clean chorus" definition (v1, tune later):**
 - ≥ 90% of expected notes hit with the right pitch class
-- Timing within ±60 ms of the target beat at ≤ 80 bpm, ±45 ms above 80
+- Timing within ±100 ms of the target beat at ≤ 80 bpm, ±80 ms above 80 (widened from ±60 / ±45 on 2026-10-26: a student app)
 - ≤ 2 extra notes per chorus (wrong or doubled)
 - Pitch class matches in any octave between C2 and C5 (mini keyboards shift octaves; don't punish that)
 

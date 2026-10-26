@@ -24,7 +24,7 @@ struct Calibration: Equatable {
     static let steadyMs = 40.0
     /// A hit: a tap (and the dial's green band) within this of the middle. The lessons' own
     /// window at 90 (`ScoringRules.windowMs`), so green here means a hit there.
-    static let onTimeMs = 45.0
+    static let onTimeMs = 80.0
     /// A lean smaller than this is on time; Use this only offers a bigger one. A hand's taps
     /// scatter by 20–30 ms, so the average of twelve still wanders by about 10: below 15 a
     /// correction would chase noise.
