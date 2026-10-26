@@ -82,11 +82,11 @@ final class Player {
         }
         self.lesson = engine.output
         wire()
-        // A lesson in progress picks up at the step it reached (its intro); a finished or fresh
-        // one starts from the top.
-        let reached = progress.lesson(lesson.code)
-        if reached.completed == nil && reached.reachedStep > 1 && reached.reachedStep <= lesson.steps.count {
-            restartLesson(at: reached.reachedStep - 1)
+        // A module in progress picks up on its next lesson's intro; a finished or fresh one
+        // starts from the top.
+        let done = lessonsDone
+        if progress.lesson(lesson.code).completed == nil && done > 0 && done < lesson.lessons.count {
+            restartLesson(at: lesson.firstStep(ofLesson: done))
         }
 
         midi.onNote = { [weak self] n in
@@ -143,7 +143,7 @@ final class Player {
             case .finished:
                 self.finish = self.engine.finish
                 self.progress.completed(self.content.code, tempo: self.engine.finish?.tempo ?? 0,
-                                        steps: self.content.steps.count)
+                                        steps: self.content.steps.count, lessons: self.content.lessons.count)
                 self.lessonLog.info("lesson \(self.content.code, privacy: .public) finished")
                 #if DEBUG
                 if UserDefaults.standard.bool(forKey: "PlayBackOnFinish"), let f = self.finish {
@@ -171,10 +171,25 @@ final class Player {
         publish()
     }
 
-    /// The engine's output to the screen; a new step is written to progress on the way.
+    /// Lessons of the module finished: the record, or for records from before lessons existed,
+    /// what the highest step reached says.
+    var lessonsDone: Int {
+        let r = progress.lesson(content.code)
+        return max(r.lessonsDone, content.lessonsDone(reachedStep: r.reachedStep))
+    }
+
+    /// Lesson `n` (1-based) from its intro: the next one, or one already done, played again.
+    func start(lesson n: Int) {
+        guard n >= 1, n <= lessonsDone + 1, n <= content.lessons.count else { return }
+        restartLesson(at: content.firstStep(ofLesson: n - 1))
+    }
+
+    /// The engine's output to the screen; a new step, and a lesson just finished, are written
+    /// to progress on the way.
     private func publish() {
         let out = engine.output
         if out.step != lesson.step { progress.reached(step: out.step, in: content.code) }
+        if let c = out.complete, c != lesson.complete { progress.lessonDone(c.number, in: content.code) }
         if out != lesson { lesson = out }
     }
 
@@ -600,6 +615,11 @@ final class Player {
             lastChorusDetail: lesson.lastChorusDetail,
             lastNote: lesson.lastNote,
             countIn: countIn,
+            moduleTitle: content.module.title,
+            lesson: lesson.lesson,
+            lessonCount: lesson.lessonCount,
+            lessonTitle: lesson.lessonTitle,
+            goal: lesson.goal,
             intro: lesson.intro,
             complete: lesson.complete,
             fingers: lesson.fingers,

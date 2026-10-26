@@ -196,6 +196,7 @@ final class AccountStore {
         for (code, r) in b.lessons {
             var m = out.lessons[code] ?? r
             m.reachedStep = max(m.reachedStep, r.reachedStep)
+            m.lessonsDone = max(m.lessonsDone, r.lessonsDone)
             m.bestTempo = max(m.bestTempo, r.bestTempo)
             m.completed = [m.completed, r.completed].compactMap { $0 }.min()
             out.lessons[code] = m

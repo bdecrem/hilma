@@ -66,6 +66,29 @@ struct Lesson: Decodable {
         case play, card, ramp, payoff
     }
 
+    /// What the player sees: a module (this file) of lessons, each a run of the engine's steps.
+    struct Module: Decodable {
+        let code: String
+        let title: String
+        let detail: String
+    }
+
+    struct LessonSpec: Decodable {
+        let title: String
+        /// The skill in five words: "Root on the 1, fifth on the 3".
+        let skill: String
+        /// What finishes it: "2 clean choruses at 70".
+        let goal: String
+        /// Step ids, in order. The first is never a card (a lesson opens on an intro).
+        let steps: [String]
+    }
+
+    /// Lessons that aren't built yet: locked rows at the end of the module.
+    struct LaterLesson: Decodable {
+        let title: String
+        let skill: String
+    }
+
     struct Step: Decodable {
         let id: String
         let kind: Kind
@@ -86,6 +109,9 @@ struct Lesson: Decodable {
 
     let code: String
     let title: String
+    let module: Module
+    let lessons: [LessonSpec]
+    let later: [LaterLesson]?
     let band: String
     let chords: [String: Chord]
     let form: [String]
@@ -114,6 +140,11 @@ struct Lesson: Decodable {
 
     private func validate() {
         for chord in form where chords[chord] == nil { fatalError("lesson \(code): no chord \(chord)") }
+        let ids = lessons.flatMap(\.steps)
+        if ids != steps.map(\.id) { fatalError("lesson \(code): the lessons must cover every step, in order (\(ids))") }
+        for l in lessons where steps.first { $0.id == l.steps[0] }?.kind == .card {
+            fatalError("lesson \(code): lesson \(l.title) starts on a card")
+        }
         for step in steps {
             let c = step.coach
             func need(_ ok: Bool, _ what: String) {
@@ -149,6 +180,34 @@ struct Lesson: Decodable {
     }
 
     var formBars: [FormBar] { form.map { FormBar(chord: $0, numeral: chords[$0]!.numeral) } }
+
+    // MARK: Lessons over steps (0-based)
+
+    func lessonIndex(ofStep i: Int) -> Int {
+        var n = 0
+        for (l, spec) in lessons.enumerated() {
+            n += spec.steps.count
+            if i < n { return l }
+        }
+        return lessons.count - 1
+    }
+
+    func firstStep(ofLesson l: Int) -> Int {
+        lessons.prefix(l).reduce(0) { $0 + $1.steps.count }
+    }
+
+    /// Lessons done, read off the highest step reached (1-based): a lesson is done once a later
+    /// step than its last play step was reached. For records from before lessons existed.
+    func lessonsDone(reachedStep: Int) -> Int {
+        var done = 0
+        for l in lessons.indices {
+            let first = firstStep(ofLesson: l)
+            let lastPlay = (first..<(first + lessons[l].steps.count)).last { steps[$0].kind != .card } ?? first
+            guard reachedStep > lastPlay + 1 else { break }
+            done = l + 1
+        }
+        return done
+    }
 
     /// The notes a step expects in one chorus, in order, with ticks inside the chorus.
     func expected(_ step: Step, ticksPerBeat: Int) -> [ExpectedNote] {

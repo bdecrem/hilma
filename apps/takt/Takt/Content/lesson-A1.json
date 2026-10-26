@@ -1,6 +1,68 @@
 {
   "code": "A1",
   "title": "Play the Form",
+  "module": {
+    "code": "blues",
+    "title": "Blues Progressions",
+    "detail": "Left hand · the 12-bar blues in C"
+  },
+  "lessons": [
+    {
+      "title": "Roots on the 1",
+      "skill": "One note a bar, pinky on the root",
+      "goal": "2 clean choruses at 70",
+      "steps": [
+        "roots",
+        "name-it"
+      ]
+    },
+    {
+      "title": "The shuffle",
+      "skill": "Root on the 1, fifth on the 3",
+      "goal": "2 clean choruses at 70",
+      "steps": [
+        "shuffle"
+      ]
+    },
+    {
+      "title": "Pick up speed",
+      "skill": "The shuffle, 5 bpm faster each clean chorus",
+      "goal": "Clean from 70 up to 90 · keys and horns join",
+      "steps": [
+        "ramp"
+      ]
+    },
+    {
+      "title": "Hold it at 90",
+      "skill": "The shuffle at full tempo",
+      "goal": "3 clean choruses at 90",
+      "steps": [
+        "gate"
+      ]
+    },
+    {
+      "title": "The payoff",
+      "skill": "Bars 11 and 12 alone, then your loop",
+      "goal": "One chorus at 90 · exported as MIDI",
+      "steps": [
+        "payoff"
+      ]
+    }
+  ],
+  "later": [
+    {
+      "title": "The Right Hand",
+      "skill": "Blues scale · call and response"
+    },
+    {
+      "title": "Shuffle Comping",
+      "skill": "Both hands · the shuffle in chords"
+    },
+    {
+      "title": "The Turnaround",
+      "skill": "Bars 11 and 12 · the walk home"
+    }
+  ],
   "band": "band-blues-C",
   "chords": {
     "C": {
@@ -188,7 +250,7 @@
         "passed": "Three clean at 90. It's yours.",
         "tomorrow": "Pick it up tomorrow."
       },
-      "about": "The same shuffle at 90. Three clean choruses and A1 is yours."
+      "about": "The same shuffle at 90. Three clean choruses and it's yours at tempo."
     },
     {
       "id": "payoff",
@@ -219,7 +281,7 @@
         "join": "From the top.",
         "passed": "That's the form."
       },
-      "about": "One more at 90. In bars 11 and 12 the band drops out: that turnaround is yours alone."
+      "about": "One more at 90. In bars 11 and 12 the band drops out: that turnaround is yours alone, and the chorus becomes your loop."
     }
   ]
 }

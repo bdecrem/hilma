@@ -33,7 +33,7 @@ struct MapScreen: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    LevelHeader(number: 1, title: "The blues", detail: "\(path.filter { $0.kind == .lesson && app.progress.lesson($0.code).completed != nil }.count) of \(path.filter { $0.kind == .lesson }.count) lessons")
+                    LevelHeader(number: 1, title: "The blues", detail: "\(path.filter { $0.module && app.progress.lesson($0.code).completed != nil }.count) of \(path.filter(\.module).count) modules")
                         .padding(.top, compact ? 22 : 32)
                         .padding(.bottom, 8)
                     ForEach(Array(path.enumerated()), id: \.element.id) { i, entry in
@@ -142,7 +142,7 @@ private struct MapStop: View {
         if here { return status == .quizNew ? "You are here · find your level" : "You are here" }
         switch status {
         case .new: return "New"
-        case .inProgress(let step, let of): return "Step \(step) of \(of)"
+        case .inProgress(let n, let of): return "Lesson \(n) of \(of)"
         case .done(let tempo): return tempo > 0 ? "Done · \(tempo) bpm" : "Done"
         case .game(let kind, let level): return "Level \(level) of \(kind.levels.count)"
         case .quizNew: return "Find your level"

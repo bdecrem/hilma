@@ -27,15 +27,22 @@ struct LessonsScreen: View {
                     TodayCard(app: app, compact: compact)
                         .padding(.top, compact ? 18 : 28)
 
-                    Text("Lessons")
+                    Text("Modules")
                         .dataLabel(13, weight: .semibold)
                         .foregroundStyle(Palette.muted)
                         .padding(.top, 14)
-                    Text("Level 1 · The blues")
-                        .bodyText(15)
+                    if let player = app.player {
+                        ModuleCard(app: app, player: player, compact: compact)
+                    }
+                    ForEach(LessonEntry.path.filter { $0.module && $0.code != "A1" }) { entry in
+                        LessonRow(entry: entry, app: app, compact: compact)
+                    }
+
+                    Text("Drills")
+                        .dataLabel(13, weight: .semibold)
                         .foregroundStyle(Palette.muted)
-                        .padding(.bottom, 4)
-                    ForEach(LessonEntry.catalog) { entry in
+                        .padding(.top, 14)
+                    ForEach(LessonEntry.catalog.filter { !$0.module }) { entry in
                         LessonRow(entry: entry, app: app, compact: compact)
                     }
                 }
@@ -99,7 +106,7 @@ struct LessonRow: View {
         .contentShape(shape)
         .onTapGesture { app.start(entry) }
         .contextMenu {
-            if enabled && entry.kind == .lesson { Button("Start over") { app.restart(lesson: entry.code) } }
+            if enabled && entry.module { Button("Start over") { app.restart(lesson: entry.code) } }
         }
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(enabled ? .isButton : [])
@@ -109,8 +116,8 @@ struct LessonRow: View {
         switch status {
         case .new:
             label("New", lit: true)
-        case .inProgress(let step, let of):
-            label("Step \(step) of \(of)", lit: true)
+        case .inProgress(let n, let of):
+            label("Lesson \(n) of \(of)", lit: true)
         case .done(let tempo):
             label(tempo > 0 ? "Done · \(tempo) bpm" : "Done", lit: false)
         case .game(let kind, let level):
@@ -243,7 +250,7 @@ struct TabBar: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            tab("Lessons", symbol: "list.bullet", route: .lessons)
+            tab("Learn", symbol: "list.bullet", route: .lessons)
             tab("Map", symbol: "map", route: .map)
         }
         .background(RoundedRectangle(cornerRadius: 8).fill(Palette.panel))

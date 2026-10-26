@@ -203,6 +203,7 @@
 		B583B8942D45177E86F16DF0 /* pno-71-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9D49AC24E5E404E221145538 /* pno-71-1.caf */; };
 		B8E69AAB1D546042CCF3F9E8 /* pno-35-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = BE08321A78FC82A54F963A66 /* pno-35-1.caf */; };
 		B928C57F8BF4FB0175EE18AB /* snare-4b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 795F9970B8942259EFDB885C /* snare-4b.caf */; };
+		B9B485CA855A1CB0DD719E4E /* ModuleScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BB01E243F17BCA073D93544 /* ModuleScreen.swift */; };
 		BA16808884370FFE046386FB /* snare-3b.caf in Resources */ = {isa = PBXBuildFile; fileRef = E85D9BD780857CE82A7D821B /* snare-3b.caf */; };
 		BB472C5307B18E0B8548003E /* pno-31-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = DF145505D6B2AB1E45C372E2 /* pno-31-2.caf */; };
 		BB8816561929F6CF85CFB42B /* pno-33-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 61570467344D53BCCC56F790 /* pno-33-1.caf */; };
@@ -325,6 +326,7 @@
 		2A745499F18AF47E90C45897 /* MIDIInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MIDIInput.swift; sourceTree = "<group>"; };
 		2AE10F73437308FCB63674FE /* snare-2c.caf */ = {isa = PBXFileReference; path = "snare-2c.caf"; sourceTree = "<group>"; };
 		2BAB6DB7B83C48780451217E /* bass-34.caf */ = {isa = PBXFileReference; path = "bass-34.caf"; sourceTree = "<group>"; };
+		2BB01E243F17BCA073D93544 /* ModuleScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModuleScreen.swift; sourceTree = "<group>"; };
 		2C0170A26E6933ACE6978F7E /* kick-2b.caf */ = {isa = PBXFileReference; path = "kick-2b.caf"; sourceTree = "<group>"; };
 		2DF5AE57DEDD36D4D43ED0B6 /* sax-50-h.caf */ = {isa = PBXFileReference; path = "sax-50-h.caf"; sourceTree = "<group>"; };
 		2FC86C2A9E24F7E687AF3D24 /* sax-81-s.caf */ = {isa = PBXFileReference; path = "sax-81-s.caf"; sourceTree = "<group>"; };
@@ -650,6 +652,7 @@
 				8DA328066B3FE950BF61365C /* EarGameScreen.swift */,
 				9EB615A2BF73A5830696480A /* LessonsScreen.swift */,
 				3946539C0524DDA802585674 /* MapScreen.swift */,
+				2BB01E243F17BCA073D93544 /* ModuleScreen.swift */,
 				A9C34FA7B4C94CA0F72FFDB8 /* QuizScreen.swift */,
 				73E28D3A2CB1F4DEF189BCD2 /* ResultScreen.swift */,
 				4287A8E13F473563716A0973 /* SettingsScreen.swift */,
@@ -1301,6 +1304,7 @@
 				3CAF2C7361F0E087EC6A2943 /* MIDIFile.swift in Sources */,
 				AD4AB405745AED706DBB9E45 /* MIDIInput.swift in Sources */,
 				8DAE719F3BA714959E6DC281 /* MapScreen.swift in Sources */,
+				B9B485CA855A1CB0DD719E4E /* ModuleScreen.swift in Sources */,
 				1BAF5C09CD661D4CF3484722 /* Motifs.swift in Sources */,
 				D29B47A7A421646F1717B78D /* NoteNeedle.swift in Sources */,
 				98A90BB07168F73C2CB64C6D /* PadGrid.swift in Sources */,
@@ -1358,7 +1362,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 20;
+				CURRENT_PROJECT_VERSION = 21;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -1425,7 +1429,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 20;
+				CURRENT_PROJECT_VERSION = 21;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;

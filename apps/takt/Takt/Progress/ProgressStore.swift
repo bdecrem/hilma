@@ -10,8 +10,21 @@ final class ProgressStore {
     struct LessonRecord: Codable, Equatable {
         /// Highest step reached, 1-based.
         var reachedStep = 1
+        /// Lessons of the module finished, in order (0.1 (21); older records derive it from
+        /// `reachedStep`, see `Lesson.lessonsDone(reachedStep:)`).
+        var lessonsDone = 0
         var completed: Date?
         var bestTempo = 0
+
+        init() {}
+
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            reachedStep = try c.decodeIfPresent(Int.self, forKey: .reachedStep) ?? 1
+            lessonsDone = try c.decodeIfPresent(Int.self, forKey: .lessonsDone) ?? 0
+            completed = try c.decodeIfPresent(Date.self, forKey: .completed)
+            bestTempo = try c.decodeIfPresent(Int.self, forKey: .bestTempo) ?? 0
+        }
     }
 
     struct SkillRecord: Codable, Equatable {
@@ -110,9 +123,19 @@ final class ProgressStore {
         save()
     }
 
-    func completed(_ code: String, tempo: Int, steps: Int) {
+    /// Lesson `n` (1-based) of the module finished.
+    func lessonDone(_ n: Int, in code: String) {
+        var r = lesson(code)
+        guard n > r.lessonsDone else { return }
+        r.lessonsDone = n
+        snapshot.lessons[code] = r
+        save()
+    }
+
+    func completed(_ code: String, tempo: Int, steps: Int, lessons: Int) {
         var r = lesson(code)
         r.reachedStep = steps
+        r.lessonsDone = lessons
         r.completed = r.completed ?? Date()
         r.bestTempo = max(r.bestTempo, tempo)
         snapshot.lessons[code] = r

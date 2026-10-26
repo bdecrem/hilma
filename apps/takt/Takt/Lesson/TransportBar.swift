@@ -10,16 +10,16 @@ struct TransportBar: View {
         if compact {
             HStack(alignment: .center, spacing: 10) {
                 backButton(size: 34)
-                // iPhone: the code and the step's title, then "Step 2 of 6" (the lesson's title
-                // doesn't fit beside the back button and the transport).
+                // iPhone: the lesson's title, then "Lesson 2 of 5" (the module's name doesn't
+                // fit beside the back button and the transport).
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(state.stepTitle.isEmpty ? "\(state.code) \(state.title)" : "\(state.code) \(state.stepTitle)")
+                    Text(state.lessonTitle.isEmpty ? "\(state.code) \(state.title)" : state.lessonTitle)
                         .font(.display(26))
                         .textCase(.uppercase)
                         .foregroundStyle(Palette.text)
                         .lineLimit(1)
                         .minimumScaleFactor(0.75)
-                    Text("Step \(state.step) of \(state.stepCount)")
+                    Text("Lesson \(state.lesson) of \(state.lessonCount)")
                         .dataLabel(12)
                         .foregroundStyle(Palette.muted)
                         .lineLimit(1)
@@ -45,7 +45,7 @@ struct TransportBar: View {
     }
 
     private func title(size: CGFloat) -> some View {
-        Text("\(state.code) \(state.title)")
+        Text(state.lessonTitle.isEmpty ? "\(state.code) \(state.title)" : state.lessonTitle)
             .font(.display(size))
             .textCase(.uppercase)
             .foregroundStyle(Palette.text)
@@ -53,12 +53,12 @@ struct TransportBar: View {
     }
 
     private func backButton(size: CGFloat) -> some View {
-        TransportButton(symbol: "chevron.left", lit: false, size: size, label: "Lessons", action: controls.back)
+        TransportButton(symbol: "chevron.left", lit: false, size: size, label: "Back to the module", action: controls.back)
     }
 
     private var stepLabel: some View {
-        Text(state.stepTitle.isEmpty ? "Step \(state.step) of \(state.stepCount)"
-                                     : "Step \(state.step) of \(state.stepCount) · \(state.stepTitle)")
+        Text(state.moduleTitle.isEmpty ? "Step \(state.step) of \(state.stepCount)"
+                                       : "\(state.moduleTitle) · \(state.lesson) of \(state.lessonCount)")
             .dataLabel(12)
             .foregroundStyle(Palette.muted)
             .lineLimit(1)

@@ -42,6 +42,7 @@ struct TaktApp: App {
         if !d.bool(forKey: "Paused") && RootView.menuMusicOn { audio.send(.play) }
         #if DEBUG
         if d.integer(forKey: "Step") > 1 { player.restartLesson(at: d.integer(forKey: "Step") - 1) }
+        if d.integer(forKey: "Lesson") > 1 { player.restartLesson(at: lesson.firstStep(ofLesson: d.integer(forKey: "Lesson") - 1)) }
         if d.bool(forKey: "StepComplete") { player.debugComplete() }
         DebugHooks.recordIfRequested(audio)
         DebugHooks.pressIfRequested(player)
@@ -122,6 +123,8 @@ struct RootView: View {
                 LessonsScreen(app: app)
             case .map:
                 MapScreen(app: app)
+            case .module:
+                ModuleScreen(app: app, player: player)
             case .earGame:
                 if let run = app.ear, let round = app.earRound {
                     EarGameScreen(app: app, kind: app.earKind, run: run, round: round)
@@ -167,7 +170,7 @@ struct RootView: View {
     /// you paused stays paused.
     private func syncMenuMusic(toggled: Bool = false) {
         switch app.route {
-        case .lessons, .map, .settings:
+        case .lessons, .map, .module, .settings:
             if !menuMusic && player.playing { player.togglePlay() }
             if menuMusic && toggled && !player.playing { player.togglePlay() }
         case .lesson:
@@ -199,7 +202,7 @@ struct LiveLessonScreen: View {
                 continueCard: player.continueCard,
                 beginStep: player.beginStep,
                 nextStep: player.nextStep,
-                back: { app.route = .lessons }
+                back: { app.route = .module }
             ))
     }
 }

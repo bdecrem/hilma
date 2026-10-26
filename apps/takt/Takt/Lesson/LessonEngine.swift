@@ -45,9 +45,14 @@ final class LessonEngine {
         let seq: Int
     }
 
-    /// A step as its intro shows it: the title, what to do, and which finger plays which tone.
+    /// A lesson as its intro shows it: number, title, goal, what to do, and which finger plays
+    /// which tone (from the step the intro opens).
     struct StepInfo: Equatable {
+        let number: Int
+        let count: Int
         let title: String
+        let skill: String
+        let goal: String
         let about: String?
         let kind: Lesson.Kind
         /// (finger, tone), in the order the pattern plays them.
@@ -55,10 +60,13 @@ final class LessonEngine {
         struct Finger: Equatable { let finger: Int; let tone: String; let beat: Int }
     }
 
-    /// A step just passed: its title, and the step that comes next.
+    /// A lesson just passed: its number and title, a card that closes it, and the next lesson
+    /// (nil after the last).
     struct Complete: Equatable {
+        let number: Int
         let done: String
-        let next: StepInfo
+        let card: String?
+        let next: StepInfo?
     }
 
     struct Output: Equatable {
@@ -68,6 +76,11 @@ final class LessonEngine {
         var stepTitle = ""
         /// The card's text while a card step is up.
         var card: String?
+        /// The lesson (1-based) the current step belongs to, and its goal.
+        var lesson = 1
+        var lessonCount = 1
+        var lessonTitle = ""
+        var goal = ""
         var clean = 0
         var gate = 0
         var passed = false
@@ -186,7 +199,9 @@ final class LessonEngine {
     /// over by themselves on the next chorus.
     let gated: Bool
     private var awaiting = false
-    private var completed: String?
+    /// A lesson just passed: the step the next one starts on (past a closing card), and the card.
+    private var completed: (lesson: Int, start: Int)?
+    private var completedCard: String?
 
     init(lesson: Lesson, ticksPerBeat: Int, rules: ScoringRules = .init(), gated: Bool = false) {
         self.lesson = lesson
@@ -222,12 +237,32 @@ final class LessonEngine {
         update()
     }
 
-    /// Lesson complete's button: the next step, its intro already read (a card shows itself).
+    /// Lesson complete's Start: the next lesson, its intro already read on that panel.
     func advance() {
-        guard completed != nil, stepIndex + 1 < lesson.steps.count else { return }
+        guard let c = completed, c.start < lesson.steps.count else { return }
         completed = nil
-        startStep(stepIndex + 1)
+        startStep(c.start)
         begin()
+    }
+
+    /// A step passed in a gated engine: the same lesson's next step starts at once (on its
+    /// intro); the lesson's last play step ends it with Lesson complete, a closing card folded
+    /// in, and the next lesson waiting.
+    private func handOver(from i: Int) {
+        let l = lesson.lessonIndex(ofStep: i)
+        var next = i + 1
+        var card: String?
+        if next < lesson.steps.count, lesson.steps[next].kind == .card, lesson.lessonIndex(ofStep: next) == l {
+            card = lesson.steps[next].card
+            next += 1
+        }
+        if card == nil, next < lesson.steps.count, lesson.lessonIndex(ofStep: next) == l {
+            startStep(next)
+            return
+        }
+        completed = (l, next)
+        completedCard = card
+        update()
     }
 
     #if DEBUG
@@ -236,19 +271,22 @@ final class LessonEngine {
         guard gated, stepIndex + 1 < lesson.steps.count else { return }
         passed = true
         awaiting = false
-        completed = step.title
-        update()
+        handOver(from: stepIndex)
     }
     #endif
 
-    func info(_ s: Lesson.Step) -> StepInfo {
+    func info(step i: Int) -> StepInfo {
+        let s = lesson.steps[i]
+        let l = lesson.lessonIndex(ofStep: i)
+        let spec = lesson.lessons[l]
         let pattern = (s.pattern ?? []).sorted { ($0.beat, $0.tick ?? 0) < ($1.beat, $1.tick ?? 0) }
         var seen: Set<Int> = []
         let fingers = pattern.compactMap { p -> StepInfo.Finger? in
             guard let f = p.finger, seen.insert(f).inserted else { return nil }
             return .init(finger: f, tone: p.tone, beat: p.beat)
         }
-        return StepInfo(title: s.title, about: s.about, kind: s.kind, fingers: fingers)
+        return StepInfo(number: l + 1, count: lesson.lessons.count, title: spec.title, skill: spec.skill, goal: spec.goal,
+                        about: s.about, kind: s.kind, fingers: fingers)
     }
 
     private func startStep(_ index: Int) {
@@ -508,9 +546,8 @@ final class LessonEngine {
 
         if passed && stepIndex + 1 < lesson.steps.count {
             if gated {
-                // Lesson complete: the band plays on, and the next step waits for its button.
-                completed = step.title
-                update()
+                // The band plays on; the next lesson waits for its button.
+                handOver(from: stepIndex)
             } else {
                 // Hand over now: the chorus that just began is the next step's.
                 banner = (line, bar(at: heardTick) + 2)
@@ -538,8 +575,16 @@ final class LessonEngine {
         o.unlocked = unlocked
         o.rampTarget = step.kind == .ramp ? rampTarget : nil
         o.finished = finish != nil
-        o.intro = awaiting ? info(step) : nil
-        o.complete = completed.map { Complete(done: $0, next: info(lesson.steps[stepIndex + 1])) }
+        o.intro = awaiting ? info(step: stepIndex) : nil
+        o.complete = completed.map { c in
+            Complete(number: c.lesson + 1, done: lesson.lessons[c.lesson].title, card: completedCard,
+                     next: c.start < lesson.steps.count ? info(step: c.start) : nil)
+        }
+        let l = lesson.lessonIndex(ofStep: stepIndex)
+        o.lesson = l + 1
+        o.lessonCount = lesson.lessons.count
+        o.lessonTitle = lesson.lessons[l].title
+        o.goal = lesson.lessons[l].goal
 
         let absBar = bar(at: heardTick)
         let barInForm = ((absBar % bars) + bars) % bars

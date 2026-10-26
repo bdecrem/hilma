@@ -52,7 +52,7 @@ export const CHALLENGES = [
   '5 ear questions: major or minor',
   '5 questions on the 12-bar form',
   '5 listening questions: higher or lower',
-  'one clean chorus of A1',
+  'one clean chorus of your blues lesson',
 ] as const
 
 /// 1 for Jan 1.

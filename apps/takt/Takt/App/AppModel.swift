@@ -3,7 +3,7 @@ import SwiftUI
 /// Which screen is up. The band plays under every one of them (principle 1: the band is
 /// already playing); only the lesson screen scores what you play.
 enum Route: Equatable {
-    case lessons, map, lesson, result, settings, calibrate, quiz, earGame
+    case lessons, map, module, lesson, result, settings, calibrate, quiz, earGame
 }
 
 /// The app's screens and what they share: the player (band, monitor, lesson), the progress
@@ -30,6 +30,7 @@ final class AppModel {
             switch r {
             case "lessons": route = .lessons
             case "lesson": route = .lesson
+            case "module": route = .module
             case "settings": route = .settings
             case "calibrate": route = .calibrate
             case "map": route = .map
@@ -94,7 +95,7 @@ final class AppModel {
         QuizBank.challenge(placed: progress.snapshot.quiz.level != nil)
     }
 
-    /// Today's challenge: the ear check, a daily five, or a clean chorus of A1.
+    /// Today's challenge: the ear check, a daily five, or a clean chorus of the blues module.
     func startChallenge() {
         if challenge == .chorus { return open(lesson: "A1") }
         startQuiz()
@@ -228,6 +229,13 @@ final class AppModel {
         route = .lesson
     }
 
+    /// From the module screen: lesson `n` (the next one, or one done, again) from its intro.
+    func start(lesson n: Int) {
+        guard let player else { return }
+        player.start(lesson: n)
+        open(lesson: player.content.code)
+    }
+
     /// The lesson screen watches for the payoff finishing.
     func lessonFinished() { route = .result }
 }
@@ -235,7 +243,8 @@ final class AppModel {
 /// Where an entry stands, for the menu and the map.
 enum EntryStatus: Equatable {
     case new
-    case inProgress(step: Int, of: Int)
+    /// The next lesson to play, of the module's count.
+    case inProgress(lesson: Int, of: Int)
     case done(tempo: Int)
     /// A quiz before the ear check.
     case quizNew
@@ -267,9 +276,9 @@ extension AppModel {
         }
         let record = progress.lesson(entry.code)
         if record.completed != nil { return .done(tempo: record.bestTempo) }
-        let live = player?.lesson
-        let step = max(record.reachedStep, live?.step ?? 1)
-        return step > 1 ? .inProgress(step: step, of: live?.stepCount ?? 6) : .new
+        guard let player else { return .new }
+        let done = player.lessonsDone
+        return done > 0 ? .inProgress(lesson: done + 1, of: player.content.lessons.count) : .new
     }
 
     func start(_ entry: LessonEntry) {
@@ -277,7 +286,7 @@ extension AppModel {
         switch entry.kind {
         case .quiz: startQuiz()
         case .game(let kind): startEarGame(kind)
-        case .lesson: open(lesson: entry.code)
+        case .lesson: route = .module
         }
     }
 }
@@ -298,7 +307,7 @@ struct LessonEntry: Identifiable {
     var id: String { code }
 
     static let catalog = [
-        LessonEntry(kind: .lesson, code: "A1", title: "Play the Form", meta: "Left hand · 12-bar blues in C · 15 min",
+        LessonEntry(kind: .lesson, code: "A1", title: "Blues Progressions", meta: "Left hand · the 12-bar blues in C · 5 lessons",
                     after: nil, playable: true),
         LessonEntry(kind: .game(.chords), code: "E1", title: "Ear Trainer", meta: "Endless · name the chord by ear, seven levels",
                     after: nil, playable: true),
@@ -306,17 +315,15 @@ struct LessonEntry: Identifiable {
                     after: nil, playable: true),
         LessonEntry(kind: .quiz, code: "Q1", title: "Ear and Form", meta: "Five questions: listening and theory · 2 min",
                     after: nil, playable: true),
-        LessonEntry(kind: .lesson, code: "A2", title: "The Right Hand", meta: "Blues scale · call and response",
-                    after: "A1", playable: false),
     ]
 
     /// Level 1 on the map, in order: the catalog and what comes after it.
     static let path = catalog + [
-        LessonEntry(kind: .lesson, code: "A3", title: "Shuffle Comping", meta: "Both hands · the shuffle in chords",
-                    after: "A2", playable: false),
         LessonEntry(kind: .quiz, code: "Q2", title: "Hear the Changes", meta: "Name the chord change by ear",
-                    after: "A3", playable: false),
-        LessonEntry(kind: .lesson, code: "A4", title: "The Turnaround", meta: "Bars 11 and 12 · the walk home",
-                    after: "A3", playable: false),
+                    after: "A1", playable: false),
+        LessonEntry(kind: .lesson, code: "M2", title: "The Right Hand", meta: "Blues scale · call and response",
+                    after: "A1", playable: false),
     ]
+
+    var module: Bool { kind == .lesson }
 }

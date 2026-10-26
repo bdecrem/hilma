@@ -167,6 +167,24 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   step 3 was never recorded). Verify resume on the simulator with `-ProgressFile`: the Mac build
   is sandboxed and silently can't read a file outside its container, so it shows step 1 there.
 
+- **Modules and lessons: 0.1 (21), 2026-10-26.** The words the player sees are **Module** (a
+  skill area, 5–8 lessons) and **Lesson** (one sitting, one goal); "step" never appears in the
+  UI. `lesson-A1.json` is the *Blues Progressions* module: its `module` block, `lessons` (title,
+  skill, goal, the engine step ids each covers: Roots on the 1 = roots + the name-it card, The
+  shuffle, Pick up speed = ramp, Hold it at 90 = gate, The payoff) and `later` (locked rows for
+  what isn't built). The Swift `Lesson` type is still the module file; a user-facing lesson is
+  `Lesson.LessonSpec` (`lessonIndex(ofStep:)`, `firstStep(ofLesson:)`,
+  `lessonsDone(reachedStep:)` for records from before). The engine still runs steps; gated, a
+  passed step hands over by lesson (`handOver`): a closing card folds into Lesson complete, the
+  next lesson's intro (title, goal, about, fingers) sits under it, and Start begins it from the
+  top. Screens: the Learn tab (`LessonsScreen`: Today, Modules = `ModuleCard`, Drills = E1 E2
+  Q1), `Menu/ModuleScreen.swift` (the lesson list with ✓ / ▶ / locked, one Start button; back
+  from a lesson lands here), the lesson header "The shuffle · Blues Progressions · 2 of 5".
+  Progress: `LessonRecord.lessonsDone` (custom decoding, merged by max; `Player.lessonsDone`
+  = max of it and the derivation) drives resume, the menu and the map. DEBUG `-Route module`,
+  `-Lesson n` (open lesson n's intro). The daily challenge text says "your blues lesson".
+  Checks 128/128.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

@@ -161,12 +161,22 @@ enum LessonCheck {
         }
 
         do {
-            // Gated (the app): intro → Start → two clean → Lesson complete → card → the next intro.
+            // Lessons over steps: five lessons cover the six steps, the card closing lesson 1.
+            check("lessons: five over six steps", lesson.lessons.count == 5 && lesson.lessonIndex(ofStep: 1) == 0
+                  && lesson.lessonIndex(ofStep: 2) == 1 && lesson.firstStep(ofLesson: 1) == 2 && lesson.firstStep(ofLesson: 4) == 5)
+            check("lessons: done from the step reached (old records)", lesson.lessonsDone(reachedStep: 1) == 0
+                  && lesson.lessonsDone(reachedStep: 2) == 1 && lesson.lessonsDone(reachedStep: 3) == 1
+                  && lesson.lessonsDone(reachedStep: 4) == 2 && lesson.lessonsDone(reachedStep: 6) == 4)
+
+            // Gated (the app): intro → Start → two clean → Lesson complete (the card folded in) →
+            // Start lesson 2 → the shuffle's intro.
             let g = LessonEngine(lesson: lesson, ticksPerBeat: tpb, gated: true)
             g.heard(tick: 0, tempo: 70, rolling: true, epoch: 0)
             let intro = g.output.intro
-            check("gated: step 1 opens on its intro, pinky", intro?.title == lesson.steps[0].title && intro?.fingers.map(\.finger) == [5]
-                  && g.output.nowNote == nil, "\(String(describing: intro))")
+            check("gated: lesson 1 opens on its intro, pinky, with its goal", intro?.title == "Roots on the 1" && intro?.number == 1
+                  && intro?.count == 5 && intro?.goal == "2 clean choruses at 70" && intro?.fingers.map(\.finger) == [5]
+                  && g.output.nowNote == nil && g.output.lesson == 1 && g.output.lessonTitle == "Roots on the 1",
+                  "\(String(describing: intro))")
             g.begin()
             let presses = autoplay(.perfect, choruses: 3)
             var pending = presses
@@ -176,20 +186,25 @@ enum LessonCheck {
                 while let p = pending.first, p.tick <= t { g.played(note: p.note, tick: p.tick, msPerTick: p.msPerTick, epoch: 0); pending.removeFirst() }
                 t += 1
             }
-            check("gated: two clean → Lesson complete, the next step waits", g.output.complete?.done == lesson.steps[0].title
-                  && g.output.complete?.next.kind == .card && g.output.step == 1 && g.output.nowNote == nil,
-                  "step \(g.output.step) complete \(String(describing: g.output.complete))")
+            let c = g.output.complete
+            check("gated: two clean → Lesson complete with the card, lesson 2 waiting", c?.number == 1 && c?.done == "Roots on the 1"
+                  && c?.card == lesson.steps[1].card && c?.next?.number == 2 && c?.next?.title == "The shuffle"
+                  && g.output.step == 1 && g.output.nowNote == nil,
+                  "step \(g.output.step) complete \(String(describing: c))")
             g.advance()
-            check("gated: next → the card", g.output.step == 2 && g.output.card != nil && g.output.complete == nil)
-            g.continueCard()
-            let shuffle = g.output.intro
-            check("gated: the shuffle's intro, pinky on the root and thumb on the fifth", g.output.step == 3
+            check("gated: Start lesson 2 skips the card, scoring from the top", g.output.step == 3 && g.output.lesson == 2
+                  && g.output.card == nil && g.output.complete == nil && g.output.intro == nil)
+            let g2 = LessonEngine(lesson: lesson, ticksPerBeat: tpb, gated: true)
+            g2.start(step: 2)
+            g2.heard(tick: 0, tempo: 70, rolling: true, epoch: 0)
+            let shuffle = g2.output.intro
+            check("gated: the shuffle's intro, pinky on the root and thumb on the fifth", g2.output.step == 3 && shuffle?.number == 2
                   && shuffle?.fingers == [.init(finger: 5, tone: "root", beat: 1), .init(finger: 1, tone: "fifth", beat: 3)]
                   && shuffle?.about != nil, "\(String(describing: shuffle))")
-            g.begin()
-            g.heard(tick: Double(3 * loop) + 2, tempo: 70, rolling: true, epoch: 1)
-            check("gated: the keyboard shows C pinky, G thumb in bar 1", g.output.fingers == [lesson.displayRoot: 5, lesson.displayRoot + 7: 1],
-                  "\(g.output.fingers)")
+            g2.begin()
+            g2.heard(tick: 2, tempo: 70, rolling: true, epoch: 0)
+            check("gated: the keyboard shows C pinky, G thumb in bar 1", g2.output.fingers == [lesson.displayRoot: 5, lesson.displayRoot + 7: 1],
+                  "\(g2.output.fingers)")
         }
 
         var run = simulate([(autoplay(.perfect, choruses: 3), end(3))])

@@ -16,7 +16,9 @@ struct StepPanel: View {
     var body: some View {
         let compact = sizeClass == .compact
         let shape = RoundedRectangle(cornerRadius: 8)
-        VStack(alignment: .leading, spacing: compact ? 10 : 16) {
+        // Scrolls when the intro is taller than the pads' box (the Mac's Lesson complete).
+        ScrollView {
+        VStack(alignment: .leading, spacing: compact ? 10 : 14) {
             if let c = state.complete {
                 HStack(spacing: 10) {
                     Image(systemName: "checkmark.circle.fill")
@@ -26,38 +28,66 @@ struct StepPanel: View {
                         .textCase(.uppercase)
                 }
                 .foregroundStyle(Palette.good)
-                Text(c.done)
+                Text("Lesson \(c.number) · \(c.done)")
                     .dataLabel(compact ? 11 : 13, weight: .semibold)
                     .foregroundStyle(Palette.muted)
+                if let card = c.card {
+                    Text(card)
+                        .bodyText(compact ? 15 : 18, weight: .semibold)
+                        .foregroundStyle(Palette.text)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
                 StaffLines(spacing: 3)
                     .padding(.vertical, compact ? 2 : 6)
-                Text("Next")
-                    .dataLabel(11)
-                    .foregroundStyle(Palette.muted)
-                about(c.next, compact: compact, titleSize: compact ? 22 : 30)
-                Spacer(minLength: 0)
-                PrimaryButton(title: c.next.kind == .card ? "Next" : "Start \(c.next.title)", action: controls.nextStep)
+                if let n = c.next {
+                    Text("Next · Lesson \(n.number) of \(n.count)")
+                        .dataLabel(11)
+                        .foregroundStyle(Palette.muted)
+                    about(n, compact: compact, titleSize: compact ? 22 : 30, hand: false)
+                }
+                // The two buttons side by side where they fit, else one under the other.
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 10) { completeButtons(c) }
+                    VStack(alignment: .leading, spacing: 8) { completeButtons(c) }
+                }
             } else if let i = state.intro {
-                Text("Step \(state.step) of \(state.stepCount)")
+                Text("\(state.moduleTitle) · Lesson \(i.number) of \(i.count)")
                     .dataLabel(11)
                     .foregroundStyle(Palette.muted)
-                about(i, compact: compact, titleSize: compact ? 28 : 40)
-                Spacer(minLength: 0)
+                about(i, compact: compact, titleSize: compact ? 28 : 40, hand: true)
                 PrimaryButton(title: "Start", action: controls.beginStep)
+                    .padding(.top, 4)
             }
         }
-        .padding(compact ? 16 : 28)
+        .padding(compact ? 16 : 24)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+        }
+        .scrollBounceBehavior(.basedOnSize)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(shape.fill(Palette.panel))
         .overlay(shape.strokeBorder(Palette.line, lineWidth: 1))
     }
 
     @ViewBuilder
-    private func about(_ s: LessonEngine.StepInfo, compact: Bool, titleSize: CGFloat) -> some View {
+    private func completeButtons(_ c: LessonEngine.Complete) -> some View {
+        if let n = c.next {
+            PrimaryButton(title: "Start lesson \(n.number) · \(n.title)", action: controls.nextStep)
+        }
+        QuietButton(title: "Back to the module", action: controls.back)
+    }
+
+    @ViewBuilder
+    private func about(_ s: LessonEngine.StepInfo, compact: Bool, titleSize: CGFloat, hand: Bool) -> some View {
         Text(s.title)
             .font(.display(titleSize))
             .textCase(.uppercase)
             .foregroundStyle(Palette.text)
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Image(systemName: "flag.checkered").font(.system(size: 11, weight: .semibold))
+            Text("Goal · \(s.goal)").dataLabel(11, weight: .semibold)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .foregroundStyle(Palette.signal)
         if let about = s.about {
             Text(about)
                 .bodyText(compact ? 14 : 17)
@@ -65,9 +95,13 @@ struct StepPanel: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         if !s.fingers.isEmpty {
+            // The hand drawing on an intro; Lesson complete keeps just the legend, so its
+            // buttons stay in view.
             HStack(alignment: .center, spacing: compact ? 14 : 28) {
-                HandDiagram(used: Set(s.fingers.map(\.finger)))
-                    .frame(width: compact ? 92 : 150, height: compact ? 70 : 112)
+                if hand {
+                    HandDiagram(used: Set(s.fingers.map(\.finger)))
+                        .frame(width: compact ? 92 : 124, height: compact ? 70 : 92)
+                }
                 VStack(alignment: .leading, spacing: compact ? 6 : 10) {
                     ForEach(s.fingers, id: \.finger) { f in
                         HStack(spacing: 10) {
