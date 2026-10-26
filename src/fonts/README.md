@@ -32,7 +32,16 @@ list the file in `outputFileTracingIncludes` in `next.config.ts` (as
 
 ## Catalog
 
-Built 2026-10-16.
+Built 2026-10-26.
+
+### Alfa Slab One
+
+static · `ofl/alfaslabone` · AlfaSlabOne-400.woff2 17 KB
+
+```ts
+import localFont from 'next/font/local'
+const font = localFont({ src: '../../fonts/alfa-slab-one/AlfaSlabOne-400.woff2', weight: '400', variable: '--font-alfa-slab-one', display: 'swap' })
+```
 
 ### Anton
 
@@ -142,6 +151,15 @@ const font = localFont({
 ```
 
 OG: `dm-mono/DMMono-400.ttf` → `{ name: 'DM Mono', weight: 400, style: 'normal' }`
+
+### Figtree
+
+variable (wght 300–900) · `ofl/figtree` · Figtree.woff2 24 KB
+
+```ts
+import localFont from 'next/font/local'
+const font = localFont({ src: '../../fonts/figtree/Figtree.woff2', weight: '300 900', variable: '--font-figtree', display: 'swap' })
+```
 
 ### Fraunces
 

@@ -1,5 +1,24 @@
 {
   "families": {
+    "Alfa Slab One": {
+      "family": "Alfa Slab One",
+      "dir": "alfa-slab-one",
+      "kind": "static",
+      "repoDir": "ofl/alfaslabone",
+      "sources": {
+        "AlfaSlabOne-Regular.ttf": "0158f184619023509f750ad3def1c39be2bd7872"
+      },
+      "axes": {},
+      "web": [
+        {
+          "file": "AlfaSlabOne-400.woff2",
+          "style": "normal",
+          "weight": 400,
+          "bytes": 17048
+        }
+      ],
+      "og": []
+    },
     "Anton": {
       "family": "Anton",
       "dir": "anton",
@@ -268,6 +287,34 @@
           "bytes": 25880
         }
       ]
+    },
+    "Figtree": {
+      "family": "Figtree",
+      "dir": "figtree",
+      "kind": "variable",
+      "repoDir": "ofl/figtree",
+      "sources": {
+        "Figtree[wght].ttf": "579e2ab5f30beb21cd0b618dd0796b0fce0eff8e"
+      },
+      "axes": {
+        "wght": [
+          300,
+          300,
+          900
+        ]
+      },
+      "web": [
+        {
+          "file": "Figtree.woff2",
+          "style": "normal",
+          "weight": [
+            300,
+            900
+          ],
+          "bytes": 25028
+        }
+      ],
+      "og": []
     },
     "Fraunces": {
       "family": "Fraunces",
@@ -863,5 +910,5 @@
       "og": []
     }
   },
-  "generated": "2026-10-16"
+  "generated": "2026-10-26"
 }
