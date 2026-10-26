@@ -64,7 +64,7 @@ export default function TiltBoard({ skin, data, state, hint, won, move }: BoardP
 
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
-      if (!(e.key in KEYS) || (e.target as HTMLElement)?.closest?.('input,textarea,.scene,.win')) return
+      if (!(e.key in KEYS) || (e.target as HTMLElement)?.closest?.('input,textarea,.scene,.win') || document.querySelector('.ww .episode')) return
       e.preventDefault()
       tilt(KEYS[e.key])
     }

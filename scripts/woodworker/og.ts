@@ -36,7 +36,7 @@ async function main() {
       kick.textContent = 'A house puzzle in ten rooms'
       kick.style.fontSize = '15px'
       const sub = document.createElement('p')
-      sub.textContent = 'Cyriel the carpenter rebuilt everything. Then left for the week.'
+      sub.textContent = 'Cyriel the carpenter rebuilt everything. Then had quite a week.'
       sub.style.cssText = 'font-family:var(--f-hand);font-size:30px;line-height:1.1;color:var(--paper);margin:14px 0 0;transform:rotate(-1.5deg)'
       header.append(sub)
       const pics = document.createElement('div')

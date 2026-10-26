@@ -322,45 +322,19 @@
 .ww .spoon .caret { bottom: calc(100% + 4px); }
 .ww .piece.target { z-index: 4; }
 
-/* ---------- Chapter two: the rooms in two rows, one per chapter ---------- */
+/* ---------- The rooms, and once met, Cyriel's week to play again ---------- */
 .ww .levels { display: grid; gap: 10px; justify-items: center; }
-.ww .chapter-row { display: grid; gap: 6px; justify-items: center; }
-.ww .chapter-row .ch { font: 600 10px/1 var(--f-mono); letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
-.ww .lvls { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.ww .lvls, .ww .eps { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; align-items: center; }
+.ww .eps .ch { font: 600 10px/1 var(--f-mono); letter-spacing: .16em; text-transform: uppercase; color: var(--muted); margin-right: 2px; }
+.ww .ep-chip { font: 700 12px/1 var(--f-body); color: var(--mark-ink); background: var(--mark); border: 0; border-radius: 999px; padding: 7px 12px; cursor: pointer; box-shadow: 0 0 0 1.5px var(--mark-ink), 0 2px 0 rgba(0, 0, 0, .3); transform: rotate(-2deg); }
+.ww .ep-chip:nth-child(odd) { transform: rotate(2deg); }
+.ww .ep-chip .done { font-family: var(--f-mono); font-size: 11px; opacity: .7; margin-left: 6px; }
 
 /* Cyriel's face by every note: tap it to see the story again. */
 .ww .note .badge { position: absolute; left: -16px; bottom: -16px; width: 48px; height: 48px; padding: 0; border-radius: 50%; overflow: hidden; cursor: pointer; background: #f7e2c4; border: 2.5px solid var(--paper-ink); box-shadow: 0 4px 8px rgba(0, 0, 0, .35); transform: rotate(6deg); transition: transform .15s; }
 .ww .note .badge:hover { transform: rotate(-4deg) scale(1.06); }
 .ww .cyriel-art { display: block; width: 100%; height: 100%; object-fit: contain; }
 
-/* When Cyriel is away, the note comes some other way. */
-.ww .note.postcard { background: #fbf3e0; background-image: none; transform: rotate(1.4deg); border: 7px solid; border-image: repeating-linear-gradient(45deg, #c8323c 0 9px, #fbf3e0 9px 15px, #3f6fb0 15px 24px, #fbf3e0 24px 30px) 7; padding-top: 14px; }
-.ww .note.postcard p { padding-right: 52px; }
-.ww .note .stamp { position: absolute; top: 10px; right: 12px; width: 40px; height: 48px; background: linear-gradient(180deg, #f7b38a 0 55%, #e8795a 55%); outline: 3px dotted #fbf3e0; outline-offset: -2px; box-shadow: 0 0 0 1px rgba(60, 30, 10, .25); overflow: hidden; }
-.ww .note .stamp::before { content: ''; position: absolute; left: 4px; right: 4px; bottom: 6px; height: 26px; background: #3f6fb0; clip-path: polygon(50% 0, 64% 22%, 100% 100%, 0 100%, 36% 22%); }
-.ww .note .stamp::after { content: ''; position: absolute; left: 13px; right: 13px; top: 15px; height: 7px; background: #fbf3e0; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
-.ww .note.postcard::after { content: ''; position: absolute; top: 18px; right: 34px; width: 40px; height: 40px; border-radius: 50%; border: 2px solid rgba(60, 40, 30, .35); background: repeating-linear-gradient(0deg, transparent 0 6px, rgba(60, 40, 30, .25) 6px 7.5px); pointer-events: none; }
-.ww .note.texts { background: #f4f2ec; background-image: none; transform: rotate(-.6deg); border: 7px solid #1b1b1d; border-radius: 22px; font: 400 15px/1.3 var(--f-body); padding: 14px 14px 12px; }
-.ww .note.texts::before { display: none; }
-.ww .note .bubbles { display: grid; gap: 6px; justify-items: start; }
-.ww .note .bubbles p { background: #e1ddd2; border-radius: 16px 16px 16px 5px; padding: 7px 12px; max-width: 88%; }
-.ww .note .bubbles p:first-child { font-weight: 800; letter-spacing: .04em; background: #e8795a; color: #fff8ee; }
-.ww .note.texts .sig, .ww .note.voicemail .sig { font: 500 11px/1 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; opacity: .6; margin-top: 8px; }
-.ww .note.tissue { background: #fdfdf9; background-image: radial-gradient(60% 40% at 30% 30%, rgba(0, 0, 0, .035), transparent 70%), radial-gradient(50% 50% at 75% 70%, rgba(0, 0, 0, .04), transparent 70%), radial-gradient(40% 30% at 60% 20%, rgba(255, 255, 255, .9), transparent 70%); border-radius: 14px 34px 20px 28px / 28px 16px 32px 14px; transform: rotate(1.8deg); box-shadow: 0 8px 14px rgba(0, 0, 0, .22); }
-.ww .note.tissue::before { top: -9px; width: 64px; height: 20px; margin-left: -32px; border-radius: 2px; background: rgba(255, 250, 220, .7); box-shadow: 0 1px 2px rgba(0, 0, 0, .15); transform: rotate(-5deg); }
-.ww .note.voicemail { background: #1b1b1d; background-image: none; color: var(--ink); border-radius: 18px; transform: rotate(-.8deg); font: 400 15px/1.4 var(--f-body); padding: 14px 18px 12px; box-shadow: 0 0 0 2px #3a3a3f, 0 10px 18px rgba(0, 0, 0, .35); }
-.ww .note.voicemail::before { display: none; }
-.ww .note.voicemail p::before { content: '“'; }
-.ww .note.voicemail p::after { content: '”'; }
-.ww .note .wave { display: flex; gap: 2px; height: 22px; align-items: center; margin-bottom: 8px; }
-.ww .note .wave i { flex: 1; height: var(--h); background: var(--brass); border-radius: 2px; opacity: .85; }
-
-/* What Cyriel says on picking up. */
-.ww .call { position: absolute; bottom: calc(100% + 10px); left: 50%; translate: -50% 0; z-index: 25; display: flex; gap: 8px; align-items: center; width: max-content; max-width: min(calc(100vw - 32px), 380px); background: var(--paper); color: var(--paper-ink); font: 700 19px/1.1 var(--f-hand); padding: 8px 14px 9px; border-radius: 16px; box-shadow: 0 0 0 2px var(--paper-ink), 0 8px 16px rgba(0, 0, 0, .35); animation: ww-pop .25s ease-out; }
-.ww .call::after { content: ''; position: absolute; left: 50%; top: 100%; width: 14px; height: 10px; margin-left: -7px; background: var(--paper); clip-path: polygon(0 0, 100% 0, 50% 100%); }
-.ww .call svg { width: 18px; height: 18px; flex: none; fill: var(--brass-dk); }
-.ww .btn.ringing svg { animation: ww-ring .09s linear infinite alternate; }
-@keyframes ww-ring { from { rotate: -14deg; } to { rotate: 14deg; } }
 @keyframes ww-pop { from { opacity: 0; transform: scale(.9) translateY(6px); } }
 
 /* ---------- Story scenes ---------- */
@@ -442,3 +416,87 @@
 .ww img.cyriel-art { object-fit: cover; }
 .ww .cyriel-art img, .ww .cyriel-art svg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; overflow: visible; }
 .ww .cyriel-art.pose-chase { transform: rotate(5deg); }
+
+/* ---------- Cyriel's week: the interruptions ---------- */
+.ww .episode { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; padding: 12px; background: rgba(12, 26, 22, .8); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+.ww .episode.alert { animation: ww-fade .15s, ww-shake .35s .3s; }
+@keyframes ww-shake { 20% { translate: -6px 2px; } 40% { translate: 5px -3px; } 60% { translate: -3px 2px; } 80% { translate: 2px -1px; } }
+.ww .ep-card { background: var(--paper); color: var(--paper-ink); width: 100%; max-width: 360px; padding: 14px 16px 16px; border-radius: 4px; text-align: center; box-shadow: 0 18px 34px rgba(0, 0, 0, .5); }
+.ww .episode.alert .ep-card { transform: rotate(1deg); animation: ww-slam .32s cubic-bezier(.3, 1.5, .5, 1); }
+@keyframes ww-slam { from { transform: scale(1.5) rotate(-6deg); opacity: 0; } }
+.ww .stamp-in { display: inline-block; font: 400 30px/1 var(--f-display); text-transform: uppercase; letter-spacing: .04em; color: #c8323c; border: 4px solid #c8323c; border-radius: 6px; padding: 6px 12px 4px; transform: rotate(-6deg); margin: 4px 0 0; animation: ww-stamp .3s .12s cubic-bezier(.3, 1.6, .5, 1) backwards; mix-blend-mode: multiply; }
+@keyframes ww-stamp { from { transform: scale(2.6) rotate(-14deg); opacity: 0; } }
+.ww .ep-art { height: 200px; margin: 8px auto 0; }
+.ww .ep-art.small { height: 130px; margin-top: 4px; }
+.ww .ep-card .say { font: 700 22px/1.12 var(--f-hand); margin: 6px 0 14px; text-wrap: balance; }
+.ww .ep-card .how { font-size: 13px; line-height: 1.35; margin: 0 0 10px; color: var(--paper-ink); opacity: .8; max-width: none; text-wrap: balance; }
+.ww .ep-card .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.ww .ep-card button { font: 700 14px/1 var(--f-body); border-radius: 999px; padding: 10px 18px; cursor: pointer; border: 1.5px solid var(--paper-ink); background: var(--paper-ink); color: var(--paper); }
+.ww .ep-card button.skip { background: transparent; color: var(--paper-ink); opacity: .7; }
+.ww .ep-score { font-family: var(--f-display); margin-top: 6px; }
+.ww .ep-score b { font-weight: 400; font-size: 54px; line-height: 1; }
+.ww .ep-score span { font-size: 22px; opacity: .55; margin-left: 4px; }
+.ww .ep-card .label { margin: 2px 0 0; font-weight: 600; font-size: 14px; }
+
+/* Every minigame plays in a 3:4 arena; positions are percent of it. */
+.ww .arena { position: relative; width: 100%; aspect-ratio: 3 / 4; border-radius: 10px; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; cursor: pointer; box-shadow: inset 0 0 0 3px var(--paper-ink); }
+.ww .arena > * { position: absolute; }
+.ww .hud { left: 0; right: 0; top: 0; z-index: 9; display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 9px 11px; font: 500 12px/1 var(--f-mono); letter-spacing: .04em; text-transform: uppercase; color: var(--ink); background: linear-gradient(180deg, rgba(0, 0, 0, .45), transparent); pointer-events: none; }
+.ww .clock { position: relative; width: 70px; height: 7px; border-radius: 4px; background: rgba(255, 255, 255, .2); overflow: hidden; }
+.ww .clock i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--mark); }
+
+/* Taxi: dusk street, the house on the left, the chalk X on the road. */
+.ww .taxi-game { background: linear-gradient(180deg, #2a3d5c 0%, #c97b5a 58%, #f0b77a 72%); }
+.ww .taxi-game .house { left: 0; top: 20%; width: 24%; height: 56%; background: repeating-linear-gradient(0deg, #8a4a32 0 7px, #7a3f2a 7px 8px); border-right: 3px solid var(--paper-ink); border-top: 3px solid var(--paper-ink); }
+.ww .taxi-game .house::after { content: ''; position: absolute; right: 18%; bottom: 0; width: 42%; height: 46%; background: #ffd84a; border: 3px solid var(--paper-ink); border-bottom: 0; border-radius: 4px 4px 0 0; box-shadow: 0 0 22px rgba(255, 216, 74, .5); }
+.ww .taxi-game .kerb { left: 0; right: 0; top: 76%; bottom: 0; background: linear-gradient(180deg, #8b8f94 0 6%, #3a3a3f 6%); }
+.ww .taxi-game .kerb::after { content: ''; position: absolute; left: 0; right: 0; top: 52%; height: 4px; background: repeating-linear-gradient(90deg, #f4ecd4 0 22px, transparent 22px 44px); opacity: .7; }
+.ww .taxi-game .aim { inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.ww .taxi-game .aim path { fill: none; stroke: rgba(255, 255, 255, .4); stroke-width: 2; stroke-dasharray: 3 6; }
+.ww .x-mark { width: 26px; height: 26px; translate: -50% -50%; }
+.ww .x-mark::before, .ww .x-mark::after { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 5px; margin-top: -2.5px; border-radius: 3px; background: #f4ecd4; rotate: 45deg; }
+.ww .x-mark::after { rotate: -45deg; }
+.ww .cab { width: 30%; translate: -50% 0; z-index: 3; }
+.ww .cab svg { display: block; width: 100%; }
+.ww .riding { position: absolute; width: 30%; translate: -50% 0; }
+.ww .flung { width: 9%; translate: -50% -50%; z-index: 4; }
+.ww .flung.landed { z-index: 2; rotate: 80deg; opacity: .85; }
+.ww .thing { display: block; width: 100%; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, .35)); }
+.ww .hud .left { display: flex; gap: 2px; }
+.ww .hud .left .thing { width: 18px; }
+
+/* Catch Krul: a park of hedges. */
+.ww .park { background: repeating-linear-gradient(90deg, #6f9f45 0 34px, #659639 34px 68px); }
+.ww .park.oops { box-shadow: inset 0 0 0 3px var(--paper-ink), inset 0 0 60px rgba(232, 121, 90, .8); }
+.ww .park .hole { width: 28%; height: 22%; translate: -50% -50%; }
+.ww .park .hedge { position: absolute; left: 0; right: 0; bottom: 0; height: 52%; z-index: 2; border-radius: 50% 50% 10px 10px / 70% 70% 10px 10px; background: radial-gradient(circle at 30% 30%, #4e8a3a, #2f6a2a 70%); box-shadow: inset 0 -6px 0 rgba(0, 0, 0, .2), 0 4px 0 rgba(0, 0, 0, .2); pointer-events: none; }
+.ww .park .pop { position: absolute; left: 50%; bottom: 30%; width: 82%; padding: 0; border: 0; background: none; cursor: pointer; z-index: 1; }
+.ww .park .pop svg { display: block; width: 100%; overflow: visible; }
+.ww .park .pop.booped { scale: .82; opacity: .6; transition: scale .15s, opacity .3s; }
+.ww .park .pop.booped::after { content: 'boop!'; position: absolute; left: 50%; top: -18%; translate: -50% 0; font: 700 18px/1 var(--f-hand); color: var(--mark); text-shadow: 0 1px 0 var(--mark-ink), 0 0 4px var(--mark-ink); }
+.ww .park .pop.is-duck.booped::after { content: 'quack!'; color: #fff; }
+
+/* Achoo: Cyriel tossing in bed, the tissue box on the rug. */
+.ww .sickbed { background: linear-gradient(180deg, #3d4a6b 0 34%, #6b4a3a 34% 36%, #b98a64 36%); }
+.ww .sickbed::before { content: ''; position: absolute; left: 10%; right: 10%; bottom: 3%; height: 22%; border-radius: 50%; background: repeating-radial-gradient(ellipse at center, #c8323c 0 6px, #e8795a 6px 12px); opacity: .55; }
+.ww .sniffly { width: 26%; translate: -50% -50%; z-index: 2; transition: rotate .2s; }
+.ww .sniffly.ah { animation: ww-ah .18s ease-in-out infinite alternate; }
+@keyframes ww-ah { from { rotate: -6deg; } to { rotate: 8deg; translate: -50% -56%; } }
+.ww .red-nose { width: 3.4%; aspect-ratio: 1; border-radius: 50%; background: #e8595a; translate: -50% -50%; z-index: 3; opacity: .85; }
+.ww .ah-bubble { translate: -50% -50%; z-index: 4; font: 700 18px/1 var(--f-hand); color: var(--paper-ink); background: var(--paper); padding: 3px 9px 4px; border-radius: 10px; box-shadow: 0 0 0 1.5px var(--paper-ink); white-space: nowrap; }
+.ww .duvet { left: -2%; right: -2%; top: 24%; height: 15%; z-index: 3; border-radius: 30px 30px 0 0; border: 3px solid var(--paper-ink); background: repeating-linear-gradient(90deg, #f4ecd4 0 18px, #9fc3d8 18px 36px); }
+.ww .drop { width: 6%; aspect-ratio: 1; translate: -50% -50%; z-index: 5; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; background: radial-gradient(circle at 35% 35%, #e6f7d8, #a6d48a); box-shadow: 0 0 0 2px var(--paper-ink); }
+.ww .drop.caught { opacity: 0; transition: opacity .3s; }
+.ww .drop.splat { scale: 1.8 .5; opacity: .7; transition: scale .1s; }
+.ww .tissues { width: 26%; height: 9%; translate: -50% -50%; z-index: 6; border-radius: 4px; border: 3px solid var(--paper-ink); background: repeating-linear-gradient(90deg, #4f7fbf 0 8px, #6f9ad0 8px 16px); }
+.ww .tissues .pluck { position: absolute; left: 30%; right: 30%; bottom: 70%; height: 110%; background: #fffdf6; border: 2px solid var(--paper-ink); border-radius: 50% 50% 20% 20%; }
+
+/* Court: the road to traffic court. */
+.ww .road { background: linear-gradient(90deg, #5f8f3a 0 8%, #3a3a3f 8% 92%, #5f8f3a 92%); }
+.ww .road.bumped { animation: ww-shake .3s; }
+.ww .lane-line { top: 0; bottom: 0; width: 1.6%; translate: -50% 0; background: repeating-linear-gradient(180deg, #f4ecd4 0 26px, transparent 26px 80px); background-position: 0 var(--dash); opacity: .8; }
+.ww .obstacle { width: 13%; translate: -50% -50%; z-index: 2; }
+.ww .obstacle svg { display: block; width: 100%; }
+.ww .obstacle.knocked { rotate: 70deg; opacity: .5; }
+.ww .van { width: 15%; translate: -50% -50%; z-index: 3; }
+.ww .van svg { display: block; width: 100%; filter: drop-shadow(0 4px 3px rgba(0, 0, 0, .4)); }

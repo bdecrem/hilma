@@ -68,3 +68,13 @@ export const ring = () => {
 }
 /** Krul, delighted. */
 export const yip = () => (tone(820, 1500, 0.09, 0.1, 'triangle'), tone(900, 1700, 0.08, 0.08, 'triangle', 0.16))
+/** A duck, offended. */
+export const quack = () => (tone(520, 300, 0.12, 0.09, 'square'), tone(480, 280, 0.1, 0.07, 'square', 0.13))
+/** Cyriel's van, unhappy about a cone. */
+export const honk = () => (tone(330, 320, 0.18, 0.08, 'square'), tone(415, 400, 0.18, 0.06, 'square'))
+/** The sneeze itself. */
+export const sneeze = () => (noise(0.05, 900, 0.3), noise(0.28, 2600, 0.4, 0.05, 0.8))
+/** A sneeze into a tissue. */
+export const pff = () => noise(0.12, 700, 0.35, 0, 0.9)
+/** Something thrown: a quick whoosh. */
+export const whoosh = () => noise(0.25, 1600, 0.18, 0, 0.6)

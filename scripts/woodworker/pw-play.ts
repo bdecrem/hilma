@@ -1,6 +1,8 @@
 // Plays all ten rooms through the real UI (drags, taps, tilts), following
 // the solver's shortest solution, and checks each ends on the win card at par.
 // Story scenes are clicked through on the way, and the ending must play last.
+// Cyriel's interruptions must barge in at their move, get played by the bots
+// (bots.ts) to a decent score, and hand the room back with the moves intact.
 // Screenshots of every room before and after go to the out dir.
 //   npx tsx scripts/woodworker/pw-play.ts <out-dir> [base=http://localhost:3255] [width=420]
 import { chromium, type Page } from 'playwright'
@@ -9,6 +11,11 @@ import { solve } from '../../src/app/woodworker/lib/engine'
 import { LEVELS } from '../../src/app/woodworker/lib/levels'
 import { rulesFor } from '../../src/app/woodworker/lib/rules'
 import { SIZE } from '../../src/app/woodworker/lib/slide'
+import { episodeIn } from '../../src/app/woodworker/lib/episodes'
+import { playEpisode } from './bots'
+
+/** What a bot must score at least, as a share of the best. */
+const ENOUGH = { taxi: 0.5, krul: 1, achoo: 0.8, court: 0.8 }
 
 const [out = '/tmp/ww', base = 'http://localhost:3255', width = '420'] = process.argv.slice(2)
 mkdirSync(out, { recursive: true })
@@ -93,6 +100,22 @@ async function main() {
         await drag(page, x, y, axis[0] === 'x' ? px : 0, axis[0] === 'y' ? px : 0)
       }
       s = R.apply(s, m)
+      const ep = episodeIn(L.id)
+      if (ep && step + 1 === ep.after) {
+        await page.waitForTimeout(1100)
+        const up = await page.locator('.episode').count()
+        await page.screenshot({ path: `${out}/ep-${ep.id}-alert.png` })
+        await page.locator('.episode .primary').click()
+        await page.waitForTimeout(1500)
+        await page.screenshot({ path: `${out}/ep-${ep.id}-play.png` })
+        const r = await playEpisode(page, ep.id)
+        await page.screenshot({ path: `${out}/ep-${ep.id}-done.png` })
+        const epOk = up === 1 && r.score >= ENOUGH[ep.id] * r.max
+        if (!epOk) bad++
+        console.log(`${epOk ? 'ok  ' : 'FAIL'}   episode ${ep.id} after move ${ep.after}: ${r.score}/${r.max}, "${r.label}"`)
+        await page.locator('.episode .primary').click()
+        await page.waitForTimeout(400)
+      }
       const shown = Number(await page.locator('.stats b').first().textContent())
       if (!s || shown !== step + 1) {
         console.log(`FAIL ${L.id}: after move ${step + 1} the page shows ${shown} moves (${JSON.stringify(m)})`)

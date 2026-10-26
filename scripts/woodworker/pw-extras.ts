@@ -1,7 +1,8 @@
 // The Woodworker, the parts a straight playthrough skips: the Hint button in
-// every room (it must point at a shortest-path move; where Cyriel is away it
-// is a call, and the calls run out), Undo, the egg and the lemon going down a
-// knot hole (no move counted, back where they were), and replaying the story.
+// every room (it must point at a shortest-path move), Undo, the egg and the
+// lemon going down a knot hole (no move counted, back where they were),
+// replaying the story, and an interruption put off with "Not now" (the room
+// carries on, the episode only comes once, and it can be replayed from its chip).
 //   npx tsx scripts/woodworker/pw-extras.ts <out-dir> [base=http://localhost:3255]
 import { chromium } from 'playwright'
 import { mkdirSync } from 'node:fs'
@@ -41,33 +42,43 @@ async function main() {
   for (let i = 0; i < LEVELS.length; i++) {
     const L = LEVELS[i]
     await go(i)
-    if (!L.away) {
-      await hintBtn.click()
-      await page.waitForTimeout(250)
-      const n = await marks()
-      await page.screenshot({ path: `${out}/hint-${i + 1}-${L.id}.png`, fullPage: true })
-      check(n >= 1 && (await hintBtn.textContent()) === 'Hint', `${L.id}: hint shows a mark (${n})`)
-      continue
-    }
-    // Away: every call rings, then they say their line and point; then they stop picking up.
-    for (let k = 0; k < L.away.calls.length; k++) {
-      const label = await hintBtn.textContent()
-      await hintBtn.click()
-      await page.waitForTimeout(1350)
-      const n = await marks()
-      const said = await page.locator('.call').textContent()
-      if (k === 0) await page.screenshot({ path: `${out}/hint-${i + 1}-${L.id}.png`, fullPage: true })
-      check(label === `Call Cyriel (${L.away.calls.length - k})` && n >= 1 && said === L.away.calls[k], `${L.id}: call ${k + 1} ("${label}") points (${n}) and says "${said}"`)
-      await page.waitForTimeout(3500)
-    }
-    check((await hintBtn.isDisabled()) && (await hintBtn.textContent()) === L.away.out, `${L.id}: out of calls → "${await hintBtn.textContent()}"`)
+    await hintBtn.click()
+    await page.waitForTimeout(250)
+    const n = await marks()
+    await page.screenshot({ path: `${out}/hint-${i + 1}-${L.id}.png`, fullPage: true })
+    check(n >= 1 && (await hintBtn.textContent()) === 'Hint', `${L.id}: hint shows a mark (${n})`)
   }
+
+  // Cyriel's taxi, put off: it comes two moves into breakfast, "Not now" goes back
+  // to the room, it doesn't come again, and it waits on a chip by the rooms.
+  await go(2)
+  await page.locator('.tilt-btn').nth(1).click()
+  await page.waitForTimeout(900)
+  await page.locator('.tilt-btn').nth(2).click()
+  await page.waitForTimeout(1300)
+  check((await page.locator('.episode').count()) === 1, 'taxi barges in after two tilts')
+  await page.locator('.episode .skip').click()
+  await page.waitForTimeout(300)
+  check((await page.locator('.episode').count()) === 0 && (await moves()) === 2, `"Not now": back in the room at 2 moves (${await moves()})`)
+  await go(2)
+  for (const d of [1, 2]) {
+    await page.locator('.tilt-btn').nth(d).click()
+    await page.waitForTimeout(900)
+  }
+  await page.waitForTimeout(600)
+  check((await page.locator('.episode').count()) === 0, 'it only barges in once')
+  const chip = page.locator('.ep-chip')
+  check((await chip.count()) === 1 && (await chip.textContent()) === 'Taxi', `replay chip: "${await chip.textContent()}"`)
+  await chip.click()
+  await page.waitForTimeout(400)
+  check((await page.locator('.episode .stamp-in').textContent()) === "Taxi's here!", 'the chip replays it')
+  await page.locator('.episode .skip').click()
 
   // The story replays from Cyriel's face by the note.
   await go(6)
   await page.locator('.note .badge').click()
   await page.waitForTimeout(300)
-  check((await page.locator('.scene .say').textContent())?.startsWith("I'm back!") === true, 'badge replays the room\'s story')
+  check((await page.locator('.scene .say').textContent())?.startsWith('Hello!') === true, 'badge replays the story so far')
   await skip()
 
   // Lemon tea: up, left, down sets the lemon up beside the knot hole; right loses it.

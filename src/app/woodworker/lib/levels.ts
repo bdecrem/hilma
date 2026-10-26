@@ -1,5 +1,5 @@
-// The ten rooms, in two chapters: five at home with Cyriel, then the week they
-// keep not being there. Layouts and starts come from scripts/woodworker/gen.ts
+// The ten rooms. Cyriel's week happens around them: four interruptions
+// (lib/episodes.ts) barge into rooms 3, 5, 7 and 9. Layouts and starts come from scripts/woodworker/gen.ts
 // (the espresso cupboard is the original); every par is the solver's true
 // minimum, proven by scripts/woodworker/check.ts.
 import type { SlideLevel, SlideState } from './slide'
@@ -21,17 +21,6 @@ interface Room {
   quips: [string, string]
   /** The art for the item and where it goes, when it isn't the first chapter's. */
   skin?: 'can' | 'treats' | 'mug' | 'licence' | 'present'
-  /** Cyriel isn't home: how their note reached you, and how often they pick up. */
-  away?: Away
-}
-export interface Away {
-  /** What the note is written on. */
-  kind: 'postcard' | 'texts' | 'tissue' | 'voicemail'
-  sig: string
-  /** What they say each time you call them for a hint; there are this many calls. */
-  calls: string[]
-  /** The Hint button, while they're away. */
-  out: string
 }
 export type Level =
   | (Room & { mech: 'slide'; data: SlideLevel; start: SlideState })
@@ -62,11 +51,6 @@ const hall: [number, number, number, boolean, string][] = [
   [2, 4, 2, true, 'Picnic'],
   [5, 2, 2, false, 'Brolly'],
   [2, 5, 2, true, 'Sledge'],
-]
-
-export const CHAPTERS = [
-  { title: 'At home', from: 0 },
-  { title: "Cyriel's week", from: 5 },
 ]
 
 export const LEVELS: Level[] = [
@@ -190,17 +174,11 @@ export const LEVELS: Level[] = [
     name: 'Ferns',
     item: 'Watering can',
     par: 8,
-    note: 'Greetings from the woodworking fair in Kyoto! Could you water my ferns? The can is in the hall cupboard. I tidied the hall cupboard before I left. Sorry.',
-    how: 'Same as the capsules: slide things along their length until the watering can gets out through the gap on the right.',
+    note: "Kyoto was wonderful. I thought about the hall cupboard the whole time, so I redid it the night I got back. The watering can is in there. The ferns are thirsty, and judging me.",
+    how: 'Slide things along their length until the watering can gets out through the gap on the right.',
     win: 'Ferns, watered',
     quips: ['The ferns send their regards.', "They're ferns. They'll forgive you."],
     skin: 'can',
-    away: {
-      kind: 'postcard',
-      sig: '— C., seven hours ahead',
-      calls: ["*yawns* It's four in the morning here. Try this one.", 'Mm. That one. Goodnight.'],
-      out: 'Asleep in Kyoto',
-    },
     data: {
       exitRow: 2,
       pieces: hall.map(([x, y, len, h, label]) => ({ label, h, len, line: h ? y : x })),
@@ -213,17 +191,11 @@ export const LEVELS: Level[] = [
     name: 'Treats',
     item: 'Treats',
     par: 9,
-    note: 'PUPPY EMERGENCY\nbrought a puppy back from Kyoto. long story. his name is Krul\nKrul is out. chasing him round the park\nrattle his treats at the back door?? they are in the boot cupboard. I fixed the boot cupboard',
+    note: "Krul's treats live in the boot cupboard now. I fixed the boot cupboard so Krul can't get in. Neither can anyone, it turns out.",
     how: 'Swing the cupboard doors (each arc has to be clear), then drag the treats in straight lines to the gap on the right.',
     win: 'Krul, home',
     quips: ['Good boy. You, I mean. Krul too.', 'He ate a glove on the way in, but he is home.'],
     skin: 'treats',
-    away: {
-      kind: 'texts',
-      sig: 'Cyriel · now',
-      calls: ['*panting* KRUL. No, not you. Do this one.', "He's found a duck. Quick, that door.", '*running* That one! Bye!'],
-      out: 'Chasing a puppy',
-    },
     data: {
       exit: [5, 2],
       walls: [],
@@ -245,17 +217,11 @@ export const LEVELS: Level[] = [
     name: 'Lemon tea',
     item: 'Lemon',
     par: 7,
-    note: 'Caught a cold chasing Krul in the rain. In bed. Could you make me a lemon tea? The lemon is on my bed tray. I built the bed tray with a fever. It tips.',
+    note: "Still poorly. I built a bed tray with a fever, and it tips. Could you roll the lemon into my tea? Not down the knot hole. *sniff*",
     how: 'Tilt the tray with the arrows, a swipe, or the arrow keys. Everything rolls until it hits something. Roll the lemon into the mug, and keep it out of the knot hole.',
     win: 'Tea, made',
     quips: ['Ahh. Lemon. I can taste things again.', 'Lukewarm. Perfect. Thank you.'],
     skin: 'mug',
-    away: {
-      kind: 'tissue',
-      sig: '— Cyriel (in bed)',
-      calls: ["*sniff* ...that way. *snores*"],
-      out: 'Fast asleep',
-    },
     data: {
       nails: [[3, 0], [1, 4], [4, 3], [2, 3], [5, 2], [3, 1], [5, 1], [4, 5]],
       holes: [[3, 5]],
@@ -274,17 +240,11 @@ export const LEVELS: Level[] = [
     name: 'Licence',
     item: 'Driving licence',
     par: 10,
-    note: "Hi, it's me. I'm at traffic court. I parked the van on the pavement to deliver a wardrobe, and then the wardrobe... anyway. They want my driving licence. It's in the desk drawers. The drawers are tied together. Drop it in the envelope, the courier comes at noon.",
+    note: "The court wants to see my driving licence. It's in the desk drawers, which I tied together to save on runners. Drop it in the envelope?",
     how: 'Drag a drawer a notch left or right; its strings drag the drawers they point to, the same way or, over a pulley, the opposite way. Line every hole up under the licence.',
     win: 'Licence, posted',
     quips: ['The judge liked my handwriting. Still a fine.', 'The courier says a drawer bit him. Fair.'],
     skin: 'licence',
-    away: {
-      kind: 'voicemail',
-      sig: 'Voicemail from Cyriel · 0:41',
-      calls: ['*whispering* We are in recess. Quickly: this one.'],
-      out: 'Phone off in court',
-    },
     data: {
       cols: 6,
       shaft: 2,

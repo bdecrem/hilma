@@ -1,16 +1,17 @@
 'use client'
-// The Woodworker: ten rooms Cyriel rebuilt, in two chapters. The shell keeps
-// the moves (every state, for Undo), the par, the hint, the hammers, the best
-// scores and the story: a scene before some rooms the first time you open
-// them, and in the rooms where Cyriel is away, a hint is a phone call and they
-// only pick up so many times. Each room's board draws it and turns gestures
-// into moves.
+// The Woodworker: ten rooms Cyriel rebuilt. The shell keeps the moves (every
+// state, for Undo), the par, the hint, the hammers, the best scores and the
+// story: a scene before the first and last room, and Cyriel's week, four
+// minigames that barge into a room the first time you play it (a few moves
+// in) and hand it back untouched. Each room's board draws it and turns
+// gestures into moves.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { solve } from './lib/engine'
-import { CHAPTERS, LEVELS } from './lib/levels'
+import { LEVELS } from './lib/levels'
 import { rulesFor } from './lib/rules'
 import { SCENES } from './lib/story'
-import { chime, ring, setSound, unlock } from './sfx'
+import { EPISODES, episodeIn, type EpisodeDef, type Result } from './lib/episodes'
+import { chime, setSound, unlock } from './sfx'
 import { duck, setRoom, startMusic, stopMusic } from './music'
 import SlideBoard from './boards/SlideBoard'
 import SwingBoard from './boards/SwingBoard'
@@ -20,10 +21,13 @@ import BoxBoard from './boards/BoxBoard'
 import Cyriel from './boards/Cyriel'
 import { Hammer } from './boards/parts'
 import SceneCard from './SceneCard'
+import Episode from './episodes/Episode'
 
 const STORE = 'woodworker-best-v2'
 const MUSIC = 'woodworker-music'
 const SEEN = 'woodworker-story-v1'
+/** Best result per episode, as a share of its best score. */
+const EPISODE_BEST = 'woodworker-episodes-v1'
 
 function load<T>(key: string, empty: T): T {
   try {
@@ -64,10 +68,6 @@ export default function Game() {
   const [sound, setSoundOn] = useState(true)
   const [round, setRound] = useState(0)
   const timers = useRef<number[]>([])
-  /** Calls to Cyriel used in this room, the one ringing now, and what they said. */
-  const [called, setCalled] = useState(0)
-  const [ringing, setRinging] = useState(false)
-  const [said, setSaid] = useState<string | null>(null)
   const [scene, setScene] = useState<{ id: string; then?: () => void } | null>(null)
 
   /** Play a room's scene, unless it has been seen already (or always, when asked). */
@@ -79,10 +79,25 @@ export default function Game() {
     setScene({ id, then })
   }, [])
 
+  /** The interruption on screen, and the episodes met so far with their best results. */
+  const [episode, setEpisode] = useState<EpisodeDef | null>(null)
+  const [met, setMet] = useState<Record<string, Result | null>>({})
+
   useEffect(() => {
     setBest(loadBest())
+    setMet(load(EPISODE_BEST, {}))
     tell(LEVELS[0].id)
   }, [tell])
+
+  const endEpisode = (r: Result | null) => {
+    const ep = episode!
+    const all = load<Record<string, Result | null>>(EPISODE_BEST, {})
+    const prev = all[ep.id]
+    if (!(ep.id in all) || (r && (!prev || r.score / r.max > prev.score / prev.max))) all[ep.id] = r ?? prev ?? null
+    save(EPISODE_BEST, all)
+    setMet(all)
+    setEpisode(null)
+  }
 
   // Music: on unless the player turned it off before. Browsers only allow
   // audio after a gesture, so it starts on the first tap or key anywhere,
@@ -132,9 +147,7 @@ export default function Game() {
       setWon(false)
       setCard(null)
       setHint(null)
-      setCalled(0)
-      setRinging(false)
-      setSaid(null)
+      setEpisode(null)
       setRound((r) => r + 1)
       tell(LEVELS[i].id)
     },
@@ -144,7 +157,6 @@ export default function Game() {
   const finish = (n: number) => {
     setWon(true)
     setHint(null)
-    setSaid(null)
     const b = loadBest()
     const prev = b[L.id]
     const better = prev == null || n < prev
@@ -165,6 +177,11 @@ export default function Game() {
     setHist(next)
     setHint(null)
     if (rules.solved(n)) finish(next.length - 1)
+    else {
+      // Cyriel's week: the first time through this room, a few moves in, something comes up.
+      const ep = episodeIn(L.id)
+      if (ep && next.length - 1 === ep.after && !(ep.id in load(EPISODE_BEST, {}))) timers.current.push(window.setTimeout(() => setEpisode(ep), 700))
+    }
     return true
   }
 
@@ -173,34 +190,14 @@ export default function Game() {
     setHist(hist.slice(0, -1))
     setHint(null)
   }
-  const point = () => {
-    const h = histRef.current
-    const path = solve(rules, h[h.length - 1])
+  const showHint = () => {
+    if (won) return
+    unlock()
+    const path = solve(rules, state)
     if (!path?.length) return
     setHint(path[0])
     clearTimeout(hintTimer.current)
-    hintTimer.current = window.setTimeout(() => (setHint(null), setSaid(null)), 2600)
-  }
-  const calls = L.away?.calls ?? []
-  const left = calls.length - called
-  const showHint = () => {
-    if (won || ringing) return
-    unlock()
-    if (!L.away) return point()
-    if (left <= 0) return
-    // Away: it rings twice, then they pick up, say their line and point.
-    ring()
-    setRinging(true)
-    timers.current.push(
-      window.setTimeout(() => {
-        setRinging(false)
-        setCalled(called + 1)
-        setSaid(calls[called])
-        point()
-        clearTimeout(hintTimer.current)
-        hintTimer.current = window.setTimeout(() => (setHint(null), setSaid(null)), 3400)
-      }, 1100),
-    )
+    hintTimer.current = window.setTimeout(() => setHint(null), 2600)
   }
   const toggleSound = () => {
     setSound(!sound)
@@ -220,8 +217,6 @@ export default function Game() {
 
   const last = lv === LEVELS.length - 1
   const ham = card ? hammers(card.moves, L.par) : 0
-  const away = L.away
-  const hintLabel = !away ? 'Hint' : ringing ? 'Ringing…' : left > 0 ? `Call Cyriel (${left})` : away.out
 
   return (
     <div className="wrap">
@@ -233,43 +228,34 @@ export default function Game() {
       </header>
 
       <nav className="levels" aria-label="Rooms">
-        {CHAPTERS.map((C, ci) => (
-          <div key={C.title} className="chapter-row">
-            <span className="ch">{C.title}</span>
-            <div className="lvls">
-              {LEVELS.slice(C.from, CHAPTERS[ci + 1]?.from).map((R, k) => {
-                const i = C.from + k
-                return (
-                  <button key={R.id} type="button" className={`lvl${R.away ? ' away' : ''}`} aria-current={i === lv} onClick={() => enter(i)}>
-                    {i + 1}. {R.name}
-                    {best[R.id] != null && <span className="done">✓{best[R.id]}</span>}
-                  </button>
-                )
-              })}
-            </div>
+        <div className="lvls">
+          {LEVELS.map((R, i) => (
+            <button key={R.id} type="button" className="lvl" aria-current={i === lv} onClick={() => enter(i)}>
+              {i + 1}. {R.name}
+              {best[R.id] != null && <span className="done">✓{best[R.id]}</span>}
+            </button>
+          ))}
+        </div>
+        {EPISODES.some((e) => e.id in met) && (
+          <div className="eps" aria-label="Cyriel's week, again">
+            <span className="ch">Cyriel&apos;s week</span>
+            {EPISODES.filter((e) => e.id in met).map((e) => (
+              <button key={e.id} type="button" className="ep-chip" onClick={() => setEpisode(e)}>
+                {e.name}
+                {met[e.id] && (
+                  <span className="done">
+                    {met[e.id]!.score}/{met[e.id]!.max}
+                  </span>
+                )}
+              </button>
+            ))}
           </div>
-        ))}
+        )}
       </nav>
 
-      <div className={`note${away ? ` ${away.kind}` : ''}`} aria-live="polite">
-        {away?.kind === 'postcard' && <span className="stamp" aria-hidden />}
-        {away?.kind === 'voicemail' && (
-          <span className="wave" aria-hidden>
-            {Array.from({ length: 28 }, (_, k) => (
-              <i key={k} style={{ '--h': `${20 + ((k * 37) % 70)}%` } as React.CSSProperties} />
-            ))}
-          </span>
-        )}
-        {away?.kind === 'texts' ? (
-          <div className="bubbles">
-            {L.note.split('\n').map((t, k) => (
-              <p key={k}>{t}</p>
-            ))}
-          </div>
-        ) : (
-          <p>{L.note}</p>
-        )}
-        <span className="sig">{away ? away.sig : '— Cyriel, woodworker'}</span>
+      <div className="note" aria-live="polite">
+        <p>{L.note}</p>
+        <span className="sig">— Cyriel, woodworker</span>
         <button type="button" className="badge" aria-label="Replay Cyriel's story" onClick={() => tell(sceneFor(lv), true)}>
           <Cyriel pose="hello" head />
         </button>
@@ -282,12 +268,6 @@ export default function Game() {
       </div>
 
       <div className="stage-wrap">
-        {said && (
-          <div className="call" role="status">
-            <svg viewBox="0 0 16 16" aria-hidden><path d="M4.5 1.8 6.6 4.4 5.3 6.2c.8 1.8 2.3 3.3 4.1 4.1l1.8-1.3 2.6 2.1-1.2 2.4C7.4 13.6 2.4 8.6 2.1 3z" /></svg>
-            <span>{said}</span>
-          </div>
-        )}
         {board}
         {card && (
           <div className="win">
@@ -326,13 +306,9 @@ export default function Game() {
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M2.5 8a5.5 5.5 0 1 0 1.8-4.1" /><path d="M2 2v3.5h3.5" /></svg>
           Restart
         </button>
-        <button className={`btn${away ? ' phone' : ''}${ringing ? ' ringing' : ''}`} type="button" onClick={showHint} disabled={won || (!!away && left <= 0)}>
-          {away ? (
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><path d="M4.5 1.8 6.6 4.4 5.3 6.2c.8 1.8 2.3 3.3 4.1 4.1l1.8-1.3 2.6 2.1-1.2 2.4C7.4 13.6 2.4 8.6 2.1 3z" /></svg>
-          ) : (
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 13h4M6.5 15h3" /><path d="M8 1.5a4.5 4.5 0 0 0-2.5 8.2V11h5V9.7A4.5 4.5 0 0 0 8 1.5Z" /></svg>
-          )}
-          {hintLabel}
+        <button className="btn" type="button" onClick={showHint} disabled={won}>
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 13h4M6.5 15h3" /><path d="M8 1.5a4.5 4.5 0 0 0-2.5 8.2V11h5V9.7A4.5 4.5 0 0 0 8 1.5Z" /></svg>
+          Hint
         </button>
         <button className="btn" type="button" aria-pressed={sound} onClick={toggleSound}>
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M2 6v4h3l4 3V3L5 6H2Z" />{sound && <path d="M11.5 5.5a3.5 3.5 0 0 1 0 5" />}</svg>
@@ -345,6 +321,8 @@ export default function Game() {
       </div>
 
       <p className="how">{L.how}</p>
+
+      {episode && <Episode key={episode.id} ep={episode} back={`Back to the ${L.name.toLowerCase()}`} onDone={endEpisode} />}
 
       {scene && (
         <SceneCard

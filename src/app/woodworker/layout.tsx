@@ -15,10 +15,10 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://ola.cx'),
   title: 'The Woodworker',
   description:
-    'Cyriel, a well-meaning, clumsy carpenter, rebuilt your house. Ten rooms, five kinds of puzzle (sliding drawers, swinging doors, a counter that tips, trays tied with string, Japanese puzzle boxes), and one week in which Cyriel is never home when you need them.',
+    'Cyriel, a well-meaning, clumsy carpenter, rebuilt your house. Ten rooms, five kinds of puzzle (sliding drawers, swinging doors, a counter that tips, trays tied with string, Japanese puzzle boxes), and Cyriel\'s week, which keeps interrupting.',
   openGraph: {
     title: 'The Woodworker',
-    description: 'Ten rooms a clumsy carpenter rebuilt, and the week they kept not being home.',
+    description: 'Ten rooms a clumsy carpenter rebuilt, and the week they kept barging in.',
     url: 'https://ola.cx/woodworker',
     images: [{ url: '/woodworker/og.png', width: 1200, height: 630 }],
   },
