@@ -113,6 +113,17 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   `AppIcon.appiconset`; run `node apps/takt/branding/icon/render.cjs apps/takt/branding/icon/svg/takt-icon-dark.svg
   apps/takt/Takt/Assets.xcassets/AppIcon.appiconset` from the repo root with sharp installed).
 
+- **Calibration is a timing dial: 0.1 (12), 2026-10-26.** Bart couldn't read the 12-square
+  screen, so it became a tuner for timing (`Lesson/Calibration.swift`, `Menu/CalibrationScreen.swift`):
+  a click every beat at 90 until you leave (the Player keeps 8 clicks queued ahead), one bar of
+  count-in, and a needle on a ±80 ms dial that swings to each tap **with the saved correction
+  already applied** (Bart's call: the measured latency is the starting point, so centered = the
+  correction is right). Faint marks = the last 8 taps, the thick blue mark = their median; once
+  8 taps are steady (median absolute deviation ≤ 20 ms) and lean ≥ 3 ms, Use this saves
+  base + lean (clamped ±150 ms) and the taps start over from the new value. Done/Skip/Back just
+  leave. DEBUG: `-Route calibrate -Calibrate 1 -CalibrateTapsEarly <ms>` taps that early (raw)
+  on every click. Checks 115/115.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

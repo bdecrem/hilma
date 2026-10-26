@@ -25,9 +25,8 @@ final class Player {
     private(set) var finish: LessonEngine.Finish?
     /// Presses are scored only while the lesson screen is up; elsewhere they just sound.
     var inLesson = false
-    /// The calibration under way (or just finished), and the click being heard.
+    /// The calibration under way, and the click being heard.
     private(set) var calibration: Calibration?
-    private(set) var calibrationDone = false
     private(set) var calibrationClick: Int?
     /// Play it back: the transport epoch the recorded chorus is playing in (it starts at tick 0).
     private(set) var playbackEpoch: Int?
@@ -44,6 +43,8 @@ final class Player {
     @ObservationIgnored private let log = Logger(subsystem: "takt", category: "input")
     @ObservationIgnored private let lessonLog = Logger(subsystem: "takt", category: "lesson")
     @ObservationIgnored private var calibrationEpoch = 0
+    /// Clicks sent to the engine so far; the tick loop keeps a bar ahead of the one heard.
+    @ObservationIgnored private var clicksSent = 0
     @ObservationIgnored private var bandBeforeCalibration: (playing: Bool, tempo: Int, muted: UInt8)?
 
     /// Calibration's result: how early (negative) or late this player presses, ms. Every scored
@@ -208,7 +209,7 @@ final class Player {
         let s = audio.snapshot()
         let clock = TransportClock(s)
         guard clock.valid else { return }
-        if var c = calibration, !calibrationDone {
+        if var c = calibration {
             guard s.epoch == calibrationEpoch else { return }
             let p = clock.position(atHost: hostTime)
             c.tap(tick: p.tick, msPerTick: p.msPerTick)
@@ -237,50 +238,50 @@ final class Player {
 
     // MARK: Calibration
 
-    /// The band stops and steps out; a cross-stick clicks four to listen and eight to tap along
-    /// with, at 90. Afterwards the band comes back as it was.
+    /// The band stops and steps out; a cross-stick clicks every beat at 90, beat 1 louder, until
+    /// the screen is left. Afterwards the band comes back as it was.
     func startCalibration() {
         let s = audio.snapshot()
         if bandBeforeCalibration == nil { bandBeforeCalibration = (playing, tempo, s.muted) }
         calibrationEpoch = s.epoch + 1
-        let c = Calibration(firstTick: Double(2 * audio.band.ticksPerBeat), ticksPerBeat: audio.band.ticksPerBeat)
+        let c = Calibration(firstTick: Double(2 * audio.band.ticksPerBeat), ticksPerBeat: audio.band.ticksPerBeat,
+                            base: Self.inputOffsetMs)
         audio.send(.stop)
         for ch in [Channel.drums, .bass, .keys, .horns] { audio.send(.mute(ch, true)) }
         audio.send(.tempo(Double(Calibration.tempo)))
         audio.send(.play)
-        for (k, t) in c.clickTicks.enumerated() {
-            audio.send(.click(tick: t, velocity: k % 4 == 0 ? 1 : 0.7))
-        }
         calibration = c
-        calibrationDone = false
         calibrationClick = nil
-        lessonLog.info("calibration started")
+        clicksSent = 0
+        sendClicks(through: 7)
+        lessonLog.info("calibration started from \(String(format: "%+.1f ms", Self.inputOffsetMs), privacy: .public)")
     }
 
-    private func finishCalibration() {
+    private func sendClicks(through k: Int) {
         guard let c = calibration else { return }
-        calibrationDone = true
-        if let r = c.result {
-            UserDefaults.standard.set(r, forKey: "inputOffsetMs")
-            UserDefaults.standard.set(true, forKey: "calibrated")
+        while clicksSent <= k {
+            audio.send(.click(tick: c.clickTick(clicksSent), velocity: clicksSent % 4 == 0 ? 1 : 0.7))
+            clicksSent += 1
         }
-        let taps = c.clickTicks.indices.compactMap { k in c.offsets[k].map { String(format: "%+.1f", $0) } }.joined(separator: " ")
-        lessonLog.info("calibration: \(c.tapped) taps [\(taps, privacy: .public)] → \(c.result.map { String(format: "%+.1f ms", $0) } ?? "not enough", privacy: .public)")
-        restoreBand()
     }
 
-    /// Leaves the calibration screen (finished or not): the band as it was.
-    func endCalibration() {
-        if !calibrationDone { restoreBand() }
-        calibration = nil
-        calibrationDone = false
-        calibrationClick = nil
-    }
-
-    /// Skip: nothing measured, and the question isn't asked again.
-    func skipCalibration() {
+    /// Use this: the steady lean goes into the saved correction, and the needle starts over from it.
+    func useCalibration() {
+        guard var c = calibration, let offset = c.proposed else { return }
+        let taps = c.recent.map { String(format: "%+.1f", $0) }.joined(separator: " ")
+        lessonLog.info("calibration: [\(taps, privacy: .public)] from \(String(format: "%+.1f", c.base), privacy: .public) → \(String(format: "%+.1f ms", offset), privacy: .public)")
+        UserDefaults.standard.set(offset, forKey: "inputOffsetMs")
         UserDefaults.standard.set(true, forKey: "calibrated")
-        endCalibration()
+        c.rebase(offset)
+        calibration = c
+    }
+
+    /// Leaves the calibration screen: the band as it was, and the first-lesson question answered.
+    func endCalibration() {
+        if calibration != nil { restoreBand() }
+        UserDefaults.standard.set(true, forKey: "calibrated")
+        calibration = nil
+        calibrationClick = nil
     }
 
     private func restoreBand() {
@@ -383,21 +384,21 @@ final class Player {
         if beats % 4 != beat { beat = beats % 4 }
         if beats / 4 / bars != chorus { chorus = beats / 4 / bars }
 
-        if let c = calibration, !calibrationDone, s.epoch == calibrationEpoch {
+        if let c = calibration, s.epoch == calibrationEpoch {
             let k = c.click(at: heard.tick)
             if k != calibrationClick { calibrationClick = k }
+            sendClicks(through: (k ?? 0) + 8)
             #if DEBUG
-            // `-CalibrateTapsEarly <ms>`: a tap that early at each click, through the press path (a
-            // launch argument can't start with a minus).
-            if UserDefaults.standard.object(forKey: "CalibrateTapsEarly") != nil {
+            // `-CalibrateTapsEarly <ms>`: a tap that early (raw) at each click, through the press path
+            // (a launch argument can't start with a minus).
+            if UserDefaults.standard.object(forKey: "CalibrateTapsEarly") != nil, let k, k + 1 >= Calibration.listen {
                 let ms = -UserDefaults.standard.double(forKey: "CalibrateTapsEarly")
-                for (k, t) in c.clickTicks.enumerated() where k >= Calibration.listen && c.offsets[k] == nil {
-                    let at = t + ms / heard.msPerTick
+                for j in max(Calibration.listen, k - 1)...(k + 1) where c.taps.last.map({ $0.click < j }) ?? true {
+                    let at = c.clickTick(j) + ms / heard.msPerTick
                     if at <= heard.tick, at > heard.tick - 6, let host = clock.hostTime(atTick: at) { score(60, hostTime: host, calibrated: false) }
                 }
             }
             #endif
-            if heard.tick >= c.endTick { finishCalibration() }
         }
         if playbackEpoch == s.epoch, heard.tick >= Double(engine.loopTicks) { playbackEpoch = nil }
 

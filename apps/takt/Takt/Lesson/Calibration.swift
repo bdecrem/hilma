@@ -1,61 +1,93 @@
 import Foundation
 
-/// Calibration (brief §5.9): four clicks to listen, eight to tap along with. Each tap is
-/// measured against the nearest click as heard; the median of the eight is how early (or late)
-/// this player presses when they line their own note up with the band, on this setup (monitor
-/// latency, the keyboard, the hand). The Player then moves every scored press by that much.
-/// Pure: ticks in, an offset out.
+/// Calibration (brief §5.9), as a timing dial: a click every beat at 90 for as long as you like,
+/// a needle that swings to each tap. The needle starts from the saved correction: a tap is
+/// measured against the nearest click as heard, then moved by the saved offset, the way a lesson
+/// scores it. Centered means the correction is right; a steady lean is how much to move it, and
+/// Use this saves that and starts over from the new value. Pure: ticks in, offsets out.
 struct Calibration: Equatable {
+    /// The first bar is a count-in; taps on it don't count.
     static let listen = 4
-    static let taps = 8
     static let tempo = 90
-    /// Taps further than this from a click are not taps at it.
-    static let maxOffsetMs = 150.0
-    /// The correction is kept to a third of a beat window and a bit: past that it is not latency.
-    static let clampMs = 80.0
-    static let needed = 6
+    /// Taps further than this from a click (raw, before the correction) are not taps at it.
+    static let maxOffsetMs = 200.0
+    /// The correction is kept to this: past it, it is not latency.
+    static let clampMs = 150.0
+    /// The dial's scale, either side of on time.
+    static let scaleMs = 80.0
+    /// The average is over this many taps, and needs them all before it is offered.
+    static let window = 8
+    /// Steady: half the window lands within this of the average (the median absolute deviation).
+    static let steadyMs = 20.0
 
     /// Transport tick of the first click; one per beat after it.
     let firstTick: Double
     let ticksPerBeat: Int
-    /// Offsets in ms (negative: early) by click, the tapped clicks only.
-    private(set) var offsets: [Int: Double] = [:]
+    /// The saved correction the needle starts from, ms (negative: early).
+    private(set) var base: Double
+    /// Taps in order: the click each was at, and its offset after the correction (negative: early).
+    private(set) var taps: [(click: Int, ms: Double)] = []
 
-    init(firstTick: Double, ticksPerBeat: Int) {
+    init(firstTick: Double, ticksPerBeat: Int, base: Double) {
         self.firstTick = firstTick
         self.ticksPerBeat = ticksPerBeat
+        self.base = base
     }
 
-    var clickTicks: [Double] {
-        (0..<(Self.listen + Self.taps)).map { firstTick + Double($0 * ticksPerBeat) }
+    static func == (a: Calibration, b: Calibration) -> Bool {
+        a.firstTick == b.firstTick && a.base == b.base && a.taps.map(\.click) == b.taps.map(\.click)
+            && a.taps.map(\.ms) == b.taps.map(\.ms)
     }
 
-    /// After the last click and a beat for a late tap.
-    var endTick: Double { firstTick + Double((Self.listen + Self.taps) * ticksPerBeat) }
+    func clickTick(_ k: Int) -> Double { firstTick + Double(k * ticksPerBeat) }
 
-    /// The click being heard at a tick (for the dots), nil before the first.
+    /// The click being heard at a tick, nil before the first.
     func click(at tick: Double) -> Int? {
-        tick < firstTick - 0.5 ? nil : min(Self.listen + Self.taps - 1, Int(((tick - firstTick) / Double(ticksPerBeat)).rounded(.down)))
+        tick < firstTick - 0.5 ? nil : Int(((tick - firstTick) / Double(ticksPerBeat)).rounded(.down))
     }
 
-    /// A press at a heard tick. Taps during the listening clicks don't count; the first tap at a
-    /// click counts, a second one doesn't.
+    /// A press at a heard tick, at the nearest click: the first tap at a click counts, a second
+    /// one doesn't, nor do taps in the count-in.
     mutating func tap(tick: Double, msPerTick: Double) {
         let k = Int(((tick - firstTick) / Double(ticksPerBeat)).rounded())
-        guard k >= Self.listen, k < Self.listen + Self.taps, offsets[k] == nil else { return }
-        let ms = (tick - (firstTick + Double(k * ticksPerBeat))) * msPerTick
-        guard abs(ms) <= Self.maxOffsetMs else { return }
-        offsets[k] = ms
+        guard k >= Self.listen, taps.last.map({ $0.click < k }) ?? true else { return }
+        let raw = (tick - clickTick(k)) * msPerTick
+        guard abs(raw) <= Self.maxOffsetMs else { return }
+        taps.append((k, raw - base))
     }
 
-    var tapped: Int { offsets.count }
+    /// Where the needle points: the last tap.
+    var needle: Double? { taps.last?.ms }
 
-    /// The median offset, clamped; nil with fewer than `needed` taps.
-    var result: Double? {
-        guard offsets.count >= Self.needed else { return nil }
-        let s = offsets.values.sorted()
-        let m = s.count % 2 == 1 ? s[s.count / 2] : (s[s.count / 2 - 1] + s[s.count / 2]) / 2
-        return min(Self.clampMs, max(-Self.clampMs, m))
+    var recent: [Double] { taps.suffix(Self.window).map(\.ms) }
+
+    /// The median of the recent taps, nil until there are a window's worth.
+    var average: Double? {
+        let r = recent
+        guard r.count >= Self.window else { return nil }
+        return Self.median(r)
+    }
+
+    var steady: Bool {
+        guard let a = average else { return false }
+        return Self.median(recent.map { abs($0 - a) }) <= Self.steadyMs
+    }
+
+    /// The correction Use this saves: the saved one moved by the steady lean, clamped.
+    var proposed: Double? {
+        guard steady, let a = average else { return nil }
+        return min(Self.clampMs, max(-Self.clampMs, base + a))
+    }
+
+    /// Saved: the needle starts from the new correction, and the taps start over.
+    mutating func rebase(_ offset: Double) {
+        base = offset
+        taps = []
+    }
+
+    static func median(_ v: [Double]) -> Double {
+        let s = v.sorted()
+        return s.count % 2 == 1 ? s[s.count / 2] : (s[s.count / 2 - 1] + s[s.count / 2]) / 2
     }
 
     /// The offset in words, "23 ms early" / "on the beat".

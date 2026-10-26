@@ -361,27 +361,38 @@ enum LessonCheck {
 
         // MARK: Calibration (M4)
 
-        func calibrate(_ offsets: [Int: Double]) -> Calibration {
-            var c = Calibration(firstTick: 24, ticksPerBeat: tpb)
-            for (k, ms) in offsets.sorted(by: { $0.key < $1.key }) {
-                c.tap(tick: 24 + Double(k * tpb) + ms / msPerTick(90), msPerTick: msPerTick(90))
-            }
+        func calibrate(_ offsets: [(Int, Double)], base: Double = 0) -> Calibration {
+            var c = Calibration(firstTick: 24, ticksPerBeat: tpb, base: base)
+            for (k, ms) in offsets { c.tap(tick: 24 + Double(k * tpb) + ms / msPerTick(90), msPerTick: msPerTick(90)) }
             return c
         }
-        let steady = calibrate(Dictionary(uniqueKeysWithValues: (4..<12).map { ($0, -23.0) }))
-        check("calibration: eight taps 23 ms early read -23", steady.tapped == 8 && abs((steady.result ?? 0) + 23) < 0.01,
-              "\(steady.result.map { String(format: "%.2f", $0) } ?? "nil")")
-        let wobbly = calibrate([4: -40, 5: -10, 6: -20, 7: -25, 8: 30, 9: -22, 10: -18, 11: -24])
-        check("calibration: the median, not the mean", abs((wobbly.result ?? 0) + 21) < 0.01, "\(String(describing: wobbly.result))")
-        let listen = calibrate([0: -20, 1: -20, 2: -20, 3: -20, 4: -20, 5: -20, 6: -20, 7: -20, 8: -20])
-        check("calibration: taps on the listening clicks don't count", listen.tapped == 5 && listen.result == nil)
-        let wild = calibrate([4: -200, 5: 160, 6: -10, 7: -10, 8: -10, 9: -10, 10: -10, 11: -10])
-        check("calibration: a tap 150+ ms off isn't a tap at that click", wild.tapped == 6 && abs((wild.result ?? 0) + 10) < 0.01, "\(wild.tapped)")
-        let tooLate = calibrate(Dictionary(uniqueKeysWithValues: (4..<12).map { ($0, 120.0) }))
-        check("calibration: the correction stops at 80 ms", tooLate.result == 80)
-        var twice = calibrate([4: -5])
-        twice.tap(tick: 24 + 48 + 2, msPerTick: msPerTick(90))
-        check("calibration: a second tap at a click doesn't count", twice.tapped == 1 && abs(twice.offsets[4]! + 5) < 0.01)
+        let steady = calibrate((4..<12).map { ($0, -23.0) })
+        check("calibration: eight taps 23 ms early read -23, steady, propose -23", steady.taps.count == 8
+              && abs((steady.average ?? 0) + 23) < 0.01 && steady.steady && abs((steady.proposed ?? 0) + 23) < 0.01,
+              "\(steady.average.map { String(format: "%.2f", $0) } ?? "nil")")
+        let corrected = calibrate((4..<12).map { ($0, -85.0) }, base: -75)
+        check("calibration: the needle starts from the saved correction", abs((corrected.needle ?? 0) + 10) < 0.01
+              && abs((corrected.proposed ?? 0) + 85) < 0.01, "\(String(describing: corrected.needle))")
+        let seven = calibrate((4..<11).map { ($0, -20.0) })
+        check("calibration: no average before eight taps", seven.average == nil && seven.proposed == nil && seven.needle != nil)
+        let wobbly = calibrate([(4, -40), (5, -10), (6, -20), (7, -25), (8, 30), (9, -22), (10, -18), (11, -24)])
+        check("calibration: the median, not the mean", abs((wobbly.average ?? 0) + 21) < 0.01, "\(String(describing: wobbly.average))")
+        let scattered = calibrate([(4, -60), (5, 40), (6, -10), (7, 70), (8, -50), (9, 30), (10, -80), (11, 60)])
+        check("calibration: scattered taps aren't steady, nothing to use", !scattered.steady && scattered.proposed == nil)
+        let rolling = calibrate((4..<12).map { ($0, 50.0) } + (12..<20).map { ($0, -5.0) })
+        check("calibration: the average is the last eight", abs((rolling.average ?? 0) + 5) < 0.01 && rolling.taps.count == 16)
+        let listen = calibrate((0..<6).map { ($0, -20.0) })
+        check("calibration: taps in the count-in don't count", listen.taps.count == 2)
+        let wild = calibrate([(4, -250), (5, 10)])
+        check("calibration: a tap 200+ ms off isn't a tap", wild.taps.count == 1)
+        let tooLate = calibrate((4..<12).map { ($0, 180.0) }, base: 100)
+        check("calibration: the correction stops at 150 ms", tooLate.proposed == 150)
+        var twice = calibrate([(4, -5)])
+        twice.tap(tick: 24 + Double(4 * tpb) + 2, msPerTick: msPerTick(90))
+        check("calibration: a second tap at a click doesn't count", twice.taps.count == 1)
+        var rebased = steady
+        rebased.rebase(-23)
+        check("calibration: Use this starts over from the new value", rebased.taps.isEmpty && rebased.base == -23)
         check("calibration: words", Calibration.words(-23.4) == "23 ms early" && Calibration.words(2) == "on the beat"
               && Calibration.words(11) == "11 ms late")
 
