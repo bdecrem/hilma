@@ -380,7 +380,8 @@ enum LessonCheck {
         check("calibration: the middle half, so wild taps don't count", abs((wobbly.average ?? 0) + 124.0 / 6) < 0.01, "\(String(describing: wobbly.average))")
         let needle = calibrate([(4, 80), (5, -10), (6, -20), (7, 10), (8, 0)])
         check("calibration: the needle is the mean of the last four", abs((needle.needle ?? 99) + 5) < 0.01 && needle.lastTap == 0)
-        check("calibration: a hit is within 25 ms", Calibration.hit(-25) && Calibration.hit(24) && !Calibration.hit(26))
+        check("calibration: a hit is the lessons' window at 90", Calibration.hit(-45) && Calibration.hit(44) && !Calibration.hit(46)
+              && Calibration.onTimeMs == ScoringRules().windowMs(tempo: Double(Calibration.tempo)))
         let scattered = calibrate([(4, -60), (5, 40), (6, -10), (7, 70), (8, -50), (9, 30), (10, -80), (11, 60),
                                    (12, -70), (13, 50), (14, -60), (15, 80)])
         check("calibration: scattered taps aren't steady, nothing to use", !scattered.steady && scattered.proposed == nil)

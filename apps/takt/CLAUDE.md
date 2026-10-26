@@ -131,6 +131,11 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   to `Documents/calibration-taps.csv` in the app container
   (`~/Library/Containers/com.bartdecrem.Takt/Data/Documents/` on the Mac): time, click, raw,
   corrected, base. Read that before guessing again. Checks 118/118.
+  **0.1 (15):** Bart's first logged run (68 taps on the Mac with a MIDI keyboard): raw mean
+  −98.5 ms, median −97.9, SD 25 ms, drifting −60 → −120 → −100 over the run. That is a normal
+  hand; the math was right, the ±25 ms band was stricter than the lessons. The green band is now
+  the lessons' own window at 90 (`ScoringRules.windowMs` = ±45 ms; green on the dial = a hit in a
+  lesson), the dial reads ±100 ms. At his saved −97.8 ms, 62 of those 68 taps are green.
 
 ## Code map (`Takt/`)
 

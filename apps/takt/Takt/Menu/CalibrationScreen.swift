@@ -115,8 +115,8 @@ struct CalibrationScreen: View {
     }
 }
 
-/// The dial: early on the left, late on the right, ±80 ms over 120°. The orange band is on time
-/// (±25 ms); dots are the last twelve taps (green = a hit), the thick mark their average, and the
+/// The dial: early on the left, late on the right, ±100 ms over 120°. The orange band is on time
+/// (±45 ms, the lessons' window); dots are the last twelve taps (green = a hit), the thick mark their average, and the
 /// needle follows the mean of the last four.
 struct Dial: View {
     let calibration: Calibration?
@@ -172,8 +172,8 @@ struct Dial: View {
                     endAngle: .degrees(Self.angle(Calibration.onTimeMs) - 90), clockwise: false)
         ctx.stroke(zone, with: .color(Palette.good.opacity(0.4)), lineWidth: r * 0.09)
         // The scale, every 10 ms.
-        for ms in stride(from: -80.0, through: 80.0, by: 10) {
-            let major = Int(ms) % 40 == 0
+        for ms in stride(from: -100.0, through: 100.0, by: 10) {
+            let major = Int(ms) % 50 == 0
             var t = Path()
             t.move(to: Self.point(pivot, Self.angle(ms), r * (major ? 0.8 : 0.85)))
             t.addLine(to: Self.point(pivot, Self.angle(ms), r * 0.95))
@@ -196,7 +196,7 @@ struct Dial: View {
 
     private func labels(r: CGFloat, pivot: CGPoint) -> some View {
         ZStack {
-            ForEach([-80.0, -40, 40, 80], id: \.self) { ms in
+            ForEach([-100.0, -50, 50, 100], id: \.self) { ms in
                 Text(String(format: "%+.0f", ms))
                     .dataLabel(10)
                     .foregroundStyle(Palette.muted)

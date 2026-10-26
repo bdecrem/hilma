@@ -14,7 +14,7 @@ struct Calibration: Equatable {
     /// The correction is kept to this: past it, it is not latency.
     static let clampMs = 150.0
     /// The dial's scale, either side of on time.
-    static let scaleMs = 80.0
+    static let scaleMs = 100.0
     /// The average is over this many taps, and needs them all before it is offered.
     static let window = 12
     /// The needle follows the mean of this many recent taps, so one wild tap doesn't throw it.
@@ -22,8 +22,9 @@ struct Calibration: Equatable {
     /// Steady: half the window lands within this of the average (the median absolute deviation).
     /// Generous: this is for students, not drummers.
     static let steadyMs = 40.0
-    /// A hit: a tap (and the dial's green band) within this of the middle.
-    static let onTimeMs = 25.0
+    /// A hit: a tap (and the dial's green band) within this of the middle. The lessons' own
+    /// window at 90 (`ScoringRules.windowMs`), so green here means a hit there.
+    static let onTimeMs = 45.0
     /// A lean smaller than this is on time; Use this only offers a bigger one. A hand's taps
     /// scatter by 20–30 ms, so the average of twelve still wanders by about 10: below 15 a
     /// correction would chase noise.
