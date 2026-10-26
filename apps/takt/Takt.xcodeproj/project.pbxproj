@@ -224,6 +224,7 @@
 		CF8437708537B6C104D4863C /* hat-0c.caf in Resources */ = {isa = PBXBuildFile; fileRef = ACAFCFE83B0144D8BD65D236 /* hat-0c.caf */; };
 		D0556E07BABEDDABE5996C09 /* kick-2b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 2C0170A26E6933ACE6978F7E /* kick-2b.caf */; };
 		D158A6D96D8477A4B860A2F3 /* snare-5b.caf in Resources */ = {isa = PBXBuildFile; fileRef = DF075103D924CB5A798DA0F7 /* snare-5b.caf */; };
+		D29B47A7A421646F1717B78D /* NoteNeedle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C5E53554552169E0F03A86D /* NoteNeedle.swift */; };
 		D2ABF92BB4D642D04FABA73E /* pno-87-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = F1DE95F369838540232593BF /* pno-87-1.caf */; };
 		D2E240C801B9FA1CA4D22B33 /* sax-60-s.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9FC9FBF5827AAB4DC69DF3E6 /* sax-60-s.caf */; };
 		D3AEB5F7AD33AAC65EB45B56 /* hat-1a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 29152D630B2A7349CB6B44A0 /* hat-1a.caf */; };
@@ -290,6 +291,7 @@
 		09EE1B46C7B231BDA2F2836D /* snare-0c.caf */ = {isa = PBXFileReference; path = "snare-0c.caf"; sourceTree = "<group>"; };
 		0B0D42BB8380AE4669C98F79 /* kick-0a.caf */ = {isa = PBXFileReference; path = "kick-0a.caf"; sourceTree = "<group>"; };
 		0B26863B63DA1BADC4F27B21 /* bass-33.caf */ = {isa = PBXFileReference; path = "bass-33.caf"; sourceTree = "<group>"; };
+		0C5E53554552169E0F03A86D /* NoteNeedle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteNeedle.swift; sourceTree = "<group>"; };
 		0C87F42F08B755A7DD365B4F /* PadGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PadGrid.swift; sourceTree = "<group>"; };
 		0C9E81396F74E488321A3DE6 /* Palette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Palette.swift; sourceTree = "<group>"; };
 		0EF8A721DB5F0A472098AA20 /* saxl-50.caf */ = {isa = PBXFileReference; path = "saxl-50.caf"; sourceTree = "<group>"; };
@@ -681,6 +683,7 @@
 				C7E43D9F422D683C7F7E89AB /* LessonEngine.swift */,
 				CA77ED30BAF689A04B1E5B94 /* LessonScreen.swift */,
 				32E41EAC5ED6208C88F089CA /* LessonState.swift */,
+				0C5E53554552169E0F03A86D /* NoteNeedle.swift */,
 				0C87F42F08B755A7DD365B4F /* PadGrid.swift */,
 				586FAD0BEBDF739818994F6C /* Player.swift */,
 				D8AEBBD36AEADCD7786A2457 /* Scorer.swift */,
@@ -1296,6 +1299,7 @@
 				AD4AB405745AED706DBB9E45 /* MIDIInput.swift in Sources */,
 				8DAE719F3BA714959E6DC281 /* MapScreen.swift in Sources */,
 				1BAF5C09CD661D4CF3484722 /* Motifs.swift in Sources */,
+				D29B47A7A421646F1717B78D /* NoteNeedle.swift in Sources */,
 				98A90BB07168F73C2CB64C6D /* PadGrid.swift in Sources */,
 				486922DA20D6BC2D8B7890FD /* Palette.swift in Sources */,
 				DE7FE10E0696FBE76644959D /* Player.swift in Sources */,
@@ -1350,7 +1354,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 17;
+				CURRENT_PROJECT_VERSION = 18;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -1417,7 +1421,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 17;
+				CURRENT_PROJECT_VERSION = 18;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;

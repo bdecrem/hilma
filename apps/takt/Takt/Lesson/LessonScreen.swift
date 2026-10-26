@@ -117,10 +117,14 @@ struct StackedLessonLayout: View {
                 }
 
                 Spacer(minLength: 16)
-                Text(state.coach)
-                    .bodyText(22, weight: .semibold, relativeTo: .title2)
-                    .foregroundStyle(Palette.text)
-                    .lineLimit(2)
+                HStack(alignment: .center, spacing: 12) {
+                    Text(state.coach)
+                        .bodyText(22, weight: .semibold, relativeTo: .title2)
+                        .foregroundStyle(Palette.text)
+                        .lineLimit(2)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    NoteNeedle(mark: state.lastNote, compact: true)
+                }
                 Spacer(minLength: 16)
 
                 if let card = state.card {

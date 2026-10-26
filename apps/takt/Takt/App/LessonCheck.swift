@@ -130,6 +130,36 @@ enum LessonCheck {
         }
         let end = { (choruses: Int) in Double(choruses * loop) + 1 }
 
+        do {
+            // The live needle: each press marked as it lands, a miss once its half beat has passed.
+            let engine = LessonEngine(lesson: lesson, ticksPerBeat: tpb)
+            let mpt = msPerTick(70)
+            var marks: [LessonEngine.NoteMark] = []
+            var tick = 0.0
+            func roll(to t: Double) {
+                while tick <= t { engine.heard(tick: tick, tempo: 70, rolling: true, epoch: 0); tick += 1 }
+            }
+            func press(_ note: Int, at t: Double) {
+                roll(to: t)
+                engine.played(note: note, tick: t, msPerTick: mpt, epoch: 0)
+                if let m = engine.output.lastNote, m.seq != marks.last?.seq { marks.append(m) }
+            }
+            let e = expected
+            press(e[0].display, at: Double(e[0].tick) + 20 / mpt)
+            press(e[1].display, at: Double(e[1].tick) - 150 / mpt)
+            press(e[2].display + 1, at: Double(e[2].tick))
+            roll(to: Double(e[3].tick) + Double(tpb))
+            if let m = engine.output.lastNote, m.seq != marks.last?.seq { marks.append(m) }
+            check("needle: hit, rushed, wrong note, missed", marks.map(\.kind) == [.hit, .early, .wrong, .missed]
+                  && abs((marks[0].offsetMs ?? 0) - 20) < 0.5 && marks[0].windowMs == 100 && marks[3].offsetMs == nil,
+                  marks.map { "\($0.kind) \($0.offsetMs.map { String(format: "%.0f", $0) } ?? "-")" }.joined(separator: ", "))
+            check("needle words", NoteNeedle.word(marks[0]) == "On time" && NoteNeedle.word(marks[1]) == "Rushed"
+                  && NoteNeedle.word(.init(kind: .hit, offsetMs: 60, windowMs: 100, seq: 9)) == "A bit late"
+                  && NoteNeedle.word(marks[3]) == "Missed" && NoteNeedle.angle(marks[3]) == 0)
+            roll(to: Double(e[3].tick) + Double(12 * tpb))
+            check("needle: no misses once the player stops", engine.output.lastNote?.seq == marks.last?.seq)
+        }
+
         var run = simulate([(autoplay(.perfect, choruses: 3), end(3))])
         check("perfect autoplay: clean, clean, gate passed", run.verdicts.map(\.counted) == [true, true]
               && run.passed && run.verdicts.last?.clean == 2 && run.output.lastChorus == "Clean."

@@ -25,6 +25,9 @@ enum EngineCommand {
     /// A cross-stick click at a transport tick, sample-accurate, on the monitor's bus so it
     /// sounds whatever the mutes (calibration).
     case click(tick: Double, velocity: Float)
+    /// Stopped at the top: the transport starts `beats` beats early, with a click on each, so
+    /// the band comes in on bar 1 after a count-in. Send before `.play`.
+    case countIn(beats: Int)
     /// Seconds from render to the speaker; beat times the UI sees include it.
     case outputLatency(Double)
     /// The band sits out from tick `from` to `to` (absolute transport ticks), sample-accurately:
@@ -665,6 +668,14 @@ final class BandRenderer {
             silenceFrom = 0
             silenceTo = 0
             releaseBand()
+            reanchor()
+        case .countIn(let beats):
+            guard !playing, heldTick == 0, beats > 0 else { return }
+            heldTick = Double(-beats * ticksPerBeat)
+            for b in 0..<beats {
+                schedule(Scheduled(tick: Double((b - beats) * ticksPerBeat), note: 0, velocity: b == 0 ? 1 : 0.7,
+                                   lengthTicks: 0, click: true))
+            }
             reanchor()
         case .tempo(let bpm):
             if playing {

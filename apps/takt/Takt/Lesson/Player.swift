@@ -28,6 +28,8 @@ final class Player {
     /// The calibration under way, and the click being heard.
     private(set) var calibration: Calibration?
     private(set) var calibrationClick: Int?
+    /// The count-in's beat (1–4) while it plays, before bar 1.
+    private(set) var countIn: Int?
     /// Play it back: the transport epoch the recorded chorus is playing in (it starts at tick 0).
     private(set) var playbackEpoch: Int?
 
@@ -51,6 +53,15 @@ final class Player {
     /// press moves by minus this.
     static var inputOffsetMs: Double { UserDefaults.standard.double(forKey: "inputOffsetMs") }
     static var calibrated: Bool { UserDefaults.standard.bool(forKey: "calibrated") }
+    /// Settings → Count-in, on unless turned off. Headless runs (`-Silent`) start on bar 1
+    /// unless they pass `-countIn YES`.
+    static var countInOn: Bool {
+        let d = UserDefaults.standard
+        #if DEBUG
+        if d.bool(forKey: "Silent") && d.object(forKey: "countIn") == nil { return false }
+        #endif
+        return d.object(forKey: "countIn") == nil || d.bool(forKey: "countIn")
+    }
 
     static let tempoRange = 50...140
 
@@ -159,7 +170,12 @@ final class Player {
         lesson = engine.output
     }
 
+    /// Play from the top of a lesson clicks four beats in first (Settings → Count-in); resuming
+    /// from a pause doesn't.
     func togglePlay() {
+        if !playing && inLesson && calibration == nil && Self.countInOn && audio.snapshot().anchor.tick == 0 {
+            audio.send(.countIn(beats: 4))
+        }
         audio.send(playing ? .pause : .play)
     }
 
@@ -396,7 +412,10 @@ final class Player {
         // The position the speaker is playing now: the pads, the LEDs and the lesson follow it.
         let heard = clock.position(atHost: mach_absolute_time())
         let tpb = Double(audio.band.ticksPerBeat)
-        let beats = Int((heard.tick / tpb).rounded(.down))
+        // The count-in runs before tick 0: bar 1, and its own beat number.
+        let counting = heard.tick < 0 && heard.rolling ? 4 + Int((heard.tick / tpb).rounded(.down)) + 1 : nil
+        if counting != countIn { countIn = counting }
+        let beats = max(0, Int((heard.tick / tpb).rounded(.down)))
         let bars = audio.band.chorusBars
         if beats / 4 % bars != bar { bar = beats / 4 % bars }
         if beats % 4 != beat { beat = beats % 4 }
@@ -532,6 +551,8 @@ final class Player {
             coach: lesson.coach,
             lastChorus: lesson.lastChorus,
             lastChorusDetail: lesson.lastChorusDetail,
+            lastNote: lesson.lastNote,
+            countIn: countIn,
             nowNote: lesson.nowNote,
             nextNote: lesson.nextNote,
             pressedNotes: pressed

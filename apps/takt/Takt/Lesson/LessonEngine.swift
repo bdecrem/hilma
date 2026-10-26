@@ -33,6 +33,18 @@ final class LessonEngine {
         case finished
     }
 
+    /// How the last note landed, live (the chorus verdict comes at its end): the lesson's needle.
+    struct NoteMark: Equatable {
+        enum Kind { case hit, early, late, wrong, missed }
+        let kind: Kind
+        /// Signed, negative = early; nil for a missed note.
+        let offsetMs: Double?
+        /// The hit window it was judged against.
+        let windowMs: Double
+        /// Counts up with every mark, so the same mark twice still moves the needle.
+        let seq: Int
+    }
+
     struct Output: Equatable {
         var step = 1
         var stepCount = 1
@@ -55,6 +67,7 @@ final class LessonEngine {
         var unlocked: Set<Int> = []
         var rampTarget: Int?
         var finished = false
+        var lastNote: NoteMark?
     }
 
     struct Verdict {
@@ -105,6 +118,14 @@ final class LessonEngine {
     var onAction: ((Action) -> Void)?
 
     private var presses: [PlayedNote] = []
+    /// Live marks: expected notes (chorus × count + index) already matched, or answered with a
+    /// wrong note; the tick checked for misses through; the last press, so a player who has
+    /// stopped playing isn't shown a miss on every note.
+    private var liveMatched: Set<Int> = []
+    private var liveWrong: Set<Int> = []
+    private var liveChecked = 0.0
+    private var lastPressTick = -Double.infinity
+    private var markSeq = 0
     /// The next chorus to judge, and the first one the current step judges.
     private var nextChorus = 0
     private var firstChorus = 0
@@ -225,6 +246,10 @@ final class LessonEngine {
             minTempo.removeAll()
             endTempo.removeAll()
             verdict = nil
+            liveMatched.removeAll()
+            liveWrong.removeAll()
+            liveChecked = tick
+            lastPressTick = -.infinity
             heardTick = tick
             nextChorus = Int((tick / Double(loopTicks)).rounded(.down))
             firstChorus = Int(((tick - lead) / Double(loopTicks)).rounded(.up))
@@ -239,11 +264,67 @@ final class LessonEngine {
             minTempo[c] = min(minTempo[c] ?? .infinity, tempo)
             endTempo[c] = tempo
         }
+        markMisses(through: tick)
         while tick >= Double((nextChorus + 1) * loopTicks) {
             judge(nextChorus)
             nextChorus += 1
         }
         update()
+    }
+
+    /// Half a beat: how far from an expected note a press still belongs to it.
+    private var reach: Double { Double(ticksPerBeat) / 2 }
+
+    private func mark(_ kind: NoteMark.Kind, _ offsetMs: Double?, msPerTick: Double) {
+        markSeq += 1
+        let tempo = 60000 / (msPerTick * Double(ticksPerBeat))
+        output.lastNote = NoteMark(kind: kind, offsetMs: offsetMs, windowMs: rules.windowMs(tempo: tempo), seq: markSeq)
+    }
+
+    /// The press against the nearest expected note within half a beat: the right pitch class is
+    /// a hit, rushed or dragged by the window; another note there is wrong; a second press of a
+    /// matched note, or one nowhere near a note, leaves the needle where it was.
+    private func markPress(note: Int, tick: Double, msPerTick: Double, chorus c: Int) {
+        let base = Double(c * loopTicks)
+        var right: (i: Int, d: Double)?
+        var near: (i: Int, d: Double)?
+        for (i, e) in expected.enumerated() {
+            let d = tick - (base + Double(e.tick))
+            guard abs(d) <= reach else { continue }
+            if (rules.low...rules.high).contains(note) && note % 12 == e.pitchClass && !liveMatched.contains(c * expected.count + i) {
+                if right == nil || abs(d) < abs(right!.d) { right = (i, d) }
+            } else if near == nil || abs(d) < abs(near!.d) {
+                near = (i, d)
+            }
+        }
+        if let r = right {
+            liveMatched.insert(c * expected.count + r.i)
+            let ms = r.d * msPerTick
+            let tempo = 60000 / (msPerTick * Double(ticksPerBeat))
+            let w = rules.windowMs(tempo: tempo)
+            mark(abs(ms) <= w ? .hit : ms < 0 ? .early : .late, ms, msPerTick: msPerTick)
+        } else if let n = near, !liveMatched.contains(c * expected.count + n.i) {
+            liveWrong.insert(c * expected.count + n.i)
+            mark(.wrong, n.d * msPerTick, msPerTick: msPerTick)
+        }
+    }
+
+    /// An expected note whose half beat has passed with nothing played at it is a miss, while
+    /// the player is playing (a press in the last two bars).
+    private func markMisses(through tick: Double) {
+        defer { liveChecked = max(liveChecked, tick) }
+        guard scoring, !expected.isEmpty, heardTempo > 0, tick > liveChecked, tick - lastPressTick <= Double(2 * ticksPerBar) else { return }
+        let first = Int(((liveChecked - reach) / Double(loopTicks)).rounded(.down))
+        let last = Int((tick / Double(loopTicks)).rounded(.down))
+        guard first <= last else { return }
+        for c in max(first, firstChorus)...last {
+            for (i, e) in expected.enumerated() {
+                let deadline = Double(c * loopTicks + e.tick) + reach
+                let id = c * expected.count + i
+                guard deadline > liveChecked, deadline <= tick, !liveMatched.contains(id), !liveWrong.contains(id) else { continue }
+                mark(.missed, nil, msPerTick: 60000 / (heardTempo * Double(ticksPerBeat)))
+            }
+        }
     }
 
     /// A key press, placed on the transport (see TransportClock). Presses while the transport
@@ -252,6 +333,8 @@ final class LessonEngine {
         let c = chorus(ofPress: tick)
         guard epoch == self.epoch, msPerTick.isFinite, scoring, c >= nextChorus, c >= firstChorus else { return }
         presses.append(PlayedNote(note: note, tick: tick, msPerTick: msPerTick, velocity: velocity))
+        lastPressTick = tick
+        markPress(note: note, tick: tick, msPerTick: msPerTick, chorus: c)
         // The press knows its tempo too: display frames stop while the window is hidden.
         minTempo[c] = min(minTempo[c] ?? .infinity, 60000 / (msPerTick * Double(ticksPerBeat)))
     }

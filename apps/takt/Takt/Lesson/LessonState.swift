@@ -56,8 +56,12 @@ struct LessonState {
     var channels: [ChannelState]
     var coach: String
     var lastChorus: String?
-    /// "11 of 12 · 23 ms early" under the last-chorus line.
+    /// "11 of 12 · 1 rushed" under the last-chorus line.
     var lastChorusDetail: String? = nil
+    /// How the last note landed: the needle.
+    var lastNote: LessonEngine.NoteMark? = nil
+    /// The count-in's beat (1–4) before bar 1.
+    var countIn: Int? = nil
     /// MIDI note numbers (C4 = 60) of the key to press now and the one after it.
     var nowNote: Int?
     var nextNote: Int?

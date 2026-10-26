@@ -137,6 +137,19 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   the lessons' own window at 90 (`ScoringRules.windowMs`, then ±45 ms, ±80 since 0.1 (17); green on the dial = a hit in a
   lesson), the dial reads ±100 ms. At his saved −97.8 ms, 62 of those 68 taps are green.
 
+- **Count-in and the note needle: 0.1 (18), 2026-10-26.** Settings → Sound → Count-in (on by
+  default, `@AppStorage("countIn")`): Play from the top of a lesson sends `.countIn(beats: 4)`
+  before `.play`, so the transport starts at tick −4 beats with a click on each (the band's
+  events start at 0, so it comes in on bar 1); the footer reads "Count-in 1–4"; resuming from a
+  pause doesn't count in. Headless `-Silent` runs skip it unless `-countIn YES`. The needle
+  (`Lesson/NoteNeedle.swift`) is the last note, live: `LessonEngine.markPress` matches each press
+  to the nearest expected note within half a beat (right pitch class: hit / rushed / dragged by
+  the window; another note: wrong), `markMisses` marks a note whose half beat passed unplayed
+  while the player is playing (a press in the last 2 bars). Scale ± twice the window, green the
+  middle half, yellow rushed/dragged, red missed/wrong (`Palette.good/warn/bad`). Mac: in the
+  coach column above Last chorus with a word ("On time", "A bit early", "Rushed", "Missed");
+  iPhone: the meter alone beside the coach line. Checks 121/121.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

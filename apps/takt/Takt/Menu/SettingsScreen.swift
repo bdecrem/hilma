@@ -8,6 +8,7 @@ struct SettingsScreen: View {
     @AppStorage("pianoLevel") private var pianoLevel = 1.0
     @AppStorage("inputOffsetMs") private var inputOffsetMs = 0.0
     @AppStorage("menuMusic") private var menuMusic = true
+    @AppStorage("countIn") private var countIn = true
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var confirmReset = false
 
@@ -43,6 +44,14 @@ struct SettingsScreen: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Band on the menu").bodyText(15).foregroundStyle(Palette.text)
                                 Text("Off: the band plays only in a lesson").dataLabel(10).foregroundStyle(Palette.muted)
+                            }
+                        }
+                        .tint(Palette.signal)
+                        Hairline()
+                        Toggle(isOn: $countIn) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Count-in").bodyText(15).foregroundStyle(Palette.text)
+                                Text("Four clicks before the band starts a lesson").dataLabel(10).foregroundStyle(Palette.muted)
                             }
                         }
                         .tint(Palette.signal)

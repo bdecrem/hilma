@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// The coach column on the Mac: the current line, then what went wrong last chorus.
+/// The coach column on the Mac: the current line, the last note's needle, then what went wrong
+/// last chorus.
 struct CoachPanel: View {
     let state: LessonState
 
@@ -16,6 +17,11 @@ struct CoachPanel: View {
 
             Spacer(minLength: 24)
 
+            StaffLines()
+                .padding(.bottom, 6)
+            NoteNeedle(mark: state.lastNote)
+                .padding(.bottom, 10)
+
             if let last = state.lastChorus {
                 StaffLines()
                     .padding(.bottom, 6)
@@ -27,7 +33,7 @@ struct CoachPanel: View {
                     .foregroundStyle(Palette.text)
                     .fixedSize(horizontal: false, vertical: true)
                 if let detail = state.lastChorusDetail {
-                    // Break only between items: "18 ms early" and "±78 ms" stay whole.
+                    // Break only between items: "2 rushed" stays whole.
                     Text(detail.components(separatedBy: " · ")
                         .map { $0.replacingOccurrences(of: " ", with: "\u{00A0}") }
                         .joined(separator: " · "))

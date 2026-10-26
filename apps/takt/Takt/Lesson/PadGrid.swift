@@ -127,9 +127,15 @@ struct FormFooter: View {
         HStack(spacing: 14) {
             // fixedSize: inside the HStack the labels were measured without their tracking
             // and truncated by a character even with room to spare.
-            Text("Bar \(state.bar + 1) / \(state.form.count)")
-                .foregroundStyle(Palette.text)
-                .fixedSize()
+            if let n = state.countIn {
+                Text("Count-in \(n)")
+                    .foregroundStyle(Palette.signal)
+                    .fixedSize()
+            } else {
+                Text("Bar \(state.bar + 1) / \(state.form.count)")
+                    .foregroundStyle(Palette.text)
+                    .fixedSize()
+            }
             Text("Chorus \(state.chorus)")
                 .foregroundStyle(Palette.muted)
                 .fixedSize()
