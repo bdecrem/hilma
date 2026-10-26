@@ -160,6 +160,12 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   (`Player.beginStep` / `nextStep`). Pattern notes carry a `finger` (A1: root 5, fifth 1), and
   the keyboard shows the current bar's keys with numbered finger badges. DEBUG `-Step n`
   opens step n's intro, `-StepComplete 1` shows Lesson complete. Checks 126/126.
+  **0.1 (20):** a lesson in progress resumes at the step it reached (`Player.init` →
+  `restartLesson(at:)` from `progress.lesson(code).reachedStep`; before, the record only fed the
+  menu label and every launch started A1 at step 1), and every step change goes through
+  `Player.publish()`, which writes `progress.reached` (the card's Continue used to skip it, so
+  step 3 was never recorded). Verify resume on the simulator with `-ProgressFile`: the Mac build
+  is sandboxed and silently can't read a file outside its container, so it shows step 1 there.
 
 ## Code map (`Takt/`)
 

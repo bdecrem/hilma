@@ -82,6 +82,12 @@ final class Player {
         }
         self.lesson = engine.output
         wire()
+        // A lesson in progress picks up at the step it reached (its intro); a finished or fresh
+        // one starts from the top.
+        let reached = progress.lesson(lesson.code)
+        if reached.completed == nil && reached.reachedStep > 1 && reached.reachedStep <= lesson.steps.count {
+            restartLesson(at: reached.reachedStep - 1)
+        }
 
         midi.onNote = { [weak self] n in
             guard let self else { return }
@@ -162,12 +168,19 @@ final class Player {
         wire()
         if let t = content.steps[0].tempo, t != tempo { audio.send(.tempo(Double(t))) }
         if step > 0 { engine.start(step: step) }
-        lesson = engine.output
+        publish()
+    }
+
+    /// The engine's output to the screen; a new step is written to progress on the way.
+    private func publish() {
+        let out = engine.output
+        if out.step != lesson.step { progress.reached(step: out.step, in: content.code) }
+        if out != lesson { lesson = out }
     }
 
     func continueCard() {
         engine.continueCard()
-        lesson = engine.output
+        publish()
     }
 
     /// Steps wait on their intro and on Lesson complete, except under DEBUG autoplay, which
@@ -182,14 +195,14 @@ final class Player {
     #if DEBUG
     func debugComplete() {
         engine.debugComplete()
-        lesson = engine.output
+        publish()
     }
     #endif
 
     /// The intro's Start: the step begins from the top, after the count-in.
     func beginStep() {
         engine.begin()
-        lesson = engine.output
+        publish()
         fromTheTop()
     }
 
@@ -197,7 +210,7 @@ final class Player {
     /// the top, after the count-in).
     func nextStep() {
         engine.advance()
-        lesson = engine.output
+        publish()
         if lesson.stepKind != .card { fromTheTop() }
     }
 
@@ -483,10 +496,7 @@ final class Player {
         runAutoplay(clock, heard: heard, epoch: s.epoch)
         DebugHooks.writeClockIfRequested(clock)
         #endif
-        if engine.output != lesson {
-            if engine.output.step != lesson.step { progress.reached(step: engine.output.step, in: content.code) }
-            lesson = engine.output
-        }
+        publish()
         #if DEBUG
         DebugHooks.snapshotIfDue(self, tick: heard.tick)
         #endif
