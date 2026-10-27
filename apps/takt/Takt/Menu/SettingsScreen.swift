@@ -107,6 +107,8 @@ struct SettingsScreen: View {
                             .pickerStyle(.segmented)
                             .frame(width: 180)
                         }
+                        Text("Hand").bodyText(15).foregroundStyle(Palette.text)
+                        HandPicker()
                     }
 
                     SettingsSection(title: "Progress") {

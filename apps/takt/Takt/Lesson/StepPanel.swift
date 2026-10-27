@@ -148,58 +148,10 @@ struct StepPanel: View {
     }
 }
 
-/// A hand from above, fingers numbered the piano way (1 thumb … 5 pinky): a left hand has the
-/// pinky on the left, a right hand the thumb. The fingers the step uses are filled `signal`.
-struct HandDiagram: View {
-    let used: Set<Int>
-    var right = false
-    /// Fingers outlined in `cue`: the one that plays next.
-    var next: Set<Int> = []
-
+/// Finger names the piano way: 1 thumb … 5 pinky (the drawing is `HandView`, in Hands.swift).
+enum HandDiagram {
     static func name(_ finger: Int) -> String {
         ["", "Thumb (1)", "Index (2)", "Middle (3)", "Ring (4)", "Pinky (5)"][max(0, min(5, finger))]
-    }
-
-    var body: some View {
-        GeometryReader { g in
-            let w = g.size.width, h = g.size.height
-            // Five columns; finger lengths as a share of the height, pinky to thumb.
-            let col = w / 5
-            let lengths: [CGFloat] = [0.50, 0.66, 0.74, 0.66, 0.42]
-            let palmTop = h * 0.56
-            ZStack(alignment: .topLeading) {
-                RoundedRectangle(cornerRadius: col * 0.5)
-                    .fill(Palette.ground)
-                    .overlay(RoundedRectangle(cornerRadius: col * 0.5).strokeBorder(Palette.line, lineWidth: 1))
-                    .frame(width: col * 4.4, height: h - palmTop)
-                    .offset(x: right ? col * 0.5 : col * 0.1, y: palmTop)
-                ForEach(0..<5, id: \.self) { i in
-                    let finger = right ? i + 1 : 5 - i
-                    let thumb = finger == 1
-                    let on = used.contains(finger)
-                    let cue = !on && next.contains(finger)
-                    let len = h * lengths[right ? 4 - i : i]
-                    // The thumb sits lower and leans out.
-                    let top = thumb ? palmTop - len * 0.35 : palmTop - len + col * 0.4
-                    ZStack {
-                        Capsule().fill(on ? Palette.signal : Palette.ground)
-                        Capsule().strokeBorder(on ? Palette.signal : cue ? Palette.cue : Palette.line, lineWidth: cue ? 1.5 : 1)
-                        if on || cue {
-                            Text("\(finger)")
-                                .font(.system(size: col * 0.5, weight: .bold, design: .rounded))
-                                .foregroundStyle(on ? Palette.blackKey : Palette.cue)
-                                .rotationEffect(.degrees(thumb ? (right ? 22 : -22) : 0))
-                                .offset(y: -len * 0.25)
-                        }
-                    }
-                    .frame(width: col * 0.78, height: len)
-                    .rotationEffect(.degrees(thumb ? (right ? -22 : 22) : Double(i - 2) * 3), anchor: .bottom)
-                    .offset(x: col * CGFloat(i) + col * 0.11 + (thumb ? (right ? col * 0.3 : -col * 0.05) : 0), y: top + (thumb ? col * 0.25 : 0))
-                }
-            }
-        }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel((right ? "Right hand: " : "Left hand: ") + used.sorted(by: >).map(Self.name).joined(separator: " and "))
     }
 }
 

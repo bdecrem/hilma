@@ -259,6 +259,10 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   hands later): `https://ola.cx/takt/hands` (`src/app/takt/hands/`): Linie (hand-drawn line),
   Automat (robot), Greif (griffin's claw), Schaltplan (circuit), Bauhaus; one SVG each in the
   same 240 × 200 box with `down` / `next` / `tuck` / `lit`, playing the A minor run live.
+  **0.1 (31):** all five hands are in the app (`Lesson/Hands.swift`: `HandStyle`, `HandView`
+  switches drawings, `HandPicker`), **Settings → Display → Hand** (thumbnails, `@AppStorage
+  "hand"`, Linie default; DEBUG `-hand greif`). Same contract everywhere: the run panel, the
+  intros (`lit:`), the left hand mirrored.
 
 ## Code map (`Takt/`)
 
