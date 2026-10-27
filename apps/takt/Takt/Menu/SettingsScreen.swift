@@ -30,6 +30,7 @@ struct SettingsScreen: View {
             .padding(.top, compact ? 8 : 24)
             .padding(.bottom, 20)
 
+            ScrollViewReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
                     AccountSection(account: app.account)
@@ -107,7 +108,7 @@ struct SettingsScreen: View {
                             .pickerStyle(.segmented)
                             .frame(width: 180)
                         }
-                        Text("Hand").bodyText(15).foregroundStyle(Palette.text)
+                        Text("Hand").bodyText(15).foregroundStyle(Palette.text).id("display")
                         HandPicker()
                     }
 
@@ -131,6 +132,13 @@ struct SettingsScreen: View {
                 .padding(.bottom, 24)
             }
             .scrollBounceBehavior(.basedOnSize)
+            #if DEBUG
+            // `-SettingsSection display`: open scrolled to a section (screenshots).
+            .onAppear {
+                if let id = UserDefaults.standard.string(forKey: "SettingsSection") { proxy.scrollTo(id, anchor: .top) }
+            }
+            #endif
+            }
         }
         .padding(.horizontal, compact ? 16 : 40)
         .frame(maxWidth: compact ? .infinity : 820, alignment: .leading)

@@ -262,7 +262,8 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   **0.1 (31):** all five hands are in the app (`Lesson/Hands.swift`: `HandStyle`, `HandView`
   switches drawings, `HandPicker`), **Settings → Display → Hand** (thumbnails, `@AppStorage
   "hand"`, Linie default; DEBUG `-hand greif`). Same contract everywhere: the run panel, the
-  intros (`lit:`), the left hand mirrored.
+  intros (`lit:`), the left hand mirrored. DEBUG `-Route settings -SettingsSection display`
+  opens Settings scrolled to the picker.
 
 ## Code map (`Takt/`)
 
