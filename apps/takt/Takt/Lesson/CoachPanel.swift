@@ -19,8 +19,19 @@ struct CoachPanel: View {
 
             StaffLines()
                 .padding(.bottom, 6)
-            NoteNeedle(mark: state.lastNote)
+            if state.run != nil {
+                // A scale lesson: the last note is one small dot, not the meter.
+                HStack(spacing: 10) {
+                    NoteDot(mark: state.lastNote)
+                    Text("Last note")
+                        .dataLabel(11)
+                        .foregroundStyle(Palette.muted)
+                }
                 .padding(.bottom, 10)
+            } else {
+                NoteNeedle(mark: state.lastNote)
+                    .padding(.bottom, 10)
+            }
 
             if let last = state.lastChorus {
                 StaffLines()

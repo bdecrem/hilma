@@ -234,6 +234,17 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   (`Run.keyboard`: the iPhone shows F3–B4 for A minor). The footer counts "Run 2 of 4". The
   cycle is 3 bars (8 notes up, one bar of hold, four runs a chorus; up and down = 60 notes a
   chorus); `key` ("A minor") in the module file names the run. Checks 150/150.
+  **0.1 (28), same morning, Bart: "autistic, not artistic", declutter:** no Now/Next block,
+  no meter. The run is a **staircase** (`Staircase` in `RunPanel.swift`: one step per note,
+  raised by pitch, so up climbs, down descends and up-and-down is a hill; letters only, no
+  octave numbers; the finger badge when a step is ≥ 34 pt wide; faint risers; the crossing
+  arrow under the pair). Under it a drawn **hand** (`HandView`: palm, four fingers, the thumb
+  growing out of the palm's side; every finger numbered; the finger that's down filled `signal`,
+  the next outlined `cue`; `tuck` folds the thumb in under the palm as a dashed ghost, sprung),
+  placed by centers in a fixed 240 × 200 space and scaled to fit, since offsets in a ZStack
+  pushed it out of the panel twice. The last note on a scale lesson is **one dot** (`NoteDot`,
+  pops on every note) beside the coach line (iPhone) or under the staff lines (Mac). The Mac's
+  pads area is only ~350 pt tall at the minimum window: staircase 124 + the hand takes the rest.
 
 ## Code map (`Takt/`)
 

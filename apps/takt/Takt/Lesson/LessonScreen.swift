@@ -133,7 +133,12 @@ struct StackedLessonLayout: View {
                         .foregroundStyle(Palette.text)
                         .lineLimit(2)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                    NoteNeedle(mark: state.lastNote, compact: true)
+                    if state.run != nil {
+                        NoteDot(mark: state.lastNote, size: 10)
+                            .frame(width: 24, height: 24)
+                    } else {
+                        NoteNeedle(mark: state.lastNote, compact: true)
+                    }
                 }
                 Spacer(minLength: 16)
 
