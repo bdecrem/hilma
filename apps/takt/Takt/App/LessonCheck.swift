@@ -258,8 +258,8 @@ enum LessonCheck {
             check("scales: down is the octave back, 5 4 3 2 1 3 2 1", down.prefix(8).map(\.display) == [60, 59, 57, 55, 53, 52, 50, 48]
                   && down.prefix(8).map(\.finger) == [5, 4, 3, 2, 1, 3, 2, 1])
             let both = major.expected(major.steps[2], ticksPerBeat: tpb)
-            check("scales: up and down is 15 eighths, 60 a chorus, none in bar 3", both.count == 60
-                  && both.prefix(15).map(\.tick) == (0..<15).map { $0 * 6 } && !both.contains { $0.bar == 2 || $0.bar == 5 },
+            check("scales: up and down is 15 notes a beat over four bars, 45 a chorus, the last beat free", both.count == 45
+                  && both.prefix(15).map(\.tick) == (0..<15).map { $0 * tpb } && both[15].tick == 16 * tpb,
                   "\(both.count) \(both.prefix(16).map(\.tick))")
             let se = LessonEngine(lesson: major, ticksPerBeat: tpb, gated: true)
             se.start(step: 2)

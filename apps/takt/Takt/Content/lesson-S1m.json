@@ -26,7 +26,7 @@
     },
     {
       "title": "Up and down",
-      "skill": "The whole octave in eighth notes",
+      "skill": "Up and back down, one note a beat",
       "goal": "2 clean choruses at 60",
       "steps": [
         "updown"
@@ -229,118 +229,103 @@
       "skill": "rh.scale.updown.S1m",
       "tempo": 60,
       "gate": 2,
-      "cycle": 3,
+      "cycle": 4,
       "hand": "right",
       "pattern": [
         {
           "bar": 0,
           "beat": 1,
-          "tick": 0,
           "semitones": 0,
           "finger": 1
         },
         {
           "bar": 0,
-          "beat": 1,
-          "tick": 6,
+          "beat": 2,
           "semitones": 2,
           "finger": 2
         },
         {
           "bar": 0,
-          "beat": 2,
-          "tick": 0,
+          "beat": 3,
           "semitones": 3,
           "finger": 3
         },
         {
           "bar": 0,
-          "beat": 2,
-          "tick": 6,
+          "beat": 4,
           "semitones": 5,
           "finger": 1
         },
         {
-          "bar": 0,
-          "beat": 3,
-          "tick": 0,
+          "bar": 1,
+          "beat": 1,
           "semitones": 7,
           "finger": 2
         },
         {
-          "bar": 0,
-          "beat": 3,
-          "tick": 6,
+          "bar": 1,
+          "beat": 2,
           "semitones": 8,
           "finger": 3
         },
         {
-          "bar": 0,
-          "beat": 4,
-          "tick": 0,
+          "bar": 1,
+          "beat": 3,
           "semitones": 10,
           "finger": 4
         },
         {
-          "bar": 0,
+          "bar": 1,
           "beat": 4,
-          "tick": 6,
           "semitones": 12,
           "finger": 5
         },
         {
-          "bar": 1,
+          "bar": 2,
           "beat": 1,
-          "tick": 0,
           "semitones": 10,
           "finger": 4
         },
         {
-          "bar": 1,
-          "beat": 1,
-          "tick": 6,
+          "bar": 2,
+          "beat": 2,
           "semitones": 8,
           "finger": 3
         },
         {
-          "bar": 1,
-          "beat": 2,
-          "tick": 0,
+          "bar": 2,
+          "beat": 3,
           "semitones": 7,
           "finger": 2
         },
         {
-          "bar": 1,
-          "beat": 2,
-          "tick": 6,
+          "bar": 2,
+          "beat": 4,
           "semitones": 5,
           "finger": 1
         },
         {
-          "bar": 1,
-          "beat": 3,
-          "tick": 0,
+          "bar": 3,
+          "beat": 1,
           "semitones": 3,
           "finger": 3
         },
         {
-          "bar": 1,
-          "beat": 3,
-          "tick": 6,
+          "bar": 3,
+          "beat": 2,
           "semitones": 2,
           "finger": 2
         },
         {
-          "bar": 1,
-          "beat": 4,
-          "tick": 0,
+          "bar": 3,
+          "beat": 3,
           "semitones": 0,
           "finger": 1
         }
       ],
-      "about": "Both ways in one breath, two notes a beat: up from A to A, turn on the pinky, and straight back down. The crossings are the whole game: thumb under on the way up, middle finger over on the way down. A bar to breathe, then again.",
+      "about": "Both ways, one note a beat: up from A to A, turn on the pinky, and straight back down. The crossings are the whole game: thumb under on the way up, middle finger over on the way down. A beat to breathe, then again.",
       "coach": {
-        "intro": "A minor, up and down. Eighth notes.",
+        "intro": "A minor, up and over the top, and back.",
         "change": "Up and over the top, and back down.",
         "hold": "Up and over the top, and back down.",
         "clean": "Clean. {left} more.",

@@ -245,6 +245,10 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   pushed it out of the panel twice. The last note on a scale lesson is **one dot** (`NoteDot`,
   pops on every note) beside the coach line (iPhone) or under the staff lines (Mac). The Mac's
   pads area is only ~350 pt tall at the minimum window: staircase 124 + the hand takes the rest.
+  **0.1 (29):** Up and down is one note a beat over four bars (15 notes, the last beat free,
+  three runs a chorus), no eighths: at 60 they were two notes a second, and straight eighths
+  (tick 6) against the drums' shuffle (late eighth at tick 8) read as dragged for anyone
+  following the swing. Bart: "it should be slow for that lesson".
 
 ## Code map (`Takt/`)
 
