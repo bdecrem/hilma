@@ -301,6 +301,16 @@ enum LessonCheck {
                   && LessonState.Run.keyboard(nil, keys: 18, fallback: 48...65) == 48...65,
                   "\(LessonState.Run.keyboard(amin, keys: 18, fallback: 48...65))")
             check("run: wrapping after the last note, next is the first", amin.wrapping && amin.next?.key == 57 && amin.now?.key == 69)
+
+            // The module's last lesson passing shows Module complete (Bart's two clean choruses of
+            // Up and down went to a blank screen: the hand-over skipped the last step).
+            let ge = LessonEngine(lesson: minor, ticksPerBeat: tpb, gated: true)
+            ge.start(step: 2)
+            ge.heard(tick: 0, tempo: 60, rolling: true, epoch: 0)
+            ge.debugComplete()
+            check("run: the last lesson passed shows Lesson 3 complete with nothing next",
+                  ge.output.complete?.number == 3 && ge.output.complete?.next == nil && ge.output.complete?.done == "Up and down",
+                  "\(String(describing: ge.output.complete))")
         }
 
         var run = simulate([(autoplay(.perfect, choruses: 3), end(3))])

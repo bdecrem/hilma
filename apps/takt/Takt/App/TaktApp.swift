@@ -41,9 +41,7 @@ struct TaktApp: App {
         // The band on the menu is a setting (Settings → Sound); a lesson always has it.
         if !d.bool(forKey: "Paused") && RootView.menuMusicOn { audio.send(.play) }
         #if DEBUG
-        if d.integer(forKey: "Step") > 1 { player.restartLesson(at: d.integer(forKey: "Step") - 1) }
-        if d.integer(forKey: "Lesson") > 1 { player.restartLesson(at: lesson.firstStep(ofLesson: d.integer(forKey: "Lesson") - 1)) }
-        if d.bool(forKey: "StepComplete") { player.debugComplete() }
+        // `-Step`, `-Lesson` and `-StepComplete` are applied in AppModel.init, after `-Module`.
         DebugHooks.recordIfRequested(audio)
         DebugHooks.pressIfRequested(player)
         DebugHooks.calibrateIfRequested(player)

@@ -68,7 +68,13 @@ final class AppModel {
         self.progress = progress
         self.account = account
         #if DEBUG
-        if let m = UserDefaults.standard.string(forKey: "Module") { openModule(m) }
+        let d = UserDefaults.standard
+        if let m = d.string(forKey: "Module") { openModule(m) }
+        if let player {
+            if d.integer(forKey: "Step") > 1 { player.restartLesson(at: d.integer(forKey: "Step") - 1) }
+            if d.integer(forKey: "Lesson") > 1 { player.restartLesson(at: player.content.firstStep(ofLesson: d.integer(forKey: "Lesson") - 1)) }
+            if d.bool(forKey: "StepComplete") { player.debugComplete() }
+        }
         if let r = UserDefaults.standard.string(forKey: "Route") {
             switch r {
             case "lessons": route = .lessons

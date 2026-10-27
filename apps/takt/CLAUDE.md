@@ -249,6 +249,16 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   three runs a chorus), no eighths: at 60 they were two notes a second, and straight eighths
   (tick 6) against the drums' shuffle (late eighth at tick 8) read as dragged for anyone
   following the swing. Bart: "it should be slow for that lesson".
+  **0.1 (30):** the module's last lesson passing showed nothing (the gated hand-over only ran
+  when a next step existed; Bart's two clean choruses of Up and down went to an unlit screen).
+  Gated engines hand over on every pass; the last one shows **Module complete** ("That's every
+  lesson in Scales. More are on the way.", only Back to the module) and records the lesson
+  done. `-Step`, `-Lesson` and `-StepComplete` now apply after `-Module` (they used to hit
+  A1). The intros draw the new `HandView` (`lit:` every finger the run uses) instead of the
+  old HandDiagram. Checks 151/151. **Hand concepts** for the lesson hand (unlockable alt
+  hands later): `https://ola.cx/takt/hands` (`src/app/takt/hands/`): Linie (hand-drawn line),
+  Automat (robot), Greif (griffin's claw), Schaltplan (circuit), Bauhaus; one SVG each in the
+  same 240 × 200 box with `down` / `next` / `tuck` / `lit`, playing the A minor run live.
 
 ## Code map (`Takt/`)
 

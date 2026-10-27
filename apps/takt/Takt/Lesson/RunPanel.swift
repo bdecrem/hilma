@@ -195,6 +195,8 @@ struct Staircase: View {
 /// `signal`, `next` outlined `cue`. `tuck` curls the thumb in under the hand.
 struct HandView: View {
     var down: Int?
+    /// Fingers filled `signal` besides `down` (an intro lights every finger the run uses).
+    var lit: Set<Int> = []
     var next: Int?
     var tuck = false
     var right = true
@@ -251,6 +253,7 @@ struct HandView: View {
     private var spoken: String {
         var parts: [String] = []
         if let down { parts.append("\(LessonState.Run.fingerWord(down)) down") }
+        if !lit.isEmpty { parts.append(lit.sorted().map { LessonState.Run.fingerWord($0).lowercased() }.joined(separator: ", ")) }
         if let next { parts.append("\(LessonState.Run.fingerWord(next).lowercased()) next") }
         if tuck { parts.append("thumb tucks under") }
         return (right ? "Right hand" : "Left hand") + (parts.isEmpty ? "" : ": " + parts.joined(separator: ", "))
@@ -268,7 +271,7 @@ struct HandView: View {
     }
 
     private func finger(_ f: Int, width: CGFloat, length: CGFloat, ghost: Bool = false) -> some View {
-        let on = down == f
+        let on = down == f || lit.contains(f)
         let cue = !on && next == f
         return ZStack(alignment: .top) {
             Capsule().fill(ghost ? Palette.ground.opacity(0.35) : on ? Palette.signal : Palette.ground)

@@ -23,7 +23,7 @@ struct StepPanel: View {
                 HStack(spacing: 10) {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.system(size: compact ? 22 : 28, weight: .semibold))
-                    Text("Lesson complete")
+                    Text(c.next == nil ? "Module complete" : "Lesson complete")
                         .font(.display(compact ? 28 : 40))
                         .textCase(.uppercase)
                 }
@@ -31,6 +31,12 @@ struct StepPanel: View {
                 Text("Lesson \(c.number) · \(c.done)")
                     .dataLabel(compact ? 11 : 13, weight: .semibold)
                     .foregroundStyle(Palette.muted)
+                if c.next == nil {
+                    Text("That's every lesson in \(state.moduleTitle). More are on the way.")
+                        .bodyText(compact ? 15 : 18, weight: .semibold)
+                        .foregroundStyle(Palette.text)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
                 if let card = c.card {
                     Text(card)
                         .bodyText(compact ? 15 : 18, weight: .semibold)
@@ -98,8 +104,8 @@ struct StepPanel: View {
             // A run: the hand, and the fingers in playing order.
             HStack(alignment: .center, spacing: compact ? 14 : 24) {
                 if hand {
-                    HandDiagram(used: Set(s.fingering), right: s.rightHand)
-                        .frame(width: compact ? 92 : 124, height: compact ? 70 : 92)
+                    HandView(lit: Set(s.fingering), right: s.rightHand)
+                        .frame(width: compact ? 96 : 140, height: compact ? 80 : 116)
                 }
                 VStack(alignment: .leading, spacing: 6) {
                     Text(s.rightHand ? "Right hand · fingering" : "Left hand · fingering")
@@ -118,8 +124,8 @@ struct StepPanel: View {
             // buttons stay in view.
             HStack(alignment: .center, spacing: compact ? 14 : 28) {
                 if hand {
-                    HandDiagram(used: Set(s.fingers.map(\.finger)), right: s.rightHand)
-                        .frame(width: compact ? 92 : 124, height: compact ? 70 : 92)
+                    HandView(lit: Set(s.fingers.map(\.finger)), right: s.rightHand)
+                        .frame(width: compact ? 96 : 140, height: compact ? 80 : 116)
                 }
                 VStack(alignment: .leading, spacing: compact ? 6 : 10) {
                     ForEach(s.fingers, id: \.finger) { f in

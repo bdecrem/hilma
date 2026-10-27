@@ -276,7 +276,7 @@ final class LessonEngine {
     #if DEBUG
     /// `-StepComplete 1`: the current step as if just passed (screenshots of Lesson complete).
     func debugComplete() {
-        guard gated, stepIndex + 1 < lesson.steps.count else { return }
+        guard gated else { return }
         passed = true
         awaiting = false
         handOver(from: stepIndex)
@@ -555,15 +555,14 @@ final class LessonEngine {
         output.lastChorusDetail = result.detail
         report(c, result, tempo, counted: counted, line: line)
 
-        if passed && stepIndex + 1 < lesson.steps.count {
-            if gated {
-                // The band plays on; the next lesson waits for its button.
-                handOver(from: stepIndex)
-            } else {
-                // Hand over now: the chorus that just began is the next step's.
-                banner = (line, bar(at: heardTick) + 2)
-                startStep(stepIndex + 1)
-            }
+        if passed && gated {
+            // The band plays on; the next lesson waits for its button (the module's last lesson
+            // shows Module complete, with nothing next).
+            handOver(from: stepIndex)
+        } else if passed && stepIndex + 1 < lesson.steps.count {
+            // Hand over now: the chorus that just began is the next step's.
+            banner = (line, bar(at: heardTick) + 2)
+            startStep(stepIndex + 1)
         }
     }
 
