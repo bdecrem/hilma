@@ -245,12 +245,12 @@ enum LessonCheck {
         }
 
         do {
-            // Scales: right hand, one octave, over a four-bar cycle; the minor variant on A.
+            // Scales: right hand, one octave, over a three-bar cycle (two of notes, one hold); the minor variant on A.
             let major = Lesson.bundled("lesson-S1"), minor = Lesson.bundled("lesson-S1m")
             let up = major.expected(major.steps[0], ticksPerBeat: tpb)
-            check("scales: C major up is C D E F G A B C, a note a beat over two bars, three times",
-                  up.count == 24 && up.prefix(8).map(\.display) == [48, 50, 52, 53, 55, 57, 59, 60]
-                  && up.prefix(8).map(\.tick) == (0..<8).map { $0 * tpb } && up[8].tick == 4 * 4 * tpb
+            check("scales: C major up is C D E F G A B C, a note a beat over two bars, four times",
+                  up.count == 32 && up.prefix(8).map(\.display) == [48, 50, 52, 53, 55, 57, 59, 60]
+                  && up.prefix(8).map(\.tick) == (0..<8).map { $0 * tpb } && up[8].tick == 3 * 4 * tpb
                   && up.prefix(8).map(\.finger) == [1, 2, 3, 1, 2, 3, 4, 5], "\(up.prefix(9).map { "\($0.display)@\($0.tick)" })")
             let mup = minor.expected(minor.steps[0], ticksPerBeat: tpb)
             check("scales: A minor up is A B C D E F G A from A3", mup.prefix(8).map(\.display) == [57, 59, 60, 62, 64, 65, 67, 69])
@@ -258,8 +258,8 @@ enum LessonCheck {
             check("scales: down is the octave back, 5 4 3 2 1 3 2 1", down.prefix(8).map(\.display) == [60, 59, 57, 55, 53, 52, 50, 48]
                   && down.prefix(8).map(\.finger) == [5, 4, 3, 2, 1, 3, 2, 1])
             let both = major.expected(major.steps[2], ticksPerBeat: tpb)
-            check("scales: up and down is 15 eighths, 45 a chorus, none in bars 3 and 4", both.count == 45
-                  && both.prefix(15).map(\.tick) == (0..<15).map { $0 * 6 } && !both.contains { $0.bar == 2 || $0.bar == 3 },
+            check("scales: up and down is 15 eighths, 60 a chorus, none in bar 3", both.count == 60
+                  && both.prefix(15).map(\.tick) == (0..<15).map { $0 * 6 } && !both.contains { $0.bar == 2 || $0.bar == 5 },
                   "\(both.count) \(both.prefix(16).map(\.tick))")
             let se = LessonEngine(lesson: major, ticksPerBeat: tpb, gated: true)
             se.start(step: 2)
@@ -269,6 +269,38 @@ enum LessonCheck {
                   "\(String(describing: se.output.intro?.fingering))")
             check("scales: three lessons, their steps in order", major.lessons.count == 3 && major.lessonsDone(reachedStep: 2) == 1
                   && minor.lessons.map(\.title) == ["Up", "Down", "Up and down"])
+            check("scales: the key is named", major.key == "C major" && minor.key == "A minor")
+
+            // The run on screen: the engine's index into the chorus, every finger on the keyboard,
+            // the crossings, and a keyboard that holds the whole run.
+            let re = LessonEngine(lesson: minor, ticksPerBeat: tpb, gated: false)
+            re.start(step: 0)
+            re.heard(tick: 0, tempo: 60, rolling: true, epoch: 0)
+            re.heard(tick: Double(3 * tpb) + 1, tempo: 60, rolling: true, epoch: 0)
+            check("run: on beat 4 of bar 1 the engine is at note 4 of the run (D, thumb), E next",
+                  re.output.nowIndex == 3 && re.output.nowNote == 62 && re.output.nextNote == 64, "\(String(describing: re.output.nowIndex))")
+            check("run: every key of the run carries its finger, not just this bar's",
+                  re.output.fingers == [57: 1, 59: 2, 60: 3, 62: 1, 64: 2, 65: 3, 67: 4, 69: 5], "\(re.output.fingers)")
+            re.heard(tick: Double(9 * tpb) + 1, tempo: 60, rolling: true, epoch: 0)
+            check("run: in the hold bar the top A stays now and the thumb's A is next",
+                  re.output.nowIndex == 7 && re.output.nowNote == 69 && re.output.nextNote == 57, "\(String(describing: re.output.nowIndex)) \(String(describing: re.output.nextNote))")
+            re.heard(tick: Double(13 * tpb) + 1, tempo: 60, rolling: true, epoch: 0)
+            check("run: the second run's second note is index 9 (position 1 of the run)",
+                  re.output.nowIndex == 9 && re.output.nowNote == 59)
+            typealias RN = LessonState.Run.Note
+            check("run: 3 → 1 going up is Thumb under, 1 → 3 going down is Middle over, 1 → 2 is nothing",
+                  LessonState.Run.crossing(from: RN(key: 60, finger: 3), to: RN(key: 62, finger: 1)) == "Thumb under"
+                  && LessonState.Run.crossing(from: RN(key: 64, finger: 1), to: RN(key: 62, finger: 3)) == "Middle over"
+                  && LessonState.Run.crossing(from: RN(key: 57, finger: 1), to: RN(key: 59, finger: 2)) == nil
+                  && LessonState.Run.crossing(from: RN(key: 69, finger: 5), to: RN(key: 57, finger: 1)) == nil)
+            let amin = LessonState.Run(name: "A minor", notes: [57, 59, 60, 62, 64, 65, 67, 69].map { RN(key: $0, finger: 1) },
+                                       index: 7, resting: true, number: 1, count: 4)
+            check("run: the Mac keyboard keeps C3–B4 for A minor, the iPhone's moves to hold A3–A4",
+                  LessonState.Run.keyboard(amin, keys: 24, fallback: 48...71) == 48...71
+                  && LessonState.Run.keyboard(amin, keys: 18, fallback: 48...65) == 53...71
+                  && LessonState.Run.keyboard(nil, keys: 18, fallback: 48...65) == 48...65,
+                  "\(LessonState.Run.keyboard(amin, keys: 18, fallback: 48...65))")
+            check("run: wrapping after the last note, next is the first", amin.wrapping && amin.next?.key == 57 && amin.now?.key == 69)
         }
 
         var run = simulate([(autoplay(.perfect, choruses: 3), end(3))])

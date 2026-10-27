@@ -149,6 +149,7 @@
 		8139EAE75275B27D767EF818 /* snare-3c.caf in Resources */ = {isa = PBXBuildFile; fileRef = AD8A3ACF263A0B9CE23283FB /* snare-3c.caf */; };
 		861E94056201983476A0C3AB /* crash-1b.caf in Resources */ = {isa = PBXBuildFile; fileRef = CC2CC4DF332B094AAC005AD4 /* crash-1b.caf */; };
 		8704BAB326417DF36B36659F /* pno-85-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 94531D8F79AEF879A04254AB /* pno-85-2.caf */; };
+		878DE3099612052F76923FAD /* RunPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11BD6025BB5E69D21B9A0B1F /* RunPanel.swift */; };
 		8933D62E32589DF348615AD6 /* pno-39-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3C8AB3B36F288B90FF3273DE /* pno-39-1.caf */; };
 		896A67B877A6CDB7653B1480 /* pno-95-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = BC4DC980AB417352A92222A0 /* pno-95-1.caf */; };
 		8A0960B42196667C75B9C38E /* pno-43-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = E7447478F83F7B3F078A972A /* pno-43-2.caf */; };
@@ -302,6 +303,7 @@
 		1015C3B7893037323D28F441 /* saxl-62.caf */ = {isa = PBXFileReference; path = "saxl-62.caf"; sourceTree = "<group>"; };
 		10C5B9D6572FC6A770B67E87 /* rideBell-0a.caf */ = {isa = PBXFileReference; path = "rideBell-0a.caf"; sourceTree = "<group>"; };
 		114C7B43CE49393D6E343425 /* pno-65-1.caf */ = {isa = PBXFileReference; path = "pno-65-1.caf"; sourceTree = "<group>"; };
+		11BD6025BB5E69D21B9A0B1F /* RunPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunPanel.swift; sourceTree = "<group>"; };
 		1225A9C23AAA0DBF395E1311 /* saxl-82.caf */ = {isa = PBXFileReference; path = "saxl-82.caf"; sourceTree = "<group>"; };
 		12273D467BDEFC4939B1545F /* bass-38.caf */ = {isa = PBXFileReference; path = "bass-38.caf"; sourceTree = "<group>"; };
 		147A244442CB1D7BBE930EA7 /* tomHi-0b.caf */ = {isa = PBXFileReference; path = "tomHi-0b.caf"; sourceTree = "<group>"; };
@@ -695,6 +697,7 @@
 				0C5E53554552169E0F03A86D /* NoteNeedle.swift */,
 				0C87F42F08B755A7DD365B4F /* PadGrid.swift */,
 				586FAD0BEBDF739818994F6C /* Player.swift */,
+				11BD6025BB5E69D21B9A0B1F /* RunPanel.swift */,
 				D8AEBBD36AEADCD7786A2457 /* Scorer.swift */,
 				F927B4DE131369E7A7E7144B /* StepPanel.swift */,
 				3FF0590E33E54BA1B15E91B1 /* TransportBar.swift */,
@@ -1322,6 +1325,7 @@
 				F5E48B65451195E56EB8CFE6 /* Quiz.swift in Sources */,
 				CD2A1678E6F4475BD791FB2D /* QuizScreen.swift in Sources */,
 				495537C6E5D2EC4AA4A7E72F /* ResultScreen.swift in Sources */,
+				878DE3099612052F76923FAD /* RunPanel.swift in Sources */,
 				2280B159810DADB2C948CEFC /* Scorer.swift in Sources */,
 				0C90898023362CB317B66D22 /* SettingsScreen.swift in Sources */,
 				B42F6C7AD6013FC34A3BAF19 /* StepPanel.swift in Sources */,
@@ -1370,7 +1374,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 26;
+				CURRENT_PROJECT_VERSION = 27;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -1437,7 +1441,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 26;
+				CURRENT_PROJECT_VERSION = 27;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;

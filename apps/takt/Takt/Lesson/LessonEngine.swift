@@ -107,8 +107,10 @@ final class LessonEngine {
         var intro: StepInfo?
         /// A step just passed (gated engines): Lesson complete, and the next step.
         var complete: Complete?
-        /// Keys of the current bar's notes → the finger for each.
+        /// Keys of the current bar's notes → the finger for each (a run: every key of the run).
         var fingers: [Int: Int] = [:]
+        /// Index into the chorus's expected notes of the one being played now (a run's position).
+        var nowIndex: Int?
     }
 
     struct Verdict {
@@ -624,9 +626,11 @@ final class LessonEngine {
             o.nowNotes = []
             o.nextNotes = []
             o.fingers = [:]
+            o.nowIndex = nil
         } else {
             var fingers: [Int: Int] = [:]
-            for e in expected where e.bar == barInForm { if let f = e.finger { fingers[e.display] = f } }
+            // A run (a step with a cycle) numbers every key it uses; a bar's pattern only its own.
+            for e in expected where step.cycle != nil || e.bar == barInForm { if let f = e.finger { fingers[e.display] = f } }
             o.fingers = fingers
             let t = heardTick - Double(chorus * loopTicks)
             let i = expected.lastIndex { Double($0.tick) <= t + 1e-6 } ?? expected.count - 1
@@ -637,6 +641,7 @@ final class LessonEngine {
             while expected[j].tick == now.tick && j != i { j = (j + 1) % expected.count }
             let nextKeys = Set(expected.filter { $0.tick == expected[j].tick }.map(\.display)).subtracting(nowKeys)
             o.nowNote = now.display
+            o.nowIndex = i
             o.nextNote = nextKeys.min()
             o.nowNotes = nowKeys
             o.nextNotes = nextKeys

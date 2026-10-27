@@ -76,6 +76,9 @@ struct WideLessonLayout: View {
                         } else if let card = state.card {
                             CardPanel(text: card, title: state.stepTitle)
                                 .frame(width: geo.size.width, height: geo.size.height)
+                        } else if let run = state.run {
+                            RunPanel(run: run, beat: state.beat)
+                                .frame(width: geo.size.width, height: geo.size.height)
                         } else {
                             PadGrid(state: state, side: PadGrid.side(fitting: geo.size, gap: gap), gap: gap)
                                 .frame(width: geo.size.width, height: geo.size.height)
@@ -94,8 +97,9 @@ struct WideLessonLayout: View {
             }
 
             Hairline()
-            KeyboardStrip(low: 48, high: 71, now: state.nowNotes, next: state.nextNotes, pressed: state.pressedNotes,
-                          fingers: state.fingers)
+            let keys = LessonState.Run.keyboard(state.run, keys: 24, fallback: 48...71)
+            KeyboardStrip(low: keys.lowerBound, high: keys.upperBound, now: state.nowNotes, next: state.nextNotes,
+                          pressed: state.pressedNotes, fingers: state.fingers)
                 .frame(height: 128)
                 .padding(.horizontal, 24)
                 .padding(.vertical, 18)
@@ -139,13 +143,17 @@ struct StackedLessonLayout: View {
                     // The card holds the pads' height, so nothing below it moves.
                     CardPanel(text: card, title: state.stepTitle)
                         .frame(height: side * 3 + gap * 2)
+                } else if let run = state.run {
+                    RunPanel(run: run, beat: state.beat, compact: true)
+                        .frame(height: side * 3 + gap * 2)
                 } else {
                     PadGrid(state: state, side: side, gap: gap)
                 }
 
                 Spacer(minLength: 16)
-                KeyboardStrip(low: 48, high: 65, now: state.nowNotes, next: state.nextNotes, pressed: state.pressedNotes,
-                              fingers: state.fingers)
+                let keys = LessonState.Run.keyboard(state.run, keys: 18, fallback: 48...65)
+                KeyboardStrip(low: keys.lowerBound, high: keys.upperBound, now: state.nowNotes, next: state.nextNotes,
+                              pressed: state.pressedNotes, fingers: state.fingers)
                     .frame(height: 112)
                 Spacer(minLength: 14)
                 FormFooter(state: state)

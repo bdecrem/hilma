@@ -118,6 +118,8 @@ struct Lesson: Decodable {
 
     let code: String
     let title: String
+    /// A scale module: the key the runs are in ("A minor"), for the run panel.
+    let key: String?
     let module: Module
     let lessons: [LessonSpec]
     let later: [LaterLesson]?

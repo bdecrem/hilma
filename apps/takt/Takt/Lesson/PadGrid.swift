@@ -131,6 +131,10 @@ struct FormFooter: View {
                 Text("Count-in \(n)")
                     .foregroundStyle(Palette.signal)
                     .fixedSize()
+            } else if let run = state.run {
+                Text("Run \(run.number) of \(run.count)")
+                    .foregroundStyle(Palette.text)
+                    .fixedSize()
             } else {
                 Text("Bar \(state.bar + 1) / \(state.form.count)")
                     .foregroundStyle(Palette.text)

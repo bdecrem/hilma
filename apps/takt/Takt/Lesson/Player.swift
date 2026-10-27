@@ -671,8 +671,23 @@ final class Player {
             nextNote: lesson.nextNote,
             nowNotes: lesson.nowNotes,
             nextNotes: lesson.nextNotes,
-            pressedNotes: pressed
+            pressedNotes: pressed,
+            run: runState()
         )
+    }
+
+    /// A scale step's run for the screen: the cycle's notes in order, the one being played
+    /// (from the engine's index into the chorus), whether this bar is the hold, and the pass.
+    private func runState() -> LessonState.Run? {
+        let step = engine.step
+        guard let cycle = step.cycle, let pattern = step.pattern, !pattern.isEmpty, step.kind != .card else { return nil }
+        let one = content.expected(step, ticksPerBeat: audio.band.ticksPerBeat).prefix(pattern.count)
+        let notes = one.map { LessonState.Run.Note(key: $0.display, finger: $0.finger ?? 0) }
+        let resting = !pattern.contains { ($0.bar ?? 0) == bar % cycle }
+        return LessonState.Run(name: content.key ?? "", notes: Array(notes),
+                               index: lesson.nowIndex.map { $0 % notes.count },
+                               resting: resting,
+                               number: bar / cycle + 1, count: max(1, form.count / cycle))
     }
 }
 

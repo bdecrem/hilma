@@ -222,6 +222,18 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   by lessons done); `AppModel.openModule` / `start(module:lesson:)` / `currentModule` drive the
   module screen and cards by entry code ("A1", "S"); progress is keyed by content code (S1 and
   S1m separately). DEBUG `-Module S`, `-preferMinor YES`. Checks 142/142.
+  **0.1 (27), 2026-10-27:** Bart couldn't read a scale as a 12-bar chord grid with blank rest
+  bars ("the two higher scales are not shown"). A scale step (any step with a `cycle`) now draws
+  `Lesson/RunPanel.swift` in the pads' place: the run as a row of note tiles (behind you dimmed,
+  now `signal`, next `cue`), the crossings as an arrow under the row ("Thumb under" on 3 → 1 up,
+  "Middle over" on 1 → 3 down; `LessonState.Run.crossing`), a Now / Next readout with the finger
+  name and the crossing as the hint, and the right hand with the finger down filled and the next
+  one outlined (`HandDiagram.next`). The hold bar reads "Hold A4 · Keep it down / Next A3 · From
+  the top". The engine publishes `Output.nowIndex` (the Player's `runState()` maps it into the
+  run) and numbers every key of a run on the keyboard, and the keyboard's range follows the run
+  (`Run.keyboard`: the iPhone shows F3–B4 for A minor). The footer counts "Run 2 of 4". The
+  cycle is 3 bars (8 notes up, one bar of hold, four runs a chorus; up and down = 60 notes a
+  chorus); `key` ("A minor") in the module file names the run. Checks 150/150.
 
 ## Code map (`Takt/`)
 

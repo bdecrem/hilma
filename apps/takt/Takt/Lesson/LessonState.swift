@@ -81,8 +81,58 @@ struct LessonState {
     var nextNotes: Set<Int> = []
     /// Keys held right now, from any input.
     var pressedNotes: Set<Int> = []
+    /// A scale lesson: the run takes the pads' place.
+    var run: Run? = nil
 
     var nextBar: Int { (bar + 1) % form.count }
+
+    /// One pass of a scale step: its notes in playing order, where the player is in it, and
+    /// which pass of the chorus this is.
+    struct Run: Equatable {
+        struct Note: Equatable {
+            let key: Int
+            let finger: Int
+        }
+        /// "A minor"
+        let name: String
+        let notes: [Note]
+        /// The note being played now (held through a rest bar); nil before the first.
+        let index: Int?
+        /// The bar after the notes: hold the last one, then from the top.
+        let resting: Bool
+        /// 1-based pass of the chorus, and how many a chorus holds.
+        let number: Int
+        let count: Int
+
+        var now: Note? { index.map { notes[$0] } }
+        var next: Note? { index.map { notes[($0 + 1) % notes.count] } }
+        /// Going back to the first note after the last.
+        var wrapping: Bool { index.map { $0 == notes.count - 1 } ?? false }
+
+        /// How the hand gets from one note to the next: a thumb tucking under, or a finger
+        /// crossing over the thumb. Nil for a plain step to the neighbor finger.
+        static func crossing(from a: Note, to b: Note) -> String? {
+            if b.finger == 1, a.finger > 1, b.key > a.key { return "Thumb under" }
+            if a.finger == 1, b.finger > 1, b.key < a.key { return "\(Self.fingerWord(b.finger)) over" }
+            return nil
+        }
+
+        static func fingerWord(_ f: Int) -> String {
+            ["", "Thumb", "Index", "Middle", "Ring", "Pinky"][max(0, min(5, f))]
+        }
+
+        /// The keyboard that shows the whole run: `keys` semitones wide, white keys at both ends,
+        /// the run centered; `fallback` when there is no run.
+        static func keyboard(_ run: Run?, keys: Int, fallback: ClosedRange<Int>) -> ClosedRange<Int> {
+            guard let run, let lo = run.notes.map(\.key).min(), let hi = run.notes.map(\.key).max() else { return fallback }
+            if fallback.contains(lo), fallback.contains(hi) { return fallback }
+            var low = (lo + hi) / 2 - keys / 2
+            while KeyboardStrip.isBlack(low) { low -= 1 }
+            var high = low + keys - 1
+            while KeyboardStrip.isBlack(high) { high += 1 }
+            return low...high
+        }
+    }
 
     /// A1 step 1, beat 3 of bar 4, one bar before the first F.
     static let preview = LessonState(

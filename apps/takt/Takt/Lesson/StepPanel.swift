@@ -147,6 +147,8 @@ struct StepPanel: View {
 struct HandDiagram: View {
     let used: Set<Int>
     var right = false
+    /// Fingers outlined in `cue`: the one that plays next.
+    var next: Set<Int> = []
 
     static func name(_ finger: Int) -> String {
         ["", "Thumb (1)", "Index (2)", "Middle (3)", "Ring (4)", "Pinky (5)"][max(0, min(5, finger))]
@@ -169,16 +171,17 @@ struct HandDiagram: View {
                     let finger = right ? i + 1 : 5 - i
                     let thumb = finger == 1
                     let on = used.contains(finger)
+                    let cue = !on && next.contains(finger)
                     let len = h * lengths[right ? 4 - i : i]
                     // The thumb sits lower and leans out.
                     let top = thumb ? palmTop - len * 0.35 : palmTop - len + col * 0.4
                     ZStack {
                         Capsule().fill(on ? Palette.signal : Palette.ground)
-                        Capsule().strokeBorder(on ? Palette.signal : Palette.line, lineWidth: 1)
-                        if on {
+                        Capsule().strokeBorder(on ? Palette.signal : cue ? Palette.cue : Palette.line, lineWidth: cue ? 1.5 : 1)
+                        if on || cue {
                             Text("\(finger)")
                                 .font(.system(size: col * 0.5, weight: .bold, design: .rounded))
-                                .foregroundStyle(Palette.blackKey)
+                                .foregroundStyle(on ? Palette.blackKey : Palette.cue)
                                 .rotationEffect(.degrees(thumb ? (right ? 22 : -22) : 0))
                                 .offset(y: -len * 0.25)
                         }

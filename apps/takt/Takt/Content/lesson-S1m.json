@@ -1,10 +1,11 @@
 {
   "code": "S1m",
   "title": "Scales",
+  "key": "A minor",
   "module": {
     "code": "scales",
     "title": "Scales",
-    "detail": "Right hand · one octave in A minor"
+    "detail": "Right hand \u00b7 one octave in A minor"
   },
   "lessons": [
     {
@@ -86,7 +87,7 @@
       "skill": "rh.scale.up.S1m",
       "tempo": 60,
       "gate": 2,
-      "cycle": 4,
+      "cycle": 3,
       "hand": "right",
       "pattern": [
         {
@@ -138,7 +139,7 @@
           "finger": 5
         }
       ],
-      "about": "Right hand, one note a beat, over the drums. Thumb on A, then index, middle. On D the thumb tucks under the middle finger, and the hand walks on: E F G and the pinky lands on A. Two bars up, two bars of rest, three times a chorus.",
+      "about": "Right hand, one note a beat, over the drums. Thumb on A, then index, middle. The thumb tucks under onto the fourth note, and the hand walks on to the pinky on the top A. Hold that a bar, then back to the thumb. Four runs a chorus.",
       "coach": {
         "intro": "A minor, up. Thumb on A.",
         "change": "Up the scale. One note a beat.",
@@ -157,7 +158,7 @@
       "skill": "rh.scale.down.S1m",
       "tempo": 60,
       "gate": 2,
-      "cycle": 4,
+      "cycle": 3,
       "hand": "right",
       "pattern": [
         {
@@ -209,7 +210,7 @@
           "finger": 1
         }
       ],
-      "about": "The way back: pinky on A, down to the thumb on E. Then the middle finger crosses over the thumb onto D, and index, thumb bring you home to A. Two bars down, two bars of rest.",
+      "about": "The way back: pinky on the top A, down to the thumb. Then the middle finger crosses over the thumb, and index, thumb bring you home to A. Hold it a bar, then from the top. Four runs a chorus.",
       "coach": {
         "intro": "A minor, down. Pinky on A.",
         "change": "Down the scale. Middle finger over the thumb.",
@@ -228,7 +229,7 @@
       "skill": "rh.scale.updown.S1m",
       "tempo": 60,
       "gate": 2,
-      "cycle": 4,
+      "cycle": 3,
       "hand": "right",
       "pattern": [
         {
@@ -337,7 +338,7 @@
           "finger": 1
         }
       ],
-      "about": "Both ways in one breath, two notes a beat: up from A to A, turn on the pinky, and straight back down. The crossings are the whole game: thumb under on the way up, middle finger over on the way down.",
+      "about": "Both ways in one breath, two notes a beat: up from A to A, turn on the pinky, and straight back down. The crossings are the whole game: thumb under on the way up, middle finger over on the way down. A bar to breathe, then again.",
       "coach": {
         "intro": "A minor, up and down. Eighth notes.",
         "change": "Up and over the top, and back down.",
