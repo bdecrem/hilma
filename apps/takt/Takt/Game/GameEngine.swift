@@ -264,7 +264,12 @@ final class GameEngine {
                 if nextTick == nil || notes[i].t < nextTick! { nextTick = notes[i].t; next = [] }
                 if notes[i].t == nextTick { next.insert(notes[i].n) }
             }
-            if t >= tick - reach, t <= tick + Double(ticksPerBar), let f = notes[i].f { fingers[notes[i].n] = f }
+        }
+        // Fingers for the chord in the window and the one after it, no further: two chords'
+        // badges on neighbouring keys read as one.
+        for i in notes.indices where status[i] == .pending && active(i) {
+            let t = Double(notes[i].t)
+            if abs(t - tick) <= reach || notes[i].t == nextTick, let f = notes[i].f { fingers[notes[i].n] = f }
         }
         return (now, next.subtracting(now), fingers)
     }
