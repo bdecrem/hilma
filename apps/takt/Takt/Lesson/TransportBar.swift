@@ -19,7 +19,7 @@ struct TransportBar: View {
                         .foregroundStyle(Palette.text)
                         .lineLimit(1)
                         .minimumScaleFactor(0.75)
-                    Text("Lesson \(state.lesson) of \(state.lessonCount)")
+                    Text(state.jam ? "Play · lesson \(state.lesson)" : "Lesson \(state.lesson) of \(state.lessonCount)")
                         .dataLabel(12)
                         .foregroundStyle(Palette.muted)
                         .lineLimit(1)
@@ -58,7 +58,7 @@ struct TransportBar: View {
 
     private var stepLabel: some View {
         Text(state.moduleTitle.isEmpty ? "Step \(state.step) of \(state.stepCount)"
-                                       : "\(state.moduleTitle) · \(state.lesson) of \(state.lessonCount)")
+             : state.jam ? "\(state.moduleTitle) · Play" : "\(state.moduleTitle) · \(state.lesson) of \(state.lessonCount)")
             .dataLabel(12)
             .foregroundStyle(Palette.muted)
             .lineLimit(1)

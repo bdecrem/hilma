@@ -29,6 +29,8 @@ struct ChannelState: Identifiable {
     var muted = false
     /// Unmuted, waiting for the next downbeat.
     var pendingUnmute = false
+    /// The module channel it is (a step may hide some): the mute button's target.
+    var index = 0
 }
 
 /// Everything the lesson screen draws. The views are pure functions of this. Live, the Player
@@ -83,6 +85,8 @@ struct LessonState {
     var pressedNotes: Set<Int> = []
     /// A scale lesson: the run takes the pads' place.
     var run: Run? = nil
+    /// Play mode: a jam under `lesson`, no gate.
+    var jam = false
 
     var nextBar: Int { (bar + 1) % form.count }
 

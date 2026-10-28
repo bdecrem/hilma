@@ -70,6 +70,19 @@ struct Lesson: Decodable {
 
     enum Kind: String, Decodable {
         case play, card, ramp, payoff
+        /// A play-mode step (a jam under a lesson): scored like a play step, but it never passes
+        /// or hands over; a clean chorus marks the jam done and the band plays on.
+        case jam
+    }
+
+    /// Play mode: an optional jam under lesson `after`, open once that lesson is done, never
+    /// blocking the next one. Its one step (`kind: jam`) comes after the lessons' steps.
+    struct JamSpec: Decodable {
+        let after: Int
+        let title: String
+        let skill: String
+        let goal: String
+        let step: String
     }
 
     /// What the player sees: a module (this file) of lessons, each a run of the engine's steps.
@@ -108,6 +121,9 @@ struct Lesson: Decodable {
         let hand: String?
         /// A run in another key than the module's ("A blues"): the run panel's name.
         let key: String?
+        /// The band channels this step plays (keys of `channels`: "drums", "bass"…); the rest are
+        /// muted and hidden. Nil: the module's channels with their unlock tempos.
+        let band: [String]?
         /// Clean choruses to pass (not necessarily in a row).
         let gate: Int?
         let maxAttempts: Int?
@@ -126,6 +142,7 @@ struct Lesson: Decodable {
     let module: Module
     let lessons: [LessonSpec]
     let later: [LaterLesson]?
+    let jams: [JamSpec]?
     let band: String
     let chords: [String: Chord]
     let form: [String]
@@ -155,7 +172,15 @@ struct Lesson: Decodable {
     private func validate() {
         for chord in form where chords[chord] == nil { fatalError("lesson \(code): no chord \(chord)") }
         let ids = lessons.flatMap(\.steps)
-        if ids != steps.map(\.id) { fatalError("lesson \(code): the lessons must cover every step, in order (\(ids))") }
+        if ids != steps.filter({ $0.kind != .jam }).map(\.id) { fatalError("lesson \(code): the lessons must cover every step, in order (\(ids))") }
+        if steps.prefix(ids.count).contains(where: { $0.kind == .jam }) { fatalError("lesson \(code): jam steps come after the lessons' steps") }
+        for j in jams ?? [] {
+            guard let s = steps.first(where: { $0.id == j.step }), s.kind == .jam else { fatalError("lesson \(code): jam \(j.title) needs a jam step \(j.step)") }
+            if !(1...lessons.count).contains(j.after) { fatalError("lesson \(code): jam \(j.title) after lesson \(j.after)?") }
+        }
+        for s in steps where s.kind == .jam && !(jams ?? []).contains(where: { $0.step == s.id }) { fatalError("lesson \(code): jam step \(s.id) belongs to no jam") }
+        let names = Set(channels.map(\.channel))
+        for s in steps { for b in s.band ?? [] where !names.contains(b) { fatalError("lesson \(code) step \(s.id): band channel \(b) is not in the module") } }
         for l in lessons where steps.first { $0.id == l.steps[0] }?.kind == .card {
             fatalError("lesson \(code): lesson \(l.title) starts on a card")
         }
@@ -172,6 +197,9 @@ struct Lesson: Decodable {
                 need(step.tempo != nil && step.gate != nil, "tempo and gate")
                 need(c.clean != nil && c.again != nil && c.slow != nil && c.passed != nil, "clean, again, slow and passed lines")
                 need(step.maxAttempts == nil || c.tomorrow != nil, "a tomorrow line with maxAttempts")
+            case .jam:
+                need(step.tempo != nil, "tempo")
+                need(c.clean != nil && c.again != nil, "clean and again lines")
             case .ramp:
                 guard let r = step.ramp else { fatalError("lesson \(code) step \(step.id): a ramp step needs ramp") }
                 need(r.by > 0 && r.to > r.from, "a rising ramp")
@@ -198,7 +226,19 @@ struct Lesson: Decodable {
 
     // MARK: Lessons over steps (0-based)
 
+    /// The jam a step is, if it is one.
+    func jam(ofStep i: Int) -> JamSpec? {
+        steps.indices.contains(i) && steps[i].kind == .jam ? jams?.first { $0.step == steps[i].id } : nil
+    }
+
+    func stepIndex(ofJam j: JamSpec) -> Int? { steps.firstIndex { $0.id == j.step } }
+
+    /// The lessons' steps: everything before the first jam.
+    var lessonStepCount: Int { steps.firstIndex { $0.kind == .jam } ?? steps.count }
+
+    /// The lesson a step belongs to; a jam counts with the lesson it sits under.
     func lessonIndex(ofStep i: Int) -> Int {
+        if let j = jam(ofStep: i) { return j.after - 1 }
         var n = 0
         for (l, spec) in lessons.enumerated() {
             n += spec.steps.count

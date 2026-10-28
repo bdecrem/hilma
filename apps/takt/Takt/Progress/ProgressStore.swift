@@ -15,6 +15,8 @@ final class ProgressStore {
         var lessonsDone = 0
         var completed: Date?
         var bestTempo = 0
+        /// Play mode: jams (step ids) played clean once.
+        var jamsDone: [String] = []
 
         init() {}
 
@@ -24,6 +26,7 @@ final class ProgressStore {
             lessonsDone = try c.decodeIfPresent(Int.self, forKey: .lessonsDone) ?? 0
             completed = try c.decodeIfPresent(Date.self, forKey: .completed)
             bestTempo = try c.decodeIfPresent(Int.self, forKey: .bestTempo) ?? 0
+            jamsDone = try c.decodeIfPresent([String].self, forKey: .jamsDone) ?? []
         }
     }
 
@@ -128,6 +131,15 @@ final class ProgressStore {
         var r = lesson(code)
         guard n > r.lessonsDone else { return }
         r.lessonsDone = n
+        snapshot.lessons[code] = r
+        save()
+    }
+
+    /// Play mode: a jam played clean.
+    func jamDone(_ id: String, in code: String) {
+        var r = lesson(code)
+        guard !r.jamsDone.contains(id) else { return }
+        r.jamsDone.append(id)
         snapshot.lessons[code] = r
         save()
     }

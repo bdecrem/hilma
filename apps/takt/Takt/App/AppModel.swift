@@ -306,6 +306,19 @@ final class AppModel {
         open(lesson: code)
     }
 
+    /// Play mode: the jam under a lesson, from its intro.
+    func start(module code: String, jam j: Lesson.JamSpec) {
+        ensure(module: code)
+        guard let player else { return }
+        currentModule = code
+        player.start(jam: j)
+        open(lesson: code)
+    }
+
+    func jamDone(_ content: Lesson, _ j: Lesson.JamSpec) -> Bool {
+        progress.lesson(content.code).jamsDone.contains(j.step)
+    }
+
     /// The lesson screen watches for the payoff finishing.
     func lessonFinished() { route = .result }
 }

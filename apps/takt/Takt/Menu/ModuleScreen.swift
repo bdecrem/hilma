@@ -51,6 +51,12 @@ struct ModuleScreen: View {
                                       state: i < done ? .done : i == next ? .next : .locked, compact: compact) {
                             app.start(module: code, lesson: i + 1)
                         }
+                        // Play mode: the jam under the lesson, open once the lesson is done.
+                        ForEach(Array((content.jams ?? []).filter { $0.after == i + 1 }.enumerated()), id: \.offset) { _, j in
+                            JamRowView(jam: j, state: i < done ? (app.jamDone(content, j) ? .done : .open) : .locked, compact: compact) {
+                                app.start(module: code, jam: j)
+                            }
+                        }
                     }
                     ForEach(Array((content.later ?? []).enumerated()), id: \.offset) { i, l in
                         LessonRowView(number: content.lessons.count + i + 1, title: l.title, skill: l.skill, goal: "Coming soon",
@@ -160,6 +166,65 @@ struct LessonRowView: View {
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(open ? .isButton : [])
         .accessibilityLabel("Lesson \(number), \(title), \(skill). \(state == .done ? "Done" : state == .next ? "Next" : state == .open ? "Open" : state == .locked ? "Locked" : "Coming soon")")
+    }
+}
+
+/// Play mode under a lesson: optional, never blocking. Open once the lesson is done, a check
+/// once it has been played clean.
+struct JamRowView: View {
+    enum State { case done, open, locked }
+    let jam: Lesson.JamSpec
+    let state: State
+    var compact = false
+    let action: () -> Void
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: 8)
+        let open = state != .locked
+        HStack(alignment: .center, spacing: compact ? 12 : 18) {
+            ZStack {
+                Circle()
+                    .fill(state == .done ? Palette.good : Palette.ground)
+                    .overlay(Circle().strokeBorder(state == .done ? Color.clear : open ? Palette.cue : Palette.line, lineWidth: 1))
+                switch state {
+                case .done: Image(systemName: "checkmark").font(.system(size: 12, weight: .bold)).foregroundStyle(Palette.blackKey)
+                case .open: Image(systemName: "music.note").font(.system(size: 13, weight: .bold)).foregroundStyle(Palette.cue)
+                case .locked: Image(systemName: "lock.fill").font(.system(size: 11, weight: .semibold)).foregroundStyle(Palette.muted)
+                }
+            }
+            .frame(width: 30, height: 30)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Play · after lesson \(jam.after)")
+                    .dataLabel(10)
+                    .foregroundStyle(open ? Palette.cue : Palette.muted)
+                Text(jam.title)
+                    .font(.display(compact ? 20 : 22))
+                    .textCase(.uppercase)
+                    .foregroundStyle(open ? Palette.text : Palette.muted)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                Text(jam.skill)
+                    .bodyText(13)
+                    .foregroundStyle(open ? Palette.text : Palette.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 0)
+            if open {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(Palette.muted)
+            }
+        }
+        .padding(.vertical, compact ? 10 : 12)
+        .padding(.horizontal, compact ? 14 : 18)
+        .background(shape.fill(Palette.ground))
+        .overlay(shape.strokeBorder(Palette.line, style: StrokeStyle(lineWidth: 1, dash: open ? [] : [3, 3])))
+        .padding(.leading, compact ? 20 : 54)
+        .contentShape(shape)
+        .onTapGesture { if open { action() } }
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(open ? .isButton : [])
+        .accessibilityLabel("Play, after lesson \(jam.after): \(jam.title), \(jam.skill). \(state == .done ? "Played clean" : open ? "Open" : "Locked")")
     }
 }
 

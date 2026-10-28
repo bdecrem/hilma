@@ -97,6 +97,18 @@
     {
       "name": "Drums",
       "channel": "drums"
+    },
+    {
+      "name": "Bass",
+      "channel": "bass"
+    },
+    {
+      "name": "Keys",
+      "channel": "keys"
+    },
+    {
+      "name": "Horns",
+      "channel": "horns"
     }
   ],
   "steps": [
@@ -169,7 +181,10 @@
         "join": "From the top.",
         "slow": "Clean at {tempo}. It counts at {gateTempo}.",
         "passed": "Clean. That's the way up."
-      }
+      },
+      "band": [
+        "drums"
+      ]
     },
     {
       "id": "down",
@@ -240,7 +255,10 @@
         "join": "From the top.",
         "slow": "Clean at {tempo}. It counts at {gateTempo}.",
         "passed": "Clean. That's the way down."
-      }
+      },
+      "band": [
+        "drums"
+      ]
     },
     {
       "id": "updown",
@@ -353,7 +371,10 @@
         "join": "From the top.",
         "slow": "Clean at {tempo}. It counts at {gateTempo}.",
         "passed": "Clean. You can play a scale."
-      }
+      },
+      "band": [
+        "drums"
+      ]
     },
     {
       "id": "two",
@@ -466,7 +487,10 @@
         "join": "From the top.",
         "slow": "Clean at {tempo}. It counts at {gateTempo}.",
         "passed": "Clean. Two octaves in the hand."
-      }
+      },
+      "band": [
+        "drums"
+      ]
     },
     {
       "id": "left",
@@ -537,7 +561,10 @@
         "join": "From the top.",
         "slow": "Clean at {tempo}. It counts at {gateTempo}.",
         "passed": "Clean. Both hands know the scale."
-      }
+      },
+      "band": [
+        "drums"
+      ]
     },
     {
       "id": "blues",
@@ -639,7 +666,535 @@
         "join": "From the top.",
         "slow": "Clean at {tempo}. It counts at {gateTempo}.",
         "passed": "Clean. That's the sound of the blues."
+      },
+      "band": [
+        "drums"
+      ]
+    },
+    {
+      "id": "jam-up",
+      "kind": "jam",
+      "title": "First riff",
+      "skill": "jam.up.S1",
+      "tempo": 70,
+      "cycle": 2,
+      "hand": "right",
+      "key": "Riff in C major",
+      "band": [
+        "drums",
+        "bass",
+        "keys"
+      ],
+      "pattern": [
+        {
+          "bar": 0,
+          "beat": 1,
+          "semitones": 0,
+          "finger": 1
+        },
+        {
+          "bar": 0,
+          "beat": 2,
+          "semitones": 2,
+          "finger": 2
+        },
+        {
+          "bar": 0,
+          "beat": 3,
+          "semitones": 4,
+          "finger": 3
+        },
+        {
+          "bar": 0,
+          "beat": 4,
+          "semitones": 7,
+          "finger": 5
+        },
+        {
+          "bar": 1,
+          "beat": 1,
+          "semitones": 7,
+          "finger": 5
+        },
+        {
+          "bar": 1,
+          "beat": 2,
+          "semitones": 4,
+          "finger": 3
+        },
+        {
+          "bar": 1,
+          "beat": 3,
+          "semitones": 2,
+          "finger": 2
+        },
+        {
+          "bar": 1,
+          "beat": 4,
+          "semitones": 0,
+          "finger": 1
+        }
+      ],
+      "about": "The first four notes of the scale as a riff: C D E G going up, then back down. One note a beat over the band's shuffle. Lean into the beat; the band does the rest.",
+      "coach": {
+        "intro": "Riff in C major. Thumb on C.",
+        "change": "C, D, E, G, and back.",
+        "hold": "C, D, E, G, and back.",
+        "clean": "Clean. Keep it rolling.",
+        "again": "{problem} Keep going.",
+        "join": "Jump in on the 1.",
+        "slow": "Clean at {tempo}. Try it at {gateTempo}."
       }
+    },
+    {
+      "id": "jam-down",
+      "kind": "jam",
+      "title": "Falling riff",
+      "skill": "jam.down.S1",
+      "tempo": 70,
+      "cycle": 2,
+      "hand": "right",
+      "key": "Riff in C major",
+      "band": [
+        "drums",
+        "bass",
+        "keys"
+      ],
+      "pattern": [
+        {
+          "bar": 0,
+          "beat": 1,
+          "semitones": 12,
+          "finger": 5
+        },
+        {
+          "bar": 0,
+          "beat": 2,
+          "semitones": 9,
+          "finger": 3
+        },
+        {
+          "bar": 0,
+          "beat": 3,
+          "semitones": 7,
+          "finger": 2
+        },
+        {
+          "bar": 0,
+          "beat": 4,
+          "semitones": 4,
+          "finger": 1
+        },
+        {
+          "bar": 1,
+          "beat": 1,
+          "semitones": 7,
+          "finger": 2
+        },
+        {
+          "bar": 1,
+          "beat": 2,
+          "semitones": 9,
+          "finger": 3
+        },
+        {
+          "bar": 1,
+          "beat": 3,
+          "semitones": 12,
+          "finger": 5
+        }
+      ],
+      "about": "From the top C down (C A G E), then climb back to it and hold it a beat. Pinky on the top, thumb at the bottom, just like the scale coming down.",
+      "coach": {
+        "intro": "Falling riff. Pinky on the top C.",
+        "change": "Down from the top, then back up.",
+        "hold": "Down from the top, then back up.",
+        "clean": "Clean. Keep it rolling.",
+        "again": "{problem} Keep going.",
+        "join": "Jump in on the 1.",
+        "slow": "Clean at {tempo}. Try it at {gateTempo}."
+      }
+    },
+    {
+      "id": "jam-updown",
+      "kind": "jam",
+      "title": "The blue note",
+      "skill": "jam.updown.S1",
+      "tempo": 70,
+      "cycle": 2,
+      "hand": "right",
+      "key": "Riff in C major",
+      "band": [
+        "drums",
+        "bass",
+        "keys"
+      ],
+      "pattern": [
+        {
+          "bar": 0,
+          "beat": 1,
+          "semitones": 0,
+          "finger": 1
+        },
+        {
+          "bar": 0,
+          "beat": 2,
+          "semitones": 2,
+          "finger": 2
+        },
+        {
+          "bar": 0,
+          "beat": 3,
+          "semitones": 3,
+          "finger": 3
+        },
+        {
+          "bar": 0,
+          "beat": 4,
+          "semitones": 4,
+          "finger": 4
+        },
+        {
+          "bar": 1,
+          "beat": 1,
+          "semitones": 7,
+          "finger": 5
+        },
+        {
+          "bar": 1,
+          "beat": 2,
+          "semitones": 4,
+          "finger": 4
+        },
+        {
+          "bar": 1,
+          "beat": 3,
+          "semitones": 2,
+          "finger": 2
+        },
+        {
+          "bar": 1,
+          "beat": 4,
+          "semitones": 0,
+          "finger": 1
+        }
+      ],
+      "about": "The riff again, with a blue note: C D E♭ E, then G E D C. The ring finger on the flat note is what makes it sound like the blues. One note a beat, two bars, and again.",
+      "coach": {
+        "intro": "The blue note. Lean on it.",
+        "change": "Up to the blue note, then back down.",
+        "hold": "Up to the blue note, then back down.",
+        "clean": "Clean. Keep it rolling.",
+        "again": "{problem} Keep going.",
+        "join": "Jump in on the 1.",
+        "slow": "Clean at {tempo}. Try it at {gateTempo}."
+      }
+    },
+    {
+      "id": "jam-two",
+      "kind": "jam",
+      "title": "The jump",
+      "skill": "jam.two.S1",
+      "tempo": 70,
+      "cycle": 2,
+      "hand": "right",
+      "key": "Riff in C major",
+      "band": [
+        "drums",
+        "bass",
+        "keys"
+      ],
+      "pattern": [
+        {
+          "bar": 0,
+          "beat": 1,
+          "semitones": 0,
+          "finger": 1
+        },
+        {
+          "bar": 0,
+          "beat": 2,
+          "semitones": 4,
+          "finger": 2
+        },
+        {
+          "bar": 0,
+          "beat": 3,
+          "semitones": 7,
+          "finger": 3
+        },
+        {
+          "bar": 0,
+          "beat": 4,
+          "semitones": 12,
+          "finger": 5
+        },
+        {
+          "bar": 1,
+          "beat": 1,
+          "semitones": 12,
+          "finger": 5
+        },
+        {
+          "bar": 1,
+          "beat": 2,
+          "semitones": 7,
+          "finger": 3
+        },
+        {
+          "bar": 1,
+          "beat": 3,
+          "semitones": 4,
+          "finger": 2
+        },
+        {
+          "bar": 1,
+          "beat": 4,
+          "semitones": 0,
+          "finger": 1
+        }
+      ],
+      "about": "Not a scale this time: the chord's own notes, C E G C, up to the octave and back. The fingers skip keys, so the hand opens up: thumb at the bottom, pinky on the octave.",
+      "coach": {
+        "intro": "The jump. Thumb at the bottom.",
+        "change": "Up through the chord, pinky on the octave.",
+        "hold": "Up through the chord, pinky on the octave.",
+        "clean": "Clean. Keep it rolling.",
+        "again": "{problem} Keep going.",
+        "join": "Jump in on the 1.",
+        "slow": "Clean at {tempo}. Try it at {gateTempo}."
+      }
+    },
+    {
+      "id": "jam-left",
+      "kind": "jam",
+      "title": "Walking bass",
+      "skill": "jam.left.S1",
+      "tempo": 70,
+      "cycle": 2,
+      "hand": "left",
+      "key": "Riff in C major",
+      "band": [
+        "drums",
+        "keys"
+      ],
+      "pattern": [
+        {
+          "bar": 0,
+          "beat": 1,
+          "semitones": -12,
+          "finger": 5
+        },
+        {
+          "bar": 0,
+          "beat": 2,
+          "semitones": -8,
+          "finger": 3
+        },
+        {
+          "bar": 0,
+          "beat": 3,
+          "semitones": -5,
+          "finger": 2
+        },
+        {
+          "bar": 0,
+          "beat": 4,
+          "semitones": -3,
+          "finger": 1
+        },
+        {
+          "bar": 1,
+          "beat": 1,
+          "semitones": -3,
+          "finger": 1
+        },
+        {
+          "bar": 1,
+          "beat": 2,
+          "semitones": -5,
+          "finger": 2
+        },
+        {
+          "bar": 1,
+          "beat": 3,
+          "semitones": -8,
+          "finger": 3
+        },
+        {
+          "bar": 1,
+          "beat": 4,
+          "semitones": -12,
+          "finger": 5
+        }
+      ],
+      "about": "The band's bass sits out and you take its place: C E G A walking up, then back down, one note a beat in the left hand. Pinky on C, and keep it even: a bass player never rushes.",
+      "coach": {
+        "intro": "Walking bass. Pinky on the low C.",
+        "change": "Walk it up, walk it down. Even.",
+        "hold": "Walk it up, walk it down. Even.",
+        "clean": "Clean. Keep it rolling.",
+        "again": "{problem} Keep going.",
+        "join": "Jump in on the 1.",
+        "slow": "Clean at {tempo}. Try it at {gateTempo}."
+      }
+    },
+    {
+      "id": "jam-blues",
+      "kind": "jam",
+      "title": "Blues riff",
+      "skill": "jam.blues.S1",
+      "tempo": 70,
+      "cycle": 4,
+      "hand": "right",
+      "key": "Riff in C major",
+      "band": [
+        "drums",
+        "bass",
+        "keys"
+      ],
+      "pattern": [
+        {
+          "bar": 0,
+          "beat": 1,
+          "semitones": 0,
+          "finger": 1
+        },
+        {
+          "bar": 0,
+          "beat": 2,
+          "semitones": 3,
+          "finger": 2
+        },
+        {
+          "bar": 0,
+          "beat": 3,
+          "semitones": 5,
+          "finger": 3
+        },
+        {
+          "bar": 0,
+          "beat": 4,
+          "semitones": 6,
+          "finger": 4,
+          "tick": 8
+        },
+        {
+          "bar": 1,
+          "beat": 1,
+          "semitones": 7,
+          "finger": 1
+        },
+        {
+          "bar": 1,
+          "beat": 2,
+          "semitones": 10,
+          "finger": 2
+        },
+        {
+          "bar": 1,
+          "beat": 3,
+          "semitones": 12,
+          "finger": 3
+        },
+        {
+          "bar": 2,
+          "beat": 1,
+          "semitones": 12,
+          "finger": 3
+        },
+        {
+          "bar": 2,
+          "beat": 2,
+          "semitones": 10,
+          "finger": 2
+        },
+        {
+          "bar": 2,
+          "beat": 3,
+          "semitones": 7,
+          "finger": 1
+        },
+        {
+          "bar": 2,
+          "beat": 4,
+          "semitones": 6,
+          "finger": 4,
+          "tick": 8
+        },
+        {
+          "bar": 3,
+          "beat": 1,
+          "semitones": 5,
+          "finger": 3
+        },
+        {
+          "bar": 3,
+          "beat": 2,
+          "semitones": 3,
+          "finger": 2
+        },
+        {
+          "bar": 3,
+          "beat": 3,
+          "semitones": 0,
+          "finger": 1
+        }
+      ],
+      "about": "The blues scale as a lick: up through C E♭ F G♭ G B♭ C, with the flat five squeezed in late on beat 3 (the shuffle's late eighth), a beat of air on top, and back down the same way. This is the shape of every blues solo you've ever heard.",
+      "coach": {
+        "intro": "Blues riff. Thumb on C.",
+        "change": "Up the blues scale, the flat five late, and back.",
+        "hold": "Up the blues scale, the flat five late, and back.",
+        "clean": "Clean. Keep it rolling.",
+        "again": "{problem} Keep going.",
+        "join": "Jump in on the 1.",
+        "slow": "Clean at {tempo}. Try it at {gateTempo}."
+      }
+    }
+  ],
+  "jams": [
+    {
+      "after": 1,
+      "title": "First riff",
+      "skill": "C D E G, up and back, over the band",
+      "goal": "Have fun. A clean chorus marks it played.",
+      "step": "jam-up"
+    },
+    {
+      "after": 2,
+      "title": "Falling riff",
+      "skill": "C A G E, then G A C: a riff that drops from the top",
+      "goal": "Have fun. A clean chorus marks it played.",
+      "step": "jam-down"
+    },
+    {
+      "after": 3,
+      "title": "The blue note",
+      "skill": "C D E♭ E, then G E D C: the flat third slips in",
+      "goal": "Have fun. A clean chorus marks it played.",
+      "step": "jam-updown"
+    },
+    {
+      "after": 4,
+      "title": "The jump",
+      "skill": "C E G C: the chord's notes, up an octave and back",
+      "goal": "Have fun. A clean chorus marks it played.",
+      "step": "jam-two"
+    },
+    {
+      "after": 5,
+      "title": "Walking bass",
+      "skill": "C E G A in the left hand: you are the bass now",
+      "goal": "Have fun. A clean chorus marks it played.",
+      "step": "jam-left"
+    },
+    {
+      "after": 6,
+      "title": "Blues riff",
+      "skill": "C E♭ F G♭ G B♭ C with a shuffle, up and down",
+      "goal": "Have fun. A clean chorus marks it played.",
+      "step": "jam-blues"
     }
   ]
 }

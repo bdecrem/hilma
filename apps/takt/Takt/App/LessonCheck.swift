@@ -328,14 +328,58 @@ enum LessonCheck {
                   "\(LessonState.Run.keyboard(amin, keys: 18, fallback: 48...65))")
             check("run: wrapping after the last note, next is the first", amin.wrapping && amin.next?.key == 57 && amin.now?.key == 69)
 
+            // Play mode: a jam under each lesson, its step past the lessons' steps, its own band;
+            // clean choruses count and mark it, nothing passes or hands over.
+            let jams = minor.jams ?? []
+            check("jams: six under the scale lessons, five under the blues, each a jam step past the lessons' steps",
+                  jams.count == 6 && (lesson.jams ?? []).count == 5 && jams.map(\.after) == [1, 2, 3, 4, 5, 6]
+                  && minor.stepIndex(ofJam: jams[0]) == 6 && minor.lessonIndex(ofStep: 6) == 0 && minor.jam(ofStep: 6)?.title == "First riff"
+                  && minor.steps[6].band == ["drums", "bass", "keys"] && minor.steps[0].band == ["drums"] && minor.steps[10].band == ["drums", "keys"]
+                  && lesson.steps[6].kind == .jam && lesson.lessonIndex(ofStep: 10) == 4 && lesson.lessonsDone(reachedStep: 7) == 5)
+            let je = LessonEngine(lesson: minor, ticksPerBeat: tpb, gated: false)
+            je.start(step: 6)
+            var jv: [LessonEngine.Verdict] = []
+            je.onVerdict = { jv.append($0) }
+            var planner = Autoplay(mode: .perfect, plannedThrough: -0.01)
+            var pending = planner.plan(through: Double(2 * loop), expected: je.expected, loopTicks: loop, msPerTick: msPerTick(70)).sorted { $0.tick < $1.tick }
+            var jt = 0.0
+            while jt <= Double(2 * loop) + 1 {
+                je.heard(tick: jt, tempo: 70, rolling: true, epoch: 0)
+                while let p = pending.first, p.tick <= jt {
+                    je.played(note: p.note, tick: p.tick, msPerTick: msPerTick(70), epoch: 0)
+                    pending.removeFirst()
+                }
+                jt += 0.25
+            }
+            check("jams: two clean choruses count and mark the jam; nothing passes, no Lesson complete",
+                  jv.count == 2 && jv.allSatisfy { $0.counted && $0.jam == "jam-up" } && je.output.clean == 2 && !je.output.passed
+                  && je.output.complete == nil && je.output.jam && je.output.gate == 0 && je.output.lessonTitle == "First riff"
+                  && je.output.lesson == 1 && je.output.coach == "Clean. Keep it rolling.", "\(jv.map(\.line)) clean \(je.output.clean)")
+            let gj = LessonEngine(lesson: minor, ticksPerBeat: tpb, gated: true)
+            gj.start(step: 6)
+            check("jams: the intro is play mode under lesson 1, with the riff's fingering",
+                  gj.output.intro?.jam == true && gj.output.intro?.number == 1 && gj.output.intro?.title == "First riff"
+                  && gj.output.intro?.fingering == [1, 2, 3, 4, 4, 3, 2, 1], "\(String(describing: gj.output.intro?.fingering))")
+            var ra = ProgressStore.LessonRecord()
+            ra.jamsDone = ["jam-up"]
+            var rb = ProgressStore.LessonRecord()
+            rb.jamsDone = ["jam-down"]
+            var sa = ProgressStore.Snapshot()
+            sa.lessons["S1m"] = ra
+            var sb = ProgressStore.Snapshot()
+            sb.lessons["S1m"] = rb
+            let old = try? JSONDecoder().decode(ProgressStore.LessonRecord.self, from: Data("{\"reachedStep\":2}".utf8))
+            check("jams: played ones merge as a union; records from before decode with none",
+                  AccountStore.merge(sa, sb).lessons["S1m"]?.jamsDone == ["jam-down", "jam-up"] && old?.jamsDone == [] && old?.reachedStep == 2)
+
             // The module's last lesson passing shows Module complete (Bart's two clean choruses of
             // Up and down went to a blank screen: the hand-over skipped the last step).
             let ge = LessonEngine(lesson: minor, ticksPerBeat: tpb, gated: true)
-            ge.start(step: 2)
+            ge.start(step: 5)
             ge.heard(tick: 0, tempo: 60, rolling: true, epoch: 0)
             ge.debugComplete()
-            check("run: the last lesson passed shows Lesson 3 complete with nothing next",
-                  ge.output.complete?.number == 3 && ge.output.complete?.next == nil && ge.output.complete?.done == "Up and down",
+            check("run: the last lesson passed shows Lesson 6 complete with nothing next (the jams after it don't count)",
+                  ge.output.complete?.number == 6 && ge.output.complete?.next == nil && ge.output.complete?.done == "The blues scale",
                   "\(String(describing: ge.output.complete))")
         }
 
@@ -551,8 +595,9 @@ enum LessonCheck {
 
         // Keys let go: their lengths and velocities reach the loop.
         let held = LessonEngine(lesson: lesson, ticksPerBeat: tpb)
-        held.start(step: lesson.steps.count - 1)
-        let payoffNotes = lesson.expected(lesson.steps.last!, ticksPerBeat: tpb)
+        let payoffIndex = lesson.steps.firstIndex { $0.kind == .payoff }!
+        held.start(step: payoffIndex)
+        let payoffNotes = lesson.expected(lesson.steps[payoffIndex], ticksPerBeat: tpb)
         var t = 0.0
         while !held.output.finished && t < Double(4 * loop) {
             held.heard(tick: t, tempo: 90, rolling: true, epoch: 0)

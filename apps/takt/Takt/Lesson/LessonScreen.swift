@@ -61,7 +61,7 @@ struct WideLessonLayout: View {
 
             HStack(spacing: 0) {
                 VStack(spacing: 10) {
-                    ForEach(Array(state.channels.enumerated()), id: \.element.id) { i, c in ChannelStrip(channel: c, index: i) }
+                    ForEach(state.channels) { c in ChannelStrip(channel: c, index: c.index) }
                     Spacer(minLength: 0)
                 }
                 .padding(20)
@@ -123,7 +123,7 @@ struct StackedLessonLayout: View {
                 StaffLines(spacing: 3)
                     .padding(.vertical, 14)
                 HStack(spacing: 6) {
-                    ForEach(Array(state.channels.enumerated()), id: \.element.id) { i, c in ChannelStrip(channel: c, index: i, compact: true) }
+                    ForEach(state.channels) { c in ChannelStrip(channel: c, index: c.index, compact: true) }
                 }
 
                 Spacer(minLength: 16)

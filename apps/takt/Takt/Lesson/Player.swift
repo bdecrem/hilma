@@ -79,6 +79,7 @@ final class Player {
         }
         for ch in [Channel.drums, .bass, .keys, .horns] where !channels.contains(ch) { audio.send(.mute(ch, true)) }
         self.lesson = engine.output
+        applyBand()
         wire()
         resume()
 
@@ -108,9 +109,11 @@ final class Player {
 
     /// The engine's verdicts go to the log and the progress store, its actions to the band.
     private func wire() {
-        engine.onVerdict = { [lessonLog, progress] v in
+        engine.onVerdict = { [lessonLog, progress, code = content.code] v in
             let what: String
             if let r = v.result {
+                // Play mode: a clean chorus marks the jam done.
+                if let jam = v.jam, v.counted { progress.jamDone(jam, in: code) }
                 let offsets = r.offsets.map { String(format: "%+.1f", $0) }.joined(separator: " ")
                 what = "\(r.hits)/\(r.notes.count) hits, \(r.extras.count) extra, mean \(r.meanOffsetMs.map { String(format: "%+.1f", $0) } ?? "-") ms, \(r.clean ? "clean" : "not clean") [\(r.problems.joined(separator: " "))] offsets \(offsets)"
                 if let skill = v.skill { progress.record(skill: skill, result: r, tempo: v.tempo, counted: v.counted) }
@@ -138,7 +141,7 @@ final class Player {
             case .finished:
                 self.finish = self.engine.finish
                 self.progress.completed(self.content.code, tempo: self.engine.finish?.tempo ?? 0,
-                                        steps: self.content.steps.count, lessons: self.content.lessons.count)
+                                        steps: self.content.lessonStepCount, lessons: self.content.lessons.count)
                 self.lessonLog.info("lesson \(self.content.code, privacy: .public) finished")
                 #if DEBUG
                 if UserDefaults.standard.bool(forKey: "PlayBackOnFinish"), let f = self.finish {
@@ -195,7 +198,21 @@ final class Player {
         wire()
         if let t = content.steps[0].tempo, t != tempo { audio.send(.tempo(Double(t))) }
         if step > 0 { engine.start(step: step) }
+        applyBand()
         publish()
+    }
+
+    /// A step that names its band (the scales over the drums alone, a jam over the whole band)
+    /// mutes the rest; a step without one keeps the module's unlock state.
+    private func applyBand() {
+        guard let band = engine.step.band else { return }
+        for (i, c) in content.channels.enumerated() { audio.send(.mute(channels[i], !band.contains(c.channel))) }
+    }
+
+    /// Play mode: the jam under a lesson that is done, from its intro.
+    func start(jam j: Lesson.JamSpec) {
+        guard j.after <= lessonsDone, let i = content.stepIndex(ofJam: j) else { return }
+        restartLesson(at: i)
     }
 
     /// Lessons of the module finished: the record, or for records from before lessons existed,
@@ -215,7 +232,11 @@ final class Player {
     /// to progress on the way.
     private func publish() {
         let out = engine.output
-        if out.step != lesson.step { progress.reached(step: out.step, in: content.code) }
+        if out.step != lesson.step {
+            // A jam's step sits past the lessons' steps: reaching it says nothing about them.
+            if !out.jam { progress.reached(step: out.step, in: content.code) }
+            applyBand()
+        }
         if let c = out.complete, c != lesson.complete { progress.lessonDone(c.number, in: content.code) }
         if out != lesson { lesson = out }
     }
@@ -629,13 +650,16 @@ final class Player {
 
     func lessonState() -> LessonState {
         var strips: [ChannelState] = []
+        let band = engine.step.band
         for (i, c) in content.channels.enumerated() {
+            // A step that names its band shows those channels alone, all open.
+            if let band, !band.contains(c.channel) { continue }
             let ch = channels[i]
-            let unlocked = c.unlockAt == nil || lesson.unlocked.contains(i)
+            let unlocked = c.unlockAt == nil || lesson.unlocked.contains(i) || band != nil
             let isMuted = muted & ch.bit != 0
-            strips.append(ChannelState(name: c.name, unlocked: unlocked, unlockAt: c.unlockAt,
+            strips.append(ChannelState(name: c.name, unlocked: unlocked, unlockAt: band == nil ? c.unlockAt : nil,
                                        level: unlocked && !isMuted ? meters[ch.rawValue] : 0,
-                                       muted: isMuted, pendingUnmute: pendingUnmute & ch.bit != 0))
+                                       muted: isMuted, pendingUnmute: pendingUnmute & ch.bit != 0, index: i))
         }
         return LessonState(
             code: content.code,
@@ -672,7 +696,8 @@ final class Player {
             nowNotes: lesson.nowNotes,
             nextNotes: lesson.nextNotes,
             pressedNotes: pressed,
-            run: runState()
+            run: runState(),
+            jam: lesson.jam
         )
     }
 

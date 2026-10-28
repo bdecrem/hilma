@@ -60,6 +60,8 @@ final class LessonEngine {
         /// A run (more than four notes): the fingers in playing order, instead of the legend.
         let fingering: [Int]
         let rightHand: Bool
+        /// Play mode: `number` is the lesson it sits under.
+        var jam = false
         struct Finger: Equatable { let finger: Int; let tone: String; let beats: [Int] }
     }
 
@@ -111,6 +113,8 @@ final class LessonEngine {
         var fingers: [Int: Int] = [:]
         /// Index into the chorus's expected notes of the one being played now (a run's position).
         var nowIndex: Int?
+        /// A jam (play mode): no gate, nothing to pass; `lesson` is the one it sits under.
+        var jam = false
     }
 
     struct Verdict {
@@ -126,6 +130,8 @@ final class LessonEngine {
         let clean: Int
         let gate: Int
         let line: String
+        /// The jam's step id when the chorus was a jam's.
+        var jam: String? = nil
     }
 
     /// The payoff chorus, for the result screen: every press with its tick inside the chorus.
@@ -247,7 +253,7 @@ final class LessonEngine {
 
     /// Lesson complete's Start: the next lesson, its intro already read on that panel.
     func advance() {
-        guard let c = completed, c.start < lesson.steps.count else { return }
+        guard let c = completed, c.start < lesson.lessonStepCount else { return }
         completed = nil
         startStep(c.start)
         begin()
@@ -258,13 +264,14 @@ final class LessonEngine {
     /// in, and the next lesson waiting.
     private func handOver(from i: Int) {
         let l = lesson.lessonIndex(ofStep: i)
+        let end = lesson.lessonStepCount
         var next = i + 1
         var card: String?
-        if next < lesson.steps.count, lesson.steps[next].kind == .card, lesson.lessonIndex(ofStep: next) == l {
+        if next < end, lesson.steps[next].kind == .card, lesson.lessonIndex(ofStep: next) == l {
             card = lesson.steps[next].card
             next += 1
         }
-        if card == nil, next < lesson.steps.count, lesson.lessonIndex(ofStep: next) == l {
+        if card == nil, next < end, lesson.lessonIndex(ofStep: next) == l {
             startStep(next)
             return
         }
@@ -294,6 +301,10 @@ final class LessonEngine {
             return .init(finger: f, tone: p.tone ?? "", beats: pattern.filter { $0.finger == f }.map(\.beat))
         }
         let run = pattern.count > 4 ? pattern.compactMap(\.finger) : []
+        if let j = lesson.jam(ofStep: i) {
+            return StepInfo(number: j.after, count: lesson.lessons.count, title: j.title, skill: j.skill, goal: j.goal,
+                            about: s.about, kind: s.kind, fingers: fingers, fingering: run, rightHand: s.hand == "right", jam: true)
+        }
         return StepInfo(number: l + 1, count: lesson.lessons.count, title: spec.title, skill: spec.skill, goal: spec.goal,
                         about: s.about, kind: s.kind, fingers: fingers, fingering: run, rightHand: s.hand == "right")
     }
@@ -530,6 +541,18 @@ final class LessonEngine {
             } else {
                 line = coach.again!.filled(["problem": result.problems.first ?? ""])
             }
+        } else if step.kind == .jam {
+            // Play mode: a clean chorus at the tempo counts (and marks the jam done); nothing
+            // passes, the band plays on.
+            counted = result.clean && tempo >= Double(step.tempo!) - 0.5
+            if counted {
+                clean += 1
+                line = coach.clean!
+            } else if result.clean {
+                line = coach.slow?.filled(["tempo": "\(Int(tempo.rounded()))", "gateTempo": "\(step.tempo!)"]) ?? coach.clean!
+            } else {
+                line = coach.again!.filled(["problem": result.problems.first ?? ""])
+            }
         } else {
             let gate = step.gate!
             let gateTempo = step.tempo!
@@ -559,7 +582,7 @@ final class LessonEngine {
             // The band plays on; the next lesson waits for its button (the module's last lesson
             // shows Module complete, with nothing next).
             handOver(from: stepIndex)
-        } else if passed && stepIndex + 1 < lesson.steps.count {
+        } else if passed && stepIndex + 1 < lesson.lessonStepCount {
             // Hand over now: the chorus that just began is the next step's.
             banner = (line, bar(at: heardTick) + 2)
             startStep(stepIndex + 1)
@@ -568,18 +591,20 @@ final class LessonEngine {
 
     private func report(_ c: Int, _ result: ChorusResult?, _ tempo: Double, counted: Bool, line: String) {
         onVerdict?(Verdict(chorus: c, step: stepIndex + 1, skill: step.skill, result: result, tempo: tempo,
-                           counted: counted, clean: clean, gate: step.gate ?? 0, line: line))
+                           counted: counted, clean: clean, gate: step.gate ?? 0, line: line,
+                           jam: step.kind == .jam ? step.id : nil))
     }
 
     private func update() {
         var o = output
         o.step = stepIndex + 1
-        o.stepCount = lesson.steps.count
+        o.stepCount = lesson.lessonStepCount
         o.stepKind = step.kind
         o.stepTitle = step.title
         o.card = step.kind == .card ? step.card : nil
         o.clean = clean
-        o.gate = step.kind == .ramp ? (step.ramp!.to - step.ramp!.from) / step.ramp!.by : step.gate ?? 0
+        o.gate = step.kind == .ramp ? (step.ramp!.to - step.ramp!.from) / step.ramp!.by : step.kind == .jam ? 0 : step.gate ?? 0
+        o.jam = step.kind == .jam
         o.passed = passed
         o.holding = holding
         o.unlocked = unlocked
@@ -588,13 +613,17 @@ final class LessonEngine {
         o.intro = awaiting ? info(step: stepIndex) : nil
         o.complete = completed.map { c in
             Complete(number: c.lesson + 1, done: lesson.lessons[c.lesson].title, card: completedCard,
-                     next: c.start < lesson.steps.count ? info(step: c.start) : nil)
+                     next: c.start < lesson.lessonStepCount ? info(step: c.start) : nil)
         }
         let l = lesson.lessonIndex(ofStep: stepIndex)
         o.lesson = l + 1
         o.lessonCount = lesson.lessons.count
         o.lessonTitle = lesson.lessons[l].title
         o.goal = lesson.lessons[l].goal
+        if let j = lesson.jam(ofStep: stepIndex) {
+            o.lessonTitle = j.title
+            o.goal = j.goal
+        }
 
         let absBar = bar(at: heardTick)
         let barInForm = ((absBar % bars) + bars) % bars

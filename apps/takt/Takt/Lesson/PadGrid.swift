@@ -144,7 +144,7 @@ struct FormFooter: View {
                 .foregroundStyle(Palette.muted)
                 .fixedSize()
             Spacer(minLength: 0)
-            // A card has no gate.
+            // A card has no gate; a jam counts its clean choruses and never ends.
             if state.gate > 0 {
                 HStack(spacing: 10) {
                     GateRings(clean: state.cleanChoruses, required: state.gate)
@@ -152,6 +152,10 @@ struct FormFooter: View {
                         .foregroundStyle(Palette.muted)
                         .fixedSize()
                 }
+            } else if state.jam {
+                Text(state.cleanChoruses > 0 ? "Clean × \(state.cleanChoruses)" : "Play along")
+                    .foregroundStyle(state.cleanChoruses > 0 ? Palette.good : Palette.muted)
+                    .fixedSize()
             }
         }
     }

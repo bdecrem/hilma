@@ -281,6 +281,28 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   on both devices, 15 white keys on the iPhone), the module's `range.high` is 84. The scales
   entry reads "Both hands · 6 lessons". Checks 158/158.
 
+- **Play mode (jams): 0.1 (34), 2026-10-28.** Bart: "a PLAY lesson below each regular lesson…
+  not BLOCKING, optional… have fun with what you just learned… these can reach a little beyond
+  what was taught". A module file's `jams` (`after` = the lesson it sits under, title, skill,
+  goal, `step`) point at steps of `kind: jam`, which come after the lessons' steps
+  (`Lesson.lessonStepCount` is where the lessons end; the hand-over and Module complete stop
+  there). A jam is scored like a play step but never passes or hands over: a clean chorus at
+  its tempo counts (`Verdict.jam` = the step id, `ProgressStore.jamDone`, `LessonRecord.jamsDone`,
+  merged as a union) and the band plays on; the footer reads "Play along" / "Clean × n". A step
+  may name its `band` (channel keys): those channels play and show, the rest are muted and
+  hidden (`Player.applyBand` on every step change; the scales' lessons list `["drums"]`, the
+  module now carries all four channels). `ModuleScreen` draws a `JamRowView` under each lesson
+  (note icon, "Play · after lesson n", locked until the lesson is done, ✓ once played clean);
+  `AppModel.start(module:jam:)` → `Player.start(jam:)`. The header reads "Scales · Play", the
+  intro "Play · after lesson n" with a Play button. Content: six scale jams at 70 over drums,
+  bass and keys (First riff A C D E, Falling riff, The blue note, The jump, Walking bass in the
+  left hand with the band's bass out, Blues riff with the flat five on the late eighth; C major
+  equivalents in `lesson-S1.json`), five blues jams over the whole band (Root and fifth, The
+  boogie 5–6, Boogie at 80 on every beat, The seventh 5-6-7-6 at 90, Walk it R-3-5-6). DEBUG:
+  `-Step 7` opens the scales' first jam (`-Step 8` A1's The boogie). Checks 162/162. Known:
+  `-SnapshotAt` renders an intro panel blank (ScrollView under ImageRenderer); capture the
+  window instead.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

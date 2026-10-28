@@ -199,6 +199,7 @@ final class AccountStore {
             m.lessonsDone = max(m.lessonsDone, r.lessonsDone)
             m.bestTempo = max(m.bestTempo, r.bestTempo)
             m.completed = [m.completed, r.completed].compactMap { $0 }.min()
+            m.jamsDone = Array(Set(m.jamsDone).union(r.jamsDone)).sorted()
             out.lessons[code] = m
         }
         for (id, s) in b.skills where s.attempts > (out.skills[id]?.attempts ?? -1) {
