@@ -303,6 +303,37 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   `-SnapshotAt` renders an intro panel blank (ScrollView under ImageRenderer); capture the
   window instead.
 
+- **Chords: the third finger, twice a bar, the Minor Chords module: 0.1 (35), 2026-10-28.**
+  Bart: "add the third finger; then add minor chords… work the user way across all minor
+  chords, one lesson at a time; then lessons that mix in more notes… 2 [chords] per bar".
+  **Blues Progressions** has two lessons after the payoff: The third finger (C E G / F A C /
+  G B D on the 1 with 5 3 1, at 70, whole band) and Twice a bar (the triad on the 1 and the
+  3, at 80), with jams Three and a bump (triad, then root + sixth on the 3) and The stomp
+  (the triad on every beat). The payoff still graduates the module (`completed`, the result,
+  the map's count); `lessonsDone` counts on past it (`Player` records `lessonIndex(ofStep:
+  payoff) + 1`), the module screen, the card and `status()` call it done only when every
+  lesson is. **Minor Chords** (`lesson-M.json`, code M1, entry "M" after Scales on the Learn
+  tab and the map): the minor blues (i iv v) in every key, one lesson a key: A E D G C F B F♯
+  C♯ G♯ E♭ B♭ (white keys first), the minor triad on the 1 with 5 3 1 (`minorThird` is a
+  tone now), then Two a bar (A minor, the triad on the 1 and the 3); a jam under each (the
+  minor boogie: root + fifth on the 1, root + flat seventh on the 3, horns in; Four a bar
+  under the last). Each key step carries its own `form` and `chords` (`Lesson.form(of:)`,
+  `chords(of:)`, `formBars(of:)`; the coach, the pads and the expected notes follow the
+  step) and a `transpose` for the band. **The band switches and transposes:**
+  `scripts/band-minor.py` → `band-minor-A.json`, the shuffle's drums and shape with minor
+  voicings (Am7 Dm7 Em7), a R b3 5 b7 bass line, a G♯ into the turnaround; the same kit and
+  instruments. `BandRenderer.load(_:)` builds another band's events on the main thread
+  (`Events`, kept alive, same kit and time structure required), `.band(events)` swaps them
+  at the current tick, `.transpose(n)` adds semitones to every bass, keys and horns note
+  (not the monitor); `AudioEngine.load(band:)` caches by name; `Player.switchModule` loads
+  the module's band when it differs, every step start sends its `transpose` (0 when none).
+  Verified offline (`-RenderScript "0:band=band-minor-A,0:transpose=2,…"`): the bass reads
+  B D F♯ A at +2, A C E G at 0, C E G A for the shuffle. DEBUG: `-Module M -Lesson 7` is B
+  minor. **Progress safety:** `-Silent` and `-Autoplay` runs no longer write progress
+  (`ProgressStore.readOnly`); earlier today's headless `-Lesson n` runs had pushed Bart's
+  Mac record's `reachedStep` past the lessons he'd played (repaired by hand: A1 step 5, S1m
+  step 4, the M1 record removed; backup in the session scratchpad). Checks 168/168.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

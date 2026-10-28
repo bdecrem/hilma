@@ -108,6 +108,11 @@ final class ProgressStore {
         }
     }
 
+    #if DEBUG
+    /// `-Silent` (headless) and `-Autoplay` runs keep progress in memory only.
+    static let readOnly = UserDefaults.standard.bool(forKey: "Silent") || UserDefaults.standard.string(forKey: "Autoplay") != nil
+    #endif
+
     static var defaultURL: URL {
         let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
         #if DEBUG
@@ -254,6 +259,11 @@ final class ProgressStore {
     private func save() {
         onChange?()
         guard let url else { return }
+        #if DEBUG
+        // Headless and autoplay runs (screenshots, recordings) change nothing on disk: a
+        // `-Lesson 6` run used to leave "reached step 7" in Bart's own record.
+        if Self.readOnly { return }
+        #endif
         do {
             try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
             try JSONEncoder.takt.encode(snapshot).write(to: url, options: .atomic)

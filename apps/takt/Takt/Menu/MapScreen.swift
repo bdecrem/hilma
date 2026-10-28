@@ -41,7 +41,7 @@ struct MapScreen: View {
                         MapStop(entry: entry, status: app.status(entry), here: i == here, side: i % 2 == 0 ? .leading : .trailing,
                                 last: i == path.count - 1) { app.start(entry) }
                     }
-                    LevelHeader(number: 2, title: "Later", detail: "Minor blues")
+                    LevelHeader(number: 2, title: "Later", detail: "The right hand")
                         .opacity(0.5)
                         .padding(.top, 16)
                 }

@@ -54,6 +54,14 @@ final class AudioEngine {
     }
 
     func send(_ command: EngineCommand) { renderer.send(command) }
+
+    /// Another band (`Takt/Content/band-*.json`), from the same tick; built once, then reused.
+    private var loaded: [String: BandRenderer.Events] = [:]
+    func load(band name: String) {
+        let e = loaded[name] ?? renderer.load(.bundled(name))
+        loaded[name] = e
+        renderer.send(.band(e))
+    }
     func snapshot() -> EngineSnapshot { renderer.snapshot() }
 
     /// Starts realtime output. `silent` keeps the speakers quiet (headless checks) while the

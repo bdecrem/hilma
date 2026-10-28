@@ -92,8 +92,8 @@ enum DebugHooks {
         guard let path = d.string(forKey: "RenderTo") else { return }
         let seconds = d.double(forKey: "RenderSeconds") > 0 ? d.double(forKey: "RenderSeconds") : 30
         let tempo = d.double(forKey: "Tempo") > 0 ? d.double(forKey: "Tempo") : 70
-        let script = parse(d.string(forKey: "RenderScript") ?? "0:play")
         let audio = AudioEngine(band: .bundled("band-blues-C"), tempo: tempo)
+        let script = parse(d.string(forKey: "RenderScript") ?? "0:play", audio: audio)
         do {
             try audio.renderOffline(seconds: seconds, script: script, to: URL(fileURLWithPath: path))
             print("TAKT rendered \(seconds)s at \(audio.sampleRate) Hz to \(path)")
@@ -119,7 +119,8 @@ enum DebugHooks {
         }
     }
 
-    static func parse(_ script: String) -> [(at: Double, command: EngineCommand)] {
+    /// `band=band-minor-A` swaps the band, `transpose=2` moves its pitched notes.
+    static func parse(_ script: String, audio: AudioEngine? = nil) -> [(at: Double, command: EngineCommand)] {
         let channels: [String: Channel] = ["drums": .drums, "bass": .bass, "keys": .keys, "horns": .horns]
         return script.split(separator: ",").map { item in
             let parts = item.split(separator: ":", maxSplits: 1).map(String.init)
@@ -137,6 +138,8 @@ enum DebugHooks {
                 let nv = v.split(separator: "@")
                 command = .noteOn(note: Int(nv[0])!, velocity: nv.count > 1 ? Float(nv[1])! : 0.8)
             case ("off", let v?): command = .noteOff(note: Int(v)!)
+            case ("transpose", let v?): command = .transpose(Int(v)!)
+            case ("band", let v?): command = .band(audio!.renderer.load(.bundled(v)))
             default: fatalError("RenderScript command \(parts[1])")
             }
             return (at, command)

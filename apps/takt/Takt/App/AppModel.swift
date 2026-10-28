@@ -364,8 +364,8 @@ extension AppModel {
         }
         let content = module(entry.code)
         let record = progress.lesson(content.code)
-        if record.completed != nil { return .done(tempo: record.bestTempo) }
         let done = lessonsDone(content)
+        if done >= content.lessons.count { return .done(tempo: record.bestTempo) }
         return done > 0 ? .inProgress(lesson: done + 1, of: content.lessons.count) : .new
     }
 
@@ -396,7 +396,7 @@ struct LessonEntry: Identifiable {
     var id: String { code }
 
     static let catalog = [
-        LessonEntry(kind: .lesson, code: "A1", title: "Blues Progressions", meta: "Left hand · the 12-bar blues in C · 5 lessons",
+        LessonEntry(kind: .lesson, code: "A1", title: "Blues Progressions", meta: "Left hand · the 12-bar blues in C · 7 lessons",
                     after: nil, playable: true),
         LessonEntry(kind: .game(.chords), code: "E1", title: "Ear Trainer", meta: "Endless · name the chord by ear, seven levels",
                     after: nil, playable: true),
@@ -417,9 +417,11 @@ struct LessonEntry: Identifiable {
 
     static let scales = LessonEntry(kind: .lesson, code: "S", title: "Scales", meta: "Both hands · one and two octaves, the blues scale · 6 lessons",
                                     after: nil, playable: true)
+    static let minor = LessonEntry(kind: .lesson, code: "M", title: "Minor Chords", meta: "Left hand · the minor blues in every key · 13 lessons",
+                                   after: nil, playable: true)
 
     /// Level 1 on the map, in order: the modules and what comes after them.
-    static let path = [catalog[0], ear, scales,
+    static let path = [catalog[0], ear, scales, minor,
         LessonEntry(kind: .lesson, code: "M2", title: "The Right Hand", meta: "Blues scale · call and response",
                     after: "A1", playable: false),
     ]

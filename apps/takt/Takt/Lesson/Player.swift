@@ -39,7 +39,8 @@ final class Player {
     @ObservationIgnored private(set) var channels: [Channel]
     @ObservationIgnored private var engine: LessonEngine
     @ObservationIgnored let progress: ProgressStore
-    @ObservationIgnored private var form: [FormBar]
+    /// The current step's form (a minor-key lesson has its own).
+    private var form: [FormBar] { content.formBars(of: engine.step) }
     @ObservationIgnored private let midi = MIDIInput()
     @ObservationIgnored private var link: CADisplayLink?
     @ObservationIgnored private let log = Logger(subsystem: "takt", category: "input")
@@ -69,7 +70,6 @@ final class Player {
         self.audio = audio
         self.progress = progress
         content = lesson
-        form = lesson.formBars
         channels = Self.channels(of: lesson)
         engine = LessonEngine(lesson: lesson, ticksPerBeat: audio.band.ticksPerBeat, gated: Self.gated)
         // Locked channels stay muted until the lesson unlocks them; channels the module doesn't
@@ -138,10 +138,14 @@ final class Player {
             case .silence(let from, let to):
                 self.audio.send(.silence(from: from, to: to))
                 self.lessonLog.info("band out from tick \(Int(from)) to \(Int(to))")
+            case .transpose(let n):
+                self.audio.send(.transpose(n))
             case .finished:
                 self.finish = self.engine.finish
+                // The payoff graduates the module; lessons after it stay to be played.
                 self.progress.completed(self.content.code, tempo: self.engine.finish?.tempo ?? 0,
-                                        steps: self.content.lessonStepCount, lessons: self.content.lessons.count)
+                                        steps: self.content.lessonStepCount,
+                                        lessons: self.content.lessonIndex(ofStep: self.lesson.step - 1) + 1)
                 self.lessonLog.info("lesson \(self.content.code, privacy: .public) finished")
                 #if DEBUG
                 if UserDefaults.standard.bool(forKey: "PlayBackOnFinish"), let f = self.finish {
@@ -166,20 +170,19 @@ final class Player {
     /// from the top.
     private func resume() {
         let done = lessonsDone
-        if progress.lesson(content.code).completed == nil && done > 0 && done < content.lessons.count {
+        if done > 0 && done < content.lessons.count {
             restartLesson(at: content.firstStep(ofLesson: done))
         } else {
             restartLesson()
         }
     }
 
-    /// Another module on the same band (the scales over the blues band's drums): its form,
+    /// Another module: its band (the minor blues beside the shuffle, from the same tick), form,
     /// channels and steps, picked up where it was.
     func switchModule(to lesson: Lesson) {
         guard lesson.code != content.code else { return }
-        precondition(lesson.band == content.band, "module \(lesson.code) needs band \(lesson.band), the player has \(content.band)")
+        if lesson.band != content.band { audio.load(band: lesson.band) }
         content = lesson
-        form = lesson.formBars
         channels = Self.channels(of: lesson)
         lessonLog.info("module \(lesson.code, privacy: .public)")
         resume()
@@ -198,6 +201,7 @@ final class Player {
         wire()
         if let t = content.steps[0].tempo, t != tempo { audio.send(.tempo(Double(t))) }
         if step > 0 { engine.start(step: step) }
+        audio.send(.transpose(engine.step.transpose ?? 0))
         applyBand()
         publish()
     }

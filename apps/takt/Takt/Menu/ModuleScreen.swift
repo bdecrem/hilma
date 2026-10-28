@@ -13,7 +13,7 @@ struct ModuleScreen: View {
         let compact = sizeClass == .compact
         let content = app.module(code)
         let done = app.lessonsDone(content)
-        let finished = app.progress.lesson(content.code).completed != nil
+        let finished = done >= content.lessons.count
         let next = finished ? nil : min(done, content.lessons.count - 1)
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .center, spacing: 16) {
@@ -369,7 +369,7 @@ struct ModuleCard: View {
         let shape = RoundedRectangle(cornerRadius: 8)
         let content = app.module(code)
         let done = app.lessonsDone(content)
-        let finished = app.progress.lesson(content.code).completed != nil
+        let finished = done >= content.lessons.count
         let next = finished ? nil : content.lessons[min(done, content.lessons.count - 1)]
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {

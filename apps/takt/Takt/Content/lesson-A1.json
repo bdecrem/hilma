@@ -47,16 +47,28 @@
       "steps": [
         "payoff"
       ]
+    },
+    {
+      "title": "The third finger",
+      "skill": "Root, third and fifth together on the 1",
+      "goal": "2 clean choruses at 70",
+      "steps": [
+        "third"
+      ]
+    },
+    {
+      "title": "Twice a bar",
+      "skill": "The chord on the 1 and the 3",
+      "goal": "2 clean choruses at 80",
+      "steps": [
+        "twice"
+      ]
     }
   ],
   "later": [
     {
       "title": "The Right Hand",
       "skill": "Blues scale · call and response"
-    },
-    {
-      "title": "Shuffle Comping",
-      "skill": "Both hands · the shuffle in chords"
     },
     {
       "title": "The Turnaround",
@@ -282,6 +294,105 @@
         "passed": "That's the form."
       },
       "about": "One more at 90. In bars 11 and 12 the band drops out: that turnaround is yours alone, and the chorus becomes your loop."
+    },
+    {
+      "id": "third",
+      "kind": "play",
+      "title": "The third finger",
+      "skill": "lh.triad.blues12.C",
+      "tempo": 70,
+      "gate": 2,
+      "band": [
+        "drums",
+        "bass",
+        "keys",
+        "horns"
+      ],
+      "pattern": [
+        {
+          "beat": 1,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 1,
+          "tone": "third",
+          "finger": 3
+        },
+        {
+          "beat": 1,
+          "tone": "fifth",
+          "finger": 1
+        }
+      ],
+      "about": "Three fingers now: the middle finger lands on the third, between the pinky's root and the thumb's fifth. C E G, F A C, G B D: the whole chord on the 1, held through the bar, with the whole band.",
+      "coach": {
+        "intro": "Root, third, fifth. The middle finger joins.",
+        "change": "Get ready. {next} on the 1.",
+        "hold": "{chord} on the 1. All three.",
+        "clean": "Clean. {left} more.",
+        "again": "{problem} Again.",
+        "join": "From the top.",
+        "slow": "Clean at {tempo}. It counts at {gateTempo}.",
+        "passed": "Clean. That's a chord."
+      }
+    },
+    {
+      "id": "twice",
+      "kind": "play",
+      "title": "Twice a bar",
+      "skill": "lh.triad.twice.blues12.C",
+      "tempo": 80,
+      "gate": 2,
+      "band": [
+        "drums",
+        "bass",
+        "keys",
+        "horns"
+      ],
+      "pattern": [
+        {
+          "beat": 1,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 1,
+          "tone": "third",
+          "finger": 3
+        },
+        {
+          "beat": 1,
+          "tone": "fifth",
+          "finger": 1
+        },
+        {
+          "beat": 3,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 3,
+          "tone": "third",
+          "finger": 3
+        },
+        {
+          "beat": 3,
+          "tone": "fifth",
+          "finger": 1
+        }
+      ],
+      "about": "The same chord, twice a bar: on the 1 and again on the 3. Lift between them so the second one speaks. At 80, with the band.",
+      "coach": {
+        "intro": "The chord on the 1 and the 3.",
+        "change": "Get ready. {next} on the 1.",
+        "hold": "{chord} on the 1 and the 3.",
+        "clean": "Clean. {left} more.",
+        "again": "{problem} Again.",
+        "join": "From the top.",
+        "slow": "Clean at {tempo}. It counts at {gateTempo}.",
+        "passed": "Clean. Two a bar."
+      }
     },
     {
       "id": "jam-roots",
@@ -537,6 +648,141 @@
         "join": "Jump in on the 1.",
         "slow": "Clean at {tempo}. Try it at {gateTempo}."
       }
+    },
+    {
+      "id": "jam-third",
+      "kind": "jam",
+      "title": "Three and a bump",
+      "skill": "jam.third.A1",
+      "tempo": 70,
+      "band": [
+        "drums",
+        "bass",
+        "keys",
+        "horns"
+      ],
+      "pattern": [
+        {
+          "beat": 1,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 1,
+          "tone": "third",
+          "finger": 3
+        },
+        {
+          "beat": 1,
+          "tone": "fifth",
+          "finger": 1
+        },
+        {
+          "beat": 3,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 3,
+          "tone": "sixth",
+          "finger": 1
+        }
+      ],
+      "about": "The chord on the 1, then the thumb bumps up to the sixth on the 3 with the root under it. The boogie move with three fingers in it.",
+      "coach": {
+        "intro": "Three and a bump. The band's in.",
+        "change": "Get ready. {next} on the 1.",
+        "hold": "{chord}. Keep it rolling.",
+        "clean": "Clean. Keep it rolling.",
+        "again": "{problem} Keep going.",
+        "join": "Jump in on the 1.",
+        "slow": "Clean at {tempo}. Try it at {gateTempo}."
+      }
+    },
+    {
+      "id": "jam-twice",
+      "kind": "jam",
+      "title": "The stomp",
+      "skill": "jam.twice.A1",
+      "tempo": 80,
+      "band": [
+        "drums",
+        "bass",
+        "keys",
+        "horns"
+      ],
+      "pattern": [
+        {
+          "beat": 1,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 1,
+          "tone": "third",
+          "finger": 3
+        },
+        {
+          "beat": 1,
+          "tone": "fifth",
+          "finger": 1
+        },
+        {
+          "beat": 2,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 2,
+          "tone": "third",
+          "finger": 3
+        },
+        {
+          "beat": 2,
+          "tone": "fifth",
+          "finger": 1
+        },
+        {
+          "beat": 3,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 3,
+          "tone": "third",
+          "finger": 3
+        },
+        {
+          "beat": 3,
+          "tone": "fifth",
+          "finger": 1
+        },
+        {
+          "beat": 4,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 4,
+          "tone": "third",
+          "finger": 3
+        },
+        {
+          "beat": 4,
+          "tone": "fifth",
+          "finger": 1
+        }
+      ],
+      "about": "The chord on every beat: a stomp. Keep the wrist loose, let the band carry it, and move the shape with the changes.",
+      "coach": {
+        "intro": "The stomp. The band's in.",
+        "change": "Get ready. {next} on the 1.",
+        "hold": "{chord}. Keep it rolling.",
+        "clean": "Clean. Keep it rolling.",
+        "again": "{problem} Keep going.",
+        "join": "Jump in on the 1.",
+        "slow": "Clean at {tempo}. Try it at {gateTempo}."
+      }
     }
   ],
   "jams": [
@@ -574,6 +820,20 @@
       "skill": "The bass line itself: root, third, fifth, sixth",
       "goal": "Have fun. A clean chorus marks it played.",
       "step": "jam-payoff"
+    },
+    {
+      "after": 6,
+      "title": "Three and a bump",
+      "skill": "The triad on the 1, root and sixth on the 3",
+      "goal": "Have fun. A clean chorus marks it played.",
+      "step": "jam-third"
+    },
+    {
+      "after": 7,
+      "title": "The stomp",
+      "skill": "The triad on every beat, at 80",
+      "goal": "Have fun. A clean chorus marks it played.",
+      "step": "jam-twice"
     }
   ]
 }

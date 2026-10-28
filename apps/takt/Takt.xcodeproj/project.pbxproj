@@ -146,6 +146,7 @@
 		7E7A372205C9BBE39C9F63A2 /* pno-67-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = F984F5DD7E138B6EC34CB614 /* pno-67-1.caf */; };
 		7EA77C1F1D8AD73E61C31437 /* bass-28.caf in Resources */ = {isa = PBXBuildFile; fileRef = B26AA27B8C81AECA090C9123 /* bass-28.caf */; };
 		803E2A82DB22813C19463E0E /* sax-84-s.caf in Resources */ = {isa = PBXBuildFile; fileRef = FA1B9F94998ABCB1BC013DDD /* sax-84-s.caf */; };
+		8076F4D48F0C778FDCDDB07B /* band-minor-A.json in Resources */ = {isa = PBXBuildFile; fileRef = 517D727F1B4D846E72A31DE1 /* band-minor-A.json */; };
 		8139EAE75275B27D767EF818 /* snare-3c.caf in Resources */ = {isa = PBXBuildFile; fileRef = AD8A3ACF263A0B9CE23283FB /* snare-3c.caf */; };
 		861E94056201983476A0C3AB /* crash-1b.caf in Resources */ = {isa = PBXBuildFile; fileRef = CC2CC4DF332B094AAC005AD4 /* crash-1b.caf */; };
 		8704BAB326417DF36B36659F /* pno-85-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 94531D8F79AEF879A04254AB /* pno-85-2.caf */; };
@@ -191,6 +192,7 @@
 		A76603B087F55AF96B584EBE /* sax-46-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = E6B4D328B3CC4F1E40DE0A72 /* sax-46-h.caf */; };
 		A76AFE872B38E3376A6F3039 /* saxl-72.caf in Resources */ = {isa = PBXBuildFile; fileRef = 4C853FD5A622D5AC04B93E72 /* saxl-72.caf */; };
 		A8F54C79E0EA50040BF9BCC4 /* rideBell-0b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9EB67C9AF0D6422F1068D2A3 /* rideBell-0b.caf */; };
+		A92A8D6E0161BE1371B4D94C /* lesson-M.json in Resources */ = {isa = PBXBuildFile; fileRef = FB59A4164192AD314B614695 /* lesson-M.json */; };
 		A93FA262D2DF80AF8A6A1CF9 /* sax-54-s.caf in Resources */ = {isa = PBXBuildFile; fileRef = 22D1D642DBE442C7180C21F1 /* sax-54-s.caf */; };
 		ABB7C98A68E5E197B6805AC6 /* bass-30.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3378B0BABC62F445208F5DBA /* bass-30.caf */; };
 		ABD4AEFF7816ABD7648B9CE5 /* sax-48-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = 463B3E2604E55ECBEB1769D5 /* sax-48-h.caf */; };
@@ -372,6 +374,7 @@
 		4C07A23D1D5D9AAEB045EDD9 /* tomLo-0a.caf */ = {isa = PBXFileReference; path = "tomLo-0a.caf"; sourceTree = "<group>"; };
 		4C853FD5A622D5AC04B93E72 /* saxl-72.caf */ = {isa = PBXFileReference; path = "saxl-72.caf"; sourceTree = "<group>"; };
 		4DE1E5CAD21F33442D42DFA1 /* ride-2b.caf */ = {isa = PBXFileReference; path = "ride-2b.caf"; sourceTree = "<group>"; };
+		517D727F1B4D846E72A31DE1 /* band-minor-A.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "band-minor-A.json"; sourceTree = "<group>"; };
 		5195A11F3940B71EB76D0CC6 /* pno-41-2.caf */ = {isa = PBXFileReference; path = "pno-41-2.caf"; sourceTree = "<group>"; };
 		52E462F831449281758F5101 /* snare-0a.caf */ = {isa = PBXFileReference; path = "snare-0a.caf"; sourceTree = "<group>"; };
 		5493818141A471AEC30127DF /* xstick-2b.caf */ = {isa = PBXFileReference; path = "xstick-2b.caf"; sourceTree = "<group>"; };
@@ -566,6 +569,7 @@
 		F984F5DD7E138B6EC34CB614 /* pno-67-1.caf */ = {isa = PBXFileReference; path = "pno-67-1.caf"; sourceTree = "<group>"; };
 		F9CECDA90CD7CA866FFACF54 /* tomLo-1b.caf */ = {isa = PBXFileReference; path = "tomLo-1b.caf"; sourceTree = "<group>"; };
 		FA1B9F94998ABCB1BC013DDD /* sax-84-s.caf */ = {isa = PBXFileReference; path = "sax-84-s.caf"; sourceTree = "<group>"; };
+		FB59A4164192AD314B614695 /* lesson-M.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "lesson-M.json"; sourceTree = "<group>"; };
 		FC1E799921D78CCB8272B10D /* tomHi-1a.caf */ = {isa = PBXFileReference; path = "tomHi-1a.caf"; sourceTree = "<group>"; };
 		FD6DB69401EB79A7363E2D36 /* sax-66-h.caf */ = {isa = PBXFileReference; path = "sax-66-h.caf"; sourceTree = "<group>"; };
 		FDE697BC3A0FD60BC7481DDE /* sax-70-s.caf */ = {isa = PBXFileReference; path = "sax-70-s.caf"; sourceTree = "<group>"; };
@@ -720,7 +724,9 @@
 			isa = PBXGroup;
 			children = (
 				B439C1F30E776ACBBAA484B4 /* band-blues-C.json */,
+				517D727F1B4D846E72A31DE1 /* band-minor-A.json */,
 				C25F3D56D94936B2DB7D9989 /* lesson-A1.json */,
+				FB59A4164192AD314B614695 /* lesson-M.json */,
 				ECECF1E4E590A9E81E139D89 /* lesson-S1.json */,
 				D3F53FD48CE9B89241FFB481 /* lesson-S1m.json */,
 			);
@@ -1052,6 +1058,7 @@
 				DC203B315E897EAFBEFF1F87 /* Assets.xcassets in Resources */,
 				1C10C6072AB01F749AE43B8B /* README.md in Resources */,
 				6FC903FE21D56D54BA26CEA4 /* band-blues-C.json in Resources */,
+				8076F4D48F0C778FDCDDB07B /* band-minor-A.json in Resources */,
 				7EA77C1F1D8AD73E61C31437 /* bass-28.caf in Resources */,
 				F0D29695A1C134AE3B1841E2 /* bass-29.caf in Resources */,
 				ABB7C98A68E5E197B6805AC6 /* bass-30.caf in Resources */,
@@ -1103,6 +1110,7 @@
 				227BF83E2373B55672B2BAD8 /* kick-4a.caf in Resources */,
 				D750220308274037C24F940F /* kick-4b.caf in Resources */,
 				7B34046ADB043B025F94F98D /* lesson-A1.json in Resources */,
+				A92A8D6E0161BE1371B4D94C /* lesson-M.json in Resources */,
 				309573F5E58807A3E167DC31 /* lesson-S1.json in Resources */,
 				11764932ABE8A75E92F7FE33 /* lesson-S1m.json in Resources */,
 				76E53571BD035AC1A63BA92C /* pno-31-1.caf in Resources */,
@@ -1378,7 +1386,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 34;
+				CURRENT_PROJECT_VERSION = 35;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -1445,7 +1453,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 34;
+				CURRENT_PROJECT_VERSION = 35;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;

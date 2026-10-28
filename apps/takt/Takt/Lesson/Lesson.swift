@@ -124,6 +124,11 @@ struct Lesson: Decodable {
         /// The band channels this step plays (keys of `channels`: "drums", "bass"…); the rest are
         /// muted and hidden. Nil: the module's channels with their unlock tempos.
         let band: [String]?
+        /// The band transposed by this many semitones (the minor blues in another key).
+        let transpose: Int?
+        /// This step's own form and chords (a key of its own); nil: the module's.
+        let form: [String]?
+        let chords: [String: Chord]?
         /// Clean choruses to pass (not necessarily in a row).
         let gate: Int?
         let maxAttempts: Int?
@@ -152,7 +157,7 @@ struct Lesson: Decodable {
     let channels: [LessonChannel]
     let steps: [Step]
 
-    static let tones = ["root": 0, "third": 4, "fifth": 7, "sixth": 9, "seventh": 10, "octave": 12]
+    static let tones = ["root": 0, "minorThird": 3, "third": 4, "fifth": 7, "sixth": 9, "seventh": 10, "octave": 12]
 
     /// Loads a bundled lesson and checks it. Bad content is a build error, so it traps.
     static func bundled(_ name: String) -> Lesson {
@@ -180,7 +185,11 @@ struct Lesson: Decodable {
         }
         for s in steps where s.kind == .jam && !(jams ?? []).contains(where: { $0.step == s.id }) { fatalError("lesson \(code): jam step \(s.id) belongs to no jam") }
         let names = Set(channels.map(\.channel))
-        for s in steps { for b in s.band ?? [] where !names.contains(b) { fatalError("lesson \(code) step \(s.id): band channel \(b) is not in the module") } }
+        for s in steps {
+            for b in s.band ?? [] where !names.contains(b) { fatalError("lesson \(code) step \(s.id): band channel \(b) is not in the module") }
+            if let f = s.form, f.count != form.count { fatalError("lesson \(code) step \(s.id): a form of \(f.count) bars, the module's has \(form.count)") }
+            for chord in form(of: s) where chords(of: s)[chord] == nil { fatalError("lesson \(code) step \(s.id): no chord \(chord)") }
+        }
         for l in lessons where steps.first { $0.id == l.steps[0] }?.kind == .card {
             fatalError("lesson \(code): lesson \(l.title) starts on a card")
         }
@@ -223,6 +232,14 @@ struct Lesson: Decodable {
     }
 
     var formBars: [FormBar] { form.map { FormBar(chord: $0, numeral: chords[$0]!.numeral) } }
+
+    /// A step's form and chords: its own key, or the module's.
+    func form(of step: Step) -> [String] { step.form ?? form }
+    func chords(of step: Step) -> [String: Chord] { step.chords ?? chords }
+    func formBars(of step: Step) -> [FormBar] {
+        let c = chords(of: step)
+        return form(of: step).map { FormBar(chord: $0, numeral: c[$0]!.numeral) }
+    }
 
     // MARK: Lessons over steps (0-based)
 
@@ -269,7 +286,8 @@ struct Lesson: Decodable {
         let pattern = (step.pattern ?? []).sorted { ($0.bar ?? 0, $0.beat, $0.tick ?? 0) < ($1.bar ?? 0, $1.beat, $1.tick ?? 0) }
         let cycle = step.cycle ?? 1
         var notes: [ExpectedNote] = []
-        for (bar, name) in form.enumerated() {
+        let chords = chords(of: step)
+        for (bar, name) in form(of: step).enumerated() {
             let root = chords[name]!.root
             for p in pattern where (p.bar ?? 0) == bar % cycle {
                 let interval = p.interval!

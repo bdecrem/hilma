@@ -30,6 +30,8 @@ final class LessonEngine {
         case unlock(Int)
         /// The band sits out between these absolute ticks.
         case silence(from: Double, to: Double)
+        /// The band in another key (0 = as written).
+        case transpose(Int)
         case finished
     }
 
@@ -331,6 +333,7 @@ final class LessonEngine {
             unlock(upTo: tempo)
         }
         if step.kind == .payoff { armPayoff(firstChorus) }
+        onAction?(.transpose(step.transpose ?? 0))
         update()
     }
 
@@ -642,8 +645,9 @@ final class LessonEngine {
         } else if step.kind == .payoff, chorus == aloneChorus, step.aloneBars!.contains(barInForm + 1) {
             o.coach = coach.alone!
         } else {
-            let chord = lesson.form[barInForm]
-            let next = lesson.form[(barInForm + 1) % bars]
+            let form = lesson.form(of: step)
+            let chord = form[barInForm]
+            let next = form[(barInForm + 1) % bars]
             o.coach = next != chord ? coach.change!.filled(["next": next]) : coach.hold!.filled(["chord": chord])
         }
 

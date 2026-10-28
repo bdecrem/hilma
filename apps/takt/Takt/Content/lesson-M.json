@@ -1,0 +1,2143 @@
+{
+  "code": "M1",
+  "title": "Minor Chords",
+  "module": {
+    "code": "minor",
+    "title": "Minor Chords",
+    "detail": "Left hand · the minor blues in every key"
+  },
+  "lessons": [
+    {
+      "title": "A minor",
+      "skill": "The A minor blues: Am Dm Em, the triad on the 1",
+      "goal": "2 clean choruses at 70",
+      "steps": [
+        "key-1"
+      ]
+    },
+    {
+      "title": "E minor",
+      "skill": "The E minor blues: Em Am Bm, the triad on the 1",
+      "goal": "2 clean choruses at 70",
+      "steps": [
+        "key-2"
+      ]
+    },
+    {
+      "title": "D minor",
+      "skill": "The D minor blues: Dm Gm Am, the triad on the 1",
+      "goal": "2 clean choruses at 70",
+      "steps": [
+        "key-3"
+      ]
+    },
+    {
+      "title": "G minor",
+      "skill": "The G minor blues: Gm Cm Dm, the triad on the 1",
+      "goal": "2 clean choruses at 70",
+      "steps": [
+        "key-4"
+      ]
+    },
+    {
+      "title": "C minor",
+      "skill": "The C minor blues: Cm Fm Gm, the triad on the 1",
+      "goal": "2 clean choruses at 70",
+      "steps": [
+        "key-5"
+      ]
+    },
+    {
+      "title": "F minor",
+      "skill": "The F minor blues: Fm B♭m Cm, the triad on the 1",
+      "goal": "2 clean choruses at 70",
+      "steps": [
+        "key-6"
+      ]
+    },
+    {
+      "title": "B minor",
+      "skill": "The B minor blues: Bm Em F♯m, the triad on the 1",
+      "goal": "2 clean choruses at 70",
+      "steps": [
+        "key-7"
+      ]
+    },
+    {
+      "title": "F♯ minor",
+      "skill": "The F♯ minor blues: F♯m Bm C♯m, the triad on the 1",
+      "goal": "2 clean choruses at 70",
+      "steps": [
+        "key-8"
+      ]
+    },
+    {
+      "title": "C♯ minor",
+      "skill": "The C♯ minor blues: C♯m F♯m G♯m, the triad on the 1",
+      "goal": "2 clean choruses at 70",
+      "steps": [
+        "key-9"
+      ]
+    },
+    {
+      "title": "G♯ minor",
+      "skill": "The G♯ minor blues: G♯m C♯m D♯m, the triad on the 1",
+      "goal": "2 clean choruses at 70",
+      "steps": [
+        "key-10"
+      ]
+    },
+    {
+      "title": "E♭ minor",
+      "skill": "The E♭ minor blues: E♭m G♯m B♭m, the triad on the 1",
+      "goal": "2 clean choruses at 70",
+      "steps": [
+        "key-11"
+      ]
+    },
+    {
+      "title": "B♭ minor",
+      "skill": "The B♭ minor blues: B♭m E♭m Fm, the triad on the 1",
+      "goal": "2 clean choruses at 70",
+      "steps": [
+        "key-12"
+      ]
+    },
+    {
+      "title": "Two a bar",
+      "skill": "A minor, the triad on the 1 and the 3",
+      "goal": "2 clean choruses at 70",
+      "steps": [
+        "two-a-bar"
+      ]
+    }
+  ],
+  "later": [
+    {
+      "title": "Minor sevenths",
+      "skill": "Four notes a chord"
+    },
+    {
+      "title": "Both hands",
+      "skill": "Triads under a right-hand riff"
+    }
+  ],
+  "jams": [
+    {
+      "after": 1,
+      "title": "A minor boogie",
+      "skill": "Root and fifth on the 1, root and seventh on the 3, with the horns",
+      "goal": "Have fun. A clean chorus marks it played.",
+      "step": "jam-1"
+    },
+    {
+      "after": 2,
+      "title": "E minor boogie",
+      "skill": "Root and fifth on the 1, root and seventh on the 3, with the horns",
+      "goal": "Have fun. A clean chorus marks it played.",
+      "step": "jam-2"
+    },
+    {
+      "after": 3,
+      "title": "D minor boogie",
+      "skill": "Root and fifth on the 1, root and seventh on the 3, with the horns",
+      "goal": "Have fun. A clean chorus marks it played.",
+      "step": "jam-3"
+    },
+    {
+      "after": 4,
+      "title": "G minor boogie",
+      "skill": "Root and fifth on the 1, root and seventh on the 3, with the horns",
+      "goal": "Have fun. A clean chorus marks it played.",
+      "step": "jam-4"
+    },
+    {
+      "after": 5,
+      "title": "C minor boogie",
+      "skill": "Root and fifth on the 1, root and seventh on the 3, with the horns",
+      "goal": "Have fun. A clean chorus marks it played.",
+      "step": "jam-5"
+    },
+    {
+      "after": 6,
+      "title": "F minor boogie",
+      "skill": "Root and fifth on the 1, root and seventh on the 3, with the horns",
+      "goal": "Have fun. A clean chorus marks it played.",
+      "step": "jam-6"
+    },
+    {
+      "after": 7,
+      "title": "B minor boogie",
+      "skill": "Root and fifth on the 1, root and seventh on the 3, with the horns",
+      "goal": "Have fun. A clean chorus marks it played.",
+      "step": "jam-7"
+    },
+    {
+      "after": 8,
+      "title": "F♯ minor boogie",
+      "skill": "Root and fifth on the 1, root and seventh on the 3, with the horns",
+      "goal": "Have fun. A clean chorus marks it played.",
+      "step": "jam-8"
+    },
+    {
+      "after": 9,
+      "title": "C♯ minor boogie",
+      "skill": "Root and fifth on the 1, root and seventh on the 3, with the horns",
+      "goal": "Have fun. A clean chorus marks it played.",
+      "step": "jam-9"
+    },
+    {
+      "after": 10,
+      "title": "G♯ minor boogie",
+      "skill": "Root and fifth on the 1, root and seventh on the 3, with the horns",
+      "goal": "Have fun. A clean chorus marks it played.",
+      "step": "jam-10"
+    },
+    {
+      "after": 11,
+      "title": "E♭ minor boogie",
+      "skill": "Root and fifth on the 1, root and seventh on the 3, with the horns",
+      "goal": "Have fun. A clean chorus marks it played.",
+      "step": "jam-11"
+    },
+    {
+      "after": 12,
+      "title": "B♭ minor boogie",
+      "skill": "Root and fifth on the 1, root and seventh on the 3, with the horns",
+      "goal": "Have fun. A clean chorus marks it played.",
+      "step": "jam-12"
+    },
+    {
+      "after": 13,
+      "title": "Four a bar",
+      "skill": "The triad on every beat, with the whole band",
+      "goal": "Have fun. A clean chorus marks it played.",
+      "step": "jam-two-a-bar"
+    }
+  ],
+  "band": "band-minor-A",
+  "chords": {
+    "Am": {
+      "numeral": "i",
+      "root": 9
+    },
+    "Dm": {
+      "numeral": "iv",
+      "root": 2
+    },
+    "Em": {
+      "numeral": "v",
+      "root": 4
+    }
+  },
+  "form": [
+    "Am",
+    "Am",
+    "Am",
+    "Am",
+    "Dm",
+    "Dm",
+    "Am",
+    "Am",
+    "Em",
+    "Dm",
+    "Am",
+    "Em"
+  ],
+  "range": {
+    "low": 36,
+    "high": 72
+  },
+  "displayRoot": 48,
+  "channels": [
+    {
+      "name": "Drums",
+      "channel": "drums"
+    },
+    {
+      "name": "Bass",
+      "channel": "bass"
+    },
+    {
+      "name": "Keys",
+      "channel": "keys"
+    },
+    {
+      "name": "Horns",
+      "channel": "horns"
+    }
+  ],
+  "steps": [
+    {
+      "id": "key-1",
+      "kind": "play",
+      "title": "A minor",
+      "skill": "lh.triad.minorblues.key-1",
+      "tempo": 70,
+      "gate": 2,
+      "band": [
+        "drums",
+        "bass",
+        "keys"
+      ],
+      "transpose": 0,
+      "form": [
+        "Am",
+        "Am",
+        "Am",
+        "Am",
+        "Dm",
+        "Dm",
+        "Am",
+        "Am",
+        "Em",
+        "Dm",
+        "Am",
+        "Em"
+      ],
+      "chords": {
+        "Am": {
+          "numeral": "i",
+          "root": 9
+        },
+        "Dm": {
+          "numeral": "iv",
+          "root": 2
+        },
+        "Em": {
+          "numeral": "v",
+          "root": 4
+        }
+      },
+      "pattern": [
+        {
+          "beat": 1,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 1,
+          "tone": "minorThird",
+          "finger": 3
+        },
+        {
+          "beat": 1,
+          "tone": "fifth",
+          "finger": 1
+        }
+      ],
+      "about": "The A minor blues: Am, Dm and Em. Left hand, the minor triad on the 1 of every bar and held: pinky on the root, middle finger on the flat third, thumb on the fifth. A minor is A C E; the shape moves with the chords.",
+      "coach": {
+        "intro": "A minor. Pinky on A, the flat third, the fifth.",
+        "change": "Get ready. {next} on the 1.",
+        "hold": "{chord} on the 1. Hold it.",
+        "clean": "Clean. {left} more.",
+        "again": "{problem} Again.",
+        "join": "From the top.",
+        "slow": "Clean at {tempo}. It counts at {gateTempo}.",
+        "passed": "Clean. A minor is yours."
+      }
+    },
+    {
+      "id": "key-2",
+      "kind": "play",
+      "title": "E minor",
+      "skill": "lh.triad.minorblues.key-2",
+      "tempo": 70,
+      "gate": 2,
+      "band": [
+        "drums",
+        "bass",
+        "keys"
+      ],
+      "transpose": -5,
+      "form": [
+        "Em",
+        "Em",
+        "Em",
+        "Em",
+        "Am",
+        "Am",
+        "Em",
+        "Em",
+        "Bm",
+        "Am",
+        "Em",
+        "Bm"
+      ],
+      "chords": {
+        "Em": {
+          "numeral": "i",
+          "root": 4
+        },
+        "Am": {
+          "numeral": "iv",
+          "root": 9
+        },
+        "Bm": {
+          "numeral": "v",
+          "root": 11
+        }
+      },
+      "pattern": [
+        {
+          "beat": 1,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 1,
+          "tone": "minorThird",
+          "finger": 3
+        },
+        {
+          "beat": 1,
+          "tone": "fifth",
+          "finger": 1
+        }
+      ],
+      "about": "The E minor blues: Em, Am and Bm. Left hand, the minor triad on the 1 of every bar and held: pinky on the root, middle finger on the flat third, thumb on the fifth. E minor is E G B; the shape moves with the chords.",
+      "coach": {
+        "intro": "E minor. Pinky on E, the flat third, the fifth.",
+        "change": "Get ready. {next} on the 1.",
+        "hold": "{chord} on the 1. Hold it.",
+        "clean": "Clean. {left} more.",
+        "again": "{problem} Again.",
+        "join": "From the top.",
+        "slow": "Clean at {tempo}. It counts at {gateTempo}.",
+        "passed": "Clean. E minor is yours."
+      }
+    },
+    {
+      "id": "key-3",
+      "kind": "play",
+      "title": "D minor",
+      "skill": "lh.triad.minorblues.key-3",
+      "tempo": 70,
+      "gate": 2,
+      "band": [
+        "drums",
+        "bass",
+        "keys"
+      ],
+      "transpose": 5,
+      "form": [
+        "Dm",
+        "Dm",
+        "Dm",
+        "Dm",
+        "Gm",
+        "Gm",
+        "Dm",
+        "Dm",
+        "Am",
+        "Gm",
+        "Dm",
+        "Am"
+      ],
+      "chords": {
+        "Dm": {
+          "numeral": "i",
+          "root": 2
+        },
+        "Gm": {
+          "numeral": "iv",
+          "root": 7
+        },
+        "Am": {
+          "numeral": "v",
+          "root": 9
+        }
+      },
+      "pattern": [
+        {
+          "beat": 1,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 1,
+          "tone": "minorThird",
+          "finger": 3
+        },
+        {
+          "beat": 1,
+          "tone": "fifth",
+          "finger": 1
+        }
+      ],
+      "about": "The D minor blues: Dm, Gm and Am. Left hand, the minor triad on the 1 of every bar and held: pinky on the root, middle finger on the flat third, thumb on the fifth. D minor is D F A; the shape moves with the chords.",
+      "coach": {
+        "intro": "D minor. Pinky on D, the flat third, the fifth.",
+        "change": "Get ready. {next} on the 1.",
+        "hold": "{chord} on the 1. Hold it.",
+        "clean": "Clean. {left} more.",
+        "again": "{problem} Again.",
+        "join": "From the top.",
+        "slow": "Clean at {tempo}. It counts at {gateTempo}.",
+        "passed": "Clean. D minor is yours."
+      }
+    },
+    {
+      "id": "key-4",
+      "kind": "play",
+      "title": "G minor",
+      "skill": "lh.triad.minorblues.key-4",
+      "tempo": 70,
+      "gate": 2,
+      "band": [
+        "drums",
+        "bass",
+        "keys"
+      ],
+      "transpose": -2,
+      "form": [
+        "Gm",
+        "Gm",
+        "Gm",
+        "Gm",
+        "Cm",
+        "Cm",
+        "Gm",
+        "Gm",
+        "Dm",
+        "Cm",
+        "Gm",
+        "Dm"
+      ],
+      "chords": {
+        "Gm": {
+          "numeral": "i",
+          "root": 7
+        },
+        "Cm": {
+          "numeral": "iv",
+          "root": 0
+        },
+        "Dm": {
+          "numeral": "v",
+          "root": 2
+        }
+      },
+      "pattern": [
+        {
+          "beat": 1,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 1,
+          "tone": "minorThird",
+          "finger": 3
+        },
+        {
+          "beat": 1,
+          "tone": "fifth",
+          "finger": 1
+        }
+      ],
+      "about": "The G minor blues: Gm, Cm and Dm. Left hand, the minor triad on the 1 of every bar and held: pinky on the root, middle finger on the flat third, thumb on the fifth. G minor is G B♭ D; the shape moves with the chords.",
+      "coach": {
+        "intro": "G minor. Pinky on G, the flat third, the fifth.",
+        "change": "Get ready. {next} on the 1.",
+        "hold": "{chord} on the 1. Hold it.",
+        "clean": "Clean. {left} more.",
+        "again": "{problem} Again.",
+        "join": "From the top.",
+        "slow": "Clean at {tempo}. It counts at {gateTempo}.",
+        "passed": "Clean. G minor is yours."
+      }
+    },
+    {
+      "id": "key-5",
+      "kind": "play",
+      "title": "C minor",
+      "skill": "lh.triad.minorblues.key-5",
+      "tempo": 70,
+      "gate": 2,
+      "band": [
+        "drums",
+        "bass",
+        "keys"
+      ],
+      "transpose": 3,
+      "form": [
+        "Cm",
+        "Cm",
+        "Cm",
+        "Cm",
+        "Fm",
+        "Fm",
+        "Cm",
+        "Cm",
+        "Gm",
+        "Fm",
+        "Cm",
+        "Gm"
+      ],
+      "chords": {
+        "Cm": {
+          "numeral": "i",
+          "root": 0
+        },
+        "Fm": {
+          "numeral": "iv",
+          "root": 5
+        },
+        "Gm": {
+          "numeral": "v",
+          "root": 7
+        }
+      },
+      "pattern": [
+        {
+          "beat": 1,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 1,
+          "tone": "minorThird",
+          "finger": 3
+        },
+        {
+          "beat": 1,
+          "tone": "fifth",
+          "finger": 1
+        }
+      ],
+      "about": "The C minor blues: Cm, Fm and Gm. Left hand, the minor triad on the 1 of every bar and held: pinky on the root, middle finger on the flat third, thumb on the fifth. C minor is C E♭ G; the shape moves with the chords.",
+      "coach": {
+        "intro": "C minor. Pinky on C, the flat third, the fifth.",
+        "change": "Get ready. {next} on the 1.",
+        "hold": "{chord} on the 1. Hold it.",
+        "clean": "Clean. {left} more.",
+        "again": "{problem} Again.",
+        "join": "From the top.",
+        "slow": "Clean at {tempo}. It counts at {gateTempo}.",
+        "passed": "Clean. C minor is yours."
+      }
+    },
+    {
+      "id": "key-6",
+      "kind": "play",
+      "title": "F minor",
+      "skill": "lh.triad.minorblues.key-6",
+      "tempo": 70,
+      "gate": 2,
+      "band": [
+        "drums",
+        "bass",
+        "keys"
+      ],
+      "transpose": -4,
+      "form": [
+        "Fm",
+        "Fm",
+        "Fm",
+        "Fm",
+        "B♭m",
+        "B♭m",
+        "Fm",
+        "Fm",
+        "Cm",
+        "B♭m",
+        "Fm",
+        "Cm"
+      ],
+      "chords": {
+        "Fm": {
+          "numeral": "i",
+          "root": 5
+        },
+        "B♭m": {
+          "numeral": "iv",
+          "root": 10
+        },
+        "Cm": {
+          "numeral": "v",
+          "root": 0
+        }
+      },
+      "pattern": [
+        {
+          "beat": 1,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 1,
+          "tone": "minorThird",
+          "finger": 3
+        },
+        {
+          "beat": 1,
+          "tone": "fifth",
+          "finger": 1
+        }
+      ],
+      "about": "The F minor blues: Fm, B♭m and Cm. Left hand, the minor triad on the 1 of every bar and held: pinky on the root, middle finger on the flat third, thumb on the fifth. F minor is F A♭ C; the shape moves with the chords.",
+      "coach": {
+        "intro": "F minor. Pinky on F, the flat third, the fifth.",
+        "change": "Get ready. {next} on the 1.",
+        "hold": "{chord} on the 1. Hold it.",
+        "clean": "Clean. {left} more.",
+        "again": "{problem} Again.",
+        "join": "From the top.",
+        "slow": "Clean at {tempo}. It counts at {gateTempo}.",
+        "passed": "Clean. F minor is yours."
+      }
+    },
+    {
+      "id": "key-7",
+      "kind": "play",
+      "title": "B minor",
+      "skill": "lh.triad.minorblues.key-7",
+      "tempo": 70,
+      "gate": 2,
+      "band": [
+        "drums",
+        "bass",
+        "keys"
+      ],
+      "transpose": 2,
+      "form": [
+        "Bm",
+        "Bm",
+        "Bm",
+        "Bm",
+        "Em",
+        "Em",
+        "Bm",
+        "Bm",
+        "F♯m",
+        "Em",
+        "Bm",
+        "F♯m"
+      ],
+      "chords": {
+        "Bm": {
+          "numeral": "i",
+          "root": 11
+        },
+        "Em": {
+          "numeral": "iv",
+          "root": 4
+        },
+        "F♯m": {
+          "numeral": "v",
+          "root": 6
+        }
+      },
+      "pattern": [
+        {
+          "beat": 1,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 1,
+          "tone": "minorThird",
+          "finger": 3
+        },
+        {
+          "beat": 1,
+          "tone": "fifth",
+          "finger": 1
+        }
+      ],
+      "about": "The B minor blues: Bm, Em and F♯m. Left hand, the minor triad on the 1 of every bar and held: pinky on the root, middle finger on the flat third, thumb on the fifth. B minor is B D G♭; the shape moves with the chords.",
+      "coach": {
+        "intro": "B minor. Pinky on B, the flat third, the fifth.",
+        "change": "Get ready. {next} on the 1.",
+        "hold": "{chord} on the 1. Hold it.",
+        "clean": "Clean. {left} more.",
+        "again": "{problem} Again.",
+        "join": "From the top.",
+        "slow": "Clean at {tempo}. It counts at {gateTempo}.",
+        "passed": "Clean. B minor is yours."
+      }
+    },
+    {
+      "id": "key-8",
+      "kind": "play",
+      "title": "F♯ minor",
+      "skill": "lh.triad.minorblues.key-8",
+      "tempo": 70,
+      "gate": 2,
+      "band": [
+        "drums",
+        "bass",
+        "keys"
+      ],
+      "transpose": -3,
+      "form": [
+        "F♯m",
+        "F♯m",
+        "F♯m",
+        "F♯m",
+        "Bm",
+        "Bm",
+        "F♯m",
+        "F♯m",
+        "C♯m",
+        "Bm",
+        "F♯m",
+        "C♯m"
+      ],
+      "chords": {
+        "F♯m": {
+          "numeral": "i",
+          "root": 6
+        },
+        "Bm": {
+          "numeral": "iv",
+          "root": 11
+        },
+        "C♯m": {
+          "numeral": "v",
+          "root": 1
+        }
+      },
+      "pattern": [
+        {
+          "beat": 1,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 1,
+          "tone": "minorThird",
+          "finger": 3
+        },
+        {
+          "beat": 1,
+          "tone": "fifth",
+          "finger": 1
+        }
+      ],
+      "about": "The F♯ minor blues: F♯m, Bm and C♯m. Left hand, the minor triad on the 1 of every bar and held: pinky on the root, middle finger on the flat third, thumb on the fifth. F♯ minor is F♯ A D♭; the shape moves with the chords.",
+      "coach": {
+        "intro": "F♯ minor. Pinky on F♯, the flat third, the fifth.",
+        "change": "Get ready. {next} on the 1.",
+        "hold": "{chord} on the 1. Hold it.",
+        "clean": "Clean. {left} more.",
+        "again": "{problem} Again.",
+        "join": "From the top.",
+        "slow": "Clean at {tempo}. It counts at {gateTempo}.",
+        "passed": "Clean. F♯ minor is yours."
+      }
+    },
+    {
+      "id": "key-9",
+      "kind": "play",
+      "title": "C♯ minor",
+      "skill": "lh.triad.minorblues.key-9",
+      "tempo": 70,
+      "gate": 2,
+      "band": [
+        "drums",
+        "bass",
+        "keys"
+      ],
+      "transpose": 4,
+      "form": [
+        "C♯m",
+        "C♯m",
+        "C♯m",
+        "C♯m",
+        "F♯m",
+        "F♯m",
+        "C♯m",
+        "C♯m",
+        "G♯m",
+        "F♯m",
+        "C♯m",
+        "G♯m"
+      ],
+      "chords": {
+        "C♯m": {
+          "numeral": "i",
+          "root": 1
+        },
+        "F♯m": {
+          "numeral": "iv",
+          "root": 6
+        },
+        "G♯m": {
+          "numeral": "v",
+          "root": 8
+        }
+      },
+      "pattern": [
+        {
+          "beat": 1,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 1,
+          "tone": "minorThird",
+          "finger": 3
+        },
+        {
+          "beat": 1,
+          "tone": "fifth",
+          "finger": 1
+        }
+      ],
+      "about": "The C♯ minor blues: C♯m, F♯m and G♯m. Left hand, the minor triad on the 1 of every bar and held: pinky on the root, middle finger on the flat third, thumb on the fifth. C♯ minor is C♯ E A♭; the shape moves with the chords.",
+      "coach": {
+        "intro": "C♯ minor. Pinky on C♯, the flat third, the fifth.",
+        "change": "Get ready. {next} on the 1.",
+        "hold": "{chord} on the 1. Hold it.",
+        "clean": "Clean. {left} more.",
+        "again": "{problem} Again.",
+        "join": "From the top.",
+        "slow": "Clean at {tempo}. It counts at {gateTempo}.",
+        "passed": "Clean. C♯ minor is yours."
+      }
+    },
+    {
+      "id": "key-10",
+      "kind": "play",
+      "title": "G♯ minor",
+      "skill": "lh.triad.minorblues.key-10",
+      "tempo": 70,
+      "gate": 2,
+      "band": [
+        "drums",
+        "bass",
+        "keys"
+      ],
+      "transpose": -1,
+      "form": [
+        "G♯m",
+        "G♯m",
+        "G♯m",
+        "G♯m",
+        "C♯m",
+        "C♯m",
+        "G♯m",
+        "G♯m",
+        "D♯m",
+        "C♯m",
+        "G♯m",
+        "D♯m"
+      ],
+      "chords": {
+        "G♯m": {
+          "numeral": "i",
+          "root": 8
+        },
+        "C♯m": {
+          "numeral": "iv",
+          "root": 1
+        },
+        "D♯m": {
+          "numeral": "v",
+          "root": 3
+        }
+      },
+      "pattern": [
+        {
+          "beat": 1,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 1,
+          "tone": "minorThird",
+          "finger": 3
+        },
+        {
+          "beat": 1,
+          "tone": "fifth",
+          "finger": 1
+        }
+      ],
+      "about": "The G♯ minor blues: G♯m, C♯m and D♯m. Left hand, the minor triad on the 1 of every bar and held: pinky on the root, middle finger on the flat third, thumb on the fifth. G♯ minor is G♯ B E♭; the shape moves with the chords.",
+      "coach": {
+        "intro": "G♯ minor. Pinky on G♯, the flat third, the fifth.",
+        "change": "Get ready. {next} on the 1.",
+        "hold": "{chord} on the 1. Hold it.",
+        "clean": "Clean. {left} more.",
+        "again": "{problem} Again.",
+        "join": "From the top.",
+        "slow": "Clean at {tempo}. It counts at {gateTempo}.",
+        "passed": "Clean. G♯ minor is yours."
+      }
+    },
+    {
+      "id": "key-11",
+      "kind": "play",
+      "title": "E♭ minor",
+      "skill": "lh.triad.minorblues.key-11",
+      "tempo": 70,
+      "gate": 2,
+      "band": [
+        "drums",
+        "bass",
+        "keys"
+      ],
+      "transpose": -6,
+      "form": [
+        "E♭m",
+        "E♭m",
+        "E♭m",
+        "E♭m",
+        "G♯m",
+        "G♯m",
+        "E♭m",
+        "E♭m",
+        "B♭m",
+        "G♯m",
+        "E♭m",
+        "B♭m"
+      ],
+      "chords": {
+        "E♭m": {
+          "numeral": "i",
+          "root": 3
+        },
+        "G♯m": {
+          "numeral": "iv",
+          "root": 8
+        },
+        "B♭m": {
+          "numeral": "v",
+          "root": 10
+        }
+      },
+      "pattern": [
+        {
+          "beat": 1,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 1,
+          "tone": "minorThird",
+          "finger": 3
+        },
+        {
+          "beat": 1,
+          "tone": "fifth",
+          "finger": 1
+        }
+      ],
+      "about": "The E♭ minor blues: E♭m, G♯m and B♭m. Left hand, the minor triad on the 1 of every bar and held: pinky on the root, middle finger on the flat third, thumb on the fifth. E♭ minor is E♭ G♭ B♭; the shape moves with the chords.",
+      "coach": {
+        "intro": "E♭ minor. Pinky on E♭, the flat third, the fifth.",
+        "change": "Get ready. {next} on the 1.",
+        "hold": "{chord} on the 1. Hold it.",
+        "clean": "Clean. {left} more.",
+        "again": "{problem} Again.",
+        "join": "From the top.",
+        "slow": "Clean at {tempo}. It counts at {gateTempo}.",
+        "passed": "Clean. E♭ minor is yours."
+      }
+    },
+    {
+      "id": "key-12",
+      "kind": "play",
+      "title": "B♭ minor",
+      "skill": "lh.triad.minorblues.key-12",
+      "tempo": 70,
+      "gate": 2,
+      "band": [
+        "drums",
+        "bass",
+        "keys"
+      ],
+      "transpose": 1,
+      "form": [
+        "B♭m",
+        "B♭m",
+        "B♭m",
+        "B♭m",
+        "E♭m",
+        "E♭m",
+        "B♭m",
+        "B♭m",
+        "Fm",
+        "E♭m",
+        "B♭m",
+        "Fm"
+      ],
+      "chords": {
+        "B♭m": {
+          "numeral": "i",
+          "root": 10
+        },
+        "E♭m": {
+          "numeral": "iv",
+          "root": 3
+        },
+        "Fm": {
+          "numeral": "v",
+          "root": 5
+        }
+      },
+      "pattern": [
+        {
+          "beat": 1,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 1,
+          "tone": "minorThird",
+          "finger": 3
+        },
+        {
+          "beat": 1,
+          "tone": "fifth",
+          "finger": 1
+        }
+      ],
+      "about": "The B♭ minor blues: B♭m, E♭m and Fm. Left hand, the minor triad on the 1 of every bar and held: pinky on the root, middle finger on the flat third, thumb on the fifth. B♭ minor is B♭ D♭ F; the shape moves with the chords.",
+      "coach": {
+        "intro": "B♭ minor. Pinky on B♭, the flat third, the fifth.",
+        "change": "Get ready. {next} on the 1.",
+        "hold": "{chord} on the 1. Hold it.",
+        "clean": "Clean. {left} more.",
+        "again": "{problem} Again.",
+        "join": "From the top.",
+        "slow": "Clean at {tempo}. It counts at {gateTempo}.",
+        "passed": "Clean. B♭ minor is yours."
+      }
+    },
+    {
+      "id": "two-a-bar",
+      "kind": "play",
+      "title": "Two a bar",
+      "skill": "lh.triad.twice.minorblues.A",
+      "tempo": 70,
+      "gate": 2,
+      "band": [
+        "drums",
+        "bass",
+        "keys"
+      ],
+      "transpose": 0,
+      "pattern": [
+        {
+          "beat": 1,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 1,
+          "tone": "minorThird",
+          "finger": 3
+        },
+        {
+          "beat": 1,
+          "tone": "fifth",
+          "finger": 1
+        },
+        {
+          "beat": 3,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 3,
+          "tone": "minorThird",
+          "finger": 3
+        },
+        {
+          "beat": 3,
+          "tone": "fifth",
+          "finger": 1
+        }
+      ],
+      "about": "Back in A minor, twice the notes: the triad on the 1 and again on the 3. Same shape, same fingers, half a bar each. Lift between them so the second one speaks.",
+      "coach": {
+        "intro": "A minor, the triad on the 1 and the 3.",
+        "change": "Get ready. {next} on the 1 and the 3.",
+        "hold": "{chord} on the 1 and the 3.",
+        "clean": "Clean. {left} more.",
+        "again": "{problem} Again.",
+        "join": "From the top.",
+        "slow": "Clean at {tempo}. It counts at {gateTempo}.",
+        "passed": "Clean. Two a bar, every key is next."
+      }
+    },
+    {
+      "id": "jam-1",
+      "kind": "jam",
+      "title": "A minor boogie",
+      "skill": "jam.minorboogie.key-1",
+      "tempo": 70,
+      "band": [
+        "drums",
+        "bass",
+        "keys",
+        "horns"
+      ],
+      "transpose": 0,
+      "form": [
+        "Am",
+        "Am",
+        "Am",
+        "Am",
+        "Dm",
+        "Dm",
+        "Am",
+        "Am",
+        "Em",
+        "Dm",
+        "Am",
+        "Em"
+      ],
+      "chords": {
+        "Am": {
+          "numeral": "i",
+          "root": 9
+        },
+        "Dm": {
+          "numeral": "iv",
+          "root": 2
+        },
+        "Em": {
+          "numeral": "v",
+          "root": 4
+        }
+      },
+      "pattern": [
+        {
+          "beat": 1,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 1,
+          "tone": "fifth",
+          "finger": 1
+        },
+        {
+          "beat": 3,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 3,
+          "tone": "seventh",
+          "finger": 1
+        }
+      ],
+      "about": "The boogie in A minor, with the horns in: root and fifth on the 1, then the thumb up to the flat seventh on the 3, the root under both. Move it with Am, Dm and Em.",
+      "coach": {
+        "intro": "A minor boogie. Fifth, then seventh.",
+        "change": "Get ready. {next} on the 1.",
+        "hold": "{chord}. Fifth on the 1, seventh on the 3.",
+        "clean": "Clean. Keep it rolling.",
+        "again": "{problem} Keep going.",
+        "join": "Jump in on the 1.",
+        "slow": "Clean at {tempo}. Try it at {gateTempo}."
+      }
+    },
+    {
+      "id": "jam-2",
+      "kind": "jam",
+      "title": "E minor boogie",
+      "skill": "jam.minorboogie.key-2",
+      "tempo": 70,
+      "band": [
+        "drums",
+        "bass",
+        "keys",
+        "horns"
+      ],
+      "transpose": -5,
+      "form": [
+        "Em",
+        "Em",
+        "Em",
+        "Em",
+        "Am",
+        "Am",
+        "Em",
+        "Em",
+        "Bm",
+        "Am",
+        "Em",
+        "Bm"
+      ],
+      "chords": {
+        "Em": {
+          "numeral": "i",
+          "root": 4
+        },
+        "Am": {
+          "numeral": "iv",
+          "root": 9
+        },
+        "Bm": {
+          "numeral": "v",
+          "root": 11
+        }
+      },
+      "pattern": [
+        {
+          "beat": 1,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 1,
+          "tone": "fifth",
+          "finger": 1
+        },
+        {
+          "beat": 3,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 3,
+          "tone": "seventh",
+          "finger": 1
+        }
+      ],
+      "about": "The boogie in E minor, with the horns in: root and fifth on the 1, then the thumb up to the flat seventh on the 3, the root under both. Move it with Em, Am and Bm.",
+      "coach": {
+        "intro": "E minor boogie. Fifth, then seventh.",
+        "change": "Get ready. {next} on the 1.",
+        "hold": "{chord}. Fifth on the 1, seventh on the 3.",
+        "clean": "Clean. Keep it rolling.",
+        "again": "{problem} Keep going.",
+        "join": "Jump in on the 1.",
+        "slow": "Clean at {tempo}. Try it at {gateTempo}."
+      }
+    },
+    {
+      "id": "jam-3",
+      "kind": "jam",
+      "title": "D minor boogie",
+      "skill": "jam.minorboogie.key-3",
+      "tempo": 70,
+      "band": [
+        "drums",
+        "bass",
+        "keys",
+        "horns"
+      ],
+      "transpose": 5,
+      "form": [
+        "Dm",
+        "Dm",
+        "Dm",
+        "Dm",
+        "Gm",
+        "Gm",
+        "Dm",
+        "Dm",
+        "Am",
+        "Gm",
+        "Dm",
+        "Am"
+      ],
+      "chords": {
+        "Dm": {
+          "numeral": "i",
+          "root": 2
+        },
+        "Gm": {
+          "numeral": "iv",
+          "root": 7
+        },
+        "Am": {
+          "numeral": "v",
+          "root": 9
+        }
+      },
+      "pattern": [
+        {
+          "beat": 1,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 1,
+          "tone": "fifth",
+          "finger": 1
+        },
+        {
+          "beat": 3,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 3,
+          "tone": "seventh",
+          "finger": 1
+        }
+      ],
+      "about": "The boogie in D minor, with the horns in: root and fifth on the 1, then the thumb up to the flat seventh on the 3, the root under both. Move it with Dm, Gm and Am.",
+      "coach": {
+        "intro": "D minor boogie. Fifth, then seventh.",
+        "change": "Get ready. {next} on the 1.",
+        "hold": "{chord}. Fifth on the 1, seventh on the 3.",
+        "clean": "Clean. Keep it rolling.",
+        "again": "{problem} Keep going.",
+        "join": "Jump in on the 1.",
+        "slow": "Clean at {tempo}. Try it at {gateTempo}."
+      }
+    },
+    {
+      "id": "jam-4",
+      "kind": "jam",
+      "title": "G minor boogie",
+      "skill": "jam.minorboogie.key-4",
+      "tempo": 70,
+      "band": [
+        "drums",
+        "bass",
+        "keys",
+        "horns"
+      ],
+      "transpose": -2,
+      "form": [
+        "Gm",
+        "Gm",
+        "Gm",
+        "Gm",
+        "Cm",
+        "Cm",
+        "Gm",
+        "Gm",
+        "Dm",
+        "Cm",
+        "Gm",
+        "Dm"
+      ],
+      "chords": {
+        "Gm": {
+          "numeral": "i",
+          "root": 7
+        },
+        "Cm": {
+          "numeral": "iv",
+          "root": 0
+        },
+        "Dm": {
+          "numeral": "v",
+          "root": 2
+        }
+      },
+      "pattern": [
+        {
+          "beat": 1,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 1,
+          "tone": "fifth",
+          "finger": 1
+        },
+        {
+          "beat": 3,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 3,
+          "tone": "seventh",
+          "finger": 1
+        }
+      ],
+      "about": "The boogie in G minor, with the horns in: root and fifth on the 1, then the thumb up to the flat seventh on the 3, the root under both. Move it with Gm, Cm and Dm.",
+      "coach": {
+        "intro": "G minor boogie. Fifth, then seventh.",
+        "change": "Get ready. {next} on the 1.",
+        "hold": "{chord}. Fifth on the 1, seventh on the 3.",
+        "clean": "Clean. Keep it rolling.",
+        "again": "{problem} Keep going.",
+        "join": "Jump in on the 1.",
+        "slow": "Clean at {tempo}. Try it at {gateTempo}."
+      }
+    },
+    {
+      "id": "jam-5",
+      "kind": "jam",
+      "title": "C minor boogie",
+      "skill": "jam.minorboogie.key-5",
+      "tempo": 70,
+      "band": [
+        "drums",
+        "bass",
+        "keys",
+        "horns"
+      ],
+      "transpose": 3,
+      "form": [
+        "Cm",
+        "Cm",
+        "Cm",
+        "Cm",
+        "Fm",
+        "Fm",
+        "Cm",
+        "Cm",
+        "Gm",
+        "Fm",
+        "Cm",
+        "Gm"
+      ],
+      "chords": {
+        "Cm": {
+          "numeral": "i",
+          "root": 0
+        },
+        "Fm": {
+          "numeral": "iv",
+          "root": 5
+        },
+        "Gm": {
+          "numeral": "v",
+          "root": 7
+        }
+      },
+      "pattern": [
+        {
+          "beat": 1,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 1,
+          "tone": "fifth",
+          "finger": 1
+        },
+        {
+          "beat": 3,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 3,
+          "tone": "seventh",
+          "finger": 1
+        }
+      ],
+      "about": "The boogie in C minor, with the horns in: root and fifth on the 1, then the thumb up to the flat seventh on the 3, the root under both. Move it with Cm, Fm and Gm.",
+      "coach": {
+        "intro": "C minor boogie. Fifth, then seventh.",
+        "change": "Get ready. {next} on the 1.",
+        "hold": "{chord}. Fifth on the 1, seventh on the 3.",
+        "clean": "Clean. Keep it rolling.",
+        "again": "{problem} Keep going.",
+        "join": "Jump in on the 1.",
+        "slow": "Clean at {tempo}. Try it at {gateTempo}."
+      }
+    },
+    {
+      "id": "jam-6",
+      "kind": "jam",
+      "title": "F minor boogie",
+      "skill": "jam.minorboogie.key-6",
+      "tempo": 70,
+      "band": [
+        "drums",
+        "bass",
+        "keys",
+        "horns"
+      ],
+      "transpose": -4,
+      "form": [
+        "Fm",
+        "Fm",
+        "Fm",
+        "Fm",
+        "B♭m",
+        "B♭m",
+        "Fm",
+        "Fm",
+        "Cm",
+        "B♭m",
+        "Fm",
+        "Cm"
+      ],
+      "chords": {
+        "Fm": {
+          "numeral": "i",
+          "root": 5
+        },
+        "B♭m": {
+          "numeral": "iv",
+          "root": 10
+        },
+        "Cm": {
+          "numeral": "v",
+          "root": 0
+        }
+      },
+      "pattern": [
+        {
+          "beat": 1,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 1,
+          "tone": "fifth",
+          "finger": 1
+        },
+        {
+          "beat": 3,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 3,
+          "tone": "seventh",
+          "finger": 1
+        }
+      ],
+      "about": "The boogie in F minor, with the horns in: root and fifth on the 1, then the thumb up to the flat seventh on the 3, the root under both. Move it with Fm, B♭m and Cm.",
+      "coach": {
+        "intro": "F minor boogie. Fifth, then seventh.",
+        "change": "Get ready. {next} on the 1.",
+        "hold": "{chord}. Fifth on the 1, seventh on the 3.",
+        "clean": "Clean. Keep it rolling.",
+        "again": "{problem} Keep going.",
+        "join": "Jump in on the 1.",
+        "slow": "Clean at {tempo}. Try it at {gateTempo}."
+      }
+    },
+    {
+      "id": "jam-7",
+      "kind": "jam",
+      "title": "B minor boogie",
+      "skill": "jam.minorboogie.key-7",
+      "tempo": 70,
+      "band": [
+        "drums",
+        "bass",
+        "keys",
+        "horns"
+      ],
+      "transpose": 2,
+      "form": [
+        "Bm",
+        "Bm",
+        "Bm",
+        "Bm",
+        "Em",
+        "Em",
+        "Bm",
+        "Bm",
+        "F♯m",
+        "Em",
+        "Bm",
+        "F♯m"
+      ],
+      "chords": {
+        "Bm": {
+          "numeral": "i",
+          "root": 11
+        },
+        "Em": {
+          "numeral": "iv",
+          "root": 4
+        },
+        "F♯m": {
+          "numeral": "v",
+          "root": 6
+        }
+      },
+      "pattern": [
+        {
+          "beat": 1,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 1,
+          "tone": "fifth",
+          "finger": 1
+        },
+        {
+          "beat": 3,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 3,
+          "tone": "seventh",
+          "finger": 1
+        }
+      ],
+      "about": "The boogie in B minor, with the horns in: root and fifth on the 1, then the thumb up to the flat seventh on the 3, the root under both. Move it with Bm, Em and F♯m.",
+      "coach": {
+        "intro": "B minor boogie. Fifth, then seventh.",
+        "change": "Get ready. {next} on the 1.",
+        "hold": "{chord}. Fifth on the 1, seventh on the 3.",
+        "clean": "Clean. Keep it rolling.",
+        "again": "{problem} Keep going.",
+        "join": "Jump in on the 1.",
+        "slow": "Clean at {tempo}. Try it at {gateTempo}."
+      }
+    },
+    {
+      "id": "jam-8",
+      "kind": "jam",
+      "title": "F♯ minor boogie",
+      "skill": "jam.minorboogie.key-8",
+      "tempo": 70,
+      "band": [
+        "drums",
+        "bass",
+        "keys",
+        "horns"
+      ],
+      "transpose": -3,
+      "form": [
+        "F♯m",
+        "F♯m",
+        "F♯m",
+        "F♯m",
+        "Bm",
+        "Bm",
+        "F♯m",
+        "F♯m",
+        "C♯m",
+        "Bm",
+        "F♯m",
+        "C♯m"
+      ],
+      "chords": {
+        "F♯m": {
+          "numeral": "i",
+          "root": 6
+        },
+        "Bm": {
+          "numeral": "iv",
+          "root": 11
+        },
+        "C♯m": {
+          "numeral": "v",
+          "root": 1
+        }
+      },
+      "pattern": [
+        {
+          "beat": 1,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 1,
+          "tone": "fifth",
+          "finger": 1
+        },
+        {
+          "beat": 3,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 3,
+          "tone": "seventh",
+          "finger": 1
+        }
+      ],
+      "about": "The boogie in F♯ minor, with the horns in: root and fifth on the 1, then the thumb up to the flat seventh on the 3, the root under both. Move it with F♯m, Bm and C♯m.",
+      "coach": {
+        "intro": "F♯ minor boogie. Fifth, then seventh.",
+        "change": "Get ready. {next} on the 1.",
+        "hold": "{chord}. Fifth on the 1, seventh on the 3.",
+        "clean": "Clean. Keep it rolling.",
+        "again": "{problem} Keep going.",
+        "join": "Jump in on the 1.",
+        "slow": "Clean at {tempo}. Try it at {gateTempo}."
+      }
+    },
+    {
+      "id": "jam-9",
+      "kind": "jam",
+      "title": "C♯ minor boogie",
+      "skill": "jam.minorboogie.key-9",
+      "tempo": 70,
+      "band": [
+        "drums",
+        "bass",
+        "keys",
+        "horns"
+      ],
+      "transpose": 4,
+      "form": [
+        "C♯m",
+        "C♯m",
+        "C♯m",
+        "C♯m",
+        "F♯m",
+        "F♯m",
+        "C♯m",
+        "C♯m",
+        "G♯m",
+        "F♯m",
+        "C♯m",
+        "G♯m"
+      ],
+      "chords": {
+        "C♯m": {
+          "numeral": "i",
+          "root": 1
+        },
+        "F♯m": {
+          "numeral": "iv",
+          "root": 6
+        },
+        "G♯m": {
+          "numeral": "v",
+          "root": 8
+        }
+      },
+      "pattern": [
+        {
+          "beat": 1,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 1,
+          "tone": "fifth",
+          "finger": 1
+        },
+        {
+          "beat": 3,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 3,
+          "tone": "seventh",
+          "finger": 1
+        }
+      ],
+      "about": "The boogie in C♯ minor, with the horns in: root and fifth on the 1, then the thumb up to the flat seventh on the 3, the root under both. Move it with C♯m, F♯m and G♯m.",
+      "coach": {
+        "intro": "C♯ minor boogie. Fifth, then seventh.",
+        "change": "Get ready. {next} on the 1.",
+        "hold": "{chord}. Fifth on the 1, seventh on the 3.",
+        "clean": "Clean. Keep it rolling.",
+        "again": "{problem} Keep going.",
+        "join": "Jump in on the 1.",
+        "slow": "Clean at {tempo}. Try it at {gateTempo}."
+      }
+    },
+    {
+      "id": "jam-10",
+      "kind": "jam",
+      "title": "G♯ minor boogie",
+      "skill": "jam.minorboogie.key-10",
+      "tempo": 70,
+      "band": [
+        "drums",
+        "bass",
+        "keys",
+        "horns"
+      ],
+      "transpose": -1,
+      "form": [
+        "G♯m",
+        "G♯m",
+        "G♯m",
+        "G♯m",
+        "C♯m",
+        "C♯m",
+        "G♯m",
+        "G♯m",
+        "D♯m",
+        "C♯m",
+        "G♯m",
+        "D♯m"
+      ],
+      "chords": {
+        "G♯m": {
+          "numeral": "i",
+          "root": 8
+        },
+        "C♯m": {
+          "numeral": "iv",
+          "root": 1
+        },
+        "D♯m": {
+          "numeral": "v",
+          "root": 3
+        }
+      },
+      "pattern": [
+        {
+          "beat": 1,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 1,
+          "tone": "fifth",
+          "finger": 1
+        },
+        {
+          "beat": 3,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 3,
+          "tone": "seventh",
+          "finger": 1
+        }
+      ],
+      "about": "The boogie in G♯ minor, with the horns in: root and fifth on the 1, then the thumb up to the flat seventh on the 3, the root under both. Move it with G♯m, C♯m and D♯m.",
+      "coach": {
+        "intro": "G♯ minor boogie. Fifth, then seventh.",
+        "change": "Get ready. {next} on the 1.",
+        "hold": "{chord}. Fifth on the 1, seventh on the 3.",
+        "clean": "Clean. Keep it rolling.",
+        "again": "{problem} Keep going.",
+        "join": "Jump in on the 1.",
+        "slow": "Clean at {tempo}. Try it at {gateTempo}."
+      }
+    },
+    {
+      "id": "jam-11",
+      "kind": "jam",
+      "title": "E♭ minor boogie",
+      "skill": "jam.minorboogie.key-11",
+      "tempo": 70,
+      "band": [
+        "drums",
+        "bass",
+        "keys",
+        "horns"
+      ],
+      "transpose": -6,
+      "form": [
+        "E♭m",
+        "E♭m",
+        "E♭m",
+        "E♭m",
+        "G♯m",
+        "G♯m",
+        "E♭m",
+        "E♭m",
+        "B♭m",
+        "G♯m",
+        "E♭m",
+        "B♭m"
+      ],
+      "chords": {
+        "E♭m": {
+          "numeral": "i",
+          "root": 3
+        },
+        "G♯m": {
+          "numeral": "iv",
+          "root": 8
+        },
+        "B♭m": {
+          "numeral": "v",
+          "root": 10
+        }
+      },
+      "pattern": [
+        {
+          "beat": 1,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 1,
+          "tone": "fifth",
+          "finger": 1
+        },
+        {
+          "beat": 3,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 3,
+          "tone": "seventh",
+          "finger": 1
+        }
+      ],
+      "about": "The boogie in E♭ minor, with the horns in: root and fifth on the 1, then the thumb up to the flat seventh on the 3, the root under both. Move it with E♭m, G♯m and B♭m.",
+      "coach": {
+        "intro": "E♭ minor boogie. Fifth, then seventh.",
+        "change": "Get ready. {next} on the 1.",
+        "hold": "{chord}. Fifth on the 1, seventh on the 3.",
+        "clean": "Clean. Keep it rolling.",
+        "again": "{problem} Keep going.",
+        "join": "Jump in on the 1.",
+        "slow": "Clean at {tempo}. Try it at {gateTempo}."
+      }
+    },
+    {
+      "id": "jam-12",
+      "kind": "jam",
+      "title": "B♭ minor boogie",
+      "skill": "jam.minorboogie.key-12",
+      "tempo": 70,
+      "band": [
+        "drums",
+        "bass",
+        "keys",
+        "horns"
+      ],
+      "transpose": 1,
+      "form": [
+        "B♭m",
+        "B♭m",
+        "B♭m",
+        "B♭m",
+        "E♭m",
+        "E♭m",
+        "B♭m",
+        "B♭m",
+        "Fm",
+        "E♭m",
+        "B♭m",
+        "Fm"
+      ],
+      "chords": {
+        "B♭m": {
+          "numeral": "i",
+          "root": 10
+        },
+        "E♭m": {
+          "numeral": "iv",
+          "root": 3
+        },
+        "Fm": {
+          "numeral": "v",
+          "root": 5
+        }
+      },
+      "pattern": [
+        {
+          "beat": 1,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 1,
+          "tone": "fifth",
+          "finger": 1
+        },
+        {
+          "beat": 3,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 3,
+          "tone": "seventh",
+          "finger": 1
+        }
+      ],
+      "about": "The boogie in B♭ minor, with the horns in: root and fifth on the 1, then the thumb up to the flat seventh on the 3, the root under both. Move it with B♭m, E♭m and Fm.",
+      "coach": {
+        "intro": "B♭ minor boogie. Fifth, then seventh.",
+        "change": "Get ready. {next} on the 1.",
+        "hold": "{chord}. Fifth on the 1, seventh on the 3.",
+        "clean": "Clean. Keep it rolling.",
+        "again": "{problem} Keep going.",
+        "join": "Jump in on the 1.",
+        "slow": "Clean at {tempo}. Try it at {gateTempo}."
+      }
+    },
+    {
+      "id": "jam-two-a-bar",
+      "kind": "jam",
+      "title": "Four a bar",
+      "skill": "jam.triad.four.minorblues.A",
+      "tempo": 70,
+      "band": [
+        "drums",
+        "bass",
+        "keys",
+        "horns"
+      ],
+      "transpose": 0,
+      "pattern": [
+        {
+          "beat": 1,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 1,
+          "tone": "minorThird",
+          "finger": 3
+        },
+        {
+          "beat": 1,
+          "tone": "fifth",
+          "finger": 1
+        },
+        {
+          "beat": 2,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 2,
+          "tone": "minorThird",
+          "finger": 3
+        },
+        {
+          "beat": 2,
+          "tone": "fifth",
+          "finger": 1
+        },
+        {
+          "beat": 3,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 3,
+          "tone": "minorThird",
+          "finger": 3
+        },
+        {
+          "beat": 3,
+          "tone": "fifth",
+          "finger": 1
+        },
+        {
+          "beat": 4,
+          "tone": "root",
+          "finger": 5
+        },
+        {
+          "beat": 4,
+          "tone": "minorThird",
+          "finger": 3
+        },
+        {
+          "beat": 4,
+          "tone": "fifth",
+          "finger": 1
+        }
+      ],
+      "about": "The triad on every beat, with the whole band: a stomp. Keep the hand loose and let the wrist do it.",
+      "coach": {
+        "intro": "The triad on every beat. Stomp.",
+        "change": "Get ready. {next} on every beat.",
+        "hold": "{chord} on every beat.",
+        "clean": "Clean. Keep it rolling.",
+        "again": "{problem} Keep going.",
+        "join": "Jump in on the 1.",
+        "slow": "Clean at {tempo}. Try it at {gateTempo}."
+      }
+    }
+  ]
+}

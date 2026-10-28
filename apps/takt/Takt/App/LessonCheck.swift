@@ -172,8 +172,9 @@ enum LessonCheck {
 
         do {
             // Lessons over steps: five lessons cover the six steps, the card closing lesson 1.
-            check("lessons: five over six steps", lesson.lessons.count == 5 && lesson.lessonIndex(ofStep: 1) == 0
-                  && lesson.lessonIndex(ofStep: 2) == 1 && lesson.firstStep(ofLesson: 1) == 2 && lesson.firstStep(ofLesson: 4) == 5)
+            check("lessons: seven over eight steps (the payoff graduates, two chord lessons after it)", lesson.lessons.count == 7 && lesson.lessonIndex(ofStep: 1) == 0
+                  && lesson.lessonIndex(ofStep: 2) == 1 && lesson.firstStep(ofLesson: 1) == 2 && lesson.firstStep(ofLesson: 4) == 5
+                  && lesson.firstStep(ofLesson: 5) == 6 && lesson.lessonStepCount == 8)
             check("lessons: done from the step reached (old records)", lesson.lessonsDone(reachedStep: 1) == 0
                   && lesson.lessonsDone(reachedStep: 2) == 1 && lesson.lessonsDone(reachedStep: 3) == 1
                   && lesson.lessonsDone(reachedStep: 4) == 2 && lesson.lessonsDone(reachedStep: 6) == 4)
@@ -184,7 +185,7 @@ enum LessonCheck {
             g.heard(tick: 0, tempo: 70, rolling: true, epoch: 0)
             let intro = g.output.intro
             check("gated: lesson 1 opens on its intro, pinky, with its goal", intro?.title == "Roots on the 1" && intro?.number == 1
-                  && intro?.count == 5 && intro?.goal == "2 clean choruses at 70" && intro?.fingers.map(\.finger) == [5]
+                  && intro?.count == 7 && intro?.goal == "2 clean choruses at 70" && intro?.fingers.map(\.finger) == [5]
                   && g.output.nowNote == nil && g.output.lesson == 1 && g.output.lessonTitle == "Roots on the 1",
                   "\(String(describing: intro))")
             g.begin()
@@ -332,10 +333,52 @@ enum LessonCheck {
             // clean choruses count and mark it, nothing passes or hands over.
             let jams = minor.jams ?? []
             check("jams: six under the scale lessons, five under the blues, each a jam step past the lessons' steps",
-                  jams.count == 6 && (lesson.jams ?? []).count == 5 && jams.map(\.after) == [1, 2, 3, 4, 5, 6]
+                  jams.count == 6 && (lesson.jams ?? []).count == 7 && jams.map(\.after) == [1, 2, 3, 4, 5, 6]
                   && minor.stepIndex(ofJam: jams[0]) == 6 && minor.lessonIndex(ofStep: 6) == 0 && minor.jam(ofStep: 6)?.title == "First riff"
                   && minor.steps[6].band == ["drums", "bass", "keys"] && minor.steps[0].band == ["drums"] && minor.steps[10].band == ["drums", "keys"]
-                  && lesson.steps[6].kind == .jam && lesson.lessonIndex(ofStep: 10) == 4 && lesson.lessonsDone(reachedStep: 7) == 5)
+                  && lesson.steps[8].kind == .jam && lesson.lessonIndex(ofStep: 12) == 4 && lesson.lessonsDone(reachedStep: 7) == 5
+                  && lesson.lessonsDone(reachedStep: 9) == 7)
+
+            // Chords: the third finger and twice a bar after the payoff (C E G with 5 3 1), and the
+            // Minor Chords module: a minor blues in every key, each step with its own form and
+            // chords, the A minor band transposed within -6…+5; the minor third as a tone.
+            let third = lesson.expected(lesson.steps[6], ticksPerBeat: tpb)
+            check("chords: the third finger is C E G on the 1 with 5 3 1, F A C in bar 5, 36 notes a chorus",
+                  third.count == 36 && third.prefix(3).map(\.display) == [48, 52, 55] && third.prefix(3).map(\.finger) == [5, 3, 1]
+                  && third[12...14].map(\.pitchClass) == [5, 9, 0] && lesson.steps[7].tempo == 80
+                  && lesson.expected(lesson.steps[7], ticksPerBeat: tpb).count == 72, "\(third.prefix(3).map(\.display))")
+            let minorModule = Lesson.bundled("lesson-M")
+            let keys = minorModule.steps.prefix(12)
+            check("minor: twelve keys then Two a bar, each key its own i iv v form, the band within -6…+5",
+                  minorModule.lessons.count == 13 && minorModule.band == "band-minor-A" && (minorModule.jams ?? []).count == 13
+                  && keys.map { $0.transpose! }.allSatisfy { (-6...5).contains($0) } && Set(keys.map { $0.transpose! }).count == 12
+                  && keys.allSatisfy { $0.form!.count == 12 && minorModule.chords(of: $0).count == 3 }
+                  && minorModule.steps[6].form?[0] == "Bm" && minorModule.steps[6].form?[8] == "F♯m" && minorModule.steps[6].transpose == 2
+                  && minorModule.steps[9].form?[8] == "D♯m" && minorModule.steps[12].form == nil,
+                  "\(keys.map { $0.transpose! })")
+            let bm = minorModule.expected(minorModule.steps[6], ticksPerBeat: tpb)
+            check("minor: B minor is B3 D4 F♯4 on the 1, E minor in bar 5, F♯ minor in bar 9",
+                  bm.count == 36 && bm.prefix(3).map(\.display) == [59, 62, 66] && bm.prefix(3).map(\.pitchClass) == [11, 2, 6]
+                  && bm[12].pitchClass == 4 && bm[24].pitchClass == 6 && minorModule.formBars(of: minorModule.steps[6])[8].numeral == "v",
+                  "\(bm.prefix(3).map(\.display))")
+            let minorBand = BandData.bundled("band-minor-A")
+            let blues = BandData.bundled("band-blues-C")
+            check("minor: the A minor band has the shuffle's time structure and kit, i iv v, the bass low",
+                  minorBand.loopTicks == blues.loopTicks && minorBand.chorusBars == 12 && minorBand.sounds.keys.sorted() == blues.sounds.keys.sorted()
+                  && minorBand.form == ["Am", "Am", "Am", "Am", "Dm", "Dm", "Am", "Am", "Em", "Dm", "Am", "Em"]
+                  && minorBand.channels.bass.allSatisfy { $0.n >= 26 && $0.n <= 50 } && minorBand.instruments == blues.instruments)
+            let me = LessonEngine(lesson: minorModule, ticksPerBeat: tpb, gated: false)
+            var transposes: [Int] = []
+            me.onAction = { if case .transpose(let n) = $0 { transposes.append(n) } }
+            me.start(step: 6)
+            me.heard(tick: 0, tempo: 70, rolling: true, epoch: 0)
+            check("minor: starting B minor transposes the band by 2 and the coach names Bm",
+                  transposes == [2] && me.output.coach == "B minor. Pinky on B, the flat third, the fifth." && me.output.nowNotes == [59, 62, 66],
+                  "\(transposes) · \(me.output.coach) · \(String(describing: me.output.nowNote)) \(me.output.nowNotes.sorted())")
+            me.heard(tick: Double(2 * 4 * tpb) + 1, tempo: 70, rolling: true, epoch: 0)
+            check("minor: bar 3 of B minor says Bm on the 1, bar 4 gets ready for Em", me.output.coach == "Bm on the 1. Hold it."
+                  && { me.heard(tick: Double(3 * 4 * tpb) + 1, tempo: 70, rolling: true, epoch: 0); return me.output.coach == "Get ready. Em on the 1." }(),
+                  me.output.coach)
             let je = LessonEngine(lesson: minor, ticksPerBeat: tpb, gated: false)
             je.start(step: 6)
             var jv: [LessonEngine.Verdict] = []
