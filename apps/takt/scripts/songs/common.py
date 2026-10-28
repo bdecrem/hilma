@@ -35,6 +35,8 @@ class Song:
         self.instruments = {}
         # Pitched channels' levels in dB (bass, keys, horns), the way sounds carry gainDb.
         self.levels = {}
+        # Sidechain: {"depth", "release", "channels"}; every kick ducks those channels.
+        self.duck = None
         self.drums = []
         self.bass = []
         self.keys = []
@@ -118,6 +120,7 @@ class Song:
             "sounds": self.sounds,
             "instruments": self.instruments,
             "levels": self.levels,
+            "duck": self.duck,
             "channels": {"drums": self.drums, "bass": self.bass, "keys": self.keys, "horns": self.horns},
             "song": {
                 "title": self.title,

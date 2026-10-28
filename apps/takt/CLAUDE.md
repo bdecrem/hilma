@@ -422,6 +422,30 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   189/189 (the four songs load and hold together, judging, combo, extras, adaptive up and down,
   the board's trim).
 
+- **The Berlin sketches on the Stage: 0.1 (40), 2026-10-28.** Bart: "Replace those 2 tracks
+  [Undertow, Nachtschicht] with the 3 new tracks… add a MATCHING melody line (think like a
+  music producer and don't ruin the vibes!!)". `misc/sketches.py` (his numpy synthesis, four
+  30-second sketches, no samples) is the source: **Hypnotist** (minimal techno 127, A minor,
+  track 1), **Warm Nine** (deep house 121, F minor, Fm9 E♭maj9 D♭maj7 Cm7, track 2), **Abyss**
+  (dub techno 117, Dm9 drifting to Cm9, track 3); the warehouse acid one was not wanted.
+  `scripts/synths.py` is now a port of that file's voices at 48 kHz, cut as one-shots: the
+  sketch kicks, hats, clap, rim and click, the bleep (with its ping-pong delay and room baked
+  in), the Rhodes (plate and delay baked in), the dub stab (the whole dub chamber baked in),
+  the subs, a dub lead, and two beds the drums channel retriggers every eight bars (vinyl
+  crackle, hiss and rumble). Filters that breathe over bars are velocity layers (dark, mid,
+  bright) the songs drive. What belongs to the beat stayed in the engine: a band's `duck`
+  (`BandData.Duck`: every kick dips the named channels by `depth`, back over `release`; the
+  renderer notes the kicks fired in a chunk and the mixdown applies the envelope; your keys
+  duck with the part you took). The old 909 set, acid, stab, pad, lead, rave are gone with
+  the two songs. `scripts/songs/{hypnotist,warm_nine,abyss}.py` are the sketches' 16-step
+  patterns bar for bar, stretched to 72–80 bars with intro, break and out. The parts the
+  sketches had are the parts (the bleep, the Rhodes stabs, the dub stab); the ones they lacked
+  are written to the vibe: a dark Am/G stab in the bleep's voice on the and of 2 (Hypnotist's
+  chords), a Rhodes top line an octave up (Warm Nine's melody), long tones in the chamber on
+  the ninth, fifth and seventh (Abyss's melody). Not carried over: the deep house sketch's 16%
+  swing (half a tick, below the 12-per-beat grid); the pushed stabs carry the feel. Levels from
+  solo renders against the blues band as before.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

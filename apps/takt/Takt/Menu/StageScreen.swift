@@ -239,23 +239,41 @@ struct SongArt: View {
                     let r = CGRect(x: x, y: y - 10, width: sw * 0.8, height: 10)
                     ctx.fill(Path(roundedRect: r, cornerRadius: 2), with: .color(i % 4 == 1 ? hot : ink))
                 }
-            case "undertow":
-                // Submerged: rings that drift off center, one lit.
-                let c = CGPoint(x: w * 0.42, y: h * 0.55)
-                for i in 1...5 {
-                    let r = CGFloat(i) * min(w, h) * 0.09
-                    let p = Path(ellipseIn: CGRect(x: c.x - r - CGFloat(i), y: c.y - r * 0.75, width: 2 * r + CGFloat(2 * i), height: r * 1.5))
-                    ctx.stroke(p, with: .color(i == 3 ? hot : i % 2 == 0 ? ink : dim), lineWidth: i == 3 ? 2.5 : 1.2)
+            case "pulse":
+                // Minimal: a grid of dots, one lit, one row of rims.
+                let cols = 6, rows = 4
+                for r in 0..<rows {
+                    for c in 0..<cols {
+                        let x = w * (0.14 + 0.72 * CGFloat(c) / CGFloat(cols - 1))
+                        let y = h * (0.2 + 0.6 * CGFloat(r) / CGFloat(rows - 1))
+                        let on = (r == 1 && c == 3)
+                        let rr: CGFloat = on ? 5 : (r + c) % 3 == 0 ? 3 : 2
+                        ctx.fill(Path(ellipseIn: CGRect(x: x - rr, y: y - rr, width: 2 * rr, height: 2 * rr)),
+                                 with: .color(on ? hot : (r + c) % 3 == 0 ? ink : dim))
+                    }
                 }
+            case "nine":
+                // Deep house: nine soft stacked bars pushed off the grid, one warm.
+                for i in 0..<9 {
+                    let y = h * (0.14 + 0.09 * CGFloat(i))
+                    let push: CGFloat = i % 4 == 1 || i % 4 == 3 ? 10 : 0
+                    let r = CGRect(x: w * 0.16 + push, y: y, width: w * 0.5 + CGFloat(i % 3) * 8, height: 5)
+                    ctx.fill(Path(roundedRect: r, cornerRadius: 2.5), with: .color(i == 4 ? hot : i % 2 == 0 ? ink : dim))
+                }
+            case "abyss":
+                // Dub: one stab and its echoes, each fainter and lower.
+                for i in 0..<5 {
+                    let x = w * (0.16 + 0.17 * CGFloat(i))
+                    let hh = h * (0.5 - 0.09 * CGFloat(i))
+                    let r = CGRect(x: x, y: h * 0.72 - hh, width: w * 0.08, height: hh)
+                    ctx.fill(Path(roundedRect: r, cornerRadius: 2), with: .color(i == 0 ? hot : ink.opacity(1 - 0.18 * Double(i))))
+                }
+                var p = Path()
+                p.move(to: CGPoint(x: w * 0.1, y: h * 0.72))
+                p.addLine(to: CGPoint(x: w * 0.9, y: h * 0.72))
+                ctx.stroke(p, with: .color(dim), lineWidth: 1)
             default:
-                // The night shift: a strobe of bars, one on.
-                let n = 7
-                let bw = w / CGFloat(n)
-                for i in 0..<n {
-                    let hh = h * (0.35 + 0.5 * abs(sin(Double(i) * 1.3 + 0.4)))
-                    let r = CGRect(x: bw * CGFloat(i) + bw * 0.22, y: h * 0.9 - hh, width: bw * 0.56, height: hh)
-                    ctx.fill(Path(roundedRect: r, cornerRadius: 1.5), with: .color(i == 3 ? hot : i % 2 == 0 ? ink : dim))
-                }
+                ctx.fill(Path(ellipseIn: CGRect(x: w * 0.4, y: h * 0.4, width: w * 0.2, height: h * 0.2)), with: .color(hot))
             }
         }
         .background(shape.fill(Palette.ground))

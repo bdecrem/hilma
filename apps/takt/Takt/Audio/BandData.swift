@@ -44,7 +44,16 @@ struct BandData: Decodable {
     /// A pitched channel's level in dB (bass, keys, horns; 0 when absent): a song's synths are
     /// balanced here, the way drum sounds carry `gainDb`.
     var levels: [String: Double]?
+    /// Sidechain: every kick ducks these channels by `depth` (0...1), back over `release`
+    /// seconds. The pumping of the electronic songs.
+    var duck: Duck?
     let channels: Channels
+
+    struct Duck: Decodable {
+        let depth: Double
+        let release: Double
+        var channels: [String]
+    }
 
     var ticksPerBar: Int { ticksPerBeat * beatsPerBar }
     var loopTicks: Int { ticksPerBar * bars }

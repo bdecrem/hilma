@@ -141,6 +141,8 @@ final class BandRenderer {
         var gain: Float
         var group: Int
         var chokes: Int
+        /// A kick: it ducks the band's `duck` channels.
+        var kick: Bool
     }
 
     /// A band as the renderer plays it: its events, its kit, its instruments and the monitor's,
@@ -154,18 +156,23 @@ final class BandRenderer {
         fileprivate let monitor: Int
         /// Your keys' level (the band's `levels["monitor"]`: a song's part).
         fileprivate let monitorGain: Float
+        /// Sidechain depth per channel (drums, bass, keys, horns, monitor) and its release.
+        fileprivate let duck: [Float]
+        fileprivate let duckRelease: Double
         let loopTicks: Int
         let chorusBars: Int
         let name: String
         fileprivate init(_ buffer: UnsafeMutableBufferPointer<Event>, drumSounds: UnsafeMutableBufferPointer<DrumSound>,
-                         clickSound: Int, instruments: [SampledInstrument], monitor: Int, monitorGain: Float, loopTicks: Int,
-                         chorusBars: Int, name: String) {
+                         clickSound: Int, instruments: [SampledInstrument], monitor: Int, monitorGain: Float,
+                         duck: [Float], duckRelease: Double, loopTicks: Int, chorusBars: Int, name: String) {
             self.buffer = buffer
             self.drumSounds = drumSounds
             self.clickSound = clickSound
             self.instruments = instruments
             self.monitor = monitor
             self.monitorGain = monitorGain
+            self.duck = duck
+            self.duckRelease = duckRelease
             self.loopTicks = loopTicks
             self.chorusBars = chorusBars
             self.name = name
@@ -180,6 +187,13 @@ final class BandRenderer {
     private var instruments: [SampledInstrument]
     private var monitor: Int
     private var monitorGain: Float = 1
+    /// Sidechain: depth per channel, the release's per-sample decay, the last kick's frame and
+    /// the kicks fired in the chunk being mixed.
+    private var duck: [Float] = [0, 0, 0, 0, 0]
+    private var duckDecay: Float = 1
+    private var lastKick: Int64 = .min / 2
+    private let chunkKicks = UnsafeMutableBufferPointer<Int64>.allocate(capacity: 64)
+    private var chunkKickCount = 0
 
     private var commands: [EngineCommand] = []
 
@@ -271,6 +285,8 @@ final class BandRenderer {
         instruments = first.instruments
         monitor = first.monitor
         monitorGain = first.monitorGain
+        duck = first.duck
+        duckDecay = Float(exp(-1 / (first.duckRelease * sampleRate)))
 
         busL = .allocate(capacity: maxChunk * 5)
         busR = .allocate(capacity: maxChunk * 5)
@@ -297,7 +313,8 @@ final class BandRenderer {
             let s = band.sounds[name]!
             drumSounds.initializeElement(at: i, to: DrumSound(
                 kit: SampledInstrument.shared(s.kit), gain: Float(pow(10, s.gainDb / 20)),
-                group: s.kit == "hatOpen" ? 1 : 0, chokes: s.kit == "hat" || s.kit == "hatFoot" ? 1 : 0))
+                group: s.kit.hasPrefix("hatOpen") ? 1 : 0, chokes: (s.kit.hasPrefix("hat") && !s.kit.hasPrefix("hatOpen")) ? 1 : 0,
+                kick: s.kit.hasPrefix("kick")))
         }
         guard let click = names.firstIndex(of: "xstick") else { fatalError("band \(band.name): no xstick for the click") }
 
@@ -314,8 +331,11 @@ final class BandRenderer {
         for n in band.channels.bass + band.channels.keys + band.channels.horns { if let i = n.i { _ = instrument(i) } }
         let monitor = instrumentNames.firstIndex(of: band.instruments["monitor"]!)!
         let instruments = instrumentNames.map { SampledInstrument.shared($0) }
+        let duckNames = band.duck?.channels ?? []
+        let duck = ["drums", "bass", "keys", "horns", "monitor"].map { duckNames.contains($0) ? Float(band.duck!.depth) : 0 }
         return Events(events(of: band, sounds: names, instruments: instrumentNames), drumSounds: drumSounds, clickSound: click,
                       instruments: instruments, monitor: monitor, monitorGain: Float(pow(10, (band.levels?["monitor"] ?? 0) / 20)),
+                      duck: duck, duckRelease: max(0.01, band.duck?.release ?? 0.2),
                       loopTicks: band.loopTicks, chorusBars: band.chorusBars, name: band.name)
     }
 
@@ -430,6 +450,7 @@ final class BandRenderer {
         let start = frame
         let end = frame + Int64(n)
         var cursor = start
+        chunkKickCount = 0
         while true {
             // The next thing to happen in this chunk: a beat, a band event, a scheduled note or a
             // live note. A beat goes before an event on the same tick (a tempo change re-anchors
@@ -536,13 +557,19 @@ final class BandRenderer {
         nextBeatTick = tick + ticksPerBeat
     }
 
-    private func fire(at: Int64) {
+    private func fire(at frameAt: Int64) {
         let tick = events[nextEvent].tick
         while true {
             let e = events[nextEvent]
             if e.tick != tick { break }
             let at = Double(loopBase + e.tick)
-            if muted & e.channel.bit == 0 && !(at >= silenceFrom && at < silenceTo) { trigger(e) }
+            if muted & e.channel.bit == 0 && !(at >= silenceFrom && at < silenceTo) {
+                trigger(e)
+                if e.channel == .drums && drumSounds[e.value].kick && chunkKickCount < chunkKicks.count {
+                    chunkKicks[chunkKickCount] = frameAt
+                    chunkKickCount += 1
+                }
+            }
             nextEvent += 1
             if nextEvent == events.count {
                 nextEvent = 0
@@ -634,6 +661,7 @@ final class BandRenderer {
             outL[i] = 0
             outR[i] = 0
         }
+        let chunkStart = frame
         for ch in Channel.allCases {
             let k = ch.rawValue
             let l = busL + k * c
@@ -642,9 +670,22 @@ final class BandRenderer {
             let target: Float = muted & ch.bit == 0 ? mix[k] * trim : 0
             var g = gain(ch)
             var level = self.level(ch)
+            let depth = duck[k]
+            // The sidechain: 1 − depth right after a kick, back toward 1 with the release.
+            var e: Float = depth > 0 ? Float(pow(Double(duckDecay), Double(max(0, chunkStart - lastKick)))) : 0
+            var nextKick = 0
             for i in 0..<n {
                 g += (target - g) * glide
-                let sl = l[i] * g, sr = r[i] * g
+                var d: Float = 1
+                if depth > 0 {
+                    if nextKick < chunkKickCount, chunkKicks[nextKick] - chunkStart <= Int64(i) {
+                        e = 1
+                        nextKick += 1
+                    }
+                    d = 1 - depth * e
+                    e *= duckDecay
+                }
+                let sl = l[i] * g * d, sr = r[i] * g * d
                 outL[i] += sl
                 outR[i] += sr
                 level = max(abs(sl), level * levelDecay)
@@ -652,6 +693,7 @@ final class BandRenderer {
             setGain(ch, g)
             setLevel(ch, level)
         }
+        if chunkKickCount > 0 { lastKick = chunkKicks[chunkKickCount - 1] }
         for i in 0..<n {
             outL[i] = Self.softClip(outL[i] * master)
             outR[i] = Self.softClip(outR[i] * master)
@@ -782,6 +824,8 @@ final class BandRenderer {
             instruments = e.instruments
             monitor = e.monitor
             monitorGain = e.monitorGain
+            duck = e.duck
+            duckDecay = Float(exp(-1 / (e.duckRelease * sampleRate)))
             loopTicks = e.loopTicks
             chorusBars = e.chorusBars
             let t = playing ? tickAt(frame: frame) : heldTick

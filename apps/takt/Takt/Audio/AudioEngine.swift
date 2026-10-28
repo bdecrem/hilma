@@ -76,6 +76,11 @@ final class AudioEngine {
             var levels = band.levels ?? [:]
             levels["monitor"] = levels[p.channel] ?? 0
             band.levels = levels
+            // Your keys pump with the kick the way the record's part does.
+            if var duck = band.duck, duck.channels.contains(p.channel) {
+                duck.channels.append("monitor")
+                band.duck = duck
+            }
             return renderer.load(band)
         }()
         loaded[key] = e
