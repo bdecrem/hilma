@@ -38,6 +38,7 @@ struct TransportBar: View {
                 }
                 StaffLines()
                     .frame(maxWidth: .infinity)
+                ShowMeButton(on: state.demo, enabled: state.canDemo, size: 36)
                 transportButtons(size: 36)
                 TempoKnob(bpm: state.tempo, pending: state.pendingTempo, counts: state.stepTempo)
             }
@@ -70,6 +71,43 @@ struct TransportBar: View {
                             label: state.playing ? "Pause" : "Play", action: controls.togglePlay)
             TransportButton(symbol: "stop.fill", lit: false, size: size, label: "Stop", action: controls.stop)
         }
+    }
+}
+
+/// Show me: an eye and the words in a flat pill (the Mac), the eye alone on the phone. While
+/// the step plays for you it reads "Watching" in `signal`, and the eye blinks on each beat
+/// the way the pads do; a card or Lesson complete greys it out.
+struct ShowMeButton: View {
+    let on: Bool
+    let enabled: Bool
+    let size: CGFloat
+    var compact = false
+    @Environment(\.lessonControls) private var controls
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: 6)
+        let ink = !enabled ? Palette.muted : on ? Palette.signal : Palette.text
+        Button(action: controls.showMe) {
+            HStack(spacing: 7) {
+                Image(systemName: on ? "eye.fill" : "eye")
+                    .font(.system(size: size * 0.36, weight: .semibold))
+                if !compact {
+                    Text(on ? "Watching" : "Show me")
+                        .dataLabel(12, weight: .semibold)
+                        .fixedSize()
+                }
+            }
+            .foregroundStyle(ink)
+            .frame(width: compact ? size : nil, height: size)
+            .padding(.horizontal, compact ? 0 : 14)
+            .background(shape.fill(Palette.panel))
+            .overlay(shape.strokeBorder(on ? Palette.signal : Palette.line, lineWidth: on ? 1.5 : 1))
+            .contentShape(shape)
+        }
+        .buttonStyle(.plain)
+        .disabled(!enabled)
+        .accessibilityLabel(on ? "Stop showing" : "Show me")
+        .accessibilityHint("Plays this lesson for you, with the keys and the hand")
     }
 }
 

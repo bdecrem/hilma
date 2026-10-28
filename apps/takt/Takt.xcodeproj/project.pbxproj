@@ -237,6 +237,7 @@
 		D2ABF92BB4D642D04FABA73E /* pno-87-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = F1DE95F369838540232593BF /* pno-87-1.caf */; };
 		D2E240C801B9FA1CA4D22B33 /* sax-60-s.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9FC9FBF5827AAB4DC69DF3E6 /* sax-60-s.caf */; };
 		D3AEB5F7AD33AAC65EB45B56 /* hat-1a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 29152D630B2A7349CB6B44A0 /* hat-1a.caf */; };
+		D5029BEB3506AC653127CFDC /* Demo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44B2DAD4F8E7620603BBBB6D /* Demo.swift */; };
 		D54DBEF9886A6BA2B3B5C222 /* hatOpen-2b.caf in Resources */ = {isa = PBXBuildFile; fileRef = EAF45756394F138573E312EB /* hatOpen-2b.caf */; };
 		D599C23DE48FC54D525D70FB /* pno-55-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 30B01F5D4CC045404821126D /* pno-55-1.caf */; };
 		D6883A965C5C32FBABBBC4D9 /* ride-3a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 7C44911616425535DBCE3DB5 /* ride-3a.caf */; };
@@ -367,6 +368,7 @@
 		42C68CEB30A9550B8E2FF38A /* hat-2b.caf */ = {isa = PBXFileReference; path = "hat-2b.caf"; sourceTree = "<group>"; };
 		43CCE047F0CB28E4512B87DE /* tomLo-0b.caf */ = {isa = PBXFileReference; path = "tomLo-0b.caf"; sourceTree = "<group>"; };
 		449E04F01FEF02B7B2D08BA8 /* tomHi-2a.caf */ = {isa = PBXFileReference; path = "tomHi-2a.caf"; sourceTree = "<group>"; };
+		44B2DAD4F8E7620603BBBB6D /* Demo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Demo.swift; sourceTree = "<group>"; };
 		4502C7364A5FFDD4E741859E /* snare-4c.caf */ = {isa = PBXFileReference; path = "snare-4c.caf"; sourceTree = "<group>"; };
 		4580A037C6F1F258C5A07C3D /* Takt-Mac.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Takt-Mac.entitlements"; sourceTree = "<group>"; };
 		45F5942DC869BC3CF9B9B575 /* saxl-70.caf */ = {isa = PBXFileReference; path = "saxl-70.caf"; sourceTree = "<group>"; };
@@ -699,6 +701,7 @@
 				8DB500F26FA68652350CA0F7 /* Calibration.swift */,
 				16C45267D4102101E567236B /* ChannelStrip.swift */,
 				F8C3928533C5BB6418CCBE93 /* CoachPanel.swift */,
+				44B2DAD4F8E7620603BBBB6D /* Demo.swift */,
 				062DF873145E0C3C0BDEFAFF /* Hands.swift */,
 				880D9001CE96FC6DB96D7635 /* KeyboardStrip.swift */,
 				D59BC4A000D534C926E8B67C /* Lesson.swift */,
@@ -1318,6 +1321,7 @@
 				913188C502DC22FAEB177062 /* ChannelStrip.swift in Sources */,
 				0D0C5243B3D5B74AC76FC97F /* CoachPanel.swift in Sources */,
 				FF098609992B64F48C556EAA /* DebugHooks.swift in Sources */,
+				D5029BEB3506AC653127CFDC /* Demo.swift in Sources */,
 				C2044003D5825445641057D4 /* EarGame.swift in Sources */,
 				1BDDD4CFEF6C835AD96A062C /* EarGameScreen.swift in Sources */,
 				F4A31AAEC5986060A7AE5C80 /* Hands.swift in Sources */,
@@ -1394,7 +1398,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 36;
+				CURRENT_PROJECT_VERSION = 37;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -1461,7 +1465,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 36;
+				CURRENT_PROJECT_VERSION = 37;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;

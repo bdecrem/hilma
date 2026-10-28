@@ -127,7 +127,11 @@ struct FormFooter: View {
         HStack(spacing: 14) {
             // fixedSize: inside the HStack the labels were measured without their tracking
             // and truncated by a character even with room to spare.
-            if let n = state.countIn {
+            if state.demo {
+                Text(state.countIn.map { "Watching · count-in \($0)" } ?? "Watching")
+                    .foregroundStyle(Palette.signal)
+                    .fixedSize()
+            } else if let n = state.countIn {
                 Text("Count-in \(n)")
                     .foregroundStyle(Palette.signal)
                     .fixedSize()

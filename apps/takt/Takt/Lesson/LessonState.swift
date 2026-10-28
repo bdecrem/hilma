@@ -93,6 +93,9 @@ struct LessonState {
     var rightHand = false
     /// The tempo the step counts at: the knob's tick.
     var stepTempo: Int? = nil
+    /// Show me: the step is being played for you (the intro steps aside); and whether it can be.
+    var demo = false
+    var canDemo = false
 
     var nextBar: Int { (bar + 1) % form.count }
 

@@ -663,34 +663,53 @@ final class LessonEngine {
             o.coach = next != chord ? coach.change!.filled(["next": next]) : coach.hold!.filled(["chord": chord])
         }
 
-        // The latest expected note at or before now, and the one after it (none on a card).
-        if expected.isEmpty || !scoring {
-            o.nowNote = nil
-            o.nextNote = nil
-            o.nowNotes = []
-            o.nextNotes = []
-            o.fingers = [:]
-            o.nowIndex = nil
-        } else {
-            var fingers: [Int: Int] = [:]
-            // A run (a step with a cycle) numbers every key it uses; a bar's pattern only its own.
-            for e in expected where step.cycle != nil || e.bar == barInForm { if let f = e.finger { fingers[e.display] = f } }
-            o.fingers = fingers
-            let t = heardTick - Double(chorus * loopTicks)
-            let i = expected.lastIndex { Double($0.tick) <= t + 1e-6 } ?? expected.count - 1
-            let now = expected[i]
-            // The chord at this tick, and the next tick's chord (wrapping), keys that differ.
-            let nowKeys = Set(expected.filter { $0.tick == now.tick }.map(\.display))
-            var j = (i + 1) % expected.count
-            while expected[j].tick == now.tick && j != i { j = (j + 1) % expected.count }
-            let nextKeys = Set(expected.filter { $0.tick == expected[j].tick }.map(\.display)).subtracting(nowKeys)
-            o.nowNote = now.display
-            o.nowIndex = i
-            o.nextNote = nextKeys.min()
-            o.nowNotes = nowKeys
-            o.nextNotes = nextKeys
-        }
+        // The latest expected note at or before now, and the one after it (none on a card, or
+        // while nothing is scored).
+        let c = expected.isEmpty || !scoring ? Cue() : cue(at: heardTick)
+        o.nowNote = c.nowNote
+        o.nextNote = c.nextNote
+        o.nowNotes = c.nowNotes
+        o.nextNotes = c.nextNotes
+        o.fingers = c.fingers
+        o.nowIndex = c.nowIndex
         if o != output { output = o }
+    }
+
+    /// What the keyboard and the hand show at a transport tick: the keys to press now and
+    /// next, the fingers, the run's position.
+    struct Cue: Equatable {
+        var nowNote: Int?
+        var nextNote: Int?
+        var nowNotes: Set<Int> = []
+        var nextNotes: Set<Int> = []
+        var fingers: [Int: Int] = [:]
+        var nowIndex: Int?
+    }
+
+    /// The cue at an absolute tick, from the step's expected notes alone (Show me plays the
+    /// step with nothing scored, on an intro too). Empty on a card.
+    func cue(at tick: Double) -> Cue {
+        guard !expected.isEmpty else { return Cue() }
+        let absBar = bar(at: tick)
+        let barInForm = ((absBar % bars) + bars) % bars
+        let chorus = Int((Double(absBar) / Double(bars)).rounded(.down))
+        var c = Cue()
+        // A run (a step with a cycle) numbers every key it uses; a bar's pattern only its own.
+        for e in expected where step.cycle != nil || e.bar == barInForm { if let f = e.finger { c.fingers[e.display] = f } }
+        let t = tick - Double(chorus * loopTicks)
+        let i = expected.lastIndex { Double($0.tick) <= t + 1e-6 } ?? expected.count - 1
+        let now = expected[i]
+        // The chord at this tick, and the next tick's chord (wrapping), keys that differ.
+        let nowKeys = Set(expected.filter { $0.tick == now.tick }.map(\.display))
+        var j = (i + 1) % expected.count
+        while expected[j].tick == now.tick && j != i { j = (j + 1) % expected.count }
+        let nextKeys = Set(expected.filter { $0.tick == expected[j].tick }.map(\.display)).subtracting(nowKeys)
+        c.nowNote = now.display
+        c.nowIndex = i
+        c.nextNote = nextKeys.min()
+        c.nowNotes = nowKeys
+        c.nextNotes = nextKeys
+        return c
     }
 
     static func word(_ n: Int) -> String {

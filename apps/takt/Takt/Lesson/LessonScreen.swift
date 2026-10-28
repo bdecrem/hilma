@@ -16,6 +16,8 @@ struct LessonControls {
     var nextStep: () -> Void = {}
     /// Back to the lessons menu.
     var back: () -> Void = {}
+    /// Show me: the step played for you; again to stop it.
+    var showMe: () -> Void = {}
 }
 
 private struct LessonControlsKey: EnvironmentKey {
@@ -71,7 +73,7 @@ struct WideLessonLayout: View {
 
                 VStack(spacing: 22) {
                     GeometryReader { geo in
-                        if let panel = StepPanel(state: state) {
+                        if !state.demo, let panel = StepPanel(state: state) {
                             panel.frame(width: geo.size.width, height: geo.size.height)
                         } else if let card = state.card {
                             CardPanel(text: card, title: state.stepTitle)
@@ -140,13 +142,17 @@ struct StackedLessonLayout: View {
                         NoteNeedle(mark: state.lastNote, compact: true)
                     }
                 }
-                if let theme = state.theme, state.intro == nil, state.complete == nil {
-                    ThemeCard(theme: theme, fingers: state.handFingers, right: state.rightHand, compact: true)
-                        .padding(.top, 10)
+                if let theme = state.theme, state.intro == nil || state.demo, state.complete == nil {
+                    // The session's card, and beside it Show me (the top bar has no room for it).
+                    HStack(spacing: 10) {
+                        ThemeCard(theme: theme, fingers: state.handFingers, right: state.rightHand, compact: true)
+                        ShowMeButton(on: state.demo, enabled: state.canDemo, size: 44, compact: true)
+                    }
+                    .padding(.top, 10)
                 }
                 Spacer(minLength: 16)
 
-                if let panel = StepPanel(state: state) {
+                if !state.demo, let panel = StepPanel(state: state) {
                     panel.frame(height: side * 3 + gap * 2)
                 } else if let card = state.card {
                     // The card holds the pads' height, so nothing below it moves.

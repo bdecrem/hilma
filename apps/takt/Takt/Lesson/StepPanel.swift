@@ -61,8 +61,14 @@ struct StepPanel: View {
                     .dataLabel(11)
                     .foregroundStyle(Palette.muted)
                 about(i, compact: compact, titleSize: compact ? 28 : 40, hand: true)
-                PrimaryButton(title: i.jam ? "Play" : "Start", action: controls.beginStep)
-                    .padding(.top, 4)
+                // Start, and beside it Show me: watch it played first, then start.
+                HStack(spacing: 10) {
+                    PrimaryButton(title: i.jam ? "Play" : "Start", action: controls.beginStep)
+                    if state.canDemo {
+                        QuietButton(title: "Show me first", action: controls.showMe)
+                    }
+                }
+                .padding(.top, 4)
             }
         }
         .padding(compact ? 16 : 24)
@@ -111,9 +117,15 @@ struct StepPanel: View {
                     Text(s.rightHand ? "Right hand · fingering" : "Left hand · fingering")
                         .dataLabel(10)
                         .foregroundStyle(Palette.muted)
-                    HStack(spacing: 4) {
-                        ForEach(Array(s.fingering.enumerated()), id: \.offset) { _, f in
-                            FingerBadge(finger: f, onFill: false)
+                    // Two octaves is 15 fingers: on the phone, more than eight wrap onto a second row.
+                    let perRow = compact && s.fingering.count > 8 ? (s.fingering.count + 1) / 2 : s.fingering.count
+                    VStack(alignment: .leading, spacing: 4) {
+                        ForEach(Array(stride(from: 0, to: s.fingering.count, by: max(1, perRow))), id: \.self) { start in
+                            HStack(spacing: 4) {
+                                ForEach(start..<min(start + perRow, s.fingering.count), id: \.self) { i in
+                                    FingerBadge(finger: s.fingering[i], onFill: false)
+                                }
+                            }
                         }
                     }
                 }

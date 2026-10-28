@@ -349,6 +349,24 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   those beats). The engine publishes the theme with the step's fingers and hand
   (`handFingers`, `rightHand`). Checks 168/168.
 
+- **Show me (practice performance): 0.1 (37), 2026-10-28.** Bart: "a little UI item… when I
+  click on it (on macOS), then I can watch a performance of the practice play, hear how it's
+  supposed to sound and see the keys light up, or the hand move". `Lesson/Demo.swift` plans
+  the step's expected notes from the top (a chord step: the chorus; a run: two passes of its
+  cycle; each note held 0.9 of the way to the next, downbeats stronger); `Player.toggleDemo`
+  restarts the band from the top (count-in and all, at the knob's tempo, so you can slow it
+  down and watch), schedules every note on the monitor (`.schedule`), lights each key as it is
+  heard (`pressed`), and ends with `.stop` at the last bar ("Your turn." until Play). The
+  engine's cue (`LessonEngine.cue(at:)`, factored out of `update()`) lights the now/next keys,
+  the fingers and the run's hand from the transport alone, so the demo works on an intro
+  (the intro steps aside while it plays) before anything is scored; your own keys sound but
+  score nothing during it; Stop or the button ends it. UI: the Mac transport bar has an eye
+  pill "Show me" / "Watching" (`ShowMeButton`, lit `signal`) before play/stop; the phone's
+  sits beside the theme card (its top bar has no room); every intro has "Show me first"
+  beside Start; the footer reads "Watching". DEBUG `-Demo 1` starts it at launch. Known: on
+  the phone a long intro (Two octaves) scrolls, so Start and Show me first sit below the fold;
+  its 15-finger row now wraps to two rows there. Checks 175/175.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

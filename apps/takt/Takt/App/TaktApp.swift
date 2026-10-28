@@ -202,7 +202,8 @@ struct LiveLessonScreen: View {
                 continueCard: player.continueCard,
                 beginStep: player.beginStep,
                 nextStep: player.nextStep,
-                back: { app.route = .module }
+                back: { app.route = .module },
+                showMe: player.toggleDemo
             ))
     }
 }

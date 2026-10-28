@@ -877,6 +877,51 @@ enum LessonCheck {
         check("the folded thumb sits under the palm", out.minX < 12 && folded.minX > 60 && HandStyle.allCases.count == 6
               && HandStyle(rawValue: "skizze") == .skizze)
 
+        // Show me: the demo plan, and the engine's cue on an intro (nothing scored).
+        do {
+            let bar = 4 * tpb
+            let shuffle = lesson.steps[2]
+            let shuffled = lesson.expected(shuffle, ticksPerBeat: tpb)
+            let plan = Demo.plan(expected: shuffled, loopTicks: loop, ticksPerBar: bar, cycle: nil)
+            check("show me: a chord step plays the whole chorus, every expected note once",
+                  plan.endTicks == Double(loop) && plan.presses.count == shuffled.count
+                  && plan.presses.map(\.tick) == shuffled.map { Double($0.tick) }.sorted(),
+                  "\(plan.presses.count) notes, ends at \(Int(plan.endTicks))")
+            check("show me: the chord on the 1 rings for most of the bar, stronger on the downbeat",
+                  plan.presses.allSatisfy { $0.lengthTicks == Double(bar) * 0.9 && $0.velocity == 0.8 })
+            let minor = Lesson.bundled("lesson-S1m")
+            let up = minor.steps[0]
+            let upNotes = minor.expected(up, ticksPerBeat: tpb)
+            let runPlan = Demo.plan(expected: upNotes, loopTicks: loop, ticksPerBar: bar, cycle: up.cycle)
+            check("show me: a run shows two passes (6 bars of a 3-bar cycle), 16 notes",
+                  runPlan.endTicks == Double(6 * bar) && runPlan.presses.count == 16
+                  && runPlan.presses.allSatisfy { $0.tick < runPlan.endTicks },
+                  "\(runPlan.presses.count) notes, ends at \(Int(runPlan.endTicks))")
+            let last = runPlan.presses[7]
+            check("show me: the last note of a run holds through the rest bar",
+                  last.tick == Double(7 * tpb) && last.lengthTicks == (Double(3 * bar) - last.tick) * 0.9,
+                  "tick \(Int(last.tick)) for \(Int(last.lengthTicks)) ticks")
+            let updown = minor.steps[2]
+            let udPlan = Demo.plan(expected: minor.expected(updown, ticksPerBeat: tpb), loopTicks: loop, ticksPerBar: bar, cycle: updown.cycle)
+            check("show me: notes a beat apart hold for most of the beat", udPlan.presses[1].lengthTicks == Double(tpb) * 0.9
+                  && udPlan.presses.count == 30)
+            // The cue on an intro: the gated engine scores nothing, the demo still lights keys.
+            let gated = LessonEngine(lesson: minor, ticksPerBeat: tpb, gated: true)
+            gated.heard(tick: 0, tempo: 60, rolling: true, epoch: 1)
+            gated.heard(tick: Double(2 * tpb) + 1, tempo: 60, rolling: true, epoch: 1)
+            let cue = gated.cue(at: Double(2 * tpb) + 1)
+            check("show me: the engine's cue follows the tick on an intro while its output stays dark",
+                  gated.output.intro != nil && gated.output.nowNotes.isEmpty && cue.nowIndex == 2 && cue.nowNote == 60 /* C4, the 3rd note of A minor */
+                  && cue.nextNote == 62 && cue.fingers[60] == 3,
+                  "cue now \(cue.nowNote ?? -1) index \(cue.nowIndex ?? -1) next \(cue.nextNote ?? -1)")
+            let begun = LessonEngine(lesson: lesson, ticksPerBeat: tpb)
+            begun.heard(tick: Double(4 * bar) + 5, tempo: 70, rolling: true, epoch: 1)
+            let c = begun.cue(at: Double(4 * bar) + 5)
+            check("show me: the cue is what the keyboard shows when scoring",
+                  c.nowNotes == begun.output.nowNotes && c.nextNotes == begun.output.nextNotes && c.fingers == begun.output.fingers
+                  && c.nowIndex == begun.output.nowIndex && c.nowNotes == [53])
+        }
+
         print("LessonCheck: \(passed) passed, \(failed) failed")
         return failed == 0
     }
