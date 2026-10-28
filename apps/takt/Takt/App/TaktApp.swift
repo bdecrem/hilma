@@ -38,8 +38,9 @@ struct TaktApp: App {
         let audio = AudioEngine(band: .bundled(lesson.band), tempo: tempo)
         let player = Player(audio: audio, lesson: lesson, progress: progress)
         audio.start(silent: d.bool(forKey: "Silent"))
-        // The band on the menu is a setting (Settings → Sound); a lesson always has it.
-        if !d.bool(forKey: "Paused") && RootView.menuMusicOn { audio.send(.play) }
+        // The band on the menu is a setting (Settings → Sound); a lesson always has it. With the
+        // launch's count-in it waits and comes in on the downbeat the count lands on.
+        if !d.bool(forKey: "Paused") && RootView.menuMusicOn && !CountInLaunch.pending { audio.send(.play) }
         #if DEBUG
         // `-Step`, `-Lesson` and `-StepComplete` are applied in AppModel.init, after `-Module`.
         DebugHooks.recordIfRequested(audio)
@@ -54,7 +55,13 @@ struct TaktApp: App {
         WindowGroup {
             Group {
                 if let player = app.player {
-                    RootView(app: app, player: player)
+                    CountInHost(bpm: Double(player.tempo), bandTitle: player.audio.band.name, onFinished: {
+                        if !UserDefaults.standard.bool(forKey: "Paused") && RootView.menuMusicOn && !player.playing {
+                            player.audio.send(.play)
+                        }
+                    }) {
+                        RootView(app: app, player: player)
+                    }
                 } else {
                     LessonScreen(state: .launchFrame)
                 }

@@ -490,6 +490,22 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   and darker. **The menu:** the M2 "The Right Hand" stub is gone (it is listed as coming soon
   inside Blues Progressions); the A1 result no longer claims "A2 is unlocked".
 
+- **The count-in launch: 0.1 (44), 2026-10-28.** Bart: "add a splash screen… refer to
+  misc/takt-countin.zip for vibe & general approach". `Menu/CountInSplash.swift`: on a cold
+  launch the app counts you in for one bar at the band's tempo (TAKT, four beat squares lit one
+  at a time, "Count-in · 4/4", the band card with its name and BPM), then hands off on the next
+  downbeat with a 0.25 s fade. The package's own tokens and fonts were dropped for ours
+  (`Palette`, `Font.display`, `dataLabel`, `bodyText`), forced dark in either theme; the launch
+  screen already was the ground (`LaunchBackground` #0D0D0D). Integrated with the engine: when
+  the count-in shows, the launch doesn't start the band (`CountInLaunch.pending` in
+  `TaktApp.makePlayer`); `CountInHost`'s `onFinished` starts it, so the band comes in on the 1
+  the count lands on (simulator: first sound 3.65 s after launch at 90 bpm, at once without the
+  splash). Menu music off (Bart's Mac): the count, then a quiet menu. Tap skips; Reduce Motion
+  holds beat 1 for 0.6 s; the iPhone ticks a haptic per beat (medium on the 1), no sound. Wide
+  layout from 700 pt (the Mac window), stacked on the iPhone. Once per process (not per
+  window). DEBUG launches with `-Silent`, `-Route`, `-SnapshotAt`, `-PreviewFrame`,
+  `-LessonCheck` or `-RenderTo` skip it; `-Splash 1` / `-Splash 0` decides outright.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

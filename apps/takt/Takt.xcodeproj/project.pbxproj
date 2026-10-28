@@ -44,6 +44,7 @@
 		164B2B354495704EEEECA649 /* hat-2b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 42C68CEB30A9550B8E2FF38A /* hat-2b.caf */; };
 		1744D865E2CEF4FC503D0C16 /* syn-bleep-69-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = DA083ED5D39D652FA1491D9E /* syn-bleep-69-2.caf */; };
 		1778659F4D1801599A0DC73B /* syn-roomtone.caf in Resources */ = {isa = PBXBuildFile; fileRef = A6F40AF6B06F77C68FD5D4E4 /* syn-roomtone.caf */; };
+		17DAC0C7D741F74668A07811 /* CountInSplash.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82DA1372D201825A42F58830 /* CountInSplash.swift */; };
 		1A3846D26D04880AB5DB2148 /* syn-subMin-34.caf in Resources */ = {isa = PBXBuildFile; fileRef = F4B963CD70D0F5D8A2B44E39 /* syn-subMin-34.caf */; };
 		1A3E953AA2D28EFF246BF443 /* pno-93-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = E4C4ED92F717DBEEBE684CD6 /* pno-93-1.caf */; };
 		1A605ED7EF5BC5CA807A9C52 /* saxl-56.caf in Resources */ = {isa = PBXBuildFile; fileRef = EFFA08C2D957ECE763A247E6 /* saxl-56.caf */; };
@@ -740,6 +741,7 @@
 		82ADF327CA05A66BBF1C09D6 /* syn-stabMin-52-0.caf */ = {isa = PBXFileReference; path = "syn-stabMin-52-0.caf"; sourceTree = "<group>"; };
 		82C6BD3B224C6C9D16ADDA69 /* kick-0b.caf */ = {isa = PBXFileReference; path = "kick-0b.caf"; sourceTree = "<group>"; };
 		82D568263799DBC86389B4D2 /* ride-4a.caf */ = {isa = PBXFileReference; path = "ride-4a.caf"; sourceTree = "<group>"; };
+		82DA1372D201825A42F58830 /* CountInSplash.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountInSplash.swift; sourceTree = "<group>"; };
 		82DFE499B4CD5206FAEBFFFB /* syn-rhodes-72-1.caf */ = {isa = PBXFileReference; path = "syn-rhodes-72-1.caf"; sourceTree = "<group>"; };
 		844127AD3D01F28724943CC8 /* syn-bleep-57-2.caf */ = {isa = PBXFileReference; path = "syn-bleep-57-2.caf"; sourceTree = "<group>"; };
 		8459B1B5C17FEBE776BF938A /* tomLo-1a.caf */ = {isa = PBXFileReference; path = "tomLo-1a.caf"; sourceTree = "<group>"; };
@@ -1065,6 +1067,7 @@
 			isa = PBXGroup;
 			children = (
 				F8D5E1401A830BE79F20D77E /* CalibrationScreen.swift */,
+				82DA1372D201825A42F58830 /* CountInSplash.swift */,
 				8DA328066B3FE950BF61365C /* EarGameScreen.swift */,
 				9EB615A2BF73A5830696480A /* LessonsScreen.swift */,
 				3946539C0524DDA802585674 /* MapScreen.swift */,
@@ -2115,6 +2118,7 @@
 				913188C502DC22FAEB177062 /* ChannelStrip.swift in Sources */,
 				D45B67EBB5C040CF2610152D /* Charting.swift in Sources */,
 				0D0C5243B3D5B74AC76FC97F /* CoachPanel.swift in Sources */,
+				17DAC0C7D741F74668A07811 /* CountInSplash.swift in Sources */,
 				FF098609992B64F48C556EAA /* DebugHooks.swift in Sources */,
 				D5029BEB3506AC653127CFDC /* Demo.swift in Sources */,
 				27010E4416321E682911278A /* DubChamber.swift in Sources */,
@@ -2198,7 +2202,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 43;
+				CURRENT_PROJECT_VERSION = 44;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -2265,7 +2269,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 43;
+				CURRENT_PROJECT_VERSION = 44;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;
