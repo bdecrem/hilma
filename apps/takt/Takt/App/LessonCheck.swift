@@ -922,6 +922,83 @@ enum LessonCheck {
                   && c.nowIndex == begun.output.nowIndex && c.nowNotes == [53])
         }
 
+        // Stage: the songs load and hold together; the game engine judges, scores and adapts.
+        do {
+            let songs = Song.catalog.compactMap { name in
+                Bundle.main.url(forResource: name, withExtension: "json") == nil ? nil : Song.bundled(name)
+            }
+            check("stage: the set list loads (\(songs.count) of \(Song.catalog.count) songs in the bundle)", !songs.isEmpty)
+            for s in songs {
+                let ok = Song.PartKey.allCases.allSatisfy { k in
+                    let hard = s.chart(k, level: 3), easy = s.chart(k, level: 1)
+                    let span = s.keyboard(k)
+                    return !easy.isEmpty && hard.count > easy.count && hard.allSatisfy { span.contains($0.n) }
+                        && hard.last!.t < s.bars * s.ticksPerBar
+                }
+                check("stage: \(s.meta.title): both parts, easy inside hard, inside the keys, \(s.length)", ok,
+                      "chords \(s.chart(.chords, level: 1).count)/\(s.chart(.chords, level: 2).count)/\(s.chart(.chords, level: 3).count) · melody \(s.chart(.melody, level: 1).count)/\(s.chart(.melody, level: 2).count)/\(s.chart(.melody, level: 3).count) · keys \(s.keyboard(.melody))")
+            }
+            if let song = songs.first {
+                let tpbar = song.ticksPerBar
+                let ms = 60000 / (Double(song.meta.tempo) * Double(tpb))
+                func run(_ difficulty: GameEngine.Difficulty, play: (Song.Note, Int) -> Double?) -> GameEngine {
+                    let g = GameEngine(song: song, part: .melody, difficulty: difficulty)
+                    var tick = -Double(tpbar)
+                    var i = 0
+                    while tick < Double(song.endTick) {
+                        // Presses for the notes in this frame's span (a frame is 4 ticks).
+                        while i < g.notes.count, Double(g.notes[i].t) <= tick + 4 {
+                            if g.active(i), let offset = play(g.notes[i], i) {
+                                let at = Double(g.notes[i].t) + offset / ms
+                                g.heard(tick: at, msPerTick: ms)
+                                g.played(note: g.notes[i].n, tick: at, msPerTick: ms)
+                            }
+                            i += 1
+                        }
+                        tick += 4
+                        g.heard(tick: tick, msPerTick: ms)
+                    }
+                    return g
+                }
+                let perfect = run(.easy) { _, _ in 0 }
+                let easyNotes = song.chart(.melody, level: 1).count
+                check("stage: perfect on easy hits every note, no misses, grade S", perfect.perfect == easyNotes && perfect.missed == 0
+                      && perfect.result().grade == "S" && perfect.finished && perfect.maxCombo == easyNotes,
+                      "\(perfect.perfect)/\(easyNotes), score \(perfect.score)")
+                check("stage: the multiplier climbs at 8, 16 and 32", perfect.multiplier == 4 && GameEngine.steps == [8, 16, 32])
+                let late = run(.easy) { _, i in i % 2 == 0 ? 70 : 0 }
+                check("stage: 70 ms late is Good, on the tick is Perfect", late.good > 0 && late.perfect > 0 && late.missed == 0
+                      && late.score < perfect.score, "\(late.perfect) perfect, \(late.good) good")
+                var k = 0
+                let sloppy = run(.easy) { _, _ in
+                    k += 1
+                    return k % 3 == 0 ? nil : 0
+                }
+                check("stage: a skipped note is a miss and breaks the combo", sloppy.missed == easyNotes / 3
+                      && sloppy.maxCombo <= 2 && sloppy.result().grade != "S", "\(sloppy.missed) missed, best combo \(sloppy.maxCombo)")
+                let wrong = GameEngine(song: song, part: .melody, difficulty: .easy)
+                wrong.heard(tick: 0, msPerTick: ms)
+                wrong.played(note: 61, tick: 0, msPerTick: ms)
+                check("stage: a key no note wants is an extra, not a hit", wrong.extras == 1 && wrong.perfect + wrong.good == 0)
+                let adaptive = run(.adaptive) { _, _ in 0 }
+                // Four judged notes before it moves: the sparse first bars keep it easy one block more.
+                check("stage: adaptive climbs to hard on clean playing", adaptive.level(atBar: 0) == 1 && adaptive.level(atBar: 4) == 1
+                      && adaptive.level(atBar: 8) == 2 && adaptive.level(atBar: 12) == 3 && adaptive.result().level == 3
+                      && adaptive.perfect > easyNotes, "levels \(adaptive.blockLevel.prefix(4)), \(adaptive.perfect) hits")
+                let eases = run(.adaptive) { n, _ in n.t / tpbar >= 8 && n.t / tpbar < 12 ? nil : 0 }
+                check("stage: four missed bars ease it off, clean ones bring it back", eases.level(atBar: 8) == 2
+                      && eases.level(atBar: 12) == 1 && eases.level(atBar: 20) == 2, "levels \(eases.blockLevel.prefix(6))")
+                let hardScore = run(.hard) { _, _ in 0 }.score
+                check("stage: hard pays twice easy per note", hardScore > perfect.score * 2,
+                      "hard \(hardScore) vs easy \(perfect.score)")
+                let r = ProgressStore.ScoreRecord.trimmed((0..<60).map { i in
+                    ProgressStore.ScoreRecord(GameEngine.Result(song: "s", part: "melody", difficulty: "easy", score: i, notes: 1, perfect: 1,
+                                                                good: 0, missed: 0, extras: 0, maxCombo: 1, accuracy: 1, level: 1, grade: "S"))
+                })
+                check("stage: the board keeps the best 50 a song, best first", r.count == 50 && r.first?.score == 59 && r.last?.score == 10)
+            }
+        }
+
         print("LessonCheck: \(passed) passed, \(failed) failed")
         return failed == 0
     }

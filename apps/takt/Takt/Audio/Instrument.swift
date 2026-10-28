@@ -48,6 +48,15 @@ final class SampledInstrument {
     private let samples: UnsafeMutableBufferPointer<SampleBuffer>
     private var robin = 0
 
+    /// One instance per name: bands share the piano and the kit, loaded once. Main thread.
+    private static var cache: [String: SampledInstrument] = [:]
+    static func shared(_ name: String) -> SampledInstrument {
+        if let i = cache[name] { return i }
+        let i = SampledInstrument(name)
+        cache[name] = i
+        return i
+    }
+
     init(_ name: String, manifest: InstrumentManifest = .bundled) {
         guard let entry = manifest.instruments[name] else { fatalError("no instrument \(name) in instruments.json") }
         release = entry.release

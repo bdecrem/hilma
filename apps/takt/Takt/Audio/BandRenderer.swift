@@ -104,8 +104,9 @@ final class BandRenderer {
     let sampleRate: Double
     let ticksPerBeat: Int
     let ticksPerBar: Int
-    let loopTicks: Int
-    let chorusBars: Int
+    /// The loaded band's: a song is longer than the lesson's loop (`.band` swaps them).
+    private(set) var loopTicks: Int
+    private(set) var chorusBars: Int
 
     // MARK: Cross-thread
 
@@ -131,34 +132,54 @@ final class BandRenderer {
         var lengthTicks: Int
         /// Pitched: index into `instruments`.
         var instrument: Int
+        /// Pitched: the channel's level from the band's `levels`.
+        var gain: Float = 1
     }
 
-    private struct DrumSound {
+    fileprivate struct DrumSound {
         var kit: SampledInstrument
         var gain: Float
         var group: Int
         var chokes: Int
     }
 
-    /// A band's events, built on the main thread by `load`, kept alive for the renderer.
+    /// A band as the renderer plays it: its events, its kit, its instruments and the monitor's,
+    /// its length. Built on the main thread by `load`, kept alive for the renderer (`.band`
+    /// swaps the whole set: a song brings its own kit and its synth for your keys).
     final class Events {
         fileprivate let buffer: UnsafeMutableBufferPointer<Event>
+        fileprivate let drumSounds: UnsafeMutableBufferPointer<DrumSound>
+        fileprivate let clickSound: Int
+        fileprivate let instruments: [SampledInstrument]
+        fileprivate let monitor: Int
+        /// Your keys' level (the band's `levels["monitor"]`: a song's part).
+        fileprivate let monitorGain: Float
+        let loopTicks: Int
+        let chorusBars: Int
         let name: String
-        fileprivate init(_ buffer: UnsafeMutableBufferPointer<Event>, name: String) {
+        fileprivate init(_ buffer: UnsafeMutableBufferPointer<Event>, drumSounds: UnsafeMutableBufferPointer<DrumSound>,
+                         clickSound: Int, instruments: [SampledInstrument], monitor: Int, monitorGain: Float, loopTicks: Int,
+                         chorusBars: Int, name: String) {
             self.buffer = buffer
+            self.drumSounds = drumSounds
+            self.clickSound = clickSound
+            self.instruments = instruments
+            self.monitor = monitor
+            self.monitorGain = monitorGain
+            self.loopTicks = loopTicks
+            self.chorusBars = chorusBars
             self.name = name
         }
     }
 
     private var events: UnsafeMutableBufferPointer<Event>
-    private let soundNames: [String]
-    private let instrumentNames: [String]
     private var transpose = 0
-    private let drumSounds: UnsafeMutableBufferPointer<DrumSound>
-    private let clickSound: Int
-    /// The pitched instruments, by name in `instrumentIndex`; `monitor` is the player's piano.
-    private let instruments: [SampledInstrument]
-    private let monitor: Int
+    private var drumSounds: UnsafeMutableBufferPointer<DrumSound>
+    private var clickSound: Int
+    /// The pitched instruments of the loaded band; `monitor` is the one your keys play.
+    private var instruments: [SampledInstrument]
+    private var monitor: Int
+    private var monitorGain: Float = 1
 
     private var commands: [EngineCommand] = []
 
@@ -243,38 +264,13 @@ final class BandRenderer {
         mach_timebase_info(&mach)
         hostTicksPerSecond = 1e9 * Double(mach.denom) / Double(mach.numer)
 
-        // Drum sounds by name; a closed hat (or the foot) chokes the open one.
-        let manifest = InstrumentManifest.bundled
-        let names = band.sounds.keys.sorted()
-        drumSounds = .allocate(capacity: names.count)
-        for (i, name) in names.enumerated() {
-            let s = band.sounds[name]!
-            drumSounds.initializeElement(at: i, to: DrumSound(
-                kit: SampledInstrument(s.kit, manifest: manifest), gain: Float(pow(10, s.gainDb / 20)),
-                group: s.kit == "hatOpen" ? 1 : 0, chokes: s.kit == "hat" || s.kit == "hatFoot" ? 1 : 0))
-        }
-
-        guard let click = names.firstIndex(of: "xstick") else { fatalError("band: no xstick for the click") }
-        clickSound = click
-
-        // Pitched instruments: each channel's own, any a note names, and the monitor's. Every
-        // band the renderer plays shares this kit and these instruments (`load` checks).
-        var instrumentNames: [String] = []
-        func instrument(_ name: String) -> Int {
-            if let i = instrumentNames.firstIndex(of: name) { return i }
-            instrumentNames.append(name)
-            return instrumentNames.count - 1
-        }
-        for key in ["bass", "keys", "horns", "monitor"] {
-            guard let name = band.instruments[key] else { fatalError("band: no instrument for \(key)") }
-            _ = instrument(name)
-        }
-        for n in band.channels.bass + band.channels.keys + band.channels.horns { if let i = n.i { _ = instrument(i) } }
-        monitor = instrumentNames.firstIndex(of: band.instruments["monitor"]!)!
-        instruments = instrumentNames.map { SampledInstrument($0, manifest: manifest) }
-        self.instrumentNames = instrumentNames
-        soundNames = names
-        events = Self.events(of: band, sounds: names, instruments: instrumentNames)
+        let first = Self.load(band)
+        events = first.buffer
+        drumSounds = first.drumSounds
+        clickSound = first.clickSound
+        instruments = first.instruments
+        monitor = first.monitor
+        monitorGain = first.monitorGain
 
         busL = .allocate(capacity: maxChunk * 5)
         busR = .allocate(capacity: maxChunk * 5)
@@ -291,6 +287,38 @@ final class BandRenderer {
         publish(hostTime: nil, frames: 0)
     }
 
+    /// A band as the renderer plays it, built on the main thread: its kit (a closed hat or the
+    /// foot chokes the open one), its pitched instruments (each channel's own, any a note
+    /// names, and the monitor's; shared by name across bands), its events in tick order.
+    private static func load(_ band: BandData) -> Events {
+        let names = band.sounds.keys.sorted()
+        let drumSounds = UnsafeMutableBufferPointer<DrumSound>.allocate(capacity: names.count)
+        for (i, name) in names.enumerated() {
+            let s = band.sounds[name]!
+            drumSounds.initializeElement(at: i, to: DrumSound(
+                kit: SampledInstrument.shared(s.kit), gain: Float(pow(10, s.gainDb / 20)),
+                group: s.kit == "hatOpen" ? 1 : 0, chokes: s.kit == "hat" || s.kit == "hatFoot" ? 1 : 0))
+        }
+        guard let click = names.firstIndex(of: "xstick") else { fatalError("band \(band.name): no xstick for the click") }
+
+        var instrumentNames: [String] = []
+        func instrument(_ name: String) -> Int {
+            if let i = instrumentNames.firstIndex(of: name) { return i }
+            instrumentNames.append(name)
+            return instrumentNames.count - 1
+        }
+        for key in ["bass", "keys", "horns", "monitor"] {
+            guard let name = band.instruments[key] else { fatalError("band \(band.name): no instrument for \(key)") }
+            _ = instrument(name)
+        }
+        for n in band.channels.bass + band.channels.keys + band.channels.horns { if let i = n.i { _ = instrument(i) } }
+        let monitor = instrumentNames.firstIndex(of: band.instruments["monitor"]!)!
+        let instruments = instrumentNames.map { SampledInstrument.shared($0) }
+        return Events(events(of: band, sounds: names, instruments: instrumentNames), drumSounds: drumSounds, clickSound: click,
+                      instruments: instruments, monitor: monitor, monitorGain: Float(pow(10, (band.levels?["monitor"] ?? 0) / 20)),
+                      loopTicks: band.loopTicks, chorusBars: band.chorusBars, name: band.name)
+    }
+
     /// A band's events as the renderer plays them, in tick order.
     private static func events(of band: BandData, sounds names: [String], instruments: [String]) -> UnsafeMutableBufferPointer<Event> {
         func instrument(_ name: String) -> Int {
@@ -305,9 +333,10 @@ final class BandRenderer {
         for (channel, key, notes) in [(Channel.bass, "bass", band.channels.bass), (.keys, "keys", band.channels.keys),
                                       (.horns, "horns", band.channels.horns)] {
             let own = instrument(band.instruments[key]!)
+            let gain = Float(pow(10, (band.levels?[key] ?? 0) / 20))
             for n in notes {
                 list.append(Event(tick: n.t, channel: channel, value: n.n, velocity: Float(n.v), lengthTicks: n.len,
-                                  instrument: n.i.map(instrument) ?? own))
+                                  instrument: n.i.map(instrument) ?? own, gain: gain))
             }
         }
         list.sort { $0.tick < $1.tick }
@@ -316,13 +345,11 @@ final class BandRenderer {
         return buffer
     }
 
-    /// Another band for `.band`, built on the main thread: the same kit, instruments and time
-    /// structure as the one the renderer started with (the minor blues beside the shuffle).
+    /// Another band for `.band`, built on the main thread: its own kit, instruments and length
+    /// (the minor blues beside the shuffle; a song with its synths), on the same tick grid.
     func load(_ band: BandData) -> Events {
-        precondition(band.sounds.keys.sorted() == soundNames, "band \(band.name): a different kit")
-        precondition(band.ticksPerBeat == ticksPerBeat && band.loopTicks == loopTicks && band.chorusBars == chorusBars,
-                     "band \(band.name): a different time structure")
-        return Events(Self.events(of: band, sounds: soundNames, instruments: instrumentNames), name: band.name)
+        precondition(band.ticksPerBeat == ticksPerBeat && band.ticksPerBar == ticksPerBar, "band \(band.name): a different tick grid")
+        return Self.load(band)
     }
 
     // MARK: Render
@@ -462,7 +489,7 @@ final class BandRenderer {
             return
         }
         play(instruments[monitor], note: s.note, velocity: s.velocity, held: Int(s.lengthTicks * samplesPerTick),
-             live: false, in: monitorVoices)
+             live: false, in: monitorVoices, gain: monitorGain)
     }
 
     /// Publishes the frame → tick mapping after the transport changed it.
@@ -544,11 +571,11 @@ final class BandRenderer {
             for i in bassVoices.indices where bassVoices[i].active {
                 bassVoices[i].stop(releaseSeconds: 0.012, sampleRate: sampleRate)
             }
-            play(instruments[e.instrument], note: e.value + transpose, velocity: e.velocity, held: held, live: false, in: bassVoices)
+            play(instruments[e.instrument], note: e.value + transpose, velocity: e.velocity, held: held, live: false, in: bassVoices, gain: e.gain)
         case .keys:
-            play(instruments[e.instrument], note: e.value + transpose, velocity: e.velocity, held: held, live: false, in: keyVoices)
+            play(instruments[e.instrument], note: e.value + transpose, velocity: e.velocity, held: held, live: false, in: keyVoices, gain: e.gain)
         case .horns:
-            play(instruments[e.instrument], note: e.value + transpose, velocity: e.velocity, held: held, live: false, in: hornVoices)
+            play(instruments[e.instrument], note: e.value + transpose, velocity: e.velocity, held: held, live: false, in: hornVoices, gain: e.gain)
         case .monitor:
             break
         }
@@ -556,7 +583,7 @@ final class BandRenderer {
 
     /// Starts a pitched note: the same note still sounding is damped first (a key restruck).
     private func play(_ inst: SampledInstrument, note: Int, velocity: Float, held: Int, live: Bool,
-                      in pool: UnsafeMutableBufferPointer<SampleVoice>) {
+                      in pool: UnsafeMutableBufferPointer<SampleVoice>, gain: Float = 1) {
         for i in pool.indices where pool[i].active && pool[i].note == note {
             pool[i].stop(releaseSeconds: 0.03, sampleRate: sampleRate)
             pool[i].note = -1
@@ -564,7 +591,7 @@ final class BandRenderer {
         age += 1
         let p = inst.pick(note: note, velocity: velocity)
         // Level follows velocity on top of the layer's own loudness.
-        pool[slot(pool)].start(p.buffer, ratio: p.ratio, gain: p.gain * (0.35 + 0.65 * velocity), heldFrames: held,
+        pool[slot(pool)].start(p.buffer, ratio: p.ratio, gain: p.gain * gain * (0.35 + 0.65 * velocity), heldFrames: held,
                                releaseSeconds: inst.release, note: note, live: live, age: age, sampleRate: sampleRate)
     }
 
@@ -748,7 +775,15 @@ final class BandRenderer {
             transpose = n
         case .band(let e):
             // The new band from the same tick: the event cursor moves to where the transport is.
+            // Its kit and instruments come with it; voices still sounding keep their buffers.
             events = e.buffer
+            drumSounds = e.drumSounds
+            clickSound = e.clickSound
+            instruments = e.instruments
+            monitor = e.monitor
+            monitorGain = e.monitorGain
+            loopTicks = e.loopTicks
+            chorusBars = e.chorusBars
             let t = playing ? tickAt(frame: frame) : heldTick
             let local = ((t.truncatingRemainder(dividingBy: Double(loopTicks))) + Double(loopTicks)).truncatingRemainder(dividingBy: Double(loopTicks))
             loopBase = Int((t - local).rounded())
@@ -763,7 +798,7 @@ final class BandRenderer {
     }
 
     private func startLive(_ note: Int, velocity: Float) {
-        play(instruments[monitor], note: note, velocity: velocity, held: .max, live: true, in: monitorVoices)
+        play(instruments[monitor], note: note, velocity: velocity, held: .max, live: true, in: monitorVoices, gain: monitorGain)
     }
 
     private func stopLive(_ note: Int) {

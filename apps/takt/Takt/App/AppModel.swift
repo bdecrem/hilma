@@ -3,7 +3,7 @@ import SwiftUI
 /// Which screen is up. The band plays under every one of them (principle 1: the band is
 /// already playing); only the lesson screen scores what you play.
 enum Route: Equatable {
-    case lessons, map, module, earModule, lesson, result, settings, calibrate, quiz, earGame
+    case lessons, map, module, earModule, lesson, result, settings, calibrate, quiz, earGame, stage, game
 }
 
 /// The app's screens and what they share: the player (band, monitor, lesson), the progress
@@ -11,7 +11,10 @@ enum Route: Equatable {
 @Observable
 final class AppModel {
     var route: Route = .lessons {
-        didSet { player?.inLesson = route == .lesson }
+        didSet {
+            player?.inLesson = route == .lesson
+            player?.inGame = route == .game
+        }
     }
     let player: Player?
     let progress: ProgressStore
@@ -84,6 +87,8 @@ final class AppModel {
             case "settings": route = .settings
             case "calibrate": route = .calibrate
             case "map": route = .map
+            case "stage": route = .stage
+            case "game": break  // below
             case "eargame": break  // below
             case "quiz": break  // below, once everything is set
             default: fatalError("unknown -Route \(r)")
@@ -92,6 +97,14 @@ final class AppModel {
         #endif
         player?.inLesson = route == .lesson
         #if DEBUG
+        // `-Route game -Song song-slow-burn -Part melody -Difficulty adaptive` starts a run.
+        if UserDefaults.standard.string(forKey: "Route") == "game" {
+            let d = UserDefaults.standard
+            let song = songs.first { $0.name == (d.string(forKey: "Song") ?? Song.catalog[0]) } ?? songs[0]
+            pick(song: song, part: Song.PartKey(rawValue: d.string(forKey: "Part") ?? "chords") ?? .chords)
+            pick(song: song, difficulty: GameEngine.Difficulty(rawValue: d.string(forKey: "Difficulty") ?? "adaptive") ?? .adaptive)
+            play(song: song)
+        }
         // `-Route quiz` starts today's quiz; `-QuizAnswers 1,0,1` answers in order (Next between),
         // leaving the last answer's explanation up, or the summary after a full five.
         // `-Route eargame [-EarKind intervals] [-EarLevel n] [-EarAnswers r,r,w]` plays an ear game, answering
@@ -321,6 +334,40 @@ final class AppModel {
 
     /// The lesson screen watches for the payoff finishing.
     func lessonFinished() { route = .result }
+
+    // MARK: Stage
+
+    /// The set list, loaded once (songs not in the bundle yet are skipped).
+    @ObservationIgnored private var loadedSongs: [Song]?
+    var songs: [Song] {
+        if let loadedSongs { return loadedSongs }
+        let s = Song.catalog.compactMap { name in
+            Bundle.main.url(forResource: name, withExtension: "json") == nil ? nil : Song.bundled(name)
+        }
+        loadedSongs = s
+        return s
+    }
+    /// The part and level picked per song (chords and adaptive to start).
+    private var stageParts: [String: Song.PartKey] = [:]
+    private var stageDifficulties: [String: GameEngine.Difficulty] = [:]
+
+    func stagePart(_ song: Song) -> Song.PartKey { stageParts[song.name] ?? .chords }
+    func stageDifficulty(_ song: Song) -> GameEngine.Difficulty { stageDifficulties[song.name] ?? .adaptive }
+    func pick(song: Song, part: Song.PartKey) { stageParts[song.name] = part }
+    func pick(song: Song, difficulty: GameEngine.Difficulty) { stageDifficulties[song.name] = difficulty }
+
+    /// Play: the song with the part and level picked for it.
+    func play(song: Song) {
+        guard let player else { return }
+        player.startGame(song: song, part: stagePart(song), difficulty: stageDifficulty(song))
+        route = .game
+    }
+
+    /// Back to the set list: the lesson's band comes back.
+    func leaveGame() {
+        player?.endGame()
+        route = .stage
+    }
 }
 
 /// Where an entry stands, for the menu and the map.

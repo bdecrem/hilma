@@ -38,8 +38,12 @@ struct BandData: Decodable {
     let bars: Int
     let form: [String]
     let sounds: [String: Sound]
-    /// The instrument each pitched channel plays (bass, keys, horns, monitor).
-    let instruments: [String: String]
+    /// The instrument each pitched channel plays (bass, keys, horns, monitor). A song's monitor
+    /// is set per part (the record's synth for the part you take).
+    var instruments: [String: String]
+    /// A pitched channel's level in dB (bass, keys, horns; 0 when absent): a song's synths are
+    /// balanced here, the way drum sounds carry `gainDb`.
+    var levels: [String: Double]?
     let channels: Channels
 
     var ticksPerBar: Int { ticksPerBeat * beatsPerBar }

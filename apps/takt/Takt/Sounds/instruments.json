@@ -1374,5 +1374,1131 @@
     ]
    }
   ]
+ },
+ "kick909": {
+  "release": 0.03,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 0.333,
+    "files": [
+     "syn-kick909-0a"
+    ]
+   },
+   {
+    "root": 0,
+    "vel": 0.667,
+    "files": [
+     "syn-kick909-1a"
+    ]
+   },
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "syn-kick909-2a"
+    ]
+   }
+  ]
+ },
+ "kickRumble": {
+  "release": 0.03,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 0.5,
+    "files": [
+     "syn-kickRumble-0a"
+    ]
+   },
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "syn-kickRumble-1a"
+    ]
+   }
+  ]
+ },
+ "clap909": {
+  "release": 0.03,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 0.333,
+    "files": [
+     "syn-clap909-0a",
+     "syn-clap909-0b"
+    ]
+   },
+   {
+    "root": 0,
+    "vel": 0.667,
+    "files": [
+     "syn-clap909-1a",
+     "syn-clap909-1b"
+    ]
+   },
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "syn-clap909-2a",
+     "syn-clap909-2b"
+    ]
+   }
+  ]
+ },
+ "hat909": {
+  "release": 0.02,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 0.333,
+    "files": [
+     "syn-hat909-0a",
+     "syn-hat909-0b",
+     "syn-hat909-0c"
+    ]
+   },
+   {
+    "root": 0,
+    "vel": 0.667,
+    "files": [
+     "syn-hat909-1a",
+     "syn-hat909-1b",
+     "syn-hat909-1c"
+    ]
+   },
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "syn-hat909-2a",
+     "syn-hat909-2b",
+     "syn-hat909-2c"
+    ]
+   }
+  ]
+ },
+ "hatOpen909": {
+  "release": 0.03,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 0.5,
+    "files": [
+     "syn-hatOpen909-0a",
+     "syn-hatOpen909-0b"
+    ]
+   },
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "syn-hatOpen909-1a",
+     "syn-hatOpen909-1b"
+    ]
+   }
+  ]
+ },
+ "ride909": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 0.5,
+    "files": [
+     "syn-ride909-0a"
+    ]
+   },
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "syn-ride909-1a"
+    ]
+   }
+  ]
+ },
+ "shaker": {
+  "release": 0.02,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 0.5,
+    "files": [
+     "syn-shaker-0a",
+     "syn-shaker-0b",
+     "syn-shaker-0c"
+    ]
+   },
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "syn-shaker-1a",
+     "syn-shaker-1b",
+     "syn-shaker-1c"
+    ]
+   }
+  ]
+ },
+ "rim909": {
+  "release": 0.02,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 0.5,
+    "files": [
+     "syn-rim909-0a"
+    ]
+   },
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "syn-rim909-1a"
+    ]
+   }
+  ]
+ },
+ "tomSyn": {
+  "release": 0.03,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 0.5,
+    "files": [
+     "syn-tomSyn-0a"
+    ]
+   },
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "syn-tomSyn-1a"
+    ]
+   }
+  ]
+ },
+ "sub": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 28,
+    "vel": 1.0,
+    "files": [
+     "syn-sub-28"
+    ]
+   },
+   {
+    "root": 30,
+    "vel": 1.0,
+    "files": [
+     "syn-sub-30"
+    ]
+   },
+   {
+    "root": 32,
+    "vel": 1.0,
+    "files": [
+     "syn-sub-32"
+    ]
+   },
+   {
+    "root": 34,
+    "vel": 1.0,
+    "files": [
+     "syn-sub-34"
+    ]
+   },
+   {
+    "root": 36,
+    "vel": 1.0,
+    "files": [
+     "syn-sub-36"
+    ]
+   },
+   {
+    "root": 38,
+    "vel": 1.0,
+    "files": [
+     "syn-sub-38"
+    ]
+   },
+   {
+    "root": 40,
+    "vel": 1.0,
+    "files": [
+     "syn-sub-40"
+    ]
+   },
+   {
+    "root": 42,
+    "vel": 1.0,
+    "files": [
+     "syn-sub-42"
+    ]
+   },
+   {
+    "root": 44,
+    "vel": 1.0,
+    "files": [
+     "syn-sub-44"
+    ]
+   },
+   {
+    "root": 46,
+    "vel": 1.0,
+    "files": [
+     "syn-sub-46"
+    ]
+   },
+   {
+    "root": 48,
+    "vel": 1.0,
+    "files": [
+     "syn-sub-48"
+    ]
+   },
+   {
+    "root": 50,
+    "vel": 1.0,
+    "files": [
+     "syn-sub-50"
+    ]
+   },
+   {
+    "root": 52,
+    "vel": 1.0,
+    "files": [
+     "syn-sub-52"
+    ]
+   }
+  ]
+ },
+ "acid": {
+  "release": 0.04,
+  "zones": [
+   {
+    "root": 28,
+    "vel": 1.0,
+    "files": [
+     "syn-acid-28"
+    ]
+   },
+   {
+    "root": 30,
+    "vel": 1.0,
+    "files": [
+     "syn-acid-30"
+    ]
+   },
+   {
+    "root": 32,
+    "vel": 1.0,
+    "files": [
+     "syn-acid-32"
+    ]
+   },
+   {
+    "root": 34,
+    "vel": 1.0,
+    "files": [
+     "syn-acid-34"
+    ]
+   },
+   {
+    "root": 36,
+    "vel": 1.0,
+    "files": [
+     "syn-acid-36"
+    ]
+   },
+   {
+    "root": 38,
+    "vel": 1.0,
+    "files": [
+     "syn-acid-38"
+    ]
+   },
+   {
+    "root": 40,
+    "vel": 1.0,
+    "files": [
+     "syn-acid-40"
+    ]
+   },
+   {
+    "root": 42,
+    "vel": 1.0,
+    "files": [
+     "syn-acid-42"
+    ]
+   },
+   {
+    "root": 44,
+    "vel": 1.0,
+    "files": [
+     "syn-acid-44"
+    ]
+   },
+   {
+    "root": 46,
+    "vel": 1.0,
+    "files": [
+     "syn-acid-46"
+    ]
+   },
+   {
+    "root": 48,
+    "vel": 1.0,
+    "files": [
+     "syn-acid-48"
+    ]
+   },
+   {
+    "root": 50,
+    "vel": 1.0,
+    "files": [
+     "syn-acid-50"
+    ]
+   },
+   {
+    "root": 52,
+    "vel": 1.0,
+    "files": [
+     "syn-acid-52"
+    ]
+   }
+  ]
+ },
+ "stab": {
+  "release": 0.25,
+  "zones": [
+   {
+    "root": 40,
+    "vel": 0.5,
+    "files": [
+     "syn-stab-40-0"
+    ]
+   },
+   {
+    "root": 40,
+    "vel": 1.0,
+    "files": [
+     "syn-stab-40-1"
+    ]
+   },
+   {
+    "root": 42,
+    "vel": 0.5,
+    "files": [
+     "syn-stab-42-0"
+    ]
+   },
+   {
+    "root": 42,
+    "vel": 1.0,
+    "files": [
+     "syn-stab-42-1"
+    ]
+   },
+   {
+    "root": 44,
+    "vel": 0.5,
+    "files": [
+     "syn-stab-44-0"
+    ]
+   },
+   {
+    "root": 44,
+    "vel": 1.0,
+    "files": [
+     "syn-stab-44-1"
+    ]
+   },
+   {
+    "root": 46,
+    "vel": 0.5,
+    "files": [
+     "syn-stab-46-0"
+    ]
+   },
+   {
+    "root": 46,
+    "vel": 1.0,
+    "files": [
+     "syn-stab-46-1"
+    ]
+   },
+   {
+    "root": 48,
+    "vel": 0.5,
+    "files": [
+     "syn-stab-48-0"
+    ]
+   },
+   {
+    "root": 48,
+    "vel": 1.0,
+    "files": [
+     "syn-stab-48-1"
+    ]
+   },
+   {
+    "root": 50,
+    "vel": 0.5,
+    "files": [
+     "syn-stab-50-0"
+    ]
+   },
+   {
+    "root": 50,
+    "vel": 1.0,
+    "files": [
+     "syn-stab-50-1"
+    ]
+   },
+   {
+    "root": 52,
+    "vel": 0.5,
+    "files": [
+     "syn-stab-52-0"
+    ]
+   },
+   {
+    "root": 52,
+    "vel": 1.0,
+    "files": [
+     "syn-stab-52-1"
+    ]
+   },
+   {
+    "root": 54,
+    "vel": 0.5,
+    "files": [
+     "syn-stab-54-0"
+    ]
+   },
+   {
+    "root": 54,
+    "vel": 1.0,
+    "files": [
+     "syn-stab-54-1"
+    ]
+   },
+   {
+    "root": 56,
+    "vel": 0.5,
+    "files": [
+     "syn-stab-56-0"
+    ]
+   },
+   {
+    "root": 56,
+    "vel": 1.0,
+    "files": [
+     "syn-stab-56-1"
+    ]
+   },
+   {
+    "root": 58,
+    "vel": 0.5,
+    "files": [
+     "syn-stab-58-0"
+    ]
+   },
+   {
+    "root": 58,
+    "vel": 1.0,
+    "files": [
+     "syn-stab-58-1"
+    ]
+   },
+   {
+    "root": 60,
+    "vel": 0.5,
+    "files": [
+     "syn-stab-60-0"
+    ]
+   },
+   {
+    "root": 60,
+    "vel": 1.0,
+    "files": [
+     "syn-stab-60-1"
+    ]
+   },
+   {
+    "root": 62,
+    "vel": 0.5,
+    "files": [
+     "syn-stab-62-0"
+    ]
+   },
+   {
+    "root": 62,
+    "vel": 1.0,
+    "files": [
+     "syn-stab-62-1"
+    ]
+   },
+   {
+    "root": 64,
+    "vel": 0.5,
+    "files": [
+     "syn-stab-64-0"
+    ]
+   },
+   {
+    "root": 64,
+    "vel": 1.0,
+    "files": [
+     "syn-stab-64-1"
+    ]
+   },
+   {
+    "root": 66,
+    "vel": 0.5,
+    "files": [
+     "syn-stab-66-0"
+    ]
+   },
+   {
+    "root": 66,
+    "vel": 1.0,
+    "files": [
+     "syn-stab-66-1"
+    ]
+   },
+   {
+    "root": 68,
+    "vel": 0.5,
+    "files": [
+     "syn-stab-68-0"
+    ]
+   },
+   {
+    "root": 68,
+    "vel": 1.0,
+    "files": [
+     "syn-stab-68-1"
+    ]
+   },
+   {
+    "root": 70,
+    "vel": 0.5,
+    "files": [
+     "syn-stab-70-0"
+    ]
+   },
+   {
+    "root": 70,
+    "vel": 1.0,
+    "files": [
+     "syn-stab-70-1"
+    ]
+   },
+   {
+    "root": 72,
+    "vel": 0.5,
+    "files": [
+     "syn-stab-72-0"
+    ]
+   },
+   {
+    "root": 72,
+    "vel": 1.0,
+    "files": [
+     "syn-stab-72-1"
+    ]
+   },
+   {
+    "root": 74,
+    "vel": 0.5,
+    "files": [
+     "syn-stab-74-0"
+    ]
+   },
+   {
+    "root": 74,
+    "vel": 1.0,
+    "files": [
+     "syn-stab-74-1"
+    ]
+   },
+   {
+    "root": 76,
+    "vel": 0.5,
+    "files": [
+     "syn-stab-76-0"
+    ]
+   },
+   {
+    "root": 76,
+    "vel": 1.0,
+    "files": [
+     "syn-stab-76-1"
+    ]
+   },
+   {
+    "root": 78,
+    "vel": 0.5,
+    "files": [
+     "syn-stab-78-0"
+    ]
+   },
+   {
+    "root": 78,
+    "vel": 1.0,
+    "files": [
+     "syn-stab-78-1"
+    ]
+   },
+   {
+    "root": 80,
+    "vel": 0.5,
+    "files": [
+     "syn-stab-80-0"
+    ]
+   },
+   {
+    "root": 80,
+    "vel": 1.0,
+    "files": [
+     "syn-stab-80-1"
+    ]
+   },
+   {
+    "root": 82,
+    "vel": 0.5,
+    "files": [
+     "syn-stab-82-0"
+    ]
+   },
+   {
+    "root": 82,
+    "vel": 1.0,
+    "files": [
+     "syn-stab-82-1"
+    ]
+   },
+   {
+    "root": 84,
+    "vel": 0.5,
+    "files": [
+     "syn-stab-84-0"
+    ]
+   },
+   {
+    "root": 84,
+    "vel": 1.0,
+    "files": [
+     "syn-stab-84-1"
+    ]
+   },
+   {
+    "root": 86,
+    "vel": 0.5,
+    "files": [
+     "syn-stab-86-0"
+    ]
+   },
+   {
+    "root": 86,
+    "vel": 1.0,
+    "files": [
+     "syn-stab-86-1"
+    ]
+   },
+   {
+    "root": 88,
+    "vel": 0.5,
+    "files": [
+     "syn-stab-88-0"
+    ]
+   },
+   {
+    "root": 88,
+    "vel": 1.0,
+    "files": [
+     "syn-stab-88-1"
+    ]
+   }
+  ]
+ },
+ "pad": {
+  "release": 0.6,
+  "zones": [
+   {
+    "root": 45,
+    "vel": 1.0,
+    "files": [
+     "syn-pad-45"
+    ]
+   },
+   {
+    "root": 48,
+    "vel": 1.0,
+    "files": [
+     "syn-pad-48"
+    ]
+   },
+   {
+    "root": 51,
+    "vel": 1.0,
+    "files": [
+     "syn-pad-51"
+    ]
+   },
+   {
+    "root": 54,
+    "vel": 1.0,
+    "files": [
+     "syn-pad-54"
+    ]
+   },
+   {
+    "root": 57,
+    "vel": 1.0,
+    "files": [
+     "syn-pad-57"
+    ]
+   },
+   {
+    "root": 60,
+    "vel": 1.0,
+    "files": [
+     "syn-pad-60"
+    ]
+   },
+   {
+    "root": 63,
+    "vel": 1.0,
+    "files": [
+     "syn-pad-63"
+    ]
+   },
+   {
+    "root": 66,
+    "vel": 1.0,
+    "files": [
+     "syn-pad-66"
+    ]
+   },
+   {
+    "root": 69,
+    "vel": 1.0,
+    "files": [
+     "syn-pad-69"
+    ]
+   },
+   {
+    "root": 72,
+    "vel": 1.0,
+    "files": [
+     "syn-pad-72"
+    ]
+   },
+   {
+    "root": 75,
+    "vel": 1.0,
+    "files": [
+     "syn-pad-75"
+    ]
+   },
+   {
+    "root": 78,
+    "vel": 1.0,
+    "files": [
+     "syn-pad-78"
+    ]
+   },
+   {
+    "root": 81,
+    "vel": 1.0,
+    "files": [
+     "syn-pad-81"
+    ]
+   }
+  ]
+ },
+ "lead": {
+  "release": 0.12,
+  "zones": [
+   {
+    "root": 55,
+    "vel": 1.0,
+    "files": [
+     "syn-lead-55"
+    ]
+   },
+   {
+    "root": 57,
+    "vel": 1.0,
+    "files": [
+     "syn-lead-57"
+    ]
+   },
+   {
+    "root": 59,
+    "vel": 1.0,
+    "files": [
+     "syn-lead-59"
+    ]
+   },
+   {
+    "root": 61,
+    "vel": 1.0,
+    "files": [
+     "syn-lead-61"
+    ]
+   },
+   {
+    "root": 63,
+    "vel": 1.0,
+    "files": [
+     "syn-lead-63"
+    ]
+   },
+   {
+    "root": 65,
+    "vel": 1.0,
+    "files": [
+     "syn-lead-65"
+    ]
+   },
+   {
+    "root": 67,
+    "vel": 1.0,
+    "files": [
+     "syn-lead-67"
+    ]
+   },
+   {
+    "root": 69,
+    "vel": 1.0,
+    "files": [
+     "syn-lead-69"
+    ]
+   },
+   {
+    "root": 71,
+    "vel": 1.0,
+    "files": [
+     "syn-lead-71"
+    ]
+   },
+   {
+    "root": 73,
+    "vel": 1.0,
+    "files": [
+     "syn-lead-73"
+    ]
+   },
+   {
+    "root": 75,
+    "vel": 1.0,
+    "files": [
+     "syn-lead-75"
+    ]
+   },
+   {
+    "root": 77,
+    "vel": 1.0,
+    "files": [
+     "syn-lead-77"
+    ]
+   },
+   {
+    "root": 79,
+    "vel": 1.0,
+    "files": [
+     "syn-lead-79"
+    ]
+   },
+   {
+    "root": 81,
+    "vel": 1.0,
+    "files": [
+     "syn-lead-81"
+    ]
+   },
+   {
+    "root": 83,
+    "vel": 1.0,
+    "files": [
+     "syn-lead-83"
+    ]
+   },
+   {
+    "root": 85,
+    "vel": 1.0,
+    "files": [
+     "syn-lead-85"
+    ]
+   },
+   {
+    "root": 87,
+    "vel": 1.0,
+    "files": [
+     "syn-lead-87"
+    ]
+   },
+   {
+    "root": 89,
+    "vel": 1.0,
+    "files": [
+     "syn-lead-89"
+    ]
+   },
+   {
+    "root": 91,
+    "vel": 1.0,
+    "files": [
+     "syn-lead-91"
+    ]
+   }
+  ]
+ },
+ "rave": {
+  "release": 0.08,
+  "zones": [
+   {
+    "root": 48,
+    "vel": 1.0,
+    "files": [
+     "syn-rave-48"
+    ]
+   },
+   {
+    "root": 50,
+    "vel": 1.0,
+    "files": [
+     "syn-rave-50"
+    ]
+   },
+   {
+    "root": 52,
+    "vel": 1.0,
+    "files": [
+     "syn-rave-52"
+    ]
+   },
+   {
+    "root": 54,
+    "vel": 1.0,
+    "files": [
+     "syn-rave-54"
+    ]
+   },
+   {
+    "root": 56,
+    "vel": 1.0,
+    "files": [
+     "syn-rave-56"
+    ]
+   },
+   {
+    "root": 58,
+    "vel": 1.0,
+    "files": [
+     "syn-rave-58"
+    ]
+   },
+   {
+    "root": 60,
+    "vel": 1.0,
+    "files": [
+     "syn-rave-60"
+    ]
+   },
+   {
+    "root": 62,
+    "vel": 1.0,
+    "files": [
+     "syn-rave-62"
+    ]
+   },
+   {
+    "root": 64,
+    "vel": 1.0,
+    "files": [
+     "syn-rave-64"
+    ]
+   },
+   {
+    "root": 66,
+    "vel": 1.0,
+    "files": [
+     "syn-rave-66"
+    ]
+   },
+   {
+    "root": 68,
+    "vel": 1.0,
+    "files": [
+     "syn-rave-68"
+    ]
+   },
+   {
+    "root": 70,
+    "vel": 1.0,
+    "files": [
+     "syn-rave-70"
+    ]
+   },
+   {
+    "root": 72,
+    "vel": 1.0,
+    "files": [
+     "syn-rave-72"
+    ]
+   },
+   {
+    "root": 74,
+    "vel": 1.0,
+    "files": [
+     "syn-rave-74"
+    ]
+   },
+   {
+    "root": 76,
+    "vel": 1.0,
+    "files": [
+     "syn-rave-76"
+    ]
+   },
+   {
+    "root": 78,
+    "vel": 1.0,
+    "files": [
+     "syn-rave-78"
+    ]
+   },
+   {
+    "root": 80,
+    "vel": 1.0,
+    "files": [
+     "syn-rave-80"
+    ]
+   },
+   {
+    "root": 82,
+    "vel": 1.0,
+    "files": [
+     "syn-rave-82"
+    ]
+   },
+   {
+    "root": 84,
+    "vel": 1.0,
+    "files": [
+     "syn-rave-84"
+    ]
+   }
+  ]
  }
 }

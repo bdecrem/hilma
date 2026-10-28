@@ -35,12 +35,20 @@ enum DebugHooks {
     }()
 
     static func snapshotIfDue(_ player: Player, tick: Double) {
-        guard let next = snapshots.first, tick >= next.tick else { return }
+        // "result:0" waits for a song's run to end instead of a tick; the others take their turn.
+        guard let i = snapshots.firstIndex(where: { $0.name == "result" ? player.gameResult != nil : tick >= $0.tick }) else { return }
+        let next = snapshots.remove(at: i)
         guard let dir = UserDefaults.standard.string(forKey: "SnapshotDir") else { fatalError("-SnapshotAt needs -SnapshotDir") }
-        snapshots.removeFirst()
         MainActor.assumeIsolated {
             for theme in [Theme.dark, .paper] {
-                let screen = LessonScreen(state: player.lessonState())
+                // A song under way renders the game screen instead of the lesson's.
+                let screen = Group {
+                    if player.game != nil {
+                        GameScreen(state: player.gameState())
+                    } else {
+                        LessonScreen(state: player.lessonState())
+                    }
+                }
                     .environment(\.horizontalSizeClass, .regular)
                     .environment(\.colorScheme, theme.colorScheme)
                     .frame(width: 1100, height: 768)

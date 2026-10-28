@@ -213,6 +213,9 @@ final class AccountStore {
         }
         out.ear = most(a.ear, b.ear)
         out.intervals = most(a.intervals, b.intervals)
+        // Stage runs from both, each once, the best per song kept.
+        var seen: Set<String> = []
+        out.scores = ProgressStore.ScoreRecord.trimmed((a.scores + b.scores).filter { seen.insert($0.id).inserted })
         return out
     }
 

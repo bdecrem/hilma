@@ -35,6 +35,12 @@ final class Player {
     /// Show me: the step is being played for you (Demo.swift); and it just ended, your turn.
     private(set) var demo = false
     private(set) var demoEnded = false
+    /// Stage: the song under way, its part, and the run's result once it ends.
+    private(set) var game: GameEngine?
+    private(set) var gameResult: GameEngine.Result?
+    private(set) var lastRun: ProgressStore.ScoreRecord?
+    /// Presses go to the game only on the game screen.
+    var inGame = false
 
     @ObservationIgnored let audio: AudioEngine
     @ObservationIgnored private(set) var content: Lesson
@@ -60,6 +66,10 @@ final class Player {
     @ObservationIgnored private var demoEnd = 0.0
     @ObservationIgnored private var demoPresses: [Demo.Press] = []
     @ObservationIgnored private var demoReleases: [(note: Int, tick: Double)] = []
+    /// Bars in the loaded band's chorus (the lesson's form, or a whole song).
+    @ObservationIgnored private var chorusBars: Int
+    @ObservationIgnored private var gameEpoch = 0
+    @ObservationIgnored private var gameDifficulty = GameEngine.Difficulty.adaptive
 
     /// Calibration's result: how early (negative) or late this player presses, ms. Every scored
     /// press moves by minus this.
@@ -81,6 +91,7 @@ final class Player {
         self.audio = audio
         self.progress = progress
         content = lesson
+        chorusBars = audio.band.chorusBars
         channels = Self.channels(of: lesson)
         engine = LessonEngine(lesson: lesson, ticksPerBeat: audio.band.ticksPerBeat, gated: Self.gated)
         // Locked channels stay muted until the lesson unlocks them; channels the module doesn't
@@ -196,7 +207,7 @@ final class Player {
     /// channels and steps, picked up where it was.
     func switchModule(to lesson: Lesson) {
         guard lesson.code != content.code else { return }
-        if lesson.band != content.band { audio.load(band: lesson.band) }
+        if lesson.band != content.band { chorusBars = audio.load(band: lesson.band).chorusBars }
         content = lesson
         channels = Self.channels(of: lesson)
         lessonLog.info("module \(lesson.code, privacy: .public)")
@@ -370,6 +381,12 @@ final class Player {
             c.tap(tick: p.tick, msPerTick: p.msPerTick)
             calibration = c
             if c.taps.count > before, let t = c.taps.last { logTap(t, base: c.base) }
+            return
+        }
+        if let game, inGame {
+            guard s.epoch == gameEpoch else { return }
+            let p = clock.position(atHost: calibrated ? shifted(hostTime, clock) : hostTime)
+            game.played(note: note, tick: p.tick, msPerTick: p.msPerTick)
             return
         }
         // Show me: your keys sound along with it, nothing is scored.
@@ -583,6 +600,137 @@ final class Player {
         }
     }
 
+    // MARK: Stage
+
+    /// A song from the top: its band with your keys on the part's instrument, the part's
+    /// channel out, the song's tempo, four clicks in. The lesson's band comes back with `endGame`.
+    func startGame(song: Song, part: Song.PartKey, difficulty: GameEngine.Difficulty) {
+        if demo { endDemo(stop: false) }
+        gameDifficulty = difficulty
+        gameResult = nil
+        lastRun = nil
+        let partChannel = song.channel(of: part)
+        chorusBars = audio.load(song: song, part: part).chorusBars
+        gameEpoch = audio.snapshot().epoch + 1
+        game = GameEngine(song: song, part: part, difficulty: difficulty)
+        audio.send(.stop)
+        audio.send(.transpose(0))
+        audio.send(.silence(from: 0, to: 0))
+        for ch in [Channel.drums, .bass, .keys, .horns] { audio.send(.mute(ch, ch == partChannel)) }
+        audio.send(.tempo(Double(song.meta.tempo)))
+        audio.send(.countIn(beats: 4))
+        audio.send(.play)
+        pressed.removeAll()
+        lessonLog.info("stage: \(song.meta.title, privacy: .public) · \(part.rawValue, privacy: .public) · \(difficulty.rawValue, privacy: .public)")
+    }
+
+    /// The same song, part and level again.
+    func restartGame() {
+        guard let g = game else { return }
+        startGame(song: g.song, part: g.part, difficulty: gameDifficulty)
+    }
+
+    /// Back to the lessons: the module's band, where the lesson was.
+    func endGame() {
+        guard game != nil else { return }
+        game = nil
+        gameResult = nil
+        chorusBars = audio.load(band: content.band).chorusBars
+        resume()
+    }
+
+    /// Every frame of a run: the engine hears the tick; the end stops the band and puts the run
+    /// on the board; Stop (a new epoch) starts the song over.
+    private func runGame(_ clock: TransportClock, heard: TransportClock.Position, epoch: Int) {
+        guard let game else { return }
+        if epoch > gameEpoch {
+            // Your Stop starts the song over; the stop at the finish line leaves the result up.
+            if gameResult == nil { restartGame() }
+            return
+        }
+        guard epoch == gameEpoch else { return }
+        game.heard(tick: heard.tick, msPerTick: heard.msPerTick)
+        #if DEBUG
+        runGameAutoplay(clock, heard: heard)
+        #endif
+        if game.finished, gameResult == nil {
+            let r = game.result()
+            gameResult = r
+            audio.send(.stop)
+            if !ProgressStore.readOnly { lastRun = progress.record(run: r) }
+            lessonLog.info("stage: \(r.grade, privacy: .public) \(r.score) · \(r.perfect)/\(r.good)/\(r.missed) · combo \(r.maxCombo)")
+        }
+    }
+
+    #if DEBUG
+    /// `-Autoplay perfect|loose|rush` on a song: the chart's notes a bar ahead on the monitor,
+    /// scored through the press path as they are heard (the checks and the screenshots).
+    @ObservationIgnored private var gamePlanned = -1
+    @ObservationIgnored private var gameAutoEpoch = -1
+    @ObservationIgnored private var gamePresses: [Autoplay.Press] = []
+    @ObservationIgnored private var gameReleases: [(note: Int, tick: Double)] = []
+    private func runGameAutoplay(_ clock: TransportClock, heard: TransportClock.Position) {
+        guard let game, let mode = autoplayMode, heard.rolling else { return }
+        if gameAutoEpoch != gameEpoch {
+            gameAutoEpoch = gameEpoch
+            gamePlanned = -1
+            gamePresses.removeAll()
+            gameReleases.removeAll()
+        }
+        let horizon = Int(heard.tick) + 4 * audio.band.ticksPerBeat
+        if horizon > gamePlanned {
+            for (_, n, _) in game.notes(from: Double(gamePlanned + 1), to: Double(horizon)) {
+                let offset: Double = mode == .rush ? -140 : mode == .loose ? Double((n.t * 7919) % 81) - 40 : 0
+                let p = Autoplay.Press(note: n.n, velocity: 0.75, tick: Double(n.t) + offset / heard.msPerTick,
+                                       lengthTicks: Double(n.len) * 0.9)
+                audio.send(.schedule(note: p.note, velocity: p.velocity, tick: p.tick, lengthTicks: p.lengthTicks))
+                gamePresses.append(p)
+            }
+            gamePlanned = horizon
+        }
+        while let i = gamePresses.firstIndex(where: { $0.tick <= heard.tick }) {
+            let p = gamePresses.remove(at: i)
+            pressed.insert(p.note)
+            gameReleases.append((p.note, p.tick + p.lengthTicks))
+            if let host = clock.hostTime(atTick: p.tick) { score(p.note, hostTime: host, velocity: p.velocity, calibrated: false) }
+        }
+        while let i = gameReleases.firstIndex(where: { $0.tick <= heard.tick }) {
+            pressed.remove(gameReleases.remove(at: i).note)
+        }
+    }
+    #endif
+
+    /// What the game screen draws, this frame.
+    func gameState() -> GameState {
+        guard let game else { return GameState() }
+        let s = audio.snapshot()
+        let clock = TransportClock(s)
+        let heard = clock.valid ? clock.position(atHost: mach_absolute_time()) : nil
+        let tick = s.epoch == gameEpoch ? (heard?.tick ?? 0) : 0
+        let msPerTick = 60000 / (Double(game.song.meta.tempo) * Double(game.ticksPerBeat))
+        let lookahead = GameState.lookaheadSeconds * 1000 / msPerTick
+        let cue = game.cue(at: tick, msPerTick: msPerTick)
+        let bar = max(0, Int((tick / Double(game.ticksPerBar)).rounded(.down)))
+        let song = game.song
+        let visible = game.notes(from: tick - Double(game.ticksPerBeat), to: tick + lookahead).map {
+            GameState.HighwayNote(id: $0.index, note: $0.note.n, tick: Double($0.note.t), length: Double($0.note.len),
+                                  status: $0.status, finger: $0.note.f)
+        }
+        return GameState(
+            title: song.meta.title, style: song.meta.style, part: game.part, partTitle: song.part(game.part).title,
+            difficulty: game.difficulty, level: game.level, section: song.section(atBar: min(bar, song.bars - 1)),
+            chord: song.chord(atBar: min(bar, song.bars - 1)),
+            nextChord: bar + 1 < song.bars ? song.chord(atBar: bar + 1) : "",
+            bar: min(bar, song.bars - 1), bars: song.bars, beat: beat,
+            score: game.score, combo: game.combo, maxCombo: game.maxCombo, multiplier: game.multiplier,
+            accuracy: game.accuracy, progress: min(1, max(0, tick / Double(song.bars * game.ticksPerBar))),
+            countIn: countIn, playing: playing, pop: game.pop,
+            heardTick: tick, lookaheadTicks: lookahead, ticksPerBeat: game.ticksPerBeat, ticksPerBar: game.ticksPerBar,
+            notes: visible, keys: song.keyboard(game.part), nowNotes: cue.now, nextNotes: cue.next,
+            pressedNotes: pressed, fingers: cue.fingers, result: gameResult, lastRun: lastRun,
+            board: progress.scores(song: song.name), sections: song.meta.sections)
+    }
+
     // MARK: Play it back
 
     /// The payoff chorus again, from the top, with the band (out for the same bars) and your
@@ -638,7 +786,7 @@ final class Player {
         let counting = heard.tick < 0 && heard.rolling ? 4 + Int((heard.tick / tpb).rounded(.down)) + 1 : nil
         if counting != countIn { countIn = counting }
         let beats = max(0, Int((heard.tick / tpb).rounded(.down)))
-        let bars = audio.band.chorusBars
+        let bars = chorusBars
         if beats / 4 % bars != bar { bar = beats / 4 % bars }
         if beats % 4 != beat { beat = beats % 4 }
         if beats / 4 / bars != chorus { chorus = beats / 4 / bars }
@@ -662,6 +810,7 @@ final class Player {
         if playbackEpoch == s.epoch, heard.tick >= Double(engine.loopTicks) { playbackEpoch = nil }
         heardTick = heard.tick
         if demo { runDemo(heard: heard, epoch: s.epoch) }
+        if game != nil { runGame(clock, heard: heard, epoch: s.epoch) }
 
         // The frame first, then the presses heard by now: the engine learns the epoch (and judges
         // a finished chorus) before a press of the new chorus arrives.

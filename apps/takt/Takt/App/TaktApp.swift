@@ -121,6 +121,10 @@ struct RootView: View {
                 LessonsScreen(app: app)
             case .map:
                 MapScreen(app: app)
+            case .stage:
+                StageScreen(app: app)
+            case .game:
+                LiveGameScreen(app: app, player: player)
             case .module:
                 ModuleScreen(app: app, code: app.currentModule)
             case .earModule:
@@ -156,7 +160,10 @@ struct RootView: View {
             onOctave: player.shiftOctave,
             onSpace: player.togglePlay,
             onTempo: player.nudgeTempo,
-            onEscape: { if app.route == .lesson { app.route = .lessons } }
+            onEscape: {
+                if app.route == .lesson { app.route = .lessons }
+                if app.route == .game { app.leaveGame() }
+            }
         ))
         .onChange(of: player.finish) { _, f in if f != nil && app.route == .lesson { app.lessonFinished() } }
         .onChange(of: app.route, initial: true) { syncMenuMusic() }
@@ -170,13 +177,13 @@ struct RootView: View {
     /// you paused stays paused.
     private func syncMenuMusic(toggled: Bool = false) {
         switch app.route {
-        case .lessons, .map, .module, .earModule, .settings:
+        case .lessons, .map, .module, .earModule, .settings, .stage:
             if !menuMusic && player.playing { player.togglePlay() }
             if menuMusic && toggled && !player.playing { player.togglePlay() }
         case .lesson:
             if !menuMusic && !player.playing { player.togglePlay() }
-        case .result, .calibrate, .quiz, .earGame:
-            break  // their own: Play it back, the clicks, a quiet quiz
+        case .result, .calibrate, .quiz, .earGame, .game:
+            break  // their own: Play it back, the clicks, a quiet quiz, the song
         }
     }
 
@@ -204,6 +211,26 @@ struct LiveLessonScreen: View {
                 nextStep: player.nextStep,
                 back: { app.route = .module },
                 showMe: player.toggleDemo
+            ))
+    }
+}
+
+/// The game screen driven by the Player, every key wired to it.
+struct LiveGameScreen: View {
+    let app: AppModel
+    let player: Player
+
+    var body: some View {
+        GameScreen(state: player.gameState())
+            .environment(\.lessonControls, LessonControls(
+                togglePlay: player.togglePlay,
+                press: { player.press($0) },
+                release: player.release
+            ))
+            .environment(\.gameControls, GameControls(
+                togglePlay: player.togglePlay,
+                again: player.restartGame,
+                leave: app.leaveGame
             ))
     }
 }

@@ -57,10 +57,30 @@ final class AudioEngine {
 
     /// Another band (`Takt/Content/band-*.json`), from the same tick; built once, then reused.
     private var loaded: [String: BandRenderer.Events] = [:]
-    func load(band name: String) {
+    @discardableResult
+    func load(band name: String) -> BandRenderer.Events {
         let e = loaded[name] ?? renderer.load(.bundled(name))
         loaded[name] = e
         renderer.send(.band(e))
+        return e
+    }
+
+    /// A song's band with your keys on the part's instrument, at the part's level.
+    @discardableResult
+    func load(song: Song, part: Song.PartKey) -> BandRenderer.Events {
+        let p = song.part(part)
+        let key = "\(song.name)|\(part.rawValue)"
+        let e = loaded[key] ?? {
+            var band = song.band
+            band.instruments["monitor"] = p.monitor
+            var levels = band.levels ?? [:]
+            levels["monitor"] = levels[p.channel] ?? 0
+            band.levels = levels
+            return renderer.load(band)
+        }()
+        loaded[key] = e
+        renderer.send(.band(e))
+        return e
     }
     func snapshot() -> EngineSnapshot { renderer.snapshot() }
 

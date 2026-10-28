@@ -63,6 +63,43 @@ final class ProgressStore {
         var answered = 0
     }
 
+    /// Stage: one run of a song, for the leaderboard.
+    struct ScoreRecord: Codable, Equatable, Identifiable {
+        let id: String
+        let song: String
+        let part: String
+        let difficulty: String
+        let score: Int
+        let accuracy: Double
+        let maxCombo: Int
+        let grade: String
+        let level: Int
+        let date: Date
+
+        init(_ r: GameEngine.Result, date: Date = Date()) {
+            id = UUID().uuidString
+            song = r.song
+            part = r.part
+            difficulty = r.difficulty
+            score = r.score
+            accuracy = r.accuracy
+            maxCombo = r.maxCombo
+            grade = r.grade
+            level = r.level
+            self.date = date
+        }
+
+        /// Per song, the best runs stay (any part or difficulty), newest first among equals.
+        static let kept = 50
+        static func trimmed(_ scores: [ScoreRecord]) -> [ScoreRecord] {
+            var out: [ScoreRecord] = []
+            for song in Set(scores.map(\.song)).sorted() {
+                out += scores.filter { $0.song == song }.sorted { ($0.score, $0.date) > ($1.score, $1.date) }.prefix(kept)
+            }
+            return out
+        }
+    }
+
     struct Snapshot: Codable, Equatable {
         var lessons: [String: LessonRecord] = [:]
         var skills: [String: SkillRecord] = [:]
@@ -72,6 +109,8 @@ final class ProgressStore {
         /// The Ear Trainer (chords) and Intervals.
         var ear = EarRecord()
         var intervals = EarRecord()
+        /// Stage runs, the best per song kept.
+        var scores: [ScoreRecord] = []
 
         init() {}
 
@@ -84,7 +123,29 @@ final class ProgressStore {
             quiz = try c.decodeIfPresent(QuizRecord.self, forKey: .quiz) ?? QuizRecord()
             ear = try c.decodeIfPresent(EarRecord.self, forKey: .ear) ?? EarRecord()
             intervals = try c.decodeIfPresent(EarRecord.self, forKey: .intervals) ?? EarRecord()
+            scores = try c.decodeIfPresent([ScoreRecord].self, forKey: .scores) ?? []
         }
+    }
+
+    // MARK: Stage
+
+    /// A finished run goes on the board (a run counts as a day of practice too).
+    @discardableResult
+    func record(run: GameEngine.Result) -> ScoreRecord {
+        let r = ScoreRecord(run)
+        snapshot.scores = ScoreRecord.trimmed(snapshot.scores + [r])
+        save()
+        practiced()
+        return r
+    }
+
+    /// A song's board, best first.
+    func scores(song: String) -> [ScoreRecord] {
+        snapshot.scores.filter { $0.song == song }.sorted { ($0.score, $0.date) > ($1.score, $1.date) }
+    }
+
+    func best(song: String, part: String) -> ScoreRecord? {
+        scores(song: song).first { $0.part == part }
     }
 
     private(set) var snapshot: Snapshot

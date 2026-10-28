@@ -241,13 +241,14 @@ struct WeekLEDs: View {
     }
 }
 
-/// Lessons | Map, at the bottom of both.
+/// Learn | Stage | Map, at the bottom of all three.
 struct TabBar: View {
     let app: AppModel
 
     var body: some View {
         HStack(spacing: 0) {
             tab("Learn", symbol: "list.bullet", route: .lessons)
+            tab("Stage", symbol: "music.mic", route: .stage)
             tab("Map", symbol: "map", route: .map)
         }
         .background(RoundedRectangle(cornerRadius: 8).fill(Palette.panel))

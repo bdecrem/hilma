@@ -367,6 +367,56 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   the phone a long intro (Two octaves) scrolls, so Start and Show me first sit below the fold;
   its 15-finger row now wraps to two rows there. Checks 175/175.
 
+- **Stage, the game tab: 0.1 (38), 2026-10-28.** Bart: "a new game mode… in the style of
+  Guitar Hero… four songs: two blues, two electronic (deep house, techno)… chords and melody
+  lines… easy, medium, hard, or adaptive… streaks and points… a leaderboard… its own tab… no
+  gate". A third tab, **Stage** (`Menu/StageScreen.swift`): the set list, every song open.
+  **Songs** (`Takt/Content/song-*.json`, written by `scripts/songs/*.py` on `common.py`): a
+  band like the lessons' plus a `song` block (title, style, key, tempo, cover glyph, sections
+  by bar, the two parts). Slow Burn (slow blues in G, 68, four choruses, the lesson kit),
+  Boogie Shoes (jump blues in C, 120, six choruses, walking bass, chanks on 2 and 4, the sax
+  riff, a piano solo chorus), Undertow (deep house in A minor, 122, Am F Dm Em, Rhodes stabs,
+  pads, a sub, the hook), Nachtschicht (techno, 130, a rumbling kick, a rolling acid line,
+  rave stabs, the riff). The electronic kit and synths are rendered one-shots
+  (`scripts/synths.py` → `Sounds/syn-*.caf`, registered in `instruments.json`: kick909,
+  kickRumble, clap909, hat909/hatOpen909, ride909, shaker, rim909, tomSyn; sub, acid, stab (FM
+  electric piano, two layers), pad (8 s at 24 kHz), lead, rave). **Parts:** every note carries
+  `lv` 1–3 (easy / medium / hard: the root on the downbeats, then root and fifth, then the
+  voicing and the pushes; the melody's bones, then its steps, then its ornaments); the band's
+  own channel for a part is the hard chart, so the record plays it in full when you take the
+  other. Your keys play the part's instrument (`monitor` per part: the record's stab or lead
+  on the electronic songs, the piano on the blues). **Engine** (`Game/GameEngine.swift`,
+  pure): Perfect ±45 ms (100), Good ±110 ms (60), a passed window is a miss and breaks the
+  combo; a key no note wants is an extra (counted, not punished); the combo's multiplier ×2 /
+  ×3 / ×4 at 8 / 16 / 32; a level pays ×1 / ×1.5 / ×2; **Adaptive** starts easy and decides
+  each four-bar block two bars ahead from the four bars before that: at or over 90% hit (four
+  notes judged at least) it climbs, under 60% it eases off. No failing; the song plays to the
+  end; grade S / A / B / C / D by accuracy (97 / 90 / 80 / 65). **Screen**
+  (`Game/GameScreen.swift`): the HUD (score, the combo ring filling toward the next multiplier,
+  pause), the section rail, the highway (a Canvas: a capsule per note in its key's lane, chords
+  as stacks with finger badges, beat and bar lines sliding, 3 s of lookahead at any tempo, the
+  hit line in `signal`, Perfect / Good / Miss pops, the bar's chord and the next by the line),
+  the playable keyboard spanning the part. The result takes the highway's place: the grade,
+  the score, the counts, the song's board with the run lit, Play again / Set list.
+  **Audio:** `BandRenderer.load` now builds a whole band (kit, instruments, monitor, length;
+  `SampledInstrument.shared` keeps one of each by name) and `.band` swaps all of it, so a song
+  with its own kit and a synth for your keys plays on the same clock; the song's form is the
+  whole song plus a silent tail bar the game ends in. A band's `levels` (bass, keys, horns, in
+  dB) balance a song's synths the way sounds carry `gainDb`; your keys take the part's level
+  (`levels["monitor"]`, set by `AudioEngine.load(song:part:)`). Set from solo renders against
+  the blues band (drums −28, bass −29, keys −30, horns −28.5 dBFS RMS; `-RenderScript
+  "0:band=song-undertow,0:mute=bass,…"`): the two electronic songs sit at −19 dBFS RMS, peak
+  −5.5, no clipping, the blues at −23. `-Mutes drums,bass,horns` with `-Route game` records
+  your part alone. `Player.startGame / endGame /
+  restartGame`, `gameState()`; Stop restarts the song, Esc or Back leaves to the set list and
+  the lesson's band comes back. **Board:** `ProgressStore.ScoreRecord` (`Snapshot.scores`, the
+  best 50 a song, merged as a union by id, synced with the account); a run counts as a day.
+  DEBUG: `-Route stage`, `-Route game -Song song-undertow -Part melody -Difficulty hard
+  [-Autoplay perfect|loose|rush]`, `-SnapshotAt "…,result:0"` renders the result when the run
+  ends, `-RenderScript "0:band=song-nachtschicht,0:play"` renders a song offline. Checks
+  189/189 (the four songs load and hold together, judging, combo, extras, adaptive up and down,
+  the board's trim).
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without
