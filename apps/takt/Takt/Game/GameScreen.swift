@@ -20,7 +20,9 @@ struct GameState {
     var part = Song.PartKey.chords
     var partTitle = ""
     var difficulty = GameEngine.Difficulty.adaptive
+    /// The tier being played and the ladder's height.
     var level = 1
+    var tiers = 1
     var section = ""
     var chord = ""
     var nextChord = ""
@@ -56,7 +58,7 @@ struct GameState {
     var board: [ProgressStore.ScoreRecord] = []
     var sections: [Song.Section] = []
 
-    var levelTitle: String { ["", "Easy", "Medium", "Hard"][max(0, min(3, level))] }
+    var levelTitle: String { "Level \(level)" }
 }
 
 /// What the game screen's buttons do.
@@ -138,7 +140,7 @@ struct GameHUD: View {
                     .foregroundStyle(Palette.text)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
-                Text("\(state.partTitle) · \(state.difficulty == .adaptive ? "Adaptive · \(state.levelTitle)" : state.difficulty.title)\(compact ? "" : " · \(state.section)")")
+                Text("\(state.partTitle) · \(state.difficulty == .adaptive ? (compact ? state.levelTitle : "Adaptive · \(state.levelTitle)") : state.difficulty.title)\(compact ? "" : " · \(state.section)")")
                     .dataLabel(compact ? 10 : 12)
                     .foregroundStyle(Palette.muted)
                     .lineLimit(1)
@@ -502,7 +504,7 @@ struct GameResultPanel: View {
                     .foregroundStyle(Palette.text)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
-                Text("\(state.partTitle) · \(state.difficulty.title)\(state.difficulty == .adaptive ? " · reached \(["", "easy", "medium", "hard"][result.level])" : "")")
+                Text("\(state.partTitle) · \(state.difficulty.title)\(state.difficulty == .adaptive ? " · reached level \(result.level) of \(state.tiers)" : "")")
                     .dataLabel(11)
                     .foregroundStyle(Palette.muted)
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
@@ -595,7 +597,7 @@ struct Leaderboard: View {
                         .monospacedDigit()
                         .foregroundStyle(Palette.text)
                         .frame(width: compact ? 64 : 84, alignment: .trailing)
-                    Text("\(s.part.capitalized) · \(s.difficulty.capitalized)\(s.difficulty == "adaptive" ? " → \(["", "easy", "medium", "hard"][max(0, min(3, s.level))])" : "")")
+                    Text("\(s.part.capitalized) · \(s.difficulty.capitalized)\(s.difficulty == "adaptive" ? " → level \(s.level)" : "")")
                         .dataLabel(10)
                         .foregroundStyle(Palette.muted)
                         .lineLimit(1)

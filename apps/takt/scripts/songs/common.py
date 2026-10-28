@@ -2,10 +2,12 @@
 
 A song file is a band (the same shape as band-blues-C.json: `scripts/band.py`) plus a `song`
 block: title, style, key, tempo, the cover's glyph, the sections by bar, and the two parts the
-player can take, each a chart with every note tagged by the lowest level it appears at
-(1 easy, 2 medium, 3 hard). The band's own channel for a part (keys for the chords, horns
-for the melody) is the hard chart, so the record plays the part in full when you take the
-other one.
+player can take, each the whole part as the record plays it. Every note carries a weight
+(`lv`: 1 the hits the part stands on, 2 the ones that make it groove, 3 the pushes and
+ornaments) and every chord note its role in the chord (`r`: root, third, fifth, ...); the app
+cuts each level's chart from those by the rules in Takt/Content/charting.json (CHARTING.md).
+The band's own channel for a part (keys for the chords, horns for the melody) is the whole
+part, so the record plays it in full when you take the other one.
 
 Time: 12 ticks a beat, 48 a bar; `t` is the tick in the whole song. Notes are MIDI, C4 = 60.
 """
@@ -15,6 +17,9 @@ from pathlib import Path
 
 CONTENT = Path(__file__).resolve().parent.parent.parent / "Takt/Content"
 TPB, BAR = 12, 48
+
+# A chord note's role, what charting.json's `keep` orders.
+ROLES = ("root", "third", "fifth", "sixth", "seventh", "ninth")
 
 NOTE_NAMES = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"]
 
@@ -37,6 +42,8 @@ class Song:
         self.levels = {}
         # Sidechain: {"depth", "release", "channels"}; every kick ducks those channels.
         self.duck = None
+        # The dub send (Takt/Audio/DubChamber.swift): {"sends": {channel: level}, "beats", ...}.
+        self.dub = None
         self.drums = []
         self.bass = []
         self.keys = []
@@ -77,18 +84,20 @@ class Song:
         return p["notes"]
 
     @staticmethod
-    def pnote(notes, t, n, ln, lv, finger=None):
+    def pnote(notes, t, n, ln, lv, finger=None, role=None):
         e = {"t": t, "n": n, "len": ln, "lv": lv}
         if finger:
             e["f"] = finger
+        if role:
+            assert role in ROLES, role
+            e["r"] = role
         notes.append(e)
 
     @staticmethod
     def pchord(notes, t, voicing, hit_lv, ln):
-        """A chord hit: `voicing` is [(note, level by role, finger)]; a note's level is the
-        higher of the hit's and its own (easy keeps the root on the downbeats)."""
-        for n, lv, f in voicing:
-            Song.pnote(notes, t, n, ln, max(hit_lv, lv), f)
+        """A chord hit of weight `hit_lv`: `voicing` is [(note, role, finger)]."""
+        for n, role, f in voicing:
+            Song.pnote(notes, t, n, ln, hit_lv, f, role)
 
     @staticmethod
     def fingered(notes, right=True):
@@ -127,6 +136,7 @@ class Song:
             p["notes"].sort(key=lambda e: (e["t"], e["n"]))
             assert all(0 <= e["t"] < end for e in p["notes"])
             assert all(e["lv"] in (1, 2, 3) for e in p["notes"])
+        assert all("r" in e for e in self.parts["chords"]["notes"]), "a role for every chord note"
         band = {
             "name": self.name,
             "ticksPerBeat": TPB,
@@ -137,6 +147,7 @@ class Song:
             "instruments": self.instruments,
             "levels": self.levels,
             "duck": self.duck,
+            "dub": self.dub,
             "channels": {"drums": self.drums, "bass": self.bass, "keys": self.keys, "horns": self.horns},
             "song": {
                 "title": self.title,

@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Stage: the set list. Four songs, all open: a cover, the style, key, tempo and length, the
+/// Stage: the set list. Every song open: a cover, the style, key, tempo and length, the
 /// part and the level you take it at, your best, Play. The band on the menu keeps playing
 /// until a song starts.
 struct StageScreen: View {
@@ -109,7 +109,7 @@ struct SongCard: View {
                     app.pick(song: song, difficulty: GameEngine.Difficulty(rawValue: $0)!)
                 }
             }
-            Text(difficulty.line)
+            Text(Charting.bundled.line(difficulty, song: song.name, part: part))
                 .dataLabel(10)
                 .foregroundStyle(Palette.muted)
                 .fixedSize(horizontal: false, vertical: true)

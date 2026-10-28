@@ -47,12 +47,37 @@ struct BandData: Decodable {
     /// Sidechain: every kick ducks these channels by `depth` (0...1), back over `release`
     /// seconds. The pumping of the electronic songs.
     var duck: Duck?
+    /// The dub send (`DubChamber`): what each channel sends and how the chamber is set.
+    var dub: Dub?
     let channels: Channels
 
     struct Duck: Decodable {
         let depth: Double
         let release: Double
         var channels: [String]
+    }
+
+    struct Dub: Decodable {
+        /// Send level per channel (keys, horns, monitor; drums and bass stay dry).
+        var sends: [String: Double]
+        let beats: Double
+        let feedback: Double
+        let highpass: Double
+        let lowpass: Double
+        let drive: Double
+        let wobble: Double
+        let wobbleRate: Double
+        let echo: Double
+        let reverb: Double
+        let decay: Double
+        let reverbHighpass: Double
+        let duck: Double
+
+        var settings: DubChamber.Settings {
+            .init(beats: beats, feedback: Float(min(0.95, feedback)), highpass: highpass, lowpass: lowpass, drive: Float(drive),
+                  wobble: wobble, wobbleRate: wobbleRate, echo: Float(echo), reverb: Float(reverb), decay: decay,
+                  reverbHighpass: reverbHighpass, duck: Float(duck))
+        }
     }
 
     var ticksPerBar: Int { ticksPerBeat * beatsPerBar }

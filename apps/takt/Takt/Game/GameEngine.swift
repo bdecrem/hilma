@@ -3,30 +3,14 @@ import Foundation
 /// Stage: one run of a song's part. Pure, main thread, like the LessonEngine: the Player feeds
 /// it the heard transport tick every frame and every key press, it judges each chart note
 /// against the press nearest it (Perfect inside ±45 ms, Good inside ±110 ms, Missed when the
-/// window passes), keeps the score, the combo and the multiplier, and on Adaptive moves the
-/// level up or down between four-bar blocks. There is no failing: the song plays to the end.
+/// window passes), keeps the score, the combo and the multiplier, and on Adaptive moves a tier
+/// up or down the part's ladder between blocks (`Charting`, charting.json). There is no
+/// failing: the song plays to the end.
 final class GameEngine {
     enum Difficulty: String, CaseIterable, Codable {
         case easy, medium, hard, adaptive
 
         var title: String { rawValue.capitalized }
-        /// The chart level, nil on adaptive (it moves).
-        var level: Int? {
-            switch self {
-            case .easy: 1
-            case .medium: 2
-            case .hard: 3
-            case .adaptive: nil
-            }
-        }
-        var line: String {
-            switch self {
-            case .easy: "The bones of the part, one key at a time."
-            case .medium: "Two notes where there were one, on the 1 and the 3."
-            case .hard: "The part as the record plays it."
-            case .adaptive: "Starts easy. Clean four bars and it climbs; miss a few and it eases off."
-            }
-        }
     }
 
     enum Judgment: Equatable {
@@ -67,7 +51,7 @@ final class GameEngine {
         let maxCombo: Int
         /// Hits over notes, 0...1.
         let accuracy: Double
-        /// The highest level played (adaptive), or the difficulty's.
+        /// The highest tier played (adaptive), or the difficulty's.
         let level: Int
         let grade: String
 
@@ -82,20 +66,18 @@ final class GameEngine {
     static let points: [Judgment: Int] = [.perfect: 100, .good: 60, .miss: 0]
     /// Combo thresholds for ×2, ×3, ×4.
     static let steps = [8, 16, 32]
-    /// Adaptive: a block at or above this hit rate climbs, below this one eases off.
-    static let climb = 0.9
-    static let ease = 0.6
-    static let block = 4
 
     let song: Song
     let part: Song.PartKey
     let difficulty: Difficulty
     let ticksPerBeat: Int
     let ticksPerBar: Int
-    /// The hard chart in time order; a note plays at a level when its `lv` is at or under it.
+    let charting: Charting
+    /// The whole part in time order, and which notes play at each tier (`[tier - 1][i]`).
     let notes: [Song.Note]
+    let masks: [[Bool]]
     private(set) var status: [Status]
-    /// The level of each four-bar block, decided two bars before the block starts.
+    /// The tier of each block, decided `ahead` bars before the block starts.
     private(set) var blockLevel: [Int]
     private(set) var score = 0
     private(set) var combo = 0
@@ -113,22 +95,28 @@ final class GameEngine {
     private var barHits: [Int: Int] = [:]
     private var barMisses: [Int: Int] = [:]
 
-    init(song: Song, part: Song.PartKey, difficulty: Difficulty) {
+    init(song: Song, part: Song.PartKey, difficulty: Difficulty, charting: Charting = .bundled) {
         self.song = song
         self.part = part
         self.difficulty = difficulty
+        self.charting = charting
         ticksPerBeat = song.band.ticksPerBeat
         ticksPerBar = song.ticksPerBar
-        notes = song.chart(part, level: 3)
+        notes = song.notes(part)
+        masks = song.masks(part, charting: charting)
         status = Array(repeating: .pending, count: notes.count)
-        let blocks = (song.band.bars + Self.block - 1) / Self.block + 1
-        blockLevel = Array(repeating: difficulty.level ?? 1, count: blocks)
+        let window = charting.adaptive.window
+        let blocks = (song.band.bars + window - 1) / window + 1
+        let first = charting.tier(difficulty, song: song.name, part: part) ?? charting.adaptive.start
+        blockLevel = Array(repeating: max(1, min(masks.count, first)), count: blocks)
     }
 
     var endTick: Int { song.endTick }
+    /// The ladder's height.
+    var tiers: Int { masks.count }
 
     func level(atBar bar: Int) -> Int {
-        let b = max(0, bar) / Self.block
+        let b = max(0, bar) / charting.adaptive.window
         return b < blockLevel.count ? blockLevel[b] : blockLevel.last ?? 1
     }
 
@@ -143,14 +131,13 @@ final class GameEngine {
 
     var multiplier: Int { 1 + Self.steps.filter { combo >= $0 }.count }
 
-    /// Points for a hit at the level being played: the multiplier, and more for a harder level.
-    static func points(_ j: Judgment, multiplier: Int, level: Int) -> Int {
-        let base = points[j]! * multiplier
-        return level == 1 ? base : level == 2 ? base * 3 / 2 : base * 2
+    /// Points for a hit at the tier being played: the multiplier, and the tier's bonus.
+    func points(_ j: Judgment, multiplier: Int, level: Int) -> Int {
+        Int((Double(Self.points[j]! * multiplier) * charting.ladder(part).tier(level).bonus).rounded())
     }
 
-    /// Whether note `i` plays at the level of its bar.
-    func active(_ i: Int) -> Bool { notes[i].lv <= level(atBar: notes[i].t / ticksPerBar) }
+    /// Whether note `i` plays at the tier of its bar.
+    func active(_ i: Int) -> Bool { masks[level(atBar: notes[i].t / ticksPerBar) - 1][i] }
 
     var accuracy: Double {
         let judged = perfect + good + missed
@@ -158,7 +145,7 @@ final class GameEngine {
     }
 
     /// The heard transport tick, every frame: notes whose window has passed are missed, the
-    /// next block's level is decided two bars ahead, and the song ends at its end tick.
+    /// next block's tier is decided ahead, and the song ends at its end tick.
     func heard(tick: Double, msPerTick: Double) {
         heardTick = tick
         guard msPerTick.isFinite, msPerTick > 0 else { return }
@@ -178,15 +165,16 @@ final class GameEngine {
         if !finished, tick >= Double(endTick) { finished = true }
     }
 
-    /// Two bars before a block starts, its level is set from the four bars before that: at or
-    /// above `climb` hit rate (with at least four notes judged) goes up, under `ease` goes down.
+    /// `ahead` bars before a block starts, its tier is set from the `window` bars before that:
+    /// at or above `climb` hit rate (with `judged` notes at least) a tier up, under `ease` one down.
     private func adapt(tick: Double) {
+        let a = charting.adaptive
         let bar = Int((tick / Double(ticksPerBar)).rounded(.down))
-        // Block k is decided when bar 4k − 2 is reached, from the four bars before that one.
-        let k = (bar + 2) / Self.block
+        // Block k is decided when bar k·window − ahead is reached, from the window before it.
+        let k = (bar + a.ahead) / a.window
         guard k >= 1, k < blockLevel.count, !decided.contains(k) else { return }
         decided.insert(k)
-        let to = k * Self.block - 2, from = to - Self.block
+        let to = k * a.window - a.ahead, from = to - a.window
         var hits = 0, misses = 0
         for b in from..<to where b >= 0 {
             hits += barHits[b] ?? 0
@@ -194,10 +182,10 @@ final class GameEngine {
         }
         let current = blockLevel[k - 1]
         var level = current
-        if hits + misses >= 4 {
+        if hits + misses >= a.judged {
             let rate = Double(hits) / Double(hits + misses)
-            if rate >= Self.climb { level = min(3, current + 1) }
-            else if rate < Self.ease { level = max(1, current - 1) }
+            if rate >= a.climb { level = min(tiers, current + 1) }
+            else if rate < a.ease { level = max(1, current - 1) }
         }
         for b in k..<blockLevel.count { blockLevel[b] = level }
     }
@@ -226,7 +214,7 @@ final class GameEngine {
         combo += 1
         maxCombo = max(maxCombo, combo)
         barHits[notes[b.i].t / ticksPerBar, default: 0] += 1
-        score += Self.points(j, multiplier: multiplier, level: level(atBar: notes[b.i].t / ticksPerBar))
+        score += points(j, multiplier: multiplier, level: level(atBar: notes[b.i].t / ticksPerBar))
         seq += 1
         pop = Pop(judgment: j, note: notes[b.i].n, seq: seq)
     }
@@ -234,7 +222,7 @@ final class GameEngine {
     func result() -> Result {
         Result(song: song.name, part: part.rawValue, difficulty: difficulty.rawValue, score: score,
                notes: perfect + good + missed, perfect: perfect, good: good, missed: missed, extras: extras,
-               maxCombo: maxCombo, accuracy: accuracy, level: difficulty.level ?? topLevel,
+               maxCombo: maxCombo, accuracy: accuracy, level: difficulty == .adaptive ? topLevel : blockLevel[0],
                grade: Result.grade(accuracy: accuracy))
     }
 

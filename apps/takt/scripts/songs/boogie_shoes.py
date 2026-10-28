@@ -129,10 +129,10 @@ for bar in range(s.bars):
 
 # MARK: Chords part: the chanks on 2 and 4.
 
-VOICING = {  # (note, level by role, finger): root 1, fifth 2, the colour 3
-    "C": [(60, 1, 5), (64, 3, 3), (67, 2, 2), (69, 3, 1)],   # C6: C E G A
-    "F": [(60, 2, 5), (63, 3, 3), (65, 1, 2), (69, 3, 1)],   # F7: C Eb F A
-    "G": [(59, 3, 5), (62, 2, 3), (65, 3, 2), (67, 1, 1)],   # G7: B D F G
+VOICING = {  # (note, role, finger)
+    "C": [(60, "root", 5), (64, "third", 3), (67, "fifth", 2), (69, "sixth", 1)],     # C6: C E G A
+    "F": [(60, "fifth", 5), (63, "seventh", 3), (65, "root", 2), (69, "third", 1)],  # F7: C Eb F A
+    "G": [(59, "third", 5), (62, "fifth", 3), (65, "seventh", 2), (67, "root", 1)],  # G7: B D F G
 }
 chords = s.part("chords", "The chanks", "piano", "keys", "piano")
 for bar in range(s.bars):

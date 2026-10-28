@@ -82,7 +82,7 @@ for bar in range(s.bars):
 
 # MARK: Chords part: the dark stab on the and of 2 (and the and of 4 when it's full)
 
-VOICING = {"Am": [(45, 1, 5), (48, 3, 3), (52, 2, 1)], "G": [(43, 1, 5), (47, 3, 3), (50, 2, 1)]}
+VOICING = {"Am": [(45, "root", 5), (48, "third", 3), (52, "fifth", 1)], "G": [(43, "root", 5), (47, "third", 3), (50, "fifth", 1)]}
 chords = s.part("chords", "The stab", "stabMin", "keys", "stabMin")
 for bar in range(s.bars):
     o = bar * BAR

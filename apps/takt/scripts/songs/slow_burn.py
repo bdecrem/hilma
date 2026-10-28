@@ -137,10 +137,10 @@ for bar in range(s.bars):
 # Four-note voicings close to middle C, smooth from one chord to the next; the bass has the
 # root, so the voicing's root is the lowest note.
 VOICING = {"G7": [55, 59, 62, 65], "C7": [55, 58, 60, 64], "D7": [54, 57, 60, 62]}
-ROLE = {  # root 1 · fifth and seventh 2 · third 3  (the level each note appears at)
-    "G7": {55: 1, 62: 2, 65: 2, 59: 3},
-    "C7": {60: 1, 55: 2, 58: 2, 64: 3},
-    "D7": {62: 1, 57: 2, 60: 2, 54: 3},
+ROLE = {
+    "G7": {55: "root", 59: "third", 62: "fifth", 65: "seventh"},
+    "C7": {60: "root", 64: "third", 55: "fifth", 58: "seventh"},
+    "D7": {62: "root", 54: "third", 57: "fifth", 60: "seventh"},
 }
 FINGER = {"G7": {55: 5, 59: 3, 62: 2, 65: 1}, "C7": {55: 5, 58: 3, 60: 2, 64: 1}, "D7": {54: 5, 57: 3, 60: 2, 62: 1}}
 
@@ -152,19 +152,18 @@ for bar in range(s.bars):
     if bar == s.bars - 1:
         # The last chord: the whole voicing, held.
         for n in VOICING["G7"]:
-            s.pnote(chords, o, n, 40, 1 if ROLE["G7"][n] == 1 else 2, FINGER["G7"][n])
+            s.pnote(chords, o, n, 40, 1, FINGER["G7"][n], ROLE["G7"][n])
         continue
-    # Hits: the 1 (every level, root alone at easy), the 3 (medium up), the pushes on the
-    # last triplet of 2 and of 4 (hard).
+    # Hits: the 1 (weight 1), the 3 and from the second chorus the 4 (2), the pushes on the
+    # last triplet of 2 and of 4 (3).
     hits = [(0, 1, 20), (24, 2, 16)]
     if c >= 1:
-        hits += [(20, 3, 4), (44, 3, 4)]
+        hits = [(0, 1, 20), (24, 2, 12), (36, 2, 8), (20, 3, 4), (44, 3, 4)]
     else:
         hits += [(44, 3, 4)]
     for t, hit_level, ln in hits:
         for n in VOICING[ch]:
-            lv = max(hit_level, ROLE[ch][n])
-            s.pnote(chords, o + t, n, ln, lv, FINGER[ch][n])
+            s.pnote(chords, o + t, n, ln, hit_level, FINGER[ch][n], ROLE[ch][n])
 s.chart_to_channel(chords, s.keys, lambda e: 0.62 if e["t"] % BAR == 0 else 0.5 if e["t"] % BAR == 24 else 0.42)
 
 # MARK: Melody part (the sax)

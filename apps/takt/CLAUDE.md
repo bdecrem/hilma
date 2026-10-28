@@ -458,10 +458,42 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   `GameEngine.cue` returns `nowFingers` / `nextFingers`; `GameState.nowFingers`, `nextFinger`,
   `rightHand`.
 
+- **Charting rules, Abyss rebuilt, M2 gone: 0.1 (43), 2026-10-28.** Bart: "leveling is bad…
+  make a charting system with basic rules/formulas for what makes for Easy Medium and Hard both
+  in Chord and Melody modes… and Adaptive… that I can easily tweak", and Abyss "all wrong, sound
+  wise" (his notes: misc/TRACKS_README.md "Fixing the dub techno sound"). **Charting**
+  (`CHARTING.md` is the guide, `Takt/Content/charting.json` the knobs, `Game/Charting.swift`
+  the charter): songs carry their parts whole; every note has a weight (`lv` 1 main hits, 2
+  groove, 3 pushes/ornaments) and every chord note a role (`r`: root third fifth sixth seventh
+  ninth). Each part has a ladder of tiers (chords 7: two-note spread → two-note on the groove →
+  three-note spread → three-note on the groove → + pushes → four notes → the record; melody 6),
+  each with `notes` (chord size by the `keep` order), `hits` (heaviest weight played), `gap`
+  (seconds at least between onsets) and `space` (seconds at most of silence: a longer one borrows
+  a lighter hit), `bonus` (points). Easy / Medium / Hard name a tier (chords 2/4/7, melody
+  2/4/6; `songs` overrides per song); Adaptive starts at tier 1 and moves one tier per 4-bar
+  block, decided 2 bars ahead (`adaptive`: climb ≥ 85%, ease < 60%, 4 notes judged). The HUD and
+  the board say "Level n"; the set list's line comes from the tier. Song parts filled out where a
+  level had nothing to choose: Slow Burn comps on the 4 from chorus 2, Warm Nine's groove section
+  has a line, Abyss's melody is a four-bar phrase with answers. `-LessonCheck` checks each
+  tier's rules and prints every ladder's onsets a second with the quietest and busiest 8 bars.
+  **Abyss:** a dub send in the engine (`Audio/DubChamber.swift`, a band's `dub`): a ping-pong
+  delay synced to the tempo (a dotted eighth), with a highpass (350 Hz), a lowpass (2.5 kHz) and
+  tanh saturation inside the feedback loop, its time wobbling ±0.3% at 0.5 Hz, into an 8-line
+  FDN reverb with its input highpassed at 250 Hz, the return ducked a little by the kick; the
+  sends are post-fader per channel (keys, horns, and your keys when you take that part). The
+  stab is dry now (four detuned saws, resonant lowpass, 4 ms attack, 120 ms decay, five filter
+  layers from 600 Hz to 3.6 kHz breathing over 16 bars), the lead dry, the hats crisp
+  (7–14 kHz), the sub an octave up (D2/C2, still under 80 Hz, audible on a laptop), kick and sub
+  never sent and mono (side/mid 0.00 in a solo render), the app's room reverb off for a band
+  with its own chamber. Measured: −21 dBFS RMS, peak −0.8, no clipping; a check sends a click
+  through the chamber and finds the echoes a dotted eighth apart, alternating sides, each quieter
+  and darker. **The menu:** the M2 "The Right Hand" stub is gone (it is listed as coming soon
+  inside Blues Progressions); the A1 result no longer claims "A2 is unlocked".
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without
-  animation), the lesson catalog (A1, A2 stub). `Menu/`: `LessonsScreen` (the menu, with the band's
+  animation), the lesson catalog. `Menu/`: `LessonsScreen` (the menu, with the band's
   strip), `SettingsScreen`, `ResultScreen` (+ `PianoRoll`). `Progress/ProgressStore.swift`: lesson
   records and skill records, `progress.json` in Application Support. `Account/AccountStore.swift`:
   guest → sign up / log in against `/api/takt/*`, progress pull (merge) and push.

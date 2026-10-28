@@ -159,12 +159,18 @@ final class BandRenderer {
         /// Sidechain depth per channel (drums, bass, keys, horns, monitor) and its release.
         fileprivate let duck: [Float]
         fileprivate let duckRelease: Double
+        /// The dub send: each channel's send level, and the chamber's settings (nil: no dub).
+        fileprivate let sends: [Float]
+        fileprivate let dub: DubChamber.Settings?
+        /// A band with its own chamber skips the app's room reverb: its low end stays dry.
+        var hasDub: Bool { dub != nil }
         let loopTicks: Int
         let chorusBars: Int
         let name: String
         fileprivate init(_ buffer: UnsafeMutableBufferPointer<Event>, drumSounds: UnsafeMutableBufferPointer<DrumSound>,
                          clickSound: Int, instruments: [SampledInstrument], monitor: Int, monitorGain: Float,
-                         duck: [Float], duckRelease: Double, loopTicks: Int, chorusBars: Int, name: String) {
+                         duck: [Float], duckRelease: Double, sends: [Float], dub: DubChamber.Settings?,
+                         loopTicks: Int, chorusBars: Int, name: String) {
             self.buffer = buffer
             self.drumSounds = drumSounds
             self.clickSound = clickSound
@@ -173,6 +179,8 @@ final class BandRenderer {
             self.monitorGain = monitorGain
             self.duck = duck
             self.duckRelease = duckRelease
+            self.sends = sends
+            self.dub = dub
             self.loopTicks = loopTicks
             self.chorusBars = chorusBars
             self.name = name
@@ -194,6 +202,13 @@ final class BandRenderer {
     private var lastKick: Int64 = .min / 2
     private let chunkKicks = UnsafeMutableBufferPointer<Int64>.allocate(capacity: 64)
     private var chunkKickCount = 0
+    /// The duck envelope across the chunk being mixed (1 right after a kick).
+    private let kickEnv: UnsafeMutablePointer<Float>
+    /// The dub send: per-channel send levels, the send bus and the chamber.
+    private var sends: [Float] = [0, 0, 0, 0, 0]
+    private let sendL: UnsafeMutablePointer<Float>
+    private let sendR: UnsafeMutablePointer<Float>
+    private let chamber: DubChamber
 
     private var commands: [EngineCommand] = []
 
@@ -287,6 +302,12 @@ final class BandRenderer {
         monitorGain = first.monitorGain
         duck = first.duck
         duckDecay = Float(exp(-1 / (first.duckRelease * sampleRate)))
+        sends = first.sends
+        chamber = DubChamber(sampleRate: sampleRate)
+        chamber.configure(first.dub)
+        kickEnv = .allocate(capacity: maxChunk)
+        sendL = .allocate(capacity: maxChunk)
+        sendR = .allocate(capacity: maxChunk)
 
         busL = .allocate(capacity: maxChunk * 5)
         busR = .allocate(capacity: maxChunk * 5)
@@ -333,9 +354,10 @@ final class BandRenderer {
         let instruments = instrumentNames.map { SampledInstrument.shared($0) }
         let duckNames = band.duck?.channels ?? []
         let duck = ["drums", "bass", "keys", "horns", "monitor"].map { duckNames.contains($0) ? Float(band.duck!.depth) : 0 }
+        let sends = ["drums", "bass", "keys", "horns", "monitor"].map { Float(band.dub?.sends[$0] ?? 0) }
         return Events(events(of: band, sounds: names, instruments: instrumentNames), drumSounds: drumSounds, clickSound: click,
                       instruments: instruments, monitor: monitor, monitorGain: Float(pow(10, (band.levels?["monitor"] ?? 0) / 20)),
-                      duck: duck, duckRelease: max(0.01, band.duck?.release ?? 0.2),
+                      duck: duck, duckRelease: max(0.01, band.duck?.release ?? 0.2), sends: sends, dub: band.dub?.settings,
                       loopTicks: band.loopTicks, chorusBars: band.chorusBars, name: band.name)
     }
 
@@ -652,16 +674,32 @@ final class BandRenderer {
         }
     }
 
-    /// Buses → output: channel gains glide (~5 ms) toward
-    /// 0 when muted, meters take the peak, and a soft knee above 0.8 keeps the sum under 1.
+    /// Buses → output: channel gains glide (~5 ms) toward 0 when muted, the sidechain dips the
+    /// ducked channels after every kick, the dub send takes its share of each channel after
+    /// that and the chamber's return joins the sum, meters take the peak, and a soft knee above
+    /// 0.8 keeps the sum under 1.
     private func mixDown(_ n: Int, outL: UnsafeMutablePointer<Float>, outR: UnsafeMutablePointer<Float>) {
         let c = maxChunk
         let glide = Float(1 - exp(-1 / (0.005 * sampleRate)))
         for i in 0..<n {
             outL[i] = 0
             outR[i] = 0
+            sendL[i] = 0
+            sendR[i] = 0
         }
+        // The duck envelope: 1 right after a kick, back toward 0 with the release.
         let chunkStart = frame
+        var e = Float(pow(Double(duckDecay), Double(max(0, chunkStart - lastKick))))
+        var nextKick = 0
+        for i in 0..<n {
+            if nextKick < chunkKickCount, chunkKicks[nextKick] - chunkStart <= Int64(i) {
+                e = 1
+                nextKick += 1
+            }
+            kickEnv[i] = e
+            e *= duckDecay
+        }
+        let dub = chamber.settings != nil
         for ch in Channel.allCases {
             let k = ch.rawValue
             let l = busL + k * c
@@ -671,29 +709,27 @@ final class BandRenderer {
             var g = gain(ch)
             var level = self.level(ch)
             let depth = duck[k]
-            // The sidechain: 1 − depth right after a kick, back toward 1 with the release.
-            var e: Float = depth > 0 ? Float(pow(Double(duckDecay), Double(max(0, chunkStart - lastKick)))) : 0
-            var nextKick = 0
+            let send = dub ? sends[k] : 0
             for i in 0..<n {
                 g += (target - g) * glide
-                var d: Float = 1
-                if depth > 0 {
-                    if nextKick < chunkKickCount, chunkKicks[nextKick] - chunkStart <= Int64(i) {
-                        e = 1
-                        nextKick += 1
-                    }
-                    d = 1 - depth * e
-                    e *= duckDecay
-                }
+                let d: Float = 1 - depth * kickEnv[i]
                 let sl = l[i] * g * d, sr = r[i] * g * d
                 outL[i] += sl
                 outR[i] += sr
+                if send > 0 {
+                    sendL[i] += sl * send
+                    sendR[i] += sr * send
+                }
                 level = max(abs(sl), level * levelDecay)
             }
             setGain(ch, g)
             setLevel(ch, level)
         }
         if chunkKickCount > 0 { lastKick = chunkKicks[chunkKickCount - 1] }
+        if dub {
+            chamber.process(sendL: sendL, sendR: sendR, kick: kickEnv, n: n, samplesPerBeat: samplesPerTick * Double(ticksPerBeat),
+                            outL: outL, outR: outR)
+        }
         for i in 0..<n {
             outL[i] = Self.softClip(outL[i] * master)
             outR[i] = Self.softClip(outR[i] * master)
@@ -826,6 +862,8 @@ final class BandRenderer {
             monitorGain = e.monitorGain
             duck = e.duck
             duckDecay = Float(exp(-1 / (e.duckRelease * sampleRate)))
+            sends = e.sends
+            chamber.configure(e.dub)
             loopTicks = e.loopTicks
             chorusBars = e.chorusBars
             let t = playing ? tickAt(frame: frame) : heldTick

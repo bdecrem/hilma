@@ -1,19 +1,21 @@
 import Foundation
 
 /// A Stage song (Takt/Content/song-*.json, written by scripts/songs/*.py): a band the renderer
-/// plays once through, plus the two parts you can take from it, each a chart with every note
-/// tagged by the lowest level it appears at (1 easy, 2 medium, 3 hard). The band's own channel
-/// for a part is the hard chart, so the record plays the part in full when you take the other.
+/// plays once through, plus the two parts you can take from it, each the whole part with every
+/// note weighted and every chord note's role, which `Charting` cuts into levels. The band's own
+/// channel for a part is the whole part, so the record plays it in full when you take the other.
 struct Song {
     struct Note: Decodable, Equatable {
         /// Tick in the song (12 a beat, 48 a bar), the MIDI note, the length in ticks.
         let t: Int
         let n: Int
         let len: Int
-        /// 1 easy, 2 medium, 3 hard: the lowest level that plays it.
+        /// The weight: 1 the hits the part stands on, 2 the groove, 3 pushes and ornaments.
         let lv: Int
-        /// The finger, when the part says (the chords).
+        /// The finger.
         let f: Int?
+        /// A chord note's role: root, third, fifth, sixth, seventh, ninth.
+        let r: String?
     }
 
     struct Part: Decodable {
@@ -76,7 +78,10 @@ struct Song {
         for key in PartKey.allCases {
             guard let p = meta.parts[key.rawValue] else { fatalError("song \(name): no \(key.rawValue) part") }
             guard ["keys", "horns"].contains(p.channel) else { fatalError("song \(name): part \(key.rawValue) on channel \(p.channel)") }
-            guard !p.notes.isEmpty, p.notes.contains(where: { $0.lv == 1 }) else { fatalError("song \(name): part \(key.rawValue) is empty at easy") }
+            guard !p.notes.isEmpty, p.notes.contains(where: { $0.lv == 1 }) else { fatalError("song \(name): part \(key.rawValue) has no weight-1 notes") }
+            if key == .chords, let keep = Charting.bundled.chords.keep {
+                guard p.notes.allSatisfy({ $0.r.map(keep.contains) ?? false }) else { fatalError("song \(name): a chord note without a role charting.json keeps") }
+            }
             for n in p.notes {
                 guard (1...3).contains(n.lv), n.t >= 0, n.t < end, n.len > 0 else { fatalError("song \(name): bad note \(n)") }
             }
@@ -101,9 +106,21 @@ struct Song {
     /// The band channel a part replaces.
     func channel(of key: PartKey) -> Channel { part(key).channel == "keys" ? .keys : .horns }
 
-    /// The part at a level: the notes that play at it, in time order.
-    func chart(_ key: PartKey, level: Int) -> [Note] {
-        part(key).notes.filter { $0.lv <= level }.sorted { ($0.t, $0.n) < ($1.t, $1.n) }
+    /// The whole part, in time order.
+    func notes(_ key: PartKey) -> [Note] {
+        part(key).notes.sorted { ($0.t, $0.n) < ($1.t, $1.n) }
+    }
+
+    /// The part at each tier of the charting rules: `[tier - 1][i]` over `notes(key)`.
+    func masks(_ key: PartKey, charting: Charting = .bundled) -> [[Bool]] {
+        charting.masks(notes(key), part: key, tempo: meta.tempo, ticksPerBeat: band.ticksPerBeat)
+    }
+
+    /// The part at a tier, in time order.
+    func chart(_ key: PartKey, tier: Int, charting: Charting = .bundled) -> [Note] {
+        let all = notes(key), tiers = masks(key, charting: charting)
+        let m = tiers[max(1, min(tiers.count, tier)) - 1]
+        return all.indices.filter { m[$0] }.map { all[$0] }
     }
 
     func chord(atBar bar: Int) -> String { band.form[max(0, min(band.form.count - 1, bar))] }

@@ -718,7 +718,7 @@ final class Player {
         }
         return GameState(
             title: song.meta.title, style: song.meta.style, part: game.part, partTitle: song.part(game.part).title,
-            difficulty: game.difficulty, level: game.level, section: song.section(atBar: min(bar, song.bars - 1)),
+            difficulty: game.difficulty, level: game.level, tiers: game.tiers, section: song.section(atBar: min(bar, song.bars - 1)),
             chord: song.chord(atBar: min(bar, song.bars - 1)),
             nextChord: bar + 1 < song.bars ? song.chord(atBar: bar + 1) : "",
             bar: min(bar, song.bars - 1), bars: song.bars, beat: beat,

@@ -468,10 +468,7 @@ struct LessonEntry: Identifiable {
                                    after: nil, playable: true)
 
     /// Level 1 on the map, in order: the modules and what comes after them.
-    static let path = [catalog[0], ear, scales, minor,
-        LessonEntry(kind: .lesson, code: "M2", title: "The Right Hand", meta: "Blues scale · call and response",
-                    after: "A1", playable: false),
-    ]
+    static let path = [catalog[0], ear, scales, minor]
 
     var module: Bool { kind == .lesson || kind == .earModule }
 }

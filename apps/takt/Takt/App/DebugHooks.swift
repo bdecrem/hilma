@@ -147,7 +147,7 @@ enum DebugHooks {
                 command = .noteOn(note: Int(nv[0])!, velocity: nv.count > 1 ? Float(nv[1])! : 0.8)
             case ("off", let v?): command = .noteOff(note: Int(v)!)
             case ("transpose", let v?): command = .transpose(Int(v)!)
-            case ("band", let v?): command = .band(audio!.renderer.load(.bundled(v)))
+            case ("band", let v?): command = .band(audio!.load(band: v))  // the room follows the band
             default: fatalError("RenderScript command \(parts[1])")
             }
             return (at, command)

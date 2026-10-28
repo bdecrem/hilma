@@ -46,7 +46,7 @@ struct ResultScreen: View {
 
             HStack(spacing: 10) {
                 LED(lit: true, size: 7)
-                Text("A2 The Right Hand is unlocked")
+                Text("Take the blues to the Stage: Slow Burn and Boogie Shoes")
                     .dataLabel(11)
                     .foregroundStyle(Palette.text)
             }

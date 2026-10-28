@@ -43,13 +43,14 @@ def section(bar):
 
 PROG = ["Fm9", "E♭maj9", "D♭maj7", "Cm7"]
 s.chords = [PROG[b % 4] for b in range(s.bars)]
-# (note, level by role, finger): root 1, fifth and seventh 2, third and ninth 3.
-VOICING = {
-    "Fm9": [(53, 1, 5), (56, 3, 4), (60, 2, 3), (63, 2, 2), (67, 3, 1)],
-    "E♭maj9": [(51, 1, 5), (55, 3, 4), (58, 2, 3), (62, 2, 2), (65, 3, 1)],
-    "D♭maj7": [(49, 1, 5), (53, 3, 4), (56, 2, 3), (60, 2, 2), (63, 3, 1)],
-    "Cm7": [(48, 1, 5), (51, 3, 4), (55, 2, 3), (58, 2, 2), (62, 3, 1)],
-}
+# (note, role, finger): root, third, fifth, seventh, ninth from the bottom up.
+STACK = ["root", "third", "fifth", "seventh", "ninth"]
+VOICING = {c: [(n, r, 5 - i) for i, (n, r) in enumerate(zip(ns, STACK))] for c, ns in {
+    "Fm9": [53, 56, 60, 63, 67],
+    "E♭maj9": [51, 55, 58, 62, 65],
+    "D♭maj7": [49, 53, 56, 60, 63],  # E♭ on top: the ninth
+    "Cm7": [48, 51, 55, 58, 62],
+}.items()}
 ROOT = {"Fm9": 29, "E♭maj9": 27, "D♭maj7": 25, "Cm7": 24}
 
 # MARK: Drums
@@ -126,7 +127,13 @@ LINE_B = {
     2: [(0, Ab4, 18, 1), (18, F4, 6, 3), (24, Eb4, 24, 2)],
     3: [(0, G4, 36, 1), (36, Bb4, 12, 3)],
 }
-CALL = {0: [(0, C5, 24, 1)], 2: [(0, Ab4, 24, 1), (24, G4, 24, 2)]}
+# The groove's line: the hook's bones, two or three notes a bar, so the first minute has a tune.
+GROOVE = {
+    0: [(0, C5, 12, 1), (24, Ab4, 12, 2), (36, G4, 6, 3)],
+    1: [(0, G4, 24, 1), (36, Bb4, 12, 2)],
+    2: [(0, Ab4, 12, 1), (24, F4, 12, 2), (36, Ab4, 6, 3)],
+    3: [(0, G4, 36, 1), (42, Bb4, 6, 3)],
+}
 LIFT = {0: [(0, C5, 48, 1)], 1: [(0, Bb4, 48, 2)], 2: [(0, Ab4, 48, 1)], 3: [(0, G4, 36, 1), (36, Bb4, 12, 3)]}
 
 melody = s.part("melody", "The top line", "rhodes", "horns", "rhodes")
@@ -136,7 +143,7 @@ for bar in range(s.bars):
     if sec == "Intro":
         continue
     if sec == "Groove":
-        phrases = CALL
+        phrases = GROOVE
     elif sec == "Lift":
         phrases = LIFT
     elif sec == "Out":

@@ -61,7 +61,7 @@ final class AudioEngine {
     func load(band name: String) -> BandRenderer.Events {
         let e = loaded[name] ?? renderer.load(.bundled(name))
         loaded[name] = e
-        renderer.send(.band(e))
+        send(e)
         return e
     }
 
@@ -81,11 +81,22 @@ final class AudioEngine {
                 duck.channels.append("monitor")
                 band.duck = duck
             }
+            // And go into the dub chamber the way it does.
+            if var dub = band.dub, let send = dub.sends[p.channel] {
+                dub.sends["monitor"] = send
+                band.dub = dub
+            }
             return renderer.load(band)
         }()
         loaded[key] = e
-        renderer.send(.band(e))
+        send(e)
         return e
+    }
+
+    /// Swaps the band in; one with its own dub chamber plays without the room.
+    private func send(_ e: BandRenderer.Events) {
+        room.wetDryMix = e.hasDub ? 0 : 12
+        renderer.send(.band(e))
     }
     func snapshot() -> EngineSnapshot { renderer.snapshot() }
 

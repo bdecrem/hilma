@@ -928,15 +928,39 @@ enum LessonCheck {
                 Bundle.main.url(forResource: name, withExtension: "json") == nil ? nil : Song.bundled(name)
             }
             check("stage: the set list loads (\(songs.count) of \(Song.catalog.count) songs in the bundle)", !songs.isEmpty)
+            let charting = Charting.bundled
             for s in songs {
                 let ok = Song.PartKey.allCases.allSatisfy { k in
-                    let hard = s.chart(k, level: 3), easy = s.chart(k, level: 1)
-                    let span = s.keyboard(k)
-                    return !easy.isEmpty && hard.count > easy.count && hard.allSatisfy { span.contains($0.n) }
-                        && hard.last!.t < s.bars * s.ticksPerBar
+                    let all = s.notes(k), span = s.keyboard(k)
+                    return !all.isEmpty && all.allSatisfy { span.contains($0.n) } && all.last!.t < s.bars * s.ticksPerBar
                 }
-                check("stage: \(s.meta.title): both parts, easy inside hard, inside the keys, \(s.length)", ok,
-                      "chords \(s.chart(.chords, level: 1).count)/\(s.chart(.chords, level: 2).count)/\(s.chart(.chords, level: 3).count) · melody \(s.chart(.melody, level: 1).count)/\(s.chart(.melody, level: 2).count)/\(s.chart(.melody, level: 3).count) · keys \(s.keyboard(.melody))")
+                check("stage: \(s.meta.title): both parts, inside the keys, \(s.length)", ok)
+                // Every tier keeps its own rules: the gap, the most a bar, the chord size; the
+                // top one is the whole part. The detail is the ladder: onsets a second per tier.
+                for k in Song.PartKey.allCases {
+                    let all = s.notes(k), masks = s.masks(k), ladder = charting.ladder(k)
+                    let secondsPerTick = 60 / (Double(s.meta.tempo) * Double(s.band.ticksPerBeat))
+                    var rules = true
+                    var ladderLine: [String] = []
+                    for (ti, m) in masks.enumerated() {
+                        let tier = ladder.tiers[ti]
+                        var byTick: [Int: Int] = [:]
+                        for i in all.indices where m[i] { byTick[all[i].t, default: 0] += 1 }
+                        let ticks = byTick.keys.sorted()
+                        if zip(ticks, ticks.dropFirst()).contains(where: { Double($1 - $0) * secondsPerTick < tier.gap - 0.001 }) { rules = false }
+                        if let cap = tier.notes, byTick.values.contains(where: { $0 > cap }) { rules = false }
+                        if ticks.isEmpty { rules = false }
+                        // Onsets a second over the song, and the quietest and busiest eight bars
+                        // the part plays in: how even the level is.
+                        let window = 8 * s.ticksPerBar, seconds = Double(window) * secondsPerTick
+                        let partBars = Set(all.map { $0.t / window })
+                        let rates = partBars.map { w in Double(ticks.filter { $0 / window == w }.count) / seconds }
+                        ladderLine.append(String(format: "%.2f [%.1f–%.1f]", Double(ticks.count) / s.seconds, rates.min() ?? 0, rates.max() ?? 0))
+                    }
+                    let top = masks.last!.allSatisfy { $0 }
+                    check("stage: \(s.meta.title) \(k.rawValue): every level keeps its rules, the top is the whole part", rules && top,
+                          "onsets/s by level [quietest–busiest 8 bars]: \(ladderLine.joined(separator: " · "))")
+                }
             }
             if let song = songs.first {
                 let tpbar = song.ticksPerBar
@@ -961,7 +985,8 @@ enum LessonCheck {
                     return g
                 }
                 let perfect = run(.easy) { _, _ in 0 }
-                let easyNotes = song.chart(.melody, level: 1).count
+                let easyTier = charting.tier(.easy, song: song.name, part: .melody)!
+                let easyNotes = song.chart(.melody, tier: easyTier).count
                 check("stage: perfect on easy hits every note, no misses, grade S", perfect.perfect == easyNotes && perfect.missed == 0
                       && perfect.result().grade == "S" && perfect.finished && perfect.maxCombo == easyNotes,
                       "\(perfect.perfect)/\(easyNotes), score \(perfect.score)")
@@ -981,15 +1006,17 @@ enum LessonCheck {
                 wrong.played(note: 61, tick: 0, msPerTick: ms)
                 check("stage: a key no note wants is an extra, not a hit", wrong.extras == 1 && wrong.perfect + wrong.good == 0)
                 let adaptive = run(.adaptive) { _, _ in 0 }
-                // Four judged notes before it moves: the sparse first bars keep it easy one block more.
-                check("stage: adaptive climbs to hard on clean playing", adaptive.level(atBar: 0) == 1 && adaptive.level(atBar: 4) == 1
-                      && adaptive.level(atBar: 8) == 2 && adaptive.level(atBar: 12) == 3 && adaptive.result().level == 3
-                      && adaptive.perfect > easyNotes, "levels \(adaptive.blockLevel.prefix(4)), \(adaptive.perfect) hits")
-                let eases = run(.adaptive) { n, _ in n.t / tpbar >= 8 && n.t / tpbar < 12 ? nil : 0 }
-                check("stage: four missed bars ease it off, clean ones bring it back", eases.level(atBar: 8) == 2
-                      && eases.level(atBar: 12) == 1 && eases.level(atBar: 20) == 2, "levels \(eases.blockLevel.prefix(6))")
+                let steps = zip(adaptive.blockLevel, adaptive.blockLevel.dropFirst())
+                check("stage: adaptive climbs one level at a time to the top on clean playing",
+                      adaptive.blockLevel[0] == charting.adaptive.start && steps.allSatisfy { $1 == $0 || $1 == $0 + 1 }
+                      && adaptive.result().level == adaptive.tiers, "levels \(adaptive.blockLevel)")
+                let eases = run(.adaptive) { n, _ in n.t / tpbar >= 12 && n.t / tpbar < 20 ? nil : 0 }
+                let down = zip(eases.blockLevel, eases.blockLevel.dropFirst()).enumerated().first { $0.element.1 < $0.element.0 }?.offset
+                check("stage: missed bars ease it off a level at a time, clean ones bring it back",
+                      down != nil && zip(eases.blockLevel, eases.blockLevel.dropFirst()).allSatisfy { abs($1 - $0) <= 1 }
+                      && eases.blockLevel.last! > eases.blockLevel[down! + 1], "levels \(eases.blockLevel)")
                 let hardScore = run(.hard) { _, _ in 0 }.score
-                check("stage: hard pays twice easy per note", hardScore > perfect.score * 2,
+                check("stage: hard pays more than twice easy", hardScore > perfect.score * 2,
                       "hard \(hardScore) vs easy \(perfect.score)")
                 let r = ProgressStore.ScoreRecord.trimmed((0..<60).map { i in
                     ProgressStore.ScoreRecord(GameEngine.Result(song: "s", part: "melody", difficulty: "easy", score: i, notes: 1, perfect: 1,
@@ -997,6 +1024,49 @@ enum LessonCheck {
                 })
                 check("stage: the board keeps the best 50 a song, best first", r.count == 50 && r.first?.score == 59 && r.last?.score == 10)
             }
+        }
+
+        // The dub chamber: one click in, the echoes a dotted eighth apart, left and right in
+        // turn, each quieter and darker than the one before (the filters inside the loop).
+        do {
+            let sr = 48000.0, beat = sr * 60 / 117
+            let chamber = DubChamber(sampleRate: sr)
+            chamber.configure(BandData.bundled("song-abyss").dub!.settings)
+            let n = Int(beat * 4), chunk = 512
+            var outL = [Float](repeating: 0, count: n), outR = [Float](repeating: 0, count: n)
+            let zero = [Float](repeating: 0, count: chunk)
+            var click = zero
+            // A bright click: a few samples of a saw-like burst.
+            for i in 0..<64 { click[i] = (i % 8 < 4 ? 0.8 : -0.8) * Float(1 - Double(i) / 64) }
+            var at = 0
+            while at < n {
+                let m = min(chunk, n - at)
+                let input = at == 0 ? click : zero
+                outL.withUnsafeMutableBufferPointer { l in
+                    outR.withUnsafeMutableBufferPointer { r in
+                        chamber.process(sendL: input, sendR: input, kick: zero, n: m, samplesPerBeat: beat,
+                                        outL: l.baseAddress! + at, outR: r.baseAddress! + at)
+                    }
+                }
+                at += m
+            }
+            // Echo k sits at k · 0.75 beat; read 30 ms there on its side, against a dry reverb tail.
+            let d = 0.75 * beat
+            func energy(_ x: [Float], _ k: Int) -> (all: Double, high: Double) {
+                let s0 = Int(Double(k) * d) - 200, s1 = s0 + Int(0.03 * sr)
+                var e = 0.0, h = 0.0, prev: Float = 0
+                for i in max(0, s0)..<min(x.count, s1) {
+                    e += Double(x[i] * x[i])
+                    let diff = x[i] - prev
+                    h += Double(diff * diff)
+                    prev = x[i]
+                }
+                return (e, h / max(e, 1e-12))
+            }
+            let e1 = energy(outL, 1), e2 = energy(outR, 2), e3 = energy(outL, 3), wrong = energy(outR, 1)
+            check("dub chamber: echoes a dotted eighth apart, left and right in turn, each quieter and darker",
+                  e1.all > e2.all && e2.all > e3.all && wrong.all < e1.all * 0.2 && e2.high < e1.high && e3.high < e2.high,
+                  String(format: "energy %.3g %.3g %.3g, brightness %.3f %.3f %.3f", e1.all, e2.all, e3.all, e1.high, e2.high, e3.high))
         }
 
         print("LessonCheck: \(passed) passed, \(failed) failed")
