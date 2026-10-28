@@ -271,6 +271,16 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   finger that's down, a dotted outline on the next, and on the tuck the thumb's dotted ghost
   under the palm plus the dotted arc it travels. Same on the web page. Checks 153/153.
 
+- **Scales lessons 4–6: 0.1 (33), 2026-10-28.** Two octaves (right hand, 15 notes A3–A5 one a
+  beat over four bars, thumb under twice, three runs a chorus), The left hand (one octave up from
+  A2 with 5 4 3 2 1 3 2 1: the middle finger crosses *over* going up), The blues scale (A C D E♭
+  E G A up and back, 1 2 3 4 1 2 3, named "A blues" by the step's `key`). Engine: `semitones`
+  may be negative (the pitch class wraps), `Run.right` mirrors the crossing rules and the hand
+  (`crossing(from:to:right:)`), `Run.flats` spells E♭/B♭ (`Key.letter(_:flats:)`, on when the
+  run's name ends in "blues"), `Run.keyboard` widens past `keys` to hold a two-octave run (A3–A5
+  on both devices, 15 white keys on the iPhone), the module's `range.high` is 84. The scales
+  entry reads "Both hands · 6 lessons". Checks 158/158.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

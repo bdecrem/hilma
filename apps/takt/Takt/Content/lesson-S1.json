@@ -5,7 +5,7 @@
   "module": {
     "code": "scales",
     "title": "Scales",
-    "detail": "Right hand \u00b7 one octave in C major"
+    "detail": "Right and left hand · scales and the blues scale in C major"
   },
   "lessons": [
     {
@@ -31,20 +31,40 @@
       "steps": [
         "updown"
       ]
+    },
+    {
+      "title": "Two octaves",
+      "skill": "C major, two octaves up, one note a beat",
+      "goal": "2 clean choruses at 60",
+      "steps": [
+        "two"
+      ]
+    },
+    {
+      "title": "The left hand",
+      "skill": "C major in the left hand, one octave up",
+      "goal": "2 clean choruses at 60",
+      "steps": [
+        "left"
+      ]
+    },
+    {
+      "title": "The blues scale",
+      "skill": "The C blues scale, up and back down",
+      "goal": "2 clean choruses at 60",
+      "steps": [
+        "blues"
+      ]
     }
   ],
   "later": [
     {
-      "title": "Two octaves",
-      "skill": "The same run, twice as far"
+      "title": "Thirds",
+      "skill": "The scale two notes at a time"
     },
     {
-      "title": "The left hand",
-      "skill": "The scale in the other hand"
-    },
-    {
-      "title": "The blues scale",
-      "skill": "Six notes, every blues solo lives here"
+      "title": "Both hands",
+      "skill": "Left and right together, an octave apart"
     }
   ],
   "band": "band-blues-C",
@@ -70,7 +90,7 @@
   ],
   "range": {
     "low": 36,
-    "high": 72
+    "high": 84
   },
   "displayRoot": 48,
   "channels": [
@@ -333,6 +353,292 @@
         "join": "From the top.",
         "slow": "Clean at {tempo}. It counts at {gateTempo}.",
         "passed": "Clean. You can play a scale."
+      }
+    },
+    {
+      "id": "two",
+      "kind": "play",
+      "title": "Two octaves",
+      "skill": "rh.scale.two.S1",
+      "tempo": 60,
+      "gate": 2,
+      "cycle": 4,
+      "hand": "right",
+      "pattern": [
+        {
+          "bar": 0,
+          "beat": 1,
+          "semitones": 0,
+          "finger": 1
+        },
+        {
+          "bar": 0,
+          "beat": 2,
+          "semitones": 2,
+          "finger": 2
+        },
+        {
+          "bar": 0,
+          "beat": 3,
+          "semitones": 4,
+          "finger": 3
+        },
+        {
+          "bar": 0,
+          "beat": 4,
+          "semitones": 5,
+          "finger": 1
+        },
+        {
+          "bar": 1,
+          "beat": 1,
+          "semitones": 7,
+          "finger": 2
+        },
+        {
+          "bar": 1,
+          "beat": 2,
+          "semitones": 9,
+          "finger": 3
+        },
+        {
+          "bar": 1,
+          "beat": 3,
+          "semitones": 11,
+          "finger": 4
+        },
+        {
+          "bar": 1,
+          "beat": 4,
+          "semitones": 12,
+          "finger": 1
+        },
+        {
+          "bar": 2,
+          "beat": 1,
+          "semitones": 14,
+          "finger": 2
+        },
+        {
+          "bar": 2,
+          "beat": 2,
+          "semitones": 16,
+          "finger": 3
+        },
+        {
+          "bar": 2,
+          "beat": 3,
+          "semitones": 17,
+          "finger": 1
+        },
+        {
+          "bar": 2,
+          "beat": 4,
+          "semitones": 19,
+          "finger": 2
+        },
+        {
+          "bar": 3,
+          "beat": 1,
+          "semitones": 21,
+          "finger": 3
+        },
+        {
+          "bar": 3,
+          "beat": 2,
+          "semitones": 23,
+          "finger": 4
+        },
+        {
+          "bar": 3,
+          "beat": 3,
+          "semitones": 24,
+          "finger": 5
+        }
+      ],
+      "about": "The same run, twice as far: up from C through the top C and on to the C above it. The thumb tucks under twice on the way, after the middle finger each time, and the pinky lands on the very top. One note a beat; a beat to breathe, then from the bottom again. Three runs a chorus.",
+      "coach": {
+        "intro": "C major, two octaves. Thumb on C.",
+        "change": "Up two octaves. Thumb under after the middle finger.",
+        "hold": "Up two octaves. Thumb under after the middle finger.",
+        "clean": "Clean. {left} more.",
+        "again": "{problem} Again.",
+        "join": "From the top.",
+        "slow": "Clean at {tempo}. It counts at {gateTempo}.",
+        "passed": "Clean. Two octaves in the hand."
+      }
+    },
+    {
+      "id": "left",
+      "kind": "play",
+      "title": "The left hand",
+      "skill": "lh.scale.up.S1",
+      "tempo": 60,
+      "gate": 2,
+      "cycle": 3,
+      "hand": "left",
+      "pattern": [
+        {
+          "bar": 0,
+          "beat": 1,
+          "semitones": -12,
+          "finger": 5
+        },
+        {
+          "bar": 0,
+          "beat": 2,
+          "semitones": -10,
+          "finger": 4
+        },
+        {
+          "bar": 0,
+          "beat": 3,
+          "semitones": -8,
+          "finger": 3
+        },
+        {
+          "bar": 0,
+          "beat": 4,
+          "semitones": -7,
+          "finger": 2
+        },
+        {
+          "bar": 1,
+          "beat": 1,
+          "semitones": -5,
+          "finger": 1
+        },
+        {
+          "bar": 1,
+          "beat": 2,
+          "semitones": -3,
+          "finger": 3
+        },
+        {
+          "bar": 1,
+          "beat": 3,
+          "semitones": -1,
+          "finger": 2
+        },
+        {
+          "bar": 1,
+          "beat": 4,
+          "semitones": 0,
+          "finger": 1
+        }
+      ],
+      "about": "The same scale in the left hand, an octave lower. Pinky on C, then ring, middle, index, thumb. Now the middle finger crosses over the thumb, and index, thumb bring you to the top C. Hold it a bar, then from the pinky again. Four runs a chorus.",
+      "coach": {
+        "intro": "C major, left hand. Pinky on C.",
+        "change": "Up the scale. Middle finger over the thumb.",
+        "hold": "Up the scale. Middle finger over the thumb.",
+        "clean": "Clean. {left} more.",
+        "again": "{problem} Again.",
+        "join": "From the top.",
+        "slow": "Clean at {tempo}. It counts at {gateTempo}.",
+        "passed": "Clean. Both hands know the scale."
+      }
+    },
+    {
+      "id": "blues",
+      "kind": "play",
+      "title": "The blues scale",
+      "skill": "rh.blues.updown.S1",
+      "tempo": 60,
+      "gate": 2,
+      "cycle": 4,
+      "hand": "right",
+      "key": "C blues",
+      "pattern": [
+        {
+          "bar": 0,
+          "beat": 1,
+          "semitones": 0,
+          "finger": 1
+        },
+        {
+          "bar": 0,
+          "beat": 2,
+          "semitones": 3,
+          "finger": 2
+        },
+        {
+          "bar": 0,
+          "beat": 3,
+          "semitones": 5,
+          "finger": 3
+        },
+        {
+          "bar": 0,
+          "beat": 4,
+          "semitones": 6,
+          "finger": 4
+        },
+        {
+          "bar": 1,
+          "beat": 1,
+          "semitones": 7,
+          "finger": 1
+        },
+        {
+          "bar": 1,
+          "beat": 2,
+          "semitones": 10,
+          "finger": 2
+        },
+        {
+          "bar": 1,
+          "beat": 3,
+          "semitones": 12,
+          "finger": 3
+        },
+        {
+          "bar": 1,
+          "beat": 4,
+          "semitones": 10,
+          "finger": 2
+        },
+        {
+          "bar": 2,
+          "beat": 1,
+          "semitones": 7,
+          "finger": 1
+        },
+        {
+          "bar": 2,
+          "beat": 2,
+          "semitones": 6,
+          "finger": 4
+        },
+        {
+          "bar": 2,
+          "beat": 3,
+          "semitones": 5,
+          "finger": 3
+        },
+        {
+          "bar": 2,
+          "beat": 4,
+          "semitones": 3,
+          "finger": 2
+        },
+        {
+          "bar": 3,
+          "beat": 1,
+          "semitones": 0,
+          "finger": 1
+        }
+      ],
+      "about": "Six notes, every blues solo lives here: C E♭ F G♭ G B♭ C. Right hand, one note a beat: thumb, index, middle, ring, then the thumb tucks under onto the fifth and index, middle finish on the top C. Turn around and come straight back down. Three runs a chorus.",
+      "coach": {
+        "intro": "C blues scale. Thumb on C.",
+        "change": "Up the blues scale and back down.",
+        "hold": "Up the blues scale and back down.",
+        "clean": "Clean. {left} more.",
+        "again": "{problem} Again.",
+        "join": "From the top.",
+        "slow": "Clean at {tempo}. It counts at {gateTempo}.",
+        "passed": "Clean. That's the sound of the blues."
       }
     }
   ]

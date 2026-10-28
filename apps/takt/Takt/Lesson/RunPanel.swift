@@ -24,7 +24,7 @@ struct RunPanel: View {
                 .padding(.top, compact ? 6 : 10)
             // The hand takes what is left, centered.
             HandView(down: run.resting ? nil : run.now?.finger, next: run.next?.finger,
-                     tuck: tucking, right: true)
+                     tuck: tucking, right: run.right)
                 .aspectRatio(240 / 200, contentMode: .fit)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .padding(.top, compact ? 6 : 12)
@@ -40,22 +40,22 @@ struct RunPanel: View {
     /// The thumb tucks under when the next step is the thumb crossing.
     private var tucking: Bool {
         guard let a = run.now, let b = run.next, !run.resting else { return false }
-        return LessonState.Run.crossing(from: a, to: b) == "Thumb under"
+        return LessonState.Run.crossing(from: a, to: b, right: run.right) == "Thumb under"
     }
 
-    /// "A minor · up"
+    /// "A minor · going up", "A minor · left hand · going up"
     private var title: String {
         let dir: String
         if let f = run.notes.first?.key, let l = run.notes.last?.key {
             dir = l > f ? "going up" : l < f ? "coming down" : "up and down"
         } else { dir = "" }
-        return [run.name, dir].filter { !$0.isEmpty }.joined(separator: " · ")
+        return [run.name, run.right ? "" : "left hand", dir].filter { !$0.isEmpty }.joined(separator: " · ")
     }
 
     private var spoken: String {
         guard let now = run.now else { return title }
-        let next = run.next.map { ", next \(Key.letter($0.key)) with \(LessonState.Run.fingerWord($0.finger).lowercased())" } ?? ""
-        return "\(title). \(run.resting ? "Hold" : "Now") \(Key.letter(now.key)), \(LessonState.Run.fingerWord(now.finger).lowercased())\(next)"
+        let next = run.next.map { ", next \(Key.letter($0.key, flats: run.flats)) with \(LessonState.Run.fingerWord($0.finger).lowercased())" } ?? ""
+        return "\(title). \(run.resting ? "Hold" : "Now") \(Key.letter(now.key, flats: run.flats)), \(LessonState.Run.fingerWord(now.finger).lowercased())\(next)"
     }
 }
 
@@ -83,7 +83,7 @@ struct Staircase: View {
                     }
                     // The crossings: an arrow from under one step to the next.
                     for i in 0..<(n - 1) {
-                        guard let name = LessonState.Run.crossing(from: run.notes[i], to: run.notes[i + 1]) else { continue }
+                        guard let name = LessonState.Run.crossing(from: run.notes[i], to: run.notes[i + 1], right: run.right) else { continue }
                         let live = run.index == i && !run.resting
                         let color = live ? Palette.signal : Palette.muted
                         let x0 = x(i) + w / 2, x1 = x(i + 1) + w / 2
@@ -104,7 +104,7 @@ struct Staircase: View {
                     }
                 }
                 ForEach(Array(run.notes.enumerated()), id: \.offset) { i, note in
-                    Step(note: note, role: role(i), width: w, badge: w >= 34, compact: compact)
+                    Step(note: note, role: role(i), width: w, badge: w >= 34, compact: compact, flats: run.flats)
                         .frame(width: w, height: stepH)
                         .offset(x: x(i), y: top(i))
                         .animation(.easeOut(duration: 0.18), value: run.index)
@@ -159,6 +159,7 @@ struct Staircase: View {
         let width: CGFloat
         let badge: Bool
         var compact = false
+        var flats = false
 
         var body: some View {
             let shape = RoundedRectangle(cornerRadius: 6)
@@ -176,7 +177,7 @@ struct Staircase: View {
                     shape.strokeBorder(Palette.line, lineWidth: 1)
                 }
                 VStack(spacing: compact ? 2 : 6) {
-                    Text(Key.letter(note.key))
+                    Text(Key.letter(note.key, flats: flats))
                         .font(.display(badge ? (compact ? 18 : 26) : (compact ? 13 : 18)))
                         .foregroundStyle(ink)
                     if badge, note.finger > 0 {
@@ -213,8 +214,10 @@ struct NoteDot: View {
 }
 
 extension Key {
-    /// The letter alone: "A", "C♯".
-    static func letter(_ note: Int) -> String {
-        ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"][note % 12]
+    /// The letter alone: "A", "C♯" (or "D♭" with `flats`).
+    static func letter(_ note: Int, flats: Bool = false) -> String {
+        let pc = ((note % 12) + 12) % 12
+        return flats ? ["C", "D♭", "D", "E♭", "E", "F", "G♭", "G", "A♭", "A", "B♭", "B"][pc]
+                     : ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"][pc]
     }
 }

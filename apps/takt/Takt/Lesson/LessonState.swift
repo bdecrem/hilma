@@ -103,6 +103,10 @@ struct LessonState {
         /// 1-based pass of the chorus, and how many a chorus holds.
         let number: Int
         let count: Int
+        /// The right hand (the crossings mirror for the left).
+        var right = true
+        /// Spell the black keys as flats (the blues scale: E♭, B♭).
+        var flats = false
 
         var now: Note? { index.map { notes[$0] } }
         var next: Note? { index.map { notes[($0 + 1) % notes.count] } }
@@ -110,10 +114,12 @@ struct LessonState {
         var wrapping: Bool { index.map { $0 == notes.count - 1 } ?? false }
 
         /// How the hand gets from one note to the next: a thumb tucking under, or a finger
-        /// crossing over the thumb. Nil for a plain step to the neighbor finger.
-        static func crossing(from a: Note, to b: Note) -> String? {
-            if b.finger == 1, a.finger > 1, b.key > a.key { return "Thumb under" }
-            if a.finger == 1, b.finger > 1, b.key < a.key { return "\(Self.fingerWord(b.finger)) over" }
+        /// crossing over the thumb. Nil for a plain step to the neighbor finger. The right hand
+        /// tucks going up and crosses over coming down; the left hand the other way round.
+        static func crossing(from a: Note, to b: Note, right: Bool = true) -> String? {
+            let up = b.key > a.key
+            if b.finger == 1, a.finger > 1, up == right { return "Thumb under" }
+            if a.finger == 1, b.finger > 1, up != right { return "\(Self.fingerWord(b.finger)) over" }
             return nil
         }
 
@@ -121,14 +127,15 @@ struct LessonState {
             ["", "Thumb", "Index", "Middle", "Ring", "Pinky"][max(0, min(5, f))]
         }
 
-        /// The keyboard that shows the whole run: `keys` semitones wide, white keys at both ends,
-        /// the run centered; `fallback` when there is no run.
+        /// The keyboard that shows the whole run: `keys` semitones wide (wider when the run spans
+        /// more, two octaves), white keys at both ends, the run centered; `fallback` when there
+        /// is no run.
         static func keyboard(_ run: Run?, keys: Int, fallback: ClosedRange<Int>) -> ClosedRange<Int> {
             guard let run, let lo = run.notes.map(\.key).min(), let hi = run.notes.map(\.key).max() else { return fallback }
             if fallback.contains(lo), fallback.contains(hi) { return fallback }
-            var low = (lo + hi) / 2 - keys / 2
+            var low = min(lo, (lo + hi) / 2 - keys / 2)
             while KeyboardStrip.isBlack(low) { low -= 1 }
-            var high = low + keys - 1
+            var high = max(hi, low + keys - 1)
             while KeyboardStrip.isBlack(high) { high += 1 }
             return low...high
         }

@@ -684,10 +684,12 @@ final class Player {
         let one = content.expected(step, ticksPerBeat: audio.band.ticksPerBeat).prefix(pattern.count)
         let notes = one.map { LessonState.Run.Note(key: $0.display, finger: $0.finger ?? 0) }
         let resting = !pattern.contains { ($0.bar ?? 0) == bar % cycle }
-        return LessonState.Run(name: content.key ?? "", notes: Array(notes),
+        let name = step.key ?? content.key ?? ""
+        return LessonState.Run(name: name, notes: Array(notes),
                                index: lesson.nowIndex.map { $0 % notes.count },
                                resting: resting,
-                               number: bar / cycle + 1, count: max(1, form.count / cycle))
+                               number: bar / cycle + 1, count: max(1, form.count / cycle),
+                               right: step.hand == "right", flats: name.hasSuffix("blues"))
     }
 }
 

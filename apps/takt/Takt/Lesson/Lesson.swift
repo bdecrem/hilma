@@ -26,7 +26,8 @@ struct Lesson: Decodable {
         let beat: Int
         /// Ticks after the beat (12 per beat; the shuffle's late eighth is 8).
         let tick: Int?
-        /// Chord tone: root, third, fifth, sixth, seventh, octave. Or `semitones` from the root.
+        /// Chord tone: root, third, fifth, sixth, seventh, octave. Or `semitones` from the root
+        /// (negative for the octave below: the left hand's scale).
         let tone: String?
         let semitones: Int?
         /// 0-based bar inside the step's `cycle` (a run over several bars); nil = every bar.
@@ -105,6 +106,8 @@ struct Lesson: Decodable {
         let cycle: Int?
         /// "left" (default) or "right": the hand the intro draws.
         let hand: String?
+        /// A run in another key than the module's ("A blues"): the run panel's name.
+        let key: String?
         /// Clean choruses to pass (not necessarily in a row).
         let gate: Int?
         let maxAttempts: Int?
@@ -234,7 +237,7 @@ struct Lesson: Decodable {
                 notes.append(ExpectedNote(
                     tick: (bar * 4 + p.beat - 1) * ticksPerBeat + (p.tick ?? 0),
                     bar: bar,
-                    pitchClass: (root + interval) % 12,
+                    pitchClass: ((root + interval) % 12 + 12) % 12,
                     display: displayRoot + root + interval,
                     finger: p.finger,
                     chord: together > 1))

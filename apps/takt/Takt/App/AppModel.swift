@@ -402,7 +402,7 @@ struct LessonEntry: Identifiable {
         (catalog[3], "Ear and form", "Find your level, then five questions a day"),
     ]
 
-    static let scales = LessonEntry(kind: .lesson, code: "S", title: "Scales", meta: "Right hand · one octave · 3 lessons",
+    static let scales = LessonEntry(kind: .lesson, code: "S", title: "Scales", meta: "Both hands · one and two octaves, the blues scale · 6 lessons",
                                     after: nil, playable: true)
 
     /// Level 1 on the map, in order: the modules and what comes after them.

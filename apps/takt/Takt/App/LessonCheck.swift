@@ -267,8 +267,34 @@ enum LessonCheck {
             check("scales: the intro shows the fingering of the run, right hand",
                   se.output.intro?.fingering == [1, 2, 3, 1, 2, 3, 4, 5, 4, 3, 2, 1, 3, 2, 1] && se.output.intro?.rightHand == true,
                   "\(String(describing: se.output.intro?.fingering))")
-            check("scales: three lessons, their steps in order", major.lessons.count == 3 && major.lessonsDone(reachedStep: 2) == 1
-                  && minor.lessons.map(\.title) == ["Up", "Down", "Up and down"])
+            typealias RN0 = LessonState.Run.Note
+            check("scales: six lessons, their steps in order", major.lessons.count == 6 && major.lessonsDone(reachedStep: 2) == 1
+                  && minor.lessons.map(\.title) == ["Up", "Down", "Up and down", "Two octaves", "The left hand", "The blues scale"])
+            // Lessons 4–6: two octaves (15 notes, A3 to A5, three runs), the left hand an octave
+            // down with the pinky first, the blues scale up and back (13 notes, the flat five).
+            let two = minor.expected(minor.steps[3], ticksPerBeat: tpb)
+            check("scales: two octaves is 15 notes a run from A3 to A5, thumb under twice, three runs a chorus",
+                  two.count == 45 && two[0].display == 57 && two[14].display == 81 && two.prefix(15).map(\.finger) == [1, 2, 3, 1, 2, 3, 4, 1, 2, 3, 1, 2, 3, 4, 5]
+                  && two[15].tick == 4 * 4 * tpb, "\(two.count) \(two.prefix(15).map(\.display))")
+            let left = minor.expected(minor.steps[4], ticksPerBeat: tpb)
+            check("scales: the left hand runs A2 to A3 with 5 4 3 2 1 3 2 1, pitch classes right below the root",
+                  left.prefix(8).map(\.display) == [45, 47, 48, 50, 52, 53, 55, 57] && left.prefix(8).map(\.finger) == [5, 4, 3, 2, 1, 3, 2, 1]
+                  && left.prefix(8).map(\.pitchClass) == [9, 11, 0, 2, 4, 5, 7, 9] && minor.steps[4].hand == "left", "\(left.prefix(8).map(\.pitchClass))")
+            let bluesRun = minor.expected(minor.steps[5], ticksPerBeat: tpb)
+            check("scales: the blues scale is A C D E♭ E G A and back, 13 notes, named A blues",
+                  bluesRun.prefix(13).map(\.display) == [57, 60, 62, 63, 64, 67, 69, 67, 64, 63, 62, 60, 57]
+                  && minor.steps[5].key == "A blues" && Key.letter(63, flats: true) == "E♭" && Key.letter(63) == "D♯"
+                  && major.expected(major.steps[5], ticksPerBeat: tpb).prefix(7).map(\.pitchClass) == [0, 3, 5, 6, 7, 10, 0])
+            check("scales: the left hand crosses the other way: 1 → 3 going up is Middle over, 3 → 1 coming down is Thumb under",
+                  LessonState.Run.crossing(from: RN0(key: 52, finger: 1), to: RN0(key: 53, finger: 3), right: false) == "Middle over"
+                  && LessonState.Run.crossing(from: RN0(key: 48, finger: 3), to: RN0(key: 47, finger: 1), right: false) == "Thumb under"
+                  && LessonState.Run.crossing(from: RN0(key: 52, finger: 1), to: RN0(key: 53, finger: 3), right: true) == nil)
+            let twoRun = LessonState.Run(name: "A minor", notes: two.prefix(15).map { RN0(key: $0.display, finger: $0.finger ?? 0) },
+                                         index: 0, resting: false, number: 1, count: 3)
+            check("scales: the keyboard widens to hold two octaves, A3–A5 on both",
+                  LessonState.Run.keyboard(twoRun, keys: 24, fallback: 48...71) == 57...81
+                  && LessonState.Run.keyboard(twoRun, keys: 18, fallback: 48...65) == 57...81,
+                  "\(LessonState.Run.keyboard(twoRun, keys: 18, fallback: 48...65))")
             check("scales: the key is named", major.key == "C major" && minor.key == "A minor")
 
             // The run on screen: the engine's index into the chorus, every finger on the keyboard,
