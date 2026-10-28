@@ -1,11 +1,11 @@
 import SwiftUI
 
-/// The hand under a scale lesson comes in five drawings (Settings → Display → Hand; concepts at
+/// The hand under a scale lesson comes in six drawings (Settings → Display → Hand; concepts at
 /// ola.cx/takt/hands), all on one contract: `down` is filled `signal` (and `lit`, an intro's
 /// whole-hand pose), `next` is outlined `cue`, `tuck` folds the thumb in under the palm, `right`
 /// mirrors the drawing for the left hand.
 enum HandStyle: String, CaseIterable, Identifiable {
-    case linie, automat, greif, schaltplan, bauhaus
+    case linie, skizze, automat, greif, schaltplan, bauhaus
 
     static let key = "hand"
     var id: String { rawValue }
@@ -13,6 +13,7 @@ enum HandStyle: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .linie: "Linie"
+        case .skizze: "Skizze"
         case .automat: "Automat"
         case .greif: "Greif"
         case .schaltplan: "Schaltplan"
@@ -23,6 +24,7 @@ enum HandStyle: String, CaseIterable, Identifiable {
     var detail: String {
         switch self {
         case .linie: "A clean hand-drawn line"
+        case .skizze: "A normal hand, sketched"
         case .automat: "The robot hand"
         case .greif: "The griffin's claw"
         case .schaltplan: "The circuit hand"
@@ -79,7 +81,18 @@ struct HandView: View {
         .accessibilityLabel(spoken)
     }
 
+    @ViewBuilder
     private var drawing: some View {
+        if current == .skizze {
+            SkizzeHand(tone: tone, tuck: tuck, right: right)
+                .frame(width: 240, height: 200)
+                .scaleEffect(x: right ? 1 : -1)
+        } else {
+            parts
+        }
+    }
+
+    private var parts: some View {
         ZStack {
             palm.zIndex(1)
             thumb.zIndex(2)
@@ -116,6 +129,7 @@ struct HandView: View {
         let t = tone(f)
         switch current {
         case .linie: LinieFinger(tone: t, w: w, len: len, seed: f, ghost: ghost)
+        case .skizze: EmptyView()
         case .automat: AutomatFinger(tone: t, w: w, len: len, thumb: thumb)
         case .greif: GreifFinger(tone: t, w: w, len: len)
         case .schaltplan: SchaltplanFinger(tone: t, w: w, len: len)
@@ -127,6 +141,7 @@ struct HandView: View {
     private var palm: some View {
         switch current {
         case .linie: LiniePalm()
+        case .skizze: EmptyView()
         case .automat: AutomatPalm()
         case .greif: GreifPalm()
         case .schaltplan: SchaltplanPalm()
@@ -138,7 +153,7 @@ struct HandView: View {
     private func number(_ f: Int, width w: CGFloat, length len: CGFloat, counter: Double) -> some View {
         let t = tone(f)
         let dy: CGFloat = switch current {
-        case .linie: 24
+        case .linie, .skizze: 24
         case .automat: 26
         case .greif: 40
         case .schaltplan: 34
@@ -450,7 +465,197 @@ private struct BauhausPalm: View {
     }
 }
 
-/// Settings → Display: the five hands side by side, the chosen one outlined `signal`; tap to pick.
+// MARK: - 6 · Skizze: a normal hand, one outline, no seams; the lesson's marks drawn over it.
+
+/// The whole hand as one closed line, the way a hand is sketched: palm, four fingers and the
+/// thumb in a single outline, no line where a finger meets the palm. `fold` 0 is the thumb out
+/// to the side, 1 the thumb folded in under the palm (its points slide onto the palm's edge).
+struct SkizzeSilhouette: Shape {
+    var fold: CGFloat
+    var animatableData: CGFloat {
+        get { fold }
+        set { fold = newValue }
+    }
+
+    func path(in rect: CGRect) -> Path {
+        let t = fold
+        func mix(_ a: CGPoint, _ b: CGPoint) -> CGPoint { CGPoint(x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t) }
+        var p = Path()
+        p.move(to: CGPoint(x: 86, y: 198))
+        p.addCurve(to: SkizzeGeometry.heel, control1: CGPoint(x: 80, y: 194), control2: CGPoint(x: 76, y: 184))
+        // The thumb: the outer edge sweeps out from the heel (the thenar) to the tip, the inner edge
+        // runs back into the web at the index finger's base. Folded, every point sits on the palm's edge.
+        p.addCurve(to: mix(CGPoint(x: 7, y: 106), CGPoint(x: 68, y: 162)),
+                   control1: mix(CGPoint(x: 46, y: 180), CGPoint(x: 70, y: 172)),
+                   control2: mix(CGPoint(x: 18, y: 126), CGPoint(x: 67, y: 168)))
+        p.addCurve(to: mix(CGPoint(x: 36, y: 86), CGPoint(x: 69, y: 150)),
+                   control1: mix(CGPoint(x: 1, y: 96), CGPoint(x: 66, y: 158)),
+                   control2: mix(CGPoint(x: 29, y: 76), CGPoint(x: 68, y: 153)))
+        p.addCurve(to: SkizzeGeometry.web,
+                   control1: mix(CGPoint(x: 44, y: 96), CGPoint(x: 70, y: 147)),
+                   control2: mix(CGPoint(x: 62, y: 118), CGPoint(x: 71, y: 143)))
+        var previous: CGPoint? = nil
+        for f in 2...5 {
+            let g = SkizzeGeometry.finger(f)
+            if let previous {
+                p.addQuadCurve(to: g.leftBottom, control: CGPoint(x: (previous.x + g.leftBottom.x) / 2, y: g.leftBottom.y + 7))
+            } else {
+                p.addQuadCurve(to: g.leftBottom, control: CGPoint(x: 71, y: 136))
+            }
+            p.addCurve(to: g.leftTop, control1: g.leftC1, control2: g.leftC2)
+            p.addCurve(to: g.rightTop, control1: g.tipC1, control2: g.tipC2)
+            p.addCurve(to: g.rightBottom, control1: g.rightC1, control2: g.rightC2)
+            previous = g.rightBottom
+        }
+        p.addCurve(to: CGPoint(x: 206, y: 198), control1: CGPoint(x: 228, y: 150), control2: CGPoint(x: 226, y: 186))
+        return p
+    }
+}
+
+enum SkizzeGeometry {
+    struct Finger {
+        let leftBottom, leftC1, leftC2, leftTop, tipC1, tipC2, rightTop, rightC1, rightC2, rightBottom: CGPoint
+        let lean: Double
+        /// A point in the finger's own upright frame, placed on the leaning finger.
+        let place: (CGFloat, CGFloat) -> CGPoint
+    }
+
+    static let heel = CGPoint(x: 73, y: 177)
+    static let web = CGPoint(x: 72, y: 139)
+    /// The thumb as the overlays see it: a capsule from `thumbBase` along the drawn thumb's axis,
+    /// out at `thumbOut`, under the palm at `thumbIn`.
+    static let thumbBase = CGPoint(x: 64, y: 157)
+    static let thumbLength: CGFloat = 80
+    static let thumbWidth: CGFloat = 30
+    static let thumbOut: Double = -35.5
+    static let thumbIn: Double = 58
+
+    static func wob(_ f: Int, _ k: Int) -> CGFloat { CGFloat((f * 7 + k * 3) % 5) * 0.5 - 1 }
+
+    static func rotate(_ p: CGPoint, about c: CGPoint, degrees: Double) -> CGPoint {
+        let a = degrees * .pi / 180, dx = p.x - c.x, dy = p.y - c.y
+        return CGPoint(x: c.x + dx * CGFloat(cos(a)) - dy * CGFloat(sin(a)), y: c.y + dx * CGFloat(sin(a)) + dy * CGFloat(cos(a)))
+    }
+
+    static func finger(_ f: Int) -> Finger {
+        let g = HandView.fingers[f]
+        let lean = Double(f - 3) * 3.5
+        let pivot = CGPoint(x: g.x, y: HandView.fingerBottom)
+        let bottom = HandView.fingerBottom + 2
+        func r(_ x: CGFloat, _ y: CGFloat) -> CGPoint { rotate(CGPoint(x: x, y: y), about: pivot, degrees: lean) }
+        let l = g.x - g.w / 2, rr = g.x + g.w / 2, tipY = g.top + g.w / 2
+        return Finger(
+            leftBottom: r(l + 2, bottom),
+            leftC1: r(l + wob(f, 1), bottom - 34), leftC2: r(l + wob(f, 2), tipY + 14), leftTop: r(l + 1, tipY),
+            tipC1: r(l + 1, g.top - 2 + wob(f, 3)), tipC2: r(rr - 1, g.top - 2 + wob(f, 4)), rightTop: r(rr - 1, tipY),
+            rightC1: r(rr + wob(f, 5), tipY + 14), rightC2: r(rr, bottom - 34), rightBottom: r(rr - 2, bottom),
+            lean: lean, place: { x, y in r(x, y) })
+    }
+
+    /// The thumb's path from out to under: an arc about its base, for the dotted motion line.
+    static func thumbArc(radius: CGFloat) -> [CGPoint] {
+        stride(from: 0, through: 24, by: 1).map { i in
+            let a = (thumbOut + (thumbIn - thumbOut) * Double(i) / 24) * .pi / 180
+            return CGPoint(x: thumbBase.x + radius * CGFloat(sin(a)), y: thumbBase.y - radius * CGFloat(cos(a)))
+        }
+    }
+}
+
+/// The drawing: the silhouette, nails and knuckles in pencil, then the lesson's marks on top as a
+/// teacher would add them: a marker over the finger that's down, a dotted outline around the next,
+/// and when the thumb goes under, its dotted ghost and the dotted arc it travels.
+private struct SkizzeHand: View {
+    let tone: (Int) -> HandTone
+    let tuck: Bool
+    let right: Bool
+
+    var body: some View {
+        ZStack {
+            SkizzeSilhouette(fold: tuck ? 1 : 0).fill(Palette.panel)
+            SkizzeSilhouette(fold: tuck ? 1 : 0)
+                .stroke(Palette.text, style: StrokeStyle(lineWidth: 2.2, lineCap: .round, lineJoin: .round))
+            pencil
+            ForEach(2...5, id: \.self) { f in mark(f) }
+            thumb
+            if tuck { motion }
+        }
+        .animation(.spring(response: 0.45, dampingFraction: 0.7), value: tuck)
+    }
+
+    /// Nails at the tips, a knuckle under each finger.
+    private var pencil: some View {
+        Path { p in
+            for f in 2...5 {
+                let g = SkizzeGeometry.finger(f), fg = HandView.fingers[f]
+                p.move(to: g.place(fg.x - 6, fg.top + 21))
+                p.addCurve(to: g.place(fg.x + 6, fg.top + 21), control1: g.place(fg.x - 7, fg.top + 8), control2: g.place(fg.x + 7, fg.top + 8))
+                p.move(to: g.place(fg.x - 5, 143))
+                p.addQuadCurve(to: g.place(fg.x + 5, 143), control: g.place(fg.x, 139))
+            }
+        }
+        .stroke(Palette.line, style: StrokeStyle(lineWidth: 1.3, lineCap: .round))
+    }
+
+    private func mark(_ f: Int) -> some View {
+        let g = HandView.fingers[f]
+        let t = tone(f)
+        let len = HandView.fingerBottom - g.top - 8
+        return ZStack {
+            Capsule().fill(t == .on ? Palette.signal.opacity(0.92) : t == .cue ? Palette.cue.opacity(0.08) : .clear)
+            Capsule().strokeBorder(t == .cue ? Palette.cue : .clear, style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [3, 4]))
+            number(f, counter: -Double(f - 3) * 3.5).position(x: (g.w - 8) / 2, y: 36)
+        }
+        .frame(width: g.w - 8, height: len)
+        .rotationEffect(.degrees(Double(f - 3) * 3.5), anchor: .bottom)
+        .position(x: g.x, y: HandView.fingerBottom - 4 - len / 2)
+    }
+
+    private var thumb: some View {
+        let t = tone(1)
+        let angle = tuck ? SkizzeGeometry.thumbIn : SkizzeGeometry.thumbOut
+        let ghost = tuck
+        let stroke: Color = ghost ? (t == .cue ? Palette.cue : Palette.muted) : (t == .cue ? Palette.cue : .clear)
+        return ZStack {
+            Capsule().fill(!ghost && t == .on ? Palette.signal.opacity(0.92) : !ghost && t == .cue ? Palette.cue.opacity(0.08) : .clear)
+            Capsule().strokeBorder(stroke, style: StrokeStyle(lineWidth: 2, lineCap: .round, dash: [3, 4]))
+            number(1, counter: -angle).position(x: SkizzeGeometry.thumbWidth / 2, y: 30)
+        }
+        .frame(width: SkizzeGeometry.thumbWidth, height: SkizzeGeometry.thumbLength)
+        .rotationEffect(.degrees(angle), anchor: .bottom)
+        .position(x: SkizzeGeometry.thumbBase.x, y: SkizzeGeometry.thumbBase.y - SkizzeGeometry.thumbLength / 2)
+    }
+
+    /// The dotted arc from where the thumb was to where it goes, with a small arrowhead.
+    private var motion: some View {
+        let pts = SkizzeGeometry.thumbArc(radius: SkizzeGeometry.thumbLength - 6)
+        let color = tone(1) == .cue ? Palette.cue : Palette.muted
+        return Path { p in
+            p.addLines(pts)
+            if let end = pts.last, pts.count > 2 {
+                let prev = pts[pts.count - 2]
+                let dx = end.x - prev.x, dy = end.y - prev.y, n = max(hypot(dx, dy), 0.001)
+                let ux = dx / n, uy = dy / n
+                p.move(to: CGPoint(x: end.x - 7 * ux + 4 * uy, y: end.y - 7 * uy - 4 * ux))
+                p.addLine(to: end)
+                p.addLine(to: CGPoint(x: end.x - 7 * ux - 4 * uy, y: end.y - 7 * uy + 4 * ux))
+            }
+        }
+        .stroke(color, style: StrokeStyle(lineWidth: 1.5, lineCap: .round, lineJoin: .round, dash: [2, 4]))
+        .transition(.opacity)
+    }
+
+    private func number(_ f: Int, counter: Double) -> some View {
+        let t = tone(f)
+        let ghost = f == 1 && tuck
+        return Text("\(f)")
+            .font(.system(size: 14, weight: .bold, design: .monospaced))
+            .foregroundStyle(t == .on && !ghost ? Palette.ground : t == .cue ? Palette.cue : Palette.muted)
+            .rotationEffect(.degrees(counter))
+            .scaleEffect(x: right ? 1 : -1)
+    }
+}
+
+/// Settings → Display: the hands side by side, the chosen one outlined `signal`; tap to pick.
 struct HandPicker: View {
     @AppStorage(HandStyle.key) private var chosen: HandStyle = .linie
 

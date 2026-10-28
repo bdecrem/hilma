@@ -31,7 +31,7 @@ export default function TaktHandsPage() {
     <main style={styles.main}>
       <header style={styles.header}>
         <div style={styles.kicker}>TAKT · HANDS</div>
-        <h1 style={styles.h1}>Five hands</h1>
+        <h1 style={styles.h1}>Six hands</h1>
         <p style={styles.lede}>
           Concepts for the hand under the scale lessons. Each is one SVG in the app’s 240 × 200 box: five addressable fingers,
           a thumb group that rotates about its base. The finger that is down fills orange, the next one outlines blue, and the thumb
@@ -87,7 +87,7 @@ export default function TaktHandsPage() {
       </section>
 
       <footer style={styles.footer}>
-        Same contract for all five: <code style={styles.code}>down</code>, <code style={styles.code}>next</code>,{' '}
+        Same contract for all six: <code style={styles.code}>down</code>, <code style={styles.code}>next</code>,{' '}
         <code style={styles.code}>tuck</code>, plus <code style={styles.code}>lit</code> for the intro’s whole-hand pose. Mirror the
         group for the left hand.
       </footer>

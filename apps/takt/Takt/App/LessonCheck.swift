@@ -754,6 +754,15 @@ enum LessonCheck {
         check("the first beat after Play reads as rolling", hair.rolling && abs(hair.tick) < 1e-3 && !milli.rolling,
               "a host tick early: \(hair.rolling ? "rolling" : "held"), 1 ms early: \(milli.rolling ? "rolling" : "held")")
 
+        // The Skizze hand: one silhouette inside the 240 × 200 box, the thumb folding onto the palm.
+        let box = CGRect(x: 0, y: 0, width: 240, height: 200)
+        let out = SkizzeSilhouette(fold: 0).path(in: box).boundingRect
+        let folded = SkizzeSilhouette(fold: 1).path(in: box).boundingRect
+        check("the Skizze silhouette stays in its box", box.insetBy(dx: -2, dy: -2).contains(out) && box.contains(folded),
+              "out \(Int(out.minX))…\(Int(out.maxX)) × \(Int(out.minY))…\(Int(out.maxY)), folded \(Int(folded.minX))…\(Int(folded.maxX))")
+        check("the folded thumb sits under the palm", out.minX < 12 && folded.minX > 60 && HandStyle.allCases.count == 6
+              && HandStyle(rawValue: "skizze") == .skizze)
+
         print("LessonCheck: \(passed) passed, \(failed) failed")
         return failed == 0
     }

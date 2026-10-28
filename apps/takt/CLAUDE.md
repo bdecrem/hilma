@@ -264,6 +264,12 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   "hand"`, Linie default; DEBUG `-hand greif`). Same contract everywhere: the run panel, the
   intros (`lit:`), the left hand mirrored. DEBUG `-Route settings -SettingsSection display`
   opens Settings scrolled to the picker.
+  **0.1 (32), 2026-10-28, a sixth hand, Skizze** ("a hand drawn hand, very normal", no seams
+  where fingers meet the palm): `SkizzeSilhouette`, one closed outline for palm, fingers and
+  thumb (an animatable `fold` slides the thumb's points onto the palm's edge when it tucks),
+  nails and knuckles in pencil, and the lesson's marks drawn over it: a marker capsule on the
+  finger that's down, a dotted outline on the next, and on the tuck the thumb's dotted ghost
+  under the palm plus the dotted arc it travels. Same on the web page. Checks 153/153.
 
 ## Code map (`Takt/`)
 

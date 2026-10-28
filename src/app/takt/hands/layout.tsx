@@ -4,10 +4,10 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://ola.cx'),
   title: 'Takt · Hands',
   description:
-    'Five hand concepts for Takt’s scale lessons: one SVG each, five addressable fingers, a thumb that tucks under.',
+    'Six hand concepts for Takt’s scale lessons: one SVG each, five addressable fingers, a thumb that tucks under.',
   openGraph: {
     title: 'Takt · Hands',
-    description: 'Five hand concepts for the scale lessons, with the finger highlights and the thumb tuck live.',
+    description: 'Six hand concepts for the scale lessons, with the finger highlights and the thumb tuck live.',
     url: 'https://ola.cx/takt/hands',
   },
 };

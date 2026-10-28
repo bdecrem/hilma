@@ -38,7 +38,7 @@ export default function OgImage() {
             HANDS
           </div>
           <div style={{ display: 'flex', fontSize: 30, color: '#8a8a8a', marginTop: 10, maxWidth: 420, lineHeight: 1.3 }}>
-            Five concepts for the scale lessons
+            Six concepts for the scale lessons
           </div>
         </div>
         {/* palm */}
