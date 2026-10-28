@@ -28,10 +28,10 @@ s.sounds = {
     "shaker": {"kit": "shaker", "gainDb": -29},
     "tom": {"kit": "tomSyn", "gainDb": -19},
 }
-s.instruments = {"bass": "sub", "keys": "stab", "horns": "lead", "monitor": "piano"}
+s.instruments = {"bass": "sub", "keys": "stab", "horns": "leadHouse", "monitor": "piano"}
 # Solo renders against the blues band (drums -28, bass -29, keys -30, horns -28.5 dBFS RMS):
 # the kick and bass a touch over it, the stabs and the lead at it.
-s.levels = {"bass": -2, "keys": -13, "horns": -8}
+s.levels = {"bass": -2, "keys": -13, "horns": -6}
 s.bars = 72
 SECTIONS = [(0, "Intro"), (4, "Groove"), (20, "Lift"), (28, "Drop"), (44, "Deep"), (52, "Drop again"), (68, "Out")]
 for b, name in SECTIONS:
@@ -155,7 +155,7 @@ CALL = {  # the groove: a sparser call, every other bar
     4: [(0, D5, 24, 1), (24, A4, 24, 2)],
     6: [(0, B4, 36, 1), (36, G4, 12, 3)],
 }
-melody = s.part("melody", "The hook", "lead", "horns", "lead")
+melody = s.part("melody", "The hook", "leadHouse", "horns", "leadHouse")
 for bar in range(s.bars):
     o = bar * BAR
     sec = section(bar)

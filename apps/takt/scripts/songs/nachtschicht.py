@@ -31,7 +31,7 @@ s.sounds = {
 s.instruments = {"bass": "acid", "keys": "rave", "horns": "lead", "monitor": "piano"}
 # Solo renders against the blues band: the kick and the acid line a touch over it, the stabs
 # and the lead at it.
-s.levels = {"bass": -1, "keys": -10, "horns": -7}
+s.levels = {"bass": -1, "keys": -10, "horns": -10}
 s.bars = 80
 SECTIONS = [(0, "Intro"), (8, "Pulse"), (24, "Break"), (32, "Peak"), (56, "Drop-out"), (64, "Peak again"), (76, "Out")]
 for b, name in SECTIONS:

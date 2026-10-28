@@ -380,7 +380,12 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   rave stabs, the riff). The electronic kit and synths are rendered one-shots
   (`scripts/synths.py` → `Sounds/syn-*.caf`, registered in `instruments.json`: kick909,
   kickRumble, clap909, hat909/hatOpen909, ride909, shaker, rim909, tomSyn; sub, acid, stab (FM
-  electric piano, two layers), pad (8 s at 24 kHz), lead, rave). **Parts:** every note carries
+  electric piano, two layers), pad (8 s at 24 kHz), lead, leadHouse, rave). **0.1 (39):** Bart: the
+  deep house lead "sounds like a $5 plastic toy". Both leads are stereo voices now: detuned saw
+  unison with a sub square, a resonant filter envelope, drive, a dotted-eighth delay at the
+  song's tempo and a short plate baked in, a long release so the echoes ring after the key
+  (`leadHouse` for Undertow: four saws, slow filter, 122; `lead` for Nachtschicht: harder,
+  snapping filter, 130). Levels re-trimmed from solo renders (Undertow horns −6, Nachtschicht −10). **Parts:** every note carries
   `lv` 1–3 (easy / medium / hard: the root on the downbeats, then root and fifth, then the
   voicing and the pushes; the melody's bones, then its steps, then its ornaments); the band's
   own channel for a part is the hard chart, so the record plays it in full when you take the

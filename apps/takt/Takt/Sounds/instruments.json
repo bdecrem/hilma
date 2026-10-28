@@ -2226,7 +2226,7 @@
   ]
  },
  "lead": {
-  "release": 0.12,
+  "release": 0.5,
   "zones": [
    {
     "root": 55,
@@ -2359,6 +2359,144 @@
     "vel": 1.0,
     "files": [
      "syn-lead-91"
+    ]
+   }
+  ]
+ },
+ "leadHouse": {
+  "release": 0.9,
+  "zones": [
+   {
+    "root": 55,
+    "vel": 1.0,
+    "files": [
+     "syn-leadHouse-55"
+    ]
+   },
+   {
+    "root": 57,
+    "vel": 1.0,
+    "files": [
+     "syn-leadHouse-57"
+    ]
+   },
+   {
+    "root": 59,
+    "vel": 1.0,
+    "files": [
+     "syn-leadHouse-59"
+    ]
+   },
+   {
+    "root": 61,
+    "vel": 1.0,
+    "files": [
+     "syn-leadHouse-61"
+    ]
+   },
+   {
+    "root": 63,
+    "vel": 1.0,
+    "files": [
+     "syn-leadHouse-63"
+    ]
+   },
+   {
+    "root": 65,
+    "vel": 1.0,
+    "files": [
+     "syn-leadHouse-65"
+    ]
+   },
+   {
+    "root": 67,
+    "vel": 1.0,
+    "files": [
+     "syn-leadHouse-67"
+    ]
+   },
+   {
+    "root": 69,
+    "vel": 1.0,
+    "files": [
+     "syn-leadHouse-69"
+    ]
+   },
+   {
+    "root": 71,
+    "vel": 1.0,
+    "files": [
+     "syn-leadHouse-71"
+    ]
+   },
+   {
+    "root": 73,
+    "vel": 1.0,
+    "files": [
+     "syn-leadHouse-73"
+    ]
+   },
+   {
+    "root": 75,
+    "vel": 1.0,
+    "files": [
+     "syn-leadHouse-75"
+    ]
+   },
+   {
+    "root": 77,
+    "vel": 1.0,
+    "files": [
+     "syn-leadHouse-77"
+    ]
+   },
+   {
+    "root": 79,
+    "vel": 1.0,
+    "files": [
+     "syn-leadHouse-79"
+    ]
+   },
+   {
+    "root": 81,
+    "vel": 1.0,
+    "files": [
+     "syn-leadHouse-81"
+    ]
+   },
+   {
+    "root": 83,
+    "vel": 1.0,
+    "files": [
+     "syn-leadHouse-83"
+    ]
+   },
+   {
+    "root": 85,
+    "vel": 1.0,
+    "files": [
+     "syn-leadHouse-85"
+    ]
+   },
+   {
+    "root": 87,
+    "vel": 1.0,
+    "files": [
+     "syn-leadHouse-87"
+    ]
+   },
+   {
+    "root": 89,
+    "vel": 1.0,
+    "files": [
+     "syn-leadHouse-89"
+    ]
+   },
+   {
+    "root": 91,
+    "vel": 1.0,
+    "files": [
+     "syn-leadHouse-91"
     ]
    }
   ]

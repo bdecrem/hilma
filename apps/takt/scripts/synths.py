@@ -22,14 +22,14 @@ from pathlib import Path
 
 import numpy as np
 import soundfile as sf
-from scipy.signal import butter, lfilter
+from scipy.signal import butter, fftconvolve, lfilter
 
 OUT = Path(__file__).resolve().parent.parent / "Takt/Sounds"
 SR = 48000
 rng = np.random.default_rng(909)
 
 NAMES = ["kick909", "kickRumble", "clap909", "hat909", "hatOpen909", "ride909", "shaker", "rim909", "tomSyn",
-         "sub", "acid", "stab", "pad", "lead", "rave"]
+         "sub", "acid", "stab", "pad", "lead", "leadHouse", "rave"]
 INSTRUMENTS = {}
 FILES = []
 
@@ -267,17 +267,95 @@ def pad(n, sr=24000):
     return x
 
 
-def lead(n):
-    t = t_axis(2.2)
-    f = midi_hz(n)
-    vib = 0.18 * np.sin(2 * np.pi * 5.6 * t) * np.minimum(t / 0.35, 1)  # semitones, swelling in
+# MARK: Leads: unison saws, a sub, a filter envelope, drive, width, a synced delay and some room.
+
+
+def saw_from_phase(phase, f):
+    n = int(min(60, 16000 / max(f, 1)))
+    k = np.arange(1, n + 1)[:, None]
+    return (2 / np.pi) * np.sum(np.sin(k * phase[None, :]) * ((-1) ** (k + 1)) / k, axis=0)
+
+
+def square_from_phase(phase, f):
+    n = int(min(41, 16000 / max(f, 1)))
+    k = np.arange(1, n + 1, 2)[:, None]
+    return (4 / np.pi) * np.sum(np.sin(k * phase[None, :]) / k, axis=0)
+
+
+def unison(f, t, detunes, phases, vib):
+    """Detuned saws sharing one vibrato, each from its own start phase."""
+    x = np.zeros_like(t)
     fi = f * 2 ** (vib / 12)
-    phase = 2 * np.pi * np.cumsum(fi) / SR
-    sq = (4 / np.pi) * sum(np.sin(k * phase) / k for k in range(1, int(min(31, 16000 / f)), 2))
-    sw = (2 / np.pi) * sum(np.sin(k * phase) * ((-1) ** (k + 1)) / k for k in range(1, int(min(40, 16000 / f))))
-    x = sq * 0.7 + sw * 0.4
-    x = lowpass(x, 3800, order=2)
-    return x * attack(t, 0.006) * env_exp(t, 0.6, hold=1.4)
+    for d, p0 in zip(detunes, phases):
+        phase = 2 * np.pi * np.cumsum(fi * (1 + d)) / SR + p0
+        x += saw_from_phase(phase, f)
+    return x / len(detunes)
+
+
+def delay_fx(x, seconds, feedback, mix, lp_hz, taps=6):
+    """A feedback delay, each echo darker than the last."""
+    d = int(seconds * SR)
+    echo = np.zeros_like(x)
+    tap = x.copy()
+    for k in range(1, taps + 1):
+        tap = lowpass(tap, lp_hz) * feedback
+        if k * d >= len(x):
+            break
+        shifted = np.zeros_like(x)
+        shifted[k * d:] = tap[: len(x) - k * d]
+        echo += shifted
+    return x + echo * mix
+
+
+def room(x, seconds, mix, seed=7):
+    """A short plate: exponentially decaying noise, darkened, convolved in."""
+    r = np.random.default_rng(seed)
+    tt = t_axis(seconds)
+    ir = lowpass(r.normal(size=len(tt)), 4500) * np.exp(-tt / (seconds / 3.2))
+    ir /= np.sqrt((ir ** 2).sum())
+    return x + fftconvolve(x, ir)[: len(x)] * mix
+
+
+def lead_house(n):
+    """Undertow's lead: four saws spread wide, a sub square, a slow-opening filter, a dotted
+    eighth of delay at 122 and a little room. Warm, not thin."""
+    t = t_axis(3.2)
+    f = midi_hz(n)
+    vib = 0.12 * np.sin(2 * np.pi * 5.2 * t) * np.minimum(t / 0.35, 1)
+    sides = []
+    for detunes, phases in (([-0.0065, -0.002, 0.003, 0.0055], [0.0, 1.1, 2.3, 4.0]),
+                            ([-0.0055, -0.003, 0.002, 0.0065], [2.9, 0.4, 5.1, 1.7])):
+        x = unison(f, t, detunes, phases, vib)
+        x += square_from_phase(2 * np.pi * np.cumsum(f / 2 * 2 ** (vib / 12)) / SR, f / 2) * 0.32
+        cutoff = 520 + 2400 * np.exp(-t / 0.32) + 260 * (1 + np.sin(2 * np.pi * 0.45 * t - 1.3))
+        y = resonant_sweep(x, cutoff, 2.4)
+        y = saturate(y * 1.3, 1.5)
+        y *= attack(t, 0.008) * env_exp(t, 0.55, hold=1.6)
+        y = delay_fx(y, 60 / 122 * 0.75, 0.42, 0.38, 2800)
+        y = room(y, 0.8, 0.11)
+        sides.append(y)
+    return np.stack(sides, axis=1)
+
+
+def lead(n):
+    """Nachtschicht's riff: two saws and a square with a snapping filter, driven, a dotted
+    eighth of delay at 130. It cuts."""
+    t = t_axis(2.4)
+    f = midi_hz(n)
+    vib = 0.08 * np.sin(2 * np.pi * 6.0 * t) * np.minimum(t / 0.4, 1)
+    sides = []
+    for detunes, phases in (([-0.005, 0.0, 0.004], [0.0, 2.0, 4.1]), ([-0.004, 0.0, 0.005], [3.1, 0.7, 5.5])):
+        x = unison(f, t, detunes, phases, vib)
+        x += square_from_phase(2 * np.pi * np.cumsum(f * 2 ** (vib / 12)) / SR + 1.0, f) * 0.45
+        x += square_from_phase(2 * np.pi * np.cumsum(f / 2 * 2 ** (vib / 12)) / SR, f / 2) * 0.25
+        cutoff = 420 + 3600 * np.exp(-t / 0.15) + 200 * np.exp(-t / 0.9)
+        y = resonant_sweep(x, cutoff, 3.4)
+        y = saturate(y * 1.8, 2.2)
+        y *= attack(t, 0.004) * env_exp(t, 0.35, hold=1.2)
+        y = delay_fx(y, 60 / 130 * 0.75, 0.36, 0.28, 3500)
+        y = room(y, 0.5, 0.06)
+        sides.append(y)
+    return np.stack(sides, axis=1)
 
 
 def rave(n):
@@ -318,7 +396,8 @@ def main():
     pitched("acid", acid, range(28, 53, 2), 0.04)
     pitched("stab", stab, range(40, 89, 2), 0.25, layers=[True, False])
     pitched("pad", pad, range(45, 82, 3), 0.6, sr=24000)
-    pitched("lead", lead, range(55, 92, 2), 0.12)
+    pitched("lead", lead, range(55, 92, 2), 0.5)
+    pitched("leadHouse", lead_house, range(55, 92, 2), 0.9)
     pitched("rave", rave, range(48, 85, 2), 0.08)
 
     manifest = json.loads((OUT / "instruments.json").read_text())
