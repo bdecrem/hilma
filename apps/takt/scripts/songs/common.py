@@ -90,6 +90,22 @@ class Song:
         for n, lv, f in voicing:
             Song.pnote(notes, t, n, ln, max(hit_lv, lv), f)
 
+    @staticmethod
+    def fingered(notes, right=True):
+        """Right-hand fingers for a melody chart that has none, the same finger for the same
+        note all song: the chart's lowest note under the thumb, a finger further for every
+        two-and-a-bit semitones up to the pinky, and a new position (thumb again) every
+        octave. The left hand mirrors it (the pinky low)."""
+        if not notes:
+            return
+        low = min(e["n"] for e in notes)
+        for e in notes:
+            if e.get("f"):
+                continue
+            d = (e["n"] - low) % 12
+            f = min(5, 1 + int(d / 2.4 + 0.5))
+            e["f"] = f if right else 6 - f
+
     def chart_to_channel(self, notes, ch, v, spread=0.05, inst=None):
         """The hard chart as the band's channel events (levels 1–3 all play)."""
         for e in sorted(notes, key=lambda e: (e["t"], e["n"])):

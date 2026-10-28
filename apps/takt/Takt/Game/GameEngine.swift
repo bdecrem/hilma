@@ -249,8 +249,10 @@ final class GameEngine {
         return out
     }
 
-    /// Keys of the pending notes inside the window now, and of the next tick's notes after.
-    func cue(at tick: Double, msPerTick: Double) -> (now: Set<Int>, next: Set<Int>, fingers: [Int: Int]) {
+    /// Keys of the pending notes inside the window now, and of the next tick's notes after,
+    /// with the fingers of each (the hand in the corner shows them).
+    func cue(at tick: Double, msPerTick: Double) -> (now: Set<Int>, next: Set<Int>, fingers: [Int: Int],
+                                                     nowFingers: Set<Int>, nextFingers: Set<Int>) {
         let reach = msPerTick.isFinite ? Self.goodMs / msPerTick : 0
         var now: Set<Int> = []
         var nextTick: Int?
@@ -267,10 +269,19 @@ final class GameEngine {
         }
         // Fingers for the chord in the window and the one after it, no further: two chords'
         // badges on neighbouring keys read as one.
+        var nowFingers: Set<Int> = []
+        var nextFingers: Set<Int> = []
         for i in notes.indices where status[i] == .pending && active(i) {
             let t = Double(notes[i].t)
-            if abs(t - tick) <= reach || notes[i].t == nextTick, let f = notes[i].f { fingers[notes[i].n] = f }
+            guard let f = notes[i].f else { continue }
+            if abs(t - tick) <= reach {
+                fingers[notes[i].n] = f
+                nowFingers.insert(f)
+            } else if notes[i].t == nextTick {
+                fingers[notes[i].n] = f
+                nextFingers.insert(f)
+            }
         }
-        return (now, next.subtracting(now), fingers)
+        return (now, next.subtracting(now), fingers, nowFingers, nextFingers)
     }
 }

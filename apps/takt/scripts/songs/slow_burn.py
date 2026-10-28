@@ -217,6 +217,7 @@ for c in range(CHORUSES):
         if c in (1, 3) and b in (1, 5):
             # The second and fourth time round, a grace note into the next phrase (hard).
             s.pnote(melody, o + 44, F4 if b == 1 else Bb4, 4, 3)
+s.fingered(melody)
 s.chart_to_channel(melody, s.horns, lambda e: 0.8 if e["lv"] == 1 else 0.68, inst=None)
 # Long sax tones use the held sample.
 for e in s.horns:

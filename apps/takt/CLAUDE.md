@@ -446,6 +446,18 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   swing (half a tick, below the 12-per-beat grid); the pushed stabs carry the feel. Levels from
   solo renders against the blues band as before.
 
+- **Fingers on the Stage: 0.1 (42), 2026-10-28.** Bart: "add finger positions… a fun/lightweight
+  UI… that doesn't add clutter". The lessons' own hand (`HandView`, in the style picked in
+  Settings) sits top right of the highway, out of the hit line's way: the fingers of the chord
+  in the window filled, the next chord's first finger outlined; the left hand for a chords
+  part (the pinky low, as the lessons comp), the right for a melody. The keys keep their
+  badges for those two chords only. Every melody chart now carries fingers:
+  `Song.fingered` in `scripts/songs/common.py` gives the same finger to the same note all
+  song (the chart's lowest note under the thumb, a finger further for every two-and-a-bit
+  semitones, the thumb again an octave up); the chords' fingers were hand-set in the voicings.
+  `GameEngine.cue` returns `nowFingers` / `nextFingers`; `GameState.nowFingers`, `nextFinger`,
+  `rightHand`.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

@@ -120,6 +120,7 @@ for bar in range(s.bars):
         if sec == "Deep" and (lv > 1 or bar % 4 in (1, 3)):
             continue  # the first sixteen bars: the long tones alone
         s.pnote(melody, o + t, n, ln, lv)
+s.fingered(melody)
 s.chart_to_channel(melody, s.horns, lambda e: 0.75, spread=0.03)
 
 s.write()

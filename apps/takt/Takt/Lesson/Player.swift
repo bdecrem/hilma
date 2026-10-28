@@ -727,7 +727,8 @@ final class Player {
             countIn: countIn, playing: playing, pop: game.pop,
             heardTick: tick, lookaheadTicks: lookahead, ticksPerBeat: game.ticksPerBeat, ticksPerBar: game.ticksPerBar,
             notes: visible, keys: song.keyboard(game.part), nowNotes: cue.now, nextNotes: cue.next,
-            pressedNotes: pressed, fingers: cue.fingers, result: gameResult, lastRun: lastRun,
+            pressedNotes: pressed, fingers: cue.fingers, nowFingers: cue.nowFingers, nextFinger: cue.nextFingers.min(),
+            rightHand: game.part == .melody, result: gameResult, lastRun: lastRun,
             board: progress.scores(song: song.name), sections: song.meta.sections)
     }
 

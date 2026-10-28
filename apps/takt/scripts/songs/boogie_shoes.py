@@ -197,6 +197,7 @@ for c in range(CHORUSES):
         for t, n, ln, lv in phrases[b]:
             # The shout chorus takes the riff up an octave.
             s.pnote(melody, o + t, n + 12 if (c == 2 and phrases is RIFF and n < 72) else n, ln, lv)
+s.fingered(melody)
 s.chart_to_channel(melody, s.horns, lambda e: 0.82 if e["lv"] == 1 else 0.7)
 for e in s.horns:
     bar = e["t"] // BAR

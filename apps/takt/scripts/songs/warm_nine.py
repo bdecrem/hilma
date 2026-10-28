@@ -145,6 +145,7 @@ for bar in range(s.bars):
         phrases = LINE_A if (bar // 4) % 2 == 0 else LINE_B
     for t, n, ln, lv in phrases.get(bar % 4, []):
         s.pnote(melody, o + t, n, ln, lv)
+s.fingered(melody)
 s.chart_to_channel(melody, s.horns, lambda e: 0.82 if e["lv"] == 1 else 0.7, spread=0.03)
 
 s.write()

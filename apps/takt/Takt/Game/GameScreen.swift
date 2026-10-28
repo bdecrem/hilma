@@ -46,6 +46,11 @@ struct GameState {
     var nextNotes: Set<Int> = []
     var pressedNotes: Set<Int> = []
     var fingers: [Int: Int] = [:]
+    /// The hand in the corner: fingers down for the chord in the window, the next chord's
+    /// first finger outlined; the right hand for a melody, the left for chords.
+    var nowFingers: Set<Int> = []
+    var nextFinger: Int? = nil
+    var rightHand = true
     var result: GameEngine.Result? = nil
     var lastRun: ProgressStore.ScoreRecord? = nil
     var board: [ProgressStore.ScoreRecord] = []
@@ -333,6 +338,23 @@ struct Highway: View {
                     .padding(.bottom, compact ? 40 : 56)
                     .allowsHitTesting(false)
             }
+            // The hand, top right, out of the way of the hit line: the fingers of the chord in
+            // the window filled, the next one outlined (the lessons' own hand, your style).
+            VStack {
+                HStack {
+                    Spacer()
+                    HandView(lit: state.nowFingers, next: state.nextFinger, right: state.rightHand)
+                        .frame(width: compact ? 72 : 108, height: compact ? 60 : 90)
+                        .padding(compact ? 6 : 8)
+                        .background(RoundedRectangle(cornerRadius: 8).fill(Palette.panel.opacity(0.85)))
+                        .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Palette.line, lineWidth: 1))
+                        .padding(.top, 10)
+                        .padding(.trailing, 2)
+                        .accessibilityLabel(state.nowFingers.isEmpty ? "Hand" : "Fingers \(state.nowFingers.sorted().map(String.init).joined(separator: ", "))")
+                }
+                Spacer()
+            }
+            .allowsHitTesting(false)
         }
         .clipped()
         .accessibilityElement(children: .ignore)

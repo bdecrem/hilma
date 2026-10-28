@@ -120,6 +120,7 @@ def bleep_velocity(e):
     return round(0.2 + 0.8 * (0.5 + 0.5 * math.sin(2 * math.pi * bar / 16)), 3)
 
 
+s.fingered(melody)
 s.chart_to_channel(melody, s.horns, bleep_velocity, spread=0.0)
 
 s.write()
