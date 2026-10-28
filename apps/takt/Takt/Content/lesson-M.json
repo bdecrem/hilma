@@ -13,7 +13,12 @@
       "goal": "2 clean choruses at 70",
       "steps": [
         "key-1"
-      ]
+      ],
+      "theme": {
+        "glyph": "form",
+        "title": "A minor blues",
+        "line": "Am, Dm, Em: i, iv and v. Pinky, middle, thumb on each."
+      }
     },
     {
       "title": "E minor",
@@ -21,7 +26,12 @@
       "goal": "2 clean choruses at 70",
       "steps": [
         "key-2"
-      ]
+      ],
+      "theme": {
+        "glyph": "form",
+        "title": "E minor blues",
+        "line": "Em, Am, Bm: i, iv and v. Pinky, middle, thumb on each."
+      }
     },
     {
       "title": "D minor",
@@ -29,7 +39,12 @@
       "goal": "2 clean choruses at 70",
       "steps": [
         "key-3"
-      ]
+      ],
+      "theme": {
+        "glyph": "form",
+        "title": "D minor blues",
+        "line": "Dm, Gm, Am: i, iv and v. Pinky, middle, thumb on each."
+      }
     },
     {
       "title": "G minor",
@@ -37,7 +52,12 @@
       "goal": "2 clean choruses at 70",
       "steps": [
         "key-4"
-      ]
+      ],
+      "theme": {
+        "glyph": "form",
+        "title": "G minor blues",
+        "line": "Gm, Cm, Dm: i, iv and v. Pinky, middle, thumb on each."
+      }
     },
     {
       "title": "C minor",
@@ -45,7 +65,12 @@
       "goal": "2 clean choruses at 70",
       "steps": [
         "key-5"
-      ]
+      ],
+      "theme": {
+        "glyph": "form",
+        "title": "C minor blues",
+        "line": "Cm, Fm, Gm: i, iv and v. Pinky, middle, thumb on each."
+      }
     },
     {
       "title": "F minor",
@@ -53,7 +78,12 @@
       "goal": "2 clean choruses at 70",
       "steps": [
         "key-6"
-      ]
+      ],
+      "theme": {
+        "glyph": "form",
+        "title": "F minor blues",
+        "line": "Fm, B♭m, Cm: i, iv and v. Pinky, middle, thumb on each."
+      }
     },
     {
       "title": "B minor",
@@ -61,7 +91,12 @@
       "goal": "2 clean choruses at 70",
       "steps": [
         "key-7"
-      ]
+      ],
+      "theme": {
+        "glyph": "form",
+        "title": "B minor blues",
+        "line": "Bm, Em, F♯m: i, iv and v. Pinky, middle, thumb on each."
+      }
     },
     {
       "title": "F♯ minor",
@@ -69,7 +104,12 @@
       "goal": "2 clean choruses at 70",
       "steps": [
         "key-8"
-      ]
+      ],
+      "theme": {
+        "glyph": "form",
+        "title": "F♯ minor blues",
+        "line": "F♯m, Bm, C♯m: i, iv and v. Pinky, middle, thumb on each."
+      }
     },
     {
       "title": "C♯ minor",
@@ -77,7 +117,12 @@
       "goal": "2 clean choruses at 70",
       "steps": [
         "key-9"
-      ]
+      ],
+      "theme": {
+        "glyph": "form",
+        "title": "C♯ minor blues",
+        "line": "C♯m, F♯m, G♯m: i, iv and v. Pinky, middle, thumb on each."
+      }
     },
     {
       "title": "G♯ minor",
@@ -85,7 +130,12 @@
       "goal": "2 clean choruses at 70",
       "steps": [
         "key-10"
-      ]
+      ],
+      "theme": {
+        "glyph": "form",
+        "title": "G♯ minor blues",
+        "line": "G♯m, C♯m, D♯m: i, iv and v. Pinky, middle, thumb on each."
+      }
     },
     {
       "title": "E♭ minor",
@@ -93,7 +143,12 @@
       "goal": "2 clean choruses at 70",
       "steps": [
         "key-11"
-      ]
+      ],
+      "theme": {
+        "glyph": "form",
+        "title": "E♭ minor blues",
+        "line": "E♭m, G♯m, B♭m: i, iv and v. Pinky, middle, thumb on each."
+      }
     },
     {
       "title": "B♭ minor",
@@ -101,7 +156,12 @@
       "goal": "2 clean choruses at 70",
       "steps": [
         "key-12"
-      ]
+      ],
+      "theme": {
+        "glyph": "form",
+        "title": "B♭ minor blues",
+        "line": "B♭m, E♭m, Fm: i, iv and v. Pinky, middle, thumb on each."
+      }
     },
     {
       "title": "Two a bar",
@@ -109,7 +169,12 @@
       "goal": "2 clean choruses at 70",
       "steps": [
         "two-a-bar"
-      ]
+      ],
+      "theme": {
+        "glyph": "bars:13",
+        "title": "Twice a bar",
+        "line": "The minor triad on the 1 and the 3. Lift between them."
+      }
     }
   ],
   "later": [
@@ -128,91 +193,156 @@
       "title": "A minor boogie",
       "skill": "Root and fifth on the 1, root and seventh on the 3, with the horns",
       "goal": "Have fun. A clean chorus marks it played.",
-      "step": "jam-1"
+      "step": "jam-1",
+      "theme": {
+        "glyph": "rock",
+        "title": "Fifth, then seventh",
+        "line": "Root and fifth on the 1, the thumb up to the flat seventh on the 3."
+      }
     },
     {
       "after": 2,
       "title": "E minor boogie",
       "skill": "Root and fifth on the 1, root and seventh on the 3, with the horns",
       "goal": "Have fun. A clean chorus marks it played.",
-      "step": "jam-2"
+      "step": "jam-2",
+      "theme": {
+        "glyph": "rock",
+        "title": "Fifth, then seventh",
+        "line": "Root and fifth on the 1, the thumb up to the flat seventh on the 3."
+      }
     },
     {
       "after": 3,
       "title": "D minor boogie",
       "skill": "Root and fifth on the 1, root and seventh on the 3, with the horns",
       "goal": "Have fun. A clean chorus marks it played.",
-      "step": "jam-3"
+      "step": "jam-3",
+      "theme": {
+        "glyph": "rock",
+        "title": "Fifth, then seventh",
+        "line": "Root and fifth on the 1, the thumb up to the flat seventh on the 3."
+      }
     },
     {
       "after": 4,
       "title": "G minor boogie",
       "skill": "Root and fifth on the 1, root and seventh on the 3, with the horns",
       "goal": "Have fun. A clean chorus marks it played.",
-      "step": "jam-4"
+      "step": "jam-4",
+      "theme": {
+        "glyph": "rock",
+        "title": "Fifth, then seventh",
+        "line": "Root and fifth on the 1, the thumb up to the flat seventh on the 3."
+      }
     },
     {
       "after": 5,
       "title": "C minor boogie",
       "skill": "Root and fifth on the 1, root and seventh on the 3, with the horns",
       "goal": "Have fun. A clean chorus marks it played.",
-      "step": "jam-5"
+      "step": "jam-5",
+      "theme": {
+        "glyph": "rock",
+        "title": "Fifth, then seventh",
+        "line": "Root and fifth on the 1, the thumb up to the flat seventh on the 3."
+      }
     },
     {
       "after": 6,
       "title": "F minor boogie",
       "skill": "Root and fifth on the 1, root and seventh on the 3, with the horns",
       "goal": "Have fun. A clean chorus marks it played.",
-      "step": "jam-6"
+      "step": "jam-6",
+      "theme": {
+        "glyph": "rock",
+        "title": "Fifth, then seventh",
+        "line": "Root and fifth on the 1, the thumb up to the flat seventh on the 3."
+      }
     },
     {
       "after": 7,
       "title": "B minor boogie",
       "skill": "Root and fifth on the 1, root and seventh on the 3, with the horns",
       "goal": "Have fun. A clean chorus marks it played.",
-      "step": "jam-7"
+      "step": "jam-7",
+      "theme": {
+        "glyph": "rock",
+        "title": "Fifth, then seventh",
+        "line": "Root and fifth on the 1, the thumb up to the flat seventh on the 3."
+      }
     },
     {
       "after": 8,
       "title": "F♯ minor boogie",
       "skill": "Root and fifth on the 1, root and seventh on the 3, with the horns",
       "goal": "Have fun. A clean chorus marks it played.",
-      "step": "jam-8"
+      "step": "jam-8",
+      "theme": {
+        "glyph": "rock",
+        "title": "Fifth, then seventh",
+        "line": "Root and fifth on the 1, the thumb up to the flat seventh on the 3."
+      }
     },
     {
       "after": 9,
       "title": "C♯ minor boogie",
       "skill": "Root and fifth on the 1, root and seventh on the 3, with the horns",
       "goal": "Have fun. A clean chorus marks it played.",
-      "step": "jam-9"
+      "step": "jam-9",
+      "theme": {
+        "glyph": "rock",
+        "title": "Fifth, then seventh",
+        "line": "Root and fifth on the 1, the thumb up to the flat seventh on the 3."
+      }
     },
     {
       "after": 10,
       "title": "G♯ minor boogie",
       "skill": "Root and fifth on the 1, root and seventh on the 3, with the horns",
       "goal": "Have fun. A clean chorus marks it played.",
-      "step": "jam-10"
+      "step": "jam-10",
+      "theme": {
+        "glyph": "rock",
+        "title": "Fifth, then seventh",
+        "line": "Root and fifth on the 1, the thumb up to the flat seventh on the 3."
+      }
     },
     {
       "after": 11,
       "title": "E♭ minor boogie",
       "skill": "Root and fifth on the 1, root and seventh on the 3, with the horns",
       "goal": "Have fun. A clean chorus marks it played.",
-      "step": "jam-11"
+      "step": "jam-11",
+      "theme": {
+        "glyph": "rock",
+        "title": "Fifth, then seventh",
+        "line": "Root and fifth on the 1, the thumb up to the flat seventh on the 3."
+      }
     },
     {
       "after": 12,
       "title": "B♭ minor boogie",
       "skill": "Root and fifth on the 1, root and seventh on the 3, with the horns",
       "goal": "Have fun. A clean chorus marks it played.",
-      "step": "jam-12"
+      "step": "jam-12",
+      "theme": {
+        "glyph": "rock",
+        "title": "Fifth, then seventh",
+        "line": "Root and fifth on the 1, the thumb up to the flat seventh on the 3."
+      }
     },
     {
       "after": 13,
       "title": "Four a bar",
       "skill": "The triad on every beat, with the whole band",
       "goal": "Have fun. A clean chorus marks it played.",
-      "step": "jam-two-a-bar"
+      "step": "jam-two-a-bar",
+      "theme": {
+        "glyph": "bars:1234",
+        "title": "Four a bar",
+        "line": "The triad on every beat, with the horns. A stomp."
+      }
     }
   ],
   "band": "band-minor-A",

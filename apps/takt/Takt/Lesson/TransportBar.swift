@@ -27,7 +27,7 @@ struct TransportBar: View {
                 }
                 Spacer(minLength: 8)
                 transportButtons(size: 34)
-                TempoReadout(bpm: state.tempo, pending: state.pendingTempo, size: 30)
+                TempoKnob(bpm: state.tempo, pending: state.pendingTempo, counts: state.stepTempo, compact: true)
             }
         } else {
             HStack(alignment: .center, spacing: 20) {
@@ -39,7 +39,7 @@ struct TransportBar: View {
                 StaffLines()
                     .frame(maxWidth: .infinity)
                 transportButtons(size: 36)
-                TempoReadout(bpm: state.tempo, pending: state.pendingTempo, size: 38)
+                TempoKnob(bpm: state.tempo, pending: state.pendingTempo, counts: state.stepTempo)
             }
         }
     }

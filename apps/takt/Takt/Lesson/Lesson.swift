@@ -83,6 +83,7 @@ struct Lesson: Decodable {
         let skill: String
         let goal: String
         let step: String
+        let theme: Theme?
     }
 
     /// What the player sees: a module (this file) of lessons, each a run of the engine's steps.
@@ -90,6 +91,13 @@ struct Lesson: Decodable {
         let code: String
         let title: String
         let detail: String
+    }
+
+    /// The session's theme beside the coach: a glyph (`ThemeGlyph`), a title, one line.
+    struct Theme: Decodable, Equatable {
+        let glyph: String
+        let title: String
+        let line: String
     }
 
     struct LessonSpec: Decodable {
@@ -100,6 +108,7 @@ struct Lesson: Decodable {
         let goal: String
         /// Step ids, in order. The first is never a card (a lesson opens on an intro).
         let steps: [String]
+        let theme: Theme?
     }
 
     /// Lessons that aren't built yet: locked rows at the end of the module.

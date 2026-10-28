@@ -15,6 +15,11 @@ struct CoachPanel: View {
                 .foregroundStyle(Palette.text)
                 .fixedSize(horizontal: false, vertical: true)
 
+            if let theme = state.theme {
+                ThemeCard(theme: theme, fingers: state.handFingers, right: state.rightHand)
+                    .padding(.top, 6)
+            }
+
             Spacer(minLength: 24)
 
             StaffLines()

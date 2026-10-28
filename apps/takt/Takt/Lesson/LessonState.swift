@@ -87,6 +87,12 @@ struct LessonState {
     var run: Run? = nil
     /// Play mode: a jam under `lesson`, no gate.
     var jam = false
+    /// The session's theme card beside the coach, with the hand it draws.
+    var theme: Lesson.Theme? = nil
+    var handFingers: Set<Int> = []
+    var rightHand = false
+    /// The tempo the step counts at: the knob's tick.
+    var stepTempo: Int? = nil
 
     var nextBar: Int { (bar + 1) % form.count }
 

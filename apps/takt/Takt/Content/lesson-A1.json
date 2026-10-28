@@ -14,7 +14,12 @@
       "steps": [
         "roots",
         "name-it"
-      ]
+      ],
+      "theme": {
+        "glyph": "keys:1",
+        "title": "The root",
+        "line": "One note names the chord. C, F or G on the 1, and move with the changes."
+      }
     },
     {
       "title": "The shuffle",
@@ -22,7 +27,12 @@
       "goal": "2 clean choruses at 70",
       "steps": [
         "shuffle"
-      ]
+      ],
+      "theme": {
+        "glyph": "keys:15",
+        "title": "Root and fifth",
+        "line": "Two notes, one shape. The fifth sits four white keys up from the root."
+      }
     },
     {
       "title": "Pick up speed",
@@ -30,7 +40,12 @@
       "goal": "Clean from 70 up to 90 · keys and horns join",
       "steps": [
         "ramp"
-      ]
+      ],
+      "theme": {
+        "glyph": "tempo",
+        "title": "Faster each clean",
+        "line": "Every clean chorus nudges the tempo up 5. Keys and horns join on the way."
+      }
     },
     {
       "title": "Hold it at 90",
@@ -38,7 +53,12 @@
       "goal": "3 clean choruses at 90",
       "steps": [
         "gate"
-      ]
+      ],
+      "theme": {
+        "glyph": "tempo",
+        "title": "Hold it at ninety",
+        "line": "Three clean at tempo. The whole band is in, and you keep it there."
+      }
     },
     {
       "title": "The payoff",
@@ -46,7 +66,12 @@
       "goal": "One chorus at 90 · exported as MIDI",
       "steps": [
         "payoff"
-      ]
+      ],
+      "theme": {
+        "glyph": "alone",
+        "title": "Bars 11 and 12 are yours",
+        "line": "The band drops out for the turnaround. You bring it home."
+      }
     },
     {
       "title": "The third finger",
@@ -54,7 +79,12 @@
       "goal": "2 clean choruses at 70",
       "steps": [
         "third"
-      ]
+      ],
+      "theme": {
+        "glyph": "keys:135",
+        "title": "The triad",
+        "line": "Root, third, fifth. The middle finger fills the chord in."
+      }
     },
     {
       "title": "Twice a bar",
@@ -62,7 +92,12 @@
       "goal": "2 clean choruses at 80",
       "steps": [
         "twice"
-      ]
+      ],
+      "theme": {
+        "glyph": "bars:13",
+        "title": "Twice a bar",
+        "line": "The chord on the 1 and again on the 3. Lift between them."
+      }
     }
   ],
   "later": [
@@ -791,49 +826,84 @@
       "title": "Root and fifth",
       "skill": "The root on the 1, the fifth on the 3",
       "goal": "Have fun. A clean chorus marks it played.",
-      "step": "jam-roots"
+      "step": "jam-roots",
+      "theme": {
+        "glyph": "keys:15",
+        "title": "Two notes a bar",
+        "line": "Root on the 1, fifth on the 3. Pinky, then thumb."
+      }
     },
     {
       "after": 2,
       "title": "The boogie",
       "skill": "Root and fifth on the 1, root and sixth on the 3",
       "goal": "Have fun. A clean chorus marks it played.",
-      "step": "jam-shuffle"
+      "step": "jam-shuffle",
+      "theme": {
+        "glyph": "rock",
+        "title": "Five, six",
+        "line": "The thumb rocks up a whole step to the sixth on the 3. That's the boogie."
+      }
     },
     {
       "after": 3,
       "title": "Boogie at 80",
       "skill": "The boogie on every beat, at 80",
       "goal": "Have fun. A clean chorus marks it played.",
-      "step": "jam-ramp"
+      "step": "jam-ramp",
+      "theme": {
+        "glyph": "rock",
+        "title": "On every beat",
+        "line": "Five, six, five, six. The root stays under it all."
+      }
     },
     {
       "after": 4,
       "title": "The seventh",
       "skill": "Five, six, seven, six on every beat, at 90",
       "goal": "Have fun. A clean chorus marks it played.",
-      "step": "jam-gate"
+      "step": "jam-gate",
+      "theme": {
+        "glyph": "rock",
+        "title": "Five, six, seven, six",
+        "line": "The thumb walks up to the flat seventh and back. That's the blues."
+      }
     },
     {
       "after": 5,
       "title": "Walk it",
       "skill": "The bass line itself: root, third, fifth, sixth",
       "goal": "Have fun. A clean chorus marks it played.",
-      "step": "jam-payoff"
+      "step": "jam-payoff",
+      "theme": {
+        "glyph": "walk",
+        "title": "Walk the chord",
+        "line": "Root, third, fifth, sixth: the bass line itself, in unison with the band."
+      }
     },
     {
       "after": 6,
       "title": "Three and a bump",
       "skill": "The triad on the 1, root and sixth on the 3",
       "goal": "Have fun. A clean chorus marks it played.",
-      "step": "jam-third"
+      "step": "jam-third",
+      "theme": {
+        "glyph": "bars:13",
+        "title": "Three and a bump",
+        "line": "The triad on the 1, then the thumb bumps to the sixth on the 3."
+      }
     },
     {
       "after": 7,
       "title": "The stomp",
       "skill": "The triad on every beat, at 80",
       "goal": "Have fun. A clean chorus marks it played.",
-      "step": "jam-twice"
+      "step": "jam-twice",
+      "theme": {
+        "glyph": "bars:1234",
+        "title": "The stomp",
+        "line": "The chord on every beat. Loose wrist, let the band carry it."
+      }
     }
   ]
 }

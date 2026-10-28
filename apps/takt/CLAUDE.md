@@ -334,6 +334,21 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   Mac record's `reachedStep` past the lessons he'd played (repaired by hand: A1 step 5, S1m
   step 4, the M1 record removed; backup in the session scratchpad). Checks 168/168.
 
+- **Tempo knob and theme cards: 0.1 (36), 2026-10-28.** Bart: "add a tempo knob and let me
+  slow down, or speed up, and in the Coach area show a simple drawing or words explaining the
+  theme of that session… like a game UI designer". `Lesson/TempoKnob.swift` replaces the
+  readout in both transport bars: a 270° ring over 50–140 with the value arc (`signal`; `cue`
+  while a change waits for the downbeat; `muted` below the tempo the step counts at, which is
+  a tick on the ring: `Output.stepTempo`), the number inside, − / + buttons, drag up or down
+  to turn it (5 bpm per 18 pt). `Lesson/ThemeCard.swift`: every lesson and jam carries a
+  `theme` (glyph, title, line) in its module file; the card sits under the coach line (Mac)
+  or between the coach line and the pads (iPhone), with `ThemeGlyph` drawings in a 72 × 54
+  box: `steps[:n]`, `fall`, `hill`, `tuck`/`over`/`hand` (the real `HandView`), `keys:135`
+  (a mini keyboard with dots on the degrees), `rock` (the thumb 5 ↔ 6), `walk`, `form` (i iv
+  v over twelve bars), `alone` (11–12 hollow), `tempo`, `blue`, `bars:13` (chord stacks on
+  those beats). The engine publishes the theme with the step's fingers and hand
+  (`handFingers`, `rightHand`). Checks 168/168.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

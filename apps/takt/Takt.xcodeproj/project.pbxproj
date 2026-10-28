@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		00F4BC3812D5876F5DE7A586 /* xstick-1a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 6EA8414D96952B8DF25F4270 /* xstick-1a.caf */; };
 		0122C6880BB2223509A01B44 /* BandData.swift in Sources */ = {isa = PBXBuildFile; fileRef = E35CB620AC7721CE809CB3C0 /* BandData.swift */; };
+		019969BF7D1F891C9D76EA5A /* TempoKnob.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07C7B848B8453F7F9142B49C /* TempoKnob.swift */; };
 		03E11DA52EB7EB63BAA61F6E /* snare-5c.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9E784B77A99187B44D2F3021 /* snare-5c.caf */; };
 		054A003EAFCDFFA4439BBE4B /* AccountStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDB3654F5D791B885FCEED1B /* AccountStore.swift */; };
 		0558E9C44BDB9EC026C7D0D0 /* Calibration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DB500F26FA68652350CA0F7 /* Calibration.swift */; };
@@ -105,6 +106,7 @@
 		5B40702A3B9F3D708DA58C3F /* pno-51-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 637060E1B27D289D64972055 /* pno-51-1.caf */; };
 		5BD89A82210707D4C12EE7F3 /* snare-1a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 27AB3C2B9B543267B44D0E56 /* snare-1a.caf */; };
 		5C357900F62CA3F2AF4D47DF /* hat-4c.caf in Resources */ = {isa = PBXBuildFile; fileRef = D4123B82EEB06216B8B06790 /* hat-4c.caf */; };
+		5CE3DCE614CF66FD55273FF2 /* ThemeCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = D325CD2AF734C9D5A942DE43 /* ThemeCard.swift */; };
 		5D12A4B666A44E9CE2C6914B /* LessonScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA77ED30BAF689A04B1E5B94 /* LessonScreen.swift */; };
 		5DB4F8877AD391F3808D0E7B /* pno-45-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = CD7DE42E8110478BE27986CC /* pno-45-1.caf */; };
 		5EFED1E324609E9B1B739938 /* sax-72-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = B3A468091F78A4DA2AF64B51 /* sax-72-h.caf */; };
@@ -296,6 +298,7 @@
 		012712C796C3F22B9A027D23 /* DebugHooks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugHooks.swift; sourceTree = "<group>"; };
 		062DF873145E0C3C0BDEFAFF /* Hands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Hands.swift; sourceTree = "<group>"; };
 		06351291D7D6B4435FAB00DB /* hatOpen-2a.caf */ = {isa = PBXFileReference; path = "hatOpen-2a.caf"; sourceTree = "<group>"; };
+		07C7B848B8453F7F9142B49C /* TempoKnob.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TempoKnob.swift; sourceTree = "<group>"; };
 		087C7F4FCE54EBE926B2A773 /* sax-84-h.caf */ = {isa = PBXFileReference; path = "sax-84-h.caf"; sourceTree = "<group>"; };
 		09EE1B46C7B231BDA2F2836D /* snare-0c.caf */ = {isa = PBXFileReference; path = "snare-0c.caf"; sourceTree = "<group>"; };
 		0B0D42BB8380AE4669C98F79 /* kick-0a.caf */ = {isa = PBXFileReference; path = "kick-0a.caf"; sourceTree = "<group>"; };
@@ -506,6 +509,7 @@
 		CF27DFEE4B13F6921E0A7589 /* pno-53-1.caf */ = {isa = PBXFileReference; path = "pno-53-1.caf"; sourceTree = "<group>"; };
 		CF62F4D73B0FBE658CD710D3 /* hat-4a.caf */ = {isa = PBXFileReference; path = "hat-4a.caf"; sourceTree = "<group>"; };
 		CF651FEB253E5456168706DA /* Voices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Voices.swift; sourceTree = "<group>"; };
+		D325CD2AF734C9D5A942DE43 /* ThemeCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeCard.swift; sourceTree = "<group>"; };
 		D3F53FD48CE9B89241FFB481 /* lesson-S1m.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "lesson-S1m.json"; sourceTree = "<group>"; };
 		D4123B82EEB06216B8B06790 /* hat-4c.caf */ = {isa = PBXFileReference; path = "hat-4c.caf"; sourceTree = "<group>"; };
 		D5671658EBED1C841D01BAFD /* pno-93-2.caf */ = {isa = PBXFileReference; path = "pno-93-2.caf"; sourceTree = "<group>"; };
@@ -707,6 +711,8 @@
 				11BD6025BB5E69D21B9A0B1F /* RunPanel.swift */,
 				D8AEBBD36AEADCD7786A2457 /* Scorer.swift */,
 				F927B4DE131369E7A7E7144B /* StepPanel.swift */,
+				07C7B848B8453F7F9142B49C /* TempoKnob.swift */,
+				D325CD2AF734C9D5A942DE43 /* ThemeCard.swift */,
 				3FF0590E33E54BA1B15E91B1 /* TransportBar.swift */,
 			);
 			path = Lesson;
@@ -1342,6 +1348,8 @@
 				0C90898023362CB317B66D22 /* SettingsScreen.swift in Sources */,
 				B42F6C7AD6013FC34A3BAF19 /* StepPanel.swift in Sources */,
 				DDF031824410D6EF39EF2FE9 /* TaktApp.swift in Sources */,
+				019969BF7D1F891C9D76EA5A /* TempoKnob.swift in Sources */,
+				5CE3DCE614CF66FD55273FF2 /* ThemeCard.swift in Sources */,
 				5393E171E435313023E81F77 /* TransportBar.swift in Sources */,
 				481CF35C84CED42D066A2594 /* TransportClock.swift in Sources */,
 				606269D637B85705945947B6 /* Typography.swift in Sources */,
@@ -1386,7 +1394,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 35;
+				CURRENT_PROJECT_VERSION = 36;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -1453,7 +1461,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 35;
+				CURRENT_PROJECT_VERSION = 36;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;

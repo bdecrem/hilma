@@ -14,7 +14,12 @@
       "goal": "2 clean choruses at 60",
       "steps": [
         "up"
-      ]
+      ],
+      "theme": {
+        "glyph": "tuck",
+        "title": "Thumb under",
+        "line": "After the middle finger, the thumb slips under and the hand walks on up."
+      }
     },
     {
       "title": "Down",
@@ -22,7 +27,12 @@
       "goal": "2 clean choruses at 60",
       "steps": [
         "down"
-      ]
+      ],
+      "theme": {
+        "glyph": "over",
+        "title": "Middle over",
+        "line": "Coming down, the middle finger reaches over the thumb to keep going."
+      }
     },
     {
       "title": "Up and down",
@@ -30,7 +40,12 @@
       "goal": "2 clean choruses at 60",
       "steps": [
         "updown"
-      ]
+      ],
+      "theme": {
+        "glyph": "hill",
+        "title": "Turn at the top",
+        "line": "Up to the pinky, straight back down: under on the way up, over on the way down."
+      }
     },
     {
       "title": "Two octaves",
@@ -38,7 +53,12 @@
       "goal": "2 clean choruses at 60",
       "steps": [
         "two"
-      ]
+      ],
+      "theme": {
+        "glyph": "steps:8",
+        "title": "Twice as far",
+        "line": "Two thumb-unders this time, and the pinky lands on the very top."
+      }
     },
     {
       "title": "The left hand",
@@ -46,7 +66,12 @@
       "goal": "2 clean choruses at 60",
       "steps": [
         "left"
-      ]
+      ],
+      "theme": {
+        "glyph": "hand",
+        "title": "The other hand",
+        "line": "Pinky first. Going up, the middle finger crosses over the thumb."
+      }
     },
     {
       "title": "The blues scale",
@@ -54,7 +79,12 @@
       "goal": "2 clean choruses at 60",
       "steps": [
         "blues"
-      ]
+      ],
+      "theme": {
+        "glyph": "blue",
+        "title": "The flat five",
+        "line": "Six notes. The E♭ between the four and the five is the blue one."
+      }
     }
   ],
   "later": [
@@ -1159,42 +1189,72 @@
       "title": "First riff",
       "skill": "A C D E, up and back, over the band",
       "goal": "Have fun. A clean chorus marks it played.",
-      "step": "jam-up"
+      "step": "jam-up",
+      "theme": {
+        "glyph": "steps",
+        "title": "A riff, not a run",
+        "line": "Four notes up and back. Sit on the beat and let the band carry you."
+      }
     },
     {
       "after": 2,
       "title": "Falling riff",
       "skill": "A G E D, then E G A: a riff that drops from the top",
       "goal": "Have fun. A clean chorus marks it played.",
-      "step": "jam-down"
+      "step": "jam-down",
+      "theme": {
+        "glyph": "fall",
+        "title": "From the top",
+        "line": "Start high, drop down, climb back. A riff can go either way."
+      }
     },
     {
       "after": 3,
       "title": "The blue note",
       "skill": "A C D E♭, then E D C A: the flat third slips in",
       "goal": "Have fun. A clean chorus marks it played.",
-      "step": "jam-updown"
+      "step": "jam-updown",
+      "theme": {
+        "glyph": "blue",
+        "title": "Lean on the blue note",
+        "line": "The C is the one that bends the ear. Give it weight."
+      }
     },
     {
       "after": 4,
       "title": "The jump",
       "skill": "A C E A: the chord's notes, up an octave and back",
       "goal": "Have fun. A clean chorus marks it played.",
-      "step": "jam-two"
+      "step": "jam-two",
+      "theme": {
+        "glyph": "keys:1358",
+        "title": "Chord tones",
+        "line": "Skip the steps: root, third, fifth, octave. The hand opens up."
+      }
     },
     {
       "after": 5,
       "title": "Walking bass",
       "skill": "A C D E in the left hand: you are the bass now",
       "goal": "Have fun. A clean chorus marks it played.",
-      "step": "jam-left"
+      "step": "jam-left",
+      "theme": {
+        "glyph": "walk",
+        "title": "You're the bass",
+        "line": "One note a beat, dead even. A bass player never rushes."
+      }
     },
     {
       "after": 6,
       "title": "Blues riff",
       "skill": "A C D E♭ E G A with a shuffle, up and down",
       "goal": "Have fun. A clean chorus marks it played.",
-      "step": "jam-blues"
+      "step": "jam-blues",
+      "theme": {
+        "glyph": "blue",
+        "title": "The late eighth",
+        "line": "The flat five lands on the shuffle's late eighth: that's the swing."
+      }
     }
   ]
 }

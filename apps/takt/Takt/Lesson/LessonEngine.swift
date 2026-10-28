@@ -117,6 +117,13 @@ final class LessonEngine {
         var nowIndex: Int?
         /// A jam (play mode): no gate, nothing to pass; `lesson` is the one it sits under.
         var jam = false
+        /// The session's theme (the lesson's or the jam's), the fingers its pattern uses and
+        /// the hand, for the theme card.
+        var theme: Lesson.Theme?
+        var handFingers: Set<Int> = []
+        var rightHand = false
+        /// The tempo the step counts at (a ramp: its next target); nil on a card.
+        var stepTempo: Int?
     }
 
     struct Verdict {
@@ -623,10 +630,15 @@ final class LessonEngine {
         o.lessonCount = lesson.lessons.count
         o.lessonTitle = lesson.lessons[l].title
         o.goal = lesson.lessons[l].goal
+        o.theme = lesson.lessons[l].theme
         if let j = lesson.jam(ofStep: stepIndex) {
             o.lessonTitle = j.title
             o.goal = j.goal
+            o.theme = j.theme
         }
+        o.handFingers = Set((step.pattern ?? []).compactMap(\.finger))
+        o.rightHand = step.hand == "right"
+        o.stepTempo = step.kind == .ramp ? rampTarget : step.kind == .card ? nil : step.tempo
 
         let absBar = bar(at: heardTick)
         let barInForm = ((absBar % bars) + bars) % bars

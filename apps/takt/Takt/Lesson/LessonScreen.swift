@@ -140,6 +140,10 @@ struct StackedLessonLayout: View {
                         NoteNeedle(mark: state.lastNote, compact: true)
                     }
                 }
+                if let theme = state.theme, state.intro == nil, state.complete == nil {
+                    ThemeCard(theme: theme, fingers: state.handFingers, right: state.rightHand, compact: true)
+                        .padding(.top, 10)
+                }
                 Spacer(minLength: 16)
 
                 if let panel = StepPanel(state: state) {

@@ -701,7 +701,11 @@ final class Player {
             nextNotes: lesson.nextNotes,
             pressedNotes: pressed,
             run: runState(),
-            jam: lesson.jam
+            jam: lesson.jam,
+            theme: lesson.theme,
+            handFingers: lesson.handFingers,
+            rightHand: lesson.rightHand,
+            stepTempo: lesson.stepTempo
         )
     }
 
