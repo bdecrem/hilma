@@ -9,6 +9,9 @@ struct LessonControls {
     var toggleMute: (Int) -> Void = { _ in }
     var press: (Int) -> Void = { _ in }
     var release: (Int) -> Void = { _ in }
+    /// Tap mode: a finger (by id) down and up, playing the notes due.
+    var tapDown: (Int) -> Void = { _ in }
+    var tapUp: (Int) -> Void = { _ in }
     /// The card's Continue.
     var continueCard: () -> Void = {}
     /// A step intro's Start, and Lesson complete's next step.

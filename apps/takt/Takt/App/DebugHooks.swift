@@ -15,6 +15,8 @@ import SwiftUI
 ///
 /// `-Autoplay perfect|loose|sloppy|rush` plays the lesson for you (Autoplay.swift).
 ///
+/// `-AutoTap 1` on a song taps each chord the frame it is heard, through tap mode's path.
+///
 /// `-ClockTo <file>` writes, once the band rolls, the host time at which tick 0 is heard:
 ///   `<mach ticks> <seconds> <bpm>`, for a player outside the app (scripts/midiplay.swift).
 ///
@@ -52,6 +54,7 @@ enum DebugHooks {
                 }
                     .environment(\.horizontalSizeClass, .regular)
                     .environment(\.colorScheme, theme.colorScheme)
+                    .environment(\.offscreen, true)
                     .frame(width: 1100, height: 768)
                 let renderer = ImageRenderer(content: screen)
                 renderer.scale = 2

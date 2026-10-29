@@ -180,6 +180,7 @@
 		61DB37FBFCFFE7F83F563F1B /* pno-79-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 596E344E48305E41CDEDCD58 /* pno-79-1.caf */; };
 		62E53B06B77D2D07A42913BF /* syn-bleep-75-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 684EA5E8461B50653BE6C32C /* syn-bleep-75-1.caf */; };
 		63205981D46B9A6C3A8E8254 /* bass-39.caf in Resources */ = {isa = PBXBuildFile; fileRef = C6F972FD0AD385D24F86BF29 /* bass-39.caf */; };
+		63D566F1EAF82677A31CC488 /* TouchSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E011EC39DA1B5B0486CBE43 /* TouchSurface.swift */; };
 		64A3DEBC26AC68C1BCE2584E /* syn-stabMin-43-0.caf in Resources */ = {isa = PBXBuildFile; fileRef = F54458F3CFF4AA7E4FD16588 /* syn-stabMin-43-0.caf */; };
 		64B6AF894E09377DF886A78C /* pno-37-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = C2038C1A05337D1214E40BCF /* pno-37-1.caf */; };
 		64EEB6753AAC3A944658CDC0 /* syn-bleep-75-0.caf in Resources */ = {isa = PBXBuildFile; fileRef = 2E41FAF8BF2AFE79D362D3C8 /* syn-bleep-75-0.caf */; };
@@ -692,6 +693,7 @@
 		8DA328066B3FE950BF61365C /* EarGameScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EarGameScreen.swift; sourceTree = "<group>"; };
 		8DAFBAAD5D41F640FB770778 /* syn-hatDub-0a.caf */ = {isa = PBXFileReference; path = "syn-hatDub-0a.caf"; sourceTree = "<group>"; };
 		8DB500F26FA68652350CA0F7 /* Calibration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Calibration.swift; sourceTree = "<group>"; };
+		8E011EC39DA1B5B0486CBE43 /* TouchSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchSurface.swift; sourceTree = "<group>"; };
 		8E7230D864AF66CE1748016D /* syn-rhodes-48-0.caf */ = {isa = PBXFileReference; path = "syn-rhodes-48-0.caf"; sourceTree = "<group>"; };
 		9022E90C399333D8404C732C /* pno-83-2.caf */ = {isa = PBXFileReference; path = "pno-83-2.caf"; sourceTree = "<group>"; };
 		90938465F2979109AAE2AF26 /* pno-49-1.caf */ = {isa = PBXFileReference; path = "pno-49-1.caf"; sourceTree = "<group>"; };
@@ -1011,6 +1013,7 @@
 			isa = PBXGroup;
 			children = (
 				675DE36B1651AEB98E028168 /* KeyCatcher.swift */,
+				8E011EC39DA1B5B0486CBE43 /* TouchSurface.swift */,
 			);
 			path = Input;
 			sourceTree = "<group>";
@@ -1994,6 +1997,7 @@
 				DDF031824410D6EF39EF2FE9 /* TaktApp.swift in Sources */,
 				019969BF7D1F891C9D76EA5A /* TempoKnob.swift in Sources */,
 				5CE3DCE614CF66FD55273FF2 /* ThemeCard.swift in Sources */,
+				63D566F1EAF82677A31CC488 /* TouchSurface.swift in Sources */,
 				5393E171E435313023E81F77 /* TransportBar.swift in Sources */,
 				481CF35C84CED42D066A2594 /* TransportClock.swift in Sources */,
 				606269D637B85705945947B6 /* Typography.swift in Sources */,
@@ -2038,7 +2042,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 46;
+				CURRENT_PROJECT_VERSION = 47;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -2105,7 +2109,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 46;
+				CURRENT_PROJECT_VERSION = 47;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;

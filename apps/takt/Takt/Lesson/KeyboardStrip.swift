@@ -3,7 +3,8 @@ import SwiftUI
 /// The on-screen keyboard, `low`...`high` as MIDI notes (C4 = 60). Both ends must be white keys.
 /// The key to press now is filled `signal`; the next one is outlined in `cue` with a corner tick.
 /// Keys held from any input (MIDI, computer keyboard, touch) fill `muted`. Playable by touch
-/// or click: one finger, slide to glide across keys.
+/// or click, a finger per key (slide to glide across keys). In tap mode (Settings, on by default
+/// on the iPhone) a finger anywhere on it plays the notes due instead, chords and all.
 struct KeyboardStrip: View {
     let low: Int
     let high: Int
@@ -13,7 +14,17 @@ struct KeyboardStrip: View {
     /// Keys → the finger that plays them, drawn as a numbered badge.
     var fingers: [Int: Int] = [:]
     @Environment(\.lessonControls) private var controls
-    @State private var touched: Int?
+    @AppStorage("tapMode") private var tapMode = KeyboardStrip.tapModeDefault
+    /// Each finger's key, while it is down.
+    @State private var touched = Touched()
+    @Environment(\.offscreen) private var offscreen
+
+    /// A phone has no keyboard; an iPad or a Mac usually sits by one.
+    static var tapModeDefault: Bool { UIDevice.current.userInterfaceIdiom == .phone }
+
+    final class Touched {
+        var keys: [Int: Int] = [:]
+    }
 
     var body: some View {
         GeometryReader { geo in
@@ -31,20 +42,26 @@ struct KeyboardStrip: View {
                         .offset(x: layout.blackX(note))
                 }
             }
-            .contentShape(Rectangle())
-            .gesture(DragGesture(minimumDistance: 0)
-                .onChanged { g in
-                    let note = layout.note(at: g.location)
-                    guard note != touched else { return }
-                    if let old = touched { controls.release(old) }
-                    if let note { controls.press(note) }
-                    touched = note
-                }
-                .onEnded { _ in
-                    if let old = touched { controls.release(old) }
-                    touched = nil
-                })
+            .frame(width: geo.size.width, height: geo.size.height, alignment: .topLeading)
+            .overlay {
+                if !offscreen { TouchSurface { phase, id, point in touch(phase, id, layout.note(at: point)) } }
+            }
         }
+    }
+
+    private func touch(_ phase: TouchSurface.Phase, _ id: Int, _ note: Int?) {
+        if tapMode {
+            if phase == .down { controls.tapDown(id) }
+            if phase == .up { controls.tapUp(id) }
+            return
+        }
+        let old = touched.keys[id]
+        let new = phase == .up ? nil : note
+        guard new != old else { return }
+        touched.keys[id] = new
+        // A key two fingers hold sounds until the last one leaves it.
+        if let old, !touched.keys.values.contains(old) { controls.release(old) }
+        if let new, touched.keys.values.filter({ $0 == new }).count == 1 { controls.press(new) }
     }
 
     private func role(_ note: Int) -> Key.Role {
@@ -131,5 +148,18 @@ struct Key: View {
     static func name(_ note: Int) -> String {
         let names = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"]
         return "\(names[note % 12])\(note / 12 - 1)"
+    }
+}
+
+private struct OffscreenKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
+extension EnvironmentValues {
+    /// Drawn by ImageRenderer (the debug snapshots), which can't draw a UIKit view: the touch
+    /// surface stays out.
+    var offscreen: Bool {
+        get { self[OffscreenKey.self] }
+        set { self[OffscreenKey.self] = newValue }
     }
 }

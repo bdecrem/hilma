@@ -675,6 +675,20 @@ final class LessonEngine {
         if o != output { output = o }
     }
 
+    /// Tap mode: the keys a tap at `tick` plays, the expected chord nearest it around the loop.
+    /// Empty while nothing is scored.
+    func due(at tick: Double) -> [Int] {
+        guard scoring, !expected.isEmpty else { return [] }
+        let loop = Double(loopTicks)
+        let t = (tick.truncatingRemainder(dividingBy: loop) + loop).truncatingRemainder(dividingBy: loop)
+        func distance(_ e: ExpectedNote) -> Double {
+            let d = abs(Double(e.tick) - t)
+            return min(d, loop - d)
+        }
+        let nearest = expected.min { distance($0) < distance($1) }!
+        return expected.filter { $0.tick == nearest.tick }.map(\.display)
+    }
+
     /// What the keyboard and the hand show at a transport tick: the keys to press now and
     /// next, the fingers, the run's position.
     struct Cue: Equatable {

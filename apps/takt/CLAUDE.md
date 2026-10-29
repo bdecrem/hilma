@@ -525,6 +525,16 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   inverted from the reference's gains (`vel_for`). Its one part is the stab: a song may now carry
   the chords part alone (`Song.partKeys`; the Part chips, `AppModel.stagePart` and the checks
   follow it). The master knee is a band setting (`knee`, 0.48 here) so the song clips the way the reference does at its lower level; it matches the reference within ±0.2 dB per octave band.
+- **Tap mode: 0.1 (47), 2026-10-29.** Bart: "i need to be able to fully test / use the app from
+  the iphone build… at least in the GAME mode, i cannot just play with my fingers." The keyboard
+  strip followed one finger (a SwiftUI drag), so no chord could be played by touch. Now it takes
+  every finger (`Input/TouchSurface.swift`, a multi-touch UIView). Settings → Input → **Tap mode
+  (no keyboard connected)**, `@AppStorage("tapMode")`, on by default on the iPhone only: a finger
+  anywhere on the strip plays the notes due nearest it, the whole chord, scored like keys pressed
+  then (`Player.tapDown/tapUp` → `GameEngine.due` in a song, `LessonEngine.due` in a lesson);
+  lifting it lets them go. MIDI and the computer keys are untouched. `-AutoTap 1` taps every chord
+  of a song through that path; ImageRenderer snapshots set `\.offscreen` so the UIKit surface
+  stays out of them. Simulator check: `cliclick` on the Simulator window is a real touch.
 
 ## Code map (`Takt/`)
 

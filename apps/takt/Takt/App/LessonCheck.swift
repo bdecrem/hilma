@@ -159,6 +159,15 @@ enum LessonCheck {
             roll(to: Double(e[3].tick) + Double(12 * tpb))
             check("needle: no misses once the player stops", engine.output.lastNote?.seq == marks.last?.seq)
 
+            // Tap mode in a lesson: the expected chord nearest the tap, wrapping round the loop.
+            let tapped = LessonEngine(lesson: lesson, ticksPerBeat: tpb)
+            tapped.heard(tick: 0, tempo: 70, rolling: true, epoch: 0)
+            let keysAt = { (t: Int) in Set(e.filter { $0.tick == t }.map(\.display)) }
+            check("tap mode: a tap in a lesson plays the expected notes nearest it",
+                  Set(tapped.due(at: Double(e[1].tick) - 3)) == keysAt(e[1].tick)
+                  && Set(tapped.due(at: Double(loop) - 1)) == keysAt(e[0].tick),
+                  "\(tapped.due(at: Double(e[1].tick) - 3)) vs \(keysAt(e[1].tick))")
+
             // Off the count-in: the first note a hair before tick 0 (the lead), then the next
             // frames still before 0. Crashed the Mac build on 2026-10-26 (an empty range).
             let early = LessonEngine(lesson: lesson, ticksPerBeat: tpb)
@@ -1023,6 +1032,27 @@ enum LessonCheck {
                                                                 good: 0, missed: 0, extras: 0, maxCombo: 1, accuracy: 1, level: 1, grade: "S"))
                 })
                 check("stage: the board keeps the best 50 a song, best first", r.count == 50 && r.first?.score == 59 && r.last?.score == 10)
+
+                // Tap mode: one finger per chord, a hair early, every key of it from `due`; and a
+                // tap far from any chord takes the next one (extras, nothing hit).
+                let tap = GameEngine(song: song, part: .chords, difficulty: .easy)
+                let chordTicks = Set(tap.notes.indices.filter { tap.active($0) }.map { tap.notes[$0].t }).sorted()
+                for t in chordTicks {
+                    let at = Double(t) - 20 / ms
+                    tap.heard(tick: at, msPerTick: ms)
+                    for n in tap.due(at: at, msPerTick: ms) { tap.played(note: n, tick: at, msPerTick: ms) }
+                }
+                tap.heard(tick: Double(song.endTick) + Double(tpbar), msPerTick: ms)
+                let chordNotes = tap.notes.indices.filter { tap.active($0) }.count
+                check("stage: tap mode plays each chord whole on one finger: every key hit, none extra, grade S",
+                      tap.perfect == chordNotes && tap.missed == 0 && tap.extras == 0 && tap.result().grade == "S"
+                      && chordNotes > chordTicks.count, "\(tap.perfect)/\(chordNotes) on \(chordTicks.count) taps, \(tap.extras) extra")
+                let stray = GameEngine(song: song, part: .chords, difficulty: .easy)
+                let gap = Double(chordTicks[0]) - 400 / ms
+                let strayKeys = stray.due(at: gap, msPerTick: ms)
+                for n in strayKeys { stray.played(note: n, tick: gap, msPerTick: ms) }
+                check("stage: a tap 400 ms before a chord plays it as extras, nothing hit",
+                      !strayKeys.isEmpty && stray.extras == strayKeys.count && stray.perfect + stray.good == 0)
             }
         }
 

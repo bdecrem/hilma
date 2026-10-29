@@ -226,6 +226,18 @@ final class GameEngine {
                grade: Result.grade(accuracy: accuracy))
     }
 
+    /// Tap mode: the keys a tap at `tick` plays, the whole pending chord nearest it that is still
+    /// in its window or ahead. Empty once the song has none left.
+    func due(at tick: Double, msPerTick: Double) -> [Int] {
+        let reach = msPerTick.isFinite && msPerTick > 0 ? Self.goodMs / msPerTick : 0
+        var best: Int?
+        for i in notes.indices where status[i] == .pending && active(i) && Double(notes[i].t) >= tick - reach {
+            if best == nil || abs(Double(notes[i].t) - tick) < abs(Double(best!) - tick) { best = notes[i].t }
+        }
+        guard let t = best else { return [] }
+        return notes.indices.filter { status[$0] == .pending && active($0) && notes[$0].t == t }.map { notes[$0].n }
+    }
+
     /// The active notes between two ticks, with their state, for the highway.
     func notes(from: Double, to: Double) -> [(index: Int, note: Song.Note, status: Status)] {
         var out: [(Int, Song.Note, Status)] = []

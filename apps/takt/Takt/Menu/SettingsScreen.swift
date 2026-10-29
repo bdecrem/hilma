@@ -10,6 +10,7 @@ struct SettingsScreen: View {
     @AppStorage("menuMusic") private var menuMusic = true
     @AppStorage("countIn") private var countIn = true
     @AppStorage("preferMinor") private var preferMinor = false
+    @AppStorage("tapMode") private var tapMode = KeyboardStrip.tapModeDefault
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var confirmReset = false
 
@@ -75,6 +76,16 @@ struct SettingsScreen: View {
                         #if targetEnvironment(macCatalyst)
                         Hairline()
                         row("Computer keys", "A–; play C3–E4 · Z X octave")
+                        #else
+                        Hairline()
+                        Toggle(isOn: $tapMode) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Tap mode (no keyboard connected)").bodyText(15).foregroundStyle(Palette.text)
+                                Text("A tap on the keys plays the notes due, chords and all. Off: each key plays its note")
+                                    .dataLabel(10).foregroundStyle(Palette.muted)
+                            }
+                        }
+                        .tint(Palette.signal)
                         #endif
                         Hairline()
                         HStack(alignment: .firstTextBaseline) {

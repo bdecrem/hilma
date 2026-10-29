@@ -213,6 +213,8 @@ struct LiveLessonScreen: View {
                 toggleMute: { i in player.toggleMute(player.channels[i]) },
                 press: { player.press($0) },
                 release: player.release,
+                tapDown: player.tapDown,
+                tapUp: player.tapUp,
                 continueCard: player.continueCard,
                 beginStep: player.beginStep,
                 nextStep: player.nextStep,
@@ -232,7 +234,9 @@ struct LiveGameScreen: View {
             .environment(\.lessonControls, LessonControls(
                 togglePlay: player.togglePlay,
                 press: { player.press($0) },
-                release: player.release
+                release: player.release,
+                tapDown: player.tapDown,
+                tapUp: player.tapUp
             ))
             .environment(\.gameControls, GameControls(
                 togglePlay: player.togglePlay,

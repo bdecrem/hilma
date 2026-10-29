@@ -358,6 +358,30 @@ final class Player {
         scoreRelease(note, hostTime: now)
     }
 
+    /// Tap mode (a phone with no keyboard): a finger down plays the notes due nearest it, a
+    /// whole chord on one finger, scored like keys pressed then; lifting it lets them go.
+    @ObservationIgnored private var taps: [Int: [Int]] = [:]
+
+    func tapDown(_ touch: Int) {
+        let s = audio.snapshot()
+        let clock = TransportClock(s)
+        guard clock.valid else { return }
+        let p = clock.position(atHost: shifted(mach_absolute_time(), clock))
+        let due: [Int]
+        if let game, inGame {
+            due = s.epoch == gameEpoch ? game.due(at: p.tick, msPerTick: p.msPerTick) : []
+        } else {
+            due = inLesson && !demo ? engine.due(at: p.tick) : []
+        }
+        let fresh = due.filter { !pressed.contains($0) }
+        taps[touch] = fresh
+        for n in fresh { press(n) }
+    }
+
+    func tapUp(_ touch: Int) {
+        for n in taps.removeValue(forKey: touch) ?? [] { release(n) }
+    }
+
     /// Computer keyboard: semitone 0 = C3 shifted by the octave.
     func key(_ semitone: Int, down: Bool) {
         let note = 48 + 12 * octave + semitone
@@ -652,6 +676,7 @@ final class Player {
         game.heard(tick: heard.tick, msPerTick: heard.msPerTick)
         #if DEBUG
         runGameAutoplay(clock, heard: heard)
+        runGameAutoTap(heard)
         #endif
         if game.finished, gameResult == nil {
             let r = game.result()
@@ -696,6 +721,23 @@ final class Player {
         }
         while let i = gameReleases.firstIndex(where: { $0.tick <= heard.tick }) {
             pressed.remove(gameReleases.remove(at: i).note)
+        }
+    }
+
+    /// `-AutoTap 1` on a song: one finger taps each chord the frame it is heard, through the
+    /// tap path (the tap-mode check).
+    @ObservationIgnored private var autoTapDown = false
+    private func runGameAutoTap(_ heard: TransportClock.Position) {
+        guard let game, UserDefaults.standard.bool(forKey: "AutoTap"), heard.rolling else { return }
+        if autoTapDown {
+            tapUp(0)
+            autoTapDown = false
+            return
+        }
+        let reach = GameEngine.goodMs / heard.msPerTick
+        if game.notes(from: heard.tick - reach, to: heard.tick).contains(where: { $0.status == .pending }) {
+            tapDown(0)
+            autoTapDown = true
         }
     }
     #endif
