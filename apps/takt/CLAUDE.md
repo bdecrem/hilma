@@ -505,6 +505,14 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   layout from 700 pt (the Mac window), stacked on the iPhone. Once per process (not per
   window). DEBUG launches with `-Silent`, `-Route`, `-SnapshotAt`, `-PreviewFrame`,
   `-LessonCheck` or `-RenderTo` skip it; `-Splash 1` / `-Splash 0` decides outright.
+- **Four Letters, the launch redrawn: 0.1 (49), 2026-10-29.** Bart picked it from three
+  proposals (Four Letters, Now Line, Dub Stab). Same clock, haptics, hand-off, tap-to-skip and
+  Reduce Motion as the count-in above; only the picture changed: T, A, K, T one per beat at full
+  height on a rule, `signal` on its beat, `cue` outline for the next, `line` outline still to
+  come, `text` once played, the beat's numeral at the right. Stacked one letter to a row under
+  700 pt wide (the iPhone), four across from 700 (a Mac window), the letters sized to the space
+  they get. SwiftUI has no text stroke, so the outline is the letter drawn twelve times a hair
+  off in the stroke color with the ground on top (`LetterCell.glyph`).
 - **Abyss = the dub reference: 0.1 (45), 2026-10-29.** Bart: "the dub techno track… is still not
   good at all… make the version in the game sound the same" as `misc/dub_reference.mp3`
   (`dub_reference.py`, `DUB_TECHNO_FIXES.md`). The chamber is a line-for-line port of the
