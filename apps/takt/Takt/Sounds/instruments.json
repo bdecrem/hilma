@@ -1569,20 +1569,27 @@
   "zones": [
    {
     "root": 0,
-    "vel": 0.5,
+    "vel": 1.0,
     "files": [
      "syn-hatDub-0a",
      "syn-hatDub-0b",
-     "syn-hatDub-0c"
+     "syn-hatDub-0c",
+     "syn-hatDub-0d"
     ]
-   },
+   }
+  ]
+ },
+ "hatDub16": {
+  "release": 0.02,
+  "zones": [
    {
     "root": 0,
     "vel": 1.0,
     "files": [
-     "syn-hatDub-1a",
-     "syn-hatDub-1b",
-     "syn-hatDub-1c"
+     "syn-hatDub16-0a",
+     "syn-hatDub16-0b",
+     "syn-hatDub16-0c",
+     "syn-hatDub16-0d"
     ]
    }
   ]
@@ -1595,18 +1602,6 @@
     "vel": 1.0,
     "files": [
      "syn-crackle"
-    ]
-   }
-  ]
- },
- "roomtone": {
-  "release": 0.5,
-  "zones": [
-   {
-    "root": 0,
-    "vel": 1.0,
-    "files": [
-     "syn-roomtone"
     ]
    }
   ]
@@ -2259,258 +2254,8 @@
    }
   ]
  },
- "dubStab": {
-  "release": 0.15,
-  "zones": [
-   {
-    "root": 48,
-    "vel": 0.2,
-    "files": [
-     "syn-dubStab-48-0"
-    ]
-   },
-   {
-    "root": 48,
-    "vel": 0.4,
-    "files": [
-     "syn-dubStab-48-1"
-    ]
-   },
-   {
-    "root": 48,
-    "vel": 0.6,
-    "files": [
-     "syn-dubStab-48-2"
-    ]
-   },
-   {
-    "root": 48,
-    "vel": 0.8,
-    "files": [
-     "syn-dubStab-48-3"
-    ]
-   },
-   {
-    "root": 48,
-    "vel": 1.0,
-    "files": [
-     "syn-dubStab-48-4"
-    ]
-   },
-   {
-    "root": 51,
-    "vel": 0.2,
-    "files": [
-     "syn-dubStab-51-0"
-    ]
-   },
-   {
-    "root": 51,
-    "vel": 0.4,
-    "files": [
-     "syn-dubStab-51-1"
-    ]
-   },
-   {
-    "root": 51,
-    "vel": 0.6,
-    "files": [
-     "syn-dubStab-51-2"
-    ]
-   },
-   {
-    "root": 51,
-    "vel": 0.8,
-    "files": [
-     "syn-dubStab-51-3"
-    ]
-   },
-   {
-    "root": 51,
-    "vel": 1.0,
-    "files": [
-     "syn-dubStab-51-4"
-    ]
-   },
-   {
-    "root": 54,
-    "vel": 0.2,
-    "files": [
-     "syn-dubStab-54-0"
-    ]
-   },
-   {
-    "root": 54,
-    "vel": 0.4,
-    "files": [
-     "syn-dubStab-54-1"
-    ]
-   },
-   {
-    "root": 54,
-    "vel": 0.6,
-    "files": [
-     "syn-dubStab-54-2"
-    ]
-   },
-   {
-    "root": 54,
-    "vel": 0.8,
-    "files": [
-     "syn-dubStab-54-3"
-    ]
-   },
-   {
-    "root": 54,
-    "vel": 1.0,
-    "files": [
-     "syn-dubStab-54-4"
-    ]
-   },
-   {
-    "root": 57,
-    "vel": 0.2,
-    "files": [
-     "syn-dubStab-57-0"
-    ]
-   },
-   {
-    "root": 57,
-    "vel": 0.4,
-    "files": [
-     "syn-dubStab-57-1"
-    ]
-   },
-   {
-    "root": 57,
-    "vel": 0.6,
-    "files": [
-     "syn-dubStab-57-2"
-    ]
-   },
-   {
-    "root": 57,
-    "vel": 0.8,
-    "files": [
-     "syn-dubStab-57-3"
-    ]
-   },
-   {
-    "root": 57,
-    "vel": 1.0,
-    "files": [
-     "syn-dubStab-57-4"
-    ]
-   },
-   {
-    "root": 60,
-    "vel": 0.2,
-    "files": [
-     "syn-dubStab-60-0"
-    ]
-   },
-   {
-    "root": 60,
-    "vel": 0.4,
-    "files": [
-     "syn-dubStab-60-1"
-    ]
-   },
-   {
-    "root": 60,
-    "vel": 0.6,
-    "files": [
-     "syn-dubStab-60-2"
-    ]
-   },
-   {
-    "root": 60,
-    "vel": 0.8,
-    "files": [
-     "syn-dubStab-60-3"
-    ]
-   },
-   {
-    "root": 60,
-    "vel": 1.0,
-    "files": [
-     "syn-dubStab-60-4"
-    ]
-   },
-   {
-    "root": 63,
-    "vel": 0.2,
-    "files": [
-     "syn-dubStab-63-0"
-    ]
-   },
-   {
-    "root": 63,
-    "vel": 0.4,
-    "files": [
-     "syn-dubStab-63-1"
-    ]
-   },
-   {
-    "root": 63,
-    "vel": 0.6,
-    "files": [
-     "syn-dubStab-63-2"
-    ]
-   },
-   {
-    "root": 63,
-    "vel": 0.8,
-    "files": [
-     "syn-dubStab-63-3"
-    ]
-   },
-   {
-    "root": 63,
-    "vel": 1.0,
-    "files": [
-     "syn-dubStab-63-4"
-    ]
-   },
-   {
-    "root": 66,
-    "vel": 0.2,
-    "files": [
-     "syn-dubStab-66-0"
-    ]
-   },
-   {
-    "root": 66,
-    "vel": 0.4,
-    "files": [
-     "syn-dubStab-66-1"
-    ]
-   },
-   {
-    "root": 66,
-    "vel": 0.6,
-    "files": [
-     "syn-dubStab-66-2"
-    ]
-   },
-   {
-    "root": 66,
-    "vel": 0.8,
-    "files": [
-     "syn-dubStab-66-3"
-    ]
-   },
-   {
-    "root": 66,
-    "vel": 1.0,
-    "files": [
-     "syn-dubStab-66-4"
-    ]
-   }
-  ]
- },
  "subDub": {
-  "release": 0.2,
+  "release": 0.06,
   "zones": [
    {
     "root": 24,
@@ -2573,74 +2318,6 @@
     "vel": 1.0,
     "files": [
      "syn-subDub-40"
-    ]
-   }
-  ]
- },
- "dubLead": {
-  "release": 0.5,
-  "zones": [
-   {
-    "root": 55,
-    "vel": 1.0,
-    "files": [
-     "syn-dubLead-55"
-    ]
-   },
-   {
-    "root": 58,
-    "vel": 1.0,
-    "files": [
-     "syn-dubLead-58"
-    ]
-   },
-   {
-    "root": 61,
-    "vel": 1.0,
-    "files": [
-     "syn-dubLead-61"
-    ]
-   },
-   {
-    "root": 64,
-    "vel": 1.0,
-    "files": [
-     "syn-dubLead-64"
-    ]
-   },
-   {
-    "root": 67,
-    "vel": 1.0,
-    "files": [
-     "syn-dubLead-67"
-    ]
-   },
-   {
-    "root": 70,
-    "vel": 1.0,
-    "files": [
-     "syn-dubLead-70"
-    ]
-   },
-   {
-    "root": 73,
-    "vel": 1.0,
-    "files": [
-     "syn-dubLead-73"
-    ]
-   },
-   {
-    "root": 76,
-    "vel": 1.0,
-    "files": [
-     "syn-dubLead-76"
-    ]
-   },
-   {
-    "root": 79,
-    "vel": 1.0,
-    "files": [
-     "syn-dubLead-79"
     ]
    }
   ]

@@ -152,7 +152,9 @@ final class BandRenderer {
         fileprivate let buffer: UnsafeMutableBufferPointer<Event>
         fileprivate let drumSounds: UnsafeMutableBufferPointer<DrumSound>
         fileprivate let clickSound: Int
-        fileprivate let instruments: [SampledInstrument]
+        /// nil: the live stab (`DubStab`).
+        fileprivate let instruments: [SampledInstrument?]
+        fileprivate let stab: DubStab.Settings?
         fileprivate let monitor: Int
         /// Your keys' level (the band's `levels["monitor"]`: a song's part).
         fileprivate let monitorGain: Float
@@ -168,13 +170,14 @@ final class BandRenderer {
         let chorusBars: Int
         let name: String
         fileprivate init(_ buffer: UnsafeMutableBufferPointer<Event>, drumSounds: UnsafeMutableBufferPointer<DrumSound>,
-                         clickSound: Int, instruments: [SampledInstrument], monitor: Int, monitorGain: Float,
+                         clickSound: Int, instruments: [SampledInstrument?], stab: DubStab.Settings?, monitor: Int, monitorGain: Float,
                          duck: [Float], duckRelease: Double, sends: [Float], dub: DubChamber.Settings?,
                          loopTicks: Int, chorusBars: Int, name: String) {
             self.buffer = buffer
             self.drumSounds = drumSounds
             self.clickSound = clickSound
             self.instruments = instruments
+            self.stab = stab
             self.monitor = monitor
             self.monitorGain = monitorGain
             self.duck = duck
@@ -191,8 +194,10 @@ final class BandRenderer {
     private var transpose = 0
     private var drumSounds: UnsafeMutableBufferPointer<DrumSound>
     private var clickSound: Int
-    /// The pitched instruments of the loaded band; `monitor` is the one your keys play.
-    private var instruments: [SampledInstrument]
+    /// The pitched instruments of the loaded band (nil: the live stab); `monitor` is the one
+    /// your keys play.
+    private var instruments: [SampledInstrument?]
+    private var stab: DubStab.Settings?
     private var monitor: Int
     private var monitorGain: Float = 1
     /// Sidechain: depth per channel, the release's per-sample decay, the last kick's frame and
@@ -278,6 +283,8 @@ final class BandRenderer {
     private let keyVoices = UnsafeMutableBufferPointer<SampleVoice>.allocate(capacity: 24)
     private let hornVoices = UnsafeMutableBufferPointer<SampleVoice>.allocate(capacity: 8)
     private let monitorVoices = UnsafeMutableBufferPointer<SampleVoice>.allocate(capacity: 24)
+    /// The live stab's notes, on whichever bus plays it (keys, horns, monitor).
+    private let stabVoices = UnsafeMutableBufferPointer<DubStab.Voice>.allocate(capacity: 48)
     private var age = 0
 
     init(band: BandData, sampleRate: Double, tempo: Double) {
@@ -298,6 +305,7 @@ final class BandRenderer {
         drumSounds = first.drumSounds
         clickSound = first.clickSound
         instruments = first.instruments
+        stab = first.stab
         monitor = first.monitor
         monitorGain = first.monitorGain
         duck = first.duck
@@ -317,6 +325,7 @@ final class BandRenderer {
         keyVoices.initialize(repeating: SampleVoice())
         hornVoices.initialize(repeating: SampleVoice())
         monitorVoices.initialize(repeating: SampleVoice())
+        stabVoices.initialize(repeating: DubStab.Voice())
         commands.reserveCapacity(256)
         inbox.withLock { $0.reserveCapacity(256) }
         anchor = .init(frame: 0, tick: 0, samplesPerTick: .infinity, tempo: tempo)
@@ -351,12 +360,12 @@ final class BandRenderer {
         }
         for n in band.channels.bass + band.channels.keys + band.channels.horns { if let i = n.i { _ = instrument(i) } }
         let monitor = instrumentNames.firstIndex(of: band.instruments["monitor"]!)!
-        let instruments = instrumentNames.map { SampledInstrument.shared($0) }
-        let duckNames = band.duck?.channels ?? []
-        let duck = ["drums", "bass", "keys", "horns", "monitor"].map { duckNames.contains($0) ? Float(band.duck!.depth) : 0 }
+        let instruments = instrumentNames.map { $0 == DubStab.name ? nil : SampledInstrument.shared($0) }
+        if instruments.contains(where: { $0 == nil }) && band.stab == nil { fatalError("band \(band.name): \(DubStab.name) without a stab") }
+        let duck = ["drums", "bass", "keys", "horns", "monitor"].map { Float(band.duck?.channels[$0] ?? 0) }
         let sends = ["drums", "bass", "keys", "horns", "monitor"].map { Float(band.dub?.sends[$0] ?? 0) }
         return Events(events(of: band, sounds: names, instruments: instrumentNames), drumSounds: drumSounds, clickSound: click,
-                      instruments: instruments, monitor: monitor, monitorGain: Float(pow(10, (band.levels?["monitor"] ?? 0) / 20)),
+                      instruments: instruments, stab: band.stab?.settings, monitor: monitor, monitorGain: Float(pow(10, (band.levels?["monitor"] ?? 0) / 20)),
                       duck: duck, duckRelease: max(0.01, band.duck?.release ?? 0.2), sends: sends, dub: band.dub?.settings,
                       loopTicks: band.loopTicks, chorusBars: band.chorusBars, name: band.name)
     }
@@ -531,8 +540,8 @@ final class BandRenderer {
                                                      sampleRate: sampleRate)
             return
         }
-        play(instruments[monitor], note: s.note, velocity: s.velocity, held: Int(s.lengthTicks * samplesPerTick),
-             live: false, in: monitorVoices, gain: monitorGain)
+        play(monitor, note: s.note, velocity: s.velocity, held: Int(s.lengthTicks * samplesPerTick),
+             live: false, in: monitorVoices, bus: .monitor, gain: monitorGain, tick: s.tick)
     }
 
     /// Publishes the frame → tick mapping after the transport changed it.
@@ -620,24 +629,46 @@ final class BandRenderer {
             for i in bassVoices.indices where bassVoices[i].active {
                 bassVoices[i].stop(releaseSeconds: 0.012, sampleRate: sampleRate)
             }
-            play(instruments[e.instrument], note: e.value + transpose, velocity: e.velocity, held: held, live: false, in: bassVoices, gain: e.gain)
+            play(e.instrument, note: e.value + transpose, velocity: e.velocity, held: held, live: false, in: bassVoices, bus: .bass,
+                 gain: e.gain, tick: Double(e.tick))
         case .keys:
-            play(instruments[e.instrument], note: e.value + transpose, velocity: e.velocity, held: held, live: false, in: keyVoices, gain: e.gain)
+            play(e.instrument, note: e.value + transpose, velocity: e.velocity, held: held, live: false, in: keyVoices, bus: .keys,
+                 gain: e.gain, tick: Double(e.tick))
         case .horns:
-            play(instruments[e.instrument], note: e.value + transpose, velocity: e.velocity, held: held, live: false, in: hornVoices, gain: e.gain)
+            play(e.instrument, note: e.value + transpose, velocity: e.velocity, held: held, live: false, in: hornVoices, bus: .horns,
+                 gain: e.gain, tick: Double(e.tick))
         case .monitor:
             break
         }
     }
 
-    /// Starts a pitched note: the same note still sounding is damped first (a key restruck).
-    private func play(_ inst: SampledInstrument, note: Int, velocity: Float, held: Int, live: Bool,
-                      in pool: UnsafeMutableBufferPointer<SampleVoice>, gain: Float = 1) {
+    /// Starts a pitched note on instrument `index`: the same note still sounding is damped first
+    /// (a key restruck). The live stab reads its breath at `tick` (the song's, from its top).
+    private func play(_ index: Int, note: Int, velocity: Float, held: Int, live: Bool,
+                      in pool: UnsafeMutableBufferPointer<SampleVoice>, bus: Channel, gain: Float = 1, tick: Double) {
+        age += 1
+        guard let inst = instruments[index] else {
+            guard let stab else { return }
+            let b = bus.rawValue
+            for i in stabVoices.indices where stabVoices[i].active && stabVoices[i].bus == b && stabVoices[i].note == note {
+                stabVoices[i].stop()
+                stabVoices[i].note = -1
+            }
+            let local = (tick.truncatingRemainder(dividingBy: Double(loopTicks)) + Double(loopTicks))
+                .truncatingRemainder(dividingBy: Double(loopTicks))
+            var slot = 0
+            for i in stabVoices.indices {
+                if !stabVoices[i].active { slot = i; break }
+                if stabVoices[i].age < stabVoices[slot].age { slot = i }
+            }
+            stabVoices[slot].start(note: note, velocity: velocity, breath: stab.breath(tick: local, ticksPerBar: ticksPerBar), held: held,
+                                   gain: gain, bus: b, live: live, age: age, settings: stab, sampleRate: sampleRate)
+            return
+        }
         for i in pool.indices where pool[i].active && pool[i].note == note {
             pool[i].stop(releaseSeconds: 0.03, sampleRate: sampleRate)
             pool[i].note = -1
         }
-        age += 1
         let p = inst.pick(note: note, velocity: velocity)
         // Level follows velocity on top of the layer's own loudness.
         pool[slot(pool)].start(p.buffer, ratio: p.ratio, gain: p.gain * gain * (0.35 + 0.65 * velocity), heldFrames: held,
@@ -671,6 +702,10 @@ final class BandRenderer {
         }
         for i in monitorVoices.indices where monitorVoices[i].active {
             monitorVoices[i].render(busL + 4 * c, busR + 4 * c, from: a, to: b)
+        }
+        for i in stabVoices.indices where stabVoices[i].active {
+            let k = stabVoices[i].bus * c
+            stabVoices[i].render(busL + k, busR + k, from: a, to: b)
         }
     }
 
@@ -728,7 +763,7 @@ final class BandRenderer {
         if chunkKickCount > 0 { lastKick = chunkKicks[chunkKickCount - 1] }
         if dub {
             chamber.process(sendL: sendL, sendR: sendR, kick: kickEnv, n: n, samplesPerBeat: samplesPerTick * Double(ticksPerBeat),
-                            outL: outL, outR: outR)
+                            playing: playing, outL: outL, outR: outR)
         }
         for i in 0..<n {
             outL[i] = Self.softClip(outL[i] * master)
@@ -858,6 +893,7 @@ final class BandRenderer {
             drumSounds = e.drumSounds
             clickSound = e.clickSound
             instruments = e.instruments
+            stab = e.stab
             monitor = e.monitor
             monitorGain = e.monitorGain
             duck = e.duck
@@ -880,13 +916,20 @@ final class BandRenderer {
     }
 
     private func startLive(_ note: Int, velocity: Float) {
-        play(instruments[monitor], note: note, velocity: velocity, held: .max, live: true, in: monitorVoices, gain: monitorGain)
+        play(monitor, note: note, velocity: velocity, held: .max, live: true, in: monitorVoices, bus: .monitor, gain: monitorGain,
+             tick: playing ? tickAt(frame: frame) : heldTick)
     }
 
     private func stopLive(_ note: Int) {
+        let release = instruments[monitor]?.release ?? 0
         for i in monitorVoices.indices where monitorVoices[i].active && monitorVoices[i].live && monitorVoices[i].note == note {
-            monitorVoices[i].stop(releaseSeconds: instruments[monitor].release, sampleRate: sampleRate)
+            monitorVoices[i].stop(releaseSeconds: release, sampleRate: sampleRate)
             monitorVoices[i].live = false
+        }
+        let b = Channel.monitor.rawValue
+        for i in stabVoices.indices where stabVoices[i].active && stabVoices[i].live && stabVoices[i].bus == b && stabVoices[i].note == note {
+            stabVoices[i].stop()
+            stabVoices[i].live = false
         }
     }
 
@@ -895,6 +938,8 @@ final class BandRenderer {
         for i in bassVoices.indices where bassVoices[i].active { bassVoices[i].stop(releaseSeconds: 0.03, sampleRate: sampleRate) }
         for i in keyVoices.indices where keyVoices[i].active { keyVoices[i].stop(releaseSeconds: 0.15, sampleRate: sampleRate) }
         for i in hornVoices.indices where hornVoices[i].active { hornVoices[i].stop(releaseSeconds: 0.08, sampleRate: sampleRate) }
+        let monitorBus = Channel.monitor.rawValue
+        for i in stabVoices.indices where stabVoices[i].active && stabVoices[i].bus != monitorBus { stabVoices[i].stop() }
     }
 
     private func publish(hostTime: UInt64?, frames: Int) {

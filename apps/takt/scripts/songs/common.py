@@ -40,10 +40,12 @@ class Song:
         self.instruments = {}
         # Pitched channels' levels in dB (bass, keys, horns), the way sounds carry gainDb.
         self.levels = {}
-        # Sidechain: {"depth", "release", "channels"}; every kick ducks those channels.
+        # Sidechain: {"release", "channels": {channel: depth}}; every kick ducks those channels.
         self.duck = None
         # The dub send (Takt/Audio/DubChamber.swift): {"sends": {channel: level}, "beats", ...}.
         self.dub = None
+        # The live stab (Takt/Audio/DubStab.swift), for the instrument "liveStab".
+        self.stab = None
         self.drums = []
         self.bass = []
         self.keys = []
@@ -148,6 +150,7 @@ class Song:
             "levels": self.levels,
             "duck": self.duck,
             "dub": self.dub,
+            "stab": self.stab,
             "channels": {"drums": self.drums, "bass": self.bass, "keys": self.keys, "horns": self.horns},
             "song": {
                 "title": self.title,

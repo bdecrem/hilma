@@ -44,22 +44,25 @@ struct BandData: Decodable {
     /// A pitched channel's level in dB (bass, keys, horns; 0 when absent): a song's synths are
     /// balanced here, the way drum sounds carry `gainDb`.
     var levels: [String: Double]?
-    /// Sidechain: every kick ducks these channels by `depth` (0...1), back over `release`
-    /// seconds. The pumping of the electronic songs.
+    /// Sidechain: every kick ducks each of these channels by its depth (0...1), back over
+    /// `release` seconds. The pumping of the electronic songs.
     var duck: Duck?
     /// The dub send (`DubChamber`): what each channel sends and how the chamber is set.
     var dub: Dub?
+    /// The live stab (`DubStab`), for a band whose instrument is `liveStab`.
+    var stab: Stab?
     let channels: Channels
 
     struct Duck: Decodable {
-        let depth: Double
         let release: Double
-        var channels: [String]
+        /// Depth per channel (bass, keys, horns, monitor).
+        var channels: [String: Double]
     }
 
     struct Dub: Decodable {
         /// Send level per channel (keys, horns, monitor; drums and bass stay dry).
         var sends: [String: Double]
+        let level: Double
         let beats: Double
         let feedback: Double
         let highpass: Double
@@ -67,16 +70,47 @@ struct BandData: Decodable {
         let drive: Double
         let wobble: Double
         let wobbleRate: Double
+        let sendHighpass: Double
+        let sendLowpass: Double
+        let cross: Double
         let echo: Double
         let reverb: Double
+        let reverbDry: Double
+        let reverbEcho: Double
         let decay: Double
+        let damping: Double
+        let bandwidth: Double
+        let predelay: Double
         let reverbHighpass: Double
         let duck: Double
+        let hiss: Double
 
         var settings: DubChamber.Settings {
-            .init(beats: beats, feedback: Float(min(0.95, feedback)), highpass: highpass, lowpass: lowpass, drive: Float(drive),
-                  wobble: wobble, wobbleRate: wobbleRate, echo: Float(echo), reverb: Float(reverb), decay: decay,
-                  reverbHighpass: reverbHighpass, duck: Float(duck))
+            .init(level: Float(level), beats: beats, feedback: Float(min(0.95, feedback)), highpass: highpass, lowpass: lowpass,
+                  drive: Float(drive), wobble: wobble, wobbleRate: wobbleRate, sendHighpass: sendHighpass, sendLowpass: sendLowpass,
+                  cross: Float(cross), echo: Float(echo), reverb: Float(reverb), reverbDry: Float(reverbDry),
+                  reverbEcho: Float(reverbEcho), decay: Float(min(0.95, decay)), damping: Float(damping), bandwidth: Float(bandwidth),
+                  predelay: predelay, reverbHighpass: reverbHighpass, duck: Float(duck), hiss: Float(hiss))
+        }
+    }
+
+    struct Stab: Decodable {
+        let detune: [Double]
+        let q: Double
+        let env: Double
+        let envTime: Double
+        let attack: Double
+        let decay: Double
+        let release: Double
+        let length: Double
+        let low: Double
+        let high: Double
+        let sweepBars: Double
+
+        var settings: DubStab.Settings {
+            precondition(detune.count == 3, "stab: three saws")
+            return .init(detune: (Float(detune[0]), Float(detune[1]), Float(detune[2])), q: Float(q), env: Float(env), envTime: envTime,
+                         attack: attack, decay: decay, release: release, length: length, low: low, high: high, sweepBars: sweepBars)
         }
     }
 

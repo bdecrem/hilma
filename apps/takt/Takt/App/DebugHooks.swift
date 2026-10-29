@@ -6,7 +6,8 @@ import SwiftUI
 /// `-RenderTo <wav> [-RenderSeconds 30] [-Tempo 70] [-RenderScript "0:play,10:tempo=90"]`
 ///   renders the band offline (no device, faster than realtime) and exits. Script items are
 ///   `<seconds>:<command>`: play, pause, stop, tempo=N, mute=<channel>, unmute=<channel>,
-///   on=<note>@<velocity>, off=<note>. Channels: drums, bass, keys, horns.
+///   on=<note>@<velocity>, off=<note>, band=<band>, song=<song>/<part> (the song with your keys on
+///   the part's instrument, as the Stage loads it). Channels: drums, bass, keys, horns.
 ///
 /// `-RecordTo <wav> [-RecordSeconds 10]` records the live render (use with `-Silent 1`) and exits.
 ///
@@ -148,6 +149,9 @@ enum DebugHooks {
             case ("off", let v?): command = .noteOff(note: Int(v)!)
             case ("transpose", let v?): command = .transpose(Int(v)!)
             case ("band", let v?): command = .band(audio!.load(band: v))  // the room follows the band
+            case ("song", let v?):
+                let sp = v.split(separator: "/").map(String.init)
+                command = .band(audio!.load(song: .bundled(sp[0]), part: Song.PartKey(rawValue: sp[1])!))
             default: fatalError("RenderScript command \(parts[1])")
             }
             return (at, command)

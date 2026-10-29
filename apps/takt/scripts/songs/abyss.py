@@ -1,46 +1,63 @@
 #!/usr/bin/env python3
-"""Abyss: dub techno at 117, D minor drifting to C minor, 72 bars (2:28), from misc/sketches.py
-track 3 (the Basic Channel stab into the chamber), its voices cut by scripts/synths.py.
+"""Abyss: dub techno at 117, D minor drifting to C minor, 72 bars (2:28), built to sound like
+misc/dub_reference.py (misc/DUB_TECHNO_FIXES.md), the reference Bart listens against.
 
-    python3 apps/takt/scripts/songs/abyss.py   -> Takt/Content/song-abyss.json
+    python3 apps/takt/scripts/songs/abyss.py          -> Takt/Content/song-abyss.json
+    python3 apps/takt/scripts/songs/abyss.py --ref16  -> Takt/Content/song-abyss16.json
 
-The sketch bar for bar: the kick, the offbeat hat, the stab on the 16ths 2, 7 and (odd bars)
-10, Dm9 for four bars and Cm9 for four, the sub on 1 and 3, the hiss. Stretched to a track:
-intro, deep, the drift, the abyss with no kick, deep again, out.
+`--ref16` is the reference's own 16 bars (no sub or 16th hats for bars 0–3, the kick out for
+bars 12–13), for rendering the app beside dub_reference.mp3; it is not in the set list.
 
-The sound follows misc/TRACKS_README.md "Fixing the dub techno sound": the stab is dry, short
-and bright (four detuned saws through a resonant lowpass), its filter breathing over sixteen
-bars (velocity picks one of five layers, 600 Hz to 3.6 kHz); the echo is the engine's dub send
-(`dub`, Takt/Audio/DubChamber.swift): a dotted-eighth ping-pong whose repeats are highpassed,
-lowpassed and saturated inside the loop, the time wobbling like tape, into a reverb with the
-low end cut from its input. Kick and sub stay mono and dry (the sub an octave up from the
-sketch's, D2 and C2, so a laptop plays it), the hats crisp, only the stab, the lead and your
-keys duck, a little. Chords part: the stab. Melody part: a hollow dub lead, a four-bar phrase
-of long notes and offbeat answers that the delay repeats, which the sketch doesn't have.
+The sound: the stab is synthesized live (`stab`, Takt/Audio/DubStab.swift): five notes of
+three PolyBLEP saws through a state-variable lowpass whose cutoff opens on the hit and settles
+on the breath, 350 Hz to 2.4 kHz and back over sixteen bars, continuously. The echo is the
+engine's dub send (`dub`, Takt/Audio/DubChamber.swift): the send filtered, a dotted-eighth
+ping-pong with gentle one-pole filters and a soft saturator in the loop (about eight repeats,
+each ~4.5 dB down), the time wobbling like tape, a little crossfeed, into a Dattorro plate that
+hears the dry stab too; tape hiss under it. Kick, sub and hats stay dry; the stab and the
+melody duck 0.3 to the kick, the sub 0.6, the return 0.25. Chords part: the stab. Melody part:
+single notes in the stab's voice, on the offbeats between its hits, sent hard so the delay
+writes the line (DUB_TECHNO_FIXES.md §7, option 2): no separate lead synth.
+
+Levels follow the reference's mix, measured bus by bus (solo, bars 4–11): drums 0 dB, sub
+−3.7, dry stab −9.1, echoes −11.8, plate −15.8, hiss −35.7.
 """
-import math
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from common import BAR, TPB, Song  # noqa: E402
+from common import BAR, Song  # noqa: E402
 
-s = Song("song-abyss", "Abyss", "Dub techno", "D minor", 117, "abyss",
-         "Dub techno at 117. One chord stab into the chamber, breathing, drifting from D to C and back.", seed=117)
+REF16 = "--ref16" in sys.argv
+
+if REF16:
+    s = Song("song-abyss16", "Abyss (reference 16)", "Dub techno", "D minor", 117, "abyss",
+             "The reference's 16 bars, for listening side by side.", seed=117)
+    s.bars = 16
+    SECTIONS = [(0, "Intro"), (4, "Deep"), (12, "Abyss"), (14, "Deep again")]
+else:
+    s = Song("song-abyss", "Abyss", "Dub techno", "D minor", 117, "abyss",
+             "Dub techno at 117. One chord stab into the chamber, breathing, drifting from D to C and back.", seed=117)
+    s.bars = 72
+    SECTIONS = [(0, "Intro"), (8, "Deep"), (24, "Drift"), (40, "Abyss"), (48, "Deep again"), (68, "Out")]
+
 s.sounds = {
-    "kick": {"kit": "kickDub", "gainDb": -16},
-    "hat": {"kit": "hatDub", "gainDb": -26},
-    "roomtone": {"kit": "roomtone", "gainDb": -16},
+    "kick": {"kit": "kickDub", "gainDb": -14.4},
+    "hat": {"kit": "hatDub", "gainDb": -25.2},
+    "hat16": {"kit": "hatDub16", "gainDb": -32.3},
     "xstick": {"kit": "rimMin", "gainDb": -28},
 }
-s.instruments = {"bass": "subDub", "keys": "dubStab", "horns": "dubLead", "monitor": "piano"}
-s.levels = {"bass": -6, "keys": 1, "horns": -6}
-s.duck = {"depth": 0.3, "release": 0.25, "channels": ["keys", "horns"]}
-s.dub = {"sends": {"keys": 0.8, "horns": 0.5}, "beats": 0.75, "feedback": 0.62, "highpass": 350, "lowpass": 2500,
-         "drive": 1.6, "wobble": 0.003, "wobbleRate": 0.5, "echo": 0.75, "reverb": 0.35, "decay": 3.5,
-         "reverbHighpass": 250, "duck": 0.3}
-s.bars = 72
-SECTIONS = [(0, "Intro"), (8, "Deep"), (24, "Drift"), (40, "Abyss"), (48, "Deep again"), (68, "Out")]
+s.instruments = {"bass": "subDub", "keys": "liveStab", "horns": "liveStab", "monitor": "piano"}
+s.levels = {"bass": -7.7, "keys": -1.7, "horns": -1.7}
+s.stab = {"detune": [1.0, 1.0045, 0.9955], "q": 1.1, "env": 2.2, "envTime": 0.018, "attack": 0.003, "decay": 0.16,
+          "release": 0.02, "length": 0.45, "low": 350, "high": 2400, "sweepBars": 16}
+s.duck = {"release": 0.2, "channels": {"bass": 0.6, "keys": 0.3, "horns": 0.3}}
+# The reference sends the stab at 0.8 against a dry level of 1.3; the melody at 0.9.
+s.dub = {"sends": {"keys": round(0.8 / 1.3, 4), "horns": round(0.9 / 1.3, 4)}, "level": 0.291,
+         "beats": 0.75, "feedback": 0.72, "highpass": 180, "lowpass": 3200, "drive": 1.4, "wobble": 0.004, "wobbleRate": 0.6,
+         "sendHighpass": 220, "sendLowpass": 3800, "cross": 0.3, "echo": 2.2, "reverb": 1.5,
+         "reverbDry": round(0.35 / 0.8, 4), "reverbEcho": 0.6, "decay": 0.82, "damping": 0.35, "bandwidth": 0.7,
+         "predelay": 0.02, "reverbHighpass": 300, "duck": 0.25, "hiss": 0.006}
 for b, name in SECTIONS:
     s.section(b, name)
 
@@ -53,6 +70,21 @@ def chord_at(bar):
     return "Dm9" if (bar // 4) % 2 == 0 else "Cm9"
 
 
+def kick_on(bar):
+    return section(bar) != "Abyss"
+
+
+def sub_on(bar):
+    sec = section(bar)
+    return sec not in ("Intro", "Abyss") and not (sec == "Out" and bar >= 70)
+
+
+def hats16_on(bar):
+    if REF16:
+        return section(bar) not in ("Intro", "Abyss")
+    return bar >= 8 and section(bar) not in ("Abyss", "Out")
+
+
 s.chords = [chord_at(b) for b in range(s.bars)]
 # (note, role, finger): root, third, fifth, seventh, ninth from the bottom up.
 STACK = ["root", "third", "fifth", "seventh", "ninth"]
@@ -62,65 +94,54 @@ VOICING = {c: [(n, r, 5 - i) for i, (n, r) in enumerate(zip(ns, STACK))] for c, 
 }.items()}
 SUB = {"Dm9": 38, "Cm9": 36}
 
-# MARK: Drums and the room
+# MARK: Drums: the kick on every beat, the hat on the offbeats, the 16ths shuffled (in the sample)
 
 for bar in range(s.bars):
     o = bar * BAR
-    sec = section(bar)
-    kick = sec != "Abyss"
-    if bar % 8 == 0:
-        s.hit(o, "roomtone", 1.0, 0.0)
     for i in range(16):
         t = o + i * 3
-        if i % 4 == 0 and kick:
-            s.hit(t, "kick", 1.0, 0.02)
+        if i % 4 == 0 and kick_on(bar):
+            s.hit(t, "kick", 1.0, 0.0)
         if i % 4 == 2:
-            s.hit(t, "hat", 0.5 if bar >= 1 else 0.2, 0.04)
-        if bar >= 8 and i % 2 == 1 and sec not in ("Abyss", "Out"):
-            s.hit(t, "hat", 0.3, 0.04)
+            s.hit(t, "hat", 1.0 if bar else 0.5, 0.0)
+        if i % 2 == 1 and hats16_on(bar) and kick_on(bar):
+            s.hit(t, "hat16", round(s.rng.uniform(0.8, 1.0), 3), 0.0)
 
-# MARK: Sub on 1 and 3
+# MARK: Sub on 1 and 3, 1.9 beats
 
 for bar in range(s.bars):
-    o = bar * BAR
-    sec = section(bar)
-    if sec in ("Intro", "Abyss") or (sec == "Out" and bar >= 70):
+    if not sub_on(bar):
         continue
     for t in (0, 24):
-        s.note(s.bass, o + t, SUB[chord_at(bar)], 0.8, 22)
+        s.note(s.bass, bar * BAR + t, SUB[chord_at(bar)], 1.0, 23)
 
-# MARK: Chords part: the stab, breathing
+# MARK: Chords part: the stab on the 16ths 2, 7 and (odd bars) 10
 
-
-def breath(bar):
-    return round(0.25 + 0.75 * (0.5 - 0.5 * math.cos(2 * math.pi * bar / 16)), 3)
-
-
-chords = s.part("chords", "The stab", "dubStab", "keys", "dubStab")
+VEL = {1: 0.85, 2: 0.7, 3: 0.55}
+chords = s.part("chords", "The stab", "liveStab", "keys", "liveStab")
 for bar in range(s.bars):
     o = bar * BAR
-    sec = section(bar)
-    if sec == "Out" and bar >= 70:
+    if section(bar) == "Out" and bar >= 70:
         continue
     v = VOICING[chord_at(bar)]
     s.pchord(chords, o + 6, v, 1, 30)
     s.pchord(chords, o + 21, v, 2, 20)
     if bar % 2 == 1:
         s.pchord(chords, o + 30, v, 3, 14)
-s.chart_to_channel(chords, s.keys, lambda e: breath(e["t"] // BAR), spread=0.0)
+s.chart_to_channel(chords, s.keys, lambda e: VEL[e["lv"]])
 
-# MARK: Melody part: long tones in the chamber
+# MARK: Melody part: single stab notes between the hits, the delay answering
 
-# A four-bar phrase on Dm9 (A C A, G F, E F A, C D), the same a step down on Cm9: long notes on
-# the ones, the answers on the offbeats where the delay has room to repeat them.
-LEAD_D = {
-    0: [(0, 69, 18, 1), (24, 72, 12, 2), (36, 69, 12, 3)],
-    1: [(12, 67, 12, 2), (24, 65, 24, 1)],
-    2: [(0, 64, 18, 1), (24, 65, 12, 3), (36, 69, 12, 2)],
-    3: [(0, 72, 36, 1), (42, 74, 6, 3)],
+# Four bars on Dm9 (A C, E D, C A E, E C), chord tones only, the same a step down on Cm9. Every
+# note sits off the stab's 16ths (2, 7, 10), where the dotted-eighth echo has room.
+LINE_D = {
+    0: [(15, 69, 6, 1), (39, 72, 6, 3)],
+    1: [(12, 76, 6, 1), (33, 74, 6, 2)],
+    2: [(15, 72, 6, 1), (36, 69, 6, 2), (45, 64, 3, 3)],
+    3: [(24, 76, 12, 1), (42, 72, 6, 3)],
 }
-LEAD = {"Dm9": LEAD_D, "Cm9": {b: [(t, n - 2, ln, lv) for t, n, ln, lv in ph] for b, ph in LEAD_D.items()}}
-melody = s.part("melody", "The dub lead", "dubLead", "horns", "dubLead")
+LINE = {"Dm9": LINE_D, "Cm9": {b: [(t, n - 2, ln, lv) for t, n, ln, lv in ph] for b, ph in LINE_D.items()}}
+melody = s.part("melody", "The echo line", "liveStab", "horns", "liveStab")
 for bar in range(s.bars):
     o = bar * BAR
     sec = section(bar)
@@ -128,14 +149,13 @@ for bar in range(s.bars):
         continue
     if sec == "Out":
         if bar == 68:
-            s.pnote(melody, o, 69, 96, 1)
+            s.pnote(melody, o + 15, 69, 12, 1)
         continue
-    phrases = LEAD[chord_at(bar)]
-    for t, n, ln, lv in phrases.get(bar % 4, []):
+    for t, n, ln, lv in LINE[chord_at(bar)].get(bar % 4, []):
         if (sec == "Deep" and bar < 16 and lv > 1) or (sec == "Abyss" and lv > 2):
-            continue  # the first eight bars and the break: the long tones alone
+            continue  # the first eight bars and the break: the main notes alone
         s.pnote(melody, o + t, n, ln, lv)
 s.fingered(melody)
-s.chart_to_channel(melody, s.horns, lambda e: 0.75, spread=0.03)
+s.chart_to_channel(melody, s.horns, lambda e: VEL[e["lv"]])
 
 s.write()

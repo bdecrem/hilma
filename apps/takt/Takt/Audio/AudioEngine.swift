@@ -77,8 +77,8 @@ final class AudioEngine {
             levels["monitor"] = levels[p.channel] ?? 0
             band.levels = levels
             // Your keys pump with the kick the way the record's part does.
-            if var duck = band.duck, duck.channels.contains(p.channel) {
-                duck.channels.append("monitor")
+            if var duck = band.duck, let depth = duck.channels[p.channel] {
+                duck.channels["monitor"] = depth
                 band.duck = duck
             }
             // And go into the dub chamber the way it does.
@@ -93,9 +93,9 @@ final class AudioEngine {
         return e
     }
 
-    /// Swaps the band in; one with its own dub chamber plays without the room.
+    /// Swaps the band in; one with its own dub chamber plays without the room (bypassed).
     private func send(_ e: BandRenderer.Events) {
-        room.wetDryMix = e.hasDub ? 0 : 12
+        room.bypass = e.hasDub
         renderer.send(.band(e))
     }
     func snapshot() -> EngineSnapshot { renderer.snapshot() }

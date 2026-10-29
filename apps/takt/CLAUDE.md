@@ -505,6 +505,20 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   layout from 700 pt (the Mac window), stacked on the iPhone. Once per process (not per
   window). DEBUG launches with `-Silent`, `-Route`, `-SnapshotAt`, `-PreviewFrame`,
   `-LessonCheck` or `-RenderTo` skip it; `-Splash 1` / `-Splash 0` decides outright.
+- **Abyss = the dub reference: 0.1 (45), 2026-10-29.** Bart: "the dub techno track… is still not
+  good at all… make the version in the game sound the same" as `misc/dub_reference.mp3`
+  (`dub_reference.py`, `DUB_TECHNO_FIXES.md`). The chamber is a line-for-line port of the
+  reference's `dub_delay` and `dattorro` (one-pole filters in the loop, the send filtered,
+  crossfeed, a Dattorro plate fed the dry stab and the echoes, tape hiss): −128 dB from the
+  Python on the same input. The stab is synthesized live (`Audio/DubStab.swift`, instrument
+  `liveStab`, the band's `stab`): PolyBLEP saws through an SVF whose breath sweeps continuously
+  from the transport's tick, ported from `render_stab` (−50 dB). Your keys play it too. Hats are
+  noise only, the sub ducks 0.6, `duck.channels` is a depth per channel for every song, the room
+  is bypassed for dub bands. The melody part is single stab notes the delay answers (no lead
+  synth, the doc's §7 option 2). The levels are the reference's bus by bus, 6 dB quieter (the
+  other songs' loudness); octave bands within ±0.8 dB of the reference in every section.
+  `abyss.py --ref16` writes the reference's 16 bars for A/B renders (not shipped). Full write-up:
+  `DUB-TECHNO.md`.
 
 ## Code map (`Takt/`)
 
@@ -570,7 +584,9 @@ and a tempo change re-anchors on a downbeat. Band events fire on their exact fra
   `Audio/Instrument.swift` picks a sample per note and velocity (nearest root, softest layer
   covering the velocity, round robin). Samples sit in memory as Int16 (~100 MB RSS on the Mac).
   An `AVAudioUnitReverb` (medium room, 12% wet) sits between the source and the mixer; `-RecordTo`
-  taps after it.
+  taps after it. Bypassed for a band with its own `dub` chamber. The one synth that runs live is
+  the dub stab (`Audio/DubStab.swift`, instrument `liveStab`; the chamber is `Audio/DubChamber.swift`,
+  both described in `DUB-TECHNO.md`).
 - **Band:** `scripts/band.py` writes a four-chorus Chicago shuffle (`bars: 48`; the lesson, pads
   and snapshot count choruses of the 12-bar `form`, `BandData.chorusBars`): cross-stick into
   snare, hat into ride, ghost notes, a crash on each top, a different fill into every chorus;

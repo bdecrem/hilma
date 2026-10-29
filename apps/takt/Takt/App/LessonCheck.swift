@@ -1026,47 +1026,96 @@ enum LessonCheck {
             }
         }
 
-        // The dub chamber: one click in, the echoes a dotted eighth apart, left and right in
-        // turn, each quieter and darker than the one before (the filters inside the loop).
+        // The dub chamber (misc/DUB_TECHNO_FIXES.md "How to check it"): one short stab in (30 ms of
+        // the song's live stab, the material it was tuned on). The echoes
+        // (the plate off) come a dotted eighth apart, alternating sides, each 2–6 dB quieter
+        // than the one before from the second on; a bright click's echoes get darker every time
+        // (the lowpass in the loop); the plate alone (the echoes off) decays evenly, 0.5 s at a
+        // time, with no bumps.
         do {
             let sr = 48000.0, beat = sr * 60 / 117
-            let chamber = DubChamber(sampleRate: sr)
-            chamber.configure(BandData.bundled("song-abyss").dub!.settings)
-            let n = Int(beat * 4), chunk = 512
-            var outL = [Float](repeating: 0, count: n), outR = [Float](repeating: 0, count: n)
-            let zero = [Float](repeating: 0, count: chunk)
-            var click = zero
+            let abyss = BandData.bundled("song-abyss")
+            let base = abyss.dub!.settings
+            let burst = Int(0.03 * sr)
+            var stab = [Float](repeating: 0, count: burst + 512), stabR = stab
+            for note in [50, 53, 57, 60, 64] {
+                var v = DubStab.Voice()
+                v.start(note: note, velocity: 1, breath: 0.5, held: burst, gain: 1, bus: 0, live: false, age: 0,
+                        settings: abyss.stab!.settings, sampleRate: sr)
+                stab.withUnsafeMutableBufferPointer { l in
+                    stabR.withUnsafeMutableBufferPointer { r in v.render(l.baseAddress!, r.baseAddress!, from: 0, to: burst + 512) }
+                }
+            }
             // A bright click: a few samples of a saw-like burst.
-            for i in 0..<64 { click[i] = (i % 8 < 4 ? 0.8 : -0.8) * Float(1 - Double(i) / 64) }
-            var at = 0
-            while at < n {
-                let m = min(chunk, n - at)
-                let input = at == 0 ? click : zero
-                outL.withUnsafeMutableBufferPointer { l in
-                    outR.withUnsafeMutableBufferPointer { r in
-                        chamber.process(sendL: input, sendR: input, kick: zero, n: m, samplesPerBeat: beat,
-                                        outL: l.baseAddress! + at, outR: r.baseAddress! + at)
+            var click = [Float](repeating: 0, count: 64)
+            for i in 0..<64 { click[i] = (i % 8 < 4 ? 1 : -1) * Float(1 - Double(i) / 64) }
+            func run(_ s: DubChamber.Settings, seconds: Double, input source: [Float]) -> (l: [Float], r: [Float]) {
+                let chamber = DubChamber(sampleRate: sr)
+                chamber.configure(s)
+                let n = Int(seconds * sr), chunk = 512
+                var outL = [Float](repeating: 0, count: n), outR = [Float](repeating: 0, count: n)
+                let zero = [Float](repeating: 0, count: chunk)
+                // The input at the reference's send level (peak 0.8 inside the chamber).
+                let top = source.map(abs).max()!
+                let stab = source.map { $0 / top * 0.8 * s.level }
+                var at = 0
+                while at < n {
+                    let m = min(chunk, n - at)
+                    let input = at < stab.count ? Array(stab[at..<min(stab.count, at + m)]) + [Float](repeating: 0, count: max(0, at + m - stab.count)) : zero
+                    outL.withUnsafeMutableBufferPointer { l in
+                        outR.withUnsafeMutableBufferPointer { r in
+                            chamber.process(sendL: input, sendR: input, kick: zero, n: m, samplesPerBeat: beat, playing: false,
+                                            outL: l.baseAddress! + at, outR: r.baseAddress! + at)
+                        }
                     }
+                    at += m
                 }
-                at += m
+                return (outL, outR)
             }
-            // Echo k sits at k · 0.75 beat; read 30 ms there on its side, against a dry reverb tail.
+            var dry = base
+            dry.reverb = 0
+            var echoes = run(dry, seconds: 6, input: stab)
+            // Echo k sits at k · 0.75 beat: its energy in 30 ms there (both sides), its brightness
+            // (the share of the first difference), and how much of it is on the side it should be.
             let d = 0.75 * beat
-            func energy(_ x: [Float], _ k: Int) -> (all: Double, high: Double) {
-                let s0 = Int(Double(k) * d) - 200, s1 = s0 + Int(0.03 * sr)
-                var e = 0.0, h = 0.0, prev: Float = 0
-                for i in max(0, s0)..<min(x.count, s1) {
-                    e += Double(x[i] * x[i])
-                    let diff = x[i] - prev
+            func echo(_ k: Int) -> (db: Double, high: Double, side: Double) {
+                let s0 = Int(Double(k) * d) - 200, s1 = s0 + Int(0.03 * sr) + burst
+                var e = 0.0, h = 0.0, own = 0.0, prev: Float = 0
+                let mine = k % 2 == 1 ? echoes.l : echoes.r
+                for i in max(0, s0)..<min(echoes.l.count, s1) {
+                    e += Double(echoes.l[i] * echoes.l[i] + echoes.r[i] * echoes.r[i])
+                    own += Double(mine[i] * mine[i])
+                    let x = echoes.l[i] + echoes.r[i], diff = x - prev
                     h += Double(diff * diff)
-                    prev = x[i]
+                    prev = x
                 }
-                return (e, h / max(e, 1e-12))
+                return (10 * log10(max(e, 1e-30)), h / max(e, 1e-30), own / max(e, 1e-30))
             }
-            let e1 = energy(outL, 1), e2 = energy(outR, 2), e3 = energy(outL, 3), wrong = energy(outR, 1)
-            check("dub chamber: echoes a dotted eighth apart, left and right in turn, each quieter and darker",
-                  e1.all > e2.all && e2.all > e3.all && wrong.all < e1.all * 0.2 && e2.high < e1.high && e3.high < e2.high,
-                  String(format: "energy %.3g %.3g %.3g, brightness %.3f %.3f %.3f", e1.all, e2.all, e3.all, e1.high, e2.high, e3.high))
+            let es = (1...7).map(echo)
+            let steps = (1..<es.count).map { es[$0 - 1].db - es[$0].db }
+            echoes = run(dry, seconds: 6, input: click)
+            let clicks = (1...7).map(echo)
+            check("dub chamber: a trail of echoes a dotted eighth apart, each 2–6 dB quieter than the last from the second on",
+                  steps.dropFirst().allSatisfy { $0 >= 2 && $0 <= 6 },
+                  "echoes " + es.map { String(format: "%.1f", $0.db) }.joined(separator: ", ") + " dB")
+            check("dub chamber: every echo darker than the one before, alternating sides",
+                  (1..<clicks.count).allSatisfy { clicks[$0].high < clicks[$0 - 1].high } && clicks.allSatisfy { $0.side > 0.55 },
+                  "brightness " + clicks.map { String(format: "%.3f", $0.high) }.joined(separator: " ")
+                      + ", own side " + clicks.map { String(format: "%.2f", $0.side) }.joined(separator: " "))
+            var wet = base
+            wet.echo = 0
+            let plate = run(wet, seconds: 5, input: stab)
+            let half = Int(0.5 * sr)
+            let windows = (1..<9).map { w -> Double in
+                var e = 0.0
+                for i in (w * half)..<((w + 1) * half) { e += Double(plate.l[i] * plate.l[i] + plate.r[i] * plate.r[i]) }
+                return 10 * log10(max(e, 1e-30))
+            }
+            let drops = (1..<windows.count).map { windows[$0 - 1] - windows[$0] }
+            let mean = drops.reduce(0, +) / Double(drops.count)
+            check("dub chamber: the plate's tail decays evenly (every 0.5 s within 1.5 dB of the mean drop)",
+                  mean > 0.5 && drops.allSatisfy { abs($0 - mean) < 1.5 },
+                  "drops " + drops.map { String(format: "%.1f", $0) }.joined(separator: " ") + String(format: " dB, RT60 %.1f s", 60 / mean * 0.5))
         }
 
         print("LessonCheck: \(passed) passed, \(failed) failed")

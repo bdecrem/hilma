@@ -9,17 +9,17 @@ synthesis, no samples): minimal techno at 127, deep house at 121, dub techno at 
 voice here is that script's voice at 48 kHz, cut as a one-shot; what the sketch does at mix
 time is baked in where it belongs to the note (the bleep's ping-pong delay and room, the
 Rhodes' reverb and delay) and left to the engine where it belongs to the beat or the room (the
-sidechain pumping: the band's `duck`; the dub chamber behind the stab and the dub lead: the
-band's `dub`, misc/TRACKS_README.md "Fixing the dub techno sound"). Filters that
+sidechain pumping: the band's `duck`; the dub chamber: the band's `dub`). Filters that
 breathe over bars become velocity layers, dark to bright, and the songs drive the velocity.
+The dub stab is the exception: it is synthesized live (Takt/Audio/DubStab.swift), so its
+filter sweeps continuously, and the chamber's tape hiss is live too (misc/DUB_TECHNO_FIXES.md).
 
 Drums (one root, velocity layers, round robins): kickMin / hatMin / rimMin / clickMin (minimal),
-kickDH / clapDH / hatDH / hatOpenDH (deep house), kickDub / hatDub (dub). Beds (one long shot
-the drums channel retriggers every eight bars): crackle (vinyl), roomtone (hiss and rumble).
+kickDH / clapDH / hatDH / hatOpenDH (deep house), kickDub / hatDub / hatDub16 (dub). Bed (one
+long shot the drums channel retriggers every eight bars): crackle (vinyl).
 Pitched: bleep (3 layers = the filter opening), stabMin (the bleep voice as a dark chord stab),
 subMin (sine), rhodes (2 layers = the filter brightening, 2.2 s plate and a delay), bassDH
-(saw and sine), dubStab (5 layers = the breathing filter, dry: the chamber is the engine's),
-subDub, dubLead (a hollow square, dry).
+(saw and sine), subDub.
 
 Each instrument is normalized to -3 dBFS peak like scripts/sounds.py; the songs balance them
 with gainDb and `levels`. Entries for these names replace what instruments.json had.
@@ -35,12 +35,16 @@ from scipy.signal import butter, fftconvolve, lfilter
 OUT = Path(__file__).resolve().parent.parent / "Takt/Sounds"
 SR = 48000
 rng = np.random.default_rng(7)
+# The dub voices draw from their own generator, so changing them leaves the others' noise alone.
+rng_dub = np.random.default_rng(117)
 
 NAMES = ["kickMin", "hatMin", "rimMin", "clickMin", "kickDH", "clapDH", "hatDH", "hatOpenDH", "kickDub", "hatDub",
-         "crackle", "roomtone", "bleep", "stabMin", "subMin", "rhodes", "bassDH", "dubStab", "subDub", "dubLead"]
+         "hatDub16", "crackle", "bleep", "stabMin", "subMin", "rhodes", "bassDH", "subDub"]
 # The electronic set before the sketches (Undertow, Nachtschicht): gone with them.
 RETIRED = ["kick909", "kickRumble", "clap909", "hat909", "hatOpen909", "ride909", "shaker", "rim909", "tomSyn",
-           "sub", "acid", "stab", "pad", "lead", "leadHouse", "rave"]
+           "sub", "acid", "stab", "pad", "lead", "leadHouse", "rave",
+           # The sampled dub stab, lead and room tone (0.1 (43)): the stab and the hiss are live now.
+           "dubStab", "dubLead", "roomtone"]
 INSTRUMENTS = {}
 FILES = []
 
@@ -220,25 +224,24 @@ def crackle_bed(seconds=16.0):
     return resample(x, 24000)
 
 
-def crisp_hat(decay):
-    """A hat with real air: metallic partials and noise from 7 kHz up, peaking 8–12 kHz."""
-    t = t_axis(decay * 6)
-    x = rng.standard_normal(len(t)) * 0.8
-    for f in (5400, 7200, 8300, 9600, 10900, 12400):
-        x += 0.35 * np.sign(np.sin(2 * np.pi * f * t + rng.uniform(0, 6.28)))
-    x = bandpass(x, 7000, 14000, order=3)
-    return x * adsr(len(t), 0.0005, 0.01) * env_exp(t, decay)
+def rbj_highpass(x, hz, q=0.707, sr=SR):
+    w = 2 * np.pi * hz / sr
+    alpha, c = np.sin(w) / (2 * q), np.cos(w)
+    b = np.array([(1 + c) / 2, -(1 + c), (1 + c) / 2])
+    a = np.array([1 + alpha, -2 * c, 1 - alpha])
+    return lfilter(b / a[0], a / a[0], x)
 
 
-def roomtone_bed(seconds=16.0):
-    """The dub sketch's tape hiss and a little rumble."""
-    n = int(seconds * SR)
-    hiss = lowpass(highpass(rng.standard_normal(n), 2000), 7000) * 0.012
-    rumble = lowpass(rng.standard_normal(n), 80) * 0.04
-    return resample(hiss + rumble, 24000)
+def noise_hat(decay, hp, late=0.0):
+    """Dub hats as in misc/dub_reference.py: noise only (no square partials to alias), through two
+    highpasses, a 0.5 ms attack. `late` seconds of silence first: the 16ths' shuffle (6% of a
+    sixteenth at 117 bpm), finer than the tick grid."""
+    n = int(decay * 8 * SR)
+    t = np.arange(n) / SR
+    x = rbj_highpass(rbj_highpass(rng_dub.standard_normal(n), hp), hp)
+    x = x * np.minimum(1, t / 0.0005) * np.exp(-t / decay)
+    return np.concatenate([np.zeros(int(late * SR)), x])
 
-
-# MARK: Pitched voices
 
 def bleep(n, layer):
     """Minimal: half square, half saw, through the filter at one of three openings, with the
@@ -297,45 +300,10 @@ def bass_dh(n):
     return x * adsr(len(t), 0.004, 0.04) * env_exp(t, 0.5, hold=0.5)
 
 
-def resonant_lowpass(x, hz, q, sr=SR):
-    """RBJ lowpass with resonance: q 0.7 is flat, 2 to 3 rings (the README's 0.3–0.5)."""
-    w = 2 * np.pi * min(hz, sr * 0.45) / sr
-    alpha, c = np.sin(w) / (2 * q), np.cos(w)
-    b = np.array([(1 - c) / 2, 1 - c, (1 - c) / 2])
-    a = np.array([1 + alpha, -2 * c, 1 - alpha])
-    return lfilter(b / a[0], a / a[0], x)
-
-
-DUB_CUTS = [600, 1000, 1600, 2500, 3600]
-
-
-def dub_stab(n, layer):
-    """Dub, dry: four detuned saws through a resonant lowpass at one of five breaths (600 Hz to
-    3.6 kHz), a 4 ms attack, a 120 ms decay, and a brighter click on top for the first 15 ms so
-    it hits. The echoes and the room are the engine's dub send."""
-    t = t_axis(0.6)
-    f = midi_hz(n)
-    x = sum(saw(f * d, t) for d in (1.0, 1.004, 0.9965, 1.0085)) / 4
-    cut = DUB_CUTS[layer]
-    body = resonant_lowpass(x, cut, 2.2) * 0.9
-    snap = resonant_lowpass(x, min(cut * 2.2, 9000), 1.2) * env_exp(t, 0.015)
-    y = (body + snap * 0.6) * adsr(len(t), 0.004, 0.05) * env_exp(t, 0.12, hold=0.01)
-    return highpass(y, 120)
-
-
 def sub_dub(n):
+    """A plain sine, 20 ms in; the note's length and a short release end it (misc/dub_reference.py)."""
     t = t_axis(1.4)
-    f = midi_hz(n)
-    return np.sin(2 * np.pi * f * t) * adsr(len(t), 0.02, 0.2) * env_exp(t, 0.5, hold=0.9)
-
-
-def dub_lead(n):
-    """A hollow square, slow in, darkened, dry: the dub melody (the engine's send echoes it)."""
-    t = t_axis(2.5)
-    f = midi_hz(n)
-    x = np.sign(np.sin(2 * np.pi * f * t)) * 0.55 + np.sin(2 * np.pi * f * t) * 0.45
-    x = resonant_lowpass(x, 2200, 1.4) * adsr(len(t), 0.03, 0.3) * env_exp(t, 0.9, hold=0.8)
-    return highpass(x, 150)
+    return np.sin(2 * np.pi * midi_hz(n) * t) * adsr(len(t), 0.02, 0.2)
 
 
 def pitched(key, render, roots, release, layers=1, sr=SR):
@@ -364,18 +332,16 @@ def main():
     drum("hatOpenDH", lambda: hat(0.12, 6000), 2, 2, release=0.03)
     # Dub techno
     drum("kickDub", lambda: kick(f0=110, f1=44, pd=0.045, decay=0.32, click=0.05, drive=1.2), 2, 1, release=0.03)
-    drum("hatDub", lambda: crisp_hat(0.022), 2, 3)
+    drum("hatDub", lambda: noise_hat(0.025, 8000), 1, 4)
+    drum("hatDub16", lambda: noise_hat(0.012, 9000, late=0.06 * 60 / 117 / 4), 1, 4)
     register("crackle", 0.5, [(0, 1.0, [("syn-crackle", crackle_bed())])], sr=24000)
-    register("roomtone", 0.5, [(0, 1.0, [("syn-roomtone", roomtone_bed())])], sr=24000)
     # Pitched
     pitched("bleep", bleep, range(57, 82, 3), 0.6, layers=3, sr=24000)
     pitched("stabMin", stab_min, range(43, 68, 3), 0.08, layers=2)
     pitched("subMin", sub_min, range(28, 41, 2), 0.03)
     pitched("rhodes", rhodes, range(48, 82, 3), 0.9, layers=2, sr=24000)
     pitched("bassDH", bass_dh, range(24, 49, 2), 0.05)
-    pitched("dubStab", dub_stab, range(48, 67, 3), 0.15, layers=5)
-    pitched("subDub", sub_dub, range(24, 41, 2), 0.2)
-    pitched("dubLead", dub_lead, range(55, 82, 3), 0.5)
+    pitched("subDub", sub_dub, range(24, 41, 2), 0.06)
 
     manifest = json.loads((OUT / "instruments.json").read_text())
     for k in NAMES + RETIRED:

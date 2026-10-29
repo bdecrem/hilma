@@ -30,7 +30,7 @@ s.sounds = {
 }
 s.instruments = {"bass": "subMin", "keys": "stabMin", "horns": "bleep", "monitor": "piano"}
 s.levels = {"bass": 0, "keys": 0, "horns": 3}
-s.duck = {"depth": 0.7, "release": 0.12, "channels": ["bass", "keys", "horns"]}
+s.duck = {"release": 0.12, "channels": {"bass": 0.7, "keys": 0.7, "horns": 0.7}}
 s.bars = 80
 SECTIONS = [(0, "Intro"), (8, "Pulse"), (16, "Bleep"), (40, "Break"), (48, "Full"), (72, "Out")]
 for b, name in SECTIONS:
