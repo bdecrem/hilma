@@ -517,8 +517,14 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   is bypassed for dub bands. The melody part is single stab notes the delay answers (no lead
   synth, the doc's §7 option 2). The levels are the reference's bus by bus, 6 dB quieter (the
   other songs' loudness); octave bands within ±0.8 dB of the reference in every section.
-  `abyss.py --ref16` writes the reference's 16 bars for A/B renders (not shipped). Full write-up:
-  `DUB-TECHNO.md`.
+  Full write-up: `DUB-TECHNO.md`.
+- **Abyss Reference: 0.1 (46), 2026-10-29.** Bart: "add a version of the Dub Tech track in the
+  game that doesn't add a melody or anything… ONLY 100% reproduces the song Claude in the app
+  made". A sixth Stage song (`song-abyss-ref`, `abyss.py --ref`): the reference's 16 bars as
+  written, nothing added, velocities not humanized (`Song.human = 0`), the drum velocities
+  inverted from the reference's gains (`vel_for`). Its one part is the stab: a song may now carry
+  the chords part alone (`Song.partKeys`; the Part chips, `AppModel.stagePart` and the checks
+  follow it). The master knee is a band setting (`knee`, 0.48 here) so the song clips the way the reference does at its lower level; it matches the reference within ±0.2 dB per octave band.
 
 ## Code map (`Takt/`)
 

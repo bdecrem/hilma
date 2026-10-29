@@ -164,6 +164,7 @@ final class BandRenderer {
         /// The dub send: each channel's send level, and the chamber's settings (nil: no dub).
         fileprivate let sends: [Float]
         fileprivate let dub: DubChamber.Settings?
+        fileprivate let knee: Float
         /// A band with its own chamber skips the app's room reverb: its low end stays dry.
         var hasDub: Bool { dub != nil }
         let loopTicks: Int
@@ -171,7 +172,7 @@ final class BandRenderer {
         let name: String
         fileprivate init(_ buffer: UnsafeMutableBufferPointer<Event>, drumSounds: UnsafeMutableBufferPointer<DrumSound>,
                          clickSound: Int, instruments: [SampledInstrument?], stab: DubStab.Settings?, monitor: Int, monitorGain: Float,
-                         duck: [Float], duckRelease: Double, sends: [Float], dub: DubChamber.Settings?,
+                         duck: [Float], duckRelease: Double, sends: [Float], dub: DubChamber.Settings?, knee: Float,
                          loopTicks: Int, chorusBars: Int, name: String) {
             self.buffer = buffer
             self.drumSounds = drumSounds
@@ -184,6 +185,7 @@ final class BandRenderer {
             self.duckRelease = duckRelease
             self.sends = sends
             self.dub = dub
+            self.knee = knee
             self.loopTicks = loopTicks
             self.chorusBars = chorusBars
             self.name = name
@@ -276,6 +278,8 @@ final class BandRenderer {
     private let mix: [Float] = [1.6, 0.32, 0.88, 0.54, 0.9]
     /// Headroom: kick, bass and crash land together on the tops.
     private let master: Float = 0.72
+    /// The band's knee scale (`BandData.knee`).
+    private var knee: Float = 1
     private let levelDecay: Float
 
     private let drumVoices = UnsafeMutableBufferPointer<SampleVoice>.allocate(capacity: 24)
@@ -311,6 +315,7 @@ final class BandRenderer {
         duck = first.duck
         duckDecay = Float(exp(-1 / (first.duckRelease * sampleRate)))
         sends = first.sends
+        knee = first.knee
         chamber = DubChamber(sampleRate: sampleRate)
         chamber.configure(first.dub)
         kickEnv = .allocate(capacity: maxChunk)
@@ -367,6 +372,7 @@ final class BandRenderer {
         return Events(events(of: band, sounds: names, instruments: instrumentNames), drumSounds: drumSounds, clickSound: click,
                       instruments: instruments, stab: band.stab?.settings, monitor: monitor, monitorGain: Float(pow(10, (band.levels?["monitor"] ?? 0) / 20)),
                       duck: duck, duckRelease: max(0.01, band.duck?.release ?? 0.2), sends: sends, dub: band.dub?.settings,
+                      knee: Float(band.knee ?? 1),
                       loopTicks: band.loopTicks, chorusBars: band.chorusBars, name: band.name)
     }
 
@@ -766,8 +772,8 @@ final class BandRenderer {
                             playing: playing, outL: outL, outR: outR)
         }
         for i in 0..<n {
-            outL[i] = Self.softClip(outL[i] * master)
-            outR[i] = Self.softClip(outR[i] * master)
+            outL[i] = Self.softClip(outL[i] * master / knee) * knee
+            outR[i] = Self.softClip(outR[i] * master / knee) * knee
         }
     }
 
@@ -899,6 +905,7 @@ final class BandRenderer {
             duck = e.duck
             duckDecay = Float(exp(-1 / (e.duckRelease * sampleRate)))
             sends = e.sends
+            knee = e.knee
             chamber.configure(e.dub)
             loopTicks = e.loopTicks
             chorusBars = e.chorusBars

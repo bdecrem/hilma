@@ -930,14 +930,14 @@ enum LessonCheck {
             check("stage: the set list loads (\(songs.count) of \(Song.catalog.count) songs in the bundle)", !songs.isEmpty)
             let charting = Charting.bundled
             for s in songs {
-                let ok = Song.PartKey.allCases.allSatisfy { k in
+                let ok = s.partKeys.allSatisfy { k in
                     let all = s.notes(k), span = s.keyboard(k)
                     return !all.isEmpty && all.allSatisfy { span.contains($0.n) } && all.last!.t < s.bars * s.ticksPerBar
                 }
-                check("stage: \(s.meta.title): both parts, inside the keys, \(s.length)", ok)
+                check("stage: \(s.meta.title): \(s.partKeys.map(\.rawValue).joined(separator: " and ")), inside the keys, \(s.length)", ok)
                 // Every tier keeps its own rules: the gap, the most a bar, the chord size; the
                 // top one is the whole part. The detail is the ladder: onsets a second per tier.
-                for k in Song.PartKey.allCases {
+                for k in s.partKeys {
                     let all = s.notes(k), masks = s.masks(k), ladder = charting.ladder(k)
                     let secondsPerTick = 60 / (Double(s.meta.tempo) * Double(s.band.ticksPerBeat))
                     var rules = true

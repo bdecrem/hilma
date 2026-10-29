@@ -1,4 +1,4 @@
-# How Abyss is made: dub techno in Swift (Takt 0.1 (45))
+# How Abyss is made: dub techno in Swift (Takt 0.1 (46))
 
 This is the recipe for **Abyss**, the dub techno track on Takt's Stage: 117 bpm, Dm9 drifting to
 Cm9, 72 bars, 2:28. It covers every voice, the arrangement, the real-time chain in Swift, the mix,
@@ -18,8 +18,8 @@ fixed sound (`misc/dub_reference.mp3`), and `misc/DUB_TECHNO_FIXES.md` lists wha
   reference's on every bus (the other songs' loudness), and every octave band, in every section,
   is within ±0.8 dB.
 
-What is **not** in the reference is the full form (72 bars), the Stage parts, and your own keys.
-Those are built on the same pieces.
+What is **not** in the reference is the full form (72 bars), the melody part, and your own keys.
+Those are built on the same pieces. **Abyss Reference** (section 3) is the reference alone.
 
 ---
 
@@ -76,8 +76,9 @@ One velocity layer, four round robins each. They draw from their own random gene
 
 ### Sub: `subDub` (sampled)
 
-A plain sine, 20 ms attack, 1.4 s long; the note's length (23 ticks = 1.9 beats) and a short
-release (0.06 s) end it. D2 on Dm9, C2 on Cm9.
+The reference's sub exactly: a plain sine 1.9 beats long at 117 bpm, a 20 ms attack, a linear
+150 ms fade at its end, baked into the sample (the song's notes are longer, so the sample ends
+it). D2 on Dm9, C2 on Cm9.
 
 ### Stab: `liveStab` (`Takt/Audio/DubStab.swift`, synthesized live)
 
@@ -111,12 +112,13 @@ the chamber at 22.6×. No `tan` table or block-rate coefficients were needed.
 
 ```bash
 python3 apps/takt/scripts/songs/abyss.py           # → Takt/Content/song-abyss.json
-python3 apps/takt/scripts/songs/abyss.py --ref16   # → song-abyss16.json, the reference's 16 bars
+python3 apps/takt/scripts/songs/abyss.py --ref     # → song-abyss-ref.json, Abyss Reference
 ```
 
-`--ref16` writes the reference's arrangement (no sub or 16ths for bars 0–3, the kick out for bars
-12–13) for rendering the app beside `dub_reference.mp3`. It isn't in the set list; delete the file
-after rendering so it doesn't ship.
+`--ref` writes **Abyss Reference**, the sixth song on the Stage: the reference's 16 bars and nothing
+else (no sub or 16ths for bars 0–3, the kick out for bars 12–13, no melody, velocities exactly as
+the reference writes them). Its one part is the stab; a song may have the chords part alone
+(`Song.partKeys`). It is also what the A/B renders below use.
 
 ### Form
 
@@ -169,7 +171,7 @@ has one A4 in bar 68.
 s.sounds = {"kick": {"kit": "kickDub", "gainDb": -14.4}, "hat": {"kit": "hatDub", "gainDb": -25.2},
             "hat16": {"kit": "hatDub16", "gainDb": -32.3}, "xstick": {"kit": "rimMin", "gainDb": -28}}
 s.instruments = {"bass": "subDub", "keys": "liveStab", "horns": "liveStab", "monitor": "piano"}
-s.levels = {"bass": -7.7, "keys": -1.7, "horns": -1.7}
+s.levels = {"bass": -4.9, "keys": -0.7, "horns": -0.7}
 s.duck = {"release": 0.2, "channels": {"bass": 0.6, "keys": 0.3, "horns": 0.3}}
 s.dub = {"sends": {"keys": 0.6154, "horns": 0.6923}, "level": 0.291, "beats": 0.75, "feedback": 0.72,
          "highpass": 180, "lowpass": 3200, "drive": 1.4, "wobble": 0.004, "wobbleRate": 0.6,
@@ -188,7 +190,9 @@ Where the numbers come from:
   saturator in the loop sees the reference's own signal level (a stab peaking at 0.8). It is 0.291
   because the app plays the reference's mix 6 dB quieter: `norm · 10^(−6/20) / 0.72`, where `norm`
   (0.418) is the reference's final normalization and 0.72 the app's master.
-- **gainDb / levels**: set by solo renders against the reference's stems (section 6).
+- **gainDb / levels**: drums from solo renders against the reference's stems; the stab and the
+  sub from the full mix, because they duck and a solo without the drums has no kick to duck to
+  (section 6).
 - **duck**: the sub at 0.6 (it plays on top of the kick), the stab and melody at 0.3, the return
   at 0.25, all with the reference's 0.2 s release. The kick and hats aren't ducked.
   `duck.channels` is a depth per channel for every song now (0.1 (43) had one depth).
@@ -299,7 +303,7 @@ same echo.
 cd apps/takt
 xcrun simctl launch --console "iPhone 17 Pro" com.bartdecrem.Takt -Backend http://localhost:1 \
   -RenderTo $PWD/build/audio/abyss16.wav -RenderSeconds 36 -Tempo 117 \
-  -RenderScript "0:band=song-abyss16,0:play"
+  -RenderScript "0:band=song-abyss-ref,0:play"
 # a solo: 0:mute=drums,0:mute=bass,0:mute=horns before 0:play (the hiss stays: it is the chamber's)
 # your keys on a part: 0:song=song-abyss/chords, then 1:on=50@0.8 … 1.2:off=50
 ```
@@ -317,8 +321,17 @@ Octave bands 30 Hz–22 kHz match within ±0.8 dB in bars 0–3, 4–11, 12–13
 side/mid are 0.01–0.02 (mono). The full song sits at −21.4 dBFS RMS (Hypnotist −22.1, Warm Nine
 −21.3), peaks at 0.46, and nothing clips. Your keys on either part give a stab with its full trail.
 
-One trap: the hiss runs in every solo, at −60 dB in the top octave. Hats measured as "energy above
-5 kHz" read the hiss and came out 17 dB too quiet. Compare hat peaks, not band energy.
+Two traps. The hiss runs in every solo, at −60 dB in the top octave: hats measured as "energy
+above 5 kHz" read the hiss and came out 17 dB too quiet, so compare hat peaks, not band energy.
+And a solo with the drums muted fires no kick, so nothing ducks: the stab and sub calibrated that
+way came out about 1 dB low in the mix. Set ducked buses from the full mix.
+
+**Abyss Reference against `dub_reference.wav`**, the app raised 6 dB, octave bands 30 Hz–22 kHz
+in bars 0–3, 4–11, 12–13 and 14–15: within ±0.2 dB everywhere but the top octave of the break
+(−0.3; hats and hiss are noise). Mix RMS −15.94 vs −15.99, peak 0.892 vs 0.890. It gets there
+with the reference's own master: `knee: 0.48` puts the app's soft knee where the reference's sits
+6 dB down (it clips its sum at 0.95 and renormalizes by 0.96), and every bus and the chamber's
+level come down 0.35 dB to match.
 
 **`-LessonCheck 1`** (`App/LessonCheck.swift`) checks the chamber from `song-abyss.json`:
 

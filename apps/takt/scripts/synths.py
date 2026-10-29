@@ -301,9 +301,11 @@ def bass_dh(n):
 
 
 def sub_dub(n):
-    """A plain sine, 20 ms in; the note's length and a short release end it (misc/dub_reference.py)."""
-    t = t_axis(1.4)
-    return np.sin(2 * np.pi * midi_hz(n) * t) * adsr(len(t), 0.02, 0.2)
+    """misc/dub_reference.py's sub exactly: a plain sine 1.9 beats long at 117 bpm, 20 ms in, a
+    linear 150 ms out at its end. The song's notes are longer, so the sample ends it."""
+    t = t_axis(1.9 * 60 / 117)
+    k = np.arange(len(t))
+    return np.sin(2 * np.pi * midi_hz(n) * t) * np.minimum(1, t / 0.02) * np.minimum(1, (len(t) - k) / (0.15 * SR))
 
 
 def pitched(key, render, roots, release, layers=1, sr=SR):

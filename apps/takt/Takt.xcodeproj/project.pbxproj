@@ -17,6 +17,7 @@
 		059C3922347B32A9DCDF5089 /* syn-rhodes-81-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = A40F3B91A413E389657A0688 /* syn-rhodes-81-1.caf */; };
 		05D3BD64A36FB3F61FAF9C60 /* syn-bleep-66-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = E9E8918DFF570C8BD791CEA3 /* syn-bleep-66-1.caf */; };
 		0694A04DCB9151BA97E84055 /* syn-rhodes-54-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = D8E888F1AA79F85A8B96A0D1 /* syn-rhodes-54-1.caf */; };
+		06D4A152FAAC81877671E319 /* song-abyss-ref.json in Resources */ = {isa = PBXBuildFile; fileRef = EEEF033DB9357648BCDCCD17 /* song-abyss-ref.json */; };
 		07488C6D67CE34AE6C725ABD /* sax-66-s.caf in Resources */ = {isa = PBXBuildFile; fileRef = F67879E7D21DFD9D9DADEBCC /* sax-66-s.caf */; };
 		0766C357E82FF96C29B4CD8B /* syn-hatMin-1c.caf in Resources */ = {isa = PBXBuildFile; fileRef = 294C88CE0834922F4338A089 /* syn-hatMin-1c.caf */; };
 		0B4807846D69D1AC21193BC9 /* bass-31.caf in Resources */ = {isa = PBXBuildFile; fileRef = B92BB72CACB4C5672A4BEE11 /* bass-31.caf */; };
@@ -859,6 +860,7 @@
 		EDB2CAB732A25EB76B9A25B9 /* Quiz.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Quiz.swift; sourceTree = "<group>"; };
 		EDB34C8D65DBD12339E97335 /* syn-kickMin-1a.caf */ = {isa = PBXFileReference; path = "syn-kickMin-1a.caf"; sourceTree = "<group>"; };
 		EDDB6276FBCD048C3D911FC0 /* syn-bassDH-32.caf */ = {isa = PBXFileReference; path = "syn-bassDH-32.caf"; sourceTree = "<group>"; };
+		EEEF033DB9357648BCDCCD17 /* song-abyss-ref.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "song-abyss-ref.json"; sourceTree = "<group>"; };
 		EFFA08C2D957ECE763A247E6 /* saxl-56.caf */ = {isa = PBXFileReference; path = "saxl-56.caf"; sourceTree = "<group>"; };
 		F065B74AFD7A4A5DF4E99EAF /* syn-subMin-36.caf */ = {isa = PBXFileReference; path = "syn-subMin-36.caf"; sourceTree = "<group>"; };
 		F08D6CCFCF70D2EC893912D1 /* sax-64-s.caf */ = {isa = PBXFileReference; path = "sax-64-s.caf"; sourceTree = "<group>"; };
@@ -1058,6 +1060,7 @@
 				FB59A4164192AD314B614695 /* lesson-M.json */,
 				ECECF1E4E590A9E81E139D89 /* lesson-S1.json */,
 				D3F53FD48CE9B89241FFB481 /* lesson-S1m.json */,
+				EEEF033DB9357648BCDCCD17 /* song-abyss-ref.json */,
 				E3111C9819000EB6D6BD3E5F /* song-abyss.json */,
 				2BD66E2CAAD161BA1549DCAF /* song-boogie-shoes.json */,
 				C1D12DD782A48B03D2950F0D /* song-hypnotist.json */,
@@ -1762,6 +1765,7 @@
 				EB31CC8D8DE8310AF2B87711 /* snare-5a.caf in Resources */,
 				D158A6D96D8477A4B860A2F3 /* snare-5b.caf in Resources */,
 				03E11DA52EB7EB63BAA61F6E /* snare-5c.caf in Resources */,
+				06D4A152FAAC81877671E319 /* song-abyss-ref.json in Resources */,
 				41FBA6D0D8E7A740DDA90C1A /* song-abyss.json in Resources */,
 				DA6EFD26386A1F1603E7DE80 /* song-boogie-shoes.json in Resources */,
 				74BA911C913AB1B9444320F4 /* song-hypnotist.json in Resources */,
@@ -2034,7 +2038,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 45;
+				CURRENT_PROJECT_VERSION = 46;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -2101,7 +2105,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 45;
+				CURRENT_PROJECT_VERSION = 46;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;

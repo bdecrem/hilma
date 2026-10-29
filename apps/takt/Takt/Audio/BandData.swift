@@ -51,6 +51,9 @@ struct BandData: Decodable {
     var dub: Dub?
     /// The live stab (`DubStab`), for a band whose instrument is `liveStab`.
     var stab: Stab?
+    /// The master's soft knee, scaled: the knee sits at `knee` × 0.8 of full scale (absent: 1).
+    /// A band mixed to a reference renders the reference's clipping at its own lower level.
+    var knee: Double?
     let channels: Channels
 
     struct Duck: Decodable {

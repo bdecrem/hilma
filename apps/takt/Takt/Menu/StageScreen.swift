@@ -26,7 +26,7 @@ struct StageScreen: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("Five songs, all yours from the start. Take the chords or the melody, pick a level, and play with the band. Adaptive climbs as you play clean.")
+                    Text("Six songs, all yours from the start. Take the chords or the melody, pick a level, and play with the band. Adaptive climbs as you play clean.")
                         .bodyText(compact ? 14 : 16)
                         .foregroundStyle(Palette.muted)
                         .fixedSize(horizontal: false, vertical: true)
@@ -95,7 +95,7 @@ struct SongCard: View {
                 Spacer(minLength: 0)
             }
             HStack(spacing: compact ? 10 : 16) {
-                Chips(title: "Part", options: Song.PartKey.allCases.map { ($0.rawValue, $0.title) }, picked: part.rawValue) {
+                Chips(title: "Part", options: song.partKeys.map { ($0.rawValue, $0.title) }, picked: part.rawValue) {
                     app.pick(song: song, part: Song.PartKey(rawValue: $0)!)
                 }
                 if !compact {

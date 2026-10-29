@@ -36,6 +36,8 @@ class Song:
         # The chord of every bar (the game's chord label); a silent tail bar is added on write.
         self.chords = []
         self.rng = random.Random(seed)
+        # How far `note` humanizes velocities (0: exactly as written).
+        self.human = 0.04
         self.sounds = {}
         self.instruments = {}
         # Pitched channels' levels in dB (bass, keys, horns), the way sounds carry gainDb.
@@ -46,6 +48,8 @@ class Song:
         self.dub = None
         # The live stab (Takt/Audio/DubStab.swift), for the instrument "liveStab".
         self.stab = None
+        # The master's soft knee scale (BandData.knee); None: the app's own.
+        self.knee = None
         self.drums = []
         self.bass = []
         self.keys = []
@@ -63,7 +67,7 @@ class Song:
         self.drums.append({"t": t, "s": s, "v": self.hum(v, spread)})
 
     def note(self, ch, t, n, v, ln, inst=None):
-        e = {"t": t, "n": n, "v": self.hum(v, 0.04), "len": ln}
+        e = {"t": t, "n": n, "v": self.hum(v, self.human) if self.human else round(v, 3), "len": ln}
         if inst:
             e["i"] = inst
         ch.append(e)
@@ -151,6 +155,7 @@ class Song:
             "duck": self.duck,
             "dub": self.dub,
             "stab": self.stab,
+            "knee": self.knee,
             "channels": {"drums": self.drums, "bass": self.bass, "keys": self.keys, "horns": self.horns},
             "song": {
                 "title": self.title,

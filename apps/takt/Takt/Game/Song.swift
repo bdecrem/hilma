@@ -1,7 +1,8 @@
 import Foundation
 
 /// A Stage song (Takt/Content/song-*.json, written by scripts/songs/*.py): a band the renderer
-/// plays once through, plus the two parts you can take from it, each the whole part with every
+/// plays once through, plus the parts you can take from it (the chords, and the melody when it
+/// has one), each the whole part with every
 /// note weighted and every chord note's role, which `Charting` cuts into levels. The band's own
 /// channel for a part is the whole part, so the record plays it in full when you take the other.
 struct Song {
@@ -58,7 +59,7 @@ struct Song {
     let meta: Meta
 
     /// The set list, in order.
-    static let catalog = ["song-slow-burn", "song-boogie-shoes", "song-hypnotist", "song-warm-nine", "song-abyss"]
+    static let catalog = ["song-slow-burn", "song-boogie-shoes", "song-hypnotist", "song-warm-nine", "song-abyss", "song-abyss-ref"]
 
     static func bundled(_ name: String) -> Song {
         guard let url = Bundle.main.url(forResource: name, withExtension: "json") else { fatalError("song \(name).json is not in the bundle") }
@@ -75,8 +76,10 @@ struct Song {
 
     private func validate() {
         let end = band.loopTicks
-        for key in PartKey.allCases {
-            guard let p = meta.parts[key.rawValue] else { fatalError("song \(name): no \(key.rawValue) part") }
+        guard meta.parts[PartKey.chords.rawValue] != nil else { fatalError("song \(name): no chords part") }
+        guard meta.parts.keys.allSatisfy({ PartKey(rawValue: $0) != nil }) else { fatalError("song \(name): an unknown part") }
+        for key in partKeys {
+            let p = part(key)
             guard ["keys", "horns"].contains(p.channel) else { fatalError("song \(name): part \(key.rawValue) on channel \(p.channel)") }
             guard !p.notes.isEmpty, p.notes.contains(where: { $0.lv == 1 }) else { fatalError("song \(name): part \(key.rawValue) has no weight-1 notes") }
             if key == .chords, let keep = Charting.bundled.chords.keep {
@@ -102,6 +105,9 @@ struct Song {
     }
 
     func part(_ key: PartKey) -> Part { meta.parts[key.rawValue]! }
+
+    /// The parts it has, chords first (every song has the chords; Abyss Reference has nothing else).
+    var partKeys: [PartKey] { PartKey.allCases.filter { meta.parts[$0.rawValue] != nil } }
 
     /// The band channel a part replaces.
     func channel(of key: PartKey) -> Channel { part(key).channel == "keys" ? .keys : .horns }

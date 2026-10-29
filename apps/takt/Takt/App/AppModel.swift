@@ -351,7 +351,11 @@ final class AppModel {
     private var stageParts: [String: Song.PartKey] = [:]
     private var stageDifficulties: [String: GameEngine.Difficulty] = [:]
 
-    func stagePart(_ song: Song) -> Song.PartKey { stageParts[song.name] ?? .chords }
+    /// The part picked for the song, or its first when it has no such part (chords only).
+    func stagePart(_ song: Song) -> Song.PartKey {
+        let picked = stageParts[song.name] ?? .chords
+        return song.partKeys.contains(picked) ? picked : song.partKeys[0]
+    }
     func stageDifficulty(_ song: Song) -> GameEngine.Difficulty { stageDifficulties[song.name] ?? .adaptive }
     func pick(song: Song, part: Song.PartKey) { stageParts[song.name] = part }
     func pick(song: Song, difficulty: GameEngine.Difficulty) { stageDifficulties[song.name] = difficulty }
