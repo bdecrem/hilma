@@ -26,6 +26,10 @@ struct Charting: Decodable {
     struct Ladder: Decodable {
         /// Roles in the order a chord keeps them (the chords part).
         let keep: [String]?
+        /// Bars: every key the part plays in each phrase this long stays at every tier (its
+        /// heaviest, earliest onset that fits the gap), before the weights fill in. Thinning the
+        /// rhythm must never thin the line down to one key. Nil: the weights alone.
+        let phrase: Int?
         let easy: Int
         let medium: Int
         let hard: Int
@@ -36,8 +40,11 @@ struct Charting: Decodable {
     }
 
     struct Adaptive: Decodable {
-        /// The tier a run starts on.
+        /// The tier a first run starts on.
         let start: Int
+        /// Later runs start this many tiers under the top of the last adaptive run of the song
+        /// and part.
+        let resume: Int
         /// Bars in a block: the tier changes between blocks.
         let window: Int
         /// Bars before a block starts that its tier is decided.
@@ -70,10 +77,12 @@ struct Charting: Decodable {
         for (name, l) in [("chords", chords), ("melody", melody)] {
             let n = l.tiers.count
             guard n >= 1, [l.easy, l.medium, l.hard].allSatisfy({ (1...n).contains($0) }),
-                  l.tiers.allSatisfy({ $0.hits >= 1 && $0.gap >= 0 && ($0.space ?? .infinity) > $0.gap && $0.bonus > 0 })
+                  l.tiers.allSatisfy({ $0.hits >= 1 && $0.gap >= 0 && ($0.space ?? .infinity) > $0.gap && $0.bonus > 0 }),
+                  (l.phrase ?? 1) >= 1
             else { fatalError("charting.json: the \(name) ladder") }
         }
-        guard adaptive.window >= 1, adaptive.ahead >= 0, adaptive.ahead < adaptive.window, adaptive.ease <= adaptive.climb
+        guard adaptive.window >= 1, adaptive.ahead >= 0, adaptive.ahead < adaptive.window, adaptive.ease <= adaptive.climb,
+              adaptive.resume >= 0
         else { fatalError("charting.json: adaptive") }
     }
 
@@ -95,13 +104,13 @@ struct Charting: Decodable {
     func line(_ difficulty: GameEngine.Difficulty, song: String, part: Song.PartKey) -> String {
         guard let t = tier(difficulty, song: song, part: part) else {
             let n = ladder(part).tiers.count
-            return "Starts at level \(adaptive.start) of \(n). Clean \(adaptive.window) bars and it climbs a level; miss a few and it steps back."
+            return "Level \(adaptive.start) of \(n) the first time, then just under where your last run got to. Clean \(adaptive.window) bars and it climbs a level; misses and wrong keys step it back."
         }
         return "Level \(t) of \(ladder(part).tiers.count). " + ladder(part).tier(t).line
     }
 
     /// Which of `notes` (the whole part, in time order) play at each tier: `[tier - 1][i]`.
-    func masks(_ notes: [Song.Note], part: Song.PartKey, tempo: Int, ticksPerBeat: Int) -> [[Bool]] {
+    func masks(_ notes: [Song.Note], part: Song.PartKey, tempo: Int, ticksPerBeat: Int, ticksPerBar: Int) -> [[Bool]] {
         let l = ladder(part)
         let secondsPerTick = 60 / (Double(tempo) * Double(ticksPerBeat))
         // Onsets: the notes that start on one tick, with the lightest weight among them.
@@ -119,6 +128,7 @@ struct Charting: Decodable {
             var mask = Array(repeating: false, count: notes.count)
             let gapTicks = tier.gap / secondsPerTick
             var taken: [Int] = []  // onset ticks, sorted
+            var isTaken: Set<Int> = []
             func fits(_ t: Int) -> Bool {
                 var lo = 0, hi = taken.count
                 while lo < hi { let m = (lo + hi) / 2; if taken[m] < t { lo = m + 1 } else { hi = m } }
@@ -130,14 +140,27 @@ struct Charting: Decodable {
                 var lo = 0, hi = taken.count
                 while lo < hi { let m = (lo + hi) / 2; if taken[m] < o.t { lo = m + 1 } else { hi = m } }
                 taken.insert(o.t, at: lo)
+                isTaken.insert(o.t)
                 var kept = o.idx
                 if let cap = tier.notes, kept.count > cap {
                     kept = Array(kept.sorted { (rank(notes[$0]), notes[$0].n) < (rank(notes[$1]), notes[$1].n) }.prefix(cap))
                 }
                 for i in kept { mask[i] = true }
             }
+            // First every key of each phrase, at its heaviest, earliest onset that fits.
+            if let phrase = l.phrase, let last = onsets.last?.t {
+                let span = phrase * ticksPerBar
+                for p in 0...(last / span) {
+                    let window = onsets.filter { $0.t >= p * span && $0.t < (p + 1) * span }.sorted { ($0.lv, $0.t) < ($1.lv, $1.t) }
+                    var keys: [Int] = []
+                    for o in window { for i in o.idx where !keys.contains(notes[i].n) { keys.append(notes[i].n) } }
+                    for key in keys where !window.contains(where: { o in isTaken.contains(o.t) && o.idx.contains { notes[$0].n == key } }) {
+                        if let o = window.first(where: { o in !isTaken.contains(o.t) && o.idx.contains { notes[$0].n == key } && fits(o.t) }) { take(o) }
+                    }
+                }
+            }
             // The hits the tier plays, heaviest first, then early first, wherever they fit the gap.
-            for o in onsets.sorted(by: { ($0.lv, $0.t) < ($1.lv, $1.t) }) where o.lv <= tier.hits && fits(o.t) { take(o) }
+            for o in onsets.sorted(by: { ($0.lv, $0.t) < ($1.lv, $1.t) }) where o.lv <= tier.hits && !isTaken.contains(o.t) && fits(o.t) { take(o) }
             // Then the silences longer than `space`: each borrows the heaviest lighter hit inside
             // it that fits, the one nearest its middle, until none is too long or nothing fits.
             if let space = tier.space {
@@ -152,7 +175,7 @@ struct Charting: Decodable {
                     if taken.isEmpty, let a = onsets.first, let z = onsets.last { holes = [(a.t - 1, z.t + 1)] }
                     for (a, z) in holes {
                         let mid = Double(a + z) / 2
-                        let pick = onsets.filter { $0.t > a && $0.t < z && !taken.contains($0.t) && fits($0.t) }
+                        let pick = onsets.filter { $0.t > a && $0.t < z && !isTaken.contains($0.t) && fits($0.t) }
                             .min { ($0.lv, abs(Double($0.t) - mid)) < ($1.lv, abs(Double($1.t) - mid)) }
                         if let o = pick { take(o); changed = true }
                     }

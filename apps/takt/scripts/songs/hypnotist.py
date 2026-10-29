@@ -2,7 +2,15 @@
 """Hypnotist: minimal techno at 127 in A minor, 80 bars (2:31), from misc/sketches.py track 1
 (clicky, dry, the hypnotic bleep), its voices cut by scripts/synths.py.
 
-    python3 apps/takt/scripts/songs/hypnotist.py   -> Takt/Content/song-hypnotist.json
+    python3 apps/takt/scripts/songs/hypnotist.py        -> Takt/Content/song-hypnotist.json
+    python3 apps/takt/scripts/songs/hypnotist.py --ii   -> Takt/Content/song-hypnotist-2.json
+
+`--ii` is **Hypnotist II**: the same record (drums, sub, stab, mix) with a new melody part
+written to be learned. Three keys, A3 C4 D4 (thumb, middle, ring: one hand position), turning
+in dotted eighths against the four on the floor, so the line lands somewhere new every beat
+and comes round every two bars: the minimal-techno phase, no tune to hum. The weights are cut
+so that every level of the ladder (charting.json) is a rhythm of the same three keys: the keys
+one at a time, then the half-time turn, then the phase whole, then with its 16th repeats.
 
 The sketch's 16-step patterns, bar for bar: kick on the quarters, the offbeat hat, the rim and
 click syncopations, the rolling offbeat sub (A1, G1 every fourth bar), the bleep's six notes
@@ -19,8 +27,13 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import BAR, TPB, Song  # noqa: E402
 
-s = Song("song-hypnotist", "Hypnotist", "Minimal techno", "A minor", 127, "pulse",
-         "Minimal techno at 127. Clicks and rims, a rolling sub, one bleep that never lets go.", seed=127)
+II = "--ii" in sys.argv
+if II:
+    s = Song("song-hypnotist-2", "Hypnotist II", "Minimal techno", "A minor", 127, "pulse",
+             "Minimal techno at 127. The same room, a new bleep: three keys turning against the kick.", seed=127)
+else:
+    s = Song("song-hypnotist", "Hypnotist", "Minimal techno", "A minor", 127, "pulse",
+             "Minimal techno at 127. Clicks and rims, a rolling sub, one bleep that never lets go.", seed=127)
 s.sounds = {
     "kick": {"kit": "kickMin", "gainDb": -15},
     "hat": {"kit": "hatMin", "gainDb": -27},
@@ -101,11 +114,28 @@ s.chart_to_channel(chords, s.keys, lambda e: 0.85 if section(e["t"] // BAR) == "
 
 SEQ = {0: 57, 9: 64, 15: 60, 24: 57, 30: 67, 39: 64}  # tick in the bar → note (A3 E4 C4 A3 G4 E4)
 LEVEL = {0: 1, 9: 2, 15: 3, 24: 1, 30: 2, 39: 3}
-melody = s.part("melody", "The bleep", "bleep", "horns", "bleep")
+# Hypnotist II: (16th in the two-bar phrase, note, weight). A C D every dotted eighth, from the
+# phrase's downbeat; weight 1 the keys one at a time (16ths 0, 6, 12, 24), weight 2 the rest of
+# the half-time turn (18, 30) and two dotted-eighth pickups (9, 21), weight 3 the phase whole
+# and its 16th repeats (7, 25, 31; the Full section only).
+TURN = [(0, 57, 1), (3, 60, 3), (6, 62, 1), (9, 57, 2), (12, 60, 1), (15, 62, 3), (18, 57, 2), (21, 60, 2),
+        (24, 62, 1), (27, 57, 3), (30, 60, 2)]
+REPEATS = [(7, 62, 3), (25, 62, 3), (31, 60, 3)]
+FINGER = {57: 1, 60: 3, 62: 4}
+melody = s.part("melody", "The phase" if II else "The bleep", "bleep", "horns", "bleep")
 for bar in range(s.bars):
     o = bar * BAR
     sec = section(bar)
     if sec == "Intro" or (sec == "Out" and bar >= 76):
+        continue
+    if II:
+        half = (bar % 2) * 16
+        for step, n, lv in TURN + (REPEATS if sec == "Full" else []):
+            if not half <= step < half + 16:
+                continue
+            if (sec == "Pulse" and lv == 3) or (sec == "Break" and (lv == 3 or step % 6)) or (sec == "Out" and lv > 1):
+                continue  # the bones as it comes in, half time in the break, the keys alone on the way out
+            s.pnote(melody, o + (step - half) * 3, n, 3, lv, FINGER[n])
         continue
     for t, n in SEQ.items():
         if sec == "Pulse" and LEVEL[t] == 3:

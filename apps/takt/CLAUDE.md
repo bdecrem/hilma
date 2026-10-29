@@ -535,6 +535,18 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   lifting it lets them go. MIDI and the computer keys are untouched. `-AutoTap 1` taps every chord
   of a song through that path; ImageRenderer snapshots set `\.offscreen` so the UIKit surface
   stays out of them. Simulator check: `cliclick` on the Simulator window is a real touch.
+- **Hypnotist II, and a ladder that keeps the line: 0.1 (48), 2026-10-29.** Bart, playing
+  Hypnotist melody on Adaptive on the iPhone, saw only a low A and asked how that is a useful
+  learning opportunity (it isn't: every weight-1 note of that line is A3, so levels 1–3 were one
+  key), then: clone it as Hypnotist II with a good adaptive chart, not cheesy, maybe three notes
+  and rhythm variations, and fix the adaptive system. **Hypnotist II** (`song-hypnotist-2`,
+  `hypnotist.py --ii`; the original's JSON is byte-identical): the same record with a new melody
+  part, "The phase": A3 C4 D4 (fingers 1 3 4) every dotted eighth against the four, round every
+  two bars; levels = rhythms of the same three keys (102 → 364 notes, each level the one below
+  plus more). **The system** (`CHARTING.md`): `phrase` (melody 2 bars) keeps every key of each
+  phrase at every level before the weights; adaptive starts one under your last adaptive run's
+  top on that song and part (`resume`); a wrong key is a miss in the window (the record's own
+  notes aren't). The original Hypnotist's levels 1–3 now play A E G / A C E G.
 
 ## Code map (`Takt/`)
 

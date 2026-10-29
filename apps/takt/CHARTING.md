@@ -33,6 +33,19 @@ four notes → the record**: every step changes one thing, and a bigger chord co
 before it gets fast again. The melody ladder goes long notes only → main notes → most of the
 tune → with pickups → nearly every note → the record.
 
+**`phrase`** (bars, a ladder knob; melody 2): before the weights, every tier takes every key
+the line plays in each phrase, at its heaviest, earliest onset that fits the gap. Without it a
+line whose strong beats are all one note (Hypnotist: every weight-1 note is the low A) cut to
+one key for its first three levels, a rhythm game on one key that teaches nothing about the
+line. The check: in every phrase where the line plays more than one key, a level that plays
+two notes or more plays two keys or more (the gap can leave room for no more).
+
+The weights do the rest, so a line written to be learned puts its keys on the strong beats
+itself: **Hypnotist II** (`hypnotist.py --ii`) is three keys, A C D, turning in dotted
+eighths, and every level is a rhythm of all three (the keys one at a time; the half-time
+turn; with two pickups; the phase whole; with its 16th repeats). Its check: six levels, each
+the one below plus more, A C D in every phrase of every one.
+
 `easy`, `medium`, `hard` name a tier of each ladder (chords 2 / 4 / 7, melody 2 / 4 / 6).
 `songs` overrides them per song, part and difficulty, e.g.
 `"songs": {"song-warm-nine": {"chords": {"medium": 3}}}`.
@@ -42,7 +55,11 @@ tune → with pickups → nearly every note → the record.
 `adaptive` walks the ladder one tier at a time. The song is cut in blocks of `window` bars;
 `ahead` bars before a block starts, its tier is decided from the `window` bars before that:
 at or above `climb` hit rate (with at least `judged` notes) it climbs a tier, under `ease` it
-drops one. It starts at `start`. The result records the highest tier reached.
+drops one. A wrong key (one the record doesn't play there at any tier) counts as a miss;
+playing more of the record than the level asks doesn't. The first run starts at `start`;
+later ones `resume` tiers (1) under the top of your last adaptive run of that song and part
+(`GameEngine.adaptiveStart`, from the board's records), so a player who reached level 5
+doesn't sit through level 1 again. The result records the highest tier reached.
 
 ## Where this comes from
 

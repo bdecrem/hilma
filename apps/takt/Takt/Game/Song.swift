@@ -59,7 +59,7 @@ struct Song {
     let meta: Meta
 
     /// The set list, in order.
-    static let catalog = ["song-slow-burn", "song-boogie-shoes", "song-hypnotist", "song-warm-nine", "song-abyss", "song-abyss-ref"]
+    static let catalog = ["song-slow-burn", "song-boogie-shoes", "song-hypnotist", "song-hypnotist-2", "song-warm-nine", "song-abyss", "song-abyss-ref"]
 
     static func bundled(_ name: String) -> Song {
         guard let url = Bundle.main.url(forResource: name, withExtension: "json") else { fatalError("song \(name).json is not in the bundle") }
@@ -119,7 +119,7 @@ struct Song {
 
     /// The part at each tier of the charting rules: `[tier - 1][i]` over `notes(key)`.
     func masks(_ key: PartKey, charting: Charting = .bundled) -> [[Bool]] {
-        charting.masks(notes(key), part: key, tempo: meta.tempo, ticksPerBeat: band.ticksPerBeat)
+        charting.masks(notes(key), part: key, tempo: meta.tempo, ticksPerBeat: band.ticksPerBeat, ticksPerBar: ticksPerBar)
     }
 
     /// The part at a tier, in time order.

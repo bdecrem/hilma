@@ -91,11 +91,12 @@ final class GameEngine {
     private var seq = 0
     private var heardTick = -Double.infinity
     private var checked = -Double.infinity
-    /// Hits and misses per bar, for the adaptive decision.
+    /// Hits and misses per bar, for the adaptive decision; a wrong key is a miss.
     private var barHits: [Int: Int] = [:]
     private var barMisses: [Int: Int] = [:]
 
-    init(song: Song, part: Song.PartKey, difficulty: Difficulty, charting: Charting = .bundled) {
+    /// `start`: the tier an adaptive run starts on (`adaptiveStart`; the ladder's start if nil).
+    init(song: Song, part: Song.PartKey, difficulty: Difficulty, start: Int? = nil, charting: Charting = .bundled) {
         self.song = song
         self.part = part
         self.difficulty = difficulty
@@ -107,8 +108,18 @@ final class GameEngine {
         status = Array(repeating: .pending, count: notes.count)
         let window = charting.adaptive.window
         let blocks = (song.band.bars + window - 1) / window + 1
-        let first = charting.tier(difficulty, song: song.name, part: part) ?? charting.adaptive.start
+        let first = charting.tier(difficulty, song: song.name, part: part) ?? start ?? charting.adaptive.start
         blockLevel = Array(repeating: max(1, min(masks.count, first)), count: blocks)
+    }
+
+    /// Where an adaptive run starts: `resume` tiers under the top of the last adaptive run of
+    /// this song and part, so a player who got to level 5 doesn't sit through level 1 again.
+    static func adaptiveStart(song: String, part: Song.PartKey, records: [ProgressStore.ScoreRecord],
+                              charting: Charting = .bundled) -> Int {
+        let a = charting.adaptive
+        guard let last = records.filter({ $0.song == song && $0.part == part.rawValue && $0.difficulty == Difficulty.adaptive.rawValue })
+            .max(by: { $0.date < $1.date }) else { return a.start }
+        return max(a.start, min(charting.ladder(part).tiers.count, last.level - a.resume))
     }
 
     var endTick: Int { song.endTick }
@@ -205,6 +216,12 @@ final class GameEngine {
         }
         guard let b = best else {
             extras += 1
+            // A key the record doesn't play here (at any tier) is wrong, and counts against the
+            // level; the record's own notes the level left out don't.
+            let bar = Int((tick / Double(ticksPerBar)).rounded(.down))
+            if !notes.contains(where: { abs(tick - Double($0.t)) <= reach && $0.n % 12 == note % 12 }) {
+                barMisses[bar, default: 0] += 1
+            }
             return
         }
         let ms = abs(b.d * msPerTick)

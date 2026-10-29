@@ -26,7 +26,7 @@ struct StageScreen: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("Six songs, all yours from the start. Take the chords or the melody, pick a level, and play with the band. Adaptive climbs as you play clean.")
+                    Text("Seven songs, all yours from the start. Take the chords or the melody, pick a level, and play with the band. Adaptive climbs as you play clean.")
                         .bodyText(compact ? 14 : 16)
                         .foregroundStyle(Palette.muted)
                         .fixedSize(horizontal: false, vertical: true)

@@ -242,6 +242,7 @@
 		8704BAB326417DF36B36659F /* pno-85-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 94531D8F79AEF879A04254AB /* pno-85-2.caf */; };
 		8777D585AEB0DEC3C0E88A2E /* syn-rhodes-51-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 2DD6C4C4CEB3ECC6F12C6C7C /* syn-rhodes-51-1.caf */; };
 		878DE3099612052F76923FAD /* RunPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11BD6025BB5E69D21B9A0B1F /* RunPanel.swift */; };
+		87FF85AFC0DC3AAC8933D48D /* song-hypnotist-2.json in Resources */ = {isa = PBXBuildFile; fileRef = BADE0D7EFE5BABCE5210E53E /* song-hypnotist-2.json */; };
 		8933D62E32589DF348615AD6 /* pno-39-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3C8AB3B36F288B90FF3273DE /* pno-39-1.caf */; };
 		896A67B877A6CDB7653B1480 /* pno-95-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = BC4DC980AB417352A92222A0 /* pno-95-1.caf */; };
 		8A0960B42196667C75B9C38E /* pno-43-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = E7447478F83F7B3F078A972A /* pno-43-2.caf */; };
@@ -756,6 +757,7 @@
 		B9F6D61A9E1DC6AFBA2CBBC5 /* DubStab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DubStab.swift; sourceTree = "<group>"; };
 		B9FA9FC704F36ABCBC4A7D66 /* sax-57-s.caf */ = {isa = PBXFileReference; path = "sax-57-s.caf"; sourceTree = "<group>"; };
 		BA8D3FFD426F899480E1192E /* kick-3a.caf */ = {isa = PBXFileReference; path = "kick-3a.caf"; sourceTree = "<group>"; };
+		BADE0D7EFE5BABCE5210E53E /* song-hypnotist-2.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "song-hypnotist-2.json"; sourceTree = "<group>"; };
 		BBF75A29D8CB98EFF4F1D415 /* syn-subMin-30.caf */ = {isa = PBXFileReference; path = "syn-subMin-30.caf"; sourceTree = "<group>"; };
 		BC4DC980AB417352A92222A0 /* pno-95-1.caf */ = {isa = PBXFileReference; path = "pno-95-1.caf"; sourceTree = "<group>"; };
 		BCFFFD49EB39BF2E6BAC0767 /* Motifs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Motifs.swift; sourceTree = "<group>"; };
@@ -1066,6 +1068,7 @@
 				EEEF033DB9357648BCDCCD17 /* song-abyss-ref.json */,
 				E3111C9819000EB6D6BD3E5F /* song-abyss.json */,
 				2BD66E2CAAD161BA1549DCAF /* song-boogie-shoes.json */,
+				BADE0D7EFE5BABCE5210E53E /* song-hypnotist-2.json */,
 				C1D12DD782A48B03D2950F0D /* song-hypnotist.json */,
 				A4985865F2AE933A767D9B73 /* song-slow-burn.json */,
 				11B6CC6B1E376F8F63DFAC35 /* song-warm-nine.json */,
@@ -1771,6 +1774,7 @@
 				06D4A152FAAC81877671E319 /* song-abyss-ref.json in Resources */,
 				41FBA6D0D8E7A740DDA90C1A /* song-abyss.json in Resources */,
 				DA6EFD26386A1F1603E7DE80 /* song-boogie-shoes.json in Resources */,
+				87FF85AFC0DC3AAC8933D48D /* song-hypnotist-2.json in Resources */,
 				74BA911C913AB1B9444320F4 /* song-hypnotist.json in Resources */,
 				D08F9AD8D242D5A9CE4CEE68 /* song-slow-burn.json in Resources */,
 				909BF6C68724A574B7BF77CB /* song-warm-nine.json in Resources */,
@@ -2042,7 +2046,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 47;
+				CURRENT_PROJECT_VERSION = 48;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -2109,7 +2113,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 47;
+				CURRENT_PROJECT_VERSION = 48;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;

@@ -1,5 +1,5 @@
 {
-  "about": "How the Stage cuts a part into levels; CHARTING.md explains every knob. Each part has a ladder of tiers, easiest first. Easy, Medium and Hard each name a tier, and Adaptive walks the ladder one step at a time. A tier: notes = chord notes kept, in `keep` order (null = all); hits = the heaviest weight played as written (1 the hits a part stands on, 2 the groove, 3 pushes and ornaments); gap = seconds at least between two onsets; space = seconds at most without an onset (a longer silence borrows a lighter hit; null = never); bonus = points per hit times this.",
+  "about": "How the Stage cuts a part into levels; CHARTING.md explains every knob. Each part has a ladder of tiers, easiest first. Easy, Medium and Hard each name a tier, and Adaptive walks the ladder one step at a time. A tier: notes = chord notes kept, in `keep` order (null = all); hits = the heaviest weight played as written (1 the hits a part stands on, 2 the groove, 3 pushes and ornaments); gap = seconds at least between two onsets; space = seconds at most without an onset (a longer silence borrows a lighter hit; null = never); bonus = points per hit times this. A ladder's phrase (bars) keeps every key the part plays in each phrase at every tier, before the weights. Adaptive starts `resume` tiers under the top of your last adaptive run of the song and part (`start` the first time); a wrong key counts as a miss in its window.",
   "chords": {
     "keep": ["root", "third", "fifth", "seventh", "sixth", "ninth"],
     "easy": 2,
@@ -17,6 +17,7 @@
   },
   "melody": {
     "keep": null,
+    "phrase": 2,
     "easy": 2,
     "medium": 4,
     "hard": 6,
@@ -31,6 +32,7 @@
   },
   "adaptive": {
     "start": 1,
+    "resume": 1,
     "window": 4,
     "ahead": 2,
     "climb": 0.85,

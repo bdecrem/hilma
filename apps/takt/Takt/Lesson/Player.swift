@@ -636,7 +636,8 @@ final class Player {
         let partChannel = song.channel(of: part)
         chorusBars = audio.load(song: song, part: part).chorusBars
         gameEpoch = audio.snapshot().epoch + 1
-        game = GameEngine(song: song, part: part, difficulty: difficulty)
+        game = GameEngine(song: song, part: part, difficulty: difficulty,
+                          start: GameEngine.adaptiveStart(song: song.name, part: part, records: progress.scores(song: song.name)))
         audio.send(.stop)
         audio.send(.transpose(0))
         audio.send(.silence(from: 0, to: 0))

@@ -971,6 +971,80 @@ enum LessonCheck {
                           "onsets/s by level [quietest–busiest 8 bars]: \(ladderLine.joined(separator: " · "))")
                 }
             }
+            // A level is still the line: in every phrase where the melody plays more than one key,
+            // a level that plays two notes or more there plays two keys or more (the gap can leave
+            // room for no more: Slow Burn's F and D sit 0.6 s apart). The detail: the fewest keys
+            // a level plays in a phrase.
+            // The detail: the fewest keys any level plays in a phrase, per level.
+            for s in songs where s.partKeys.contains(.melody) {
+                let all = s.notes(.melody), masks = s.masks(.melody), span = (charting.melody.phrase ?? 1) * s.ticksPerBar
+                let phrases = Set(all.map { $0.t / span }).sorted()
+                var fewest: [Int] = []
+                var ok = true
+                for m in masks {
+                    var low = Int.max
+                    for p in phrases {
+                        let line = Set(all.filter { $0.t / span == p }.map(\.n))
+                        let kept = Set(all.indices.filter { m[$0] && all[$0].t / span == p }.map { all[$0].n })
+                        let onsets = Set(all.indices.filter { m[$0] && all[$0].t / span == p }.map { all[$0].t }).count
+                        if line.count > 1 { low = min(low, kept.count); if kept.count < min(2, onsets) { ok = false } }
+                    }
+                    fewest.append(low == .max ? 0 : low)
+                }
+                check("stage: \(s.meta.title) melody: every level plays the line's keys, not one", ok, "fewest keys a phrase, by level: \(fewest)")
+            }
+            if let two = songs.first(where: { $0.name == "song-hypnotist-2" }) {
+                let all = two.notes(.melody), masks = two.masks(.melody), span = 2 * two.ticksPerBar
+                let counts = masks.map { m in m.filter { $0 }.count }
+                let grows = zip(masks, masks.dropFirst()).allSatisfy { lo, hi in zip(lo, hi).allSatisfy { !$0 || $1 } } && Set(counts).count == counts.count
+                let acd = masks.allSatisfy { m in
+                    Set(all.map { $0.t / span }).allSatisfy { p in Set(all.indices.filter { m[$0] && all[$0].t / span == p }.map { all[$0].n }) == [57, 60, 62] }
+                }
+                check("stage: Hypnotist II: six levels, each the one below plus more, every one A C D in every phrase",
+                      masks.count == 6 && grows && acd && Set(all.map(\.n)) == [57, 60, 62], "notes by level \(counts)")
+
+                // Adaptive resumes just under the last run's top, and wrong keys hold it back
+                // where the record's own notes don't.
+                func record(_ part: String, _ difficulty: String, level: Int, _ ago: Double) -> ProgressStore.ScoreRecord {
+                    ProgressStore.ScoreRecord(GameEngine.Result(song: two.name, part: part, difficulty: difficulty, score: 1, notes: 1, perfect: 1,
+                                                                good: 0, missed: 0, extras: 0, maxCombo: 1, accuracy: 1, level: level, grade: "S"),
+                                              date: Date(timeIntervalSinceNow: -ago))
+                }
+                let starts = [
+                    GameEngine.adaptiveStart(song: two.name, part: .melody, records: []),
+                    GameEngine.adaptiveStart(song: two.name, part: .melody, records: [record("melody", "adaptive", level: 5, 60)]),
+                    GameEngine.adaptiveStart(song: two.name, part: .melody, records: [record("melody", "adaptive", level: 6, 600),
+                                                                                    record("melody", "adaptive", level: 3, 60)]),
+                    GameEngine.adaptiveStart(song: two.name, part: .melody, records: [record("melody", "hard", level: 6, 60),
+                                                                                    record("chords", "adaptive", level: 7, 30)]),
+                ]
+                check("stage: adaptive starts at 1, then one under the last adaptive run's top (that song and part only)",
+                      starts == [1, 4, 2, 1], "\(starts)")
+                let ms = 60000 / (Double(two.meta.tempo) * Double(two.band.ticksPerBeat))
+                func adaptive(wrong: Int?, extra: Bool) -> GameEngine {
+                    let g = GameEngine(song: two, part: .melody, difficulty: .adaptive)
+                    var tick = 0.0
+                    while tick < Double(two.endTick) {
+                        for i in g.notes.indices where Double(g.notes[i].t) >= tick && Double(g.notes[i].t) < tick + 4 {
+                            let at = Double(g.notes[i].t)
+                            if g.active(i) {
+                                g.heard(tick: at, msPerTick: ms)
+                                g.played(note: g.notes[i].n, tick: at, msPerTick: ms)
+                                if let w = wrong { g.played(note: w, tick: at, msPerTick: ms) }
+                            } else if extra {
+                                g.played(note: g.notes[i].n, tick: at, msPerTick: ms)  // the record's note, more than the level asks
+                            }
+                        }
+                        tick += 4
+                        g.heard(tick: tick, msPerTick: ms)
+                    }
+                    return g
+                }
+                let clean = adaptive(wrong: nil, extra: true), sloppy = adaptive(wrong: 63, extra: false)
+                check("stage: a wrong key with every note holds adaptive down; playing more of the record doesn't",
+                      clean.result().level == 6 && sloppy.result().level == 1,
+                      "clean + record notes: top \(clean.result().level), \(clean.extras) extras · with a wrong key: top \(sloppy.result().level)")
+            }
             if let song = songs.first {
                 let tpbar = song.ticksPerBar
                 let ms = 60000 / (Double(song.meta.tempo) * Double(tpb))
