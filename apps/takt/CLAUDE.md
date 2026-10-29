@@ -513,6 +513,8 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   700 pt wide (the iPhone), four across from 700 (a Mac window), the letters sized to the space
   they get. SwiftUI has no text stroke, so the outline is the letter drawn twelve times a hair
   off in the stroke color with the ground on top (`LetterCell.glyph`).
+  Merged from PR #12 (written without Xcode); on review the 0.1 s state animation was dropped:
+  it cross-faded the outline into the fill (an orange letter with a blue edge) on every beat.
 - **Abyss = the dub reference: 0.1 (45), 2026-10-29.** Bart: "the dub techno track… is still not
   good at all… make the version in the game sound the same" as `misc/dub_reference.mp3`
   (`dub_reference.py`, `DUB_TECHNO_FIXES.md`). The chamber is a line-for-line port of the

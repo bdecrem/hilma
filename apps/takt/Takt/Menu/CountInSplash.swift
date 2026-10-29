@@ -245,7 +245,8 @@ private struct LetterCell: View {
                 .fill(Palette.line)
                 .frame(height: 1)
         }
-        .animation(.easeOut(duration: 0.1), value: state)
+        // No animation: a fade crossed the outline into the fill (an orange letter with a blue
+        // edge, a peach one) for a tenth of every beat. The letter lands on the beat.
     }
 
     /// SwiftUI has no text stroke, so an outline is the letter drawn a hair off in twelve
