@@ -558,6 +558,31 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   top on that song and part (`resume`); a wrong key is a miss in the window (the record's own
   notes aren't). The original Hypnotist's levels 1–3 now play A E G / A C E G.
 
+- **Scales 7–13, Chord Shapes, a smoother Adaptive: 0.1 (50), 2026-10-29.** Bart: "improve two
+  core things: the pedagogy / lessons structure incl creating additional content, for the Scales
+  and Chords modules… think like a music curriculum expert… (2) game mode: difficulty level
+  construction in particular for Adaptive play… the difficulty curve is smooth". His research
+  notes are `misc/scales-and-chords-lessons.txt` and `misc/game-level-design.txt`; the plan and
+  the reasons are **`CURRICULUM.md`**. **Scales** (both key files, `scripts/scales-extend.py`,
+  lessons 1–6 kept byte for byte): minor / major pentatonic, the relative (same keys, other
+  home), E minor / G major (same fingering), D minor / F major (the first flat; F breaks the
+  fingering 1 2 3 4 1 2 3 4), harmonic minor / Mixolydian, Dorian, the chromatic; a jam under
+  each, the new keys' jams transposing the blues band to the relative major. **Chord Shapes**
+  (`lesson-H.json`, `scripts/chord-shapes.py`, entry "H" after Minor Chords): minor sevenths,
+  inversions, the four-chord minor loop (Am F C G over the drums), the same loop by voice
+  leading, the backbeat, sus4 resolving, the shell, the rootless minor nine; eight jams.
+  Content model: a pattern note's `chord` plays it only in that chord's bars (a voicing per
+  chord), a step's `flats` spells its run, five more `tones`. **Stage** (`CHARTING.md`): every
+  tier is the one below plus more (the charter seeds each tier with the last; the chords ladder
+  is 6 tiers, the sparse three-note tier gone, Easy/Medium/Hard = 2/3/6); Adaptive reads one
+  window for drops and two for climbs (`judged` 8, reaching back for sparse levels), holds
+  climbs after a change (`afterClimb` 1, `afterDrop` 2), never climbs on scattered hits
+  (`spreadMaxMs` 60), drops on `missRun` 3, keeps a `floorBelowStart`, skips tiers whose chart
+  is identical; a dropped finger keeps the combo. Checks 255/255: the new content note by note,
+  ladder health for every song and part, the adaptive rules, a seeded player model that settles.
+  Verified on the simulator: the Chord Shapes module, Moving less lighting G C E / 5 2 1 in bar
+  3, D minor and F major spelled with B♭.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

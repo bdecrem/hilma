@@ -1010,7 +1010,7 @@ final class Player {
                                index: nowIndex.map { $0 % notes.count },
                                resting: resting,
                                number: bar / cycle + 1, count: max(1, form.count / cycle),
-                               right: step.hand == "right", flats: name.hasSuffix("blues"))
+                               right: step.hand == "right", flats: step.flats ?? name.hasSuffix("blues"))
     }
 }
 

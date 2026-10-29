@@ -54,6 +54,37 @@ struct Charting: Decodable {
         let ease: Double
         /// Notes judged in a window before it moves.
         let judged: Int
+        /// No climb while the window's hits scatter more than this (median absolute offset, ms):
+        /// lucky isn't solid. Nil: the hit rate alone.
+        let spreadMaxMs: Double?
+        /// Blocks held after a climb (the player meets the new tier for a whole phrase before
+        /// the next) and after a drop (long enough to recover; this is what stops ping-pong).
+        let afterClimb: Int
+        let afterDrop: Int
+        /// This many misses in a row drop a tier at the next decision, whatever the rate. Nil: never.
+        let missRun: Int?
+        /// A run never sinks more than this under the tier it started on (and never under 1).
+        let floorBelowStart: Int
+
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            start = try c.decode(Int.self, forKey: .start)
+            resume = try c.decodeIfPresent(Int.self, forKey: .resume) ?? 0
+            window = try c.decode(Int.self, forKey: .window)
+            ahead = try c.decode(Int.self, forKey: .ahead)
+            climb = try c.decode(Double.self, forKey: .climb)
+            ease = try c.decode(Double.self, forKey: .ease)
+            judged = try c.decode(Int.self, forKey: .judged)
+            spreadMaxMs = try c.decodeIfPresent(Double.self, forKey: .spreadMaxMs)
+            afterClimb = try c.decodeIfPresent(Int.self, forKey: .afterClimb) ?? 0
+            afterDrop = try c.decodeIfPresent(Int.self, forKey: .afterDrop) ?? 0
+            missRun = try c.decodeIfPresent(Int.self, forKey: .missRun)
+            floorBelowStart = try c.decodeIfPresent(Int.self, forKey: .floorBelowStart) ?? Int.max
+        }
+
+        private enum CodingKeys: String, CodingKey {
+            case start, resume, window, ahead, climb, ease, judged, spreadMaxMs, afterClimb, afterDrop, missRun, floorBelowStart
+        }
     }
 
     let chords: Ladder
@@ -80,9 +111,17 @@ struct Charting: Decodable {
                   l.tiers.allSatisfy({ $0.hits >= 1 && $0.gap >= 0 && ($0.space ?? .infinity) > $0.gap && $0.bonus > 0 }),
                   (l.phrase ?? 1) >= 1
             else { fatalError("charting.json: the \(name) ladder") }
+            // Every tier is the one below plus more (`masks` seeds each tier with the last), so
+            // a tier may only loosen the rules: a smaller gap, heavier hits, bigger chords.
+            for (lo, hi) in zip(l.tiers, l.tiers.dropFirst()) {
+                guard hi.gap <= lo.gap, hi.hits >= lo.hits, (hi.notes ?? .max) >= (lo.notes ?? .max) else {
+                    fatalError("charting.json: the \(name) ladder tightens a rule going up (gap, hits and notes may only loosen)")
+                }
+            }
         }
         guard adaptive.window >= 1, adaptive.ahead >= 0, adaptive.ahead < adaptive.window, adaptive.ease <= adaptive.climb,
-              adaptive.resume >= 0
+              adaptive.resume >= 0, adaptive.afterClimb >= 0, adaptive.afterDrop >= 0, (adaptive.missRun ?? 1) >= 1,
+              adaptive.floorBelowStart >= 0, (adaptive.spreadMaxMs ?? 1) > 0
         else { fatalError("charting.json: adaptive") }
     }
 
@@ -104,7 +143,7 @@ struct Charting: Decodable {
     func line(_ difficulty: GameEngine.Difficulty, song: String, part: Song.PartKey) -> String {
         guard let t = tier(difficulty, song: song, part: part) else {
             let n = ladder(part).tiers.count
-            return "Level \(adaptive.start) of \(n) the first time, then just under where your last run got to. Clean \(adaptive.window) bars and it climbs a level; misses and wrong keys step it back."
+            return "Level \(adaptive.start) of \(n) the first time, then just under where your last run got to. Clean \(adaptive.window) bars and it climbs a level, one at a time; misses and wrong keys step it back. It holds a phrase after each change."
         }
         return "Level \(t) of \(ladder(part).tiers.count). " + ladder(part).tier(t).line
     }
@@ -124,11 +163,15 @@ struct Charting: Decodable {
             }
         }
         let rank: (Song.Note) -> Int = { n in l.keep?.firstIndex(of: n.r ?? "") ?? (l.keep?.count ?? 0) }
+        // Each tier starts from the one below it and adds (Rock Band's rule: everything on a lower
+        // difficulty is on the higher one), so climbing a level never takes a note away.
+        var seed: Set<Int> = []
         return l.tiers.map { tier in
             var mask = Array(repeating: false, count: notes.count)
             let gapTicks = tier.gap / secondsPerTick
             var taken: [Int] = []  // onset ticks, sorted
             var isTaken: Set<Int> = []
+            defer { seed = isTaken }
             func fits(_ t: Int) -> Bool {
                 var lo = 0, hi = taken.count
                 while lo < hi { let m = (lo + hi) / 2; if taken[m] < t { lo = m + 1 } else { hi = m } }
@@ -147,7 +190,9 @@ struct Charting: Decodable {
                 }
                 for i in kept { mask[i] = true }
             }
-            // First every key of each phrase, at its heaviest, earliest onset that fits.
+            // The tier below, whole (its onsets fit this tier's gap: the ladder only loosens).
+            for o in onsets where seed.contains(o.t) { take(o) }
+            // Then every key of each phrase, at its heaviest, earliest onset that fits.
             if let phrase = l.phrase, let last = onsets.last?.t {
                 let span = phrase * ticksPerBar
                 for p in 0...(last / span) {

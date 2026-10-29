@@ -5,7 +5,7 @@
   "module": {
     "code": "scales",
     "title": "Scales",
-    "detail": "Right and left hand · scales and the blues scale in C major"
+    "detail": "Right and left hand · scales, pentatonics and modes in C major"
   },
   "lessons": [
     {
@@ -85,16 +85,119 @@
         "title": "The flat five",
         "line": "Six notes. The G♭ between the four and the five is the blue one."
       }
+    },
+    {
+      "title": "Major pentatonic",
+      "skill": "C D E G A C, up and back",
+      "goal": "2 clean choruses at 60",
+      "steps": [
+        "penta"
+      ],
+      "theme": {
+        "glyph": "steps:5",
+        "title": "Five that always fit",
+        "line": "Take the 4 and the 7 out of the major scale. What's left can't clash."
+      }
+    },
+    {
+      "title": "The relative minor",
+      "skill": "A minor pentatonic: the same five keys, from A",
+      "goal": "2 clean choruses at 60",
+      "steps": [
+        "relpenta"
+      ],
+      "theme": {
+        "glyph": "hill",
+        "title": "Same keys, other home",
+        "line": "C major and A minor share every key. Where you land decides which one you hear."
+      }
+    },
+    {
+      "title": "G major",
+      "skill": "G A B C D E F♯ G, up and back",
+      "goal": "2 clean choruses at 60",
+      "steps": [
+        "key2"
+      ],
+      "theme": {
+        "glyph": "steps:8",
+        "title": "Same hand, new key",
+        "line": "C, G, D, A and E all share one fingering. Learn it once, move it round the circle."
+      }
+    },
+    {
+      "title": "F major",
+      "skill": "F G A B♭ C D E F: 1 2 3 4, 1 2 3 4",
+      "goal": "2 clean choruses at 60",
+      "steps": [
+        "key3"
+      ],
+      "theme": {
+        "glyph": "steps:8",
+        "title": "The exception",
+        "line": "The thumb stays off the black keys. In F that means four fingers before the tuck, not three."
+      }
+    },
+    {
+      "title": "Mixolydian",
+      "skill": "C D E F G A B♭ C: the flat seventh",
+      "goal": "2 clean choruses at 60",
+      "steps": [
+        "color"
+      ],
+      "theme": {
+        "glyph": "blue",
+        "title": "The flat seven",
+        "line": "Lower the seventh a half step and major stops pulling home. Disco house and the blues' major side."
+      }
+    },
+    {
+      "title": "Dorian",
+      "skill": "C D E♭ F G A B♭ C: the raised sixth",
+      "goal": "2 clean choruses at 60",
+      "steps": [
+        "dorian"
+      ],
+      "theme": {
+        "glyph": "keys:6",
+        "title": "The bright minor",
+        "line": "Natural minor with the 6th raised. One note, and the minor lifts: the club's favourite mode."
+      }
+    },
+    {
+      "title": "Chromatic",
+      "skill": "C to C, every key, 1 3 1 3 1 2 3 1 3 1 3 1 2",
+      "goal": "2 clean choruses at 60",
+      "steps": [
+        "chroma"
+      ],
+      "theme": {
+        "glyph": "hand",
+        "title": "Thumb white, middle black",
+        "line": "Twelve half steps make an octave. The fingering is a rule, not a list: 1 on white, 3 on black, 2 between two whites."
+      }
     }
   ],
   "later": [
+    {
+      "title": "Hands together",
+      "skill": "Left and right together, an octave apart"
+    },
+    {
+      "title": "Contrary motion",
+      "skill": "Both hands from one note, mirrored"
+    },
     {
       "title": "Thirds",
       "skill": "The scale two notes at a time"
     },
     {
-      "title": "Both hands",
-      "skill": "Left and right together, an octave apart"
+      "title": "D major and A major",
+      "skill": "Two more keys with the same fingering"
+    },
+    {
+      "title": "Round the circle",
+      "skill": "All twelve keys, one a bar"
     }
   ],
   "band": "band-blues-C",
@@ -702,6 +805,828 @@
       ]
     },
     {
+      "id": "penta",
+      "kind": "play",
+      "title": "Major pentatonic",
+      "skill": "rh.penta.updown.S1",
+      "tempo": 60,
+      "gate": 2,
+      "cycle": 3,
+      "hand": "right",
+      "key": "C major pentatonic",
+      "pattern": [
+        {
+          "bar": 0,
+          "beat": 1,
+          "semitones": 0,
+          "finger": 1
+        },
+        {
+          "bar": 0,
+          "beat": 2,
+          "semitones": 2,
+          "finger": 2
+        },
+        {
+          "bar": 0,
+          "beat": 3,
+          "semitones": 4,
+          "finger": 3
+        },
+        {
+          "bar": 0,
+          "beat": 4,
+          "semitones": 7,
+          "finger": 1
+        },
+        {
+          "bar": 1,
+          "beat": 1,
+          "semitones": 9,
+          "finger": 2
+        },
+        {
+          "bar": 1,
+          "beat": 2,
+          "semitones": 12,
+          "finger": 3
+        },
+        {
+          "bar": 1,
+          "beat": 3,
+          "semitones": 9,
+          "finger": 2
+        },
+        {
+          "bar": 1,
+          "beat": 4,
+          "semitones": 7,
+          "finger": 1
+        },
+        {
+          "bar": 2,
+          "beat": 1,
+          "semitones": 4,
+          "finger": 3
+        },
+        {
+          "bar": 2,
+          "beat": 2,
+          "semitones": 2,
+          "finger": 2
+        },
+        {
+          "bar": 2,
+          "beat": 3,
+          "semitones": 0,
+          "finger": 1
+        }
+      ],
+      "about": "Five notes: C D E G A C. The fourth and the seventh are gone, and with them every note that can clash over a major groove. Thumb, index, middle; thumb under onto G; index, middle to the top. Back the same way. Four runs a chorus.",
+      "coach": {
+        "intro": "C major pentatonic. Thumb on C.",
+        "change": "Up the five notes and back.",
+        "hold": "Up the five notes and back.",
+        "clean": "Clean. {left} more.",
+        "again": "{problem} Again.",
+        "join": "From the top.",
+        "slow": "Clean at {tempo}. It counts at {gateTempo}.",
+        "passed": "Clean. Five notes, nothing to hit wrong."
+      },
+      "band": [
+        "drums"
+      ]
+    },
+    {
+      "id": "relpenta",
+      "kind": "play",
+      "title": "The relative minor",
+      "skill": "rh.relpenta.updown.S1",
+      "tempo": 60,
+      "gate": 2,
+      "cycle": 3,
+      "hand": "right",
+      "key": "A minor pentatonic",
+      "pattern": [
+        {
+          "bar": 0,
+          "beat": 1,
+          "semitones": 0,
+          "finger": 1
+        },
+        {
+          "bar": 0,
+          "beat": 2,
+          "semitones": 3,
+          "finger": 2
+        },
+        {
+          "bar": 0,
+          "beat": 3,
+          "semitones": 5,
+          "finger": 3
+        },
+        {
+          "bar": 0,
+          "beat": 4,
+          "semitones": 7,
+          "finger": 1
+        },
+        {
+          "bar": 1,
+          "beat": 1,
+          "semitones": 10,
+          "finger": 2
+        },
+        {
+          "bar": 1,
+          "beat": 2,
+          "semitones": 12,
+          "finger": 3
+        },
+        {
+          "bar": 1,
+          "beat": 3,
+          "semitones": 10,
+          "finger": 2
+        },
+        {
+          "bar": 1,
+          "beat": 4,
+          "semitones": 7,
+          "finger": 1
+        },
+        {
+          "bar": 2,
+          "beat": 1,
+          "semitones": 5,
+          "finger": 3
+        },
+        {
+          "bar": 2,
+          "beat": 2,
+          "semitones": 3,
+          "finger": 2
+        },
+        {
+          "bar": 2,
+          "beat": 3,
+          "semitones": 0,
+          "finger": 1
+        }
+      ],
+      "about": "The same five keys, from A: A C D E G A. Nothing moved but the home. Over the drums alone it is dark where C major was bright; that is the whole difference between major and minor. Same fingers, 1 2 3 then thumb under.",
+      "coach": {
+        "intro": "A minor pentatonic. Thumb on A.",
+        "change": "Same five keys, from A.",
+        "hold": "Same five keys, from A.",
+        "clean": "Clean. {left} more.",
+        "again": "{problem} Again.",
+        "join": "From the top.",
+        "slow": "Clean at {tempo}. It counts at {gateTempo}.",
+        "passed": "Clean. Same keys, other home."
+      },
+      "band": [
+        "drums"
+      ],
+      "form": [
+        "Am",
+        "Am",
+        "Am",
+        "Am",
+        "Am",
+        "Am",
+        "Am",
+        "Am",
+        "Am",
+        "Am",
+        "Am",
+        "Am"
+      ],
+      "chords": {
+        "Am": {
+          "numeral": "vi",
+          "root": 9
+        }
+      }
+    },
+    {
+      "id": "key2",
+      "kind": "play",
+      "title": "G major",
+      "skill": "rh.scale.updown.G.S1",
+      "tempo": 60,
+      "gate": 2,
+      "cycle": 4,
+      "hand": "right",
+      "key": "G major",
+      "pattern": [
+        {
+          "bar": 0,
+          "beat": 1,
+          "semitones": 0,
+          "finger": 1
+        },
+        {
+          "bar": 0,
+          "beat": 2,
+          "semitones": 2,
+          "finger": 2
+        },
+        {
+          "bar": 0,
+          "beat": 3,
+          "semitones": 4,
+          "finger": 3
+        },
+        {
+          "bar": 0,
+          "beat": 4,
+          "semitones": 5,
+          "finger": 1
+        },
+        {
+          "bar": 1,
+          "beat": 1,
+          "semitones": 7,
+          "finger": 2
+        },
+        {
+          "bar": 1,
+          "beat": 2,
+          "semitones": 9,
+          "finger": 3
+        },
+        {
+          "bar": 1,
+          "beat": 3,
+          "semitones": 11,
+          "finger": 4
+        },
+        {
+          "bar": 1,
+          "beat": 4,
+          "semitones": 12,
+          "finger": 5
+        },
+        {
+          "bar": 2,
+          "beat": 1,
+          "semitones": 11,
+          "finger": 4
+        },
+        {
+          "bar": 2,
+          "beat": 2,
+          "semitones": 9,
+          "finger": 3
+        },
+        {
+          "bar": 2,
+          "beat": 3,
+          "semitones": 7,
+          "finger": 2
+        },
+        {
+          "bar": 2,
+          "beat": 4,
+          "semitones": 5,
+          "finger": 1
+        },
+        {
+          "bar": 3,
+          "beat": 1,
+          "semitones": 4,
+          "finger": 3
+        },
+        {
+          "bar": 3,
+          "beat": 2,
+          "semitones": 2,
+          "finger": 2
+        },
+        {
+          "bar": 3,
+          "beat": 3,
+          "semitones": 0,
+          "finger": 1
+        }
+      ],
+      "about": "A new key, the same hand: G A B C D E F♯ G, one black key. Thumb, index, middle, thumb under, index, middle, ring, pinky; back down with the middle finger over the thumb. If C major is in your fingers, so is this.",
+      "coach": {
+        "intro": "G major. Thumb on G.",
+        "change": "Up G major and back. F♯ under the ring finger.",
+        "hold": "Up G major and back. F♯ under the ring finger.",
+        "clean": "Clean. {left} more.",
+        "again": "{problem} Again.",
+        "join": "From the top.",
+        "slow": "Clean at {tempo}. It counts at {gateTempo}.",
+        "passed": "Clean. Two keys down, ten to go."
+      },
+      "band": [
+        "drums"
+      ],
+      "form": [
+        "G",
+        "G",
+        "G",
+        "G",
+        "G",
+        "G",
+        "G",
+        "G",
+        "G",
+        "G",
+        "G",
+        "G"
+      ],
+      "chords": {
+        "G": {
+          "numeral": "V",
+          "root": 7
+        }
+      }
+    },
+    {
+      "id": "key3",
+      "kind": "play",
+      "title": "F major",
+      "skill": "rh.scale.updown.F.S1",
+      "tempo": 60,
+      "gate": 2,
+      "cycle": 4,
+      "hand": "right",
+      "key": "F major",
+      "pattern": [
+        {
+          "bar": 0,
+          "beat": 1,
+          "semitones": 0,
+          "finger": 1
+        },
+        {
+          "bar": 0,
+          "beat": 2,
+          "semitones": 2,
+          "finger": 2
+        },
+        {
+          "bar": 0,
+          "beat": 3,
+          "semitones": 4,
+          "finger": 3
+        },
+        {
+          "bar": 0,
+          "beat": 4,
+          "semitones": 5,
+          "finger": 4
+        },
+        {
+          "bar": 1,
+          "beat": 1,
+          "semitones": 7,
+          "finger": 1
+        },
+        {
+          "bar": 1,
+          "beat": 2,
+          "semitones": 9,
+          "finger": 2
+        },
+        {
+          "bar": 1,
+          "beat": 3,
+          "semitones": 11,
+          "finger": 3
+        },
+        {
+          "bar": 1,
+          "beat": 4,
+          "semitones": 12,
+          "finger": 4
+        },
+        {
+          "bar": 2,
+          "beat": 1,
+          "semitones": 11,
+          "finger": 3
+        },
+        {
+          "bar": 2,
+          "beat": 2,
+          "semitones": 9,
+          "finger": 2
+        },
+        {
+          "bar": 2,
+          "beat": 3,
+          "semitones": 7,
+          "finger": 1
+        },
+        {
+          "bar": 2,
+          "beat": 4,
+          "semitones": 5,
+          "finger": 4
+        },
+        {
+          "bar": 3,
+          "beat": 1,
+          "semitones": 4,
+          "finger": 3
+        },
+        {
+          "bar": 3,
+          "beat": 2,
+          "semitones": 2,
+          "finger": 2
+        },
+        {
+          "bar": 3,
+          "beat": 3,
+          "semitones": 0,
+          "finger": 1
+        }
+      ],
+      "about": "F G A B♭ C D E F. The first flat, and the first key that breaks the fingering: the thumb can't sit on B♭, so the ring finger takes it and the thumb tucks under onto C. 1 2 3 4, then 1 2 3 4 again. Coming down, the ring finger crosses over.",
+      "coach": {
+        "intro": "F major. Thumb on F.",
+        "change": "Up F major: ring finger on B♭, thumb under onto C.",
+        "hold": "Up F major: ring finger on B♭, thumb under onto C.",
+        "clean": "Clean. {left} more.",
+        "again": "{problem} Again.",
+        "join": "From the top.",
+        "slow": "Clean at {tempo}. It counts at {gateTempo}.",
+        "passed": "Clean. The one that breaks the rule."
+      },
+      "band": [
+        "drums"
+      ],
+      "form": [
+        "F",
+        "F",
+        "F",
+        "F",
+        "F",
+        "F",
+        "F",
+        "F",
+        "F",
+        "F",
+        "F",
+        "F"
+      ],
+      "chords": {
+        "F": {
+          "numeral": "IV",
+          "root": 5
+        }
+      },
+      "flats": true
+    },
+    {
+      "id": "color",
+      "kind": "play",
+      "title": "Mixolydian",
+      "skill": "rh.mixolydian.updown.S1",
+      "tempo": 60,
+      "gate": 2,
+      "cycle": 4,
+      "hand": "right",
+      "key": "C Mixolydian",
+      "pattern": [
+        {
+          "bar": 0,
+          "beat": 1,
+          "semitones": 0,
+          "finger": 1
+        },
+        {
+          "bar": 0,
+          "beat": 2,
+          "semitones": 2,
+          "finger": 2
+        },
+        {
+          "bar": 0,
+          "beat": 3,
+          "semitones": 4,
+          "finger": 3
+        },
+        {
+          "bar": 0,
+          "beat": 4,
+          "semitones": 5,
+          "finger": 1
+        },
+        {
+          "bar": 1,
+          "beat": 1,
+          "semitones": 7,
+          "finger": 2
+        },
+        {
+          "bar": 1,
+          "beat": 2,
+          "semitones": 9,
+          "finger": 3
+        },
+        {
+          "bar": 1,
+          "beat": 3,
+          "semitones": 10,
+          "finger": 4
+        },
+        {
+          "bar": 1,
+          "beat": 4,
+          "semitones": 12,
+          "finger": 5
+        },
+        {
+          "bar": 2,
+          "beat": 1,
+          "semitones": 10,
+          "finger": 4
+        },
+        {
+          "bar": 2,
+          "beat": 2,
+          "semitones": 9,
+          "finger": 3
+        },
+        {
+          "bar": 2,
+          "beat": 3,
+          "semitones": 7,
+          "finger": 2
+        },
+        {
+          "bar": 2,
+          "beat": 4,
+          "semitones": 5,
+          "finger": 1
+        },
+        {
+          "bar": 3,
+          "beat": 1,
+          "semitones": 4,
+          "finger": 3
+        },
+        {
+          "bar": 3,
+          "beat": 2,
+          "semitones": 2,
+          "finger": 2
+        },
+        {
+          "bar": 3,
+          "beat": 3,
+          "semitones": 0,
+          "finger": 1
+        }
+      ],
+      "about": "C major with one note lowered: B becomes B♭. C D E F G A B♭ C. Major, but it no longer pulls home so hard: it sits. This is the scale of a dominant seventh chord, and of the blues' major side. Same fingering, the ring finger on the black key.",
+      "coach": {
+        "intro": "C Mixolydian. Thumb on C.",
+        "change": "Up and back. Hear the B♭ sit.",
+        "hold": "Up and back. Hear the B♭ sit.",
+        "clean": "Clean. {left} more.",
+        "again": "{problem} Again.",
+        "join": "From the top.",
+        "slow": "Clean at {tempo}. It counts at {gateTempo}.",
+        "passed": "Clean. That B♭ is the blues' seventh."
+      },
+      "band": [
+        "drums"
+      ],
+      "flats": true
+    },
+    {
+      "id": "dorian",
+      "kind": "play",
+      "title": "Dorian",
+      "skill": "rh.dorian.updown.S1",
+      "tempo": 60,
+      "gate": 2,
+      "cycle": 4,
+      "hand": "right",
+      "key": "C Dorian",
+      "pattern": [
+        {
+          "bar": 0,
+          "beat": 1,
+          "semitones": 0,
+          "finger": 1
+        },
+        {
+          "bar": 0,
+          "beat": 2,
+          "semitones": 2,
+          "finger": 2
+        },
+        {
+          "bar": 0,
+          "beat": 3,
+          "semitones": 3,
+          "finger": 3
+        },
+        {
+          "bar": 0,
+          "beat": 4,
+          "semitones": 5,
+          "finger": 1
+        },
+        {
+          "bar": 1,
+          "beat": 1,
+          "semitones": 7,
+          "finger": 2
+        },
+        {
+          "bar": 1,
+          "beat": 2,
+          "semitones": 9,
+          "finger": 3
+        },
+        {
+          "bar": 1,
+          "beat": 3,
+          "semitones": 10,
+          "finger": 4
+        },
+        {
+          "bar": 1,
+          "beat": 4,
+          "semitones": 12,
+          "finger": 5
+        },
+        {
+          "bar": 2,
+          "beat": 1,
+          "semitones": 10,
+          "finger": 4
+        },
+        {
+          "bar": 2,
+          "beat": 2,
+          "semitones": 9,
+          "finger": 3
+        },
+        {
+          "bar": 2,
+          "beat": 3,
+          "semitones": 7,
+          "finger": 2
+        },
+        {
+          "bar": 2,
+          "beat": 4,
+          "semitones": 5,
+          "finger": 1
+        },
+        {
+          "bar": 3,
+          "beat": 1,
+          "semitones": 3,
+          "finger": 3
+        },
+        {
+          "bar": 3,
+          "beat": 2,
+          "semitones": 2,
+          "finger": 2
+        },
+        {
+          "bar": 3,
+          "beat": 3,
+          "semitones": 0,
+          "finger": 1
+        }
+      ],
+      "about": "C minor with the sixth raised: C D E♭ F G A B♭ C. Two flats, the middle finger and the ring finger on black keys going up. Minor, but lifted. This is the scale under deep house and melodic techno.",
+      "coach": {
+        "intro": "C Dorian. Thumb on C.",
+        "change": "Up and back. The A is the colour.",
+        "hold": "Up and back. The A is the colour.",
+        "clean": "Clean. {left} more.",
+        "again": "{problem} Again.",
+        "join": "From the top.",
+        "slow": "Clean at {tempo}. It counts at {gateTempo}.",
+        "passed": "Clean. That lift is Dorian."
+      },
+      "band": [
+        "drums"
+      ],
+      "flats": true
+    },
+    {
+      "id": "chroma",
+      "kind": "play",
+      "title": "Chromatic",
+      "skill": "rh.chromatic.up.S1",
+      "tempo": 60,
+      "gate": 2,
+      "cycle": 4,
+      "hand": "right",
+      "key": "C chromatic",
+      "pattern": [
+        {
+          "bar": 0,
+          "beat": 1,
+          "semitones": 0,
+          "finger": 1
+        },
+        {
+          "bar": 0,
+          "beat": 2,
+          "semitones": 1,
+          "finger": 3
+        },
+        {
+          "bar": 0,
+          "beat": 3,
+          "semitones": 2,
+          "finger": 1
+        },
+        {
+          "bar": 0,
+          "beat": 4,
+          "semitones": 3,
+          "finger": 3
+        },
+        {
+          "bar": 1,
+          "beat": 1,
+          "semitones": 4,
+          "finger": 1
+        },
+        {
+          "bar": 1,
+          "beat": 2,
+          "semitones": 5,
+          "finger": 2
+        },
+        {
+          "bar": 1,
+          "beat": 3,
+          "semitones": 6,
+          "finger": 3
+        },
+        {
+          "bar": 1,
+          "beat": 4,
+          "semitones": 7,
+          "finger": 1
+        },
+        {
+          "bar": 2,
+          "beat": 1,
+          "semitones": 8,
+          "finger": 3
+        },
+        {
+          "bar": 2,
+          "beat": 2,
+          "semitones": 9,
+          "finger": 1
+        },
+        {
+          "bar": 2,
+          "beat": 3,
+          "semitones": 10,
+          "finger": 3
+        },
+        {
+          "bar": 2,
+          "beat": 4,
+          "semitones": 11,
+          "finger": 1
+        },
+        {
+          "bar": 3,
+          "beat": 1,
+          "semitones": 12,
+          "finger": 2
+        }
+      ],
+      "about": "Every key from C to C, thirteen notes. The rule: thumb on the white keys, middle finger on the black ones, and where two white keys meet (E F, B C) the index takes the second. Up only, one a beat; the jam comes back down.",
+      "coach": {
+        "intro": "C chromatic. Thumb on C, middle finger on C♯.",
+        "change": "Every key. Thumb white, middle black.",
+        "hold": "Every key. Thumb white, middle black.",
+        "clean": "Clean. {left} more.",
+        "again": "{problem} Again.",
+        "join": "From the top.",
+        "slow": "Clean at {tempo}. It counts at {gateTempo}.",
+        "passed": "Clean. Every key, evenly."
+      },
+      "band": [
+        "drums"
+      ]
+    },
+    {
       "id": "jam-up",
       "kind": "jam",
       "title": "First riff",
@@ -1181,6 +2106,880 @@
         "join": "Jump in on the 1.",
         "slow": "Clean at {tempo}. Try it at {gateTempo}."
       }
+    },
+    {
+      "id": "jam-penta",
+      "kind": "jam",
+      "title": "Pentatonic riff",
+      "skill": "jam.penta.S1",
+      "tempo": 70,
+      "cycle": 4,
+      "hand": "right",
+      "key": "Riff in C major pentatonic",
+      "band": [
+        "drums",
+        "bass",
+        "keys"
+      ],
+      "pattern": [
+        {
+          "bar": 0,
+          "beat": 1,
+          "semitones": 0,
+          "finger": 1
+        },
+        {
+          "bar": 0,
+          "beat": 2,
+          "semitones": 4,
+          "finger": 3
+        },
+        {
+          "bar": 0,
+          "beat": 3,
+          "semitones": 7,
+          "finger": 1
+        },
+        {
+          "bar": 0,
+          "beat": 4,
+          "semitones": 9,
+          "finger": 2
+        },
+        {
+          "bar": 1,
+          "beat": 1,
+          "semitones": 12,
+          "finger": 3
+        },
+        {
+          "bar": 1,
+          "beat": 2,
+          "semitones": 9,
+          "finger": 2
+        },
+        {
+          "bar": 1,
+          "beat": 3,
+          "semitones": 7,
+          "finger": 1
+        },
+        {
+          "bar": 1,
+          "beat": 4,
+          "semitones": 4,
+          "finger": 3,
+          "tick": 8
+        },
+        {
+          "bar": 2,
+          "beat": 1,
+          "semitones": 2,
+          "finger": 2
+        },
+        {
+          "bar": 2,
+          "beat": 2,
+          "semitones": 4,
+          "finger": 3
+        },
+        {
+          "bar": 2,
+          "beat": 3,
+          "semitones": 7,
+          "finger": 1,
+          "tick": 8
+        },
+        {
+          "bar": 2,
+          "beat": 4,
+          "semitones": 9,
+          "finger": 2
+        },
+        {
+          "bar": 3,
+          "beat": 1,
+          "semitones": 7,
+          "finger": 1
+        },
+        {
+          "bar": 3,
+          "beat": 2,
+          "semitones": 4,
+          "finger": 3
+        },
+        {
+          "bar": 3,
+          "beat": 3,
+          "semitones": 2,
+          "finger": 2
+        },
+        {
+          "bar": 3,
+          "beat": 4,
+          "semitones": 0,
+          "finger": 1
+        }
+      ],
+      "about": "A riff on the five notes over the band: up, down from the top, a late eighth into the turn, home. Every note sits on the blues band, so lean on the beat and listen.",
+      "coach": {
+        "intro": "Pentatonic riff. Thumb on C.",
+        "change": "Up, down, lean on the late eighth.",
+        "hold": "Up, down, lean on the late eighth.",
+        "clean": "Clean. Keep it rolling.",
+        "again": "{problem} Keep going.",
+        "join": "Jump in on the 1.",
+        "slow": "Clean at {tempo}."
+      }
+    },
+    {
+      "id": "jam-relpenta",
+      "kind": "jam",
+      "title": "Dark riff",
+      "skill": "jam.relpenta.S1",
+      "tempo": 70,
+      "cycle": 4,
+      "hand": "right",
+      "key": "Riff in A minor pentatonic",
+      "band": [
+        "drums",
+        "bass",
+        "keys"
+      ],
+      "pattern": [
+        {
+          "bar": 0,
+          "beat": 1,
+          "semitones": 0,
+          "finger": 1
+        },
+        {
+          "bar": 0,
+          "beat": 2,
+          "semitones": 3,
+          "finger": 2
+        },
+        {
+          "bar": 0,
+          "beat": 3,
+          "semitones": 5,
+          "finger": 3
+        },
+        {
+          "bar": 0,
+          "beat": 4,
+          "semitones": 7,
+          "finger": 1
+        },
+        {
+          "bar": 1,
+          "beat": 1,
+          "semitones": 10,
+          "finger": 2
+        },
+        {
+          "bar": 1,
+          "beat": 2,
+          "semitones": 7,
+          "finger": 1
+        },
+        {
+          "bar": 1,
+          "beat": 3,
+          "semitones": 5,
+          "finger": 3
+        },
+        {
+          "bar": 1,
+          "beat": 4,
+          "semitones": 3,
+          "finger": 2,
+          "tick": 8
+        },
+        {
+          "bar": 2,
+          "beat": 1,
+          "semitones": 0,
+          "finger": 1
+        },
+        {
+          "bar": 2,
+          "beat": 3,
+          "semitones": 3,
+          "finger": 2
+        },
+        {
+          "bar": 2,
+          "beat": 4,
+          "semitones": 5,
+          "finger": 3,
+          "tick": 8
+        },
+        {
+          "bar": 3,
+          "beat": 1,
+          "semitones": 7,
+          "finger": 1
+        },
+        {
+          "bar": 3,
+          "beat": 2,
+          "semitones": 5,
+          "finger": 3
+        },
+        {
+          "bar": 3,
+          "beat": 3,
+          "semitones": 3,
+          "finger": 2
+        },
+        {
+          "bar": 3,
+          "beat": 4,
+          "semitones": 0,
+          "finger": 1
+        }
+      ],
+      "about": "The minor pentatonic over the C blues band: the relative minor fits every chord of the blues. The same shape you played in C, heard in the shade.",
+      "coach": {
+        "intro": "Dark riff. Thumb on A.",
+        "change": "Up through the minor, back down.",
+        "hold": "Up through the minor, back down.",
+        "clean": "Clean. Keep it rolling.",
+        "again": "{problem} Keep going.",
+        "join": "Jump in on the 1.",
+        "slow": "Clean at {tempo}."
+      },
+      "form": [
+        "Am",
+        "Am",
+        "Am",
+        "Am",
+        "Am",
+        "Am",
+        "Am",
+        "Am",
+        "Am",
+        "Am",
+        "Am",
+        "Am"
+      ],
+      "chords": {
+        "Am": {
+          "numeral": "vi",
+          "root": 9
+        }
+      }
+    },
+    {
+      "id": "jam-key2",
+      "kind": "jam",
+      "title": "G major riff",
+      "skill": "jam.key2.S1",
+      "tempo": 70,
+      "cycle": 4,
+      "hand": "right",
+      "key": "Riff in G major pentatonic",
+      "band": [
+        "drums",
+        "bass",
+        "keys"
+      ],
+      "pattern": [
+        {
+          "bar": 0,
+          "beat": 1,
+          "semitones": 0,
+          "finger": 1
+        },
+        {
+          "bar": 0,
+          "beat": 2,
+          "semitones": 4,
+          "finger": 3
+        },
+        {
+          "bar": 0,
+          "beat": 3,
+          "semitones": 7,
+          "finger": 1
+        },
+        {
+          "bar": 0,
+          "beat": 4,
+          "semitones": 9,
+          "finger": 2
+        },
+        {
+          "bar": 1,
+          "beat": 1,
+          "semitones": 12,
+          "finger": 3
+        },
+        {
+          "bar": 1,
+          "beat": 2,
+          "semitones": 9,
+          "finger": 2
+        },
+        {
+          "bar": 1,
+          "beat": 3,
+          "semitones": 7,
+          "finger": 1
+        },
+        {
+          "bar": 1,
+          "beat": 4,
+          "semitones": 4,
+          "finger": 3,
+          "tick": 8
+        },
+        {
+          "bar": 2,
+          "beat": 1,
+          "semitones": 2,
+          "finger": 2
+        },
+        {
+          "bar": 2,
+          "beat": 2,
+          "semitones": 4,
+          "finger": 3
+        },
+        {
+          "bar": 2,
+          "beat": 3,
+          "semitones": 7,
+          "finger": 1,
+          "tick": 8
+        },
+        {
+          "bar": 2,
+          "beat": 4,
+          "semitones": 9,
+          "finger": 2
+        },
+        {
+          "bar": 3,
+          "beat": 1,
+          "semitones": 7,
+          "finger": 1
+        },
+        {
+          "bar": 3,
+          "beat": 2,
+          "semitones": 4,
+          "finger": 3
+        },
+        {
+          "bar": 3,
+          "beat": 3,
+          "semitones": 2,
+          "finger": 2
+        },
+        {
+          "bar": 3,
+          "beat": 4,
+          "semitones": 0,
+          "finger": 1
+        }
+      ],
+      "about": "The pentatonic riff you know, moved to G. The band moves with you: the blues in G.",
+      "coach": {
+        "intro": "G major riff. Thumb on G.",
+        "change": "The same riff, a fifth up.",
+        "hold": "The same riff, a fifth up.",
+        "clean": "Clean. Keep it rolling.",
+        "again": "{problem} Keep going.",
+        "join": "Jump in on the 1.",
+        "slow": "Clean at {tempo}."
+      },
+      "form": [
+        "G",
+        "G",
+        "G",
+        "G",
+        "G",
+        "G",
+        "G",
+        "G",
+        "G",
+        "G",
+        "G",
+        "G"
+      ],
+      "chords": {
+        "G": {
+          "numeral": "V",
+          "root": 7
+        }
+      },
+      "transpose": 7
+    },
+    {
+      "id": "jam-key3",
+      "kind": "jam",
+      "title": "F major riff",
+      "skill": "jam.key3.S1",
+      "tempo": 70,
+      "cycle": 4,
+      "hand": "right",
+      "key": "Riff in F major pentatonic",
+      "band": [
+        "drums",
+        "bass",
+        "keys"
+      ],
+      "pattern": [
+        {
+          "bar": 0,
+          "beat": 1,
+          "semitones": 0,
+          "finger": 1
+        },
+        {
+          "bar": 0,
+          "beat": 2,
+          "semitones": 4,
+          "finger": 3
+        },
+        {
+          "bar": 0,
+          "beat": 3,
+          "semitones": 7,
+          "finger": 1
+        },
+        {
+          "bar": 0,
+          "beat": 4,
+          "semitones": 9,
+          "finger": 2
+        },
+        {
+          "bar": 1,
+          "beat": 1,
+          "semitones": 12,
+          "finger": 3
+        },
+        {
+          "bar": 1,
+          "beat": 2,
+          "semitones": 9,
+          "finger": 2
+        },
+        {
+          "bar": 1,
+          "beat": 3,
+          "semitones": 7,
+          "finger": 1
+        },
+        {
+          "bar": 1,
+          "beat": 4,
+          "semitones": 4,
+          "finger": 3,
+          "tick": 8
+        },
+        {
+          "bar": 2,
+          "beat": 1,
+          "semitones": 2,
+          "finger": 2
+        },
+        {
+          "bar": 2,
+          "beat": 2,
+          "semitones": 4,
+          "finger": 3
+        },
+        {
+          "bar": 2,
+          "beat": 3,
+          "semitones": 7,
+          "finger": 1,
+          "tick": 8
+        },
+        {
+          "bar": 2,
+          "beat": 4,
+          "semitones": 9,
+          "finger": 2
+        },
+        {
+          "bar": 3,
+          "beat": 1,
+          "semitones": 7,
+          "finger": 1
+        },
+        {
+          "bar": 3,
+          "beat": 2,
+          "semitones": 4,
+          "finger": 3
+        },
+        {
+          "bar": 3,
+          "beat": 3,
+          "semitones": 2,
+          "finger": 2
+        },
+        {
+          "bar": 3,
+          "beat": 4,
+          "semitones": 0,
+          "finger": 1
+        }
+      ],
+      "about": "The riff in F, over the blues in F. Three keys now: C, G and F, one riff.",
+      "coach": {
+        "intro": "F major riff. Thumb on F.",
+        "change": "The riff, a fifth down.",
+        "hold": "The riff, a fifth down.",
+        "clean": "Clean. Keep it rolling.",
+        "again": "{problem} Keep going.",
+        "join": "Jump in on the 1.",
+        "slow": "Clean at {tempo}."
+      },
+      "form": [
+        "F",
+        "F",
+        "F",
+        "F",
+        "F",
+        "F",
+        "F",
+        "F",
+        "F",
+        "F",
+        "F",
+        "F"
+      ],
+      "chords": {
+        "F": {
+          "numeral": "IV",
+          "root": 5
+        }
+      },
+      "transpose": 5,
+      "flats": true
+    },
+    {
+      "id": "jam-color",
+      "kind": "jam",
+      "title": "Lean on the seventh",
+      "skill": "jam.color.S1",
+      "tempo": 70,
+      "cycle": 4,
+      "hand": "right",
+      "key": "Riff in C Mixolydian",
+      "band": [
+        "drums",
+        "bass",
+        "keys",
+        "horns"
+      ],
+      "pattern": [
+        {
+          "bar": 0,
+          "beat": 1,
+          "semitones": 0,
+          "finger": 1
+        },
+        {
+          "bar": 0,
+          "beat": 2,
+          "semitones": 2,
+          "finger": 2
+        },
+        {
+          "bar": 0,
+          "beat": 3,
+          "semitones": 4,
+          "finger": 3
+        },
+        {
+          "bar": 0,
+          "beat": 4,
+          "semitones": 7,
+          "finger": 4
+        },
+        {
+          "bar": 1,
+          "beat": 1,
+          "semitones": 10,
+          "finger": 5
+        },
+        {
+          "bar": 1,
+          "beat": 2,
+          "semitones": 7,
+          "finger": 4
+        },
+        {
+          "bar": 1,
+          "beat": 3,
+          "semitones": 4,
+          "finger": 3
+        },
+        {
+          "bar": 1,
+          "beat": 4,
+          "semitones": 2,
+          "finger": 2
+        },
+        {
+          "bar": 2,
+          "beat": 1,
+          "semitones": 0,
+          "finger": 1
+        },
+        {
+          "bar": 2,
+          "beat": 3,
+          "semitones": 4,
+          "finger": 3,
+          "tick": 8
+        },
+        {
+          "bar": 2,
+          "beat": 4,
+          "semitones": 7,
+          "finger": 4
+        },
+        {
+          "bar": 3,
+          "beat": 1,
+          "semitones": 10,
+          "finger": 5
+        },
+        {
+          "bar": 3,
+          "beat": 2,
+          "semitones": 7,
+          "finger": 4
+        },
+        {
+          "bar": 3,
+          "beat": 3,
+          "semitones": 4,
+          "finger": 3
+        },
+        {
+          "bar": 3,
+          "beat": 4,
+          "semitones": 0,
+          "finger": 1
+        }
+      ],
+      "about": "C D E G, B♭ G E D, home, a late eighth, and B♭ G E C down: the flat seventh on the strong beats, over the whole C blues band, which plays C7 under you.",
+      "coach": {
+        "intro": "Lean on the seventh. Thumb on C.",
+        "change": "C D E G, B♭ G E D. The seventh on the beat.",
+        "hold": "C D E G, B♭ G E D. The seventh on the beat.",
+        "clean": "Clean. Keep it rolling.",
+        "again": "{problem} Keep going.",
+        "join": "Jump in on the 1.",
+        "slow": "Clean at {tempo}."
+      },
+      "flats": true
+    },
+    {
+      "id": "jam-dorian",
+      "kind": "jam",
+      "title": "Dorian vamp",
+      "skill": "jam.dorian.S1",
+      "tempo": 70,
+      "cycle": 4,
+      "hand": "right",
+      "key": "Vamp in C Dorian",
+      "band": [
+        "drums",
+        "bass"
+      ],
+      "pattern": [
+        {
+          "bar": 0,
+          "beat": 1,
+          "semitones": 0,
+          "finger": 1
+        },
+        {
+          "bar": 0,
+          "beat": 2,
+          "semitones": 2,
+          "finger": 2
+        },
+        {
+          "bar": 0,
+          "beat": 3,
+          "semitones": 3,
+          "finger": 3
+        },
+        {
+          "bar": 1,
+          "beat": 1,
+          "semitones": 7,
+          "finger": 1
+        },
+        {
+          "bar": 1,
+          "beat": 2,
+          "semitones": 9,
+          "finger": 2
+        },
+        {
+          "bar": 1,
+          "beat": 3,
+          "semitones": 10,
+          "finger": 3
+        },
+        {
+          "bar": 1,
+          "beat": 4,
+          "semitones": 7,
+          "finger": 1
+        },
+        {
+          "bar": 2,
+          "beat": 1,
+          "semitones": 0,
+          "finger": 1
+        },
+        {
+          "bar": 3,
+          "beat": 1,
+          "semitones": 10,
+          "finger": 3
+        },
+        {
+          "bar": 3,
+          "beat": 2,
+          "semitones": 9,
+          "finger": 2
+        },
+        {
+          "bar": 3,
+          "beat": 3,
+          "semitones": 7,
+          "finger": 1
+        }
+      ],
+      "about": "C D E♭, then G A B♭ G, home, and B♭ A G back down: a two-bar vamp with the A on the strong beat. Drums and bass, the bass on the roots.",
+      "coach": {
+        "intro": "Dorian vamp. Thumb on C.",
+        "change": "C D E♭, G A B♭. The sixth on the beat.",
+        "hold": "C D E♭, G A B♭. The sixth on the beat.",
+        "clean": "Clean. Keep it rolling.",
+        "again": "{problem} Keep going.",
+        "join": "Jump in on the 1.",
+        "slow": "Clean at {tempo}."
+      },
+      "flats": true
+    },
+    {
+      "id": "jam-chroma",
+      "kind": "jam",
+      "title": "Chromatic, down",
+      "skill": "jam.chroma.S1",
+      "tempo": 70,
+      "cycle": 4,
+      "hand": "right",
+      "key": "C chromatic, down",
+      "band": [
+        "drums",
+        "bass"
+      ],
+      "pattern": [
+        {
+          "bar": 0,
+          "beat": 1,
+          "semitones": 12,
+          "finger": 2
+        },
+        {
+          "bar": 0,
+          "beat": 2,
+          "semitones": 11,
+          "finger": 1
+        },
+        {
+          "bar": 0,
+          "beat": 3,
+          "semitones": 10,
+          "finger": 3
+        },
+        {
+          "bar": 0,
+          "beat": 4,
+          "semitones": 9,
+          "finger": 1
+        },
+        {
+          "bar": 1,
+          "beat": 1,
+          "semitones": 8,
+          "finger": 3
+        },
+        {
+          "bar": 1,
+          "beat": 2,
+          "semitones": 7,
+          "finger": 1
+        },
+        {
+          "bar": 1,
+          "beat": 3,
+          "semitones": 6,
+          "finger": 3
+        },
+        {
+          "bar": 1,
+          "beat": 4,
+          "semitones": 5,
+          "finger": 2
+        },
+        {
+          "bar": 2,
+          "beat": 1,
+          "semitones": 4,
+          "finger": 1
+        },
+        {
+          "bar": 2,
+          "beat": 2,
+          "semitones": 3,
+          "finger": 3
+        },
+        {
+          "bar": 2,
+          "beat": 3,
+          "semitones": 2,
+          "finger": 1
+        },
+        {
+          "bar": 2,
+          "beat": 4,
+          "semitones": 1,
+          "finger": 3
+        },
+        {
+          "bar": 3,
+          "beat": 1,
+          "semitones": 0,
+          "finger": 1
+        }
+      ],
+      "about": "The way back: C B B♭ A A♭ G F♯ F E E♭ D C♯ C, one a beat over the band. Same rule, mirrored: the thumb lands on every white key, the middle finger drops onto every black one.",
+      "coach": {
+        "intro": "Chromatic, down. Thumb on C.",
+        "change": "Every key, coming down.",
+        "hold": "Every key, coming down.",
+        "clean": "Clean. Keep it rolling.",
+        "again": "{problem} Keep going.",
+        "join": "Jump in on the 1.",
+        "slow": "Clean at {tempo}."
+      }
     }
   ],
   "jams": [
@@ -1254,6 +3053,90 @@
         "glyph": "blue",
         "title": "The late eighth",
         "line": "The flat five lands on the shuffle's late eighth: that's the swing."
+      }
+    },
+    {
+      "after": 7,
+      "title": "Pentatonic riff",
+      "skill": "The five notes as a riff, over the band",
+      "goal": "Have fun. A clean chorus marks it played.",
+      "step": "jam-penta",
+      "theme": {
+        "glyph": "steps:5",
+        "title": "Any order works",
+        "line": "A pentatonic riff has no wrong turns. Pick the beat, the notes take care of themselves."
+      }
+    },
+    {
+      "after": 8,
+      "title": "Dark riff",
+      "skill": "A minor pentatonic over the band",
+      "goal": "Have fun. A clean chorus marks it played.",
+      "step": "jam-relpenta",
+      "theme": {
+        "glyph": "hill",
+        "title": "The shady side",
+        "line": "Rock, blues, every minor hook: this scale. Same fingers as the major."
+      }
+    },
+    {
+      "after": 9,
+      "title": "G major riff",
+      "skill": "The pentatonic riff in G, over the blues in G",
+      "goal": "Have fun. A clean chorus marks it played.",
+      "step": "jam-key2",
+      "theme": {
+        "glyph": "steps:5",
+        "title": "Transposed",
+        "line": "Same shape, same fingers, every key a fifth up. The band follows."
+      }
+    },
+    {
+      "after": 10,
+      "title": "F major riff",
+      "skill": "The pentatonic riff in F, over the blues in F",
+      "goal": "Have fun. A clean chorus marks it played.",
+      "step": "jam-key3",
+      "theme": {
+        "glyph": "steps:5",
+        "title": "Three keys, one riff",
+        "line": "C G F: the riff is the same, your ear hears the band change under it."
+      }
+    },
+    {
+      "after": 11,
+      "title": "Lean on the seventh",
+      "skill": "C D E G and the B♭, over C7",
+      "goal": "Have fun. A clean chorus marks it played.",
+      "step": "jam-color",
+      "theme": {
+        "glyph": "blue",
+        "title": "The seventh chord's scale",
+        "line": "C7 is C E G B♭. Mixolydian is that chord with the steps between filled in."
+      }
+    },
+    {
+      "after": 12,
+      "title": "Dorian vamp",
+      "skill": "A two-bar vamp with the A on the beat",
+      "goal": "Have fun. A clean chorus marks it played.",
+      "step": "jam-dorian",
+      "theme": {
+        "glyph": "keys:6",
+        "title": "One chord, one mode",
+        "line": "Electronic harmony is mostly static: one mode over one root. Dorian is the one."
+      }
+    },
+    {
+      "after": 13,
+      "title": "Chromatic, down",
+      "skill": "C to C, every key, the way back",
+      "goal": "Have fun. A clean chorus marks it played.",
+      "step": "jam-chroma",
+      "theme": {
+        "glyph": "hand",
+        "title": "The mirror",
+        "line": "Down is up backwards: the same fingers on the same keys, the thumb landing instead of tucking."
       }
     }
   ]

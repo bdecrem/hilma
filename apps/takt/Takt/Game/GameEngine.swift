@@ -91,9 +91,21 @@ final class GameEngine {
     private var seq = 0
     private var heardTick = -Double.infinity
     private var checked = -Double.infinity
-    /// Hits and misses per bar, for the adaptive decision; a wrong key is a miss.
+    /// Hits and misses per bar, for the adaptive decision; a wrong key is a miss. The offsets
+    /// (ms, unsigned) of the hits per bar are the spread.
     private var barHits: [Int: Int] = [:]
     private var barMisses: [Int: Int] = [:]
+    private var barOffsets: [Int: [Double]] = [:]
+    /// Misses (and wrong keys) in a row, now; and the longest run that ended in each bar.
+    private(set) var missRun = 0
+    private var barMissRun: [Int: Int] = [:]
+    /// Blocks still to hold after the last climb or drop.
+    private var cooldown = 0
+    /// The tier the run started on: it never sinks more than `floorBelowStart` under it.
+    private let startLevel: Int
+    /// Every tier change, for the log and the checks: the block it took effect, from, to, the
+    /// window's hit rate and its spread.
+    private(set) var changes: [(block: Int, from: Int, to: Int, rate: Double, spreadMs: Double)] = []
 
     /// `start`: the tier an adaptive run starts on (`adaptiveStart`; the ladder's start if nil).
     init(song: Song, part: Song.PartKey, difficulty: Difficulty, start: Int? = nil, charting: Charting = .bundled) {
@@ -109,7 +121,8 @@ final class GameEngine {
         let window = charting.adaptive.window
         let blocks = (song.band.bars + window - 1) / window + 1
         let first = charting.tier(difficulty, song: song.name, part: part) ?? start ?? charting.adaptive.start
-        blockLevel = Array(repeating: max(1, min(masks.count, first)), count: blocks)
+        startLevel = max(1, min(masks.count, first))
+        blockLevel = Array(repeating: startLevel, count: blocks)
     }
 
     /// Where an adaptive run starts: `resume` tiers under the top of the last adaptive run of
@@ -150,6 +163,11 @@ final class GameEngine {
     /// Whether note `i` plays at the tier of its bar.
     func active(_ i: Int) -> Bool { masks[level(atBar: notes[i].t / ticksPerBar) - 1][i] }
 
+    func isHit(_ i: Int) -> Bool {
+        if case .hit = status[i] { return true }
+        return false
+    }
+
     var accuracy: Double {
         let judged = perfect + good + missed
         return judged == 0 ? 1 : Double(perfect + good) / Double(judged)
@@ -166,7 +184,12 @@ final class GameEngine {
             guard deadline > checked, deadline <= tick else { continue }
             status[i] = .missed
             missed += 1
-            combo = 0
+            missRun += 1
+            barMissRun[notes[i].t / ticksPerBar] = max(barMissRun[notes[i].t / ticksPerBar] ?? 0, missRun)
+            // A chord with one finger dropped is a miss for that note, but it breaks the combo
+            // only when the whole chord went by unplayed: a 30-combo shouldn't go on one finger.
+            let chordHit = notes.indices.contains { $0 != i && notes[$0].t == notes[i].t && active($0) && isHit($0) }
+            if !chordHit { combo = 0 }
             barMisses[notes[i].t / ticksPerBar, default: 0] += 1
             seq += 1
             pop = Pop(judgment: .miss, note: notes[i].n, seq: seq)
@@ -177,7 +200,11 @@ final class GameEngine {
     }
 
     /// `ahead` bars before a block starts, its tier is set from the `window` bars before that:
-    /// at or above `climb` hit rate (with `judged` notes at least) a tier up, under `ease` one down.
+    /// at or above `climb` hit rate (with `judged` notes at least, and the hits not scattered past
+    /// `spreadMaxMs`) a tier up, under `ease` (or after `missRun` misses in a row) one down, one
+    /// tier at a time. A change is followed by `afterClimb` / `afterDrop` blocks of holding, so
+    /// the player meets a new tier for a whole phrase and a drop has room to recover: no
+    /// ping-pong. The run never sinks under `floorBelowStart` tiers below where it began.
     private func adapt(tick: Double) {
         let a = charting.adaptive
         let bar = Int((tick / Double(ticksPerBar)).rounded(.down))
@@ -185,22 +212,65 @@ final class GameEngine {
         let k = (bar + a.ahead) / a.window
         guard k >= 1, k < blockLevel.count, !decided.contains(k) else { return }
         decided.insert(k)
-        let to = k * a.window - a.ahead, from = to - a.window
-        var hits = 0, misses = 0
-        for b in from..<to where b >= 0 {
-            hits += barHits[b] ?? 0
-            misses += barMisses[b] ?? 0
+        // Two windows. Drops read the last `window` bars (reaching back up to twice that for
+        // `judged` notes, so a sparse level at a slow tempo is judged on enough notes to mean
+        // something); climbs read twice the window. Falling apart shows in a phrase, being
+        // ready for more takes two: Rocksmith's complaint was levelling up too soon.
+        let to = k * a.window - a.ahead
+        struct Window {
+            var hits = 0, misses = 0, longestRun = 0
+            var offsets: [Double] = []
+            var judged: Int { hits + misses }
+            var rate: Double { judged > 0 ? Double(hits) / Double(judged) : 1 }
+            var spread: Double { let s = offsets.sorted(); return s.isEmpty ? 0 : s[s.count / 2] }
         }
+        func window(_ from: Int, _ to: Int) -> Window {
+            var w = Window()
+            for b in from..<to where b >= 0 {
+                w.hits += barHits[b] ?? 0
+                w.misses += barMisses[b] ?? 0
+                w.offsets += barOffsets[b] ?? []
+                w.longestRun = max(w.longestRun, barMissRun[b] ?? 0)
+            }
+            return w
+        }
+        var from = to - a.window
+        var short = window(from, to)
+        while short.judged < a.judged, from > max(0, to - 2 * a.window) { from -= 1; short = window(from, to) }
+        let long = window(to - 2 * a.window, to)
         let current = blockLevel[k - 1]
         var level = current
-        if hits + misses >= a.judged {
-            let rate = Double(hits) / Double(hits + misses)
-            if rate >= a.climb { level = min(tiers, current + 1) }
-            else if rate < a.ease { level = max(1, current - 1) }
+        let floor = max(1, startLevel - a.floorBelowStart)
+        // A cooldown holds climbs only: a player who falls apart right after a climb (or a
+        // drop) goes down at once, not after the hold.
+        let held = cooldown > 0
+        if held { cooldown -= 1 }
+        var rate = short.rate, spread = short.spread
+        if short.judged >= a.judged, short.rate < a.ease || (a.missRun.map { short.longestRun >= $0 } ?? false) {
+            level = max(floor, distinct(from: current, up: false))
+            if level != current { cooldown = a.afterDrop }
+        } else if !held, long.judged >= a.judged, long.rate >= a.climb, long.spread <= (a.spreadMaxMs ?? .infinity) {
+            level = distinct(from: current, up: true)
+            if level != current { cooldown = a.afterClimb }
+            rate = long.rate
+            spread = long.spread
         }
+        if level != current { changes.append((k, current, level, rate, spread)) }
         for b in k..<blockLevel.count { blockLevel[b] = level }
     }
     private var decided: Set<Int> = []
+
+    /// The next tier up (or down) whose chart differs from `tier`'s: a thin part can cut the same
+    /// notes on two or three tiers, and a climb that changes nothing teaches nothing. The ends of
+    /// the ladder when nothing differs.
+    func distinct(from tier: Int, up: Bool) -> Int {
+        var t = tier
+        while up ? t < tiers : t > 1 {
+            t += up ? 1 : -1
+            if masks[t - 1] != masks[tier - 1] { return t }
+        }
+        return t
+    }
 
     /// A key press at a transport tick: the nearest pending note of its pitch class inside the
     /// Good window takes it (the exact key first); anything else is an extra.
@@ -221,6 +291,8 @@ final class GameEngine {
             let bar = Int((tick / Double(ticksPerBar)).rounded(.down))
             if !notes.contains(where: { abs(tick - Double($0.t)) <= reach && $0.n % 12 == note % 12 }) {
                 barMisses[bar, default: 0] += 1
+                missRun += 1
+                barMissRun[bar] = max(barMissRun[bar] ?? 0, missRun)
             }
             return
         }
@@ -229,8 +301,10 @@ final class GameEngine {
         status[b.i] = .hit(j)
         if j == .perfect { perfect += 1 } else { good += 1 }
         combo += 1
+        missRun = 0
         maxCombo = max(maxCombo, combo)
         barHits[notes[b.i].t / ticksPerBar, default: 0] += 1
+        barOffsets[notes[b.i].t / ticksPerBar, default: []].append(ms)
         score += points(j, multiplier: multiplier, level: level(atBar: notes[b.i].t / ticksPerBar))
         seq += 1
         pop = Pop(judgment: j, note: notes[b.i].n, seq: seq)

@@ -53,6 +53,7 @@
 		1BDDD4CFEF6C835AD96A062C /* EarGameScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DA328066B3FE950BF61365C /* EarGameScreen.swift */; };
 		1C10C6072AB01F749AE43B8B /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = C5E40801CC98A659B7FBBD8E /* README.md */; };
 		1CA11419F58044299EE12B9A /* syn-stabMin-55-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 531F3A3C4839D1C692857505 /* syn-stabMin-55-1.caf */; };
+		1CCF034E6CB62BC0F91E35AD /* lesson-H.json in Resources */ = {isa = PBXBuildFile; fileRef = 21CC267631B161A93A3F4CE6 /* lesson-H.json */; };
 		1DA1F276B078D8480198F581 /* saxl-54.caf in Resources */ = {isa = PBXBuildFile; fileRef = 7B4DB1EF0F0433B417F786C0 /* saxl-54.caf */; };
 		1DCE1AF6BA595026B91A7B6C /* syn-bleep-81-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 559C43E3806F133B5FFDD119 /* syn-bleep-81-1.caf */; };
 		1DD87923F621FB63B0B1DE2A /* sax-86-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = 72FD3F6B35B76A7F8829D411 /* sax-86-h.caf */; };
@@ -511,6 +512,7 @@
 		1E11A267B7A20B0074FE2250 /* ride-0b.caf */ = {isa = PBXFileReference; path = "ride-0b.caf"; sourceTree = "<group>"; };
 		1E1A36038FBAEDDDF2A9B412 /* pno-89-2.caf */ = {isa = PBXFileReference; path = "pno-89-2.caf"; sourceTree = "<group>"; };
 		21AF9C4A9B84E18FF59B0327 /* syn-bleep-75-2.caf */ = {isa = PBXFileReference; path = "syn-bleep-75-2.caf"; sourceTree = "<group>"; };
+		21CC267631B161A93A3F4CE6 /* lesson-H.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "lesson-H.json"; sourceTree = "<group>"; };
 		22D1D642DBE442C7180C21F1 /* sax-54-s.caf */ = {isa = PBXFileReference; path = "sax-54-s.caf"; sourceTree = "<group>"; };
 		249902DF6BD4A108A4229629 /* kick-3b.caf */ = {isa = PBXFileReference; path = "kick-3b.caf"; sourceTree = "<group>"; };
 		25528A02CA41B21CADAD386D /* syn-hatDH-2a.caf */ = {isa = PBXFileReference; path = "syn-hatDH-2a.caf"; sourceTree = "<group>"; };
@@ -1062,6 +1064,7 @@
 				517D727F1B4D846E72A31DE1 /* band-minor-A.json */,
 				A90E97D28DC2E39FA1571AE7 /* charting.json */,
 				C25F3D56D94936B2DB7D9989 /* lesson-A1.json */,
+				21CC267631B161A93A3F4CE6 /* lesson-H.json */,
 				FB59A4164192AD314B614695 /* lesson-M.json */,
 				ECECF1E4E590A9E81E139D89 /* lesson-S1.json */,
 				D3F53FD48CE9B89241FFB481 /* lesson-S1m.json */,
@@ -1608,6 +1611,7 @@
 				227BF83E2373B55672B2BAD8 /* kick-4a.caf in Resources */,
 				D750220308274037C24F940F /* kick-4b.caf in Resources */,
 				7B34046ADB043B025F94F98D /* lesson-A1.json in Resources */,
+				1CCF034E6CB62BC0F91E35AD /* lesson-H.json in Resources */,
 				A92A8D6E0161BE1371B4D94C /* lesson-M.json in Resources */,
 				309573F5E58807A3E167DC31 /* lesson-S1.json in Resources */,
 				11764932ABE8A75E92F7FE33 /* lesson-S1m.json in Resources */,
@@ -2046,7 +2050,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 49;
+				CURRENT_PROJECT_VERSION = 50;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -2113,7 +2117,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 49;
+				CURRENT_PROJECT_VERSION = 50;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;

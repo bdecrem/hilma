@@ -1,0 +1,1579 @@
+{
+  "code": "H1",
+  "title": "Chord Shapes",
+  "module": {
+    "code": "shapes",
+    "title": "Chord Shapes",
+    "detail": "Left hand · sevenths, inversions, voice leading, the club voicings"
+  },
+  "lessons": [
+    {
+      "title": "Minor sevenths",
+      "skill": "Root, flat third, fifth, flat seventh on the 1",
+      "goal": "2 clean choruses at 70",
+      "steps": [
+        "m7"
+      ],
+      "theme": {
+        "glyph": "keys:1357",
+        "title": "Four notes",
+        "line": "A minor triad plus the flat seventh. One more finger, and the chord sounds like a record."
+      }
+    },
+    {
+      "title": "Inversions",
+      "skill": "Root, first, second inversion, one a bar",
+      "goal": "2 clean choruses at 70",
+      "steps": [
+        "inv"
+      ],
+      "theme": {
+        "glyph": "steps:3",
+        "title": "Same notes, new bottom",
+        "line": "Put the third on the bottom, then the fifth. The chord doesn't change; where your hand sits does."
+      }
+    },
+    {
+      "title": "Four chords",
+      "skill": "Am F C G, root position, one a bar",
+      "goal": "2 clean choruses at 70",
+      "steps": [
+        "loop"
+      ],
+      "theme": {
+        "glyph": "bars:1",
+        "title": "The minor loop",
+        "line": "i VI III VII. Minor to its relative major and back round. Learn it, and you know a thousand songs."
+      }
+    },
+    {
+      "title": "Moving less",
+      "skill": "Am F C G with the inversions that keep the hand still",
+      "goal": "2 clean choruses at 70",
+      "steps": [
+        "lead"
+      ],
+      "theme": {
+        "glyph": "hand",
+        "title": "Voice leading",
+        "line": "Keep the common tone, move the rest by a step. Four chords, the hand inside one fifth."
+      }
+    },
+    {
+      "title": "The backbeat",
+      "skill": "The minor triad on 2 and 4, against the kick",
+      "goal": "2 clean choruses at 80",
+      "steps": [
+        "chank"
+      ],
+      "theme": {
+        "glyph": "bars:24",
+        "title": "Off the 1",
+        "line": "Leave the 1 to the drums. A chord on 2 and 4 is the chank of every blues and the skank of every reggae tune."
+      }
+    },
+    {
+      "title": "Suspend, resolve",
+      "skill": "Sus4 on the 1, the minor on the 3",
+      "goal": "2 clean choruses at 70",
+      "steps": [
+        "sus"
+      ],
+      "theme": {
+        "glyph": "keys:145",
+        "title": "Lean, then land",
+        "line": "The fourth leans on the third. Two beats of tension, two of home."
+      }
+    },
+    {
+      "title": "The shell",
+      "skill": "Root, flat third, flat seventh: the fifth left out",
+      "goal": "2 clean choruses at 70",
+      "steps": [
+        "shell"
+      ],
+      "theme": {
+        "glyph": "keys:137",
+        "title": "Three that say it all",
+        "line": "The third and the seventh are the guide tones. The fifth is furniture."
+      }
+    },
+    {
+      "title": "Minor nine",
+      "skill": "Flat third, fifth, flat seventh, ninth; the bass has the root",
+      "goal": "2 clean choruses at 70",
+      "steps": [
+        "m9"
+      ],
+      "theme": {
+        "glyph": "keys:3572",
+        "title": "The deep house chord",
+        "line": "Leave the root to the bass. What's left is a major seventh shape that the bass turns into a minor nine."
+      }
+    }
+  ],
+  "later": [
+    {
+      "title": "Rootless A and B",
+      "skill": "3 5 7 9 and 7 9 3 5, round the ii-V-I"
+    },
+    {
+      "title": "Drop 2",
+      "skill": "The second note from the top, an octave down"
+    },
+    {
+      "title": "The ii-V-I",
+      "skill": "The progression of jazz, in four keys"
+    },
+    {
+      "title": "Both hands",
+      "skill": "Shapes under a right-hand riff"
+    }
+  ],
+  "jams": [
+    {
+      "after": 1,
+      "title": "Seventh, walked",
+      "skill": "Root, flat third, fifth, flat seventh, one a beat",
+      "goal": "Have fun. A clean chorus marks it played.",
+      "step": "jam-m7",
+      "theme": {
+        "glyph": "walk",
+        "title": "The chord as a line",
+        "line": "Broken, a seventh chord is a bass line. Held, it's a pad. Same four notes."
+      }
+    },
+    {
+      "after": 2,
+      "title": "Turning over",
+      "skill": "Each inversion broken, climbing an octave",
+      "goal": "Have fun. A clean chorus marks it played.",
+      "step": "jam-inv",
+      "theme": {
+        "glyph": "steps:4",
+        "title": "The climb",
+        "line": "Broken inversions are how a left hand climbs without jumping."
+      }
+    },
+    {
+      "after": 3,
+      "title": "Loop with a bump",
+      "skill": "The chord on 1, root and fifth on 3",
+      "goal": "Have fun. A clean chorus marks it played.",
+      "step": "jam-loop",
+      "theme": {
+        "glyph": "bars:13",
+        "title": "Two a bar",
+        "line": "A chord on the 1 and a bump on the 3 is the oldest left-hand pattern there is."
+      }
+    },
+    {
+      "after": 4,
+      "title": "Moving less at 80",
+      "skill": "The near shapes on 1 and 3, faster",
+      "goal": "Have fun. A clean chorus marks it played.",
+      "step": "jam-lead",
+      "theme": {
+        "glyph": "tempo",
+        "title": "Less motion, more speed",
+        "line": "A hand that stays put can play twice as often. That's the point of inversions."
+      }
+    },
+    {
+      "after": 5,
+      "title": "Chank with a push",
+      "skill": "The and of 1, then 2 and 4",
+      "goal": "Have fun. A clean chorus marks it played.",
+      "step": "jam-chank",
+      "theme": {
+        "glyph": "bars:24",
+        "title": "The push",
+        "line": "A chord just before the beat pulls the band along. Late eighth, then the backbeat."
+      }
+    },
+    {
+      "after": 6,
+      "title": "Sus on the four",
+      "skill": "Sus on 1, home on 2, sus again on 4",
+      "goal": "Have fun. A clean chorus marks it played.",
+      "step": "jam-sus",
+      "theme": {
+        "glyph": "keys:145",
+        "title": "Leaning into the bar",
+        "line": "A sus on the 4 is a question the next bar answers."
+      }
+    },
+    {
+      "after": 7,
+      "title": "Shell and five",
+      "skill": "The shell on 1, the fifth alone on 3",
+      "goal": "Have fun. A clean chorus marks it played.",
+      "step": "jam-shell",
+      "theme": {
+        "glyph": "bars:13",
+        "title": "Two hands' worth",
+        "line": "Chord on 1, bass note on 3: one hand doing a pianist's two."
+      }
+    },
+    {
+      "after": 8,
+      "title": "Nine, broken",
+      "skill": "The rootless shape, a note a beat",
+      "goal": "Have fun. A clean chorus marks it played.",
+      "step": "jam-m9",
+      "theme": {
+        "glyph": "walk",
+        "title": "Ring the nine",
+        "line": "The last note of the climb is the ninth. Over the bass it floats."
+      }
+    }
+  ],
+  "band": "band-minor-A",
+  "chords": {
+    "Am": {
+      "numeral": "i",
+      "root": 9
+    },
+    "Dm": {
+      "numeral": "iv",
+      "root": 2
+    },
+    "Em": {
+      "numeral": "v",
+      "root": 4
+    }
+  },
+  "form": [
+    "Am",
+    "Am",
+    "Am",
+    "Am",
+    "Dm",
+    "Dm",
+    "Am",
+    "Am",
+    "Em",
+    "Dm",
+    "Am",
+    "Em"
+  ],
+  "range": {
+    "low": 36,
+    "high": 72
+  },
+  "displayRoot": 48,
+  "channels": [
+    {
+      "name": "Drums",
+      "channel": "drums"
+    },
+    {
+      "name": "Bass",
+      "channel": "bass"
+    },
+    {
+      "name": "Keys",
+      "channel": "keys"
+    },
+    {
+      "name": "Horns",
+      "channel": "horns"
+    }
+  ],
+  "steps": [
+    {
+      "id": "m7",
+      "kind": "play",
+      "title": "Minor sevenths",
+      "skill": "lh.m7.minorblues",
+      "tempo": 70,
+      "gate": 2,
+      "band": [
+        "drums",
+        "bass",
+        "keys",
+        "horns"
+      ],
+      "pattern": [
+        {
+          "beat": 1,
+          "semitones": 0,
+          "finger": 5
+        },
+        {
+          "beat": 1,
+          "semitones": 3,
+          "finger": 3
+        },
+        {
+          "beat": 1,
+          "semitones": 7,
+          "finger": 2
+        },
+        {
+          "beat": 1,
+          "semitones": 10,
+          "finger": 1
+        }
+      ],
+      "about": "Four notes: root, flat third, fifth, flat seventh. Am7 is A C E G, pinky, middle, index, thumb, on the 1 of every bar and held. The shape moves whole to Dm7 and Em7. This is the chord under most of house and all of the blues' minor side.",
+      "coach": {
+        "intro": "Am7. Pinky on A, four fingers down.",
+        "change": "Get ready. {next} on the 1.",
+        "hold": "{chord} on the 1. Hold it.",
+        "clean": "Clean. {left} more.",
+        "again": "{problem} Again.",
+        "join": "From the top.",
+        "slow": "Clean at {tempo}. It counts at {gateTempo}.",
+        "passed": "Clean. Four notes, one shape."
+      }
+    },
+    {
+      "id": "inv",
+      "kind": "play",
+      "title": "Inversions",
+      "skill": "lh.inversions.minorblues",
+      "tempo": 70,
+      "gate": 2,
+      "cycle": 3,
+      "band": [
+        "drums",
+        "bass"
+      ],
+      "pattern": [
+        {
+          "beat": 1,
+          "semitones": 0,
+          "finger": 5,
+          "bar": 0
+        },
+        {
+          "beat": 1,
+          "semitones": 3,
+          "finger": 3,
+          "bar": 0
+        },
+        {
+          "beat": 1,
+          "semitones": 7,
+          "finger": 1,
+          "bar": 0
+        },
+        {
+          "beat": 1,
+          "semitones": 3,
+          "finger": 5,
+          "bar": 1
+        },
+        {
+          "beat": 1,
+          "semitones": 7,
+          "finger": 3,
+          "bar": 1
+        },
+        {
+          "beat": 1,
+          "semitones": 12,
+          "finger": 1,
+          "bar": 1
+        },
+        {
+          "beat": 1,
+          "semitones": 7,
+          "finger": 5,
+          "bar": 2
+        },
+        {
+          "beat": 1,
+          "semitones": 12,
+          "finger": 2,
+          "bar": 2
+        },
+        {
+          "beat": 1,
+          "semitones": 15,
+          "finger": 1,
+          "bar": 2
+        }
+      ],
+      "about": "The same three notes, turned over: Am as A C E (root on the bottom), then C E A (first inversion, the third on the bottom), then E A C (second inversion, the fifth). One a bar, 5 3 1, 5 3 1, 5 2 1, over the drums and bass. Every chord of the blues turns over the same way.",
+      "coach": {
+        "intro": "Inversions. Root position first.",
+        "change": "Get ready. {next}, root position.",
+        "hold": "{chord}, turned over.",
+        "clean": "Clean. {left} more.",
+        "again": "{problem} Again.",
+        "join": "From the top.",
+        "slow": "Clean at {tempo}. It counts at {gateTempo}.",
+        "passed": "Clean. Three bottoms, one chord."
+      }
+    },
+    {
+      "id": "loop",
+      "kind": "play",
+      "title": "Four chords",
+      "skill": "lh.loop.minor",
+      "tempo": 70,
+      "gate": 2,
+      "band": [
+        "drums"
+      ],
+      "form": [
+        "Am",
+        "F",
+        "C",
+        "G",
+        "Am",
+        "F",
+        "C",
+        "G",
+        "Am",
+        "F",
+        "C",
+        "G"
+      ],
+      "chords": {
+        "Am": {
+          "numeral": "i",
+          "root": 9
+        },
+        "F": {
+          "numeral": "VI",
+          "root": 5
+        },
+        "C": {
+          "numeral": "III",
+          "root": 0
+        },
+        "G": {
+          "numeral": "VII",
+          "root": 7
+        }
+      },
+      "pattern": [
+        {
+          "beat": 1,
+          "semitones": 0,
+          "finger": 5,
+          "chord": "Am"
+        },
+        {
+          "beat": 1,
+          "semitones": 3,
+          "finger": 3,
+          "chord": "Am"
+        },
+        {
+          "beat": 1,
+          "semitones": 7,
+          "finger": 1,
+          "chord": "Am"
+        },
+        {
+          "beat": 1,
+          "semitones": 0,
+          "finger": 5,
+          "chord": "F"
+        },
+        {
+          "beat": 1,
+          "semitones": 4,
+          "finger": 3,
+          "chord": "F"
+        },
+        {
+          "beat": 1,
+          "semitones": 7,
+          "finger": 1,
+          "chord": "F"
+        },
+        {
+          "beat": 1,
+          "semitones": 0,
+          "finger": 5,
+          "chord": "C"
+        },
+        {
+          "beat": 1,
+          "semitones": 4,
+          "finger": 3,
+          "chord": "C"
+        },
+        {
+          "beat": 1,
+          "semitones": 7,
+          "finger": 1,
+          "chord": "C"
+        },
+        {
+          "beat": 1,
+          "semitones": 0,
+          "finger": 5,
+          "chord": "G"
+        },
+        {
+          "beat": 1,
+          "semitones": 4,
+          "finger": 3,
+          "chord": "G"
+        },
+        {
+          "beat": 1,
+          "semitones": 7,
+          "finger": 1,
+          "chord": "G"
+        }
+      ],
+      "about": "Am F C G, one a bar, root position, pinky middle thumb on each: A C E, F A C, C E G, G B D. The drums alone under you, so you hear the chords move. In A minor these are i, VI, III and VII, and the loop is under half of pop and most of the club.",
+      "coach": {
+        "intro": "Am F C G. Pinky on A.",
+        "change": "Get ready. {next} on the 1.",
+        "hold": "{chord} on the 1. Hold it.",
+        "clean": "Clean. {left} more.",
+        "again": "{problem} Again.",
+        "join": "From the top.",
+        "slow": "Clean at {tempo}. It counts at {gateTempo}.",
+        "passed": "Clean. That loop is everywhere."
+      }
+    },
+    {
+      "id": "lead",
+      "kind": "play",
+      "title": "Moving less",
+      "skill": "lh.voicelead.minor",
+      "tempo": 70,
+      "gate": 2,
+      "band": [
+        "drums"
+      ],
+      "form": [
+        "Am",
+        "F",
+        "C",
+        "G",
+        "Am",
+        "F",
+        "C",
+        "G",
+        "Am",
+        "F",
+        "C",
+        "G"
+      ],
+      "chords": {
+        "Am": {
+          "numeral": "i",
+          "root": 9
+        },
+        "F": {
+          "numeral": "VI",
+          "root": 5
+        },
+        "C": {
+          "numeral": "III",
+          "root": 0
+        },
+        "G": {
+          "numeral": "VII",
+          "root": 7
+        }
+      },
+      "pattern": [
+        {
+          "beat": 1,
+          "semitones": 0,
+          "finger": 5,
+          "chord": "Am"
+        },
+        {
+          "beat": 1,
+          "semitones": 3,
+          "finger": 3,
+          "chord": "Am"
+        },
+        {
+          "beat": 1,
+          "semitones": 7,
+          "finger": 1,
+          "chord": "Am"
+        },
+        {
+          "beat": 1,
+          "semitones": 4,
+          "finger": 5,
+          "chord": "F"
+        },
+        {
+          "beat": 1,
+          "semitones": 7,
+          "finger": 3,
+          "chord": "F"
+        },
+        {
+          "beat": 1,
+          "semitones": 12,
+          "finger": 1,
+          "chord": "F"
+        },
+        {
+          "beat": 1,
+          "semitones": 7,
+          "finger": 5,
+          "chord": "C"
+        },
+        {
+          "beat": 1,
+          "semitones": 12,
+          "finger": 2,
+          "chord": "C"
+        },
+        {
+          "beat": 1,
+          "semitones": 16,
+          "finger": 1,
+          "chord": "C"
+        },
+        {
+          "beat": 1,
+          "semitones": 0,
+          "finger": 5,
+          "chord": "G"
+        },
+        {
+          "beat": 1,
+          "semitones": 4,
+          "finger": 3,
+          "chord": "G"
+        },
+        {
+          "beat": 1,
+          "semitones": 7,
+          "finger": 1,
+          "chord": "G"
+        }
+      ],
+      "about": "The same four chords with the hand staying put: A C E, then A C F (F in first inversion: only the top finger moves), then G C E (C in second inversion: the outer fingers slide down), then G B D. Keep the note the chords share, move the others by a step. That is voice leading, and it is why records sound smooth.",
+      "coach": {
+        "intro": "Moving less. A C E, then A C F.",
+        "change": "Get ready. {next}, move as little as you can.",
+        "hold": "{chord}, the near shape.",
+        "clean": "Clean. {left} more.",
+        "again": "{problem} Again.",
+        "join": "From the top.",
+        "slow": "Clean at {tempo}. It counts at {gateTempo}.",
+        "passed": "Clean. The hand hardly moved."
+      }
+    },
+    {
+      "id": "chank",
+      "kind": "play",
+      "title": "The backbeat",
+      "skill": "lh.chank.minorblues",
+      "tempo": 80,
+      "gate": 2,
+      "band": [
+        "drums",
+        "bass",
+        "keys",
+        "horns"
+      ],
+      "pattern": [
+        {
+          "beat": 2,
+          "semitones": 0,
+          "finger": 5
+        },
+        {
+          "beat": 2,
+          "semitones": 3,
+          "finger": 3
+        },
+        {
+          "beat": 2,
+          "semitones": 7,
+          "finger": 1
+        },
+        {
+          "beat": 4,
+          "semitones": 0,
+          "finger": 5
+        },
+        {
+          "beat": 4,
+          "semitones": 3,
+          "finger": 3
+        },
+        {
+          "beat": 4,
+          "semitones": 7,
+          "finger": 1
+        }
+      ],
+      "about": "The minor triad on 2 and 4, short, against the kick on 1 and 3. Pinky middle thumb, Am Dm Em through the form, with the whole band. The oldest comp there is: it leaves the 1 to the bass and the drums.",
+      "coach": {
+        "intro": "The backbeat. Chord on 2 and 4.",
+        "change": "Get ready. {next} on 2 and 4.",
+        "hold": "{chord} on 2 and 4.",
+        "clean": "Clean. {left} more.",
+        "again": "{problem} Again.",
+        "join": "From the top.",
+        "slow": "Clean at {tempo}. It counts at {gateTempo}.",
+        "passed": "Clean. That's comping."
+      }
+    },
+    {
+      "id": "sus",
+      "kind": "play",
+      "title": "Suspend, resolve",
+      "skill": "lh.sus4.minorblues",
+      "tempo": 70,
+      "gate": 2,
+      "band": [
+        "drums",
+        "bass",
+        "keys",
+        "horns"
+      ],
+      "pattern": [
+        {
+          "beat": 1,
+          "semitones": 0,
+          "finger": 5
+        },
+        {
+          "beat": 1,
+          "semitones": 5,
+          "finger": 2
+        },
+        {
+          "beat": 1,
+          "semitones": 7,
+          "finger": 1
+        },
+        {
+          "beat": 3,
+          "semitones": 0,
+          "finger": 5
+        },
+        {
+          "beat": 3,
+          "semitones": 3,
+          "finger": 3
+        },
+        {
+          "beat": 3,
+          "semitones": 7,
+          "finger": 1
+        }
+      ],
+      "about": "On the 1 the fourth instead of the third: A D E, pinky index thumb. On the 3 the index comes down to the flat third: A C E. Two beats of leaning, two of home, every bar. A sus chord is neither major nor minor, which is why pads and stabs love it.",
+      "coach": {
+        "intro": "Sus on the 1, the minor on the 3.",
+        "change": "Get ready. {next}: sus on the 1.",
+        "hold": "{chord}: sus, then home.",
+        "clean": "Clean. {left} more.",
+        "again": "{problem} Again.",
+        "join": "From the top.",
+        "slow": "Clean at {tempo}. It counts at {gateTempo}.",
+        "passed": "Clean. Lean, then land."
+      }
+    },
+    {
+      "id": "shell",
+      "kind": "play",
+      "title": "The shell",
+      "skill": "lh.shell.minorblues",
+      "tempo": 70,
+      "gate": 2,
+      "band": [
+        "drums",
+        "bass",
+        "keys",
+        "horns"
+      ],
+      "pattern": [
+        {
+          "beat": 1,
+          "semitones": 0,
+          "finger": 5
+        },
+        {
+          "beat": 1,
+          "semitones": 3,
+          "finger": 3
+        },
+        {
+          "beat": 1,
+          "semitones": 10,
+          "finger": 1
+        }
+      ],
+      "about": "Three notes that say the whole chord: root, flat third, flat seventh. A C G, pinky middle thumb, the fifth left out. The third says minor, the seventh says seventh, and the fifth said nothing the ear needed. This is how jazz left hands voice a chord.",
+      "coach": {
+        "intro": "The shell. Root, third, seventh.",
+        "change": "Get ready. {next} on the 1.",
+        "hold": "{chord} on the 1. Hold it.",
+        "clean": "Clean. {left} more.",
+        "again": "{problem} Again.",
+        "join": "From the top.",
+        "slow": "Clean at {tempo}. It counts at {gateTempo}.",
+        "passed": "Clean. Nothing missing."
+      }
+    },
+    {
+      "id": "m9",
+      "kind": "play",
+      "title": "Minor nine",
+      "skill": "lh.m9.rootless",
+      "tempo": 70,
+      "gate": 2,
+      "band": [
+        "drums",
+        "bass",
+        "keys",
+        "horns"
+      ],
+      "pattern": [
+        {
+          "beat": 1,
+          "semitones": 3,
+          "finger": 5
+        },
+        {
+          "beat": 1,
+          "semitones": 7,
+          "finger": 3
+        },
+        {
+          "beat": 1,
+          "semitones": 10,
+          "finger": 2
+        },
+        {
+          "beat": 1,
+          "semitones": 14,
+          "finger": 1
+        }
+      ],
+      "about": "Flat third, fifth, flat seventh, ninth: C E G B over Am. No root; the band's bass has it. Pinky middle index thumb, one shape, moved whole to Dm and Em. On its own it's a major seventh chord (Cmaj7); over the bass it's Am9, the deep house chord.",
+      "coach": {
+        "intro": "Minor nine. C E G B, the bass has the A.",
+        "change": "Get ready. {next}, the shape moves.",
+        "hold": "{chord}, rootless.",
+        "clean": "Clean. {left} more.",
+        "again": "{problem} Again.",
+        "join": "From the top.",
+        "slow": "Clean at {tempo}. It counts at {gateTempo}.",
+        "passed": "Clean. That's the deep house chord."
+      }
+    },
+    {
+      "id": "jam-m7",
+      "kind": "jam",
+      "title": "Seventh, walked",
+      "skill": "jam.m7.walked",
+      "tempo": 70,
+      "band": [
+        "drums",
+        "bass",
+        "keys",
+        "horns"
+      ],
+      "pattern": [
+        {
+          "beat": 1,
+          "semitones": 0,
+          "finger": 5
+        },
+        {
+          "beat": 2,
+          "semitones": 3,
+          "finger": 3
+        },
+        {
+          "beat": 3,
+          "semitones": 7,
+          "finger": 2
+        },
+        {
+          "beat": 4,
+          "semitones": 10,
+          "finger": 1
+        }
+      ],
+      "about": "The same four notes one at a time: root, flat third, fifth, flat seventh, a note a beat. The chord as a bass line, the way a left hand walks through a minor seventh.",
+      "coach": {
+        "intro": "Seventh, walked. Pinky on A.",
+        "change": "Get ready. {next}.",
+        "hold": "{chord}: root, third, fifth, seventh.",
+        "clean": "Clean. Keep it rolling.",
+        "again": "{problem} Keep going.",
+        "join": "Jump in on the 1.",
+        "slow": "Clean at {tempo}."
+      }
+    },
+    {
+      "id": "jam-inv",
+      "kind": "jam",
+      "title": "Turning over",
+      "skill": "jam.inversions.broken",
+      "tempo": 70,
+      "cycle": 3,
+      "band": [
+        "drums",
+        "bass"
+      ],
+      "pattern": [
+        {
+          "beat": 1,
+          "semitones": 0,
+          "finger": 5,
+          "bar": 0
+        },
+        {
+          "beat": 2,
+          "semitones": 3,
+          "finger": 3,
+          "bar": 0
+        },
+        {
+          "beat": 3,
+          "semitones": 7,
+          "finger": 2,
+          "bar": 0
+        },
+        {
+          "beat": 4,
+          "semitones": 12,
+          "finger": 1,
+          "bar": 0
+        },
+        {
+          "beat": 1,
+          "semitones": 3,
+          "finger": 5,
+          "bar": 1
+        },
+        {
+          "beat": 2,
+          "semitones": 7,
+          "finger": 3,
+          "bar": 1
+        },
+        {
+          "beat": 3,
+          "semitones": 12,
+          "finger": 2,
+          "bar": 1
+        },
+        {
+          "beat": 4,
+          "semitones": 15,
+          "finger": 1,
+          "bar": 1
+        },
+        {
+          "beat": 1,
+          "semitones": 7,
+          "finger": 5,
+          "bar": 2
+        },
+        {
+          "beat": 2,
+          "semitones": 12,
+          "finger": 3,
+          "bar": 2
+        },
+        {
+          "beat": 3,
+          "semitones": 15,
+          "finger": 2,
+          "bar": 2
+        },
+        {
+          "beat": 4,
+          "semitones": 19,
+          "finger": 1,
+          "bar": 2
+        }
+      ],
+      "about": "Each inversion broken upward, a note a beat, up to the next bar's bottom note: A C E A, C E A C, E A C E. The hand climbs an octave in three bars and starts over.",
+      "coach": {
+        "intro": "Turning over. Pinky on A.",
+        "change": "Get ready. {next}.",
+        "hold": "{chord}, broken, climbing.",
+        "clean": "Clean. Keep it rolling.",
+        "again": "{problem} Keep going.",
+        "join": "Jump in on the 1.",
+        "slow": "Clean at {tempo}."
+      }
+    },
+    {
+      "id": "jam-loop",
+      "kind": "jam",
+      "title": "Loop with a bump",
+      "skill": "jam.loop.bump",
+      "tempo": 70,
+      "band": [
+        "drums"
+      ],
+      "form": [
+        "Am",
+        "F",
+        "C",
+        "G",
+        "Am",
+        "F",
+        "C",
+        "G",
+        "Am",
+        "F",
+        "C",
+        "G"
+      ],
+      "chords": {
+        "Am": {
+          "numeral": "i",
+          "root": 9
+        },
+        "F": {
+          "numeral": "VI",
+          "root": 5
+        },
+        "C": {
+          "numeral": "III",
+          "root": 0
+        },
+        "G": {
+          "numeral": "VII",
+          "root": 7
+        }
+      },
+      "pattern": [
+        {
+          "beat": 1,
+          "semitones": 0,
+          "finger": 5,
+          "chord": "Am"
+        },
+        {
+          "beat": 1,
+          "semitones": 3,
+          "finger": 3,
+          "chord": "Am"
+        },
+        {
+          "beat": 1,
+          "semitones": 7,
+          "finger": 1,
+          "chord": "Am"
+        },
+        {
+          "beat": 1,
+          "semitones": 0,
+          "finger": 5,
+          "chord": "F"
+        },
+        {
+          "beat": 1,
+          "semitones": 4,
+          "finger": 3,
+          "chord": "F"
+        },
+        {
+          "beat": 1,
+          "semitones": 7,
+          "finger": 1,
+          "chord": "F"
+        },
+        {
+          "beat": 1,
+          "semitones": 0,
+          "finger": 5,
+          "chord": "C"
+        },
+        {
+          "beat": 1,
+          "semitones": 4,
+          "finger": 3,
+          "chord": "C"
+        },
+        {
+          "beat": 1,
+          "semitones": 7,
+          "finger": 1,
+          "chord": "C"
+        },
+        {
+          "beat": 1,
+          "semitones": 0,
+          "finger": 5,
+          "chord": "G"
+        },
+        {
+          "beat": 1,
+          "semitones": 4,
+          "finger": 3,
+          "chord": "G"
+        },
+        {
+          "beat": 1,
+          "semitones": 7,
+          "finger": 1,
+          "chord": "G"
+        },
+        {
+          "beat": 3,
+          "semitones": 0,
+          "finger": 5
+        },
+        {
+          "beat": 3,
+          "semitones": 7,
+          "finger": 1
+        }
+      ],
+      "about": "The loop with a bump: the whole chord on the 1, root and fifth on the 3. Same hand, two beats of air between.",
+      "coach": {
+        "intro": "Loop with a bump. Chord on 1, root and fifth on 3.",
+        "change": "Get ready. {next}.",
+        "hold": "{chord} on 1, the bump on 3.",
+        "clean": "Clean. Keep it rolling.",
+        "again": "{problem} Keep going.",
+        "join": "Jump in on the 1.",
+        "slow": "Clean at {tempo}."
+      }
+    },
+    {
+      "id": "jam-lead",
+      "kind": "jam",
+      "title": "Moving less at 80",
+      "skill": "jam.voicelead.80",
+      "tempo": 80,
+      "band": [
+        "drums"
+      ],
+      "form": [
+        "Am",
+        "F",
+        "C",
+        "G",
+        "Am",
+        "F",
+        "C",
+        "G",
+        "Am",
+        "F",
+        "C",
+        "G"
+      ],
+      "chords": {
+        "Am": {
+          "numeral": "i",
+          "root": 9
+        },
+        "F": {
+          "numeral": "VI",
+          "root": 5
+        },
+        "C": {
+          "numeral": "III",
+          "root": 0
+        },
+        "G": {
+          "numeral": "VII",
+          "root": 7
+        }
+      },
+      "pattern": [
+        {
+          "beat": 1,
+          "semitones": 0,
+          "finger": 5,
+          "chord": "Am"
+        },
+        {
+          "beat": 1,
+          "semitones": 3,
+          "finger": 3,
+          "chord": "Am"
+        },
+        {
+          "beat": 1,
+          "semitones": 7,
+          "finger": 1,
+          "chord": "Am"
+        },
+        {
+          "beat": 1,
+          "semitones": 4,
+          "finger": 5,
+          "chord": "F"
+        },
+        {
+          "beat": 1,
+          "semitones": 7,
+          "finger": 3,
+          "chord": "F"
+        },
+        {
+          "beat": 1,
+          "semitones": 12,
+          "finger": 1,
+          "chord": "F"
+        },
+        {
+          "beat": 1,
+          "semitones": 7,
+          "finger": 5,
+          "chord": "C"
+        },
+        {
+          "beat": 1,
+          "semitones": 12,
+          "finger": 2,
+          "chord": "C"
+        },
+        {
+          "beat": 1,
+          "semitones": 16,
+          "finger": 1,
+          "chord": "C"
+        },
+        {
+          "beat": 1,
+          "semitones": 0,
+          "finger": 5,
+          "chord": "G"
+        },
+        {
+          "beat": 1,
+          "semitones": 4,
+          "finger": 3,
+          "chord": "G"
+        },
+        {
+          "beat": 1,
+          "semitones": 7,
+          "finger": 1,
+          "chord": "G"
+        },
+        {
+          "beat": 3,
+          "semitones": 0,
+          "finger": 5,
+          "chord": "Am"
+        },
+        {
+          "beat": 3,
+          "semitones": 3,
+          "finger": 3,
+          "chord": "Am"
+        },
+        {
+          "beat": 3,
+          "semitones": 7,
+          "finger": 1,
+          "chord": "Am"
+        },
+        {
+          "beat": 3,
+          "semitones": 4,
+          "finger": 5,
+          "chord": "F"
+        },
+        {
+          "beat": 3,
+          "semitones": 7,
+          "finger": 3,
+          "chord": "F"
+        },
+        {
+          "beat": 3,
+          "semitones": 12,
+          "finger": 1,
+          "chord": "F"
+        },
+        {
+          "beat": 3,
+          "semitones": 7,
+          "finger": 5,
+          "chord": "C"
+        },
+        {
+          "beat": 3,
+          "semitones": 12,
+          "finger": 2,
+          "chord": "C"
+        },
+        {
+          "beat": 3,
+          "semitones": 16,
+          "finger": 1,
+          "chord": "C"
+        },
+        {
+          "beat": 3,
+          "semitones": 0,
+          "finger": 5,
+          "chord": "G"
+        },
+        {
+          "beat": 3,
+          "semitones": 4,
+          "finger": 3,
+          "chord": "G"
+        },
+        {
+          "beat": 3,
+          "semitones": 7,
+          "finger": 1,
+          "chord": "G"
+        }
+      ],
+      "about": "The near shapes on the 1 and the 3 at 80. Because the hand barely moves, the tempo can.",
+      "coach": {
+        "intro": "Moving less at 80. Twice a bar.",
+        "change": "Get ready. {next}.",
+        "hold": "{chord}, near shape, 1 and 3.",
+        "clean": "Clean. Keep it rolling.",
+        "again": "{problem} Keep going.",
+        "join": "Jump in on the 1.",
+        "slow": "Clean at {tempo}."
+      }
+    },
+    {
+      "id": "jam-chank",
+      "kind": "jam",
+      "title": "Chank with a push",
+      "skill": "jam.chank.push",
+      "tempo": 80,
+      "band": [
+        "drums",
+        "bass",
+        "keys",
+        "horns"
+      ],
+      "pattern": [
+        {
+          "beat": 1,
+          "semitones": 0,
+          "finger": 5,
+          "tick": 8
+        },
+        {
+          "beat": 1,
+          "semitones": 3,
+          "finger": 3,
+          "tick": 8
+        },
+        {
+          "beat": 1,
+          "semitones": 7,
+          "finger": 1,
+          "tick": 8
+        },
+        {
+          "beat": 2,
+          "semitones": 0,
+          "finger": 5
+        },
+        {
+          "beat": 2,
+          "semitones": 3,
+          "finger": 3
+        },
+        {
+          "beat": 2,
+          "semitones": 7,
+          "finger": 1
+        },
+        {
+          "beat": 4,
+          "semitones": 0,
+          "finger": 5
+        },
+        {
+          "beat": 4,
+          "semitones": 3,
+          "finger": 3
+        },
+        {
+          "beat": 4,
+          "semitones": 7,
+          "finger": 1
+        }
+      ],
+      "about": "The backbeat with a push: the chord on the late eighth of the 1 (the shuffle's and), then on 2 and 4. The push is what makes a comp lean forward.",
+      "coach": {
+        "intro": "Chank with a push. The and of 1, then 2 and 4.",
+        "change": "Get ready. {next}.",
+        "hold": "{chord}: push, 2, 4.",
+        "clean": "Clean. Keep it rolling.",
+        "again": "{problem} Keep going.",
+        "join": "Jump in on the 1.",
+        "slow": "Clean at {tempo}."
+      }
+    },
+    {
+      "id": "jam-sus",
+      "kind": "jam",
+      "title": "Sus on the four",
+      "skill": "jam.sus4.four",
+      "tempo": 70,
+      "band": [
+        "drums",
+        "bass",
+        "keys",
+        "horns"
+      ],
+      "pattern": [
+        {
+          "beat": 1,
+          "semitones": 0,
+          "finger": 5
+        },
+        {
+          "beat": 1,
+          "semitones": 5,
+          "finger": 2
+        },
+        {
+          "beat": 1,
+          "semitones": 7,
+          "finger": 1
+        },
+        {
+          "beat": 2,
+          "semitones": 0,
+          "finger": 5
+        },
+        {
+          "beat": 2,
+          "semitones": 3,
+          "finger": 3
+        },
+        {
+          "beat": 2,
+          "semitones": 7,
+          "finger": 1
+        },
+        {
+          "beat": 4,
+          "semitones": 0,
+          "finger": 5
+        },
+        {
+          "beat": 4,
+          "semitones": 5,
+          "finger": 2
+        },
+        {
+          "beat": 4,
+          "semitones": 7,
+          "finger": 1
+        }
+      ],
+      "about": "Quicker: sus on the 1, home on the 2, and the sus comes back on the 4 to lean into the next bar.",
+      "coach": {
+        "intro": "Sus on the four. 1 sus, 2 home, 4 sus.",
+        "change": "Get ready. {next}.",
+        "hold": "{chord}: sus, home, sus.",
+        "clean": "Clean. Keep it rolling.",
+        "again": "{problem} Keep going.",
+        "join": "Jump in on the 1.",
+        "slow": "Clean at {tempo}."
+      }
+    },
+    {
+      "id": "jam-shell",
+      "kind": "jam",
+      "title": "Shell and five",
+      "skill": "jam.shell.five",
+      "tempo": 70,
+      "band": [
+        "drums",
+        "bass",
+        "keys",
+        "horns"
+      ],
+      "pattern": [
+        {
+          "beat": 1,
+          "semitones": 0,
+          "finger": 5
+        },
+        {
+          "beat": 1,
+          "semitones": 3,
+          "finger": 3
+        },
+        {
+          "beat": 1,
+          "semitones": 10,
+          "finger": 1
+        },
+        {
+          "beat": 3,
+          "semitones": 7,
+          "finger": 2
+        }
+      ],
+      "about": "The shell on the 1, the fifth alone on the 3 with the index finger: the furniture comes back as a bass note.",
+      "coach": {
+        "intro": "Shell and five. Shell on 1, fifth on 3.",
+        "change": "Get ready. {next}.",
+        "hold": "{chord}: shell, then the fifth.",
+        "clean": "Clean. Keep it rolling.",
+        "again": "{problem} Keep going.",
+        "join": "Jump in on the 1.",
+        "slow": "Clean at {tempo}."
+      }
+    },
+    {
+      "id": "jam-m9",
+      "kind": "jam",
+      "title": "Nine, broken",
+      "skill": "jam.m9.broken",
+      "tempo": 70,
+      "band": [
+        "drums",
+        "bass",
+        "keys",
+        "horns"
+      ],
+      "pattern": [
+        {
+          "beat": 1,
+          "semitones": 3,
+          "finger": 5
+        },
+        {
+          "beat": 2,
+          "semitones": 7,
+          "finger": 3
+        },
+        {
+          "beat": 3,
+          "semitones": 10,
+          "finger": 2
+        },
+        {
+          "beat": 4,
+          "semitones": 14,
+          "finger": 1
+        }
+      ],
+      "about": "The rootless shape as an arpeggio, a note a beat, up: flat third, fifth, flat seventh, ninth. The bass holds the root under you, so the top note rings as a nine.",
+      "coach": {
+        "intro": "Nine, broken. Up through the shape.",
+        "change": "Get ready. {next}.",
+        "hold": "{chord}: third, fifth, seventh, nine.",
+        "clean": "Clean. Keep it rolling.",
+        "again": "{problem} Keep going.",
+        "join": "Jump in on the 1.",
+        "slow": "Clean at {tempo}."
+      }
+    }
+  ]
+}

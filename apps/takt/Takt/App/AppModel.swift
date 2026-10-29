@@ -466,13 +466,15 @@ struct LessonEntry: Identifiable {
         (catalog[3], "Ear and form", "Find your level, then five questions a day"),
     ]
 
-    static let scales = LessonEntry(kind: .lesson, code: "S", title: "Scales", meta: "Both hands · one and two octaves, the blues scale · 6 lessons",
+    static let scales = LessonEntry(kind: .lesson, code: "S", title: "Scales", meta: "Both hands · octaves, pentatonics, new keys, modes · 13 lessons",
                                     after: nil, playable: true)
     static let minor = LessonEntry(kind: .lesson, code: "M", title: "Minor Chords", meta: "Left hand · the minor blues in every key · 13 lessons",
                                    after: nil, playable: true)
+    static let shapes = LessonEntry(kind: .lesson, code: "H", title: "Chord Shapes", meta: "Left hand · sevenths, inversions, voice leading, the club voicings · 8 lessons",
+                                    after: nil, playable: true)
 
     /// Level 1 on the map, in order: the modules and what comes after them.
-    static let path = [catalog[0], ear, scales, minor]
+    static let path = [catalog[0], ear, scales, minor, shapes]
 
     var module: Bool { kind == .lesson || kind == .earModule }
 }

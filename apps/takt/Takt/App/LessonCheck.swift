@@ -278,8 +278,54 @@ enum LessonCheck {
                   se.output.intro?.fingering == [1, 2, 3, 1, 2, 3, 4, 5, 4, 3, 2, 1, 3, 2, 1] && se.output.intro?.rightHand == true,
                   "\(String(describing: se.output.intro?.fingering))")
             typealias RN0 = LessonState.Run.Note
-            check("scales: six lessons, their steps in order", major.lessons.count == 6 && major.lessonsDone(reachedStep: 2) == 1
-                  && minor.lessons.map(\.title) == ["Up", "Down", "Up and down", "Two octaves", "The left hand", "The blues scale"])
+            check("scales: thirteen lessons, their steps in order", major.lessons.count == 13 && major.lessonsDone(reachedStep: 2) == 1
+                  && minor.lessons.map(\.title) == ["Up", "Down", "Up and down", "Two octaves", "The left hand", "The blues scale",
+                                                    "Minor pentatonic", "The relative major", "E minor", "D minor", "Harmonic minor", "Dorian", "Chromatic"]
+                  && major.lessons.map(\.title).suffix(7) == ["Major pentatonic", "The relative minor", "G major", "F major", "Mixolydian", "Dorian", "Chromatic"]
+                  && (minor.jams ?? []).count == 13 && (minor.jams ?? []).map(\.after) == Array(1...13), "\(minor.lessons.map(\.title))")
+            // Lessons 7–13 (scripts/scales-extend.py): the pentatonics, two new keys, the colour
+            // scales, the chromatic. Each in both files, as the key's own notes.
+            let penta = minor.expected(minor.steps[6], ticksPerBeat: tpb)
+            check("scales: minor pentatonic is A C D E G A and back, 11 notes with 1 2 3 1 2 3, four runs a chorus",
+                  penta.count == 44 && penta.prefix(11).map(\.display) == [57, 60, 62, 64, 67, 69, 67, 64, 62, 60, 57]
+                  && penta.prefix(11).map(\.finger) == [1, 2, 3, 1, 2, 3, 2, 1, 3, 2, 1] && penta[11].tick == 3 * 4 * tpb
+                  && major.expected(major.steps[6], ticksPerBeat: tpb).prefix(6).map(\.display) == [48, 50, 52, 55, 57, 60],
+                  "\(penta.prefix(11).map(\.display))")
+            let rel = minor.expected(minor.steps[7], ticksPerBeat: tpb)
+            check("scales: the relative is the same five keys from the other home (C major pentatonic in the minor file, A minor in the major)",
+                  rel.prefix(6).map(\.display) == [48, 50, 52, 55, 57, 60] && minor.steps[7].form?.allSatisfy { $0 == "C" } == true
+                  && major.expected(major.steps[7], ticksPerBeat: tpb).prefix(6).map(\.display) == [57, 60, 62, 64, 67, 69]
+                  && major.steps[7].chords?["Am"]?.numeral == "vi" && minor.steps[7].chords?["C"]?.numeral == "III")
+            let em = minor.expected(minor.steps[8], ticksPerBeat: tpb), gm = major.expected(major.steps[8], ticksPerBeat: tpb)
+            check("scales: the second key keeps the fingering: E minor from E3 (F♯ under the index), G major from G3",
+                  em.prefix(8).map(\.pitchClass) == [4, 6, 7, 9, 11, 0, 2, 4] && em[0].display == 52 && em.count == 45
+                  && em.prefix(8).map(\.finger) == [1, 2, 3, 1, 2, 3, 4, 5]
+                  && gm.prefix(8).map(\.pitchClass) == [7, 9, 11, 0, 2, 4, 6, 7] && gm[0].display == 55 && minor.steps[8].flats == nil,
+                  "\(em.prefix(8).map(\.pitchClass))")
+            let dm = minor.expected(minor.steps[9], ticksPerBeat: tpb), fm = major.expected(major.steps[9], ticksPerBeat: tpb)
+            check("scales: the third key is the first flat: D minor spelled with B♭; F major breaks the fingering, 1 2 3 4 1 2 3 4",
+                  dm.prefix(8).map(\.pitchClass) == [2, 4, 5, 7, 9, 10, 0, 2] && minor.steps[9].flats == true
+                  && fm.prefix(8).map(\.pitchClass) == [5, 7, 9, 10, 0, 2, 4, 5] && major.steps[9].flats == true
+                  && fm.prefix(15).map(\.finger) == [1, 2, 3, 4, 1, 2, 3, 4, 3, 2, 1, 4, 3, 2, 1]
+                  && LessonState.Run.crossing(from: RN0(key: 58, finger: 4), to: RN0(key: 60, finger: 1)) == "Thumb under"
+                  && LessonState.Run.crossing(from: RN0(key: 60, finger: 1), to: RN0(key: 58, finger: 4)) == "Ring over",
+                  "\(fm.prefix(15).map(\.finger))")
+            check("scales: the colour scales: A harmonic minor raises the 7th (G♯), C Mixolydian lowers it (B♭); Dorian raises the 6th in both",
+                  minor.expected(minor.steps[10], ticksPerBeat: tpb).prefix(8).map(\.pitchClass) == [9, 11, 0, 2, 4, 5, 8, 9]
+                  && major.expected(major.steps[10], ticksPerBeat: tpb).prefix(8).map(\.pitchClass) == [0, 2, 4, 5, 7, 9, 10, 0]
+                  && minor.expected(minor.steps[11], ticksPerBeat: tpb).prefix(8).map(\.pitchClass) == [9, 11, 0, 2, 4, 6, 7, 9]
+                  && major.expected(major.steps[11], ticksPerBeat: tpb).prefix(8).map(\.pitchClass) == [0, 2, 3, 5, 7, 9, 10, 0]
+                  && major.steps[10].flats == true && major.steps[11].flats == true && minor.steps[11].flats == nil)
+            let chroma = minor.expected(minor.steps[12], ticksPerBeat: tpb)
+            check("scales: the chromatic is every key A3 to A4, 1 on white, 3 on black, 2 between two whites; three runs a chorus",
+                  chroma.count == 39 && chroma.prefix(13).map(\.display) == Array(57...69)
+                  && chroma.prefix(13).map(\.finger) == [1, 3, 1, 2, 3, 1, 3, 1, 2, 3, 1, 3, 1]
+                  && major.expected(major.steps[12], ticksPerBeat: tpb).prefix(13).map(\.finger) == [1, 3, 1, 3, 1, 2, 3, 1, 3, 1, 3, 1, 2],
+                  "\(chroma.prefix(13).map(\.finger))")
+            check("scales: the new keys' jams transpose the blues band to the relative major (E minor → G, D minor → F), the D minor one in flats",
+                  minor.steps[21].id == "jam-key2" && minor.steps[21].transpose == 7 && minor.steps[22].transpose == 5 && minor.steps[22].flats == true
+                  && major.steps[21].transpose == 7 && major.steps[22].transpose == 5 && minor.steps[19].transpose == nil
+                  && minor.steps[23].band == ["drums", "bass"], "\(minor.steps[19...25].map { "\($0.id):\($0.transpose ?? 0)" })")
             // Lessons 4–6: two octaves (15 notes, A3 to A5, three runs), the left hand an octave
             // down with the pinky first, the blues scale up and back (13 notes, the flat five).
             let two = minor.expected(minor.steps[3], ticksPerBeat: tpb)
@@ -341,10 +387,10 @@ enum LessonCheck {
             // Play mode: a jam under each lesson, its step past the lessons' steps, its own band;
             // clean choruses count and mark it, nothing passes or hands over.
             let jams = minor.jams ?? []
-            check("jams: six under the scale lessons, five under the blues, each a jam step past the lessons' steps",
-                  jams.count == 6 && (lesson.jams ?? []).count == 7 && jams.map(\.after) == [1, 2, 3, 4, 5, 6]
-                  && minor.stepIndex(ofJam: jams[0]) == 6 && minor.lessonIndex(ofStep: 6) == 0 && minor.jam(ofStep: 6)?.title == "First riff"
-                  && minor.steps[6].band == ["drums", "bass", "keys"] && minor.steps[0].band == ["drums"] && minor.steps[10].band == ["drums", "keys"]
+            check("jams: thirteen under the scale lessons, seven under the blues, each a jam step past the lessons' steps",
+                  jams.count == 13 && (lesson.jams ?? []).count == 7 && jams.map(\.after) == Array(1...13)
+                  && minor.stepIndex(ofJam: jams[0]) == 13 && minor.lessonIndex(ofStep: 13) == 0 && minor.jam(ofStep: 13)?.title == "First riff"
+                  && minor.steps[13].band == ["drums", "bass", "keys"] && minor.steps[0].band == ["drums"] && minor.steps[17].band == ["drums", "keys"]
                   && lesson.steps[8].kind == .jam && lesson.lessonIndex(ofStep: 12) == 4 && lesson.lessonsDone(reachedStep: 7) == 5
                   && lesson.lessonsDone(reachedStep: 9) == 7)
 
@@ -370,6 +416,51 @@ enum LessonCheck {
                   bm.count == 36 && bm.prefix(3).map(\.display) == [59, 62, 66] && bm.prefix(3).map(\.pitchClass) == [11, 2, 6]
                   && bm[12].pitchClass == 4 && bm[24].pitchClass == 6 && minorModule.formBars(of: minorModule.steps[6])[8].numeral == "v",
                   "\(bm.prefix(3).map(\.display))")
+            // Chord Shapes (scripts/chord-shapes.py): what a hand does with a chord it knows. A
+            // pattern note with `chord` plays only in that chord's bars: a voicing per chord.
+            let shapes = Lesson.bundled("lesson-H")
+            check("shapes: eight lessons with a jam each, over the A minor band",
+                  shapes.lessons.count == 8 && (shapes.jams ?? []).count == 8 && shapes.band == "band-minor-A" && shapes.code == "H1"
+                  && shapes.lessons.map(\.title) == ["Minor sevenths", "Inversions", "Four chords", "Moving less", "The backbeat",
+                                                     "Suspend, resolve", "The shell", "Minor nine"]
+                  && Lesson.tones["ninth"] == 14 && Lesson.tones["majorSeventh"] == 11 && Lesson.tones["fourth"] == 5,
+                  "\(shapes.lessons.map(\.title))")
+            let m7 = shapes.expected(shapes.steps[0], ticksPerBeat: tpb)
+            check("shapes: the minor seventh is A C E G on the 1 with 5 3 2 1, a chord, 48 notes a chorus",
+                  m7.count == 48 && m7.prefix(4).map(\.display) == [57, 60, 64, 67] && m7.prefix(4).map(\.finger) == [5, 3, 2, 1]
+                  && m7.allSatisfy(\.chord) && m7[16...19].map(\.pitchClass) == [2, 5, 9, 0], "\(m7.prefix(4).map(\.display))")
+            let inv = shapes.expected(shapes.steps[1], ticksPerBeat: tpb)
+            check("shapes: inversions turn the chord over one a bar: A C E, C E A, E A C; Dm in bar 10 starts over at the root",
+                  inv.count == 36 && inv.prefix(3).map(\.display) == [57, 60, 64] && inv[3...5].map(\.display) == [60, 64, 69]
+                  && inv[6...8].map(\.display) == [64, 69, 72] && inv[6...8].map(\.finger) == [5, 2, 1] && inv[27...29].map(\.display) == [50, 53, 57]
+                  && shapes.steps[1].cycle == 3, "\(inv.prefix(9).map(\.display))")
+            let loopNotes = shapes.expected(shapes.steps[2], ticksPerBeat: tpb)
+            check("shapes: four chords is Am F C G in root position, the major third on the major chords, over the drums",
+                  shapes.steps[2].form == ["Am", "F", "C", "G", "Am", "F", "C", "G", "Am", "F", "C", "G"] && loopNotes.count == 36
+                  && loopNotes.prefix(3).map(\.display) == [57, 60, 64] && loopNotes[3...5].map(\.display) == [53, 57, 60]
+                  && loopNotes[6...8].map(\.display) == [48, 52, 55] && loopNotes[9...11].map(\.display) == [55, 59, 62]
+                  && loopNotes[3...5].map(\.pitchClass) == [5, 9, 0] && shapes.steps[2].band == ["drums"] && loopNotes.allSatisfy(\.chord),
+                  "\(loopNotes.prefix(12).map(\.display))")
+            let leadNotes = shapes.expected(shapes.steps[3], ticksPerBeat: tpb)
+            check("shapes: moving less voices the loop inside one hand: A C E, A C F, G C E, G B D (G3 to F4)",
+                  leadNotes.prefix(3).map(\.display) == [57, 60, 64] && leadNotes[3...5].map(\.display) == [57, 60, 65]
+                  && leadNotes[6...8].map(\.display) == [55, 60, 64] && leadNotes[9...11].map(\.display) == [55, 59, 62]
+                  && leadNotes.map(\.display).min() == 55 && leadNotes.map(\.display).max() == 65
+                  && leadNotes[3...5].map(\.pitchClass) == [9, 0, 5] && leadNotes[6...8].map(\.pitchClass) == [7, 0, 4],
+                  "\(leadNotes.prefix(12).map(\.display))")
+            let chank = shapes.expected(shapes.steps[4], ticksPerBeat: tpb), sus = shapes.expected(shapes.steps[5], ticksPerBeat: tpb)
+            check("shapes: the backbeat is the triad on 2 and 4 at 80; sus4 on the 1 (A D E) resolves to the minor on the 3",
+                  chank.count == 72 && chank.prefix(6).map(\.tick) == [12, 12, 12, 36, 36, 36] && shapes.steps[4].tempo == 80
+                  && sus.prefix(3).map(\.display) == [57, 62, 64] && sus[3...5].map(\.display) == [57, 60, 64] && sus[3].tick == 24
+                  && sus.prefix(3).map(\.finger) == [5, 2, 1], "\(sus.prefix(6).map { "\($0.display)@\($0.tick)" })")
+            let shell = shapes.expected(shapes.steps[6], ticksPerBeat: tpb), m9 = shapes.expected(shapes.steps[7], ticksPerBeat: tpb)
+            check("shapes: the shell is root, third, seventh (A C G); the rootless nine is C E G B over Am, F A C E over Dm",
+                  shell.prefix(3).map(\.display) == [57, 60, 67] && m9.prefix(4).map(\.display) == [60, 64, 67, 71]
+                  && m9.prefix(4).map(\.finger) == [5, 3, 2, 1] && m9[16...19].map(\.display) == [53, 57, 60, 64]
+                  && m9.map(\.display).max()! <= shapes.range.high, "\(m9.prefix(4).map(\.display))")
+            check("shapes: the jams sit under their lessons, the voice-leading jam at 80 twice a bar",
+                  (shapes.jams ?? []).map(\.after) == Array(1...8) && shapes.steps[11].tempo == 80
+                  && shapes.expected(shapes.steps[11], ticksPerBeat: tpb).count == 72 && shapes.steps[11].kind == .jam)
             let minorBand = BandData.bundled("band-minor-A")
             let blues = BandData.bundled("band-blues-C")
             check("minor: the A minor band has the shuffle's time structure and kit, i iv v, the bass low",
@@ -389,7 +480,7 @@ enum LessonCheck {
                   && { me.heard(tick: Double(3 * 4 * tpb) + 1, tempo: 70, rolling: true, epoch: 0); return me.output.coach == "Get ready. Em on the 1." }(),
                   me.output.coach)
             let je = LessonEngine(lesson: minor, ticksPerBeat: tpb, gated: false)
-            je.start(step: 6)
+            je.start(step: 13)
             var jv: [LessonEngine.Verdict] = []
             je.onVerdict = { jv.append($0) }
             var planner = Autoplay(mode: .perfect, plannedThrough: -0.01)
@@ -408,7 +499,7 @@ enum LessonCheck {
                   && je.output.complete == nil && je.output.jam && je.output.gate == 0 && je.output.lessonTitle == "First riff"
                   && je.output.lesson == 1 && je.output.coach == "Clean. Keep it rolling.", "\(jv.map(\.line)) clean \(je.output.clean)")
             let gj = LessonEngine(lesson: minor, ticksPerBeat: tpb, gated: true)
-            gj.start(step: 6)
+            gj.start(step: 13)
             check("jams: the intro is play mode under lesson 1, with the riff's fingering",
                   gj.output.intro?.jam == true && gj.output.intro?.number == 1 && gj.output.intro?.title == "First riff"
                   && gj.output.intro?.fingering == [1, 2, 3, 4, 4, 3, 2, 1], "\(String(describing: gj.output.intro?.fingering))")
@@ -427,11 +518,11 @@ enum LessonCheck {
             // The module's last lesson passing shows Module complete (Bart's two clean choruses of
             // Up and down went to a blank screen: the hand-over skipped the last step).
             let ge = LessonEngine(lesson: minor, ticksPerBeat: tpb, gated: true)
-            ge.start(step: 5)
+            ge.start(step: 12)
             ge.heard(tick: 0, tempo: 60, rolling: true, epoch: 0)
             ge.debugComplete()
-            check("run: the last lesson passed shows Lesson 6 complete with nothing next (the jams after it don't count)",
-                  ge.output.complete?.number == 6 && ge.output.complete?.next == nil && ge.output.complete?.done == "The blues scale",
+            check("run: the last lesson passed shows Lesson 13 complete with nothing next (the jams after it don't count)",
+                  ge.output.complete?.number == 13 && ge.output.complete?.next == nil && ge.output.complete?.done == "Chromatic",
                   "\(String(describing: ge.output.complete))")
         }
 
@@ -1044,6 +1135,116 @@ enum LessonCheck {
                 check("stage: a wrong key with every note holds adaptive down; playing more of the record doesn't",
                       clean.result().level == 6 && sloppy.result().level == 1,
                       "clean + record notes: top \(clean.result().level), \(clean.extras) extras · with a wrong key: top \(sloppy.result().level)")
+
+                // The adaptive rules (charting.json `adaptive`, CHARTING.md): one tier a step, a
+                // phrase held after a climb and two after a drop, no climb on scattered hits, a
+                // drop after three misses in a row, a floor just under the start.
+                func drive(_ g: GameEngine, _ play: (Int, Song.Note) -> Double?) {
+                    var tick = 0.0
+                    var i = 0
+                    while tick < Double(g.endTick) {
+                        while i < g.notes.count, Double(g.notes[i].t) < tick + 4 {
+                            if g.active(i), let offset = play(i, g.notes[i]) {
+                                let at = Double(g.notes[i].t) + offset / ms
+                                g.heard(tick: at, msPerTick: ms)
+                                g.played(note: g.notes[i].n, tick: at, msPerTick: ms)
+                            }
+                            i += 1
+                        }
+                        tick += 4
+                        g.heard(tick: tick, msPerTick: ms)
+                    }
+                }
+                let a = charting.adaptive
+                let steady = GameEngine(song: two, part: .melody, difficulty: .adaptive)
+                drive(steady) { _, _ in 0 }
+                let gaps = zip(steady.changes, steady.changes.dropFirst()).map { $1.block - $0.block }
+                check("stage: adaptive climbs one tier at a time and holds a block after each climb (afterClimb \(a.afterClimb))",
+                      steady.changes.count == steady.tiers - 1 && steady.changes.allSatisfy { $0.to == $0.from + 1 }
+                      && gaps.allSatisfy { $0 == a.afterClimb + 1 }, "changes at blocks \(steady.changes.map(\.block))")
+                let scatter = GameEngine(song: two, part: .melody, difficulty: .adaptive)
+                drive(scatter) { i, _ in i % 2 == 0 ? 70 : -70 }
+                check("stage: hits scattered 70 ms (over spreadMaxMs \(Int(a.spreadMaxMs ?? 0))) never climb, though every note is hit",
+                      scatter.missed == 0 && scatter.result().level == 1 && scatter.changes.isEmpty, "top \(scatter.result().level), \(scatter.good) good")
+                var skipped = 0
+                let cluster = GameEngine(song: two, part: .melody, difficulty: .adaptive)
+                drive(cluster) { _, n in
+                    // Three misses in a row in bar 24, everything else clean: the window's rate stays
+                    // over `ease`, the cluster alone drops it.
+                    if n.t / two.ticksPerBar == 24, skipped < 3 { skipped += 1; return nil }
+                    return 0
+                }
+                let drop = cluster.changes.first { $0.to < $0.from }
+                check("stage: \(a.missRun ?? 0) misses in a row drop a tier even at a hit rate over ease, then two blocks hold (afterDrop \(a.afterDrop))",
+                      drop != nil && drop!.rate >= a.ease && skipped == 3
+                      && (cluster.changes.firstIndex { $0.to < $0.from }.map { i in i + 1 < cluster.changes.count ? cluster.changes[i + 1].block - cluster.changes[i].block >= a.afterDrop + 1 : true } ?? false),
+                      "changes \(cluster.changes.map { "\($0.block):\($0.from)→\($0.to) @\(Int($0.rate * 100))%" })")
+                let floorRun = GameEngine(song: two, part: .melody, difficulty: .adaptive, start: 4)
+                drive(floorRun) { _, _ in nil }
+                check("stage: a run that started on 4 and plays nothing sinks to 3 and no further (floorBelowStart \(a.floorBelowStart))",
+                      floorRun.blockLevel.min() == 3 && floorRun.blockLevel[0] == 4 && floorRun.result().level == 4, "levels \(floorRun.blockLevel)")
+                // A player model: clean up to their tier, 70% a tier above, under half beyond;
+                // offsets normal with 30 / 45 / 60 ms spread (a seeded LCG with Box–Muller). Adaptive
+                // should settle on the tier above theirs (hysteresis: 75% is between ease and climb)
+                // and stop changing, not ping-pong.
+                var seed: UInt64 = 7
+                func rand() -> Double { seed = seed &* 6364136223846793005 &+ 1442695040888963407; return Double(seed >> 11) / Double(1 << 53) }
+                func gauss(_ sd: Double) -> Double { sd * (-2 * log(max(rand(), 1e-12))).squareRoot() * cos(2 * .pi * rand()) }
+                let own = 3
+                let bot = GameEngine(song: two, part: .melody, difficulty: .adaptive)
+                drive(bot) { _, n in
+                    let t = bot.level(atBar: n.t / two.ticksPerBar)
+                    let (p, sd) = t <= own ? (0.95, 30.0) : t == own + 1 ? (0.7, 45.0) : (0.45, 60.0)
+                    return rand() < p ? gauss(sd) : nil
+                }
+                let half = bot.blockLevel.count / 2
+                let late = bot.changes.filter { $0.block >= half }
+                // A 70% player sits in the hold band on average; a window still scatters the
+                // rate, so the bound is on how far and how often it wanders, not zero changes.
+                check("stage: a level-\(own) player model ends on level \(own) or \(own + 1), stays within \(own)–\(own + 2) in the second half, changing at most twice",
+                      (own...own + 1).contains(bot.blockLevel.last!) && late.count <= 2
+                      && bot.blockLevel[half...].allSatisfy { (own...own + 2).contains($0) },
+                      "levels \(bot.blockLevel), changes \(bot.changes.map { "\($0.block):\($0.from)→\($0.to)" })")
+                // A thin part cuts the same chart on two or three tiers (Abyss's long tones at
+                // the top of its ladder): a climb lands on the next tier that differs.
+                if let abyss = songs.first(where: { $0.name == "song-abyss" }) {
+                    let skip = GameEngine(song: abyss, part: .melody, difficulty: .adaptive)
+                    let ams = 60000 / (Double(abyss.meta.tempo) * Double(abyss.band.ticksPerBeat))
+                    var tick = 0.0
+                    var i = 0
+                    while tick < Double(skip.endTick) {
+                        while i < skip.notes.count, Double(skip.notes[i].t) < tick + 4 {
+                            if skip.active(i) { skip.heard(tick: Double(skip.notes[i].t), msPerTick: ams); skip.played(note: skip.notes[i].n, tick: Double(skip.notes[i].t), msPerTick: ams) }
+                            i += 1
+                        }
+                        tick += 4
+                        skip.heard(tick: tick, msPerTick: ams)
+                    }
+                    let m = abyss.masks(.melody)
+                    check("stage: on Abyss's melody every adaptive climb changes the chart or lands on the top (identical tiers are skipped)",
+                          skip.changes.allSatisfy { m[$0.to - 1] != m[$0.from - 1] || $0.to == skip.tiers } && skip.result().level == skip.tiers
+                          && skip.distinct(from: 4, up: true) == 6 && m[3] == m[5],
+                          "changes \(skip.changes.map { "\($0.block):\($0.from)→\($0.to)" })")
+                }
+            }
+            // Ladder health, every song and part: each level is the one below plus more (seeded
+            // masks), so it never has fewer notes a second; and level 1 is at most half the top,
+            // so the ladder has somewhere to go. The detail: notes a second by level, and the
+            // rise per step.
+            for s in songs {
+                for k in s.partKeys {
+                    let masks = s.masks(k)
+                    let subset = zip(masks, masks.dropFirst()).allSatisfy { lo, hi in zip(lo, hi).allSatisfy { !$0 || $1 } }
+                    let rates = masks.map { m in Double(m.filter { $0 }.count) / s.seconds }
+                    let rising = zip(rates, rates.dropFirst()).allSatisfy { $1 >= $0 - 1e-9 }
+                    let rise = zip(rates, rates.dropFirst()).map { $0 > 0 ? "+\(Int((($1 / $0) - 1) * 100 + 0.5))%" : "—" }
+                    // A dense part has room for a ladder (level 1 at most half the top); a thin one
+                    // (long tones under 1.5 a second) can only thin so far.
+                    let share = rates.last! >= 1.5 ? 0.5 : 0.65
+                    check("stage: \(s.meta.title) \(k.rawValue): every level is the one below plus more, level 1 at most \(Int(share * 100))% of the top",
+                          subset && rising && rates[0] <= rates.last! * share + 1e-9,
+                          "notes/s " + rates.map { String(format: "%.2f", $0) }.joined(separator: " · ") + " · rise \(rise.joined(separator: " "))")
+                }
             }
             if let song = songs.first {
                 let tpbar = song.ticksPerBar
@@ -1090,13 +1291,13 @@ enum LessonCheck {
                 check("stage: a key no note wants is an extra, not a hit", wrong.extras == 1 && wrong.perfect + wrong.good == 0)
                 let adaptive = run(.adaptive) { _, _ in 0 }
                 let steps = zip(adaptive.blockLevel, adaptive.blockLevel.dropFirst())
-                check("stage: adaptive climbs one level at a time to the top on clean playing",
-                      adaptive.blockLevel[0] == charting.adaptive.start && steps.allSatisfy { $1 == $0 || $1 == $0 + 1 }
+                check("stage: adaptive climbs one level at a time to the top on clean playing (past a level whose chart is the same)",
+                      adaptive.blockLevel[0] == charting.adaptive.start && steps.allSatisfy { $1 == $0 || $1 == adaptive.distinct(from: $0, up: true) }
                       && adaptive.result().level == adaptive.tiers, "levels \(adaptive.blockLevel)")
                 let eases = run(.adaptive) { n, _ in n.t / tpbar >= 12 && n.t / tpbar < 20 ? nil : 0 }
                 let down = zip(eases.blockLevel, eases.blockLevel.dropFirst()).enumerated().first { $0.element.1 < $0.element.0 }?.offset
                 check("stage: missed bars ease it off a level at a time, clean ones bring it back",
-                      down != nil && zip(eases.blockLevel, eases.blockLevel.dropFirst()).allSatisfy { abs($1 - $0) <= 1 }
+                      down != nil && zip(eases.blockLevel, eases.blockLevel.dropFirst()).allSatisfy { $1 == $0 || $1 == eases.distinct(from: $0, up: $1 > $0) }
                       && eases.blockLevel.last! > eases.blockLevel[down! + 1], "levels \(eases.blockLevel)")
                 let hardScore = run(.hard) { _, _ in 0 }.score
                 check("stage: hard pays more than twice easy", hardScore > perfect.score * 2,
@@ -1121,6 +1322,19 @@ enum LessonCheck {
                 check("stage: tap mode plays each chord whole on one finger: every key hit, none extra, grade S",
                       tap.perfect == chordNotes && tap.missed == 0 && tap.extras == 0 && tap.result().grade == "S"
                       && chordNotes > chordTicks.count, "\(tap.perfect)/\(chordNotes) on \(chordTicks.count) taps, \(tap.extras) extra")
+                // One finger of every chord dropped: a miss per chord, but the combo runs on (a
+                // 30-combo shouldn't go on one finger); a whole chord skipped breaks it.
+                let dropped = GameEngine(song: song, part: .chords, difficulty: .easy)
+                for (n, t) in chordTicks.enumerated() {
+                    dropped.heard(tick: Double(t), msPerTick: ms)
+                    let keys = dropped.due(at: Double(t), msPerTick: ms).sorted()
+                    for k in (n == 5 ? [] : keys.dropLast()) { dropped.played(note: k, tick: Double(t), msPerTick: ms) }
+                }
+                dropped.heard(tick: Double(song.endTick) + Double(tpbar), msPerTick: ms)
+                check("stage: a chord with one finger dropped is a miss for that note but keeps the combo; a whole chord skipped breaks it",
+                      dropped.missed == chordTicks.count + 1 && dropped.maxCombo == chordTicks.count - 6 && dropped.combo == chordTicks.count - 6
+                      && dropped.perfect == chordNotes - chordTicks.count - 1,
+                      "\(dropped.missed) missed, combo \(dropped.combo) of \(chordTicks.count) chords, max \(dropped.maxCombo)")
                 let stray = GameEngine(song: song, part: .chords, difficulty: .easy)
                 let gap = Double(chordTicks[0]) - 400 / ms
                 let strayKeys = stray.due(at: gap, msPerTick: ms)

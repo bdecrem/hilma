@@ -1,15 +1,14 @@
 {
-  "about": "How the Stage cuts a part into levels; CHARTING.md explains every knob. Each part has a ladder of tiers, easiest first. Easy, Medium and Hard each name a tier, and Adaptive walks the ladder one step at a time. A tier: notes = chord notes kept, in `keep` order (null = all); hits = the heaviest weight played as written (1 the hits a part stands on, 2 the groove, 3 pushes and ornaments); gap = seconds at least between two onsets; space = seconds at most without an onset (a longer silence borrows a lighter hit; null = never); bonus = points per hit times this. A ladder's phrase (bars) keeps every key the part plays in each phrase at every tier, before the weights. Adaptive starts `resume` tiers under the top of your last adaptive run of the song and part (`start` the first time); a wrong key counts as a miss in its window.",
+  "about": "How the Stage cuts a part into levels; CHARTING.md explains every knob. Each part has a ladder of tiers, easiest first, and every tier is the one below plus more (a tier may only loosen a rule). Easy, Medium and Hard each name a tier, and Adaptive walks the ladder one step at a time. A tier: notes = chord notes kept, in `keep` order (null = all); hits = the heaviest weight played as written (1 the hits a part stands on, 2 the groove, 3 pushes and ornaments); gap = seconds at least between two onsets; space = seconds at most without an onset (a longer silence borrows a lighter hit; null = never); bonus = points per hit times this. A ladder's phrase (bars) keeps every key the part plays in each phrase at every tier, before the weights. Adaptive: a window of `window` bars (reaching back to twice that for `judged` notes) is judged `ahead` bars before the next block; at or over `climb` it climbs (not while the hits scatter past spreadMaxMs, median ms), under `ease` or after `missRun` misses in a row it drops; then climbs hold for afterClimb / afterDrop blocks (drops never wait); a climb or a drop lands on the next tier whose chart differs; it never sinks under floorBelowStart tiers below where the run began; a run starts `resume` tiers under the top of your last adaptive run of the song and part (`start` the first time); a wrong key counts as a miss in its window.",
   "chords": {
     "keep": ["root", "third", "fifth", "seventh", "sixth", "ninth"],
     "easy": 2,
-    "medium": 4,
-    "hard": 7,
+    "medium": 3,
+    "hard": 6,
     "tiers": [
       {"line": "Two-note chords, room between them.", "notes": 2, "hits": 1, "gap": 1.2, "space": 2.0, "bonus": 1.0},
       {"line": "Two-note chords, on the groove.", "notes": 2, "hits": 2, "gap": 0.6, "space": 1.5, "bonus": 1.2},
-      {"line": "Three-note chords, room between them.", "notes": 3, "hits": 1, "gap": 1.2, "space": 2.0, "bonus": 1.4},
-      {"line": "Three-note chords, on the groove.", "notes": 3, "hits": 2, "gap": 0.6, "space": 1.5, "bonus": 1.6},
+      {"line": "Three-note chords, on the groove.", "notes": 3, "hits": 2, "gap": 0.6, "space": 1.5, "bonus": 1.5},
       {"line": "Three-note chords and the pushes.", "notes": 3, "hits": 3, "gap": 0.35, "space": 1.2, "bonus": 1.8},
       {"line": "Four-note chords, nearly all of it.", "notes": 4, "hits": 3, "gap": 0.25, "space": 1.0, "bonus": 2.0},
       {"line": "The part as the record plays it.", "notes": null, "hits": 3, "gap": 0, "space": null, "bonus": 2.2}
@@ -37,7 +36,12 @@
     "ahead": 2,
     "climb": 0.85,
     "ease": 0.6,
-    "judged": 4
+    "judged": 8,
+    "spreadMaxMs": 60,
+    "afterClimb": 1,
+    "afterDrop": 2,
+    "missRun": 3,
+    "floorBelowStart": 1
   },
   "songs": {}
 }

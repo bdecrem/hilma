@@ -34,6 +34,9 @@ struct Lesson: Decodable {
         let bar: Int?
         /// The finger that plays it (1 thumb … 5 pinky), shown on the keyboard and in the step's intro.
         let finger: Int?
+        /// Only in the bars of this chord (a name of the step's `chords`): a voicing of its own per
+        /// chord, the way a hand voice-leads a progression (Am as A C E, F as A C F). Nil: every bar.
+        let chord: String?
 
         var interval: Int? { semitones ?? tone.flatMap { Lesson.tones[$0] } }
     }
@@ -130,6 +133,9 @@ struct Lesson: Decodable {
         let hand: String?
         /// A run in another key than the module's ("A blues"): the run panel's name.
         let key: String?
+        /// Spell the run's black keys as flats (D minor's B♭, F major's B♭). Nil: flats when the
+        /// run's name ends in "blues", sharps otherwise.
+        let flats: Bool?
         /// The band channels this step plays (keys of `channels`: "drums", "bass"…); the rest are
         /// muted and hidden. Nil: the module's channels with their unlock tempos.
         let band: [String]?
@@ -166,7 +172,8 @@ struct Lesson: Decodable {
     let channels: [LessonChannel]
     let steps: [Step]
 
-    static let tones = ["root": 0, "minorThird": 3, "third": 4, "fifth": 7, "sixth": 9, "seventh": 10, "octave": 12]
+    static let tones = ["root": 0, "second": 2, "minorThird": 3, "third": 4, "fourth": 5, "flatFifth": 6, "fifth": 7,
+                        "sixth": 9, "seventh": 10, "majorSeventh": 11, "octave": 12, "ninth": 14]
 
     /// Loads a bundled lesson and checks it. Bad content is a build error, so it traps.
     static func bundled(_ name: String) -> Lesson {
@@ -237,6 +244,17 @@ struct Lesson: Decodable {
                 || !(0..<(step.cycle ?? 1)).contains(p.bar ?? 0) {
                 fatalError("lesson \(code) step \(step.id): bad pattern note \(p)")
             }
+            let stepChords = chords(of: step)
+            for c in pattern.compactMap(\.chord) where stepChords[c] == nil {
+                fatalError("lesson \(code) step \(step.id): pattern note for a chord \(c) the step has no bar of")
+            }
+            // A per-chord pattern covers every chord of the form, or none: a bar with nothing to
+            // play would read as a rest the player can't tell from a missing voicing.
+            let perChord = Set(pattern.compactMap(\.chord))
+            let allPerChord = pattern.allSatisfy { $0.chord != nil }
+            if !perChord.isEmpty && allPerChord {
+                for c in form(of: step) where !perChord.contains(c) { fatalError("lesson \(code) step \(step.id): no voicing for \(c)") }
+            }
         }
     }
 
@@ -298,9 +316,10 @@ struct Lesson: Decodable {
         let chords = chords(of: step)
         for (bar, name) in form(of: step).enumerated() {
             let root = chords[name]!.root
-            for p in pattern where (p.bar ?? 0) == bar % cycle {
+            let here = pattern.filter { ($0.bar ?? 0) == bar % cycle && ($0.chord == nil || $0.chord == name) }
+            for p in here {
                 let interval = p.interval!
-                let together = pattern.filter { ($0.bar ?? 0) == (p.bar ?? 0) && $0.beat == p.beat && ($0.tick ?? 0) == (p.tick ?? 0) }.count
+                let together = here.filter { $0.beat == p.beat && ($0.tick ?? 0) == (p.tick ?? 0) }.count
                 notes.append(ExpectedNote(
                     tick: (bar * 4 + p.beat - 1) * ticksPerBeat + (p.tick ?? 0),
                     bar: bar,
