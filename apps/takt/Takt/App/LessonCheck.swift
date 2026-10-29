@@ -1071,6 +1071,7 @@ enum LessonCheck {
                 let all = s.notes(.melody), masks = s.masks(.melody), span = (charting.melody.phrase ?? 1) * s.ticksPerBar
                 let phrases = Set(all.map { $0.t / span }).sorted()
                 var fewest: [Int] = []
+                var bad: [String] = []
                 var ok = true
                 for m in masks {
                     var low = Int.max
@@ -1078,21 +1079,29 @@ enum LessonCheck {
                         let line = Set(all.filter { $0.t / span == p }.map(\.n))
                         let kept = Set(all.indices.filter { m[$0] && all[$0].t / span == p }.map { all[$0].n })
                         let onsets = Set(all.indices.filter { m[$0] && all[$0].t / span == p }.map { all[$0].t }).count
-                        if line.count > 1 { low = min(low, kept.count); if kept.count < min(2, onsets) { ok = false } }
+                        if line.count > 1 { low = min(low, kept.count); if kept.count < min(2, onsets) { ok = false; bad.append("level \(fewest.count + 1) phrase \(p) keys \(kept.sorted()) of \(line.sorted())") } }
                     }
                     fewest.append(low == .max ? 0 : low)
                 }
-                check("stage: \(s.meta.title) melody: every level plays the line's keys, not one", ok, "fewest keys a phrase, by level: \(fewest)")
+                check("stage: \(s.meta.title) melody: every level plays the line's keys, not one", ok, "fewest keys a phrase, by level: \(fewest) \(bad.prefix(3).joined(separator: "; "))")
             }
             if let two = songs.first(where: { $0.name == "song-hypnotist-2" }) {
                 let all = two.notes(.melody), masks = two.masks(.melody), span = 2 * two.ticksPerBar
                 let counts = masks.map { m in m.filter { $0 }.count }
                 let grows = zip(masks, masks.dropFirst()).allSatisfy { lo, hi in zip(lo, hi).allSatisfy { !$0 || $1 } } && Set(counts).count == counts.count
-                let acd = masks.allSatisfy { m in
-                    Set(all.map { $0.t / span }).allSatisfy { p in Set(all.indices.filter { m[$0] && all[$0].t / span == p }.map { all[$0].n }) == [57, 60, 62] }
+                var thin: [String] = []
+                for (li, m) in masks.enumerated() {
+                    for p in Set(all.map { $0.t / span }).sorted() {
+                        let keys = Set(all.indices.filter { m[$0] && all[$0].t / span == p }.map { all[$0].n })
+                        // Three of the line's keys in every phrase at every level, A among them; an
+                        // answer phrase (A C D E) can't fit four at level 1's gap, and keeps the lift.
+                        if keys.count < 3 || !keys.contains(57) { thin.append("level \(li + 1) phrase \(p) \(keys.sorted())") }
+                    }
                 }
-                check("stage: Hypnotist II: six levels, each the one below plus more, every one A C D in every phrase",
-                      masks.count == 6 && grows && acd && Set(all.map(\.n)) == [57, 60, 62], "notes by level \(counts)")
+                let acd = thin.isEmpty
+                check("stage: Hypnotist II: six levels, each the one below plus more, three of its keys in every phrase of every one (A C D, or A D E on the lift)",
+                      masks.count == 6 && grows && acd && Set(all.map(\.n)) == [57, 60, 62, 64] && all[0].t / two.ticksPerBar == 4,
+                      "notes by level \(counts), from bar \(all[0].t / two.ticksPerBar) \(thin.prefix(4).joined(separator: "; "))")
 
                 // Adaptive resumes just under the last run's top, and wrong keys hold it back
                 // where the record's own notes don't.
@@ -1109,8 +1118,8 @@ enum LessonCheck {
                     GameEngine.adaptiveStart(song: two.name, part: .melody, records: [record("melody", "hard", level: 6, 60),
                                                                                     record("chords", "adaptive", level: 7, 30)]),
                 ]
-                check("stage: adaptive starts at 1, then one under the last adaptive run's top (that song and part only)",
-                      starts == [1, 4, 2, 1], "\(starts)")
+                check("stage: adaptive starts at \(charting.adaptive.start), then one under the last adaptive run's top (that song and part only), never under the start",
+                      starts == [3, 4, 3, 3], "\(starts)")
                 let ms = 60000 / (Double(two.meta.tempo) * Double(two.band.ticksPerBeat))
                 func adaptive(wrong: Int?, extra: Bool) -> GameEngine {
                     let g = GameEngine(song: two, part: .melody, difficulty: .adaptive)
@@ -1133,7 +1142,7 @@ enum LessonCheck {
                 }
                 let clean = adaptive(wrong: nil, extra: true), sloppy = adaptive(wrong: 63, extra: false)
                 check("stage: a wrong key with every note holds adaptive down; playing more of the record doesn't",
-                      clean.result().level == 6 && sloppy.result().level == 1,
+                      clean.result().level == 6 && sloppy.result().level == 3 && sloppy.blockLevel.min() == 2,
                       "clean + record notes: top \(clean.result().level), \(clean.extras) extras · with a wrong key: top \(sloppy.result().level)")
 
                 // The adaptive rules (charting.json `adaptive`, CHARTING.md): one tier a step, a
@@ -1159,13 +1168,13 @@ enum LessonCheck {
                 let steady = GameEngine(song: two, part: .melody, difficulty: .adaptive)
                 drive(steady) { _, _ in 0 }
                 let gaps = zip(steady.changes, steady.changes.dropFirst()).map { $1.block - $0.block }
-                check("stage: adaptive climbs one tier at a time and holds a block after each climb (afterClimb \(a.afterClimb))",
-                      steady.changes.count == steady.tiers - 1 && steady.changes.allSatisfy { $0.to == $0.from + 1 }
+                check("stage: a perfect run climbs one tier at a time, a whole block at each tier before the next (afterClimb \(a.afterClimb)), from \(a.start) to the top",
+                      steady.changes.count == steady.tiers - a.start && steady.changes.allSatisfy { $0.to == $0.from + 1 }
                       && gaps.allSatisfy { $0 == a.afterClimb + 1 }, "changes at blocks \(steady.changes.map(\.block))")
                 let scatter = GameEngine(song: two, part: .melody, difficulty: .adaptive)
                 drive(scatter) { i, _ in i % 2 == 0 ? 70 : -70 }
                 check("stage: hits scattered 70 ms (over spreadMaxMs \(Int(a.spreadMaxMs ?? 0))) never climb, though every note is hit",
-                      scatter.missed == 0 && scatter.result().level == 1 && scatter.changes.isEmpty, "top \(scatter.result().level), \(scatter.good) good")
+                      scatter.missed == 0 && scatter.result().level == a.start && scatter.changes.isEmpty, "top \(scatter.result().level), \(scatter.good) good")
                 var skipped = 0
                 let cluster = GameEngine(song: two, part: .melody, difficulty: .adaptive)
                 drive(cluster) { _, n in
@@ -1239,8 +1248,9 @@ enum LessonCheck {
                     let rising = zip(rates, rates.dropFirst()).allSatisfy { $1 >= $0 - 1e-9 }
                     let rise = zip(rates, rates.dropFirst()).map { $0 > 0 ? "+\(Int((($1 / $0) - 1) * 100 + 0.5))%" : "—" }
                     // A dense part has room for a ladder (level 1 at most half the top); a thin one
-                    // (long tones under 1.5 a second) can only thin so far.
-                    let share = rates.last! >= 1.5 ? 0.5 : 0.65
+                    // (long tones under 1.5 a second) can only thin so far: the phrase rule keeps
+                    // every key of every phrase, and Abyss's line is nearly that already.
+                    let share = rates.last! >= 1.5 ? 0.5 : 0.7
                     check("stage: \(s.meta.title) \(k.rawValue): every level is the one below plus more, level 1 at most \(Int(share * 100))% of the top",
                           subset && rising && rates[0] <= rates.last! * share + 1e-9,
                           "notes/s " + rates.map { String(format: "%.2f", $0) }.joined(separator: " · ") + " · rise \(rise.joined(separator: " "))")

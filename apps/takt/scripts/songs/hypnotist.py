@@ -121,21 +121,31 @@ LEVEL = {0: 1, 9: 2, 15: 3, 24: 1, 30: 2, 39: 3}
 TURN = [(0, 57, 1), (3, 60, 3), (6, 62, 1), (9, 57, 2), (12, 60, 1), (15, 62, 3), (18, 57, 2), (21, 60, 2),
         (24, 62, 1), (27, 57, 3), (30, 60, 2)]
 REPEATS = [(7, 62, 3), (25, 62, 3), (31, 60, 3)]
-FINGER = {57: 1, 60: 3, 62: 4}
+FINGER = {57: 1, 60: 3, 62: 4, 64: 5}
 melody = s.part("melody", "The phase" if II else "The bleep", "bleep", "horns", "bleep")
 for bar in range(s.bars):
     o = bar * BAR
     sec = section(bar)
-    if sec == "Intro" or (sec == "Out" and bar >= 76):
-        continue
     if II:
+        # The phase comes in at bar 4 (its bones; nothing to play for 15 s was the complaint),
+        # whole from the Bleep section, half time in the break, without its repeats on the way out.
+        # Every fourth two-bar phrase answers: its second bar lifts the D to E (the only
+        # fourth key, so the loop turns a corner once every eight bars).
+        if bar < 4 or bar >= 76:
+            continue
         half = (bar % 2) * 16
+        answer = (bar // 2) % 4 == 3 and sec in ("Bleep", "Full")
         for step, n, lv in TURN + (REPEATS if sec == "Full" else []):
             if not half <= step < half + 16:
                 continue
-            if (sec == "Pulse" and lv == 3) or (sec == "Break" and (lv == 3 or step % 6)) or (sec == "Out" and lv > 1):
-                continue  # the bones as it comes in, half time in the break, the keys alone on the way out
+            if (sec in ("Intro", "Pulse") and lv == 3) or (sec == "Intro" and lv == 2) \
+                    or (sec == "Break" and (lv == 3 or step % 6)) or (sec == "Out" and lv > 2):
+                continue
+            if answer and step >= 16 and n == 62:
+                n = 64
             s.pnote(melody, o + (step - half) * 3, n, 3, lv, FINGER[n])
+        continue
+    if sec == "Intro" or (sec == "Out" and bar >= 76):
         continue
     for t, n in SEQ.items():
         if sec == "Pulse" and LEVEL[t] == 3:

@@ -143,7 +143,7 @@ struct Charting: Decodable {
     func line(_ difficulty: GameEngine.Difficulty, song: String, part: Song.PartKey) -> String {
         guard let t = tier(difficulty, song: song, part: part) else {
             let n = ladder(part).tiers.count
-            return "Level \(adaptive.start) of \(n) the first time, then just under where your last run got to. Clean \(adaptive.window) bars and it climbs a level, one at a time; misses and wrong keys step it back. It holds a phrase after each change."
+            return "Level \(adaptive.start) of \(n) the first time, then just under where your last run got to. Clean bars climb it a level at a time, misses and wrong keys step it back at once, and the band plays whatever the level leaves out."
         }
         return "Level \(t) of \(ladder(part).tiers.count). " + ladder(part).tier(t).line
     }
@@ -190,18 +190,42 @@ struct Charting: Decodable {
                 }
                 for i in kept { mask[i] = true }
             }
+            func untake(_ o: (t: Int, lv: Int, idx: [Int])) {
+                if let at = taken.firstIndex(of: o.t) { taken.remove(at: at) }
+                isTaken.remove(o.t)
+                for i in o.idx { mask[i] = false }
+            }
             // The tier below, whole (its onsets fit this tier's gap: the ladder only loosens).
             for o in onsets where seed.contains(o.t) { take(o) }
-            // Then every key of each phrase, at its heaviest, earliest onset that fits.
+            // Then every key of each phrase, each at its heaviest, earliest onset that fits: a
+            // depth-first search over the keys, backtracking when a later key has nothing left
+            // that fits (one key's early pick can crowd another's only onsets), so a phrase
+            // covers all its keys whenever any combination does; else the most keys it can.
             if let phrase = l.phrase, let last = onsets.last?.t {
                 let span = phrase * ticksPerBar
                 for p in 0...(last / span) {
                     let window = onsets.filter { $0.t >= p * span && $0.t < (p + 1) * span }.sorted { ($0.lv, $0.t) < ($1.lv, $1.t) }
                     var keys: [Int] = []
                     for o in window { for i in o.idx where !keys.contains(notes[i].n) { keys.append(notes[i].n) } }
-                    for key in keys where !window.contains(where: { o in isTaken.contains(o.t) && o.idx.contains { notes[$0].n == key } }) {
-                        if let o = window.first(where: { o in !isTaken.contains(o.t) && o.idx.contains { notes[$0].n == key } && fits(o.t) }) { take(o) }
+                    let open = keys.filter { key in !window.contains { o in isTaken.contains(o.t) && o.idx.contains { notes[$0].n == key } } }
+                    var chosen: [Int] = []
+                    var best: [Int] = []
+                    func search(_ k: Int) -> Bool {
+                        if k == open.count { best = chosen; return true }
+                        for (wi, o) in window.enumerated()
+                        where !isTaken.contains(o.t) && o.idx.contains(where: { notes[$0].n == open[k] }) && fits(o.t) {
+                            take(o)
+                            chosen.append(wi)
+                            if search(k + 1) { return true }
+                            untake(o)
+                            chosen.removeLast()
+                        }
+                        // This key has no fit: carry on with the rest, keeping the widest cover seen.
+                        if k + 1 < open.count, search(k + 1) { return true }
+                        if chosen.count > best.count { best = chosen }
+                        return false
                     }
+                    if !search(0) { for wi in best { take(window[wi]) } }
                 }
             }
             // The hits the tier plays, heaviest first, then early first, wherever they fit the gap.

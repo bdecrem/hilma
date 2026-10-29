@@ -69,6 +69,11 @@ final class Player {
     /// Bars in the loaded band's chorus (the lesson's form, or a whole song).
     @ObservationIgnored private var chorusBars: Int
     @ObservationIgnored private var gameEpoch = 0
+    /// The record fills what the level leaves out: the part's notes the tier doesn't ask for are
+    /// scheduled on the part's instrument a bar ahead, at the band's own velocity, so a low level
+    /// still sounds like the song and the player plays a part of it (Guitar Hero's rule).
+    @ObservationIgnored private var fillVelocity: [Int: Float] = [:]
+    @ObservationIgnored private var fillThrough = -1
     @ObservationIgnored private var gameDifficulty = GameEngine.Difficulty.adaptive
 
     /// Calibration's result: how early (negative) or late this player presses, ms. Every scored
@@ -638,6 +643,9 @@ final class Player {
         gameEpoch = audio.snapshot().epoch + 1
         game = GameEngine(song: song, part: part, difficulty: difficulty,
                           start: GameEngine.adaptiveStart(song: song.name, part: part, records: progress.scores(song: song.name)))
+        fillVelocity = [:]
+        for e in partChannel == .horns ? song.band.channels.horns : song.band.channels.keys { fillVelocity[e.t * 128 + e.n] = Float(e.v) }
+        fillThrough = -1
         audio.send(.stop)
         audio.send(.transpose(0))
         audio.send(.silence(from: 0, to: 0))
@@ -675,6 +683,14 @@ final class Player {
         }
         guard epoch == gameEpoch else { return }
         game.heard(tick: heard.tick, msPerTick: heard.msPerTick)
+        // The bar ahead's notes the level leaves out, on the part's instrument (its tier is
+        // decided two bars before it starts).
+        while fillThrough < min(game.heardBar + 1, game.song.bars - 1) {
+            fillThrough += 1
+            for n in game.fill(bar: fillThrough) {
+                audio.send(.schedule(note: n.n, velocity: fillVelocity[n.t * 128 + n.n] ?? 0.6, tick: Double(n.t), lengthTicks: Double(n.len)))
+            }
+        }
         #if DEBUG
         runGameAutoplay(clock, heard: heard)
         runGameAutoTap(heard)

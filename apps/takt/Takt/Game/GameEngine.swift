@@ -163,6 +163,13 @@ final class GameEngine {
     /// Whether note `i` plays at the tier of its bar.
     func active(_ i: Int) -> Bool { masks[level(atBar: notes[i].t / ticksPerBar) - 1][i] }
 
+    /// The record fills what the level leaves out: the part's notes in `bar` that don't play at
+    /// its tier, for the Player to schedule on the part's instrument. Decided once the bar's
+    /// block is (`ahead` bars before it starts).
+    func fill(bar: Int) -> [Song.Note] {
+        notes.indices.filter { notes[$0].t / ticksPerBar == bar && !active($0) }.map { notes[$0] }
+    }
+
     func isHit(_ i: Int) -> Bool {
         if case .hit = status[i] { return true }
         return false
@@ -214,8 +221,9 @@ final class GameEngine {
         decided.insert(k)
         // Two windows. Drops read the last `window` bars (reaching back up to twice that for
         // `judged` notes, so a sparse level at a slow tempo is judged on enough notes to mean
-        // something); climbs read twice the window. Falling apart shows in a phrase, being
-        // ready for more takes two: Rocksmith's complaint was levelling up too soon.
+        // something); climbs read up to twice the window, the bars at this tier only. Falling
+        // apart shows in a phrase, being ready for more takes a whole phrase at the tier:
+        // Rocksmith's complaint was levelling up too soon.
         let to = k * a.window - a.ahead
         struct Window {
             var hits = 0, misses = 0, longestRun = 0
@@ -237,8 +245,13 @@ final class GameEngine {
         var from = to - a.window
         var short = window(from, to)
         while short.judged < a.judged, from > max(0, to - 2 * a.window) { from -= 1; short = window(from, to) }
-        let long = window(to - 2 * a.window, to)
         let current = blockLevel[k - 1]
+        // The climb's evidence comes from bars played at this tier only (a window that is
+        // mostly the easier tier before a climb says nothing about the new one), at least a
+        // whole phrase of them.
+        let atTier = ((to - 2 * a.window)..<to).filter { $0 >= 0 && self.level(atBar: $0) == current }
+        var long = Window()
+        for b in atTier { let w = window(b, b + 1); long.hits += w.hits; long.misses += w.misses; long.offsets += w.offsets }
         var level = current
         let floor = max(1, startLevel - a.floorBelowStart)
         // A cooldown holds climbs only: a player who falls apart right after a climb (or a
@@ -249,7 +262,8 @@ final class GameEngine {
         if short.judged >= a.judged, short.rate < a.ease || (a.missRun.map { short.longestRun >= $0 } ?? false) {
             level = max(floor, distinct(from: current, up: false))
             if level != current { cooldown = a.afterDrop }
-        } else if !held, long.judged >= a.judged, long.rate >= a.climb, long.spread <= (a.spreadMaxMs ?? .infinity) {
+        } else if !held, atTier.count >= a.window, long.judged >= a.judged, long.rate >= a.climb,
+                  long.spread <= (a.spreadMaxMs ?? .infinity) {
             level = distinct(from: current, up: true)
             if level != current { cooldown = a.afterClimb }
             rate = long.rate

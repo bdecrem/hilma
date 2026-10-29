@@ -61,9 +61,17 @@ the one below plus more, A C D in every phrase of every one.
 (4); `ahead` bars (2) before a block starts, its tier is decided. Two windows are read
 (0.1 (50)): **a drop** reads the last `window` bars, reaching back up to twice that until
 `judged` notes (8) have been judged, so a sparse level at a slow tempo is judged on enough
-notes to mean something; **a climb** reads twice the window. Falling apart shows in one
-phrase; being ready for more takes two (Rocksmith's documented complaint was levelling up
-before the player was ready). The rules:
+notes to mean something; **a climb** reads the bars played at the current tier, a whole
+window of them at least and up to two (a window that is mostly the easier tier before a
+climb says nothing about the new one). Falling apart shows in one phrase; being ready for
+more takes a phrase at the tier (Rocksmith's documented complaint was levelling up before
+the player was ready). **The record fills what the level leaves out** (0.1 (51)): the part's
+notes a tier doesn't ask for are scheduled on the part's instrument at the band's own
+velocity, a bar ahead, so a low level still sounds like the song and the player plays a part
+of it, the way a Guitar Hero track keeps playing. A first run starts on `start` (3: most of
+the tune, three-note chords on the groove), because drops are fast and climbs slow: a
+beginner is down a level within a phrase, and a player who can play isn't sat on one note a
+bar for a minute. The rules:
 
 - under `ease` (60%) hit rate, or after `missRun` (3) misses in a row anywhere in the window,
   it drops a tier, then holds climbs for `afterDrop` (2) blocks: long enough to recover, and
@@ -81,7 +89,7 @@ the record than the level asks doesn't. In a chord, a dropped finger is a miss f
 breaks the combo only when the whole chord went by unplayed. The first run starts at `start`;
 later ones `resume` tiers (1) under the top of your last adaptive run of that song and part
 (`GameEngine.adaptiveStart`, from the board's records), so a player who reached level 5
-doesn't sit through level 1 again. The result records the highest tier reached;
+doesn't sit through the start again. The result records the highest tier reached;
 `GameEngine.changes` keeps every change with the window's rate and spread.
 
 Open (from `misc/game-level-design.txt`, for Bart): memory per section instead of per song;

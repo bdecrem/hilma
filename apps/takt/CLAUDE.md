@@ -583,6 +583,23 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   Verified on the simulator: the Chord Shapes module, Moving less lighting G C E / 5 2 1 in bar
   3, D minor and F major spelled with B♭.
 
+- **Hypnotist II fixed, the record fills the level: 0.1 (51), 2026-10-29.** Bart, testing
+  Hypnotist II melody on Adaptive: "it's just a broken song… 0 notes to play in the first +30
+  seconds, then a VERY REPETITIVE terrible set of notes, at maybe one a second". Three causes,
+  all real: taking the melody muted the band's bleep (so the record was a kick and a sub for
+  16 bars), the line started at bar 8 and Adaptive at level 1 (one note every two beats of a
+  dotted-eighth line), and climbing took eight bars a level. Now **the record fills what the
+  level leaves out**: `GameEngine.fill(bar:)` is the part's notes the tier doesn't ask for, and
+  the Player schedules them on the part's instrument a bar ahead at the band's velocity
+  (`fillVelocity` from the band channel), so every level sounds like the song. Adaptive
+  **starts on 3** (`start`); a climb's evidence is the bars played at the current tier (a whole
+  window of them, up to two), so a climb right after a climb can't ride on the easier tier's
+  bars. Hypnotist II's phase comes in at bar 4 (its bones), lifts the D to E in the second bar
+  of every fourth phrase (the only fourth key, so the loop turns a corner every eight bars),
+  keeps its groove hits in the outro. The band of the song is byte-identical to Hypnotist's
+  (same 1828 hits, 408 bass, 282 stabs, 127 bpm); only the bleep line differs, by design.
+  Checks 255/255.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without
