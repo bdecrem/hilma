@@ -237,9 +237,10 @@ struct ProgressRail: View {
 }
 
 /// The notes coming down. Drawn in a Canvas: a capsule per note in its key's lane (black keys
-/// narrower and darker), as long as it lasts; beat lines slide with the song, bar lines
-/// stronger and numbered, the part's own subdivision between the beats as faint dashes (a
-/// shuffle's thirds, straight eighths), so a note off the beat has a line to land on; the hit line is `signal` at the bottom; a hit note vanishes with a
+/// narrower and darker), as long as it lasts; the grid slides with the song and reads like
+/// notation: the bar (a whole note) a strong numbered line, the half note a plain line, the
+/// quarter notes as alternating shading, the part's own subdivision (a shuffle's thirds,
+/// straight eighths) as the faintest dashes, so a note off the beat has a line to land on; the hit line is `signal` at the bottom; a hit note vanishes with a
 /// flash, a missed one slides on past the line and fades.
 struct Highway: View {
     let state: GameState
@@ -252,21 +253,32 @@ struct Highway: View {
                 let h = size.height
                 let lookahead = state.lookaheadTicks
                 func y(_ tick: Double) -> CGFloat { h - CGFloat((tick - state.heardTick) / lookahead) * h }
+                // Grid lines sit on whole points: a hairline sliding between pixels shimmers.
+                func snap(_ v: CGFloat) -> CGFloat { v.rounded() + 0.5 }
 
-                // Beat and bar lines.
+                // The grid. Quarter notes: every other beat shaded, no line of its own.
+                let beatsPerBar = state.ticksPerBar / state.ticksPerBeat
                 let firstBeat = Int((state.heardTick / Double(state.ticksPerBeat)).rounded(.down))
                 let lastBeat = Int(((state.heardTick + lookahead) / Double(state.ticksPerBeat)).rounded(.up))
+                for b in max(0, firstBeat)...max(0, lastBeat) where b % 2 == 1 {
+                    let top = max(0, snap(y(Double((b + 1) * state.ticksPerBeat))))
+                    let bottom = min(h, snap(y(Double(b * state.ticksPerBeat))))
+                    guard bottom > top else { continue }
+                    ctx.fill(Path(CGRect(x: 0, y: top, width: size.width, height: bottom - top)), with: .color(Palette.text.opacity(0.03)))
+                }
+                // Whole notes (the bars) strong and numbered, half notes plain.
                 for b in max(0, firstBeat)...max(0, lastBeat) {
-                    let tick = Double(b * state.ticksPerBeat)
-                    let yy = y(tick)
+                    let bar = b % beatsPerBar == 0
+                    let half = beatsPerBar % 2 == 0 && b % beatsPerBar == beatsPerBar / 2
+                    guard bar || half else { continue }
+                    let yy = snap(y(Double(b * state.ticksPerBeat)))
                     guard yy >= 0, yy <= h else { continue }
-                    let bar = b % (state.ticksPerBar / state.ticksPerBeat) == 0
                     var p = Path()
                     p.move(to: CGPoint(x: 0, y: yy))
                     p.addLine(to: CGPoint(x: size.width, y: yy))
                     ctx.stroke(p, with: .color(bar ? Palette.muted.opacity(0.55) : Palette.line), lineWidth: bar ? 1.5 : 1)
                     if bar {
-                        let n = b / (state.ticksPerBar / state.ticksPerBeat) + 1
+                        let n = b / beatsPerBar + 1
                         ctx.draw(Text("\(n)").font(.system(size: 10, weight: .semibold, design: .monospaced)).foregroundColor(Palette.muted),
                                  at: CGPoint(x: 10, y: yy - 8), anchor: .center)
                     }
@@ -279,15 +291,17 @@ struct Highway: View {
                     sub = ((sub + 1)...state.ticksPerBeat).first { state.ticksPerBeat % $0 == 0 && $0 % state.gridTicks == 0 } ?? state.ticksPerBeat
                 }
                 if sub < state.ticksPerBeat {
-                    var dashes = Path()
+                    // One stroke a line: in one path the dash pattern runs on from line to line, and
+                    // every dash on screen shifts sideways each time a line enters or leaves.
                     for tick in stride(from: max(0, firstBeat) * state.ticksPerBeat, through: max(0, lastBeat) * state.ticksPerBeat, by: sub)
                     where tick % state.ticksPerBeat != 0 {
-                        let yy = y(Double(tick))
+                        let yy = snap(y(Double(tick)))
                         guard yy >= 0, yy <= h else { continue }
-                        dashes.move(to: CGPoint(x: 0, y: yy))
-                        dashes.addLine(to: CGPoint(x: size.width, y: yy))
+                        var dash = Path()
+                        dash.move(to: CGPoint(x: 0, y: yy))
+                        dash.addLine(to: CGPoint(x: size.width, y: yy))
+                        ctx.stroke(dash, with: .color(Palette.line.opacity(0.5)), style: StrokeStyle(lineWidth: 1, dash: [3, 5]))
                     }
-                    ctx.stroke(dashes, with: .color(Palette.line.opacity(0.6)), style: StrokeStyle(lineWidth: 1, dash: [3, 5]))
                 }
 
                 // Lanes for the keys the chart uses next: a faint column.
@@ -472,7 +486,9 @@ struct GameResultPanel: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 14) {
                         headline
-                        stats
+                        verdict
+                        RunMap(result: result, compact: true)
+                        chips
                         StaffLines(spacing: 3)
                         board
                         buttons
@@ -486,7 +502,9 @@ struct GameResultPanel: View {
                 HStack(alignment: .top, spacing: 32) {
                     VStack(alignment: .leading, spacing: 18) {
                         headline
-                        stats
+                        verdict
+                        RunMap(result: result, compact: false)
+                        chips
                         Spacer(minLength: 0)
                     }
                     .frame(maxWidth: .infinity, alignment: .topLeading)
@@ -546,15 +564,46 @@ struct GameResultPanel: View {
         }
     }
 
-    private var stats: some View {
-        HStack(spacing: compact ? 10 : 16) {
-            stat("\(Int((result.accuracy * 100).rounded()))%", "Accuracy")
-            stat("\(result.perfect)", "Perfect")
-            stat("\(result.good)", "Good")
-            stat("\(result.missed)", "Missed")
-            stat("\(result.wrong)", "Wrong")
-            stat("\(result.maxCombo)", compact ? "Combo" : "Best combo")
+    /// How it went, in words: the title in the display face, one line under it.
+    private var verdict: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(result.verdict.title)
+                .font(.display(compact ? 24 : 32))
+                .textCase(.uppercase)
+                .foregroundStyle(result.grade == "S" || result.grade == "A" ? Palette.signal : Palette.text)
+            Text(result.verdict.line)
+                .font(.system(size: compact ? 14 : 15))
+                .foregroundStyle(Palette.muted)
         }
+    }
+
+    /// The two numbers worth keeping: how clean, and the longest streak.
+    private var chips: some View {
+        HStack(spacing: 8) {
+            chip("\(Int((result.accuracy * 100).rounded()))%", "accuracy", lit: result.grade == "S" || result.grade == "A")
+            chip("×\(result.maxCombo)", compact ? "combo" : "best combo", lit: false)
+            if result.wrong > 0 {
+                chip("\(result.wrong)", compact ? "stray" : (result.wrong == 1 ? "stray key" : "stray keys"), lit: false, tint: Palette.bad)
+            }
+        }
+    }
+
+    private func chip(_ value: String, _ label: String, lit: Bool, tint: Color? = nil) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
+            Text(value)
+                .font(.display(compact ? 18 : 22))
+                .monospacedDigit()
+                .foregroundStyle(tint ?? (lit ? Palette.signal : Palette.text))
+            Text(label)
+                .dataLabel(9)
+                .foregroundStyle(Palette.muted)
+                .lineLimit(1)
+        }
+        .fixedSize()
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(Capsule().fill(Palette.ground))
+        .overlay(Capsule().strokeBorder(Palette.line, lineWidth: 1))
     }
 
     private var board: some View {
@@ -572,20 +621,50 @@ struct GameResultPanel: View {
             QuietButton(title: "Set list", action: controls.leave)
         }
     }
+}
 
-    private func stat(_ value: String, _ label: String) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(value)
-                .font(.display(compact ? 22 : 28))
-                .monospacedDigit()
-                .foregroundStyle(Palette.text)
-            Text(label)
-                .dataLabel(9)
-                .foregroundStyle(Palette.muted)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
+/// The run as a strip of the song: a mark per onset where it fell in time, perfect in signal,
+/// good in cue, a miss hollow; the stray keys as short red ticks under the line. One look says
+/// where it went well and where it fell apart.
+struct RunMap: View {
+    let result: GameEngine.Result
+    let compact: Bool
+
+    var body: some View {
+        let h: CGFloat = compact ? 44 : 56
+        Canvas { ctx, size in
+            let w = size.width
+            let base = h - 12  // the strays' row sits under it
+            // The song's line.
+            var line = Path()
+            line.move(to: CGPoint(x: 0, y: base))
+            line.addLine(to: CGPoint(x: w, y: base))
+            ctx.stroke(line, with: .color(Palette.line), lineWidth: 1)
+            // Marks: as wide as the gaps allow, never under 2 pt, never over 10.
+            let gap = result.map.count > 1 ? w / CGFloat(result.map.count) : w
+            let mw = max(2, min(10, gap * 0.6))
+            for m in result.map {
+                let x = CGFloat(m.at) * w
+                let tall: CGFloat = m.judgment == .perfect ? base - 2 : m.judgment == .good ? (base - 2) * 0.65 : (base - 2) * 0.35
+                let r = CGRect(x: x - mw / 2, y: base - tall, width: mw, height: tall)
+                let p = Path(roundedRect: r, cornerRadius: min(2, mw / 2))
+                switch m.judgment {
+                case .perfect: ctx.fill(p, with: .color(Palette.signal))
+                case .good: ctx.fill(p, with: .color(Palette.cue))
+                case .miss: ctx.stroke(p, with: .color(Palette.muted.opacity(0.7)), lineWidth: 1)
+                }
+            }
+            for at in result.strays {
+                let x = CGFloat(at) * w
+                var tick = Path()
+                tick.move(to: CGPoint(x: x, y: base + 3))
+                tick.addLine(to: CGPoint(x: x, y: base + 10))
+                ctx.stroke(tick, with: .color(Palette.bad), lineWidth: max(1.5, min(3, mw / 2)))
+            }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(height: h)
+        .frame(maxWidth: .infinity)
+        .accessibilityLabel("\(result.perfect) perfect, \(result.good) good, \(result.missed) missed, \(result.wrong) stray keys")
     }
 }
 

@@ -705,8 +705,10 @@ final class Player {
     }
 
     #if DEBUG
-    /// `-Autoplay perfect|loose|rush` on a song: the chart's notes a bar ahead on the monitor,
-    /// scored through the press path as they are heard (the checks and the screenshots).
+    /// `-Autoplay perfect|loose|sloppy|rush` on a song: the chart's notes a bar ahead on the
+    /// monitor, scored through the press path as they are heard (the checks and the
+    /// screenshots). Sloppy skips every eighth note, plays every ninth a semitone off, and is
+    /// up to 260 ms out on the rest.
     @ObservationIgnored private var gamePlanned = -1
     @ObservationIgnored private var gameAutoEpoch = -1
     @ObservationIgnored private var gamePresses: [Autoplay.Press] = []
@@ -721,9 +723,12 @@ final class Player {
         }
         let horizon = Int(heard.tick) + 4 * audio.band.ticksPerBeat
         if horizon > gamePlanned {
-            for (_, n, _) in game.notes(from: Double(gamePlanned + 1), to: Double(horizon)) {
-                let offset: Double = mode == .rush ? -140 : mode == .loose ? Double((n.t * 7919) % 81) - 40 : 0
-                let p = Autoplay.Press(note: n.n, velocity: 0.75, tick: Double(n.t) + offset / heard.msPerTick,
+            for (i, n, _) in game.notes(from: Double(gamePlanned + 1), to: Double(horizon)) {
+                if mode == .sloppy, i % 8 == 3 { continue }
+                let offset: Double = mode == .rush ? -140 : mode == .loose ? Double((n.t * 7919) % 81) - 40
+                    : mode == .sloppy ? Double((n.t * 7919) % 521) - 260 : 0
+                let key = mode == .sloppy && i % 9 == 5 ? n.n + 1 : n.n
+                let p = Autoplay.Press(note: key, velocity: 0.75, tick: Double(n.t) + offset / heard.msPerTick,
                                        lengthTicks: Double(n.len) * 0.9)
                 audio.send(.schedule(note: p.note, velocity: p.velocity, tick: p.tick, lengthTicks: p.lengthTicks))
                 gamePresses.append(p)

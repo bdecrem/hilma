@@ -13,7 +13,7 @@ final class GameEngine {
         var title: String { rawValue.capitalized }
     }
 
-    enum Judgment: Equatable {
+    enum Judgment: String, Equatable, Codable {
         case perfect, good, miss
         var title: String {
             switch self {
@@ -51,21 +51,41 @@ final class GameEngine {
         /// Extras that aren't the record's own notes: wrong keys.
         let wrong: Int
         let maxCombo: Int
-        /// Hits over keys played (hits and wrong keys), 0...1: how clean the playing was, whatever
-        /// the level left out or you let go by.
+        /// Hits over the chart's notes plus the wrong keys, 0...1: a miss costs, a wrong key
+        /// costs, a hit inside the Good window pays.
         let accuracy: Double
         /// The highest tier played (adaptive), or the difficulty's.
         let level: Int
         let grade: String
+        /// The run as a map: every judged onset at its place in the song (0...1), and how it
+        /// went, for the result screen's strip.
+        let map: [Mark]
+        /// Where the wrong keys fell (0...1).
+        let strays: [Double]
 
-        /// From the hit rate (hits over the chart's notes): how much of the chart you played.
-        static func grade(hitRate: Double) -> String {
-            hitRate >= 0.97 ? "S" : hitRate >= 0.9 ? "A" : hitRate >= 0.8 ? "B" : hitRate >= 0.65 ? "C" : "D"
+        struct Mark: Equatable, Codable {
+            let at: Double
+            let judgment: Judgment
+        }
+
+        static func grade(accuracy: Double) -> String {
+            accuracy >= 0.97 ? "S" : accuracy >= 0.9 ? "A" : accuracy >= 0.8 ? "B" : accuracy >= 0.65 ? "C" : "D"
+        }
+
+        /// The one line the result leads with, and the one under it.
+        var verdict: (title: String, line: String) {
+            switch grade {
+            case "S": return ("Clean run", "Every note where it belongs.")
+            case "A": return ("Tight", "A couple got away. Nothing to see.")
+            case "B": return ("Solid", "The tune is in your hands.")
+            case "C": return ("Getting there", wrong > missed ? "A few stray keys crept in." : "Let the notes come to you.")
+            default: return ("Rough one", wrong > missed ? "Stray keys everywhere. Keep to the lit lanes." : "Most of the notes went by. Breathe, and play less.")
+            }
         }
     }
 
     static let perfectMs = 45.0
-    static let goodMs = 110.0
+    static let goodMs = 150.0
     /// Points for a hit, before the multiplier and the level.
     static let points: [Judgment: Int] = [.perfect: 100, .good: 60, .miss: 0]
     /// Combo thresholds for ×2, ×3, ×4.
@@ -94,6 +114,7 @@ final class GameEngine {
     private(set) var missed = 0
     private(set) var extras = 0
     private(set) var wrong = 0
+    private var wrongTicks: [Double] = []
     private(set) var pop: Pop?
     private(set) var finished = false
     private var seq = 0
@@ -186,15 +207,9 @@ final class GameEngine {
         return false
     }
 
-    /// Hits over the keys played: a wrong key costs, a note let go by doesn't (that is the hit
-    /// rate, which grades the run).
+    /// Hits over the notes judged plus the wrong keys: a miss costs, a wrong key costs.
     var accuracy: Double {
-        let played = perfect + good + wrong
-        return played == 0 ? 1 : Double(perfect + good) / Double(played)
-    }
-
-    var hitRate: Double {
-        let judged = perfect + good + missed
+        let judged = perfect + good + missed + wrong
         return judged == 0 ? 1 : Double(perfect + good) / Double(judged)
     }
 
@@ -318,11 +333,17 @@ final class GameEngine {
         }
         guard let b = best else {
             extras += 1
-            // A key the record doesn't play here (at any tier) is wrong, and counts against the
-            // level; the record's own notes the level left out don't.
+            // A wrong key is one the tune has nowhere within a beat of here (at any tier): the
+            // right key early or late, outside the judging window, is a miss, not a wrong key,
+            // and the record's own notes the level left out are neither.
+            if !notes.contains(where: { abs(tick - Double($0.t)) <= Double(ticksPerBeat) && $0.n % 12 == note % 12 }) {
+                wrong += 1
+                wrongTicks.append(tick)
+            }
+            // A key the record doesn't play here counts against the level; its own notes the
+            // level left out don't.
             let bar = Int((tick / Double(ticksPerBar)).rounded(.down))
             if !notes.contains(where: { abs(tick - Double($0.t)) <= reach && $0.n % 12 == note % 12 }) {
-                wrong += 1
                 barMisses[bar, default: 0] += 1
                 missRun += 1
                 barMissRun[bar] = max(barMissRun[bar] ?? 0, missRun)
@@ -344,10 +365,30 @@ final class GameEngine {
     }
 
     func result() -> Result {
-        Result(song: song.name, part: part.rawValue, difficulty: difficulty.rawValue, score: score,
-               notes: perfect + good + missed, perfect: perfect, good: good, missed: missed, extras: extras, wrong: wrong,
-               maxCombo: maxCombo, accuracy: accuracy, level: difficulty == .adaptive ? topLevel : blockLevel[0],
-               grade: Result.grade(hitRate: hitRate))
+        // The map: one mark an onset (a chord is one mark, its worst note), judged ones only.
+        let end = Double(song.endTick)
+        var map: [Result.Mark] = []
+        var lastT = -1
+        for i in notes.indices where active(i) {
+            let j: Judgment?
+            switch status[i] {
+            case .hit(let h): j = h
+            case .missed: j = .miss
+            case .pending: j = nil
+            }
+            guard let j else { continue }
+            if notes[i].t == lastT, let last = map.last {
+                let worst: Judgment = last.judgment == .miss || j == .miss ? .miss : (last.judgment == .good || j == .good ? .good : .perfect)
+                map[map.count - 1] = Result.Mark(at: last.at, judgment: worst)
+            } else {
+                map.append(Result.Mark(at: Double(notes[i].t) / end, judgment: j))
+                lastT = notes[i].t
+            }
+        }
+        return Result(song: song.name, part: part.rawValue, difficulty: difficulty.rawValue, score: score,
+                      notes: perfect + good + missed, perfect: perfect, good: good, missed: missed, extras: extras, wrong: wrong,
+                      maxCombo: maxCombo, accuracy: accuracy, level: difficulty == .adaptive ? topLevel : blockLevel[0],
+                      grade: Result.grade(accuracy: accuracy), map: map, strays: wrongTicks.map { min(1, max(0, $0 / end)) })
     }
 
     /// Tap mode: the keys a tap at `tick` plays, the whole pending chord nearest it that is still

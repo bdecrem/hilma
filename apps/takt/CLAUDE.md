@@ -396,8 +396,10 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   ×3 / ×4 at 8 / 16 / 32; a level pays ×1 / ×1.5 / ×2; **Adaptive** starts easy and decides
   each four-bar block two bars ahead from the four bars before that: at or over 90% hit (four
   notes judged at least) it climbs, under 60% it eases off. No failing; the song plays to the
-  end; grade S / A / B / C / D by the hit rate (97 / 90 / 80 / 65); since 0.1 (53) **Accuracy**
-  is hits over keys played (a wrong key costs, a note let go by doesn't). **Screen**
+  end; **Accuracy** (0.1 (54)) is hits over the chart's notes plus the wrong keys: a miss costs, a
+  wrong key costs, a hit inside the Good window (150 ms) pays; grade S / A / B / C / D from it
+  (97 / 90 / 80 / 65). A wrong key is one the tune has nowhere within a beat of the press; the
+  right key late is a miss, not a wrong key. **Screen**
   (`Game/GameScreen.swift`): the HUD (score, the combo ring filling toward the next multiplier,
   pause), the section rail, the highway (a Canvas: a capsule per note in its key's lane, chords
   as stacks with finger badges, beat and bar lines sliding, 3 s of lookahead at any tempo, the
@@ -618,7 +620,36 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   onsets' offsets in the beat: Slow Burn's shuffle thirds, Hypnotist's sixteenths), thinned to a
   coarser division where the lines would sit under 22 pt apart (Hypnotist at 127 bpm shows one
   dash a beat). Beginner keeps the `minBeats` rule all the same: its notes are the anchors.
+  **0.1 (54), the grid as notation** (Bart: "lines should represent a full note, and then
+  shading or thinner grids to mark half and quarter notes, but keep it nice looking"; and the
+  dashes had "skipped around": one path held every dashed line, and Core Graphics runs the dash
+  pattern on from line to line, so every dash shifted sideways each time a line entered or
+  left): the bar (whole note) is the strong numbered line, the half note a plain line, the
+  quarter notes alternating shading (`Palette.text` at 3%, no line of their own), the
+  subdivision the faintest dashes, one stroke a line; every grid line snaps to whole points so
+  it doesn't shimmer while sliding. DEBUG `-Autoplay sloppy` now works on a song too (every
+  eighth note skipped, every ninth a semitone off, the rest up to 260 ms out).
   DEBUG `-ChartDump <song>/<part>` prints every tier's chart. Checks 276/276.
+
+- **Normal scoring, and a result card that is a game screen: 0.1 (54), 2026-10-30.** Bart saw
+  51% on a run he played well (0.1 (53) had counted a right key outside the Good window as a
+  wrong key), then: "make it less autistic, more normal. if I MISS the note, my percentage takes
+  a hit. if I hit the wrong note also, but if I hit it with reasonable accuracy I get my
+  points", and of the six-number row: "clean up that shitshow and do something FUN and
+  GAME-LIKE". **Scoring:** accuracy = hits / (perfect + good + missed + wrong); the Good window
+  is 150 ms (was 110; Perfect stays 45); a wrong key is a press the tune has no such note within
+  a beat of (`GameEngine.wrong`, `wrongTicks`); the grade follows accuracy; `hitRate` is gone.
+  Adaptive's own wrong-key rule (the Good window) is unchanged. **Result card**
+  (`GameResultPanel`): grade, title, score and board rank as before; then a verdict in the
+  display face with a line under it (`Result.verdict`: Clean run / Tight / Solid / Getting
+  there / Rough one, the line naming stray keys or misses, whichever weighs more), a **run map**
+  (`RunMap`: the song as a line, a mark per judged onset where it fell, perfect tall in signal,
+  good in cue, a miss hollow and short, stray keys as red ticks under the line; `Result.map` /
+  `Result.strays`, 0...1 positions, a chord is one mark, its worst note), and two chips,
+  accuracy and best combo (a third, stray keys, only when there were any). The
+  perfect/good/missed counts are no longer printed anywhere but the log and the accessibility
+  label. Checks 278/278 (the right key 200 ms behind is a miss and an extra, not wrong; the map
+  has a mark an onset in order, strays where the wrong keys fell).
 
 - **Beginner level, and Slow Burn's Easy kept: 0.1 (52), 2026-10-30.** Bart: "the MELODY line
   on Easy is charted like a Medium… keep Easy as is but add a new Beginner level… HALF as hard…

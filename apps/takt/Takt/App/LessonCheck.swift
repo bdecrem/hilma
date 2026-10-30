@@ -1114,7 +1114,7 @@ enum LessonCheck {
                 // where the record's own notes don't.
                 func record(_ part: String, _ difficulty: String, level: Int, _ ago: Double) -> ProgressStore.ScoreRecord {
                     ProgressStore.ScoreRecord(GameEngine.Result(song: two.name, part: part, difficulty: difficulty, score: 1, notes: 1, perfect: 1,
-                                                                good: 0, missed: 0, extras: 0, wrong: 0, maxCombo: 1, accuracy: 1, level: level, grade: "S"),
+                                                                good: 0, missed: 0, extras: 0, wrong: 0, maxCombo: 1, accuracy: 1, level: level, grade: "S", map: [], strays: []),
                                               date: Date(timeIntervalSinceNow: -ago))
                 }
                 let starts = [
@@ -1346,15 +1346,30 @@ enum LessonCheck {
                 // Accuracy is how clean the keys you played were: a wrong key costs, a note let go
                 // by doesn't (the hit rate grades the run), and the record's own notes the level
                 // left out cost nothing.
-                check("stage: accuracy is hits over keys played: a skipped note keeps 100%, a wrong key doesn't",
-                      sloppy.accuracy == 1 && sloppy.result().wrong == 0 && wrong.accuracy == 0 && wrong.result().wrong == 1
-                      && sloppy.hitRate < 0.7, "skipped: \(sloppy.accuracy) · wrong key: \(wrong.accuracy), \(wrong.result().wrong) wrong")
+                check("stage: accuracy is hits over notes and wrong keys: a skipped note costs, a wrong key costs",
+                      sloppy.accuracy < 0.7 && sloppy.accuracy > 0.6 && sloppy.result().wrong == 0 && wrong.accuracy == 0 && wrong.result().wrong == 1,
+                      "skipped a third: \(sloppy.accuracy) · wrong key: \(wrong.accuracy), \(wrong.result().wrong) wrong")
                 let own = GameEngine(song: song, part: .melody, difficulty: .easy)
                 let left = song.notes(.melody).indices.first { !own.active($0) }!
                 let leftNote = song.notes(.melody)[left]
                 own.heard(tick: Double(leftNote.t), msPerTick: ms)
+                let before = own.accuracy
                 own.played(note: leftNote.n, tick: Double(leftNote.t), msPerTick: ms)
-                check("stage: the record's own note the level left out is an extra but not wrong", own.extras == 1 && own.wrong == 0 && own.accuracy == 1)
+                check("stage: the record's own note the level left out is an extra but not wrong", own.extras == 1 && own.wrong == 0 && own.accuracy == before)
+                // The right key 200 ms late (past the Good window): the note is missed, the press
+                // an extra, and nothing is wrong. Bart's 51% on a run he played well, 0.1 (53).
+                let behind = GameEngine(song: song, part: .melody, difficulty: .easy)
+                let firstIdx = song.notes(.melody).indices.first { behind.active($0) }!
+                let firstNote = song.notes(.melody)[firstIdx]
+                let lateTick = Double(firstNote.t) + 200 / ms
+                behind.heard(tick: lateTick, msPerTick: ms)
+                behind.played(note: firstNote.n, tick: lateTick, msPerTick: ms)
+                check("stage: the right key 200 ms behind is a miss and an extra, not a wrong key",
+                      behind.missed == 1 && behind.extras == 1 && behind.wrong == 0 && behind.accuracy == 0, "\(behind.missed) missed, \(behind.extras) extras, \(behind.wrong) wrong")
+                check("stage: the run's map has a mark per judged onset in order, strays where the wrong keys fell",
+                      sloppy.result().map.count == easyNotes && sloppy.result().map.filter { $0.judgment == .miss }.count == easyNotes / 3
+                      && zip(sloppy.result().map, sloppy.result().map.dropFirst()).allSatisfy { $0.at < $1.at }
+                      && wrong.result().strays == [0], "\(sloppy.result().map.count) marks, \(wrong.result().strays)")
                 let adaptive = run(.adaptive) { _, _ in 0 }
                 let steps = zip(adaptive.blockLevel, adaptive.blockLevel.dropFirst())
                 check("stage: adaptive climbs one level at a time to the top on clean playing (past a level whose chart is the same)",
@@ -1370,7 +1385,7 @@ enum LessonCheck {
                       "hard \(hardScore) vs easy \(perfect.score)")
                 let r = ProgressStore.ScoreRecord.trimmed((0..<60).map { i in
                     ProgressStore.ScoreRecord(GameEngine.Result(song: "s", part: "melody", difficulty: "easy", score: i, notes: 1, perfect: 1,
-                                                                good: 0, missed: 0, extras: 0, wrong: 0, maxCombo: 1, accuracy: 1, level: 1, grade: "S"))
+                                                                good: 0, missed: 0, extras: 0, wrong: 0, maxCombo: 1, accuracy: 1, level: 1, grade: "S", map: [], strays: []))
                 })
                 check("stage: the board keeps the best 50 a song, best first", r.count == 50 && r.first?.score == 59 && r.last?.score == 10)
 
