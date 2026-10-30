@@ -615,7 +615,7 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   first in the Level chips; the board records it as "beginner". **Tempo:** nothing in the Stage
   ever changed the speed; a Slow Burn Adaptive run recorded on the simulator has every kick on
   the 68 bpm grid from the first bar (the count-in included), so that is written down in
-  `CHARTING.md` rather than changed. Checks 268/268. **TestFlight, Mac:** an external group
+  `CHARTING.md` rather than changed. Checks 268/268. **TestFlight, Mac and iOS:** an external group
   "Public beta" with a public link (https://testflight.apple.com/join/sF4rp7DS), beta review
   contact and test information set on the ASC record; see "TestFlight" below for the Mac
   Installer certificate this Mac lacks.
@@ -960,4 +960,5 @@ beta:** external group "Public beta", public link https://testflight.apple.com/j
 (limit 10,000), created 2026-10-30 with the beta review contact (Bart, no demo account: the app
 opens as a guest) and the en-US test information; `asc-submit.mjs` adds every build to it and
 submits it for beta review, and the link serves a build once Apple has approved one. First build
-on it: 0.1 (52), Mac.
+on it: 0.1 (52), Mac and iOS (both archived signed on the Air with `MINI=local`; the iOS
+one uses the "takt appstore" profile and needs no installer certificate).
