@@ -225,13 +225,17 @@ struct LiveLessonScreen: View {
     }
 }
 
-/// The game screen driven by the Player, every key wired to it.
+/// The game screen driven by the Player, every key wired to it. Redrawn every frame while the
+/// song rolls: `gameState()` reads the transport clock, not an observed property, so without the
+/// timeline the highway only moved when something observed changed (once a beat).
 struct LiveGameScreen: View {
     let app: AppModel
     let player: Player
 
     var body: some View {
-        GameScreen(state: player.gameState())
+        TimelineView(.animation(paused: !player.playing)) { _ in
+            GameScreen(state: player.gameState())
+        }
             .environment(\.lessonControls, LessonControls(
                 togglePlay: player.togglePlay,
                 press: { player.press($0) },

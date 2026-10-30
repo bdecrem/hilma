@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 """Slow Burn: a slow blues in G at 68, 12/8 feel, four choruses (2:49), the lesson band's kit.
 
-    python3 apps/takt/scripts/songs/slow_burn.py   -> Takt/Content/song-slow-burn.json
+    python3 apps/takt/scripts/songs/slow_burn.py          -> Takt/Content/song-slow-burn.json
+    python3 apps/takt/scripts/songs/slow_burn.py --short  -> Takt/Content/song-slow-burn-short.json
+
+Slow Burn Short (2026-10-30) is the same song once round: one chorus (12 bars, 42 s, 45 with
+the stop ringing) played the way the second chorus of the long one is (snare in, the head with
+its ornaments), ending on the stop.
 
 Chorus 1 cross-stick and hat, the head on the sax; 2 the snare comes in, the head again with
 ornaments; 3 the ride, the sax solo; 4 everything, the head, and a stop on the last bar.
@@ -15,8 +20,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import BAR, TPB, Song  # noqa: E402
 
 FORM = ["G7", "G7", "G7", "G7", "C7", "C7", "G7", "G7", "D7", "C7", "G7", "D7"]
-s = Song("song-slow-burn", "Slow Burn", "Slow blues", "G", 68, "river",
-         "A slow one in G. Twelve bars, four times round, the band leaning back.", seed=68)
+SHORT = "--short" in sys.argv
+if SHORT:
+    s = Song("song-slow-burn-short", "Slow Burn Short", "Slow blues", "G", 68, "river",
+             "The slow one in G, once round. Twelve bars and the stop.", seed=68)
+else:
+    s = Song("song-slow-burn", "Slow Burn", "Slow blues", "G", 68, "river",
+             "A slow one in G. Twelve bars, four times round, the band leaning back.", seed=68)
 s.sounds = {
     "kick": {"kit": "kick", "gainDb": -1},
     "snare": {"kit": "snare", "gainDb": -4},
@@ -31,12 +41,17 @@ s.sounds = {
     "tomLo": {"kit": "tomLo", "gainDb": -5},
 }
 s.instruments = {"bass": "bass", "keys": "piano", "horns": "sax", "monitor": "piano"}
-CHORUSES = 4
+CHORUSES = 1 if SHORT else 4
 s.bars = 12 * CHORUSES
 s.chords = [FORM[b % 12] for b in range(s.bars)]
 s.chords[-1] = "G"
-for c, name in enumerate(["Head", "Second time", "Sax solo", "Out chorus"]):
+for c, name in enumerate(["Head", "Second time", "Sax solo", "Out chorus"][:CHORUSES]):
     s.section(c * 12, name)
+
+
+def feel(c):
+    """The arrangement a chorus is played with: the short one plays like the second time round."""
+    return 1 if SHORT else c
 
 ROOT = {"G7": 31, "C7": 36, "D7": 38}
 FIFTH = {"G7": 38, "C7": 31, "D7": 33}
@@ -69,16 +84,17 @@ for c in range(CHORUSES):
             s.hit(o + 36, "kick", 0.5)
             s.hit(o + 36, "crash", 0.6)
             continue
-        fill = FILLS.get(c) if last else None
+        a = feel(c)
+        fill = FILLS.get(a) if last else None
         fill_from = fill[0][0] if fill else BAR
-        back = "xstick" if c == 0 else "snare"
-        ride = c >= 2
+        back = "xstick" if a == 0 else "snare"
+        ride = a >= 2
         s.hit(o, "kick", 0.95)
         s.hit(o + 24, "kick", 0.75)
-        if c >= 1 and b % 2 == 0:
+        if a >= 1 and b % 2 == 0:
             s.hit(o + 20, "kick", 0.4)  # the triplet push into 3
         if b == 0:
-            s.hit(o, "crash", 0.55 + 0.12 * c)
+            s.hit(o, "crash", 0.55 + 0.12 * a)
         for t in (12, 36):
             if t < fill_from:
                 s.hit(o + t, back, 0.85 if t == 12 else 0.92, 0.05)
@@ -93,14 +109,14 @@ for c in range(CHORUSES):
             if ride:
                 s.hit(o + t, "ride", 0.6 if beat in (0, 2) else 0.45)
                 s.hit(o + t + 8, "ride", 0.35)
-                if c == 3:
+                if a == 3:
                     s.hit(o + t + 4, "ride", 0.2)
                 if beat in (1, 3):
                     s.hit(o + t, "hatFoot", 0.5)
             else:
                 s.hit(o + t, "hat", 0.55 if beat in (0, 2) else 0.42)
                 s.hit(o + t + 8, "hat", 0.3)
-            if c == 3 and beat == 0:
+            if a == 3 and beat == 0:
                 s.hit(o + t, "rideBell", 0.5)
         if fill:
             for t, sound, v in fill:
@@ -113,6 +129,7 @@ for bar in range(s.bars):
     ch = chord_at(bar)
     nxt = chord_at(bar + 1) if bar + 1 < s.bars else "G7"
     c = bar // 12
+    a = feel(c)
     if bar == s.bars - 1:
         s.note(s.bass, o, ROOT["G7"], 0.95, 36)
         continue
@@ -123,10 +140,10 @@ for bar in range(s.bars):
         s.note(s.bass, o + 44, 30, 0.6, 4)
         continue
     s.note(s.bass, o, ROOT[ch], 0.9, 20)
-    if c >= 2:
+    if a >= 2:
         s.note(s.bass, o + 20, THIRD[ch], 0.55, 4)
     s.note(s.bass, o + 24, FIFTH[ch], 0.75, 14)
-    if c >= 1:
+    if a >= 1:
         s.note(s.bass, o + 36, SIXTH[ch], 0.6, 8)
     # The last triplet eighth walks a half step into the next root.
     approach = ROOT[nxt] - 1 if nxt != ch else FIFTH[ch]
@@ -148,7 +165,7 @@ chords = s.part("chords", "Comping", "piano", "keys", "piano")
 for bar in range(s.bars):
     o = bar * BAR
     ch = chord_at(bar)
-    c = bar // 12
+    a = feel(bar // 12)
     if bar == s.bars - 1:
         # The last chord: the whole voicing, held.
         for n in VOICING["G7"]:
@@ -157,7 +174,7 @@ for bar in range(s.bars):
     # Hits: the 1 (weight 1), the 3 and from the second chorus the 4 (2), the pushes on the
     # last triplet of 2 and of 4 (3).
     hits = [(0, 1, 20), (24, 2, 16)]
-    if c >= 1:
+    if a >= 1:
         hits = [(0, 1, 20), (24, 2, 12), (36, 2, 8), (20, 3, 4), (44, 3, 4)]
     else:
         hits += [(44, 3, 4)]
@@ -204,7 +221,8 @@ SOLO = {
 
 melody = s.part("melody", "The sax line", "piano", "horns", "sax")
 for c in range(CHORUSES):
-    phrases = SOLO if c == 2 else HEAD
+    a = feel(c)
+    phrases = SOLO if a == 2 else HEAD
     for b in range(12):
         bar = c * 12 + b
         o = bar * BAR
@@ -213,7 +231,7 @@ for c in range(CHORUSES):
             continue
         for t, n, ln, lv in phrases[b]:
             s.pnote(melody, o + t, n, ln, lv)
-        if c in (1, 3) and b in (1, 5):
+        if a in (1, 3) and b in (1, 5):
             # The second and fourth time round, a grace note into the next phrase (hard).
             s.pnote(melody, o + 44, F4 if b == 1 else Bb4, 4, 3)
 s.fingered(melody)

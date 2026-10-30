@@ -59,7 +59,7 @@ struct Song {
     let meta: Meta
 
     /// The set list, in order.
-    static let catalog = ["song-slow-burn", "song-boogie-shoes", "song-hypnotist", "song-hypnotist-2", "song-warm-nine", "song-abyss", "song-abyss-ref"]
+    static let catalog = ["song-slow-burn", "song-slow-burn-short", "song-boogie-shoes", "song-hypnotist", "song-hypnotist-2", "song-warm-nine", "song-abyss", "song-abyss-ref"]
 
     static func bundled(_ name: String) -> Song {
         guard let url = Bundle.main.url(forResource: name, withExtension: "json") else { fatalError("song \(name).json is not in the bundle") }

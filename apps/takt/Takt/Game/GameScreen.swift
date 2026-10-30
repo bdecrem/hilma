@@ -42,8 +42,6 @@ struct GameState {
     var lookaheadTicks = 1.0
     var ticksPerBeat = 12
     var ticksPerBar = 48
-    /// Ticks between the sub-beat grid lines the part asks for (`GameEngine.grid`).
-    var gridTicks = 12
     var notes: [HighwayNote] = []
     var keys: ClosedRange<Int> = 48...71
     var nowNotes: Set<Int> = []
@@ -237,11 +235,11 @@ struct ProgressRail: View {
 }
 
 /// The notes coming down. Drawn in a Canvas: a capsule per note in its key's lane (black keys
-/// narrower and darker), as long as it lasts; the grid slides with the song and reads like
-/// notation: the bar (a whole note) a strong numbered line, the half note a plain line, the
-/// quarter notes as alternating shading, the part's own subdivision (a shuffle's thirds,
-/// straight eighths) as the faintest dashes, so a note off the beat has a line to land on; the hit line is `signal` at the bottom; a hit note vanishes with a
-/// flash, a missed one slides on past the line and fades.
+/// narrower and darker), as long as it lasts, sliding in one continuous movement (the screen
+/// redraws every frame, `LiveGameScreen`); the grid never moves: a fixed ruler of beat lines up
+/// from the hit line, one a beat at the song's tempo, so a note's distance from the line is read
+/// in beats; the hit line is `signal` at the bottom; a hit note vanishes with a flash, a missed
+/// one slides on past the line and fades.
 struct Highway: View {
     let state: GameState
     let compact: Bool
@@ -256,52 +254,18 @@ struct Highway: View {
                 // Grid lines sit on whole points: a hairline sliding between pixels shimmers.
                 func snap(_ v: CGFloat) -> CGFloat { v.rounded() + 0.5 }
 
-                // The grid. Quarter notes: every other beat shaded, no line of its own.
-                let beatsPerBar = state.ticksPerBar / state.ticksPerBeat
-                let firstBeat = Int((state.heardTick / Double(state.ticksPerBeat)).rounded(.down))
-                let lastBeat = Int(((state.heardTick + lookahead) / Double(state.ticksPerBeat)).rounded(.up))
-                for b in max(0, firstBeat)...max(0, lastBeat) where b % 2 == 1 {
-                    let top = max(0, snap(y(Double((b + 1) * state.ticksPerBeat))))
-                    let bottom = min(h, snap(y(Double(b * state.ticksPerBeat))))
-                    guard bottom > top else { continue }
-                    ctx.fill(Path(CGRect(x: 0, y: top, width: size.width, height: bottom - top)), with: .color(Palette.text.opacity(0.03)))
-                }
-                // Whole notes (the bars) strong and numbered, half notes plain.
-                for b in max(0, firstBeat)...max(0, lastBeat) {
-                    let bar = b % beatsPerBar == 0
-                    let half = beatsPerBar % 2 == 0 && b % beatsPerBar == beatsPerBar / 2
-                    guard bar || half else { continue }
-                    let yy = snap(y(Double(b * state.ticksPerBeat)))
-                    guard yy >= 0, yy <= h else { continue }
+                // The grid: a fixed ruler. One line a beat up from the hit line, never moving; the
+                // notes slide past it. The beat nearest the line reads strongest, the rest fade up.
+                let beatHeight = CGFloat(state.ticksPerBeat) / lookahead * h
+                let beatsShown = Int((h / beatHeight).rounded(.up))
+                for b in 1...max(1, beatsShown) {
+                    let yy = snap(h - CGFloat(b) * beatHeight)
+                    guard yy >= 0 else { continue }
                     var p = Path()
                     p.move(to: CGPoint(x: 0, y: yy))
                     p.addLine(to: CGPoint(x: size.width, y: yy))
-                    ctx.stroke(p, with: .color(bar ? Palette.muted.opacity(0.55) : Palette.line), lineWidth: bar ? 1.5 : 1)
-                    if bar {
-                        let n = b / beatsPerBar + 1
-                        ctx.draw(Text("\(n)").font(.system(size: 10, weight: .semibold, design: .monospaced)).foregroundColor(Palette.muted),
-                                 at: CGPoint(x: 10, y: yy - 8), anchor: .center)
-                    }
-                }
-
-                // Sub-beat lines: the part's subdivision, dashed and faint, where the lines stay at
-                // least 22 pt apart (a coarser division of the beat otherwise, none past it).
-                var sub = state.gridTicks
-                while sub < state.ticksPerBeat, CGFloat(sub) / lookahead * h < 22 {
-                    sub = ((sub + 1)...state.ticksPerBeat).first { state.ticksPerBeat % $0 == 0 && $0 % state.gridTicks == 0 } ?? state.ticksPerBeat
-                }
-                if sub < state.ticksPerBeat {
-                    // One stroke a line: in one path the dash pattern runs on from line to line, and
-                    // every dash on screen shifts sideways each time a line enters or leaves.
-                    for tick in stride(from: max(0, firstBeat) * state.ticksPerBeat, through: max(0, lastBeat) * state.ticksPerBeat, by: sub)
-                    where tick % state.ticksPerBeat != 0 {
-                        let yy = snap(y(Double(tick)))
-                        guard yy >= 0, yy <= h else { continue }
-                        var dash = Path()
-                        dash.move(to: CGPoint(x: 0, y: yy))
-                        dash.addLine(to: CGPoint(x: size.width, y: yy))
-                        ctx.stroke(dash, with: .color(Palette.line.opacity(0.5)), style: StrokeStyle(lineWidth: 1, dash: [3, 5]))
-                    }
+                    let fade = 1 - 0.5 * Double(b - 1) / Double(max(1, beatsShown - 1))
+                    ctx.stroke(p, with: .color(Palette.line.opacity(fade)), lineWidth: 1)
                 }
 
                 // Lanes for the keys the chart uses next: a faint column.

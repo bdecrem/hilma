@@ -100,9 +100,6 @@ final class GameEngine {
     /// The whole part in time order, and which notes play at each tier (`[tier - 1][i]`).
     let notes: [Song.Note]
     let masks: [[Bool]]
-    /// Ticks: the finest part of a beat the part's onsets sit on (a shuffle's thirds, straight
-    /// eighths or sixteenths; the beat itself when every onset is on one). The highway's grid.
-    let grid: Int
     private(set) var status: [Status]
     /// The tier of each block, decided `ahead` bars before the block starts.
     private(set) var blockLevel: [Int]
@@ -146,9 +143,6 @@ final class GameEngine {
         ticksPerBar = song.ticksPerBar
         notes = song.notes(part)
         masks = song.masks(part, charting: charting)
-        func gcd(_ a: Int, _ b: Int) -> Int { b == 0 ? a : gcd(b, a % b) }
-        let tpb = song.band.ticksPerBeat
-        grid = notes.reduce(tpb) { gcd($0, $1.t % tpb) }
         status = Array(repeating: .pending, count: notes.count)
         let window = charting.adaptive.window
         let blocks = (song.band.bars + window - 1) / window + 1

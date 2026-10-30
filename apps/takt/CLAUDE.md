@@ -671,6 +671,22 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   contact and test information set on the ASC record; see "TestFlight" below for the Mac
   Installer certificate this Mac lacks.
 
+- **Slow Burn Short, and the highway as one movement: 0.1 (55), 2026-10-30.** Bart: "add a new
+  Track called Slow Burn Short and it's slow burn, but 45 seconds long" and "the grid lines
+  NEVER MOVE. they mark BEATS… the notes move down in one continuous movement, no more 'drop one
+  beat at a time'". **Slow Burn Short** (`song-slow-burn-short`, `slow_burn.py --short`, second
+  on the set list): the same song once round, one 12-bar chorus (0:42, 45 s with the stop
+  ringing) played the way the long one's second chorus is (`feel(c)`: snare in, the head with its
+  ornaments, the triplet pushes), ending on the stop; the long song regenerates byte-identical.
+  **The highway:** the beat-at-a-time motion was `LiveGameScreen` only re-rendering when an
+  observed Player property changed (once a beat); `gameState()` reads the clock, not a property,
+  so it sits in a `TimelineView(.animation)` now and redraws every frame while the song rolls
+  (the clock was always continuous). The grid is a fixed ruler: one line a beat up from the hit
+  line, fading upward, nothing sliding; the bar numbers, the half-note lines, the quarter shading
+  and the sub-beat dashes of 0.1 (53–54) are gone with it (`GameEngine.grid` too). Verified on
+  the simulator: four frames ~350 ms apart, the grid row at the same pixel in all, the note's
+  bottom at four sub-beat positions. Checks 287/287.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without
