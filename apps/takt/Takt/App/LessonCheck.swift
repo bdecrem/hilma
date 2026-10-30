@@ -1068,12 +1068,13 @@ enum LessonCheck {
             // a level plays in a phrase.
             // The detail: the fewest keys any level plays in a phrase, per level.
             for s in songs where s.partKeys.contains(.melody) {
-                let all = s.notes(.melody), masks = s.masks(.melody), span = (charting.melody.phrase ?? 1) * s.ticksPerBar
-                let phrases = Set(all.map { $0.t / span }).sorted()
+                let all = s.notes(.melody), masks = s.masks(.melody)
                 var fewest: [Int] = []
                 var bad: [String] = []
                 var ok = true
-                for m in masks {
+                for (ti, m) in masks.enumerated() {
+                    let span = (charting.melody.tiers[ti].phrase ?? charting.melody.phrase ?? 1) * s.ticksPerBar
+                    let phrases = Set(all.map { $0.t / span }).sorted()
                     var low = Int.max
                     for p in phrases {
                         let line = Set(all.filter { $0.t / span == p }.map(\.n))
@@ -1091,16 +1092,22 @@ enum LessonCheck {
                 let grows = zip(masks, masks.dropFirst()).allSatisfy { lo, hi in zip(lo, hi).allSatisfy { !$0 || $1 } } && Set(counts).count == counts.count
                 var thin: [String] = []
                 for (li, m) in masks.enumerated() {
-                    for p in Set(all.map { $0.t / span }).sorted() {
-                        let keys = Set(all.indices.filter { m[$0] && all[$0].t / span == p }.map { all[$0].n })
+                    // Beginner (level 1) keeps two of them in every four bars (cut from level 2's picks, it can't always reach the A).
+                    let pspan = li == 0 ? 2 * span : span
+                    for p in Set(all.map { $0.t / pspan }).sorted() {
+                        let keys = Set(all.indices.filter { m[$0] && all[$0].t / pspan == p }.map { all[$0].n })
                         // Three of the line's keys in every phrase at every level, A among them; an
-                        // answer phrase (A C D E) can't fit four at level 1's gap, and keeps the lift.
-                        if keys.count < 3 || !keys.contains(57) { thin.append("level \(li + 1) phrase \(p) \(keys.sorted())") }
+                        // answer phrase (A C D E) can't fit four at level 2's gap, and keeps the lift.
+                        if keys.count < (li == 0 ? 2 : 3) || (li > 0 && !keys.contains(57)) {
+                            let seeded = li == 0 ? "" : " under " + all.indices.filter { masks[li - 1][$0] && all[$0].t >= p * pspan - 61 && all[$0].t < (p + 1) * pspan + 61 }.map { "\(all[$0].t):\(all[$0].n)" }.joined(separator: ",")
+                            let mine = all.indices.filter { m[$0] && all[$0].t / pspan == p }.map { "\(all[$0].t):\(all[$0].n)" }.joined(separator: ",")
+                            thin.append("level \(li + 1) phrase \(p) \(keys.sorted()) [\(mine)]\(seeded)")
+                        }
                     }
                 }
                 let acd = thin.isEmpty
-                check("stage: Hypnotist II: six levels, each the one below plus more, three of its keys in every phrase of every one (A C D, or A D E on the lift)",
-                      masks.count == 6 && grows && acd && Set(all.map(\.n)) == [57, 60, 62, 64] && all[0].t / two.ticksPerBar == 4,
+                check("stage: Hypnotist II: seven levels, each the one below plus more, three of its keys in every phrase of every one over Beginner (A C D, or A D E on the lift), two in every four bars of Beginner",
+                      masks.count == 7 && grows && acd && Set(all.map(\.n)) == [57, 60, 62, 64] && all[0].t / two.ticksPerBar == 4,
                       "notes by level \(counts), from bar \(all[0].t / two.ticksPerBar) \(thin.prefix(4).joined(separator: "; "))")
 
                 // Adaptive resumes just under the last run's top, and wrong keys hold it back
@@ -1112,14 +1119,15 @@ enum LessonCheck {
                 }
                 let starts = [
                     GameEngine.adaptiveStart(song: two.name, part: .melody, records: []),
-                    GameEngine.adaptiveStart(song: two.name, part: .melody, records: [record("melody", "adaptive", level: 5, 60)]),
+                    GameEngine.adaptiveStart(song: two.name, part: .melody, records: [record("melody", "adaptive", level: 6, 60)]),
                     GameEngine.adaptiveStart(song: two.name, part: .melody, records: [record("melody", "adaptive", level: 6, 600),
                                                                                     record("melody", "adaptive", level: 3, 60)]),
                     GameEngine.adaptiveStart(song: two.name, part: .melody, records: [record("melody", "hard", level: 6, 60),
                                                                                     record("chords", "adaptive", level: 7, 30)]),
                 ]
+                let a0 = charting.adaptive.start
                 check("stage: adaptive starts at \(charting.adaptive.start), then one under the last adaptive run's top (that song and part only), never under the start",
-                      starts == [3, 4, 3, 3], "\(starts)")
+                      starts == [a0, a0 + 1, a0, a0], "\(starts)")
                 let ms = 60000 / (Double(two.meta.tempo) * Double(two.band.ticksPerBeat))
                 func adaptive(wrong: Int?, extra: Bool) -> GameEngine {
                     let g = GameEngine(song: two, part: .melody, difficulty: .adaptive)
@@ -1142,7 +1150,7 @@ enum LessonCheck {
                 }
                 let clean = adaptive(wrong: nil, extra: true), sloppy = adaptive(wrong: 63, extra: false)
                 check("stage: a wrong key with every note holds adaptive down; playing more of the record doesn't",
-                      clean.result().level == 6 && sloppy.result().level == 3 && sloppy.blockLevel.min() == 2,
+                      clean.result().level == 7 && sloppy.result().level == 4 && sloppy.blockLevel.min() == 3,
                       "clean + record notes: top \(clean.result().level), \(clean.extras) extras · with a wrong key: top \(sloppy.result().level)")
 
                 // The adaptive rules (charting.json `adaptive`, CHARTING.md): one tier a step, a
@@ -1188,10 +1196,10 @@ enum LessonCheck {
                       drop != nil && drop!.rate >= a.ease && skipped == 3
                       && (cluster.changes.firstIndex { $0.to < $0.from }.map { i in i + 1 < cluster.changes.count ? cluster.changes[i + 1].block - cluster.changes[i].block >= a.afterDrop + 1 : true } ?? false),
                       "changes \(cluster.changes.map { "\($0.block):\($0.from)→\($0.to) @\(Int($0.rate * 100))%" })")
-                let floorRun = GameEngine(song: two, part: .melody, difficulty: .adaptive, start: 4)
+                let floorRun = GameEngine(song: two, part: .melody, difficulty: .adaptive, start: 5)
                 drive(floorRun) { _, _ in nil }
-                check("stage: a run that started on 4 and plays nothing sinks to 3 and no further (floorBelowStart \(a.floorBelowStart))",
-                      floorRun.blockLevel.min() == 3 && floorRun.blockLevel[0] == 4 && floorRun.result().level == 4, "levels \(floorRun.blockLevel)")
+                check("stage: a run that started on 5 and plays nothing sinks to 4 and no further (floorBelowStart \(a.floorBelowStart))",
+                      floorRun.blockLevel.min() == 4 && floorRun.blockLevel[0] == 5 && floorRun.result().level == 5, "levels \(floorRun.blockLevel)")
                 // A player model: clean up to their tier, 70% a tier above, under half beyond;
                 // offsets normal with 30 / 45 / 60 ms spread (a seeded LCG with Box–Muller). Adaptive
                 // should settle on the tier above theirs (hysteresis: 75% is between ease and climb)
@@ -1199,7 +1207,7 @@ enum LessonCheck {
                 var seed: UInt64 = 7
                 func rand() -> Double { seed = seed &* 6364136223846793005 &+ 1442695040888963407; return Double(seed >> 11) / Double(1 << 53) }
                 func gauss(_ sd: Double) -> Double { sd * (-2 * log(max(rand(), 1e-12))).squareRoot() * cos(2 * .pi * rand()) }
-                let own = 3
+                let own = 4
                 let bot = GameEngine(song: two, part: .melody, difficulty: .adaptive)
                 drive(bot) { _, n in
                     let t = bot.level(atBar: n.t / two.ticksPerBar)
@@ -1232,7 +1240,7 @@ enum LessonCheck {
                     let m = abyss.masks(.melody)
                     check("stage: on Abyss's melody every adaptive climb changes the chart or lands on the top (identical tiers are skipped)",
                           skip.changes.allSatisfy { m[$0.to - 1] != m[$0.from - 1] || $0.to == skip.tiers } && skip.result().level == skip.tiers
-                          && skip.distinct(from: 4, up: true) == 6 && m[3] == m[5],
+                          && skip.distinct(from: 5, up: true) == 7 && m[4] == m[6],
                           "changes \(skip.changes.map { "\($0.block):\($0.from)→\($0.to)" })")
                 }
             }
@@ -1240,9 +1248,36 @@ enum LessonCheck {
             // masks), so it never has fewer notes a second; and level 1 is at most half the top,
             // so the ladder has somewhere to go. The detail: notes a second by level, and the
             // rise per step.
+            // Beginner changes nothing above it: the same charting with the bottom tier of each
+            // ladder cut away charts Easy and everything over it identically.
+            let without: Charting = {
+                let url = Bundle.main.url(forResource: "charting", withExtension: "json")!
+                var d = try! JSONSerialization.jsonObject(with: Data(contentsOf: url)) as! [String: Any]
+                for part in ["chords", "melody"] {
+                    var l = d[part] as! [String: Any]
+                    var tiers = l["tiers"] as! [[String: Any]]
+                    guard tiers[0]["fromAbove"] as? Bool == true else { continue }
+                    tiers.removeFirst()
+                    l["tiers"] = tiers
+                    for n in ["beginner", "easy", "medium", "hard"] { l[n] = max(1, (l[n] as! Int) - 1) }
+                    d[part] = l
+                }
+                var a = d["adaptive"] as! [String: Any]
+                a["start"] = (a["start"] as! Int) - 1
+                d["adaptive"] = a
+                return try! JSONDecoder().decode(Charting.self, from: JSONSerialization.data(withJSONObject: d))
+            }()
             for s in songs {
                 for k in s.partKeys {
                     let masks = s.masks(k)
+                    let plain = s.masks(k, charting: without)
+                    let all = s.notes(k)
+                    var diffs: [String] = []
+                    for (li, (a, b)) in zip(masks.dropFirst(), plain).enumerated() where a != b {
+                        let d = all.indices.filter { a[$0] != b[$0] }
+                        diffs.append("level \(li + 2): \(d.count) notes differ, first at bar \(all[d[0]].t / s.ticksPerBar) tick \(all[d[0]].t % s.ticksPerBar) (\(a[d[0]] ? "extra" : "missing"))")
+                    }
+                    check("stage: \(s.meta.title) \(k.rawValue): Easy and above chart the same with Beginner under them as without", diffs.isEmpty, diffs.joined(separator: "; "))
                     let subset = zip(masks, masks.dropFirst()).allSatisfy { lo, hi in zip(lo, hi).allSatisfy { !$0 || $1 } }
                     let rates = masks.map { m in Double(m.filter { $0 }.count) / s.seconds }
                     let rising = zip(rates, rates.dropFirst()).allSatisfy { $1 >= $0 - 1e-9 }

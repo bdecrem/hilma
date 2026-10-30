@@ -600,6 +600,26 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   (same 1828 hits, 408 bass, 282 stabs, 127 bpm); only the bleep line differs, by design.
   Checks 255/255.
 
+- **Beginner level, and Slow Burn's Easy kept: 0.1 (52), 2026-10-30.** Bart: "the MELODY line
+  on Easy is charted like a Medium… keep Easy as is but add a new Beginner level… HALF as hard…
+  fewer notes, more time between them", and "in all games, all game modes do not change the
+  speed of the songs". **Beginner** is a new bottom tier of both ladders (`charting.json`;
+  `CHARTING.md`): one onset every 2.4 s at most, a note at least every 5 s (chords: one note a
+  chord), its own `phrase` of four bars (a tier may now name one), and `fromAbove`: it is cut
+  from the chart the tier above makes with nothing under it, so Easy, Medium and Hard are
+  **byte-identical** to what they were (a check compares every song and part against the
+  ladder with the tier cut away). Slow Burn melody: 0.25 onsets a second on Beginner against
+  0.67 on Easy. Indices moved up one (chords 1/3/4/7, melody 1/3/5/7; Adaptive `start` 4, the
+  same chart as the old 3). The phrase search is a real maximum-cover search now (the old one
+  could call a partial cover complete after skipping a key). `GameEngine.Difficulty.beginner` is
+  first in the Level chips; the board records it as "beginner". **Tempo:** nothing in the Stage
+  ever changed the speed; a Slow Burn Adaptive run recorded on the simulator has every kick on
+  the 68 bpm grid from the first bar (the count-in included), so that is written down in
+  `CHARTING.md` rather than changed. Checks 268/268. **TestFlight, Mac:** an external group
+  "Public beta" with a public link (https://testflight.apple.com/join/sF4rp7DS), beta review
+  contact and test information set on the ASC record; see "TestFlight" below for the Mac
+  Installer certificate this Mac lacks.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

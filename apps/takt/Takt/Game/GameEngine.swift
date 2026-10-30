@@ -8,7 +8,7 @@ import Foundation
 /// failing: the song plays to the end.
 final class GameEngine {
     enum Difficulty: String, CaseIterable, Codable {
-        case easy, medium, hard, adaptive
+        case beginner, easy, medium, hard, adaptive
 
         var title: String { rawValue.capitalized }
     }

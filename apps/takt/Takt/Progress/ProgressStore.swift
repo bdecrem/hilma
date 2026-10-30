@@ -172,6 +172,8 @@ final class ProgressStore {
     #if DEBUG
     /// `-Silent` (headless) and `-Autoplay` runs keep progress in memory only.
     static let readOnly = UserDefaults.standard.bool(forKey: "Silent") || UserDefaults.standard.string(forKey: "Autoplay") != nil
+    #else
+    static let readOnly = false
     #endif
 
     static var defaultURL: URL {

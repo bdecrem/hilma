@@ -1,11 +1,20 @@
 {
-  "about": "How the Stage cuts a part into levels; CHARTING.md explains every knob. Each part has a ladder of tiers, easiest first, and every tier is the one below plus more (a tier may only loosen a rule). Easy, Medium and Hard each name a tier, and Adaptive walks the ladder one step at a time. A tier: notes = chord notes kept, in `keep` order (null = all); hits = the heaviest weight played as written (1 the hits a part stands on, 2 the groove, 3 pushes and ornaments); gap = seconds at least between two onsets; space = seconds at most without an onset (a longer silence borrows a lighter hit; null = never); bonus = points per hit times this. A ladder's phrase (bars) keeps every key the part plays in each phrase at every tier, before the weights. Adaptive: `ahead` bars before each block, the last `window` bars (reaching back to twice that for `judged` notes) decide a drop and the bars played at the current tier (a whole window of them at least, up to two) decide a climb; at or over `climb` it climbs (not while the hits scatter past spreadMaxMs, median ms), under `ease` or after `missRun` misses in a row it drops; then climbs hold for afterClimb / afterDrop blocks (drops never wait); a climb or a drop lands on the next tier whose chart differs; it never sinks under floorBelowStart tiers below where the run began; a run starts `resume` tiers under the top of your last adaptive run of the song and part (`start` the first time); a wrong key counts as a miss in its window.",
+  "about": "How the Stage cuts a part into levels; CHARTING.md explains every knob. Each part has a ladder of tiers, easiest first, and every tier is the one below plus more (a tier may only loosen a rule). Beginner, Easy, Medium and Hard each name a tier, and Adaptive walks the ladder one step at a time. A tier: notes = chord notes kept, in `keep` order (null = all); hits = the heaviest weight played as written (1 the hits a part stands on, 2 the groove, 3 pushes and ornaments); gap = seconds at least between two onsets; space = seconds at most without an onset (a longer silence borrows a lighter hit; null = never); bonus = points per hit times this. A ladder's phrase (bars) keeps every key the part plays in each phrase at every tier, before the weights; a tier may name a longer phrase of its own (Beginner: four bars). The bottom tier with fromAbove is cut from the chart the tier above makes on its own, so it changes nothing above it. Adaptive: `ahead` bars before each block, the last `window` bars (reaching back to twice that for `judged` notes) decide a drop and the bars played at the current tier (a whole window of them at least, up to two) decide a climb; at or over `climb` it climbs (not while the hits scatter past spreadMaxMs, median ms), under `ease` or after `missRun` misses in a row it drops; then climbs hold for afterClimb / afterDrop blocks (drops never wait); a climb or a drop lands on the next tier whose chart differs; it never sinks under floorBelowStart tiers below where the run began; a run starts `resume` tiers under the top of your last adaptive run of the song and part (`start` the first time); a wrong key counts as a miss in its window.",
   "chords": {
-    "keep": ["root", "third", "fifth", "seventh", "sixth", "ninth"],
-    "easy": 2,
-    "medium": 3,
-    "hard": 6,
+    "keep": [
+      "root",
+      "third",
+      "fifth",
+      "seventh",
+      "sixth",
+      "ninth"
+    ],
+    "beginner": 1,
+    "easy": 3,
+    "medium": 4,
+    "hard": 7,
     "tiers": [
+      {"line": "One note a chord, lots of room.", "notes": 1, "hits": 1, "gap": 2.4, "space": 4.0, "bonus": 0.8, "fromAbove": true},
       {"line": "Two-note chords, room between them.", "notes": 2, "hits": 1, "gap": 1.2, "space": 2.0, "bonus": 1.0},
       {"line": "Two-note chords, on the groove.", "notes": 2, "hits": 2, "gap": 0.6, "space": 1.5, "bonus": 1.2},
       {"line": "Three-note chords, on the groove.", "notes": 3, "hits": 2, "gap": 0.6, "space": 1.5, "bonus": 1.5},
@@ -17,10 +26,12 @@
   "melody": {
     "keep": null,
     "phrase": 2,
-    "easy": 2,
-    "medium": 4,
-    "hard": 6,
+    "beginner": 1,
+    "easy": 3,
+    "medium": 5,
+    "hard": 7,
     "tiers": [
+      {"line": "The tune's anchors, one note at a time.", "notes": null, "hits": 1, "gap": 2.4, "space": 5.0, "bonus": 0.8, "phrase": 4, "fromAbove": true},
       {"line": "The tune's long notes, room between them.", "notes": null, "hits": 1, "gap": 0.9, "space": 2.5, "bonus": 1.0},
       {"line": "The tune's main notes.", "notes": null, "hits": 1, "gap": 0.6, "space": 1.8, "bonus": 1.2},
       {"line": "Most of the tune, nothing too quick.", "notes": null, "hits": 2, "gap": 0.45, "space": 1.5, "bonus": 1.5},
@@ -30,7 +41,7 @@
     ]
   },
   "adaptive": {
-    "start": 3,
+    "start": 4,
     "resume": 1,
     "window": 4,
     "ahead": 2,

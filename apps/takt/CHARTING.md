@@ -17,7 +17,8 @@ Every note of a part (`scripts/songs/*.py`, `pnote` / `pchord` in `common.py`) c
 
 ## The ladder
 
-Each part, chords and melody, has a ladder of **tiers**, easiest first. A tier has five knobs:
+Each part, chords and melody, has a ladder of **tiers**, easiest first. A tier has five knobs
+(and may name a `phrase` of its own, below):
 
 | knob | what it does |
 |---|---|
@@ -35,11 +36,32 @@ A tier may therefore only loosen a rule going up: a smaller `gap`, heavier `hits
 two-note chords on the groove → three-note chords on the groove → plus the pushes → four
 notes → the record**: every step changes one thing (the rhythm, then the chord size, then the
 rhythm again). The old third tier, three-note chords spread out again, was sparser than the
-tier under it and is gone. The melody ladder goes long notes only → main notes → most of the
-tune → with pickups → nearly every note → the record.
+tier under it and is gone. The melody ladder goes anchors → long notes only → main notes → most
+of the tune → with pickups → nearly every note → the record.
 
-**`phrase`** (bars, a ladder knob; melody 2): before the weights, every tier takes every key
-the line plays in each phrase, at its heaviest, earliest onset that fits the gap. Without it a
+**Beginner** (0.1 (52), the bottom tier of each ladder) is half of Easy: Bart found Slow Burn's
+melody on Easy "charted like a Medium" (the line itself is under a note a second, so Easy sat
+close to the top). Beginner takes one onset every 2.4 s at most, a note at least every 5 s
+(chords: one note a chord, 2.4 / 4 s), and keeps every key of each *four* bars (a tier's own
+`phrase`, see below) instead of two. Slow Burn melody: 0.25 onsets a second against Easy's
+0.67; every song's Beginner is 0.2–0.35 a second, Easy 0.5–1.1.
+
+**`fromAbove`** (the bottom tier only; Beginner has it): the tier is **cut from the chart the
+tier above makes with nothing under it**. The charter first charts the tier above from scratch
+(then undoes it), and the bottom tier may take only the onsets that chart takes *by rule* (its
+phrase picks, or its hits where the ladder has no phrase; not what it borrowed for a silence);
+the tier above then takes those same picks first. The point: every tier is seeded with the one
+below, so a free bottom tier would move the whole ladder. An anchor a tick or two from the only
+D of a phrase blocks that D at the tier above, and the hits grid shifts around every anchor.
+With `fromAbove`, Easy and everything over it chart exactly as they did before Beginner
+existed. The check: the same charting with the `fromAbove` tier cut away charts levels 2–7
+identically, every song and part.
+
+**`phrase`** (bars, a ladder knob; melody 2; a tier may name a longer one, Beginner 4): before
+the weights, every tier takes every key the line plays in each phrase (a depth-first search over
+the keys for the widest cover a phrase can have, since 0.1 (52) one that may also skip a key and
+never calls a partial cover complete; a tier with a longer phrase spreads its keys over the
+ladder's phrases inside it, one a slot where it can), at its heaviest, earliest onset that fits the gap. Without it a
 line whose strong beats are all one note (Hypnotist: every weight-1 note is the low A) cut to
 one key for its first three levels, a rhythm game on one key that teaches nothing about the
 line. The check: in every phrase where the line plays more than one key, a level that plays
@@ -48,14 +70,21 @@ two notes or more plays two keys or more (the gap can leave room for no more).
 The weights do the rest, so a line written to be learned puts its keys on the strong beats
 itself: **Hypnotist II** (`hypnotist.py --ii`) is three keys, A C D, turning in dotted
 eighths, and every level is a rhythm of all three (the keys one at a time; the half-time
-turn; with two pickups; the phase whole; with its 16th repeats). Its check: six levels, each
-the one below plus more, A C D in every phrase of every one.
+turn; with two pickups; the phase whole; with its 16th repeats). Its check: seven levels, each
+the one below plus more, A C D in every phrase of every one over Beginner (which keeps two of
+them in every four bars).
 
-`easy`, `medium`, `hard` name a tier of each ladder (chords 2 / 3 / 6, melody 2 / 4 / 6).
+`beginner`, `easy`, `medium`, `hard` name a tier of each ladder (chords 1 / 3 / 4 / 7, melody
+1 / 3 / 5 / 7). Easy, Medium and Hard are the same charts they were before Beginner came.
 `songs` overrides them per song, part and difficulty, e.g.
 `"songs": {"song-warm-nine": {"chords": {"medium": 3}}}`.
 
 ## Adaptive
+
+**The song's speed never changes.** No level and no mode slows the record down: the Stage sends
+the song's own tempo before the count-in and nothing touches it after (measured 2026-10-30 on
+a Slow Burn Adaptive run: every kick on the 68 bpm grid from the first bar). A low level sounds
+slow because it asks for few notes, not because the band is slower.
 
 `adaptive` walks the ladder one tier at a time. The song is cut in blocks of `window` bars
 (4); `ahead` bars (2) before a block starts, its tier is decided. Two windows are read
@@ -68,8 +97,8 @@ more takes a phrase at the tier (Rocksmith's documented complaint was levelling 
 the player was ready). **The record fills what the level leaves out** (0.1 (51)): the part's
 notes a tier doesn't ask for are scheduled on the part's instrument at the band's own
 velocity, a bar ahead, so a low level still sounds like the song and the player plays a part
-of it, the way a Guitar Hero track keeps playing. A first run starts on `start` (3: most of
-the tune, three-note chords on the groove), because drops are fast and climbs slow: a
+of it, the way a Guitar Hero track keeps playing. A first run starts on `start` (4: most of
+the tune, three-note chords on the groove; the same chart it was before Beginner), because drops are fast and climbs slow: a
 beginner is down a level within a phrase, and a player who can play isn't sat on one note a
 bar for a minute. The rules:
 

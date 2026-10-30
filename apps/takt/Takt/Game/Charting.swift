@@ -4,8 +4,8 @@ import Foundation
 /// carries each part whole: every note has a weight (`lv`: 1 the hits the part stands on, 2
 /// the groove, 3 the pushes and ornaments) and every chord note its role (root, third, …).
 /// Each part has a ladder of tiers, easiest first; a tier says how many chord notes to keep,
-/// which weights play, how close two onsets may come and how long a silence may last. Easy,
-/// Medium and Hard name a tier each (a song may name its own), Adaptive walks the ladder.
+/// which weights play, how close two onsets may come and how long a silence may last. Beginner,
+/// Easy, Medium and Hard name a tier each (a song may name its own), Adaptive walks the ladder.
 struct Charting: Decodable {
     struct Tier: Decodable {
         /// What the level is, for the set list.
@@ -21,6 +21,13 @@ struct Charting: Decodable {
         let space: Double?
         /// Points per hit times this.
         let bonus: Double
+        /// Bars: this tier's own phrase (see the ladder's), for a tier sparser than the ladder's
+        /// phrase allows (Beginner keeps every key of each four bars, not each two).
+        let phrase: Int?
+        /// The bottom tier only: cut from the chart the tier above makes with nothing under it
+        /// (it takes its notes only among the onsets that chart takes by rule, and the tier above
+        /// takes those first), so this tier changes nothing above it. Beginner.
+        let fromAbove: Bool?
     }
 
     struct Ladder: Decodable {
@@ -30,6 +37,7 @@ struct Charting: Decodable {
         /// heaviest, earliest onset that fits the gap), before the weights fill in. Thinning the
         /// rhythm must never thin the line down to one key. Nil: the weights alone.
         let phrase: Int?
+        let beginner: Int
         let easy: Int
         let medium: Int
         let hard: Int
@@ -107,19 +115,23 @@ struct Charting: Decodable {
     private func validate() {
         for (name, l) in [("chords", chords), ("melody", melody)] {
             let n = l.tiers.count
-            guard n >= 1, [l.easy, l.medium, l.hard].allSatisfy({ (1...n).contains($0) }),
-                  l.tiers.allSatisfy({ $0.hits >= 1 && $0.gap >= 0 && ($0.space ?? .infinity) > $0.gap && $0.bonus > 0 }),
+            guard n >= 1, [l.beginner, l.easy, l.medium, l.hard].allSatisfy({ (1...n).contains($0) }),
+                  l.beginner < l.easy, l.easy <= l.medium, l.medium <= l.hard,
+                  l.tiers.allSatisfy({ $0.hits >= 1 && $0.gap >= 0 && ($0.space ?? .infinity) > $0.gap && $0.bonus > 0 && ($0.phrase ?? 1) >= 1 }),
+                  l.tiers.dropFirst().allSatisfy({ $0.fromAbove != true }), !(l.tiers[0].fromAbove == true && n < 2),
                   (l.phrase ?? 1) >= 1
             else { fatalError("charting.json: the \(name) ladder") }
             // Every tier is the one below plus more (`masks` seeds each tier with the last), so
             // a tier may only loosen the rules: a smaller gap, heavier hits, bigger chords.
             for (lo, hi) in zip(l.tiers, l.tiers.dropFirst()) {
-                guard hi.gap <= lo.gap, hi.hits >= lo.hits, (hi.notes ?? .max) >= (lo.notes ?? .max) else {
-                    fatalError("charting.json: the \(name) ladder tightens a rule going up (gap, hits and notes may only loosen)")
+                guard hi.gap <= lo.gap, hi.hits >= lo.hits, (hi.notes ?? .max) >= (lo.notes ?? .max),
+                      (hi.phrase ?? l.phrase ?? 1) <= (lo.phrase ?? l.phrase ?? 1) else {
+                    fatalError("charting.json: the \(name) ladder tightens a rule going up (gap, hits, notes and phrase may only loosen)")
                 }
             }
         }
-        guard adaptive.window >= 1, adaptive.ahead >= 0, adaptive.ahead < adaptive.window, adaptive.ease <= adaptive.climb,
+        guard (1...melody.tiers.count).contains(adaptive.start), (1...chords.tiers.count).contains(adaptive.start),
+              adaptive.window >= 1, adaptive.ahead >= 0, adaptive.ahead < adaptive.window, adaptive.ease <= adaptive.climb,
               adaptive.resume >= 0, adaptive.afterClimb >= 0, adaptive.afterDrop >= 0, (adaptive.missRun ?? 1) >= 1,
               adaptive.floorBelowStart >= 0, (adaptive.spreadMaxMs ?? 1) > 0
         else { fatalError("charting.json: adaptive") }
@@ -132,6 +144,7 @@ struct Charting: Decodable {
         let l = ladder(part)
         if let own = songs[song]?[part.rawValue]?[difficulty.rawValue] { return max(1, min(l.tiers.count, own)) }
         switch difficulty {
+        case .beginner: return l.beginner
         case .easy: return l.easy
         case .medium: return l.medium
         case .hard: return l.hard
@@ -166,12 +179,18 @@ struct Charting: Decodable {
         // Each tier starts from the one below it and adds (Rock Band's rule: everything on a lower
         // difficulty is on the higher one), so climbing a level never takes a note away.
         var seed: Set<Int> = []
-        return l.tiers.map { tier in
+        // The phrase picks the bottom tier worked out for the tier above (below): that tier takes
+        // them first, so it charts exactly as it would with nothing under it.
+        var preferred: Set<Int> = []
+        typealias Onset = (t: Int, lv: Int, idx: [Int])
+        return l.tiers.enumerated().map { ti, tier in
             var mask = Array(repeating: false, count: notes.count)
-            let gapTicks = tier.gap / secondsPerTick
+            var gapTicks = tier.gap / secondsPerTick
             var taken: [Int] = []  // onset ticks, sorted
             var isTaken: Set<Int> = []
-            defer { seed = isTaken }
+            let prefer = preferred
+            var preferNext: Set<Int> = []
+            defer { seed = isTaken; preferred = preferNext }
             func fits(_ t: Int) -> Bool {
                 var lo = 0, hi = taken.count
                 while lo < hi { let m = (lo + hi) / 2; if taken[m] < t { lo = m + 1 } else { hi = m } }
@@ -179,7 +198,7 @@ struct Charting: Decodable {
                 if lo > 0, Double(t - taken[lo - 1]) < gapTicks - 0.001 { return false }
                 return true
             }
-            func take(_ o: (t: Int, lv: Int, idx: [Int])) {
+            func take(_ o: Onset) {
                 var lo = 0, hi = taken.count
                 while lo < hi { let m = (lo + hi) / 2; if taken[m] < o.t { lo = m + 1 } else { hi = m } }
                 taken.insert(o.t, at: lo)
@@ -190,66 +209,109 @@ struct Charting: Decodable {
                 }
                 for i in kept { mask[i] = true }
             }
-            func untake(_ o: (t: Int, lv: Int, idx: [Int])) {
+            func untake(_ o: Onset) {
                 if let at = taken.firstIndex(of: o.t) { taken.remove(at: at) }
                 isTaken.remove(o.t)
                 for i in o.idx { mask[i] = false }
             }
-            // The tier below, whole (its onsets fit this tier's gap: the ladder only loosens).
-            for o in onsets where seed.contains(o.t) { take(o) }
-            // Then every key of each phrase, each at its heaviest, earliest onset that fits: a
-            // depth-first search over the keys, backtracking when a later key has nothing left
-            // that fits (one key's early pick can crowd another's only onsets), so a phrase
-            // covers all its keys whenever any combination does; else the most keys it can.
-            if let phrase = l.phrase, let last = onsets.last?.t {
-                let span = phrase * ticksPerBar
+            // Every key of each phrase, each at its heaviest, earliest onset that fits: a
+            // depth-first search over the keys (a key may also be skipped), backtracking when a
+            // later key has nothing left that fits (one key's early pick can crowd another's
+            // only onsets), for the widest cover a phrase can have; the first widest found wins,
+            // so the order candidates are tried in is the preference: `prefer` first, then the
+            // heaviest, then (with `slot`, ticks) one key a slot where it can, so a long phrase
+            // has a note every couple of bars, then the earliest.
+            func phrasePass(_ pool: [Onset], span: Int, slot: Int?, prefer: Set<Int>) {
+                guard let last = pool.last?.t else { return }
                 for p in 0...(last / span) {
-                    let window = onsets.filter { $0.t >= p * span && $0.t < (p + 1) * span }.sorted { ($0.lv, $0.t) < ($1.lv, $1.t) }
+                    let window = pool.filter { $0.t >= p * span && $0.t < (p + 1) * span }.sorted { ($0.lv, $0.t) < ($1.lv, $1.t) }
                     var keys: [Int] = []
                     for o in window { for i in o.idx where !keys.contains(notes[i].n) { keys.append(notes[i].n) } }
                     let open = keys.filter { key in !window.contains { o in isTaken.contains(o.t) && o.idx.contains { notes[$0].n == key } } }
                     var chosen: [Int] = []
                     var best: [Int] = []
                     func search(_ k: Int) -> Bool {
-                        if k == open.count { best = chosen; return true }
-                        for (wi, o) in window.enumerated()
-                        where !isTaken.contains(o.t) && o.idx.contains(where: { notes[$0].n == open[k] }) && fits(o.t) {
+                        if k == open.count {
+                            if chosen.count > best.count { best = chosen }
+                            return chosen.count == open.count
+                        }
+                        if chosen.count + (open.count - k) <= best.count { return false }  // can't beat the best
+                        var cands = window.indices.filter { wi in
+                            let o = window[wi]
+                            return !isTaken.contains(o.t) && o.idx.contains(where: { notes[$0].n == open[k] }) && fits(o.t)
+                        }
+                        let used = Set(chosen.map { wi in slot.map { (window[wi].t - p * span) / $0 } ?? 0 })
+                        cands.sort { a, b in
+                            let pa = prefer.contains(window[a].t) ? 0 : 1, pb = prefer.contains(window[b].t) ? 0 : 1
+                            let ua = slot.map { used.contains((window[a].t - p * span) / $0) ? 1 : 0 } ?? 0
+                            let ub = slot.map { used.contains((window[b].t - p * span) / $0) ? 1 : 0 } ?? 0
+                            return (pa, window[a].lv, ua, window[a].t) < (pb, window[b].lv, ub, window[b].t)
+                        }
+                        for wi in cands {
+                            let o = window[wi]
                             take(o)
                             chosen.append(wi)
                             if search(k + 1) { return true }
                             untake(o)
                             chosen.removeLast()
                         }
-                        // This key has no fit: carry on with the rest, keeping the widest cover seen.
-                        if k + 1 < open.count, search(k + 1) { return true }
-                        if chosen.count > best.count { best = chosen }
-                        return false
+                        return search(k + 1)  // without this key
                     }
                     if !search(0) { for wi in best { take(window[wi]) } }
                 }
             }
-            // The hits the tier plays, heaviest first, then early first, wherever they fit the gap.
-            for o in onsets.sorted(by: { ($0.lv, $0.t) < ($1.lv, $1.t) }) where o.lv <= tier.hits && !isTaken.contains(o.t) && fits(o.t) { take(o) }
-            // Then the silences longer than `space`: each borrows the heaviest lighter hit inside
-            // it that fits, the one nearest its middle, until none is too long or nothing fits.
-            if let space = tier.space {
-                let spaceTicks = space / secondsPerTick
-                var changed = true
-                while changed {
-                    changed = false
-                    var holes = zip(taken, taken.dropFirst()).filter { Double($1 - $0) > spaceTicks + 0.001 }
-                    // The part's first and last onsets bound the silences before and after.
-                    if let f = taken.first, let o = onsets.first, Double(f - o.t) > spaceTicks { holes.insert((o.t - 1, f), at: 0) }
-                    if let l = taken.last, let o = onsets.last, Double(o.t - l) > spaceTicks { holes.append((l, o.t + 1)) }
-                    if taken.isEmpty, let a = onsets.first, let z = onsets.last { holes = [(a.t - 1, z.t + 1)] }
-                    for (a, z) in holes {
-                        let mid = Double(a + z) / 2
-                        let pick = onsets.filter { $0.t > a && $0.t < z && !isTaken.contains($0.t) && fits($0.t) }
-                            .min { ($0.lv, abs(Double($0.t) - mid)) < ($1.lv, abs(Double($1.t) - mid)) }
-                        if let o = pick { take(o); changed = true }
+            // A tier's three passes over `pool`: the phrase keys, the hits, the silences. Returns
+            // what the tier took by rule: its phrase picks (a ladder with a phrase) or its hits,
+            // not what it borrowed for a silence.
+            func chart(_ t: Tier, pool: [Onset], prefer: Set<Int>) -> Set<Int> {
+                gapTicks = t.gap / secondsPerTick
+                let before = isTaken
+                if let phrase = t.phrase ?? l.phrase {
+                    let span = phrase * ticksPerBar
+                    phrasePass(pool, span: span, slot: l.phrase.map { $0 * ticksPerBar }.flatMap { $0 < span ? $0 : nil }, prefer: prefer)
+                }
+                let byPhrase = isTaken.subtracting(before)
+                // The hits the tier plays, heaviest first, then early first, wherever they fit the gap.
+                for o in pool.sorted(by: { ($0.lv, $0.t) < ($1.lv, $1.t) }) where o.lv <= t.hits && !isTaken.contains(o.t) && fits(o.t) { take(o) }
+                let picks = (t.phrase ?? l.phrase) != nil ? byPhrase : isTaken.subtracting(before)
+                // Then the silences longer than `space`: each borrows the heaviest lighter hit inside
+                // it that fits, the one nearest its middle, until none is too long or nothing fits.
+                if let space = t.space {
+                    let spaceTicks = space / secondsPerTick
+                    var changed = true
+                    while changed {
+                        changed = false
+                        var holes = zip(taken, taken.dropFirst()).filter { Double($1 - $0) > spaceTicks + 0.001 }
+                        // The part's first and last onsets bound the silences before and after.
+                        if let f = taken.first, let o = onsets.first, Double(f - o.t) > spaceTicks { holes.insert((o.t - 1, f), at: 0) }
+                        if let l = taken.last, let o = onsets.last, Double(o.t - l) > spaceTicks { holes.append((l, o.t + 1)) }
+                        if taken.isEmpty, let a = onsets.first, let z = onsets.last { holes = [(a.t - 1, z.t + 1)] }
+                        for (a, z) in holes {
+                            let mid = Double(a + z) / 2
+                            let pick = pool.filter { $0.t > a && $0.t < z && !isTaken.contains($0.t) && fits($0.t) }
+                                .min { ($0.lv, abs(Double($0.t) - mid)) < ($1.lv, abs(Double($1.t) - mid)) }
+                            if let o = pick { take(o); changed = true }
+                        }
                     }
                 }
+                return picks
             }
+            // The tier below, whole (its onsets fit this tier's gap: the ladder only loosens).
+            for o in onsets where seed.contains(o.t) { take(o) }
+            // The bottom tier (Beginner) is cut from the chart the tier above makes with nothing
+            // under it: it takes its notes only among the onsets that chart takes by rule (its
+            // phrase picks, or its hits; worked out here, then undone), and the tier above takes
+            // those first. So adding a bottom tier changes nothing above it, where a free anchor
+            // a tick or two from the only D of a phrase would block that D at the tier above and
+            // move its whole grid.
+            var pool = onsets
+            if ti == 0, tier.fromAbove == true {
+                let saved = (taken, isTaken, mask)
+                preferNext = chart(l.tiers[1], pool: onsets, prefer: [])
+                (taken, isTaken, mask) = saved
+                pool = onsets.filter { preferNext.contains($0.t) }
+            }
+            _ = chart(tier, pool: pool, prefer: prefer)
             return mask
         }
     }
