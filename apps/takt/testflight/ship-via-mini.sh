@@ -35,10 +35,14 @@ git fetch -q origin && [ "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)
 OUT=$(mktemp -d "${TMPDIR:-/tmp}/takt-ship.XXXXXX")
 
 if [ "$MINI" = local ]; then
+  # Archived SIGNED here (the profile and its cert are on this Mac): an unsigned archive carries
+  # no entitlements, and App Store Connect rejects a Catalyst build without the sandbox one
+  # (2026-10-30). The export re-signs with the same profile.
   echo "== archiving $VERSION ($BUILD) for $PLATFORM here"
   command -v xcodegen >/dev/null && xcodegen generate -q
   xcodebuild archive -project Takt.xcodeproj -scheme Takt -destination "$DEST" -archivePath "$OUT/takt.xcarchive" \
-    -configuration Release CODE_SIGN_IDENTITY='' CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO > "$OUT/archive.log" 2>&1 \
+    -configuration Release CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="Apple Distribution" \
+    PROVISIONING_PROFILE_SPECIFIER="$PROFILE" DEVELOPMENT_TEAM=274T5WCVD2 > "$OUT/archive.log" 2>&1 \
     || { grep -E 'error:' "$OUT/archive.log" | head; exit 1; }
 else
 echo "== archiving $VERSION ($BUILD) for $PLATFORM on the mini"

@@ -947,5 +947,17 @@ Tutor" (ASC id 6826824040), internal group "Internal" (all builds, tester kurona
 network client, user-selected files; CoreMIDI and playback need nothing more; checked on the Air:
 audio, MIDI from a virtual source and the ola.cx account all work sandboxed). The iMac ships it
 (`TAKT_PROFILE="takt catalyst appstore imac" ASC_KEY_ID=5A5HNSWA33`, profile against its
-Apple Distribution cert `0DDCC75F…`), archiving on the mini at 171.66.240.175. Formerly blocked: for `mac`, the MacBook Air has no "3rd Party Mac Developer Installer" identity in the keychain (ASC has
-three MAC_INSTALLER_DISTRIBUTION certs, so their keys live on another Mac).
+Apple Distribution cert `0DDCC75F…`), archiving on the mini at 171.66.240.175. **The MacBook Air
+ships it too since 2026-10-30** (`MINI=local ./testflight/ship-via-mini.sh mac`): it now holds a
+"3rd Party Mac Developer Installer" identity (Mac Installer Distribution cert `UFUMCYT3W9`,
+serial `6C88B10E…`, minted over the ASC API from an openssl CSR after Bart okayed revoking the
+unused 2026-08-26 one, `WUZK4CR87J`; Apple issues no fourth while three are current). The key
+lives in its own keychain, `~/Library/Keychains/takt-ship.keychain-db` (password `takt-ship`,
+on the search list, partition list set for apple-tool/codesign/productbuild): in the login
+keychain an imported key makes productbuild wait on an authorization dialog nobody sees, and
+`set-key-partition-list` there would need the login password. **Public
+beta:** external group "Public beta", public link https://testflight.apple.com/join/sF4rp7DS
+(limit 10,000), created 2026-10-30 with the beta review contact (Bart, no demo account: the app
+opens as a guest) and the en-US test information; `asc-submit.mjs` adds every build to it and
+submits it for beta review, and the link serves a build once Apple has approved one. First build
+on it: 0.1 (52), Mac.
