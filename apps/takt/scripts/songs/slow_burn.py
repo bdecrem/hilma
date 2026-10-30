@@ -8,8 +8,10 @@ Slow Burn Short (2026-10-30) is the same song once round: one chorus (12 bars, 4
 the stop ringing) played the way the second chorus of the long one is (snare in, the head with
 its ornaments), ending on the stop.
 
-Chorus 1 cross-stick and hat, the head on the sax; 2 the snare comes in, the head again with
-ornaments; 3 the ride, the sax solo; 4 everything, the head, and a stop on the last bar.
+Chorus 1 the snare and hat, the head on the sax; 2 the head again with grace notes; 3 the ride,
+the sax solo; 4 everything, the head, and a stop on the last bar. (The first chorus was
+cross-stick only until 0.1 (56): Bart heard it as slower than Slow Burn Short, which opens with
+the second-chorus feel, so the long one does too now.)
 Chords part: the piano's comping (four-note dominant voicings; easy is the root on the 1,
 medium the shell on 1 and 3, hard the whole thing with the pushes). Melody part: the sax line.
 """
@@ -50,8 +52,9 @@ for c, name in enumerate(["Head", "Second time", "Sax solo", "Out chorus"][:CHOR
 
 
 def feel(c):
-    """The arrangement a chorus is played with: the short one plays like the second time round."""
-    return 1 if SHORT else c
+    """The arrangement a chorus is played with: the snare is in from the first chorus (no quiet
+    cross-stick head), the short one plays like the second time round."""
+    return 1 if SHORT else max(1, c)
 
 ROOT = {"G7": 31, "C7": 36, "D7": 38}
 FIFTH = {"G7": 38, "C7": 31, "D7": 33}
@@ -231,7 +234,7 @@ for c in range(CHORUSES):
             continue
         for t, n, ln, lv in phrases[b]:
             s.pnote(melody, o + t, n, ln, lv)
-        if a in (1, 3) and b in (1, 5):
+        if (SHORT or c in (1, 3)) and b in (1, 5):
             # The second and fourth time round, a grace note into the next phrase (hard).
             s.pnote(melody, o + 44, F4 if b == 1 else Bb4, 4, 3)
 s.fingered(melody)

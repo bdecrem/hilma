@@ -687,6 +687,15 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   the simulator: four frames ~350 ms apart, the grid row at the same pixel in all, the note's
   bottom at four sub-beat positions. Checks 287/287.
 
+- **Slow Burn opens with the snare: 0.1 (56), 2026-10-30.** Bart, after 0.1 (55): "Slow burn short
+  in game mode is the correct speed, much faster and better than normal Slow Burn - fix slow
+  burn". Both run at 68; the long one opened with the quiet head chorus (cross-stick and hat
+  only, no kick push, the bass without its sixth, two comping hits a bar), which reads as slower.
+  `feel(c)` is `max(1, c)` for the long song now: chorus 1 plays the second-chorus feel from bar
+  1 (its drums, bass and comping are note-for-note the short song's, velocities humanized apart),
+  the grace notes still arrive on choruses 2 and 4; the short song is byte-identical to 0.1 (55).
+  Checks 287/287.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without
