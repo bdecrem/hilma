@@ -9,6 +9,7 @@ struct TaktApp: App {
         #if DEBUG
         DebugHooks.renderIfRequested()
         DebugHooks.lessonCheckIfRequested()
+        DebugHooks.chartDumpIfRequested()
         #endif
         let progress = ProgressStore()
         let account = AccountStore(progress: progress)

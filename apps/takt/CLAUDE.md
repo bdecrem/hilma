@@ -396,7 +396,8 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   ×3 / ×4 at 8 / 16 / 32; a level pays ×1 / ×1.5 / ×2; **Adaptive** starts easy and decides
   each four-bar block two bars ahead from the four bars before that: at or over 90% hit (four
   notes judged at least) it climbs, under 60% it eases off. No failing; the song plays to the
-  end; grade S / A / B / C / D by accuracy (97 / 90 / 80 / 65). **Screen**
+  end; grade S / A / B / C / D by the hit rate (97 / 90 / 80 / 65); since 0.1 (53) **Accuracy**
+  is hits over keys played (a wrong key costs, a note let go by doesn't). **Screen**
   (`Game/GameScreen.swift`): the HUD (score, the combo ring filling toward the next multiplier,
   pause), the section rail, the highway (a Canvas: a capsule per note in its key's lane, chords
   as stacks with finger badges, beat and bar lines sliding, 3 s of lookahead at any tempo, the
@@ -599,6 +600,25 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   keeps its groove hits in the outro. The band of the song is byte-identical to Hypnotist's
   (same 1828 hits, 408 bass, 282 stabs, 127 bpm); only the bleep line differs, by design.
   Checks 255/255.
+
+- **Beginner's stubs, and Accuracy as clean keys: 0.1 (53), 2026-10-30.** Bart: "some notes, in
+  game mode, playing Slow Burn melody beginner, are weird: instead of coming down like a full
+  bar, one beat at a time, they are half length and don't attach correctly" and "Accuracy
+  should be redefined as any note not wrong: perfect or good notes, not accidentally hitting a
+  wrong note". (1) The phrase cover took a 4- or 8-tick ornament off the beat as the only F or
+  Bb of its four bars. New tier knob `minBeats` (melody Beginner 1): the tier takes only onsets
+  with a note at least a beat long, capped at the part's usual weight-1 length so Hypnotist's
+  4-tick stab line keeps its Beginner (`Charting.swift`, `CHARTING.md`). Slow Burn Beginner is
+  42 notes, none under a beat; Easy and above unchanged (the check). (2) `GameEngine.wrong`
+  counts extras that aren't the record's own notes; `accuracy` = hits / (hits + wrong), the old
+  hits-over-notes is `hitRate` and still grades the run; the result screen gets a "Wrong" stat.
+  Then Bart: "those are probably shorter notes that fall on a half beat or some such. that's
+  fine, but maybe we should add lighter or dotted grid lines for them": the highway draws the
+  part's own subdivision between the beats as faint dashes (`GameEngine.grid`, the gcd of the
+  onsets' offsets in the beat: Slow Burn's shuffle thirds, Hypnotist's sixteenths), thinned to a
+  coarser division where the lines would sit under 22 pt apart (Hypnotist at 127 bpm shows one
+  dash a beat). Beginner keeps the `minBeats` rule all the same: its notes are the anchors.
+  DEBUG `-ChartDump <song>/<part>` prints every tier's chart. Checks 276/276.
 
 - **Beginner level, and Slow Burn's Easy kept: 0.1 (52), 2026-10-30.** Bart: "the MELODY line
   on Easy is charted like a Medium… keep Easy as is but add a new Beginner level… HALF as hard…

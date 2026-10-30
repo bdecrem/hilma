@@ -42,6 +42,8 @@ struct GameState {
     var lookaheadTicks = 1.0
     var ticksPerBeat = 12
     var ticksPerBar = 48
+    /// Ticks between the sub-beat grid lines the part asks for (`GameEngine.grid`).
+    var gridTicks = 12
     var notes: [HighwayNote] = []
     var keys: ClosedRange<Int> = 48...71
     var nowNotes: Set<Int> = []
@@ -236,7 +238,8 @@ struct ProgressRail: View {
 
 /// The notes coming down. Drawn in a Canvas: a capsule per note in its key's lane (black keys
 /// narrower and darker), as long as it lasts; beat lines slide with the song, bar lines
-/// stronger and numbered; the hit line is `signal` at the bottom; a hit note vanishes with a
+/// stronger and numbered, the part's own subdivision between the beats as faint dashes (a
+/// shuffle's thirds, straight eighths), so a note off the beat has a line to land on; the hit line is `signal` at the bottom; a hit note vanishes with a
 /// flash, a missed one slides on past the line and fades.
 struct Highway: View {
     let state: GameState
@@ -267,6 +270,24 @@ struct Highway: View {
                         ctx.draw(Text("\(n)").font(.system(size: 10, weight: .semibold, design: .monospaced)).foregroundColor(Palette.muted),
                                  at: CGPoint(x: 10, y: yy - 8), anchor: .center)
                     }
+                }
+
+                // Sub-beat lines: the part's subdivision, dashed and faint, where the lines stay at
+                // least 22 pt apart (a coarser division of the beat otherwise, none past it).
+                var sub = state.gridTicks
+                while sub < state.ticksPerBeat, CGFloat(sub) / lookahead * h < 22 {
+                    sub = ((sub + 1)...state.ticksPerBeat).first { state.ticksPerBeat % $0 == 0 && $0 % state.gridTicks == 0 } ?? state.ticksPerBeat
+                }
+                if sub < state.ticksPerBeat {
+                    var dashes = Path()
+                    for tick in stride(from: max(0, firstBeat) * state.ticksPerBeat, through: max(0, lastBeat) * state.ticksPerBeat, by: sub)
+                    where tick % state.ticksPerBeat != 0 {
+                        let yy = y(Double(tick))
+                        guard yy >= 0, yy <= h else { continue }
+                        dashes.move(to: CGPoint(x: 0, y: yy))
+                        dashes.addLine(to: CGPoint(x: size.width, y: yy))
+                    }
+                    ctx.stroke(dashes, with: .color(Palette.line.opacity(0.6)), style: StrokeStyle(lineWidth: 1, dash: [3, 5]))
                 }
 
                 // Lanes for the keys the chart uses next: a faint column.
@@ -531,7 +552,8 @@ struct GameResultPanel: View {
             stat("\(result.perfect)", "Perfect")
             stat("\(result.good)", "Good")
             stat("\(result.missed)", "Missed")
-            stat("\(result.maxCombo)", "Best combo")
+            stat("\(result.wrong)", "Wrong")
+            stat("\(result.maxCombo)", compact ? "Combo" : "Best combo")
         }
     }
 

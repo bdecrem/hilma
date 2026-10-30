@@ -57,6 +57,15 @@ With `fromAbove`, Easy and everything over it chart exactly as they did before B
 existed. The check: the same charting with the `fromAbove` tier cut away charts levels 2–7
 identically, every song and part.
 
+**`minBeats`** (beats, a tier knob; melody Beginner 1, since 0.1 (53)): the tier may take only
+an onset with a note at least this long, capped at the part's usual weight-1 length (the median)
+so a line of short stabs (Hypnotist, every note 4 ticks) keeps them all. Bart on Slow Burn
+melody Beginner: some notes "instead of coming down like a full bar, one beat at a time, are
+half length and don't attach correctly": the phrase cover had taken a 4- or 8-tick ornament
+off the beat as the only F or Bb of its four bars, a stub among the anchors. With the cap the
+cover takes a longer onset of the key, or skips the key in that phrase. The check: no Beginner
+note shorter than a beat (or the usual length) in any song or part.
+
 **`phrase`** (bars, a ladder knob; melody 2; a tier may name a longer one, Beginner 4): before
 the weights, every tier takes every key the line plays in each phrase (a depth-first search over
 the keys for the widest cover a phrase can have, since 0.1 (52) one that may also skip a key and

@@ -48,15 +48,19 @@ final class GameEngine {
         let good: Int
         let missed: Int
         let extras: Int
+        /// Extras that aren't the record's own notes: wrong keys.
+        let wrong: Int
         let maxCombo: Int
-        /// Hits over notes, 0...1.
+        /// Hits over keys played (hits and wrong keys), 0...1: how clean the playing was, whatever
+        /// the level left out or you let go by.
         let accuracy: Double
         /// The highest tier played (adaptive), or the difficulty's.
         let level: Int
         let grade: String
 
-        static func grade(accuracy: Double) -> String {
-            accuracy >= 0.97 ? "S" : accuracy >= 0.9 ? "A" : accuracy >= 0.8 ? "B" : accuracy >= 0.65 ? "C" : "D"
+        /// From the hit rate (hits over the chart's notes): how much of the chart you played.
+        static func grade(hitRate: Double) -> String {
+            hitRate >= 0.97 ? "S" : hitRate >= 0.9 ? "A" : hitRate >= 0.8 ? "B" : hitRate >= 0.65 ? "C" : "D"
         }
     }
 
@@ -76,6 +80,9 @@ final class GameEngine {
     /// The whole part in time order, and which notes play at each tier (`[tier - 1][i]`).
     let notes: [Song.Note]
     let masks: [[Bool]]
+    /// Ticks: the finest part of a beat the part's onsets sit on (a shuffle's thirds, straight
+    /// eighths or sixteenths; the beat itself when every onset is on one). The highway's grid.
+    let grid: Int
     private(set) var status: [Status]
     /// The tier of each block, decided `ahead` bars before the block starts.
     private(set) var blockLevel: [Int]
@@ -86,6 +93,7 @@ final class GameEngine {
     private(set) var good = 0
     private(set) var missed = 0
     private(set) var extras = 0
+    private(set) var wrong = 0
     private(set) var pop: Pop?
     private(set) var finished = false
     private var seq = 0
@@ -117,6 +125,9 @@ final class GameEngine {
         ticksPerBar = song.ticksPerBar
         notes = song.notes(part)
         masks = song.masks(part, charting: charting)
+        func gcd(_ a: Int, _ b: Int) -> Int { b == 0 ? a : gcd(b, a % b) }
+        let tpb = song.band.ticksPerBeat
+        grid = notes.reduce(tpb) { gcd($0, $1.t % tpb) }
         status = Array(repeating: .pending, count: notes.count)
         let window = charting.adaptive.window
         let blocks = (song.band.bars + window - 1) / window + 1
@@ -175,7 +186,14 @@ final class GameEngine {
         return false
     }
 
+    /// Hits over the keys played: a wrong key costs, a note let go by doesn't (that is the hit
+    /// rate, which grades the run).
     var accuracy: Double {
+        let played = perfect + good + wrong
+        return played == 0 ? 1 : Double(perfect + good) / Double(played)
+    }
+
+    var hitRate: Double {
         let judged = perfect + good + missed
         return judged == 0 ? 1 : Double(perfect + good) / Double(judged)
     }
@@ -304,6 +322,7 @@ final class GameEngine {
             // level; the record's own notes the level left out don't.
             let bar = Int((tick / Double(ticksPerBar)).rounded(.down))
             if !notes.contains(where: { abs(tick - Double($0.t)) <= reach && $0.n % 12 == note % 12 }) {
+                wrong += 1
                 barMisses[bar, default: 0] += 1
                 missRun += 1
                 barMissRun[bar] = max(barMissRun[bar] ?? 0, missRun)
@@ -326,9 +345,9 @@ final class GameEngine {
 
     func result() -> Result {
         Result(song: song.name, part: part.rawValue, difficulty: difficulty.rawValue, score: score,
-               notes: perfect + good + missed, perfect: perfect, good: good, missed: missed, extras: extras,
+               notes: perfect + good + missed, perfect: perfect, good: good, missed: missed, extras: extras, wrong: wrong,
                maxCombo: maxCombo, accuracy: accuracy, level: difficulty == .adaptive ? topLevel : blockLevel[0],
-               grade: Result.grade(accuracy: accuracy))
+               grade: Result.grade(hitRate: hitRate))
     }
 
     /// Tap mode: the keys a tap at `tick` plays, the whole pending chord nearest it that is still

@@ -1114,7 +1114,7 @@ enum LessonCheck {
                 // where the record's own notes don't.
                 func record(_ part: String, _ difficulty: String, level: Int, _ ago: Double) -> ProgressStore.ScoreRecord {
                     ProgressStore.ScoreRecord(GameEngine.Result(song: two.name, part: part, difficulty: difficulty, score: 1, notes: 1, perfect: 1,
-                                                                good: 0, missed: 0, extras: 0, maxCombo: 1, accuracy: 1, level: level, grade: "S"),
+                                                                good: 0, missed: 0, extras: 0, wrong: 0, maxCombo: 1, accuracy: 1, level: level, grade: "S"),
                                               date: Date(timeIntervalSinceNow: -ago))
                 }
                 let starts = [
@@ -1278,6 +1278,15 @@ enum LessonCheck {
                         diffs.append("level \(li + 2): \(d.count) notes differ, first at bar \(all[d[0]].t / s.ticksPerBar) tick \(all[d[0]].t % s.ticksPerBar) (\(a[d[0]] ? "extra" : "missing"))")
                     }
                     check("stage: \(s.meta.title) \(k.rawValue): Easy and above chart the same with Beginner under them as without", diffs.isEmpty, diffs.joined(separator: "; "))
+                    // `minBeats`: no Beginner note shorter than a beat, or than the part's usual
+                    // weight-1 note where the line is all short stabs (Hypnotist).
+                    if let beats = charting.ladder(k).tiers[0].minBeats {
+                        let anchors = all.filter { $0.lv == 1 }.map(\.len).sorted()
+                        let minLen = min(Int((beats * Double(s.band.ticksPerBeat)).rounded()), anchors[anchors.count / 2])
+                        let short = all.indices.filter { masks[0][$0] && all[$0].len < minLen }
+                        check("stage: \(s.meta.title) \(k.rawValue): no Beginner note shorter than \(minLen) ticks", short.isEmpty && !masks[0].allSatisfy { !$0 },
+                              short.isEmpty ? "" : "\(short.count) short, first at bar \(all[short[0]].t / s.ticksPerBar + 1) len \(all[short[0]].len)")
+                    }
                     let subset = zip(masks, masks.dropFirst()).allSatisfy { lo, hi in zip(lo, hi).allSatisfy { !$0 || $1 } }
                     let rates = masks.map { m in Double(m.filter { $0 }.count) / s.seconds }
                     let rising = zip(rates, rates.dropFirst()).allSatisfy { $1 >= $0 - 1e-9 }
@@ -1334,6 +1343,18 @@ enum LessonCheck {
                 wrong.heard(tick: 0, msPerTick: ms)
                 wrong.played(note: 61, tick: 0, msPerTick: ms)
                 check("stage: a key no note wants is an extra, not a hit", wrong.extras == 1 && wrong.perfect + wrong.good == 0)
+                // Accuracy is how clean the keys you played were: a wrong key costs, a note let go
+                // by doesn't (the hit rate grades the run), and the record's own notes the level
+                // left out cost nothing.
+                check("stage: accuracy is hits over keys played: a skipped note keeps 100%, a wrong key doesn't",
+                      sloppy.accuracy == 1 && sloppy.result().wrong == 0 && wrong.accuracy == 0 && wrong.result().wrong == 1
+                      && sloppy.hitRate < 0.7, "skipped: \(sloppy.accuracy) · wrong key: \(wrong.accuracy), \(wrong.result().wrong) wrong")
+                let own = GameEngine(song: song, part: .melody, difficulty: .easy)
+                let left = song.notes(.melody).indices.first { !own.active($0) }!
+                let leftNote = song.notes(.melody)[left]
+                own.heard(tick: Double(leftNote.t), msPerTick: ms)
+                own.played(note: leftNote.n, tick: Double(leftNote.t), msPerTick: ms)
+                check("stage: the record's own note the level left out is an extra but not wrong", own.extras == 1 && own.wrong == 0 && own.accuracy == 1)
                 let adaptive = run(.adaptive) { _, _ in 0 }
                 let steps = zip(adaptive.blockLevel, adaptive.blockLevel.dropFirst())
                 check("stage: adaptive climbs one level at a time to the top on clean playing (past a level whose chart is the same)",
@@ -1349,7 +1370,7 @@ enum LessonCheck {
                       "hard \(hardScore) vs easy \(perfect.score)")
                 let r = ProgressStore.ScoreRecord.trimmed((0..<60).map { i in
                     ProgressStore.ScoreRecord(GameEngine.Result(song: "s", part: "melody", difficulty: "easy", score: i, notes: 1, perfect: 1,
-                                                                good: 0, missed: 0, extras: 0, maxCombo: 1, accuracy: 1, level: 1, grade: "S"))
+                                                                good: 0, missed: 0, extras: 0, wrong: 0, maxCombo: 1, accuracy: 1, level: 1, grade: "S"))
                 })
                 check("stage: the board keeps the best 50 a song, best first", r.count == 50 && r.first?.score == 59 && r.last?.score == 10)
 

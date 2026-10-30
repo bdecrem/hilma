@@ -70,6 +70,27 @@ enum DebugHooks {
         player.autoplayMode = mode
     }
 
+    /// `-ChartDump <song>/<part>` prints every tier's chart (tick, bar.beat, key, length, weight)
+    /// and exits: what the highway will show at each level.
+    static func chartDumpIfRequested() {
+        guard let v = UserDefaults.standard.string(forKey: "ChartDump") else { return }
+        let sp = v.split(separator: "/").map(String.init)
+        guard sp.count == 2, let part = Song.PartKey(rawValue: sp[1]) else { fatalError("-ChartDump <song>/<part>") }
+        let song = Song.bundled(sp[0])
+        let notes = song.notes(part)
+        let masks = song.masks(part, charting: .bundled)
+        let tpb = song.band.ticksPerBeat, tpBar = song.ticksPerBar
+        for (ti, mask) in masks.enumerated() {
+            let picked = notes.indices.filter { mask[$0] }
+            print("tier \(ti + 1): \(picked.count) notes")
+            for i in picked {
+                let n = notes[i]
+                print(String(format: "  t=%4d  %2d.%d  n=%2d len=%2d lv=%d", n.t, n.t / tpBar + 1, (n.t % tpBar) / tpb + 1, n.n, n.len, n.lv))
+            }
+        }
+        exit(0)
+    }
+
     static func lessonCheckIfRequested() {
         guard UserDefaults.standard.bool(forKey: "LessonCheck") else { return }
         exit(LessonCheck.run() ? 0 : 1)

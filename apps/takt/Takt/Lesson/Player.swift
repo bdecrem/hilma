@@ -785,6 +785,7 @@ final class Player {
             accuracy: game.accuracy, progress: min(1, max(0, tick / Double(song.bars * game.ticksPerBar))),
             countIn: countIn, playing: playing, pop: game.pop,
             heardTick: tick, lookaheadTicks: lookahead, ticksPerBeat: game.ticksPerBeat, ticksPerBar: game.ticksPerBar,
+            gridTicks: game.grid,
             notes: visible, keys: song.keyboard(game.part), nowNotes: cue.now, nextNotes: cue.next,
             pressedNotes: pressed, fingers: cue.fingers, nowFingers: cue.nowFingers, nextFinger: cue.nextFingers.min(),
             rightHand: game.part == .melody, result: gameResult, lastRun: lastRun,

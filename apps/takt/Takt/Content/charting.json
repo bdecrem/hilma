@@ -31,7 +31,7 @@
     "medium": 5,
     "hard": 7,
     "tiers": [
-      {"line": "The tune's anchors, one note at a time.", "notes": null, "hits": 1, "gap": 2.4, "space": 5.0, "bonus": 0.8, "phrase": 4, "fromAbove": true},
+      {"line": "The tune's anchors, one note at a time.", "notes": null, "hits": 1, "gap": 2.4, "space": 5.0, "bonus": 0.8, "phrase": 4, "fromAbove": true, "minBeats": 1},
       {"line": "The tune's long notes, room between them.", "notes": null, "hits": 1, "gap": 0.9, "space": 2.5, "bonus": 1.0},
       {"line": "The tune's main notes.", "notes": null, "hits": 1, "gap": 0.6, "space": 1.8, "bonus": 1.2},
       {"line": "Most of the tune, nothing too quick.", "notes": null, "hits": 2, "gap": 0.45, "space": 1.5, "bonus": 1.5},

@@ -28,6 +28,10 @@ struct Charting: Decodable {
         /// (it takes its notes only among the onsets that chart takes by rule, and the tier above
         /// takes those first), so this tier changes nothing above it. Beginner.
         let fromAbove: Bool?
+        /// Beats: only onsets with a note at least this long, or as long as the part's usual
+        /// weight-1 note (its median length) when that is shorter, so a line of short stabs keeps
+        /// them all. A Beginner note shorter than a beat shows as a stub among the anchors.
+        let minBeats: Double?
     }
 
     struct Ladder: Decodable {
@@ -117,7 +121,7 @@ struct Charting: Decodable {
             let n = l.tiers.count
             guard n >= 1, [l.beginner, l.easy, l.medium, l.hard].allSatisfy({ (1...n).contains($0) }),
                   l.beginner < l.easy, l.easy <= l.medium, l.medium <= l.hard,
-                  l.tiers.allSatisfy({ $0.hits >= 1 && $0.gap >= 0 && ($0.space ?? .infinity) > $0.gap && $0.bonus > 0 && ($0.phrase ?? 1) >= 1 }),
+                  l.tiers.allSatisfy({ $0.hits >= 1 && $0.gap >= 0 && ($0.space ?? .infinity) > $0.gap && $0.bonus > 0 && ($0.phrase ?? 1) >= 1 && ($0.minBeats ?? 0) >= 0 }),
                   l.tiers.dropFirst().allSatisfy({ $0.fromAbove != true }), !(l.tiers[0].fromAbove == true && n < 2),
                   (l.phrase ?? 1) >= 1
             else { fatalError("charting.json: the \(name) ladder") }
@@ -125,7 +129,8 @@ struct Charting: Decodable {
             // a tier may only loosen the rules: a smaller gap, heavier hits, bigger chords.
             for (lo, hi) in zip(l.tiers, l.tiers.dropFirst()) {
                 guard hi.gap <= lo.gap, hi.hits >= lo.hits, (hi.notes ?? .max) >= (lo.notes ?? .max),
-                      (hi.phrase ?? l.phrase ?? 1) <= (lo.phrase ?? l.phrase ?? 1) else {
+                      (hi.phrase ?? l.phrase ?? 1) <= (lo.phrase ?? l.phrase ?? 1),
+                      (hi.minBeats ?? 0) <= (lo.minBeats ?? 0) else {
                     fatalError("charting.json: the \(name) ladder tightens a rule going up (gap, hits, notes and phrase may only loosen)")
                 }
             }
@@ -175,6 +180,9 @@ struct Charting: Decodable {
                 onsets.append((n.t, n.lv, [i]))
             }
         }
+        // The part's usual weight-1 length: the median (the longest of a tie).
+        let anchors = notes.filter { $0.lv == 1 }.map(\.len).sorted()
+        let usualLength = anchors.isEmpty ? Int.max : anchors[anchors.count / 2]
         let rank: (Song.Note) -> Int = { n in l.keep?.firstIndex(of: n.r ?? "") ?? (l.keep?.count ?? 0) }
         // Each tier starts from the one below it and adds (Rock Band's rule: everything on a lower
         // difficulty is on the higher one), so climbing a level never takes a note away.
@@ -304,14 +312,21 @@ struct Charting: Decodable {
             // those first. So adding a bottom tier changes nothing above it, where a free anchor
             // a tick or two from the only D of a phrase would block that D at the tier above and
             // move its whole grid.
+            // What a tier may take at all: an onset with a note long enough (`minBeats`, capped
+            // at the part's usual weight-1 length).
+            func allowed(_ t: Tier, _ pool: [Onset]) -> [Onset] {
+                guard let beats = t.minBeats, beats > 0 else { return pool }
+                let minLen = min(Int((beats * Double(ticksPerBeat)).rounded()), usualLength)
+                return pool.filter { o in o.idx.contains { notes[$0].len >= minLen } }
+            }
             var pool = onsets
             if ti == 0, tier.fromAbove == true {
                 let saved = (taken, isTaken, mask)
-                preferNext = chart(l.tiers[1], pool: onsets, prefer: [])
+                preferNext = chart(l.tiers[1], pool: allowed(l.tiers[1], onsets), prefer: [])
                 (taken, isTaken, mask) = saved
                 pool = onsets.filter { preferNext.contains($0.t) }
             }
-            _ = chart(tier, pool: pool, prefer: prefer)
+            _ = chart(tier, pool: allowed(tier, pool), prefer: prefer)
             return mask
         }
     }
