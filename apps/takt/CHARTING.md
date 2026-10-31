@@ -1,6 +1,8 @@
 # Charting: how a Stage part becomes a level
 
-One file decides every level of every song: `Takt/Content/charting.json`. The songs carry
+One file decides every level of every song: `Takt/Content/charting.json`. What the levels
+must come out as for a blues track, part by part, is `BLUES.md` (the reference sheet, with the
+measured figures of every blues song); this file is the mechanism. The songs carry
 their parts whole, as the record plays them, and the app cuts each level from them at load
 time by these rules. To change how a level feels, change a number there (or tell Claude what
 felt wrong: "Warm Nine chords on Medium is too busy", "Easy is boring at 90 bpm") and rebuild.

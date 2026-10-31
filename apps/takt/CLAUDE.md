@@ -741,6 +741,16 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   same onsets-a-second figures as 0.1 (58). Checks 287/287 (the Beginner-cut check renumbers a
   song's levels and patches with the ladder). Details and the numbers in `CHARTING.md`.
 
+- **The blues reference sheet, `BLUES.md`: 2026-10-31.** Bart: "make a reference sheet for BLUES
+  tracks, where we will write down guidance for melody and chord gameplay difficulty, for each
+  level… notes that will be used for all game charts". `apps/takt/BLUES.md`: the ground rules
+  (one speed, the band plays the rest, plus-more levels, density in onsets a second, a level is
+  still the line, no stubs), a table per part with what each level plays, its onsets-a-second
+  band and the measured figure for every blues song, the notes from play that set them, how to
+  write a new blues track so the levels fall out right, and the open items (Boogie Shoes melody
+  Easy at 0.88 is over its band). Every blues chart is held to it; `CHARTING.md` stays the
+  mechanism.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without
