@@ -682,7 +682,7 @@ final class BandRenderer {
         let p = inst.pick(note: note, velocity: velocity)
         // Level follows velocity on top of the layer's own loudness.
         pool[slot(pool)].start(p.buffer, ratio: p.ratio, gain: p.gain * gain * (0.35 + 0.65 * velocity), heldFrames: held,
-                               releaseSeconds: inst.release, note: note, live: live, age: age, sampleRate: sampleRate)
+                               releaseSeconds: inst.release, note: note, live: live, sustain: true, age: age, sampleRate: sampleRate)
     }
 
     /// A free voice, or the oldest one.

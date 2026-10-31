@@ -827,6 +827,24 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   "What makes a good chart: the rules so far", eleven numbered rules, each with the build that
   taught it; `BLUES.md` points at it.
 
+- **Sustain: a held key keeps sounding, 0.1 (64), 2026-10-31.** Bart: "add sustain to the notes
+  and chords: as long as I hold the notes down, they keep playing". The engine already held a
+  live note until note-off, but the recordings end: the piano files are cut at 3.5 / 5 / 7 s
+  (`sounds.py` caps), the Rhodes one-shots at 3.4 s, so a held note stopped there. Now every
+  pitched sampled voice loops the file's tail while it sounds (`SampleBuffer.withLoop`,
+  `SampleVoice.sustain`): the loop is up to a second before the cutter's 40 ms fade (40% of
+  the file at most), crossfaded over up to 300 ms into its start, and every pass is quieter by
+  the tail's own measured decay (RMS of the loop's last 100 ms over its first), so a held
+  piano note fades the way the piano does; a tail already at silence, or a file under a
+  second, does not loop; drums never do. Band notes longer than their sample sustain the same
+  way (none of the current songs' are), the dub stab keeps its own length. Measured offline on
+  the simulator (`-RenderScript "…,0.5:on=55,15:off=55"`, G3 piano): before, silent from 5.5 s;
+  after, −56 dBFS at 6 s, −66 at 10, −80 at 15, then the 0.18 s release; a held G2 B2 D3 chord
+  rings at −49 dBFS at 12 s; the loudest step between 100 ms windows across all renders +2 dB
+  (no bumps at the loop seams). The synthesized Rhodes one-shot decays to silence inside its
+  3.4 s by itself, so a held Rhodes key still ends there; a Rhodes that truly sustains wants a
+  live voice or longer samples (open). Checks 307/307.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without
