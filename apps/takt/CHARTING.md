@@ -85,8 +85,27 @@ them in every four bars).
 
 `beginner`, `easy`, `medium`, `hard` name a tier of each ladder (chords 1 / 3 / 4 / 7, melody
 1 / 3 / 5 / 7). Easy, Medium and Hard are the same charts they were before Beginner came.
-`songs` overrides them per song, part and difficulty, e.g.
-`"songs": {"song-warm-nine": {"chords": {"medium": 3}}}`.
+`songs` overrides a part's ladder per song (since 0.1 (59) more than the tier a difficulty
+names): `"easy": 2` names a tier, `"phrase": 12` replaces the ladder's phrase (bars), and
+`"tiers": {"2": {"space": 0}}` patches one tier's `gap` or `space` (0 = never borrows). The
+patched ladder must still loosen going up; the loader traps otherwise.
+
+**Slow Burn melody** (both songs, 0.1 (59)): `{"easy": 2, "phrase": 12, "tiers": {"2":
+{"space": 0}}}`. Bart: "melody / easy on Slow Burn is 2x too hard". The sax line marks one
+anchor a bar (0.41 onsets a second at 90), but the ladder's two-bar cover (the head uses five
+or six keys in every two bars) and Easy's 1.8 s borrowing filled it to 0.88, near the top of
+its own ladder (1.23). With a chorus-long phrase and no borrowing, tier 2 is the anchors plus
+the few keys they miss: Easy 0.43 a second, half of what it was; Beginner 0.29 (its own
+four-bar phrase, unchanged), Medium 1.09 and Hard 1.23 as before. Adaptive climbs 0.29 → 0.43
+→ 0.84 → 0.87 → 1.09 → 1.11 → 1.23 instead of jumping from 0.30 to 0.66. No other song's ladder
+changed (every onsets-a-second figure of every other song and part is the same as in 0.1 (58)).
+
+A detail that made this possible: Beginner (`fromAbove`) chooses among what the tier above
+takes *by rule*. Until 0.1 (59) that was the phrase picks alone on a ladder with a phrase; with
+a chorus-long phrase those are eight or nine onsets a chorus, and Beginner left four bars
+empty. Beginner's pool is the tier above's phrase picks and its hits now; the tier above
+still prefers only its phrase picks, so Easy and above chart exactly as without Beginner (the
+check), and every other song's Beginner is unchanged.
 
 ## Adaptive
 

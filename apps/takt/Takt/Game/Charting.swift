@@ -32,6 +32,40 @@ struct Charting: Decodable {
         /// weight-1 note (its median length) when that is shorter, so a line of short stabs keeps
         /// them all. A Beginner note shorter than a beat shows as a stub among the anchors.
         let minBeats: Double?
+
+        /// The same tier with a song's own gap or space (`Charting.songs`); space 0 borrows nothing.
+        func patched(_ p: Charting.TierPatch) -> Tier {
+            Tier(line: line, notes: notes, hits: hits, gap: p.gap ?? gap,
+                 space: p.space.map { $0 > 0 ? $0 : nil } ?? space, bonus: bonus, phrase: phrase,
+                 fromAbove: fromAbove, minBeats: minBeats)
+        }
+    }
+
+    /// A song's change to one tier of a ladder: a gap or a space of its own (0 = never borrows).
+    struct TierPatch: Decodable {
+        let gap: Double?
+        let space: Double?
+    }
+
+    /// A song's changes to one part's ladder: a tier of its own for a difficulty, a phrase of
+    /// its own (bars), and tier knobs by tier number (1-based).
+    struct PartOverride: Decodable {
+        let beginner: Int?
+        let easy: Int?
+        let medium: Int?
+        let hard: Int?
+        let phrase: Int?
+        let tiers: [String: TierPatch]?
+
+        func level(_ d: GameEngine.Difficulty) -> Int? {
+            switch d {
+            case .beginner: return beginner
+            case .easy: return easy
+            case .medium: return medium
+            case .hard: return hard
+            case .adaptive: return nil
+            }
+        }
     }
 
     struct Ladder: Decodable {
@@ -102,8 +136,25 @@ struct Charting: Decodable {
     let chords: Ladder
     let melody: Ladder
     let adaptive: Adaptive
-    /// Per song, per part, per difficulty: a tier instead of the ladder's.
-    let songs: [String: [String: [String: Int]]]
+    /// Per song, per part: a tier instead of the ladder's for a difficulty (`"easy": 2`), a
+    /// `phrase` (bars) instead of the ladder's, and a gap or space of its own on a tier
+    /// (`"tiers": {"2": {"space": 0}}`). Slow Burn melody since 0.1 (59): its Easy is tier 2
+    /// with no silence-borrowing and a chorus-long phrase, so Easy is the tune's anchors, about
+    /// one a bar (the ladder's two-bar cover and 1.8 s borrowing put it near the top).
+    let songs: [String: [String: PartOverride]]
+
+    /// The phrase (bars) the song's part keeps every key in: the song's own, or the ladder's.
+    func phrase(song: String, part: Song.PartKey) -> Int? {
+        if let own = songs[song]?[part.rawValue]?.phrase { return max(1, own) }
+        return ladder(part).phrase
+    }
+
+    /// The ladder's tiers as the song plays them: the song's patches applied.
+    func tiers(song: String, part: Song.PartKey) -> [Tier] {
+        let l = ladder(part)
+        guard let patches = songs[song]?[part.rawValue]?.tiers else { return l.tiers }
+        return l.tiers.enumerated().map { i, t in patches[String(i + 1)].map(t.patched) ?? t }
+    }
 
     static let bundled: Charting = {
         guard let url = Bundle.main.url(forResource: "charting", withExtension: "json") else { fatalError("charting.json is not in the bundle") }
@@ -127,12 +178,23 @@ struct Charting: Decodable {
             else { fatalError("charting.json: the \(name) ladder") }
             // Every tier is the one below plus more (`masks` seeds each tier with the last), so
             // a tier may only loosen the rules: a smaller gap, heavier hits, bigger chords.
-            for (lo, hi) in zip(l.tiers, l.tiers.dropFirst()) {
-                guard hi.gap <= lo.gap, hi.hits >= lo.hits, (hi.notes ?? .max) >= (lo.notes ?? .max),
-                      (hi.phrase ?? l.phrase ?? 1) <= (lo.phrase ?? l.phrase ?? 1),
-                      (hi.minBeats ?? 0) <= (lo.minBeats ?? 0) else {
-                    fatalError("charting.json: the \(name) ladder tightens a rule going up (gap, hits, notes and phrase may only loosen)")
+            func loosens(_ tiers: [Tier], _ what: String) {
+                for (lo, hi) in zip(tiers, tiers.dropFirst()) {
+                    guard hi.gap <= lo.gap, hi.hits >= lo.hits, (hi.notes ?? .max) >= (lo.notes ?? .max),
+                          (hi.phrase ?? l.phrase ?? 1) <= (lo.phrase ?? l.phrase ?? 1),
+                          (hi.minBeats ?? 0) <= (lo.minBeats ?? 0), ((hi.space ?? .infinity) > hi.gap) else {
+                        fatalError("charting.json: \(what) tightens a rule going up (gap, hits, notes and phrase may only loosen)")
+                    }
                 }
+            }
+            loosens(l.tiers, "the \(name) ladder")
+            for (song, parts) in songs {
+                guard let o = parts[name] else { continue }
+                guard [o.beginner, o.easy, o.medium, o.hard].allSatisfy({ $0 == nil || (1...n).contains($0!) }),
+                      (o.phrase ?? 1) >= 1, (o.tiers ?? [:]).keys.allSatisfy({ Int($0).map { (1...n).contains($0) } ?? false }),
+                      (o.tiers ?? [:]).values.allSatisfy({ ($0.gap ?? 0) >= 0 && ($0.space ?? 0) >= 0 })
+                else { fatalError("charting.json: songs.\(song).\(name)") }
+                loosens(tiers(song: song, part: name == "chords" ? .chords : .melody), "songs.\(song).\(name)")
             }
         }
         guard (1...melody.tiers.count).contains(adaptive.start), (1...chords.tiers.count).contains(adaptive.start),
@@ -147,7 +209,7 @@ struct Charting: Decodable {
     /// The tier a fixed difficulty plays (nil on adaptive).
     func tier(_ difficulty: GameEngine.Difficulty, song: String, part: Song.PartKey) -> Int? {
         let l = ladder(part)
-        if let own = songs[song]?[part.rawValue]?[difficulty.rawValue] { return max(1, min(l.tiers.count, own)) }
+        if let own = songs[song]?[part.rawValue]?.level(difficulty) { return max(1, min(l.tiers.count, own)) }
         switch difficulty {
         case .beginner: return l.beginner
         case .easy: return l.easy
@@ -167,8 +229,10 @@ struct Charting: Decodable {
     }
 
     /// Which of `notes` (the whole part, in time order) play at each tier: `[tier - 1][i]`.
-    func masks(_ notes: [Song.Note], part: Song.PartKey, tempo: Int, ticksPerBeat: Int, ticksPerBar: Int) -> [[Bool]] {
+    func masks(_ notes: [Song.Note], song: String, part: Song.PartKey, tempo: Int, ticksPerBeat: Int, ticksPerBar: Int) -> [[Bool]] {
         let l = ladder(part)
+        let ladderPhrase = phrase(song: song, part: part)
+        let tiers = tiers(song: song, part: part)
         let secondsPerTick = 60 / (Double(tempo) * Double(ticksPerBeat))
         // Onsets: the notes that start on one tick, with the lightest weight among them.
         var onsets: [(t: Int, lv: Int, idx: [Int])] = []
@@ -191,7 +255,7 @@ struct Charting: Decodable {
         // them first, so it charts exactly as it would with nothing under it.
         var preferred: Set<Int> = []
         typealias Onset = (t: Int, lv: Int, idx: [Int])
-        return l.tiers.enumerated().map { ti, tier in
+        return tiers.enumerated().map { ti, tier in
             var mask = Array(repeating: false, count: notes.count)
             var gapTicks = tier.gap / secondsPerTick
             var taken: [Int] = []  // onset ticks, sorted
@@ -271,17 +335,23 @@ struct Charting: Decodable {
             // A tier's three passes over `pool`: the phrase keys, the hits, the silences. Returns
             // what the tier took by rule: its phrase picks (a ladder with a phrase) or its hits,
             // not what it borrowed for a silence.
-            func chart(_ t: Tier, pool: [Onset], prefer: Set<Int>) -> Set<Int> {
+            func chart(_ t: Tier, pool: [Onset], prefer: Set<Int>) -> (picks: Set<Int>, rule: Set<Int>) {
                 gapTicks = t.gap / secondsPerTick
                 let before = isTaken
-                if let phrase = t.phrase ?? l.phrase {
+                if let phrase = t.phrase ?? ladderPhrase {
                     let span = phrase * ticksPerBar
-                    phrasePass(pool, span: span, slot: l.phrase.map { $0 * ticksPerBar }.flatMap { $0 < span ? $0 : nil }, prefer: prefer)
+                    phrasePass(pool, span: span, slot: ladderPhrase.map { $0 * ticksPerBar }.flatMap { $0 < span ? $0 : nil }, prefer: prefer)
                 }
                 let byPhrase = isTaken.subtracting(before)
                 // The hits the tier plays, heaviest first, then early first, wherever they fit the gap.
                 for o in pool.sorted(by: { ($0.lv, $0.t) < ($1.lv, $1.t) }) where o.lv <= t.hits && !isTaken.contains(o.t) && fits(o.t) { take(o) }
-                let picks = (t.phrase ?? l.phrase) != nil ? byPhrase : isTaken.subtracting(before)
+                // What the tier took by rule: its phrase picks (a ladder with a phrase) or its
+                // hits, and, for the bottom tier's pool, both (not what it borrows for a silence,
+                // below). Since 0.1 (59) Beginner may choose among the hits too: a song with a
+                // chorus-long phrase (Slow Burn) has few phrase picks a chorus, and Beginner cut
+                // from those alone left four bars empty.
+                let picks = (t.phrase ?? ladderPhrase) != nil ? byPhrase : isTaken.subtracting(before)
+                let rule = isTaken.subtracting(before)
                 // Then the silences longer than `space`: each borrows the heaviest lighter hit inside
                 // it that fits, the one nearest its middle, until none is too long or nothing fits.
                 if let space = t.space {
@@ -302,7 +372,7 @@ struct Charting: Decodable {
                         }
                     }
                 }
-                return picks
+                return (picks, rule)
             }
             // The tier below, whole (its onsets fit this tier's gap: the ladder only loosens).
             for o in onsets where seed.contains(o.t) { take(o) }
@@ -322,9 +392,10 @@ struct Charting: Decodable {
             var pool = onsets
             if ti == 0, tier.fromAbove == true {
                 let saved = (taken, isTaken, mask)
-                preferNext = chart(l.tiers[1], pool: allowed(l.tiers[1], onsets), prefer: [])
+                let above = chart(tiers[1], pool: allowed(tiers[1], onsets), prefer: [])
                 (taken, isTaken, mask) = saved
-                pool = onsets.filter { preferNext.contains($0.t) }
+                preferNext = above.picks
+                pool = onsets.filter { above.rule.contains($0.t) }
             }
             _ = chart(tier, pool: allowed(tier, pool), prefer: prefer)
             return mask

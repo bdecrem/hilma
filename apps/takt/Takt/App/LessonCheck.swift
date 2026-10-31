@@ -1038,12 +1038,12 @@ enum LessonCheck {
                 // Every tier keeps its own rules: the gap, the most a bar, the chord size; the
                 // top one is the whole part. The detail is the ladder: onsets a second per tier.
                 for k in s.partKeys {
-                    let all = s.notes(k), masks = s.masks(k), ladder = charting.ladder(k)
+                    let all = s.notes(k), masks = s.masks(k), tiers = charting.tiers(song: s.name, part: k)
                     let secondsPerTick = 60 / (Double(s.meta.tempo) * Double(s.band.ticksPerBeat))
                     var rules = true
                     var ladderLine: [String] = []
                     for (ti, m) in masks.enumerated() {
-                        let tier = ladder.tiers[ti]
+                        let tier = tiers[ti]
                         var byTick: [Int: Int] = [:]
                         for i in all.indices where m[i] { byTick[all[i].t, default: 0] += 1 }
                         let ticks = byTick.keys.sorted()
@@ -1073,7 +1073,7 @@ enum LessonCheck {
                 var bad: [String] = []
                 var ok = true
                 for (ti, m) in masks.enumerated() {
-                    let span = (charting.melody.tiers[ti].phrase ?? charting.melody.phrase ?? 1) * s.ticksPerBar
+                    let span = (charting.melody.tiers[ti].phrase ?? charting.phrase(song: s.name, part: .melody) ?? 1) * s.ticksPerBar
                     let phrases = Set(all.map { $0.t / span }).sorted()
                     var low = Int.max
                     for p in phrases {
@@ -1265,6 +1265,23 @@ enum LessonCheck {
                 var a = d["adaptive"] as! [String: Any]
                 a["start"] = (a["start"] as! Int) - 1
                 d["adaptive"] = a
+                // A song's own levels and tier patches move down a tier with the ladder.
+                var songsD = d["songs"] as! [String: Any]
+                for (song, partsAny) in songsD {
+                    var parts = partsAny as! [String: Any]
+                    for (part, oAny) in parts {
+                        var o = oAny as! [String: Any]
+                        for n in ["beginner", "easy", "medium", "hard"] where o[n] != nil { o[n] = max(1, (o[n] as! Int) - 1) }
+                        if let tiers = o["tiers"] as? [String: Any] {
+                            var moved: [String: Any] = [:]
+                            for (k, v) in tiers where Int(k)! > 1 { moved[String(Int(k)! - 1)] = v }
+                            o["tiers"] = moved
+                        }
+                        parts[part] = o
+                    }
+                    songsD[song] = parts
+                }
+                d["songs"] = songsD
                 return try! JSONDecoder().decode(Charting.self, from: JSONSerialization.data(withJSONObject: d))
             }()
             for s in songs {

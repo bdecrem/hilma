@@ -119,7 +119,7 @@ struct Song {
 
     /// The part at each tier of the charting rules: `[tier - 1][i]` over `notes(key)`.
     func masks(_ key: PartKey, charting: Charting = .bundled) -> [[Bool]] {
-        charting.masks(notes(key), part: key, tempo: meta.tempo, ticksPerBeat: band.ticksPerBeat, ticksPerBar: ticksPerBar)
+        charting.masks(notes(key), song: name, part: key, tempo: meta.tempo, ticksPerBeat: band.ticksPerBeat, ticksPerBar: ticksPerBar)
     }
 
     /// The part at a tier, in time order.

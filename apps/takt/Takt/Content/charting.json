@@ -54,5 +54,8 @@
     "missRun": 3,
     "floorBelowStart": 1
   },
-  "songs": {}
+  "songs": {
+    "song-slow-burn": {"melody": {"easy": 2, "phrase": 12, "tiers": {"2": {"space": 0}}}},
+    "song-slow-burn-short": {"melody": {"easy": 2, "phrase": 12, "tiers": {"2": {"space": 0}}}}
+  }
 }

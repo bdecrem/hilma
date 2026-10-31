@@ -727,6 +727,20 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   and stray keys when any. Verified with `-SnapshotAt "result:0"` on Slow Burn Short, perfect
   Medium and sloppy Adaptive, both themes.
 
+- **Slow Burn melody Easy at half: 0.1 (59), 2026-10-31.** Bart: "melody / easy on Slow Burn is
+  2x too hard". Easy was 0.88 onsets a second on a line whose anchors are 0.41: the ladder's
+  two-bar key cover and Easy's 1.8 s silence-borrowing filled it. `charting.json` `songs` can
+  now patch a part's ladder per song (`phrase`, and `gap` / `space` by tier, besides naming a
+  tier for a difficulty; `Charting.PartOverride` / `TierPatch`, `tiers(song:part:)`,
+  `phrase(song:part:)`, validated like the ladder). Slow Burn and Slow Burn Short melody:
+  Easy = tier 2 with a chorus-long phrase and no borrowing → 0.43 a second (Beginner 0.29,
+  Medium 1.09, Hard 1.23 as before; Adaptive climbs 0.29 → 0.43 → 0.84 → …). Beginner's pool
+  (`fromAbove`) is the tier above's phrase picks *and* hits now (it was the picks alone, which
+  left four bars empty under a chorus-long phrase); the tier above still prefers only the
+  picks, so nothing above Beginner moves. Every other song's ladder, both parts, prints the
+  same onsets-a-second figures as 0.1 (58). Checks 287/287 (the Beginner-cut check renumbers a
+  song's levels and patches with the ladder). Details and the numbers in `CHARTING.md`.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without
