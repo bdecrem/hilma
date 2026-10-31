@@ -3,7 +3,7 @@
 One file decides every level of every song: `Takt/Content/charting.json`. The songs carry
 their parts whole, as the record plays them, and the app cuts each level from them at load
 time by these rules. To change how a level feels, change a number there (or tell Claude what
-felt wrong: "Warm Nine chords on Medium is too busy", "Easy is boring at 68 bpm") and rebuild.
+felt wrong: "Warm Nine chords on Medium is too busy", "Easy is boring at 90 bpm") and rebuild.
 No song needs regenerating.
 
 ## What a song gives the charter
@@ -24,7 +24,7 @@ Each part, chords and melody, has a ladder of **tiers**, easiest first. A tier h
 |---|---|
 | `notes` | chord notes kept, in the ladder's `keep` order (`root, third, fifth, seventh, sixth, ninth`: two notes are root and third, three a triad). `null` keeps them all |
 | `hits` | the heaviest weight played as written: 1 only the main hits, 3 all of them |
-| `gap` | seconds at least between two onsets. Seconds, not beats: it reads the same at 68 bpm and at 127 |
+| `gap` | seconds at least between two onsets. Seconds, not beats: it reads the same at 90 bpm and at 127 |
 | `space` | seconds at most without an onset where the part is playing. A longer silence borrows a lighter hit inside it (the heaviest that fits the gap, nearest the middle), so a sparse section or a slow song isn't boring. `null` never borrows |
 | `bonus` | points per hit times this |
 
@@ -90,10 +90,15 @@ them in every four bars).
 
 ## Adaptive
 
-**The song's speed never changes.** No level and no mode slows the record down: the Stage sends
-the song's own tempo before the count-in and nothing touches it after (measured 2026-10-30 on
-a Slow Burn Adaptive run: every kick on the 68 bpm grid from the first bar). A low level sounds
-slow because it asks for few notes, not because the band is slower.
+**The song's speed never changes.** Each song's `tempo` is its 1x speed, set by the generator,
+and the Stage plays it at exactly that at every level and in Adaptive: `startGame` stops the
+band, sends the song's tempo, counts in, plays, and nothing touches the tempo after. Since
+0.1 (57) a stop also clears a tempo change left waiting for a downbeat (a lesson's ramp or the
+knob), which used to land on bar 1 of the song and play it at the lesson's tempo (Slow Burn at
+90 instead of 68 in one run, 68 in the next). Measured 2026-10-31 on this Mac, Slow Burn melody at
+Beginner and at Adaptive: every kick on the 90 bpm grid from the first bar. A low level sounds
+slow because it asks for few notes, not because the band is slower. Slow Burn and Slow Burn
+Short are 90 since 0.1 (57) (68 before; Bart found 68 too slow for the blues).
 
 `adaptive` walks the ladder one tier at a time. The song is cut in blocks of `window` bars
 (4); `ahead` bars (2) before a block starts, its tier is decided. Two windows are read

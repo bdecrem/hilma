@@ -456,7 +456,7 @@
 {"t":480,"n":67,"v":0.794,"len":24,"i":"saxLong"},
 {"t":504,"n":65,"v":0.665,"len":8},
 {"t":512,"n":62,"v":0.705,"len":16,"i":"saxLong"},
-{"t":528,"n":67,"v":0.794,"len":40,"i":"saxLong"}]},"song":{"title":"Slow Burn Short","style":"Slow blues","key":"G","tempo":68,"art":"river","line":"The slow one in G, once round. Twelve bars and the stop.","sections":[{"bar":0,"name":"Head"}],"parts":{"chords":{"title":"Comping","monitor":"piano","channel":"keys","notes":[{"t":0,"n":55,"len":20,"lv":1,"f":5,"r":"root"},
+{"t":528,"n":67,"v":0.794,"len":40,"i":"saxLong"}]},"song":{"title":"Slow Burn Short","style":"Slow blues","key":"G","tempo":90,"art":"river","line":"The slow one in G, once round. Twelve bars and the stop.","sections":[{"bar":0,"name":"Head"}],"parts":{"chords":{"title":"Comping","monitor":"piano","channel":"keys","notes":[{"t":0,"n":55,"len":20,"lv":1,"f":5,"r":"root"},
 {"t":0,"n":59,"len":20,"lv":1,"f":3,"r":"third"},
 {"t":0,"n":62,"len":20,"lv":1,"f":2,"r":"fifth"},
 {"t":0,"n":65,"len":20,"lv":1,"f":1,"r":"seventh"},

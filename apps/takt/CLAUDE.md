@@ -373,7 +373,7 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   gate". A third tab, **Stage** (`Menu/StageScreen.swift`): the set list, every song open.
   **Songs** (`Takt/Content/song-*.json`, written by `scripts/songs/*.py` on `common.py`): a
   band like the lessons' plus a `song` block (title, style, key, tempo, cover glyph, sections
-  by bar, the two parts). Slow Burn (slow blues in G, 68, four choruses, the lesson kit),
+  by bar, the two parts). Slow Burn (slow blues in G, 90 since 0.1 (57), four choruses, the lesson kit),
   Boogie Shoes (jump blues in C, 120, six choruses, walking bass, chanks on 2 and 4, the sax
   riff, a piano solo chorus), Undertow (deep house in A minor, 122, Am F Dm Em, Rhodes stabs,
   pads, a sub, the hook), Nachtschicht (techno, 130, a rumbling kick, a rolling acid line,
@@ -695,6 +695,27 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   1 (its drums, bass and comping are note-for-note the short song's, velocities humanized apart),
   the grace notes still arrive on choruses 2 and 4; the short song is byte-identical to 0.1 (55).
   Checks 287/287.
+
+- **The song's tempo always wins, and Slow Burn is 90: 0.1 (57), 2026-10-31.** Bart: Slow Burn
+  melody Beginner "approx 66bpm but normal speed, which I get in Adaptive game mode, is 90bpm
+  approx - WAY FASTER… (1) fix it so the song always plays at 90bpm in game mode (2) in game mode
+  ALL songs should play at their '1x' tempo". The speed difference was real and not about the
+  level: a tempo change the lesson sent while the band played (`tempo 90` at launch with Bart's
+  progress, a ramp step, the knob) waits in `pendingTempo` for a downbeat, and `.stop` never
+  cleared it, so `startGame`'s stop → `.tempo(68)` → play ran bar 1 at 68 and then jumped to the
+  lesson's 90 on the first downbeat; the next run from the Stage had nothing pending and played
+  68. Reproduced offline (`-RenderScript "0:play,1.0:tempo=90,1.5:stop,1.6:tempo=68,1.7:play"`
+  on 0.1 (56): 89.6 bpm from bar 1). `BandRenderer`: `.stop` clears `pendingTempo` and
+  `pendingUnmute`, and `.tempo` while stopped clears `pendingTempo` too; the same render on
+  0.1 (57) holds 68 throughout. **The 1x tempo** is the `tempo` in each song's block and the
+  Stage plays every song at exactly that, at every level and in Adaptive; it is the speed of
+  record the generator sets. Slow Burn and Slow Burn Short move from 68 to 90 (`slow_burn.py`,
+  only the tempo field changes in both JSONs; the long song is 2:08, the short 0:32). Verified
+  on this Mac's build: `-Route game -Song song-slow-burn -Part melody` recorded at Beginner and
+  Adaptive both read 89.6 bpm from the kick grid. Checks 287/287 (the Slow Burn ladders still
+  hold their time-based rules at 90: melody 0.30 → 1.23 onsets/s). The Mac app records only
+  into its sandbox container (`~/Library/Containers/com.bartdecrem.Takt/Data/tmp`), a path in
+  the repo fails with error -54; `-Mutes` does not exist, use `-RenderScript … mute=bass`.
 
 ## Code map (`Takt/`)
 

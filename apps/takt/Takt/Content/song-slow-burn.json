@@ -2062,7 +2062,7 @@
 {"t":2208,"n":67,"v":0.787,"len":24,"i":"saxLong"},
 {"t":2232,"n":65,"v":0.676,"len":8},
 {"t":2240,"n":62,"v":0.718,"len":16,"i":"saxLong"},
-{"t":2256,"n":67,"v":0.835,"len":40,"i":"saxLong"}]},"song":{"title":"Slow Burn","style":"Slow blues","key":"G","tempo":68,"art":"river","line":"A slow one in G. Twelve bars, four times round, the band leaning back.","sections":[{"bar":0,"name":"Head"},
+{"t":2256,"n":67,"v":0.835,"len":40,"i":"saxLong"}]},"song":{"title":"Slow Burn","style":"Slow blues","key":"G","tempo":90,"art":"river","line":"A slow one in G. Twelve bars, four times round, the band leaning back.","sections":[{"bar":0,"name":"Head"},
 {"bar":12,"name":"Second time"},
 {"bar":24,"name":"Sax solo"},
 {"bar":36,"name":"Out chorus"}],"parts":{"chords":{"title":"Comping","monitor":"piano","channel":"keys","notes":[{"t":0,"n":55,"len":20,"lv":1,"f":5,"r":"root"},

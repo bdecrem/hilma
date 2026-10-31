@@ -847,6 +847,11 @@ final class BandRenderer {
             nextEvent = 0
             loopBase = 0
             nextBeatTick = 0
+            // Nothing waiting for a downbeat survives a stop: a lesson's tempo change left
+            // pending here used to land on bar 1 of the next song and play it at the lesson's
+            // tempo (Slow Burn at 90 instead of 68, 2026-10-31).
+            pendingTempo = 0
+            pendingUnmute = 0
             previousBeat = .init()
             lastBeat = .init()
             scheduledCount = 0
@@ -868,6 +873,7 @@ final class BandRenderer {
                 pendingTempo = bpm == tempo ? 0 : bpm
             } else {
                 tempo = bpm
+                pendingTempo = 0
                 samplesPerTick = sampleRate * 60 / (tempo * Double(ticksPerBeat))
                 anchor.tempo = tempo
             }

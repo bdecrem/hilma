@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
-"""Slow Burn: a slow blues in G at 68, 12/8 feel, four choruses (2:49), the lesson band's kit.
+"""Slow Burn: a slow blues in G at 90, 12/8 feel, four choruses (2:08), the lesson band's kit.
+
+The tempo in the song block is the song's 1x speed: the Stage plays every song at exactly that,
+at every level. Slow Burn was 68 until 0.1 (57) (2026-10-31): Bart heard 68 as too slow and set
+90 as the speed of record for the blues tracks.
 
     python3 apps/takt/scripts/songs/slow_burn.py          -> Takt/Content/song-slow-burn.json
     python3 apps/takt/scripts/songs/slow_burn.py --short  -> Takt/Content/song-slow-burn-short.json
 
-Slow Burn Short (2026-10-30) is the same song once round: one chorus (12 bars, 42 s, 45 with
+Slow Burn Short (2026-10-30) is the same song once round: one chorus (12 bars, 32 s, 35 with
 the stop ringing) played the way the second chorus of the long one is (snare in, the head with
 its ornaments), ending on the stop.
 
@@ -24,10 +28,10 @@ from common import BAR, TPB, Song  # noqa: E402
 FORM = ["G7", "G7", "G7", "G7", "C7", "C7", "G7", "G7", "D7", "C7", "G7", "D7"]
 SHORT = "--short" in sys.argv
 if SHORT:
-    s = Song("song-slow-burn-short", "Slow Burn Short", "Slow blues", "G", 68, "river",
+    s = Song("song-slow-burn-short", "Slow Burn Short", "Slow blues", "G", 90, "river",
              "The slow one in G, once round. Twelve bars and the stop.", seed=68)
 else:
-    s = Song("song-slow-burn", "Slow Burn", "Slow blues", "G", 68, "river",
+    s = Song("song-slow-burn", "Slow Burn", "Slow blues", "G", 90, "river",
              "A slow one in G. Twelve bars, four times round, the band leaning back.", seed=68)
 s.sounds = {
     "kick": {"kit": "kick", "gainDb": -1},
