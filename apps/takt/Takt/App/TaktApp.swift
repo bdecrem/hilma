@@ -246,7 +246,12 @@ struct LiveGameScreen: View {
             .environment(\.gameControls, GameControls(
                 togglePlay: player.togglePlay,
                 again: player.restartGame,
-                leave: app.leaveGame
+                leave: app.leaveGame,
+                practice: player.enterPractice,
+                practiceSeek: { player.practiceSeek(bar: $0) },
+                practiceBack: { player.practiceBack() },
+                practiceSpeed: { player.practiceSpeed(delta: $0) },
+                run: player.leavePractice
             ))
     }
 }

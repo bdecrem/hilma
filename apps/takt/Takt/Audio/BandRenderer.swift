@@ -25,9 +25,13 @@ enum EngineCommand {
     /// A cross-stick click at a transport tick, sample-accurate, on the monitor's bus so it
     /// sounds whatever the mutes (calibration).
     case click(tick: Double, velocity: Float)
-    /// Stopped at the top: the transport starts `beats` beats early, with a click on each, so
-    /// the band comes in on bar 1 after a count-in. Send before `.play`.
+    /// Held: the transport starts `beats` beats before where it sits, with a click on each, so
+    /// the band comes in on that bar after a count-in (bar 1 from the top; any bar in
+    /// practice, after a `.seek`). Send before `.play`.
     case countIn(beats: Int)
+    /// Held (paused if playing): the transport moves to `tick`, the band's cursor with it,
+    /// scheduled notes dropped. Practice scrubs with it; `.play` goes on from there.
+    case seek(tick: Double)
     /// Seconds from render to the speaker; beat times the UI sees include it.
     case outputLatency(Double)
     /// The band sits out from tick `from` to `to` (absolute transport ticks), sample-accurately:
@@ -861,12 +865,24 @@ final class BandRenderer {
             releaseBand()
             reanchor()
         case .countIn(let beats):
-            guard !playing, heldTick == 0, beats > 0 else { return }
-            heldTick = Double(-beats * ticksPerBeat)
+            guard !playing, beats > 0 else { return }
+            // The cursor stays where it sits, so the bars before it don't sound under the clicks.
+            let from = heldTick
+            heldTick = from - Double(beats * ticksPerBeat)
             for b in 0..<beats {
-                schedule(Scheduled(tick: Double((b - beats) * ticksPerBeat), note: 0, velocity: b == 0 ? 1 : 0.7,
+                schedule(Scheduled(tick: from - Double((beats - b) * ticksPerBeat), note: 0, velocity: b == 0 ? 1 : 0.7,
                                    lengthTicks: 0, click: true))
             }
+            reanchor()
+        case .seek(let tick):
+            if playing {
+                playing = false
+                releaseBand()
+            }
+            heldTick = tick
+            scheduledCount = 0
+            nextBeatTick = Int((heldTick / Double(ticksPerBeat)).rounded(.up)) * ticksPerBeat
+            repositionCursor()
             reanchor()
         case .tempo(let bpm):
             if playing {
@@ -915,17 +931,22 @@ final class BandRenderer {
             chamber.configure(e.dub)
             loopTicks = e.loopTicks
             chorusBars = e.chorusBars
-            let t = playing ? tickAt(frame: frame) : heldTick
-            let local = ((t.truncatingRemainder(dividingBy: Double(loopTicks))) + Double(loopTicks)).truncatingRemainder(dividingBy: Double(loopTicks))
-            loopBase = Int((t - local).rounded())
-            var i = 0
-            while i < events.count && Double(events[i].tick) < local { i += 1 }
-            if i == events.count {
-                i = 0
-                loopBase += loopTicks
-            }
-            nextEvent = i
+            repositionCursor()
         }
+    }
+
+    /// The band's event cursor moves to where the transport is (a new band, or a seek).
+    private func repositionCursor() {
+        let t = playing ? tickAt(frame: frame) : heldTick
+        let local = ((t.truncatingRemainder(dividingBy: Double(loopTicks))) + Double(loopTicks)).truncatingRemainder(dividingBy: Double(loopTicks))
+        loopBase = Int((t - local).rounded())
+        var i = 0
+        while i < events.count && Double(events[i].tick) < local { i += 1 }
+        if i == events.count {
+            i = 0
+            loopBase += loopTicks
+        }
+        nextEvent = i
     }
 
     private func startLive(_ note: Int, velocity: Float) {

@@ -133,6 +133,20 @@ final class GameEngine {
     /// window's hit rate and its spread.
     private(set) var changes: [(block: Int, from: Int, to: Int, rate: Double, spreadMs: Double)] = []
 
+    /// Practice (the Stage's pause menu, 0.1 (61)): notes still judge and pop at the hit line
+    /// and the band still fills what the level leaves out, but nothing scores, the combo and
+    /// the counts hold, nothing adapts, the run never finishes and nothing goes on the board.
+    var practice = false
+
+    /// Practice moves the run to `tick` (a scrub, four bars back): every note from there on is
+    /// pending again, whatever happened to it; what came before keeps its judgment.
+    func seek(to tick: Double) {
+        for i in notes.indices where Double(notes[i].t) >= tick { status[i] = .pending }
+        heardTick = tick
+        checked = tick
+        pop = nil
+    }
+
     /// `start`: the tier an adaptive run starts on (`adaptiveStart`; the ladder's start if nil).
     init(song: Song, part: Song.PartKey, difficulty: Difficulty, start: Int? = nil, charting: Charting = .bundled) {
         self.song = song
@@ -213,6 +227,18 @@ final class GameEngine {
         heardTick = tick
         guard msPerTick.isFinite, msPerTick > 0 else { return }
         let reach = Self.goodMs / msPerTick
+        if practice {
+            // A pass-by still shows (the note slides past, the pop says miss); no counts move.
+            for i in notes.indices where status[i] == .pending && active(i) {
+                let deadline = Double(notes[i].t) + reach
+                guard deadline > checked, deadline <= tick else { continue }
+                status[i] = .missed
+                seq += 1
+                pop = Pop(judgment: .miss, note: notes[i].n, seq: seq)
+            }
+            checked = max(checked, tick)
+            return
+        }
         for i in notes.indices where status[i] == .pending && active(i) {
             let deadline = Double(notes[i].t) + reach
             guard deadline > checked, deadline <= tick else { continue }
@@ -326,6 +352,7 @@ final class GameEngine {
             if best == nil || (exact && !best!.exact) || (exact == best!.exact && abs(d) < abs(best!.d)) { best = (i, d, exact) }
         }
         guard let b = best else {
+            if practice { return }
             extras += 1
             // A wrong key is one the tune has nowhere within a beat of here (at any tier): the
             // right key early or late, outside the judging window, is a miss, not a wrong key,
@@ -347,6 +374,11 @@ final class GameEngine {
         let ms = abs(b.d * msPerTick)
         let j: Judgment = ms <= Self.perfectMs ? .perfect : .good
         status[b.i] = .hit(j)
+        if practice {
+            seq += 1
+            pop = Pop(judgment: j, note: notes[b.i].n, seq: seq)
+            return
+        }
         if j == .perfect { perfect += 1 } else { good += 1 }
         combo += 1
         missRun = 0

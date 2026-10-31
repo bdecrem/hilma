@@ -75,6 +75,16 @@ final class Player {
     @ObservationIgnored private var fillVelocity: [Int: Float] = [:]
     @ObservationIgnored private var fillThrough = -1
     @ObservationIgnored private var gameDifficulty = GameEngine.Difficulty.adaptive
+    /// Practice, inside a run (0.1 (61)): the band at a fraction of the song's tempo, from any
+    /// bar, nothing scored. `practiceTick` is where it sits while held (observed, so a scrub
+    /// redraws the highway); `practiceCountBase` is the tick a practice count-in lands on.
+    private(set) var practice = false
+    private(set) var practiceSpeed = 1.0
+    private(set) var practiceTick = 0.0
+    @ObservationIgnored private var practiceCountBase = 0.0
+    #if DEBUG
+    @ObservationIgnored private var practiceHookDone = false
+    #endif
 
     /// Calibration's result: how early (negative) or late this player presses, ms. Every scored
     /// press moves by minus this.
@@ -326,6 +336,10 @@ final class Player {
     /// Play from the top of a lesson clicks four beats in first (Settings → Count-in); resuming
     /// from a pause doesn't.
     func togglePlay() {
+        if practice {
+            practicePlay()
+            return
+        }
         demoEnded = false
         if !playing && inLesson && calibration == nil && Self.countInOn && audio.snapshot().anchor.tick == 0 {
             audio.send(.countIn(beats: 4))
@@ -338,6 +352,10 @@ final class Player {
     }
 
     func nudgeTempo(_ delta: Int) {
+        if practice {
+            practiceSpeed(delta: delta > 0 ? 10 : -10)
+            return
+        }
         let base = pendingTempo ?? tempo
         let next = min(Self.tempoRange.upperBound, max(Self.tempoRange.lowerBound, base + delta))
         audio.send(.tempo(Double(next)))
@@ -638,6 +656,10 @@ final class Player {
         gameDifficulty = difficulty
         gameResult = nil
         lastRun = nil
+        practice = false
+        practiceSpeed = 1
+        practiceTick = 0
+        practiceCountBase = 0
         let partChannel = song.channel(of: part)
         chorusBars = audio.load(song: song, part: part).chorusBars
         gameEpoch = audio.snapshot().epoch + 1
@@ -668,8 +690,88 @@ final class Player {
         guard game != nil else { return }
         game = nil
         gameResult = nil
+        practice = false
+        practiceSpeed = 1
+        practiceCountBase = 0
         chorusBars = audio.load(band: content.band).chorusBars
         resume()
+    }
+
+    // MARK: Practice
+
+    /// Pause → Practice: the run becomes a practice session, held at the start of the bar
+    /// being heard. Nothing from here on scores or goes on the board; "Play the run" starts the
+    /// run over at the song's speed.
+    func enterPractice() {
+        guard let game, gameResult == nil, !practice else { return }
+        if playing { audio.send(.pause) }
+        practice = true
+        game.practice = true
+        let s = audio.snapshot()
+        let clock = TransportClock(s)
+        let tick = clock.valid && s.epoch == gameEpoch ? clock.position(atHost: mach_absolute_time()).tick : 0
+        practiceSeek(bar: Int((max(0, tick) / Double(game.ticksPerBar)).rounded(.down)))
+        lessonLog.info("practice: in at bar \(self.practiceBar + 1)")
+    }
+
+    /// The bar practice sits at (held) or is passing (playing).
+    var practiceBar: Int {
+        guard let game else { return 0 }
+        if !playing { return Int((practiceTick / Double(game.ticksPerBar)).rounded(.down)) }
+        let s = audio.snapshot()
+        let clock = TransportClock(s)
+        guard clock.valid, s.epoch == gameEpoch else { return 0 }
+        return max(0, Int((clock.position(atHost: mach_absolute_time()).tick / Double(game.ticksPerBar)).rounded(.down)))
+    }
+
+    /// The scrub: the band holds at the start of `bar`, the highway shows it, every note from
+    /// there on is pending again, the fills are scheduled from there.
+    func practiceSeek(bar: Int) {
+        guard let game, practice else { return }
+        let b = max(0, min(game.song.bars - 1, bar))
+        let tick = Double(b * game.ticksPerBar)
+        if !playing, practiceTick == tick { return }
+        if playing { audio.send(.pause) }
+        audio.send(.seek(tick: tick))
+        game.seek(to: tick)
+        fillThrough = b - 1
+        practiceCountBase = tick
+        practiceTick = tick
+        pressed.removeAll()
+    }
+
+    /// Four bars back from where practice sits or is passing: the phrase again.
+    func practiceBack(bars: Int = 4) {
+        practiceSeek(bar: practiceBar - bars)
+    }
+
+    /// The speed, in steps of ten percent between half and full: the band's tempo follows (on
+    /// the next downbeat while it plays, at once while it holds).
+    func practiceSpeed(delta: Int) {
+        guard let game, practice else { return }
+        let pct = Int((practiceSpeed * 100).rounded()) + delta
+        practiceSpeed = Double(min(100, max(50, pct))) / 100
+        audio.send(.tempo(Double(game.song.meta.tempo) * practiceSpeed))
+    }
+
+    /// Play in practice: from the held bar, four clicks at the practice tempo, then the band;
+    /// playing, it pauses, and the next play starts that bar over.
+    func practicePlay() {
+        guard practice else { return }
+        if playing {
+            audio.send(.pause)
+            return
+        }
+        practiceSeek(bar: practiceBar)
+        audio.send(.countIn(beats: 4))
+        audio.send(.play)
+    }
+
+    /// Back to the game: the run from the top, at the song's speed, a fresh score.
+    func leavePractice() {
+        guard let g = game, practice else { return }
+        lessonLog.info("practice: out, the run from the top")
+        startGame(song: g.song, part: g.part, difficulty: gameDifficulty)
     }
 
     /// Every frame of a run: the engine hears the tick; the end stops the band and puts the run
@@ -694,7 +796,13 @@ final class Player {
         #if DEBUG
         runGameAutoplay(clock, heard: heard)
         runGameAutoTap(heard)
+        runPracticeHook(heard)
         #endif
+        if practice {
+            // The end of the song: hold there; the scrubber goes back.
+            if playing, heard.tick >= Double(game.endTick) { audio.send(.pause) }
+            return
+        }
         if game.finished, gameResult == nil {
             let r = game.result()
             gameResult = r
@@ -746,6 +854,20 @@ final class Player {
         }
     }
 
+    /// `-PracticeAt <tick> -PracticeBar <bar> -PracticeSpeed <percent>` on a song: when the run
+    /// reaches the tick, pause → practice, scrub to the bar, set the speed and play (the
+    /// snapshots and the tempo check).
+    private func runPracticeHook(_ heard: TransportClock.Position) {
+        let d = UserDefaults.standard
+        guard !practiceHookDone, d.object(forKey: "PracticeAt") != nil, heard.tick >= d.double(forKey: "PracticeAt") else { return }
+        practiceHookDone = true
+        enterPractice()
+        practiceSeek(bar: d.integer(forKey: "PracticeBar"))
+        if d.object(forKey: "PracticeSpeed") != nil { practiceSpeed(delta: d.integer(forKey: "PracticeSpeed") - 100) }
+        audio.send(.countIn(beats: 4))
+        audio.send(.play)
+    }
+
     /// `-AutoTap 1` on a song: one finger taps each chord the frame it is heard, through the
     /// tap path (the tap-mode check).
     @ObservationIgnored private var autoTapDown = false
@@ -771,10 +893,13 @@ final class Player {
         let clock = TransportClock(s)
         let heard = clock.valid ? clock.position(atHost: mach_absolute_time()) : nil
         let tick = s.epoch == gameEpoch ? (heard?.tick ?? 0) : 0
-        let msPerTick = 60000 / (Double(game.song.meta.tempo) * Double(game.ticksPerBeat))
+        let msPerTick = 60000 / (Double(game.song.meta.tempo) * practiceSpeed * Double(game.ticksPerBeat))
+        _ = practiceTick  // a scrub while held redraws the highway
         let lookahead = GameState.lookaheadSeconds * 1000 / msPerTick
         let cue = game.cue(at: tick, msPerTick: msPerTick)
-        let bar = max(0, Int((tick / Double(game.ticksPerBar)).rounded(.down)))
+        // During a practice count-in the bar is the one the clicks land on, not the one before.
+        let bar = practice && countIn != nil ? Int(practiceCountBase / Double(game.ticksPerBar))
+            : max(0, Int((tick / Double(game.ticksPerBar)).rounded(.down)))
         let song = game.song
         let visible = game.notes(from: tick - Double(game.ticksPerBeat), to: tick + lookahead).map {
             GameState.HighwayNote(id: $0.index, note: $0.note.n, tick: Double($0.note.t), length: Double($0.note.len),
@@ -788,7 +913,7 @@ final class Player {
             bar: min(bar, song.bars - 1), bars: song.bars, beat: beat,
             score: game.score, combo: game.combo, maxCombo: game.maxCombo, multiplier: game.multiplier,
             accuracy: game.accuracy, progress: min(1, max(0, tick / Double(song.bars * game.ticksPerBar))),
-            countIn: countIn, playing: playing, pop: game.pop,
+            countIn: countIn, playing: playing, pop: game.pop, practice: practice, speed: practiceSpeed,
             heardTick: tick, lookaheadTicks: lookahead, ticksPerBeat: game.ticksPerBeat, ticksPerBar: game.ticksPerBar,
             notes: visible, keys: song.keyboard(game.part), nowNotes: cue.now, nextNotes: cue.next,
             pressedNotes: pressed, fingers: cue.fingers, nowFingers: cue.nowFingers, nextFinger: cue.nextFingers.min(),
@@ -847,8 +972,10 @@ final class Player {
         // The position the speaker is playing now: the pads, the LEDs and the lesson follow it.
         let heard = clock.position(atHost: mach_absolute_time())
         let tpb = Double(audio.band.ticksPerBeat)
-        // The count-in runs before tick 0: bar 1, and its own beat number.
-        let counting = heard.tick < 0 && heard.rolling ? 4 + Int((heard.tick / tpb).rounded(.down)) + 1 : nil
+        // The count-in runs before tick 0 (bar 1), or before the bar practice lands on: its own
+        // beat number.
+        let base = practice ? practiceCountBase : 0
+        let counting = heard.tick < base && heard.rolling ? 4 + Int(((heard.tick - base) / tpb).rounded(.down)) + 1 : nil
         if counting != countIn { countIn = counting }
         let beats = max(0, Int((heard.tick / tpb).rounded(.down)))
         let bars = chorusBars

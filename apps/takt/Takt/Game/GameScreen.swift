@@ -38,6 +38,9 @@ struct GameState {
     var countIn: Int? = nil
     var playing = false
     var pop: GameEngine.Pop? = nil
+    /// Practice: nothing scores, the rail is a scrubber, the band at `speed` (0.5...1).
+    var practice = false
+    var speed = 1.0
     var heardTick = 0.0
     var lookaheadTicks = 1.0
     var ticksPerBeat = 12
@@ -66,6 +69,12 @@ struct GameControls {
     var togglePlay: () -> Void = {}
     var again: () -> Void = {}
     var leave: () -> Void = {}
+    /// Pause → practice; the scrub (a bar); four bars back; the speed (percent, ±10); back to the run.
+    var practice: () -> Void = {}
+    var practiceSeek: (Int) -> Void = { _ in }
+    var practiceBack: () -> Void = {}
+    var practiceSpeed: (Int) -> Void = { _ in }
+    var run: () -> Void = {}
 }
 
 private struct GameControlsKey: EnvironmentKey {
@@ -95,9 +104,17 @@ struct GameScreen: View {
                 .padding(.horizontal, compact ? 16 : 24)
                 .padding(.top, compact ? 8 : 14)
                 .padding(.bottom, 10)
-            ProgressRail(state: state)
-                .frame(height: 6)
-                .padding(.horizontal, compact ? 16 : 24)
+            if state.practice {
+                // Practice tucks in where the rail was: the rail becomes the scrubber, a row of
+                // small controls under it.
+                PracticeBar(state: state, compact: compact)
+                    .padding(.horizontal, compact ? 16 : 24)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            } else {
+                ProgressRail(state: state)
+                    .frame(height: 6)
+                    .padding(.horizontal, compact ? 16 : 24)
+            }
             ZStack {
                 if let r = state.result {
                     GameResultPanel(state: state, result: r, compact: compact)
@@ -107,12 +124,13 @@ struct GameScreen: View {
                         .padding(.horizontal, compact ? 16 : 24)
                     if let n = state.countIn {
                         CountInBadge(n: n, compact: compact)
-                    } else if !state.playing && state.heardTick > 0 {
+                    } else if !state.playing && state.heardTick > 0 && !state.practice {
                         PausedBadge(compact: compact)
                     }
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .animation(.easeOut(duration: 0.25), value: state.practice)
             Hairline()
             KeyboardStrip(low: state.keys.lowerBound, high: state.keys.upperBound, now: state.nowNotes, next: state.nextNotes,
                           pressed: state.pressedNotes, fingers: state.fingers)
@@ -147,20 +165,35 @@ struct GameHUD: View {
                     .minimumScaleFactor(0.7)
             }
             Spacer(minLength: 8)
-            ComboMeter(combo: state.combo, multiplier: state.multiplier, compact: compact)
-            VStack(alignment: .trailing, spacing: 0) {
-                Text("\(state.score)")
-                    .font(.display(compact ? 30 : 40))
-                    .monospacedDigit()
-                    .foregroundStyle(Palette.text)
-                    .contentTransition(.numericText())
-                    .animation(.easeOut(duration: 0.15), value: state.score)
-                Text("Score")
-                    .dataLabel(10)
-                    .foregroundStyle(Palette.muted)
+            if state.practice {
+                // No score to chase: the word, and the speed.
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text("Practice")
+                        .font(.display(compact ? 22 : 28))
+                        .textCase(.uppercase)
+                        .foregroundStyle(Palette.signal)
+                    Text("\(Int((state.speed * 100).rounded()))% speed · nothing scored")
+                        .dataLabel(10)
+                        .foregroundStyle(Palette.muted)
+                        .lineLimit(1)
+                }
+                .frame(minWidth: compact ? 70 : 110, alignment: .trailing)
+            } else {
+                ComboMeter(combo: state.combo, multiplier: state.multiplier, compact: compact)
+                VStack(alignment: .trailing, spacing: 0) {
+                    Text("\(state.score)")
+                        .font(.display(compact ? 30 : 40))
+                        .monospacedDigit()
+                        .foregroundStyle(Palette.text)
+                        .contentTransition(.numericText())
+                        .animation(.easeOut(duration: 0.15), value: state.score)
+                    Text("Score")
+                        .dataLabel(10)
+                        .foregroundStyle(Palette.muted)
+                }
+                .frame(minWidth: compact ? 70 : 110, alignment: .trailing)
             }
-            .frame(minWidth: compact ? 70 : 110, alignment: .trailing)
-            if !compact {
+            if !compact && !state.practice {
                 TransportButton(symbol: state.playing ? "pause.fill" : "play.fill", lit: state.playing, size: 36,
                                 label: state.playing ? "Pause" : "Play", action: controls.togglePlay)
             }
@@ -429,10 +462,115 @@ struct PausedBadge: View {
                 .textCase(.uppercase)
                 .foregroundStyle(Palette.text)
             PrimaryButton(title: "Keep going", action: controls.togglePlay)
+            // The quiet way out of a hard part: practice it, slower, from a few bars back.
+            Button(action: controls.practice) {
+                Text("Practice this part")
+                    .dataLabel(12, weight: .semibold)
+                    .foregroundStyle(Palette.muted)
+                    .padding(.vertical, 6)
+            }
+            .buttonStyle(.plain)
         }
         .padding(28)
         .background(RoundedRectangle(cornerRadius: 8).fill(Palette.panel))
         .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Palette.line, lineWidth: 1))
+    }
+}
+
+/// Practice, where the progress rail was: the rail as a scrubber (drag to any bar; the band
+/// holds there), then one quiet row: the bar and its section, four bars back, the speed with
+/// − and +, play (four clicks, then the band) and the way back to the run. Nothing in it is
+/// big: the highway stays the screen.
+struct PracticeBar: View {
+    let state: GameState
+    let compact: Bool
+    @Environment(\.gameControls) private var controls
+
+    var body: some View {
+        VStack(spacing: compact ? 6 : 8) {
+            Scrubber(state: state)
+                .frame(height: 18)
+            HStack(spacing: compact ? 6 : 10) {
+                Text("Bar \(state.bar + 1)\(compact ? "" : " · \(state.section)")")
+                    .dataLabel(10)
+                    .foregroundStyle(Palette.muted)
+                    .lineLimit(1)
+                    .frame(minWidth: compact ? 44 : 150, alignment: .leading)
+                Spacer(minLength: 4)
+                SmallButton(symbol: "gobackward", label: "Four bars back", action: controls.practiceBack)
+                HStack(spacing: 2) {
+                    SmallButton(symbol: "minus", label: "Slower", action: { controls.practiceSpeed(-10) })
+                    Text("\(Int((state.speed * 100).rounded()))%")
+                        .font(.display(16))
+                        .monospacedDigit()
+                        .foregroundStyle(state.speed < 0.999 ? Palette.signal : Palette.text)
+                        .frame(width: 46)
+                    SmallButton(symbol: "plus", label: "Faster", action: { controls.practiceSpeed(10) })
+                }
+                SmallButton(symbol: state.playing ? "pause.fill" : "play.fill", lit: state.playing,
+                            label: state.playing ? "Pause" : "Play from here", action: controls.togglePlay)
+                Button(action: controls.run) {
+                    Text(compact ? "Run" : "Play the run")
+                        .dataLabel(10, weight: .semibold)
+                        .foregroundStyle(Palette.text)
+                        .padding(.horizontal, 10)
+                        .frame(height: 28)
+                        .background(RoundedRectangle(cornerRadius: 6).fill(Palette.panel))
+                        .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Palette.line, lineWidth: 1))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.top, 2)
+    }
+}
+
+/// A 28 pt transport button for the practice row.
+struct SmallButton: View {
+    let symbol: String
+    var lit = false
+    let label: String
+    var action: () -> Void
+
+    var body: some View {
+        TransportButton(symbol: symbol, lit: lit, size: 28, label: label, action: action)
+    }
+}
+
+/// The rail as a scrubber: the played part in `signal`, the sections marked, a knob where the
+/// run sits. Drag anywhere along it to hold the band at that bar.
+struct Scrubber: View {
+    let state: GameState
+    @Environment(\.gameControls) private var controls
+
+    var body: some View {
+        GeometryReader { g in
+            let w = g.size.width
+            let x = w * CGFloat(state.progress)
+            ZStack(alignment: .leading) {
+                Capsule().fill(Palette.line).frame(height: 6)
+                Capsule().fill(Palette.signal).frame(width: max(0, x), height: 6)
+                ForEach(state.sections.dropFirst(), id: \.bar) { s in
+                    Rectangle()
+                        .fill(Palette.ground)
+                        .frame(width: 2, height: 6)
+                        .offset(x: w * CGFloat(s.bar) / CGFloat(max(1, state.bars)) - 1)
+                }
+                Circle()
+                    .fill(Palette.signal)
+                    .frame(width: 16, height: 16)
+                    .overlay(Circle().strokeBorder(Palette.ground, lineWidth: 2))
+                    .offset(x: min(w - 16, max(0, x - 8)))
+            }
+            .frame(maxHeight: .infinity, alignment: .center)
+            .contentShape(Rectangle())
+            .gesture(DragGesture(minimumDistance: 0).onChanged { v in
+                let bar = Int((v.location.x / max(1, w) * CGFloat(state.bars)).rounded(.down))
+                controls.practiceSeek(max(0, min(state.bars - 1, bar)))
+            })
+        }
+        .accessibilityElement()
+        .accessibilityLabel("Bar \(state.bar + 1) of \(state.bars)")
     }
 }
 

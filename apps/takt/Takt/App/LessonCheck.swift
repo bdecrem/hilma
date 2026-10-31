@@ -1439,6 +1439,32 @@ enum LessonCheck {
                 for n in strayKeys { stray.played(note: n, tick: gap, msPerTick: ms) }
                 check("stage: a tap 400 ms before a chord plays it as extras, nothing hit",
                       !strayKeys.isEmpty && stray.extras == strayKeys.count && stray.perfect + stray.good == 0)
+
+                // Practice (the pause menu): a seek makes every note from there pending again
+                // and leaves what came before; presses and pass-bys still pop, but the score, the
+                // combo and the counts hold, and the run never finishes.
+                let prac = GameEngine(song: song, part: .melody, difficulty: .easy)
+                let pracNotes = prac.notes.indices.filter { prac.active($0) }
+                let pracFirst = pracNotes[0], midNote = pracNotes[pracNotes.count / 2]
+                let pracFirstTick = Double(prac.notes[pracFirst].t), midTick = Double(prac.notes[midNote].t)
+                prac.heard(tick: pracFirstTick, msPerTick: ms)
+                prac.played(note: prac.notes[pracFirst].n, tick: pracFirstTick, msPerTick: ms)
+                let scored = (prac.score, prac.combo, prac.perfect)
+                prac.practice = true
+                prac.seek(to: midTick)
+                let pendingFromMid = prac.status.indices.filter { Double(prac.notes[$0].t) >= midTick }.allSatisfy { prac.status[$0] == .pending }
+                prac.played(note: prac.notes[midNote].n, tick: midTick, msPerTick: ms)
+                let hitPop = prac.pop?.judgment == .perfect
+                prac.played(note: prac.notes[midNote].n + 1, tick: midTick + 1, msPerTick: ms)
+                prac.heard(tick: Double(song.endTick) + Double(tpbar), msPerTick: ms)
+                check("stage: practice judges and pops but holds the score, the combo and the counts, and never finishes",
+                      prac.isHit(midNote) && hitPop && prac.pop?.judgment == .miss && (prac.score, prac.combo, prac.perfect) == scored
+                      && prac.missed == 0 && prac.extras == 0 && prac.wrong == 0 && !prac.finished,
+                      "score \(prac.score) combo \(prac.combo) missed \(prac.missed) extras \(prac.extras) finished \(prac.finished)")
+                prac.seek(to: midTick)
+                check("stage: a practice seek makes every note from there pending again and leaves the ones before",
+                      pendingFromMid && prac.status[midNote] == .pending && prac.isHit(pracFirst)
+                      && prac.status.indices.filter { Double(prac.notes[$0].t) >= midTick }.allSatisfy { prac.status[$0] == .pending })
             }
         }
 
