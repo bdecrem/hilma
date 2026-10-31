@@ -373,7 +373,7 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   gate". A third tab, **Stage** (`Menu/StageScreen.swift`): the set list, every song open.
   **Songs** (`Takt/Content/song-*.json`, written by `scripts/songs/*.py` on `common.py`): a
   band like the lessons' plus a `song` block (title, style, key, tempo, cover glyph, sections
-  by bar, the two parts). Slow Burn (slow blues in G, 90 since 0.1 (57), four choruses, the lesson kit),
+  by bar, the two parts). Slow Burn (slow blues in G, 90 since 0.1 (57), four choruses, the lesson kit), Pearl Street (Texas shuffle in E, 112, a stop-time chorus) and Blue Lantern (minor blues in D, 84, Rhodes), both 2026-10-31,
   Boogie Shoes (jump blues in C, 120, six choruses, walking bass, chanks on 2 and 4, the sax
   riff, a piano solo chorus), Undertow (deep house in A minor, 122, Am F Dm Em, Rhodes stabs,
   pads, a sub, the hook), Nachtschicht (techno, 130, a rumbling kick, a rolling acid line,
@@ -750,6 +750,33 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   write a new blues track so the levels fall out right, and the open items (Boogie Shoes melody
   Easy at 0.88 is over its band). Every blues chart is held to it; `CHARTING.md` stays the
   mechanism.
+
+- **Two more blues tracks, Boogie Shoes re-weighted: 0.1 (60), 2026-10-31.** Bart: "update the
+  Beginner and Easy levels, Melody, on the OTHER blues track… add a third and a fourth blues
+  track… think like a music producer… different key… chart the melody beginner / easy levels
+  per the rules you just established". **Boogie Shoes** (`boogie_shoes.py`): the riff carried
+  two anchors a bar (0.95 weight-1 onsets a second), so Easy was the riff; one anchor a bar now
+  (the note the bar lands on), the rest weight 2; the band's horn line is the same notes.
+  Melody 0.25 · 0.64 · 0.79 · 1.49 · 1.57 · 1.69 · 2.17 (was 0.27 · 0.88 · 0.92 · 1.59 · …).
+  **Pearl Street** (`song-pearl-street`, `pearl_street.py`): Texas shuffle in E at 112, five
+  choruses (2:09), boogie bass two notes a beat, quick four, a stop-time chorus (the band hits
+  the 1 and lays out eight bars while the sax talks), sax solo on the ride, out chorus; piano
+  stab-and-chank chords part; cover glyph `boots`. **Blue Lantern** (`song-blue-lantern`,
+  `blue_lantern.py`): minor blues in D at 84, straight eighths over a sixteenth hat, open hat
+  into the 1, Dm7 / Gm7 / B♭7 A7, Rhodes comping (`keys: rhodes`), long sax tones, four
+  choruses (2:17); glyph `lantern`. Its sixteenth hat and sustained Rhodes made the first mix
+  hit 0 dBFS; the kit sits 4–6 dB under the other blues' and `levels` take keys −4, bass −5,
+  horns −3.5 dB, for a mean of −20.7 dBFS and a −4 dB peak (Pearl Street −21 / −2, offline
+  renders through `volumedetect`; `audiocheck` cannot read a `-RenderTo` file, its
+  frameCapacity assertion). The set list's copy counts the songs (`StageScreen.spelled`)
+  instead of saying "Eight". Both on the set list after Boogie Shoes
+  (`Song.catalog`), both with the blues melody patch in `charting.json` (Easy = tier 2,
+  phrase 12, tier 2 space 0): Pearl Street melody 0.26 · 0.51 · 0.77 · … · 1.86, Blue Lantern
+  0.26 · 0.41 · 0.68 · … · 0.97, chords 0.23 → 1.55 and 0.35 → 1.10. **Charting:** the tier
+  above a `fromAbove` tier is seeded with its own no-Beginner by-rule set (`aboveRule`), which
+  is what makes "Easy and above chart the same with Beginner under them" hold once Beginner may
+  take a hit (Boogie Shoes failed it at bar 64 before). Checks 305/305 (ten songs load).
+  Every number in `BLUES.md` §2–3, the producer's notes in §5.
 
 ## Code map (`Takt/`)
 

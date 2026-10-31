@@ -8,6 +8,12 @@ struct StageScreen: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var board: Song?
 
+    /// "Ten" for 10: the count of songs, in words up to twelve.
+    static func spelled(_ n: Int) -> String {
+        let words = ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve"]
+        return n < words.count ? words[n] : String(n)
+    }
+
     var body: some View {
         let compact = sizeClass == .compact
         VStack(alignment: .leading, spacing: 0) {
@@ -26,7 +32,7 @@ struct StageScreen: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("Eight songs, all yours from the start. Take the chords or the melody, pick a level, and play with the band. Adaptive climbs as you play clean.")
+                    Text("\(Self.spelled(app.songs.count)) songs, all yours from the start. Take the chords or the melody, pick a level, and play with the band. Adaptive climbs as you play clean.")
                         .bodyText(compact ? 14 : 16)
                         .foregroundStyle(Palette.muted)
                         .fixedSize(horizontal: false, vertical: true)
@@ -239,6 +245,33 @@ struct SongArt: View {
                     let r = CGRect(x: x, y: y - 10, width: sw * 0.8, height: 10)
                     ctx.fill(Path(roundedRect: r, cornerRadius: 2), with: .color(i % 4 == 1 ? hot : ink))
                 }
+            case "boots":
+                // The Texas shuffle: three rows of long-short stomps (the shuffle's two eighths),
+                // the backbeat lit. Three a row: each is 0.18 w + 4 + 8 wide, so 3 × 0.26 w = 0.78 w
+                // from x = 0.11 w ends at 0.89 w, inside the tile.
+                for row in 0..<3 {
+                    let y = h * (0.26 + 0.24 * CGFloat(row))
+                    var x = w * 0.11
+                    for i in 0..<3 {
+                        let long = w * 0.13, short = w * 0.05
+                        let r1 = CGRect(x: x, y: y - 4, width: long, height: 8)
+                        ctx.fill(Path(roundedRect: r1, cornerRadius: 2), with: .color(i == 1 && row == 1 ? hot : ink))
+                        let r2 = CGRect(x: x + long + 4, y: y - 3, width: short, height: 6)
+                        ctx.fill(Path(roundedRect: r2, cornerRadius: 2), with: .color(dim))
+                        x += long + short + 4 + w * 0.08
+                    }
+                }
+            case "lantern":
+                // The minor blues: a ring of dim dots around one warm one, low in the frame.
+                let cx = w * 0.5, cy = h * 0.56, rad = min(w, h) * 0.3
+                for i in 0..<12 {
+                    let a = Double(i) / 12 * 2 * .pi - .pi / 2
+                    let x = cx + rad * cos(a), y = cy + rad * sin(a)
+                    let rr: CGFloat = i % 3 == 0 ? 3 : 2
+                    ctx.fill(Path(ellipseIn: CGRect(x: x - rr, y: y - rr, width: 2 * rr, height: 2 * rr)),
+                             with: .color(i % 3 == 0 ? ink : dim))
+                }
+                ctx.fill(Path(ellipseIn: CGRect(x: cx - 7, y: cy - 7, width: 14, height: 14)), with: .color(hot))
             case "pulse":
                 // Minimal: a grid of dots, one lit, one row of rims.
                 let cols = 6, rows = 4

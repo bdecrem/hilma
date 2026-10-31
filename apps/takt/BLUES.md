@@ -7,8 +7,12 @@ The mechanism (tiers, knobs, the phrase cover, per-song patches) is `CHARTING.md
 says what the result must be.
 
 The tracks today: **Slow Burn** (slow blues in G, 90, four choruses, 2:08), **Slow Burn Short**
-(the same once round, 0:32), **Boogie Shoes** (jump blues in C, 120, six choruses). Generators
-in `scripts/songs/`, charts cut at load time by `Takt/Content/charting.json`.
+(the same once round, 0:32), **Boogie Shoes** (jump blues in C, 120, six choruses, 2:24),
+**Pearl Street** (Texas shuffle in E, 112, five choruses with a stop-time chorus, 2:09, added
+2026-10-31) and **Blue Lantern** (minor blues in D, 84, straight eighths over a sixteenth hat,
+Rhodes, four choruses, 2:17, added 2026-10-31). Generators in `scripts/songs/`, charts cut at
+load time by `Takt/Content/charting.json`; every blues melody carries the same `songs` patch
+there (Easy = tier 2, a chorus-long phrase, no borrowing on tier 2).
 
 ## 1. The ground rules
 
@@ -38,13 +42,13 @@ from those weights, but **the density targets below are the spec**: when a line'
 a level the wrong density, patch the song in `charting.json` (`songs`) or rewrite the weights,
 and say which in the song's generator docstring.
 
-| Level | What you play | Onsets / s target | Slow Burn | Boogie Shoes |
-|---|---|---|---|---|
-| Beginner | The anchors, one at a time, with room: never two inside 2.4 s, never 5 s of nothing. Every key of each four bars appears once. Learn where the phrases land. | 0.2 – 0.35 | 0.29 | 0.27 |
-| Easy | The anchors, all of them, plus the few keys they miss over a chorus. About one note a bar in a slow blues, two in a jump blues. No borrowing into silences. **Half of Medium.** | 0.4 – 0.55 | 0.43 | 0.88 (open, see §5) |
-| Medium | Most of the tune: anchors and main notes, nothing quicker than a beat's division you can read. | 0.8 – 1.1 | 1.09 | 1.59 (open, see §5) |
-| Hard | The line as the record plays it: pushes, pickups, grace notes, the turnaround ornaments. | the record | 1.23 | 2.17 |
-| Adaptive | Starts one rung under your last run's top (first time: rung 4); clean 4-bar blocks climb one rung, under 60 % or three misses in a row drop one. The seven rungs must climb smoothly: no rung more than twice the one below it. | rungs: 0.29 · 0.43 · 0.84 · 0.87 · 1.09 · 1.11 · 1.23 | | |
+| Level | What you play | Onsets / s target | Slow Burn | Boogie Shoes | Pearl Street | Blue Lantern |
+|---|---|---|---|---|---|---|
+| Beginner | The anchors, one at a time, with room: never two inside 2.4 s, never 5 s of nothing. Every key of each four bars appears once. Learn where the phrases land. | 0.2 – 0.35 | 0.29 | 0.25 | 0.26 | 0.26 |
+| Easy | The anchors, all of them, plus the few keys they miss over a chorus. About one note a bar. No borrowing into silences. **Half of Medium.** | 0.4 – 0.55 | 0.43 | 0.64 (a riff in eighths; was 0.88) | 0.51 | 0.41 |
+| Medium | Most of the tune: anchors and main notes, nothing quicker than a beat's division you can read. | 0.8 – 1.1 (a jump-blues riff runs to 1.6) | 1.09 | 1.57 | 1.31 | 0.88 |
+| Hard | The line as the record plays it: pushes, pickups, grace notes, the turnaround ornaments. | the record | 1.23 | 2.17 | 1.86 | 0.97 |
+| Adaptive | Starts one rung under your last run's top (first time: rung 4); clean 4-bar blocks climb one rung, under 60 % or three misses in a row drop one. The seven rungs must climb smoothly: no rung more than twice the one below it. | | 0.29 · 0.43 · 0.84 · 0.87 · 1.09 · 1.11 · 1.23 | 0.25 · 0.64 · 0.79 · 1.49 · 1.57 · 1.69 · 2.17 | 0.26 · 0.51 · 0.77 · 1.23 · 1.31 · 1.42 · 1.86 | 0.26 · 0.41 · 0.68 · 0.74 · 0.88 · 0.94 · 0.97 |
 
 Notes from play:
 
@@ -56,6 +60,14 @@ Notes from play:
   to 0.88 on a line with 0.41 anchors a second. Easy is now the anchors (0.43). Rule of thumb
   for every blues line: **Easy ≈ the weight-1 notes alone**; if the cover or the borrowing
   push it over 0.55, give the song a chorus-long phrase and no borrowing on that tier.
+- 2026-10-31, Boogie Shoes re-weighted: the riff had two anchors a bar (0.95 a second of
+  weight-1 notes), so Easy was the whole riff. One anchor a bar now, the note the bar lands on
+  (the G on the 1, the C the lick falls to); Easy went from 0.88 to 0.64, Beginner 0.27 to 0.25,
+  Medium and Hard unchanged. Easy still sits over the band because the riff repeats five keys
+  every two bars and the chorus cover keeps them; the step Easy → Medium is 0.64 → 1.57, wide.
+  To hear on the next play-through.
+- 2026-10-31, the two new tracks were written to the §4 recipe and landed inside the bands at
+  the first charting: Pearl Street Easy 0.51, Blue Lantern Easy 0.41.
 
 ## 3. Chords (the comping)
 
@@ -64,13 +76,13 @@ stands on, **2** the groove hits, the 3 or the and-of-2, **3** the pushes) and a
 (`root, third, fifth, seventh, sixth, ninth`). Levels cut both the rhythm (which hits) and the
 voicing (how many notes, in that role order), one thing at a time.
 
-| Level | What you play | Onsets / s target | Slow Burn | Boogie Shoes |
-|---|---|---|---|---|
-| Beginner | One note a chord, the root, on the downbeat hits only, with room (2.4 s). Learn the changes. | 0.2 – 0.4 | 0.38 | 0.25 |
-| Easy | Two-note chords (root + third) on the groove hits. The shell on 1 and 3. | 0.7 – 1.1 | 1.11 | 0.99 |
-| Medium | Three-note chords on the groove. Same rhythm as Easy, the triad. | 0.9 – 1.2 | 1.11 | 0.99 |
-| Hard | The comping as the record plays it: four-note dominant voicings, every push. | the record | 1.84 | 1.31 |
-| Adaptive | Rungs: root alone → two-note spread → two-note on the groove → triad → + pushes → four notes → the record. | | 0.38 · 0.74 · 1.11 · 1.11 · 1.11 · 1.11 · 1.84 | 0.25 · 0.50 · 0.99 · 0.99 · 1.00 · 1.30 · 1.31 |
+| Level | What you play | Onsets / s target | Slow Burn | Boogie Shoes | Pearl Street | Blue Lantern |
+|---|---|---|---|---|---|---|
+| Beginner | One note a chord, the root, on the downbeat hits only, with room (2.4 s). Learn the changes. | 0.2 – 0.4 | 0.38 | 0.25 | 0.23 | 0.35 |
+| Easy | Two-note chords (root + third) on the groove hits. The shell on 1 and 3. | 0.7 – 1.1 | 1.11 | 0.99 | 0.87 | 0.99 |
+| Medium | Three-note chords on the groove. Same rhythm as Easy, the triad. | 0.9 – 1.2 | 1.11 | 0.99 | 0.87 | 0.99 |
+| Hard | The comping as the record plays it: four-note voicings, every push. | the record | 1.84 | 1.31 | 1.55 | 1.10 |
+| Adaptive | Rungs: root alone → two-note spread → two-note on the groove → triad → + pushes → four notes → the record. | | 0.38 · 0.74 · 1.11 · 1.11 · 1.11 · 1.11 · 1.84 | 0.25 · 0.50 · 0.99 · 0.99 · 1.00 · 1.30 · 1.31 | 0.23 · 0.47 · 0.87 · 0.87 · 0.87 · 0.87 · 1.55 | 0.35 · 0.35 · 0.99 · 0.99 · 0.99 · 0.99 · 1.10 |
 
 Notes from play:
 
@@ -80,6 +92,11 @@ Notes from play:
   keep weight 3 for the turnaround fills.
 - The left hand plays the lower two notes, the right the melody, in the Stage's finger badges
   (the pinky low, as the lessons comp).
+- Blue Lantern's Rhodes comps the 1, the "and" of 2 and the 4 (weight 2), with the push on the
+  last sixteenth (3): Easy to Hard keep the one rhythm until the record, so the ladder reads
+  0.99 four times; Beginner and the second rung are both one chord a bar (0.35). Pearl Street's
+  stab-and-chank (the 1, the "a" of 2, the 3) does the same at 0.87. If the comping ladders
+  want a rhythm step, the sheet's note above applies to these two as well.
 
 ## 4. Writing a new blues track so the levels fall out right
 
@@ -97,10 +114,28 @@ Notes from play:
 - Then play it: Beginner should feel like learning where the phrases land, Easy like playing the
   tune's bones with the band, Medium like playing the tune, Hard like the record.
 
-## 5. Open
+## 5. The four tracks, as a producer hears them
 
-- **Boogie Shoes melody Easy is 0.88 and Medium 1.59**, over the bands above (the riff is a
-  fast line in eighths). Not touched on 2026-10-31; the Slow Burn recipe (a chorus-long phrase,
-  no borrowing on tier 2, Easy = tier 2) would bring Easy near 0.5. Decide after playing it.
-- The chords' Easy → Medium step is voicing only; whether a blues wants a rhythm step between
-  them is Bart's call after playing Slow Burn chords on both.
+- **Slow Burn**, G, 90, 12/8. The slow one: snare in from bar 1, the sax head with its grace
+  notes the second and fourth time, a sax solo on the ride, a stop. The piano comps the 1 and
+  the 3 with triplet pushes.
+- **Boogie Shoes**, C, 120, shuffle. The jump: walking bass R 3 5 6 / b7 6 5 3, chanks on 2 and
+  4, a riff you hum; shout chorus an octave up, a piano solo chorus, fills, a stop.
+- **Pearl Street**, E, 112, heavy shuffle. Texas: the boogie bass doubling every beat, kick on 1
+  and 3 with the shuffle push, the snare fat; quick four in bar 2; chorus 3 is **stop time** (the
+  band hits the 1 and lays out for eight bars while the sax talks, a fill back in), then the sax
+  solo on the ride and an out chorus with the bell. Piano: stab the 1, chank the "a" of 2 and
+  the 3. Sax line in E minor pentatonic with the blue B♭.
+- **Blue Lantern**, D minor, 84, straight eighths. The moody one: a sixteenth hat with an open
+  hat into the 1 every other bar, kick on the 1 and the "and" of 3, the bass on the root with the
+  seventh and the fifth answering; Dm7 / Gm7 / B♭7 A7; a Rhodes instead of the piano, long sax
+  tones (the melody's Hard is only 0.97 a second: it is a slow line, by design). Sax solo on the
+  ride, out chorus, the last Dm held.
+
+## 6. Open
+
+- **Boogie Shoes melody Easy at 0.64** is still over the band after the re-weighting (§2 notes);
+  Medium at 1.57 is a wide step up. Play it; the next lever is dropping the cover for the riff's
+  passing keys (a `phrase` of 24) or marking the C5 of the riff weight 3.
+- The chords' Easy → Medium step is voicing only on all four tracks; whether a blues wants a
+  rhythm step between them is Bart's call after playing a chords part on both.

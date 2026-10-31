@@ -254,6 +254,12 @@ struct Charting: Decodable {
         // The phrase picks the bottom tier worked out for the tier above (below): that tier takes
         // them first, so it charts exactly as it would with nothing under it.
         var preferred: Set<Int> = []
+        // What the tier above the bottom one takes by rule with nothing under it (its phrase
+        // picks and its hits): that tier is seeded with it, so whatever Beginner chose among it,
+        // the tier charts exactly as it would without Beginner (its borrows follow from the same
+        // taken set). Since 0.1 (60): a Beginner anchor taken first used to count a key as
+        // covered and drop the cover's own pick for it.
+        var aboveRule: Set<Int> = []
         typealias Onset = (t: Int, lv: Int, idx: [Int])
         return tiers.enumerated().map { ti, tier in
             var mask = Array(repeating: false, count: notes.count)
@@ -376,6 +382,9 @@ struct Charting: Decodable {
             }
             // The tier below, whole (its onsets fit this tier's gap: the ladder only loosens).
             for o in onsets where seed.contains(o.t) { take(o) }
+            if ti == 1, tiers[0].fromAbove == true {
+                for o in onsets where aboveRule.contains(o.t) && !isTaken.contains(o.t) && fits(o.t) { take(o) }
+            }
             // The bottom tier (Beginner) is cut from the chart the tier above makes with nothing
             // under it: it takes its notes only among the onsets that chart takes by rule (its
             // phrase picks, or its hits; worked out here, then undone), and the tier above takes
@@ -395,6 +404,7 @@ struct Charting: Decodable {
                 let above = chart(tiers[1], pool: allowed(tiers[1], onsets), prefer: [])
                 (taken, isTaken, mask) = saved
                 preferNext = above.picks
+                aboveRule = above.rule
                 pool = onsets.filter { above.rule.contains($0.t) }
             }
             _ = chart(tier, pool: allowed(tier, pool), prefer: prefer)

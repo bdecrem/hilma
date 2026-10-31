@@ -105,9 +105,13 @@ changed (every onsets-a-second figure of every other song and part is the same a
 A detail that made this possible: Beginner (`fromAbove`) chooses among what the tier above
 takes *by rule*. Until 0.1 (59) that was the phrase picks alone on a ladder with a phrase; with
 a chorus-long phrase those are eight or nine onsets a chorus, and Beginner left four bars
-empty. Beginner's pool is the tier above's phrase picks and its hits now; the tier above
-still prefers only its phrase picks, so Easy and above chart exactly as without Beginner (the
-check), and every other song's Beginner is unchanged.
+empty. Beginner's pool is the tier above's phrase picks and its hits now. Since 0.1 (60) the
+tier above is **seeded with that whole by-rule set** (`aboveRule`) before its own passes, so
+whatever Beginner chose among it, the tier's taken set is the one it reaches on its own and its
+borrows follow from it: Easy and above chart exactly as without Beginner (the check), and every
+other song's Beginner is unchanged. (Preferring the phrase picks alone was not enough once
+Beginner could take a hit: a hit taken first counted its key as covered and the cover dropped
+its own pick for that key; Boogie Shoes showed it at bar 64.)
 
 ## Adaptive
 

@@ -108,6 +108,7 @@
 		3F0F9F933FA8434D41547176 /* hat-2c.caf in Resources */ = {isa = PBXBuildFile; fileRef = 1D346A64372DD97C2368E256 /* hat-2c.caf */; };
 		3FF2F602E3A5DF6198990343 /* syn-bleep-69-0.caf in Resources */ = {isa = PBXBuildFile; fileRef = BEDE8E091713A077BC5BF592 /* syn-bleep-69-0.caf */; };
 		3FF794ED3E6D8AAB365E558A /* pno-75-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = EA528344B003B7949FDCAD43 /* pno-75-2.caf */; };
+		40BC777B2258F7F54D5CF35B /* song-pearl-street.json in Resources */ = {isa = PBXBuildFile; fileRef = 48BEC1DC3AA0BBC2F6DC7F33 /* song-pearl-street.json */; };
 		40C82100CA62B9E3B482C9C1 /* syn-rhodes-69-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 058FFD6EE8B7270F2B777CB6 /* syn-rhodes-69-1.caf */; };
 		40E4079190E3C9BA5D19612F /* sax-64-s.caf in Resources */ = {isa = PBXBuildFile; fileRef = F08D6CCFCF70D2EC893912D1 /* sax-64-s.caf */; };
 		414888B108C80FDC15CC456C /* LessonCheck.swift in Sources */ = {isa = PBXBuildFile; fileRef = 181E70467D20AC8A720F563F /* LessonCheck.swift */; };
@@ -236,6 +237,7 @@
 		8139EAE75275B27D767EF818 /* snare-3c.caf in Resources */ = {isa = PBXBuildFile; fileRef = AD8A3ACF263A0B9CE23283FB /* snare-3c.caf */; };
 		81A2CED37C562C147ABFE4D6 /* syn-bassDH-48.caf in Resources */ = {isa = PBXBuildFile; fileRef = FB5CCD741315F952588005BF /* syn-bassDH-48.caf */; };
 		82133113F52C42543F8F1B93 /* syn-rhodes-57-0.caf in Resources */ = {isa = PBXBuildFile; fileRef = 304532CB257EEB0B9C5531CA /* syn-rhodes-57-0.caf */; };
+		82D19FB68A0BE969AB700E9F /* song-blue-lantern.json in Resources */ = {isa = PBXBuildFile; fileRef = 602B79D6E3FFCF61D2B824AB /* song-blue-lantern.json */; };
 		82D31777AAB608B192EA3734 /* syn-hatDub-0b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3DAFD1AEC1EF1E44537846B8 /* syn-hatDub-0b.caf */; };
 		83249614F79FA5740C17B939 /* syn-stabMin-52-0.caf in Resources */ = {isa = PBXBuildFile; fileRef = 82ADF327CA05A66BBF1C09D6 /* syn-stabMin-52-0.caf */; };
 		8413B7B53945B06526129280 /* syn-stabMin-64-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = A7D3AA9BE236FA8C71F9FDC8 /* syn-stabMin-64-1.caf */; };
@@ -589,6 +591,7 @@
 		4720E312311BC2DC0BC59CFC /* pno-33-2.caf */ = {isa = PBXFileReference; path = "pno-33-2.caf"; sourceTree = "<group>"; };
 		47D1A351F5FE0725EC15D54E /* bass-37.caf */ = {isa = PBXFileReference; path = "bass-37.caf"; sourceTree = "<group>"; };
 		48AC0F7D07390FEBFAF005B5 /* crash-0a.caf */ = {isa = PBXFileReference; path = "crash-0a.caf"; sourceTree = "<group>"; };
+		48BEC1DC3AA0BBC2F6DC7F33 /* song-pearl-street.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "song-pearl-street.json"; sourceTree = "<group>"; };
 		4AA4F0AC14899F70D3EC13C4 /* syn-bassDH-44.caf */ = {isa = PBXFileReference; path = "syn-bassDH-44.caf"; sourceTree = "<group>"; };
 		4B6126EBBF05F62DF38C0F13 /* syn-bassDH-46.caf */ = {isa = PBXFileReference; path = "syn-bassDH-46.caf"; sourceTree = "<group>"; };
 		4BDFF238159F3E1947417C5A /* syn-subDub-28.caf */ = {isa = PBXFileReference; path = "syn-subDub-28.caf"; sourceTree = "<group>"; };
@@ -621,6 +624,7 @@
 		5A6D4B76937F79D24368F63A /* hatOpen-0b.caf */ = {isa = PBXFileReference; path = "hatOpen-0b.caf"; sourceTree = "<group>"; };
 		5B9CEE9C210FA1CC4EA6DF0E /* pno-87-2.caf */ = {isa = PBXFileReference; path = "pno-87-2.caf"; sourceTree = "<group>"; };
 		5ECCE2F11B46DAB18432D62D /* syn-kickDub-0a.caf */ = {isa = PBXFileReference; path = "syn-kickDub-0a.caf"; sourceTree = "<group>"; };
+		602B79D6E3FFCF61D2B824AB /* song-blue-lantern.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "song-blue-lantern.json"; sourceTree = "<group>"; };
 		60C528CEAD1BA483B07D7AB1 /* saxl-66.caf */ = {isa = PBXFileReference; path = "saxl-66.caf"; sourceTree = "<group>"; };
 		613351BCBE7AF3D174CAB2A3 /* bass-35.caf */ = {isa = PBXFileReference; path = "bass-35.caf"; sourceTree = "<group>"; };
 		61570467344D53BCCC56F790 /* pno-33-1.caf */ = {isa = PBXFileReference; path = "pno-33-1.caf"; sourceTree = "<group>"; };
@@ -1072,9 +1076,11 @@
 				D3F53FD48CE9B89241FFB481 /* lesson-S1m.json */,
 				EEEF033DB9357648BCDCCD17 /* song-abyss-ref.json */,
 				E3111C9819000EB6D6BD3E5F /* song-abyss.json */,
+				602B79D6E3FFCF61D2B824AB /* song-blue-lantern.json */,
 				2BD66E2CAAD161BA1549DCAF /* song-boogie-shoes.json */,
 				BADE0D7EFE5BABCE5210E53E /* song-hypnotist-2.json */,
 				C1D12DD782A48B03D2950F0D /* song-hypnotist.json */,
+				48BEC1DC3AA0BBC2F6DC7F33 /* song-pearl-street.json */,
 				B406B5EABFF2F1734A1E4E05 /* song-slow-burn-short.json */,
 				A4985865F2AE933A767D9B73 /* song-slow-burn.json */,
 				11B6CC6B1E376F8F63DFAC35 /* song-warm-nine.json */,
@@ -1780,9 +1786,11 @@
 				03E11DA52EB7EB63BAA61F6E /* snare-5c.caf in Resources */,
 				06D4A152FAAC81877671E319 /* song-abyss-ref.json in Resources */,
 				41FBA6D0D8E7A740DDA90C1A /* song-abyss.json in Resources */,
+				82D19FB68A0BE969AB700E9F /* song-blue-lantern.json in Resources */,
 				DA6EFD26386A1F1603E7DE80 /* song-boogie-shoes.json in Resources */,
 				87FF85AFC0DC3AAC8933D48D /* song-hypnotist-2.json in Resources */,
 				74BA911C913AB1B9444320F4 /* song-hypnotist.json in Resources */,
+				40BC777B2258F7F54D5CF35B /* song-pearl-street.json in Resources */,
 				4B1361CAABC1BA0FBE776FD7 /* song-slow-burn-short.json in Resources */,
 				D08F9AD8D242D5A9CE4CEE68 /* song-slow-burn.json in Resources */,
 				909BF6C68724A574B7BF77CB /* song-warm-nine.json in Resources */,
@@ -2054,7 +2062,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 59;
+				CURRENT_PROJECT_VERSION = 60;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -2121,7 +2129,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 59;
+				CURRENT_PROJECT_VERSION = 60;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;
