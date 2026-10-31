@@ -816,6 +816,14 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   there). DEBUG: `-Route game … -Practice 1`. Snapshot of Blue Lantern melody Easy held at bar 1
   checked in both themes.
 
+- **Slow Burn chords Easy, two chords a bar: 0.1 (63), 2026-10-31.** Bart: "slow burn, chords,
+  easy: remove (almost) half of the chords… whenever I say slow burn, I mean both the full and
+  the short versions". Easy was tier 3 (the 1, the 3 and the 4, 1.11 a second); both Slow Burn
+  songs name tier 2 for it now (`charting.json` `songs`, `"chords": {"easy": 2}`): the two-note
+  shell on the 1 and the 3, 0.74 a second. Nothing else moves (the ladder is the same, Medium
+  stays tier 4). The rung under it is the 1 alone (0.38): the note in `BLUES.md` §3 says so, for
+  when Bart has played it. Checks 307/307.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

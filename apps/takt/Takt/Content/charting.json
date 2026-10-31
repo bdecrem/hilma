@@ -55,8 +55,8 @@
     "floorBelowStart": 1
   },
   "songs": {
-    "song-slow-burn": {"melody": {"easy": 2, "phrase": 12, "tiers": {"2": {"space": 0}}}},
-    "song-slow-burn-short": {"melody": {"easy": 2, "phrase": 12, "tiers": {"2": {"space": 0}}}},
+    "song-slow-burn": {"melody": {"easy": 2, "phrase": 12, "tiers": {"2": {"space": 0}}}, "chords": {"easy": 2}},
+    "song-slow-burn-short": {"melody": {"easy": 2, "phrase": 12, "tiers": {"2": {"space": 0}}}, "chords": {"easy": 2}},
     "song-boogie-shoes": {"melody": {"easy": 2, "phrase": 12, "tiers": {"2": {"space": 0}}}},
     "song-pearl-street": {"melody": {"easy": 2, "phrase": 12, "tiers": {"2": {"space": 0}}}},
     "song-blue-lantern": {"melody": {"easy": 2, "phrase": 12, "tiers": {"2": {"space": 0}}}}

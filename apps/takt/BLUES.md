@@ -79,7 +79,7 @@ voicing (how many notes, in that role order), one thing at a time.
 | Level | What you play | Onsets / s target | Slow Burn | Boogie Shoes | Pearl Street | Blue Lantern |
 |---|---|---|---|---|---|---|
 | Beginner | One note a chord, the root, on the downbeat hits only, with room (2.4 s). Learn the changes. | 0.2 – 0.4 | 0.38 | 0.25 | 0.23 | 0.35 |
-| Easy | Two-note chords (root + third) on the groove hits. The shell on 1 and 3. | 0.7 – 1.1 | 1.11 | 0.99 | 0.87 | 0.99 |
+| Easy | Two-note chords (root + third). Slow Burn: the shell on the 1 and the 3 (tier 2, since 0.1 (63)); the others: the groove hits (tier 3). | 0.6 – 1.0 | 0.74 (was 1.11) | 0.99 | 0.87 | 0.99 |
 | Medium | Three-note chords on the groove. Same rhythm as Easy, the triad. | 0.9 – 1.2 | 1.11 | 0.99 | 0.87 | 0.99 |
 | Hard | The comping as the record plays it: four-note voicings, every push. | the record | 1.84 | 1.31 | 1.55 | 1.10 |
 | Adaptive | Rungs: root alone → two-note spread → two-note on the groove → triad → + pushes → four notes → the record. | | 0.38 · 0.74 · 1.11 · 1.11 · 1.11 · 1.11 · 1.84 | 0.25 · 0.50 · 0.99 · 0.99 · 1.00 · 1.30 · 1.31 | 0.23 · 0.47 · 0.87 · 0.87 · 0.87 · 0.87 · 1.55 | 0.35 · 0.35 · 0.99 · 0.99 · 0.99 · 0.99 · 1.10 |
@@ -92,6 +92,12 @@ Notes from play:
   keep weight 3 for the turnaround fills.
 - The left hand plays the lower two notes, the right the melody, in the Stage's finger badges
   (the pinky low, as the lessons comp).
+- 2026-10-31, Slow Burn chords Easy: "remove (almost) half of the chords to make it feel almost
+  half as hard". Easy played the 1, the 3 and the 4 of every bar (three two-note chords a bar,
+  1.11 a second); it is tier 2 now for both Slow Burn songs (`"chords": {"easy": 2}`): the
+  shell on the 1 and the 3, two a bar, 0.74 a second, a third fewer. The ladder has no rung
+  between that and the 1 alone (0.38, Beginner's rhythm with two notes), so "half" would mean
+  the 1 alone; to hear which Bart means.
 - Blue Lantern's Rhodes comps the 1, the "and" of 2 and the 4 (weight 2), with the push on the
   last sixteenth (3): Easy to Hard keep the one rhythm until the record, so the ladder reads
   0.99 four times; Beginner and the second rung are both one chord a bar (0.35). Pearl Street's
