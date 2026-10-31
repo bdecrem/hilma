@@ -436,7 +436,7 @@ struct PausedBadge: View {
     }
 }
 
-/// The run's result in the highway's place: the grade, the score, the counts, the board.
+/// The run's result in the highway's place: the grade and the accuracy, the verdict, the board.
 struct GameResultPanel: View {
     let state: GameState
     let result: GameEngine.Result
@@ -451,7 +451,6 @@ struct GameResultPanel: View {
                     VStack(alignment: .leading, spacing: 14) {
                         headline
                         verdict
-                        RunMap(result: result, compact: true)
                         chips
                         StaffLines(spacing: 3)
                         board
@@ -467,7 +466,6 @@ struct GameResultPanel: View {
                     VStack(alignment: .leading, spacing: 18) {
                         headline
                         verdict
-                        RunMap(result: result, compact: false)
                         chips
                         Spacer(minLength: 0)
                     }
@@ -500,22 +498,17 @@ struct GameResultPanel: View {
                     .font(.display(compact ? 96 : 130))
                     .foregroundStyle(result.grade == "S" || result.grade == "A" ? Palette.signal : Palette.text)
             }
+            // The song's name is in the HUD above; the card says the part and level once.
             VStack(alignment: .leading, spacing: compact ? 8 : 10) {
-                Text(state.title)
-                    .font(.display(compact ? 28 : 36))
-                    .textCase(.uppercase)
-                    .foregroundStyle(Palette.text)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
                 Text("\(state.partTitle) · \(state.difficulty.title)\(state.difficulty == .adaptive ? " · reached level \(result.level) of \(state.tiers)" : "")")
                     .dataLabel(11)
                     .foregroundStyle(Palette.muted)
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text("\(result.score)")
+                    Text("\(Int((result.accuracy * 100).rounded()))%")
                         .font(.display(compact ? 44 : 60))
                         .monospacedDigit()
-                        .foregroundStyle(Palette.text)
-                    Text("points")
+                        .foregroundStyle(result.grade == "S" || result.grade == "A" ? Palette.signal : Palette.text)
+                    Text("accuracy")
                         .dataLabel(12)
                         .foregroundStyle(Palette.muted)
                 }
@@ -541,10 +534,11 @@ struct GameResultPanel: View {
         }
     }
 
-    /// The two numbers worth keeping: how clean, and the longest streak.
+    /// Under the verdict, small: the points (the board ranks by them), the longest streak,
+    /// and the stray keys when there were any. Accuracy is the headline number.
     private var chips: some View {
         HStack(spacing: 8) {
-            chip("\(Int((result.accuracy * 100).rounded()))%", "accuracy", lit: result.grade == "S" || result.grade == "A")
+            chip(result.score.formatted(.number.grouping(.automatic)), "points", lit: false)
             chip("×\(result.maxCombo)", compact ? "combo" : "best combo", lit: false)
             if result.wrong > 0 {
                 chip("\(result.wrong)", compact ? "stray" : (result.wrong == 1 ? "stray key" : "stray keys"), lit: false, tint: Palette.bad)
@@ -584,51 +578,6 @@ struct GameResultPanel: View {
             PrimaryButton(title: "Play again", action: controls.again)
             QuietButton(title: "Set list", action: controls.leave)
         }
-    }
-}
-
-/// The run as a strip of the song: a mark per onset where it fell in time, perfect in signal,
-/// good in cue, a miss hollow; the stray keys as short red ticks under the line. One look says
-/// where it went well and where it fell apart.
-struct RunMap: View {
-    let result: GameEngine.Result
-    let compact: Bool
-
-    var body: some View {
-        let h: CGFloat = compact ? 44 : 56
-        Canvas { ctx, size in
-            let w = size.width
-            let base = h - 12  // the strays' row sits under it
-            // The song's line.
-            var line = Path()
-            line.move(to: CGPoint(x: 0, y: base))
-            line.addLine(to: CGPoint(x: w, y: base))
-            ctx.stroke(line, with: .color(Palette.line), lineWidth: 1)
-            // Marks: as wide as the gaps allow, never under 2 pt, never over 10.
-            let gap = result.map.count > 1 ? w / CGFloat(result.map.count) : w
-            let mw = max(2, min(10, gap * 0.6))
-            for m in result.map {
-                let x = CGFloat(m.at) * w
-                let tall: CGFloat = m.judgment == .perfect ? base - 2 : m.judgment == .good ? (base - 2) * 0.65 : (base - 2) * 0.35
-                let r = CGRect(x: x - mw / 2, y: base - tall, width: mw, height: tall)
-                let p = Path(roundedRect: r, cornerRadius: min(2, mw / 2))
-                switch m.judgment {
-                case .perfect: ctx.fill(p, with: .color(Palette.signal))
-                case .good: ctx.fill(p, with: .color(Palette.cue))
-                case .miss: ctx.stroke(p, with: .color(Palette.muted.opacity(0.7)), lineWidth: 1)
-                }
-            }
-            for at in result.strays {
-                let x = CGFloat(at) * w
-                var tick = Path()
-                tick.move(to: CGPoint(x: x, y: base + 3))
-                tick.addLine(to: CGPoint(x: x, y: base + 10))
-                ctx.stroke(tick, with: .color(Palette.bad), lineWidth: max(1.5, min(3, mw / 2)))
-            }
-        }
-        .frame(height: h)
-        .frame(maxWidth: .infinity)
-        .accessibilityLabel("\(result.perfect) perfect, \(result.good) good, \(result.missed) missed, \(result.wrong) stray keys")
     }
 }
 

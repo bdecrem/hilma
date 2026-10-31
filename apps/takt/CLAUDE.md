@@ -717,6 +717,16 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   into its sandbox container (`~/Library/Containers/com.bartdecrem.Takt/Data/tmp`), a path in
   the repo fails with error -54; `-Mutes` does not exist, use `-RenderScript … mute=bass`.
 
+- **A quieter result card: 0.1 (58), 2026-10-31.** Bart: "on the postgame, no need to show the
+  little bars of every single hit, and show the accuracy % at the top, instead of the score -
+  think like a game designer - keep trimming the ui clutter". `GameResultPanel`: the run map
+  (`RunMap`, a mark per onset) is gone from the card and the code (`Result.map` / `strays` stay
+  in the engine and its checks); the headline number next to the grade is the accuracy, in
+  signal on an S or A; the song's title inside the card went too (the HUD above says it), the
+  part · level line stays; the chips under the verdict are points (grouped, 12,070), best combo
+  and stray keys when any. Verified with `-SnapshotAt "result:0"` on Slow Burn Short, perfect
+  Medium and sloppy Adaptive, both themes.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without
