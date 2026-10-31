@@ -807,6 +807,15 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   (70%); snapshots of the count-in and of practice playing in both themes. Checks 307/307 (two
   new: practice holds the counts and never finishes; a seek re-pends every note from there).
 
+- **Practice from the set list: 0.1 (62), 2026-10-31.** Bart: "put a small Practice button on
+  the main menu of the Game tab - alongside Play and Board for each track, but a little
+  smaller/less prominent". Each card's row is Play · Board · **Practice** (outlined, 32 pt, the
+  label in `muted`, a size down from Board): the song with the part and level picked, opened
+  held at bar 1 in practice (`AppModel.practice(song:)` → `Player.startGame(…, practice: true)`:
+  the band stopped at the song's tempo, no count-in, `practice` on; play counts in from
+  there). DEBUG: `-Route game … -Practice 1`. Snapshot of Blue Lantern melody Easy held at bar 1
+  checked in both themes.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

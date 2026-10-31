@@ -122,6 +122,16 @@ struct SongCard: View {
             HStack(spacing: 10) {
                 PrimaryButton(title: "Play") { app.play(song: song) }
                 QuietButton(title: "Board", action: showBoard)
+                // Practice, a size down: the song held at bar 1, the scrubber and the speed.
+                Button { app.practice(song: song) } label: {
+                    Text("Practice")
+                        .dataLabel(11, weight: .semibold)
+                        .foregroundStyle(Palette.muted)
+                        .padding(.horizontal, 12)
+                        .frame(height: 32)
+                        .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Palette.line, lineWidth: 1))
+                }
+                .buttonStyle(.plain)
                 Spacer(minLength: 8)
                 if let best {
                     HStack(alignment: .firstTextBaseline, spacing: 6) {

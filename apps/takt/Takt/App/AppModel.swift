@@ -97,13 +97,14 @@ final class AppModel {
         #endif
         player?.inLesson = route == .lesson
         #if DEBUG
-        // `-Route game -Song song-slow-burn -Part melody -Difficulty adaptive` starts a run.
+        // `-Route game -Song song-slow-burn -Part melody -Difficulty adaptive` starts a run;
+        // with `-Practice 1` it opens held in practice at bar 1, as the set list's Practice does.
         if UserDefaults.standard.string(forKey: "Route") == "game" {
             let d = UserDefaults.standard
             let song = songs.first { $0.name == (d.string(forKey: "Song") ?? Song.catalog[0]) } ?? songs[0]
             pick(song: song, part: Song.PartKey(rawValue: d.string(forKey: "Part") ?? "chords") ?? .chords)
             pick(song: song, difficulty: GameEngine.Difficulty(rawValue: d.string(forKey: "Difficulty") ?? "adaptive") ?? .adaptive)
-            play(song: song)
+            if d.bool(forKey: "Practice") { practice(song: song) } else { play(song: song) }
         }
         // `-Route quiz` starts today's quiz; `-QuizAnswers 1,0,1` answers in order (Next between),
         // leaving the last answer's explanation up, or the summary after a full five.
@@ -364,6 +365,13 @@ final class AppModel {
     func play(song: Song) {
         guard let player else { return }
         player.startGame(song: song, part: stagePart(song), difficulty: stageDifficulty(song))
+        route = .game
+    }
+
+    /// Practice: the same song, part and level, opened held at bar 1 in practice mode.
+    func practice(song: Song) {
+        guard let player else { return }
+        player.startGame(song: song, part: stagePart(song), difficulty: stageDifficulty(song), practice: true)
         route = .game
     }
 

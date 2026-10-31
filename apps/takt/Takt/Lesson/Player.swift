@@ -651,7 +651,7 @@ final class Player {
 
     /// A song from the top: its band with your keys on the part's instrument, the part's
     /// channel out, the song's tempo, four clicks in. The lesson's band comes back with `endGame`.
-    func startGame(song: Song, part: Song.PartKey, difficulty: GameEngine.Difficulty) {
+    func startGame(song: Song, part: Song.PartKey, difficulty: GameEngine.Difficulty, practice startHeld: Bool = false) {
         if demo { endDemo(stop: false) }
         gameDifficulty = difficulty
         gameResult = nil
@@ -673,9 +673,17 @@ final class Player {
         audio.send(.silence(from: 0, to: 0))
         for ch in [Channel.drums, .bass, .keys, .horns] { audio.send(.mute(ch, ch == partChannel)) }
         audio.send(.tempo(Double(song.meta.tempo)))
+        pressed.removeAll()
+        if startHeld {
+            // Practice from the set list: held at bar 1, nothing scored; play counts in from there.
+            practice = true
+            game?.practice = true
+            fillThrough = -1
+            lessonLog.info("stage: \(song.meta.title, privacy: .public) · \(part.rawValue, privacy: .public) · \(difficulty.rawValue, privacy: .public) · practice")
+            return
+        }
         audio.send(.countIn(beats: 4))
         audio.send(.play)
-        pressed.removeAll()
         lessonLog.info("stage: \(song.meta.title, privacy: .public) · \(part.rawValue, privacy: .public) · \(difficulty.rawValue, privacy: .public)")
     }
 
