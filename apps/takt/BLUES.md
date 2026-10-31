@@ -4,7 +4,8 @@ What a blues song on Takt's Stage should feel like to play, level by level, for 
 and the melody part. Started 2026-10-31 (0.1 (59)) after two days of tuning Slow Burn by ear;
 every chart we make for a blues track is held to this sheet, and the sheet grows as Bart plays.
 The mechanism (tiers, knobs, the phrase cover, per-song patches) is `CHARTING.md`; this sheet
-says what the result must be.
+says what the result must be. The general rules every chart follows, blues or not, are
+`CHARTING.md` "What makes a good chart" (one item a lesson learned, dated).
 
 The tracks today: **Slow Burn** (slow blues in G, 90, four choruses, 2:08), **Slow Burn Short**
 (the same once round, 0:32), **Boogie Shoes** (jump blues in C, 120, six choruses, 2:24),

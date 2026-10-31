@@ -113,6 +113,14 @@ other song's Beginner is unchanged. (Preferring the phrase picks alone was not e
 Beginner could take a hit: a hit taken first counted its key as covered and the cover dropped
 its own pick for that key; Boogie Shoes showed it at bar 64.)
 
+**Slow Burn chords** (both songs, 0.1 (63)): `"chords": {"easy": 2}`. Bart: "remove (almost)
+half of the chords to make it feel almost half as hard". Easy named tier 3, the two-note shell
+on the 1, the 3 and the 4 (1.11 onsets a second); tier 2 is the shell on the 1 and the 3 (0.74),
+a third fewer, not half. The ladder has no rung in between: the one under tier 2 is the root
+alone on the 1 (0.38, Beginner's rhythm with two notes), so a true half would be that. Nothing
+else moved (Medium stays tier 4, Adaptive's rungs are the same charts). See "What makes a good
+chart" below for the rule this taught.
+
 ## Adaptive
 
 **The song's speed never changes.** Each song's `tempo` is its 1x speed, set by the generator,
@@ -163,6 +171,64 @@ doesn't sit through the start again. The result records the highest tier reached
 Open (from `misc/game-level-design.txt`, for Bart): memory per section instead of per song;
 Swap / Both hands / call-and-response modes; boards per input class; stars; a `span` knob
 (Pro Keys' 7 / 9 / 11-semitone stretch limits) and position shifts for wide melodies.
+
+## What makes a good chart: the rules so far
+
+The knowledge base. Every rule here came from Bart playing a chart and saying what was wrong;
+the date and the build say where. `BLUES.md` holds the blues-specific targets; these hold for
+every song and part.
+
+1. **Difficulty is onsets a second, and "half as hard" means half that figure.** Notes a bar
+   lies (a 90 and a 120 bpm chart read differently); the `-LessonCheck` ladder line is the
+   measure. When Bart says a level is "2x too hard" or wants it "half as hard", read the
+   level's figure, find the rung nearest half, and say which rung that is and what it plays
+   (Slow Burn melody Easy 0.88 → 0.43, 0.1 (59); chords Easy 1.11 → 0.74, 0.1 (63)).
+
+2. **Easy ≈ the weight-1 notes alone.** On a melody, Easy is the anchors (about one a bar) and
+   the few keys they miss over a chorus; on a comping part, two hits a bar (the 1 and the 3 on
+   a slow blues). If the phrase cover or the silence-borrowing push Easy over its band, give the
+   song a chorus-long `phrase` and `space: 0` on that tier before touching the weights.
+
+3. **A ladder needs a rung near every target, or it has nothing to offer.** Slow Burn's chords
+   ladder read 0.38 · 0.74 · 1.11 · 1.11 · 1.11 · 1.11 · 1.84: four rungs with one rhythm (the
+   steps there are chord size), none between two hits a bar and one. When Bart asks for a level
+   the ladder has no rung for, say so plainly and name the nearest rungs on both sides; don't
+   invent a knob. If a part keeps asking for a missing rung, write the part with weights that
+   make it (weight 2 on the groove hits, weight 3 on the pushes and fills), so the ladder's
+   rhythm steps exist.
+
+4. **Patch the song, never the ladder.** A global knob change moves every song at once (a tier-2
+   change for Slow Burn broke Hypnotist II's checks and shifted the others, 0.1 (59)); a `songs`
+   patch in `charting.json` moves one. The check that every other song's figures are unchanged
+   is part of every charting change.
+
+5. **No rung more than twice the one below.** Adaptive walks the rungs; a doubling is a wall.
+   Slow Burn melody once jumped 0.30 → 0.66; after the patch 0.29 → 0.43 → 0.84 → 0.87 → 1.09.
+
+6. **Beginner never moves the levels above it** (`fromAbove`, `aboveRule`): a bottom tier that
+   chose freely would seed every tier over it. Easy, Medium and Hard are the same charts with or
+   without Beginner, and the check proves it for every song and part.
+
+7. **A level is still the line, and its notes are whole.** Every key of the phrase at every
+   level (the cover), never one key with a rhythm (Hypnotist, 0.1 (48)); no stub shorter than a
+   beat on Beginner (`minBeats`, 0.1 (53)).
+
+8. **The band plays what the level leaves out** (0.1 (51)), so a sparse level still sounds like
+   the record and a chart can be as thin as the player needs.
+
+9. **The speed never changes** (0.1 (57)). A level is easier because it asks for fewer notes,
+   never because the band slows down; a slow blues at 90 is not made easier at 68, it is made
+   boring.
+
+10. **Write the weights for the ladder, then measure.** One anchor a bar as the rule for a
+    melody (Boogie Shoes had two and Easy was the whole riff, 0.1 (60)); downbeats weight 1,
+    groove hits 2, pushes 3 for a comping part. Then run the ladder line and read the figures
+    against the sheet's bands before anyone plays it; a new song written this way landed inside
+    the bands at first charting (Pearl Street, Blue Lantern).
+
+11. **Write down the next step when a request can't be met exactly.** "A third fewer, the rung
+    under it is the 1 alone" belongs in the sheet with the date, so the next play-through can
+    decide instead of re-deriving.
 
 ## Where this comes from
 

@@ -822,7 +822,10 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   songs name tier 2 for it now (`charting.json` `songs`, `"chords": {"easy": 2}`): the two-note
   shell on the 1 and the 3, 0.74 a second. Nothing else moves (the ladder is the same, Medium
   stays tier 4). The rung under it is the 1 alone (0.38): the note in `BLUES.md` §3 says so, for
-  when Bart has played it. Checks 307/307.
+  when Bart has played it. Checks 307/307. Then: "add this to your charting rules document - we
+  are building a knowledge base for how to build good charts": `CHARTING.md` has a section
+  "What makes a good chart: the rules so far", eleven numbered rules, each with the build that
+  taught it; `BLUES.md` points at it.
 
 ## Code map (`Takt/`)
 
