@@ -778,6 +778,35 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   take a hit (Boogie Shoes failed it at bar 64 before). Checks 305/305 (ten songs load).
   Every number in `BLUES.md` §2–3, the producer's notes in §5.
 
+- **Practice mode inside a run: 0.1 (61), 2026-10-31.** Bart: "add a Practice Mode to the
+  Games… hit Pause at any time and then it's shown as an option. There's a scrubber and I can
+  adjust the speed… practice it at a slow speed. then I can restart game mode once I've
+  mastered the hard part. THINK LIKE A GAME designer… elegant, not clumsy, UI that tucks in
+  subtly". **What you see:** Pause → the card says Paused, Keep going, and under it a quiet
+  "Practice this part". Practice holds the band at the start of the bar you paused in; the
+  score and combo in the HUD give way to PRACTICE with "70% speed · nothing scored"; the
+  progress rail becomes a **scrubber** (drag anywhere: the band holds at that bar, the highway
+  shows it) with one small row under it: the bar and its section, ↺ four bars back, − 70% +
+  (50–100 in tens; ↑/↓ on the Mac), play (four clicks at the practice tempo, then the band;
+  playing, it pauses, and play starts that bar over) and "Play the run", which starts the run
+  over from the top at the song's speed with a fresh score. Notes still judge and pop at the
+  hit line and the band still fills what the level leaves out, but nothing scores, nothing
+  adapts, nothing goes on the board, and the run never "finishes" (the end of the song holds).
+  **Plumbing:** `EngineCommand.seek(tick:)` (held, or paused if playing: the transport and the
+  band's cursor move, scheduled notes dropped; `repositionCursor()` shared with `.band`) and
+  `.countIn` from any held tick (the cursor stays, so the bars before don't sound under the
+  clicks); `GameEngine.practice` (pops, no counters, no adapt, no finish) and `seek(to:)`
+  (every note from there pending again); `Player.enterPractice / practiceSeek(bar:) /
+  practiceBack / practiceSpeed(delta:) / practicePlay / leavePractice`, `practiceTick`
+  observed so a scrub redraws while held, `practiceCountBase` so the count-in badge and the
+  bar label read the landing bar; `GameState.practice / speed`; `GameControls` grew
+  `practice / practiceSeek / practiceBack / practiceSpeed / run`; `PracticeBar`, `Scrubber`,
+  `SmallButton` in `GameScreen.swift`. DEBUG `-PracticeAt <tick> -PracticeBar <bar>
+  -PracticeSpeed <percent>` enters practice during a run. Verified on this Mac: a Slow Burn
+  Easy run recorded through the hook holds 90 bpm, then four clicks and 63.2 bpm from bar 5
+  (70%); snapshots of the count-in and of practice playing in both themes. Checks 307/307 (two
+  new: practice holds the counts and never finishes; a seek re-pends every note from there).
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without
