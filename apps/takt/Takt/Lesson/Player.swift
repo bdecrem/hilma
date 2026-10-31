@@ -102,6 +102,19 @@ final class Player {
 
     static let tempoRange = 50...140
 
+    /// Settings → Sound → Your instrument (`instrument`: "piano" or "organ", organ since
+    /// 0.1 (65)). Piano is the content's own monitor: the upright in the lessons and the blues,
+    /// the record's synth on the electronic tracks. Organ is the Hammond (`Organ.swift`)
+    /// wherever the content would hand you the piano or the Rhodes; the electronic tracks
+    /// keep their synths either way.
+    static var organOn: Bool { (UserDefaults.standard.string(forKey: "instrument") ?? "organ") == "organ" }
+
+    /// Tells the engine which instrument your keys play for the current content.
+    func applyInstrument() {
+        let monitor = game.map { $0.song.part($0.part).monitor } ?? audio.band.instruments["monitor"] ?? "piano"
+        audio.send(.organ(Self.organOn && ["piano", "rhodes"].contains(monitor)))
+    }
+
     init(audio: AudioEngine, lesson: Lesson, progress: ProgressStore) {
         self.audio = audio
         self.progress = progress
@@ -117,6 +130,7 @@ final class Player {
         for ch in [Channel.drums, .bass, .keys, .horns] where !channels.contains(ch) { audio.send(.mute(ch, true)) }
         self.lesson = engine.output
         applyBand()
+        applyInstrument()
         wire()
         resume()
 
@@ -668,6 +682,7 @@ final class Player {
         fillVelocity = [:]
         for e in partChannel == .horns ? song.band.channels.horns : song.band.channels.keys { fillVelocity[e.t * 128 + e.n] = Float(e.v) }
         fillThrough = -1
+        applyInstrument()
         audio.send(.stop)
         audio.send(.transpose(0))
         audio.send(.silence(from: 0, to: 0))
@@ -702,6 +717,7 @@ final class Player {
         practiceSpeed = 1
         practiceCountBase = 0
         chorusBars = audio.load(band: content.band).chorusBars
+        applyInstrument()
         resume()
     }
 

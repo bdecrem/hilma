@@ -398,6 +398,7 @@
 		DE7FE10E0696FBE76644959D /* Player.swift in Sources */ = {isa = PBXBuildFile; fileRef = 586FAD0BEBDF739818994F6C /* Player.swift */; };
 		DE8498CB1B318758534143D9 /* syn-rhodes-72-0.caf in Resources */ = {isa = PBXBuildFile; fileRef = 67D187EC71FDBEDCED0ED20C /* syn-rhodes-72-0.caf */; };
 		DEFF544E38DBFDE108CCBB19 /* syn-bleep-57-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 844127AD3D01F28724943CC8 /* syn-bleep-57-2.caf */; };
+		DFEE7E6FE2BD0D6D2D4EDE38 /* Organ.swift in Sources */ = {isa = PBXBuildFile; fileRef = 815FCF9D254F30ABC57B2E9C /* Organ.swift */; };
 		E08CC6293F0BB2640770A436 /* syn-bassDH-32.caf in Resources */ = {isa = PBXBuildFile; fileRef = EDDB6276FBCD048C3D911FC0 /* syn-bassDH-32.caf */; };
 		E1427314DA1968F8B4681B13 /* AudioEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0A80DA756328D46986C659 /* AudioEngine.swift */; };
 		E15817F171D4406FB89B74F2 /* pno-89-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 1E1A36038FBAEDDDF2A9B412 /* pno-89-2.caf */; };
@@ -679,6 +680,7 @@
 		7C44911616425535DBCE3DB5 /* ride-3a.caf */ = {isa = PBXFileReference; path = "ride-3a.caf"; sourceTree = "<group>"; };
 		7CE30DCBE3E72ECE014E12D0 /* syn-hatDH-1c.caf */ = {isa = PBXFileReference; path = "syn-hatDH-1c.caf"; sourceTree = "<group>"; };
 		7EA6F5A2CBE7D3F314967A7C /* syn-stabMin-61-0.caf */ = {isa = PBXFileReference; path = "syn-stabMin-61-0.caf"; sourceTree = "<group>"; };
+		815FCF9D254F30ABC57B2E9C /* Organ.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Organ.swift; sourceTree = "<group>"; };
 		81D324181FB73737AD7F33A9 /* hatOpen-1a.caf */ = {isa = PBXFileReference; path = "hatOpen-1a.caf"; sourceTree = "<group>"; };
 		81F9E22985C2E7F376263C4A /* pno-81-2.caf */ = {isa = PBXFileReference; path = "pno-81-2.caf"; sourceTree = "<group>"; };
 		82ADF327CA05A66BBF1C09D6 /* syn-stabMin-52-0.caf */ = {isa = PBXFileReference; path = "syn-stabMin-52-0.caf"; sourceTree = "<group>"; };
@@ -988,6 +990,7 @@
 				DFA2B474D4DCB275C2F9E1F2 /* DubChamber.swift */,
 				B9F6D61A9E1DC6AFBA2CBBC5 /* DubStab.swift */,
 				DE0C764EDD9366AB37F8E78E /* Instrument.swift */,
+				815FCF9D254F30ABC57B2E9C /* Organ.swift */,
 				27D942EC6ACE999D537538FE /* TransportClock.swift */,
 				CF651FEB253E5456168706DA /* Voices.swift */,
 			);
@@ -2001,6 +2004,7 @@
 				B9B485CA855A1CB0DD719E4E /* ModuleScreen.swift in Sources */,
 				1BAF5C09CD661D4CF3484722 /* Motifs.swift in Sources */,
 				D29B47A7A421646F1717B78D /* NoteNeedle.swift in Sources */,
+				DFEE7E6FE2BD0D6D2D4EDE38 /* Organ.swift in Sources */,
 				98A90BB07168F73C2CB64C6D /* PadGrid.swift in Sources */,
 				486922DA20D6BC2D8B7890FD /* Palette.swift in Sources */,
 				DE7FE10E0696FBE76644959D /* Player.swift in Sources */,
@@ -2062,7 +2066,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 64;
+				CURRENT_PROJECT_VERSION = 65;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -2129,7 +2133,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 64;
+				CURRENT_PROJECT_VERSION = 65;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;

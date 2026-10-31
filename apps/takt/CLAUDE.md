@@ -845,6 +845,34 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   3.4 s by itself, so a held Rhodes key still ends there; a Rhodes that truly sustains wants a
   live voice or longer samples (open). Checks 307/307.
 
+- **Your instrument: the organ, 0.1 (65), 2026-10-31.** Bart: the notes the user plays "should be
+  distinct from the sound of the baked-in instruments" (on the blues tracks your melody was the
+  same upright the band comps on), then "add a user setting where we offer instruments for the
+  user to play. instrument 1 is the current piano. option 2 will be your Hammond Organ - make
+  that default". **Settings → Sound → Your instrument**, Piano / Organ (`@AppStorage
+  "instrument"`, default organ; the level row under it is "Your keys" now). Piano is the
+  content's own monitor: the upright in the lessons and the blues, the record's synth on the
+  electronic tracks. Organ is the Hammond wherever the content would hand you the piano or the
+  Rhodes (the lessons, all four blues tracks, both parts); the electronic tracks keep their
+  synths either way (`Player.organOn`, `applyInstrument()` on every content change and on the
+  picker; `EngineCommand.organ`). **The organ** (`Audio/Organ.swift`), synthesized live, built
+  the way the instrument is: nine drawbars at the real bars' ratios from a sine table, 3 dB a
+  step, with the generator's fold-back, registration 88 8400 000 (the blues setting);
+  percussion on the third harmonic, fast, single-trigger (a key struck while another is held
+  gets none, a chord's keys all do); key click on and off; 2 / 6 ms attack and release; the
+  scanner vibrato/chorus C3 (a 6.87 Hz swept delay mixed with the dry); a soft tube curve; a
+  Leslie in chorale (horn 0.83 Hz above 800 Hz with doppler, swell and a sweep across the
+  stereo field, drum 0.67 Hz under it). Velocity moves the level a little (0.7 + 0.3 v: the
+  swell pedal following your hand; the instrument has no touch). Voices (16) are structs in a
+  pool, the cabinet owns its delay lines, nothing allocates on the render thread. Measured
+  offline (`-RenderScript "…,0:organ=1,0.5:on=55,…"`): a held G3 at 0.8 is −26.7 dBFS RMS
+  steady, flat for as long as the key is down (−77 after note-off), where the piano's first
+  second is −26.4; the onset 2–3 dB over the steady state (the percussion); spectral peaks at
+  0.5, 1.0, 1.5 × f0 with the scanner's ±7 Hz sidebands; the Leslie swell about 6 dB at the
+  drum's period; a four-note chord peaks at −12.8 dBFS; over the Slow Burn band (−24.5 RMS) a
+  triad reads −23.0 and the peak −3.1, no clipping. Checks 307/307. Debug: `organ=1` / `organ=0`
+  in a `-RenderScript`; `-instrument piano` at launch.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

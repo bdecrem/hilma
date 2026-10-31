@@ -172,6 +172,7 @@ enum DebugHooks {
                 command = .noteOn(note: Int(nv[0])!, velocity: nv.count > 1 ? Float(nv[1])! : 0.8)
             case ("off", let v?): command = .noteOff(note: Int(v)!)
             case ("transpose", let v?): command = .transpose(Int(v)!)
+            case ("organ", let v?): command = .organ(v == "1")
             case ("band", let v?): command = .band(audio!.load(band: v))  // the room follows the band
             case ("song", let v?):
                 let sp = v.split(separator: "/").map(String.init)

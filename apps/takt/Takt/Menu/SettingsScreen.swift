@@ -8,6 +8,7 @@ struct SettingsScreen: View {
     @AppStorage("pianoLevel") private var pianoLevel = 1.0
     @AppStorage("inputOffsetMs") private var inputOffsetMs = 0.0
     @AppStorage("menuMusic") private var menuMusic = true
+    @AppStorage("instrument") private var instrument = "organ"
     @AppStorage("countIn") private var countIn = true
     @AppStorage("preferMinor") private var preferMinor = false
     @AppStorage("tapMode") private var tapMode = KeyboardStrip.tapModeDefault
@@ -39,9 +40,25 @@ struct SettingsScreen: View {
                     DailyTextSection(account: app.account)
 
                     SettingsSection(title: "Sound") {
+                        HStack(alignment: .center) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Your instrument").bodyText(15).foregroundStyle(Palette.text)
+                                Text("What your keys sound like · the electronic tracks keep their synths").dataLabel(10).foregroundStyle(Palette.muted)
+                            }
+                            Spacer()
+                            Picker("Your instrument", selection: $instrument) {
+                                Text("Piano").tag("piano")
+                                Text("Organ").tag("organ")
+                            }
+                            .pickerStyle(.segmented)
+                            .frame(width: 180)
+                        }
+                        .id("sound")
+                        .onChange(of: instrument) { app.player?.applyInstrument() }
+                        Hairline()
                         LevelRow(title: "Band", value: $bandLevel)
                         Hairline()
-                        LevelRow(title: "Your piano", value: $pianoLevel)
+                        LevelRow(title: "Your keys", value: $pianoLevel)
                         Hairline()
                         Toggle(isOn: $menuMusic) {
                             VStack(alignment: .leading, spacing: 2) {
