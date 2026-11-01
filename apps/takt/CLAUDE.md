@@ -982,6 +982,23 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   the electronic ones at −19), peak −1.0, no clipping. The first pass at keys/horns +7 hit −19.3
   with the peak at −0.8, too hot against the knee.
 
+- **Dockery on a sampled guitar: 0.1 (71), 2026-11-01.** Bart: "try the sampled steel string guitar -
+  add it to dockery - make it dirty". The search: FreePats' FSS Steel-String is GPL (not ours to
+  ship), sfzinstruments' OvationGuitar has no license, VCSL has no guitar; **Karoryfer's
+  Shinyguitar** (D. Smolken, github.com/sfzinstruments/karoryfer.shinyguitar) is CC0 and an archtop
+  played acoustic into a microphone, the 1930s blues guitar. `scripts/guitar.py` cuts it: 17 notes a
+  minor third apart (E2..C6), four velocity layers x two round robins, capped at 2.8 s, the layers
+  set 12 dB apart with the set's peak at −3 (`guitar`, release 0.12); the six dead strings as
+  `guitarMute` (filed under each string's pitch); four knocks on the body as `guitarPerc`; 152 files,
+  10.8 MB. Dockery is all guitar now: the thumb and the chick (three-note chicks, the fifth, the
+  root and the third; the chick on the 2 and the 4 is a dead-string slap on the record), the voice
+  on the same guitar on the horns channel, your keys play the guitar on both parts; the body
+  knocks take the backbeat from the cross-stick; the kick, the heel and the bass under the thumb
+  stay from 0.1 (70). Everything plays hot (the hardest layer is the dirt). Levels keys +2,
+  horns +2, bass −1: RMS −23.0 (the band tracks), peak −1.0, no clipping. Checks 325/325. Built and
+  checked in a separate worktree because another session was mid-change in this checkout
+  (`Takt/Mods/`); only these files were committed.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

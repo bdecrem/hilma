@@ -43,4 +43,6 @@ tar -xJf organ.tar.xz -C organ
 # jRhodes3d (CC BY-NC 4.0 in an app; see Takt/Licenses/README.md), cut by scripts/rhodes.py.
 curl -sL -o rhodes.zip https://github.com/sfzinstruments/jlearman.jRhodes3d/archive/refs/heads/master.zip
 mkdir -p rhodes && unzip -q -o rhodes.zip -d rhodes
+# Shinyguitar (CC0, Karoryfer / D. Smolken): the archtop guitar, cut by scripts/guitar.py.
+mkdir -p guitar && git clone -q --depth 1 https://github.com/sfzinstruments/karoryfer.shinyguitar.git guitar/karoryfer.shinyguitar
 echo "piano $(ls piano | wc -l), sax $(ls sax | wc -l), hh $(ls hh | wc -l), bass + drums + organ + rhodes extracted in $OUT"
