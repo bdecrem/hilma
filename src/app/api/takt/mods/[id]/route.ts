@@ -11,7 +11,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
   const { id } = await ctx.params
   const mod = await getMod(user.id, id)
   if (!mod) return NextResponse.json({ error: 'No such mod.' }, { status: 404 })
-  return NextResponse.json({ mod: bundle(mod) })
+  return NextResponse.json({ mod: await bundle(mod) })
 }
 
 // DELETE /api/takt/mods/[id]

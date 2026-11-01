@@ -24,6 +24,6 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
   if (!mod) return NextResponse.json({ error: 'No such mod.' }, { status: 404 })
   return sseResponse(async (emit) => {
     await runModTurn(mod, message, turn, (e) => emit(e))
-    emit({ type: 'done', mod: bundle(mod) })
+    emit({ type: 'done', mod: await bundle(mod) })
   })
 }

@@ -16,6 +16,17 @@ final class ModStore {
         let steps: [String]?
     }
 
+    /// One entry of a mod's history: v0 the original as cloned, then one per turn that
+    /// changed the song (or a rollback), with the ask that made it.
+    struct Version: Codable, Equatable, Identifiable {
+        let version: Int
+        let title: String
+        let line: String
+        let ask: String
+        let at: String
+        var id: Int { version }
+    }
+
     /// One mod as the server sends it (and as it sits on disk).
     struct Bundle {
         let id: String
@@ -31,6 +42,8 @@ final class ModStore {
         let songData: Data
         let override: [String: Charting.PartOverride]?
         let messages: [Message]
+        /// The history, oldest first (empty for a bundle from before it existed).
+        let versions: [Version]
         /// The whole bundle, as received.
         let raw: Data
 
@@ -60,6 +73,11 @@ final class ModStore {
                 messages = try JSONDecoder().decode([Message].self, from: JSONSerialization.data(withJSONObject: m))
             } else {
                 messages = []
+            }
+            if let v = top["versions"] {
+                versions = try JSONDecoder().decode([Version].self, from: JSONSerialization.data(withJSONObject: v)).sorted { $0.version < $1.version }
+            } else {
+                versions = []
             }
             raw = data
         }
@@ -212,6 +230,22 @@ final class ModStore {
             self.error = (error as? Failure)?.message ?? "Can't reach ola.cx."
             log.error("refresh: \(error.localizedDescription, privacy: .public)")
         }
+    }
+
+    /// Back to an earlier version: the server makes a new version with its content; the
+    /// bundle comes back and replaces the one here.
+    func rollBack(_ id: String, to version: Int) async throws -> Bundle {
+        var req = URLRequest(url: base.appendingPathComponent("api/takt/mods/\(id)/rollback"))
+        req.httpMethod = "POST"
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.httpBody = try JSONSerialization.data(withJSONObject: ["version": version])
+        let (data, response) = try await session.data(for: req)
+        try check(response, data)
+        guard let top = try JSONSerialization.jsonObject(with: data) as? [String: Any], let mod = top["mod"] else { throw Failure(message: "No bundle came back.") }
+        let bundle = try Bundle(data: JSONSerialization.data(withJSONObject: mod))
+        if bundle.version >= 1 { _ = try bundle.song() }
+        store(bundle)
+        return bundle
     }
 
     func delete(_ id: String) async throws {

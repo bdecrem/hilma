@@ -32,6 +32,10 @@ struct AgentSheet: View {
     @State private var title: String?
     @State private var confirmRemove = false
     @State private var removing = false
+    /// The mod's history (v0 the original), the panel that lists it, the version being restored.
+    @State private var versions: [ModStore.Version] = []
+    @State private var showVersions = false
+    @State private var restoring: Int?
     @FocusState private var focused: Bool
 
     /// The first asks on an empty thread; a tap sends one.
@@ -59,6 +63,9 @@ struct AgentSheet: View {
                     VStack(alignment: .leading, spacing: 16) {
                         if thread.isEmpty && !working {
                             intro
+                        }
+                        if showVersions, let mod {
+                            VersionsPanel(versions: versions, current: mod.version, restoring: restoring, compact: compact) { restore($0) }
                         }
                         ForEach(Array(thread.enumerated()), id: \.offset) { _, m in
                             MessageRow(message: m, compact: compact)
@@ -136,6 +143,21 @@ struct AgentSheet: View {
                 }
             }
             Spacer(minLength: 8)
+            if mod != nil, versions.count >= 2, !working {
+                // The history: every version this thread made, any of them one tap away.
+                Button { withAnimation(.easeInOut(duration: 0.2)) { showVersions.toggle() } } label: {
+                    Text(compact ? "V\(mod?.version ?? 0)" : "Versions")
+                        .dataLabel(11, weight: .semibold)
+                        .foregroundStyle(showVersions ? Palette.blackKey : Palette.signal)
+                        .padding(.horizontal, 12)
+                        .frame(height: 32)
+                        .background(RoundedRectangle(cornerRadius: 6).fill(showVersions ? Palette.signal : .clear))
+                        .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(showVersions ? Palette.signal : Palette.line, lineWidth: 1))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Versions, \(versions.count)")
+                .accessibilityAddTraits(showVersions ? [.isSelected] : [])
+            }
             if mod != nil && !working {
                 Button { confirmRemove = true } label: {
                     Text(removing ? "Removing…" : "Remove")
@@ -221,16 +243,19 @@ struct AgentSheet: View {
     // MARK: Work
 
     private func load() {
-        if let m = target.song.mod {
+        if target.song.mod != nil {
             landed = target.song
             title = target.song.meta.title
-            thread = app.mods.bundle(for: target.song)?.messages ?? []
-            _ = m
+            let bundle = app.mods.bundle(for: target.song)
+            thread = bundle?.messages ?? []
+            versions = bundle?.versions ?? []
         } else if let pending = app.mods.pendingThread(for: target.song.name) {
             thread = pending.messages
             title = pending.title
         }
         #if DEBUG
+        // `-AgentVersions 1` opens the history panel at once (the screenshots).
+        if UserDefaults.standard.bool(forKey: "AgentVersions") { showVersions = true }
         if let say = UserDefaults.standard.string(forKey: "AgentSay"), !say.isEmpty, thread.isEmpty {
             UserDefaults.standard.removeObject(forKey: "AgentSay")
             send(say)
@@ -272,6 +297,7 @@ struct AgentSheet: View {
                     thread.append(.init(role: "agent", text: r, at: ISO8601DateFormatter().string(from: Date()), steps: steps))
                 case .done(let b):
                     title = b.title
+                    versions = b.versions
                     if b.version >= 1, let s = try? b.song() {
                         landed = s
                         app.adopt(mod: s, from: target.song)
@@ -281,6 +307,29 @@ struct AgentSheet: View {
                 }
             }
             working = false
+        }
+    }
+
+    /// Back to an earlier version: the server files it as the next one; the card and the
+    /// thread follow.
+    private func restore(_ version: Int) {
+        guard let m = mod?.mod, restoring == nil, !working else { return }
+        restoring = version
+        error = nil
+        Task { @MainActor in
+            do {
+                let b = try await app.mods.rollBack(m.id, to: version)
+                versions = b.versions
+                if let last = b.messages.last, last.role == "agent" { thread.append(last) }
+                if let s = try? b.song() {
+                    landed = s
+                    app.adopt(mod: s, from: target.song)
+                }
+                withAnimation(.easeInOut(duration: 0.2)) { showVersions = false }
+            } catch {
+                self.error = (error as? ModStore.Failure)?.message ?? "Couldn't go back: can't reach ola.cx."
+            }
+            restoring = nil
         }
     }
 
@@ -296,6 +345,83 @@ struct AgentSheet: View {
             }
             removing = false
         }
+    }
+}
+
+/// The history, newest first: the version, what made it, its line; Restore on every one but
+/// the current. A restore is a new version with the old content, so nothing is ever lost.
+struct VersionsPanel: View {
+    let versions: [ModStore.Version]
+    let current: Int
+    let restoring: Int?
+    let compact: Bool
+    let restore: (Int) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("Versions")
+                    .dataLabel(10, weight: .semibold)
+                    .foregroundStyle(Palette.muted)
+                Spacer()
+                Text("Restore brings one back as the next version; nothing is lost.")
+                    .dataLabel(9)
+                    .foregroundStyle(Palette.muted)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+            }
+            .padding(.bottom, 8)
+            ForEach(versions.sorted { $0.version > $1.version }) { v in
+                let now = v.version == current
+                HStack(alignment: .top, spacing: compact ? 10 : 14) {
+                    Text("v\(v.version)")
+                        .font(.display(compact ? 20 : 24))
+                        .monospacedDigit()
+                        .foregroundStyle(now ? Palette.signal : Palette.text)
+                        .frame(width: compact ? 34 : 44, alignment: .leading)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(v.ask)
+                            .bodyText(compact ? 13 : 14, weight: .semibold)
+                            .foregroundStyle(Palette.text)
+                            .lineLimit(2)
+                            .fixedSize(horizontal: false, vertical: true)
+                        if !v.line.isEmpty {
+                            Text(v.line)
+                                .bodyText(compact ? 12 : 13)
+                                .foregroundStyle(Palette.muted)
+                                .lineLimit(2)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                    Spacer(minLength: 8)
+                    if now {
+                        Text("Now")
+                            .dataLabel(10, weight: .semibold)
+                            .foregroundStyle(Palette.signal)
+                            .frame(height: 28)
+                    } else {
+                        Button { restore(v.version) } label: {
+                            Text(restoring == v.version ? "Restoring…" : "Restore")
+                                .dataLabel(10, weight: .semibold)
+                                .foregroundStyle(Palette.text)
+                                .padding(.horizontal, 10)
+                                .frame(height: 28)
+                                .background(RoundedRectangle(cornerRadius: 6).fill(Palette.ground))
+                                .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Palette.line, lineWidth: 1))
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(restoring != nil)
+                    }
+                }
+                .padding(.vertical, 8)
+                if v.version != versions.map(\.version).min() { Hairline() }
+            }
+        }
+        .padding(compact ? 14 : 16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 8).fill(Palette.panel))
+        .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Palette.line, lineWidth: 1))
+        .transition(.opacity)
     }
 }
 

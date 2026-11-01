@@ -47,6 +47,6 @@ export async function POST(req: Request) {
   return sseResponse(async (emit) => {
     emit({ type: 'mod', mod: summary(mod) })
     await runModTurn(mod, message, ctx, (e) => emit(e))
-    emit({ type: 'done', mod: bundle(mod) })
+    emit({ type: 'done', mod: await bundle(mod) })
   })
 }

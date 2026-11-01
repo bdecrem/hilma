@@ -7,7 +7,7 @@
 import type Anthropic from '@anthropic-ai/sdk'
 import { type Charting, type SongOverride, looksLikeCharting, figures, tiersOf } from './charting'
 import { type Draft, TOOLS, describeCall, readSong, runTool } from './mod-tools'
-import { type ModRow, saveMod } from './mods'
+import { type ModRow, type ModVersion, getVersion, listVersions, recordVersion, saveMod } from './mods'
 import { type PartKey, partKeys } from './songfile'
 
 export type AgentEvent =
@@ -59,16 +59,20 @@ WRITING MUSIC. When asked for new material (a solo, a fill, a harder line, a fun
 HOW TO WORK. The song as it stands (and every ladder figure) is in the message; call read_notes before rewriting a passage. Do the thing — don't ask permission for what was plainly asked; ask only when the request forks in a way only the player can decide, and then ask briefly (their next message continues the thread). After any change, write the card's line (set_title with line: one sentence saying what this version is). End with a short plain-text report, no markdown and no headings: what changed and the figures before → after for the levels that matter (e.g. "Medium on the melody: 1.09 → 0.55 a second, level 3 of 7: the tune's main notes"), what to listen for, and anything that still needs them. Keep it to a few sentences; it is read in a small panel on a phone. If the message is just a question, answer it from the figures without changing anything.`
 }
 
-function firstUser(mod: ModRow, draft: Draft, ctx: TurnContext, message: string, history: string): string {
+function firstUser(mod: ModRow, draft: Draft, ctx: TurnContext, message: string, history: string, versions: ModVersion[]): string {
   const pos = ctx.position
   const where = pos
     ? `Where the player is: ${[pos.part, pos.difficulty, pos.level != null ? `level ${pos.level}` : null, pos.bar != null ? `bar ${pos.bar}` : null, pos.section].filter(Boolean).join(' · ')} (they opened Agent mode from the pause menu there).`
     : 'Opened from the set list.'
+  const past = versions.map((v) => `v${v.version}${v.version === mod.version ? ' (now)' : ''}: ${v.ask}${v.line ? ` — ${v.line}` : ''}`).join('\n')
   return `charting.json (the ladders every song is cut by):
 ${JSON.stringify(ctx.charting)}
 
-The song as it stands:
+The song as it stands (v${mod.version}):
 ${readSong(draft, ctx.charting)}
+
+Versions so far (roll_back takes one of these):
+${past || '(none yet)'}
 
 ${where}
 ${history ? `\nEarlier in this thread:\n${history}\n` : ''}
@@ -93,8 +97,14 @@ export async function runModTurn(mod: ModRow, message: string, ctx: TurnContext,
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY is not set')
   const anthropic = new AnthropicSDK({ apiKey })
   const tools = TOOLS.map((t) => ({ name: t.name, description: t.description, input_schema: t.input_schema })) as Anthropic.Tool[]
+  let versions = await listVersions(mod.id)
+  if (!versions.length && mod.version >= 1) {
+    // A mod from before the history (schema 004): its current state is the first entry.
+    await recordVersion(mod, 'As it was before the history')
+    versions = await listVersions(mod.id)
+  }
   const messages: Anthropic.MessageParam[] = [
-    { role: 'user', content: [{ type: 'text', text: firstUser(mod, draft, ctx, message, history), cache_control: { type: 'ephemeral' } }] },
+    { role: 'user', content: [{ type: 'text', text: firstUser(mod, draft, ctx, message, history, versions), cache_control: { type: 'ephemeral' } }] },
   ]
   const steps: string[] = []
   let reply = ''
@@ -129,7 +139,7 @@ export async function runModTurn(mod: ModRow, message: string, ctx: TurnContext,
       const step = describeCall(draft, tu.name, input)
       steps.push(step)
       emit({ type: 'status', text: step })
-      const out = runTool(draft, ctx.charting, tu.name, input)
+      const out = tu.name === 'roll_back' ? await rollBackDraft(mod, draft, ctx, input) : runTool(draft, ctx.charting, tu.name, input)
       results.push({ type: 'tool_result', tool_use_id: tu.id, content: out })
     }
     messages.push({ role: 'user', content: results })
@@ -145,9 +155,23 @@ export async function runModTurn(mod: ModRow, message: string, ctx: TurnContext,
     mod.version += 1
   }
   mod.messages = [...mod.messages, { role: 'user', text: message, at: now }, { role: 'agent', text: reply, at: now, steps }]
-  await saveMod(mod)
+  await saveMod(mod, draft.mutated ? message : undefined)
   emit({ type: 'reply', text: reply })
   return reply
+}
+
+/** The roll_back tool: an earlier version's content into the draft (saved as the next
+ *  version with the turn, like any other change). */
+async function rollBackDraft(mod: ModRow, draft: Draft, ctx: TurnContext, input: Record<string, unknown>): Promise<string> {
+  const version = input.version
+  if (typeof version !== 'number' || !Number.isInteger(version)) return 'Error: version must be a whole number'
+  const v = await getVersion(mod.id, version)
+  if (!v) return `Error: there is no v${version}`
+  draft.song = JSON.parse(JSON.stringify(v.song))
+  draft.override = v.charting ? JSON.parse(JSON.stringify(v.charting)) : null
+  draft.title = v.title
+  draft.mutated = true
+  return `The draft is v${version} again (it will be saved as v${mod.version + 1}).\n${readSong(draft, ctx.charting)}`
 }
 
 /** The app measured the ladder with its own charter; the port must agree. A mismatch is logged

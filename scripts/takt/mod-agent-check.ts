@@ -131,10 +131,20 @@ async function main() {
     if (OUT) writeFileSync(join(OUT, `${sdone.mod.name}-v2.json`), JSON.stringify({ mod: sdone.mod }))
   }
 
+  // The history, and a rollback to v1 (a new version with v1's song: 12 bars again).
+  const hist = await (await call(`mods/${mod.id}/versions`)).json() as { versions: { version: number; ask: string }[] }
+  check('the history holds v0 (the original), v1 and v2 with their asks', hist.versions.map((v) => v.version).join(',') === (sdone ? '0,1,2' : '0,1') && hist.versions[1]?.ask === ASK, hist.versions.map((v) => `v${v.version} ${v.ask.slice(0, 30)}`).join(' | '))
+  const rb = await call(`mods/${mod.id}/rollback`, { method: 'POST', body: JSON.stringify({ version: 1 }) })
+  const rbBody = await rb.json() as { mod?: { version: number; song: SongFile; versions: { version: number; ask: string }[]; messages: unknown[] }; error?: string }
+  check('rollback to v1 makes v3 with v1\'s song (12 bars), the history kept', rb.ok && rbBody.mod?.version === (sdone ? 3 : 2) && musicBars(rbBody.mod!.song) === musicBars(song) && rbBody.mod!.versions.length === (sdone ? 4 : 3) && rbBody.mod!.versions.at(-1)!.ask === 'Back to v1', rbBody.error ?? `v${rbBody.mod?.version}, ${rbBody.mod ? musicBars(rbBody.mod.song) : '?'} bars, ${rbBody.mod?.versions.length} versions`)
+  const same = await call(`mods/${mod.id}/rollback`, { method: 'POST', body: JSON.stringify({ version: rbBody.mod?.version }) })
+  check('rolling back to the current version is refused', same.status === 400)
+  if (OUT && rbBody.mod) writeFileSync(join(OUT, `${mod.name}-rolledback.json`), JSON.stringify({ mod: rbBody.mod }))
+
   const list = await (await call('mods')).json() as { mods: { id: string; version: number; line: string }[] }
-  check('the list has the mod at its version', list.mods.length === 1 && list.mods[0].id === mod.id && list.mods[0].version === (sdone ? 2 : 1), list.mods[0]?.line)
-  const full = await (await call(`mods/${mod.id}`)).json() as { mod: { song: SongFile } }
-  check('GET returns the bundle', !!full.mod?.song?.song)
+  check('the list has the mod at its version', list.mods.length === 1 && list.mods[0].id === mod.id && list.mods[0].version === (sdone ? 3 : 2), list.mods[0]?.line)
+  const full = await (await call(`mods/${mod.id}`)).json() as { mod: { song: SongFile; versions: unknown[] } }
+  check('GET returns the bundle with its history', !!full.mod?.song?.song && full.mod.versions.length === (sdone ? 4 : 3))
 
   if (!KEEP) {
     const del = await call(`mods/${mod.id}`, { method: 'DELETE' })

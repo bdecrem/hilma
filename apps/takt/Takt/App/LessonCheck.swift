@@ -1326,6 +1326,9 @@ enum LessonCheck {
                 var top: [String: Any] = ["id": "11111111-2222-3333-4444-555555555555", "name": "mod-test0001", "base": base.name, "base_title": base.meta.title,
                                           "title": "Slow Burn Short mod 01", "version": 2, "created_at": "2026-11-01T00:00:00Z", "updated_at": "2026-11-01T00:00:00Z",
                                           "charting": ["melody": ["medium": 3, "phrase": 12, "tiers": ["2": ["space": 0]]]],
+                                          "versions": [["version": 1, "title": "Slow Burn Short mod 01", "line": "Half.", "ask": "half the notes", "at": "2026-11-01T00:00:00Z"],
+                                                       ["version": 0, "title": "Slow Burn Short mod 01", "line": "", "ask": "The original", "at": "2026-11-01T00:00:00Z"],
+                                                       ["version": 2, "title": "Slow Burn Short mod 01", "line": "Half, solo.", "ask": "a solo", "at": "2026-11-01T00:00:00Z"]],
                                           "messages": [["role": "user", "text": "half the notes", "at": "2026-11-01T00:00:00Z"], ["role": "agent", "text": "Done.", "at": "2026-11-01T00:00:00Z", "steps": ["Reading the song"]]]]
                 var f = file
                 var meta = f["song"] as! [String: Any]
@@ -1337,6 +1340,7 @@ enum LessonCheck {
                     let bundle = try ModStore.Bundle(data: JSONSerialization.data(withJSONObject: top))
                     let mod = try bundle.song()
                     check("mods: a bundle loads as a song with its version and base", mod.name == "mod-test0001" && mod.version == 2 && mod.mod?.base == base.name && mod.meta.title == "Slow Burn Short mod 01" && bundle.messages.count == 2 && bundle.messages[1].steps?.count == 1)
+                    check("mods: the history comes in order, v0 the original", bundle.versions.map(\.version) == [0, 1, 2] && bundle.versions[0].ask == "The original" && bundle.versions[2].line == "Half, solo.")
                     let baseMedium = base.charting.tier(.medium, song: base.name, part: .melody)!, modMedium = mod.charting.tier(.medium, song: mod.name, part: .melody)!
                     check("mods: the mod's own charting moves its Medium (\(baseMedium) → \(modMedium)) and nothing of the base's", baseMedium == 5 && modMedium == 3 && mod.charting.tier(.medium, song: base.name, part: .melody) == baseMedium)
                     let ladder = mod.ladder(.melody), rates = mod.masks(.melody).map { m in Double(Set(mod.notes(.melody).indices.filter { m[$0] }.map { mod.notes(.melody)[$0].t }).count) / mod.seconds }

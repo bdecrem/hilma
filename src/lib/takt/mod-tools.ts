@@ -67,6 +67,7 @@ export function describeCall(d: Draft, name: string, input: Record<string, unkno
     case 'set_form': return `Relabeling the chords from bar ${input.from_bar}`
     case 'set_title': return input.title ? `Naming it “${input.title}”` : 'Writing the card’s line'
     case 'set_tempo': return `Setting the tempo to ${input.tempo}`
+    case 'roll_back': return `Going back to v${input.version}`
     default: return name
   }
 }
@@ -220,6 +221,11 @@ export const TOOLS: ToolDef[] = [
       type: 'object',
       properties: { title: { type: 'string' }, line: { type: 'string' } },
     },
+  },
+  {
+    name: 'roll_back',
+    description: 'Go back to an earlier version of this mod (the history is in the message: v0 is the original as cloned, then one per turn that changed it). Makes a new version with that content, so nothing is lost. For "undo that", "go back to before the solo", "start over from the original".',
+    input_schema: { type: 'object', properties: { version: { type: 'integer', description: 'The version to go back to.' } }, required: ['version'] },
   },
   {
     name: 'set_tempo',

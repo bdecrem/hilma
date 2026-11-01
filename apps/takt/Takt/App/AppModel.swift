@@ -401,9 +401,17 @@ final class AppModel {
     /// The sheet's target; set to open it, nil when it closes.
     var agentTarget: AgentTarget?
 
-    /// From a song's card: the thread on it (a mod's own; a bundled song's pending one).
+    /// From a song's card: the thread on it. A mod continues its own; a bundled song that
+    /// already has your version continues that (one version per song, with its history — Bart,
+    /// 2026-11-02), else its pending thread or a fresh one.
     func openAgent(song: Song) {
-        agentTarget = AgentTarget(song: song, position: nil)
+        agentTarget = AgentTarget(song: existingMod(of: song) ?? song, position: nil)
+    }
+
+    /// The player's latest version of a bundled song, when there is one.
+    func existingMod(of song: Song) -> Song? {
+        guard song.mod == nil else { return nil }
+        return mods.mods(of: song.name).last
     }
 
     /// From the pause menu: the same, knowing where the run sits.
@@ -412,7 +420,7 @@ final class AppModel {
         if player.playing { player.togglePlay() }
         let s = player.gameState()
         let position = ModStore.Position(part: game.part.rawValue, difficulty: game.difficulty.rawValue, level: s.level, bar: s.bar + 1, section: s.section)
-        agentTarget = AgentTarget(song: game.song, position: position)
+        agentTarget = AgentTarget(song: existingMod(of: game.song) ?? game.song, position: position)
     }
 
     /// A mod just landed (or moved on): it takes the part and level picked on the song it came

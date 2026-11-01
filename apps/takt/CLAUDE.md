@@ -1054,6 +1054,24 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   mod cases), charting-check 41/41. This Air's local Anthropic key is stale, so the live turns
   run against production. Not yet: a catalog of published mods (the row shape is ready for it);
   the agent writing a new comping under a solo (it offers; the chords part only changes on ask).
+  **Versions (0.1 (74), 2026-11-02).** Bart: "when a user invokes the agent and we clone the
+  track, then after that all changes are changes to that same cloned version, and we keep a
+  version history so we can easily roll back to a prior version". One version per song: Agent
+  on a bundled song that already has your version opens that version's thread
+  (`AppModel.existingMod`), from the card and from the pause menu alike; a second clone only
+  happens after Remove. Every saved version is kept — `takt_mod_versions` (schema 004,
+  applied): v0 the clone as made (the original), then one per turn that changed the song, each
+  with the ask that made it — and the bundle carries the list (`versions`). **Versions** in the
+  sheet's header (V3 on the phone) opens the history, newest first, the ask and the card line
+  per version, **Restore** on every one but the current: a restore is a new version with the
+  old content (`POST …/<id>/rollback {version}`, "Back to v1" in the history and a line in the
+  thread), so nothing is ever lost and the thread stays linear. The agent has the same move
+  (`roll_back` tool, the history in its message): "undo the solo", "start over from the
+  original". A mod from before the history gets its current state filed as its first entry on
+  its next turn. `GET …/<id>/versions` lists the history. DEBUG `-AgentVersions 1` opens the
+  panel. Checks: `mod-agent-check.ts` (history v0/v1/v2 with their asks, rollback to v1 → v3
+  with v1's 12 bars and 4 entries, a rollback to the current version refused), LessonCheck
+  (the history parses in order).
 
 - **Friars Point, the fast loud Delta: 0.1 (73), 2026-11-01.** Bart: "make another delta blues
   track, still in the style of robert Johnson… a louder or faster kind". In genre: Johnson's I
