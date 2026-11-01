@@ -1097,6 +1097,10 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   Checks 339/339 (with the Agent mode checks of 0.1 (72)). Dockery's card line says "One guitar"
   now. Built in a separate worktree again (the Agent mode session was mid-change here).
 
+- **Six on the Stage: 0.1 (75), 2026-11-01.** Bart: "add dockery and friars point to the main Stage
+  listing screen, not All Tracks". `StageScreen.featured` is 6: the four blues tracks and the two
+  Delta ones in full, All tracks holds the seven others. (74 is the Agent mode session's build.)
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

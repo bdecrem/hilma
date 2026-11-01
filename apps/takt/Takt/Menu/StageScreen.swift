@@ -9,8 +9,9 @@ struct StageScreen: View {
     @State private var board: Song?
     /// `-AllTracks 1` opens the card at launch (the screenshots).
     @State private var allTracks = UserDefaults.standard.bool(forKey: "AllTracks")
-    /// How many songs the set list shows in full; the rest go under "All tracks".
-    static let featured = 4
+    /// How many songs the set list shows in full (the four blues tracks and the two Delta ones,
+    /// Bart 2026-11-01); the rest go under "All tracks".
+    static let featured = 6
 
     /// "Ten" for 10: the count of songs, in words up to twelve.
     static func spelled(_ n: Int) -> String {
