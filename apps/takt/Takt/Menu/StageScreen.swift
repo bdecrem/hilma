@@ -7,6 +7,10 @@ struct StageScreen: View {
     let app: AppModel
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var board: Song?
+    /// `-AllTracks 1` opens the card at launch (the screenshots).
+    @State private var allTracks = UserDefaults.standard.bool(forKey: "AllTracks")
+    /// How many songs the set list shows in full; the rest go under "All tracks".
+    static let featured = 4
 
     /// "Ten" for 10: the count of songs, in words up to twelve.
     static func spelled(_ n: Int) -> String {
@@ -30,6 +34,7 @@ struct StageScreen: View {
             }
             .padding(.top, compact ? 8 : 24)
 
+            ScrollViewReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 12) {
                     Text("\(Self.spelled(app.songs.count)) songs, all yours from the start. Take the chords or the melody, pick a level, and play with the band. Adaptive climbs as you play clean.")
@@ -37,13 +42,30 @@ struct StageScreen: View {
                         .foregroundStyle(Palette.muted)
                         .fixedSize(horizontal: false, vertical: true)
                         .padding(.top, compact ? 16 : 24)
-                    ForEach(app.songs, id: \.name) { song in
+                    // The set: the four blues tracks in full. The rest sit under a small
+                    // "All tracks" card at the bottom, open on a tap (Bart, 2026-11-01).
+                    ForEach(app.songs.prefix(Self.featured), id: \.name) { song in
                         SongCard(app: app, song: song, compact: compact) { board = song }
+                    }
+                    if app.songs.count > Self.featured {
+                        AllTracksCard(count: app.songs.count - Self.featured,
+                                      names: app.songs.dropFirst(Self.featured).map(\.meta.title), open: $allTracks, compact: compact)
+                            .id("all")
+                        if allTracks {
+                            ForEach(app.songs.dropFirst(Self.featured), id: \.name) { song in
+                                SongCard(app: app, song: song, compact: compact) { board = song }
+                            }
+                        }
                     }
                 }
                 .padding(.bottom, 16)
             }
             .scrollBounceBehavior(.basedOnSize)
+            .onAppear {
+                // `-ScrollTo all` lands on the All tracks card (the screenshots).
+                if UserDefaults.standard.string(forKey: "ScrollTo") == "all" { proxy.scrollTo("all", anchor: .top) }
+            }
+            }
 
             Spacer(minLength: 12)
             if let player = app.player {
@@ -157,6 +179,50 @@ struct SongCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(shape.fill(Palette.panel))
         .overlay(shape.strokeBorder(Palette.line, lineWidth: 1))
+    }
+}
+
+/// The small card at the bottom of the set list that holds every other track: the count,
+/// their names in one line, a chevron. A tap opens them below it as full cards.
+struct AllTracksCard: View {
+    let count: Int
+    let names: [String]
+    @Binding var open: Bool
+    let compact: Bool
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: 8)
+        Button {
+            withAnimation(.easeInOut(duration: 0.2)) { open.toggle() }
+        } label: {
+            HStack(alignment: .center, spacing: compact ? 12 : 16) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("All tracks")
+                        .font(.display(compact ? 20 : 24))
+                        .textCase(.uppercase)
+                        .foregroundStyle(Palette.text)
+                    Text("\(StageScreen.spelled(count)) more · \(names.joined(separator: " · "))")
+                        .dataLabel(10)
+                        .foregroundStyle(Palette.muted)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                }
+                Spacer(minLength: 8)
+                Image(systemName: "chevron.down")
+                    .font(.system(size: compact ? 13 : 15, weight: .semibold))
+                    .foregroundStyle(Palette.muted)
+                    .rotationEffect(.degrees(open ? 180 : 0))
+            }
+            .padding(.horizontal, compact ? 16 : 20)
+            .padding(.vertical, compact ? 12 : 14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(shape.fill(Palette.panel))
+            .overlay(shape.strokeBorder(Palette.line, lineWidth: 1))
+            .contentShape(shape)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("All tracks, \(count) more")
+        .accessibilityAddTraits(open ? [.isSelected] : [])
     }
 }
 
@@ -282,6 +348,37 @@ struct SongArt: View {
                              with: .color(i % 3 == 0 ? ink : dim))
                 }
                 ctx.fill(Path(ellipseIn: CGRect(x: cx - 7, y: cy - 7, width: 14, height: 14)), with: .color(hot))
+            case "crossroads":
+                // The Delta: two roads crossing, the meeting lit. The roads run corner to corner
+                // inside a 0.14 w inset, so they clear the tile's rounded corners.
+                for (a, b) in [(CGPoint(x: w * 0.14, y: h * 0.86), CGPoint(x: w * 0.86, y: h * 0.14)),
+                               (CGPoint(x: w * 0.14, y: h * 0.14), CGPoint(x: w * 0.86, y: h * 0.86))] {
+                    var p = Path()
+                    p.move(to: a)
+                    p.addLine(to: b)
+                    ctx.stroke(p, with: .color(ink), lineWidth: 2)
+                }
+                for (dx, dy) in [(-1.0, -1.0), (1.0, -1.0), (-1.0, 1.0), (1.0, 1.0)] {
+                    let x = w * 0.5 + dx * w * 0.22, y = h * 0.5 + dy * h * 0.22
+                    ctx.fill(Path(ellipseIn: CGRect(x: x - 2, y: y - 2, width: 4, height: 4)), with: .color(dim))
+                }
+                ctx.fill(Path(ellipseIn: CGRect(x: w * 0.5 - 7, y: h * 0.5 - 7, width: 14, height: 14)), with: .color(hot))
+            case "stoptime":
+                // Chicago stop time: the riff's five bars climbing, then the gap, then the hit.
+                // Five bars 0.09 w wide at 0.11 w apart from x = 0.1 w end at 0.64 w; the hit sits
+                // at 0.78 w; the gap between reads as the stop.
+                for i in 0..<5 {
+                    let x = w * 0.1 + CGFloat(i) * w * 0.11
+                    let hh = h * (0.22 + 0.1 * CGFloat(i))
+                    ctx.fill(Path(roundedRect: CGRect(x: x, y: h * 0.78 - hh, width: w * 0.09, height: hh), cornerRadius: 2),
+                             with: .color(i == 4 ? ink : dim))
+                }
+                ctx.fill(Path(roundedRect: CGRect(x: w * 0.78, y: h * 0.78 - h * 0.62, width: w * 0.12, height: h * 0.62), cornerRadius: 2),
+                         with: .color(hot))
+                var p = Path()
+                p.move(to: CGPoint(x: w * 0.08, y: h * 0.78))
+                p.addLine(to: CGPoint(x: w * 0.92, y: h * 0.78))
+                ctx.stroke(p, with: .color(dim), lineWidth: 1)
             case "pulse":
                 // Minimal: a grid of dots, one lit, one row of rims.
                 let cols = 6, rows = 4

@@ -948,6 +948,30 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   `Player.gameState()` draws from it. Checked with `-SnapshotAt` on Blue Lantern chords Hard at
   ticks 7 and 40 (the Dm7 held under the line in both themes); checks 307/307.
 
+- **The set list tucked, and two old-school blues tracks: 0.1 (69), 2026-11-01.** Bart: "Keep slow
+  burn, slow burn short, boogie shoes, pearl street in the game. Tuck all the other tracks under a
+  pretty small 'all tracks' card at the bottom of the stage tab", then "make 2 new blues tracks
+  with a slightly different musical taste, more like super old school blues" (Robert Johnson's
+  Delta, Muddy Waters' Chicago) "without any charts". The Stage shows the first four of
+  `Song.catalog` in full (`StageScreen.featured`); under them `AllTracksCard` (small: the title,
+  "Eight more · " the names in one line, a chevron) opens the rest as full cards below it
+  (`-AllTracks 1` opens it at launch). The two tracks sit first under it, uncharted (the weights are
+  honest, the ladders fall out of the rules; BLUES.md's bands were not tuned):
+  **Dockery** (`scripts/songs/dockery.py`, Delta blues in A at 96, 2:00): one piano, both hands
+  (the chords part is the left hand's Delta thumb, boom-chick and the chromatic turnaround; the
+  melody part is the right hand, the voice and the bottleneck, on the horns channel played by the
+  piano), a foot stomp (the kick at −9) on every beat, every chorus opening in two bars of stop
+  time with the voice alone, the third chorus up an octave with the slide's tremolo (band channel
+  only). Needs an `xstick` sound for the count-in click even with no drummer (the renderer traps
+  without one). Levels keys +5, horns +6: RMS −26.5, peak −4.0 (the band tracks sit at −23).
+  **Maxwell Street** (`scripts/songs/maxwell_street.py`, Chicago blues in A at 80, 2:24): the
+  stop-time 12-bar (A7 × 8, then E7 D7 A7 E7), an original blues-scale walk-up riff (A C D E♭ E)
+  slammed in unison by bass, piano and sax on the even bars, the sax's answers in the gaps, the
+  release swinging, a shuffle chorus on the ride with the riff every bar, Spann's tremolo on the
+  band's keys, the out chorus ending on one big stop. RMS −25.0, peak −2.7, no clipping; the riff
+  bars −23.4 against the gaps −29.3. Glyphs `crossroads` and `stoptime` in `SongArt`. Checks
+  325/325 (18 new, the two songs' ladders).
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

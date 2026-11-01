@@ -426,6 +426,7 @@
 		C715878A6A94E03A4915639C /* rho-96-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 1D3A42604582A1D71A6F5D7B /* rho-96-2.caf */; };
 		C80B6F25DA5362B82D201D1B /* xstick-0a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 7286A0A50F4BC75A3FD8881B /* xstick-0a.caf */; };
 		C86460F5BA92AA01CBF5629D /* bass-37.caf in Resources */ = {isa = PBXBuildFile; fileRef = 47D1A351F5FE0725EC15D54E /* bass-37.caf */; };
+		C86F76A99FD9DDFE3C3A37A6 /* song-dockery.json in Resources */ = {isa = PBXBuildFile; fileRef = 65295EEA1EB525ECEE125A7E /* song-dockery.json */; };
 		C8BAF1BE6026A27D7E6E2895 /* hat-3b.caf in Resources */ = {isa = PBXBuildFile; fileRef = A0B88D3BA5FAE2AD0B3B9385 /* hat-3b.caf */; };
 		C95504C75C8AD7AC0C7C74E6 /* saxl-58.caf in Resources */ = {isa = PBXBuildFile; fileRef = 1C19A0BA4C401C900E7DC5CA /* saxl-58.caf */; };
 		C9D5166DCE8CEB1942FAB996 /* kick-0b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 82C6BD3B224C6C9D16ADDA69 /* kick-0b.caf */; };
@@ -512,6 +513,7 @@
 		EDE47F32FE4402A8FBE3F2F5 /* rideBell-1a.caf in Resources */ = {isa = PBXBuildFile; fileRef = CADF682DF4FFC095D7CB3377 /* rideBell-1a.caf */; };
 		EEA8A7EC5A99C9BAFEE01D8A /* syn-bleep-75-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 21AF9C4A9B84E18FF59B0327 /* syn-bleep-75-2.caf */; };
 		EF4FB0CD09BBC3C2E7E0A2CA /* sax-50-s.caf in Resources */ = {isa = PBXBuildFile; fileRef = E1D60F4768483CFFF3FECF07 /* sax-50-s.caf */; };
+		EFF3EBD83E11EC5BB488123C /* song-maxwell-street.json in Resources */ = {isa = PBXBuildFile; fileRef = 597EBA6ECE301E5C95CEBF1A /* song-maxwell-street.json */; };
 		F00359F6AA4C0413BBB446F3 /* rho-81-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = BEB4585209440E6ACDA6B36D /* rho-81-2.caf */; };
 		F0C1135D9EE88C97D502FDC8 /* syn-hatDub16-0d.caf in Resources */ = {isa = PBXBuildFile; fileRef = 01043A86B250A6BF3DEB02BF /* syn-hatDub16-0d.caf */; };
 		F0D29695A1C134AE3B1841E2 /* bass-29.caf in Resources */ = {isa = PBXBuildFile; fileRef = F12738BF65384901373A6360 /* bass-29.caf */; };
@@ -742,6 +744,7 @@
 		59155600836DBCC72DCA030F /* pno-35-2.caf */ = {isa = PBXFileReference; path = "pno-35-2.caf"; sourceTree = "<group>"; };
 		595499964FE4FCF24649BF63 /* rho-35-3.caf */ = {isa = PBXFileReference; path = "rho-35-3.caf"; sourceTree = "<group>"; };
 		596E344E48305E41CDEDCD58 /* pno-79-1.caf */ = {isa = PBXFileReference; path = "pno-79-1.caf"; sourceTree = "<group>"; };
+		597EBA6ECE301E5C95CEBF1A /* song-maxwell-street.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "song-maxwell-street.json"; sourceTree = "<group>"; };
 		5988A981E615E30931C01226 /* kick-2a.caf */ = {isa = PBXFileReference; path = "kick-2a.caf"; sourceTree = "<group>"; };
 		5A6D4B76937F79D24368F63A /* hatOpen-0b.caf */ = {isa = PBXFileReference; path = "hatOpen-0b.caf"; sourceTree = "<group>"; };
 		5B9CEE9C210FA1CC4EA6DF0E /* pno-87-2.caf */ = {isa = PBXFileReference; path = "pno-87-2.caf"; sourceTree = "<group>"; };
@@ -762,6 +765,7 @@
 		637060E1B27D289D64972055 /* pno-51-1.caf */ = {isa = PBXFileReference; path = "pno-51-1.caf"; sourceTree = "<group>"; };
 		6394CE6017B6C3D4F9819A62 /* syn-rhodes-75-0.caf */ = {isa = PBXFileReference; path = "syn-rhodes-75-0.caf"; sourceTree = "<group>"; };
 		63FD563FD1411C16778CF386 /* syn-bassDH-26.caf */ = {isa = PBXFileReference; path = "syn-bassDH-26.caf"; sourceTree = "<group>"; };
+		65295EEA1EB525ECEE125A7E /* song-dockery.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "song-dockery.json"; sourceTree = "<group>"; };
 		65F4A5C32BB689BA5F03246A /* kick-4a.caf */ = {isa = PBXFileReference; path = "kick-4a.caf"; sourceTree = "<group>"; };
 		66606AB57115E0AD516B9B61 /* pno-65-2.caf */ = {isa = PBXFileReference; path = "pno-65-2.caf"; sourceTree = "<group>"; };
 		67214A86B8D3126A8B3921DF /* sax-68-s.caf */ = {isa = PBXFileReference; path = "sax-68-s.caf"; sourceTree = "<group>"; };
@@ -1260,8 +1264,10 @@
 				E3111C9819000EB6D6BD3E5F /* song-abyss.json */,
 				602B79D6E3FFCF61D2B824AB /* song-blue-lantern.json */,
 				2BD66E2CAAD161BA1549DCAF /* song-boogie-shoes.json */,
+				65295EEA1EB525ECEE125A7E /* song-dockery.json */,
 				BADE0D7EFE5BABCE5210E53E /* song-hypnotist-2.json */,
 				C1D12DD782A48B03D2950F0D /* song-hypnotist.json */,
+				597EBA6ECE301E5C95CEBF1A /* song-maxwell-street.json */,
 				48BEC1DC3AA0BBC2F6DC7F33 /* song-pearl-street.json */,
 				B406B5EABFF2F1734A1E4E05 /* song-slow-burn-short.json */,
 				A4985865F2AE933A767D9B73 /* song-slow-burn.json */,
@@ -2152,8 +2158,10 @@
 				41FBA6D0D8E7A740DDA90C1A /* song-abyss.json in Resources */,
 				82D19FB68A0BE969AB700E9F /* song-blue-lantern.json in Resources */,
 				DA6EFD26386A1F1603E7DE80 /* song-boogie-shoes.json in Resources */,
+				C86F76A99FD9DDFE3C3A37A6 /* song-dockery.json in Resources */,
 				87FF85AFC0DC3AAC8933D48D /* song-hypnotist-2.json in Resources */,
 				74BA911C913AB1B9444320F4 /* song-hypnotist.json in Resources */,
+				EFF3EBD83E11EC5BB488123C /* song-maxwell-street.json in Resources */,
 				40BC777B2258F7F54D5CF35B /* song-pearl-street.json in Resources */,
 				4B1361CAABC1BA0FBE776FD7 /* song-slow-burn-short.json in Resources */,
 				D08F9AD8D242D5A9CE4CEE68 /* song-slow-burn.json in Resources */,
@@ -2426,7 +2434,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 68;
+				CURRENT_PROJECT_VERSION = 69;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -2493,7 +2501,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 68;
+				CURRENT_PROJECT_VERSION = 69;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;

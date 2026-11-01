@@ -11,7 +11,11 @@ The tracks today: **Slow Burn** (slow blues in G, 90, four choruses, 2:08), **Sl
 (the same once round, 0:32), **Boogie Shoes** (jump blues in C, 120, six choruses, 2:24),
 **Pearl Street** (Texas shuffle in E, 112, five choruses with a stop-time chorus, 2:09, added
 2026-10-31) and **Blue Lantern** (minor blues in D, 84, straight eighths over a sixteenth hat,
-Rhodes, four choruses, 2:17, added 2026-10-31). Generators in `scripts/songs/`, charts cut at
+Rhodes, four choruses, 2:17, added 2026-10-31), and under the Stage's "All tracks" card two
+old-school ones, uncharted against this sheet (2026-11-01, Bart: "without any charts"): **Dockery**
+(Delta blues in A, 96, one piano and a foot stomp, stop-time tops, 2:00) and **Maxwell Street**
+(Chicago blues in A, 80, the stop-time 12-bar with a unison riff, 2:24); their ladders fall out of
+the rules alone (see the `-LessonCheck` lines). Generators in `scripts/songs/`, charts cut at
 load time by `Takt/Content/charting.json`; every blues melody carries the same `songs` patch
 there (Easy = tier 2, a chorus-long phrase, no borrowing on tier 2).
 
