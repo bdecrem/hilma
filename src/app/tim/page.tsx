@@ -1,7 +1,14 @@
 import type { Metadata, Viewport } from 'next'
 import localFont from 'next/font/local'
 
-const font = localFont({ src: '../../fonts/bricolage-grotesque/BricolageGrotesque.woff2', weight: '200 800', variable: '--font-bricolage-grotesque', display: 'swap' })
+const font = localFont({
+  src: [
+    { path: '../../fonts/instrument-serif/InstrumentSerif-400.woff2', weight: '400' },
+    { path: '../../fonts/instrument-serif/InstrumentSerif-400-Italic.woff2', weight: '400', style: 'italic' },
+  ],
+  variable: '--font-instrument-serif',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: 'Hi Tim',
@@ -10,51 +17,33 @@ export const metadata: Metadata = {
   openGraph: { title: 'Hi Tim', description: 'A hello world page for Tim.', url: 'https://ola.cx/tim' },
 }
 
-export const viewport: Viewport = { themeColor: '#ff4b1f' }
+export const viewport: Viewport = { themeColor: '#f4efe6' }
 
-// A two-ink riso print: the ultramarine plate sits a few px off the cream type
-// and slides into place on load.
-// Size math: the corners of "Tim" must stay inside the sun. Half the word is about
-// .86em across and its ink ends about .72em below centre, so the corner sits 1.12em
-// out. At 33dvh that is 37dvh, inside the 45dvh radius; at 36vw it is 40vw, inside 48vw.
+// Two words on warm paper and nothing else. The block sits a little above
+// centre, where the eye rests, and fades in once.
 const css = `
 .tim {
-  position: relative;
   min-height: 100dvh;
   display: grid;
   place-items: center;
-  overflow: hidden;
-  background: #ff4b1f;
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-  font-family: var(--font-bricolage-grotesque), system-ui, sans-serif;
-}
-.tim-sun {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: min(96vw, 90dvh);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: #ffc31f;
-  transform: translate(-50%, -50%);
+  box-sizing: border-box;
+  background: #f4efe6;
+  color: #26221d;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) calc(env(safe-area-inset-bottom) + 8dvh) env(safe-area-inset-left);
+  font-family: var(--font-instrument-serif), Georgia, serif;
 }
 .tim h1 {
-  position: relative;
   margin: 0;
-  font-size: min(36vw, 33dvh);
-  font-weight: 800;
-  font-variation-settings: 'opsz' 96;
-  line-height: .84;
-  letter-spacing: .012em;
-  text-align: center;
-  color: #16121c;
-  text-shadow: .022em .022em 0 #3d3bff;
-  animation: tim-print .7s cubic-bezier(.2, .9, .2, 1) both;
+  font-size: clamp(4rem, 9vw, 7.5rem);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -.01em;
+  animation: tim-in 1.4s ease-out both;
 }
-.tim h1 span { display: block; }
-@keyframes tim-print {
-  from { text-shadow: .12em .1em 0 #3d3bff; }
-  to { text-shadow: .022em .022em 0 #3d3bff; }
+.tim em { font-style: italic; }
+@keyframes tim-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 @media (prefers-reduced-motion: reduce) {
   .tim h1 { animation: none; }
@@ -65,10 +54,8 @@ export default function TimPage() {
   return (
     <main className={`tim ${font.variable}`}>
       <style>{css}</style>
-      <div className="tim-sun" aria-hidden="true" />
       <h1>
-        <span>Hi</span>
-        <span>Tim</span>
+        Hi <em>Tim</em>
       </h1>
     </main>
   )
