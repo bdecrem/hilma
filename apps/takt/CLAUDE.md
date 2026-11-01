@@ -935,6 +935,19 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   which first deletes every file in `Takt/Sounds`; restored from git), and the RenderScript has
   `keys=<instrument>|0` for your keys' instrument by name.
 
+- **Held notes on the Stage: "right, keep holding", 0.1 (68), 2026-11-01.** Bart: "games, esp
+  chords, have long held notes, and they are instantly removed as soon as i hit the first note.
+  Instead, there should be some UI that indicates both 'you hit it right' and also 'keep holding
+  it'… a less saturated version of the note after the first hit". A hit note no longer vanishes
+  from the highway: the "PERFECT" / "GOOD" pop still fires, and the capsule stays as a wash of
+  itself (`cue` at 0.38) with a crisp `cue` outline while the key is down, clipped above the hit
+  line, so the line eats it as it slides and what is left above the line is how long to keep
+  holding. Let go early and the outline drops and the wash fades to 0.16 (nothing scores the
+  release: the engine judges onsets, as before). `GameEngine.onHighway(from:to:)` keeps a note
+  on the highway while it lasts (`notes(from:to:)` still goes by onset, autoplay plans from it);
+  `Player.gameState()` draws from it. Checked with `-SnapshotAt` on Blue Lantern chords Hard at
+  ticks 7 and 40 (the Dm7 held under the line in both themes); checks 307/307.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

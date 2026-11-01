@@ -429,12 +429,24 @@ final class GameEngine {
         return notes.indices.filter { status[$0] == .pending && active($0) && notes[$0].t == t }.map { notes[$0].n }
     }
 
-    /// The active notes between two ticks, with their state, for the highway.
+    /// The active notes starting between two ticks, with their state.
     func notes(from: Double, to: Double) -> [(index: Int, note: Song.Note, status: Status)] {
         var out: [(Int, Song.Note, Status)] = []
         for i in notes.indices {
             let t = Double(notes[i].t)
             guard t >= from, t <= to, active(i) else { continue }
+            out.append((i, notes[i], status[i]))
+        }
+        return out
+    }
+
+    /// What the highway shows between two ticks: every active note starting by `to` that is
+    /// still sounding at `from` (a hit note stays on the highway while it lasts, 0.1 (68)).
+    func onHighway(from: Double, to: Double) -> [(index: Int, note: Song.Note, status: Status)] {
+        var out: [(Int, Song.Note, Status)] = []
+        for i in notes.indices {
+            let t = Double(notes[i].t)
+            guard t <= to, t + Double(notes[i].len) >= from, active(i) else { continue }
             out.append((i, notes[i], status[i]))
         }
         return out

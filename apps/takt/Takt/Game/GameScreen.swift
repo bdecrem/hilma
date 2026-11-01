@@ -271,8 +271,10 @@ struct ProgressRail: View {
 /// narrower and darker), as long as it lasts, sliding in one continuous movement (the screen
 /// redraws every frame, `LiveGameScreen`); the grid never moves: a fixed ruler of beat lines up
 /// from the hit line, one a beat at the song's tempo, so a note's distance from the line is read
-/// in beats; the hit line is `signal` at the bottom; a hit note vanishes with a flash, a missed
-/// one slides on past the line and fades.
+/// in beats; the hit line is `signal` at the bottom. A hit note pops ("PERFECT") and stays:
+/// its capsule turns to a wash of itself and the line eats it as it slides, so what is left
+/// above the line is how long to keep holding; the key down keeps the outline crisp, let go
+/// early and the wash fades on its own (0.1 (68)). A missed one slides on past the line and fades.
 struct Highway: View {
     let state: GameState
     let compact: Bool
@@ -327,6 +329,15 @@ struct Highway: View {
                             rect.origin.y = min(rect.origin.y, h - 4)
                         }
                     case .hit:
+                        // Right, keep holding: the remaining length drains into the line.
+                        let held = state.pressedNotes.contains(n.note)
+                        let tail = CGRect(x: x - w / 2, y: top, width: w, height: bottom - top)
+                        guard tail.maxY > 0, tail.minY < h - 2, tail.height >= 2 else { continue }
+                        var c = ctx
+                        c.clip(to: Path(CGRect(x: 0, y: 0, width: size.width, height: h - 2)))
+                        let shape = Path(roundedRect: tail, cornerRadius: min(5, w / 2))
+                        c.fill(shape, with: .color(Palette.cue.opacity(held ? 0.38 : 0.16)))
+                        if held { c.stroke(shape, with: .color(Palette.cue.opacity(0.9)), lineWidth: 1.5) }
                         continue
                     case .missed:
                         color = Palette.muted

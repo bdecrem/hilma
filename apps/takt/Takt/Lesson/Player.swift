@@ -934,7 +934,7 @@ final class Player {
         let bar = practice && countIn != nil ? Int(practiceCountBase / Double(game.ticksPerBar))
             : max(0, Int((tick / Double(game.ticksPerBar)).rounded(.down)))
         let song = game.song
-        let visible = game.notes(from: tick - Double(game.ticksPerBeat), to: tick + lookahead).map {
+        let visible = game.onHighway(from: tick - Double(game.ticksPerBeat), to: tick + lookahead).map {
             GameState.HighwayNote(id: $0.index, note: $0.note.n, tick: Double($0.note.t), length: Double($0.note.len),
                                   status: $0.status, finger: $0.note.f)
         }
