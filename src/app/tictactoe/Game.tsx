@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { EMPTY, computerMove, isFull, place, winningLine, type Board, type Mark } from './game'
+import { EMPTY, computerMove, isFull, place, winningLine, type Board, type Mark } from './logic'
 
 const COMPUTER: Mark = 'O'
 const THINK_MS = 450
