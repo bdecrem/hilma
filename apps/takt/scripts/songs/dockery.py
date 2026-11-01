@@ -32,12 +32,12 @@ FORM = ["A7", "A7", "A7", "A7", "D7", "D7", "A7", "A7", "E7", "D7", "A7", "E7"]
 s = Song("song-dockery", "Dockery", "Delta blues", "A", 96, "crossroads",
          "A Delta blues in A. One piano, a foot on the floor, and the voice alone in the stops.", seed=1936)
 s.sounds = {
-    "kick": {"kit": "kick", "gainDb": -9},
-    "hatFoot": {"kit": "hatFoot", "gainDb": -13},
-    "xstick": {"kit": "xstick", "gainDb": -5},  # the count-in's click only (BandRenderer wants one)
+    "kick": {"kit": "kick", "gainDb": -3},
+    "hatFoot": {"kit": "hatFoot", "gainDb": -9},
+    "xstick": {"kit": "xstick", "gainDb": -4},
 }
 s.instruments = {"bass": "bass", "keys": "piano", "horns": "piano", "monitor": "piano"}
-s.levels = {"keys": 5.0, "bass": 0.0, "horns": 6.0}
+s.levels = {"keys": 4.0, "bass": -1.0, "horns": 4.0}
 CHORUSES = 4
 s.bars = 12 * CHORUSES
 s.chords = [FORM[b % 12] for b in range(s.bars)]
@@ -56,17 +56,24 @@ def stop(bar):
     return bar % 12 < 2
 
 
-# MARK: The foot
+# MARK: The foot (and, once the hands drive, the slap)
 
+# A heavy foot: the kick on every beat, hard on the 1 and the 3, the triplet push into the 3;
+# the heel's chick on 2 and 4. Once the stop is over, a cross-stick slap on the backbeat, the
+# one-man-band way (Bart, 2026-11-01: "needs some more dirt… make it hit harder").
 for bar in range(s.bars):
     o = bar * BAR
     if bar == s.bars - 1:
-        s.hit(o, "kick", 0.9)
+        s.hit(o, "kick", 1.0)
         continue
     for beat in range(4):
-        s.hit(o + beat * TPB, "kick", 0.62 if beat in (0, 2) else 0.5, 0.06)
+        s.hit(o + beat * TPB, "kick", 0.95 if beat in (0, 2) else 0.7, 0.05)
         if beat in (1, 3):
-            s.hit(o + beat * TPB, "hatFoot", 0.35, 0.06)
+            s.hit(o + beat * TPB, "hatFoot", 0.5, 0.06)
+            if not stop(bar):
+                s.hit(o + beat * TPB, "xstick", 0.8, 0.05)
+    if not stop(bar):
+        s.hit(o + 20, "kick", 0.45, 0.05)
 
 # MARK: Chords part: the left hand.
 
@@ -120,7 +127,12 @@ for bar in range(s.bars):
         s.pnote(chords, o + beat * TPB, thumb, 12, 1 if beat in (0, 2) else 2, 5,
                 "fifth" if alternate and beat in (1, 3) else "root")
         s.pchord(chords, o + beat * TPB + 8, CHICK[ch], 3, 4)
-s.chart_to_channel(chords, s.keys, lambda e: 0.72 if e["lv"] == 1 and e["len"] >= 20 else 0.58 if e["lv"] == 1 else 0.5 if e["lv"] == 2 else 0.38)
+s.chart_to_channel(chords, s.keys, lambda e: 0.92 if e["lv"] == 1 and e["len"] >= 20 else 0.74 if e["lv"] == 1 else 0.66 if e["lv"] == 2 else 0.56)
+
+# The bass doubles the thumb an octave down (the boom under the boom-chick), the slam's root too.
+for e in chords:
+    if e.get("r") in ("root", "fifth") and e["n"] <= 52 and e["len"] >= 12:
+        s.note(s.bass, e["t"], e["n"] - 12, 0.8 if e["lv"] == 1 else 0.66, min(e["len"], 12))
 
 # MARK: Melody part: the voice and the bottleneck, the right hand.
 
@@ -159,7 +171,7 @@ for c in range(CHORUSES):
         for t, n, ln, lv in VOICE[b]:
             s.pnote(melody, o + t, n + up, ln, lv)
 s.fingered(melody)
-s.chart_to_channel(melody, s.horns, lambda e: 0.74 if e["lv"] == 1 else 0.62 if e["lv"] == 2 else 0.5)
+s.chart_to_channel(melody, s.horns, lambda e: 0.88 if e["lv"] == 1 else 0.76 if e["lv"] == 2 else 0.62)
 
 # The slide's tremolo: on the slide chorus the record shakes every held note (the band's
 # channel only; the chart keeps the one note so the player holds it).

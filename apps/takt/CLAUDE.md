@@ -972,6 +972,16 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   bars −23.4 against the gaps −29.3. Glyphs `crossroads` and `stoptime` in `SongArt`. Checks
   325/325 (18 new, the two songs' ladders).
 
+- **Dockery hits harder: 0.1 (70), 2026-11-01.** Bart: "Dockery needs some more dirt. maybe a kick
+  drum, or a little louder chords or something... make it hit harder". The foot is a kick drum now
+  (gain −3, 0.95 on the 1 and the 3, 0.7 on 2 and 4, the triplet push into the 3 once the hands
+  drive), the heel's chick louder, and a cross-stick slap on the backbeat in the driving bars (the
+  one-man-band way; the stops stay bare). The bass doubles the thumb an octave down (A1, the boom
+  under the boom-chick). The hands play harder (thumb 0.74, chick 0.56, slam 0.92; the voice 0.88 /
+  0.76 / 0.62) at keys +4, horns +4, bass −1. RMS −21.7 (was −26.5; the band tracks sit at −23,
+  the electronic ones at −19), peak −1.0, no clipping. The first pass at keys/horns +7 hit −19.3
+  with the peak at −0.8, too hot against the knee.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without
