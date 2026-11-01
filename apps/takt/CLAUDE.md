@@ -1101,6 +1101,33 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   listing screen, not All Tracks". `StageScreen.featured` is 6: the four blues tracks and the two
   Delta ones in full, All tracks holds the seven others. (74 is the Agent mode session's build.)
 
+- **The launch sounds: 0.1 (76), 2026-11-01.** Bart: "add a setting where users can pick any of
+  those 3 as their startup sound, but the default is Blues and that sound sequence is part of our
+  startup sequence, when the letters TAKT 1234 light up". The count-in package in
+  `misc/takt-countin2.zip` (another agent's: a README spec, `render.py`, six one-shot cues a set,
+  48 kHz) gives three sets Bart auditioned, blues (a Rhodes warming up: C2 and middle C, the blue
+  third, A flicked to B♭, the C9 on the landing), acid (a 303 opening its filter count by count,
+  a dub landing) and deep (a Sub 37 gliding, a soft kick and a Rhodes Cm9 on the landing). The
+  cues are in `Takt/Sounds/launch-<set>-<cue>.caf` (b1…b4, swell, land; 18 files, 1.2 MB, ALAC
+  from the package's WAVs), the generator kept at `scripts/launch-sounds/render.py` (own work,
+  synthesized; a launch jingle, not an instrument you play). `Audio/LaunchSound.swift` loads a
+  set into six AVAudioPlayerNodes attached to the app's own AVAudioEngine
+  (`AudioEngine.makePlayer` / `detach`, so they share the output and `-Silent`) and schedules
+  them on host time: a cue a beat from beat 1, the 0.34 s swell ending on the landing, the
+  landing on the 1 the band comes in on (the menu band is in C, so is every landing). The splash
+  (`CountInSplash`) schedules the sound 80 ms ahead and waits for the same instant before
+  lighting T, so lights and cues share the mach clock; a tap before the landing lands at once,
+  Reduce Motion lands at 0.6 s. The count runs at the band's tempo as before, so the cues sit
+  wider apart than the 121 bpm previews on a slow menu band (each cue is under 300 ms of music
+  with a tail, so any tempo works). Settings → Sound → **Launch sound**: Blues (default) / Acid /
+  Deep / Off, with "Hear it" (the full count at the band's tempo, now). `-LaunchSoundCheck 1`
+  proves every set's six cues load. Not taken from the package: its once-a-day rule, its own
+  AVAudioEngine and ambient session, the other three sets (soundcheck, boogie, latenight).
+  Verified: both targets build, `-LessonCheck` 340/340 on the simulator; the Mac could not run
+  the launch-sound check because this Mac's coreaudiod was wedged at the time (even `afplay`
+  failed with -66681; any app touching the audio session hung at start; a `sudo killall
+  coreaudiod` is Bart's to run), so hearing it is the next step.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

@@ -15,6 +15,7 @@ sample packs.
 | Guitar (`gtr-*`, `gmute-*`, `gperc-*`: Dockery's guitar, the dead strings and the knocks on its body; `scripts/guitar.py`) | **Shinyguitar by Karoryfer Lecolds / D. Smolken** (github.com/sfzinstruments/karoryfer.shinyguitar), an archtop guitar played acoustic, the microphone samples | CC0 1.0 ("royalty-free for all commercial and non-commercial use") |
 | Drums (`kick`, `snare`, `xstick`, `hat`, `hatOpen`, `ride`, `rideBell`, `crash`, `tomHi`, `tomLo`) | **MuldjordKit by Lars Muldjord** (muldjord.com, drumgizmo.org), FreePats stereo version by Roberto (zenvoid.org) | **CC BY 4.0**: credit required |
 | Band patterns (`Takt/Content/band-*.json`) | Written by `apps/takt/scripts/band.py` | Own work |
+| Launch sound (`launch-<set>-<cue>.caf`: the count-in's cues, Settings → Sound → Launch sound) | Synthesized by `apps/takt/scripts/launch-sounds/render.py` (numpy, no samples; the count-in package of 2026-11-01) | Own work |
 
 **Attribution (CC BY 4.0), to show in the app's credits before release:**
 "Drums: MuldjordKit by Lars Muldjord, CC BY 4.0 (creativecommons.org/licenses/by/4.0).

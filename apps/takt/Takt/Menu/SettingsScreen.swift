@@ -1,3 +1,4 @@
+import AVFoundation
 import SwiftUI
 
 /// Settings: the account (sign up / log in), sound levels, inputs, the theme, progress, about.
@@ -9,6 +10,8 @@ struct SettingsScreen: View {
     @AppStorage("inputOffsetMs") private var inputOffsetMs = 0.0
     @AppStorage("menuMusic") private var menuMusic = true
     @AppStorage("instrument") private var instrument = "piano"
+    @AppStorage(LaunchSound.key) private var launchSound = LaunchSound.defaultSet
+    @State private var launchPreview: LaunchSound?
     @AppStorage("countIn") private var countIn = true
     @AppStorage("preferMinor") private var preferMinor = false
     @AppStorage("tapMode") private var tapMode = KeyboardStrip.tapModeDefault
@@ -56,6 +59,30 @@ struct SettingsScreen: View {
                         }
                         .id("sound")
                         .onChange(of: instrument) { app.player?.applyInstrument() }
+                        Hairline()
+                        HStack(alignment: .center) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Launch sound").bodyText(15).foregroundStyle(Palette.text)
+                                Text("The count-in when Takt opens, a cue a letter").dataLabel(10).foregroundStyle(Palette.muted)
+                            }
+                            Spacer()
+                            if launchSound != "off" {
+                                QuietButton(title: "Hear it") {
+                                    guard let audio = app.player?.audio, let s = LaunchSound.make(on: audio, set: launchSound) else { return }
+                                    launchPreview = s
+                                    s.schedule(startHostTime: mach_absolute_time() + AVAudioTime.hostTime(forSeconds: 0.08),
+                                               interval: 60 / Double(app.player?.tempo ?? 120))
+                                }
+                            }
+                            Picker("Launch sound", selection: $launchSound) {
+                                Text("Blues").tag("blues")
+                                Text("Acid").tag("acid")
+                                Text("Deep").tag("deep")
+                                Text("Off").tag("off")
+                            }
+                            .pickerStyle(.segmented)
+                            .frame(width: 260)
+                        }
                         Hairline()
                         LevelRow(title: "Band", value: $bandLevel)
                         Hairline()

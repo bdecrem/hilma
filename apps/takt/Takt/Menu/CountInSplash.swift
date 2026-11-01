@@ -1,3 +1,4 @@
+import AVFoundation
 import SwiftUI
 #if !targetEnvironment(macCatalyst)
 import UIKit
@@ -8,12 +9,15 @@ import UIKit
 /// count: T, A, K, T land one per beat at full height, `signal` on its beat, `cue` for the next,
 /// an outline still to come. On the 1 of the next bar it hands off and the band comes in on that
 /// downbeat. Tap skips. Reduce Motion: beat 1 lit, held 0.6 s. The iPhone ticks a haptic on each
-/// beat (stronger on the 1); the Mac has none, and the count makes no sound. Always dark, in
+/// beat (stronger on the 1); the Mac has none. The count sounds (0.1 (76)): the launch set from
+/// Settings → Sound (`LaunchSound`, blues by default) plays a cue on each letter, a swell into
+/// the landing and the landing on the 1, scheduled on the host clock the lights run on. Always dark, in
 /// either theme: the stage before the lights come up. Four across from 700 pt wide (a Mac
 /// window), stacked one letter to a row under it (the iPhone).
 struct CountInSplash: View {
     let bpm: Double
     let bandTitle: String
+    var sound: LaunchSound? = nil
     let onFinished: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -57,15 +61,23 @@ struct CountInSplash: View {
 
     // MARK: Clock
 
+    /// The sound is scheduled this far ahead, and the lights wait for the same instant: both
+    /// run on the mach clock (ContinuousClock, AVAudioTime's host time).
+    private static let lead = 0.08
+
     private func run() async {
         if reduceMotion {
             beat = 0
             try? await Task.sleep(for: .seconds(0.6))
+            sound?.landNow()
             finish()
             return
         }
-        let start = ContinuousClock.now
-        let interval = Duration.seconds(60 / tempo)
+        let seconds = 60 / tempo
+        let interval = Duration.seconds(seconds)
+        let start = ContinuousClock.now + .seconds(Self.lead)
+        sound?.schedule(startHostTime: mach_absolute_time() + AVAudioTime.hostTime(forSeconds: Self.lead), interval: seconds)
+        try? await Task.sleep(until: start, clock: .continuous)
         for i in 0..<4 {
             if didFinish || Task.isCancelled { return }
             beat = i
@@ -79,6 +91,7 @@ struct CountInSplash: View {
     private func finish() {
         guard !didFinish else { return }
         didFinish = true
+        sound?.skip()  // a tap before the landing lands now; after it, nothing more
         onFinished()
     }
 
@@ -288,6 +301,7 @@ private struct CueMark: Shape {
 struct CountInHost<Content: View>: View {
     let bpm: Double
     let bandTitle: String
+    var sound: LaunchSound? = nil
     let onFinished: () -> Void
     @ViewBuilder let content: () -> Content
 
@@ -297,7 +311,7 @@ struct CountInHost<Content: View>: View {
         ZStack {
             content()
             if showing {
-                CountInSplash(bpm: bpm, bandTitle: bandTitle) {
+                CountInSplash(bpm: bpm, bandTitle: bandTitle, sound: sound) {
                     CountInLaunch.counted = true
                     onFinished()
                     withAnimation(.easeOut(duration: 0.25)) { showing = false }

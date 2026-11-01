@@ -55,6 +55,17 @@ final class AudioEngine {
 
     func send(_ command: EngineCommand) { renderer.send(command) }
 
+    /// A one-shot player on the mixer for the launch cues (`LaunchSound`), attached to this
+    /// engine so it shares the output, the clock and the `-Silent` volume; `detach` when done.
+    func makePlayer(format: AVAudioFormat) -> AVAudioPlayerNode {
+        let node = AVAudioPlayerNode()
+        engine.attach(node)
+        engine.connect(node, to: engine.mainMixerNode, format: format)
+        return node
+    }
+
+    func detach(_ node: AVAudioPlayerNode) { engine.detach(node) }
+
     /// Another band (`Takt/Content/band-*.json`), from the same tick; built once, then reused.
     private var loaded: [String: BandRenderer.Events] = [:]
     @discardableResult

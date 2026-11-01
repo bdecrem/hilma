@@ -51,6 +51,7 @@ struct TaktApp: App {
         DebugHooks.pressIfRequested(player)
         DebugHooks.calibrateIfRequested(player)
         DebugHooks.autoplayIfRequested(player)
+        DebugHooks.launchSoundCheckIfRequested(audio)
         #endif
         return player
     }
@@ -59,7 +60,8 @@ struct TaktApp: App {
         WindowGroup {
             Group {
                 if let player = app.player {
-                    CountInHost(bpm: Double(player.tempo), bandTitle: player.audio.band.name, onFinished: {
+                    CountInHost(bpm: Double(player.tempo), bandTitle: player.audio.band.name,
+                                sound: CountInLaunch.pending ? LaunchSound.make(on: player.audio) : nil, onFinished: {
                         if !UserDefaults.standard.bool(forKey: "Paused") && RootView.menuMusicOn && !player.playing {
                             player.audio.send(.play)
                         }

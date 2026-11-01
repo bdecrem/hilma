@@ -64,6 +64,19 @@ enum DebugHooks {
         }
     }
 
+    /// `-LaunchSoundCheck 1`: every launch set's six cues load from the bundle; prints their
+    /// lengths and exits.
+    @MainActor static func launchSoundCheckIfRequested(_ audio: AudioEngine) {
+        guard UserDefaults.standard.bool(forKey: "LaunchSoundCheck") else { return }
+        var ok = true
+        for set in LaunchSound.sets {
+            guard let s = LaunchSound.make(on: audio, set: set) else { print("FAIL  launch sound \(set) did not load"); ok = false; continue }
+            let lengths = LaunchSound.Cue.allCases.map { String(format: "%@ %.2f", $0.rawValue, s.seconds($0)) }
+            print("PASS  launch sound \(set): \(lengths.joined(separator: ", "))")
+        }
+        exit(ok ? 0 : 1)
+    }
+
     static func autoplayIfRequested(_ player: Player) {
         guard let name = UserDefaults.standard.string(forKey: "Autoplay") else { return }
         guard let mode = Autoplay.Mode(rawValue: name) else { fatalError("unknown -Autoplay \(name)") }
