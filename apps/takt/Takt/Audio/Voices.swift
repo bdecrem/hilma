@@ -64,8 +64,9 @@ struct SampleBuffer {
     }
 
     /// Loads a bundled CAF from Takt/Sounds. Missing sounds trap: they are part of the build.
-    /// `loop`: the manifest's sustain loop (start and end frames), else the tail loop is found.
-    static func bundled(_ name: String, loop: [Int]? = nil) -> SampleBuffer {
+    /// `loop`: the manifest's sustain loop (start and end frames) and `decay` per pass (default
+    /// 1, a steady tone), else the tail loop is found and its decay measured.
+    static func bundled(_ name: String, loop: [Int]? = nil, decay: Double? = nil) -> SampleBuffer {
         guard let url = Bundle.main.url(forResource: name, withExtension: "caf") else {
             fatalError("sound \(name).caf is not in the bundle")
         }
@@ -95,7 +96,7 @@ struct SampleBuffer {
                 b.loopStart = loop[0]
                 b.loopEnd = loop[1]
                 b.xfade = min(Int(0.2 * format.sampleRate), (loop[1] - loop[0]) / 2, loop[0])
-                b.loopDecay = 1
+                b.loopDecay = Float(min(1, max(0.05, decay ?? 1)))
                 return b
             }
             return withLoop(b)

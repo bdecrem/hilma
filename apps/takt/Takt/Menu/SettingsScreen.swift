@@ -49,9 +49,10 @@ struct SettingsScreen: View {
                             Picker("Your instrument", selection: $instrument) {
                                 Text("Piano").tag("piano")
                                 Text("Organ").tag("organ")
+                                Text("Rhodes").tag("rhodes")
                             }
                             .pickerStyle(.segmented)
-                            .frame(width: 180)
+                            .frame(width: 260)
                         }
                         .id("sound")
                         .onChange(of: instrument) { app.player?.applyInstrument() }

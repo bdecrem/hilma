@@ -3,7 +3,8 @@ import Foundation
 /// The sampled instruments in Takt/Sounds, as cut by `scripts/sounds.py` (`instruments.json`):
 /// per instrument a release time and zones, each a root note (0 for drums), a velocity ceiling
 /// and its round-robin files. A zone may carry the files' sustain loop (`loop`: start and end
-/// in frames, for a recording that holds a steady tone, the organ); an instrument may say how
+/// in frames, and `loopDecay`, the level of each pass over the one before, default 1: the
+/// organ holds, the Rhodes fades as measured); an instrument may say how
 /// much velocity moves its level (`touch`, 0...1, default 1: the organ has almost none).
 struct InstrumentManifest: Decodable {
     struct Zone: Decodable {
@@ -11,6 +12,7 @@ struct InstrumentManifest: Decodable {
         let vel: Double
         let files: [String]
         let loop: [Int]?
+        let loopDecay: Double?
     }
 
     struct Entry: Decodable {
@@ -67,9 +69,9 @@ final class SampledInstrument {
         guard let entry = manifest.instruments[name] else { fatalError("no instrument \(name) in instruments.json") }
         release = entry.release
         touch = Float(entry.touch ?? 1)
-        let files = entry.zones.flatMap { z in z.files.map { ($0, z.loop) } }
+        let files = entry.zones.flatMap { z in z.files.map { ($0, z.loop, z.loopDecay) } }
         samples = .allocate(capacity: files.count)
-        for (i, f) in files.enumerated() { samples.initializeElement(at: i, to: .bundled(f.0, loop: f.1)) }
+        for (i, f) in files.enumerated() { samples.initializeElement(at: i, to: .bundled(f.0, loop: f.1, decay: f.2)) }
         zones = .allocate(capacity: entry.zones.count)
         var first = 0
         for (i, z) in entry.zones.enumerated() {

@@ -102,17 +102,26 @@ final class Player {
 
     static let tempoRange = 50...140
 
-    /// Settings → Sound → Your instrument (`instrument`: "piano" or "organ", since 0.1 (65);
-    /// piano the default since 0.1 (66)). Piano is the content's own monitor: the upright in the
-    /// lessons and the blues, the record's synth on the electronic tracks. Organ is the sampled
-    /// Hammond (`organ` in instruments.json, `scripts/organ.py`) wherever the content would hand
-    /// you the piano or the Rhodes; the electronic tracks keep their synths either way.
-    static var organOn: Bool { (UserDefaults.standard.string(forKey: "instrument") ?? "piano") == "organ" }
+    /// Settings → Sound → Your instrument (`instrument`: "piano", "organ" or "rhodes"; the
+    /// picker since 0.1 (65), piano the default since 0.1 (66), the Rhodes since 0.1 (67)). Piano
+    /// is the content's own monitor: the upright in the lessons and the blues, the record's synth
+    /// on the electronic tracks. Organ is the sampled Hammond (`organ` in instruments.json,
+    /// `scripts/organ.py`) and Rhodes the sampled Mark I (`rhodes73`, `scripts/rhodes.py`),
+    /// wherever the content would hand you the piano or its own Rhodes; the electronic tracks
+    /// keep their synths either way.
+    static var yourInstrument: String? {
+        switch UserDefaults.standard.string(forKey: "instrument") ?? "piano" {
+        case "organ": return "organ"
+        case "rhodes": return "rhodes73"
+        default: return nil
+        }
+    }
 
     /// Tells the engine which instrument your keys play for the current content.
     func applyInstrument() {
         let monitor = game.map { $0.song.part($0.part).monitor } ?? audio.band.instruments["monitor"] ?? "piano"
-        audio.send(.monitor(Self.organOn && ["piano", "rhodes"].contains(monitor) ? SampledInstrument.shared("organ") : nil))
+        let yours = ["piano", "rhodes"].contains(monitor) ? Self.yourInstrument : nil
+        audio.send(.monitor(yours.map { SampledInstrument.shared($0) }))
     }
 
     init(audio: AudioEngine, lesson: Lesson, progress: ProgressStore) {

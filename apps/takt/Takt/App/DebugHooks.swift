@@ -173,6 +173,7 @@ enum DebugHooks {
             case ("off", let v?): command = .noteOff(note: Int(v)!)
             case ("transpose", let v?): command = .transpose(Int(v)!)
             case ("organ", let v?): command = .monitor(v == "1" ? SampledInstrument.shared("organ") : nil)
+            case ("keys", let v?): command = .monitor(v == "0" ? nil : SampledInstrument.shared(v))  // your keys' instrument by name
             case ("band", let v?): command = .band(audio!.load(band: v))  // the room follows the band
             case ("song", let v?):
                 let sp = v.split(separator: "/").map(String.init)

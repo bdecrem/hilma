@@ -236,4 +236,5 @@ def main():
     print(f"{len(list(OUT.glob('*.caf')))} files, {total / 1e6:.1f} MB")
 
 
-main()
+if __name__ == "__main__":
+    main()

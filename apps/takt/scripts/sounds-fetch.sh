@@ -40,4 +40,7 @@ curl -sL -O "$FP/muldjordkit/releases/download/2020-10-18/MuldjordKit-SFZ+WAV-20
 7zz x -y -odrums MuldjordKit-SFZ+WAV-20201018.7z >/dev/null
 curl -sL -o organ.tar.xz "https://freepats.zenvoid.org/Organ/PercussiveOrganEmulation/PercussiveOrganEmulation-SFZ-20190715.tar.xz"
 tar -xJf organ.tar.xz -C organ
-echo "piano $(ls piano | wc -l), sax $(ls sax | wc -l), hh $(ls hh | wc -l), bass + drums + organ extracted in $OUT"
+# jRhodes3d (CC BY-NC 4.0 in an app; see Takt/Licenses/README.md), cut by scripts/rhodes.py.
+curl -sL -o rhodes.zip https://github.com/sfzinstruments/jlearman.jRhodes3d/archive/refs/heads/master.zip
+mkdir -p rhodes && unzip -q -o rhodes.zip -d rhodes
+echo "piano $(ls piano | wc -l), sax $(ls sax | wc -l), hh $(ls hh | wc -l), bass + drums + organ + rhodes extracted in $OUT"

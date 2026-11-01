@@ -903,6 +903,38 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   the Drawbar one (888 8xx) from the same FreePats page are the alternatives if 888 reads too
   dark; swapping is one glob in `organ.py`. Debug: `organ=1` / `organ=0` in a `-RenderScript`.
 
+- **Your instrument: a sampled Rhodes as the third option, 0.1 (67), 2026-11-01.** Bart, on the
+  sampled organ: "this sounds alright - samples, right? … so why not do samples for a rhodes
+  too, there's many online i'm pretty sure - as a third option". **Settings → Sound → Your
+  instrument** is Piano / Organ / Rhodes (`instrument` = "rhodes"; `Player.yourInstrument`
+  maps the setting to a manifest name, nil for the content's own). The Rhodes is **Jeff
+  Learman's jRhodes3d** (github.com/sfzinstruments/jlearman.jRhodes3d): his 1977 Rhodes Mark I
+  Stage 73 recorded from the harp connector, 65 full-length mono samples (up to 25 s), five
+  velocity layers, every fourth white key F1..C7. **License: CC BY-NC 4.0 for distribution in
+  an app**, commercial licenses on request from the author (jjlearman@gmail.com) — the one
+  non-CC0/CC BY sound in Takt, taken because no CC0 or CC BY recording of a real Rhodes exists
+  (FreePats has only a synthesized EP, VCSL none, the Freesound Mark II is sparse and mono);
+  **a license from him is needed before Takt is sold** (Licenses/README.md). Cut by
+  **`scripts/rhodes.py`** (`sounds-fetch.sh` downloads the zip) to `Sounds/rho-<root>-<layer>.caf`,
+  11.8 MB, registered as `rhodes73`: the piano's cut (onset trim, tail at −60 dB or the 7/5/3.5 s
+  cap, 40 ms fade), the SFZ's velocity groups as layers (ceilings 0.37 · 0.567 · 0.748 · 0.874 ·
+  1.0; **the set's file names count the other way, `_5.flac` is the softest**, which cost one
+  round: at first velocity 0.3 came out louder than 0.8), the dynamics baked in as the files
+  are recorded at one level and the SFZ leaves them to the player (a layer's gain = the velocity
+  at its group's centre, −14.5 dB soft to −0.5 hard), and the sustain loop chosen per file like
+  the organ's: the longest loop up to 1.3 s before the fade whose seam correlates within 0.02 of
+  the best (all 1.00), its decay per pass measured (−2.6 to −3.6 dB a pass on G3, −12 to −20 on
+  the top notes that die anyway) and written as the zone's `loopDecay` (new in the manifest,
+  default 1; `SampleBuffer.bundled(_:loop:decay:)`). Level: the set at −6 dBFS peak (`NORM`), so
+  a G3 at 0.8 is −28.9 dBFS RMS in its first second where the piano's is −29.0, then −35 at 3 s,
+  −45 at 7 s, −62 at 14 s (a Rhodes rings longer than the upright; the piano is at −78 by then),
+  −90 half a second after note-off; at 0.3 it is −38.5 (ten dB of touch); held 14 s the biggest
+  50 ms step is +0.1 dB (no seam audible in the numbers); four notes at 0.9 peak −9.7; over the
+  Blue Lantern band a Dm7 peaks −6.5, no clipping. Checks 307/307 on the simulator and the Mac.
+  Also: `scripts/sounds.py` got its `if __name__ == "__main__"` guard (importing it ran `main()`,
+  which first deletes every file in `Takt/Sounds`; restored from git), and the RenderScript has
+  `keys=<instrument>|0` for your keys' instrument by name.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without
