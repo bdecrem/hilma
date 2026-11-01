@@ -41,8 +41,9 @@ enum EngineCommand {
     case trim(band: Float, monitor: Float)
     /// Semitones added to every pitched band note (the minor band in another key).
     case transpose(Int)
-    /// Your keys play the organ (Settings → Sound → Your instrument) instead of the band's monitor instrument.
-    case organ(Bool)
+    /// Your keys play this instrument (Settings → Sound → Your instrument: the organ) instead of
+    /// the band's monitor instrument; nil: the band's own.
+    case monitor(SampledInstrument?)
     /// Another band's events (`BandRenderer.load`), picked up at the same tick.
     case band(BandRenderer.Events)
 }
@@ -295,12 +296,8 @@ final class BandRenderer {
     private let monitorVoices = UnsafeMutableBufferPointer<SampleVoice>.allocate(capacity: 24)
     /// The live stab's notes, on whichever bus plays it (keys, horns, monitor).
     private let stabVoices = UnsafeMutableBufferPointer<DubStab.Voice>.allocate(capacity: 48)
-    /// The organ (`Organ.swift`): your keys when `useOrgan`; its voices sum into `organBus`, the cabinet puts them on the monitor bus.
-    private let organVoices = UnsafeMutableBufferPointer<Organ.Voice>.allocate(capacity: 16)
-    private let organ: Organ.Cabinet
-    private let organBus: UnsafeMutablePointer<Float>
-    private var useOrgan = false
-    private var organTail = 0
+    /// Your keys' instrument when it is not the band's (`.monitor`): the organ.
+    private var monitorOverride: SampledInstrument?
     private var age = 0
 
     init(band: BandData, sampleRate: Double, tempo: Double) {
@@ -343,10 +340,6 @@ final class BandRenderer {
         hornVoices.initialize(repeating: SampleVoice())
         monitorVoices.initialize(repeating: SampleVoice())
         stabVoices.initialize(repeating: DubStab.Voice())
-        organVoices.initialize(repeating: Organ.Voice())
-        organ = Organ.Cabinet(sampleRate: sampleRate)
-        organBus = .allocate(capacity: maxChunk)
-        organBus.initialize(repeating: 0, count: maxChunk)
         commands.reserveCapacity(256)
         inbox.withLock { $0.reserveCapacity(256) }
         anchor = .init(frame: 0, tick: 0, samplesPerTick: .infinity, tempo: tempo)
@@ -669,26 +662,7 @@ final class BandRenderer {
     private func play(_ index: Int, note: Int, velocity: Float, held: Int, live: Bool,
                       in pool: UnsafeMutableBufferPointer<SampleVoice>, bus: Channel, gain: Float = 1, tick: Double) {
         age += 1
-        if bus == .monitor, useOrgan {
-            for i in organVoices.indices where organVoices[i].active && organVoices[i].note == note {
-                organVoices[i].stop()
-                organVoices[i].note = -1
-            }
-            // Percussion is single-trigger: only a key struck with none held (a chord's keys
-            // land within a few ms of each other and all get it).
-            var othersHeld = false
-            for i in organVoices.indices where organVoices[i].active && organVoices[i].keyed
-                && frame - organVoices[i].startFrame > Int64(0.03 * sampleRate) { othersHeld = true }
-            var s = 0
-            for i in organVoices.indices {
-                if !organVoices[i].active { s = i; break }
-                if organVoices[i].age < organVoices[s].age { s = i }
-            }
-            organVoices[s].start(note: note, velocity: velocity, held: held, gain: gain * Organ.trim, live: live,
-                                 percussion: !othersHeld, age: age, frame: frame, sampleRate: sampleRate)
-            return
-        }
-        guard let inst = instruments[index] else {
+        guard let inst = (bus == .monitor ? monitorOverride : nil) ?? instruments[index] else {
             guard let stab else { return }
             let b = bus.rawValue
             for i in stabVoices.indices where stabVoices[i].active && stabVoices[i].bus == b && stabVoices[i].note == note {
@@ -712,7 +686,7 @@ final class BandRenderer {
         }
         let p = inst.pick(note: note, velocity: velocity)
         // Level follows velocity on top of the layer's own loudness.
-        pool[slot(pool)].start(p.buffer, ratio: p.ratio, gain: p.gain * gain * (0.35 + 0.65 * velocity), heldFrames: held,
+        pool[slot(pool)].start(p.buffer, ratio: p.ratio, gain: p.gain * gain * (0.35 + 0.65 * p.velocity), heldFrames: held,
                                releaseSeconds: inst.release, note: note, live: live, sustain: true, age: age, sampleRate: sampleRate)
     }
 
@@ -747,14 +721,6 @@ final class BandRenderer {
         for i in stabVoices.indices where stabVoices[i].active {
             let k = stabVoices[i].bus * c
             stabVoices[i].render(busL + k, busR + k, from: a, to: b)
-        }
-        var organOn = false
-        for i in organVoices.indices where organVoices[i].active { organOn = true; break }
-        if organOn || organTail > 0 {
-            (organBus + a).update(repeating: 0, count: b - a)
-            for i in organVoices.indices where organVoices[i].active { organVoices[i].render(organBus, from: a, to: b) }
-            organ.process(organBus, from: a, to: b, outL: busL + 4 * c, outR: busR + 4 * c)
-            organTail = organOn ? Int(0.1 * sampleRate) : max(0, organTail - (b - a))
         }
     }
 
@@ -953,8 +919,8 @@ final class BandRenderer {
             monitorTrim = monitor
         case .transpose(let n):
             transpose = n
-        case .organ(let on):
-            useOrgan = on
+        case .monitor(let inst):
+            monitorOverride = inst
         case .band(let e):
             // The new band from the same tick: the event cursor moves to where the transport is.
             // Its kit and instruments come with it; voices still sounding keep their buffers.
@@ -996,14 +962,10 @@ final class BandRenderer {
     }
 
     private func stopLive(_ note: Int) {
-        let release = instruments[monitor]?.release ?? 0
+        let release = (monitorOverride ?? instruments[monitor])?.release ?? 0
         for i in monitorVoices.indices where monitorVoices[i].active && monitorVoices[i].live && monitorVoices[i].note == note {
             monitorVoices[i].stop(releaseSeconds: release, sampleRate: sampleRate)
             monitorVoices[i].live = false
-        }
-        for i in organVoices.indices where organVoices[i].active && organVoices[i].live && organVoices[i].note == note {
-            organVoices[i].stop()
-            organVoices[i].live = false
         }
         let b = Channel.monitor.rawValue
         for i in stabVoices.indices where stabVoices[i].active && stabVoices[i].live && stabVoices[i].bus == b && stabVoices[i].note == note {

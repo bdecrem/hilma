@@ -10,6 +10,7 @@ sample packs.
 | Tenor sax (`sax-*`, `saxl-*`: HORNS) | "Tenor Saxophone" (Brett), VCSL | CC0 1.0 |
 | Hi-hat foot chick (`hatFoot-*`) | "Hi-Hat Cymbal", VCSL | CC0 1.0 |
 | Bass (`bass-*`) | "Finger Bass YR", a Yamaha RBX recorded by Andrea Biasior, FreePats (freepats.zenvoid.org) | CC0 1.0 |
+| Organ (`org-*`: your keys when Settings → Sound → Your instrument is Organ; `scripts/organ.py`) | "Percussive organ emulation", a Hammond with percussion through a Leslie rendered from the setBfree tonewheel emulator by the Strix SoundFont Team, FreePats version by Roberto (zenvoid.org), 2019 | CC0 1.0 |
 | Drums (`kick`, `snare`, `xstick`, `hat`, `hatOpen`, `ride`, `rideBell`, `crash`, `tomHi`, `tomLo`) | **MuldjordKit by Lars Muldjord** (muldjord.com, drumgizmo.org), FreePats stereo version by Roberto (zenvoid.org) | **CC BY 4.0**: credit required |
 | Band patterns (`Takt/Content/band-*.json`) | Written by `apps/takt/scripts/band.py` | Own work |
 

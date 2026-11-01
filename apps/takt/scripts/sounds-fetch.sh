@@ -5,10 +5,11 @@
 #   python3 apps/takt/scripts/sounds.py <dir>      # (numpy + soundfile) -> Takt/Sounds
 #
 # VCSL (CC0): the Knight upright piano (Ivy Audio), the tenor sax, the hi-hat foot chick.
-# FreePats (CC0): Finger Bass YR. FreePats (CC-BY 4.0, Lars Muldjord): MuldjordKit.
+# FreePats (CC0): Finger Bass YR, the Percussive organ emulation (setBfree, Strix SoundFont
+# Team; cut by scripts/organ.py). FreePats (CC-BY 4.0, Lars Muldjord): MuldjordKit.
 set -euo pipefail
 OUT=${1:?usage: sounds-fetch.sh <dir>}
-mkdir -p "$OUT"/{piano,sax,hh}
+mkdir -p "$OUT"/{piano,sax,hh,organ}
 cd "$OUT"
 
 VCSL=https://raw.githubusercontent.com/sgossner/VCSL/master
@@ -37,4 +38,6 @@ curl -sL -O "$FP/electric-bass-YR/releases/download/2019-09-30/FingerBassYR-SFZ+
 curl -sL -O "$FP/muldjordkit/releases/download/2020-10-18/MuldjordKit-SFZ+WAV-20201018.7z"
 7zz x -y -obass FingerBassYR-SFZ+WAV-20190930.7z >/dev/null
 7zz x -y -odrums MuldjordKit-SFZ+WAV-20201018.7z >/dev/null
-echo "piano $(ls piano | wc -l), sax $(ls sax | wc -l), hh $(ls hh | wc -l), bass + drums extracted in $OUT"
+curl -sL -o organ.tar.xz "https://freepats.zenvoid.org/Organ/PercussiveOrganEmulation/PercussiveOrganEmulation-SFZ-20190715.tar.xz"
+tar -xJf organ.tar.xz -C organ
+echo "piano $(ls piano | wc -l), sax $(ls sax | wc -l), hh $(ls hh | wc -l), bass + drums + organ extracted in $OUT"

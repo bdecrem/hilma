@@ -8,7 +8,7 @@ struct SettingsScreen: View {
     @AppStorage("pianoLevel") private var pianoLevel = 1.0
     @AppStorage("inputOffsetMs") private var inputOffsetMs = 0.0
     @AppStorage("menuMusic") private var menuMusic = true
-    @AppStorage("instrument") private var instrument = "organ"
+    @AppStorage("instrument") private var instrument = "piano"
     @AppStorage("countIn") private var countIn = true
     @AppStorage("preferMinor") private var preferMinor = false
     @AppStorage("tapMode") private var tapMode = KeyboardStrip.tapModeDefault

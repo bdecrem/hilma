@@ -873,6 +873,36 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   triad reads −23.0 and the peak −3.1, no clipping. Checks 307/307. Debug: `organ=1` / `organ=0`
   in a `-RenderScript`; `-instrument piano` at launch.
 
+- **The organ is a sampled Hammond, and the piano is the default again, 0.1 (66), 2026-11-01.**
+  Bart on the synthesized organ of 0.1 (65): "it's TERRIBLE. sounds like the dumbest instrument
+  ever made". `Audio/Organ.swift` is gone. **Your instrument** keeps its two options, Piano
+  (default now) / Organ; Organ is the FreePats **"Percussive organ emulation"** (CC0): a Hammond
+  on 888 000 000 with percussion through a Leslie, rendered from the setBfree tonewheel emulator
+  by the Strix SoundFont Team, 16 notes a major third apart C2..G#6, each a left and a right
+  file (the Leslie's two sides, L/R correlation about 0, so it is real stereo). Cut by
+  **`scripts/organ.py`** (`sounds-fetch.sh` downloads it with the rest) to `Sounds/org-<root>.caf`,
+  4.4 MB, registered as `organ`. The set's two sides share a loop end but not a loop start, so
+  the loop is cut again: the end is the set's, the start the point in the steady part where the
+  60 ms before it best match the 60 ms before the end on both sides at once (seam correlation
+  0.68–1.00; computing it from the pitch failed, −0.67 on E3: a tonewheel is a few cents off the
+  tempered pitch). **The sampler** learned two things for it: a zone's `loop` (start and end
+  frames) in `instruments.json` sets the sustain loop explicitly, at full level every pass, 200 ms
+  crossfade (`SampleBuffer.bundled(_:loop:)`), where a recording without one still gets the
+  measured tail loop of 0.1 (64); and an instrument's `touch` (0...1, default 1, the organ 0.35)
+  scales how much velocity moves its level and picks its layer (`SampledInstrument.pick` returns
+  the velocity it felt). **The engine** plays your keys on an override instrument instead of a
+  separate synth: `EngineCommand.monitor(SampledInstrument?)`, `BandRenderer.monitorOverride`
+  (nil: the band's own monitor), `Player.applyInstrument()` sends `SampledInstrument.shared("organ")`
+  or nil. Level: the set is normalized to −14 dBFS peak (`NORM`), so a held G3 at 0.8 is −29 dBFS
+  RMS and stays there (−30.2 after 14 s, 100 ms windows within ±4 dB from the Leslie, the biggest
+  step 3 dB, −89 dBFS half a second after note-off), where the piano's first second at the same
+  velocity is −29.0; its spectrum is the three drawbars (0.5, 1, 1.5 × f0, the sub-octave the
+  strongest: the sound sits an octave under the written pitch the way an 888 Hammond does). Over
+  the Slow Burn band (−24 RMS) a triad reads −19.8 and four notes −20.4, peak −3.0, no clipping.
+  Checks 307/307 on the simulator and the Mac. The Rock organ emulation (888 888 888, driven) and
+  the Drawbar one (888 8xx) from the same FreePats page are the alternatives if 888 reads too
+  dark; swapping is one glob in `organ.py`. Debug: `organ=1` / `organ=0` in a `-RenderScript`.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

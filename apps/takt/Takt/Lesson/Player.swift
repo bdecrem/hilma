@@ -102,17 +102,17 @@ final class Player {
 
     static let tempoRange = 50...140
 
-    /// Settings → Sound → Your instrument (`instrument`: "piano" or "organ", organ since
-    /// 0.1 (65)). Piano is the content's own monitor: the upright in the lessons and the blues,
-    /// the record's synth on the electronic tracks. Organ is the Hammond (`Organ.swift`)
-    /// wherever the content would hand you the piano or the Rhodes; the electronic tracks
-    /// keep their synths either way.
-    static var organOn: Bool { (UserDefaults.standard.string(forKey: "instrument") ?? "organ") == "organ" }
+    /// Settings → Sound → Your instrument (`instrument`: "piano" or "organ", since 0.1 (65);
+    /// piano the default since 0.1 (66)). Piano is the content's own monitor: the upright in the
+    /// lessons and the blues, the record's synth on the electronic tracks. Organ is the sampled
+    /// Hammond (`organ` in instruments.json, `scripts/organ.py`) wherever the content would hand
+    /// you the piano or the Rhodes; the electronic tracks keep their synths either way.
+    static var organOn: Bool { (UserDefaults.standard.string(forKey: "instrument") ?? "piano") == "organ" }
 
     /// Tells the engine which instrument your keys play for the current content.
     func applyInstrument() {
         let monitor = game.map { $0.song.part($0.part).monitor } ?? audio.band.instruments["monitor"] ?? "piano"
-        audio.send(.organ(Self.organOn && ["piano", "rhodes"].contains(monitor)))
+        audio.send(.monitor(Self.organOn && ["piano", "rhodes"].contains(monitor) ? SampledInstrument.shared("organ") : nil))
     }
 
     init(audio: AudioEngine, lesson: Lesson, progress: ProgressStore) {

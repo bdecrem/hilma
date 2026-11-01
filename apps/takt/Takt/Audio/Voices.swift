@@ -16,7 +16,8 @@ struct SampleBuffer {
     /// frames of the loop into its start, and every pass is `loopDecay` times quieter (the
     /// tail's own decay measured over the loop), so a held piano note fades the way the
     /// piano does instead of stopping where the recording was cut. `loopEnd` 0 = no loop
-    /// (a file under a second, or a tail already at silence).
+    /// (a file under a second, or a tail already at silence). A recording of a steady tone
+    /// (the organ) brings its own loop from the manifest instead, at full level every pass.
     var loopStart = 0
     var loopEnd = 0
     var xfade = 0
@@ -63,7 +64,8 @@ struct SampleBuffer {
     }
 
     /// Loads a bundled CAF from Takt/Sounds. Missing sounds trap: they are part of the build.
-    static func bundled(_ name: String) -> SampleBuffer {
+    /// `loop`: the manifest's sustain loop (start and end frames), else the tail loop is found.
+    static func bundled(_ name: String, loop: [Int]? = nil) -> SampleBuffer {
         guard let url = Bundle.main.url(forResource: name, withExtension: "caf") else {
             fatalError("sound \(name).caf is not in the bundle")
         }
@@ -88,7 +90,15 @@ struct SampleBuffer {
                 r.update(from: ch[1], count: n)
                 r[n] = 0
             }
-            return withLoop(SampleBuffer(left: l, right: r, count: n, rate: format.sampleRate))
+            var b = SampleBuffer(left: l, right: r, count: n, rate: format.sampleRate)
+            if let loop, loop.count == 2, loop[0] >= 0, loop[0] + 2 < loop[1], loop[1] <= n - 1 {
+                b.loopStart = loop[0]
+                b.loopEnd = loop[1]
+                b.xfade = min(Int(0.2 * format.sampleRate), (loop[1] - loop[0]) / 2, loop[0])
+                b.loopDecay = 1
+                return b
+            }
+            return withLoop(b)
         } catch {
             fatalError("sound \(name): \(error)")
         }
