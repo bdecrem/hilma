@@ -21,7 +21,12 @@ backbeat once it drives; a bass doubles the thumb an octave down (Bart: "make it
 
 Chords part: the thumb and the chick (roles for every note: the thumb is the root, the chick
 the fifth, the root and the third, the turnaround walks root, seventh, sixth, fifth). Melody
-part: the voice, on the horns channel, the same guitar. Your keys play the guitar on both. Not charted against BLUES.md yet (Bart: "without any charts"); the
+part: the voice, on the horns channel, the same guitar. Your keys play the piano (or the Rhodes
+or the organ from Settings) on both parts, the way every Stage track is played: the record's
+guitar plays whatever your part leaves out. Charted to BLUES.md (0.1 (73)): the blues melody
+patch (Easy = tier 2, a chorus-long phrase, no borrowing), chords Easy = tier 2 (the thumb on
+the 1 and the 3); Medium on the chords is the thumb on every beat, 1.54 a second, the one rung
+a Delta thumb has there. Not charted against BLUES.md yet (Bart: "without any charts"); the
 weights are honest so the levels fall out playable.
 """
 import sys
@@ -32,7 +37,7 @@ from common import BAR, TPB, Song  # noqa: E402
 
 FORM = ["A7", "A7", "A7", "A7", "D7", "D7", "A7", "A7", "E7", "D7", "A7", "E7"]
 s = Song("song-dockery", "Dockery", "Delta blues", "A", 96, "crossroads",
-         "A Delta blues in A. One piano, a foot on the floor, and the voice alone in the stops.", seed=1936)
+         "A Delta blues in A. One guitar, a foot on the floor, and the voice alone in the stops.", seed=1936)
 s.sounds = {
     "kick": {"kit": "kick", "gainDb": -3},
     "hatFoot": {"kit": "hatFoot", "gainDb": -9},
@@ -92,7 +97,7 @@ CHICK = {  # (note, role, finger): the chord on the middle strings, the fifth, t
 SLAM = [(45, "root", 5), (52, "fifth", 4), (57, "root", 3), (61, "third", 2), (67, "seventh", 1)]
 TURN = [(57, "root", 1), (55, "seventh", 2), (54, "sixth", 3), (52, "fifth", 4)]   # A G F# E, over the thumb
 
-chords = s.part("chords", "The thumb", "guitar", "keys", "guitar")
+chords = s.part("chords", "The thumb", "piano", "keys", "guitar")
 for bar in range(s.bars):
     o = bar * BAR
     ch = chord_at(bar)
@@ -166,7 +171,7 @@ VOICE = {
     11: [(0, E4, 12, 1), (12, G4, 8, 2), (20, A4, 4, 3), (24, C5, 12, 2), (36, D5, 12, 3)],
 }
 
-melody = s.part("melody", "The voice", "guitar", "horns", "guitar")
+melody = s.part("melody", "The voice", "piano", "horns", "guitar")
 for c in range(CHORUSES):
     for b in range(12):
         bar = c * 12 + b

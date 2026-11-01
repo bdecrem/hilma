@@ -11,11 +11,12 @@ The tracks today: **Slow Burn** (slow blues in G, 90, four choruses, 2:08), **Sl
 (the same once round, 0:32), **Boogie Shoes** (jump blues in C, 120, six choruses, 2:24),
 **Pearl Street** (Texas shuffle in E, 112, five choruses with a stop-time chorus, 2:09, added
 2026-10-31) and **Blue Lantern** (minor blues in D, 84, straight eighths over a sixteenth hat,
-Rhodes, four choruses, 2:17, added 2026-10-31), and under the Stage's "All tracks" card two
-old-school ones, uncharted against this sheet (2026-11-01, Bart: "without any charts"): **Dockery**
-(Delta blues in A, 96, one piano and a foot stomp, stop-time tops, 2:00) and **Maxwell Street**
-(Chicago blues in A, 80, the stop-time 12-bar with a unison riff, 2:24); their ladders fall out of
-the rules alone (see the `-LessonCheck` lines). Generators in `scripts/songs/`, charts cut at
+Rhodes, four choruses, 2:17, added 2026-10-31), and under the Stage's "All tracks" card three
+old-school ones (2026-11-01): **Dockery** (Delta blues in A, 96, one guitar and a foot stomp,
+stop-time tops, 2:00) and **Friars Point** (Delta boogie in E, 116, the boogie thumb under the
+slide's triplets, 2:04), both charted to this sheet in 0.1 (73) (their columns below), and
+**Maxwell Street** (Chicago blues in A, 80, the stop-time 12-bar with a unison riff, 2:24), not
+charted yet (Bart: "without any charts"; its ladder falls out of the rules alone). Generators in `scripts/songs/`, charts cut at
 load time by `Takt/Content/charting.json`; every blues melody carries the same `songs` patch
 there (Easy = tier 2, a chorus-long phrase, no borrowing on tier 2).
 
@@ -47,13 +48,13 @@ from those weights, but **the density targets below are the spec**: when a line'
 a level the wrong density, patch the song in `charting.json` (`songs`) or rewrite the weights,
 and say which in the song's generator docstring.
 
-| Level | What you play | Onsets / s target | Slow Burn | Boogie Shoes | Pearl Street | Blue Lantern |
-|---|---|---|---|---|---|---|
-| Beginner | The anchors, one at a time, with room: never two inside 2.4 s, never 5 s of nothing. Every key of each four bars appears once. Learn where the phrases land. | 0.2 – 0.35 | 0.29 | 0.25 | 0.26 | 0.26 |
-| Easy | The anchors, all of them, plus the few keys they miss over a chorus. About one note a bar. No borrowing into silences. **Half of Medium.** | 0.4 – 0.55 | 0.43 | 0.64 (a riff in eighths; was 0.88) | 0.51 | 0.41 |
-| Medium | Most of the tune: anchors and main notes, nothing quicker than a beat's division you can read. | 0.8 – 1.1 (a jump-blues riff runs to 1.6) | 1.09 | 1.57 | 1.31 | 0.88 |
-| Hard | The line as the record plays it: pushes, pickups, grace notes, the turnaround ornaments. | the record | 1.23 | 2.17 | 1.86 | 0.97 |
-| Adaptive | Starts one rung under your last run's top (first time: rung 4); clean 4-bar blocks climb one rung, under 60 % or three misses in a row drop one. The seven rungs must climb smoothly: no rung more than twice the one below it. | | 0.29 · 0.43 · 0.84 · 0.87 · 1.09 · 1.11 · 1.23 | 0.25 · 0.64 · 0.79 · 1.49 · 1.57 · 1.69 · 2.17 | 0.26 · 0.51 · 0.77 · 1.23 · 1.31 · 1.42 · 1.86 | 0.26 · 0.41 · 0.68 · 0.74 · 0.88 · 0.94 · 0.97 |
+| Level | What you play | Onsets / s target | Slow Burn | Boogie Shoes | Pearl Street | Blue Lantern | Dockery | Friars Point |
+|---|---|---|---|---|---|---|---|---|
+| Beginner | The anchors, one at a time, with room: never two inside 2.4 s, never 5 s of nothing. Every key of each four bars appears once. Learn where the phrases land. | 0.2 – 0.35 | 0.29 | 0.25 | 0.26 | 0.26 | 0.27 | 0.24 |
+| Easy | The anchors, all of them, plus the few keys they miss over a chorus. About one note a bar. No borrowing into silences. **Half of Medium.** | 0.4 – 0.55 | 0.43 | 0.64 (a riff in eighths; was 0.88) | 0.51 | 0.41 | 0.50 | 0.55 |
+| Medium | Most of the tune: anchors and main notes, nothing quicker than a beat's division you can read. | 0.8 – 1.1 (a jump-blues riff runs to 1.6) | 1.09 | 1.57 | 1.31 | 0.88 | 1.18 | 1.42 (a boogie) |
+| Hard | The line as the record plays it: pushes, pickups, grace notes, the turnaround ornaments. | the record | 1.23 | 2.17 | 1.86 | 0.97 | 1.50 | 2.80 (the slide's triplets) |
+| Adaptive | Starts one rung under your last run's top (first time: rung 4); clean 4-bar blocks climb one rung, under 60 % or three misses in a row drop one. The seven rungs must climb smoothly: no rung more than twice the one below it. | | 0.29 · 0.43 · 0.84 · 0.87 · 1.09 · 1.11 · 1.23 | 0.25 · 0.64 · 0.79 · 1.49 · 1.57 · 1.69 · 2.17 | 0.26 · 0.51 · 0.77 · 1.23 · 1.31 · 1.42 · 1.86 | 0.26 · 0.41 · 0.68 · 0.74 · 0.88 · 0.94 · 0.97 | 0.27 · 0.50 · 0.78 · 1.11 · 1.18 · 1.18 · 1.50 | 0.24 · 0.55 · 0.80 · 1.34 · 1.42 · 1.86 · 2.80 |
 
 Notes from play:
 
@@ -73,6 +74,14 @@ Notes from play:
   To hear on the next play-through.
 - 2026-10-31, the two new tracks were written to the §4 recipe and landed inside the bands at
   the first charting: Pearl Street Easy 0.51, Blue Lantern Easy 0.41.
+- 2026-11-01, the two Delta tracks (0.1 (73)): with the blues melody patch, Dockery's voice is
+  0.27 · 0.50 · 1.18 on Beginner / Easy / Medium, inside the bands (Medium a hair over 1.1).
+  **Friars Point's Beginner is every other anchor**: at 116 the bar is 2.07 s, under Beginner's
+  2.4 s gap, so the first rung takes 0.24 and Easy (0.55, the anchors and the cover) is 2.3 times
+  it, over the "twice" rule. Beginner cannot borrow (`fromAbove`), so a `space` patch on it does
+  nothing; the rung between doesn't exist short of a 2.0 s gap, which would make Beginner the
+  anchors themselves (≈ 0.48, over its band). Left as is, to hear: Beginner there is one note
+  every other bar, which may be the right first rung for a 116 bpm boogie anyway.
 
 ## 3. Chords (the comping)
 
@@ -81,13 +90,13 @@ stands on, **2** the groove hits, the 3 or the and-of-2, **3** the pushes) and a
 (`root, third, fifth, seventh, sixth, ninth`). Levels cut both the rhythm (which hits) and the
 voicing (how many notes, in that role order), one thing at a time.
 
-| Level | What you play | Onsets / s target | Slow Burn | Boogie Shoes | Pearl Street | Blue Lantern |
-|---|---|---|---|---|---|---|
-| Beginner | One note a chord, the root, on the downbeat hits only, with room (2.4 s). Learn the changes. | 0.2 – 0.4 | 0.38 | 0.25 | 0.23 | 0.35 |
-| Easy | Two-note chords (root + third). Slow Burn: the shell on the 1 and the 3 (tier 2, since 0.1 (63)); the others: the groove hits (tier 3). | 0.6 – 1.0 | 0.74 (was 1.11) | 0.99 | 0.87 | 0.99 |
-| Medium | Three-note chords on the groove. Same rhythm as Easy, the triad. | 0.9 – 1.2 | 1.11 | 0.99 | 0.87 | 0.99 |
-| Hard | The comping as the record plays it: four-note voicings, every push. | the record | 1.84 | 1.31 | 1.55 | 1.10 |
-| Adaptive | Rungs: root alone → two-note spread → two-note on the groove → triad → + pushes → four notes → the record. | | 0.38 · 0.74 · 1.11 · 1.11 · 1.11 · 1.11 · 1.84 | 0.25 · 0.50 · 0.99 · 0.99 · 1.00 · 1.30 · 1.31 | 0.23 · 0.47 · 0.87 · 0.87 · 0.87 · 0.87 · 1.55 | 0.35 · 0.35 · 0.99 · 0.99 · 0.99 · 0.99 · 1.10 |
+| Level | What you play | Onsets / s target | Slow Burn | Boogie Shoes | Pearl Street | Blue Lantern | Dockery | Friars Point |
+|---|---|---|---|---|---|---|---|---|
+| Beginner | One note a chord, the root, on the downbeat hits only, with room (2.4 s). Learn the changes. | 0.2 – 0.4 | 0.38 | 0.25 | 0.23 | 0.35 | 0.40 | 0.24 |
+| Easy | Two-note chords (root + third). Slow Burn: the shell on the 1 and the 3 (tier 2, since 0.1 (63)); the others: the groove hits (tier 3). Dockery: the thumb on the 1 and the 3 (tier 2). | 0.6 – 1.0 | 0.74 (was 1.11) | 0.99 | 0.87 | 0.99 | 0.79 | 0.96 |
+| Medium | Three-note chords on the groove. Same rhythm as Easy, the triad. Dockery: the thumb on every beat (a Delta thumb's one rung). | 0.9 – 1.2 | 1.11 | 0.99 | 0.87 | 0.99 | 1.54 | 0.96 |
+| Hard | The comping as the record plays it: four-note voicings, every push. The Delta tracks: the thumb and every chick. | the record | 1.84 | 1.31 | 1.55 | 1.10 | 2.82 | 3.68 |
+| Adaptive | Rungs: root alone → two-note spread → two-note on the groove → triad → + pushes → four notes → the record. | | 0.38 · 0.74 · 1.11 · 1.11 · 1.11 · 1.11 · 1.84 | 0.25 · 0.50 · 0.99 · 0.99 · 1.00 · 1.30 · 1.31 | 0.23 · 0.47 · 0.87 · 0.87 · 0.87 · 0.87 · 1.55 | 0.35 · 0.35 · 0.99 · 0.99 · 0.99 · 0.99 · 1.10 | 0.40 · 0.79 · 1.54 · 1.54 · 1.54 · 1.54 · 2.82 | 0.24 · 0.48 · 0.96 · 0.96 · 1.91 · 1.91 · 3.68 |
 
 Notes from play:
 
@@ -103,6 +112,13 @@ Notes from play:
   shell on the 1 and the 3, two a bar, 0.74 a second, a third fewer. The ladder has no rung
   between that and the 1 alone (0.38, Beginner's rhythm with two notes), so "half" would mean
   the 1 alone; to hear which Bart means.
+- 2026-11-01, the Delta thumbs (0.1 (73)): a thumb part is a note a beat, so its ladder is the 1
+  alone → the 1 and the 3 → every beat → every beat with the chick (the chick sits 0.21 s before
+  the next thumb at 96, so only the record's tier takes it). Dockery Medium is 1.54 a second,
+  over the 0.9–1.2 band, because the rung under it (0.79) is Easy; a Delta thumb has no rung
+  between "half the beats" and "every beat". Friars Point's boogie walks root, fifth, sixth,
+  seventh a note a beat with the chick on every late eighth: 0.24 · 0.48 · 0.96 (Easy, the 1
+  and the 3) · 0.96 (Medium) · 1.91 · 1.91 · 3.68, every step at most double.
 - Blue Lantern's Rhodes comps the 1, the "and" of 2 and the 4 (weight 2), with the push on the
   last sixteenth (3): Easy to Hard keep the one rhythm until the record, so the ladder reads
   0.99 four times; Beginner and the second rung are both one chord a bar (0.35). Pearl Street's

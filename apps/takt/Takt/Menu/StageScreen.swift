@@ -402,6 +402,17 @@ struct SongArt: View {
                     ctx.fill(Path(ellipseIn: CGRect(x: x - 2, y: y - 2, width: 4, height: 4)), with: .color(dim))
                 }
                 ctx.fill(Path(ellipseIn: CGRect(x: w * 0.5 - 7, y: h * 0.5 - 7, width: 14, height: 14)), with: .color(hot))
+            case "triplets":
+                // The Delta boogie: the slide's triplets, three rows of three dots climbing, the
+                // landing a bar at the right, lit. Dots 0.09 w apart from 0.12 w, the bar at 0.72 w.
+                for row in 0..<3 {
+                    let y = h * (0.3 + 0.2 * CGFloat(row))
+                    for i in 0..<3 {
+                        let x = w * 0.14 + CGFloat(i) * w * 0.1 + CGFloat(row) * w * 0.07
+                        ctx.fill(Path(ellipseIn: CGRect(x: x - 3, y: y - 3, width: 6, height: 6)), with: .color(row == 2 ? ink : dim))
+                    }
+                }
+                ctx.fill(Path(roundedRect: CGRect(x: w * 0.72, y: h * 0.24, width: w * 0.12, height: h * 0.52), cornerRadius: 2), with: .color(hot))
             case "stoptime":
                 // Chicago stop time: the riff's five bars climbing, then the gap, then the hit.
                 // Five bars 0.09 w wide at 0.11 w apart from x = 0.1 w end at 0.64 w; the hit sits

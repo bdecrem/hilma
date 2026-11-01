@@ -1055,6 +1055,30 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   run against production. Not yet: a catalog of published mods (the row shape is ready for it);
   the agent writing a new comping under a solo (it offers; the chords part only changes on ask).
 
+- **Friars Point, the fast loud Delta: 0.1 (73), 2026-11-01.** Bart: "make another delta blues
+  track, still in the style of robert Johnson… a louder or faster kind". In genre: Johnson's I
+  Believe I'll Dust My Broom and Sweet Home Chicago are the boogie thumb on the low strings under a
+  slide hammering triplets; They're Red Hot is a sprint. `scripts/songs/friars_point.py`: Delta
+  boogie in E at 116, five choruses (2:04), the same guitar and foot as Dockery. The chords part is
+  the thumb's walk (root, fifth, sixth, seventh and back, a note a beat) with the chord chick on
+  every late eighth (dead strings on the record); the melody part is the slide figure (the high note
+  hammered in triplets for two beats, the step, the landing) answered by the voice, a slide chorus
+  of figures in the middle, one big stop at the end. Kick −2, knocks on the body on the backbeat,
+  the bass under the thumb. RMS −22.6, peak −1.3, no clipping. Glyph `triplets`. Then Bart:
+  "give them each melody and chords parts to be played on keys… make sure to use our .md file
+  that has the technical details of how to do the difficulty leveling". Both Delta tracks' parts
+  now have `monitor: piano` (your keys play the piano, or the Rhodes or the organ from Settings;
+  the record's guitar plays what your part leaves out; no keys channel was added to the records),
+  and both are charted to BLUES.md: the blues melody patch in `charting.json` (`easy: 2`,
+  `phrase: 12`, tier 2 `space: 0`) for both melodies, `chords: {easy: 2}` for Dockery. Ladders:
+  Dockery melody 0.27 · 0.50 · 0.78 · 1.11 · 1.18 · 1.18 · 1.50, chords 0.40 · 0.79 · 1.54 ×4 ·
+  2.82 (Medium is the thumb on every beat, the one rung a thumb has); Friars Point melody 0.24 ·
+  0.55 · 0.80 · 1.34 · 1.42 · 1.86 · 2.80 (Beginner is every other anchor: at 116 a bar is 2.07 s,
+  under the 2.4 s gap; Beginner cannot borrow, so Easy is 2.3× it, noted in the sheet as open),
+  chords 0.24 · 0.48 · 0.96 · 0.96 · 1.91 · 1.91 · 3.68 unpatched. Columns for both in BLUES.md.
+  Checks 339/339 (with the Agent mode checks of 0.1 (72)). Dockery's card line says "One guitar"
+  now. Built in a separate worktree again (the Agent mode session was mid-change here).
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without
