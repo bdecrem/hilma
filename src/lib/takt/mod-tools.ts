@@ -46,9 +46,12 @@ export type ToolDef = {
 
 /** One sentence per tool call for the app's working list ("Reading the sax line, bars 25–36"). */
 export function describeCall(d: Draft, name: string, input: Record<string, unknown>): string {
+  // "the sax line (melody)", "the comping (chords)": a title that starts with "The" keeps its own.
   const partTitle = (k: unknown) => {
     const p = d.song.song.parts[k as PartKey]
-    return p ? `${p.title.toLowerCase()} (${k})` : String(k)
+    if (!p) return String(k)
+    const t = p.title.trim()
+    return `${/^the\s/i.test(t) ? t.charAt(0).toLowerCase() + t.slice(1) : `the ${t.toLowerCase()}`} (${k})`
   }
   const range = (a: unknown, b: unknown) => (a === b || b == null ? `bar ${a}` : `bars ${a}–${b}`)
   switch (name) {

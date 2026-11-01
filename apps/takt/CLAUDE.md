@@ -999,6 +999,62 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   checked in a separate worktree because another session was mid-change in this checkout
   (`Takt/Mods/`); only these files were committed.
 
+- **Agent mode: your own version of a track, charted by the agent. 0.1 (72), 2026-11-01.** Bart:
+  "a new feature called AGENT MODE… patterned on the dodo agent, but more targeted: the user can
+  request changes to the melody or chords charts for a track… we clone the track for them (Slow
+  Burn > Slow Burn mod01)… stored in that user's table… 'medium on melody is way too hard, get rid
+  of half the notes', 'add a funky super hard solo towards the end'… a lightweight backend for
+  delivering track bundles… think like a designer… it's the agentic superpower of the app!"
+  **What you see:** Practice's sibling — **Agent** (the small outlined button, lit) on every song
+  card, and **Agent mode** under Practice on the pause menu. A sheet (`Mods/AgentSheet.swift`):
+  AGENT MODE, the song, four things to try on an empty thread, a composer. Send, and the agent
+  works in view — a pulse, the seconds, each step as it happens ("Reading the sax line, bars
+  1–12", "Writing 70 notes into bars 13–24 of the sax line", "Setting the levels of the sax
+  line") — then its report in plain words with the figures (Medium 0.97 → 0.50 a second, level 3
+  of 7: the tune's main notes), then **the new version as a card**: SLOW BURN SHORT MOD 01, a V1
+  badge, the agent's one-line description, every part's four levels in onsets a second with
+  "was" where one moved, Play and Practice. The mod sits on the set list under the song it came
+  from (the badge says V2, V3 as the thread goes on; Agent on its card continues it; Remove in
+  the sheet's header takes it off the account). From the pause menu the agent knows the bar and
+  the section you stopped in. The original is never touched; a mod has its own board.
+  **The agent** (`src/lib/takt/mod-agent.ts`, Opus 5.5, the dodo's loop shape): one turn per
+  message with song tools (`mod-tools.ts`): read_song (everything, with the ladder), read_notes,
+  write_notes (a passage, mirrored into the band's channel with the song's own velocities and
+  the long-tone instrument), set_weights, set_levels (the song's own charting, the shape of
+  charting.json's `songs.<name>`), measure, add_bars / remove_bars (a solo chorus = copy the last
+  one, write over it), set_sections, set_form, set_title (the title and the card's line),
+  set_tempo. Every edit is validated against the app's own rules (`songfile.ts` mirrors
+  Song.validate and BandData) and refused rather than saved broken, so nothing it makes can
+  trap the app. Its system prompt carries the format, the ladder and CHARTING.md's rules (half
+  as hard = half the figure; find the rung, or rewrite the weights when none is near; a level is
+  still the line; the speed never changes). **It measures exactly what the app will play:**
+  `src/lib/takt/charting.ts` is `Charting.swift` ported line for line, proven by
+  `scripts/takt/charting-check.ts` against the app's `-DumpCharts <file>` (every song, part and
+  tier identical; run both after touching either), and the app sends its own figures with every
+  message (`Song.ladder`), which the server compares and logs on any disagreement.
+  **Delivery, Dodo-topics style:** `takt_mods` (schema 003, applied 2026-11-01): the whole song
+  file, the charting override, the thread, a version that counts the turns that changed it
+  (0 = a thread that changed nothing yet; the set list hides it, the next message continues it).
+  `GET/POST /api/takt/mods`, `GET/DELETE /api/takt/mods/<id>`, `POST …/<id>/agent`; a turn
+  streams server-sent events (`mod` when the row exists, `status` per step, `reply`, `done` with
+  the bundle; a ping every 10 s; `maxDuration` 300). The app's `ModStore` keeps every bundle in
+  Application Support/mods, syncs with the account after it is known (new and newer come down,
+  deleted go), loads mods as `Song`s with `Song.ModInfo` (`Song(name:data:mod:)` throws instead
+  of trapping), charts them with `song.charting` (`Charting.overriding`), and the renderer's
+  cache keys on `song.version` so a new turn is a new band. `AppModel.songs` interleaves mods
+  under their base; `-LoadMod <file>` puts a saved bundle on the set list without an account;
+  `-AgentSheet <song> [-AgentSay "…"]` opens the sheet (over `-Route game`, with the position)
+  and sends; `-ScrollTo <song name>` lands the set list on a card. The phone card's buttons
+  are two rows now (Play · Board · best, then Practice · Agent): four didn't fit 360 pt.
+  **Verified:** `scripts/takt/mod-agent-check.ts https://ola.cx` (a guest, the half-the-notes ask
+  → v1 Medium L5 0.97 → L3 0.50 in 33 s, a question that leaves the version alone, a solo chorus
+  → v2, 24 bars, Hard 1.13 → 1.66, list, GET, DELETE: 15/15); the Mac app on this account
+  through the sheet (the solo ask, 7 steps, the card, both themes); the simulator the same; a
+  Hard autoplay run on the v2 bundle through its Solo section to an S. Checks 330/330 (five new
+  mod cases), charting-check 41/41. This Air's local Anthropic key is stale, so the live turns
+  run against production. Not yet: a catalog of published mods (the row shape is ready for it);
+  the agent writing a new comping under a solo (it offers; the chords part only changes on ask).
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

@@ -51,6 +51,7 @@ struct StageScreen: View {
                     // on a tap (Bart, 2026-11-01).
                     ForEach(featured, id: \.name) { song in
                         SongCard(app: app, song: song, compact: compact) { board = song }
+                            .id(song.name)
                     }
                     if !rest.isEmpty {
                         AllTracksCard(count: rest.count, names: rest.map(\.meta.title), open: $allTracks, compact: compact)
@@ -58,6 +59,7 @@ struct StageScreen: View {
                         if allTracks {
                             ForEach(rest, id: \.name) { song in
                                 SongCard(app: app, song: song, compact: compact) { board = song }
+                                    .id(song.name)
                             }
                         }
                     }
@@ -66,8 +68,9 @@ struct StageScreen: View {
             }
             .scrollBounceBehavior(.basedOnSize)
             .onAppear {
-                // `-ScrollTo all` lands on the All tracks card (the screenshots).
-                if UserDefaults.standard.string(forKey: "ScrollTo") == "all" { proxy.scrollTo("all", anchor: .top) }
+                // `-ScrollTo all` lands on the All tracks card, `-ScrollTo <song name>` on that
+                // card (the screenshots).
+                if let to = UserDefaults.standard.string(forKey: "ScrollTo") { proxy.scrollTo(to, anchor: .top) }
             }
             }
 
@@ -150,31 +153,53 @@ struct SongCard: View {
                 .dataLabel(10)
                 .foregroundStyle(Palette.muted)
                 .fixedSize(horizontal: false, vertical: true)
+            // Play · Board · Practice · Agent and the best, one row; on the phone the two small
+            // ones take a row of their own (four buttons and the best don't fit 360 pt).
             HStack(spacing: 10) {
                 PrimaryButton(title: "Play") { app.play(song: song) }
                 QuietButton(title: "Board", action: showBoard)
-                // Practice, a size down: the song held at bar 1, the scrubber and the speed.
-                Button { app.practice(song: song) } label: {
-                    Text("Practice")
-                        .dataLabel(11, weight: .semibold)
-                        .foregroundStyle(Palette.muted)
-                        .padding(.horizontal, 12)
-                        .frame(height: 32)
-                        .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Palette.line, lineWidth: 1))
-                }
-                .buttonStyle(.plain)
-                // Agent mode, the same size, lit: your own version of the track.
-                Button { app.openAgent(song: song) } label: {
-                    Text("Agent")
-                        .dataLabel(11, weight: .semibold)
-                        .foregroundStyle(Palette.signal)
-                        .padding(.horizontal, 12)
-                        .frame(height: 32)
-                        .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Palette.line, lineWidth: 1))
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(song.mod == nil ? "Agent mode: your own version of \(song.meta.title)" : "Agent mode: continue \(song.meta.title)")
+                if !compact { smallButtons }
                 Spacer(minLength: 8)
+                bestView(best)
+            }
+            if compact {
+                HStack(spacing: 10) { smallButtons }
+            }
+        }
+        .padding(compact ? 16 : 20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(shape.fill(Palette.panel))
+        .overlay(shape.strokeBorder(Palette.line, lineWidth: 1))
+    }
+
+    /// Practice, a size down: the song held at bar 1, the scrubber and the speed. Agent mode,
+    /// the same size, lit: your own version of the track.
+    private var smallButtons: some View {
+        Group {
+            Button { app.practice(song: song) } label: {
+                Text("Practice")
+                    .dataLabel(11, weight: .semibold)
+                    .foregroundStyle(Palette.muted)
+                    .padding(.horizontal, 12)
+                    .frame(height: 32)
+                    .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Palette.line, lineWidth: 1))
+            }
+            .buttonStyle(.plain)
+            Button { app.openAgent(song: song) } label: {
+                Text("Agent")
+                    .dataLabel(11, weight: .semibold)
+                    .foregroundStyle(Palette.signal)
+                    .padding(.horizontal, 12)
+                    .frame(height: 32)
+                    .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Palette.line, lineWidth: 1))
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(song.mod == nil ? "Agent mode: your own version of \(song.meta.title)" : "Agent mode: continue \(song.meta.title)")
+        }
+    }
+
+    @ViewBuilder
+    private func bestView(_ best: ProgressStore.ScoreRecord?) -> some View {
                 if let best {
                     HStack(alignment: .firstTextBaseline, spacing: 6) {
                         Text("Best")
@@ -193,12 +218,6 @@ struct SongCard: View {
                         .dataLabel(10)
                         .foregroundStyle(Palette.muted)
                 }
-            }
-        }
-        .padding(compact ? 16 : 20)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(shape.fill(Palette.panel))
-        .overlay(shape.strokeBorder(Palette.line, lineWidth: 1))
     }
 }
 

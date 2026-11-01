@@ -189,7 +189,7 @@ struct AgentSheet: View {
 
     private var composer: some View {
         HStack(alignment: .bottom, spacing: 10) {
-            TextField(working ? "The agent is working…" : (thread.isEmpty ? "What should change?" : "Anything else?"), text: $input, axis: .vertical)
+            TextField(working ? (app.account.state == .unknown ? "Connecting to ola.cx…" : "The agent is working…") : (thread.isEmpty ? "What should change?" : "Anything else?"), text: $input, axis: .vertical)
                 .lineLimit(1...4)
                 .bodyText(15)
                 .foregroundStyle(Palette.text)
@@ -250,6 +250,18 @@ struct AgentSheet: View {
         thread.append(.init(role: "user", text: message, at: now, steps: nil))
         let song = landed ?? target.song
         Task { @MainActor in
+            // The account comes up a moment after launch; a message sent before it is known
+            // would go out without a session. Wait for it, briefly.
+            var waited = 0
+            while app.account.state == .unknown && waited < 40 {
+                try? await Task.sleep(for: .milliseconds(250))
+                waited += 1
+            }
+            guard app.account.state != .unknown else {
+                error = "Can't reach ola.cx. Agent mode needs the account; your songs still play."
+                working = false
+                return
+            }
             for await event in app.mods.send(message, song: song, position: target.position) {
                 switch event {
                 case .created(let t):
