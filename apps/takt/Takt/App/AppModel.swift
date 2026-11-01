@@ -19,6 +19,8 @@ final class AppModel {
     let player: Player?
     let progress: ProgressStore
     let account: AccountStore
+    /// The player's own versions of the Stage songs (Agent mode).
+    let mods: ModStore
     /// The Mac's save panel for the loop (Export MIDI, ⌘E).
     var exporting = false
     /// The module the module screen shows (an entry code: "A1", "S").
@@ -66,12 +68,17 @@ final class AppModel {
     /// Where calibration goes when it is done: the lesson (first time) or Settings.
     private var afterCalibration: Route = .lessons
 
-    init(player: Player?, progress: ProgressStore, account: AccountStore) {
+    init(player: Player?, progress: ProgressStore, account: AccountStore, mods: ModStore = ModStore()) {
         self.player = player
         self.progress = progress
         self.account = account
+        self.mods = mods
         #if DEBUG
         let d = UserDefaults.standard
+        // `-LoadMod <file>` puts a saved bundle on the set list without an account.
+        if let path = d.string(forKey: "LoadMod") {
+            do { try mods.loadFile(path) } catch { fatalError("-LoadMod \(path): \(error)") }
+        }
         if let m = d.string(forKey: "Module") { openModule(m) }
         if let player {
             if d.integer(forKey: "Step") > 1 { player.restartLesson(at: d.integer(forKey: "Step") - 1) }
@@ -105,6 +112,12 @@ final class AppModel {
             pick(song: song, part: Song.PartKey(rawValue: d.string(forKey: "Part") ?? "chords") ?? .chords)
             pick(song: song, difficulty: GameEngine.Difficulty(rawValue: d.string(forKey: "Difficulty") ?? "adaptive") ?? .adaptive)
             if d.bool(forKey: "Practice") { practice(song: song) } else { play(song: song) }
+        }
+        // `-AgentSheet <song>` opens Agent mode on that song (over the stage, or over the run
+        // `-Route game` started, with the position); `-AgentSay "<text>"` sends it at once.
+        if let name = d.string(forKey: "AgentSheet") {
+            guard let song = songs.first(where: { $0.name == name }) else { fatalError("-AgentSheet: no song \(name)") }
+            if route == .game, let player { openAgent(fromGame: player) } else { openAgent(song: song) }
         }
         // `-Route quiz` starts today's quiz; `-QuizAnswers 1,0,1` answers in order (Next between),
         // leaving the last answer's explanation up, or the summary after a full five.
@@ -338,15 +351,81 @@ final class AppModel {
 
     // MARK: Stage
 
-    /// The set list, loaded once (songs not in the bundle yet are skipped).
+    /// The bundled set list, loaded once (songs not in the bundle yet are skipped).
     @ObservationIgnored private var loadedSongs: [Song]?
-    var songs: [Song] {
+    var bundledSongs: [Song] {
         if let loadedSongs { return loadedSongs }
         let s = Song.catalog.compactMap { name in
             Bundle.main.url(forResource: name, withExtension: "json") == nil ? nil : Song.bundled(name)
         }
         loadedSongs = s
         return s
+    }
+
+    /// The set list: the bundled songs in catalog order, each followed by the player's mods of
+    /// it (and theirs), oldest first; a mod whose base is gone comes last.
+    var songs: [Song] {
+        var out: [Song] = []
+        var placed: Set<String> = []
+        func place(_ s: Song) {
+            guard !placed.contains(s.name) else { return }
+            out.append(s)
+            placed.insert(s.name)
+            for m in mods.mods(of: s.name) { place(m) }
+        }
+        for s in bundledSongs { place(s) }
+        for m in mods.songs { place(m) }
+        return out
+    }
+
+    /// The bundled song a mod descends from (through mods of mods); a bundled song's own name.
+    func rootName(_ song: Song) -> String {
+        var s = song
+        var hops = 0
+        while let base = s.mod?.base, hops < 20 {
+            guard let b = songs.first(where: { $0.name == base }) else { return base }
+            s = b
+            hops += 1
+        }
+        return s.name
+    }
+
+    /// The song a mod was cloned from, when it is on the set list.
+    func baseSong(of song: Song) -> Song? {
+        guard let base = song.mod?.base else { return nil }
+        return songs.first { $0.name == base }
+    }
+
+    // MARK: Agent mode
+
+    /// The sheet's target; set to open it, nil when it closes.
+    var agentTarget: AgentTarget?
+
+    /// From a song's card: the thread on it (a mod's own; a bundled song's pending one).
+    func openAgent(song: Song) {
+        agentTarget = AgentTarget(song: song, position: nil)
+    }
+
+    /// From the pause menu: the same, knowing where the run sits.
+    func openAgent(fromGame player: Player) {
+        guard let game = player.game else { return }
+        if player.playing { player.togglePlay() }
+        let s = player.gameState()
+        let position = ModStore.Position(part: game.part.rawValue, difficulty: game.difficulty.rawValue, level: s.level, bar: s.bar + 1, section: s.section)
+        agentTarget = AgentTarget(song: game.song, position: position)
+    }
+
+    /// A mod just landed (or moved on): it takes the part and level picked on the song it came
+    /// from, so Play plays what the player was playing.
+    func adopt(mod: Song, from origin: Song) {
+        if stageParts[mod.name] == nil, let p = stageParts[origin.name] { stageParts[mod.name] = p }
+        if stageDifficulties[mod.name] == nil, let d = stageDifficulties[origin.name] { stageDifficulties[mod.name] = d }
+    }
+
+    /// Remove a mod from the account and the set list; a run on it goes back to the stage.
+    func remove(modID: String) async throws {
+        if let game = player?.game, game.song.mod?.id == modID { leaveGame() }
+        try await mods.delete(modID)
     }
     /// The part and level picked per song (chords and adaptive to start).
     private var stageParts: [String: Song.PartKey] = [:]

@@ -10,11 +10,14 @@ struct TaktApp: App {
         DebugHooks.renderIfRequested()
         DebugHooks.lessonCheckIfRequested()
         DebugHooks.chartDumpIfRequested()
+        DebugHooks.chartsDumpIfRequested()
         #endif
         let progress = ProgressStore()
         let account = AccountStore(progress: progress)
+        let mods = ModStore()
         progress.onChange = { [weak account] in account?.progressChanged() }
-        _app = State(initialValue: AppModel(player: Self.makePlayer(progress: progress), progress: progress, account: account))
+        account.onReady = { [weak mods] in await mods?.refresh() }
+        _app = State(initialValue: AppModel(player: Self.makePlayer(progress: progress), progress: progress, account: account, mods: mods))
         #if DEBUG
         if !UserDefaults.standard.bool(forKey: "Offline") {
             account.start()
@@ -173,6 +176,10 @@ struct RootView: View {
                 if app.route == .game { app.leaveGame() }
             }
         ))
+        // Agent mode, over the set list or a paused run (one presenter for both).
+        .sheet(item: Binding(get: { app.agentTarget }, set: { app.agentTarget = $0 })) { target in
+            AgentSheet(app: app, target: target)
+        }
         .onChange(of: player.finish) { _, f in if f != nil && app.route == .lesson { app.lessonFinished() } }
         .onChange(of: app.route, initial: true) { syncMenuMusic() }
         .onChange(of: menuMusic) { syncMenuMusic(toggled: true) }
@@ -251,7 +258,8 @@ struct LiveGameScreen: View {
                 practiceSeek: { player.practiceSeek(bar: $0) },
                 practiceBack: { player.practiceBack() },
                 practiceSpeed: { player.practiceSpeed(delta: $0) },
-                run: player.leavePractice
+                run: player.leavePractice,
+                agent: { app.openAgent(fromGame: player) }
             ))
     }
 }

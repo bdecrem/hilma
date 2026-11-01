@@ -127,14 +127,18 @@ struct BandData: Decodable {
         guard let url = Bundle.main.url(forResource: name, withExtension: "json") else {
             fatalError("band \(name).json is not in the bundle")
         }
-        let band: BandData
         do {
-            band = try JSONDecoder().decode(BandData.self, from: Data(contentsOf: url))
+            return try decode(Data(contentsOf: url), name: name)
         } catch {
             fatalError("band \(name).json: \(error)")
         }
+    }
+
+    /// An arrangement from its bytes (a mod's song file comes from the account, not the bundle).
+    static func decode(_ data: Data, name: String) throws -> BandData {
+        let band = try JSONDecoder().decode(BandData.self, from: data)
         guard band.bars % band.chorusBars == 0 else {
-            fatalError("band \(name).json: \(band.bars) bars is not a whole number of \(band.chorusBars)-bar choruses")
+            throw Song.LoadError(message: "band \(name): \(band.bars) bars is not a whole number of \(band.chorusBars)-bar choruses")
         }
         return band
     }

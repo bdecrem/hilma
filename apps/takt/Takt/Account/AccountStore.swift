@@ -50,6 +50,9 @@ final class AccountStore {
         session = URLSession(configuration: config)
     }
 
+    /// Once the account is known (at launch, after a log in or out): the mods sync to it.
+    @ObservationIgnored var onReady: (() async -> Void)?
+
     /// At launch: who the cookie belongs to, or a fresh guest; then the progress syncs.
     func start() {
         Task { @MainActor in
@@ -58,7 +61,10 @@ final class AccountStore {
             } else {
                 do { apply(try await call("auth/guest", body: [String: String]())) } catch { note(error) }
             }
-            if state != .unknown { await pull() }
+            if state != .unknown {
+                await pull()
+                await onReady?()
+            }
         }
     }
 
@@ -78,6 +84,7 @@ final class AccountStore {
         await run {
             self.apply(try await self.call("auth/login", body: ["email": email, "password": password]))
             await self.pull()
+            await self.onReady?()
         }
     }
 
@@ -88,6 +95,7 @@ final class AccountStore {
             self.state = .unknown
             self.apply(try await self.call("auth/guest", body: [String: String]()))
             await self.push()
+            await self.onReady?()
         }
     }
 

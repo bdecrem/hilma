@@ -69,7 +69,8 @@ final class AudioEngine {
     @discardableResult
     func load(song: Song, part: Song.PartKey) -> BandRenderer.Events {
         let p = song.part(part)
-        let key = "\(song.name)|\(part.rawValue)"
+        // A mod's version is in the key: the next turn of Agent mode is a new band.
+        let key = "\(song.name)@\(song.version)|\(part.rawValue)"
         let e = loaded[key] ?? {
             var band = song.band
             band.instruments["monitor"] = p.monitor

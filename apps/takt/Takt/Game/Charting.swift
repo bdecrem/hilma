@@ -42,14 +42,14 @@ struct Charting: Decodable {
     }
 
     /// A song's change to one tier of a ladder: a gap or a space of its own (0 = never borrows).
-    struct TierPatch: Decodable {
+    struct TierPatch: Codable, Equatable {
         let gap: Double?
         let space: Double?
     }
 
     /// A song's changes to one part's ladder: a tier of its own for a difficulty, a phrase of
     /// its own (bars), and tier knobs by tier number (1-based).
-    struct PartOverride: Decodable {
+    struct PartOverride: Codable, Equatable {
         let beginner: Int?
         let easy: Int?
         let medium: Int?
@@ -141,7 +141,14 @@ struct Charting: Decodable {
     /// (`"tiers": {"2": {"space": 0}}`). Slow Burn melody since 0.1 (59): its Easy is tier 2
     /// with no silence-borrowing and a chorus-long phrase, so Easy is the tune's anchors, about
     /// one a bar (the ladder's two-bar cover and 1.8 s borrowing put it near the top).
-    let songs: [String: [String: PartOverride]]
+    private(set) var songs: [String: [String: PartOverride]]
+
+    /// The same charting with a song's own override (a mod's, from its bundle) in `songs`.
+    func overriding(song: String, with override: [String: PartOverride]) -> Charting {
+        var c = self
+        c.songs[song] = override
+        return c
+    }
 
     /// The phrase (bars) the song's part keeps every key in: the song's own, or the ladder's.
     func phrase(song: String, part: Song.PartKey) -> Int? {

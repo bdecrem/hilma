@@ -148,10 +148,12 @@ final class GameEngine {
     }
 
     /// `start`: the tier an adaptive run starts on (`adaptiveStart`; the ladder's start if nil).
-    init(song: Song, part: Song.PartKey, difficulty: Difficulty, start: Int? = nil, charting: Charting = .bundled) {
+    /// The charting is the song's own (a mod's override on the bundle's) unless one is given.
+    init(song: Song, part: Song.PartKey, difficulty: Difficulty, start: Int? = nil, charting: Charting? = nil) {
         self.song = song
         self.part = part
         self.difficulty = difficulty
+        let charting = charting ?? song.charting
         self.charting = charting
         ticksPerBeat = song.band.ticksPerBeat
         ticksPerBar = song.ticksPerBar

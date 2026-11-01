@@ -20,6 +20,10 @@ struct StageScreen: View {
 
     var body: some View {
         let compact = sizeClass == .compact
+        // The featured tracks and the player's own versions of them; the rest under All tracks.
+        let featuredRoots = Set(Song.catalog.prefix(Self.featured))
+        let featured = app.songs.filter { featuredRoots.contains(app.rootName($0)) }
+        let rest = app.songs.filter { !featuredRoots.contains(app.rootName($0)) }
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .center, spacing: 16) {
                 Text("Stage")
@@ -37,22 +41,22 @@ struct StageScreen: View {
             ScrollViewReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("\(Self.spelled(app.songs.count)) songs, all yours from the start. Take the chords or the melody, pick a level, and play with the band. Adaptive climbs as you play clean.")
+                    Text("\(Self.spelled(app.bundledSongs.count)) songs, all yours from the start. Take the chords or the melody, pick a level, and play with the band. Adaptive climbs as you play clean.\(app.mods.songs.isEmpty ? " Agent mode makes a track your own." : "")")
                         .bodyText(compact ? 14 : 16)
                         .foregroundStyle(Palette.muted)
                         .fixedSize(horizontal: false, vertical: true)
                         .padding(.top, compact ? 16 : 24)
-                    // The set: the four blues tracks in full. The rest sit under a small
-                    // "All tracks" card at the bottom, open on a tap (Bart, 2026-11-01).
-                    ForEach(app.songs.prefix(Self.featured), id: \.name) { song in
+                    // The set: the four blues tracks in full, each with the player's own versions
+                    // under it. The rest sit under a small "All tracks" card at the bottom, open
+                    // on a tap (Bart, 2026-11-01).
+                    ForEach(featured, id: \.name) { song in
                         SongCard(app: app, song: song, compact: compact) { board = song }
                     }
-                    if app.songs.count > Self.featured {
-                        AllTracksCard(count: app.songs.count - Self.featured,
-                                      names: app.songs.dropFirst(Self.featured).map(\.meta.title), open: $allTracks, compact: compact)
+                    if !rest.isEmpty {
+                        AllTracksCard(count: rest.count, names: rest.map(\.meta.title), open: $allTracks, compact: compact)
                             .id("all")
                         if allTracks {
-                            ForEach(app.songs.dropFirst(Self.featured), id: \.name) { song in
+                            ForEach(rest, id: \.name) { song in
                                 SongCard(app: app, song: song, compact: compact) { board = song }
                             }
                         }
@@ -112,9 +116,14 @@ struct SongCard: View {
                         .foregroundStyle(Palette.text)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
-                    Text("\(song.meta.style) · \(song.meta.key) · \(song.meta.tempo) bpm · \(song.length)")
-                        .dataLabel(11)
-                        .foregroundStyle(Palette.muted)
+                    HStack(spacing: 8) {
+                        // A mod wears its version; the title says what it came from.
+                        if let mod = song.mod { VersionBadge(version: mod.version) }
+                        Text("\(song.meta.style) · \(song.meta.key) · \(song.meta.tempo) bpm · \(song.length)")
+                            .dataLabel(11)
+                            .foregroundStyle(Palette.muted)
+                            .lineLimit(1)
+                    }
                     Text(song.meta.line)
                         .bodyText(compact ? 13 : 14)
                         .foregroundStyle(Palette.text)
@@ -137,7 +146,7 @@ struct SongCard: View {
                     app.pick(song: song, difficulty: GameEngine.Difficulty(rawValue: $0)!)
                 }
             }
-            Text(Charting.bundled.line(difficulty, song: song.name, part: part))
+            Text(song.charting.line(difficulty, song: song.name, part: part))
                 .dataLabel(10)
                 .foregroundStyle(Palette.muted)
                 .fixedSize(horizontal: false, vertical: true)
@@ -154,6 +163,17 @@ struct SongCard: View {
                         .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Palette.line, lineWidth: 1))
                 }
                 .buttonStyle(.plain)
+                // Agent mode, the same size, lit: your own version of the track.
+                Button { app.openAgent(song: song) } label: {
+                    Text("Agent")
+                        .dataLabel(11, weight: .semibold)
+                        .foregroundStyle(Palette.signal)
+                        .padding(.horizontal, 12)
+                        .frame(height: 32)
+                        .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Palette.line, lineWidth: 1))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(song.mod == nil ? "Agent mode: your own version of \(song.meta.title)" : "Agent mode: continue \(song.meta.title)")
                 Spacer(minLength: 8)
                 if let best {
                     HStack(alignment: .firstTextBaseline, spacing: 6) {

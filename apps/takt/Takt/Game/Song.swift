@@ -5,6 +5,8 @@ import Foundation
 /// has one), each the whole part with every
 /// note weighted and every chord note's role, which `Charting` cuts into levels. The band's own
 /// channel for a part is the whole part, so the record plays it in full when you take the other.
+/// A **mod** is the same file made by Agent mode (`ModStore`): the player's own version of a
+/// bundled song, with its own charting override, loaded from the account instead of the bundle.
 struct Song {
     struct Note: Decodable, Equatable {
         /// Tick in the song (12 a beat, 48 a bar), the MIDI note, the length in ticks.
@@ -54,44 +56,79 @@ struct Song {
         var title: String { self == .chords ? "Chords" : "Melody" }
     }
 
+    /// What a mod carries beside the song: where it came from, how many turns changed it,
+    /// and this song's own charting (the shape of charting.json's `songs.<name>`).
+    struct ModInfo: Equatable {
+        let id: String
+        let base: String
+        let baseTitle: String
+        let version: Int
+        let override: [String: Charting.PartOverride]?
+
+        static func == (a: ModInfo, b: ModInfo) -> Bool { a.id == b.id && a.version == b.version }
+    }
+
+    struct LoadError: LocalizedError {
+        let message: String
+        var errorDescription: String? { message }
+    }
+
     let name: String
     let band: BandData
     let meta: Meta
+    /// Nil for a bundled song.
+    let mod: ModInfo?
 
     /// The set list, in order.
     static let catalog = ["song-slow-burn", "song-slow-burn-short", "song-boogie-shoes", "song-pearl-street", "song-dockery", "song-maxwell-street", "song-blue-lantern", "song-hypnotist", "song-hypnotist-2", "song-warm-nine", "song-abyss", "song-abyss-ref"]
 
     static func bundled(_ name: String) -> Song {
         guard let url = Bundle.main.url(forResource: name, withExtension: "json") else { fatalError("song \(name).json is not in the bundle") }
-        let meta: Meta
         do {
-            meta = try JSONDecoder().decode(File.self, from: Data(contentsOf: url)).song
+            return try Song(name: name, data: Data(contentsOf: url), mod: nil)
         } catch {
             fatalError("song \(name).json: \(error)")
         }
-        let song = Song(name: name, band: .bundled(name), meta: meta)
-        song.validate()
-        return song
     }
 
-    private func validate() {
+    /// A song from its file's bytes (a mod's, or a bundled one's); throws on anything the app
+    /// could not play, so a bad file from the account is an error to show, not a trap.
+    init(name: String, data: Data, mod: ModInfo?) throws {
+        self.name = name
+        self.mod = mod
+        band = try BandData.decode(data, name: name)
+        meta = try JSONDecoder().decode(File.self, from: data).song
+        try validate()
+    }
+
+    private func validate() throws {
+        func fail(_ what: String) -> LoadError { LoadError(message: "song \(name): \(what)") }
         let end = band.loopTicks
-        guard meta.parts[PartKey.chords.rawValue] != nil else { fatalError("song \(name): no chords part") }
-        guard meta.parts.keys.allSatisfy({ PartKey(rawValue: $0) != nil }) else { fatalError("song \(name): an unknown part") }
+        guard meta.parts[PartKey.chords.rawValue] != nil else { throw fail("no chords part") }
+        guard meta.parts.keys.allSatisfy({ PartKey(rawValue: $0) != nil }) else { throw fail("an unknown part") }
         for key in partKeys {
             let p = part(key)
-            guard ["keys", "horns"].contains(p.channel) else { fatalError("song \(name): part \(key.rawValue) on channel \(p.channel)") }
-            guard !p.notes.isEmpty, p.notes.contains(where: { $0.lv == 1 }) else { fatalError("song \(name): part \(key.rawValue) has no weight-1 notes") }
+            guard ["keys", "horns"].contains(p.channel) else { throw fail("part \(key.rawValue) on channel \(p.channel)") }
+            guard !p.notes.isEmpty, p.notes.contains(where: { $0.lv == 1 }) else { throw fail("part \(key.rawValue) has no weight-1 notes") }
             if key == .chords, let keep = Charting.bundled.chords.keep {
-                guard p.notes.allSatisfy({ $0.r.map(keep.contains) ?? false }) else { fatalError("song \(name): a chord note without a role charting.json keeps") }
+                guard p.notes.allSatisfy({ $0.r.map(keep.contains) ?? false }) else { throw fail("a chord note without a role charting.json keeps") }
             }
             for n in p.notes {
-                guard (1...3).contains(n.lv), n.t >= 0, n.t < end, n.len > 0 else { fatalError("song \(name): bad note \(n)") }
+                guard (1...3).contains(n.lv), n.t >= 0, n.t < end, n.len > 0 else { throw fail("bad note \(n)") }
             }
         }
         guard band.form.count == band.bars, band.bars >= 2, meta.tempo >= 40, !meta.sections.isEmpty,
-              meta.sections[0].bar == 0 else { fatalError("song \(name): form, sections or tempo") }
+              meta.sections[0].bar == 0 else { throw fail("form, sections or tempo") }
     }
+
+    /// The charting this song plays by: the bundle's, with a mod's own override on top.
+    var charting: Charting {
+        guard let o = mod?.override, !o.isEmpty else { return .bundled }
+        return Charting.bundled.overriding(song: name, with: o)
+    }
+
+    /// A mod's version (0 for a bundled song): what tells a rendered band apart from the last.
+    var version: Int { mod?.version ?? 0 }
 
     var ticksPerBar: Int { band.ticksPerBar }
     /// Bars of music; the band's last bar is a silent tail the game ends in.
@@ -117,16 +154,24 @@ struct Song {
         part(key).notes.sorted { ($0.t, $0.n) < ($1.t, $1.n) }
     }
 
-    /// The part at each tier of the charting rules: `[tier - 1][i]` over `notes(key)`.
-    func masks(_ key: PartKey, charting: Charting = .bundled) -> [[Bool]] {
-        charting.masks(notes(key), song: name, part: key, tempo: meta.tempo, ticksPerBeat: band.ticksPerBeat, ticksPerBar: ticksPerBar)
+    /// The part at each tier of the charting rules: `[tier - 1][i]` over `notes(key)`. By the
+    /// song's own charting unless one is given.
+    func masks(_ key: PartKey, charting: Charting? = nil) -> [[Bool]] {
+        (charting ?? self.charting).masks(notes(key), song: name, part: key, tempo: meta.tempo, ticksPerBeat: band.ticksPerBeat, ticksPerBar: ticksPerBar)
     }
 
     /// The part at a tier, in time order.
-    func chart(_ key: PartKey, tier: Int, charting: Charting = .bundled) -> [Note] {
+    func chart(_ key: PartKey, tier: Int, charting: Charting? = nil) -> [Note] {
         let all = notes(key), tiers = masks(key, charting: charting)
         let m = tiers[max(1, min(tiers.count, tier)) - 1]
         return all.indices.filter { m[$0] }.map { all[$0] }
+    }
+
+    /// Onsets a second at every tier (the `-LessonCheck` ladder figure): what Agent mode shows
+    /// on a level, and what it sends the server to check its own charter against.
+    func ladder(_ key: PartKey) -> [Double] {
+        let all = notes(key)
+        return masks(key).map { m in Double(Set(all.indices.filter { m[$0] }.map { all[$0].t }).count) / seconds }
     }
 
     func chord(atBar bar: Int) -> String { band.form[max(0, min(band.form.count - 1, bar))] }

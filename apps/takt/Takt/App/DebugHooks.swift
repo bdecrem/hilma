@@ -91,6 +91,31 @@ enum DebugHooks {
         exit(0)
     }
 
+    /// `-DumpCharts <file.json>` writes every bundled song's charts — per part, per tier, the
+    /// indices of the notes that play (over `Song.notes`, in time order) — and exits. The
+    /// server's charter (src/lib/takt/charting.ts, Agent mode) is checked against it by
+    /// `scripts/takt/charting-check.ts`.
+    static func chartsDumpIfRequested() {
+        guard let path = UserDefaults.standard.string(forKey: "DumpCharts") else { return }
+        var out: [String: [String: [[Int]]]] = [:]
+        for name in Song.catalog where Bundle.main.url(forResource: name, withExtension: "json") != nil {
+            let song = Song.bundled(name)
+            var parts: [String: [[Int]]] = [:]
+            for k in song.partKeys {
+                parts[k.rawValue] = song.masks(k).map { m in m.indices.filter { m[$0] } }
+            }
+            out[name] = parts
+        }
+        do {
+            try JSONSerialization.data(withJSONObject: out).write(to: URL(fileURLWithPath: path))
+            print("TAKT charts dumped to \(path)")
+            exit(0)
+        } catch {
+            print("TAKT charts dump failed: \(error)")
+            exit(1)
+        }
+    }
+
     static func lessonCheckIfRequested() {
         guard UserDefaults.standard.bool(forKey: "LessonCheck") else { return }
         exit(LessonCheck.run() ? 0 : 1)

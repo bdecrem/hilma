@@ -75,6 +75,8 @@ struct GameControls {
     var practiceBack: () -> Void = {}
     var practiceSpeed: (Int) -> Void = { _ in }
     var run: () -> Void = {}
+    /// Pause → Agent mode on this song, where the run sits.
+    var agent: () -> Void = {}
 }
 
 private struct GameControlsKey: EnvironmentKey {
@@ -479,6 +481,14 @@ struct PausedBadge: View {
                     .dataLabel(12, weight: .semibold)
                     .foregroundStyle(Palette.muted)
                     .padding(.vertical, 6)
+            }
+            .buttonStyle(.plain)
+            // Or change the part itself: the agent makes your own version of the track.
+            Button(action: controls.agent) {
+                Text("Agent mode")
+                    .dataLabel(12, weight: .semibold)
+                    .foregroundStyle(Palette.signal)
+                    .padding(.vertical, 2)
             }
             .buttonStyle(.plain)
         }

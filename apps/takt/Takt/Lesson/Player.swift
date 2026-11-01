@@ -687,7 +687,7 @@ final class Player {
         chorusBars = audio.load(song: song, part: part).chorusBars
         gameEpoch = audio.snapshot().epoch + 1
         game = GameEngine(song: song, part: part, difficulty: difficulty,
-                          start: GameEngine.adaptiveStart(song: song.name, part: part, records: progress.scores(song: song.name)))
+                          start: GameEngine.adaptiveStart(song: song.name, part: part, records: progress.scores(song: song.name), charting: song.charting))
         fillVelocity = [:]
         for e in partChannel == .horns ? song.band.channels.horns : song.band.channels.keys { fillVelocity[e.t * 128 + e.n] = Float(e.v) }
         fillThrough = -1

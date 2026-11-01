@@ -1317,6 +1317,44 @@ enum LessonCheck {
                           "notes/s " + rates.map { String(format: "%.2f", $0) }.joined(separator: " · ") + " · rise \(rise.joined(separator: " "))")
                 }
             }
+            // Mods (Agent mode): a bundle in the server's shape loads as a Song with its own
+            // charting, which only that song's levels follow; the figures the app sends the
+            // server (`ladder`) are the ladder line's.
+            if let base = songs.first(where: { $0.name == "song-slow-burn-short" }),
+               let url = Bundle.main.url(forResource: base.name, withExtension: "json"),
+               let file = try? JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any] {
+                var top: [String: Any] = ["id": "11111111-2222-3333-4444-555555555555", "name": "mod-test0001", "base": base.name, "base_title": base.meta.title,
+                                          "title": "Slow Burn Short mod 01", "version": 2, "created_at": "2026-11-01T00:00:00Z", "updated_at": "2026-11-01T00:00:00Z",
+                                          "charting": ["melody": ["medium": 3, "phrase": 12, "tiers": ["2": ["space": 0]]]],
+                                          "messages": [["role": "user", "text": "half the notes", "at": "2026-11-01T00:00:00Z"], ["role": "agent", "text": "Done.", "at": "2026-11-01T00:00:00Z", "steps": ["Reading the song"]]]]
+                var f = file
+                var meta = f["song"] as! [String: Any]
+                meta["title"] = "Slow Burn Short mod 01"
+                f["song"] = meta
+                f["name"] = "mod-test0001"
+                top["song"] = f
+                do {
+                    let bundle = try ModStore.Bundle(data: JSONSerialization.data(withJSONObject: top))
+                    let mod = try bundle.song()
+                    check("mods: a bundle loads as a song with its version and base", mod.name == "mod-test0001" && mod.version == 2 && mod.mod?.base == base.name && mod.meta.title == "Slow Burn Short mod 01" && bundle.messages.count == 2 && bundle.messages[1].steps?.count == 1)
+                    let baseMedium = base.charting.tier(.medium, song: base.name, part: .melody)!, modMedium = mod.charting.tier(.medium, song: mod.name, part: .melody)!
+                    check("mods: the mod's own charting moves its Medium (\(baseMedium) → \(modMedium)) and nothing of the base's", baseMedium == 5 && modMedium == 3 && mod.charting.tier(.medium, song: base.name, part: .melody) == baseMedium)
+                    let ladder = mod.ladder(.melody), rates = mod.masks(.melody).map { m in Double(Set(mod.notes(.melody).indices.filter { m[$0] }.map { mod.notes(.melody)[$0].t }).count) / mod.seconds }
+                    check("mods: the ladder figures are onsets a second per tier, the base's for an unchanged part", ladder == rates && ladder == base.ladder(.melody), ladder.map { String(format: "%.2f", $0) }.joined(separator: " · "))
+                    let engine = GameEngine(song: mod, part: .melody, difficulty: .medium)
+                    check("mods: a run on the mod plays its own Medium", engine.level == 3 && engine.masks[2].filter { $0 }.count == mod.chart(.melody, tier: 3).count)
+                } catch {
+                    check("mods: a bundle loads", false, "\(error)")
+                }
+                var broken = top
+                var bf = f
+                var bmeta = bf["song"] as! [String: Any]
+                bmeta["parts"] = ["melody": (bmeta["parts"] as! [String: Any])["melody"]!]
+                bf["song"] = bmeta
+                broken["song"] = bf
+                let fails = (try? ModStore.Bundle(data: JSONSerialization.data(withJSONObject: broken)).song()) == nil
+                check("mods: a bundle without a chords part is refused, not trapped", fails)
+            }
             if let song = songs.first {
                 let tpbar = song.ticksPerBar
                 let ms = 60000 / (Double(song.meta.tempo) * Double(tpb))
