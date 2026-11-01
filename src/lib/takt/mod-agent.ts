@@ -98,9 +98,9 @@ export async function runModTurn(mod: ModRow, message: string, ctx: TurnContext,
   const anthropic = new AnthropicSDK({ apiKey })
   const tools = TOOLS.map((t) => ({ name: t.name, description: t.description, input_schema: t.input_schema })) as Anthropic.Tool[]
   let versions = await listVersions(mod.id)
-  if (!versions.length && mod.version >= 1) {
+  if (!versions.length) {
     // A mod from before the history (schema 004): its current state is the first entry.
-    await recordVersion(mod, 'As it was before the history')
+    await recordVersion(mod, mod.version === 0 ? `The original: ${mod.base_title}` : 'As it was before the history')
     versions = await listVersions(mod.id)
   }
   const messages: Anthropic.MessageParam[] = [

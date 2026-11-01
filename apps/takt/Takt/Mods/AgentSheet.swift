@@ -121,14 +121,17 @@ struct AgentSheet: View {
         HStack(alignment: .top, spacing: 16) {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Agent mode")
-                    .font(.display(compact ? 32 : 40))
+                    .font(.display(compact ? 30 : 40))
                     .textCase(.uppercase)
                     .foregroundStyle(Palette.signal)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
                 if let mod {
                     Text("\(mod.meta.title) · v\(mod.version) · from \(mod.mod?.baseTitle ?? "")")
                         .dataLabel(11)
                         .foregroundStyle(Palette.muted)
-                        .lineLimit(1)
+                        .lineLimit(compact ? 2 : 1)
+                        .fixedSize(horizontal: false, vertical: true)
                 } else {
                     Text("\(target.song.meta.title) · your own version")
                         .dataLabel(11)
@@ -256,7 +259,12 @@ struct AgentSheet: View {
         #if DEBUG
         // `-AgentVersions 1` opens the history panel at once (the screenshots).
         if UserDefaults.standard.bool(forKey: "AgentVersions") { showVersions = true }
-        if let say = UserDefaults.standard.string(forKey: "AgentSay"), !say.isEmpty, thread.isEmpty {
+        // `-AgentRestore <n>` restores that version at once (the check of the real flow).
+        if UserDefaults.standard.integer(forKey: "AgentRestore") > 0 || UserDefaults.standard.string(forKey: "AgentRestore") == "0" {
+            let n = UserDefaults.standard.integer(forKey: "AgentRestore")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) { restore(n) }
+        }
+        if let say = UserDefaults.standard.string(forKey: "AgentSay"), !say.isEmpty {
             UserDefaults.standard.removeObject(forKey: "AgentSay")
             send(say)
         }
@@ -371,6 +379,11 @@ struct VersionsPanel: View {
                     .truncationMode(.tail)
             }
             .padding(.bottom, 8)
+            if versions.isEmpty {
+                Text("No history yet: the next change starts it.")
+                    .bodyText(compact ? 13 : 14)
+                    .foregroundStyle(Palette.muted)
+            }
             ForEach(versions.sorted { $0.version > $1.version }) { v in
                 let now = v.version == current
                 HStack(alignment: .top, spacing: compact ? 10 : 14) {
