@@ -413,29 +413,45 @@ final class Player {
     @ObservationIgnored private var taps: [Int: [Int]] = [:]
 
     func tapDown(_ touch: Int) {
-        let s = audio.snapshot()
-        let clock = TransportClock(s)
-        guard clock.valid else { return }
-        let p = clock.position(atHost: shifted(mach_absolute_time(), clock))
-        let due: [Int]
-        if let game, inGame {
-            due = s.epoch == gameEpoch ? game.due(at: p.tick, msPerTick: p.msPerTick) : []
-        } else {
-            due = inLesson && !demo ? engine.due(at: p.tick) : []
-        }
-        let fresh = due.filter { !pressed.contains($0) }
+        let fresh = dueNow().filter { !pressed.contains($0) }
         taps[touch] = fresh
         for n in fresh { press(n) }
+    }
+
+    /// The notes due at the transport position heard now: the pending chord nearest it in a
+    /// song, the expected chord nearest it around a lesson's loop. Empty when nothing is scored.
+    private func dueNow() -> [Int] {
+        let s = audio.snapshot()
+        let clock = TransportClock(s)
+        guard clock.valid else { return [] }
+        let p = clock.position(atHost: shifted(mach_absolute_time(), clock))
+        if let game, inGame {
+            return s.epoch == gameEpoch ? game.due(at: p.tick, msPerTick: p.msPerTick) : []
+        }
+        return inLesson && !demo ? engine.due(at: p.tick) : []
     }
 
     func tapUp(_ touch: Int) {
         for n in taps.removeValue(forKey: touch) ?? [] { release(n) }
     }
 
-    /// Computer keyboard: semitone 0 = C3 shifted by the octave.
+    /// Computer keyboard: a key is a note name, and the octave follows the song (2026-11-02,
+    /// for playing on a laptop). A key down plays every note due now with its name, in the
+    /// octave it is charted, so a 12-key row reaches a chart of any range; with none of its name
+    /// due it plays at C3 + `semitone`, moved by the Z / X octave, and a wrong name sounds wrong.
+    @ObservationIgnored private var keyNotes: [Int: [Int]] = [:]
+
     func key(_ semitone: Int, down: Bool) {
-        let note = 48 + 12 * octave + semitone
-        if down { CountInLaunch.onHit?(mach_absolute_time()); press(note) } else { release(note) }
+        guard down else {
+            for n in keyNotes.removeValue(forKey: semitone) ?? [] { release(n) }
+            return
+        }
+        CountInLaunch.onHit?(mach_absolute_time())
+        let plain = 48 + 12 * octave + semitone
+        let named = dueNow().filter { ($0 - plain) % 12 == 0 && !pressed.contains($0) }
+        let notes = named.isEmpty ? [plain] : named
+        keyNotes[semitone] = notes
+        for n in notes { press(n) }
     }
 
     func shiftOctave(_ delta: Int) {
@@ -833,6 +849,7 @@ final class Player {
         #if DEBUG
         runGameAutoplay(clock, heard: heard)
         runGameAutoTap(heard)
+        runGameAutoKeys(heard)
         runPracticeHook(heard)
         #endif
         if practice {
@@ -920,6 +937,24 @@ final class Player {
             tapDown(0)
             autoTapDown = true
         }
+    }
+
+    /// `-AutoKeys 1` on a song: presses each note due by its name only (the semitone above C3,
+    /// octave 0), through the computer-keyboard path, the frame it is heard; the octave snap
+    /// has to put it where it is charted.
+    @ObservationIgnored private var autoKeysDown: [Int] = []
+    private func runGameAutoKeys(_ heard: TransportClock.Position) {
+        guard let game, UserDefaults.standard.bool(forKey: "AutoKeys"), heard.rolling else { return }
+        if !autoKeysDown.isEmpty {
+            for k in autoKeysDown { key(k, down: false) }
+            autoKeysDown = []
+            return
+        }
+        let reach = GameEngine.goodMs / heard.msPerTick
+        let pending = game.notes(from: heard.tick - reach, to: heard.tick).filter { $0.status == .pending }
+        let names = Set(pending.map { (($0.note.n % 12) + 12) % 12 })
+        for k in names.sorted() { key(k, down: true) }
+        autoKeysDown = names.sorted()
     }
     #endif
 

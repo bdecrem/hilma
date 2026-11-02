@@ -2,7 +2,8 @@ import SwiftUI
 import UIKit
 
 /// The computer keyboard as a piano (brief §5): the home row is the white keys from C,
-/// W E T Y U O P the black keys, Z / X shift an octave. Space plays/pauses, ↑ / ↓ change tempo, Esc leaves the lesson.
+/// W E T Y U O P the black keys. A key is a note name: in a song or a lesson the octave
+/// follows what is due (`Player.key`), otherwise Z / X shift it. Space plays/pauses, ↑ / ↓ change tempo, Esc leaves the lesson.
 /// Physical key codes, so it works on any layout. Keys held with ⌘, ⌃ or ⌥ are left to menus.
 struct KeyCatcher: UIViewRepresentable {
     var onNote: (_ semitone: Int, _ down: Bool) -> Void

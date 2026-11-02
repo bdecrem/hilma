@@ -120,7 +120,7 @@ struct SettingsScreen: View {
                         }
                         #if targetEnvironment(macCatalyst)
                         Hairline()
-                        row("Computer keys", "A–; play C3–E4 · Z X octave")
+                        row("Computer keys", "A–J play note names, the octave follows the song · Z X octave")
                         #else
                         Hairline()
                         Toggle(isOn: $tapMode) {

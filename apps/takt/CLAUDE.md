@@ -1236,6 +1236,17 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   Ladders in `BLUES.md` §3. Verified: LessonCheck 342/342, `charting-check.ts` 43/43 against the
   Mac app's `-DumpCharts` (sandboxed: write the dump inside the container's `tmp/`), `-SnapshotAt`
   of both songs on chords Easy.
+- **Laptop keys play note names; the octave follows the song: 2026-11-02.** Bart, before 24 h
+  in transit with no MIDI keyboard: the computer keys (A–; = C3–E4, 17 semitones) couldn't reach
+  the charts (Dockery chords span 23 semitones, Friars Point 28, Dockery melody 33). Now a key is a
+  note name: `Player.key` presses every note due now (`dueNow()`, the same pick as tap mode) with
+  that name, in its charted octave, and holds them until the key comes up; with none of its name
+  due it plays at C3 + the key, moved by Z / X, so a wrong name still sounds and scores wrong.
+  Always on for the computer keys (no setting); MIDI and touch are untouched. Settings → Input says
+  "A–J play note names, the octave follows the song". DEBUG `-AutoKeys 1` on a song presses each
+  due note by name only (octave 0) through that path. Verified on the Mac: Dockery chords Hard
+  (632 notes), Dockery melody Hard and Friars Point chords Hard all 100% from names alone;
+  LessonCheck 342/342.
 
 ## Code map (`Takt/`)
 
