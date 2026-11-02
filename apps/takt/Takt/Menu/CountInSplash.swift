@@ -30,7 +30,8 @@ struct CountInSplash: View {
     let bandTitle: String
     var sound: LaunchSound? = nil
     /// Called on the 1 with whether the bar was stamped.
-    let onFinished: (_ stamped: Bool) -> Void
+    /// `hold`: how long the landed word stays put before the splash goes (the band is already in).
+    let onFinished: (_ stamped: Bool, _ hold: Double) -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var beat: Int?
@@ -184,15 +185,19 @@ struct CountInSplash: View {
             // Against the start, not the last wake-up, so the bar doesn't drift.
             try? await Task.sleep(until: start + interval * (i + 1), clock: .continuous)
         }
-        finish()  // the 1 of the next bar
+        // The 1 of the next bar: the band comes in, and TAKT, all four lit, sticks the landing
+        // for one short beat before the splash goes.
+        if didFinish || Task.isCancelled { return }
+        withAnimation(.easeOut(duration: 0.12)) { beat = 4 }
+        finish(hold: min(seconds, 0.6))
     }
 
-    private func finish() {
+    private func finish(hold: Double = 0) {
         guard !didFinish else { return }
         didFinish = true
         sound?.skip()  // a tap before the landing lands now; after it, nothing more
         CountInLaunch.onHit = nil
-        onFinished(stamped)
+        onFinished(stamped, hold)
     }
 
     private func tick(downbeat: Bool) {
@@ -493,11 +498,13 @@ struct CountInHost<Content: View>: View {
         ZStack {
             content()
             if showing {
-                CountInSplash(bpm: bpm, bandTitle: bandTitle, sound: sound) { stamped in
+                CountInSplash(bpm: bpm, bandTitle: bandTitle, sound: sound) { stamped, hold in
                     CountInLaunch.counted = true
                     onFinished()
-                    // A stamp rides out over the band a little longer.
-                    withAnimation(.easeOut(duration: stamped ? 0.8 : 0.25)) { showing = false }
+                    // The word holds on the landing, then goes; a stamp rides out a little longer.
+                    DispatchQueue.main.asyncAfter(deadline: .now() + hold) {
+                        withAnimation(.easeOut(duration: stamped ? 0.8 : 0.25)) { showing = false }
+                    }
                 }
                 .transition(.opacity)
                 .zIndex(1)
