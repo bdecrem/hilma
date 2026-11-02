@@ -7,7 +7,7 @@ import { looksLikeSong, validateSong } from '@/lib/takt/songfile'
 import { ladder, validateOverride, type SongOverride } from '@/lib/takt/charting'
 
 export const runtime = 'nodejs'
-export const maxDuration = 300
+export const maxDuration = 800
 
 // GET /api/takt/mods — the user's mods, newest last, without their songs.
 export async function GET() {

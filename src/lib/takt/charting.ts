@@ -211,7 +211,17 @@ export function masks(
       let kept = o.idx
       const cap = tier.notes
       if (cap != null && kept.length > cap) {
-        kept = [...kept].sort((a, b) => rank(notes[a]) - rank(notes[b]) || notes[a].n - notes[b].n).slice(0, cap)
+        // By the keep order, low first; a role already kept (the root an octave up) goes last,
+        // so two notes are root and third (or fifth), never an octave. Same as Charting.swift.
+        const sorted = [...kept].sort((a, b) => rank(notes[a]) - rank(notes[b]) || notes[a].n - notes[b].n)
+        const seen = new Set<string>()
+        const firsts: number[] = [], repeats: number[] = []
+        for (const i of sorted) {
+          const r = notes[i].r ?? ''
+          if (seen.has(r)) repeats.push(i)
+          else { seen.add(r); firsts.push(i) }
+        }
+        kept = [...firsts, ...repeats].slice(0, cap)
       }
       for (const i of kept) mask[i] = true
     }

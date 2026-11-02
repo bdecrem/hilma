@@ -56,11 +56,12 @@ export function describeCall(d: Draft, name: string, input: Record<string, unkno
   const range = (a: unknown, b: unknown) => (a === b || b == null ? `bar ${a}` : `bars ${a}–${b}`)
   switch (name) {
     case 'read_song': return 'Reading the song and its ladder'
-    case 'read_notes': return `Reading the ${partTitle(input.part)}, ${range(input.from_bar, input.to_bar)}`
-    case 'write_notes': return `Writing ${(input.notes as unknown[] | undefined)?.length ?? 0} notes into ${range(input.from_bar, input.to_bar)} of the ${partTitle(input.part)}`
-    case 'set_weights': return `Reweighting ${(input.changes as unknown[] | undefined)?.length ?? 0} onsets of the ${partTitle(input.part)}`
-    case 'set_levels': return `Setting the levels of the ${partTitle(input.part)}`
-    case 'measure': return `Measuring the ${partTitle(input.part)} ladder`
+    case 'read_notes': return `Reading ${partTitle(input.part)}, ${range(input.from_bar, input.to_bar)}`
+    case 'write_notes': return `Writing ${(input.notes as unknown[] | undefined)?.length ?? 0} notes into ${range(input.from_bar, input.to_bar)} of ${partTitle(input.part)}`
+    case 'add_interval': return `Adding a note ${input.interval} semitones ${Number(input.interval) < 0 ? 'under' : 'over'} the hits of ${partTitle(input.part)}`
+    case 'set_weights': return `Reweighting ${(input.changes as unknown[] | undefined)?.length ?? 0} onsets of ${partTitle(input.part)}`
+    case 'set_levels': return `Setting the levels of ${partTitle(input.part)}`
+    case 'measure': return `Measuring ${partTitle(input.part)} ladder`
     case 'add_bars': return `Adding ${input.bars} bars, copied from bar ${input.copy_from_bar}`
     case 'remove_bars': return `Removing ${input.bars} bars from bar ${input.from_bar}`
     case 'set_sections': return 'Naming the sections'
@@ -117,6 +118,24 @@ export const TOOLS: ToolDef[] = [
         notes: { type: 'array', items: NOTE_SCHEMA },
       },
       required: ['part', 'from_bar', 'to_bar', 'notes'],
+    },
+  },
+  {
+    name: 'add_interval',
+    description: 'Add one note to many chord hits at once, without rewriting them: at every onset in the range (filtered by weight and by size), a note `interval` semitones from the onset\'s lowest note (or highest, with from: "highest"), the same length and weight, with this role; the record mirrors it. Use it for "make these two-note chords" (7 = the fifth over a root, 12 = the octave, 4/3 = a major/minor third), doubling, thickening. Onsets that already hold that pitch are left alone. Re-measured after.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        part: { type: 'string', enum: ['chords', 'melody'] },
+        interval: { type: 'integer', description: 'Semitones, -24..24, not 0: 7 a fifth up, -5 a fourth down, 12 an octave.' },
+        role: { type: 'string', description: 'The new note\'s role on the chords part (fifth for a fifth over the root).' },
+        from: { type: 'string', enum: ['lowest', 'highest'], description: 'Measure from the onset\'s lowest (default) or highest note.' },
+        from_bar: { type: 'integer', description: '1-based; default the first bar.' },
+        to_bar: { type: 'integer', description: 'Inclusive; default the last bar.' },
+        max_lv: { type: 'integer', description: 'Only onsets whose heaviest note weighs at most this (1 = the hits Easy plays). Default 3.' },
+        max_notes: { type: 'integer', description: 'Only onsets with at most this many notes (1 = single notes only). Default any.' },
+      },
+      required: ['part', 'interval'],
     },
   },
   {
@@ -415,6 +434,47 @@ function writeNotes(d: Draft, charting: Charting, input: Record<string, unknown>
   return afterEdit(d, charting, k, before, `Wrote ${notes.length} notes into bars ${a}–${b} of the ${k} (replacing ${removed}); the record's ${p.channel} channel mirrors them.`)
 }
 
+function addInterval(d: Draft, charting: Charting, input: Record<string, unknown>): string {
+  const k = asPart(d, input.part)
+  const iv = asInt(input.interval, 'interval')
+  if (iv === 0 || Math.abs(iv) > 24) throw new Error('interval: -24..24 semitones, not 0')
+  const keep = ladder(charting, 'chords').keep
+  const role = typeof input.role === 'string' ? input.role : undefined
+  if (k === 'chords' && keep && (!role || !keep.includes(role))) throw new Error(`role: one of ${keep.join(', ')}`)
+  const [a, b] = barRange(d, input.from_bar ?? 1, input.to_bar ?? musicBars(d.song))
+  const maxLv = input.max_lv == null ? 3 : asInt(input.max_lv, 'max_lv')
+  const maxNotes = input.max_notes == null ? Infinity : asInt(input.max_notes, 'max_notes')
+  const fromHighest = input.from === 'highest'
+  const tpb = ticksPerBar(d.song)
+  const lo = (a - 1) * tpb, hi = b * tpb
+  const before = JSON.parse(JSON.stringify(d.song)) as SongFile
+  const p = partOf(d.song, k)
+  const onsets = new Map<number, PartNote[]>()
+  for (const n of p.notes) if (n.t >= lo && n.t < hi) onsets.set(n.t, [...(onsets.get(n.t) ?? []), n])
+  const added: PartNote[] = []
+  let skipped = 0
+  for (const [, group] of onsets) {
+    if (group.length > maxNotes || Math.min(...group.map((n) => n.lv)) > maxLv) continue
+    const base = group.reduce((x, y) => (fromHighest ? (y.n > x.n ? y : x) : (y.n < x.n ? y : x)))
+    const n = base.n + iv
+    if (n < 21 || n > 108 || group.some((g) => g.n === n)) { skipped++; continue }
+    const note: PartNote = { t: base.t, n, len: base.len, lv: base.lv }
+    if (k === 'chords') note.r = role
+    added.push(note)
+  }
+  if (!added.length) return `No onset in bars ${a}–${b} matched (weight ≤ ${maxLv}${Number.isFinite(maxNotes) ? `, ≤ ${maxNotes} notes` : ''}); nothing changed.`
+  p.notes = sortedNotes([...p.notes, ...added])
+  const rules = mirrorRules(d.song, k)
+  const mirrored: BandNote[] = added.map((n) => {
+    const e: BandNote = { t: n.t, n: n.n, v: rules.velocity(n.lv), len: n.len }
+    const inst = rules.instrument(n.len)
+    if (inst) e.i = inst
+    return e
+  })
+  d.song.channels[p.channel] = [...d.song.channels[p.channel], ...mirrored].sort((x, y) => x.t - y.t || x.n - y.n)
+  return afterEdit(d, charting, k, before, `Added ${added.length} notes ${iv} semitones from each onset's ${fromHighest ? 'highest' : 'lowest'} note in bars ${a}–${b} of the ${k}${skipped ? ` (${skipped} skipped: the pitch was there or out of range)` : ''}; the record's ${p.channel} channel mirrors them.`)
+}
+
 function setWeights(d: Draft, charting: Charting, input: Record<string, unknown>): string {
   const k = asPart(d, input.part)
   if (!Array.isArray(input.changes)) throw new Error('changes must be a list')
@@ -603,6 +663,7 @@ export function runTool(d: Draft, charting: Charting, name: string, input: Recor
       case 'read_song': return readSong(d, charting)
       case 'read_notes': return readNotes(d, input)
       case 'write_notes': return writeNotes(d, charting, input)
+      case 'add_interval': return addInterval(d, charting, input)
       case 'set_weights': return setWeights(d, charting, input)
       case 'set_levels': return setLevels(d, charting, input)
       case 'measure': return measure(d, charting, asPart(d, input.part))

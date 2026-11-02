@@ -1211,6 +1211,20 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   dry dev server, and on a fresh iPhone 17 simulator an autoplayed `song-slow-burn-short` wrote
   `{2026-11-02, stage, song-slow-burn-short}` locally and in that guest's `takt_progress` row
   (guest deleted after).
+- **Two-note chords are never an octave; the agent thickens in one call: 0.1 (84), 2026-11-02.**
+  Bart's Agent mode ask on Dockery ("chords, on EASY should be all 2 note chords… not just an
+  octave… a 1 and a v") failed with "ran out of room": Opus rewrote the whole part in one
+  write_notes call and the response hit `max_tokens`. Three fixes. (1) The engine (Charting.swift
+  and charting.ts, same rule): when a tier caps a chord's notes, a role already kept goes last, so
+  two notes of a voicing with the root twice are root + third, never root + root. (2) The agent:
+  `add_interval` (`src/lib/takt/mod-tools.ts`) adds a note N semitones over (or under) every
+  onset's lowest (or highest) note, filtered by weight and size, in one call; the charter points
+  thickening asks at it and caps write_notes at 8 bars; a response cut off at the length limit
+  is dropped and retried smaller (twice at most) instead of failing; the mods routes may run 800 s.
+  (3) "the the thumb" in the step lines. Verified: the same ask on a local server took 122 s and
+  made Easy 95 two-note hits (87 root + fifth, 3 fifth + root above, the 5 big downbeats root +
+  the third above) where the bundled song had 19 single notes; `charting-check.ts` 43/43 against
+  the app's `-DumpCharts`; LessonCheck all passed.
 
 ## Code map (`Takt/`)
 

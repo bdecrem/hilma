@@ -290,7 +290,14 @@ struct Charting: Decodable {
                 isTaken.insert(o.t)
                 var kept = o.idx
                 if let cap = tier.notes, kept.count > cap {
-                    kept = Array(kept.sorted { (rank(notes[$0]), notes[$0].n) < (rank(notes[$1]), notes[$1].n) }.prefix(cap))
+                    // By the keep order, low first; a role already kept (the root an octave up)
+                    // goes last, so two notes are root and third (or fifth), never an octave.
+                    let sorted = kept.sorted { (rank(notes[$0]), notes[$0].n) < (rank(notes[$1]), notes[$1].n) }
+                    var seen = Set<String>(), firsts: [Int] = [], repeats: [Int] = []
+                    for i in sorted {
+                        if seen.insert(notes[i].r ?? "").inserted { firsts.append(i) } else { repeats.append(i) }
+                    }
+                    kept = Array((firsts + repeats).prefix(cap))
                 }
                 for i in kept { mask[i] = true }
             }

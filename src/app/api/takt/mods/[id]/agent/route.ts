@@ -5,7 +5,7 @@ import { parseContext, runModTurn } from '@/lib/takt/mod-agent'
 import { sseResponse } from '@/lib/takt/sse'
 
 export const runtime = 'nodejs'
-export const maxDuration = 300
+export const maxDuration = 800
 
 // POST /api/takt/mods/[id]/agent { message, context } — the next turn on a mod, streamed like
 // the first (status steps, then { type: 'done', mod }).
