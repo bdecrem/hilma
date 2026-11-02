@@ -150,6 +150,7 @@ final class Player {
                                  : .noteOff(note: n.note, hostTime: n.hostTime))
             DispatchQueue.main.async {
                 if n.on {
+                    CountInLaunch.onHit?(n.hostTime)
                     self.pressed.insert(n.note)
                     self.score(n.note, hostTime: n.hostTime, velocity: n.velocity)
                 } else {
@@ -431,7 +432,7 @@ final class Player {
     /// Computer keyboard: semitone 0 = C3 shifted by the octave.
     func key(_ semitone: Int, down: Bool) {
         let note = 48 + 12 * octave + semitone
-        if down { press(note) } else { release(note) }
+        if down { CountInLaunch.onHit?(mach_absolute_time()); press(note) } else { release(note) }
     }
 
     func shiftOctave(_ delta: Int) {

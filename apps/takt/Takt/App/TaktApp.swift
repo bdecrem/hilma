@@ -171,7 +171,8 @@ struct RootView: View {
         .background(KeyCatcher(
             onNote: { player.key($0, down: $1) },
             onOctave: player.shiftOctave,
-            onSpace: player.togglePlay,
+            // While the count runs, Space is a hit, not the band's play button.
+            onSpace: { if let hit = CountInLaunch.onHit { hit(mach_absolute_time()) } else { player.togglePlay() } },
             onTempo: player.nudgeTempo,
             onEscape: {
                 if app.route == .lesson { app.route = .lessons }

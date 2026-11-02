@@ -1167,6 +1167,24 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   the next beat. The big letters still land with no animation. Reduce Motion: all four words sit
   there and nothing moves. `-SplashBeat` now takes 0 to 3. Verified: 30 fps frames of a real launch
   on the simulator show the strike, the stagger, the overshoot and the settle.
+- **You count the band in: 0.1 (80), 2026-11-02.** Bart, after the dictionary line didn't land
+  ("think like an indie game designer"), picked: the splash is the game's first move. A touch
+  (on touch-down), a click, a computer key, Space or a note on the keyboard is a hit if it falls
+  within 110 ms of a beat (`CountInSplash.window`); hits are measured in host time against
+  beat one, MIDI with the packet's own stamp (`CountInLaunch.onHit`, set while the splash runs,
+  called from `Player`'s MIDI handler, `Player.key` and the Space key, which no longer starts
+  the band during the count). A hit slams its letter (1.16x, held 50 ms, sprung back), kicks the
+  screen 7 pt in a random direction, and on the iPhone fires a rigid haptic (the clock's own ticks
+  stop once you play). Beat one is a gift: hit ZWEI, DREI and VIER with no stray taps and SAUBER
+  is rubber-stamped across the screen (slams in from 1.9x, tilted -8 degrees, untranslated) and
+  the fade stretches to 0.8 s so it rides out over the band. Once you've hit or strayed, a beat
+  you missed stays an outline (`missed`, its word dim). Do nothing and it counts itself in as
+  before. No skip any more (it's one bar); VoiceOver's activate still ends it. The dictionary line
+  is gone. DEBUG: `-SplashHits 1,2,3` with `-SplashBeat`; `-SplashTaps 1,2,3 [-SplashTapLate ms]`
+  taps on the real clock through the same path as a touch. Verified on the simulator from
+  recordings: clean (stamp on the VIER hit, the shake, the slam), a late join (ZWEI missed, an
+  outline), taps 150 ms late (all strays, no stamp); both layouts shot on the Mac. Not driven: a
+  real finger, keyboard or MIDI note (the paths share `hit(at:)`).
 
 ## Code map (`Takt/`)
 
