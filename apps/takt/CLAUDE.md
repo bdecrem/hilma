@@ -1286,6 +1286,16 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   the store, every level's lesson exists in both scale keys, every photo in the catalog with a
   credit, episodes, the blues counts).
 
+  **Same night, Bart's mechanic:** the map is a reveal, not a launcher. The stop up next is the
+  big orange one and its pill names the venue ("Dockery Farms"), not the lesson. Every venue not
+  cleared (that one too) is a washed-out old print (`grayscale(0.9)`, contrast 0.7, a 45% ground
+  wash) and does nothing on tap; clear the level (any lesson + any Stage song) and its photo comes
+  up in color and opens the story. The venue screen is only for cleared venues: no Lesson/Song
+  buttons, the bar says `Level 1 · Cleared` and ‹ › walk the cleared ones. The JSON's `levels`
+  lesson numbers are kept but unused for now. Stops ignore taps with `allowsHitTesting`, not
+  `.disabled` (that faded the orange stop). Riverside and Junior's have Bart's photos since 0.1
+  (87); their sources and licenses are not recorded yet (Credits says so).
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

@@ -55,9 +55,8 @@ struct MapScreen: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Palette.ground.ignoresSafeArea())
 
-            if let level = app.openVenue, let stop = stops.first(where: { $0.level == level }) {
-                VenueScreen(app: app, world: world, stop: stop, count: stops.count, progress: progress, cleared: cleared,
-                            compact: compact)
+            if let level = app.openVenue, level <= cleared, let stop = stops.first(where: { $0.level == level }) {
+                VenueScreen(app: app, world: world, stop: stop, cleared: cleared, compact: compact)
             }
         }
     }
@@ -159,10 +158,11 @@ private struct Road: View {
                 VenueCard(world: world, stop: s, state: state, width: cardWidth)
                     .rotationEffect(.degrees(tilt ? (left ? 1.2 : -1.2) : 0))
                     .offset(x: left ? width - 14 - cardWidth : 14, y: RoadLayout.y(s) - 74)
-                    .onTapGesture { app.openVenue = s.level }
+                    // A venue's story is the reward: it opens once its level is cleared.
+                    .onTapGesture { if state == .done { app.openVenue = s.level } }
                     .accessibilityElement(children: .ignore)
-                    .accessibilityLabel("\(s.venue.name), \(s.venue.era), \(s.venue.town)\(state == .next || state == .ahead ? ", locked" : "")")
-                    .accessibilityAddTraits(.isButton)
+                    .accessibilityLabel("\(s.venue.name), \(s.venue.era), \(s.venue.town)\(state == .done ? "" : ", locked")")
+                    .accessibilityAddTraits(state == .done ? .isButton : [])
             }
 
             ForEach(stops) { s in
@@ -171,6 +171,10 @@ private struct Road: View {
                 let x = RoadLayout.x(s, width: width), y = RoadLayout.y(s)
                 Button { app.openVenue = s.level } label: { StopMark(number: s.level, state: state) }
                     .buttonStyle(.plain)
+                    // Not `.disabled`: that fades the orange stop. It just ignores taps until cleared.
+                    .allowsHitTesting(state == .done)
+                    .accessibilityAddTraits(state == .done ? .isButton : [])
+                    .accessibilityRemoveTraits(state == .done ? [] : .isButton)
                     .frame(width: size, height: size)
                     .offset(x: x - size / 2, y: y - size / 2)
                     .accessibilityLabel(stopLabel(s, state))
@@ -183,10 +187,10 @@ private struct Road: View {
 
             if cleared < stops.count {
                 let s = stops[cleared]
-                // 264 wide holds "Level 7 · Hold it at 90"; 8 pt from either edge.
+                // 264 wide holds "King Biscuit Time"; 8 pt from either edge.
                 let w = min(264, width - 16)
                 let x = min(max(RoadLayout.x(s, width: width), w / 2 + 8), width - w / 2 - 8)
-                HerePill(title: "Level \(s.level) · \(app.levelLesson(s).title)") { app.openVenue = s.level }
+                HerePill(title: s.venue.name)
                     .frame(width: w)
                     .offset(x: x - w / 2, y: RoadLayout.y(s) - 92)
                     .accessibilityHidden(true)  // the stop says it
@@ -208,11 +212,11 @@ private struct Road: View {
     private func stopLabel(_ s: MapWorld.Stop, _ state: MapWorld.StopState) -> String {
         let where_: String
         switch state {
-        case .done: where_ = "done"
-        case .here: where_ = "you are here"
+        case .done: where_ = "cleared"
+        case .here: where_ = "up next: finish any lesson and any Stage song"
         case .next, .ahead: where_ = "locked"
         }
-        return "Level \(s.level), \(app.levelLesson(s).title), \(s.venue.name), \(where_)"
+        return "Level \(s.level), \(s.venue.name), \(where_)"
     }
 }
 
@@ -319,23 +323,20 @@ private struct Rings: View {
     }
 }
 
+/// The venue up next, by name. Not a button: the venue opens once it's cleared.
 private struct HerePill: View {
     let title: String
-    let action: () -> Void
 
     var body: some View {
         VStack(spacing: 0) {
-            Button(action: action) {
-                HStack(spacing: 8) {
-                    Text(title).dataLabel(11, weight: .semibold).lineLimit(1).minimumScaleFactor(0.8)
-                    Image(systemName: "play.fill").font(.system(size: 10))
-                }
+            Text(title)
+                .dataLabel(11, weight: .semibold)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
                 .foregroundStyle(Palette.ground)
-                .padding(.horizontal, 14)
+                .padding(.horizontal, 16)
                 .frame(height: 40)
                 .background(Capsule().fill(Palette.signal))
-            }
-            .buttonStyle(.plain)
             Triangle().fill(Palette.signal).frame(width: 16, height: 9)
         }
     }
@@ -361,17 +362,18 @@ private struct VenueCard: View {
     let width: CGFloat
 
     var body: some View {
-        let locked = state == .next || state == .ahead
+        // Every venue not cleared yet (the one up next too) is an old, washed-out print.
+        let locked = state != .done
         let photoHeight = (104 * width / 186).rounded()
         VStack(alignment: .leading, spacing: 0) {
             // "Tonight" in the corner away from the stop: the pill covers the stop's side.
             ZStack(alignment: stop.level % 2 == 1 ? .topTrailing : .topLeading) {
                 VenuePhoto(world: world, venue: stop.venue, big: false)
-                    .grayscale(locked ? 1 : 0)
-                    .contrast(locked ? 0.8 : 1)
+                    .grayscale(locked ? 0.9 : 0)
+                    .contrast(locked ? 0.7 : 1)
                     .frame(width: width, height: photoHeight)
                     .clipped()
-                if locked { Palette.ground.opacity(0.55) }
+                if locked { Palette.ground.opacity(0.45) }
                 if state == .here {
                     Text("Tonight")
                         .dataLabel(9, weight: .semibold)

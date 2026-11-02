@@ -41,13 +41,6 @@ final class AppModel {
         return progress.map
     }
 
-    /// The lesson a level's Lesson button starts: its own, or the module's next open one if
-    /// that isn't reached yet (lessons in a module open in order).
-    func levelLesson(_ stop: MapWorld.Stop) -> (code: String, n: Int, title: String) {
-        let content = module(stop.lesson.module)
-        let n = max(1, min(stop.lesson.lesson, lessonsDone(content) + 1, content.lessons.count))
-        return (stop.lesson.module, n, content.lessons[n - 1].title)
-    }
     let player: Player?
     let progress: ProgressStore
     let account: AccountStore

@@ -1,15 +1,12 @@
 import SwiftUI
 
-/// A venue's story, over the map: full screen on iPhone, a 480 pt card on the Mac.
-/// The photo on top with its credit, then the story, then the level: its two halves (a lesson
-/// finished, a song played through) with a button each. Locked venues open too (the story is
-/// the tease); their buttons say what clears the way.
+/// A cleared venue's story, over the map: full screen on iPhone, a 480 pt card on the Mac.
+/// The photo on top with its credit, then the story, then the level with arrows to the other
+/// cleared venues. The story is the reward: venues not cleared don't open.
 struct VenueScreen: View {
     let app: AppModel
     let world: MapWorld
     let stop: MapWorld.Stop
-    let count: Int
-    let progress: MapProgress
     let cleared: Int
     let compact: Bool
 
@@ -33,8 +30,6 @@ struct VenueScreen: View {
             }
         }
     }
-
-    private var state: MapWorld.StopState { MapWorld.state(stop.level - 1, cleared: cleared) }
 
     private func content(photoHeight: CGFloat) -> some View {
         let v = stop.venue
@@ -122,7 +117,7 @@ struct VenueScreen: View {
                 .padding(.top, compact ? 4 : 16)
             }
 
-            LevelBar(app: app, stop: stop, count: count, state: state, progress: progress, cleared: cleared)
+            LevelBar(app: app, stop: stop, cleared: cleared)
                 .padding(.horizontal, 16)
                 .padding(.top, 12)
                 .padding(.bottom, compact ? 8 : 16)
@@ -130,96 +125,37 @@ struct VenueScreen: View {
     }
 }
 
-/// The level at the bottom of the venue: its lesson, the two halves, the buttons, and the
-/// arrows to the venues either side.
+/// The bottom of a cleared venue: its level, and the arrows to the cleared venues either side.
 private struct LevelBar: View {
     let app: AppModel
     let stop: MapWorld.Stop
-    let count: Int
-    let state: MapWorld.StopState
-    let progress: MapProgress
     let cleared: Int
 
     var body: some View {
-        let lesson = app.levelLesson(stop)
-        let locked = state == .next || state == .ahead
-        VStack(spacing: 10) {
-            HStack(spacing: 8) {
-                arrow("chevron.left", label: "Previous venue", to: stop.level - 1)
-                HStack(spacing: 12) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Level \(stop.level) · \(summary(locked: locked))")
-                            .dataLabel(10, weight: .semibold)
-                            .foregroundStyle(Palette.line)
-                        Text(lesson.title)
-                            .font(.display(20))
-                            .textCase(.uppercase)
-                            .foregroundStyle(Palette.ground)
-                    }
-                    .lineLimit(1)
-                    Spacer(minLength: 0)
-                }
-                .padding(.horizontal, 14)
-                .frame(height: 56)
-                .background(RoundedRectangle(cornerRadius: 6).fill(Palette.text))
-                .accessibilityElement(children: .combine)
-                arrow("chevron.right", label: "Next venue", to: stop.level + 1)
+        HStack(spacing: 8) {
+            arrow("chevron.left", label: "Previous venue", to: stop.level - 1)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Level \(stop.level) · Cleared")
+                    .dataLabel(10, weight: .semibold)
+                    .foregroundStyle(Palette.line)
+                Text(stop.venue.name)
+                    .font(.display(20))
+                    .textCase(.uppercase)
+                    .foregroundStyle(Palette.ground)
             }
-            if locked {
-                Text("Clear level \(cleared + 1) first")
-                    .dataLabel(12, weight: .semibold)
-                    .foregroundStyle(Palette.muted)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 48)
-                    .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(Palette.line, lineWidth: 1))
-            } else {
-                HStack(spacing: 8) {
-                    half("Lesson \(lesson.n)", inHand: state == .here && progress.lessonInHand) {
-                        app.openVenue = nil
-                        app.start(module: lesson.code, lesson: lesson.n)
-                    }
-                    half("Song", inHand: state == .here && progress.songInHand) {
-                        app.openVenue = nil
-                        app.route = .stage
-                    }
-                }
-            }
+            .lineLimit(1)
+            .padding(.horizontal, 14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(height: 56)
+            .background(RoundedRectangle(cornerRadius: 6).fill(Palette.text))
+            .accessibilityElement(children: .combine)
+            arrow("chevron.right", label: "Next venue", to: stop.level + 1)
         }
     }
 
-    private func summary(locked: Bool) -> String {
-        switch state {
-        case .done: return "Cleared"
-        case .here:
-            switch (progress.lessonInHand, progress.songInHand) {
-            case (true, false): return "Now a song"
-            case (false, true): return "Now a lesson"
-            default: return "A lesson and a song"
-            }
-        case .next, .ahead: return "Locked"
-        }
-    }
-
-    /// One half of the level: lit in signal until it's in hand, then a quiet ✓ (still playable).
-    private func half(_ title: String, inHand: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack(spacing: 8) {
-                Image(systemName: inHand ? "checkmark" : "play.fill").font(.system(size: 11, weight: .bold))
-                Text(title).dataLabel(12, weight: .semibold)
-            }
-            .foregroundStyle(inHand ? Palette.text : Palette.ground)
-            .frame(maxWidth: .infinity)
-            .frame(height: 48)
-            .background(RoundedRectangle(cornerRadius: 4).fill(inHand ? Palette.panel : Palette.signal))
-            .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(inHand ? Palette.line : .clear, lineWidth: 1))
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(inHand ? "\(title), done for this level, play again" : title)
-    }
-
+    /// Only to venues already cleared.
     private func arrow(_ symbol: String, label: String, to level: Int) -> some View {
-        let ok = level >= 1 && level <= count
+        let ok = level >= 1 && level <= cleared
         return Button { if ok { app.openVenue = level } } label: {
             Image(systemName: symbol)
                 .font(.system(size: 14, weight: .bold))
