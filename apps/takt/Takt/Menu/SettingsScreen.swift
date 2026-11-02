@@ -469,10 +469,12 @@ struct PhotoCredits: View {
                     VStack(alignment: .leading, spacing: 3) {
                         Text(v.name).dataLabel(11, weight: .semibold).foregroundStyle(Palette.text)
                         Text(photo.credit).bodyText(13).foregroundStyle(Palette.muted)
-                        if let url = URL(string: photo.source) {
+                        if let s = photo.source, let url = URL(string: s) {
                             Link(destination: url) {
                                 Text("\(photo.license) · source").dataLabel(10).foregroundStyle(Palette.cue)
                             }
+                        } else {
+                            Text(photo.license).dataLabel(10).foregroundStyle(Palette.muted)
                         }
                     }
                     .fixedSize(horizontal: false, vertical: true)

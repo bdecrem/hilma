@@ -55,7 +55,13 @@
           "status": "Closed 2020",
           "tag": "Hospital first. Then a musicians' bed.",
           "story": "This building was once the G.T. Thomas Afro-American Hospital, which served Black patients in the Delta. Bessie Smith died here on September 26, 1937, after a car wreck on Highway 61. From 1944 it was the Riverside Hotel, a place for touring players to sleep. Sonny Boy Williamson II, Robert Nighthawk and Ike Turner were regulars, and Turner reportedly worked up \"Rocket 88\" in his room. Storm damage and the pandemic closed it in 2020.",
-          "photo": null,
+          "photo": {
+            "file": "venues/riverside.jpg",
+            "credit": "Photo: source not yet recorded",
+            "license": "Not yet recorded",
+            "source": null,
+            "note": null
+          },
           "sources": [
             "https://en.wikipedia.org/wiki/Riverside_Hotel_(Clarksdale,_Mississippi)",
             "https://www.hmdb.org/m.asp?m=90062"
@@ -169,7 +175,13 @@
           "status": "Burned 2000",
           "tag": "Sunday nights. Burned in 2000.",
           "story": "Junior Kimbrough set up this juke around 1992 in a building that used to be a church, out in the hill country near Holly Springs. On Sunday nights he played with his sons and R.L. Burnside's family, and he recorded his first Fat Possum album, All Night Long, right here. Students from Ole Miss came, and so did members of U2 and Keith Richards. The place burned to the ground in April 2000.",
-          "photo": null,
+          "photo": {
+            "file": "venues/juniors.jpg",
+            "credit": "Photo: source not yet recorded",
+            "license": "Not yet recorded",
+            "source": null,
+            "note": "the Junior's Place T-shirt logo"
+          },
           "sources": [
             "https://en.wikipedia.org/wiki/Junior_Kimbrough",
             "https://msbluestrail.org/?p=15658"

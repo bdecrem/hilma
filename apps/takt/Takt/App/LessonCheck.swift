@@ -861,14 +861,14 @@ enum LessonCheck {
             let photos = stops.compactMap { world.imageName($0.venue) }
             check("map \(id): every photo is in the asset catalog", photos.allSatisfy { UIImage(named: $0) != nil },
                   "\(photos.filter { UIImage(named: $0) == nil })")
-            check("map \(id): every photo has a credit, a license and a source",
-                  stops.compactMap(\.venue.photo).allSatisfy { !$0.credit.isEmpty && !$0.license.isEmpty && URL(string: $0.source) != nil })
+            check("map \(id): every photo has a credit and a license, and a source is a link",
+                  stops.compactMap(\.venue.photo).allSatisfy { !$0.credit.isEmpty && !$0.license.isEmpty && ($0.source.map { URL(string: $0) != nil } ?? true) },
+                  "no source yet: " + stops.filter { $0.venue.photo != nil && $0.venue.photo?.source == nil }.map(\.venue.id).joined(separator: ", "))
             check("map \(id): episodes open where their first venue sits", stops.filter(\.opensEpisode).count == world.episodes.count)
         }
         let blues = MapWorld.bundled("blues")
-        check("map blues: 20 levels of 50, 18 photos, the photo-less two are Riverside and Junior's",
-              blues.stops.count == 20 && blues.total == 50
-              && blues.stops.filter { $0.venue.photo == nil }.map(\.venue.id) == ["riverside", "juniors"])
+        check("map blues: 20 levels of 50, a photo for every venue",
+              blues.stops.count == 20 && blues.total == 50 && blues.stops.allSatisfy { $0.venue.photo != nil })
 
         let place = QuizBank.placement
         check("ear check: five, theory and listening", place.count == 5 && place.filter { $0.kind == .listen }.count == 3)

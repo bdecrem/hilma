@@ -10,7 +10,8 @@ struct MapWorld: Decodable {
         let file: String
         let credit: String
         let license: String
-        let source: String
+        /// The page it came from; nil until recorded (Credits then says so).
+        let source: String?
         /// What the photo shows when it isn't the venue itself (a marker, today's building).
         let note: String?
     }
