@@ -1131,6 +1131,21 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   --stdout <file> /Applications/Takt.app --args …`, not from the shell directly: launched from
   the shell, the app's audio session start takes the shell down with it (exit 144).
 
+- **Launch cues as gestures: 0.1 (77), 2026-11-02.** Bart: "the startup sounds are a little too
+  non-artistic. they are single notes so it feels a little stilted. do a double note, or a hold,
+  or a bend etc to liven things up some - in all 3 versions". `scripts/launch-sounds/render.py`
+  grew a pitch bend and a vibrato on the Rhodes (`rhodes(bend:, vib:)`), 303 slides between tied
+  notes (`acid`, a fifth tuple field) and a filter wah on the Sub 37 (`sub37(wah:)`), and every
+  set's four cues are gestures of about 400 ms with a tail. Blues: C2 and C4 doubled by the thumb
+  with the E; E♭ slipping to a held, shaking E with the G landing on it; G bent up from F♯ and
+  held, the octave answering; A–B♭–A–B♭ shaken into the 1 over C2. Acid: B♭ sliding up to C2;
+  C2 then the octave pop; E♭ held while the squelch sweeps down; the G accent sliding up to B♭
+  for the 1. Deep: C2 and the octave popping after it; C3 bent up slowly from C2 and held; the
+  B♭ double tap; G held with the filter rocking into the 1. Landings and swells unchanged; the
+  18 CAFs regenerated (1.3 MB), previews at 70 (the menu band) and 121 bpm in `~/Desktop/takt/`.
+  Verified on the Mac: `-LaunchSoundCheck` PASS ×3, `-LessonCheck` 340/340, a real launch with
+  sound runs the count through.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

@@ -10,7 +10,10 @@ import os
 /// over the next count; `swell`, a reversed tail that ends exactly on the landing; `land`,
 /// the 1 the app opens on. Blues is a Rhodes warming up (C2 and middle C, the blue third,
 /// the C9 on the landing), acid a 303 opening its filter count by count, deep a Sub 37 gliding
-/// (the design, 2026-11-01, from the count-in package in misc/takt-countin2.zip).
+/// (the design, 2026-11-01, from the count-in package in misc/takt-countin2.zip). Since 0.1 (77)
+/// every cue is a gesture rather than one note: a double, a held double stop, a bend, a shake
+/// (blues); a slide, an octave pop, a held squelch, a slide into the 1 (acid); an octave
+/// double, a slow bend, a double tap, a wah (deep).
 ///
 /// The cues play through the app's own AVAudioEngine (`AudioEngine.makePlayer`), one
 /// AVAudioPlayerNode each, scheduled at host times (`AVAudioTime(hostTime:)`), so they share

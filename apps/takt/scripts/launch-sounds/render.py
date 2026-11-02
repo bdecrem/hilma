@@ -44,13 +44,25 @@ def empty(d=0.0): return np.zeros((2, N(d)))
 
 # ---------------------------------------------------------------- instruments
 
-def rhodes(midi, dur=1.8, vel=0.7, hold=None):
-    """FM electric piano: 1:1 bark that softens, a 14:1 tine ping, suitcase-style ring."""
-    f = mtof(midi); n = N(dur); t = T(n)
+def rhodes(midi, dur=1.8, vel=0.7, hold=None, bend=None, vib=None):
+    """FM electric piano: 1:1 bark that softens, a 14:1 tine ping, suitcase-style ring.
+    bend=(semitones, seconds): starts that far off and settles on the note (a bent tine, a
+    slide of the thumb); vib=(rate Hz, depth semitones, onset s): a vibrato that grows in."""
+    n = N(dur); t = T(n)
+    m = np.full(n, float(midi))
+    if bend is not None:
+        off, dt = bend
+        m += off * np.exp(-t / (dt / 3))
+    if vib is not None:
+        rate, depth, on = vib
+        grow = np.clip((t - on) / 0.25, 0, 1)
+        m += depth * grow * np.sin(2 * np.pi * rate * t)
+    f = mtof(midi)
+    ph = np.cumsum(mtof(m)) / SR
     I = (0.9 + 2.6 * vel) * np.exp(-t / 0.16) + 0.22
-    car = np.sin(2 * np.pi * f * t + I * np.sin(2 * np.pi * f * t))
-    tine = 0.22 * vel * np.sin(2 * np.pi * f * 14 * t) * np.exp(-t / 0.018)
-    body = 0.12 * np.sin(2 * np.pi * f * 2 * t) * np.exp(-t / 0.5)
+    car = np.sin(2 * np.pi * ph + I * np.sin(2 * np.pi * ph))
+    tine = 0.22 * vel * np.sin(2 * np.pi * ph * 14) * np.exp(-t / 0.018)
+    body = 0.12 * np.sin(2 * np.pi * ph * 2) * np.exp(-t / 0.5)
     tau = 1.4 * (261.6 / f) ** 0.3
     e = np.minimum(t / 0.002, 1) * np.exp(-t / tau)
     if hold is not None:
@@ -61,10 +73,12 @@ def rhodes(midi, dur=1.8, vel=0.7, hold=None):
     return fade_end(lp(x, 5200 if f > 300 else 3800), 0.35)
 
 def epiano(notes, dur=1.8, trem=True):
-    """notes: list of (midi, vel, onset, hold) -> stereo with suitcase autopan"""
+    """notes: list of (midi, vel, onset, hold[, bend[, vib]]) -> stereo with suitcase autopan"""
     out = empty(dur + 0.3)
-    for m, v, on, h in notes:
-        out = place(out, st(rhodes(m, dur, v, h)), on)
+    for m, v, on, h, *x in notes:
+        bend = x[0] if len(x) > 0 else None
+        vib = x[1] if len(x) > 1 else None
+        out = place(out, st(rhodes(m, dur, v, h, bend, vib)), on)
     if trem:
         t = T(out.shape[1]); s = 0.18 * np.sin(2 * np.pi * 4.6 * t)
         out = out * np.vstack([1 + s, 1 - s])
@@ -92,15 +106,24 @@ def rim(vel=0.5, pan=-0.15):
     return st(x / np.max(np.abs(x)) * vel, pan)
 
 def acid(notes, dur=0.6, res=0.86, pan=-0.3, base=260, decay=0.07, drive=2.2, env=1800):
-    """mono saw through a Chamberlin SVF; notes: (midi, onset, gate, accent)"""
+    """mono saw through a Chamberlin SVF; notes: (midi, onset, gate, accent[, slide])
+    slide (seconds): the pitch glides there from the note before, 303-style, and the
+    filter does not re-trigger (a tie)."""
     n = N(dur); t = T(n)
-    f = np.zeros(n); gate = np.zeros(n); fenv = np.zeros(n)
-    for m, on, g, acc in notes:
+    mm = np.full(n, float(notes[0][0])); gate = np.zeros(n); fenv = np.zeros(n)
+    prev = notes[0][0]
+    for m, on, g, acc, *x in notes:
+        slide = x[0] if x else None
         i0, i1 = N(on), N(on + g)
-        f[i0:] = mtof(m)
-        gate[i0:i1] = 1
         k = np.arange(n - i0) / SR
-        fenv[i0:] = np.maximum(fenv[i0:] * 0, (env + 2600 * acc) * np.exp(-k / decay))
+        if slide:
+            mm[i0:] = m + (prev - m) * np.exp(-k / (slide / 3))
+        else:
+            mm[i0:] = m
+            fenv[i0:] = np.maximum(fenv[i0:] * 0, (env + 2600 * acc) * np.exp(-k / decay))
+        gate[i0:i1] = 1
+        prev = m
+    f = mtof(mm)
     gate = lp(gate, 200, 1)
     ph = np.cumsum(f) / SR
     saw = 2 * (ph % 1) - 1
@@ -278,12 +301,19 @@ def reverse_of(src, dur=0.34):
 
 def variant_blues():
     """keys finger-warmer: C, the crushed blue third, G, B-flat — a C7 with the blue note, up the keys"""
+    # Gestures, not single notes (Bart, 2026-11-02: "they are single notes so it feels a little
+    # stilted. do a double note, or a hold, or a bend"): each under ~420 ms, tails ring on.
     def note(*ns, rv=0.28):
-        return verb(epiano(list(ns), dur=1.6), rv)
-    b1 = note((36, 0.42, 0, 0.32), (60, 0.62, 0, 0.26))          # left hand C2 + C4
-    b2 = note((63, 0.5, 0, 0.038), (64, 0.66, 0.04, 0.26))        # E-flat slips to E
-    b3 = note((67, 0.76, 0, 0.26))                                # G
-    b4 = note((69, 0.38, 0, 0.03), (70, 0.66, 0.032, 0.3))        # a flick of A into B-flat
+        return verb(epiano(list(ns), dur=1.8), rv)
+    b1 = note((36, 0.42, 0, 0.40), (60, 0.62, 0, 0.14),           # left hand C2 + C4, and the
+              (60, 0.46, 0.16, 0.26), (64, 0.34, 0.16, 0.26))     # thumb doubles it with the E
+    b2 = note((63, 0.5, 0, 0.038), (64, 0.62, 0.04, 0.42, None, (5.6, 0.12, 0.16)),  # E-flat slips to E, held, shaking
+              (67, 0.44, 0.10, 0.36))                             # and the G lands on it: a double stop
+    b3 = note((67, 0.74, 0, 0.40, (-1.0, 0.09), (5.2, 0.10, 0.18)),  # G bent up from F-sharp, held
+              (72, 0.36, 0.22, 0.20))                             # the octave C answers, soft
+    b4 = note((69, 0.36, 0, 0.03), (70, 0.6, 0.032, 0.09),        # A into B-flat, then the shake:
+              (69, 0.36, 0.13, 0.05), (70, 0.56, 0.18, 0.30),     # B-flat, A, B-flat, into the 1
+              (36, 0.36, 0.18, 0.30))                             # with the C2 under it
     keys = epiano([(36, 0.5, 0, None)] + [(m, v, 0, None) for m, v in zip(C9 + [72], (0.6, 0.5, 0.52, 0.5, 0.46))], dur=2.6)
     land = dub(verb(keys, 0.38), fb=0.32, n=4, tone=2200)
     return dict(b1=b1, b2=b2, b3=b3, b4=b4, swell=reverse_swell(C9), land=land)
@@ -292,13 +322,14 @@ CM9 = [48, 51, 55, 58, 62]  # C Eb G Bb D
 
 def variant_acid():
     """303 finger-warmer: four notes, cutoff and resonance a notch higher each time"""
-    def one(m, base, env, res, acc, gate=0.13):
-        x = acid([(m, 0.0, gate, acc)], 0.55, res=res, pan=0.0, base=base, decay=0.09, drive=2.6, env=env)
+    def one(notes, base, env, res, decay=0.09, dur=0.8):
+        x = acid(notes, dur, res=res, pan=0.0, base=base, decay=decay, drive=2.6, env=env)
         return 1.7 * dub(verb(x, 0.12), d=0.372, fb=0.28, n=3, tone=2200)
-    b1 = one(36, 160, 250, 0.78, 0.0)    # C2, filter shut, round
-    b2 = one(48, 320, 600, 0.84, 0.2)    # up the octave, a little bite
-    b3 = one(39, 600, 1100, 0.89, 0.45)  # E-flat, squelch arriving
-    b4 = one(43, 900, 1600, 0.93, 1.0)   # G, accent, knob most of the way
+    # 303 gestures: a slide, an octave double, a held squelch, a slide leaning on the 1
+    b1 = one([(34, 0.0, 0.08, 0.0), (36, 0.07, 0.26, 0.0, 0.11)], 160, 250, 0.78)      # B-flat slides up to C2, round
+    b2 = one([(36, 0.0, 0.12, 0.2), (48, 0.17, 0.16, 0.5)], 320, 600, 0.84)            # C2 then the octave: the pop
+    b3 = one([(39, 0.0, 0.40, 0.45)], 600, 1100, 0.89, decay=0.22)                      # E-flat held, the squelch sweeps down
+    b4 = one([(43, 0.0, 0.14, 1.0), (46, 0.13, 0.26, 0.6, 0.10)], 900, 1600, 0.93)      # G accent, slides up to B-flat for the 1
     x = empty(2.6)
     x = place(x, kick(0.8), 0)
     x = place(x, moog(24, 1.4, 380, 0.55), 0)                       # C1 sub
@@ -309,7 +340,7 @@ def variant_acid():
     return dict(b1=b1, b2=b2, b3=b3, b4=b4, swell=sw, land=x)
 
 def sub37(midi, from_midi=None, glide=0.045, dur=1.2, gate=0.34, cut=300, env=900,
-          res=0.35, vel=0.7, drive=1.8, decay=0.16):
+          res=0.35, vel=0.7, drive=1.8, decay=0.16, wah=None):
     """Sub 37-style mono bass: 2 detuned saws + square sub, 24 dB (two cascaded SVFs),
     glide from the previous note, filter pluck, a little overdrive."""
     n = N(dur); t = T(n)
@@ -320,7 +351,11 @@ def sub37(midi, from_midi=None, glide=0.045, dur=1.2, gate=0.34, cut=300, env=90
     f = 440.0 * 2 ** ((m - 69) / 12)
     ph = np.cumsum(f) / SR
     x = (2 * ((ph * 1.003) % 1) - 1 + 2 * ((ph * 0.997) % 1) - 1) / 2 + 0.75 * np.sign(np.sin(np.pi * ph))
-    fc = np.clip(cut + env * np.exp(-t / decay), 30, 6000)
+    fc = cut + env * np.exp(-t / decay)
+    if wah is not None:  # (rate Hz, depth Hz): the cutoff rocks on a held note
+        rate, depth = wah
+        fc = fc + depth * np.clip(t / 0.08, 0, 1) * (0.5 - 0.5 * np.cos(2 * np.pi * rate * t))
+    fc = np.clip(fc, 30, 6000)
     g = 2 * np.sin(np.pi * fc / (SR * 2)); q = 1 - res
     y = np.zeros(n)
     l1 = b1_ = l2 = b2_ = 0.0
@@ -336,12 +371,13 @@ def sub37(midi, from_midi=None, glide=0.045, dur=1.2, gate=0.34, cut=300, env=90
 
 def variant_deep():
     """deep house bass finger-warmer: octave pop, down, down, gliding the whole way"""
-    def one(m, frm, cut, env, vel=0.72):
-        return 1.4 * verb(sub37(m, frm, cut=cut, env=env, vel=vel), 0.1)
-    b1 = one(36, None, 240, 700)        # C2, round
-    b2 = one(48, 36, 320, 1100, 0.6)    # glides up the octave: the house octave pop
-    b3 = one(46, 48, 280, 900)          # down to B-flat
-    b4 = one(43, 46, 300, 1300)         # down to G, a bit more filter, leaning into the 1
+    def one(m, frm, cut, env, vel=0.72, **kw):
+        return 1.4 * verb(sub37(m, frm, cut=cut, env=env, vel=vel, **kw), 0.1)
+    # Sub 37 gestures: an octave double, a slow bend, a double tap, a wah held into the 1
+    b1 = place(one(36, None, 240, 700, gate=0.15), one(48, None, 380, 900, 0.5, gate=0.11, dur=0.9), 0.19)  # C2, and the octave pops after it
+    b2 = one(48, 36, 320, 1100, 0.6, glide=0.16, gate=0.42)       # C3 bent up slowly from C2, held
+    b3 = place(one(46, 48, 280, 900, gate=0.13), one(46, None, 420, 700, 0.5, gate=0.11, dur=0.9), 0.18)   # B-flat, B-flat: the double tap
+    b4 = one(43, 46, 300, 1300, gate=0.46, wah=(5.0, 520))        # down to G, held, the filter rocking into the 1
     keys = epiano([(m, v, 0, None) for m, v in zip(CM9, (0.5, 0.42, 0.44, 0.46, 0.42))], dur=2.6)
     x = empty(2.8)
     x = place(x, kick(0.6), 0)
@@ -388,6 +424,7 @@ for name, (fn, peak_db, use_door) in VARIANTS.items():
         write(f'{OUT}/{name}/countin_{name}_{k}.wav', v * g)
         manifest[name][k] = round(v.shape[1] / SR, 3)
     write(f'{OUT}/{name}/preview_{name}_121bpm.wav', mix * g)
+    write(f'{OUT}/{name}/preview_{name}_70bpm.wav', preview(cues, 70.0) * g)  # the menu band's tempo
     print(name, 'gain', round(20 * np.log10(g), 1), 'dB', manifest[name])
 
 json.dump(manifest, open(f'{OUT}/manifest.json', 'w'), indent=1)
