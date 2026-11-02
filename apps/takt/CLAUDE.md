@@ -1529,10 +1529,16 @@ ships it too since 2026-10-30** (`MINI=local ./testflight/ship-via-mini.sh mac`)
 "3rd Party Mac Developer Installer" identity (Mac Installer Distribution cert `UFUMCYT3W9`,
 serial `6C88B10E…`, minted over the ASC API from an openssl CSR after Bart okayed revoking the
 unused 2026-08-26 one, `WUZK4CR87J`; Apple issues no fourth while three are current). The key
-lives in its own keychain, `~/Library/Keychains/takt-ship.keychain-db` (password `takt-ship`,
+lives in its own keychain, `~/Library/Keychains/takt-ship2.keychain-db` (password `takt-ship`,
 on the search list, partition list set for apple-tool/codesign/productbuild): in the login
 keychain an imported key makes productbuild wait on an authorization dialog nobody sees, and
-`set-key-partition-list` there would need the login password. **Public
+`set-key-partition-list` there would need the login password. It was `takt-ship.keychain-db`
+until 2026-11-02: that day securityd refused the right password at that exact path (a
+byte-identical copy at any other path unlocked), so the file moved to `takt-ship2`; when a
+ship fails in productbuild, `security unlock-keychain -p takt-ship ~/Library/Keychains/takt-ship2.keychain-db`
+first, and never answer the "security wants to use the takt-ship keychain" dialog with the
+login password (and never "Reset Default Keychains" over it: that swaps the real login
+keychain for an empty one, `login_renamed_1.keychain-db` holds the old one). **Public
 beta:** external group "Public beta", public link https://testflight.apple.com/join/sF4rp7DS
 (limit 10,000), created 2026-10-30 with the beta review contact (Bart, no demo account: the app
 opens as a guest) and the en-US test information; `asc-submit.mjs` adds every build to it and
