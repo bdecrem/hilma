@@ -107,7 +107,7 @@ export const TOOLS: ToolDef[] = [
   },
   {
     name: 'write_notes',
-    description: 'Replace every note of a part between from_bar and to_bar (inclusive) with these notes, and mirror them into the record (the band channel the part replaces), so the band plays them when the player takes the other part. Write a whole passage in one call. Notes outside the range are refused; the file is validated against the app’s rules and the ladder re-measured.',
+    description: 'Replace every note of a part between from_bar and to_bar (inclusive) with these notes, and mirror them into the record (the band channel the part replaces), so the band plays them when the player takes the other part. At most 8 bars per call: a longer passage (or a whole part) takes several calls, one range after another, because one response can only hold so many notes. Notes outside the range are refused; the file is validated against the app’s rules and the ladder re-measured.',
     input_schema: {
       type: 'object',
       properties: {

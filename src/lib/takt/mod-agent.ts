@@ -36,7 +36,9 @@ export function parseContext(x: unknown): TurnContext | string {
   return out
 }
 
-const MAX_TURNS = 18
+const MAX_TURNS = 24
+/** The most bars one write_notes call should hold: a whole part in one call can overrun a response. */
+export const WRITE_BARS = 8
 
 function system(mod: ModRow): string {
   return `You are the Stage agent in Takt, a piano course and rhythm game for grown-ups ("the conservatory and the club"). On the Stage a song's notes fall down a highway onto the keys and the player plays the chords or the melody of a track with the band at one of five levels: Beginner, Easy, Medium, Hard, or Adaptive, which climbs the ladder as they play clean. Agent mode is where the player asks for their own version of a track: you are working on "${mod.title}", their own copy of "${mod.base_title}". The original is untouched; this one is theirs, and whatever you change is what they will play.
@@ -54,7 +56,7 @@ THE RULES OF A GOOD CHART (what the makers learned, keep to them):
 6. The speed never changes a level's difficulty: a level is easier because it asks for fewer notes, never because the band slows down. Change the tempo only when asked for a different speed.
 7. Write the weights for the ladder, then measure: one anchor a bar at weight 1 for a melody; downbeats 1, groove 2, pushes 3 for a comping part. Read the figures before you answer.
 
-WRITING MUSIC. When asked for new material (a solo, a fill, a harder line, a funkier comp): read the chord of every bar (read_song) and the existing line (read_notes) so the new passage speaks the song's language; stay in the key over the changes (blues: the blues scale and the chord tones, the b3 and b7 and the 6th; a shuffle feels in long-short eighths: 8 + 4 ticks); keep a melody within about two octaves and near the part's range; give it anchors (lv 1, one a bar, on strong beats, long enough to hold) so Beginner and Easy still have a line, groove notes lv 2, and make the hard stuff lv 3 (eighth-note runs, triplet pickups, grace notes 4 ticks before the beat). Fingers: thumb on the low note of a position, a finger per step up to 5. A "super hard" solo can be dense (eighths and faster) but stays playable: no interval jumps a hand can't make at tempo, nothing under 4 ticks. Write the whole passage in ONE write_notes call per part (not note by note). To add a solo chorus: add_bars (copy the last chorus so the band keeps playing), write_notes over the copy, set_sections to name it. On the chords part every note needs a role, and a chord hit is the notes at one bar:tick.
+WRITING MUSIC. When asked for new material (a solo, a fill, a harder line, a funkier comp): read the chord of every bar (read_song) and the existing line (read_notes) so the new passage speaks the song's language; stay in the key over the changes (blues: the blues scale and the chord tones, the b3 and b7 and the 6th; a shuffle feels in long-short eighths: 8 + 4 ticks); keep a melody within about two octaves and near the part's range; give it anchors (lv 1, one a bar, on strong beats, long enough to hold) so Beginner and Easy still have a line, groove notes lv 2, and make the hard stuff lv 3 (eighth-note runs, triplet pickups, grace notes 4 ticks before the beat). Fingers: thumb on the low note of a position, a finger per step up to 5. A "super hard" solo can be dense (eighths and faster) but stays playable: no interval jumps a hand can't make at tempo, nothing under 4 ticks. Write a passage in write_notes calls of at most 8 bars each (a range at a time, never note by note; a whole part in one call overruns your response). To add a solo chorus: add_bars (copy the last chorus so the band keeps playing), write_notes over the copy, set_sections to name it. On the chords part every note needs a role, and a chord hit is the notes at one bar:tick.
 
 HOW TO WORK. The song as it stands (and every ladder figure) is in the message; call read_notes before rewriting a passage. Do the thing — don't ask permission for what was plainly asked; ask only when the request forks in a way only the player can decide, and then ask briefly (their next message continues the thread). After any change, write the card's line (set_title with line: one sentence saying what this version is). End with a short plain-text report, no markdown and no headings: what changed and the figures before → after for the levels that matter (e.g. "Medium on the melody: 1.09 → 0.55 a second, level 3 of 7: the tune's main notes"), what to listen for, and anything that still needs them. Keep it to a few sentences; it is read in a small panel on a phone. If the message is just a question, answer it from the figures without changing anything.`
 }
@@ -108,6 +110,7 @@ export async function runModTurn(mod: ModRow, message: string, ctx: TurnContext,
   ]
   const steps: string[] = []
   let reply = ''
+  let cutOffs = 0
   for (let turn = 0; turn < MAX_TURNS; turn++) {
     const res = await anthropic.messages.create({
       model: 'claude-opus-5-5',
@@ -116,6 +119,15 @@ export async function runModTurn(mod: ModRow, message: string, ctx: TurnContext,
       tools,
       messages,
     })
+    if (res.stop_reason === 'max_tokens' && cutOffs < 2) {
+      // Cut off mid-answer (usually one write_notes holding a whole part): drop the partial
+      // response and ask for the same change in smaller pieces.
+      cutOffs++
+      console.warn(`[takt/mod-agent] response hit max_tokens (turn ${turn}, cut-off ${cutOffs})`)
+      messages.push({ role: 'assistant', content: [{ type: 'text', text: '(my last response was cut off at the length limit)' }] })
+      messages.push({ role: 'user', content: [{ type: 'text', text: `Your last response was cut off at the length limit and discarded; none of it was applied. Make the change in smaller steps: at most ${WRITE_BARS} bars per write_notes call, one call per response, and keep your thinking short.` }] })
+      continue
+    }
     messages.push({ role: 'assistant', content: res.content })
     if (res.stop_reason === 'pause_turn') continue
     const toolUses = res.content.filter((b): b is Anthropic.ToolUseBlock => b.type === 'tool_use')
