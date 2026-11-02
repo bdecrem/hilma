@@ -14,14 +14,23 @@ import UIKit
 /// the landing and the landing on the 1, scheduled on the host clock the lights run on. Always dark, in
 /// either theme: the stage before the lights come up. Four across from 700 pt wide (a Mac
 /// window), stacked one letter to a row under it (the iPhone).
+///
+/// The name says itself (0.1 (78)): the header is a dictionary line, the count is in German
+/// beside the letters, and the 1 is a hit, the whole screen `signal` with AUF DIE EINS for two
+/// beats while the band comes in underneath, then the fade.
 struct CountInSplash: View {
     let bpm: Double
     let bandTitle: String
     var sound: LaunchSound? = nil
+    /// The 1 of the next bar, or a skip: the band comes in.
+    let onDownbeat: () -> Void
+    /// The landing has been held: the splash goes.
     let onFinished: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var beat: Int?
+    @State private var landed = false
+    @State private var didDownbeat = false
     @State private var didFinish = false
 
     static let wideBreakpoint: CGFloat = 700
@@ -47,13 +56,15 @@ struct CountInSplash: View {
             ZStack {
                 Palette.ground.ignoresSafeArea()
                 if geo.size.width >= Self.wideBreakpoint { wide } else { compact }
+                // No transition: it lands on the beat, like the letters.
+                if landed { landing(wide: geo.size.width >= Self.wideBreakpoint) }
             }
         }
         .environment(\.colorScheme, .dark)
         .contentShape(Rectangle())
         .onTapGesture { finish() }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Takt. Counting in at \(bpmLabel) BPM.")
+        .accessibilityLabel("Takt: the bar, the beat, the pulse. Counting in at \(bpmLabel) BPM.")
         .accessibilityHint("Tap to skip.")
         .accessibilityAddTraits(.isButton)
         .task { await run() }
@@ -65,12 +76,24 @@ struct CountInSplash: View {
     /// run on the mach clock (ContinuousClock, AVAudioTime's host time).
     private static let lead = 0.08
 
+    /// The landing holds two beats, however fast the band: long enough to read, short enough
+    /// not to sit on the band.
+    private var landingHold: Double { min(max(2 * 60 / tempo, 0.7), 1.2) }
+
     private func run() async {
+        #if DEBUG
+        // `-Splash 1 -SplashBeat n` holds a beat (0–3) or the landing (4), for a screenshot.
+        if UserDefaults.standard.object(forKey: "SplashBeat") != nil {
+            let n = UserDefaults.standard.integer(forKey: "SplashBeat")
+            if n == 4 { beat = 3; landed = true } else { beat = n }
+            return
+        }
+        #endif
         if reduceMotion {
             beat = 0
             try? await Task.sleep(for: .seconds(0.6))
             sound?.landNow()
-            finish()
+            await land()
             return
         }
         let seconds = 60 / tempo
@@ -85,13 +108,30 @@ struct CountInSplash: View {
             // Against the start, not the last wake-up, so the bar doesn't drift.
             try? await Task.sleep(until: start + interval * (i + 1), clock: .continuous)
         }
-        finish()  // the 1 of the next bar
+        if didFinish || Task.isCancelled { return }
+        await land()  // the 1 of the next bar
+    }
+
+    /// The hit: the line, the band, then the hold.
+    private func land() async {
+        landed = true
+        tick(downbeat: true)
+        downbeat()
+        try? await Task.sleep(for: .seconds(landingHold))
+        finish()
+    }
+
+    private func downbeat() {
+        guard !didDownbeat else { return }
+        didDownbeat = true
+        sound?.skip()  // a tap before the landing lands now; after it, nothing more
+        onDownbeat()
     }
 
     private func finish() {
         guard !didFinish else { return }
         didFinish = true
-        sound?.skip()  // a tap before the landing lands now; after it, nothing more
+        downbeat()
         onFinished()
     }
 
@@ -114,7 +154,7 @@ struct CountInSplash: View {
     /// The iPhone: the label, T A K T stacked one to a row, the band.
     private var compact: some View {
         VStack(spacing: 0) {
-            header
+            header(showsBPM: false)  // no room beside the line; the band card has it
             GeometryReader { geo in
                 // A letter's cap height is ~0.70 em (SF Pro), so 1.18 x the row puts the caps at
                 // ~83% of it, sitting on the row's rule.
@@ -135,15 +175,15 @@ struct CountInSplash: View {
     /// The Mac window: the label, T A K T four across, the band below.
     private var wide: some View {
         VStack(spacing: 0) {
-            header
+            header(showsBPM: true)
                 .padding(.top, 22)
             GeometryReader { geo in
                 // Four columns, 32 pt apart. The letter fills the column's height unless the
                 // column is too narrow for it: a compressed heavy cap is at most ~0.55 em wide,
-                // and the numeral needs ~40 pt beside it.
+                // and the beat's word needs ~70 pt beside it.
                 let gap: CGFloat = 32
                 let column = (geo.size.width - gap * 3) / 4
-                let size = min(geo.size.height * 1.18, (column - 40) / 0.6)
+                let size = min(geo.size.height * 1.18, (column - 70) / 0.6)
                 // The row is as tall as the letters need, centered in what's left.
                 HStack(spacing: gap) {
                     ForEach(0..<4, id: \.self) { i in cell(i, size: size) }
@@ -161,23 +201,67 @@ struct CountInSplash: View {
 
     // MARK: Pieces
 
-    private var header: some View {
+    /// The dictionary line: what the word means, under the word's own count.
+    private func header(showsBPM: Bool) -> some View {
         HStack {
-            Text("Count-in · 4/4")
-                .dataLabel(12, weight: .semibold)
-                .foregroundStyle(Palette.signal)
-            Spacer(minLength: 16)
-            Text("\(bpmLabel) BPM")
-                .dataLabel(12)
-                .foregroundStyle(Palette.muted)
+            Text("\(Text("Takt").fontWeight(.bold).foregroundStyle(Palette.signal)) \(Text("(m.)").italic().foregroundStyle(Palette.muted))\(Text(": the bar, the beat, the pulse."))")
+                .bodyText(14)
+                .foregroundStyle(Palette.text)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+            if showsBPM {
+                Spacer(minLength: 16)
+                Text("\(bpmLabel) BPM")
+                    .dataLabel(12)
+                    .foregroundStyle(Palette.muted)
+            }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func cell(_ i: Int, size: CGFloat) -> some View {
-        LetterCell(letter: Self.letters[i], number: i + 1, state: state(i), size: max(size, 24))
+        LetterCell(letter: Self.letters[i], word: Self.count[i], state: state(i), size: max(size, 24))
     }
 
     private static let letters = ["T", "A", "K", "T"]
+    private static let count = ["Eins", "Zwei", "Drei", "Vier"]
+
+    /// The 1: the whole screen `signal`, the line as big as it goes, its gloss under it. Stacked
+    /// on the iPhone like the letters it replaces.
+    private func landing(wide: Bool) -> some View {
+        ZStack {
+            Palette.signal.ignoresSafeArea()
+            GeometryReader { geo in
+                VStack(alignment: .leading, spacing: 0) {
+                    if wide {
+                        Text("AUF DIE EINS")
+                            .font(.display(geo.size.height * 0.8))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.05)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+                    } else {
+                        // EINS is the widest row, ~0.35 em a letter: it spans the width.
+                        let row = (geo.size.height - 28) / 3
+                        let size = min(row * 1.18, geo.size.width / (4 * 0.35))
+                        ForEach(["AUF", "DIE", "EINS"], id: \.self) { word in
+                            // An overlay: the font's line height is taller than the row.
+                            Color.clear.overlay(alignment: .leading) {
+                                Text(word)
+                                    .font(.display(size))
+                                    .fixedSize()
+                            }
+                        }
+                    }
+                    Text("On the one")
+                        .dataLabel(13, weight: .semibold)
+                        .frame(height: 28, alignment: .bottomLeading)
+                }
+                .foregroundStyle(Palette.ground)
+            }
+            .padding(.horizontal, wide ? 80 : 28)
+            .padding(.vertical, wide ? 56 : 24)
+        }
+    }
 
     private func band(title: CGFloat, bpm size: CGFloat, padH: CGFloat, padV: CGFloat) -> some View {
         let shape = RoundedRectangle(cornerRadius: 14, style: .continuous)
@@ -225,11 +309,11 @@ private enum LetterState {
     var filled: Bool { self == .now || self == .past }
 }
 
-/// One beat: its letter at full height on a rule, the beat's numeral at the right. The letter
-/// is an outline until its beat, `signal` on it, then text.
+/// One beat: its letter at full height on a rule, the beat counted in German at the right. The
+/// letter is an outline until its beat, `signal` on it, then text.
 private struct LetterCell: View {
     let letter: String
-    let number: Int
+    let word: String
     let state: LetterState
     let size: CGFloat
 
@@ -248,8 +332,9 @@ private struct LetterCell: View {
                 .overlay(alignment: .bottomTrailing) {
                     HStack(spacing: 6) {
                         if state == .next { CueMark().fill(Palette.cue).frame(width: 8, height: 8) }
-                        Text("\(number)")
-                            .dataLabel(13)
+                        Text(word.uppercased())
+                            .font(.display(min(max(size * 0.14, 20), 30)))
+                            .tracking(0.6)
                             .foregroundStyle(state == .now ? Palette.signal : Palette.muted)
                     }
                     .padding(.bottom, 8)
@@ -284,7 +369,7 @@ private struct LetterCell: View {
     }
 }
 
-/// The small triangle beside the next beat's numeral.
+/// The small triangle beside the next beat's word.
 private struct CueMark: Shape {
     func path(in rect: CGRect) -> Path {
         var p = Path()
@@ -297,7 +382,7 @@ private struct CueMark: Shape {
 }
 
 /// The splash over the app, once per launch (once per app on the Mac, not per window); it
-/// fades out over 0.25 s when the count lands.
+/// fades out over 0.25 s once the landing has been held.
 struct CountInHost<Content: View>: View {
     let bpm: Double
     let bandTitle: String
@@ -311,11 +396,12 @@ struct CountInHost<Content: View>: View {
         ZStack {
             content()
             if showing {
-                CountInSplash(bpm: bpm, bandTitle: bandTitle, sound: sound) {
+                CountInSplash(bpm: bpm, bandTitle: bandTitle, sound: sound, onDownbeat: {
                     CountInLaunch.counted = true
                     onFinished()
+                }, onFinished: {
                     withAnimation(.easeOut(duration: 0.25)) { showing = false }
-                }
+                })
                 .transition(.opacity)
                 .zIndex(1)
             }

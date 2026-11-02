@@ -1145,6 +1145,17 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   18 CAFs regenerated (1.3 MB), previews at 70 (the menu band) and 121 bpm in `~/Desktop/takt/`.
   Verified on the Mac: `-LaunchSoundCheck` PASS ×3, `-LessonCheck` 340/340, a real launch with
   sound runs the count through.
+- **The count says its name: 0.1 (78), 2026-11-02.** Bart: "add some more badassery to the launch
+  screen", then picked from a list of German words. The header is a dictionary line, "Takt (m.):
+  the bar, the beat, the pulse." (it replaces "Count-in · 4/4"; the iPhone drops the header's BPM,
+  the band card has it). The numerals beside T, A, K, T are EINS, ZWEI, DREI, VIER in the display
+  face. The 1 is a hit: the screen goes full `signal` with AUF DIE EINS (one line on the Mac,
+  stacked AUF / DIE / EINS on the iPhone, EINS spanning the width) and a small "On the one". The
+  band now starts on `onDownbeat`, separately from `onFinished`: the landing holds two beats,
+  0.7 to 1.2 s, over the band coming in, then the 0.25 s fade. A tap skips straight past it, with
+  no line. DEBUG `-Splash 1 -SplashBeat n` holds a beat (0 to 3) or the landing (4) for a
+  screenshot. Verified: a recording of a real launch at 70 BPM on the simulator (a beat every
+  0.86 s, the landing on the 1, the fade into the app), both layouts shot on simulator and Mac.
 
 ## Code map (`Takt/`)
 
