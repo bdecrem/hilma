@@ -1123,10 +1123,13 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   Deep / Off, with "Hear it" (the full count at the band's tempo, now). `-LaunchSoundCheck 1`
   proves every set's six cues load. Not taken from the package: its once-a-day rule, its own
   AVAudioEngine and ambient session, the other three sets (soundcheck, boogie, latenight).
-  Verified: both targets build, `-LessonCheck` 340/340 on the simulator; the Mac could not run
-  the launch-sound check because this Mac's coreaudiod was wedged at the time (even `afplay`
-  failed with -66681; any app touching the audio session hung at start; a `sudo killall
-  coreaudiod` is Bart's to run), so hearing it is the next step.
+  Verified (2026-11-02, once this Mac's coreaudiod had come back on its own; it was wedged on
+  the 1st and every app touching the audio session hung at start): both targets build,
+  `-LessonCheck` 340/340 on the Mac, `-LaunchSoundCheck` PASS for all three sets (cues ~2.0 s,
+  swell 0.34 s, land 2.4–4.1 s), Settings → Sound shows the row, and a real launch with the
+  splash and sound on runs the count through. Run the Mac binary for a check with `open -W -g -n
+  --stdout <file> /Applications/Takt.app --args …`, not from the shell directly: launched from
+  the shell, the app's audio session start takes the shell down with it (exit 144).
 
 ## Code map (`Takt/`)
 
