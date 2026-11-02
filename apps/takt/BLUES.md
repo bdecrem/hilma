@@ -92,11 +92,11 @@ voicing (how many notes, in that role order), one thing at a time.
 
 | Level | What you play | Onsets / s target | Slow Burn | Boogie Shoes | Pearl Street | Blue Lantern | Dockery | Friars Point |
 |---|---|---|---|---|---|---|---|---|
-| Beginner | One note a chord, the root, on the downbeat hits only, with room (2.4 s). Learn the changes. | 0.2 – 0.4 | 0.38 | 0.25 | 0.23 | 0.35 | 0.40 | 0.24 |
-| Easy | Two-note chords (root + third). Slow Burn: the shell on the 1 and the 3 (tier 2, since 0.1 (63)); the others: the groove hits (tier 3). Dockery: the thumb on the 1 and the 3 (tier 2). | 0.6 – 1.0 | 0.74 (was 1.11) | 0.99 | 0.87 | 0.99 | 0.79 | 0.96 |
-| Medium | Three-note chords on the groove. Same rhythm as Easy, the triad. Dockery: the thumb on every beat (a Delta thumb's one rung). | 0.9 – 1.2 | 1.11 | 0.99 | 0.87 | 0.99 | 1.54 | 0.96 |
+| Beginner | One note a chord, the root, on the downbeat hits only, with room (2.4 s). Learn the changes. | 0.2 – 0.4 | 0.38 | 0.25 | 0.23 | 0.35 | 0.31 | 0.24 |
+| Easy | Two-note chords (root + third). Slow Burn: the shell on the 1 and the 3 (tier 2, since 0.1 (63)); the others: the groove hits (tier 3). The Delta tracks: the chick after the 1 and the 3, on the off beat (Dockery tier 2). | 0.6 – 1.0 | 0.74 (was 1.11) | 0.99 | 0.87 | 0.99 | 0.76 | 0.96 |
+| Medium | Three-note chords on the groove. Same rhythm as Easy, the triad. Dockery: the three-note chick on every off beat. | 0.9 – 1.2 | 1.11 | 0.99 | 0.87 | 0.99 | 1.38 | 0.96 |
 | Hard | The comping as the record plays it: four-note voicings, every push. The Delta tracks: the thumb and every chick. | the record | 1.84 | 1.31 | 1.55 | 1.10 | 2.82 | 3.68 |
-| Adaptive | Rungs: root alone → two-note spread → two-note on the groove → triad → + pushes → four notes → the record. | | 0.38 · 0.74 · 1.11 · 1.11 · 1.11 · 1.11 · 1.84 | 0.25 · 0.50 · 0.99 · 0.99 · 1.00 · 1.30 · 1.31 | 0.23 · 0.47 · 0.87 · 0.87 · 0.87 · 0.87 · 1.55 | 0.35 · 0.35 · 0.99 · 0.99 · 0.99 · 0.99 · 1.10 | 0.40 · 0.79 · 1.54 · 1.54 · 1.54 · 1.54 · 2.82 | 0.24 · 0.48 · 0.96 · 0.96 · 1.91 · 1.91 · 3.68 |
+| Adaptive | Rungs: root alone → two-note spread → two-note on the groove → triad → + pushes → four notes → the record. | | 0.38 · 0.74 · 1.11 · 1.11 · 1.11 · 1.11 · 1.84 | 0.25 · 0.50 · 0.99 · 0.99 · 1.00 · 1.30 · 1.31 | 0.23 · 0.47 · 0.87 · 0.87 · 0.87 · 0.87 · 1.55 | 0.35 · 0.35 · 0.99 · 0.99 · 0.99 · 0.99 · 1.10 | 0.31 · 0.76 · 1.38 · 1.38 · 1.54 · 1.54 · 2.82 | 0.24 · 0.52 · 0.96 · 0.96 · 1.84 · 1.91 · 3.68 |
 
 Notes from play:
 
@@ -112,13 +112,22 @@ Notes from play:
   shell on the 1 and the 3, two a bar, 0.74 a second, a third fewer. The ladder has no rung
   between that and the 1 alone (0.38, Beginner's rhythm with two notes), so "half" would mean
   the 1 alone; to hear which Bart means.
-- 2026-11-01, the Delta thumbs (0.1 (73)): a thumb part is a note a beat, so its ladder is the 1
+- 2026-11-01, the Delta thumbs (0.1 (73); superseded by the chick-first weights of 2026-11-02 below): a thumb part is a note a beat, so its ladder is the 1
   alone → the 1 and the 3 → every beat → every beat with the chick (the chick sits 0.21 s before
   the next thumb at 96, so only the record's tier takes it). Dockery Medium is 1.54 a second,
   over the 0.9–1.2 band, because the rung under it (0.79) is Easy; a Delta thumb has no rung
   between "half the beats" and "every beat". Friars Point's boogie walks root, fifth, sixth,
   seventh a note a beat with the chick on every late eighth: 0.24 · 0.48 · 0.96 (Easy, the 1
   and the 3) · 0.96 (Medium) · 1.91 · 1.91 · 3.68, every step at most double.
+- 2026-11-02, chords on the Delta tracks. Bart: on Easy "i'm not seeing traditional
+  chords, instead i see bass notes"; he wants to practice the chords, two-note on Easy, and
+  "playing on the off beats is fine". The chart's weights now put the chick first (after the 1
+  and the 3 = 1, after the 2 and the 4 = 2) and the thumb last (3, the record's tier only); the
+  record is untouched (velocities and the bass are read from the old weights before the swap,
+  the band channels are byte-identical). Easy is the root and the third on the "and" of 1 and 3:
+  Dockery 0.76, Friars Point 0.96; Medium the three-note chick (Dockery four a bar, 1.38, over the
+  0.9–1.2 band; Friars Point two a bar, 0.96). The stop-time bars and Friars Point's turnaround
+  have no chick, so below the record they rest (the thumb alone there is the record's).
 - Blue Lantern's Rhodes comps the 1, the "and" of 2 and the 4 (weight 2), with the push on the
   last sixteenth (3): Easy to Hard keep the one rhythm until the record, so the ladder reads
   0.99 four times; Beginner and the second rung are both one chord a bar (0.35). Pearl Street's

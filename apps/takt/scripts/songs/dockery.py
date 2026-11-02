@@ -24,9 +24,11 @@ the fifth, the root and the third, the turnaround walks root, seventh, sixth, fi
 part: the voice, on the horns channel, the same guitar. Your keys play the piano (or the Rhodes
 or the organ from Settings) on both parts, the way every Stage track is played: the record's
 guitar plays whatever your part leaves out. Charted to BLUES.md (0.1 (73)): the blues melody
-patch (Easy = tier 2, a chorus-long phrase, no borrowing), chords Easy = tier 2 (the thumb on
-the 1 and the 3); Medium on the chords is the thumb on every beat, 1.54 a second, the one rung
-a Delta thumb has there. Not charted against BLUES.md yet (Bart: "without any charts"); the
+patch (Easy = tier 2, a chorus-long phrase, no borrowing), chords Easy = tier 2. Since 2026-11-02 the
+chart's weights put the chick first (the chick after the 1 and the 3 is 1, after the 2 and the
+4 is 2, the thumb 3), so the chords part is chords on every level: Easy the root and the third
+on the "and" of 1 and 3 (0.76 a second), Medium the three-note chick four times a bar (1.38),
+the thumb only on the record's tier. Not charted against BLUES.md yet (Bart: "without any charts"); the
 weights are honest so the levels fall out playable.
 """
 import sys
@@ -97,7 +99,7 @@ CHICK = {  # (note, role, finger): the chord on the middle strings, the fifth, t
 SLAM = [(45, "root", 5), (52, "fifth", 4), (57, "root", 3), (61, "third", 2), (67, "seventh", 1)]
 TURN = [(57, "root", 1), (55, "seventh", 2), (54, "sixth", 3), (52, "fifth", 4)]   # A G F# E, over the thumb
 
-chords = s.part("chords", "The thumb", "piano", "keys", "guitar")
+chords = s.part("chords", "Thumb and chick", "piano", "keys", "guitar")
 for bar in range(s.bars):
     o = bar * BAR
     ch = chord_at(bar)
@@ -145,6 +147,21 @@ for e in s.keys:
 for e in chords:
     if e.get("r") in ("root", "fifth") and e["n"] <= 52 and e["len"] >= 12:
         s.note(s.bass, e["t"], e["n"] - 12, 0.8 if e["lv"] == 1 else 0.66, min(e["len"], 12))
+
+# The chart's weights, set after the record above was played from the old ones (the sound
+# doesn't change): the chick is the chords part's backbone, so every level below the record
+# plays chords, not the thumb. The chick after the 1 and the 3 is weight 1, the one after the
+# 2 and the 4 weight 2, the thumb weight 3 (only the record's tier). Bart: "playing on the off
+# beats is fine". The slam and the turnaround walk keep theirs.
+_at = {}
+for e in chords:
+    _at.setdefault(e["t"], []).append(e)
+for t, group in _at.items():
+    for e in group:
+        if len(group) == 3 and e["len"] == 4:
+            e["lv"] = 1 if t % BAR in (8, 32) else 2
+        elif len(group) == 1 and e["len"] == 12:
+            e["lv"] = 3
 
 # MARK: Melody part: the voice and the bottleneck, the right hand.
 

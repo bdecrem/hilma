@@ -1226,6 +1226,17 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   the third above) where the bundled song had 19 single notes; `charting-check.ts` 43/43 against
   the app's `-DumpCharts`; LessonCheck all passed.
 
+- **Chords on the Delta tracks, 2026-11-02.** Bart: on Easy chords, Dockery and Friars Point
+  showed "bass notes" (the Delta thumb) instead of chords; he wants to practice chords from Easy,
+  two-note is fine, "playing on the off beats is fine". Both scripts now swap the chords part's
+  weights after the record is built from the old ones (the band channels are byte-identical): the
+  chick after the 1 and the 3 is weight 1, after the 2 and the 4 weight 2, the thumb 3 (only the
+  record's tier). Easy = root + third on the "and" of 1 and 3 (Dockery A3 C♯4 at 0.76/s, Friars
+  Point E4 G♯4 at 0.96/s), Medium the three-note chick; the part is named "Thumb and chick".
+  Ladders in `BLUES.md` §3. Verified: LessonCheck 342/342, `charting-check.ts` 43/43 against the
+  Mac app's `-DumpCharts` (sandboxed: write the dump inside the container's `tmp/`), `-SnapshotAt`
+  of both songs on chords Easy.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

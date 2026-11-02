@@ -1478,7 +1478,7 @@
 {"t":2256,"n":69,"v":0.959,"len":44}]},"song":{"title":"Dockery","style":"Delta blues","key":"A","tempo":96,"art":"crossroads","line":"A Delta blues in A. One guitar, a foot on the floor, and the voice alone in the stops.","sections":[{"bar":0,"name":"Crossroads"},
 {"bar":12,"name":"Verse"},
 {"bar":24,"name":"Slide"},
-{"bar":36,"name":"Last verse"}],"parts":{"chords":{"title":"The thumb","monitor":"piano","channel":"keys","notes":[{"t":0,"n":45,"len":22,"lv":1,"f":5,"r":"root"},
+{"bar":36,"name":"Last verse"}],"parts":{"chords":{"title":"Thumb and chick","monitor":"piano","channel":"keys","notes":[{"t":0,"n":45,"len":22,"lv":1,"f":5,"r":"root"},
 {"t":0,"n":52,"len":22,"lv":1,"f":4,"r":"fifth"},
 {"t":0,"n":57,"len":22,"lv":1,"f":3,"r":"root"},
 {"t":0,"n":61,"len":22,"lv":1,"f":2,"r":"third"},

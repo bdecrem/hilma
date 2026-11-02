@@ -19,7 +19,9 @@ the walk; the chick is the fifth, the root and the third). Melody part: the slid
 voice, on the horns channel, the same guitar. Your keys play the piano (or the Rhodes or the
 organ from Settings) on both parts; the record's guitar plays what your part leaves out.
 Charted to BLUES.md (0.1 (73)): the blues melody patch (Easy = tier 2, a chorus-long phrase, no
-borrowing); the chords ladder needed nothing. Beginner on the melody is every other anchor (at
+borrowing). Since 2026-11-02 the chords chart weights the chick first (after the 1 and the
+3 is 1, after the 2 and the 4 is 2, the thumb's walk 3), so Easy is the root and the third on
+the "and" of 1 and 3 (0.96 a second) and the walk only comes in on the record's tier. Beginner on the melody is every other anchor (at
 116 the bar is 2.07 s, under Beginner's 2.4 s gap), so Easy is 2.3 times Beginner; the sheet
 notes it.
 """
@@ -83,7 +85,7 @@ CHICK = {  # (note, role, finger): the chord on the middle strings
 }
 SLAM = [(40, "root", 5), (47, "fifth", 4), (52, "root", 3), (56, "third", 2), (62, "seventh", 1)]
 
-chords = s.part("chords", "The boogie thumb", "piano", "keys", "guitar")
+chords = s.part("chords", "Thumb and chick", "piano", "keys", "guitar")
 for bar in range(s.bars):
     o = bar * BAR
     ch = chord_at(bar)
@@ -109,6 +111,21 @@ for e in s.keys:
 for e in chords:
     if e["len"] >= 12 and e["n"] <= 50:
         s.note(s.bass, e["t"], e["n"] - 12, 0.82 if e["lv"] == 1 else 0.7, 12)
+
+# The chart's weights, set after the record above was played from the old ones (the sound
+# doesn't change): the chick is the chords part's backbone, so every level below the record
+# plays chords, not the thumb. The chick after the 1 and the 3 is weight 1, the one after the
+# 2 and the 4 weight 2, the thumb weight 3 (only the record's tier). Bart: "playing on the off
+# beats is fine". The slam and the turnaround walk keep theirs.
+_at = {}
+for e in chords:
+    _at.setdefault(e["t"], []).append(e)
+for t, group in _at.items():
+    for e in group:
+        if len(group) == 3 and e["len"] == 4:
+            e["lv"] = 1 if t % BAR in (8, 32) else 2
+        elif len(group) == 1 and e["len"] == 12:
+            e["lv"] = 3
 
 # MARK: Melody part: the slide's triplets and the voice.
 

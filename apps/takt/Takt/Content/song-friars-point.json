@@ -1958,7 +1958,7 @@
 {"bar":12,"name":"Verse"},
 {"bar":24,"name":"Slide"},
 {"bar":36,"name":"Verse"},
-{"bar":48,"name":"Out"}],"parts":{"chords":{"title":"The boogie thumb","monitor":"piano","channel":"keys","notes":[{"t":0,"n":40,"len":12,"lv":3,"f":5,"r":"root"},
+{"bar":48,"name":"Out"}],"parts":{"chords":{"title":"Thumb and chick","monitor":"piano","channel":"keys","notes":[{"t":0,"n":40,"len":12,"lv":3,"f":5,"r":"root"},
 {"t":8,"n":59,"len":4,"lv":1,"f":3,"r":"fifth"},
 {"t":8,"n":64,"len":4,"lv":1,"f":2,"r":"root"},
 {"t":8,"n":68,"len":4,"lv":1,"f":1,"r":"third"},
