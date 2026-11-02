@@ -161,7 +161,8 @@ private struct Road: View {
                     // A venue's story is the reward: it opens once its level is cleared.
                     .onTapGesture { if state == .done { app.openVenue = s.level } }
                     .accessibilityElement(children: .ignore)
-                    .accessibilityLabel("\(s.venue.name), \(s.venue.era), \(s.venue.town)\(state == .done ? "" : ", locked")")
+                    .accessibilityLabel(state == .done ? "\(s.venue.name), \(s.venue.era), \(s.venue.town)"
+                                        : "\(state == .here ? s.venue.name : "Hidden venue"), \(s.venue.era), \(s.venue.town), locked")
                     .accessibilityAddTraits(state == .done ? .isButton : [])
             }
 
@@ -216,7 +217,7 @@ private struct Road: View {
         case .here: where_ = "up next: finish any lesson and any Stage song"
         case .next, .ahead: where_ = "locked"
         }
-        return "Level \(s.level), \(s.venue.name), \(where_)"
+        return "Level \(s.level), \(state == .done || state == .here ? s.venue.name : "hidden venue"), \(where_)"
     }
 }
 
@@ -369,11 +370,11 @@ private struct VenueCard: View {
             // "Tonight" in the corner away from the stop: the pill covers the stop's side.
             ZStack(alignment: stop.level % 2 == 1 ? .topTrailing : .topLeading) {
                 VenuePhoto(world: world, venue: stop.venue, big: false)
-                    .grayscale(locked ? 0.9 : 0)
-                    .contrast(locked ? 0.7 : 1)
+                    .grayscale(locked ? 1 : 0)
                     .frame(width: width, height: photoHeight)
                     .clipped()
-                if locked { Palette.ground.opacity(0.45) }
+                // Not cleared: a grainy grey mask over the print, only a faint shape shows through.
+                if locked { GrainMask(seed: stop.level) }
                 if state == .here {
                     Text("Tonight")
                         .dataLabel(9, weight: .semibold)
@@ -386,7 +387,8 @@ private struct VenueCard: View {
             }
             .frame(width: width, height: photoHeight)
             VStack(alignment: .leading, spacing: 2) {
-                Text(stop.venue.name)
+                // The name is the reveal: "???" until the level is cleared (the pill names the one up next).
+                Text(locked && state != .here ? "???" : stop.venue.name)
                     .font(.display(width > 200 ? 23 : 19))
                     .textCase(.uppercase)
                     .foregroundStyle(locked ? Palette.muted : Palette.text)
@@ -458,5 +460,29 @@ private struct Stripes: View {
                 x += gap * 2
             }
         }
+    }
+}
+
+/// The mask over a venue not cleared yet: the panel grey at 97%, with grain (a fixed scatter of
+/// light and dark specks per card), so the photo underneath is only a faint shape.
+private struct GrainMask: View {
+    let seed: Int
+
+    var body: some View {
+        Canvas { ctx, size in
+            ctx.fill(Path(CGRect(origin: .zero, size: size)), with: .color(Palette.panel.opacity(0.97)))
+            var r = UInt64(truncatingIfNeeded: seed &* 2654435761 &+ 1)
+            func next() -> CGFloat {
+                r = r &* 6364136223846793005 &+ 1442695040888963407
+                return CGFloat(r >> 33) / CGFloat(1 << 31)
+            }
+            let count = Int(size.width * size.height / 9)
+            for _ in 0..<count {
+                let x = next() * size.width, y = next() * size.height, light = next() > 0.5
+                ctx.fill(Path(CGRect(x: x, y: y, width: 1.2, height: 1.2)),
+                         with: .color((light ? Palette.muted : Palette.ground).opacity(0.18 + 0.2 * next())))
+            }
+        }
+        .allowsHitTesting(false)
     }
 }

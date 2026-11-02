@@ -1295,6 +1295,10 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   lesson numbers are kept but unused for now. Stops ignore taps with `allowsHitTesting`, not
   `.disabled` (that faded the orange stop). Riverside and Junior's have Bart's photos since 0.1
   (87); their sources and licenses are not recorded yet (Credits says so).
+  **Then, the tease (0.1 (89)):** a venue not cleared shows `???` for its name (the one up next
+  keeps its name, the pill says it anyway) but keeps era · town, and its photo sits under
+  `GrainMask`: panel grey at 97% with a fixed scatter of specks, so only a very faint shape shows.
+  VoiceOver says "hidden venue".
 
 ## Code map (`Takt/`)
 
