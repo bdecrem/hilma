@@ -15,6 +15,7 @@ struct SettingsScreen: View {
     @AppStorage("countIn") private var countIn = true
     @AppStorage("preferMinor") private var preferMinor = false
     @AppStorage("tapMode") private var tapMode = KeyboardStrip.tapModeDefault
+    @AppStorage("showComputerKeys") private var showComputerKeys = false
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var confirmReset = false
 
@@ -120,7 +121,14 @@ struct SettingsScreen: View {
                         }
                         #if targetEnvironment(macCatalyst)
                         Hairline()
-                        row("Computer keys", "A–J play note names, the octave follows the song · Z X octave")
+                        Toggle(isOn: $showComputerKeys) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Show computer keys").bodyText(15).foregroundStyle(Palette.text)
+                                Text("A–J play note names, the octave follows the song · Z X octave. On: each key on screen shows its letter")
+                                    .dataLabel(10).foregroundStyle(Palette.muted)
+                            }
+                        }
+                        .tint(Palette.signal)
                         #else
                         Hairline()
                         Toggle(isOn: $tapMode) {

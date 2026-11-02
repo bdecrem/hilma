@@ -1247,6 +1247,12 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   due note by name only (octave 0) through that path. Verified on the Mac: Dockery chords Hard
   (632 notes), Dockery melody Hard and Friars Point chords Hard all 100% from names alone;
   LessonCheck 342/342.
+  **Show computer keys** (Mac, Settings → Input, `@AppStorage("showComputerKeys")`, off by
+  default; `-showComputerKeys 1` at launch): every on-screen key carries its letter as a small
+  keycap (`KeyCap` in `KeyboardStrip.swift`: rounded square, thin rim, a heavier bottom lip, 55%
+  ink at rest, muted ink on white keys, paper on black keys, cue blue on the next keys, ink on the
+  lit and held ones). With the caps on, unnamed white keys keep the name's room so every cap
+  sits on one row. Checked in both themes from `-SnapshotAt` of Dockery chords Easy.
 
 ## Code map (`Takt/`)
 

@@ -15,6 +15,8 @@ struct KeyboardStrip: View {
     var fingers: [Int: Int] = [:]
     @Environment(\.lessonControls) private var controls
     @AppStorage("tapMode") private var tapMode = KeyboardStrip.tapModeDefault
+    /// Settings → Input on the Mac: each key carries the computer key that plays it.
+    @AppStorage("showComputerKeys") private var showComputerKeys = false
     /// Each finger's key, while it is down.
     @State private var touched = Touched()
     @Environment(\.offscreen) private var offscreen
@@ -32,12 +34,12 @@ struct KeyboardStrip: View {
 
             ZStack(alignment: .topLeading) {
                 ForEach(Array(layout.whites.enumerated()), id: \.element) { i, note in
-                    Key(note: note, black: false, role: role(note), finger: fingers[note])
+                    Key(note: note, black: false, role: role(note), finger: fingers[note], keyCap: keyCap(note))
                         .frame(width: layout.white, height: layout.height)
                         .offset(x: CGFloat(i) * layout.white)
                 }
                 ForEach(layout.blacks, id: \.self) { note in
-                    Key(note: note, black: true, role: role(note), finger: fingers[note])
+                    Key(note: note, black: true, role: role(note), finger: fingers[note], keyCap: keyCap(note))
                         .frame(width: layout.blackWidth, height: layout.blackHeight)
                         .offset(x: layout.blackX(note))
                 }
@@ -62,6 +64,13 @@ struct KeyboardStrip: View {
         // A key two fingers hold sounds until the last one leaves it.
         if let old, !touched.keys.values.contains(old) { controls.release(old) }
         if let new, touched.keys.values.filter({ $0 == new }).count == 1 { controls.press(new) }
+    }
+
+    /// The computer key for a note's name (`KeyCatcher`'s A–J row and W E T Y U); the octave
+    /// follows the song, so every octave shows the same letter.
+    private func keyCap(_ note: Int) -> String? {
+        guard showComputerKeys else { return nil }
+        return ["A", "W", "S", "E", "D", "F", "T", "G", "Y", "H", "U", "J"][((note % 12) + 12) % 12]
     }
 
     private func role(_ note: Int) -> Key.Role {
@@ -112,6 +121,8 @@ struct Key: View {
     let black: Bool
     let role: Role
     var finger: Int? = nil
+    /// The computer key that plays it (Settings → Input → Show computer keys, Mac).
+    var keyCap: String? = nil
 
     var body: some View {
         let shape = UnevenRoundedRectangle(bottomLeadingRadius: 4, bottomTrailingRadius: 4)
@@ -133,10 +144,16 @@ struct Key: View {
                 if let finger {
                     FingerBadge(finger: finger, onFill: role == .now)
                 }
-                if !black, role != .rest || note % 12 == 0 {
+                if let keyCap {
+                    KeyCap(letter: keyCap, black: black, role: role)
+                }
+                // With the keycaps on, an unnamed white key keeps the name's room, so every cap
+                // sits on one row.
+                if !black, role != .rest || note % 12 == 0 || keyCap != nil {
                     Text(Self.name(note))
                         .dataLabel(11, weight: .medium)
                         .foregroundStyle(role == .next ? Palette.cue : role == .rest ? Palette.muted : Palette.ground)
+                        .opacity(role != .rest || note % 12 == 0 ? 1 : 0)
                 }
             }
             .padding(.bottom, 8)
@@ -148,6 +165,37 @@ struct Key: View {
     static func name(_ note: Int) -> String {
         let names = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"]
         return "\(names[note % 12])\(note / 12 - 1)"
+    }
+}
+
+/// A computer key's letter as a small keycap: a rounded square, thin rim, heavier bottom lip,
+/// drawn quiet (it is a hint, the note name and the cue colors stay the loud things). Ink on the
+/// lit and held keys, paper on the black keys (black in both themes), the theme's muted ink on
+/// the white ones.
+struct KeyCap: View {
+    let letter: String
+    let black: Bool
+    let role: Key.Role
+
+    var body: some View {
+        let ink: Color = switch role {
+        case .now, .pressed: Palette.blackKey
+        case .next: Palette.cue
+        case .rest: black ? Color(dark: 0xF2F0EB, paper: 0xF2F0EB) : Palette.muted
+        }
+        let strength = role == .rest ? 0.55 : 0.85
+        let cap = RoundedRectangle(cornerRadius: 4, style: .continuous)
+        Text(letter)
+            .font(.system(size: 10, weight: .semibold, design: .monospaced))
+            .foregroundStyle(ink.opacity(strength))
+            .frame(width: 18, height: 17)
+            .background(cap.fill(ink.opacity(0.07)))
+            .overlay(cap.strokeBorder(ink.opacity(strength * 0.55), lineWidth: 1))
+            // The lip: a keycap's bottom edge sits a little heavier than its rim.
+            .overlay(alignment: .bottom) {
+                Capsule().fill(ink.opacity(strength * 0.55)).frame(width: 12, height: 1.5).offset(y: 0.5)
+            }
+            .accessibilityHidden(true)
     }
 }
 
