@@ -1191,6 +1191,11 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   rest muted, `n.` and `tactus` italic, "find it." in text. It fades in once (0.6 s) and sits
   still; not prominent on purpose. `CountInSplash.definition(size:)`. Shot on the iPhone 17 Pro
   simulator and the Mac (stamped).
+- **The count sticks the landing: 0.1 (82), 2026-11-02.** Bart: after VIER, "just stay put, the
+  word TAKT 1234 for one more short beat". On the 1 the band comes in as before (and the landing
+  sound), but the splash sets `beat = 4` (all four lit as `past`, a missed one stays an outline),
+  stops taking hits, and the host waits `hold` = min(one beat, 0.6 s) before the fade. Seen on the
+  simulator at 8 fps: about five frames of the whole word, then the fade.
 
 ## Code map (`Takt/`)
 
