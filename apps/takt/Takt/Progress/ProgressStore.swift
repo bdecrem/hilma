@@ -114,6 +114,8 @@ final class ProgressStore {
         var intervals = EarRecord()
         /// Stage runs, the best per song kept.
         var scores: [ScoreRecord] = []
+        /// Map levels cleared (a lesson and a song each), merged by max: see `MapProgress`.
+        var mapCleared = 0
 
         init() {}
 
@@ -128,6 +130,7 @@ final class ProgressStore {
             intervals = try c.decodeIfPresent(EarRecord.self, forKey: .intervals) ?? EarRecord()
             scores = try c.decodeIfPresent([ScoreRecord].self, forKey: .scores) ?? []
             practice = try c.decodeIfPresent([PracticeEntry].self, forKey: .practice) ?? []
+            mapCleared = try c.decodeIfPresent(Int.self, forKey: .mapCleared) ?? 0
         }
     }
 
@@ -280,8 +283,12 @@ final class ProgressStore {
         guard !snapshot.days.contains(d) || !snapshot.practice.contains(entry) else { return }
         if !snapshot.days.contains(d) { snapshot.days = (snapshot.days + [d]).sorted() }
         snapshot.practice = PracticeEntry.union(snapshot.practice, [entry])
+        snapshot.mapCleared = map.cleared
         save()
     }
+
+    /// The map: levels cleared, and what the next one has in hand.
+    var map: MapProgress { MapProgress(practice: snapshot.practice, stored: snapshot.mapCleared) }
 
     var practicedToday: Bool { snapshot.days.contains(Self.day()) }
 

@@ -14,6 +14,7 @@ struct SettingsScreen: View {
     @State private var launchPreview: LaunchSound?
     @AppStorage("countIn") private var countIn = true
     @AppStorage("preferMinor") private var preferMinor = false
+    @AppStorage("mapWorld") private var mapWorld = MapWorld.defaultWorld
     @AppStorage("tapMode") private var tapMode = KeyboardStrip.tapModeDefault
     @AppStorage("showComputerKeys") private var showComputerKeys = false
     @Environment(\.horizontalSizeClass) private var sizeClass
@@ -159,6 +160,20 @@ struct SettingsScreen: View {
                         }
                         .tint(Palette.signal)
                         .onChange(of: preferMinor) { app.tasteChanged() }
+                        // The map's world: only once there is a second one (the techno map).
+                        if MapWorld.all.count > 1 {
+                            Hairline()
+                            HStack {
+                                Text("Map").bodyText(15).foregroundStyle(Palette.text)
+                                Spacer()
+                                Picker("Map", selection: $mapWorld) {
+                                    ForEach(MapWorld.all, id: \.self) { Text(MapWorld.bundled($0).title).tag($0) }
+                                }
+                                .pickerStyle(.segmented)
+                                .frame(maxWidth: 280)
+                            }
+                            .onChange(of: mapWorld) { app.mapWorldChanged() }
+                        }
                     }
 
                     SettingsSection(title: "Display") {
@@ -192,6 +207,9 @@ struct SettingsScreen: View {
                             .foregroundStyle(Palette.muted)
                             .fixedSize(horizontal: false, vertical: true)
                     }
+
+                    PhotoCredits()
+                        .id("credits")
                 }
                 .padding(.bottom, 24)
             }
@@ -435,5 +453,32 @@ struct DailyTextSection: View {
 
     static func hourName(_ h: Int) -> String {
         h == 12 ? "Noon" : h < 12 ? "\(h) am" : "\(h - 12) pm"
+    }
+}
+
+/// Settings → Credits: every map photo with its license and source (CC BY and CC BY-SA require
+/// it; public-domain credits are kept as courtesy). Read from the maps' JSON, every world.
+struct PhotoCredits: View {
+    var body: some View {
+        SettingsSection(title: "Credits") {
+            Text("Map photos").bodyText(15, weight: .semibold).foregroundStyle(Palette.text)
+            ForEach(MapWorld.all, id: \.self) { id in
+                let world = MapWorld.bundled(id)
+                ForEach(world.episodes.flatMap(\.venues).filter { $0.photo != nil }) { v in
+                    let photo = v.photo!
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(v.name).dataLabel(11, weight: .semibold).foregroundStyle(Palette.text)
+                        Text(photo.credit).bodyText(13).foregroundStyle(Palette.muted)
+                        if let url = URL(string: photo.source) {
+                            Link(destination: url) {
+                                Text("\(photo.license) · source").dataLabel(10).foregroundStyle(Palette.cue)
+                            }
+                        }
+                    }
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+        }
     }
 }

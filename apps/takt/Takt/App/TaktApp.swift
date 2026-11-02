@@ -177,6 +177,7 @@ struct RootView: View {
             onEscape: {
                 if app.route == .lesson { app.route = .lessons }
                 if app.route == .game { app.leaveGame() }
+                if app.route == .map { app.openVenue = nil }
             }
         ))
         // Agent mode, over the set list or a paused run (one presenter for both).

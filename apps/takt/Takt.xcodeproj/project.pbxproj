@@ -89,6 +89,7 @@
 		1DA1F276B078D8480198F581 /* saxl-54.caf in Resources */ = {isa = PBXBuildFile; fileRef = 7B4DB1EF0F0433B417F786C0 /* saxl-54.caf */; };
 		1DCE1AF6BA595026B91A7B6C /* syn-bleep-81-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 559C43E3806F133B5FFDD119 /* syn-bleep-81-1.caf */; };
 		1DD87923F621FB63B0B1DE2A /* sax-86-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = 72FD3F6B35B76A7F8829D411 /* sax-86-h.caf */; };
+		1E40EFFABA5A2EC1D003E3FB /* VenueScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C93ACD2DD529AAE1C9FA057 /* VenueScreen.swift */; };
 		1E80875C3B7E5E21C1126DAC /* rho-62-5.caf in Resources */ = {isa = PBXBuildFile; fileRef = E5E1FF72CCC04D821EF406E3 /* rho-62-5.caf */; };
 		1ED43417BE7B3047B602E21E /* saxl-86.caf in Resources */ = {isa = PBXBuildFile; fileRef = E9CDF65C85CCE001F6524983 /* saxl-86.caf */; };
 		1F47B23A1C5506E20B4295E0 /* gtr-45-1-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 2C76D33978419DD1C170FFDF /* gtr-45-1-1.caf */; };
@@ -269,6 +270,7 @@
 		5AB26F64BF6DE47ED26151F1 /* ride-1a.caf in Resources */ = {isa = PBXBuildFile; fileRef = F471A2196F9AF3B8F004FA9C /* ride-1a.caf */; };
 		5B33A6B9A5E5F7F702073F6D /* org-76.caf in Resources */ = {isa = PBXBuildFile; fileRef = 0B7846EF9A880EEB0ABCCC2C /* org-76.caf */; };
 		5B40702A3B9F3D708DA58C3F /* pno-51-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 637060E1B27D289D64972055 /* pno-51-1.caf */; };
+		5B50C91C72EF17ADAB84A7EE /* map-blues.json in Resources */ = {isa = PBXBuildFile; fileRef = 8126E18CD90A6679714BEC02 /* map-blues.json */; };
 		5BD89A82210707D4C12EE7F3 /* snare-1a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 27AB3C2B9B543267B44D0E56 /* snare-1a.caf */; };
 		5C357900F62CA3F2AF4D47DF /* hat-4c.caf in Resources */ = {isa = PBXBuildFile; fileRef = D4123B82EEB06216B8B06790 /* hat-4c.caf */; };
 		5C39E66134F645B48D336A4E /* syn-hatMin-1a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 52FB1F3EE4637523E5744522 /* syn-hatMin-1a.caf */; };
@@ -717,6 +719,7 @@
 		F9CF2CF7978FDD1C0A21B144 /* rho-71-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = D89D22659C142D873A3EE0FF /* rho-71-2.caf */; };
 		FA2AA969EC41471263D6E52F /* gtr-75-2-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 8450AFA100BAFC1C3F93BC54 /* gtr-75-2-2.caf */; };
 		FAFE413E656E162D855A1ED6 /* gtr-57-1-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 357E512989038C36CD2D5482 /* gtr-57-1-2.caf */; };
+		FBE10A7DC7A819F02F75682E /* MapWorld.swift in Sources */ = {isa = PBXBuildFile; fileRef = C19DF66C7040A709B09B3CF5 /* MapWorld.swift */; };
 		FC04DA1E831302B06B17BB5F /* saxl-76.caf in Resources */ = {isa = PBXBuildFile; fileRef = 175CA8CA5984BD7373EB7478 /* saxl-76.caf */; };
 		FC5A33D72168EC87C930224F /* snare-2b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 964352540F89FAC0C96E0420 /* snare-2b.caf */; };
 		FCD78500B341758546312CD3 /* ride-4a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 82D568263799DBC86389B4D2 /* ride-4a.caf */; };
@@ -1067,10 +1070,12 @@
 		7C1E3CEDE55B4F0501B0DE78 /* org-88.caf */ = {isa = PBXFileReference; path = "org-88.caf"; sourceTree = "<group>"; };
 		7C44911616425535DBCE3DB5 /* ride-3a.caf */ = {isa = PBXFileReference; path = "ride-3a.caf"; sourceTree = "<group>"; };
 		7C85C0778E6948978AEA29F8 /* gtr-40-3-2.caf */ = {isa = PBXFileReference; path = "gtr-40-3-2.caf"; sourceTree = "<group>"; };
+		7C93ACD2DD529AAE1C9FA057 /* VenueScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VenueScreen.swift; sourceTree = "<group>"; };
 		7CE30DCBE3E72ECE014E12D0 /* syn-hatDH-1c.caf */ = {isa = PBXFileReference; path = "syn-hatDH-1c.caf"; sourceTree = "<group>"; };
 		7D63AD26CC351CFF4E35F87F /* org-68.caf */ = {isa = PBXFileReference; path = "org-68.caf"; sourceTree = "<group>"; };
 		7EA6F5A2CBE7D3F314967A7C /* syn-stabMin-61-0.caf */ = {isa = PBXFileReference; path = "syn-stabMin-61-0.caf"; sourceTree = "<group>"; };
 		7FD99AB958DF7F12F942E3BD /* gtr-63-4-1.caf */ = {isa = PBXFileReference; path = "gtr-63-4-1.caf"; sourceTree = "<group>"; };
+		8126E18CD90A6679714BEC02 /* map-blues.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "map-blues.json"; sourceTree = "<group>"; };
 		812CD9A42448D7DD21C7C2B8 /* rho-81-3.caf */ = {isa = PBXFileReference; path = "rho-81-3.caf"; sourceTree = "<group>"; };
 		817B2278CE9C61ADB69BDDB2 /* rho-65-2.caf */ = {isa = PBXFileReference; path = "rho-65-2.caf"; sourceTree = "<group>"; };
 		818EF590A151362162AF3D67 /* gtr-84-2-2.caf */ = {isa = PBXFileReference; path = "gtr-84-2-2.caf"; sourceTree = "<group>"; };
@@ -1236,6 +1241,7 @@
 		C109FE965605A2DC16F7E768 /* xstick-2a.caf */ = {isa = PBXFileReference; path = "xstick-2a.caf"; sourceTree = "<group>"; };
 		C13AAC48601B511375156F70 /* rho-29-2.caf */ = {isa = PBXFileReference; path = "rho-29-2.caf"; sourceTree = "<group>"; };
 		C16E6A9D592B4301A750857A /* LaunchSound.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchSound.swift; sourceTree = "<group>"; };
+		C19DF66C7040A709B09B3CF5 /* MapWorld.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapWorld.swift; sourceTree = "<group>"; };
 		C1A9E9109A5089BF3C189ACE /* pno-79-2.caf */ = {isa = PBXFileReference; path = "pno-79-2.caf"; sourceTree = "<group>"; };
 		C1D12DD782A48B03D2950F0D /* song-hypnotist.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "song-hypnotist.json"; sourceTree = "<group>"; };
 		C2038C1A05337D1214E40BCF /* pno-37-1.caf */ = {isa = PBXFileReference; path = "pno-37-1.caf"; sourceTree = "<group>"; };
@@ -1472,6 +1478,14 @@
 			path = Design;
 			sourceTree = "<group>";
 		};
+		4F639C58A69EE44696696177 /* Map */ = {
+			isa = PBXGroup;
+			children = (
+				C19DF66C7040A709B09B3CF5 /* MapWorld.swift */,
+			);
+			path = Map;
+			sourceTree = "<group>";
+		};
 		54DE8A4095BEC708D5253B44 /* Export */ = {
 			isa = PBXGroup;
 			children = (
@@ -1496,6 +1510,7 @@
 				88FE4DA545CABDD001D8C347 /* Input */,
 				A255B25EAA1B8A12A0308EE4 /* Lesson */,
 				85ECE389A6D688DE477845B5 /* Licenses */,
+				4F639C58A69EE44696696177 /* Map */,
 				8420109DC0235151EC032073 /* Menu */,
 				C5A8C31905666F590C737B60 /* MIDI */,
 				A9AF6D0F0AFFA802E25D7B29 /* Mods */,
@@ -1543,6 +1558,7 @@
 				73E28D3A2CB1F4DEF189BCD2 /* ResultScreen.swift */,
 				4287A8E13F473563716A0973 /* SettingsScreen.swift */,
 				7041194702FC13A037191652 /* StageScreen.swift */,
+				7C93ACD2DD529AAE1C9FA057 /* VenueScreen.swift */,
 			);
 			path = Menu;
 			sourceTree = "<group>";
@@ -1619,6 +1635,7 @@
 				FB59A4164192AD314B614695 /* lesson-M.json */,
 				ECECF1E4E590A9E81E139D89 /* lesson-S1.json */,
 				D3F53FD48CE9B89241FFB481 /* lesson-S1m.json */,
+				8126E18CD90A6679714BEC02 /* map-blues.json */,
 				EEEF033DB9357648BCDCCD17 /* song-abyss-ref.json */,
 				E3111C9819000EB6D6BD3E5F /* song-abyss.json */,
 				602B79D6E3FFCF61D2B824AB /* song-blue-lantern.json */,
@@ -2603,6 +2620,7 @@
 				A92A8D6E0161BE1371B4D94C /* lesson-M.json in Resources */,
 				309573F5E58807A3E167DC31 /* lesson-S1.json in Resources */,
 				11764932ABE8A75E92F7FE33 /* lesson-S1m.json in Resources */,
+				5B50C91C72EF17ADAB84A7EE /* map-blues.json in Resources */,
 				30CEC54A141B2CF29FAE6DF2 /* org-36.caf in Resources */,
 				1FAC82F0451088C274313D1C /* org-40.caf in Resources */,
 				AE3BD58A95F363F7518C0FDB /* org-44.caf in Resources */,
@@ -3073,6 +3091,7 @@
 				3CAF2C7361F0E087EC6A2943 /* MIDIFile.swift in Sources */,
 				AD4AB405745AED706DBB9E45 /* MIDIInput.swift in Sources */,
 				8DAE719F3BA714959E6DC281 /* MapScreen.swift in Sources */,
+				FBE10A7DC7A819F02F75682E /* MapWorld.swift in Sources */,
 				B0C3F5B6F70894B6FDB1A73C /* ModStore.swift in Sources */,
 				B9B485CA855A1CB0DD719E4E /* ModuleScreen.swift in Sources */,
 				1BAF5C09CD661D4CF3484722 /* Motifs.swift in Sources */,
@@ -3097,6 +3116,7 @@
 				5393E171E435313023E81F77 /* TransportBar.swift in Sources */,
 				481CF35C84CED42D066A2594 /* TransportClock.swift in Sources */,
 				606269D637B85705945947B6 /* Typography.swift in Sources */,
+				1E40EFFABA5A2EC1D003E3FB /* VenueScreen.swift in Sources */,
 				0DE168DE937CF47D7A71BA79 /* Voices.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

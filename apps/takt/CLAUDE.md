@@ -1254,6 +1254,38 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   lit and held ones). With the caps on, unnamed white keys keep the name's room so every cap
   sits on one row. Checked in both themes from `-SnapshotAt` of Dockery chords Easy.
 
+- **The Map tab is the blues road: 2026-11-02.** Bart: "a level will be cleared anytime a user
+  completes both a LESSON and a GAME", built from the design handoff
+  (`~/Desktop/takt-pics/takt-map-handoff/`: README, `map-blues.json`, venue photos, reference
+  HTML; live canvas https://claude.ai/artifact/GvqBpPrBMmLSQKuZVEusHk). `Menu/MapScreen.swift`
+  replaces the old module path: a road (Catmull-Rom through the stops, `panel` on a `line` edge,
+  dashed center, the cleared stretch dotted in `text`), numbered stops (done / here 66 pt in
+  `signal` with the `Level 7 · Hold it at 90` pill / next in `cue` / ahead), a tilted photo card
+  per venue (gray under a wash until reached, `Tonight` on the one you're on), episode signs, the
+  Episode 3 teaser, header `6 / 50`. Opens with the stop you're on ~470 pt down
+  (`defaultScrollAnchor`, computed: `scrollTo` on the absolutely placed road didn't move it).
+  `Menu/VenueScreen.swift`: the story (photo with its credit, era · town, status, name, tag,
+  story, `Photo: <note>`), full screen on iPhone, a 480 pt card on the Mac, ‹ › to walk the road,
+  and the level's two halves, **Lesson n** and **Song** (Stage), each lit in `signal` until it's
+  in hand, then a quiet ✓; locked venues open too and read `Clear level N first`. Esc closes it.
+  **Clearing** (`MapProgress` in `Map/MapWorld.swift`): cleared = min(lessons finished, Stage songs
+  played through), both counted from the synced practice log (each id once a day), and
+  `Snapshot.mapCleared` (merged by max) keeps it from going down when the log trims at 200.
+  **Content is data, ready for the techno map:** `Content/map-<world>.json` (episodes, venues,
+  `levels: [{venue, module, lesson}]`, `total`), photos as imagesets `<world>-<venue>` in
+  `Assets.xcassets/Venues/`, `MapWorld.all` lists the worlds, `@AppStorage("mapWorld")` picks one,
+  and Settings → Taste shows a Map picker once there are two. A second world = its JSON, its
+  photos, its id in `all`. Levels 1–7 = A1 lessons 1–7, 8–20 = Scales 1–13 (the handoff had the
+  ear lessons at 8–10, but they never log a finished lesson, so they could never clear a level);
+  a level's Lesson button starts its lesson, or the module's next open one if it isn't reached.
+  **Settings → Credits** lists every photo (credit, license, source link) from the JSON. The rings
+  under done stops: only the first lights (cleared); the handoff's proposal for rings 2 and 3
+  (target tempo, a perfect chorus) waits for Bart's OK. Not done: the bar-quantized scroll on
+  returning from a lesson (it lands at once). DEBUG `-Route map -MapCleared n [-Venue n]`.
+  Checks 355/355 (13 new: the pairs rule, in-hand halves, the stored floor, merge, stop states,
+  the store, every level's lesson exists in both scale keys, every photo in the catalog with a
+  credit, episodes, the blues counts).
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without
@@ -1263,6 +1295,8 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   guest → sign up / log in against `/api/takt/*`, progress pull (merge) and push.
 - `App/TaktApp.swift`: `@main`, the theme (`@AppStorage("theme")`, `dark` default, `paper`),
   View → Paper Theme (⇧⌘L) on the Mac, and `MacWindow` (1100×720 minimum, no title text or toolbar).
+- `Map/MapWorld.swift`: a map world from `Content/map-<world>.json` (episodes, venues, levels),
+  `MapProgress` (levels cleared). `Menu/MapScreen.swift` (the road) and `Menu/VenueScreen.swift`.
 - `Design/Palette.swift`: the brief's seven tokens as dynamic colors. `signal` = now, `cue` = next;
   never add a third accent, never red/green. White keys are `panel`, black keys `#0D0D0D` in both themes.
 - `Design/Typography.swift`: `Font.display` (SF Pro compressed heavy), `.dataLabel()` (SF Mono,

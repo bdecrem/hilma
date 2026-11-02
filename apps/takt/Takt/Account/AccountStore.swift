@@ -216,6 +216,7 @@ final class AccountStore {
         // Days practiced on either device; the quiz record that has seen more answers.
         out.days = Array(Set(a.days).union(b.days)).sorted()
         out.practice = ProgressStore.PracticeEntry.union(a.practice, b.practice)
+        out.mapCleared = max(a.mapCleared, b.mapCleared)
         if b.quiz.answered > a.quiz.answered || (a.quiz.level == nil && b.quiz.level != nil) { out.quiz = b.quiz }
         func most(_ x: ProgressStore.EarRecord, _ y: ProgressStore.EarRecord) -> ProgressStore.EarRecord {
             .init(level: max(x.level, y.level), best: max(x.best, y.best), answered: max(x.answered, y.answered))

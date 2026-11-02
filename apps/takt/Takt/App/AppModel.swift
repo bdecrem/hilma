@@ -14,7 +14,39 @@ final class AppModel {
         didSet {
             player?.inLesson = route == .lesson
             player?.inGame = route == .game
+            if route != .map { openVenue = nil }
         }
+    }
+
+    // MARK: Map
+
+    /// The map's world (Settings → Taste → Map when there is more than one).
+    private(set) var mapWorld = MapWorld.bundled(MapWorld.selected)
+    /// The venue open over the map, by level (1-based).
+    var openVenue: Int?
+
+    func mapWorldChanged() {
+        if mapWorld.world != MapWorld.selected { mapWorld = .bundled(MapWorld.selected) }
+    }
+
+    /// Levels cleared, and what the next one has in hand.
+    var mapProgress: MapProgress {
+        #if DEBUG
+        // `-MapCleared n` shows the map as if n levels were cleared (screenshots).
+        if UserDefaults.standard.object(forKey: "MapCleared") != nil {
+            let n = UserDefaults.standard.integer(forKey: "MapCleared")
+            return MapProgress(practice: [], stored: n)
+        }
+        #endif
+        return progress.map
+    }
+
+    /// The lesson a level's Lesson button starts: its own, or the module's next open one if
+    /// that isn't reached yet (lessons in a module open in order).
+    func levelLesson(_ stop: MapWorld.Stop) -> (code: String, n: Int, title: String) {
+        let content = module(stop.lesson.module)
+        let n = max(1, min(stop.lesson.lesson, lessonsDone(content) + 1, content.lessons.count))
+        return (stop.lesson.module, n, content.lessons[n - 1].title)
     }
     let player: Player?
     let progress: ProgressStore
@@ -93,7 +125,10 @@ final class AppModel {
             case "earmodule": route = .earModule
             case "settings": route = .settings
             case "calibrate": route = .calibrate
-            case "map": route = .map
+            case "map":
+                route = .map
+                // `-Venue n` opens level n's venue over it.
+                if d.integer(forKey: "Venue") > 0 { openVenue = d.integer(forKey: "Venue") }
             case "stage": route = .stage
             case "game": break  // below
             case "eargame": break  // below

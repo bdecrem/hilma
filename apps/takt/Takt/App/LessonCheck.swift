@@ -1,5 +1,6 @@
 #if DEBUG
 import Foundation
+import UIKit
 
 /// `-LessonCheck`: the Scorer, the LessonEngine and the TransportClock against scripted
 /// players (the same Autoplay planner the app uses), no audio. One line per case.
@@ -826,6 +827,48 @@ enum LessonCheck {
               mergedLog == [PE(day: "2026-10-20", kind: "lesson", id: "A1·2"), PE(day: "2026-10-21", kind: "stage", id: "undertow")])
         let many = (0..<250).map { PE(day: String(format: "2026-%02d-%02d", 1 + $0 / 28, 1 + $0 % 28), kind: "stage", id: "s") }
         check("practice log: the last 200 kept", PE.union(many, []).count == 200 && PE.union(many, []).last == many.last)
+
+        // MARK: Map
+
+        let lessonsOnly = [PE(day: "2026-11-01", kind: "lesson", id: "A1·1"), PE(day: "2026-11-01", kind: "lesson", id: "A1·2"),
+                           PE(day: "2026-11-02", kind: "lesson", id: "A1·2")]
+        let mp0 = MapProgress(practice: lessonsOnly, stored: 0)
+        check("map: lessons without a song clear nothing, the lesson is in hand", mp0.cleared == 0 && mp0.lessonInHand && !mp0.songInHand)
+        let mp1 = MapProgress(practice: lessonsOnly + [PE(day: "2026-11-02", kind: "stage", id: "song-dockery")], stored: 0)
+        check("map: a lesson and a song clear a level; the next has a lesson in hand", mp1.cleared == 1 && mp1.lessonInHand && !mp1.songInHand)
+        let mp2 = MapProgress(practice: lessonsOnly + ["a", "b", "c", "d"].map { PE(day: "2026-11-02", kind: "stage", id: $0) }, stored: 0)
+        check("map: pairs, not totals (3 lessons, 4 songs = 3 levels, a song in hand)", mp2.cleared == 3 && mp2.songInHand && !mp2.lessonInHand)
+        check("map: a cleared level stays cleared when the log forgets", MapProgress(practice: [], stored: 5).cleared == 5)
+        var mapA = ProgressStore.Snapshot(), mapB = ProgressStore.Snapshot()
+        mapA.mapCleared = 3; mapB.mapCleared = 7
+        check("map: merged by max", AccountStore.merge(mapA, mapB).mapCleared == 7 && AccountStore.merge(mapB, mapA).mapCleared == 7)
+        check("map: an old snapshot has no levels cleared", old.mapCleared == 0)
+        check("map: stop states", [0, 1, 2, 3, 4].map { MapWorld.state($0, cleared: 2) } == [.done, .done, .here, .next, .ahead])
+        let mapStore = ProgressStore(url: nil)
+        mapStore.practiced(.lesson, id: "A1·1")
+        mapStore.practiced(.stage, id: "song-slow-burn")
+        mapStore.practiced(.stage, id: "song-slow-burn")
+        check("map: the store counts a song once a day and stores the cleared level", mapStore.map.cleared == 1
+              && mapStore.snapshot.mapCleared == 1 && !mapStore.map.songInHand)
+        for id in MapWorld.all {
+            let world = MapWorld.bundled(id)
+            let stops = world.stops
+            check("map \(id): every level's lesson exists in its module (both scale keys)",
+                  stops.allSatisfy { s in
+                      let files = s.lesson.module == "S" ? ["lesson-S1", "lesson-S1m"] : ["lesson-\(s.lesson.module)"]
+                      return files.allSatisfy { s.lesson.lesson <= Lesson.bundled($0).lessons.count }
+                  })
+            let photos = stops.compactMap { world.imageName($0.venue) }
+            check("map \(id): every photo is in the asset catalog", photos.allSatisfy { UIImage(named: $0) != nil },
+                  "\(photos.filter { UIImage(named: $0) == nil })")
+            check("map \(id): every photo has a credit, a license and a source",
+                  stops.compactMap(\.venue.photo).allSatisfy { !$0.credit.isEmpty && !$0.license.isEmpty && URL(string: $0.source) != nil })
+            check("map \(id): episodes open where their first venue sits", stops.filter(\.opensEpisode).count == world.episodes.count)
+        }
+        let blues = MapWorld.bundled("blues")
+        check("map blues: 20 levels of 50, 18 photos, the photo-less two are Riverside and Junior's",
+              blues.stops.count == 20 && blues.total == 50
+              && blues.stops.filter { $0.venue.photo == nil }.map(\.venue.id) == ["riverside", "juniors"])
 
         let place = QuizBank.placement
         check("ear check: five, theory and listening", place.count == 5 && place.filter { $0.kind == .listen }.count == 3)
