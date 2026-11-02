@@ -463,14 +463,14 @@ private struct Stripes: View {
     }
 }
 
-/// The mask over a venue not cleared yet: the panel grey at 97%, with grain (a fixed scatter of
+/// The mask over a venue not cleared yet: the panel grey at 93%, with grain (a fixed scatter of
 /// light and dark specks per card), so the photo underneath is only a faint shape.
 private struct GrainMask: View {
     let seed: Int
 
     var body: some View {
         Canvas { ctx, size in
-            ctx.fill(Path(CGRect(origin: .zero, size: size)), with: .color(Palette.panel.opacity(0.97)))
+            ctx.fill(Path(CGRect(origin: .zero, size: size)), with: .color(Palette.panel.opacity(0.93)))
             var r = UInt64(truncatingIfNeeded: seed &* 2654435761 &+ 1)
             func next() -> CGFloat {
                 r = r &* 6364136223846793005 &+ 1442695040888963407
