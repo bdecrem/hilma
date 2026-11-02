@@ -173,12 +173,6 @@ final class AppModel {
         QuizBank.challenge(placed: progress.snapshot.quiz.level != nil)
     }
 
-    /// Today's challenge: the ear check, a daily five, or a clean chorus of the blues module.
-    func startChallenge() {
-        if challenge == .chorus { return open(lesson: "A1") }
-        startQuiz()
-    }
-
     /// The ear check the first time; after it, today's five (a chorus day gets the chord five).
     func startQuiz() {
         let q = progress.snapshot.quiz
@@ -207,7 +201,6 @@ final class AppModel {
         if s.finished {
             if s.mode == .placement { progress.placed(QuizBank.level(placement: s.results)) }
             progress.finishedDaily()
-            progress.practiced()
         } else {
             playCurrent()
         }
@@ -227,14 +220,12 @@ final class AppModel {
     private(set) var earPoints = 0
     @ObservationIgnored private var earRNG = SystemRandomNumberGenerator()
     @ObservationIgnored private var earRoundID = 0
-    @ObservationIgnored private var earPracticed = false
 
     /// At the highest level opened (or `level`).
     func startEarGame(_ kind: EarGame.Kind, level: Int? = nil) {
         earKind = kind
         ear = EarGame.Run(level: level ?? progress.ear(kind).level, top: kind.levels.count)
         earRound = nil
-        earPracticed = false
         if route != .earGame { afterQuiz = route }
         player?.holdBand()
         route = .earGame
@@ -267,10 +258,6 @@ final class AppModel {
         earPoints = run.answer(right: right)
         ear = run
         progress.earAnswered(earKind, level: run.level, score: run.score)
-        if run.answered >= 10 && !earPracticed {
-            earPracticed = true
-            progress.practiced()
-        }
         guard advance else { return }
         if !right { DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in self?.playEar() } }
         let id = earRoundID

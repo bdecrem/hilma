@@ -182,8 +182,6 @@ final class Player {
                 let offsets = r.offsets.map { String(format: "%+.1f", $0) }.joined(separator: " ")
                 what = "\(r.hits)/\(r.notes.count) hits, \(r.extras.count) extra, mean \(r.meanOffsetMs.map { String(format: "%+.1f", $0) } ?? "-") ms, \(r.clean ? "clean" : "not clean") [\(r.problems.joined(separator: " "))] offsets \(offsets)"
                 if let skill = v.skill { progress.record(skill: skill, result: r, tempo: v.tempo, counted: v.counted) }
-                // A judged chorus is a day of practice: the streak.
-                progress.practiced()
             } else {
                 what = "joined late, not judged"
             }
@@ -211,6 +209,7 @@ final class Player {
                 self.progress.completed(self.content.code, tempo: self.engine.finish?.tempo ?? 0,
                                         steps: self.content.lessonStepCount,
                                         lessons: self.content.lessonIndex(ofStep: self.lesson.step - 1) + 1)
+                if !ProgressStore.readOnly { self.progress.practiced(.lesson, id: "\(self.content.code)·finish") }
                 self.lessonLog.info("lesson \(self.content.code, privacy: .public) finished")
                 #if DEBUG
                 if UserDefaults.standard.bool(forKey: "PlayBackOnFinish"), let f = self.finish {
@@ -308,7 +307,11 @@ final class Player {
             if !out.jam { progress.reached(step: out.step, in: content.code) }
             applyBand()
         }
-        if let c = out.complete, c != lesson.complete { progress.lessonDone(c.number, in: content.code) }
+        if let c = out.complete, c != lesson.complete {
+            progress.lessonDone(c.number, in: content.code)
+            // A finished lesson is a day of practice (a replay too).
+            if !ProgressStore.readOnly { progress.practiced(.lesson, id: "\(content.code)·\(c.number)") }
+        }
         if out != lesson { lesson = out }
     }
 

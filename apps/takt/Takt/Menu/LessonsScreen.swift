@@ -188,7 +188,6 @@ struct TodayCard: View {
         let shape = RoundedRectangle(cornerRadius: 8)
         let streak = app.progress.streak()
         let done = app.progress.practicedToday
-        let challenge = app.challenge
         VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .firstTextBaseline, spacing: 10) {
                 Text("\(streak)")
@@ -202,22 +201,24 @@ struct TodayCard: View {
                 WeekLEDs(days: Set(app.progress.snapshot.days))
             }
             Hairline()
-            HStack(alignment: .center, spacing: 14) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(done ? "Done for today · one more?" : "Today's challenge")
-                        .dataLabel(11)
-                        .foregroundStyle(Palette.muted)
-                    Text(challenge.title.prefix(1).uppercased() + challenge.title.dropFirst())
-                        .bodyText(16, weight: .semibold)
-                        .foregroundStyle(Palette.text)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                Spacer(minLength: 8)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(done ? "Done for today · one more?" : "Today's challenge")
+                    .dataLabel(11)
+                    .foregroundStyle(Palette.muted)
+                Text("Finish a lesson or play a song on the Stage")
+                    .bodyText(16, weight: .semibold)
+                    .foregroundStyle(Palette.text)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            // Either one counts for the day: the lesson you're on, or any song on the Stage.
+            HStack(spacing: 10) {
                 if done {
-                    QuietButton(title: "Again") { app.startChallenge() }
+                    QuietButton(title: "Lesson") { app.open(lesson: "A1") }
                 } else {
-                    PrimaryButton(title: "Start") { app.startChallenge() }
+                    PrimaryButton(title: "Lesson") { app.open(lesson: "A1") }
                 }
+                QuietButton(title: "Stage") { app.route = .stage }
+                Spacer(minLength: 0)
             }
         }
         .padding(compact ? 16 : 22)

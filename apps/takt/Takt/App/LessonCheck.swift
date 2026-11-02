@@ -817,7 +817,15 @@ enum LessonCheck {
         let merged = AccountStore.merge(mineSnap, theirs)
         check("merge: days from both devices, the placed quiz record", merged.days == ["2026-10-20", "2026-10-21", "2026-10-22"] && merged.quiz.level == .ear)
         let old = try! JSONDecoder.takt.decode(ProgressStore.Snapshot.self, from: Data(#"{"lessons":{},"skills":{}}"#.utf8))
-        check("a snapshot from before the streak decodes", old.days.isEmpty && old.quiz.level == nil)
+        check("a snapshot from before the streak decodes", old.days.isEmpty && old.quiz.level == nil && old.practice.isEmpty)
+        typealias PE = ProgressStore.PracticeEntry
+        mineSnap.practice = [PE(day: "2026-10-20", kind: "lesson", id: "A1·2")]
+        theirs.practice = [PE(day: "2026-10-21", kind: "stage", id: "undertow"), PE(day: "2026-10-20", kind: "lesson", id: "A1·2")]
+        let mergedLog = AccountStore.merge(mineSnap, theirs).practice
+        check("practice log: merged from both devices, each once, oldest first",
+              mergedLog == [PE(day: "2026-10-20", kind: "lesson", id: "A1·2"), PE(day: "2026-10-21", kind: "stage", id: "undertow")])
+        let many = (0..<250).map { PE(day: String(format: "2026-%02d-%02d", 1 + $0 / 28, 1 + $0 % 28), kind: "stage", id: "s") }
+        check("practice log: the last 200 kept", PE.union(many, []).count == 200 && PE.union(many, []).last == many.last)
 
         let place = QuizBank.placement
         check("ear check: five, theory and listening", place.count == 5 && place.filter { $0.kind == .listen }.count == 3)

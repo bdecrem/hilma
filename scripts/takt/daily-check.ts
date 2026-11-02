@@ -12,10 +12,8 @@ import { readFileSync } from 'node:fs'
 import { createClient } from '@supabase/supabase-js'
 import {
   canResend,
-  challengeFor,
-  todaysChallenge,
+  CHALLENGE,
   composeText,
-  dayOfYear,
   isDue,
   localDate,
   normalizePhone,
@@ -54,24 +52,15 @@ eq(prevDate('2028-03-01'), '2028-02-29', 'leap day')
 console.log('text')
 const LA = 'America/Los_Angeles'
 const oct25 = new Date('2026-10-25T19:00:00Z') // noon in LA
-eq(todaysChallenge(null, oct25, LA), 'the 5-question ear check', 'no snapshot → ear check')
-eq(todaysChallenge({ quiz: {} }, oct25, LA), 'the 5-question ear check', 'no quiz level → ear check')
-eq(dayOfYear('2026-01-01'), 1, 'day of year Jan 1')
-eq(dayOfYear('2026-10-25'), 298, 'day of year Oct 25')
-eq(challengeFor(oct25, LA), '5 questions on the 12-bar form', '2026-10-25 → day 298 → index 1 → 12-bar form')
-eq(challengeFor(new Date('2026-01-01T20:00:00Z'), LA), '5 ear questions: major or minor', 'Jan 1 → index 0')
-eq(challengeFor(new Date('2026-10-26T03:00:00Z'), LA), '5 questions on the 12-bar form', 'tz decides the day: 03:00Z Oct 26 is still Oct 25 in LA')
-eq(challengeFor(new Date('2026-10-26T03:00:00Z'), 'Europe/Brussels'), '5 listening questions: higher or lower', '…and Oct 26 in Brussels → index 2')
-eq(todaysChallenge({ quiz: { level: 'ear' } }, oct25, LA), '5 questions on the 12-bar form', 'with a level → the rotation')
 eq(
   composeText({ days: [] }, oct25, LA),
-  "Takt: today's challenge is the 5-question ear check. Two minutes starts a streak.",
+  "Takt: today's challenge: finish a lesson or play a song on the Stage. One song starts a streak.",
   'streak 0',
 )
 eq(
   composeText({ days: ['2026-10-23', '2026-10-24'], quiz: { level: 'both' } }, oct25, LA),
-  "Takt: you're on a 2-day streak. Today's challenge: 5 questions on the 12-bar form. Open Takt to keep it going.",
-  'streak 2 with a quiz level',
+  "Takt: you're on a 2-day streak. Today: finish a lesson or play a song on the Stage. Open Takt to keep it going.",
+  'streak 2',
 )
 
 console.log('due check')
@@ -149,7 +138,7 @@ async function live(baseUrl: string) {
 
     eq((await call('GET', `/api/takt/daily/tick?force=1&dry=1&user=${userId}`)).status, 401, 'tick without secret → 401')
     const t1 = await call('GET', `/api/takt/daily/tick?force=1&dry=1&user=${userId}`, undefined, cron)
-    eq((t1.json?.results as unknown[])?.[0], { id: userId, status: 'dry', text: "Takt: today's challenge is the 5-question ear check. Two minutes starts a streak." }, 'tick force+dry, no progress')
+    eq((t1.json?.results as unknown[])?.[0], { id: userId, status: 'dry', text: `Takt: today's challenge: ${CHALLENGE}. One song starts a streak.` }, 'tick force+dry, no progress')
 
     const now = new Date()
     const today = localDate(now, 'Europe/Brussels')
@@ -157,7 +146,7 @@ async function live(baseUrl: string) {
     await call('PUT', '/api/takt/progress', { progress: { lessons: {}, skills: {}, days: [prevDate(prevDate(y)), prevDate(y), y], quiz: { level: 'ear' } } })
     const t2 = await call('GET', `/api/takt/daily/tick?force=1&dry=1&user=${userId}`, undefined, cron)
     eq((t2.json?.results as { text?: string }[])?.[0]?.text,
-      `Takt: you're on a 3-day streak. Today's challenge: ${challengeFor(now, 'Europe/Brussels')}. Open Takt to keep it going.`, 'tick force+dry, 3-day streak')
+      `Takt: you're on a 3-day streak. Today: ${CHALLENGE}. Open Takt to keep it going.`, 'tick force+dry, 3-day streak')
 
     // The real due path (sender stubbed by TAKT_IMESSAGE_DRY on the server): at the user's hour.
     const at = new Date(now)

@@ -1196,6 +1196,21 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   sound), but the splash sets `beat = 4` (all four lit as `past`, a missed one stays an outline),
   stops taking hits, and the host waits `hold` = min(one beat, 0.6 s) before the fade. Seen on the
   simulator at 8 fps: about five frames of the whole word, then the fade.
+- **The day counts for a lesson or a song: 0.1 (83), 2026-11-02.** Bart: the daily challenge is
+  "ONE of EITHER (a) complete a GAME (stage tab) OR complete a LESSON". Only two things mark a day
+  now (`ProgressStore.practiced(_:id:)`): a lesson reaching its Complete card (a replay too; the
+  module's payoff counts as `A1·finish`) and a Stage song played to the end (`record(run:)`). A
+  judged chorus, a quiz and ten ear answers no longer count. Every counted day is logged in the
+  snapshot's `practice` (`{day, kind: lesson|stage, id: "A1·3" | the song}`, one per day/kind/id,
+  the last 200, merged as a union), which syncs to `takt_progress.snapshot` under the user's id,
+  so the server can say what made each day. The Today card reads "Finish a lesson or play a song
+  on the Stage" with Lesson (opens A1) and Stage; the daily text says the same (`CHALLENGE` in
+  `src/lib/takt/daily.ts`; the four-way rotation is gone from the text, the quiz keeps its own).
+  DEBUG `-WriteProgress 1` lets an autoplay run write progress (use a throwaway simulator).
+  Verified: LessonCheck 342/342 (the log's merge and trim), `daily-check.ts` all passed against a
+  dry dev server, and on a fresh iPhone 17 simulator an autoplayed `song-slow-burn-short` wrote
+  `{2026-11-02, stage, song-slow-burn-short}` locally and in that guest's `takt_progress` row
+  (guest deleted after).
 
 ## Code map (`Takt/`)
 

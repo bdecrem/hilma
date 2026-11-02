@@ -9,6 +9,8 @@ export type TaktSnapshot = {
   lessons?: unknown
   skills?: unknown
   days?: string[]
+  /// What made each day count (app 0.1 (83)+): a finished lesson or a Stage song.
+  practice?: { day: string; kind: 'lesson' | 'stage' | string; id: string }[]
   quiz?: { level?: 'new' | 'ear' | 'theory' | 'both' | string }
 }
 
@@ -48,38 +50,15 @@ export function practicedToday(days: string[] | undefined, today: string): boole
   return (days ?? []).includes(today)
 }
 
-export const CHALLENGES = [
-  '5 ear questions: major or minor',
-  '5 questions on the 12-bar form',
-  '5 listening questions: higher or lower',
-  'one clean chorus of your blues lesson',
-] as const
-
-/// 1 for Jan 1.
-export function dayOfYear(ymd: string): number {
-  const d = Date.parse(`${ymd}T00:00:00Z`)
-  const jan1 = Date.parse(`${ymd.slice(0, 4)}-01-01T00:00:00Z`)
-  return Math.round((d - jan1) / 86_400_000) + 1
-}
-
-/// The day's rotating challenge, shared with the app: index (dayOfYear - 1) % 4, dayOfYear of
-/// `date` in `tz` (Jan 1 = 1). 2026-10-25 is day 298 → index 1 → the 12-bar form.
-export function challengeFor(date: Date, tz: string): string {
-  return CHALLENGES[(dayOfYear(localDate(date, tz)) - 1) % CHALLENGES.length]
-}
-
-/// What the text asks for: the ear check until the placement quiz has a level, then the rotation.
-export function todaysChallenge(snapshot: TaktSnapshot | null, now: Date, tz: string): string {
-  if (!snapshot?.quiz?.level) return 'the 5-question ear check'
-  return challengeFor(now, tz)
-}
+/// The day's challenge, the same every day since 0.1 (83): only a finished lesson or a Stage
+/// song played to the end counts for the streak (the app logs which in `practice`).
+export const CHALLENGE = 'finish a lesson or play a song on the Stage'
 
 export function composeText(snapshot: TaktSnapshot | null, now: Date, tz: string): string {
   const n = streak(snapshot?.days, localDate(now, tz))
-  const challenge = todaysChallenge(snapshot, now, tz)
   return n > 0
-    ? `Takt: you're on a ${n}-day streak. Today's challenge: ${challenge}. Open Takt to keep it going.`
-    : `Takt: today's challenge is ${challenge}. Two minutes starts a streak.`
+    ? `Takt: you're on a ${n}-day streak. Today: ${CHALLENGE}. Open Takt to keep it going.`
+    : `Takt: today's challenge: ${CHALLENGE}. One song starts a streak.`
 }
 
 /// Whether the tick should text this user at `now` (before the practiced-today check, which

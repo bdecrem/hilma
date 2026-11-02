@@ -103,8 +103,11 @@ final class ProgressStore {
     struct Snapshot: Codable, Equatable {
         var lessons: [String: LessonRecord] = [:]
         var skills: [String: SkillRecord] = [:]
-        /// Local dates practiced (a judged chorus or a finished quiz), sorted: the streak.
+        /// Local dates practiced, sorted: the streak. Since 0.1 (83) only a finished lesson or a
+        /// Stage song played to the end counts (before it, a judged chorus, a quiz, ten ear answers).
         var days: [String] = []
+        /// What made each day count, oldest first: traceable per account on the server.
+        var practice: [PracticeEntry] = []
         var quiz = QuizRecord()
         /// The Ear Trainer (chords) and Intervals.
         var ear = EarRecord()
@@ -124,6 +127,24 @@ final class ProgressStore {
             ear = try c.decodeIfPresent(EarRecord.self, forKey: .ear) ?? EarRecord()
             intervals = try c.decodeIfPresent(EarRecord.self, forKey: .intervals) ?? EarRecord()
             scores = try c.decodeIfPresent([ScoreRecord].self, forKey: .scores) ?? []
+            practice = try c.decodeIfPresent([PracticeEntry].self, forKey: .practice) ?? []
+        }
+    }
+
+    /// One thing that counted for a day: `kind` "lesson" (id "A1·3", a module's lesson number,
+    /// or "A1·finish", the payoff) or "stage" (id the song). One entry per day, kind and id.
+    struct PracticeEntry: Codable, Equatable, Hashable {
+        let day: String
+        let kind: String
+        let id: String
+
+        /// The last `kept` entries, each once, oldest first.
+        static let kept = 200
+        static func union(_ a: [PracticeEntry], _ b: [PracticeEntry]) -> [PracticeEntry] {
+            var seen: Set<PracticeEntry> = []
+            let all = (a + b).filter { seen.insert($0).inserted }
+                .sorted { ($0.day, $0.kind, $0.id) < ($1.day, $1.kind, $1.id) }
+            return Array(all.suffix(kept))
         }
     }
 
@@ -135,7 +156,7 @@ final class ProgressStore {
         let r = ScoreRecord(run)
         snapshot.scores = ScoreRecord.trimmed(snapshot.scores + [r])
         save()
-        practiced()
+        practiced(.stage, id: r.song)
         return r
     }
 
@@ -171,7 +192,9 @@ final class ProgressStore {
 
     #if DEBUG
     /// `-Silent` (headless) and `-Autoplay` runs keep progress in memory only.
-    static let readOnly = UserDefaults.standard.bool(forKey: "Silent") || UserDefaults.standard.string(forKey: "Autoplay") != nil
+    /// `-WriteProgress 1` lets an autoplay run write anyway (a throwaway simulator, to check what it records).
+    static let readOnly = (UserDefaults.standard.bool(forKey: "Silent") || UserDefaults.standard.string(forKey: "Autoplay") != nil)
+        && !UserDefaults.standard.bool(forKey: "WriteProgress")
     #else
     static let readOnly = false
     #endif
@@ -248,11 +271,15 @@ final class ProgressStore {
         return String(format: "%04d-%02d-%02d", c.year!, c.month!, c.day!)
     }
 
-    /// Today counts as practiced.
-    func practiced(on date: Date = Date()) {
+    enum PracticeKind: String { case lesson, stage }
+
+    /// Today counts as practiced: a lesson finished or a Stage song played to the end.
+    func practiced(_ kind: PracticeKind, id: String, on date: Date = Date()) {
         let d = Self.day(date)
-        guard !snapshot.days.contains(d) else { return }
-        snapshot.days = (snapshot.days + [d]).sorted()
+        let entry = PracticeEntry(day: d, kind: kind.rawValue, id: id)
+        guard !snapshot.days.contains(d) || !snapshot.practice.contains(entry) else { return }
+        if !snapshot.days.contains(d) { snapshot.days = (snapshot.days + [d]).sorted() }
+        snapshot.practice = PracticeEntry.union(snapshot.practice, [entry])
         save()
     }
 
