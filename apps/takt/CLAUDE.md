@@ -1185,6 +1185,12 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   recordings: clean (stamp on the VIER hit, the shake, the slam), a late join (ZWEI missed, an
   outline), taps 150 ms late (all strays, no stamp); both layouts shot on the Mac. Not driven: a
   real finger, keyboard or MIDI note (the paths share `hit(at:)`).
+- **The name, as a dictionary entry: 0.1 (81), 2026-11-02.** Bart's words, verbatim: "takt
+  /tɑkt/ n. / the beat. from Latin tactus, "touch." / find it." Small SF Mono (11 pt on the
+  iPhone, 12 on the Mac), left-aligned between the letters and the band, headword bold, the
+  rest muted, `n.` and `tactus` italic, "find it." in text. It fades in once (0.6 s) and sits
+  still; not prominent on purpose. `CountInSplash.definition(size:)`. Shot on the iPhone 17 Pro
+  simulator and the Mac (stamped).
 
 ## Code map (`Takt/`)
 

@@ -42,6 +42,7 @@ struct CountInSplash: View {
     @State private var punch: [Int: CGFloat] = [:]
     @State private var shake: CGSize = .zero
     @State private var stamped = false
+    @State private var definitionShown = false
 
     /// A hit is this close to its beat, either side: lenient for touch latency, tight enough
     /// that mashing between beats misses.
@@ -227,7 +228,9 @@ struct CountInSplash: View {
                     ForEach(0..<4, id: \.self) { i in cell(i, size: row * 1.18, word: row * 0.36) }
                 }
             }
-            .padding(.bottom, 24)
+            definition(size: 11)
+                .padding(.top, 14)
+                .padding(.bottom, 18)
             band(title: 18, bpm: 40, padH: 20, padV: 16)
         }
         .padding(.horizontal, 28)
@@ -253,7 +256,9 @@ struct CountInSplash: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
             .padding(.top, 44)
-            .padding(.bottom, 32)
+            .padding(.bottom, 24)
+            definition(size: 12)
+                .padding(.bottom, 20)
             band(title: 22, bpm: 48, padH: 28, padV: 20)
                 .padding(.bottom, 56)
         }
@@ -261,6 +266,28 @@ struct CountInSplash: View {
     }
 
     // MARK: Pieces
+
+    /// The name, set like a dictionary entry: small monospace, left-aligned above the band.
+    /// It fades in once and then sits still; the count is the show.
+    private func definition(size: CGFloat) -> some View {
+        let mono = { (w: Font.Weight) in Font.system(size: size, weight: w, design: .monospaced) }
+        return VStack(alignment: .leading, spacing: size * 0.45) {
+            (Text("takt").font(mono(.bold)).foregroundColor(Palette.text)
+             + Text("  /tɑkt/  ").font(mono(.regular)).foregroundColor(Palette.muted)
+             + Text("n.").font(mono(.regular)).italic().foregroundColor(Palette.muted))
+            Text("the beat. from Latin ").font(mono(.regular)).foregroundColor(Palette.muted)
+                + Text("tactus").font(mono(.regular)).italic().foregroundColor(Palette.muted)
+                + Text(", \u{201C}touch.\u{201D}").font(mono(.regular)).foregroundColor(Palette.muted)
+            Text("find it.").font(mono(.regular)).foregroundColor(Palette.text)
+        }
+        .lineLimit(1)
+        .minimumScaleFactor(0.8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .opacity(definitionShown ? 1 : 0)
+        .animation(.easeOut(duration: 0.6), value: definitionShown)
+        .onAppear { definitionShown = true }
+        .accessibilityElement(children: .combine)
+    }
 
     /// SAUBER, rubber-stamped: it slams down from big and tilted. Untranslated.
     private func stamp(size: CGFloat) -> some View {
