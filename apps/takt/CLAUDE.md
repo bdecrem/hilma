@@ -1156,6 +1156,17 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   no line. DEBUG `-Splash 1 -SplashBeat n` holds a beat (0 to 3) or the landing (4) for a
   screenshot. Verified: a recording of a real launch at 70 BPM on the simulator (a beat every
   0.86 s, the landing on the 1, the fade into the app), both layouts shot on simulator and Mac.
+- **The count pops: 0.1 (79), 2026-11-02.** Bart: "add in that dictionary explainer as you
+  proposed (2) remove the orange final splash (3) use a motion design/pop up the numbers". The
+  orange AUF DIE EINS landing of 78 is gone, and the band and the fade are back together on the 1.
+  The dictionary line moved from the header to directly under T A K T; the header row is gone (the
+  band card has the BPM). `PopWord`: a word isn't there until its beat, then each letter springs up
+  from behind the rule, small and tilted, 28 ms after the last, on a loose spring that overshoots
+  and settles (`response` 0.26, damping 0.52); the words are also bigger on the iPhone. On the
+  beat the rule strikes out from under the word in `signal` (0.22 s) and is a plain rule again on
+  the next beat. The big letters still land with no animation. Reduce Motion: all four words sit
+  there and nothing moves. `-SplashBeat` now takes 0 to 3. Verified: 30 fps frames of a real launch
+  on the simulator show the strike, the stagger, the overshoot and the settle.
 
 ## Code map (`Takt/`)
 
