@@ -19,6 +19,31 @@ Bart's goals for one year:
 - Concept levels cost the least (1, 2, 5, 11).
 - Treat each figure as ±50%. A level that runs past double its estimate is a sign to drop back a level, not to grind on.
 
+**At 3 hours a week** (the week each level clears; the next one starts that week):
+
+| # | Venue | Hours | Total | Week cleared |
+|---|---|---|---|---|
+| 1 | Dockery Farms | 3 | 3 | 1 |
+| 2 | King Biscuit Time | 4 | 7 | 3 |
+| 3 | Riverside Hotel | 5 | 12 | 4 |
+| 4 | Hopson Commissary | 5 | 17 | 6 |
+| 5 | Blue Front Cafe | 4 | 21 | 7 |
+| 6 | Club Ebony | 5 | 26 | 9 |
+| 7 | Po' Monkey's | 8 | 34 | 12 |
+| 8 | Red's Lounge | 6 | 40 | 14 |
+| 9 | Junior's Place | 6 | 46 | 16 |
+| 10 | Ground Zero | 6 | 52 | 18 |
+| 11 | Church Park | 5 | 57 | 19 |
+| 12 | Pee Wee's Saloon | 8 | 65 | 22 |
+| 13 | Daisy Theatre | 7 | 72 | 24 |
+| 14 | The Peabody | 7 | 79 | 27 |
+| 15 | Handy Park | 6 | 85 | 29 |
+| 16 | The Palace | 9 | 94 | 32 |
+| 17 | Club Handy | 7 | 101 | 34 |
+| 18 | WDIA | 9 | 110 | 37 |
+| 19 | Sun Studio | 8 | 118 | 40 |
+| 20 | Royal Studios | 6 | 124 | 42 |
+
 **Shape.** The map's two episodes are the two halves of the year.
 
 - **Delta (levels 1–10): the foundations.** The white-key minors, the C blues, and the first improvising.
