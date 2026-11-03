@@ -117,8 +117,8 @@ struct StepPanel: View {
                     Text(s.rightHand ? "Right hand · fingering" : "Left hand · fingering")
                         .dataLabel(10)
                         .foregroundStyle(Palette.muted)
-                    // Two octaves is 15 fingers: on the phone, more than eight wrap onto a second row.
-                    let perRow = compact && s.fingering.count > 8 ? (s.fingering.count + 1) / 2 : s.fingering.count
+                    // Two octaves is 15 fingers, the pentatonic over two 21: on the phone, rows of eight.
+                    let perRow = compact ? 8 : s.fingering.count
                     VStack(alignment: .leading, spacing: 4) {
                         ForEach(Array(stride(from: 0, to: s.fingering.count, by: max(1, perRow))), id: \.self) { start in
                             HStack(spacing: 4) {

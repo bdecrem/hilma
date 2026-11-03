@@ -1,8 +1,9 @@
 import SwiftUI
 
 /// The Map tab: one road down the screen through the current world's venues, a numbered stop
-/// per level, a photo card beside each. A level clears when a lesson is finished and a Stage
-/// song is played to the end (`MapProgress`). Tap a card, a stop or the pill to open the venue.
+/// per level, a photo card beside each. Level n is level n of the player's plan
+/// (`LearningPlan`): the orange stop up next opens its goals (`LevelGoalsScreen`), and the level
+/// clears when every goal is done (`GoalProgress`); a cleared stop opens its venue's story.
 /// The world (blues now, techno later) is content: `MapWorld`, from `map-<world>.json`.
 /// Layout numbers are the handoff's (`reference/Main.dc.html`, iPhone at 390 wide): x positions
 /// scale to the width, y positions don't.
@@ -15,8 +16,8 @@ struct MapScreen: View {
         let compact = sizeClass == .compact
         let world = app.mapWorld
         let stops = world.stops
-        let progress = app.mapProgress
-        let cleared = min(progress.cleared, stops.count)
+        let goals = app.goals
+        let cleared = min(goals.cleared, stops.count)
         let here = cleared < stops.count ? stops[cleared] : nil
 
         ZStack {
@@ -38,7 +39,7 @@ struct MapScreen: View {
                     let y = RoadLayout.y(here ?? stops.last!)
                     let u = min(1, max(0, (y - RoadLayout.hereOffset) / max(1, content - g.size.height)))
                     ScrollView {
-                        Road(app: app, world: world, stops: stops, progress: progress, cleared: cleared,
+                        Road(app: app, world: world, stops: stops, cleared: cleared,
                              width: min(g.size.width, compact ? .infinity : 820), compact: compact, tilt: !reduceMotion)
                             .frame(maxWidth: .infinity)
                     }
@@ -55,8 +56,12 @@ struct MapScreen: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Palette.ground.ignoresSafeArea())
 
-            if let level = app.openVenue, level <= cleared, let stop = stops.first(where: { $0.level == level }) {
-                VenueScreen(app: app, world: world, stop: stop, cleared: cleared, compact: compact)
+            if let level = app.openVenue, let stop = stops.first(where: { $0.level == level }) {
+                if level <= cleared {
+                    VenueScreen(app: app, world: world, stop: stop, cleared: cleared, compact: compact)
+                } else if level == cleared + 1, let planLevel = app.plan.levels.first(where: { $0.n == level }) {
+                    LevelGoalsScreen(app: app, stop: stop, level: planLevel, goals: goals, compact: compact)
+                }
             }
         }
     }
@@ -124,7 +129,6 @@ private struct Road: View {
     let app: AppModel
     let world: MapWorld
     let stops: [MapWorld.Stop]
-    let progress: MapProgress
     let cleared: Int
     let width: CGFloat
     let compact: Bool
@@ -158,12 +162,12 @@ private struct Road: View {
                 VenueCard(world: world, stop: s, state: state, width: cardWidth)
                     .rotationEffect(.degrees(tilt ? (left ? 1.2 : -1.2) : 0))
                     .offset(x: left ? width - 14 - cardWidth : 14, y: RoadLayout.y(s) - 74)
-                    // A venue's story is the reward: it opens once its level is cleared.
-                    .onTapGesture { if state == .done { app.openVenue = s.level } }
+                    // A venue's story is the reward: it opens once its level is cleared. The one
+                    // up next opens its goals.
+                    .onTapGesture { if state == .done || state == .here { app.openVenue = s.level } }
                     .accessibilityElement(children: .ignore)
-                    .accessibilityLabel(state == .done ? "\(s.venue.name), \(s.venue.era), \(s.venue.town)"
-                                        : "\(state == .here ? s.venue.name : "Hidden venue"), \(s.venue.era), \(s.venue.town), locked")
-                    .accessibilityAddTraits(state == .done ? .isButton : [])
+                    .accessibilityLabel(cardLabel(s, state))
+                    .accessibilityAddTraits(state == .done || state == .here ? .isButton : [])
             }
 
             ForEach(stops) { s in
@@ -172,10 +176,10 @@ private struct Road: View {
                 let x = RoadLayout.x(s, width: width), y = RoadLayout.y(s)
                 Button { app.openVenue = s.level } label: { StopMark(number: s.level, state: state) }
                     .buttonStyle(.plain)
-                    // Not `.disabled`: that fades the orange stop. It just ignores taps until cleared.
-                    .allowsHitTesting(state == .done)
-                    .accessibilityAddTraits(state == .done ? .isButton : [])
-                    .accessibilityRemoveTraits(state == .done ? [] : .isButton)
+                    // Not `.disabled`: that fades the orange stop. Locked stops just ignore taps.
+                    .allowsHitTesting(state == .done || state == .here)
+                    .accessibilityAddTraits(state == .done || state == .here ? .isButton : [])
+                    .accessibilityRemoveTraits(state == .done || state == .here ? [] : .isButton)
                     .frame(width: size, height: size)
                     .offset(x: x - size / 2, y: y - size / 2)
                     .accessibilityLabel(stopLabel(s, state))
@@ -191,20 +195,11 @@ private struct Road: View {
                 // 264 wide holds "King Biscuit Time"; 8 pt from either edge.
                 let w = min(264, width - 16)
                 let x = min(max(RoadLayout.x(s, width: width), w / 2 + 8), width - w / 2 - 8)
-                HerePill(title: s.venue.name)
+                Button { app.openVenue = s.level } label: { HerePill(title: s.venue.isPlaceholder ? "Level \(s.level)" : s.venue.name) }
+                    .buttonStyle(.plain)
                     .frame(width: w)
                     .offset(x: x - w / 2, y: RoadLayout.y(s) - 92)
                     .accessibilityHidden(true)  // the stop says it
-            }
-
-            if let t = world.nextTeaser {
-                VStack(spacing: 6) {
-                    Text(t.kicker).dataLabel(11).foregroundStyle(Palette.muted)
-                    Text(t.title).font(.display(40)).textCase(.uppercase).foregroundStyle(Palette.muted)
-                }
-                .multilineTextAlignment(.center)
-                .frame(width: width)
-                .offset(y: height - 220)
             }
         }
         .frame(width: width, height: height, alignment: .topLeading)
@@ -214,10 +209,17 @@ private struct Road: View {
         let where_: String
         switch state {
         case .done: where_ = "cleared"
-        case .here: where_ = "up next: finish any lesson and any Stage song"
+        case .here: where_ = "up next: opens its goals"
         case .next, .ahead: where_ = "locked"
         }
-        return "Level \(s.level), \(state == .done || state == .here ? s.venue.name : "hidden venue"), \(where_)"
+        let name = s.venue.isPlaceholder ? "not written yet" : state == .done || state == .here ? s.venue.name : "hidden venue"
+        return "Level \(s.level), \(name), \(where_)"
+    }
+
+    private func cardLabel(_ s: MapWorld.Stop, _ state: MapWorld.StopState) -> String {
+        if s.venue.isPlaceholder { return "Level \(s.level), venue not written yet" }
+        if state == .done { return "\(s.venue.name), \(s.venue.era), \(s.venue.town)" }
+        return "\(state == .here ? s.venue.name : "Hidden venue"), \(s.venue.era), \(s.venue.town), \(state == .here ? "up next" : "locked")"
     }
 }
 
@@ -324,7 +326,7 @@ private struct Rings: View {
     }
 }
 
-/// The venue up next, by name. Not a button: the venue opens once it's cleared.
+/// The venue up next, by name. Opens the level's goals.
 private struct HerePill: View {
     let title: String
 
@@ -363,10 +365,29 @@ private struct VenueCard: View {
     let width: CGFloat
 
     var body: some View {
+        if stop.venue.isPlaceholder {
+            // A level whose venue isn't written yet: an empty box on the road.
+            let photoHeight = (104 * width / 186).rounded()
+            VStack(spacing: 6) {
+                Text("Level \(stop.level)").font(.display(width > 200 ? 23 : 19)).textCase(.uppercase).foregroundStyle(Palette.muted)
+                Text("Venue to come").dataLabel(9).foregroundStyle(Palette.muted)
+            }
+            .frame(width: width, height: photoHeight + 50)
+            .background(Palette.ground)
+            .clipShape(RoundedRectangle(cornerRadius: 3))
+            .overlay(RoundedRectangle(cornerRadius: 3).strokeBorder(state == .here ? Palette.signal : Palette.line,
+                                                                     style: StrokeStyle(lineWidth: state == .here ? 3 : 1.5, dash: [6, 5])))
+            .contentShape(Rectangle())
+        } else {
+            card
+        }
+    }
+
+    private var card: some View {
         // Every venue not cleared yet (the one up next too) is an old, washed-out print.
         let locked = state != .done
         let photoHeight = (104 * width / 186).rounded()
-        VStack(alignment: .leading, spacing: 0) {
+        return VStack(alignment: .leading, spacing: 0) {
             // "Tonight" in the corner away from the stop: the pill covers the stop's side.
             ZStack(alignment: stop.level % 2 == 1 ? .topTrailing : .topLeading) {
                 VenuePhoto(world: world, venue: stop.venue, big: false)

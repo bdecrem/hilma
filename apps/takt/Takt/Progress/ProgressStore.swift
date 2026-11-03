@@ -114,8 +114,8 @@ final class ProgressStore {
         var intervals = EarRecord()
         /// Stage runs, the best per song kept.
         var scores: [ScoreRecord] = []
-        /// Map levels cleared (a lesson and a song each), merged by max: see `MapProgress`.
-        var mapCleared = 0
+        /// The plan's goals, by `LearningPlan.key`: see `GoalRecord`.
+        var goals: [String: GoalRecord] = [:]
 
         init() {}
 
@@ -130,7 +130,7 @@ final class ProgressStore {
             intervals = try c.decodeIfPresent(EarRecord.self, forKey: .intervals) ?? EarRecord()
             scores = try c.decodeIfPresent([ScoreRecord].self, forKey: .scores) ?? []
             practice = try c.decodeIfPresent([PracticeEntry].self, forKey: .practice) ?? []
-            mapCleared = try c.decodeIfPresent(Int.self, forKey: .mapCleared) ?? 0
+            goals = try c.decodeIfPresent([String: GoalRecord].self, forKey: .goals) ?? [:]
         }
     }
 
@@ -283,12 +283,30 @@ final class ProgressStore {
         guard !snapshot.days.contains(d) || !snapshot.practice.contains(entry) else { return }
         if !snapshot.days.contains(d) { snapshot.days = (snapshot.days + [d]).sorted() }
         snapshot.practice = PracticeEntry.union(snapshot.practice, [entry])
-        snapshot.mapCleared = map.cleared
         save()
     }
 
-    /// The map: levels cleared, and what the next one has in hand.
-    var map: MapProgress { MapProgress(practice: snapshot.practice, stored: snapshot.mapCleared) }
+    // MARK: Goals
+
+    func goal(_ key: String) -> GoalRecord { snapshot.goals[key] ?? GoalRecord() }
+
+    /// A step goal: a 100% chorus at `tempo`. The best tempo is kept; at `target` or faster it is done.
+    func goalChorus(_ key: String, tempo: Int, target: Int, on date: Date = Date()) {
+        var r = goal(key)
+        r.best = max(r.best, tempo)
+        if tempo >= target, r.done == nil { r.done = Self.day(date) }
+        snapshot.goals[key] = r
+        save()
+    }
+
+    /// A jam goal: a chorus in the scale. `needed` of them and it is done.
+    func goalJam(_ key: String, needed: Int, on date: Date = Date()) {
+        var r = goal(key)
+        r.choruses += 1
+        if r.choruses >= needed, r.done == nil { r.done = Self.day(date) }
+        snapshot.goals[key] = r
+        save()
+    }
 
     var practicedToday: Bool { snapshot.days.contains(Self.day()) }
 

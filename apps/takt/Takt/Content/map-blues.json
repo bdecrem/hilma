@@ -1,527 +1,477 @@
 {
-  "world": "blues",
-  "title": "The blues road",
-  "total": 50,
-  "episodes": [
+ "world": "blues",
+ "title": "The blues road",
+ "total": 24,
+ "episodes": [
+  {
+   "id": "delta",
+   "title": "The Delta",
+   "kicker": "Episode 1 · 10 joints",
+   "years": "Mississippi · 1895–2001",
+   "venues": [
     {
-      "id": "delta",
-      "title": "The Delta",
-      "kicker": "Episode 1 · 10 joints",
-      "years": "Mississippi · 1895–2001",
-      "venues": [
-        {
-          "id": "dockery",
-          "name": "Dockery Farms",
-          "town": "Near Cleveland, MS",
-          "era": "1895",
-          "status": "Still a working farm",
-          "tag": "Where Charley Patton learned.",
-          "story": "Will Dockery started this plantation on the Sunflower River in 1895, at first for the timber. Around 1900 a boy named Charley Patton arrived, picked up the music from an older player, Henry Sloan, and became the center of a whole circle: Willie Brown, Tommy Johnson, Son House. Younger ears followed, Howlin' Wolf and Pops Staples among them. It is still a working farm and sits on the National Register.",
-          "photo": {
-            "file": "venues/dockery.jpg",
-            "credit": "Photo: formulanone, CC BY-SA 2.0, via Wikimedia Commons",
-            "license": "CC BY-SA 2.0",
-            "source": "https://commons.wikimedia.org/wiki/File:Dockery_Service_Station_-_MS8_Roadside_(45232169662).jpg",
-            "note": "The service station on the farm"
-          },
-          "sources": [
-            "https://en.wikipedia.org/wiki/Dockery_Plantation"
-          ]
-        },
-        {
-          "id": "kffa",
-          "name": "King Biscuit Time",
-          "town": "Helena, AR",
-          "era": "1941",
-          "status": "Still on air",
-          "tag": "Noon blues, sponsored by flour.",
-          "story": "On November 21, 1941, a small station in Helena put Sonny Boy Williamson II and Robert Lockwood Jr. on the air, paid for by a company that sold King Biscuit Flour. The show never stopped. It is the longest-running daily radio broadcast in American history. Sunshine Sonny Payne hosted from 1951 until 2018. B.B. King, James Cotton, Ike Turner and Levon Helm all grew up listening. It still goes out from the Delta Cultural Center.",
-          "photo": {
-            "file": "venues/kffa.jpg",
-            "credit": "Photo: Josh Czupryk, public domain, via Wikimedia Commons",
-            "license": "Public domain",
-            "source": "https://commons.wikimedia.org/wiki/File:Helenadeltaculturalcenter.JPG",
-            "note": "the Delta Cultural Center, where it still airs"
-          },
-          "sources": [
-            "https://en.wikipedia.org/wiki/King_Biscuit_Time"
-          ]
-        },
-        {
-          "id": "riverside",
-          "name": "Riverside Hotel",
-          "town": "Clarksdale, MS",
-          "era": "1944",
-          "status": "Closed 2020",
-          "tag": "Hospital first. Then a musicians' bed.",
-          "story": "This building was once the G.T. Thomas Afro-American Hospital, which served Black patients in the Delta. Bessie Smith died here on September 26, 1937, after a car wreck on Highway 61. From 1944 it was the Riverside Hotel, a place for touring players to sleep. Sonny Boy Williamson II, Robert Nighthawk and Ike Turner were regulars, and Turner reportedly worked up \"Rocket 88\" in his room. Storm damage and the pandemic closed it in 2020.",
-          "photo": {
-            "file": "venues/riverside.jpg",
-            "credit": "Photo: source not yet recorded",
-            "license": "Not yet recorded",
-            "source": null,
-            "note": null
-          },
-          "sources": [
-            "https://en.wikipedia.org/wiki/Riverside_Hotel_(Clarksdale,_Mississippi)",
-            "https://www.hmdb.org/m.asp?m=90062"
-          ]
-        },
-        {
-          "id": "hopson",
-          "name": "Hopson Commissary",
-          "town": "Clarksdale, MS",
-          "era": "1944",
-          "status": "Now a music room",
-          "tag": "First cotton picked by machine.",
-          "story": "Hopson Plantation dates back to 1852. In 1944, working with International Harvester, it became the first operation to plant and pick a whole cotton crop by machine. That was the start of the end of hand labor in Delta fields, and of the jobs that kept many blues players in place. Pinetop Perkins drove a tractor here, long before the world knew his piano. The old company store is now a restaurant and music room.",
-          "photo": {
-            "file": "venues/hopson.jpg",
-            "credit": "Photo: Chillin662, CC BY-SA 3.0, via Wikimedia Commons",
-            "license": "CC BY-SA 3.0",
-            "source": "https://commons.wikimedia.org/wiki/File:Hopsonbuilding.jpg",
-            "note": null
-          },
-          "sources": [
-            "https://en.wikipedia.org/wiki/Hopson,_Mississippi",
-            "https://www.hmdb.org/m.asp?m=89921"
-          ]
-        },
-        {
-          "id": "bluefront",
-          "name": "Blue Front Cafe",
-          "town": "Bentonia, MS",
-          "era": "1948",
-          "status": "Landmark",
-          "tag": "Buffalo fish, blues, back-door whiskey.",
-          "story": "Carey and Mary Holmes opened this café in 1948 and sold buffalo fish, blues and moonshine. Skip James, Bentonia's best-known singer, played here from 1948 to 1953. When Carey died in 1970, their son Jimmy \"Duck\" Holmes took over. He had learned the town's music from guitarist Jack Owens, and he turned a small-town café into a stop for blues fans from all over the world.",
-          "photo": {
-            "file": "venues/bluefront.jpg",
-            "credit": "Photo: Natalie Maynor, CC BY 2.0, via Wikimedia Commons",
-            "license": "CC BY 2.0",
-            "source": "https://commons.wikimedia.org/wiki/File:Blue_Front_Cafe.jpg",
-            "note": null
-          },
-          "sources": [
-            "https://msbluestrail.org/blues-trail-markers/blue-front-cafe",
-            "https://en.wikipedia.org/wiki/Blue_Front_Cafe"
-          ]
-        },
-        {
-          "id": "ebony",
-          "name": "Club Ebony",
-          "town": "Indianola, MS",
-          "era": "1948",
-          "status": "Landmark",
-          "tag": "B.B. King bought it to save it.",
-          "story": "Johnny Jones and his wife Josephine bought this lot in 1945, and by 1948 he was calling it the South's largest and finest night club. Ray Charles, Count Basie, Howlin' Wolf and James Brown all played here. B.B. King took the stage in 1955 and met his future wife in the room. In 2008, when the owner retired, King bought the club himself to keep it alive. It got a full renovation in 2023.",
-          "photo": {
-            "file": "venues/ebony.jpg",
-            "credit": "Photo: Richard apple, CC BY-SA 3.0, via Wikimedia Commons",
-            "license": "CC BY-SA 3.0",
-            "source": "https://commons.wikimedia.org/wiki/File:Club_Ebony.jpg",
-            "note": null
-          },
-          "sources": [
-            "https://msbluestrail.org/blues-trail-markers/club-ebony"
-          ]
-        },
-        {
-          "id": "pomonkey",
-          "name": "Po' Monkey's",
-          "town": "Merigold, MS",
-          "era": "1963",
-          "status": "Closed 2016",
-          "tag": "Tin shack. Thursday nights. No rap.",
-          "story": "This was an old sharecropper shack of tin and plywood, out in the fields near Merigold. Willie \"Po' Monkey\" Seaberry lived in it, farmed by day, and from about 1963 opened it on Thursday nights. Inside: Christmas lights, stuffed monkeys, disco balls, a pool table. The sign out front banned loud music and rap. It was one of the last rural jukes in the Delta, and it closed when Seaberry died in 2016.",
-          "photo": {
-            "file": "venues/pomonkey.jpg",
-            "credit": "Photo: bobpalez, public domain, via Wikimedia Commons",
-            "license": "Public domain",
-            "source": "https://commons.wikimedia.org/wiki/File:Po_Monkeys_Juke_Joint.jpg",
-            "note": null
-          },
-          "sources": [
-            "https://msbluestrail.org/blues-trail-markers/po-monkeys",
-            "https://en.wikipedia.org/wiki/Po%27_Monkey%27s"
-          ]
-        },
-        {
-          "id": "reds",
-          "name": "Red's Lounge",
-          "town": "Clarksdale, MS",
-          "era": "1980s",
-          "status": "Still open",
-          "tag": "No stage. Ribs on the grill.",
-          "story": "In the 1980s Red Paden turned an old music store in Clarksdale's New World District into his juke. There's no stage, just chairs around a cleared floor, a beer cooler behind the counter, and ribs on a grill outside. Big Jack Johnson called it his home base, and Christone \"Kingfish\" Ingram started playing gigs here in seventh grade. Paden died in 2023. His son Orlando, the town's mayor, keeps it going.",
-          "photo": {
-            "file": "venues/reds.jpg",
-            "credit": "Photo: Roger Hsu, CC BY 2.0, via Wikimedia Commons",
-            "license": "CC BY 2.0",
-            "source": "https://commons.wikimedia.org/wiki/File:Red%27s_Lounge_exterior_in_Clarksdale.png",
-            "note": null
-          },
-          "sources": [
-            "https://capitalbnews.org/sinners-blues-juke-joints-clarksdale/",
-            "https://en.wikipedia.org/wiki/Red_Paden",
-            "https://www.hmdb.org/m.asp?m=90061"
-          ]
-        },
-        {
-          "id": "juniors",
-          "name": "Junior's Place",
-          "town": "Chulahoma, MS",
-          "era": "1992",
-          "status": "Burned 2000",
-          "tag": "Sunday nights. Burned in 2000.",
-          "story": "Junior Kimbrough set up this juke around 1992 in a building that used to be a church, out in the hill country near Holly Springs. On Sunday nights he played with his sons and R.L. Burnside's family, and he recorded his first Fat Possum album, All Night Long, right here. Students from Ole Miss came, and so did members of U2 and Keith Richards. The place burned to the ground in April 2000.",
-          "photo": {
-            "file": "venues/juniors.jpg",
-            "credit": "Photo: source not yet recorded",
-            "license": "Not yet recorded",
-            "source": null,
-            "note": "the Junior's Place T-shirt logo"
-          },
-          "sources": [
-            "https://en.wikipedia.org/wiki/Junior_Kimbrough",
-            "https://msbluestrail.org/?p=15658"
-          ]
-        },
-        {
-          "id": "groundzero",
-          "name": "Ground Zero",
-          "town": "Clarksdale, MS",
-          "era": "2001",
-          "status": "Still open",
-          "tag": "The new room across the tracks.",
-          "story": "By the 1990s the old Delta jukes were drawing blues fans from around the world. In 2001 actor Morgan Freeman helped open a club for them in downtown Clarksdale, just across the railroad tracks from Red's. Three years later the town started its yearly Juke Joint Festival. Freeman still co-owns Ground Zero, the newest room on this road.",
-          "photo": {
-            "file": "venues/groundzero.jpg",
-            "credit": "Photo: Natalie Maynor, CC BY 2.0, via Wikimedia Commons",
-            "license": "CC BY 2.0",
-            "source": "https://commons.wikimedia.org/wiki/File:Ground_Zero_Blues_Club.jpg",
-            "note": null
-          },
-          "sources": [
-            "https://capitalbnews.org/sinners-blues-juke-joints-clarksdale/"
-          ]
-        }
-      ]
+     "id": "dockery",
+     "name": "Dockery Farms",
+     "town": "Near Cleveland, MS",
+     "era": "1895",
+     "status": "Still a working farm",
+     "tag": "Where Charley Patton learned.",
+     "story": "Will Dockery started this plantation on the Sunflower River in 1895, at first for the timber. Around 1900 a boy named Charley Patton arrived, picked up the music from an older player, Henry Sloan, and became the center of a whole circle: Willie Brown, Tommy Johnson, Son House. Younger ears followed, Howlin' Wolf and Pops Staples among them. It is still a working farm and sits on the National Register.",
+     "photo": {
+      "file": "venues/dockery.jpg",
+      "credit": "Photo: formulanone, CC BY-SA 2.0, via Wikimedia Commons",
+      "license": "CC BY-SA 2.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Dockery_Service_Station_-_MS8_Roadside_(45232169662).jpg",
+      "note": "The service station on the farm"
+     },
+     "sources": [
+      "https://en.wikipedia.org/wiki/Dockery_Plantation"
+     ]
     },
     {
-      "id": "memphis",
-      "title": "Memphis",
-      "kicker": "Episode 2 · 10 rooms",
-      "years": "Beale Street · 1899–1957",
-      "venues": [
-        {
-          "id": "church",
-          "name": "Church Park",
-          "town": "Beale St at Fourth",
-          "era": "1899",
-          "status": "Auditorium gone; now Robert R. Church Park",
-          "tag": "A park built because none existed.",
-          "story": "Memphis gave its Black citizens no parks and no decent stages, so Robert Church built both with his own money in 1899. The auditorium seated 2,200 and had one of the largest stages in the South. W.C. Handy led an orchestra here. Theodore Roosevelt and Booker T. Washington came through, and later Duke Ellington and Louis Armstrong played. Urban renewal cleared the buildings, and the site sat empty until it was planted as a park in 1987.",
-          "photo": {
-            "file": "venues/church.jpg",
-            "credit": "Photo: Thomas R Machnitzki, CC BY 3.0, via Wikimedia Commons",
-            "license": "CC BY 3.0",
-            "source": "https://commons.wikimedia.org/wiki/File:Robert_Church_Park_Memphis_TN_001.jpg",
-            "note": "The site today"
-          },
-          "sources": [
-            "https://library3.tnstate.edu/library/digital/churchp.htm",
-            "https://www.hmdb.org/m.asp?m=107386",
-            "https://en.wikipedia.org/wiki/Beale_Street"
-          ]
-        },
-        {
-          "id": "peewee",
-          "name": "Pee Wee's Saloon",
-          "town": "Beale St",
-          "era": "1909",
-          "status": "Demolished",
-          "tag": "Wrote the blues at a cigar counter.",
-          "story": "An Italian immigrant called Pee Wee ran the saloon where Memphis musicians gathered, with billiards, cards and dice in the back. W.C. Handy used it as his band's headquarters. At the cigar counter he wrote out parts for his players. A tune he wrote for the 1909 mayoral campaign was called \"Mr. Crump\" at first. Under a new name, \"The Memphis Blues\", it carried Beale Street around the world.",
-          "photo": {
-            "file": "venues/peewee.jpg",
-            "credit": "Photo: Spudgun67, CC BY-SA 4.0, via Wikimedia Commons",
-            "license": "CC BY-SA 4.0",
-            "source": "https://commons.wikimedia.org/wiki/File:Pee_Wee_Saloon_-_Tennessee_Historical_Commission.jpg",
-            "note": "The historical marker"
-          },
-          "sources": [
-            "https://www.hmdb.org/m.asp?m=9302",
-            "https://facingsouth.org/beale-street-blues"
-          ]
-        },
-        {
-          "id": "daisy",
-          "name": "Daisy Theatre",
-          "town": "329 Beale St",
-          "era": "1913",
-          "status": "Still standing",
-          "tag": "Walk in. Face the crowd.",
-          "story": "The Daisy opened in 1913 as a 600-seat movie house with a tiled half-dome entrance. The layout is backwards: you walk in facing the audience, with the stage behind the box office. In 1929 Bessie Smith and W.C. Handy came to promote the screening of \"St. Louis Blues\", the only film Bessie ever made. From the 1930s into the 1960s it was a stop on the Chitlin' Circuit.",
-          "photo": {
-            "file": "venues/daisy.jpg",
-            "credit": "Historic American Buildings Survey, Library of Congress (public domain)",
-            "license": "Public domain",
-            "source": "https://commons.wikimedia.org/wiki/File:DAISY_THEATER_-_Beale_Street_Historic_District,_Memphis,_Shelby_County,_TN_HABS_TENN,79-MEMPH,6-5.tif",
-            "note": null
-          },
-          "sources": [
-            "https://theclio.com/entry/13193",
-            "https://historic-memphis.com/memphis-historic/movietheaters/olddaisy.html"
-          ]
-        },
-        {
-          "id": "peabody",
-          "name": "The Peabody",
-          "town": "Union Ave",
-          "era": "1929",
-          "status": "Still open",
-          "tag": "Delta blues, cut in a hotel room.",
-          "story": "For four days in September 1929, a hotel guest room became a recording studio. Talent scout H.C. Speir brought Brunswick and Vocalion engineers to the Peabody. Furry Lewis, Robert Wilkins, Garfield Akers, Charlie McCoy and Jenny Pope cut sides there, which came out as 78s. One Wilkins song turned up decades later on a Rolling Stones album as \"Prodigal Son\". The hotel had opened in 1925.",
-          "photo": {
-            "file": "venues/peabody.jpg",
-            "credit": "Photo: Trevorbirchett, CC BY-SA 3.0, via Wikimedia Commons",
-            "license": "CC BY-SA 3.0",
-            "source": "https://commons.wikimedia.org/wiki/File:Peabody_Hotel_Memphis.jpg",
-            "note": null
-          },
-          "sources": [
-            "https://davehoekstra.com/2014/04/30/discovery-of-peabody-hotel-field-recordings/",
-            "https://en.wikipedia.org/wiki/Peabody_Hotel"
-          ]
-        },
-        {
-          "id": "handypark",
-          "name": "Handy Park",
-          "town": "Beale St",
-          "era": "1931",
-          "status": "Still open",
-          "tag": "Old market. New name. Bronze trumpet.",
-          "story": "A plot on Beale that once held a public market was renamed for W.C. Handy in 1931. On May 1, 1960, the city unveiled a bronze statue of Handy holding his horn, sculpted by Leone Tomassi and cast in Florence. At the dedication, Danny Thomas played a few notes on Handy's real trumpet. He had earlier helped save Beale Street's name. The park still has a stage for live music.",
-          "photo": {
-            "file": "venues/handypark.jpg",
-            "credit": "Historic American Buildings Survey, Library of Congress (public domain)",
-            "license": "Public domain",
-            "source": "https://commons.wikimedia.org/wiki/File:HANDY_PARK,_FROM_SOUTH_-_Beale_Street_Historic_District,_Memphis,_Shelby_County,_TN_HABS_TENN,79-MEMPH,6-9.tif",
-            "note": null
-          },
-          "sources": [
-            "https://www.hmdb.org/m.asp?m=82863",
-            "https://memphismagazine.com/ask-vance/ask-vance-the-w-c-handy-statue/"
-          ]
-        },
-        {
-          "id": "palace",
-          "name": "The Palace",
-          "town": "324 Beale St",
-          "era": "1935",
-          "status": "Demolished 1972",
-          "tag": "Amateur night. Careers started here.",
-          "story": "The Palace seated about 1,080 and was billed as the largest theater in the South for Black audiences. In 1935 Nat D. Williams, a schoolteacher, started Amateur Night on Beale there. In the 1940s and 1950s Rufus Thomas ran the amateur shows, and B.B. King and Bobby \"Blue\" Bland got their starts on that stage. The theater closed in 1955 and was knocked down in 1972.",
-          "photo": {
-            "file": "venues/palace.jpg",
-            "credit": "Photo: Spudgun67, CC BY-SA 4.0, via Wikimedia Commons",
-            "license": "CC BY-SA 4.0",
-            "source": "https://commons.wikimedia.org/wiki/File:Rufus_Thomas_Jr_-_Tennessee_Historical_Commission_(obverse).jpg",
-            "note": "The marker on the Palace site"
-          },
-          "sources": [
-            "https://historic-memphis.com/memphis-historic/movietheaters/palace.html",
-            "https://www.hmdb.org/m.asp?m=9303"
-          ]
-        },
-        {
-          "id": "clubhandy",
-          "name": "Club Handy",
-          "town": "Beale St at Hernando",
-          "era": "1946",
-          "status": "Closed",
-          "tag": "A room and a bowl of chili.",
-          "story": "In 1946 Sunbeam and Ernestine Mitchell leased the floors above the Pantaze Drug Store. They ran a 30-room hotel on top and a nightclub, the Domino Lounge, below it. Broke musicians could always get a bed and a bowl of chili there, and Little Richard stayed for weeks. In 1958 the lounge became Club Handy, and B.B. King played the opening. Bill Harvey's house band backed whoever came through.",
-          "photo": {
-            "file": "venues/clubhandy.jpg",
-            "credit": "Historic American Buildings Survey, Library of Congress (public domain)",
-            "license": "Public domain",
-            "source": "https://commons.wikimedia.org/wiki/File:LOOKING_WEST_FROM_HERNANDO_STREET_-_Beale_Street_Historic_District,_Memphis,_Shelby_County,_TN_HABS_TENN,79-MEMPH,6-6.tif",
-            "note": "The Pantaze corner, Beale and Hernando"
-          },
-          "sources": [
-            "https://en.wikipedia.org/wiki/Sunbeam_Mitchell",
-            "https://en.wikipedia.org/wiki/Club_Handy"
-          ]
-        },
-        {
-          "id": "wdia",
-          "name": "WDIA",
-          "town": "Union Ave",
-          "era": "1948",
-          "status": "Still on air",
-          "tag": "The Goodwill Station. Blues Boy on air.",
-          "story": "WDIA went on the air in 1947 under two white owners. At 4 p.m. on October 25, 1948, Nat D. Williams started a show there and became the first Black DJ in Memphis. The station went on to be the first in the country programmed entirely for Black listeners. In 1949 a young B.B. King walked in, got airtime selling Pep-Ti-Kon tonic, and earned the nickname that became his initials.",
-          "photo": {
-            "file": "venues/wdia.jpg",
-            "credit": "Photo: Chris Light, CC BY-SA 4.0, via Wikimedia Commons",
-            "license": "CC BY-SA 4.0",
-            "source": "https://commons.wikimedia.org/wiki/File:WDIA_(112_Union_Ave)_P9130124.jpg",
-            "note": "Today's WDIA building, not the 1940s studio"
-          },
-          "sources": [
-            "https://en.wikipedia.org/wiki/WDIA",
-            "https://www.hmdb.org/m.asp?m=116723"
-          ]
-        },
-        {
-          "id": "sun",
-          "name": "Sun Studio",
-          "town": "706 Union Ave",
-          "era": "1951",
-          "status": "Still open",
-          "tag": "Busted amp. First rock and roll.",
-          "story": "Sam Phillips opened the Memphis Recording Service in January 1950 and would record anyone who paid. In March 1951 Ike Turner's Kings of Rhythm came up from Mississippi. The guitar amp had been damaged on the way, and its fuzz ended up on \"Rocket 88\", released under Jackie Brenston's name. It reached number one on the R&B chart, and many call it the first rock and roll record. Howlin' Wolf and B.B. King also recorded here.",
-          "photo": {
-            "file": "venues/sun.jpg",
-            "credit": "Carol M. Highsmith Archive, Library of Congress (public domain)",
-            "license": "Public domain",
-            "source": "https://commons.wikimedia.org/wiki/File:Sun_Records_Studio,_Memphis,_Tennessee_LCCN2010630851.tif",
-            "note": null
-          },
-          "sources": [
-            "https://en.wikipedia.org/wiki/Sun_Studio",
-            "https://en.wikipedia.org/wiki/Rocket_88"
-          ]
-        },
-        {
-          "id": "royal",
-          "name": "Royal Studios",
-          "town": "Willie Mitchell Blvd",
-          "era": "1957",
-          "status": "Still open",
-          "tag": "Old movie house. Still recording.",
-          "story": "The Royal was a neighborhood movie theater until 1955. Soon after, the people behind Hi Records turned it into a recording studio, and the label made its name on instrumentals. Willie Mitchell joined in the early 1960s and ended up running the room. With Al Green he made seven gold singles in a row starting in 1970. The Mitchell family still runs the studio, and \"Uptown Funk\" was partly made there.",
-          "photo": {
-            "file": "venues/royal.jpg",
-            "credit": "Photo: jbcurio, CC BY 2.0, via Wikimedia Commons",
-            "license": "CC BY 2.0",
-            "source": "https://commons.wikimedia.org/wiki/File:Royal_Recording_Studios.jpg",
-            "note": null
-          },
-          "sources": [
-            "https://en.wikipedia.org/wiki/Royal_Studios",
-            "https://en.wikipedia.org/wiki/Hi_Records"
-          ]
-        }
-      ]
+     "id": "kffa",
+     "name": "King Biscuit Time",
+     "town": "Helena, AR",
+     "era": "1941",
+     "status": "Still on air",
+     "tag": "Noon blues, sponsored by flour.",
+     "story": "On November 21, 1941, a small station in Helena put Sonny Boy Williamson II and Robert Lockwood Jr. on the air, paid for by a company that sold King Biscuit Flour. The show never stopped. It is the longest-running daily radio broadcast in American history. Sunshine Sonny Payne hosted from 1951 until 2018. B.B. King, James Cotton, Ike Turner and Levon Helm all grew up listening. It still goes out from the Delta Cultural Center.",
+     "photo": {
+      "file": "venues/kffa.jpg",
+      "credit": "Photo: Josh Czupryk, public domain, via Wikimedia Commons",
+      "license": "Public domain",
+      "source": "https://commons.wikimedia.org/wiki/File:Helenadeltaculturalcenter.JPG",
+      "note": "the Delta Cultural Center, where it still airs"
+     },
+     "sources": [
+      "https://en.wikipedia.org/wiki/King_Biscuit_Time"
+     ]
+    },
+    {
+     "id": "riverside",
+     "name": "Riverside Hotel",
+     "town": "Clarksdale, MS",
+     "era": "1944",
+     "status": "Closed 2020",
+     "tag": "Hospital first. Then a musicians' bed.",
+     "story": "This building was once the G.T. Thomas Afro-American Hospital, which served Black patients in the Delta. Bessie Smith died here on September 26, 1937, after a car wreck on Highway 61. From 1944 it was the Riverside Hotel, a place for touring players to sleep. Sonny Boy Williamson II, Robert Nighthawk and Ike Turner were regulars, and Turner reportedly worked up \"Rocket 88\" in his room. Storm damage and the pandemic closed it in 2020.",
+     "photo": {
+      "file": "venues/riverside.jpg",
+      "credit": "Photo: source not yet recorded",
+      "license": "Not yet recorded",
+      "source": null,
+      "note": null
+     },
+     "sources": [
+      "https://en.wikipedia.org/wiki/Riverside_Hotel_(Clarksdale,_Mississippi)",
+      "https://www.hmdb.org/m.asp?m=90062"
+     ]
+    },
+    {
+     "id": "hopson",
+     "name": "Hopson Commissary",
+     "town": "Clarksdale, MS",
+     "era": "1944",
+     "status": "Now a music room",
+     "tag": "First cotton picked by machine.",
+     "story": "Hopson Plantation dates back to 1852. In 1944, working with International Harvester, it became the first operation to plant and pick a whole cotton crop by machine. That was the start of the end of hand labor in Delta fields, and of the jobs that kept many blues players in place. Pinetop Perkins drove a tractor here, long before the world knew his piano. The old company store is now a restaurant and music room.",
+     "photo": {
+      "file": "venues/hopson.jpg",
+      "credit": "Photo: Chillin662, CC BY-SA 3.0, via Wikimedia Commons",
+      "license": "CC BY-SA 3.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Hopsonbuilding.jpg",
+      "note": null
+     },
+     "sources": [
+      "https://en.wikipedia.org/wiki/Hopson,_Mississippi",
+      "https://www.hmdb.org/m.asp?m=89921"
+     ]
+    },
+    {
+     "id": "bluefront",
+     "name": "Blue Front Cafe",
+     "town": "Bentonia, MS",
+     "era": "1948",
+     "status": "Landmark",
+     "tag": "Buffalo fish, blues, back-door whiskey.",
+     "story": "Carey and Mary Holmes opened this café in 1948 and sold buffalo fish, blues and moonshine. Skip James, Bentonia's best-known singer, played here from 1948 to 1953. When Carey died in 1970, their son Jimmy \"Duck\" Holmes took over. He had learned the town's music from guitarist Jack Owens, and he turned a small-town café into a stop for blues fans from all over the world.",
+     "photo": {
+      "file": "venues/bluefront.jpg",
+      "credit": "Photo: Natalie Maynor, CC BY 2.0, via Wikimedia Commons",
+      "license": "CC BY 2.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Blue_Front_Cafe.jpg",
+      "note": null
+     },
+     "sources": [
+      "https://msbluestrail.org/blues-trail-markers/blue-front-cafe",
+      "https://en.wikipedia.org/wiki/Blue_Front_Cafe"
+     ]
+    },
+    {
+     "id": "ebony",
+     "name": "Club Ebony",
+     "town": "Indianola, MS",
+     "era": "1948",
+     "status": "Landmark",
+     "tag": "B.B. King bought it to save it.",
+     "story": "Johnny Jones and his wife Josephine bought this lot in 1945, and by 1948 he was calling it the South's largest and finest night club. Ray Charles, Count Basie, Howlin' Wolf and James Brown all played here. B.B. King took the stage in 1955 and met his future wife in the room. In 2008, when the owner retired, King bought the club himself to keep it alive. It got a full renovation in 2023.",
+     "photo": {
+      "file": "venues/ebony.jpg",
+      "credit": "Photo: Richard apple, CC BY-SA 3.0, via Wikimedia Commons",
+      "license": "CC BY-SA 3.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Club_Ebony.jpg",
+      "note": null
+     },
+     "sources": [
+      "https://msbluestrail.org/blues-trail-markers/club-ebony"
+     ]
+    },
+    {
+     "id": "pomonkey",
+     "name": "Po' Monkey's",
+     "town": "Merigold, MS",
+     "era": "1963",
+     "status": "Closed 2016",
+     "tag": "Tin shack. Thursday nights. No rap.",
+     "story": "This was an old sharecropper shack of tin and plywood, out in the fields near Merigold. Willie \"Po' Monkey\" Seaberry lived in it, farmed by day, and from about 1963 opened it on Thursday nights. Inside: Christmas lights, stuffed monkeys, disco balls, a pool table. The sign out front banned loud music and rap. It was one of the last rural jukes in the Delta, and it closed when Seaberry died in 2016.",
+     "photo": {
+      "file": "venues/pomonkey.jpg",
+      "credit": "Photo: bobpalez, public domain, via Wikimedia Commons",
+      "license": "Public domain",
+      "source": "https://commons.wikimedia.org/wiki/File:Po_Monkeys_Juke_Joint.jpg",
+      "note": null
+     },
+     "sources": [
+      "https://msbluestrail.org/blues-trail-markers/po-monkeys",
+      "https://en.wikipedia.org/wiki/Po%27_Monkey%27s"
+     ]
+    },
+    {
+     "id": "reds",
+     "name": "Red's Lounge",
+     "town": "Clarksdale, MS",
+     "era": "1980s",
+     "status": "Still open",
+     "tag": "No stage. Ribs on the grill.",
+     "story": "In the 1980s Red Paden turned an old music store in Clarksdale's New World District into his juke. There's no stage, just chairs around a cleared floor, a beer cooler behind the counter, and ribs on a grill outside. Big Jack Johnson called it his home base, and Christone \"Kingfish\" Ingram started playing gigs here in seventh grade. Paden died in 2023. His son Orlando, the town's mayor, keeps it going.",
+     "photo": {
+      "file": "venues/reds.jpg",
+      "credit": "Photo: Roger Hsu, CC BY 2.0, via Wikimedia Commons",
+      "license": "CC BY 2.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Red%27s_Lounge_exterior_in_Clarksdale.png",
+      "note": null
+     },
+     "sources": [
+      "https://capitalbnews.org/sinners-blues-juke-joints-clarksdale/",
+      "https://en.wikipedia.org/wiki/Red_Paden",
+      "https://www.hmdb.org/m.asp?m=90061"
+     ]
+    },
+    {
+     "id": "juniors",
+     "name": "Junior's Place",
+     "town": "Chulahoma, MS",
+     "era": "1992",
+     "status": "Burned 2000",
+     "tag": "Sunday nights. Burned in 2000.",
+     "story": "Junior Kimbrough set up this juke around 1992 in a building that used to be a church, out in the hill country near Holly Springs. On Sunday nights he played with his sons and R.L. Burnside's family, and he recorded his first Fat Possum album, All Night Long, right here. Students from Ole Miss came, and so did members of U2 and Keith Richards. The place burned to the ground in April 2000.",
+     "photo": {
+      "file": "venues/juniors.jpg",
+      "credit": "Photo: source not yet recorded",
+      "license": "Not yet recorded",
+      "source": null,
+      "note": "the Junior's Place T-shirt logo"
+     },
+     "sources": [
+      "https://en.wikipedia.org/wiki/Junior_Kimbrough",
+      "https://msbluestrail.org/?p=15658"
+     ]
+    },
+    {
+     "id": "groundzero",
+     "name": "Ground Zero",
+     "town": "Clarksdale, MS",
+     "era": "2001",
+     "status": "Still open",
+     "tag": "The new room across the tracks.",
+     "story": "By the 1990s the old Delta jukes were drawing blues fans from around the world. In 2001 actor Morgan Freeman helped open a club for them in downtown Clarksdale, just across the railroad tracks from Red's. Three years later the town started its yearly Juke Joint Festival. Freeman still co-owns Ground Zero, the newest room on this road.",
+     "photo": {
+      "file": "venues/groundzero.jpg",
+      "credit": "Photo: Natalie Maynor, CC BY 2.0, via Wikimedia Commons",
+      "license": "CC BY 2.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Ground_Zero_Blues_Club.jpg",
+      "note": null
+     },
+     "sources": [
+      "https://capitalbnews.org/sinners-blues-juke-joints-clarksdale/"
+     ]
     }
-  ],
-  "next_teaser": {
-    "kicker": "Episode 3 · catch the train north",
-    "title": "South Side Chicago"
+   ]
   },
-  "levels": [
+  {
+   "id": "memphis",
+   "title": "Memphis",
+   "kicker": "Episode 2 · 10 rooms",
+   "years": "Beale Street · 1899–1957",
+   "venues": [
     {
-      "venue": "dockery",
-      "module": "A1",
-      "lesson": 1
+     "id": "church",
+     "name": "Church Park",
+     "town": "Beale St at Fourth",
+     "era": "1899",
+     "status": "Auditorium gone; now Robert R. Church Park",
+     "tag": "A park built because none existed.",
+     "story": "Memphis gave its Black citizens no parks and no decent stages, so Robert Church built both with his own money in 1899. The auditorium seated 2,200 and had one of the largest stages in the South. W.C. Handy led an orchestra here. Theodore Roosevelt and Booker T. Washington came through, and later Duke Ellington and Louis Armstrong played. Urban renewal cleared the buildings, and the site sat empty until it was planted as a park in 1987.",
+     "photo": {
+      "file": "venues/church.jpg",
+      "credit": "Photo: Thomas R Machnitzki, CC BY 3.0, via Wikimedia Commons",
+      "license": "CC BY 3.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Robert_Church_Park_Memphis_TN_001.jpg",
+      "note": "The site today"
+     },
+     "sources": [
+      "https://library3.tnstate.edu/library/digital/churchp.htm",
+      "https://www.hmdb.org/m.asp?m=107386",
+      "https://en.wikipedia.org/wiki/Beale_Street"
+     ]
     },
     {
-      "venue": "kffa",
-      "module": "A1",
-      "lesson": 2
+     "id": "peewee",
+     "name": "Pee Wee's Saloon",
+     "town": "Beale St",
+     "era": "1909",
+     "status": "Demolished",
+     "tag": "Wrote the blues at a cigar counter.",
+     "story": "An Italian immigrant called Pee Wee ran the saloon where Memphis musicians gathered, with billiards, cards and dice in the back. W.C. Handy used it as his band's headquarters. At the cigar counter he wrote out parts for his players. A tune he wrote for the 1909 mayoral campaign was called \"Mr. Crump\" at first. Under a new name, \"The Memphis Blues\", it carried Beale Street around the world.",
+     "photo": {
+      "file": "venues/peewee.jpg",
+      "credit": "Photo: Spudgun67, CC BY-SA 4.0, via Wikimedia Commons",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Pee_Wee_Saloon_-_Tennessee_Historical_Commission.jpg",
+      "note": "The historical marker"
+     },
+     "sources": [
+      "https://www.hmdb.org/m.asp?m=9302",
+      "https://facingsouth.org/beale-street-blues"
+     ]
     },
     {
-      "venue": "riverside",
-      "module": "A1",
-      "lesson": 3
+     "id": "daisy",
+     "name": "Daisy Theatre",
+     "town": "329 Beale St",
+     "era": "1913",
+     "status": "Still standing",
+     "tag": "Walk in. Face the crowd.",
+     "story": "The Daisy opened in 1913 as a 600-seat movie house with a tiled half-dome entrance. The layout is backwards: you walk in facing the audience, with the stage behind the box office. In 1929 Bessie Smith and W.C. Handy came to promote the screening of \"St. Louis Blues\", the only film Bessie ever made. From the 1930s into the 1960s it was a stop on the Chitlin' Circuit.",
+     "photo": {
+      "file": "venues/daisy.jpg",
+      "credit": "Historic American Buildings Survey, Library of Congress (public domain)",
+      "license": "Public domain",
+      "source": "https://commons.wikimedia.org/wiki/File:DAISY_THEATER_-_Beale_Street_Historic_District,_Memphis,_Shelby_County,_TN_HABS_TENN,79-MEMPH,6-5.tif",
+      "note": null
+     },
+     "sources": [
+      "https://theclio.com/entry/13193",
+      "https://historic-memphis.com/memphis-historic/movietheaters/olddaisy.html"
+     ]
     },
     {
-      "venue": "hopson",
-      "module": "A1",
-      "lesson": 4
+     "id": "peabody",
+     "name": "The Peabody",
+     "town": "Union Ave",
+     "era": "1929",
+     "status": "Still open",
+     "tag": "Delta blues, cut in a hotel room.",
+     "story": "For four days in September 1929, a hotel guest room became a recording studio. Talent scout H.C. Speir brought Brunswick and Vocalion engineers to the Peabody. Furry Lewis, Robert Wilkins, Garfield Akers, Charlie McCoy and Jenny Pope cut sides there, which came out as 78s. One Wilkins song turned up decades later on a Rolling Stones album as \"Prodigal Son\". The hotel had opened in 1925.",
+     "photo": {
+      "file": "venues/peabody.jpg",
+      "credit": "Photo: Trevorbirchett, CC BY-SA 3.0, via Wikimedia Commons",
+      "license": "CC BY-SA 3.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Peabody_Hotel_Memphis.jpg",
+      "note": null
+     },
+     "sources": [
+      "https://davehoekstra.com/2014/04/30/discovery-of-peabody-hotel-field-recordings/",
+      "https://en.wikipedia.org/wiki/Peabody_Hotel"
+     ]
     },
     {
-      "venue": "bluefront",
-      "module": "A1",
-      "lesson": 5
+     "id": "handypark",
+     "name": "Handy Park",
+     "town": "Beale St",
+     "era": "1931",
+     "status": "Still open",
+     "tag": "Old market. New name. Bronze trumpet.",
+     "story": "A plot on Beale that once held a public market was renamed for W.C. Handy in 1931. On May 1, 1960, the city unveiled a bronze statue of Handy holding his horn, sculpted by Leone Tomassi and cast in Florence. At the dedication, Danny Thomas played a few notes on Handy's real trumpet. He had earlier helped save Beale Street's name. The park still has a stage for live music.",
+     "photo": {
+      "file": "venues/handypark.jpg",
+      "credit": "Historic American Buildings Survey, Library of Congress (public domain)",
+      "license": "Public domain",
+      "source": "https://commons.wikimedia.org/wiki/File:HANDY_PARK,_FROM_SOUTH_-_Beale_Street_Historic_District,_Memphis,_Shelby_County,_TN_HABS_TENN,79-MEMPH,6-9.tif",
+      "note": null
+     },
+     "sources": [
+      "https://www.hmdb.org/m.asp?m=82863",
+      "https://memphismagazine.com/ask-vance/ask-vance-the-w-c-handy-statue/"
+     ]
     },
     {
-      "venue": "ebony",
-      "module": "A1",
-      "lesson": 6
+     "id": "palace",
+     "name": "The Palace",
+     "town": "324 Beale St",
+     "era": "1935",
+     "status": "Demolished 1972",
+     "tag": "Amateur night. Careers started here.",
+     "story": "The Palace seated about 1,080 and was billed as the largest theater in the South for Black audiences. In 1935 Nat D. Williams, a schoolteacher, started Amateur Night on Beale there. In the 1940s and 1950s Rufus Thomas ran the amateur shows, and B.B. King and Bobby \"Blue\" Bland got their starts on that stage. The theater closed in 1955 and was knocked down in 1972.",
+     "photo": {
+      "file": "venues/palace.jpg",
+      "credit": "Photo: Spudgun67, CC BY-SA 4.0, via Wikimedia Commons",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Rufus_Thomas_Jr_-_Tennessee_Historical_Commission_(obverse).jpg",
+      "note": "The marker on the Palace site"
+     },
+     "sources": [
+      "https://historic-memphis.com/memphis-historic/movietheaters/palace.html",
+      "https://www.hmdb.org/m.asp?m=9303"
+     ]
     },
     {
-      "venue": "pomonkey",
-      "module": "A1",
-      "lesson": 7
+     "id": "clubhandy",
+     "name": "Club Handy",
+     "town": "Beale St at Hernando",
+     "era": "1946",
+     "status": "Closed",
+     "tag": "A room and a bowl of chili.",
+     "story": "In 1946 Sunbeam and Ernestine Mitchell leased the floors above the Pantaze Drug Store. They ran a 30-room hotel on top and a nightclub, the Domino Lounge, below it. Broke musicians could always get a bed and a bowl of chili there, and Little Richard stayed for weeks. In 1958 the lounge became Club Handy, and B.B. King played the opening. Bill Harvey's house band backed whoever came through.",
+     "photo": {
+      "file": "venues/clubhandy.jpg",
+      "credit": "Historic American Buildings Survey, Library of Congress (public domain)",
+      "license": "Public domain",
+      "source": "https://commons.wikimedia.org/wiki/File:LOOKING_WEST_FROM_HERNANDO_STREET_-_Beale_Street_Historic_District,_Memphis,_Shelby_County,_TN_HABS_TENN,79-MEMPH,6-6.tif",
+      "note": "The Pantaze corner, Beale and Hernando"
+     },
+     "sources": [
+      "https://en.wikipedia.org/wiki/Sunbeam_Mitchell",
+      "https://en.wikipedia.org/wiki/Club_Handy"
+     ]
     },
     {
-      "venue": "reds",
-      "module": "S",
-      "lesson": 1
+     "id": "wdia",
+     "name": "WDIA",
+     "town": "Union Ave",
+     "era": "1948",
+     "status": "Still on air",
+     "tag": "The Goodwill Station. Blues Boy on air.",
+     "story": "WDIA went on the air in 1947 under two white owners. At 4 p.m. on October 25, 1948, Nat D. Williams started a show there and became the first Black DJ in Memphis. The station went on to be the first in the country programmed entirely for Black listeners. In 1949 a young B.B. King walked in, got airtime selling Pep-Ti-Kon tonic, and earned the nickname that became his initials.",
+     "photo": {
+      "file": "venues/wdia.jpg",
+      "credit": "Photo: Chris Light, CC BY-SA 4.0, via Wikimedia Commons",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:WDIA_(112_Union_Ave)_P9130124.jpg",
+      "note": "Today's WDIA building, not the 1940s studio"
+     },
+     "sources": [
+      "https://en.wikipedia.org/wiki/WDIA",
+      "https://www.hmdb.org/m.asp?m=116723"
+     ]
     },
     {
-      "venue": "juniors",
-      "module": "S",
-      "lesson": 2
+     "id": "sun",
+     "name": "Sun Studio",
+     "town": "706 Union Ave",
+     "era": "1951",
+     "status": "Still open",
+     "tag": "Busted amp. First rock and roll.",
+     "story": "Sam Phillips opened the Memphis Recording Service in January 1950 and would record anyone who paid. In March 1951 Ike Turner's Kings of Rhythm came up from Mississippi. The guitar amp had been damaged on the way, and its fuzz ended up on \"Rocket 88\", released under Jackie Brenston's name. It reached number one on the R&B chart, and many call it the first rock and roll record. Howlin' Wolf and B.B. King also recorded here.",
+     "photo": {
+      "file": "venues/sun.jpg",
+      "credit": "Carol M. Highsmith Archive, Library of Congress (public domain)",
+      "license": "Public domain",
+      "source": "https://commons.wikimedia.org/wiki/File:Sun_Records_Studio,_Memphis,_Tennessee_LCCN2010630851.tif",
+      "note": null
+     },
+     "sources": [
+      "https://en.wikipedia.org/wiki/Sun_Studio",
+      "https://en.wikipedia.org/wiki/Rocket_88"
+     ]
     },
     {
-      "venue": "groundzero",
-      "module": "S",
-      "lesson": 3
-    },
-    {
-      "venue": "church",
-      "module": "S",
-      "lesson": 4
-    },
-    {
-      "venue": "peewee",
-      "module": "S",
-      "lesson": 5
-    },
-    {
-      "venue": "daisy",
-      "module": "S",
-      "lesson": 6
-    },
-    {
-      "venue": "peabody",
-      "module": "S",
-      "lesson": 7
-    },
-    {
-      "venue": "handypark",
-      "module": "S",
-      "lesson": 8
-    },
-    {
-      "venue": "palace",
-      "module": "S",
-      "lesson": 9
-    },
-    {
-      "venue": "clubhandy",
-      "module": "S",
-      "lesson": 10
-    },
-    {
-      "venue": "wdia",
-      "module": "S",
-      "lesson": 11
-    },
-    {
-      "venue": "sun",
-      "module": "S",
-      "lesson": 12
-    },
-    {
-      "venue": "royal",
-      "module": "S",
-      "lesson": 13
+     "id": "royal",
+     "name": "Royal Studios",
+     "town": "Willie Mitchell Blvd",
+     "era": "1957",
+     "status": "Still open",
+     "tag": "Old movie house. Still recording.",
+     "story": "The Royal was a neighborhood movie theater until 1955. Soon after, the people behind Hi Records turned it into a recording studio, and the label made its name on instrumentals. Willie Mitchell joined in the early 1960s and ended up running the room. With Al Green he made seven gold singles in a row starting in 1970. The Mitchell family still runs the studio, and \"Uptown Funk\" was partly made there.",
+     "photo": {
+      "file": "venues/royal.jpg",
+      "credit": "Photo: jbcurio, CC BY 2.0, via Wikimedia Commons",
+      "license": "CC BY 2.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Royal_Recording_Studios.jpg",
+      "note": null
+     },
+     "sources": [
+      "https://en.wikipedia.org/wiki/Royal_Studios",
+      "https://en.wikipedia.org/wiki/Hi_Records"
+     ]
     }
-  ]
+   ]
+  },
+  {
+   "id": "chicago",
+   "title": "South Side Chicago",
+   "kicker": "Episode 3 · catch the train north",
+   "years": "1948–",
+   "venues": [
+    {
+     "id": "chicago-1",
+     "name": "",
+     "town": "",
+     "era": "",
+     "status": "",
+     "tag": "",
+     "story": "",
+     "photo": null,
+     "sources": [],
+     "placeholder": true
+    },
+    {
+     "id": "chicago-2",
+     "name": "",
+     "town": "",
+     "era": "",
+     "status": "",
+     "tag": "",
+     "story": "",
+     "photo": null,
+     "sources": [],
+     "placeholder": true
+    },
+    {
+     "id": "chicago-3",
+     "name": "",
+     "town": "",
+     "era": "",
+     "status": "",
+     "tag": "",
+     "story": "",
+     "photo": null,
+     "sources": [],
+     "placeholder": true
+    },
+    {
+     "id": "chicago-4",
+     "name": "",
+     "town": "",
+     "era": "",
+     "status": "",
+     "tag": "",
+     "story": "",
+     "photo": null,
+     "sources": [],
+     "placeholder": true
+    }
+   ]
+  }
+ ]
 }

@@ -139,8 +139,21 @@ final class LessonEngine {
         let clean: Int
         let gate: Int
         let line: String
-        /// The jam's step id when the chorus was a jam's.
+        /// The jam's step id when the chorus was a jam's (a free jam's too).
         var jam: String? = nil
+        /// The step's id (the plan's goals are keyed by it).
+        var stepId = ""
+        /// A free jam's chorus: the notes played, and the ones outside the scale.
+        var free: FreeResult? = nil
+    }
+
+    /// One chorus of a free jam (`Lesson.Kind.free`): how many notes, which fell outside the
+    /// scale. It counts when none did and there were enough.
+    struct FreeResult: Equatable {
+        let notes: Int
+        let outside: [Int]
+        let enough: Bool
+        var inScale: Bool { outside.isEmpty }
     }
 
     /// The payoff chorus, for the result screen: every press with its tick inside the chorus.
@@ -532,6 +545,30 @@ final class LessonEngine {
 
         var line: String
         var counted = false
+        if step.kind == .free {
+            // A free jam: the chorus counts when every note sat in the scale and there were
+            // enough of them. The Scorer has nothing to judge: no pattern.
+            let allowed = lesson.scale(of: step)
+            let outside = mine.filter { !allowed.contains((($0.note % 12) + 12) % 12) }.map(\.note)
+            let free = FreeResult(notes: mine.count, outside: outside, enough: mine.count >= (step.minNotes ?? 8))
+            counted = free.inScale && free.enough && tempo >= Double(step.tempo!) - 0.5
+            if counted {
+                clean += 1
+                line = coach.clean!
+            } else if let n = outside.first {
+                line = coach.again!.filled(["problem": "\(Self.noteName(n)) isn't in the scale."])
+            } else if !free.enough {
+                line = coach.again!.filled(["problem": "Play more: \(step.minNotes ?? 8) notes a chorus at least."])
+            } else {
+                line = coach.slow?.filled(["tempo": "\(Int(tempo.rounded()))", "gateTempo": "\(step.tempo!)"]) ?? coach.clean!
+            }
+            verdict = (c, line)
+            output.lastChorus = free.inScale ? "\(free.notes) notes, all in the scale" : "\(free.outside.count) of \(free.notes) notes outside the scale"
+            output.lastChorusDetail = ""
+            onVerdict?(Verdict(chorus: c, step: stepIndex + 1, skill: step.skill, result: nil, tempo: tempo,
+                               counted: counted, clean: clean, gate: 0, line: line, jam: step.id, stepId: step.id, free: free))
+            return
+        }
         if step.kind == .ramp {
             let r = step.ramp!
             counted = result.clean && (endTempo[c] ?? tempo) >= Double(rampTarget) - 0.5
@@ -602,7 +639,12 @@ final class LessonEngine {
     private func report(_ c: Int, _ result: ChorusResult?, _ tempo: Double, counted: Bool, line: String) {
         onVerdict?(Verdict(chorus: c, step: stepIndex + 1, skill: step.skill, result: result, tempo: tempo,
                            counted: counted, clean: clean, gate: step.gate ?? 0, line: line,
-                           jam: step.kind == .jam ? step.id : nil))
+                           jam: step.kind.isJam ? step.id : nil, stepId: step.id))
+    }
+
+    /// "B♭" for a MIDI note (flats: the blues keys spell that way).
+    static func noteName(_ note: Int) -> String {
+        ["C", "D♭", "D", "E♭", "E", "F", "G♭", "G", "A♭", "A", "B♭", "B"][((note % 12) + 12) % 12]
     }
 
     private func update() {
@@ -613,8 +655,8 @@ final class LessonEngine {
         o.stepTitle = step.title
         o.card = step.kind == .card ? step.card : nil
         o.clean = clean
-        o.gate = step.kind == .ramp ? (step.ramp!.to - step.ramp!.from) / step.ramp!.by : step.kind == .jam ? 0 : step.gate ?? 0
-        o.jam = step.kind == .jam
+        o.gate = step.kind == .ramp ? (step.ramp!.to - step.ramp!.from) / step.ramp!.by : step.kind.isJam ? 0 : step.gate ?? 0
+        o.jam = step.kind.isJam
         o.passed = passed
         o.holding = holding
         o.unlocked = unlocked

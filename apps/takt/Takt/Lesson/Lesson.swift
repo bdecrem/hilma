@@ -76,6 +76,13 @@ struct Lesson: Decodable {
         /// A play-mode step (a jam under a lesson): scored like a play step, but it never passes
         /// or hands over; a clean chorus marks the jam done and the band plays on.
         case jam
+        /// A free jam: no pattern, a `scale` (semitones from the key's root) the whole chorus
+        /// must stay inside, `minNotes` at least. Scored by the engine, not the Scorer; play
+        /// mode like a jam (never passes, the band plays on).
+        case free
+
+        /// Play mode: a jam or a free jam.
+        var isJam: Bool { self == .jam || self == .free }
     }
 
     /// Play mode: an optional jam under lesson `after`, open once that lesson is done, never
@@ -149,6 +156,10 @@ struct Lesson: Decodable {
         let maxAttempts: Int?
         let ramp: Ramp?
         let aloneBars: [Int]?
+        /// `free`: the pitch classes allowed, as semitones from the root of the first chord of
+        /// the step's form; and the notes a chorus needs to count (default 8).
+        let scale: [Int]?
+        let minNotes: Int?
         let card: String?
         /// What to do, in a sentence or two: the step's intro, and the "Next" of the step before.
         let about: String?
@@ -193,13 +204,13 @@ struct Lesson: Decodable {
     private func validate() {
         for chord in form where chords[chord] == nil { fatalError("lesson \(code): no chord \(chord)") }
         let ids = lessons.flatMap(\.steps)
-        if ids != steps.filter({ $0.kind != .jam }).map(\.id) { fatalError("lesson \(code): the lessons must cover every step, in order (\(ids))") }
-        if steps.prefix(ids.count).contains(where: { $0.kind == .jam }) { fatalError("lesson \(code): jam steps come after the lessons' steps") }
+        if ids != steps.filter({ !$0.kind.isJam }).map(\.id) { fatalError("lesson \(code): the lessons must cover every step, in order (\(ids))") }
+        if steps.prefix(ids.count).contains(where: { $0.kind.isJam }) { fatalError("lesson \(code): jam steps come after the lessons' steps") }
         for j in jams ?? [] {
-            guard let s = steps.first(where: { $0.id == j.step }), s.kind == .jam else { fatalError("lesson \(code): jam \(j.title) needs a jam step \(j.step)") }
+            guard let s = steps.first(where: { $0.id == j.step }), s.kind.isJam else { fatalError("lesson \(code): jam \(j.title) needs a jam step \(j.step)") }
             if !(1...lessons.count).contains(j.after) { fatalError("lesson \(code): jam \(j.title) after lesson \(j.after)?") }
         }
-        for s in steps where s.kind == .jam && !(jams ?? []).contains(where: { $0.step == s.id }) { fatalError("lesson \(code): jam step \(s.id) belongs to no jam") }
+        for s in steps where s.kind.isJam && !(jams ?? []).contains(where: { $0.step == s.id }) { fatalError("lesson \(code): jam step \(s.id) belongs to no jam") }
         let names = Set(channels.map(\.channel))
         for s in steps {
             for b in s.band ?? [] where !names.contains(b) { fatalError("lesson \(code) step \(s.id): band channel \(b) is not in the module") }
@@ -225,6 +236,11 @@ struct Lesson: Decodable {
             case .jam:
                 need(step.tempo != nil, "tempo")
                 need(c.clean != nil && c.again != nil, "clean and again lines")
+            case .free:
+                need(step.tempo != nil, "tempo")
+                need(!(step.scale ?? []).isEmpty && step.pattern == nil, "a scale and no pattern")
+                need(c.clean != nil && c.again != nil && c.change != nil && c.hold != nil && c.join != nil, "clean, again, change, hold and join lines")
+                continue
             case .ramp:
                 guard let r = step.ramp else { fatalError("lesson \(code) step \(step.id): a ramp step needs ramp") }
                 need(r.by > 0 && r.to > r.from, "a rising ramp")
@@ -272,13 +288,19 @@ struct Lesson: Decodable {
 
     /// The jam a step is, if it is one.
     func jam(ofStep i: Int) -> JamSpec? {
-        steps.indices.contains(i) && steps[i].kind == .jam ? jams?.first { $0.step == steps[i].id } : nil
+        steps.indices.contains(i) && steps[i].kind.isJam ? jams?.first { $0.step == steps[i].id } : nil
+    }
+
+    /// A free step's allowed pitch classes: its scale from the root of its form's first chord.
+    func scale(of step: Step) -> Set<Int> {
+        guard let scale = step.scale, let first = form(of: step).first, let root = chords(of: step)[first]?.root else { return [] }
+        return Set(scale.map { ((root + $0) % 12 + 12) % 12 })
     }
 
     func stepIndex(ofJam j: JamSpec) -> Int? { steps.firstIndex { $0.id == j.step } }
 
     /// The lessons' steps: everything before the first jam.
-    var lessonStepCount: Int { steps.firstIndex { $0.kind == .jam } ?? steps.count }
+    var lessonStepCount: Int { steps.firstIndex { $0.kind.isJam } ?? steps.count }
 
     /// The lesson a step belongs to; a jam counts with the lesson it sits under.
     func lessonIndex(ofStep i: Int) -> Int {

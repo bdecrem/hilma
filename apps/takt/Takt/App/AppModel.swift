@@ -29,16 +29,48 @@ final class AppModel {
         if mapWorld.world != MapWorld.selected { mapWorld = .bundled(MapWorld.selected) }
     }
 
-    /// Levels cleared, and what the next one has in hand.
-    var mapProgress: MapProgress {
+    // MARK: Goals
+
+    /// The plan the player follows: the map's levels and what clears each (`LearningPlan`).
+    /// Everyone is on the bundled default; a plan of the player's own plugs in by id.
+    let plan = LearningPlan.active(for: nil)
+
+    /// The plan against the player's records: levels cleared, each goal's state.
+    var goals: GoalProgress {
+        var override: Int?
         #if DEBUG
         // `-MapCleared n` shows the map as if n levels were cleared (screenshots).
-        if UserDefaults.standard.object(forKey: "MapCleared") != nil {
-            let n = UserDefaults.standard.integer(forKey: "MapCleared")
-            return MapProgress(practice: [], stored: n)
-        }
+        if UserDefaults.standard.object(forKey: "MapCleared") != nil { override = UserDefaults.standard.integer(forKey: "MapCleared") }
         #endif
-        return progress.map
+        return GoalProgress(plan: plan, records: progress.snapshot.goals, clearedOverride: override)
+    }
+
+    /// A goal from the level's screen: its step from the intro, the knob on the ladder's next
+    /// tempo; the module screen is where Back lands.
+    func start(goal item: LearningPlan.Item, level: LearningPlan.Level) {
+        ensure(module: item.module)
+        guard let player else { return }
+        currentModule = item.module
+        player.start(stepId: item.step, tempo: item.kind == .step ? goals.suggestedTempo(level, item) : nil)
+        openVenue = nil
+        open(lesson: item.module)
+    }
+
+    /// Every judged chorus (`Player.onGoalChorus`): the goals on that step score themselves. A
+    /// step goal wants every expected note hit and nothing extra; a jam goal a chorus in the scale.
+    func goalJudged(module code: String, verdict v: LessonEngine.Verdict) {
+        guard !ProgressStore.readOnly else { return }
+        for (level, item) in plan.items(step: v.stepId) where module(item.module).code == code {
+            let key = plan.key(level, item)
+            switch item.kind {
+            case .step:
+                guard let r = v.result, r.hits == r.notes.count, r.extras.isEmpty, let target = item.tempo else { continue }
+                progress.goalChorus(key, tempo: Int(v.tempo.rounded()), target: target)
+            case .jam:
+                guard v.free != nil, v.counted else { continue }
+                progress.goalJam(key, needed: item.choruses ?? 1)
+            }
+        }
     }
 
     let player: Player?
@@ -98,6 +130,7 @@ final class AppModel {
         self.progress = progress
         self.account = account
         self.mods = mods
+        player?.onGoalChorus = { [weak self] code, v in self?.goalJudged(module: code, verdict: v) }
         #if DEBUG
         let d = UserDefaults.standard
         // `-LoadMod <file>` puts a saved bundle on the set list without an account.

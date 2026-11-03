@@ -1300,6 +1300,35 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   `GrainMask`: panel grey at 93% (Bart, after 97%) with a fixed scatter of specks, so only a very faint shape shows.
   VoiceOver says "hidden venue".
 
+- **Learning goals: the plan is a document, the map's levels are its chapters: 0.1 (91),
+  2026-11-03.** Bart's year is `misc/takt-12-month-plan.md` (24 chapters of two weeks: Q1 one key,
+  A minor; Q2 more keys and chords; Q3 taste; Q4 range), chosen over the 20-level plan in
+  `LEARNING-PLAN.md` (kept as the alternative). "Any lesson + any song" is gone. **Read
+  `GOALS.md`**: the plumbing, Level 1's four goals, and what's left. In short:
+  `Content/plan-blues-year-1.json` → `Goals/LearningPlan.swift` (levels → items of kind `step`
+  or `jam`, each naming a module's step; `LearningPlan.active(for:)` is the per-user seam, the
+  bundled default for everyone now); `Snapshot.goals` (`GoalRecord`: done day, best 100% tempo,
+  choruses; merged earliest/max; `mapCleared` and `MapProgress` are gone); `GoalProgress` (levels
+  cleared = leading levels with every item done; a level with no items can't clear);
+  `AppModel.goalJudged` scores every verdict (`Verdict.stepId`, `Player.onGoalChorus`): a step
+  goal is one chorus with every note hit and nothing extra at the item's tempo, every 100%
+  chorus keeps its tempo as `best`, the ladder suggests start 60 then best + 4 up to the target.
+  **`Lesson.Kind.free`**: a jam with no pattern, a `scale` and `minNotes`; the engine counts a
+  chorus whose every note is in the scale ("F isn't in the scale. Keep going."); play mode like
+  a jam (`Kind.isJam`). **Content:** Scales (A minor) lesson 14 "Pentatonic, two octaves"
+  (`penta2-rh`, `penta2-lh`: 21 eighths up and back at 72, RH 1 2 3 1 2 3 1 2 3 4 5, LH 5 4 3 2 1
+  3 2 1 3 2 1); Minor Chords jam "Five notes" (`jam-five`, free, A C D E G over the minor band).
+  **Map:** 24 stops in three episodes (`map-blues.json` level list and teaser gone; four
+  `placeholder` venues for 21–24, dashed empty boxes "Venue to come"); the orange stop, its pill
+  and its card open **`Menu/LevelGoalsScreen.swift`** (the plan's title and line, a row per goal
+  with its status and a "Play at 68" / "Jam" button that opens the step with the knob on the
+  ladder's tempo: `AppModel.start(goal:level:)`, `Player.start(stepId:tempo:)`); a level with no
+  goals says so. The intro's fingering row wraps in eights on the phone. DEBUG `-Route map
+  -Venue 1`. Checks 362/362 (the plan, the ladder, the store, merge, the free jam, the new
+  scale steps, one stop per level, placeholders). Verified on the simulator (map, goals in both
+  themes, the free jam, the new lesson) and installed on this Mac. No session feature: the
+  plan's 10/20/15 line is advice in the .md (Bart: "we don't need 10k features").
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without
@@ -1309,8 +1338,9 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   guest → sign up / log in against `/api/takt/*`, progress pull (merge) and push.
 - `App/TaktApp.swift`: `@main`, the theme (`@AppStorage("theme")`, `dark` default, `paper`),
   View → Paper Theme (⇧⌘L) on the Mac, and `MacWindow` (1100×720 minimum, no title text or toolbar).
-- `Map/MapWorld.swift`: a map world from `Content/map-<world>.json` (episodes, venues, levels),
-  `MapProgress` (levels cleared). `Menu/MapScreen.swift` (the road) and `Menu/VenueScreen.swift`.
+- `Map/MapWorld.swift`: a map world from `Content/map-<world>.json` (episodes, venues). `Goals/LearningPlan.swift`:
+  the plan (`Content/plan-<id>.json`), `GoalRecord`, `GoalProgress` (levels cleared, each goal's state).
+  `Menu/MapScreen.swift` (the road), `Menu/LevelGoalsScreen.swift` (the level up next), `Menu/VenueScreen.swift`.
 - `Design/Palette.swift`: the brief's seven tokens as dynamic colors. `signal` = now, `cue` = next;
   never add a third accent, never red/green. White keys are `panel`, black keys `#0D0D0D` in both themes.
 - `Design/Typography.swift`: `Font.display` (SF Pro compressed heavy), `.dataLabel()` (SF Mono,

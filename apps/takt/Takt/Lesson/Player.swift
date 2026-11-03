@@ -174,11 +174,15 @@ final class Player {
 
     /// The engine's verdicts go to the log and the progress store, its actions to the band.
     private func wire() {
-        engine.onVerdict = { [lessonLog, progress, code = content.code] v in
+        engine.onVerdict = { [weak self, lessonLog, progress, code = content.code] v in
             let what: String
-            if let r = v.result {
-                // Play mode: a clean chorus marks the jam done.
-                if let jam = v.jam, v.counted { progress.jamDone(jam, in: code) }
+            // Play mode: a clean chorus marks the jam done (a free jam's chorus in the scale too).
+            if let jam = v.jam, v.counted { progress.jamDone(jam, in: code) }
+            // The plan's goals score themselves off the same verdict.
+            self?.onGoalChorus?(code, v)
+            if let free = v.free {
+                what = "free: \(free.notes) notes, \(free.outside.count) outside, \(v.counted ? "counts" : "doesn't count")"
+            } else if let r = v.result {
                 let offsets = r.offsets.map { String(format: "%+.1f", $0) }.joined(separator: " ")
                 what = "\(r.hits)/\(r.notes.count) hits, \(r.extras.count) extra, mean \(r.meanOffsetMs.map { String(format: "%+.1f", $0) } ?? "-") ms, \(r.clean ? "clean" : "not clean") [\(r.problems.joined(separator: " "))] offsets \(offsets)"
                 if let skill = v.skill { progress.record(skill: skill, result: r, tempo: v.tempo, counted: v.counted) }
@@ -291,6 +295,17 @@ final class Player {
         let r = progress.lesson(content.code)
         return max(r.lessonsDone, content.lessonsDone(reachedStep: r.reachedStep))
     }
+
+    /// A plan goal: the step by id from its intro, the knob set to `tempo` (the ladder's next
+    /// number; the step still counts at its own tempo).
+    func start(stepId: String, tempo: Int?) {
+        guard let i = content.steps.firstIndex(where: { $0.id == stepId }) else { return }
+        restartLesson(at: i)
+        if let tempo, tempo != self.tempo { audio.send(.tempo(Double(tempo))) }
+    }
+
+    /// Every judged chorus, with the module's code: the plan's goals (`AppModel`).
+    @ObservationIgnored var onGoalChorus: ((String, LessonEngine.Verdict) -> Void)?
 
     /// Lesson `n` (1-based) from its intro: the next one, or one already done, played again.
     func start(lesson n: Int) {

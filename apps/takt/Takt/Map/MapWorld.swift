@@ -1,10 +1,11 @@
 import Foundation
 
 /// A map: a road of levels through real places, one venue per level, grouped in episodes.
-/// Content, not code: `Content/map-<world>.json` holds the episodes, the venues (story, photo,
-/// credit) and the level list that ties each level to a lesson. The photos are imagesets named
-/// `<world>-<venue id>` in `Assets.xcassets/Venues/`. A second world (the Berlin techno map) is
-/// a new JSON file, its photos, and its id in `all`; Settings picks it by `mapWorld`.
+/// Content, not code: `Content/map-<world>.json` holds the episodes and the venues (story,
+/// photo, credit). The photos are imagesets named `<world>-<venue id>` in
+/// `Assets.xcassets/Venues/`. What a level asks for, and when it clears, is the player's
+/// `LearningPlan`: level n of the map is level n of the plan. A second world (the Berlin techno
+/// map) is a new JSON file, its photos, and its id in `all`; Settings picks it by `mapWorld`.
 struct MapWorld: Decodable {
     struct Photo: Decodable {
         let file: String
@@ -26,6 +27,9 @@ struct MapWorld: Decodable {
         let story: String
         let photo: Photo?
         let sources: [String]
+        /// A stop with no venue written yet: an empty box on the road.
+        let placeholder: Bool?
+        var isPlaceholder: Bool { placeholder ?? false }
     }
 
     struct Episode: Decodable, Identifiable {
@@ -36,26 +40,12 @@ struct MapWorld: Decodable {
         let venues: [Venue]
     }
 
-    struct Teaser: Decodable {
-        let kicker: String
-        let title: String
-    }
-
-    /// A level: its venue, and the lesson the venue's Lesson button starts.
-    struct Level: Decodable {
-        let venue: String
-        /// A module's entry code ("A1", "S": the scales follow the taste setting).
-        let module: String
-        let lesson: Int
-    }
-
     /// One stop on the road, in level order.
     struct Stop: Identifiable {
         /// 1-based.
         let level: Int
         let venue: Venue
         let episode: Int
-        let lesson: Level
         /// The first stop of its episode (the sign goes above it).
         let opensEpisode: Bool
         /// 1-based place in its episode.
@@ -67,16 +57,9 @@ struct MapWorld: Decodable {
 
     let world: String
     let title: String
-    /// Levels planned in all (the header's "7 / 50"); only `levels` exist so far.
+    /// Levels in all (the header's "1 / 24").
     let total: Int
     let episodes: [Episode]
-    let nextTeaser: Teaser?
-    let levels: [Level]
-
-    private enum CodingKeys: String, CodingKey {
-        case world, title, total, episodes, levels
-        case nextTeaser = "next_teaser"
-    }
 
     /// The worlds that ship, in Settings order. The first is the default.
     static let all = ["blues"]
@@ -101,25 +84,19 @@ struct MapWorld: Decodable {
         }
     }
 
-    /// Bad content traps at load: every level has a venue, every venue a level, the levels walk
-    /// the episodes in order.
+    /// Bad content traps at load: venue ids unique, a venue that isn't a placeholder has a name.
     func validate() {
-        let byId = Dictionary(uniqueKeysWithValues: episodes.flatMap(\.venues).map { ($0.id, $0) })
-        precondition(byId.count == episodes.flatMap(\.venues).count, "map \(world): a venue id twice")
-        precondition(Set(levels.map(\.venue)) == Set(byId.keys) && levels.count == byId.count,
-                     "map \(world): levels and venues don't match one to one")
-        precondition(levels.map(\.venue) == episodes.flatMap(\.venues).map(\.id),
-                     "map \(world): levels must walk the episodes in order")
-        precondition(total >= levels.count, "map \(world): total under the levels")
-        precondition(levels.allSatisfy { $0.lesson >= 1 }, "map \(world): lessons are 1-based")
+        let venues = episodes.flatMap(\.venues)
+        precondition(Set(venues.map(\.id)).count == venues.count, "map \(world): a venue id twice")
+        precondition(venues.allSatisfy { $0.isPlaceholder || !$0.name.isEmpty }, "map \(world): a venue without a name")
+        precondition(total >= venues.count, "map \(world): total under the venues")
     }
 
     var stops: [Stop] {
         var out: [Stop] = []
         for (e, episode) in episodes.enumerated() {
             for (i, v) in episode.venues.enumerated() {
-                let n = out.count
-                out.append(Stop(level: n + 1, venue: v, episode: e, lesson: levels[n], opensEpisode: i == 0, inEpisode: i + 1))
+                out.append(Stop(level: out.count + 1, venue: v, episode: e, opensEpisode: i == 0, inEpisode: i + 1))
             }
         }
         return out
@@ -132,27 +109,4 @@ struct MapWorld: Decodable {
     static func state(_ index: Int, cleared: Int) -> StopState {
         index < cleared ? .done : index == cleared ? .here : index == cleared + 1 ? .next : .ahead
     }
-}
-
-/// Where the player is on the map. A level clears when a lesson is finished and a Stage song
-/// is played to the end: every such pair clears one. Counted from the practice log, each
-/// lesson or song once a day.
-struct MapProgress: Equatable {
-    /// Lessons finished and songs played through, from the log.
-    let lessons: Int
-    let songs: Int
-    /// Levels cleared: the pairs, or the stored count if that is higher (the log keeps the
-    /// last 200 entries, so it can forget; a cleared level never comes back).
-    let cleared: Int
-
-    init(practice: [ProgressStore.PracticeEntry], stored: Int) {
-        lessons = practice.filter { $0.kind == ProgressStore.PracticeKind.lesson.rawValue }.count
-        songs = practice.filter { $0.kind == ProgressStore.PracticeKind.stage.rawValue }.count
-        cleared = max(stored, min(lessons, songs))
-    }
-
-    /// The level you're on has its lesson done (a lesson is waiting for its song).
-    var lessonInHand: Bool { lessons > cleared }
-    /// The level you're on has its song done.
-    var songInHand: Bool { songs > cleared }
 }

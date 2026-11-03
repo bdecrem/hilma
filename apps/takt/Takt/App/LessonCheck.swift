@@ -279,9 +279,10 @@ enum LessonCheck {
                   se.output.intro?.fingering == [1, 2, 3, 1, 2, 3, 4, 5, 4, 3, 2, 1, 3, 2, 1] && se.output.intro?.rightHand == true,
                   "\(String(describing: se.output.intro?.fingering))")
             typealias RN0 = LessonState.Run.Note
-            check("scales: thirteen lessons, their steps in order", major.lessons.count == 13 && major.lessonsDone(reachedStep: 2) == 1
+            check("scales: thirteen lessons (fourteen in A minor), their steps in order", major.lessons.count == 13 && major.lessonsDone(reachedStep: 2) == 1
                   && minor.lessons.map(\.title) == ["Up", "Down", "Up and down", "Two octaves", "The left hand", "The blues scale",
-                                                    "Minor pentatonic", "The relative major", "E minor", "D minor", "Harmonic minor", "Dorian", "Chromatic"]
+                                                    "Minor pentatonic", "The relative major", "E minor", "D minor", "Harmonic minor", "Dorian", "Chromatic",
+                                                    "Pentatonic, two octaves"]
                   && major.lessons.map(\.title).suffix(7) == ["Major pentatonic", "The relative minor", "G major", "F major", "Mixolydian", "Dorian", "Chromatic"]
                   && (minor.jams ?? []).count == 13 && (minor.jams ?? []).map(\.after) == Array(1...13), "\(minor.lessons.map(\.title))")
             // Lessons 7–13 (scripts/scales-extend.py): the pentatonics, two new keys, the colour
@@ -324,9 +325,9 @@ enum LessonCheck {
                   && major.expected(major.steps[12], ticksPerBeat: tpb).prefix(13).map(\.finger) == [1, 3, 1, 3, 1, 2, 3, 1, 3, 1, 3, 1, 2],
                   "\(chroma.prefix(13).map(\.finger))")
             check("scales: the new keys' jams transpose the blues band to the relative major (E minor → G, D minor → F), the D minor one in flats",
-                  minor.steps[21].id == "jam-key2" && minor.steps[21].transpose == 7 && minor.steps[22].transpose == 5 && minor.steps[22].flats == true
-                  && major.steps[21].transpose == 7 && major.steps[22].transpose == 5 && minor.steps[19].transpose == nil
-                  && minor.steps[23].band == ["drums", "bass"], "\(minor.steps[19...25].map { "\($0.id):\($0.transpose ?? 0)" })")
+                  minor.steps[23].id == "jam-key2" && minor.steps[23].transpose == 7 && minor.steps[24].transpose == 5 && minor.steps[24].flats == true
+                  && major.steps[21].transpose == 7 && major.steps[22].transpose == 5 && minor.steps[21].transpose == nil
+                  && minor.steps[25].band == ["drums", "bass"], "\(minor.steps[19...25].map { "\($0.id):\($0.transpose ?? 0)" })")
             // Lessons 4–6: two octaves (15 notes, A3 to A5, three runs), the left hand an octave
             // down with the pinky first, the blues scale up and back (13 notes, the flat five).
             let two = minor.expected(minor.steps[3], ticksPerBeat: tpb)
@@ -390,8 +391,8 @@ enum LessonCheck {
             let jams = minor.jams ?? []
             check("jams: thirteen under the scale lessons, seven under the blues, each a jam step past the lessons' steps",
                   jams.count == 13 && (lesson.jams ?? []).count == 7 && jams.map(\.after) == Array(1...13)
-                  && minor.stepIndex(ofJam: jams[0]) == 13 && minor.lessonIndex(ofStep: 13) == 0 && minor.jam(ofStep: 13)?.title == "First riff"
-                  && minor.steps[13].band == ["drums", "bass", "keys"] && minor.steps[0].band == ["drums"] && minor.steps[17].band == ["drums", "keys"]
+                  && minor.stepIndex(ofJam: jams[0]) == 15 && minor.lessonIndex(ofStep: 15) == 0 && minor.jam(ofStep: 15)?.title == "First riff"
+                  && minor.steps[15].band == ["drums", "bass", "keys"] && minor.steps[0].band == ["drums"] && minor.steps[19].band == ["drums", "keys"]
                   && lesson.steps[8].kind == .jam && lesson.lessonIndex(ofStep: 12) == 4 && lesson.lessonsDone(reachedStep: 7) == 5
                   && lesson.lessonsDone(reachedStep: 9) == 7)
 
@@ -406,7 +407,7 @@ enum LessonCheck {
             let minorModule = Lesson.bundled("lesson-M")
             let keys = minorModule.steps.prefix(12)
             check("minor: twelve keys then Two a bar, each key its own i iv v form, the band within -6…+5",
-                  minorModule.lessons.count == 13 && minorModule.band == "band-minor-A" && (minorModule.jams ?? []).count == 13
+                  minorModule.lessons.count == 13 && minorModule.band == "band-minor-A" && (minorModule.jams ?? []).count == 14
                   && keys.map { $0.transpose! }.allSatisfy { (-6...5).contains($0) } && Set(keys.map { $0.transpose! }).count == 12
                   && keys.allSatisfy { $0.form!.count == 12 && minorModule.chords(of: $0).count == 3 }
                   && minorModule.steps[6].form?[0] == "Bm" && minorModule.steps[6].form?[8] == "F♯m" && minorModule.steps[6].transpose == 2
@@ -481,7 +482,7 @@ enum LessonCheck {
                   && { me.heard(tick: Double(3 * 4 * tpb) + 1, tempo: 70, rolling: true, epoch: 0); return me.output.coach == "Get ready. Em on the 1." }(),
                   me.output.coach)
             let je = LessonEngine(lesson: minor, ticksPerBeat: tpb, gated: false)
-            je.start(step: 13)
+            je.start(step: 15)
             var jv: [LessonEngine.Verdict] = []
             je.onVerdict = { jv.append($0) }
             var planner = Autoplay(mode: .perfect, plannedThrough: -0.01)
@@ -500,7 +501,7 @@ enum LessonCheck {
                   && je.output.complete == nil && je.output.jam && je.output.gate == 0 && je.output.lessonTitle == "First riff"
                   && je.output.lesson == 1 && je.output.coach == "Clean. Keep it rolling.", "\(jv.map(\.line)) clean \(je.output.clean)")
             let gj = LessonEngine(lesson: minor, ticksPerBeat: tpb, gated: true)
-            gj.start(step: 13)
+            gj.start(step: 15)
             check("jams: the intro is play mode under lesson 1, with the riff's fingering",
                   gj.output.intro?.jam == true && gj.output.intro?.number == 1 && gj.output.intro?.title == "First riff"
                   && gj.output.intro?.fingering == [1, 2, 3, 4, 4, 3, 2, 1], "\(String(describing: gj.output.intro?.fingering))")
@@ -519,11 +520,11 @@ enum LessonCheck {
             // The module's last lesson passing shows Module complete (Bart's two clean choruses of
             // Up and down went to a blank screen: the hand-over skipped the last step).
             let ge = LessonEngine(lesson: minor, ticksPerBeat: tpb, gated: true)
-            ge.start(step: 12)
-            ge.heard(tick: 0, tempo: 60, rolling: true, epoch: 0)
+            ge.start(step: 14)
+            ge.heard(tick: 0, tempo: 72, rolling: true, epoch: 0)
             ge.debugComplete()
-            check("run: the last lesson passed shows Lesson 13 complete with nothing next (the jams after it don't count)",
-                  ge.output.complete?.number == 13 && ge.output.complete?.next == nil && ge.output.complete?.done == "Chromatic",
+            check("run: the last lesson passed shows Lesson 14 complete with nothing next (the jams after it don't count)",
+                  ge.output.complete?.number == 14 && ge.output.complete?.next == nil && ge.output.complete?.done == "Pentatonic, two octaves",
                   "\(String(describing: ge.output.complete))")
         }
 
@@ -828,36 +829,106 @@ enum LessonCheck {
         let many = (0..<250).map { PE(day: String(format: "2026-%02d-%02d", 1 + $0 / 28, 1 + $0 % 28), kind: "stage", id: "s") }
         check("practice log: the last 200 kept", PE.union(many, []).count == 200 && PE.union(many, []).last == many.last)
 
-        // MARK: Map
+        // MARK: Goals and the map
 
-        let lessonsOnly = [PE(day: "2026-11-01", kind: "lesson", id: "A1·1"), PE(day: "2026-11-01", kind: "lesson", id: "A1·2"),
-                           PE(day: "2026-11-02", kind: "lesson", id: "A1·2")]
-        let mp0 = MapProgress(practice: lessonsOnly, stored: 0)
-        check("map: lessons without a song clear nothing, the lesson is in hand", mp0.cleared == 0 && mp0.lessonInHand && !mp0.songInHand)
-        let mp1 = MapProgress(practice: lessonsOnly + [PE(day: "2026-11-02", kind: "stage", id: "song-dockery")], stored: 0)
-        check("map: a lesson and a song clear a level; the next has a lesson in hand", mp1.cleared == 1 && mp1.lessonInHand && !mp1.songInHand)
-        let mp2 = MapProgress(practice: lessonsOnly + ["a", "b", "c", "d"].map { PE(day: "2026-11-02", kind: "stage", id: $0) }, stored: 0)
-        check("map: pairs, not totals (3 lessons, 4 songs = 3 levels, a song in hand)", mp2.cleared == 3 && mp2.songInHand && !mp2.lessonInHand)
-        check("map: a cleared level stays cleared when the log forgets", MapProgress(practice: [], stored: 5).cleared == 5)
-        var mapA = ProgressStore.Snapshot(), mapB = ProgressStore.Snapshot()
-        mapA.mapCleared = 3; mapB.mapCleared = 7
-        check("map: merged by max", AccountStore.merge(mapA, mapB).mapCleared == 7 && AccountStore.merge(mapB, mapA).mapCleared == 7)
-        check("map: an old snapshot has no levels cleared", old.mapCleared == 0)
+        let plan = LearningPlan.bundled(LearningPlan.defaultId)
+        let l1 = plan.levels[0]
+        check("plan: 24 levels, 1…24, level 1 has four goals, the rest none yet",
+              plan.levels.count == 24 && plan.levels.map(\.n) == Array(1...24) && l1.items.map(\.id) == ["scale-rh", "scale-lh", "form", "jam"]
+              && plan.levels.dropFirst().allSatisfy { $0.items.isEmpty } && plan.levels[5].title.hasPrefix("Checkpoint"))
+        check("plan: every goal names a step that exists in its module, step goals carry a tempo, the jam its choruses",
+              l1.items.allSatisfy { i in
+                  let m = Lesson.bundled("lesson-\(i.module)")
+                  guard let step = m.steps.first(where: { $0.id == i.step }) else { return false }
+                  switch i.kind {
+                  case .step: return step.kind == .play && i.tempo == step.tempo
+                  case .jam: return step.kind == .free && (i.choruses ?? 0) > 0
+                  }
+              })
+        let k = { (i: Int) in plan.key(l1, l1.items[i]) }
+        let none = GoalProgress(plan: plan, records: [:])
+        check("goals: nothing done clears nothing; the ladder starts at 60, the jam at 0 of 3",
+              none.cleared == 0 && none.suggestedTempo(l1, l1.items[0]) == 60 && none.status(l1, l1.items[3]) == "0 of 3 choruses in the scale"
+              && none.action(l1, l1.items[0]) == "Play at 60" && none.action(l1, l1.items[3]) == "Jam")
+        let partial = GoalProgress(plan: plan, records: [k(0): GoalRecord(done: nil, best: 64, choruses: 0), k(1): GoalRecord(done: nil, best: 70, choruses: 0)])
+        check("goals: a rung above the best 100% pass, never past the target",
+              partial.suggestedTempo(l1, l1.items[0]) == 68 && partial.suggestedTempo(l1, l1.items[1]) == 72
+              && partial.action(l1, l1.items[0]) == "Play at 68" && partial.status(l1, l1.items[0]) == "Best 100% pass 64 · counts at 72")
+        let all = GoalProgress(plan: plan, records: Dictionary(uniqueKeysWithValues: (0..<4).map { (k($0), GoalRecord(done: "2026-11-03", best: 72, choruses: 3)) }))
+        check("goals: every goal done clears level 1; level 2 has no goals, so nothing past it", all.cleared == 1 && all.cleared(l1) && !all.cleared(plan.levels[1]))
+        check("goals: -MapCleared overrides, capped at the plan", GoalProgress(plan: plan, records: [:], clearedOverride: 30).cleared == 24)
+        let goalStore = ProgressStore(url: nil)
+        goalStore.goalChorus(k(0), tempo: 64, target: 72)
+        goalStore.goalChorus(k(0), tempo: 60, target: 72)
+        check("goals: a 100% chorus under the target keeps the best, isn't done", goalStore.goal(k(0)).best == 64 && goalStore.goal(k(0)).done == nil)
+        goalStore.goalChorus(k(0), tempo: 72, target: 72)
+        goalStore.goalJam(k(3), needed: 3); goalStore.goalJam(k(3), needed: 3)
+        check("goals: at the target it is done; two jam choruses aren't three",
+              goalStore.goal(k(0)).done != nil && goalStore.goal(k(3)).choruses == 2 && goalStore.goal(k(3)).done == nil
+              && { goalStore.goalJam(k(3), needed: 3); return goalStore.goal(k(3)).done != nil }())
+        var goalA = ProgressStore.Snapshot(), goalB = ProgressStore.Snapshot()
+        goalA.goals[k(0)] = GoalRecord(done: "2026-11-05", best: 68, choruses: 0)
+        goalB.goals[k(0)] = GoalRecord(done: "2026-11-03", best: 72, choruses: 0)
+        goalB.goals[k(3)] = GoalRecord(done: nil, best: 0, choruses: 2)
+        let goalM = AccountStore.merge(goalA, goalB)
+        check("goals: merged, the earliest day and the max of the numbers, either way round",
+              goalM.goals[k(0)] == GoalRecord(done: "2026-11-03", best: 72, choruses: 0) && goalM.goals[k(3)]?.choruses == 2
+              && AccountStore.merge(goalB, goalA).goals == goalM.goals)
+        check("goals: an old snapshot has none", old.goals.isEmpty)
         check("map: stop states", [0, 1, 2, 3, 4].map { MapWorld.state($0, cleared: 2) } == [.done, .done, .here, .next, .ahead])
-        let mapStore = ProgressStore(url: nil)
-        mapStore.practiced(.lesson, id: "A1·1")
-        mapStore.practiced(.stage, id: "song-slow-burn")
-        mapStore.practiced(.stage, id: "song-slow-burn")
-        check("map: the store counts a song once a day and stores the cleared level", mapStore.map.cleared == 1
-              && mapStore.snapshot.mapCleared == 1 && !mapStore.map.songInHand)
+
+        // The free jam: a chorus in the scale with enough notes counts; one note outside doesn't,
+        // and the coach names it; too few notes don't either.
+        do {
+            let m = Lesson.bundled("lesson-M")
+            let fi = m.steps.firstIndex { $0.id == "jam-five" }!
+            check("free jam: the step's scale is A C D E G, it is a jam under lesson 1, no pattern",
+                  m.scale(of: m.steps[fi]) == [9, 0, 2, 4, 7] && m.jam(ofStep: fi)?.after == 1 && m.steps[fi].pattern == nil
+                  && m.lessonStepCount < fi && m.lessonIndex(ofStep: fi) == 0)
+            let fe = LessonEngine(lesson: m, ticksPerBeat: tpb, gated: false)
+            fe.start(step: fi)
+            var fv: [LessonEngine.Verdict] = []
+            fe.onVerdict = { fv.append($0) }
+            let mloop = m.form.count * 4 * tpb
+            func chorus(_ c: Int, notes: [Int]) -> [PlayedNote] {
+                notes.enumerated().map { PlayedNote(note: $0.element, tick: Double(c * mloop + $0.offset * tpb), msPerTick: msPerTick(70)) }
+            }
+            var fp = chorus(0, notes: [57, 60, 62, 64, 67, 69, 67, 64, 62, 60]) + chorus(1, notes: [57, 60, 62, 65, 67, 69, 67, 64, 62, 60])
+                + chorus(2, notes: [57, 60, 62]) + chorus(3, notes: [69, 72, 74, 76, 79, 81, 79, 76])
+            var ft = 0.0
+            while ft <= Double(4 * mloop) + 1 {
+                fe.heard(tick: ft, tempo: 70, rolling: true, epoch: 0)
+                while let p = fp.first, p.tick <= ft {
+                    fe.played(note: p.note, tick: p.tick, msPerTick: msPerTick(70), epoch: 0)
+                    fp.removeFirst()
+                }
+                ft += 0.25
+            }
+            check("free jam: in the scale counts, an F doesn't and is named, three notes aren't enough, any octave counts",
+                  fv.count == 4 && fv[0].counted && fv[0].free?.notes == 10 && fv[0].jam == "jam-five" && fv[0].stepId == "jam-five"
+                  && !fv[1].counted && fv[1].free?.outside == [65] && fv[1].line == "F isn't in the scale. Keep going."
+                  && !fv[2].counted && fv[2].line.hasPrefix("Play more") && fv[3].counted && fe.output.clean == 2 && fe.output.jam && !fe.output.passed,
+                  fv.map { "\($0.counted) \($0.line)" }.joined(separator: " | "))
+        }
+
+        // The two-octave pentatonic: 21 eighths up and back in each hand.
+        do {
+            let minor = Lesson.bundled("lesson-S1m")
+            let rh = minor.steps.first { $0.id == "penta2-rh" }!, lh = minor.steps.first { $0.id == "penta2-lh" }!
+            let rn = minor.expected(rh, ticksPerBeat: tpb), ln = minor.expected(lh, ticksPerBeat: tpb)
+            check("scales: pentatonic two octaves, right hand: A3 to A5 and back, 21 eighths, 1 2 3 1 2 3 1 2 3 4 5, three runs a chorus",
+                  rn.count == 63 && rn.prefix(11).map(\.display) == [57, 60, 62, 64, 67, 69, 72, 74, 76, 79, 81] && rn[20].display == 57
+                  && rn.prefix(21).map(\.tick) == (0..<21).map { $0 * tpb / 2 } && rn.prefix(11).map(\.finger) == [1, 2, 3, 1, 2, 3, 1, 2, 3, 4, 5]
+                  && rn[21].tick == 4 * 4 * tpb && rh.tempo == 72 && rh.gate == 2 && rh.hand == "right",
+                  "\(rn.prefix(12).map { "\($0.display)@\($0.tick)" })")
+            check("scales: left hand from A2, 5 4 3 2 1 3 2 1 3 2 1",
+                  ln.count == 63 && ln.prefix(11).map(\.display) == [45, 48, 50, 52, 55, 57, 60, 62, 64, 67, 69]
+                  && ln.prefix(11).map(\.finger) == [5, 4, 3, 2, 1, 3, 2, 1, 3, 2, 1] && lh.hand == "left")
+        }
+
         for id in MapWorld.all {
             let world = MapWorld.bundled(id)
             let stops = world.stops
-            check("map \(id): every level's lesson exists in its module (both scale keys)",
-                  stops.allSatisfy { s in
-                      let files = s.lesson.module == "S" ? ["lesson-S1", "lesson-S1m"] : ["lesson-\(s.lesson.module)"]
-                      return files.allSatisfy { s.lesson.lesson <= Lesson.bundled($0).lessons.count }
-                  })
             let photos = stops.compactMap { world.imageName($0.venue) }
             check("map \(id): every photo is in the asset catalog", photos.allSatisfy { UIImage(named: $0) != nil },
                   "\(photos.filter { UIImage(named: $0) == nil })")
@@ -865,10 +936,12 @@ enum LessonCheck {
                   stops.compactMap(\.venue.photo).allSatisfy { !$0.credit.isEmpty && !$0.license.isEmpty && ($0.source.map { URL(string: $0) != nil } ?? true) },
                   "no source yet: " + stops.filter { $0.venue.photo != nil && $0.venue.photo?.source == nil }.map(\.venue.id).joined(separator: ", "))
             check("map \(id): episodes open where their first venue sits", stops.filter(\.opensEpisode).count == world.episodes.count)
+            check("map \(id): one stop per plan level", stops.count == plan.levels.count && world.total == plan.levels.count)
         }
         let blues = MapWorld.bundled("blues")
-        check("map blues: 20 levels of 50, a photo for every venue",
-              blues.stops.count == 20 && blues.total == 50 && blues.stops.allSatisfy { $0.venue.photo != nil })
+        check("map blues: 24 stops in three episodes, 20 venues with a photo, the last four placeholders",
+              blues.stops.count == 24 && blues.episodes.count == 3 && blues.stops.prefix(20).allSatisfy { $0.venue.photo != nil && !$0.venue.isPlaceholder }
+              && blues.stops.suffix(4).allSatisfy(\.venue.isPlaceholder))
 
         let place = QuizBank.placement
         check("ear check: five, theory and listening", place.count == 5 && place.filter { $0.kind == .listen }.count == 3)
