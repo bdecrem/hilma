@@ -80,8 +80,8 @@ module at the top of the Lesson 1 requirements: C major scale up and down in eig
 
 | Goal | Where | Pass |
 |---|---|---|
-| C major, up and down | Scales (C major, `lesson-S1`) → lesson 14, step `major2-rh` (new) | one 100 % chorus at ≥ 72 (eighths, 29 notes a run: two octaves up and back, 3 runs a chorus) |
-| Pentatonic, two octaves, right hand | Scales (A minor) → lesson 14, step `penta2-rh` (new) | one 100 % chorus at ≥ 72 (eighths, 21 notes a run, 3 runs a chorus) |
+| C major, up and down | Scales (C major, `lesson-S1`) → lesson 14, step `major2-rh` (new) | one 100 % run at ≥ 72 (eighths, 29 notes: two octaves up and back) |
+| Pentatonic, two octaves, right hand | Scales (A minor) → lesson 14, step `penta2-rh` (new) | one 100 % run at ≥ 72 (eighths, 21 notes) |
 | Pentatonic, two octaves, left hand | step `penta2-lh` (new) | same, from A2 |
 | The 12-bar minor blues | Minor Chords → lesson 1 "A minor", step `key-1` | one 100 % chorus at ≥ 70 (the triad on the 1, every change) |
 | Jam with five notes | Minor Chords → "Five notes", step `jam-five` (new, `free`) | 3 choruses with only A C D E G, 8 notes or more each |
@@ -91,6 +91,19 @@ module at the top of the Lesson 1 requirements: C major scale up and down in eig
 3 2 1 and back, over the drums); `lesson-M.json` the `jam-five` step and its jam row under lesson
 1 (the whole minor band at 70). The C major file (`lesson-S1`) is untouched: the plan is in A
 minor, and the goal opens `S1m` whatever the taste setting says.
+
+**The run is the unit (2026-11-04, from Bart's first C major session):** the engine judged the
+12-bar chorus (three runs), so one weak run sank two good ones every time: his lesson log
+(`Documents/lesson-log.txt` in the app's container, every press and verdict) showed 8 of his last
+13 runs with every note inside the window and 0 of 5 choruses. A play step with a `cycle` whose
+every cycle expects the same notes is now judged run by run (`LessonEngine.loopTicks` is the
+cycle, `expected` one run; `chorusTicks` keeps the form): a verdict, "Clean. One more.", the gate
+and a goal's 100 % all go per run. Replayed through the engine (`-ReplayLog`, DebugHooks), that
+session reads 15 runs judged, 9 clean, 1 at 100 % with nothing extra. The rest of the extras
+were the hand landing on the first note (two to four neighbors within 110 ms of the C) and a B3
+brushed after the thumb-under; whether those are whispers the player never hears is a velocity
+question, so presses and extras now log their velocity, and the window and the extras rule stay
+as they are until that data is in.
 
 **The feel (2026-11-04):** the eighth-note steps were straight against the shuffle drums (hat,
 ride and bass on ticks 0 and 8 of 12; the runs on tick 6, between the hits), which read as "out

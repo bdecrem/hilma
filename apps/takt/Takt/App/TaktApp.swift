@@ -8,6 +8,7 @@ struct TaktApp: App {
     init() {
         #if DEBUG
         DebugHooks.renderIfRequested()
+        DebugHooks.replayIfRequested()
         DebugHooks.lessonCheckIfRequested()
         DebugHooks.chartDumpIfRequested()
         DebugHooks.chartsDumpIfRequested()

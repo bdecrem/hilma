@@ -46,6 +46,8 @@ struct ChorusResult {
         let bar: Int
         let kind: ExtraKind
         let note: Int
+        /// How hard: a finger that came down with the one that played is a whisper.
+        var velocity: Float = 0.8
     }
 
     let chorus: Int
@@ -145,7 +147,7 @@ enum Scorer {
                 if kind != .doubled && judged[i].mark == .missed { judged[i].mark = .wrong }
                 break
             }
-            extras.append(.init(bar: bar, kind: kind, note: p.note))
+            extras.append(.init(bar: bar, kind: kind, note: p.note, velocity: p.velocity))
         }
 
         let hits = judged.filter { $0.mark == .hit }.count

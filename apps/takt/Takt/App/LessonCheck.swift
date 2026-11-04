@@ -369,8 +369,9 @@ enum LessonCheck {
             check("run: in the hold bar the top A stays now and the thumb's A is next",
                   re.output.nowIndex == 7 && re.output.nowNote == 69 && re.output.nextNote == 57, "\(String(describing: re.output.nowIndex)) \(String(describing: re.output.nextNote))")
             re.heard(tick: Double(13 * tpb) + 1, tempo: 60, rolling: true, epoch: 0)
-            check("run: the second run's second note is index 9 (position 1 of the run)",
-                  re.output.nowIndex == 9 && re.output.nowNote == 59)
+            check("run: the second run's second note is index 1 of the run (the run is the judged unit, 4 bars)",
+                  re.output.nowIndex == 1 && re.output.nowNote == 59 && re.loopTicks == 3 * 4 * tpb && re.expected.count == 8
+                  && re.chorusTicks == 12 * 4 * tpb, "\(String(describing: re.output.nowIndex)) \(re.loopTicks) \(re.expected.count)")
             typealias RN = LessonState.Run.Note
             check("run: 3 → 1 going up is Thumb under, 1 → 3 going down is Middle over, 1 → 2 is nothing",
                   LessonState.Run.crossing(from: RN(key: 60, finger: 3), to: RN(key: 62, finger: 1)) == "Thumb under"
@@ -898,6 +899,44 @@ enum LessonCheck {
         check("plan: the C major scale is the first goal of level 1, on lesson-S1, at 72 from 60",
               goalC.kind == .step && goalC.module == "S1" && goalC.step == "major2-rh" && goalC.tempo == 72 && goalC.start == 60
               && none.action(l1, goalC) == "Play at 60")
+
+        // MARK: A run is the judged unit on a scale step
+
+        let runEngine = LessonEngine(lesson: s1, ticksPerBeat: 12, gated: false)
+        runEngine.start(step: 13)
+        check("runs: the C major step judges a 4-bar run of 29 notes; a chord step, a jam with a cycle and the A1 lessons keep the 12-bar chorus",
+              runEngine.loopTicks == 192 && runEngine.expected.count == 29 && runEngine.chorusTicks == 576
+              && { let j = LessonEngine(lesson: s1, ticksPerBeat: 12, gated: false); j.start(step: s1.steps.firstIndex { $0.id == "jam-up" }!); return j.loopTicks == 576 }()
+              && { let a = LessonEngine(lesson: Lesson.bundled("lesson-A1"), ticksPerBeat: 12, gated: false); return a.loopTicks == 576 && a.chorusTicks == 576 }()
+              && { let m = LessonEngine(lesson: Lesson.bundled("lesson-M"), ticksPerBeat: 12, gated: false); return m.loopTicks == 576 }())
+        var runVerdicts: [LessonEngine.Verdict] = []
+        runEngine.onVerdict = { runVerdicts.append($0) }
+        let runMs = 60000.0 / (72 * 12)
+        var runTick = 0.0
+        for unit in 0..<3 {
+            for (i, e) in runEngine.expected.enumerated() {
+                // The second run skips five notes; the others are on the tick.
+                runTick = Double(unit * 192 + e.tick)
+                runEngine.heard(tick: runTick, tempo: 72, rolling: true, epoch: 0)
+                if unit == 1 && (5...9).contains(i) { continue }
+                runEngine.played(note: e.display, tick: runTick, msPerTick: runMs, epoch: 0)
+            }
+        }
+        runEngine.heard(tick: 3 * 192 + 1, tempo: 72, rolling: true, epoch: 0)
+        check("runs: three runs give three verdicts; a perfect run is clean and 100%, the one with five misses isn't, two clean runs at 72 pass the gate",
+              runVerdicts.count == 3 && runVerdicts.map { $0.result?.hits } == [29, 24, 29] && runVerdicts.map { $0.result?.clean } == [true, false, true]
+              && runVerdicts.map(\.counted) == [true, false, true] && runVerdicts.map(\.clean) == [1, 1, 2] && runVerdicts.map(\.chorus) == [0, 1, 2]
+              && runVerdicts[0].result!.extras.isEmpty && runVerdicts[1].result!.notes.filter { $0.mark == .missed }.count == 5
+              && runVerdicts[1].line.hasPrefix("Missed") && runEngine.output.passed && runVerdicts[2].line == "Clean. The scale in eighths.",
+              "\(runVerdicts.map { "\($0.chorus):\($0.result?.hits ?? -1):\($0.result?.clean ?? false):\($0.counted):\($0.line)" })")
+        let demoC = Demo.plan(expected: runEngine.expected, loopTicks: runEngine.loopTicks, ticksPerBar: 48, cycle: 4, chorusTicks: runEngine.chorusTicks)
+        check("runs: Show me tiles the run over its two passes: 58 presses over 8 bars, the second pass from tick 192",
+              demoC.presses.count == 58 && demoC.endTicks == 384 && demoC.presses[29].tick == 192 && demoC.presses[29].note == 48
+              && demoC.presses[28].lengthTicks > 0 && demoC.presses.last!.tick == 192 + 168)
+        let extraVel = Scorer.judge(chorus: 0, expected: runEngine.expected, played: [PlayedNote(note: 48, tick: 0, msPerTick: runMs, velocity: 0.9), PlayedNote(note: 50, tick: 0.4, msPerTick: runMs, velocity: 0.05)],
+                                    loopTicks: 192, ticksPerBeat: 12, rules: .init())
+        check("runs: an extra keeps its velocity (a whisper beside the note that played is logged as one)",
+              extraVel.extras.count == 1 && extraVel.extras[0].velocity == 0.05 && extraVel.extras[0].kind == .wrong && extraVel.hits == 1)
         var goalA = ProgressStore.Snapshot(), goalB = ProgressStore.Snapshot()
         goalA.goals[k(0)] = GoalRecord(done: "2026-11-05", best: 68, choruses: 0)
         goalB.goals[k(0)] = GoalRecord(done: "2026-11-03", best: 72, choruses: 0)

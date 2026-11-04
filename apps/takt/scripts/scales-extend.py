@@ -119,7 +119,7 @@ def jam(sid, title, key, pattern, cycle, about, c, band, chords=None, transpose=
     return s
 
 
-def lesson(title, skill, step, glyph, ttitle, tline, goal="2 clean choruses at 60"):
+def lesson(title, skill, step, glyph, ttitle, tline, goal="2 clean runs at 60"):
     return {"title": title, "skill": skill, "goal": goal, "steps": [step], "theme": {"glyph": glyph, "title": ttitle, "line": tline}}
 
 

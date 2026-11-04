@@ -1366,7 +1366,16 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   in both themes; a `-RecordTo` of the demo; the log line), offline (`audiocheck` on a
   `straight=` render: the three tick-8 kicks of the chorus leave the shuffle grid, the rest
   within 1 ms) and on the simulator (the goals screen, the stage on the phone); installed on
-  this Mac.
+  this Mac. **0.1 (93), the same day:** Bart played the new step 20-odd runs at 50 and asked why
+  none counted ("about half are valid in my opinion"). The log had the answer: 8 of his last 13
+  runs had every note in the window, but a verdict covered the chorus (three runs), so one weak
+  run sank the others every time. The run is the judged unit now (see "Lesson engine and
+  scoring"); replayed, the session reads 15 runs, 9 clean (at 50; they count at 72), 1 at 100 %
+  with nothing extra. The extras left are the hand landing on the first C (neighbors within
+  110 ms) and a B brushed after the thumb-under; velocities are logged from now on to tell
+  whispers from notes before the extras rule or the window changes. Lesson goals read "2 clean
+  runs"; checks 370/370 (the unit per step kind, three runs → three verdicts and the gate, the
+  tiled demo, an extra's velocity).
 
 ## Code map (`Takt/`)
 
@@ -1535,6 +1544,17 @@ renderer `.silence(from:to:)` for bars 11–12 of its chorus (sample-accurate, c
 silent chorus arms the next) and any played chorus finishes the lesson. The Player carries out
 the engine's actions (tempo, unmute, silence) and scores presses only on the lesson screen.
 DEBUG: `-Step <n>` and Debug → Jump to Step start at a step; `-Route lesson` opens the lesson.
+
+**A run is the judged unit on a scale step (0.1 (93), 2026-11-04).** A play step with a `cycle`
+whose cycles all expect the same notes is judged run by run: `LessonEngine.loopTicks` becomes the
+cycle's length and `expected` one run (`unit(of:)`, `chorusTicks` keeps the form for the band and
+the payoff); verdicts, the clean count, the gate, the plan's goals and the coach's verdict line
+(on the first bar of the next unit) all follow. A jam with a cycle, a chord step and A1 keep the
+chorus. `Demo.plan` tiles the unit over the bars it shows. The lesson log (`Player.dump`,
+`Documents/lesson-log.txt` in the container) carries each press's velocity and each extra's, and
+`-ReplayLog <file> -ReplayModule S1 -ReplayStep 14 -ReplayTempo 50 [-ReplayEpoch n] [-ReplayFilter
+<prefix>]` replays a session's presses through a fresh engine and prints the verdicts, for tuning
+the rules on real playing (Bart's first C major session: 15 runs, 9 clean, 1 at 100 %).
 
 **Calibration (M4):** a press is scored against the beat as heard, so a player who lines up the
 sound of their own note with the band presses early by the monitor latency (~23 ms on this Mac,

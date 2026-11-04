@@ -158,6 +158,53 @@ enum DebugHooks {
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) { player.press(note) }
     }
 
+    /// `-ReplayLog <lesson-log.txt> -ReplayModule S1 -ReplayStep 14 -ReplayTempo 50 [-ReplayEpoch 4]
+    /// [-ReplayFilter 2026-11-04T18]`: runs a session's presses (the lines `Player.dump` wrote)
+    /// through a fresh engine on that step and prints every verdict, run by run, with the
+    /// scoring rules as they are now; then exits. For tuning the rules on real playing.
+    static func replayIfRequested() {
+        let d = UserDefaults.standard
+        guard let path = d.string(forKey: "ReplayLog") else { return }
+        let code = d.string(forKey: "ReplayModule") ?? "S1"
+        let stepNumber = max(1, d.integer(forKey: "ReplayStep"))
+        let tempo = d.double(forKey: "ReplayTempo") > 0 ? d.double(forKey: "ReplayTempo") : 60
+        let epoch = d.object(forKey: "ReplayEpoch") == nil ? nil : d.integer(forKey: "ReplayEpoch")
+        let filter = d.string(forKey: "ReplayFilter") ?? ""
+        let lesson = Lesson.bundled("lesson-\(code)")
+        let tpb = 12
+        let engine = LessonEngine(lesson: lesson, ticksPerBeat: tpb, gated: false)
+        engine.start(step: stepNumber - 1)
+        let msPerTick = 60000 / (tempo * Double(tpb))
+        var count = 0, clean = 0, perfect = 0
+        engine.onVerdict = { v in
+            count += 1
+            if let r = v.result {
+                if r.clean { clean += 1 }
+                if r.hits == r.notes.count && r.extras.isEmpty { perfect += 1 }
+                let extras = r.extras.map { "\($0.bar + 1):\(LessonEngine.noteName($0.note))" }.joined(separator: " ")
+                print("TAKT replay unit \(v.chorus + 1): \(r.detail) · \(r.clean ? "clean" : "not clean") · \(r.hits == r.notes.count && r.extras.isEmpty ? "100%" : "") [\(r.problems.joined(separator: " "))]\(extras.isEmpty ? "" : " extras \(extras)")")
+            } else {
+                print("TAKT replay unit \(v.chorus + 1): not judged (\(v.line))")
+            }
+        }
+        guard let text = try? String(contentsOfFile: path, encoding: .utf8) else { fatalError("-ReplayLog \(path) unreadable") }
+        let regex = try! NSRegularExpression(pattern: #"press (\d+) tick ([-\d.]+) \(bar \d+ beat [\d.]+\) epoch (\d+)"#)
+        var last = 0.0, n = 0
+        for line in text.split(separator: "\n") where filter.isEmpty || line.contains(filter) {
+            let s = String(line)
+            guard let m = regex.firstMatch(in: s, range: NSRange(s.startIndex..., in: s)) else { continue }
+            let note = Int(s[Range(m.range(at: 1), in: s)!])!, tick = Double(s[Range(m.range(at: 2), in: s)!])!, e = Int(s[Range(m.range(at: 3), in: s)!])!
+            if let epoch, e != epoch { continue }
+            engine.heard(tick: tick, tempo: tempo, rolling: true, epoch: e)
+            engine.played(note: note, tick: tick, msPerTick: msPerTick, epoch: e)
+            last = tick
+            n += 1
+        }
+        engine.heard(tick: last + Double(2 * engine.loopTicks), tempo: tempo, rolling: true, epoch: epoch ?? 0)
+        print("TAKT replay: \(n) presses, \(count) units judged, \(clean) clean, \(perfect) at 100% with nothing extra, unit \(engine.loopTicks) ticks, \(engine.expected.count) notes")
+        exit(0)
+    }
+
     static func renderIfRequested() {
         let d = UserDefaults.standard
         guard let path = d.string(forKey: "RenderTo") else { return }

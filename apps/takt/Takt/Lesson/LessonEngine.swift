@@ -11,6 +11,13 @@ import Foundation
 /// you joined after bar 1 when you weren't playing the chorus before ("you join the band"), nor
 /// one that began before its step did.
 ///
+/// On a play step whose pattern is a run (a `cycle`, the same notes every cycle of the form),
+/// the judged unit is the run, not the chorus (2026-11-04: Bart's C major eighths, 8 of 13 runs
+/// with every note in the window and 0 of 5 choruses, one weak run sinking two good ones each
+/// time): `loopTicks` is the cycle's length and `expected` one run, so a verdict, a clean count,
+/// the gate and the plan's goals all go run by run. A chord step, a jam and the A1 lessons
+/// keep the chorus (`chorusTicks`).
+///
 /// The steps (brief §4):
 /// - play: clean choruses add up toward the gate, not necessarily in a row, and count only at the
 ///   step's tempo or faster. With `maxAttempts`, judged choruses run out and the step holds.
@@ -180,7 +187,10 @@ final class LessonEngine {
     let lesson: Lesson
     let rules: ScoringRules
     let ticksPerBeat: Int
-    let loopTicks: Int
+    /// The judged unit: a run's cycle on a scale step, the chorus otherwise.
+    private(set) var loopTicks: Int
+    /// The form's length: the band's loop.
+    let chorusTicks: Int
     private(set) var output = Output()
     private(set) var stepIndex = 0
     private(set) var expected: [ExpectedNote] = []
@@ -244,7 +254,8 @@ final class LessonEngine {
         self.rules = rules
         self.gated = gated
         self.ticksPerBeat = ticksPerBeat
-        loopTicks = lesson.form.count * 4 * ticksPerBeat
+        chorusTicks = lesson.form.count * 4 * ticksPerBeat
+        loopTicks = chorusTicks
         guard lesson.steps.first?.kind == .play else { fatalError("lesson \(lesson.code): step 1 must be a play step") }
         startStep(0)
     }
@@ -331,9 +342,33 @@ final class LessonEngine {
                         about: s.about, kind: s.kind, fingers: fingers, fingering: run, rightHand: s.hand == "right")
     }
 
+    /// The judged unit of a step: one run of a play step with a cycle when every cycle of the
+    /// form expects the same notes (a scale, not a riff that follows the chords), else the
+    /// chorus with all its notes.
+    private func unit(of step: Lesson.Step) -> (ticks: Int, expected: [ExpectedNote]) {
+        let all = step.pattern == nil ? [] : lesson.expected(step, ticksPerBeat: ticksPerBeat)
+        guard step.kind == .play, let cycle = step.cycle, cycle < lesson.form.count, lesson.form.count % cycle == 0, !all.isEmpty else {
+            return (chorusTicks, all)
+        }
+        let ticks = cycle * ticksPerBar
+        func shape(_ e: ExpectedNote, _ k: Int) -> [Int] { [e.tick - k * ticks, e.pitchClass, e.display, e.finger ?? 0, e.chord ? 1 : 0] }
+        let first = all.filter { $0.tick < ticks }
+        for k in 1..<(lesson.form.count / cycle) {
+            let run = all.filter { $0.tick >= k * ticks && $0.tick < (k + 1) * ticks }
+            guard run.count == first.count, zip(first, run).allSatisfy({ shape($0, 0) == shape($1, k) }) else { return (chorusTicks, all) }
+        }
+        return (ticks, first)
+    }
+
     private func startStep(_ index: Int) {
         stepIndex = index
-        expected = step.pattern == nil ? [] : lesson.expected(step, ticksPerBeat: ticksPerBeat)
+        let u = unit(of: step)
+        expected = u.expected
+        if u.ticks != loopTicks {
+            // Another unit length: the unit being heard is the next to judge.
+            loopTicks = u.ticks
+            nextChorus = Int((heardTick / Double(loopTicks)).rounded(.down))
+        }
         clean = 0
         attempts = 0
         passed = false
@@ -418,8 +453,10 @@ final class LessonEngine {
         }
         markMisses(through: tick)
         while tick >= Double((nextChorus + 1) * loopTicks) {
-            judge(nextChorus)
-            nextChorus += 1
+            let c = nextChorus
+            judge(c)
+            // A hand-over to a step with another unit length moved the cursor itself.
+            if nextChorus == c { nextChorus += 1 }
         }
         update()
     }
@@ -685,6 +722,10 @@ final class LessonEngine {
         let absBar = bar(at: heardTick)
         let barInForm = ((absBar % bars) + bars) % bars
         let chorus = Int((Double(absBar) / Double(bars)).rounded(.down))
+        // The judged unit (a run, or the chorus): its verdict shows on its first bar.
+        let unitBars = max(1, loopTicks / ticksPerBar)
+        let unit = Int((Double(absBar) / Double(unitBars)).rounded(.down))
+        let barInUnit = ((absBar % unitBars) + unitBars) % unitBars
         let coach = step.coach
         if let b = banner, absBar < b.untilBar {
             o.coach = b.line
@@ -694,7 +735,7 @@ final class LessonEngine {
             o.coach = coach.passed!
         } else if step.kind == .card || awaiting || absBar - stepStartBar < 2 {
             o.coach = coach.intro
-        } else if barInForm == 0, let v = verdict, v.chorus == chorus - 1 {
+        } else if barInUnit == 0, let v = verdict, v.chorus == unit - 1 {
             o.coach = v.line
         } else if step.kind == .payoff, chorus == aloneChorus, step.aloneBars!.contains(barInForm + 1) {
             o.coach = coach.alone!
@@ -748,11 +789,11 @@ final class LessonEngine {
         guard !expected.isEmpty else { return Cue() }
         let absBar = bar(at: tick)
         let barInForm = ((absBar % bars) + bars) % bars
-        let chorus = Int((Double(absBar) / Double(bars)).rounded(.down))
         var c = Cue()
         // A run (a step with a cycle) numbers every key it uses; a bar's pattern only its own.
         for e in expected where step.cycle != nil || e.bar == barInForm { if let f = e.finger { c.fingers[e.display] = f } }
-        let t = tick - Double(chorus * loopTicks)
+        // Into the judged unit (a run, or the chorus).
+        let t = tick - Double(Int((tick / Double(loopTicks)).rounded(.down)) * loopTicks)
         let i = expected.lastIndex { Double($0.tick) <= t + 1e-6 } ?? expected.count - 1
         let now = expected[i]
         // The chord at this tick, and the next tick's chord (wrapping), keys that differ.

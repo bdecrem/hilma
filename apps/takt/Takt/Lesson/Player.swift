@@ -192,8 +192,16 @@ final class Player {
                 what = "joined late, not judged"
             }
             lessonLog.info("step \(v.step) chorus \(v.chorus + 1) at \(Int(v.tempo.rounded())): \(what, privacy: .public) · counts \(v.counted) · gate \(v.clean)/\(v.gate) · \"\(v.line, privacy: .public)\"")
-            Self.dump("verdict step \(v.step) chorus \(v.chorus + 1) at \(Int(v.tempo.rounded())): \(what) · \"\(v.line)\""
-                      + (v.result.map { r in " · marks " + r.notes.map { "\($0.expected.bar + 1):\($0.expected.display)=\($0.mark)" }.joined(separator: " ") } ?? ""))
+            var dumped = "verdict step \(v.step) chorus \(v.chorus + 1) at \(Int(v.tempo.rounded())): \(what) · \"\(v.line)\""
+            if let r = v.result {
+                let marks: [String] = r.notes.map { "\($0.expected.bar + 1):\($0.expected.display)=\($0.mark)" }
+                dumped += " · marks " + marks.joined(separator: " ")
+                if !r.extras.isEmpty {
+                    let extras: [String] = r.extras.map { "\($0.bar + 1):\($0.note)=\($0.kind)@" + String(format: "%.2f", $0.velocity) }
+                    dumped += " · extras " + extras.joined(separator: " ")
+                }
+            }
+            Self.dump(dumped)
         }
         engine.onAction = { [weak self] a in
             guard let self else { return }
@@ -515,10 +523,10 @@ final class Player {
         guard inLesson, !demo else { return }
         let p = clock.position(atHost: calibrated ? shifted(hostTime, clock) : hostTime)
         engine.played(note: note, tick: p.tick, msPerTick: p.msPerTick, epoch: s.epoch, velocity: velocity)
-        Self.dump(String(format: "press %d tick %.1f (bar %d beat %.2f) epoch %d calibrated %@ step %d now %@",
+        Self.dump(String(format: "press %d tick %.1f (bar %d beat %.2f) epoch %d calibrated %@ step %d now %@ vel %.2f",
                          note, p.tick, Int(p.tick / Double(4 * audio.band.ticksPerBeat)) + 1,
                          (p.tick.truncatingRemainder(dividingBy: Double(4 * audio.band.ticksPerBeat))) / Double(audio.band.ticksPerBeat) + 1,
-                         s.epoch, calibrated ? "yes" : "no", engine.output.step, engine.output.nowNotes.sorted().description))
+                         s.epoch, calibrated ? "yes" : "no", engine.output.step, engine.output.nowNotes.sorted().description, velocity))
     }
 
     private func scoreRelease(_ note: Int, hostTime: UInt64, calibrated: Bool = true) {
@@ -673,7 +681,7 @@ final class Player {
     private func startDemo() {
         guard canDemo else { return }
         let plan = Demo.plan(expected: engine.expected, loopTicks: engine.loopTicks,
-                             ticksPerBar: 4 * audio.band.ticksPerBeat, cycle: engine.step.cycle)
+                             ticksPerBar: 4 * audio.band.ticksPerBeat, cycle: engine.step.cycle, chorusTicks: engine.chorusTicks)
         demoEpoch = audio.snapshot().epoch + 1
         demoEnd = plan.endTicks
         demoPresses = plan.presses

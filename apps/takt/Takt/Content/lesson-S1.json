@@ -11,7 +11,7 @@
     {
       "title": "Up",
       "skill": "C major, one octave up, one note a beat",
-      "goal": "2 clean choruses at 60",
+      "goal": "2 clean runs at 60",
       "steps": [
         "up"
       ],
@@ -24,7 +24,7 @@
     {
       "title": "Down",
       "skill": "C major, one octave down",
-      "goal": "2 clean choruses at 60",
+      "goal": "2 clean runs at 60",
       "steps": [
         "down"
       ],
@@ -37,7 +37,7 @@
     {
       "title": "Up and down",
       "skill": "Up and back down, one note a beat",
-      "goal": "2 clean choruses at 60",
+      "goal": "2 clean runs at 60",
       "steps": [
         "updown"
       ],
@@ -50,7 +50,7 @@
     {
       "title": "Two octaves",
       "skill": "C major, two octaves up, one note a beat",
-      "goal": "2 clean choruses at 60",
+      "goal": "2 clean runs at 60",
       "steps": [
         "two"
       ],
@@ -63,7 +63,7 @@
     {
       "title": "The left hand",
       "skill": "C major in the left hand, one octave up",
-      "goal": "2 clean choruses at 60",
+      "goal": "2 clean runs at 60",
       "steps": [
         "left"
       ],
@@ -76,7 +76,7 @@
     {
       "title": "The blues scale",
       "skill": "The C blues scale, up and back down",
-      "goal": "2 clean choruses at 60",
+      "goal": "2 clean runs at 60",
       "steps": [
         "blues"
       ],
@@ -89,7 +89,7 @@
     {
       "title": "Major pentatonic",
       "skill": "C D E G A C, up and back",
-      "goal": "2 clean choruses at 60",
+      "goal": "2 clean runs at 60",
       "steps": [
         "penta"
       ],
@@ -102,7 +102,7 @@
     {
       "title": "The relative minor",
       "skill": "A minor pentatonic: the same five keys, from A",
-      "goal": "2 clean choruses at 60",
+      "goal": "2 clean runs at 60",
       "steps": [
         "relpenta"
       ],
@@ -115,7 +115,7 @@
     {
       "title": "G major",
       "skill": "G A B C D E F♯ G, up and back",
-      "goal": "2 clean choruses at 60",
+      "goal": "2 clean runs at 60",
       "steps": [
         "key2"
       ],
@@ -128,7 +128,7 @@
     {
       "title": "F major",
       "skill": "F G A B♭ C D E F: 1 2 3 4, 1 2 3 4",
-      "goal": "2 clean choruses at 60",
+      "goal": "2 clean runs at 60",
       "steps": [
         "key3"
       ],
@@ -141,7 +141,7 @@
     {
       "title": "Mixolydian",
       "skill": "C D E F G A B♭ C: the flat seventh",
-      "goal": "2 clean choruses at 60",
+      "goal": "2 clean runs at 60",
       "steps": [
         "color"
       ],
@@ -154,7 +154,7 @@
     {
       "title": "Dorian",
       "skill": "C D E♭ F G A B♭ C: the raised sixth",
-      "goal": "2 clean choruses at 60",
+      "goal": "2 clean runs at 60",
       "steps": [
         "dorian"
       ],
@@ -167,7 +167,7 @@
     {
       "title": "Chromatic",
       "skill": "C to C, every key, 1 3 1 3 1 2 3 1 3 1 3 1 2",
-      "goal": "2 clean choruses at 60",
+      "goal": "2 clean runs at 60",
       "steps": [
         "chroma"
       ],
@@ -180,7 +180,7 @@
     {
       "title": "C major in eighths",
       "skill": "C major over two octaves, two a beat",
-      "goal": "2 clean choruses at 72",
+      "goal": "2 clean runs at 72",
       "steps": [
         "major2-rh"
       ],
