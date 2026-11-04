@@ -11,6 +11,16 @@
    "text": "A minor pentatonic, both hands. 12-bar minor blues (Am–Dm–Em). Jam with 5 notes only.",
    "items": [
     {
+     "id": "scale-c",
+     "kind": "step",
+     "title": "C major, up and down",
+     "detail": "C major over two octaves, up and back in eighths, right hand. Every note, nothing extra, at 72.",
+     "module": "S1",
+     "step": "major2-rh",
+     "tempo": 72,
+     "start": 60
+    },
+    {
      "id": "scale-rh",
      "kind": "step",
      "title": "Pentatonic, two octaves, right hand",

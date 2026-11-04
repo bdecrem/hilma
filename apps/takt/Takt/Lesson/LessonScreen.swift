@@ -81,6 +81,9 @@ struct WideLessonLayout: View {
                         } else if let card = state.card {
                             CardPanel(text: card, title: state.stepTitle)
                                 .frame(width: geo.size.width, height: geo.size.height)
+                        } else if state.demo, let run = state.run {
+                            DemoStage(run: run, now: state.nowNotes, next: state.nextNotes, pressed: state.pressedNotes, fingers: state.fingers)
+                                .frame(width: geo.size.width, height: geo.size.height)
                         } else if let run = state.run {
                             RunPanel(run: run, beat: state.beat)
                                 .frame(width: geo.size.width, height: geo.size.height)
@@ -160,6 +163,9 @@ struct StackedLessonLayout: View {
                 } else if let card = state.card {
                     // The card holds the pads' height, so nothing below it moves.
                     CardPanel(text: card, title: state.stepTitle)
+                        .frame(height: side * 3 + gap * 2)
+                } else if state.demo, let run = state.run {
+                    DemoStage(run: run, now: state.nowNotes, next: state.nextNotes, pressed: state.pressedNotes, fingers: state.fingers, compact: true)
                         .frame(height: side * 3 + gap * 2)
                 } else if let run = state.run {
                     RunPanel(run: run, beat: state.beat, compact: true)

@@ -32,7 +32,7 @@ struct BandData: Decodable {
         let horns: [Note]
     }
 
-    let name: String
+    var name: String
     let ticksPerBeat: Int
     let beatsPerBar: Int
     let bars: Int
@@ -54,7 +54,7 @@ struct BandData: Decodable {
     /// The master's soft knee, scaled: the knee sits at `knee` × 0.8 of full scale (absent: 1).
     /// A band mixed to a reference renders the reference's clipping at its own lower level.
     var knee: Double?
-    let channels: Channels
+    var channels: Channels
 
     struct Duck: Decodable {
         let release: Double
@@ -141,5 +141,27 @@ struct BandData: Decodable {
             throw Song.LoadError(message: "band \(name): \(band.bars) bars is not a whole number of \(band.chorusBars)-bar choruses")
         }
         return band
+    }
+}
+
+extension BandData {
+    /// The shuffle's late eighth, two thirds through the beat (tick 8 of 12), moved to the
+    /// straight eighth halfway through (tick 6); every other tick stays. A scale step in
+    /// straight eighths (`Lesson.Step.straight`) plays over the band on this grid, so the hat
+    /// lands with the notes instead of between them.
+    static func straightTick(_ t: Int, ticksPerBeat: Int) -> Int {
+        let late = ticksPerBeat * 2 / 3, straight = ticksPerBeat / 2
+        return t % ticksPerBeat == late ? t - (late - straight) : t
+    }
+
+    /// This band with every hit and note on the straight grid (`straightTick`).
+    func straightened() -> BandData {
+        let tpb = ticksPerBeat
+        func move(_ n: Note) -> Note { Note(t: Self.straightTick(n.t, ticksPerBeat: tpb), n: n.n, v: n.v, len: n.len, i: n.i) }
+        var b = self
+        b.name = name + " (straight)"
+        b.channels = Channels(drums: channels.drums.map { Hit(t: Self.straightTick($0.t, ticksPerBeat: tpb), s: $0.s, v: $0.v) },
+                              bass: channels.bass.map(move), keys: channels.keys.map(move), horns: channels.horns.map(move))
+        return b
     }
 }

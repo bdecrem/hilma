@@ -1329,6 +1329,45 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   themes, the free jam, the new lesson) and installed on this Mac. No session feature: the
   plan's 10/20/15 line is advice in the .md (Bart: "we don't need 10k features").
 
+- **C major in eighths at the top of Level 1, the band straight under a run in eighths, Show
+  me with the hand on the keys: 0.1 (92), 2026-11-04.** Bart: "(1) add one additional module at
+  the top of the Lesson 1 requirements: C major scale up and down in eights (2) i think this is
+  not tied to the backing track right now - double check, but seems completely out of sync with
+  the music (3) there's a SHOW ME feature and that should be an animation + sound showing the
+  finger movement and IDEALLY also play the notes". **(1)** `lesson-S1.json` lesson 14 "C major
+  in eighths", step `major2-rh` (two octaves up and back, 29 eighths from C3 over bars 1–3 of
+  a 4-bar cycle, RH 1 2 3 1 2 3 4 1 2 3 1 2 3 4 5 and 4 3 2 1 3 2 1 4 3 2 1 3 2 1, drums alone,
+  72, gate 2; by hand after the chromatic, before the jams, like S1m's lesson 14), and the plan's
+  first Level 1 goal `scale-c` ("C major, up and down", module `S1`, 72 from 60) above the
+  pentatonic ones; `-Module S1 -Step 14` opens it. **(2)** It was tied to the transport
+  sample-accurately (the demo's notes read back 417 ms apart at 72); what was out was the
+  feel: the band is a shuffle (hat, ride and bass on ticks 0 and 8 of 12) and the eighth-note
+  runs sit on tick 6, between its hits (GOALS.md's known issue). A step now has a `feel`
+  (`Lesson.Step.straight`: "straight" / "shuffle", or derived: a pattern note off the 0/8
+  grid) and a straight step gets the band on the straight grid: `BandData.straightened()`
+  moves every tick-8 hit and note to tick 6 (`straightTick`), `AudioEngine.load(band:straight:)`
+  caches it as `<file>|straight`, `Player.loadBand(straight:)` (from `applyBand` and
+  `restartLesson`; `switchModule` and `endGame` go through it, the Stage invalidates it) sends
+  `.band` only when the file or the feel changes, logged `band band-blues-C straight`. The
+  penta2 goals and the new step are straight; one note a beat and the jams (tick-8 riffs) keep
+  the shuffle. Render script: `straight=<band>`. **(3)** Show me on a scale step shows
+  **`Lesson/DemoStage.swift`** in the pads' place instead of the staircase: the run's keys as a
+  keyboard (a white key of room each side, no keycaps, the played key lit `signal`) with the
+  hand over them, scaled so the fingers sit a white key apart (`unitsPerKey` 40), the finger
+  that plays lit over its key and the next outlined, the thumb curling under before it
+  crosses, the hand gliding key to key (`easeInOut` 0.16 s on `run.index`), and the move named
+  under it ("THUMB UNDER", "MIDDLE OVER"); fingertips from the drawing's geometry
+  (`DemoStage.tip`: fingers 2–5 at the top of their leaning column, the thumb from its base at
+  −42°), the left hand mirrored; the scene centered in the panel. The notes were already played
+  on the monitor (sound was never the gap); a piano level turned down in Settings → Sound comes
+  up to full while it plays and goes back after (`Player.demoTrim`). Checks 366/366 (the feel
+  and its override, the straightened band hit by hit, the new step's 87 notes, five goals).
+  Verified headless on the Mac (`-SnapshotAt` of the stage at the tuck, the cross and the top
+  in both themes; a `-RecordTo` of the demo; the log line), offline (`audiocheck` on a
+  `straight=` render: the three tick-8 kicks of the chorus leave the shuffle grid, the rest
+  within 1 ms) and on the simulator (the goals screen, the stage on the phone); installed on
+  this Mac.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

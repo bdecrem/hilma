@@ -138,6 +138,8 @@ final class Player {
         }
         for ch in [Channel.drums, .bass, .keys, .horns] where !channels.contains(ch) { audio.send(.mute(ch, true)) }
         self.lesson = engine.output
+        // The engine opened on the module's band as written (TaktApp).
+        loadedBand = (lesson.band, false)
         applyBand()
         applyInstrument()
         wire()
@@ -249,7 +251,7 @@ final class Player {
     /// channels and steps, picked up where it was.
     func switchModule(to lesson: Lesson) {
         guard lesson.code != content.code else { return }
-        if lesson.band != content.band { chorusBars = audio.load(band: lesson.band).chorusBars }
+        // Its band comes in with its first step (`restartLesson`, through `resume`).
         content = lesson
         channels = Self.channels(of: lesson)
         lessonLog.info("module \(lesson.code, privacy: .public)")
@@ -264,6 +266,7 @@ final class Player {
         engine.onAction = nil
         engine.onVerdict = nil
         engine = LessonEngine(lesson: content, ticksPerBeat: audio.band.ticksPerBeat, gated: Self.gated)
+        loadBand(straight: engine.step.straight)
         audio.send(.silence(from: 0, to: 0))
         for (c, ch) in zip(content.channels, channels) { audio.send(.mute(ch, c.unlockAt != nil)) }
         for ch in [Channel.drums, .bass, .keys, .horns] where !channels.contains(ch) { audio.send(.mute(ch, true)) }
@@ -276,9 +279,23 @@ final class Player {
         publish()
     }
 
+    /// The band in the engine: the module's file, straight or as written. Swapped only when
+    /// that changes (a step's feel, another module, back from the Stage).
+    @ObservationIgnored private var loadedBand: (name: String, straight: Bool)?
+
+    private func loadBand(straight: Bool) {
+        let want = (name: content.band, straight: straight)
+        if let l = loadedBand, l == want { return }
+        chorusBars = audio.load(band: want.name, straight: want.straight).chorusBars
+        loadedBand = want
+        lessonLog.info("band \(want.name, privacy: .public) \(want.straight ? "straight" : "as written", privacy: .public)")
+    }
+
     /// A step that names its band (the scales over the drums alone, a jam over the whole band)
-    /// mutes the rest; a step without one keeps the module's unlock state.
+    /// mutes the rest; a step without one keeps the module's unlock state. A step in straight
+    /// eighths gets the band on the straight grid (`Lesson.Step.straight`).
     private func applyBand() {
+        loadBand(straight: engine.step.straight)
         guard let band = engine.step.band else { return }
         for (i, c) in content.channels.enumerated() { audio.send(.mute(channels[i], !band.contains(c.channel))) }
     }
@@ -663,6 +680,7 @@ final class Player {
         demoReleases.removeAll()
         demo = true
         demoEnded = false
+        demoTrim(on: true)
         fromTheTop()
         for p in plan.presses {
             audio.send(.schedule(note: p.note, velocity: p.velocity, tick: p.tick, lengthTicks: p.lengthTicks))
@@ -676,11 +694,22 @@ final class Player {
         guard demo else { return }
         demo = false
         demoEnded = true
+        demoTrim(on: false)
         for r in demoReleases { pressed.remove(r.note) }
         demoReleases.removeAll()
         demoPresses.removeAll()
         if stop { audio.send(.stop) }
         lessonLog.info("show me: over")
+    }
+
+    /// Show me is heard: a piano level turned down (Settings → Sound, for a player who hears
+    /// their own instrument) comes up to full while it plays, and goes back after.
+    private func demoTrim(on: Bool) {
+        let d = UserDefaults.standard
+        let band = d.object(forKey: "bandLevel") == nil ? 1.0 : d.double(forKey: "bandLevel")
+        let piano = d.object(forKey: "pianoLevel") == nil ? 1.0 : d.double(forKey: "pianoLevel")
+        guard piano < 1 else { return }
+        audio.send(.trim(band: Float(band), monitor: Float(on ? 1 : piano)))
     }
 
     /// Lights each key as its note is heard, lets go at its length, and ends at the last bar.
@@ -720,6 +749,7 @@ final class Player {
         practiceCountBase = 0
         let partChannel = song.channel(of: part)
         chorusBars = audio.load(song: song, part: part).chorusBars
+        loadedBand = nil
         gameEpoch = audio.snapshot().epoch + 1
         game = GameEngine(song: song, part: part, difficulty: difficulty,
                           start: GameEngine.adaptiveStart(song: song.name, part: part, records: progress.scores(song: song.name), charting: song.charting))
@@ -760,7 +790,7 @@ final class Player {
         practice = false
         practiceSpeed = 1
         practiceCountBase = 0
-        chorusBars = audio.load(band: content.band).chorusBars
+        // The module's band comes back with the lesson's step (`resume` → `restartLesson`).
         applyInstrument()
         resume()
     }

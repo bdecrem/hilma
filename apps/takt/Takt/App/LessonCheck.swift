@@ -279,11 +279,11 @@ enum LessonCheck {
                   se.output.intro?.fingering == [1, 2, 3, 1, 2, 3, 4, 5, 4, 3, 2, 1, 3, 2, 1] && se.output.intro?.rightHand == true,
                   "\(String(describing: se.output.intro?.fingering))")
             typealias RN0 = LessonState.Run.Note
-            check("scales: thirteen lessons (fourteen in A minor), their steps in order", major.lessons.count == 13 && major.lessonsDone(reachedStep: 2) == 1
+            check("scales: fourteen lessons in each key (the pentatonic over two octaves, the C major scale in eighths), their steps in order", major.lessons.count == 14 && major.lessonsDone(reachedStep: 2) == 1
                   && minor.lessons.map(\.title) == ["Up", "Down", "Up and down", "Two octaves", "The left hand", "The blues scale",
                                                     "Minor pentatonic", "The relative major", "E minor", "D minor", "Harmonic minor", "Dorian", "Chromatic",
                                                     "Pentatonic, two octaves"]
-                  && major.lessons.map(\.title).suffix(7) == ["Major pentatonic", "The relative minor", "G major", "F major", "Mixolydian", "Dorian", "Chromatic"]
+                  && major.lessons.map(\.title).suffix(8) == ["Major pentatonic", "The relative minor", "G major", "F major", "Mixolydian", "Dorian", "Chromatic", "C major in eighths"]
                   && (minor.jams ?? []).count == 13 && (minor.jams ?? []).map(\.after) == Array(1...13), "\(minor.lessons.map(\.title))")
             // Lessons 7–13 (scripts/scales-extend.py): the pentatonics, two new keys, the colour
             // scales, the chromatic. Each in both files, as the key's own notes.
@@ -326,7 +326,7 @@ enum LessonCheck {
                   "\(chroma.prefix(13).map(\.finger))")
             check("scales: the new keys' jams transpose the blues band to the relative major (E minor → G, D minor → F), the D minor one in flats",
                   minor.steps[23].id == "jam-key2" && minor.steps[23].transpose == 7 && minor.steps[24].transpose == 5 && minor.steps[24].flats == true
-                  && major.steps[21].transpose == 7 && major.steps[22].transpose == 5 && minor.steps[21].transpose == nil
+                  && major.steps[22].transpose == 7 && major.steps[23].transpose == 5 && minor.steps[21].transpose == nil
                   && minor.steps[25].band == ["drums", "bass"], "\(minor.steps[19...25].map { "\($0.id):\($0.transpose ?? 0)" })")
             // Lessons 4–6: two octaves (15 notes, A3 to A5, three runs), the left hand an octave
             // down with the pinky first, the blues scale up and back (13 notes, the flat five).
@@ -833,8 +833,8 @@ enum LessonCheck {
 
         let plan = LearningPlan.bundled(LearningPlan.defaultId)
         let l1 = plan.levels[0]
-        check("plan: 24 levels, 1…24, level 1 has four goals, the rest none yet",
-              plan.levels.count == 24 && plan.levels.map(\.n) == Array(1...24) && l1.items.map(\.id) == ["scale-rh", "scale-lh", "form", "jam"]
+        check("plan: 24 levels, 1…24, level 1 has five goals, the C major scale first, the rest none yet",
+              plan.levels.count == 24 && plan.levels.map(\.n) == Array(1...24) && l1.items.map(\.id) == ["scale-c", "scale-rh", "scale-lh", "form", "jam"]
               && plan.levels.dropFirst().allSatisfy { $0.items.isEmpty } && plan.levels[5].title.hasPrefix("Checkpoint"))
         check("plan: every goal names a step that exists in its module, step goals carry a tempo, the jam its choruses",
               l1.items.allSatisfy { i in
@@ -848,13 +848,13 @@ enum LessonCheck {
         let k = { (i: Int) in plan.key(l1, l1.items[i]) }
         let none = GoalProgress(plan: plan, records: [:])
         check("goals: nothing done clears nothing; the ladder starts at 60, the jam at 0 of 3",
-              none.cleared == 0 && none.suggestedTempo(l1, l1.items[0]) == 60 && none.status(l1, l1.items[3]) == "0 of 3 choruses in the scale"
-              && none.action(l1, l1.items[0]) == "Play at 60" && none.action(l1, l1.items[3]) == "Jam")
+              none.cleared == 0 && none.suggestedTempo(l1, l1.items[0]) == 60 && none.status(l1, l1.items[4]) == "0 of 3 choruses in the scale"
+              && none.action(l1, l1.items[0]) == "Play at 60" && none.action(l1, l1.items[4]) == "Jam")
         let partial = GoalProgress(plan: plan, records: [k(0): GoalRecord(done: nil, best: 64, choruses: 0), k(1): GoalRecord(done: nil, best: 70, choruses: 0)])
         check("goals: a rung above the best 100% pass, never past the target",
               partial.suggestedTempo(l1, l1.items[0]) == 68 && partial.suggestedTempo(l1, l1.items[1]) == 72
               && partial.action(l1, l1.items[0]) == "Play at 68" && partial.status(l1, l1.items[0]) == "Best 100% pass 64 · counts at 72")
-        let all = GoalProgress(plan: plan, records: Dictionary(uniqueKeysWithValues: (0..<4).map { (k($0), GoalRecord(done: "2026-11-03", best: 72, choruses: 3)) }))
+        let all = GoalProgress(plan: plan, records: Dictionary(uniqueKeysWithValues: (0..<5).map { (k($0), GoalRecord(done: "2026-11-03", best: 72, choruses: 3)) }))
         check("goals: every goal done clears level 1; level 2 has no goals, so nothing past it", all.cleared == 1 && all.cleared(l1) && !all.cleared(plan.levels[1]))
         check("goals: -MapCleared overrides, capped at the plan", GoalProgress(plan: plan, records: [:], clearedOverride: 30).cleared == 24)
         let goalStore = ProgressStore(url: nil)
@@ -862,17 +862,49 @@ enum LessonCheck {
         goalStore.goalChorus(k(0), tempo: 60, target: 72)
         check("goals: a 100% chorus under the target keeps the best, isn't done", goalStore.goal(k(0)).best == 64 && goalStore.goal(k(0)).done == nil)
         goalStore.goalChorus(k(0), tempo: 72, target: 72)
-        goalStore.goalJam(k(3), needed: 3); goalStore.goalJam(k(3), needed: 3)
+        goalStore.goalJam(k(4), needed: 3); goalStore.goalJam(k(4), needed: 3)
         check("goals: at the target it is done; two jam choruses aren't three",
-              goalStore.goal(k(0)).done != nil && goalStore.goal(k(3)).choruses == 2 && goalStore.goal(k(3)).done == nil
-              && { goalStore.goalJam(k(3), needed: 3); return goalStore.goal(k(3)).done != nil }())
+              goalStore.goal(k(0)).done != nil && goalStore.goal(k(4)).choruses == 2 && goalStore.goal(k(4)).done == nil
+              && { goalStore.goalJam(k(4), needed: 3); return goalStore.goal(k(4)).done != nil }())
+
+        // MARK: Feel (the band straight under a run in eighths) and the C major scale in eighths
+
+        let s1 = Lesson.bundled("lesson-S1"), s1m = Lesson.bundled("lesson-S1m")
+        func stepOf(_ l: Lesson, _ id: String) -> Lesson.Step { l.steps.first { $0.id == id }! }
+        check("feel: a run in straight eighths straightens the band; one note a beat and a shuffle riff keep it; `feel` overrides",
+              stepOf(s1m, "penta2-rh").straight && stepOf(s1m, "penta2-lh").straight && stepOf(s1, "major2-rh").straight
+              && !stepOf(s1, "updown").straight && !stepOf(s1, "two").straight && !stepOf(s1, "jam-blues").straight
+              && !s1m.steps.contains { $0.kind.isJam && $0.straight })
+        let shuffle = BandData.bundled("band-blues-C"), straightBand = shuffle.straightened()
+        let lateHits = shuffle.channels.drums.filter { $0.t % 12 == 8 }.count
+        check("feel: straightened, every late eighth (tick 8) sits on tick 6 and nothing else moves",
+              lateHits > 0 && straightBand.channels.drums.count == shuffle.channels.drums.count
+              && zip(shuffle.channels.drums, straightBand.channels.drums).allSatisfy { $1.s == $0.s && $1.v == $0.v && $1.t == ($0.t % 12 == 8 ? $0.t - 2 : $0.t) }
+              && straightBand.channels.drums.filter { $0.t % 12 == 6 }.count == lateHits + shuffle.channels.drums.filter { $0.t % 12 == 6 }.count
+              && zip(shuffle.channels.bass, straightBand.channels.bass).allSatisfy { $1.n == $0.n && $1.t == ($0.t % 12 == 8 ? $0.t - 2 : $0.t) }
+              && BandData.straightTick(20, ticksPerBeat: 12) == 18 && BandData.straightTick(12, ticksPerBeat: 12) == 12
+              && BandData.straightTick(4, ticksPerBeat: 12) == 4 && straightBand.name.hasSuffix("(straight)") && straightBand.ticksPerBeat == 12)
+        let major = stepOf(s1, "major2-rh")
+        let majorNotes = s1.expected(major, ticksPerBeat: 12)
+        let upFingers = [1, 2, 3, 1, 2, 3, 4, 1, 2, 3, 1, 2, 3, 4, 5], downFingers = [4, 3, 2, 1, 3, 2, 1, 4, 3, 2, 1, 3, 2, 1]
+        let upKeys = [0, 2, 4, 5, 7, 9, 11, 12, 14, 16, 17, 19, 21, 23, 24].map { 48 + $0 }
+        check("C major in eighths: 29 notes a run on every eighth from the 1, C3 up two octaves and back, 1 2 3 1 2 3 4 1 2 3 1 2 3 4 5 and 4 3 2 1 3 2 1 4 3 2 1 3 2 1, three runs a chorus at 72, straight, drums alone",
+              majorNotes.count == 87 && majorNotes.prefix(29).map(\.tick) == (0..<29).map { $0 * 6 }
+              && majorNotes.prefix(29).map(\.display) == upKeys + upKeys.dropLast().reversed()
+              && majorNotes.prefix(29).compactMap(\.finger) == upFingers + downFingers
+              && majorNotes[29].tick == 4 * 48 && major.tempo == 72 && major.cycle == 4 && major.gate == 2 && major.hand == "right"
+              && major.band == ["drums"] && s1.lessons.last?.steps == ["major2-rh"] && s1.lessons.count == 14)
+        let goalC = l1.items[0]
+        check("plan: the C major scale is the first goal of level 1, on lesson-S1, at 72 from 60",
+              goalC.kind == .step && goalC.module == "S1" && goalC.step == "major2-rh" && goalC.tempo == 72 && goalC.start == 60
+              && none.action(l1, goalC) == "Play at 60")
         var goalA = ProgressStore.Snapshot(), goalB = ProgressStore.Snapshot()
         goalA.goals[k(0)] = GoalRecord(done: "2026-11-05", best: 68, choruses: 0)
         goalB.goals[k(0)] = GoalRecord(done: "2026-11-03", best: 72, choruses: 0)
-        goalB.goals[k(3)] = GoalRecord(done: nil, best: 0, choruses: 2)
+        goalB.goals[k(4)] = GoalRecord(done: nil, best: 0, choruses: 2)
         let goalM = AccountStore.merge(goalA, goalB)
         check("goals: merged, the earliest day and the max of the numbers, either way round",
-              goalM.goals[k(0)] == GoalRecord(done: "2026-11-03", best: 72, choruses: 0) && goalM.goals[k(3)]?.choruses == 2
+              goalM.goals[k(0)] == GoalRecord(done: "2026-11-03", best: 72, choruses: 0) && goalM.goals[k(4)]?.choruses == 2
               && AccountStore.merge(goalB, goalA).goals == goalM.goals)
         check("goals: an old snapshot has none", old.goals.isEmpty)
         check("map: stop states", [0, 1, 2, 3, 4].map { MapWorld.state($0, cleared: 2) } == [.done, .done, .here, .next, .ahead])

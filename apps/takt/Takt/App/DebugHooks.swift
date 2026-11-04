@@ -213,6 +213,7 @@ enum DebugHooks {
             case ("organ", let v?): command = .monitor(v == "1" ? SampledInstrument.shared("organ") : nil)
             case ("keys", let v?): command = .monitor(v == "0" ? nil : SampledInstrument.shared(v))  // your keys' instrument by name
             case ("band", let v?): command = .band(audio!.load(band: v))  // the room follows the band
+            case ("straight", let v?): command = .band(audio!.load(band: v, straight: true))  // on the straight grid
             case ("song", let v?):
                 let sp = v.split(separator: "/").map(String.init)
                 command = .band(audio!.load(song: .bundled(sp[0]), part: Song.PartKey(rawValue: sp[1])!))

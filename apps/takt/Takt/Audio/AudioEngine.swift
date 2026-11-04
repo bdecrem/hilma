@@ -67,11 +67,13 @@ final class AudioEngine {
     func detach(_ node: AVAudioPlayerNode) { engine.detach(node) }
 
     /// Another band (`Takt/Content/band-*.json`), from the same tick; built once, then reused.
+    /// `straight`: the band on the straight grid (`BandData.straightened`), kept apart.
     private var loaded: [String: BandRenderer.Events] = [:]
     @discardableResult
-    func load(band name: String) -> BandRenderer.Events {
-        let e = loaded[name] ?? renderer.load(.bundled(name))
-        loaded[name] = e
+    func load(band name: String, straight: Bool = false) -> BandRenderer.Events {
+        let key = straight ? "\(name)|straight" : name
+        let e = loaded[key] ?? renderer.load(straight ? BandData.bundled(name).straightened() : .bundled(name))
+        loaded[key] = e
         send(e)
         return e
     }

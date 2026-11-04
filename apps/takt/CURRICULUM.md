@@ -28,6 +28,9 @@ producer-theory writers); the choices below are the ones that fit how Takt alrea
 Thirteen lessons, right hand at 60 unless said, one note a beat, over the drums alone; a jam
 under each at 70 with the band. Lessons 1–6 were built in 0.1 (26)–(33); 7–13 are
 `scripts/scales-extend.py` (run it after editing 1–6 by hand: it keeps them byte for byte).
+Lesson 14 is by hand in each file and in eighths, with the drums on the straight grid under it
+(`feel`, GOALS.md): the pentatonic over two octaves in A minor (the Level 1 goals, 0.1 (91)),
+the C major scale over two octaves in C major (`major2-rh`, the first Level 1 goal, 0.1 (92)).
 
 | # | A minor file | C major file | What's new | Why here |
 |---|---|---|---|---|

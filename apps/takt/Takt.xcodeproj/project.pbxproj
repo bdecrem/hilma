@@ -587,6 +587,7 @@
 		CEA3E80CA71BC34E365A59BF /* syn-clickMin-0a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 724754C34A8806BE828315A9 /* syn-clickMin-0a.caf */; };
 		CF194BDC92FC4391AF2F9517 /* gtr-57-2-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = B6821BFA15C01B0AD91E1479 /* gtr-57-2-1.caf */; };
 		CF7E26B27506474352F8E40A /* syn-hatDub16-0a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 1C96CB8DD47C52B4164F778A /* syn-hatDub16-0a.caf */; };
+		CF8391EAABEF7AAB155CDBE4 /* DemoStage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E3E2A0CA1D7E6E8769485F4 /* DemoStage.swift */; };
 		CF8437708537B6C104D4863C /* hat-0c.caf in Resources */ = {isa = PBXBuildFile; fileRef = ACAFCFE83B0144D8BD65D236 /* hat-0c.caf */; };
 		CF9A5904C488F0E9DBBECD54 /* syn-kickDH-0a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 69A18D2B8AE389E654BD5099 /* syn-kickDH-0a.caf */; };
 		D0556E07BABEDDABE5996C09 /* kick-2b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 2C0170A26E6933ACE6978F7E /* kick-2b.caf */; };
@@ -1077,6 +1078,7 @@
 		7C93ACD2DD529AAE1C9FA057 /* VenueScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VenueScreen.swift; sourceTree = "<group>"; };
 		7CE30DCBE3E72ECE014E12D0 /* syn-hatDH-1c.caf */ = {isa = PBXFileReference; path = "syn-hatDH-1c.caf"; sourceTree = "<group>"; };
 		7D63AD26CC351CFF4E35F87F /* org-68.caf */ = {isa = PBXFileReference; path = "org-68.caf"; sourceTree = "<group>"; };
+		7E3E2A0CA1D7E6E8769485F4 /* DemoStage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoStage.swift; sourceTree = "<group>"; };
 		7EA6F5A2CBE7D3F314967A7C /* syn-stabMin-61-0.caf */ = {isa = PBXFileReference; path = "syn-stabMin-61-0.caf"; sourceTree = "<group>"; };
 		7FD99AB958DF7F12F942E3BD /* gtr-63-4-1.caf */ = {isa = PBXFileReference; path = "gtr-63-4-1.caf"; sourceTree = "<group>"; };
 		8126E18CD90A6679714BEC02 /* map-blues.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "map-blues.json"; sourceTree = "<group>"; };
@@ -1596,6 +1598,7 @@
 				16C45267D4102101E567236B /* ChannelStrip.swift */,
 				F8C3928533C5BB6418CCBE93 /* CoachPanel.swift */,
 				44B2DAD4F8E7620603BBBB6D /* Demo.swift */,
+				7E3E2A0CA1D7E6E8769485F4 /* DemoStage.swift */,
 				062DF873145E0C3C0BDEFAFF /* Hands.swift */,
 				880D9001CE96FC6DB96D7635 /* KeyboardStrip.swift */,
 				D59BC4A000D534C926E8B67C /* Lesson.swift */,
@@ -3089,6 +3092,7 @@
 				17DAC0C7D741F74668A07811 /* CountInSplash.swift in Sources */,
 				FF098609992B64F48C556EAA /* DebugHooks.swift in Sources */,
 				D5029BEB3506AC653127CFDC /* Demo.swift in Sources */,
+				CF8391EAABEF7AAB155CDBE4 /* DemoStage.swift in Sources */,
 				27010E4416321E682911278A /* DubChamber.swift in Sources */,
 				F5C8544A6C8E51E5CD7E7384 /* DubStab.swift in Sources */,
 				C2044003D5825445641057D4 /* EarGame.swift in Sources */,
@@ -3178,7 +3182,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 91;
+				CURRENT_PROJECT_VERSION = 92;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -3245,7 +3249,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 91;
+				CURRENT_PROJECT_VERSION = 92;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;

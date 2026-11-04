@@ -148,6 +148,11 @@ struct Lesson: Decodable {
         let band: [String]?
         /// The band transposed by this many semitones (the minor blues in another key).
         let transpose: Int?
+        /// The band's feel under the step. "straight": the shuffle's late eighth (tick 8 of 12)
+        /// plays on the straight eighth (tick 6), so a run in straight eighths sits on the hat
+        /// instead of between its hits; "shuffle" keeps the band as written. Nil: straight when
+        /// the pattern has a note off the shuffle's grid (a tick that is neither 0 nor 8).
+        let feel: String?
         /// This step's own form and chords (a key of its own); nil: the module's.
         let form: [String]?
         let chords: [String: Chord]?
@@ -352,6 +357,14 @@ struct Lesson: Decodable {
             }
         }
         return notes
+    }
+}
+
+extension Lesson.Step {
+    /// Straight eighths under this step (see `feel`): the band plays on the straight grid.
+    var straight: Bool {
+        if let feel { return feel == "straight" }
+        return (pattern ?? []).contains { let t = $0.tick ?? 0; return t != 0 && t != 8 }
     }
 }
 

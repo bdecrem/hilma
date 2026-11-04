@@ -13,6 +13,8 @@ struct KeyboardStrip: View {
     var pressed: Set<Int> = []
     /// Keys → the finger that plays them, drawn as a numbered badge.
     var fingers: [Int: Int] = [:]
+    /// The computer keycaps, when Settings shows them; off on the Show me stage.
+    var keyCaps = true
     @Environment(\.lessonControls) private var controls
     @AppStorage("tapMode") private var tapMode = KeyboardStrip.tapModeDefault
     /// Settings → Input on the Mac: each key carries the computer key that plays it.
@@ -69,7 +71,7 @@ struct KeyboardStrip: View {
     /// The computer key for a note's name (`KeyCatcher`'s A–J row and W E T Y U); the octave
     /// follows the song, so every octave shows the same letter.
     private func keyCap(_ note: Int) -> String? {
-        guard showComputerKeys else { return nil }
+        guard showComputerKeys, keyCaps else { return nil }
         return ["A", "W", "S", "E", "D", "F", "T", "G", "Y", "H", "U", "J"][((note % 12) + 12) % 12]
     }
 

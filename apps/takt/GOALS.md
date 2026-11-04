@@ -75,10 +75,12 @@ one stop per plan level; placeholders.
 ## 2. Level 1: what Bart has to do, and what the app does
 
 From the plan: "A minor pentatonic, both hands. 12-bar minor blues (Am–Dm–Em). Jam with 5 notes
-only." Four goals, all scored:
+only." Five goals, all scored (the C major scale first, Bart, 2026-11-04: "add one additional
+module at the top of the Lesson 1 requirements: C major scale up and down in eights"):
 
 | Goal | Where | Pass |
 |---|---|---|
+| C major, up and down | Scales (C major, `lesson-S1`) → lesson 14, step `major2-rh` (new) | one 100 % chorus at ≥ 72 (eighths, 29 notes a run: two octaves up and back, 3 runs a chorus) |
 | Pentatonic, two octaves, right hand | Scales (A minor) → lesson 14, step `penta2-rh` (new) | one 100 % chorus at ≥ 72 (eighths, 21 notes a run, 3 runs a chorus) |
 | Pentatonic, two octaves, left hand | step `penta2-lh` (new) | same, from A2 |
 | The 12-bar minor blues | Minor Chords → lesson 1 "A minor", step `key-1` | one 100 % chorus at ≥ 70 (the triad on the 1, every change) |
@@ -90,10 +92,13 @@ only." Four goals, all scored:
 1 (the whole minor band at 70). The C major file (`lesson-S1`) is untouched: the plan is in A
 minor, and the goal opens `S1m` whatever the taste setting says.
 
-**Known:** the eighths are straight against the shuffle drums (one note a beat was the scale
-lessons' rule for that reason); the window at 72 is ±100 ms, so a swung eighth still hits. A
-straight-eighth hat for the scale steps would be better. "Show me first" on the free jam plays
-nothing (no pattern).
+**The feel (2026-11-04):** the eighth-note steps were straight against the shuffle drums (hat,
+ride and bass on ticks 0 and 8 of 12; the runs on tick 6, between the hits), which read as "out
+of sync with the music". A step in straight eighths now gets the band on the straight grid:
+`Lesson.Step.straight` (the `feel` key, or derived from a pattern note off the 0/8 grid),
+`BandData.straightened()` (every tick-8 hit and note to tick 6), `AudioEngine.load(band:straight:)`,
+`Player.loadBand`. One note a beat and the jams (tick-8 riffs) keep the shuffle. "Show me
+first" on the free jam plays nothing (no pattern).
 
 ## 3. What's left to build
 
