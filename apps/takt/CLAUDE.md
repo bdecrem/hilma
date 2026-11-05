@@ -1663,6 +1663,9 @@ it to the lesson at the host time it is heard, through the same path as a key pr
   below (C→A, D→B … B→G), black keys −3 semitones, so C3–C5 sounds and scores as A2–A4. A diatonic
   shift, not a transpose (−3 semitones would turn the white keys into A major). MIDI only, not the
   computer keys or the screen. Check: `-LessonCheck` 413/413.
+  **0.1 (100):** Bart's first runs with it read every note right (A3 up to A5 and back) but scored
+  19–20 of 29: the Scorer's C2–C5 range called the chart's own notes above C5 "too high". The range
+  now always covers the chart (`Scorer.judge`); new check, 414/414.
 
 ## Build and run
 

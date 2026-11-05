@@ -942,6 +942,13 @@ enum LessonCheck {
               && s1mPlan.lessons.last?.steps == ["minor2-rh"]
               && s1mPlan.fingerLine(step: "minor2-rh") == "1-2-3, tuck, 1-2-3-4, tuck, 1-2-3, tuck, 1-2-3-4-5, and reverse",
               "\(minorNotes.prefix(15).map(\.display))")
+        // Played where it is written (A3 to A5, what the white-keys remap sends from C3–C5) the run is clean:
+        // the scorer's range covers the chart, so A5 is not "too high" (Bart's runs, 2026-11-05).
+        let asWritten = minorNotes.map { PlayedNote(note: $0.display, tick: Double($0.tick), msPerTick: 60000 / 72 / 12) }
+        let writtenRun = Scorer.judge(chorus: 0, expected: minorNotes, played: asWritten, loopTicks: (minorNotes.map(\.tick).max()! / 48 + 1) * 48,
+                                      ticksPerBeat: 12, rules: ScoringRules())
+        check("A minor in eighths played as written up to A5 is clean, no notes too high",
+              writtenRun.clean && writtenRun.extras.isEmpty, "\(writtenRun.detail) · \(writtenRun.extras.count) extra")
         let changes = mPlan.steps.first { $0.id == "changes" }!
         let changeNotes = mPlan.expected(changes, ticksPerBeat: 12)
         let form = mPlan.form(of: changes)

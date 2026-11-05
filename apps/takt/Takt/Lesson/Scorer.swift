@@ -111,7 +111,11 @@ enum Scorer {
             let next = ticks.filter { $0 > t }.min() ?? (ticks.min()! + loopTicks)
             window[i] = min(window[i], Double(t - prev) / 2, Double(next - t) / 2)
         }
-        func inRange(_ note: Int) -> Bool { (rules.low...rules.high).contains(note) }
+        // The range always covers the chart itself: a two-octave run to A5 (81) is written above
+        // C5, and a keyboard that plays it where it is written must not hear "too high".
+        let low = min(rules.low, expected.map(\.display).min() ?? rules.low)
+        let high = max(rules.high, expected.map(\.display).max() ?? rules.high)
+        func inRange(_ note: Int) -> Bool { (low...high).contains(note) }
 
         let presses = played.sorted { $0.tick < $1.tick }
         var used = [Bool](repeating: false, count: presses.count)
@@ -141,8 +145,8 @@ enum Scorer {
             var kind = ChorusResult.ExtraKind.stray
             for (i, e) in expected.enumerated() where abs(p.tick - (base + Double(e.tick))) <= window[i] {
                 bar = e.bar
-                if p.note > rules.high { kind = .high }
-                else if p.note < rules.low { kind = .low }
+                if p.note > high { kind = .high }
+                else if p.note < low { kind = .low }
                 else { kind = p.note % 12 == e.pitchClass ? .doubled : .wrong }
                 if kind != .doubled && judged[i].mark == .missed { judged[i].mark = .wrong }
                 break
