@@ -347,7 +347,8 @@ final class LessonEngine {
     /// chorus with all its notes.
     private func unit(of step: Lesson.Step) -> (ticks: Int, expected: [ExpectedNote]) {
         let all = step.pattern == nil ? [] : lesson.expected(step, ticksPerBeat: ticksPerBeat)
-        guard step.kind == .play, let cycle = step.cycle, cycle < lesson.form.count, lesson.form.count % cycle == 0, !all.isEmpty else {
+        // A play step, or the improv teacher's idea (the one kind of jam left with a pattern).
+        guard step.kind == .play || step.kind == .jam, let cycle = step.cycle, cycle < lesson.form.count, lesson.form.count % cycle == 0, !all.isEmpty else {
             return (chorusTicks, all)
         }
         let ticks = cycle * ticksPerBar
@@ -746,9 +747,9 @@ final class LessonEngine {
             o.coach = next != chord ? coach.change!.filled(["next": next]) : coach.hold!.filled(["chord": chord])
         }
 
-        // The latest expected note at or before now, and the one after it (none on a card, or
-        // while nothing is scored).
-        let c = expected.isEmpty || !scoring ? Cue() : cue(at: heardTick)
+        // The latest expected note at or before now, and the one after it (none on a card, while
+        // nothing is scored, or on an improv: its pattern is a starting idea, for Show me alone).
+        let c = expected.isEmpty || !scoring || step.kind == .free ? Cue() : cue(at: heardTick)
         o.nowNote = c.nowNote
         o.nextNote = c.nextNote
         o.nowNotes = c.nowNotes
@@ -761,7 +762,7 @@ final class LessonEngine {
     /// Tap mode: the keys a tap at `tick` plays, the expected chord nearest it around the loop.
     /// Empty while nothing is scored.
     func due(at tick: Double) -> [Int] {
-        guard scoring, !expected.isEmpty else { return [] }
+        guard scoring, !expected.isEmpty, step.kind != .free else { return [] }
         let loop = Double(loopTicks)
         let t = (tick.truncatingRemainder(dividingBy: loop) + loop).truncatingRemainder(dividingBy: loop)
         func distance(_ e: ExpectedNote) -> Double {

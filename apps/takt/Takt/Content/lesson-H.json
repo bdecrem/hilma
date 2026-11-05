@@ -135,7 +135,7 @@
       "after": 1,
       "title": "Seventh, walked",
       "skill": "Root, flat third, fifth, flat seventh, one a beat",
-      "goal": "Have fun. A clean chorus marks it played.",
+      "goal": "Improvise two choruses or more. Get notes and one idea back.",
       "step": "jam-m7",
       "theme": {
         "glyph": "walk",
@@ -147,7 +147,7 @@
       "after": 2,
       "title": "Turning over",
       "skill": "Each inversion broken, climbing an octave",
-      "goal": "Have fun. A clean chorus marks it played.",
+      "goal": "Improvise two choruses or more. Get notes and one idea back.",
       "step": "jam-inv",
       "theme": {
         "glyph": "steps:4",
@@ -159,7 +159,7 @@
       "after": 3,
       "title": "Loop with a bump",
       "skill": "The chord on 1, root and fifth on 3",
-      "goal": "Have fun. A clean chorus marks it played.",
+      "goal": "Improvise two choruses or more. Get notes and one idea back.",
       "step": "jam-loop",
       "theme": {
         "glyph": "bars:13",
@@ -171,7 +171,7 @@
       "after": 4,
       "title": "Moving less at 80",
       "skill": "The near shapes on 1 and 3, faster",
-      "goal": "Have fun. A clean chorus marks it played.",
+      "goal": "Improvise two choruses or more. Get notes and one idea back.",
       "step": "jam-lead",
       "theme": {
         "glyph": "tempo",
@@ -183,7 +183,7 @@
       "after": 5,
       "title": "Chank with a push",
       "skill": "The and of 1, then 2 and 4",
-      "goal": "Have fun. A clean chorus marks it played.",
+      "goal": "Improvise two choruses or more. Get notes and one idea back.",
       "step": "jam-chank",
       "theme": {
         "glyph": "bars:24",
@@ -195,7 +195,7 @@
       "after": 6,
       "title": "Sus on the four",
       "skill": "Sus on 1, home on 2, sus again on 4",
-      "goal": "Have fun. A clean chorus marks it played.",
+      "goal": "Improvise two choruses or more. Get notes and one idea back.",
       "step": "jam-sus",
       "theme": {
         "glyph": "keys:145",
@@ -207,7 +207,7 @@
       "after": 7,
       "title": "Shell and five",
       "skill": "The shell on 1, the fifth alone on 3",
-      "goal": "Have fun. A clean chorus marks it played.",
+      "goal": "Improvise two choruses or more. Get notes and one idea back.",
       "step": "jam-shell",
       "theme": {
         "glyph": "bars:13",
@@ -219,7 +219,7 @@
       "after": 8,
       "title": "Nine, broken",
       "skill": "The rootless shape, a note a beat",
-      "goal": "Have fun. A clean chorus marks it played.",
+      "goal": "Improvise two choruses or more. Get notes and one idea back.",
       "step": "jam-m9",
       "theme": {
         "glyph": "walk",
@@ -869,7 +869,7 @@
     },
     {
       "id": "jam-m7",
-      "kind": "jam",
+      "kind": "free",
       "title": "Seventh, walked",
       "skill": "jam.m7.walked",
       "tempo": 70,
@@ -914,7 +914,7 @@
     },
     {
       "id": "jam-inv",
-      "kind": "jam",
+      "kind": "free",
       "title": "Turning over",
       "skill": "jam.inversions.broken",
       "tempo": 70,
@@ -1010,7 +1010,7 @@
     },
     {
       "id": "jam-loop",
-      "kind": "jam",
+      "kind": "free",
       "title": "Loop with a bump",
       "skill": "jam.loop.bump",
       "tempo": 70,
@@ -1146,7 +1146,7 @@
     },
     {
       "id": "jam-lead",
-      "kind": "jam",
+      "kind": "free",
       "title": "Moving less at 80",
       "skill": "jam.voicelead.80",
       "tempo": 80,
@@ -1344,7 +1344,7 @@
     },
     {
       "id": "jam-chank",
-      "kind": "jam",
+      "kind": "free",
       "title": "Chank with a push",
       "skill": "jam.chank.push",
       "tempo": 80,
@@ -1417,7 +1417,7 @@
     },
     {
       "id": "jam-sus",
-      "kind": "jam",
+      "kind": "free",
       "title": "Sus on the four",
       "skill": "jam.sus4.four",
       "tempo": 70,
@@ -1487,7 +1487,7 @@
     },
     {
       "id": "jam-shell",
-      "kind": "jam",
+      "kind": "free",
       "title": "Shell and five",
       "skill": "jam.shell.five",
       "tempo": 70,
@@ -1532,7 +1532,7 @@
     },
     {
       "id": "jam-m9",
-      "kind": "jam",
+      "kind": "free",
       "title": "Nine, broken",
       "skill": "jam.m9.broken",
       "tempo": 70,

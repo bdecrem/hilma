@@ -16,6 +16,8 @@ final class AppModel {
             player?.inGame = route == .game
             if route != .map { openVenue = nil }
             if ![.lesson, .result, .calibrate, .game].contains(route) { fromLevel = nil }
+            // Off the lesson screen the teacher's idea goes and the module is as bundled again.
+            if route != .lesson { player?.dropVersion() }
         }
     }
 
@@ -105,10 +107,146 @@ final class AppModel {
             case .jam:
                 guard v.free != nil, v.counted else { continue }
                 progress.goalJam(key, needed: item.choruses ?? 1)
-            case .song:
+            case .song, .improv:
                 continue
             }
         }
+    }
+
+    // MARK: Improv (IMPROV.md)
+
+    /// The review sheet over an improv: the take sent, then the teacher's steps, the review, or
+    /// what went wrong.
+    struct ImprovReview: Equatable {
+        enum Phase: Equatable {
+            case listening([String])
+            case reviewed(Improv.Review, id: String?)
+            case failed(String)
+        }
+        var phase: Phase
+        let take: Improv.Take
+        let count: Improv.Count
+        /// The plan's improv goals this take counts for (title, met), and the XP it earned.
+        var goals: [(title: String, met: Bool)] = []
+        var xp = 0
+        let started: Date
+
+        static func == (a: Self, b: Self) -> Bool {
+            a.phase == b.phase && a.take == b.take && a.xp == b.xp && a.goals.map(\.title) == b.goals.map(\.title) && a.goals.map(\.met) == b.goals.map(\.met)
+        }
+    }
+    var improvReview: ImprovReview?
+    @ObservationIgnored private lazy var improvClient = ImprovClient()
+    @ObservationIgnored private var improvTask: Task<Void, Never>?
+
+    /// "Send it": the band stops, the take goes to the teacher, the sheet shows it listening.
+    func sendTake() {
+        guard let player, let take = player.improvTake(), take.notes.count >= Player.takeMinimum else { return }
+        player.pauseForReview()
+        let content = player.content, step = player.currentStep
+        let allowed = content.scale(of: step)
+        let count = Improv.Count.of(take, formBars: content.form(of: step).count, allowed: allowed)
+        let song = step.backing.map { Song.bundled($0) }
+        let names = ["C", "C♯", "D", "E♭", "E", "F", "F♯", "G", "A♭", "A", "B♭", "B"]
+        let root = content.chords(of: step)[content.form(of: step).first ?? ""]?.root ?? 0
+        let backing: [String: Any] = [
+            "title": song?.meta.title ?? "the \(content.module.title) band",
+            "style": song?.meta.style ?? content.module.title,
+            "key": song?.meta.key ?? step.key ?? content.key ?? names[root],
+            "feel": step.straight ? "straight" : "shuffle",
+            "form": content.form(of: step),
+            "scale": step.scale == nil ? NSNull() : Array(allowed).sorted(),
+            "scaleName": step.scale == nil ? "" : (0..<12).map { (root + $0) % 12 }.filter { allowed.contains($0) }.map { names[$0] }.joined(separator: " "),
+        ]
+        let jam = content.jams?.first { $0.step == step.id }
+        let goals = plan.levels.flatMap { l in l.items.filter { $0.kind == .improv && $0.step == step.id && $0.module.map({ module($0).code }) == content.code }.map { (l, $0) } }
+        let context: [String: Any] = [
+            "where": goals.isEmpty ? "jam" : "level",
+            "title": jam?.title ?? step.title,
+            "about": step.about ?? "",
+            "hand": step.hand ?? "right",
+            "device": Self.device,
+        ]
+        var state = ImprovReview(phase: .listening([]), take: take, count: count, started: Date())
+        state.goals = goals.map { (l, i) in
+            ("Level \(l.n) · \(i.title)", count.choruses >= (i.choruses ?? 0) && count.notes >= (i.minNotes ?? 0) && count.inScale >= (i.inScale ?? 1) - 1e-9)
+        }
+        improvReview = state
+        let request = ImprovClient.Request(take: take, backing: backing, context: context)
+        improvTask?.cancel()
+        improvTask = Task { @MainActor [weak self] in
+            guard let self else { return }
+            #if DEBUG
+            // `-ImprovReview <file>`: the review from a saved file (a `review` event's review), no network.
+            if let path = UserDefaults.standard.string(forKey: "ImprovReview"),
+               let review = try? JSONDecoder().decode(Improv.Review.self, from: Data(contentsOf: URL(fileURLWithPath: path))) {
+                self.reviewed(review, id: "debug", goals: goals)
+                return
+            }
+            #endif
+            for await e in self.improvClient.review(request) {
+                guard self.improvReview?.started == state.started else { return }
+                switch e {
+                case .status(let text):
+                    if case .listening(let steps) = self.improvReview?.phase { self.improvReview?.phase = .listening(steps + [text]) }
+                case .review(let review, let id):
+                    self.reviewed(review, id: id, goals: goals)
+                case .failed(let text):
+                    self.improvReview?.phase = .failed(text)
+                }
+            }
+        }
+    }
+
+    private func reviewed(_ review: Improv.Review, id: String?, goals: [(LearningPlan.Level, LearningPlan.Item)]) {
+        guard var state = improvReview else { return }
+        #if DEBUG
+        // `-ImprovVersion 1`: straight on to the idea once it's in (screenshots of the version).
+        defer { if UserDefaults.standard.bool(forKey: "ImprovVersion") { DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { self.tryVersion() } } }
+        #endif
+        state.phase = .reviewed(review, id: id)
+        if !ProgressStore.readOnly {
+            if progress.award("improv·\(id ?? UUID().uuidString)", kind: "improv", points: Improv.XP.improv) { state.xp += Improv.XP.improv }
+            for ((level, item), g) in zip(goals, state.goals) where g.met && progress.goal(plan.key(level, item)).done == nil {
+                progress.goalImprov(plan.key(level, item))
+                state.xp += Improv.XP.goal
+            }
+        }
+        improvReview = state
+    }
+
+    /// The sheet's "Try my version": the idea as a step over the same backing.
+    func tryVersion() {
+        guard let player, case .reviewed(let review, let id) = improvReview?.phase else { return }
+        improvReview = nil
+        player.startVersion(review.idea, take: String((id ?? UUID().uuidString).prefix(8)))
+    }
+
+    /// The sheet's "Improvise again": a new take from the top.
+    func improviseAgain() {
+        improvTask?.cancel()
+        improvReview = nil
+        player?.improviseAgain()
+    }
+
+    /// The sheet's "Send it again", after a failure: the same take.
+    func resendTake() {
+        guard improvReview != nil else { return }
+        improvReview = nil
+        sendTake()
+    }
+
+    func closeReview() {
+        improvTask?.cancel()
+        improvReview = nil
+    }
+
+    static var device: String {
+        #if targetEnvironment(macCatalyst)
+        return "mac"
+        #else
+        return "iphone"
+        #endif
     }
 
     /// Every Stage run played to the end (`Player.onGameRun`): a song goal on that song, part and
@@ -180,6 +318,9 @@ final class AppModel {
         self.mods = mods
         player?.onGoalChorus = { [weak self] code, v in self?.goalJudged(module: code, verdict: v) }
         player?.onGameRun = { [weak self] r in self?.goalRun(r) }
+        #if DEBUG
+        player?.onImprovDone = { [weak self] in self?.sendTake() }
+        #endif
         #if DEBUG
         let d = UserDefaults.standard
         // `-LoadMod <file>` puts a saved bundle on the set list without an account.

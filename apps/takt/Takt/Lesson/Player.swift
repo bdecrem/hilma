@@ -178,8 +178,15 @@ final class Player {
     private func wire() {
         engine.onVerdict = { [weak self, lessonLog, progress, code = content.code] v in
             let what: String
-            // Play mode: a clean chorus marks the jam done (a free jam's chorus in the scale too).
-            if let jam = v.jam, v.counted { progress.jamDone(jam, in: code) }
+            // Play mode: a clean chorus marks the jam done (a free jam's chorus in the scale too);
+            // the improv teacher's idea is not a jam of the module, it pays XP instead.
+            if let jam = v.jam, jam.hasPrefix(Improv.versionPrefix) {
+                let take = String(jam.dropFirst(Improv.versionPrefix.count))
+                if let r = v.result, r.hits * 2 >= r.notes.count { progress.award("version·\(take)", kind: "version", points: Improv.XP.version) }
+                if v.counted { progress.award("version-clean·\(take)", kind: "version", points: Improv.XP.versionClean) }
+            } else if let jam = v.jam, v.counted {
+                progress.jamDone(jam, in: code)
+            }
             // The plan's goals score themselves off the same verdict.
             self?.onGoalChorus?(code, v)
             if let free = v.free {
@@ -255,9 +262,62 @@ final class Player {
         }
     }
 
+    // MARK: Improv
+
+    /// What you've played on this improv so far (`Improv.Recorder`); `takeNotes` for the screen.
+    @ObservationIgnored private var recorder = Improv.Recorder()
+    private(set) var takeNotes = 0
+
+    /// The step the engine is on (an improv's backing, scale and form for the teacher).
+    var currentStep: Lesson.Step { engine.step }
+    var chorusTicks: Int { engine.chorusTicks }
+
+    /// The take so far, to the end of the chorus being played.
+    func improvTake() -> Improv.Take? {
+        recorder.take(chorusTicks: engine.chorusTicks, ticksPerBeat: audio.band.ticksPerBeat, formBars: content.form(of: engine.step).count,
+                      tempo: tempo, now: heardTick)
+    }
+
+    /// Sent: the band stops where it is; the take stays until you improvise again.
+    func pauseForReview() {
+        if demo { endDemo(stop: false) }
+        if playing { audio.send(.pause) }
+    }
+
+    /// Improvise again: a new take from the top.
+    func improviseAgain() {
+        recorder.reset()
+        takeNotes = 0
+        demoEnded = false
+        fromTheTop()
+    }
+
+    /// The teacher's idea as a step over the same backing, from its intro (Show me plays it).
+    /// `take` names it (the review's id), so its XP is paid once.
+    func startVersion(_ idea: Improv.Review.Idea, take: String) {
+        let improv = engine.step
+        guard improv.kind == .free else { return }
+        if versionBase == nil { versionBase = content }
+        let (withIt, i) = content.withVersion(Improv.versionStep(idea, of: improv, take: take), after: improv)
+        content = withIt
+        restartLesson(at: i)
+    }
+
+    /// The module before the teacher's idea was added to it.
+    @ObservationIgnored private var versionBase: Lesson?
+
+    /// The module as it was again, the idea's step gone (leaving the lesson screen).
+    func dropVersion() {
+        guard let base = versionBase else { return }
+        versionBase = nil
+        content = base
+        resume()
+    }
+
     /// Another module: its band (the minor blues beside the shuffle, from the same tick), form,
     /// channels and steps, picked up where it was.
     func switchModule(to lesson: Lesson) {
+        versionBase = nil
         guard lesson.code != content.code else { return }
         // Its band comes in with its first step (`restartLesson`, through `resume`).
         content = lesson
@@ -274,7 +334,9 @@ final class Player {
         engine.onAction = nil
         engine.onVerdict = nil
         engine = LessonEngine(lesson: content, ticksPerBeat: audio.band.ticksPerBeat, gated: Self.gated)
-        loadBand(straight: engine.step.straight)
+        recorder.reset()
+        takeNotes = 0
+        loadBand()
         audio.send(.silence(from: 0, to: 0))
         for (c, ch) in zip(content.channels, channels) { audio.send(.mute(ch, c.unlockAt != nil)) }
         for ch in [Channel.drums, .bass, .keys, .horns] where !channels.contains(ch) { audio.send(.mute(ch, true)) }
@@ -287,23 +349,27 @@ final class Player {
         publish()
     }
 
-    /// The band in the engine: the module's file, straight or as written. Swapped only when
-    /// that changes (a step's feel, another module, back from the Stage).
+    /// The band in the engine: the module's file, or the step's backing (a Stage song looping
+    /// by the step's form, for an improv), straight or as written. Swapped only when that
+    /// changes (a step's feel or backing, another module, back from the Stage).
     @ObservationIgnored private var loadedBand: (name: String, straight: Bool)?
 
-    private func loadBand(straight: Bool) {
-        let want = (name: content.band, straight: straight)
+    private func loadBand() {
+        let step = engine.step
+        let want = (name: step.backing ?? content.band, straight: step.straight)
         if let l = loadedBand, l == want { return }
-        chorusBars = audio.load(band: want.name, straight: want.straight).chorusBars
+        chorusBars = audio.load(band: want.name, straight: want.straight, loop: step.backing.map { _ in content.form(of: step) }).chorusBars
         loadedBand = want
         lessonLog.info("band \(want.name, privacy: .public) \(want.straight ? "straight" : "as written", privacy: .public)")
+        // A backing brings its own instruments: your keys follow it (Blue Lantern's Rhodes).
+        applyInstrument()
     }
 
     /// A step that names its band (the scales over the drums alone, a jam over the whole band)
     /// mutes the rest; a step without one keeps the module's unlock state. A step in straight
     /// eighths gets the band on the straight grid (`Lesson.Step.straight`).
     private func applyBand() {
-        loadBand(straight: engine.step.straight)
+        loadBand()
         guard let band = engine.step.band else { return }
         for (i, c) in content.channels.enumerated() { audio.send(.mute(channels[i], !band.contains(c.channel))) }
     }
@@ -383,6 +449,8 @@ final class Player {
     func beginStep() {
         if demo { endDemo(stop: false) }
         demoEnded = false
+        recorder.reset()
+        takeNotes = 0
         engine.begin()
         publish()
         fromTheTop()
@@ -398,7 +466,13 @@ final class Player {
     }
 
     private func fromTheTop() {
+        // A step's tempo and its channels' unmutes asked for while the band played (the menu's
+        // band, a goal opened from the map) wait for a downbeat, and a stop drops what waits
+        // (0.1 (57)); stopped, they apply at once, so they go again after it.
+        let tempo = pendingTempo, unmute = pendingUnmute
         audio.send(.stop)
+        if let tempo { audio.send(.tempo(Double(tempo))) }
+        for ch in Channel.allCases where unmute & ch.bit != 0 { audio.send(.mute(ch, false)) }
         if Self.countInOn { audio.send(.countIn(beats: 4)) }
         audio.send(.play)
     }
@@ -526,6 +600,11 @@ final class Player {
         guard inLesson, !demo else { return }
         let p = clock.position(atHost: calibrated ? shifted(hostTime, clock) : hostTime)
         engine.played(note: note, tick: p.tick, msPerTick: p.msPerTick, epoch: s.epoch, velocity: velocity)
+        // An improv keeps the take for the teacher (not on its intro, not while stopped).
+        if engine.step.kind == .free, lesson.intro == nil, playing {
+            recorder.press(note, tick: p.tick, velocity: Double(velocity), epoch: s.epoch)
+            takeNotes = recorder.count
+        }
         Self.dump(String(format: "press %d tick %.1f (bar %d beat %.2f) epoch %d calibrated %@ step %d now %@ vel %.2f",
                          note, p.tick, Int(p.tick / Double(4 * audio.band.ticksPerBeat)) + 1,
                          (p.tick.truncatingRemainder(dividingBy: Double(4 * audio.band.ticksPerBeat))) / Double(audio.band.ticksPerBeat) + 1,
@@ -539,6 +618,7 @@ final class Player {
         guard clock.valid else { return }
         let p = clock.position(atHost: calibrated ? shifted(hostTime, clock) : hostTime)
         engine.released(note: note, tick: p.tick, epoch: s.epoch)
+        if engine.step.kind == .free { recorder.release(note, tick: p.tick, epoch: s.epoch) }
     }
 
     /// A press `inputOffsetMs` early (negative) is placed that much later.
@@ -671,6 +751,9 @@ final class Player {
 
     /// The step can be played for you: a play step (an intro's too), not a card, not Lesson
     /// complete, not the result.
+    /// Notes a take needs before it can go to the teacher.
+    static let takeMinimum = 8
+
     var canDemo: Bool {
         engine.step.kind != .card && !engine.expected.isEmpty && finish == nil && lesson.complete == nil
     }
@@ -1139,6 +1222,7 @@ final class Player {
         engine.heard(tick: heard.tick, tempo: heard.tempo, rolling: heard.rolling, epoch: s.epoch)
         #if DEBUG
         runAutoplay(clock, heard: heard, epoch: s.epoch)
+        runImprovPlay(clock, heard: heard, epoch: s.epoch)
         DebugHooks.writeClockIfRequested(clock)
         #endif
         publish()
@@ -1177,6 +1261,48 @@ final class Player {
 
     /// Plans a bar ahead, schedules the presses on the monitor, and hands each one to the
     /// lesson when it is heard, at the host time it is heard (the same path as a key press).
+    /// `-ImprovPlay <choruses>` on an improv: starts it, plays a made-up solo on the step's notes
+    /// (a phrase climbing on beats 1, 2, 3 and the "and" of 3, then two notes and room) through
+    /// the press path, and after that many choruses calls `onImprovDone` (AppModel sends the take).
+    @ObservationIgnored var onImprovDone: (() -> Void)?
+    @ObservationIgnored private var improvPlayed: [(note: Int, tick: Double, len: Double)] = []
+    @ObservationIgnored private var improvBegun = false
+    @ObservationIgnored private var improvPlannedBar = -1
+    @ObservationIgnored private var improvSent = false
+
+    private func runImprovPlay(_ clock: TransportClock, heard: TransportClock.Position, epoch: Int) {
+        let want = UserDefaults.standard.integer(forKey: "ImprovPlay")
+        guard want > 0, inLesson, engine.step.kind == .free, !improvSent else { return }
+        if lesson.intro != nil {
+            if !improvBegun { improvBegun = true; beginStep() }
+            return
+        }
+        guard heard.rolling, heard.tick >= 0 else { return }
+        let bar = 4 * audio.band.ticksPerBeat
+        let allowed = content.scale(of: engine.step)
+        let keys = (57...79).filter { allowed.contains($0 % 12) }
+        while improvPlannedBar < Int(heard.tick) / bar + 1 {
+            improvPlannedBar += 1
+            let b = improvPlannedBar
+            let start = (b * 3) % max(1, keys.count - 4)
+            let shape: [(Double, Int, Double)] = b % 2 == 0 ? [(0, 0, 12), (12, 1, 12), (24, 2, 6), (30, 3, 18)] : [(0, 3, 12), (12, 1, 24)]
+            for (t, step, len) in shape where start + step < keys.count {
+                improvPlayed.append((keys[start + step], Double(b * bar) + t, len))
+            }
+        }
+        while let p = improvPlayed.first, p.tick <= heard.tick {
+            improvPlayed.removeFirst()
+            guard let host = clock.hostTime(atTick: p.tick) else { continue }
+            audio.send(.schedule(note: p.note, velocity: 0.7, tick: p.tick, lengthTicks: p.len))
+            score(p.note, hostTime: host, velocity: 0.7, calibrated: false)
+            if let end = clock.hostTime(atTick: p.tick + p.len) { scoreRelease(p.note, hostTime: end, calibrated: false) }
+        }
+        if heard.tick >= Double(want * engine.chorusTicks) + 6 {
+            improvSent = true
+            onImprovDone?()
+        }
+    }
+
     private func runAutoplay(_ clock: TransportClock, heard: TransportClock.Position, epoch: Int) {
         if epoch != autoEpoch {
             // Stopped: the renderer dropped what was scheduled; start over from here.
@@ -1271,7 +1397,9 @@ final class Player {
             rightHand: lesson.rightHand,
             stepTempo: lesson.stepTempo,
             demo: demo,
-            canDemo: canDemo
+            canDemo: canDemo,
+            improv: engine.step.kind == .free && lesson.intro == nil && !demo
+                ? LessonState.Improv(notes: takeNotes, canSend: takeNotes >= Self.takeMinimum) : nil
         )
     }
 
@@ -1279,7 +1407,8 @@ final class Player {
     /// (from the engine's index into the chorus), whether this bar is the hold, and the pass.
     private func runState(nowIndex: Int?) -> LessonState.Run? {
         let step = engine.step
-        guard let cycle = step.cycle, let pattern = step.pattern, !pattern.isEmpty, step.kind != .card else { return nil }
+        // An improv's pattern is a starting idea: the run shows only while Show me plays it.
+        guard let cycle = step.cycle, let pattern = step.pattern, !pattern.isEmpty, step.kind != .card, step.kind != .free || demo else { return nil }
         let one = content.expected(step, ticksPerBeat: audio.band.ticksPerBeat).prefix(pattern.count)
         let notes = one.map { LessonState.Run.Note(key: $0.display, finger: $0.finger ?? 0) }
         let resting = !pattern.contains { ($0.bar ?? 0) == bar % cycle }

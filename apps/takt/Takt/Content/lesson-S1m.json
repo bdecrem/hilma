@@ -2231,7 +2231,7 @@
   },
   {
    "id": "jam-up",
-   "kind": "jam",
+   "kind": "free",
    "title": "First riff",
    "skill": "jam.up.S1m",
    "tempo": 70,
@@ -2306,7 +2306,7 @@
   },
   {
    "id": "jam-down",
-   "kind": "jam",
+   "kind": "free",
    "title": "Falling riff",
    "skill": "jam.down.S1m",
    "tempo": 70,
@@ -2375,7 +2375,7 @@
   },
   {
    "id": "jam-updown",
-   "kind": "jam",
+   "kind": "free",
    "title": "The blue note",
    "skill": "jam.updown.S1m",
    "tempo": 70,
@@ -2450,7 +2450,7 @@
   },
   {
    "id": "jam-two",
-   "kind": "jam",
+   "kind": "free",
    "title": "The jump",
    "skill": "jam.two.S1m",
    "tempo": 70,
@@ -2525,7 +2525,7 @@
   },
   {
    "id": "jam-left",
-   "kind": "jam",
+   "kind": "free",
    "title": "Walking bass",
    "skill": "jam.left.S1m",
    "tempo": 70,
@@ -2599,7 +2599,7 @@
   },
   {
    "id": "jam-blues",
-   "kind": "jam",
+   "kind": "free",
    "title": "Blues riff",
    "skill": "jam.blues.S1m",
    "tempo": 70,
@@ -2712,7 +2712,7 @@
   },
   {
    "id": "jam-penta",
-   "kind": "jam",
+   "kind": "free",
    "title": "Pentatonic riff",
    "skill": "jam.penta.S1m",
    "tempo": 70,
@@ -2831,7 +2831,7 @@
   },
   {
    "id": "jam-relpenta",
-   "kind": "jam",
+   "kind": "free",
    "title": "Bright riff",
    "skill": "jam.relpenta.S1m",
    "tempo": 70,
@@ -2976,7 +2976,7 @@
   },
   {
    "id": "jam-key2",
-   "kind": "jam",
+   "kind": "free",
    "title": "E minor riff",
    "skill": "jam.key2.S1m",
    "tempo": 70,
@@ -3116,7 +3116,7 @@
   },
   {
    "id": "jam-key3",
-   "kind": "jam",
+   "kind": "free",
    "title": "D minor riff",
    "skill": "jam.key3.S1m",
    "tempo": 70,
@@ -3257,7 +3257,7 @@
   },
   {
    "id": "jam-color",
-   "kind": "jam",
+   "kind": "free",
    "title": "Lean on the seventh",
    "skill": "jam.color.S1m",
    "tempo": 70,
@@ -3349,7 +3349,7 @@
   },
   {
    "id": "jam-dorian",
-   "kind": "jam",
+   "kind": "free",
    "title": "Dorian vamp",
    "skill": "jam.dorian.S1m",
    "tempo": 70,
@@ -3441,7 +3441,7 @@
   },
   {
    "id": "jam-chroma",
-   "kind": "jam",
+   "kind": "free",
    "title": "Chromatic, down",
    "skill": "jam.chroma.S1m",
    "tempo": 70,
@@ -3542,6 +3542,132 @@
     "join": "Jump in on the 1.",
     "slow": "Clean at {tempo}."
    }
+  },
+  {
+   "id": "improv-five",
+   "kind": "free",
+   "title": "Improvise on five notes",
+   "skill": "rh.improv.penta.S1m",
+   "tempo": 80,
+   "hand": "right",
+   "feel": "shuffle",
+   "backing": "song-maxwell-street-five",
+   "band": [
+    "drums",
+    "bass",
+    "keys"
+   ],
+   "minNotes": 8,
+   "form": [
+    "A7",
+    "A7",
+    "A7",
+    "A7",
+    "A7",
+    "A7",
+    "A7",
+    "A7",
+    "E7",
+    "D7",
+    "A7",
+    "E7"
+   ],
+   "chords": {
+    "A7": {
+     "numeral": "I",
+     "root": 9
+    },
+    "D7": {
+     "numeral": "IV",
+     "root": 2
+    },
+    "E7": {
+     "numeral": "V",
+     "root": 4
+    }
+   },
+   "scale": [
+    0,
+    3,
+    5,
+    7,
+    10
+   ],
+   "about": "Maxwell Street II's band without its horn: the solo is yours. Play anything on A C D E G for two choruses or more. In the stop time, answer the riff; in the release, ride the shuffle. When you're done, send it: the teacher listens and sends back notes and one idea, made from what you played.",
+   "coach": {
+    "change": "Get ready. {next} on the 1.",
+    "hold": "{chord}. Play what you hear.",
+    "clean": "That's a chorus. Keep going.",
+    "again": "{problem} Keep going.",
+    "join": "From the top.",
+    "intro": "Your solo. A C D E G."
+   }
+  },
+  {
+   "id": "improv-white",
+   "kind": "free",
+   "title": "Improvise on the white keys",
+   "skill": "rh.improv.white.S1m",
+   "tempo": 84,
+   "hand": "right",
+   "feel": "straight",
+   "backing": "song-blue-lantern-white",
+   "band": [
+    "drums",
+    "bass",
+    "keys"
+   ],
+   "minNotes": 8,
+   "form": [
+    "Dm7",
+    "Dm7",
+    "Dm7",
+    "Dm7",
+    "Gm7",
+    "Gm7",
+    "Dm7",
+    "Dm7",
+    "Bb7",
+    "A7",
+    "Dm7",
+    "A7"
+   ],
+   "chords": {
+    "Dm7": {
+     "numeral": "i",
+     "root": 2
+    },
+    "Gm7": {
+     "numeral": "iv",
+     "root": 7
+    },
+    "Bb7": {
+     "numeral": "VI",
+     "root": 10
+    },
+    "A7": {
+     "numeral": "V",
+     "root": 9
+    }
+   },
+   "scale": [
+    0,
+    2,
+    3,
+    5,
+    7,
+    9,
+    10
+   ],
+   "about": "Blue Lantern II's band without its sax: the solo is yours. Play anything on the white keys, the notes of C major and A natural minor, for two choruses or more. Leave space, repeat what you like, land somewhere on beat 1. When you're done, send it: the teacher listens and sends back notes and one idea, made from what you played.",
+   "coach": {
+    "change": "Get ready. {next} on the 1.",
+    "hold": "{chord}. Play what you hear.",
+    "clean": "That's a chorus. Keep going.",
+    "again": "{problem} Keep going.",
+    "join": "From the top.",
+    "intro": "Your solo. White keys only."
+   }
   }
  ],
  "jams": [
@@ -3549,7 +3675,7 @@
    "after": 1,
    "title": "First riff",
    "skill": "A C D E, up and back, over the band",
-   "goal": "Have fun. A clean chorus marks it played.",
+   "goal": "Improvise two choruses or more. Get notes and one idea back.",
    "step": "jam-up",
    "theme": {
     "glyph": "steps",
@@ -3561,7 +3687,7 @@
    "after": 2,
    "title": "Falling riff",
    "skill": "A G E D, then E G A: a riff that drops from the top",
-   "goal": "Have fun. A clean chorus marks it played.",
+   "goal": "Improvise two choruses or more. Get notes and one idea back.",
    "step": "jam-down",
    "theme": {
     "glyph": "fall",
@@ -3573,7 +3699,7 @@
    "after": 3,
    "title": "The blue note",
    "skill": "A C D E♭, then E D C A: the flat third slips in",
-   "goal": "Have fun. A clean chorus marks it played.",
+   "goal": "Improvise two choruses or more. Get notes and one idea back.",
    "step": "jam-updown",
    "theme": {
     "glyph": "blue",
@@ -3585,7 +3711,7 @@
    "after": 4,
    "title": "The jump",
    "skill": "A C E A: the chord's notes, up an octave and back",
-   "goal": "Have fun. A clean chorus marks it played.",
+   "goal": "Improvise two choruses or more. Get notes and one idea back.",
    "step": "jam-two",
    "theme": {
     "glyph": "keys:1358",
@@ -3597,7 +3723,7 @@
    "after": 5,
    "title": "Walking bass",
    "skill": "A C D E in the left hand: you are the bass now",
-   "goal": "Have fun. A clean chorus marks it played.",
+   "goal": "Improvise two choruses or more. Get notes and one idea back.",
    "step": "jam-left",
    "theme": {
     "glyph": "walk",
@@ -3609,7 +3735,7 @@
    "after": 6,
    "title": "Blues riff",
    "skill": "A C D E♭ E G A with a shuffle, up and down",
-   "goal": "Have fun. A clean chorus marks it played.",
+   "goal": "Improvise two choruses or more. Get notes and one idea back.",
    "step": "jam-blues",
    "theme": {
     "glyph": "blue",
@@ -3621,7 +3747,7 @@
    "after": 7,
    "title": "Pentatonic riff",
    "skill": "The five notes as a riff, over the band",
-   "goal": "Have fun. A clean chorus marks it played.",
+   "goal": "Improvise two choruses or more. Get notes and one idea back.",
    "step": "jam-penta",
    "theme": {
     "glyph": "steps:5",
@@ -3633,7 +3759,7 @@
    "after": 8,
    "title": "Bright riff",
    "skill": "C major pentatonic over the band",
-   "goal": "Have fun. A clean chorus marks it played.",
+   "goal": "Improvise two choruses or more. Get notes and one idea back.",
    "step": "jam-relpenta",
    "theme": {
     "glyph": "hill",
@@ -3645,7 +3771,7 @@
    "after": 9,
    "title": "E minor riff",
    "skill": "The pentatonic riff in E, over the blues in G",
-   "goal": "Have fun. A clean chorus marks it played.",
+   "goal": "Improvise two choruses or more. Get notes and one idea back.",
    "step": "jam-key2",
    "theme": {
     "glyph": "steps:5",
@@ -3657,7 +3783,7 @@
    "after": 10,
    "title": "D minor riff",
    "skill": "The pentatonic riff in D, over the blues in F",
-   "goal": "Have fun. A clean chorus marks it played.",
+   "goal": "Improvise two choruses or more. Get notes and one idea back.",
    "step": "jam-key3",
    "theme": {
     "glyph": "steps:5",
@@ -3669,7 +3795,7 @@
    "after": 11,
    "title": "Lean on the seventh",
    "skill": "E F G♯ A, the pull to the root",
-   "goal": "Have fun. A clean chorus marks it played.",
+   "goal": "Improvise two choruses or more. Get notes and one idea back.",
    "step": "jam-color",
    "theme": {
     "glyph": "keys:7",
@@ -3681,7 +3807,7 @@
    "after": 12,
    "title": "Dorian vamp",
    "skill": "A two-bar vamp with the F♯ on the beat",
-   "goal": "Have fun. A clean chorus marks it played.",
+   "goal": "Improvise two choruses or more. Get notes and one idea back.",
    "step": "jam-dorian",
    "theme": {
     "glyph": "keys:6",
@@ -3693,12 +3819,36 @@
    "after": 13,
    "title": "Chromatic, down",
    "skill": "A to A, every key, the way back",
-   "goal": "Have fun. A clean chorus marks it played.",
+   "goal": "Improvise two choruses or more. Get notes and one idea back.",
    "step": "jam-chroma",
    "theme": {
     "glyph": "hand",
     "title": "The mirror",
     "line": "Down is up backwards: the same fingers on the same keys, the thumb landing instead of tucking."
+   }
+  },
+  {
+   "after": 14,
+   "title": "Improvise on five notes",
+   "skill": "Your solo over Maxwell Street II's band, on A C D E G",
+   "goal": "Improvise two choruses or more. Get notes and one idea back.",
+   "step": "improv-five",
+   "theme": {
+    "glyph": "keys:135",
+    "title": "Five notes, your way",
+    "line": "A C D E G and the band. Play, leave space, play again."
+   }
+  },
+  {
+   "after": 15,
+   "title": "Improvise on the white keys",
+   "skill": "Your solo over Blue Lantern II's band, white keys only",
+   "goal": "Improvise two choruses or more. Get notes and one idea back.",
+   "step": "improv-white",
+   "theme": {
+    "glyph": "keys:135",
+    "title": "White keys, your way",
+    "line": "Seven notes and the band. Play, leave space, play again."
    }
   }
  ]

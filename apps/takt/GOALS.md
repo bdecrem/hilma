@@ -20,8 +20,9 @@ builds no session.
 ```
 { id, title, source, about,
   levels: [ { n, quarter, title, text, items: [ item… ] } ] }
-item = { id, kind: "step" | "jam" | "song", title, detail,
-         module?, step?, tempo?, start?, choruses?,      (step, jam)
+item = { id, kind: "step" | "jam" | "song" | "improv", title, detail,
+         module?, step?, tempo?, start?, choruses?,      (step, jam, improv)
+         minNotes?, inScale?,                            (improv)
          song?, part?, difficulty?, grade? }             (song)
 ```
 
@@ -41,6 +42,8 @@ item = { id, kind: "step" | "jam" | "song", title, detail,
     Stage's own (`GameEngine.Result.grade(accuracy:)`; `Result.floor(of:)` turns "A" into 0.9),
     so an A on the result card is the goal done. Every such run keeps its accuracy (`best`, in
     percent). Practice never ends a run, a mod is another song, so neither counts.
+  - `improv` (2026-11-04, **`IMPROV.md`**): a take on an improv step the teacher reviewed, with
+    `choruses` whole choruses, `minNotes` notes and `inScale` of them on the step's notes.
 - A level clears when every item is done. A level with no items can't clear, so the road
   stops at the first level whose goals aren't written. Levels 4–26 have none yet.
 
@@ -107,6 +110,7 @@ pass rule of §1; the ladder suggests 60, then best + 4.
 | C major, up and down | Scales (C major, `lesson-S1`) → lesson 14, step `major2-rh` | one 100 % run at ≥ 72 (eighths, 29 notes: two octaves up and back) |
 | A natural minor, up and down | Scales (A minor, `lesson-S1m`) → lesson 15 "A minor in eighths", step `minor2-rh` (new) | the same from A3: A B C D E F G, 29 notes, C major's fingering |
 | Blue Lantern on the white keys | Stage, `song-blue-lantern-white` ("Blue Lantern II", new), melody, Medium | an A (90 %) on a run to the end |
+| Improvise on the white keys | Scales (A minor) → jam after lesson 15, step `improv-white`: Blue Lantern II's band (IMPROV.md) | a reviewed take of 2 choruses, 16 notes, 90 % on the white keys |
 
 **Level 2 · Five notes.** The pentatonic shape, each hand on its own.
 
@@ -115,6 +119,7 @@ pass rule of §1; the ladder suggests 60, then best + 4.
 | Pentatonic, two octaves, right hand | Scales (A minor) → lesson 14, step `penta2-rh` | one 100 % run at ≥ 72 (eighths, 21 notes) |
 | Pentatonic, two octaves, left hand | step `penta2-lh` | the same, from A2 |
 | Maxwell Street on five notes | Stage, `song-maxwell-street-five` ("Maxwell Street II", new), melody, Medium | an A (90 %) on a run to the end |
+| Improvise on five notes | Scales (A minor) → jam after lesson 14, step `improv-five`: Maxwell Street II's band | a reviewed take of 2 choruses, 16 notes, 90 % on A C D E G |
 
 **Level 3 · The minor blues.** The chords, then the form, then improvising over it.
 

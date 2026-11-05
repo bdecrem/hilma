@@ -431,7 +431,7 @@
     },
     {
       "id": "jam-roots",
-      "kind": "jam",
+      "kind": "free",
       "title": "Root and fifth",
       "skill": "jam.roots.A1",
       "tempo": 70,
@@ -466,7 +466,7 @@
     },
     {
       "id": "jam-shuffle",
-      "kind": "jam",
+      "kind": "free",
       "title": "The boogie",
       "skill": "jam.shuffle.A1",
       "tempo": 70,
@@ -511,7 +511,7 @@
     },
     {
       "id": "jam-ramp",
-      "kind": "jam",
+      "kind": "free",
       "title": "Boogie at 80",
       "skill": "jam.ramp.A1",
       "tempo": 80,
@@ -576,7 +576,7 @@
     },
     {
       "id": "jam-gate",
-      "kind": "jam",
+      "kind": "free",
       "title": "The seventh",
       "skill": "jam.gate.A1",
       "tempo": 90,
@@ -641,7 +641,7 @@
     },
     {
       "id": "jam-payoff",
-      "kind": "jam",
+      "kind": "free",
       "title": "Walk it",
       "skill": "jam.payoff.A1",
       "tempo": 90,
@@ -686,7 +686,7 @@
     },
     {
       "id": "jam-third",
-      "kind": "jam",
+      "kind": "free",
       "title": "Three and a bump",
       "skill": "jam.third.A1",
       "tempo": 70,
@@ -736,7 +736,7 @@
     },
     {
       "id": "jam-twice",
-      "kind": "jam",
+      "kind": "free",
       "title": "The stomp",
       "skill": "jam.twice.A1",
       "tempo": 80,
@@ -825,7 +825,7 @@
       "after": 1,
       "title": "Root and fifth",
       "skill": "The root on the 1, the fifth on the 3",
-      "goal": "Have fun. A clean chorus marks it played.",
+      "goal": "Improvise two choruses or more. Get notes and one idea back.",
       "step": "jam-roots",
       "theme": {
         "glyph": "keys:15",
@@ -837,7 +837,7 @@
       "after": 2,
       "title": "The boogie",
       "skill": "Root and fifth on the 1, root and sixth on the 3",
-      "goal": "Have fun. A clean chorus marks it played.",
+      "goal": "Improvise two choruses or more. Get notes and one idea back.",
       "step": "jam-shuffle",
       "theme": {
         "glyph": "rock",
@@ -849,7 +849,7 @@
       "after": 3,
       "title": "Boogie at 80",
       "skill": "The boogie on every beat, at 80",
-      "goal": "Have fun. A clean chorus marks it played.",
+      "goal": "Improvise two choruses or more. Get notes and one idea back.",
       "step": "jam-ramp",
       "theme": {
         "glyph": "rock",
@@ -861,7 +861,7 @@
       "after": 4,
       "title": "The seventh",
       "skill": "Five, six, seven, six on every beat, at 90",
-      "goal": "Have fun. A clean chorus marks it played.",
+      "goal": "Improvise two choruses or more. Get notes and one idea back.",
       "step": "jam-gate",
       "theme": {
         "glyph": "rock",
@@ -873,7 +873,7 @@
       "after": 5,
       "title": "Walk it",
       "skill": "The bass line itself: root, third, fifth, sixth",
-      "goal": "Have fun. A clean chorus marks it played.",
+      "goal": "Improvise two choruses or more. Get notes and one idea back.",
       "step": "jam-payoff",
       "theme": {
         "glyph": "walk",
@@ -885,7 +885,7 @@
       "after": 6,
       "title": "Three and a bump",
       "skill": "The triad on the 1, root and sixth on the 3",
-      "goal": "Have fun. A clean chorus marks it played.",
+      "goal": "Improvise two choruses or more. Get notes and one idea back.",
       "step": "jam-third",
       "theme": {
         "glyph": "bars:13",
@@ -897,7 +897,7 @@
       "after": 7,
       "title": "The stomp",
       "skill": "The triad on every beat, at 80",
-      "goal": "Have fun. A clean chorus marks it played.",
+      "goal": "Improvise two choruses or more. Get notes and one idea back.",
       "step": "jam-twice",
       "theme": {
         "glyph": "bars:1234",

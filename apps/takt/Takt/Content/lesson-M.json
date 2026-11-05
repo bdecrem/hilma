@@ -205,7 +205,7 @@
    "after": 1,
    "title": "A minor boogie",
    "skill": "Root and fifth on the 1, root and seventh on the 3, with the horns",
-   "goal": "Have fun. A clean chorus marks it played.",
+   "goal": "Improvise two choruses or more. Get notes and one idea back.",
    "step": "jam-1",
    "theme": {
     "glyph": "rock",
@@ -229,7 +229,7 @@
    "after": 2,
    "title": "E minor boogie",
    "skill": "Root and fifth on the 1, root and seventh on the 3, with the horns",
-   "goal": "Have fun. A clean chorus marks it played.",
+   "goal": "Improvise two choruses or more. Get notes and one idea back.",
    "step": "jam-2",
    "theme": {
     "glyph": "rock",
@@ -241,7 +241,7 @@
    "after": 3,
    "title": "D minor boogie",
    "skill": "Root and fifth on the 1, root and seventh on the 3, with the horns",
-   "goal": "Have fun. A clean chorus marks it played.",
+   "goal": "Improvise two choruses or more. Get notes and one idea back.",
    "step": "jam-3",
    "theme": {
     "glyph": "rock",
@@ -253,7 +253,7 @@
    "after": 4,
    "title": "G minor boogie",
    "skill": "Root and fifth on the 1, root and seventh on the 3, with the horns",
-   "goal": "Have fun. A clean chorus marks it played.",
+   "goal": "Improvise two choruses or more. Get notes and one idea back.",
    "step": "jam-4",
    "theme": {
     "glyph": "rock",
@@ -265,7 +265,7 @@
    "after": 5,
    "title": "C minor boogie",
    "skill": "Root and fifth on the 1, root and seventh on the 3, with the horns",
-   "goal": "Have fun. A clean chorus marks it played.",
+   "goal": "Improvise two choruses or more. Get notes and one idea back.",
    "step": "jam-5",
    "theme": {
     "glyph": "rock",
@@ -277,7 +277,7 @@
    "after": 6,
    "title": "F minor boogie",
    "skill": "Root and fifth on the 1, root and seventh on the 3, with the horns",
-   "goal": "Have fun. A clean chorus marks it played.",
+   "goal": "Improvise two choruses or more. Get notes and one idea back.",
    "step": "jam-6",
    "theme": {
     "glyph": "rock",
@@ -289,7 +289,7 @@
    "after": 7,
    "title": "B minor boogie",
    "skill": "Root and fifth on the 1, root and seventh on the 3, with the horns",
-   "goal": "Have fun. A clean chorus marks it played.",
+   "goal": "Improvise two choruses or more. Get notes and one idea back.",
    "step": "jam-7",
    "theme": {
     "glyph": "rock",
@@ -301,7 +301,7 @@
    "after": 8,
    "title": "F♯ minor boogie",
    "skill": "Root and fifth on the 1, root and seventh on the 3, with the horns",
-   "goal": "Have fun. A clean chorus marks it played.",
+   "goal": "Improvise two choruses or more. Get notes and one idea back.",
    "step": "jam-8",
    "theme": {
     "glyph": "rock",
@@ -313,7 +313,7 @@
    "after": 9,
    "title": "C♯ minor boogie",
    "skill": "Root and fifth on the 1, root and seventh on the 3, with the horns",
-   "goal": "Have fun. A clean chorus marks it played.",
+   "goal": "Improvise two choruses or more. Get notes and one idea back.",
    "step": "jam-9",
    "theme": {
     "glyph": "rock",
@@ -325,7 +325,7 @@
    "after": 10,
    "title": "G♯ minor boogie",
    "skill": "Root and fifth on the 1, root and seventh on the 3, with the horns",
-   "goal": "Have fun. A clean chorus marks it played.",
+   "goal": "Improvise two choruses or more. Get notes and one idea back.",
    "step": "jam-10",
    "theme": {
     "glyph": "rock",
@@ -337,7 +337,7 @@
    "after": 11,
    "title": "E♭ minor boogie",
    "skill": "Root and fifth on the 1, root and seventh on the 3, with the horns",
-   "goal": "Have fun. A clean chorus marks it played.",
+   "goal": "Improvise two choruses or more. Get notes and one idea back.",
    "step": "jam-11",
    "theme": {
     "glyph": "rock",
@@ -349,7 +349,7 @@
    "after": 12,
    "title": "B♭ minor boogie",
    "skill": "Root and fifth on the 1, root and seventh on the 3, with the horns",
-   "goal": "Have fun. A clean chorus marks it played.",
+   "goal": "Improvise two choruses or more. Get notes and one idea back.",
    "step": "jam-12",
    "theme": {
     "glyph": "rock",
@@ -361,7 +361,7 @@
    "after": 13,
    "title": "Four a bar",
    "skill": "The triad on every beat, with the whole band",
-   "goal": "Have fun. A clean chorus marks it played.",
+   "goal": "Improvise two choruses or more. Get notes and one idea back.",
    "step": "jam-two-a-bar",
    "theme": {
     "glyph": "bars:1234",
@@ -1389,7 +1389,7 @@
   },
   {
    "id": "jam-1",
-   "kind": "jam",
+   "kind": "free",
    "title": "A minor boogie",
    "skill": "jam.minorboogie.key-1",
    "tempo": 70,
@@ -1463,7 +1463,7 @@
   },
   {
    "id": "jam-2",
-   "kind": "jam",
+   "kind": "free",
    "title": "E minor boogie",
    "skill": "jam.minorboogie.key-2",
    "tempo": 70,
@@ -1537,7 +1537,7 @@
   },
   {
    "id": "jam-3",
-   "kind": "jam",
+   "kind": "free",
    "title": "D minor boogie",
    "skill": "jam.minorboogie.key-3",
    "tempo": 70,
@@ -1611,7 +1611,7 @@
   },
   {
    "id": "jam-4",
-   "kind": "jam",
+   "kind": "free",
    "title": "G minor boogie",
    "skill": "jam.minorboogie.key-4",
    "tempo": 70,
@@ -1685,7 +1685,7 @@
   },
   {
    "id": "jam-5",
-   "kind": "jam",
+   "kind": "free",
    "title": "C minor boogie",
    "skill": "jam.minorboogie.key-5",
    "tempo": 70,
@@ -1759,7 +1759,7 @@
   },
   {
    "id": "jam-6",
-   "kind": "jam",
+   "kind": "free",
    "title": "F minor boogie",
    "skill": "jam.minorboogie.key-6",
    "tempo": 70,
@@ -1833,7 +1833,7 @@
   },
   {
    "id": "jam-7",
-   "kind": "jam",
+   "kind": "free",
    "title": "B minor boogie",
    "skill": "jam.minorboogie.key-7",
    "tempo": 70,
@@ -1907,7 +1907,7 @@
   },
   {
    "id": "jam-8",
-   "kind": "jam",
+   "kind": "free",
    "title": "F♯ minor boogie",
    "skill": "jam.minorboogie.key-8",
    "tempo": 70,
@@ -1981,7 +1981,7 @@
   },
   {
    "id": "jam-9",
-   "kind": "jam",
+   "kind": "free",
    "title": "C♯ minor boogie",
    "skill": "jam.minorboogie.key-9",
    "tempo": 70,
@@ -2055,7 +2055,7 @@
   },
   {
    "id": "jam-10",
-   "kind": "jam",
+   "kind": "free",
    "title": "G♯ minor boogie",
    "skill": "jam.minorboogie.key-10",
    "tempo": 70,
@@ -2129,7 +2129,7 @@
   },
   {
    "id": "jam-11",
-   "kind": "jam",
+   "kind": "free",
    "title": "E♭ minor boogie",
    "skill": "jam.minorboogie.key-11",
    "tempo": 70,
@@ -2203,7 +2203,7 @@
   },
   {
    "id": "jam-12",
-   "kind": "jam",
+   "kind": "free",
    "title": "B♭ minor boogie",
    "skill": "jam.minorboogie.key-12",
    "tempo": 70,
@@ -2277,7 +2277,7 @@
   },
   {
    "id": "jam-two-a-bar",
-   "kind": "jam",
+   "kind": "free",
    "title": "Four a bar",
    "skill": "jam.triad.four.minorblues.A",
    "tempo": 70,

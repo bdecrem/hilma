@@ -121,6 +121,9 @@ final class ProgressStore {
         var scores: [ScoreRecord] = []
         /// The plan's goals, by `LearningPlan.key`: see `GoalRecord`.
         var goals: [String: GoalRecord] = [:]
+        /// XP earned, one entry per thing that earned it (`XPEntry`); a done goal earns its own
+        /// from `goals` (`ProgressStore.xp`).
+        var xp: [XPEntry] = []
 
         init() {}
 
@@ -136,6 +139,22 @@ final class ProgressStore {
             scores = try c.decodeIfPresent([ScoreRecord].self, forKey: .scores) ?? []
             practice = try c.decodeIfPresent([PracticeEntry].self, forKey: .practice) ?? []
             goals = LearningPlan.migrated(try c.decodeIfPresent([String: GoalRecord].self, forKey: .goals) ?? [:])
+            xp = try c.decodeIfPresent([XPEntry].self, forKey: .xp) ?? []
+        }
+    }
+
+    /// XP for one thing done (Improv.XP has the amounts): an id that says what and which
+    /// ("improv·<review id>", "version·<take>", "lesson·S1m·3·2026-11-04", "stage·<run id>"), so the
+    /// same thing never pays twice and two devices merge as a union.
+    struct XPEntry: Codable, Equatable, Hashable {
+        let id: String
+        let day: String
+        let kind: String
+        let points: Int
+
+        static func union(_ a: [XPEntry], _ b: [XPEntry]) -> [XPEntry] {
+            var seen: Set<String> = []
+            return (a + b).filter { seen.insert($0.id).inserted }.sorted { ($0.day, $0.id) < ($1.day, $1.id) }
         }
     }
 
@@ -165,6 +184,7 @@ final class ProgressStore {
         snapshot.scores = ScoreRecord.trimmed(snapshot.scores + [r])
         save()
         practiced(.stage, id: r.song)
+        award("stage·\(r.id)", kind: "stage", points: Improv.XP.stage)
         return r
     }
 
@@ -289,6 +309,26 @@ final class ProgressStore {
         if !snapshot.days.contains(d) { snapshot.days = (snapshot.days + [d]).sorted() }
         snapshot.practice = PracticeEntry.union(snapshot.practice, [entry])
         save()
+        // A lesson finished pays once a day per lesson (a song's XP comes with its run).
+        if kind == .lesson { award("lesson·\(id)·\(d)", kind: "lesson", points: Improv.XP.lesson, on: date) }
+    }
+
+    // MARK: XP
+
+    /// XP: every entry, and a goal's worth for every plan goal done.
+    var xp: Int { Self.xp(snapshot) }
+
+    static func xp(_ s: Snapshot) -> Int {
+        s.xp.reduce(0) { $0 + $1.points } + s.goals.values.filter { $0.done != nil }.count * Improv.XP.goal
+    }
+
+    /// Pays `points` once for `id`; false when it already has.
+    @discardableResult
+    func award(_ id: String, kind: String, points: Int, on date: Date = Date()) -> Bool {
+        guard !snapshot.xp.contains(where: { $0.id == id }) else { return false }
+        snapshot.xp.append(XPEntry(id: id, day: Self.day(date), kind: kind, points: points))
+        save()
+        return true
     }
 
     // MARK: Goals
@@ -319,6 +359,16 @@ final class ProgressStore {
         var r = goal(key)
         r.best = max(r.best, Int((accuracy * 100).rounded(.down)))
         if accuracy >= floor, r.done == nil { r.done = Self.day(date) }
+        snapshot.goals[key] = r
+        save()
+    }
+
+    /// An improv goal: a take that met it, reviewed. Done for good.
+    func goalImprov(_ key: String, on date: Date = Date()) {
+        var r = goal(key)
+        guard r.done == nil else { return }
+        r.done = Self.day(date)
+        r.choruses = max(r.choruses, 1)
         snapshot.goals[key] = r
         save()
     }

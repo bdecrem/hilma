@@ -96,6 +96,14 @@ struct LessonState {
     /// Show me: the step is being played for you (the intro steps aside); and whether it can be.
     var demo = false
     var canDemo = false
+    /// An improv being played (not its intro): the take so far, and whether it can go to the
+    /// teacher yet.
+    var improv: Improv? = nil
+
+    struct Improv: Equatable {
+        let notes: Int
+        let canSend: Bool
+    }
 
     var nextBar: Int { (bar + 1) % form.count }
 

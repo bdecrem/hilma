@@ -284,7 +284,7 @@ enum LessonCheck {
                                                     "Minor pentatonic", "The relative major", "E minor", "D minor", "Harmonic minor", "Dorian", "Chromatic",
                                                     "Pentatonic, two octaves", "A minor in eighths"]
                   && major.lessons.map(\.title).suffix(8) == ["Major pentatonic", "The relative minor", "G major", "F major", "Mixolydian", "Dorian", "Chromatic", "C major in eighths"]
-                  && (minor.jams ?? []).count == 13 && (minor.jams ?? []).map(\.after) == Array(1...13), "\(minor.lessons.map(\.title))")
+                  && (minor.jams ?? []).count == 15 && (minor.jams ?? []).map(\.after) == Array(1...13) + [14, 15], "\(minor.lessons.map(\.title))")
             // Lessons 7–13 (scripts/scales-extend.py): the pentatonics, two new keys, the colour
             // scales, the chromatic. Each in both files, as the key's own notes.
             let penta = minor.expected(minor.steps[6], ticksPerBeat: tpb)
@@ -390,11 +390,11 @@ enum LessonCheck {
             // Play mode: a jam under each lesson, its step past the lessons' steps, its own band;
             // clean choruses count and mark it, nothing passes or hands over.
             let jams = minor.jams ?? []
-            check("jams: thirteen under the scale lessons, seven under the blues, each a jam step past the lessons' steps",
-                  jams.count == 13 && (lesson.jams ?? []).count == 7 && jams.map(\.after) == Array(1...13)
+            check("jams: fifteen under the scale lessons (the two improvs of levels 1 and 2 last), seven under the blues, each a jam step past the lessons' steps",
+                  jams.count == 15 && (lesson.jams ?? []).count == 7 && jams.map(\.after) == Array(1...13) + [14, 15]
                   && minor.stepIndex(ofJam: jams[0]) == 16 && minor.lessonIndex(ofStep: 16) == 0 && minor.jam(ofStep: 16)?.title == "First riff"
                   && minor.steps[16].band == ["drums", "bass", "keys"] && minor.steps[0].band == ["drums"] && minor.steps[20].band == ["drums", "keys"]
-                  && lesson.steps[8].kind == .jam && lesson.lessonIndex(ofStep: 12) == 4 && lesson.lessonsDone(reachedStep: 7) == 5
+                  && lesson.steps[8].kind == .free && lesson.lessonIndex(ofStep: 12) == 4 && lesson.lessonsDone(reachedStep: 7) == 5
                   && lesson.lessonsDone(reachedStep: 9) == 7)
 
             // Chords: the third finger and twice a bar after the payoff (C E G with 5 3 1), and the
@@ -463,7 +463,7 @@ enum LessonCheck {
                   && m9.map(\.display).max()! <= shapes.range.high, "\(m9.prefix(4).map(\.display))")
             check("shapes: the jams sit under their lessons, the voice-leading jam at 80 twice a bar",
                   (shapes.jams ?? []).map(\.after) == Array(1...8) && shapes.steps[11].tempo == 80
-                  && shapes.expected(shapes.steps[11], ticksPerBeat: tpb).count == 72 && shapes.steps[11].kind == .jam)
+                  && shapes.expected(shapes.steps[11], ticksPerBeat: tpb).count == 72 && shapes.steps[11].kind == .free)
             let minorBand = BandData.bundled("band-minor-A")
             let blues = BandData.bundled("band-blues-C")
             check("minor: the A minor band has the shuffle's time structure and kit, i iv v, the bass low",
@@ -837,7 +837,7 @@ enum LessonCheck {
         check("plan: 26 levels, 1…26; chapter 1 is levels 1–3 (white keys, five notes, the minor blues), the blues scale level 4, no goals past 3 yet",
               plan.levels.count == 26 && plan.levels.map(\.n) == Array(1...26)
               && [l1, l2, l3].map(\.title) == ["White keys", "Five notes", "The minor blues"]
-              && l1.items.map(\.id) == ["scale-c", "scale-a", "song"] && l2.items.map(\.id) == ["scale-rh", "scale-lh", "song"]
+              && l1.items.map(\.id) == ["scale-c", "scale-a", "song", "improv"] && l2.items.map(\.id) == ["scale-rh", "scale-lh", "song", "improv"]
               && l3.items.map(\.id) == ["chords", "form", "jam"]
               && plan.levels[3].title == "The blues scale" && plan.levels.dropFirst(3).allSatisfy { $0.items.isEmpty }
               && plan.levels[7].title.hasPrefix("Checkpoint"))
@@ -850,7 +850,7 @@ enum LessonCheck {
         // Each of levels 1 and 2 ends on a song whose chart, at the goal's part and level, plays
         // only that level's notes (and all of them): the white keys, then A C D E G.
         for (level, notes) in [(l1, Set([0, 2, 4, 5, 7, 9, 11])), (l2, Set([9, 0, 2, 4, 7]))] {
-            let item = level.items.last!
+            let item = level.items.first { $0.kind == .song }!
             let song = Song.bundled(item.song!), part = Song.PartKey(rawValue: item.part!)!
             let tier = Charting.bundled.tier(GameEngine.Difficulty(rawValue: item.difficulty!)!, song: song.name, part: part)!
             let chart = song.chart(part, tier: tier), used = Set(chart.map { $0.n % 12 })
@@ -858,6 +858,20 @@ enum LessonCheck {
                   item.kind == .song && item.part == "melody" && item.difficulty == "medium" && item.grade == "A"
                   && used == notes && Set(song.notes(part).map { $0.n % 12 }).isSubset(of: notes),
                   "\(used.sorted())")
+        }
+        // Each ends on an improv (IMPROV.md): a free step of the A minor scales over that level's
+        // song's band, the level's notes as its scale, two choruses, 16 notes, nine in ten on them.
+        for (level, step, backing, notes) in [(l1, "improv-white", "song-blue-lantern-white", Set([0, 2, 4, 5, 7, 9, 11])),
+                                              (l2, "improv-five", "song-maxwell-street-five", Set([9, 0, 2, 4, 7]))] {
+            let item = level.items.last!
+            let m = Lesson.bundled("lesson-S1m"), s = m.steps.first { $0.id == step }!
+            let band = BandData.bundled(backing).looped(by: m.form(of: s))
+            check("plan: level \(level.n) ends on an improv over \(backing)'s band (looped to 48 bars of its 12-bar form, no horns), on the level's notes",
+                  item.kind == .improv && item.step == step && item.module == "S1m" && item.choruses == 2 && item.minNotes == 16 && item.inScale == 0.9
+                  && s.kind == .free && s.backing == backing && m.scale(of: s) == notes && s.band == ["drums", "bass", "keys"]
+                  && band.bars == 48 && band.form == m.form(of: s) && band.channels.drums.allSatisfy { $0.t < 48 * 48 }
+                  && m.jams?.contains { $0.step == step } == true,
+                  "\(band.bars) bars, scale \(m.scale(of: s).sorted())")
         }
         let k = { (i: Int) in plan.key(l1, l1.items[i]) }
         let k3 = { (i: Int) in plan.key(l3, l3.items[i]) }
@@ -937,6 +951,68 @@ enum LessonCheck {
               && mPlan.lessons.last?.steps == ["changes"],
               "\(form) \(changeNotes.count)")
 
+        // MARK: Improv (IMPROV.md)
+
+        let improvModules = ["lesson-A1", "lesson-S1", "lesson-S1m", "lesson-M", "lesson-H"].map(Lesson.bundled)
+        check("improv: every jam under a lesson is an improv now (no scored riff left), its riff kept as a starting idea",
+              improvModules.allSatisfy { m in !m.steps.contains { $0.kind == .jam } }
+              && improvModules.flatMap { m in m.steps.filter { $0.kind == .free } }.count == 57
+              && Lesson.bundled("lesson-S1m").steps.first { $0.id == "jam-up" }?.pattern?.isEmpty == false)
+        let upJam = Lesson.bundled("lesson-S1m")
+        let ije = LessonEngine(lesson: upJam, ticksPerBeat: tpb, gated: false)
+        ije.start(step: upJam.steps.firstIndex { $0.id == "jam-up" }!)
+        ije.heard(tick: 30, tempo: 70, rolling: true, epoch: 0)
+        check("improv: the starting idea lights no keys while you play, and tap mode plays nothing (Show me still has it)",
+              ije.output.nowNotes.isEmpty && ije.output.fingers.isEmpty && ije.due(at: 30).isEmpty && !ije.expected.isEmpty)
+        var rec = Improv.Recorder()
+        rec.press(62, tick: 576 - 3, velocity: 0.8, epoch: 1)   // half a beat early for chorus 2
+        rec.press(65, tick: 600, velocity: 0.6, epoch: 1)
+        rec.release(62, tick: 590, epoch: 1)
+        rec.press(69, tick: 1200, velocity: 0.9, epoch: 1)
+        let take = rec.take(chorusTicks: 576, ticksPerBeat: 12, formBars: 12, tempo: 84, now: 1210)!
+        check("improv: a take starts on the chorus its first note leads into, keeps every press with its length, and runs to the end of the bar being played",
+              take.bars == 14 && take.notes.map(\.t) == [0, 24, 624] && take.notes.map(\.len) == [17, 610, 10] && take.notes[1].v == 0.6 && take.tempo == 84,
+              "\(take.bars) bars \(take.notes)")
+        rec.press(60, tick: 10, velocity: 0.5, epoch: 2)
+        check("improv: a Stop (a new epoch) starts a new take", rec.count == 1)
+        let count = Improv.Count.of(take, formBars: 12, allowed: [2, 5, 9])
+        check("improv: the count: whole choruses, notes, the share on the notes", count.choruses == 1 && count.notes == 3 && abs(count.inScale - 1) < 1e-9
+              && Improv.Count.of(take, formBars: 12, allowed: [2]).inScale < 0.34)
+        let improvStep = upJam.steps.first { $0.id == "improv-white" }!
+        let idea = Improv.Review.Idea(title: "Your bar 1 climb", why: "From bar 1.", bars: 2, notes: [
+            .init(t: 0, n: 62, len: 12, f: 1), .init(t: 12, n: 65, len: 12, f: 3), .init(t: 24, n: 67, len: 6, f: 4), .init(t: 30, n: 69, len: 6, f: 5),
+            .init(t: 48, n: 62, len: 24, f: 1)])
+        let (withVersion, vi) = upJam.withVersion(Improv.versionStep(idea, of: improvStep, take: "abc"), after: improvStep)
+        let version = withVersion.steps[vi], vNotes = withVersion.expected(version, ticksPerBeat: tpb)
+        check("improv: your version is a jam over the improv's own backing, every note the idea's key, looping every 2 bars, under the improv's lesson",
+              version.kind == .jam && version.id == "version-abc" && version.backing == "song-blue-lantern-white" && version.cycle == 2
+              && version.band == improvStep.band && version.form == improvStep.form && vNotes.count == 30
+              && vNotes.prefix(5).map(\.display) == [62, 65, 67, 69, 62] && vNotes.prefix(5).map(\.tick) == [0, 12, 24, 30, 48]
+              && vNotes.prefix(5).compactMap(\.finger) == [1, 3, 4, 5, 1] && vNotes[5].tick == 96
+              && withVersion.jam(ofStep: vi)?.after == 15 && withVersion.steps.count == upJam.steps.count + 1
+              && withVersion.withVersion(Improv.versionStep(idea, of: improvStep, take: "def"), after: improvStep).0.steps.count == upJam.steps.count + 1,
+              "\(vNotes.prefix(6).map { "\($0.display)@\($0.tick)" })")
+        let ve = LessonEngine(lesson: withVersion, ticksPerBeat: tpb, gated: false)
+        ve.start(step: vi)
+        check("improv: your version is judged run by run (two bars), not by the chorus", ve.loopTicks == 96 && ve.expected.count == 5)
+        let xpStore = ProgressStore(url: nil)
+        let first = xpStore.award("improv·r1", kind: "improv", points: Improv.XP.improv)
+        let again = xpStore.award("improv·r1", kind: "improv", points: Improv.XP.improv)
+        xpStore.goalImprov(k(3))
+        check("xp: an award pays once; a done goal is worth its 100 on top", first && !again && xpStore.xp == Improv.XP.improv + Improv.XP.goal)
+        xpStore.practiced(.lesson, id: "S1m·3")
+        xpStore.practiced(.lesson, id: "S1m·3")
+        check("xp: a lesson finished pays once a day", xpStore.xp == Improv.XP.improv + Improv.XP.goal + Improv.XP.lesson)
+        var xa = ProgressStore.Snapshot(), xb = ProgressStore.Snapshot()
+        xa.xp = [.init(id: "improv·r1", day: "2026-11-04", kind: "improv", points: 30), .init(id: "stage·s1", day: "2026-11-04", kind: "stage", points: 10)]
+        xb.xp = [.init(id: "improv·r1", day: "2026-11-04", kind: "improv", points: 30), .init(id: "version·r1", day: "2026-11-05", kind: "version", points: 50)]
+        check("xp: two devices merge as a union, nothing paid twice", ProgressStore.xp(AccountStore.merge(xa, xb)) == 90 && ProgressStore.xp(AccountStore.merge(xb, xa)) == 90)
+        let improvItem = l1.items[3]
+        check("goals: an improv goal waits for a reviewed take, then says so",
+              none.status(l1, improvItem) == "Not yet · 2 choruses, 16 notes, 90% on the notes" && none.action(l1, improvItem) == "Improvise"
+              && GoalProgress(plan: plan, records: [k(3): GoalRecord(done: "2026-11-04", best: 0, choruses: 1)]).action(l1, improvItem) == "Improvise again",
+              none.status(l1, improvItem))
+
         // MARK: Feel (the band straight under a run in eighths) and the C major scale in eighths
 
         let s1 = Lesson.bundled("lesson-S1"), s1m = Lesson.bundled("lesson-S1m")
@@ -944,7 +1020,7 @@ enum LessonCheck {
         check("feel: a run in straight eighths straightens the band; one note a beat and a shuffle riff keep it; `feel` overrides",
               stepOf(s1m, "penta2-rh").straight && stepOf(s1m, "penta2-lh").straight && stepOf(s1, "major2-rh").straight
               && !stepOf(s1, "updown").straight && !stepOf(s1, "two").straight && !stepOf(s1, "jam-blues").straight
-              && !s1m.steps.contains { $0.kind.isJam && $0.straight })
+              && !s1m.steps.contains { $0.kind.isJam && $0.backing == nil && $0.straight })
         let shuffle = BandData.bundled("band-blues-C"), straightBand = shuffle.straightened()
         let lateHits = shuffle.channels.drums.filter { $0.t % 12 == 8 }.count
         check("feel: straightened, every late eighth (tick 8) sits on tick 6 and nothing else moves",

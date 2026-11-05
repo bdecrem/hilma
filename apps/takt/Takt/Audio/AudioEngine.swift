@@ -70,9 +70,14 @@ final class AudioEngine {
     /// `straight`: the band on the straight grid (`BandData.straightened`), kept apart.
     private var loaded: [String: BandRenderer.Events] = [:]
     @discardableResult
-    func load(band name: String, straight: Bool = false) -> BandRenderer.Events {
-        let key = straight ? "\(name)|straight" : name
-        let e = loaded[key] ?? renderer.load(straight ? BandData.bundled(name).straightened() : .bundled(name))
+    /// `loop`: a song's band as a backing track, looping by that form (`BandData.looped`).
+    func load(band name: String, straight: Bool = false, loop: [String]? = nil) -> BandRenderer.Events {
+        let key = (straight ? "\(name)|straight" : name) + (loop.map { "|loop\($0.count)" } ?? "")
+        let e = loaded[key] ?? {
+            var band = BandData.bundled(name)
+            if let loop { band = band.looped(by: loop) }
+            return renderer.load(straight ? band.straightened() : band)
+        }()
         loaded[key] = e
         send(e)
         return e

@@ -322,6 +322,8 @@
 		69362D8E983A7AB7F0ABD673 /* sax-52-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = EC1B98ACF898FE895E4231EA /* sax-52-h.caf */; };
 		695F027B4C6305C0193ADC70 /* gtr-84-2-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = EBDC46BA92070FCB3F1DB136 /* gtr-84-2-1.caf */; };
 		696C99ECFB5C5A3B3F05CC72 /* syn-bleep-63-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 0959CC92EF6847C841C12AFC /* syn-bleep-63-1.caf */; };
+		6986166F1EEBD2709F5D1521 /* ImprovClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA10D801EA2FE78D9545B7F1 /* ImprovClient.swift */; };
+		69B525824450221386E7F1C5 /* Improv.swift in Sources */ = {isa = PBXBuildFile; fileRef = A45F13233D2FE821A99750DC /* Improv.swift */; };
 		6B3B7AA52838070E70B7EA3B /* sax-76-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = 1CFD0166B5EA3EEEB25CBCE5 /* sax-76-h.caf */; };
 		6B764DB7C80BAFDA14BDE6C0 /* gtr-51-1-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = B5B2B4CA874B8E8C913F9B46 /* gtr-51-1-2.caf */; };
 		6BDD3CF39C5927CF60A236A7 /* kick-2a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 5988A981E615E30931C01226 /* kick-2a.caf */; };
@@ -398,6 +400,7 @@
 		8340069FB0FFBB75E3780D54 /* gtr-57-3-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 77062E4785B45C3758249F1C /* gtr-57-3-2.caf */; };
 		8413B7B53945B06526129280 /* syn-stabMin-64-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = A7D3AA9BE236FA8C71F9FDC8 /* syn-stabMin-64-1.caf */; };
 		84829DCA8667BD6921267FD9 /* gmute-64-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = CF1160221469666DEE39F5E0 /* gmute-64-1.caf */; };
+		854DFD0191152771C0C28253 /* ImprovSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE333F1E9743432C6DE4503B /* ImprovSheet.swift */; };
 		8599F5189FD20A3D7D7CFA94 /* syn-clapDH-1b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 0AFDD95578BB71349D0A60B8 /* syn-clapDH-1b.caf */; };
 		861E94056201983476A0C3AB /* crash-1b.caf in Resources */ = {isa = PBXBuildFile; fileRef = CC2CC4DF332B094AAC005AD4 /* crash-1b.caf */; };
 		8704BAB326417DF36B36659F /* pno-85-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 94531D8F79AEF879A04254AB /* pno-85-2.caf */; };
@@ -1183,6 +1186,7 @@
 		A3DB69A4869CEE1C795FB453 /* song-blue-lantern-white.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "song-blue-lantern-white.json"; sourceTree = "<group>"; };
 		A3F0234B42F7DF59E7FC5336 /* gtr-40-1-1.caf */ = {isa = PBXFileReference; path = "gtr-40-1-1.caf"; sourceTree = "<group>"; };
 		A40F3B91A413E389657A0688 /* syn-rhodes-81-1.caf */ = {isa = PBXFileReference; path = "syn-rhodes-81-1.caf"; sourceTree = "<group>"; };
+		A45F13233D2FE821A99750DC /* Improv.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Improv.swift; sourceTree = "<group>"; };
 		A47212EAD9D85FA20B031F3E /* rho-76-2.caf */ = {isa = PBXFileReference; path = "rho-76-2.caf"; sourceTree = "<group>"; };
 		A4937E88B7B31E6F59662AAA /* rho-62-3.caf */ = {isa = PBXFileReference; path = "rho-62-3.caf"; sourceTree = "<group>"; };
 		A4985865F2AE933A767D9B73 /* song-slow-burn.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "song-slow-burn.json"; sourceTree = "<group>"; };
@@ -1290,6 +1294,7 @@
 		CDD8BDE4868C7184EE587761 /* pno-45-2.caf */ = {isa = PBXFileReference; path = "pno-45-2.caf"; sourceTree = "<group>"; };
 		CE01F94AD01BB99CFAF34156 /* sax-74-h.caf */ = {isa = PBXFileReference; path = "sax-74-h.caf"; sourceTree = "<group>"; };
 		CE1E824B0F9C75AD95659127 /* rho-59-4.caf */ = {isa = PBXFileReference; path = "rho-59-4.caf"; sourceTree = "<group>"; };
+		CE333F1E9743432C6DE4503B /* ImprovSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImprovSheet.swift; sourceTree = "<group>"; };
 		CE83C975A682A0B69DDA4664 /* rho-62-1.caf */ = {isa = PBXFileReference; path = "rho-62-1.caf"; sourceTree = "<group>"; };
 		CED2F9E594DAD76AFBB441F1 /* LevelGoalsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelGoalsScreen.swift; sourceTree = "<group>"; };
 		CF1160221469666DEE39F5E0 /* gmute-64-1.caf */ = {isa = PBXFileReference; path = "gmute-64-1.caf"; sourceTree = "<group>"; };
@@ -1326,6 +1331,7 @@
 		D91430A8050558E1346C6590 /* syn-hatOpenDH-0a.caf */ = {isa = PBXFileReference; path = "syn-hatOpenDH-0a.caf"; sourceTree = "<group>"; };
 		D96784C02E07FD06D08596FF /* pno-91-2.caf */ = {isa = PBXFileReference; path = "pno-91-2.caf"; sourceTree = "<group>"; };
 		DA083ED5D39D652FA1491D9E /* syn-bleep-69-2.caf */ = {isa = PBXFileReference; path = "syn-bleep-69-2.caf"; sourceTree = "<group>"; };
+		DA10D801EA2FE78D9545B7F1 /* ImprovClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImprovClient.swift; sourceTree = "<group>"; };
 		DA983FCC785F900703E7C325 /* syn-bassDH-38.caf */ = {isa = PBXFileReference; path = "syn-bassDH-38.caf"; sourceTree = "<group>"; };
 		DB0DA25CCFAA5832D8A4AFF5 /* gperc-1.caf */ = {isa = PBXFileReference; path = "gperc-1.caf"; sourceTree = "<group>"; };
 		DB90FC03A2A5438F6F53CA7C /* pno-55-2.caf */ = {isa = PBXFileReference; path = "pno-55-2.caf"; sourceTree = "<group>"; };
@@ -1520,6 +1526,7 @@
 				54DE8A4095BEC708D5253B44 /* Export */,
 				D294A58E0237C1265C2605C3 /* Game */,
 				BD78C3D0F1978A947FD6BFCD /* Goals */,
+				706C45A76A00F58674CD2AE6 /* Improv */,
 				88FE4DA545CABDD001D8C347 /* Input */,
 				A255B25EAA1B8A12A0308EE4 /* Lesson */,
 				85ECE389A6D688DE477845B5 /* Licenses */,
@@ -1540,6 +1547,16 @@
 				40963202F528F02BF5EEECD8 /* Takt.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		706C45A76A00F58674CD2AE6 /* Improv */ = {
+			isa = PBXGroup;
+			children = (
+				A45F13233D2FE821A99750DC /* Improv.swift */,
+				DA10D801EA2FE78D9545B7F1 /* ImprovClient.swift */,
+				CE333F1E9743432C6DE4503B /* ImprovSheet.swift */,
+			);
+			path = Improv;
 			sourceTree = "<group>";
 		};
 		7E718AC35B0C62F76073A6EF /* Audio */ = {
@@ -3108,6 +3125,9 @@
 				DA8FEB32DBD7329929BAA853 /* GameEngine.swift in Sources */,
 				9B294F89E0A8CA9A8188D92A /* GameScreen.swift in Sources */,
 				F4A31AAEC5986060A7AE5C80 /* Hands.swift in Sources */,
+				69B525824450221386E7F1C5 /* Improv.swift in Sources */,
+				6986166F1EEBD2709F5D1521 /* ImprovClient.swift in Sources */,
+				854DFD0191152771C0C28253 /* ImprovSheet.swift in Sources */,
 				73D31E854898BB54BE5D4C0D /* Instrument.swift in Sources */,
 				7943EE24325ECDBDE8F2DC64 /* KeyCatcher.swift in Sources */,
 				C644B759F0C8337C5B487AC0 /* KeyboardStrip.swift in Sources */,
@@ -3190,7 +3210,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 97;
+				CURRENT_PROJECT_VERSION = 98;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -3257,7 +3277,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 97;
+				CURRENT_PROJECT_VERSION = 98;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;

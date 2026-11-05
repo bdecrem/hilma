@@ -22,6 +22,8 @@ struct LessonControls {
     var backTitle = "Back to the module"
     /// Show me: the step played for you; again to stop it.
     var showMe: () -> Void = {}
+    /// An improv's take to the teacher.
+    var sendTake: () -> Void = {}
 }
 
 private struct LessonControlsKey: EnvironmentKey {
@@ -93,7 +95,11 @@ struct WideLessonLayout: View {
                                 .frame(width: geo.size.width, height: geo.size.height)
                         }
                     }
-                    FormFooter(state: state)
+                    if let improv = state.improv {
+                        ImprovBar(state: state, improv: improv)
+                    } else {
+                        FormFooter(state: state)
+                    }
                 }
                 .padding(32)
                 .frame(maxWidth: .infinity)
@@ -106,7 +112,8 @@ struct WideLessonLayout: View {
             }
 
             Hairline()
-            let keys = LessonState.Run.keyboard(state.run, keys: 24, fallback: 48...71)
+            // A right-hand improv plays higher than the left hand's chords: its keys start at A3.
+            let keys = LessonState.Run.keyboard(state.run, keys: 24, fallback: state.improv != nil && state.rightHand ? 57...80 : 48...71)
             KeyboardStrip(low: keys.lowerBound, high: keys.upperBound, now: state.nowNotes, next: state.nextNotes,
                           pressed: state.pressedNotes, fingers: state.fingers)
                 .frame(height: 128)
@@ -176,13 +183,19 @@ struct StackedLessonLayout: View {
                 }
 
                 Spacer(minLength: 16)
-                let keys = LessonState.Run.keyboard(state.run, keys: 18, fallback: 48...65)
+                let keys = LessonState.Run.keyboard(state.run, keys: 18, fallback: state.improv != nil && state.rightHand ? 57...74 : 48...65)
                 KeyboardStrip(low: keys.lowerBound, high: keys.upperBound, now: state.nowNotes, next: state.nextNotes,
                               pressed: state.pressedNotes, fingers: state.fingers)
                     .frame(height: 112)
                 Spacer(minLength: 14)
-                FormFooter(state: state)
-                    .padding(.bottom, 8)
+                Group {
+                    if let improv = state.improv {
+                        ImprovBar(state: state, improv: improv, compact: true)
+                    } else {
+                        FormFooter(state: state)
+                    }
+                }
+                .padding(.bottom, 8)
             }
             .padding(.horizontal, 16)
         }
@@ -264,5 +277,43 @@ struct QuietButton: View {
                 .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Palette.line, lineWidth: 1))
         }
         .buttonStyle(.plain)
+    }
+}
+
+/// Under an improv's pads, in the footer's place: where you are, the take so far, and the button
+/// that sends it to the teacher (open from `Player.takeMinimum` notes).
+struct ImprovBar: View {
+    let state: LessonState
+    let improv: LessonState.Improv
+    var compact = false
+    @Environment(\.lessonControls) private var controls
+
+    var body: some View {
+        HStack(spacing: 14) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(state.countIn.map { "Count-in \($0)" } ?? "Bar \(state.bar + 1) / \(state.form.count) · Chorus \(state.chorus)")
+                    .dataLabel(compact ? 11 : 12, weight: .medium)
+                    .foregroundStyle(state.countIn == nil ? Palette.text : Palette.signal)
+                Text(improv.notes == 0 ? "Your solo. Play anything." : "Your take · \(improv.notes) notes")
+                    .dataLabel(compact ? 10 : 11)
+                    .foregroundStyle(Palette.muted)
+            }
+            .fixedSize()
+            Spacer(minLength: 8)
+            Button(action: controls.sendTake) {
+                HStack(spacing: 6) {
+                    Image(systemName: "paperplane.fill").font(.system(size: 11, weight: .bold))
+                    Text(compact ? "Send it" : "Send it to the teacher").dataLabel(compact ? 11 : 12, weight: .semibold)
+                }
+                .foregroundStyle(improv.canSend ? Palette.ground : Palette.muted)
+                .padding(.horizontal, 14)
+                .frame(height: compact ? 36 : 40)
+                .background(RoundedRectangle(cornerRadius: 4).fill(improv.canSend ? Palette.signal : Palette.panel))
+                .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(improv.canSend ? Palette.signal : Palette.line, lineWidth: 1))
+            }
+            .buttonStyle(.plain)
+            .disabled(!improv.canSend)
+            .accessibilityLabel(improv.canSend ? "Send your take to the teacher" : "Play a few more notes to send your take")
+        }
     }
 }

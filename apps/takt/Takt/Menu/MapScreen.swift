@@ -22,7 +22,7 @@ struct MapScreen: View {
 
         ZStack {
             VStack(spacing: 0) {
-                MapHeader(world: world, here: here ?? stops.last!, cleared: cleared, compact: compact) {
+                MapHeader(world: world, here: here ?? stops.last!, cleared: cleared, xp: app.progress.xp, compact: compact) {
                     app.route = .settings
                 }
                 .padding(.horizontal, compact ? 16 : 40)
@@ -91,6 +91,7 @@ private struct MapHeader: View {
     let world: MapWorld
     let here: MapWorld.Stop
     let cleared: Int
+    let xp: Int
     let compact: Bool
     let settings: () -> Void
 
@@ -119,6 +120,7 @@ private struct MapHeader: View {
                 .background(RoundedRectangle(cornerRadius: 6).fill(Palette.panel))
                 .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Palette.line, lineWidth: 1))
                 .accessibilityLabel("\(cleared) of \(world.total) levels cleared")
+            XPLabel(xp: xp)
             TransportButton(symbol: "gearshape", lit: false, size: compact ? 34 : 36, label: "Settings", action: settings)
         }
     }

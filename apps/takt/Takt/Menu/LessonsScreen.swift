@@ -16,6 +16,7 @@ struct LessonsScreen: View {
                     .foregroundStyle(Palette.text)
                 StaffLines()
                     .frame(maxWidth: .infinity)
+                XPLabel(xp: app.progress.xp)
                 TransportButton(symbol: "gearshape", lit: false, size: compact ? 34 : 36, label: "Settings") {
                     app.route = .settings
                 }
@@ -270,5 +271,19 @@ struct TabBar: View {
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(on ? [.isSelected] : [])
+    }
+}
+
+/// XP, small, beside the account's gear: what the player has earned (`ProgressStore.xp`).
+struct XPLabel: View {
+    let xp: Int
+
+    var body: some View {
+        Text("\(xp.formatted()) XP")
+            .dataLabel(11, weight: .semibold)
+            .foregroundStyle(Palette.muted)
+            .monospacedDigit()
+            .fixedSize()
+            .accessibilityLabel("\(xp) XP")
     }
 }

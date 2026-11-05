@@ -35,8 +35,8 @@ struct BandData: Decodable {
     var name: String
     let ticksPerBeat: Int
     let beatsPerBar: Int
-    let bars: Int
-    let form: [String]
+    var bars: Int
+    var form: [String]
     let sounds: [String: Sound]
     /// The instrument each pitched channel plays (bass, keys, horns, monitor). A song's monitor
     /// is set per part (the record's synth for the part you take).
@@ -155,6 +155,19 @@ extension BandData {
     }
 
     /// This band with every hit and note on the straight grid (`straightTick`).
+    /// A Stage song as a backing track that loops by `form` (an improv over one of our songs):
+    /// the whole choruses of that form it holds, the tail bar the game ends in cut off.
+    func looped(by form: [String]) -> BandData {
+        var b = self
+        b.name = name + " (loop)"
+        b.bars = bars / form.count * form.count
+        b.form = form
+        let end = b.bars * beatsPerBar * ticksPerBeat
+        b.channels = Channels(drums: channels.drums.filter { $0.t < end }, bass: channels.bass.filter { $0.t < end },
+                              keys: channels.keys.filter { $0.t < end }, horns: channels.horns.filter { $0.t < end })
+        return b
+    }
+
     func straightened() -> BandData {
         let tpb = ticksPerBeat
         func move(_ n: Note) -> Note { Note(t: Self.straightTick(n.t, ticksPerBeat: tpb), n: n.n, v: n.v, len: n.len, i: n.i) }

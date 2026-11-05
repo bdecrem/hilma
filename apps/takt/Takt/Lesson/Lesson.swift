@@ -37,6 +37,9 @@ struct Lesson: Decodable {
         /// Only in the bars of this chord (a name of the step's `chords`): a voicing of its own per
         /// chord, the way a hand voice-leads a progression (Am as A C E, F as A C F). Nil: every bar.
         let chord: String?
+        /// The key itself (MIDI, C4 = 60) instead of a tone from the chord's root: the improv
+        /// teacher's idea, written for a backing in one place (`Improv.versionStep`).
+        var note: Int? = nil
 
         var interval: Int? { semitones ?? tone.flatMap { Lesson.tones[$0] } }
     }
@@ -76,9 +79,11 @@ struct Lesson: Decodable {
         /// A play-mode step (a jam under a lesson): scored like a play step, but it never passes
         /// or hands over; a clean chorus marks the jam done and the band plays on.
         case jam
-        /// A free jam: no pattern, a `scale` (semitones from the key's root) the whole chorus
-        /// must stay inside, `minNotes` at least. Scored by the engine, not the Scorer; play
-        /// mode like a jam (never passes, the band plays on).
+        /// A free jam, an improv: you play what you like over the band, and the take goes to the
+        /// improv teacher (`IMPROV.md`). A `scale` (semitones from the key's root) the chorus
+        /// should stay inside, or none (any note); `minNotes` at least. Its `pattern`, if any, is
+        /// a starting idea: shown in the intro and played by Show me, never scored. Judged by the
+        /// engine, not the Scorer; play mode like a jam (never passes, the band plays on).
         case free
 
         /// Play mode: a jam or a free jam.
@@ -153,6 +158,9 @@ struct Lesson: Decodable {
         /// instead of between its hits; "shuffle" keeps the band as written. Nil: straight when
         /// the pattern has a note off the shuffle's grid (a tick that is neither 0 nor 8).
         let feel: String?
+        /// The band file under this step instead of the module's (a Stage song's, `song-…`: an
+        /// improv over one of our songs, its tail bar cut so it loops by the step's form).
+        var backing: String? = nil
         /// This step's own form and chords (a key of its own); nil: the module's.
         let form: [String]?
         let chords: [String: Chord]?
@@ -243,9 +251,9 @@ struct Lesson: Decodable {
                 need(c.clean != nil && c.again != nil, "clean and again lines")
             case .free:
                 need(step.tempo != nil, "tempo")
-                need(!(step.scale ?? []).isEmpty && step.pattern == nil, "a scale and no pattern")
+                need(step.scale.map { !$0.isEmpty } ?? true, "a scale with notes in it, or none")
                 need(c.clean != nil && c.again != nil && c.change != nil && c.hold != nil && c.join != nil, "clean, again, change, hold and join lines")
-                continue
+                if step.pattern == nil { continue }
             case .ramp:
                 guard let r = step.ramp else { fatalError("lesson \(code) step \(step.id): a ramp step needs ramp") }
                 need(r.by > 0 && r.to > r.from, "a rising ramp")
@@ -261,7 +269,7 @@ struct Lesson: Decodable {
             guard let pattern = step.pattern, !pattern.isEmpty else {
                 fatalError("lesson \(code) step \(step.id): no pattern")
             }
-            for p in pattern where p.interval == nil || !(1...4).contains(p.beat) || !(0..<12).contains(p.tick ?? 0)
+            for p in pattern where (p.interval == nil && p.note == nil) || !(1...4).contains(p.beat) || !(0..<12).contains(p.tick ?? 0)
                 || !(0..<(step.cycle ?? 1)).contains(p.bar ?? 0) {
                 fatalError("lesson \(code) step \(step.id): bad pattern note \(p)")
             }
@@ -296,9 +304,11 @@ struct Lesson: Decodable {
         steps.indices.contains(i) && steps[i].kind.isJam ? jams?.first { $0.step == steps[i].id } : nil
     }
 
-    /// A free step's allowed pitch classes: its scale from the root of its form's first chord.
+    /// A free step's allowed pitch classes: its scale from the root of its form's first chord;
+    /// every pitch class when it has none.
     func scale(of step: Step) -> Set<Int> {
-        guard let scale = step.scale, let first = form(of: step).first, let root = chords(of: step)[first]?.root else { return [] }
+        guard let scale = step.scale else { return Set(0..<12) }
+        guard let first = form(of: step).first, let root = chords(of: step)[first]?.root else { return [] }
         return Set(scale.map { ((root + $0) % 12 + 12) % 12 })
     }
 
@@ -352,13 +362,14 @@ struct Lesson: Decodable {
             let root = chords[name]!.root
             let here = pattern.filter { ($0.bar ?? 0) == bar % cycle && ($0.chord == nil || $0.chord == name) }
             for p in here {
-                let interval = p.interval!
+                // A key of its own (the improv teacher's idea), or a tone from the bar's root.
+                let display = p.note ?? displayRoot + root + p.interval!
                 let together = here.filter { $0.beat == p.beat && ($0.tick ?? 0) == (p.tick ?? 0) }.count
                 notes.append(ExpectedNote(
                     tick: (bar * 4 + p.beat - 1) * ticksPerBeat + (p.tick ?? 0),
                     bar: bar,
-                    pitchClass: ((root + interval) % 12 + 12) % 12,
-                    display: displayRoot + root + interval,
+                    pitchClass: (display % 12 + 12) % 12,
+                    display: display,
                     finger: p.finger,
                     chord: together > 1))
             }

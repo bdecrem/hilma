@@ -1446,6 +1446,19 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   its goal recording the goal done at 100 and the old record moving on save, Back landing on
   Level 1 at 2 of 3, every level's goals screen and both new steps' intros.
 
+- **Improv, the teacher, XP: 0.1 (98), 2026-11-04.** Read **`IMPROV.md`**. Every jam row is an
+  improv now (55 converted by `scripts/improv-jams.py`: kind `free`, any note, the riff kept as a
+  starting idea for the intro and Show me, never lit or scored); a free step records the take
+  (`Improv.Recorder`), the footer's **Send it to the teacher** posts it to `POST
+  /api/takt/improv` (`src/lib/takt/improv-agent.ts`, Opus 5.5, streamed), and a sheet shows the
+  review: a headline, two or three notes, one idea made from the take; **Try my version** plays
+  the idea as a step over the same backing (`Improv.versionStep`, exact keys, run by run). A free
+  step may name a Stage song as its `backing` (`BandData.looped`): Levels 1 and 2 end on improvs
+  over Blue Lantern II's and Maxwell Street II's bands (`improv-white`, `improv-five`; plan kind
+  `improv`: 2 choruses, 16 notes, 90 % on the notes). **XP** (`Snapshot.xp`, a union of entries,
+  plus 100 a done goal): 30 a reviewed take, 50 + 25 your version, 20 a lesson, 10 a song, shown
+  small beside the gear on Learn and Map. Reviews are kept in `takt_improv` (schema 005).
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

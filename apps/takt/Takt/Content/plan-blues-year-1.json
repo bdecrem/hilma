@@ -8,7 +8,7 @@
    "n": 1,
    "quarter": "Q1 — one key, A minor",
    "title": "White keys",
-   "text": "C major and A natural minor, two octaves in eighths: the same fingering twice. Then a song on the white keys.",
+   "text": "C major and A natural minor, two octaves in eighths: the same fingering twice. Then a song on the white keys, and a solo of your own.",
    "items": [
     {
      "id": "scale-c",
@@ -39,6 +39,17 @@
      "part": "melody",
      "difficulty": "medium",
      "grade": "A"
+    },
+    {
+     "id": "improv",
+     "kind": "improv",
+     "title": "Improvise on the white keys",
+     "detail": "Your solo over Blue Lantern II's band: two choruses or more, 16 notes, nine in ten on the white keys. Send it; the teacher answers with notes and one idea.",
+     "module": "S1m",
+     "step": "improv-white",
+     "choruses": 2,
+     "minNotes": 16,
+     "inScale": 0.9
     }
    ]
   },
@@ -46,7 +57,7 @@
    "n": 2,
    "quarter": "Q1 — one key, A minor",
    "title": "Five notes",
-   "text": "A minor pentatonic, A C D E G, each hand on its own. Then a song on the five notes.",
+   "text": "A minor pentatonic, A C D E G, each hand on its own. Then a song on the five notes, and a solo of your own.",
    "items": [
     {
      "id": "scale-rh",
@@ -77,6 +88,17 @@
      "part": "melody",
      "difficulty": "medium",
      "grade": "A"
+    },
+    {
+     "id": "improv",
+     "kind": "improv",
+     "title": "Improvise on five notes",
+     "detail": "Your solo over Maxwell Street II's band: two choruses or more, 16 notes, nine in ten on A C D E G. Send it; the teacher answers with notes and one idea.",
+     "module": "S1m",
+     "step": "improv-five",
+     "choruses": 2,
+     "minNotes": 16,
+     "inScale": 0.9
     }
    ]
   },

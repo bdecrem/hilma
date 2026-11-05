@@ -14,9 +14,11 @@ import Foundation
 ///   `choruses` of them.
 /// - `song`: a Stage song played to the end on one part and level (`part`, `difficulty`) with
 ///   `grade` or better (an A is 90% accuracy: `GameEngine.Result.grade(accuracy:)`).
+/// - `improv`: a take on an improv step (`Lesson.Kind.free`) the improv teacher reviewed, with
+///   `choruses` whole choruses, `minNotes` notes and `inScale` of them on the step's notes.
 /// A level clears when every one of its items is done; a level with no items yet can't.
 struct LearningPlan: Decodable {
-    enum Kind: String, Decodable { case step, jam, song }
+    enum Kind: String, Decodable { case step, jam, song, improv }
 
     struct Item: Decodable, Identifiable {
         let id: String
@@ -31,8 +33,11 @@ struct LearningPlan: Decodable {
         let tempo: Int?
         /// `step`: where the tempo ladder starts; nil = the target.
         let start: Int?
-        /// `jam`: choruses in the scale to finish.
+        /// `jam`: choruses in the scale to finish. `improv`: whole choruses in the take.
         let choruses: Int?
+        /// `improv`: notes in the take, and the share of them on the step's notes (0…1).
+        let minNotes: Int?
+        let inScale: Double?
         /// `song`: the Stage song (`Song.catalog`), the part and level to play, the grade to get.
         let song: String?
         let part: String?
@@ -88,6 +93,9 @@ struct LearningPlan: Decodable {
                 switch i.kind {
                 case .step: precondition(i.module != nil && i.step != nil && i.tempo != nil, "\(at): a step item needs a module, a step and a tempo")
                 case .jam: precondition(i.module != nil && i.step != nil && (i.choruses ?? 0) > 0, "\(at): a jam item needs a module, a step and choruses")
+                case .improv:
+                    precondition(i.module != nil && i.step != nil && (i.choruses ?? 0) > 0 && (i.minNotes ?? 0) > 0 && (0...1).contains(i.inScale ?? -1),
+                                 "\(at): an improv item needs a module, a step, choruses, minNotes and inScale")
                 case .song:
                     precondition(i.song.map(Song.catalog.contains) == true, "\(at): \(i.song ?? "no song") is not a bundled song")
                     precondition(i.part.flatMap(Song.PartKey.init(rawValue:)) != nil, "\(at): part \(i.part ?? "none")")
@@ -203,6 +211,9 @@ struct GoalProgress {
             let n = item.choruses ?? 0
             if r.done != nil { return "Done · \(n) choruses in the scale" }
             return "\(min(r.choruses, n)) of \(n) choruses in the scale"
+        case .improv:
+            if r.done != nil { return "Done · reviewed \(r.done!)" }
+            return "Not yet · \(item.choruses ?? 0) choruses, \(item.minNotes ?? 0) notes, \(Int(((item.inScale ?? 0) * 100).rounded()))% on the notes"
         case .song:
             let level = item.difficulty.map { $0.prefix(1).uppercased() + $0.dropFirst() } ?? ""
             let floor = Int(((item.grade.flatMap(GameEngine.Result.floor(of:)) ?? 0) * 100).rounded())
@@ -218,6 +229,7 @@ struct GoalProgress {
         case .step: return done(level, item) ? "Play again" : "Play at \(suggestedTempo(level, item))"
         case .jam: return done(level, item) ? "Jam again" : "Jam"
         case .song: return done(level, item) ? "Play again" : "Play the song"
+        case .improv: return done(level, item) ? "Improvise again" : "Improvise"
         }
     }
 }
