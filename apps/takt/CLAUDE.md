@@ -1397,6 +1397,24 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   does and backs out of it. Checks 372/372; verified on the simulator (the goals in both themes,
   the goal's lesson, Back landing on Level 1's goals) and installed on this Mac.
 
+- **Map goals no longer fill in the module; a record can be set by hand: 0.1 (95), 2026-11-04.**
+  Bart: "Scales: I have only done lessons 1-4 - update my record accordingly". His server record
+  read S1 14 of 14 (and S1m reachedStep 14): the C major goal opens lesson 14's step, reaching it
+  wrote `reachedStep` 14 and passing it `lessonsDone` 14, and both count every lesson before.
+  Now `Player.publish` records a step reached only inside the lessons opened in order
+  (`Lesson.inOrder(step:lessonsDone:)`: the next lesson or one before it) and a lesson complete
+  only when it is the next one; the goal's own record (`Snapshot.goals`) is untouched. Lowering a
+  record needed more than the server row, since every device merges by max:
+  `LessonRecord.setAt` marks a record set by hand, and `AccountStore.merge` lets the newer stamp's
+  place in the module (`reachedStep`, `lessonsDone`, `completed`) replace the other copy's
+  instead of taking the max (best tempo and jams still merge); the same stamp merges as before.
+  Builds before 0.1 (95) drop the stamp and push their max, so `/api/takt/progress` PUT keeps a
+  stamped record's place against an older or unstamped copy (`keepHandSet` in the route). The tool:
+  `npx tsx scripts/takt/set-lessons.ts <email> S1=4,S1m=4 [--apply]` (dry run by default; lesson
+  n's next intro as `reachedStep`). Applied for Bart: S1 and S1m at 4 done, reachedStep 5.
+  A device on an older build keeps showing its own max until it updates (its pushes no longer
+  stick). Checks 374/374 (the stamp both ways round and with the same stamp; in-order steps).
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

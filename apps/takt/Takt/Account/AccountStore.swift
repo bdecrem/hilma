@@ -203,10 +203,19 @@ final class AccountStore {
         var out = a
         for (code, r) in b.lessons {
             var m = out.lessons[code] ?? r
-            m.reachedStep = max(m.reachedStep, r.reachedStep)
-            m.lessonsDone = max(m.lessonsDone, r.lessonsDone)
+            if m.setAt != r.setAt {
+                // A record set by hand replaces the place in the module of copies from before it.
+                let newer = (r.setAt ?? .distantPast) > (m.setAt ?? .distantPast) ? r : m
+                m.reachedStep = newer.reachedStep
+                m.lessonsDone = newer.lessonsDone
+                m.completed = newer.completed
+                m.setAt = newer.setAt
+            } else {
+                m.reachedStep = max(m.reachedStep, r.reachedStep)
+                m.lessonsDone = max(m.lessonsDone, r.lessonsDone)
+                m.completed = [m.completed, r.completed].compactMap { $0 }.min()
+            }
             m.bestTempo = max(m.bestTempo, r.bestTempo)
-            m.completed = [m.completed, r.completed].compactMap { $0 }.min()
             m.jamsDone = Array(Set(m.jamsDone).union(r.jamsDone)).sorted()
             out.lessons[code] = m
         }

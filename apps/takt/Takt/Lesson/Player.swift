@@ -343,12 +343,13 @@ final class Player {
     private func publish() {
         let out = engine.output
         if out.step != lesson.step {
-            // A jam's step sits past the lessons' steps: reaching it says nothing about them.
-            if !out.jam { progress.reached(step: out.step, in: content.code) }
+            // A jam's step sits past the lessons' steps, and a map goal's step can sit past the
+            // lessons played in order: reaching either says nothing about the lessons before it.
+            if !out.jam, content.inOrder(step: out.step, lessonsDone: lessonsDone) { progress.reached(step: out.step, in: content.code) }
             applyBand()
         }
         if let c = out.complete, c != lesson.complete {
-            progress.lessonDone(c.number, in: content.code)
+            if c.number <= lessonsDone + 1 { progress.lessonDone(c.number, in: content.code) }
             // A finished lesson is a day of practice (a replay too).
             if !ProgressStore.readOnly { progress.practiced(.lesson, id: "\(content.code)·\(c.number)") }
         }

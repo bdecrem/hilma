@@ -957,6 +957,19 @@ enum LessonCheck {
         goalB.goals[k(0)] = GoalRecord(done: "2026-11-03", best: 72, choruses: 0)
         goalB.goals[k(4)] = GoalRecord(done: nil, best: 0, choruses: 2)
         let goalM = AccountStore.merge(goalA, goalB)
+        var stale = ProgressStore.Snapshot(), fixed = ProgressStore.Snapshot()
+        var r14 = ProgressStore.LessonRecord(); r14.lessonsDone = 14; r14.reachedStep = 14; r14.bestTempo = 70
+        var r4 = ProgressStore.LessonRecord(); r4.lessonsDone = 4; r4.reachedStep = 5; r4.setAt = Date(timeIntervalSince1970: 1_793_840_000)
+        stale.lessons["S1"] = r14; fixed.lessons["S1"] = r4
+        var r5 = r4; r5.lessonsDone = 5; r5.reachedStep = 6
+        var advanced = ProgressStore.Snapshot(); advanced.lessons["S1"] = r5
+        check("progress: a record set by hand beats an older copy either way round (keeping the best tempo); the same stamp merges by max",
+              AccountStore.merge(stale, fixed).lessons["S1"].map { ($0.lessonsDone, $0.reachedStep, $0.bestTempo, $0.setAt != nil) } ?? (0, 0, 0, false) == (4, 5, 70, true)
+              && AccountStore.merge(fixed, stale).lessons["S1"]?.lessonsDone == 4
+              && AccountStore.merge(fixed, advanced).lessons["S1"]?.lessonsDone == 5 && AccountStore.merge(advanced, fixed).lessons["S1"]?.reachedStep == 6)
+        check("progress: a step reached moves the module only inside the lessons opened in order (a map goal on lesson 14 after 4 doesn't)",
+              s1.inOrder(step: 5, lessonsDone: 4) && s1.inOrder(step: 3, lessonsDone: 4) && !s1.inOrder(step: 14, lessonsDone: 4)
+              && !s1.inOrder(step: 6, lessonsDone: 4) && s1.inOrder(step: 1, lessonsDone: 0))
         check("goals: merged, the earliest day and the max of the numbers, either way round",
               goalM.goals[k(0)] == GoalRecord(done: "2026-11-03", best: 72, choruses: 0) && goalM.goals[k(4)]?.choruses == 2
               && AccountStore.merge(goalB, goalA).goals == goalM.goals)

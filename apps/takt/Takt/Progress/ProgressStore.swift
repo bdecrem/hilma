@@ -17,6 +17,10 @@ final class ProgressStore {
         var bestTempo = 0
         /// Play mode: jams (step ids) played clean once.
         var jamsDone: [String] = []
+        /// When the record was set by hand on the server (a correction): the place in the
+        /// module (`reachedStep`, `lessonsDone`, `completed`) replaces copies from before it
+        /// instead of merging by max (`AccountStore.merge`; the PUT route keeps it too).
+        var setAt: Date?
 
         init() {}
 
@@ -27,6 +31,7 @@ final class ProgressStore {
             completed = try c.decodeIfPresent(Date.self, forKey: .completed)
             bestTempo = try c.decodeIfPresent(Int.self, forKey: .bestTempo) ?? 0
             jamsDone = try c.decodeIfPresent([String].self, forKey: .jamsDone) ?? []
+            setAt = try c.decodeIfPresent(Date.self, forKey: .setAt)
         }
     }
 

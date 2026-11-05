@@ -322,6 +322,13 @@ struct Lesson: Decodable {
         lessons.prefix(l).reduce(0) { $0 + $1.steps.count }
     }
 
+    /// Reaching `step` (1-based) moves the module's record only inside the lessons opened in
+    /// order: the next one or one before it. A map goal opens a step further on, and playing it
+    /// says nothing about the lessons it skipped.
+    func inOrder(step: Int, lessonsDone: Int) -> Bool {
+        lessonIndex(ofStep: step - 1) <= lessonsDone
+    }
+
     /// Lessons done, read off the highest step reached (1-based): a lesson is done once a later
     /// step than its last play step was reached. For records from before lessons existed.
     func lessonsDone(reachedStep: Int) -> Int {
