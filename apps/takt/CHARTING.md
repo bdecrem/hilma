@@ -123,9 +123,11 @@ chart" below for the rule this taught.
 
 ## Adaptive
 
-**The song's speed never changes.** Each song's `tempo` is its 1x speed, set by the generator,
-and the Stage plays it at exactly that at every level and in Adaptive: `startGame` stops the
-band, sends the song's tempo, counts in, plays, and nothing touches the tempo after. Since
+**The song's speed never changes by itself.** Each song's `tempo` is its 1x speed, set by the
+generator, and the Stage plays it at exactly that at every level and in Adaptive: `startGame`
+stops the band, sends the song's tempo, counts in, plays, and nothing in the app touches the
+tempo after. Only the player does, with the knob (0.1 (103)): half speed to full, and a run
+under full speed is practice (its result shows, but it goes on no board and clears no goal). Since
 0.1 (57) a stop also clears a tempo change left waiting for a downbeat (a lesson's ramp or the
 knob), which used to land on bar 1 of the song and play it at the lesson's tempo (Slow Burn at
 90 instead of 68 in one run, 68 in the next). Measured 2026-10-31 on this Mac, Slow Burn melody at
@@ -216,9 +218,10 @@ every song and part.
 8. **The band plays what the level leaves out** (0.1 (51)), so a sparse level still sounds like
    the record and a chart can be as thin as the player needs.
 
-9. **The speed never changes** (0.1 (57)). A level is easier because it asks for fewer notes,
-   never because the band slows down; a slow blues at 90 is not made easier at 68, it is made
-   boring.
+9. **The speed never changes by itself** (0.1 (57)). A level is easier because it asks for fewer
+   notes, never because the band slows down; a slow blues at 90 is not made easier at 68, it is
+   made boring. The player may turn the knob down to learn a part (0.1 (103)), and that run is
+   practice: the chart is still written for 1x.
 
 10. **Write the weights for the ladder, then measure.** One anchor a bar as the rule for a
     melody (Boogie Shoes had two and Easy was the whole riff, 0.1 (60)); downbeats weight 1,

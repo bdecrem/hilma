@@ -25,7 +25,8 @@ there (Easy = tier 2, a chorus-long phrase, no borrowing on tier 2).
 - **One speed.** The `tempo` in the song block is the song's 1x; the Stage plays every level and
   Adaptive at exactly that. Slow blues is 90, not 68 (Bart, 2026-10-31: 68 is "too boring");
   jump blues 120. A level is easier because it asks for fewer notes, never because the band
-  slows down.
+  slows down. The player's knob (0.1 (103)) can take a run under 1x to learn it; that run is
+  practice, not a score.
 - **The band plays the rest.** Whatever a level leaves out of the part, the band's own
   instrument plays, so every level sounds like the record. The player hears the whole tune and
   plays a slice of it.

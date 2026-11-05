@@ -787,7 +787,7 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   score and combo in the HUD give way to PRACTICE with "70% speed · nothing scored"; the
   progress rail becomes a **scrubber** (drag anywhere: the band holds at that bar, the highway
   shows it) with one small row under it: the bar and its section, ↺ four bars back, − 70% +
-  (50–100 in tens; ↑/↓ on the Mac), play (four clicks at the practice tempo, then the band;
+  (50–100 in tens; ↑/↓ on the Mac; since 0.1 (103) the HUD's knob, in bpm), play (four clicks at the practice tempo, then the band;
   playing, it pauses, and play starts that bar over) and "Play the run", which starts the run
   over from the top at the song's speed with a fresh score. Notes still judge and pop at the
   hit line and the band still fills what the level leaves out, but nothing scores, nothing
@@ -1458,6 +1458,25 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   `improv`: 2 choruses, 16 notes, 90 % on the notes). **XP** (`Snapshot.xp`, a union of entries,
   plus 100 a done goal): 30 a reviewed take, 50 + 25 your version, 20 a lesson, 10 a song, shown
   small beside the gear on Learn and Map. Reviews are kept in `takt_improv` (schema 005).
+
+- **The tempo knob on every song: 0.1 (103), 2026-11-05.** Bart, practicing Blue Lantern: "i
+  also need the tempo adjustment widget. that should btw be present in all games, incl games
+  played from the level/map tab". The lessons' `TempoKnob` sits in the Stage's HUD on the Mac
+  (between the score and play) and by the rail on the phone (in the practice row while
+  practicing), on every song however it was opened: the ring runs half the song's tempo to the
+  song's own (`TempoKnob.range`, `nudge`; `GameKnob` builds it), ± 5 a tap, drag, or ↑ / ↓.
+  Full speed is the song's tempo, the arc in `signal`; turned under it the arc goes muted, the
+  subtitle reads "· 70% speed", and **the run is practice**: it plays to its result (grade and
+  accuracy shown, "At 70% speed · practice, not on the board") but goes on no board, clears no
+  song goal, counts no day. Play again and Play the run keep the knob; a song opened fresh is at
+  full speed. `Player.gameSpeed` (was `practiceSpeed`), `setGameTempo(_:)` / `nudgeGameTempo(_:)`
+  (`nudgeTempo` turns it on a song), `GameState.tempo / pendingTempo / songTempo / slowed`,
+  `GameControls.tempo`; the practice row's own − 70% + is gone (the knob is the one control).
+  DEBUG `-Speed <percent>` turns it before the count-in. Verified headless on this Mac: a
+  `-Speed 70 -Autoplay perfect` run of Slow Burn Short at 63 bpm to an S logged "at 70% speed ·
+  not recorded" with the card's line; snapshots of the HUD at 90 and 63, practice, and Blue
+  Lantern II from the map (`-Route map -Venue 1 -Goal song`); the iPhone 17 Pro simulator's
+  run and practice rows; `-LessonCheck` 415/415.
 
 ## Code map (`Takt/`)
 

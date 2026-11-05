@@ -5,14 +5,22 @@ import os
 /// the level leaves out, practice inside a run, and the game screen's frame.
 extension Player {
     /// A song from the top: its band with your keys on the part's instrument, the part's
-    /// channel out, the song's tempo, four clicks in. The lesson's band comes back with `endGame`.
-    func startGame(song: Song, part: Song.PartKey, difficulty: GameEngine.Difficulty, practice startHeld: Bool = false) {
+    /// channel out, the song's tempo (or the knob's, `keepSpeed`: Play again and Play the run
+    /// keep what you turned it to), four clicks in. The lesson's band comes back with `endGame`.
+    func startGame(song: Song, part: Song.PartKey, difficulty: GameEngine.Difficulty, practice startHeld: Bool = false,
+                   keepSpeed: Bool = false) {
         if demo { endDemo(stop: false) }
         gameDifficulty = difficulty
         gameResult = nil
         lastRun = nil
         practice = false
-        practiceSpeed = 1
+        if !keepSpeed { gameSpeed = 1 }
+        #if DEBUG
+        // `-Speed <percent>`: the knob turned before the count-in.
+        if !keepSpeed, UserDefaults.standard.integer(forKey: "Speed") > 0 {
+            gameSpeed = Double(min(100, max(50, UserDefaults.standard.integer(forKey: "Speed")))) / 100
+        }
+        #endif
         practiceTick = 0
         practiceCountBase = 0
         let partChannel = song.channel(of: part)
@@ -29,7 +37,7 @@ extension Player {
         audio.send(.transpose(0))
         audio.send(.silence(from: 0, to: 0))
         for ch in Channel.band { audio.send(.mute(ch, ch == partChannel)) }
-        audio.send(.tempo(Double(song.meta.tempo)))
+        audio.send(.tempo((Double(song.meta.tempo) * gameSpeed).rounded()))
         pressed.removeAll()
         if startHeld {
             // Practice from the set list: held at bar 1, nothing scored; play counts in from there.
@@ -44,10 +52,10 @@ extension Player {
         lessonLog.info("stage: \(song.meta.title, privacy: .public) · \(part.rawValue, privacy: .public) · \(difficulty.rawValue, privacy: .public)")
     }
 
-    /// The same song, part and level again.
+    /// The same song, part and level again, at the knob's speed.
     func restartGame() {
         guard let g = game else { return }
-        startGame(song: g.song, part: g.part, difficulty: gameDifficulty)
+        startGame(song: g.song, part: g.part, difficulty: gameDifficulty, keepSpeed: true)
     }
 
     /// Back to the lessons: the module's band, where the lesson was.
@@ -56,7 +64,7 @@ extension Player {
         game = nil
         gameResult = nil
         practice = false
-        practiceSpeed = 1
+        gameSpeed = 1
         practiceCountBase = 0
         // The module's band comes back with the lesson's step (`resume` → `restartLesson`).
         applyInstrument()
@@ -111,13 +119,29 @@ extension Player {
         practiceSeek(bar: practiceBar - bars)
     }
 
-    /// The speed, in steps of ten percent between half and full: the band's tempo follows (on
-    /// the next downbeat while it plays, at once while it holds).
-    func practiceSpeed(delta: Int) {
-        guard let game, practice else { return }
-        let pct = Int((practiceSpeed * 100).rounded()) + delta
-        practiceSpeed = Double(min(100, max(50, pct))) / 100
-        audio.send(.tempo(Double(game.song.meta.tempo) * practiceSpeed))
+    // MARK: The knob
+
+    /// The knob's range on a song: half the song's tempo to the song's own, its full speed.
+    var gameTempoRange: ClosedRange<Int> {
+        let top = max(1, game?.song.meta.tempo ?? 1)
+        return max(1, (top + 1) / 2)...top
+    }
+
+    /// The knob, in a run or in practice: the band to `bpm` (held to the range), on the next
+    /// downbeat while it plays, at once while it holds. The song's tempo is full speed; under
+    /// it the run is practice (`runGame` records nothing).
+    func setGameTempo(_ bpm: Int) {
+        guard let game else { return }
+        let t = min(gameTempoRange.upperBound, max(gameTempoRange.lowerBound, bpm))
+        gameSpeed = Double(t) / Double(game.song.meta.tempo)
+        audio.send(.tempo(Double(t)))
+        lessonLog.info("stage: knob \(t) (\(Int((self.gameSpeed * 100).rounded()))%)")
+    }
+
+    /// A step of the knob (± 5 from the lesson's keys and buttons) from where it was turned to.
+    func nudgeGameTempo(_ delta: Int) {
+        guard let game else { return }
+        setGameTempo(Int((Double(game.song.meta.tempo) * gameSpeed).rounded()) + delta)
     }
 
     /// Play in practice: from the held bar, four clicks at the practice tempo, then the band;
@@ -133,11 +157,11 @@ extension Player {
         audio.send(.play)
     }
 
-    /// Back to the game: the run from the top, at the song's speed, a fresh score.
+    /// Back to the game: the run from the top, at the knob's speed, a fresh score.
     func leavePractice() {
         guard let g = game, practice else { return }
         lessonLog.info("practice: out, the run from the top")
-        startGame(song: g.song, part: g.part, difficulty: gameDifficulty)
+        startGame(song: g.song, part: g.part, difficulty: gameDifficulty, keepSpeed: true)
     }
 
     /// Every frame of a run: the engine hears the tick; the end stops the band and puts the run
@@ -174,6 +198,11 @@ extension Player {
             let r = game.result()
             gameResult = r
             audio.send(.stop)
+            if gameSpeed < 0.999 {
+                // Under full speed the run was practice: the result shows, nothing is recorded.
+                lessonLog.info("stage: \(r.grade, privacy: .public) \(r.score) at \(Int((self.gameSpeed * 100).rounded()))% speed · \(r.perfect)/\(r.good)/\(r.missed) · not recorded")
+                return
+            }
             if !ProgressStore.readOnly { lastRun = progress.record(run: r) }
             // The plan's song goals score themselves off the same run.
             onGameRun?(r)
@@ -188,7 +217,9 @@ extension Player {
         let clock = TransportClock(s)
         let heard = clock.valid ? clock.position(atHost: mach_absolute_time()) : nil
         let tick = s.epoch == gameEpoch ? (heard?.tick ?? 0) : 0
-        let msPerTick = 60000 / (Double(game.song.meta.tempo) * practiceSpeed * Double(game.ticksPerBeat))
+        // The band's own pace while it rolls (a knob turn lands on a downbeat); the knob's while it holds.
+        let rolling = s.epoch == gameEpoch && (heard?.msPerTick.isFinite ?? false)
+        let msPerTick = rolling ? heard!.msPerTick : 60000 / (Double(game.song.meta.tempo) * gameSpeed * Double(game.ticksPerBeat))
         _ = practiceTick  // a scrub while held redraws the highway
         let lookahead = GameState.lookaheadSeconds * 1000 / msPerTick
         let cue = game.cue(at: tick, msPerTick: msPerTick)
@@ -208,7 +239,8 @@ extension Player {
             bar: min(bar, song.bars - 1), bars: song.bars, beat: beat,
             score: game.score, combo: game.combo, maxCombo: game.maxCombo, multiplier: game.multiplier,
             accuracy: game.accuracy, progress: min(1, max(0, tick / Double(song.bars * game.ticksPerBar))),
-            countIn: countIn, playing: playing, pop: game.pop, practice: practice, speed: practiceSpeed,
+            countIn: countIn, playing: playing, pop: game.pop, practice: practice, speed: gameSpeed,
+            tempo: tempo, pendingTempo: pendingTempo, songTempo: song.meta.tempo,
             heardTick: tick, lookaheadTicks: lookahead, ticksPerBeat: game.ticksPerBeat, ticksPerBar: game.ticksPerBar,
             notes: visible, keys: song.keyboard(game.part), nowNotes: cue.now, nextNotes: cue.next,
             pressedNotes: pressed, fingers: cue.fingers, nowFingers: cue.nowFingers, nextFinger: cue.nextFingers.min(),

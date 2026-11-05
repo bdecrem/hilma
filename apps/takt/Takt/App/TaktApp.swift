@@ -278,8 +278,8 @@ struct LiveGameScreen: View {
                 practice: player.enterPractice,
                 practiceSeek: { player.practiceSeek(bar: $0) },
                 practiceBack: { player.practiceBack() },
-                practiceSpeed: { player.practiceSpeed(delta: $0) },
                 run: player.leavePractice,
+                tempo: player.nudgeGameTempo,
                 agent: { app.openAgent(fromGame: player) }
             ))
     }

@@ -84,7 +84,9 @@ says "Level 21"). The orange stop, its pill and its card open **`Menu/LevelGoals
 mark, the title, the detail, the status line, a button) and the plan's `about`. "Play at 68"
 opens that step from its intro with the knob on 68 (`Player.start(stepId:tempo:)`); the step
 still counts at 72. A song goal's "Play the song" opens the song on the Stage on its part and
-level; Back, Esc and the result card's "Map" come back to the level. A cleared stop opens the
+level; Back, Esc and the result card's "Map" come back to the level. The Stage's knob can slow
+the song to learn it (0.1 (103)), the way the lesson's can; a run under full speed is practice
+and does not clear the goal, as a slow run of a step does not count. A cleared stop opens the
 venue's story as before. The header reads `cleared / 26`.
 
 DEBUG: `-Route map -Venue 1` opens level 1's goals (a level past the one up next needs

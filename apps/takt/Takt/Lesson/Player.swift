@@ -90,10 +90,12 @@ final class Player {
     @ObservationIgnored var demoQueue = PressQueue()
 
     // Player+Stage: the run's epoch, the record's fills, the level, and practice's hold.
-    /// Practice, inside a run (0.1 (61)): the band at a fraction of the song's tempo, from any
-    /// bar, nothing scored.
+    /// Practice, inside a run (0.1 (61)): the band from any bar, nothing scored.
     var practice = false
-    var practiceSpeed = 1.0
+    /// The knob on the Stage (0.1 (103)): the band at this fraction of the song's tempo, half
+    /// to full, in a run and in practice alike. Under full speed a run is practice: it ends on
+    /// its result, but goes on no board and clears no goal.
+    var gameSpeed = 1.0
     /// Bars in the loaded band's chorus (the lesson's form, or a whole song).
     @ObservationIgnored var chorusBars: Int
     @ObservationIgnored var gameEpoch = 0
@@ -507,8 +509,8 @@ final class Player {
     }
 
     func nudgeTempo(_ delta: Int) {
-        if practice {
-            practiceSpeed(delta: delta > 0 ? 10 : -10)
+        if game != nil {
+            nudgeGameTempo(delta)
             return
         }
         let base = pendingTempo ?? tempo

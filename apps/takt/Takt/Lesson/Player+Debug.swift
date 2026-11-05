@@ -48,7 +48,9 @@ extension Player {
         practiceHookDone = true
         enterPractice()
         practiceSeek(bar: d.integer(forKey: "PracticeBar"))
-        if d.object(forKey: "PracticeSpeed") != nil { practiceSpeed(delta: d.integer(forKey: "PracticeSpeed") - 100) }
+        if d.integer(forKey: "PracticeSpeed") > 0, let t = game?.song.meta.tempo {
+            setGameTempo(Int((Double(t) * Double(d.integer(forKey: "PracticeSpeed")) / 100).rounded()))
+        }
         audio.send(.countIn(beats: 4))
         audio.send(.play)
     }

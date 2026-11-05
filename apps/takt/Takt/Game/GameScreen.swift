@@ -38,9 +38,17 @@ struct GameState {
     var countIn: Int? = nil
     var playing = false
     var pop: GameEngine.Pop? = nil
-    /// Practice: nothing scores, the rail is a scrubber, the band at `speed` (0.5...1).
+    /// Practice: nothing scores, the rail is a scrubber.
     var practice = false
+    /// The knob: the band at this fraction of the song's tempo (0.5...1), the band's tempo now,
+    /// the one waiting for the downbeat, and the song's own (full speed).
     var speed = 1.0
+    var tempo = 0
+    var pendingTempo: Int? = nil
+    var songTempo = 0
+    /// Under full speed a run is practice: it goes on no board and clears no goal.
+    var slowed: Bool { speed < 0.999 }
+    var speedPercent: Int { Int((speed * 100).rounded()) }
     var heardTick = 0.0
     var lookaheadTicks = 1.0
     var ticksPerBeat = 12
@@ -71,12 +79,13 @@ struct GameControls {
     var leave: () -> Void = {}
     /// Where `leave` goes: the set list, or the map when a goal on the map started the song.
     var leaveTitle = "Set list"
-    /// Pause → practice; the scrub (a bar); four bars back; the speed (percent, ±10); back to the run.
+    /// Pause → practice; the scrub (a bar); four bars back; back to the run.
     var practice: () -> Void = {}
     var practiceSeek: (Int) -> Void = { _ in }
     var practiceBack: () -> Void = {}
-    var practiceSpeed: (Int) -> Void = { _ in }
     var run: () -> Void = {}
+    /// The knob, a run or practice alike: the band's tempo by so many bpm (±5).
+    var tempo: (Int) -> Void = { _ in }
     /// Pause → Agent mode on this song, where the run sits.
     var agent: () -> Void = {}
 }
@@ -114,10 +123,18 @@ struct GameScreen: View {
                 PracticeBar(state: state, compact: compact)
                     .padding(.horizontal, compact ? 16 : 24)
                     .transition(.move(edge: .top).combined(with: .opacity))
+            } else if compact {
+                // The phone's HUD has no room for the knob: it sits at the end of the rail.
+                HStack(spacing: 12) {
+                    ProgressRail(state: state)
+                        .frame(height: 6)
+                    GameKnob(state: state, compact: true)
+                }
+                .padding(.horizontal, 16)
             } else {
                 ProgressRail(state: state)
                     .frame(height: 6)
-                    .padding(.horizontal, compact ? 16 : 24)
+                    .padding(.horizontal, 24)
             }
             ZStack {
                 if let r = state.result {
@@ -146,7 +163,23 @@ struct GameScreen: View {
     }
 }
 
-/// Back, the song and its section, the combo with its multiplier, the score.
+/// The lessons' tempo knob on a song: half the song's tempo to the song's own, the arc muted
+/// under full speed (the run is practice then). In the HUD on the Mac, by the rail or in the
+/// practice row on the phone.
+struct GameKnob: View {
+    let state: GameState
+    let compact: Bool
+    @Environment(\.gameControls) private var controls
+
+    var body: some View {
+        let top = max(1, state.songTempo)
+        TempoKnob(bpm: state.tempo, pending: state.pendingTempo, counts: top, compact: compact,
+                  range: max(1, (top + 1) / 2)...top, nudge: controls.tempo)
+    }
+}
+
+/// Back, the song and its section, the combo with its multiplier, the score, the knob (wide),
+/// play.
 struct GameHUD: View {
     let state: GameState
     let compact: Bool
@@ -162,7 +195,7 @@ struct GameHUD: View {
                     .foregroundStyle(Palette.text)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
-                Text("\(state.partTitle) · \(state.difficulty == .adaptive ? (compact ? state.levelTitle : "Adaptive · \(state.levelTitle)") : state.difficulty.title)\(compact ? "" : " · \(state.section)")")
+                Text("\(state.partTitle) · \(state.difficulty == .adaptive ? (compact ? state.levelTitle : "Adaptive · \(state.levelTitle)") : state.difficulty.title)\(compact ? "" : " · \(state.section)")\(state.slowed && !state.practice ? " · \(state.speedPercent)% speed" : "")")
                     .dataLabel(compact ? 10 : 12)
                     .foregroundStyle(Palette.muted)
                     .lineLimit(1)
@@ -176,7 +209,7 @@ struct GameHUD: View {
                         .font(.display(compact ? 22 : 28))
                         .textCase(.uppercase)
                         .foregroundStyle(Palette.signal)
-                    Text("\(Int((state.speed * 100).rounded()))% speed · nothing scored")
+                    Text("\(state.speedPercent)%\(compact ? "" : " speed") · nothing scored")
                         .dataLabel(10)
                         .foregroundStyle(Palette.muted)
                         .lineLimit(1)
@@ -197,9 +230,12 @@ struct GameHUD: View {
                 }
                 .frame(minWidth: compact ? 70 : 110, alignment: .trailing)
             }
-            if !compact && !state.practice {
-                TransportButton(symbol: state.playing ? "pause.fill" : "play.fill", lit: state.playing, size: 36,
-                                label: state.playing ? "Pause" : "Play", action: controls.togglePlay)
+            if !compact {
+                GameKnob(state: state, compact: false)
+                if !state.practice {
+                    TransportButton(symbol: state.playing ? "pause.fill" : "play.fill", lit: state.playing, size: 36,
+                                    label: state.playing ? "Pause" : "Play", action: controls.togglePlay)
+                }
             }
         }
     }
@@ -501,9 +537,9 @@ struct PausedBadge: View {
 }
 
 /// Practice, where the progress rail was: the rail as a scrubber (drag to any bar; the band
-/// holds there), then one quiet row: the bar and its section, four bars back, the speed with
-/// − and +, play (four clicks, then the band) and the way back to the run. Nothing in it is
-/// big: the highway stays the screen.
+/// holds there), then one quiet row: the bar and its section, four bars back, play (four
+/// clicks, then the band) and the way back to the run. The speed is the knob, as in a run (the
+/// HUD's on the Mac, in this row on the phone). Nothing in it is big: the highway stays the screen.
 struct PracticeBar: View {
     let state: GameState
     let compact: Bool
@@ -520,16 +556,8 @@ struct PracticeBar: View {
                     .lineLimit(1)
                     .frame(minWidth: compact ? 44 : 150, alignment: .leading)
                 Spacer(minLength: 4)
+                if compact { GameKnob(state: state, compact: true) }
                 SmallButton(symbol: "gobackward", label: "Four bars back", action: controls.practiceBack)
-                HStack(spacing: 2) {
-                    SmallButton(symbol: "minus", label: "Slower", action: { controls.practiceSpeed(-10) })
-                    Text("\(Int((state.speed * 100).rounded()))%")
-                        .font(.display(16))
-                        .monospacedDigit()
-                        .foregroundStyle(state.speed < 0.999 ? Palette.signal : Palette.text)
-                        .frame(width: 46)
-                    SmallButton(symbol: "plus", label: "Faster", action: { controls.practiceSpeed(10) })
-                }
                 SmallButton(symbol: state.playing ? "pause.fill" : "play.fill", lit: state.playing,
                             label: state.playing ? "Pause" : "Play from here", action: controls.togglePlay)
                 Button(action: controls.run) {
@@ -673,7 +701,12 @@ struct GameResultPanel: View {
                         .dataLabel(12)
                         .foregroundStyle(Palette.muted)
                 }
-                if let rank {
+                if state.slowed {
+                    // The knob was under full speed: practice, however it went.
+                    Text("At \(state.speedPercent)% speed · practice, not on the board")
+                        .dataLabel(11, weight: .semibold)
+                        .foregroundStyle(Palette.muted)
+                } else if let rank {
                     Text(rank == 0 ? "A new best for this song" : "No. \(rank + 1) on the board")
                         .dataLabel(11, weight: .semibold)
                         .foregroundStyle(rank == 0 ? Palette.signal : Palette.muted)
