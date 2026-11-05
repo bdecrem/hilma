@@ -40,7 +40,10 @@ if [ "$MINI" = local ]; then
   # (2026-10-30). The export re-signs with the same profile.
   echo "== archiving $VERSION ($BUILD) for $PLATFORM here"
   command -v xcodegen >/dev/null && xcodegen generate -q
+  # DerivedData per platform, so the ios and mac ships can run at the same time (2026-11-05:
+  # archiving both into the default one, the mac build swept the ios intermediates mid-archive).
   xcodebuild archive -project Takt.xcodeproj -scheme Takt -destination "$DEST" -archivePath "$OUT/takt.xcarchive" \
+    -derivedDataPath "$HOME/Library/Developer/Xcode/DerivedData/takt-ship-$PLATFORM" \
     -configuration Release CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="Apple Distribution" \
     PROVISIONING_PROFILE_SPECIFIER="$PROFILE" DEVELOPMENT_TEAM=274T5WCVD2 > "$OUT/archive.log" 2>&1 \
     || { grep -E 'error:' "$OUT/archive.log" | head; exit 1; }

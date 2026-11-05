@@ -1899,4 +1899,6 @@ one uses the "takt appstore" profile and needs no installer certificate). **The 
 too since 2026-11-04** (0.1 (95)): `MINI=admin@100.95.51.98 TAKT_PROFILE="takt appstore imac"
 ASC_KEY_ID=748UX45NAP ./apps/takt/testflight/ship-via-mini.sh ios` (profile minted that day
 against the iMac's Apple Distribution cert with `mint-profile.mjs`; the mini's Stanford address
-timed out, Tailscale answered; the archive happens on the mini, ~10 min end to end).
+timed out, Tailscale answered; the archive happens on the mini, ~10 min end to end). **Both platforms at once (2026-11-05, 0.1 (104) to the Public beta from the Air):** each
+platform archives in its own DerivedData (`takt-ship-ios`, `takt-ship-mac`), so the two ships
+can run side by side; before that the mac archive swept the ios intermediates mid-build.
