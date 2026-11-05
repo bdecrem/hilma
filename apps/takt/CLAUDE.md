@@ -1776,4 +1776,8 @@ beta:** external group "Public beta", public link https://testflight.apple.com/j
 opens as a guest) and the en-US test information; `asc-submit.mjs` adds every build to it and
 submits it for beta review, and the link serves a build once Apple has approved one. First build
 on it: 0.1 (52), Mac and iOS (both archived signed on the Air with `MINI=local`; the iOS
-one uses the "takt appstore" profile and needs no installer certificate).
+one uses the "takt appstore" profile and needs no installer certificate). **The iMac ships iOS
+too since 2026-11-04** (0.1 (95)): `MINI=admin@100.95.51.98 TAKT_PROFILE="takt appstore imac"
+ASC_KEY_ID=748UX45NAP ./apps/takt/testflight/ship-via-mini.sh ios` (profile minted that day
+against the iMac's Apple Distribution cert with `mint-profile.mjs`; the mini's Stanford address
+timed out, Tailscale answered; the archive happens on the mini, ~10 min end to end).
