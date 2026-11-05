@@ -15,6 +15,7 @@ final class AppModel {
             player?.inLesson = route == .lesson
             player?.inGame = route == .game
             if route != .map { openVenue = nil }
+            if ![.lesson, .result, .calibrate].contains(route) { lessonFromLevel = nil }
         }
     }
 
@@ -46,7 +47,7 @@ final class AppModel {
     }
 
     /// A goal from the level's screen: its step from the intro, the knob on the ladder's next
-    /// tempo; the module screen is where Back lands.
+    /// tempo; Back (and Esc) land on that level again, still on the map.
     func start(goal item: LearningPlan.Item, level: LearningPlan.Level) {
         ensure(module: item.module)
         guard let player else { return }
@@ -54,6 +55,27 @@ final class AppModel {
         player.start(stepId: item.step, tempo: item.kind == .step ? goals.suggestedTempo(level, item) : nil)
         openVenue = nil
         open(lesson: item.module)
+        lessonFromLevel = level.n
+    }
+
+    /// The level whose goals opened the lesson; nil when it came from the menu or a module.
+    private(set) var lessonFromLevel: Int?
+
+    /// Out of the lesson: back to the map's level it was started from, else `fallback` (the
+    /// module screen; Esc and the result screen go to the menu).
+    func leaveLesson(else fallback: Route = .module) {
+        if let level = lessonFromLevel {
+            route = .map
+            openVenue = level
+        } else {
+            route = fallback
+        }
+    }
+
+    /// A scale goal's fingering as a line ("1-2-3, tuck, 1-2-3, tuck, 1-2-3-4-5, and
+    /// reverse"), from its step's run; nil for a goal that isn't a run.
+    func fingerLine(_ item: LearningPlan.Item) -> String? {
+        item.kind == .step ? module(item.module).fingerLine(step: item.step) : nil
     }
 
     /// Every judged chorus (`Player.onGoalChorus`): the goals on that step score themselves. A
@@ -153,8 +175,15 @@ final class AppModel {
             case "calibrate": route = .calibrate
             case "map":
                 route = .map
-                // `-Venue n` opens level n's venue over it.
+                // `-Venue n` opens level n's venue over it; `-Goal <id>` starts that level's goal as
+                // its button does, and `-Back 1` then leaves the lesson the way Back does.
                 if d.integer(forKey: "Venue") > 0 { openVenue = d.integer(forKey: "Venue") }
+                if let id = d.string(forKey: "Goal") {
+                    guard let level = plan.levels.first(where: { $0.n == max(1, d.integer(forKey: "Venue")) }),
+                          let item = level.items.first(where: { $0.id == id }) else { fatalError("-Goal: no goal \(id)") }
+                    start(goal: item, level: level)
+                    if d.bool(forKey: "Back") { leaveLesson() }
+                }
             case "stage": route = .stage
             case "game": break  // below
             case "eargame": break  // below

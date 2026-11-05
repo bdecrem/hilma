@@ -54,7 +54,7 @@ struct TransportBar: View {
     }
 
     private func backButton(size: CGFloat) -> some View {
-        TransportButton(symbol: "chevron.left", lit: false, size: size, label: "Back to the module", action: controls.back)
+        TransportButton(symbol: "chevron.left", lit: false, size: size, label: controls.backTitle, action: controls.back)
     }
 
     private var stepLabel: some View {

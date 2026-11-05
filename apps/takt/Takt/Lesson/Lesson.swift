@@ -370,6 +370,17 @@ extension Lesson.Step {
 
 /// One note the lesson expects: when (ticks into the chorus), which pitch class, and the key
 /// the keyboard strip shows for it.
+extension Lesson {
+    /// A scale step's fingering as a line (`LessonState.Run.fingerLine`), from one pass of its
+    /// run; nil for a step that isn't a run.
+    func fingerLine(step id: String) -> String? {
+        guard let step = steps.first(where: { $0.id == id }), step.cycle != nil, let pattern = step.pattern else { return nil }
+        let one = expected(step, ticksPerBeat: 12).prefix(pattern.count)
+        guard !one.contains(where: \.chord) else { return nil }
+        return LessonState.Run.fingerLine(one.map { .init(key: $0.display, finger: $0.finger ?? 0) }, right: step.hand == "right")
+    }
+}
+
 struct ExpectedNote: Equatable {
     let tick: Int
     /// 0-based bar of the form.

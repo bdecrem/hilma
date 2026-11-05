@@ -1377,6 +1377,26 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   runs"; checks 370/370 (the unit per step kind, three runs → three verdicts and the gate, the
   tiled demo, an extra's velocity).
 
+- **The scale goals say their fingering; a goal from the map comes back to the map: 0.1 (94),
+  2026-11-04.** Bart: "draw the user's attention for all the scale assignments to the finger
+  pattern, with a text line… eg for pentatonic 2 octaves '1-2-3, tuck, 1, 2, 3 tuck, 1, 2, 3, 4,
+  5 and reverse'" and "if I start on the map, I should exit back to the level I was on, still on
+  the map". **(1)** Each scale goal row on `LevelGoalsScreen` has a `cue` line under its detail,
+  "Fingers · 1-2-3, tuck, 1-2-3, tuck, 1-2-3-4-5, and reverse", generated from the step's own
+  run, not written in the plan: `Lesson.fingerLine(step:)` takes one pass of the run (keys and
+  fingers, no chord steps) and `LessonState.Run.fingerLine` joins neighbor fingers with hyphens,
+  says "tuck" where `crossing` says Thumb under and "over" where a finger crosses the thumb, and
+  ends "and reverse" when the way back is the way there backwards (else "then …"). C major reads
+  1-2-3, tuck, 1-2-3-4, tuck, 1-2-3, tuck, 1-2-3-4-5; the left hand 5-4-3-2-1, over, 3-2-1, over,
+  3-2-1. The chord and jam goals get none. **(2)** `AppModel.start(goal:level:)` records
+  `lessonFromLevel`; `leaveLesson(else:)` sends the lesson's Back, Lesson complete's back button,
+  Esc and the result screen's button to the map with that level's goals open (`openVenue`), and
+  their titles read "Back to the map" / "Map" (`LessonControls.backTitle`); without it they go
+  where they always went (the module; Esc and the result screen to the menu). Any menu route
+  clears it. DEBUG `-Route map -Venue 1 -Goal scale-rh [-Back 1]` starts a goal as its button
+  does and backs out of it. Checks 372/372; verified on the simulator (the goals in both themes,
+  the goal's lesson, Back landing on Level 1's goals) and installed on this Mac.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

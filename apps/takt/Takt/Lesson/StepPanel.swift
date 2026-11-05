@@ -85,7 +85,7 @@ struct StepPanel: View {
         if let n = c.next {
             PrimaryButton(title: "Start lesson \(n.number) · \(n.title)", action: controls.nextStep)
         }
-        QuietButton(title: "Back to the module", action: controls.back)
+        QuietButton(title: controls.backTitle, action: controls.back)
     }
 
     @ViewBuilder

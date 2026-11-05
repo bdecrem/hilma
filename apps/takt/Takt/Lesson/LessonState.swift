@@ -140,6 +140,35 @@ struct LessonState {
             ["", "Thumb", "Index", "Middle", "Ring", "Pinky"][max(0, min(5, f))]
         }
 
+        /// The run's fingering the way you'd say it: neighbor fingers joined ("1-2-3"), "tuck"
+        /// where the thumb goes under, "over" where a finger crosses the thumb, and "and
+        /// reverse" when the way back is the way there backwards. Nil for four notes or fewer.
+        static func fingerLine(_ notes: [Note], right: Bool) -> String? {
+            guard notes.count > 4 else { return nil }
+            // The turn: the top of a run that starts up, the bottom of one that starts down.
+            let up = notes[1].key > notes[0].key
+            let turn = notes.indices.max { up ? notes[$0].key < notes[$1].key : notes[$0].key > notes[$1].key }!
+            func say(_ leg: ArraySlice<Note>, fromTurn: Bool) -> String {
+                var out = fromTurn ? "" : "\(leg.first!.finger)"
+                for (a, b) in zip(leg, leg.dropFirst()) {
+                    switch crossing(from: a, to: b, right: right) {
+                    case "Thumb under"?: out += out.isEmpty ? "tuck, " : ", tuck, "
+                    case _?: out += out.isEmpty ? "over, " : ", over, "
+                    case nil: out += out.isEmpty ? "" : "-"
+                    }
+                    out += "\(b.finger)"
+                }
+                return out
+            }
+            let there = notes[...turn]
+            guard turn < notes.count - 1 else { return say(there, fromTurn: false) }
+            let back = notes[turn...]
+            if there.dropLast().reversed().map(\.finger).starts(with: back.dropFirst().map(\.finger)) {
+                return say(there, fromTurn: false) + ", and reverse"
+            }
+            return say(there, fromTurn: false) + ", then " + say(back, fromTurn: true)
+        }
+
         /// The keyboard that shows the whole run: `keys` semitones wide (wider when the run spans
         /// more, two octaves), white keys at both ends, the run centered; `fallback` when there
         /// is no run.

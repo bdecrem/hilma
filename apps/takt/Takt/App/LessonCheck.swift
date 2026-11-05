@@ -899,6 +899,21 @@ enum LessonCheck {
         check("plan: the C major scale is the first goal of level 1, on lesson-S1, at 72 from 60",
               goalC.kind == .step && goalC.module == "S1" && goalC.step == "major2-rh" && goalC.tempo == 72 && goalC.start == 60
               && none.action(l1, goalC) == "Play at 60")
+        check("plan: the scale goals say their fingering, tucks, crossings and the way back; the chord and jam goals none",
+              s1.fingerLine(step: "major2-rh") == "1-2-3, tuck, 1-2-3-4, tuck, 1-2-3, tuck, 1-2-3-4-5, and reverse"
+              && s1m.fingerLine(step: "penta2-rh") == "1-2-3, tuck, 1-2-3, tuck, 1-2-3-4-5, and reverse"
+              && s1m.fingerLine(step: "penta2-lh") == "5-4-3-2-1, over, 3-2-1, over, 3-2-1, and reverse"
+              && Lesson.bundled("lesson-M").fingerLine(step: "key-1") == nil && Lesson.bundled("lesson-M").fingerLine(step: "jam-five") == nil,
+              "\(String(describing: s1.fingerLine(step: "major2-rh"))) | \(String(describing: s1m.fingerLine(step: "penta2-rh"))) | \(String(describing: s1m.fingerLine(step: "penta2-lh"))) | \(String(describing: Lesson.bundled("lesson-M").fingerLine(step: "key-1")))")
+        let fl = { (keys: [Int], fingers: [Int], right: Bool) in
+            LessonState.Run.fingerLine(zip(keys, fingers).map { LessonState.Run.Note(key: $0, finger: $1) }, right: right) }
+        check("fingering line: one way up, one way down with the middle over, a way back that differs, and four notes say nothing",
+              fl([60, 62, 64, 65, 67, 69, 71, 72], [1, 2, 3, 1, 2, 3, 4, 5], true) == "1-2-3, tuck, 1-2-3-4-5"
+              && fl([72, 71, 69, 67, 65, 64, 62, 60], [5, 4, 3, 2, 1, 3, 2, 1], true) == "5-4-3-2-1, over, 3-2-1"
+              && fl([60, 62, 64, 65, 67, 65, 64, 62, 60], [1, 2, 3, 4, 5, 4, 3, 2, 1], true) == "1-2-3-4-5, and reverse"
+              && fl([60, 62, 64, 65, 67, 65, 64], [1, 2, 3, 4, 5, 3, 2], true) == "1-2-3-4-5, then 3-2"
+              && fl([60, 62, 64, 65], [1, 2, 3, 4], true) == nil,
+              "\(String(describing: fl([60, 62, 64, 65, 67, 65, 64], [1, 2, 3, 4, 5, 3, 2], true)))")
 
         // MARK: A run is the judged unit on a scale step
 

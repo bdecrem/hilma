@@ -93,8 +93,8 @@ struct LevelGoalsScreen: View {
                             .padding(20)
                     } else {
                         ForEach(level.items) { item in
-                            GoalRow(item: item, done: goals.done(level, item), status: goals.status(level, item),
-                                    action: goals.action(level, item), compact: compact) {
+                            GoalRow(item: item, fingers: app.fingerLine(item), done: goals.done(level, item),
+                                    status: goals.status(level, item), action: goals.action(level, item), compact: compact) {
                                 app.start(goal: item, level: level)
                             }
                             .padding(.horizontal, 20)
@@ -117,9 +117,11 @@ struct LevelGoalsScreen: View {
     }
 }
 
-/// One goal: the mark, the words, where it stands, and its button.
+/// One goal: the mark, the words, a scale's fingering, where it stands, and its button.
 private struct GoalRow: View {
     let item: LearningPlan.Item
+    /// A scale goal's fingering, the way you'd say it ("1-2-3, tuck, …").
+    let fingers: String?
     let done: Bool
     let status: String
     let action: String
@@ -148,6 +150,16 @@ private struct GoalRow: View {
                     .bodyText(13)
                     .foregroundStyle(Palette.muted)
                     .fixedSize(horizontal: false, vertical: true)
+                if let fingers {
+                    // The pattern under the hand, in the color the keys use for the next finger.
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
+                        Image(systemName: "hand.raised").font(.system(size: 11, weight: .semibold))
+                        Text("Fingers · \(fingers)").bodyText(13, weight: .semibold)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .foregroundStyle(Palette.cue)
+                    .padding(.top, 2)
+                }
                 Text(status)
                     .dataLabel(10, weight: .semibold)
                     .foregroundStyle(done ? Palette.signal : Palette.text)
@@ -165,6 +177,6 @@ private struct GoalRow: View {
             }
         }
         .accessibilityElement(children: .contain)
-        .accessibilityLabel("\(item.title), \(done ? "done" : status)")
+        .accessibilityLabel("\(item.title), \(fingers.map { "fingers \($0), " } ?? "")\(done ? "done" : status)")
     }
 }

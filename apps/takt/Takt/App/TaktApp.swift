@@ -176,7 +176,7 @@ struct RootView: View {
             onSpace: { if let hit = CountInLaunch.onHit { hit(mach_absolute_time()) } else { player.togglePlay() } },
             onTempo: player.nudgeTempo,
             onEscape: {
-                if app.route == .lesson { app.route = .lessons }
+                if app.route == .lesson { app.leaveLesson(else: .lessons) }
                 if app.route == .game { app.leaveGame() }
                 if app.route == .map { app.openVenue = nil }
             }
@@ -231,7 +231,8 @@ struct LiveLessonScreen: View {
                 continueCard: player.continueCard,
                 beginStep: player.beginStep,
                 nextStep: player.nextStep,
-                back: { app.route = .module },
+                back: { app.leaveLesson() },
+                backTitle: app.lessonFromLevel == nil ? "Back to the module" : "Back to the map",
                 showMe: player.toggleDemo
             ))
     }

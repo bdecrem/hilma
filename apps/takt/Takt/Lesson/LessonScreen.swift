@@ -17,8 +17,9 @@ struct LessonControls {
     /// A step intro's Start, and Lesson complete's next step.
     var beginStep: () -> Void = {}
     var nextStep: () -> Void = {}
-    /// Back to the lessons menu.
+    /// Back to the module, or to the map's level when a goal there opened the lesson.
     var back: () -> Void = {}
+    var backTitle = "Back to the module"
     /// Show me: the step played for you; again to stop it.
     var showMe: () -> Void = {}
 }
