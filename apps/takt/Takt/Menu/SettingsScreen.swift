@@ -17,6 +17,7 @@ struct SettingsScreen: View {
     @AppStorage("mapWorld") private var mapWorld = MapWorld.defaultWorld
     @AppStorage("tapMode") private var tapMode = KeyboardStrip.tapModeDefault
     @AppStorage("showComputerKeys") private var showComputerKeys = false
+    @AppStorage(MIDIInput.whiteKeyMinorKey) private var whiteKeysAMinor = false
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var confirmReset = false
     /// The credits modal. `-Credits YES` opens it at launch in DEBUG builds.
@@ -122,6 +123,15 @@ struct SettingsScreen: View {
                                 }
                             }
                         }
+                        Hairline()
+                        Toggle(isOn: $whiteKeysAMinor) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("White keys play A minor").bodyText(15).foregroundStyle(Palette.text)
+                                Text("Your MIDI keyboard's C–C plays A–A: each white key sounds the white key two below it, so a board that starts on C covers two octaves of A minor")
+                                    .dataLabel(10).foregroundStyle(Palette.muted)
+                            }
+                        }
+                        .tint(Palette.signal)
                         #if targetEnvironment(macCatalyst)
                         Hairline()
                         Toggle(isOn: $showComputerKeys) {

@@ -69,6 +69,20 @@ final class MIDIInput {
         onSources?(names)
     }
 
+    /// Settings → Input → "White keys play A minor": each white key plays the white key two
+    /// below it (C→A, D→B, E→C … B→G), so C–C on the keyboard is A–A, and a 25- or 32-key
+    /// board that starts on C covers two octaves of A minor. Black keys move down three
+    /// semitones (C♯→A♯ …). Applied here, before the monitor, the keys on screen and scoring.
+    static let whiteKeyMinorKey = "whiteKeysAMinor"
+    private static let whiteIndex = [0: 0, 2: 1, 4: 2, 5: 3, 7: 4, 9: 5, 11: 6]
+    private static let whitePC = [0, 2, 4, 5, 7, 9, 11]
+    static func remap(_ note: Int, on: Bool = UserDefaults.standard.bool(forKey: whiteKeyMinorKey)) -> Int {
+        guard on else { return note }
+        guard let w = whiteIndex[note % 12] else { return max(0, note - 3) }
+        let d = note / 12 * 7 + w - 2
+        return max(0, (d / 7) * 12 + whitePC[d % 7])
+    }
+
     private func receive(_ list: UnsafePointer<MIDIEventList>) {
         for packet in list.unsafeSequence() {
             // Hardware stamps packets with the host time of the key press; 0 means "now"
@@ -79,7 +93,7 @@ final class MIDIInput {
                 // MIDI 1.0 channel voice in a UMP word: 0x2G SS NN VV.
                 guard word >> 28 == 0x2 else { continue }
                 let status = (word >> 16) & 0xF0
-                let note = Int((word >> 8) & 0x7F)
+                let note = MIDIInput.remap(Int((word >> 8) & 0x7F))
                 let velocity = Int(word & 0x7F)
                 switch status {
                 case 0x90 where velocity > 0:

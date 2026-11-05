@@ -41,6 +41,10 @@ enum LessonCheck {
         }
 
         var r = judge(chorus())
+        // White keys play A minor (Settings → Input): C3–C5 white keys become A2–A4.
+        let whites = [48, 50, 52, 53, 55, 57, 59, 60, 62, 64, 65, 67, 69, 71, 72].map { MIDIInput.remap($0, on: true) }
+        check("white keys C3–C5 remap to A2–A4 white keys", whites == [45, 47, 48, 50, 52, 53, 55, 57, 59, 60, 62, 64, 65, 67, 69]
+              && MIDIInput.remap(61, on: true) == 58 && MIDIInput.remap(60, on: false) == 60, "\(whites)")
         check("perfect at 70 is clean", r.clean && r.hits == 12 && r.extras.isEmpty && r.detail == "12 of 12", text(r))
         r = judge(chorus(offsetMs: { _ in -50 }))
         check("50 ms early at 70 is clean (±100)", r.clean && r.detail == "12 of 12", text(r))

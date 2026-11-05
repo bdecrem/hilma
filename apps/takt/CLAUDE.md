@@ -1657,6 +1657,13 @@ works, `-inputOffsetMs -23` doesn't. Test runs write the app's real defaults (sa
 repeats. The Player plans a bar ahead, schedules each press on the monitor at its tick, and hands
 it to the lesson at the host time it is heard, through the same path as a key press.
 
+- **White keys play A minor: 0.1 (99), 2026-11-05.** Bart's SH-01A has two octaves C–C, and the
+  Level 1 goals want two octaves of A minor. Settings → Input → "White keys play A minor" remaps
+  incoming MIDI before everything else (`MIDIInput.remap`): each white key plays the white key two
+  below (C→A, D→B … B→G), black keys −3 semitones, so C3–C5 sounds and scores as A2–A4. A diatonic
+  shift, not a transpose (−3 semitones would turn the white keys into A major). MIDI only, not the
+  computer keys or the screen. Check: `-LessonCheck` 413/413.
+
 ## Build and run
 
 ```bash
