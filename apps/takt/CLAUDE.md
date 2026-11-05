@@ -1499,6 +1499,45 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   sliding between keys within an octave and, within a fifth, no crossing but the thumb's and no
   stretch past the pair's reach (past a fifth the hand may jump in order, F♯4 to E5 as 1 then 2).
 
+- **Call, the next note called out: 0.1 (106), 2026-11-05.** Bart: a "show and tell" mode for
+  many kinds of content (songs, improv, scales) — "it will go 1-A 2-B 3-C TUCK 1-D 2-E… it
+  speaks out (i) the finger (ii) the note (iii) tucking of the thumb… it's waiting for me to
+  play that next note… in a high quality synthetic voice", first on Blue Lantern II. **What you
+  get:** **Call** on the practice row (lit while on) and on every song card beside Practice. The
+  band holds, a voice says the step waiting to be played, finger then key ("five, D"), then
+  "tuck" or "over" when the hand crosses after it, and nothing moves until that exact key is
+  played; then the next call. A wrong key: "no" and the call again; four seconds of silence:
+  the call again; the last step: "done", practice held where it ended. No rhythm, nothing
+  scored. The HUD shows the words big where the score was ("2 · A", "Call · 3 of 120 · nothing
+  scored", "Not that one" after a wrong key), the keyboard lights the key with its finger badge
+  and outlines the next, the hand shows the finger, the highway holds the step at the hit line
+  and the played notes slide away as hits. The scrubber restarts the call from the bar it lands
+  on; Play from here, Play the run, Back and Esc end it. **Modular** (`Takt/Call/`): `Call.swift`
+  is pure — `Step` (keys with fingers, a chord one step, the source's tick and indices, the
+  crossing after it), `steps(game:from:)` from a Stage chart at its tier (`Fingering`'s fingers)
+  and `steps(expected:right:)` from a lesson step's pattern, `crossing(from:to:right:)` (the
+  thumb under going up / a finger over it coming down, inside `Fingering.crossMax`, the left
+  hand mirrored), `Engine` (a key in, `.waiting` / `.advance` / `.wrong` / `.done` out),
+  `Spelling.of(key:)` (flat keys say "A flat"), `Word` / `words(for:)` / `phrase(_:)`.
+  `CallVoice.swift` plays the words from 26 clips (`Sounds/call-<word>.caf`: one…five, the
+  twelve keys sharp and flat, tuck, over, no, done; River on ElevenLabs via
+  `scripts/call-voice.py`, `--check` has Whisper read every clip back, 26/26) on one player on
+  the engine, a phrase one buffer with 90 ms between words and 200 ms before a crossing.
+  `Lesson/Player+Call.swift` wires it to the Stage (`startCall` / `endCall` / `toggleCall`,
+  `callPlayed` in front of the clock in `score`, `dueNow` hands tap mode the called keys,
+  `GameEngine.called(i)` marks the note hit without a pop, `GameState.CallState`,
+  `GameControls.call`). To put Call somewhere else: build `[Call.Step]` with an adapter, hold a
+  `Call.Engine`, feed it presses, speak `engine.words` through a `CallVoice`. DEBUG: `-Route game
+  -Song … -Call 1` starts calling at bar 1; `-CallAuto "r,r,w,r"` presses the called keys (w a
+  wrong one) 0.7 s apart through the press path, `-CallSnapshotDir <dir>` renders the screen
+  after each (inside the Mac container's `tmp/`), `-CallExit 1` quits after. Verified: the
+  scripted run on this Mac (calls 5·D 4·C 2·A, "no" on A♯, on to 1·F 2·G 4·C, the log and
+  twelve snapshots), checks 434/434 (the Medium line's steps and fingers, every tuck and over
+  by the rule, the engine's verdicts, a chord waiting for all its keys, C major up and down as
+  "1 · C, 2 · D, 3 · E · tuck, 1 · F … 1 · F · over, 3 · E, 2 · D, 1 · C", the words and
+  spellings, every clip in the bundle). Not yet: Call on a lesson's scale step or an improv
+  (the adapters exist, the lesson screen has no button), a voice setting.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without
@@ -1539,10 +1578,16 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   over six files since 0.1 (102): the state, the lesson flow, the inputs and the frame in
   `Player.swift`; `Player+Improv` (the take, the review, your version's highway),
   `Player+Calibration` (and a quiz's hold on the band), `Player+Demo` (Show me, Play it back),
-  `Player+Stage` (a song, practice, the game's frame), `Player+Debug` (every launch-argument
+  `Player+Stage` (a song, practice, the game's frame), `Player+Call` (the notes called out, on
+  the Stage), `Player+Debug` (every launch-argument
   autoplay, `#if DEBUG`). The stored state all sits in `Player.swift`, open to the other files
   (Swift's `private` is the file). `Lesson/PressQueue.swift`: presses scheduled ahead on the
   monitor, down as heard, up at their length, shared by Show me and the autoplays.
+- `Call/Call.swift`: Call (0.1 (106)), pure — steps from any content with notes in order and a
+  finger each (adapters from a Stage chart at its tier and from a lesson step's pattern), the
+  crossing after each ("tuck" / "over"), the engine (a key in, a verdict out), the words and
+  how they are spelled. `Call/CallVoice.swift`: the 26 clips (`Sounds/call-*.caf`, rendered by
+  `scripts/call-voice.py`) as phrases on one player on the engine.
 - `Audio/TransportClock.swift`: host time ↔ heard transport tick, from an engine snapshot.
 - `Audio/`: the engine (below). `MIDI/MIDIInput.swift`: CoreMIDI, UMP, every source, hot-plug.
   `Input/KeyCatcher.swift`: the computer keyboard (A = C3 … ; = E4, W E T Y U O P black keys,

@@ -363,13 +363,14 @@ final class AppModel {
         player?.inLesson = route == .lesson
         #if DEBUG
         // `-Route game -Song song-slow-burn -Part melody -Difficulty adaptive` starts a run;
-        // with `-Practice 1` it opens held in practice at bar 1, as the set list's Practice does.
+        // with `-Practice 1` it opens held in practice at bar 1, as the set list's Practice does,
+        // and with `-Call 1` calling from there (`-CallAuto`, `-CallSnapshotDir`: Player+Call).
         if UserDefaults.standard.string(forKey: "Route") == "game" {
             let d = UserDefaults.standard
             let song = songs.first { $0.name == (d.string(forKey: "Song") ?? Song.catalog[0]) } ?? songs[0]
             pick(song: song, part: Song.PartKey(rawValue: d.string(forKey: "Part") ?? "chords") ?? .chords)
             pick(song: song, difficulty: GameEngine.Difficulty(rawValue: d.string(forKey: "Difficulty") ?? "adaptive") ?? .adaptive)
-            if d.bool(forKey: "Practice") { practice(song: song) } else { play(song: song) }
+            if d.bool(forKey: "Call") { call(song: song) } else if d.bool(forKey: "Practice") { practice(song: song) } else { play(song: song) }
         }
         // `-AgentSheet <song>` opens Agent mode on that song (over the stage, or over the run
         // `-Route game` started, with the position); `-AgentSay "<text>"` sends it at once.
@@ -705,6 +706,13 @@ final class AppModel {
         guard let player else { return }
         player.startGame(song: song, part: stagePart(song), difficulty: stageDifficulty(song), practice: true)
         route = .game
+    }
+
+    /// Call: the same, with the first note called out at once (Player+Call).
+    func call(song: Song) {
+        guard let player else { return }
+        practice(song: song)
+        player.startCall()
     }
 
     /// Back to the set list, or to the map's level when a goal started the song: the lesson's

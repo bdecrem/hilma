@@ -10,6 +10,7 @@ extension Player {
     func startGame(song: Song, part: Song.PartKey, difficulty: GameEngine.Difficulty, practice startHeld: Bool = false,
                    keepSpeed: Bool = false) {
         if demo { endDemo(stop: false) }
+        dropCall()
         gameDifficulty = difficulty
         gameResult = nil
         lastRun = nil
@@ -61,6 +62,7 @@ extension Player {
     /// Back to the lessons: the module's band, where the lesson was.
     func endGame() {
         guard game != nil else { return }
+        dropCall()
         game = nil
         gameResult = nil
         practice = false
@@ -112,6 +114,8 @@ extension Player {
         practiceCountBase = tick
         practiceTick = tick
         pressed.removeAll()
+        // A scrub while calling: the call again from the bar it landed on.
+        if call != nil { callFrom(tick: tick) }
     }
 
     /// Four bars back from where practice sits or is passing: the phrase again.
@@ -148,6 +152,8 @@ extension Player {
     /// playing, it pauses, and the next play starts that bar over.
     func practicePlay() {
         guard practice else { return }
+        // Play from here ends the call: the band takes over where it got to.
+        if call != nil { endCall() }
         if playing {
             audio.send(.pause)
             return
@@ -216,13 +222,15 @@ extension Player {
         let s = audio.snapshot()
         let clock = TransportClock(s)
         let heard = clock.valid ? clock.position(atHost: mach_absolute_time()) : nil
-        let tick = s.epoch == gameEpoch ? (heard?.tick ?? 0) : 0
+        // Calling (Player+Call): the step waiting to be played sits at the hit line.
+        let callTick = call.map { Double($0.current?.tick ?? $0.steps.last?.tick ?? 0) }
+        let tick = callTick ?? (s.epoch == gameEpoch ? (heard?.tick ?? 0) : 0)
         // The band's own pace while it rolls (a knob turn lands on a downbeat); the knob's while it holds.
         let rolling = s.epoch == gameEpoch && (heard?.msPerTick.isFinite ?? false)
         let msPerTick = rolling ? heard!.msPerTick : 60000 / (Double(game.song.meta.tempo) * gameSpeed * Double(game.ticksPerBeat))
         _ = practiceTick  // a scrub while held redraws the highway
         let lookahead = GameState.lookaheadSeconds * 1000 / msPerTick
-        let cue = game.cue(at: tick, msPerTick: msPerTick)
+        let cue = call.map { callCue($0) } ?? game.cue(at: tick, msPerTick: msPerTick)
         // During a practice count-in the bar is the one the clicks land on, not the one before.
         let bar = practice && countIn != nil ? Int(practiceCountBase / Double(game.ticksPerBar))
             : max(0, Int((tick / Double(game.ticksPerBar)).rounded(.down)))
@@ -239,7 +247,7 @@ extension Player {
             bar: min(bar, song.bars - 1), bars: song.bars, beat: beat,
             score: game.score, combo: game.combo, maxCombo: game.maxCombo, multiplier: game.multiplier,
             accuracy: game.accuracy, progress: min(1, max(0, tick / Double(song.bars * game.ticksPerBar))),
-            countIn: countIn, playing: playing, pop: game.pop, practice: practice, speed: gameSpeed,
+            countIn: countIn, playing: playing, pop: game.pop, practice: practice, call: callState(), speed: gameSpeed,
             tempo: tempo, pendingTempo: pendingTempo, songTempo: song.meta.tempo,
             heardTick: tick, lookaheadTicks: lookahead, ticksPerBeat: game.ticksPerBeat, ticksPerBar: game.ticksPerBar,
             notes: visible, keys: song.keyboard(game.part), nowNotes: cue.now, nextNotes: cue.next,

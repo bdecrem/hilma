@@ -2061,6 +2061,67 @@ enum LessonCheck {
             for bar in rows.keys.sorted() { print(String(format: "  bar %2d: ", bar + 1) + rows[bar]!.joined(separator: "  ")) }
         }
 
+        // Call (Call.swift): the next note called out, finger then key, then the crossing, and
+        // the step waits for that key.
+        do {
+            let bl = GameEngine(song: Song.bundled("song-blue-lantern-white"), part: .melody, difficulty: .medium)
+            let steps = Call.steps(game: bl, from: 0)
+            let active = bl.notes.indices.filter { bl.active($0) }
+            let single = steps.allSatisfy { $0.notes.count == 1 }
+            let fingered = steps.allSatisfy { s in zip(s.notes, s.indices).allSatisfy { $0.finger == bl.finger($1) && $0.key == bl.notes[$1].n } }
+            let crossingsOK = zip(steps, steps.dropFirst()).allSatisfy { a, b in
+                guard let c = a.crossing else { return true }
+                let d = b.notes[0].key - a.notes[0].key
+                guard abs(d) <= Fingering.crossMax, let fa = a.notes[0].finger, let fb = b.notes[0].finger else { return false }
+                return c == .tuck ? (d > 0 && fb == 1 && fa > 1) : (d < 0 && fa == 1 && fb > 1)
+            }
+            let tucks = steps.filter { $0.crossing == .tuck }.count, overs = steps.filter { $0.crossing == .over }.count
+            check("call: Blue Lantern II melody on Medium is \(steps.count) single-note steps, one per note of the tier, the tier's fingers; every tuck the thumb under going up and every over a finger over it coming down, inside a crossing's reach (\(tucks) tucks, \(overs) overs)",
+                  steps.count == active.count && !steps.isEmpty && single && fingered && crossingsOK && steps.flatMap(\.indices) == active)
+            var engine = Call.Engine(steps: steps, right: true, spelling: .of(key: bl.song.meta.key))
+            let first = engine.phrase
+            let wrongKey = steps[0].notes[0].key + 1
+            let wrong = engine.played(key: wrongKey)
+            let stayed = engine.index == 0 && engine.wrong == 1
+            var verdicts: [Call.Verdict] = []
+            for s in steps { verdicts.append(engine.played(key: s.notes[0].key)) }
+            check("call: a wrong key (\(wrongKey)) is .wrong and the step stays; the right keys advance \(steps.count - 1) times and the last is done; the first call is \"\(first)\"",
+                  wrong == .wrong(wrongKey) && stayed && verdicts.dropLast().allSatisfy { $0 == .advance } && verdicts.last == .done && engine.finished && engine.phrase.isEmpty,
+                  "\(verdicts.prefix(3)) … \(verdicts.suffix(1))")
+            print("Blue Lantern II, called: " + steps.prefix(12).map { Call.phrase(Call.words(for: $0, spelling: .flats)) }.joined(separator: " | "))
+
+            // A chord is one step that waits for all of its keys, nothing to say about the hand after it.
+            let ch = GameEngine(song: Song.bundled("song-blue-lantern-white"), part: .chords, difficulty: .hard)
+            let chords = Call.steps(game: ch, from: 0)
+            var ce = Call.Engine(steps: chords, right: false, spelling: .flats)
+            let c0 = chords[0]
+            let partial = c0.notes.dropLast().map { ce.played(key: $0.key) }
+            let last = ce.played(key: c0.notes.last!.key)
+            check("call: the chords part: a chord is one step (\(c0.notes.count) keys, \"\(Call.phrase(Call.words(for: c0, spelling: .flats)))\"), waiting until every key is down, no crossing called",
+                  c0.notes.count > 1 && partial.allSatisfy { $0 == .waiting } && last == .advance && ce.index == 1 && chords.allSatisfy { $0.crossing == nil },
+                  "\(partial) then \(last)")
+
+            // A lesson step: C major up and down (lesson-S1 "updown"), said the way Bart said it:
+            // 1 C, 2 D, 3 E, tuck, 1 F … 5 C, 4 B … 1 F, over, 3 E, 2 D, 1 C.
+            let s1 = Lesson.bundled("lesson-S1")
+            let updown = s1.steps.first { $0.id == "updown" }!
+            let scale = Call.steps(expected: Array(s1.expected(updown, ticksPerBeat: tpb).prefix(updown.pattern!.count)), right: updown.hand != "left")
+            let said = scale.map { Call.phrase(Call.words(for: $0, spelling: .sharps)) }
+            check("call: a lesson's scale, C major up and down: \(said.joined(separator: ", "))",
+                  said == ["1 · C", "2 · D", "3 · E · tuck", "1 · F", "2 · G", "3 · A", "4 · B", "5 · C", "4 · B", "3 · A", "2 · G", "1 · F · over", "3 · E", "2 · D", "1 · C"])
+
+            // What is said, and how the black keys are spelled.
+            let sharp = Call.words(for: Call.Step(notes: [.init(key: 61, finger: 2)], tick: 0, indices: [0], crossing: .tuck), spelling: .sharps)
+            let flat = Call.words(for: Call.Step(notes: [.init(key: 61, finger: 2)], tick: 0, indices: [0]), spelling: .flats)
+            check("call: the words: \"2 · C♯ · tuck\" (clips two, c-sharp, tuck) in sharps, \"2 · D♭\" in flats; D minor, B♭ and E♭ blues spell flat, E and A minor sharp",
+                  Call.phrase(sharp) == "2 · C♯ · tuck" && sharp.map(\.clip) == ["two", "c-sharp", "tuck"] && Call.phrase(flat) == "2 · D♭" && flat.map(\.clip) == ["two", "d-flat"]
+                  && Call.Spelling.of(key: "Dm") == .flats && Call.Spelling.of(key: "B♭") == .flats && Call.Spelling.of(key: "E♭ blues") == .flats
+                  && Call.Spelling.of(key: "E") == .sharps && Call.Spelling.of(key: "Am") == .sharps,
+                  "\(Call.phrase(sharp)) \(sharp.map(\.clip)) \(Call.phrase(flat))")
+            let missing = Call.Word.clips.filter { Bundle.main.url(forResource: "call-\($0)", withExtension: "caf") == nil }
+            check("call: every word has its clip in the bundle (\(Call.Word.clips.count) clips)", missing.isEmpty, missing.joined(separator: " "))
+        }
+
         print("LessonCheck: \(passed) passed, \(failed) failed")
         return failed == 0
     }

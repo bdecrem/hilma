@@ -40,6 +40,16 @@ struct GameState {
     var pop: GameEngine.Pop? = nil
     /// Practice: nothing scores, the rail is a scrubber.
     var practice = false
+    /// Call (Call.swift, inside practice): the words being said for the step waiting to be
+    /// played, where it is in the line, the key just played wrong (until the right one), the end.
+    struct CallState: Equatable {
+        var phrase = ""
+        var step = 0
+        var count = 0
+        var wrong: Int? = nil
+        var done = false
+    }
+    var call: CallState? = nil
     /// The knob: the band at this fraction of the song's tempo (0.5...1), the band's tempo now,
     /// the one waiting for the downbeat, and the song's own (full speed).
     var speed = 1.0
@@ -88,6 +98,8 @@ struct GameControls {
     var tempo: (Int) -> Void = { _ in }
     /// Pause → Agent mode on this song, where the run sits.
     var agent: () -> Void = {}
+    /// Call on and off: the next note called out, finger then key, the band held.
+    var call: () -> Void = {}
 }
 
 private struct GameControlsKey: EnvironmentKey {
@@ -202,7 +214,26 @@ struct GameHUD: View {
                     .minimumScaleFactor(0.7)
             }
             Spacer(minLength: 8)
-            if state.practice {
+            if let c = state.call {
+                // Calling: the words being said, big, where the score was.
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text(c.done ? "Done" : c.phrase)
+                        .font(.display(compact ? 22 : 28))
+                        .textCase(.uppercase)
+                        .foregroundStyle(Palette.signal)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.6)
+                        .contentTransition(.identity)
+                    Text(c.wrong != nil ? (compact ? "Not that one" : "Not that one · \(c.step) of \(c.count)")
+                         : "Call · \(c.step) of \(c.count)\(compact ? "" : " · nothing scored")")
+                        .dataLabel(10)
+                        .foregroundStyle(c.wrong != nil ? Palette.text : Palette.muted)
+                        .lineLimit(1)
+                }
+                .frame(minWidth: compact ? 70 : 110, alignment: .trailing)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(c.done ? "Done" : "Call: \(c.phrase), \(c.step) of \(c.count)")
+            } else if state.practice {
                 // No score to chase: the word, and the speed.
                 VStack(alignment: .trailing, spacing: 2) {
                     Text("Practice")
@@ -560,6 +591,18 @@ struct PracticeBar: View {
                 SmallButton(symbol: "gobackward", label: "Four bars back", action: controls.practiceBack)
                 SmallButton(symbol: state.playing ? "pause.fill" : "play.fill", lit: state.playing,
                             label: state.playing ? "Pause" : "Play from here", action: controls.togglePlay)
+                // Call: the next note called out, finger then key, until it is played; lit while on.
+                Button(action: controls.call) {
+                    Text("Call")
+                        .dataLabel(10, weight: .semibold)
+                        .foregroundStyle(state.call != nil ? Palette.ground : Palette.text)
+                        .padding(.horizontal, 10)
+                        .frame(height: 28)
+                        .background(RoundedRectangle(cornerRadius: 6).fill(state.call != nil ? Palette.signal : Palette.panel))
+                        .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(state.call != nil ? Palette.signal : Palette.line, lineWidth: 1))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(state.call != nil ? "Stop calling the notes" : "Call the notes: the next one spoken, finger then key")
                 Button(action: controls.run) {
                     Text(compact ? "Run" : "Play the run")
                         .dataLabel(10, weight: .semibold)

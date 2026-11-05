@@ -16,6 +16,7 @@ sample packs.
 | Drums (`kick`, `snare`, `xstick`, `hat`, `hatOpen`, `ride`, `rideBell`, `crash`, `tomHi`, `tomLo`) | **MuldjordKit by Lars Muldjord** (muldjord.com, drumgizmo.org), FreePats stereo version by Roberto (zenvoid.org) | **CC BY 4.0**: credit required |
 | Band patterns (`Takt/Content/band-*.json`) | Written by `apps/takt/scripts/band.py` | Own work |
 | Launch sound (`launch-<set>-<cue>.caf`: the count-in's cues, Settings → Sound → Launch sound) | Synthesized by `apps/takt/scripts/launch-sounds/render.py` (numpy, no samples; the count-in package of 2026-11-01) | Own work |
+| Call voice (`call-<word>.caf`: one…five, the twelve keys sharp and flat, tuck, over, no, done; Call on the Stage, 2026-11-05) | Rendered by `apps/takt/scripts/call-voice.py` on ElevenLabs (voice River, model eleven_turbo_v2) under our paid plan, which licenses the generated audio for commercial use | Generated, ours to use |
 
 **Attribution (CC BY 4.0), to show in the app's credits before release:**
 "Drums: MuldjordKit by Lars Muldjord, CC BY 4.0 (creativecommons.org/licenses/by/4.0).

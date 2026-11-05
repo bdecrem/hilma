@@ -110,6 +110,13 @@ final class Player {
     var practiceTick = 0.0
     @ObservationIgnored var practiceCountBase = 0.0
 
+    // Player+Call: the call under way on the song (Call.swift), the key just played wrong (the
+    // HUD, until the right one), the voice, and the timer that says a call again after silence.
+    var call: Call.Engine?
+    var callWrong: Int?
+    @ObservationIgnored var callVoice: CallVoice?
+    @ObservationIgnored var callNag: DispatchWorkItem?
+
     #if DEBUG
     // Player+Debug: the autoplays' plans and presses not yet heard.
     var autoplayMode: Autoplay.Mode? {
@@ -549,6 +556,8 @@ final class Player {
     /// The notes due at the transport position heard now: the pending chord nearest it in a
     /// song, the expected chord nearest it around a lesson's loop. Empty when nothing is scored.
     private func dueNow() -> [Int] {
+        // Calling: the keys the voice asked for.
+        if let call, inGame { return (call.current?.keys ?? []).sorted() }
         let s = audio.snapshot()
         let clock = TransportClock(s)
         guard clock.valid else { return [] }
@@ -584,6 +593,11 @@ final class Player {
     /// A press reaches the lesson at the transport position heard when it happened, moved by
     /// the calibration (autoplay's presses are exact and aren't). During a calibration it is a tap.
     func score(_ note: Int, hostTime: UInt64, velocity: Float = 0.8, calibrated: Bool = true) {
+        // Calling (Player+Call): the key goes to the call, not the clock.
+        if call != nil, inGame {
+            callPlayed(note)
+            return
+        }
         let s = audio.snapshot()
         let clock = TransportClock(s)
         guard clock.valid else { return }

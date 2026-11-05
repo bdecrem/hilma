@@ -156,6 +156,13 @@ final class GameEngine {
         pop = nil
     }
 
+    /// Call (Call.swift): note `i` played where the voice asked for it, no timing judged: a hit
+    /// that scores nothing and doesn't pop, so the highway shows the line as played.
+    func called(_ i: Int) {
+        guard notes.indices.contains(i) else { return }
+        status[i] = .hit(.perfect)
+    }
+
     /// `start`: the tier an adaptive run starts on (`adaptiveStart`; the ladder's start if nil).
     /// The charting is the song's own (a mod's override on the bundle's) unless one is given.
     init(song: Song, part: Song.PartKey, difficulty: Difficulty, start: Int? = nil, charting: Charting? = nil) {

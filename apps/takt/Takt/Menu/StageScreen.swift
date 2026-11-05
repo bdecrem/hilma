@@ -173,8 +173,9 @@ struct SongCard: View {
         .overlay(shape.strokeBorder(Palette.line, lineWidth: 1))
     }
 
-    /// Practice, a size down: the song held at bar 1, the scrubber and the speed. Agent mode,
-    /// the same size, lit: your own version of the track.
+    /// Practice, a size down: the song held at bar 1, the scrubber and the speed. Call, the
+    /// same: the notes called out one at a time (Call.swift). Agent mode, lit: your own version
+    /// of the track.
     private var smallButtons: some View {
         Group {
             Button { app.practice(song: song) } label: {
@@ -186,6 +187,16 @@ struct SongCard: View {
                     .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Palette.line, lineWidth: 1))
             }
             .buttonStyle(.plain)
+            Button { app.call(song: song) } label: {
+                Text("Call")
+                    .dataLabel(11, weight: .semibold)
+                    .foregroundStyle(Palette.muted)
+                    .padding(.horizontal, 12)
+                    .frame(height: 32)
+                    .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Palette.line, lineWidth: 1))
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Call: \(song.meta.title) one note at a time, each called out, finger then key")
             Button { app.openAgent(song: song) } label: {
                 Text("Agent")
                     .dataLabel(11, weight: .semibold)

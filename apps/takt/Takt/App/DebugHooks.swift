@@ -42,6 +42,11 @@ enum DebugHooks {
         guard let i = snapshots.firstIndex(where: { $0.name == "result" ? player.gameResult != nil : tick >= $0.tick }) else { return }
         let next = snapshots.remove(at: i)
         guard let dir = UserDefaults.standard.string(forKey: "SnapshotDir") else { fatalError("-SnapshotAt needs -SnapshotDir") }
+        snapshot(player, name: next.name, dir: dir)
+    }
+
+    /// The screen now, both themes, to `<dir>/<name>-<theme>.png` (the Mac layout, offscreen).
+    static func snapshot(_ player: Player, name: String, dir: String) {
         MainActor.assumeIsolated {
             for theme in [Theme.dark, .paper] {
                 // A song under way renders the game screen instead of the lesson's.
@@ -58,8 +63,8 @@ enum DebugHooks {
                     .frame(width: 1100, height: 768)
                 let renderer = ImageRenderer(content: screen)
                 renderer.scale = 2
-                guard let png = renderer.uiImage?.pngData() else { fatalError("snapshot \(next.name) did not render") }
-                try? png.write(to: URL(fileURLWithPath: dir).appendingPathComponent("\(next.name)-\(theme.rawValue).png"))
+                guard let png = renderer.uiImage?.pngData() else { fatalError("snapshot \(name) did not render") }
+                try? png.write(to: URL(fileURLWithPath: dir).appendingPathComponent("\(name)-\(theme.rawValue).png"))
             }
         }
     }
