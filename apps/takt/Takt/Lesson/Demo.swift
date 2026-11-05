@@ -5,13 +5,8 @@ import Foundation
 /// one is heard, and the hand and the pads follow the transport as they would for you; nothing
 /// is scored, and your own keys still sound. A run shows two passes, a chord step a chorus.
 enum Demo {
-    struct Press: Equatable {
-        let note: Int
-        let velocity: Float
-        /// Absolute transport tick (the demo starts at 0).
-        let tick: Double
-        let lengthTicks: Double
-    }
+    /// A note on the monitor at its tick (the demo starts at 0), the Player's queue's.
+    typealias Press = PressQueue.Press
 
     struct Plan: Equatable {
         let presses: [Press]

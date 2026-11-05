@@ -6,6 +6,8 @@ enum Channel: Int, CaseIterable {
     case drums, bass, keys, horns, monitor
 
     var bit: UInt8 { 1 << UInt8(rawValue) }
+    /// The band's channels, the monitor aside.
+    static let band: [Channel] = [.drums, .bass, .keys, .horns]
 }
 
 enum EngineCommand {

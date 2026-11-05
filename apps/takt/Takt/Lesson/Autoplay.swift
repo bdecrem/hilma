@@ -19,12 +19,7 @@ struct Autoplay {
         var title: String { rawValue.capitalized }
     }
 
-    struct Press {
-        let note: Int
-        let velocity: Float
-        let tick: Double
-        let lengthTicks: Double
-    }
+    typealias Press = PressQueue.Press
 
     let mode: Mode
     /// Expected notes up to this absolute tick have been planned.

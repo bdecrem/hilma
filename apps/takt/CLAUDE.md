@@ -1495,7 +1495,14 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
 - `Lesson/Calibration.swift` (pure: clicks, taps, the median) and `Menu/CalibrationScreen.swift`.
 - `Lesson/Player.swift`: `@Observable`, polls the engine at display rate (CADisplayLink), places
   the heard position and every press on the transport, runs the LessonEngine, builds the live
-  LessonState; routes MIDI, computer keyboard and touch to the monitor and the lesson.
+  LessonState; routes MIDI, computer keyboard and touch to the monitor and the lesson. One class
+  over six files since 0.1 (102): the state, the lesson flow, the inputs and the frame in
+  `Player.swift`; `Player+Improv` (the take, the review, your version's highway),
+  `Player+Calibration` (and a quiz's hold on the band), `Player+Demo` (Show me, Play it back),
+  `Player+Stage` (a song, practice, the game's frame), `Player+Debug` (every launch-argument
+  autoplay, `#if DEBUG`). The stored state all sits in `Player.swift`, open to the other files
+  (Swift's `private` is the file). `Lesson/PressQueue.swift`: presses scheduled ahead on the
+  monitor, down as heard, up at their length, shared by Show me and the autoplays.
 - `Audio/TransportClock.swift`: host time ↔ heard transport tick, from an engine snapshot.
 - `Audio/`: the engine (below). `MIDI/MIDIInput.swift`: CoreMIDI, UMP, every source, hot-plug.
   `Input/KeyCatcher.swift`: the computer keyboard (A = C3 … ; = E4, W E T Y U O P black keys,
@@ -1674,6 +1681,16 @@ it to the lesson at the host time it is heard, through the same path as a key pr
   over a keyboard of its own (`VersionHighway`, `LessonState.highway`), on Mac and iPhone; the
   frame is `Player.versionHighway` → `Improv.highwayNotes` (pure, checked: 415/415). The intro's
   "Show me first" keeps the hand view; Show me on the step itself plays over the highway.
+
+- **Player.swift split by concern: 0.1 (102), 2026-11-05.** Bart: "a file with at least 1445
+  lines - that doesn't seem awesome." The class is the same; its methods moved into
+  `Player+Improv/Calibration/Demo/Stage/Debug.swift` by the MARK sections they sat under (817
+  lines left: state, flow, inputs, refresh, the frame), the three copies of the "press heard →
+  key down, release due → key up" loop (Show me, `-Autoplay` on a lesson, on a song) became
+  `PressQueue`, `Demo.Press` and `Autoplay.Press` one type, the four band channels `Channel.band`.
+  Verified: `-LessonCheck` 415/415, `-Autoplay perfect` on the A minor goal 29/29 clean twice, a
+  Stage run to its grade, Show me on the version step (keys light), `-Calibrate 1
+  -CalibrateTapsEarly 30` logging taps.
 
 ## Build and run
 

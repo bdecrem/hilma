@@ -16,7 +16,7 @@ final class Player {
     private(set) var meters: [Int] = [0, 0, 0, 0]
     private(set) var muted: UInt8 = 0
     private(set) var pendingUnmute: UInt8 = 0
-    private(set) var pressed: Set<Int> = []
+    var pressed: Set<Int> = []
     private(set) var midiSources: [String] = []
     /// Computer-keyboard octave shift (Z / X), -2...2 around C3.
     private(set) var octave = 0
@@ -26,19 +26,19 @@ final class Player {
     /// Presses are scored only while the lesson screen is up; elsewhere they just sound.
     var inLesson = false
     /// The calibration under way, and the click being heard.
-    private(set) var calibration: Calibration?
-    private(set) var calibrationClick: Int?
+    var calibration: Calibration?
+    var calibrationClick: Int?
     /// The count-in's beat (1–4) while it plays, before bar 1.
     private(set) var countIn: Int?
     /// Play it back: the transport epoch the recorded chorus is playing in (it starts at tick 0).
-    private(set) var playbackEpoch: Int?
+    var playbackEpoch: Int?
     /// Show me: the step is being played for you (Demo.swift); and it just ended, your turn.
-    private(set) var demo = false
-    private(set) var demoEnded = false
+    var demo = false
+    var demoEnded = false
     /// Stage: the song under way, its part, and the run's result once it ends.
-    private(set) var game: GameEngine?
-    private(set) var gameResult: GameEngine.Result?
-    private(set) var lastRun: ProgressStore.ScoreRecord?
+    var game: GameEngine?
+    var gameResult: GameEngine.Result?
+    var lastRun: ProgressStore.ScoreRecord?
     /// Presses go to the game only on the game screen.
     var inGame = false
 
@@ -46,48 +46,93 @@ final class Player {
     @ObservationIgnored private(set) var content: Lesson
     /// The lesson's channel strips, in order, as mixer channels.
     @ObservationIgnored private(set) var channels: [Channel]
-    @ObservationIgnored private var engine: LessonEngine
+    @ObservationIgnored var engine: LessonEngine
     @ObservationIgnored let progress: ProgressStore
     /// The current step's form (a minor-key lesson has its own).
-    private var form: [FormBar] { content.formBars(of: engine.step) }
+    var form: [FormBar] { content.formBars(of: engine.step) }
     @ObservationIgnored private let midi = MIDIInput()
     @ObservationIgnored private var link: CADisplayLink?
     @ObservationIgnored private let log = Logger(subsystem: "takt", category: "input")
-    @ObservationIgnored private let lessonLog = Logger(subsystem: "takt", category: "lesson")
-    @ObservationIgnored private var calibrationEpoch = 0
-    /// Clicks sent to the engine so far; the tick loop keeps a bar ahead of the one heard.
-    @ObservationIgnored private var clicksSent = 0
-    @ObservationIgnored private var bandBeforeCalibration: (playing: Bool, tempo: Int, muted: UInt8)?
+    @ObservationIgnored let lessonLog = Logger(subsystem: "takt", category: "lesson")
     /// The transport tick heard at the last display frame.
-    @ObservationIgnored private var heardTick = 0.0
-    /// Your presses on the teacher's version this transport epoch, for its highway's hits.
-    @ObservationIgnored private var versionPresses: [(tick: Double, note: Int)] = []
-    @ObservationIgnored private var versionEpoch = -1
-    /// Show me: the epoch it plays in, where it ends, the presses not yet heard and the keys to
-    /// let go of.
-    @ObservationIgnored private var demoEpoch = 0
-    @ObservationIgnored private var demoEnd = 0.0
-    @ObservationIgnored private var demoPresses: [Demo.Press] = []
-    @ObservationIgnored private var demoReleases: [(note: Int, tick: Double)] = []
+    @ObservationIgnored var heardTick = 0.0
+    /// Tap mode (a phone with no keyboard): the notes each finger (by id) holds down.
+    @ObservationIgnored private var taps: [Int: [Int]] = [:]
+    /// Computer keyboard: the notes each key (by semitone) holds down.
+    @ObservationIgnored private var keyNotes: [Int: [Int]] = [:]
+
+    // The state of the Player's other files (Player+*.swift): stored here because an extension
+    // cannot hold it, open to them because `private` is the file. The screens only read it.
+
+    // Player+Improv: what you've played on this improv so far (`Improv.Recorder`); `takeNotes`
+    // for the screen; your presses on the teacher's version this transport epoch, for its highway.
+    @ObservationIgnored var recorder = Improv.Recorder()
+    var takeNotes = 0
+    @ObservationIgnored var versionPresses: [(tick: Double, note: Int)] = []
+    @ObservationIgnored var versionEpoch = -1
+    /// The module before the teacher's idea was added to it (`startVersion`, `dropVersion`).
+    @ObservationIgnored private var versionBase: Lesson?
+    /// The band in the engine: the module's file, or the step's backing (a Stage song looping
+    /// by the step's form, for an improv), straight or as written. Swapped only when that
+    /// changes (a step's feel or backing, another module, back from the Stage).
+    @ObservationIgnored var loadedBand: (name: String, straight: Bool)?
+
+    // Player+Calibration: the click being heard, the band as it was, and a quiz's hold on it.
+    @ObservationIgnored var calibrationEpoch = 0
+    /// Clicks sent to the engine so far; the tick loop keeps a bar ahead of the one heard.
+    @ObservationIgnored var clicksSent = 0
+    @ObservationIgnored var bandBeforeCalibration: (playing: Bool, tempo: Int, muted: UInt8)?
+    @ObservationIgnored var bandWasPlaying: Bool?
+
+    // Player+Demo: Show me's epoch, where it ends, and its presses not yet heard.
+    @ObservationIgnored var demoEpoch = 0
+    @ObservationIgnored var demoEnd = 0.0
+    @ObservationIgnored var demoQueue = PressQueue()
+
+    // Player+Stage: the run's epoch, the record's fills, the level, and practice's hold.
+    /// Practice, inside a run (0.1 (61)): the band at a fraction of the song's tempo, from any
+    /// bar, nothing scored.
+    var practice = false
+    var practiceSpeed = 1.0
     /// Bars in the loaded band's chorus (the lesson's form, or a whole song).
-    @ObservationIgnored private var chorusBars: Int
-    @ObservationIgnored private var gameEpoch = 0
+    @ObservationIgnored var chorusBars: Int
+    @ObservationIgnored var gameEpoch = 0
     /// The record fills what the level leaves out: the part's notes the tier doesn't ask for are
     /// scheduled on the part's instrument a bar ahead, at the band's own velocity, so a low level
     /// still sounds like the song and the player plays a part of it (Guitar Hero's rule).
-    @ObservationIgnored private var fillVelocity: [Int: Float] = [:]
-    @ObservationIgnored private var fillThrough = -1
-    @ObservationIgnored private var gameDifficulty = GameEngine.Difficulty.adaptive
-    /// Practice, inside a run (0.1 (61)): the band at a fraction of the song's tempo, from any
-    /// bar, nothing scored. `practiceTick` is where it sits while held (observed, so a scrub
-    /// redraws the highway); `practiceCountBase` is the tick a practice count-in lands on.
-    private(set) var practice = false
-    private(set) var practiceSpeed = 1.0
-    private(set) var practiceTick = 0.0
-    @ObservationIgnored private var practiceCountBase = 0.0
+    @ObservationIgnored var fillVelocity: [Int: Float] = [:]
+    @ObservationIgnored var fillThrough = -1
+    @ObservationIgnored var gameDifficulty = GameEngine.Difficulty.adaptive
+    /// `practiceTick` is where practice sits while held (observed, so a scrub redraws the
+    /// highway); `practiceCountBase` is the tick a practice count-in lands on.
+    var practiceTick = 0.0
+    @ObservationIgnored var practiceCountBase = 0.0
+
     #if DEBUG
-    @ObservationIgnored private var practiceHookDone = false
+    // Player+Debug: the autoplays' plans and presses not yet heard.
+    var autoplayMode: Autoplay.Mode? {
+        didSet {
+            autoplay = autoplayMode.map { Autoplay(mode: $0, plannedThrough: heardTick - 0.01) }
+            lessonLog.info("autoplay \(self.autoplayMode?.rawValue ?? "off", privacy: .public)")
+        }
+    }
+    @ObservationIgnored var autoplay: Autoplay?
+    @ObservationIgnored var autoQueue = PressQueue()
+    @ObservationIgnored var autoEpoch = 0
+    @ObservationIgnored var gamePlanned = -1
+    @ObservationIgnored var gameAutoEpoch = -1
+    @ObservationIgnored var gameQueue = PressQueue()
+    @ObservationIgnored var autoTapDown = false
+    @ObservationIgnored var autoKeysDown: [Int] = []
+    @ObservationIgnored var practiceHookDone = false
+    /// `-ImprovPlay`: after that many choruses, AppModel sends the take.
+    @ObservationIgnored var onImprovDone: (() -> Void)?
+    @ObservationIgnored var improvPlayed: [(note: Int, tick: Double, len: Double)] = []
+    @ObservationIgnored var improvBegun = false
+    @ObservationIgnored var improvPlannedBar = -1
+    @ObservationIgnored var improvSent = false
     #endif
+
 
     /// Calibration's result: how early (negative) or late this player presses, ms. Every scored
     /// press moves by minus this.
@@ -139,7 +184,7 @@ final class Player {
         for (c, ch) in zip(lesson.channels, channels) where c.unlockAt != nil {
             audio.send(.mute(ch, true))
         }
-        for ch in [Channel.drums, .bass, .keys, .horns] where !channels.contains(ch) { audio.send(.mute(ch, true)) }
+        for ch in Channel.band where !channels.contains(ch) { audio.send(.mute(ch, true)) }
         self.lesson = engine.output
         // The engine opened on the module's band as written (TaktApp).
         loadedBand = (lesson.band, false)
@@ -256,7 +301,7 @@ final class Player {
 
     /// A module in progress picks up on its next lesson's intro; a finished or fresh one starts
     /// from the top.
-    private func resume() {
+    func resume() {
         let done = lessonsDone
         if done > 0 && done < content.lessons.count {
             restartLesson(at: content.firstStep(ofLesson: done))
@@ -265,35 +310,6 @@ final class Player {
         }
     }
 
-    // MARK: Improv
-
-    /// What you've played on this improv so far (`Improv.Recorder`); `takeNotes` for the screen.
-    @ObservationIgnored private var recorder = Improv.Recorder()
-    private(set) var takeNotes = 0
-
-    /// The step the engine is on (an improv's backing, scale and form for the teacher).
-    var currentStep: Lesson.Step { engine.step }
-    var chorusTicks: Int { engine.chorusTicks }
-
-    /// The take so far, to the end of the chorus being played.
-    func improvTake() -> Improv.Take? {
-        recorder.take(chorusTicks: engine.chorusTicks, ticksPerBeat: audio.band.ticksPerBeat, formBars: content.form(of: engine.step).count,
-                      tempo: tempo, now: heardTick)
-    }
-
-    /// Sent: the band stops where it is; the take stays until you improvise again.
-    func pauseForReview() {
-        if demo { endDemo(stop: false) }
-        if playing { audio.send(.pause) }
-    }
-
-    /// Improvise again: a new take from the top.
-    func improviseAgain() {
-        recorder.reset()
-        takeNotes = 0
-        demoEnded = false
-        fromTheTop()
-    }
 
     /// The teacher's idea as a step over the same backing, from its intro (Show me plays it).
     /// `take` names it (the review's id), so its XP is paid once.
@@ -305,9 +321,6 @@ final class Player {
         content = withIt
         restartLesson(at: i)
     }
-
-    /// The module before the teacher's idea was added to it.
-    @ObservationIgnored private var versionBase: Lesson?
 
     /// The module as it was again, the idea's step gone (leaving the lesson screen).
     func dropVersion() {
@@ -342,7 +355,7 @@ final class Player {
         loadBand()
         audio.send(.silence(from: 0, to: 0))
         for (c, ch) in zip(content.channels, channels) { audio.send(.mute(ch, c.unlockAt != nil)) }
-        for ch in [Channel.drums, .bass, .keys, .horns] where !channels.contains(ch) { audio.send(.mute(ch, true)) }
+        for ch in Channel.band where !channels.contains(ch) { audio.send(.mute(ch, true)) }
         finish = nil
         wire()
         if let t = content.steps[0].tempo, t != tempo { audio.send(.tempo(Double(t))) }
@@ -351,11 +364,6 @@ final class Player {
         applyBand()
         publish()
     }
-
-    /// The band in the engine: the module's file, or the step's backing (a Stage song looping
-    /// by the step's form, for an improv), straight or as written. Swapped only when that
-    /// changes (a step's feel or backing, another module, back from the Stage).
-    @ObservationIgnored private var loadedBand: (name: String, straight: Bool)?
 
     private func loadBand() {
         let step = engine.step
@@ -468,7 +476,7 @@ final class Player {
         if lesson.stepKind != .card { fromTheTop() }
     }
 
-    private func fromTheTop() {
+    func fromTheTop() {
         // A step's tempo and its channels' unmutes asked for while the band played (the menu's
         // band, a goal opened from the map) wait for a downbeat, and a stop drops what waits
         // (0.1 (57)); stopped, they apply at once, so they go again after it.
@@ -528,9 +536,7 @@ final class Player {
         scoreRelease(note, hostTime: now)
     }
 
-    /// Tap mode (a phone with no keyboard): a finger down plays the notes due nearest it, a
-    /// whole chord on one finger, scored like keys pressed then; lifting it lets them go.
-    @ObservationIgnored private var taps: [Int: [Int]] = [:]
+
 
     func tapDown(_ touch: Int) {
         let fresh = dueNow().filter { !pressed.contains($0) }
@@ -555,11 +561,6 @@ final class Player {
         for n in taps.removeValue(forKey: touch) ?? [] { release(n) }
     }
 
-    /// Computer keyboard: a key is a note name, and the octave follows the song (2026-11-02,
-    /// for playing on a laptop). A key down plays every note due now with its name, in the
-    /// octave it is charted, so a 12-key row reaches a chart of any range; with none of its name
-    /// due it plays at C3 + `semitone`, moved by the Z / X octave, and a wrong name sounds wrong.
-    @ObservationIgnored private var keyNotes: [Int: [Int]] = [:]
 
     func key(_ semitone: Int, down: Bool) {
         guard down else {
@@ -580,7 +581,7 @@ final class Player {
 
     /// A press reaches the lesson at the transport position heard when it happened, moved by
     /// the calibration (autoplay's presses are exact and aren't). During a calibration it is a tap.
-    private func score(_ note: Int, hostTime: UInt64, velocity: Float = 0.8, calibrated: Bool = true) {
+    func score(_ note: Int, hostTime: UInt64, velocity: Float = 0.8, calibrated: Bool = true) {
         let s = audio.snapshot()
         let clock = TransportClock(s)
         guard clock.valid else { return }
@@ -619,7 +620,7 @@ final class Player {
                          s.epoch, calibrated ? "yes" : "no", engine.output.step, engine.output.nowNotes.sorted().description, velocity))
     }
 
-    private func scoreRelease(_ note: Int, hostTime: UInt64, calibrated: Bool = true) {
+    func scoreRelease(_ note: Int, hostTime: UInt64, calibrated: Bool = true) {
         guard inLesson, calibration == nil, !demo else { return }
         let s = audio.snapshot()
         let clock = TransportClock(s)
@@ -635,35 +636,6 @@ final class Player {
         return UInt64(max(0, Int64(hostTime) + delta))
     }
 
-    // MARK: Calibration
-
-    /// The band stops and steps out; a cross-stick clicks every beat at 90, beat 1 louder, until
-    /// the screen is left. Afterwards the band comes back as it was.
-    func startCalibration() {
-        let s = audio.snapshot()
-        if bandBeforeCalibration == nil { bandBeforeCalibration = (playing, tempo, s.muted) }
-        calibrationEpoch = s.epoch + 1
-        let c = Calibration(firstTick: Double(2 * audio.band.ticksPerBeat), ticksPerBeat: audio.band.ticksPerBeat,
-                            base: Self.inputOffsetMs)
-        audio.send(.stop)
-        for ch in [Channel.drums, .bass, .keys, .horns] { audio.send(.mute(ch, true)) }
-        audio.send(.tempo(Double(Calibration.tempo)))
-        audio.send(.play)
-        calibration = c
-        calibrationClick = nil
-        clicksSent = 0
-        sendClicks(through: 7)
-        lessonLog.info("calibration started from \(String(format: "%+.1f ms", Self.inputOffsetMs), privacy: .public)")
-    }
-
-    private func sendClicks(through k: Int) {
-        guard let c = calibration else { return }
-        while clicksSent <= k {
-            audio.send(.click(tick: c.clickTick(clicksSent), velocity: clicksSent % 4 == 0 ? 1 : 0.7))
-            clicksSent += 1
-        }
-    }
-
     /// Every scored press and every verdict, to Documents/lesson-log.txt in the app's container,
     /// so a real session can be read back afterwards (the unified log drops info lines).
     static func dump(_ line: String) {
@@ -675,499 +647,6 @@ final class Player {
         h.seekToEndOfFile()
         h.write(Data(stamped.utf8))
         try? h.close()
-    }
-
-    /// Every counted tap, raw and corrected, to the log and to Documents/calibration-taps.csv, so a
-    /// real session can be read back afterwards.
-    private func logTap(_ t: (click: Int, ms: Double), base: Double) {
-        let line = String(format: "%@,%d,%.1f,%.1f,%.1f\n", ISO8601DateFormatter().string(from: Date()), t.click, t.ms + base, t.ms, base)
-        lessonLog.notice("calibration tap: \(line, privacy: .public)")
-        guard let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
-        let url = dir.appendingPathComponent("calibration-taps.csv")
-        if !FileManager.default.fileExists(atPath: url.path) {
-            try? "time,click,raw_ms,corrected_ms,base_ms\n".write(to: url, atomically: true, encoding: .utf8)
-        }
-        guard let h = try? FileHandle(forWritingTo: url) else { return }
-        h.seekToEndOfFile()
-        h.write(Data(line.utf8))
-        try? h.close()
-    }
-
-    /// Use this: the steady lean goes into the saved correction, and the needle starts over from it.
-    func useCalibration() {
-        guard var c = calibration, let offset = c.proposed else { return }
-        let taps = c.recent.map { String(format: "%+.1f", $0) }.joined(separator: " ")
-        lessonLog.info("calibration: [\(taps, privacy: .public)] from \(String(format: "%+.1f", c.base), privacy: .public) → \(String(format: "%+.1f ms", offset), privacy: .public)")
-        UserDefaults.standard.set(offset, forKey: "inputOffsetMs")
-        UserDefaults.standard.set(true, forKey: "calibrated")
-        c.rebase(offset)
-        calibration = c
-    }
-
-    /// Leaves the calibration screen: the band as it was, and the first-lesson question answered.
-    func endCalibration() {
-        if calibration != nil { restoreBand() }
-        UserDefaults.standard.set(true, forKey: "calibrated")
-        calibration = nil
-        calibrationClick = nil
-    }
-
-    private func restoreBand() {
-        guard let b = bandBeforeCalibration else { return }
-        bandBeforeCalibration = nil
-        audio.send(.stop)
-        for ch in [Channel.drums, .bass, .keys, .horns] { audio.send(.mute(ch, b.muted & ch.bit != 0)) }
-        audio.send(.tempo(Double(b.tempo)))
-        if b.playing { audio.send(.play) }
-    }
-
-    // MARK: Quizzes
-
-    @ObservationIgnored private var bandWasPlaying: Bool?
-
-    /// A quiz needs quiet: the band pauses, and comes back as it was after.
-    func holdBand() {
-        guard bandWasPlaying == nil else { return }
-        bandWasPlaying = playing
-        if playing { audio.send(.pause) }
-    }
-
-    func releaseBand() {
-        guard let was = bandWasPlaying else { return }
-        bandWasPlaying = nil
-        if was && !playing { audio.send(.play) }
-    }
-
-    /// A question's sound on the piano: a chord struck together, or notes one after another.
-    func play(_ sound: Question.Sound) {
-        let notes: [(note: Int, at: Double, length: Double)]
-        switch sound {
-        case .chord(let n): notes = n.map { ($0, 0, 1.8) }
-        case .notes(let n): notes = n.enumerated().map { ($1, Double($0) * 0.75, 0.65) }
-        }
-        for n in notes {
-            DispatchQueue.main.asyncAfter(deadline: .now() + n.at) { [audio] in
-                audio.send(.noteOn(note: n.note, velocity: 0.7, hostTime: 0))
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + n.at + n.length) { [audio] in
-                audio.send(.noteOff(note: n.note, hostTime: 0))
-            }
-        }
-    }
-
-    // MARK: Show me
-
-    /// The step can be played for you: a play step (an intro's too), not a card, not Lesson
-    /// complete, not the result.
-    /// Notes a take needs before it can go to the teacher.
-    static let takeMinimum = 8
-
-    var canDemo: Bool {
-        engine.step.kind != .card && !engine.expected.isEmpty && finish == nil && lesson.complete == nil
-    }
-
-    /// Show me: the step from the top at the knob's tempo, every note on the monitor, the keys
-    /// and the hand following; again while it plays stops it (your turn).
-    func toggleDemo() {
-        if demo { endDemo(stop: true) } else { startDemo() }
-    }
-
-    private func startDemo() {
-        guard canDemo else { return }
-        let plan = Demo.plan(expected: engine.expected, loopTicks: engine.loopTicks,
-                             ticksPerBar: 4 * audio.band.ticksPerBeat, cycle: engine.step.cycle, chorusTicks: engine.chorusTicks)
-        demoEpoch = audio.snapshot().epoch + 1
-        demoEnd = plan.endTicks
-        demoPresses = plan.presses
-        demoReleases.removeAll()
-        demo = true
-        demoEnded = false
-        demoTrim(on: true)
-        fromTheTop()
-        for p in plan.presses {
-            audio.send(.schedule(note: p.note, velocity: p.velocity, tick: p.tick, lengthTicks: p.lengthTicks))
-        }
-        lessonLog.info("show me: \(plan.presses.count) notes over \(Int(plan.endTicks)) ticks")
-    }
-
-    /// `stop`: the band stops here (the demo ran out, or was clicked off); stopped by you, it
-    /// already has.
-    private func endDemo(stop: Bool) {
-        guard demo else { return }
-        demo = false
-        demoEnded = true
-        demoTrim(on: false)
-        for r in demoReleases { pressed.remove(r.note) }
-        demoReleases.removeAll()
-        demoPresses.removeAll()
-        if stop { audio.send(.stop) }
-        lessonLog.info("show me: over")
-    }
-
-    /// Show me is heard: a piano level turned down (Settings → Sound, for a player who hears
-    /// their own instrument) comes up to full while it plays, and goes back after.
-    private func demoTrim(on: Bool) {
-        let d = UserDefaults.standard
-        let band = d.object(forKey: "bandLevel") == nil ? 1.0 : d.double(forKey: "bandLevel")
-        let piano = d.object(forKey: "pianoLevel") == nil ? 1.0 : d.double(forKey: "pianoLevel")
-        guard piano < 1 else { return }
-        audio.send(.trim(band: Float(band), monitor: Float(on ? 1 : piano)))
-    }
-
-    /// Lights each key as its note is heard, lets go at its length, and ends at the last bar.
-    private func runDemo(heard: TransportClock.Position, epoch: Int) {
-        if epoch > demoEpoch {
-            // Stop (yours) dropped the scheduled notes.
-            endDemo(stop: false)
-            return
-        }
-        guard epoch == demoEpoch else { return }
-        if heard.tick >= demoEnd {
-            endDemo(stop: true)
-            return
-        }
-        while let i = demoPresses.firstIndex(where: { $0.tick <= heard.tick }) {
-            let p = demoPresses.remove(at: i)
-            pressed.insert(p.note)
-            demoReleases.append((p.note, p.tick + p.lengthTicks))
-        }
-        while let i = demoReleases.firstIndex(where: { $0.tick <= heard.tick }) {
-            pressed.remove(demoReleases.remove(at: i).note)
-        }
-    }
-
-    // MARK: Stage
-
-    /// A song from the top: its band with your keys on the part's instrument, the part's
-    /// channel out, the song's tempo, four clicks in. The lesson's band comes back with `endGame`.
-    func startGame(song: Song, part: Song.PartKey, difficulty: GameEngine.Difficulty, practice startHeld: Bool = false) {
-        if demo { endDemo(stop: false) }
-        gameDifficulty = difficulty
-        gameResult = nil
-        lastRun = nil
-        practice = false
-        practiceSpeed = 1
-        practiceTick = 0
-        practiceCountBase = 0
-        let partChannel = song.channel(of: part)
-        chorusBars = audio.load(song: song, part: part).chorusBars
-        loadedBand = nil
-        gameEpoch = audio.snapshot().epoch + 1
-        game = GameEngine(song: song, part: part, difficulty: difficulty,
-                          start: GameEngine.adaptiveStart(song: song.name, part: part, records: progress.scores(song: song.name), charting: song.charting))
-        fillVelocity = [:]
-        for e in partChannel == .horns ? song.band.channels.horns : song.band.channels.keys { fillVelocity[e.t * 128 + e.n] = Float(e.v) }
-        fillThrough = -1
-        applyInstrument()
-        audio.send(.stop)
-        audio.send(.transpose(0))
-        audio.send(.silence(from: 0, to: 0))
-        for ch in [Channel.drums, .bass, .keys, .horns] { audio.send(.mute(ch, ch == partChannel)) }
-        audio.send(.tempo(Double(song.meta.tempo)))
-        pressed.removeAll()
-        if startHeld {
-            // Practice from the set list: held at bar 1, nothing scored; play counts in from there.
-            practice = true
-            game?.practice = true
-            fillThrough = -1
-            lessonLog.info("stage: \(song.meta.title, privacy: .public) · \(part.rawValue, privacy: .public) · \(difficulty.rawValue, privacy: .public) · practice")
-            return
-        }
-        audio.send(.countIn(beats: 4))
-        audio.send(.play)
-        lessonLog.info("stage: \(song.meta.title, privacy: .public) · \(part.rawValue, privacy: .public) · \(difficulty.rawValue, privacy: .public)")
-    }
-
-    /// The same song, part and level again.
-    func restartGame() {
-        guard let g = game else { return }
-        startGame(song: g.song, part: g.part, difficulty: gameDifficulty)
-    }
-
-    /// Back to the lessons: the module's band, where the lesson was.
-    func endGame() {
-        guard game != nil else { return }
-        game = nil
-        gameResult = nil
-        practice = false
-        practiceSpeed = 1
-        practiceCountBase = 0
-        // The module's band comes back with the lesson's step (`resume` → `restartLesson`).
-        applyInstrument()
-        resume()
-    }
-
-    // MARK: Practice
-
-    /// Pause → Practice: the run becomes a practice session, held at the start of the bar
-    /// being heard. Nothing from here on scores or goes on the board; "Play the run" starts the
-    /// run over at the song's speed.
-    func enterPractice() {
-        guard let game, gameResult == nil, !practice else { return }
-        if playing { audio.send(.pause) }
-        practice = true
-        game.practice = true
-        let s = audio.snapshot()
-        let clock = TransportClock(s)
-        let tick = clock.valid && s.epoch == gameEpoch ? clock.position(atHost: mach_absolute_time()).tick : 0
-        practiceSeek(bar: Int((max(0, tick) / Double(game.ticksPerBar)).rounded(.down)))
-        lessonLog.info("practice: in at bar \(self.practiceBar + 1)")
-    }
-
-    /// The bar practice sits at (held) or is passing (playing).
-    var practiceBar: Int {
-        guard let game else { return 0 }
-        if !playing { return Int((practiceTick / Double(game.ticksPerBar)).rounded(.down)) }
-        let s = audio.snapshot()
-        let clock = TransportClock(s)
-        guard clock.valid, s.epoch == gameEpoch else { return 0 }
-        return max(0, Int((clock.position(atHost: mach_absolute_time()).tick / Double(game.ticksPerBar)).rounded(.down)))
-    }
-
-    /// The scrub: the band holds at the start of `bar`, the highway shows it, every note from
-    /// there on is pending again, the fills are scheduled from there.
-    func practiceSeek(bar: Int) {
-        guard let game, practice else { return }
-        let b = max(0, min(game.song.bars - 1, bar))
-        let tick = Double(b * game.ticksPerBar)
-        if !playing, practiceTick == tick { return }
-        if playing { audio.send(.pause) }
-        audio.send(.seek(tick: tick))
-        game.seek(to: tick)
-        fillThrough = b - 1
-        practiceCountBase = tick
-        practiceTick = tick
-        pressed.removeAll()
-    }
-
-    /// Four bars back from where practice sits or is passing: the phrase again.
-    func practiceBack(bars: Int = 4) {
-        practiceSeek(bar: practiceBar - bars)
-    }
-
-    /// The speed, in steps of ten percent between half and full: the band's tempo follows (on
-    /// the next downbeat while it plays, at once while it holds).
-    func practiceSpeed(delta: Int) {
-        guard let game, practice else { return }
-        let pct = Int((practiceSpeed * 100).rounded()) + delta
-        practiceSpeed = Double(min(100, max(50, pct))) / 100
-        audio.send(.tempo(Double(game.song.meta.tempo) * practiceSpeed))
-    }
-
-    /// Play in practice: from the held bar, four clicks at the practice tempo, then the band;
-    /// playing, it pauses, and the next play starts that bar over.
-    func practicePlay() {
-        guard practice else { return }
-        if playing {
-            audio.send(.pause)
-            return
-        }
-        practiceSeek(bar: practiceBar)
-        audio.send(.countIn(beats: 4))
-        audio.send(.play)
-    }
-
-    /// Back to the game: the run from the top, at the song's speed, a fresh score.
-    func leavePractice() {
-        guard let g = game, practice else { return }
-        lessonLog.info("practice: out, the run from the top")
-        startGame(song: g.song, part: g.part, difficulty: gameDifficulty)
-    }
-
-    /// Every frame of a run: the engine hears the tick; the end stops the band and puts the run
-    /// on the board; Stop (a new epoch) starts the song over.
-    private func runGame(_ clock: TransportClock, heard: TransportClock.Position, epoch: Int) {
-        guard let game else { return }
-        if epoch > gameEpoch {
-            // Your Stop starts the song over; the stop at the finish line leaves the result up.
-            if gameResult == nil { restartGame() }
-            return
-        }
-        guard epoch == gameEpoch else { return }
-        game.heard(tick: heard.tick, msPerTick: heard.msPerTick)
-        // The bar ahead's notes the level leaves out, on the part's instrument (its tier is
-        // decided two bars before it starts).
-        while fillThrough < min(game.heardBar + 1, game.song.bars - 1) {
-            fillThrough += 1
-            for n in game.fill(bar: fillThrough) {
-                audio.send(.schedule(note: n.n, velocity: fillVelocity[n.t * 128 + n.n] ?? 0.6, tick: Double(n.t), lengthTicks: Double(n.len)))
-            }
-        }
-        #if DEBUG
-        runGameAutoplay(clock, heard: heard)
-        runGameAutoTap(heard)
-        runGameAutoKeys(heard)
-        runPracticeHook(heard)
-        #endif
-        if practice {
-            // The end of the song: hold there; the scrubber goes back.
-            if playing, heard.tick >= Double(game.endTick) { audio.send(.pause) }
-            return
-        }
-        if game.finished, gameResult == nil {
-            let r = game.result()
-            gameResult = r
-            audio.send(.stop)
-            if !ProgressStore.readOnly { lastRun = progress.record(run: r) }
-            // The plan's song goals score themselves off the same run.
-            onGameRun?(r)
-            lessonLog.info("stage: \(r.grade, privacy: .public) \(r.score) · \(r.perfect)/\(r.good)/\(r.missed) · combo \(r.maxCombo)")
-        }
-    }
-
-    #if DEBUG
-    /// `-Autoplay perfect|loose|sloppy|rush` on a song: the chart's notes a bar ahead on the
-    /// monitor, scored through the press path as they are heard (the checks and the
-    /// screenshots). Sloppy skips every eighth note, plays every ninth a semitone off, and is
-    /// up to 260 ms out on the rest.
-    @ObservationIgnored private var gamePlanned = -1
-    @ObservationIgnored private var gameAutoEpoch = -1
-    @ObservationIgnored private var gamePresses: [Autoplay.Press] = []
-    @ObservationIgnored private var gameReleases: [(note: Int, tick: Double)] = []
-    private func runGameAutoplay(_ clock: TransportClock, heard: TransportClock.Position) {
-        guard let game, let mode = autoplayMode, heard.rolling else { return }
-        if gameAutoEpoch != gameEpoch {
-            gameAutoEpoch = gameEpoch
-            gamePlanned = -1
-            gamePresses.removeAll()
-            gameReleases.removeAll()
-        }
-        let horizon = Int(heard.tick) + 4 * audio.band.ticksPerBeat
-        if horizon > gamePlanned {
-            for (i, n, _) in game.notes(from: Double(gamePlanned + 1), to: Double(horizon)) {
-                if mode == .sloppy, i % 8 == 3 { continue }
-                let offset: Double = mode == .rush ? -140 : mode == .loose ? Double((n.t * 7919) % 81) - 40
-                    : mode == .sloppy ? Double((n.t * 7919) % 521) - 260 : 0
-                let key = mode == .sloppy && i % 9 == 5 ? n.n + 1 : n.n
-                let p = Autoplay.Press(note: key, velocity: 0.75, tick: Double(n.t) + offset / heard.msPerTick,
-                                       lengthTicks: Double(n.len) * 0.9)
-                audio.send(.schedule(note: p.note, velocity: p.velocity, tick: p.tick, lengthTicks: p.lengthTicks))
-                gamePresses.append(p)
-            }
-            gamePlanned = horizon
-        }
-        while let i = gamePresses.firstIndex(where: { $0.tick <= heard.tick }) {
-            let p = gamePresses.remove(at: i)
-            pressed.insert(p.note)
-            gameReleases.append((p.note, p.tick + p.lengthTicks))
-            if let host = clock.hostTime(atTick: p.tick) { score(p.note, hostTime: host, velocity: p.velocity, calibrated: false) }
-        }
-        while let i = gameReleases.firstIndex(where: { $0.tick <= heard.tick }) {
-            pressed.remove(gameReleases.remove(at: i).note)
-        }
-    }
-
-    /// `-PracticeAt <tick> -PracticeBar <bar> -PracticeSpeed <percent>` on a song: when the run
-    /// reaches the tick, pause → practice, scrub to the bar, set the speed and play (the
-    /// snapshots and the tempo check).
-    private func runPracticeHook(_ heard: TransportClock.Position) {
-        let d = UserDefaults.standard
-        guard !practiceHookDone, d.object(forKey: "PracticeAt") != nil, heard.tick >= d.double(forKey: "PracticeAt") else { return }
-        practiceHookDone = true
-        enterPractice()
-        practiceSeek(bar: d.integer(forKey: "PracticeBar"))
-        if d.object(forKey: "PracticeSpeed") != nil { practiceSpeed(delta: d.integer(forKey: "PracticeSpeed") - 100) }
-        audio.send(.countIn(beats: 4))
-        audio.send(.play)
-    }
-
-    /// `-AutoTap 1` on a song: one finger taps each chord the frame it is heard, through the
-    /// tap path (the tap-mode check).
-    @ObservationIgnored private var autoTapDown = false
-    private func runGameAutoTap(_ heard: TransportClock.Position) {
-        guard let game, UserDefaults.standard.bool(forKey: "AutoTap"), heard.rolling else { return }
-        if autoTapDown {
-            tapUp(0)
-            autoTapDown = false
-            return
-        }
-        let reach = GameEngine.goodMs / heard.msPerTick
-        if game.notes(from: heard.tick - reach, to: heard.tick).contains(where: { $0.status == .pending }) {
-            tapDown(0)
-            autoTapDown = true
-        }
-    }
-
-    /// `-AutoKeys 1` on a song: presses each note due by its name only (the semitone above C3,
-    /// octave 0), through the computer-keyboard path, the frame it is heard; the octave snap
-    /// has to put it where it is charted.
-    @ObservationIgnored private var autoKeysDown: [Int] = []
-    private func runGameAutoKeys(_ heard: TransportClock.Position) {
-        guard let game, UserDefaults.standard.bool(forKey: "AutoKeys"), heard.rolling else { return }
-        if !autoKeysDown.isEmpty {
-            for k in autoKeysDown { key(k, down: false) }
-            autoKeysDown = []
-            return
-        }
-        let reach = GameEngine.goodMs / heard.msPerTick
-        let pending = game.notes(from: heard.tick - reach, to: heard.tick).filter { $0.status == .pending }
-        let names = Set(pending.map { (($0.note.n % 12) + 12) % 12 })
-        for k in names.sorted() { key(k, down: true) }
-        autoKeysDown = names.sorted()
-    }
-    #endif
-
-    /// What the game screen draws, this frame.
-    func gameState() -> GameState {
-        guard let game else { return GameState() }
-        let s = audio.snapshot()
-        let clock = TransportClock(s)
-        let heard = clock.valid ? clock.position(atHost: mach_absolute_time()) : nil
-        let tick = s.epoch == gameEpoch ? (heard?.tick ?? 0) : 0
-        let msPerTick = 60000 / (Double(game.song.meta.tempo) * practiceSpeed * Double(game.ticksPerBeat))
-        _ = practiceTick  // a scrub while held redraws the highway
-        let lookahead = GameState.lookaheadSeconds * 1000 / msPerTick
-        let cue = game.cue(at: tick, msPerTick: msPerTick)
-        // During a practice count-in the bar is the one the clicks land on, not the one before.
-        let bar = practice && countIn != nil ? Int(practiceCountBase / Double(game.ticksPerBar))
-            : max(0, Int((tick / Double(game.ticksPerBar)).rounded(.down)))
-        let song = game.song
-        let visible = game.onHighway(from: tick - Double(game.ticksPerBeat), to: tick + lookahead).map {
-            GameState.HighwayNote(id: $0.index, note: $0.note.n, tick: Double($0.note.t), length: Double($0.note.len),
-                                  status: $0.status, finger: $0.note.f)
-        }
-        return GameState(
-            title: song.meta.title, style: song.meta.style, part: game.part, partTitle: song.part(game.part).title,
-            difficulty: game.difficulty, level: game.level, tiers: game.tiers, section: song.section(atBar: min(bar, song.bars - 1)),
-            chord: song.chord(atBar: min(bar, song.bars - 1)),
-            nextChord: bar + 1 < song.bars ? song.chord(atBar: bar + 1) : "",
-            bar: min(bar, song.bars - 1), bars: song.bars, beat: beat,
-            score: game.score, combo: game.combo, maxCombo: game.maxCombo, multiplier: game.multiplier,
-            accuracy: game.accuracy, progress: min(1, max(0, tick / Double(song.bars * game.ticksPerBar))),
-            countIn: countIn, playing: playing, pop: game.pop, practice: practice, speed: practiceSpeed,
-            heardTick: tick, lookaheadTicks: lookahead, ticksPerBeat: game.ticksPerBeat, ticksPerBar: game.ticksPerBar,
-            notes: visible, keys: song.keyboard(game.part), nowNotes: cue.now, nextNotes: cue.next,
-            pressedNotes: pressed, fingers: cue.fingers, nowFingers: cue.nowFingers, nextFinger: cue.nextFingers.min(),
-            rightHand: game.part == .melody, result: gameResult, lastRun: lastRun,
-            board: progress.scores(song: song.name), sections: song.meta.sections)
-    }
-
-    // MARK: Play it back
-
-    /// The payoff chorus again, from the top, with the band (out for the same bars) and your
-    /// notes on the monitor as you played them.
-    func playBack(_ f: LessonEngine.Finish) {
-        let tpb = Double(audio.band.ticksPerBeat)
-        playbackEpoch = audio.snapshot().epoch + 1
-        audio.send(.stop)
-        audio.send(.tempo(Double(f.tempo)))
-        audio.send(.play)
-        if let first = f.aloneBars.min(), let last = f.aloneBars.max() {
-            audio.send(.silence(from: Double(first * 4) * tpb, to: Double((last + 1) * 4) * tpb))
-        }
-        for p in f.presses {
-            audio.send(.schedule(note: p.note, velocity: p.velocity, tick: max(0, p.tick), lengthTicks: p.lengthTicks))
-        }
-        lessonLog.info("play it back: \(f.presses.count) notes at \(f.tempo)")
-    }
-
-    /// The transport tick heard now, while the recorded chorus plays back.
-    func playbackTick() -> Double? {
-        let s = audio.snapshot()
-        guard s.epoch == playbackEpoch else { return nil }
-        let clock = TransportClock(s)
-        guard clock.valid else { return nil }
-        return clock.position(atHost: mach_absolute_time()).tick
     }
 
     // MARK: Engine → UI
@@ -1183,7 +662,7 @@ final class Player {
         if s.muted != muted { muted = s.muted }
         if s.pendingUnmute != pendingUnmute { pendingUnmute = s.pendingUnmute }
         // Meter: 12 segments over -42...0 dBFS.
-        let m = [Channel.drums, .bass, .keys, .horns].map { c in
+        let m = Channel.band.map { c in
             min(12, max(0, Int((s.level(c) + 42) / 3.5)))
         }
         if m != meters { meters = m }
@@ -1209,15 +688,7 @@ final class Player {
             if k != calibrationClick { calibrationClick = k }
             sendClicks(through: (k ?? 0) + 8)
             #if DEBUG
-            // `-CalibrateTapsEarly <ms>`: a tap that early (raw) at each click, through the press path
-            // (a launch argument can't start with a minus).
-            if UserDefaults.standard.object(forKey: "CalibrateTapsEarly") != nil, let k, k + 1 >= Calibration.listen {
-                let ms = -UserDefaults.standard.double(forKey: "CalibrateTapsEarly")
-                for j in max(Calibration.listen, k - 1)...(k + 1) where c.taps.last.map({ $0.click < j }) ?? true {
-                    let at = c.clickTick(j) + ms / heard.msPerTick
-                    if at <= heard.tick, at > heard.tick - 6, let host = clock.hostTime(atTick: at) { score(60, hostTime: host, calibrated: false) }
-                }
-            }
+            runCalibrationHook(c, click: k, clock, heard: heard)
             #endif
         }
         if playbackEpoch == s.epoch, heard.tick >= Double(engine.loopTicks) { playbackEpoch = nil }
@@ -1251,97 +722,6 @@ final class Player {
         return String(format: "chorus %d bar %d beat %.3f", barIndex / bars + 1, barIndex % bars + 1,
                       beats - Double(barIndex * 4) + 1)
     }
-
-    // MARK: Autoplay (DEBUG)
-
-    #if DEBUG
-    var autoplayMode: Autoplay.Mode? {
-        didSet {
-            autoplay = autoplayMode.map { Autoplay(mode: $0, plannedThrough: heardTick - 0.01) }
-            lessonLog.info("autoplay \(self.autoplayMode?.rawValue ?? "off", privacy: .public)")
-        }
-    }
-    @ObservationIgnored private var autoplay: Autoplay?
-    /// Scheduled on the monitor, not yet heard.
-    @ObservationIgnored private var autoPresses: [Autoplay.Press] = []
-    @ObservationIgnored private var autoReleases: [(note: Int, tick: Double)] = []
-    @ObservationIgnored private var autoEpoch = 0
-
-    /// Plans a bar ahead, schedules the presses on the monitor, and hands each one to the
-    /// lesson when it is heard, at the host time it is heard (the same path as a key press).
-    /// `-ImprovPlay <choruses>` on an improv: starts it, plays a made-up solo on the step's notes
-    /// (a phrase climbing on beats 1, 2, 3 and the "and" of 3, then two notes and room) through
-    /// the press path, and after that many choruses calls `onImprovDone` (AppModel sends the take).
-    @ObservationIgnored var onImprovDone: (() -> Void)?
-    @ObservationIgnored private var improvPlayed: [(note: Int, tick: Double, len: Double)] = []
-    @ObservationIgnored private var improvBegun = false
-    @ObservationIgnored private var improvPlannedBar = -1
-    @ObservationIgnored private var improvSent = false
-
-    private func runImprovPlay(_ clock: TransportClock, heard: TransportClock.Position, epoch: Int) {
-        let want = UserDefaults.standard.integer(forKey: "ImprovPlay")
-        guard want > 0, inLesson, engine.step.kind == .free, !improvSent else { return }
-        if lesson.intro != nil {
-            if !improvBegun { improvBegun = true; beginStep() }
-            return
-        }
-        guard heard.rolling, heard.tick >= 0 else { return }
-        let bar = 4 * audio.band.ticksPerBeat
-        let allowed = content.scale(of: engine.step)
-        let keys = (57...79).filter { allowed.contains($0 % 12) }
-        while improvPlannedBar < Int(heard.tick) / bar + 1 {
-            improvPlannedBar += 1
-            let b = improvPlannedBar
-            let start = (b * 3) % max(1, keys.count - 4)
-            let shape: [(Double, Int, Double)] = b % 2 == 0 ? [(0, 0, 12), (12, 1, 12), (24, 2, 6), (30, 3, 18)] : [(0, 3, 12), (12, 1, 24)]
-            for (t, step, len) in shape where start + step < keys.count {
-                improvPlayed.append((keys[start + step], Double(b * bar) + t, len))
-            }
-        }
-        while let p = improvPlayed.first, p.tick <= heard.tick {
-            improvPlayed.removeFirst()
-            guard let host = clock.hostTime(atTick: p.tick) else { continue }
-            audio.send(.schedule(note: p.note, velocity: 0.7, tick: p.tick, lengthTicks: p.len))
-            score(p.note, hostTime: host, velocity: 0.7, calibrated: false)
-            if let end = clock.hostTime(atTick: p.tick + p.len) { scoreRelease(p.note, hostTime: end, calibrated: false) }
-        }
-        if heard.tick >= Double(want * engine.chorusTicks) + 6 {
-            improvSent = true
-            onImprovDone?()
-        }
-    }
-
-    private func runAutoplay(_ clock: TransportClock, heard: TransportClock.Position, epoch: Int) {
-        if epoch != autoEpoch {
-            // Stopped: the renderer dropped what was scheduled; start over from here.
-            autoEpoch = epoch
-            autoPresses.removeAll()
-            for r in autoReleases { pressed.remove(r.note) }
-            autoReleases.removeAll()
-            autoplay?.plannedThrough = heard.tick - 0.01
-        }
-        if var plan = autoplay, heard.rolling, inLesson, !engine.expected.isEmpty, !lesson.passed, !lesson.finished {
-            let ahead = plan.plan(through: heard.tick + Double(4 * audio.band.ticksPerBeat), expected: engine.expected,
-                                  loopTicks: engine.loopTicks, msPerTick: heard.msPerTick)
-            autoplay = plan
-            for p in ahead {
-                audio.send(.schedule(note: p.note, velocity: p.velocity, tick: p.tick, lengthTicks: p.lengthTicks))
-            }
-            autoPresses += ahead
-        }
-        while let i = autoPresses.firstIndex(where: { $0.tick <= heard.tick }) {
-            let p = autoPresses.remove(at: i)
-            pressed.insert(p.note)
-            autoReleases.append((p.note, p.tick + p.lengthTicks))
-            if let host = clock.hostTime(atTick: p.tick) { score(p.note, hostTime: host, velocity: p.velocity, calibrated: false) }
-        }
-        while let i = autoReleases.firstIndex(where: { $0.tick <= heard.tick }) {
-            let r = autoReleases.remove(at: i)
-            pressed.remove(r.note)
-            if let host = clock.hostTime(atTick: r.tick) { scoreRelease(r.note, hostTime: host, calibrated: false) }
-        }
-    }
-    #endif
 
     // MARK: LessonState
 
@@ -1410,30 +790,6 @@ final class Player {
                 ? LessonState.Improv(notes: takeNotes, canSend: takeNotes >= Self.takeMinimum) : nil,
             highway: engine.step.id.hasPrefix(Improv.versionPrefix) && lesson.intro == nil && lesson.complete == nil
         )
-    }
-
-    /// The teacher's version as the game draws it, this frame: the step's notes coming down onto
-    /// `keys` (`Improv.highwayNotes`), hit by your presses this transport epoch inside the
-    /// lessons' timing window, the chord of the bar, the keys and the hand as the lesson has them.
-    func versionHighway(keys: ClosedRange<Int>) -> GameState {
-        let step = engine.step
-        guard step.id.hasPrefix(Improv.versionPrefix) else { return GameState() }
-        let tpb = audio.band.ticksPerBeat
-        let msPerTick = 60000 / (Double(max(1, tempo)) * Double(tpb))
-        let lookahead = GameState.lookaheadSeconds * 1000 / msPerTick
-        let now = heardTick
-        let notes = Improv.highwayNotes(expected: content.expected(step, ticksPerBeat: tpb), loopTicks: Double(engine.loopTicks),
-                                        ticksPerBeat: tpb, now: now, lookahead: lookahead,
-                                        window: ScoringRules().windowMs(tempo: Double(tempo)) / msPerTick,
-                                        presses: audio.snapshot().epoch == versionEpoch ? versionPresses : [], demo: demo)
-        let count = max(1, form.count)
-        return GameState(
-            chord: form.isEmpty ? "" : form[bar % count].chord,
-            nextChord: form.isEmpty ? "" : form[(bar + 1) % count].chord,
-            playing: playing, heardTick: now, lookaheadTicks: lookahead, ticksPerBeat: tpb, ticksPerBar: 4 * tpb,
-            notes: notes, keys: keys, nowNotes: lesson.nowNotes, nextNotes: lesson.nextNotes,
-            pressedNotes: pressed, fingers: lesson.fingers, nowFingers: lesson.handFingers, nextFinger: nil,
-            rightHand: lesson.rightHand)
     }
 
     /// A scale step's run for the screen: the cycle's notes in order, the one being played
