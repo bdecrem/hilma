@@ -229,7 +229,7 @@ extension Player {
         let song = game.song
         let visible = game.onHighway(from: tick - Double(game.ticksPerBeat), to: tick + lookahead).map {
             GameState.HighwayNote(id: $0.index, note: $0.note.n, tick: Double($0.note.t), length: Double($0.note.len),
-                                  status: $0.status, finger: $0.note.f)
+                                  status: $0.status, finger: game.finger($0.index))
         }
         return GameState(
             title: song.meta.title, style: song.meta.style, part: game.part, partTitle: song.part(game.part).title,

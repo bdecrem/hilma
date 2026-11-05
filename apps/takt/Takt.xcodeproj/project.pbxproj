@@ -732,6 +732,7 @@
 		F9905269B5DAF68A2EDF755A /* org-92.caf in Resources */ = {isa = PBXBuildFile; fileRef = 721BFC69BFA9630ECCB52332 /* org-92.caf */; };
 		F9CF2CF7978FDD1C0A21B144 /* rho-71-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = D89D22659C142D873A3EE0FF /* rho-71-2.caf */; };
 		FA2AA969EC41471263D6E52F /* gtr-75-2-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 8450AFA100BAFC1C3F93BC54 /* gtr-75-2-2.caf */; };
+		FA86DC7F602882B9D46D2654 /* Fingering.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E265BEC0D78EFE05ABF5192 /* Fingering.swift */; };
 		FAFE413E656E162D855A1ED6 /* gtr-57-1-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 357E512989038C36CD2D5482 /* gtr-57-1-2.caf */; };
 		FBDA0588574DD93815CDFB4D /* Player+Debug.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B321BCE7BA25197591B04CA /* Player+Debug.swift */; };
 		FBE10A7DC7A819F02F75682E /* MapWorld.swift in Sources */ = {isa = PBXBuildFile; fileRef = C19DF66C7040A709B09B3CF5 /* MapWorld.swift */; };
@@ -1093,6 +1094,7 @@
 		7C93ACD2DD529AAE1C9FA057 /* VenueScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VenueScreen.swift; sourceTree = "<group>"; };
 		7CE30DCBE3E72ECE014E12D0 /* syn-hatDH-1c.caf */ = {isa = PBXFileReference; path = "syn-hatDH-1c.caf"; sourceTree = "<group>"; };
 		7D63AD26CC351CFF4E35F87F /* org-68.caf */ = {isa = PBXFileReference; path = "org-68.caf"; sourceTree = "<group>"; };
+		7E265BEC0D78EFE05ABF5192 /* Fingering.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Fingering.swift; sourceTree = "<group>"; };
 		7E3E2A0CA1D7E6E8769485F4 /* DemoStage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoStage.swift; sourceTree = "<group>"; };
 		7EA6F5A2CBE7D3F314967A7C /* syn-stabMin-61-0.caf */ = {isa = PBXFileReference; path = "syn-stabMin-61-0.caf"; sourceTree = "<group>"; };
 		7FD99AB958DF7F12F942E3BD /* gtr-63-4-1.caf */ = {isa = PBXFileReference; path = "gtr-63-4-1.caf"; sourceTree = "<group>"; };
@@ -1735,6 +1737,7 @@
 			isa = PBXGroup;
 			children = (
 				7BA7E1BFDEC1B07542856998 /* Charting.swift */,
+				7E265BEC0D78EFE05ABF5192 /* Fingering.swift */,
 				32BBCE009EFC44289758DDC5 /* GameEngine.swift */,
 				A4D47A815704904DF95A5F08 /* GameScreen.swift */,
 				F43509FD82D84A6E1255B37C /* Song.swift */,
@@ -3140,6 +3143,7 @@
 				F5C8544A6C8E51E5CD7E7384 /* DubStab.swift in Sources */,
 				C2044003D5825445641057D4 /* EarGame.swift in Sources */,
 				1BDDD4CFEF6C835AD96A062C /* EarGameScreen.swift in Sources */,
+				FA86DC7F602882B9D46D2654 /* Fingering.swift in Sources */,
 				DA8FEB32DBD7329929BAA853 /* GameEngine.swift in Sources */,
 				9B294F89E0A8CA9A8188D92A /* GameScreen.swift in Sources */,
 				F4A31AAEC5986060A7AE5C80 /* Hands.swift in Sources */,
@@ -3234,7 +3238,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 103;
+				CURRENT_PROJECT_VERSION = 104;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -3301,7 +3305,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 103;
+				CURRENT_PROJECT_VERSION = 104;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;

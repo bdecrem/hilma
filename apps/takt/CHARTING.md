@@ -233,6 +233,13 @@ every song and part.
     under it is the 1 alone" belongs in the sheet with the date, so the next play-through can
     decide instead of re-deriving.
 
+12. **Fingers follow the hand, not the pitch** (0.1 (104)). A melody's `f` in the song file is
+    the generator's per-pitch rule (the thumb on the chart's lowest note and again every
+    octave), and it had Blue Lantern II jumping an octave onto 1 and 2 with 3–5 idle. The Stage
+    ignores it and fingers each tier's own line by hand position (`Game/Fingering.swift`: a
+    dynamic program with a pianist's costs), since the line at Medium is not the line at Hard.
+    Chord voicings keep the fingers written for them.
+
 ## Where this comes from
 
 Rhythm-game charters (Rock Band, Guitar Hero, Clone Hero) chart the top difficulty first and

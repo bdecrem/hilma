@@ -1478,6 +1478,27 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   Lantern II from the map (`-Route map -Venue 1 -Goal song`); the iPhone 17 Pro simulator's
   run and practice rows; `-LessonCheck` 415/415.
 
+- **Melody fingers by hand position: 0.1 (104), 2026-11-05.** Bart, on Blue Lantern II's Medium
+  line: "the fingerings indicated are way too complicated… I'm expected to jump up a full octave
+  to play notes on the 1 and 2 fingers, but 3-5 are never needed". They were wrong: the
+  generator's `Song.fingered` gives the same finger to the same pitch all song (the chart's lowest
+  note under the thumb, the thumb again every octave), so A4 B4 C5 D5 read 5 5 1 2 whatever the
+  phrase. The Stage now fingers **each tier's own line** in the app, `Game/Fingering.swift`: a
+  dynamic program over the five fingers with a pianist's costs (neighbour fingers for steps and
+  wider pairs for wider intervals up to what each pair reaches, the thumb to the pinky an octave;
+  the thumb under 2–4 going up and a finger over it coming down, easiest over a half step; a
+  jump of the whole hand nearly free after a rest or a long note and dear mid-phrase; the same
+  finger never slides between keys; a repeated key keeps its finger; the left hand as the mirror).
+  `GameEngine.fingers[tier - 1][i]` and `finger(i)` feed the highway's badges, the keys and the
+  hand; the chords part keeps its hand-set voicings; the file's `f` on a melody is unused by the
+  Stage (the generator still writes it; the agent's prompt says the app fingers melodies).
+  Blue Lantern II Medium now opens 5 4 2 | 1 2 | 4 5 | 3 2 1 (F4 under the thumb, D5 under the
+  pinky, one position for bars 1–4); `-ChartDump <song>/melody` prints `f=` per tier. Checks
+  428/428: C major up and down two octaves give the taught fingerings (1 2 3 1 2 3 4 1 2 3 1 2 3
+  4 5 and back), the left hand its mirror, and every blues melody at every tier has no finger
+  sliding between keys within an octave and, within a fifth, no crossing but the thumb's and no
+  stretch past the pair's reach (past a fifth the hand may jump in order, F♯4 to E5 as 1 then 2).
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

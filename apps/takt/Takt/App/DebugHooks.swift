@@ -95,10 +95,13 @@ enum DebugHooks {
         let tpb = song.band.ticksPerBeat, tpBar = song.ticksPerBar
         for (ti, mask) in masks.enumerated() {
             let picked = notes.indices.filter { mask[$0] }
+            // The tier's fingers as the Stage shows them: a melody by hand position, a chords
+            // part as the file sets them.
+            let fingers = part == .melody ? Fingering.plan(picked.map { notes[$0] }, ticksPerBeat: tpb) : picked.map { notes[$0].f ?? 0 }
             print("tier \(ti + 1): \(picked.count) notes")
-            for i in picked {
+            for (k, i) in picked.enumerated() {
                 let n = notes[i]
-                print(String(format: "  t=%4d  %2d.%d  n=%2d len=%2d lv=%d", n.t, n.t / tpBar + 1, (n.t % tpBar) / tpb + 1, n.n, n.len, n.lv))
+                print(String(format: "  t=%4d  %2d.%d  n=%2d len=%2d lv=%d f=%d", n.t, n.t / tpBar + 1, (n.t % tpBar) / tpb + 1, n.n, n.len, n.lv, fingers[k]))
             }
         }
         exit(0)

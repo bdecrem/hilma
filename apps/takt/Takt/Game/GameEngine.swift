@@ -105,6 +105,10 @@ final class GameEngine {
     /// The whole part in time order, and which notes play at each tier (`[tier - 1][i]`).
     let notes: [Song.Note]
     let masks: [[Bool]]
+    /// A melody's fingers, per tier (`[tier - 1][i]`, nil off the tier): the tier's own line
+    /// fingered by hand position (`Fingering`), since the file's fingers go by pitch over the
+    /// whole record. The chords part keeps its hand-set voicings.
+    let fingers: [[Int?]]
     private(set) var status: [Status]
     /// The tier of each block, decided `ahead` bars before the block starts.
     private(set) var blockLevel: [Int]
@@ -162,8 +166,17 @@ final class GameEngine {
         self.charting = charting
         ticksPerBeat = song.band.ticksPerBeat
         ticksPerBar = song.ticksPerBar
-        notes = song.notes(part)
-        masks = song.masks(part, charting: charting)
+        let notes = song.notes(part)
+        let masks = song.masks(part, charting: charting)
+        self.notes = notes
+        self.masks = masks
+        fingers = part == .melody ? masks.map { m in
+            let on = notes.indices.filter { m[$0] }
+            let f = Fingering.plan(on.map { notes[$0] }, ticksPerBeat: song.band.ticksPerBeat)
+            var row = [Int?](repeating: nil, count: notes.count)
+            for (k, i) in on.enumerated() { row[i] = f[k] }
+            return row
+        } : masks.map { _ in notes.map { $0.f } }
         status = Array(repeating: .pending, count: notes.count)
         let window = charting.adaptive.window
         let blocks = (song.band.bars + window - 1) / window + 1
@@ -209,6 +222,9 @@ final class GameEngine {
 
     /// Whether note `i` plays at the tier of its bar.
     func active(_ i: Int) -> Bool { masks[level(atBar: notes[i].t / ticksPerBar) - 1][i] }
+
+    /// The finger on note `i` at the tier of its bar (the file's own when the tier has none).
+    func finger(_ i: Int) -> Int? { fingers[level(atBar: notes[i].t / ticksPerBar) - 1][i] ?? notes[i].f }
 
     /// The record fills what the level leaves out: the part's notes in `bar` that don't play at
     /// its tier, for the Player to schedule on the part's instrument. Decided once the bar's
@@ -483,7 +499,7 @@ final class GameEngine {
         var nextFingers: Set<Int> = []
         for i in notes.indices where status[i] == .pending && active(i) {
             let t = Double(notes[i].t)
-            guard let f = notes[i].f else { continue }
+            guard let f = finger(i) else { continue }
             if abs(t - tick) <= reach {
                 fingers[notes[i].n] = f
                 nowFingers.insert(f)

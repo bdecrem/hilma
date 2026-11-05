@@ -1993,6 +1993,74 @@ enum LessonCheck {
                   "drops " + drops.map { String(format: "%.1f", $0) }.joined(separator: " ") + String(format: " dB, RT60 %.1f s", 60 / mean * 0.5))
         }
 
+        // MARK: Fingering by hand position (0.1 (104))
+        do {
+            func line(_ keys: [Int], step: Int = 6) -> [Song.Note] {
+                keys.enumerated().map { Song.Note(t: $0.offset * step, n: $0.element, len: step, lv: 1, f: nil, r: nil) }
+            }
+            func plan(_ notes: [Song.Note], right: Bool = true) -> [Int] { Fingering.plan(notes, right: right, ticksPerBeat: 12) }
+            let scale = [60, 62, 64, 65, 67, 69, 71, 72, 74, 76, 77, 79, 81, 83, 84]
+            check("fingering: C major up two octaves is 1 2 3 1 2 3 4 1 2 3 1 2 3 4 5",
+                  plan(line(scale)) == [1, 2, 3, 1, 2, 3, 4, 1, 2, 3, 1, 2, 3, 4, 5], plan(line(scale)).map(String.init).joined(separator: " "))
+            check("fingering: and down 5 4 3 2 1 3 2 1 4 3 2 1 3 2 1",
+                  plan(line(scale.reversed())) == [5, 4, 3, 2, 1, 3, 2, 1, 4, 3, 2, 1, 3, 2, 1], plan(line(scale.reversed())).map(String.init).joined(separator: " "))
+            // The left hand up has no half step to settle where the 4 goes (both crossings are
+            // over a whole step), so either of the two taught fingerings is right.
+            check("fingering: the left hand up is the mirror, 5 4 3 2 1 3 2 1 4 3 2 1 3 2 1 (or the 4 first)",
+                  [[5, 4, 3, 2, 1, 3, 2, 1, 4, 3, 2, 1, 3, 2, 1], [5, 4, 3, 2, 1, 4, 3, 2, 1, 3, 2, 1, 3, 2, 1]].contains(plan(line(scale), right: false)),
+                  plan(line(scale), right: false).map(String.init).joined(separator: " "))
+            check("fingering: F4 G4 A4 C5 D5 sits in one hand, 1 2 3 4 5",
+                  plan(line([65, 67, 69, 72, 74])) == [1, 2, 3, 4, 5], plan(line([65, 67, 69, 72, 74])).map(String.init).joined(separator: " "))
+            let first = plan(line([74, 72, 69, 65, 67, 72, 74], step: 12))
+            check("fingering: D5 C5 A4 F4 G4 C5 D5 (Blue Lantern II's first bars) stays in one hand: the thumb on F4, D5 under 4 or 5, every step in order",
+                  first[3] == 1 && first.last! >= 4 && zip(first, first.dropFirst()).enumerated().allSatisfy { k, p in
+                      let d = [72, 69, 65, 67, 72, 74][k] - [74, 72, 69, 65, 67, 72][k]
+                      return (d > 0) == (p.1 > p.0) && p.0 != p.1
+                  }, first.map(String.init).joined(separator: " "))
+            check("fingering: a repeated key keeps its finger, a leap after a rest moves the hand",
+                  plan(line([67, 67, 67], step: 12) + [Song.Note(t: 96, n: 79, len: 12, lv: 1, f: nil, r: nil), Song.Note(t: 108, n: 81, len: 12, lv: 1, f: nil, r: nil)]) == [1, 1, 1, 1, 2]
+                  || plan(line([67, 67, 67], step: 12) + [Song.Note(t: 96, n: 79, len: 12, lv: 1, f: nil, r: nil), Song.Note(t: 108, n: 81, len: 12, lv: 1, f: nil, r: nil)]) == [1, 1, 1, 2, 3])
+            // Every blues melody at every tier, judged as a hand: inside a beat, no finger slides
+            // between two keys within an octave, and within a fifth no crossing but the thumb's
+            // under 2–4 (or 2–4 over it) and no stretch past what the pair reaches. Past a fifth
+            // the hand may jump to a new position in order (F♯4 to E5 with 1 then 2), as it does.
+            let names = ["C", "C♯", "D", "E♭", "E", "F", "F♯", "G", "A♭", "A", "B♭", "B"]
+            func name(_ n: Int) -> String { "\(names[n % 12])\(n / 12 - 1)" }
+            for songName in ["song-blue-lantern-white", "song-maxwell-street-five", "song-slow-burn", "song-pearl-street", "song-boogie-shoes", "song-dockery", "song-friars-point"] {
+                let song = Song.bundled(songName)
+                let e = GameEngine(song: song, part: .melody, difficulty: .hard)
+                var faults: [String] = []
+                for tier in 1...e.tiers {
+                    let on = e.notes.indices.filter { e.masks[tier - 1][$0] }
+                    let f = on.map { e.fingers[tier - 1][$0]! }
+                    for k in 1..<on.count {
+                        let a = e.notes[on[k - 1]], b = e.notes[on[k]]
+                        guard b.t - a.t <= 12, b.t > a.t, abs(b.n - a.n) <= 12 else { continue }
+                        let d = b.n - a.n, fa = f[k - 1], fb = f[k]
+                        var fault: String?
+                        if d != 0, fa == fb { fault = "slides" }
+                        if abs(d) <= 7 {
+                            if d > 0, fb < fa, !(fb == 1 && (2...4).contains(fa) && d <= Fingering.crossMax) { fault = "crosses up" }
+                            if d < 0, fb > fa, !(fa == 1 && (2...4).contains(fb) && -d <= Fingering.crossMax) { fault = "crosses down" }
+                            if (d > 0) == (fb > fa), d != 0, let r = Fingering.reach[min(fa, fb) * 10 + max(fa, fb)], abs(d) > r.max { fault = "stretches" }
+                        }
+                        if let fault { faults.append("tier \(tier) bar \(b.t / 48 + 1): \(name(a.n))/\(fa) → \(name(b.n))/\(fb) \(fault)") }
+                    }
+                }
+                check("fingering: \(song.meta.title) melody at every tier: no slide, no crossing but the thumb's, no stretch past the hand",
+                      faults.isEmpty, faults.prefix(4).joined(separator: "; "))
+            }
+            // Blue Lantern II on Medium (the Level 1 goal), for the eye.
+            let bl = GameEngine(song: Song.bundled("song-blue-lantern-white"), part: .melody, difficulty: .medium)
+            let medium = bl.level(atBar: 0)
+            var rows: [Int: [String]] = [:]
+            for i in bl.notes.indices where bl.masks[medium - 1][i] {
+                rows[bl.notes[i].t / 48, default: []].append("\(name(bl.notes[i].n))/\(bl.fingers[medium - 1][i]!)")
+            }
+            print("Blue Lantern II melody, level \(medium) (Medium), fingered by hand position:")
+            for bar in rows.keys.sorted() { print(String(format: "  bar %2d: ", bar + 1) + rows[bar]!.joined(separator: "  ")) }
+        }
+
         print("LessonCheck: \(passed) passed, \(failed) failed")
         return failed == 0
     }
