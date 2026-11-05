@@ -25,8 +25,13 @@ numbers clears the goal; the teacher is Opus 5.5.
    yours, what changed), a little piano roll with the fingers. **Try my version · +50 XP** and
    **Improvise again**.
 4. **Your version**: the idea as a step (a `jam` with exact keys, `Improv.versionStep`) over the
-   same backing, from its intro; it loops every 1, 2 or 4 bars, is judged run by run, shows as a
-   run (the staircase and the hand) and Show me plays it. A run with half its notes hit pays
+   same backing, from its intro; it loops every 1, 2 or 4 bars, is judged run by run and Show me
+   plays it. It shows **as the game does** (0.1 (101), Bart: "the user sees the notes come down so
+   they have time to get their fingers there"): the idea's notes come down the game's highway
+   (`Highway`, `VersionHighway` in `LessonScreen.swift`) onto a keyboard of its own, with the
+   fingers, the chord of the bar and the hand; `Player.versionHighway` builds the frame from
+   `Improv.highwayNotes` (pure: hit by a press of the pitch inside the lessons' window, missed
+   once it has gone by) and your presses this transport epoch. A run with half its notes hit pays
    +50 XP, a clean run +25 more (once per idea). Leaving the lesson screen drops it.
 
 ## Backings

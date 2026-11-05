@@ -239,7 +239,8 @@ struct LiveLessonScreen: View {
                 back: { app.leaveLesson() },
                 backTitle: app.fromLevel == nil ? "Back to the module" : "Back to the map",
                 showMe: player.toggleDemo,
-                sendTake: app.sendTake
+                sendTake: app.sendTake,
+                highway: { player.versionHighway(keys: $0) }
             ))
             // The improv teacher's review, over the improv it came from.
             .sheet(isPresented: Binding(get: { app.improvReview != nil }, set: { if !$0 { app.closeReview() } })) {

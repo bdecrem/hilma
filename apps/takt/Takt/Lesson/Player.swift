@@ -60,6 +60,9 @@ final class Player {
     @ObservationIgnored private var bandBeforeCalibration: (playing: Bool, tempo: Int, muted: UInt8)?
     /// The transport tick heard at the last display frame.
     @ObservationIgnored private var heardTick = 0.0
+    /// Your presses on the teacher's version this transport epoch, for its highway's hits.
+    @ObservationIgnored private var versionPresses: [(tick: Double, note: Int)] = []
+    @ObservationIgnored private var versionEpoch = -1
     /// Show me: the epoch it plays in, where it ends, the presses not yet heard and the keys to
     /// let go of.
     @ObservationIgnored private var demoEpoch = 0
@@ -600,6 +603,11 @@ final class Player {
         guard inLesson, !demo else { return }
         let p = clock.position(atHost: calibrated ? shifted(hostTime, clock) : hostTime)
         engine.played(note: note, tick: p.tick, msPerTick: p.msPerTick, epoch: s.epoch, velocity: velocity)
+        if engine.step.id.hasPrefix(Improv.versionPrefix) {
+            if s.epoch != versionEpoch { versionPresses = []; versionEpoch = s.epoch }
+            versionPresses.append((p.tick, note))
+            if versionPresses.count > 128 { versionPresses.removeFirst(versionPresses.count - 128) }
+        }
         // An improv keeps the take for the teacher (not on its intro, not while stopped).
         if engine.step.kind == .free, lesson.intro == nil, playing {
             recorder.press(note, tick: p.tick, velocity: Double(velocity), epoch: s.epoch)
@@ -1399,8 +1407,33 @@ final class Player {
             demo: demo,
             canDemo: canDemo,
             improv: engine.step.kind == .free && lesson.intro == nil && !demo
-                ? LessonState.Improv(notes: takeNotes, canSend: takeNotes >= Self.takeMinimum) : nil
+                ? LessonState.Improv(notes: takeNotes, canSend: takeNotes >= Self.takeMinimum) : nil,
+            highway: engine.step.id.hasPrefix(Improv.versionPrefix) && lesson.intro == nil && lesson.complete == nil
         )
+    }
+
+    /// The teacher's version as the game draws it, this frame: the step's notes coming down onto
+    /// `keys` (`Improv.highwayNotes`), hit by your presses this transport epoch inside the
+    /// lessons' timing window, the chord of the bar, the keys and the hand as the lesson has them.
+    func versionHighway(keys: ClosedRange<Int>) -> GameState {
+        let step = engine.step
+        guard step.id.hasPrefix(Improv.versionPrefix) else { return GameState() }
+        let tpb = audio.band.ticksPerBeat
+        let msPerTick = 60000 / (Double(max(1, tempo)) * Double(tpb))
+        let lookahead = GameState.lookaheadSeconds * 1000 / msPerTick
+        let now = heardTick
+        let notes = Improv.highwayNotes(expected: content.expected(step, ticksPerBeat: tpb), loopTicks: Double(engine.loopTicks),
+                                        ticksPerBeat: tpb, now: now, lookahead: lookahead,
+                                        window: ScoringRules().windowMs(tempo: Double(tempo)) / msPerTick,
+                                        presses: audio.snapshot().epoch == versionEpoch ? versionPresses : [], demo: demo)
+        let count = max(1, form.count)
+        return GameState(
+            chord: form.isEmpty ? "" : form[bar % count].chord,
+            nextChord: form.isEmpty ? "" : form[(bar + 1) % count].chord,
+            playing: playing, heardTick: now, lookaheadTicks: lookahead, ticksPerBeat: tpb, ticksPerBar: 4 * tpb,
+            notes: notes, keys: keys, nowNotes: lesson.nowNotes, nextNotes: lesson.nextNotes,
+            pressedNotes: pressed, fingers: lesson.fingers, nowFingers: lesson.handFingers, nextFinger: nil,
+            rightHand: lesson.rightHand)
     }
 
     /// A scale step's run for the screen: the cycle's notes in order, the one being played

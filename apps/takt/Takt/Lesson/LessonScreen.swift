@@ -24,6 +24,26 @@ struct LessonControls {
     var showMe: () -> Void = {}
     /// An improv's take to the teacher.
     var sendTake: () -> Void = {}
+    /// Your version's notes coming down, this frame, for a keyboard of these keys
+    /// (`Player.versionHighway`); read every frame by `VersionHighway`.
+    var highway: (ClosedRange<Int>) -> GameState = { _ in GameState() }
+}
+
+/// The teacher's idea ("your version") as the game plays it: the notes come down the game's
+/// highway onto the keys below, so there is time to get the fingers there. Redrawn every frame
+/// while the band plays, like `LiveGameScreen`.
+struct VersionHighway: View {
+    let keys: ClosedRange<Int>
+    let playing: Bool
+    var compact = false
+    @Environment(\.lessonControls) private var controls
+
+    var body: some View {
+        TimelineView(.animation(paused: !playing)) { _ in
+            Highway(state: controls.highway(keys), compact: compact)
+        }
+        .background(RoundedRectangle(cornerRadius: 8).fill(Palette.panel.opacity(0.5)))
+    }
 }
 
 private struct LessonControlsKey: EnvironmentKey {
@@ -84,6 +104,16 @@ struct WideLessonLayout: View {
                         } else if let card = state.card {
                             CardPanel(text: card, title: state.stepTitle)
                                 .frame(width: geo.size.width, height: geo.size.height)
+                        } else if state.highway {
+                            // The highway and its own keyboard, one width, so every lane sits on its key.
+                            let keys = LessonState.Run.keyboard(state.run, keys: 24, fallback: 57...80)
+                            VStack(spacing: 0) {
+                                VersionHighway(keys: keys, playing: state.playing)
+                                KeyboardStrip(low: keys.lowerBound, high: keys.upperBound, now: state.nowNotes, next: state.nextNotes,
+                                              pressed: state.pressedNotes, fingers: state.fingers)
+                                    .frame(height: 128)
+                            }
+                            .frame(width: geo.size.width, height: geo.size.height)
                         } else if state.demo, let run = state.run {
                             DemoStage(run: run, now: state.nowNotes, next: state.nextNotes, pressed: state.pressedNotes, fingers: state.fingers)
                                 .frame(width: geo.size.width, height: geo.size.height)
@@ -111,14 +141,17 @@ struct WideLessonLayout: View {
                     .frame(width: 290)
             }
 
-            Hairline()
-            // A right-hand improv plays higher than the left hand's chords: its keys start at A3.
-            let keys = LessonState.Run.keyboard(state.run, keys: 24, fallback: state.improv != nil && state.rightHand ? 57...80 : 48...71)
-            KeyboardStrip(low: keys.lowerBound, high: keys.upperBound, now: state.nowNotes, next: state.nextNotes,
-                          pressed: state.pressedNotes, fingers: state.fingers)
-                .frame(height: 128)
-                .padding(.horizontal, 24)
-                .padding(.vertical, 18)
+            // The version's highway brings its own keyboard (above); otherwise the keys run full width.
+            if !state.highway || state.intro != nil || state.complete != nil {
+                Hairline()
+                // A right-hand improv plays higher than the left hand's chords: its keys start at A3.
+                let keys = LessonState.Run.keyboard(state.run, keys: 24, fallback: state.improv != nil && state.rightHand ? 57...80 : 48...71)
+                KeyboardStrip(low: keys.lowerBound, high: keys.upperBound, now: state.nowNotes, next: state.nextNotes,
+                              pressed: state.pressedNotes, fingers: state.fingers)
+                    .frame(height: 128)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 18)
+            }
         }
     }
 }
@@ -172,6 +205,10 @@ struct StackedLessonLayout: View {
                     // The card holds the pads' height, so nothing below it moves.
                     CardPanel(text: card, title: state.stepTitle)
                         .frame(height: side * 3 + gap * 2)
+                } else if state.highway {
+                    // Same width as the keyboard below, so the lanes land on the keys.
+                    VersionHighway(keys: LessonState.Run.keyboard(state.run, keys: 18, fallback: 57...74), playing: state.playing, compact: true)
+                        .frame(height: side * 3 + gap * 2)
                 } else if state.demo, let run = state.run {
                     DemoStage(run: run, now: state.nowNotes, next: state.nextNotes, pressed: state.pressedNotes, fingers: state.fingers, compact: true)
                         .frame(height: side * 3 + gap * 2)
@@ -183,7 +220,7 @@ struct StackedLessonLayout: View {
                 }
 
                 Spacer(minLength: 16)
-                let keys = LessonState.Run.keyboard(state.run, keys: 18, fallback: state.improv != nil && state.rightHand ? 57...74 : 48...65)
+                let keys = LessonState.Run.keyboard(state.run, keys: 18, fallback: state.highway || (state.improv != nil && state.rightHand) ? 57...74 : 48...65)
                 KeyboardStrip(low: keys.lowerBound, high: keys.upperBound, now: state.nowNotes, next: state.nextNotes,
                               pressed: state.pressedNotes, fingers: state.fingers)
                     .frame(height: 112)

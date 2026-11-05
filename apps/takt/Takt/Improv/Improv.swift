@@ -125,6 +125,37 @@ enum Improv {
 
     static let versionPrefix = "version-"
 
+    /// The version's notes on the game's highway this frame (`Player.versionHighway`): the step's
+    /// notes, chorus after chorus, from a beat behind `now` to `lookahead` ahead. Each is as long
+    /// as the gap to the next note, a little short of it (at most two beats). Hit once a press of
+    /// its pitch, any octave, landed within `window` ticks of it (Show me: once the line has
+    /// passed it), missed once the window has gone by, pending until then.
+    static func highwayNotes(expected: [ExpectedNote], loopTicks loop: Double, ticksPerBeat tpb: Int, now: Double, lookahead: Double,
+                             window: Double, presses: [(tick: Double, note: Int)], demo: Bool) -> [GameState.HighwayNote] {
+        let one = expected.sorted { $0.tick < $1.tick }
+        guard !one.isEmpty, loop > 0 else { return [] }
+        let from = now - Double(tpb), to = now + lookahead
+        var notes: [GameState.HighwayNote] = []
+        for chorus in max(0, Int((from / loop).rounded(.down)))...max(0, Int((to / loop).rounded(.down))) {
+            for (i, e) in one.enumerated() {
+                let t = Double(chorus) * loop + Double(e.tick)
+                guard t >= from - Double(tpb) * 2, t <= to else { continue }
+                let next = i + 1 < one.count ? Double(one[i + 1].tick) : loop + Double(one[0].tick)
+                let length = max(Double(tpb) / 4, min(Double(tpb) * 2, (next - Double(e.tick)) * 0.85))
+                let status: GameEngine.Status
+                if demo ? t <= now : presses.contains(where: { $0.note % 12 == e.pitchClass && abs($0.tick - t) <= window }) {
+                    status = .hit(.good)
+                } else if now > t + window {
+                    status = .missed
+                } else {
+                    status = .pending
+                }
+                notes.append(.init(id: chorus * 10_000 + i, note: e.display, tick: t, length: length, status: status, finger: e.finger))
+            }
+        }
+        return notes
+    }
+
     // MARK: XP (IMPROV.md: what earns what)
 
     enum XP {

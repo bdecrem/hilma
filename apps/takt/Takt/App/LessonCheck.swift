@@ -949,6 +949,18 @@ enum LessonCheck {
                                       ticksPerBeat: 12, rules: ScoringRules())
         check("A minor in eighths played as written up to A5 is clean, no notes too high",
               writtenRun.clean && writtenRun.extras.isEmpty, "\(writtenRun.detail) · \(writtenRun.extras.count) extra")
+        // The version's highway (IMPROV.md, 0.1 (101)): the idea's notes come down the game's lanes, chorus after chorus.
+        let laneIdea = [ExpectedNote(tick: 0, bar: 0, pitchClass: 9, display: 57, finger: 1), ExpectedNote(tick: 12, bar: 0, pitchClass: 0, display: 60, finger: 2),
+                        ExpectedNote(tick: 24, bar: 0, pitchClass: 2, display: 62, finger: 3)]
+        let lanes = { (now: Double, presses: [(tick: Double, note: Int)], demo: Bool) -> [GameState.HighwayNote] in
+            Improv.highwayNotes(expected: laneIdea, loopTicks: 48, ticksPerBeat: 12, now: now, lookahead: 60, window: 3, presses: presses, demo: demo)
+        }
+        let ahead = lanes(0, [], false), later = lanes(20, [(1, 57), (13, 72)], false)
+        check("version highway: the idea's notes a lookahead ahead, chorus after chorus, each short of the next, pending; a press of the pitch inside the window hits (any octave); the window gone by misses; Show me hits as the line passes",
+              ahead.map(\.tick) == [0, 12, 24, 48, 60] && ahead.allSatisfy { $0.status == .pending } && ahead[0].length == 12 * 0.85 && ahead[2].length == 24 * 0.85
+              && later.map(\.tick) == [0, 12, 24, 48, 60, 72] && later[0].status == .hit(.good) && later[1].status == .hit(.good) && later[2].status == .pending
+              && lanes(20, [], false)[1].status == .missed && lanes(20, [], true)[1].status == .hit(.good) && lanes(20, [], true)[2].status == .pending,
+              "\(ahead.map(\.tick)) \(later.map { "\($0.tick):\($0.status)" })")
         let changes = mPlan.steps.first { $0.id == "changes" }!
         let changeNotes = mPlan.expected(changes, ticksPerBeat: 12)
         let form = mPlan.form(of: changes)

@@ -1667,6 +1667,14 @@ it to the lesson at the host time it is heard, through the same path as a key pr
   19–20 of 29: the Scorer's C2–C5 range called the chart's own notes above C5 "too high". The range
   now always covers the chart (`Scorer.judge`); new check, 414/414.
 
+- **Your version on the game's highway: 0.1 (101), 2026-11-05.** Bart: "when the agent suggests
+  jam improvements, to play those, the UI should be that of playing a game, ie the user sees the
+  notes come down so they have time to get their fingers there." The teacher's idea (the
+  `version-` step, IMPROV.md §4) now shows the game's `Highway` in the lesson screen's middle,
+  over a keyboard of its own (`VersionHighway`, `LessonState.highway`), on Mac and iPhone; the
+  frame is `Player.versionHighway` → `Improv.highwayNotes` (pure, checked: 415/415). The intro's
+  "Show me first" keeps the hand view; Show me on the step itself plays over the highway.
+
 ## Build and run
 
 ```bash

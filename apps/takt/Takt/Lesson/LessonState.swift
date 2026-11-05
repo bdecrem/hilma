@@ -99,6 +99,8 @@ struct LessonState {
     /// An improv being played (not its intro): the take so far, and whether it can go to the
     /// teacher yet.
     var improv: Improv? = nil
+    /// The teacher's idea being played (past its intro): its notes come down a highway, as in the game.
+    var highway = false
 
     struct Improv: Equatable {
         let notes: Int
