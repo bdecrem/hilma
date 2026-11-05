@@ -19,6 +19,8 @@ struct SettingsScreen: View {
     @AppStorage("showComputerKeys") private var showComputerKeys = false
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var confirmReset = false
+    /// The credits modal. `-Credits YES` opens it at launch in DEBUG builds.
+    @State private var credits = UserDefaults.standard.bool(forKey: "Credits")
 
     var body: some View {
         let compact = sizeClass == .compact
@@ -206,10 +208,20 @@ struct SettingsScreen: View {
                             .bodyText(13)
                             .foregroundStyle(Palette.muted)
                             .fixedSize(horizontal: false, vertical: true)
-                    }
-
-                    PhotoCredits()
+                        Hairline()
+                        Button { credits = true } label: {
+                            HStack {
+                                Text("Credits").bodyText(15).foregroundStyle(Palette.text)
+                                Spacer()
+                                Text("Map photos").dataLabel(11).foregroundStyle(Palette.muted)
+                                Image(systemName: "chevron.right").font(.system(size: 11, weight: .bold)).foregroundStyle(Palette.muted)
+                            }
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Credits, map photos")
                         .id("credits")
+                    }
                 }
                 .padding(.bottom, 24)
             }
@@ -226,6 +238,10 @@ struct SettingsScreen: View {
         .frame(maxWidth: compact ? .infinity : 820, alignment: .leading)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Palette.ground.ignoresSafeArea())
+        .sheet(isPresented: $credits) {
+            CreditsPanel { credits = false }
+                .presentationBackground(Palette.ground)
+        }
         .confirmationDialog("Reset progress? Every lesson starts over.", isPresented: $confirmReset, titleVisibility: .visible) {
             Button("Reset progress", role: .destructive) {
                 app.progress.reset()
@@ -456,31 +472,48 @@ struct DailyTextSection: View {
     }
 }
 
-/// Settings → Credits: every map photo with its license and source (CC BY and CC BY-SA require
-/// it; public-domain credits are kept as courtesy). Read from the maps' JSON, every world.
-struct PhotoCredits: View {
+/// Settings → About → Credits, a modal: every map photo with its license and source (CC BY and
+/// CC BY-SA require it; public-domain credits are kept as courtesy). Read from the maps' JSON,
+/// every world.
+struct CreditsPanel: View {
+    let done: () -> Void
+
     var body: some View {
-        SettingsSection(title: "Credits") {
-            Text("Map photos").bodyText(15, weight: .semibold).foregroundStyle(Palette.text)
-            ForEach(MapWorld.all, id: \.self) { id in
-                let world = MapWorld.bundled(id)
-                ForEach(world.episodes.flatMap(\.venues).filter { $0.photo != nil }) { v in
-                    let photo = v.photo!
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(v.name).dataLabel(11, weight: .semibold).foregroundStyle(Palette.text)
-                        Text(photo.credit).bodyText(13).foregroundStyle(Palette.muted)
-                        if let s = photo.source, let url = URL(string: s) {
-                            Link(destination: url) {
-                                Text("\(photo.license) · source").dataLabel(10).foregroundStyle(Palette.cue)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(alignment: .firstTextBaseline) {
+                    Text("Credits")
+                        .font(.display(32))
+                        .textCase(.uppercase)
+                        .foregroundStyle(Palette.text)
+                    Spacer()
+                    Button("Done", action: done)
+                        .dataLabel(13, weight: .semibold)
+                        .foregroundStyle(Palette.signal)
+                        .buttonStyle(.plain)
+                }
+                Text("Map photos").bodyText(15, weight: .semibold).foregroundStyle(Palette.text)
+                ForEach(MapWorld.all, id: \.self) { id in
+                    let world = MapWorld.bundled(id)
+                    ForEach(world.episodes.flatMap(\.venues).filter { $0.photo != nil }) { v in
+                        let photo = v.photo!
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(v.name).dataLabel(11, weight: .semibold).foregroundStyle(Palette.text)
+                            Text(photo.credit).bodyText(13).foregroundStyle(Palette.muted)
+                            if let s = photo.source, let url = URL(string: s) {
+                                Link(destination: url) {
+                                    Text("\(photo.license) · source").dataLabel(10).foregroundStyle(Palette.cue)
+                                }
+                            } else {
+                                Text(photo.license).dataLabel(10).foregroundStyle(Palette.muted)
                             }
-                        } else {
-                            Text(photo.license).dataLabel(10).foregroundStyle(Palette.muted)
                         }
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     }
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
+            .padding(24)
         }
     }
 }

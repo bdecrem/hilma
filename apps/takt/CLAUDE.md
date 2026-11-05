@@ -1278,7 +1278,8 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   photos, its id in `all`. Levels 1–7 = A1 lessons 1–7, 8–20 = Scales 1–13 (the handoff had the
   ear lessons at 8–10, but they never log a finished lesson, so they could never clear a level);
   a level's Lesson button starts its lesson, or the module's next open one if it isn't reached.
-  **Settings → Credits** lists every photo (credit, license, source link) from the JSON. The rings
+  **Settings → About → Credits** (a modal since 0.1 (96), `CreditsPanel`; DEBUG `-Credits YES` opens
+  it) lists every photo (credit, license, source link) from the JSON. The rings
   under done stops: only the first lights (cleared); the handoff's proposal for rings 2 and 3
   (target tempo, a perfect chorus) waits for Bart's OK. Not done: the bar-quantized scroll on
   returning from a lesson (it lands at once). DEBUG `-Route map -MapCleared n [-Venue n]`.
