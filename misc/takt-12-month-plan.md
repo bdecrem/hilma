@@ -20,6 +20,8 @@ Measured on 2 octaves, up and down, clean and even. Start at 60 and only bump 4�
 ## Q1 — one key, A minor
 
 1. A minor pentatonic, both hands. 12-bar minor blues (Am–Dm–Em). Jam with 5 notes only.
+   (In the app since 2026-11-04 this chapter is three levels of about a week: White keys, Five
+   notes, The minor blues; chapter 2 is level 4 and the rest follow. See apps/takt/GOALS.md §2.)
 2. Blues scale (add the b5). Call and response: 2 bars play, 2 bars rest. Left hand plays root + 7th.
 3. A natural minor. See the pentatonic inside it. Land on a chord tone on beat 1.
 4. Dorian (raised 6th) over Am7–Dm7–E7. This is the minor-blues sound.

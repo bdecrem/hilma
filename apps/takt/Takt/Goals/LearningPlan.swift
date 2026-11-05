@@ -5,31 +5,39 @@ import Foundation
 /// `misc/takt-12-month-plan.md`); a plan written for one player (the agent's, later) is another
 /// document with its own id, picked in `active(for:)`, and nothing else changes.
 ///
-/// A goal (`Item`) is one of two kinds, both scored by the lesson engine:
-/// - `step`: a step of a module, passed by one chorus with every expected note hit and nothing
-///   extra (100%, stricter than the lesson's own "clean") at the item's tempo or faster. The best
-///   tempo of such a chorus is kept, so the tempo ladder (start at 60, up 4 when a pass is clean)
-///   can suggest the next number.
+/// A goal (`Item`) is one of three kinds:
+/// - `step`: a step of a module, passed by one chorus (a run, on a scale) with every expected note
+///   hit and nothing extra (100%, stricter than the lesson's own "clean") at the item's tempo or
+///   faster. The best tempo of such a pass is kept, so the tempo ladder (start at 60, up 4 when a
+///   pass is clean) can suggest the next number.
 /// - `jam`: a free step (`Lesson.Kind.free`): choruses played entirely inside the step's scale,
 ///   `choruses` of them.
+/// - `song`: a Stage song played to the end on one part and level (`part`, `difficulty`) with
+///   `grade` or better (an A is 90% accuracy: `GameEngine.Result.grade(accuracy:)`).
 /// A level clears when every one of its items is done; a level with no items yet can't.
 struct LearningPlan: Decodable {
-    enum Kind: String, Decodable { case step, jam }
+    enum Kind: String, Decodable { case step, jam, song }
 
     struct Item: Decodable, Identifiable {
         let id: String
         let kind: Kind
         let title: String
         let detail: String
-        /// The module by entry code ("S1m", "M": `AppModel.module(_:)`) and the step's id in it.
-        let module: String
-        let step: String
+        /// `step`, `jam`: the module by entry code ("S1m", "M": `AppModel.module(_:)`) and the
+        /// step's id in it.
+        let module: String?
+        let step: String?
         /// `step`: counts at this tempo or faster (the lesson step's own tempo, as a rule).
         let tempo: Int?
         /// `step`: where the tempo ladder starts; nil = the target.
         let start: Int?
         /// `jam`: choruses in the scale to finish.
         let choruses: Int?
+        /// `song`: the Stage song (`Song.catalog`), the part and level to play, the grade to get.
+        let song: String?
+        let part: String?
+        let difficulty: String?
+        let grade: String?
     }
 
     struct Level: Decodable, Identifiable {
@@ -69,15 +77,23 @@ struct LearningPlan: Decodable {
     }
 
     /// Bad content traps at load: levels numbered 1…n in order, item ids unique in a level, a
-    /// step item has a tempo, a jam item its choruses.
+    /// step item has a module, a step and a tempo, a jam item its module, step and choruses, a
+    /// song item a bundled song, a part, a level and a grade.
     func validate() {
         precondition(levels.map(\.n) == Array(1...max(1, levels.count)), "plan \(id): levels must run 1…n")
         for l in levels {
             precondition(Set(l.items.map(\.id)).count == l.items.count, "plan \(id) level \(l.n): an item id twice")
             for i in l.items {
+                let at = "plan \(id) level \(l.n) \(i.id)"
                 switch i.kind {
-                case .step: precondition(i.tempo != nil, "plan \(id) level \(l.n) \(i.id): a step item needs a tempo")
-                case .jam: precondition((i.choruses ?? 0) > 0, "plan \(id) level \(l.n) \(i.id): a jam item needs choruses")
+                case .step: precondition(i.module != nil && i.step != nil && i.tempo != nil, "\(at): a step item needs a module, a step and a tempo")
+                case .jam: precondition(i.module != nil && i.step != nil && (i.choruses ?? 0) > 0, "\(at): a jam item needs a module, a step and choruses")
+                case .song:
+                    precondition(i.song.map(Song.catalog.contains) == true, "\(at): \(i.song ?? "no song") is not a bundled song")
+                    precondition(i.part.flatMap(Song.PartKey.init(rawValue:)) != nil, "\(at): part \(i.part ?? "none")")
+                    precondition(i.difficulty.flatMap(GameEngine.Difficulty.init(rawValue:)).map { $0 != .adaptive } == true,
+                                 "\(at): difficulty \(i.difficulty ?? "none") (one fixed level)")
+                    precondition(i.grade.flatMap(GameEngine.Result.floor(of:)) != nil, "\(at): grade \(i.grade ?? "none")")
                 }
             }
         }
@@ -88,7 +104,32 @@ struct LearningPlan: Decodable {
 
     /// Every item on a step, with its level (the same step can serve two levels).
     func items(step: String) -> [(level: Level, item: Item)] {
-        levels.flatMap { l in l.items.filter { $0.step == step }.map { (l, $0) } }
+        levels.flatMap { l in l.items.filter { $0.kind != .song && $0.step == step }.map { (l, $0) } }
+    }
+
+    /// Every song item on a song, with its level.
+    func items(song: String) -> [(level: Level, item: Item)] {
+        levels.flatMap { l in l.items.filter { $0.kind == .song && $0.song == song }.map { (l, $0) } }
+    }
+
+    /// Goals that moved to another level: old key → new key. Applied to every snapshot decoded
+    /// (the file, an account's pull), so records kept by an older build land where the goal is
+    /// now. 2026-11-04: the plan's chapter 1 became levels 1–3; level 1's pentatonic goals went
+    /// to level 2, its 12-bar and its jam to level 3 (the C major scale stayed on level 1).
+    static let moved = [
+        "blues-year-1·1·scale-rh": "blues-year-1·2·scale-rh",
+        "blues-year-1·1·scale-lh": "blues-year-1·2·scale-lh",
+        "blues-year-1·1·form": "blues-year-1·3·form",
+        "blues-year-1·1·jam": "blues-year-1·3·jam",
+    ]
+
+    static func migrated(_ goals: [String: GoalRecord]) -> [String: GoalRecord] {
+        var out = goals
+        for (old, new) in moved {
+            guard let r = out.removeValue(forKey: old) else { continue }
+            out[new] = out[new].map { GoalRecord.merge($0, r) } ?? r
+        }
+        return out
     }
 }
 
@@ -97,7 +138,8 @@ struct LearningPlan: Decodable {
 struct GoalRecord: Codable, Equatable {
     /// The local day it was done ("2026-11-03"); nil until then.
     var done: String?
-    /// `step`: the highest tempo of a 100% chorus so far (at any tempo).
+    /// `step`: the highest tempo of a 100% chorus so far (at any tempo). `song`: the best
+    /// accuracy so far, in percent, of a run on the item's part and level.
     var best = 0
     /// `jam`: choruses in the scale so far.
     var choruses = 0
@@ -161,6 +203,12 @@ struct GoalProgress {
             let n = item.choruses ?? 0
             if r.done != nil { return "Done · \(n) choruses in the scale" }
             return "\(min(r.choruses, n)) of \(n) choruses in the scale"
+        case .song:
+            let level = item.difficulty.map { $0.prefix(1).uppercased() + $0.dropFirst() } ?? ""
+            let floor = Int(((item.grade.flatMap(GameEngine.Result.floor(of:)) ?? 0) * 100).rounded())
+            if r.done != nil { return "Done · \(r.best)% on \(level)" }
+            if r.best > 0 { return "Best \(r.best)% on \(level) · an \(item.grade ?? "") is \(floor)%" }
+            return "Not yet · an \(item.grade ?? "") on \(level) is \(floor)%"
         }
     }
 
@@ -169,6 +217,7 @@ struct GoalProgress {
         switch item.kind {
         case .step: return done(level, item) ? "Play again" : "Play at \(suggestedTempo(level, item))"
         case .jam: return done(level, item) ? "Jam again" : "Jam"
+        case .song: return done(level, item) ? "Play again" : "Play the song"
         }
     }
 }

@@ -15,7 +15,7 @@ final class AppModel {
             player?.inLesson = route == .lesson
             player?.inGame = route == .game
             if route != .map { openVenue = nil }
-            if ![.lesson, .result, .calibrate].contains(route) { lessonFromLevel = nil }
+            if ![.lesson, .result, .calibrate, .game].contains(route) { fromLevel = nil }
         }
     }
 
@@ -47,24 +47,37 @@ final class AppModel {
     }
 
     /// A goal from the level's screen: its step from the intro, the knob on the ladder's next
-    /// tempo; Back (and Esc) land on that level again, still on the map.
+    /// tempo, or its song on the Stage at the goal's part and level; Back (and Esc) land on that
+    /// level again, still on the map.
     func start(goal item: LearningPlan.Item, level: LearningPlan.Level) {
-        ensure(module: item.module)
         guard let player else { return }
-        currentModule = item.module
-        player.start(stepId: item.step, tempo: item.kind == .step ? goals.suggestedTempo(level, item) : nil)
         openVenue = nil
-        open(lesson: item.module)
-        lessonFromLevel = level.n
+        if item.kind == .song {
+            guard let name = item.song, let part = item.part.flatMap(Song.PartKey.init(rawValue:)),
+                  let difficulty = item.difficulty.flatMap(GameEngine.Difficulty.init(rawValue:)) else { return }
+            let song = Song.bundled(name)
+            pick(song: song, part: part)
+            pick(song: song, difficulty: difficulty)
+            player.startGame(song: song, part: part, difficulty: difficulty)
+            route = .game
+        } else {
+            guard let module = item.module, let step = item.step else { return }
+            ensure(module: module)
+            currentModule = module
+            player.start(stepId: step, tempo: item.kind == .step ? goals.suggestedTempo(level, item) : nil)
+            open(lesson: module)
+        }
+        fromLevel = level.n
     }
 
-    /// The level whose goals opened the lesson; nil when it came from the menu or a module.
-    private(set) var lessonFromLevel: Int?
+    /// The level whose goals opened the lesson or the song; nil when it came from the menu, a
+    /// module or the Stage.
+    private(set) var fromLevel: Int?
 
     /// Out of the lesson: back to the map's level it was started from, else `fallback` (the
     /// module screen; Esc and the result screen go to the menu).
     func leaveLesson(else fallback: Route = .module) {
-        if let level = lessonFromLevel {
+        if let level = fromLevel {
             route = .map
             openVenue = level
         } else {
@@ -75,14 +88,15 @@ final class AppModel {
     /// A scale goal's fingering as a line ("1-2-3, tuck, 1-2-3, tuck, 1-2-3-4-5, and
     /// reverse"), from its step's run; nil for a goal that isn't a run.
     func fingerLine(_ item: LearningPlan.Item) -> String? {
-        item.kind == .step ? module(item.module).fingerLine(step: item.step) : nil
+        guard item.kind == .step, let m = item.module, let step = item.step else { return nil }
+        return module(m).fingerLine(step: step)
     }
 
     /// Every judged chorus (`Player.onGoalChorus`): the goals on that step score themselves. A
     /// step goal wants every expected note hit and nothing extra; a jam goal a chorus in the scale.
     func goalJudged(module code: String, verdict v: LessonEngine.Verdict) {
         guard !ProgressStore.readOnly else { return }
-        for (level, item) in plan.items(step: v.stepId) where module(item.module).code == code {
+        for (level, item) in plan.items(step: v.stepId) where item.module.map({ module($0).code }) == code {
             let key = plan.key(level, item)
             switch item.kind {
             case .step:
@@ -91,7 +105,19 @@ final class AppModel {
             case .jam:
                 guard v.free != nil, v.counted else { continue }
                 progress.goalJam(key, needed: item.choruses ?? 1)
+            case .song:
+                continue
             }
+        }
+    }
+
+    /// Every Stage run played to the end (`Player.onGameRun`): a song goal on that song, part and
+    /// level keeps its best accuracy and is done at its grade or better.
+    func goalRun(_ r: GameEngine.Result) {
+        guard !ProgressStore.readOnly else { return }
+        for (level, item) in plan.items(song: r.song) where item.part == r.part && item.difficulty == r.difficulty {
+            guard let floor = item.grade.flatMap(GameEngine.Result.floor(of:)) else { continue }
+            progress.goalRun(plan.key(level, item), accuracy: r.accuracy, floor: floor)
         }
     }
 
@@ -153,6 +179,7 @@ final class AppModel {
         self.account = account
         self.mods = mods
         player?.onGoalChorus = { [weak self] code, v in self?.goalJudged(module: code, verdict: v) }
+        player?.onGameRun = { [weak self] r in self?.goalRun(r) }
         #if DEBUG
         let d = UserDefaults.standard
         // `-LoadMod <file>` puts a saved bundle on the set list without an account.
@@ -176,13 +203,13 @@ final class AppModel {
             case "map":
                 route = .map
                 // `-Venue n` opens level n's venue over it; `-Goal <id>` starts that level's goal as
-                // its button does, and `-Back 1` then leaves the lesson the way Back does.
+                // its button does, and `-Back 1` then leaves the lesson (or the song) the way Back does.
                 if d.integer(forKey: "Venue") > 0 { openVenue = d.integer(forKey: "Venue") }
                 if let id = d.string(forKey: "Goal") {
                     guard let level = plan.levels.first(where: { $0.n == max(1, d.integer(forKey: "Venue")) }),
                           let item = level.items.first(where: { $0.id == id }) else { fatalError("-Goal: no goal \(id)") }
                     start(goal: item, level: level)
-                    if d.bool(forKey: "Back") { leaveLesson() }
+                    if d.bool(forKey: "Back") { item.kind == .song ? leaveGame() : leaveLesson() }
                 }
             case "stage": route = .stage
             case "game": break  // below
@@ -539,10 +566,16 @@ final class AppModel {
         route = .game
     }
 
-    /// Back to the set list: the lesson's band comes back.
+    /// Back to the set list, or to the map's level when a goal started the song: the lesson's
+    /// band comes back.
     func leaveGame() {
         player?.endGame()
-        route = .stage
+        if let level = fromLevel {
+            route = .map
+            openVenue = level
+        } else {
+            route = .stage
+        }
     }
 }
 

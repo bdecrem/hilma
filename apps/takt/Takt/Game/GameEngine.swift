@@ -72,6 +72,11 @@ final class GameEngine {
             accuracy >= 0.97 ? "S" : accuracy >= 0.9 ? "A" : accuracy >= 0.8 ? "B" : accuracy >= 0.65 ? "C" : "D"
         }
 
+        /// The accuracy a grade starts at (an A: 0.9), so "an A or better" is one comparison.
+        static func floor(of grade: String) -> Double? {
+            ["S": 0.97, "A": 0.9, "B": 0.8, "C": 0.65, "D": 0][grade]
+        }
+
         /// The one line the result leads with, and the one under it.
         var verdict: (title: String, line: String) {
             switch grade {

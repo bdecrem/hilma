@@ -7,7 +7,14 @@ whole band swings; a shuffle chorus in the middle where the riff turns into the 
 for the Sunday market where the Chicago players plugged in; the riff is ours (a blues-scale
 walk-up, root, flat third, fourth, flat fifth, fifth), not Willie Dixon's.
 
-    python3 apps/takt/scripts/songs/maxwell_street.py   -> Takt/Content/song-maxwell-street.json
+    python3 apps/takt/scripts/songs/maxwell_street.py          -> Takt/Content/song-maxwell-street.json
+    python3 apps/takt/scripts/songs/maxwell_street.py --five   -> Takt/Content/song-maxwell-street-five.json
+
+`--five` is **Maxwell Street II**, the song of the map's Level 2 (A minor pentatonic;
+the plan wants an A on its melody at Medium): the same record with the horn on A C D E G only.
+The riff walks up A C D E without the flat fifth, the bass in unison with it; the release's
+riff shapes on the E and the D become E G A and D E G A, and the solo's chromatic steps go.
+Every note of the part, every level, is one of the five.
 
 12/8 feel at 80 (the late eighth on tick 8, the triplet on 4). The form is the stop-time
 12-bar: A7 for eight bars, then E7 D7 A7 E7. Choruses: Stop time (the riff, the voice on the
@@ -28,9 +35,15 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import BAR, TPB, Song  # noqa: E402
 
+FIVE = "--five" in sys.argv
+
 FORM = ["A7"] * 8 + ["E7", "D7", "A7", "E7"]
-s = Song("song-maxwell-street", "Maxwell Street", "Chicago blues", "A", 80, "stoptime",
-         "Chicago blues in A. Eight bars of stop time, the band slamming the riff, the voice in the gaps, then it swings.", seed=1954)
+if FIVE:
+    s = Song("song-maxwell-street-five", "Maxwell Street II", "Chicago blues", "A", 80, "stoptime",
+             "Chicago blues in A, the horn on five notes: A C D E G. Level 2's song.", seed=1954)
+else:
+    s = Song("song-maxwell-street", "Maxwell Street", "Chicago blues", "A", 80, "stoptime",
+             "Chicago blues in A. Eight bars of stop time, the band slamming the riff, the voice in the gaps, then it swings.", seed=1954)
 s.sounds = {
     "kick": {"kit": "kick", "gainDb": -2},
     "snare": {"kit": "snare", "gainDb": -4},
@@ -71,6 +84,8 @@ def riff_bar(bar):
 
 # The riff, bass register (A1 = 33): A C D Eb E, the E held into beat 3. (tick, note, len)
 RIFF = [(0, 33, 8), (8, 36, 4), (12, 38, 8), (20, 39, 4), (24, 40, 12)]
+if FIVE:
+    RIFF = [(0, 33, 8), (8, 36, 4), (12, 38, 12), (24, 40, 12)]  # A C D E, no flat fifth
 # The release's walking shuffle bass: a note a beat.
 WALK = {"E7": [40, 44, 47, 50], "D7": [38, 42, 45, 48], "A7": [33, 37, 40, 42]}
 ROOT = {"A7": 33, "D7": 38, "E7": 40}
@@ -241,6 +256,9 @@ HIGH = [
     [(0, G5, 8, 2), (8, E5, 4, 3), (12, D5, 12, 2), (24, C5, 24, 1)],
     [(0, A4, 12, 1), (12, C5, 8, 2), (20, Cs5, 4, 3), (24, D5, 24, 2)],
 ]
+if FIVE:
+    HORN_RIFF = [(0, A3, 8, 1), (8, C4, 4, 2), (12, D4, 12, 2), (24, E4, 12, 1)]
+    HIGH[3] = [(0, A4, 12, 1), (12, C5, 12, 2), (24, D5, 24, 2)]
 # The release (bars 8–11): the riff shape on the E and the D, then the turnaround.
 RELEASE = {
     8: [(0, E4, 8, 1), (8, G4, 4, 2), (12, A4, 8, 2), (20, Bb4, 4, 3), (24, B4, 24, 1)],
@@ -259,8 +277,16 @@ SOLO = {
     6: [(0, D5, 8, 2), (8, Eb5, 4, 3), (12, E5, 12, 1), (24, G5, 12, 2), (36, E5, 12, 2)],
     7: [(0, D5, 12, 2), (12, C5, 12, 2), (24, A4, 24, 1)],
 }
+if FIVE:
+    # The release on the five notes: E G A landing on the G (the blue third of E7), D E G A,
+    # and the turnaround walking up A C D E.
+    RELEASE[8] = [(0, E4, 8, 1), (8, G4, 4, 2), (12, A4, 12, 2), (24, G4, 24, 1)]
+    RELEASE[9] = [(0, D4, 8, 1), (8, E4, 4, 2), (12, G4, 12, 2), (24, A4, 24, 1)]
+    RELEASE[11] = [(0, A3, 24, 1), (24, C4, 8, 2), (32, D4, 4, 3), (36, E4, 12, 2)]
+    SOLO[1] = [(0, E5, 12, 2), (12, D5, 12, 2), (24, C5, 24, 1)]
+    SOLO[6] = [(0, D5, 12, 2), (12, E5, 12, 1), (24, G5, 12, 2), (36, E5, 12, 2)]
 
-melody = s.part("melody", "The horn", "piano", "horns", "sax")
+melody = s.part("melody", "Five notes" if FIVE else "The horn", "piano", "horns", "sax")
 for c in range(CHORUSES):
     for b in range(12):
         bar = c * 12 + b
@@ -277,6 +303,8 @@ for c in range(CHORUSES):
             phrase = RELEASE[b]
         for t, n, ln, lv in phrase:
             s.pnote(melody, o + t, n, ln, lv)
+if FIVE:
+    assert all(e["n"] % 12 in (9, 0, 2, 4, 7) for e in melody), "a note outside A C D E G in the five-note line"
 s.fingered(melody)
 s.chart_to_channel(melody, s.horns, lambda e: 0.84 if e["lv"] == 1 else 0.7, inst=None)
 for e in s.horns:

@@ -176,9 +176,14 @@ struct RootView: View {
             onSpace: { if let hit = CountInLaunch.onHit { hit(mach_absolute_time()) } else { player.togglePlay() } },
             onTempo: player.nudgeTempo,
             onEscape: {
-                if app.route == .lesson { app.leaveLesson(else: .lessons) }
-                if app.route == .game { app.leaveGame() }
-                if app.route == .map { app.openVenue = nil }
+                // One move per press: leaving a goal's lesson or song opens its level on the map,
+                // which a second `if` would close again.
+                switch app.route {
+                case .lesson: app.leaveLesson(else: .lessons)
+                case .game: app.leaveGame()
+                case .map: app.openVenue = nil
+                default: break
+                }
             }
         ))
         // Agent mode, over the set list or a paused run (one presenter for both).
@@ -232,7 +237,7 @@ struct LiveLessonScreen: View {
                 beginStep: player.beginStep,
                 nextStep: player.nextStep,
                 back: { app.leaveLesson() },
-                backTitle: app.lessonFromLevel == nil ? "Back to the module" : "Back to the map",
+                backTitle: app.fromLevel == nil ? "Back to the module" : "Back to the map",
                 showMe: player.toggleDemo
             ))
     }
@@ -260,6 +265,7 @@ struct LiveGameScreen: View {
                 togglePlay: player.togglePlay,
                 again: player.restartGame,
                 leave: app.leaveGame,
+                leaveTitle: app.fromLevel == nil ? "Set list" : "Map",
                 practice: player.enterPractice,
                 practiceSeek: { player.practiceSeek(bar: $0) },
                 practiceBack: { player.practiceBack() },

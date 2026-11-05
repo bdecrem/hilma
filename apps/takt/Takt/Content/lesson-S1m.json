@@ -190,6 +190,19 @@
     "title": "Twice as far, twice as fast",
     "line": "Same five notes, two octaves, two a beat. Start slow and let the clean passes set the tempo."
    }
+  },
+  {
+   "title": "A minor in eighths",
+   "skill": "A natural minor over two octaves, two a beat",
+   "goal": "2 clean runs at 72",
+   "steps": [
+    "minor2-rh"
+   ],
+   "theme": {
+    "glyph": "hill",
+    "title": "Same fingers, new home",
+    "line": "C major's fingering, started on A. The drums go straight with you; keep every eighth the same length."
+   }
   }
  ],
  "later": [
@@ -1984,6 +1997,236 @@
    },
    "band": [
     "drums"
+   ]
+  },
+  {
+   "id": "minor2-rh",
+   "kind": "play",
+   "title": "A minor in eighths",
+   "skill": "rh.scale.two.eighths.S1m",
+   "tempo": 72,
+   "gate": 2,
+   "cycle": 4,
+   "hand": "right",
+   "key": "A minor",
+   "about": "A natural minor over two octaves, two notes a beat: A B C D E F G, up from A through the top A to the one above it, then straight back down. The fingering is C major's, started on A: thumb under after the middle finger, then after the ring finger; coming down, the middle and the ring finger cross over. The drums play straight eighths with you. Start the knob at 60; take it up 4 when a pass is clean. It counts at 72.",
+   "coach": {
+    "intro": "A minor, two octaves in eighths. Thumb on A.",
+    "change": "Up two octaves and back, two a beat.",
+    "hold": "Up two octaves and back, two a beat.",
+    "clean": "Clean. {left} more.",
+    "again": "{problem} Again.",
+    "join": "From the top.",
+    "slow": "Clean at {tempo}. It counts at {gateTempo}.",
+    "passed": "Clean. A minor in eighths."
+   },
+   "band": [
+    "drums"
+   ],
+   "pattern": [
+    {
+     "bar": 0,
+     "beat": 1,
+     "tick": 0,
+     "semitones": 0,
+     "finger": 1
+    },
+    {
+     "bar": 0,
+     "beat": 1,
+     "tick": 6,
+     "semitones": 2,
+     "finger": 2
+    },
+    {
+     "bar": 0,
+     "beat": 2,
+     "tick": 0,
+     "semitones": 3,
+     "finger": 3
+    },
+    {
+     "bar": 0,
+     "beat": 2,
+     "tick": 6,
+     "semitones": 5,
+     "finger": 1
+    },
+    {
+     "bar": 0,
+     "beat": 3,
+     "tick": 0,
+     "semitones": 7,
+     "finger": 2
+    },
+    {
+     "bar": 0,
+     "beat": 3,
+     "tick": 6,
+     "semitones": 8,
+     "finger": 3
+    },
+    {
+     "bar": 0,
+     "beat": 4,
+     "tick": 0,
+     "semitones": 10,
+     "finger": 4
+    },
+    {
+     "bar": 0,
+     "beat": 4,
+     "tick": 6,
+     "semitones": 12,
+     "finger": 1
+    },
+    {
+     "bar": 1,
+     "beat": 1,
+     "tick": 0,
+     "semitones": 14,
+     "finger": 2
+    },
+    {
+     "bar": 1,
+     "beat": 1,
+     "tick": 6,
+     "semitones": 15,
+     "finger": 3
+    },
+    {
+     "bar": 1,
+     "beat": 2,
+     "tick": 0,
+     "semitones": 17,
+     "finger": 1
+    },
+    {
+     "bar": 1,
+     "beat": 2,
+     "tick": 6,
+     "semitones": 19,
+     "finger": 2
+    },
+    {
+     "bar": 1,
+     "beat": 3,
+     "tick": 0,
+     "semitones": 20,
+     "finger": 3
+    },
+    {
+     "bar": 1,
+     "beat": 3,
+     "tick": 6,
+     "semitones": 22,
+     "finger": 4
+    },
+    {
+     "bar": 1,
+     "beat": 4,
+     "tick": 0,
+     "semitones": 24,
+     "finger": 5
+    },
+    {
+     "bar": 1,
+     "beat": 4,
+     "tick": 6,
+     "semitones": 22,
+     "finger": 4
+    },
+    {
+     "bar": 2,
+     "beat": 1,
+     "tick": 0,
+     "semitones": 20,
+     "finger": 3
+    },
+    {
+     "bar": 2,
+     "beat": 1,
+     "tick": 6,
+     "semitones": 19,
+     "finger": 2
+    },
+    {
+     "bar": 2,
+     "beat": 2,
+     "tick": 0,
+     "semitones": 17,
+     "finger": 1
+    },
+    {
+     "bar": 2,
+     "beat": 2,
+     "tick": 6,
+     "semitones": 15,
+     "finger": 3
+    },
+    {
+     "bar": 2,
+     "beat": 3,
+     "tick": 0,
+     "semitones": 14,
+     "finger": 2
+    },
+    {
+     "bar": 2,
+     "beat": 3,
+     "tick": 6,
+     "semitones": 12,
+     "finger": 1
+    },
+    {
+     "bar": 2,
+     "beat": 4,
+     "tick": 0,
+     "semitones": 10,
+     "finger": 4
+    },
+    {
+     "bar": 2,
+     "beat": 4,
+     "tick": 6,
+     "semitones": 8,
+     "finger": 3
+    },
+    {
+     "bar": 3,
+     "beat": 1,
+     "tick": 0,
+     "semitones": 7,
+     "finger": 2
+    },
+    {
+     "bar": 3,
+     "beat": 1,
+     "tick": 6,
+     "semitones": 5,
+     "finger": 1
+    },
+    {
+     "bar": 3,
+     "beat": 2,
+     "tick": 0,
+     "semitones": 3,
+     "finger": 3
+    },
+    {
+     "bar": 3,
+     "beat": 2,
+     "tick": 6,
+     "semitones": 2,
+     "finger": 2
+    },
+    {
+     "bar": 3,
+     "beat": 3,
+     "tick": 0,
+     "semitones": 0,
+     "finger": 1
+    }
    ]
   },
   {

@@ -69,6 +69,8 @@ struct GameControls {
     var togglePlay: () -> Void = {}
     var again: () -> Void = {}
     var leave: () -> Void = {}
+    /// Where `leave` goes: the set list, or the map when a goal on the map started the song.
+    var leaveTitle = "Set list"
     /// Pause → practice; the scrub (a bar); four bars back; the speed (percent, ±10); back to the run.
     var practice: () -> Void = {}
     var practiceSeek: (Int) -> Void = { _ in }
@@ -152,7 +154,7 @@ struct GameHUD: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: compact ? 10 : 20) {
-            TransportButton(symbol: "chevron.left", lit: false, size: compact ? 34 : 36, label: "Back to the stage", action: controls.leave)
+            TransportButton(symbol: "chevron.left", lit: false, size: compact ? 34 : 36, label: controls.leaveTitle == "Map" ? "Back to the map" : "Back to the stage", action: controls.leave)
             VStack(alignment: .leading, spacing: 2) {
                 Text(state.title)
                     .font(.display(compact ? 24 : 30))
@@ -735,7 +737,7 @@ struct GameResultPanel: View {
     private var buttons: some View {
         HStack(spacing: 10) {
             PrimaryButton(title: "Play again", action: controls.again)
-            QuietButton(title: "Set list", action: controls.leave)
+            QuietButton(title: controls.leaveTitle, action: controls.leave)
         }
     }
 }

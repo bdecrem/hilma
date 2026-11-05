@@ -1,7 +1,7 @@
 {
  "world": "blues",
  "title": "The blues road",
- "total": 24,
+ "total": 26,
  "episodes": [
   {
    "id": "delta",
@@ -461,6 +461,30 @@
     },
     {
      "id": "chicago-4",
+     "name": "",
+     "town": "",
+     "era": "",
+     "status": "",
+     "tag": "",
+     "story": "",
+     "photo": null,
+     "sources": [],
+     "placeholder": true
+    },
+    {
+     "id": "chicago-5",
+     "name": "",
+     "town": "",
+     "era": "",
+     "status": "",
+     "tag": "",
+     "story": "",
+     "photo": null,
+     "sources": [],
+     "placeholder": true
+    },
+    {
+     "id": "chicago-6",
      "name": "",
      "town": "",
      "era": "",

@@ -331,6 +331,8 @@ final class Player {
 
     /// Every judged chorus, with the module's code: the plan's goals (`AppModel`).
     @ObservationIgnored var onGoalChorus: ((String, LessonEngine.Verdict) -> Void)?
+    /// Every Stage run played to the end (not practice).
+    @ObservationIgnored var onGameRun: ((GameEngine.Result) -> Void)?
 
     /// Lesson `n` (1-based) from its intro: the next one, or one already done, played again.
     func start(lesson n: Int) {
@@ -916,6 +918,8 @@ final class Player {
             gameResult = r
             audio.send(.stop)
             if !ProgressStore.readOnly { lastRun = progress.record(run: r) }
+            // The plan's song goals score themselves off the same run.
+            onGameRun?(r)
             lessonLog.info("stage: \(r.grade, privacy: .public) \(r.score) · \(r.perfect)/\(r.good)/\(r.missed) · combo \(r.maxCombo)")
         }
     }

@@ -76,7 +76,7 @@ struct ResultScreen: View {
             }
             let leave = HStack(spacing: 10) {
                 QuietButton(title: "Play it again") { app.restart(lesson: player?.content.code ?? "") }
-                QuietButton(title: app.lessonFromLevel == nil ? "Lessons" : "Map") { app.leaveLesson(else: .lessons) }
+                QuietButton(title: app.fromLevel == nil ? "Lessons" : "Map") { app.leaveLesson(else: .lessons) }
             }
             Group {
                 if compact {

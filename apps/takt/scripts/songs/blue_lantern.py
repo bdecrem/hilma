@@ -2,7 +2,14 @@
 """Blue Lantern: a minor blues in D at 84, straight eighths over a sixteenth hat, four choruses
 (2:17), a Rhodes comping, the sax on the line.
 
-    python3 apps/takt/scripts/songs/blue_lantern.py   -> Takt/Content/song-blue-lantern.json
+    python3 apps/takt/scripts/songs/blue_lantern.py           -> Takt/Content/song-blue-lantern.json
+    python3 apps/takt/scripts/songs/blue_lantern.py --white   -> Takt/Content/song-blue-lantern-white.json
+
+`--white` is **Blue Lantern II**, the song of the map's Level 1 (white keys: A natural
+minor, C major; the plan wants an A on its melody at Medium): the same record with the sax line
+on white keys only. The blue note (A flat) goes, a white neighbor takes its place where it sat
+(F under the Gm7, E under the Dm7, B under the A7), and the head's turnaround passes through E
+instead of F. Every note of the part, every level, is a white key.
 
 The slow-funk minor blues (the thrill-is-gone feel): kick on the 1 and the "and" of 3, the snare
 on 2 and 4, the hat in sixteenths with the eighths accented, an open hat into the 1 every other
@@ -21,9 +28,15 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import BAR, TPB, Song  # noqa: E402
 
+WHITE = "--white" in sys.argv
+
 FORM = ["Dm7", "Dm7", "Dm7", "Dm7", "Gm7", "Gm7", "Dm7", "Dm7", "Bb7", "A7", "Dm7", "A7"]
-s = Song("song-blue-lantern", "Blue Lantern", "Minor blues", "Dm", 84, "lantern",
-         "A minor blues in D. Rhodes, a sixteenth hat, the sax taking its time.", seed=84)
+if WHITE:
+    s = Song("song-blue-lantern-white", "Blue Lantern II", "Minor blues", "Dm", 84, "lantern",
+             "The minor blues in D, the sax line on the white keys only. Level 1's song.", seed=84)
+else:
+    s = Song("song-blue-lantern", "Blue Lantern", "Minor blues", "Dm", 84, "lantern",
+             "A minor blues in D. Rhodes, a sixteenth hat, the sax taking its time.", seed=84)
 s.sounds = {
     "kick": {"kit": "kick", "gainDb": -5},
     "snare": {"kit": "snare", "gainDb": -7},
@@ -165,8 +178,8 @@ s.chart_to_channel(chords, s.keys, lambda e: 0.58 if e["t"] % BAR == 0 else 0.46
 
 # MARK: Melody part: the sax, D minor.
 
-A3, C4, D4, F4, G4, Gs4, A4, C5 = 57, 60, 62, 65, 67, 68, 69, 72
-D5, F5, G5, Gs5, A5, C6 = 74, 77, 79, 80, 81, 84
+A3, C4, D4, E4, F4, G4, Gs4, A4, B4, C5 = 57, 60, 62, 64, 65, 67, 68, 69, 71, 72
+D5, E5, F5, G5, Gs5, A5, C6 = 74, 76, 77, 79, 80, 81, 84
 
 # One anchor (1) a bar, the note the bar sits on; the answers (2); the turns and pickups (3).
 HEAD = {
@@ -175,19 +188,19 @@ HEAD = {
     2: [(0, C5, 18, 2), (18, D5, 30, 1)],
     3: [(0, A4, 24, 1), (24, G4, 6, 3), (30, F4, 18, 2)],
     4: [(0, G4, 12, 2), (12, F4, 36, 1)],
-    5: [(0, G4, 18, 1), (18, A4, 6, 3), (24, Gs4, 6, 3), (30, G4, 18, 2)],
+    5: [(0, G4, 18, 1), (18, A4, 6, 3), (24, F4 if WHITE else Gs4, 6, 3), (30, G4, 18, 2)],
     6: [(0, F4, 24, 1), (24, D4, 24, 2)],
     7: [(0, D4, 36, 1), (42, C5, 6, 3)],
     8: [(0, D5, 24, 1), (24, C5, 12, 2), (36, A4, 12, 2)],
     9: [(0, C5, 12, 2), (12, A4, 36, 1)],
     10: [(0, F4, 18, 2), (18, D4, 30, 1)],
-    11: [(0, C4, 24, 1), (24, D4, 6, 3), (30, F4, 6, 3), (36, A4, 12, 2)],
+    11: [(0, C4, 24, 1), (24, D4, 6, 3), (30, E4 if WHITE else F4, 6, 3), (36, A4, 12, 2)],
 }
 SOLO_LINE = {
     0: [(0, A5, 12, 1), (12, G5, 6, 3), (18, F5, 6, 2), (24, D5, 24, 2)],
     1: [(0, F5, 12, 2), (12, D5, 36, 1)],
     2: [(0, C5, 6, 3), (6, D5, 6, 3), (12, F5, 12, 2), (24, G5, 24, 1)],
-    3: [(0, A5, 24, 1), (24, Gs5, 6, 3), (30, G5, 18, 2)],
+    3: [(0, A5, 24, 1), (24, G5, 6, 3), (30, E5, 18, 2)] if WHITE else [(0, A5, 24, 1), (24, Gs5, 6, 3), (30, G5, 18, 2)],
     4: [(0, G5, 12, 1), (12, F5, 12, 2), (24, D5, 24, 2)],
     5: [(0, G5, 6, 3), (6, A5, 6, 3), (12, G5, 12, 2), (24, F5, 24, 1)],
     6: [(0, D5, 36, 1), (36, C5, 12, 2)],
@@ -195,10 +208,10 @@ SOLO_LINE = {
     8: [(0, F5, 12, 1), (12, D5, 12, 2), (24, C5, 24, 2)],
     9: [(0, A4, 12, 2), (12, C5, 36, 1)],
     10: [(0, D5, 24, 1), (24, F5, 6, 3), (30, D5, 18, 2)],
-    11: [(0, C5, 24, 1), (24, Gs4, 6, 3), (30, A4, 18, 2)],
+    11: [(0, C5, 24, 1), (24, B4 if WHITE else Gs4, 6, 3), (30, A4, 18, 2)],
 }
 
-melody = s.part("melody", "The sax line", "rhodes", "horns", "sax")
+melody = s.part("melody", "White keys" if WHITE else "The sax line", "rhodes", "horns", "sax")
 for c in range(CHORUSES):
     for b in range(12):
         bar = c * 12 + b
@@ -211,6 +224,8 @@ for c in range(CHORUSES):
             s.pnote(melody, o + t, n, ln, lv)
         if c in (1, 3) and b in (3, 7):
             s.pnote(melody, o + 45, C5 if b == 3 else A4, 3, 3)  # a pickup into the next phrase
+if WHITE:
+    assert all(e["n"] % 12 in (0, 2, 4, 5, 7, 9, 11) for e in melody), "a black key in the white-key line"
 s.fingered(melody)
 s.chart_to_channel(melody, s.horns, lambda e: 0.8 if e["lv"] == 1 else 0.66, inst=None)
 for e in s.horns:

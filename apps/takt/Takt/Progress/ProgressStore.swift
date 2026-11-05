@@ -135,7 +135,7 @@ final class ProgressStore {
             intervals = try c.decodeIfPresent(EarRecord.self, forKey: .intervals) ?? EarRecord()
             scores = try c.decodeIfPresent([ScoreRecord].self, forKey: .scores) ?? []
             practice = try c.decodeIfPresent([PracticeEntry].self, forKey: .practice) ?? []
-            goals = try c.decodeIfPresent([String: GoalRecord].self, forKey: .goals) ?? [:]
+            goals = LearningPlan.migrated(try c.decodeIfPresent([String: GoalRecord].self, forKey: .goals) ?? [:])
         }
     }
 
@@ -309,6 +309,16 @@ final class ProgressStore {
         var r = goal(key)
         r.choruses += 1
         if r.choruses >= needed, r.done == nil { r.done = Self.day(date) }
+        snapshot.goals[key] = r
+        save()
+    }
+
+    /// A song goal: a run on its part and level played to the end, `accuracy` 0…1. The best is
+    /// kept (percent); at `floor` or better it is done.
+    func goalRun(_ key: String, accuracy: Double, floor: Double, on date: Date = Date()) {
+        var r = goal(key)
+        r.best = max(r.best, Int((accuracy * 100).rounded(.down)))
+        if accuracy >= floor, r.done == nil { r.done = Self.day(date) }
         snapshot.goals[key] = r
         save()
     }

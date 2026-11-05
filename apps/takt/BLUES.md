@@ -167,6 +167,11 @@ Notes from play:
   seventh and the fifth answering; Dm7 / Gm7 / B♭7 A7; a Rhodes instead of the piano, long sax
   tones (the melody's Hard is only 0.97 a second: it is a slow line, by design). Sax solo on the
   ride, out chorus, the last Dm held.
+- **Blue Lantern II** and **Maxwell Street II** (2026-11-04, the map's Level 1 and Level 2
+  songs): the same records with the melody on a level's notes only, the white keys and A C D E
+  G (`--white`, `--five`; GOALS.md §2). Their melody ladders chart the originals' figures within
+  0.04 a second (Blue Lantern II 0.26 · 0.40 · 0.66 · 0.74 · 0.88 · 0.94 · 0.97, Maxwell Street II
+  0.26 · 0.65 · 0.85 · 1.01 · 1.01 · 1.30 · 1.30); the plan asks for an A on Medium.
 
 ## 6. Open
 

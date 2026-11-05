@@ -2,13 +2,13 @@
  "id": "blues-year-1",
  "title": "12 months of keys",
  "source": "misc/takt-12-month-plan.md",
- "about": "Minor scales, blues jamming, writing tracks. About 3 hours a week; a level is two weeks. Start scales at 60 and raise the tempo 4 bpm when a pass is clean: the number moves when the playing does, not the calendar.",
+ "about": "Minor scales, blues jamming, writing tracks. About 3 hours a week; a level is about a week. Start scales at 60 and raise the tempo 4 bpm when a pass is clean: the number moves when the playing does, not the calendar.",
  "levels": [
   {
    "n": 1,
    "quarter": "Q1 — one key, A minor",
-   "title": "A minor pentatonic",
-   "text": "A minor pentatonic, both hands. 12-bar minor blues (Am–Dm–Em). Jam with 5 notes only.",
+   "title": "White keys",
+   "text": "C major and A natural minor, two octaves in eighths: the same fingering twice. Then a song on the white keys.",
    "items": [
     {
      "id": "scale-c",
@@ -20,6 +20,34 @@
      "tempo": 72,
      "start": 60
     },
+    {
+     "id": "scale-a",
+     "kind": "step",
+     "title": "A natural minor, up and down",
+     "detail": "A B C D E F G over two octaves, up and back in eighths, right hand, C major's fingering from A. Every note, nothing extra, at 72.",
+     "module": "S1m",
+     "step": "minor2-rh",
+     "tempo": 72,
+     "start": 60
+    },
+    {
+     "id": "song",
+     "kind": "song",
+     "title": "Blue Lantern on the white keys",
+     "detail": "The sax line on the Stage, Medium, every note a white key. An A clears it: 90% or better.",
+     "song": "song-blue-lantern-white",
+     "part": "melody",
+     "difficulty": "medium",
+     "grade": "A"
+    }
+   ]
+  },
+  {
+   "n": 2,
+   "quarter": "Q1 — one key, A minor",
+   "title": "Five notes",
+   "text": "A minor pentatonic, A C D E G, each hand on its own. Then a song on the five notes.",
+   "items": [
     {
      "id": "scale-rh",
      "kind": "step",
@@ -39,6 +67,33 @@
      "step": "penta2-lh",
      "tempo": 72,
      "start": 60
+    },
+    {
+     "id": "song",
+     "kind": "song",
+     "title": "Maxwell Street on five notes",
+     "detail": "The horn on the Stage, Medium, only A C D E G. An A clears it: 90% or better.",
+     "song": "song-maxwell-street-five",
+     "part": "melody",
+     "difficulty": "medium",
+     "grade": "A"
+    }
+   ]
+  },
+  {
+   "n": 3,
+   "quarter": "Q1 — one key, A minor",
+   "title": "The minor blues",
+   "text": "Am, Dm and Em, then the 12-bar minor blues with the band. Jam with 5 notes only.",
+   "items": [
+    {
+     "id": "chords",
+     "kind": "step",
+     "title": "Three chords",
+     "detail": "Am (A C E), Dm (D F A) and Em (E G B), a new one every bar over the drums: every change, all three notes on the 1, nothing extra, at 60.",
+     "module": "M",
+     "step": "changes",
+     "tempo": 60
     },
     {
      "id": "form",
@@ -61,161 +116,161 @@
    ]
   },
   {
-   "n": 2,
+   "n": 4,
    "quarter": "Q1 — one key, A minor",
    "title": "The blues scale",
    "text": "Blues scale (add the b5). Call and response: 2 bars play, 2 bars rest. Left hand plays root + 7th.",
    "items": []
   },
   {
-   "n": 3,
+   "n": 5,
    "quarter": "Q1 — one key, A minor",
    "title": "A natural minor",
    "text": "A natural minor. See the pentatonic inside it. Land on a chord tone on beat 1.",
    "items": []
   },
   {
-   "n": 4,
+   "n": 6,
    "quarter": "Q1 — one key, A minor",
    "title": "Dorian",
    "text": "Dorian (raised 6th) over Am7–Dm7–E7. This is the minor-blues sound.",
    "items": []
   },
   {
-   "n": 5,
+   "n": 7,
    "quarter": "Q1 — one key, A minor",
    "title": "Swing, triplets, space",
    "text": "Swing, triplets, space. Steal 3 licks, move them around the scale.",
    "items": []
   },
   {
-   "n": 6,
+   "n": 8,
    "quarter": "Q1 — one key, A minor",
    "title": "Checkpoint: a first 12-bar",
    "text": "Checkpoint: record a 3-chorus solo. Write a first 12-bar with a hook.",
    "items": []
   },
   {
-   "n": 7,
+   "n": 9,
    "quarter": "Q2 — more keys, more chords",
    "title": "E minor and D minor",
    "text": "Same material in E minor and D minor. Transpose by shape.",
    "items": []
   },
   {
-   "n": 8,
+   "n": 10,
    "quarter": "Q2 — more keys, more chords",
    "title": "Harmonic minor",
    "text": "Harmonic minor: the raised 7th belongs over the V chord (E7), not everywhere.",
    "items": []
   },
   {
-   "n": 9,
+   "n": 11,
    "quarter": "Q2 — more keys, more chords",
    "title": "Chord vocabulary",
    "text": "Chord vocabulary: 7ths, 9ths, 6ths, sus. Rootless 3-note left-hand voicings.",
    "items": []
   },
   {
-   "n": 10,
+   "n": 12,
    "quarter": "Q2 — more keys, more chords",
    "title": "Turnarounds",
    "text": "Turnarounds: Bm7b5–E7 back to Am; quick change in bar 2.",
    "items": []
   },
   {
-   "n": 11,
+   "n": 13,
    "quarter": "Q2 — more keys, more chords",
    "title": "Major blues",
    "text": "Major blues: major pentatonic and mixolydian, mixing major and minor over a dominant chord. G blues.",
    "items": []
   },
   {
-   "n": 12,
+   "n": 14,
    "quarter": "Q2 — more keys, more chords",
    "title": "Checkpoint: track 2",
    "text": "Checkpoint: track 2, new key, with turnaround. Record it.",
    "items": []
   },
   {
-   "n": 13,
+   "n": 15,
    "quarter": "Q3 — taste",
    "title": "Transcribe by ear",
    "text": "Transcribe 2 short phrases by ear (Otis Spann, Pinetop Perkins, Ray Charles).",
    "items": []
   },
   {
-   "n": 14,
+   "n": 16,
    "quarter": "Q3 — taste",
    "title": "Motif development",
    "text": "Motif development: 3 notes, repeat, vary, answer. Fewer notes, better ones.",
    "items": []
   },
   {
-   "n": 15,
+   "n": 17,
    "quarter": "Q3 — taste",
    "title": "The left hand",
    "text": "Left hand: shuffle, boogie, walking bass. Right hand gets lighter.",
    "items": []
   },
   {
-   "n": 16,
+   "n": 18,
    "quarter": "Q3 — taste",
    "title": "Modes as colors",
    "text": "Modes as colors over a static vamp: Dorian vs Aeolian vs Phrygian, one chord for 5 minutes. The techno-shaped chapter.",
    "items": []
   },
   {
-   "n": 17,
+   "n": 19,
    "quarter": "Q3 — taste",
    "title": "Beyond 12 bars",
    "text": "Beyond 12 bars: 8 and 16-bar forms, Am–F–G, i–bVII–bVI, the Andalusian cadence.",
    "items": []
   },
   {
-   "n": 18,
+   "n": 20,
    "quarter": "Q3 — taste",
    "title": "Checkpoint: track 3",
    "text": "Checkpoint: track 3, not a 12-bar. Minor vamp with a melody.",
    "items": []
   },
   {
-   "n": 19,
+   "n": 21,
    "quarter": "Q4 — range",
    "title": "All 12 keys",
    "text": "Minor pentatonic and blues scale in all 12 keys. 1 key a day, 2 minutes each.",
    "items": []
   },
   {
-   "n": 20,
+   "n": 22,
    "quarter": "Q4 — range",
    "title": "Substitutions",
    "text": "Substitutions: tritone sub, diminished passing chords, gospel-blues moves.",
    "items": []
   },
   {
-   "n": 21,
+   "n": 23,
    "quarter": "Q4 — range",
    "title": "Altered dominants",
    "text": "Altered dominants: b9, #9, 13 on the V. Harmonic minor meets the blues scale.",
    "items": []
   },
   {
-   "n": 22,
+   "n": 24,
    "quarter": "Q4 — range",
    "title": "Two-hand independence",
    "text": "Two-hand independence: solo while comping. Trade 4s with the track.",
    "items": []
   },
   {
-   "n": 23,
+   "n": 25,
    "quarter": "Q4 — range",
    "title": "Form",
    "text": "Form: intro, head, solos, ending. Write a full arranged track.",
    "items": []
   },
   {
-   "n": 24,
+   "n": 26,
    "quarter": "Q4 — range",
    "title": "Final",
    "text": "Final: record a 3-track set in 3 keys and tempos, plus track 4. List next year's gaps.",

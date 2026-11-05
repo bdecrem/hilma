@@ -175,6 +175,19 @@
     "title": "Twice a bar",
     "line": "The minor triad on the 1 and the 3. Lift between them."
    }
+  },
+  {
+   "title": "Three chords",
+   "skill": "Am, Dm and Em, a new one every bar",
+   "goal": "2 clean choruses at 60",
+   "steps": [
+    "changes"
+   ],
+   "theme": {
+    "glyph": "keys:135",
+    "title": "Change on the 1",
+    "line": "Am, Dm, Em, a new one every bar. Pinky, middle, thumb; move the whole hand."
+   }
   }
  ],
  "later": [
@@ -1305,6 +1318,73 @@
     "join": "From the top.",
     "slow": "Clean at {tempo}. It counts at {gateTempo}.",
     "passed": "Clean. Two a bar, every key is next."
+   }
+  },
+  {
+   "id": "changes",
+   "kind": "play",
+   "title": "Three chords",
+   "skill": "lh.triad.changes.minor",
+   "tempo": 60,
+   "gate": 2,
+   "band": [
+    "drums"
+   ],
+   "form": [
+    "Am",
+    "Dm",
+    "Am",
+    "Em",
+    "Dm",
+    "Am",
+    "Em",
+    "Dm",
+    "Am",
+    "Em",
+    "Dm",
+    "Am"
+   ],
+   "chords": {
+    "Am": {
+     "numeral": "i",
+     "root": 9
+    },
+    "Dm": {
+     "numeral": "iv",
+     "root": 2
+    },
+    "Em": {
+     "numeral": "v",
+     "root": 4
+    }
+   },
+   "pattern": [
+    {
+     "beat": 1,
+     "tone": "root",
+     "finger": 5
+    },
+    {
+     "beat": 1,
+     "tone": "minorThird",
+     "finger": 3
+    },
+    {
+     "beat": 1,
+     "tone": "fifth",
+     "finger": 1
+    }
+   ],
+   "about": "The three chords of the minor blues, a new one every bar: Am is A C E, Dm is D F A, Em is E G B. Left hand, all three notes on the 1 and held: pinky on the root, middle finger on the flat third, thumb on the fifth. Every change comes round: Am to Dm, Dm to Am, Am to Em, Em to Dm. The drums alone under you. Move the whole hand in one piece and land on the 1.",
+   "coach": {
+    "intro": "Three chords. Pinky on A.",
+    "change": "Get ready. {next} on the 1.",
+    "hold": "{chord} on the 1. Hold it.",
+    "clean": "Clean. {left} more.",
+    "again": "{problem} Again.",
+    "join": "From the top.",
+    "slow": "Clean at {tempo}. It counts at {gateTempo}.",
+    "passed": "Clean. Three chords, every change."
    }
   },
   {

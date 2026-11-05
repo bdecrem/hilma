@@ -1416,6 +1416,36 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   A device on an older build keeps showing its own max until it updates (its pushes no longer
   stick). Checks 374/374 (the stamp both ways round and with the same stamp; in-order steps).
 
+- **Settings → About → Credits is a modal: 0.1 (96), 2026-11-04.** The photo credits moved out of
+  their own section into `CreditsPanel`, opened from a Credits row under About (DEBUG `-Credits YES`).
+
+- **Chapter 1 is levels 1–3, and a song goal: 0.1 (97), 2026-11-04.** Bart's spec (verbatim in the
+  session; the result in **`GOALS.md` §2**): the plan's chapter 1 became three levels of about a
+  week, 2–3 goals each, and the blues scale is level 4 (26 levels; the map has two more
+  placeholder stops, `chicago-5` and `chicago-6`). **Level 1 · White keys:** C major in eighths,
+  A natural minor in eighths (new step `minor2-rh`, `lesson-S1m` lesson 15: C major's run and
+  fingering from A3), and a song. **Level 2 · Five notes:** the pentatonic, each hand, and a song.
+  **Level 3 · The minor blues:** Three chords (new step `changes`, `lesson-M` lesson 14: Am Dm Am
+  Em / Dm Am Em Dm / Am Em Dm Am, the triad on the 1, the drums alone, 60), the 12-bar, the jam.
+  **Song goals** (`LearningPlan.Kind.song`: `song`, `part`, `difficulty`, `grade`): a Stage run
+  played to the end on that part and fixed level with that grade or better
+  (`GameEngine.Result.floor(of:)`; `Player.onGameRun` → `AppModel.goalRun`, the best accuracy
+  kept in `GoalRecord.best`). Both want an A on Medium melody, on two new charts (Bart: "including
+  new charts"): **Blue Lantern II** (`blue_lantern.py --white`, the sax line on white keys only)
+  and **Maxwell Street II** (`maxwell_street.py --five`, the horn on A C D E G, the riff without
+  the flat fifth, the bass with it), first under All tracks, ladders as their originals'.
+  Hypnotist and Hypnotist II fit the notes on paper but use three or four of them, at 127.
+  A goal started from the map comes back to its level from the song too (`fromLevel`, was
+  `lessonFromLevel`; Back, Esc and the result card's "Map"). Esc from a goal's lesson used to
+  reopen the level and close it again in the same press (three `if`s); it is a `switch` now.
+  **Moved records:** `LearningPlan.moved` maps old keys to new (level 1's pentatonic goals to 2,
+  its 12-bar and jam to 3), applied to every snapshot decoded, so Bart's pentatonic right hand
+  (done at 75) shows on level 2 and builds before 97 can't lose it. Verified: LessonCheck 399/399
+  (the plan, each song's chart on exactly its level's notes, the run goal, the migration, both new
+  steps), `charting-check.ts` 47/47, on the simulator a perfect autoplay of the Level 1 song from
+  its goal recording the goal done at 100 and the old record moving on save, Back landing on
+  Level 1 at 2 of 3, every level's goals screen and both new steps' intros.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without
