@@ -90,13 +90,19 @@ class Song:
         return p["notes"]
 
     @staticmethod
-    def pnote(notes, t, n, ln, lv, finger=None, role=None):
+    def pnote(notes, t, n, ln, lv, finger=None, role=None, tier=None):
+        """`tier`: the lowest tier the note is on at all (`from` in the file), in every pass of
+        the cutter, the phrase cover included: for a figure whose new keys must not leak into
+        the levels under it (Blue Lantern II's hand moves from 6, its Hard-only extras from 7)."""
         e = {"t": t, "n": n, "len": ln, "lv": lv}
         if finger:
             e["f"] = finger
         if role:
             assert role in ROLES, role
             e["r"] = role
+        if tier:
+            assert tier >= 1, tier
+            e["from"] = tier
         notes.append(e)
 
     @staticmethod

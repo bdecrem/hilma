@@ -15,7 +15,13 @@ Every note of a part (`scripts/songs/*.py`, `pnote` / `pchord` in `common.py`) c
 - **a weight, `lv`**: 1 for the hits the part stands on (the 1 of the bar, the long notes of
   the tune), 2 for the ones that make it groove (the 3, the answers), 3 for pushes, pickups
   and ornaments;
-- **a role, `r`** (chord notes only): `root`, `third`, `fifth`, `sixth`, `seventh`, `ninth`.
+- **a role, `r`** (chord notes only): `root`, `third`, `fifth`, `sixth`, `seventh`, `ninth`;
+- **a floor, `from`** (optional, 0.1 (109)): the lowest tier the note is on at all, in every
+  pass, the phrase cover included. A weight says how a note ranks among the notes a tier
+  plays; `from` keeps it off the lower tiers altogether, for a figure whose new keys would
+  otherwise land one onset each on every level below (the phrase pass covers every key a
+  phrase has). Blue Lantern II's hand-move figures are `from` 6 (Medium) and its Hard-only
+  extras `from` 7; the rest of the part has none.
 
 ## The ladder
 
@@ -85,8 +91,9 @@ turn; with two pickups; the phase whole; with its 16th repeats). Its check: seve
 the one below plus more, A C D in every phrase of every one over Beginner (which keeps two of
 them in every four bars).
 
-`beginner`, `easy`, `medium`, `hard` name a tier of each ladder (chords 1 / 3 / 4 / 7, melody
-1 / 3 / 5 / 7). Easy, Medium and Hard are the same charts they were before Beginner came.
+`beginner`, `easy`, `easy+`, `medium`, `hard` name a tier of each ladder (chords 1 / 3 / 4 / 4 / 7,
+melody 1 / 3 / 4 / 5 / 7; Easy+ since 0.1 (109), the chords ladder has no rung of its own for
+it yet). Easy, Medium and Hard are the same charts they were before Beginner came.
 `songs` overrides a part's ladder per song (since 0.1 (59) more than the tier a difficulty
 names): `"easy": 2` names a tier, `"phrase": 12` replaces the ladder's phrase (bars), and
 `"tiers": {"2": {"space": 0}}` patches one tier's `gap` or `space` (0 = never borrows). The
@@ -249,6 +256,18 @@ every song and part.
     to learn, one hand position, 72 notes at Medium. The ladder then needs the song's `space: 0`
     on tiers 2–5, because the held notes are long silences and every tier would borrow the Hard
     passing note back into them.
+
+14. **The next rung up is the same line with a few moves** (0.1 (109)). A day later Bart asked
+    for that chart to keep its name's place as "EZ-2" and for a Medium "a little harder: 2 or 3
+    moments in the song where it requires a hand repositioning". So a level between Easy and
+    Medium, **Easy+** (`"easy+"` in the ladders, tier 4 of both; Blue Lantern II's riff lands
+    there by the ladder's default), and Medium named tier 6 for the song (`"medium": 6`), where
+    three figures sit: the climb C5 D5 E5 F5 off the B4 of bars 12 and 24, the run F4 to D5 off
+    the E4 of bar 34, eighths with a thumb under in each and the hand back on the riff's F
+    after. The figures bring two keys the line never had (E5, F5), and the phrase cover would
+    have put one of each on every level down to Beginner, so they carry `from: 6` (and the
+    Hard-only passing C and pickups `from: 7`, since tier 6 plays weight 3): the lower charts
+    don't change by a note. Easy+ 72, Medium 86, Hard 120.
 
 ## Where this comes from
 

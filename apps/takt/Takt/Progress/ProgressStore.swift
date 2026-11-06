@@ -73,13 +73,26 @@ final class ProgressStore {
         let id: String
         let song: String
         let part: String
-        let difficulty: String
+        private(set) var difficulty: String
         let score: Int
         let accuracy: Double
         let maxCombo: Int
         let grade: String
         let level: Int
         let date: Date
+
+        /// Blue Lantern II's Medium became its Easy+ in 0.1 (109) (2026-11-06, the riff alone;
+        /// Medium took on the hand moves): runs of it from before wear the level they were
+        /// played on, on this device and on the account alike (both decode through here).
+        static let blueLanternRenamed = ISO8601DateFormatter().date(from: "2026-11-06T18:30:00Z")!
+        static func relabeled(_ scores: [ScoreRecord]) -> [ScoreRecord] {
+            scores.map { s in
+                guard s.song == "song-blue-lantern-white", s.difficulty == "medium", s.date < blueLanternRenamed else { return s }
+                var r = s
+                r.difficulty = GameEngine.Difficulty.easyPlus.rawValue
+                return r
+            }
+        }
 
         init(_ r: GameEngine.Result, date: Date = Date()) {
             id = UUID().uuidString
@@ -136,7 +149,7 @@ final class ProgressStore {
             quiz = try c.decodeIfPresent(QuizRecord.self, forKey: .quiz) ?? QuizRecord()
             ear = try c.decodeIfPresent(EarRecord.self, forKey: .ear) ?? EarRecord()
             intervals = try c.decodeIfPresent(EarRecord.self, forKey: .intervals) ?? EarRecord()
-            scores = try c.decodeIfPresent([ScoreRecord].self, forKey: .scores) ?? []
+            scores = ScoreRecord.relabeled(try c.decodeIfPresent([ScoreRecord].self, forKey: .scores) ?? [])
             practice = try c.decodeIfPresent([PracticeEntry].self, forKey: .practice) ?? []
             goals = LearningPlan.migrated(try c.decodeIfPresent([String: GoalRecord].self, forKey: .goals) ?? [:])
             xp = try c.decodeIfPresent([XPEntry].self, forKey: .xp) ?? []

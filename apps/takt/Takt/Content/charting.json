@@ -11,6 +11,7 @@
   ],
   "beginner": 1,
   "easy": 3,
+  "easy+": 4,
   "medium": 4,
   "hard": 7,
   "tiers": [
@@ -78,6 +79,7 @@
   "phrase": 2,
   "beginner": 1,
   "easy": 3,
+  "easy+": 4,
   "medium": 5,
   "hard": 7,
   "tiers": [
@@ -221,6 +223,7 @@
   "song-blue-lantern-white": {
    "melody": {
     "easy": 2,
+    "medium": 6,
     "phrase": 12,
     "tiers": {
      "2": {

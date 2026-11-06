@@ -8,9 +8,11 @@ import Foundation
 /// (`Charting`, charting.json). There is no failing: the song plays to the end.
 final class GameEngine {
     enum Difficulty: String, CaseIterable, Codable {
-        case beginner, easy, medium, hard, adaptive
+        case beginner, easy, easyPlus = "easy+", medium, hard, adaptive
 
-        var title: String { rawValue.capitalized }
+        /// Easy+ (0.1 (109)): a rung between Easy and Medium, for a song whose Medium grew
+        /// (Blue Lantern II's riff moved here when its Medium took on the hand moves).
+        var title: String { self == .easyPlus ? "Easy+" : rawValue.capitalized }
     }
 
     enum Judgment: String, Equatable, Codable {

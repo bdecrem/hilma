@@ -5,7 +5,8 @@ import Foundation
 /// the groove, 3 the pushes and ornaments) and every chord note its role (root, third, …).
 /// Each part has a ladder of tiers, easiest first; a tier says how many chord notes to keep,
 /// which weights play, how close two onsets may come and how long a silence may last. Beginner,
-/// Easy, Medium and Hard name a tier each (a song may name its own), Adaptive walks the ladder.
+/// Easy, Easy+, Medium and Hard name a tier each (a song may name its own), Adaptive walks the
+/// ladder. A note's `from` keeps it off every tier under that number, in every pass.
 struct Charting: Decodable {
     struct Tier: Decodable {
         /// What the level is, for the set list.
@@ -52,15 +53,21 @@ struct Charting: Decodable {
     struct PartOverride: Codable, Equatable {
         let beginner: Int?
         let easy: Int?
+        let easyPlus: Int?
         let medium: Int?
         let hard: Int?
         let phrase: Int?
         let tiers: [String: TierPatch]?
 
+        enum CodingKeys: String, CodingKey {
+            case beginner, easy, easyPlus = "easy+", medium, hard, phrase, tiers
+        }
+
         func level(_ d: GameEngine.Difficulty) -> Int? {
             switch d {
             case .beginner: return beginner
             case .easy: return easy
+            case .easyPlus: return easyPlus
             case .medium: return medium
             case .hard: return hard
             case .adaptive: return nil
@@ -77,9 +84,15 @@ struct Charting: Decodable {
         let phrase: Int?
         let beginner: Int
         let easy: Int
+        /// "easy+" in the file: the rung between Easy and Medium (0.1 (109)).
+        let easyPlus: Int
         let medium: Int
         let hard: Int
         let tiers: [Tier]
+
+        enum CodingKeys: String, CodingKey {
+            case keep, phrase, beginner, easy, easyPlus = "easy+", medium, hard, tiers
+        }
 
         /// Tier n, 1-based.
         func tier(_ n: Int) -> Tier { tiers[max(1, min(tiers.count, n)) - 1] }
@@ -177,8 +190,8 @@ struct Charting: Decodable {
     private func validate() {
         for (name, l) in [("chords", chords), ("melody", melody)] {
             let n = l.tiers.count
-            guard n >= 1, [l.beginner, l.easy, l.medium, l.hard].allSatisfy({ (1...n).contains($0) }),
-                  l.beginner < l.easy, l.easy <= l.medium, l.medium <= l.hard,
+            guard n >= 1, [l.beginner, l.easy, l.easyPlus, l.medium, l.hard].allSatisfy({ (1...n).contains($0) }),
+                  l.beginner < l.easy, l.easy <= l.easyPlus, l.easyPlus <= l.medium, l.medium <= l.hard,
                   l.tiers.allSatisfy({ $0.hits >= 1 && $0.gap >= 0 && ($0.space ?? .infinity) > $0.gap && $0.bonus > 0 && ($0.phrase ?? 1) >= 1 && ($0.minBeats ?? 0) >= 0 }),
                   l.tiers.dropFirst().allSatisfy({ $0.fromAbove != true }), !(l.tiers[0].fromAbove == true && n < 2),
                   (l.phrase ?? 1) >= 1
@@ -197,7 +210,7 @@ struct Charting: Decodable {
             loosens(l.tiers, "the \(name) ladder")
             for (song, parts) in songs {
                 guard let o = parts[name] else { continue }
-                guard [o.beginner, o.easy, o.medium, o.hard].allSatisfy({ $0 == nil || (1...n).contains($0!) }),
+                guard [o.beginner, o.easy, o.easyPlus, o.medium, o.hard].allSatisfy({ $0 == nil || (1...n).contains($0!) }),
                       (o.phrase ?? 1) >= 1, (o.tiers ?? [:]).keys.allSatisfy({ Int($0).map { (1...n).contains($0) } ?? false }),
                       (o.tiers ?? [:]).values.allSatisfy({ ($0.gap ?? 0) >= 0 && ($0.space ?? 0) >= 0 })
                 else { fatalError("charting.json: songs.\(song).\(name)") }
@@ -220,6 +233,7 @@ struct Charting: Decodable {
         switch difficulty {
         case .beginner: return l.beginner
         case .easy: return l.easy
+        case .easyPlus: return l.easyPlus
         case .medium: return l.medium
         case .hard: return l.hard
         case .adaptive: return nil
@@ -270,6 +284,17 @@ struct Charting: Decodable {
         typealias Onset = (t: Int, lv: Int, idx: [Int])
         return tiers.enumerated().map { ti, tier in
             var mask = Array(repeating: false, count: notes.count)
+            // What this tier sees at all: a note with `from` is on no chart under that tier, in
+            // any pass (the phrase cover too), so a figure's new keys don't leak into the levels
+            // under it (Blue Lantern II's hand moves, 0.1 (109)). An onset keeps the notes the
+            // tier sees, the lightest weight among them.
+            func seen(by tierNumber: Int) -> [Onset] {
+                onsets.compactMap { o in
+                    let idx = o.idx.filter { (notes[$0].from ?? 1) <= tierNumber }
+                    return idx.isEmpty ? nil : (t: o.t, lv: idx.map { notes[$0].lv }.min()!, idx: idx)
+                }
+            }
+            let visible = seen(by: ti + 1)
             var gapTicks = tier.gap / secondsPerTick
             var taken: [Int] = []  // onset ticks, sorted
             var isTaken: Set<Int> = []
@@ -381,9 +406,9 @@ struct Charting: Decodable {
                         changed = false
                         var holes = zip(taken, taken.dropFirst()).filter { Double($1 - $0) > spaceTicks + 0.001 }
                         // The part's first and last onsets bound the silences before and after.
-                        if let f = taken.first, let o = onsets.first, Double(f - o.t) > spaceTicks { holes.insert((o.t - 1, f), at: 0) }
-                        if let l = taken.last, let o = onsets.last, Double(o.t - l) > spaceTicks { holes.append((l, o.t + 1)) }
-                        if taken.isEmpty, let a = onsets.first, let z = onsets.last { holes = [(a.t - 1, z.t + 1)] }
+                        if let f = taken.first, let o = visible.first, Double(f - o.t) > spaceTicks { holes.insert((o.t - 1, f), at: 0) }
+                        if let l = taken.last, let o = visible.last, Double(o.t - l) > spaceTicks { holes.append((l, o.t + 1)) }
+                        if taken.isEmpty, let a = visible.first, let z = visible.last { holes = [(a.t - 1, z.t + 1)] }
                         for (a, z) in holes {
                             let mid = Double(a + z) / 2
                             let pick = pool.filter { $0.t > a && $0.t < z && !isTaken.contains($0.t) && fits($0.t) }
@@ -395,9 +420,9 @@ struct Charting: Decodable {
                 return (picks, rule)
             }
             // The tier below, whole (its onsets fit this tier's gap: the ladder only loosens).
-            for o in onsets where seed.contains(o.t) { take(o) }
+            for o in visible where seed.contains(o.t) { take(o) }
             if ti == 1, tiers[0].fromAbove == true {
-                for o in onsets where aboveRule.contains(o.t) && !isTaken.contains(o.t) && fits(o.t) { take(o) }
+                for o in visible where aboveRule.contains(o.t) && !isTaken.contains(o.t) && fits(o.t) { take(o) }
             }
             // The bottom tier (Beginner) is cut from the chart the tier above makes with nothing
             // under it: it takes its notes only among the onsets that chart takes by rule (its
@@ -412,14 +437,14 @@ struct Charting: Decodable {
                 let minLen = min(Int((beats * Double(ticksPerBeat)).rounded()), usualLength)
                 return pool.filter { o in o.idx.contains { notes[$0].len >= minLen } }
             }
-            var pool = onsets
+            var pool = visible
             if ti == 0, tier.fromAbove == true {
                 let saved = (taken, isTaken, mask)
-                let above = chart(tiers[1], pool: allowed(tiers[1], onsets), prefer: [])
+                let above = chart(tiers[1], pool: allowed(tiers[1], seen(by: 2)), prefer: [])
                 (taken, isTaken, mask) = saved
                 preferNext = above.picks
                 aboveRule = above.rule
-                pool = onsets.filter { above.rule.contains($0.t) }
+                pool = visible.filter { above.rule.contains($0.t) }
             }
             _ = chart(tier, pool: allowed(tier, pool), prefer: prefer)
             return mask

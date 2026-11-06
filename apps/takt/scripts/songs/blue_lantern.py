@@ -11,11 +11,15 @@ its own, one riff in one hand. Every odd bar is the riff bar, D5 on the 1 held, 
 of 3 (with the kick); every even bar holds one note on the 1 that follows the chord: A over the
 Dm7 (C the second time, the seventh), G over the Gm7, E then B over the A7s of the turnaround,
 back to D. The hand never moves: the thumb on F4 (reaching down to E), 2 on G, 3 on A, 4 on C
-(reaching down to B), 5 on D. Medium is exactly that, 72 notes (2026-11-05: Bart found the
-sax line's 120 "too hard", and asked for simpler patterns that repeat more often; it had 24
-different bars); Hard adds the passing C between the D and the F, and in the solo chorus two
-pickup eighths into every riff. Every note of the part, every level, is a white key, and
-Medium plays all seven.
+(reaching down to B), 5 on D. Easy+ is exactly that, 72 notes (2026-11-05: Bart found the
+sax line's 120 "too hard" as Medium, and asked for simpler patterns that repeat more often; it
+had 24 different bars; 2026-11-06 he asked for that chart to become "EZ-2" and for a Medium a
+little harder). Medium (tier 6: `from` 6 on the notes) is the riff with three figures that
+move the hand, a thumb under in each: the climb C5 D5 E5 F5 in eighths off the B4 of the
+turnaround's last bar (bars 12 and 24, into the second chorus and into the solo) and the run
+F4 to D5 in eighths off the E4 of bar 34 (the solo's A7); 86 notes. Hard (tier 7: `from` 7) adds the passing C between
+the D and the F, and in the solo chorus two pickup eighths into every riff but the run's (120).
+Every note of the part, every level, is a white key, and Easy+ already plays all seven.
 
 The slow-funk minor blues (the thrill-is-gone feel): kick on the 1 and the "and" of 3, the snare
 on 2 and 4, the hat in sixteenths with the eighths accented, an open hat into the 1 every other
@@ -217,13 +221,19 @@ SOLO_LINE = {
     11: [(0, C5, 24, 1), (24, Gs4, 6, 3), (30, A4, 18, 2)],
 }
 
-# Blue Lantern II: one riff in one hand (the module's docstring). The riff bar: D5 on the 1
-# (1), the passing C5 on the "and" of 2 (3, Hard), F4 on the "and" of 3 with the kick (2).
-# The bar after it holds one note on the 1 (1), the chord's: LANDING by bar of the form. In the
-# solo chorus that note lets go on the 4 for two pickup eighths into the riff (3, Hard).
-RIFF = [(0, D5, 18, 1), (18, C5, 12, 3), (30, F4, 18, 2)]
+# Blue Lantern II: one riff in one hand (the module's docstring). Each note is (tick, key,
+# length, weight, from): `from` is the lowest tier the note is on at all (None: every tier).
+# The riff bar: D5 on the 1 (1), the passing C5 on the "and" of 2 (3, Hard only), F4 on the
+# "and" of 3 with the kick (2). The bar after it holds one note on the 1 (1), the chord's:
+# LANDING by bar of the form. In the solo chorus that note lets go on the 4 for two pickup
+# eighths into the riff (3, Hard only). FIGURES, by (chorus, bar of the form), from Medium up
+# (tier 6): the landing note holds until the figure starts, then eighths that move the hand.
+RIFF = [(0, D5, 18, 1, None), (18, C5, 12, 3, 7), (30, F4, 18, 2, None)]
 LANDING = {1: A4, 3: C5, 5: G4, 7: A4, 9: E4, 11: B4}
-PICKUP = [(36, A4, 6, 3), (42, C5, 6, 3)]
+PICKUP = [(36, A4, 6, 3, 7), (42, C5, 6, 3, 7)]
+CLIMB = [(24, C5, 6, 3, 6), (30, D5, 6, 3, 6), (36, E5, 6, 3, 6), (42, F5, 6, 3, 6)]
+RUN = [(12, F4, 6, 3, 6), (18, G4, 6, 3, 6), (24, A4, 6, 3, 6), (30, B4, 6, 3, 6), (36, C5, 6, 3, 6), (42, D5, 6, 3, 6)]
+FIGURES = {(0, 11): CLIMB, (1, 11): CLIMB, (SOLO, 9): RUN}  # bars 12, 24 and 34 (bar 48 is the final D5)
 
 melody = s.part("melody", "White keys" if WHITE else "The sax line", "rhodes", "horns", "sax")
 for c in range(CHORUSES):
@@ -235,13 +245,14 @@ for c in range(CHORUSES):
             continue
         if WHITE:
             if b % 2 == 0:
-                for t, n, ln, lv in RIFF:
-                    s.pnote(melody, o + t, n, ln, lv)
+                for t, n, ln, lv, frm in RIFF:
+                    s.pnote(melody, o + t, n, ln, lv, tier=frm)
             else:
-                s.pnote(melody, o, LANDING[b], 36 if c == SOLO else 48, 1)
-                if c == SOLO:
-                    for t, n, ln, lv in PICKUP:
-                        s.pnote(melody, o + t, n, ln, lv)
+                figure = FIGURES.get((c, b))
+                hold = figure[0][0] if figure else (36 if c == SOLO else 48)
+                s.pnote(melody, o, LANDING[b], hold, 1)
+                for t, n, ln, lv, frm in figure or (PICKUP if c == SOLO else []):
+                    s.pnote(melody, o + t, n, ln, lv, tier=frm)
             continue
         phrases = SOLO_LINE if c == SOLO else HEAD
         for t, n, ln, lv in phrases[b]:
@@ -250,7 +261,9 @@ for c in range(CHORUSES):
             s.pnote(melody, o + 45, C5 if b == 3 else A4, 3, 3)  # a pickup into the next phrase
 if WHITE:
     assert all(e["n"] % 12 in (0, 2, 4, 5, 7, 9, 11) for e in melody), "a black key in the white-key line"
-    assert {e["n"] % 12 for e in melody if e["lv"] <= 2} == {0, 2, 4, 5, 7, 9, 11}, "Medium wants all seven white keys"
+    assert {e["n"] % 12 for e in melody if e["lv"] <= 2} == {0, 2, 4, 5, 7, 9, 11}, "Easy+ wants all seven white keys"
+    assert sum(1 for e in melody if e.get("from") == 6) == 14, "the three figures, 14 notes from Medium up"
+    assert sum(1 for e in melody if e.get("from") == 7) == 34, "the passing Cs and the pickups, 34 notes on Hard only"
 s.fingered(melody)
 s.chart_to_channel(melody, s.horns, lambda e: 0.8 if e["lv"] == 1 else 0.66, inst=None)
 for e in s.horns:

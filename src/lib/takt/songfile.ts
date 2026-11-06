@@ -22,6 +22,9 @@ export type PartNote = {
   f?: number
   /** A chord note's role: root, third, fifth, sixth, seventh, ninth. */
   r?: string
+  /** The lowest tier the note is on at all, in every pass of the cutter (1 when absent): a
+   *  figure whose new keys must not leak into the levels under it. */
+  from?: number
 }
 
 export type Part = {
@@ -173,6 +176,10 @@ export function validateSong(s: SongFile, keep: string[] | null): string | null 
       }
       if (!(Number.isInteger(n.len) && n.len > 0)) {
         problems.push(`part ${k}: a note at tick ${n.t} with length ${n.len}`)
+        break
+      }
+      if (n.from != null && !(Number.isInteger(n.from) && n.from >= 1)) {
+        problems.push(`part ${k}: a note at tick ${n.t} from tier ${n.from} (a tier number, 1 or more)`)
         break
       }
       if (!(Number.isInteger(n.n) && n.n >= 21 && n.n <= 108)) {

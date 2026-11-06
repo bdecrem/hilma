@@ -106,7 +106,8 @@ enum DebugHooks {
             print("tier \(ti + 1): \(picked.count) notes")
             for (k, i) in picked.enumerated() {
                 let n = notes[i]
-                print(String(format: "  t=%4d  %2d.%d  n=%2d len=%2d lv=%d f=%d", n.t, n.t / tpBar + 1, (n.t % tpBar) / tpb + 1, n.n, n.len, n.lv, fingers[k]))
+                print(String(format: "  t=%4d  %2d.%d  n=%2d len=%2d lv=%d%@ f=%d", n.t, n.t / tpBar + 1, (n.t % tpBar) / tpb + 1, n.n, n.len, n.lv,
+                             n.from.map { " from=\($0)" } ?? "", fingers[k]))
             }
         }
         exit(0)

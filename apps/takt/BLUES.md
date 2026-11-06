@@ -174,9 +174,10 @@ Notes from play:
   figures within 0.04 a second (0.26 · 0.65 · 0.85 · 1.01 · 1.01 · 1.30 · 1.30); the plan asks
   for an A on Medium. Blue Lantern II has had a line of its own since 0.1 (107), 2026-11-05: one
   riff in one hand, a held note between (Bart found the sax line's Medium, 120 notes, too hard,
-  and asked for simpler patterns that repeat more often), 0.35 · 0.38 · 0.38 · 0.53 · 0.53 ·
-  0.79 · 0.79 a second (48 · 52 · 52 · 72 · 72 · 108 · 108 notes): the anchors, then the riff,
-  then the riff with its passing note and pickups.
+  and asked for simpler patterns that repeat more often), and since 0.1 (109), 2026-11-06, a
+  rung above it: 0.35 · 0.38 · 0.38 · 0.53 · 0.53 · 0.63 · 0.88 a second (48 · 52 · 52 · 72 ·
+  72 · 86 · 120 notes): the anchors, then the riff (Easy+), then the riff with three hand-move
+  figures (Medium, tier 6 by the song's own naming), then with its passing note and pickups too.
 
 ## 6. Open
 

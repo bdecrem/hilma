@@ -1604,6 +1604,45 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   stays on his board (the record holds no presses to regrade). Unchanged: the Good window, the
   wrong-key rule, the thresholds, the chart.
 
+- **Easy+, and a Medium with hand moves: 0.1 (109), 2026-11-06.** Bart, after the scoring
+  fix: "(1) tweak the app UI as needed so the difficulty level row can scroll and accomodate
+  additional difficulties, in game etc (2) then rename the CURRENT Blue Lantern II Medium to
+  EZ-2 or some such (3) then make a new Medium difficulty for melody on that track … an
+  evolution of the current chart, BUT a little harder: 2 or 3 moments in the song where it
+  requires a hand repositioning". **The level:** `GameEngine.Difficulty.easyPlus` ("easy+",
+  shown as Easy+) between Easy and Medium, in both ladders (`"easy+": 4`: melody "Most of the
+  tune, nothing too quick", chords the same tier as Medium for now), in song overrides
+  (`PartOverride.easyPlus`, key "easy+"), the mod agent's types, `set_levels` tool and prompt
+  (`src/lib/takt/charting.ts`, `mod-tools.ts`, `mod-agent.ts`), and the Agent sheet's figure
+  row. The set list's Level chips (`Chips`, `scrolls: true`) sit in a horizontal ScrollView
+  that slides only when the row is wider than its place (`.scrollBounceBehavior(.basedOnSize)`);
+  the Part chips keep their own width beside it. **Blue Lantern II:** its riff (72 notes) is
+  Easy+ by the ladder's default (tiers 4 and 5 both chart it); Medium is named tier 6 for the
+  song (`"medium": 6` in charting.json) and carries three figures from the generator
+  (`blue_lantern.py --white`, `FIGURES`): the climb C5 D5 E5 F5 in eighths off the B4 of bars
+  12 and 24 (the landing holds two beats), the run F4 G4 A4 B4 C5 D5 off the E4 of bar 34 (the
+  solo's A7, holding one beat, its pickups dropped), a thumb under in each (bar 12 and 24: B4
+  4, C5 1 tuck, D5 2, E5 3, F5 5, then the riff's D5 under 4 and F4 back under the thumb; bar
+  34: E4 2, F4 3, G4 1 tuck, A4 2, B4 3, C5 4, D5 5). 86 notes; Hard 120 (the passing Cs and
+  the pickups). **A note floor, `from`:** the figures bring E5 and F5, keys the line never had,
+  and the cutter's phrase pass covers every key of a phrase at every tier, so weights alone
+  would have put one E5 and one F5 on Beginner, Easy and Easy+. `Song.Note.from` (optional;
+  `pnote(..., tier=)` in common.py) is the lowest tier a note is on at all, in every pass
+  (`Charting.masks` sees only `from ≤ tier`; ported to charting.ts the same way,
+  charting-check 47/47 against the app's `-DumpCharts`): the figures `from` 6, the Hard-only
+  extras (the passing C, the pickups) `from` 7, so tier 6 is exactly Easy+ plus the figures and
+  the lower charts don't change by a note (CHARTING.md rule 14). The ladder: 48 · 52 · 52 ·
+  72 · 72 · 86 · 120. `-ChartDump` prints `from=` on such notes. **Records:** Blue Lantern II
+  runs filed under "medium" before 2026-11-06 18:30Z (Bart's D of this morning) read as
+  "easy+" on decode (`ScoreRecord.relabeled`, local file and account alike): they were played
+  on that chart. **Checks 441/441:** Easy+ is one hand position (72); Medium is Easy+ plus
+  the three figures (86), a tuck in each of bars 12, 24 and 34 by the Call steps, E5/F5 on no
+  lower level, the ladder as above; the "Beginner changes nothing above it" check shifts
+  `from` down with the ladder it cuts; Bart's run replays on Easy+. The Level 1 goal stays
+  "Blue Lantern on the white keys, Medium, an A": the bar rose with the chart, as asked. Not
+  yet: the chords ladder has no rung of its own for Easy+ (it charts Medium's); TestFlight is
+  on 104.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

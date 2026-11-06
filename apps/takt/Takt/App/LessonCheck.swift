@@ -1651,7 +1651,7 @@ enum LessonCheck {
                     guard tiers[0]["fromAbove"] as? Bool == true else { continue }
                     tiers.removeFirst()
                     l["tiers"] = tiers
-                    for n in ["beginner", "easy", "medium", "hard"] { l[n] = max(1, (l[n] as! Int) - 1) }
+                    for n in ["beginner", "easy", "easy+", "medium", "hard"] { l[n] = max(1, (l[n] as! Int) - 1) }
                     d[part] = l
                 }
                 var a = d["adaptive"] as! [String: Any]
@@ -1663,7 +1663,7 @@ enum LessonCheck {
                     var parts = partsAny as! [String: Any]
                     for (part, oAny) in parts {
                         var o = oAny as! [String: Any]
-                        for n in ["beginner", "easy", "medium", "hard"] where o[n] != nil { o[n] = max(1, (o[n] as! Int) - 1) }
+                        for n in ["beginner", "easy", "easy+", "medium", "hard"] where o[n] != nil { o[n] = max(1, (o[n] as! Int) - 1) }
                         if let tiers = o["tiers"] as? [String: Any] {
                             var moved: [String: Any] = [:]
                             for (k, v) in tiers where Int(k)! > 1 { moved[String(Int(k)! - 1)] = v }
@@ -1679,8 +1679,10 @@ enum LessonCheck {
             for s in songs {
                 for k in s.partKeys {
                     let masks = s.masks(k)
-                    let plain = s.masks(k, charting: without)
+                    // A note's `from` is a tier number: it moves down a tier with the ladder.
                     let all = s.notes(k)
+                    let shifted = all.map { Song.Note(t: $0.t, n: $0.n, len: $0.len, lv: $0.lv, f: $0.f, r: $0.r, from: $0.from.map { max(1, $0 - 1) }) }
+                    let plain = without.masks(shifted, song: s.name, part: k, tempo: s.meta.tempo, ticksPerBeat: s.band.ticksPerBeat, ticksPerBar: s.ticksPerBar)
                     var diffs: [String] = []
                     for (li, (a, b)) in zip(masks.dropFirst(), plain).enumerated() where a != b {
                         let d = all.indices.filter { a[$0] != b[$0] }
@@ -1849,8 +1851,8 @@ enum LessonCheck {
                     // Bart's run of 2026-11-06 as the record decodes it (5,780 points at tier 5's
                     // 1.7, no multiplier, 55%): 44 notes in the window, 24 of the right keys early
                     // by 200 ms, 4 let go by, 8 stray keys. He counted three or four misses and
-                    // gave himself a B.
-                    let g = GameEngine(song: bl2, part: .melody, difficulty: .medium)
+                    // gave himself a B. The chart he played is Easy+ since 0.1 (109) (then Medium).
+                    let g = GameEngine(song: bl2, part: .melody, difficulty: .easyPlus)
                     let ms2 = 60000 / (Double(bl2.meta.tempo) * Double(tpb))
                     var tick = -Double(bl2.ticksPerBar)
                     var i = 0, k = 0
@@ -2070,7 +2072,7 @@ enum LessonCheck {
         // MARK: Fingering by hand position (0.1 (104))
         do {
             func line(_ keys: [Int], step: Int = 6) -> [Song.Note] {
-                keys.enumerated().map { Song.Note(t: $0.offset * step, n: $0.element, len: step, lv: 1, f: nil, r: nil) }
+                keys.enumerated().map { Song.Note(t: $0.offset * step, n: $0.element, len: step, lv: 1, f: nil, r: nil, from: nil) }
             }
             func plan(_ notes: [Song.Note], right: Bool = true) -> [Int] { Fingering.plan(notes, right: right, ticksPerBeat: 12) }
             let scale = [60, 62, 64, 65, 67, 69, 71, 72, 74, 76, 77, 79, 81, 83, 84]
@@ -2092,8 +2094,8 @@ enum LessonCheck {
                       return (d > 0) == (p.1 > p.0) && p.0 != p.1
                   }, first.map(String.init).joined(separator: " "))
             check("fingering: a repeated key keeps its finger, a leap after a rest moves the hand",
-                  plan(line([67, 67, 67], step: 12) + [Song.Note(t: 96, n: 79, len: 12, lv: 1, f: nil, r: nil), Song.Note(t: 108, n: 81, len: 12, lv: 1, f: nil, r: nil)]) == [1, 1, 1, 1, 2]
-                  || plan(line([67, 67, 67], step: 12) + [Song.Note(t: 96, n: 79, len: 12, lv: 1, f: nil, r: nil), Song.Note(t: 108, n: 81, len: 12, lv: 1, f: nil, r: nil)]) == [1, 1, 1, 2, 3])
+                  plan(line([67, 67, 67], step: 12) + [Song.Note(t: 96, n: 79, len: 12, lv: 1, f: nil, r: nil, from: nil), Song.Note(t: 108, n: 81, len: 12, lv: 1, f: nil, r: nil, from: nil)]) == [1, 1, 1, 1, 2]
+                  || plan(line([67, 67, 67], step: 12) + [Song.Note(t: 96, n: 79, len: 12, lv: 1, f: nil, r: nil, from: nil), Song.Note(t: 108, n: 81, len: 12, lv: 1, f: nil, r: nil, from: nil)]) == [1, 1, 1, 2, 3])
             // Every blues melody at every tier, judged as a hand: inside a beat, no finger slides
             // between two keys within an octave, and within a fifth no crossing but the thumb's
             // under 2–4 (or 2–4 over it) and no stretch past what the pair reaches. Past a fifth
@@ -2124,8 +2126,9 @@ enum LessonCheck {
                 check("fingering: \(song.meta.title) melody at every tier: no slide, no crossing but the thumb's, no stretch past the hand",
                       faults.isEmpty, faults.prefix(4).joined(separator: "; "))
             }
-            // Blue Lantern II on Medium (the Level 1 goal), for the eye.
+            // Blue Lantern II on Easy+ and Medium (the Level 1 goal), for the eye.
             let bl = GameEngine(song: Song.bundled("song-blue-lantern-white"), part: .melody, difficulty: .medium)
+            let easyPlus = bl.charting.tier(.easyPlus, song: bl.song.name, part: .melody)!
             let medium = bl.level(atBar: 0)
             var rows: [Int: [String]] = [:]
             for i in bl.notes.indices where bl.masks[medium - 1][i] {
@@ -2135,13 +2138,30 @@ enum LessonCheck {
             for bar in rows.keys.sorted() { print(String(format: "  bar %2d: ", bar + 1) + rows[bar]!.joined(separator: "  ")) }
             // Since 0.1 (107) the line is one riff in one hand (blue_lantern.py --white): every
             // key under the same finger all song long, D5 the pinky, F4 the thumb and E4 its
-            // reach down, and Medium exactly the riff and its landing notes, 72 of them.
-            let byKey = Dictionary(grouping: bl.notes.indices.filter { bl.masks[medium - 1][$0] }, by: { bl.notes[$0].n })
-                .mapValues { Set($0.map { bl.fingers[medium - 1][$0]! }) }
-            let mediumCount = bl.masks[medium - 1].filter { $0 }.count
-            check("fingering: Blue Lantern II on Medium is one hand position: \(byKey.count) keys, each under one finger all song, D5 under 5, F4 and E4 under the thumb; \(mediumCount) notes",
-                  byKey.count == 7 && byKey.values.allSatisfy { $0.count == 1 } && byKey[74] == [5] && byKey[65] == [1] && byKey[64] == [1] && mediumCount == 72,
+            // reach down, and (Easy+ since 0.1 (109), Medium before it) exactly the riff and its
+            // landing notes, 72 of them.
+            let byKey = Dictionary(grouping: bl.notes.indices.filter { bl.masks[easyPlus - 1][$0] }, by: { bl.notes[$0].n })
+                .mapValues { Set($0.map { bl.fingers[easyPlus - 1][$0]! }) }
+            let easyPlusCount = bl.masks[easyPlus - 1].filter { $0 }.count
+            check("fingering: Blue Lantern II on Easy+ (tier \(easyPlus)) is one hand position: \(byKey.count) keys, each under one finger all song, D5 under 5, F4 and E4 under the thumb; \(easyPlusCount) notes",
+                  easyPlus == 4 && byKey.count == 7 && byKey.values.allSatisfy { $0.count == 1 } && byKey[74] == [5] && byKey[65] == [1] && byKey[64] == [1] && easyPlusCount == 72,
                   byKey.keys.sorted().map { "\(name($0))/\(byKey[$0]!.sorted().map(String.init).joined(separator: ","))" }.joined(separator: " "))
+            // Medium (0.1 (109); Bart: "current difficulty + 2 or 3 times where i need to tuck
+            // or move my hand") is Easy+ with three figures, on the chart from tier 6 up (`from`
+            // on the notes): the climb C5 D5 E5 F5 off the B4 of bars 12 and 24, the run F4 to
+            // D5 off the E4 of bar 34; a thumb under in each, and the hand back on the riff's F
+            // after. Beginner, Easy and Easy+ never see the figures' keys (E5, F5): the phrase
+            // cover would have put one of each on every level.
+            let mediumOn = Set(bl.notes.indices.filter { bl.masks[medium - 1][$0] })
+            let easyPlusOn = Set(bl.notes.indices.filter { bl.masks[easyPlus - 1][$0] })
+            let figureBars = Set(mediumOn.subtracting(easyPlusOn).map { bl.notes[$0].t / 48 + 1 })
+            let lowKeys = Set((0..<easyPlus).flatMap { t in bl.notes.indices.filter { bl.masks[t][$0] }.map { bl.notes[$0].n } })
+            let tuckBars = Set(Call.steps(game: bl, from: 0).filter { $0.crossing == .tuck }.map { $0.tick / 48 + 1 })
+            let ladderCounts = bl.masks.map { $0.filter { $0 }.count }
+            check("charting: Blue Lantern II on Medium (tier \(medium)) is Easy+ and three figures: \(mediumOn.count) notes, the figures in bars \(figureBars.sorted()), a tuck in each (\(tuckBars.sorted())), E5 and F5 on no lower level; the ladder \(ladderCounts)",
+                  medium == 6 && easyPlusOn.isSubset(of: mediumOn) && mediumOn.count == 86 && figureBars == [12, 24, 34] && tuckBars == [12, 24, 34]
+                  && !lowKeys.contains(76) && !lowKeys.contains(77) && ladderCounts == [48, 52, 52, 72, 72, 86, 120]
+                  && bl.charting.tier(.hard, song: bl.song.name, part: .melody) == 7)
         }
 
         // Call (Call.swift): the next note called out, finger then key, then the crossing, and
@@ -2159,8 +2179,8 @@ enum LessonCheck {
                 return c == .tuck ? (d > 0 && fb == 1 && fa > 1) : (d < 0 && fa == 1 && fb > 1)
             }
             let tucks = steps.filter { $0.crossing == .tuck }.count, overs = steps.filter { $0.crossing == .over }.count
-            check("call: Blue Lantern II melody on Medium is \(steps.count) single-note steps, one per note of the tier, the tier's fingers; every tuck the thumb under going up and every over a finger over it coming down, inside a crossing's reach (\(tucks) tucks, \(overs) overs)",
-                  steps.count == active.count && !steps.isEmpty && single && fingered && crossingsOK && steps.flatMap(\.indices) == active)
+            check("call: Blue Lantern II melody on Medium is \(steps.count) single-note steps, one per note of the tier, the tier's fingers; every tuck the thumb under going up and every over a finger over it coming down, inside a crossing's reach (\(tucks) tucks, \(overs) overs: the three figures' thumbs under, 0.1 (109))",
+                  steps.count == active.count && !steps.isEmpty && single && fingered && crossingsOK && steps.flatMap(\.indices) == active && tucks == 3 && overs == 0)
             var engine = Call.Engine(steps: steps, right: true, spelling: .of(key: bl.song.meta.key))
             let first = engine.phrase
             let wrongKey = steps[0].notes[0].key + 1

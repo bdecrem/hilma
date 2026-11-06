@@ -19,6 +19,10 @@ struct Song {
         let f: Int?
         /// A chord note's role: root, third, fifth, sixth, seventh, ninth.
         let r: String?
+        /// The lowest tier the note is on at all, in every pass of the cutter (1 when absent):
+        /// a figure whose new keys must not leak into the levels under it (Blue Lantern II's
+        /// hand moves from tier 6, its Hard-only extras from 7; 0.1 (109)).
+        let from: Int?
     }
 
     struct Part: Decodable {
@@ -114,7 +118,7 @@ struct Song {
                 guard p.notes.allSatisfy({ $0.r.map(keep.contains) ?? false }) else { throw fail("a chord note without a role charting.json keeps") }
             }
             for n in p.notes {
-                guard (1...3).contains(n.lv), n.t >= 0, n.t < end, n.len > 0 else { throw fail("bad note \(n)") }
+                guard (1...3).contains(n.lv), n.t >= 0, n.t < end, n.len > 0, (n.from ?? 1) >= 1 else { throw fail("bad note \(n)") }
             }
         }
         guard band.form.count == band.bars, band.bars >= 2, meta.tempo >= 40, !meta.sections.isEmpty,

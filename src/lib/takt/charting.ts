@@ -27,6 +27,7 @@ export type TierPatch = { gap?: number | null; space?: number | null }
 export type PartOverride = {
   beginner?: number | null
   easy?: number | null
+  'easy+'?: number | null
   medium?: number | null
   hard?: number | null
   phrase?: number | null
@@ -40,6 +41,8 @@ export type Ladder = {
   phrase?: number | null
   beginner: number
   easy: number
+  /** The rung between Easy and Medium (0.1 (109)); an older app's charting.json has none. */
+  'easy+'?: number | null
   medium: number
   hard: number
   tiers: Tier[]
@@ -54,8 +57,9 @@ export type Charting = {
   songs: Record<string, SongOverride>
 }
 
-export type Difficulty = 'beginner' | 'easy' | 'medium' | 'hard' | 'adaptive'
-export const DIFFICULTIES: Difficulty[] = ['beginner', 'easy', 'medium', 'hard']
+export type Difficulty = 'beginner' | 'easy' | 'easy+' | 'medium' | 'hard' | 'adaptive'
+export type FixedDifficulty = Exclude<Difficulty, 'adaptive'>
+export const DIFFICULTIES: FixedDifficulty[] = ['beginner', 'easy', 'easy+', 'medium', 'hard']
 
 export function looksLikeCharting(x: unknown): x is Charting {
   if (!x || typeof x !== 'object') return false
@@ -96,11 +100,12 @@ export function tiersOf(c: Charting, override: SongOverride | null, part: PartKe
 /** The tier a fixed difficulty plays (null on adaptive). */
 export function tierFor(c: Charting, override: SongOverride | null, part: PartKey, d: Difficulty): number | null {
   const l = ladder(c, part)
-  const own = override?.[part]?.[d as 'beginner' | 'easy' | 'medium' | 'hard']
-  if (d !== 'adaptive' && own != null) return Math.max(1, Math.min(l.tiers.length, own))
+  const own = d !== 'adaptive' ? override?.[part]?.[d] : null
+  if (own != null) return Math.max(1, Math.min(l.tiers.length, own))
   switch (d) {
     case 'beginner': return l.beginner
     case 'easy': return l.easy
+    case 'easy+': return l['easy+'] ?? l.easy
     case 'medium': return l.medium
     case 'hard': return l.hard
     default: return null
@@ -116,7 +121,7 @@ export function validateOverride(c: Charting, override: SongOverride): string | 
     const l = ladder(c, part)
     const n = l.tiers.length
     for (const d of DIFFICULTIES) {
-      const v = o[d as 'beginner' | 'easy' | 'medium' | 'hard']
+      const v = o[d]
       if (v != null && !(Number.isInteger(v) && v >= 1 && v <= n)) return `${part}.${d}: tier ${v} is not 1…${n}`
     }
     if (o.phrase != null && !(Number.isInteger(o.phrase) && o.phrase >= 1)) return `${part}.phrase must be a whole number of bars, 1 or more`
@@ -184,6 +189,15 @@ export function masks(
 
   return tiers.map((tier, ti) => {
     let mask: boolean[] = new Array(notes.length).fill(false)
+    // What this tier sees at all: a note with `from` is on no chart under that tier, in any
+    // pass (the phrase cover too), so a figure's new keys don't leak into the levels under it.
+    // An onset keeps the notes the tier sees, the lightest weight among them. Same as Charting.swift.
+    const seen = (tierNumber: number): Onset[] =>
+      onsets.flatMap((o) => {
+        const idx = o.idx.filter((i) => (notes[i].from ?? 1) <= tierNumber)
+        return idx.length ? [{ t: o.t, lv: Math.min(...idx.map((i) => notes[i].lv)), idx }] : []
+      })
+    const visible = seen(ti + 1)
     let gapTicks = tier.gap / secondsPerTick
     let taken: number[] = []
     let isTaken = new Set<number>()
@@ -306,13 +320,13 @@ export function masks(
           changed = false
           let holes: [number, number][] = []
           for (let i = 1; i < taken.length; i++) if (taken[i] - taken[i - 1] > spaceTicks + 0.001) holes.push([taken[i - 1], taken[i]])
-          if (taken.length && onsets.length) {
-            const f = taken[0], o = onsets[0]
+          if (taken.length && visible.length) {
+            const f = taken[0], o = visible[0]
             if (f - o.t > spaceTicks) holes.unshift([o.t - 1, f])
-            const lt = taken[taken.length - 1], oz = onsets[onsets.length - 1]
+            const lt = taken[taken.length - 1], oz = visible[visible.length - 1]
             if (oz.t - lt > spaceTicks) holes.push([lt, oz.t + 1])
           }
-          if (!taken.length && onsets.length) holes = [[onsets[0].t - 1, onsets[onsets.length - 1].t + 1]]
+          if (!taken.length && visible.length) holes = [[visible[0].t - 1, visible[visible.length - 1].t + 1]]
           for (const [a, z] of holes) {
             const mid = (a + z) / 2
             let pick: Onset | null = null
@@ -330,9 +344,9 @@ export function masks(
       return { picks, rule }
     }
     // The tier below, whole (its onsets fit this tier's gap: the ladder only loosens).
-    for (const o of onsets) if (seed.has(o.t)) take(o)
+    for (const o of visible) if (seed.has(o.t)) take(o)
     if (ti === 1 && tiers[0].fromAbove === true) {
-      for (const o of onsets) if (aboveRule.has(o.t) && !isTaken.has(o.t) && fits(o.t)) take(o)
+      for (const o of visible) if (aboveRule.has(o.t) && !isTaken.has(o.t) && fits(o.t)) take(o)
     }
     const allowed = (t: Tier, pool: Onset[]): Onset[] => {
       const beats = t.minBeats
@@ -340,16 +354,16 @@ export function masks(
       const minLen = Math.min(Math.round(beats * ticksPerBeat), usualLength)
       return pool.filter((o) => o.idx.some((i) => notes[i].len >= minLen))
     }
-    let pool = onsets
+    let pool = visible
     if (ti === 0 && tier.fromAbove === true) {
       const saved = { taken: [...taken], isTaken: new Set(isTaken), mask: [...mask] }
-      const above = chart(tiers[1], allowed(tiers[1], onsets), new Set())
+      const above = chart(tiers[1], allowed(tiers[1], seen(2)), new Set())
       taken = saved.taken
       isTaken = saved.isTaken
       mask = saved.mask
       preferNext = above.picks
       aboveRule = above.rule
-      pool = onsets.filter((o) => above.rule.has(o.t))
+      pool = visible.filter((o) => above.rule.has(o.t))
     }
     chart(tier, allowed(tier, pool), prefer)
     seed = isTaken

@@ -616,7 +616,7 @@ struct LadderStrip: View {
                 .dataLabel(9)
                 .foregroundStyle(Palette.muted)
             HStack(spacing: compact ? 6 : 10) {
-                ForEach([GameEngine.Difficulty.beginner, .easy, .medium, .hard], id: \.rawValue) { d in
+                ForEach(GameEngine.Difficulty.allCases.filter { $0 != .adaptive }, id: \.rawValue) { d in
                     let now = figure(mod, d)
                     let was = base.flatMap { figure($0, d) }
                     let moved = now != nil && was != nil && abs(now! - was!) > 0.005

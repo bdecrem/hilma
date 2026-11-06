@@ -140,13 +140,13 @@ struct SongCard: View {
                     app.pick(song: song, part: Song.PartKey(rawValue: $0)!)
                 }
                 if !compact {
-                    Chips(title: "Level", options: GameEngine.Difficulty.allCases.map { ($0.rawValue, $0.title) }, picked: difficulty.rawValue) {
+                    Chips(title: "Level", options: GameEngine.Difficulty.allCases.map { ($0.rawValue, $0.title) }, picked: difficulty.rawValue, scrolls: true) {
                         app.pick(song: song, difficulty: GameEngine.Difficulty(rawValue: $0)!)
                     }
                 }
             }
             if compact {
-                Chips(title: "Level", options: GameEngine.Difficulty.allCases.map { ($0.rawValue, $0.title) }, picked: difficulty.rawValue) {
+                Chips(title: "Level", options: GameEngine.Difficulty.allCases.map { ($0.rawValue, $0.title) }, picked: difficulty.rawValue, scrolls: true) {
                     app.pick(song: song, difficulty: GameEngine.Difficulty(rawValue: $0)!)
                 }
             }
@@ -278,10 +278,14 @@ struct AllTracksCard: View {
 }
 
 /// A row of small choices; the picked one is filled `signal`.
+/// A row of choices. `scrolls`: the row slides sideways when it is wider than its place (the
+/// levels, six since Easy+ in 0.1 (109), on the phone), and takes the width it is given; off,
+/// it is as wide as its chips (the parts, beside the levels on the Mac).
 struct Chips: View {
     let title: String
     let options: [(key: String, title: String)]
     let picked: String
+    var scrolls = false
     let pick: (String) -> Void
 
     var body: some View {
@@ -289,21 +293,35 @@ struct Chips: View {
             Text(title)
                 .dataLabel(9)
                 .foregroundStyle(Palette.muted)
-            HStack(spacing: 4) {
-                ForEach(options, id: \.key) { o in
-                    let on = o.key == picked
-                    Button { pick(o.key) } label: {
-                        Text(o.title)
-                            .dataLabel(10, weight: .semibold)
-                            .foregroundStyle(on ? Palette.blackKey : Palette.text)
-                            .padding(.horizontal, 10)
-                            .frame(height: 28)
-                            .background(RoundedRectangle(cornerRadius: 5).fill(on ? Palette.signal : Palette.ground))
-                            .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(on ? Palette.signal : Palette.line, lineWidth: 1))
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityAddTraits(on ? [.isSelected] : [])
+            if scrolls {
+                // The picked chip in view from the start (Adaptive is the last of six).
+                ScrollViewReader { proxy in
+                    ScrollView(.horizontal, showsIndicators: false) { row }
+                        .scrollBounceBehavior(.basedOnSize)
+                        .onAppear { proxy.scrollTo(picked) }
                 }
+            } else {
+                row
+            }
+        }
+    }
+
+    private var row: some View {
+        HStack(spacing: 4) {
+            ForEach(options, id: \.key) { o in
+                let on = o.key == picked
+                Button { pick(o.key) } label: {
+                    Text(o.title)
+                        .dataLabel(10, weight: .semibold)
+                        .foregroundStyle(on ? Palette.blackKey : Palette.text)
+                        .padding(.horizontal, 10)
+                        .frame(height: 28)
+                        .background(RoundedRectangle(cornerRadius: 5).fill(on ? Palette.signal : Palette.ground))
+                        .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(on ? Palette.signal : Palette.line, lineWidth: 1))
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(on ? [.isSelected] : [])
+                .id(o.key)
             }
         }
     }

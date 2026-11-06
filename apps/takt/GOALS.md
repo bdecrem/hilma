@@ -144,9 +144,12 @@ notes, as a separate song beside the original, the way Hypnotist II sits beside 
   bar, D5 on the 1 held and F4 on the "and" of 3 with the kick; every even bar holds one note
   on the 1 that follows the chord: A over the Dm7 (C the second time), G over the Gm7, E then B
   over the turnaround's A7s, back to D. The hand never moves: the thumb on F reaching down to
-  E, 2 on G and A, 3 on B, 4 on C, 5 on D. Medium is exactly that, 72 notes, 0.53 a second, and
-  still all seven white keys; Hard adds the passing C between the D and the F and, in the solo
-  chorus, two pickup eighths into every riff (108).
+  E, 2 on G and A, 3 on B, 4 on C, 5 on D. Easy+ is exactly that (since 0.1 (109), 2026-11-06;
+  Medium until then), 72 notes, 0.53 a second, and still all seven white keys. Medium is the
+  riff with three figures that move the hand, a thumb under in each: the climb C5 D5 E5 F5 off
+  the B4 of bars 12 and 24, the run F4 to D5 off the E4 of bar 34 (86 notes, 0.63 a second);
+  Hard adds the passing C between the D and the F and, in the solo chorus, two pickup eighths
+  into every riff but the run's (120).
 - **Maxwell Street II** (Chicago blues in A, 80, `maxwell_street.py --five`): the horn on
   A C D E G. The riff walks up A C D E without the flat fifth, and the bass plays it in unison
   with the horn. The release's riff shapes become E G A and D E G A, and the solo's chromatic
