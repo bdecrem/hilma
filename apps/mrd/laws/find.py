@@ -60,8 +60,17 @@ def pdf_text(data):
 def fetch(url):
     req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "text/html,application/pdf,*/*",
                                                "Accept-Language": "en,*;q=0.5"})
-    with urllib.request.urlopen(req, timeout=60) as r:
-        data = r.read(40_000_000)
+    with urllib.request.urlopen(req, timeout=30) as r:
+        # a slow server can trickle bytes forever under a per-read timeout: cap the whole download
+        start, chunks, size = time.time(), [], 0
+        while size < 40_000_000:
+            if time.time() - start > 90:
+                raise TimeoutError("download took over 90 s")
+            c = r.read(65536)
+            if not c:
+                break
+            chunks.append(c); size += len(c)
+        data = b"".join(chunks)
         ctype = (r.headers.get("Content-Type") or "").lower()
         final = r.geturl()
     if data[:5] == b"%PDF-" or "pdf" in ctype:
