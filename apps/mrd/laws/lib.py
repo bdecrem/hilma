@@ -22,7 +22,7 @@ SB_KEY = os.environ["MRD_SUPABASE_SERVICE_KEY"]
 
 
 def http(method, url, body=None, headers=None, timeout=120, raw=False):
-    data = None if body is None else (body if isinstance(body, bytes) else json.dumps(body).encode())
+    data = None if body is None else (body if isinstance(body, bytes) else json.dumps(body).replace("\\u0000", "").encode())  # Postgres text rejects NUL
     req = urllib.request.Request(url, data=data, method=method, headers=headers or {})
     with urllib.request.urlopen(req, timeout=timeout) as r:
         out = r.read()
