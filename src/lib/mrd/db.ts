@@ -80,7 +80,7 @@ export type ArticleEnglish = { article: string; english: string }
 
 export async function articleTranslations(id: string): Promise<ArticleEnglish[]> {
   const { url, key } = env()
-  const r = await fetch(`${url}/rest/v1/article_translations?law_id=eq.${encodeURIComponent(id)}&select=article,english`, { headers: headers(key), next: { revalidate: 3600, tags: ['mrd'] } })
+  const r = await fetch(`${url}/rest/v1/article_translations?law_id=eq.${encodeURIComponent(id)}&select=article,english`, { headers: headers(key), cache: 'no-store' })
   if (!r.ok) return []
   return r.json()
 }

@@ -78,7 +78,7 @@ export async function once(text: string, ctx: { lang?: string | null; law?: stri
     output_config: { effort },
     messages: [{
       role: 'user',
-      content: `<excerpt>\n${text}\n</excerpt>\n\nTranslate the excerpt above${ctx.law ? ` (from ${ctx.law})` : ''} from ${from} into English, preserving its line breaks and headings. It may begin or end mid-sentence. Output only the English translation, with no notes.`,
+      content: `<excerpt>\n${text}\n</excerpt>\n\nTranslate the excerpt above${ctx.law ? ` (from ${ctx.law})` : ''} from ${from} into English, preserving its line breaks and headings. It may begin or end mid-sentence. Output only the English translation, as plain text, with no notes and no added headings or Markdown.`,
     }],
   } as never) as unknown as Anthropic.Message
   usage.input += res.usage?.input_tokens ?? 0
