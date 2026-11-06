@@ -1505,7 +1505,8 @@ enum LessonCheck {
                 // where the record's own notes don't.
                 func record(_ part: String, _ difficulty: String, level: Int, _ ago: Double) -> ProgressStore.ScoreRecord {
                     ProgressStore.ScoreRecord(GameEngine.Result(song: two.name, part: part, difficulty: difficulty, score: 1, notes: 1, perfect: 1,
-                                                                good: 0, missed: 0, extras: 0, wrong: 0, maxCombo: 1, accuracy: 1, level: level, grade: "S", map: [], strays: []),
+                                                                good: 0, early: 0, late: 0, missed: 0, extras: 0, wrong: 0, maxCombo: 1, accuracy: 1, timing: 1,
+                                                                leanMs: 0, level: level, grade: "S", map: [], strays: []),
                                               date: Date(timeIntervalSinceNow: -ago))
                 }
                 let starts = [
@@ -1806,16 +1807,80 @@ enum LessonCheck {
                 let before = own.accuracy
                 own.played(note: leftNote.n, tick: Double(leftNote.t), msPerTick: ms)
                 check("stage: the record's own note the level left out is an extra but not wrong", own.extras == 1 && own.wrong == 0 && own.accuracy == before)
-                // The right key 200 ms late (past the Good window): the note is missed, the press
-                // an extra, and nothing is wrong. Bart's 51% on a run he played well, 0.1 (53).
+                // The right key past the Good window but inside half a beat is Late (before the
+                // note, Early): played, a hit for the accuracy, a third of the points, the combo
+                // kept, the S withheld; past half a beat the note went by and the press is an
+                // extra, not a wrong key. Bart's 51% on a run he played well (0.1 (53): the right
+                // key late was a wrong key) and his 55% on Blue Lantern II (0.1 (108): the right
+                // key late was a miss).
+                let half = 0.5 * Double(tpb)
                 let behind = GameEngine(song: song, part: .melody, difficulty: .easy)
                 let firstIdx = song.notes(.melody).indices.first { behind.active($0) }!
                 let firstNote = song.notes(.melody)[firstIdx]
-                let lateTick = Double(firstNote.t) + 200 / ms
+                let lateTick = Double(firstNote.t) + half - 0.5
                 behind.heard(tick: lateTick, msPerTick: ms)
                 behind.played(note: firstNote.n, tick: lateTick, msPerTick: ms)
-                check("stage: the right key 200 ms behind is a miss and an extra, not a wrong key",
-                      behind.missed == 1 && behind.extras == 1 && behind.wrong == 0 && behind.accuracy == 0, "\(behind.missed) missed, \(behind.extras) extras, \(behind.wrong) wrong")
+                let latePoints = Int((30 * charting.ladder(.melody).tier(easyTier).bonus).rounded())
+                check("stage: the right key \(Int(((half - 0.5) * ms).rounded())) ms behind (inside half a beat) is Late: played, a third of the points, the combo kept, an A not an S",
+                      behind.late == 1 && behind.hits == 1 && behind.missed == 0 && behind.extras == 0 && behind.accuracy == 1 && behind.timing == 0
+                      && behind.combo == 1 && behind.score == latePoints && behind.result().grade == "A" && behind.result().map.first?.judgment == .late,
+                      "\(behind.late) late, \(behind.missed) missed, \(behind.extras) extras, \(behind.score) points, \(behind.result().grade)")
+                let ahead = GameEngine(song: song, part: .melody, difficulty: .easy)
+                let secondIdx = song.notes(.melody).indices.first { ahead.active($0) && song.notes(.melody)[$0].n % 12 != firstNote.n % 12 }!
+                let secondNote = song.notes(.melody)[secondIdx]
+                let earlyTick = Double(secondNote.t) - (half - 0.5)
+                ahead.heard(tick: earlyTick, msPerTick: ms)
+                ahead.played(note: secondNote.n, tick: earlyTick, msPerTick: ms)
+                check("stage: the right key the same ahead is Early, and the lean reads early",
+                      ahead.early == 1 && ahead.hits == 1 && ahead.extras == 0 && ahead.leanMs < -GameEngine.goodMs && ahead.status[secondIdx] == .hit(.early),
+                      "\(ahead.early) early, lean \(ahead.leanMs)")
+                let gone = GameEngine(song: song, part: .melody, difficulty: .easy)
+                let goneTick = Double(firstNote.t) + half + 0.5
+                gone.heard(tick: goneTick, msPerTick: ms)
+                gone.played(note: firstNote.n, tick: goneTick, msPerTick: ms)
+                check("stage: the right key past half a beat is a miss and an extra, not a wrong key",
+                      gone.missed == 1 && gone.extras == 1 && gone.wrong == 0 && gone.accuracy == 0, "\(gone.missed) missed, \(gone.extras) extras, \(gone.wrong) wrong")
+                let loose = run(.easy) { _, _ in (half - 0.5) * ms }
+                check("stage: every note played but late is an A, not an S: an S wants the time too; the verdict names the lean",
+                      loose.hits == easyNotes && loose.missed == 0 && loose.result().accuracy == 1 && loose.result().timing == 0
+                      && loose.result().grade == "A" && loose.result().verdict.line.contains("late") && loose.result().verdict.line.contains("Calibration"),
+                      "\(loose.late) late of \(easyNotes), \(loose.result().grade): \(loose.result().verdict.line)")
+                if let bl2 = songs.first(where: { $0.name == "song-blue-lantern-white" }) {
+                    // Bart's run of 2026-11-06 as the record decodes it (5,780 points at tier 5's
+                    // 1.7, no multiplier, 55%): 44 notes in the window, 24 of the right keys early
+                    // by 200 ms, 4 let go by, 8 stray keys. He counted three or four misses and
+                    // gave himself a B.
+                    let g = GameEngine(song: bl2, part: .melody, difficulty: .medium)
+                    let ms2 = 60000 / (Double(bl2.meta.tempo) * Double(tpb))
+                    var tick = -Double(bl2.ticksPerBar)
+                    var i = 0, k = 0
+                    while tick < Double(bl2.endTick) {
+                        while i < g.notes.count, Double(g.notes[i].t) <= tick + 4 {
+                            if g.active(i) {
+                                let t = Double(g.notes[i].t)
+                                if k % 18 != 17 {
+                                    let at = t + (k % 3 == 0 ? -200 / ms2 : 0)
+                                    g.heard(tick: at, msPerTick: ms2)
+                                    g.played(note: g.notes[i].n, tick: at, msPerTick: ms2)
+                                }
+                                if k % 9 == 4 {
+                                    g.heard(tick: t, msPerTick: ms2)
+                                    g.played(note: 61, tick: t, msPerTick: ms2)
+                                }
+                                k += 1
+                            }
+                            i += 1
+                        }
+                        tick += 4
+                        g.heard(tick: tick, msPerTick: ms2)
+                    }
+                    g.heard(tick: Double(bl2.endTick) + Double(bl2.ticksPerBar), msPerTick: ms2)
+                    let r = g.result()
+                    check("stage: Bart's Blue Lantern II run (44 in the window, 24 early by 200 ms, 4 let go, 8 stray keys) is a B at 85%, and the verdict sends the 71 ms lean to the calibration",
+                          r.notes == 72 && r.perfect == 44 && r.early == 24 && r.late == 0 && r.missed == 4 && r.wrong == 8 && abs(r.accuracy - 0.85) < 1e-9
+                          && r.grade == "B" && r.verdict.title == "Solid" && r.leanMs < -60 && r.leanMs > -80 && r.verdict.line.contains("Calibration"),
+                          "\(r.perfect)/\(r.good)/\(r.early)/\(r.late)/\(r.missed), wrong \(r.wrong) → \(Int((r.accuracy * 100).rounded()))% \(r.grade), lean \(Int(r.leanMs.rounded())) ms: \(r.verdict.line)")
+                }
                 check("stage: the run's map has a mark per judged onset in order, strays where the wrong keys fell",
                       sloppy.result().map.count == easyNotes && sloppy.result().map.filter { $0.judgment == .miss }.count == easyNotes / 3
                       && zip(sloppy.result().map, sloppy.result().map.dropFirst()).allSatisfy { $0.at < $1.at }
@@ -1835,7 +1900,8 @@ enum LessonCheck {
                       "hard \(hardScore) vs easy \(perfect.score)")
                 let r = ProgressStore.ScoreRecord.trimmed((0..<60).map { i in
                     ProgressStore.ScoreRecord(GameEngine.Result(song: "s", part: "melody", difficulty: "easy", score: i, notes: 1, perfect: 1,
-                                                                good: 0, missed: 0, extras: 0, wrong: 0, maxCombo: 1, accuracy: 1, level: 1, grade: "S", map: [], strays: []))
+                                                                good: 0, early: 0, late: 0, missed: 0, extras: 0, wrong: 0, maxCombo: 1, accuracy: 1, timing: 1,
+                                                                leanMs: 0, level: 1, grade: "S", map: [], strays: []))
                 })
                 check("stage: the board keeps the best 50 a song, best first", r.count == 50 && r.first?.score == 59 && r.last?.score == 10)
 
@@ -1867,11 +1933,19 @@ enum LessonCheck {
                       && dropped.perfect == chordNotes - chordTicks.count - 1,
                       "\(dropped.missed) missed, combo \(dropped.combo) of \(chordTicks.count) chords, max \(dropped.maxCombo)")
                 let stray = GameEngine(song: song, part: .chords, difficulty: .easy)
-                let gap = Double(chordTicks[0]) - 400 / ms
+                let gap = Double(chordTicks[0]) - half - 1
                 let strayKeys = stray.due(at: gap, msPerTick: ms)
                 for n in strayKeys { stray.played(note: n, tick: gap, msPerTick: ms) }
-                check("stage: a tap 400 ms before a chord plays it as extras, nothing hit",
-                      !strayKeys.isEmpty && stray.extras == strayKeys.count && stray.perfect + stray.good == 0)
+                check("stage: a tap more than half a beat before a chord plays it as extras, nothing hit",
+                      !strayKeys.isEmpty && stray.extras == strayKeys.count && stray.hits == 0)
+                let lateTap = GameEngine(song: song, part: .chords, difficulty: .easy)
+                let behindTick = Double(chordTicks[0]) + half - 0.5
+                lateTap.heard(tick: behindTick, msPerTick: ms)
+                let lateKeys = lateTap.due(at: behindTick, msPerTick: ms)
+                for n in lateKeys { lateTap.played(note: n, tick: behindTick, msPerTick: ms) }
+                check("stage: a tap just inside half a beat behind a chord still plays it, Late",
+                      !lateKeys.isEmpty && lateTap.late == lateKeys.count && lateTap.missed == 0 && lateTap.extras == 0,
+                      "\(lateKeys.count) keys, \(lateTap.late) late, \(lateTap.missed) missed, \(lateTap.extras) extras")
 
                 // Practice (the pause menu): a seek makes every note from there pending again
                 // and leaves what came before; presses and pass-bys still pop, but the score, the

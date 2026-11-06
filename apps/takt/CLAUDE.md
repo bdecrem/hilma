@@ -391,15 +391,20 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   own channel for a part is the hard chart, so the record plays it in full when you take the
   other. Your keys play the part's instrument (`monitor` per part: the record's stab or lead
   on the electronic songs, the piano on the blues). **Engine** (`Game/GameEngine.swift`,
-  pure): Perfect ±45 ms (100), Good ±110 ms (60), a passed window is a miss and breaks the
-  combo; a key no note wants is an extra (counted, not punished); the combo's multiplier ×2 /
-  ×3 / ×4 at 8 / 16 / 32; a level pays ×1 / ×1.5 / ×2; **Adaptive** starts easy and decides
-  each four-bar block two bars ahead from the four bars before that: at or over 90% hit (four
-  notes judged at least) it climbs, under 60% it eases off. No failing; the song plays to the
-  end; **Accuracy** (0.1 (54)) is hits over the chart's notes plus the wrong keys: a miss costs, a
-  wrong key costs, a hit inside the Good window (150 ms) pays; grade S / A / B / C / D from it
-  (97 / 90 / 80 / 65). A wrong key is one the tune has nowhere within a beat of the press; the
-  right key late is a miss, not a wrong key. **Screen**
+  pure): Perfect ±45 ms (100), Good ±150 ms (60), Early / Late the right key inside half a
+  beat either side (30, since 0.1 (108); before it a miss), a note nothing played inside half a
+  beat is a miss and breaks the combo; a key no note wants is an extra (counted, not
+  punished); the combo's multiplier ×2 / ×3 / ×4 at 8 / 16 / 32; a level pays its tier's bonus
+  (0.8 … 2.2); **Adaptive** starts easy and decides each four-bar block two bars ahead from the
+  four bars before that: at or over 85% hit (eight notes judged at least, the hits' median
+  offset inside 60 ms) it climbs, under 60% it eases off. No failing; the song plays to the
+  end; **Accuracy** (0.1 (54), (108)) is the notes played (perfect, good, early or late) over
+  the chart's notes plus the wrong keys: a note that went by costs, a wrong key costs, the
+  right key inside half a beat pays; grade S / A / B / C / D from it (97 / 90 / 80 / 65), and an
+  S wants `timing` (the notes inside the Good window, over the same) at 97 too, else it is an
+  A. A wrong key is one the tune has nowhere within a beat of the press. `leanMs` is the mean
+  signed offset of the notes played; 60 ms or more either way over eight notes, the verdict
+  says latency and points to the calibration. **Screen**
   (`Game/GameScreen.swift`): the HUD (score, the combo ring filling toward the next multiplier,
   pause), the section rail, the highway (a Canvas: a capsule per note in its key's lane, chords
   as stacks with finger badges, beat and bar lines sliding, 3 s of lookahead at any tempo, the
@@ -1564,6 +1569,40 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   under 2 coming down). Not yet: Bart's pass at the piano. If Medium is still too hard, the next
   step down is the pentatonic box alone (A and G the only landings, no E or B), which gives up
   "every white key at Medium" in the plan check.
+
+- **The right key late is played, not missed: 0.1 (108), 2026-11-06.** Bart played Blue
+  Lantern II on Medium and got a D at 55%: "i missed 3-4 notes on my play … that should have
+  been a B, maaaaybe a c. don't change the difficulty/chart but review how you're scoring,
+  seems too harsh". The Stage keeps no press log (`lessonLog.info` lines are not persisted),
+  but the record decodes: 5,780 points at tier 5's 1.7 with no multiplier (best combo 5) is 44
+  hits (19 perfect, 25 good), so 28 of the 72 notes were missed and 44/(72 + 8 stray keys) =
+  0.55. He counted three or four wrong notes; the other 24 "misses" were the right key outside
+  the ±150 ms Good window, which the engine scored exactly like a note never played (the 0.1
+  (54) rule: "the right key late is a miss, not a wrong key"). The calibration history says
+  why: `calibration-taps.csv` has a 12-tap session of 2026-11-04 reading 83 ms early under the
+  saved −97.8 ms correction (sd 19 ms, a steady hand), not saved; the setup's latency moved and
+  the window swallowed the difference. **Scoring now** (`GameEngine`): a press of the right key
+  inside half a beat of its note (`looseBeats`, 357 ms at 84, the lesson scorer's own reach)
+  is **Early** or **Late**: played, a hit for the accuracy and the adaptive rate, 30 points
+  before the multiplier (Good 60, Perfect 100), the combo kept; only a note nothing played
+  inside half a beat is a miss. The press takes the pending note of its key inside the Good
+  window (the exact key first, then the nearest) or else the earliest inside half a beat, so a
+  hand running late pays each note it meant, never the one after. The grade still follows the
+  accuracy (a letter says how much of the tune you played), and an **S wants the time too**
+  (`timing` ≥ 97%, the notes inside the Good window), else an A. `leanMs`, the mean signed
+  offset of the notes played: 60 ms or more either way over eight notes and the verdict line is
+  "Your notes lean 71 ms early all run. That's latency, not you: Settings → Calibration.";
+  otherwise, when early or late weigh most, "Right keys, 24 of them early. Sit back on the
+  beat." / "… late. Lean into the beat." / "Right keys, loose time: 9 early, 7 late."; else the
+  grade's old lines. The result card's chips add "early" / "late" counts beside the stray keys
+  (a second row on the iPhone); the hit line pops EARLY / LATE in dimmed cue. Tap mode's `due`
+  takes a tap inside half a beat behind a chord. The per-run log line is `notice` now (kept by
+  `log show`): grade, points, perfect/good/early/late/missed, wrong keys, lean, combo. Bart's
+  run replayed in the checks (44 in the window, 24 early by 200 ms, 4 let go, 8 strays) is a B
+  at 85%, lean −71 ms, the calibration line; a run with every note 306 ms late is an A at 100%
+  with timing 0; past half a beat is still a miss and an extra. Checks 440/440. The old 55% D
+  stays on his board (the record holds no presses to regrade). Unchanged: the Good window, the
+  wrong-key rule, the thresholds, the chart.
 
 ## Code map (`Takt/`)
 

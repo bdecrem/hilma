@@ -2,10 +2,10 @@ import Foundation
 
 /// Stage: one run of a song's part. Pure, main thread, like the LessonEngine: the Player feeds
 /// it the heard transport tick every frame and every key press, it judges each chart note
-/// against the press nearest it (Perfect inside ±45 ms, Good inside ±110 ms, Missed when the
-/// window passes), keeps the score, the combo and the multiplier, and on Adaptive moves a tier
-/// up or down the part's ladder between blocks (`Charting`, charting.json). There is no
-/// failing: the song plays to the end.
+/// against the press nearest it (Perfect inside ±45 ms, Good inside ±150 ms, Early or Late
+/// inside half a beat, Missed when that passes), keeps the score, the combo and the
+/// multiplier, and on Adaptive moves a tier up or down the part's ladder between blocks
+/// (`Charting`, charting.json). There is no failing: the song plays to the end.
 final class GameEngine {
     enum Difficulty: String, CaseIterable, Codable {
         case beginner, easy, medium, hard, adaptive
@@ -14,12 +14,25 @@ final class GameEngine {
     }
 
     enum Judgment: String, Equatable, Codable {
-        case perfect, good, miss
+        case perfect, good, early, late, miss
         var title: String {
             switch self {
             case .perfect: "Perfect"
             case .good: "Good"
+            case .early: "Early"
+            case .late: "Late"
             case .miss: "Miss"
+            }
+        }
+        /// The right key out of the Good window: played, not in time.
+        var loose: Bool { self == .early || self == .late }
+        /// Worst last: a chord's mark is its worst note's.
+        var rank: Int {
+            switch self {
+            case .perfect: 0
+            case .good: 1
+            case .early, .late: 2
+            case .miss: 3
             }
         }
     }
@@ -46,14 +59,25 @@ final class GameEngine {
         let notes: Int
         let perfect: Int
         let good: Int
+        /// The right key past the Good window but inside half a beat, before the note and
+        /// after it: played, out of time.
+        let early: Int
+        let late: Int
         let missed: Int
         let extras: Int
         /// Extras that aren't the record's own notes: wrong keys.
         let wrong: Int
         let maxCombo: Int
-        /// Hits over the chart's notes plus the wrong keys, 0...1: a miss costs, a wrong key
-        /// costs, a hit inside the Good window pays.
+        /// Notes played (perfect, good, early or late) over the chart's notes plus the wrong
+        /// keys, 0...1: a note that went by costs, a wrong key costs, the right key inside half
+        /// a beat pays. The grade follows it: a letter says how much of the tune you played.
         let accuracy: Double
+        /// Notes inside the Good window over the same, 0...1: how much of it was in time. The
+        /// points say the rest; an S wants this too.
+        let timing: Double
+        /// The mean offset of the notes played, ms, negative early. A steady lean is the
+        /// setup's latency, not the hand: the verdict sends it to the calibration.
+        let leanMs: Double
         /// The highest tier played (adaptive), or the difficulty's.
         let level: Int
         let grade: String
@@ -68,8 +92,10 @@ final class GameEngine {
             let judgment: Judgment
         }
 
-        static func grade(accuracy: Double) -> String {
-            accuracy >= 0.97 ? "S" : accuracy >= 0.9 ? "A" : accuracy >= 0.8 ? "B" : accuracy >= 0.65 ? "C" : "D"
+        /// The letter from the accuracy; an S ("every note where it belongs") wants the timing
+        /// as clean, else it is an A.
+        static func grade(accuracy: Double, timing: Double = 1) -> String {
+            accuracy >= 0.97 ? (timing >= 0.97 ? "S" : "A") : accuracy >= 0.9 ? "A" : accuracy >= 0.8 ? "B" : accuracy >= 0.65 ? "C" : "D"
         }
 
         /// The accuracy a grade starts at (an A: 0.9), so "an A or better" is one comparison.
@@ -77,22 +103,53 @@ final class GameEngine {
             ["S": 0.97, "A": 0.9, "B": 0.8, "C": 0.65, "D": 0][grade]
         }
 
-        /// The one line the result leads with, and the one under it.
+        /// A run whose notes lean this far one way on average is early or late by the setup
+        /// (the speakers, the keyboard), not by the hand; from this many notes it is a lean,
+        /// not a few rushed ones.
+        static let leanMs = 60.0
+        static let leanNotes = 8
+
+        /// The one line the result leads with, and the one under it: the line names what
+        /// weighed most, a lean, the right keys out of time, stray keys, or notes that went by.
         var verdict: (title: String, line: String) {
+            let title: String
             switch grade {
-            case "S": return ("Clean run", "Every note where it belongs.")
-            case "A": return ("Tight", "A couple got away. Nothing to see.")
-            case "B": return ("Solid", "The tune is in your hands.")
-            case "C": return ("Getting there", wrong > missed ? "A few stray keys crept in." : "Let the notes come to you.")
-            default: return ("Rough one", wrong > missed ? "Stray keys everywhere. Keep to the lit lanes." : "Most of the notes went by. Breathe, and play less.")
+            case "S": title = "Clean run"
+            case "A": title = "Tight"
+            case "B": title = "Solid"
+            case "C": title = "Getting there"
+            default: title = "Rough one"
+            }
+            if grade == "S" { return (title, "Every note where it belongs.") }
+            let played = perfect + good + early + late
+            if played >= Self.leanNotes, abs(leanMs) >= Self.leanMs {
+                return (title, "Your notes lean \(Int(abs(leanMs).rounded())) ms \(leanMs < 0 ? "early" : "late") all run. That's latency, not you: Settings → Calibration.")
+            }
+            let loose = early + late
+            if loose > 0, loose >= missed, loose >= wrong {
+                if early >= loose * 4 / 5 { return (title, "Right keys, \(early) of them early. Sit back on the beat.") }
+                if late >= loose * 4 / 5 { return (title, "Right keys, \(late) of them late. Lean into the beat.") }
+                return (title, "Right keys, loose time: \(early) early, \(late) late.")
+            }
+            switch grade {
+            case "A": return (title, "A couple got away. Nothing to see.")
+            case "B": return (title, "The tune is in your hands.")
+            case "C": return (title, wrong > missed ? "A few stray keys crept in." : "Let the notes come to you.")
+            default: return (title, wrong > missed ? "Stray keys everywhere. Keep to the lit lanes." : "Most of the notes went by. Breathe, and play less.")
             }
         }
     }
 
     static let perfectMs = 45.0
     static let goodMs = 150.0
+    /// The right key past the Good window still plays its note inside this much of a beat
+    /// either side (the lesson scorer's own reach): Early or Late, a hit for the accuracy, a
+    /// third of the points. Past it the note went by. Half a beat is 357 ms at Blue Lantern's
+    /// 84, 236 at Hypnotist's 127: a hand that rushes the and-of-three onto the three is still
+    /// playing the tune. Bart's 55% on a run he played well but for three or four notes, 0.1 (108).
+    static let looseBeats = 0.5
     /// Points for a hit, before the multiplier and the level.
-    static let points: [Judgment: Int] = [.perfect: 100, .good: 60, .miss: 0]
+    static let points: [Judgment: Int] = [.perfect: 100, .good: 60, .early: 30, .late: 30, .miss: 0]
     /// Combo thresholds for ×2, ×3, ×4.
     static let steps = [8, 16, 32]
 
@@ -117,10 +174,14 @@ final class GameEngine {
     private(set) var maxCombo = 0
     private(set) var perfect = 0
     private(set) var good = 0
+    private(set) var early = 0
+    private(set) var late = 0
     private(set) var missed = 0
     private(set) var extras = 0
     private(set) var wrong = 0
     private var wrongTicks: [Double] = []
+    /// The signed offsets (ms) of the notes played, summed: the lean.
+    private var offsetSum = 0.0
     private(set) var pop: Pop?
     private(set) var finished = false
     private var seq = 0
@@ -245,18 +306,35 @@ final class GameEngine {
         return false
     }
 
-    /// Hits over the notes judged plus the wrong keys: a miss costs, a wrong key costs.
+    /// Notes played, in time or not.
+    var hits: Int { perfect + good + early + late }
+
+    /// Notes played over the notes judged plus the wrong keys: a note that went by costs, a
+    /// wrong key costs, the right key inside half a beat pays.
     var accuracy: Double {
-        let judged = perfect + good + missed + wrong
+        let judged = hits + missed + wrong
+        return judged == 0 ? 1 : Double(hits) / Double(judged)
+    }
+
+    /// Notes inside the Good window over the same.
+    var timing: Double {
+        let judged = hits + missed + wrong
         return judged == 0 ? 1 : Double(perfect + good) / Double(judged)
     }
+
+    /// The mean offset of the notes played, ms, negative early.
+    var leanMs: Double { hits == 0 ? 0 : offsetSum / Double(hits) }
+
+    /// How far past its tick a note can still be played, in ticks: half a beat, and never less
+    /// than the Good window (a tempo where half a beat is under 150 ms).
+    func loose(msPerTick: Double) -> Double { max(Self.goodMs / msPerTick, Self.looseBeats * Double(ticksPerBeat)) }
 
     /// The heard transport tick, every frame: notes whose window has passed are missed, the
     /// next block's tier is decided ahead, and the song ends at its end tick.
     func heard(tick: Double, msPerTick: Double) {
         heardTick = tick
         guard msPerTick.isFinite, msPerTick > 0 else { return }
-        let reach = Self.goodMs / msPerTick
+        let reach = loose(msPerTick: msPerTick)
         if practice {
             // A pass-by still shows (the note slides past, the pop says miss); no counts move.
             for i in notes.indices where status[i] == .pending && active(i) {
@@ -369,24 +447,33 @@ final class GameEngine {
         return t
     }
 
-    /// A key press at a transport tick: the nearest pending note of its pitch class inside the
-    /// Good window takes it (the exact key first); anything else is an extra.
+    /// A key press at a transport tick: a pending note of its pitch class takes it, the one
+    /// inside the Good window (the exact key first, then the nearest) or else the earliest
+    /// inside half a beat, so a hand running late pays each note it meant and never the one
+    /// after it; anything else is an extra.
     func played(note: Int, tick: Double, msPerTick: Double) {
         guard !finished, msPerTick.isFinite, msPerTick > 0 else { return }
         let reach = Self.goodMs / msPerTick
-        var best: (i: Int, d: Double, exact: Bool)?
+        let outer = loose(msPerTick: msPerTick)
+        var best: (i: Int, d: Double, exact: Bool, near: Bool)?
         for i in notes.indices where status[i] == .pending && active(i) && notes[i].n % 12 == note % 12 {
             let d = tick - Double(notes[i].t)
-            guard abs(d) <= reach else { continue }
+            guard abs(d) <= outer else { continue }
             let exact = notes[i].n == note
-            if best == nil || (exact && !best!.exact) || (exact == best!.exact && abs(d) < abs(best!.d)) { best = (i, d, exact) }
+            let near = abs(d) <= reach
+            guard let b = best else { best = (i, d, exact, near); continue }
+            let better: Bool
+            if near != b.near { better = near }
+            else if near { better = (exact && !b.exact) || (exact == b.exact && abs(d) < abs(b.d)) }
+            else { better = notes[i].t < notes[b.i].t || (notes[i].t == notes[b.i].t && exact && !b.exact) }
+            if better { best = (i, d, exact, near) }
         }
         guard let b = best else {
             if practice { return }
             extras += 1
             // A wrong key is one the tune has nowhere within a beat of here (at any tier): the
-            // right key early or late, outside the judging window, is a miss, not a wrong key,
-            // and the record's own notes the level left out are neither.
+            // right key further off than half a beat is a miss, not a wrong key, and the
+            // record's own notes the level left out are neither.
             if !notes.contains(where: { abs(tick - Double($0.t)) <= Double(ticksPerBeat) && $0.n % 12 == note % 12 }) {
                 wrong += 1
                 wrongTicks.append(tick)
@@ -401,20 +488,27 @@ final class GameEngine {
             }
             return
         }
-        let ms = abs(b.d * msPerTick)
-        let j: Judgment = ms <= Self.perfectMs ? .perfect : .good
+        let ms = b.d * msPerTick
+        let j: Judgment = abs(ms) <= Self.perfectMs ? .perfect : abs(ms) <= Self.goodMs ? .good : ms < 0 ? .early : .late
         status[b.i] = .hit(j)
         if practice {
             seq += 1
             pop = Pop(judgment: j, note: notes[b.i].n, seq: seq)
             return
         }
-        if j == .perfect { perfect += 1 } else { good += 1 }
+        switch j {
+        case .perfect: perfect += 1
+        case .good: good += 1
+        case .early: early += 1
+        case .late: late += 1
+        case .miss: break
+        }
+        offsetSum += ms
         combo += 1
         missRun = 0
         maxCombo = max(maxCombo, combo)
         barHits[notes[b.i].t / ticksPerBar, default: 0] += 1
-        barOffsets[notes[b.i].t / ticksPerBar, default: []].append(ms)
+        barOffsets[notes[b.i].t / ticksPerBar, default: []].append(abs(ms))
         score += points(j, multiplier: multiplier, level: level(atBar: notes[b.i].t / ticksPerBar))
         seq += 1
         pop = Pop(judgment: j, note: notes[b.i].n, seq: seq)
@@ -434,7 +528,7 @@ final class GameEngine {
             }
             guard let j else { continue }
             if notes[i].t == lastT, let last = map.last {
-                let worst: Judgment = last.judgment == .miss || j == .miss ? .miss : (last.judgment == .good || j == .good ? .good : .perfect)
+                let worst = j.rank > last.judgment.rank ? j : last.judgment
                 map[map.count - 1] = Result.Mark(at: last.at, judgment: worst)
             } else {
                 map.append(Result.Mark(at: Double(notes[i].t) / end, judgment: j))
@@ -442,15 +536,16 @@ final class GameEngine {
             }
         }
         return Result(song: song.name, part: part.rawValue, difficulty: difficulty.rawValue, score: score,
-                      notes: perfect + good + missed, perfect: perfect, good: good, missed: missed, extras: extras, wrong: wrong,
-                      maxCombo: maxCombo, accuracy: accuracy, level: difficulty == .adaptive ? topLevel : blockLevel[0],
-                      grade: Result.grade(accuracy: accuracy), map: map, strays: wrongTicks.map { min(1, max(0, $0 / end)) })
+                      notes: hits + missed, perfect: perfect, good: good, early: early, late: late, missed: missed,
+                      extras: extras, wrong: wrong, maxCombo: maxCombo, accuracy: accuracy, timing: timing, leanMs: leanMs,
+                      level: difficulty == .adaptive ? topLevel : blockLevel[0],
+                      grade: Result.grade(accuracy: accuracy, timing: timing), map: map, strays: wrongTicks.map { min(1, max(0, $0 / end)) })
     }
 
-    /// Tap mode: the keys a tap at `tick` plays, the whole pending chord nearest it that is still
-    /// in its window or ahead. Empty once the song has none left.
+    /// Tap mode: the keys a tap at `tick` plays, the whole pending chord nearest it that can
+    /// still be played (inside half a beat behind) or ahead. Empty once the song has none left.
     func due(at tick: Double, msPerTick: Double) -> [Int] {
-        let reach = msPerTick.isFinite && msPerTick > 0 ? Self.goodMs / msPerTick : 0
+        let reach = msPerTick.isFinite && msPerTick > 0 ? loose(msPerTick: msPerTick) : 0
         var best: Int?
         for i in notes.indices where status[i] == .pending && active(i) && Double(notes[i].t) >= tick - reach {
             if best == nil || abs(Double(notes[i].t) - tick) < abs(Double(best!) - tick) { best = notes[i].t }

@@ -206,13 +206,15 @@ extension Player {
             audio.send(.stop)
             if gameSpeed < 0.999 {
                 // Under full speed the run was practice: the result shows, nothing is recorded.
-                lessonLog.info("stage: \(r.grade, privacy: .public) \(r.score) at \(Int((self.gameSpeed * 100).rounded()))% speed · \(r.perfect)/\(r.good)/\(r.missed) · not recorded")
+                lessonLog.info("stage: \(r.grade, privacy: .public) \(r.score) at \(Int((self.gameSpeed * 100).rounded()))% speed · \(r.perfect)/\(r.good)/\(r.early)/\(r.late)/\(r.missed) · not recorded")
                 return
             }
             if !ProgressStore.readOnly { lastRun = progress.record(run: r) }
             // The plan's song goals score themselves off the same run.
             onGameRun?(r)
-            lessonLog.info("stage: \(r.grade, privacy: .public) \(r.score) · \(r.perfect)/\(r.good)/\(r.missed) · combo \(r.maxCombo)")
+            // Perfect / good / early / late / missed, the wrong keys, the lean: the result card
+            // shows the grade and the accuracy, this line keeps the rest (`log show` keeps notice).
+            lessonLog.notice("stage: \(r.grade, privacy: .public) \(r.score) · \(r.perfect)/\(r.good)/\(r.early)/\(r.late)/\(r.missed) · wrong \(r.wrong) · lean \(Int(r.leanMs.rounded())) ms · combo \(r.maxCombo)")
         }
     }
 

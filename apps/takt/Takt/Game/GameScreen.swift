@@ -487,7 +487,7 @@ struct Highway: View {
     }
 }
 
-/// "PERFECT", "GOOD" or "MISS" by the hit line: springs in, fades out.
+/// "PERFECT", "GOOD", "EARLY", "LATE" or "MISS" by the hit line: springs in, fades out.
 struct HitPop: View {
     let pop: GameEngine.Pop
     let compact: Bool
@@ -497,6 +497,7 @@ struct HitPop: View {
         let color: Color = switch pop.judgment {
         case .perfect: Palette.signal
         case .good: Palette.cue
+        case .early, .late: Palette.cue.opacity(0.6)
         case .miss: Palette.muted
         }
         Text(pop.judgment.title)
@@ -772,13 +773,33 @@ struct GameResultPanel: View {
     }
 
     /// Under the verdict, small: the points (the board ranks by them), the longest streak,
-    /// and the stray keys when there were any. Accuracy is the headline number.
+    /// and, when there were any, the stray keys and the right keys early or late (the grade
+    /// counts those as played; the chip says where the points went). Accuracy is the headline
+    /// number. Narrow, the faults take a second row.
     private var chips: some View {
-        HStack(spacing: 8) {
+        let faults = result.wrong + result.early + result.late
+        let scores = HStack(spacing: 8) {
             chip(result.score.formatted(.number.grouping(.automatic)), "points", lit: false)
             chip("×\(result.maxCombo)", compact ? "combo" : "best combo", lit: false)
+        }
+        let leaks = HStack(spacing: 8) {
             if result.wrong > 0 {
                 chip("\(result.wrong)", compact ? "stray" : (result.wrong == 1 ? "stray key" : "stray keys"), lit: false, tint: Palette.bad)
+            }
+            if result.early > 0 { chip("\(result.early)", "early", lit: false) }
+            if result.late > 0 { chip("\(result.late)", "late", lit: false) }
+        }
+        return Group {
+            if compact {
+                VStack(alignment: .leading, spacing: 8) {
+                    scores
+                    if faults > 0 { leaks }
+                }
+            } else {
+                HStack(spacing: 8) {
+                    scores
+                    if faults > 0 { leaks }
+                }
             }
         }
     }
