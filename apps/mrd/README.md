@@ -50,3 +50,14 @@ Strapi v4 REST. `?populate=*` pulls whole related records (slow, huge);
 field. Filters: `filters[id_year][year][$eq]=2023`,
 `filters[id_country][slug][$eq]=argentina`. Pages are capped at 100 rows.
 Collections not pulled: `projects` (site content), `publications` (404).
+
+## The source-law crawl (`laws/`)
+
+Own Supabase project (`MRD_SUPABASE_*` in `apps/mrd/.env`; migrations in `supabase/`, pushed with `supabase db push --workdir . -p <pw> --yes`). Tables `countries`, `categories`, `questions`, `citations`, `laws`, `citation_laws`, `find_log`, `runs`; the `dashboard()` RPC feeds https://ola.cx/mrd (`src/app/mrd/`, polls every 5 s). Storage bucket `sources` holds the fetched files at `{ISO}/{law_id}.{pdf|html}`. Scripts run with plain `python3` from `laws/` (no `-I`, they import each other); `lib.py` has the Supabase, Haiku 5.5 and Brave Search helpers and the cost meter.
+
+1. `seed.py` loads countries, questions and citations.
+2. `extract.py` has Haiku read every citation and name the instruments it relies on (2,970 citations → 2,536 laws, $9.50).
+3. `find.py` searches each law (Brave, steered at the country's portal from `portals.py`), lets Haiku rank and check the download, stores the file and the text. `run-find.sh` loops it until nothing is pending. Status per law: `found` (text stored), `linked` (the site refuses scripts, link kept), `not_found`, `paywalled`, `error`.
+4. `find.py --rescue` is the second pass over every miss (`run-rescue.sh`, restartable with `--before`): predictable addresses first (`adapters.py`: core treaties at their depositary, EU law by CELEX, Colombian Constitutional Court rulings, Austrian law through the RIS open-data API), then side doors into portals that render by script (Dutch BWB XML repository, Singapore Statutes Online `?WholeDoc=1`, Russian gazette PDFs, Kenya Law `/source.pdf`), then a headless Chrome worker (`bfetch.mjs` + `browser.py`; it needs Google Chrome installed, `channel: 'chrome'`) for sites whose challenge pages block plain clients (SAFLII, legislation.govt.nz, EUR-Lex, OHCHR, HUDOC, courtlistener, finlex), then new searches with queries Haiku writes in the country's language. Cloudflare's managed challenge (refworld, NATLEX, NZLII, Légifrance, LawLibrary, AustLII, CanLII, ejustice.fgov.be) beats headless Chrome too: those stay links.
+
+First pass: 1,677 found, 451 link only, 404 not found (~$30 Haiku + Brave). Scanned PDFs (older gazettes, AU treaties) come back with no text; OCR would be the next lever.
