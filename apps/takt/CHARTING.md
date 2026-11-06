@@ -238,7 +238,17 @@ every song and part.
     octave), and it had Blue Lantern II jumping an octave onto 1 and 2 with 3–5 idle. The Stage
     ignores it and fingers each tier's own line by hand position (`Game/Fingering.swift`: a
     dynamic program with a pianist's costs), since the line at Medium is not the line at Hard.
-    Chord voicings keep the fingers written for them.
+    Chord voicings keep the fingers written for them. Since 0.1 (107) a finger may reach the
+    next key over after a beat and a half (the thumb on F taking an E after a held note, the
+    hand staying put); inside a beat it never slides, the thumb tucks.
+
+13. **A first song is one riff** (0.1 (107)). Blue Lantern II at Medium was the sax line's 120
+    notes in 24 different bars, and Bart found it too hard: "make it at least 1/3 easier … by
+    having simpler patterns that repeat more often". The cure was the line, not the ladder: one
+    riff bar (D5 held, F4 on the "and" of 3) and a held note that follows the chord, four bars
+    to learn, one hand position, 72 notes at Medium. The ladder then needs the song's `space: 0`
+    on tiers 2–5, because the held notes are long silences and every tier would borrow the Hard
+    passing note back into them.
 
 ## Where this comes from
 

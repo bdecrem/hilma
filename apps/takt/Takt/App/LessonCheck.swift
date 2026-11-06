@@ -2012,7 +2012,7 @@ enum LessonCheck {
             check("fingering: F4 G4 A4 C5 D5 sits in one hand, 1 2 3 4 5",
                   plan(line([65, 67, 69, 72, 74])) == [1, 2, 3, 4, 5], plan(line([65, 67, 69, 72, 74])).map(String.init).joined(separator: " "))
             let first = plan(line([74, 72, 69, 65, 67, 72, 74], step: 12))
-            check("fingering: D5 C5 A4 F4 G4 C5 D5 (Blue Lantern II's first bars) stays in one hand: the thumb on F4, D5 under 4 or 5, every step in order",
+            check("fingering: D5 C5 A4 F4 G4 C5 D5 (the sax line's first bars, Blue Lantern II's until 0.1 (107)) stays in one hand: the thumb on F4, D5 under 4 or 5, every step in order",
                   first[3] == 1 && first.last! >= 4 && zip(first, first.dropFirst()).enumerated().allSatisfy { k, p in
                       let d = [72, 69, 65, 67, 72, 74][k] - [74, 72, 69, 65, 67, 72][k]
                       return (d > 0) == (p.1 > p.0) && p.0 != p.1
@@ -2059,6 +2059,15 @@ enum LessonCheck {
             }
             print("Blue Lantern II melody, level \(medium) (Medium), fingered by hand position:")
             for bar in rows.keys.sorted() { print(String(format: "  bar %2d: ", bar + 1) + rows[bar]!.joined(separator: "  ")) }
+            // Since 0.1 (107) the line is one riff in one hand (blue_lantern.py --white): every
+            // key under the same finger all song long, D5 the pinky, F4 the thumb and E4 its
+            // reach down, and Medium exactly the riff and its landing notes, 72 of them.
+            let byKey = Dictionary(grouping: bl.notes.indices.filter { bl.masks[medium - 1][$0] }, by: { bl.notes[$0].n })
+                .mapValues { Set($0.map { bl.fingers[medium - 1][$0]! }) }
+            let mediumCount = bl.masks[medium - 1].filter { $0 }.count
+            check("fingering: Blue Lantern II on Medium is one hand position: \(byKey.count) keys, each under one finger all song, D5 under 5, F4 and E4 under the thumb; \(mediumCount) notes",
+                  byKey.count == 7 && byKey.values.allSatisfy { $0.count == 1 } && byKey[74] == [5] && byKey[65] == [1] && byKey[64] == [1] && mediumCount == 72,
+                  byKey.keys.sorted().map { "\(name($0))/\(byKey[$0]!.sorted().map(String.init).joined(separator: ","))" }.joined(separator: " "))
         }
 
         // Call (Call.swift): the next note called out, finger then key, then the crossing, and

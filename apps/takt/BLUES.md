@@ -170,9 +170,13 @@ Notes from play:
   ride, out chorus, the last Dm held.
 - **Blue Lantern II** and **Maxwell Street II** (2026-11-04, the map's Level 1 and Level 2
   songs): the same records with the melody on a level's notes only, the white keys and A C D E
-  G (`--white`, `--five`; GOALS.md §2). Their melody ladders chart the originals' figures within
-  0.04 a second (Blue Lantern II 0.26 · 0.40 · 0.66 · 0.74 · 0.88 · 0.94 · 0.97, Maxwell Street II
-  0.26 · 0.65 · 0.85 · 1.01 · 1.01 · 1.30 · 1.30); the plan asks for an A on Medium.
+  G (`--white`, `--five`; GOALS.md §2). Maxwell Street II's melody ladder charts the original's
+  figures within 0.04 a second (0.26 · 0.65 · 0.85 · 1.01 · 1.01 · 1.30 · 1.30); the plan asks
+  for an A on Medium. Blue Lantern II has had a line of its own since 0.1 (107), 2026-11-05: one
+  riff in one hand, a held note between (Bart found the sax line's Medium, 120 notes, too hard,
+  and asked for simpler patterns that repeat more often), 0.35 · 0.38 · 0.38 · 0.53 · 0.53 ·
+  0.79 · 0.79 a second (48 · 52 · 52 · 72 · 72 · 108 · 108 notes): the anchors, then the riff,
+  then the riff with its passing note and pickups.
 
 ## 6. Open
 

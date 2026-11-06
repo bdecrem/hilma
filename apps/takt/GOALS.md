@@ -138,10 +138,15 @@ Instead, two blues tracks at a walking tempo got a second melody chart on exactl
 notes, as a separate song beside the original, the way Hypnotist II sits beside Hypnotist
 (`--white` and `--five` on their scripts; the originals regenerate byte-identical):
 
-- **Blue Lantern II** (minor blues in D, 84, `blue_lantern.py --white`): the sax line on white
-  keys only. The blue note (A flat) gives way to a white neighbor (F under the Gm7, E under the
-  Dm7, B under the A7), and the head's turnaround passes through E. Medium plays all seven white
-  keys, 120 notes, 0.88 a second (the original's figure).
+- **Blue Lantern II** (minor blues in D, 84, `blue_lantern.py --white`): the same record with
+  a line of its own, one riff in one hand (since 0.1 (107), 2026-11-05; until then the sax line
+  on white keys only, 120 notes at Medium, which Bart found too hard). Every odd bar is the riff
+  bar, D5 on the 1 held and F4 on the "and" of 3 with the kick; every even bar holds one note
+  on the 1 that follows the chord: A over the Dm7 (C the second time), G over the Gm7, E then B
+  over the turnaround's A7s, back to D. The hand never moves: the thumb on F reaching down to
+  E, 2 on G and A, 3 on B, 4 on C, 5 on D. Medium is exactly that, 72 notes, 0.53 a second, and
+  still all seven white keys; Hard adds the passing C between the D and the F and, in the solo
+  chorus, two pickup eighths into every riff (108).
 - **Maxwell Street II** (Chicago blues in A, 80, `maxwell_street.py --five`): the horn on
   A C D E G. The riff walks up A C D E without the flat fifth, and the bass plays it in unison
   with the horn. The release's riff shapes become E G A and D E G A, and the solo's chromatic

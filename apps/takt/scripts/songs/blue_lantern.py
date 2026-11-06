@@ -6,10 +6,16 @@
     python3 apps/takt/scripts/songs/blue_lantern.py --white   -> Takt/Content/song-blue-lantern-white.json
 
 `--white` is **Blue Lantern II**, the song of the map's Level 1 (white keys: A natural
-minor, C major; the plan wants an A on its melody at Medium): the same record with the sax line
-on white keys only. The blue note (A flat) goes, a white neighbor takes its place where it sat
-(F under the Gm7, E under the Dm7, B under the A7), and the head's turnaround passes through E
-instead of F. Every note of the part, every level, is a white key.
+minor, C major; the plan wants an A on its melody at Medium): the same record with a line of
+its own, one riff in one hand. Every odd bar is the riff bar, D5 on the 1 held, F4 on the "and"
+of 3 (with the kick); every even bar holds one note on the 1 that follows the chord: A over the
+Dm7 (C the second time, the seventh), G over the Gm7, E then B over the A7s of the turnaround,
+back to D. The hand never moves: the thumb on F4 (reaching down to E), 2 on G, 3 on A, 4 on C
+(reaching down to B), 5 on D. Medium is exactly that, 72 notes (2026-11-05: Bart found the
+sax line's 120 "too hard", and asked for simpler patterns that repeat more often; it had 24
+different bars); Hard adds the passing C between the D and the F, and in the solo chorus two
+pickup eighths into every riff. Every note of the part, every level, is a white key, and
+Medium plays all seven.
 
 The slow-funk minor blues (the thrill-is-gone feel): kick on the 1 and the "and" of 3, the snare
 on 2 and 4, the hat in sixteenths with the eighths accented, an open hat into the 1 every other
@@ -33,7 +39,7 @@ WHITE = "--white" in sys.argv
 FORM = ["Dm7", "Dm7", "Dm7", "Dm7", "Gm7", "Gm7", "Dm7", "Dm7", "Bb7", "A7", "Dm7", "A7"]
 if WHITE:
     s = Song("song-blue-lantern-white", "Blue Lantern II", "Minor blues", "Dm", 84, "lantern",
-             "The minor blues in D, the sax line on the white keys only. Level 1's song.", seed=84)
+             "The minor blues in D, one riff in one hand on the white keys. Level 1's song.", seed=84)
 else:
     s = Song("song-blue-lantern", "Blue Lantern", "Minor blues", "Dm", 84, "lantern",
              "A minor blues in D. Rhodes, a sixteenth hat, the sax taking its time.", seed=84)
@@ -188,19 +194,19 @@ HEAD = {
     2: [(0, C5, 18, 2), (18, D5, 30, 1)],
     3: [(0, A4, 24, 1), (24, G4, 6, 3), (30, F4, 18, 2)],
     4: [(0, G4, 12, 2), (12, F4, 36, 1)],
-    5: [(0, G4, 18, 1), (18, A4, 6, 3), (24, F4 if WHITE else Gs4, 6, 3), (30, G4, 18, 2)],
+    5: [(0, G4, 18, 1), (18, A4, 6, 3), (24, Gs4, 6, 3), (30, G4, 18, 2)],
     6: [(0, F4, 24, 1), (24, D4, 24, 2)],
     7: [(0, D4, 36, 1), (42, C5, 6, 3)],
     8: [(0, D5, 24, 1), (24, C5, 12, 2), (36, A4, 12, 2)],
     9: [(0, C5, 12, 2), (12, A4, 36, 1)],
     10: [(0, F4, 18, 2), (18, D4, 30, 1)],
-    11: [(0, C4, 24, 1), (24, D4, 6, 3), (30, E4 if WHITE else F4, 6, 3), (36, A4, 12, 2)],
+    11: [(0, C4, 24, 1), (24, D4, 6, 3), (30, F4, 6, 3), (36, A4, 12, 2)],
 }
 SOLO_LINE = {
     0: [(0, A5, 12, 1), (12, G5, 6, 3), (18, F5, 6, 2), (24, D5, 24, 2)],
     1: [(0, F5, 12, 2), (12, D5, 36, 1)],
     2: [(0, C5, 6, 3), (6, D5, 6, 3), (12, F5, 12, 2), (24, G5, 24, 1)],
-    3: [(0, A5, 24, 1), (24, G5, 6, 3), (30, E5, 18, 2)] if WHITE else [(0, A5, 24, 1), (24, Gs5, 6, 3), (30, G5, 18, 2)],
+    3: [(0, A5, 24, 1), (24, Gs5, 6, 3), (30, G5, 18, 2)],
     4: [(0, G5, 12, 1), (12, F5, 12, 2), (24, D5, 24, 2)],
     5: [(0, G5, 6, 3), (6, A5, 6, 3), (12, G5, 12, 2), (24, F5, 24, 1)],
     6: [(0, D5, 36, 1), (36, C5, 12, 2)],
@@ -208,8 +214,16 @@ SOLO_LINE = {
     8: [(0, F5, 12, 1), (12, D5, 12, 2), (24, C5, 24, 2)],
     9: [(0, A4, 12, 2), (12, C5, 36, 1)],
     10: [(0, D5, 24, 1), (24, F5, 6, 3), (30, D5, 18, 2)],
-    11: [(0, C5, 24, 1), (24, B4 if WHITE else Gs4, 6, 3), (30, A4, 18, 2)],
+    11: [(0, C5, 24, 1), (24, Gs4, 6, 3), (30, A4, 18, 2)],
 }
+
+# Blue Lantern II: one riff in one hand (the module's docstring). The riff bar: D5 on the 1
+# (1), the passing C5 on the "and" of 2 (3, Hard), F4 on the "and" of 3 with the kick (2).
+# The bar after it holds one note on the 1 (1), the chord's: LANDING by bar of the form. In the
+# solo chorus that note lets go on the 4 for two pickup eighths into the riff (3, Hard).
+RIFF = [(0, D5, 18, 1), (18, C5, 12, 3), (30, F4, 18, 2)]
+LANDING = {1: A4, 3: C5, 5: G4, 7: A4, 9: E4, 11: B4}
+PICKUP = [(36, A4, 6, 3), (42, C5, 6, 3)]
 
 melody = s.part("melody", "White keys" if WHITE else "The sax line", "rhodes", "horns", "sax")
 for c in range(CHORUSES):
@@ -219,6 +233,16 @@ for c in range(CHORUSES):
         if bar == s.bars - 1:
             s.pnote(melody, o, D5, 44, 1)
             continue
+        if WHITE:
+            if b % 2 == 0:
+                for t, n, ln, lv in RIFF:
+                    s.pnote(melody, o + t, n, ln, lv)
+            else:
+                s.pnote(melody, o, LANDING[b], 36 if c == SOLO else 48, 1)
+                if c == SOLO:
+                    for t, n, ln, lv in PICKUP:
+                        s.pnote(melody, o + t, n, ln, lv)
+            continue
         phrases = SOLO_LINE if c == SOLO else HEAD
         for t, n, ln, lv in phrases[b]:
             s.pnote(melody, o + t, n, ln, lv)
@@ -226,6 +250,7 @@ for c in range(CHORUSES):
             s.pnote(melody, o + 45, C5 if b == 3 else A4, 3, 3)  # a pickup into the next phrase
 if WHITE:
     assert all(e["n"] % 12 in (0, 2, 4, 5, 7, 9, 11) for e in melody), "a black key in the white-key line"
+    assert {e["n"] % 12 for e in melody if e["lv"] <= 2} == {0, 2, 4, 5, 7, 9, 11}, "Medium wants all seven white keys"
 s.fingered(melody)
 s.chart_to_channel(melody, s.horns, lambda e: 0.8 if e["lv"] == 1 else 0.66, inst=None)
 for e in s.horns:

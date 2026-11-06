@@ -1431,7 +1431,8 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   played to the end on that part and fixed level with that grade or better
   (`GameEngine.Result.floor(of:)`; `Player.onGameRun` → `AppModel.goalRun`, the best accuracy
   kept in `GoalRecord.best`). Both want an A on Medium melody, on two new charts (Bart: "including
-  new charts"): **Blue Lantern II** (`blue_lantern.py --white`, the sax line on white keys only)
+  new charts"): **Blue Lantern II** (`blue_lantern.py --white`, the sax line on white keys only
+  until 0.1 (107), since then one riff in one hand, below)
   and **Maxwell Street II** (`maxwell_street.py --five`, the horn on A C D E G, the riff without
   the flat fifth, the bass with it), first under All tracks, ladders as their originals'.
   Hypnotist and Hypnotist II fit the notes on paper but use three or four of them, at 127.
@@ -1537,6 +1538,32 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   "1 · C, 2 · D, 3 · E · tuck, 1 · F … 1 · F · over, 3 · E, 2 · D, 1 · C", the words and
   spellings, every clip in the bundle). Not yet: Call on a lesson's scale step or an improv
   (the adapters exist, the lesson screen has no button), a voice setting.
+
+- **Blue Lantern II, one riff in one hand: 0.1 (107), 2026-11-05.** Bart, on Level 1's song:
+  "blue lantern ii on medium is too hard - make it at least 1/3 easier", and, as the ladder
+  figures came up, "do it by have simpler patterns that repeat more often". So the line, not
+  the ladder (`scripts/songs/blue_lantern.py --white`; the original Blue Lantern regenerates
+  byte-identical): every odd bar the riff bar, D5 on the 1 held and F4 on the "and" of 3 with
+  the kick; every even bar one note held on the 1 that follows the chord, A over the Dm7 (C the
+  second time, the seventh), G over the Gm7, E then B over the turnaround's A7s, back to D.
+  Four bars to learn instead of 24, and the hand never moves: the thumb on F reaching down to
+  E, 2 on G and A, 3 on B, 4 on C, 5 on D. Medium is exactly that, 72 notes (was 120), still
+  all seven white keys (the plan check); Hard adds the passing C between the D and the F and,
+  in the solo chorus, two pickup eighths into every riff (108). Ladder 48 · 52 · 52 · 72 · 72 ·
+  108 · 108 (0.35 · 0.38 · 0.38 · 0.53 · 0.53 · 0.79 · 0.79 a second); `charting.json` gives the
+  song `space: 0` on tiers 2–5, since the held notes are long silences and every tier would
+  borrow the Hard notes back into them (CHARTING.md rule 13). `Fingering.cost`: the same finger
+  on the next key over, a beat and a half or more later, is a reach (1) and not the hand's jump
+  (shift + 0.5), so the thumb on F takes the E without the riff bar before it being re-fingered
+  4 2 (it was); inside a beat nothing changes, the thumb tucks. On the other seven melodies the
+  rule moves 76 fingers of 7,400, for the better where read (Slow Burn bar 6 and Dockery bar 12
+  lose a crossing for 4 3 2 1 and a reach). Checks 435/435, one new: Blue Lantern II on Medium
+  is one hand position, 7 keys each under one finger all song, D5 under 5, F4 and E4 under the
+  thumb, 72 notes; the Call line now "5 · D | 1 · F | 2 · A | 5 · D | 1 · F | 4 · C …", no tuck,
+  no over. Verified on the Stage (Medium, the Gm7 bar: D5 under 5 played, F4 under 1 and G4
+  under 2 coming down). Not yet: Bart's pass at the piano. If Medium is still too hard, the next
+  step down is the pentatonic box alone (A and G the only landings, no E or B), which gives up
+  "every white key at Medium" in the plan check.
 
 ## Code map (`Takt/`)
 

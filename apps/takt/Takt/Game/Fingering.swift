@@ -7,7 +7,8 @@ import Foundation
 /// hand reaches (the thumb to the pinky an octave), the thumb tucking under on the way up and
 /// a finger crossing over it on the way down, and a jump of the whole hand only where there
 /// is time for it (a rest, a long note) or nothing else will do. The same finger never slides
-/// between two keys inside a phrase, and a repeated key keeps its finger. The left hand is the
+/// between two keys inside a beat (after a beat and a half it may reach the next key over, the
+/// thumb on F taking the E), and a repeated key keeps its finger. The left hand is the
 /// mirror (the pinky low). The Stage fingers each tier's chart with this (0.1 (104)), so a
 /// level's line is fingered as the line it is, not as the whole record's.
 enum Fingering {
@@ -47,8 +48,11 @@ enum Fingering {
             guard (d > 0) == (b > a), a != b, let r = reach[min(a, b) * 10 + max(a, b)], abs(d) <= r.max else { return 50 }
             return abs(d) <= r.easy ? 0 : Double(abs(d) - r.easy) * 1.5
         }
-        // The same finger again on another key: the hand jumps (and another finger would do).
-        if a == b { return shift + 0.5 }
+        // The same finger again on another key: a reach when it is the next key over and there
+        // is time for it (a beat and a half: the thumb on F reaching down to E after a held
+        // note, keeping the hand where it lies), otherwise the hand jumps (and another finger
+        // would do). Scale speed, a beat a note, is no time: there the thumb tucks.
+        if a == b { return abs(d) <= 2 && gap >= 1.5 ? 1 : shift + 0.5 }
         let up = d > 0
         let s = abs(d)
         if up == (b > a) {
