@@ -1,17 +1,18 @@
 import SwiftUI
 
-/// The hand under a scale lesson comes in six drawings (Settings → Display → Hand; concepts at
+/// The hand under a scale lesson comes in seven drawings (Settings → Display → Hand; concepts at
 /// ola.cx/takt/hands), all on one contract: `down` is filled `signal` (and `lit`, an intro's
 /// whole-hand pose), `next` is outlined `cue`, `tuck` folds the thumb in under the palm, `right`
 /// mirrors the drawing for the left hand.
 enum HandStyle: String, CaseIterable, Identifiable {
-    case linie, skizze, automat, greif, schaltplan, bauhaus
+    case kontur, linie, skizze, automat, greif, schaltplan, bauhaus
 
     static let key = "hand"
     var id: String { rawValue }
 
     var title: String {
         switch self {
+        case .kontur: "Kontur"
         case .linie: "Linie"
         case .skizze: "Skizze"
         case .automat: "Automat"
@@ -23,6 +24,7 @@ enum HandStyle: String, CaseIterable, Identifiable {
 
     var detail: String {
         switch self {
+        case .kontur: "One outline, traced from a photo"
         case .linie: "A clean hand-drawn line"
         case .skizze: "A normal hand, sketched"
         case .automat: "The robot hand"
@@ -47,7 +49,7 @@ struct HandView: View {
     var right = true
     /// A fixed style (the Settings thumbnails); nil draws the chosen one.
     var style: HandStyle? = nil
-    @AppStorage(HandStyle.key) private var chosen: HandStyle = .linie
+    @AppStorage(HandStyle.key) private var chosen: HandStyle = .kontur
 
     /// Finger geometry, right hand: (center x, top y, width), thumb to pinky by number. Fingers
     /// end at `fingerBottom`; the thumb is `thumbLength` long from its base in the palm's side.
@@ -83,7 +85,11 @@ struct HandView: View {
 
     @ViewBuilder
     private var drawing: some View {
-        if current == .skizze {
+        if current == .kontur {
+            KonturHand(motion: KonturMotion(fold: tuck ? 1 : 0, press: (2...5).map { tone($0) == .on ? 1 : 0 }),
+                       tone: tone, right: right)
+                .frame(width: 240, height: 200)
+        } else if current == .skizze {
             SkizzeHand(tone: tone, tuck: tuck, right: right)
                 .frame(width: 240, height: 200)
                 .scaleEffect(x: right ? 1 : -1)
@@ -129,7 +135,7 @@ struct HandView: View {
         let t = tone(f)
         switch current {
         case .linie: LinieFinger(tone: t, w: w, len: len, seed: f, ghost: ghost)
-        case .skizze: EmptyView()
+        case .kontur, .skizze: EmptyView()
         case .automat: AutomatFinger(tone: t, w: w, len: len, thumb: thumb)
         case .greif: GreifFinger(tone: t, w: w, len: len)
         case .schaltplan: SchaltplanFinger(tone: t, w: w, len: len)
@@ -141,7 +147,7 @@ struct HandView: View {
     private var palm: some View {
         switch current {
         case .linie: LiniePalm()
-        case .skizze: EmptyView()
+        case .kontur, .skizze: EmptyView()
         case .automat: AutomatPalm()
         case .greif: GreifPalm()
         case .schaltplan: SchaltplanPalm()
@@ -153,7 +159,7 @@ struct HandView: View {
     private func number(_ f: Int, width w: CGFloat, length len: CGFloat, counter: Double) -> some View {
         let t = tone(f)
         let dy: CGFloat = switch current {
-        case .linie, .skizze: 24
+        case .kontur, .linie, .skizze: 24
         case .automat: 26
         case .greif: 40
         case .schaltplan: 34
@@ -655,9 +661,251 @@ private struct SkizzeHand: View {
     }
 }
 
+// MARK: - 0 · Kontur: one outline traced from a photo of a hand on the keys, from the player's seat.
+
+/// Everything in the Kontur drawing that moves, as one animatable value: `fold` 0 is the thumb
+/// out beside the palm, 1 the thumb under it (the fingers spread so its nail shows between 3 and
+/// 4, the palm narrows where the thumb left); `press[f - 2]` is finger f pushed down on its key.
+struct KonturMotion: VectorArithmetic {
+    var fold: Double = 0
+    var press: [Double] = [0, 0, 0, 0]
+
+    static var zero: KonturMotion { KonturMotion() }
+    static func + (a: KonturMotion, b: KonturMotion) -> KonturMotion {
+        KonturMotion(fold: a.fold + b.fold, press: zip(a.press, b.press).map(+))
+    }
+    static func - (a: KonturMotion, b: KonturMotion) -> KonturMotion {
+        KonturMotion(fold: a.fold - b.fold, press: zip(a.press, b.press).map(-))
+    }
+    mutating func scale(by rhs: Double) {
+        fold *= rhs
+        press = press.map { $0 * rhs }
+    }
+    var magnitudeSquared: Double { fold * fold + press.reduce(0) { $0 + $1 * $1 } }
+}
+
+/// The drawing's parts, in the reference photo's pixel space (the hand ≈ x 76–598, y 36–612),
+/// fitted into the 240 × 200 box. Traced over a photo of a right hand on the keys seen from the
+/// player's seat: fingers up the screen and foreshortened, the thumb a short broad lobe on the
+/// left with its nail toward the keys. The fingers reach below the knuckle line into the palm,
+/// the thumb's base lies inside it; the drawing strokes every part first and fills them after,
+/// so together they are one outline with no seam, and a part can still pass behind another.
+struct KonturDrawing {
+    struct Finger {
+        let baseX, baseW, tipX, tipY, tipW: CGFloat
+        let num: CGPoint
+    }
+
+    static let box = CGRect(x: 70, y: 30, width: 534, height: 586)
+    static let scale: CGFloat = 200 / 586
+    /// The outline's width in the box (2.6 in the photo's space).
+    static let lineWidth: CGFloat = 2.6 * scale
+    static let fingerRoot: CGFloat = 336
+    static let fingers: [Int: Finger] = [
+        2: Finger(baseX: 240, baseW: 104, tipX: 216, tipY: 66, tipW: 72, num: CGPoint(x: 230, y: 205)),
+        3: Finger(baseX: 340, baseW: 102, tipX: 322, tipY: 34, tipW: 72, num: CGPoint(x: 333, y: 185)),
+        4: Finger(baseX: 445, baseW: 104, tipX: 438, tipY: 38, tipW: 72, num: CGPoint(x: 441, y: 185)),
+        5: Finger(baseX: 546, baseW: 94, tipX: 552, tipY: 94, tipW: 64, num: CGPoint(x: 544, y: 220)),
+    ]
+    /// How far each finger slides sideways when the thumb goes under.
+    static let spread: [Int: CGFloat] = [2: -16, 3: -6, 4: 26, 5: 34]
+    /// How far a pressed finger's tip goes down.
+    static let dip: CGFloat = 24
+    /// The thumb out: four cubic segments from where the thenar leaves the palm's edge, up the
+    /// outer edge, over the tip, down the inner edge to the web, and back inside the palm.
+    static let thumbOut: [CGPoint] = [
+        CGPoint(x: 158, y: 452),
+        CGPoint(x: 124, y: 408), CGPoint(x: 88, y: 336), CGPoint(x: 86, y: 258),
+        CGPoint(x: 76, y: 219), CGPoint(x: 134, y: 203), CGPoint(x: 144, y: 242),
+        CGPoint(x: 162, y: 262), CGPoint(x: 190, y: 296), CGPoint(x: 206, y: 324),
+        CGPoint(x: 200, y: 384), CGPoint(x: 178, y: 424),
+    ]
+    /// The thumb under: the same four segments as a capsule from under the palm to the gap
+    /// between fingers 3 and 4, where only its tip shows.
+    static let thumbIn: [CGPoint] = capsule(from: CGPoint(x: 210, y: 440), to: CGPoint(x: 402, y: 222), width: 58)
+    static let numOut = CGPoint(x: 126, y: 300)
+    static let numIn = CGPoint(x: 402, y: 182)
+
+    static func capsule(from a: CGPoint, to b: CGPoint, width: CGFloat) -> [CGPoint] {
+        let r = width / 2, ang = atan2(b.y - a.y, b.x - a.x)
+        let n = CGPoint(x: -sin(ang) * r, y: cos(ang) * r)
+        let e = CGPoint(x: cos(ang) * r * 4 / 3, y: sin(ang) * r * 4 / 3)
+        func mix(_ p: CGPoint, _ q: CGPoint, _ t: CGFloat) -> CGPoint { CGPoint(x: p.x + (q.x - p.x) * t, y: p.y + (q.y - p.y) * t) }
+        let a0 = CGPoint(x: a.x - n.x, y: a.y - n.y), b0 = CGPoint(x: b.x - n.x, y: b.y - n.y)
+        let b1 = CGPoint(x: b.x + n.x, y: b.y + n.y), a1 = CGPoint(x: a.x + n.x, y: a.y + n.y)
+        return [
+            a0,
+            mix(a0, b0, 1 / 3), mix(a0, b0, 2 / 3), b0,
+            CGPoint(x: b0.x + e.x, y: b0.y + e.y), CGPoint(x: b1.x + e.x, y: b1.y + e.y), b1,
+            mix(b1, a1, 1 / 3), mix(b1, a1, 2 / 3), a1,
+            mix(a1, a0, 1 / 3), mix(a1, a0, 2 / 3),
+        ]
+    }
+
+    let fold: CGFloat
+    let press: [CGFloat]
+    let transform: CGAffineTransform
+
+    init(motion: KonturMotion, right: Bool) {
+        fold = CGFloat(min(max(motion.fold, 0), 1))
+        press = motion.press.map { CGFloat($0) }
+        var t = CGAffineTransform(translationX: (240 - Self.box.width * Self.scale) / 2, y: 0)
+            .scaledBy(x: Self.scale, y: Self.scale)
+            .translatedBy(x: -Self.box.minX, y: -Self.box.minY)
+        if !right { t = t.concatenating(CGAffineTransform(scaleX: -1, y: 1).translatedBy(x: -240, y: 0)) }
+        transform = t
+    }
+
+    private func mix(_ a: CGPoint, _ b: CGPoint) -> CGPoint { CGPoint(x: a.x + (b.x - a.x) * fold, y: a.y + (b.y - a.y) * fold) }
+    private func spread(_ f: Int) -> CGFloat { (Self.spread[f] ?? 0) * fold }
+    private func dip(_ f: Int) -> CGFloat { Self.dip * press[f - 2] }
+
+    func point(_ p: CGPoint) -> CGPoint { p.applying(transform) }
+
+    var thumb: Path {
+        let p = zip(Self.thumbOut, Self.thumbIn).map { mix($0, $1) }
+        var path = Path()
+        path.move(to: p[0])
+        path.addCurve(to: p[3], control1: p[1], control2: p[2])
+        path.addCurve(to: p[6], control1: p[4], control2: p[5])
+        path.addCurve(to: p[9], control1: p[7], control2: p[8])
+        path.addCurve(to: p[0], control1: p[10], control2: p[11])
+        path.closeSubpath()
+        return path.applying(transform)
+    }
+
+    /// The thumb's tip (the middle of its nail), where its number goes when it is under.
+    var thumbTip: CGPoint {
+        let p = zip(Self.thumbOut, Self.thumbIn).map { mix($0, $1) }
+        return point(CGPoint(x: (p[3].x + p[6].x) / 2 + (p[4].x + p[5].x - p[3].x - p[6].x) * 0.375,
+                             y: (p[3].y + p[6].y) / 2 + (p[4].y + p[5].y - p[3].y - p[6].y) * 0.375))
+    }
+
+    var thumbNumber: CGPoint { point(mix(Self.numOut, Self.numIn)) }
+
+    /// Wrist left, up the left edge (under the thumb out; the thenar folded in on a tuck), the
+    /// web, the knuckle line following the fingers' spread, down the right edge, wrist right.
+    var palm: Path {
+        let s2 = spread(2), s3 = spread(3), s4 = spread(4), s5 = spread(5)
+        let left: [(CGPoint, CGPoint)] = [
+            (CGPoint(x: 276, y: 600), CGPoint(x: 276, y: 600)), (CGPoint(x: 236, y: 548), CGPoint(x: 238, y: 548)),
+            (CGPoint(x: 190, y: 492), CGPoint(x: 200, y: 494)), (CGPoint(x: 158, y: 452), CGPoint(x: 172, y: 446)),
+            (CGPoint(x: 144, y: 400), CGPoint(x: 154, y: 398)), (CGPoint(x: 144, y: 352), CGPoint(x: 148, y: 344)),
+        ]
+        var pts = left.map { mix($0.0, $0.1) }
+        pts.append(CGPoint(x: 206 + s2 - 8 * fold, y: 324 - 6 * fold))
+        pts.append(CGPoint(x: 290 + (s2 + s3) / 2, y: 300))
+        pts.append(CGPoint(x: 392 + (s3 + s4) / 2, y: 296))
+        pts.append(CGPoint(x: 498 + (s4 + s5) / 2, y: 300))
+        pts.append(CGPoint(x: 592 + s5, y: 310))
+        pts.append(CGPoint(x: 597 + s5, y: 370))
+        pts.append(CGPoint(x: 591 + s5, y: 455))
+        pts.append(CGPoint(x: 573 + s5 * 0.6, y: 540))
+        pts.append(CGPoint(x: 562 + s5 * 0.3, y: 600))
+        var path = Path()
+        path.move(to: pts[0])
+        for i in 1..<pts.count {
+            let a = pts[i - 1], b = pts[i], m = CGPoint(x: (a.x + b.x) / 2, y: (a.y + b.y) / 2)
+            if i == 1 { path.addLine(to: m) } else { path.addQuadCurve(to: m, control: a) }
+        }
+        let a = pts[pts.count - 1], b = pts[0]
+        path.addLine(to: a)
+        path.addCurve(to: b, control1: CGPoint(x: a.x - 40, y: a.y + 14), control2: CGPoint(x: b.x + 40, y: b.y + 14))
+        path.closeSubpath()
+        return path.applying(transform)
+    }
+
+    /// A finger from its root inside the palm, up the left side (a gentle bulge at the middle
+    /// joint, the finger is widest there in this view), over the tip, down the right side.
+    func finger(_ f: Int, closed: Bool) -> Path {
+        let g = Self.fingers[f]!, dx = spread(f)
+        let lx0 = g.baseX - g.baseW / 2 + dx, rx0 = g.baseX + g.baseW / 2 + dx, y0 = Self.fingerRoot
+        let r = g.tipW / 2, cy = g.tipY + r + dip(f), lx1 = g.tipX - r + dx, rx1 = g.tipX + r + dx
+        let k = 1.2 * r
+        var p = Path()
+        p.move(to: CGPoint(x: lx0, y: y0))
+        p.addCurve(to: CGPoint(x: lx1, y: cy), control1: CGPoint(x: lx0 - 3, y: y0 - (y0 - cy) * 0.35), control2: CGPoint(x: lx1 - 4, y: cy + (y0 - cy) * 0.45))
+        p.addCurve(to: CGPoint(x: rx1, y: cy), control1: CGPoint(x: lx1, y: cy - k), control2: CGPoint(x: rx1, y: cy - k))
+        p.addCurve(to: CGPoint(x: rx0, y: y0), control1: CGPoint(x: rx1 + 4, y: cy + (y0 - cy) * 0.45), control2: CGPoint(x: rx0 + 3, y: y0 - (y0 - cy) * 0.35))
+        if closed { p.closeSubpath() }
+        return p.applying(transform)
+    }
+
+    func number(_ f: Int) -> CGPoint {
+        let g = Self.fingers[f]!
+        return point(CGPoint(x: g.num.x + spread(f), y: g.num.y + dip(f) * 0.5))
+    }
+
+    /// The palm and the fingers together: what covers the thumb.
+    var cover: Path {
+        var p = palm
+        for f in 2...5 { p.addPath(finger(f, closed: true)) }
+        return p
+    }
+}
+
+/// The drawing: every part's outline stroked first (together, the outline of the whole hand),
+/// then the fills in order so the thumb goes under the palm and the fingers sit on it, then the
+/// lines between the fingers and around the thumb on top, outside the palm, the next finger's
+/// in `cue`; the finger that's down is filled `signal` from the knuckle line up.
+private struct KonturHand: View, Animatable {
+    var motion: KonturMotion
+    let tone: (Int) -> HandTone
+    let right: Bool
+
+    var animatableData: KonturMotion {
+        get { motion }
+        set { motion = newValue }
+    }
+
+    var body: some View {
+        let d = KonturDrawing(motion: motion, right: right)
+        ZStack {
+            Canvas { ctx, _ in
+                let ink = Palette.text, panel = Palette.panel
+                let w = KonturDrawing.lineWidth
+                let line = StrokeStyle(lineWidth: w, lineCap: .round, lineJoin: .round)
+                let palm = d.palm, thumb = d.thumb
+                let fingers = (2...5).map { d.finger($0, closed: true) }
+                for p in [thumb, palm] + fingers {
+                    ctx.stroke(p, with: .color(ink), style: StrokeStyle(lineWidth: w * 2, lineJoin: .round))
+                }
+                ctx.fill(thumb, with: .color(tone(1) == .on ? Palette.signal : panel))
+                ctx.fill(palm, with: .color(panel))
+                var outside = ctx
+                outside.clip(to: palm, options: .inverse)
+                for f in 2...5 {
+                    ctx.fill(fingers[f - 2], with: .color(panel))
+                    if tone(f) == .on { outside.fill(fingers[f - 2], with: .color(Palette.signal)) }
+                }
+                for f in 2...5 {
+                    outside.stroke(d.finger(f, closed: false), with: .color(tone(f) == .cue ? Palette.cue : ink), style: line)
+                }
+                var uncovered = ctx
+                uncovered.clip(to: d.cover, options: .inverse)
+                uncovered.stroke(thumb, with: .color(tone(1) == .cue ? Palette.cue : ink), style: line)
+            }
+            ForEach(2...5, id: \.self) { f in
+                number(f).position(d.number(f))
+            }
+            number(1).position(motion.fold > 0.5 ? CGPoint(x: d.thumbTip.x, y: d.thumbTip.y - 40 * KonturDrawing.scale) : d.thumbNumber)
+                .opacity(motion.fold > 0.5 ? (motion.fold - 0.5) * 2 : 1 - motion.fold * 2)
+        }
+        .animation(.spring(response: 0.4, dampingFraction: 0.75), value: motion)
+    }
+
+    private func number(_ f: Int) -> some View {
+        let t = tone(f)
+        let under = f == 1 && motion.fold > 0.5
+        return Text("\(f)")
+            .font(.system(size: 11, weight: .semibold, design: .monospaced))
+            .foregroundStyle(t == .on && !under ? Palette.ground : t == .cue ? Palette.cue : Palette.muted)
+    }
+}
+
 /// Settings → Display: the hands side by side, the chosen one outlined `signal`; tap to pick.
 struct HandPicker: View {
-    @AppStorage(HandStyle.key) private var chosen: HandStyle = .linie
+    @AppStorage(HandStyle.key) private var chosen: HandStyle = .kontur
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {

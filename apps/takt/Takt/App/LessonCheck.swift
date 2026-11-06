@@ -1365,8 +1365,30 @@ enum LessonCheck {
         let folded = SkizzeSilhouette(fold: 1).path(in: box).boundingRect
         check("the Skizze silhouette stays in its box", box.insetBy(dx: -2, dy: -2).contains(out) && box.contains(folded),
               "out \(Int(out.minX))…\(Int(out.maxX)) × \(Int(out.minY))…\(Int(out.maxY)), folded \(Int(folded.minX))…\(Int(folded.maxX))")
-        check("the folded thumb sits under the palm", out.minX < 12 && folded.minX > 60 && HandStyle.allCases.count == 6
-              && HandStyle(rawValue: "skizze") == .skizze)
+        check("the folded thumb sits under the palm", out.minX < 12 && folded.minX > 60 && HandStyle.allCases.count == 7
+              && HandStyle(rawValue: "skizze") == .skizze && HandStyle(rawValue: "kontur") == .kontur)
+
+        // The Kontur hand: every part inside the box, the thumb out beside the palm at rest and,
+        // folded, under it with only its tip in the gap between fingers 3 and 4.
+        do {
+            let rest = KonturDrawing(motion: KonturMotion(), right: true)
+            let under = KonturDrawing(motion: KonturMotion(fold: 1, press: [0, 1, 0, 0]), right: true)
+            let all = [rest.thumb, rest.palm] + (2...5).map { rest.finger($0, closed: true) }
+            let bounds = all.map(\.boundingRect).reduce(CGRect.null) { $0.union($1) }
+            check("the Kontur hand stays in its box", box.insetBy(dx: -1, dy: -1).contains(bounds),
+                  "\(Int(bounds.minX))…\(Int(bounds.maxX)) × \(Int(bounds.minY))…\(Int(bounds.maxY))")
+            let tip = under.thumbTip
+            let f3 = under.finger(3, closed: true), f4 = under.finger(4, closed: true)
+            check("the Kontur thumb goes under the palm, its tip between fingers 3 and 4",
+                  rest.thumb.boundingRect.minX < rest.palm.boundingRect.minX - 10
+                  && under.thumb.boundingRect.minX > under.palm.boundingRect.minX
+                  && f3.boundingRect.midX < tip.x && tip.x < f4.boundingRect.midX
+                  && !f3.contains(tip) && !f4.contains(tip) && !under.palm.contains(tip)
+                  && under.palm.boundingRect.minY > tip.y,
+                  "tip \(Int(tip.x)),\(Int(tip.y)); 3 at \(Int(f3.boundingRect.midX)), 4 at \(Int(f4.boundingRect.midX))")
+            let left = KonturDrawing(motion: KonturMotion(), right: false)
+            check("the left Kontur hand is the mirror", abs(left.palm.boundingRect.midX - (240 - rest.palm.boundingRect.midX)) < 0.01)
+        }
 
         // Show me: the demo plan, and the engine's cue on an intro (nothing scored).
         do {

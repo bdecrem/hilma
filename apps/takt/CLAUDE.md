@@ -270,6 +270,21 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   nails and knuckles in pencil, and the lesson's marks drawn over it: a marker capsule on the
   finger that's down, a dotted outline on the next, and on the tuck the thumb's dotted ghost
   under the palm plus the dotted arc it travels. Same on the web page. Checks 153/153.
+  **0.1 (112), 2026-11-06, a seventh hand, Kontur, now the default.** Bart on Linie and Skizze:
+  "the lines don't even connect" and "a cringe hand". Kontur is one outline traced over a
+  gpt-image-2 photo of a right hand on the keys seen from the player's seat (fingers up the
+  screen and foreshortened, the thumb a short broad lobe on the left, its nail toward the keys).
+  `KonturDrawing` keeps the parts in the photo's pixel space (fitted into the 240 × 200 box,
+  mirrored for the left hand); `KonturHand` draws them in a `Canvas` stroke-all-then-fill-all:
+  every part stroked at twice the line, then filled in order (thumb, palm, fingers), so the parts
+  join into one line with no seam while the thumb can pass behind the palm. The lines on top are
+  clipped to outside the palm (the finger that's down is `signal` from the knuckle line up), the
+  thumb's to outside the palm and fingers, so under the palm only its nail shows in the gap
+  between 3 and 4, its "1" above it. `KonturMotion` (`fold`, a `press` per finger) is the view's
+  `animatableData`: the thumb's four cubic segments morph from the lobe to a capsule under the
+  palm, the fingers spread and the palm narrows with the fold, a pressed finger dips. The
+  prototype page, the photo and the keyframe sheet are in `~/Desktop/takt/hand-prototype/` on
+  the iMac (not in the repo). Not on the web page. Checks 444/444.
 
 - **Scales lessons 4–6: 0.1 (33), 2026-10-28.** Two octaves (right hand, 15 notes A3–A5 one a
   beat over four bars, thumb under twice, three runs a chorus), The left hand (one octave up from
