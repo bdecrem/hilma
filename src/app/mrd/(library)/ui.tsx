@@ -55,7 +55,12 @@ export function size(chars?: number | null) {
 }
 
 export type Cat = { slug: string; name: string; group: string }
-export type CountryRef = { name: string; iso: string; slug: string }
+export type CountryRef = { name: string; iso: string; slug: string; experimental?: boolean }
+
+/** The six dossiers Claude compiled (apps/mrd/dossiers) carry this on every page they touch. */
+export function Flag({ long = false }: { long?: boolean }) {
+  return <Link className="flag-x" href={`${BASE}/dossiers`} title="Compiled by Claude, not by the Migrant Rights Initiative's coders">{long ? 'Experimental dossier' : 'Experimental'}</Link>
+}
 
 export function Badge({ status }: { status: string }) {
   return <span className={`badge ${status}`}>{STATUS[status] ?? status}</span>
@@ -157,6 +162,7 @@ export function LawMeta({ kind, year, country, status, extra }: { kind?: string;
     <div className="meta">
       {status && <Badge status={status} />}
       {country && <Link href={`${BASE}/countries/${country.slug}`}>{country.name}</Link>}
+      {country?.experimental && <Flag />}
       {kind && <span>{KINDS[kind] ?? kind}</span>}
       {year ? <span>{year}</span> : null}
       {extra}

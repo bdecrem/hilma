@@ -5,7 +5,7 @@ import { articleTranslations, rpc } from '@/lib/mrd/db'
 import { getDoc, page } from '@/lib/mrd/text'
 import { ArticleChips } from './Articles'
 import Reader from './Reader'
-import { BASE, Badge, CatChip, KINDS, LawMeta, langName, size, type Cat, type CountryRef } from '../../ui'
+import { BASE, Badge, CatChip, Flag, KINDS, LawMeta, langName, size, type Cat, type CountryRef } from '../../ui'
 
 type Law = {
   id: string; name: string; name_en: string | null; official: string | null; cited: string; kind: string; number: string | null; court: string | null
@@ -44,6 +44,9 @@ export default async function Page({ params, searchParams }: { params: Promise<{
         <Link href={`${BASE}/countries/${law.country.slug}`}>{law.country.name}</Link><span>›</span>
         <Link href={`${BASE}/search?country=${law.country.slug}&kind=${law.kind}`}>{KINDS[law.kind] ?? law.kind}</Link>
       </div>
+      {law.country.experimental && (
+        <p className="exp-banner"><Flag long /> This law was traced for a dossier Claude compiled, not by the Migrant Rights Initiative&apos;s coders.</p>
+      )}
       <div className="law-h">
         <h1>{law.name}</h1>
         {law.official && law.official !== law.name && <div className="official" dir={rtl ? 'rtl' : undefined}>{law.official}</div>}
@@ -52,7 +55,7 @@ export default async function Page({ params, searchParams }: { params: Promise<{
 
       <dl className="facts">
         <div><dt>Availability</dt><dd><Badge status={law.status} /></dd></div>
-        <div><dt>Country</dt><dd><Link href={`${BASE}/countries/${law.country.slug}`}>{law.country.name}</Link></dd></div>
+        <div><dt>Country</dt><dd><Link href={`${BASE}/countries/${law.country.slug}`}>{law.country.name}</Link>{law.country.experimental && <> <Flag /></>}</dd></div>
         <div><dt>Type</dt><dd>{KINDS[law.kind] ?? law.kind}</dd></div>
         {law.number && <div><dt>Number</dt><dd>{law.number}</dd></div>}
         {law.court && <div><dt>Court</dt><dd>{law.court}</dd></div>}

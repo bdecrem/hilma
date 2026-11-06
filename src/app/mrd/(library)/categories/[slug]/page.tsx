@@ -4,12 +4,12 @@ import { notFound } from 'next/navigation'
 import { rpc } from '@/lib/mrd/db'
 import Finder from '../../Finder'
 import { home, options } from '../../data'
-import { BASE, GROUPS, LawMeta, groupColor } from '../../ui'
+import { BASE, GROUPS, LawMeta, groupColor, Flag } from '../../ui'
 
 type LawRef = { id: string; name: string; kind: string; year: number | null; status: string; articles: string }
 type Category = {
   slug: string; name: string; group: string
-  questions: { id: number; text: string; countries: { name: string; iso: string; slug: string; laws: LawRef[] }[] }[]
+  questions: { id: number; text: string; countries: { name: string; iso: string; slug: string; experimental?: boolean; laws: LawRef[] }[] }[]
 }
 
 const get = (slug: string) => rpc<Category | null>('lib_category', { p_slug: slug })
@@ -38,7 +38,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
           <h3>{q.text}</h3>
           {q.countries.map(co => (
             <div key={co.slug} className="ctry">
-              <Link href={`${BASE}/countries/${co.slug}#${slug}`}>{co.name}</Link>
+              <Link href={`${BASE}/countries/${co.slug}#${slug}`}>{co.name}</Link>{co.experimental && <> <Flag /></>}
               <ul className="lawlist">
                 {co.laws.map(l => (
                   <li key={`${l.id}-${l.articles}`}>

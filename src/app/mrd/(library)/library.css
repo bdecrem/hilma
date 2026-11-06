@@ -286,3 +286,33 @@
 .mri .art-en summary { cursor: pointer; font-size: 14px; font-weight: 700; color: var(--navy); }
 .mri .art-en div { margin-top: 8px; white-space: pre-wrap; font-size: 15px; line-height: 1.65; color: #1d1d1d; max-height: 420px; overflow: auto; }
 .mri .art-en div::after { content: 'Machine translation by Claude.'; display: block; margin-top: 8px; font-size: 12px; color: var(--grey-2); }
+
+/* experimental dossiers (apps/mrd/dossiers) */
+.mri .flag-x { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #b3261e;
+  border: 1.5px solid #b3261e; border-radius: 4px; padding: 2px 6px; line-height: 1.2; text-decoration: none; vertical-align: middle; }
+.mri .flag-x:hover { background: #b3261e; color: #fff; }
+.mri .exp-banner { margin: 0 0 24px; padding: 14px 16px; border: 1.5px solid #b3261e; border-radius: 10px; background: #fff7f5; font-size: 15px; line-height: 1.5; }
+.mri .exp-banner .flag-x { margin-right: 6px; }
+.mri .wheel.exp .pill { border-color: #b3261e; }
+.mri .dossier .overview { font-size: 18px; line-height: 1.55; max-width: 760px; margin-top: 14px; }
+.mri .score-grid { display: grid; gap: 2px; margin-top: 22px; max-width: 760px; }
+.mri .score { display: grid; grid-template-columns: 1fr 96px 120px 96px; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 8px; color: inherit; text-decoration: none; font-size: 15px; }
+.mri .score:hover { background: var(--mint, #e8f3ec); }
+.mri .score b { font-variant-numeric: tabular-nums; text-align: right; font-weight: 600; }
+.mri .score i { font-style: normal; text-align: right; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted, #6b6b6b); }
+.mri .score.head:hover { background: none; }
+.mri .score.avg { background: var(--navy, #0b0b50); color: #fff; font-size: 17px; }
+.mri .score.avg b { font-size: 20px; }
+.mri .score .dot { display: inline-block; width: 10px; height: 10px; border-radius: 10px; margin-right: 8px; vertical-align: middle; }
+.mri .q-answers { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 10px; }
+.mri .ans { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; line-height: 1.3; padding: 5px 10px; border-radius: 6px; background: #f1ede4; border-left: 4px solid #bbb; }
+.mri .ans i { font-style: normal; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: #6b6b6b; }
+.mri .ans b { font-variant-numeric: tabular-nums; }
+.mri .ans.hi { border-left-color: #2e7d4f; } .mri .ans.mid { border-left-color: #e0a800; } .mri .ans.lo { border-left-color: #b3261e; } .mri .ans.na { border-left-color: #bbb; color: #6b6b6b; }
+.mri .conf { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: #6b6b6b; align-self: center; }
+.mri .conf.low { color: #b3261e; }
+.mri .sources { white-space: pre-wrap; font-family: inherit; font-size: 13px; line-height: 1.45; margin: 10px 0 0; color: #444; overflow-wrap: anywhere; }
+.mri .intl, .mri .notes { font-size: 14px; margin-top: 10px; color: #444; }
+.mri .evidence { margin-top: 12px; padding: 10px 12px; background: #f1ede4; border-radius: 8px; font-size: 14px; line-height: 1.5; }
+.mri .evidence ul { margin: 8px 0 0 18px; padding: 0; }
+@media (max-width: 640px) { .mri .score { grid-template-columns: 1fr 56px 56px 56px; font-size: 13px; } .mri .score i { font-size: 9px; } }

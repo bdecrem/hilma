@@ -4,7 +4,7 @@ import type { Cat, CountryRef } from './ui'
 export type Home = {
   stats: { laws: number; texts: number; links: number; missing: number; chars: number; languages: number; countries: number; citations: number }
   kinds: Record<string, number>
-  countries: (CountryRef & { laws: number; texts: number; cats: Record<string, number> })[]
+  countries: (CountryRef & { laws: number; texts: number; citations: number; cats: Record<string, number> })[]
   categories: (Cat & { laws: number; questions: number })[]
 }
 

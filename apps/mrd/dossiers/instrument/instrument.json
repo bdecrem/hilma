@@ -1,0 +1,4662 @@
+[
+ {
+  "q": "Q1",
+  "cat": "Basic Information",
+  "text": "What is your name?",
+  "options": []
+ },
+ {
+  "q": "Q2",
+  "cat": "Basic Information",
+  "text": "What country are you coding?",
+  "options": []
+ },
+ {
+  "q": "Q3",
+  "cat": "Vulnerable Migrants",
+  "text": "Does the law take child status into consideration in the context of migration and provide special protections for migrant children in comparison to migrant adults?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q3.1",
+  "cat": "Vulnerable Migrants",
+  "text": "CITATION/COMMENT: Does the law take child status into consideration in the context of migration and provide special protections for migrant children in comparison to migrant adults?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q3.2",
+  "cat": "Vulnerable Migrants",
+  "text": "To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q3B.0",
+  "cat": "Vulnerable Migrants",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q3B",
+  "cat": "Vulnerable Migrants",
+  "text": "Presence of Right Protection in 2020: Does the law take child status into consideration in the context of migration and provide special protections for migrant children in comparison to migrant adults?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q3B.1",
+  "cat": "Vulnerable Migrants",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Does the law take child status into consideration in the context of migration and provide special protections for migrant children in comparison to migrant adults?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q3B.2",
+  "cat": "Vulnerable Migrants",
+  "text": "Implementation as of January 1, 2020: To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q4",
+  "cat": "Vulnerable Migrants",
+  "text": "Does the law take the vulnerability of women into consideration in the context of migration and provide special protection for migrant women who are vulnerable in comparison to other migrants?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q4.1",
+  "cat": "Vulnerable Migrants",
+  "text": "CITATION/COMMENT: Does the law take the vulnerability of women into consideration in the context of migration and provide special protection for migrant women who are vulnerable in comparison to other migrants?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q4.2",
+  "cat": "Vulnerable Migrants",
+  "text": "To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q4B.0",
+  "cat": "Vulnerable Migrants",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q4B",
+  "cat": "Vulnerable Migrants",
+  "text": "Presence of Right Protection in 2020: Does the law take the vulnerability of women into consideration in the context of migration and provide special protection for migrant women who are vulnerable in comparison to other migrants?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q4B.1",
+  "cat": "Vulnerable Migrants",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Does the law take the vulnerability of women into consideration in the context of migration and provide special protection for migrant women who are vulnerable in comparison to other migrants?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q4B.2",
+  "cat": "Vulnerable Migrants",
+  "text": "Implementation as of January 1, 2020: To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q5",
+  "cat": "Vulnerable Migrants",
+  "text": "Does the law take disabilities into consideration in the context of migration and provide special protection for migrants with disabilities in comparison to other migrants?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q5.1",
+  "cat": "Vulnerable Migrants",
+  "text": "CITATION/COMMENT: Does the law take disabilities into consideration in the context of migration and provide special protection for migrants with disabilities in comparison to other migrants?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q5.2",
+  "cat": "Vulnerable Migrants",
+  "text": "To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q5B.0",
+  "cat": "Vulnerable Migrants",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q5B",
+  "cat": "Vulnerable Migrants",
+  "text": "Presence of Right Protection in 2020: Does the law take disabilities into consideration in the context of migration and provide special protection for migrants with disabilities in comparison to other migrants?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q5B.1",
+  "cat": "Vulnerable Migrants",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Does the law take disabilities into consideration in the context of migration and provide special protection for migrants with disabilities in comparison to other migrants?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q5B.2",
+  "cat": "Vulnerable Migrants",
+  "text": "Implementation as of January 1, 2020: To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always End of Block: Vulnerable Migrants"
+  ]
+ },
+ {
+  "q": "Q6",
+  "cat": "Life",
+  "text": "Does the national law prohibit the use of force by its officers or agents as a means of preventing migrants from entering the state's territory?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q6.1",
+  "cat": "Life",
+  "text": "CITATION/COMMENT: Does the national law prohibit the use of force by its officers or agents as a means of preventing migrants from entering the state's territory?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q6.2",
+  "cat": "Life",
+  "text": "To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q6B.0",
+  "cat": "Life",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q6B",
+  "cat": "Life",
+  "text": "Presence of Right Protection in 2020: Does the national law prohibit the use of force by its officers or agents as a means of preventing migrants from entering the state's territory?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q6B.1",
+  "cat": "Life",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Does the national law prohibit the use of force by its officers or agents as a means of preventing migrants from entering the state's territory?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q6B.2",
+  "cat": "Life",
+  "text": "Implementation as of January 1, 2020: To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q7",
+  "cat": "Life",
+  "text": "Does the national law prohibit the use of lethal force by its officers or agents as a means of preventing migrants from entering the state's territory?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q7.1",
+  "cat": "Life",
+  "text": "CITATION/COMMENT: Does the national law prohibit the use of lethal force by its officers or agents as a means of preventing migrants from entering the state's territory?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q7.2",
+  "cat": "Life",
+  "text": "To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q7B.0",
+  "cat": "Life",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q7B",
+  "cat": "Life",
+  "text": "Presence of Right Protection in 2020: Does the national law prohibit the use of lethal force by its officers or agents as a means of preventing migrants from entering the state's territory?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q7B.1",
+  "cat": "Life",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Does the national law prohibit the use of lethal force by its officers or agents as a means of preventing migrants from entering the state's territory?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q7B.2",
+  "cat": "Life",
+  "text": "Implementation as of January 1, 2020: To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q8",
+  "cat": "Life",
+  "text": "Does the national law exempt trafficked and smuggled migrants from criminal prosecutions?",
+  "options": [
+   "No, government may punish trafficked or smuggled migrants",
+   "Yes, the national law provides exemption"
+  ]
+ },
+ {
+  "q": "Q8.1",
+  "cat": "Life",
+  "text": "CITATION/COMMENT: Does the national law exempt trafficked and smuggled migrants from criminal prosecutions? exempts trafficked / smuggled migrants from criminal prosecutions in .” If the legal provision is different as it relates to two groups (migrant victims of trafficking vs. migrants who have been smuggled), please indicate the legal provision for each separately. Spell out the name of the legal provision in a way that makes it easier for a non-lawyer to understand (e.g., “constitution” and not “Const.” and “code section” and not “C. §”). Feel free to include a SHORT explanatory note regarding the citation but limit this text to that which is necessary to understand the citation. Additional commentary, for example, regarding compliance, should be included in the comment field. For those that responded “no” to Q8, if there is a national law that punishes migrants who have been subject to trafficking or smuggling, please mention that law in the citation along with explanations in the comment.]",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q8.2",
+  "cat": "Life",
+  "text": "To what extent is the exemption from criminal prosecution of trafficked/smuggled migrants implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q8B.0",
+  "cat": "Life",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q8B",
+  "cat": "Life",
+  "text": "Presence of Right Protection in 2020: Does the national law exempt trafficked and smuggled migrants from criminal prosecutions?",
+  "options": [
+   "No, government may punish trafficked or smuggled migrants",
+   "Yes, the national law provides exemption"
+  ]
+ },
+ {
+  "q": "Q8B.1",
+  "cat": "Life",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Does the national law exempt trafficked and smuggled migrants from criminal prosecutions?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q8B.2",
+  "cat": "Life",
+  "text": "Implementation as of January 1, 2020: To what extent is the exemption from criminal prosecution of trafficked/smuggled migrants implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always End of Block: Life"
+  ]
+ },
+ {
+  "q": "Q9",
+  "cat": "Liberty",
+  "text": "Does the national law provide that migrants have a right to be free from torture and cruel, inhumane, or degrading treatment or punishment?",
+  "options": [
+   "No",
+   "Yes, right to be free from torture but not cruel, inhumane, or degrading treatment or punishment",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q9.1",
+  "cat": "Liberty",
+  "text": "CITATION/COMMENT: Does the national law provide that migrants have a right to be free from torture or cruel, inhumane, or degrading treatment or punishment?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q9.2",
+  "cat": "Liberty",
+  "text": "To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q9B.0",
+  "cat": "Liberty",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q9B",
+  "cat": "Liberty",
+  "text": "Presence of Right Protection in 2020: Does the national law provide that migrants have a right to be free from torture and cruel, inhumane, or degrading treatment or punishment?",
+  "options": [
+   "No",
+   "Yes, right to be free from torture but not cruel, inhumane, or degrading treatment or punishment",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q9B.1",
+  "cat": "Liberty",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Does the national law provide that migrants have a right to be free from torture or cruel, inhumane, or degrading treatment or punishment?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q9B.2",
+  "cat": "Liberty",
+  "text": "Implementation as of January 1, 2020: To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q10",
+  "cat": "Liberty",
+  "text": "Does the national law entail an obligation to allow consular officials and migrants (who are nationals of the consular sending state) to communicate?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q10.1",
+  "cat": "Liberty",
+  "text": "CITATION/COMMENT: Does the national law entail an obligation to allow consular officials and migrants (who are nationals of the consular sending state) to communicate?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q10.2",
+  "cat": "Liberty",
+  "text": "To what extent is this obligation allowing consular officials and migrants to communicate implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q10B.0",
+  "cat": "Liberty",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q10B",
+  "cat": "Liberty",
+  "text": "Presence of Right Protection in 2020: Does the national law entail an obligation to allow consular officials and migrants (who are nationals of the consular sending state) to communicate?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q10B.1",
+  "cat": "Liberty",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Does the national law entail an obligation to allow consular officials and migrants (who are nationals of the consular sending state) to communicate?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q10B.2",
+  "cat": "Liberty",
+  "text": "Implementation as of January 1, 2020: To what extent is this obligation allowing consular officials and migrants to communicate implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q11",
+  "cat": "Liberty",
+  "text": "Does the national law prohibit the detention of children on the basis of their status as a migrant?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q11.1",
+  "cat": "Liberty",
+  "text": "CITATION/COMMENT: Does the national law prohibit the detention of children on the basis of their status as a migrant?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q11.2",
+  "cat": "Liberty",
+  "text": "To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q11B.0",
+  "cat": "Liberty",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q11B",
+  "cat": "Liberty",
+  "text": "Presence of Right Protection in 2020: Does the national law prohibit the detention of children on the basis of their status as a migrant?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q11B.1",
+  "cat": "Liberty",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Does the national law entail an obligation to allow consular officials and migrants (who are nationals of the consular sending state) to communicate?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q11B.2",
+  "cat": "Liberty",
+  "text": "Implementation as of January 1, 2020: To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q12",
+  "cat": "Liberty",
+  "text": "Does the national law prohibit the detention of migrants on the basis of their status as a migrant?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q12.1",
+  "cat": "Liberty",
+  "text": "CITATION/COMMENT: Does the national law prohibit the detention of migrants on the basis of their status as a migrant?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q12.2",
+  "cat": "Liberty",
+  "text": "To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q12B.0",
+  "cat": "Liberty",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q12B",
+  "cat": "Liberty",
+  "text": "Presence of Right Protection in 2020: Does the national law prohibit the detention of migrants on the basis of their status as a migrant?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q12B.1",
+  "cat": "Liberty",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Does the national law prohibit the detention of migrants on the basis of their status as a migrant?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q12B.2",
+  "cat": "Liberty",
+  "text": "Implementation as of January 1, 2020: To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q13",
+  "cat": "Liberty",
+  "text": "Does the national law allow migrants to appeal legality, conditions, or length of detention?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q13.1",
+  "cat": "Liberty",
+  "text": "CITATION/COMMENT: Does the national law allow migrants to appeal legality, conditions, or length of detention?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q13.2",
+  "cat": "Liberty",
+  "text": "To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q13B.0",
+  "cat": "Liberty",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q13B",
+  "cat": "Liberty",
+  "text": "Presence of Right Protection in 2020: Does the national law allow migrants to appeal legality, conditions, or length of detention?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q13B.1",
+  "cat": "Liberty",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Does the national law allow migrants to appeal legality, conditions, or length of detention?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q13B.2",
+  "cat": "Liberty",
+  "text": "Implementation as of January 1, 2020: To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q14",
+  "cat": "Liberty",
+  "text": "Does the national law require an individualized determination for the detention of a migrant?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q14.1",
+  "cat": "Liberty",
+  "text": "CITATION/COMMENT: Does the national law require an individualized determination for the detention of a migrant?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q14.2",
+  "cat": "Liberty",
+  "text": "To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q14B.0",
+  "cat": "Liberty",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q14B",
+  "cat": "Liberty",
+  "text": "Presence of Right Protection in 2020: Does the national law require an individualized determination for the detention of a migrant?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q14B.1",
+  "cat": "Liberty",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Does the national law require an individualized determination for the detention of a migrant?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q14B.2",
+  "cat": "Liberty",
+  "text": "Implementation as of January 1, 2020: To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always End of Block: Liberty"
+  ]
+ },
+ {
+  "q": "Q15",
+  "cat": "Legal Personhood",
+  "text": "Do migrant workers have the right not to have identity documents confiscated by anyone, other than a public official duly authorized by the law?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q15.1",
+  "cat": "Legal Personhood",
+  "text": "CITATION/COMMENT: Do migrant workers have the right not to have identity documents confiscated by anyone, other than a public official duly authorized by the law?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q15.2",
+  "cat": "Legal Personhood",
+  "text": "To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q15B.0",
+  "cat": "Legal Personhood",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q15B",
+  "cat": "Legal Personhood",
+  "text": "Presence of Right Protection in 2020: Do migrant workers have the right not to have identity documents confiscated by anyone, other than a public official duly authorized by the law?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q15B.1",
+  "cat": "Legal Personhood",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Do migrant workers have the right not to have identity documents confiscated by anyone, other than a public official duly authorized by the law?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q15B.2",
+  "cat": "Legal Personhood",
+  "text": "Implementation as of January 1, 2020: To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q16",
+  "cat": "Legal Personhood",
+  "text": "Does the national law require birth registration of children of migrants regardless of their status as a migrant?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q16.1",
+  "cat": "Legal Personhood",
+  "text": "CITATION/COMMENT: Does the national law require birth registration of children of migrants regardless of their status as a migrant?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q16.2",
+  "cat": "Legal Personhood",
+  "text": "To what extent is the birth registration requirement of migrant children implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q16B.0",
+  "cat": "Legal Personhood",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q16B",
+  "cat": "Legal Personhood",
+  "text": "Presence of Right Protection in 2020: Does the national law require birth registration of children of migrants regardless of their status as a migrant?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q16B.1",
+  "cat": "Legal Personhood",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Does the national law require birth registration of children of migrants regardless of their status as a migrant?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q16B.2",
+  "cat": "Legal Personhood",
+  "text": "Implementation as of January 1, 2020: To what extent is the birth registration requirement of migrant children implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q17",
+  "cat": "Legal Personhood",
+  "text": "Does the national law mandate the issuing of documents that recognize migrants’ residency status, work status, and identity?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q17.1",
+  "cat": "Legal Personhood",
+  "text": "CITATION/COMMENT: Does the national law mandate the issuing of documents that recognize migrants’ residency status, work status, and identity? .",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q17.2",
+  "cat": "Legal Personhood",
+  "text": "To what extent is this mandate to issue documents to migrants implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q17B.0",
+  "cat": "Legal Personhood",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q17B",
+  "cat": "Legal Personhood",
+  "text": "Presence of Right Protection in 2020: Does the national law mandate the issuing of documents that recognize migrants’ residency status, work status, and identity?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q17B.1",
+  "cat": "Legal Personhood",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Does the national law mandate the issuing of documents that recognize migrants’ residency status, work status, and identity?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q17B.2",
+  "cat": "Legal Personhood",
+  "text": "Implementation as of January 1, 2020: To what extent is this mandate to issue documents to migrants implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q18",
+  "cat": "Legal Personhood",
+  "text": "Does the national law make it illegal for anyone to destroy documents that recognize migrants’ residency status, work status, and identity?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q18.1",
+  "cat": "Legal Personhood",
+  "text": "CITATION/COMMENT: Does the national law make it illegal for anyone to destroy documents that recognize migrants’ residency status, work status, and identity?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q18.2",
+  "cat": "Legal Personhood",
+  "text": "To what extent is the prohibition against destroying documents implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q18B.0",
+  "cat": "Legal Personhood",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q18B",
+  "cat": "Legal Personhood",
+  "text": "Presence of Right Protection in 2020: Does the national law make it illegal for anyone to destroy documents that recognize migrants’ residency status, work status, and identity?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q18B.1",
+  "cat": "Legal Personhood",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Does the national law make it illegal for anyone to destroy documents that recognize migrants’ residency status, work status, and identity?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q18B.2",
+  "cat": "Legal Personhood",
+  "text": "Implementation as of January 1, 2020: To what extent is the prohibition against destroying documents implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always End of Block: Legal Personhood"
+  ]
+ },
+ {
+  "q": "Q19",
+  "cat": "Due Process",
+  "text": "Does the national law provide migrants with the right of equal protection of the law before administrative, civil, and criminal courts and tribunals, commensurate with citizens?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q19.1",
+  "cat": "Due Process",
+  "text": "CITATION/COMMENT: Does the national law provide migrants with the right of equal protection of the law before administrative, civil, and criminal courts and tribunals, commensurate with citizens?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q19.2",
+  "cat": "Due Process",
+  "text": "To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q19B.0",
+  "cat": "Due Process",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q19B",
+  "cat": "Due Process",
+  "text": "Presence of Right Protection in 2020: Does the national law provide migrants with the right of equal protection of the law before administrative, civil, and criminal courts and tribunals, commensurate with citizens?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q19B.1",
+  "cat": "Due Process",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Does the national law provide migrants with the right of equal protection of the law before administrative, civil, and criminal courts and tribunals, commensurate with citizens?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q19B.2",
+  "cat": "Due Process",
+  "text": "Implementation as of January 1, 2020: To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q20",
+  "cat": "Due Process",
+  "text": "Do migrants have a right to counsel at government expense in proceedings related to their legal status as a migrant?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q20.1",
+  "cat": "Due Process",
+  "text": "CITATION/COMMENT: Do migrants have a right to counsel at government expense in proceedings related to their legal status as a migrant?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q20.2",
+  "cat": "Due Process",
+  "text": "To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q20B.0",
+  "cat": "Due Process",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q20B",
+  "cat": "Due Process",
+  "text": "Presence of Right Protection in 2020: Do migrants have a right to counsel at government expense in proceedings related to their legal status as a migrant?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q20B.1",
+  "cat": "Due Process",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Do migrants have a right to counsel at government expense in proceedings related to their legal status as a migrant?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q20B.2",
+  "cat": "Due Process",
+  "text": "Implementation as of January 1, 2020: To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q21",
+  "cat": "Due Process",
+  "text": "Do migrants have a right to interpretation at government expense in criminal proceedings?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q21.1",
+  "cat": "Due Process",
+  "text": "CITATION/COMMENT: Do migrants have a right to interpretation at government expense in criminal proceedings?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q21.2",
+  "cat": "Due Process",
+  "text": "To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q21B.0",
+  "cat": "Due Process",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q21B",
+  "cat": "Due Process",
+  "text": "Presence of Right Protection in 2020: Do migrants have a right to interpretation at government expense in criminal proceedings?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q21B.1",
+  "cat": "Due Process",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Do migrants have a right to interpretation at government expense in criminal proceedings?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q21B.2",
+  "cat": "Due Process",
+  "text": "Implementation as of January 1, 2020: To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q22",
+  "cat": "Due Process",
+  "text": "Does the national law exempt migrants from criminal sanctions for unauthorized entry?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q22.1",
+  "cat": "Due Process",
+  "text": "CITATION/COMMENT: Does the national law exempt migrants from criminal sanctions for unauthorized entry?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q22.2",
+  "cat": "Due Process",
+  "text": "To what extent do the relevant authorities exempt migrants from criminal sanctions for unauthorized entry?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q22B.0",
+  "cat": "Due Process",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q22B",
+  "cat": "Due Process",
+  "text": "Presence of Right Protection in 2020: Does the national law exempt migrants from criminal sanctions for unauthorized entry?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q22B.1",
+  "cat": "Due Process",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Does the national law exempt migrants from criminal sanctions for unauthorized entry?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q22B.2",
+  "cat": "Due Process",
+  "text": "Implementation as of January 1, 2020: To what extent do the relevant authorities exempt migrants from criminal sanctions for unauthorized entry?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always End of Block: Due Process"
+  ]
+ },
+ {
+  "q": "Q23",
+  "cat": "Victims of Crime",
+  "text": "Does the national law provide migrant victims of crime with the right of access to criminal proceedings commensurate with citizens, such as by allowing them to serve as complainants?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q23.1",
+  "cat": "Victims of Crime",
+  "text": "CITATION/COMMENT: Does the national law provide migrant victims of crime with the right of access to criminal proceedings commensurate with citizens, such as by allowing them to serve as complainants?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q23.2",
+  "cat": "Victims of Crime",
+  "text": "To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q23B.0",
+  "cat": "Victims of Crime",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q23B",
+  "cat": "Victims of Crime",
+  "text": "Presence of Right Protection in 2020: Does the national law provide migrant victims of crime with the right of access to criminal proceedings commensurate with citizens, such as by allowing them to serve as complainants?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q23B.1",
+  "cat": "Victims of Crime",
+  "text": "Citation as of January 1, 2020: Does the national law provide migrant victims of crime with the right of access to criminal proceedings commensurate with citizens, such as by allowing them to serve as complainants?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q23B.2",
+  "cat": "Victims of Crime",
+  "text": "Implementation as of January 1, 2020: To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q24",
+  "cat": "Victims of Crime",
+  "text": "Does the national law provide migrant victims of crime an avenue to immigration status or relief from expulsion as a result of being a victim of a crime?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q24.1",
+  "cat": "Victims of Crime",
+  "text": "CITATION/COMMENT: Does the national law provide migrant victims of crime an avenue to immigration status or relief from expulsion as a result of being a victim of a crime?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q24.2",
+  "cat": "Victims of Crime",
+  "text": "To what extent are the avenues to immigration status or relief from expulsion available to migrant victims of crime used by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q24B.0",
+  "cat": "Victims of Crime",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q24B",
+  "cat": "Victims of Crime",
+  "text": "Presence of Right Protection in 2020: Does the national law provide migrant victims of crime an avenue to immigration status or relief from expulsion as a result of being a victim of a crime?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q24B.1",
+  "cat": "Victims of Crime",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Does the national law provide migrant victims of crime an avenue to immigration status or relief from expulsion as a result of being a victim of a crime?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q24B.2",
+  "cat": "Victims of Crime",
+  "text": "Implementation as of January 1, 2020: To what extent are the avenues to immigration status or relief from expulsion available to migrant victims of crime used by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always End of Block: Victims of Crime"
+  ]
+ },
+ {
+  "q": "Q25",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "How, if at all, do convictions for criminal or other offenses affect migrants’ residence status?",
+  "options": [
+   "any conviction (even minor administrative offenses) can lead to loss of residence status",
+   "only major convictions (e.g., criminal offenses) can lead to loss of residence status",
+   "convictions do not affect residence status"
+  ]
+ },
+ {
+  "q": "Q25.1",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "CITATION/COMMENT: How, if at all, do convictions for criminal or other offenses affect migrants’ residence status?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q25.2",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "To what extent do the relevant authorities protect the residence status of immigrants who have been convicted of criminal or other offenses?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q25B.0",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q25B",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "Presence of Right Protection in 2020: How, if at all, do convictions for criminal or other offenses affect migrants’ residence status?",
+  "options": [
+   "any conviction (even minor administrative offenses) can lead to loss of residence status",
+   "only major convictions (e.g., criminal offenses) can lead to loss of residence status",
+   "convictions do not affect residence status"
+  ]
+ },
+ {
+  "q": "Q25B.1",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "Citation as of January 1, 2020: How, if at all, do convictions for criminal or other offenses affect migrants’ residence status?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q25B.2",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "Implementation as of January 1, 2020: To what extent do the relevant authorities protect the residence status of immigrants who have been convicted of criminal or other offenses?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q26",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "Does the national law ban refoulement on the basis of a risk of return to torture or cruel, inhuman or degrading treatment or punishment?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q26.1",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "CITATION/COMMENT: Does the national law ban refoulement on the basis of a risk of return to torture or cruel, inhuman or degrading treatment or punishment?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q26.2",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "To what extent is the ban of refoulement on the basis of a risk of return to torture or cruel, inhuman or degrading treatment or punishment implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q26B.0",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q26B",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "Presence of Right Protection in 2020: Does the national law ban refoulement on the basis of a risk of return to torture or cruel, inhuman or degrading treatment or punishment?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q26B.1",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "Citation as of January 1, 2020: Does the national law ban refoulement on the basis of a risk of return to torture or cruel, inhuman or degrading treatment or punishment?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q26B.2",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "Implementation as of January 1, 2020: To what extent is the ban of refoulement on the basis of a risk of return to torture or cruel, inhuman or degrading treatment or punishment implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q27",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "Does the national law ban refoulement on the basis of a risk of return to persecution on the basis of race, religion, nationality, membership of a particular social group, or political opinion?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q27.1",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "CITATION/ COMMENT: Does the national law ban refoulement on the basis of a risk of return to persecution on the basis of race, religion, nationality, membership of a particular social group, or political opinion?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q27.2",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "To what extent is the ban on refoulement on the basis of a risk of return to persecution based on race, religion, nationality, membership of a particular social group, or political opinion implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q27B.0",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q27B",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "Presence of Right Protection in 2020: Does the national law ban refoulement on the basis of a risk of return to persecution on the basis of race, religion, nationality, membership of a particular social group, or political opinion?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q27B.1",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Does the national law ban refoulement on the basis of a risk of return to persecution on the basis of race, religion, nationality, membership of a particular social group, or political opinion?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q27B.2",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "Implementation as of January 1, 2020: To what extent is the ban on refoulement on the basis of a risk of return to persecution based on race, religion, nationality, membership of a particular social group, or political opinion implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q28",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "Does the national law ban refoulement on the basis of a risk of serious deprivations of fundamental human rights (such as the right to life)?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q28.1",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "CITATION/COMMENT: Does the national law ban refoulement on the basis of a risk of serious deprivations of fundamental human rights (such as the right to life)?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q28.2",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "To what extent is the ban on refoulement (on the basis of a risk of serious deprivations of fundamental human rights) implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q28B.0",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q28B",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "Presence of Right Protection in 2020: Does the national law ban refoulement on the basis of a risk of serious deprivations of fundamental human rights (such as the right to life)?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q28B.1",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Does the national law ban refoulement on the basis of a risk of serious deprivations of fundamental human rights (such as the right to life)? bans refoulement on the basis of a risk of serious deprivations of fundamental human rights in.” Please spell out the name of the legal provision in a way that makes it easier for a non-lawyer to understand (e.g., “constitution” and not “Const.” and “code section” and not “C. §”). Feel free to include a SHORT explanatory note regarding the citation but limit this text to that which is necessary to understand the citation. Additional commentary, for example, regarding compliance, should be included in the comment field.]",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q28B.2",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "Implementation as of January 1, 2020: To what extent is the ban on refoulement (on the basis of a risk of serious deprivations of fundamental human rights) implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q29",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "Does the national law require a person to be advised of the possible availability of asylum before being expelled or prevented entry?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q29.1",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "CITATION/COMMENT: Does the national law require a person to be advised of the possible availability of asylum before being expelled or prevented entry?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q29.2",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q29B.0",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q29B",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "Presence of Right Protection in 2020: Does the national law require a person to be advised of the possible availability of asylum before being expelled or prevented entry?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q29B.1",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Does the national law require a person to be advised of the possible availability of asylum before being expelled or prevented entry?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q29B.2",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "Implementation as of January 1, 2020: To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q30",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "Does the national law ban expulsion to any country where a migrant is likely to be subjected to refoulement through a subsequent expulsion? .",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q30.1",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "CITATION/COMMENT: Does the national law ban expulsion to any country where a migrant is likely to be subjected to refoulement through a subsequent expulsion?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q30.2",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "To what extent is the ban of expulsion to any country where a migrant is likely to be subjected to refoulement implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q30B.0",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q30B",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "Presence of Right Protection in 2020: Does the national law ban expulsion to any country where a migrant is likely to be subjected to refoulement through a subsequent expulsion? .",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q30B.1",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Does the national law ban expulsion to any country where a migrant is likely to be subjected to refoulement through a subsequent expulsion?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q30B.2",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "Implementation as of January 1, 2020: To what extent is the ban of expulsion to any country where a migrant is likely to be subjected to refoulement implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q31",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "Does the national law provide that a migrant can only be expelled when justified by facts relevant to the individual concerned and only pursuant to a decision reached in accordance with and authorized by law?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q31.1",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "CITATION/COMMENT: Does the national law provide that a migrant can only be expelled when justified by facts relevant to the individual concerned and only pursuant to a decision reached in accordance with and authorized by law?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q31.2",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q31B.0",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q31B",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "Presence of Right Protection in 2020: Does the national law provide that a migrant can only be expelled when justified by facts relevant to the individual concerned and only pursuant to a decision reached in accordance with and authorized by law?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q31B.1",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Does the national law provide that a migrant can only be expelled when justified by facts relevant to the individual concerned and only pursuant to a decision reached in accordance with and authorized by law?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q31B.2",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "Implementation as of January 1, 2020: To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q32",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "Does the national law provide migrants with an opportunity to submit the reasons against expulsion and to have their case reviewed by the competent authority before being expelled?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q32.1",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "CITATION/COMMENT: Does the national law provide migrants with an opportunity to submit the reasons against expulsion and to have their case reviewed by the competent authority before being expelled?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q32.2",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q32B.0",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q32B",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "Presence of Right Protection in 2020: Does the national law provide migrants with an opportunity to submit the reasons against expulsion and to have their case reviewed by the competent authority before being expelled?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q32B.1",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Does the national law provide migrants with an opportunity to submit the reasons against expulsion and to have their case reviewed by the competent authority before being expelled?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q32B.2",
+  "cat": "Expulsion, Asylum, and Non-refoulement",
+  "text": "Implementation as of January 1, 2020: To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always End of Block: Expulsion, Asylum, and Non-refoulement"
+  ]
+ },
+ {
+  "q": "Q33",
+  "cat": "Nationality",
+  "text": "How, if at all, do convictions for criminal or other offenses affect the citizenship status of naturalized migrants (other than matters such as misrepresentation or fraud specific to the underlying naturalization process)?",
+  "options": [
+   "Any conviction (even minor administrative offenses) can lead to loss of citizenship status",
+   "Only major convictions (e.g., criminal offenses) can lead to loss of citizenship status",
+   "Convictions do not affect citizenship status"
+  ]
+ },
+ {
+  "q": "Q33.1",
+  "cat": "Nationality",
+  "text": "CITATION/COMMENT: How, if at all, do convictions for criminal or other offenses affect citizenship status of naturalized migrants?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q33.2",
+  "cat": "Nationality",
+  "text": "To what extent do relevant authorities protect the citizenship status of immigrants who have been convicted of criminal or other offenses?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q33B.0",
+  "cat": "Nationality",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q33B",
+  "cat": "Nationality",
+  "text": "Presence of Right Protection in 2020: How, if at all, do convictions for criminal or other offenses affect the citizenship status of naturalized migrants?",
+  "options": [
+   "Any conviction (even minor administrative offenses) can lead to loss of citizenship status",
+   "Only major convictions (e.g., criminal offenses) can lead to loss of citizenship status",
+   "Convictions do not affect citizenship status"
+  ]
+ },
+ {
+  "q": "Q33B.1",
+  "cat": "Nationality",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: How, if at all, do convictions for criminal or other offenses affect citizenship status of naturalized migrants?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q33B.2",
+  "cat": "Nationality",
+  "text": "Implementation as of January 1, 2020: To what extent do relevant authorities protect the citizenship status of immigrants who have been convicted of criminal or other offenses?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q34",
+  "cat": "Nationality",
+  "text": "Do economic migrants have a pathway to citizenship?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q34.1",
+  "cat": "Nationality",
+  "text": "CITATION/COMMENT: Do economic migrants have a pathway to citizenship?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q34.2",
+  "cat": "Nationality",
+  "text": "To what extent are the pathways that are available to economic migrants implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q34B.0",
+  "cat": "Nationality",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q34B",
+  "cat": "Nationality",
+  "text": "Presence of Right Protection in 2020: Do economic migrants have a pathway to citizenship?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q34B.1",
+  "cat": "Nationality",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Do economic migrants have a pathway to citizenship?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q34B.2",
+  "cat": "Nationality",
+  "text": "Implementation as of January 1, 2020: To what extent are the pathways that are available to economic migrants implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q35",
+  "cat": "Nationality",
+  "text": "Do humanitarian migrants have a pathway to citizenship?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q35.1",
+  "cat": "Nationality",
+  "text": "CITATION/COMMENT: Do humanitarian migrants have a pathway to citizenship?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q35.2",
+  "cat": "Nationality",
+  "text": "To what extent are the pathways available to humanitarian migrants implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q35B.0",
+  "cat": "Nationality",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q35B",
+  "cat": "Nationality",
+  "text": "Presence of Right Protection in 2020: Do humanitarian migrants have a pathway to citizenship?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q35B.1",
+  "cat": "Nationality",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Do humanitarian migrants have a pathway to citizenship?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q35B.2",
+  "cat": "Nationality",
+  "text": "Implementation as of January 1, 2020: To what extent are the pathways that are available to humanitarian migrants implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q36",
+  "cat": "Nationality",
+  "text": "Do family migrants have a pathway to citizenship?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q36.1",
+  "cat": "Nationality",
+  "text": "CITATION/COMMENT: Do family migrants have a pathway to citizenship?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q36.2",
+  "cat": "Nationality",
+  "text": "To what extent are the pathways available to family migrants implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q36B.0",
+  "cat": "Nationality",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q36B",
+  "cat": "Nationality",
+  "text": "Presence of Right Protection in 2020: Do family migrants have a pathway to citizenship?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q36B.1",
+  "cat": "Nationality",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Do family migrants have a pathway to citizenship?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q36B.2",
+  "cat": "Nationality",
+  "text": "Implementation as of January 1, 2020: To what extent are the pathways that are available to family migrants implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q37",
+  "cat": "Nationality",
+  "text": "Does the national law allow migrants who naturalize to obtain dual nationality by retaining their nationality of origin?",
+  "options": [
+   "No, no migrants may obtain dual nationality by retaining their nationality of origin",
+   "Conditional, depending on the country of origin or some other consideration",
+   "Yes, all migrants can obtain dual nationality by retaining their nationality of origin"
+  ]
+ },
+ {
+  "q": "Q37.1",
+  "cat": "Nationality",
+  "text": "CITATION/COMMENT: Does the national law allow migrants to obtain dual nationality by retaining their nationality of origin?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q37.2",
+  "cat": "Nationality",
+  "text": "To what extent is the right for dual nationality implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q37B.0",
+  "cat": "Nationality",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q37B",
+  "cat": "Nationality",
+  "text": "Presence of Right Protection in 2020: Does the national law allow migrants who naturalize to obtain dual nationality by retaining their nationality of origin?",
+  "options": [
+   "No, no migrants may obtain dual nationality by retaining their nationality of origin",
+   "Conditional, depending on the country of origin or some other consideration",
+   "Yes, all migrants can obtain dual nationality by retaining their nationality of origin"
+  ]
+ },
+ {
+  "q": "Q37B.1",
+  "cat": "Nationality",
+  "text": "Citation as of January 1, 2020: Does the national law allow migrants to obtain dual nationality by retaining their nationality of origin?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q37B.2",
+  "cat": "Nationality",
+  "text": "Implementation as of January 1, 2020: To what extent is the right for dual nationality implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q38",
+  "cat": "Nationality",
+  "text": "Does the national law guarantee citizenship to migrants and children of migrants who would otherwise be stateless?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q38.1",
+  "cat": "Nationality",
+  "text": "CITATION/COMMENT: Does the national law guarantee citizenship to migrants and children of migrants who would otherwise be stateless?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q38.2",
+  "cat": "Nationality",
+  "text": "To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q38B.0",
+  "cat": "Nationality",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q38B",
+  "cat": "Nationality",
+  "text": "Presence of Right Protection in 2020: Does the national law guarantee citizenship to migrants and children of migrants who would otherwise be stateless?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q38B.1",
+  "cat": "Nationality",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Does the national law guarantee citizenship to migrants and children of migrants who would otherwise be stateless?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q38B.2",
+  "cat": "Nationality",
+  "text": "Implementation as of January 1, 2020: To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always End of Block: Nationality"
+  ]
+ },
+ {
+  "q": "Q39",
+  "cat": "Family",
+  "text": "Does the national law provide settled migrants with legal avenues to facilitate reunification with immediate or non-dependent family members?",
+  "options": [
+   "No",
+   "Conditional",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q39.1",
+  "cat": "Family",
+  "text": "CITATION/COMMENT: Does the national law provide settled migrants with legal avenues to facilitate reunification with immediate or non-dependent family members?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q39.2",
+  "cat": "Family",
+  "text": "To what extent are the legal avenues available to settled migrants to facilitate their reunification with immediate or non-dependent family members implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q39B.0",
+  "cat": "Family",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q39B",
+  "cat": "Family",
+  "text": "Presence of Right Protection in 2020: Does the national law provide settled migrants with legal avenues to facilitate reunification with immediate or non-dependent family members?",
+  "options": [
+   "No",
+   "Conditional",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q39B.1",
+  "cat": "Family",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Does the national law provide settled migrants with legal avenues to facilitate reunification with immediate or non-dependent family members?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q39B.2",
+  "cat": "Family",
+  "text": "Implementation as of January 1, 2020: To what extent are the legal avenues available to settled migrants to facilitate their reunification with immediate or non-dependent family members implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q40",
+  "cat": "Family",
+  "text": "Is there a judicial remedy to appeal the refusal by the authorities to allow family formation/reunification?",
+  "options": [
+   "No",
+   "Conditional",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q40.1",
+  "cat": "Family",
+  "text": "CITATION/COMMENT: Is there a judicial remedy to appeal the refusal by the authorities to allow family formation/reunification?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q40.2",
+  "cat": "Family",
+  "text": "To what extent is the judicial remedy (to appeal the refusal by the authorities to allow family formation/reunification) implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q40B.0",
+  "cat": "Family",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q40B",
+  "cat": "Family",
+  "text": "Presence of Right Protection in 2020: Is there a judicial remedy to appeal the refusal by the authorities to allow family formation/reunification?",
+  "options": [
+   "No",
+   "Conditional",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q40B.1",
+  "cat": "Family",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Is there a judicial remedy to appeal the refusal by the authorities to allow family formation/reunification?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q40B.2",
+  "cat": "Family",
+  "text": "Implementation as of January 1, 2020: To what extent is the judicial remedy (to appeal the refusal by the authorities to allow family formation/reunification) implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q41",
+  "cat": "Family",
+  "text": "Are same sex marital relationships recognized under the migrant family reunification framework?",
+  "options": [
+   "No",
+   "Conditional",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q41.1",
+  "cat": "Family",
+  "text": "CITATION/COMMENT: Are same sex marital relationships recognized under the migrant family reunification framework?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q41.2",
+  "cat": "Family",
+  "text": "To what extent is the recognition of same sex marital relationships implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q41B.0",
+  "cat": "Family",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q41B",
+  "cat": "Family",
+  "text": "Presence of Right Protection in 2020: Are same sex marital relationships recognized under the migrant family reunification framework?",
+  "options": [
+   "No",
+   "Conditional",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q41B.1",
+  "cat": "Family",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Are same sex marital relationships recognized under the migrant family reunification framework?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q41B.2",
+  "cat": "Family",
+  "text": "Implementation as of January 1, 2020: To what extent is the recognition of same sex marital relationships implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q42",
+  "cat": "Family",
+  "text": "Does the national law allow migrants a right to family reunification regardless of resource conditions (such as income, insurance, etc.)?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q42.1",
+  "cat": "Family",
+  "text": "CITATION/COMMENT: Does the national law allow migrants a right to family reunification regardless of resource conditions (such as income, insurance, etc.)?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q42.2",
+  "cat": "Family",
+  "text": "To what extent do relevant authorities allow a right to family reunification regardless of resource conditions?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q42B.0",
+  "cat": "Family",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q42B",
+  "cat": "Family",
+  "text": "Presence of Right Protection in 2020: Does the national law allow migrants a right to family reunification regardless of resource conditions (such as income, insurance, etc.)?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q42B.1",
+  "cat": "Family",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Does the national law allow migrants a right to family reunification regardless of resource conditions (such as income, insurance, etc.)?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q42B.2",
+  "cat": "Family",
+  "text": "Implementation as of January 1, 2020: To what extent do relevant authorities allow a right to family reunification regardless of resource conditions?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always End of Block: Family"
+  ]
+ },
+ {
+  "q": "Q43",
+  "cat": "Freedom of Thought, Conscience, and Religious Belief",
+  "text": "Does the national law recognize and protect the right of freedom of thought, conscience and religion or belief of migrants commensurate with citizens?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q43.1",
+  "cat": "Freedom of Thought, Conscience, and Religious Belief",
+  "text": "CITATION/COMMENT: Does the national law recognize and protect the right of freedom of thought, conscience and religion or belief of migrants commensurate with citizens?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q43.2",
+  "cat": "Freedom of Thought, Conscience, and Religious Belief",
+  "text": "To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q43B.0",
+  "cat": "Freedom of Thought, Conscience, and Religious Belief",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q43B",
+  "cat": "Freedom of Thought, Conscience, and Religious Belief",
+  "text": "Presence of Right Protection in 2020: Does the national law recognize and protect the right of freedom of thought, conscience and religion or belief of migrants commensurate with citizens?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q43B.1",
+  "cat": "Freedom of Thought, Conscience, and Religious Belief",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Does the national law recognize and protect the right of freedom of thought, conscience and religion or belief of migrants commensurate with citizens?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q43B.2",
+  "cat": "Freedom of Thought, Conscience, and Religious Belief",
+  "text": "Implementation as of January 1, 2020: To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always End of Block: Freedom of Thought, Conscience, and Religious Belief"
+  ]
+ },
+ {
+  "q": "Q44",
+  "cat": "Freedom of Opinion and Expression",
+  "text": "Does the national law provide migrants with full freedom to hold opinions without interference commensurate with that afforded to citizens?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q44.1",
+  "cat": "Freedom of Opinion and Expression",
+  "text": "CITATION/COMMENT: Does the national law provide migrants with full freedom to hold opinions without interference commensurate with that afforded to citizens?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q44.2",
+  "cat": "Freedom of Opinion and Expression",
+  "text": "To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q44B.0",
+  "cat": "Freedom of Opinion and Expression",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q44B",
+  "cat": "Freedom of Opinion and Expression",
+  "text": "Presence of Right Protection in 2020: Does the national law provide migrants with full freedom to hold opinions without interference commensurate with that afforded to citizens?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q44B.1",
+  "cat": "Freedom of Opinion and Expression",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Does the national law provide migrants with full freedom to hold opinions without interference commensurate with that afforded to citizens?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q44B.2",
+  "cat": "Freedom of Opinion and Expression",
+  "text": "Implementation as of January 1, 2020: To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q45",
+  "cat": "Freedom of Opinion and Expression",
+  "text": "Does the national law provide migrants with the right to freedom of expression commensurate with that afforded to citizens?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q45.1",
+  "cat": "Freedom of Opinion and Expression",
+  "text": "CITATION/COMMENT: Does the national law provide migrants with the right to freedom of expression commensurate with that afforded to citizens?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q45.2",
+  "cat": "Freedom of Opinion and Expression",
+  "text": "To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q45B.0",
+  "cat": "Freedom of Opinion and Expression",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q45B",
+  "cat": "Freedom of Opinion and Expression",
+  "text": "Presence of Right Protection in 2020: Does the national law provide migrants with the right to freedom of expression commensurate with that afforded to citizens?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q45B.1",
+  "cat": "Freedom of Opinion and Expression",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Does the national law provide migrants with the right to freedom of expression commensurate with that afforded to citizens?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q45B.2",
+  "cat": "Freedom of Opinion and Expression",
+  "text": "Implementation as of January 1, 2020: To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always End of Block: Freedom of Opinion and Expression"
+  ]
+ },
+ {
+  "q": "Q46",
+  "cat": "Freedom of Peaceful Assembly and Association",
+  "text": "Does the national law recognize and protect migrants’ right of freedom of association, including the right to join trade unions, commensurate with that afforded to citizens?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q46.1",
+  "cat": "Freedom of Peaceful Assembly and Association",
+  "text": "CITATION/COMMENT: Does the national law recognize and protect migrants’ right of freedom of association, including the right to join trade unions, commensurate with that afforded to citizens?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q46.2",
+  "cat": "Freedom of Peaceful Assembly and Association",
+  "text": "To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q46B.0",
+  "cat": "Freedom of Peaceful Assembly and Association",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q46B",
+  "cat": "Freedom of Peaceful Assembly and Association",
+  "text": "Presence of Right Protection in 2020: Does the national law recognize and protect migrants’ right of freedom of association, including the right to join trade unions, commensurate with that afforded to citizens?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q46B.1",
+  "cat": "Freedom of Peaceful Assembly and Association",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Does the national law recognize and protect migrants’ right of freedom of association, including the right to join trade unions, commensurate with that afforded to citizens?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q46B.2",
+  "cat": "Freedom of Peaceful Assembly and Association",
+  "text": "Implementation as of January 1, 2020: To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q47",
+  "cat": "Freedom of Peaceful Assembly and Association",
+  "text": "Does the national law recognize and protect migrants’ right of freedom of peaceful assembly commensurate with that afforded to citizens?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q47.1",
+  "cat": "Freedom of Peaceful Assembly and Association",
+  "text": "CITATION/COMMENT: Does the national law recognize and protect the right of freedom of peaceful assembly commensurate with that afforded to citizens?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q47.2",
+  "cat": "Freedom of Peaceful Assembly and Association",
+  "text": "To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q47B.0",
+  "cat": "Freedom of Peaceful Assembly and Association",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q47B",
+  "cat": "Freedom of Peaceful Assembly and Association",
+  "text": "Presence of Right Protection in 2020: Does the national law recognize and protect migrants’ right of freedom of peaceful assembly commensurate with that afforded to citizens?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q47B.1",
+  "cat": "Freedom of Peaceful Assembly and Association",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Does the national law recognize and protect the right of freedom of peaceful assembly commensurate with that afforded to citizens?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q47B.2",
+  "cat": "Freedom of Peaceful Assembly and Association",
+  "text": "Implementation as of January 1, 2020: To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always End of Block: Freedom of Peaceful Assembly and Association"
+  ]
+ },
+ {
+  "q": "Q48",
+  "cat": "Civil and Political Life",
+  "text": "Does being lawfully present create a legal right for migrants to vote in local, regional, or national elections?",
+  "options": [
+   "No right to vote in any election",
+   "Right to vote in local or regional elections",
+   "Right to vote in national elections"
+  ]
+ },
+ {
+  "q": "Q48.1",
+  "cat": "Civil and Political Life",
+  "text": "CITATION/COMMENT: Does being lawfully present create a legal right for migrants to vote in local, regional, or national elections?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q48.2",
+  "cat": "Civil and Political Life",
+  "text": "To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q48B.0",
+  "cat": "Civil and Political Life",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q48B",
+  "cat": "Civil and Political Life",
+  "text": "Presence of Right Protection in 2020: Does being lawfully present create a legal right for migrants to vote in local, regional, or national elections?",
+  "options": [
+   "No right to vote in any election",
+   "Right to vote in local or regional elections",
+   "Right to vote in national elections"
+  ]
+ },
+ {
+  "q": "Q48B.1",
+  "cat": "Civil and Political Life",
+  "text": "Citation as of January 1, 2020: Does being lawfully present create a legal right for migrants to vote in local, regional, or national elections?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q48B.2",
+  "cat": "Civil and Political Life",
+  "text": "Implementation as of January 1, 2020: To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q49",
+  "cat": "Civil and Political Life",
+  "text": "Does being lawfully present create a legal right for migrants to stand for election (run for public office)?",
+  "options": [
+   "No right to run for public office in any election",
+   "Right to run for public office in local or regional elections",
+   "Right to run for public office in national elections"
+  ]
+ },
+ {
+  "q": "Q49.1",
+  "cat": "Civil and Political Life",
+  "text": "CITATION/COMMENT: Does being lawfully present create a legal right for migrants to stand for election?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q49.2",
+  "cat": "Civil and Political Life",
+  "text": "To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q49B.0",
+  "cat": "Civil and Political Life",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q49B",
+  "cat": "Civil and Political Life",
+  "text": "Presence of Right Protection in 2020: Does being lawfully present create a legal right for migrants to stand for election (run for public office)?",
+  "options": [
+   "No right to run for public office in any election",
+   "Right to run for public office in local or regional elections",
+   "Right to run for public office in national elections"
+  ]
+ },
+ {
+  "q": "Q49B.1",
+  "cat": "Civil and Political Life",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Does being lawfully present create a legal right for migrants to stand for election (run for public office)?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q49B.2",
+  "cat": "Civil and Political Life",
+  "text": "Implementation as of January 1, 2020: To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always End of Block: Civil and Political Life"
+  ]
+ },
+ {
+  "q": "Q50",
+  "cat": "Equal Protection",
+  "text": "Does the national law prohibit discrimination against migrants on the basis of their status as a migrant?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q50.1",
+  "cat": "Equal Protection",
+  "text": "CITATION/COMMENT: Does the national law prohibit discrimination against migrants on the basis of their status as a migrant?",
+  "options": [
+   "Citation: __________________________________________________",
+   "Comment: __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q50.2",
+  "cat": "Equal Protection",
+  "text": "To what extent is the ban on discrimination against migrants on the basis of their status as a migrant implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q50B.0",
+  "cat": "Equal Protection",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q50B",
+  "cat": "Equal Protection",
+  "text": "Presence of Right Protection in 2020: Does the national law prohibit discrimination against migrants on the basis of their status as a migrant?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q50B.1",
+  "cat": "Equal Protection",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Does the national law prohibit discrimination against migrants on the basis of their status as a migrant?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q50B.2",
+  "cat": "Equal Protection",
+  "text": "Implementation as of January 1, 2020: To what extent is the ban on discrimination against migrants on the basis of their status as a migrant implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q51",
+  "cat": "Equal Protection",
+  "text": "Does the national law prohibit discrimination against migrants on the ground of race or ethnicity?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q51.1",
+  "cat": "Equal Protection",
+  "text": "CITATION/COMMENT: Does the national law prohibit discrimination against migrants on the ground of race or ethnicity?",
+  "options": [
+   "Citation: __________________________________________________",
+   "Comment: __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q51.2",
+  "cat": "Equal Protection",
+  "text": "To what extent is the ban on discrimination against migrants on the ground of race or ethnicity implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q51B.0",
+  "cat": "Equal Protection",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q51B",
+  "cat": "Equal Protection",
+  "text": "Presence of Right Protection in 2020: Does the national law prohibit discrimination against migrants on the ground of race or ethnicity?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q51B.1",
+  "cat": "Equal Protection",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Does the national law prohibit discrimination against migrants on the ground of race or ethnicity?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q51B.2",
+  "cat": "Equal Protection",
+  "text": "Implementation as of January 1, 2020: To what extent is the ban on discrimination against migrants on the ground of race or ethnicity implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always End of Block: Equal Protection"
+  ]
+ },
+ {
+  "q": "Q52",
+  "cat": "Labor",
+  "text": "Do migrant workers have the right to fair wages and equal remuneration for work of equal value commensurate with that afforded to citizens doing the same work?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q52.1",
+  "cat": "Labor",
+  "text": "CITATION/COMMENT: Do migrant workers have the right to fair wages and equal remuneration for work of equal value commensurate with that afforded to citizens doing the same work?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q52.2",
+  "cat": "Labor",
+  "text": "To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q52B.0",
+  "cat": "Labor",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q52B",
+  "cat": "Labor",
+  "text": "Presence of Right Protection in 2020: Do migrant workers have the right to fair wages and equal remuneration for work of equal value commensurate with that afforded to citizens doing the same work?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q52B.1",
+  "cat": "Labor",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Do migrant workers have the right to fair wages and equal remuneration for work of equal value commensurate with that afforded to citizens doing the same work?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q52B.2",
+  "cat": "Labor",
+  "text": "Implementation as of January 1, 2020: To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q53",
+  "cat": "Labor",
+  "text": "Do migrant workers have the right to free choice of employment?",
+  "options": [
+   "Employment is tied to a specific employer and no change of employer possible",
+   "Employment is tied to specific employer; change of employer possible, but requires new work permit application",
+   "Workers can freely change employers within a specific sector",
+   "Migrant workers have completely free choice of employment"
+  ]
+ },
+ {
+  "q": "Q53.1",
+  "cat": "Labor",
+  "text": "CITATION/COMMENT: Do migrant workers have the right to free choice of employment?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q53.2",
+  "cat": "Labor",
+  "text": "To what extent is migrants’ free choice of employment implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q53B.0",
+  "cat": "Labor",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q53B",
+  "cat": "Labor",
+  "text": "Presence of Right Protection in 2020: Do migrant workers have the right to free choice of employment?",
+  "options": [
+   "Employment is tied to a specific employer and no change of employer possible",
+   "Employment is tied to specific employer; change of employer possible, but requires new work permission",
+   "Workers can freely change employers within a specific sector",
+   "Migrant workers have completely free choice of employment"
+  ]
+ },
+ {
+  "q": "Q53B.1",
+  "cat": "Labor",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Do migrant workers have the right to free choice of employment?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q53B.2",
+  "cat": "Labor",
+  "text": "Implementation as of January 1, 2020: To what extent is migrants’ free choice of employment implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q54",
+  "cat": "Labor",
+  "text": "Does the spouse/partner of the principal migrant automatically have the right to work (without having to apply for permission)?",
+  "options": [
+   "No",
+   "Yes, but limited (e.g., by sector or occupation)",
+   "Yes, unrestricted right to work"
+  ]
+ },
+ {
+  "q": "Q54.1",
+  "cat": "Labor",
+  "text": "CITATION/COMMENT: Does the spouse/partner of the principal migrant automatically have the right to work (without having to apply for permission)?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q54.2",
+  "cat": "Labor",
+  "text": "To what extent is migrant spouse/partner’s right to work implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q54B.0",
+  "cat": "Labor",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q54B",
+  "cat": "Labor",
+  "text": "Presence of Right Protection in 2020: Does the spouse/partner of the principal migrant automatically have the right to work (without having to apply for permission)?",
+  "options": [
+   "No",
+   "Yes, but limited (e.g., by sector or occupation)",
+   "Yes, unrestricted right to work"
+  ]
+ },
+ {
+  "q": "Q54B.1",
+  "cat": "Labor",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Does the spouse/partner of the principal migrant automatically have the right to work (without having to apply for permission)?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q54B.2",
+  "cat": "Labor",
+  "text": "Implementation as of January 1, 2020: To what extent is migrant spouse/partner’s right to work implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q55",
+  "cat": "Labor",
+  "text": "Is immigration status protected despite the loss of employment for all migrants who are in a regular legal status?",
+  "options": [
+   "Loss of employment automatically implies the loss of immigration status",
+   "Loss of employment implies loss of immigration status unless a new job is found within a specified time period",
+   "Loss of employment does not affect immigration status"
+  ]
+ },
+ {
+  "q": "Q55.1",
+  "cat": "Labor",
+  "text": "CITATION/COMMENT: Is immigration status protected despite the loss of employment?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q55.2",
+  "cat": "Labor",
+  "text": "To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q55B.0",
+  "cat": "Labor",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q55B",
+  "cat": "Labor",
+  "text": "Presence of Right Protection in 2020: Is immigration status protected despite the loss of employment for all migrants who are in a regular legal status?",
+  "options": [
+   "Loss of employment automatically implies the loss of immigration status",
+   "Loss of employment implies loss of immigration status unless a new job is found within a specified time period",
+   "Loss of employment does not affect immigration status"
+  ]
+ },
+ {
+  "q": "Q55B.1",
+  "cat": "Labor",
+  "text": "Citation as of January 1, 2020: Is immigration status protected despite the loss of employment?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q55B.2",
+  "cat": "Labor",
+  "text": "Implementation as of January 1, 2020: To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q56",
+  "cat": "Labor",
+  "text": "Beyond the issue of equal pay, do migrant workers with a valid work permit have the same rights to equal employment conditions and protections (e.g., overtime, hours of work, weekly rest, paid holidays, sick pay, health and safety at work, protection against dismissal) commensurate with that afforded to citizens?",
+  "options": [
+   "No, migrant workers have significantly fewer legal rights",
+   "Migrants have a right to most of the employment conditions and protections for citizens",
+   "Yes, migrants have a right to the same employment conditions and protections"
+  ]
+ },
+ {
+  "q": "Q56.1",
+  "cat": "Labor",
+  "text": "CITATION/COMMENT: Beyond the issue of equal pay, do migrant workers with a valid work permit have the same rights to equal employment conditions and protections (e.g., overtime, hours of work, weekly rest, paid holidays, sick pay, health and safety at work, protection against dismissal) commensurate with that afforded to citizens?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q56.2",
+  "cat": "Labor",
+  "text": "To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q56B.0",
+  "cat": "Labor",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q56B",
+  "cat": "Labor",
+  "text": "Presence of Right Protection in 2020: Beyond the issue of equal pay, do migrant workers with a valid work permit have the same rights to equal employment conditions and protections (e.g., overtime, hours of work, weekly rest, paid holidays, sick pay, health and safety at work, protection against dismissal) commensurate with that afforded to citizens?",
+  "options": [
+   "No, migrant workers have significantly fewer legal rights",
+   "Migrants have a right to most of the employment conditions and protections for citizens",
+   "Yes, migrants have a right to the same employment conditions and protections"
+  ]
+ },
+ {
+  "q": "Q56B.1",
+  "cat": "Labor",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Beyond the issue of equal pay, do migrant workers with a valid work permit have the same rights to equal employment conditions and protections (e.g., overtime, hours of work, weekly rest, paid holidays, sick pay, health and safety at work, protection against dismissal) commensurate with that afforded to citizens?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q56B.2",
+  "cat": "Labor",
+  "text": "Implementation as of January 1, 2020: To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q57",
+  "cat": "Labor",
+  "text": "Do migrant workers with a valid work permit have the right to social security protections commensurate with citizens?",
+  "options": [
+   "No right to access any social security protections",
+   "Access to some, but not all types of social security protections (e.g., no equal access under this program; or access depending on visa type)",
+   "Equal access to all types of social security protections after some period of time",
+   "Yes, immediate equal access to all types of social security protections"
+  ]
+ },
+ {
+  "q": "Q57.1",
+  "cat": "Labor",
+  "text": "CITATION/COMMENT: Do migrant workers with a valid work permit have the right to social security protections commensurate with citizens?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q57.2",
+  "cat": "Labor",
+  "text": "To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q57B.0",
+  "cat": "Labor",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q57B",
+  "cat": "Labor",
+  "text": "Presence of Right Protection in 2020: Do migrant workers with a valid work permit have the right to social security protections commensurate with citizens?",
+  "options": [
+   "No right to access any social security protections",
+   "Access to some, but not all types of social security protections (e.g., no equal access under this program; or access depending on visa type)",
+   "Equal access to all types of social security protections after some period of time",
+   "Yes, immediate equal access to all types of social security protections"
+  ]
+ },
+ {
+  "q": "Q57B.1",
+  "cat": "Labor",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Do migrant workers with a valid work permit have the right to social security protections commensurate with citizens?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q57B.2",
+  "cat": "Labor",
+  "text": "Implementation as of January 1, 2020: To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q58",
+  "cat": "Labor",
+  "text": "Do migrant workers with a valid work permit have the right to unemployment benefits commensurate with citizens?",
+  "options": [
+   "No access to any unemployment benefits",
+   "Access to some, but not all types of unemployment benefits; OR not to the same extent as citizens; OR it depends on their visa type (e.g., temporary vs. permanent, high-skill vs. low skill)",
+   "Equal access to all types of unemployment benefits after a duration of stay",
+   "Yes, immediate equal access to all types of unemployment benefits"
+  ]
+ },
+ {
+  "q": "Q58.1",
+  "cat": "Labor",
+  "text": "CITATION/COMMENT: Do migrant workers with a valid work permit have the right to unemployment benefits commensurate with citizens?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q58.2",
+  "cat": "Labor",
+  "text": "To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q58B.0",
+  "cat": "Labor",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q58B",
+  "cat": "Labor",
+  "text": "Presence of Right Protection in 2020: Do migrant workers with a valid work permit have the right to unemployment benefits commensurate with citizens?",
+  "options": [
+   "No access to any unemployment benefits",
+   "Access to some, but not all types of unemployment benefits; OR not to the same extent as citizens; OR it depends on their visa type (e.g., temporary vs. permanent, high-skill vs. low skill)",
+   "Equal access to all types of unemployment benefits after a duration of stay",
+   "Yes, immediate equal access to all types of unemployment benefits"
+  ]
+ },
+ {
+  "q": "Q58B.1",
+  "cat": "Labor",
+  "text": "Citation as of January 1, 2020: Do migrant workers with a valid work permit have the right to unemployment benefits commensurate with citizens?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q58B.2",
+  "cat": "Labor",
+  "text": "Implementation as of January 1, 2020: To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q59",
+  "cat": "Labor",
+  "text": "Does the national law provide temporary migrant workers with avenues to become lawful permanent residents?",
+  "options": [
+   "No, there is no opportunity to acquire permanent residence status",
+   "met Yes, there is an opportunity to switch to permanent status after certain conditions are"
+  ]
+ },
+ {
+  "q": "Q59.1",
+  "cat": "Labor",
+  "text": "CITATION/COMMENT: Does the national law provide temporary migrant workers with avenues to become lawful permanent residents?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q59.2",
+  "cat": "Labor",
+  "text": "To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q60",
+  "cat": "Labor",
+  "text": "If your answer to Q59 is yes (in other words, if there is an opportunity for temporary migrant workers to switch to permanent status after certain conditions are met), is it unconditional on visa type?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q60.1",
+  "cat": "Labor",
+  "text": "CITATION/COMMENT: If your answer to Q59 is yes, is it unconditional on visa type?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q60.2",
+  "cat": "Labor",
+  "text": "To what extent do the relevant authorities provide avenues to lawful permanent residence unconditional on visa?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q59B",
+  "cat": "Labor",
+  "text": "Now, please re-answer the same question(s) below as it relates to January 1, 2020. Does the national law provide temporary migrant workers with avenues to become lawful permanent residents?",
+  "options": [
+   "No, there is no opportunity to acquire permanent residence status",
+   "met Yes, there is an opportunity to switch to permanent status after certain conditions are"
+  ]
+ },
+ {
+  "q": "Q59B.1",
+  "cat": "Labor",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Does the national law provide temporary migrant workers with avenues to become lawful permanent residents as of January 1, 2020?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q59B.2",
+  "cat": "Labor",
+  "text": "Implementation as of January 1, 2020: To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q60B",
+  "cat": "Labor",
+  "text": "If your answer to Q59B is yes (in other words, if there is an opportunity, as of January 1, 2020, for temporary migrant workers to switch to permanent status after certain conditions are met), is it unconditional on visa type?",
+  "options": [
+   "No",
+   "Yes"
+  ]
+ },
+ {
+  "q": "Q60B.1",
+  "cat": "Labor",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: If your answer to Q59B is yes, is it unconditional on visa type?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q60B.2",
+  "cat": "Labor",
+  "text": "Implementation as of January 1, 2020: To what extent do the relevant authorities provide avenues to lawful permanent residence unconditional on visa as of January 1, 2020?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q61",
+  "cat": "Labor",
+  "text": "Does the national law provide opportunities for irregular migrant workers to regularize their status as a migrant? .",
+  "options": [
+   "No, there is no opportunity for irregular migrant workers to regularize",
+   "Yes, there is an opportunity to regularize after certain conditions are met"
+  ]
+ },
+ {
+  "q": "Q61.1",
+  "cat": "Labor",
+  "text": "CITATION/COMMENT: Does the national law provide irregular migrant workers to regularize?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q61.2",
+  "cat": "Labor",
+  "text": "To what extent is irregular migrant workers’ right to regularize implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q61B.0",
+  "cat": "Labor",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q61B",
+  "cat": "Labor",
+  "text": "Presence of Right Protection in 2020: Does the national law provide opportunities for irregular migrant workers to regularize their status as a migrant? .",
+  "options": [
+   "No, there is no opportunity for irregular migrant workers to regularize",
+   "Yes, there is an opportunity to regularize after certain conditions are met"
+  ]
+ },
+ {
+  "q": "Q61B.1",
+  "cat": "Labor",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Does the national law provide irregular migrant workers to regularize their status as a migrant?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q61B.2",
+  "cat": "Labor",
+  "text": "Implementation as of January 1, 2020: To what extent is irregular migrant workers’ right to regularize implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q62",
+  "cat": "Labor",
+  "text": "Do migrant workers have the right to redress if the terms of their employment contract have been violated by their employer?",
+  "options": [
+   "No",
+   "Yes, but limited",
+   "Yes, same as citizens"
+  ]
+ },
+ {
+  "q": "Q62.1",
+  "cat": "Labor",
+  "text": "CITATION/COMMENT: Do migrant workers have the right to redress if the terms of their employment contract have been violated by their employer?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q62.2",
+  "cat": "Labor",
+  "text": "To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q62B.0",
+  "cat": "Labor",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q62B",
+  "cat": "Labor",
+  "text": "Presence of Right Protection in 2020: Do migrant workers have the right to redress if the terms of their employment contract have been violated by their employer?",
+  "options": [
+   "No",
+   "Yes, but limited",
+   "Yes, same as citizens"
+  ]
+ },
+ {
+  "q": "Q62B.1",
+  "cat": "Labor",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Do migrant workers have the right to redress if the terms of their employment contract have been violated by their employer?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q62B.2",
+  "cat": "Labor",
+  "text": "Implementation as of January 1, 2020: To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always End of Block: Labor"
+  ]
+ },
+ {
+  "q": "Q63",
+  "cat": "Health",
+  "text": "Does the national law guarantee migrants’ access to health care services commensurate with citizens?",
+  "options": [
+   "No",
+   "Yes, but only for certain visa types and migrant statuses (e.g., economic, family, humanitarian, temporary or regular migrants)",
+   "Yes, for all visa types (including irregular migrants)"
+  ]
+ },
+ {
+  "q": "Q63.1",
+  "cat": "Health",
+  "text": "CITATION/COMMENT: Does the national law guarantee migrants’ access to health care services commensurate with citizens?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q63B.2",
+  "cat": "Health",
+  "text": "Implementation as of January 1, 2020: To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q64",
+  "cat": "Health",
+  "text": "Does the national law guarantee access to publicly supported housing to migrants commensurate with citizens?",
+  "options": [
+   "No",
+   "Yes, but only for certain visa types and migrant statuses (e.g., economic, family, humanitarian, temporary or regular migrants)",
+   "Yes (including irregular migrants)"
+  ]
+ },
+ {
+  "q": "Q64.1",
+  "cat": "Health",
+  "text": "CITATION/COMMENT: Does the national law guarantee access to publicly supported housing to migrants commensurate with citizens?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q64.2",
+  "cat": "Health",
+  "text": "To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q64B.0",
+  "cat": "Health",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q64B",
+  "cat": "Health",
+  "text": "Presence of Right Protection in 2020: Does the national law guarantee access to publicly supported housing to migrants commensurate with citizens?",
+  "options": [
+   "No",
+   "Yes, but only for certain visa types and migrant statuses (e.g., economic, family, humanitarian, temporary or regular migrants)",
+   "Yes (including irregular migrants)"
+  ]
+ },
+ {
+  "q": "Q64B.1",
+  "cat": "Health",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Does the national law guarantee access to publicly supported housing to migrants commensurate with citizens?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q64B.2",
+  "cat": "Health",
+  "text": "Implementation as of January 1, 2020: To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always End of Block: Health"
+  ]
+ },
+ {
+  "q": "Q65",
+  "cat": "Education",
+  "text": "Does the national law guarantee access to free primary educational institutions and services to migrant children commensurate with citizens?",
+  "options": [
+   "No",
+   "Yes, but only for certain visa types and migrant statuses (e.g., economic, family, humanitarian, temporary or regular migrants)",
+   "Yes (including irregular migrants)"
+  ]
+ },
+ {
+  "q": "Q65.1",
+  "cat": "Education",
+  "text": "CITATION/COMMENT: Does the national law guarantee access to free primary education to migrant children commensurate with citizens?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q65.2",
+  "cat": "Education",
+  "text": "To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q65B.0",
+  "cat": "Education",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q65B",
+  "cat": "Education",
+  "text": "Presence of Right Protection in 2020: Does the national law guarantee access to free primary educational institutions and services to migrant children commensurate with citizens?",
+  "options": [
+   "No",
+   "Yes, but only for certain visa types and migrant statuses (e.g., economic, family, humanitarian, temporary or regular migrants)",
+   "Yes (including irregular migrants)"
+  ]
+ },
+ {
+  "q": "Q65B.1",
+  "cat": "Education",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Does the national law guarantee access to free primary education to migrant children commensurate with citizens?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q65B.2",
+  "cat": "Education",
+  "text": "Implementation as of January 1, 2020: To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q66",
+  "cat": "Education",
+  "text": "Does the national law guarantee access to public adult educational institutions and services to migrants (such as degree-level course and vocational training) commensurate with citizens?",
+  "options": [
+   "No",
+   "Yes, but only for certain visa types and migrant statuses (e.g., economic, family, humanitarian, temporary or regular migrants)",
+   "Yes (including irregular migrants)"
+  ]
+ },
+ {
+  "q": "Q66.1",
+  "cat": "Education",
+  "text": "CITATION/COMMENT: Does the national law guarantee access to public adult educational institutions and services to migrants (such as degree-level course and vocational training) commensurate with citizens?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q66.2",
+  "cat": "Education",
+  "text": "To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always"
+  ]
+ },
+ {
+  "q": "Q66B.0",
+  "cat": "Education",
+  "text": "2020 LEGAL ENVIRONMENT: What is the state of migrant right protections and/or their implementation as of January 1, 2020, when compared with the legal situation in your country as of January 1, 2023?",
+  "options": [
+   "There was no right protection (as of January 1, 2020), but there is now (as of January 1, 2023)",
+   "There was right protection (as of January 1, 2020), but there is no such protection now (as of January 1, 2023)",
+   "There have been no right protections neither in 2020 nor in 2023",
+   "There have been right protections both in 2020 and 2023 and neither the right protection nor the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but the implementation level of these protections has changed",
+   "There have been right protections both in 2020 and 2023 but they are not the same"
+  ]
+ },
+ {
+  "q": "Q66B",
+  "cat": "Education",
+  "text": "Presence of Right Protection in 2020: Does the national law guarantee access to public adult educational institutions and services to migrants (such as degree-level course and vocational training) commensurate with citizens?",
+  "options": [
+   "No",
+   "Yes, but only for certain visa types and migrant statuses (e.g., economic, family, humanitarian, temporary or regular migrants)",
+   "Yes (including irregular migrants)"
+  ]
+ },
+ {
+  "q": "Q66B.1",
+  "cat": "Education",
+  "text": "Citation as of January 1, 2020: CITATION/COMMENT: Does the national law guarantee access to public adult educational institutions and services to migrants (such as degree-level course and vocational training) commensurate with citizens?",
+  "options": [
+   "Citation __________________________________________________",
+   "Comment __________________________________________________"
+  ]
+ },
+ {
+  "q": "Q66B.2",
+  "cat": "Education",
+  "text": "Implementation as of January 1, 2020: To what extent is this migrant right protection implemented by the relevant authorities?",
+  "options": [
+   "Effectively never",
+   "Rarely",
+   "Sometimes",
+   "Usually",
+   "Effectively always End of Block: Education You have now completed the survey. Please select the \"next\" arrow to submit your responses. End of Block: End"
+  ]
+ }
+]

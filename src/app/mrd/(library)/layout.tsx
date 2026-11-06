@@ -44,6 +44,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div className="actions">
             <a className="pill" href="https://www.migrantrightsinitiative.org/en" target="_blank" rel="noreferrer">The Migrant Rights Initiative</a>
             <Link className="pill" href={`${BASE}/crawl`}>How it was built</Link>
+            <Link className="pill" href={`${BASE}/dossiers`}>Six experimental dossiers</Link>
           </div>
         </div>
         <div>
