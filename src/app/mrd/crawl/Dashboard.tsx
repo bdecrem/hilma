@@ -102,7 +102,7 @@ export default function Dashboard() {
         <p className="lede">
           Cornell&apos;s Migrant Rights Database scores 45 countries on 66 indicators and backs each answer with a citation.
           This crawl reads those {fmt(data.citations.total)} citations, names every statute, regulation and court decision
-          they rely on, and goes looking for the official text.
+          they rely on, and goes looking for the official text. <a href="/mrd" style={{ color: 'var(--blue)', fontWeight: 600 }}>Read the laws in the library →</a>
         </p>
         {error && <p className="warn">Last refresh failed: {error}</p>}
       </header>

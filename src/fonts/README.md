@@ -32,7 +32,7 @@ list the file in `outputFileTracingIncludes` in `next.config.ts` (as
 
 ## Catalog
 
-Built 2026-10-26.
+Built 2026-11-06.
 
 ### Alfa Slab One
 
@@ -151,6 +151,24 @@ const font = localFont({
 ```
 
 OG: `dm-mono/DMMono-400.ttf` → `{ name: 'DM Mono', weight: 400, style: 'normal' }`
+
+### DM Sans
+
+variable (opsz 9–40, wght 100–1000) · `ofl/dmsans` · DMSans.woff2 47 KB, DMSans-Italic.woff2 49 KB
+
+```ts
+import localFont from 'next/font/local'
+const font = localFont({
+  src: [
+    { path: '../../fonts/dm-sans/DMSans.woff2', style: 'normal' },
+    { path: '../../fonts/dm-sans/DMSans-Italic.woff2', style: 'italic' },
+  ],
+  weight: '100 1000',
+  variable: '--font-dm-sans', display: 'swap',
+})
+```
+
+OG: `dm-sans/DMSans-300.ttf` → `{ name: 'DM Sans', weight: 300, style: 'normal' }`; `dm-sans/DMSans-400.ttf` → `{ name: 'DM Sans', weight: 400, style: 'normal' }`; `dm-sans/DMSans-700.ttf` → `{ name: 'DM Sans', weight: 700, style: 'normal' }`
 
 ### Figtree
 

@@ -63,6 +63,29 @@ def html_text(raw):
     return re.sub(r"\n\s*\n+", "\n\n", t).strip()
 
 
+LEGACY = {"he": "cp1255", "ru": "cp1251", "ar": "cp1256", "el": "cp1253", "tr": "cp1254", "hu": "cp1250", "bn": "utf-8"}
+
+
+def decode_html(data, ctype="", lang=None):
+    """Valid UTF-8 first, then the page's declared charset (header, then <meta>), then the usual legacy
+    code page for the law's language. Decoding Latin-1 or Windows-1255 pages as UTF-8 with errors ignored
+    dropped every accented letter ("Artculo") and every Hebrew one."""
+    if data[:2] in (b"\xff\xfe", b"\xfe\xff") or data[:400].count(b"\x00") > 40:   # UTF-16 (bdlaws.minlaw.gov.bd)
+        return data.decode("utf-16" if data[:2] in (b"\xff\xfe", b"\xfe\xff") else "utf-16-le", "replace")
+    try:
+        return data.decode("utf-8")
+    except UnicodeDecodeError:
+        pass
+    enc = re.search(r"charset=[\"']?([\w-]+)", ctype) or re.search(rb"<meta[^>]+charset=[\"']?([\w-]+)", data[:4000], re.I)
+    if enc:
+        name = enc.group(1).decode() if isinstance(enc.group(1), bytes) else enc.group(1)
+        try:
+            return data.decode(name)
+        except (LookupError, UnicodeDecodeError):
+            pass
+    return data.decode(LEGACY.get(lang or "", "cp1252"), "replace")
+
+
 def pdf_text(data):
     with tempfile.NamedTemporaryFile(suffix=".pdf") as f:
         f.write(data); f.flush()
@@ -88,9 +111,7 @@ def fetch(url):
         final = r.geturl()
     if data[:5] == b"%PDF-" or "pdf" in ctype:
         return final, "pdf", data, pdf_text(data)
-    enc = re.search(r"charset=([\w-]+)", ctype)
-    raw = data.decode(enc.group(1) if enc else "utf-8", "ignore")
-    return final, "html", data, html_text(raw)
+    return final, "html", data, html_text(decode_html(data, ctype))
 
 
 def pdf_links(data, base):

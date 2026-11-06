@@ -288,6 +288,68 @@
         }
       ]
     },
+    "DM Sans": {
+      "family": "DM Sans",
+      "dir": "dm-sans",
+      "kind": "variable",
+      "repoDir": "ofl/dmsans",
+      "sources": {
+        "DMSans[opsz,wght].ttf": "c672f98060af9b2c85fca704ebd5ad9a8717c1df",
+        "DMSans-Italic[opsz,wght].ttf": "bf6819b0f811026ecf98d66183509b7302c0bf61"
+      },
+      "axes": {
+        "opsz": [
+          9,
+          9,
+          40
+        ],
+        "wght": [
+          100,
+          400,
+          1000
+        ]
+      },
+      "web": [
+        {
+          "file": "DMSans.woff2",
+          "style": "normal",
+          "weight": [
+            100,
+            1000
+          ],
+          "bytes": 47960
+        },
+        {
+          "file": "DMSans-Italic.woff2",
+          "style": "italic",
+          "weight": [
+            100,
+            1000
+          ],
+          "bytes": 50312
+        }
+      ],
+      "og": [
+        {
+          "file": "DMSans-300.ttf",
+          "style": "normal",
+          "weight": 300,
+          "bytes": 49784
+        },
+        {
+          "file": "DMSans-400.ttf",
+          "style": "normal",
+          "weight": 400,
+          "bytes": 49776
+        },
+        {
+          "file": "DMSans-700.ttf",
+          "style": "normal",
+          "weight": 700,
+          "bytes": 49820
+        }
+      ]
+    },
     "Figtree": {
       "family": "Figtree",
       "dir": "figtree",
@@ -910,5 +972,5 @@
       "og": []
     }
   },
-  "generated": "2026-10-26"
+  "generated": "2026-11-06"
 }
