@@ -141,6 +141,14 @@ export default function Dashboard() {
           <Step n={3} title="Second pass over the misses" run={rescue} now={now} done={rescue.done} total={rescue.total}
             detail="Fixed addresses for treaties, EU law and numbered rulings; XML feeds and open-data APIs behind the portals that render by script; a real browser for sites that refuse scripts; new searches in the country's own language." />
         )}
+        <a className="step" href="/mrd/dossiers" style={{ textDecoration: 'none' }}>
+          <div className="step-head">
+            <span className="num">4</span>
+            <h2>Six new countries</h2>
+            <span className="state">live →</span>
+          </div>
+          <p className="detail">Portugal, Norway, the Philippines, Costa Rica, Qatar and China, coded by Claude the way the database codes them and flagged experimental. Progress on its own page.</p>
+        </a>
       </section>
 
       <div className="cols">

@@ -1,0 +1,47 @@
+/* the six-country dossier dashboard; everything else comes from ../crawl/mrd.css */
+.mrd .flag { display: inline-block; font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--red); border: 1px solid var(--red); border-radius: 4px; padding: 3px 7px; }
+.mrd .phase { margin-top: 28px; background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 18px 20px;
+  display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.mrd .phase .what { font-size: 15px; font-weight: 600; }
+.mrd .phase .why { font-size: 14px; color: var(--mute); line-height: 1.4; flex: 1 1 420px; }
+.mrd .phase .stage { font-family: var(--font-jetbrains-mono), monospace; font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--blue); border: 1px solid color-mix(in srgb, var(--blue) 40%, var(--rule)); border-radius: 4px; padding: 3px 7px; }
+.mrd .dossiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 20px; }
+.mrd .dossier { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 18px 18px 16px; display: grid; gap: 12px; align-content: start; }
+.mrd .dossier.running { border-color: color-mix(in srgb, var(--blue) 50%, var(--rule)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--blue) 12%, transparent); }
+.mrd .dossier.done { border-color: color-mix(in srgb, var(--blue) 35%, var(--rule)); }
+.mrd .dossier.error { border-color: var(--red); }
+.mrd .dhead { display: flex; align-items: baseline; gap: 10px; }
+.mrd .dhead h2 { font-family: var(--font-source-serif-4), Georgia, serif; font-size: 24px; font-weight: 600; letter-spacing: -.01em; }
+.mrd .dhead .tier { font-size: 12px; color: var(--mute); }
+.mrd .dhead .state { margin-left: auto; }
+.mrd .dhead .state.running { color: var(--blue); }
+.mrd .dhead .state.error { color: var(--red); }
+.mrd .dossier .bar { margin-top: 0; height: 8px; }
+.mrd .dnums { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.mrd .dnum b { display: block; font-family: var(--font-jetbrains-mono), monospace; font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.mrd .dnum span { font-size: 11px; color: var(--mute); }
+.mrd .dnote { font-size: 13px; line-height: 1.4; color: var(--mute); min-height: 18px; }
+.mrd .dnote.live { color: var(--ink); }
+.mrd .chunks { display: flex; flex-wrap: wrap; gap: 4px; }
+.mrd .chunk { width: 18px; height: 18px; border-radius: 4px; background: var(--track); border: 1px solid transparent; }
+.mrd .chunk.running { background: color-mix(in srgb, var(--blue) 35%, var(--track)); border-color: var(--blue); animation: mrd-blink 1.2s infinite alternate; }
+.mrd .chunk.done { background: var(--blue); }
+.mrd .chunk.error { background: var(--red); }
+@keyframes mrd-blink { from { opacity: .55; } to { opacity: 1; } }
+.mrd .scores { display: flex; gap: 14px; font-size: 13px; }
+.mrd .scores b { font-family: var(--font-jetbrains-mono), monospace; font-weight: 500; }
+.mrd .scores span { color: var(--mute); }
+.mrd .feed .dot.search { background: var(--sun); border-color: var(--sun); }
+.mrd .feed .dot.read { background: var(--blue); border-color: var(--blue); }
+.mrd .feed .dot.answer { background: var(--ink); border-color: var(--ink); }
+.mrd .feed .dot.error { background: var(--red); border-color: var(--red); }
+.mrd .feed .dot.step, .mrd .feed .dot.note { background: var(--track); border-color: var(--mute); }
+.mrd .plan { list-style: none; display: grid; gap: 10px; font-size: 14px; line-height: 1.45; }
+.mrd .plan li { display: grid; grid-template-columns: 24px 1fr; gap: 10px; }
+.mrd .plan li .num { transform: none; }
+.mrd .plan li.on .num { background: var(--blue); color: #fff; border-color: var(--blue); }
+.mrd .plan li.past .num { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+@media (max-width: 900px) { .mrd .dossiers { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 600px) { .mrd .dossiers { grid-template-columns: 1fr; } .mrd .dnums { grid-template-columns: repeat(2, 1fr); } }
