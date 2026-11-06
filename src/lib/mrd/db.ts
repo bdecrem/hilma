@@ -55,3 +55,32 @@ export async function storagePath(id: string): Promise<{ path: string | null; fo
   const row = ((await r.json()) as { storage_path: string | null; source_format: string | null; name_en: string | null; name_cited: string }[])[0]
   return row ? { path: row.storage_path, format: row.source_format, name: row.name_en || row.name_cited } : null
 }
+
+export type ChunkRow = { chunk: number; src_hash: string; text: string }
+
+export async function pageTranslations(id: string, page: number): Promise<ChunkRow[]> {
+  const { url, key } = env()
+  const r = await fetch(`${url}/rest/v1/translations?law_id=eq.${encodeURIComponent(id)}&page=eq.${page}&select=chunk,src_hash,text`, { headers: headers(key), cache: 'no-store' })
+  if (!r.ok) throw new Error(`mrd translations ${r.status}`)
+  return r.json()
+}
+
+export async function saveTranslation(row: { law_id: string; page: number; chunk: number; src_hash: string; text: string; model: string }) {
+  const { url, key } = env()
+  const r = await fetch(`${url}/rest/v1/translations?on_conflict=law_id,page,chunk`, {
+    method: 'POST',
+    headers: { ...headers(key), 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' },
+    body: JSON.stringify(row),
+    cache: 'no-store',
+  })
+  if (!r.ok) throw new Error(`mrd save translation ${r.status}: ${(await r.text()).slice(0, 200)}`)
+}
+
+export type ArticleEnglish = { article: string; english: string }
+
+export async function articleTranslations(id: string): Promise<ArticleEnglish[]> {
+  const { url, key } = env()
+  const r = await fetch(`${url}/rest/v1/article_translations?law_id=eq.${encodeURIComponent(id)}&select=article,english`, { headers: headers(key), next: { revalidate: 3600, tags: ['mrd'] } })
+  if (!r.ok) return []
+  return r.json()
+}

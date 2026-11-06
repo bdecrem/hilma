@@ -90,7 +90,7 @@ export function articlePattern(n: string): RegExp | null {
     'статья', 'ст\\.', 'άρθρο', 'άρθ\\.', 'סעיף', 'المادة', 'مادة', 'ধারা', 'rule', 'regulation', 'reg\\.', 'paragraph', 'para\\.',
   ].join('|')
   // "29. Expulsion of refugees" — a numbered heading at the start of a line — counts too
-  return new RegExp(`(?:(?<![\\p{L}])(?:${words})\\s*\\(?${num}(?![\\d])|§+\\s*${num}(?![\\d])|第\\s*${num}\\s*条|제\\s*${num}\\s*조|(?<=^|\\n)${num}\\.(?=\\s+\\p{Lu}))`, 'giu')
+  return new RegExp(`(?:(?<![\\p{L}])(?:${words})\\s*\\(?${num}(?![\\d\\p{L}])|§+\\s*${num}(?![\\d\\p{L}])|(?<![\\d.])${num}\\.?\\s?§|第\\s*${num}\\s*条|제\\s*${num}\\s*조|(?<=^|\\n)${num}\\.(?=\\s+\\p{Lu}))`, 'giu')
 }
 
 export type Hit = { page: number; at: number; len: number; before: string; match: string; after: string }

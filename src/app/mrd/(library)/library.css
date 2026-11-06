@@ -180,6 +180,13 @@
 .mri .tabs a { padding: 6px 14px; font-size: 14px; font-weight: 700; text-transform: uppercase; color: var(--navy); border-left: 1px solid var(--navy); }
 .mri .tabs a:first-child { border-left: 0; }
 .mri .tabs a.on, .mri .tabs a:hover { background: var(--hi-soft); }
+.mri .tabs button { padding: 6px 14px; font-family: inherit; font-size: 14px; line-height: 20px; font-weight: 700; text-transform: uppercase; color: var(--navy); background: var(--card); border: 0; border-left: 1px solid var(--navy); cursor: pointer; }
+.mri .tabs button:first-child { border-left: 0; }
+.mri .tabs button.on { background: var(--hi); }
+.mri .tabs button:hover { background: var(--hi-soft); }
+.mri .reader .mt { margin: 16px 0 0; font-size: 13px; color: var(--grey-2); }
+.mri .doc .pending { margin: 0 0 18px; padding: 14px 16px; border-radius: 8px; background: var(--panel); color: var(--grey-2); font-size: 14px; white-space: normal; animation: mri-pulse 1.6s ease-in-out infinite; }
+@keyframes mri-pulse { 50% { opacity: .55; } }
 .mri .block { margin-top: 56px; }
 .mri .block > header { display: flex; align-items: center; gap: 12px; padding-bottom: 14px; border-bottom: 2px solid var(--navy); }
 .mri .block > header h2 { font-size: 26px; font-weight: 400; }
@@ -274,3 +281,8 @@
 .mri .ftr h2 { color: #fff; }
 .mri .ftr .pill { background: var(--paper); color: var(--navy); border-color: var(--paper); }
 .mri .ftr .pill:hover { background: var(--hi); border-color: var(--hi); }
+
+.mri .art-en { margin: 10px 0 0; border-left: 3px solid var(--hi); padding: 2px 0 2px 14px; }
+.mri .art-en summary { cursor: pointer; font-size: 14px; font-weight: 700; color: var(--navy); }
+.mri .art-en div { margin-top: 8px; white-space: pre-wrap; font-size: 15px; line-height: 1.65; color: #1d1d1d; max-height: 420px; overflow: auto; }
+.mri .art-en div::after { content: 'Machine translation by Claude.'; display: block; margin-top: 8px; font-size: 12px; color: var(--grey-2); }

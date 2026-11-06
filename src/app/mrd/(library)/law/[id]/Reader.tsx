@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 type Hit = { page: number; at: number; len: number; before: string; match: string; after: string }
 type Found = { total: number; hits: Hit[]; best: number; label: string }
+type En = { parts: (string | null)[]; failed: boolean }
 
 /** The full text, a page at a time, with search inside it. Offsets come from /api/mrd/law/[id]/find and match the paged text exactly. */
 export default function Reader({ id, first, pages, chars, q, lang }: { id: string; first: string; pages: number; chars: number; q: string; lang?: string }) {
@@ -16,6 +17,54 @@ export default function Reader({ id, first, pages, chars, q, lang }: { id: strin
   const box = useRef<HTMLElement>(null)
   const scrollTo = useRef<'hit' | 'top' | null>(null)
   const seq = useRef(0)
+  const translatable = !!lang && lang !== 'en'
+  const [mode, setMode] = useState<'orig' | 'en'>('orig')
+  const [en, setEn] = useState<Record<number, En>>({})
+  const enLoading = useRef(new Set<number>())
+
+  // English, streamed: one line per finished chunk, cached server-side so each page is translated once
+  const loadEn = useCallback(async (n: number) => {
+    if (enLoading.current.has(n) || (en[n] && !en[n].failed)) return
+    enLoading.current.add(n)
+    setEn(e => ({ ...e, [n]: { parts: e[n]?.parts.map(p => p) ?? [], failed: false } }))
+    try {
+      const r = await fetch(`/api/mrd/law/${id}/translate?page=${n}`)
+      if (!r.ok || !r.body) throw new Error(String(r.status))
+      const rd = r.body.getReader()
+      const dec = new TextDecoder()
+      let buf = ''
+      let failed = false
+      for (;;) {
+        const { done, value } = await rd.read()
+        if (done) break
+        buf += dec.decode(value, { stream: true })
+        let nl
+        while ((nl = buf.indexOf('\n')) >= 0) {
+          const line = buf.slice(0, nl)
+          buf = buf.slice(nl + 1)
+          if (!line) continue
+          const m = JSON.parse(line) as { n?: number; i?: number; text?: string; error?: string }
+          if (m.error) failed = true
+          setEn(e => {
+            const cur = e[n] ?? { parts: [], failed: false }
+            const parts = m.n !== undefined ? Array.from({ length: m.n }, (_, k) => cur.parts[k] ?? null) : [...cur.parts]
+            if (m.i !== undefined && m.text !== undefined) parts[m.i] = m.text
+            return { ...e, [n]: { parts, failed: cur.failed || !!m.error } }
+          })
+        }
+      }
+      if (failed) setEn(e => ({ ...e, [n]: { ...e[n], failed: true } }))
+    } catch {
+      setEn(e => ({ ...e, [n]: { parts: e[n]?.parts ?? [], failed: true } }))
+    } finally {
+      enLoading.current.delete(n)
+    }
+  }, [id, en])
+
+  const english = (on: boolean) => {
+    setMode(on ? 'en' : 'orig')
+    if (on) { setFound(null); setActive(-1); setInput(''); loadEn(pg) }
+  }
 
   const load = useCallback(async (n: number) => {
     if (texts[n] !== undefined) return
@@ -26,6 +75,7 @@ export default function Reader({ id, first, pages, chars, q, lang }: { id: strin
   }, [id, texts])
 
   const goPage = async (n: number) => {
+    if (mode === 'en') loadEn(n)
     await load(n)
     scrollTo.current = 'top'
     setPg(n)
@@ -42,6 +92,7 @@ export default function Reader({ id, first, pages, chars, q, lang }: { id: strin
 
   const run = useCallback(async (params: string, label: string, jump: boolean) => {
     const my = ++seq.current
+    setMode('orig')
     setBusy(true)
     const r = await fetch(`/api/mrd/law/${id}/find?${params}`)
     const j = r.ok ? ((await r.json()) as { total: number; hits: Hit[]; best: number }) : { total: 0, hits: [], best: 0 }
@@ -101,14 +152,32 @@ export default function Reader({ id, first, pages, chars, q, lang }: { id: strin
     return out
   }, [text, found, pg, active])
 
+  const enPage = en[pg]
+  const enBody = mode === 'en' ? (
+    !enPage || !enPage.parts.length ? <p className="pending">Translating this page…</p> : <>
+      {enPage.parts.map((p, i) => p !== null
+        ? <span key={i}>{p}{p.endsWith('\n') ? '' : '\n'}</span>
+        : <p key={i} className="pending">{enPage.failed ? 'This part could not be translated.' : 'Translating…'}</p>)}
+      {enPage.failed && <p><button className="pill ghost" onClick={() => loadEn(pg)}>Try again</button></p>}
+    </>
+  ) : null
+
   const n = found?.hits.length ?? 0
   const step = (d: number) => found && n && show(found, active < 0 ? 0 : (active + d + n) % n)
 
   return (
     <section className="reader" id="text" ref={box}>
       <div className="sec-h" style={{ borderTop: 0, marginBottom: 0 }}>
-        <h2>Full text</h2>
-        <span className="muted" style={{ fontSize: 14 }}>{Math.round(chars / 6.2).toLocaleString('en-US')} words{pages > 1 ? ` · ${pages} pages` : ''}</span>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 16, flexWrap: 'wrap' }}>
+          <h2>Full text</h2>
+          <span className="muted" style={{ fontSize: 14 }}>{Math.round(chars / 6.2).toLocaleString('en-US')} words{pages > 1 ? ` · ${pages} pages` : ''}</span>
+        </div>
+        {translatable && (
+          <div className="tabs" role="group" aria-label="Language">
+            <button className={mode === 'orig' ? 'on' : undefined} aria-pressed={mode === 'orig'} onClick={() => english(false)}>Original</button>
+            <button className={mode === 'en' ? 'on' : undefined} aria-pressed={mode === 'en'} onClick={() => english(true)}>English</button>
+          </div>
+        )}
       </div>
       <div className="rbar">
         <div className="search">
@@ -144,7 +213,10 @@ export default function Reader({ id, first, pages, chars, q, lang }: { id: strin
           ))}
         </ul>
       )}
-      <div className="doc" lang={lang}>{body ?? 'Loading…'}</div>
+      {mode === 'en' && <p className="mt">Machine translation by Claude. The original text is the authoritative one.</p>}
+      {mode === 'en'
+        ? <div className="doc" lang="en">{enBody}</div>
+        : <div className="doc" lang={lang}>{body ?? 'Loading…'}</div>}
       {pages > 1 && (
         <div className="pgfoot">
           <button className="pill ghost" disabled={pg === 0} aria-disabled={pg === 0} onClick={() => goPage(pg - 1)}>Previous page</button>

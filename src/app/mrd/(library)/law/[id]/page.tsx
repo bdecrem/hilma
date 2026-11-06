@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { rpc } from '@/lib/mrd/db'
+import { articleTranslations, rpc } from '@/lib/mrd/db'
 import { getDoc, page } from '@/lib/mrd/text'
 import { ArticleChips } from './Articles'
 import Reader from './Reader'
@@ -33,6 +33,9 @@ export default async function Page({ params, searchParams }: { params: Promise<{
   if (!law) notFound()
   const doc = law.status === 'text' ? await getDoc(law.id) : null
   const first = doc ? page(doc, 0) : null
+  const english = doc && law.language && law.language !== 'en'
+    ? Object.fromEntries((await articleTranslations(law.id)).map(a => [a.article, a.english]))
+    : undefined
   const rtl = law.language === 'ar' || law.language === 'he'
   // the same citation can name a law under several questions; group the cards by category
   return (
@@ -73,7 +76,7 @@ export default async function Page({ params, searchParams }: { params: Promise<{
               <article key={`${c.id}-${c.articles}`} className="cite">
                 <CatChip c={c.cat} />
                 {c.question && <h3>{c.question}</h3>}
-                {c.articles && <ArticleChips articles={c.articles} enabled={!!first} />}
+                {c.articles && <ArticleChips articles={c.articles} enabled={!!first} english={english} />}
                 {c.quote && <blockquote>{c.quote}</blockquote>}
                 <p>{c.text}</p>
               </article>

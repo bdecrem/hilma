@@ -16,9 +16,11 @@ export function articleNumbers(s: string): string[] {
   return out.slice(0, 10)
 }
 
-export function ArticleChips({ articles, enabled }: { articles: string; enabled: boolean }) {
+export function ArticleChips({ articles, enabled, english }: { articles: string; enabled: boolean; english?: Record<string, string> }) {
   const nums = articleNumbers(articles)
+  const en = english ? nums.filter(n => english[n]) : []
   return (
+    <>
     <div className="chips" style={{ alignItems: 'center' }}>
       <span className="label" style={{ fontSize: 12 }}>{articles}</span>
       {enabled && nums.map(n => (
@@ -28,5 +30,12 @@ export function ArticleChips({ articles, enabled }: { articles: string; enabled:
         </button>
       ))}
     </div>
+    {en.map(n => (
+      <details key={n} className="art-en">
+        <summary>{/^\d/.test(n) ? `Article ${n}` : n.replace(/^([LRD])/, '$1. ')} in English</summary>
+        <div>{english![n]}</div>
+      </details>
+    ))}
+    </>
   )
 }
