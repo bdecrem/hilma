@@ -6,7 +6,7 @@ export const alt = 'Migrant Rights Law Library: the laws behind the Migrant Righ
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
 
-const NAVY = '#0b0b50', MINT = '#d5fcf0', GREY = '#808080'
+const NAVY = '#0b0b50', PAPER = '#f7f3eb', HI = '#f6dd8f', WEDGE = '#ebe3d2', GREY = '#7a7568'
 const GROUP = ['#a0e7e6', '#ecbd35', '#ecbd35', '#96d371', '#96d371', '#96d371', '#fc6652', '#fc6652', '#fc6652', '#475883', '#475883', '#475883', '#475883', '#475883', '#475883', '#475883', '#475883']
 // a typical wheel: spoke lengths 0..1
 const LEN = [0.7, 0.45, 0.62, 0.95, 0.5, 0.58, 0.55, 0.75, 0.48, 0.52, 0.8, 0.6, 0.3, 0.9, 0.57, 0.66, 0.5]
@@ -27,7 +27,7 @@ function wheel() {
   const ang = (i: number) => -Math.PI / 2 + (i / n) * Math.PI * 2
   for (let i = 0; i < n; i++) {
     const a0 = ang(i - 0.5) + 0.012, a1 = ang(i + 0.5) - 0.012
-    parts.push(`<path d="M${C},${C} L${C + R * Math.cos(a0)},${C + R * Math.sin(a0)} A${R},${R} 0 0 1 ${C + R * Math.cos(a1)},${C + R * Math.sin(a1)} Z" fill="#f4f4f4"/>`)
+    parts.push(`<path d="M${C},${C} L${C + R * Math.cos(a0)},${C + R * Math.sin(a0)} A${R},${R} 0 0 1 ${C + R * Math.cos(a1)},${C + R * Math.sin(a1)} Z" fill="${WEDGE}"/>`)
   }
   for (let i = 0; i < n; i++) {
     const r = 12 + (R - 22) * LEN[i], x = C + r * Math.cos(ang(i)), y = C + r * Math.sin(ang(i))
@@ -43,7 +43,7 @@ export default async function Image() {
   ])
   return new ImageResponse(
     (
-      <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', background: '#fff', fontFamily: 'DM Sans' }}>
+      <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', background: PAPER, fontFamily: 'DM Sans' }}>
         <div style={{ display: 'flex', flex: 1, padding: '56px 64px 0', gap: 40 }}>
           <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 26 }}>
@@ -59,11 +59,11 @@ export default async function Image() {
           </div>
           <img src={wheel()} width={380} height={380} alt="" style={{ marginTop: 34 }} />
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 22, height: 92, background: MINT, borderLeft: `14px solid ${NAVY}`, padding: '0 50px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 22, height: 92, background: NAVY, borderLeft: `14px solid ${HI}`, padding: '0 50px' }}>
           {['Search', 'Categories', 'Countries'].map(t => (
-            <div key={t} style={{ display: 'flex', background: NAVY, color: '#fff', fontSize: 20, fontWeight: 700, padding: '8px 18px', borderRadius: 12, textTransform: 'uppercase' }}>{t}</div>
+            <div key={t} style={{ display: 'flex', background: PAPER, color: NAVY, fontSize: 20, fontWeight: 700, padding: '8px 18px', borderRadius: 12, textTransform: 'uppercase' }}>{t}</div>
           ))}
-          <div style={{ display: 'flex', marginLeft: 'auto', fontSize: 22, color: NAVY, fontWeight: 700 }}>ola.cx/mrd</div>
+          <div style={{ display: 'flex', marginLeft: 'auto', fontSize: 22, color: HI, fontWeight: 700 }}>ola.cx/mrd</div>
         </div>
       </div>
     ),

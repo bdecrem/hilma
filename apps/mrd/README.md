@@ -64,7 +64,7 @@ First pass: 1,677 found, 451 link only, 404 not found (~$30 Haiku + Brave). Scan
 
 ## The law library (ola.cx/mrd)
 
-A searchable, browsable reader over the crawl, styled after migrantrightsinitiative.org (DM Sans, navy `#0b0b50`, mint `#d5fcf0`, the five group colors, the per-country wheels). The crawl dashboard moved to ola.cx/mrd/crawl.
+A searchable, browsable reader over the crawl, built as a companion to migrantrightsinitiative.org rather than a page of it: it shares the site's DM Sans, navy `#0b0b50`, pills, five group colors and per-country wheels, but sits on warm paper `#f7f3eb` with a highlighter yellow `#f6dd8f` where the site uses mint, and a navy footer (2026-11-06, Bart: "looks like a companion to the website, not part of it"). The crawl dashboard moved to ola.cx/mrd/crawl.
 
 - **Pages** (`src/app/mrd/(library)/`): home (search, a wheel per country, categories, types), `/search` (full text + names + the MRD's citation text; filters for country, category, type, availability), `/countries/[slug]` (every indicator the country was coded on: the database's own words and the laws behind them, then all laws by type), `/categories/[slug]` (each indicator, country by country), `/law/[id]` (facts, source link, the original file, every citation with its articles, laws cited alongside it, the full-text reader).
 - **SQL** (`supabase/migrations/20261106030000_library.sql`): `lib_home`, `lib_search`, `lib_law`, `lib_country`, `lib_category`, plus an English `fts` column on `citations`. Search ranks a name match over a citation match over a full-text match, then by how often the law is cited. Snippets come back with `⟦ ⟧` around the matched words. URL slugs are the MRD slugs with hyphens.

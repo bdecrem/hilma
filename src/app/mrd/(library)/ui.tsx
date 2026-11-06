@@ -113,7 +113,7 @@ export function Wheel({ cats, max, labels = false }: { cats: Record<string, numb
     <svg viewBox={`0 0 ${W} ${W}`} role="img" aria-label="Laws cited per category">
       {WHEEL.map((w, i) => {
         const a0 = ang(i - 0.5) + gap, a1 = ang(i + 0.5) - gap
-        return <path key={w.slug} d={`M${C},${C} L${r2(C + R * Math.cos(a0))},${r2(C + R * Math.sin(a0))} A${R},${R} 0 0 1 ${r2(C + R * Math.cos(a1))},${r2(C + R * Math.sin(a1))} Z`} fill="#f4f4f4" />
+        return <path key={w.slug} d={`M${C},${C} L${r2(C + R * Math.cos(a0))},${r2(C + R * Math.sin(a0))} A${R},${R} 0 0 1 ${r2(C + R * Math.cos(a1))},${r2(C + R * Math.sin(a1))} Z`} style={{ fill: 'var(--wedge)' }} />
       })}
       {WHEEL.map((w, i) => {
         const v = cats[w.slug] ?? 0
