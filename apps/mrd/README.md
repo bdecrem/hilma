@@ -85,3 +85,5 @@ Non-English texts (about 1,470 laws, 420M characters) are not translated in bulk
 ### Letters lost to "?" in Cornell's data
 
 About 90 citation texts arrive from the MRD API with accented letters already replaced by "?" ("libert? de r?union"), so re-downloading doesn't help. `laws/fix_qmarks.py` has Haiku restore them and accepts a result only when every other character is unchanged. The few it couldn't do were fixed by hand in SQL, along with four law names, on 2026-11-06. `data/citations.csv` keeps the raw text; the database holds the repaired one, so a fresh import from the CSV needs the script run again. One "?" is left, in "GA?V.01", a Peruvian directive number whose letter is unknown.
+
+After changing data by hand or by script, clear the library's one-hour cache: `curl -X POST https://ola.cx/api/mrd/revalidate -H "Authorization: Bearer $MRD_SUPABASE_SERVICE_KEY"`.
