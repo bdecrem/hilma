@@ -1,2 +1,6 @@
 raw/
 .venv/
+.env
+supabase/.temp/
+*.log
+__pycache__/
