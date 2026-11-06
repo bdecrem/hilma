@@ -74,6 +74,8 @@ def claude(system, user, model="claude-haiku-5-5", max_tokens=4000, schema=None)
     body = {"model": model, "max_tokens": max_tokens, "system": system,
             "messages": [{"role": "user", "content": user}],
             "output_config": {"effort": "low"}}
+    if system is None:
+        del body["system"]
     if schema:
         body["output_config"]["format"] = {"type": "json_schema", "schema": schema}
     h = {"x-api-key": os.environ["ANTHROPIC_API_KEY"], "anthropic-version": "2023-06-01",
