@@ -14,8 +14,8 @@ export default async function Page() {
         <div>
           <h1>Check the Legislation</h1>
           <p className="lede">
-            Every statute, regulation, court decision and treaty the Migrant Rights Database cites, collected from the countries that
-            wrote them. Search their full texts in the original languages, or browse them by country and by right.
+            The laws the Migrant Rights Database cites, in full text. Search them in the original language, or browse by country
+            and by right.
           </p>
         </div>
         <Finder countries={countries} categories={categories} />
@@ -24,8 +24,8 @@ export default async function Page() {
       <div className="stats">
         <div className="stat"><b>{fmt(s.texts)}</b><span>laws in full text, of {fmt(s.laws)} cited</span></div>
         <div className="stat"><b>{s.countries}</b><span>countries</span></div>
-        <div className="stat"><b>{s.languages}</b><span>languages, kept as written</span></div>
-        <div className="stat"><b>{fmt(Math.round(s.chars / 6.2 / 1e6))}M</b><span>words of law to search</span></div>
+        <div className="stat"><b>{s.languages}</b><span>languages</span></div>
+        <div className="stat"><b>{fmt(Math.round(s.chars / 6.2 / 1e6))}M</b><span>words</span></div>
       </div>
 
       <section className="sec">
@@ -34,7 +34,7 @@ export default async function Page() {
           <Link className="pill" href={`${BASE}/countries`}>Explore countries</Link>
         </div>
         <Legend />
-        <p className="muted" style={{ fontSize: 14, marginTop: 12 }}>Each spoke is one category of rights; its length is the number of laws the database cites for it.</p>
+        <p className="muted" style={{ fontSize: 14, marginTop: 12 }}>Each spoke is a category of rights. The longer the spoke, the more laws cited.</p>
         <div className="wheels">
           {h.countries.map(c => (
             <Link key={c.slug} href={`${BASE}/countries/${c.slug}`} className="wheel">

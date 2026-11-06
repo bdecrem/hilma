@@ -15,8 +15,8 @@ export default function Header() {
       </Link>
       {home && (
         <div className="tagline">
-          <p>The statutes, regulations, court decisions and treaties behind the Migrant Rights Database, gathered from the countries that wrote them.</p>
-          <Link href={`${BASE}/search`}>Now you can read them.</Link>
+          <p>Every law the Migrant Rights Database cites, in full text.</p>
+          <Link href={`${BASE}/search`}>Search them →</Link>
         </div>
       )}
       <nav>

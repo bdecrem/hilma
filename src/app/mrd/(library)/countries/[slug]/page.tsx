@@ -45,7 +45,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
       </div>
 
       <div className="sec-h" style={{ marginTop: 64 }}>
-        <h2>Dig deeper</h2>
+        <h2>The laws</h2>
         <div className="tabs"><a href="#by-right" className="on">By right</a><a href="#all-laws">All laws</a></div>
       </div>
 

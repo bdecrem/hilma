@@ -17,7 +17,7 @@ const dmSans = localFont({
 export const metadata: Metadata = {
   metadataBase: new URL('https://ola.cx'),
   title: { default: 'Migrant Rights Law Library', template: '%s · Migrant Rights Law Library' },
-  description: 'The statutes, regulations, court decisions and treaties behind the Migrant Rights Database, in full text, searchable across 45 countries.',
+  description: 'The laws behind the Migrant Rights Database, in full text, for 45 countries.',
   robots: { index: false, follow: false },
   openGraph: {
     url: 'https://ola.cx/mrd',
@@ -38,9 +38,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <div>
           <h2>About</h2>
           <p>
-            The Migrant Rights Database scores how 45 countries protect and implement the human rights of migrants, and backs every
-            answer with citations to national law. This library gathers the law behind those 2,970 citations: the statutes, regulations,
-            decrees, court decisions and treaties, in their original language and full text wherever a public copy could be found.
+            The Migrant Rights Database scores how 45 countries protect migrants&apos; rights, and cites national law for every answer.
+            This library holds the laws behind its 2,970 citations, in full text and in the original language wherever a public copy exists.
           </p>
           <div className="actions">
             <a className="pill" href="https://www.migrantrightsinitiative.org/en" target="_blank" rel="noreferrer">The Migrant Rights Initiative</a>
@@ -48,11 +47,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
         <div>
-          <h4>About these texts</h4>
+          <h4>Sources</h4>
           <p className="small">
-            Texts were collected automatically from official gazettes, legislature and court sites and other public sources, then matched to
-            each citation. Check the source before relying on a text. This library is an independent companion to the Migrant Rights
-            Database, not a publication of the Initiative.
+            The texts were downloaded automatically from official gazettes, parliament and court websites and other public sources.
+            Check the original before relying on one. This library is independent; the Migrant Rights Initiative did not publish it.
           </p>
         </div>
       </footer>

@@ -11,7 +11,7 @@ export default async function Page() {
     <>
       <h1 className="c">Categories</h1>
       <p className="lede" style={{ margin: '18px auto 0', textAlign: 'center' }}>
-        The database scores 17 categories of rights in five groups. Pick one to see, country by country, which laws it relies on.
+        17 categories of rights in five groups. Each lists the laws cited for it, country by country.
       </p>
       {GROUPS.map(g => {
         const cs = h.categories.filter(c => c.group === g.key)

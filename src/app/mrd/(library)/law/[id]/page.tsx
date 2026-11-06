@@ -5,7 +5,7 @@ import { rpc } from '@/lib/mrd/db'
 import { getDoc, page } from '@/lib/mrd/text'
 import { ArticleChips } from './Articles'
 import Reader from './Reader'
-import { BASE, Badge, CatChip, KINDS, LawMeta, fmt, langName, size, type Cat, type CountryRef } from '../../ui'
+import { BASE, Badge, CatChip, KINDS, LawMeta, langName, size, type Cat, type CountryRef } from '../../ui'
 
 type Law = {
   id: string; name: string; name_en: string | null; official: string | null; cited: string; kind: string; number: string | null; court: string | null
@@ -60,7 +60,7 @@ export default async function Page({ params, searchParams }: { params: Promise<{
         {law.domain && <div><dt>Source</dt><dd>{law.url ? <a href={law.url} target="_blank" rel="noreferrer">{law.domain}</a> : law.domain}{law.official_source ? ' (official)' : ''}</dd></div>}
       </dl>
       <div className="actions">
-        {law.url && <a className="pill" href={law.url} target="_blank" rel="noreferrer">Open at the source ↗</a>}
+        {law.url && <a className="pill" href={law.url} target="_blank" rel="noreferrer">Original source ↗</a>}
         {law.file && <a className="pill ghost" href={`/api/mrd/law/${law.id}/file`}>Download the original{law.format ? ` (${law.format.toUpperCase()})` : ''}</a>}
         {first && <a className="pill ghost" href="#text">Read the full text ↓</a>}
       </div>
@@ -83,7 +83,7 @@ export default async function Page({ params, searchParams }: { params: Promise<{
         <aside className="aside">
           {law.related.length > 0 && (
             <>
-              <h2>Cited alongside it</h2>
+              <h2>Cited with it</h2>
               <ul>
                 {law.related.map(r => (
                   <li key={r.id}>
@@ -103,9 +103,9 @@ export default async function Page({ params, searchParams }: { params: Promise<{
         <section className="reader" id="text">
           <div className="note">
             {law.status === 'link' ? (
-              <><b>The text is at the source.</b> The right document was found, but the site doesn&apos;t allow automated copies, so it isn&apos;t stored here.{law.url && <> <a href={law.url} target="_blank" rel="noreferrer" style={{ color: 'var(--navy)', fontWeight: 700 }}>Read it on {law.domain} ↗</a></>}</>
+              <><b>Not stored here.</b> The source site blocks automated downloads.{law.url && <> <a href={law.url} target="_blank" rel="noreferrer" style={{ color: 'var(--navy)', fontWeight: 700 }}>Read it on {law.domain} ↗</a></>}</>
             ) : (
-              <><b>No public copy was found.</b> The database cites it {law.citations.length === 1 ? 'once' : `${fmt(law.citations.length)} times`}; the citations above are what is known about it.</>
+              <><b>No public copy found.</b> The citations above are all there is on it.</>
             )}
           </div>
         </section>
