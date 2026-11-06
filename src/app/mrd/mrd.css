@@ -53,6 +53,7 @@
 .mrd .legend { display: flex; gap: 16px; flex-wrap: wrap; justify-content: space-between; margin-top: 10px; text-transform: none; letter-spacing: 0; font-size: 12px; }
 .mrd .legend i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; }
 .mrd .legend .pending { background: var(--track); }
+.mrd .bar .linked, .mrd .legend .linked { background: var(--blue); opacity: .4; }
 .mrd .detail { font-size: 14px; line-height: 1.45; color: var(--mute); margin-top: 12px; }
 
 .mrd .cols { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 20px; margin-top: 20px; align-items: start; }

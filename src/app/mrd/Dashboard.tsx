@@ -24,7 +24,7 @@ const KIND_LABEL: Record<string, string> = {
   executive_order: 'Executive orders', other: 'Other',
 }
 const STATUS_LABEL: Record<string, string> = {
-  pending: 'waiting', found: 'found', not_found: 'not found', paywalled: 'paywalled', error: 'error', skipped: 'skipped',
+  pending: 'waiting', found: 'found', linked: 'link only', not_found: 'not found', paywalled: 'paywalled', error: 'error', skipped: 'skipped',
 }
 const POLL_MS = 5000
 
@@ -82,6 +82,7 @@ export default function Dashboard() {
   const found = st.found ?? 0
   const missing = (st.not_found ?? 0) + (st.paywalled ?? 0) + (st.error ?? 0)
   const pending = (st.pending ?? 0)
+  const linked = st.linked ?? 0
   const kinds = Object.entries(data.by_kind).sort((a, b) => b[1] - a[1])
   const kindMax = Math.max(1, ...kinds.map(k => k[1]))
   const extract = runs.extract
@@ -124,10 +125,12 @@ export default function Dashboard() {
           </div>
           <div className="bar stacked" aria-label={`${found} found, ${missing} missing, ${pending} waiting`}>
             <span className="found" style={{ width: `${pct(found, data.laws)}%` }} />
+            <span className="linked" style={{ width: `${pct(linked, data.laws)}%` }} />
             <span className="missing" style={{ width: `${pct(missing, data.laws)}%` }} />
           </div>
           <div className="legend">
             <span><i className="found" />{fmt(found)} found</span>
+            <span><i className="linked" />{fmt(linked)} link only</span>
             <span><i className="missing" />{fmt(missing)} not found</span>
             <span><i className="pending" />{fmt(pending)} waiting</span>
           </div>
