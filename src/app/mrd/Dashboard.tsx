@@ -87,6 +87,7 @@ export default function Dashboard() {
   const kindMax = Math.max(1, ...kinds.map(k => k[1]))
   const extract = runs.extract
   const find = runs.find
+  const rescue = runs.rescue
 
   return (
     <main className="wrap">
@@ -136,6 +137,10 @@ export default function Dashboard() {
           </div>
           <p className="detail">Search official law portals and court sites, pick the right document, download it and keep the full text.</p>
         </div>
+        {rescue && (
+          <Step n={3} title="Second pass over the misses" run={rescue} now={now} done={rescue.done} total={rescue.total}
+            detail="Fixed addresses for treaties, EU law and numbered rulings; XML feeds and open-data APIs behind the portals that render by script; a real browser for sites that refuse scripts; new searches in the country's own language." />
+        )}
       </section>
 
       <div className="cols">
