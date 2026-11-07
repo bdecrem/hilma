@@ -118,7 +118,7 @@ export default function Dashboard() {
         </div>
         <h1>Six countries the database doesn&apos;t cover yet, <em>coded the way it codes them.</em></h1>
         <p className="lede">
-          The Migrant Rights Database scores 46 countries on 68 indicators of migrants&apos; rights: what the law protects, how far it is applied,
+          The Migrant Rights Database scores 46 countries on 64 indicators of migrants&apos; rights: what the law protects, how far it is applied,
           a citation for every answer. Claude is compiling the same dossier for Portugal, Norway, the Philippines, Costa Rica, Qatar and China,
           one after the other. Everything it produces is marked <span className="flag">experimental</span> and kept apart from the human-coded data.
         </p>
