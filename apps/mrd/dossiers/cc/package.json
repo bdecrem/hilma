@@ -1,0 +1,10 @@
+{
+  "name": "mrd-dossiers-cc",
+  "private": true,
+  "type": "module",
+  "description": "Runs the dossier compiler's jobs through Claude Code (the Agent SDK on Bart's Max login) instead of the API key.",
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.3.282",
+    "zod": "^4.6.7"
+  }
+}

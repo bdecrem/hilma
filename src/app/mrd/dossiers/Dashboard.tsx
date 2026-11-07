@@ -45,7 +45,7 @@ function dur(from: string, to: string | null, now: number) {
 const PLAN = [
   ['Codebook', 'Every indicator with the answer options and scores the database uses, worked examples from the 46 coded countries, the implementation scale.'],
   ['Map the law', 'For each country: the constitution, the immigration, asylum, nationality and labor acts, the treaties it has ratified, the portals that carry the official texts.'],
-  ['Code the indicators', '18 chunks of related indicators per country. Claude Opus 5.5 searches the official portals, reads the articles, answers each indicator in the database\'s own options, writes the citation, rates implementation from documented practice.'],
+  ['Code the indicators', '18 chunks of related indicators per country, three at a time, each a Claude Code session on Opus 5.5: it searches the official portals, reads the articles, answers each indicator in the database\'s own options, writes the citation, rates implementation from documented practice.'],
   ['Score and summarise', 'Protection, Implementation and Adjusted scores per category, computed the way the database computes them, and a country overview in English, Spanish and French.'],
   ['Trace the laws', 'Yesterday\'s crawl runs over the new citations: every statute named is found on its official portal and stored in full text.'],
   ['Publish, flagged', 'The dossier appears in the library with an EXPERIMENTAL badge; every row it produced carries experimental = true in the database.'],
@@ -135,7 +135,7 @@ export default function Dashboard() {
         <Stat label="Indicators coded" value={fmt(qDone)} sub={`of ${fmt(qTotal)} · ${pct(qDone, qTotal)}%`} />
         <Stat label="Citations written" value={fmt(cits)} sub={`${fmt(data.answers)} answers stored`} />
         <Stat label="Research" value={fmt(t.searches)} sub={`web searches · ${fmt(t.reads)} pages read`} />
-        <Stat label="Spent" value={`$${Number(t.cost_usd).toFixed(2)}`} sub={`${fmt(t.calls)} model calls · ${fmt(Math.round((t.in_tokens + t.out_tokens) / 1000))}k tokens`} />
+        <Stat label="API-equivalent spend" value={`$${Number(t.cost_usd).toFixed(2)}`} sub={`on the Max plan · ${fmt(t.calls)} model turns · ${fmt(Math.round((t.in_tokens + t.out_tokens) / 1000))}k tokens`} />
       </section>
 
       <section className="dossiers">
@@ -159,7 +159,7 @@ export default function Dashboard() {
                 <div className="dnum"><b>{c.questions_done}/{c.questions_total}</b><span>indicators</span></div>
                 <div className="dnum"><b>{fmt(c.searches)}</b><span>searches</span></div>
                 <div className="dnum"><b>{fmt(c.reads)}</b><span>pages read</span></div>
-                <div className="dnum"><b>${Number(c.cost_usd).toFixed(2)}</b><span>spent</span></div>
+                <div className="dnum"><b>${Number(c.cost_usd).toFixed(2)}</b><span>API-equiv.</span></div>
               </div>
               {c.scores && (
                 <div className="scores">
@@ -210,7 +210,7 @@ export default function Dashboard() {
       </div>
 
       <footer className="foot">
-        Experimental: compiled by Claude Opus 5.5 with web research, not by the Migrant Rights Initiative&apos;s coders. Scripts in apps/mrd/dossiers.
+        Experimental: compiled by Claude Opus 5.5 through Claude Code, with web research, not by the Migrant Rights Initiative&apos;s coders. Spend is what the same calls would cost on the API; they run on the Max plan. Scripts in apps/mrd/dossiers.
       </footer>
     </main>
   )

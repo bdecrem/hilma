@@ -178,8 +178,8 @@ def windows(text, terms, width=900, cap=8):
 def tool_read(inp, chunk):
     url = inp["url"].strip()
     find = (inp.get("find") or "").strip()
-    max_chars = int(inp.get("max_chars") or 12000)
-    max_chars = max(2000, min(max_chars, 30000))
+    max_chars = int(inp.get("max_chars") or 8000)
+    max_chars = max(2000, min(max_chars, 20000))
     page = cached_fetch(url)
     RUN.add(reads=1)
     text = page["text"]
@@ -258,7 +258,7 @@ def submit_schema(qids):
         "required": ["question_id", "answer", "citation", "sources", "international", "implementation", "evidence", "evidence_sources", "confidence", "notes"],
         "properties": {
             "question_id": {"type": "integer", "description": "the q-number of the indicator, e.g. 3 for q3"},
-            "answer": {"type": "string", "description": "exactly one of the indicator's options, copied verbatim"},
+            "answer": {"type": "string", "enum": sorted({o["answer"] for q in qids for o in Q[str(q)]["options"]}), "description": "exactly one of the indicator's options, copied verbatim"},
             "citation": {"type": "string", "description": "the MRD-style citation paragraph (120-350 words)"},
             "sources": {"type": "array", "items": {"type": "object", "additionalProperties": False, "required": ["instrument", "article", "url", "quote"],
                         "properties": {"instrument": {"type": "string", "description": "official name and number in the original language, English in parentheses"},
@@ -483,12 +483,13 @@ def write_chunk(c, chunk, out):
         q = Q[str(qid)]
         score = next((o["score"] for o in q["options"] if o["answer"] == a["answer"]), None)
         impl = next((o for o in CODEBOOK["implementation_options"] if o["answer"] == a["implementation"]), None)
+        # PostgREST bulk upserts want identical keys on every row
         answers.append({"country_id": c["id"], "year": YEAR, "question_id": qid, "answer": a["answer"], "subscore": score,
-                        "confidence": a.get("confidence"), "notes": a.get("notes"), "experimental": True})
+                        "confidence": a.get("confidence"), "notes": a.get("notes"), "evidence": None, "sources": None, "experimental": True})
         if q.get("implementation_id"):
             answers.append({"country_id": c["id"], "year": YEAR, "question_id": q["implementation_id"], "answer": a["implementation"],
-                            "subscore": impl["score"] if impl else None, "evidence": a.get("evidence"),
-                            "sources": a.get("evidence_sources") or [], "confidence": a.get("confidence"), "experimental": True})
+                            "subscore": impl["score"] if impl else None, "evidence": a.get("evidence"), "sources": a.get("evidence_sources") or [],
+                            "confidence": a.get("confidence"), "notes": None, "experimental": True})
         local = "\n".join(f"• {s['instrument']}, {s['article']}" + (f" — {s['url']}" if s.get("url") else "") + (f"\n  «{s['quote']}»" if s.get("quote") else "")
                           for s in a.get("sources") or [])
         cits.append({"id": c["id"] * 1000 + qid, "country_id": c["id"], "question_id": qid, "text_en": a["citation"],
@@ -529,13 +530,88 @@ def phase_chunk(c, chunk, lawmap, n_total):
         raise
 
 
+# ---------- the Claude Code runner (cc/run.mjs) talks to this file through these ----------
+def map_prompt(c):
+    system = method_text(c) + "\n\n" + country_text(c, None) + """
+
+Your task now: build the law map for this country, the first pass before indicator coding. Identify every instrument that bears on migrants' rights across the MRD's 17 categories (vulnerable migrants; life; liberty and detention; legal personhood and documents; due process; victims of crime; expulsion, asylum and non-refoulement; nationality; family reunification; religion; opinion and expression; assembly and association; political participation; equal protection; labor; health and housing; education), verify where their consolidated texts live by reading them, list the human-rights treaties the country is party to and how treaties take effect domestically, and describe the legal framework and migration context in an overview. Prefer the official portal's consolidated version; record the exact URL you read.
+
+Tools: WebSearch, read (page/PDF; `find` for terms). Budget: at most 30 search/read calls. When done, answer with the law map as JSON (the schema is enforced)."""
+    return {"system": system, "user": f"Build the law map for {c['name']}.", "schema": MAP_SCHEMA}
+
+
+def chunk_prompt(c, chunk, lawmap):
+    qids = chunk["questions"]
+    tools = f"""Tools and process
+- WebSearch: query in {c['lang']} and in English; name the instrument, number and article, or the portal; cite only what you then `read`.
+- read: a page or PDF; use `find` with ' | '-separated terms to pull the passages around the articles you need (consolidated codes are long); use it for court decisions, ombudsman and NGO reports too.
+Work from the official consolidated texts first (the law map names them), then research practice. Reuse what you read: one read of the right act with several `find` terms answers several indicators. Budget: at most 30 search/read calls, usually far fewer are needed; prefer one `read` with several `find` terms over many. When every indicator is answered, give your final answer as JSON (the schema is enforced): one entry per indicator, with the option copied verbatim. Do not answer until you have read the provisions you cite."""
+    system = "\n\n".join([method_text(c), country_text(c, lawmap), indicators_text(c, qids), tools])
+    user = f"Code the {len(qids)} indicators listed for {c['name']} (q{', q'.join(map(str, qids))}) and answer with the JSON."
+    return {"key": chunk["key"], "label": chunk["label"], "qids": qids, "system": system, "user": user, "schema": submit_schema(qids)}
+
+
+def emit_prompts(c, path, only=None, redo=False):
+    maps = sb("GET", "dossier_maps", params={"country_id": f"eq.{c['id']}", "select": "map"})
+    lawmap = maps[0]["map"] if maps else None
+    done = {r["key"] for r in sb_all(f"dossier_chunks?select=key&country_id=eq.{c['id']}&status=eq.done")} if not redo else set()
+    chunks = [ch for ch in CODEBOOK["chunks"] if (not only or ch["key"] in only) and ch["key"] not in done]
+    out = {"country": {k: c[k] for k in ("id", "iso", "name", "lang")}, "slug": c_slug(c), "map": None if lawmap else map_prompt(c),
+           "chunks": [chunk_prompt(c, ch, lawmap) for ch in chunks] if lawmap else [], "chunks_total": len(CODEBOOK["chunks"]), "done": sorted(done)}
+    json.dump(out, open(path, "w", encoding="utf-8"), ensure_ascii=False)
+    print(f"{c['name']}: {'map job' if out['map'] else str(len(out['chunks'])) + ' chunk jobs'} written to {path} ({len(done)} chunks done)")
+
+
+def c_slug(c):
+    return next(k for k, v in COUNTRIES.items() if v is c)
+
+
+def ingest_map(c, path):
+    d = json.load(open(path, encoding="utf-8"))
+    out = d["output"]
+    sb("POST", "dossier_maps", [{"country_id": c["id"], "map": out}], prefer="resolution=merge-duplicates")
+    log("step", f"Law map done: {len(out.get('instruments', []))} instruments, {len(out.get('treaties', []))} treaties", "map")
+
+
+def ingest_chunk(c, key, path):
+    """The runner's result file: {output: <structured output>, meta: {cost_usd, calls, searches, reads, in_tokens, out_tokens, error}}."""
+    d = json.load(open(path, encoding="utf-8"))
+    chunk = next(ch for ch in CODEBOOK["chunks"] if ch["key"] == key)
+    meta = d.get("meta", {})
+    counters = {k: meta.get(k, 0) for k in ("calls", "searches", "reads", "in_tokens", "out_tokens")}
+    counters["cost_usd"] = round(float(meta.get("cost_usd", 0)), 4)
+    if d.get("output") is None:
+        err = meta.get("error") or "no output"
+        sb("PATCH", f"dossier_chunks?country_id=eq.{c['id']}&key=eq.{key}", {"status": "error", "error": err[:800], "finished_at": "now()", **counters}, prefer="return=minimal")
+        log("error", f"{chunk['label']}: {err[:200]}", key); return 1
+    ok, err = validate_submit(d["output"], chunk["questions"])
+    if err:
+        sb("PATCH", f"dossier_chunks?country_id=eq.{c['id']}&key=eq.{key}", {"status": "error", "error": err[:800], "finished_at": "now()", **counters}, prefer="return=minimal")
+        log("error", f"{chunk['label']}: {err[:200]}", key); return 1
+    n = write_chunk(c, chunk, ok)
+    sb("PATCH", f"dossier_chunks?country_id=eq.{c['id']}&key=eq.{key}", {"status": "done", "finished_at": "now()", "error": None, **counters}, prefer="return=minimal")
+    log("step", f"Done: {chunk['label']} · {n} indicators · ${counters['cost_usd']:.2f} API-equivalent", key)
+    return 0
+
+
 def main():
     global COUNTRY, RUN_BASE, DRY
     ap = argparse.ArgumentParser()
     ap.add_argument("slug"); ap.add_argument("--only"); ap.add_argument("--redo", action="store_true")
     ap.add_argument("--workers", type=int, default=3); ap.add_argument("--dry", action="store_true"); ap.add_argument("--map-only", action="store_true")
+    ap.add_argument("--emit-prompts"); ap.add_argument("--ingest-map"); ap.add_argument("--ingest-chunk", nargs=2, metavar=("KEY", "FILE"))
+    ap.add_argument("--read", metavar="URL"); ap.add_argument("--find"); ap.add_argument("--max-chars", type=int, default=12000)
     a = ap.parse_args()
     c = COUNTRIES[a.slug]; COUNTRY = c; DRY = a.dry
+    if a.read:
+        DRY = True
+        print(tool_read({"url": a.read, "find": a.find, "max_chars": a.max_chars}, "read")); return
+    if a.emit_prompts:
+        emit_prompts(c, a.emit_prompts, only=a.only.split(",") if a.only else None, redo=a.redo); return
+    if a.ingest_map:
+        ingest_map(c, a.ingest_map); return
+    if a.ingest_chunk:
+        sys.exit(ingest_chunk(c, a.ingest_chunk[0], a.ingest_chunk[1]))
     chunks = CODEBOOK["chunks"]
     if a.only:
         chunks = [ch for ch in chunks if ch["key"] in a.only.split(",")]

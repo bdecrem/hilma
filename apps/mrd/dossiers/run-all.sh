@@ -1,6 +1,7 @@
 #!/bin/bash
-# The six, in sequence: compile (map + 18 chunks), score + overview, then yesterday's crawl over the
-# new citations (extract the instruments, find their texts). Restartable: each step skips what is done.
+# The six, in sequence, through Claude Code on the Max login: compile (map + 18 chunks), score +
+# overview, then yesterday's crawl over the new citations (extract the instruments, find their
+# texts). Restartable: each step skips what is done.
 #   nohup ./run-all.sh > logs/run-all.log 2>&1 &
 cd "$(dirname "$0")"
 set -a; . ../.env 2>/dev/null; . ../../../.env.local 2>/dev/null; set +a
@@ -11,7 +12,7 @@ for pair in "${ids[@]}"; do
   slug=${pair%%:*}; id=${pair##*:}
   echo "=== $slug $(date)"
   for attempt in 1 2 3; do
-    python3 compile.py "$slug" --workers 3 >> "logs/$slug.log" 2>&1 && break
+    node cc/run.mjs "$slug" --workers 3 >> "logs/$slug.log" 2>&1 && break
     echo "compile $slug failed (attempt $attempt), retrying the failed chunks"; sleep 30
   done
   python3 score.py "$slug" >> "logs/$slug.log" 2>&1 || { echo "score $slug failed"; mark "$id" '{"status":"error","note":"scoring failed; see logs"}'; continue; }
