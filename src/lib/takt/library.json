@@ -1,0 +1,337 @@
+{
+ "songs": [
+  {
+   "name": "song-slow-burn",
+   "title": "Slow Burn",
+   "style": "Slow blues",
+   "key": "G",
+   "tempo": 90,
+   "bars": 48,
+   "seconds": 128,
+   "line": "A slow one in G. Twelve bars, four times round, the band leaning back.",
+   "sections": "Head (bar 1), Second time (bar 13), Sax solo (bar 25), Out chorus (bar 37)",
+   "chorus": "1–4 G7 · 5–6 C7 · 7–8 G7 · 9 D7 · 10 C7 · 11 G7 · 12 D7",
+   "choruses": 4,
+   "parts": {
+    "chords": "Comping",
+    "melody": "The sax line"
+   },
+   "shelf": "set list",
+   "uses": []
+  },
+  {
+   "name": "song-slow-burn-short",
+   "title": "Slow Burn Short",
+   "style": "Slow blues",
+   "key": "G",
+   "tempo": 90,
+   "bars": 12,
+   "seconds": 32,
+   "line": "The slow one in G, once round. Twelve bars and the stop.",
+   "sections": "Head (bar 1)",
+   "chorus": "1–4 G7 · 5–6 C7 · 7–8 G7 · 9 D7 · 10 C7 · 11 G7 · 12 G",
+   "choruses": 1,
+   "parts": {
+    "chords": "Comping",
+    "melody": "The sax line"
+   },
+   "shelf": "set list",
+   "uses": []
+  },
+  {
+   "name": "song-boogie-shoes",
+   "title": "Boogie Shoes",
+   "style": "Jump blues",
+   "key": "C",
+   "tempo": 120,
+   "bars": 72,
+   "seconds": 144,
+   "line": "A jump blues in C. Walking bass, chanks on two and four, a riff you'll be humming.",
+   "sections": "Head (bar 1), The riff (bar 13), Shout chorus (bar 25), Piano solo (bar 37), Head again (bar 49), Out chorus (bar 61)",
+   "chorus": "1–4 C · 5–6 F · 7–8 C · 9 G · 10 F · 11 C · 12 G",
+   "choruses": 6,
+   "parts": {
+    "chords": "The chanks",
+    "melody": "The riff"
+   },
+   "shelf": "set list",
+   "uses": []
+  },
+  {
+   "name": "song-pearl-street",
+   "title": "Pearl Street",
+   "style": "Texas shuffle",
+   "key": "E",
+   "tempo": 112,
+   "bars": 60,
+   "seconds": 129,
+   "line": "A Texas shuffle in E. A boogie bass, a fat backbeat, and a stop-time chorus where the sax talks.",
+   "sections": "Head (bar 1), Snare in (bar 13), Stop time (bar 25), Sax solo (bar 37), Out chorus (bar 49)",
+   "chorus": "1 E7 · 2 A7 · 3–4 E7 · 5–6 A7 · 7–8 E7 · 9 B7 · 10 A7 · 11 E7 · 12 B7",
+   "choruses": 5,
+   "parts": {
+    "chords": "Stab and chank",
+    "melody": "The sax line"
+   },
+   "shelf": "set list",
+   "uses": []
+  },
+  {
+   "name": "song-dockery",
+   "title": "Dockery",
+   "style": "Delta blues",
+   "key": "A",
+   "tempo": 96,
+   "bars": 48,
+   "seconds": 120,
+   "line": "A Delta blues in A. One guitar, a foot on the floor, and the voice alone in the stops.",
+   "sections": "Crossroads (bar 1), Verse (bar 13), Slide (bar 25), Last verse (bar 37)",
+   "chorus": "1–4 A7 · 5–6 D7 · 7–8 A7 · 9 E7 · 10 D7 · 11 A7 · 12 E7",
+   "choruses": 4,
+   "parts": {
+    "chords": "Thumb and chick",
+    "melody": "The voice"
+   },
+   "shelf": "set list",
+   "uses": []
+  },
+  {
+   "name": "song-friars-point",
+   "title": "Friars Point",
+   "style": "Delta boogie",
+   "key": "E",
+   "tempo": 116,
+   "bars": 60,
+   "seconds": 124,
+   "line": "The fast one. A boogie thumb on the low strings, the slide hammering triplets up top, the foot going.",
+   "sections": "Head (bar 1), Verse (bar 13), Slide (bar 25), Verse (bar 37), Out (bar 49)",
+   "chorus": "1–4 E7 · 5–6 A7 · 7–8 E7 · 9 B7 · 10 A7 · 11 E7 · 12 B7",
+   "choruses": 5,
+   "parts": {
+    "chords": "Thumb and chick",
+    "melody": "The slide"
+   },
+   "shelf": "set list",
+   "uses": []
+  },
+  {
+   "name": "song-blue-lantern-white",
+   "title": "Blue Lantern II",
+   "style": "Minor blues",
+   "key": "Dm",
+   "tempo": 84,
+   "bars": 48,
+   "seconds": 137,
+   "line": "The minor blues in D, one riff in one hand on the white keys. Level 1's song.",
+   "sections": "Head (bar 1), Snare in (bar 13), Sax solo (bar 25), Out chorus (bar 37)",
+   "chorus": "1–4 Dm7 · 5–6 Gm7 · 7–8 Dm7 · 9 Bb7 · 10 A7 · 11 Dm7 · 12 A7",
+   "choruses": 4,
+   "parts": {
+    "chords": "Rhodes comping",
+    "melody": "White keys"
+   },
+   "shelf": "all tracks",
+   "uses": [
+    "Level 1 (White keys) goal: the melody on Medium for an A",
+    "the band under Level 1's improv \"Improvise on the white keys\" in Scales (A minor) (the melody left out for the solo)"
+   ]
+  },
+  {
+   "name": "song-maxwell-street-five",
+   "title": "Maxwell Street II",
+   "style": "Chicago blues",
+   "key": "A",
+   "tempo": 80,
+   "bars": 48,
+   "seconds": 144,
+   "line": "Chicago blues in A, the horn on five notes: A C D E G. Level 2's song.",
+   "sections": "Stop time (bar 1), Snare in (bar 13), Shuffle (bar 25), Out (bar 37)",
+   "chorus": "1–8 A7 · 9 E7 · 10 D7 · 11 A7 · 12 E7",
+   "choruses": 4,
+   "parts": {
+    "chords": "Spann's chair",
+    "melody": "Five notes"
+   },
+   "shelf": "all tracks",
+   "uses": [
+    "Level 2 (Five notes) goal: the melody on Medium for an A",
+    "the band under Level 2's improv \"Improvise on five notes\" in Scales (A minor) (the melody left out for the solo)"
+   ]
+  },
+  {
+   "name": "song-maxwell-street",
+   "title": "Maxwell Street",
+   "style": "Chicago blues",
+   "key": "A",
+   "tempo": 80,
+   "bars": 48,
+   "seconds": 144,
+   "line": "Chicago blues in A. Eight bars of stop time, the band slamming the riff, the voice in the gaps, then it swings.",
+   "sections": "Stop time (bar 1), Snare in (bar 13), Shuffle (bar 25), Out (bar 37)",
+   "chorus": "1–8 A7 · 9 E7 · 10 D7 · 11 A7 · 12 E7",
+   "choruses": 4,
+   "parts": {
+    "chords": "Spann's chair",
+    "melody": "The horn"
+   },
+   "shelf": "all tracks",
+   "uses": []
+  },
+  {
+   "name": "song-blue-lantern",
+   "title": "Blue Lantern",
+   "style": "Minor blues",
+   "key": "Dm",
+   "tempo": 84,
+   "bars": 48,
+   "seconds": 137,
+   "line": "A minor blues in D. Rhodes, a sixteenth hat, the sax taking its time.",
+   "sections": "Head (bar 1), Snare in (bar 13), Sax solo (bar 25), Out chorus (bar 37)",
+   "chorus": "1–4 Dm7 · 5–6 Gm7 · 7–8 Dm7 · 9 Bb7 · 10 A7 · 11 Dm7 · 12 A7",
+   "choruses": 4,
+   "parts": {
+    "chords": "Rhodes comping",
+    "melody": "The sax line"
+   },
+   "shelf": "all tracks",
+   "uses": []
+  },
+  {
+   "name": "song-hypnotist",
+   "title": "Hypnotist",
+   "style": "Minimal techno",
+   "key": "A minor",
+   "tempo": 127,
+   "bars": 80,
+   "seconds": 151,
+   "line": "Minimal techno at 127. Clicks and rims, a rolling sub, one bleep that never lets go.",
+   "sections": "Intro (bar 1), Pulse (bar 9), Bleep (bar 17), Break (bar 41), Full (bar 49), Out (bar 73)",
+   "chorus": "1–3 Am · 4 G",
+   "choruses": 20,
+   "parts": {
+    "chords": "The stab",
+    "melody": "The bleep"
+   },
+   "shelf": "all tracks",
+   "uses": []
+  },
+  {
+   "name": "song-hypnotist-2",
+   "title": "Hypnotist II",
+   "style": "Minimal techno",
+   "key": "A minor",
+   "tempo": 127,
+   "bars": 80,
+   "seconds": 151,
+   "line": "Minimal techno at 127. The same room, a new bleep: three keys turning against the kick.",
+   "sections": "Intro (bar 1), Pulse (bar 9), Bleep (bar 17), Break (bar 41), Full (bar 49), Out (bar 73)",
+   "chorus": "1–3 Am · 4 G",
+   "choruses": 20,
+   "parts": {
+    "chords": "The stab",
+    "melody": "The phase"
+   },
+   "shelf": "all tracks",
+   "uses": []
+  },
+  {
+   "name": "song-warm-nine",
+   "title": "Warm Nine",
+   "style": "Deep house",
+   "key": "F minor",
+   "tempo": 121,
+   "bars": 76,
+   "seconds": 151,
+   "line": "Deep house at 121. Ninth chords pushed ahead of the beat, a bass that walks root, octave, fifth, crackle on top.",
+   "sections": "Intro (bar 1), Groove (bar 9), Hook (bar 25), Lift (bar 41), Hook again (bar 49), Out (bar 69)",
+   "chorus": "1 Fm9 · 2 E♭maj9 · 3 D♭maj7 · 4 Cm7",
+   "choruses": 19,
+   "parts": {
+    "chords": "Rhodes stabs",
+    "melody": "The top line"
+   },
+   "shelf": "all tracks",
+   "uses": []
+  },
+  {
+   "name": "song-abyss",
+   "title": "Abyss",
+   "style": "Dub techno",
+   "key": "D minor",
+   "tempo": 117,
+   "bars": 72,
+   "seconds": 148,
+   "line": "Dub techno at 117. One chord stab into the chamber, breathing, drifting from D to C and back.",
+   "sections": "Intro (bar 1), Deep (bar 9), Drift (bar 25), Abyss (bar 41), Deep again (bar 49), Out (bar 69)",
+   "chorus": "1–4 Dm9 · 5–8 Cm9",
+   "choruses": 9,
+   "parts": {
+    "chords": "The stab",
+    "melody": "The echo line"
+   },
+   "shelf": "all tracks",
+   "uses": []
+  },
+  {
+   "name": "song-abyss-ref",
+   "title": "Abyss Reference",
+   "style": "Dub techno",
+   "key": "D minor",
+   "tempo": 117,
+   "bars": 16,
+   "seconds": 33,
+   "line": "The 16 bars Claude made as the target for Abyss, exactly as made: kick, hats, sub, the stab into the chamber. Nothing added.",
+   "sections": "Intro (bar 1), Deep (bar 5), Abyss (bar 13), Deep again (bar 15)",
+   "chorus": "1–4 Dm9 · 5–8 Cm9",
+   "choruses": 2,
+   "parts": {
+    "chords": "The stab",
+    "melody": null
+   },
+   "shelf": "all tracks",
+   "uses": []
+  }
+ ],
+ "bands": [
+  {
+   "file": "band-blues-C",
+   "name": "Chicago shuffle in C",
+   "key": "C",
+   "chorus": "1–4 C · 5–6 F · 7–8 C · 9 G · 10 F · 11 C · 12 G",
+   "channels": [
+    "drums",
+    "bass",
+    "keys",
+    "horns"
+   ],
+   "uses": [
+    "Blues Progressions (15 steps, 7 jams, 70–90 bpm)",
+    "Scales (C major) (27 steps, 13 jams, 60–72 bpm; some steps move it to F, G)",
+    "Scales (A minor) (29 steps, 13 jams, 60–72 bpm; some steps move it to F, G)"
+   ]
+  },
+  {
+   "file": "band-minor-A",
+   "name": "Minor blues in A",
+   "key": "A minor",
+   "chorus": "1–4 Am · 5–6 Dm · 7–8 Am · 9 Em · 10 Dm · 11 Am · 12 Em",
+   "channels": [
+    "drums",
+    "bass",
+    "keys",
+    "horns"
+   ],
+   "uses": [
+    "Chord Shapes (16 steps, 8 jams, 70–80 bpm)",
+    "Minor Chords (28 steps, 14 jams, 60–70 bpm; some steps move it to E♭ minor, E minor, F minor, F♯ minor, G minor, A♭ minor, B♭ minor, B minor, C minor, C♯ minor, D minor)"
+   ]
+  }
+ ],
+ "modules": {
+  "A1": "Blues Progressions",
+  "H1": "Chord Shapes",
+  "M1": "Minor Chords",
+  "S1": "Scales (C major)",
+  "S1m": "Scales (A minor)"
+ }
+}

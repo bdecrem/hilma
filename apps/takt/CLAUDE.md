@@ -1823,6 +1823,25 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   of all three lessons in both themes; the phone's screen and the module. Not yet: Bart's pass
   at a real keyboard, the Reading track itself.
 
+- **The library for the agents, and Band on the menu means off. 2026-11-07.** Bart: "make sure
+  the agents know about these two tracks [the lesson bands] so they are available for various
+  things, along with the tracks" and "if that feature is not toggled on, then the music should
+  not play, but also the card should not be shown". **Library:** `scripts/takt/library.ts`
+  reads the app's content (Song.catalog, every song file, `band-*.json`, the modules that play
+  over each band and the keys their steps move it to, the year plan's song and improv goals)
+  and writes `src/lib/takt/library.json`; `src/lib/takt/library.ts` renders it
+  (`libraryText()`) into the chat teacher's, the improv teacher's and Agent mode's system
+  prompts, and is where `SONG_TITLES` / `MODULE_TITLES` come from now. Run the script after
+  adding or changing a song, a band or a module's band: chat-check fails while library.json is
+  stale. The app names a lesson band by its own name ("Chicago shuffle in C, moved to F (the
+  Scales band)") in the improv request and in the chat context. Live: from the Learn tab,
+  "what can I play the A minor pentatonic over?" got Maxwell Street II (All tracks, its
+  "Five notes" melody), the Scales (A minor) improv over its band, and Minor Chords over the
+  minor blues in A. **Band on the menu off:** `NowPlayingStrip` is not shown (Learn, Stage),
+  so it can't start the band either; the band already stayed silent on the menus (checked with
+  `-menuMusic NO -ClockTo`: silent on Learn and Stage, rolling with YES). chat-check 20/20,
+  `-LessonCheck` 468/468.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

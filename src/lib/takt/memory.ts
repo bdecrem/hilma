@@ -10,6 +10,7 @@
 
 import { f2Supabase } from '@/lib/f2/supabase'
 import { noteName } from './improv-agent'
+import { SONG_TITLES, MODULE_TITLES } from './library'
 
 export type MemoryEvent = { at: number; text: string }
 export type Session = { from: number; to: number; events: MemoryEvent[] }
@@ -21,33 +22,8 @@ export const SESSIONS_KEPT = 2
 const EVENTS_PER_SESSION = 40
 const MAX_CHARS = 9000
 
-/** The set list by file name (Song.catalog in the app; the server has no song files). */
-export const SONG_TITLES: Record<string, string> = {
-  'song-slow-burn': 'Slow Burn',
-  'song-slow-burn-short': 'Slow Burn Short',
-  'song-boogie-shoes': 'Boogie Shoes',
-  'song-pearl-street': 'Pearl Street',
-  'song-dockery': 'Dockery',
-  'song-friars-point': 'Friars Point',
-  'song-blue-lantern-white': 'Blue Lantern II',
-  'song-maxwell-street-five': 'Maxwell Street II',
-  'song-maxwell-street': 'Maxwell Street',
-  'song-blue-lantern': 'Blue Lantern',
-  'song-hypnotist': 'Hypnotist',
-  'song-hypnotist-2': 'Hypnotist II',
-  'song-warm-nine': 'Warm Nine',
-  'song-abyss': 'Abyss',
-  'song-abyss-ref': 'Abyss Reference',
-}
-
-/** The modules by their content code (Lesson.code). */
-export const MODULE_TITLES: Record<string, string> = {
-  A1: 'Blues Progressions',
-  S1: 'Scales (C major)',
-  S1m: 'Scales (A minor)',
-  M1: 'Minor Chords',
-  H1: 'Chord Shapes',
-}
+/** The set list and the modules by name, from the library (library.json). */
+export { SONG_TITLES, MODULE_TITLES }
 
 const cut = (s: unknown, max: number) => {
   const t = typeof s === 'string' ? s.replace(/\s+/g, ' ').trim() : ''

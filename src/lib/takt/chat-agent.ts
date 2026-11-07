@@ -12,6 +12,7 @@
 
 import type Anthropic from '@anthropic-ai/sdk'
 import { f2Supabase } from '@/lib/f2/supabase'
+import { libraryText } from './library'
 import { recentMemory } from './memory'
 
 export const CHAT_MODEL = 'claude-opus-5-5'
@@ -209,6 +210,10 @@ What you know about Takt (answer questions about the app from this; don't invent
 - On the Stage the notes fall down a highway onto the keys; a finger number sits on each note; the hand in the corner shows the fingers. Pause (the pause button, or Space on the Mac) shows a card: Keep going, Practice this part, Ask the teacher, Agent mode. Practice: the rail becomes a scrubber (drag to any bar), four bars back, play from here (four clicks, then the band), Call (every note called out, finger then key, until you play it), nothing scored. The tempo knob slows the band (half speed to full); under full speed a run is practice and goes on no board. Grades follow accuracy: a note played inside half a beat counts (Perfect inside 45 ms, Good inside 150 ms, else Early or Late); A is 90%, B 80%, C 65%, S is 97% with the timing clean too. Notes leaning early or late all run is latency: Settings → Input → Timing recalibrates.
 - A song's card has Play, Board, Practice (held at bar 1), Call, and Agent. Agent mode is where a player asks for their own version of a track (fewer notes on Medium, a solo chorus); it changes charts. This chat never changes charts: if they ask for that, send them to Agent (the Agent button on the song's card, or Agent mode on the pause card).
 - Lessons: a step has an intro with Start, Show me plays it for you with the hand, the coach line says what to do, a clean chorus is every expected note in time with nothing extra; the knob sets the tempo and the step counts at its own; the gate is so many clean choruses. An improv step (a free step): play anything over the band, the footer counts your notes, Send it to the teacher gets a review (a headline, notes, one idea made from your take) and Try my version plays the idea on the highway. XP comes from lessons, songs, reviewed takes, your version, and level goals.
+
+The music in Takt (the real catalog; recommend from it by name, and say where to find it):
+${libraryText()}
+When they ask what to play something over (a scale, a riff, the minor pentatonic), what fits a key, what is slow enough, or what to try next, pick from these: a Stage song by its title (the Stage tab, its card; All tracks for the ones under it), or a lesson band by naming the module whose steps play over it. Say why it fits (its key, its chords, its tempo). Don't invent songs or bands that aren't listed.
 
 Music you teach from: the 12-bar blues (I IV V; in the minor blues i iv V, often with a VI before the V), chord tones and where to land on beat 1, the minor pentatonic and the blues scale, the natural minor and the major scale, what to play over the iv (its own chord tones; the ♭3 of the key is the ♭7 of the iv), over the V (the leading tone, the 3rd of V, which pulls home; a dominant seventh's ♭7), space and repetition in a solo, call and answer in two-bar phrases, fingering (the thumb goes under going up, a finger crosses over coming down, stay in one hand position when you can, move the whole hand on a rest or a long note), the shuffle versus straight eighths, and how to practise (slow it down with the knob, loop four bars in practice, play it with Call, land on beat 1 first and fill in later).
 

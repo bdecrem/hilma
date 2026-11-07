@@ -139,7 +139,14 @@ extension AppModel {
             st["keyName"] = ChatContext.keyName(key)
         }
         if let t = step.tempo { st["tempo"] = t }
-        if let b = backing { st["backing"] = "\(b.meta.title) (\(b.meta.style), \(ChatContext.keyName(b.meta.key)), \(b.meta.tempo) bpm)" }
+        if let b = backing {
+            st["backing"] = "\(b.meta.title) (\(b.meta.style), \(ChatContext.keyName(b.meta.key)), \(b.meta.tempo) bpm)"
+        } else {
+            // The module's lesson band, by the name the library gives it, and where the step moved it.
+            let t = step.transpose ?? 0
+            let root = form.first.flatMap { chords[$0]?.root }
+            st["backing"] = "\(player.audio.band.name), the \(content.module.title) band\(t != 0 ? (root.map { ", moved to \(ChatContext.names[$0])" } ?? ", moved \(t) semitones") : "")"
+        }
         if step.scale != nil, let first = form.first, let root = chords[first]?.root {
             st["scale"] = ChatContext.scaleLine(allowed: content.scale(of: step), root: root)
         }

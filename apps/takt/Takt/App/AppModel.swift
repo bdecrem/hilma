@@ -187,7 +187,9 @@ final class AppModel {
         let names = ["C", "C♯", "D", "E♭", "E", "F", "F♯", "G", "A♭", "A", "B♭", "B"]
         let root = content.chords(of: step)[content.form(of: step).first ?? ""]?.root ?? 0
         let backing: [String: Any] = [
-            "title": song?.meta.title ?? "the \(content.module.title) band",
+            // A lesson band by its own name (the library's: "Chicago shuffle in C"), and the key
+            // a step moved it to.
+            "title": song?.meta.title ?? "\(player.audio.band.name)\((step.transpose ?? 0) != 0 ? ", moved to \(names[root])" : "") (the \(content.module.title) band)",
             "style": song?.meta.style ?? content.module.title,
             "key": song?.meta.key ?? step.key ?? content.key ?? names[root],
             "feel": step.straight ? "straight" : "shuffle",

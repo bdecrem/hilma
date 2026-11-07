@@ -9,6 +9,7 @@
 
 import type Anthropic from '@anthropic-ai/sdk'
 import { f2Supabase } from '@/lib/f2/supabase'
+import { libraryText } from './library'
 
 export const IMPROV_MODEL = 'claude-opus-5-5'
 
@@ -202,7 +203,10 @@ The idea's rules (the app checks them and sends it back if one is broken):
 - note is a MIDI number (60 = middle C). Stay near where they played. If the transcript lists notes allowed, use only those.
 - finger 1 to 5 for every note, for the hand given (right: 1 = thumb, 5 = pinky, low notes on the thumb side), a real fingering a teacher would write: stay in one hand position when you can; a thumb-under or a cross only when it has to.
 - It should be playable by this student today: about as fast as their own playing, not faster. Simpler beats busier.
-- title: at most 40 characters, names it ("Your bar 5 lick, landing on D").`
+- title: at most 40 characters, names it ("Your bar 5 lick, landing on D").
+
+The music in Takt, for when a note points them somewhere next (another backing this idea would also sit on, by its name and where it is: a Stage song, or the module whose band it is; only ones listed here):
+${libraryText()}`
 }
 
 function userMessage(r: ImprovRequest): string {

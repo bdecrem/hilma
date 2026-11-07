@@ -147,12 +147,19 @@ struct LessonRow: View {
 }
 
 /// The band under the menu: what's playing, play/pause, the tempo.
+/// Hidden when Settings → Sound → Band on the menu is off (Bart, 2026-11-07: off means no band on
+/// the menus and no card for it either).
 struct NowPlayingStrip: View {
     let player: Player
+    @AppStorage("menuMusic") private var menuMusic = true
 
     var body: some View {
+        if menuMusic { strip }
+    }
+
+    private var strip: some View {
         let shape = RoundedRectangle(cornerRadius: 8)
-        HStack(spacing: 12) {
+        return HStack(spacing: 12) {
             LED(lit: player.playing)
             VStack(alignment: .leading, spacing: 2) {
                 Text("The band")

@@ -9,8 +9,10 @@
 //   SKIP_LIVE=1 npx tsx scripts/takt/chat-check.ts     # pure checks only
 //   BASE=https://ola.cx npx tsx scripts/takt/chat-check.ts   # + the route
 
-import { readFileSync, readdirSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { chordRuns, describe, parseChatRequest, runChat, type ChatRequest } from '../../src/lib/takt/chat-agent'
+import { libraryText } from '../../src/lib/takt/library'
+import { buildLibrary } from './library'
 import { SONG_TITLES, chatEvent, dayFactsOf, improvEvent, modEvents, renderMemory, scoreEvents, sessionsOf } from '../../src/lib/takt/memory'
 
 let pass = 0, fail = 0
@@ -134,10 +136,21 @@ check('memory: in words, the session before and this one, the jam with its revie
   memory.split('\n').slice(0, 3).join(' / '))
 check('memory: the day\'s facts read from the snapshot', JSON.stringify(dayFactsOf(snapshot)) === JSON.stringify({ '2026-11-04': ['finished lesson 15 of Scales (A minor)', 'cleared Level 1\'s goal "scale-c"'], '2026-11-03': ['finished the Blues Progressions module\'s payoff'] }), JSON.stringify(dayFactsOf(snapshot)))
 check('memory: an empty account renders nothing', renderMemory(sessionsOf([]), {}, TZ, NOW) === '')
-const catalog = readdirSync('apps/takt/Takt/Content').filter((f) => f.startsWith('song-') && f.endsWith('.json')).map((f) => f.slice(0, -5))
+// The library (library.ts): current with the app's content, the two bands and every Stage song
+// in it, and in the teacher's prompt.
+const fresh = JSON.stringify(buildLibrary(), null, 1) + '\n' === readFileSync('src/lib/takt/library.json', 'utf8')
+check('library: library.json is current with the app\'s content (else npx tsx scripts/takt/library.ts)', fresh)
+const songSwift = readFileSync('apps/takt/Takt/Game/Song.swift', 'utf8')
+const catalog = [...(/static let catalog = \[([^\]]*)\]/.exec(songSwift)?.[1] ?? '').matchAll(/"([^"]+)"/g)].map((m) => m[1])
 const titles = Object.fromEntries(catalog.map((n) => [n, (JSON.parse(readFileSync(`apps/takt/Takt/Content/${n}.json`, 'utf8')) as { song: { title: string } }).song.title]))
-check('memory: the song titles match the bundle', catalog.every((n) => SONG_TITLES[n] === titles[n]) && Object.keys(SONG_TITLES).length === catalog.length,
+check('memory: the song titles match the set list', catalog.length > 0 && catalog.every((n) => SONG_TITLES[n] === titles[n]) && Object.keys(SONG_TITLES).length === catalog.length,
   catalog.filter((n) => SONG_TITLES[n] !== titles[n]).join(' '))
+const lib = libraryText()
+check('library: both lesson bands with their chords and modules, every Stage song with its key and form',
+  lib.includes('- Chicago shuffle in C (C): 1–4 C · 5–6 F · 7–8 C · 9 G · 10 F · 11 C · 12 G, looped') && lib.includes('Plays under Blues Progressions')
+  && lib.includes('- Minor blues in A (A minor): 1–4 Am · 5–6 Dm') && lib.includes('Minor Chords') && lib.includes('Chord Shapes')
+  && catalog.every((n) => lib.includes(`- ${titles[n]}: `)) && lib.includes('- Blue Lantern II: minor blues in D minor, 84 bpm') && lib.includes('Level 1 (White keys) goal: the melody on Medium for an A'),
+  `${lib.length} chars`)
 
 async function live() {
   const t0 = Date.now()
@@ -161,6 +174,13 @@ async function live() {
   console.log(`\n${reply2}\n`)
   check(`live: a follow-up about the jam answers from the memory in ${((Date.now() - t1) / 1000).toFixed(0)} s: the headline, the idea by name`,
     /came home to D|answered bar 1/i.test(reply2) && /bar 1 climb|landing on D/i.test(reply2))
+  // The library: a question only the catalog answers, from a menu (no song, no lesson).
+  const t2 = Date.now()
+  const menu: ChatRequest = { message: 'I want to practise the A minor pentatonic over a backing track. What in the app can I play it over, and where do I find it?', thread: [], context: { screen: 'learn', where: 'Learn', device: 'mac' } }
+  const reply3 = await runChat(menu, null, () => {}, '')
+  console.log(`\n${reply3}\n`)
+  check(`live: from a menu, it recommends real backings in A minor by name and where they are, in ${((Date.now() - t2) / 1000).toFixed(0)} s`,
+    /Minor blues in A|Chord Shapes|Minor Chords/.test(reply3) && /Hypnotist|Maxwell Street|Dockery|Stage/.test(reply3) && !/Undertow|Nachtschicht/.test(reply3))
 }
 
 async function route(base: string) {
