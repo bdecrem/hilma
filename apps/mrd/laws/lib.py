@@ -107,9 +107,46 @@ def claude(system, user, model="claude-haiku-5-5", max_tokens=4000, schema=None)
 SEARCHES = {"n": 0}
 
 
+_BRAVE_DEAD = {"v": False}
+_SEARCH_SCHEMA = {"type": "object", "additionalProperties": False, "required": ["results"], "properties": {"results": {"type": "array", "items": {
+    "type": "object", "additionalProperties": False, "required": ["url", "title", "snippet"],
+    "properties": {"url": {"type": "string"}, "title": {"type": "string"}, "snippet": {"type": "string"}}}}}}
+
+
+def anthropic_search(q, count=8):
+    """Anthropic's server-side web search through one Haiku call, when Brave is unavailable
+    (its plan returned 402 on 2026-11-06). $0.01 a search plus a cent of tokens."""
+    body = {"model": "claude-haiku-5-5", "max_tokens": 3000,
+            "system": f"Run exactly one web_search for the user's query and return its results as JSON: up to {count} results, each with the url, the page title and a one-line snippet of what the page is. No commentary.",
+            "messages": [{"role": "user", "content": q}],
+            "tools": [{"type": "web_search_20250305", "name": "web_search", "max_uses": 1}],
+            "output_config": {"effort": "low", "format": {"type": "json_schema", "schema": _SEARCH_SCHEMA}}}
+    h = {"x-api-key": os.environ["ANTHROPIC_API_KEY"], "anthropic-version": "2023-06-01", "content-type": "application/json"}
+    for attempt in range(4):
+        try:
+            r = http("POST", "https://api.anthropic.com/v1/messages", body, h, timeout=120); break
+        except urllib.error.HTTPError as e:
+            if e.code in (429, 500, 502, 503, 529):
+                time.sleep(5 * (attempt + 1)); continue
+            raise RuntimeError(f"anthropic search {e.code}: {e.read().decode()[:300]}")
+    else:
+        return []
+    u = r.get("usage", {})
+    USAGE["in"] += u.get("input_tokens", 0); USAGE["out"] += u.get("output_tokens", 0); USAGE["calls"] += 1
+    USAGE["cost"] += u.get("input_tokens", 0) / 1e6 * 1.0 + u.get("output_tokens", 0) / 1e6 * 5.0 + 0.01
+    SEARCHES["n"] += 1
+    text = "".join(b.get("text", "") for b in r.get("content", []) if b.get("type") == "text")
+    try:
+        return [x for x in json.loads(text).get("results", []) if x.get("url", "").startswith("http")][:count]
+    except Exception:
+        return []
+
+
 def search(q, count=8):
+    if _BRAVE_DEAD["v"]:
+        return anthropic_search(q, count)
     url = "https://api.search.brave.com/res/v1/web/search?" + urllib.parse.urlencode({"q": q, "count": count})
-    h = {"X-Subscription-Token": os.environ["BRAVE_API_KEY"], "Accept": "application/json"}
+    h = {"X-Subscription-Token": os.environ.get("BRAVE_API_KEY", ""), "Accept": "application/json"}
     for attempt in range(4):
         try:
             d = http("GET", url, headers=h, timeout=30)
@@ -119,6 +156,10 @@ def search(q, count=8):
         except urllib.error.HTTPError as e:
             if e.code == 429:
                 time.sleep(2 * (attempt + 1)); continue
+            if e.code in (401, 402, 403):
+                print(f"brave {e.code}: falling back to Anthropic web search", file=sys.stderr)
+                _BRAVE_DEAD["v"] = True
+                return anthropic_search(q, count)
             raise
     return []
 

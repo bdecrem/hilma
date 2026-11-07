@@ -47,7 +47,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
       {c.experimental && (
         <p className="exp-banner">
           <Flag long /> {c.name} is not in the Migrant Rights Database. This dossier was compiled by Claude ({c.coded_by ?? 'Claude'}) with the database&apos;s 2023
-          instrument{c.coded_at ? ` on ${new Date(c.coded_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}` : ''}, and has not been reviewed by the
+          instrument{c.coded_at ? ` on ${new Date(c.coded_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'America/Los_Angeles' })}` : ''}, and has not been reviewed by the
           Migrant Rights Initiative. <Link href={`${BASE}/dossiers`}>How it was made →</Link>
         </p>
       )}
