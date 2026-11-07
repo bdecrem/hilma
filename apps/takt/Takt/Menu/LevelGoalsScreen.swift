@@ -1,8 +1,9 @@
 import SwiftUI
 
-/// The level up next, over the map: its goals from the plan, where you stand on each, and a
-/// button per goal that opens the right step at the right tempo. Full screen on iPhone, a 480 pt
-/// card on the Mac. The venue's story stays hidden until the level clears.
+/// A level over the map (the one up next, or a cleared one from its number): its goals from the
+/// plan, where you stand on each, and a button per goal that opens the right step at the right
+/// tempo (Play again / Practice once done). Full screen on iPhone, a 480 pt card on the Mac. The
+/// venue's story is the photo card's, once the level clears.
 struct LevelGoalsScreen: View {
     let app: AppModel
     let stop: MapWorld.Stop
@@ -51,7 +52,9 @@ struct LevelGoalsScreen: View {
                 Spacer()
                 // The phone's card covers the map's header, the teacher's button with it.
                 if compact { AskButton(size: 34) }
-                Text(level.items.isEmpty ? "Up next" : "\(done) of \(level.items.count) done")
+                Text(level.items.isEmpty ? "Up next"
+                     : done == level.items.count ? "Cleared · \(done) of \(done)"
+                     : "\(done) of \(level.items.count) done")
                     .dataLabel(10, weight: .semibold)
                     .foregroundStyle(Palette.ground)
                     .padding(.horizontal, 10)

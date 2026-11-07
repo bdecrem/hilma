@@ -25,8 +25,13 @@ final class AppModel {
 
     /// The map's world (Settings → Taste → Map when there is more than one).
     private(set) var mapWorld = MapWorld.bundled(MapWorld.selected)
-    /// The venue open over the map, by level (1-based).
-    var openVenue: Int?
+    /// The level open over the map (1-based): its goals, or its venue's story when `openStory`.
+    var openVenue: Int? {
+        didSet { if openVenue == nil { openStory = false } }
+    }
+    /// The open level shows its venue's story (the photo card of a cleared level) instead of
+    /// its goals (the numbered stop: a cleared level's goals stay there to practice).
+    var openStory = false
 
     func mapWorldChanged() {
         if mapWorld.world != MapWorld.selected { mapWorld = .bundled(MapWorld.selected) }
@@ -467,9 +472,12 @@ final class AppModel {
             case "calibrate": route = .calibrate
             case "map":
                 route = .map
-                // `-Venue n` opens level n's venue over it; `-Goal <id>` starts that level's goal as
+                // `-Venue n` opens level n's goals over it (`-VenueStory 1`: its story); `-Goal <id>` starts that level's goal as
                 // its button does, and `-Back 1` then leaves the lesson (or the song) the way Back does.
-                if d.integer(forKey: "Venue") > 0 { openVenue = d.integer(forKey: "Venue") }
+                if d.integer(forKey: "Venue") > 0 {
+                    openStory = d.bool(forKey: "VenueStory")
+                    openVenue = d.integer(forKey: "Venue")
+                }
                 if let id = d.string(forKey: "Goal") {
                     guard let level = plan.levels.first(where: { $0.n == max(1, d.integer(forKey: "Venue")) }),
                           let item = level.items.first(where: { $0.id == id }) else { fatalError("-Goal: no goal \(id)") }

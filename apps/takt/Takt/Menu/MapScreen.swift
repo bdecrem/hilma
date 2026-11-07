@@ -3,7 +3,8 @@ import SwiftUI
 /// The Map tab: one road down the screen through the current world's venues, a numbered stop
 /// per level, a photo card beside each. Level n is level n of the player's plan
 /// (`LearningPlan`): the orange stop up next opens its goals (`LevelGoalsScreen`), and the level
-/// clears when every goal is done (`GoalProgress`); a cleared stop opens its venue's story.
+/// clears when every goal is done (`GoalProgress`). A cleared stop's number opens its goals, all
+/// done, to play again or practice; its photo card opens the venue's story.
 /// The world (blues now, techno later) is content: `MapWorld`, from `map-<world>.json`.
 /// Layout numbers are the handoff's (`reference/Main.dc.html`, iPhone at 390 wide): x positions
 /// scale to the width, y positions don't.
@@ -57,9 +58,9 @@ struct MapScreen: View {
             .background(Palette.ground.ignoresSafeArea())
 
             if let level = app.openVenue, let stop = stops.first(where: { $0.level == level }) {
-                if level <= cleared {
+                if app.openStory && level <= cleared {
                     VenueScreen(app: app, world: world, stop: stop, cleared: cleared, compact: compact)
-                } else if level == cleared + 1, let planLevel = app.plan.levels.first(where: { $0.n == level }) {
+                } else if level <= cleared + 1, let planLevel = app.plan.levels.first(where: { $0.n == level }) {
                     LevelGoalsScreen(app: app, stop: stop, level: planLevel, goals: goals, compact: compact)
                 }
             }
@@ -167,7 +168,11 @@ private struct Road: View {
                     .offset(x: left ? width - 14 - cardWidth : 14, y: RoadLayout.y(s) - 74)
                     // A venue's story is the reward: it opens once its level is cleared. The one
                     // up next opens its goals.
-                    .onTapGesture { if state == .done || state == .here { app.openVenue = s.level } }
+                    .onTapGesture {
+                        guard state == .done || state == .here else { return }
+                        app.openStory = state == .done
+                        app.openVenue = s.level
+                    }
                     .accessibilityElement(children: .ignore)
                     .accessibilityLabel(cardLabel(s, state))
                     .accessibilityAddTraits(state == .done || state == .here ? .isButton : [])
@@ -177,7 +182,8 @@ private struct Road: View {
                 let state = MapWorld.state(s.level - 1, cleared: cleared)
                 let size: CGFloat = state == .here ? 66 : 52
                 let x = RoadLayout.x(s, width: width), y = RoadLayout.y(s)
-                Button { app.openVenue = s.level } label: { StopMark(number: s.level, state: state) }
+                // The number is the level's goals, cleared or not.
+                Button { app.openStory = false; app.openVenue = s.level } label: { StopMark(number: s.level, state: state) }
                     .buttonStyle(.plain)
                     // Not `.disabled`: that fades the orange stop. Locked stops just ignore taps.
                     .allowsHitTesting(state == .done || state == .here)
