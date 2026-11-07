@@ -235,8 +235,8 @@ struct CountInSplash: View {
             }
             definition(size: 11)
                 .padding(.top, 14)
-                .padding(.bottom, 18)
-            band(title: 18, bpm: 40, padH: 20, padV: 16)
+                .padding(.bottom, showsBand ? 18 : 0)
+            if showsBand { band(title: 18, bpm: 40, padH: 20, padV: 16) }
         }
         .padding(.horizontal, 28)
         .padding(.top, 24)
@@ -263,9 +263,11 @@ struct CountInSplash: View {
             .padding(.top, 44)
             .padding(.bottom, 24)
             definition(size: 12)
-                .padding(.bottom, 20)
-            band(title: 22, bpm: 48, padH: 28, padV: 20)
-                .padding(.bottom, 56)
+                .padding(.bottom, showsBand ? 20 : 56)
+            if showsBand {
+                band(title: 22, bpm: 48, padH: 28, padV: 20)
+                    .padding(.bottom, 56)
+            }
         }
         .padding(.horizontal, 80)
     }
@@ -316,6 +318,10 @@ struct CountInSplash: View {
 
     private static let letters = ["T", "A", "K", "T"]
     private static let count = ["Eins", "Zwei", "Drei", "Vier"]
+
+    /// The band's card shows only when Settings → Sound → Band on the menu is on (Bart,
+    /// 2026-11-07: off means no band and no card for it, the launch included).
+    private var showsBand: Bool { RootView.menuMusicOn }
 
     private func band(title: CGFloat, bpm size: CGFloat, padH: CGFloat, padV: CGFloat) -> some View {
         let shape = RoundedRectangle(cornerRadius: 14, style: .continuous)
