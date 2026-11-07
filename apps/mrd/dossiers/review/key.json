@@ -1,0 +1,50 @@
+{
+ "A": {
+  "country": "Philippines",
+  "source": "new"
+ },
+ "B": {
+  "country": "Jordan",
+  "source": "mrd"
+ },
+ "C": {
+  "country": "Spain",
+  "source": "mrd"
+ },
+ "D": {
+  "country": "Colombia",
+  "source": "mrd"
+ },
+ "E": {
+  "country": "Qatar",
+  "source": "new"
+ },
+ "F": {
+  "country": "Portugal",
+  "source": "new"
+ },
+ "G": {
+  "country": "Sweden",
+  "source": "mrd"
+ },
+ "H": {
+  "country": "Russia",
+  "source": "mrd"
+ },
+ "I": {
+  "country": "India",
+  "source": "mrd"
+ },
+ "J": {
+  "country": "Costa Rica",
+  "source": "new"
+ },
+ "K": {
+  "country": "Norway",
+  "source": "new"
+ },
+ "L": {
+  "country": "China",
+  "source": "new"
+ }
+}
