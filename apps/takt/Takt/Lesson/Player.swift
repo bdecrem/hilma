@@ -117,6 +117,10 @@ final class Player {
     @ObservationIgnored var callVoice: CallVoice?
     @ObservationIgnored var callNag: DispatchWorkItem?
 
+    // Player+Reading: the Reading lesson under way (Game/Reading.swift) on the Stage's
+    // machinery, its names chip and its gate.
+    var reading: ReadingSession?
+
     #if DEBUG
     // Player+Debug: the autoplays' plans and presses not yet heard.
     var autoplayMode: Autoplay.Mode? {

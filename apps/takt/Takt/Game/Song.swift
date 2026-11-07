@@ -87,6 +87,9 @@ struct Song {
     let meta: Meta
     /// Nil for a bundled song.
     let mod: ModInfo?
+    /// A Reading lesson's line (`Reading.song`): every note is played at the one tier, with the
+    /// file's fingers; no charting, no ladder.
+    var exact = false
 
     /// The set list, in order.
     static let catalog = ["song-slow-burn", "song-slow-burn-short", "song-boogie-shoes", "song-pearl-street", "song-dockery", "song-friars-point", "song-blue-lantern-white", "song-maxwell-street-five", "song-maxwell-street", "song-blue-lantern", "song-hypnotist", "song-hypnotist-2", "song-warm-nine", "song-abyss", "song-abyss-ref"]

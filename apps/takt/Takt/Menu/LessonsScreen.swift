@@ -42,6 +42,7 @@ struct LessonsScreen: View {
                             LessonRow(entry: entry, app: app, compact: compact)
                         }
                     }
+                    ReadingModuleCard(app: app, compact: compact)
                 }
             }
             .scrollBounceBehavior(.basedOnSize)

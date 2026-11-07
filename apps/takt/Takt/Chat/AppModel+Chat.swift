@@ -58,6 +58,7 @@ extension AppModel {
         case .map: return chatLevel.map { "Map · Level \($0.n), \($0.title)" } ?? "Map"
         case .module: return module(currentModule).module.title
         case .earModule: return LessonEntry.ear.title
+        case .readingModule: return LessonEntry.reading.title
         case .settings: return "Settings"
         case .calibrate: return "Timing"
         case .quiz: return "Quiz"
@@ -70,7 +71,7 @@ extension AppModel {
     /// way with its chords and its line at this level and the run so far, or the lesson step
     /// with its key, form, notes allowed and the take so far, and the progress.
     func chatContext() -> [String: Any] {
-        let screens: [Route: String] = [.lessons: "learn", .map: "map", .module: "module", .earModule: "ear", .lesson: "lesson", .result: "result",
+        let screens: [Route: String] = [.lessons: "learn", .map: "map", .module: "module", .earModule: "ear", .readingModule: "reading", .lesson: "lesson", .result: "result",
                                         .settings: "settings", .calibrate: "calibrate", .quiz: "quiz", .earGame: "eargame", .stage: "stage", .game: "game"]
         var c: [String: Any] = ["device": Self.device, "screen": screens[route] ?? "unknown", "where": chatWhere(), "timeZone": TimeZone.current.identifier]
         if let level = chatLevel {

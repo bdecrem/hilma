@@ -78,6 +78,8 @@ struct GameState {
     var lastRun: ProgressStore.ScoreRecord? = nil
     var board: [ProgressStore.ScoreRecord] = []
     var sections: [Song.Section] = []
+    /// A Reading lesson (Player+Reading): the staff takes the highway's place.
+    var reading: ReadingState? = nil
 
     var levelTitle: String { "Level \(level)" }
 }
@@ -100,6 +102,8 @@ struct GameControls {
     var agent: () -> Void = {}
     /// Call on and off: the next note called out, finger then key, the band held.
     var call: () -> Void = {}
+    /// A Reading lesson's names chip: on, faint, off.
+    var readingNames: () -> Void = {}
 }
 
 private struct GameControlsKey: EnvironmentKey {
@@ -159,6 +163,14 @@ struct GameScreen: View {
                 if let r = state.result {
                     GameResultPanel(state: state, result: r, compact: compact)
                         .padding(compact ? 16 : 32)
+                } else if let reading = state.reading {
+                    ReadingStage(state: state, reading: reading, compact: compact)
+                        .padding(.horizontal, compact ? 16 : 24)
+                        .padding(.top, compact ? 8 : 14)
+                        .padding(.bottom, 8)
+                    if let n = state.countIn {
+                        CountInBadge(n: n, compact: compact)
+                    }
                 } else {
                     Highway(state: state, compact: compact)
                         .padding(.horizontal, compact ? 16 : 24)
@@ -214,7 +226,7 @@ struct GameHUD: View {
                     .foregroundStyle(Palette.text)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
-                Text("\(state.partTitle) · \(state.difficulty == .adaptive ? (compact ? state.levelTitle : "Adaptive · \(state.levelTitle)") : state.difficulty.title)\(compact ? "" : " · \(state.section)")\(state.slowed && !state.practice ? " · \(state.speedPercent)% speed" : "")")
+                Text(state.reading?.subtitle ?? "\(state.partTitle) · \(state.difficulty == .adaptive ? (compact ? state.levelTitle : "Adaptive · \(state.levelTitle)") : state.difficulty.title)\(compact ? "" : " · \(state.section)")\(state.slowed && !state.practice ? " · \(state.speedPercent)% speed" : "")")
                     .dataLabel(compact ? 10 : 12)
                     .foregroundStyle(Palette.muted)
                     .lineLimit(1)
@@ -240,6 +252,8 @@ struct GameHUD: View {
                 .frame(minWidth: compact ? 70 : 110, alignment: .trailing)
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(c.done ? "Done" : "Call: \(c.phrase), \(c.step) of \(c.count)")
+            } else if let r = state.reading {
+                ReadingMeter(reading: r, compact: compact)
             } else if state.practice {
                 // No score to chase: the word, and the speed.
                 VStack(alignment: .trailing, spacing: 2) {
@@ -274,6 +288,7 @@ struct GameHUD: View {
                     TransportButton(symbol: state.playing ? "pause.fill" : "play.fill", lit: state.playing, size: 36,
                                     label: state.playing ? "Pause" : "Play", action: controls.togglePlay)
                 }
+                if state.reading != nil { CheatToggle(compact: false) }
                 AskButton(size: 36)
             }
         }
@@ -621,6 +636,7 @@ struct PracticeBar: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(state.call != nil ? "Stop calling the notes" : "Call the notes: the next one spoken, finger then key")
+                if state.reading == nil {
                 Button(action: controls.run) {
                     Text(compact ? "Run" : "Play the run")
                         .dataLabel(10, weight: .semibold)
@@ -631,7 +647,9 @@ struct PracticeBar: View {
                         .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Palette.line, lineWidth: 1))
                 }
                 .buttonStyle(.plain)
-                // The phone's HUD has no room for the teacher: in practice it sits here.
+                }
+                // The phone's HUD has no room for the teacher (or the cheat sheet): in practice they sit here.
+                if compact, state.reading != nil { CheatToggle(compact: true).scaleEffect(28 / 34) }
                 if compact { AskButton(size: 28) }
             }
         }

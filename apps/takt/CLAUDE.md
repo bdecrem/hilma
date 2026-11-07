@@ -1777,6 +1777,52 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   114 s). Not yet: TestFlight (still 104); a solo of a mod (the improv's backing is always a
   bundled song).
 
+- **Reading, a module: read the staff to a track. 2026-11-07.** Bart: "should i learn to read
+  musical notation?", then "build me a module on that… 3 lessons… first right hand, then left
+  hand, then both… a short tutorial panel / some sort of cheat sheet that i can hide, and then a
+  track i'm playing to - so it's a practice mode of playing the track… a different ui than the
+  bars coming down", from the mockup he approved (`public/takt/mockups/reading.html`, not
+  deployed). **The track is a placeholder** (the lessons' `band-blues-C`) until another agent's
+  Reading track lands: swap `track` (any bundled band or song file), `tempo`, `key`, `chords`
+  and `channel` in `Content/reading-R.json`. **Content** (`Content/reading-R.json`,
+  `Game/Reading.swift`, pure): the module, three lessons each with a clef (treble / bass /
+  grand), default names (on / faint / off), one line per hand written as notation a bar a string
+  (`"C4/q E4/q G4/h"`, `r/h` a rest, lengths w h. h q. q e, `/n` a finger; every bar must add to
+  four beats, checked at load), the five-finger position, and its cheat sheet (title, lead, the
+  notes it draws, mnemonics, a tip, the note-values row). R1 Right hand: C–G in quarters, halves
+  and a rest over the C blues; R2 Left hand: roots and fifths in half notes; R3 Both hands: R1's
+  line over whole-note roots. **Engine:** the lesson is a Stage song built in code
+  (`Reading.song`, `Song(reading:band:meta:)` with `exact`: `GameEngine` plays every note at one
+  tier with the file's fingers, no charting), whole choruses of the line through the track,
+  opened held at bar 1 in practice (`Player.startReading`), so the knob, the scrubber, four bars
+  back and Call all work; "Play the run" is hidden. **The gate** (`Player.runReading`): a chorus
+  played from its top with 90% of its notes played (`cleanShare`) is clean; two (`gate`) finish
+  the lesson (`progress.jamDone(id, in: "R")`, `practiced(.lesson, id: "R·R1")`); a scrub forgets
+  the choruses from there; at the end Play goes round from bar 1. **Screen**
+  (`Game/ReadingStage.swift`): the staff scrolls right to left past a fixed playhead
+  (`StaffView`, a Canvas; `StaffLayout`, `StaffDraw` for lines, clefs as the SMuFL glyphs U+1D11E
+  / U+1D122 placed by baseline, the 4/4, notes with stems, flags, dots, ledger lines and
+  accidentals, rests, the grand staff's brace); the note to play now is **framed** in `signal`
+  (not filled: on a staff, filled vs. hollow says quarter vs. half), the next outlined in `cue`
+  with the corner tick; a finger over each (under, for the left hand), the name under each
+  (`Note names · on/faint/off` chip, top left), bar lines and numbers, the chord and its numeral
+  where it changes; bottom left the bar's chord and the coach ("G. Second line. Pinky.",
+  `Reading.coach`), bottom right the bar and its beat LEDs. The keyboard lights the now / next
+  keys with fingers. The HUD swaps the score for `ReadingMeter` (this chorus's notes played of
+  those judged, "Chorus n", two gate rings, Done) and adds `CheatToggle` (book, ⌘/; the phone's
+  sits in the practice row). The cheat sheet (`CheatSheetPanel`, 292 pt, `@AppStorage
+  "readingCheat"`, on by default on the Mac, `readingCheatPhone` off on the phone where it
+  slides over the staff) hides into a side tab. **Menu:** `ReadingModuleCard` under the modules
+  on Learn, `ReadingModuleScreen` (route `.readingModule`, the three lessons all open, the first
+  not done is next), `LessonEntry.reading` (kind `.readingModule`, code "R"); not on the map.
+  DEBUG `-Route readingmodule`, `-Route reading -Reading n` (with `-PracticeAt 0 -PracticeBar 0
+  -Autoplay perfect` it plays). Verified: LessonCheck 468/468 (12 new: content, the load trap,
+  pitches, staff steps, places, the coach, numerals, the song's notes and fingers, one tier,
+  rests kept, both hands in one part, the clean share); on the simulator a perfect autoplay of
+  R1 read 35/35 twice and logged "R1 done", sloppy 27/35 twice and never passed; `-SnapshotAt`
+  of all three lessons in both themes; the phone's screen and the module. Not yet: Bart's pass
+  at a real keyboard, the Reading track itself.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

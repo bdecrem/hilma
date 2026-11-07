@@ -1,0 +1,220 @@
+{
+ "_track": "Placeholder: the lessons' C blues band until the Reading module's own track lands. Swap `track` (a band or song file in Content/), and `tempo`, `key`, `chords`, `channel` to match it.",
+ "module": {
+  "code": "R",
+  "title": "Reading",
+  "detail": "Read the staff to a track, one hand at a time, then both"
+ },
+ "track": "band-blues-C",
+ "tempo": 70,
+ "key": "C",
+ "channel": "horns",
+ "chords": {
+  "C": "C7",
+  "F": "F7",
+  "G": "G7"
+ },
+ "cleanShare": 0.9,
+ "gate": 2,
+ "lessons": [
+  {
+   "id": "R1",
+   "title": "Right hand",
+   "goal": "C to G on the treble clef: quarters, halves and a rest",
+   "clef": "treble",
+   "names": "on",
+   "right": [
+    "C4/q E4/q G4/h",
+    "G4/q F4/q E4/h",
+    "E4/q D4/q C4/q D4/q",
+    "C4/h r/h",
+    "F4/q F4/q F4/h",
+    "F4/q E4/q D4/h",
+    "E4/q G4/q E4/q C4/q",
+    "C4/h r/h",
+    "G4/q G4/q F4/q D4/q",
+    "F4/q E4/q D4/q C4/q",
+    "C4/q E4/q G4/q E4/q",
+    "D4/w"
+   ],
+   "fingers": {
+    "right": {
+     "C4": 1,
+     "D4": 2,
+     "E4": 3,
+     "F4": 4,
+     "G4": 5
+    },
+    "left": {
+     "C3": 5,
+     "D3": 4,
+     "E3": 3,
+     "F3": 2,
+     "G3": 1
+    }
+   },
+   "cheat": {
+    "title": "Treble clef",
+    "lead": "The right hand reads the top staff. Thumb on middle C, one finger per key.",
+    "notes": [
+     "C4",
+     "D4",
+     "E4",
+     "F4",
+     "G4"
+    ],
+    "mnemonics": [
+     {
+      "label": "Lines",
+      "letters": "EGBDF",
+      "words": "Every Good Boy Does Fine"
+     },
+     {
+      "label": "Spaces",
+      "letters": "FACE",
+      "words": "Spells face"
+     }
+    ],
+    "tip": "One step on the staff is one white key. Line, space, line: up the keyboard.",
+    "values": true
+   }
+  },
+  {
+   "id": "R2",
+   "title": "Left hand",
+   "goal": "Roots and fifths on the bass clef, in half notes",
+   "clef": "bass",
+   "names": "on",
+   "left": [
+    "C3/h G3/h",
+    "C3/h G3/h",
+    "C3/h G3/h",
+    "C3/h G3/h",
+    "F3/h C3/h",
+    "F3/h C3/h",
+    "C3/h G3/h",
+    "C3/h G3/h",
+    "G3/h D3/h",
+    "F3/h C3/h",
+    "C3/h G3/h",
+    "G3/w"
+   ],
+   "fingers": {
+    "right": {
+     "C4": 1,
+     "D4": 2,
+     "E4": 3,
+     "F4": 4,
+     "G4": 5
+    },
+    "left": {
+     "C3": 5,
+     "D3": 4,
+     "E3": 3,
+     "F3": 2,
+     "G3": 1
+    }
+   },
+   "cheat": {
+    "title": "Bass clef",
+    "lead": "The left hand reads the bottom staff. Pinky on C3, an octave under middle C.",
+    "notes": [
+     "C3",
+     "D3",
+     "E3",
+     "F3",
+     "G3"
+    ],
+    "mnemonics": [
+     {
+      "label": "Lines",
+      "letters": "GBDFA",
+      "words": "Good Boys Do Fine Always"
+     },
+     {
+      "label": "Spaces",
+      "letters": "ACEG",
+      "words": "All Cows Eat Grass"
+     }
+    ],
+    "tip": "The clef's two dots sit around the F line. Find F and count from there.",
+    "values": true
+   }
+  },
+  {
+   "id": "R3",
+   "title": "Both hands",
+   "goal": "The left hand holds the root, the right plays lesson 1's line",
+   "clef": "grand",
+   "names": "faint",
+   "right": [
+    "C4/q E4/q G4/h",
+    "G4/q F4/q E4/h",
+    "E4/q D4/q C4/q D4/q",
+    "C4/h r/h",
+    "F4/q F4/q F4/h",
+    "F4/q E4/q D4/h",
+    "E4/q G4/q E4/q C4/q",
+    "C4/h r/h",
+    "G4/q G4/q F4/q D4/q",
+    "F4/q E4/q D4/q C4/q",
+    "C4/q E4/q G4/q E4/q",
+    "D4/w"
+   ],
+   "left": [
+    "C3/w",
+    "C3/w",
+    "C3/w",
+    "C3/w",
+    "F3/w",
+    "F3/w",
+    "C3/w",
+    "C3/w",
+    "G3/w",
+    "F3/w",
+    "C3/w",
+    "G3/w"
+   ],
+   "fingers": {
+    "right": {
+     "C4": 1,
+     "D4": 2,
+     "E4": 3,
+     "F4": 4,
+     "G4": 5
+    },
+    "left": {
+     "C3": 5,
+     "D3": 4,
+     "E3": 3,
+     "F3": 2,
+     "G3": 1
+    }
+   },
+   "cheat": {
+    "title": "Grand staff",
+    "lead": "Two staves, one piano. Top is the right hand, bottom the left. Middle C sits between them.",
+    "notes": [
+     "C3",
+     "C4",
+     "E4",
+     "G4"
+    ],
+    "mnemonics": [
+     {
+      "label": "Treble lines",
+      "letters": "EGBDF",
+      "words": "Every Good Boy Does Fine"
+     },
+     {
+      "label": "Bass lines",
+      "letters": "GBDFA",
+      "words": "Good Boys Do Fine Always"
+     }
+    ],
+    "tip": "Notes in one column sound together. The left hand holds its whole note for four beats while the right hand moves.",
+    "values": false
+   }
+  }
+ ]
+}

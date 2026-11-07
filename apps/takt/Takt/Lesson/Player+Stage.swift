@@ -11,6 +11,8 @@ extension Player {
                    keepSpeed: Bool = false) {
         if demo { endDemo(stop: false) }
         dropCall()
+        // A Stage song is not a Reading lesson (`startReading` sets it after this).
+        if !song.exact { reading = nil }
         gameDifficulty = difficulty
         gameResult = nil
         lastRun = nil
@@ -64,6 +66,7 @@ extension Player {
         guard game != nil else { return }
         dropCall()
         game = nil
+        reading = nil
         gameResult = nil
         practice = false
         gameSpeed = 1
@@ -126,6 +129,7 @@ extension Player {
         practiceCountBase = tick
         practiceTick = tick
         pressed.removeAll()
+        readingSeek(to: tick)
         // A scrub while calling: the call again from the bar it landed on.
         if call != nil { callFrom(tick: tick) }
     }
@@ -170,7 +174,9 @@ extension Player {
             audio.send(.pause)
             return
         }
-        practiceSeek(bar: practiceBar)
+        // A Reading lesson held at the end goes round again from the top.
+        let end = (game?.song.bars ?? 1) - 1
+        practiceSeek(bar: reading != nil && practiceBar >= end ? 0 : practiceBar)
         audio.send(.countIn(beats: 4))
         audio.send(.play)
     }
@@ -207,6 +213,7 @@ extension Player {
         runGameAutoKeys(heard)
         runPracticeHook(heard)
         #endif
+        runReading(heard)
         if practice {
             // The end of the song: hold there; the scrubber goes back.
             if playing, heard.tick >= Double(game.endTick) { audio.send(.pause) }
@@ -249,6 +256,8 @@ extension Player {
         let bar = practice && countIn != nil ? Int(practiceCountBase / Double(game.ticksPerBar))
             : max(0, Int((tick / Double(game.ticksPerBar)).rounded(.down)))
         let song = game.song
+        // A Reading lesson: the staff instead of the highway, its own now and next keys.
+        let reading = readingState(tick: tick, msPerTick: msPerTick, bar: bar)
         let visible = game.onHighway(from: tick - Double(game.ticksPerBeat), to: tick + lookahead).map {
             GameState.HighwayNote(id: $0.index, note: $0.note.n, tick: Double($0.note.t), length: Double($0.note.len),
                                   status: $0.status, finger: game.finger($0.index))
@@ -264,9 +273,9 @@ extension Player {
             countIn: countIn, playing: playing, pop: game.pop, practice: practice, call: callState(), speed: gameSpeed,
             tempo: tempo, pendingTempo: pendingTempo, songTempo: song.meta.tempo,
             heardTick: tick, lookaheadTicks: lookahead, ticksPerBeat: game.ticksPerBeat, ticksPerBar: game.ticksPerBar,
-            notes: visible, keys: song.keyboard(game.part), nowNotes: cue.now, nextNotes: cue.next,
-            pressedNotes: pressed, fingers: cue.fingers, nowFingers: cue.nowFingers, nextFinger: cue.nextFingers.min(),
+            notes: visible, keys: song.keyboard(game.part), nowNotes: reading?.nowKeys ?? cue.now, nextNotes: reading?.nextKeys ?? cue.next,
+            pressedNotes: pressed, fingers: reading?.keyFingers ?? cue.fingers, nowFingers: cue.nowFingers, nextFinger: cue.nextFingers.min(),
             rightHand: game.part == .melody, result: gameResult, lastRun: lastRun,
-            board: progress.scores(song: song.name), sections: song.meta.sections)
+            board: progress.scores(song: song.name), sections: song.meta.sections, reading: reading)
     }
 }

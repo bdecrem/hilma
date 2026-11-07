@@ -2345,6 +2345,58 @@ enum LessonCheck {
                   && ChatContext.keyName("E♭ blues") == "E♭ blues" && ChatContext.keyName("F minor") == "F minor")
         }
 
+        // MARK: Reading (2026-11-07)
+
+        let rd = Reading.bundled
+        check("reading: three lessons, treble right, bass left, grand both",
+              rd.lessons.map(\.clef) == [.treble, .bass, .grand] && rd.lessons[0].right != nil && rd.lessons[0].left == nil
+              && rd.lessons[1].left != nil && rd.lessons[1].right == nil && rd.lessons[2].right != nil && rd.lessons[2].left != nil,
+              rd.lessons.map(\.id).joined(separator: " "))
+        let short = #"{"module":{"code":"X","title":"X","detail":""},"track":"band-blues-C","tempo":70,"key":"C","channel":"horns","chords":{},"cleanShare":0.9,"gate":2,"lessons":[{"id":"X1","title":"X","goal":"","clef":"treble","names":"on","right":["C4/q E4/q"],"fingers":{"right":{"C4":1,"E4":3}},"cheat":{"title":"","lead":"","notes":[],"mnemonics":[],"tip":"","values":false}}]}"#
+        check("reading: a bar that doesn't add up to four beats traps at load", (try? Reading.load(Data(short.utf8))) == nil)
+        check("reading: pitches", Reading.pitch("C4")?.midi == 60 && Reading.pitch("F#3")?.midi == 54 && Reading.pitch("Bb4")?.midi == 70
+              && Reading.pitch("H4") == nil)
+        func st(_ p: String, _ c: Reading.Clef) -> Int? {
+            let x = Reading.pitch(p)!
+            return Reading.step(Reading.Event(midi: x.midi, beats: 1, finger: 1, hand: .right, letter: x.letter, accidental: x.accidental), clef: c)
+        }
+        let trebleSteps = ["C4", "E4", "G4", "B4", "F5", "F#4"].map { st($0, .treble)! }
+        let bassSteps = ["G2", "C3", "F3", "A3", "C4"].map { st($0, .bass)! }
+        check("reading: staff steps (treble middle C -2, E on the bottom line; bass G on the bottom line, middle C 10)",
+              trebleSteps == [-2, 0, 2, 4, 8, 1] && bassSteps == [0, 3, 6, 8, 10], "\(trebleSteps) \(bassSteps)")
+        check("reading: places", Reading.place(step: 2, clef: .treble) == "Second line" && Reading.place(step: 1, clef: .treble) == "First space"
+              && Reading.place(step: 3, clef: .bass) == "Second space" && Reading.place(step: 6, clef: .bass) == "Fourth line"
+              && Reading.place(step: -2, clef: .treble) == "Middle C, its own little line" && Reading.place(step: 10, clef: .bass) == "Middle C, its own little line")
+        func ev(_ p: String, _ f: Int, _ h: Reading.Hand) -> Reading.Event {
+            let x = Reading.pitch(p)!
+            return Reading.Event(midi: x.midi, beats: 1, finger: f, hand: h, letter: x.letter, accidental: x.accidental)
+        }
+        let coachLines = [Reading.coach([ev("G4", 5, .right)], lesson: .treble), Reading.coach([ev("C3", 5, .left)], lesson: .bass),
+                          Reading.coach([ev("F3", 2, .left), ev("F4", 4, .right)], lesson: .grand)]
+        check("reading: the coach says the name, the place, the finger",
+              coachLines == ["G. Second line. Pinky.", "C. Second space. Pinky, left hand.", "F. First space. Ring. Left hand F."],
+              coachLines.joined(separator: " | "))
+        check("reading: numerals", Reading.numeral("C", key: "C") == "I" && Reading.numeral("F7", key: "C") == "IV"
+              && Reading.numeral("G", key: "C") == "V" && Reading.numeral("Dm7", key: "C") == "II")
+        let rs1 = rd.song(rd.lessons[0])
+        let rn1 = rs1.notes(.melody)
+        let perChorus: Int = rd.lessons[0].right!.map { (bar: String) -> Int in bar.split(separator: " ").filter { !$0.hasPrefix("r/") }.count }.reduce(0, +)
+        let firstThree: [[Int]] = rn1.prefix(3).map { n -> [Int] in [n.t, n.n, n.f ?? 0] }
+        let wholeChoruses = rs1.exact && rs1.bars % 12 == 0 && rn1.count == perChorus * rs1.bars / 12
+        check("reading: lesson 1's song is whole choruses of the line, every note written",
+              wholeChoruses && firstThree == [[0, 60, 1], [12, 64, 3], [24, 67, 5]] && rn1[2].len == 23,
+              "\(rs1.bars) bars, \(rn1.count) notes")
+        let rg1 = GameEngine(song: rs1, part: .melody, difficulty: .hard)
+        check("reading: the engine plays every note at one tier with the file's fingers",
+              rg1.tiers == 1 && rg1.notes.indices.allSatisfy { rg1.active($0) && rg1.finger($0) == rg1.notes[$0].f })
+        let rline1 = rd.line(rd.lessons[0], bars: 12, ticksPerBeat: 12)
+        check("reading: the line keeps its rests (bars 4 and 8)", rline1.filter(\.rest).map(\.tick) == [3 * 48 + 24, 7 * 48 + 24])
+        let rs3 = rd.song(rd.lessons[2])
+        let lhFirst = rs3.notes(.melody).filter { $0.n < 60 }.prefix(2).map(\.t)
+        check("reading: both hands in one part, the left a whole note a bar", Array(lhFirst) == [0, 48] && rs3.notes(.melody).first { $0.n < 60 }?.f == 5)
+        check("reading: a chorus is clean at 90% of its notes", Reading.chorus(played: 9, of: 10, cleanShare: 0.9)
+              && !Reading.chorus(played: 8, of: 10, cleanShare: 0.9) && !Reading.chorus(played: 0, of: 0, cleanShare: 0.9))
+
         print("LessonCheck: \(passed) passed, \(failed) failed")
         return failed == 0
     }

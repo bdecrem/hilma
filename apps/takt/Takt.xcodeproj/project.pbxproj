@@ -208,6 +208,7 @@
 		3C1EA57DD7F5B2B34829D888 /* gtr-37-2-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 284DB034DF3E62522C5B3946 /* gtr-37-2-2.caf */; };
 		3C503C7C843FEE5B474CF5EE /* call-done.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3BB6DC4F666BAE08EF40FC64 /* call-done.caf */; };
 		3C639C727C47586BB97C1B52 /* launch-deep-b3.caf in Resources */ = {isa = PBXBuildFile; fileRef = F64077B05D1503E32B28781A /* launch-deep-b3.caf */; };
+		3C8A043C7C6B3532537827DD /* Reading.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9889BC4318CFD5B72439A190 /* Reading.swift */; };
 		3CA229EEA0D45F2AB9ADCD88 /* egt-69-3-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 8A4D3A3297DBAAA11519E4C2 /* egt-69-3-2.caf */; };
 		3CAF2C7361F0E087EC6A2943 /* MIDIFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FB00222D362D7FD1557F9ED /* MIDIFile.swift */; };
 		3D2736533FD72DC914C57397 /* launch-blues-b3.caf in Resources */ = {isa = PBXBuildFile; fileRef = 72305F88EC20B6F3ADEB7EFE /* launch-blues-b3.caf */; };
@@ -510,6 +511,7 @@
 		8A10CA7685663E951B7BFB53 /* syn-hatOpenDH-0b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 19F2C083582AEB28FE594E4D /* syn-hatOpenDH-0b.caf */; };
 		8A25A56C7AE2F99B684A89BC /* tomLo-2b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9B5AC6B39D1D0D30706D4475 /* tomLo-2b.caf */; };
 		8AFD26F694758D3E21A60873 /* ProgressStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 345B9C65560B4950C621F712 /* ProgressStore.swift */; };
+		8B53C1236B3D8FEC9D0D0F7B /* Player+Reading.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7412D4CF9736BE1347D973CF /* Player+Reading.swift */; };
 		8BC9F1FDF95837894516D558 /* snare-4c.caf in Resources */ = {isa = PBXBuildFile; fileRef = 4502C7364A5FFDD4E741859E /* snare-4c.caf */; };
 		8C2CA8D1ED0A9C05CF7CF5E9 /* egt-75-4-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 4467CBBE380D0B74FFC84EE6 /* egt-75-4-1.caf */; };
 		8C4335971FDD5A30166788B6 /* sax-76-s.caf in Resources */ = {isa = PBXBuildFile; fileRef = E8A75BFF12540BD4900190A4 /* sax-76-s.caf */; };
@@ -730,6 +732,7 @@
 		C95504C75C8AD7AC0C7C74E6 /* saxl-58.caf in Resources */ = {isa = PBXBuildFile; fileRef = 1C19A0BA4C401C900E7DC5CA /* saxl-58.caf */; };
 		C98434EF327EDFED83EAE9A3 /* egmute-3.caf in Resources */ = {isa = PBXBuildFile; fileRef = C75C9D7C3FCB5E0F7E7C9650 /* egmute-3.caf */; };
 		C9D5166DCE8CEB1942FAB996 /* kick-0b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 82C6BD3B224C6C9D16ADDA69 /* kick-0b.caf */; };
+		C9ED332074959E8AE511D846 /* reading-R.json in Resources */ = {isa = PBXBuildFile; fileRef = B8B043ACC1BBEADA13414C94 /* reading-R.json */; };
 		CA4BC5C01CB8AC5A0A272EB0 /* gmute-55-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = FC6FC34AAB18015C7FE97C00 /* gmute-55-1.caf */; };
 		CAC2A36B48CCF893F9EF65BF /* syn-bleep-72-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = F32E8380D84CD6774232EC48 /* syn-bleep-72-2.caf */; };
 		CB07623D91F644CD3487B119 /* egt-75-1-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = CBD3D69F35032E7B5274A93B /* egt-75-1-2.caf */; };
@@ -808,6 +811,7 @@
 		DEFF544E38DBFDE108CCBB19 /* syn-bleep-57-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 844127AD3D01F28724943CC8 /* syn-bleep-57-2.caf */; };
 		DFF55AA8DBD6E38C474966E1 /* gperc-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = EDA25993D0C94777F4BE3DC2 /* gperc-2.caf */; };
 		E03D4918BE4C14C22270A1A4 /* gtr-57-2-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 43813C626F763BE9CA67C67B /* gtr-57-2-2.caf */; };
+		E051FB4D4955261B7864E461 /* ReadingStage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BEB8CA2CE12DE6F5AB5E1E5 /* ReadingStage.swift */; };
 		E08CC6293F0BB2640770A436 /* syn-bassDH-32.caf in Resources */ = {isa = PBXBuildFile; fileRef = EDDB6276FBCD048C3D911FC0 /* syn-bassDH-32.caf */; };
 		E1427314DA1968F8B4681B13 /* AudioEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0A80DA756328D46986C659 /* AudioEngine.swift */; };
 		E15817F171D4406FB89B74F2 /* pno-89-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 1E1A36038FBAEDDDF2A9B412 /* pno-89-2.caf */; };
@@ -911,6 +915,7 @@
 		F9CF2CF7978FDD1C0A21B144 /* rho-71-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = D89D22659C142D873A3EE0FF /* rho-71-2.caf */; };
 		FA2AA969EC41471263D6E52F /* gtr-75-2-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 8450AFA100BAFC1C3F93BC54 /* gtr-75-2-2.caf */; };
 		FA86DC7F602882B9D46D2654 /* Fingering.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E265BEC0D78EFE05ABF5192 /* Fingering.swift */; };
+		FAA0CAB11E04F1B78A70032A /* ReadingModuleScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B56E2FAB895A85E674B76A5 /* ReadingModuleScreen.swift */; };
 		FAFE413E656E162D855A1ED6 /* gtr-57-1-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 357E512989038C36CD2D5482 /* gtr-57-1-2.caf */; };
 		FBA10ED6E71BC6074983A162 /* egt-40-2-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 23E04196A27FBB05E3C8262D /* egt-40-2-2.caf */; };
 		FBDA0588574DD93815CDFB4D /* Player+Debug.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B321BCE7BA25197591B04CA /* Player+Debug.swift */; };
@@ -966,6 +971,7 @@
 		0B26863B63DA1BADC4F27B21 /* bass-33.caf */ = {isa = PBXFileReference; path = "bass-33.caf"; sourceTree = "<group>"; };
 		0B7846EF9A880EEB0ABCCC2C /* org-76.caf */ = {isa = PBXFileReference; path = "org-76.caf"; sourceTree = "<group>"; };
 		0B83E63819D17057BC27FF18 /* gtr-40-2-1.caf */ = {isa = PBXFileReference; path = "gtr-40-2-1.caf"; sourceTree = "<group>"; };
+		0BEB8CA2CE12DE6F5AB5E1E5 /* ReadingStage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingStage.swift; sourceTree = "<group>"; };
 		0C2083097EB7171296D78F12 /* Call.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Call.swift; sourceTree = "<group>"; };
 		0C5E53554552169E0F03A86D /* NoteNeedle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteNeedle.swift; sourceTree = "<group>"; };
 		0C87F42F08B755A7DD365B4F /* PadGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PadGrid.swift; sourceTree = "<group>"; };
@@ -1008,6 +1014,7 @@
 		19F2C083582AEB28FE594E4D /* syn-hatOpenDH-0b.caf */ = {isa = PBXFileReference; path = "syn-hatOpenDH-0b.caf"; sourceTree = "<group>"; };
 		1A79614D331910C547766C76 /* egmute-4.caf */ = {isa = PBXFileReference; path = "egmute-4.caf"; sourceTree = "<group>"; };
 		1B1C8AE9402CF726CDE67A87 /* syn-hatDub16-0b.caf */ = {isa = PBXFileReference; path = "syn-hatDub16-0b.caf"; sourceTree = "<group>"; };
+		1B56E2FAB895A85E674B76A5 /* ReadingModuleScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingModuleScreen.swift; sourceTree = "<group>"; };
 		1B87220FBA0DB51E7614E0B2 /* syn-bleep-78-2.caf */ = {isa = PBXFileReference; path = "syn-bleep-78-2.caf"; sourceTree = "<group>"; };
 		1B99862868BC876AB2F9CA94 /* gtr-54-2-1.caf */ = {isa = PBXFileReference; path = "gtr-54-2-1.caf"; sourceTree = "<group>"; };
 		1BE9E1FDBFAAC87730C4C160 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
@@ -1328,6 +1335,7 @@
 		73A56DE6333E64E33B43800D /* rho-29-1.caf */ = {isa = PBXFileReference; path = "rho-29-1.caf"; sourceTree = "<group>"; };
 		73E28D3A2CB1F4DEF189BCD2 /* ResultScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultScreen.swift; sourceTree = "<group>"; };
 		7401172E0F08056ED38EEB1C /* egt-42-3-2.caf */ = {isa = PBXFileReference; path = "egt-42-3-2.caf"; sourceTree = "<group>"; };
+		7412D4CF9736BE1347D973CF /* Player+Reading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Player+Reading.swift"; sourceTree = "<group>"; };
 		76503928B2805F4DFE568B23 /* pno-83-1.caf */ = {isa = PBXFileReference; path = "pno-83-1.caf"; sourceTree = "<group>"; };
 		76584AFAC158D7CF1DF38E00 /* sax-57-h.caf */ = {isa = PBXFileReference; path = "sax-57-h.caf"; sourceTree = "<group>"; };
 		765EC5583C83A92403A4D041 /* rho-62-4.caf */ = {isa = PBXFileReference; path = "rho-62-4.caf"; sourceTree = "<group>"; };
@@ -1459,6 +1467,7 @@
 		976A3C658DD5A2652B664445 /* egt-37-4-2.caf */ = {isa = PBXFileReference; path = "egt-37-4-2.caf"; sourceTree = "<group>"; };
 		97A0CA72A6CF2972C2B748E0 /* egt-75-2-2.caf */ = {isa = PBXFileReference; path = "egt-75-2-2.caf"; sourceTree = "<group>"; };
 		9887F83D6990F74ED1B9207B /* snare-1c.caf */ = {isa = PBXFileReference; path = "snare-1c.caf"; sourceTree = "<group>"; };
+		9889BC4318CFD5B72439A190 /* Reading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reading.swift; sourceTree = "<group>"; };
 		99B4B28D145F72838834F9BC /* egt-37-3-2.caf */ = {isa = PBXFileReference; path = "egt-37-3-2.caf"; sourceTree = "<group>"; };
 		9A10E398341B26B7DB8E5555 /* egt-37-2-2.caf */ = {isa = PBXFileReference; path = "egt-37-2-2.caf"; sourceTree = "<group>"; };
 		9A42659E5B70584DC16AA342 /* gtr-63-1-2.caf */ = {isa = PBXFileReference; path = "gtr-63-1-2.caf"; sourceTree = "<group>"; };
@@ -1558,6 +1567,7 @@
 		B85928F90C85C89D592A62C8 /* hat-4b.caf */ = {isa = PBXFileReference; path = "hat-4b.caf"; sourceTree = "<group>"; };
 		B86DF4CFAD1CE758411787CC /* gtr-84-3-1.caf */ = {isa = PBXFileReference; path = "gtr-84-3-1.caf"; sourceTree = "<group>"; };
 		B87252E87FC7D6798123084B /* AgentSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSheet.swift; sourceTree = "<group>"; };
+		B8B043ACC1BBEADA13414C94 /* reading-R.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "reading-R.json"; sourceTree = "<group>"; };
 		B8EF0E657DD9D6482D0CAA66 /* sax-54-h.caf */ = {isa = PBXFileReference; path = "sax-54-h.caf"; sourceTree = "<group>"; };
 		B913F2131C26C47D92F45C9D /* egt-72-1-1.caf */ = {isa = PBXFileReference; path = "egt-72-1-1.caf"; sourceTree = "<group>"; };
 		B92BB72CACB4C5672A4BEE11 /* bass-31.caf */ = {isa = PBXFileReference; path = "bass-31.caf"; sourceTree = "<group>"; };
@@ -1989,6 +1999,7 @@
 				3946539C0524DDA802585674 /* MapScreen.swift */,
 				2BB01E243F17BCA073D93544 /* ModuleScreen.swift */,
 				A9C34FA7B4C94CA0F72FFDB8 /* QuizScreen.swift */,
+				1B56E2FAB895A85E674B76A5 /* ReadingModuleScreen.swift */,
 				73E28D3A2CB1F4DEF189BCD2 /* ResultScreen.swift */,
 				4287A8E13F473563716A0973 /* SettingsScreen.swift */,
 				7041194702FC13A037191652 /* StageScreen.swift */,
@@ -2037,6 +2048,7 @@
 				6B321BCE7BA25197591B04CA /* Player+Debug.swift */,
 				A94E9FC88A39C17800EA229B /* Player+Demo.swift */,
 				5D0D3D458E0B4C355A9F6F2D /* Player+Improv.swift */,
+				7412D4CF9736BE1347D973CF /* Player+Reading.swift */,
 				637E02678A7B00BE1FB868B6 /* Player+Stage.swift */,
 				D3C00D3F5A32BEDE9DE2A23B /* PressQueue.swift */,
 				11BD6025BB5E69D21B9A0B1F /* RunPanel.swift */,
@@ -2087,6 +2099,7 @@
 				D3F53FD48CE9B89241FFB481 /* lesson-S1m.json */,
 				8126E18CD90A6679714BEC02 /* map-blues.json */,
 				50960A8BB0999D357DE62B40 /* plan-blues-year-1.json */,
+				B8B043ACC1BBEADA13414C94 /* reading-R.json */,
 				EEEF033DB9357648BCDCCD17 /* song-abyss-ref.json */,
 				E3111C9819000EB6D6BD3E5F /* song-abyss.json */,
 				A3DB69A4869CEE1C795FB453 /* song-blue-lantern-white.json */,
@@ -2130,6 +2143,8 @@
 				7E265BEC0D78EFE05ABF5192 /* Fingering.swift */,
 				32BBCE009EFC44289758DDC5 /* GameEngine.swift */,
 				A4D47A815704904DF95A5F08 /* GameScreen.swift */,
+				9889BC4318CFD5B72439A190 /* Reading.swift */,
+				0BEB8CA2CE12DE6F5AB5E1E5 /* ReadingStage.swift */,
 				F43509FD82D84A6E1255B37C /* Song.swift */,
 			);
 			path = Game;
@@ -3508,6 +3523,7 @@
 				4F99D09614EABEC78C65ADC0 /* pno-93-2.caf in Resources */,
 				896A67B877A6CDB7653B1480 /* pno-95-1.caf in Resources */,
 				9B2B7BD8F914A6A208B36734 /* pno-95-2.caf in Resources */,
+				C9ED332074959E8AE511D846 /* reading-R.json in Resources */,
 				AD0B50F8EA638AD878EB572A /* rho-29-1.caf in Resources */,
 				0CA2F59CE1D482E88E4CE77D /* rho-29-2.caf in Resources */,
 				EBB9E49B4BC412C04EB4E86E /* rho-29-3.caf in Resources */,
@@ -3924,12 +3940,16 @@
 				FBDA0588574DD93815CDFB4D /* Player+Debug.swift in Sources */,
 				BA05B6014956A29DE91B4C49 /* Player+Demo.swift in Sources */,
 				6AE528146D2ABF694497FC01 /* Player+Improv.swift in Sources */,
+				8B53C1236B3D8FEC9D0D0F7B /* Player+Reading.swift in Sources */,
 				78B5DC068C79B780750D62DF /* Player+Stage.swift in Sources */,
 				DE7FE10E0696FBE76644959D /* Player.swift in Sources */,
 				A6E2E96ADE25CF8E27C9308B /* PressQueue.swift in Sources */,
 				8AFD26F694758D3E21A60873 /* ProgressStore.swift in Sources */,
 				F5E48B65451195E56EB8CFE6 /* Quiz.swift in Sources */,
 				CD2A1678E6F4475BD791FB2D /* QuizScreen.swift in Sources */,
+				3C8A043C7C6B3532537827DD /* Reading.swift in Sources */,
+				FAA0CAB11E04F1B78A70032A /* ReadingModuleScreen.swift in Sources */,
+				E051FB4D4955261B7864E461 /* ReadingStage.swift in Sources */,
 				495537C6E5D2EC4AA4A7E72F /* ResultScreen.swift in Sources */,
 				878DE3099612052F76923FAD /* RunPanel.swift in Sources */,
 				2280B159810DADB2C948CEFC /* Scorer.swift in Sources */,

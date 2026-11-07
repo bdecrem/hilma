@@ -144,6 +144,8 @@ struct RootView: View {
                 ModuleScreen(app: app, code: app.currentModule)
             case .earModule:
                 EarModuleScreen(app: app)
+            case .readingModule:
+                ReadingModuleScreen(app: app)
             case .earGame:
                 if let run = app.ear, let round = app.earRound {
                     EarGameScreen(app: app, kind: app.earKind, run: run, round: round)
@@ -210,7 +212,7 @@ struct RootView: View {
     /// you paused stays paused.
     private func syncMenuMusic(toggled: Bool = false) {
         switch app.route {
-        case .lessons, .map, .module, .earModule, .settings, .stage:
+        case .lessons, .map, .module, .earModule, .readingModule, .settings, .stage:
             if !menuMusic && player.playing { player.togglePlay() }
             if menuMusic && toggled && !player.playing { player.togglePlay() }
         case .lesson:
@@ -282,14 +284,15 @@ struct LiveGameScreen: View {
                 togglePlay: player.togglePlay,
                 again: player.restartGame,
                 leave: app.leaveGame,
-                leaveTitle: app.fromLevel == nil ? "Set list" : "Map",
+                leaveTitle: player.reading != nil ? "Reading" : app.fromLevel == nil ? "Set list" : "Map",
                 practice: player.practiceFromHere,
                 practiceSeek: { player.practiceSeek(bar: $0) },
                 practiceBack: { player.practiceBack() },
                 run: player.leavePractice,
                 tempo: player.nudgeGameTempo,
                 agent: { app.openAgent(fromGame: player) },
-                call: player.toggleCall
+                call: player.toggleCall,
+                readingNames: player.cycleReadingNames
             ))
     }
 }

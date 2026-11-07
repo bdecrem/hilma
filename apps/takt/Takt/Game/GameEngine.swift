@@ -244,10 +244,11 @@ final class GameEngine {
         ticksPerBeat = song.band.ticksPerBeat
         ticksPerBar = song.ticksPerBar
         let notes = song.notes(part)
-        let masks = song.masks(part, charting: charting)
+        // A Reading line is played as written: one tier, every note, its own fingers.
+        let masks = song.exact ? [notes.map { _ in true }] : song.masks(part, charting: charting)
         self.notes = notes
         self.masks = masks
-        fingers = part == .melody ? masks.map { m in
+        fingers = song.exact ? [notes.map(\.f)] : part == .melody ? masks.map { m in
             let on = notes.indices.filter { m[$0] }
             let f = Fingering.plan(on.map { notes[$0] }, ticksPerBeat: song.band.ticksPerBeat)
             var row = [Int?](repeating: nil, count: notes.count)
@@ -257,7 +258,7 @@ final class GameEngine {
         status = Array(repeating: .pending, count: notes.count)
         let window = charting.adaptive.window
         let blocks = (song.band.bars + window - 1) / window + 1
-        let first = charting.tier(difficulty, song: song.name, part: part) ?? start ?? charting.adaptive.start
+        let first = song.exact ? 1 : charting.tier(difficulty, song: song.name, part: part) ?? start ?? charting.adaptive.start
         startLevel = max(1, min(masks.count, first))
         blockLevel = Array(repeating: startLevel, count: blocks)
     }

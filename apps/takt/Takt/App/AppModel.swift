@@ -3,7 +3,7 @@ import SwiftUI
 /// Which screen is up. The band plays under every one of them (principle 1: the band is
 /// already playing); only the lesson screen scores what you play.
 enum Route: Equatable {
-    case lessons, map, module, earModule, lesson, result, settings, calibrate, quiz, earGame, stage, game
+    case lessons, map, module, earModule, readingModule, lesson, result, settings, calibrate, quiz, earGame, stage, game
 }
 
 /// The app's screens and what they share: the player (band, monitor, lesson), the progress
@@ -468,6 +468,10 @@ final class AppModel {
             case "lesson": route = .lesson
             case "module": route = .module
             case "earmodule": route = .earModule
+            case "readingmodule": route = .readingModule
+            case "reading":
+                // `-Route reading -Reading n` opens lesson n of the Reading module, held at bar 1.
+                startReading(max(1, d.integer(forKey: "Reading")) - 1)
             case "settings": route = .settings
             case "calibrate": route = .calibrate
             case "map":
@@ -705,6 +709,27 @@ final class AppModel {
         }
     }
 
+    // MARK: Reading
+
+    /// A Reading lesson is done after two clean choruses (`Player.runReading`), kept with the
+    /// module's record as its id.
+    func readingDone(_ index: Int) -> Bool {
+        let r = Reading.bundled
+        return progress.lesson(r.module.code).jamsDone.contains(r.lessons[index].id)
+    }
+
+    var readingDoneCount: Int { Reading.bundled.lessons.indices.filter(readingDone).count }
+
+    /// The first Reading lesson not done, else the first.
+    var nextReadingLesson: Int { Reading.bundled.lessons.indices.first { !readingDone($0) } ?? 0 }
+
+    /// Lesson `index` of the Reading module: the track held at bar 1, the staff, play counts in.
+    func startReading(_ index: Int) {
+        guard let player else { return }
+        player.startReading(.bundled, lesson: index, done: readingDone(index))
+        route = .game
+    }
+
     /// The ear module's next lesson: the first not done, else the first.
     var nextEarLesson: LessonEntry {
         LessonEntry.earLessons.first { !earLessonDone($0.entry) }?.entry ?? LessonEntry.earLessons[0].entry
@@ -895,6 +920,11 @@ final class AppModel {
     /// Back to the set list, or to the map's level when a goal started the song: the lesson's
     /// band comes back.
     func leaveGame() {
+        if player?.reading != nil {
+            player?.endGame()
+            route = .readingModule
+            return
+        }
         player?.endGame()
         if let level = fromLevel {
             route = .map
@@ -938,6 +968,9 @@ extension AppModel {
         if entry.kind == .earModule {
             return .module(done: LessonEntry.earLessons.filter { earLessonDone($0.entry) }.count, of: LessonEntry.earLessons.count)
         }
+        if entry.kind == .readingModule {
+            return .module(done: readingDoneCount, of: Reading.bundled.lessons.count)
+        }
         if case .game(let kind) = entry.kind { return .game(kind, level: progress.ear(kind).level) }
         if entry.kind == .quiz {
             let q = progress.snapshot.quiz
@@ -958,6 +991,7 @@ extension AppModel {
         case .game(let kind): startEarGame(kind)
         case .lesson: openModule(entry.code)
         case .earModule: route = .earModule
+        case .readingModule: route = .readingModule
         }
     }
 }
@@ -965,7 +999,7 @@ extension AppModel {
 /// The catalog the menu shows. A1 is the lesson, Q1 the quiz (the ear check, then a daily five);
 /// A2 is a stub until it exists (brief §5: "A2 stub screen only"), unlocked by finishing A1.
 struct LessonEntry: Identifiable {
-    enum Kind: Equatable { case lesson, quiz, game(EarGame.Kind), earModule }
+    enum Kind: Equatable { case lesson, quiz, game(EarGame.Kind), earModule, readingModule }
     let kind: Kind
     let code: String
     let title: String
@@ -997,6 +1031,10 @@ struct LessonEntry: Identifiable {
         (catalog[3], "Ear and form", "Find your level, then five questions a day"),
     ]
 
+    /// The Reading module (2026-11-07): read the staff, a hand at a time, to a track.
+    static let reading = LessonEntry(kind: .readingModule, code: "R", title: "Reading", meta: "Treble, bass, both · 3 lessons",
+                                     after: nil, playable: true)
+
     static let scales = LessonEntry(kind: .lesson, code: "S", title: "Scales", meta: "Both hands · octaves, pentatonics, new keys, modes · 13 lessons",
                                     after: nil, playable: true)
     static let minor = LessonEntry(kind: .lesson, code: "M", title: "Minor Chords", meta: "Left hand · the minor blues in every key · 13 lessons",
@@ -1007,5 +1045,5 @@ struct LessonEntry: Identifiable {
     /// Level 1 on the map, in order: the modules and what comes after them.
     static let path = [scales, ear, shapes, minor, catalog[0]]
 
-    var module: Bool { kind == .lesson || kind == .earModule }
+    var module: Bool { kind == .lesson || kind == .earModule || kind == .readingModule }
 }
