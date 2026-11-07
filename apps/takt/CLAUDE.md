@@ -1771,8 +1771,11 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   `-ImprovReview` alone none is written), `-Route stage -Song <name> -Part melody -Difficulty
   solo` (picks on the card), `-Route game … -Difficulty solo -LoadMod <solo bundle>`.
   Screenshots: the Mac's Solo run (`-SnapshotAt "solo:620"`), the phone's Stage card, Solo run
-  and review sheet with the track. Not yet: TestFlight (still 104); a solo of a mod (the
-  improv's backing is always a bundled song).
+  and review sheet with the track. `npx tsx scripts/takt/solo-from-review.ts <email>` writes a
+  player's track from their latest reviewed take over a song (Bart's first, "Lantern climb",
+  from his take of 2026-11-06 evening: 121 notes, 0.88 a second, one fix for a run of eighths,
+  114 s). Not yet: TestFlight (still 104); a solo of a mod (the improv's backing is always a
+  bundled song).
 
 ## Code map (`Takt/`)
 
