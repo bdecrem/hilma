@@ -1942,7 +1942,11 @@ and a tempo change re-anchors on a downbeat. Band events fire on their exact fra
 - **Sounds (since 0.1 (5), 2026-10-25):** real recordings, no synthesis. Piano (monitor and
   KEYS): the VCSL Knight upright, whole-tone roots x 2 velocity layers; HORNS: two VCSL tenor
   saxes (staccato, held notes as `saxLong`); BASS: FreePats Finger Bass YR (E1..D#2, lines sit
-  low); DRUMS: MuldjordKit (CC BY 4.0, credit in `Licenses/README.md`) with velocity layers and
+  low); GUITARS: Karoryfer's Shinyguitar, an acoustic archtop (`guitar`, `guitarMute`, `guitarPerc`;
+  Dockery, Tutwiler) and Emilyguitar, an electric solid body recorded clean (`eguitar`,
+  `eguitarMute`; `scripts/eguitar.py`), dirtied by a channel amp (`Audio/GuitarAmp.swift`, a
+  band's `amp` per channel: drive, bias, tight, mid, tone, presence, level, room; Halsted);
+  YOUR KEYS also offer the sampled organ and Rhodes; DRUMS: MuldjordKit (CC BY 4.0, credit in `Licenses/README.md`) with velocity layers and
   round robins, plus a VCSL hat foot chick. `scripts/sounds-fetch.sh <dir>` downloads the sources,
   `scripts/sounds.py <dir>` (numpy + soundfile in a scratch venv) cuts them into `Sounds/*.caf`
   (ALAC, onset-trimmed so hits fire on their frame) and `Sounds/instruments.json`.
