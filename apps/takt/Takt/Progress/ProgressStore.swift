@@ -137,6 +137,9 @@ final class ProgressStore {
         /// XP earned, one entry per thing that earned it (`XPEntry`); a done goal earns its own
         /// from `goals` (`ProgressStore.xp`).
         var xp: [XPEntry] = []
+        /// The Stage's pinned tracks (bundled song names), when the player has changed them:
+        /// nil is the default set (`StageScreen.defaultPins`). The newer set wins a merge.
+        var pins: Pins?
 
         init() {}
 
@@ -153,7 +156,31 @@ final class ProgressStore {
             practice = try c.decodeIfPresent([PracticeEntry].self, forKey: .practice) ?? []
             goals = LearningPlan.migrated(try c.decodeIfPresent([String: GoalRecord].self, forKey: .goals) ?? [:])
             xp = try c.decodeIfPresent([XPEntry].self, forKey: .xp) ?? []
+            pins = try c.decodeIfPresent(Pins.self, forKey: .pins)
         }
+    }
+
+    /// The Stage's pinned tracks and when they were last set (Bart, 2026-11-07: pinned tracks
+    /// show by default, the rest sit under All tracks).
+    struct Pins: Codable, Equatable {
+        var songs: [String]
+        var at: Date
+
+        /// Two devices' sets: the one set last.
+        static func merge(_ a: Pins?, _ b: Pins?) -> Pins? {
+            guard let a else { return b }
+            guard let b else { return a }
+            return b.at > a.at ? b : a
+        }
+    }
+
+    /// Pins a bundled song to the Stage, or unpins it, from the set as it stands (`current`,
+    /// the default until the player has changed it).
+    func setPinned(_ song: String, _ on: Bool, current: [String], at date: Date = Date()) {
+        var songs = current.filter { $0 != song }
+        if on { songs.append(song) }
+        snapshot.pins = Pins(songs: songs, at: date)
+        save()
     }
 
     /// XP for one thing done (Improv.XP has the amounts): an id that says what and which

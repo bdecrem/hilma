@@ -1842,6 +1842,23 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   `-menuMusic NO -ClockTo`: silent on Learn and Stage, rolling with YES). chat-check 20/20,
   `-LessonCheck` 468/468.
 
+- **Pinned tracks on the Stage. 2026-11-07.** Bart: "pinned tracks are the ones we show by
+  default, and not pinned just means it's under All Tracks… a context menu or some such to
+  unpin… the same for tracks under All Tracks to pin them… lightweight and not ugly". Every
+  bundled song's card has a small pin in its top-right corner (filled when pinned, an outline
+  under All tracks; quiet until hovered on the Mac, with a tooltip); a tap pins or unpins, and
+  so does the card's context menu (right-click on the Mac, long-press on the phone: "Unpin ·
+  move to All tracks" / "Pin to the Stage"). The card moves at once and a line slides up above
+  the tab bar for four seconds, "Slow Burn moved to All tracks · Undo" or "… is pinned · Undo".
+  Pinned tracks show in set-list order, each with the player's mods under it (a mod's card has
+  no pin; it goes with its song); with nothing pinned the Stage says so and opens All tracks.
+  The set lives in the progress snapshot (`Snapshot.pins`: the songs and when they were set,
+  nil = `StageScreen.defaultPins`, the first six of the catalog), so it syncs between the Mac and
+  the phone; a merge keeps the set changed last. `AppModel.pinnedSongs / isPinned / setPinned`,
+  `ProgressStore.setPinned`, `PinButton`, `PinToastView`. The library and the chat teacher know
+  about pinning. DEBUG `-Pinned "a,b"` shows that set, `-PinTap <song>` taps its pin a second
+  in. Checks 471/471 (three pin cases).
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

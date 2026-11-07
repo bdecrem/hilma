@@ -9,9 +9,12 @@ struct StageScreen: View {
     @State private var board: Song?
     /// `-AllTracks 1` opens the card at launch (the screenshots).
     @State private var allTracks = UserDefaults.standard.bool(forKey: "AllTracks")
-    /// How many songs the set list shows in full (the four blues tracks and the two Delta ones,
-    /// Bart 2026-11-01); the rest go under "All tracks".
-    static let featured = 6
+    /// The tracks pinned until the player changes them (the four blues tracks and the two Delta
+    /// ones, Bart 2026-11-01); the rest go under "All tracks". The player's own set is
+    /// `AppModel.pinnedSongs` (2026-11-07: the pin on a card, or its context menu).
+    static let defaultPins = Array(Song.catalog.prefix(6))
+    /// The line under the stage after a pin or an unpin, with Undo, for a few seconds.
+    @State private var toast: PinToast?
 
     /// "Ten" for 10: the count of songs, in words up to twelve.
     static func spelled(_ n: Int) -> String {
@@ -21,10 +24,10 @@ struct StageScreen: View {
 
     var body: some View {
         let compact = sizeClass == .compact
-        // The featured tracks and the player's own versions of them; the rest under All tracks.
-        let featuredRoots = Set(Song.catalog.prefix(Self.featured))
-        let featured = app.songs.filter { featuredRoots.contains(app.rootName($0)) }
-        let rest = app.songs.filter { !featuredRoots.contains(app.rootName($0)) }
+        // The pinned tracks and the player's own versions of them; the rest under All tracks.
+        let pinnedRoots = Set(app.pinnedSongs)
+        let featured = app.songs.filter { pinnedRoots.contains(app.rootName($0)) }
+        let rest = app.songs.filter { !pinnedRoots.contains(app.rootName($0)) }
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .center, spacing: 16) {
                 Text("Stage")
@@ -52,15 +55,21 @@ struct StageScreen: View {
                     // under it. The rest sit under a small "All tracks" card at the bottom, open
                     // on a tap (Bart, 2026-11-01).
                     ForEach(featured, id: \.name) { song in
-                        SongCard(app: app, song: song, compact: compact) { board = song }
+                        SongCard(app: app, song: song, compact: compact, onPin: pinAction(song)) { board = song }
                             .id(song.name)
+                    }
+                    if featured.isEmpty {
+                        Text("Nothing pinned. Pin a track under All tracks to keep it up here.")
+                            .bodyText(compact ? 13 : 14)
+                            .foregroundStyle(Palette.muted)
+                            .padding(.vertical, 6)
                     }
                     if !rest.isEmpty {
                         AllTracksCard(count: rest.count, names: rest.map(\.meta.title), open: $allTracks, compact: compact)
                             .id("all")
-                        if allTracks {
+                        if allTracks || featured.isEmpty {
                             ForEach(rest, id: \.name) { song in
-                                SongCard(app: app, song: song, compact: compact) { board = song }
+                                SongCard(app: app, song: song, compact: compact, onPin: pinAction(song)) { board = song }
                                     .id(song.name)
                             }
                         }
@@ -77,6 +86,11 @@ struct StageScreen: View {
             }
 
             Spacer(minLength: 12)
+            if let toast {
+                PinToastView(toast: toast, compact: compact) { undo(toast) }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .padding(.bottom, 10)
+            }
             if let player = app.player {
                 NowPlayingStrip(player: player)
             }
@@ -91,6 +105,100 @@ struct StageScreen: View {
         .sheet(item: $board) { song in
             BoardSheet(app: app, song: song)
         }
+        #if DEBUG
+        // `-PinTap <song>` taps that card's pin a second in (screenshots of the toast).
+        .task {
+            guard let name = UserDefaults.standard.string(forKey: "PinTap"), let song = app.bundledSongs.first(where: { $0.name == name }) else { return }
+            try? await Task.sleep(for: .seconds(1))
+            pinAction(song)?(!app.isPinned(song))
+        }
+        #endif
+        .task(id: toast?.id) {
+            guard toast != nil else { return }
+            try? await Task.sleep(for: .seconds(4))
+            withAnimation(.easeOut(duration: 0.2)) { toast = nil }
+        }
+    }
+
+    /// A bundled song's card pins or unpins it; a mod's card has no pin (it sits under its song).
+    private func pinAction(_ song: Song) -> ((Bool) -> Void)? {
+        guard song.mod == nil else { return nil }
+        return { on in
+            withAnimation(.easeInOut(duration: 0.25)) {
+                app.setPinned(song, on)
+                toast = PinToast(song: song.name, title: song.meta.title, pinned: on)
+            }
+        }
+    }
+
+    private func undo(_ t: PinToast) {
+        guard let song = app.bundledSongs.first(where: { $0.name == t.song }) else { return }
+        withAnimation(.easeInOut(duration: 0.25)) {
+            app.setPinned(song, !t.pinned)
+            toast = nil
+        }
+    }
+}
+
+/// What a pin or an unpin just did, for the line under the stage.
+struct PinToast: Equatable {
+    let id = UUID()
+    let song: String
+    let title: String
+    let pinned: Bool
+}
+
+/// "Slow Burn moved to All tracks · Undo": one quiet line, gone after a few seconds.
+struct PinToastView: View {
+    let toast: PinToast
+    let compact: Bool
+    let undo: () -> Void
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: toast.pinned ? "pin.fill" : "pin.slash")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(toast.pinned ? Palette.signal : Palette.muted)
+            Text(toast.pinned ? "\(toast.title) is pinned" : "\(toast.title) moved to All tracks")
+                .bodyText(compact ? 13 : 14)
+                .foregroundStyle(Palette.text)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+            Spacer(minLength: 8)
+            Button("Undo", action: undo)
+                .dataLabel(11, weight: .semibold)
+                .foregroundStyle(Palette.signal)
+                .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 14)
+        .frame(height: 40)
+        .background(RoundedRectangle(cornerRadius: 8).fill(Palette.panel))
+        .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Palette.line, lineWidth: 1))
+    }
+}
+
+/// The pin in a card's corner: filled when the track is pinned to the stage, an outline when it
+/// sits under All tracks. Quiet until hovered (Mac) or pressed.
+struct PinButton: View {
+    let pinned: Bool
+    let title: String
+    let action: () -> Void
+    @State private var hover = false
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: pinned ? "pin.fill" : "pin")
+                .font(.system(size: 13, weight: .semibold))
+                .rotationEffect(.degrees(45))
+                .foregroundStyle(hover ? Palette.text : pinned ? Palette.muted : Palette.muted.opacity(0.7))
+                .frame(width: 30, height: 30)
+                .background(RoundedRectangle(cornerRadius: 6).fill(hover ? Palette.ground : .clear))
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .onHover { hover = $0 }
+        .help(pinned ? "Unpin: move it to All tracks" : "Pin it to the Stage")
+        .accessibilityLabel(pinned ? "Unpin \(title)" : "Pin \(title)")
     }
 }
 
@@ -103,10 +211,13 @@ struct SongCard: View {
     let app: AppModel
     let song: Song
     let compact: Bool
+    /// Pin or unpin this track (nil on a mod's card: it goes with its song).
+    var onPin: ((Bool) -> Void)? = nil
     let showBoard: () -> Void
 
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: 8)
+        let pinned = app.isPinned(song)
         let part = app.stagePart(song)
         let difficulty = app.stageDifficulty(song)
         // Solo (0.1 (114)): the teacher's whole track from the player's take, a level of this
@@ -139,6 +250,10 @@ struct SongCard: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 0)
+                if let onPin {
+                    PinButton(pinned: pinned, title: song.meta.title) { onPin(!pinned) }
+                        .offset(x: compact ? 6 : 8, y: compact ? -6 : -8)
+                }
             }
             HStack(spacing: compact ? 10 : 16) {
                 Chips(title: "Part", options: song.partKeys.map { ($0.rawValue, $0.title) }, picked: part.rawValue) {
@@ -176,6 +291,14 @@ struct SongCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(shape.fill(Palette.panel))
         .overlay(shape.strokeBorder(Palette.line, lineWidth: 1))
+        .contentShape(.contextMenuPreview, shape)
+        .contextMenu {
+            if let onPin {
+                Button { onPin(!pinned) } label: {
+                    Label(pinned ? "Unpin · move to All tracks" : "Pin to the Stage", systemImage: pinned ? "pin.slash" : "pin")
+                }
+            }
+        }
     }
 
     /// Practice, a size down: the song held at bar 1, the scrubber and the speed. Call, the

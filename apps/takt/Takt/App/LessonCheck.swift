@@ -1775,6 +1775,31 @@ enum LessonCheck {
                 let fails = (try? ModStore.Bundle(data: JSONSerialization.data(withJSONObject: broken)).song()) == nil
                 check("mods: a bundle without a chords part is refused, not trapped", fails)
             }
+            // Pinned tracks (2026-11-07): the default set until the player changes it; pin and
+            // unpin keep the rest; two devices merge to the set changed last; old snapshots
+            // have none.
+            do {
+                let store = ProgressStore(url: nil)
+                let app = AppModel(player: nil, progress: store, account: AccountStore(progress: ProgressStore(url: nil)))
+                let first = songs.first { $0.name == StageScreen.defaultPins[0] }!, other = songs.first { !StageScreen.defaultPins.contains($0.name) }!
+                let byDefault = app.pinnedSongs == StageScreen.defaultPins && app.isPinned(first) && !app.isPinned(other)
+                app.setPinned(first, false)
+                app.setPinned(other, true)
+                let moved = !app.isPinned(first) && app.isPinned(other) && app.pinnedSongs.count == StageScreen.defaultPins.count
+                app.setPinned(other, true)
+                check("pins: the default set, then unpin one and pin another; pinning twice keeps one", byDefault && moved && app.pinnedSongs.filter { $0 == other.name }.count == 1, app.pinnedSongs.joined(separator: " "))
+                var a = ProgressStore.Snapshot(), b = ProgressStore.Snapshot()
+                a.pins = .init(songs: ["song-dockery"], at: Date(timeIntervalSince1970: 100))
+                b.pins = .init(songs: ["song-pearl-street", "song-boogie-shoes"], at: Date(timeIntervalSince1970: 200))
+                let none = ProgressStore.Snapshot()
+                check("pins: the set changed last wins a merge either way; a device without one keeps the other's",
+                      AccountStore.merge(a, b).pins == b.pins && AccountStore.merge(b, a).pins == b.pins && AccountStore.merge(none, a).pins == a.pins && AccountStore.merge(a, none).pins == a.pins)
+                let old = try JSONDecoder.takt.decode(ProgressStore.Snapshot.self, from: Data(#"{"lessons":{},"skills":{}}"#.utf8))
+                let round = try JSONDecoder.takt.decode(ProgressStore.Snapshot.self, from: JSONEncoder.takt.encode(a))
+                check("pins: a snapshot from before has none (the default), and a set survives the file", old.pins == nil && round.pins == a.pins)
+            } catch {
+                check("pins: snapshots decode", false, "\(error)")
+            }
             // The teacher's whole track (0.1 (114), IMPROV.md "The whole track"): a bundle of kind
             // "solo" is the Solo level of its base song, never a card; Solo plays every note.
             if let base = songs.first(where: { $0.name == "song-blue-lantern-white" }),

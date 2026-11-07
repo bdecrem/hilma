@@ -227,6 +227,7 @@ final class AccountStore {
         out.practice = ProgressStore.PracticeEntry.union(a.practice, b.practice)
         out.goals = a.goals.merging(b.goals) { GoalRecord.merge($0, $1) }
         out.xp = ProgressStore.XPEntry.union(a.xp, b.xp)
+        out.pins = ProgressStore.Pins.merge(a.pins, b.pins)
         if b.quiz.answered > a.quiz.answered || (a.quiz.level == nil && b.quiz.level != nil) { out.quiz = b.quiz }
         func most(_ x: ProgressStore.EarRecord, _ y: ProgressStore.EarRecord) -> ProgressStore.EarRecord {
             .init(level: max(x.level, y.level), best: max(x.best, y.best), answered: max(x.answered, y.answered))

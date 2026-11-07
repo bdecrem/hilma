@@ -32,11 +32,11 @@ export function libraryText(): string {
   )
   const songs = data.songs.map((s) => {
     const parts = s.parts.melody ? `chords "${s.parts.chords}", melody "${s.parts.melody}"` : `chords "${s.parts.chords}" only`
-    return `- ${s.title}: ${s.style.toLowerCase()} in ${keyName(s.key)}, ${s.tempo} bpm, ${length(s.seconds)}, ${s.choruses} ${s.choruses === 1 ? 'chorus' : 'choruses'} of ${s.chorus}. Sections: ${s.sections}. Parts: ${parts}. "${s.line}"${s.shelf === 'all tracks' ? ' (under All tracks on the Stage)' : ''}${s.uses.length ? ` Used as: ${s.uses.join('; ')}.` : ''}`
+    return `- ${s.title}: ${s.style.toLowerCase()} in ${keyName(s.key)}, ${s.tempo} bpm, ${length(s.seconds)}, ${s.choruses} ${s.choruses === 1 ? 'chorus' : 'choruses'} of ${s.chorus}. Sections: ${s.sections}. Parts: ${parts}. "${s.line}"${s.shelf === 'all tracks' ? ' (under All tracks unless the player pinned it)' : ''}${s.uses.length ? ` Used as: ${s.uses.join('; ')}.` : ''}`
   })
   return `The two lesson bands (backing loops, not Stage songs: they play under the lesson steps and jams of their modules, and on the menus as "the band"; a player can't pick one on its own, they get it by opening a step of that module; a step may move the band to another key):
 ${bands.join('\n')}
 
-The Stage songs (the set list, in order; each has a chords part and most a melody part, at Beginner, Easy, Easy+, Medium, Hard or Adaptive; a player may also have their own versions from Agent mode, and a Solo level the improv teacher wrote from their take):
+The Stage songs (the set list, in order; the first six are pinned to the Stage by default and the rest sit under All tracks, and a player can pin or unpin any of them; each has a chords part and most a melody part, at Beginner, Easy, Easy+, Medium, Hard or Adaptive; a player may also have their own versions from Agent mode, and a Solo level the improv teacher wrote from their take):
 ${songs.join('\n')}`
 }

@@ -85,7 +85,7 @@ export function buildLibrary(): Library {
   const songSwift = readFileSync(join(ROOT, 'apps/takt/Takt/Game/Song.swift'), 'utf8')
   const catalog = [...(/static let catalog = \[([^\]]*)\]/.exec(songSwift)?.[1] ?? '').matchAll(/"([^"]+)"/g)].map((m) => m[1])
   const stage = readFileSync(join(ROOT, 'apps/takt/Takt/Menu/StageScreen.swift'), 'utf8')
-  const featured = Number(/static let featured = (\d+)/.exec(stage)?.[1] ?? '6')
+  const featured = Number(/static let defaultPins = Array\(Song\.catalog\.prefix\((\d+)\)\)/.exec(stage)?.[1] ?? '6')
   const plan = json('plan-blues-year-1.json') as { levels: { n: number; title: string; items: Record<string, unknown>[] }[] }
   const lessonFiles = readdirSync(CONTENT).filter((f) => f.startsWith('lesson-') && f.endsWith('.json')).sort()
   const lessons = lessonFiles.map((f) => json(f) as {

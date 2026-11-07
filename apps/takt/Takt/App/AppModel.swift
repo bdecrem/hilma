@@ -792,6 +792,27 @@ final class AppModel {
         return out
     }
 
+    // MARK: Pinned tracks
+
+    /// The Stage's pinned tracks (bundled song names): the player's set, or the default. Pinned
+    /// tracks show on the Stage in set-list order, each with the player's versions under it; the
+    /// rest sit under All tracks. Synced with the account (`Snapshot.pins`).
+    var pinnedSongs: [String] {
+        #if DEBUG
+        // `-Pinned "song-a,song-b"` shows that set (screenshots; nothing is saved).
+        if let list = UserDefaults.standard.string(forKey: "Pinned") { return list.split(separator: ",").map(String.init) }
+        #endif
+        return progress.snapshot.pins?.songs ?? StageScreen.defaultPins
+    }
+
+    /// Whether a card's track is pinned (a mod goes with the song it came from).
+    func isPinned(_ song: Song) -> Bool { pinnedSongs.contains(rootName(song)) }
+
+    /// Pin or unpin a bundled song's card.
+    func setPinned(_ song: Song, _ on: Bool) {
+        progress.setPinned(rootName(song), on, current: pinnedSongs)
+    }
+
     /// The bundled song a mod descends from (through mods of mods); a bundled song's own name.
     func rootName(_ song: Song) -> String {
         var s = song
