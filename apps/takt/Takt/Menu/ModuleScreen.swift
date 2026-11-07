@@ -28,6 +28,7 @@ struct ModuleScreen: View {
                     .minimumScaleFactor(0.7)
                 StaffLines()
                     .frame(maxWidth: .infinity)
+                AskButton(size: compact ? 34 : 36)
             }
             .padding(.top, compact ? 8 : 24)
 
@@ -252,6 +253,7 @@ struct EarModuleScreen: View {
                     .minimumScaleFactor(0.7)
                 StaffLines()
                     .frame(maxWidth: .infinity)
+                AskButton(size: compact ? 34 : 36)
             }
             .padding(.top, compact ? 8 : 24)
 

@@ -33,6 +33,7 @@ struct StageScreen: View {
                     .foregroundStyle(Palette.text)
                 StaffLines()
                     .frame(maxWidth: .infinity)
+                AskButton(size: compact ? 34 : 36)
                 TransportButton(symbol: "gearshape", lit: false, size: compact ? 34 : 36, label: "Settings") {
                     app.route = .settings
                 }

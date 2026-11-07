@@ -49,6 +49,8 @@ struct LevelGoalsScreen: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel("Back to the map")
                 Spacer()
+                // The phone's card covers the map's header, the teacher's button with it.
+                if compact { AskButton(size: 34) }
                 Text(level.items.isEmpty ? "Up next" : "\(done) of \(level.items.count) done")
                     .dataLabel(10, weight: .semibold)
                     .foregroundStyle(Palette.ground)
@@ -94,7 +96,8 @@ struct LevelGoalsScreen: View {
                     } else {
                         ForEach(level.items) { item in
                             GoalRow(item: item, fingers: app.fingerLine(item), done: goals.done(level, item),
-                                    status: goals.status(level, item), action: goals.action(level, item), compact: compact) {
+                                    status: goals.status(level, item), action: goals.action(level, item), compact: compact,
+                                    practice: item.kind == .song ? { app.start(goal: item, level: level, practice: true) } : nil) {
                                 app.start(goal: item, level: level)
                             }
                             .padding(.horizontal, 20)
@@ -117,7 +120,8 @@ struct LevelGoalsScreen: View {
     }
 }
 
-/// One goal: the mark, the words, a scale's fingering, where it stands, and its button.
+/// One goal: the mark, the words, a scale's fingering, where it stands, and its button (a song
+/// goal has Practice beside it: the song held at bar 1 with the scrubber; 0.1 (113)).
 private struct GoalRow: View {
     let item: LearningPlan.Item
     /// A scale goal's fingering, the way you'd say it ("1-2-3, tuck, …").
@@ -126,6 +130,7 @@ private struct GoalRow: View {
     let status: String
     let action: String
     let compact: Bool
+    var practice: (() -> Void)? = nil
     let start: () -> Void
 
     var body: some View {
@@ -163,16 +168,30 @@ private struct GoalRow: View {
                 Text(status)
                     .dataLabel(10, weight: .semibold)
                     .foregroundStyle(done ? Palette.signal : Palette.text)
-                Button(action: start) {
-                    Text(action)
-                        .dataLabel(11, weight: .semibold)
-                        .foregroundStyle(done ? Palette.text : Palette.ground)
-                        .padding(.horizontal, 14)
-                        .frame(height: 34)
-                        .background(RoundedRectangle(cornerRadius: 4).fill(done ? Palette.panel : Palette.signal))
-                        .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(done ? Palette.line : Palette.signal, lineWidth: 1))
+                HStack(spacing: 8) {
+                    Button(action: start) {
+                        Text(action)
+                            .dataLabel(11, weight: .semibold)
+                            .foregroundStyle(done ? Palette.text : Palette.ground)
+                            .padding(.horizontal, 14)
+                            .frame(height: 34)
+                            .background(RoundedRectangle(cornerRadius: 4).fill(done ? Palette.panel : Palette.signal))
+                            .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(done ? Palette.line : Palette.signal, lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
+                    if let practice {
+                        Button(action: practice) {
+                            Text("Practice")
+                                .dataLabel(11, weight: .semibold)
+                                .foregroundStyle(Palette.muted)
+                                .padding(.horizontal, 12)
+                                .frame(height: 34)
+                                .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(Palette.line, lineWidth: 1))
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Practice \(item.title): the song held at bar 1, the scrubber and the speed")
+                    }
                 }
-                .buttonStyle(.plain)
                 .padding(.top, 4)
             }
         }

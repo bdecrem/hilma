@@ -438,17 +438,19 @@ struct VersionsPanel: View {
     }
 }
 
-/// One message of the thread: yours on the right in a quiet panel, the agent's on the left.
+/// One message of the thread: yours on the right in a quiet panel, the agent's (or the
+/// teacher's, `who`) on the left.
 struct MessageRow: View {
     let message: ModStore.Message
     let compact: Bool
+    var who = "Agent"
 
     var body: some View {
         let mine = message.role == "user"
         HStack {
             if mine { Spacer(minLength: compact ? 40 : 120) }
             VStack(alignment: .leading, spacing: 5) {
-                Text(mine ? "You" : "Agent")
+                Text(mine ? "You" : who)
                     .dataLabel(9, weight: .semibold)
                     .foregroundStyle(mine ? Palette.muted : Palette.signal)
                 Text(message.text)

@@ -2247,6 +2247,40 @@ enum LessonCheck {
             check("call: every word has its clip in the bundle (\(Call.Word.clips.count) clips)", missing.isEmpty, missing.joined(separator: " "))
         }
 
+        // Ask the teacher (ChatContext.swift, 0.1 (113)): what the teacher is told, in words.
+        do {
+            let bl = Song.bundled("song-blue-lantern-white")
+            let g = GameEngine(song: bl, part: .melody, difficulty: .medium)
+            let active = g.notes.indices.filter { g.active($0) }.map { g.notes[$0] }
+            let tx = ChatContext.transcript(notes: active.map { ($0.t, $0.n, $0.len) }, chords: bl.band.form,
+                                            sections: bl.meta.sections.map { ($0.bar, $0.name) }, bars: bl.bars, ticksPerBeat: tpb, ticksPerBar: 4 * tpb)
+            let lines = tx.split(separator: "\n").map(String.init)
+            check("ask: Blue Lantern II's Medium line reads one line a bar: the chord, the section where one starts, every note with its beat and its length in beats (\(lines.count) lines)",
+                  lines.count == 48 && lines[0] == "Bar 1 (Head), Dm7: D5 on 1 for 1.5, F4 on 3.5 for 1.5" && lines[1] == "Bar 2, Dm7: A4 on 1 for 4"
+                  && lines[12].hasPrefix("Bar 13 (Snare in), Dm7:") && lines[24].hasPrefix("Bar 25 (Sax solo), Dm7:") && !tx.contains("rest"),
+                  "\(lines[0]) / \(lines[1]) / \(lines[12])")
+            let keys = ChatContext.keys(active.map(\.n))
+            check("ask: the keys by how often they come, most first, and the range: \(keys) · \(ChatContext.range(active.map(\.n)))",
+                  keys.hasPrefix("D ") && keys.contains(", F ") && ChatContext.range(active.map(\.n)) == "E4–F5")
+            check("ask: beats read 1-based, lengths in beats, two decimals at most: ticks 0 6 8 30 → 1 1.5 1.67 3.5; 18 4 48 → 1.5 0.33 4",
+                  [0, 6, 8, 30].map { ChatContext.beat($0, ticksPerBeat: tpb) } == ["1", "1.5", "1.67", "3.5"]
+                  && [18, 4, 48].map { ChatContext.beats($0, ticksPerBeat: tpb) } == ["1.5", "0.33", "4"])
+            let s1m = Lesson.bundled("lesson-S1m")
+            let improv = s1m.steps.first { $0.id == "improv-white" }!
+            let form = s1m.form(of: improv)
+            let take = Improv.Take(tempo: 84, bars: 13, notes: [.init(t: 0, n: 62, v: 0.6, len: 12), .init(t: 12 * 48 + 6, n: 65, v: 0.9, len: 6)])
+            let tt = ChatContext.transcript(take: take, form: form).split(separator: "\n").map(String.init)
+            check("ask: a take reads like the improv teacher's transcript, each chorus marked where it starts, an empty bar a rest",
+                  tt.count == 13 && tt[0] == "Bar 1 (chorus 1), Dm7: D4 on 1 for 1" && tt[1] == "Bar 2, Dm7: rest" && tt[4] == "Bar 5, Gm7: rest"
+                  && tt[12] == "Bar 13 (chorus 2), Dm7: F4 on 1.5 for 0.5", "\(tt[0]) / \(tt[1]) / \(tt[12])")
+            let root = s1m.chords(of: improv)[form[0]]!.root
+            let scale = ChatContext.scaleLine(allowed: s1m.scale(of: improv), root: root)
+            check("ask: the improv's notes allowed, from its root: \(scale)", scale == "D E F G A B C" && root == 2)
+            check("ask: key names said in full: Dm → D minor, A → A major; A minor and E♭ blues stay",
+                  ChatContext.keyName("Dm") == "D minor" && ChatContext.keyName("A") == "A major" && ChatContext.keyName("A minor") == "A minor"
+                  && ChatContext.keyName("E♭ blues") == "E♭ blues" && ChatContext.keyName("F minor") == "F minor")
+        }
+
         print("LessonCheck: \(passed) passed, \(failed) failed")
         return failed == 0
     }

@@ -27,7 +27,10 @@ struct TransportBar: View {
                 }
                 Spacer(minLength: 8)
                 transportButtons(size: 34)
-                TempoKnob(bpm: state.tempo, pending: state.pendingTempo, counts: state.stepTempo, compact: true)
+                // No − / + here since the teacher's button took their room (0.1 (113)): the
+                // knob turns by drag, and VoiceOver adjusts it.
+                TempoKnob(bpm: state.tempo, pending: state.pendingTempo, counts: state.stepTempo, compact: true, buttons: false)
+                AskButton(size: 34)
             }
         } else {
             HStack(alignment: .center, spacing: 20) {
@@ -41,6 +44,7 @@ struct TransportBar: View {
                 ShowMeButton(on: state.demo, enabled: state.canDemo, size: 36)
                 transportButtons(size: 36)
                 TempoKnob(bpm: state.tempo, pending: state.pendingTempo, counts: state.stepTempo)
+                AskButton(size: 36)
             }
         }
     }

@@ -90,6 +90,18 @@ extension Player {
         lessonLog.info("practice: in at bar \(self.practiceBar + 1)")
     }
 
+    /// Practice this part (the pause card), or Practice on the result card (0.1 (113), Bart:
+    /// practice reachable from a song on the map too): into practice where the run sits, or,
+    /// once the run has ended, the song held at bar 1, as the set list's Practice opens it.
+    func practiceFromHere() {
+        guard let g = game else { return }
+        if gameResult != nil {
+            startGame(song: g.song, part: g.part, difficulty: gameDifficulty, practice: true, keepSpeed: true)
+            return
+        }
+        enterPractice()
+    }
+
     /// The bar practice sits at (held) or is passing (playing).
     var practiceBar: Int {
         guard let game else { return 0 }

@@ -35,6 +35,7 @@ struct EarGameScreen: View {
                         songs = true
                     }
                 }
+                AskButton(size: compact ? 34 : 36)
             }
             .padding(.top, compact ? 8 : 24)
 

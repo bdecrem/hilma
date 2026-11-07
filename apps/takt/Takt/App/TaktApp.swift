@@ -16,9 +16,10 @@ struct TaktApp: App {
         let progress = ProgressStore()
         let account = AccountStore(progress: progress)
         let mods = ModStore()
+        let chat = ChatStore()
         progress.onChange = { [weak account] in account?.progressChanged() }
         account.onReady = { [weak mods] in await mods?.refresh() }
-        _app = State(initialValue: AppModel(player: Self.makePlayer(progress: progress), progress: progress, account: account, mods: mods))
+        _app = State(initialValue: AppModel(player: Self.makePlayer(progress: progress), progress: progress, account: account, mods: mods, chat: chat))
         #if DEBUG
         if !UserDefaults.standard.bool(forKey: "Offline") {
             account.start()
@@ -169,6 +170,13 @@ struct RootView: View {
                 CalibrationScreen(app: app, player: player)
             }
         }
+        // Ask the teacher: the button on every screen (lit while an answer is on its way or
+        // waits unread) and its sheet, over whatever is up.
+        .environment(\.ask, Ask(lit: app.chat.working || app.chat.unread, open: app.openAsk))
+        .sheet(isPresented: Binding(get: { app.askOpen }, set: { app.askOpen = $0 })) {
+            AskSheet(app: app)
+                .presentationBackground(Palette.ground)
+        }
         .background(KeyCatcher(
             onNote: { player.key($0, down: $1) },
             onOctave: player.shiftOctave,
@@ -275,7 +283,7 @@ struct LiveGameScreen: View {
                 again: player.restartGame,
                 leave: app.leaveGame,
                 leaveTitle: app.fromLevel == nil ? "Set list" : "Map",
-                practice: player.enterPractice,
+                practice: player.practiceFromHere,
                 practiceSeek: { player.practiceSeek(bar: $0) },
                 practiceBack: { player.practiceBack() },
                 run: player.leavePractice,

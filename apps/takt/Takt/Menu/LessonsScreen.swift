@@ -17,6 +17,7 @@ struct LessonsScreen: View {
                 StaffLines()
                     .frame(maxWidth: .infinity)
                 XPLabel(xp: app.progress.xp)
+                AskButton(size: compact ? 34 : 36)
                 TransportButton(symbol: "gearshape", lit: false, size: compact ? 34 : 36, label: "Settings") {
                     app.route = .settings
                 }

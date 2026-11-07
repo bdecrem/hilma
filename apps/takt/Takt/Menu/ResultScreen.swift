@@ -24,6 +24,7 @@ struct ResultScreen: View {
                 Text("Done")
                     .dataLabel(13, weight: .semibold)
                     .foregroundStyle(Palette.signal)
+                AskButton(size: compact ? 34 : 36)
             }
             .padding(.top, compact ? 8 : 24)
 

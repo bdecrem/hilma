@@ -38,8 +38,15 @@ enum DebugHooks {
     }()
 
     static func snapshotIfDue(_ player: Player, tick: Double) {
-        // "result:0" waits for a song's run to end instead of a tick; the others take their turn.
-        guard let i = snapshots.firstIndex(where: { $0.name == "result" ? player.gameResult != nil : tick >= $0.tick }) else { return }
+        // "result:0" waits for a song's run to end instead of a tick, "paused:0" for the run to
+        // hold (`-PauseAt`); the others take their turn.
+        guard let i = snapshots.firstIndex(where: {
+            switch $0.name {
+            case "result": return player.gameResult != nil
+            case "paused": return player.game != nil && !player.playing && tick > 0
+            default: return tick >= $0.tick
+            }
+        }) else { return }
         let next = snapshots.remove(at: i)
         guard let dir = UserDefaults.standard.string(forKey: "SnapshotDir") else { fatalError("-SnapshotAt needs -SnapshotDir") }
         snapshot(player, name: next.name, dir: dir)

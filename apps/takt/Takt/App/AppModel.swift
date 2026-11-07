@@ -49,9 +49,10 @@ final class AppModel {
     }
 
     /// A goal from the level's screen: its step from the intro, the knob on the ladder's next
-    /// tempo, or its song on the Stage at the goal's part and level; Back (and Esc) land on that
-    /// level again, still on the map.
-    func start(goal item: LearningPlan.Item, level: LearningPlan.Level) {
+    /// tempo, or its song on the Stage at the goal's part and level (held at bar 1 in practice
+    /// with `practice`, as the set list's Practice opens it; 0.1 (113)); Back (and Esc) land on
+    /// that level again, still on the map.
+    func start(goal item: LearningPlan.Item, level: LearningPlan.Level, practice: Bool = false) {
         guard let player else { return }
         openVenue = nil
         if item.kind == .song {
@@ -60,7 +61,7 @@ final class AppModel {
             let song = Song.bundled(name)
             pick(song: song, part: part)
             pick(song: song, difficulty: difficulty)
-            player.startGame(song: song, part: part, difficulty: difficulty)
+            player.startGame(song: song, part: part, difficulty: difficulty, practice: practice)
             route = .game
         } else {
             guard let module = item.module, let step = item.step else { return }
@@ -264,6 +265,9 @@ final class AppModel {
     let account: AccountStore
     /// The player's own versions of the Stage songs (Agent mode).
     let mods: ModStore
+    /// The thread with the teacher (Ask, `AppModel+Chat.swift`), and whether its sheet is up.
+    let chat: ChatStore
+    var askOpen = false
     /// The Mac's save panel for the loop (Export MIDI, ⌘E).
     var exporting = false
     /// The module the module screen shows (an entry code: "A1", "S").
@@ -311,11 +315,12 @@ final class AppModel {
     /// Where calibration goes when it is done: the lesson (first time) or Settings.
     private var afterCalibration: Route = .lessons
 
-    init(player: Player?, progress: ProgressStore, account: AccountStore, mods: ModStore = ModStore()) {
+    init(player: Player?, progress: ProgressStore, account: AccountStore, mods: ModStore = ModStore(), chat: ChatStore = ChatStore()) {
         self.player = player
         self.progress = progress
         self.account = account
         self.mods = mods
+        self.chat = chat
         player?.onGoalChorus = { [weak self] code, v in self?.goalJudged(module: code, verdict: v) }
         player?.onGameRun = { [weak self] r in self?.goalRun(r) }
         #if DEBUG
@@ -378,6 +383,9 @@ final class AppModel {
             guard let song = songs.first(where: { $0.name == name }) else { fatalError("-AgentSheet: no song \(name)") }
             if route == .game, let player { openAgent(fromGame: player) } else { openAgent(song: song) }
         }
+        // `-Ask 1` opens the teacher's sheet over whatever route is up (`-AskSay "<text>"` sends
+        // at once; `-ChatReply <file>` answers from a file, no network; `-ChatFile <path>` the thread).
+        if d.bool(forKey: "Ask") { DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { self.openAsk() } }
         // `-Route quiz` starts today's quiz; `-QuizAnswers 1,0,1` answers in order (Next between),
         // leaving the last answer's explanation up, or the summary after a full five.
         // `-Route eargame [-EarKind intervals] [-EarLevel n] [-EarAnswers r,r,w]` plays an ear game, answering

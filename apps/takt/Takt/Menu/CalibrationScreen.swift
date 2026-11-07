@@ -27,6 +27,7 @@ struct CalibrationScreen: View {
                     .foregroundStyle(Palette.text)
                 StaffLines()
                     .frame(maxWidth: .infinity)
+                AskButton(size: compact ? 34 : 36)
             }
             .padding(.top, compact ? 8 : 24)
             .padding(.bottom, 16)

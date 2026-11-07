@@ -136,11 +136,18 @@ struct GameScreen: View {
                     .padding(.horizontal, compact ? 16 : 24)
                     .transition(.move(edge: .top).combined(with: .opacity))
             } else if compact {
-                // The phone's HUD has no room for the knob: it sits at the end of the rail.
-                HStack(spacing: 12) {
+                // The phone's HUD has no room for the knob, the pause or the teacher: they sit
+                // at the end of the rail (the pause card, with Practice this part, is under the
+                // pause; 0.1 (113)).
+                HStack(spacing: 10) {
                     ProgressRail(state: state)
                         .frame(height: 6)
                     GameKnob(state: state, compact: true)
+                    if state.result == nil {
+                        TransportButton(symbol: state.playing ? "pause.fill" : "play.fill", lit: state.playing, size: 34,
+                                        label: state.playing ? "Pause" : "Play", action: controls.togglePlay)
+                    }
+                    AskButton(size: 34)
                 }
                 .padding(.horizontal, 16)
             } else {
@@ -267,6 +274,7 @@ struct GameHUD: View {
                     TransportButton(symbol: state.playing ? "pause.fill" : "play.fill", lit: state.playing, size: 36,
                                     label: state.playing ? "Pause" : "Play", action: controls.togglePlay)
                 }
+                AskButton(size: 36)
             }
         }
     }
@@ -537,6 +545,7 @@ struct CountInBadge: View {
 struct PausedBadge: View {
     let compact: Bool
     @Environment(\.gameControls) private var controls
+    @Environment(\.ask) private var ask
 
     var body: some View {
         VStack(spacing: 12) {
@@ -551,6 +560,14 @@ struct PausedBadge: View {
                     .dataLabel(12, weight: .semibold)
                     .foregroundStyle(Palette.muted)
                     .padding(.vertical, 6)
+            }
+            .buttonStyle(.plain)
+            // Or ask about it: the teacher knows the bar you stopped in.
+            Button(action: ask.open) {
+                Text("Ask the teacher")
+                    .dataLabel(12, weight: .semibold)
+                    .foregroundStyle(Palette.muted)
+                    .padding(.vertical, 2)
             }
             .buttonStyle(.plain)
             // Or change the part itself: the agent makes your own version of the track.
@@ -614,6 +631,8 @@ struct PracticeBar: View {
                         .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Palette.line, lineWidth: 1))
                 }
                 .buttonStyle(.plain)
+                // The phone's HUD has no room for the teacher: in practice it sits here.
+                if compact { AskButton(size: 28) }
             }
         }
         .padding(.top, 2)
@@ -831,9 +850,12 @@ struct GameResultPanel: View {
         }
     }
 
+    /// Play again, Practice (the song held at bar 1 with the scrubber: the way to work on what
+    /// the grade says, from the map as from the set list), and the way back.
     private var buttons: some View {
         HStack(spacing: 10) {
             PrimaryButton(title: "Play again", action: controls.again)
+            QuietButton(title: "Practice", action: controls.practice)
             QuietButton(title: controls.leaveTitle, action: controls.leave)
         }
     }

@@ -44,6 +44,13 @@ extension Player {
     /// snapshots and the tempo check).
     func runPracticeHook(_ heard: TransportClock.Position) {
         let d = UserDefaults.standard
+        // `-PauseAt <tick>`: the run paused there, as the pause button does (the pause card's
+        // screenshots: Keep going, Practice this part, Ask the teacher, Agent mode).
+        if !practiceHookDone, d.object(forKey: "PauseAt") != nil, heard.tick >= d.double(forKey: "PauseAt"), playing {
+            practiceHookDone = true
+            togglePlay()
+            return
+        }
         guard !practiceHookDone, d.object(forKey: "PracticeAt") != nil, heard.tick >= d.double(forKey: "PracticeAt") else { return }
         practiceHookDone = true
         enterPractice()

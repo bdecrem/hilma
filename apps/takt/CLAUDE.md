@@ -1658,6 +1658,64 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   yet: the chords ladder has no rung of its own for Easy+ (it charts Medium's); TestFlight is
   on 104.
 
+- **Ask the teacher everywhere, practice from the map, the phone's pause: 0.1 (113),
+  2026-11-06.** Bart: "(1) practice mode should be accessible when i'm on the Map, playing the
+  game - it's fine to tuck it under the pause button (2) at all times in the app, give me a
+  small UI widget to pull up the agent and chat with them, including when i'm doing a task
+  from the map. EXAMPLE: i'm doing Improvize on the white keys… is this song in A minor? why
+  was the melody i played mostly a D (the 4) and the F (a 6)? should i lean on those for my
+  improv, and when we get to the IV chord, and the V, what's typically advised"; then "the
+  agent should have some concept of memory… everything from the 2 most recent sessions, for
+  that user… if I do a jam and I get feedback, it should know what that was and be able to talk
+  about that". **Practice from the map:** the pause card already had Practice this part, but the
+  phone's HUD had no pause button in a run, so it couldn't be reached there: the phone's rail
+  row is now rail · knob · pause · Ask (`GameScreen`). A song goal's row on the level screen has
+  **Practice** beside Play the song (`AppModel.start(goal:level:practice:)`: held at bar 1, as
+  the set list's Practice), and the result card has Play again · **Practice** · Map
+  (`Player.practiceFromHere`: into practice where the run sits, or the song held at bar 1 once
+  the run has ended). **Ask (`Takt/Chat/`):** one small `AskButton` (`questionmark.bubble`, from
+  the `\.ask` environment set in `RootView`) on every screen: beside the gear on Learn, Stage and
+  Map; after play in the Stage's HUD (the phone: by the rail, and in the practice row); after
+  the knob in the lesson's bar (the phone's knob there lost its − / + to make room: it drags);
+  in the headers of Settings, a module, Ear Training, the quiz, an ear game, Timing, the
+  lesson's result, and the phone's level and venue cards; and **Ask the teacher** on the pause
+  card between Practice this part and Agent mode. The glyph is lit while an answer is on its
+  way and until it has been read. It opens `AskSheet` over whatever is up (a run or a lesson
+  under way holds first: you can't play and type): ASK, "The teacher · where you are", the
+  thread (yours right, the teacher's left, `MessageRow` with `who`), the answer as it streams,
+  four things to ask fitted to the screen on an empty thread, Clear, a composer. `ChatStore`
+  keeps the thread on the device (Application Support/chat.json, the last 200) and streams
+  `POST /api/takt/chat`; a failed question comes off the thread with Try again. **What the
+  teacher is told (`AppModel.chatContext`, `ChatContext.swift`, pure parts checked):** the
+  screen and a one-line where; the map's level with every goal's status; a song under way with
+  its key, chords bar by bar, sections, the part and level, the bar and chord now, the run's
+  counts, the result, the keys the line uses by how often ("D 28, F 27, A 9 …") and the line at
+  this level one line a bar ("Bar 1 (Head), Dm7: D5 on 1 for 1.5, F4 on 3.5 for 1.5"); a lesson
+  step with its key (the backing's), form with numerals, notes allowed from the root ("D E F G
+  A B C"), a run's notes with fingers, the phase, the coach line, the last chorus, and an
+  improv's take so far as the improv teacher reads it; the streak, XP, levels cleared. **The
+  server (`src/lib/takt/chat-agent.ts`, Opus 5.5, thinking on at medium effort, streamed):**
+  the teacher's prompt (warm, direct, degrees named in the key they are really in, a wrong
+  premise set right in a sentence, 60–160 words, no markdown; what Takt is and does, so app
+  questions get real answers; chart changes go to Agent mode), `describe()` turns the context
+  into words, the thread rides as plain turns and the context with the question. **Memory
+  (`src/lib/takt/memory.ts`):** every dated thing the account keeps — Stage runs
+  (`takt_progress` scores), improv takes with the review and the idea (`takt_improv`), Agent
+  mode asks and replies (`takt_mods`), earlier questions (`takt_chat`), lessons finished and
+  goals done by day — cut into sessions by two-hour gaps; the last two (the one under way
+  included) go to the teacher in words, in the player's time zone (`context.timeZone`). Every
+  exchange is saved in `takt_chat` (schema 006, applied 2026-11-06). **Verified:**
+  `scripts/takt/chat-check.ts` 17/17 (the parser, `describe`, the sessions and the memory in
+  words, the song titles against the bundle; live: Bart's own question from the improv with a
+  take mostly on D and F → D minor, D the 1, F the ♭3, the iv, VI and V by name, 187 words in
+  11 s; "what did you say about the jam i sent you?" → the headline and the idea by name from
+  the memory, 8 s); `-LessonCheck` 450/450 (on top of the Kontur hand, 0.1 (112)); Mac snapshots of the HUD and the pause card from a
+  map-started run (`-PauseAt <tick>` + `-SnapshotAt "paused:0"`, new); the iPhone 17 Pro
+  simulator: the run's rail row, the pause card, the practice row, the level's goals with
+  Practice, the improv's bar, and the sheet with a canned answer (`-Ask 1 -AskSay "…" -ChatReply
+  <file> -ChatFile <path>`, new). Not yet: TestFlight (still 104); the chat's model is
+  `CHAT_MODEL` in chat-agent.ts.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without
@@ -1703,6 +1761,11 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   autoplay, `#if DEBUG`). The stored state all sits in `Player.swift`, open to the other files
   (Swift's `private` is the file). `Lesson/PressQueue.swift`: presses scheduled ahead on the
   monitor, down as heard, up at their length, shared by Show me and the autoplays.
+- `Chat/`: Ask the teacher (0.1 (113)). `ChatContext.swift` (pure: notes as a line a bar, keys by
+  count, a key's name), `AppModel+Chat.swift` (`openAsk`, `ask`, `chatWhere`, `chatContext`),
+  `ChatStore.swift` (the thread on disk, the streamed question), `AskSheet.swift` (`Ask` in the
+  environment, `AskButton`, the sheet). Server: `src/lib/takt/chat-agent.ts`, `memory.ts`,
+  `src/app/api/takt/chat/route.ts`, `scripts/takt/chat-check.ts`.
 - `Call/Call.swift`: Call (0.1 (106)), pure — steps from any content with notes in order and a
   finger each (adapters from a Stage chart at its tier and from a lesson step's pattern), the
   crossing after each ("tuck" / "over"), the engine (a key in, a verdict out), the words and

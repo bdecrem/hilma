@@ -121,6 +121,7 @@ private struct MapHeader: View {
                 .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Palette.line, lineWidth: 1))
                 .accessibilityLabel("\(cleared) of \(world.total) levels cleared")
             XPLabel(xp: xp)
+            AskButton(size: compact ? 34 : 36)
             TransportButton(symbol: "gearshape", lit: false, size: compact ? 34 : 36, label: "Settings", action: settings)
         }
     }

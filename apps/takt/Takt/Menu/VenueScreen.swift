@@ -106,6 +106,7 @@ struct VenueScreen: View {
                     .buttonStyle(.plain)
                     .accessibilityLabel("Back to the map")
                     Spacer()
+                    if compact { AskButton(size: 34) }
                     Text("\(episode.title) · \(stop.inEpisode) of \(episode.venues.count)")
                         .dataLabel(10, weight: .semibold)
                         .foregroundStyle(Palette.ground)

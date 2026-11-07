@@ -462,6 +462,7 @@
 		913188C502DC22FAEB177062 /* ChannelStrip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C45267D4102101E567236B /* ChannelStrip.swift */; };
 		928920684437E2909B8706A3 /* snare-3a.caf in Resources */ = {isa = PBXBuildFile; fileRef = F7EE8892FF3ACE1F8E57E20C /* snare-3a.caf */; };
 		934A3A1814A8B5F790654FAC /* syn-subDub-38.caf in Resources */ = {isa = PBXBuildFile; fileRef = E868AA730F2B11A67DF89964 /* syn-subDub-38.caf */; };
+		93F1EADEAC320F8E9DEF01DD /* AskSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FEECCBEDA9AC8EFA33AE0CA /* AskSheet.swift */; };
 		948906CD02A8D0C2AEDB523F /* kick-1a.caf in Resources */ = {isa = PBXBuildFile; fileRef = A06E9F4619CD031C522ED381 /* kick-1a.caf */; };
 		948F62CDB1F5D241BCAC0B69 /* snare-0a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 52E462F831449281758F5101 /* snare-0a.caf */; };
 		94C68668ABEC6919A8604542 /* rho-50-4.caf in Resources */ = {isa = PBXBuildFile; fileRef = 48B90B676AE3476E846CD280 /* rho-50-4.caf */; };
@@ -549,6 +550,7 @@
 		B27C7B2142102B2727B953FD /* snare-1b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 29AA8EF9E976DF81AAB0A63B /* snare-1b.caf */; };
 		B2C4E58AA08621473A525586 /* pno-57-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 35D653C9B2196E5967894DB5 /* pno-57-2.caf */; };
 		B2FA0C4657E34F3A0DA284C2 /* sax-68-s.caf in Resources */ = {isa = PBXBuildFile; fileRef = 67214A86B8D3126A8B3921DF /* sax-68-s.caf */; };
+		B31B3F0FABFDD36B45A8069E /* ChatContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48C87D53F3AB018DDC16F1CE /* ChatContext.swift */; };
 		B36F2FD58CE0B92558D57E44 /* gtr-54-2-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 1B99862868BC876AB2F9CA94 /* gtr-54-2-1.caf */; };
 		B3C9C24DCC6F2C6B7E9C8135 /* gtr-57-4-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3C188D5916CACE8B3DFAC354 /* gtr-57-4-2.caf */; };
 		B3DE5FCB4B61E6D826C0B82D /* tomHi-0b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 147A244442CB1D7BBE930EA7 /* tomHi-0b.caf */; };
@@ -604,6 +606,7 @@
 		C67341B7D9F1F2D374F2E365 /* tomHi-1a.caf in Resources */ = {isa = PBXBuildFile; fileRef = FC1E799921D78CCB8272B10D /* tomHi-1a.caf */; };
 		C715878A6A94E03A4915639C /* rho-96-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 1D3A42604582A1D71A6F5D7B /* rho-96-2.caf */; };
 		C80B6F25DA5362B82D201D1B /* xstick-0a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 7286A0A50F4BC75A3FD8881B /* xstick-0a.caf */; };
+		C8319DF97ACD2140A06E8D64 /* ChatStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 382B954C63F20BE552F9022E /* ChatStore.swift */; };
 		C86460F5BA92AA01CBF5629D /* bass-37.caf in Resources */ = {isa = PBXBuildFile; fileRef = 47D1A351F5FE0725EC15D54E /* bass-37.caf */; };
 		C86F76A99FD9DDFE3C3A37A6 /* song-dockery.json in Resources */ = {isa = PBXBuildFile; fileRef = 65295EEA1EB525ECEE125A7E /* song-dockery.json */; };
 		C8BAF1BE6026A27D7E6E2895 /* hat-3b.caf in Resources */ = {isa = PBXBuildFile; fileRef = A0B88D3BA5FAE2AD0B3B9385 /* hat-3b.caf */; };
@@ -688,6 +691,7 @@
 		E246FEC0F16339D81AD61A40 /* rho-55-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 5C17D506770F4434E510DF24 /* rho-55-2.caf */; };
 		E26E7FB16E7E0E521C28D51B /* pno-37-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = E942B88563949B447AC1803C /* pno-37-2.caf */; };
 		E3FF0B3DDA3F30C98B160E4A /* gtr-37-4-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 8C2AD5E6E4603374CD580DFF /* gtr-37-4-2.caf */; };
+		E41379494ACB34670B97F04A /* AppModel+Chat.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48131F7222F811B6CC7361E3 /* AppModel+Chat.swift */; };
 		E44310FD799C553ED68A897F /* syn-subMin-32.caf in Resources */ = {isa = PBXBuildFile; fileRef = D373A27EC32EF9B03090E924 /* syn-subMin-32.caf */; };
 		E47FF2AE85EF38BB44A7BA07 /* sax-88-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = 18DAA0E3CE41C2850C2E731E /* sax-88-h.caf */; };
 		E583F7FBD471E51F1F56F0AF /* syn-rhodes-54-0.caf in Resources */ = {isa = PBXBuildFile; fileRef = 29F64FFFD39206780DEB3FBD /* syn-rhodes-54-0.caf */; };
@@ -939,6 +943,7 @@
 		379674C43D4090DBE46D6547 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		38019389E35C05FEDE65CE7E /* rho-59-5.caf */ = {isa = PBXFileReference; path = "rho-59-5.caf"; sourceTree = "<group>"; };
 		38068BFF65C16DF9D08A8B48 /* org-36.caf */ = {isa = PBXFileReference; path = "org-36.caf"; sourceTree = "<group>"; };
+		382B954C63F20BE552F9022E /* ChatStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatStore.swift; sourceTree = "<group>"; };
 		38E5F2DEA3C4568CFE64B5DF /* ride-1b.caf */ = {isa = PBXFileReference; path = "ride-1b.caf"; sourceTree = "<group>"; };
 		392B915050A985BDB0886803 /* gtr-60-2-1.caf */ = {isa = PBXFileReference; path = "gtr-60-2-1.caf"; sourceTree = "<group>"; };
 		3946539C0524DDA802585674 /* MapScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapScreen.swift; sourceTree = "<group>"; };
@@ -988,9 +993,11 @@
 		46F0D3EC0520EF5197C9786D /* rho-62-2.caf */ = {isa = PBXFileReference; path = "rho-62-2.caf"; sourceTree = "<group>"; };
 		4720E312311BC2DC0BC59CFC /* pno-33-2.caf */ = {isa = PBXFileReference; path = "pno-33-2.caf"; sourceTree = "<group>"; };
 		47D1A351F5FE0725EC15D54E /* bass-37.caf */ = {isa = PBXFileReference; path = "bass-37.caf"; sourceTree = "<group>"; };
+		48131F7222F811B6CC7361E3 /* AppModel+Chat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppModel+Chat.swift"; sourceTree = "<group>"; };
 		48AC0F7D07390FEBFAF005B5 /* crash-0a.caf */ = {isa = PBXFileReference; path = "crash-0a.caf"; sourceTree = "<group>"; };
 		48B90B676AE3476E846CD280 /* rho-50-4.caf */ = {isa = PBXFileReference; path = "rho-50-4.caf"; sourceTree = "<group>"; };
 		48BEC1DC3AA0BBC2F6DC7F33 /* song-pearl-street.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "song-pearl-street.json"; sourceTree = "<group>"; };
+		48C87D53F3AB018DDC16F1CE /* ChatContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatContext.swift; sourceTree = "<group>"; };
 		4AA4F0AC14899F70D3EC13C4 /* syn-bassDH-44.caf */ = {isa = PBXFileReference; path = "syn-bassDH-44.caf"; sourceTree = "<group>"; };
 		4B6126EBBF05F62DF38C0F13 /* syn-bassDH-46.caf */ = {isa = PBXFileReference; path = "syn-bassDH-46.caf"; sourceTree = "<group>"; };
 		4BDFF238159F3E1947417C5A /* syn-subDub-28.caf */ = {isa = PBXFileReference; path = "syn-subDub-28.caf"; sourceTree = "<group>"; };
@@ -1004,6 +1011,7 @@
 		4F0D6B35E527E3B3A1BF623A /* syn-hatMin-0a.caf */ = {isa = PBXFileReference; path = "syn-hatMin-0a.caf"; sourceTree = "<group>"; };
 		4F76712FF6CF6A4447B25237 /* gtr-78-3-1.caf */ = {isa = PBXFileReference; path = "gtr-78-3-1.caf"; sourceTree = "<group>"; };
 		4F93CC645CACDF1097D39E4C /* syn-kickDH-1a.caf */ = {isa = PBXFileReference; path = "syn-kickDH-1a.caf"; sourceTree = "<group>"; };
+		4FEECCBEDA9AC8EFA33AE0CA /* AskSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AskSheet.swift; sourceTree = "<group>"; };
 		50960A8BB0999D357DE62B40 /* plan-blues-year-1.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "plan-blues-year-1.json"; sourceTree = "<group>"; };
 		517D727F1B4D846E72A31DE1 /* band-minor-A.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "band-minor-A.json"; sourceTree = "<group>"; };
 		5195A11F3940B71EB76D0CC6 /* pno-41-2.caf */ = {isa = PBXFileReference; path = "pno-41-2.caf"; sourceTree = "<group>"; };
@@ -1594,6 +1602,7 @@
 				EF1B6EFE9A6233DFFD2D98E5 /* App */,
 				7E718AC35B0C62F76073A6EF /* Audio */,
 				667CE1399059CAEA863F5C8A /* Call */,
+				644EE1B57AE5DC287F8AD7F2 /* Chat */,
 				C1181D7DC56335696E3C73A1 /* Content */,
 				4369F79803C501D3563FBCCD /* Design */,
 				54DE8A4095BEC708D5253B44 /* Export */,
@@ -1620,6 +1629,17 @@
 				40963202F528F02BF5EEECD8 /* Takt.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		644EE1B57AE5DC287F8AD7F2 /* Chat */ = {
+			isa = PBXGroup;
+			children = (
+				48131F7222F811B6CC7361E3 /* AppModel+Chat.swift */,
+				4FEECCBEDA9AC8EFA33AE0CA /* AskSheet.swift */,
+				48C87D53F3AB018DDC16F1CE /* ChatContext.swift */,
+				382B954C63F20BE552F9022E /* ChatStore.swift */,
+			);
+			path = Chat;
 			sourceTree = "<group>";
 		};
 		667CE1399059CAEA863F5C8A /* Call */ = {
@@ -3246,7 +3266,9 @@
 			files = (
 				054A003EAFCDFFA4439BBE4B /* AccountStore.swift in Sources */,
 				B7D50027310A7BC4DE6033E4 /* AgentSheet.swift in Sources */,
+				E41379494ACB34670B97F04A /* AppModel+Chat.swift in Sources */,
 				8E06D303F6A072274A6AA5EF /* AppModel.swift in Sources */,
+				93F1EADEAC320F8E9DEF01DD /* AskSheet.swift in Sources */,
 				E1427314DA1968F8B4681B13 /* AudioEngine.swift in Sources */,
 				F6E6BC20DF042E27FE4FA6B3 /* Autoplay.swift in Sources */,
 				0122C6880BB2223509A01B44 /* BandData.swift in Sources */,
@@ -3257,6 +3279,8 @@
 				B9177DA91FEBB199B6070BDC /* CallVoice.swift in Sources */,
 				913188C502DC22FAEB177062 /* ChannelStrip.swift in Sources */,
 				D45B67EBB5C040CF2610152D /* Charting.swift in Sources */,
+				B31B3F0FABFDD36B45A8069E /* ChatContext.swift in Sources */,
+				C8319DF97ACD2140A06E8D64 /* ChatStore.swift in Sources */,
 				0D0C5243B3D5B74AC76FC97F /* CoachPanel.swift in Sources */,
 				17DAC0C7D741F74668A07811 /* CountInSplash.swift in Sources */,
 				FF098609992B64F48C556EAA /* DebugHooks.swift in Sources */,
@@ -3362,7 +3386,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 112;
+				CURRENT_PROJECT_VERSION = 113;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -3429,7 +3453,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 112;
+				CURRENT_PROJECT_VERSION = 113;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;
