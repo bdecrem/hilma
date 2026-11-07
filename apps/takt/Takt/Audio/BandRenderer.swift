@@ -174,6 +174,8 @@ final class BandRenderer {
         fileprivate let sends: [Float]
         fileprivate let dub: DubChamber.Settings?
         fileprivate let knee: Float
+        /// The amp on each channel (drums, bass, keys, horns, monitor), nil: none.
+        fileprivate let amps: [GuitarAmp.Settings?]
         /// A band with its own chamber skips the app's room reverb: its low end stays dry.
         var hasDub: Bool { dub != nil }
         let loopTicks: Int
@@ -182,6 +184,7 @@ final class BandRenderer {
         fileprivate init(_ buffer: UnsafeMutableBufferPointer<Event>, drumSounds: UnsafeMutableBufferPointer<DrumSound>,
                          clickSound: Int, instruments: [SampledInstrument?], stab: DubStab.Settings?, monitor: Int, monitorGain: Float,
                          duck: [Float], duckRelease: Double, sends: [Float], dub: DubChamber.Settings?, knee: Float,
+                         amps: [GuitarAmp.Settings?],
                          loopTicks: Int, chorusBars: Int, name: String) {
             self.buffer = buffer
             self.drumSounds = drumSounds
@@ -195,6 +198,7 @@ final class BandRenderer {
             self.sends = sends
             self.dub = dub
             self.knee = knee
+            self.amps = amps
             self.loopTicks = loopTicks
             self.chorusBars = chorusBars
             self.name = name
@@ -225,6 +229,8 @@ final class BandRenderer {
     private let sendL: UnsafeMutablePointer<Float>
     private let sendR: UnsafeMutablePointer<Float>
     private let chamber: DubChamber
+    /// A guitar amp per channel bus (a band's `amp`), inactive unless the band names one.
+    private let amps: [GuitarAmp]
 
     private var commands: [EngineCommand] = []
 
@@ -329,6 +335,8 @@ final class BandRenderer {
         knee = first.knee
         chamber = DubChamber(sampleRate: sampleRate)
         chamber.configure(first.dub)
+        amps = (0..<5).map { _ in GuitarAmp(sampleRate: sampleRate) }
+        for (amp, s) in zip(amps, first.amps) { amp.configure(s) }
         kickEnv = .allocate(capacity: maxChunk)
         sendL = .allocate(capacity: maxChunk)
         sendR = .allocate(capacity: maxChunk)
@@ -384,6 +392,7 @@ final class BandRenderer {
                       instruments: instruments, stab: band.stab?.settings, monitor: monitor, monitorGain: Float(pow(10, (band.levels?["monitor"] ?? 0) / 20)),
                       duck: duck, duckRelease: max(0.01, band.duck?.release ?? 0.2), sends: sends, dub: band.dub?.settings,
                       knee: Float(band.knee ?? 1),
+                      amps: ["drums", "bass", "keys", "horns", "monitor"].map { band.amp?[$0] },
                       loopTicks: band.loopTicks, chorusBars: band.chorusBars, name: band.name)
     }
 
@@ -756,6 +765,7 @@ final class BandRenderer {
             let k = ch.rawValue
             let l = busL + k * c
             let r = busR + k * c
+            if amps[k].active { amps[k].process(l, r, n: n) }
             let trim = ch == .monitor ? monitorTrim : bandTrim
             let target: Float = muted & ch.bit == 0 ? mix[k] * trim : 0
             var g = gain(ch)
@@ -938,6 +948,7 @@ final class BandRenderer {
             sends = e.sends
             knee = e.knee
             chamber.configure(e.dub)
+            for (amp, s) in zip(amps, e.amps) { amp.configure(s) }
             loopTicks = e.loopTicks
             chorusBars = e.chorusBars
             repositionCursor()

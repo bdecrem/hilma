@@ -54,6 +54,8 @@ struct BandData: Decodable {
     /// The master's soft knee, scaled: the knee sits at `knee` × 0.8 of full scale (absent: 1).
     /// A band mixed to a reference renders the reference's clipping at its own lower level.
     var knee: Double?
+    /// A guitar amp per channel (keys, horns): the electric's grit (`GuitarAmp`).
+    var amp: [String: GuitarAmp.Settings]?
     var channels: Channels
 
     struct Duck: Decodable {

@@ -50,6 +50,8 @@ class Song:
         self.stab = None
         # The master's soft knee scale (BandData.knee); None: the app's own.
         self.knee = None
+        # A guitar amp per channel (Takt/Audio/GuitarAmp.swift): {"keys": {"drive", ...}}.
+        self.amp = None
         self.drums = []
         self.bass = []
         self.keys = []
@@ -162,6 +164,7 @@ class Song:
             "dub": self.dub,
             "stab": self.stab,
             "knee": self.knee,
+            **({"amp": self.amp} if self.amp else {}),
             "channels": {"drums": self.drums, "bass": self.bass, "keys": self.keys, "horns": self.horns},
             "song": {
                 "title": self.title,

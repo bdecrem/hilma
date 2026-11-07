@@ -7,6 +7,12 @@ in 1903; the music is ours. Same guitar and foot as Dockery and Friars Point
 (scripts/guitar.py, Karoryfer's Shinyguitar), played hot.
 
     python3 apps/takt/scripts/songs/tutwiler.py   -> Takt/Content/song-tutwiler.json
+    python3 apps/takt/scripts/songs/tutwiler.py --electric   -> song-tutwiler-electric.json
+
+`--electric` (2026-11-07, Bart: "a real guitar, more gritty than steel guitar … use it for the
+chords"): the chords part on the electric (`eguitar`, Emilyguitar DI) through the band's amp
+(`amp.keys`, Audio/GuitarAmp.swift), the strum as power chords (root, fifth, octave: a seventh
+under distortion is mud), the chick a muted strum (`eguitarMute`); the slide stays acoustic.
 
 Choruses: Head, Verse, Stomp (stop time: the band hits the 1 for eight bars and the slide
 talks alone, then the drive comes back), Slide (the triplet figure every bar), Shout (slide
@@ -23,8 +29,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import BAR, TPB, Song  # noqa: E402
 
+ELECTRIC = "--electric" in sys.argv
 FORM = ["G7", "G7", "G7", "G7", "C7", "C7", "G7", "G7", "D7", "C7", "G7", "D7"]
-s = Song("song-tutwiler", "Tutwiler", "Delta stomp", "G", 132, "triplets",
+s = Song("song-tutwiler-electric" if ELECTRIC else "song-tutwiler", "Tutwiler (electric)" if ELECTRIC else "Tutwiler", "Delta stomp", "G", 132, "triplets",
          "The loud one. The thumb pounding every beat, the slide raking the high G, the foot going.", seed=1903)
 s.sounds = {
     "kick": {"kit": "kick", "gainDb": -5},
@@ -34,6 +41,8 @@ s.sounds = {
 }
 s.instruments = {"bass": "bass", "keys": "guitar", "horns": "guitar", "monitor": "guitar"}
 s.levels = {"keys": -2.0, "bass": -5.0, "horns": -1.5}
+if ELECTRIC:
+    s.amp = {"keys": {"drive": 20, "bias": 0.2, "tight": 150, "mid": 5, "tone": 6500, "presence": 5, "level": -10, "room": 0.2}}
 NAMES = ["Head", "Verse", "Stomp", "Slide", "Shout", "Out"]
 CHORUSES = len(NAMES)
 STOMP, SLIDE, SHOUT = 2, 3, 4
@@ -83,9 +92,15 @@ STRUM = {  # (note, role, finger)
     "C7": [(55, "fifth", 3), (58, "seventh", 2), (64, "third", 1)],
     "D7": [(54, "third", 3), (60, "seventh", 2), (62, "root", 1)],
 }
+if ELECTRIC:
+    STRUM = {
+        "G7": [(55, "root", 3), (62, "fifth", 2), (67, "root", 1)],
+        "C7": [(48, "root", 3), (55, "fifth", 2), (60, "root", 1)],
+        "D7": [(50, "root", 3), (57, "fifth", 2), (62, "root", 1)],
+    }
 SLAM = [(43, "root", 5), (50, "fifth", 4), (55, "root", 3), (59, "third", 2), (65, "seventh", 1)]
 
-chords = s.part("chords", "Thumb and strum", "piano", "keys", "guitar")
+chords = s.part("chords", "Thumb and strum", "piano", "keys", "eguitar" if ELECTRIC else "guitar")
 for bar in range(s.bars):
     o = bar * BAR
     ch = FORM[bar % 12]
@@ -114,7 +129,7 @@ s.chart_to_channel(chords, s.keys, lambda e: 1.0 if e["len"] >= 18 else 0.95 if 
 # Every late-eighth chord is a dead-string slap on the record.
 for e in s.keys:
     if e["t"] % TPB == 8 and e["len"] == 3:
-        e["i"] = "guitarMute"
+        e["i"] = "eguitarMute" if ELECTRIC else "guitarMute"
 # The bass under the thumb, an octave down.
 for e in chords:
     if e["n"] <= 50 and (e["len"] == 10 or e["len"] >= 18):
