@@ -70,7 +70,7 @@ struct Charting: Decodable {
             case .easyPlus: return easyPlus
             case .medium: return medium
             case .hard: return hard
-            case .adaptive: return nil
+            case .adaptive, .solo: return nil
             }
         }
     }
@@ -237,11 +237,14 @@ struct Charting: Decodable {
         case .medium: return l.medium
         case .hard: return l.hard
         case .adaptive: return nil
+        // The teacher's whole track is played as written: the top of its own ladder.
+        case .solo: return l.tiers.count
         }
     }
 
     /// The set list's line for a difficulty.
     func line(_ difficulty: GameEngine.Difficulty, song: String, part: Song.PartKey) -> String {
+        if difficulty == .solo { return "The teacher's whole track from your take, every note as written." }
         guard let t = tier(difficulty, song: song, part: part) else {
             let n = ladder(part).tiers.count
             return "Level \(adaptive.start) of \(n) the first time, then just under where your last run got to. Clean bars climb it a level at a time, misses and wrong keys step it back at once, and the band plays whatever the level leaves out."

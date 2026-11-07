@@ -50,6 +50,69 @@ final class ImprovClient {
     private struct Failure: Error { let message: String }
     private struct ServerError: Decodable { let error: String }
 
+    // MARK: The whole track
+
+    enum TrackEvent {
+        case status(String)
+        /// The solo bundle (a mod of kind "solo", the shape `ModStore.Bundle` reads), the
+        /// teacher's title for it and the card's line.
+        case track(Data, title: String, line: String)
+        case failed(String)
+    }
+
+    /// Sends the review and the backing song's file to the teacher, who writes the whole track
+    /// (`POST /api/takt/improv/track`); streams the steps, then the bundle. A track takes a
+    /// minute or two; the server pings every ten seconds.
+    func track(_ body: [String: Any]) -> AsyncStream<TrackEvent> {
+        AsyncStream { continuation in
+            let task = Task {
+                do {
+                    try await streamTrack(body) { continuation.yield($0) }
+                } catch {
+                    log.error("track: \(error.localizedDescription, privacy: .public)")
+                    continuation.yield(.failed((error as? Failure)?.message ?? "Can't reach ola.cx. The review is kept: write the track again from it."))
+                }
+                continuation.finish()
+            }
+            continuation.onTermination = { _ in task.cancel() }
+        }
+    }
+
+    private func streamTrack(_ body: [String: Any], yield: @escaping (TrackEvent) -> Void) async throws {
+        var req = URLRequest(url: base.appendingPathComponent("api/takt/improv/track"))
+        req.httpMethod = "POST"
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.setValue("text/event-stream", forHTTPHeaderField: "Accept")
+        req.httpBody = try JSONSerialization.data(withJSONObject: body)
+        req.timeoutInterval = 90
+        let (bytes, response) = try await session.bytes(for: req)
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        guard (200..<300).contains(status) else {
+            var data = Data()
+            for try await b in bytes { data.append(b) }
+            throw Failure(message: (try? JSONDecoder().decode(ServerError.self, from: data))?.error ?? "Server error \(status).")
+        }
+        var got = false
+        for try await line in bytes.lines {
+            guard line.hasPrefix("data: "), let data = line.dropFirst(6).data(using: .utf8),
+                  let event = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let type = event["type"] as? String else { continue }
+            switch type {
+            case "status":
+                if let text = event["text"] as? String { yield(.status(text)) }
+            case "track":
+                guard let mod = event["mod"] else { throw Failure(message: "The track came back without its bundle.") }
+                got = true
+                yield(.track(try JSONSerialization.data(withJSONObject: mod), title: event["title"] as? String ?? "", line: event["line"] as? String ?? ""))
+            case "error":
+                throw Failure(message: event["text"] as? String ?? "The teacher tripped writing the track. Write it again from the review.")
+            default:
+                break
+            }
+        }
+        if !got { throw Failure(message: "The connection dropped before the track was done. Write it again from the review.") }
+    }
+
     private func stream(_ r: Request, yield: @escaping (Event) -> Void) async throws {
         var req = URLRequest(url: base.appendingPathComponent("api/takt/improv"))
         req.httpMethod = "POST"

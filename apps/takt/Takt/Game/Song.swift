@@ -68,6 +68,11 @@ struct Song {
         let baseTitle: String
         let version: Int
         let override: [String: Charting.PartOverride]?
+        /// "mod" (Agent mode's version, a card) or "solo" (the teacher's whole track, the Solo
+        /// level of its base song; `ModStore.Bundle.kind`).
+        var kind = "mod"
+
+        var isSolo: Bool { kind == "solo" }
 
         static func == (a: ModInfo, b: ModInfo) -> Bool { a.id == b.id && a.version == b.version }
     }

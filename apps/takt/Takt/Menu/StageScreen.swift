@@ -109,7 +109,11 @@ struct SongCard: View {
         let shape = RoundedRectangle(cornerRadius: 8)
         let part = app.stagePart(song)
         let difficulty = app.stageDifficulty(song)
-        let best = app.progress.best(song: song.name, part: part.rawValue)
+        // Solo (0.1 (114)): the teacher's whole track from the player's take, a level of this
+        // song once it exists; its best is the track's own.
+        let solo = app.solo(of: song)
+        let levels = app.stageLevels(song).map { ($0.rawValue, $0.title) }
+        let best = difficulty == .solo && solo != nil ? app.progress.best(song: solo!.name, part: Song.PartKey.melody.rawValue) : app.progress.best(song: song.name, part: part.rawValue)
         VStack(alignment: .leading, spacing: compact ? 12 : 14) {
             HStack(alignment: .top, spacing: compact ? 14 : 20) {
                 SongArt(kind: song.meta.art)
@@ -141,17 +145,17 @@ struct SongCard: View {
                     app.pick(song: song, part: Song.PartKey(rawValue: $0)!)
                 }
                 if !compact {
-                    Chips(title: "Level", options: GameEngine.Difficulty.allCases.map { ($0.rawValue, $0.title) }, picked: difficulty.rawValue, scrolls: true) {
+                    Chips(title: "Level", options: levels, picked: difficulty.rawValue, scrolls: true, accent: GameEngine.Difficulty.solo.rawValue) {
                         app.pick(song: song, difficulty: GameEngine.Difficulty(rawValue: $0)!)
                     }
                 }
             }
             if compact {
-                Chips(title: "Level", options: GameEngine.Difficulty.allCases.map { ($0.rawValue, $0.title) }, picked: difficulty.rawValue, scrolls: true) {
+                Chips(title: "Level", options: levels, picked: difficulty.rawValue, scrolls: true, accent: GameEngine.Difficulty.solo.rawValue) {
                     app.pick(song: song, difficulty: GameEngine.Difficulty(rawValue: $0)!)
                 }
             }
-            Text(song.charting.line(difficulty, song: song.name, part: part))
+            Text(difficulty == .solo && solo != nil ? "The teacher's whole track from your take, every note as written. \(solo!.meta.line)" : song.charting.line(difficulty, song: song.name, part: part))
                 .dataLabel(10)
                 .foregroundStyle(Palette.muted)
                 .fixedSize(horizontal: false, vertical: true)
@@ -287,6 +291,8 @@ struct Chips: View {
     let options: [(key: String, title: String)]
     let picked: String
     var scrolls = false
+    /// A key drawn apart (outlined in `cue`): the Solo level, another line rather than a rung.
+    var accent: String? = nil
     let pick: (String) -> Void
 
     var body: some View {
@@ -311,14 +317,15 @@ struct Chips: View {
         HStack(spacing: 4) {
             ForEach(options, id: \.key) { o in
                 let on = o.key == picked
+                let apart = o.key == accent
                 Button { pick(o.key) } label: {
                     Text(o.title)
                         .dataLabel(10, weight: .semibold)
-                        .foregroundStyle(on ? Palette.blackKey : Palette.text)
+                        .foregroundStyle(on ? Palette.blackKey : apart ? Palette.cue : Palette.text)
                         .padding(.horizontal, 10)
                         .frame(height: 28)
-                        .background(RoundedRectangle(cornerRadius: 5).fill(on ? Palette.signal : Palette.ground))
-                        .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(on ? Palette.signal : Palette.line, lineWidth: 1))
+                        .background(RoundedRectangle(cornerRadius: 5).fill(on ? (apart ? Palette.cue : Palette.signal) : Palette.ground))
+                        .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(on ? (apart ? Palette.cue : Palette.signal) : apart ? Palette.cue.opacity(0.7) : Palette.line, lineWidth: 1))
                 }
                 .buttonStyle(.plain)
                 .accessibilityAddTraits(on ? [.isSelected] : [])
@@ -352,7 +359,10 @@ struct BoardSheet: View {
                 QuietButton(title: "Done") { dismiss() }
             }
             ScrollView {
-                Leaderboard(scores: Array(app.progress.scores(song: song.name).prefix(20)), compact: compact)
+                // The song's runs and, under them in the same list, the runs of its Solo level.
+                let scores = (app.progress.scores(song: song.name) + (app.solo(of: song).map { app.progress.scores(song: $0.name) } ?? []))
+                    .sorted { ($0.score, $0.date) > ($1.score, $1.date) }
+                Leaderboard(scores: Array(scores.prefix(20)), compact: compact)
             }
         }
         .padding(24)

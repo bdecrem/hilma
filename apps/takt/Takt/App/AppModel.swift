@@ -131,6 +131,9 @@ final class AppModel {
         var goals: [(title: String, met: Bool)] = []
         var xp = 0
         let started: Date
+        /// The Stage song the improv played over (`Lesson.Step.backing`), when it is one: the
+        /// teacher writes the whole track on it after the review (`writeTrack`).
+        var backingSong: String? = nil
 
         static func == (a: Self, b: Self) -> Bool {
             a.phase == b.phase && a.take == b.take && a.xp == b.xp && a.goals.map(\.title) == b.goals.map(\.title) && a.goals.map(\.met) == b.goals.map(\.met)
@@ -139,6 +142,34 @@ final class AppModel {
     var improvReview: ImprovReview?
     @ObservationIgnored private lazy var improvClient = ImprovClient()
     @ObservationIgnored private var improvTask: Task<Void, Never>?
+    /// The last take sent, as sent: the whole track is written from it after the review.
+    @ObservationIgnored private var lastImprovRequest: ImprovClient.Request?
+
+    /// The teacher writing the whole track after a review (Bart, 2026-11-07: "have them produce
+    /// a full version of the track that I can play… add that to the versions of the song in
+    /// game mode"): the steps as they come, then the track landed as the song's Solo level, or
+    /// what went wrong. It outlives the review sheet: closing the sheet does not stop it, and
+    /// the Stage shows the Solo chip once it lands.
+    struct TrackJob: Equatable {
+        enum Phase: Equatable {
+            case writing([String])
+            /// The track landed: the teacher's title and line, the bundle's song name.
+            case done(title: String, line: String, name: String)
+            case failed(String)
+        }
+        var phase: Phase
+        /// The backing song (bundled) the track is on, and its title.
+        let base: String
+        let baseTitle: String
+        let started: Date
+        /// The review it grows from (to write it again after a failure).
+        let review: Improv.Review
+        let reviewID: String?
+
+        static func == (a: Self, b: Self) -> Bool { a.phase == b.phase && a.base == b.base && a.started == b.started }
+    }
+    var trackJob: TrackJob?
+    @ObservationIgnored private var trackTask: Task<Void, Never>?
 
     /// "Send it": the band stops, the take goes to the teacher, the sheet shows it listening.
     func sendTake() {
@@ -172,8 +203,10 @@ final class AppModel {
         state.goals = goals.map { (l, i) in
             ("Level \(l.n) · \(i.title)", count.choruses >= (i.choruses ?? 0) && count.notes >= (i.minNotes ?? 0) && count.inScale >= (i.inScale ?? 1) - 1e-9)
         }
+        state.backingSong = step.backing
         improvReview = state
         let request = ImprovClient.Request(take: take, backing: backing, context: context)
+        lastImprovRequest = request
         improvTask?.cancel()
         improvTask = Task { @MainActor [weak self] in
             guard let self else { return }
@@ -214,6 +247,92 @@ final class AppModel {
             }
         }
         improvReview = state
+        writeTrack(review: review, id: id)
+    }
+
+    // MARK: The whole track
+
+    /// After a review over a Stage song: the teacher writes the whole track from the idea
+    /// (`POST /api/takt/improv/track`, src/lib/takt/solo-agent.ts), and it lands as the song's
+    /// Solo level (`ModStore.solo(of:)`). Runs on its own: the sheet may close meanwhile.
+    func writeTrack(review: Improv.Review, id: String?) {
+        guard let base = improvReview?.backingSong ?? trackJob?.base, let request = lastImprovRequest,
+              let song = bundledSongs.first(where: { $0.name == base }) else { return }
+        var job = TrackJob(phase: .writing([]), base: base, baseTitle: song.meta.title, started: Date(), review: review, reviewID: id)
+        trackTask?.cancel()
+        #if DEBUG
+        // `-ImprovTrack <file>`: the track from a saved bundle (a `track` event's mod), no
+        // network, a moment after the review; with `-ImprovReview` alone no track is written.
+        if let path = UserDefaults.standard.string(forKey: "ImprovTrack") {
+            trackJob = job
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                guard let self, self.trackJob?.started == job.started else { return }
+                do {
+                    try self.mods.loadFile(path)
+                    guard let solo = self.mods.solo(of: base), let bundle = self.mods.bundle(for: solo) else { throw ModStore.Failure(message: "-ImprovTrack: no solo of \(base) in the file") }
+                    // The teacher's title leads its line in the thread ("Lantern climb: …").
+                    let said = bundle.messages.last { $0.role == "agent" }?.text ?? ""
+                    let title = said.split(separator: ":", maxSplits: 1).first.map(String.init) ?? "Your track"
+                    self.trackJob?.phase = .done(title: title, line: solo.meta.line, name: solo.name)
+                } catch {
+                    fatalError("-ImprovTrack \(path): \(error)")
+                }
+            }
+            return
+        }
+        if UserDefaults.standard.string(forKey: "ImprovReview") != nil { return }
+        #endif
+        guard let chartingURL = Foundation.Bundle.main.url(forResource: "charting", withExtension: "json"),
+              let charting = try? JSONSerialization.jsonObject(with: Data(contentsOf: chartingURL)),
+              let songURL = Foundation.Bundle.main.url(forResource: song.name, withExtension: "json"),
+              let file = try? JSONSerialization.jsonObject(with: Data(contentsOf: songURL)) else { return }
+        var body: [String: Any] = [
+            "take": request.take.json, "backing": request.backing, "context": request.context,
+            "review": [
+                "headline": review.headline, "notes": review.notes,
+                "idea": ["title": review.idea.title, "why": review.idea.why, "bars": review.idea.bars,
+                         "notes": review.idea.notes.map { ["t": $0.t, "n": $0.n, "len": $0.len, "f": $0.f] }],
+            ],
+            "song": file, "base": song.name, "base_title": song.meta.title, "charting": charting,
+        ]
+        if let own = Charting.bundled.songs[song.name], let data = try? JSONEncoder().encode(own), let json = try? JSONSerialization.jsonObject(with: data) {
+            body["song_charting"] = json
+        }
+        job.phase = .writing([])
+        trackJob = job
+        trackTask = Task { @MainActor [weak self] in
+            guard let self else { return }
+            for await e in self.improvClient.track(body) {
+                guard self.trackJob?.started == job.started else { return }
+                switch e {
+                case .status(let text):
+                    if case .writing(let steps) = self.trackJob?.phase { self.trackJob?.phase = .writing(steps + [text]) }
+                case .track(let data, let title, let line):
+                    do {
+                        let bundle = try self.mods.receive(data)
+                        self.trackJob?.phase = .done(title: title, line: line, name: bundle.name)
+                    } catch {
+                        self.trackJob?.phase = .failed("The track came back in a shape the app can't play: \((error as? Song.LoadError)?.message ?? error.localizedDescription)")
+                    }
+                case .failed(let text):
+                    self.trackJob?.phase = .failed(text)
+                }
+            }
+        }
+    }
+
+    /// The track card's "Write it again", after a failure.
+    func retryTrack() {
+        guard let job = trackJob, case .failed = job.phase else { return }
+        writeTrack(review: job.review, id: job.reviewID)
+    }
+
+    /// The track card's "Play the whole track": the review closes and the Stage plays the
+    /// backing song on its Solo level (the melody, the teacher's line).
+    func playTrack() {
+        guard let job = trackJob, case .done = job.phase, let base = bundledSongs.first(where: { $0.name == job.base }) else { return }
+        closeReview()
+        playSolo(of: base)
     }
 
     /// The sheet's "Try my version": the idea as a step over the same backing.
@@ -357,7 +476,13 @@ final class AppModel {
                     start(goal: item, level: level)
                     if d.bool(forKey: "Back") { item.kind == .song ? leaveGame() : leaveLesson() }
                 }
-            case "stage": route = .stage
+            case "stage":
+                route = .stage
+                // `-Song <name> -Part melody -Difficulty solo` picks on that song's card (screenshots).
+                if let name = d.string(forKey: "Song"), let song = songs.first(where: { $0.name == name }) {
+                    if let p = d.string(forKey: "Part").flatMap(Song.PartKey.init(rawValue:)) { pick(song: song, part: p) }
+                    if let dd = d.string(forKey: "Difficulty").flatMap(GameEngine.Difficulty.init(rawValue:)) { pick(song: song, difficulty: dd) }
+                }
             case "game": break  // below
             case "eargame": break  // below
             case "quiz": break  // below, once everything is set
@@ -698,21 +823,57 @@ final class AppModel {
         let picked = stageParts[song.name] ?? .chords
         return song.partKeys.contains(picked) ? picked : song.partKeys[0]
     }
-    func stageDifficulty(_ song: Song) -> GameEngine.Difficulty { stageDifficulties[song.name] ?? .adaptive }
+    /// The level picked for the song; Solo only while the song has a solo and the melody is
+    /// the part (the teacher's track is a melody line).
+    func stageDifficulty(_ song: Song) -> GameEngine.Difficulty {
+        let d = stageDifficulties[song.name] ?? .adaptive
+        if d == .solo, solo(of: song) == nil || stagePart(song) != .melody { return .adaptive }
+        return d
+    }
     func pick(song: Song, part: Song.PartKey) { stageParts[song.name] = part }
     func pick(song: Song, difficulty: GameEngine.Difficulty) { stageDifficulties[song.name] = difficulty }
+
+    /// The teacher's whole track on a bundled song (its Solo level), when the player has one.
+    func solo(of song: Song) -> Song? {
+        guard song.mod == nil else { return nil }
+        return mods.solo(of: song.name)
+    }
+
+    /// The levels a song's card offers: the ladder and Adaptive, then Solo once the player has
+    /// the teacher's track on it and the melody is picked.
+    func stageLevels(_ song: Song) -> [GameEngine.Difficulty] {
+        GameEngine.Difficulty.ladder + (solo(of: song) != nil && stagePart(song) == .melody ? [.solo] : [])
+    }
+
+    /// What Play, Practice and Call open: the song at its part and level, or, on Solo, the
+    /// teacher's track on the melody, every note of it.
+    private func stageTarget(_ song: Song) -> (song: Song, part: Song.PartKey, difficulty: GameEngine.Difficulty) {
+        let d = stageDifficulty(song)
+        if d == .solo, let s = solo(of: song) { return (s, .melody, .solo) }
+        return (song, stagePart(song), d)
+    }
 
     /// Play: the song with the part and level picked for it.
     func play(song: Song) {
         guard let player else { return }
-        player.startGame(song: song, part: stagePart(song), difficulty: stageDifficulty(song))
+        let t = stageTarget(song)
+        player.startGame(song: t.song, part: t.part, difficulty: t.difficulty)
         route = .game
+    }
+
+    /// The song's Solo level from the top: the teacher's whole track (the review sheet's
+    /// "Play the whole track").
+    func playSolo(of song: Song) {
+        pick(song: song, part: .melody)
+        pick(song: song, difficulty: .solo)
+        play(song: song)
     }
 
     /// Practice: the same song, part and level, opened held at bar 1 in practice mode.
     func practice(song: Song) {
         guard let player else { return }
-        player.startGame(song: song, part: stagePart(song), difficulty: stageDifficulty(song), practice: true)
+        let t = stageTarget(song)
+        player.startGame(song: t.song, part: t.part, difficulty: t.difficulty, practice: true)
         route = .game
     }
 

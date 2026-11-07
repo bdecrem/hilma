@@ -9,10 +9,17 @@ import Foundation
 final class GameEngine {
     enum Difficulty: String, CaseIterable, Codable {
         case beginner, easy, easyPlus = "easy+", medium, hard, adaptive
+        /// Solo (0.1 (114)): not a rung but another line, the improv teacher's whole track
+        /// written from the player's take (`ModStore.solo(of:)`), every note of it; the chip
+        /// appears on a song's card once the player has one, after Adaptive.
+        case solo
 
         /// Easy+ (0.1 (109)): a rung between Easy and Medium, for a song whose Medium grew
         /// (Blue Lantern II's riff moved here when its Medium took on the hand moves).
         var title: String { self == .easyPlus ? "Easy+" : rawValue.capitalized }
+
+        /// The rungs of a ladder, in order, and Adaptive: what every song's card shows.
+        static var ladder: [Difficulty] { allCases.filter { $0 != .solo } }
     }
 
     enum Judgment: String, Equatable, Codable {

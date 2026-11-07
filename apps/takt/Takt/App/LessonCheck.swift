@@ -1775,6 +1775,70 @@ enum LessonCheck {
                 let fails = (try? ModStore.Bundle(data: JSONSerialization.data(withJSONObject: broken)).song()) == nil
                 check("mods: a bundle without a chords part is refused, not trapped", fails)
             }
+            // The teacher's whole track (0.1 (114), IMPROV.md "The whole track"): a bundle of kind
+            // "solo" is the Solo level of its base song, never a card; Solo plays every note.
+            if let base = songs.first(where: { $0.name == "song-blue-lantern-white" }),
+               let url = Bundle.main.url(forResource: base.name, withExtension: "json"),
+               let file = try? JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any] {
+                // A short solo over the whole song: the idea (D F G, D) every two bars, a chord
+                // tone on every change.
+                var notes: [[String: Any]] = []
+                var horns: [[String: Any]] = []
+                for bar in stride(from: 0, to: base.bars, by: 2) {
+                    let root = base.chord(atBar: bar).hasPrefix("G") ? 67 : base.chord(atBar: bar).hasPrefix("A") ? 69 : base.chord(atBar: bar).hasPrefix("Bb") ? 65 : 62
+                    for (i, (tick, n, len, lv)) in [(0, root, 12, 1), (12, root + 3, 12, 2), (24, root + 5, 24, 2), (48, 62, 36, 1)].enumerated() where i < 4 {
+                        notes.append(["t": bar * 48 + tick, "n": n, "len": len, "lv": lv])
+                        horns.append(["t": bar * 48 + tick, "n": n, "len": len, "v": 0.7])
+                    }
+                }
+                var f = file
+                var meta = f["song"] as! [String: Any]
+                var parts = meta["parts"] as! [String: Any]
+                var melody = parts["melody"] as! [String: Any]
+                melody["notes"] = notes
+                parts["melody"] = melody
+                meta["parts"] = parts
+                meta["line"] = "Your climb, through all four choruses."
+                f["song"] = meta
+                f["name"] = "solo-check001"
+                var channels = f["channels"] as! [String: Any]
+                channels["horns"] = horns
+                f["channels"] = channels
+                let now = "2026-11-07T00:00:00Z"
+                let top: [String: Any] = ["id": "22222222-3333-4444-5555-666666666666", "kind": "solo", "name": "solo-check001", "base": base.name, "base_title": base.meta.title,
+                                          "title": base.meta.title, "version": 1, "created_at": now, "updated_at": now, "song": f,
+                                          "messages": [["role": "user", "text": "from their take", "at": now], ["role": "agent", "text": "Lantern climb: the line.", "at": now]],
+                                          "versions": [["version": 0, "title": base.meta.title, "line": "", "ask": "The original", "at": now], ["version": 1, "title": base.meta.title, "line": "Your climb, through all four choruses.", "ask": "Lantern climb", "at": now]]]
+                do {
+                    let data = try JSONSerialization.data(withJSONObject: top)
+                    let bundle = try ModStore.Bundle(data: data)
+                    let solo = try bundle.song()
+                    check("solo: a bundle of kind solo loads as a song that knows it is one", bundle.isSolo && solo.mod?.isSolo == true && solo.mod?.base == base.name && solo.meta.title == base.meta.title && solo.notes(.melody).count == notes.count)
+                    let dir = FileManager.default.temporaryDirectory.appendingPathComponent("takt-solo-check-\(UUID().uuidString)", isDirectory: true)
+                    let store = ModStore(dir: dir)
+                    try store.receive(data)
+                    check("solo: the store keeps it apart from the mods (no card), as the song's solo", store.songs.isEmpty && store.solos.count == 1 && store.mods(of: base.name).isEmpty && store.solo(of: base.name)?.name == "solo-check001")
+                    let again = ModStore(dir: dir)
+                    check("solo: it comes back from disk the same way", again.solos.count == 1 && again.solo(of: base.name)?.version == 1)
+                    try? FileManager.default.removeItem(at: dir)
+                    let c = Charting.bundled
+                    check("solo: the Solo level is the top of the ladder, named apart from the rungs", c.tier(.solo, song: solo.name, part: .melody) == c.melody.tiers.count && GameEngine.Difficulty.solo.title == "Solo" && GameEngine.Difficulty.ladder.count == 6 && !GameEngine.Difficulty.ladder.contains(.solo) && c.line(.solo, song: solo.name, part: .melody).hasPrefix("The teacher's whole track"))
+                    let engine = GameEngine(song: solo, part: .melody, difficulty: .solo)
+                    check("solo: a run on Solo plays every note of the track", engine.level == c.melody.tiers.count && engine.masks[engine.level - 1].allSatisfy { $0 } && engine.notes.count == notes.count)
+                    let app = AppModel(player: nil, progress: ProgressStore(url: nil), account: AccountStore(progress: ProgressStore(url: nil)), mods: store)
+                    let before = app.stageLevels(base)
+                    app.pick(song: base, part: .melody)
+                    app.pick(song: base, difficulty: .solo)
+                    let picked = app.stageDifficulty(base)
+                    app.pick(song: base, part: .chords)
+                    let onChords = app.stageDifficulty(base)
+                    let other = songs.first { $0.name != base.name }.map { app.stageLevels($0).contains(.solo) } ?? false
+                    check("solo: the song's card offers Solo on the melody only, and only this song's; on the chords the pick falls back to Adaptive",
+                          before.contains(.solo) == false && app.stageLevels({ app.pick(song: base, part: .melody); return base }()).last == .solo && picked == .solo && onChords == .adaptive && !other && app.solo(of: solo) == nil && app.songs.allSatisfy { $0.name != solo.name })
+                } catch {
+                    check("solo: a solo bundle loads", false, "\(error)")
+                }
+            }
             if let song = songs.first {
                 let tpbar = song.ticksPerBar
                 let ms = 60000 / (Double(song.meta.tempo) * Double(tpb))

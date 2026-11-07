@@ -118,7 +118,7 @@ export function renderMemory(sessions: Session[], dayFacts: Record<string, strin
 // MARK: What the account keeps
 
 type ImprovRow = { created_at: string; take: { bars?: number; notes?: { t: number; n: number; v: number; len: number }[] } | null; backing: Record<string, unknown> | null; context: Record<string, unknown> | null; review: Record<string, unknown> | null }
-type ModRow = { title: string; base_title: string; version: number; messages: { role: string; text: string; at: string }[] | null }
+type ModRow = { kind?: string | null; title: string; base_title: string; version: number; messages: { role: string; text: string; at: string }[] | null }
 type ChatRow = { where_line: string | null; question: string; answer: string; created_at: string }
 type Snapshot = {
   scores?: { song: string; part: string; difficulty: string; score: number; accuracy: number; maxCombo: number; grade: string; level: number; date: string }[]
@@ -159,6 +159,16 @@ export function modEvents(row: ModRow): MemoryEvent[] {
   for (const m of row.messages ?? []) {
     const at = ms(m.at)
     if (!Number.isFinite(at)) continue
+    if (row.kind === 'solo') {
+      // The teacher's whole track (solo-agent.ts): the take it came from, then the line.
+      out.push({
+        at,
+        text: m.role === 'user'
+          ? `You wrote them the whole track of ${cut(row.base_title, 60)} (the Solo level on the Stage) ${cut(m.text, 200)}`
+          : `The Solo on ${cut(row.base_title, 60)}, as you described it: "${cut(m.text, 240)}"`,
+      })
+      continue
+    }
     out.push({
       at,
       text: m.role === 'user'
@@ -213,7 +223,7 @@ export async function recentMemory(userId: string, tz: string, now = Date.now())
     const [chat, improv, mods, progress] = await Promise.all([
       db.from('takt_chat').select('where_line, question, answer, created_at').eq('user_id', userId).gte('created_at', since).order('created_at', { ascending: false }).limit(60),
       db.from('takt_improv').select('created_at, take, backing, context, review').eq('user_id', userId).gte('created_at', since).order('created_at', { ascending: false }).limit(30),
-      db.from('takt_mods').select('title, base_title, version, messages').eq('user_id', userId).order('updated_at', { ascending: false }).limit(10),
+      db.from('takt_mods').select('kind, title, base_title, version, messages').eq('user_id', userId).order('updated_at', { ascending: false }).limit(10),
       db.from('takt_progress').select('snapshot').eq('user_id', userId).maybeSingle(),
     ])
     for (const [name, r] of [['takt_chat', chat], ['takt_improv', improv], ['takt_mods', mods], ['takt_progress', progress]] as const) {

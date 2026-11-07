@@ -30,6 +30,10 @@ final class ModStore {
     /// One mod as the server sends it (and as it sits on disk).
     struct Bundle {
         let id: String
+        /// "mod": Agent mode's own version of a track, a card on the set list. "solo": the improv
+        /// teacher's whole track from the player's take (solo-agent.ts), played as the Solo
+        /// level of the song it came from; one per song, the next version with each new take.
+        let kind: String
         let name: String
         let base: String
         let baseTitle: String
@@ -54,6 +58,7 @@ final class ModStore {
                 return v
             }
             id = try string("id")
+            kind = (top["kind"] as? String) ?? "mod"
             name = try string("name")
             base = try string("base")
             baseTitle = try string("base_title")
@@ -82,9 +87,11 @@ final class ModStore {
             raw = data
         }
 
-        var info: Song.ModInfo { .init(id: id, base: base, baseTitle: baseTitle, version: version, override: override) }
+        var info: Song.ModInfo { .init(id: id, base: base, baseTitle: baseTitle, version: version, override: override, kind: kind) }
 
         func song() throws -> Song { try Song(name: name, data: songData, mod: info) }
+
+        var isSolo: Bool { kind == "solo" }
     }
 
     /// Where the player is when Agent mode opens from a run.
@@ -118,6 +125,9 @@ final class ModStore {
     private(set) var bundles: [Bundle] = []
     /// The mods on the set list: every bundle of version 1 or more, loaded.
     private(set) var songs: [Song] = []
+    /// The teacher's whole tracks (kind "solo", version 1 or more), loaded: each is the Solo
+    /// level of its base song, never a card.
+    private(set) var solos: [Song] = []
     private(set) var error: String?
     private(set) var syncing = false
 
@@ -165,14 +175,26 @@ final class ModStore {
     private func set(_ list: [Bundle]) {
         bundles = list.sorted { $0.createdAt < $1.createdAt }
         var out: [Song] = []
+        var tracks: [Song] = []
         for b in bundles where b.version >= 1 {
             do {
-                out.append(try b.song())
+                if b.isSolo { tracks.append(try b.song()) } else { out.append(try b.song()) }
             } catch {
                 log.error("mod \(b.name, privacy: .public) does not load: \(error.localizedDescription, privacy: .public)")
             }
         }
         songs = out
+        solos = tracks
+    }
+
+    /// A bundle that just arrived (the teacher's whole track, `AppModel.writeTrack`): kept on
+    /// disk and in the lists. Throws when the app could not play it.
+    @discardableResult
+    func receive(_ data: Data) throws -> Bundle {
+        let bundle = try Bundle(data: data)
+        if bundle.version >= 1 { _ = try bundle.song() }
+        store(bundle)
+        return bundle
     }
 
     private func store(_ b: Bundle) {
@@ -192,6 +214,11 @@ final class ModStore {
 
     /// The mods made from this song (by name), oldest first.
     func mods(of name: String) -> [Song] { songs.filter { $0.mod?.base == name } }
+
+    /// The teacher's whole track on this song (its Solo level), the newest when there are several.
+    func solo(of name: String) -> Song? {
+        solos.last { $0.mod?.base == name }
+    }
 
     /// A thread on this bundled song that hasn't changed anything yet: the next message
     /// continues it instead of opening another.
@@ -371,8 +398,8 @@ final class ModStore {
     }
 
     #if DEBUG
-    /// `-LoadMod <file>`: a bundle from disk (a saved `done` event's mod, or a GET's `mod`)
-    /// into the store, for the checks and the screenshots without an account.
+    /// `-LoadMod <file>`: a bundle from disk (a saved `done` event's mod, a `track` event's, or
+    /// a GET's `mod`) into the store, for the checks and the screenshots without an account.
     func loadFile(_ path: String) throws {
         let data = try Data(contentsOf: URL(fileURLWithPath: path))
         if let top = try JSONSerialization.jsonObject(with: data) as? [String: Any], let mod = top["mod"] {
@@ -381,5 +408,8 @@ final class ModStore {
             store(try Bundle(data: data))
         }
     }
+
+    /// The bundle's data as the `track` event carries it.
+    static func data(of mod: Any) throws -> Data { try JSONSerialization.data(withJSONObject: mod) }
     #endif
 }

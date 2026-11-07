@@ -98,6 +98,10 @@ struct ImprovSheet: View {
             }
         }
         IdeaCard(idea: review.idea, compact: compact)
+        // The whole track, written from the idea once the review is in (over a Stage song).
+        if let job = app.trackJob, job.base == state.backingSong {
+            TrackCard(job: job, compact: compact, play: app.playTrack, retry: app.retryTrack)
+        }
     }
 
     /// What the take still needs for a level's improv goal (the plan's numbers).
@@ -141,6 +145,72 @@ struct IdeaCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(shape.fill(Palette.panel))
         .overlay(shape.strokeBorder(Palette.cue.opacity(0.6), lineWidth: 1))
+    }
+}
+
+/// The whole track (IMPROV.md): the teacher writing a solo over every bar of the backing song
+/// from the idea, step by step, then the track as it landed on the Stage, the song's Solo
+/// level, with Play; or what went wrong and Write it again.
+struct TrackCard: View {
+    let job: AppModel.TrackJob
+    let compact: Bool
+    let play: () -> Void
+    let retry: () -> Void
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: 8)
+        VStack(alignment: .leading, spacing: 10) {
+            Text("The whole track · \(job.baseTitle)")
+                .dataLabel(11, weight: .semibold)
+                .foregroundStyle(Palette.cue)
+            switch job.phase {
+            case .writing(let steps):
+                HStack(spacing: 10) {
+                    PulseDot()
+                    Text(steps.last ?? "Sending the review")
+                        .bodyText(compact ? 14 : 15)
+                        .foregroundStyle(Palette.text)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 0)
+                    TimelineView(.periodic(from: job.started, by: 1)) { ctx in
+                        Text("\(Int(ctx.date.timeIntervalSince(job.started))) s")
+                            .dataLabel(11)
+                            .foregroundStyle(Palette.muted)
+                            .monospacedDigit()
+                    }
+                }
+                Text("A solo over all of \(job.baseTitle), grown from your idea: it moves with the changes and changes chorus by chorus. It lands on the Stage as \(job.baseTitle)'s Solo level; you can close this and keep playing.")
+                    .bodyText(compact ? 13 : 14)
+                    .foregroundStyle(Palette.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+            case .done(let title, let line, _):
+                Text(title)
+                    .font(.display(compact ? 22 : 26))
+                    .textCase(.uppercase)
+                    .foregroundStyle(Palette.text)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text(line)
+                    .bodyText(compact ? 14 : 15)
+                    .foregroundStyle(Palette.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text("On the Stage: \(job.baseTitle) · Melody · Solo. Every note, as written.")
+                    .dataLabel(11)
+                    .foregroundStyle(Palette.muted)
+                PrimaryButton(title: "Play the whole track", action: play)
+                    .padding(.top, 4)
+            case .failed(let text):
+                Text(text)
+                    .bodyText(compact ? 14 : 15)
+                    .foregroundStyle(Palette.text)
+                    .fixedSize(horizontal: false, vertical: true)
+                QuietButton(title: "Write it again", action: retry)
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(shape.fill(Palette.panel))
+        .overlay(shape.strokeBorder(Palette.cue.opacity(0.6), lineWidth: 1))
+        .animation(.easeOut(duration: 0.25), value: job.phase)
     }
 }
 

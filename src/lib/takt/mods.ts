@@ -21,9 +21,15 @@ export type ModMessage = {
   steps?: string[]
 }
 
+/** 'mod': Agent mode's own version of a track, a card on the set list. 'solo': the improv
+ *  teacher's whole track from the player's take (solo-agent.ts), the Solo level on the song it
+ *  came from; one per song and player, rewritten as the next version by each new take. */
+export type ModKind = 'mod' | 'solo'
+
 export type ModRow = {
   id: string
   user_id: string
+  kind: ModKind
   base: string
   base_title: string
   name: string
@@ -51,11 +57,12 @@ export type ModSummary = Omit<ModRow, 'song' | 'charting' | 'messages' | 'user_i
 /** What the app stores: the row without the owner, plus the history. */
 export type ModBundle = Omit<ModRow, 'user_id'> & { versions: ModVersion[] }
 
-const COLUMNS = 'id, user_id, base, base_title, name, title, version, song, charting, messages, created_at, updated_at'
+const COLUMNS = 'id, user_id, kind, base, base_title, name, title, version, song, charting, messages, created_at, updated_at'
 
 export function summary(m: ModRow): ModSummary {
   return {
     id: m.id,
+    kind: m.kind ?? 'mod',
     base: m.base,
     base_title: m.base_title,
     name: m.name,
@@ -95,24 +102,40 @@ export async function getMod(userId: string, id: string): Promise<ModRow | null>
 }
 
 /** A new mod of `base` for the user: the song as the app sent it, titled "<Base> mod NN", and
- *  version 0 of its history (the clone as made). */
-export async function createMod(userId: string, base: string, baseTitle: string, song: SongFile, charting: SongOverride | null): Promise<ModRow> {
+ *  version 0 of its history (the clone as made). A solo (kind 'solo') is named "solo-…" and
+ *  keeps the song's own title: the app shows it as a level of that song, not as a card. */
+export async function createMod(userId: string, base: string, baseTitle: string, song: SongFile, charting: SongOverride | null, kind: ModKind = 'mod'): Promise<ModRow> {
   const mine = await listMods(userId)
-  const nth = mine.filter((m) => m.base_title === baseTitle).length + 1
-  const title = `${baseTitle} mod ${String(nth).padStart(2, '0')}`
-  const name = `mod-${randomBytes(4).toString('hex')}`
+  const nth = mine.filter((m) => m.base_title === baseTitle && (m.kind ?? 'mod') === 'mod').length + 1
+  const title = kind === 'solo' ? baseTitle : `${baseTitle} mod ${String(nth).padStart(2, '0')}`
+  const name = `${kind === 'solo' ? 'solo' : 'mod'}-${randomBytes(4).toString('hex')}`
   const file: SongFile = JSON.parse(JSON.stringify(song))
   file.name = name
   file.song.title = title
   const { data, error } = await f2Supabase()
     .from('takt_mods')
-    .insert({ user_id: userId, base, base_title: baseTitle, name, title, version: 0, song: file, charting, messages: [] })
+    .insert({ user_id: userId, kind, base, base_title: baseTitle, name, title, version: 0, song: file, charting, messages: [] })
     .select(COLUMNS)
     .single()
   if (error || !data) throw new Error(`takt_mods insert: ${error?.message}`)
   const row = data as unknown as ModRow
   await recordVersion(row, `The original: ${baseTitle}`)
   return row
+}
+
+/** The user's solo on `base` (the improv teacher's whole track), the latest if several. */
+export async function findSolo(userId: string, base: string): Promise<ModRow | null> {
+  const { data, error } = await f2Supabase()
+    .from('takt_mods')
+    .select(COLUMNS)
+    .eq('user_id', userId)
+    .eq('kind', 'solo')
+    .eq('base', base)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  if (error) throw new Error(`takt_mods: ${error.message}`)
+  return (data as unknown as ModRow | null) ?? null
 }
 
 /** Saves the row; with `ask` it also files the row's version in the history (call it after

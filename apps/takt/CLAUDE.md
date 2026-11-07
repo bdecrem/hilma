@@ -1716,6 +1716,64 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   <file> -ChatFile <path>`, new). Not yet: TestFlight (still 104); the chat's model is
   `CHAT_MODEL` in chat-agent.ts.
 
+- **The whole track: the teacher's solo as the Solo level. 0.1 (114), 2026-11-07.** Bart, on
+  the improv's "Your version" (a 4-bar loop over and over): "when the agent suggests an
+  improvement to the jam, have them produce a full version of the track that i can play. and
+  so their improvisation will change across the song to be interesting, follow chord changes
+  etc. NOT TOO HARD, but make it interesting. and then add that to the versions of the song
+  available in GAME MODE - give it some new level name". Read **`IMPROV.md`** ("The whole
+  track"). **What you see:** after a review over a Stage song (Level 1's improv over Blue
+  Lantern II, Level 2's over Maxwell Street II; a jam over a module's band gets none), the
+  sheet grows a third card under the idea, **THE WHOLE TRACK · BLUE LANTERN II**, with the
+  teacher's steps as it writes ("Hearing where your idea can go", "Writing bars 1–24 (Head)",
+  "Writing bars 25–48 (Sax solo)", "Checking it against the changes", "Putting it on the
+  Stage"; a minute or two), then its title ("Lantern climb home"), its line and **Play the
+  whole track**. Closing the sheet does not stop it. On the Stage the song's card gains a
+  level, **Solo** (after Adaptive, outlined in `cue`, on the melody only): the teacher's track,
+  every note as written, on the game's highway with the band; the card's line says what it
+  is; its runs go on the song's board; the pause card's Agent mode continues it (it is a
+  bundle). One Solo per song: the next take rewrites it as the next version (the history keeps
+  every earlier one). **The teacher** (`src/lib/takt/solo-agent.ts`, Opus 5.5, `SOLO_MODEL`):
+  `POST /api/takt/improv/track` takes the take, the review, the backing's file and
+  charting.json (the app's copies, as Agent mode sends them); the prompt is the improv
+  teacher's voice with the brief (their idea grown into a whole solo; the first chorus states
+  it, each chorus does one new thing, the peak before the last, home on the tonic; the first
+  note heard in a bar where the chord changes is a tone of the new chord; mostly quarters and
+  held notes, never five eighths in a row, no sixteenths, one note at a time, steps and small
+  leaps, a rest bar in four, 0.6–1.0 notes a second) and the chord tones of every chord among
+  the notes allowed (`chordTones`, `chordLine`). It writes with `write_notes` (mod-tools', so
+  the band's horns mirror the solo with the song's own velocities) in two halves and calls
+  `finish(title, line)`; **`checkSolo`** sends it back with reasons (two notes at once, off
+  the grid, shorter than an eighth, off the scale, out of the range `rulesFor` sets from the
+  take, leaps over an octave inside a phrase, too sparse or busy (0.45–1.2 a second), runs of
+  five eighths, more than two bars silent, the changes missed in over a third of the change
+  bars, the idea's first notes not quoted twice (same keys or same shape), more than half the
+  bars after chorus 1 repeating the bar a chorus earlier, anchors (lv 1) missing), up to four
+  fixes. Saved as a `takt_mods` row of **kind 'solo'** (schema `007_takt_mods_kind.sql`,
+  applied 2026-11-07; `createMod(…, 'solo')` names it `solo-…` and keeps the song's title;
+  `findSolo`), one per song and player, the next version with each take; `summary` and the
+  bundle carry `kind`; the memory (`memory.ts`) tells the chat teacher about it. **The app:**
+  `ModStore.Bundle.kind` / `isSolo`, `solos` beside `songs` (never a card; `solo(of:)`,
+  `receive(_:)`), `Song.ModInfo.kind`; `GameEngine.Difficulty.solo` ("Solo"; `ladder` is the
+  six rungs without it); `Charting.tier(.solo)` is the top of the ladder, `line(.solo)` its
+  sentence; `AppModel.solo(of:)`, `stageLevels`, `stageDifficulty` (Solo only with a solo and
+  the melody picked), `stageTarget` (Play, Practice and Call open the solo bundle on Solo),
+  `playSolo(of:)`; `TrackJob` + `writeTrack` / `retryTrack` / `playTrack` (the job outlives
+  the sheet; `ImprovReview.backingSong`, `lastImprovRequest`), `ImprovClient.track`;
+  `ImprovSheet.TrackCard`; `SongCard` (the chip, the line, the solo's best; `Chips.accent`),
+  `BoardSheet` (the solo's runs in the song's board). **Checks:** `npx tsx
+  scripts/takt/solo-check.ts` (the chords, the rules, `checkSolo` on a hand-made solo and on
+  looped / off-the-changes / busy / chordal / black-key / idea-less / silent / out-of-range
+  ones, one live track, with `BASE` the route with a guest: 22/22 locally, the live track 112
+  notes in 73 s, every rule kept, the route's in 99 s); `-LessonCheck` 456/456 (six solo
+  cases: the bundle, the store, disk, the level, the engine, the card's chips). DEBUG:
+  `-ImprovTrack <file>` (the track from a saved bundle after the review, no network; with
+  `-ImprovReview` alone none is written), `-Route stage -Song <name> -Part melody -Difficulty
+  solo` (picks on the card), `-Route game … -Difficulty solo -LoadMod <solo bundle>`.
+  Screenshots: the Mac's Solo run (`-SnapshotAt "solo:620"`), the phone's Stage card, Solo run
+  and review sheet with the track. Not yet: TestFlight (still 104); a solo of a mod (the
+  improv's backing is always a bundled song).
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without
@@ -1766,6 +1824,11 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   `ChatStore.swift` (the thread on disk, the streamed question), `AskSheet.swift` (`Ask` in the
   environment, `AskButton`, the sheet). Server: `src/lib/takt/chat-agent.ts`, `memory.ts`,
   `src/app/api/takt/chat/route.ts`, `scripts/takt/chat-check.ts`.
+- The whole track (0.1 (114)): `Improv/ImprovSheet.swift` (`TrackCard`), `App/AppModel.swift`
+  (`TrackJob`, `writeTrack`, `playSolo`, `stageTarget`), `Improv/ImprovClient.swift` (`track`),
+  `Mods/ModStore.swift` (`solos`, `solo(of:)`), `GameEngine.Difficulty.solo`. Server:
+  `src/lib/takt/solo-agent.ts`, `src/app/api/takt/improv/track/route.ts`,
+  `scripts/takt/solo-check.ts`, schema `007_takt_mods_kind.sql`.
 - `Call/Call.swift`: Call (0.1 (106)), pure — steps from any content with notes in order and a
   finger each (adapters from a Stage chart at its tier and from a lesson step's pattern), the
   crossing after each ("tuck" / "over"), the engine (a key in, a verdict out), the words and

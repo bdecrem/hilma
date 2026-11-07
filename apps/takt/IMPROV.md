@@ -84,6 +84,34 @@ idea checker, one live review; `BASE=https://ola.cx` adds the route with a throw
 First live review (2026-11-04, a made-up two choruses on the white keys): 19 s, the headline
 above, an idea joining the take's bar-1 climb and bar-3 walk-down into one arch landing on D.
 
+## The whole track (2026-11-07)
+
+Bart: "when the agent suggests an improvement to the jam, have them produce a full version of
+the track that I can play, so their improvisation changes across the song, follows the chord
+changes, not too hard but interesting; add that to the versions of the song in game mode, with a
+new level name." So after a review over a Stage song (`Lesson.Step.backing`: Level 1's improv
+over Blue Lantern II, Level 2's over Maxwell Street II), the teacher writes **the whole track**:
+
+1. The sheet grows a card under the idea, **THE WHOLE TRACK · BLUE LANTERN II**: the steps as
+   the teacher writes (a minute or two), then its title, its line and **Play the whole track**.
+   `AppModel.writeTrack` starts it from `reviewed`; it is a `TrackJob` of its own, so closing
+   the sheet (or Try my version) does not stop it, and Write it again retries a failure.
+2. It lands as a bundle of kind `solo` (`ModStore.solos`, apart from the mods: never a card) and
+   the song's card on the Stage gains a level, **Solo**, after Adaptive, outlined in `cue`, on
+   the melody only: the teacher's line, every note as written, on the game's highway with the
+   band (`GameEngine.Difficulty.solo`; `Charting.tier(.solo)` is the top of the ladder). Its
+   runs are on the song's board; the pause card's Agent mode continues the bundle. One Solo
+   per song and player: the next take rewrites it as the next version, the history keeps every
+   earlier one.
+3. The server (`src/lib/takt/solo-agent.ts`, `POST /api/takt/improv/track` with the take, the
+   review, the backing's file and charting.json): the improv teacher's voice with the brief,
+   the chord tones of every chord among the notes allowed, the range from the take, the density
+   in notes a bar; `write_notes` in two halves (the band's horns mirror it), `finish(title,
+   line)`; `checkSolo` sends it back with reasons (the grid, the lengths, one note at a time,
+   the scale, the range, leaps, 0.45–1.2 notes a second, runs of five eighths, silences over
+   two bars, the changes, the idea quoted twice, looping, anchors) up to four times. Saved in
+   `takt_mods` with `kind = 'solo'` (schema 007). `npx tsx scripts/takt/solo-check.ts`.
+
 ## XP
 
 `Snapshot.xp: [XPEntry]` (id, day, kind, points), merged as a union by id, so nothing pays twice
@@ -104,5 +132,10 @@ take on that step had them (`AppModel.reviewed` → `ProgressStore.goalImprov`).
   press path, sends the take after that many choruses.
 - `-ImprovReview <file>`: the review from a file (a `review` event's review), no network.
 - `-ImprovVersion 1`: on to the idea 1.5 s after the review.
+- `-ImprovTrack <file>`: the whole track from a saved bundle (a `track` event's mod, or
+  `solo-check.ts`'s `OUT`), no network, a second after the review; with `-ImprovReview` alone no
+  track is written. `-Route stage -Song song-blue-lantern-white -Part melody -Difficulty solo
+  -LoadMod <file> -AllTracks 1 -ScrollTo song-blue-lantern-white` shows the card with Solo picked;
+  `-Route game … -Difficulty solo -LoadMod <file>` plays it.
 - e.g. `-Module S1m -Step <n>` or `-Route map -Venue 1 -Goal improv`, with `-Backend
   http://localhost:<port>` for a dev server.
