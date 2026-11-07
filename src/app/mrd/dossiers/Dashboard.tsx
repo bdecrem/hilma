@@ -111,7 +111,7 @@ export default function Dashboard() {
     <main className="wrap">
       <header className="top">
         <div className="eyebrow">
-          <span>MRD · six new dossiers · <a href="/mrd/crawl">the crawl</a> · <a href="/mrd">the library</a></span>
+          <span>MRD · six new dossiers · <a href="/mrd/dossiers/review">blind review</a> · <a href="/mrd/crawl">the crawl</a> · <a href="/mrd">the library</a></span>
           <span className={`live ${active ? 'on' : ''}`}>
             <i />{active ? 'running' : stage.i === 0 ? 'preparing' : 'idle'} · updated {fetchedAt ? ago(new Date(fetchedAt).toISOString(), now) : '—'}
           </span>
@@ -175,6 +175,15 @@ export default function Dashboard() {
             </article>
           )
         })}
+      </section>
+
+      <section className="panel rv-cta">
+        <span className="stage">review</span>
+        <span className="what">
+          <b>Blind review, 2026-11-07.</b> The six dossiers and six matched MRD originals, shuffled and labelled A to L, scored by a separate agent
+          that checked 8 indicators against the law in each. The experimental six ranked 1 to 6 and got 48 of 48 checks right; the originals 31 of 48.
+        </span>
+        <a className="go" href="/mrd/dossiers/review">Read the review and the packets →</a>
       </section>
 
       <div className="cols">
