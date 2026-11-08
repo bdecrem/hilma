@@ -165,6 +165,10 @@ final class ProgressStore {
     struct Pins: Codable, Equatable {
         var songs: [String]
         var at: Date
+        /// A mod (Agent mode's version) pinned or unpinned on its own card, by its name; a mod
+        /// with no entry goes with the song it came from (Bart, 2026-11-07: unpin Slow Burn
+        /// Short Mod 01 and keep Slow Burn Short).
+        var mods: [String: Bool]? = nil
 
         /// Two devices' sets: the one set last.
         static func merge(_ a: Pins?, _ b: Pins?) -> Pins? {
@@ -179,7 +183,16 @@ final class ProgressStore {
     func setPinned(_ song: String, _ on: Bool, current: [String], at date: Date = Date()) {
         var songs = current.filter { $0 != song }
         if on { songs.append(song) }
-        snapshot.pins = Pins(songs: songs, at: date)
+        snapshot.pins = Pins(songs: songs, at: date, mods: snapshot.pins?.mods)
+        save()
+    }
+
+    /// Pins or unpins a mod's own card, apart from the song it came from.
+    func setPinned(mod name: String, _ on: Bool, current: [String], at date: Date = Date()) {
+        var p = snapshot.pins ?? Pins(songs: current, at: date)
+        p.mods = (p.mods ?? [:]).merging([name: on]) { _, new in new }
+        p.at = date
+        snapshot.pins = p
         save()
     }
 

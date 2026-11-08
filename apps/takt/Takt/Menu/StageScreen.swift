@@ -24,10 +24,10 @@ struct StageScreen: View {
 
     var body: some View {
         let compact = sizeClass == .compact
-        // The pinned tracks and the player's own versions of them; the rest under All tracks.
-        let pinnedRoots = Set(app.pinnedSongs)
-        let featured = app.songs.filter { pinnedRoots.contains(app.rootName($0)) }
-        let rest = app.songs.filter { !pinnedRoots.contains(app.rootName($0)) }
+        // The pinned tracks and the player's own versions of them (a version unpinned on its own
+        // card goes under All tracks); the rest under All tracks.
+        let featured = app.songs.filter { app.isPinned($0) }
+        let rest = app.songs.filter { !app.isPinned($0) }
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .center, spacing: 16) {
                 Text("Stage")
@@ -108,7 +108,7 @@ struct StageScreen: View {
         #if DEBUG
         // `-PinTap <song>` taps that card's pin a second in (screenshots of the toast).
         .task {
-            guard let name = UserDefaults.standard.string(forKey: "PinTap"), let song = app.bundledSongs.first(where: { $0.name == name }) else { return }
+            guard let name = UserDefaults.standard.string(forKey: "PinTap"), let song = app.songs.first(where: { $0.name == name }) else { return }
             try? await Task.sleep(for: .seconds(1))
             pinAction(song)?(!app.isPinned(song))
         }
@@ -120,10 +120,9 @@ struct StageScreen: View {
         }
     }
 
-    /// A bundled song's card pins or unpins it; a mod's card has no pin (it sits under its song).
+    /// A card's pin: a bundled song in the set, a mod on its own (it follows its song until then).
     private func pinAction(_ song: Song) -> ((Bool) -> Void)? {
-        guard song.mod == nil else { return nil }
-        return { on in
+        { on in
             withAnimation(.easeInOut(duration: 0.25)) {
                 app.setPinned(song, on)
                 toast = PinToast(song: song.name, title: song.meta.title, pinned: on)
@@ -132,7 +131,7 @@ struct StageScreen: View {
     }
 
     private func undo(_ t: PinToast) {
-        guard let song = app.bundledSongs.first(where: { $0.name == t.song }) else { return }
+        guard let song = app.songs.first(where: { $0.name == t.song }) else { return }
         withAnimation(.easeInOut(duration: 0.25)) {
             app.setPinned(song, !t.pinned)
             toast = nil
@@ -211,7 +210,7 @@ struct SongCard: View {
     let app: AppModel
     let song: Song
     let compact: Bool
-    /// Pin or unpin this track (nil on a mod's card: it goes with its song).
+    /// Pin or unpin this track.
     var onPin: ((Bool) -> Void)? = nil
     let showBoard: () -> Void
 

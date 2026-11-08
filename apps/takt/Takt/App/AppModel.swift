@@ -805,12 +805,20 @@ final class AppModel {
         return progress.snapshot.pins?.songs ?? StageScreen.defaultPins
     }
 
-    /// Whether a card's track is pinned (a mod goes with the song it came from).
-    func isPinned(_ song: Song) -> Bool { pinnedSongs.contains(rootName(song)) }
+    /// Whether a card's track is pinned: a mod by its own pin when the player set one, else it
+    /// goes with the song it came from.
+    func isPinned(_ song: Song) -> Bool {
+        if song.mod != nil, let own = progress.snapshot.pins?.mods?[song.name] { return own }
+        return pinnedSongs.contains(rootName(song))
+    }
 
-    /// Pin or unpin a bundled song's card.
+    /// Pin or unpin a card: a bundled song in the set, a mod on its own.
     func setPinned(_ song: Song, _ on: Bool) {
-        progress.setPinned(rootName(song), on, current: pinnedSongs)
+        if song.mod != nil {
+            progress.setPinned(mod: song.name, on, current: pinnedSongs)
+        } else {
+            progress.setPinned(song.name, on, current: pinnedSongs)
+        }
     }
 
     /// The bundled song a mod descends from (through mods of mods); a bundled song's own name.

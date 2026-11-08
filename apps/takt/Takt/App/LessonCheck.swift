@@ -1763,6 +1763,17 @@ enum LessonCheck {
                     check("mods: the ladder figures are onsets a second per tier, the base's for an unchanged part", ladder == rates && ladder == base.ladder(.melody), ladder.map { String(format: "%.2f", $0) }.joined(separator: " · "))
                     let engine = GameEngine(song: mod, part: .melody, difficulty: .medium)
                     check("mods: a run on the mod plays its own Medium", engine.level == 3 && engine.masks[2].filter { $0 }.count == mod.chart(.melody, tier: 3).count)
+                    // A mod's own pin (2026-11-07): it follows its song until unpinned on its card.
+                    let pinApp = AppModel(player: nil, progress: ProgressStore(url: nil), account: AccountStore(progress: ProgressStore(url: nil)))
+                    let follows = pinApp.isPinned(mod) && pinApp.isPinned(base)
+                    pinApp.setPinned(mod, false)
+                    let alone = !pinApp.isPinned(mod) && pinApp.isPinned(base) && pinApp.pinnedSongs == StageScreen.defaultPins
+                    pinApp.setPinned(base, false)
+                    pinApp.setPinned(mod, true)
+                    let own = pinApp.isPinned(mod) && !pinApp.isPinned(base)
+                    let round = try JSONDecoder.takt.decode(ProgressStore.Snapshot.self, from: JSONEncoder.takt.encode(pinApp.progress.snapshot))
+                    check("pins: a mod follows its song until its own pin is set, then keeps it apart from the song's",
+                          follows && alone && own && round.pins?.mods == ["mod-test0001": true], "\(follows) \(alone) \(own)")
                 } catch {
                     check("mods: a bundle loads", false, "\(error)")
                 }
