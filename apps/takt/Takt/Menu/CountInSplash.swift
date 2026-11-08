@@ -543,7 +543,7 @@ struct CountInHost<Content: View>: View {
     }
 }
 
-/// The launch's dictionary entry and the Learn header's tagline, "/tɑkt/  the beat. find it."
+/// The launch's dictionary entry and the Learn header's tagline, "the beat. find it."
 /// (Bart, 2026-11-07): one line, handed from the splash to the header once per launch. Where
 /// each sits (global frames, the font size), and whether the header shows its line yet.
 @MainActor @Observable
@@ -610,15 +610,14 @@ struct DictionaryEntry: View {
     }
 }
 
-/// "/tɑkt/  the beat. find it.": the pronunciation faintest, the meaning muted, the
-/// instruction brighter, as on the splash.
+/// "the beat. find it.": the meaning muted, the instruction brighter, as on the splash (the
+/// pronunciation stays on the splash; Bart, 2026-11-07: saves room on the main menu).
 struct TaglineText: View {
     let size: CGFloat
 
     var body: some View {
         let mono = Font.system(size: size, design: .monospaced)
-        (Text("/tɑkt/  ").font(mono).foregroundColor(Palette.muted.opacity(0.7))
-         + Text("the beat. ").font(mono).foregroundColor(Palette.muted)
+        (Text("the beat. ").font(mono).foregroundColor(Palette.muted)
          + Text("find it.").font(mono).foregroundColor(Palette.text))
             .lineLimit(1)
     }

@@ -171,7 +171,7 @@ extension LessonsScreen {
     }
 }
 
-/// The Learn header's line, "/tɑkt/  the beat. find it." (`TaglineText`): hidden while the
+/// The Learn header's line, "the beat. find it." (`TaglineText`): hidden while the
 /// launch's entry flies here (`Tagline`), then there for good. The etymology on hover (Mac).
 struct HeaderTagline: View {
     let size: CGFloat
