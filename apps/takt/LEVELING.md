@@ -50,10 +50,10 @@ The figures for every song, every tier (2026-11-08, `-LessonCheck` prints them a
 | song (melody) | L1 Beginner | L3 Easy | L4 Easy+ | Medium | L7 Hard |
 |---|---|---|---|---|---|
 | Blue Lantern II (Level 1 goal) | 0/0 · 1 · 10 | 0/0 · 1 · 10 | 0/0 · 1 · 10 | **6/3 · 3 · 13** (L6) | 6/4 · 3 · 13 |
-| Maxwell Street II (Level 2 goal) | 4/4 · 3 · 19 | 26/11 · 5 · 24 | 30/9 · 5 · 24 | **30/9 · 5 · 24** (L5) | 30/9 · 5 · 24 |
+| Maxwell Street II (Level 2 goal; the line of 2026-11-08, §4) | 5/3 · 3 · 22 | 6/5 · 3 · 22 (L2) | 4/3 · 2 · 22 | **4/3 · 2 · 22** (L5) | 4/3 · 2 · 22 |
 | Slow Burn | 8/6 · 3 · 19 | 18/12 · 5 · 24 | 18/12 · 5 · 24 | 18/11 · 5 · 24 (L5) | 20/11 · 5 · 24 |
 | Pearl Street | 8/8 · 2 · 14 | 23/12 · 4 · 21 | 32/12 · 4 · 21 | 33/15 · 4 · 21 (L5) | 33/12 · 4 · 21 |
-| Boogie Shoes | 6/5 · 4 · 24 | 27/14 · 5 · 24 | 50/7 · 5 · 24 | 50/9 · 6 · 24 (L5) | 56/7 · 5 · 24 |
+| Boogie Shoes (Easy = L2, Easy+ = L3 since 2026-11-08) | 13/8 · 3 · 19 | 23/12 · 3 · 19 (L2) | 27/14 · 5 · 22 (L3) | 50/9 · 6 · 24 (L5) | 56/7 · 5 · 24 |
 | Friars Point | 0/0 · 1 · 11 | 20/15 · 3 · 15 | 35/10 · 3 · 15 | 41/7 · 4 · 15 (L5) | 43/8 · 3 · 15 |
 | Warm Nine | 0/0 · 1 · 9 | 0/0 · 1 · 9 | 14/5 · 2 · 12 | 14/5 · 2 · 12 (L5) | 14/5 · 2 · 12 |
 | Hypnotist II | 0/0 · 1 · 5 | 0/0 · 1 · 7 | 0/0 · 1 · 7 | 0/0 · 1 · 7 (L5) | 0/0 · 1 · 7 |
@@ -103,10 +103,12 @@ it before and after every change (2026-11-08).
 - **Stage charts** (`CHARTING.md`, `Game/Charting.swift`): `-LessonCheck` prints the hand
   figures of every tier of every melody beside its onsets a second, and asserts the plan's
   goal songs: Blue Lantern II Easy+ 0 moves and 1 position, Medium ≤ 6 moves and ≤ 3 moments
-  (the Level 1 budget). A chart over its level's budget is cured in the line (rule 13: write
-  the riff in one position; rule 14: the next rung is the same line with a few moves), never by
-  slowing it (rule 9). The chords part keeps its hand-set voicings and is not measured this way
-  (a voicing is a position by construction).
+  (the Level 1 budget), and Maxwell Street II's Medium against Level 2's (4/3 · 2 · 22 since
+  2026-11-08, asserted since the same day; a later level's goal song prints until its line holds). A
+  chart over its level's budget is cured in the line (rule 13: write the riff in one position;
+  rule 14: the next rung is the same line with a few moves), never by slowing it (rule 9). The
+  chords part keeps its hand-set voicings and is not measured this way (a voicing is a position
+  by construction).
 - **Lesson steps and jams** (`Lesson/`, `CURRICULUM.md`): a run's fingering is in the content;
   a scale over two octaves is two tucks a run by design, and the step's level says so (Level 1
   is the C major and A minor runs, Level 2 the pentatonic ones). A jam's riff sits in one
@@ -136,10 +138,33 @@ it before and after every change (2026-11-08).
   solo budget is 4 moves, Bart's own number ("maybe 4 times"). Bart's solo was rewritten under
   it the same day (`scripts/takt/solo-from-review.ts`), v2 of his `takt_mods` row; v1 is in the
   history and in the fixture.
-- **Open: Maxwell Street II at Medium is a Level 4–6 hand (30 moves, 9 moments, 5 positions
-  over two octaves) and is the Level 2 goal.** Its horn line walks A C D E over two octaves. By
-  this sheet the Level 2 goal song wants ≤ 12 moves in ≤ 3 positions: the cure is the line
-  (`apps/takt/scripts/songs/maxwell_street.py --five`: keep the riff in one octave, let the
-  record's horns take the high answer), as Blue Lantern II's was in 0.1 (107). Not done on
-  2026-11-08 (the ask was Level 1); the check prints its figure as a warning, not a failure,
-  until the line is rewritten.
+- **2026-11-08, later: Boogie Shoes melody Easy.** Bart: "still over the band (0.64, we want
+  0.4-0.55)… without touching any other song and without making medium or hard a cliff": the
+  density axis, fixed there (`from: 3` on every non-anchor note but the riff's landing F in the form's first bar, which Beginner needs for a second key, so Easy is the anchors at 0.52
+  and tier 3 is named Easy+ at 0.83; BLUES.md §2, CHARTING.md rule 17). Measured on this axis
+  after: Beginner 13/8 · 3 · 19, Easy 23/12 · 3 · 19 (was 24/14 · 5 · 24), Easy+ 27/14 · 5 · 22,
+  Medium 50/9 · 6 · 24, Hard 56/7 · 5 · 24. Easy's 23 moves are the record's own octave leaps
+  (C4 under the thumb, the C5 on the IV, the D5 on the V, the shout chorus an octave up): a Level
+  4–6 hand on a song no level has as a goal, so it is printed, not failed. A Level 1–2 Boogie
+  Shoes is a line (a II version with the riff kept in one octave), not done: the ask was the
+  band, and no other song.
+- **2026-11-08, later: Maxwell Street II's line rewritten for the Level 2 hand.** Its Medium was
+  a Level 4–6 hand, 30 moves in 9 moments, 5 positions over two octaves: the five-note line of
+  0.1 (97) charted the original's answers, which land on A4 and C5 under the pinky while the
+  riff sits with the thumb on A3, so the hand jumped on every bar of stop time. The cure was
+  the line (`maxwell_street.py --five`; the original regenerates byte-identical): the riff and
+  the voice's answers in one pentatonic box, the five keys under the five fingers (thumb on A3,
+  pinky on G4), the second chorus and the solo in the box an octave up (thumb on A4), every
+  turnaround low on the A under the thumb, so the hand tucks up onto the high A and jumps home
+  onto the low one. Medium reads **4/3 · 2 · 22** (the same hand from tier 3 to Hard), 134
+  notes, 0.93 a second, inside Level 2's 12/6 · 3 · 24 and 0.4–1.0; Easy 6/5 · 3 · 22 at 0.49,
+  Beginner 5/3 · 3 · 22 at 0.26; the ladder 0.26 · 0.49 · 0.64 · 0.90 · 0.93 · 1.21 · 1.21 with
+  the blues melody patch in `charting.json` (new for this song; without it Easy is 0.76 and
+  Beginner → Easy doubles). Two things the fingering planner taught on the way, for the next
+  line written for the hand: a climb that ends under finger 4 (… E G | A) tucks onto the G and
+  settles a bar later, two moves and a position between the boxes, so end a climb on a note
+  the thumb tucks from straight onto the box's own thumb key; and a descent within a beat onto
+  a note mid-box lands the thumb there (inside a beat the hand may not jump onto a high
+  finger), two moves again, so bring the hand down onto the box's thumb key after a long note
+  (here the turnaround's A after the release's held C). The `-LessonCheck` plan-goal check
+  still asserts Level 1 only and prints Level 2's figure; it can assert it on the next build.

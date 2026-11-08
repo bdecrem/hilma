@@ -156,9 +156,11 @@ notes, as a separate song beside the original, the way Hypnotist II sits beside 
   Hard adds the passing C between the D and the F and, in the solo chorus, two pickup eighths
   into every riff but the run's (120).
 - **Maxwell Street II** (Chicago blues in A, 80, `maxwell_street.py --five`): the horn on
-  A C D E G. The riff walks up A C D E without the flat fifth, and the bass plays it in unison
-  with the horn. The release's riff shapes become E G A and D E G A, and the solo's chromatic
-  steps go. Medium plays all five notes, 145 notes, 1.01 a second (the original's figure).
+  A C D E G, a line of its own since 2026-11-08 (LEVELING.md §4): the riff walks up A C D E
+  without the flat fifth, the bass in unison; the voice's answers stay inside the riff's own
+  hand (thumb on A3, pinky on G4); the second chorus and the solo sit an octave up; every
+  turnaround comes home low. Medium plays all five notes, 134 notes, 0.93 a second, and moves
+  the hand 4 times in 3 moments between two positions (Level 2 allows 12 in 6, 3 positions).
 
 The record plays the new line on the horns channel, so it sounds the way the player is asked
 to play it. Both sit first under All tracks. A check proves each level's song at its goal's

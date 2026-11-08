@@ -123,6 +123,38 @@ lambda e: 0.84 if e["lv"] == 1 else 0.7)` puts the line on the record; then `sax
 horns note of 12 ticks or more. The grind (Halsted) doubles the riff a fifth up on the channel
 only.
 
+## A solo chorus, and the cover against the anchors (learned on the first test tracks, 2026-11-08)
+
+- **A piano solo** goes on the horns channel played by the piano (`inst="piano"` on each note in
+  `chart_to_channel`, or `s.note(s.horns, …, inst="piano")`), the way Boogie Shoes does it, with
+  the comping under it dropped about 15 %; the melody part's notes in that chorus are the solo
+  (the player takes the piano line there, on the part's monitor). Halsted writes its piano solo on
+  the keys channel instead (the melody part is the guitar); either way the solo is a line, not
+  the comping.
+- **Every key a chorus uses must be an anchor somewhere in that chorus, or carry one weight-2
+  note on the 3.** The chorus-long phrase cover runs before the weights and takes, for each key
+  the line uses, its heaviest earliest onset that fits the gap; a key whose only onsets are a
+  weight-2 passing note on the 4 or a 4-tick ornament a beat before a downbeat gets taken there,
+  and the next bar's anchor no longer fits Easy's 0.9 s gap. Both test tracks lost four anchors
+  a chorus this way at first measurement. The cure is the line: a weight-2 note of that key on
+  the 3 (a beat from both downbeats), or the key as an anchor, or `from` 6/7 on an ornament-only
+  key (the B naturals, a grace note) so the cover never sees it on Easy.
+- **A cover a beat long or longer is Beginner's too** (`minBeats` 1): keep a cover note that
+  should stay off Beginner to an eighth.
+- **At 76–90 a second anchor sits on the 3, never the 4**: the 4 is 0.79 s before the next
+  downbeat at 76 (0.67 at 90), under Easy's 0.9 s gap, and knocks the next bar's anchor off. One
+  anchor a bar at 76 is 0.32 a second, under §4's 0.35 rule of thumb: the riff bars take a
+  second anchor on the 3.
+- **A pickup into a bar's last note goes on the last triplet eighth (tick 44)**: Medium (tier 5,
+  `space` 1.2 s) borrows any weight-3 note it finds in a 12/8 half-bar silence (1.33 s); on tick
+  44 the 0.3 s gap keeps Medium off it and Hard still plays it.
+- **The comping's groove hits are the 3 and the 4, the anticipation a weight-3 push**: with the
+  groove on the "a" of 2 (tick 20), tier 2 borrows nothing (a hit must sit 1.2 s from both
+  downbeats) and Easy falls to the 1 alone (0.38) with a ×2.6 step over it.
+- Measure after every one of these; a chart that passes the bands can still be wrong bar by bar
+  (an anchor missing from Easy shows in `-ChartDump`, or in a per-bar dump of `masks()`), so read
+  Easy's bars once before calling it done.
+
 ## Level variants and `from`
 
 A song can write a second file from the same record (`--white`, `--five`, `--short`, `--ii`):

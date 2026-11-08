@@ -295,6 +295,19 @@ every song and part.
     level, and the figures of every song, are in `LEVELING.md`; a chart over its level's budget
     is cured in the line (rules 13 and 14), never by thinning or slowing it.
 
+17. **When the cover alone keeps Easy over its band, the passing notes go on `from: 3`**
+    (Boogie Shoes, 2026-11-08). Rule 2's patch (a chorus-long phrase, no borrowing) assumes the
+    anchors miss a *few* keys; a riff with eleven keys a chorus and four anchor keys hands the
+    cover seven picks a chorus, and Easy read 0.64 against 0.4–0.55 while the anchors alone were
+    0.50. A longer phrase is not the cure: 24 bars measured 0.56, the whole song 0.53, both
+    uneven (the picks pile into the first chorus) and still over twice Beginner. The cover can't
+    be told to skip a key by weight (it picks before the weights), only by `from`: every
+    non-anchor note on `from: 3` makes Easy the anchors (0.52 with one landing F a chorus left off the floor, so Beginner's four-bar phrases keep two keys: rule 7), tier 3 the first chart
+    with the whole line, and the song names tier 3 Easy+ (`"easy+": 3`) so the named ladder
+    climbs 0.25 → 0.52 → 0.83 → 1.58 → 2.17 with no step over twice. The tiers above re-pick a
+    few notes (each is seeded by the one under it: 114 → 119, 226 → 228); the band channels
+    never move, and `measure.ts --compare` proves the other songs don't either.
+
 ## Where this comes from
 
 Rhythm-game charters (Rock Band, Guitar Hero, Clone Hero) chart the top difficulty first and

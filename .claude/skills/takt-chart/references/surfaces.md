@@ -47,6 +47,19 @@ home position (the five or six scale keys under the fingers, the thumb's key) an
 whole piece inside it plus a step either side; the figures are the interest and each comes
 straight back.
 
+Writing a line for a hand budget, what Maxwell Street II taught (2026-11-08, 30/9 · 5 · 24 →
+4/3 · 2 · 22): put the line in **boxes**, the scale's five or six keys under the five fingers
+(thumb on A3 for A C D E G, thumb on A4 for the octave up), and let whole sections live in one
+box; move between boxes only at a chorus boundary or a turnaround, and bring the hand home onto
+the box's **thumb key** after a long note. The planner adds moves you did not write: a climb that
+ends under finger 4 (… E G | A) tucks onto the G and settles a bar later (two moves), so end a
+climb on a note the thumb tucks from straight onto the next box's thumb key; coming down within a
+beat onto a note mid-box puts the thumb there (inside a beat the hand may not jump onto a high
+finger), two moves again. Medium's `space` (1.2 s) borrows a Hard-only push back after any note
+held longer, so put Hard-only pushes inside a beat of a main note, never after a long one. Read
+the moves bar by bar (`measure.ts` prints them) and fix the line where the planner moved, not
+the fingers.
+
 Level songs: the plan's `song` item names `song`, `part`, `difficulty`, `grade` (Blue Lantern II
 melody Medium A for Level 1; Maxwell Street II melody Medium A for Level 2). `measure.ts
 <song> --level N --scale <pcs> --difficulty medium` is the whole judgement: every note on the

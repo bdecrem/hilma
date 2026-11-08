@@ -10,6 +10,14 @@ with the fills, a stop on the last bar. Chords part: the chanks on 2 and 4 (easy
 medium root and fifth, hard the voicing and the pushes). Melody part: the riff, and the piano
 solo in chorus 4. Since 0.1 (60) the riff carries one anchor (weight 1) a bar, the note the
 bar lands on, so Easy is the bones of the riff (BLUES.md); the other riff notes are weight 2.
+Since 2026-11-08 every note that is not an anchor carries `from: 3`: the riff has eleven keys a
+chorus and the anchors four, so the chorus-long phrase cover alone put Easy (tier 2) at 0.64 a
+second, over its 0.4–0.55 band (BLUES.md §2; a phrase of 24 or 72 bars still read 0.56 / 0.53
+and uneven). Easy is now the anchors, one a bar (70 of the 72: two of the solo's land inside
+the 0.9 s gap), 0.49 a second; tier 3 sees every note, so the passing keys come back there, and
+the song names it Easy+ (charting.json): 0.25 · 0.49 · 0.83 · 1.49 · 1.58 · 1.69 · 2.17, every
+rung under twice the one below. Tiers 3–5 re-pick a few notes since each is seeded by the one
+under it (114 → 119, 214, 226 → 228); Hard is the record as before.
 """
 import sys
 from pathlib import Path
@@ -155,6 +163,8 @@ s.chart_to_channel(chords, s.keys, lambda e: 0.58 if e["t"] % BAR in (12, 36) el
 
 C4, Eb4, E4, F4, Fs4, G4, Bb4, B4 = 60, 63, 64, 65, 66, 67, 70, 71
 C5, D5, Eb5, F5, G5, Bb5, C6 = 72, 74, 75, 77, 79, 82, 84
+# The lowest tier a non-anchor note is on at all (`from`): Easy (tier 2) is the anchors alone.
+PASSING = 3
 
 RIFF = {  # (tick, note, length, level) per bar of the form; one anchor (1) a bar, see BLUES.md
     0: [(0, G4, 8, 1), (8, Bb4, 4, 3), (12, C5, 12, 2), (24, Bb4, 8, 2), (32, G4, 4, 3), (36, F4, 12, 2)],
@@ -192,12 +202,21 @@ for c in range(CHORUSES):
         o = bar * BAR
         if bar == s.bars - 1:
             s.pnote(melody, o, C5, 20, 1)
-            s.pnote(melody, o + 24, C5, 20, 2)
+            s.pnote(melody, o + 24, C5, 20, 2, tier=PASSING)
             continue
         phrases = SOLO if c == 3 else RIFF
         for t, n, ln, lv in phrases[b]:
-            # The shout chorus takes the riff up an octave.
-            s.pnote(melody, o + t, n + 12 if (c == 2 and phrases is RIFF and n < 72) else n, ln, lv)
+            # The shout chorus takes the riff up an octave. Only the anchors are on Easy (tier 2);
+            # every other note is on the charts from tier 3 up (see the docstring), except the
+            # riff's landing F on the 4 of the form's first bar: Beginner (a 4-bar phrase, one
+            # onset every 2.4 s, a beat long at least) sees only the anchors otherwise, and in
+            # bars 1–4 those are the G on the 1 (8 ticks, too short for it) and the C the lick
+            # falls to, so it played one key there (CHARTING.md rule 7). The F sits a beat and
+            # a half from the G and a beat from the next C, so Easy's cover takes it without
+            # displacing an anchor (three notes a song).
+            keeps_beginner_honest = phrases is RIFF and b == 0 and t == 36
+            s.pnote(melody, o + t, n + 12 if (c == 2 and phrases is RIFF and n < 72) else n, ln, lv,
+                    tier=None if lv == 1 or keeps_beginner_honest else PASSING)
 s.fingered(melody)
 s.chart_to_channel(melody, s.horns, lambda e: 0.82 if e["lv"] == 1 else 0.7)
 for e in s.horns:

@@ -54,10 +54,10 @@ and say which in the song's generator docstring.
 | Level | What you play | Onsets / s target | Slow Burn | Boogie Shoes | Pearl Street | Blue Lantern | Dockery | Friars Point | Halsted |
 |---|---|---|---|---|---|---|---|---|---|
 | Beginner | The anchors, one at a time, with room: never two inside 2.4 s, never 5 s of nothing. Every key of each four bars appears once. Learn where the phrases land. | 0.2 – 0.35 | 0.29 | 0.25 | 0.26 | 0.26 | 0.27 | 0.24 | 0.18 (one anchor every two bars, cut from Easy's chorus cover) |
-| Easy | The anchors, all of them, plus the few keys they miss over a chorus. About one note a bar. No borrowing into silences. **Half of Medium.** | 0.4 – 0.55 | 0.43 | 0.64 (a riff in eighths; was 0.88) | 0.51 | 0.41 | 0.50 | 0.55 | 0.65 (about a note a bar: at 148 a bar is 1.62 s) |
-| Medium | Most of the tune: anchors and main notes, nothing quicker than a beat's division you can read. | 0.8 – 1.1 (a jump-blues riff runs to 1.6) | 1.09 | 1.57 | 1.31 | 0.88 | 1.18 | 1.42 (a boogie) | 1.14 (tier 4, the riff without its ornaments) |
+| Easy | The anchors, all of them, plus the few keys they miss over a chorus. About one note a bar. No borrowing into silences. **Half of Medium.** | 0.4 – 0.55 | 0.43 | 0.52 (the anchors and the riff's landing F once a chorus, since 2026-11-08; was 0.88, then 0.64) | 0.51 | 0.41 | 0.50 | 0.55 | 0.65 (about a note a bar: at 148 a bar is 1.62 s) |
+| Medium | Most of the tune: anchors and main notes, nothing quicker than a beat's division you can read. | 0.8 – 1.1 (a jump-blues riff runs to 1.6) | 1.09 | 1.58 | 1.31 | 0.88 | 1.18 | 1.42 (a boogie) | 1.14 (tier 4, the riff without its ornaments) |
 | Hard | The line as the record plays it: pushes, pickups, grace notes, the turnaround ornaments. | the record | 1.23 | 2.17 | 1.86 | 0.97 | 1.50 | 2.80 (the slide's triplets) | 4.29 (the riff, the runs, the solo's rakes) |
-| Adaptive | Starts one rung under your last run's top (first time: rung 4); clean 4-bar blocks climb one rung, under 60 % or three misses in a row drop one. The seven rungs must climb smoothly: no rung more than twice the one below it. | | 0.29 · 0.43 · 0.84 · 0.87 · 1.09 · 1.11 · 1.23 | 0.25 · 0.64 · 0.79 · 1.49 · 1.57 · 1.69 · 2.17 | 0.26 · 0.51 · 0.77 · 1.23 · 1.31 · 1.42 · 1.86 | 0.26 · 0.41 · 0.68 · 0.74 · 0.88 · 0.94 · 0.97 | 0.27 · 0.50 · 0.78 · 1.11 · 1.18 · 1.18 · 1.50 | 0.24 · 0.55 · 0.80 · 1.34 · 1.42 · 1.86 · 2.80 | 0.18 · 0.65 · 0.81 · 1.14 · 1.93 · 2.46 · 4.29 |
+| Adaptive | Starts one rung under your last run's top (first time: rung 4); clean 4-bar blocks climb one rung, under 60 % or three misses in a row drop one. The seven rungs must climb smoothly: no rung more than twice the one below it. | | 0.29 · 0.43 · 0.84 · 0.87 · 1.09 · 1.11 · 1.23 | 0.25 · 0.52 · 0.83 · 1.49 · 1.58 · 1.69 · 2.17 | 0.26 · 0.51 · 0.77 · 1.23 · 1.31 · 1.42 · 1.86 | 0.26 · 0.41 · 0.68 · 0.74 · 0.88 · 0.94 · 0.97 | 0.27 · 0.50 · 0.78 · 1.11 · 1.18 · 1.18 · 1.50 | 0.24 · 0.55 · 0.80 · 1.34 · 1.42 · 1.86 · 2.80 | 0.18 · 0.65 · 0.81 · 1.14 · 1.93 · 2.46 · 4.29 |
 
 Notes from play:
 
@@ -74,7 +74,7 @@ Notes from play:
   (the G on the 1, the C the lick falls to); Easy went from 0.88 to 0.64, Beginner 0.27 to 0.25,
   Medium and Hard unchanged. Easy still sits over the band because the riff repeats five keys
   every two bars and the chorus cover keeps them; the step Easy → Medium is 0.64 → 1.57, wide.
-  To hear on the next play-through.
+  Fixed 2026-11-08, below: Easy is the anchors alone.
 - 2026-10-31, the two new tracks were written to the §4 recipe and landed inside the bands at
   the first charting: Pearl Street Easy 0.51, Blue Lantern Easy 0.41.
 - 2026-11-01, the two Delta tracks (0.1 (73)): with the blues melody patch, Dockery's voice is
@@ -94,6 +94,21 @@ Notes from play:
   under about 0.6; it is a note a bar, which is what Easy reads like at 120. Beginner (0.18) is
   3.6 times under it, over the "twice" rule, as on Friars Point; it is cut from Easy's chart
   (`fromAbove`) and Easy's cover spends the chorus on keys, not anchors. To hear.
+- 2026-11-08, **Boogie Shoes Easy is the anchors alone.** Bart: "still over the band (0.64, we
+  want 0.4-0.55)… fix it without touching any other song and without making medium or hard a
+  cliff". The riff has eleven keys a chorus and the anchors four, so the chorus cover alone kept
+  Easy at 0.64 (92 notes: 72 anchors and 20 cover picks); a `phrase` of 24 measured 0.56 and of
+  72 0.53, both uneven over the song (0.4–0.7 across eight bars: the picks pile into the first
+  chorus) and still 2.1–2.3 times Beginner. The cover can't skip a key by weight (it picks before
+  the weights), only by `from`: every non-anchor note carries `from: 3` now (`boogie_shoes.py`;
+  CHARTING.md rule 17), so Easy is the anchors (70 of 72; two of the solo's fall inside the
+  0.9 s gap), 0.49 a second and even, and the passing keys come back on tier 3, which the song
+  names Easy+ (`"easy+": 3`, 0.83). Ladder 0.25 · 0.52 · 0.83 · 1.49 · 1.58 · 1.69 · 2.17,
+  every rung under twice the one below (the ×2.6 Beginner → Easy warning is gone); the named
+  levels 0.25 → 0.52 → 0.83 → 1.58 → 2.17. Medium 1.57 → 1.58 (two notes re-picked: each tier
+  is seeded by the one under it), Hard the record, the band channels byte-identical, the other
+  sixteen songs unchanged (`measure.ts --compare`). To hear: Easy's hand still jumps the record's
+  octaves (23 moves in 12 moments, 3 positions, 19 semitones; §6 and LEVELING.md §4).
 
 ## 3. Chords (the comping)
 
@@ -194,9 +209,13 @@ render loop, and Bart's calls to date (`references/feedback.md`).
   ride, out chorus, the last Dm held.
 - **Blue Lantern II** and **Maxwell Street II** (2026-11-04, the map's Level 1 and Level 2
   songs): the same records with the melody on a level's notes only, the white keys and A C D E
-  G (`--white`, `--five`; GOALS.md §2). Maxwell Street II's melody ladder charts the original's
-  figures within 0.04 a second (0.26 · 0.65 · 0.85 · 1.01 · 1.01 · 1.30 · 1.30); the plan asks
-  for an A on Medium. Blue Lantern II has had a line of its own since 0.1 (107), 2026-11-05: one
+  G (`--white`, `--five`; GOALS.md §2). Maxwell Street II has had a line of its own since
+  2026-11-08 (LEVELING.md §4: the first one charted the original's answers and was a Level 4–6
+  hand, 30 moves in 9 moments): two pentatonic boxes an octave apart, the second chorus and
+  the solo up the octave, the turnarounds low; with the blues melody patch 0.26 · 0.49 · 0.64 ·
+  0.90 · 0.93 · 1.21 · 1.21 a second (37 · 71 · 92 · 130 · 134 · 174 · 174 notes), Medium 4
+  hand moves in 3 moments, 2 positions, 22 semitones; the plan asks for an A on Medium. Blue
+  Lantern II has had a line of its own since 0.1 (107), 2026-11-05: one
   riff in one hand, a held note between (Bart found the sax line's Medium, 120 notes, too hard,
   and asked for simpler patterns that repeat more often), and since 0.1 (109), 2026-11-06, a
   rung above it: 0.35 · 0.38 · 0.38 · 0.53 · 0.53 · 0.63 · 0.88 a second (48 · 52 · 52 · 72 ·
@@ -210,8 +229,11 @@ render loop, and Bart's calls to date (`references/feedback.md`).
 
 ## 6. Open
 
-- **Boogie Shoes melody Easy at 0.64** is still over the band after the re-weighting (§2 notes);
-  Medium at 1.57 is a wide step up. Play it; the next lever is dropping the cover for the riff's
-  passing keys (a `phrase` of 24) or marking the C5 of the riff weight 3.
+- **Boogie Shoes melody Easy** is inside its band since 2026-11-08 (0.52: the anchors, and the riff's landing F in the form's first bar so Beginner has a second key there; §2
+  notes), with Easy+ at 0.83 between it and Medium. Open on the other axis: that Easy moves the
+  hand 23 times in 12 moments over 3 positions and 19 semitones (C4 under the thumb, then the C5
+  on the IV, the D5 on the V, the shout chorus an octave up), a Level 4–6 hand (LEVELING.md §2)
+  on a song that is no level's goal. If Bart wants a Level 1–2 Boogie Shoes, it is a line (a
+  Boogie Shoes II with the riff kept in one octave, as Blue Lantern II's was), not a patch.
 - The chords' Easy → Medium step is voicing only on all four tracks; whether a blues wants a
   rhythm step between them is Bart's call after playing a chords part on both.

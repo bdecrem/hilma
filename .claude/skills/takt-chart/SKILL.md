@@ -50,7 +50,14 @@ time, then:
    - Density over a band: the rung (rule 1: "half as hard" is half the figure; rule 3: find the
      rung nearest it and name what it plays, or say plainly that the ladder has no rung there),
      through the song's patch in `charting.json` `songs` (rule 4: never the ladder, which moves
-     every song); if no rung exists, the weights (rule 10) or the line.
+     every song); if no rung exists, the weights (rule 10) or the line. **When the phrase cover
+     alone keeps Easy over its band** (the anchors are in band but the cover adds the line's
+     other keys: Boogie Shoes, 0.64 with anchors at 0.50), weights cannot help, because the
+     cover runs before the weights and only picks which onset of a key it takes; the lever is
+     `from` on the passing notes (`from: 3` on every weight-2 and weight-3 note keeps Easy, tier
+     2, to the anchors and leaves tiers 3–7 as they were), proven on Boogie Shoes 2026-11-08
+     (0.64 → 0.49, every other tier within 0.02). A longer `phrase` (24, 72) was measured there
+     and did not reach the band; a weight-3 C5 moved nothing on Easy.
    - The hand over its budget: **the line**, never the ladder, never the tempo (rules 9, 13, 14,
      16). Write the riff in one hand position (five or six scale keys under the hand, the
      thumb named), let the figures that leave it be few and come straight home, and give those

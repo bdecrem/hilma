@@ -82,11 +82,11 @@ here.
 
 ## Open, to hear
 
-- Boogie Shoes melody Easy at 0.64 is over the 0.4–0.55 band after the re-weighting (BLUES.md
-  §6); Medium at 1.57 is a wide step up.
+- Boogie Shoes melody Easy: 0.64 → 0.49 on 2026-11-08 (`from: 3` on the passing notes, by the
+  takt-chart skill's first run); to hear. Its hand at Easy is the record's octave leaps.
 - Whether a blues comping wants a rhythm step between Easy and Medium (voicing only today).
 - Friars Point's and Halsted's Beginner are under their band (a fast song), noted, to hear.
-- Maxwell Street II (the Level 2 song) is a Level 4–6 hand at Medium (LEVELING.md §4).
+- Maxwell Street II (the Level 2 song): its line rewritten into two pentatonic boxes on 2026-11-08 (Medium 4/3 · 2 · 22); to hear.
 
 ## How to add a line
 

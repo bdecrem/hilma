@@ -26,6 +26,23 @@ TAKT = ROOT / "apps/takt"
 CONTENT = TAKT / "Takt/Content"
 SONGS = TAKT / "scripts/songs"
 
+
+def base_tree(iteration: Path):
+    """The repo as it was when the runs were spawned: <iteration>/base.txt names the commit, and
+    apps/takt's Content and song scripts are checked out from it into a scratch folder, so a run's
+    result can be graded against what it started from even after it was merged into main.
+    Without base.txt the working tree is the base."""
+    global CONTENT, SONGS
+    f = iteration / "base.txt"
+    if not f.exists():
+        return
+    commit = f.read_text().strip()
+    d = Path(tempfile.mkdtemp(prefix="takt-base-"))
+    subprocess.run(f"git -C {ROOT} archive {commit} apps/takt/Takt/Content apps/takt/scripts/songs | tar -x -C {d}", shell=True, check=True)
+    CONTENT = d / "apps/takt/Takt/Content"
+    SONGS = d / "apps/takt/scripts/songs"
+    print(f"base: {commit} ({CONTENT})")
+
 MELODY_BANDS = {"beginner": (0.2, 0.35), "easy": (0.4, 0.55), "medium": (0.8, 1.1)}
 CHORDS_BANDS = {"beginner": (0.2, 0.4), "easy": (0.6, 1.0), "medium": (0.9, 1.2)}
 
@@ -182,14 +199,17 @@ def grade_slow_blues_stoptime(outputs: Path):
                 runl = runl + 1 if b in quiet else 0
                 best = max(best, runl)
             ex.append(("A stop-time chorus: eight bars in a row where the drums hit only the 1", best >= 7, f"longest run of 1-only bars: {best} ({len(quiet)} such bars)"))
+            # A piano solo is written either as extra notes on the keys channel (Halsted) or as the
+            # horns channel playing the piano instrument for a chorus (Boogie Shoes, `i: "piano"`).
             chord_ticks = {(n["t"], n["n"]) for n in s["song"]["parts"]["chords"]["notes"]}
             extra_keys = [n for n in s["channels"]["keys"] if (n["t"], n["n"]) not in chord_ticks]
+            horn_piano = [n for n in s["channels"]["horns"] if n.get("i") == "piano"]
             by_chorus = {}
-            for n in extra_keys:
+            for n in extra_keys + horn_piano:
                 by_chorus[n["t"] // 576] = by_chorus.get(n["t"] // 576, 0) + 1
             solo_named = any(re.search(r"solo|piano", sec["name"], re.I) for sec in s["song"]["sections"])
-            ex.append(("A piano solo chorus: the keys channel plays a line of its own in one chorus",
-                       solo_named and max(by_chorus.values(), default=0) >= 24, f"sections {[x['name'] for x in s['song']['sections']]}; extra keys notes per chorus {by_chorus}"))
+            ex.append(("A piano solo chorus: a chorus where the piano plays a line of its own (extra keys notes, or the horns channel on the piano)",
+                       solo_named and max(by_chorus.values(), default=0) >= 24, f"sections {[x['name'] for x in s['song']['sections']]}; piano line notes per chorus {by_chorus}"))
             def bands(part, table):
                 ok, info = True, []
                 for d, (lo, hi) in table.items():
@@ -271,8 +291,9 @@ def grade_minor_blues_level_3(outputs: Path):
         bad = touched_other_songs(outputs, {new[0].name} if new else set(), set())
         ex.append(("No other song file and not Song.catalog changed", not bad, f"changed: {bad}" if bad else "only new files (and charting.json at most)"))
         rep = report_text(outputs)
+        figs = len(re.findall(r"\b\d\.\d\d\b", rep))
         ex.append(("The report quotes the ladder and the hand figures (moves, positions)",
-                   len(re.findall(r"\b\d\.\d\d\b", rep)) >= 6 and re.search(r"move|position", rep, re.I) is not None, f"{len(re.findall(r'\\b\\d\\.\\d\\d\\b', rep))} figures; hand words {'present' if re.search('move|position', rep, re.I) else 'absent'}"))
+                   figs >= 6 and re.search(r"move|position", rep, re.I) is not None, f"{figs} figures; hand words {'present' if re.search('move|position', rep, re.I) else 'absent'}"))
     finally:
         tree.cleanup()
     return ex
@@ -360,8 +381,9 @@ def grade_boogie_shoes_easy(outputs: Path):
             b_ev = "a dated 2026-11-08 note mentioning Boogie Shoes" if b_ok else "no dated note"
         ex.append(("BLUES.md's table and notes carry the new figure and the reason", b_ok, b_ev))
         rep = report_text(outputs)
+        figs = len(re.findall(r"\b\d\.\d\d\b", rep))
         ex.append(("The report names the lever (a tier, the phrase, space, or the weights) and the new ladder",
-                   re.search(r"tier|weight|phrase|space", rep, re.I) is not None and len(re.findall(r"\b\d\.\d\d\b", rep)) >= 5, f"{len(re.findall(r'\\b\\d\\.\\d\\d\\b', rep))} figures"))
+                   re.search(r"tier|weight|phrase|space", rep, re.I) is not None and figs >= 5, f"{figs} figures; lever words {'present' if re.search('tier|weight|phrase|space', rep, re.I) else 'absent'}"))
         bad = touched_other_songs(outputs, set(), {"song-boogie-shoes.json"})
         ex.append(("No other song file changed", not bad, f"changed: {bad}" if bad else "only Boogie Shoes"))
     finally:
@@ -438,6 +460,7 @@ def main():
         sys.exit(2)
     iteration = Path(args[0]).resolve()
     only = args[args.index("--case") + 1] if "--case" in args else None
+    base_tree(iteration)
     for case_dir in sorted(p for p in iteration.iterdir() if p.is_dir()):
         case = case_dir.name
         if case not in CASES or (only and case != only):

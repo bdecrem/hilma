@@ -2324,8 +2324,9 @@ enum LessonCheck {
             check("hand: Blue Lantern II by tier: Beginner to Easy+ 0/0 · 1 · 10, Medium 6/3 · 3 · 13, Hard 6/4 · 3 · 13",
                   byTier == ["0/0 · 1 · 10", "0/0 · 1 · 10", "0/0 · 1 · 10", "0/0 · 1 · 10", "0/0 · 1 · 10", "6/3 · 3 · 13", "6/4 · 3 · 13"], byTier.joined(separator: " | "))
             // The budgets: the sheet's table, and the plan's goal songs against their level's.
-            // Level 1 is asserted; a later level over its budget prints (LEVELING.md §4 lists
-            // Maxwell Street II as the open one) until its line is rewritten.
+            // Levels 1 and 2 are asserted (Maxwell Street II's line was rewritten for the Level 2
+            // hand on 2026-11-08, LEVELING.md §4); a later level over its budget prints until
+            // its line is rewritten.
             let b1 = Fingering.Budget.of(level: 1), b1solo = Fingering.Budget.of(level: 1, solo: true)
             check("hand: the Level 1 budget is 6 moves in 3 places, 3 positions, 13 semitones; a Level 1 solo track 4 moves in 2 places, 2 positions, inside an octave",
                   b1 == Fingering.Budget(level: 1, positions: 3, moves: 6, moments: 3, span: 13) && b1solo == Fingering.Budget(level: 1, positions: 2, moves: 4, moments: 2, span: 12)
@@ -2340,7 +2341,7 @@ enum LessonCheck {
                     let f = Fingering.figures(e.notes.indices.filter { e.masks[tier - 1][$0] }.map { e.notes[$0] }, ticksPerBeat: 12)
                     let b = Fingering.Budget.of(level: level.n)
                     let label = "leveling: Level \(level.n) goal \(e.song.meta.title) \(part.rawValue) at \(d.title) (tier \(tier)) reads \(f.short) against a budget of \(b.moves)/\(b.moments) · \(b.positions) · \(b.span)"
-                    if level.n == 1 {
+                    if level.n <= 2 {
                         check(label, b.holds(f))
                     } else {
                         print("\(b.holds(f) ? "note" : "WARN") \(label)\(b.holds(f) ? "" : " — over the hand budget, LEVELING.md §4")")

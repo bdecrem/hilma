@@ -1931,6 +1931,78 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   a new epoch, so a chorus joined mid-way is not judged). solo-check 22/22 live (a track in 78 s,
   0 hand moves), improv-check 10/10, `-LessonCheck` 479/479, Mac snapshots and the phone's.
 
+- **Boogie Shoes melody Easy is the anchors alone: 2026-11-08.** Bart: "boogie shoes melody
+  easy is still over the band (0.64, we want 0.4-0.55; it's in BLUES.md's open items). fix it
+  without touching any other song and without making medium or hard a cliff." The riff has
+  eleven keys a chorus and four anchor keys, so the chorus-long phrase cover alone put Easy at
+  0.64 (92 notes: 72 anchors, 20 cover picks); a `phrase` of 24 or 72 measured 0.56 / 0.53,
+  uneven over the song (0.4–0.7 across eight bars) and still 2.1–2.3 times Beginner. Every
+  non-anchor melody note now carries `from: 3` (`boogie_shoes.py`, `PASSING`; CHARTING.md rule
+  17): Easy is the 70 anchors the 0.9 s gap lets through plus the riff's landing F once a chorus (left off the floor so Beginner's first four bars keep two keys, rule 7; `-LessonCheck` caught it at 0.49 with C4 alone there), 0.52 a second, even ([0.4–0.6]); tier
+  3 sees every note, so the passing keys come back there, and the song names it Easy+ (`"easy+":
+  3` in `charting.json`). Ladder 0.25 · 0.52 · 0.83 · 1.49 · 1.58 · 1.69 · 2.17 (was 0.25 ·
+  0.64 · 0.79 · 1.49 · 1.57 · 1.69 · 2.17): every rung under twice the one below (the ×2.6
+  Beginner → Easy warning is gone), the named levels 0.25 → 0.52 → 0.83 → 1.58 → 2.17. The band
+  channels and the chords part are byte-identical; tiers 3–5 re-pick a few notes (114 → 119,
+  214, 226 → 228) since each is seeded by the one under it. `measure.ts --compare` against a
+  snapshot taken before: the other 16 songs unchanged. Easy's hand reads 23/12 · 3 · 19 (was
+  24/14 · 5 · 24): the record's own octave leaps (the C5 on the IV, the D5 on the V, the shout
+  chorus up an octave); not a level goal, so measured, not failed; a Level 1–2 hand would be a
+  Boogie Shoes II line (BLUES.md §6). Measured with `scripts/takt/measure.ts` only, no build in
+  this pass: run `-LessonCheck 1` and `charting-check.ts` on the next build.
+- **Maxwell Street II, two boxes for the Level 2 hand. 2026-11-08.** The sheet's open item:
+  the Level 2 goal song's Medium was a Level 4–6 hand, 30 moves in 9 moments, 5 positions over
+  two octaves (the five-note line of 0.1 (97) charted the original's answers, which sit under
+  the pinky an octave over the riff's thumb, so the hand jumped every bar of stop time).
+  `maxwell_street.py --five` has a line of its own now (the original regenerates
+  byte-identical): the riff and the voice's answers in one pentatonic box (thumb on A3, pinky
+  on G4), the second chorus and the solo in the box an octave up, every turnaround low on the
+  A under the thumb, so the hand tucks up onto the high A (bars 13, 25) and jumps home (24,
+  36): Medium 4 moves in 3 moments, 2 positions, 22 semitones, the same hand from tier 3 to
+  Hard; 134 notes, 0.93 a second; ladder 0.26 · 0.49 · 0.64 · 0.90 · 0.93 · 1.21 · 1.21 with
+  the blues melody patch in `charting.json` (new for this song). Measured with
+  `scripts/takt/measure.ts song-maxwell-street-five --level 2 --scale 9,0,2,4,7`, every other
+  song's figures unchanged (`--snapshot` / `--compare`). Figures in `LEVELING.md` §1 and §4,
+  `BLUES.md` §5, `GOALS.md` §2. Not built in this pass: `-LessonCheck` still prints Level 2's
+  figure instead of asserting it.
+
+- **Two skills, tested: `takt-blues` and `takt-chart`. 2026-11-08.** Bart: "make two skills or
+  subagents: 1 to create music tracks in the blues genre in accordance with the .md file about
+  our instruments and the type of blues we like… and 2 to create 'charts' for exercises,
+  improvisation, games, etc in a way that accords with all the feedback I have given thus far…
+  I want to be able to keep finetuning both… BUT ALSO do some testing on them." **The skills**
+  (`.claude/skills/takt-blues`, `.claude/skills/takt-chart`, project skills, `/takt-blues` and
+  `/takt-chart`): each a SKILL.md that says the workflow and where the sheets are (BLUES.md,
+  CHARTING.md, LEVELING.md, CURRICULUM.md, GOALS.md, IMPROV.md stay the source; the skills never
+  copy a number), `references/` (blues: `sound.md` the instruments, kit gains and loudness
+  targets, `recipe.md` the generator device by device with the closest script to copy per style,
+  `feedback.md` every call Bart has made about a track, dated; chart: `surfaces.md` each surface's
+  format, check and registration, `feedback.md` every call about difficulty, dated, and what
+  each one meant on the two axes), and `evals/` (cases in his words with graders). **The tools:**
+  `scripts/takt/measure.ts` (any material's figures without a build: a song's two ladders
+  against BLUES.md's bands and the twice rule, a tier against LEVELING.md's hand budget and
+  density band, a lesson step by its written fingering, a raw line; `--snapshot` / `--compare`
+  for "every other song unchanged"; `--content` for another checkout), `scripts/takt/render-song.sh`
+  (an offline render through the booted simulator to `~/Desktop/takt/<song>.mp3` with ffmpeg's
+  mean and peak), `scripts/takt/skill-grade.py` (grades a run's outputs against its case,
+  programmatically, from a base commit). **The test:** five cases, each run once with the skill
+  and once without, ten subagents in worktrees (13–36 min each): a slow blues in a new key with
+  stop time and a piano solo, a Level 3 minor blues over Am Dm Em, the Maxwell Street II Level 2
+  hand rewrite, Boogie Shoes' Easy, a Level 2 pentatonic drill. Every run passed every assertion
+  (the sheets in the repo already carry most of what the skills say, so the baselines read them
+  too); the skill's runs had the tighter hands (Moon Lake 8/5 · 3 · 17 against 11/8 · 3 · 22;
+  Maxwell Street II 4/3 · 2 · 22 keeping the record's riff, against 4/4 · 2 · 22 with the riff's
+  rhythm changed) and were faster on the chart cases. Benchmarks and the viewer:
+  `.claude/skills/<skill>-workspace/iteration-1/` (not committed) and
+  `~/Desktop/takt/skill-evals/<skill>-iteration-1.html`; the four test tracks render at −22 to
+  −24 dBFS (`~/Desktop/takt/song-{moorhead,last-call,moon-lake,low-tide}.mp3`), none in the
+  catalog. **Merged from the runs** (the two open items the sheets listed): Maxwell Street II's
+  line (above) and Boogie Shoes' Easy (above), with `-LessonCheck` asserting Level 2's goal song.
+  What the runs taught went back into the skills (recipe.md: the cover against the anchors, a
+  second anchor on the 3 at 76–90, a pickup on tick 44, the comping's groove hits; SKILL.md: the
+  `from` lever when the cover alone keeps Easy over its band; surfaces.md: boxes and the thumb
+  key for a hand-budget line).
+
 ## The one transport (2026-11-08)
 
 Every screen that plays music draws the same controls in the same order and they always work:

@@ -111,14 +111,24 @@ LEVELING.md, and this file keeps the pointer.
   printed (rule 16). **Measured: 10 moves in 7 moments was "crazy"; 6 in 3 was "2 or 3
   moments", right.**
 
+## Done by the skill's first runs (2026-11-08, to hear)
+
+- **Maxwell Street II** (Level 2's song): the `--five` line rewritten into two pentatonic boxes
+  an octave apart; Medium 4 moves in 3 moments, 2 positions, 22 semitones at 0.93 a second (was
+  30/9 · 5 · 24 at 1.01); Beginner 0.26, Easy 0.49 with the blues melody patch. The original
+  Maxwell Street byte-identical. Not yet played by Bart.
+- **Boogie Shoes** melody Easy 0.64 → 0.49: `from: 3` on every passing note (the cover alone
+  kept Easy over its band; weights and a longer phrase could not reach it), Easy+ named tier 3
+  so the step to Medium is not a cliff. The hand at Easy (23/12 · 3 · 19) is the record's own
+  octave leaps: a Level 1–2 Boogie Shoes would be a line, not a patch.
+
 ## Open (LEVELING.md §4, BLUES.md §6)
 
-- Maxwell Street II (Level 2's song) is a Level 4–6 hand at Medium: 30 moves in 9 moments, 5
-  positions over two octaves; the cure is the line (`maxwell_street.py --five`).
-- Boogie Shoes melody Easy at 0.64, over its band; Medium 1.57 a wide step up.
 - Whether the comping ladders want a rhythm step between Easy and Medium.
 - Whether the Level 1 budget (6 / 3 · 3 · 13) is right for the other songs once Bart plays them;
   the figure is in the check, his ear decides.
+- The Level 2 and Level 3 goal songs' figures are printed by `-LessonCheck`, Level 1's asserted;
+  assert Level 2's now that Maxwell Street II holds its budget.
 
 ## How to add a line
 

@@ -11,10 +11,27 @@ walk-up, root, flat third, fourth, flat fifth, fifth), not Willie Dixon's.
     python3 apps/takt/scripts/songs/maxwell_street.py --five   -> Takt/Content/song-maxwell-street-five.json
 
 `--five` is **Maxwell Street II**, the song of the map's Level 2 (A minor pentatonic;
-the plan wants an A on its melody at Medium): the same record with the horn on A C D E G only.
-The riff walks up A C D E without the flat fifth, the bass in unison with it; the release's
-riff shapes on the E and the D become E G A and D E G A, and the solo's chromatic steps go.
-Every note of the part, every level, is one of the five.
+the plan wants an A on its melody at Medium): the same record with a horn line of its own on
+A C D E G, written for the hand (LEVELING.md, 2026-11-08: the first five-note line charted the
+original's answers and sat the hand in five positions over two octaves, 30 moves in 9 moments
+at Medium; Level 2 allows 12 in 6, 3 positions). The line lives in two pentatonic boxes an
+octave apart, the five keys under the five fingers: the thumb on A3 (A3 C4 D4 E4 G4) and the
+thumb on A4 (A4 C5 D5 E5 G5). The riff walks up A C D E without the flat fifth, the bass in
+unison with it (the C on the late eighth is a Hard push, so Medium plays A D E on 1, 2, 3),
+and the voice's four answers stay inside the low box, each falling to one held note. The
+second chorus is the whole stop-time section and its release up the octave (the record's "the
+voice answers higher"); the solo chorus sits in the high box too, two two-bar phrases each
+played twice over the band's riff, its release high; the out chorus is low, one long note in
+each gap, the horn's last word. The turnaround is always low, A held then C D E walking up: the
+hand comes home onto the A under the thumb, and the next chorus's riff is a step away or, going
+up, a thumb under onto the high A (the Level 2 lesson's move). So the hand moves four times in
+three moments (up at bar 13, home and straight back up at 24–25, home at 36), two positions,
+A3 to G5, the same at every tier from the main notes up: Medium 4/3 · 2 · 22 against Level 2's
+12/6 · 3 · 24, 134 notes, 0.93 a second; Hard 174 notes, 1.21 a second (the pushes). Every
+note of the part, every level, is one of the five, and Medium plays all five. `charting.json`
+gives the song the blues melody patch (Easy = tier 2, a chorus-long phrase, no borrowing on
+it) that every blues track carries: Easy 0.49 a second (0.76 without it), and the riff at
+Medium is A D E in every bar instead of the cover's A C E in some.
 
 12/8 feel at 80 (the late eighth on tick 8, the triplet on 4). The form is the stop-time
 12-bar: A7 for eight bars, then E7 D7 A7 E7. Choruses: Stop time (the riff, the voice on the
@@ -256,9 +273,6 @@ HIGH = [
     [(0, G5, 8, 2), (8, E5, 4, 3), (12, D5, 12, 2), (24, C5, 24, 1)],
     [(0, A4, 12, 1), (12, C5, 8, 2), (20, Cs5, 4, 3), (24, D5, 24, 2)],
 ]
-if FIVE:
-    HORN_RIFF = [(0, A3, 8, 1), (8, C4, 4, 2), (12, D4, 12, 2), (24, E4, 12, 1)]
-    HIGH[3] = [(0, A4, 12, 1), (12, C5, 12, 2), (24, D5, 24, 2)]
 # The release (bars 8–11): the riff shape on the E and the D, then the turnaround.
 RELEASE = {
     8: [(0, E4, 8, 1), (8, G4, 4, 2), (12, A4, 8, 2), (20, Bb4, 4, 3), (24, B4, 24, 1)],
@@ -277,34 +291,103 @@ SOLO = {
     6: [(0, D5, 8, 2), (8, Eb5, 4, 3), (12, E5, 12, 1), (24, G5, 12, 2), (36, E5, 12, 2)],
     7: [(0, D5, 12, 2), (12, C5, 12, 2), (24, A4, 24, 1)],
 }
-if FIVE:
-    # The release on the five notes: E G A landing on the G (the blue third of E7), D E G A,
-    # and the turnaround walking up A C D E.
-    RELEASE[8] = [(0, E4, 8, 1), (8, G4, 4, 2), (12, A4, 12, 2), (24, G4, 24, 1)]
-    RELEASE[9] = [(0, D4, 8, 1), (8, E4, 4, 2), (12, G4, 12, 2), (24, A4, 24, 1)]
-    RELEASE[11] = [(0, A3, 24, 1), (24, C4, 8, 2), (32, D4, 4, 3), (36, E4, 12, 2)]
-    SOLO[1] = [(0, E5, 12, 2), (12, D5, 12, 2), (24, C5, 24, 1)]
-    SOLO[6] = [(0, D5, 12, 2), (12, E5, 12, 1), (24, G5, 12, 2), (36, E5, 12, 2)]
+# Maxwell Street II (the module's docstring): the five-note line, written for the hand. Every
+# note is (tick, note, length, weight); the whole line sits in two pentatonic boxes, the five
+# keys under the five fingers, the thumb on A3 or on A4. Weight 1 the anchors (the riff's root
+# and landing, the note each answer falls to), 2 the main notes, 3 the pushes that only Hard
+# plays (Medium is "nothing quicker than a beat's division you can read"; a push is written
+# inside a beat of a main note, never after a long note, or Medium's `space` borrows it back).
+UP = 12
+# The riff, the thumb on A3: A on 1, the C a Hard push on the late eighth, D on 2, E on 3.
+FIVE_RIFF = [(0, A3, 8, 1), (8, C4, 4, 3), (12, D4, 12, 2), (24, E4, 12, 1)]
+# The voice's answers in the gaps, four a chorus, inside the box (the G is the top, under the
+# pinky): each falls to one held note (weight 1), with a Hard ornament.
+FIVE_ANSWERS = [
+    [(0, E4, 12, 2), (12, G4, 8, 2), (20, E4, 4, 3), (24, D4, 24, 1)],
+    [(0, G4, 12, 2), (12, E4, 8, 2), (20, D4, 4, 3), (24, C4, 24, 1)],
+    [(0, C4, 8, 2), (8, D4, 4, 3), (12, E4, 12, 2), (24, G4, 24, 1)],
+    [(0, E4, 24, 1), (24, D4, 8, 2), (32, C4, 4, 3), (36, A3, 12, 2)],
+]
+# The release: the riff's shape on the E and the D, the fall over the A7 to the blue third
+# (Medium E G D / D G C / G E C), in the box the chorus sits in; then the turnaround, always
+# low, A held then C D E walking up: the hand lands on the A (the thumb) and the next chorus's
+# riff is a step away, or a thumb under onto the high A.
+FIVE_RELEASE = {
+    8: [(0, E4, 12, 1), (12, G4, 8, 2), (20, E4, 4, 3), (24, D4, 24, 1)],
+    9: [(0, D4, 8, 1), (8, E4, 4, 3), (12, G4, 12, 2), (24, C4, 24, 1)],
+    10: [(0, G4, 12, 2), (12, E4, 8, 3), (20, D4, 4, 3), (24, C4, 24, 1)],
+}
+FIVE_TURNAROUND = [(0, A3, 24, 1), (24, C4, 8, 2), (32, D4, 4, 3), (36, E4, 12, 2)]
+# The solo on the shuffle, in the high box over the band's riff: two two-bar phrases, each
+# played twice (the riff's shape turned up and brought down, then the G falling to a held A).
+FIVE_SOLO = [
+    [(0, A4, 12, 1), (12, C5, 8, 2), (20, D5, 4, 3), (24, E5, 24, 2)],
+    [(0, E5, 12, 2), (12, D5, 12, 2), (24, C5, 24, 1)],
+    [(0, G5, 12, 1), (12, E5, 8, 2), (20, D5, 4, 3), (24, C5, 24, 2)],
+    [(0, A4, 36, 1), (40, C5, 8, 3)],
+]
+FIVE_SOLO_ORDER = [0, 1, 0, 1, 2, 3, 2, 3]
+# The out chorus's gaps: one long note each, the horn's last word.
+FIVE_OUT = [[(0, G4, 36, 1)], [(0, E4, 36, 1)], [(0, G4, 36, 1)], [(0, C4, 36, 1)]]
+HIGH_CHORUS = 1  # the stop-time section up the octave; the solo chorus (SHUFFLE) is high too
+
+
+def up(phrase, by=UP):
+    return [(t, n + by, ln, lv) for t, n, ln, lv in phrase]
+
+
+def five_melody(melody):
+    for c in range(CHORUSES):
+        high = c in (HIGH_CHORUS, SHUFFLE)
+        for b in range(12):
+            bar = c * 12 + b
+            o = bar * BAR
+            if bar == s.bars - 1:
+                for t, n, ln, lv in FIVE_RIFF:
+                    s.pnote(melody, o + t, n, ln if t != 24 else 20, lv)
+                continue
+            if stop_time(bar):
+                if riff_bar(bar):
+                    phrase = up(FIVE_RIFF) if high else FIVE_RIFF
+                elif c == CHORUSES - 1:
+                    phrase = FIVE_OUT[b // 2]
+                else:
+                    phrase = up(FIVE_ANSWERS[b // 2]) if high else FIVE_ANSWERS[b // 2]
+            elif c == SHUFFLE and b < 8:
+                phrase = FIVE_SOLO[FIVE_SOLO_ORDER[b]]
+            elif b == 11:
+                phrase = FIVE_TURNAROUND
+            else:
+                phrase = up(FIVE_RELEASE[b]) if high else FIVE_RELEASE[b]
+            for t, n, ln, lv in phrase:
+                s.pnote(melody, o + t, n, ln, lv)
+
 
 melody = s.part("melody", "Five notes" if FIVE else "The horn", "piano", "horns", "sax")
-for c in range(CHORUSES):
-    for b in range(12):
-        bar = c * 12 + b
-        o = bar * BAR
-        if bar == s.bars - 1:
-            for t, n, ln, lv in HORN_RIFF:
-                s.pnote(melody, o + t, n, ln if t != 24 else 20, lv)
-            continue
-        if stop_time(bar):
-            phrase = HORN_RIFF if riff_bar(bar) else (HIGH if c == 1 else ANSWERS)[b // 2]
-        elif c == SHUFFLE and b < 8:
-            phrase = SOLO[b]
-        else:
-            phrase = RELEASE[b]
-        for t, n, ln, lv in phrase:
-            s.pnote(melody, o + t, n, ln, lv)
+if FIVE:
+    five_melody(melody)
+else:
+    for c in range(CHORUSES):
+        for b in range(12):
+            bar = c * 12 + b
+            o = bar * BAR
+            if bar == s.bars - 1:
+                for t, n, ln, lv in HORN_RIFF:
+                    s.pnote(melody, o + t, n, ln if t != 24 else 20, lv)
+                continue
+            if stop_time(bar):
+                phrase = HORN_RIFF if riff_bar(bar) else (HIGH if c == 1 else ANSWERS)[b // 2]
+            elif c == SHUFFLE and b < 8:
+                phrase = SOLO[b]
+            else:
+                phrase = RELEASE[b]
+            for t, n, ln, lv in phrase:
+                s.pnote(melody, o + t, n, ln, lv)
 if FIVE:
     assert all(e["n"] % 12 in (9, 0, 2, 4, 7) for e in melody), "a note outside A C D E G in the five-note line"
+    assert {e["n"] % 12 for e in melody if e["lv"] <= 2} == {9, 0, 2, 4, 7}, "Medium wants all five notes"
+    assert min(e["n"] for e in melody) == A3 and max(e["n"] for e in melody) == G5, "two boxes, A3 to G5"
+    assert len(melody) == 174, f"the five-note line is 174 notes, not {len(melody)}"
 s.fingered(melody)
 s.chart_to_channel(melody, s.horns, lambda e: 0.84 if e["lv"] == 1 else 0.7, inst=None)
 for e in s.horns:

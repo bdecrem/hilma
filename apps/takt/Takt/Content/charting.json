@@ -190,6 +190,7 @@
   "song-boogie-shoes": {
    "melody": {
     "easy": 2,
+    "easy+": 3,
     "phrase": 12,
     "tiers": {
      "2": {
@@ -279,6 +280,17 @@
    },
    "chords": {
     "easy": 2
+   }
+  },
+  "song-maxwell-street-five": {
+   "melody": {
+    "easy": 2,
+    "phrase": 12,
+    "tiers": {
+     "2": {
+      "space": 0
+     }
+    }
    }
   }
  }
