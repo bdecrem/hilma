@@ -29,22 +29,13 @@ struct Reading: Decodable {
         case right, left
     }
 
-    /// Note names under the notes: on (lessons 1 and 2), faint (lesson 3), off. A chip on the
-    /// screen cycles them.
-    enum Names: String, Decodable, CaseIterable {
-        case on, faint, off
-
-        var next: Names { Names.allCases[(Names.allCases.firstIndex(of: self)! + 1) % Names.allCases.count] }
-    }
-
-    /// One lesson: its staff, its default names, and one line per hand, a 12-bar chorus (or any
+    /// One lesson: its staff, and one line per hand, a 12-bar chorus (or any
     /// length; it repeats through the track) written a bar a string.
     struct Lesson: Decodable {
         let id: String
         let title: String
         let goal: String
         let clef: Clef
-        let names: Names
         /// The bars, each like "C4/q E4/q G4/h" or "C4/h r/h" (w h. h q. q e; `/n` after
         /// the length sets the finger; `r` is a rest).
         let right: [String]?

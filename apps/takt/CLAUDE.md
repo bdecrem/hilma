@@ -1786,7 +1786,7 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   Reading track lands: swap `track` (any bundled band or song file), `tempo`, `key`, `chords`
   and `channel` in `Content/reading-R.json`. **Content** (`Content/reading-R.json`,
   `Game/Reading.swift`, pure): the module, three lessons each with a clef (treble / bass /
-  grand), default names (on / faint / off), one line per hand written as notation a bar a string
+  grand), one line per hand written as notation a bar a string
   (`"C4/q E4/q G4/h"`, `r/h` a rest, lengths w h. h q. q e, `/n` a finger; every bar must add to
   four beats, checked at load), the five-finger position, and its cheat sheet (title, lead, the
   notes it draws, mnemonics, a tip, the note-values row). R1 Right hand: C–G in quarters, halves
@@ -1804,19 +1804,21 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   / U+1D122 placed by baseline, the 4/4, notes with stems, flags, dots, ledger lines and
   accidentals, rests, the grand staff's brace); the note to play now is **framed** in `signal`
   (not filled: on a staff, filled vs. hollow says quarter vs. half), the next outlined in `cue`
-  with the corner tick; a finger over each (under, for the left hand), the name under each
-  (`Note names · on/faint/off` chip, top left), bar lines and numbers, the chord and its numeral
-  where it changes; bottom left the bar's chord and the coach ("G. Second line. Pinky.",
-  `Reading.coach`), bottom right the bar and its beat LEDs. The keyboard lights only the keys
-  you press: no now / next keys, no finger badges (Bart, same day: "that's a cheat that defeats
-  the purpose of the lesson").
-  **Fixed the same day:** the names chip crashed the Mac app (`cycleReadingNames` read the
-  observed `reading` inside its own write, a Swift exclusivity trap; DEBUG `-ReadingNames n`
-  presses it n times). The HUD swaps the score for `ReadingMeter` (this chorus's notes played of
-  those judged, "Chorus n", two gate rings, Done) and adds `CheatToggle` (book, ⌘/; the phone's
-  sits in the practice row). The cheat sheet (`CheatSheetPanel`, 292 pt, `@AppStorage
-  "readingCheat"`, on by default on the Mac, `readingCheatPhone` off on the phone where it
-  slides over the staff) hides into a side tab. **Menu:** `ReadingModuleCard` under the modules
+  with the corner tick; a finger over each (under, for the left hand), bar lines and numbers,
+  the chord and its numeral where it changes; bottom right the bar and its beat LEDs. **No
+  clues** (Bart, same day: "remove the hints and the large clue letters. that's just silly"):
+  no note names, no coach line and no big chord on screen (the coach, `Reading.coach`, is the
+  staff's VoiceOver label only), and the keyboard never lights the key to play ("a cheat that
+  defeats the purpose"). **Missed, half lit:** right after a miss the key it wanted fills with
+  a wash of `signal` (a third of the play-now key's, `Key.soft`): a note gone by unplayed
+  (`runReading`, once a note, not one a scrub skipped) or a wrong key while a note was due
+  (`readingPress`: the key(s) of the due note nearest the press). It holds a beat, fades over
+  half a beat (`Player.hintStrength`), and goes dark the moment that key is played. The HUD
+  swaps the score for `ReadingMeter` (this chorus's notes played of those judged, "Chorus n",
+  two gate rings, Done) and adds `CheatToggle` (book, ⌘/; the phone's sits in the practice
+  row). The cheat sheet (`CheatSheetPanel`, 292 pt, `@AppStorage "readingCheat"`, on by
+  default on the Mac, `readingCheatPhone` off on the phone where it slides over the staff)
+  hides into a side tab. **Menu:** `ReadingModuleCard` under the modules
   on Learn, `ReadingModuleScreen` (route `.readingModule`, the three lessons all open, the first
   not done is next), `LessonEntry.reading` (kind `.readingModule`, code "R"); not on the map.
   DEBUG `-Route readingmodule`, `-Route reading -Reading n` (with `-PracticeAt 0 -PracticeBar 0

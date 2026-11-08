@@ -13,6 +13,9 @@ struct KeyboardStrip: View {
     var pressed: Set<Int> = []
     /// Keys → the finger that plays them, drawn as a numbered badge.
     var fingers: [Int: Int] = [:]
+    /// Keys half lit, 0...1: the key a Reading lesson's note wanted, just after it was missed
+    /// (`Player.readingHint`), fading out on the beat after.
+    var soft: [Int: Double] = [:]
     /// The computer keycaps, when Settings shows them; off on the Show me stage.
     var keyCaps = true
     @Environment(\.lessonControls) private var controls
@@ -36,12 +39,12 @@ struct KeyboardStrip: View {
 
             ZStack(alignment: .topLeading) {
                 ForEach(Array(layout.whites.enumerated()), id: \.element) { i, note in
-                    Key(note: note, black: false, role: role(note), finger: fingers[note], keyCap: keyCap(note))
+                    Key(note: note, black: false, role: role(note), finger: fingers[note], keyCap: keyCap(note), soft: soft[note] ?? 0)
                         .frame(width: layout.white, height: layout.height)
                         .offset(x: CGFloat(i) * layout.white)
                 }
                 ForEach(layout.blacks, id: \.self) { note in
-                    Key(note: note, black: true, role: role(note), finger: fingers[note], keyCap: keyCap(note))
+                    Key(note: note, black: true, role: role(note), finger: fingers[note], keyCap: keyCap(note), soft: soft[note] ?? 0)
                         .frame(width: layout.blackWidth, height: layout.blackHeight)
                         .offset(x: layout.blackX(note))
                 }
@@ -125,6 +128,8 @@ struct Key: View {
     var finger: Int? = nil
     /// The computer key that plays it (Settings → Input → Show computer keys, Mac).
     var keyCap: String? = nil
+    /// Half lit, 0...1 (a missed note's key): a wash of `signal`, a third of the key to play now.
+    var soft: Double = 0
 
     var body: some View {
         let shape = UnevenRoundedRectangle(bottomLeadingRadius: 4, bottomTrailingRadius: 4)
@@ -136,6 +141,9 @@ struct Key: View {
 
         ZStack(alignment: .bottom) {
             shape.fill(fill)
+            if soft > 0, role == .rest {
+                shape.fill(Palette.signal.opacity((black ? 0.5 : 0.34) * soft))
+            }
             if role == .next {
                 shape.strokeBorder(Palette.cue, lineWidth: 1.5)
                 CornerTick(inset: 5, leg: 8).fill(Palette.cue)
@@ -161,7 +169,7 @@ struct Key: View {
             .padding(.bottom, 8)
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(Self.name(note))\(role == .now ? ", play now" : role == .next ? ", next" : "")\(finger.map { ", finger \($0)" } ?? "")")
+        .accessibilityLabel("\(Self.name(note))\(role == .now ? ", play now" : role == .next ? ", next" : soft > 0 ? ", the note you missed" : "")\(finger.map { ", finger \($0)" } ?? "")")
     }
 
     static func name(_ note: Int) -> String {

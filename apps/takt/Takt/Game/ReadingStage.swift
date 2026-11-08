@@ -3,10 +3,10 @@ import SwiftUI
 /// The Reading lesson in the highway's place (2026-11-07, from the mockup Bart approved): the
 /// staff scrolls right to left past a fixed playhead, the note to play now framed in `signal`
 /// (a frame, not a fill: on a staff, filled and hollow say quarter and half), the next one
-/// outlined in `cue` with the corner tick; the names under the notes (a chip cycles them on,
-/// faint, off), the finger over each; the chord and the coach bottom left ("G. Second line.
-/// Pinky."), the bar and its beat LEDs bottom right; the cheat sheet beside it, hidden into a
-/// side tab (⌘/), the staff taking the room.
+/// outlined in `cue` with the corner tick;
+/// the finger over each, no names and no coach on screen (the staff is the thing read; the coach
+/// line is VoiceOver's); the bar and its beat LEDs bottom right; the cheat sheet beside it,
+/// hidden into a side tab (⌘/), the staff taking the room.
 struct ReadingStage: View {
     let state: GameState
     let reading: ReadingState
@@ -23,30 +23,12 @@ struct ReadingStage: View {
                 StaffView(reading: reading, heardTick: state.heardTick, ticksPerBeat: state.ticksPerBeat, compact: compact)
                     .accessibilityElement()
                     .accessibilityLabel(reading.coach)
-                Button(action: controls.readingNames) {
-                    HStack(spacing: 4) {
-                        Text("Note names ·").foregroundStyle(Palette.muted)
-                        Text(reading.names.rawValue).foregroundStyle(Palette.text)
-                    }
-                    .dataLabel(10, weight: .semibold)
-                    .padding(.horizontal, 8)
-                    .frame(height: 26)
-                    .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(Palette.line, lineWidth: 1))
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Note names \(reading.names.rawValue)")
-                VStack(alignment: .leading, spacing: 4) {
+                // No clues on the screen (Bart, 2026-11-07: "remove the hints and the large clue
+                // letters"): the staff says what to play; only the bar and its beat, bottom right.
+                VStack(alignment: .trailing, spacing: 0) {
                     Spacer()
-                    HStack(alignment: .lastTextBaseline, spacing: 8) {
-                        Text(reading.chord)
-                            .font(.display(compact ? 30 : 44))
-                            .foregroundStyle(Palette.text)
-                        if !reading.nextChord.isEmpty, reading.nextChord != reading.chord {
-                            Text("→ \(reading.nextChord)")
-                                .dataLabel(compact ? 11 : 13, weight: .semibold)
-                                .foregroundStyle(Palette.muted)
-                        }
-                        Spacer(minLength: 8)
+                    HStack(spacing: 8) {
+                        Spacer()
                         Text("Bar \(state.bar + 1) / \(state.bars)")
                             .dataLabel(10)
                             .foregroundStyle(Palette.muted)
@@ -59,7 +41,6 @@ struct ReadingStage: View {
                         }
                         .accessibilityHidden(true)
                     }
-                    CoachText(line: reading.coach, compact: compact)
                 }
                 .allowsHitTesting(false)
             }
@@ -83,26 +64,6 @@ struct ReadingStage: View {
             }
         }
         .animation(.easeOut(duration: 0.2), value: open)
-    }
-}
-
-/// The coach line: the note's name in `signal`, the rest in text.
-private struct CoachText: View {
-    let line: String
-    let compact: Bool
-
-    var body: some View {
-        let parts = line.split(separator: ".", maxSplits: 1)
-        Group {
-            if parts.count == 2 {
-                Text(String(parts[0]) + ".").foregroundColor(Palette.signal).fontWeight(.semibold)
-                    + Text(String(parts[1])).foregroundColor(Palette.text)
-            } else {
-                Text(line).foregroundColor(Palette.text)
-            }
-        }
-        .bodyText(compact ? 14 : 16)
-        .lineLimit(2)
     }
 }
 
@@ -248,7 +209,7 @@ struct StaffLayout {
         playX = clipX + (compact ? 34 : 110)
         beat = compact ? 42 : 64
         // The coach and the chord sit under the staff; the block above them is centered.
-        let reserve: CGFloat = compact ? 74 : 96
+        let reserve: CGFloat = compact ? 30 : 36
         let room = max(0, size.height - reserve)
         if grand {
             let block = 60 + 13 * g + 70
@@ -353,20 +314,11 @@ struct StaffView: View {
                         c.draw(Text("\(f)").font(.system(size: 11, weight: .bold, design: .monospaced))
                                 .foregroundColor(lit ? color : Palette.muted), at: CGPoint(x: nx, y: fy))
                     }
-                    // The name, under its staff (between the two on the grand staff for the right hand).
-                    if reading.names != .off {
-                        let ny = n.event.hand == .right ? s.bottom + (L.grand ? 2.6 * s.g : 2.3 * s.g)
-                            : s.bottom + (L.grand ? 2.2 * s.g : 3.0 * s.g + 6)
-                        var t = c
-                        if reading.names == .faint && n.mark != .now { t.opacity *= 0.4 }
-                        t.draw(Text(Reading.name(n.event)).font(.system(size: L.grand ? 12 : 14, weight: n.mark == .now ? .bold : .medium, design: .monospaced))
-                                .foregroundColor(lit ? color : Palette.muted), at: CGPoint(x: nx, y: ny))
-                    }
                 }
             }
 
             // The playhead, fixed.
-            let lowRow = L.grand ? last.bottom + 3.4 * last.g + 10 : last.bottom + (reading.clef == .bass ? 3.0 * last.g + 18 : 2.3 * last.g + 14)
+            let lowRow = L.grand ? last.bottom + 3.4 * last.g + 10 : last.bottom + (reading.clef == .bass ? 2.0 * last.g + 18 : 1.6 * last.g + 10)
             ctx.stroke(Path { p in p.move(to: CGPoint(x: L.playX, y: first.top - 26)); p.addLine(to: CGPoint(x: L.playX, y: lowRow)) },
                        with: .color(Palette.signal), lineWidth: 2)
             ctx.fill(Path { p in

@@ -617,6 +617,7 @@ final class Player {
         if let game, inGame {
             guard s.epoch == gameEpoch else { return }
             let p = clock.position(atHost: calibrated ? shifted(hostTime, clock) : hostTime)
+            if reading != nil { readingPress(note, tick: p.tick, msPerTick: p.msPerTick) }
             game.played(note: note, tick: p.tick, msPerTick: p.msPerTick)
             return
         }

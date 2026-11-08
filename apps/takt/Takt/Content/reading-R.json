@@ -22,7 +22,6 @@
    "title": "Right hand",
    "goal": "C to G on the treble clef: quarters, halves and a rest",
    "clef": "treble",
-   "names": "on",
    "right": [
     "C4/q E4/q G4/h",
     "G4/q F4/q E4/h",
@@ -84,7 +83,6 @@
    "title": "Left hand",
    "goal": "Roots and fifths on the bass clef, in half notes",
    "clef": "bass",
-   "names": "on",
    "left": [
     "C3/h G3/h",
     "C3/h G3/h",
@@ -146,7 +144,6 @@
    "title": "Both hands",
    "goal": "The left hand holds the root, the right plays lesson 1's line",
    "clef": "grand",
-   "names": "faint",
    "right": [
     "C4/q E4/q G4/h",
     "G4/q F4/q E4/h",

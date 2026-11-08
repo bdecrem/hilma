@@ -102,8 +102,6 @@ struct GameControls {
     var agent: () -> Void = {}
     /// Call on and off: the next note called out, finger then key, the band held.
     var call: () -> Void = {}
-    /// A Reading lesson's names chip: on, faint, off.
-    var readingNames: () -> Void = {}
 }
 
 private struct GameControlsKey: EnvironmentKey {
@@ -185,7 +183,7 @@ struct GameScreen: View {
             .animation(.easeOut(duration: 0.25), value: state.practice)
             Hairline()
             KeyboardStrip(low: state.keys.lowerBound, high: state.keys.upperBound, now: state.nowNotes, next: state.nextNotes,
-                          pressed: state.pressedNotes, fingers: state.fingers)
+                          pressed: state.pressedNotes, fingers: state.fingers, soft: state.reading?.soft ?? [:])
                 .frame(height: compact ? 112 : 128)
                 .padding(.horizontal, compact ? 16 : 24)
                 .padding(.vertical, compact ? 10 : 18)

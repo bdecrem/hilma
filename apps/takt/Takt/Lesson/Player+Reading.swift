@@ -2,7 +2,7 @@ import SwiftUI
 import os
 
 /// A Reading lesson under way: which lesson, its line as written (notes and rests, both
-/// hands), the names chip, and the gate (two clean choruses).
+/// hands), the keys half lit after a miss, and the gate (two clean choruses).
 struct ReadingSession {
     let content: Reading
     let index: Int
@@ -11,7 +11,10 @@ struct ReadingSession {
     /// The engine's note index of each written note (`tick * 128 + midi`).
     let engineIndex: [Int: Int]
     let trackName: String
-    var names: Reading.Names
+    /// Keys half lit after a miss (MIDI note → the uptime it lit), and the engine's notes
+    /// already hinted, so a miss lights its key once.
+    var hints: [Int: Double] = [:]
+    var hinted: Set<Int> = []
     /// Clean choruses this sitting, and the choruses already read (by number).
     var clean = 0
     var read: Set<Int> = []
@@ -38,21 +41,30 @@ extension Player {
         var map: [Int: Int] = [:]
         for (i, n) in game.notes.enumerated() { map[n.t * 128 + n.n] = i }
         reading = ReadingSession(content: content, index: index, line: line, engineIndex: map,
-                                 trackName: Reading.band(content.track).name, names: lesson.names, done: done)
+                                 trackName: Reading.band(content.track).name, done: done)
         lessonLog.info("reading: \(lesson.id, privacy: .public) · \(song.bars) bars on \(content.track, privacy: .public)")
-        #if DEBUG
-        // `-ReadingNames n` presses the names chip n times (the chip's own path; it trapped once).
-        for _ in 0..<UserDefaults.standard.integer(forKey: "ReadingNames") { cycleReadingNames() }
-        #endif
     }
 
-    /// The names chip: on → faint → off.
-    func cycleReadingNames() {
-        // Read, change, write back: `reading?.names = reading?.names.next` reads the observed
-        // property inside its own write (an exclusivity trap; it crashed the Mac app).
-        guard var r = reading else { return }
-        r.names = r.names.next
+    /// A key pressed in a Reading lesson, before the engine judges it: the key half lit after a
+    /// miss goes dark when it is played; a key no note due wants half lights the key(s) the note
+    /// nearest the press wanted (the right answer, right after the wrong one).
+    func readingPress(_ note: Int, tick: Double, msPerTick: Double) {
+        guard var r = reading, let game, msPerTick.isFinite, msPerTick > 0 else { return }
+        r.hints[note] = nil
+        let reach = game.loose(msPerTick: msPerTick)
+        let due = game.notes.indices.filter { game.status[$0] == .pending && abs(Double(game.notes[$0].t) - tick) <= reach }
+        if !due.isEmpty, !due.contains(where: { game.notes[$0].n == note }),
+           let nearest = due.min(by: { abs(Double(game.notes[$0].t) - tick) < abs(Double(game.notes[$1].t) - tick) }) {
+            let now = ProcessInfo.processInfo.systemUptime
+            for i in due where game.notes[i].t == game.notes[nearest].t { r.hints[game.notes[i].n] = now }
+        }
         reading = r
+    }
+
+    /// How lit a hinted key is, `elapsed` seconds after it lit: fully (a third of the key to
+    /// play now) for a beat, then fading out over half a beat.
+    static func hintStrength(elapsed: Double, beat: Double) -> Double {
+        elapsed <= beat ? 1 : max(0, 1 - (elapsed - beat) / (beat / 2))
     }
 
     /// A scrub or a start: what was read from there on is unread again, and a chorus counts
@@ -62,6 +74,8 @@ extension Player {
         let chorus = r.chorusBars * game.ticksPerBar
         r.read = r.read.filter { Double(($0 + 1) * chorus) <= tick }
         r.from = tick
+        r.hints = [:]
+        r.hinted = r.hinted.filter { Double(game.notes[$0].t) < tick }
         reading = r
     }
 
@@ -73,6 +87,15 @@ extension Player {
         let reach = game.loose(msPerTick: heard.msPerTick)
         let choruses = game.song.bars / r.chorusBars
         var changed = false
+        // A note that just went by unplayed half lights its key (once; not one a scrub skipped).
+        let now = ProcessInfo.processInfo.systemUptime
+        for (i, n) in game.notes.enumerated() where game.status[i] == .missed && !r.hinted.contains(i) {
+            r.hinted.insert(i)
+            if Double(n.t) >= heard.tick - reach - Double(2 * game.ticksPerBeat) { r.hints[n.n] = now }
+            changed = true
+        }
+        let stale = r.hints.filter { now - $0.value > 3 }.map(\.key)
+        if !stale.isEmpty { for k in stale { r.hints[k] = nil }; changed = true }
         for c in 0..<choruses where !r.read.contains(c) {
             let end = Double((c + 1) * chorus)
             guard heard.tick >= end + reach else { break }
@@ -157,19 +180,16 @@ extension Player {
             case .pending: break
             }
         }
-        let form = game.song.chord(atBar: min(bar, game.song.bars - 1))
-        let nextForm = bar + 1 < game.song.bars ? game.song.chord(atBar: bar + 1) : ""
+        let beatSeconds = msPerTick.isFinite && msPerTick > 0 ? msPerTick * Double(tpb) / 1000 : 60 / Double(game.song.meta.tempo)
+        let uptime = ProcessInfo.processInfo.systemUptime
+        let soft = r.hints.mapValues { Self.hintStrength(elapsed: uptime - $0, beat: beatSeconds) }.filter { $0.value > 0 }
         return ReadingState(
-            clef: lesson.clef, names: r.names, notes: notes, bars: bars,
+            clef: lesson.clef, notes: notes, bars: bars,
             coach: r.done && r.clean >= r.content.gate && nowEvents.isEmpty ? "Two clean. Lesson done." : Reading.coach(nowEvents, lesson: lesson.clef),
-            chord: r.content.chords[form] ?? form, nextChord: nextForm.isEmpty ? "" : (r.content.chords[nextForm] ?? nextForm),
             number: r.index + 1, count: r.content.lessons.count,
             subtitle: "\(r.content.module.title) · \(r.index + 1) of \(r.content.lessons.count) · \(lesson.clef.title) · \(r.trackName)",
             played: played, judged: judged, chorus: c + 1, clean: r.clean, gate: r.content.gate, done: r.done,
-            cheat: lesson.cheat, fingers: lesson.fingers, nowKeys: Set(nowEvents.compactMap(\.midi)),
-            nextKeys: Set(notes.filter { $0.mark == .next }.compactMap(\.event.midi)),
-            keyFingers: Dictionary(notes.filter { $0.mark == .now || $0.mark == .next }.compactMap { n in n.event.midi.map { ($0, n.event.finger ?? 0) } },
-                                   uniquingKeysWith: { a, _ in a }))
+            cheat: lesson.cheat, fingers: lesson.fingers, soft: soft)
     }
 }
 
@@ -194,12 +214,9 @@ struct ReadingState: Equatable {
     }
 
     var clef = Reading.Clef.treble
-    var names = Reading.Names.on
     var notes: [Note] = []
     var bars: [Bar] = []
     var coach = ""
-    var chord = ""
-    var nextChord = ""
     var number = 1
     var count = 3
     var subtitle = ""
@@ -212,7 +229,6 @@ struct ReadingState: Equatable {
     var done = false
     var cheat: Reading.Cheat? = nil
     var fingers: [String: [String: Int]] = [:]
-    var nowKeys: Set<Int> = []
-    var nextKeys: Set<Int> = []
-    var keyFingers: [Int: Int] = [:]
+    /// Keys half lit after a miss, 0...1 (`Player.hintStrength`).
+    var soft: [Int: Double] = [:]
 }

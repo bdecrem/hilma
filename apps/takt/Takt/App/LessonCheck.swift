@@ -2430,6 +2430,10 @@ enum LessonCheck {
         let rs3 = rd.song(rd.lessons[2])
         let lhFirst = rs3.notes(.melody).filter { $0.n < 60 }.prefix(2).map(\.t)
         check("reading: both hands in one part, the left a whole note a bar", Array(lhFirst) == [0, 48] && rs3.notes(.melody).first { $0.n < 60 }?.f == 5)
+        let beat = 60.0 / 70
+        check("reading: a missed key is half lit a beat, then fades over half a beat",
+              Player.hintStrength(elapsed: 0, beat: beat) == 1 && Player.hintStrength(elapsed: beat, beat: beat) == 1
+              && abs(Player.hintStrength(elapsed: beat * 1.25, beat: beat) - 0.5) < 1e-9 && Player.hintStrength(elapsed: beat * 1.5, beat: beat) < 1e-9 && Player.hintStrength(elapsed: beat * 2, beat: beat) == 0)
         check("reading: a chorus is clean at 90% of its notes", Reading.chorus(played: 9, of: 10, cleanShare: 0.9)
               && !Reading.chorus(played: 8, of: 10, cleanShare: 0.9) && !Reading.chorus(played: 0, of: 0, cleanShare: 0.9))
 

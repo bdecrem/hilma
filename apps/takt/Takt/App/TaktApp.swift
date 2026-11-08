@@ -291,8 +291,7 @@ struct LiveGameScreen: View {
                 run: player.leavePractice,
                 tempo: player.nudgeGameTempo,
                 agent: { app.openAgent(fromGame: player) },
-                call: player.toggleCall,
-                readingNames: player.cycleReadingNames
+                call: player.toggleCall
             ))
     }
 }
