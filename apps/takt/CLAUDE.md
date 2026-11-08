@@ -2240,7 +2240,10 @@ says so. The Mac's About Takt panel shows the version.
 check never takes the foreground. Launch arguments: `-theme dark|paper`, `-PreviewFrame gate90` (a
 fixed frame instead of the live player; `TAKT_FRAME=gate90 scripts/shots.sh`), `-TestPress <note>`
 (hold a key from 1 s, through the touch path). The app plays on launch: every headless launch passes
-`-Silent 1` (speakers off, everything else runs). Other live arguments: `-Tempo <bpm>`, `-Paused 1`
+`-Silent 1` (speakers off, everything else runs). The Mac build is sandboxed, so `-SnapshotDir`
+must sit inside its container, `~/Library/Containers/com.bartdecrem.Takt/Data/Documents/<dir>`
+(anywhere else nothing is written and nothing is logged, 2026-11-08); a `-SnapshotAt` tick must
+be reachable in the wait (300 ticks at 84 bpm is 18 s after the count-in). Other live arguments: `-Tempo <bpm>`, `-Paused 1`
 (band stopped; was `-AutoPlay 0` before M2), `-Autoplay <mode>`, `-ClockTo <file>`.
 In zsh pass each argument as its own word (`"-Paused" "1"` or an array); a variable holding
 `"-Paused 1"` is not split and the app never sees it.
