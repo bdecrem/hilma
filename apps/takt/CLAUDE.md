@@ -1882,6 +1882,16 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   stretch the hand check forbids (Maxwell Street and Blue Lantern moved a few fingers and joined
   the check). `library.json` regenerated. Checks: LessonCheck 483/483, charting-check 49/49.
 
+- **The word mark's line, handed over by the launch. 2026-11-07.** Bart picked the launch
+  screen's own dictionary entry as the tagline. The Learn header reads TAKT and, in the splash's
+  small monospace, "/tɑkt/  the beat. find it." (the pronunciation faintest, "find it." brighter):
+  beside the word mark on the staff, baseline to its foot, on the Mac; under it on the phone.
+  At launch the entry doesn't fade with the splash: it lifts from the splash's bottom into the
+  header in 0.7 s while the etymology line fades out on the way (`TaglineFlight`, from the
+  frames both report to `Tagline.shared`; the header's own line shows once it lands). Once per
+  launch; with Reduce Motion, the splash off, or another screen up, the line is simply there.
+  The etymology is the Mac tooltip. Only on Learn.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

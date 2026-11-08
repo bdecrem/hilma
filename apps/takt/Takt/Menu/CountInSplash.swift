@@ -289,8 +289,11 @@ struct CountInSplash: View {
         }
         .lineLimit(1)
         .minimumScaleFactor(0.8)
+        .fixedSize(horizontal: false, vertical: true)
+        // Where the entry starts its flight to the Learn header (`Tagline`).
+        .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { Tagline.shared.source = $0; Tagline.shared.sourceSize = size }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .opacity(definitionShown ? 1 : 0)
+        .opacity(definitionShown && Tagline.shared.phase != .flying ? 1 : 0)
         .animation(.easeOut(duration: 0.6), value: definitionShown)
         .onAppear { definitionShown = true }
         .accessibilityElement(children: .combine)
@@ -499,6 +502,8 @@ struct CountInHost<Content: View>: View {
     @ViewBuilder let content: () -> Content
 
     @State private var showing = !CountInLaunch.counted && CountInSplash.enabled
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private var tagline: Tagline { Tagline.shared }
 
     var body: some View {
         ZStack {
@@ -509,13 +514,113 @@ struct CountInHost<Content: View>: View {
                     onFinished()
                     // The word holds on the landing, then goes; a stamp rides out a little longer.
                     DispatchQueue.main.asyncAfter(deadline: .now() + hold) {
-                        withAnimation(.easeOut(duration: stamped ? 0.8 : 0.25)) { showing = false }
+                        let fade = stamped ? 0.8 : 0.25
+                        handOff(fade: fade)
+                        withAnimation(.easeOut(duration: fade)) { showing = false }
                     }
                 }
                 .transition(.opacity)
                 .zIndex(1)
             }
+            if tagline.phase == .flying, let from = tagline.source, let to = tagline.slot {
+                TaglineFlight(from: from, to: to, fromSize: tagline.sourceSize, toSize: tagline.slotSize)
+                    .zIndex(2)
+                    .allowsHitTesting(false)
+            }
         }
+    }
+
+    /// The dictionary entry doesn't fade with the splash: it lifts into the Learn header's
+    /// tagline and closes up on the way (`TaglineFlight`). With nowhere to land (another screen
+    /// is up) or with Reduce Motion, the header's line is simply there.
+    private func handOff(fade: Double) {
+        guard !reduceMotion, tagline.source != nil, tagline.slot != nil else {
+            tagline.phase = .landed
+            return
+        }
+        tagline.phase = .flying
+        DispatchQueue.main.asyncAfter(deadline: .now() + TaglineFlight.duration + 0.05) { tagline.phase = .landed }
+    }
+}
+
+/// The launch's dictionary entry and the Learn header's tagline, "/tɑkt/  the beat. find it."
+/// (Bart, 2026-11-07): one line, handed from the splash to the header once per launch. Where
+/// each sits (global frames, the font size), and whether the header shows its line yet.
+@MainActor @Observable
+final class Tagline {
+    static let shared = Tagline()
+    enum Phase { case waiting, flying, landed }
+    var phase: Phase = CountInLaunch.pending ? .waiting : .landed
+    @ObservationIgnored var source: CGRect?
+    @ObservationIgnored var sourceSize: CGFloat = 11
+    @ObservationIgnored var slot: CGRect?
+    @ObservationIgnored var slotSize: CGFloat = 11
+}
+
+/// The entry in flight: from the splash's three lines to the header's one, over 0.7 s. The
+/// block moves and scales from its place to the line's, while the full entry fades and the
+/// short line fades in over it (the etymology closes up on the way).
+struct TaglineFlight: View {
+    let from: CGRect
+    let to: CGRect
+    let fromSize: CGFloat
+    let toSize: CGFloat
+    static let duration = 0.7
+    @State private var arrived = false
+
+    var body: some View {
+        GeometryReader { geo in
+            let origin = geo.frame(in: .global).origin
+            let at = arrived ? to.origin : from.origin
+            let scale = arrived ? 1 : fromSize / toSize
+            ZStack(alignment: .topLeading) {
+                DictionaryEntry(size: toSize)
+                    .fixedSize()
+                    .opacity(arrived ? 0 : 1)
+                TaglineText(size: toSize)
+                    .fixedSize()
+                    .opacity(arrived ? 1 : 0)
+            }
+            .scaleEffect(scale, anchor: .topLeading)
+            .offset(x: at.x - origin.x, y: at.y - origin.y)
+        }
+        .ignoresSafeArea()
+        .onAppear {
+            withAnimation(.timingCurve(0.3, 0, 0.2, 1, duration: Self.duration)) { arrived = true }
+        }
+    }
+}
+
+/// The splash's three lines, for the flight (the splash draws its own).
+struct DictionaryEntry: View {
+    let size: CGFloat
+
+    var body: some View {
+        let mono = { (w: Font.Weight) in Font.system(size: size, weight: w, design: .monospaced) }
+        VStack(alignment: .leading, spacing: size * 0.45) {
+            (Text("takt").font(mono(.bold)).foregroundColor(Palette.text)
+             + Text("  /tɑkt/  ").font(mono(.regular)).foregroundColor(Palette.muted)
+             + Text("n.").font(mono(.regular)).italic().foregroundColor(Palette.muted))
+            Text("the beat. from Latin ").font(mono(.regular)).foregroundColor(Palette.muted)
+                + Text("tactus").font(mono(.regular)).italic().foregroundColor(Palette.muted)
+                + Text(", \u{201C}touch.\u{201D}").font(mono(.regular)).foregroundColor(Palette.muted)
+            Text("find it.").font(mono(.regular)).foregroundColor(Palette.text)
+        }
+        .lineLimit(1)
+    }
+}
+
+/// "/tɑkt/  the beat. find it.": the pronunciation faintest, the meaning muted, the
+/// instruction brighter, as on the splash.
+struct TaglineText: View {
+    let size: CGFloat
+
+    var body: some View {
+        let mono = Font.system(size: size, design: .monospaced)
+        (Text("/tɑkt/  ").font(mono).foregroundColor(Palette.muted.opacity(0.7))
+         + Text("the beat. ").font(mono).foregroundColor(Palette.muted)
+         + Text("find it.").font(mono).foregroundColor(Palette.text))
+            .lineLimit(1)
     }
 }
 

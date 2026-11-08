@@ -10,12 +10,25 @@ struct LessonsScreen: View {
         let compact = sizeClass == .compact
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .center, spacing: 16) {
-                Text("Takt")
-                    .font(.display(compact ? 40 : 52))
-                    .textCase(.uppercase)
-                    .foregroundStyle(Palette.text)
-                StaffLines()
-                    .frame(maxWidth: .infinity)
+                // The word mark and its line, the launch's dictionary entry: beside it on the
+                // staff on the Mac, under it on the phone.
+                if compact {
+                    VStack(alignment: .leading, spacing: 2) {
+                        wordMark(compact: true)
+                        HeaderTagline(size: 10)
+                    }
+                    .layoutPriority(1)
+                    StaffLines()
+                        .frame(maxWidth: .infinity)
+                } else {
+                    HStack(alignment: .lastTextBaseline, spacing: 18) {
+                        wordMark(compact: false)
+                        HeaderTagline(size: 12)
+                            .padding(.bottom, 6)
+                    }
+                    StaffLines()
+                        .frame(maxWidth: .infinity)
+                }
                 XPLabel(xp: app.progress.xp)
                 AskButton(size: compact ? 34 : 36)
                 TransportButton(symbol: "gearshape", lit: false, size: compact ? 34 : 36, label: "Settings") {
@@ -147,6 +160,33 @@ struct LessonRow: View {
 }
 
 /// The band under the menu: what's playing, play/pause, the tempo.
+extension LessonsScreen {
+    func wordMark(compact: Bool) -> some View {
+        Text("Takt")
+            .font(.display(compact ? 40 : 52))
+            .textCase(.uppercase)
+            .foregroundStyle(Palette.text)
+            .lineLimit(1)
+            .fixedSize()
+    }
+}
+
+/// The Learn header's line, "/tɑkt/  the beat. find it." (`TaglineText`): hidden while the
+/// launch's entry flies here (`Tagline`), then there for good. The etymology on hover (Mac).
+struct HeaderTagline: View {
+    let size: CGFloat
+    private var tagline: Tagline { Tagline.shared }
+
+    var body: some View {
+        TaglineText(size: size)
+            .fixedSize()
+            .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { tagline.slot = $0; tagline.slotSize = size }
+            .opacity(tagline.phase == .landed ? 1 : 0)
+            .help("takt: the beat. From Latin tactus, \u{201C}touch.\u{201D}")
+            .accessibilityLabel("takt: the beat. Find it.")
+    }
+}
+
 /// Hidden when Settings → Sound → Band on the menu is off (Bart, 2026-11-07: off means no band on
 /// the menus and no card for it either).
 struct NowPlayingStrip: View {
