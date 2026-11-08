@@ -2001,7 +2001,7 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   What the runs taught went back into the skills (recipe.md: the cover against the anchors, a
   second anchor on the 3 at 76–90, a pickup on tick 44, the comping's groove hits; SKILL.md: the
   `from` lever when the cover alone keeps Easy over its band; surfaces.md: boxes and the thumb
-  key for a hand-budget line).
+  key for a hand-budget line). **0.1 (118)** on this Mac with the two merged charts.
 
 ## The one transport (2026-11-08)
 
