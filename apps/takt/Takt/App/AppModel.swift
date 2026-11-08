@@ -394,6 +394,8 @@ final class AppModel {
     /// The thread with the teacher (Ask, `AppModel+Chat.swift`), and whether its sheet is up.
     let chat: ChatStore
     var askOpen = false
+    /// Chord Detective's sheet (`ChordSheet`), from the Learn tab.
+    var chordsOpen = false
     /// The Mac's save panel for the loop (Export MIDI, ⌘E).
     var exporting = false
     /// The module the module screen shows (an entry code: "A1", "S").

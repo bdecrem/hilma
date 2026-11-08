@@ -1892,6 +1892,41 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   launch; with Reduce Motion, the splash off, or another screen up, the line is simply there.
   The etymology is the Mac tooltip. Only on Learn.
 
+- **Chord Detective: 0.1 (117), 2026-11-08.** Asked (from another session, Bart's Allow) for
+  "something super dope… one feature that would genuinely delight someone learning music with
+  the app, something they'd show a friend", self-contained. Hold any keys and Takt names the
+  chord, big, live: C7, Am/E, F♯m7♭5, Gm/B♭, E7♯9 ("the Hendrix chord"), an interval for two
+  keys ("Major third"), the note for one, "?" for a cluster; under it the long name ("G minor,
+  B♭ in the bass"), the notes spelled in the chord (C E♭ G♭ A for Cdim7, F♯ A♯ C♯) and the
+  degrees (R 3 5 ♭7). The chords you play line up as chips; when the last few make a famous
+  progression a card says which, in its key: the four chords of pop (I–V–vi–IV), pop's four from
+  the minor (vi–IV–I–V), the fifties (I–vi–IV–V), the Andalusian cadence (i–♭VII–♭VI–V),
+  Pachelbel's opening (I–V–vi–iii), the ii–V–I, the rock turnaround (I–♭VII–IV), the minor
+  blues (i–iv–v, Level 3's changes), I–IV–V, and I7–IV7 ("That's the blues"). Why this one: the
+  app teaches by doing but never answers "what did I just play?", and naming what your hands
+  found, then "you just played the Andalusian cadence", is the moment a learner hands the phone
+  to a friend. **Pure core** `Chords/ChordDetective.swift`: 25 qualities in priority order, every
+  key tried as the root, an exact interval match wins, a root in the bass before one above (so
+  C E G A is C6 and A C E G is Am7), letter-based spelling from the degree (roots: C♯ F♯ G♯ for
+  minor, D♭ A♭ for major); `Trail` refines a chord built on the same root without letting go (C,
+  add B: one Cmaj7), counts the same chord again only once, and a new root as a new chord even
+  played legato; `detect` matches the longest progression on the trail's tail, transposition-free.
+  **UI** `Chords/ChordSheet.swift`: a sheet like Ask (CHORD DETECTIVE, Clear, Done), the name in
+  the display face in `signal` (kept up dimmed after the keys lift), the match card outlined in
+  `signal`, the chips (newest lit), a keyboard (C3–B4 on the phone, C3–B5 on the Mac) that plays
+  as touched: `KeyboardStrip(plainTouch:)` skips tap mode, which plays "the notes due" and would
+  play nothing here. MIDI and the strip go through `Player.press/release` as everywhere, so your
+  instrument (piano, organ, Rhodes) sounds over the menu band; nothing is scored or recorded
+  (`inLesson` / `inGame` are off on Learn). Way in: `ChordDetectiveCard` under Today on the Learn
+  tab → `AppModel.chordsOpen` → the sheet in `RootView`. The computer keys don't reach it (the
+  `KeyCatcher` is behind the sheet). **Checks:** 6 in `-LessonCheck` (31 names, spelling, 204
+  triads and sevenths in every key and inversion, the 10 progressions in their keys, the trail's
+  refine / legato / repeat rules), first written and passed as a Python prototype of the same
+  tables. **Not verified:** written on a Linux cloud box with no Swift toolchain (download.swift.org
+  is blocked by its network policy), so neither target has been built and `-LessonCheck` has not
+  run; the logic ran as the Python port, the Swift was reviewed by hand.
+  Build it on the Mac before shipping.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

@@ -1435,6 +1435,85 @@ enum LessonCheck {
                   && c.nowIndex == begun.output.nowIndex && c.nowNotes == [53])
         }
 
+        // Chord Detective: names, spelling, inversions, progressions, the trail's rules.
+        do {
+            let named: [([Int], String)] = [
+                ([60, 64, 67], "C"), ([57, 60, 64], "Am"), ([60, 64, 67, 70], "C7"), ([64, 67, 72], "C/E"),
+                ([55, 60, 64], "C/G"), ([60, 64, 67, 69], "C6"), ([57, 60, 64, 67], "Am7"), ([55, 58, 62], "Gm"),
+                ([58, 62, 65], "B♭"), ([66, 69, 73], "F♯m"), ([61, 64, 68], "C♯m"), ([63, 67, 70], "E♭"),
+                ([60, 63, 66, 69], "Cdim7"), ([60, 64, 68], "Caug"), ([60, 65, 67], "Csus4"), ([59, 62, 65, 69], "Bm7♭5"),
+                ([52, 56, 59, 62, 67], "E7♯9"), ([60, 64, 70], "C7"), ([48, 55], "C5"), ([62, 66, 69, 72, 76], "D9"),
+                ([54, 62, 69], "D/F♯"), ([58, 62, 67], "Gm/B♭"), ([60, 64], "Major third"), ([60, 66], "Tritone"),
+                ([60], "C"), ([60, 61, 62], "?"), ([65, 69, 72, 76], "Fmaj7"), ([68, 72, 75], "A♭"), ([56, 59, 63], "G♯m"),
+                ([63, 66, 70], "E♭m"), ([61, 65, 68], "D♭"),
+            ]
+            let wrong = named.filter { ChordDetective.read(Set($0.0))?.display != $0.1 }
+            check("chord detective: \(named.count) chords, intervals and notes named", wrong.isEmpty,
+                  wrong.map { "\($0.0) read \(ChordDetective.read(Set($0.0))?.display ?? "nil"), want \($0.1)" }.joined(separator: "; "))
+            let dim = ChordDetective.read([60, 63, 66, 69])
+            let gm = ChordDetective.read([58, 67, 62])
+            check("chord detective: spelled in the chord", dim?.notes == ["C", "E♭", "G♭", "A"]
+                  && ChordDetective.read([54, 58, 61])?.notes == ["F♯", "A♯", "C♯"]
+                  && ChordDetective.read([60, 64, 67, 70])?.degrees == ["R", "3", "5", "♭7"]
+                  && gm?.long == "G minor, B♭ in the bass", "\(dim?.notes ?? []) \(gm?.long ?? "")")
+            // Every triad and seventh in every key and inversion names its root (Cm7 over its
+            // third is E♭6 as much as Cm7/E♭: the bass decides, so that one is left out).
+            var inversions = 0, badInversions: [String] = []
+            for r in 0..<12 {
+                for q in ChordDetective.qualities.prefix(5) {
+                    let pcs = q.intervals.map { 48 + r + $0 }
+                    for inv in 0..<pcs.count where !(q.suffix == "m7" && inv == 1) {
+                        let v = Array(pcs[inv...]) + pcs[..<inv].map { $0 + 12 }
+                        let c = ChordDetective.read(Set(v))
+                        inversions += 1
+                        let head = c.map { String($0.display.split(separator: "/").first ?? "") } ?? ""
+                        if c?.root != r || !head.hasSuffix(q.suffix) || (inv > 0) != (c?.display.contains("/") ?? false) {
+                            badInversions.append("\(r) \(q.suffix) inv \(inv): \(c?.display ?? "nil")")
+                        }
+                    }
+                }
+            }
+            check("chord detective: \(inversions) triads and sevenths in every key and inversion", badInversions.isEmpty,
+                  badInversions.prefix(4).joined(separator: "; "))
+            func played(_ chords: [[Int]]) -> ChordDetective.Trail {
+                var t = ChordDetective.Trail()
+                for c in chords {
+                    t.update(held: Set(c))
+                    t.update(held: [])
+                }
+                return t
+            }
+            let C = [60, 64, 67], G = [55, 59, 62], Am = [57, 60, 64], F = [53, 57, 60], E = [52, 56, 59]
+            let Dm = [50, 53, 57], Em = [52, 55, 59], G7 = [55, 59, 62, 65]
+            let progressions: [([[Int]], String, String)] = [
+                ([C, G, Am, F], "The four chords of pop", "I–V–vi–IV in C"),
+                ([Am, F, C, G], "Pop's four, starting sad", "vi–IV–I–V in C"),
+                ([Am, G, F, E], "The Andalusian cadence", "i–♭VII–♭VI–V in A minor"),
+                ([C, Am, F, G], "The fifties", "I–vi–IV–V in C"),
+                ([Dm, G7, C], "The ii–V–I", "ii–V–I in C"),
+                ([C, F, G], "Three chords and the truth", "I–IV–V in C"),
+                ([[60, 64, 67, 70], [53, 57, 60, 63]], "That's the blues", "I7–IV7 in C"),
+                ([Am, Dm, Em], "The minor blues", "i–iv–v in A minor"),
+                ([C, G, Am, Em], "Pachelbel's opening", "I–V–vi–iii in C"),
+                ([[50, 54, 57], [48, 52, 55], G], "The rock turnaround", "I–♭VII–IV in D"),
+            ]
+            let missed = progressions.filter { p in
+                let m = played(p.0).match
+                return m?.name != p.1 || m?.numerals != p.2
+            }
+            check("chord detective: \(progressions.count) progressions spotted, in their keys", missed.isEmpty,
+                  missed.map { "\($0.1): \(played($0.0).match?.numerals ?? "none")" }.joined(separator: "; "))
+            var built = ChordDetective.Trail()
+            for held: Set<Int> in [[60], [60, 64], [60, 64, 67], [60, 64, 67, 71]] { built.update(held: held) }
+            var legato = ChordDetective.Trail()
+            for held: Set<Int> in [[60, 64, 67], [60, 64, 67, 65, 69], [65, 69, 72]] { legato.update(held: held) }
+            let repeated = played([C, C, G])
+            check("chord detective: a chord built note by note is one chord, a legato change is two, a repeat is one",
+                  built.chords.map(\.display) == ["Cmaj7"] && legato.chords.map(\.display) == ["C", "F"]
+                  && repeated.chords.map(\.display) == ["C", "G"],
+                  "\(built.chords.map(\.display)) \(legato.chords.map(\.display)) \(repeated.chords.map(\.display))")
+        }
+
         // Stage: the songs load and hold together; the game engine judges, scores and adapts.
         do {
             let songs = Song.catalog.compactMap { name in

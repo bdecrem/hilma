@@ -106,6 +106,7 @@
 		1E80875C3B7E5E21C1126DAC /* rho-62-5.caf in Resources */ = {isa = PBXBuildFile; fileRef = E5E1FF72CCC04D821EF406E3 /* rho-62-5.caf */; };
 		1EA0E77CE86ED8ABF16965ED /* egt-60-1-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = CA1AC644814D796D07DB21B9 /* egt-60-1-2.caf */; };
 		1ED43417BE7B3047B602E21E /* saxl-86.caf in Resources */ = {isa = PBXBuildFile; fileRef = E9CDF65C85CCE001F6524983 /* saxl-86.caf */; };
+		1EEAF22DE8B2FF39417C9FAE /* ChordSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = F44DDF0E4832A20840FFD2F3 /* ChordSheet.swift */; };
 		1F47B23A1C5506E20B4295E0 /* gtr-45-1-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 2C76D33978419DD1C170FFDF /* gtr-45-1-1.caf */; };
 		1F79E5760392C10A935AA7B9 /* xstick-0b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 779DBDE154DF8B5AAD17D2F2 /* xstick-0b.caf */; };
 		1FAC82F0451088C274313D1C /* org-40.caf in Resources */ = {isa = PBXBuildFile; fileRef = D17B6E8364C404EC386EA725 /* org-40.caf */; };
@@ -282,6 +283,7 @@
 		4D428DEEE990FF7C23D2865C /* pno-69-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = A90516563580959F36C82E8A /* pno-69-1.caf */; };
 		4D44A0056564A65A1ABC2088 /* syn-hatOpenDH-1a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 41E9351D4D5D23483A4E30ED /* syn-hatOpenDH-1a.caf */; };
 		4DA35CFC7D5CFD66EC928AC3 /* rho-62-4.caf in Resources */ = {isa = PBXBuildFile; fileRef = 765EC5583C83A92403A4D041 /* rho-62-4.caf */; };
+		4DEC971AFA3F7138D29005BB /* ChordDetective.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA509697ABE199DA00A8AE17 /* ChordDetective.swift */; };
 		4DEDFF5C4A2538EEB7EB8A9C /* syn-subMin-30.caf in Resources */ = {isa = PBXBuildFile; fileRef = BBF75A29D8CB98EFF4F1D415 /* syn-subMin-30.caf */; };
 		4E09447779779E9AB4D07C63 /* egt-78-1-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 1D39FD61591487918B238295 /* egt-78-1-2.caf */; };
 		4E2658D017F315DF499931E8 /* egt-63-3-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 81E55E8D0B1738315EE7AD7A /* egt-63-3-1.caf */; };
@@ -1701,6 +1703,7 @@
 		DA083ED5D39D652FA1491D9E /* syn-bleep-69-2.caf */ = {isa = PBXFileReference; path = "syn-bleep-69-2.caf"; sourceTree = "<group>"; };
 		DA10D801EA2FE78D9545B7F1 /* ImprovClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImprovClient.swift; sourceTree = "<group>"; };
 		DA490F34035F618A79E63055 /* call-e.caf */ = {isa = PBXFileReference; path = "call-e.caf"; sourceTree = "<group>"; };
+		DA509697ABE199DA00A8AE17 /* ChordDetective.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChordDetective.swift; sourceTree = "<group>"; };
 		DA90DA4976D15665F7BAE891 /* egt-57-4-1.caf */ = {isa = PBXFileReference; path = "egt-57-4-1.caf"; sourceTree = "<group>"; };
 		DA983FCC785F900703E7C325 /* syn-bassDH-38.caf */ = {isa = PBXFileReference; path = "syn-bassDH-38.caf"; sourceTree = "<group>"; };
 		DB0DA25CCFAA5832D8A4AFF5 /* gperc-1.caf */ = {isa = PBXFileReference; path = "gperc-1.caf"; sourceTree = "<group>"; };
@@ -1815,6 +1818,7 @@
 		F371742327E70A03DF6031DE /* gtr-45-2-1.caf */ = {isa = PBXFileReference; path = "gtr-45-2-1.caf"; sourceTree = "<group>"; };
 		F3AB985F2166D8474707314C /* gtr-37-1-1.caf */ = {isa = PBXFileReference; path = "gtr-37-1-1.caf"; sourceTree = "<group>"; };
 		F43509FD82D84A6E1255B37C /* Song.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Song.swift; sourceTree = "<group>"; };
+		F44DDF0E4832A20840FFD2F3 /* ChordSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChordSheet.swift; sourceTree = "<group>"; };
 		F46182DA1CDF8141B291AABA /* sax-60-h.caf */ = {isa = PBXFileReference; path = "sax-60-h.caf"; sourceTree = "<group>"; };
 		F471A2196F9AF3B8F004FA9C /* ride-1a.caf */ = {isa = PBXFileReference; path = "ride-1a.caf"; sourceTree = "<group>"; };
 		F4B963CD70D0F5D8A2B44E39 /* syn-subMin-34.caf */ = {isa = PBXFileReference; path = "syn-subMin-34.caf"; sourceTree = "<group>"; };
@@ -1862,6 +1866,15 @@
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
+		062CCD9C983281449E430FF1 /* Chords */ = {
+			isa = PBXGroup;
+			children = (
+				DA509697ABE199DA00A8AE17 /* ChordDetective.swift */,
+				F44DDF0E4832A20840FFD2F3 /* ChordSheet.swift */,
+			);
+			path = Chords;
+			sourceTree = "<group>";
+		};
 		1CF44BC8A4C782CABA9ED203 /* Progress */ = {
 			isa = PBXGroup;
 			children = (
@@ -1915,6 +1928,7 @@
 				7E718AC35B0C62F76073A6EF /* Audio */,
 				667CE1399059CAEA863F5C8A /* Call */,
 				644EE1B57AE5DC287F8AD7F2 /* Chat */,
+				062CCD9C983281449E430FF1 /* Chords */,
 				C1181D7DC56335696E3C73A1 /* Content */,
 				4369F79803C501D3563FBCCD /* Design */,
 				54DE8A4095BEC708D5253B44 /* Export */,
@@ -3900,6 +3914,8 @@
 				D45B67EBB5C040CF2610152D /* Charting.swift in Sources */,
 				B31B3F0FABFDD36B45A8069E /* ChatContext.swift in Sources */,
 				C8319DF97ACD2140A06E8D64 /* ChatStore.swift in Sources */,
+				4DEC971AFA3F7138D29005BB /* ChordDetective.swift in Sources */,
+				1EEAF22DE8B2FF39417C9FAE /* ChordSheet.swift in Sources */,
 				0D0C5243B3D5B74AC76FC97F /* CoachPanel.swift in Sources */,
 				17DAC0C7D741F74668A07811 /* CountInSplash.swift in Sources */,
 				FF098609992B64F48C556EAA /* DebugHooks.swift in Sources */,
@@ -4010,7 +4026,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 116;
+				CURRENT_PROJECT_VERSION = 117;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -4077,7 +4093,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 116;
+				CURRENT_PROJECT_VERSION = 117;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;

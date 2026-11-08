@@ -41,6 +41,7 @@ struct LessonsScreen: View {
                 VStack(alignment: .leading, spacing: 12) {
                     TodayCard(app: app, compact: compact)
                         .padding(.top, compact ? 18 : 28)
+                    ChordDetectiveCard(app: app, compact: compact)
 
                     Text("Modules")
                         .dataLabel(13, weight: .semibold)

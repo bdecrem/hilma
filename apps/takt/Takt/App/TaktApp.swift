@@ -196,6 +196,11 @@ struct RootView: View {
                 }
             }
         ))
+        // Chord Detective, from the Learn tab: hold keys, it names them.
+        .sheet(isPresented: Binding(get: { app.chordsOpen }, set: { app.chordsOpen = $0 })) {
+            ChordSheet(player: player)
+                .presentationBackground(Palette.ground)
+        }
         // Agent mode, over the set list or a paused run (one presenter for both).
         .sheet(item: Binding(get: { app.agentTarget }, set: { app.agentTarget = $0 })) { target in
             AgentSheet(app: app, target: target)

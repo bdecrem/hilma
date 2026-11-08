@@ -18,6 +18,8 @@ struct KeyboardStrip: View {
     var soft: [Int: Double] = [:]
     /// The computer keycaps, when Settings shows them; off on the Show me stage.
     var keyCaps = true
+    /// Every touch plays the key under it, tap mode or not (Chord Detective: nothing is due there).
+    var plainTouch = false
     @Environment(\.lessonControls) private var controls
     @AppStorage("tapMode") private var tapMode = KeyboardStrip.tapModeDefault
     /// Settings → Input on the Mac: each key carries the computer key that plays it.
@@ -57,7 +59,7 @@ struct KeyboardStrip: View {
     }
 
     private func touch(_ phase: TouchSurface.Phase, _ id: Int, _ note: Int?) {
-        if tapMode {
+        if tapMode && !plainTouch {
             if phase == .down { controls.tapDown(id) }
             if phase == .up { controls.tapUp(id) }
             return
