@@ -27,7 +27,7 @@ from common import BAR, TPB, Song  # noqa: E402
 FORM = ["A7", "D7", "A7", "A7", "D7", "D7", "A7", "A7", "E7", "D7", "A7", "E7"]
 NAMES = ["Head", "Verse", "Piano", "Stop time", "Guitar", "Head", "Out"]
 HEADS, VERSE, PIANO, STOP, SOLO, OUT = (0, 5, 6), 1, 2, 3, 4, 6
-s = Song("song-halsted", "Halsted", "Chicago boogie", "A", 148, "triplets",
+s = Song("song-halsted", "Halsted", "Chicago boogie", "A", 148, "amp",
          "The loud one with a band. An electric riff, a rolling piano, a stop-time chorus.", seed=148)
 s.sounds = {
     "kick": {"kit": "kick", "gainDb": -3},
@@ -203,16 +203,22 @@ def tr(line, k):
 B3, A3, C4, Cs4, D4, Eb4, E4, Fs4, G4 = 59, 57, 60, 61, 62, 63, 64, 66, 67
 RIFF = [
     [(0, A3, 8, 1), (8, A3, 4, 3), (12, C4, 6, 2), (20, Cs4, 4, 3), (24, E4, 8, 2), (32, E4, 4, 3), (36, G4, 6, 2), (44, E4, 4, 3)],
-    [(0, A4, 12, 1), (12, G4, 6, 2), (20, E4, 4, 3), (24, C4, 6, 2), (32, Cs4, 4, 3), (36, A3, 12, 2)],
+    # The C♯ is the main note and the low A its ornament, so a level without ornaments walks C up to
+    # C♯ in one hand position (A4 G4 C4 A3 then E4 a beat apart is a hand jump inside a beat).
+    [(0, A4, 12, 1), (12, G4, 6, 2), (20, E4, 4, 3), (24, C4, 6, 2), (32, Cs4, 4, 2), (36, A3, 12, 3)],
 ]
 TURN = [(0, E4, 8, 1), (8, D4, 4, 3), (12, Cs4, 8, 2), (20, C4, 4, 3), (24, B3, 12, 2), (36, Eb4, 6, 3), (44, E4, 4, 3)]
 # The verse: a held note a singer's line would sit under, then an answer on 3 and 4.
-ANSWER = [(24, C5, 4, 3), (28, A4, 4, 3), (32, C5, 4, 2), (36, A4, 12, 2)]
+# The answer lands on the "and" of 3 and holds, so the hand has a beat and a half to move down to the
+# riff or the turnaround (a fourth down off the thumb inside a beat is no hand's move).
+ANSWER = [(24, C5, 4, 3), (28, A4, 4, 3), (32, A4, 12, 2)]
 HOLD = {"A7": E5, "D7": D5, "E7": E5}
 # The stop-time runs: down the blues scale in triplets, landing on the root.
 RUNS = [
     [(t, n, 4, 3 if i else 1) for i, (t, n) in enumerate(zip(range(0, 36, 4), [A5, G5, E5, Eb5, D5, C5, A4, G4, E4]))] + [(36, A4, 12, 2)],
     [(t, n, 4, 3 if i else 1) for i, (t, n) in enumerate(zip(range(0, 36, 4), [C5, D5, Eb5, E5, G5, A5, C6, A5, G5]))] + [(36, A5, 12, 2)],
+    # The third bar of each four starts a step lower, so Beginner's anchors there are two keys.
+    [(t, n, 4, 3 if i else 1) for i, (t, n) in enumerate(zip(range(0, 36, 4), [G5, E5, Eb5, D5, C5, A4, G4, E4, G4]))] + [(36, A4, 12, 2)],
 ]
 
 
@@ -245,10 +251,14 @@ for bar in range(s.bars):
     elif c == VERSE:
         line = [(0, HOLD[ch], 20, 1)] + tr(ANSWER, k) if b % 2 == 0 else tr(RIFF[1], k)
     elif c == STOP:
-        line = RUNS[b % 2] if b < 8 else tr(RIFF[bar % 2], k)
+        line = RUNS[(0, 1, 2, 1)[b % 4]] if b < 8 else tr(RIFF[bar % 2], k)
     else:
         line = SOLO_LINE[ch][b % 2]
     for t, n, ln, lv in line:
+        # One anchor every two bars: at 148 a bar is 1.62 s, and an anchor a bar (0.62 a second)
+        # put Easy at 0.88, over BLUES.md's band. The odd bar's anchor plays as a main note.
+        if lv == 1 and bar % 2 == 1 and bar != LAST:
+            lv = 2
         s.pnote(melody, o + t, n, ln, lv)
 s.fingered(melody)
 s.chart_to_channel(melody, s.horns, lambda e: 1.0 if e["lv"] == 1 else 0.9 if e["lv"] == 2 else 0.82)

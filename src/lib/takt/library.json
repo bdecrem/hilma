@@ -115,6 +115,25 @@
    "uses": []
   },
   {
+   "name": "song-halsted",
+   "title": "Halsted",
+   "style": "Chicago boogie",
+   "key": "A",
+   "tempo": 148,
+   "bars": 84,
+   "seconds": 136,
+   "line": "The loud one with a band. An electric riff, a rolling piano, a stop-time chorus.",
+   "sections": "Head (bar 1), Verse (bar 13), Piano (bar 25), Stop time (bar 37), Guitar (bar 49), Head (bar 61), Out (bar 73)",
+   "chorus": "1 A7 · 2 D7 · 3–4 A7 · 5–6 D7 · 7–8 A7 · 9 E7 · 10 D7 · 11 A7 · 12 E7",
+   "choruses": 7,
+   "parts": {
+    "chords": "Boogie piano",
+    "melody": "Electric guitar"
+   },
+   "shelf": "all tracks",
+   "uses": []
+  },
+  {
    "name": "song-blue-lantern-white",
    "title": "Blue Lantern II",
    "style": "Minor blues",

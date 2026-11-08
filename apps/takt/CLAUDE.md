@@ -1863,6 +1863,23 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   about pinning. DEBUG `-Pinned "a,b"` shows that set, `-PinTap <song>` taps its pin a second
   in. Checks 471/471 (three pin cases).
 
+- **Halsted on the Stage, charted: 0.1 (115), 2026-11-07.** Bart: "make beginner, easy, medium
+  charts for the new track, which sounds great btw, and add it to our game mode". **Halsted**
+  (`song-halsted`, `scripts/songs/halsted.py`, Chicago boogie in A at 148, 2:16) is in
+  `Song.catalog` after Friars Point, so it sits under All tracks (pin it to bring it up); its
+  cover glyph is new, `amp` (a cabinet, five knobs with the last one on ten, the speaker).
+  Both parts play your keys' instrument (the piano by default); the record's guitar goes through
+  `amp.horns`. Charted to BLUES.md: the melody has one anchor every two bars, the C♯ of the
+  riff's second bar is a main note and its low A an ornament, the blues melody patch plus
+  `"medium": 4`; the chords part names Easy tier 2. Ladders: melody 0.18 · 0.65 · 0.81 · 1.14 ·
+  1.93 · 2.46 · 4.29, chords 0.30 · 0.60 · 1.14 · 1.14 · 2.21 · 2.21 · 4.35 (Beginner, Easy,
+  Medium, Hard: melody tiers 1, 2, 4, 7; chords 1, 2, 4, 7). Engine, both from this song
+  (`CHARTING.md` rule 15): the phrase cover's search has a 200,000-step budget a phrase
+  (Charting.swift and `src/lib/takt/charting.ts`; every other song's charts unchanged, checked
+  against a `-DumpCharts` from before), and `Fingering` refuses an in-beat slide, crossing or
+  stretch the hand check forbids (Maxwell Street and Blue Lantern moved a few fingers and joined
+  the check). `library.json` regenerated. Checks: LessonCheck 483/483, charting-check 49/49.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without

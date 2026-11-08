@@ -350,11 +350,19 @@ struct Charting: Decodable {
                     let open = keys.filter { key in !window.contains { o in isTaken.contains(o.t) && o.idx.contains { notes[$0].n == key } } }
                     var chosen: [Int] = []
                     var best: [Int] = []
+                    // A phrase whose keys can't all fit (a fast run's keys under a wide gap: Halsted's
+                    // stop time on a chorus-long phrase) would try every subset; past `budget` steps
+                    // the widest cover found so far stands. Every song before Halsted finishes far
+                    // under it, so their charts are what an unbounded search gives.
+                    var steps = 0
+                    let budget = 200_000
                     func search(_ k: Int) -> Bool {
                         if k == open.count {
                             if chosen.count > best.count { best = chosen }
                             return chosen.count == open.count
                         }
+                        steps += 1
+                        if steps > budget { return false }
                         if chosen.count + (open.count - k) <= best.count { return false }  // can't beat the best
                         var cands = window.indices.filter { wi in
                             let o = window[wi]

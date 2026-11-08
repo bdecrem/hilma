@@ -576,6 +576,21 @@ struct SongArt: View {
                     }
                 }
                 ctx.fill(Path(roundedRect: CGRect(x: w * 0.72, y: h * 0.24, width: w * 0.12, height: h * 0.52), cornerRadius: 2), with: .color(hot))
+            case "amp":
+                // The electric Chicago boogie: an amp. The cabinet inset 0.16 w / 0.18 h, a row of
+                // five knobs at 0.28 h from 0.26 w to 0.74 w (0.12 w apart), the last one on ten,
+                // lit; the speaker centred at 0.6 h, radius 0.17 of the short side, so it spans
+                // 0.43–0.77 h, inside the cabinet's 0.84 h floor.
+                ctx.stroke(Path(roundedRect: CGRect(x: w * 0.16, y: h * 0.18, width: w * 0.68, height: h * 0.66), cornerRadius: 4),
+                           with: .color(ink), lineWidth: 2)
+                for i in 0..<5 {
+                    let x = w * (0.26 + 0.12 * CGFloat(i)), y = h * 0.28, rr: CGFloat = i == 4 ? 4 : 2.5
+                    ctx.fill(Path(ellipseIn: CGRect(x: x - rr, y: y - rr, width: 2 * rr, height: 2 * rr)), with: .color(i == 4 ? hot : dim))
+                }
+                let sr = min(w, h) * 0.17, sc = CGPoint(x: w * 0.5, y: h * 0.6)
+                ctx.stroke(Path(ellipseIn: CGRect(x: sc.x - sr, y: sc.y - sr, width: 2 * sr, height: 2 * sr)), with: .color(ink), lineWidth: 2)
+                ctx.stroke(Path(ellipseIn: CGRect(x: sc.x - sr * 0.55, y: sc.y - sr * 0.55, width: sr * 1.1, height: sr * 1.1)), with: .color(dim), lineWidth: 1)
+                ctx.fill(Path(ellipseIn: CGRect(x: sc.x - 3, y: sc.y - 3, width: 6, height: 6)), with: .color(ink))
             case "stoptime":
                 // Chicago stop time: the riff's five bars climbing, then the gap, then the hit.
                 // Five bars 0.09 w wide at 0.11 w apart from x = 0.1 w end at 0.64 w; the hit sits

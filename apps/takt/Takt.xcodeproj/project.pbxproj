@@ -602,6 +602,7 @@
 		A4A59000E20B327AB64A40BE /* launch-deep-b1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 4DC7428E8BC444F33D80E21E /* launch-deep-b1.caf */; };
 		A5046E6C6242F6795A4EAA25 /* gtr-45-3-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 599931DD239598074320D0BB /* gtr-45-3-2.caf */; };
 		A58B4155D00A5213BB6ECA2E /* gperc-4.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9D717994F956EEEB99A9918D /* gperc-4.caf */; };
+		A5A68B7782E2870135698A42 /* song-halsted.json in Resources */ = {isa = PBXBuildFile; fileRef = 08E299E096ACAFB40E745A59 /* song-halsted.json */; };
 		A608EB45A6965E39D1E8AD74 /* saxl-52.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9749BEF30BE468B93DE6053D /* saxl-52.caf */; };
 		A65B645F1D29A1ABD272BCB6 /* gtr-51-4-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 0DC9719117D91D7F70EBE2AA /* gtr-51-4-1.caf */; };
 		A698B7D81D67CC16D2E0E6B1 /* call-a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 81C613C3E7560D377410DF46 /* call-a.caf */; };
@@ -959,6 +960,7 @@
 		085D15DD7BF349CE7431D9D4 /* egt-66-4-1.caf */ = {isa = PBXFileReference; path = "egt-66-4-1.caf"; sourceTree = "<group>"; };
 		087C7F4FCE54EBE926B2A773 /* sax-84-h.caf */ = {isa = PBXFileReference; path = "sax-84-h.caf"; sourceTree = "<group>"; };
 		089E5741689396ACF33C6922 /* syn-hatDH-2b.caf */ = {isa = PBXFileReference; path = "syn-hatDH-2b.caf"; sourceTree = "<group>"; };
+		08E299E096ACAFB40E745A59 /* song-halsted.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "song-halsted.json"; sourceTree = "<group>"; };
 		0959CC92EF6847C841C12AFC /* syn-bleep-63-1.caf */ = {isa = PBXFileReference; path = "syn-bleep-63-1.caf"; sourceTree = "<group>"; };
 		096CA0CBC8E71358498ACB56 /* syn-rhodes-66-1.caf */ = {isa = PBXFileReference; path = "syn-rhodes-66-1.caf"; sourceTree = "<group>"; };
 		09757F6DB58A9680EFFEA68A /* gtr-63-2-2.caf */ = {isa = PBXFileReference; path = "gtr-63-2-2.caf"; sourceTree = "<group>"; };
@@ -2107,6 +2109,7 @@
 				2BD66E2CAAD161BA1549DCAF /* song-boogie-shoes.json */,
 				65295EEA1EB525ECEE125A7E /* song-dockery.json */,
 				2973DECBF96FFD576F357818 /* song-friars-point.json */,
+				08E299E096ACAFB40E745A59 /* song-halsted.json */,
 				BADE0D7EFE5BABCE5210E53E /* song-hypnotist-2.json */,
 				C1D12DD782A48B03D2950F0D /* song-hypnotist.json */,
 				5FB1C79C55E8BFD0E83697D6 /* song-maxwell-street-five.json */,
@@ -3700,6 +3703,7 @@
 				DA6EFD26386A1F1603E7DE80 /* song-boogie-shoes.json in Resources */,
 				C86F76A99FD9DDFE3C3A37A6 /* song-dockery.json in Resources */,
 				F7CD8211EFC215035257192D /* song-friars-point.json in Resources */,
+				A5A68B7782E2870135698A42 /* song-halsted.json in Resources */,
 				87FF85AFC0DC3AAC8933D48D /* song-hypnotist-2.json in Resources */,
 				74BA911C913AB1B9444320F4 /* song-hypnotist.json in Resources */,
 				CD610613602840F122AC81C2 /* song-maxwell-street-five.json in Resources */,
@@ -4006,7 +4010,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 114;
+				CURRENT_PROJECT_VERSION = 115;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -4073,7 +4077,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 114;
+				CURRENT_PROJECT_VERSION = 115;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;

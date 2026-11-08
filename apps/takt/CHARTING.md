@@ -269,6 +269,19 @@ every song and part.
     Hard-only passing C and pickups `from: 7`, since tier 6 plays weight 3): the lower charts
     don't change by a note. Easy+ 72, Medium 86, Hard 120.
 
+15. **A fast song takes fewer anchors, and its levels must stay fingerable** (Halsted, 148, 0.1
+    (115), 2026-11-07). One anchor a bar is a rate, not a rule: at 148 it is 0.62 a second, so
+    Halsted has one every two bars. A level is a line the hand can play: when a reduction leaves
+    keys a beat apart that need the whole hand to jump inside a fifth (A4 G4 C4 A3 then E4), fix
+    the weights (the riff's C♯ became the main note and the low A its ornament), never only the
+    fingers. `Fingering` now prices what the hand check forbids inside a beat (a slide, a
+    crossing other than the thumb's, a stretch past the pair's reach) as impossible, where
+    before a jump after exactly one beat cost 2.5 and a 148 riff took it; Maxwell Street and
+    Blue Lantern moved 14 and 6 fingers and joined the check. The phrase cover's search has a
+    budget (200,000 steps a phrase, the TS charter the same): a chorus-long phrase over a run
+    whose keys can't all fit tried every subset for over ten minutes; every earlier song finishes
+    under it, and its charts are byte for byte what they were.
+
 ## Where this comes from
 
 Rhythm-game charters (Rock Band, Guitar Hero, Clone Hero) chart the top difficulty first and

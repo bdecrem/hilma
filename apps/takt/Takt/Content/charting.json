@@ -265,6 +265,21 @@
      }
     }
    }
+  },
+  "song-halsted": {
+   "melody": {
+    "easy": 2,
+    "medium": 4,
+    "phrase": 12,
+    "tiers": {
+     "2": {
+      "space": 0
+     }
+    }
+   },
+   "chords": {
+    "easy": 2
+   }
   }
  }
 }

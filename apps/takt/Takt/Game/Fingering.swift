@@ -48,6 +48,21 @@ enum Fingering {
             guard (d > 0) == (b > a), a != b, let r = reach[min(a, b) * 10 + max(a, b)], abs(d) <= r.max else { return 50 }
             return abs(d) <= r.easy ? 0 : Double(abs(d) - r.easy) * 1.5
         }
+        // Inside a beat there is no time to move the hand: no finger slides to another key within
+        // the octave, and within a fifth nothing crosses but the thumb under 2–4 (or 2–4 over it)
+        // and no pair stretches past its reach. A jump there was priced like one after a beat's
+        // rest, and Halsted at 148 took it (the riff's A4 on the thumb to G4 on the pinky).
+        if gap <= 1, abs(d) <= 12 {
+            if a == b { return 50 }
+            if abs(d) <= 7 {
+                if (d > 0) == (b > a) {
+                    if abs(d) > reach[min(a, b) * 10 + max(a, b)]!.max { return 50 }
+                } else {
+                    let thumbCross = d > 0 ? (b == 1 && (2...4).contains(a)) : (a == 1 && (2...4).contains(b))
+                    if !(thumbCross && abs(d) <= crossMax) { return 50 }
+                }
+            }
+        }
         // The same finger again on another key: a reach when it is the next key over and there
         // is time for it (a beat and a half: the thumb on F reaching down to E after a held
         // note, keeping the hand where it lies), otherwise the hand jumps (and another finger

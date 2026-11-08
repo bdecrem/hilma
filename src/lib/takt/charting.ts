@@ -255,11 +255,17 @@ export function masks(
         const open = keys.filter((key) => !window.some((o) => isTaken.has(o.t) && o.idx.some((i) => notes[i].n === key)))
         let chosen: number[] = []
         let best: number[] = []
+        // The app's budget (Charting.swift): a phrase whose keys can't all fit would try every
+        // subset; past it the widest cover found so far stands.
+        let steps = 0
+        const budget = 200_000
         const search = (k: number): boolean => {
           if (k === open.length) {
             if (chosen.length > best.length) best = [...chosen]
             return chosen.length === open.length
           }
+          steps += 1
+          if (steps > budget) return false
           if (chosen.length + (open.length - k) <= best.length) return false
           const cands = window
             .map((_, wi) => wi)
