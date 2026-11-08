@@ -273,8 +273,10 @@ extension Player {
             countIn: countIn, playing: playing, pop: game.pop, practice: practice, call: callState(), speed: gameSpeed,
             tempo: tempo, pendingTempo: pendingTempo, songTempo: song.meta.tempo,
             heardTick: tick, lookaheadTicks: lookahead, ticksPerBeat: game.ticksPerBeat, ticksPerBar: game.ticksPerBar,
-            notes: visible, keys: song.keyboard(game.part), nowNotes: reading?.nowKeys ?? cue.now, nextNotes: reading?.nextKeys ?? cue.next,
-            pressedNotes: pressed, fingers: reading?.keyFingers ?? cue.fingers, nowFingers: cue.nowFingers, nextFinger: cue.nextFingers.min(),
+            notes: visible, keys: song.keyboard(game.part), nowNotes: reading != nil ? [] : cue.now, nextNotes: reading != nil ? [] : cue.next,
+            // A Reading lesson lights only the keys you press: the staff is the thing to read
+            // (Bart, 2026-11-07: lit keys are a cheat that defeats the lesson).
+            pressedNotes: pressed, fingers: reading != nil ? [:] : cue.fingers, nowFingers: cue.nowFingers, nextFinger: cue.nextFingers.min(),
             rightHand: game.part == .melody, result: gameResult, lastRun: lastRun,
             board: progress.scores(song: song.name), sections: song.meta.sections, reading: reading)
     }

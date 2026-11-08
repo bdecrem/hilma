@@ -1807,8 +1807,12 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   with the corner tick; a finger over each (under, for the left hand), the name under each
   (`Note names · on/faint/off` chip, top left), bar lines and numbers, the chord and its numeral
   where it changes; bottom left the bar's chord and the coach ("G. Second line. Pinky.",
-  `Reading.coach`), bottom right the bar and its beat LEDs. The keyboard lights the now / next
-  keys with fingers. The HUD swaps the score for `ReadingMeter` (this chorus's notes played of
+  `Reading.coach`), bottom right the bar and its beat LEDs. The keyboard lights only the keys
+  you press: no now / next keys, no finger badges (Bart, same day: "that's a cheat that defeats
+  the purpose of the lesson").
+  **Fixed the same day:** the names chip crashed the Mac app (`cycleReadingNames` read the
+  observed `reading` inside its own write, a Swift exclusivity trap; DEBUG `-ReadingNames n`
+  presses it n times). The HUD swaps the score for `ReadingMeter` (this chorus's notes played of
   those judged, "Chorus n", two gate rings, Done) and adds `CheatToggle` (book, ⌘/; the phone's
   sits in the practice row). The cheat sheet (`CheatSheetPanel`, 292 pt, `@AppStorage
   "readingCheat"`, on by default on the Mac, `readingCheatPhone` off on the phone where it

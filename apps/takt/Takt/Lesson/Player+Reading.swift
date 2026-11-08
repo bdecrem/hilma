@@ -40,11 +40,19 @@ extension Player {
         reading = ReadingSession(content: content, index: index, line: line, engineIndex: map,
                                  trackName: Reading.band(content.track).name, names: lesson.names, done: done)
         lessonLog.info("reading: \(lesson.id, privacy: .public) · \(song.bars) bars on \(content.track, privacy: .public)")
+        #if DEBUG
+        // `-ReadingNames n` presses the names chip n times (the chip's own path; it trapped once).
+        for _ in 0..<UserDefaults.standard.integer(forKey: "ReadingNames") { cycleReadingNames() }
+        #endif
     }
 
     /// The names chip: on → faint → off.
     func cycleReadingNames() {
-        reading?.names = reading?.names.next ?? .on
+        // Read, change, write back: `reading?.names = reading?.names.next` reads the observed
+        // property inside its own write (an exclusivity trap; it crashed the Mac app).
+        guard var r = reading else { return }
+        r.names = r.names.next
+        reading = r
     }
 
     /// A scrub or a start: what was read from there on is unread again, and a chorus counts
