@@ -1924,7 +1924,7 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   refine / legato / repeat rules), first written and passed as a Python prototype of the same
   tables. **Not verified:** written on a Linux cloud box with no Swift toolchain (download.swift.org
   is blocked by its network policy), so neither target has been built and `-LessonCheck` has not
-  run; the logic ran as the Python port, the Swift was reviewed by hand.
+  run; the logic ran as the Python port, the Swift was reviewed by hand and read again for compile errors (the init orders, tuple conversions and the top-level `Reading` in `Game/Reading.swift`, which the nested one shadows safely): nothing found.
   Build it on the Mac before shipping.
 
 ## Code map (`Takt/`)
