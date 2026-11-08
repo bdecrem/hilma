@@ -1455,7 +1455,13 @@ enum LessonCheck {
                     let secondsPerTick = 60 / (Double(s.meta.tempo) * Double(s.band.ticksPerBeat))
                     var rules = true
                     var ladderLine: [String] = []
+                    // The hand (LEVELING.md §1): each melody tier's line fingered as the Stage
+                    // fingers it, moves/moments · positions · span.
+                    var handLine: [String] = []
                     for (ti, m) in masks.enumerated() {
+                        if k == .melody {
+                            handLine.append(Fingering.figures(all.indices.filter { m[$0] }.map { all[$0] }, ticksPerBeat: s.band.ticksPerBeat).short)
+                        }
                         let tier = tiers[ti]
                         var byTick: [Int: Int] = [:]
                         for i in all.indices where m[i] { byTick[all[i].t, default: 0] += 1 }
@@ -1472,7 +1478,8 @@ enum LessonCheck {
                     }
                     let top = masks.last!.allSatisfy { $0 }
                     check("stage: \(s.meta.title) \(k.rawValue): every level keeps its rules, the top is the whole part", rules && top,
-                          "onsets/s by level [quietest–busiest 8 bars]: \(ladderLine.joined(separator: " · "))")
+                          "onsets/s by level [quietest–busiest 8 bars]: \(ladderLine.joined(separator: " · "))"
+                          + (handLine.isEmpty ? "" : " · hand (moves/moments · positions · span) by level: \(handLine.joined(separator: " | "))"))
                 }
             }
             // A level is still the line: in every phrase where the melody plays more than one key,
@@ -2284,6 +2291,62 @@ enum LessonCheck {
                   medium == 6 && easyPlusOn.isSubset(of: mediumOn) && mediumOn.count == 86 && figureBars == [12, 24, 34] && tuckBars == [12, 24, 34]
                   && !lowKeys.contains(76) && !lowKeys.contains(77) && ladderCounts == [48, 52, 52, 72, 72, 86, 120]
                   && bl.charting.tier(.hard, song: bl.song.name, part: .melody) == 7)
+        }
+
+        // MARK: Leveling: the hand (LEVELING.md, 2026-11-08)
+        do {
+            // The measure itself: where the thumb sits, a stretch is no move, a tuck is.
+            check("hand: the white-key index climbs one a white key (C4 35, D4 36, B4 41, C5 42) and a black key counts as the white key under it",
+                  Fingering.whiteIndex(60) == 35 && Fingering.whiteIndex(62) == 36 && Fingering.whiteIndex(71) == 41 && Fingering.whiteIndex(72) == 42 && Fingering.whiteIndex(61) == 35)
+            check("hand: F4 under the thumb and D5 under the pinky read as one position (a stretch), E5 under the thumb as another",
+                  Fingering.thumbKey(65, finger: 1) == 38 && Fingering.thumbKey(74, finger: 5) == 39 && Fingering.thumbKey(76, finger: 1) == 44)
+            func line(_ keys: [Int], step: Int = 12) -> [Song.Note] {
+                keys.enumerated().map { Song.Note(t: $0.offset * step, n: $0.element, len: step, lv: 1, f: nil, r: nil, from: nil) }
+            }
+            let riff = Fingering.figures(line([74, 65, 69, 65, 74, 65, 67, 64, 74, 65]), ticksPerBeat: 12)
+            check("hand: Blue Lantern II's riff and its landing notes are one position, no move (\(riff.short))", riff.moves == 0 && riff.positions == 1 && riff.span == 10, riff.short)
+            let scale = Fingering.figures(line([60, 62, 64, 65, 67, 69, 71, 72]), ticksPerBeat: 12)
+            check("hand: a C major octave is one tuck, two positions (\(scale.short))", scale.moves == 1 && scale.moments == 1 && scale.positions == 2, scale.short)
+            // C D E in bar 1, C5 D5 E5 in bar 3, C D E in bar 5, C5 D5 E5 in bar 7: three moves
+            // two bars apart, each its own moment, two positions; the same twelve notes a beat
+            // apart are three moves in one moment (they chain within two bars).
+            let groups = [60, 62, 64, 72, 74, 76, 60, 62, 64, 72, 74, 76].enumerated().map { i, n in
+                Song.Note(t: (i / 3) * 96 + (i % 3) * 12, n: n, len: 12, lv: 1, f: nil, r: nil, from: nil)
+            }
+            let jumps = Fingering.figures(groups, ticksPerBeat: 12)
+            let chained = Fingering.figures(line([60, 62, 64, 72, 74, 76, 60, 62, 64, 72, 74, 76]), ticksPerBeat: 12)
+            check("hand: C D E and C D E an octave up, a bar each two bars apart, is three moves in three moments and two positions (\(jumps.short)); a beat apart, the moves chain into one moment (\(chained.short))",
+                  jumps.moves == 3 && jumps.moments == 3 && jumps.positions == 2 && chained.moves >= 3 && chained.moments == 1, "\(jumps.short) / \(chained.short)")
+            // The app's figures for Blue Lantern II, tier by tier, are the sheet's (and the TS
+            // port's in scripts/takt/solo-check.ts): one position to Easy+, three figures on Medium.
+            let bl = GameEngine(song: Song.bundled("song-blue-lantern-white"), part: .melody, difficulty: .hard)
+            let byTier = (1...bl.tiers).map { t in Fingering.figures(bl.notes.indices.filter { bl.masks[t - 1][$0] }.map { bl.notes[$0] }, ticksPerBeat: 12).short }
+            check("hand: Blue Lantern II by tier: Beginner to Easy+ 0/0 · 1 · 10, Medium 6/3 · 3 · 13, Hard 6/4 · 3 · 13",
+                  byTier == ["0/0 · 1 · 10", "0/0 · 1 · 10", "0/0 · 1 · 10", "0/0 · 1 · 10", "0/0 · 1 · 10", "6/3 · 3 · 13", "6/4 · 3 · 13"], byTier.joined(separator: " | "))
+            // The budgets: the sheet's table, and the plan's goal songs against their level's.
+            // Level 1 is asserted; a later level over its budget prints (LEVELING.md §4 lists
+            // Maxwell Street II as the open one) until its line is rewritten.
+            let b1 = Fingering.Budget.of(level: 1), b1solo = Fingering.Budget.of(level: 1, solo: true)
+            check("hand: the Level 1 budget is 6 moves in 3 places, 3 positions, 13 semitones; a Level 1 solo track 4 moves in 2 places, 2 positions, inside an octave",
+                  b1 == Fingering.Budget(level: 1, positions: 3, moves: 6, moments: 3, span: 13) && b1solo == Fingering.Budget(level: 1, positions: 2, moves: 4, moments: 2, span: 12)
+                  && Fingering.Budget.of(level: 2).moves == 12 && Fingering.Budget.of(level: 3).moves == 20 && Fingering.Budget.of(level: 9).moves == 999)
+            let plan = LearningPlan.active(for: nil)
+            for level in plan.levels {
+                for item in level.items where item.kind == .song {
+                    guard let name = item.song, let part = item.part.flatMap(Song.PartKey.init(rawValue:)), part == .melody,
+                          let d = item.difficulty.flatMap(GameEngine.Difficulty.init(rawValue:)) else { continue }
+                    let e = GameEngine(song: Song.bundled(name), part: part, difficulty: d)
+                    let tier = e.level(atBar: 0)
+                    let f = Fingering.figures(e.notes.indices.filter { e.masks[tier - 1][$0] }.map { e.notes[$0] }, ticksPerBeat: 12)
+                    let b = Fingering.Budget.of(level: level.n)
+                    let label = "leveling: Level \(level.n) goal \(e.song.meta.title) \(part.rawValue) at \(d.title) (tier \(tier)) reads \(f.short) against a budget of \(b.moves)/\(b.moments) · \(b.positions) · \(b.span)"
+                    if level.n == 1 {
+                        check(label, b.holds(f))
+                    } else {
+                        print("\(b.holds(f) ? "note" : "WARN") \(label)\(b.holds(f) ? "" : " — over the hand budget, LEVELING.md §4")")
+                    }
+                }
+            }
         }
 
         // Call (Call.swift): the next note called out, finger then key, then the crossing, and

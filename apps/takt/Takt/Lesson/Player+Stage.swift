@@ -55,9 +55,11 @@ extension Player {
         lessonLog.info("stage: \(song.meta.title, privacy: .public) · \(part.rawValue, privacy: .public) · \(difficulty.rawValue, privacy: .public)")
     }
 
-    /// The same song, part and level again, at the knob's speed.
+    /// Restart (⏮, Play again, Return): the same song, part and level from the top at the knob's
+    /// speed, a fresh run, scored again when the knob is at full speed; out of practice too.
     func restartGame() {
         guard let g = game else { return }
+        if practice { lessonLog.info("practice: out, the run from the top") }
         startGame(song: g.song, part: g.part, difficulty: gameDifficulty, keepSpeed: true)
     }
 
@@ -115,6 +117,16 @@ extension Player {
         return max(0, Int((clock.position(atHost: mach_absolute_time()).tick / Double(game.ticksPerBar)).rounded(.down)))
     }
 
+    /// The rail, dragged (2026-11-08: the one transport): the band holds at the start of `bar`
+    /// and nothing scores from here on. A run under way becomes practice where it sits; a run
+    /// that ended comes back held in practice; practice just moves.
+    func scrub(bar: Int) {
+        guard let g = game else { return }
+        if gameResult != nil { startGame(song: g.song, part: g.part, difficulty: gameDifficulty, practice: true, keepSpeed: true) }
+        if !practice { enterPractice() }
+        practiceSeek(bar: bar)
+    }
+
     /// The scrub: the band holds at the start of `bar`, the highway shows it, every note from
     /// there on is pending again, the fills are scheduled from there.
     func practiceSeek(bar: Int) {
@@ -134,9 +146,20 @@ extension Player {
         if call != nil { callFrom(tick: tick) }
     }
 
-    /// Four bars back from where practice sits or is passing: the phrase again.
+    /// Four bars back from where the song sits or is passing: the phrase again, held. In a run
+    /// it is the way into practice (nothing scored from here on).
     func practiceBack(bars: Int = 4) {
-        practiceSeek(bar: practiceBar - bars)
+        guard let game else { return }
+        let from: Int
+        if practice || gameResult != nil {
+            from = gameResult != nil ? game.song.bars : practiceBar
+        } else {
+            let s = audio.snapshot()
+            let clock = TransportClock(s)
+            let tick = clock.valid && s.epoch == gameEpoch ? clock.position(atHost: mach_absolute_time()).tick : 0
+            from = Int((max(0, tick) / Double(game.ticksPerBar)).rounded(.down))
+        }
+        scrub(bar: from - bars)
     }
 
     // MARK: The knob
@@ -181,7 +204,8 @@ extension Player {
         audio.send(.play)
     }
 
-    /// Back to the game: the run from the top, at the knob's speed, a fresh score.
+    /// Back to the game: the run from the top, at the knob's speed, a fresh score (`restartGame`
+    /// does the same from a run; since 2026-11-08 both are the one Restart button).
     func leavePractice() {
         guard let g = game, practice else { return }
         lessonLog.info("practice: out, the run from the top")

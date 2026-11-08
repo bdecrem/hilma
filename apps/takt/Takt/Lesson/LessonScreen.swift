@@ -3,7 +3,10 @@ import SwiftUI
 /// What the lesson screen's controls do. Empty by default, so a fixed frame draws inert.
 struct LessonControls {
     var togglePlay: () -> Void = {}
-    var stop: () -> Void = {}
+    /// ⏮: the step from the top with the count-in (the Stage's Restart, the same button).
+    var restart: () -> Void = {}
+    /// The chorus rail, dragged to a bar: the band holds there; Play counts in from it.
+    var scrub: (Int) -> Void = { _ in }
     var nudgeTempo: (Int) -> Void = { _ in }
     /// Toggle mute by channel index (0 drums, 1 bass, 2 keys, 3 horns).
     var toggleMute: (Int) -> Void = { _ in }
@@ -125,11 +128,7 @@ struct WideLessonLayout: View {
                                 .frame(width: geo.size.width, height: geo.size.height)
                         }
                     }
-                    if let improv = state.improv {
-                        ImprovBar(state: state, improv: improv)
-                    } else {
-                        FormFooter(state: state)
-                    }
+                    LessonFooter(state: state)
                 }
                 .padding(32)
                 .frame(maxWidth: .infinity)
@@ -225,14 +224,8 @@ struct StackedLessonLayout: View {
                               pressed: state.pressedNotes, fingers: state.fingers)
                     .frame(height: 112)
                 Spacer(minLength: 14)
-                Group {
-                    if let improv = state.improv {
-                        ImprovBar(state: state, improv: improv, compact: true)
-                    } else {
-                        FormFooter(state: state)
-                    }
-                }
-                .padding(.bottom, 8)
+                LessonFooter(state: state, compact: true)
+                    .padding(.bottom, 8)
             }
             .padding(.horizontal, 16)
         }
@@ -314,6 +307,66 @@ struct QuietButton: View {
                 .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Palette.line, lineWidth: 1))
         }
         .buttonStyle(.plain)
+    }
+}
+
+/// The lesson's footer (2026-11-08): the chorus as a rail you can drag, as on the Stage, over
+/// the form's line (or the improv's take and Send it).
+struct LessonFooter: View {
+    let state: LessonState
+    var compact = false
+
+    var body: some View {
+        VStack(spacing: compact ? 8 : 10) {
+            ChorusRail(state: state)
+                .frame(height: 18)
+            if let improv = state.improv {
+                ImprovBar(state: state, improv: improv, compact: compact)
+            } else {
+                FormFooter(state: state)
+            }
+        }
+    }
+}
+
+/// The chorus as a rail: one segment a bar of the form, filled to the beat being heard, a knob
+/// where the band is. Drag anywhere along it to hold the band at that bar; Play counts in from
+/// there. The Stage's `Scrubber`, for a lesson's loop.
+struct ChorusRail: View {
+    let state: LessonState
+    @Environment(\.lessonControls) private var controls
+
+    var body: some View {
+        GeometryReader { g in
+            let w = g.size.width
+            let bars = max(1, state.form.count)
+            let progress = state.countIn == nil ? (CGFloat(state.bar) + CGFloat(state.beat) / 4) / CGFloat(bars) : 0
+            let x = w * progress
+            ZStack(alignment: .leading) {
+                Capsule().fill(Palette.line).frame(height: 6)
+                Capsule().fill(Palette.signal).frame(width: max(0, x), height: 6)
+                ForEach(1..<bars, id: \.self) { b in
+                    Rectangle()
+                        .fill(Palette.ground)
+                        .frame(width: 2, height: 6)
+                        .offset(x: w * CGFloat(b) / CGFloat(bars) - 1)
+                }
+                Circle()
+                    .fill(Palette.signal)
+                    .frame(width: 16, height: 16)
+                    .overlay(Circle().strokeBorder(Palette.ground, lineWidth: 2))
+                    .offset(x: min(w - 16, max(0, x - 8)))
+            }
+            .frame(maxHeight: .infinity, alignment: .center)
+            .contentShape(Rectangle())
+            .gesture(DragGesture(minimumDistance: 0).onChanged { v in
+                let bar = Int((v.location.x / max(1, w) * CGFloat(bars)).rounded(.down))
+                controls.scrub(max(0, min(bars - 1, bar)))
+            })
+        }
+        .accessibilityElement()
+        .accessibilityLabel("Bar \(state.bar + 1) of \(state.form.count)")
+        .accessibilityHint("Drag to another bar of the chorus")
     }
 }
 

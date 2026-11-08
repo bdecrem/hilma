@@ -13,6 +13,11 @@ gone. Anything the app can test is scored by the app, at 100%. The plan's "every
 line (10 min scales, 20 min jam, 15 min the chapter's thing) stays advice in the .md; the app
 builds no session.
 
+How hard a goal's material may be at its level, on both axes (notes a second and hand moves),
+is **`LEVELING.md`** (2026-11-08): the Level 1 goal song is asserted against it by `-LessonCheck`,
+the improv teacher's idea and whole track are written and checked to it, and Maxwell Street II
+(Level 2's song) is over it until its line is rewritten.
+
 ## 1. The plumbing (built)
 
 **A plan is a document.** `Takt/Content/plan-<id>.json` → `Goals/LearningPlan.swift`:

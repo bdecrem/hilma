@@ -56,6 +56,9 @@ final class Player {
     @ObservationIgnored let lessonLog = Logger(subsystem: "takt", category: "lesson")
     /// The transport tick heard at the last display frame.
     @ObservationIgnored var heardTick = 0.0
+    /// The lesson's band holds where the chorus rail was dragged (`seekLesson`): the next Play
+    /// counts in from there.
+    @ObservationIgnored private var heldBySeek = false
     /// Tap mode (a phone with no keyboard): the notes each finger (by id) holds down.
     @ObservationIgnored private var taps: [Int: [Int]] = [:]
     /// Computer keyboard: the notes each key (by semitone) holds down.
@@ -490,32 +493,70 @@ final class Player {
     }
 
     func fromTheTop() {
-        // A step's tempo and its channels' unmutes asked for while the band played (the menu's
-        // band, a goal opened from the map) wait for a downbeat, and a stop drops what waits
-        // (0.1 (57)); stopped, they apply at once, so they go again after it.
-        let tempo = pendingTempo, unmute = pendingUnmute
-        audio.send(.stop)
-        if let tempo { audio.send(.tempo(Double(tempo))) }
-        for ch in Channel.allCases where unmute & ch.bit != 0 { audio.send(.mute(ch, false)) }
+        stopKeepingPending()
         if Self.countInOn { audio.send(.countIn(beats: 4)) }
         audio.send(.play)
     }
 
-    /// Play from the top of a lesson clicks four beats in first (Settings → Count-in); resuming
-    /// from a pause doesn't.
+    /// A stop that keeps what waited for a downbeat: a step's tempo and its channels' unmutes
+    /// asked for while the band played (the menu's band, a goal opened from the map) wait for a
+    /// downbeat, and a stop drops what waits (0.1 (57)); stopped, they apply at once, so they go
+    /// again after it.
+    private func stopKeepingPending() {
+        let tempo = pendingTempo, unmute = pendingUnmute
+        audio.send(.stop)
+        if let tempo { audio.send(.tempo(Double(tempo))) }
+        for ch in Channel.allCases where unmute & ch.bit != 0 { audio.send(.mute(ch, false)) }
+    }
+
+    /// Restart (⏮, Return) in a lesson: the step from the top with the count-in, Show me ended.
+    /// On a song it is the run from the top (`restartGame`). The one button on both screens
+    /// since 2026-11-08.
+    func restart() {
+        if game != nil {
+            restartGame()
+            return
+        }
+        if demo { endDemo(stop: false) }
+        demoEnded = false
+        heldBySeek = false
+        fromTheTop()
+    }
+
+    /// The chorus rail, dragged (2026-11-08): the band holds at the start of `bar` of the chorus
+    /// being heard; Play counts in from there. A new epoch, so the engine starts over from that
+    /// bar (a chorus joined after its downbeat is not judged, the next one is: "you join the
+    /// band") and an improv's take starts over.
+    func seekLesson(bar: Int) {
+        guard game == nil else { return }
+        if demo { endDemo(stop: false) }
+        demoEnded = false
+        let bars = max(1, form.count)
+        let b = max(0, min(bars - 1, bar))
+        let tick = Double((chorus * bars + b) * 4 * audio.band.ticksPerBeat)
+        stopKeepingPending()
+        audio.send(.seek(tick: tick))
+        heldBySeek = true
+        lessonLog.info("lesson: held at bar \(b + 1) of chorus \(self.chorus + 1)")
+    }
+
+    /// Play from the top of a lesson clicks four beats in first (Settings → Count-in), as does
+    /// Play from a bar the rail was dragged to; resuming from a pause doesn't.
     func togglePlay() {
         if practice {
             practicePlay()
             return
         }
         demoEnded = false
-        if !playing && inLesson && calibration == nil && Self.countInOn && audio.snapshot().anchor.tick == 0 {
+        if !playing && inLesson && calibration == nil && Self.countInOn && (audio.snapshot().anchor.tick == 0 || heldBySeek) {
             audio.send(.countIn(beats: 4))
         }
+        heldBySeek = false
         audio.send(playing ? .pause : .play)
     }
 
     func stop() {
+        heldBySeek = false
         audio.send(.stop)
     }
 

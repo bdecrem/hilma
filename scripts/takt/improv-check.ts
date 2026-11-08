@@ -62,6 +62,13 @@ const bad = checkIdea({ ...good, bars: 3, notes: [{ beat: 0.1, note: 63, beats: 
 check('idea: off the grid, a black key, out of reach, past the end, too few, a bad finger, a 3-bar loop: all named',
   'problems' in bad && bad.problems.length >= 6, 'problems' in bad ? bad.problems.join(' | ') : '')
 check('idea: a triplet is on the grid', 'idea' in checkIdea({ ...good, notes: [...good.notes.slice(0, 3), { beat: 2 + 2 / 3, note: 69, beats: 1, finger: 4 }] }, r))
+// The hand (LEVELING.md §3): one position. The good idea's fingers come back as the app's
+// planner sets them (D F G A under 1 3 4 5, whatever the model wrote); an idea that climbs an
+// octave is sent back for the hand.
+check('idea: the fingers are the planner\'s (1 3 4 5 on D F G A: the thumb on D, the third on F)', 'idea' in ok && ok.idea.notes.map((n) => n.f).join('') === '1345', 'idea' in ok ? ok.idea.notes.map((n) => n.f).join('') : '')
+const wide = checkIdea({ ...good, notes: [{ beat: 0, note: 62, beats: 1, finger: 1 }, { beat: 1, note: 65, beats: 1, finger: 2 }, { beat: 2, note: 69, beats: 1, finger: 3 }, { beat: 3, note: 74, beats: 1, finger: 5 }, { beat: 4, note: 76, beats: 2, finger: 5 }] }, r)
+check('idea: one that moves the hand (D4 up to E5) is sent back for the hand', 'problems' in wide && wide.problems.some((p) => p.startsWith('the idea must sit in one hand position')), 'problems' in wide ? wide.problems.join(' | ') : 'accepted')
+check('parse: the level rides along (3), and defaults to 1', (parseRequest({ ...body, context: { ...body.context, level: 3 } }) as ImprovRequest).context.level === 3 && r.context.level === 1)
 
 async function live() {
   const t0 = Date.now()

@@ -185,6 +185,8 @@ struct RootView: View {
             // While the count runs, Space is a hit, not the band's play button.
             onSpace: { if let hit = CountInLaunch.onHit { hit(mach_absolute_time()) } else { player.togglePlay() } },
             onTempo: player.nudgeTempo,
+            // Return: from the top (a song or a lesson), the same as ⏮.
+            onRestart: { if app.route == .game || app.route == .lesson { player.restart() } },
             onEscape: {
                 // One move per press: leaving a goal's lesson or song opens its level on the map,
                 // which a second `if` would close again.
@@ -236,7 +238,8 @@ struct LiveLessonScreen: View {
         LessonScreen(state: player.lessonState())
             .environment(\.lessonControls, LessonControls(
                 togglePlay: player.togglePlay,
-                stop: player.stop,
+                restart: player.restart,
+                scrub: { player.seekLesson(bar: $0) },
                 nudgeTempo: player.nudgeTempo,
                 toggleMute: { i in player.toggleMute(player.channels[i]) },
                 press: { player.press($0) },
@@ -282,13 +285,12 @@ struct LiveGameScreen: View {
             ))
             .environment(\.gameControls, GameControls(
                 togglePlay: player.togglePlay,
-                again: player.restartGame,
+                restart: player.restartGame,
                 leave: app.leaveGame,
                 leaveTitle: player.reading != nil ? "Reading" : app.fromLevel == nil ? "Set list" : "Map",
                 practice: player.practiceFromHere,
-                practiceSeek: { player.practiceSeek(bar: $0) },
-                practiceBack: { player.practiceBack() },
-                run: player.leavePractice,
+                scrub: { player.scrub(bar: $0) },
+                back: { player.practiceBack() },
                 tempo: player.nudgeGameTempo,
                 agent: { app.openAgent(fromGame: player) },
                 call: player.toggleCall

@@ -1892,6 +1892,59 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   launch; with Reduce Motion, the splash off, or another screen up, the line is simply there.
   The etymology is the Mac tooltip. Only on Learn.
 
+- **Leveling: the hand is an axis; one transport everywhere. 0.1 (117), 2026-11-08.** Bart,
+  playing the Solo track the improv teacher wrote for his Level 1 take (0.1 (114)): "(1) the
+  difficulty is WAY OFF, not per se the difficulty of hitting those notes, but the FINGER
+  MOVEMENTS required. it's CONSTANTLY telling me to move my hands around… level complexity
+  includes BOTH the notes variety AND the required hand positioning. at level 1, maybe I have
+  to move my hand 4 times in the course of playing the full song, NOT 20+… fix that song and
+  fix/update/create .md instructions for properly leveling at all areas in the app (2) we have
+  3 or 4 variations on the UI for gameplay / exercise / improv… there's a SCRUB/progress bar in
+  the UI, but I'm not able to use it in 'play mode'… the exact same scrub bar is scrubbable in
+  practice mode… there's no way to stop/restart, only continue… make it so basically the UI is
+  the same everywhere… I can always change tempo, scrub, pause etc, but if I'm in a game, maybe
+  that will invalidate my score". **(1) Read `LEVELING.md`.** The track moved his hand 10 times
+  in 7 places over 15 semitones by the app's own fingering (`Fingering.plan`), and the agent
+  had only density rules. Now: `Fingering.figures` (the hand's moves, moments, positions and
+  span of a line fingered as the Stage fingers it; `src/lib/takt/fingering.ts` is the same
+  program on the server, `leveling.ts` the budgets), a budget per map level (Level 1: 6 moves
+  in 3 moments, 3 positions, inside an octave and a step: Blue Lantern II's Medium is exactly
+  6/3 · 3 · 13; a Level 1 solo track 4 moves in 2 moments inside an octave, his number), the
+  improv teacher's idea in one hand position (`checkIdea`, the planner's fingers), the whole
+  track written in a named **home position** (the five scale keys his take sat on) under the
+  budget and sent back with the bars of every move otherwise (`rulesFor`, `checkSolo`;
+  `context.level` from the app), Agent mode's ladder lines carrying the hand figures and its
+  rule 8, `-LessonCheck` printing the figures of every melody tier beside the onsets a second
+  and asserting the plan's Level 1 song (Maxwell Street II, Level 2's, is over budget: 30/9 · 5
+  · 24, a WARN and §4 of the sheet). His solo was rewritten under the rule the same day
+  (`solo-from-review.ts`, v2 of his row: 129 notes, 0.94 a second, D4–B4, no hand move; v1 is
+  in the history and in `scripts/takt/fixtures/`). **(2) One transport** (`GameControls`,
+  `LessonControls`; "The one transport" below): the rail is always the scrubber (`Scrubber`,
+  the plain `ProgressRail` is unused), the same quiet row under it in a run as in practice
+  (`TransportRow`, was `PracticeBar`), **⏮ Restart** beside play on both screens (the HUD on
+  the Mac, the row on the phone; the lesson's Stop became it; Return on the keyboard),
+  knob · ⏮ · ▶ · Ask in that order everywhere. Scrubbing or four-bars-back in a run turns it
+  into practice where it sits (`Player.scrub(bar:)`, `practiceBack`), pausing keeps the score,
+  the knob under full speed is a run on no board as before; "Play the run" is gone (⏮ is it)
+  and the pause card has Restart. The lesson got a **chorus rail** (`ChorusRail`, `LessonFooter`:
+  drag to a bar of the form, the band holds there, Play counts in from it, `Player.seekLesson`;
+  a new epoch, so a chorus joined mid-way is not judged). solo-check 22/22 live (a track in 78 s,
+  0 hand moves), improv-check 10/10, `-LessonCheck` 479/479, Mac snapshots and the phone's.
+
+## The one transport (2026-11-08)
+
+Every screen that plays music draws the same controls in the same order and they always work:
+**knob · ⏮ Restart · ▶/⏸ · Ask** (the Mac: in the HUD / transport bar; the phone: in the row
+under the rail), and a **rail that is always a scrubber** (the song's bars with its sections on
+the Stage, the chorus's bars in a lesson). What changes between a game and a practice is only
+whether the run still scores, and the HUD says which: **pausing keeps the score**; **scrubbing,
+four bars back, Practice and Call make the run practice** from where it sits (nothing scored, the
+run never finishes, the knob and the rail free); **the knob under full speed** plays to a result
+that goes on no board; **Restart** is a fresh run from the top at the knob's speed, scored again
+when the knob is at full speed. In a lesson a scrub holds the band at that bar of the form and
+Play counts in from it; the chorus you joined mid-way is not judged, the next one is. Don't add
+a mode-specific control without putting it in the same place on the other screen.
+
 ## Code map (`Takt/`)
 
 - `App/AppModel.swift`: the route (lessons / lesson / result / settings; screens switch without
@@ -1922,7 +1975,12 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
 - `Lesson/{TransportBar,ChannelStrip,PadGrid,CoachPanel,KeyboardStrip}.swift`: one part each.
   `KeyboardStrip` takes MIDI note bounds (C4 = 60; the Mac shows C3–B4, iPhone C3–F4) and is
   playable (one finger, slide across keys). Controls reach the views as `LessonControls` in the
-  environment; a fixed frame gets the empty default and draws inert.
+  environment; a fixed frame gets the empty default and draws inert. `LessonFooter` /
+  `ChorusRail` (LessonScreen.swift): the chorus as a scrubber over the form's line (0.1 (117)).
+- `Game/Fingering.swift`: a melody line's fingers by hand position, and since 0.1 (117) the
+  hand's figures (`figures`: moves, moments, positions, span) and the leveling budgets
+  (`Budget.of(level:solo:)`), the sheet being `LEVELING.md`. `Game/GameScreen.swift`:
+  `TransportRow` (the scrubber and the quiet row, a run or practice alike), `RestartButton`.
 - `Export/MIDIFile.swift`: the SMF writer (and a reader, for the checks). `ResultScreen`'s
   `MIDIExport` names and writes the file; `MIDIDocument` is the Mac save panel's document.
 - `Lesson/Calibration.swift` (pure: clicks, taps, the median) and `Menu/CalibrationScreen.swift`.

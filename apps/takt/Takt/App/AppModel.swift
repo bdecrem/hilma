@@ -205,6 +205,9 @@ final class AppModel {
             "about": step.about ?? "",
             "hand": step.hand ?? "right",
             "device": Self.device,
+            // The map level the improv is a goal of (LEVELING.md: the hand budget of the idea
+            // and the whole track); a jam under a lesson is written for Level 1.
+            "level": goals.map(\.0.n).min() ?? 1,
         ]
         var state = ImprovReview(phase: .listening([]), take: take, count: count, started: Date())
         state.goals = goals.map { (l, i) in

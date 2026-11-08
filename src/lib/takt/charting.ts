@@ -9,6 +9,7 @@
 // mask the app's `-DumpCharts` writes.
 
 import { type PartKey, type PartNote, type SongFile, musicBars, seconds as songSeconds, sortedNotes, ticksPerBar } from './songfile'
+import { type HandFigures, handFigures, handLine } from './fingering'
 
 export type Tier = {
   line: string
@@ -380,7 +381,7 @@ export function masks(
 
 /** One tier's figures, the `-LessonCheck` ladder line's: onsets a second over the song, and
  *  the quietest and busiest eight bars the part plays in. */
-export type TierFigure = { tier: number; notes: number; onsets: number; perSecond: number; quietest: number; busiest: number }
+export type TierFigure = { tier: number; notes: number; onsets: number; perSecond: number; quietest: number; busiest: number; hand?: HandFigures }
 
 export function figures(c: Charting, override: SongOverride | null, s: SongFile, part: PartKey): TierFigure[] {
   const all = sortedNotes(s.song.parts[part]!.notes)
@@ -407,6 +408,8 @@ export function figures(c: Charting, override: SongOverride | null, s: SongFile,
       perSecond: ticks.size / total,
       quietest: rates.length ? Math.min(...rates) : 0,
       busiest: rates.length ? Math.max(...rates) : 0,
+      // The hand (LEVELING.md): a melody tier's line fingered as the Stage fingers it.
+      hand: part === 'melody' ? handFigures(all.filter((_, i) => m[i]), true, s.ticksPerBeat) : undefined,
     }
   })
 }
@@ -424,7 +427,7 @@ export function ladderLine(c: Charting, override: SongOverride | null, s: SongFi
   return figs
     .map((f) => {
       const tag = names.get(f.tier)?.join('/') ?? ''
-      return `L${f.tier}${tag ? ` (${tag})` : ''}: ${f.perSecond.toFixed(2)}/s [${f.quietest.toFixed(1)}–${f.busiest.toFixed(1)}], ${f.notes} notes — ${tiers[f.tier - 1].line}`
+      return `L${f.tier}${tag ? ` (${tag})` : ''}: ${f.perSecond.toFixed(2)}/s [${f.quietest.toFixed(1)}–${f.busiest.toFixed(1)}], ${f.notes} notes${f.hand ? `, ${handLine(f.hand)}` : ''} — ${tiers[f.tier - 1].line}`
     })
     .join('\n')
 }

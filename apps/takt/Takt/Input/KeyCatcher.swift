@@ -3,13 +3,15 @@ import UIKit
 
 /// The computer keyboard as a piano (brief §5): the home row is the white keys from C,
 /// W E T Y U O P the black keys. A key is a note name: in a song or a lesson the octave
-/// follows what is due (`Player.key`), otherwise Z / X shift it. Space plays/pauses, ↑ / ↓ change tempo, Esc leaves the lesson.
+/// follows what is due (`Player.key`), otherwise Z / X shift it. Space plays/pauses, Return
+/// restarts from the top, ↑ / ↓ change tempo, Esc leaves the lesson.
 /// Physical key codes, so it works on any layout. Keys held with ⌘, ⌃ or ⌥ are left to menus.
 struct KeyCatcher: UIViewRepresentable {
     var onNote: (_ semitone: Int, _ down: Bool) -> Void
     var onOctave: (_ delta: Int) -> Void
     var onSpace: () -> Void
     var onTempo: (_ delta: Int) -> Void
+    var onRestart: () -> Void = {}
     var onEscape: () -> Void = {}
 
     func makeUIView(context: Context) -> CatcherView {
@@ -58,6 +60,7 @@ struct KeyCatcher: UIViewRepresentable {
                     case .keyboardZ: catcher.onOctave(-1)
                     case .keyboardX: catcher.onOctave(1)
                     case .keyboardSpacebar: catcher.onSpace()
+                    case .keyboardReturnOrEnter, .keypadEnter: catcher.onRestart()
                     case .keyboardUpArrow: catcher.onTempo(5)
                     case .keyboardDownArrow: catcher.onTempo(-5)
                     case .keyboardEscape: catcher.onEscape()

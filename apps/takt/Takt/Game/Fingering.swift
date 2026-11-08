@@ -124,3 +124,113 @@ enum Fingering {
         return out
     }
 }
+
+// MARK: The hand (LEVELING.md, 2026-11-08)
+
+extension Fingering {
+    /// The white-key index of a note (a black key counts as the white key under it), so a hand
+    /// position reads as where the thumb sits, in keys.
+    static func whiteIndex(_ n: Int) -> Int {
+        let pc = ((n % 12) + 12) % 12
+        return Int((Double(n) / 12).rounded(.down)) * 7 + [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6][pc]
+    }
+
+    /// Where the hand sits for a note under a finger: the white key the thumb lies on (the right
+    /// hand; the pinky's key for the left), finger f sitting f − 1 keys over it.
+    static func thumbKey(_ n: Int, finger: Int, right: Bool = true) -> Int {
+        right ? whiteIndex(n) - (finger - 1) : whiteIndex(n) + (finger - 1)
+    }
+
+    struct Move: Equatable {
+        enum Kind { case tuck, over, jump }
+        /// Index into the notes of the note the hand moves onto.
+        let index: Int
+        let kind: Kind
+    }
+
+    /// How often the hand moves over a fingered line (the server's `handMoves` in
+    /// src/lib/takt/fingering.ts is the same rule). The hand sits where its thumb lies; a note
+    /// under finger f says the thumb is f − 1 white keys under it. One position reads within a
+    /// key of itself (1 on F and 5 on D is a stretch, the thumb on F reaching to E a reach), so
+    /// the position is the span of thumb keys read since the last move, and a note that widens
+    /// it past two keys is a move; so is a thumb-under going up or a finger over the thumb
+    /// coming down. Rests don't excuse a move.
+    static func moves(_ notes: [Song.Note], fingers: [Int], right: Bool = true) -> [Move] {
+        guard notes.count >= 2, fingers.count == notes.count else { return [] }
+        var out: [Move] = []
+        var lo = thumbKey(notes[0].n, finger: fingers[0], right: right), hi = lo
+        for i in 1..<notes.count {
+            let d = (right ? 1 : -1) * (notes[i].n - notes[i - 1].n)
+            let fa = fingers[i - 1], fb = fingers[i]
+            let here = thumbKey(notes[i].n, finger: fb, right: right)
+            let tuck = d > 0 && fb == 1 && fa > 1
+            let over = d < 0 && fa == 1 && fb > 1
+            if tuck || over || max(hi, here) - min(lo, here) > 2 {
+                out.append(Move(index: i, kind: tuck ? .tuck : over ? .over : .jump))
+                lo = here
+                hi = here
+            } else {
+                lo = min(lo, here)
+                hi = max(hi, here)
+            }
+        }
+        return out
+    }
+
+    /// The hand's figures for a line, fingered by the rule above: moves, moments (moves within
+    /// two bars of each other are one moment to the player), positions (places the hand has not
+    /// sat before, within a key) and the span in semitones.
+    struct Figures: Equatable {
+        let moves: Int
+        let moments: Int
+        let positions: Int
+        let span: Int
+        /// "6/3 · 3 · 13": moves/moments · positions · span, as LEVELING.md tabulates them.
+        var short: String { "\(moves)/\(moments) · \(positions) · \(span)" }
+    }
+
+    static func figures(_ notes: [Song.Note], right: Bool = true, ticksPerBeat: Int) -> Figures {
+        guard !notes.isEmpty else { return Figures(moves: 0, moments: 0, positions: 0, span: 0) }
+        let f = plan(notes, right: right, ticksPerBeat: ticksPerBeat)
+        let mv = moves(notes, fingers: f, right: right)
+        // Moves within two bars of the move before join its moment (a tuck up into a figure
+        // and the hand coming home are one moment to the player).
+        var moments = 0, last = -Int.max / 2
+        for m in mv {
+            if notes[m.index].t - last >= 8 * ticksPerBeat { moments += 1 }
+            last = notes[m.index].t
+        }
+        var positions = [thumbKey(notes[0].n, finger: f[0], right: right)]
+        for m in mv {
+            let k = thumbKey(notes[m.index].n, finger: f[m.index], right: right)
+            if !positions.contains(where: { abs($0 - k) <= 1 }) { positions.append(k) }
+        }
+        let pitches = notes.map(\.n)
+        return Figures(moves: mv.count, moments: moments, positions: positions.count, span: pitches.max()! - pitches.min()!)
+    }
+
+    /// The leveling sheet's hand budget for a map level (LEVELING.md §2; `src/lib/takt/leveling.ts`
+    /// is the same table): the most moves, moments and positions a line may ask for, and how
+    /// wide it may be. `solo` is the improv teacher's whole track at Level 1 (Bart: "maybe 4").
+    struct Budget: Equatable {
+        let level: Int
+        let positions: Int
+        let moves: Int
+        let moments: Int
+        let span: Int
+
+        static func of(level: Int, solo: Bool = false) -> Budget {
+            switch max(1, level) {
+            case 1: return solo ? Budget(level: 1, positions: 2, moves: 4, moments: 2, span: 12) : Budget(level: 1, positions: 3, moves: 6, moments: 3, span: 13)
+            case 2: return Budget(level: 2, positions: 3, moves: 12, moments: 6, span: 24)
+            case 3: return Budget(level: 3, positions: 4, moves: 20, moments: 10, span: 24)
+            case 4...6: return Budget(level: level, positions: 5, moves: 30, moments: 15, span: 24)
+            default: return Budget(level: level, positions: 99, moves: 999, moments: 999, span: 48)
+            }
+        }
+
+        func holds(_ f: Figures) -> Bool {
+            f.moves <= moves && f.moments <= moments && f.positions <= positions && f.span <= span
+        }
+    }
+}

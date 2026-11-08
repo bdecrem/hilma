@@ -323,7 +323,7 @@ export function readSong(d: Draft, charting: Charting): string {
     const weights = [1, 2, 3].map((lv) => notes.filter((n) => n.lv === lv).length)
     lines.push('')
     lines.push(`Part "${k}" — ${p.title}: ${notes.length} notes (weights 1/2/3: ${weights.join('/')}), range ${noteName(Math.min(...pitches))}–${noteName(Math.max(...pitches))}, your keys play ${p.monitor}, replaces the band's ${p.channel}`)
-    lines.push(`Ladder (level: onsets a second over the song [quietest–busiest 8 bars], notes — what the level is):`)
+    lines.push(`Ladder (level: onsets a second over the song [quietest–busiest 8 bars], notes${k === 'melody' ? ', the hand: moves over the song (places), positions, width' : ''} — what the level is):`)
     lines.push(ladderLine(charting, d.override, s, k))
     const o = d.override?.[k]
     lines.push(`This song's own charting for it: ${o ? JSON.stringify(o) : 'none (the ladder as is)'}`)

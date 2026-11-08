@@ -2,7 +2,8 @@
 
 One file decides every level of every song: `Takt/Content/charting.json`. What the levels
 must come out as for a blues track, part by part, is `BLUES.md` (the reference sheet, with the
-measured figures of every blues song); this file is the mechanism. The songs carry
+measured figures of every blues song); this file is the mechanism. How hard a level may be for
+a player at a given map level, on both axes (notes a second and hand moves), is `LEVELING.md`. The songs carry
 their parts whole, as the record plays them, and the app cuts each level from them at load
 time by these rules. To change how a level feels, change a number there (or tell Claude what
 felt wrong: "Warm Nine chords on Medium is too busy", "Easy is boring at 90 bpm") and rebuild.
@@ -281,6 +282,18 @@ every song and part.
     budget (200,000 steps a phrase, the TS charter the same): a chorus-long phrase over a run
     whose keys can't all fit tried every subset for over ten minutes; every earlier song finishes
     under it, and its charts are byte for byte what they were.
+
+16. **The hand is the other axis** (2026-11-08, `LEVELING.md`). Bart on the first Solo track:
+    "not per se the difficulty of hitting those notes, but the FINGER MOVEMENTS required. it's
+    CONSTANTLY telling me to move my hands around… at level 1, maybe I have to move my hand 4
+    times in the course of playing the full song, NOT 20+". Every melody tier's line is
+    fingered as the Stage fingers it (`Fingering`) and read as hand moves over the song, the
+    moments they group into, the positions the hand sits in and the span; `-LessonCheck`
+    prints them beside the onsets a second (`hand (moves/moments · positions · span) by level`)
+    and asserts the plan's Level 1 goal song against the Level 1 budget (6 moves in 3 moments,
+    inside an octave and a step; Blue Lantern II's Medium is exactly 6/3). The budgets per
+    level, and the figures of every song, are in `LEVELING.md`; a chart over its level's budget
+    is cured in the line (rules 13 and 14), never by thinning or slowing it.
 
 ## Where this comes from
 

@@ -16,6 +16,8 @@ import { type Charting, type SongOverride } from './charting'
 import { type Draft, runTool } from './mod-tools'
 import { type ModBundle, type ModRow, bundle, createMod, findSolo, saveMod } from './mods'
 import { type PartNote, type SongFile, cloneSong, musicBars, sortedNotes, ticksPerBar } from './songfile'
+import { handFigures, handLine } from './fingering'
+import { type HandBudget, type HomePosition, budgetLine, handBudget, handProblems, homeLine, homePosition, noteNameSharp } from './leveling'
 
 export const SOLO_MODEL = 'claude-opus-5-5'
 
@@ -109,24 +111,44 @@ export type SoloRules = {
   /** Onsets a second over the song. */
   minPerSecond: number
   maxPerSecond: number
+  /** The hand (LEVELING.md §2): the player's level's budget for a solo track, the home
+   *  position the line is written in, and which hand. */
+  hand: HandBudget
+  home: HomePosition
+  right: boolean
 }
 
-/** The rules for this backing and take: the range near where they played (a seventh under the
- *  take's lowest note, an octave over its highest, two octaves at most), the density of a
- *  level a grown-up beginner reads (0.45 to 1.2 onsets a second). */
+/** The rules for this backing and take. The hand first (LEVELING.md, 2026-11-08): the budget
+ *  of the player's map level for a solo track (Level 1: at most 4 moves in 2 places, 2
+ *  positions, inside an octave), and the home position, the five scale keys where their take
+ *  mostly sat. On Levels 1–2 the range is that position and a step either side; from Level 3
+ *  the range is near where they played (a seventh under, an octave over, two octaves at most).
+ *  The density is a grown-up beginner's (0.45 to 1.2 onsets a second). */
 export function rulesFor(r: ImprovRequest): SoloRules {
   const s = stats(r)
-  const lo = s.low ?? 60, hi = s.high ?? 72
-  let low = Math.max(36, lo - 7)
-  let high = Math.min(96, hi + 12)
-  // Two octaves and a third at most (a take that wandered doesn't license the whole piano).
-  if (high - low > 28) {
-    const mid = Math.round((lo + hi) / 2)
-    low = Math.max(low, mid - 14)
-    high = Math.min(high, low + 28)
+  const level = r.context.level || 1
+  const hand = handBudget(level, true)
+  const right = r.context.hand === 'right'
+  const home = homePosition(r.take.notes, r.backing.scale, level <= 1 ? 5 : 6)
+  let low: number, high: number
+  if (level <= 2) {
+    low = home.low
+    high = home.high
+    // Level 2 may reach an octave over the home (two positions).
+    if (level === 2) high = Math.min(96, home.keys[0] + 19)
+  } else {
+    const lo = s.low ?? 60, hi = s.high ?? 72
+    low = Math.max(36, lo - 7)
+    high = Math.min(96, hi + 12)
+    // Two octaves and a third at most (a take that wandered doesn't license the whole piano).
+    if (high - low > 28) {
+      const mid = Math.round((lo + hi) / 2)
+      low = Math.max(low, mid - 14)
+      high = Math.min(high, low + 28)
+    }
+    if (high - low < 14) high = Math.min(96, low + 14)
   }
-  if (high - low < 14) high = Math.min(96, low + 14)
-  return { scale: r.backing.scale, scaleName: r.backing.scaleName, low, high, shuffle: r.backing.feel === 'shuffle', minPerSecond: 0.45, maxPerSecond: 1.2 }
+  return { scale: r.backing.scale, scaleName: r.backing.scaleName, low, high, shuffle: r.backing.feel === 'shuffle', minPerSecond: 0.45, maxPerSecond: 1.2, hand, home, right }
 }
 
 const barOf = (t: number, tpb: number) => Math.floor(t / tpb) + 1
@@ -243,6 +265,13 @@ export function checkSolo(song: SongFile, rules: SoloRules, idea: Idea): string[
     if (later && same / later > 0.5) problems.push(`it loops: ${same} of the ${later} bars after the first chorus repeat the bar one chorus earlier note for note; vary the line from chorus to chorus (move the idea onto the changes, answer it, stretch it, go up for the peak, come home at the end)`)
   }
 
+  // The hand (LEVELING.md): fingered as the Stage will finger it, the line keeps to the
+  // level's budget of moves, places, positions and width.
+  if (!together.length) {
+    const figures = handFigures(notes, rules.right, 12)
+    problems.push(...handProblems(notes, figures, rules.hand, tpb))
+  }
+
   // The weights, for the game's levels under Solo.
   const barsWithNotes = new Set(notes.map((n) => barOf(n.t, tpb)))
   const anchored = new Set(notes.filter((n) => n.lv === 1).map((n) => barOf(n.t, tpb)))
@@ -269,7 +298,9 @@ What it is: their idea, grown into a whole solo. The first chorus states the ide
 
 The changes: the solo must say the chords. On a bar where the chord changes, the first note heard in it (or the note still ringing into it) is a tone of the new chord; the message lists every chord's tones among the notes allowed. Phrases land on chord tones; passing notes go between them.
 
-Not too hard, and interesting: a grown-up beginner plays this with one hand while reading the notes coming down. Mostly quarter notes and held notes, eighths in pairs or short groups, never more than four eighths in a row, no sixteenths, never two notes at once, steps and small leaps (a fifth at most; an octave only to restate the idea up high), within about a tenth. Rests are music: at least one bar in four is mostly silence or one held note, and never more than two bars without a note. About 0.6 to 1.0 notes a second over the whole song; the message says how many notes a bar that is at this tempo.
+THE HAND FIRST. This is the rule the student cares most about: a beginner's whole difficulty is knowing where their hand is. The message names their HOME POSITION (five neighbouring keys of the scale, one finger each, where their own take sat) and their level's HAND BUDGET: how many times in the WHOLE SONG the hand may move at all. Write every bar inside the home position. The few figures that leave it are the interest of the track: a short climb or a reach over the top note, a bar or two, and the hand comes straight home. Never settle in a new position for a chorus; never move the hand twice in one bar; never ask for a thumb-under or a jump where the line could stay put. The app fingers your line the way the Stage will (a dynamic program over the five fingers) and counts the moves; over the budget it comes back with the bars named. Interest at this level comes from rhythm, repetition and variation, space, and landing on the chord tones, not from range.
+
+Not too hard, and interesting: a grown-up beginner plays this with one hand while reading the notes coming down. Mostly quarter notes and held notes, eighths in pairs or short groups, never more than four eighths in a row, no sixteenths, never two notes at once, steps and small leaps (a fifth at most; nothing wider than the range given). Rests are music: at least one bar in four is mostly silence or one held note, and never more than two bars without a note. About 0.6 to 1.0 notes a second over the whole song; the message says how many notes a bar that is at this tempo.
 
 The format (the app checks every rule and sends the solo back with what to fix): bar is 1-based; tick is counted inside the bar from 0, 12 a beat, 48 a bar, on the grid: beats (0, 12, 24, 36) and halves (6, 18, 30, 42), and in a shuffle the short eighth on 8, 20, 32, 44; n is a MIDI number (60 = middle C), only the notes allowed, inside the range given; len in ticks, 6 or more (a quarter is 12, a half 24, a whole bar 48; a note may ring over the bar line, up to two bars); lv is the weight for the game's levels under Solo: 1 for one anchor a bar (the note held on a strong beat, a chord tone), 2 the rest of the line, 3 pickups and ornaments. No fingers: the app fingers it.
 
@@ -299,7 +330,7 @@ Sections: ${sections}.
 Chords by bar: ${formRuns(song.form, bars)}.
 Chord tones among the notes allowed: ${chordLine(song.form.slice(0, bars), rules.scale)}.
 ${allowed}
-Range: between ${noteName(rules.low)} (${rules.low}) and ${noteName(rules.high)} (${rules.high}), near where they played (${s.low != null ? noteName(s.low) : '-'} to ${s.high != null ? noteName(s.high) : '-'}).
+Level ${rules.hand.level}. Home position (${r.context.hand} hand): ${homeLine(rules.home, rules.right)}; the figures may reach one step either side (${noteNameSharp(rules.low)} to ${noteNameSharp(rules.high)}, MIDI ${rules.low}–${rules.high}), and nothing outside that. Hand budget for the whole song: ${budgetLine(rules.hand)}. They played ${s.low != null ? noteName(s.low) : '-'} to ${s.high != null ? noteName(s.high) : '-'}.
 Density: 0.6 to 1.0 notes a second is ${perBar(0.6)} to ${perBar(1.0)} notes a bar at ${song.song.tempo} bpm, about ${Math.round(0.6 * seconds)} to ${Math.round(1.0 * seconds)} notes in all.
 Hand: ${r.context.hand}.
 ${tuneLines.length ? `

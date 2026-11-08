@@ -10,6 +10,8 @@
 import type Anthropic from '@anthropic-ai/sdk'
 import { f2Supabase } from '@/lib/f2/supabase'
 import { libraryText } from './library'
+import { handFigures, handLine } from './fingering'
+import { handBudget } from './leveling'
 
 export const IMPROV_MODEL = 'claude-opus-5-5'
 
@@ -27,7 +29,9 @@ export type Backing = {
   scale: number[] | null
   scaleName: string
 }
-export type ImprovContext = { where: 'level' | 'jam'; title: string; about: string; hand: 'right' | 'left'; device: string }
+/** `level`: the map level the improv is a goal of (LEVELING.md: the hand budget of the idea and
+ *  the whole track), 1 for a jam under a lesson or an older app. */
+export type ImprovContext = { where: 'level' | 'jam'; title: string; about: string; hand: 'right' | 'left'; device: string; level: number }
 export type IdeaNote = { t: number; n: number; len: number; f: number }
 export type Idea = { title: string; why: string; bars: number; notes: IdeaNote[] }
 export type Review = { headline: string; notes: string[]; idea: Idea }
@@ -81,6 +85,7 @@ export function parseRequest(body: unknown): ImprovRequest | string {
       about: str(c.about, 1200),
       hand: c.hand === 'left' ? 'left' : 'right',
       device: str(c.device, 20),
+      level: num(c.level, 1, 60) ? Math.round(c.level as number) : 1,
     },
   }
 }
@@ -182,8 +187,23 @@ export function checkIdea(raw: unknown, r: ImprovRequest): { idea: Idea } | { pr
   for (const n of notes) byTick.set(n.t, (byTick.get(n.t) ?? 0) + 1)
   if ([...byTick.values()].some((c) => c > 2)) problems.push('at most two notes at once: it is a line, not chords')
   if (problems.length) return { problems }
+  // One hand position (LEVELING.md §3): fingered as the app will finger it, the idea never
+  // moves the hand and spans a seventh at most; the fingers the app shows are the planner's.
+  const line = notes.filter((n, i) => i === 0 || n.t !== notes[i - 1].t)
+  const hand = handFigures(line, r.context.hand === 'right', 12)
+  if (hand.moves.length || hand.span > IDEA_SPAN) {
+    const low = Math.min(...notes.map((n) => n.n)), high = Math.max(...notes.map((n) => n.n))
+    problems.push(`the idea must sit in one hand position (five fingers over five or six scale keys, no thumb-under, nothing wider than a seventh): this one is ${noteName(low)} to ${noteName(high)}, ${handLine(hand)}. Keep it where their hand already sits`)
+    return { problems }
+  }
+  const byIndex = new Map(line.map((n, i) => [n, hand.fingers[i]]))
+  for (const n of notes) n.f = byIndex.get(n) ?? n.f
   return { idea: { title, why, bars: bars as number, notes } }
 }
+
+/** The widest an idea may be and still sit in one hand position: a minor seventh (the thumb on
+ *  F, the pinky stretched to D). */
+export const IDEA_SPAN = 10
 
 // MARK: The teacher
 
@@ -201,7 +221,8 @@ The idea's rules (the app checks them and sends it back if one is broken):
 - bars: 1, 2 or 4. The app loops it over the whole form, every chord, so it must sound good over every chord in it (in a blues, a phrase on the minor pentatonic or the blues scale does). A 2-bar idea with the second bar mostly rest (a call that leaves room) is often the best.
 - 3 to 16 notes. beat is counted in beats from the start of the idea, starting at 0 (0 = bar 1 beat 1, 4 = bar 2 beat 1), on the grid: whole beats, halves (0.5), triplets (0.333, 0.667) or sixteenths (0.25). beats is the length in beats. Nothing rings past the end of the idea.
 - note is a MIDI number (60 = middle C). Stay near where they played. If the transcript lists notes allowed, use only those.
-- finger 1 to 5 for every note, for the hand given (right: 1 = thumb, 5 = pinky, low notes on the thumb side), a real fingering a teacher would write: stay in one hand position when you can; a thumb-under or a cross only when it has to.
+- ONE HAND POSITION. The idea sits where their hand already sits: five fingers over five or six neighbouring keys of the scale, nothing wider than a seventh, no thumb-under, no jump (the app fingers it by hand position and sends it back if the hand would have to move). A beginner's whole difficulty is knowing where their hand is; an idea that moves it is not an idea they can play tonight.
+- finger 1 to 5 for every note, for the hand given (right: 1 = thumb, 5 = pinky, low notes on the thumb side), as the hand lies in that position (the app re-fingers it the same way).
 - It should be playable by this student today: about as fast as their own playing, not faster. Simpler beats busier.
 - title: at most 40 characters, names it ("Your bar 5 lick, landing on D").
 
@@ -214,7 +235,9 @@ function userMessage(r: ImprovRequest): string {
   const allowed = r.backing.scale
     ? `Notes allowed: ${r.backing.scaleName ? `${r.backing.scaleName}, ` : ''}${r.backing.scale.map((p) => NAMES[p]).join(' ')} (any octave).`
     : 'Notes allowed: any (this is a free jam; the backing\'s key is the guide).'
-  return `Where: ${r.context.where === 'level' ? 'a level goal on the map' : 'a jam under a lesson'}: "${r.context.title}".${r.context.about ? `\nWhat they were working on: ${r.context.about}` : ''}
+  const b = handBudget(r.context.level)
+  return `Where: ${r.context.where === 'level' ? `a Level ${r.context.level} goal on the map` : 'a jam under a lesson'}: "${r.context.title}".${r.context.about ? `\nWhat they were working on: ${r.context.about}` : ''}
+The student is on Level ${b.level}: an idea for them sits in one hand position (see the rules).
 Backing: ${r.backing.title}${r.backing.style ? `, ${r.backing.style}` : ''}${r.backing.key ? ` in ${r.backing.key}` : ''}, ${r.take.tempo} bpm, ${r.backing.feel === 'straight' ? 'straight eighths' : 'a shuffle (swung eighths)'}.
 The form, one chorus: ${r.backing.form.join(' | ')}.
 ${allowed}

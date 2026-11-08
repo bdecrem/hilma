@@ -84,18 +84,27 @@ struct GameState {
     var levelTitle: String { "Level \(level)" }
 }
 
-/// What the game screen's buttons do.
+/// What the game screen's buttons do. One transport everywhere (2026-11-08, Bart: "make it so
+/// basically the UI is the same everywhere, and I can always change tempo, scrub, pause etc,
+/// but if I'm in a game, maybe that will invalidate my score"): play/pause, restart, the knob
+/// and the rail are always there and always work; what changes is whether the run still
+/// scores. Pausing keeps the score. Scrubbing the rail, four bars back and Practice turn the run
+/// into practice (nothing scored from there, the run never finishes); the knob under full speed
+/// plays to a result that goes on no board. Restart is a fresh run from the top at the knob's
+/// speed, scored again when the knob is at full speed.
 struct GameControls {
     var togglePlay: () -> Void = {}
-    var again: () -> Void = {}
+    /// The song from the top at the knob's speed: a fresh run (Play again, Play the run, ⏮, Return).
+    var restart: () -> Void = {}
     var leave: () -> Void = {}
     /// Where `leave` goes: the set list, or the map when a goal on the map started the song.
     var leaveTitle = "Set list"
-    /// Pause → practice; the scrub (a bar); four bars back; back to the run.
+    /// Hold here, nothing scored (the pause card's Practice this part, the result card's Practice).
     var practice: () -> Void = {}
-    var practiceSeek: (Int) -> Void = { _ in }
-    var practiceBack: () -> Void = {}
-    var run: () -> Void = {}
+    /// The rail, dragged to a bar: the band holds there; a run becomes practice.
+    var scrub: (Int) -> Void = { _ in }
+    /// Four bars back, held; a run becomes practice.
+    var back: () -> Void = {}
     /// The knob, a run or practice alike: the band's tempo by so many bpm (±5).
     var tempo: (Int) -> Void = { _ in }
     /// Pause → Agent mode on this song, where the run sits.
@@ -131,32 +140,11 @@ struct GameScreen: View {
                 .padding(.horizontal, compact ? 16 : 24)
                 .padding(.top, compact ? 8 : 14)
                 .padding(.bottom, 10)
-            if state.practice {
-                // Practice tucks in where the rail was: the rail becomes the scrubber, a row of
-                // small controls under it.
-                PracticeBar(state: state, compact: compact)
-                    .padding(.horizontal, compact ? 16 : 24)
-                    .transition(.move(edge: .top).combined(with: .opacity))
-            } else if compact {
-                // The phone's HUD has no room for the knob, the pause or the teacher: they sit
-                // at the end of the rail (the pause card, with Practice this part, is under the
-                // pause; 0.1 (113)).
-                HStack(spacing: 10) {
-                    ProgressRail(state: state)
-                        .frame(height: 6)
-                    GameKnob(state: state, compact: true)
-                    if state.result == nil {
-                        TransportButton(symbol: state.playing ? "pause.fill" : "play.fill", lit: state.playing, size: 34,
-                                        label: state.playing ? "Pause" : "Play", action: controls.togglePlay)
-                    }
-                    AskButton(size: 34)
-                }
-                .padding(.horizontal, 16)
-            } else {
-                ProgressRail(state: state)
-                    .frame(height: 6)
-                    .padding(.horizontal, 24)
-            }
+            // The one transport (2026-11-08): the rail is always the scrubber, and under it the
+            // same quiet row in a run as in practice. On the phone the row also holds the knob,
+            // restart, play and the teacher (the HUD has no room for them); on the Mac the HUD has those.
+            TransportRow(state: state, compact: compact)
+                .padding(.horizontal, compact ? 16 : 24)
             ZStack {
                 if let r = state.result {
                     GameResultPanel(state: state, result: r, compact: compact)
@@ -259,7 +247,8 @@ struct GameHUD: View {
                         .font(.display(compact ? 22 : 28))
                         .textCase(.uppercase)
                         .foregroundStyle(Palette.signal)
-                    Text("\(state.speedPercent)%\(compact ? "" : " speed") · nothing scored")
+                    // The phone has room for the speed only when it says something (under full speed).
+                    Text(compact ? (state.slowed ? "\(state.speedPercent)% · nothing scored" : "Nothing scored") : "\(state.speedPercent)% speed · nothing scored")
                         .dataLabel(10)
                         .foregroundStyle(Palette.muted)
                         .lineLimit(1)
@@ -282,10 +271,9 @@ struct GameHUD: View {
             }
             if !compact {
                 GameKnob(state: state, compact: false)
-                if !state.practice {
-                    TransportButton(symbol: state.playing ? "pause.fill" : "play.fill", lit: state.playing, size: 36,
-                                    label: state.playing ? "Pause" : "Play", action: controls.togglePlay)
-                }
+                RestartButton(size: 36)
+                TransportButton(symbol: state.playing ? "pause.fill" : "play.fill", lit: state.playing, size: 36,
+                                label: state.playing ? "Pause" : state.practice ? "Play from here" : "Play", action: controls.togglePlay)
                 if state.reading != nil { CheatToggle(compact: false) }
                 AskButton(size: 36)
             }
@@ -337,7 +325,8 @@ struct ComboMeter: View {
     }
 }
 
-/// The song as a rail with its sections, filled to where it is.
+/// The song as a rail with its sections, filled to where it is (the plain rail; since
+/// 2026-11-08 the screen draws `Scrubber`, which is this with a knob and a drag).
 struct ProgressRail: View {
     let state: GameState
 
@@ -567,6 +556,14 @@ struct PausedBadge: View {
                 .textCase(.uppercase)
                 .foregroundStyle(Palette.text)
             PrimaryButton(title: "Keep going", action: controls.togglePlay)
+            // From the top, a fresh run (the score starts over).
+            Button(action: controls.restart) {
+                Text("Restart")
+                    .dataLabel(12, weight: .semibold)
+                    .foregroundStyle(Palette.muted)
+                    .padding(.vertical, 6)
+            }
+            .buttonStyle(.plain)
             // The quiet way out of a hard part: practice it, slower, from a few bars back.
             Button(action: controls.practice) {
                 Text("Practice this part")
@@ -598,11 +595,11 @@ struct PausedBadge: View {
     }
 }
 
-/// Practice, where the progress rail was: the rail as a scrubber (drag to any bar; the band
-/// holds there), then one quiet row: the bar and its section, four bars back, play (four
-/// clicks, then the band) and the way back to the run. The speed is the knob, as in a run (the
-/// HUD's on the Mac, in this row on the phone). Nothing in it is big: the highway stays the screen.
-struct PracticeBar: View {
+/// The transport, in a run and in practice alike (2026-11-08): the rail as a scrubber (drag to
+/// any bar; the band holds there and the run is practice from then on), then one quiet row: the
+/// bar and its section, four bars back, Call, and on the phone the knob, restart, play and the
+/// teacher. Nothing in it is big: the highway stays the screen.
+struct TransportRow: View {
     let state: GameState
     let compact: Bool
     @Environment(\.gameControls) private var controls
@@ -612,46 +609,50 @@ struct PracticeBar: View {
             Scrubber(state: state)
                 .frame(height: 18)
             HStack(spacing: compact ? 6 : 10) {
-                Text("Bar \(state.bar + 1)\(compact ? "" : " · \(state.section)")")
+                Text(state.countIn.map { "Count-in \($0)" } ?? "Bar \(state.bar + 1)\(compact ? "" : " · \(state.section)")")
                     .dataLabel(10)
-                    .foregroundStyle(Palette.muted)
+                    .foregroundStyle(state.countIn == nil ? Palette.muted : Palette.signal)
                     .lineLimit(1)
                     .frame(minWidth: compact ? 44 : 150, alignment: .leading)
                 Spacer(minLength: 4)
                 if compact { GameKnob(state: state, compact: true) }
-                SmallButton(symbol: "gobackward", label: "Four bars back", action: controls.practiceBack)
-                SmallButton(symbol: state.playing ? "pause.fill" : "play.fill", lit: state.playing,
-                            label: state.playing ? "Pause" : "Play from here", action: controls.togglePlay)
+                SmallButton(symbol: "gobackward", label: "Four bars back", action: controls.back)
+                if compact {
+                    RestartButton(size: 28)
+                    SmallButton(symbol: state.playing ? "pause.fill" : "play.fill", lit: state.playing,
+                                label: state.playing ? "Pause" : state.practice ? "Play from here" : "Play", action: controls.togglePlay)
+                }
                 // Call: the next note called out, finger then key, until it is played; lit while on.
-                Button(action: controls.call) {
-                    Text("Call")
-                        .dataLabel(10, weight: .semibold)
-                        .foregroundStyle(state.call != nil ? Palette.ground : Palette.text)
-                        .padding(.horizontal, 10)
-                        .frame(height: 28)
-                        .background(RoundedRectangle(cornerRadius: 6).fill(state.call != nil ? Palette.signal : Palette.panel))
-                        .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(state.call != nil ? Palette.signal : Palette.line, lineWidth: 1))
+                if state.result == nil {
+                    Button(action: controls.call) {
+                        Text("Call")
+                            .dataLabel(10, weight: .semibold)
+                            .foregroundStyle(state.call != nil ? Palette.ground : Palette.text)
+                            .padding(.horizontal, 10)
+                            .frame(height: 28)
+                            .background(RoundedRectangle(cornerRadius: 6).fill(state.call != nil ? Palette.signal : Palette.panel))
+                            .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(state.call != nil ? Palette.signal : Palette.line, lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(state.call != nil ? "Stop calling the notes" : "Call the notes: the next one spoken, finger then key")
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel(state.call != nil ? "Stop calling the notes" : "Call the notes: the next one spoken, finger then key")
-                if state.reading == nil {
-                Button(action: controls.run) {
-                    Text(compact ? "Run" : "Play the run")
-                        .dataLabel(10, weight: .semibold)
-                        .foregroundStyle(Palette.text)
-                        .padding(.horizontal, 10)
-                        .frame(height: 28)
-                        .background(RoundedRectangle(cornerRadius: 6).fill(Palette.panel))
-                        .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Palette.line, lineWidth: 1))
-                }
-                .buttonStyle(.plain)
-                }
-                // The phone's HUD has no room for the teacher (or the cheat sheet): in practice they sit here.
+                // The phone's HUD has no room for the teacher (or the cheat sheet): they sit here.
                 if compact, state.reading != nil { CheatToggle(compact: true).scaleEffect(28 / 34) }
                 if compact { AskButton(size: 28) }
             }
         }
         .padding(.top, 2)
+    }
+}
+
+/// ⏮: the piece from the top, a fresh run at the knob's speed. The same button on the Stage and
+/// in a lesson (Return on the Mac's keyboard).
+struct RestartButton: View {
+    let size: CGFloat
+    @Environment(\.gameControls) private var controls
+
+    var body: some View {
+        TransportButton(symbol: "backward.end.fill", lit: false, size: size, label: "Restart from the top", action: controls.restart)
     }
 }
 
@@ -667,8 +668,9 @@ struct SmallButton: View {
     }
 }
 
-/// The rail as a scrubber: the played part in `signal`, the sections marked, a knob where the
-/// run sits. Drag anywhere along it to hold the band at that bar.
+/// The rail as a scrubber, in a run and in practice: the played part in `signal`, the sections
+/// marked, a knob where the run sits. Drag anywhere along it to hold the band at that bar (a
+/// run is practice from then on: nothing scored).
 struct Scrubber: View {
     let state: GameState
     @Environment(\.gameControls) private var controls
@@ -696,11 +698,12 @@ struct Scrubber: View {
             .contentShape(Rectangle())
             .gesture(DragGesture(minimumDistance: 0).onChanged { v in
                 let bar = Int((v.location.x / max(1, w) * CGFloat(state.bars)).rounded(.down))
-                controls.practiceSeek(max(0, min(state.bars - 1, bar)))
+                controls.scrub(max(0, min(state.bars - 1, bar)))
             })
         }
         .accessibilityElement()
         .accessibilityLabel("Bar \(state.bar + 1) of \(state.bars)")
+        .accessibilityHint(state.practice ? "Drag to another bar" : "Drag to another bar; the run becomes practice")
     }
 }
 
@@ -870,7 +873,7 @@ struct GameResultPanel: View {
     /// the grade says, from the map as from the set list), and the way back.
     private var buttons: some View {
         HStack(spacing: 10) {
-            PrimaryButton(title: "Play again", action: controls.again)
+            PrimaryButton(title: "Play again", action: controls.restart)
             QuietButton(title: "Practice", action: controls.practice)
             QuietButton(title: controls.leaveTitle, action: controls.leave)
         }

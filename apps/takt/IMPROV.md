@@ -75,8 +75,12 @@ about, hand, device } }`, streamed as server-sent events (`src/lib/takt/sse.ts`)
   notes [{ beat, note, beats, finger }] }.
 - **Checked before the app sees it** (`checkIdea`): bars divide the form, 3–16 notes, on the
   12-a-beat grid, inside the idea, within 7 semitones of the take's range, on the scale when there
-  is one, fingers 1–5, at most two notes at once. Broken → sent back to the model with the reasons
-  as a tool error (up to 3 tries).
+  is one, at most two notes at once, and since 2026-11-08 (**`LEVELING.md`**) **one hand
+  position**: fingered as the Stage fingers a line (`src/lib/takt/fingering.ts`, the app's
+  `Fingering` ported) it has no hand move and spans a seventh at most; the fingers the app shows
+  are the planner's, whatever the model wrote. Broken → sent back to the model with the reasons
+  as a tool error (up to 3 tries). The request's `context.level` (the map level the improv is a
+  goal of; 1 for a jam) is what the hand budgets key on.
 - Saved in `takt_improv` (schema `005_takt_improv.sql`: take, backing, context, review, model).
 
 `npx tsx scripts/takt/improv-check.ts` (with `.env.local` loaded): the parser, the transcript, the
@@ -109,8 +113,21 @@ over Blue Lantern II, Level 2's over Maxwell Street II), the teacher writes **th
    in notes a bar; `write_notes` in two halves (the band's horns mirror it), `finish(title,
    line)`; `checkSolo` sends it back with reasons (the grid, the lengths, one note at a time,
    the scale, the range, leaps, 0.45–1.2 notes a second, runs of five eighths, silences over
-   two bars, the changes, the idea quoted twice, looping, anchors) up to four times. Saved in
-   `takt_mods` with `kind = 'solo'` (schema 007). `npx tsx scripts/takt/solo-check.ts`.
+   two bars, the changes, the idea quoted twice, looping, anchors, **and the hand**) up to four
+   times. Saved in `takt_mods` with `kind = 'solo'` (schema 007). `npx tsx scripts/takt/solo-check.ts`.
+
+   **The hand (2026-11-08, `LEVELING.md`).** Bart's first track (2026-11-07) moved his hand
+   10 times in 7 places over 15 semitones, and he called it "way beyond Level 1": the prompt
+   had density rules and no hand rule. Now `rulesFor` reads the player's level
+   (`context.level`), takes the level's **solo budget** (Level 1: at most 4 moves in 2 places,
+   2 positions, inside an octave; `src/lib/takt/leveling.ts`) and finds the **home position**,
+   the five scale keys the take mostly sat on (`homePosition`); on Levels 1–2 the range is that
+   position and a step either side. The prompt opens with THE HAND FIRST and names the home
+   position and the budget in words; `checkSolo` fingers the solo as the Stage will
+   (`fingering.ts`) and sends it back with the bars of every move when it is over budget. The
+   first track under the rule (the check's live run): 110 notes, 0.80 a second, 0 hand moves,
+   one position, in 78 s. Bart's own row was rewritten the same day as its v2 (v1 is in the
+   history and in `scripts/takt/fixtures/solo-blue-lantern-2026-11-07.json`).
 
 ## XP
 

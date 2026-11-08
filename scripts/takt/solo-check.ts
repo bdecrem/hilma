@@ -14,6 +14,9 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { parseRequest, type ImprovRequest, type Review } from '../../src/lib/takt/improv-agent'
 import { checkSolo, chordLine, chordTones, parseReview, rulesFor, runSoloTrack } from '../../src/lib/takt/solo-agent'
+import { handFigures, handLine } from '../../src/lib/takt/fingering'
+import { handBudget, homeLine } from '../../src/lib/takt/leveling'
+import { masks } from '../../src/lib/takt/charting'
 import { type Charting } from '../../src/lib/takt/charting'
 import { type PartNote, type SongFile, cloneSong, musicBars, validateSong } from '../../src/lib/takt/songfile'
 
@@ -76,40 +79,77 @@ check('chordLine: every chord once, the tones among the white keys, the rest nam
 // MARK: Rules and the checker
 
 const rules = rulesFor(r)
-check('rules: the range is a seventh under the take and an octave over it, the white keys', rules.low === 55 && rules.high === 81 && rules.scale!.length === 7 && !rules.shuffle, JSON.stringify(rules))
+// Level 1 (LEVELING.md): the home position is the five white keys the take sat on (D4 to A4:
+// the take is D, F, G, A with one C5), the range a step either side, the solo budget 4 moves.
+check('rules: Level 1, the home position D4–A4 (thumb on D4), the range C4–B4, the white keys, the solo budget 4 moves in 2 places',
+  rules.hand.level === 1 && rules.hand.moves === 4 && rules.hand.moments === 2 && rules.home.keys.join() === '62,64,65,67,69' && rules.low === 60 && rules.high === 71
+  && rules.scale!.length === 7 && !rules.shuffle && homeLine(rules.home) === 'thumb on D4, then E4 F4 G4, pinky on A4', JSON.stringify({ ...rules, home: rules.home, hand: rules.hand }))
+const level3 = rulesFor({ ...r, context: { ...r.context, level: 3 } })
+check('rules: Level 3 keeps the old range (a seventh under the take, an octave over it) and a 20-move budget', level3.low === 55 && level3.high === 81 && level3.hand.moves === 20, JSON.stringify(level3.hand))
+
+// MARK: The hand (the fingering port against the app's figures, LEVELING.md §1)
+
+{
+  const all = [...song.song.parts.melody!.notes].sort((a, b) => a.t - b.t || a.n - b.n)
+  const ms = masks(charting, override, all, 'melody', song.song.tempo, song.ticksPerBeat, 48)
+  const figs = ms.map((m) => handFigures(all.filter((_, i) => m[i])))
+  const line = figs.map((f) => `${f.moves.length}/${f.moments}·${f.positions}·${f.span}`).join(' ')
+  check('hand: Blue Lantern II by tier as the app reads it: Beginner to Easy+ one position and no move (0/0·1·10), Medium 6 moves in 3 moments and 3 positions (6/3·3·13)',
+    line === '0/0·1·10 0/0·1·10 0/0·1·10 0/0·1·10 0/0·1·10 6/3·3·13 6/4·3·13', line)
+  const fixture = JSON.parse(readFileSync(join(__dirname, 'fixtures/solo-blue-lantern-2026-11-07.json'), 'utf8')) as { notes: PartNote[] }
+  const f = handFigures(fixture.notes)
+  check(`hand: the first solo of 2026-11-07 reads ${handLine(f)}`, f.moves.length === 10 && f.moments === 7 && f.span === 15, handLine(f))
+  const b = handBudget(1, true)
+  const fixtureProblems = checkSolo(withSolo(fixture.notes), rules, review.idea)
+  check(`hand: that solo is refused for the hand (budget ${b.moves} moves in ${b.moments} places) with the bars named`,
+    fixtureProblems.some((p) => p.startsWith('the hand moves 10 times') && p.includes('bars 13 (thumb under)')), fixtureProblems.join(' | '))
+}
+
 
 const tpb = 48
 const bars = musicBars(song)
-/** A solo that keeps every rule: the idea stated in chorus 1, moved onto the iv in chorus 2,
- *  up an octave for the peak, home in the last; the first note of every change bar a chord tone. */
+/** A solo that keeps every rule, the hand's first (LEVELING.md): the whole line in the home
+ *  position, thumb on D4 and pinky on A4, with one figure that leaves it and comes straight
+ *  back (the peak chorus reaches over the top to B4); the idea stated in chorus 1, up a step in
+ *  chorus 2, answered over the top in chorus 3, home in the last, each chorus with its own
+ *  rhythm so it never loops; the first note of every change bar a chord tone. */
 function goodSolo(): PartNote[] {
   const out: PartNote[] = []
   const put = (bar: number, tick: number, n: number, len: number, lv: number) => out.push({ t: (bar - 1) * tpb + tick, n, len, lv })
-  const chorus = (c: number, shift: number, up: number) => {
+  const chorus = (c: number, shift: number, v: number) => {
     const b0 = c * 12
-    // Bars 1–2: the idea (D F G, then D), shifted by `shift` semitones within the scale by key.
-    const idea = [62, 65, 67, 62].map((n) => n + up)
-    put(b0 + 1, 0, idea[0] + shift, 12, 1); put(b0 + 1, 12, idea[1] + shift, 12, 2); put(b0 + 1, 24, idea[2] + shift, 24, 2)
-    put(b0 + 2, 0, idea[3] + shift, 36, 1)
-    // Bars 3–4: an answer, then a rest bar.
-    put(b0 + 3, 12, 65 + up, 12, 2); put(b0 + 3, 24, 64 + up, 12, 2); put(b0 + 3, 36, 62 + up, 12, 1)
-    put(b0 + 4, 0, 62 + up, 24, 1)
-    // Bars 5–6 Gm7: G on 1, D, F.
-    put(b0 + 5, 0, 67 + up, 24, 1); put(b0 + 5, 24, 62 + up, 12, 2); put(b0 + 5, 36, 65 + up, 12, 2)
-    put(b0 + 6, 0, 67 + up, 36, 1)
+    // Bars 1–2: the idea (D F G, then D), shifted by `shift` semitones within the scale by key;
+    // later choruses start it a beat later or stretch it.
+    const idea = [62, 65, 67, 62]
+    if (v === 1) { put(b0 + 1, 12, idea[0] + shift, 12, 1); put(b0 + 1, 24, idea[1] + shift, 12, 2); put(b0 + 1, 36, idea[2] + shift, 12, 2); put(b0 + 2, 0, idea[3] + shift, 36, 1) }
+    else if (v === 3) { put(b0 + 1, 0, idea[0], 24, 1); put(b0 + 1, 24, idea[1], 12, 2); put(b0 + 1, 36, idea[2], 12, 2); put(b0 + 2, 0, idea[3], 48, 1) }
+    else { put(b0 + 1, 0, idea[0] + shift, 12, 1); put(b0 + 1, 12, idea[1] + shift, 12, 2); put(b0 + 1, 24, idea[2] + shift, 24, 2); put(b0 + 2, 0, idea[3] + shift, 36, 1) }
+    // Bars 3–4: an answer, then a rest bar. The peak chorus reaches over the top (A, then B4
+    // under the pinky's stretch) and comes home.
+    if (v === 2) { put(b0 + 3, 12, 69, 12, 2); put(b0 + 3, 24, 71, 12, 2); put(b0 + 3, 36, 69, 12, 1); put(b0 + 4, 0, 65, 24, 1) }
+    else if (v === 1) { put(b0 + 3, 0, 65, 12, 2); put(b0 + 3, 18, 64, 6, 3); put(b0 + 3, 24, 62, 24, 1); put(b0 + 4, 12, 62, 24, 1) }
+    else if (v === 3) { put(b0 + 3, 12, 64, 12, 2); put(b0 + 3, 24, 62, 24, 1); put(b0 + 4, 0, 62, 36, 1) }
+    else { put(b0 + 3, 12, 65, 12, 2); put(b0 + 3, 24, 64, 12, 2); put(b0 + 3, 36, 62, 12, 1); put(b0 + 4, 0, 62, 24, 1) }
+    // Bars 5–6 Gm7: G on 1, then D and F in a different rhythm each chorus.
+    if (v === 1) { put(b0 + 5, 0, 67, 12, 1); put(b0 + 5, 12, 65, 12, 2); put(b0 + 5, 24, 62, 24, 2); put(b0 + 6, 0, 67, 24, 1); put(b0 + 6, 36, 65, 12, 3) }
+    else if (v === 2) { put(b0 + 5, 0, 67, 36, 1); put(b0 + 5, 36, 69, 12, 3); put(b0 + 6, 0, 67, 12, 1); put(b0 + 6, 12, 65, 12, 2); put(b0 + 6, 24, 62, 24, 2) }
+    else if (v === 3) { put(b0 + 5, 0, 67, 24, 1); put(b0 + 5, 30, 65, 6, 3); put(b0 + 5, 36, 62, 12, 2); put(b0 + 6, 0, 67, 48, 1) }
+    else { put(b0 + 5, 0, 67, 24, 1); put(b0 + 5, 24, 62, 12, 2); put(b0 + 5, 36, 65, 12, 2); put(b0 + 6, 0, 67, 36, 1) }
     // Bars 7–8 Dm7: D on 1 held, then F E D.
-    put(b0 + 7, 0, 62 + up, 24, 1); put(b0 + 7, 24, 65 + up, 12, 2); put(b0 + 7, 36, 64 + up, 12, 3)
-    put(b0 + 8, 0, 62 + up, 48, 1)
+    if (v === 1) { put(b0 + 7, 0, 62, 12, 1); put(b0 + 7, 12, 65, 12, 2); put(b0 + 7, 24, 64, 12, 3); put(b0 + 7, 36, 62, 12, 2); put(b0 + 8, 0, 65, 48, 1) }
+    else if (v === 2) { put(b0 + 7, 0, 69, 24, 1); put(b0 + 7, 24, 67, 12, 2); put(b0 + 7, 36, 65, 12, 3); put(b0 + 8, 0, 62, 48, 1) }
+    else { put(b0 + 7, 0, 62, 24, 1); put(b0 + 7, 24, 65, 12, 2); put(b0 + 7, 36, 64, 12, 3); put(b0 + 8, 0, 62, 48, 1) }
     // Bar 9 Bb7: F on 1, D. Bar 10 A7: A on 1, G, E. Bar 11 Dm7: D. Bar 12 A7: E, then A held.
-    put(b0 + 9, 0, 65 + up, 24, 1); put(b0 + 9, 24, 62 + up, 24, 2)
-    put(b0 + 10, 0, 69 + up, 12, 1); put(b0 + 10, 12, 67 + up, 12, 2); put(b0 + 10, 24, 64 + up, 24, 2)
-    put(b0 + 11, 0, 62 + up, 36, 1)
-    put(b0 + 12, 0, 64 + up, 12, 2); put(b0 + 12, 12, 69 + up, 36, 1)
+    if (v === 2) { put(b0 + 9, 0, 65, 12, 1); put(b0 + 9, 12, 62, 12, 2); put(b0 + 9, 24, 65, 24, 2); put(b0 + 10, 0, 69, 24, 1); put(b0 + 10, 24, 64, 24, 2) }
+    else if (v === 3) { put(b0 + 9, 0, 65, 36, 1); put(b0 + 10, 0, 69, 12, 1); put(b0 + 10, 12, 67, 12, 2); put(b0 + 10, 24, 65, 12, 3); put(b0 + 10, 36, 64, 12, 2) }
+    else { put(b0 + 9, 0, 65, 24, 1); put(b0 + 9, 24, 62, 24, 2); put(b0 + 10, 0, 69, 12, 1); put(b0 + 10, 12, 67, 12, 2); put(b0 + 10, 24, 64, 24, 2) }
+    if (v === 1) { put(b0 + 11, 0, 62, 24, 1); put(b0 + 11, 24, 64, 12, 2); put(b0 + 11, 36, 65, 12, 2); put(b0 + 12, 0, 64, 24, 2); put(b0 + 12, 24, 69, 24, 1) }
+    else { put(b0 + 11, 0, 62, 36, 1); put(b0 + 12, 0, 64, 12, 2); put(b0 + 12, 12, 69, 36, 1) }
   }
   chorus(0, 0, 0)
-  chorus(1, 2, 0) // the idea up a step (E G A, E): the same shape
-  chorus(2, 0, 12) // the peak, an octave up
-  chorus(3, 0, 0)
+  chorus(1, 2, 1) // the idea up a step (E G A, E): the same shape, a beat late
+  chorus(2, 0, 2) // the peak: the answer reaches over the top of the hand
+  chorus(3, 0, 3) // home: longer notes
   // Bars 47–48: home on D, held.
   out.length = out.findIndex((n) => n.t >= 46 * tpb)
   put(47, 0, 65, 12, 2); put(47, 12, 64, 12, 2); put(47, 24, 62, 24, 1)
@@ -125,7 +165,8 @@ const good = goodSolo()
 const goodSong = withSolo(good)
 check('a good solo keeps the song sound', validateSong(goodSong, null) === null, validateSong(goodSong, null) ?? '')
 const okProblems = checkSolo(goodSong, rules, review.idea)
-check('a good solo passes the check', okProblems.length === 0, okProblems.join(' | '))
+const goodHand = handFigures(good)
+check(`a good solo passes the check (${handLine(goodHand)})`, okProblems.length === 0 && goodHand.moves.length <= 4, okProblems.join(' | '))
 
 // Looping: four identical choruses.
 const looped = (() => {
@@ -182,7 +223,8 @@ async function live() {
   }
   console.log(`\n${solo.title}\n${solo.line}\n${lines.join('\n')}\n`)
   const problems = checkSolo(solo.song, rules, review.idea)
-  check(`live: a track in ${secs} s, ${solo.notes.length} notes (${perSecond.toFixed(2)} a second), titled, on the white keys, every rule kept`,
+  const hand = handFigures(solo.notes)
+  check(`live: a track in ${secs} s, ${solo.notes.length} notes (${perSecond.toFixed(2)} a second), ${handLine(hand)}, titled, on the white keys, every rule kept`,
     solo.title.length > 0 && solo.line.length > 0 && problems.length === 0 && solo.notes.every((n) => WHITE.includes(n.n % 12)), problems.join(' | ') || steps.join(' → '))
   check('live: the band\'s horns mirror the solo', solo.song.channels.horns.length === solo.notes.length && solo.song.channels.horns.every((e, i) => e.t === solo.notes[i].t && e.n === solo.notes[i].n))
   check('live: the file is sound for the app', validateSong(solo.song, null) === null)

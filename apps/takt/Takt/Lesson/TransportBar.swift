@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// Lesson title, the staff, play/stop and the tempo readout.
+/// Lesson title, the staff, the knob, restart and play/pause (the Stage's HUD has the same, in
+/// the same order, since 2026-11-08), Show me and the teacher.
 struct TransportBar: View {
     let state: LessonState
     var compact = false
@@ -26,10 +27,10 @@ struct TransportBar: View {
                         .minimumScaleFactor(0.7)
                 }
                 Spacer(minLength: 8)
-                transportButtons(size: 34)
                 // No − / + here since the teacher's button took their room (0.1 (113)): the
-                // knob turns by drag, and VoiceOver adjusts it.
+                // knob turns by drag, and VoiceOver adjusts it. Knob · ⏮ · ▶ · Ask, as on the Stage.
                 TempoKnob(bpm: state.tempo, pending: state.pendingTempo, counts: state.stepTempo, compact: true, buttons: false)
+                transportButtons(size: 34)
                 AskButton(size: 34)
             }
         } else {
@@ -42,8 +43,8 @@ struct TransportBar: View {
                 StaffLines()
                     .frame(maxWidth: .infinity)
                 ShowMeButton(on: state.demo, enabled: state.canDemo, size: 36)
-                transportButtons(size: 36)
                 TempoKnob(bpm: state.tempo, pending: state.pendingTempo, counts: state.stepTempo)
+                transportButtons(size: 36)
                 AskButton(size: 36)
             }
         }
@@ -69,11 +70,13 @@ struct TransportBar: View {
             .lineLimit(1)
     }
 
+    /// ⏮ then ▶/⏸, as on the Stage: restart is the step from the top with the count-in (it
+    /// took Stop's place on 2026-11-08; a pause holds the band where it is).
     private func transportButtons(size: CGFloat) -> some View {
         HStack(spacing: 6) {
+            TransportButton(symbol: "backward.end.fill", lit: false, size: size, label: "Restart from the top", action: controls.restart)
             TransportButton(symbol: state.playing ? "pause.fill" : "play.fill", lit: state.playing, size: size,
                             label: state.playing ? "Pause" : "Play", action: controls.togglePlay)
-            TransportButton(symbol: "stop.fill", lit: false, size: size, label: "Stop", action: controls.stop)
         }
     }
 }
