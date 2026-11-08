@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: maxwell-level-2-hand
+expected_outcome: |
+  maxwell_street.py's --five line rewritten so song-maxwell-street-five.json's melody at Medium holds the Level 2 budget (at most 12 moves in 6 moments, 3 positions, span 24), every melody note on A C D E G and all five used at Medium, Medium density inside 0.4-1.1 a second; song-maxwell-street.json byte-identical to before; every other song's figures unchanged; LEVELING.md's table row and section 4 updated with the new figures; the JSON regenerates from the script.

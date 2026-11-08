@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: slow-blues-stoptime
+expected_outcome: |
+  A new generator apps/takt/scripts/songs/<name>.py on common.py, in a key not yet on the Stage, tempo 90, 48 bars plus the tail, four named sections, a stop-time chorus (eight bars where the drums hit only the 1) and a piano solo chorus; both parts weighted with roles and fingers; a charting.json songs patch where the bands need it; the melody's Beginner/Easy/Medium onsets a second inside BLUES.md's bands (0.2-0.35 / 0.4-0.55 / 0.8-1.1) and the chords' inside theirs (0.2-0.4 / 0.6-1.0 / 0.9-1.2), no rung over twice the one below past Beginner; no other song file or Song.catalog changed; the report quotes the two ladders.

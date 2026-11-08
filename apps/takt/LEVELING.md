@@ -93,6 +93,13 @@ Rules of thumb that follow from it:
 
 ## 3. Where the budgets apply, and how each surface keeps them
 
+The one tool for all of them, no build needed: `npx tsx scripts/takt/measure.ts <song> --level N
+[--scale pcs]` (a Stage part at its named difficulty against the level's budget and density
+band), `--step <module.json>:<id> --level N` (a lesson step by its written fingering), `--notes
+<file> --tempo N --level N [--solo]` (a solo or an idea). The skills that write material,
+`.claude/skills/takt-chart` (anything leveled) and `takt-blues` (a track), read this sheet and run
+it before and after every change (2026-11-08).
+
 - **Stage charts** (`CHARTING.md`, `Game/Charting.swift`): `-LessonCheck` prints the hand
   figures of every tier of every melody beside its onsets a second, and asserts the plan's
   goal songs: Blue Lantern II Easy+ 0 moves and 1 position, Medium ≤ 6 moves and ≤ 3 moments

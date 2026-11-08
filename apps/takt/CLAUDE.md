@@ -1981,6 +1981,16 @@ a mode-specific control without putting it in the same place on the other screen
   hand's figures (`figures`: moves, moments, positions, span) and the leveling budgets
   (`Budget.of(level:solo:)`), the sheet being `LEVELING.md`. `Game/GameScreen.swift`:
   `TransportRow` (the scrubber and the quiet row, a run or practice alike), `RestartButton`.
+- **The skills and their tools (2026-11-08):** `.claude/skills/takt-blues` (a new blues track,
+  end to end) and `.claude/skills/takt-chart` (anything leveled: charts, steps, ideas, solos,
+  mods), each a SKILL.md with `references/` (the sound, the recipe, the surfaces, and Bart's
+  dated calls in `feedback.md`) and `evals/` (cases in his words; `scripts/takt/skill-grade.py`
+  grades a run, `.claude/skills/<skill>-workspace/` holds the runs, not committed).
+  `scripts/takt/measure.ts`: the figures of any material without a build (a song's two ladders
+  against BLUES.md's bands, a tier against LEVELING.md's budget, a lesson step, a raw line;
+  `--snapshot` / `--compare` for "every other song unchanged"). `scripts/takt/render-song.sh`:
+  an offline render through the booted simulator to `~/Desktop/takt/<song>.mp3` with ffmpeg's
+  mean and peak.
 - `Export/MIDIFile.swift`: the SMF writer (and a reader, for the checks). `ResultScreen`'s
   `MIDIExport` names and writes the file; `MIDIDocument` is the Mac save panel's document.
 - `Lesson/Calibration.swift` (pure: clicks, taps, the median) and `Menu/CalibrationScreen.swift`.

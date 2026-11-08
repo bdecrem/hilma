@@ -152,6 +152,10 @@ Notes from play:
 
 ## 4. Writing a new blues track so the levels fall out right
 
+The skill `.claude/skills/takt-blues` (2026-11-08) is the worked form of this section: the
+instruments and gains, the closest generator to copy per style, the register-build-measure-
+render loop, and Bart's calls to date (`references/feedback.md`).
+
 - Tempo 90 for a slow blues (12/8 feel), 120 for a jump blues; the generator's `Song(...)` tempo
   is the 1x.
 - Melody: one weight-1 note a bar as the rule, two at most, on the 1 or the landing of the lick;
@@ -160,9 +164,14 @@ Notes from play:
   ornament. Check: weight-1 notes alone at 0.35–0.5 a second.
 - Chords: weight 1 on the downbeat of every chord change (and bar 1 of each four), weight 2 on
   the comping hits of the groove, weight 3 on the pushes. Voicings carry roles, root first.
-- Run `-LessonCheck 1` and read the song's two ladder lines against the tables above. A level
+- Run `npx tsx scripts/takt/measure.ts apps/takt/Takt/Content/song-<name>.json` before any
+  build (the TS port of the charter: the two ladders, the bands above judged, the hand figures;
+  2026-11-08), then `-LessonCheck 1` and read the song's two ladder lines against the tables above. A level
   outside its band gets a `songs` patch in `charting.json` (named tier, `phrase`, `gap` /
   `space` by tier), and a line here saying why.
+- Render it (`scripts/takt/render-song.sh song-<name> <seconds>`: through the booted simulator,
+  an MP3 on the Desktop and ffmpeg's mean and peak; the band tracks sit at about −23 dBFS with
+  the peak under −1) and set `levels` and the kit's gains from the numbers.
 - Then play it: Beginner should feel like learning where the phrases land, Easy like playing the
   tune's bones with the band, Medium like playing the tune, Hard like the record.
 

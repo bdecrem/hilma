@@ -307,6 +307,13 @@ named difficulties, so Adaptive can climb in small steps.
 
 ## Checking a change
 
+Without a build: `npx tsx scripts/takt/measure.ts <song> [--level N] [--scale pcs]` (2026-11-08)
+prints every tier's onsets a second, hand figures and keys from the TS ports of the charter and
+the hand planner, judges the named levels against BLUES.md's bands and the goal tier against
+LEVELING.md's budget, and `--snapshot` / `--compare` prove every other song's figures unchanged
+(rule 4). The two skills that make material (`.claude/skills/takt-blues`, `takt-chart`) run it
+first. Then, with a build:
+
 `-LessonCheck 1` checks that every tier of every song keeps its rules (gap and chord size, the
 top tier is the whole part), that every level is the one below plus more and never thinner
 (printing notes a second per level and the rise per step; level 1 at most half the top, 65%

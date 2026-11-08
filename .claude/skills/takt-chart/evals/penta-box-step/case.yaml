@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: penta-box-step
+expected_outcome: |
+  A new play step in lesson-S1m.json (unique id, kind play, tempo 72, cycle 2, hand right, feel straight, a pattern of eighths on A C D E G only with fingers 1-5 on every note, about and the full coach set) and a lessons[] row appended last that names it with a theme; measure.ts --step reports 0 hand moves and 1 position; every other step and row unchanged; the file still parses.

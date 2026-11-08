@@ -81,3 +81,6 @@ apps/*/build-device/
 # fonts pipeline (scripts/fonts)
 scripts/fonts/.venv
 scripts/fonts/.cache
+
+# skill eval runs (skill-creator workspaces)
+.claude/skills/*-workspace/

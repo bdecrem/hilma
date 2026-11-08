@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: minor-blues-level-3
+expected_outcome: |
+  A new generator in A minor over a 12-bar of Am, Dm and Em chords (minor labels), tempo about 76, Rhodes as the keys instrument, four choruses; the melody at Medium inside Level 3's hand budget (at most 20 moves in 10 moments, 4 positions, two octaves) and density band (0.5-1.2 a second), the melody and chords ladders climbing with no rung over twice the one below past Beginner; the song file loads by the app's rules; no other song or the catalog changed; the report quotes the ladder and the hand figures.
