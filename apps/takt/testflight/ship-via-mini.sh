@@ -76,7 +76,10 @@ GOT=$(/usr/libexec/PlistBuddy -c "Print CFBundleVersion" "$PLIST")
   "$OUT/takt.xcarchive/Products/Applications/Takt.app"
 
 INSTALLER=""
-[ "$PLATFORM" = mac ] && INSTALLER="<key>installerSigningCertificate</key><string>3rd Party Mac Developer Installer</string>"
+# TAKT_INSTALLER: the installer identity by its SHA-1 when a keychain holds more than one of that
+# name (the iMac keeps a revoked one beside the good one, and the name alone picks the revoked:
+# "Signing certificate is invalid", 2026-11-09). `security find-identity -v` lists the valid one.
+[ "$PLATFORM" = mac ] && INSTALLER="<key>installerSigningCertificate</key><string>${TAKT_INSTALLER:-3rd Party Mac Developer Installer}</string>"
 cat > "$OUT/export.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">

@@ -2586,3 +2586,22 @@ against the iMac's Apple Distribution cert with `mint-profile.mjs`; the mini's S
 timed out, Tailscale answered; the archive happens on the mini, ~10 min end to end). **Both platforms at once (2026-11-05, 0.1 (104) to the Public beta from the Air):** each
 platform archives in its own DerivedData (`takt-ship-ios`, `takt-ship-mac`), so the two ships
 can run side by side; before that the mac archive swept the ios intermediates mid-build.
+**From the M4 iMac (2026-11-09, 0.1 (121), both to the Public beta):**
+
+```bash
+MINI=admin@171.66.240.175 TAKT_PROFILE="takt appstore imac m4" ASC_KEY_ID=5A5HNSWA33 ./apps/takt/testflight/ship-via-mini.sh ios
+MINI=admin@171.66.240.175 TAKT_PROFILE="takt catalyst appstore imac" ASC_KEY_ID=5A5HNSWA33 \
+  TAKT_INSTALLER=367E120009FF22C7FCA7D19A0C42DDD3143CD318 ./apps/takt/testflight/ship-via-mini.sh mac
+```
+
+One after the other (the mini archives both to `/tmp/takt.xcarchive`), about ten minutes each.
+What that day taught: the iOS profile `takt appstore imac` was not on this Mac, so `takt
+appstore imac m4` was minted against its Apple Distribution cert (`0DDCC75F…`); its keychain
+holds two "3rd Party Mac Developer Installer" identities, one revoked, and the name alone picks
+the revoked one ("Signing certificate is invalid"), hence `TAKT_INSTALLER` with the valid one's
+SHA-1; the only ASC keys here are `5A5HNSWA33` and `AH7Q68TW6S`; the mini's Tailscale address
+did not answer, its Stanford one did; and the mini could not reach GitHub (no outbound
+connection at all: every ephemeral port in TIME_WAIT), so the script now pushes the commit to
+`~/takt-ship` over ssh and resets that checkout to it. When an export fails after a good
+archive, the archive is still in the script's `$OUT`: fix `export.plist` and run the
+`xcodebuild -exportArchive` line and `asc-submit.mjs <build> IOS|MAC_OS` by hand.
