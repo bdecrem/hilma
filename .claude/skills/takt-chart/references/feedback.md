@@ -122,6 +122,13 @@ LEVELING.md, and this file keeps the pointer.
   so the step to Medium is not a cliff. The hand at Easy (23/12 · 3 · 19) is the record's own
   octave leaps: a Level 1–2 Boogie Shoes would be a line, not a patch.
 
+- **McLemore** (2026-11-09, a new track's charts, both parts, five named levels each). Melody
+  0.36 · 0.49 · 0.77 (Easy+, tier 3) · 1.11 · 1.91; chords 0.39 · 0.74 · 0.91 (Easy+, two notes)
+  · 0.91 (Medium, three) · 1.26. What it took beyond the blues patch: second anchors on the 3 of
+  three answer bars a chorus (Beginner and Easy were one chart at 96), `space` 1.3 on tier 5
+  (Medium was borrowing an ornament a bar), Easy+ named tier 3 on both parts (CHARTING.md rule
+  18). The hand at Easy 5/5 · 2 · 10, Medium 14/11 · 2 · 12. Not yet played by Bart.
+
 ## Open (LEVELING.md §4, BLUES.md §6)
 
 - Whether the comping ladders want a rhythm step between Easy and Medium.

@@ -17,7 +17,7 @@ a gain) and instruments per channel in `instruments`.
 | `bass` | Finger Bass YR, a Yamaha RBX (FreePats, CC0), **sampled E1–D♯2 (MIDI 28–39)** | write bass lines low: roots at 28–40, walks inside 28–50; higher notes are stretched samples |
 | `sax` / `saxLong` | Brett's tenor (VCSL, CC0): staccato notes, and the sustained ones | the horn line. Generators set `e["i"] = "saxLong"` on every horns note with `len >= 12` after `chart_to_channel`, so held notes sustain and short ones speak |
 | `guitar` / `guitarMute` / `guitarPerc` | Shinyguitar (Karoryfer, CC0): an archtop played acoustic, four layers × two round robins; the dead strings; knocks on the body | the Delta tracks (Dockery, Friars Point): the thumb and the chick, the voice, the slap on the backbeat as a drum sound (`"knock": {"kit": "guitarPerc"}`). Hot velocities are the dirt |
-| `eguitar` / `eguitarMute` | Emilyguitar (Karoryfer, CC0), a solid body recorded clean DI | through the engine's amp: a band's `amp` per channel (`Audio/GuitarAmp.swift`). Halsted: `s.amp = {"horns": {"drive": 22, "bias": 0.2, "tight": 130, "mid": 5, "tone": 6000, "presence": 5, "level": -9, "room": 0.22}}` |
+| `eguitar` / `eguitarMute` | Emilyguitar (Karoryfer, CC0), a solid body recorded clean DI, sampled C♯2–D6 | through the engine's amp: a band's `amp` per channel (`Audio/GuitarAmp.swift`). Halsted (loud): `s.amp = {"horns": {"drive": 22, "bias": 0.2, "tight": 130, "mid": 5, "tone": 6000, "presence": 5, "level": -9, "room": 0.22}}`; McLemore (a cleaner sting): drive 16, bias 0.22, tight 120, tone 6500, presence 6, room 0.25. The amp is the whole channel's: never put another instrument on an amped channel (a piano solo goes on the keys channel there) |
 | electronic (`kickMin`, `bleep`, `stabMin`, `subDub`, `liveStab`, …) | the Berlin sketches' voices | not for the blues; their songs are `hypnotist.py`, `warm_nine.py`, `abyss.py` |
 
 `instruments` in a song: `{"bass": "bass", "keys": "piano"|"rhodes"|"guitar", "horns": "sax"|"guitar"|"eguitar", "monitor": <what the player's keys play by default>}`.
@@ -40,6 +40,7 @@ Gains the tracks use (dB), by feel:
 | Maxwell Street (Chicago, 80) | −2 | −4 | −5 | −13 | −15 | −12 | −11 | −12 | −13 | −6 / −5 | −2 / 0 / −1 |
 | Blue Lantern (sixteenth hat, Rhodes) | −5 | −7 | −5 | −19 | −19 | −12 | −11 | −12 | −15 | −6 / −5 | −4 / −5 / −3.5 |
 | Halsted (148, guitar through the amp) | −3 | −5 | −8 | −14 | −16 | −15 | −13 | −15 | −13 | −8 / −7 | −5.5 / −1.5 / −1.5 |
+| McLemore (96, straight eighths, guitar through a cleaner amp) | −3 | −5 | −6 | −14 | −16 | −13 | −12 | −14 | −13 | −7 / −6 | −2 / +1 / −1.5 |
 | Dockery (one guitar, a foot) | −3 | — | −4 | — | — | −9 | — | — | — | — | +2 / −1 / +2 (knock −6) |
 
 A busy hat (sixteenths) or a sustaining keys instrument wants the kit 4–6 dB down (Blue
@@ -51,7 +52,7 @@ keys take the part's level (`levels["monitor"]` is set by the app from the part)
 Measured with `scripts/takt/render-song.sh <song>` (ffmpeg `volumedetect` on an offline
 render): **the band tracks sit at about −23 dBFS mean with the peak under −1 dB, never
 clipping** (Dockery −23.0 / −1.0, Friars Point −22.6 / −1.3, Halsted −22.8 / −3.3, Maxwell
-Street −25.0 / −2.7, Blue Lantern −20.7 / −4.0, Pearl Street −21 / −2); the electronic tracks
+Street −25.0 / −2.7, Blue Lantern −20.7 / −4.0, Pearl Street −21 / −2, McLemore −23.4 / −1.3); the electronic tracks
 at −19. Dockery at keys/horns +7 read −19.3 with the peak at −0.8, "too hot against the knee":
 when the peak creeps over −1, bring the hands down, not the kick. Set the levels from a
 render, never by ear alone.

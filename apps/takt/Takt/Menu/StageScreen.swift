@@ -608,6 +608,28 @@ struct SongArt: View {
                 ctx.stroke(Path(ellipseIn: CGRect(x: sc.x - sr, y: sc.y - sr, width: 2 * sr, height: 2 * sr)), with: .color(ink), lineWidth: 2)
                 ctx.stroke(Path(ellipseIn: CGRect(x: sc.x - sr * 0.55, y: sc.y - sr * 0.55, width: sr * 1.1, height: sr * 1.1)), with: .color(dim), lineWidth: 1)
                 ctx.fill(Path(ellipseIn: CGRect(x: sc.x - 3, y: sc.y - 3, width: 6, height: 6)), with: .color(ink))
+            case "duo":
+                // The guitar and the piano trading (McLemore). Left, three piano keys: each 0.09 w
+                // wide with 0.03 w between, so 3 × 0.09 + 2 × 0.03 = 0.33 w from 0.12 w to 0.45 w,
+                // 0.22 h to 0.78 h, the middle one struck. Right, six strings from 0.55 w to 0.88 w,
+                // 0.1 h apart from 0.25 h to 0.75 h, the sting a dot on the second. Margins 0.12 w
+                // both sides, 0.1 w between the two.
+                for i in 0..<3 {
+                    let r = CGRect(x: w * (0.12 + 0.12 * CGFloat(i)), y: h * 0.22, width: w * 0.09, height: h * 0.56)
+                    if i == 1 {
+                        ctx.fill(Path(roundedRect: r, cornerRadius: 2), with: .color(ink))
+                    } else {
+                        ctx.stroke(Path(roundedRect: r.insetBy(dx: 0.75, dy: 0.75), cornerRadius: 2), with: .color(ink), lineWidth: 1.5)
+                    }
+                }
+                for i in 0..<6 {
+                    var p = Path()
+                    let y = h * (0.25 + 0.1 * CGFloat(i))
+                    p.move(to: CGPoint(x: w * 0.55, y: y))
+                    p.addLine(to: CGPoint(x: w * 0.88, y: y))
+                    ctx.stroke(p, with: .color(i == 1 ? ink : dim), lineWidth: i == 1 ? 1.5 : 1)
+                }
+                ctx.fill(Path(ellipseIn: CGRect(x: w * 0.715 - 4.5, y: h * 0.35 - 4.5, width: 9, height: 9)), with: .color(hot))
             case "stoptime":
                 // Chicago stop time: the riff's five bars climbing, then the gap, then the hit.
                 // Five bars 0.09 w wide at 0.11 w apart from x = 0.1 w end at 0.64 w; the hit sits

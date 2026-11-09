@@ -292,6 +292,25 @@
      }
     }
    }
+  },
+  "song-mclemore": {
+   "melody": {
+    "easy": 2,
+    "easy+": 3,
+    "phrase": 12,
+    "tiers": {
+     "2": {
+      "space": 0
+     },
+     "5": {
+      "space": 1.3
+     }
+    }
+   },
+   "chords": {
+    "easy": 2,
+    "easy+": 3
+   }
   }
  }
 }

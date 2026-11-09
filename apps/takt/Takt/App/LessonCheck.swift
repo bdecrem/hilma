@@ -2280,7 +2280,7 @@ enum LessonCheck {
             // the hand may jump to a new position in order (F♯4 to E5 with 1 then 2), as it does.
             let names = ["C", "C♯", "D", "E♭", "E", "F", "F♯", "G", "A♭", "A", "B♭", "B"]
             func name(_ n: Int) -> String { "\(names[n % 12])\(n / 12 - 1)" }
-            for songName in ["song-blue-lantern-white", "song-maxwell-street-five", "song-slow-burn", "song-pearl-street", "song-boogie-shoes", "song-dockery", "song-friars-point", "song-halsted", "song-maxwell-street", "song-blue-lantern"] {
+            for songName in ["song-blue-lantern-white", "song-maxwell-street-five", "song-slow-burn", "song-pearl-street", "song-boogie-shoes", "song-dockery", "song-friars-point", "song-halsted", "song-mclemore", "song-maxwell-street", "song-blue-lantern"] {
                 let song = Song.bundled(songName)
                 let e = GameEngine(song: song, part: .melody, difficulty: .hard)
                 var faults: [String] = []

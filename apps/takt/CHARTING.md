@@ -311,6 +311,16 @@ every song and part.
     few notes (each is seeded by the one under it: 114 → 119, 226 → 228); the band channels
     never move, and `measure.ts --compare` proves the other songs don't either.
 
+18. **At 96 the ladder's seconds sit right on the bar's beats: read the two edges** (McLemore,
+    2026-11-09). A bar is 2.5 s, so Beginner's 2.4 s gap keeps every downbeat anchor and Beginner
+    is Easy (0.40 against 0.45); a `gap` of 2.6 makes it every other bar (0.19, 5 s of nothing),
+    and nothing lies between. The rung is made in the line: a second anchor on the 3 of a few
+    answer bars (a beat and a half from both downbeats; the 4 is 0.63 s from the next one, under
+    Easy's gap) lifts Easy to 0.49 and leaves Beginner at one note a bar. The other edge: the 3
+    is 1.25 s from the next downbeat, over tier 5's `space` of 1.2, so Medium borrows a weight-3
+    ornament into every riff bar (1.31 for 1.11); the song's patch sets `space` 1.3 on tier 5
+    (still between tier 4's 1.5 and tier 6's 1.0). Any song from about 92 to 100 has both edges.
+
 ## Where this comes from
 
 Rhythm-game charters (Rock Band, Guitar Hero, Clone Hero) chart the top difficulty first and
@@ -328,7 +338,9 @@ prints every tier's onsets a second, hand figures and keys from the TS ports of 
 the hand planner, judges the named levels against BLUES.md's bands and the goal tier against
 LEVELING.md's budget, and `--snapshot` / `--compare` prove every other song's figures unchanged
 (rule 4). The two skills that make material (`.claude/skills/takt-blues`, `takt-chart`) run it
-first. Then, with a build:
+first. `npx tsx scripts/takt/chart-dump.ts <song> [--part chords] [--tier N] [--bars a-b]` prints a
+tier's chart bar by bar with the Stage's fingers and a `^` on every hand move (2026-11-09): the
+read that shows an anchor missing from one bar or where the planner moved the hand. Then, with a build:
 
 `-LessonCheck 1` checks that every tier of every song keeps its rules (gap and chord size, the
 top tier is the whole part), that every level is the one below plus more and never thinner

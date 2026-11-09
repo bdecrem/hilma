@@ -48,6 +48,12 @@ here.
   track" → Halsted, Chicago boogie at 148, the electric through the amp, a rolling piano. Then,
   asking for its charts: "which sounds great btw". The amp settings and the seven-chorus
   arrangement are the reference for a loud track.
+- **2026-11-09.** "create an awesome new blues track that has both guitar (not the steel one -
+  the regular one) and piano, and then create charts for that for beginning - advanced on both
+  rhythm and melody lines" → McLemore, Memphis soul blues in F at 96, the electric and the piano
+  trading over one riff; the first track written by this skill and charted by `takt-chart` in
+  one go. "The regular one" is `eguitar` through the amp; "the steel one" is `guitar`
+  (Shinyguitar). Not heard by him yet.
 - **2026-11-07.** On the pinned tracks: the first six of the catalog show on the Stage, the rest
   under All tracks; a new track goes under All tracks unless he says pin it.
 
@@ -87,6 +93,9 @@ here.
 - Whether a blues comping wants a rhythm step between Easy and Medium (voicing only today).
 - Friars Point's and Halsted's Beginner are under their band (a fast song), noted, to hear.
 - Maxwell Street II (the Level 2 song): its line rewritten into two pentatonic boxes on 2026-11-08 (Medium 4/3 · 2 · 22); to hear.
+
+- McLemore (2026-11-09): the whole track, to hear. Its Beginner melody is one note a bar
+  (0.36, a hair over the band); its chords ladder has the rhythm step between Easy and Medium.
 
 ## How to add a line
 

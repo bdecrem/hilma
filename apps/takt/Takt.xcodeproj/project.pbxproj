@@ -320,6 +320,7 @@
 		56FAAC4E2E06C889F685B627 /* egt-81-3-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 2386C1E3028F5C8405120F8E /* egt-81-3-2.caf */; };
 		572595C6F8594DE21D38DA4A /* egt-42-1-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 67C460395E45CE0BD46DCA5A /* egt-42-1-1.caf */; };
 		578BC8F5B57D9425C0F1ABAB /* egt-63-4-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 8FB77899ABDACCD08E3E4EC3 /* egt-63-4-1.caf */; };
+		57FC82F81877364CA8C6EB0D /* song-mclemore.json in Resources */ = {isa = PBXBuildFile; fileRef = 2120F8290B3A557F4E6C3EC4 /* song-mclemore.json */; };
 		5860ADDDB55FE5FF6D009753 /* egt-48-4-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = DFD717766066EDF19D76EADA /* egt-48-4-1.caf */; };
 		58B984D4A4591461D934F181 /* syn-stabMin-58-0.caf in Resources */ = {isa = PBXBuildFile; fileRef = 2B6BF9F2DC7AA8914FFCAEB1 /* syn-stabMin-58-0.caf */; };
 		58C48D4E08309293EBB4A5A8 /* gtr-72-2-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = A9BD0909A59B02CAAC2EB994 /* gtr-72-2-1.caf */; };
@@ -1037,6 +1038,7 @@
 		1EDA8355269CC93360981E3F /* call-a-flat.caf */ = {isa = PBXFileReference; path = "call-a-flat.caf"; sourceTree = "<group>"; };
 		1EF0B45C2296556C723902C1 /* gtr-48-1-2.caf */ = {isa = PBXFileReference; path = "gtr-48-1-2.caf"; sourceTree = "<group>"; };
 		1F8EDD67F9F27812DD0B9A6B /* egt-40-2-1.caf */ = {isa = PBXFileReference; path = "egt-40-2-1.caf"; sourceTree = "<group>"; };
+		2120F8290B3A557F4E6C3EC4 /* song-mclemore.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "song-mclemore.json"; sourceTree = "<group>"; };
 		21AF9C4A9B84E18FF59B0327 /* syn-bleep-75-2.caf */ = {isa = PBXFileReference; path = "syn-bleep-75-2.caf"; sourceTree = "<group>"; };
 		21C9872F8A4734272F340E59 /* egt-81-3-1.caf */ = {isa = PBXFileReference; path = "egt-81-3-1.caf"; sourceTree = "<group>"; };
 		21CC267631B161A93A3F4CE6 /* lesson-H.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "lesson-H.json"; sourceTree = "<group>"; };
@@ -2117,6 +2119,7 @@
 				C1D12DD782A48B03D2950F0D /* song-hypnotist.json */,
 				5FB1C79C55E8BFD0E83697D6 /* song-maxwell-street-five.json */,
 				597EBA6ECE301E5C95CEBF1A /* song-maxwell-street.json */,
+				2120F8290B3A557F4E6C3EC4 /* song-mclemore.json */,
 				48BEC1DC3AA0BBC2F6DC7F33 /* song-pearl-street.json */,
 				B406B5EABFF2F1734A1E4E05 /* song-slow-burn-short.json */,
 				A4985865F2AE933A767D9B73 /* song-slow-burn.json */,
@@ -3711,6 +3714,7 @@
 				74BA911C913AB1B9444320F4 /* song-hypnotist.json in Resources */,
 				CD610613602840F122AC81C2 /* song-maxwell-street-five.json in Resources */,
 				EFF3EBD83E11EC5BB488123C /* song-maxwell-street.json in Resources */,
+				57FC82F81877364CA8C6EB0D /* song-mclemore.json in Resources */,
 				40BC777B2258F7F54D5CF35B /* song-pearl-street.json in Resources */,
 				4B1361CAABC1BA0FBE776FD7 /* song-slow-burn-short.json in Resources */,
 				D08F9AD8D242D5A9CE4CEE68 /* song-slow-burn.json in Resources */,
@@ -4014,7 +4018,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 119;
+				CURRENT_PROJECT_VERSION = 120;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -4081,7 +4085,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 119;
+				CURRENT_PROJECT_VERSION = 120;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;

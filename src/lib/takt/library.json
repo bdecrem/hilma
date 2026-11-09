@@ -134,6 +134,25 @@
    "uses": []
   },
   {
+   "name": "song-mclemore",
+   "title": "McLemore",
+   "style": "Memphis blues",
+   "key": "F",
+   "tempo": 96,
+   "bars": 60,
+   "seconds": 150,
+   "line": "The guitar and the piano trading. One riff in unison, stings, a piano chorus, the breaks.",
+   "sections": "Head (bar 1), Verse (bar 13), Piano (bar 25), Guitar (bar 37), Out (bar 49)",
+   "chorus": "1–4 F7 · 5–6 Bb7 · 7–8 F7 · 9 C7 · 10 Bb7 · 11 F7 · 12 C7",
+   "choruses": 5,
+   "parts": {
+    "chords": "The stabs",
+    "melody": "Electric guitar"
+   },
+   "shelf": "all tracks",
+   "uses": []
+  },
+  {
    "name": "song-blue-lantern-white",
    "title": "Blue Lantern II",
    "style": "Minor blues",

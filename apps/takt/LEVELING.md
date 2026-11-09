@@ -58,6 +58,7 @@ The figures for every song, every tier (2026-11-08, `-LessonCheck` prints them a
 | Warm Nine | 0/0 · 1 · 9 | 0/0 · 1 · 9 | 14/5 · 2 · 12 | 14/5 · 2 · 12 (L5) | 14/5 · 2 · 12 |
 | Hypnotist II | 0/0 · 1 · 5 | 0/0 · 1 · 7 | 0/0 · 1 · 7 | 0/0 · 1 · 7 (L5) | 0/0 · 1 · 7 |
 | Halsted (148, 0.1 (115)) | 10/10 · 3 · 19 | 36/20 · 6 · 27 | 41/17 · 6 · 27 | 41/17 · 6 · 27 (L4) | 82/6 · 6 · 27 |
+| McLemore (96, 2026-11-09; Easy = L2, Easy+ = L3) | 2/2 · 2 · 10 | 5/5 · 2 · 10 (L2) | 12/9 · 2 · 10 (L3) | 14/11 · 2 · 12 (L5) | 20/9 · 3 · 15 |
 
 ## 2. The budgets
 
@@ -168,3 +169,13 @@ it before and after every change (2026-11-08).
   finger), two moves again, so bring the hand down onto the box's thumb key after a long note
   (here the turnaround's A after the release's held C). The `-LessonCheck` plan-goal check
   still asserts Level 1 only and prints Level 2's figure; it can assert it on the next build.
+- **2026-11-09: McLemore, a record melody written for the hand from the first note.** Bart asked
+  for a new guitar-and-piano track and charts "for beginning - advanced on both rhythm and
+  melody lines". The line was written in one box before it was measured (F4 under the thumb,
+  A♭4, B♭4, C5, E♭5 under the pinky; the riff re-shaped on those keys over the IV and the V
+  instead of transposed; the peaks F5 and A♭5 on `from` 5 and 6), and reads Beginner 2/2 · 2 ·
+  10, Easy 5/5 · 2 · 10, Easy+ 12/9 · 2 · 10, Medium 14/11 · 2 · 12, Hard 20/9 · 3 · 15: Easy
+  inside the Level 1 move count, Medium a Level 3–6 hand by its moments. The moves the planner
+  adds inside the box are its choice between 4 and 3 on the C5 (a minor third to the E♭5 under
+  the pinky is a stretch for 4–5), not a jump; no level's goal song, so printed, not asserted.
+

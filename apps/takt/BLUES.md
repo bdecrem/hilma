@@ -18,7 +18,10 @@ slide's triplets, 2:04), both charted to this sheet in 0.1 (73) (their columns b
 **Maxwell Street** (Chicago blues in A, 80, the stop-time 12-bar with a unison riff, 2:24), not
 charted yet (Bart: "without any charts"; its ladder falls out of the rules alone). **Halsted** (Chicago boogie in A, 148, the electric guitar through the
 amp on the riff and a rolling piano, seven choruses with a stop-time chorus, 2:16, added
-2026-11-07) sits under All tracks too, charted to this sheet (its columns below). Generators in `scripts/songs/`, charts cut at
+2026-11-07) sits under All tracks too, charted to this sheet (its columns below). **McLemore** (Memphis soul blues in F, 96,
+straight eighths, the electric guitar and the piano trading over one riff in unison, five choruses with a
+piano chorus and a guitar chorus that opens on four bars of breaks, 2:30, added 2026-11-09) sits beside it,
+written by the `takt-blues` skill and charted by `takt-chart` (its columns below). Generators in `scripts/songs/`, charts cut at
 load time by `Takt/Content/charting.json`; every blues melody carries the same `songs` patch
 there (Easy = tier 2, a chorus-long phrase, no borrowing on tier 2).
 
@@ -51,13 +54,13 @@ from those weights, but **the density targets below are the spec**: when a line'
 a level the wrong density, patch the song in `charting.json` (`songs`) or rewrite the weights,
 and say which in the song's generator docstring.
 
-| Level | What you play | Onsets / s target | Slow Burn | Boogie Shoes | Pearl Street | Blue Lantern | Dockery | Friars Point | Halsted |
-|---|---|---|---|---|---|---|---|---|---|
-| Beginner | The anchors, one at a time, with room: never two inside 2.4 s, never 5 s of nothing. Every key of each four bars appears once. Learn where the phrases land. | 0.2 – 0.35 | 0.29 | 0.25 | 0.26 | 0.26 | 0.27 | 0.24 | 0.18 (one anchor every two bars, cut from Easy's chorus cover) |
-| Easy | The anchors, all of them, plus the few keys they miss over a chorus. About one note a bar. No borrowing into silences. **Half of Medium.** | 0.4 – 0.55 | 0.43 | 0.52 (the anchors and the riff's landing F once a chorus, since 2026-11-08; was 0.88, then 0.64) | 0.51 | 0.41 | 0.50 | 0.55 | 0.65 (about a note a bar: at 148 a bar is 1.62 s) |
-| Medium | Most of the tune: anchors and main notes, nothing quicker than a beat's division you can read. | 0.8 – 1.1 (a jump-blues riff runs to 1.6) | 1.09 | 1.58 | 1.31 | 0.88 | 1.18 | 1.42 (a boogie) | 1.14 (tier 4, the riff without its ornaments) |
-| Hard | The line as the record plays it: pushes, pickups, grace notes, the turnaround ornaments. | the record | 1.23 | 2.17 | 1.86 | 0.97 | 1.50 | 2.80 (the slide's triplets) | 4.29 (the riff, the runs, the solo's rakes) |
-| Adaptive | Starts one rung under your last run's top (first time: rung 4); clean 4-bar blocks climb one rung, under 60 % or three misses in a row drop one. The seven rungs must climb smoothly: no rung more than twice the one below it. | | 0.29 · 0.43 · 0.84 · 0.87 · 1.09 · 1.11 · 1.23 | 0.25 · 0.52 · 0.83 · 1.49 · 1.58 · 1.69 · 2.17 | 0.26 · 0.51 · 0.77 · 1.23 · 1.31 · 1.42 · 1.86 | 0.26 · 0.41 · 0.68 · 0.74 · 0.88 · 0.94 · 0.97 | 0.27 · 0.50 · 0.78 · 1.11 · 1.18 · 1.18 · 1.50 | 0.24 · 0.55 · 0.80 · 1.34 · 1.42 · 1.86 · 2.80 | 0.18 · 0.65 · 0.81 · 1.14 · 1.93 · 2.46 · 4.29 |
+| Level | What you play | Onsets / s target | Slow Burn | Boogie Shoes | Pearl Street | Blue Lantern | Dockery | Friars Point | Halsted | McLemore |
+|---|---|---|---|---|---|---|---|---|---| --- |
+| Beginner | The anchors, one at a time, with room: never two inside 2.4 s, never 5 s of nothing. Every key of each four bars appears once. Learn where the phrases land. | 0.2 – 0.35 | 0.29 | 0.25 | 0.26 | 0.26 | 0.27 | 0.24 | 0.18 (one anchor every two bars, cut from Easy's chorus cover) | 0.36 (the 1 of nearly every bar: at 96 a bar is 2.5 s, just over the 2.4 s gap) |
+| Easy | The anchors, all of them, plus the few keys they miss over a chorus. About one note a bar. No borrowing into silences. **Half of Medium.** | 0.4 – 0.55 | 0.43 | 0.52 (the anchors and the riff's landing F once a chorus, since 2026-11-08; was 0.88, then 0.64) | 0.51 | 0.41 | 0.50 | 0.55 | 0.65 (about a note a bar: at 148 a bar is 1.62 s) | 0.49 (the anchors, and the answer's main note on the 3 in three bars a chorus) |
+| Medium | Most of the tune: anchors and main notes, nothing quicker than a beat's division you can read. | 0.8 – 1.1 (a jump-blues riff runs to 1.6) | 1.09 | 1.58 | 1.31 | 0.88 | 1.18 | 1.42 (a boogie) | 1.14 (tier 4, the riff without its ornaments) | 1.11 (the riff's bones F, A♭ B♭ and the answers; `space` 1.3 on tier 5) |
+| Hard | The line as the record plays it: pushes, pickups, grace notes, the turnaround ornaments. | the record | 1.23 | 2.17 | 1.86 | 0.97 | 1.50 | 2.80 (the slide's triplets) | 4.29 (the riff, the runs, the solo's rakes) | 1.91 (the riff in full, the answers, the solo's stings up to A♭5) |
+| Adaptive | Starts one rung under your last run's top (first time: rung 4); clean 4-bar blocks climb one rung, under 60 % or three misses in a row drop one. The seven rungs must climb smoothly: no rung more than twice the one below it. | | 0.29 · 0.43 · 0.84 · 0.87 · 1.09 · 1.11 · 1.23 | 0.25 · 0.52 · 0.83 · 1.49 · 1.58 · 1.69 · 2.17 | 0.26 · 0.51 · 0.77 · 1.23 · 1.31 · 1.42 · 1.86 | 0.26 · 0.41 · 0.68 · 0.74 · 0.88 · 0.94 · 0.97 | 0.27 · 0.50 · 0.78 · 1.11 · 1.18 · 1.18 · 1.50 | 0.24 · 0.55 · 0.80 · 1.34 · 1.42 · 1.86 · 2.80 | 0.18 · 0.65 · 0.81 · 1.14 · 1.93 · 2.46 · 4.29 | 0.36 · 0.49 · 0.77 (Easy+) · 0.93 · 1.11 · 1.89 · 1.91 |
 
 Notes from play:
 
@@ -110,6 +113,23 @@ Notes from play:
   sixteen songs unchanged (`measure.ts --compare`). To hear: Easy's hand still jumps the record's
   octaves (23 moves in 12 moments, 3 positions, 19 semitones; §6 and LEVELING.md §4).
 
+- 2026-11-09, **McLemore** (96, straight eighths, the first track through both skills). One
+  anchor a bar on the 1, every anchor and main note one of five keys (F4 A♭4 B♭4 C5 E♭5, the F
+  minor pentatonic under one hand; the riff keeps its shape on those keys over the IV and the V
+  instead of transposing), the reaches above (F5, A♭5) on `from` 5 and 6. With the blues melody
+  patch Easy first read 0.45 and Beginner 0.40, the same chart twice: at 96 a bar is 2.5 s, so
+  Beginner's 2.4 s gap keeps every anchor. A `gap` of 2.6 on Beginner made it every other bar
+  (0.19, ×2.3 under Easy, 5 s between notes); the ladder has no rung between those two, so the
+  cure was the line: the answer's main note on the 3 is a second anchor in three answer bars a
+  chorus (a beat and a half from both downbeats), which lifts Easy to 0.49 and leaves Beginner
+  at 0.36, a hair over its band and one note a bar. Easy+ is tier 3 (0.77: the anchors and one
+  note of the riff a bar). Medium was 1.31 because tier 5's `space` (1.2 s) borrowed an ornament
+  after the 3 of every riff bar (the 3 is 1.25 s from the next downbeat at 96); the song sets
+  `space` 1.3 on that tier and Medium is the bones, 1.11. Named levels 0.36 → 0.49 → 0.77 →
+  1.11 → 1.91, every step under twice. The hand: Easy 5 moves in 5 moments, 2 positions, inside
+  an octave; Medium 14 in 11, 2 positions; Hard 20 in 9, 3 positions, a tenth (LEVELING.md §1):
+  the lightest hand of any record melody here.
+
 ## 3. Chords (the comping)
 
 The comping is written as chord hits with a weight per hit (**1** the downbeat hits the form
@@ -117,13 +137,13 @@ stands on, **2** the groove hits, the 3 or the and-of-2, **3** the pushes) and a
 (`root, third, fifth, seventh, sixth, ninth`). Levels cut both the rhythm (which hits) and the
 voicing (how many notes, in that role order), one thing at a time.
 
-| Level | What you play | Onsets / s target | Slow Burn | Boogie Shoes | Pearl Street | Blue Lantern | Dockery | Friars Point | Halsted |
-|---|---|---|---|---|---|---|---|---|---|
-| Beginner | One note a chord, the root, on the downbeat hits only, with room (2.4 s). Learn the changes. | 0.2 – 0.4 | 0.38 | 0.25 | 0.23 | 0.35 | 0.31 | 0.24 | 0.30 |
-| Easy | Two-note chords (root + third). Slow Burn: the shell on the 1 and the 3 (tier 2, since 0.1 (63)); the others: the groove hits (tier 3). The Delta tracks: the chick after the 1 and the 3, on the off beat (Dockery tier 2). | 0.6 – 1.0 | 0.74 (was 1.11) | 0.99 | 0.87 | 0.99 | 0.76 | 0.96 | 0.60 (tier 2: the root and third on the 1) |
-| Medium | Three-note chords on the groove. Same rhythm as Easy, the triad. Dockery: the three-note chick on every off beat. | 0.9 – 1.2 | 1.11 | 0.99 | 0.87 | 0.99 | 1.38 | 0.96 | 1.14 (tier 4: the triad on every beat) |
-| Hard | The comping as the record plays it: four-note voicings, every push. The Delta tracks: the thumb and every chick. | the record | 1.84 | 1.31 | 1.55 | 1.10 | 2.82 | 3.68 | 4.35 (four notes on every beat and its eighth) |
-| Adaptive | Rungs: root alone → two-note spread → two-note on the groove → triad → + pushes → four notes → the record. | | 0.38 · 0.74 · 1.11 · 1.11 · 1.11 · 1.11 · 1.84 | 0.25 · 0.50 · 0.99 · 0.99 · 1.00 · 1.30 · 1.31 | 0.23 · 0.47 · 0.87 · 0.87 · 0.87 · 0.87 · 1.55 | 0.35 · 0.35 · 0.99 · 0.99 · 0.99 · 0.99 · 1.10 | 0.31 · 0.76 · 1.38 · 1.38 · 1.54 · 1.54 · 2.82 | 0.24 · 0.52 · 0.96 · 0.96 · 1.84 · 1.91 · 3.68 | 0.30 · 0.60 · 1.14 · 1.14 · 2.21 · 2.21 · 4.35 |
+| Level | What you play | Onsets / s target | Slow Burn | Boogie Shoes | Pearl Street | Blue Lantern | Dockery | Friars Point | Halsted | McLemore |
+|---|---|---|---|---|---|---|---|---|---| --- |
+| Beginner | One note a chord, the root, on the downbeat hits only, with room (2.4 s). Learn the changes. | 0.2 – 0.4 | 0.38 | 0.25 | 0.23 | 0.35 | 0.31 | 0.24 | 0.30 | 0.39 |
+| Easy | Two-note chords (root + third). Slow Burn: the shell on the 1 and the 3 (tier 2, since 0.1 (63)); the others: the groove hits (tier 3). The Delta tracks: the chick after the 1 and the 3, on the off beat (Dockery tier 2). | 0.6 – 1.0 | 0.74 (was 1.11) | 0.99 | 0.87 | 0.99 | 0.76 | 0.96 | 0.60 (tier 2: the root and third on the 1) | 0.74 (tier 2: the root and third on the 1 and the 3) |
+| Medium | Three-note chords on the groove. Same rhythm as Easy, the triad. Dockery: the three-note chick on every off beat. | 0.9 – 1.2 | 1.11 | 0.99 | 0.87 | 0.99 | 1.38 | 0.96 | 1.14 (tier 4: the triad on every beat) | 0.91 (tier 4: the triad on the 1 and the 3, and the 4 of every answer bar; Easy+ is tier 3, that rhythm in two notes) |
+| Hard | The comping as the record plays it: four-note voicings, every push. The Delta tracks: the thumb and every chick. | the record | 1.84 | 1.31 | 1.55 | 1.10 | 2.82 | 3.68 | 4.35 (four notes on every beat and its eighth) | 1.26 (four notes, the pushes on the "and" of 2 and of 4) |
+| Adaptive | Rungs: root alone → two-note spread → two-note on the groove → triad → + pushes → four notes → the record. | | 0.38 · 0.74 · 1.11 · 1.11 · 1.11 · 1.11 · 1.84 | 0.25 · 0.50 · 0.99 · 0.99 · 1.00 · 1.30 · 1.31 | 0.23 · 0.47 · 0.87 · 0.87 · 0.87 · 0.87 · 1.55 | 0.35 · 0.35 · 0.99 · 0.99 · 0.99 · 0.99 · 1.10 | 0.31 · 0.76 · 1.38 · 1.38 · 1.54 · 1.54 · 2.82 | 0.24 · 0.52 · 0.96 · 0.96 · 1.84 · 1.91 · 3.68 | 0.30 · 0.60 · 1.14 · 1.14 · 2.21 · 2.21 · 4.35 | 0.39 · 0.74 · 0.91 · 0.91 · 0.91 · 1.26 · 1.26 |
 
 Notes from play:
 
@@ -160,6 +180,13 @@ Notes from play:
   0.99 four times; Beginner and the second rung are both one chord a bar (0.35). Pearl Street's
   stab-and-chank (the 1, the "a" of 2, the 3) does the same at 0.87. If the comping ladders
   want a rhythm step, the sheet's note above applies to these two as well.
+- 2026-11-09, McLemore's stabs are written for a rhythm step (the open item of §6): the 1
+  weight 1, the 3 weight 2, the 4 weight 2 in the answer bars only, the pushes (the "and" of 2
+  with the riff, the "and" of 4 into the next bar) weight 3. Easy is tier 2 (two notes on the 1
+  and the 3, 0.74), Easy+ tier 3 (the same two notes with the 4 of every other bar, 0.91),
+  Medium tier 4 (that rhythm as triads), Hard the four-note stabs with the pushes (1.26). To
+  hear: whether the step from Easy to Easy+ (a rhythm) and from Easy+ to Medium (a third note)
+  is the order a player wants.
 - 2026-11-07, Halsted's piano comps four notes on every beat and its shuffle eighth (the 1 at
   weight 1, the other beats 2, the eighths 3): the default Easy (tier 3) was 1.14, so the song
   names tier 2, the root and third on the 1, 0.60; Medium is the triad on every beat (1.14),
@@ -228,6 +255,17 @@ weights cannot bring into its band is then `takt-chart`'s.
   up on the record in the heads; a rolling boogie piano with a triplet solo chorus; a verse of
   held notes and answers; stop time with blues-scale runs; a guitar solo of rakes and hammered
   figures on the ride; one big stop. Your keys play the piano on both parts.
+
+- **McLemore**, F, 96, Memphis soul blues, straight eighths. The guitar and the piano trading:
+  one riff in an arch (F, then A♭ B♭ C B♭ A♭ from the "and" of 2) played in unison by the bass
+  and the guitar an octave apart, the piano stabbing its accents, the kick with it and the snare
+  fat on 2 and 4. The guitar and the piano alone on the riff for two bars, then the band; a verse
+  where the piano's left hand takes the riff, the guitar sings and the piano's right hand answers
+  in the gaps; a piano chorus on the ride with the guitar sitting back; a guitar chorus that
+  opens on four bars of breaks; everybody on the riff, the bell, one stop. The guitar is
+  Emilyguitar through a cleaner amp than Halsted's (drive 16, presence 6), with a fourth under
+  the held stings and a slide from the fret below into them. Your keys play the piano on both
+  parts.
 
 ## 6. Open
 

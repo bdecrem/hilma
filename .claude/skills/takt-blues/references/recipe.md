@@ -17,6 +17,7 @@ Read `common.py` once (190 lines); it is the format.
 | a fast Delta boogie, 116 | `friars_point.py` | the boogie thumb under the slide's triplets, five choruses, one big stop |
 | Chicago stop time, 80, a unison riff | `maxwell_street.py` (`--five` is the Level 2 song) | eight bars of stop time, the riff slammed by bass, piano and sax, the answers in the gaps, a shuffle chorus where the riff drives |
 | an electric boogie at 148 with the guitar through the amp and a rolling piano | `halsted.py` | the guitar alone for two bars, seven choruses each doing one thing, the fewer-anchors rule for a fast song |
+| a soul blues at 96, straight eighths, the electric guitar and the piano trading over one riff in unison | `mclemore.py` | a one-bar riff and an answer bar (`kind(bar)`: A / B / T), the bass and the guitar in unison, piano stabs written for a rhythm step, the verse where the piano takes the riff, breaks at the top of the guitar chorus, a line written in one hand box with `from` on the peaks |
 
 ## The skeleton
 
@@ -171,3 +172,31 @@ not leak down the ladder.
    comping's default Easy is over 1.0), then measure again. The weights last.
 3. Register (SKILL.md step 5), build, `-LessonCheck 1`, `scripts/takt/render-song.sh`, the
    levels from the render, the MP3 to Bart.
+
+## What McLemore taught (2026-11-09, the first track through both skills)
+
+- **Write the melody in a box before the first measure.** Five scale keys under five fingers
+  (F4 A♭4 B♭4 C5 E♭5), every anchor and main note on them, the riff re-shaped on the same keys
+  over the IV and the V instead of transposed, the peaks above on `from` 5 / 6. First measure:
+  Easy 2 moves, Medium 15, Hard 24, where the other record melodies read 18–50 at Medium. The
+  record gets its weight from the channel (the riff an octave down, a fourth under the held
+  stings, a 2-tick slide from the fret below), not from the part's range.
+- **A riff transposed by ear, not by interval, keeps the keys few.** Three keys of anchors and
+  five in all means the chorus cover adds two notes to Easy, not seven (Boogie Shoes' problem).
+- **Between about 92 and 100 bpm, check two edges** (CHARTING.md rule 18): Beginner keeps every
+  downbeat anchor (a bar is just over 2.4 s), so give three answer bars a chorus a second
+  anchor on the 3 to separate Easy from it; and Medium borrows an ornament after the 3 of every
+  bar (1.25 s to the downbeat, over `space` 1.2), so the song's patch carries
+  `"5": {"space": 1.3}`.
+- **A comping part with a rhythm step**: the 1 weight 1, the 3 weight 2, the 4 weight 2 in
+  every other bar, the pushes 3 → 0.39 · 0.74 · 0.91 · 0.91 · 0.91 · 1.26, and the song names
+  Easy tier 2 and Easy+ tier 3 so all five named levels differ.
+- **A new song file needs `xcodegen generate`** before the build, or it is not in the bundle
+  and `render-song.sh` renders nothing.
+- **Stems**: `xcrun simctl launch --console-pty booted com.bartdecrem.Takt -Silent 1 -RenderTo
+  /tmp/x.wav -RenderSeconds 150 -RenderScript "0:song=<name>/melody,0:mute=bass,0:mute=keys,0:mute=horns,0:play"`
+  renders one channel alone. The blues band's reference: drums −28, bass −29, keys −30, horns
+  −28.5 dBFS mean; McLemore's first pass read −29.2 / −31.1 / −31.2 / −29.1 and took bass +2,
+  keys +1.
+- `npx tsx scripts/takt/chart-dump.ts <song> --tier N` reads a level bar by bar (fingers, `^`
+  on a hand move): do it for Easy and Medium before calling the charts done.

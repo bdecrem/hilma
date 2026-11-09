@@ -2072,6 +2072,34 @@ cover stealing anchors, a hand of 30 moves on a Level 2 song, a Beginner on one 
   an Easy run to "Easy mastered · +75 XP", the 75 written once) and on this Mac (Boogie Shoes'
   chanks on the staff). Known and older than this: the phone's result screen sits shifted left
   (the HUD and rail cut off), with or without the badge.
+- **McLemore, the guitar and the piano trading: 0.1 (120), 2026-11-09.** Bart: "use these two
+  skills… to create an awesome new blues track that has both guitar (not the steel one - the
+  regular one) and piano, and then create charts for that for beginning - advanced on both
+  rhythm and melody lines". The first track made by `takt-blues` and charted by `takt-chart` in
+  one pass. **The record** (`scripts/songs/mclemore.py` → `song-mclemore.json`, under All
+  tracks after Halsted, cover glyph `duo`): Memphis soul blues in F at 96, straight eighths,
+  five choruses, 2:30. One riff in an arch (F, then A♭ B♭ C B♭ A♭ from the "and" of 2) in
+  unison on the bass and the electric guitar (`eguitar` through `amp.horns`, drive 16), the
+  piano stabbing its accents; Head (the guitar and the piano alone for two bars, then the band),
+  Verse (the piano's left hand takes the riff, the guitar sings, the piano's right hand answers),
+  Piano (a right-hand solo on the keys channel, the ride, the guitar back 20 %), Guitar (four
+  bars of breaks, then stings), Out (the bell, one stop). Channel only: the riff an octave down,
+  a fourth under held stings, a 2-tick slide into them. Levels from stems and the mix: keys −2,
+  bass +1, horns −1.5, kick −3, snare −5 → −23.3 dBFS mean, peak −1.3, each chorus within 0.6 dB.
+  **The charts** (`charting.json` `song-mclemore`; BLUES.md's columns and notes; CHARTING.md
+  rule 18): melody Beginner 0.36 · Easy 0.49 · Easy+ 0.77 (tier 3) · Medium 1.11 · Hard 1.91,
+  written in one hand box (F4 A♭4 B♭4 C5 E♭5; hand 2/2 · 5/5 · 12/9 · 14/11 · 20/9 moves/moments,
+  LEVELING.md §1); chords 0.39 · 0.74 (two notes on the 1 and the 3) · 0.91 (Easy+, tier 3: the 4
+  of every answer bar too) · 0.91 (Medium, triads) · 1.26 (the pushes), the first comping ladder
+  with a rhythm step between Easy and Medium. `measure.ts`: 6 pass, 2 warn (Beginner melody 0.36
+  against 0.2–0.35, Medium 1.11 against 0.8–1.1), every other song unchanged (`--compare`).
+  New tool `scripts/takt/chart-dump.ts` (a tier bar by bar, fingers, `^` on a hand move).
+  Verified: `-LessonCheck` 510/510 on the simulator, a Hard melody autoplay run to an S (286
+  notes), Medium melody and Easy chords shot mid-run, the card on the set list; the Mac app
+  installed at 0.1 (120); `~/Desktop/takt/McLemore.mp3`. Not heard by Bart yet: his call goes
+  into both skills' `references/feedback.md`. Seen on the way, not touched: the phone's result
+  card with a six-digit score (240,020) pushes the HUD wider than the screen (the back button
+  and the score clip at the edges).
 
 ## The one transport (2026-11-08)
 
