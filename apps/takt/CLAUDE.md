@@ -2096,8 +2096,8 @@ cover stealing anchors, a hand of 30 moves on a Level 2 song, a Beginner on one 
   New tool `scripts/takt/chart-dump.ts` (a tier bar by bar, fingers, `^` on a hand move).
   Verified: `-LessonCheck` 510/510 on the simulator, a Hard melody autoplay run to an S (286
   notes), Medium melody and Easy chords shot mid-run, the card on the set list; the Mac app
-  installed at 0.1 (120); `~/Desktop/takt/McLemore.mp3`. Not heard by Bart yet: his call goes
-  into both skills' `references/feedback.md`. Seen on the way, not touched: the phone's result
+  installed at 0.1 (120); `~/Desktop/takt/McLemore.mp3`. Bart, after opening it in the app:
+  "THIS IS GREAT! GOOD JOB!" (in both skills' `references/feedback.md`). Seen on the way, not touched: the phone's result
   card with a six-digit score (240,020) pushes the HUD wider than the screen (the back button
   and the score clip at the edges).
 

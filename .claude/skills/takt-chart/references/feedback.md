@@ -127,7 +127,8 @@ LEVELING.md, and this file keeps the pointer.
   · 0.91 (Medium, three) · 1.26. What it took beyond the blues patch: second anchors on the 3 of
   three answer bars a chorus (Beginner and Easy were one chart at 96), `space` 1.3 on tier 5
   (Medium was borrowing an ornament a bar), Easy+ named tier 3 on both parts (CHARTING.md rule
-  18). The hand at Easy 5/5 · 2 · 10, Medium 14/11 · 2 · 12. Not yet played by Bart.
+  18). The hand at Easy 5/5 · 2 · 10, Medium 14/11 · 2 · 12. Bart, the same day, on the track
+  and its charts in the app: "THIS IS GREAT! GOOD JOB!" (the whole, no level singled out).
 
 ## Open (LEVELING.md §4, BLUES.md §6)
 
