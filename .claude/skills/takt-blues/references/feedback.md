@@ -57,6 +57,11 @@ here.
   reference for a mid-tempo track: one riff in unison on the bass and the guitar, the piano on
   its accents, a chorus each for the piano and the guitar, the amp at drive 16, a melody written
   in one hand box.
+- **2026-11-09.** On a record Claude rendered in Python for him (Halbschatten): "implement this
+  track into TAKT but make sure it sounds EXACTLY the same as the wav… we have struggled with
+  this in the past". Exact is measured, not judged: the reference's own events and samples,
+  its render ported per sample, every bus nulled (DUB-TECHNO.md §8). The app's level stays the
+  Stage's (−8 dB under that reference). Not heard by him yet.
 - **2026-11-07.** On the pinned tracks: the first six of the catalog show on the Stage, the rest
   under All tracks; a new track goes under All tracks unless he says pin it.
 

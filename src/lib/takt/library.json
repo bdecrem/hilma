@@ -235,6 +235,25 @@
    "uses": []
   },
   {
+   "name": "song-halbschatten",
+   "title": "Halbschatten",
+   "style": "Dub techno",
+   "key": "G minor",
+   "tempo": 122,
+   "bars": 124,
+   "seconds": 244,
+   "line": "Dub techno at 122, four minutes. One chord stab into a tape echo and a hall, a pad, a lead that arrives late.",
+   "sections": "Dust (bar 1), Kick (bar 9), Bass (bar 17), Hats (bar 25), Full (bar 33), Clap (bar 41), Break (bar 49), The lead (bar 57), Shaker (bar 65), Open (bar 73), Lead again (bar 81), One chord (bar 89), Thinning (bar 97), Low (bar 105), Out (bar 113)",
+   "chorus": "1–4 Gm9",
+   "choruses": 31,
+   "parts": {
+    "chords": "The stab",
+    "melody": "The lead (from bar 49)"
+   },
+   "shelf": "all tracks",
+   "uses": []
+  },
+  {
    "name": "song-hypnotist",
    "title": "Hypnotist",
    "style": "Minimal techno",

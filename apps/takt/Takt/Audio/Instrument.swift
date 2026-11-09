@@ -65,6 +65,14 @@ final class SampledInstrument {
         return i
     }
 
+    /// An instrument cut at more than one rate (`<name>@44`: the samples as they are at
+    /// 44.1 kHz, beside the 48 kHz set) by the set nearest the output's: a sample at the
+    /// output's own rate plays as it is, and the voices' linear interpolation between rates
+    /// costs the top octave over a decibel (Halbschatten's kit, 2026-11-09).
+    static func rated(_ name: String, sampleRate: Double) -> String {
+        sampleRate < 46000 && InstrumentManifest.bundled.instruments["\(name)@44"] != nil ? "\(name)@44" : name
+    }
+
     init(_ name: String, manifest: InstrumentManifest = .bundled) {
         guard let entry = manifest.instruments[name] else { fatalError("no instrument \(name) in instruments.json") }
         release = entry.release

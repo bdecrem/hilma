@@ -35,6 +35,7 @@ extension Player {
                           start: GameEngine.adaptiveStart(song: song.name, part: part, records: progress.scores(song: song.name), charting: song.charting))
         fillVelocity = [:]
         for e in partChannel == .horns ? song.band.channels.horns : song.band.channels.keys { fillVelocity[e.t * 128 + e.n] = Float(e.v) }
+        for n in song.part(part).notes { if let v = n.v { fillVelocity[n.t * 128 + n.n] = Float(v) } }
         fillThrough = -1
         applyInstrument()
         audio.send(.stop)

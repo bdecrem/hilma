@@ -8,6 +8,17 @@ enum Channel: Int, CaseIterable {
     var bit: UInt8 { 1 << UInt8(rawValue) }
     /// The band's channels, the monitor aside.
     static let band: [Channel] = [.drums, .bass, .keys, .horns]
+    /// The stem a channel's own bus is in a rack's solo (`-RackSolo`): the drums channel
+    /// carries only the kick there, the kit's other sounds have buses of their own.
+    var stem: String {
+        switch self {
+        case .drums: "kick"
+        case .bass: "bass"
+        case .keys: "keys"
+        case .horns: "horns"
+        case .monitor: "monitor"
+        }
+    }
 }
 
 enum EngineCommand {
@@ -141,8 +152,20 @@ final class BandRenderer {
         var lengthTicks: Int
         /// Pitched: index into `instruments`.
         var instrument: Int
-        /// Pitched: the channel's level from the band's `levels`.
+        /// Pitched: the channel's level from the band's `levels` (times the note's own `g`).
+        /// A drum: the hit's `g`.
         var gain: Float = 1
+        /// Later than `tick` by this many ticks (the swing, a humanized hit).
+        var late: Float = 0
+    }
+
+    /// What plays a pitched instrument: a recording, the live stab, or a voice of the band's rack.
+    fileprivate enum Kind {
+        case sample, dubStab
+        /// One of the reference's raw stab buffers into the rack's stab bus.
+        case rackHit
+        /// A stab note synthesized into that bus, and the rack's FM lead.
+        case rackStab, rackLead
     }
 
     fileprivate struct DrumSound {
@@ -152,6 +175,8 @@ final class BandRenderer {
         var chokes: Int
         /// A kick: it ducks the band's `duck` channels.
         var kick: Bool
+        /// The rack bus it plays into (-1: the drums channel).
+        var aux = -1
     }
 
     /// A band as the renderer plays it: its events, its kit, its instruments and the monitor's,
@@ -176,8 +201,13 @@ final class BandRenderer {
         fileprivate let knee: Float
         /// The amp on each channel (drums, bass, keys, horns, monitor), nil: none.
         fileprivate let amps: [GuitarAmp.Settings?]
-        /// A band with its own chamber skips the app's room reverb: its low end stays dry.
-        var hasDub: Bool { dub != nil }
+        /// The duck's shape (`BandData.Duck`): attack, hold and length in seconds (0: the plain one).
+        fileprivate let duckShape: (attack: Double, hold: Double, length: Double)
+        fileprivate let kinds: [Kind]
+        /// The song's console, when it has one.
+        fileprivate let rack: Rack?
+        /// A band with its own chamber or console skips the app's room reverb: its low end stays dry.
+        var hasDub: Bool { dub != nil || rack != nil }
         let loopTicks: Int
         let chorusBars: Int
         let name: String
@@ -185,6 +215,7 @@ final class BandRenderer {
                          clickSound: Int, instruments: [SampledInstrument?], stab: DubStab.Settings?, monitor: Int, monitorGain: Float,
                          duck: [Float], duckRelease: Double, sends: [Float], dub: DubChamber.Settings?, knee: Float,
                          amps: [GuitarAmp.Settings?],
+                         duckShape: (attack: Double, hold: Double, length: Double), kinds: [Kind], rack: Rack?,
                          loopTicks: Int, chorusBars: Int, name: String) {
             self.buffer = buffer
             self.drumSounds = drumSounds
@@ -199,6 +230,9 @@ final class BandRenderer {
             self.dub = dub
             self.knee = knee
             self.amps = amps
+            self.duckShape = duckShape
+            self.kinds = kinds
+            self.rack = rack
             self.loopTicks = loopTicks
             self.chorusBars = chorusBars
             self.name = name
@@ -212,6 +246,11 @@ final class BandRenderer {
     /// The pitched instruments of the loaded band (nil: the live stab); `monitor` is the one
     /// your keys play.
     private var instruments: [SampledInstrument?]
+    private var kinds: [Kind]
+    /// The loaded band's console (`Rack`), nil for a band without one.
+    private var rack: Rack?
+    /// Where in the chunk being rendered the event or note firing now falls.
+    private var chunkOffset = 0
     private var stab: DubStab.Settings?
     private var monitor: Int
     private var monitorGain: Float = 1
@@ -219,6 +258,8 @@ final class BandRenderer {
     /// the kicks fired in the chunk being mixed.
     private var duck: [Float] = [0, 0, 0, 0, 0]
     private var duckDecay: Float = 1
+    private var duckShape: (attack: Double, hold: Double, length: Double) = (0, 0, 0)
+    private var previousKick: Int64 = .min / 2
     private var lastKick: Int64 = .min / 2
     private let chunkKicks = UnsafeMutableBufferPointer<Int64>.allocate(capacity: 64)
     private var chunkKickCount = 0
@@ -321,11 +362,14 @@ final class BandRenderer {
         mach_timebase_info(&mach)
         hostTicksPerSecond = 1e9 * Double(mach.denom) / Double(mach.numer)
 
-        let first = Self.load(band)
+        let first = Self.load(band, sampleRate: sampleRate, maxChunk: 4096)
         events = first.buffer
         drumSounds = first.drumSounds
         clickSound = first.clickSound
         instruments = first.instruments
+        kinds = first.kinds
+        rack = first.rack
+        duckShape = first.duckShape
         stab = first.stab
         monitor = first.monitor
         monitorGain = first.monitorGain
@@ -360,15 +404,21 @@ final class BandRenderer {
     /// A band as the renderer plays it, built on the main thread: its kit (a closed hat or the
     /// foot chokes the open one), its pitched instruments (each channel's own, any a note
     /// names, and the monitor's; shared by name across bands), its events in tick order.
-    private static func load(_ band: BandData) -> Events {
+    private static func load(_ band: BandData, sampleRate: Double, maxChunk: Int) -> Events {
+        let rack = band.rack.map { Rack($0, sampleRate: sampleRate, maxChunk: maxChunk) }
+        let rated = { SampledInstrument.rated($0, sampleRate: sampleRate) }
         let names = band.sounds.keys.sorted()
         let drumSounds = UnsafeMutableBufferPointer<DrumSound>.allocate(capacity: names.count)
         for (i, name) in names.enumerated() {
             let s = band.sounds[name]!
             drumSounds.initializeElement(at: i, to: DrumSound(
-                kit: SampledInstrument.shared(s.kit), gain: Float(pow(10, s.gainDb / 20)),
+                kit: SampledInstrument.shared(rated(s.kit)), gain: Float(pow(10, s.gainDb / 20)),
                 group: s.kit.hasPrefix("hatOpen") ? 1 : 0, chokes: (s.kit.hasPrefix("hat") && !s.kit.hasPrefix("hatOpen")) ? 1 : 0,
-                kick: s.kit.hasPrefix("kick")))
+                kick: s.kit.hasPrefix("kick"),
+                aux: s.bus.map { bus in
+                    guard let i = rack?.busNames.firstIndex(of: bus) else { fatalError("band \(band.name): sound \(name) on bus \(bus), which its rack does not have") }
+                    return i
+                } ?? -1))
         }
         guard let click = names.firstIndex(of: "xstick") else { fatalError("band \(band.name): no xstick for the click") }
 
@@ -384,8 +434,12 @@ final class BandRenderer {
         }
         for n in band.channels.bass + band.channels.keys + band.channels.horns { if let i = n.i { _ = instrument(i) } }
         let monitor = instrumentNames.firstIndex(of: band.instruments["monitor"]!)!
-        let instruments = instrumentNames.map { $0 == DubStab.name ? nil : SampledInstrument.shared($0) }
-        if instruments.contains(where: { $0 == nil }) && band.stab == nil { fatalError("band \(band.name): \(DubStab.name) without a stab") }
+        let kinds: [Kind] = instrumentNames.map {
+            $0 == DubStab.name ? .dubStab : $0 == "rackStab" ? .rackStab : $0 == "rackLead" ? .rackLead : $0.hasPrefix("hsStab") ? .rackHit : .sample
+        }
+        let instruments = zip(instrumentNames, kinds).map { name, kind in kind == .sample || kind == .rackHit ? SampledInstrument.shared(rated(name)) : nil }
+        if kinds.contains(.dubStab) && band.stab == nil { fatalError("band \(band.name): \(DubStab.name) without a stab") }
+        if kinds.contains(where: { $0 == .rackHit || $0 == .rackStab || $0 == .rackLead }) && rack == nil { fatalError("band \(band.name): a rack voice without a rack") }
         let duck = ["drums", "bass", "keys", "horns", "monitor"].map { Float(band.duck?.channels[$0] ?? 0) }
         let sends = ["drums", "bass", "keys", "horns", "monitor"].map { Float(band.dub?.sends[$0] ?? 0) }
         return Events(events(of: band, sounds: names, instruments: instrumentNames), drumSounds: drumSounds, clickSound: click,
@@ -393,6 +447,7 @@ final class BandRenderer {
                       duck: duck, duckRelease: max(0.01, band.duck?.release ?? 0.2), sends: sends, dub: band.dub?.settings,
                       knee: Float(band.knee ?? 1),
                       amps: ["drums", "bass", "keys", "horns", "monitor"].map { band.amp?[$0] },
+                      duckShape: (band.duck?.attack ?? 0, band.duck?.hold ?? 0, band.duck?.length ?? 0), kinds: kinds, rack: rack,
                       loopTicks: band.loopTicks, chorusBars: band.chorusBars, name: band.name)
     }
 
@@ -405,7 +460,8 @@ final class BandRenderer {
         var list: [Event] = []
         for h in band.channels.drums {
             guard let i = names.firstIndex(of: h.s) else { fatalError("band \(band.name): unknown drum sound \(h.s)") }
-            list.append(Event(tick: h.t, channel: .drums, value: i, velocity: Float(h.v), lengthTicks: 0, instrument: 0))
+            list.append(Event(tick: h.t, channel: .drums, value: i, velocity: Float(h.v), lengthTicks: 0, instrument: 0,
+                              gain: Float(h.g ?? 1), late: Float(h.late ?? 0)))
         }
         for (channel, key, notes) in [(Channel.bass, "bass", band.channels.bass), (.keys, "keys", band.channels.keys),
                                       (.horns, "horns", band.channels.horns)] {
@@ -413,7 +469,7 @@ final class BandRenderer {
             let gain = Float(pow(10, (band.levels?[key] ?? 0) / 20))
             for n in notes {
                 list.append(Event(tick: n.t, channel: channel, value: n.n, velocity: Float(n.v), lengthTicks: n.len,
-                                  instrument: n.i.map(instrument) ?? own, gain: gain))
+                                  instrument: n.i.map(instrument) ?? own, gain: gain * Float(n.g ?? 1), late: Float(n.late ?? 0)))
             }
         }
         list.sort { $0.tick < $1.tick }
@@ -426,7 +482,7 @@ final class BandRenderer {
     /// (the minor blues beside the shuffle; a song with its synths), on the same tick grid.
     func load(_ band: BandData) -> Events {
         precondition(band.ticksPerBeat == ticksPerBeat && band.ticksPerBar == ticksPerBar, "band \(band.name): a different tick grid")
-        return Self.load(band)
+        return Self.load(band, sampleRate: sampleRate, maxChunk: maxChunk)
     }
 
     // MARK: Render
@@ -503,11 +559,12 @@ final class BandRenderer {
     private func renderChunk(_ n: Int, hostTime: UInt64?, outL: UnsafeMutablePointer<Float>, outR: UnsafeMutablePointer<Float>) {
         busL.update(repeating: 0, count: maxChunk * 5)
         busR.update(repeating: 0, count: maxChunk * 5)
+        rack?.begin(n)
 
         let start = frame
         let end = frame + Int64(n)
         var cursor = start
-        chunkKickCount = 0
+        // The kicks still to come (a late kick's own frame can lie past the chunk it fired in) stay.
         while true {
             // The next thing to happen in this chunk: a beat, a band event, a scheduled note or a
             // live note. A beat goes before an event on the same tick (a tempo change re-anchors
@@ -537,6 +594,7 @@ final class BandRenderer {
             if what == 0 { break }
             renderVoices(from: Int(cursor - start), to: Int(at - start))
             cursor = at
+            chunkOffset = Int(at - start)
             switch what {
             case 1: beat(tick: nextBeatTick, at: at, chunkStart: start, hostTime: hostTime)
             case 2: fire(at: at)
@@ -621,9 +679,12 @@ final class BandRenderer {
             if e.tick != tick { break }
             let at = Double(loopBase + e.tick)
             if muted & e.channel.bit == 0 && !(at >= silenceFrom && at < silenceTo) {
-                trigger(e)
+                // A late event's own frame, rounded from its exact tick, less this tick's.
+                let delay = e.late > 0 ? max(0, Int(anchorFrame + Int64(((at + Double(e.late) - anchorTick) * samplesPerTick).rounded()) - frameAt)) : 0
+                trigger(e, delay: delay)
                 if e.channel == .drums && drumSounds[e.value].kick && chunkKickCount < chunkKicks.count {
-                    chunkKicks[chunkKickCount] = frameAt
+                    // The duck starts where the kick sounds.
+                    chunkKicks[chunkKickCount] = frameAt + Int64(delay)
                     chunkKickCount += 1
                 }
             }
@@ -636,7 +697,7 @@ final class BandRenderer {
         }
     }
 
-    private func trigger(_ e: Event) {
+    private func trigger(_ e: Event, delay: Int) {
         age += 1
         let held = Int(Double(e.lengthTicks) * samplesPerTick)
         switch e.channel {
@@ -648,21 +709,22 @@ final class BandRenderer {
                 }
             }
             let p = s.kit.pick(note: 0, velocity: e.velocity)
-            drumVoices[slot(drumVoices)].start(p.buffer, ratio: 1, gain: s.gain * p.gain * (0.3 + 0.7 * e.velocity), heldFrames: .max,
-                                               releaseSeconds: s.kit.release, group: s.group, age: age, sampleRate: sampleRate)
+            drumVoices[slot(drumVoices)].start(p.buffer, ratio: 1, gain: s.gain * p.gain * (0.3 + 0.7 * e.velocity) * e.gain, heldFrames: .max,
+                                               releaseSeconds: s.kit.release, group: s.group, age: age, sampleRate: sampleRate,
+                                               delay: delay, aux: s.aux)
         case .bass:
             // Monophonic: the new note cuts the last one.
             for i in bassVoices.indices where bassVoices[i].active {
                 bassVoices[i].stop(releaseSeconds: 0.012, sampleRate: sampleRate)
             }
             play(e.instrument, note: e.value + transpose, velocity: e.velocity, held: held, live: false, in: bassVoices, bus: .bass,
-                 gain: e.gain, tick: Double(e.tick))
+                 gain: e.gain, tick: Double(e.tick), delay: delay)
         case .keys:
             play(e.instrument, note: e.value + transpose, velocity: e.velocity, held: held, live: false, in: keyVoices, bus: .keys,
-                 gain: e.gain, tick: Double(e.tick))
+                 gain: e.gain, tick: Double(e.tick), delay: delay)
         case .horns:
             play(e.instrument, note: e.value + transpose, velocity: e.velocity, held: held, live: false, in: hornVoices, bus: .horns,
-                 gain: e.gain, tick: Double(e.tick))
+                 gain: e.gain, tick: Double(e.tick), delay: delay)
         case .monitor:
             break
         }
@@ -671,8 +733,22 @@ final class BandRenderer {
     /// Starts a pitched note on instrument `index`: the same note still sounding is damped first
     /// (a key restruck). The live stab reads its breath at `tick` (the song's, from its top).
     private func play(_ index: Int, note: Int, velocity: Float, held: Int, live: Bool,
-                      in pool: UnsafeMutableBufferPointer<SampleVoice>, bus: Channel, gain: Float = 1, tick: Double) {
+                      in pool: UnsafeMutableBufferPointer<SampleVoice>, bus: Channel, gain: Float = 1, tick: Double, delay: Int = 0) {
         age += 1
+        if let rack, kinds[index] != .sample, kinds[index] != .dubStab {
+            // The rack's voices, in the reference's own units: your keys bring their trim.
+            let level = gain * (bus == .monitor ? monitorTrim : 1)
+            let offset = chunkOffset + delay
+            switch kinds[index] {
+            case .rackHit:
+                if let inst = instruments[index] { rack.hit(inst.pick(note: note, velocity: 1).buffer, gain: velocity * level, offset: offset) }
+            case .rackStab:
+                rack.note(note, velocity: velocity, gain: level, offset: offset, live: live)
+            default:
+                rack.pluck(note, velocity: velocity, gain: level, held: held, offset: offset, live: live)
+            }
+            return
+        }
         guard let inst = (bus == .monitor ? monitorOverride : nil) ?? instruments[index] else {
             guard let stab else { return }
             let b = bus.rawValue
@@ -698,7 +774,8 @@ final class BandRenderer {
         let p = inst.pick(note: note, velocity: velocity)
         // Level follows velocity on top of the layer's own loudness.
         pool[slot(pool)].start(p.buffer, ratio: p.ratio, gain: p.gain * gain * (0.35 + 0.65 * p.velocity), heldFrames: held,
-                               releaseSeconds: inst.release, note: note, live: live, sustain: true, age: age, sampleRate: sampleRate)
+                               releaseSeconds: inst.release, note: note, live: live, sustain: true, age: age, sampleRate: sampleRate,
+                               delay: delay)
     }
 
     /// A free voice, or the oldest one.
@@ -715,7 +792,12 @@ final class BandRenderer {
         guard b > a else { return }
         let c = maxChunk
         for i in drumVoices.indices where drumVoices[i].active {
-            drumVoices[i].render(busL, busR, from: a, to: b)
+            if drumVoices[i].aux >= 0, let rack {
+                let (l, r) = rack.bus(drumVoices[i].aux)
+                drumVoices[i].render(l, r, from: a, to: b)
+            } else {
+                drumVoices[i].render(busL, busR, from: a, to: b)
+            }
         }
         for i in bassVoices.indices where bassVoices[i].active {
             bassVoices[i].render(busL + c, busR + c, from: a, to: b)
@@ -750,15 +832,36 @@ final class BandRenderer {
         }
         // The duck envelope: 1 right after a kick, back toward 0 with the release.
         let chunkStart = frame
-        var e = Float(pow(Double(duckDecay), Double(max(0, chunkStart - lastKick))))
         var nextKick = 0
-        for i in 0..<n {
-            if nextKick < chunkKickCount, chunkKicks[nextKick] - chunkStart <= Int64(i) {
-                e = 1
-                nextKick += 1
+        if duckShape.attack > 0 {
+            // The shaped envelope: each kick's own curve from its frame, the larger of the last two.
+            let attack = Float(duckShape.attack * sampleRate), hold = Float(duckShape.hold * sampleRate)
+            let length = duckShape.length > 0 ? Float(duckShape.length * sampleRate) : .infinity
+            let logDecay = logf(duckDecay)
+            func curve(_ t: Float) -> Float {
+                t < 0 || t >= length ? 0 : min(t / attack, 1) * expf(max(t - hold, 0) * logDecay)
             }
-            kickEnv[i] = e
-            e *= duckDecay
+            var last = lastKick, previous = previousKick
+            for i in 0..<n {
+                if nextKick < chunkKickCount, chunkKicks[nextKick] - chunkStart <= Int64(i) {
+                    previous = last
+                    last = chunkKicks[nextKick]
+                    nextKick += 1
+                }
+                let now = chunkStart + Int64(i)
+                kickEnv[i] = max(curve(Float(now - last)), curve(Float(now - previous)))
+            }
+            if nextKick > 1 { previousKick = chunkKicks[nextKick - 2] } else if nextKick == 1 { previousKick = lastKick }
+        } else {
+            var e = Float(pow(Double(duckDecay), Double(max(0, chunkStart - lastKick))))
+            for i in 0..<n {
+                if nextKick < chunkKickCount, chunkKicks[nextKick] - chunkStart <= Int64(i) {
+                    e = 1
+                    nextKick += 1
+                }
+                kickEnv[i] = e
+                e *= duckDecay
+            }
         }
         let dub = chamber.settings != nil
         for ch in Channel.allCases {
@@ -766,7 +869,9 @@ final class BandRenderer {
             let l = busL + k * c
             let r = busR + k * c
             if amps[k].active { amps[k].process(l, r, n: n) }
-            let trim = ch == .monitor ? monitorTrim : bandTrim
+            // A rack runs at the reference's own levels: the band's trim comes after its master.
+            let trim = ch == .monitor ? monitorTrim : rack != nil ? 1 : bandTrim
+            let audible: Float = rack?.passes(ch.stem) ?? true ? 1 : 0
             let target: Float = muted & ch.bit == 0 ? mix[k] * trim : 0
             var g = gain(ch)
             var level = self.level(ch)
@@ -776,8 +881,8 @@ final class BandRenderer {
                 g += (target - g) * glide
                 let d: Float = 1 - depth * kickEnv[i]
                 let sl = l[i] * g * d, sr = r[i] * g * d
-                outL[i] += sl
-                outR[i] += sr
+                outL[i] += sl * audible
+                outR[i] += sr * audible
                 if send > 0 {
                     sendL[i] += sl * send
                     sendR[i] += sr * send
@@ -787,10 +892,21 @@ final class BandRenderer {
             setGain(ch, g)
             setLevel(ch, level)
         }
-        if chunkKickCount > 0 { lastKick = chunkKicks[chunkKickCount - 1] }
+        // The kicks this chunk reached are done; the ones past it wait for theirs.
+        if nextKick > 0 { lastKick = chunkKicks[nextKick - 1] }
+        for i in nextKick..<chunkKickCount { chunkKicks[i - nextKick] = chunkKicks[i] }
+        chunkKickCount -= nextKick
         if dub {
             chamber.process(sendL: sendL, sendR: sendR, kick: kickEnv, n: n, samplesPerBeat: samplesPerTick * Double(ticksPerBeat),
                             playing: playing, outL: outL, outR: outR)
+        }
+        if let rack {
+            // The console adds its buses and runs its own master (no knee: it has the reference's).
+            let tick = playing ? tickAt(frame: frame) : heldTick
+            rack.process(n, tick: tick, ticksPerFrame: playing ? 1 / samplesPerTick : 0, ticksPerBar: ticksPerBar,
+                         samplesPerBeat: samplesPerTick * Double(ticksPerBeat), kick: kickEnv,
+                         drums: channelGain.0 / mix[0], trim: bandTrim, outL: outL, outR: outR)
+            return
         }
         for i in 0..<n {
             outL[i] = Self.softClip(outL[i] * master / knee) * knee
@@ -880,6 +996,10 @@ final class BandRenderer {
             silenceFrom = 0
             silenceTo = 0
             releaseBand()
+            rack?.reset()
+            lastKick = .min / 2
+            previousKick = .min / 2
+            chunkKickCount = 0
             reanchor()
         case .countIn(let beats):
             guard !playing, beats > 0 else { return }
@@ -940,6 +1060,10 @@ final class BandRenderer {
             drumSounds = e.drumSounds
             clickSound = e.clickSound
             instruments = e.instruments
+            kinds = e.kinds
+            rack = e.rack
+            rack?.reset()
+            duckShape = e.duckShape
             stab = e.stab
             monitor = e.monitor
             monitorGain = e.monitorGain
@@ -985,6 +1109,7 @@ final class BandRenderer {
             stabVoices[i].stop()
             stabVoices[i].live = false
         }
+        rack?.release(note)
     }
 
     private func releaseBand() {
@@ -994,6 +1119,7 @@ final class BandRenderer {
         for i in hornVoices.indices where hornVoices[i].active { hornVoices[i].stop(releaseSeconds: 0.08, sampleRate: sampleRate) }
         let monitorBus = Channel.monitor.rawValue
         for i in stabVoices.indices where stabVoices[i].active && stabVoices[i].bus != monitorBus { stabVoices[i].stop() }
+        rack?.releaseBand()
     }
 
     private func publish(hostTime: UInt64?, frames: Int) {

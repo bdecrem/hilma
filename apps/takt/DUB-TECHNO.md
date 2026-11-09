@@ -1,4 +1,4 @@
-# How Abyss is made: dub techno in Swift (Takt 0.1 (46))
+# How Abyss is made: dub techno in Swift (Takt 0.1 (46)), and Halbschatten (§8, 0.1 (121))
 
 This is the recipe for **Abyss**, the dub techno track on Takt's Stage: 117 bpm, Dm9 drifting to
 Cm9, 72 bars, 2:28. It covers every voice, the arrangement, the real-time chain in Swift, the mix,
@@ -365,8 +365,154 @@ level come down 0.35 dB to match.
 Any change here: `python3 scripts/songs/abyss.py`, then rebuild. Hat or sub changes go in
 `scripts/synths.py` (the venv with numpy, scipy and soundfile), then rebuild.
 
+## 8. Halbschatten: a whole record from its reference (0.1 (121), 2026-11-09)
+
+Bart: "implement this track into TAKT but make sure it sounds EXACTLY the same as the wav
+created by the claude agent in the claude app. we have struggled with this in the past". The
+record is `misc/halbschatten_reference.py` (G minor, 122, 120 bars, 4:03; the brief is
+`misc/HALBSCHATTEN.md`). It is on the Stage as **Halbschatten**, and the app's render of it
+is the reference: every octave band of every passage within 0.02 dB, every bus at the same
+level to 0.01 dB, and at 44.1 kHz the app's stems null against the reference's.
+
+**The method, for the next record that has to be the same** (what Abyss took three passes to
+learn, done in one here):
+
+1. **Run the reference; don't read it.** `scripts/halbschatten.py` loads the reference's
+   source, patches a log line into every place it adds an event (in memory; the file is never
+   edited), and runs it. The log holds each event's sample, its round robin and its velocity
+   *after* the script's random humanizing, and the script asserts the logged render is
+   `reference.flac` bit for bit, so the random stream was not disturbed. Nothing is
+   transcribed by hand and nothing is "like" the reference: the song file is the log.
+2. **Its own sounds.** Every one-shot is the reference's (`parts/`): the kick, hats, shaker,
+   clap, rim, toms, each bass note rendered by its `bass_note`, the twelve raw stab buffers,
+   the risers cut from the riser bus, 32 s of the noise bed, both reverb impulses. A linear
+   filter on a bus (the hats' 12.5 kHz lowpass, the bass's 520 Hz) and a pan are baked into
+   the samples; anything that depends on the beat or on other buses stays live.
+3. **Port per sample, at the reference's own levels.** `Takt/Audio/Rack.swift` is `render()`
+   in Swift: the same formulas, in the reference's units (every resolved gain is in
+   `gains.json`), so each nonlinear stage (the stab's tanh, the echoes' feedback, the master)
+   sees the signal it saw there. The app's loudness is one number after the master
+   (`master.level`, −8 dB).
+4. **Solo every bus and null it.** `-RackSolo <stem>` renders one bus before the master;
+   `scripts/takt/halb-ab.py` compares each with the reference's stem (level, peak, lag, the
+   residual of app − reference) and the master with the reference by octave band. A bus that
+   is off by a constant in dB is a gain law (below); a bus whose level is right and whose null
+   is poor is timing.
+
+**What the engine gained** (all of it general, in the song file):
+
+- `rack` (`BandData.rack`, `Rack.Settings`): **lanes** (a value by bar, linear between
+  points: the stab's cutoff and decay, the echo's feedback and send, the pad's cutoff and
+  level, the lead's level, the noise, the master's fade); **the stab bus** (hits into one
+  filter pair a side whose cutoff every hit kicks open, tanh, the level taken back as it
+  opens); **two tape echoes** (`Rack.Tape` is `tape_delay`: feedback from a lane, each hit
+  entering on the other side, two wobbles, the filters on the read); **the lead** (two-operator
+  FM, `fm_pluck`); **the pad** (twenty PolyBLEP saws from the reference's own start phases,
+  one filter a side); **kit buses** with their sends (`sounds.<name>.bus`); **the noise bed**,
+  looped; **the hall and the room** by convolution; **the master** (24 Hz highpass, fade, tanh,
+  the limiter's forward pass, level).
+- `Convolver` (`Takt/Audio/Convolver.swift`): uniformly partitioned convolution in the
+  frequency domain (vDSP). One block of latency, paid by the impulse's own predelay (the hall
+  1024 frames of its 28 ms, the room 256 of its 8 ms), so it is on time. Against scipy's
+  `fftconvolve`: −130 dB. 280 times real time a channel.
+- `late` and `g` on a hit and on a note (`BandData.Hit`, `.Note`): later than its tick by a
+  fraction of a tick (swing and jitter are finer than the grid), and a linear gain (the
+  velocity curve cannot reach every level). A late event's frame is rounded from its exact
+  time, as the reference rounds it.
+- A sound's `bus`; a duck with a shape (`attack`, `hold`, `length`: the reference's 3 ms
+  attack, 20 ms hold, 110 ms release, 450 ms long); the kick's duck starts at its own frame
+  even when that is past the chunk it fired in.
+- Instruments cut at two rates (`<name>@44` beside `<name>`, `SampledInstrument.rated`):
+  the renderer takes the set at its output's rate.
+- Three voices a channel can name: `hsStab0…3` (one of the reference's raw stab buffers into
+  the stab bus, one event a hit), `rackStab` (a stab note synthesized: three saws and the
+  noise, for your keys and for the notes a level leaves to the band) and `rackLead`.
+- A part note's `v` (the record's velocity for it, when the channel is not written note by
+  note): what the band plays a note at when a level leaves it out.
+
+**Four traps, each a constant in dB or a rate:**
+
+- **A centre pan is −3 dB a side.** The reference's `pan(x, 0)` is x·cos(π/4) on each side; a
+  mono file in the sampler plays at full level on both. The kick and the bass read +3.01 dB
+  until their gains took √½.
+- **An impulse resampled to a higher rate has more samples under the same curve.** The hall
+  and the room read +0.74 dB at 48 kHz (20·log10(48/44.1)) until the 48 kHz impulses were
+  scaled by 147/160.
+- **The sampler's linear interpolation between rates costs the top of the spectrum**: 48 kHz
+  files played at a 44.1 kHz output read −0.4 dB at 4–8 kHz, −1.4 at 8–15, −4.3 above. This
+  iMac's speakers run at 44.1 kHz (`system_profiler SPAudioDataType`), the simulator too;
+  iPhones run at 48. So the kit exists at both rates, the 44.1 kHz set being the reference's
+  own samples untouched, and at 44.1 kHz the app's stems are the reference's to the sample.
+- **`-Tempo 122` on a `band=` render.** Without it the band plays at the launch tempo and
+  every bus is "wrong".
+
+**The numbers** (`halb-ab.py`, the simulator; reference = `reference.flac` − 8 dB):
+
+| | 44.1 kHz | 48 kHz |
+|---|---|---|
+| mean level, app / reference | −19.04 / −19.03 dBFS | −19.03 / −19.03 |
+| peak | −9.01 / −9.01 | −9.01 / −8.89 |
+| octave bands 30 Hz–21 kHz, bars 0–7, 24–31, 48–55, 64–71, 104–111, worst | 0.02 dB | 0.02 dB |
+| side / mid | 0.265 / 0.265 | 0.265 / 0.265 |
+| the master, app − reference, first 30 s | −66.5 dB | |
+| the master, whole song | −34.5 dB (the noise bed loops after 32 s) | −28.5 dB |
+
+Stems at 44.1 kHz, app − reference over the whole song (level difference; the null):
+kick 0.00 dB, −75; bass 0.00, −52; chords 0.00, −68; dub_delay 0.00, −65; hall 0.00, −64;
+lead 0.00, −67; lead_echo 0.01, −59; pad 0.00, −64; hats 0.00, −59; clap 0.00, −61; toms 0.00,
+−64; shaker 0.01, −54; rim 0.00, −61; room 0.01, −53; riser 0.00, −58; noise 0.04, −45 over its
+first 30 s (then it loops). The floors are the stems' 16 bits.
+
+**What is not the reference, and why:**
+
+- **The noise bed loops** after 32 s (hiss and crackle at −52 dBFS in the mix): the same
+  noise, not the same samples. Four minutes of it would be 40 MB.
+- **The limiter is its forward pass only**: the reference smooths the limiter's attack with a
+  second pass backwards in time (4 ms), which needs lookahead a live instrument can't give
+  your keys. It acts on 4 % of the samples by at most 0.7 dB; the peaks match.
+- **At 48 kHz** an event sits on the nearest 48 kHz frame (half a frame, 10 µs, from the
+  reference's 44.1 kHz frame), so the hats and the shaker match in level and spectrum, not
+  sample for sample.
+- **Louder is the app's own level**: the Stage plays its electronic tracks at −19 dBFS mean
+  and the reference is at −11. For an A/B by ear, match the volume first.
+- The tail is the reference's 7 s (four bars under the fade); the run ends after it.
+
+**The song** (`scripts/songs/halbschatten.py`, from `halbschatten-events.json`): 2,244 drum
+hits, 334 bass notes, 323 stab hits, 88 lead notes, each with its `late` and `g`. The parts:
+**chords** = the stab's five-note voicings (Gm9, Cm9, Dm9; the 16th after the 1 weight 1, the
+louder answer on steps 11 and 13 weight 2, the quiet hits 3): 0.24 · 0.48 · 0.93 · 0.93 · 1.26
+· 1.26 · 1.32 onsets a second, Beginner the root every other bar, Easy two notes once a bar,
+Easy+ two notes twice a bar, Medium the triad, Hard the record. **Melody** = the lead, which
+plays 32 of the 120 bars (from bar 49): 19 · 36 · 52 · 80 · 80 · 80 · 88 notes, Easy the first
+note of each bar, Easy+ two a bar, Medium the line, Hard with its pickup. When you take a
+part, the band's own events for it stop and your keys (and the notes your level leaves out)
+play the rack's synthesized voice into the same filter, echo and hall.
+
+**Running it again:**
+
+```bash
+V=<venv with numpy, scipy, numba, soundfile>/bin/python      # ~/.cache/takt-venv on the iMac
+$V apps/takt/scripts/halbschatten.py --keep /tmp/halb         # sounds, impulses, the event log; stems kept
+python3 apps/takt/scripts/songs/halbschatten.py                # the song file
+# build, install on the booted simulator, then:
+HALB_SR=44100 $V scripts/takt/halb-ab.py render /tmp/halb      # 17 renders, about 12 minutes
+HALB_SR=44100 $V scripts/takt/halb-ab.py stems /tmp/halb && HALB_SR=44100 $V scripts/takt/halb-ab.py master /tmp/halb
+$V scripts/takt/halb-ab.py render /tmp/halb master && $V scripts/takt/halb-ab.py master /tmp/halb   # at 48 kHz
+```
+
+`-SampleRate 48000` (with `-RenderTo`) renders offline at the devices' rate; `-RackSolo a,b`
+renders only those buses, before the master (`kick`, `bass`, `chords`, `dub_delay`, `hall`,
+`lead`, `lead_echo`, `pad`, `hats`, `clap`, `toms`, `shaker`, `rim`, `room`, `noise`,
+`riser`); `-RackRaw 1` all of them before the master. A debug build renders the song at 6.4
+times real time on the M4.
+
+**Not checked: Bart's ears.** The mp3, then the app, at the same volume.
+
 ## Files
 
+- `misc/halbschatten_reference.py`, `misc/Halbschatten.mp3`, `misc/HALBSCHATTEN.md`: Halbschatten's reference and brief
+- `scripts/halbschatten.py` (sounds and the event log), `scripts/songs/halbschatten.py`, `scripts/songs/halbschatten-events.json`
+- `Takt/Audio/Rack.swift`, `Takt/Audio/Convolver.swift`; `Takt/Sounds/hs-*`; `scripts/takt/halb-ab.py` (repo root)
 - `misc/dub_reference.py`, `misc/dub_reference.mp3`, `misc/DUB_TECHNO_FIXES.md`: the target and the brief
 - `Takt/Audio/DubStab.swift`: the live stab
 - `Takt/Audio/DubChamber.swift`: the delay, the plate, the hiss

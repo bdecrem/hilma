@@ -18,6 +18,7 @@ a gain) and instruments per channel in `instruments`.
 | `sax` / `saxLong` | Brett's tenor (VCSL, CC0): staccato notes, and the sustained ones | the horn line. Generators set `e["i"] = "saxLong"` on every horns note with `len >= 12` after `chart_to_channel`, so held notes sustain and short ones speak |
 | `guitar` / `guitarMute` / `guitarPerc` | Shinyguitar (Karoryfer, CC0): an archtop played acoustic, four layers × two round robins; the dead strings; knocks on the body | the Delta tracks (Dockery, Friars Point): the thumb and the chick, the voice, the slap on the backbeat as a drum sound (`"knock": {"kit": "guitarPerc"}`). Hot velocities are the dirt |
 | `eguitar` / `eguitarMute` | Emilyguitar (Karoryfer, CC0), a solid body recorded clean DI, sampled C♯2–D6 | through the engine's amp: a band's `amp` per channel (`Audio/GuitarAmp.swift`). Halsted (loud): `s.amp = {"horns": {"drive": 22, "bias": 0.2, "tight": 130, "mid": 5, "tone": 6000, "presence": 5, "level": -9, "room": 0.22}}`; McLemore (a cleaner sting): drive 16, bias 0.22, tight 120, tone 6500, presence 6, room 0.25. The amp is the whole channel's: never put another instrument on an amped channel (a piano solo goes on the keys channel there) |
+| `hs…`, `kickHS` and the rack's `rackStab` / `rackLead` | Halbschatten's own: the reference render's one-shots at 44.1 and 48 kHz (`scripts/halbschatten.py`), and the voices of its console (`Takt/Audio/Rack.swift`) | only inside a song with a `rack`; DUB-TECHNO.md §8 |
 | electronic (`kickMin`, `bleep`, `stabMin`, `subDub`, `liveStab`, …) | the Berlin sketches' voices | not for the blues; their songs are `hypnotist.py`, `warm_nine.py`, `abyss.py` |
 
 `instruments` in a song: `{"bass": "bass", "keys": "piano"|"rhodes"|"guitar", "horns": "sax"|"guitar"|"eguitar", "monitor": <what the player's keys play by default>}`.
@@ -71,6 +72,16 @@ label for every bar (`s.chords`, the game's label per bar; the form's last entry
 the song ends on), every event inside the music, every part note weighted 1–3, every chords-
 part note with a role. A song is about 2:00–2:30: four choruses of 12 at 90 is 2:08, six at 120
 2:24, seven at 148 2:16.
+
+## Three things about levels that cost a dB each (Halbschatten, 2026-11-09)
+
+- A mono file plays at full level on both sides; a reference that pans its centre at cos(π/4)
+  is 3.01 dB under that.
+- 48 kHz files at a 44.1 kHz output (this iMac's speakers, the simulator) are interpolated
+  linearly and lose 0.4 dB at 4–8 kHz, 1.4 at 8–15, 4.3 above. A sound that must be exact is
+  cut at both rates (`name` and `name@44`; `SampledInstrument.rated`).
+- A level a reference gives as a plain gain goes in a hit's or a note's `g` with `v` 1: the
+  kit's velocity curve is (0.3 + 0.7v)(0.5 + 0.5v) and a pitched note's 0.35 + 0.65v.
 
 ## Where a sound lives
 

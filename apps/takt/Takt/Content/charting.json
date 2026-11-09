@@ -311,6 +311,16 @@
     "easy": 2,
     "easy+": 3
    }
+  },
+  "song-halbschatten": {
+   "melody": {
+    "easy": 2,
+    "easy+": 3
+   },
+   "chords": {
+    "easy": 2,
+    "easy+": 3
+   }
   }
  }
 }

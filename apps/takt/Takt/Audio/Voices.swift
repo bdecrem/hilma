@@ -128,12 +128,16 @@ struct SampleVoice {
     /// Loops the tail while sounding (pitched instruments), and the level the passes have come down to.
     var sustain = false
     var sus: Float = 1
+    /// Frames before it sounds (an event's `late`).
+    var delay = 0
+    /// The rack bus it plays into (-1: its channel's own).
+    var aux = -1
 
     private static let scale: Float = 1 / 32768
 
     mutating func start(_ buffer: SampleBuffer, ratio: Double, gain: Float, heldFrames: Int,
                         releaseSeconds: Double, group: Int = 0, note: Int = -1, live: Bool = false,
-                        sustain: Bool = false, age: Int, sampleRate: Double) {
+                        sustain: Bool = false, age: Int, sampleRate: Double, delay: Int = 0, aux: Int = -1) {
         self.buffer = buffer
         active = true
         position = 0
@@ -149,6 +153,8 @@ struct SampleVoice {
         self.sustain = sustain && buffer.loopEnd > 0
         sus = 1
         self.age = age
+        self.delay = delay
+        self.aux = aux
     }
 
     mutating func stop(releaseSeconds: Double, sampleRate: Double) {
@@ -157,6 +163,13 @@ struct SampleVoice {
     }
 
     mutating func render(_ l: UnsafeMutablePointer<Float>, _ r: UnsafeMutablePointer<Float>, from a: Int, to b: Int) {
+        var a = a
+        if delay > 0 {
+            let skip = min(delay, b - a)
+            delay -= skip
+            a += skip
+            if a >= b { return }
+        }
         let bl = buffer.left, br = buffer.right, count = buffer.count
         // The loop: from `zone` on, the tail crossfades into the loop's start (read `span`
         // frames back, a pass quieter); at `loopEnd` the position wraps and the level steps down.

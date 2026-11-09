@@ -630,6 +630,19 @@ struct SongArt: View {
                     ctx.stroke(p, with: .color(i == 1 ? ink : dim), lineWidth: i == 1 ? 1.5 : 1)
                 }
                 ctx.fill(Path(ellipseIn: CGRect(x: w * 0.715 - 4.5, y: h * 0.35 - 4.5, width: 9, height: 9)), with: .color(hot))
+            case "penumbra":
+                // Halbschatten, the half shadow: two discs of radius 0.26 of the short side, their
+                // centres 0.16 w apart on the middle line (0.42 w and 0.58 w), so the pair spans
+                // 0.16 w to 0.84 w on an 80 pt tile and 0.24 h to 0.76 h. The left one an outline,
+                // the right one the shadow, the lens where they overlap lit.
+                let rr = min(w, h) * 0.26
+                let a = Path(ellipseIn: CGRect(x: w * 0.42 - rr, y: h * 0.5 - rr, width: 2 * rr, height: 2 * rr))
+                let b = Path(ellipseIn: CGRect(x: w * 0.58 - rr, y: h * 0.5 - rr, width: 2 * rr, height: 2 * rr))
+                ctx.fill(b, with: .color(dim.opacity(0.55)))
+                var lens = ctx
+                lens.clip(to: a)
+                lens.fill(b, with: .color(hot))
+                ctx.stroke(a, with: .color(ink), lineWidth: 2)
             case "stoptime":
                 // Chicago stop time: the riff's five bars climbing, then the gap, then the hit.
                 // Five bars 0.09 w wide at 0.11 w apart from x = 0.1 w end at 0.64 w; the hit sits

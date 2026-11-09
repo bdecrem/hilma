@@ -4632,5 +4632,915 @@
     ]
    }
   ]
+ },
+ "kickHS": {
+  "release": 0.03,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hs-kick"
+    ]
+   }
+  ]
+ },
+ "kickHS@44": {
+  "release": 0.03,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hs-kick-44"
+    ]
+   }
+  ]
+ },
+ "hsChh0": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hs-chh-0"
+    ]
+   }
+  ]
+ },
+ "hsChh0@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hs-chh-0-44"
+    ]
+   }
+  ]
+ },
+ "hsChh1": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hs-chh-1"
+    ]
+   }
+  ]
+ },
+ "hsChh1@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hs-chh-1-44"
+    ]
+   }
+  ]
+ },
+ "hsChh2": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hs-chh-2"
+    ]
+   }
+  ]
+ },
+ "hsChh2@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hs-chh-2-44"
+    ]
+   }
+  ]
+ },
+ "hsOhh0": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hs-ohh-0"
+    ]
+   }
+  ]
+ },
+ "hsOhh0@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hs-ohh-0-44"
+    ]
+   }
+  ]
+ },
+ "hsOhh1": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hs-ohh-1"
+    ]
+   }
+  ]
+ },
+ "hsOhh1@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hs-ohh-1-44"
+    ]
+   }
+  ]
+ },
+ "hsShk0": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hs-shk-0"
+    ]
+   }
+  ]
+ },
+ "hsShk0@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hs-shk-0-44"
+    ]
+   }
+  ]
+ },
+ "hsShk1": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hs-shk-1"
+    ]
+   }
+  ]
+ },
+ "hsShk1@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hs-shk-1-44"
+    ]
+   }
+  ]
+ },
+ "hsShk2": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hs-shk-2"
+    ]
+   }
+  ]
+ },
+ "hsShk2@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hs-shk-2-44"
+    ]
+   }
+  ]
+ },
+ "hsClap": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hs-clap"
+    ]
+   }
+  ]
+ },
+ "hsClap@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hs-clap-44"
+    ]
+   }
+  ]
+ },
+ "hsRim": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hs-rim"
+    ]
+   }
+  ]
+ },
+ "hsRim@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hs-rim-44"
+    ]
+   }
+  ]
+ },
+ "hsTom55L": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hs-tom-55-l"
+    ]
+   }
+  ]
+ },
+ "hsTom55L@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hs-tom-55-l-44"
+    ]
+   }
+  ]
+ },
+ "hsTom53R": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hs-tom-53-r"
+    ]
+   }
+  ]
+ },
+ "hsTom53R@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hs-tom-53-r-44"
+    ]
+   }
+  ]
+ },
+ "hsTom50R": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hs-tom-50-r"
+    ]
+   }
+  ]
+ },
+ "hsTom50R@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hs-tom-50-r-44"
+    ]
+   }
+  ]
+ },
+ "hsTom53L": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hs-tom-53-l"
+    ]
+   }
+  ]
+ },
+ "hsTom53L@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hs-tom-53-l-44"
+    ]
+   }
+  ]
+ },
+ "hsBass20": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 31,
+    "vel": 1.0,
+    "files": [
+     "hs-bass-20-31"
+    ]
+   },
+   {
+    "root": 36,
+    "vel": 1.0,
+    "files": [
+     "hs-bass-20-36"
+    ]
+   },
+   {
+    "root": 38,
+    "vel": 1.0,
+    "files": [
+     "hs-bass-20-38"
+    ]
+   }
+  ]
+ },
+ "hsBass20@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 31,
+    "vel": 1.0,
+    "files": [
+     "hs-bass-20-31-44"
+    ]
+   },
+   {
+    "root": 36,
+    "vel": 1.0,
+    "files": [
+     "hs-bass-20-36-44"
+    ]
+   },
+   {
+    "root": 38,
+    "vel": 1.0,
+    "files": [
+     "hs-bass-20-38-44"
+    ]
+   }
+  ]
+ },
+ "hsBass13": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 31,
+    "vel": 1.0,
+    "files": [
+     "hs-bass-13-31"
+    ]
+   },
+   {
+    "root": 36,
+    "vel": 1.0,
+    "files": [
+     "hs-bass-13-36"
+    ]
+   },
+   {
+    "root": 38,
+    "vel": 1.0,
+    "files": [
+     "hs-bass-13-38"
+    ]
+   }
+  ]
+ },
+ "hsBass13@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 31,
+    "vel": 1.0,
+    "files": [
+     "hs-bass-13-31-44"
+    ]
+   },
+   {
+    "root": 36,
+    "vel": 1.0,
+    "files": [
+     "hs-bass-13-36-44"
+    ]
+   },
+   {
+    "root": 38,
+    "vel": 1.0,
+    "files": [
+     "hs-bass-13-38-44"
+    ]
+   }
+  ]
+ },
+ "hsBass25": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 31,
+    "vel": 1.0,
+    "files": [
+     "hs-bass-25-31"
+    ]
+   },
+   {
+    "root": 34,
+    "vel": 1.0,
+    "files": [
+     "hs-bass-25-34"
+    ]
+   },
+   {
+    "root": 36,
+    "vel": 1.0,
+    "files": [
+     "hs-bass-25-36"
+    ]
+   },
+   {
+    "root": 38,
+    "vel": 1.0,
+    "files": [
+     "hs-bass-25-38"
+    ]
+   }
+  ]
+ },
+ "hsBass25@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 31,
+    "vel": 1.0,
+    "files": [
+     "hs-bass-25-31-44"
+    ]
+   },
+   {
+    "root": 34,
+    "vel": 1.0,
+    "files": [
+     "hs-bass-25-34-44"
+    ]
+   },
+   {
+    "root": 36,
+    "vel": 1.0,
+    "files": [
+     "hs-bass-25-36-44"
+    ]
+   },
+   {
+    "root": 38,
+    "vel": 1.0,
+    "files": [
+     "hs-bass-25-38-44"
+    ]
+   }
+  ]
+ },
+ "hsBass15": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 38,
+    "vel": 1.0,
+    "files": [
+     "hs-bass-15-38"
+    ]
+   },
+   {
+    "root": 39,
+    "vel": 1.0,
+    "files": [
+     "hs-bass-15-39"
+    ]
+   },
+   {
+    "root": 41,
+    "vel": 1.0,
+    "files": [
+     "hs-bass-15-41"
+    ]
+   }
+  ]
+ },
+ "hsBass15@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 38,
+    "vel": 1.0,
+    "files": [
+     "hs-bass-15-38-44"
+    ]
+   },
+   {
+    "root": 39,
+    "vel": 1.0,
+    "files": [
+     "hs-bass-15-39-44"
+    ]
+   },
+   {
+    "root": 41,
+    "vel": 1.0,
+    "files": [
+     "hs-bass-15-41-44"
+    ]
+   }
+  ]
+ },
+ "hsStab0": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 55,
+    "vel": 1.0,
+    "files": [
+     "hs-stab-gm9-0"
+    ]
+   },
+   {
+    "root": 48,
+    "vel": 1.0,
+    "files": [
+     "hs-stab-cm9-0"
+    ]
+   },
+   {
+    "root": 50,
+    "vel": 1.0,
+    "files": [
+     "hs-stab-dm9-0"
+    ]
+   }
+  ]
+ },
+ "hsStab0@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 55,
+    "vel": 1.0,
+    "files": [
+     "hs-stab-gm9-0-44"
+    ]
+   },
+   {
+    "root": 48,
+    "vel": 1.0,
+    "files": [
+     "hs-stab-cm9-0-44"
+    ]
+   },
+   {
+    "root": 50,
+    "vel": 1.0,
+    "files": [
+     "hs-stab-dm9-0-44"
+    ]
+   }
+  ]
+ },
+ "hsStab1": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 55,
+    "vel": 1.0,
+    "files": [
+     "hs-stab-gm9-1"
+    ]
+   },
+   {
+    "root": 48,
+    "vel": 1.0,
+    "files": [
+     "hs-stab-cm9-1"
+    ]
+   },
+   {
+    "root": 50,
+    "vel": 1.0,
+    "files": [
+     "hs-stab-dm9-1"
+    ]
+   }
+  ]
+ },
+ "hsStab1@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 55,
+    "vel": 1.0,
+    "files": [
+     "hs-stab-gm9-1-44"
+    ]
+   },
+   {
+    "root": 48,
+    "vel": 1.0,
+    "files": [
+     "hs-stab-cm9-1-44"
+    ]
+   },
+   {
+    "root": 50,
+    "vel": 1.0,
+    "files": [
+     "hs-stab-dm9-1-44"
+    ]
+   }
+  ]
+ },
+ "hsStab2": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 55,
+    "vel": 1.0,
+    "files": [
+     "hs-stab-gm9-2"
+    ]
+   },
+   {
+    "root": 48,
+    "vel": 1.0,
+    "files": [
+     "hs-stab-cm9-2"
+    ]
+   },
+   {
+    "root": 50,
+    "vel": 1.0,
+    "files": [
+     "hs-stab-dm9-2"
+    ]
+   }
+  ]
+ },
+ "hsStab2@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 55,
+    "vel": 1.0,
+    "files": [
+     "hs-stab-gm9-2-44"
+    ]
+   },
+   {
+    "root": 48,
+    "vel": 1.0,
+    "files": [
+     "hs-stab-cm9-2-44"
+    ]
+   },
+   {
+    "root": 50,
+    "vel": 1.0,
+    "files": [
+     "hs-stab-dm9-2-44"
+    ]
+   }
+  ]
+ },
+ "hsStab3": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 55,
+    "vel": 1.0,
+    "files": [
+     "hs-stab-gm9-3"
+    ]
+   },
+   {
+    "root": 48,
+    "vel": 1.0,
+    "files": [
+     "hs-stab-cm9-3"
+    ]
+   },
+   {
+    "root": 50,
+    "vel": 1.0,
+    "files": [
+     "hs-stab-dm9-3"
+    ]
+   }
+  ]
+ },
+ "hsStab3@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 55,
+    "vel": 1.0,
+    "files": [
+     "hs-stab-gm9-3-44"
+    ]
+   },
+   {
+    "root": 48,
+    "vel": 1.0,
+    "files": [
+     "hs-stab-cm9-3-44"
+    ]
+   },
+   {
+    "root": 50,
+    "vel": 1.0,
+    "files": [
+     "hs-stab-dm9-3-44"
+    ]
+   }
+  ]
+ },
+ "hsRiser0": {
+  "release": 0.2,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hs-riser-0"
+    ]
+   }
+  ]
+ },
+ "hsRiser0@44": {
+  "release": 0.2,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hs-riser-0-44"
+    ]
+   }
+  ]
+ },
+ "hsRiser1": {
+  "release": 0.2,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hs-riser-1"
+    ]
+   }
+  ]
+ },
+ "hsRiser1@44": {
+  "release": 0.2,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hs-riser-1-44"
+    ]
+   }
+  ]
+ },
+ "hsRiser2": {
+  "release": 0.2,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hs-riser-2"
+    ]
+   }
+  ]
+ },
+ "hsRiser2@44": {
+  "release": 0.2,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hs-riser-2-44"
+    ]
+   }
+  ]
+ },
+ "hsRiser3": {
+  "release": 0.2,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hs-riser-3"
+    ]
+   }
+  ]
+ },
+ "hsRiser3@44": {
+  "release": 0.2,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hs-riser-3-44"
+    ]
+   }
+  ]
+ },
+ "hsNoise": {
+  "release": 0.2,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hs-noise"
+    ]
+   }
+  ]
+ },
+ "hsNoise@44": {
+  "release": 0.2,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "hs-noise-44"
+    ]
+   }
+  ]
  }
 }

@@ -366,6 +366,10 @@ function mirrorRules(s: SongFile, k: PartKey): { velocity: (lv: number) => numbe
   const velocity = (lv: number) => med[lv as 1 | 2 | 3] ?? defaults[lv] ?? 0.6
   const withInst = ch.filter((e) => e.i)
   let instrument: (len: number) => string | undefined = () => undefined
+  // A song with a rack (Halbschatten) plays its record's part from the reference's own
+  // buffers, one event a hit; a note written here is a note, so it goes to the rack's
+  // synthesized voice for that part (the part's monitor), never to those buffers.
+  if ((s as { rack?: unknown }).rack && p.monitor.startsWith('rack')) return { velocity, instrument: () => p.monitor }
   if (withInst.length) {
     const minLen = Math.min(...withInst.map((e) => e.len))
     const counts = new Map<string, number>()

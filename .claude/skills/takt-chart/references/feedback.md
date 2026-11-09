@@ -130,6 +130,14 @@ LEVELING.md, and this file keeps the pointer.
   18). The hand at Easy 5/5 · 2 · 10, Medium 14/11 · 2 · 12. Bart, the same day, on the track
   and its charts in the app: "THIS IS GREAT! GOOD JOB!" (the whole, no level singled out).
 
+- **Halbschatten** (2026-11-09, dub techno; the parts of a record that is its reference). Chords,
+  the stab: 0.24 · 0.48 (Easy, tier 2: two notes once a bar) · 0.93 (Easy+, tier 3: twice a bar)
+  · 0.93 (Medium, the triad) · 1.26 · 1.26 · 1.32; the rung at two hits a bar exists because the
+  louder answer (steps 11 and 13) is weight 2 and the quiet hits weight 3 (rule 3). Melody, the
+  lead: it plays 32 of 120 bars, so the whole-song figures (0.08 to 0.36 a second) read low; in
+  its own bars it is 0.5 a second on Easy (each bar's first note) to 1.4 on Hard. BLUES.md's
+  bands do not apply to it. Not yet played by Bart.
+
 ## Open (LEVELING.md §4, BLUES.md §6)
 
 - Whether the comping ladders want a rhythm step between Easy and Medium.

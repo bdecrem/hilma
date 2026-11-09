@@ -23,6 +23,10 @@ struct Song {
         /// a figure whose new keys must not leak into the levels under it (Blue Lantern II's
         /// hand moves from tier 6, its Hard-only extras from 7; 0.1 (109)).
         let from: Int?
+        /// The record's velocity for this note, when the band's channel does not carry it note
+        /// by note (a rack's stab is one event a hit): what the band plays it at when a level
+        /// leaves it out.
+        var v: Double? = nil
     }
 
     struct Part: Decodable {
@@ -92,7 +96,7 @@ struct Song {
     var exact = false
 
     /// The set list, in order.
-    static let catalog = ["song-slow-burn", "song-slow-burn-short", "song-boogie-shoes", "song-pearl-street", "song-dockery", "song-friars-point", "song-halsted", "song-mclemore", "song-blue-lantern-white", "song-maxwell-street-five", "song-maxwell-street", "song-blue-lantern", "song-hypnotist", "song-hypnotist-2", "song-warm-nine", "song-abyss", "song-abyss-ref"]
+    static let catalog = ["song-slow-burn", "song-slow-burn-short", "song-boogie-shoes", "song-pearl-street", "song-dockery", "song-friars-point", "song-halsted", "song-mclemore", "song-blue-lantern-white", "song-maxwell-street-five", "song-maxwell-street", "song-blue-lantern", "song-halbschatten", "song-hypnotist", "song-hypnotist-2", "song-warm-nine", "song-abyss", "song-abyss-ref"]
 
     static func bundled(_ name: String) -> Song {
         guard let url = Bundle.main.url(forResource: name, withExtension: "json") else { fatalError("song \(name).json is not in the bundle") }

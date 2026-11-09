@@ -2100,6 +2100,36 @@ cover stealing anchors, a hand of 30 moves on a Level 2 song, a Beginner on one 
   "THIS IS GREAT! GOOD JOB!" (in both skills' `references/feedback.md`). Seen on the way, not touched: the phone's result
   card with a six-digit score (240,020) pushes the HUD wider than the screen (the back button
   and the score clip at the edges).
+- **Halbschatten, a record that is its reference: 0.1 (121), 2026-11-09.** Bart: "review
+  misc/Halbs* and then implement this track into TAKT but make sure it sounds EXACTLY the same
+  as the wav created by the claude agent in the claude app. we have struggled with this in the
+  past". The record is `misc/halbschatten_reference.py` (dub techno, G minor, 122, 4:03; brief
+  `misc/HALBSCHATTEN.md`). **Read `DUB-TECHNO.md` §8 before touching it**: the method (run the
+  reference and log its events, use its own samples, port `render()` per sample at its own
+  levels, solo and null every bus), the traps (a centre pan is −3 dB a side; a resampled impulse
+  gains 0.74 dB; 48 kHz samples at a 44.1 kHz output lose the top octave, and this iMac's
+  speakers run at 44.1), and the commands. **Engine** (`Audio/Rack.swift`, `Audio/Convolver.swift`,
+  hooks in `BandRenderer`): a band's `rack` (lanes, the stab bus, two tape echoes, FM lead, the
+  pad, kit buses with sends, the noise bed, a convolution hall and room, the reference's
+  master), `late` and `g` on hits and notes, a sound's `bus`, a shaped duck, instruments at two
+  sample rates (`name@44`), a part note's `v`. **Sounds** (`scripts/halbschatten.py` → 94
+  `Sounds/hs-*` files, 28 MB, and `scripts/songs/halbschatten-events.json`): the reference's
+  own one-shots at 44.1 and 48 kHz and both impulses. **The song**
+  (`scripts/songs/halbschatten.py` → `song-halbschatten.json`, before Hypnotist in the catalog,
+  glyph `penumbra`): the event log as the band; chords = the stab (0.24 · 0.48 · 0.93 · 0.93 ·
+  1.26 · 1.26 · 1.32; Easy tier 2, Easy+ tier 3), melody = the lead from bar 49 (19 to 88 notes).
+  **Measured** (`scripts/takt/halb-ab.py`): against the reference − 8 dB (the Stage's level
+  for electronic tracks), mean −19.04 / −19.03 dBFS, peak −9.01 / −9.01, every octave band of
+  the five passages within 0.02 dB at 44.1 and at 48 kHz, side/mid 0.265 / 0.265; at 44.1 kHz
+  every stem nulls against the reference's (−52 to −75 dB, the 16-bit floor) and the master's
+  first 30 s at −66.5 dB; the same figures from the installed Mac app's own render. Not the
+  reference: the noise bed loops after 32 s, the limiter is its forward pass. Every other
+  song's charts unchanged (`measure.ts --compare`) and McLemore's render bit-identical after
+  the engine changes. `-LessonCheck` 520/520; Chords Hard autoplayed on the simulator (your
+  keys through the rack's synthesized stab). Agent mode's written notes on a rack song go to
+  the rack's voice, not the raw buffers (`mod-tools.ts`). For his ears:
+  `~/Desktop/takt/halbschatten/` (the reference mp3 and the app's render, level matched).
+  Open: his A/B; a debug build renders it at 6.4× real time on the M4, not timed on the phone.
 
 ## The one transport (2026-11-08)
 

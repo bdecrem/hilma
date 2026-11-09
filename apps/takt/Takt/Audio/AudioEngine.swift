@@ -27,6 +27,11 @@ final class AudioEngine {
         try? session.setActive(true)
         var sr = engine.outputNode.outputFormat(forBus: 0).sampleRate
         if sr <= 0 { sr = 48000 }
+        #if DEBUG
+        // `-SampleRate 48000` with `-RenderTo`: an offline render at the devices' rate (the simulator's is 44.1 kHz).
+        let forced = UserDefaults.standard.double(forKey: "SampleRate")
+        if forced > 0, UserDefaults.standard.string(forKey: "RenderTo") != nil { sr = forced }
+        #endif
         format = AVAudioFormat(standardFormatWithSampleRate: sr, channels: 2)!
         self.band = band
         let renderer = BandRenderer(band: band, sampleRate: sr, tempo: tempo)

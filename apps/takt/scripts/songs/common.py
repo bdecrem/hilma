@@ -52,6 +52,8 @@ class Song:
         self.knee = None
         # A guitar amp per channel (Takt/Audio/GuitarAmp.swift): {"keys": {"drive", ...}}.
         self.amp = None
+        # The console of a song mixed to a reference (Takt/Audio/Rack.swift): lanes, buses, …
+        self.rack = None
         self.drums = []
         self.bass = []
         self.keys = []
@@ -165,6 +167,7 @@ class Song:
             "stab": self.stab,
             "knee": self.knee,
             **({"amp": self.amp} if self.amp else {}),
+            **({"rack": self.rack} if self.rack else {}),
             "channels": {"drums": self.drums, "bass": self.bass, "keys": self.keys, "horns": self.horns},
             "song": {
                 "title": self.title,

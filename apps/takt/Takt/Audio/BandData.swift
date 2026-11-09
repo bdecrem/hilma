@@ -8,12 +8,19 @@ struct BandData: Decodable {
     struct Sound: Decodable {
         let kit: String
         let gainDb: Double
+        /// A bus of the band's `rack` this sound plays into (its sends are the bus's); absent:
+        /// the drums channel.
+        var bus: String? = nil
     }
 
     struct Hit: Decodable {
         let t: Int
         let s: String
         let v: Double
+        /// Later than `t` by this many ticks (a fraction: the swing, a humanized hit).
+        var late: Double? = nil
+        /// A linear gain on top of the velocity's (a level the velocity curve can't reach).
+        var g: Double? = nil
     }
 
     struct Note: Decodable {
@@ -23,6 +30,9 @@ struct BandData: Decodable {
         let len: Int
         /// The instrument, when not the channel's own (the horns' held notes).
         let i: String?
+        /// As a hit's: later than `t` by this many ticks, and a linear gain.
+        var late: Double? = nil
+        var g: Double? = nil
     }
 
     struct Channels: Decodable {
@@ -56,10 +66,19 @@ struct BandData: Decodable {
     var knee: Double?
     /// A guitar amp per channel (keys, horns): the electric's grit (`GuitarAmp`).
     var amp: [String: GuitarAmp.Settings]?
+    /// The console of a song mixed to a reference (`Rack`): lanes, the stab bus, echoes, the
+    /// pad, the lead, the kit's buses, the hall and the room, the master.
+    var rack: Rack.Settings?
     var channels: Channels
 
     struct Duck: Decodable {
         let release: Double
+        /// A shaped envelope instead of the plain one (1 at the kick, falling by `release`):
+        /// 0 → 1 over `attack` seconds, held until `hold` seconds after the kick, then e^(−t/release),
+        /// cut `length` seconds after the kick.
+        var attack: Double? = nil
+        var hold: Double? = nil
+        var length: Double? = nil
         /// Depth per channel (bass, keys, horns, monitor).
         var channels: [String: Double]
     }
