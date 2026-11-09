@@ -9,7 +9,8 @@
 #   MINI=local ./apps/takt/testflight/ship-via-mini.sh ios   # on the Air: profile "takt appstore"
 #   ./apps/takt/testflight/ship-via-mini.sh mac               # Mac Catalyst, "takt catalyst appstore"
 #
-# Ships the build number in project.yml as committed and PUSHED (the mini pulls main).
+# Ships the build number in project.yml as committed and pushed (the commit is sent to the mini
+# over ssh; ~/takt-ship there is a ship-only checkout, reset to it).
 # A profile only signs on the Mac that holds its certificate's key: the defaults are the
 # MacBook Air's; another Mac mints its own and passes TAKT_PROFILE="<name>".
 # Profiles: apps/feynd/testflight/mint-profile.mjs --bundle HSR9TXP4B3 (installed 2026-10-25).
@@ -49,9 +50,15 @@ if [ "$MINI" = local ]; then
     || { grep -E 'error:' "$OUT/archive.log" | head; exit 1; }
 else
 echo "== archiving $VERSION ($BUILD) for $PLATFORM on the mini"
+# The commit goes to the mini over this ssh, not by the mini pulling GitHub: on 2026-11-09 the
+# mini could open no outbound connection at all (BlueBubbles had every ephemeral port in
+# TIME_WAIT: "Can't assign requested address"), and a ship should not depend on that.
+ssh -o ConnectTimeout=10 "$MINI" "[ -d ~/takt-ship/.git ] || git init -q ~/takt-ship"
+git push -q -f "$MINI:takt-ship" HEAD:refs/heads/ship-incoming || { echo "could not push the commit to the mini" >&2; exit 1; }
 ssh -o ConnectTimeout=10 "$MINI" "set -e; export PATH=/opt/homebrew/bin:/usr/local/bin:\$PATH
-  [ -d ~/takt-ship ] || git clone -q https://github.com/bdecrem/hilma.git ~/takt-ship
-  cd ~/takt-ship && git pull -q --ff-only && cd apps/takt
+  cd ~/takt-ship
+  git reset -q --hard ship-incoming
+  cd apps/takt
   command -v xcodegen >/dev/null && xcodegen generate -q || echo 'no xcodegen on the mini: using the committed .xcodeproj'
   rm -rf /tmp/takt.xcarchive
   xcodebuild archive -project Takt.xcodeproj -scheme Takt -destination '$DEST' -archivePath /tmp/takt.xcarchive \
