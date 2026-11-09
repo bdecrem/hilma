@@ -16,6 +16,7 @@ extension Player {
         gameDifficulty = difficulty
         gameResult = nil
         lastRun = nil
+        lastMastery = nil
         practice = false
         if !keepSpeed { gameSpeed = 1 }
         #if DEBUG
@@ -252,7 +253,14 @@ extension Player {
                 lessonLog.info("stage: \(r.grade, privacy: .public) \(r.score) at \(Int((self.gameSpeed * 100).rounded()))% speed · \(r.perfect)/\(r.good)/\(r.early)/\(r.late)/\(r.missed) · not recorded")
                 return
             }
-            if !ProgressStore.readOnly { lastRun = progress.record(run: r) }
+            if !ProgressStore.readOnly {
+                // Mastered for the first time (`ProgressStore.master`, inside the record): the
+                // result card says so, with the XP.
+                let was = progress.mastered(song: r.song, part: r.part, difficulty: r.difficulty)
+                lastRun = progress.record(run: r)
+                let now = progress.mastered(song: r.song, part: r.part, difficulty: r.difficulty)
+                lastMastery = !was && now ? GameEngine.Difficulty(rawValue: r.difficulty).map(Improv.XP.mastery) : nil
+            }
             // The plan's song goals score themselves off the same run.
             onGameRun?(r)
             // Perfect / good / early / late / missed, the wrong keys, the lean: the result card
@@ -301,7 +309,9 @@ extension Player {
             // A Reading lesson lights only the keys you press: the staff is the thing to read
             // (Bart, 2026-11-07: lit keys are a cheat that defeats the lesson).
             pressedNotes: pressed, fingers: reading != nil ? [:] : cue.fingers, nowFingers: cue.nowFingers, nextFinger: cue.nextFingers.min(),
-            rightHand: game.part == .melody, result: gameResult, lastRun: lastRun,
-            board: progress.scores(song: song.name), sections: song.meta.sections, reading: reading)
+            rightHand: game.part == .melody, result: gameResult, lastRun: lastRun, mastery: lastMastery,
+            mastered: progress.mastered(song: song.name, part: game.part.rawValue, difficulty: game.difficulty.rawValue),
+            board: progress.scores(song: song.name), sections: song.meta.sections, reading: reading,
+            staff: reading == nil && gameResult == nil ? staffState(tick: tick, msPerTick: msPerTick) : nil)
     }
 }

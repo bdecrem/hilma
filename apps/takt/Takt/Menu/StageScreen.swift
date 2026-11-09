@@ -223,6 +223,7 @@ struct SongCard: View {
         // song once it exists; its best is the track's own.
         let solo = app.solo(of: song)
         let levels = app.stageLevels(song).map { ($0.rawValue, $0.title) }
+        let mastered = Set(app.masteredLevels(song).map(\.rawValue))
         let best = difficulty == .solo && solo != nil ? app.progress.best(song: solo!.name, part: Song.PartKey.melody.rawValue) : app.progress.best(song: song.name, part: part.rawValue)
         VStack(alignment: .leading, spacing: compact ? 12 : 14) {
             HStack(alignment: .top, spacing: compact ? 14 : 20) {
@@ -259,19 +260,20 @@ struct SongCard: View {
                     app.pick(song: song, part: Song.PartKey(rawValue: $0)!)
                 }
                 if !compact {
-                    Chips(title: "Level", options: levels, picked: difficulty.rawValue, scrolls: true, accent: GameEngine.Difficulty.solo.rawValue) {
+                    Chips(title: "Level", options: levels, picked: difficulty.rawValue, scrolls: true, accent: GameEngine.Difficulty.solo.rawValue, mastered: mastered) {
                         app.pick(song: song, difficulty: GameEngine.Difficulty(rawValue: $0)!)
                     }
                 }
             }
             if compact {
-                Chips(title: "Level", options: levels, picked: difficulty.rawValue, scrolls: true, accent: GameEngine.Difficulty.solo.rawValue) {
+                Chips(title: "Level", options: levels, picked: difficulty.rawValue, scrolls: true, accent: GameEngine.Difficulty.solo.rawValue, mastered: mastered) {
                     app.pick(song: song, difficulty: GameEngine.Difficulty(rawValue: $0)!)
                 }
             }
-            Text(difficulty == .solo && solo != nil ? "The teacher's whole track from your take, every note as written. \(solo!.meta.line)" : song.charting.line(difficulty, song: song.name, part: part))
+            // The picked level mastered: the line says so first, in brass.
+            (Text(mastered.contains(difficulty.rawValue) ? "Mastered · " : "").foregroundColor(Palette.mastery)
+             + Text(difficulty == .solo && solo != nil ? "The teacher's whole track from your take, every note as written. \(solo!.meta.line)" : song.charting.line(difficulty, song: song.name, part: part)).foregroundColor(Palette.muted))
                 .dataLabel(10)
-                .foregroundStyle(Palette.muted)
                 .fixedSize(horizontal: false, vertical: true)
             // Play · Board · Practice · Agent and the best, one row; on the phone the two small
             // ones take a row of their own (four buttons and the best don't fit 360 pt).
@@ -415,6 +417,9 @@ struct Chips: View {
     var scrolls = false
     /// A key drawn apart (outlined in `cue`): the Solo level, another line rather than a rung.
     var accent: String? = nil
+    /// Keys mastered (an A or better at full speed): drawn in brass with a small seal,
+    /// `Palette.mastery` (Bart, 2026-11-09).
+    var mastered: Set<String> = []
     let pick: (String) -> Void
 
     var body: some View {
@@ -439,18 +444,30 @@ struct Chips: View {
         HStack(spacing: 4) {
             ForEach(options, id: \.key) { o in
                 let on = o.key == picked
+                let won = mastered.contains(o.key)
                 let apart = o.key == accent
+                // Mastered: brass, filled when picked, a brass tint and outline when not; the seal
+                // says it without the colour too.
+                let tint = won ? Palette.mastery : apart ? Palette.cue : Palette.signal
                 Button { pick(o.key) } label: {
-                    Text(o.title)
-                        .dataLabel(10, weight: .semibold)
-                        .foregroundStyle(on ? Palette.blackKey : apart ? Palette.cue : Palette.text)
-                        .padding(.horizontal, 10)
-                        .frame(height: 28)
-                        .background(RoundedRectangle(cornerRadius: 5).fill(on ? (apart ? Palette.cue : Palette.signal) : Palette.ground))
-                        .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(on ? (apart ? Palette.cue : Palette.signal) : apart ? Palette.cue.opacity(0.7) : Palette.line, lineWidth: 1))
+                    HStack(spacing: 4) {
+                        if won {
+                            Image(systemName: "checkmark.seal.fill")
+                                .font(.system(size: 9, weight: .semibold))
+                        }
+                        Text(o.title)
+                            .dataLabel(10, weight: .semibold)
+                    }
+                    .foregroundStyle(on ? Palette.blackKey : won ? Palette.mastery : apart ? Palette.cue : Palette.text)
+                    .padding(.horizontal, 10)
+                    .frame(height: 28)
+                    .background(RoundedRectangle(cornerRadius: 5).fill(on ? tint : won ? Palette.mastery.opacity(0.12) : Palette.ground))
+                    .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(on ? tint : won ? Palette.mastery.opacity(0.75) : apart ? Palette.cue.opacity(0.7) : Palette.line, lineWidth: 1))
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(won ? "\(o.title), mastered" : o.title)
                 .accessibilityAddTraits(on ? [.isSelected] : [])
+                .help(won ? "\(o.title): mastered, an A or better at full speed" : "")
                 .id(o.key)
             }
         }

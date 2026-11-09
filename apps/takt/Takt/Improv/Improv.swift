@@ -165,6 +165,21 @@ enum Improv {
         static let lesson = 20
         static let stage = 10
         static let goal = 100
+
+        /// Mastering a level of a Stage song (an A or better at full speed, `ProgressStore.mastery`),
+        /// once per song, part and level: more the higher the rung (Bart, 2026-11-09: "give the
+        /// user a bunch of XP each time they master a level").
+        static func mastery(_ d: GameEngine.Difficulty) -> Int {
+            switch d {
+            case .beginner: 50
+            case .easy: 75
+            case .easyPlus: 100
+            case .medium: 150
+            case .hard: 250
+            case .solo: 200
+            case .adaptive: 0
+            }
+        }
     }
 }
 

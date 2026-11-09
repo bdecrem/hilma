@@ -2043,6 +2043,35 @@ cover stealing anchors, a hand of 30 moves on a Level 2 song, a Beginner on one 
   file, the Takt row of the root `CLAUDE.md`, BLUES.md §4 and CHARTING.md's opening point at
   them as the way, and each SKILL.md names the other for the hand-off (a track's level that the
   weights cannot bring in is `takt-chart`'s; a new track is `takt-blues`'). Docs only.
+- **Mastery and the staff view on the Stage: 0.1 (119), 2026-11-09.** Bart: "add the concept of
+  Mastery in Stage mode… that song, that mode, that level, at the 100% speed, at an A grade",
+  "give the user a bunch of XP each time they master a level", and "an elegant little UI toggle
+  that switches between our normal guitar hero style… to our note-staff mode that we built for the
+  Reading module". **Mastery** (`ProgressStore.master`, run from `record(run:)`): a recorded run
+  (only full-speed runs are) with an A or S masters its song · part · level; Adaptive never does
+  (no fixed chart), Solo does on the teacher's track. The record *is* the XP entry
+  `mastery·<song>·<part>·<level>` (`Improv.XP.mastery`: Beginner 50, Easy 75, Easy+ 100, Medium
+  150, Solo 200, Hard 250), so it pays once and syncs with the XP; A runs already on the board
+  master theirs on load and on an account pull (`masterBoard`). The card's level chips
+  (`Chips.mastered`, `AppModel.masteredLevels`) draw a mastered level in **brass**,
+  `Palette.mastery` (#D9A35E dark, #9A6A24 paper; it marks only something done, never now/next),
+  with a small seal, tinted when not picked, filled when picked; the line under them starts
+  "Mastered ·". The result card shows "<Level> mastered · +N XP" the first time
+  (`Player.lastMastery`, `GameState.mastery`). **Staff view** (`Lesson/Player+Staff.swift`,
+  `StageViewToggle` in GameScreen.swift): a two-way switch (three lanes / five lines, drawn) in
+  the play area's top-left corner on every Stage song (not in a Reading lesson, not on the result),
+  ⇧⌘N, held in `@AppStorage("stageView")`; the staff is the Reading module's `StaffView`, fed
+  each frame from the engine's notes in the window (Adaptive's tier as it moves), the clef from
+  the part's whole range (treble down to F3, bass up to E4, else grand split at middle C), pitches
+  spelled in the song's key (`Player.spell`: degrees on their own letters, the blue notes as
+  flats), lengths from the next onset on the staff (`Player.written`: a shuffle's late eighth
+  reads as an eighth), no rests. Chords share one stem (`StaffView.chord`), sixteenths get two
+  flags. Scoring, the lit keys and the hand are unchanged: only the picture. LessonCheck
+  500/500 (6 new: mastery, its XP, the board backfill, spelling, clefs, lengths). Seen on the
+  simulator (Slow Burn's card with Beginner and Easy mastered; melody and comping on the staff;
+  an Easy run to "Easy mastered · +75 XP", the 75 written once) and on this Mac (Boogie Shoes'
+  chanks on the staff). Known and older than this: the phone's result screen sits shifted left
+  (the HUD and rail cut off), with or without the badge.
 
 ## The one transport (2026-11-08)
 

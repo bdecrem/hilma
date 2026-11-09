@@ -912,6 +912,19 @@ final class AppModel {
         GameEngine.Difficulty.ladder + (solo(of: song) != nil && stagePart(song) == .melody ? [.solo] : [])
     }
 
+    /// The levels of the song's picked part the player has mastered (an A or better at full
+    /// speed, `ProgressStore.mastered`): the card draws their chips in `Palette.mastery`. Solo's
+    /// runs are the teacher's track's own.
+    func masteredLevels(_ song: Song) -> Set<GameEngine.Difficulty> {
+        let part = stagePart(song)
+        return Set(stageLevels(song).filter { d in
+            if d == .solo, let s = solo(of: song) {
+                return progress.mastered(song: s.name, part: Song.PartKey.melody.rawValue, difficulty: d.rawValue)
+            }
+            return progress.mastered(song: song.name, part: part.rawValue, difficulty: d.rawValue)
+        })
+    }
+
     /// What Play, Practice and Call open: the song at its part and level, or, on Solo, the
     /// teacher's track on the melody, every note of it.
     private func stageTarget(_ song: Song) -> (song: Song, part: Song.PartKey, difficulty: GameEngine.Difficulty) {

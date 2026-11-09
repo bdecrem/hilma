@@ -39,6 +39,10 @@ final class Player {
     var game: GameEngine?
     var gameResult: GameEngine.Result?
     var lastRun: ProgressStore.ScoreRecord?
+    /// The XP the last run paid for mastering its level, the first time it did (nil otherwise).
+    var lastMastery: Int?
+    /// The Stage's staff view (Player+Staff): the part's clef, worked out once per song and part.
+    var staffClef: (key: String, clef: Reading.Clef)?
     /// Presses go to the game only on the game screen.
     var inGame = false
 

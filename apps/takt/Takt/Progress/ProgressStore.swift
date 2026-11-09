@@ -238,7 +238,52 @@ final class ProgressStore {
         save()
         practiced(.stage, id: r.song)
         award("stage·\(r.id)", kind: "stage", points: Improv.XP.stage)
+        master(run)
         return r
+    }
+
+    // MARK: Mastery
+
+    /// Mastery (Bart, 2026-11-09): a level of a song's part played at full speed for an A or
+    /// better. Only full-speed runs are recorded (`Player.runGame`), so a run here is at 100%;
+    /// Adaptive has no fixed chart and is never mastered. The record is the XP it paid
+    /// ("mastery·<song>·<part>·<level>"): it pays once, and two devices merge it with the XP.
+    static func masteryID(song: String, part: String, difficulty: String) -> String {
+        "mastery·\(song)·\(part)·\(difficulty)"
+    }
+
+    static func masters(_ grade: String, difficulty: String) -> Bool {
+        guard let d = GameEngine.Difficulty(rawValue: difficulty), d != .adaptive,
+              let floor = GameEngine.Result.floor(of: grade) else { return false }
+        return floor >= GameEngine.Result.floor(of: "A")!
+    }
+
+    func mastered(song: String, part: String, difficulty: String) -> Bool {
+        let id = Self.masteryID(song: song, part: part, difficulty: difficulty)
+        return snapshot.xp.contains { $0.id == id }
+    }
+
+    /// A run that masters its level for the first time pays the level's XP; returns the points.
+    @discardableResult
+    func master(_ run: GameEngine.Result, on date: Date = Date()) -> Int? {
+        master(song: run.song, part: run.part, difficulty: run.difficulty, grade: run.grade, on: date)
+    }
+
+    @discardableResult
+    private func master(song: String, part: String, difficulty: String, grade: String, on date: Date) -> Int? {
+        guard Self.masters(grade, difficulty: difficulty), let d = GameEngine.Difficulty(rawValue: difficulty) else { return nil }
+        let points = Improv.XP.mastery(d)
+        return award(Self.masteryID(song: song, part: part, difficulty: difficulty), kind: "mastery", points: points, on: date) ? points : nil
+    }
+
+    /// The A runs already on the board from before mastery existed master their levels (once,
+    /// on load and when an account's copy comes down).
+    private func masterBoard() {
+        for s in snapshot.scores where Self.masters(s.grade, difficulty: s.difficulty) {
+            let id = Self.masteryID(song: s.song, part: s.part, difficulty: s.difficulty)
+            guard !snapshot.xp.contains(where: { $0.id == id }), let d = GameEngine.Difficulty(rawValue: s.difficulty) else { continue }
+            snapshot.xp.append(XPEntry(id: id, day: Self.day(s.date), kind: "mastery", points: Improv.XP.mastery(d)))
+        }
     }
 
     /// A song's board, best first.
@@ -269,6 +314,7 @@ final class ProgressStore {
         } else {
             snapshot = Snapshot()
         }
+        masterBoard()
     }
 
     #if DEBUG
@@ -480,6 +526,7 @@ final class ProgressStore {
     /// Replaces everything (an account's copy coming down).
     func replace(with new: Snapshot) {
         snapshot = new
+        masterBoard()
         save()
     }
 

@@ -76,10 +76,17 @@ struct GameState {
     var rightHand = true
     var result: GameEngine.Result? = nil
     var lastRun: ProgressStore.ScoreRecord? = nil
+    /// The XP this run paid for mastering its level, the first time (the result card's brass
+    /// line); and whether the level being played is mastered.
+    var mastery: Int? = nil
+    var mastered = false
     var board: [ProgressStore.ScoreRecord] = []
     var sections: [Song.Section] = []
     /// A Reading lesson (Player+Reading): the staff takes the highway's place.
     var reading: ReadingState? = nil
+    /// The Stage in staff view (the HUD's view toggle, Player+Staff): the song's notes on the
+    /// Reading module's staff, scrolling past the playhead, in the highway's place.
+    var staff: ReadingState? = nil
 
     var levelTitle: String { "Level \(level)" }
 }
@@ -158,8 +165,17 @@ struct GameScreen: View {
                         CountInBadge(n: n, compact: compact)
                     }
                 } else {
-                    Highway(state: state, compact: compact)
-                        .padding(.horizontal, compact ? 16 : 24)
+                    if let staff = state.staff {
+                        // The staff view: the Reading module's staff in the highway's place.
+                        StaffView(reading: staff, heardTick: state.heardTick, ticksPerBeat: state.ticksPerBeat, compact: compact)
+                            .accessibilityElement()
+                            .accessibilityLabel(staff.coach)
+                            .padding(.horizontal, compact ? 16 : 24)
+                            .padding(.top, compact ? 8 : 14)
+                    } else {
+                        Highway(state: state, compact: compact)
+                            .padding(.horizontal, compact ? 16 : 24)
+                    }
                     if let n = state.countIn {
                         CountInBadge(n: n, compact: compact)
                     } else if !state.playing && state.heardTick > 0 && !state.practice {
@@ -169,6 +185,16 @@ struct GameScreen: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .animation(.easeOut(duration: 0.25), value: state.practice)
+            .overlay(alignment: .topLeading) {
+                // Highway or staff (Bart, 2026-11-09): the view's own switch, in its top-left
+                // corner (the hand sits in the right one), on every song the Stage plays (a
+                // Reading lesson is the staff already).
+                if state.result == nil && state.reading == nil {
+                    StageViewToggle(compact: compact)
+                        .padding(.leading, compact ? 22 : 32)
+                        .padding(.top, compact ? 8 : 10)
+                }
+            }
             Hairline()
             KeyboardStrip(low: state.keys.lowerBound, high: state.keys.upperBound, now: state.nowNotes, next: state.nextNotes,
                           pressed: state.pressedNotes, fingers: state.fingers, soft: state.reading?.soft ?? [:])
@@ -721,6 +747,7 @@ struct GameResultPanel: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 14) {
                         headline
+                        masteryBadge
                         verdict
                         chips
                         StaffLines(spacing: 3)
@@ -793,7 +820,29 @@ struct GameResultPanel: View {
                         .dataLabel(11, weight: .semibold)
                         .foregroundStyle(rank == 0 ? Palette.signal : Palette.muted)
                 }
+                if !compact { masteryBadge }
             }
+        }
+    }
+
+    /// Mastered for the first time: the level and its XP in brass (the level's chip on the card
+    /// turns brass too). Under the accuracy on the Mac; on the phone a row of its own under the
+    /// headline (beside the grade it is wider than the card).
+    @ViewBuilder private var masteryBadge: some View {
+        if let xp = state.mastery {
+            HStack(spacing: 6) {
+                Image(systemName: "checkmark.seal.fill")
+                    .font(.system(size: compact ? 12 : 14, weight: .semibold))
+                Text("\(state.difficulty.title) mastered · +\(xp) XP")
+                    .dataLabel(compact ? 11 : 12, weight: .semibold)
+                    .lineLimit(1)
+            }
+            .foregroundStyle(Palette.mastery)
+            .padding(.horizontal, 10)
+            .frame(height: compact ? 26 : 28)
+            .background(Capsule().fill(Palette.mastery.opacity(0.12)))
+            .overlay(Capsule().strokeBorder(Palette.mastery.opacity(0.75), lineWidth: 1))
+            .accessibilityElement(children: .combine)
         }
     }
 
@@ -932,5 +981,95 @@ struct Leaderboard: View {
                 .background(RoundedRectangle(cornerRadius: 6).fill(mine ? Palette.signal.opacity(0.12) : .clear))
             }
         }
+    }
+}
+
+/// Highway or staff: a two-way switch drawn in the app's line, each side a small picture of
+/// what it shows (three lanes and a falling note; five lines and a note head), the side on
+/// lit in `signal` on a raised panel, the other muted. In the play area's top corner, ⇧⌘N.
+/// The choice holds across songs and launches (`Player.stageViewKey`).
+struct StageViewToggle: View {
+    let compact: Bool
+    @AppStorage(Player.stageViewKey) private var view = "highway"
+
+    var body: some View {
+        let h: CGFloat = compact ? 26 : 30
+        let staff = view == "staff"
+        HStack(spacing: 2) {
+            side(on: !staff, label: "Highway") { HighwayGlyph() }
+            side(on: staff, label: "Staff") { StaffGlyph() }
+        }
+        .padding(2)
+        .frame(height: h)
+        .background(RoundedRectangle(cornerRadius: 7).fill(Palette.ground.opacity(0.88)))
+        .overlay(RoundedRectangle(cornerRadius: 7).strokeBorder(Palette.line, lineWidth: 1))
+        .animation(.easeOut(duration: 0.15), value: staff)
+        .background {
+            // ⇧⌘N flips it from the keyboard.
+            Button("") { view = staff ? "highway" : "staff" }
+                .keyboardShortcut("n", modifiers: [.command, .shift])
+                .opacity(0)
+                .accessibilityHidden(true)
+        }
+        .help("Notes as a highway or on the staff · ⇧⌘N")
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Notes view")
+    }
+
+    private func side<G: View>(on: Bool, label: String, @ViewBuilder glyph: () -> G) -> some View {
+        Button { view = label == "Staff" ? "staff" : "highway" } label: {
+            glyph()
+                .foregroundStyle(on ? Palette.signal : Palette.muted)
+                .frame(width: compact ? 30 : 34)
+                .frame(maxHeight: .infinity)
+                .background(RoundedRectangle(cornerRadius: 5).fill(on ? Palette.panel : .clear))
+                .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(on ? Palette.line : .clear, lineWidth: 1))
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(label)
+        .accessibilityAddTraits(on ? [.isSelected] : [])
+    }
+}
+
+/// Three lanes, a note falling down the middle one onto the hit line.
+private struct HighwayGlyph: View {
+    var body: some View {
+        Canvas { ctx, size in
+            let w: CGFloat = 14, hgt: CGFloat = 13
+            let x0 = (size.width - w) / 2, y0 = (size.height - hgt) / 2
+            for i in 0...3 {
+                let x = x0 + CGFloat(i) * w / 3
+                ctx.stroke(Path { p in p.move(to: CGPoint(x: x, y: y0)); p.addLine(to: CGPoint(x: x, y: y0 + hgt - 2)) },
+                           with: .foreground, style: StrokeStyle(lineWidth: 0.9, lineCap: .round))
+            }
+            ctx.fill(Path(roundedRect: CGRect(x: x0 + w / 3 + 1, y: y0 + 3, width: w / 3 - 2, height: 4.5), cornerRadius: 1), with: .foreground)
+            ctx.stroke(Path { p in p.move(to: CGPoint(x: x0 - 1, y: y0 + hgt)); p.addLine(to: CGPoint(x: x0 + w + 1, y: y0 + hgt)) },
+                       with: .foreground, style: StrokeStyle(lineWidth: 1.6, lineCap: .round))
+        }
+        .accessibilityHidden(true)
+    }
+}
+
+/// Five lines and a note head on them, its stem up.
+private struct StaffGlyph: View {
+    var body: some View {
+        Canvas { ctx, size in
+            let w: CGFloat = 16, g: CGFloat = 2.8
+            let x0 = (size.width - w) / 2, top = (size.height - 4 * g) / 2
+            for i in 0..<5 {
+                let y = top + CGFloat(i) * g
+                ctx.stroke(Path { p in p.move(to: CGPoint(x: x0, y: y)); p.addLine(to: CGPoint(x: x0 + w, y: y)) },
+                           with: .foreground, style: StrokeStyle(lineWidth: 0.8))
+            }
+            let cx = x0 + w * 0.5, cy = top + 3 * g
+            let head = Path(ellipseIn: CGRect(x: -2.4, y: -1.7, width: 4.8, height: 3.4))
+                .applying(CGAffineTransform(rotationAngle: -22 * .pi / 180))
+                .applying(CGAffineTransform(translationX: cx, y: cy))
+            ctx.fill(head, with: .foreground)
+            ctx.stroke(Path { p in p.move(to: CGPoint(x: cx + 2.1, y: cy - 0.4)); p.addLine(to: CGPoint(x: cx + 2.1, y: cy - 3.4 * g)) },
+                       with: .foreground, style: StrokeStyle(lineWidth: 1.1))
+        }
+        .accessibilityHidden(true)
     }
 }

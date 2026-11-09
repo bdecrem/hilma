@@ -1030,6 +1030,55 @@ enum LessonCheck {
         xa.xp = [.init(id: "improv·r1", day: "2026-11-04", kind: "improv", points: 30), .init(id: "stage·s1", day: "2026-11-04", kind: "stage", points: 10)]
         xb.xp = [.init(id: "improv·r1", day: "2026-11-04", kind: "improv", points: 30), .init(id: "version·r1", day: "2026-11-05", kind: "version", points: 50)]
         check("xp: two devices merge as a union, nothing paid twice", ProgressStore.xp(AccountStore.merge(xa, xb)) == 90 && ProgressStore.xp(AccountStore.merge(xb, xa)) == 90)
+
+        // Mastery (2026-11-09): an A or better at full speed masters the song, part and level,
+        // once, for the level's XP; a B, or Adaptive, masters nothing; the A runs already on
+        // the board master theirs when a copy is loaded.
+        func masteryRun(_ song: String, _ difficulty: String, _ grade: String) -> GameEngine.Result {
+            GameEngine.Result(song: song, part: "melody", difficulty: difficulty, score: 100, notes: 10, perfect: 10, good: 0, early: 0, late: 0,
+                              missed: 0, extras: 0, wrong: 0, maxCombo: 10, accuracy: grade == "B" ? 0.85 : 0.95, timing: 1, leanMs: 0,
+                              level: 1, grade: grade, map: [], strays: [])
+        }
+        let ms = ProgressStore(url: nil)
+        ms.record(run: masteryRun("song-slow-burn", "beginner", "B"))
+        let afterB = ms.mastered(song: "song-slow-burn", part: "melody", difficulty: "beginner")
+        ms.record(run: masteryRun("song-slow-burn", "beginner", "A"))
+        let xpOnce = ms.xp
+        ms.record(run: masteryRun("song-slow-burn", "beginner", "S"))
+        ms.record(run: masteryRun("song-slow-burn", "adaptive", "S"))
+        check("mastery: an A masters the level once for its XP; a B and Adaptive master nothing",
+              !afterB && ms.mastered(song: "song-slow-burn", part: "melody", difficulty: "beginner")
+              && !ms.mastered(song: "song-slow-burn", part: "chords", difficulty: "beginner")
+              && !ms.mastered(song: "song-slow-burn", part: "melody", difficulty: "adaptive")
+              && xpOnce == 2 * Improv.XP.stage + Improv.XP.mastery(.beginner) && ms.xp == xpOnce + 2 * Improv.XP.stage,
+              "xp \(ms.xp), once \(xpOnce)")
+        check("mastery: more XP the higher the rung", Improv.XP.mastery(.beginner) < Improv.XP.mastery(.easy) && Improv.XP.mastery(.easy) < Improv.XP.mastery(.medium)
+              && Improv.XP.mastery(.medium) < Improv.XP.mastery(.hard) && Improv.XP.mastery(.adaptive) == 0)
+        var oldCopy = ProgressStore.Snapshot()
+        oldCopy.scores = [ProgressStore.ScoreRecord(masteryRun("song-halsted", "hard", "A")), ProgressStore.ScoreRecord(masteryRun("song-halsted", "easy", "C"))]
+        let loaded = ProgressStore(url: nil)
+        loaded.replace(with: oldCopy)
+        check("mastery: an A already on the board masters its level when the copy loads, and merges with the XP",
+              loaded.mastered(song: "song-halsted", part: "melody", difficulty: "hard") && !loaded.mastered(song: "song-halsted", part: "melody", difficulty: "easy")
+              && loaded.xp == Improv.XP.mastery(.hard)
+              && ProgressStore.xp(AccountStore.merge(loaded.snapshot, ms.snapshot)) == loaded.xp + ms.xp)
+
+        // The Stage's staff view (Player+Staff): pitches spelled in the key, the clef from the
+        // part's range, lengths from the next onset.
+        func spelled(_ m: Int, _ key: String) -> String {
+            let s = Player.spell(m, root: Player.keyRoot(key))
+            return String(s.letter) + (s.accidental > 0 ? "#" : s.accidental < 0 ? "b" : "")
+        }
+        check("staff: the blue notes spelled as flats, the key's own notes as the key has them",
+              [spelled(63, "C"), spelled(70, "C"), spelled(66, "C"), spelled(61, "A"), spelled(60, "A"), spelled(66, "Dm"), spelled(65, "D minor"),
+               spelled(68, "F minor"), spelled(63, "Bb"), spelled(68, "E"), spelled(67, "E")] == ["Eb", "Bb", "Gb", "C#", "C", "F#", "F", "Ab", "Eb", "G#", "G"],
+              "\([spelled(63, "C"), spelled(70, "C"), spelled(66, "C"), spelled(61, "A"), spelled(60, "A"), spelled(66, "Dm"), spelled(65, "D minor"), spelled(68, "F minor"), spelled(63, "Bb"), spelled(68, "E"), spelled(67, "E")])")
+        check("staff: treble down to F3 (every Stage melody), bass under E4, the grand staff across",
+              Player.clef(for: [57, 76]) == .treble && Player.clef(for: [55, 79]) == .treble && Player.clef(for: [52, 72]) == .grand && Player.clef(for: [40, 64]) == .bass && Player.clef(for: [48, 72]) == .grand)
+        check("staff: a shuffle's late eighth reads as an eighth, sixteenths as sixteenths, a held note to its value",
+              Player.written(ticks: 4, gap: 4, ticksPerBeat: 12) == 0.5 && Player.written(ticks: 7, gap: 8, ticksPerBeat: 12) == 0.5
+              && Player.written(ticks: 3, gap: 3, ticksPerBeat: 12) == 0.25 && Player.written(ticks: 11, gap: 48, ticksPerBeat: 12) == 1
+              && Player.written(ticks: 40, gap: 48, ticksPerBeat: 12) == 3 && Player.written(ticks: 20, gap: nil, ticksPerBeat: 12) == 1.5)
         let improvItem = l1.items[3]
         check("goals: an improv goal waits for a reviewed take, then says so",
               none.status(l1, improvItem) == "Not yet · 2 choruses, 16 notes, 90% on the notes" && none.action(l1, improvItem) == "Improvise"

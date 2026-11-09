@@ -19,6 +19,10 @@ enum Palette {
     static let muted = Color(dark: 0x9A978F, paper: 0x5E5B54)
     static let signal = Color(dark: 0xFF5A1F, paper: 0xD8430C)
     static let cue = Color(dark: 0x8FB3FF, paper: 0x2F5BD3)
+    /// Mastered (Bart, 2026-11-09: "some gold'ish variant on orange, not too saturated"): brass,
+    /// signal's hue turned toward gold and taken down, for a Stage level played at full speed for
+    /// an A or better. Not a third accent for now/next: it only ever marks something done.
+    static let mastery = Color(dark: 0xD9A35E, paper: 0x9A6A24)
     /// The needles: a hit, a note off the window (rushed, dragged), a miss or a wrong note.
     static let good = Color(dark: 0x4ADE80, paper: 0x15803D)
     static let warn = Color(dark: 0xFACC15, paper: 0xA16207)

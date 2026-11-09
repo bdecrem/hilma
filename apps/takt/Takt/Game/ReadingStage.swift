@@ -284,11 +284,24 @@ struct StaffView: View {
                         }
                     }
                 }
-                // Notes and rests.
+                // Notes and rests. Notes struck together on one staff (a Stage song's chords
+                // part in the staff view) are one chord: one stem, the frame around all of it.
+                var chords: [String: [ReadingState.Note]] = [:]
+                for n in reading.notes where !n.event.isRest {
+                    chords["\(n.tick)|\(L.staff(for: n.event).top)", default: []].append(n)
+                }
+                var drawn: Set<String> = []
                 for n in reading.notes {
                     let nx = x(n.tick)
                     guard nx > L.clipX - 30, nx < size.width + 30 else { continue }
                     let s = L.staff(for: n.event)
+                    let chordKey = "\(n.tick)|\(s.top)"
+                    if !n.event.isRest, let group = chords[chordKey], group.count > 1 {
+                        guard drawn.insert(chordKey).inserted else { continue }
+                        var lc = layer
+                        StaffView.chord(&lc, group, s: s, x: nx, grand: L.grand)
+                        continue
+                    }
                     let color: Color = n.mark == .now ? Palette.signal : n.mark == .next ? Palette.cue : Palette.text
                     var c = layer
                     if n.mark == .played || n.mark == .missed { c.opacity = 0.32 }
@@ -327,6 +340,69 @@ struct StaffView: View {
                 p.addLine(to: CGPoint(x: L.playX, y: first.top - 24))
                 p.closeSubpath()
             }, with: .color(Palette.signal))
+        }
+    }
+}
+
+extension Reading.Event {
+    var isRest: Bool { midi == nil }
+}
+
+extension StaffView {
+    /// A chord: its heads on one stem (a second's upper head on the stem's other side), each
+    /// accidental staggered left, framed as one when it is the one to play now (or next), the
+    /// fingers stacked over it.
+    static func chord(_ ctx: inout GraphicsContext, _ group: [ReadingState.Note], s: StaffLayout.Staff, x nx: CGFloat, grand: Bool) {
+        let mark = group.contains { $0.mark == .now } ? ReadingState.Mark.now : group.contains { $0.mark == .next } ? .next : group[0].mark
+        let color: Color = mark == .now ? Palette.signal : mark == .next ? Palette.cue : Palette.text
+        var c = ctx
+        if mark == .played || mark == .missed { c.opacity = 0.32 }
+        let heads = group.compactMap { n -> (step: Int, acc: Int, finger: Int?)? in
+            guard let st = Reading.step(n.event, clef: s.clef) else { return nil }
+            return (st, n.event.accidental, n.event.finger)
+        }.sorted { $0.step < $1.step }
+        guard let low = heads.first, let high = heads.last else { return }
+        let beats = group.map(\.event.beats).max() ?? 1
+        let g = s.g, rx = g * 0.62
+        let up = Double(low.step + high.step) / 2 < 4
+        let sx = up ? nx + rx - 1.1 : nx - rx + 1.1
+        var span = s.y(step: high.step)...s.y(step: low.step)
+        var lastStep = -1000, flipped = false, k = 0
+        for h in heads {
+            // A second: the upper head of the two on the stem's other side.
+            flipped = h.step - lastStep == 1 && !flipped
+            lastStep = h.step
+            let hx = flipped ? (up ? nx + 2 * rx - 2.2 : nx - 2 * rx + 2.2) : nx
+            let sp = StaffDraw.note(&c, s, x: hx, step: h.step, beats: beats, accidental: 0, color: color, stem: false)
+            span = min(span.lowerBound, sp.lowerBound)...max(span.upperBound, sp.upperBound)
+            if h.acc != 0 {
+                c.draw(Text(h.acc > 0 ? "♯" : "♭").font(.system(size: g * 1.5)).foregroundColor(color),
+                       at: CGPoint(x: nx - rx - 0.6 * g - CGFloat(k % 2) * 0.9 * g, y: s.y(step: h.step)))
+                k += 1
+            }
+        }
+        if beats < 4 {
+            let from = up ? s.y(step: low.step) : s.y(step: high.step)
+            let to = up ? s.y(step: high.step) - 3.5 * g : s.y(step: low.step) + 3.5 * g
+            c.stroke(Path { p in p.move(to: CGPoint(x: sx, y: from)); p.addLine(to: CGPoint(x: sx, y: to)) }, with: .color(color), lineWidth: 1.6)
+            if beats < 1 { StaffDraw.flags(&c, x: sx, y: to, up: up, g: g, beats: beats, color: color) }
+            span = min(span.lowerBound, to)...max(span.upperBound, to)
+        }
+        let frame = CGRect(x: nx - rx - 9, y: span.lowerBound - 7, width: 2 * rx + 18 + (heads.count > 1 ? rx : 0), height: span.upperBound - span.lowerBound + 14)
+        if mark == .now {
+            let p = Path(roundedRect: frame, cornerRadius: 6)
+            c.fill(p, with: .color(Palette.signal.opacity(0.12)))
+            c.stroke(p, with: .color(Palette.signal), lineWidth: 2)
+        } else if mark == .next {
+            c.stroke(Path(roundedRect: frame, cornerRadius: 6), with: .color(Palette.cue), lineWidth: 1.4)
+            c.fill(CornerTick(inset: 1, leg: 8).path(in: frame), with: .color(Palette.cue))
+        }
+        let lit = mark == .now || mark == .next
+        let right = group[0].event.hand == .right
+        for (i, f) in heads.reversed().compactMap(\.finger).enumerated() {
+            let fy = right ? s.top - 16 - CGFloat(i) * 12 : s.bottom + (grand ? 3.4 * s.g : 2.0 * s.g + 6) + CGFloat(i) * 12
+            c.draw(Text("\(f)").font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .foregroundColor(lit ? color : Palette.muted), at: CGPoint(x: nx, y: fy))
         }
     }
 }
@@ -375,7 +451,7 @@ enum StaffDraw {
     /// A note at a step; returns the vertical span of its head and stem (for the now/next frame).
     @discardableResult
     static func note(_ ctx: inout GraphicsContext, _ s: StaffLayout.Staff, x: CGFloat, step: Int, beats: Double,
-                     accidental: Int, color: Color) -> ClosedRange<CGFloat> {
+                     accidental: Int, color: Color, stem: Bool = true) -> ClosedRange<CGFloat> {
         let g = s.g, y = s.y(step: step)
         let rx = g * 0.62, ry = g * 0.44
         // Ledger lines, below and above.
@@ -393,22 +469,14 @@ enum StaffDraw {
             ctx.fill(head, with: .color(color))
         }
         var span = (y - ry)...(y + ry)
-        if beats < 4 {
+        if beats < 4 && stem {
             let up = step < 4
             let sx = up ? x + rx - 1.1 : x - rx + 1.1
             let sy = up ? y - 3.5 * g : y + 3.5 * g
             ctx.stroke(Path { p in p.move(to: CGPoint(x: sx, y: y)); p.addLine(to: CGPoint(x: sx, y: sy)) },
                        with: .color(color), lineWidth: 1.6)
             span = min(span.lowerBound, sy)...max(span.upperBound, sy)
-            if beats < 1 {
-                // The eighth's flag.
-                let d: CGFloat = up ? 1 : -1
-                ctx.stroke(Path { p in
-                    p.move(to: CGPoint(x: sx, y: sy))
-                    p.addCurve(to: CGPoint(x: sx + 0.7 * g, y: sy + d * 2.3 * g),
-                               control1: CGPoint(x: sx + 0.2 * g, y: sy + d * 1.0 * g), control2: CGPoint(x: sx + 1.2 * g, y: sy + d * 1.4 * g))
-                }, with: .color(color), lineWidth: 1.8)
-            }
+            if beats < 1 { flags(&ctx, x: sx, y: sy, up: up, g: g, beats: beats, color: color) }
         }
         // A dotted length: the dot in the space to the right.
         if [1.5, 3].contains(beats) {
@@ -420,6 +488,19 @@ enum StaffDraw {
                      at: CGPoint(x: x - rx - 0.6 * g, y: y))
         }
         return span
+    }
+
+    /// The eighth's flag; a sixteenth's two.
+    static func flags(_ ctx: inout GraphicsContext, x sx: CGFloat, y sy: CGFloat, up: Bool, g: CGFloat, beats: Double, color: Color) {
+        let d: CGFloat = up ? 1 : -1
+        for i in 0..<(beats < 0.5 ? 2 : 1) {
+            let y = sy + d * CGFloat(i) * 0.9 * g
+            ctx.stroke(Path { p in
+                p.move(to: CGPoint(x: sx, y: y))
+                p.addCurve(to: CGPoint(x: sx + 0.7 * g, y: y + d * 2.3 * g),
+                           control1: CGPoint(x: sx + 0.2 * g, y: y + d * 1.0 * g), control2: CGPoint(x: sx + 1.2 * g, y: y + d * 1.4 * g))
+            }, with: .color(color), lineWidth: 1.8)
+        }
     }
 
     static func ledger(_ ctx: inout GraphicsContext, _ s: StaffLayout.Staff, x: CGFloat, y: CGFloat, rx: CGFloat, color: Color) {
