@@ -10,6 +10,42 @@ Catalyst (macOS 14+) with the Mac idiom ("Optimize Interface for Mac", device fa
 iPhone-only on iOS (no iPad). Everything runs on the device; an account on ola.cx (Dodo's shape,
 since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
 
+## The two skills: always, for a track and for anything leveled (2026-11-08)
+
+Bart, 2026-11-08, after the skills were built and tested: "make sure to update the claude.md
+etc so that these skills are always used when we create new tracks or charts." A standing rule,
+on every machine, in every session, for subagents too:
+
+- **A new track, or a track's sound, groove or arrangement** (a blues song for the Stage, a
+  band under a lesson or the Reading module, "make it hit harder", a solo or stop-time chorus,
+  a new key or tempo): invoke the **`takt-blues`** skill (`/takt-blues`,
+  `.claude/skills/takt-blues/SKILL.md`) before touching a generator. It carries the
+  instruments and gains, the recipe with the closest script to copy, the
+  register-build-measure-render loop and every call Bart has made about a track.
+- **Anything leveled** (a Stage chart or its ladder, a level version of a song, a lesson step,
+  drill or jam, an improv idea or whole-track rule, an Agent-mode mod, a map level's goals; any
+  sentence of his about too hard, too easy, boring, the fingering, the hand): invoke
+  **`takt-chart`** (`/takt-chart`, `.claude/skills/takt-chart/SKILL.md`) before changing a
+  weight, a `from`, a patch, a step or a prompt. It judges on both axes of `LEVELING.md` and
+  runs `scripts/takt/measure.ts` before and after.
+- **Both when both apply.** A new track's charts come out of `takt-blues`' weights; when a
+  level then sits outside its band or hand budget and the weights cannot bring it in, that is
+  `takt-chart`'s job by its levers, not a guess in the generator. Charts for an existing track
+  are `takt-chart` alone.
+- **Subagents too.** A subagent that writes a track or a chart is given the skill's path and
+  told to read its SKILL.md first (the eval runs did; a worktree has no uncommitted files, so
+  commit the tools and the skill before spawning).
+- **Close the loop, the same turn.** Bart's reaction to the result, in his words, dated, goes
+  into the skill's `references/feedback.md` (a number into `LEVELING.md` / `BLUES.md` first, the
+  pointer there); what a run teaches goes into the skill's `references/`; a kind of ask the
+  skill got wrong becomes a case under its `evals/`, rerun with
+  `/anthropic-skills:skill-creator` and graded by `scripts/takt/skill-grade.py`. The sheets stay
+  the source; the skills get sharper at reading them.
+
+A track or chart written "from the sheets" without the skill still passes the checks (the
+first eval round showed it) and pays again for what the skills already paid for: the phrase
+cover stealing anchors, a hand of 30 moves on a Level 2 song, a Beginner on one key.
+
 ## Status
 
 - **M0 skeleton: done 2026-10-24, 0.1 (1).** Both targets build and launch; design tokens and type
@@ -2002,6 +2038,11 @@ since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
   second anchor on the 3 at 76–90, a pickup on tick 44, the comping's groove hits; SKILL.md: the
   `from` lever when the cover alone keeps Easy over its band; surfaces.md: boxes and the thumb
   key for a hand-budget line). **0.1 (118)** on this Mac with the two merged charts.
+- **The skills are the rule. 2026-11-08.** Bart: "make sure to update the claude.md etc so that
+  these skills are always used when we create new tracks or charts" → the first section of this
+  file, the Takt row of the root `CLAUDE.md`, BLUES.md §4 and CHARTING.md's opening point at
+  them as the way, and each SKILL.md names the other for the hand-off (a track's level that the
+  weights cannot bring in is `takt-chart`'s; a new track is `takt-blues`'). Docs only.
 
 ## The one transport (2026-11-08)
 

@@ -7,7 +7,10 @@ a player at a given map level, on both axes (notes a second and hand moves), is 
 their parts whole, as the record plays them, and the app cuts each level from them at load
 time by these rules. To change how a level feels, change a number there (or tell Claude what
 felt wrong: "Warm Nine chords on Medium is too busy", "Easy is boring at 90 bpm") and rebuild.
-No song needs regenerating.
+No song needs regenerating. Since 2026-11-08 every such change is made through the
+`takt-chart` skill (`.claude/skills/takt-chart`, Bart's call: always; the rule is the first
+section of `CLAUDE.md` here), which reads this file, measures first and writes his call into
+its `references/feedback.md`.
 
 ## What a song gives the charter
 

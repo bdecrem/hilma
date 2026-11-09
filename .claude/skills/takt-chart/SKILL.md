@@ -32,6 +32,11 @@ time, then:
 - `references/feedback.md` (this skill): every call Bart has made about difficulty, dated, with
   what it meant and what we did. It is how to read his next one.
 
+**The hand-off.** A new track is not this skill: `takt-blues` (`.claude/skills/takt-blues/SKILL.md`)
+writes the record and the first weights, and this skill takes over when a level of it needs
+bringing in, or when any existing material is too hard, too easy or moves the hand too much.
+Bart's rule (2026-11-08): every chart, step, drill, idea or mod goes through this skill.
+
 ## The way a change gets made
 
 1. **Name the surface, the level and the complaint in the sheet's words.** Which thing (a song's

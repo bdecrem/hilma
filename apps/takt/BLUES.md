@@ -169,7 +169,9 @@ Notes from play:
 
 The skill `.claude/skills/takt-blues` (2026-11-08) is the worked form of this section: the
 instruments and gains, the closest generator to copy per style, the register-build-measure-
-render loop, and Bart's calls to date (`references/feedback.md`).
+render loop, and Bart's calls to date (`references/feedback.md`). **Every new track goes through
+it** (his call, 2026-11-08; the rule is the first section of `CLAUDE.md` here); a level the
+weights cannot bring into its band is then `takt-chart`'s.
 
 - Tempo 90 for a slow blues (12/8 feel), 120 for a jump blues; the generator's `Song(...)` tempo
   is the 1x.

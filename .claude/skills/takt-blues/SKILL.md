@@ -29,6 +29,14 @@ learns. Both have to be right, and both are measured before anyone plays them.
 Then `apps/takt/CHARTING.md` only if a ladder comes out wrong (the mechanism), and
 `apps/takt/LEVELING.md` when the track is a map level's song (the hand budget applies).
 
+**The hand-off.** This skill writes the record and the weights; the levels fall out of them.
+When, after the measure step, a level still sits outside its band or the hand budget and the
+weights cannot bring it in, that is the `takt-chart` skill's job
+(`.claude/skills/takt-chart/SKILL.md`: `from` floors, the charting.json patch, a rewritten line
+for a map level's song), not a guess in the generator. Charts for an existing track are
+`takt-chart` alone. Bart's rule (2026-11-08): every new track goes through this skill, every
+chart through that one.
+
 ## The way a track gets made
 
 1. **Hear it before writing it.** From the brief, decide: the style and the record it nods to
