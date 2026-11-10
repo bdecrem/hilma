@@ -34,15 +34,17 @@ exactly.
 
 **Read these first, in this order:**
 
-1. `references/system.md`: the signal flow and every setting of the console: buses, sends,
+1. `references/taste.md`: what every electronic record here has to keep, whatever else
+   changes; why Gezeiten came out cheesy. Read it before `music.md`.
+2. `references/system.md`: the signal flow and every setting of the console: buses, sends,
    the two echoes, the hall and the room, the sidechain, the master, the lanes.
-2. `references/instruments.md`: every voice, how it is synthesized, where it sits in the mix.
-3. `references/music.md`: the musical principles the record was generated from: form,
+3. `references/instruments.md`: every voice, how it is synthesized, where it sits in the mix.
+4. `references/music.md`: the musical principles the record was generated from: form,
    harmony, the stab and its echo as one rhythm, the bass, the drums, automation as
    arrangement, tension, humanizing.
-4. `references/fidelity.md`: what keeps the app's sound the reference's: sample rates, gain
+5. `references/fidelity.md`: what keeps the app's sound the reference's: sample rates, gain
    laws, timing, the A/B and its tolerances, the traps.
-5. `references/feedback.md`: what Bart has said about every electronic track, dated.
+6. `references/feedback.md`: what Bart has said about every electronic track, dated.
 
 Then the sources, when you need a number this skill only points to:
 `misc/halbschatten_reference.py` (the record: every formula is there),
