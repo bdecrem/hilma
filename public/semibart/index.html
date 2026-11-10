@@ -639,8 +639,8 @@ const ELI = [
    ['eli', "...I'm working through that."]]
 ];
 let eliKnocks = 0;
-Object.assign(MAP.find(h => h.name === 'Study 13'), { on: {
-  look: "Study 13. Eli's. A sticker on the door says EVERYTHING IS A SCAM. The sticker was $4.",
+Object.assign(MAP.find(h => h.name === 'Study 14'), { on: {
+  look: "Study 14. Eli's. A sticker on the door says EVERYTHING IS A SCAM. The sticker was $4.",
   open: async () => {
     SFX.knock(); await say('you', eliKnocks ? 'Knock, knock. Again.' : 'Knock, knock.');
     await wait(0.4);
@@ -759,7 +759,7 @@ window.addEventListener('keydown', e => {
 function speakerPos(who) {
   if (who === 'bart') return [190, 54];
   if (who === 'cow') return [268, 94];
-  if (who === 'eli') return [292, 96];
+  if (who === 'eli') return [292, 112];
   return S.scene === 'map' ? [S.x, S.y - 14] : [S.x, S.y - 78];
 }
 const COLORS = { you: '#ffffff', bart: '#ffff55', cow: '#ff9ccf', eli: '#ff7a5c' };
