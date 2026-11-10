@@ -193,6 +193,11 @@ const mapBg = document.createElement('canvas'); mapBg.width = W; mapBg.height = 
   // the meeting room, just off the courtyard, its door facing the oak
   rect(m, 108, 77, 10, 7, C.path); rect(m, 108, 77, 10, 1, C.pathEdge); rect(m, 108, 83, 10, 1, C.pathEdge);
   wing(m, 82, 68, 22, 22, [80], 1);
+  { // a gold star on the roof: this is where the seminars happen
+    const STAR = ['...X...', '...X...', '..XXX..', 'XXXXXXX', '.XXXXX.', '..XXX..', '.XX.XX.', '.X...X.'];
+    [[-1, 0], [1, 0], [0, -1], [0, 1]].forEach(([ox, oy]) => sprite(m, STAR, { X: C.ink }, 90 + ox, 75 + oy));
+    sprite(m, STAR, { X: '#ffd93b' }, 90, 75); rect(m, 92, 78, 1, 1, '#fff3c4');
+  }
   rect(m, 4, 98, 46, 42, C.ink); rect(m, 5, 99, 44, 40, C.asphalt);
   [19, 33].forEach(x => rect(m, x, 100, 1, 18, C.line));
   car(m, 7, 102, '#2b3fff'); car(m, 21, 102, '#ff9ccf'); car(m, 35, 102, '#fff7e6');
