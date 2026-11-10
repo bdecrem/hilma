@@ -32,8 +32,8 @@ body { height: 100dvh; padding: env(safe-area-inset-top) env(safe-area-inset-rig
 body { background: var(--black); container-type: size; display: flex; align-items: center; justify-content: center; overflow: hidden; font-family: var(--font); }
 #stage { position: relative; width: min(100cqw, calc(100cqh * 16 / 9)); aspect-ratio: 16 / 9; background: var(--black); overflow: hidden; container-type: inline-size; user-select: none; -webkit-user-select: none; }
 #cv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; image-rendering: pixelated; image-rendering: crisp-edges; cursor: crosshair; touch-action: none; transform-origin: 73.75% 56.7%; }
-.outlined { text-shadow: 0.2cqw 0 0 #000, -0.2cqw 0 0 #000, 0 0.2cqw 0 #000, 0 -0.2cqw 0 #000, 0.2cqw 0.2cqw 0 #000, -0.2cqw 0.2cqw 0 #000, 0.2cqw -0.2cqw 0 #000, -0.2cqw -0.2cqw 0 #000; }
-#line { position: absolute; width: 60%; text-align: center; font-size: 2.6cqw; line-height: 1.15; font-weight: 500; transform: translateY(-100%); pointer-events: none; text-wrap: balance; }
+.outlined { text-shadow: 0.22cqw 0 0 #000, -0.22cqw 0 0 #000, 0 0.22cqw 0 #000, 0 -0.22cqw 0 #000, 0.22cqw 0.22cqw 0 #000, -0.22cqw 0.22cqw 0 #000, 0.22cqw -0.22cqw 0 #000, -0.22cqw -0.22cqw 0 #000, 0.15cqw 0.45cqw 0 rgba(0,0,0,0.55); }
+#line { position: absolute; width: 62%; text-align: center; font-size: 2.85cqw; line-height: 1.18; font-weight: 600; letter-spacing: 0.03em; word-spacing: 0.08em; transform: translateY(-100%); pointer-events: none; text-wrap: balance; }
 #label { position: absolute; color: var(--cyan); font-size: 1.9cqw; line-height: 1; pointer-events: none; white-space: nowrap; transform: translate(-50%, -160%); }
 #label[hidden] { display: none; }
 #choices { position: absolute; left: 0; right: 0; bottom: 0; padding: 1.2cqw 3cqw 1.6cqw; background: rgba(0, 0, 0, 0.84); display: flex; flex-direction: column; }
@@ -62,7 +62,7 @@ button { font: inherit; background: none; border: 0; margin: 0; cursor: pointer;
 #title[hidden] { display: none; }
 .card { width: 62cqw; background: #12100c; color: #fff7e6; border: 0.5cqw solid var(--hot); box-shadow: 0 0 0 0.5cqw #000, 1.4cqw 1.4cqw 0 0.5cqw #000; padding: 2.4cqw 3.6cqw 2.6cqw; text-align: center; }
 .card .eyebrow { margin: 0 0 1cqw; color: var(--cyan); font-size: 1.6cqw; letter-spacing: 0.3em; text-transform: uppercase; }
-.card h1 { margin: 0; color: var(--hot); font-size: 6.6cqw; line-height: 1; white-space: nowrap; font-weight: 700; letter-spacing: 0.02em; }
+.card h1 { margin: 0; color: var(--hot); font-size: 7cqw; line-height: 1; white-space: nowrap; font-weight: 400; letter-spacing: 0.06em; }
 .card .tag { margin: 1.4cqw 0 0; font-size: 2.3cqw; line-height: 1.2; }
 .card hr { border: 0; border-top: 0.3cqw dashed #4a4436; margin: 2cqw 0 1.8cqw; }
 .card dl { display: grid; grid-template-columns: auto auto; justify-content: center; gap: 0.6cqw 1.6cqw; margin: 0; font-size: 1.7cqw; line-height: 1.1; text-align: left; }
@@ -169,7 +169,10 @@ function litDoor(m, dx, top, h) {
 }
 function oak(m, x, y, r) { oval(m, x + 1, y + r + 2, r, 2, C.shadow); rect(m, x - 1, y + r - 2, 2, 5, C.trunk); disc(m, x, y, r, C.oak2); disc(m, x - 1, y - 1, r - 1, C.oak); disc(m, x - Math.round(r / 3), y - Math.round(r / 3), Math.max(1, Math.round(r / 3)), C.oak3); }
 function car(m, x, y, col) { rect(m, x, y, 10, 15, C.ink); rect(m, x + 1, y + 1, 8, 13, col); rect(m, x + 2, y + 3, 6, 3, C.glassHi); rect(m, x + 2, y + 10, 6, 2, C.glassHi); }
-function cow(m, x, y) { rect(m, x, y + 2, 9, 5, C.ink); rect(m, x + 1, y + 3, 7, 3, '#fffaf0'); rect(m, x + 2, y + 3, 2, 2, C.ink); rect(m, x + 6, y + 4, 1, 2, C.ink); rect(m, x + 8, y + 1, 4, 4, C.ink); rect(m, x + 9, y + 2, 2, 2, '#fffaf0'); rect(m, x + 1, y + 7, 1, 2, C.ink); rect(m, x + 7, y + 7, 1, 2, C.ink); }
+function turkey(m, x, y) {
+  sprite(m, ['..kTk........', '.kTtTk.......', 'kTtktTk...HH.', 'TtkBBBBB.HHEb', 'kBBBBBBBBRHH.', '.BBBBBBBBRR..', '..BBBBBBBR...', '...BBBBBB....', '....L..L.....', '...LL.LL.....'],
+    { k: C.ink, T: '#e0892e', t: '#9a5326', B: '#4e3322', H: '#c7d3de', E: C.ink, b: '#e8b13a', R: '#d6402e', L: '#e8a33a' }, x, y);
+}
 
 const mapBg = document.createElement('canvas'); mapBg.width = W; mapBg.height = H;
 (function () {
@@ -207,7 +210,7 @@ const mapBg = document.createElement('canvas'); mapBg.width = W; mapBg.height = 
   car(m, 7, 102, '#2b3fff'); car(m, 21, 102, '#ff9ccf'); car(m, 35, 102, '#fff7e6');
   oval(m, 224, 22, 10, 3, C.shadow); rect(m, 221, 14, 1, 8, C.ink); rect(m, 227, 14, 1, 8, C.ink);
   oval(m, 224, 11, 8, 4, C.ink); oval(m, 224, 11, 7, 3, '#fffaf0'); rect(m, 224, 5, 1, 6, C.ink);
-  cow(m, 258, 100); cow(m, 266, 118);
+  turkey(m, 256, 98); turkey(m, 266, 116);
   [[100, 14, 5], [308, 82, 7], [22, 82, 6], [82, 116, 5], [118, 6, 4]].forEach(o => oak(m, o[0], o[1], o[2]));
   for (let i = 0; i < 26; i++) rect(m, 250 + r() * 66, 90 + r() * 46, 2, 2, C.orange);
   wing(m, 300, 96, 12, 36, WING_DOORS);
@@ -412,6 +415,12 @@ const SFX = {
   buzz() { tone(150, 0.35, 'sawtooth', 0.06, 0); tone(150, 0.35, 'sawtooth', 0.06, 0.5); },
   pick() { tone(660, 0.05, 'square', 0.06); tone(990, 0.07, 'square', 0.06, 0.05); },
   jingle() { [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.16, 'square', 0.07, i * 0.11)); tone(1568, 0.4, 'triangle', 0.06, 0.44); },
+  gobble() {
+    if (!AC || muted) return [];
+    const out = [];
+    for (let i = 0; i < 9; i++) out.push(tone(560 + (i % 2) * 260 + Math.random() * 40, 0.06, 'square', 0.1, i * 0.058, 420));
+    return out.filter(Boolean);
+  },
   moo() {
     if (!AC || muted) return [];
     const t = AC.currentTime, o = AC.createOscillator(), lfo = AC.createOscillator(), lg = AC.createGain(), f = AC.createBiquadFilter(), gn = AC.createGain();
@@ -432,7 +441,7 @@ const VOICES = {
 function garble(who, text) {
   const v = VOICES[who];
   if (!AC || muted) return [];
-  if (who === 'cow') return SFX.moo();
+  if (who === 'turkey') return SFX.gobble();
   if (!v) return [];
   const nodes = [];
   let t = AC.currentTime + 0.02, chunk = 0;
@@ -596,7 +605,7 @@ async function talkBart() {
 }
 
 const NOTES = { 6: 'At lunch. Lunch is sacred.', 7: 'Thinking under the oak.', 8: 'Back in five. Five what, unclear.', 9: 'In a seminar. Possibly this one.',
-  10: 'Walking to the Dish. Not listening to it.', 11: 'Writing. Do not knock. (You knocked.)', 12: 'Gone to see the cows. For research.', 13: 'Napping counts as fieldwork.', 14: 'Back after this paragraph.' };
+  10: 'Walking to the Dish. Not listening to it.', 11: 'Writing. Do not knock. (You knocked.)', 12: 'Gone to see the turkeys. For research.', 13: 'Napping counts as fieldwork.', 14: 'Back after this paragraph.' };
 function litStudy(n, r, walk) {
   return { name: 'Study ' + n, study: true, r, walk, def: 'open', on: { look: n === 1 ? "Study 1. The light's on. Someone's typing in there." : `Study ${n}. The light's on.`, open: n === 1 ? knockAndEnter : enterEmpty } };
 }
@@ -620,7 +629,7 @@ const MAP = [
   { name: 'picnic table', r: [178, 73, 20, 16], walk: { x: 188, y: 64 }, def: 'look', on: { look: 'A picnic table. The good one, in the shade. Taken at noon.', use: 'I sit for a second. Very restorative. Back to it.' } },
   { name: 'courtyard oak', r: [148, 68, 24, 24], walk: { x: 160, y: 64 }, def: 'look', on: { look: 'A big oak in a brick courtyard. Good for thinking under.' } },
   { name: 'the Dish', r: [212, 2, 24, 22], walk: { x: 224, y: 64 }, def: 'talk', on: { look: "The Dish. It's listening to space.", talk: [['you', 'Hello, space.'], ['you', '...']] } },
-  { name: 'cow', r: [252, 96, 30, 32], walk: { x: 240, y: 112 }, def: 'talk', on: { look: 'A cow. Looks tenured.', talk: [['you', 'Moo.'], ['cow', 'Moo.']] } },
+  { name: 'turkey', r: [252, 94, 30, 34], walk: { x: 240, y: 112 }, def: 'talk', on: { look: 'Wild turkeys. They run this part of campus. Looks tenured.', talk: [['you', 'Gobble.'], ['turkey', 'Gobble gobble.']] } },
   { name: 'parking lot', r: [4, 98, 46, 42], walk: { x: 54, y: 132 }, def: 'look', on: { look: 'Three cars. Nobody biked today.' } }
 ];
 // Eli, lower-right wing. Everything is a scam. He talks through the door.
@@ -633,7 +642,7 @@ const ELI = [
    ['eli', 'The coffee here is free. That is exactly how they get you.']],
   [['eli', 'Brunch is a scam. Breakfast and lunch should unionize.'],
    ['eli', 'Loyalty points are a scam. I am loyal to no points.'],
-   ['eli', 'And the cows? Unpaid labor. Look at them. They have no idea.']],
+   ['eli', 'And the turkeys? Unpaid labor. Look at them. They have no idea.']],
   [['eli', 'The lights are off. Electricity is a scam.'],
    ['you', "It's three in the afternoon."],
    ['eli', 'The sun is the only honest utility.']],
@@ -761,17 +770,17 @@ window.addEventListener('keydown', e => {
 /* ---------- drawing ---------- */
 function speakerPos(who) {
   if (who === 'bart') return [190, 54];
-  if (who === 'cow') return [268, 94];
+  if (who === 'turkey') return [268, 94];
   if (who === 'eli') return [292, 112];
   return S.scene === 'map' ? [S.x, S.y - 14] : [S.x, S.y - 78];
 }
-const COLORS = { you: '#ffffff', bart: '#ffff55', cow: '#ff9ccf', eli: '#ff7a5c' };
+const COLORS = { you: '#ffffff', bart: '#ffff55', turkey: '#ffb070', eli: '#ff7a5c' };
 function drawLine() {
   const l = S.line;
   if (!l) { if (lineEl.textContent) lineEl.textContent = ''; return; }
   if (lineEl.textContent !== l.text) lineEl.textContent = l.text;
   const p = speakerPos(l.who), xp = p[0] / W * 100;
-  lineEl.style.left = Math.max(1, Math.min(39, xp - 30)) + '%';
+  lineEl.style.left = Math.max(1, Math.min(37, xp - 31)) + '%';
   lineEl.style.top = Math.max(10, (p[1] + OY) / FH * 100) + '%';
   lineEl.style.color = COLORS[l.who] || '#ffffff';
 }
