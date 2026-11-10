@@ -136,7 +136,7 @@ const C = {
   brick: '#c46a4a', brick2: '#ad593c', stone: '#b9b4a8', oak: '#2f6b45', oak2: '#24553a', oak3: '#4a8f5f', trunk: '#5b3a21',
   asphalt: '#7b7771', line: '#f4efe2', shadow: 'rgba(20,20,20,0.2)', ink: '#141414', paper: '#fff7e6', orange: '#ff5a1f', lit: '#ffd96a'
 };
-const DOORS_TOP = [250, 266, 282], WING_DOORS = [106, 122];
+const DOORS_TOP = [34, 50, 66], WING_DOORS = [106, 122];
 const DOORS_A = [28, 44, 60, 76, 92, 108], DOORS_B = [212, 228, 244, 260, 276, 292], DOORS_C = [114, 130, 146, 174, 190, 206];
 function building(m, x, y, w, rh, wh, doors, wide) {
   rect(m, x + 2, y + rh + wh, w, 2, C.shadow);
@@ -172,7 +172,7 @@ const mapBg = document.createElement('canvas'); mapBg.width = W; mapBg.height = 
   const m = mapBg.getContext('2d'), r = rng(7);
   rect(m, 0, 0, W, H, C.grass);
   for (let i = 0; i < 360; i++) rect(m, r() * W, r() * H, 2, 1, r() < 0.6 ? C.grass2 : C.grass3);
-  const paths = [[60, 64, 60, 132], [16, 64, 310, 64], [240, 64, 240, 132], [50, 132, 292, 132], [160, 38, 160, 64], [140, 38, 140, 64], [180, 38, 180, 64], [236, 9, 310, 9], [310, 9, 310, 64], [292, 100, 292, 132]];
+  const paths = [[60, 64, 60, 132], [10, 64, 304, 64], [240, 64, 240, 132], [50, 132, 292, 132], [160, 38, 160, 64], [140, 38, 140, 64], [180, 38, 180, 64], [10, 9, 82, 9], [10, 9, 10, 64], [292, 100, 292, 132]];
   DOORS_TOP.forEach(x => paths.push([x, 2, x, 9]));
   DOORS_A.concat(DOORS_B).forEach(x => paths.push([x, 54, x, 64]));
   DOORS_C.forEach(x => paths.push([x, 122, x, 132]));
@@ -204,7 +204,7 @@ const mapBg = document.createElement('canvas'); mapBg.width = W; mapBg.height = 
   oval(m, 224, 22, 10, 3, C.shadow); rect(m, 221, 14, 1, 8, C.ink); rect(m, 227, 14, 1, 8, C.ink);
   oval(m, 224, 11, 8, 4, C.ink); oval(m, 224, 11, 7, 3, '#fffaf0'); rect(m, 224, 5, 1, 6, C.ink);
   cow(m, 258, 100); cow(m, 266, 118);
-  [[70, 12, 6], [308, 82, 7], [22, 82, 6], [82, 116, 5], [118, 6, 4]].forEach(o => oak(m, o[0], o[1], o[2]));
+  [[100, 14, 5], [308, 82, 7], [22, 82, 6], [82, 116, 5], [118, 6, 4]].forEach(o => oak(m, o[0], o[1], o[2]));
   for (let i = 0; i < 26; i++) rect(m, 250 + r() * 66, 90 + r() * 46, 2, 2, C.orange);
   wing(m, 300, 96, 12, 36, WING_DOORS);
   // picnic tables on the courtyard, either side of the oak
@@ -343,8 +343,8 @@ const mapFull = document.createElement('canvas'); mapFull.width = W; mapFull.hei
   rect(m, 0, 0, W, FH, C.grass);
   for (let i = 0; i < 120; i++) { const y = r() < 0.5 ? r() * OY : FH - OY + r() * OY; rect(m, r() * W, y, 2, 1, r() < 0.6 ? C.grass2 : C.grass3); }
   m.drawImage(mapBg, 0, OY);
-  building(m, 238, 2, 56, 12, 7, DOORS_TOP);
-  [[22, 6, 5], [96, 170, 6], [180, 172, 5], [250, 168, 6], [30, 170, 5]].forEach(o => oak(m, o[0], o[1], o[2]));
+  building(m, 22, 2, 56, 12, 7, DOORS_TOP);
+  [[256, 6, 5], [300, 10, 6], [96, 170, 6], [180, 172, 5], [250, 168, 6], [30, 170, 5]].forEach(o => oak(m, o[0], o[1], o[2]));
   for (let i = 0; i < 14; i++) rect(m, 120 + r() * 120, 164 + r() * 14, 2, 2, C.orange);
 })();
 const roomFull = document.createElement('canvas'); roomFull.width = W; roomFull.height = FH;
@@ -470,7 +470,7 @@ function route(to) {
   let fx = S.x, ry = fy;
   while (ry !== ty) {
     const next = ry !== 64 ? 64 : ty;
-    const cx = ry === 9 || next === 9 ? 310 : (Math.abs(fx - 60) + Math.abs(to.x - 60) <= Math.abs(fx - 240) + Math.abs(to.x - 240) ? 60 : 240);
+    const cx = ry === 9 || next === 9 ? 10 : (Math.abs(fx - 60) + Math.abs(to.x - 60) <= Math.abs(fx - 240) + Math.abs(to.x - 240) ? 60 : 240);
     pts.push({ x: cx, y: ry }, { x: cx, y: next }); fx = cx; ry = next;
   }
   pts.push({ x: to.x, y: ty });
@@ -584,7 +584,7 @@ function lockedStudy(n, x, y) {
 const MAP = [
   { name: 'Study 1', r: [34, 30, 20, 26], walk: { x: 44, y: 60 }, def: 'open', on: { look: "Study 1. The light's on. Someone's typing in there.", open: knockAndEnter } },
   lockedStudy(2, 228, 60), lockedStudy(3, 276, 60), lockedStudy(4, 190, 128), lockedStudy(5, 130, 128),
-  lockedStudy(6, 250, 9), lockedStudy(7, 266, 9), lockedStudy(8, 282, 9), lockedStudy(9, 300, 106), lockedStudy(10, 300, 122),
+  lockedStudy(6, 34, 9), lockedStudy(7, 50, 9), lockedStudy(8, 66, 9), lockedStudy(9, 300, 106), lockedStudy(10, 300, 122),
   { name: 'main hall', r: [128, 8, 64, 30], walk: { x: 160, y: 44 }, def: 'open', on: { look: 'The main hall. Lounge, mailboxes, coffee.', open: "Just the lounge. Nobody's in. Everybody's in their study." } },
   { name: 'meeting room', r: [80, 66, 30, 30], walk: { x: 112, y: 80 }, def: 'open', on: { look: 'The meeting room. Seminars happen in there. Like this one.', open: "Not yet. I haven't visited the studies." } },
   { name: 'picnic table', r: [122, 73, 20, 16], walk: { x: 132, y: 64 }, def: 'look', on: { look: 'A picnic table. Someone carved a regression line into it.', use: 'I sit for a second. Very restorative. Back to it.' } },
@@ -642,7 +642,7 @@ function act(e, verb) {
   const p = toScene(e), h = hit(p[0], p[1]);
   if (h) { run(() => doAction(verb || h.def, h)); return; }
   if (verb) return;
-  if (S.scene === 'map') { const ry = rail(p[1]), lo = ry === 9 ? 236 : ry === 64 ? 16 : 50, hi = ry === 9 ? 310 : ry === 64 ? 310 : 292; goTo({ x: Math.max(lo, Math.min(hi, p[0])), y: ry }); }
+  if (S.scene === 'map') { const ry = rail(p[1]), lo = ry === 9 ? 10 : ry === 64 ? 10 : 50, hi = ry === 9 ? 82 : ry === 64 ? 304 : 292; goTo({ x: Math.max(lo, Math.min(hi, p[0])), y: ry }); }
   else goTo({ x: p[0], y: p[1] });
 }
 cv.addEventListener('click', e => act(e, null));
