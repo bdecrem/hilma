@@ -171,6 +171,17 @@ const nextConfig: NextConfig = {
           has: [{ type: 'host', value: 'www.onething.ink' }],
           destination: '/onething',
         },
+        // takt.pizza root → /takt (the Takt landing page)
+        {
+          source: '/',
+          has: [{ type: 'host', value: 'takt.pizza' }],
+          destination: '/takt',
+        },
+        {
+          source: '/',
+          has: [{ type: 'host', value: 'www.takt.pizza' }],
+          destination: '/takt',
+        },
         // tokensurfers.app + brainrot.surf root → /surf (Token Surfers)
         {
           source: '/',
@@ -311,6 +322,17 @@ const nextConfig: NextConfig = {
           source: '/:path((?!(?:onething|api|_next)(?:/|$)).*)',
           has: [{ type: 'host', value: 'www.onething.ink' }],
           destination: '/onething/:path',
+        },
+        // takt.pizza/anything → /takt/anything (opengraph-image, icons, /hands)
+        {
+          source: '/:path((?!(?:takt|api|_next)(?:/|$)).*)',
+          has: [{ type: 'host', value: 'takt.pizza' }],
+          destination: '/takt/:path',
+        },
+        {
+          source: '/:path((?!(?:takt|api|_next)(?:/|$)).*)',
+          has: [{ type: 'host', value: 'www.takt.pizza' }],
+          destination: '/takt/:path',
         },
         // tokensurfers.app + brainrot.surf /anything → /surf/anything (gallery, /a/<slug>, og)
         {

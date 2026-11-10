@@ -1,0 +1,240 @@
+/* Takt landing page. Two vibes, the app's own tokens (apps/takt/Takt/Design/Vibe.swift):
+   Blues on its paper, Electronic on its ink. The canvas behind draws the keyboard and
+   the falling notes in the same colors (LOOK in Landing.tsx: keep the two in step). */
+
+.takt-lp {
+  --ground: #f0e8d6;
+  --panel: #e4d9c3;
+  --line: #cbbea4;
+  --ink: #17120c;
+  --muted: #62584a;
+  --signal: #c2540b;
+  --cue: #2d4e96;
+  --go-bg: #17120c;
+  --go-fg: #f0e8d6;
+  --go-radius: 999px;
+
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: var(--ground);
+  color: var(--ink);
+  transition: background-color 0.35s ease, color 0.35s ease;
+  -webkit-font-smoothing: antialiased;
+}
+
+.takt-lp[data-vibe='electronic'] {
+  --ground: #0d0d0d;
+  --panel: #181818;
+  --line: #2a2a2a;
+  --ink: #f2f0eb;
+  --muted: #9a978f;
+  --signal: #ff5a1f;
+  --cue: #8fb3ff;
+  --go-bg: #ff5a1f;
+  --go-fg: #0d0d0d;
+  --go-radius: 0px;
+}
+
+.takt-lp canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.takt-lp .copy {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+  column-gap: 24px;
+  padding: calc(clamp(18px, 3.2vw, 44px) + env(safe-area-inset-top)) calc(clamp(20px, 5vw, 76px) + env(safe-area-inset-right)) 0
+    calc(clamp(20px, 5vw, 76px) + env(safe-area-inset-left));
+  pointer-events: none;
+}
+.takt-lp .copy > * {
+  pointer-events: auto;
+}
+
+.takt-lp h1 {
+  grid-column: 1;
+  grid-row: 1;
+  margin: 0 0 0 -0.035em;
+  font-family: var(--font-takt-display), 'Arial Narrow', sans-serif;
+  font-weight: 700;
+  font-size: clamp(120px, 23vw, 330px);
+  line-height: 0.78;
+  letter-spacing: -0.012em;
+  text-transform: uppercase;
+}
+
+/* ---- the vibe switch: the app's own, a 56 x 30 track and a lit knob */
+.takt-lp .vibe {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+  font-family: var(--font-takt-mono), ui-monospace, Menlo, monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.takt-lp .vibe .name {
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 8px 0;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+.takt-lp .vibe .name[aria-pressed='true'] {
+  color: var(--ink);
+}
+.takt-lp .switch {
+  appearance: none;
+  position: relative;
+  width: 56px;
+  height: 30px;
+  flex: none;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  cursor: pointer;
+  transition: background-color 0.35s ease, border-color 0.35s ease;
+}
+.takt-lp .switch .knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--signal);
+  color: var(--ground);
+  display: grid;
+  place-items: center;
+  font-family: var(--font-takt-serif), Georgia, serif;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+  transition: transform 0.22s cubic-bezier(0.3, 0.9, 0.3, 1.15), background-color 0.35s ease, color 0.35s ease;
+}
+.takt-lp[data-vibe='electronic'] .switch .knob {
+  transform: translateX(26px);
+}
+.takt-lp .switch .knob svg {
+  width: 13px;
+  height: 13px;
+  display: block;
+}
+
+.takt-lp .line {
+  grid-column: 1 / -1;
+  margin: clamp(18px, 2.4vw, 34px) 0 0;
+  max-width: 13em;
+  font-family: var(--font-takt-serif), Georgia, serif;
+  font-style: italic;
+  font-weight: 420;
+  font-size: clamp(25px, 3vw, 42px);
+  line-height: 1.12;
+  letter-spacing: -0.012em;
+  text-wrap: balance;
+}
+.takt-lp[data-vibe='electronic'] .line {
+  max-width: 15em;
+  font-family: var(--font-takt-mono), ui-monospace, Menlo, monospace;
+  font-style: normal;
+  font-weight: 400;
+  font-size: clamp(19px, 2.2vw, 31px);
+  line-height: 1.28;
+  letter-spacing: -0.02em;
+}
+
+.takt-lp .go {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px 20px;
+  margin-top: clamp(20px, 2.4vw, 32px);
+}
+.takt-lp .go a {
+  display: inline-block;
+  padding: 13px 24px 14px;
+  border-radius: var(--go-radius);
+  background: var(--go-bg);
+  color: var(--go-fg);
+  font-family: var(--font-takt-display), 'Arial Narrow', sans-serif;
+  font-weight: 600;
+  font-size: 21px;
+  line-height: 1;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background-color 0.35s ease, color 0.35s ease, border-radius 0.35s ease, transform 0.12s ease;
+}
+.takt-lp .go a:hover {
+  transform: translateY(-2px);
+}
+.takt-lp .go a:active {
+  transform: translateY(1px);
+}
+.takt-lp .go span {
+  font-family: var(--font-takt-mono), ui-monospace, Menlo, monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  transition: color 0.35s ease;
+}
+
+.takt-lp :is(a, button):focus-visible {
+  outline: 2px solid var(--cue);
+  outline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+  .takt-lp .copy {
+    grid-template-columns: 1fr;
+  }
+  .takt-lp .vibe {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: end;
+    margin-top: 0;
+  }
+  .takt-lp h1 {
+    grid-row: 2;
+    margin-top: 10px;
+    font-size: clamp(120px, 40vw, 190px);
+  }
+}
+
+@media (max-height: 560px) {
+  .takt-lp h1 {
+    font-size: clamp(84px, 30vh, 170px);
+  }
+  .takt-lp .line {
+    margin-top: 12px;
+  }
+  .takt-lp .go {
+    margin-top: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .takt-lp,
+  .takt-lp * {
+    transition: none !important;
+  }
+}
