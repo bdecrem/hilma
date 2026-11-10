@@ -39,6 +39,7 @@ const APPS: App[] = [
     name: 'Migrant Rights Database',
     line: 'Cornell’s Migrant Rights Database: 46 countries scored on 18 categories of migrants’ rights, and the laws behind them.',
     links: [
+      { href: 'https://www.migrantrightsinitiative.org/en', label: 'The live site', note: 'Cornell’s Migrant Rights Initiative' },
       { href: 'https://ola.cx/mrd', label: 'The database', note: 'countries, categories and the full law library' },
       { href: 'https://ola.cx/mrd/crawl', label: 'The dashboard', note: 'tracing every law the database cites' },
       { href: 'https://ola.cx/mrd/dossiers', label: 'The six-country experiment', note: 'six countries coded by an agent, flagged experimental' },
