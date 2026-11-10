@@ -189,7 +189,6 @@ const mapBg = document.createElement('canvas'); mapBg.width = W; mapBg.height = 
   rect(m, 42, 47, 4, 7, C.lit); rect(m, 42, 47, 1, 7, '#fff3c4');
   oval(m, 44, 57, 6, 2, 'rgba(255,217,106,0.35)');
   oak(m, 160, 79, 8);
-  rect(m, 136, 88, 10, 3, C.trunk); rect(m, 174, 88, 10, 3, C.trunk);
   rect(m, 4, 98, 46, 42, C.ink); rect(m, 5, 99, 44, 40, C.asphalt);
   [19, 33].forEach(x => rect(m, x, 100, 1, 18, C.line));
   car(m, 7, 102, '#2b3fff'); car(m, 21, 102, '#ff9ccf'); car(m, 35, 102, '#fff7e6');
@@ -200,8 +199,8 @@ const mapBg = document.createElement('canvas'); mapBg.width = W; mapBg.height = 
   for (let i = 0; i < 26; i++) rect(m, 250 + r() * 66, 90 + r() * 46, 2, 2, C.orange);
   wing(m, 300, 96, 12, 36, WING_DOORS);
   for (let i = 0; i < 8; i++) rect(m, 70 + r() * 24, 76 + r() * 18, 2, 2, C.orange);
-  // picnic tables either side of the oak courtyard
-  [[78, 74], [214, 78]].forEach(([x, y]) => {
+  // picnic tables on the courtyard, either side of the oak
+  [[124, 75], [180, 75]].forEach(([x, y]) => {
     oval(m, x + 8, y + 13, 9, 2, C.shadow);
     rect(m, x, y, 16, 2, '#7d5632'); rect(m, x, y + 10, 16, 2, '#7d5632');
     rect(m, x - 1, y + 3, 18, 6, C.ink); rect(m, x, y + 4, 16, 4, '#b07a45'); rect(m, x, y + 6, 16, 1, '#9c6a3c');
@@ -579,8 +578,8 @@ const MAP = [
   lockedStudy(2, 228, 60), lockedStudy(3, 276, 60), lockedStudy(4, 190, 128), lockedStudy(5, 130, 128),
   lockedStudy(6, 250, 9), lockedStudy(7, 266, 9), lockedStudy(8, 282, 9), lockedStudy(9, 300, 106), lockedStudy(10, 300, 122),
   { name: 'main hall', r: [128, 8, 64, 30], walk: { x: 160, y: 44 }, def: 'open', on: { look: 'The main hall. Seminars happen in there. Like this one.', open: "Not yet. I haven't visited the studies." } },
-  { name: 'picnic table', r: [76, 72, 20, 16], walk: { x: 60, y: 82 }, def: 'look', on: { look: 'A picnic table. Someone carved a regression line into it.', use: 'I sit for a second. Very restorative. Back to it.' } },
-  { name: 'picnic table', r: [212, 76, 20, 16], walk: { x: 240, y: 84 }, def: 'look', on: { look: 'A picnic table. The good one, in the shade. Taken at noon.', use: 'I sit for a second. Very restorative. Back to it.' } },
+  { name: 'picnic table', r: [122, 73, 20, 16], walk: { x: 132, y: 64 }, def: 'look', on: { look: 'A picnic table. Someone carved a regression line into it.', use: 'I sit for a second. Very restorative. Back to it.' } },
+  { name: 'picnic table', r: [178, 73, 20, 16], walk: { x: 188, y: 64 }, def: 'look', on: { look: 'A picnic table. The good one, in the shade. Taken at noon.', use: 'I sit for a second. Very restorative. Back to it.' } },
   { name: 'courtyard oak', r: [148, 68, 24, 24], walk: { x: 160, y: 64 }, def: 'look', on: { look: 'A big oak in a brick courtyard. Good for thinking under.' } },
   { name: 'the Dish', r: [212, 2, 24, 22], walk: { x: 224, y: 64 }, def: 'talk', on: { look: "The Dish. It's listening to space.", talk: [['you', 'Hello, space.'], ['you', '...']] } },
   { name: 'cow', r: [252, 96, 30, 32], walk: { x: 240, y: 112 }, def: 'talk', on: { look: 'A cow. Looks tenured.', talk: [['you', 'Moo.'], ['cow', 'Moo.']] } },
