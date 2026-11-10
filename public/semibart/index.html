@@ -58,14 +58,22 @@ button { font: inherit; background: none; border: 0; margin: 0; cursor: pointer;
 #phones { flex: 1; min-height: 0; display: flex; justify-content: center; align-items: center; gap: 5cqw; padding: 1cqw 0 3cqw; background: #1a1a18; }
 .phone { height: 100%; aspect-ratio: 640 / 1247; padding: 0.8cqw; background: #0c0c0c; border-radius: 3cqw; box-shadow: 0 0 0 0.3cqw #3a3a3a; }
 .phone img { width: 100%; height: 100%; display: block; border-radius: 2.2cqw; object-fit: cover; }
-#title { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.4cqw; background: rgba(0, 0, 0, 0.55); cursor: pointer; text-align: center; }
+#title { position: absolute; inset: 0; display: grid; place-items: center; }
 #title[hidden] { display: none; }
-#title h1 { margin: 0; color: var(--hot); font-size: 9cqw; line-height: 0.95; font-weight: 700; letter-spacing: 0.02em; }
-#title p { margin: 0; color: #fff7e6; font-size: 2.4cqw; line-height: 1.2; }
-#title .start { color: var(--cyan); animation: blink 1.1s steps(1) infinite; }
-#title .keys { color: #c9c3b4; font-size: 1.7cqw; margin-top: 1.5cqw; }
+.card { width: 62cqw; background: #12100c; color: #fff7e6; border: 0.5cqw solid var(--hot); box-shadow: 0 0 0 0.5cqw #000, 1.4cqw 1.4cqw 0 0.5cqw #000; padding: 2.4cqw 3.6cqw 2.6cqw; text-align: center; }
+.card .eyebrow { margin: 0 0 1cqw; color: var(--cyan); font-size: 1.6cqw; letter-spacing: 0.3em; text-transform: uppercase; }
+.card h1 { margin: 0; color: var(--hot); font-size: 6.6cqw; line-height: 1; white-space: nowrap; font-weight: 700; letter-spacing: 0.02em; }
+.card .tag { margin: 1.4cqw 0 0; font-size: 2.3cqw; line-height: 1.2; }
+.card hr { border: 0; border-top: 0.3cqw dashed #4a4436; margin: 2cqw 0 1.8cqw; }
+.card dl { display: grid; grid-template-columns: auto auto; justify-content: center; gap: 0.6cqw 1.6cqw; margin: 0; font-size: 1.7cqw; line-height: 1.1; text-align: left; }
+.card dt { color: var(--choice); text-align: right; }
+.card dd { margin: 0; color: #c9c3b4; }
+#startBtn { margin-top: 2.2cqw; background: var(--hot); color: #000; font-size: 2.8cqw; font-weight: 700; padding: 0.9cqw 5cqw; box-shadow: 0.5cqw 0.5cqw 0 #8a7a1e; letter-spacing: 0.08em; }
+#startBtn:hover { background: #fff; }
+#startBtn:focus-visible { outline: 0.3cqw solid #fff; outline-offset: 0.4cqw; }
+#startBtn:active { transform: translate(0.5cqw, 0.5cqw); box-shadow: none; }
 @keyframes blink { 50% { opacity: 0; } }
-@media (prefers-reduced-motion: reduce) { #fade { transition: none; } #title .start { animation: none; } }
+@media (prefers-reduced-motion: reduce) { #fade { transition: none; } }
 </style>
 </head>
 <body>
@@ -86,11 +94,21 @@ button { font: inherit; background: none; border: 0; margin: 0; cursor: pointer;
     </div>
   </div>
   <div id="fade"></div>
-  <div id="title" role="button" tabindex="0" aria-label="Start CASBS Quest">
-    <h1 class="outlined">CASBS Quest</h1>
-    <p class="outlined">Five studies. Five fellows. One afternoon.</p>
-    <p class="outlined start">Click to start</p>
-    <p class="outlined keys">Click to act · right-click to look · space skips a line · arrows hop studies · M mutes · F for full screen</p>
+  <div id="title" role="dialog" aria-modal="true" aria-labelledby="titleH">
+    <div class="card">
+      <p class="eyebrow">A point-and-click visit</p>
+      <h1 id="titleH">CASBS Quest</h1>
+      <p class="tag">Five studies. Five fellows. One afternoon.</p>
+      <hr>
+      <dl>
+        <dt>Click</dt><dd>walk, talk, open</dd>
+        <dt>Right-click</dt><dd>look</dd>
+        <dt>Space</dt><dd>skip a line</dd>
+        <dt>Arrows</dt><dd>hop between studies</dd>
+        <dt>M · F</dt><dd>mute · full screen</dd>
+      </dl>
+      <button id="startBtn" type="button">Start</button>
+    </div>
   </div>
 </div>
 
@@ -606,7 +624,8 @@ function start() {
   audio(); S.started = true; titleEl.hidden = true; SFX.jingle(); cv.focus && cv.focus();
   run(async () => { await wait(0.6); await say('you', 'CASBS. Five studies.'); await say('you', "Somebody's typing in one of them."); });
 }
-titleEl.addEventListener('click', e => { e.stopPropagation(); start(); });
+$('startBtn').addEventListener('click', e => { e.stopPropagation(); start(); });
+$('startBtn').focus({ preventScroll: true });
 async function hop(dir) {
   if (S.busy || S.choices) return;
   if (S.scene === 'room') { run(exitRoom); return; }
