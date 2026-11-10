@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#000000">
-<meta name="description" content="Fifty-four studies. One afternoon. A point-and-click walk through CASBS.">
+<meta name="description" content="Ten studies. Ten fellows. One afternoon. A point-and-click walk through CASBS.">
 <meta property="og:title" content="CASBS Quest">
-<meta property="og:description" content="Fifty-four studies. One afternoon.">
+<meta property="og:description" content="Ten studies. Ten fellows. One afternoon.">
 <meta property="og:url" content="https://ola.cx/semibart">
 <meta property="og:image" content="https://ola.cx/semibart/og.png">
 <meta property="og:image:width" content="1200">
@@ -98,13 +98,12 @@ button { font: inherit; background: none; border: 0; margin: 0; cursor: pointer;
     <div class="card">
       <p class="eyebrow">A point-and-click visit</p>
       <h1 id="titleH">CASBS Quest</h1>
-      <p class="tag">Fifty-four studies. One afternoon.</p>
+      <p class="tag">Ten studies. Ten fellows. One afternoon.</p>
       <hr>
       <dl>
         <dt>Click</dt><dd>walk, talk, open</dd>
         <dt>Right-click</dt><dd>look</dd>
         <dt>Space</dt><dd>skip a line</dd>
-        <dt>Drag · scroll</dt><dd>look around campus</dd>
         <dt>Arrows</dt><dd>hop between studies</dd>
         <dt>M · F</dt><dd>mute · full screen</dd>
       </dl>
@@ -137,6 +136,8 @@ const C = {
   brick: '#c46a4a', brick2: '#ad593c', stone: '#b9b4a8', oak: '#2f6b45', oak2: '#24553a', oak3: '#4a8f5f', trunk: '#5b3a21',
   asphalt: '#7b7771', line: '#f4efe2', shadow: 'rgba(20,20,20,0.2)', ink: '#141414', paper: '#fff7e6', orange: '#ff5a1f', lit: '#ffd96a'
 };
+const DOORS_TOP = [250, 266, 282], WING_DOORS = [106, 122];
+const DOORS_A = [28, 44, 60, 76, 92, 108], DOORS_B = [212, 228, 244, 260, 276, 292], DOORS_C = [114, 130, 146, 174, 190, 206];
 function building(m, x, y, w, rh, wh, doors, wide) {
   rect(m, x + 2, y + rh + wh, w, 2, C.shadow);
   rect(m, x, y, w, rh, C.roof);
@@ -145,147 +146,60 @@ function building(m, x, y, w, rh, wh, doors, wide) {
   rect(m, x, y + rh, w, wh, C.wall);
   for (let i = x + 1; i < x + w; i += 3) rect(m, i, y + rh, 1, wh, C.wallLo);
   rect(m, x, y + rh + wh - 1, w, 1, C.fascia);
-  doors.forEach(d => {
-    const dx = typeof d === 'number' ? d : d.x, half = (typeof d === 'number' ? wide : d.wide) ? 5 : 3;
+  doors.forEach(dx => {
+    const half = wide ? 5 : 3;
     rect(m, dx - half, y + rh, half * 2, wh, C.fascia);
     rect(m, dx - half + 1, y + rh + 1, half * 2 - 2, wh - 1, C.glass);
     rect(m, dx - half + 1, y + rh + 1, 1, wh - 1, C.glassHi);
   });
 }
-// a long north-south wing: roof seen from above, doors on one long side (side -1 = west, 1 = east)
-function wing(m, x, y, w, h, doorYs, side) {
+function wing(m, x, y, w, h, doorYs) {
   rect(m, x + 2, y + 2, w + 2, h + 6, C.shadow);
   rect(m, x, y, w, h, C.roof);
   for (let i = x + 3; i < x + w - 2; i += 4) rect(m, i, y + 2, 1, h - 4, C.roofLine);
   rect(m, x, y, w, 1, C.fascia); rect(m, x, y + h - 1, w, 1, C.fascia); rect(m, x, y, 1, h, C.fascia); rect(m, x + w - 1, y, 1, h, C.fascia);
   rect(m, x, y + h, w, 5, C.wall); for (let i = x + 1; i < x + w; i += 3) rect(m, i, y + h, 1, 5, C.wallLo); rect(m, x, y + h + 4, w, 1, C.fascia);
-  const sx = side < 0 ? x - 4 : x + w;
-  rect(m, sx, y + 1, 4, h + 3, C.wall); rect(m, side < 0 ? sx : sx + 3, y + 1, 1, h + 3, C.fascia);
-  doorYs.forEach(dy => { rect(m, sx, dy - 3, 4, 7, C.fascia); rect(m, sx + (side < 0 ? 1 : 0), dy - 2, 3, 5, C.glass); rect(m, sx + (side < 0 ? 1 : 0), dy - 2, 3, 1, C.glassHi); });
+  rect(m, x - 4, y + 1, 4, h + 3, C.wall); rect(m, x - 4, y + 1, 1, h + 3, C.fascia);
+  doorYs.forEach(dy => { rect(m, x - 4, dy - 3, 4, 7, C.fascia); rect(m, x - 3, dy - 2, 3, 5, C.glass); rect(m, x - 3, dy - 2, 3, 1, C.glassHi); });
 }
 function oak(m, x, y, r) { oval(m, x + 1, y + r + 2, r, 2, C.shadow); rect(m, x - 1, y + r - 2, 2, 5, C.trunk); disc(m, x, y, r, C.oak2); disc(m, x - 1, y - 1, r - 1, C.oak); disc(m, x - Math.round(r / 3), y - Math.round(r / 3), Math.max(1, Math.round(r / 3)), C.oak3); }
 function car(m, x, y, col) { rect(m, x, y, 10, 15, C.ink); rect(m, x + 1, y + 1, 8, 13, col); rect(m, x + 2, y + 3, 6, 3, C.glassHi); rect(m, x + 2, y + 10, 6, 2, C.glassHi); }
 function cow(m, x, y) { rect(m, x, y + 2, 9, 5, C.ink); rect(m, x + 1, y + 3, 7, 3, '#fffaf0'); rect(m, x + 2, y + 3, 2, 2, C.ink); rect(m, x + 6, y + 4, 1, 2, C.ink); rect(m, x + 8, y + 1, 4, 4, C.ink); rect(m, x + 9, y + 2, 2, 2, '#fffaf0'); rect(m, x + 1, y + 7, 1, 2, C.ink); rect(m, x + 7, y + 7, 1, 2, C.ink); }
-function dish(m, cx, cy) { oval(m, cx, cy + 11, 10, 3, C.shadow); rect(m, cx - 3, cy + 3, 1, 8, C.ink); rect(m, cx + 3, cy + 3, 1, 8, C.ink); oval(m, cx, cy, 8, 4, C.ink); oval(m, cx, cy, 7, 3, '#fffaf0'); rect(m, cx, cy - 6, 1, 6, C.ink); }
-function dotted(m, x, y, w, h, col) { for (let i = 0; i < w; i += 3) { rect(m, x + i, y, 1, 1, col); rect(m, x + i, y + h - 1, 1, 1, col); } for (let j = 0; j < h; j += 3) { rect(m, x, y + j, 1, 1, col); rect(m, x + w - 1, y + j, 1, 1, col); } }
-function stamp(m, s, h, col) { const n = Math.ceil(Math.hypot(s[2] - s[0], s[3] - s[1])); for (let i = 0; i <= n; i++) rect(m, s[0] + (s[2] - s[0]) * i / n - h, s[1] + (s[3] - s[1]) * i / n - h, h * 2, h * 2, col); }
 
-/* The world is bigger than the screen: the camera opens on the middle of campus
-   (Bart's row, the hall, the east wings) and the rest slides in as you walk:
-   the hill with the long row and the cows up top, the west wings to the left,
-   library and dining below. Loosely after the real CASBS plan, not to scale. */
-const WW = 640, WH = 360;
-const FELLOWS = {
-  1: 'Daniel Chen', 2: 'Kah-Wee Lee', 4: 'Mary Helen Immordino-Yang', 5: 'Luke Miratrix', 6: 'Lewis Abedi Asante',
-  7: 'Lawrence Cheung', 8: 'Brooke Harrington', 9: 'Katharyne Mitchell', 10: 'Frances Moore', 11: 'James Goldgeier', 12: 'Fred Singer',
-  13: 'John Casellas Connors', 14: 'Garance Burke', 15: 'Graeme Blair', 16: 'Bart Decrem',
-  21: 'Mike Gaetani', 22: 'Manny Pulido', 24: 'Sejung Park', 25: 'Bruce Young',
-  27: ['Kevin Driscoll', 'Raul Saucedo', 'Mikael Jakobsson'], 28: ['Chi Kei Jacqueline Lam', 'Jurate Jaraite-Kazukauske'], 29: ['Ishara Casellas Connors', 'Ian Kysel'],
-  30: 'Juliana Bidadanure', 31: 'Inbal Ben Ami Bartal', 32: 'Milena Tsvetkova', 33: 'T.L. Taylor', 34: 'Eli Cook', 35: 'Summerson Carr', 36: 'Alison McQueen', 37: 'Salman Chaudhry',
-  38: 'June Gruber', 39: 'Lynda Powell', 40: 'Robert Kaplan', 41: 'R. Richard Banks', 42: 'Dessislava Lange-Damianova', 43: 'Joseph Tao-yi Wang', 44: 'Forrest Stuart', 45: 'Jamie Kreiner',
-  46: 'Kepa Korta', 47: 'Henry Cowles', 48: 'Corey Abramson', 49: 'Lana Swartz', 50: 'Shigehiro Oishi', 51: 'Andrius Kazukauskas', 52: 'Bryn Rosenfeld', 53: 'Brian Knutson', 54: 'Heeju Sohn',
-  '016': ['Toussaint Nothias', 'Matthew Sparke']
-};
-const NOTE_POOL = [
-  'At lunch. Lunch is sacred.', 'Thinking under the oak.', 'Back in five. Five what, unclear.', 'In a seminar. Possibly this one.',
-  'Walking to the Dish. Not listening to it.', 'Writing. Do not knock. (You knocked.)', 'On a call with a different time zone.',
-  'In the library. The book is long.', 'Napping counts as fieldwork.', 'Gone to see the cows. For research.',
-  'Back after this paragraph.', 'At the coffee. The coffee is far.', 'Out. Thinking. Same thing.'
-];
-// the paths, as segments; where one ends on another they join
-const SEGS = [
-  [28, 54, 160, 54], [160, 54, 176, 58], [176, 58, 420, 58],
-  [140, 54, 140, 74], [140, 74, 250, 92], [250, 92, 140, 110], [140, 110, 250, 128], [250, 128, 250, 170],
-  [420, 58, 496, 40],
-  [420, 58, 420, 124], [420, 124, 420, 170], [420, 124, 524, 124],
-  [64, 170, 598, 170],
-  [64, 170, 64, 300], [250, 170, 250, 270], [420, 170, 420, 270],
-  [526, 146, 526, 170], [526, 170, 526, 340],
-  [598, 146, 598, 170], [598, 170, 598, 300],
-  [64, 270, 526, 270]
-];
-const GRAPH = (function () {
-  let segs = SEGS.map(s => s.slice());
-  SEGS.forEach(s => [[s[0], s[1]], [s[2], s[3]]].forEach(([px, py]) => {
-    const out = [];
-    segs.forEach(q => {
-      const dx = q[2] - q[0], dy = q[3] - q[1], L = dx * dx + dy * dy, t = ((px - q[0]) * dx + (py - q[1]) * dy) / L;
-      const ex = q[0] + dx * t - px, ey = q[1] + dy * t - py;
-      if (t > 0.001 && t < 0.999 && ex * ex + ey * ey < 0.25) out.push([q[0], q[1], px, py], [px, py, q[2], q[3]]); else out.push(q);
-    });
-    segs = out;
-  }));
-  const adj = new Map(), add = (a, b, w) => { if (!adj.has(a)) adj.set(a, []); adj.get(a).push([b, w]); };
-  segs.forEach(s => { const a = s[0] + ',' + s[1], b = s[2] + ',' + s[3], w = Math.hypot(s[2] - s[0], s[3] - s[1]); add(a, b, w); add(b, a, w); });
-  return { segs, adj };
-})();
-// rows face south onto a walk; wings face a walk along their long side
-const ROWS = [
-  { x: 24, y: 26, first: 38, n: 8, d0: 34 }, { x: 176, y: 30, first: 46, n: 9, d0: 186 },
-  { x: 440, y: 96, first: 26, n: 4, d0: 452 }, { x: 344, y: 142, first: 13, n: 4, d0: 354 }, { x: 96, y: 142, first: 7, n: 6, d0: 106 }
-];
-const WINGS = [
-  { x: 42, y: 186, w: 14, h: 122, side: 1, path: 64, doors: [[6, 196], [5, 216], [4, 236], [3, 256], [2, 276], [1, 296]] },
-  { x: 532, y: 150, w: 14, h: 80, side: -1, path: 526, doors: [[17, 160], [18, 180], [19, 200], [20, 220]] },
-  { x: 532, y: 244, w: 14, h: 100, side: -1, path: 526, doors: [[21, 254], [22, 274], [23, 294], [24, 314], [25, 334]] },
-  { x: 606, y: 146, w: 14, h: 160, side: -1, path: 598, doors: [[30, 156], [31, 176], [32, 196], [33, 216], [34, 236], [35, 256], [36, 276], [37, 296]] }
-];
-const COWS = [[546, 40], [578, 72], [604, 104]];
-const BART_DOOR = { x: 402, y: 170 };
-const SPURS = [[150, 270, 150, 290]];
-ROWS.forEach(R => { for (let i = 0; i < R.n; i++) SPURS.push([R.d0 + i * 16, R.y + 22, R.d0 + i * 16, R.y + 28]); });
-SPURS.push([160, 264, 160, 270], [210, 264, 210, 270], [345, 264, 345, 270], [468, 164, 468, 170]);
-
-const world = document.createElement('canvas'); world.width = WW; world.height = WH;
+const mapBg = document.createElement('canvas'); mapBg.width = W; mapBg.height = H;
 (function () {
-  const m = world.getContext('2d'), r = rng(7);
-  rect(m, 0, 0, WW, WH, C.grass);
-  // the hill: contour lines fade out as the ground flattens
-  for (let k = 0; k < 7; k++) { const base = 10 + k * 18; for (let x = 0; x < WW; x++) { const y = Math.round(base + 5 * Math.sin(x / 37 + k * 1.7) + 2 * Math.sin(x / 11 + k)); if (y < 140) rect(m, x, y, 1, 1, k % 2 ? C.grass2 : '#d39a35'); } }
-  for (let i = 0; i < 1500; i++) rect(m, r() * WW, r() * WH, 2, 1, r() < 0.6 ? C.grass2 : C.grass3);
-  for (let i = 0; i < 40; i++) rect(m, 540 + r() * 96, 6 + r() * 120, 2, 2, C.orange);
-  for (let i = 0; i < 26; i++) rect(m, 430 + r() * 90, 284 + r() * 50, 2, 2, C.orange);
-  for (let i = 0; i < 18; i++) rect(m, 8 + r() * 120, 60 + r() * 70, 2, 2, C.orange);
-  // lawn, mowed in stripes
-  rect(m, 552, 146, 38, 186, '#5f8a3e'); for (let y = 147; y < 331; y += 8) rect(m, 553, y, 36, 4, '#86b056'); for (let y = 151; y < 331; y += 8) rect(m, 553, y, 36, 4, '#7aa34d');
-  // patios: dotted, like on the plan
-  dotted(m, 20, 16, 308, 40, C.pathEdge); dotted(m, 90, 132, 112, 36, C.pathEdge); dotted(m, 338, 132, 80, 36, C.pathEdge); dotted(m, 436, 86, 86, 36, C.pathEdge);
-  dotted(m, 28, 182, 14, 132, C.pathEdge); dotted(m, 622, 140, 12, 172, C.pathEdge);
-  // paths
-  const all = GRAPH.segs.concat(SPURS);
-  all.forEach(s => stamp(m, s, 4, C.pathEdge)); all.forEach(s => stamp(m, s, 3, C.path));
-  // brick courtyard with the big oak
-  rect(m, 330, 184, 80, 28, C.stone); rect(m, 331, 185, 78, 26, C.brick);
-  for (let y = 185; y < 211; y += 2) for (let x = 331 + (((y - 185) / 2) % 2) * 2; x < 409; x += 4) rect(m, x, y, 1, 1, C.brick2);
-  rect(m, 366, 174, 8, 10, C.path);
-  oak(m, 370, 193, 9); rect(m, 340, 204, 10, 3, C.trunk); rect(m, 390, 204, 10, 3, C.trunk);
-  // outdoor dining: umbrellas on a terrace
-  rect(m, 440, 186, 68, 28, C.pathEdge); rect(m, 441, 187, 66, 26, C.path);
-  [[454, 196, '#ff9ccf'], [474, 204, '#2b3fff'], [494, 195, '#ffd93b'], [492, 208, '#ff5a1f']].forEach(u => { oval(m, u[0] + 1, u[1] + 5, 5, 1, C.shadow); disc(m, u[0], u[1], 4, C.ink); disc(m, u[0], u[1], 3, u[2]); rect(m, u[0], u[1], 1, 1, '#fff7e6'); });
-  // buildings
-  ROWS.forEach(R => { const ds = []; for (let i = 0; i < R.n; i++) ds.push(R.d0 + i * 16); building(m, R.x, R.y, ds[ds.length - 1] + 10 - R.x, 14, 8, ds); });
-  WINGS.forEach(Wg => wing(m, Wg.x, Wg.y, Wg.w, Wg.h, Wg.doors.map(d => d[1]), Wg.side));
-  building(m, 436, 134, 64, 20, 10, [468], true);           // the main hall
-  building(m, 140, 242, 96, 14, 8, [160, { x: 210, wide: true }]); // 016 + library
-  building(m, 290, 238, 110, 18, 8, [{ x: 345, wide: true }, 312, 380]); // dining, kitchen, reception
-  building(m, 300, 294, 120, 14, 8, [330, 360, 390]);       // conference rooms
-  rect(m, 504, 120, 1, 26, C.ink);                          // flagpole
-  // the one lit door
-  rect(m, 400, 157, 4, 7, C.lit); rect(m, 400, 157, 1, 7, '#fff3c4'); oval(m, 402, 170, 6, 2, 'rgba(255,217,106,0.45)');
-  // the hill: the Dish, a fence, the cows
-  dish(m, 512, 22);
-  COWS.forEach(c => cow(m, c[0], c[1]));
-  for (let y = 4; y < 134; y += 6) rect(m, 530, y, 1, 4, C.trunk); rect(m, 530, 4, 1, 130, 'rgba(91,58,33,0.5)');
-  for (let x = 530; x < WW; x += 6) rect(m, x, 132, 1, 4, C.trunk); rect(m, 530, 133, WW - 530, 1, 'rgba(91,58,33,0.5)');
-  // parking
-  rect(m, 100, 290, 100, 48, C.ink); rect(m, 101, 291, 98, 46, C.asphalt);
-  [120, 140, 160, 180].forEach(x => rect(m, x, 292, 1, 18, C.line));
-  car(m, 105, 294, '#2b3fff'); car(m, 125, 294, '#ff9ccf'); car(m, 165, 294, '#fff7e6');
-  rect(m, 0, 344, WW, 16, C.ink); rect(m, 0, 345, WW, 15, C.asphalt); for (let x = 4; x < WW; x += 14) rect(m, x, 352, 7, 1, C.line);
-  rect(m, 146, 337, 8, 8, C.asphalt);
-  [[10, 92, 6], [92, 96, 5], [300, 100, 6], [340, 112, 5], [372, 86, 6], [356, 16, 5], [392, 28, 6], [618, 12, 6], [462, 60, 5],
-   [16, 140, 6], [18, 226, 6], [120, 212, 5], [270, 212, 6], [204, 304, 6], [440, 300, 5], [470, 244, 6], [484, 312, 5],
-   [622, 336, 6], [20, 330, 6], [240, 318, 6], [470, 326, 5], [84, 318, 5], [300, 208, 4], [596, 330, 4]].forEach(o => oak(m, o[0], o[1], o[2]));
+  const m = mapBg.getContext('2d'), r = rng(7);
+  rect(m, 0, 0, W, H, C.grass);
+  for (let i = 0; i < 360; i++) rect(m, r() * W, r() * H, 2, 1, r() < 0.6 ? C.grass2 : C.grass3);
+  const paths = [[60, 64, 60, 132], [16, 64, 310, 64], [240, 64, 240, 132], [50, 132, 292, 132], [160, 38, 160, 64], [236, 9, 310, 9], [310, 9, 310, 64], [292, 100, 292, 132]];
+  DOORS_TOP.forEach(x => paths.push([x, 2, x, 9]));
+  DOORS_A.concat(DOORS_B).forEach(x => paths.push([x, 54, x, 64]));
+  DOORS_C.forEach(x => paths.push([x, 122, x, 132]));
+  const box = (p, pad) => [Math.min(p[0], p[2]) - pad, Math.min(p[1], p[3]) - pad, Math.abs(p[2] - p[0]) + pad * 2, Math.abs(p[3] - p[1]) + pad * 2];
+  paths.forEach(p => { const b = box(p, 4); rect(m, b[0], b[1], b[2], b[3], C.pathEdge); });
+  paths.forEach(p => { const b = box(p, 3); rect(m, b[0], b[1], b[2], b[3], C.path); });
+  rect(m, 117, 68, 86, 27, C.stone); rect(m, 118, 69, 84, 25, C.brick);
+  for (let y = 69; y < 94; y += 2) for (let x = 118 + (((y - 69) / 2) % 2) * 2; x < 202; x += 4) rect(m, x, y, 1, 1, C.brick2);
+  rect(m, 150, 68, 20, 1, C.brick); rect(m, 150, 94, 20, 1, C.brick);
+  building(m, 16, 30, 100, 16, 8, DOORS_A);
+  building(m, 204, 30, 100, 16, 8, DOORS_B);
+  building(m, 128, 8, 64, 20, 10, [160], true);
+  building(m, 100, 98, 120, 16, 8, DOORS_C);
+  rect(m, 42, 47, 4, 7, C.lit); rect(m, 42, 47, 1, 7, '#fff3c4');
+  oval(m, 44, 57, 6, 2, 'rgba(255,217,106,0.35)');
+  oak(m, 160, 79, 8);
+  rect(m, 136, 88, 10, 3, C.trunk); rect(m, 174, 88, 10, 3, C.trunk);
+  rect(m, 4, 98, 46, 42, C.ink); rect(m, 5, 99, 44, 40, C.asphalt);
+  [19, 33].forEach(x => rect(m, x, 100, 1, 18, C.line));
+  car(m, 7, 102, '#2b3fff'); car(m, 21, 102, '#ff9ccf'); car(m, 35, 102, '#fff7e6');
+  oval(m, 224, 22, 10, 3, C.shadow); rect(m, 221, 14, 1, 8, C.ink); rect(m, 227, 14, 1, 8, C.ink);
+  oval(m, 224, 11, 8, 4, C.ink); oval(m, 224, 11, 7, 3, '#fffaf0'); rect(m, 224, 5, 1, 6, C.ink);
+  cow(m, 258, 100); cow(m, 266, 118);
+  [[70, 12, 6], [308, 82, 7], [22, 82, 6], [82, 116, 5], [118, 6, 4]].forEach(o => oak(m, o[0], o[1], o[2]));
+  for (let i = 0; i < 26; i++) rect(m, 250 + r() * 66, 90 + r() * 46, 2, 2, C.orange);
+  wing(m, 300, 96, 12, 36, WING_DOORS);
+  for (let i = 0; i < 8; i++) rect(m, 70 + r() * 24, 76 + r() * 18, 2, 2, C.orange);
+  rect(m, 196, 22, 1, 20, C.ink);
 })();
 
 /* ---------- Bart's study ---------- */
@@ -409,6 +323,16 @@ function drawMonitor(f) {
 }
 
 /* ---------- full 16:9 frames ---------- */
+const mapFull = document.createElement('canvas'); mapFull.width = W; mapFull.height = FH;
+(function () {
+  const m = mapFull.getContext('2d'), r = rng(91);
+  rect(m, 0, 0, W, FH, C.grass);
+  for (let i = 0; i < 120; i++) { const y = r() < 0.5 ? r() * OY : FH - OY + r() * OY; rect(m, r() * W, y, 2, 1, r() < 0.6 ? C.grass2 : C.grass3); }
+  m.drawImage(mapBg, 0, OY);
+  building(m, 238, 2, 56, 12, 7, DOORS_TOP);
+  [[22, 6, 5], [96, 170, 6], [180, 172, 5], [250, 168, 6], [30, 170, 5]].forEach(o => oak(m, o[0], o[1], o[2]));
+  for (let i = 0; i < 14; i++) rect(m, 120 + r() * 120, 164 + r() * 14, 2, 2, C.orange);
+})();
 const roomFull = document.createElement('canvas'); roomFull.width = W; roomFull.height = FH;
 (function () {
   const m = roomFull.getContext('2d'), r = rng(5);
@@ -505,7 +429,7 @@ function garble(who, text) {
 
 /* ---------- state ---------- */
 const S = {
-  scene: 'map', x: 420, y: 232, cam: { x: 320, y: 136, free: false }, seen: {}, focus: null, drag: null, dragged: false, face: 1, path: [], arrive: null, stepT: 0, keyT: 0,
+  scene: 'map', x: 54, y: 132, face: 1, path: [], arrive: null, stepT: 0, keyT: 0,
   hover: null, busy: false, line: null, choices: null, started: false, study: -1,
   bart: { mode: 'type', t: 0, shades: false }, met: false, talked: false, phoneOn: false, phoneT: 0, zoomT: -1, screenDone: null
 };
@@ -520,45 +444,25 @@ function walkTo(pts) {
   return new Promise(res => {
     if (S.arrive) { const a = S.arrive; S.arrive = null; a(); }
     S.path = pts.map(p => S.scene === 'room' ? clampRoom(p) : p);
-    if (S.path.length) S.cam.free = false;
     if (!S.path.length) { res(); return; }
     S.arrive = res;
   });
 }
 function clampRoom(p) { return { x: Math.max(40, Math.min(300, p.x)), y: Math.max(126, Math.min(141, p.y)) }; }
-function nearestOnGraph(p) {
-  let best = null;
-  GRAPH.segs.forEach((s, i) => {
-    const dx = s[2] - s[0], dy = s[3] - s[1], L = dx * dx + dy * dy;
-    const t = Math.max(0, Math.min(1, L ? ((p.x - s[0]) * dx + (p.y - s[1]) * dy) / L : 0));
-    const x = s[0] + dx * t, y = s[1] + dy * t, d = (x - p.x) ** 2 + (y - p.y) ** 2;
-    if (!best || d < best.d) best = { i, x, y, d };
-  });
-  return best;
-}
+function rail(y) { return y < 20 ? 9 : y < 98 ? 64 : 132; }
 function route(to) {
-  const A = nearestOnGraph({ x: S.x, y: S.y }), B = nearestOnGraph(to), pts = [];
-  if (A.d > 0.25) pts.push({ x: A.x, y: A.y });
-  if (A.i === B.i) { pts.push({ x: B.x, y: B.y }); return pts; }
-  const sa = GRAPH.segs[A.i], sb = GRAPH.segs[B.i], dist = new Map(), prev = new Map(), done = new Set();
-  [[sa[0], sa[1]], [sa[2], sa[3]]].forEach(([x, y]) => { const k = x + ',' + y, d = Math.hypot(x - A.x, y - A.y); if (!dist.has(k) || d < dist.get(k)) { dist.set(k, d); prev.set(k, null); } });
-  for (;;) {
-    let bk = null, bd = Infinity;
-    dist.forEach((d, k) => { if (!done.has(k) && d < bd) { bd = d; bk = k; } });
-    if (bk === null) break;
-    done.add(bk);
-    (GRAPH.adj.get(bk) || []).forEach(([nk, w]) => { const nd = bd + w; if (!dist.has(nk) || nd < dist.get(nk)) { dist.set(nk, nd); prev.set(nk, bk); } });
+  const pts = [], fy = rail(S.y), ty = rail(to.y);
+  if (Math.abs(S.y - fy) > 0.5) pts.push({ x: S.x, y: fy });
+  let fx = S.x, ry = fy;
+  while (ry !== ty) {
+    const next = ry !== 64 ? 64 : ty;
+    const cx = ry === 9 || next === 9 ? 310 : (Math.abs(fx - 60) + Math.abs(to.x - 60) <= Math.abs(fx - 240) + Math.abs(to.x - 240) ? 60 : 240);
+    pts.push({ x: cx, y: ry }, { x: cx, y: next }); fx = cx; ry = next;
   }
-  let best = null;
-  [[sb[0], sb[1]], [sb[2], sb[3]]].forEach(([x, y]) => { const k = x + ',' + y; if (!dist.has(k)) return; const d = dist.get(k) + Math.hypot(x - B.x, y - B.y); if (!best || d < best.d) best = { k, d }; });
-  const chain = [];
-  for (let k = best.k; k !== null && k !== undefined; k = prev.get(k)) chain.unshift(k);
-  chain.forEach(k => { const [x, y] = k.split(',').map(Number); pts.push({ x, y }); });
-  pts.push({ x: B.x, y: B.y });
+  pts.push({ x: to.x, y: ty });
+  if (Math.abs(to.y - ty) > 0.5) pts.push({ x: to.x, y: to.y });
   return pts;
 }
-function clampCam(x, y) { return { x: Math.max(0, Math.min(WW - W, x)), y: Math.max(0, Math.min(WH - FH, y)) }; }
-function snapCam() { const c = clampCam(S.x - W / 2, S.y - FH / 2 - 10); S.cam.x = c.x; S.cam.y = c.y; S.cam.free = false; }
 function goTo(p) { return S.scene === 'map' ? walkTo(route(p)) : walkTo([p]); }
 function fadeTo(on) { fadeEl.classList.toggle('on', on); return wait(0.32); }
 async function run(fn) { if (S.busy) return; S.busy = true; labelEl.hidden = true; try { await fn(); } finally { S.busy = false; } }
@@ -600,7 +504,7 @@ async function exitRoom() {
   await goTo({ x: 40, y: 132 }); S.face = -1;
   SFX.creak();
   await fadeTo(true);
-  S.scene = 'map'; S.x = BART_DOOR.x; S.y = BART_DOOR.y; S.path = []; snapCam();
+  S.scene = 'map'; S.x = 44; S.y = 60; S.path = [];
   await fadeTo(false);
 }
 async function ringPhone() {
@@ -618,7 +522,7 @@ async function lookPhone() {
   SFX.unzoom(); screenEl.hidden = true; S.zoomT = -1; cv.style.transform = '';
   await say('bart', 'Well?');
   await say('you', 'Eins, zwei, drei, vier.');
-  await say('bart', 'You found it. Fifty-three more studies. Go knock.');
+  await say('bart', 'You found it. Nine more studies. Go knock.');
 }
 async function talkBart() {
   await say('you', S.talked ? 'Me again.' : 'Hi, Bart.');
@@ -652,40 +556,28 @@ async function talkBart() {
   }
 }
 
-const listNames = a => a.length === 2 ? a[0] + ' and ' + a[1] : a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1];
-function studyLook(n) {
-  const who = FELLOWS[n];
-  if (!who) return `Study ${n}. No name on the door. A note, though.`;
-  if (Array.isArray(who)) return `Study ${n}. Shared by ${listNames(who)}. There's a note on the door.`;
-  return `Study ${n}. ${who}. Dark. There's a note on the door.`;
-}
-function lockedStudy(n, r, walk) {
-  const note = NOTE_POOL[(parseInt(n, 10) * 7) % NOTE_POOL.length];
+const NOTES = { 2: 'At lunch. Lunch is sacred.', 3: 'Thinking under the oak.', 4: 'Back in five. Five what, unclear.', 5: 'In a seminar. Possibly this one.',
+  6: 'Walking to the Dish. Not listening to it.', 7: 'Writing. Do not knock. (You knocked.)', 8: 'Gone to see the cows. For research.', 9: 'Napping counts as fieldwork.', 10: 'Back after this paragraph.' };
+function lockedStudy(n, x, y) {
   return {
-    name: 'Study ' + n, num: typeof n === 'number' ? n : 0, r, walk, def: 'open',
-    on: { look: studyLook(n), open: async () => { SFX.rattle(); await say('you', `Locked. The note says: "${note}"`); } }
+    name: 'Study ' + n, r: y < 20 ? [x - 8, -16, 16, 20] : x > 290 ? [294, y - 8, 20, 16] : [x - 8, y < 98 ? 30 : 98, 16, 26], walk: y < 20 ? { x, y: 9 } : x > 290 ? { x: 292, y } : { x, y: y < 98 ? 60 : 128 }, def: 'open',
+    on: {
+      look: `Study ${n}. Dark. There's a note on the door.`,
+      open: async () => { SFX.rattle(); await say('you', `Locked. The note says: "${NOTES[n]}"`); }
+    }
   };
 }
-const MAP = [];
-ROWS.forEach(R => { for (let i = 0; i < R.n; i++) { const dx = R.d0 + i * 16, n = R.first + i; MAP.push(lockedStudy(n, [dx - 8, R.y, 16, 24], { x: dx, y: R.y + 28 })); } });
-WINGS.forEach(Wg => Wg.doors.forEach(([n, dy]) => MAP.push(lockedStudy(n, Wg.side < 0 ? [Wg.x - 6, dy - 8, Wg.w + 6, 16] : [Wg.x, dy - 8, Wg.w + 6, 16], { x: Wg.path, y: dy }))));
-const bartStudy = MAP.find(h => h.num === 16);
-bartStudy.on = { look: "Study 16. Bart Decrem. The light's on. Someone's typing in there.", open: knockAndEnter };
-MAP.push(lockedStudy('016', [150, 242, 20, 22], { x: 160, y: 270 }));
-MAP.push(
-  { name: 'main hall', r: [436, 134, 64, 30], walk: { x: 468, y: 170 }, def: 'open', on: { look: 'The main hall. Seminars happen in there. Like this one.', open: "Not yet. I haven't visited the studies." } },
-  { name: 'courtyard oak', r: [330, 180, 80, 32], walk: { x: 370, y: 170 }, def: 'look', on: { look: 'A big oak in a brick courtyard. Good for thinking under.' } },
-  { name: 'outdoor dining', r: [440, 186, 68, 28], walk: { x: 474, y: 170 }, def: 'look', on: { look: 'Outdoor dining. The good tables go by 12:05.' } },
-  { name: 'the Dish', r: [500, 6, 26, 30], walk: { x: 496, y: 40 }, def: 'talk', on: { look: "The Dish. It's listening to space.", talk: [['you', 'Hello, space.'], ['you', '...']] } },
-  ...COWS.map(c => ({ name: 'cow', r: [c[0] - 3, c[1] - 2, 18, 14], walk: { x: 496, y: 40 }, def: 'talk', on: { look: 'A cow. Looks tenured.', talk: [['you', 'Moo.'], ['cow', 'Moo.']] } })),
-  { name: 'the switchback', r: [140, 62, 110, 64], walk: { x: 140, y: 74 }, def: 'look', on: { look: "The path up the hill. It zigzags so you don't have to." } },
-  { name: 'lawn', r: [552, 146, 38, 186], walk: { x: 526, y: 240 }, def: 'look', on: { look: 'A lawn, mowed in stripes. Nobody walks on it. Everybody wants to.' } },
-  { name: 'library', r: [196, 242, 40, 22], walk: { x: 210, y: 270 }, def: 'open', on: { look: 'The library. Quiet in a way you can hear.', open: "Jason and Fatma are in the library office. I won't interrupt." } },
-  { name: 'dining hall', r: [290, 238, 110, 26], walk: { x: 345, y: 270 }, def: 'open', on: { look: 'The dining hall. Lunch is the main event here.', open: 'Closed between meals. The soup says otherwise.' } },
-  { name: 'conference rooms', r: [300, 294, 120, 22], walk: { x: 360, y: 270 }, def: 'look', on: { look: 'Conference rooms A, B and C. Somebody booked all three.' } },
-  { name: 'parking lot', r: [100, 290, 100, 48], walk: { x: 150, y: 270 }, def: 'look', on: { look: 'Three cars. Nobody biked today.' } }
-);
-const STUDIES = MAP.filter(h => h.num).sort((a, b) => a.num - b.num);
+const MAP = [
+  { name: 'Study 1', r: [34, 30, 20, 26], walk: { x: 44, y: 60 }, def: 'open', on: { look: "Study 1. The light's on. Someone's typing in there.", open: knockAndEnter } },
+  lockedStudy(2, 228, 60), lockedStudy(3, 276, 60), lockedStudy(4, 190, 128), lockedStudy(5, 130, 128),
+  lockedStudy(6, 250, 9), lockedStudy(7, 266, 9), lockedStudy(8, 282, 9), lockedStudy(9, 300, 106), lockedStudy(10, 300, 122),
+  { name: 'main hall', r: [128, 8, 64, 30], walk: { x: 160, y: 44 }, def: 'open', on: { look: 'The main hall. Seminars happen in there. Like this one.', open: "Not yet. I haven't visited the studies." } },
+  { name: 'courtyard oak', r: [148, 68, 24, 24], walk: { x: 160, y: 64 }, def: 'look', on: { look: 'A big oak in a brick courtyard. Good for thinking under.' } },
+  { name: 'the Dish', r: [212, 2, 24, 22], walk: { x: 224, y: 64 }, def: 'talk', on: { look: "The Dish. It's listening to space.", talk: [['you', 'Hello, space.'], ['you', '...']] } },
+  { name: 'cow', r: [252, 96, 30, 32], walk: { x: 240, y: 112 }, def: 'talk', on: { look: 'A cow. Looks tenured.', talk: [['you', 'Moo.'], ['cow', 'Moo.']] } },
+  { name: 'parking lot', r: [4, 98, 46, 42], walk: { x: 54, y: 132 }, def: 'look', on: { look: 'Three cars. Nobody biked today.' } }
+];
+const STUDIES = MAP.slice(0, 10);
 const ROOM = [
   { name: 'plant', r: [284, 100, 22, 32], walk: { x: 270, y: 134 }, def: 'talk', on: { look: "It's thriving. Someone waters it.", talk: 'I tell the plant about my research. It grows a little.' } },
   { name: 'coffee mug', r: [204, 86, 13, 12], walk: { x: 212, y: 130 }, def: 'pick', on: { look: 'Coffee. Still hot. The mug says TAKT.', pick: "It's Bart's. He'd notice. He'd definitely notice." } },
@@ -699,7 +591,7 @@ const ROOM = [
   { name: 'pinboard', r: [158, 20, 30, 24], walk: { x: 172, y: 130 }, def: 'look', on: { look: 'Sticky notes. One says: ASK CLAUDE.' } },
   { name: 'bookshelf', r: [266, 10, 48, 90], walk: { x: 284, y: 132 }, def: 'push', on: { look: 'Social science. Lots of it.', push: 'No secret passage. I checked.' } },
   { name: 'window', r: [44, 14, 78, 60], walk: { x: 84, y: 130 }, def: 'look', on: { look: 'The hills, the Dish, Stanford down below. Good office.' } },
-  { name: 'door', r: [4, 30, 32, 76], walk: { x: 40, y: 132 }, def: 'open', on: { look: 'The way out. Fifty-three more studies out there.', open: exitRoom } }
+  { name: 'door', r: [4, 30, 32, 76], walk: { x: 40, y: 132 }, def: 'open', on: { look: 'The way out. Nine more studies out there.', open: exitRoom } }
 ];
 function hotspots() { return S.scene === 'map' ? MAP : ROOM; }
 function hit(x, y) { return hotspots().find(h => x >= h.r[0] && x < h.r[0] + h.r[2] && y >= h.r[1] && y < h.r[1] + h.r[3]); }
@@ -709,7 +601,6 @@ async function perform(r) {
   else if (Array.isArray(r)) for (const l of r) await say(l[0], l[1]);
 }
 async function doAction(verb, h) {
-  S.focus = h;
   await goTo(h.walk);
   const cx = h.r[0] + h.r[2] / 2; if (Math.abs(cx - S.x) > 3) S.face = Math.sign(cx - S.x);
   const r = h.on[verb];
@@ -717,13 +608,9 @@ async function doAction(verb, h) {
 }
 
 /* ---------- input ---------- */
-function toScene(e) {
-  const b = cv.getBoundingClientRect(), fx = (e.clientX - b.left) / b.width * W, fy = (e.clientY - b.top) / b.height * FH;
-  return S.scene === 'map' ? [fx + S.cam.x, fy + S.cam.y] : [fx, fy - OY];
-}
-
+function toScene(e) { const b = cv.getBoundingClientRect(); return [(e.clientX - b.left) / b.width * W, (e.clientY - b.top) / b.height * FH - OY]; }
 function showLabel(e) {
-  if (!S.started || S.busy || S.choices || S.zoomT >= 0 || !S.hover || S.drag) { labelEl.hidden = true; return; }
+  if (!S.started || S.busy || S.choices || S.zoomT >= 0 || !S.hover) { labelEl.hidden = true; return; }
   const b = $('stage').getBoundingClientRect();
   labelEl.textContent = S.hover.name; labelEl.hidden = false;
   labelEl.style.left = Math.max(6, Math.min(94, (e.clientX - b.left) / b.width * 100)) + '%';
@@ -732,33 +619,16 @@ function showLabel(e) {
 cv.addEventListener('mousemove', e => { const p = toScene(e); S.hover = hit(p[0], p[1]) || null; showLabel(e); });
 cv.addEventListener('mouseleave', () => { S.hover = null; labelEl.hidden = true; });
 function act(e, verb) {
-  if (!S.started || S.dragged) return;
+  if (!S.started) return;
   if (S.line) { skipLine(); return; }
   if (S.busy || S.choices || S.zoomT >= 0) return;
   const p = toScene(e), h = hit(p[0], p[1]);
   if (h) { run(() => doAction(verb || h.def, h)); return; }
   if (verb) return;
-  goTo({ x: p[0], y: p[1] });
+  if (S.scene === 'map') { const ry = rail(p[1]), lo = ry === 9 ? 236 : ry === 64 ? 16 : 50, hi = ry === 9 ? 310 : ry === 64 ? 310 : 292; goTo({ x: Math.max(lo, Math.min(hi, p[0])), y: ry }); }
+  else goTo({ x: p[0], y: p[1] });
 }
 cv.addEventListener('click', e => act(e, null));
-// look around: drag the map, or scroll it with a wheel or trackpad
-function canPan() { return S.started && S.scene === 'map' && !S.choices && S.zoomT < 0; }
-function panBy(dx, dy) { const c = clampCam(S.cam.x + dx, S.cam.y + dy); S.cam.x = c.x; S.cam.y = c.y; S.cam.free = true; }
-cv.addEventListener('pointerdown', e => { if (e.button !== 0 || !canPan()) return; S.drag = { x: e.clientX, y: e.clientY, moved: false }; });
-cv.addEventListener('pointermove', e => {
-  const d = S.drag; if (!d) return;
-  if (!d.moved && Math.hypot(e.clientX - d.x, e.clientY - d.y) > 6) { d.moved = true; try { cv.setPointerCapture(e.pointerId); } catch (err) {} cv.style.cursor = 'grabbing'; labelEl.hidden = true; }
-  if (d.moved) { const k = W / cv.getBoundingClientRect().width; panBy((d.x - e.clientX) * k, (d.y - e.clientY) * k); d.x = e.clientX; d.y = e.clientY; }
-});
-function endDrag() { if (S.drag && S.drag.moved) { S.dragged = true; setTimeout(() => { S.dragged = false; }, 0); } S.drag = null; cv.style.cursor = ''; }
-cv.addEventListener('pointerup', endDrag); cv.addEventListener('pointercancel', endDrag);
-$('stage').addEventListener('wheel', e => {
-  if (!canPan()) return;
-  e.preventDefault();
-  const k = W / cv.getBoundingClientRect().width * (e.deltaMode === 1 ? 16 : 1);
-  if (e.shiftKey && !e.deltaX) panBy(e.deltaY * k, 0); else panBy(e.deltaX * k, e.deltaY * k);
-}, { passive: false });
-
 cv.addEventListener('contextmenu', e => { e.preventDefault(); act(e, 'look'); });
 function closeScreen() { if (S.screenDone) { const d = S.screenDone; S.screenDone = null; d(); } }
 $('screenBack').addEventListener('click', e => { e.stopPropagation(); closeScreen(); });
@@ -772,7 +642,7 @@ $('bFull').addEventListener('click', e => { e.stopPropagation(); fullscreen(); }
 function start() {
   if (S.started) return;
   audio(); S.started = true; titleEl.hidden = true; SFX.jingle(); cv.focus && cv.focus();
-  run(async () => { await wait(0.6); await say('you', 'CASBS. Fifty-four studies.'); await say('you', "Somebody's typing in one of them."); });
+  run(async () => { await wait(0.6); await say('you', 'CASBS. Ten studies.'); await say('you', "Somebody's typing in one of them."); });
 }
 $('startBtn').addEventListener('click', e => { e.stopPropagation(); start(); });
 $('startBtn').focus({ preventScroll: true });
@@ -798,9 +668,9 @@ window.addEventListener('keydown', e => {
 
 /* ---------- drawing ---------- */
 function speakerPos(who) {
-  if (S.scene === 'room') return who === 'bart' ? [190, 54 + OY] : [S.x, S.y - 78 + OY];
-  if (who === 'cow' && S.focus) return [S.focus.r[0] + 8 - S.cam.x, S.focus.r[1] - 2 - S.cam.y];
-  return [S.x - S.cam.x, S.y - 14 - S.cam.y];
+  if (who === 'bart') return [190, 54];
+  if (who === 'cow') return [268, 94];
+  return S.scene === 'map' ? [S.x, S.y - 14] : [S.x, S.y - 78];
 }
 const COLORS = { you: '#ffffff', bart: '#ffff55', cow: '#ff9ccf' };
 function drawLine() {
@@ -809,35 +679,19 @@ function drawLine() {
   if (lineEl.textContent !== l.text) lineEl.textContent = l.text;
   const p = speakerPos(l.who), xp = p[0] / W * 100;
   lineEl.style.left = Math.max(1, Math.min(39, xp - 30)) + '%';
-  lineEl.style.top = Math.max(10, p[1] / FH * 100) + '%';
+  lineEl.style.top = Math.max(10, (p[1] + OY) / FH * 100) + '%';
   lineEl.style.color = COLORS[l.who] || '#ffffff';
 }
-// a small arrow at the screen edge while there is campus you haven't seen that way
-function chevron(x, y, dir) {
-  const vert = dir === 'up' || dir === 'down', back = dir === 'up' || dir === 'left';
-  for (let pass = 0; pass < 2; pass++) for (let i = 0; i < 4; i++) {
-    const k = back ? i : 3 - i, w = i * 2 + 1, o = 3 - i, col = pass ? '#ffff55' : C.ink, pad = pass ? 0 : 1;
-    if (vert) rect(g, x + o - 4 - pad, y + k - pad, w + pad * 2, 1 + pad * 2, col);
-    else rect(g, x + k - pad, y + o - 4 - pad, 1 + pad * 2, w + pad * 2, col);
-  }
-}
 function drawMap(t) {
-  const cx = Math.round(S.cam.x), cy = Math.round(S.cam.y);
-  g.drawImage(world, -cx, -cy);
-  g.save(); g.translate(-cx, -cy);
+  g.drawImage(mapFull, 0, 0);
+  g.save(); g.translate(0, OY);
   const wave = calm ? 0 : Math.round(Math.sin(t * 5));
-  rect(g, 505, 120, 8, 5, C.ink); rect(g, 505, 121, 7, 3, C.orange); rect(g, 509, 121 + wave, 3, 3, C.orange);
+  rect(g, 197, 22, 8, 5, C.ink); rect(g, 197, 23, 7, 3, C.orange); rect(g, 201, 23 + wave, 3, 3, C.orange);
   const moving = S.path.length > 0, fr = moving ? Math.floor(t * 8) % 2 : 0;
   oval(g, S.x, S.y + 1, 3, 1, C.shadow);
   sprite(g, TINY[fr], TPAL, S.x - 2, S.y - 8);
-  if (!calm) { const k = ((t * 6) % (WW + 160)) - 80; oval(g, k, 230, 40, 10, 'rgba(20,20,20,0.06)'); oval(g, k - 260, 80, 30, 8, 'rgba(20,20,20,0.06)'); oval(g, k + 300, 310, 34, 9, 'rgba(20,20,20,0.06)'); }
+  if (!calm) { const cx = ((t * 6) % (W + 120)) - 60; oval(g, cx, 96, 34, 9, 'rgba(20,20,20,0.06)'); oval(g, cx - 170, 30, 26, 7, 'rgba(20,20,20,0.06)'); }
   g.restore();
-  if (S.started && (calm || Math.floor(t * 2) % 2 === 0)) {
-    const sn = S.seen;
-    if (!sn.left && S.cam.x > 4) chevron(4, FH / 2, 'left');
-    if (!sn.up && S.cam.y > 4) chevron(W / 2, 4, 'up');
-    if (!sn.down && S.cam.y < WH - FH - 4) chevron(W / 2, FH - 8, 'down');
-  }
 }
 function drawRoom(t) {
   const B = S.bart;
@@ -897,20 +751,7 @@ function frame(now) {
     S.zoomT += dt; const k = Math.min(1, S.zoomT / 0.9), e = k * k;
     cv.style.transform = calm ? '' : 'scale(' + (1 + e * 9) + ')';
   }
-  if (S.scene === 'map') {
-    const c = S.cam;
-    if (!c.free) {
-      // the camera holds still until you walk near an edge, then slides along
-      let gx = c.x, gy = c.y;
-      if (S.x - gx < 90) gx = S.x - 90; if (S.x - gx > W - 90) gx = S.x - (W - 90);
-      if (S.y - gy < 56) gy = S.y - 56; if (S.y - gy > FH - 36) gy = S.y - (FH - 36);
-      const goal = clampCam(gx, gy), k = calm ? 1 : Math.min(1, dt * 5);
-      c.x += (goal.x - c.x) * k; c.y += (goal.y - c.y) * k;
-    }
-    if (c.x < 40) S.seen.left = true; if (c.y < 30) S.seen.up = true; if (c.y > WH - FH - 30) S.seen.down = true;
-    drawMap(t);
-  } else drawRoom(t);
-
+  if (S.scene === 'map') drawMap(t); else drawRoom(t);
   drawLine();
   requestAnimationFrame(frame);
 }
