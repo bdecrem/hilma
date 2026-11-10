@@ -171,7 +171,7 @@ const mapBg = document.createElement('canvas'); mapBg.width = W; mapBg.height = 
   const m = mapBg.getContext('2d'), r = rng(7);
   rect(m, 0, 0, W, H, C.grass);
   for (let i = 0; i < 360; i++) rect(m, r() * W, r() * H, 2, 1, r() < 0.6 ? C.grass2 : C.grass3);
-  const paths = [[60, 64, 60, 132], [16, 64, 310, 64], [240, 64, 240, 132], [50, 132, 292, 132], [160, 38, 160, 64], [236, 9, 310, 9], [310, 9, 310, 64], [292, 100, 292, 132]];
+  const paths = [[60, 64, 60, 132], [16, 64, 310, 64], [240, 64, 240, 132], [50, 132, 292, 132], [160, 38, 160, 64], [140, 38, 140, 64], [180, 38, 180, 64], [236, 9, 310, 9], [310, 9, 310, 64], [292, 100, 292, 132]];
   DOORS_TOP.forEach(x => paths.push([x, 2, x, 9]));
   DOORS_A.concat(DOORS_B).forEach(x => paths.push([x, 54, x, 64]));
   DOORS_C.forEach(x => paths.push([x, 122, x, 132]));
@@ -184,6 +184,7 @@ const mapBg = document.createElement('canvas'); mapBg.width = W; mapBg.height = 
   building(m, 16, 30, 100, 16, 8, DOORS_A);
   building(m, 204, 30, 100, 16, 8, DOORS_B);
   building(m, 128, 8, 64, 20, 10, [160], true);
+  [140, 180].forEach(dx => { rect(m, dx - 3, 28, 6, 10, C.fascia); rect(m, dx - 2, 29, 4, 9, C.glass); rect(m, dx - 2, 29, 1, 9, C.glassHi); });
   building(m, 100, 98, 120, 16, 8, DOORS_C);
   rect(m, 42, 47, 4, 7, C.lit); rect(m, 42, 47, 1, 7, '#fff3c4');
   oval(m, 44, 57, 6, 2, 'rgba(255,217,106,0.35)');
@@ -199,6 +200,12 @@ const mapBg = document.createElement('canvas'); mapBg.width = W; mapBg.height = 
   for (let i = 0; i < 26; i++) rect(m, 250 + r() * 66, 90 + r() * 46, 2, 2, C.orange);
   wing(m, 300, 96, 12, 36, WING_DOORS);
   for (let i = 0; i < 8; i++) rect(m, 70 + r() * 24, 76 + r() * 18, 2, 2, C.orange);
+  // picnic tables either side of the oak courtyard
+  [[78, 74], [214, 78]].forEach(([x, y]) => {
+    oval(m, x + 8, y + 13, 9, 2, C.shadow);
+    rect(m, x, y, 16, 2, '#7d5632'); rect(m, x, y + 10, 16, 2, '#7d5632');
+    rect(m, x - 1, y + 3, 18, 6, C.ink); rect(m, x, y + 4, 16, 4, '#b07a45'); rect(m, x, y + 6, 16, 1, '#9c6a3c');
+  });
   rect(m, 196, 22, 1, 20, C.ink);
 })();
 
@@ -572,6 +579,8 @@ const MAP = [
   lockedStudy(2, 228, 60), lockedStudy(3, 276, 60), lockedStudy(4, 190, 128), lockedStudy(5, 130, 128),
   lockedStudy(6, 250, 9), lockedStudy(7, 266, 9), lockedStudy(8, 282, 9), lockedStudy(9, 300, 106), lockedStudy(10, 300, 122),
   { name: 'main hall', r: [128, 8, 64, 30], walk: { x: 160, y: 44 }, def: 'open', on: { look: 'The main hall. Seminars happen in there. Like this one.', open: "Not yet. I haven't visited the studies." } },
+  { name: 'picnic table', r: [76, 72, 20, 16], walk: { x: 60, y: 82 }, def: 'look', on: { look: 'A picnic table. Someone carved a regression line into it.', use: 'I sit for a second. Very restorative. Back to it.' } },
+  { name: 'picnic table', r: [212, 76, 20, 16], walk: { x: 240, y: 84 }, def: 'look', on: { look: 'A picnic table. The good one, in the shade. Taken at noon.', use: 'I sit for a second. Very restorative. Back to it.' } },
   { name: 'courtyard oak', r: [148, 68, 24, 24], walk: { x: 160, y: 64 }, def: 'look', on: { look: 'A big oak in a brick courtyard. Good for thinking under.' } },
   { name: 'the Dish', r: [212, 2, 24, 22], walk: { x: 224, y: 64 }, def: 'talk', on: { look: "The Dish. It's listening to space.", talk: [['you', 'Hello, space.'], ['you', '...']] } },
   { name: 'cow', r: [252, 96, 30, 32], walk: { x: 240, y: 112 }, def: 'talk', on: { look: 'A cow. Looks tenured.', talk: [['you', 'Moo.'], ['cow', 'Moo.']] } },
