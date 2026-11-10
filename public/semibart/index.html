@@ -423,6 +423,7 @@ const SFX = {
 // garble voices: one blip per syllable-ish chunk, pitched per speaker
 const VOICES = {
   you: { base: 300, steps: [0, 2, 4, 5, 7, 9], type: 'square', gap: 0.072, len: 0.06, vowels: [700, 1100, 1500, 500] },
+  eli: { base: 230, steps: [0, 2, 3, 7, 10], type: 'square', gap: 0.066, len: 0.055, vowels: [600, 950, 1300, 450] },
   bart: { base: 165, steps: [0, 3, 5, 7, 10, 12], type: 'sawtooth', gap: 0.085, len: 0.07, vowels: [500, 800, 1100, 650] }
 };
 function garble(who, text) {
@@ -619,6 +620,46 @@ const MAP = [
   { name: 'cow', r: [252, 96, 30, 32], walk: { x: 240, y: 112 }, def: 'talk', on: { look: 'A cow. Looks tenured.', talk: [['you', 'Moo.'], ['cow', 'Moo.']] } },
   { name: 'parking lot', r: [4, 98, 46, 42], walk: { x: 54, y: 132 }, def: 'look', on: { look: 'Three cars. Nobody biked today.' } }
 ];
+// Eli, lower-right wing. Everything is a scam. He talks through the door.
+const ELI = [
+  [['eli', "Who's there? Wait, don't answer. \"Who\" is a construct of late capitalism."],
+   ['you', 'I just wanted to say hi.'],
+   ['eli', '"Hi." Free for now. Give it a year. They\'ll put it behind a subscription.']],
+  [['eli', "If you're selling something, I'm not buying."],
+   ['eli', "If you're buying something, I'm also not buying."],
+   ['eli', 'The coffee here is free. That is exactly how they get you.']],
+  [['eli', 'Brunch is a scam. Breakfast and lunch should unionize.'],
+   ['eli', 'Loyalty points are a scam. I am loyal to no points.'],
+   ['eli', 'And the cows? Unpaid labor. Look at them. They have no idea.']],
+  [['eli', 'The lights are off. Electricity is a scam.'],
+   ['you', "It's three in the afternoon."],
+   ['eli', 'The sun is the only honest utility.']],
+  [['eli', 'This door is a scam. It only opens for people with keys.'],
+   ['you', 'You have the key.'],
+   ['eli', "...I'm working through that."]]
+];
+let eliKnocks = 0;
+Object.assign(MAP.find(h => h.name === 'Study 13'), { on: {
+  look: "Study 13. Eli's. A sticker on the door says EVERYTHING IS A SCAM. The sticker was $4.",
+  open: async () => {
+    SFX.knock(); await say('you', eliKnocks ? 'Knock, knock. Again.' : 'Knock, knock.');
+    await wait(0.4);
+    for (const l of ELI[Math.min(eliKnocks, ELI.length - 1)]) await say(l[0], l[1]);
+    eliKnocks++;
+  }
+} });
+// the cafeteria used to be behind the last door on the bottom row. It had rules.
+MAP.unshift({ name: 'cafeteria', r: [198, 98, 16, 26], walk: { x: 206, y: 128 }, def: 'open', on: {
+  look: 'There is a sign on the door. It is long.',
+  open: [
+    ['you', 'The cafeteria. Lunch!'],
+    ['you', 'There is a sign on the door.'],
+    ['you', '"Too many trays were returned late. As of today, the cafeteria has been dissolved."'],
+    ['you', '"Rule 14: trays back by 1:15. Rule 15: not before 1:14. Rule 16: do not discuss rule 14."'],
+    ['you', 'Poof. No more cafeteria.'],
+    ['you', 'I knew I should have returned that tray in March.']
+  ]
+} });
 const STUDIES = MAP.filter(h => h.study);
 const ROOM_EMPTY = [
   { name: 'bookshelf', r: [266, 10, 48, 90], walk: { x: 284, y: 132 }, def: 'look', on: { look: 'Books left by the last fellow. Mostly about time.', push: 'No secret passage. I checked.' } },
@@ -718,9 +759,10 @@ window.addEventListener('keydown', e => {
 function speakerPos(who) {
   if (who === 'bart') return [190, 54];
   if (who === 'cow') return [268, 94];
+  if (who === 'eli') return [292, 96];
   return S.scene === 'map' ? [S.x, S.y - 14] : [S.x, S.y - 78];
 }
-const COLORS = { you: '#ffffff', bart: '#ffff55', cow: '#ff9ccf' };
+const COLORS = { you: '#ffffff', bart: '#ffff55', cow: '#ff9ccf', eli: '#ff7a5c' };
 function drawLine() {
   const l = S.line;
   if (!l) { if (lineEl.textContent) lineEl.textContent = ''; return; }
