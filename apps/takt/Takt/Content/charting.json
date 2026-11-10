@@ -321,6 +321,17 @@
     "easy": 2,
     "easy+": 3
    }
+  },
+  "song-gezeiten": {
+   "melody": {
+    "easy": 2,
+    "easy+": 4,
+    "medium": 6
+   },
+   "chords": {
+    "easy": 2,
+    "easy+": 3
+   }
   }
  }
 }

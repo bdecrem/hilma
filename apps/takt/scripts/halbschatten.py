@@ -206,7 +206,8 @@ def main():
         print(f"ir {name}: {ir.shape[1] / 44100:.2f} s, {lead} samples of predelay at 44.1 kHz")
 
     manifest = json.loads((OUT / "instruments.json").read_text())
-    for key in [k for k in manifest if k.startswith("hs") or k.startswith("kickHS")]:
+    # Not Gezeiten's raw stab buffers (hsStabGz…: the renderer sends any hsStab… into the rack).
+    for key in [k for k in manifest if (k.startswith("hs") and not k.startswith("hsStabGz")) or k.startswith("kickHS")]:
         manifest.pop(key)
     manifest.update(INSTRUMENTS)
     (OUT / "instruments.json").write_text(json.dumps(manifest, indent=1) + "\n")
