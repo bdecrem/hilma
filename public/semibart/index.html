@@ -211,6 +211,9 @@ const mapBg = document.createElement('canvas'); mapBg.width = W; mapBg.height = 
   [[100, 14, 5], [308, 82, 7], [22, 82, 6], [82, 116, 5], [118, 6, 4]].forEach(o => oak(m, o[0], o[1], o[2]));
   for (let i = 0; i < 26; i++) rect(m, 250 + r() * 66, 90 + r() * 46, 2, 2, C.orange);
   wing(m, 300, 96, 12, 36, WING_DOORS);
+  // the two easter-egg doors (Eli, the cafeteria): glass a shade greener than the rest
+  rect(m, 297, 120, 3, 5, '#6b8c78'); rect(m, 297, 120, 3, 1, '#93b39f');
+  rect(m, 204, 115, 4, 7, '#6b8c78'); rect(m, 204, 115, 1, 7, '#93b39f');
   // picnic tables on the courtyard, either side of the oak
   [[124, 75], [180, 75]].forEach(([x, y]) => {
     oval(m, x + 8, y + 13, 9, 2, C.shadow);
