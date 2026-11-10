@@ -768,10 +768,14 @@ struct SongArt: View {
                 ctx.fill(Path(ellipseIn: CGRect(x: c.x - disc, y: c.y - disc, width: 2 * disc, height: 2 * disc)), with: .color(Palette.panel))
                 ctx.stroke(Path(ellipseIn: CGRect(x: c.x - disc, y: c.y - disc, width: 2 * disc, height: 2 * disc)), with: .color(ink), lineWidth: 1.5)
                 for i in 0..<8 {
-                    let a = Double(i) * .pi / 4 + .pi / 8
+                    // Typed step by step: the mixed Double / CGFloat one-liners took this body
+                    // past the type-checker's time limit on Xcode 26.2.
+                    let a: Double = Double(i) * Double.pi / 4 + Double.pi / 8
+                    let dx: CGFloat = CGFloat(cos(a)), dy: CGFloat = CGFloat(sin(a))
+                    let r0: CGFloat = m * 0.32, r1: CGFloat = m * 0.40
                     var p = Path()
-                    p.move(to: CGPoint(x: c.x + m * 0.32 * cos(a), y: c.y + m * 0.32 * sin(a)))
-                    p.addLine(to: CGPoint(x: c.x + m * 0.40 * cos(a), y: c.y + m * 0.40 * sin(a)))
+                    p.move(to: CGPoint(x: c.x + r0 * dx, y: c.y + r0 * dy))
+                    p.addLine(to: CGPoint(x: c.x + r1 * dx, y: c.y + r1 * dy))
                     ctx.stroke(p, with: .color(i % 2 == 0 ? hot : dim), style: StrokeStyle(lineWidth: 2, lineCap: .round))
                 }
             case "stoptime":
