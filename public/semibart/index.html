@@ -153,14 +153,15 @@ function building(m, x, y, w, rh, wh, doors, wide) {
     rect(m, dx - half + 1, y + rh + 1, 1, wh - 1, C.glassHi);
   });
 }
-function wing(m, x, y, w, h, doorYs) {
+function wing(m, x, y, w, h, doorYs, side = -1) {
   rect(m, x + 2, y + 2, w + 2, h + 6, C.shadow);
   rect(m, x, y, w, h, C.roof);
   for (let i = x + 3; i < x + w - 2; i += 4) rect(m, i, y + 2, 1, h - 4, C.roofLine);
   rect(m, x, y, w, 1, C.fascia); rect(m, x, y + h - 1, w, 1, C.fascia); rect(m, x, y, 1, h, C.fascia); rect(m, x + w - 1, y, 1, h, C.fascia);
   rect(m, x, y + h, w, 5, C.wall); for (let i = x + 1; i < x + w; i += 3) rect(m, i, y + h, 1, 5, C.wallLo); rect(m, x, y + h + 4, w, 1, C.fascia);
-  rect(m, x - 4, y + 1, 4, h + 3, C.wall); rect(m, x - 4, y + 1, 1, h + 3, C.fascia);
-  doorYs.forEach(dy => { rect(m, x - 4, dy - 3, 4, 7, C.fascia); rect(m, x - 3, dy - 2, 3, 5, C.glass); rect(m, x - 3, dy - 2, 3, 1, C.glassHi); });
+  const sx = side < 0 ? x - 4 : x + w, gx = side < 0 ? sx + 1 : sx;
+  rect(m, sx, y + 1, 4, h + 3, C.wall); rect(m, side < 0 ? sx : sx + 3, y + 1, 1, h + 3, C.fascia);
+  doorYs.forEach(dy => { rect(m, sx, dy - 3, 4, 7, C.fascia); rect(m, gx, dy - 2, 3, 5, C.glass); rect(m, gx, dy - 2, 3, 1, C.glassHi); });
 }
 function oak(m, x, y, r) { oval(m, x + 1, y + r + 2, r, 2, C.shadow); rect(m, x - 1, y + r - 2, 2, 5, C.trunk); disc(m, x, y, r, C.oak2); disc(m, x - 1, y - 1, r - 1, C.oak); disc(m, x - Math.round(r / 3), y - Math.round(r / 3), Math.max(1, Math.round(r / 3)), C.oak3); }
 function car(m, x, y, col) { rect(m, x, y, 10, 15, C.ink); rect(m, x + 1, y + 1, 8, 13, col); rect(m, x + 2, y + 3, 6, 3, C.glassHi); rect(m, x + 2, y + 10, 6, 2, C.glassHi); }
@@ -190,8 +191,8 @@ const mapBg = document.createElement('canvas'); mapBg.width = W; mapBg.height = 
   oval(m, 44, 57, 6, 2, 'rgba(255,217,106,0.35)');
   oak(m, 160, 79, 8);
   // the meeting room, just off the courtyard, its door facing the oak
-  rect(m, 203, 77, 6, 7, C.path); rect(m, 203, 77, 6, 1, C.pathEdge); rect(m, 203, 83, 6, 1, C.pathEdge);
-  wing(m, 212, 68, 22, 22, [80]);
+  rect(m, 108, 77, 10, 7, C.path); rect(m, 108, 77, 10, 1, C.pathEdge); rect(m, 108, 83, 10, 1, C.pathEdge);
+  wing(m, 82, 68, 22, 22, [80], 1);
   rect(m, 4, 98, 46, 42, C.ink); rect(m, 5, 99, 44, 40, C.asphalt);
   [19, 33].forEach(x => rect(m, x, 100, 1, 18, C.line));
   car(m, 7, 102, '#2b3fff'); car(m, 21, 102, '#ff9ccf'); car(m, 35, 102, '#fff7e6');
@@ -201,7 +202,6 @@ const mapBg = document.createElement('canvas'); mapBg.width = W; mapBg.height = 
   [[70, 12, 6], [308, 82, 7], [22, 82, 6], [82, 116, 5], [118, 6, 4]].forEach(o => oak(m, o[0], o[1], o[2]));
   for (let i = 0; i < 26; i++) rect(m, 250 + r() * 66, 90 + r() * 46, 2, 2, C.orange);
   wing(m, 300, 96, 12, 36, WING_DOORS);
-  for (let i = 0; i < 8; i++) rect(m, 70 + r() * 24, 76 + r() * 18, 2, 2, C.orange);
   // picnic tables on the courtyard, either side of the oak
   [[124, 75], [180, 75]].forEach(([x, y]) => {
     oval(m, x + 8, y + 13, 9, 2, C.shadow);
@@ -581,7 +581,7 @@ const MAP = [
   lockedStudy(2, 228, 60), lockedStudy(3, 276, 60), lockedStudy(4, 190, 128), lockedStudy(5, 130, 128),
   lockedStudy(6, 250, 9), lockedStudy(7, 266, 9), lockedStudy(8, 282, 9), lockedStudy(9, 300, 106), lockedStudy(10, 300, 122),
   { name: 'main hall', r: [128, 8, 64, 30], walk: { x: 160, y: 44 }, def: 'open', on: { look: 'The main hall. Lounge, mailboxes, coffee.', open: "Just the lounge. Nobody's in. Everybody's in their study." } },
-  { name: 'meeting room', r: [206, 66, 30, 30], walk: { x: 206, y: 80 }, def: 'open', on: { look: 'The meeting room. Seminars happen in there. Like this one.', open: "Not yet. I haven't visited the studies." } },
+  { name: 'meeting room', r: [80, 66, 30, 30], walk: { x: 112, y: 80 }, def: 'open', on: { look: 'The meeting room. Seminars happen in there. Like this one.', open: "Not yet. I haven't visited the studies." } },
   { name: 'picnic table', r: [122, 73, 20, 16], walk: { x: 132, y: 64 }, def: 'look', on: { look: 'A picnic table. Someone carved a regression line into it.', use: 'I sit for a second. Very restorative. Back to it.' } },
   { name: 'picnic table', r: [178, 73, 20, 16], walk: { x: 188, y: 64 }, def: 'look', on: { look: 'A picnic table. The good one, in the shade. Taken at noon.', use: 'I sit for a second. Very restorative. Back to it.' } },
   { name: 'courtyard oak', r: [148, 68, 24, 24], walk: { x: 160, y: 64 }, def: 'look', on: { look: 'A big oak in a brick courtyard. Good for thinking under.' } },
