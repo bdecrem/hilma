@@ -5,7 +5,8 @@ import SwiftUI
 /// (`LearningPlan`): the orange stop up next opens its goals (`LevelGoalsScreen`), and the level
 /// clears when every goal is done (`GoalProgress`). A cleared stop's number opens its goals, all
 /// done, to play again or practice; its photo card opens the venue's story.
-/// The world (blues now, techno later) is content: `MapWorld`, from `map-<world>.json`.
+/// The world is content, one per vibe (`Vibe`: the blues road, the Berlin clubs): `MapWorld`,
+/// from `map-<world>.json`. The vibe switch in the header swaps it; the level you're on stays.
 /// Layout numbers are the handoff's (`reference/Main.dc.html`, iPhone at 390 wide): x positions
 /// scale to the width, y positions don't.
 struct MapScreen: View {
@@ -23,7 +24,7 @@ struct MapScreen: View {
 
         ZStack {
             VStack(spacing: 0) {
-                MapHeader(world: world, here: here ?? stops.last!, cleared: cleared, xp: app.progress.xp, compact: compact) {
+                MapHeader(app: app, world: world, here: here ?? stops.last!, cleared: cleared, xp: app.progress.xp, compact: compact) {
                     app.route = .settings
                 }
                 .padding(.horizontal, compact ? 16 : 40)
@@ -89,6 +90,7 @@ enum RoadLayout {
 }
 
 private struct MapHeader: View {
+    let app: AppModel
     let world: MapWorld
     let here: MapWorld.Stop
     let cleared: Int
@@ -97,34 +99,72 @@ private struct MapHeader: View {
     let settings: () -> Void
 
     var body: some View {
-        let episode = world.episodes[here.episode]
-        HStack(alignment: .center, spacing: 12) {
-            Text("Map")
-                .font(.display(compact ? 38 : 48))
-                .textCase(.uppercase)
-                .foregroundStyle(Palette.text)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(world.title)
-                    .dataLabel(11, weight: .semibold)
-                    .foregroundStyle(Palette.text)
-                Text("Episode \(here.episode + 1) · \(episode.title)")
-                    .dataLabel(10)
-                    .foregroundStyle(Palette.muted)
+        // The phone's header is two rows since the vibe switch (2026-11-10): 358 pt held the
+        // title, the world, the count, the XP and two buttons, and not a 56 pt switch as well.
+        // Row 1 is the screen's own (title, switch, Ask, gear, as on the other two tabs), row 2
+        // is where you are (the world and the episode, the count, the XP).
+        if compact {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(alignment: .center, spacing: 12) {
+                    title
+                    Spacer(minLength: 8)
+                    buttons
+                }
+                HStack(alignment: .center, spacing: 12) {
+                    place
+                    count
+                    XPLabel(xp: xp)
+                }
             }
-            .lineLimit(1)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            Text("\(cleared) / \(world.total)")
-                .dataLabel(12, weight: .semibold)
-                .foregroundStyle(Palette.text)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 8)
-                .background(RoundedRectangle(cornerRadius: 6).fill(Palette.panel))
-                .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Palette.line, lineWidth: 1))
-                .accessibilityLabel("\(cleared) of \(world.total) levels cleared")
-            XPLabel(xp: xp)
-            AskButton(size: compact ? 34 : 36)
-            TransportButton(symbol: "gearshape", lit: false, size: compact ? 34 : 36, label: "Settings", action: settings)
+        } else {
+            HStack(alignment: .center, spacing: 12) {
+                title
+                place
+                count
+                XPLabel(xp: xp)
+                buttons
+            }
         }
+    }
+
+    private var title: some View {
+        Text("Map")
+            .font(.display(compact ? 38 : 48))
+            .textCase(.uppercase)
+            .foregroundStyle(Palette.text)
+            .fixedSize()
+    }
+
+    private var place: some View {
+        let episode = world.episodes[here.episode]
+        return VStack(alignment: .leading, spacing: 2) {
+            Text(world.title)
+                .dataLabel(11, weight: .semibold)
+                .foregroundStyle(Palette.text)
+            Text("Episode \(here.episode + 1) · \(episode.title)")
+                .dataLabel(10)
+                .foregroundStyle(Palette.muted)
+        }
+        .lineLimit(1)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var count: some View {
+        Text("\(cleared) / \(world.total)")
+            .dataLabel(12, weight: .semibold)
+            .foregroundStyle(Palette.text)
+            .fixedSize()
+            .padding(.horizontal, 10)
+            .padding(.vertical, compact ? 6 : 8)
+            .background(RoundedRectangle(cornerRadius: 6).fill(Palette.panel))
+            .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Palette.line, lineWidth: 1))
+            .accessibilityLabel("\(cleared) of \(world.total) levels cleared")
+    }
+
+    @ViewBuilder private var buttons: some View {
+        VibeToggle(app: app, labels: !compact)
+        AskButton(size: compact ? 34 : 36)
+        TransportButton(symbol: "gearshape", lit: false, size: compact ? 34 : 36, label: "Settings", action: settings)
     }
 }
 
@@ -148,10 +188,22 @@ private struct Road: View {
                 .stroke(Palette.line, style: StrokeStyle(lineWidth: 40, lineCap: .round, lineJoin: .round))
             RoadShape(points: pts, upTo: nil, width: width, height: height)
                 .stroke(Palette.panel, style: StrokeStyle(lineWidth: 34, lineCap: .round, lineJoin: .round))
-            RoadShape(points: pts, upTo: nil, width: width, height: height)
-                .stroke(Palette.line, style: StrokeStyle(lineWidth: 14, lineCap: .round, dash: [2, 9]))
-            RoadShape(points: pts, upTo: min(cleared, stops.count - 1), width: width, height: height)
-                .stroke(Palette.text, style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: [1, 7]))
+            if world.world == Vibe.electronic.rawValue {
+                // Berlin: not a highway with its ties but a line on the U-Bahn map, two thin
+                // rails 8 pt apart (a 10 pt stroke with a 6 pt gap cut out of it), and the
+                // stretch behind you one solid cable in `text`.
+                RoadShape(points: pts, upTo: nil, width: width, height: height)
+                    .stroke(Palette.line, style: StrokeStyle(lineWidth: 10, lineCap: .round, lineJoin: .round))
+                RoadShape(points: pts, upTo: nil, width: width, height: height)
+                    .stroke(Palette.panel, style: StrokeStyle(lineWidth: 6, lineCap: .round, lineJoin: .round))
+                RoadShape(points: pts, upTo: min(cleared, stops.count - 1), width: width, height: height)
+                    .stroke(Palette.text, style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
+            } else {
+                RoadShape(points: pts, upTo: nil, width: width, height: height)
+                    .stroke(Palette.line, style: StrokeStyle(lineWidth: 14, lineCap: .round, dash: [2, 9]))
+                RoadShape(points: pts, upTo: min(cleared, stops.count - 1), width: width, height: height)
+                    .stroke(Palette.text, style: StrokeStyle(lineWidth: 3, lineCap: .round, dash: [1, 7]))
+            }
 
             ForEach(stops.filter(\.opensEpisode)) { s in
                 EpisodeSign(episode: world.episodes[s.episode])

@@ -30,6 +30,7 @@ struct LessonsScreen: View {
                         .frame(maxWidth: .infinity)
                 }
                 XPLabel(xp: app.progress.xp)
+                VibeToggle(app: app, labels: !compact)
                 AskButton(size: compact ? 34 : 36)
                 TransportButton(symbol: "gearshape", lit: false, size: compact ? 34 : 36, label: "Settings") {
                     app.route = .settings

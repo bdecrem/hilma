@@ -172,6 +172,10 @@ struct RootView: View {
                 CalibrationScreen(app: app, player: player)
             }
         }
+        // The tokens and the type are read when a view is made (`Palette`, `Vibe.current`), so
+        // a vibe change makes the screen again; inside an animation the two cross-fade.
+        .id(app.vibe)
+        .transition(.opacity)
         // Ask the teacher: the button on every screen (lit while an answer is on its way or
         // waits unread) and its sheet, over whatever is up.
         .environment(\.ask, Ask(lit: app.chat.working || app.chat.unread, open: app.openAsk))

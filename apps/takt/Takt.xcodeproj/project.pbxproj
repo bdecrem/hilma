@@ -185,6 +185,7 @@
 		2E9B83D4DB6B8FAF34410970 /* launch-acid-b4.caf in Resources */ = {isa = PBXBuildFile; fileRef = 2D9F3A2AC28370A64DEBC7DE /* launch-acid-b4.caf */; };
 		2ED987C9270C6A13C19F2C95 /* syn-subDub-32.caf in Resources */ = {isa = PBXBuildFile; fileRef = 1C27B913B17EA4E72EBE2C25 /* syn-subDub-32.caf */; };
 		2F37975A478AB62934354BF4 /* gtr-51-2-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = D35D4E51D25CC022D1C43036 /* gtr-51-2-2.caf */; };
+		2F4582A3E01EA122B51CD8DD /* Vibe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 180B9180806927E597C3A74C /* Vibe.swift */; };
 		2FB26634114AB60A92082B9D /* hs-bass-15-39-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = C52424725672FAAF8BED93F0 /* hs-bass-15-39-44.caf */; };
 		306848967A711785611C8454 /* Lesson.swift in Sources */ = {isa = PBXBuildFile; fileRef = D59BC4A000D534C926E8B67C /* Lesson.swift */; };
 		307EF0B0AE15E6A69CC0A9F7 /* sax-70-s.caf in Resources */ = {isa = PBXBuildFile; fileRef = FDE697BC3A0FD60BC7481DDE /* sax-70-s.caf */; };
@@ -915,6 +916,7 @@
 		E246FEC0F16339D81AD61A40 /* rho-55-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 5C17D506770F4434E510DF24 /* rho-55-2.caf */; };
 		E26E7FB16E7E0E521C28D51B /* pno-37-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = E942B88563949B447AC1803C /* pno-37-2.caf */; };
 		E2A49B0D7F922E08060CBBBC /* egt-72-2-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9AC0C05417168AAA744B3D80 /* egt-72-2-1.caf */; };
+		E30DCB050EBB6B545F49F334 /* map-electronic.json in Resources */ = {isa = PBXBuildFile; fileRef = 33F95F4A64E71774E080F5A4 /* map-electronic.json */; };
 		E30F3C5E03D4DBEF0A95AF86 /* egt-40-1-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 77C161D8D4961C85915284F0 /* egt-40-1-2.caf */; };
 		E35C76079F8EE87A7A03D7F9 /* egt-86-1-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = B698CBBABB6F4B39BA00753E /* egt-86-1-2.caf */; };
 		E3FF0B3DDA3F30C98B160E4A /* gtr-37-4-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 8C2AD5E6E4603374CD580DFF /* gtr-37-4-2.caf */; };
@@ -1114,6 +1116,7 @@
 		1707307894005DC510F4732B /* hs-shk-2.caf */ = {isa = PBXFileReference; path = "hs-shk-2.caf"; sourceTree = "<group>"; };
 		175CA8CA5984BD7373EB7478 /* saxl-76.caf */ = {isa = PBXFileReference; path = "saxl-76.caf"; sourceTree = "<group>"; };
 		176BDAB34716BD5AAA889E8D /* syn-kickMin-0a.caf */ = {isa = PBXFileReference; path = "syn-kickMin-0a.caf"; sourceTree = "<group>"; };
+		180B9180806927E597C3A74C /* Vibe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Vibe.swift; sourceTree = "<group>"; };
 		181E70467D20AC8A720F563F /* LessonCheck.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonCheck.swift; sourceTree = "<group>"; };
 		183650C0680D5644ABD78506 /* egt-45-4-1.caf */ = {isa = PBXFileReference; path = "egt-45-4-1.caf"; sourceTree = "<group>"; };
 		187C4062D46AD00A002C6816 /* hs-bass-13-31-44.caf */ = {isa = PBXFileReference; path = "hs-bass-13-31-44.caf"; sourceTree = "<group>"; };
@@ -1234,6 +1237,7 @@
 		32BBCE009EFC44289758DDC5 /* GameEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameEngine.swift; sourceTree = "<group>"; };
 		32E41EAC5ED6208C88F089CA /* LessonState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonState.swift; sourceTree = "<group>"; };
 		3378B0BABC62F445208F5DBA /* bass-30.caf */ = {isa = PBXFileReference; path = "bass-30.caf"; sourceTree = "<group>"; };
+		33F95F4A64E71774E080F5A4 /* map-electronic.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "map-electronic.json"; sourceTree = "<group>"; };
 		345B9C65560B4950C621F712 /* ProgressStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressStore.swift; sourceTree = "<group>"; };
 		349BFAF58AF88AB685AA1DB7 /* tomHi-1b.caf */ = {isa = PBXFileReference; path = "tomHi-1b.caf"; sourceTree = "<group>"; };
 		3521CBCABC68CBDB076B074E /* tomHi-2b.caf */ = {isa = PBXFileReference; path = "tomHi-2b.caf"; sourceTree = "<group>"; };
@@ -2082,6 +2086,7 @@
 				BCFFFD49EB39BF2E6BAC0767 /* Motifs.swift */,
 				0C9E81396F74E488321A3DE6 /* Palette.swift */,
 				360CC0D3E4675A3F8F360945 /* Typography.swift */,
+				180B9180806927E597C3A74C /* Vibe.swift */,
 			);
 			path = Design;
 			sourceTree = "<group>";
@@ -2301,6 +2306,7 @@
 				ECECF1E4E590A9E81E139D89 /* lesson-S1.json */,
 				D3F53FD48CE9B89241FFB481 /* lesson-S1m.json */,
 				8126E18CD90A6679714BEC02 /* map-blues.json */,
+				33F95F4A64E71774E080F5A4 /* map-electronic.json */,
 				50960A8BB0999D357DE62B40 /* plan-blues-year-1.json */,
 				B8B043ACC1BBEADA13414C94 /* reading-R.json */,
 				EEEF033DB9357648BCDCCD17 /* song-abyss-ref.json */,
@@ -3834,6 +3840,7 @@
 				309573F5E58807A3E167DC31 /* lesson-S1.json in Resources */,
 				11764932ABE8A75E92F7FE33 /* lesson-S1m.json in Resources */,
 				5B50C91C72EF17ADAB84A7EE /* map-blues.json in Resources */,
+				E30DCB050EBB6B545F49F334 /* map-electronic.json in Resources */,
 				30CEC54A141B2CF29FAE6DF2 /* org-36.caf in Resources */,
 				1FAC82F0451088C274313D1C /* org-40.caf in Resources */,
 				AE3BD58A95F363F7518C0FDB /* org-44.caf in Resources */,
@@ -4365,6 +4372,7 @@
 				481CF35C84CED42D066A2594 /* TransportClock.swift in Sources */,
 				606269D637B85705945947B6 /* Typography.swift in Sources */,
 				1E40EFFABA5A2EC1D003E3FB /* VenueScreen.swift in Sources */,
+				2F4582A3E01EA122B51CD8DD /* Vibe.swift in Sources */,
 				0DE168DE937CF47D7A71BA79 /* Voices.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

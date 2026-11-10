@@ -27,11 +27,23 @@ struct DataLabel: ViewModifier {
 
     func body(content: Content) -> some View {
         let size = min(scaled, base * Self.maxScale)
+        // Blues (`Vibe`): a typewriter face where Electronic has the mono, the set list typed
+        // on the back of a record sleeve. It runs narrower than SF Mono, so nothing a label
+        // fits in gets tighter; a point larger and less tracking keep it as legible at 9 pt.
+        let blues = Vibe.current == .blues
         return content
-            .font(.system(size: size, weight: weight, design: .monospaced))
+            .font(blues ? .custom(Self.typewriter(weight), fixedSize: size + 1) : .system(size: size, weight: weight, design: .monospaced))
             .textCase(.uppercase)
-            .tracking(size * 0.12)
+            .tracking(size * (blues ? 0.09 : 0.12))
             .monospacedDigit()
+    }
+
+    /// American Typewriter ships with iOS and macOS (the brief's "system fonts only" holds).
+    static func typewriter(_ weight: Font.Weight) -> String {
+        switch weight {
+        case .semibold, .bold, .heavy, .black: return "AmericanTypewriter-Semibold"
+        default: return "AmericanTypewriter"
+        }
     }
 }
 
@@ -46,7 +58,8 @@ struct BodyText: ViewModifier {
     }
 
     func body(content: Content) -> some View {
-        content.font(.system(size: size, weight: weight))
+        // Blues reads in a serif (New York), like liner notes; Electronic in SF Pro.
+        content.font(.system(size: size, weight: weight, design: Vibe.current == .blues ? .serif : .default))
     }
 }
 

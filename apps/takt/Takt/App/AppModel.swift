@@ -23,8 +23,20 @@ final class AppModel {
 
     // MARK: Map
 
-    /// The map's world (Settings → Taste → Map when there is more than one).
-    private(set) var mapWorld = MapWorld.bundled(MapWorld.selected)
+    /// Blues or Electronic (`Vibe`): the look, the map's world and which pinned tracks the
+    /// Stage shows. Stored on the device, not in the account: a look is the device's own.
+    var vibe = Vibe.current {
+        didSet {
+            guard vibe != oldValue else { return }
+            Vibe.current = vibe
+            UserDefaults.standard.set(vibe.rawValue, forKey: Vibe.key)
+            mapWorld = .bundled(vibe)
+            openVenue = nil
+        }
+    }
+
+    /// The map's world: the vibe's.
+    private(set) var mapWorld = MapWorld.bundled(Vibe.current)
     /// The level open over the map (1-based): its goals, or its venue's story when `openStory`.
     var openVenue: Int? {
         didSet { if openVenue == nil { openStory = false } }
@@ -32,10 +44,6 @@ final class AppModel {
     /// The open level shows its venue's story (the photo card of a cleared level) instead of
     /// its goals (the numbered stop: a cleared level's goals stay there to practice).
     var openStory = false
-
-    func mapWorldChanged() {
-        if mapWorld.world != MapWorld.selected { mapWorld = .bundled(MapWorld.selected) }
-    }
 
     // MARK: Goals
 
@@ -467,6 +475,15 @@ final class AppModel {
             if d.integer(forKey: "Lesson") > 1 { player.restartLesson(at: player.content.firstStep(ofLesson: d.integer(forKey: "Lesson") - 1)) }
             if d.bool(forKey: "StepComplete") { player.debugComplete() }
         }
+        // `-VibeFlip <seconds>` flips the vibe that long after launch, as the switch does
+        // (screenshots of both sides of one run; it stores the flipped vibe like a tap).
+        if d.double(forKey: "VibeFlip") > 0 {
+            Task { @MainActor [weak self] in
+                try? await Task.sleep(for: .seconds(d.double(forKey: "VibeFlip")))
+                guard let self else { return }
+                withAnimation(.easeInOut(duration: 0.3)) { self.vibe = self.vibe.other }
+            }
+        }
         if let r = UserDefaults.standard.string(forKey: "Route") {
             switch r {
             case "lessons": route = .lessons
@@ -805,7 +822,10 @@ final class AppModel {
         // `-Pinned "song-a,song-b"` shows that set (screenshots; nothing is saved).
         if let list = UserDefaults.standard.string(forKey: "Pinned") { return list.split(separator: ",").map(String.init) }
         #endif
-        return progress.snapshot.pins?.songs ?? StageScreen.defaultPins
+        guard let pins = progress.snapshot.pins else { return StageScreen.defaultPins }
+        // A set from before the vibes had no say about electronic tracks: it gets their defaults.
+        if pins.at < Vibe.pinsEpoch { return pins.songs + StageScreen.electronicPins.filter { !pins.songs.contains($0) } }
+        return pins.songs
     }
 
     /// Whether a card's track is pinned: a mod by its own pin when the player set one, else it

@@ -1259,6 +1259,12 @@ enum LessonCheck {
               blues.stops.count == 26 && blues.episodes.count == 3 && blues.stops.prefix(20).allSatisfy { $0.venue.photo != nil && !$0.venue.isPlaceholder }
               && blues.stops.suffix(6).allSatisfy(\.venue.isPlaceholder))
 
+        let berlin = MapWorld.bundled(.electronic)
+        check("map electronic: 26 clubs in three episodes, every one with a photo, Berghain the last",
+              berlin.stops.count == 26 && berlin.episodes.count == 3 && berlin.stops.allSatisfy { $0.venue.photo != nil && !$0.venue.isPlaceholder }
+              && berlin.stops.last?.venue.id == "berghain", berlin.stops.last?.venue.id ?? "")
+        check("map: a world per vibe, under the vibe's name", MapWorld.all == ["blues", "electronic"] && Vibe.allCases.allSatisfy { MapWorld.bundled($0).world == $0.rawValue })
+
         let place = QuizBank.placement
         check("ear check: five, theory and listening", place.count == 5 && place.filter { $0.kind == .listen }.count == 3)
         func placementLevel(_ right: Set<String>) -> QuizLevel { QuizBank.level(placement: Dictionary(uniqueKeysWithValues: place.map { ($0.id, right.contains($0.id)) })) }
@@ -1855,6 +1861,26 @@ enum LessonCheck {
                 let moved = !app.isPinned(first) && app.isPinned(other) && app.pinnedSongs.count == StageScreen.defaultPins.count
                 app.setPinned(other, true)
                 check("pins: the default set, then unpin one and pin another; pinning twice keeps one", byDefault && moved && app.pinnedSongs.filter { $0 == other.name }.count == 1, app.pinnedSongs.joined(separator: " "))
+                // The vibes (2026-11-10): every song has a genre; the default set has both; a set
+                // from before the vibes gets the electronic defaults, a set changed since is as set.
+                func genre(_ name: String) -> Vibe? { songs.first { $0.name == name }?.genre }
+                let electronic = songs.filter { $0.genre == .electronic }.map(\.meta.title)
+                check("vibes: the blues pins are blues, the electronic pins electronic, and techno, house and dub techno read as electronic",
+                      StageScreen.bluesPins.allSatisfy { genre($0) == .blues } && StageScreen.electronicPins.allSatisfy { genre($0) == .electronic }
+                      && songs.allSatisfy { s in (s.genre == .electronic) == ["techno", "house"].contains { w in s.meta.style.lowercased().contains(w) } },
+                      electronic.joined(separator: ", "))
+                let before = ProgressStore(url: nil), since = ProgressStore(url: nil)
+                before.setPinned("song-dockery", true, current: [], at: Vibe.pinsEpoch.addingTimeInterval(-86400))
+                since.setPinned("song-dockery", true, current: [], at: Vibe.pinsEpoch.addingTimeInterval(86400))
+                let oldApp = AppModel(player: nil, progress: before, account: AccountStore(progress: ProgressStore(url: nil)))
+                let newApp = AppModel(player: nil, progress: since, account: AccountStore(progress: ProgressStore(url: nil)))
+                check("vibes: a pinned set from before the vibes gets the electronic defaults, one changed since is as set",
+                      oldApp.pinnedSongs == ["song-dockery"] + StageScreen.electronicPins && newApp.pinnedSongs == ["song-dockery"],
+                      oldApp.pinnedSongs.joined(separator: " "))
+                oldApp.setPinned(songs.first { $0.name == "song-halbschatten" }!, false)
+                check("vibes: unpinning from that set writes it whole, the rest of the electronic defaults kept",
+                      oldApp.pinnedSongs == ["song-dockery"] + StageScreen.electronicPins.filter { $0 != "song-halbschatten" }
+                      && (before.snapshot.pins?.at ?? .distantPast) > Vibe.pinsEpoch, oldApp.pinnedSongs.joined(separator: " "))
                 var a = ProgressStore.Snapshot(), b = ProgressStore.Snapshot()
                 a.pins = .init(songs: ["song-dockery"], at: Date(timeIntervalSince1970: 100))
                 b.pins = .init(songs: ["song-pearl-street", "song-boogie-shoes"], at: Date(timeIntervalSince1970: 200))

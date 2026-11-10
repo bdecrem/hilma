@@ -12,13 +12,21 @@ struct StageScreen: View {
     /// The tracks pinned until the player changes them (the four blues tracks and the two Delta
     /// ones, Bart 2026-11-01); the rest go under "All tracks". The player's own set is
     /// `AppModel.pinnedSongs` (2026-11-07: the pin on a card, or its context menu).
-    static let defaultPins = Array(Song.catalog.prefix(6))
+    /// Since the vibes (2026-11-10) the default set carries electronic tracks too, so either
+    /// vibe opens on a stage with something on it.
+    static let bluesPins = Array(Song.catalog.prefix(6))
+    static let electronicPins = ["song-halbschatten", "song-hypnotist-2", "song-warm-nine", "song-abyss"]
+    static let defaultPins = bluesPins + electronicPins
+    /// The other vibe's pinned tracks, open under their header. Stored: once opened they stay
+    /// open, on either vibe and across launches, until the player closes them (Bart, 2026-11-10).
+    @AppStorage("stageOtherOpen") private var otherOpen = false
     /// The line under the stage after a pin or an unpin, with Undo, for a few seconds.
     @State private var toast: PinToast?
 
-    /// "Ten" for 10: the count of songs, in words up to twelve.
+    /// "Ten" for 10: the count of songs, in words up to twenty.
     static func spelled(_ n: Int) -> String {
-        let words = ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve"]
+        let words = ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve",
+                     "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen", "Twenty"]
         return n < words.count ? words[n] : String(n)
     }
 
@@ -26,8 +34,15 @@ struct StageScreen: View {
         let compact = sizeClass == .compact
         // The pinned tracks and the player's own versions of them (a version unpinned on its own
         // card goes under All tracks); the rest under All tracks.
-        let featured = app.songs.filter { app.isPinned($0) }
-        let rest = app.songs.filter { !app.isPinned($0) }
+        // By genre (2026-11-10): the pinned tracks of the vibe that's on are the set; the other
+        // vibe's pinned tracks sit under a disclosure header below them.
+        let vibe = app.vibe
+        let pinned = app.songs.filter { app.isPinned($0) }
+        let featured = pinned.filter { $0.genre == vibe }
+        let others = pinned.filter { $0.genre != vibe }
+        // All tracks: the vibe's own first, each group in set-list order.
+        let unpinned = app.songs.filter { !app.isPinned($0) }
+        let rest = unpinned.filter { $0.genre == vibe } + unpinned.filter { $0.genre != vibe }
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .center, spacing: 16) {
                 Text("Stage")
@@ -36,6 +51,7 @@ struct StageScreen: View {
                     .foregroundStyle(Palette.text)
                 StaffLines()
                     .frame(maxWidth: .infinity)
+                VibeToggle(app: app, labels: !compact)
                 AskButton(size: compact ? 34 : 36)
                 TransportButton(symbol: "gearshape", lit: false, size: compact ? 34 : 36, label: "Settings") {
                     app.route = .settings
@@ -59,10 +75,21 @@ struct StageScreen: View {
                             .id(song.name)
                     }
                     if featured.isEmpty {
-                        Text("Nothing pinned. Pin a track under All tracks to keep it up here.")
+                        Text(pinned.isEmpty ? "Nothing pinned. Pin a track under All tracks to keep it up here."
+                             : "No \(vibe.title.lowercased()) tracks pinned. Pin one under All tracks to keep it up here.")
                             .bodyText(compact ? 13 : 14)
                             .foregroundStyle(Palette.muted)
                             .padding(.vertical, 6)
+                    }
+                    if !others.isEmpty {
+                        GenreHeader(vibe: vibe.other, count: others.filter { $0.mod == nil }.count, names: others.map(\.meta.title), open: $otherOpen, compact: compact)
+                            .id("other")
+                        if otherOpen {
+                            ForEach(others, id: \.name) { song in
+                                SongCard(app: app, song: song, compact: compact, onPin: pinAction(song)) { board = song }
+                                    .id(song.name)
+                            }
+                        }
                     }
                     if !rest.isEmpty {
                         AllTracksCard(count: rest.count, names: rest.map(\.meta.title), open: $allTracks, compact: compact)
@@ -359,6 +386,56 @@ struct SongCard: View {
                         .dataLabel(10)
                         .foregroundStyle(Palette.muted)
                 }
+    }
+}
+
+/// The disclosure header over the other vibe's pinned tracks: a chevron, "Blues · Six pinned",
+/// their names in one faint line and a hairline to the edge. A header, not a card: the cards
+/// under it are the same cards. A tap opens or closes them, and they stay that way.
+struct GenreHeader: View {
+    let vibe: Vibe
+    let count: Int
+    let names: [String]
+    @Binding var open: Bool
+    let compact: Bool
+
+    var body: some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.2)) { open.toggle() }
+        } label: {
+            HStack(alignment: .center, spacing: 10) {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(Palette.muted)
+                    .rotationEffect(.degrees(open ? 90 : 0))
+                    .frame(width: 12)
+                VibeGlyph(vibe: vibe, size: 11)
+                    .foregroundStyle(Palette.muted)
+                    .frame(width: 14)
+                Text("\(vibe.title) · \(StageScreen.spelled(count)) pinned")
+                    .dataLabel(13, weight: .semibold)
+                    .foregroundStyle(open ? Palette.text : Palette.muted)
+                    .fixedSize()
+                if open {
+                    Hairline()
+                } else {
+                    Text(names.joined(separator: " · "))
+                        .dataLabel(10)
+                        .foregroundStyle(Palette.muted.opacity(0.75))
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+            .frame(height: 36)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .padding(.top, 6)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(vibe.title) tracks, \(count) pinned")
+        .accessibilityValue(open ? "expanded" : "collapsed")
+        .accessibilityAddTraits(.isButton)
     }
 }
 

@@ -1,0 +1,572 @@
+{
+ "world": "electronic",
+ "title": "Berlin nights",
+ "total": 26,
+ "episodes": [
+  {
+   "id": "wall",
+   "title": "After the Wall",
+   "kicker": "Episode 1 · 9 rooms",
+   "years": "Kreuzberg to Mitte · 1988–1998",
+   "venues": [
+    {
+     "id": "ufo",
+     "name": "UFO",
+     "town": "Köpenicker Str. 6",
+     "era": "1988",
+     "status": "Closed 1990",
+     "tag": "Down a ladder, into acid house.",
+     "story": "In 1988 Dimitri Hegemann, Achim Kohlberger and Carola Stoiber opened Berlin's first acid house club in a Kreuzberg cellar. You climbed down a ladder through a hatch in a kitchen floor. The ceiling was about 1.90 metres high and the room held a hundred people at most. In 1989 it hosted the afterparty of the first Love Parade. The club moved to an old Penny supermarket in Schöneberg and closed on December 31, 1990. Three months later the same people opened Tresor.",
+     "photo": {
+      "file": "venues/ufo.jpg",
+      "credit": "Photo: Roehrensee, CC BY-SA 3.0, via Wikimedia Commons",
+      "license": "CC BY-SA 3.0",
+      "source": "https://commons.wikimedia.org/wiki/File:19861012a_K%C3%B6penicker_Stra%C3%9Fe.jpg",
+      "note": "Köpenicker Straße at the Wall, 1986"
+     },
+     "sources": [
+      "https://de.wikipedia.org/wiki/Ufo_(Club,_Berlin)",
+      "https://en.wikipedia.org/wiki/Ufo_(club,_Berlin)",
+      "https://daily.redbullmusicacademy.com/2018/09/techno-and-the-fall-of-the-wall"
+     ]
+    },
+    {
+     "id": "tekknozid",
+     "name": "Tekknozid",
+     "town": "Klosterstr., Mitte",
+     "era": "1990",
+     "status": "Ended 1991",
+     "tag": "One dark room. Strobes. No bar.",
+     "story": "In 1990, months after the Wall opened, Wolfram Neugebauer, known as Wolle XDP, began the first techno raves in East Berlin. The early ones were held in the Haus der jungen Talente, the central clubhouse of the East German youth organization. There was one blacked-out dance floor with strobes and lasers, and no bar, tables or chairs. Ten raves took place, the last in December 1991. People from the crew went on to start Tresor, Planet and E-Werk. The palace is now called the Podewil.",
+     "photo": {
+      "file": "venues/tekknozid.jpg",
+      "credit": "Photo: Jörg Zägel, CC BY-SA 3.0, via Wikimedia Commons (cropped)",
+      "license": "CC BY-SA 3.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Berlin,_Mitte,_Klosterstra%C3%9Fe,_Palais_Podewils_01.jpg",
+      "note": "The building in 2009, now the Podewil"
+     },
+     "sources": [
+      "https://de.wikipedia.org/wiki/Tekknozid",
+      "https://de.wikipedia.org/wiki/Ralf_Regitz",
+      "https://de.wikipedia.org/wiki/Klosterstra%C3%9Fe_(Berlin-Mitte)",
+      "https://daily.redbullmusicacademy.com/2018/09/techno-and-the-fall-of-the-wall"
+     ]
+    },
+    {
+     "id": "tresor",
+     "name": "Tresor",
+     "town": "Leipziger Straße",
+     "era": "1991",
+     "status": "Closed 2005",
+     "tag": "Safe-deposit boxes and Detroit techno.",
+     "story": "In March 1991 the people behind UFO opened a club in the vault of the old Wertheim department store, next to Potsdamer Platz. The vault dated from 1926 and had stood empty for decades, its steel doors and safe-deposit boxes still in place. DJs from Detroit played there often: Jeff Mills, Juan Atkins, Blake Baxter, Robert Hood. The label Tresor Records followed that September. The last party began on April 16, 2005, and the building was torn down weeks later for offices.",
+     "photo": {
+      "file": "venues/tresor.jpg",
+      "credit": "Photo: MichaelBrossmann (author assumed by Commons), public domain, via Wikimedia Commons (cropped)",
+      "license": "Public domain",
+      "source": "https://commons.wikimedia.org/wiki/File:Tresor_-_Berlin.jpg",
+      "note": "The entrance in September 2003"
+     },
+     "sources": [
+      "https://de.wikipedia.org/wiki/Tresor_(Club)",
+      "https://en.wikipedia.org/wiki/Tresor_(club)",
+      "https://daily.redbullmusicacademy.com/2018/09/techno-and-the-fall-of-the-wall"
+     ]
+    },
+    {
+     "id": "planet",
+     "name": "Planet",
+     "town": "Köpenicker Str. 50",
+     "era": "1991",
+     "status": "Closed 1993",
+     "tag": "A soap factory on the Spree.",
+     "story": "Planet opened in 1991 in an abandoned soap factory on the Spree. Ralf Regitz, who had managed UFO and helped organize Tekknozid, was one of the people who ran it. With Walfisch on the same street, it was among the first clubs to follow Tresor into the empty buildings of East Berlin. It lasted about two years. In 1992 Andreas Rossmann of the Planet crew found a disused substation, which became E-Werk. Twenty years later the soap factory was a club again, as Kater Holzig.",
+     "photo": {
+      "file": "venues/planet.jpg",
+      "credit": "Photo: Seth Tisue, CC BY-SA 2.0, via Wikimedia Commons",
+      "license": "CC BY-SA 2.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Alte_Seifenfabrik_K%C3%B6penicker_Stra%C3%9Fe_Berlin.jpg",
+      "note": "The soap factory in 2003"
+     },
+     "sources": [
+      "https://de.wikipedia.org/wiki/Liste_von_Clubs_und_Diskotheken_in_Berlin",
+      "https://de.wikipedia.org/wiki/Ralf_Regitz",
+      "https://de.wikipedia.org/wiki/Kater_Blau",
+      "https://www.visitberlin.de/de/blog/e-werk-berlin-clubszene-unter-strom",
+      "https://daily.redbullmusicacademy.com/2018/09/techno-and-the-fall-of-the-wall"
+     ]
+    },
+    {
+     "id": "walfisch",
+     "name": "Walfisch",
+     "town": "Köpenicker Str. 76",
+     "era": "1991",
+     "status": "Closed 1993",
+     "tag": "Where the night went after Tresor.",
+     "story": "In East German times the rooms above the Heinrich-Heine-Straße underground station were a pub called Zum Walfisch, the whale. In 1991 its owners wanted techno parties, and DJ Der Würfler suggested an afterhour, which East Berlin did not yet have. They taped over the windows and brought in strobes and fog, and the crowds from Tresor and Planet came. The owners sold up around 1993. The Sage Club took the rooms in 1997, and the KitKatClub moved in ten years later.",
+     "photo": {
+      "file": "venues/walfisch.jpg",
+      "credit": "Photo: Gobbler, CC BY-SA 3.0, via Wikimedia Commons (cropped)",
+      "license": "CC BY-SA 3.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Kit-Kat_club_Berlin.JPG",
+      "note": "The station building in 2012"
+     },
+     "sources": [
+      "https://de.wikipedia.org/wiki/Walfisch_(Club)",
+      "https://de.wikipedia.org/wiki/Sage_Club"
+     ]
+    },
+    {
+     "id": "wmf",
+     "name": "WMF",
+     "town": "All over Mitte",
+     "era": "1991",
+     "status": "Closed 2010",
+     "tag": "Eight addresses in nineteen years.",
+     "story": "In 1991 a group of music activists squatted the empty headquarters of the Württembergische Metallwarenfabrik on Leipziger Straße and held illegal parties. They kept the initials as they moved: disused underground toilets in the Wall strip at Potsdamer Platz, a factory hall near Hackescher Markt, a former government guest house, Café Moskau. Moving into buildings between tenants kept the rent low. In March 2010, at the eighth address, the landlord closed the club over its debts.",
+     "photo": {
+      "file": "venues/wmf.jpg",
+      "credit": "Photo: Sascha Pohflepp, CC BY 2.0, via Wikimedia Commons (cropped)",
+      "license": "CC BY 2.0",
+      "source": "https://commons.wikimedia.org/wiki/File:WMF_Club_Berlin_Transmediale_2010.jpg",
+      "note": "Inside, during Transmediale, February 2010"
+     },
+     "sources": [
+      "https://de.wikipedia.org/wiki/WMF-Club",
+      "https://daily.redbullmusicacademy.com/2018/09/techno-and-the-fall-of-the-wall"
+     ]
+    },
+    {
+     "id": "bunker",
+     "name": "Bunker",
+     "town": "Reinhardtstraße",
+     "era": "1992",
+     "status": "Closed 1996",
+     "tag": "Air-raid shelter. Gabber on four levels.",
+     "story": "Forced labourers built the Reichsbahn bunker in 1941 and 1942 to shelter 3,000 railway passengers. Under East Germany it stored fruit from Cuba and was known as the banana bunker. In April 1992 the artist Werner Vollert turned it into a techno club, with hardcore, gabber and breakbeat on four levels. From 1994 it also housed the Snax parties, whose organizers later opened Ostgut and Berghain. After police raids it closed in December 1996. Since 2008 it has held the Boros art collection.",
+     "photo": {
+      "file": "venues/bunker.jpg",
+      "credit": "Photo: Kliehm, CC BY 4.0, via Wikimedia Commons",
+      "license": "CC BY 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Bunker-berlin-1997.jpg",
+      "note": "The bunker in 1997"
+     },
+     "sources": [
+      "https://de.wikipedia.org/wiki/Reichsbahnbunker_Friedrichstra%C3%9Fe",
+      "https://de.wikipedia.org/wiki/Tekknozid"
+     ]
+    },
+    {
+     "id": "ewerk",
+     "name": "E-Werk",
+     "town": "Wilhelmstr., Mitte",
+     "era": "1993",
+     "status": "Closed 1997",
+     "tag": "A substation with the power back on.",
+     "story": "The Buchhändlerhof substation near Checkpoint Charlie was built in the 1920s and has been a listed building since 1987. The first party was held there in February 1993, and Hilke Saul, Andreas Rossmann, Ralf Regitz and Lee Waters ran it as a techno club. Fridays were Dubmission, with the residents Kid Paul and Paul van Dyk. The club closed on July 24, 1997. The building was restored and reopened in 2005 as an event hall.",
+     "photo": {
+      "file": "venues/ewerk.jpg",
+      "credit": "Photo: Nicor, CC BY-SA 3.0, via Wikimedia Commons (cropped)",
+      "license": "CC BY-SA 3.0",
+      "source": "https://commons.wikimedia.org/wiki/File:E-Werk_Berlin.JPG",
+      "note": "The control building after its restoration"
+     },
+     "sources": [
+      "https://de.wikipedia.org/wiki/E-Werk_(Berlin)",
+      "https://en.wikipedia.org/wiki/E-Werk_(Berlin)",
+      "https://www.visitberlin.de/de/blog/e-werk-berlin-clubszene-unter-strom"
+     ]
+    },
+    {
+     "id": "ostgut",
+     "name": "Ostgut",
+     "town": "Friedrichshain",
+     "era": "1998",
+     "status": "Closed 2003",
+     "tag": "Freight shed. Berghain before Berghain.",
+     "story": "Michael Teufele and Norbert Thormann had run the men-only Snax parties in the Bunker. In 1998 they settled in a storage hall on an old railway freight yard on Mühlenstraße and called it Ostgut. Most of the crowd were gay men, but the club was open to everyone. A second room, the Panorama Bar, was added in 2000. The last big night, on January 6, 2003, is said to have lasted about 30 hours. The halls were demolished the next year to make room for an arena.",
+     "photo": {
+      "file": "venues/ostgut.jpg",
+      "credit": "Photo: Nicor (author assumed by Commons), CC BY-SA 3.0, via Wikimedia Commons",
+      "license": "CC BY-SA 3.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Ostgut_reklame.jpg",
+      "note": "The club's sign"
+     },
+     "sources": [
+      "https://de.wikipedia.org/wiki/Berghain",
+      "https://en.wikipedia.org/wiki/Berghain",
+      "https://de.wikipedia.org/wiki/Reichsbahnbunker_Friedrichstra%C3%9Fe"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "spree",
+   "title": "Along the Spree",
+   "kicker": "Episode 2 · 8 rooms",
+   "years": "Riverbanks and rooftops · 1998–2012",
+   "venues": [
+    {
+     "id": "maria",
+     "name": "Maria am Ostbahnhof",
+     "town": "Schillingbrücke",
+     "era": "1998",
+     "status": "Closed 2011",
+     "tag": "Red letters over the river.",
+     "story": "Maria opened in 1998 in a warehouse of the old postal railway station beside the Ostbahnhof. In 2003 it moved into an industrial hall on the Spree at the Schillingbrücke. The programme went beyond techno: Jeff Mills and Laurent Garnier played there, and so did The Fall, Autechre and the Beastie Boys. Scenes of the film Berlin Calling were shot inside. The city wanted to sell the land, and Maria held its farewell in May 2011. Since 2014 the hall has been home to the YAAM.",
+     "photo": {
+      "file": "venues/maria.jpg",
+      "credit": "Photo: Angela Monika Arnold, CC BY-SA 3.0, via Wikimedia Commons (cropped)",
+      "license": "CC BY-SA 3.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Szeneclub_an_der_Schillingbruecke.JPG",
+      "note": "The hall by the Schillingbrücke, April 2009"
+     },
+     "sources": [
+      "https://de.wikipedia.org/wiki/Maria_am_Ostbahnhof"
+     ]
+    },
+    {
+     "id": "cdv",
+     "name": "Club der Visionaere",
+     "town": "Am Flutgraben",
+     "era": "2000",
+     "status": "Still open",
+     "tag": "A wooden deck on a canal. One floor.",
+     "story": "Nobody recorded the day it opened. It began with private parties around the year 2000 on the Flutgraben, the canal arm between Kreuzberg and Treptow just before it meets the Spree. There is one small floor, which also plays to the open deck by the water. Unlike most Berlin clubs it closes all winter, and in season it opens every day from the afternoon. The music is mostly minimal techno, and Richie Hawtin and Ricardo Villalobos have played there.",
+     "photo": {
+      "file": "venues/cdv.jpg",
+      "credit": "Photo: Rubén Vique, CC BY 2.0, via Wikimedia Commons",
+      "license": "CC BY 2.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Club_der_Visionaere_Berlin_Waterfront_2010.jpg",
+      "note": "The deck at night, July 2010"
+     },
+     "sources": [
+      "https://de.wikipedia.org/wiki/Club_der_Visionaere",
+      "https://de.wikipedia.org/wiki/Liste_von_Clubs_und_Diskotheken_in_Berlin"
+     ]
+    },
+    {
+     "id": "watergate",
+     "name": "Watergate",
+     "town": "Oberbaumbrücke",
+     "era": "2002",
+     "status": "Closed 2024",
+     "tag": "Two floors and a window on the Spree.",
+     "story": "Watergate opened in October 2002 in an office building beside the Oberbaumbrücke, on the Kreuzberg bank of the Spree. Its founders started with reggae, hip-hop and drum and bass and soon turned to house and techno. Both floors looked out over the river. Upstairs a 12-metre band of LEDs ran across the ceiling, and downstairs a door led to a terrace on the water. The club closed at the end of 2024, and the owners named rising costs and a changing club culture.",
+     "photo": {
+      "file": "venues/watergate.jpg",
+      "credit": "Photo: Oh-Berlin.com, CC BY 2.0, via Wikimedia Commons (cropped)",
+      "license": "CC BY 2.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Watergate_Nightclub_Berlin_Spree_River.jpg",
+      "note": "Seen from the Oberbaumbrücke, November 2010"
+     },
+     "sources": [
+      "https://de.wikipedia.org/wiki/Watergate_(Club)"
+     ]
+    },
+    {
+     "id": "bar25",
+     "name": "Bar 25",
+     "town": "Holzmarktstr. 25",
+     "era": "2003",
+     "status": "Closed 2010",
+     "tag": "A wooden saloon on the Wall strip.",
+     "story": "The plot on the Spree had lain empty for decades because it was part of the border strip. In 2003 Christoph Klenzendorf, Juval Dieziger, Danny Faber and Steffi Lotta leased it and put up a wooden shed in the style of a Western saloon. Around it grew a restaurant, a circus tent, a hostel and a sauna. It opened only in summer and was known for its confetti parties and for Steffi Lotta's unpredictable door. The last party, in September 2010, ran for five days.",
+     "photo": {
+      "file": "venues/bar25.jpg",
+      "credit": "Photo: Andreas Praefcke, CC BY 3.0, via Wikimedia Commons (cropped)",
+      "license": "CC BY 3.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Berlin_Spree_Bar25_Holzmarktstra%C3%9Fe.jpg",
+      "note": "Seen from the Spree, April 2009"
+     },
+     "sources": [
+      "https://de.wikipedia.org/wiki/Bar_25",
+      "https://en.wikipedia.org/wiki/Bar_25",
+      "https://de.wikipedia.org/wiki/Liste_von_Clubs_und_Diskotheken_in_Berlin"
+     ]
+    },
+    {
+     "id": "weekend",
+     "name": "Weekend",
+     "town": "Alexanderplatz",
+     "era": "2004",
+     "status": "Still open",
+     "tag": "Twelve floors up, facing the TV tower.",
+     "story": "The Haus des Reisens is an 18-storey tower on Alexanderplatz, finished in 1971 as the headquarters of the East German state travel agency. A club called Week End opened on its 12th floor at the turn of 2004 to 2005. In the early years it was a room for house and techno, with guests such as Richie Hawtin, Laurent Garnier and Dixon. It later spread to the 15th floor, and the roof terrace above looks straight at the TV tower. Today the music is mostly hip-hop and R'n'B.",
+     "photo": {
+      "file": "venues/weekend.jpg",
+      "credit": "Photo: Zeitfixierer, CC BY-SA 2.0, via Wikimedia Commons (cropped)",
+      "license": "CC BY-SA 2.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Weekend_Club_Berlin_Rooftop_Bar_5.jpg",
+      "note": "The roof terrace, June 2007"
+     },
+     "sources": [
+      "https://de.wikipedia.org/wiki/Haus_des_Reisens",
+      "https://clubguideberlin.de/weekend-berlin-club-en",
+      "https://www.visitberlin.de/de/weekend-club"
+     ]
+    },
+    {
+     "id": "stattbad",
+     "name": "Stattbad Wedding",
+     "town": "Gerichtstraße",
+     "era": "2009",
+     "status": "Closed 2015",
+     "tag": "Dancing in the deep end.",
+     "story": "The public baths on Gerichtstraße were built in 1907 and 1908 for tenement families who had no bathrooms. After the pools closed, the developer Arne Piepgras bought the complex and reopened it in 2009 as the Stattbad, with a street art show in the small pool. Artists rented studios upstairs. At night the drained pools became dance floors, and the techno nights ran for six years. In May 2015 the building authority closed the house at short notice. Demolition began the following year.",
+     "photo": {
+      "file": "venues/stattbad.jpg",
+      "credit": "Photo: Fridolin freudenfett (Peter Kuley), CC BY-SA 3.0, via Wikimedia Commons (cropped)",
+      "license": "CC BY-SA 3.0",
+      "source": "https://commons.wikimedia.org/wiki/File:GesundbrunnenGerichtstra%C3%9FeStadtbad.jpg",
+      "note": "The baths on Gerichtstraße, November 2010"
+     },
+     "sources": [
+      "https://de.wikipedia.org/wiki/Stadtbad_Wedding",
+      "https://www.the-berliner.com/berlin/save-berlin-pools-of-tears/",
+      "https://mixmag.net/read/stattbad-in-berlin-has-been-forced-to-close-temporarily-news",
+      "https://www.iheartberlin.de/2015/06/20/the-stattbad-chronicles/"
+     ]
+    },
+    {
+     "id": "katerholzig",
+     "name": "Kater Holzig",
+     "town": "Michaelkirchstraße",
+     "era": "2011",
+     "status": "Closed 2014",
+     "tag": "Bar 25 crosses the river.",
+     "story": "After Bar 25 closed, its founders crossed to the other bank of the Spree and in the summer of 2011 opened Kater Holzig in an old soap factory. It was the same ruin that had housed the club Planet twenty years earlier. The landlords limited the lease to three years from the start. Kater Holzig was meant to end in August 2013, stayed open five months longer and closed on January 5, 2014. By then the same people had secured the old Bar 25 site across the water.",
+     "photo": {
+      "file": "venues/katerholzig.jpg",
+      "credit": "Photo: Samuel Goëta, CC BY-SA 2.0, via Wikimedia Commons (cropped)",
+      "license": "CC BY-SA 2.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Kater_Holzig_Nightclub_Berlin_Nighttime.jpg",
+      "note": "The yard at night, August 2013"
+     },
+     "sources": [
+      "https://de.wikipedia.org/wiki/Kater_Blau",
+      "https://ra.co/news.aspx?id=22241",
+      "https://en.wikipedia.org/wiki/Bar_25",
+      "https://de.wikipedia.org/wiki/Liste_von_Clubs_und_Diskotheken_in_Berlin"
+     ]
+    },
+    {
+     "id": "griessmuehle",
+     "name": "Griessmuehle",
+     "town": "Sonnenallee 221",
+     "era": "2012",
+     "status": "Closed 2020",
+     "tag": "The semolina mill. Eight years.",
+     "story": "Griessmuehle, the semolina mill, opened on the site of a former pasta factory in Neukölln. Resident Advisor dates the start to 2011, and the memorial plaque says 2012. For eight years it was a home for techno nights and for the gay party Cocktail d'Amore. In February 2020 the club had to leave when its lease ended, though more than 50,000 people had signed a petition. The team moved to a disused brewery in Schöneweide. In 2025 an anonymous group put up a plaque outside the old site.",
+     "photo": {
+      "file": "venues/griessmuehle.jpg",
+      "credit": "Photo: Michael Mayer, CC BY 2.0, via Wikimedia Commons (cropped)",
+      "license": "CC BY 2.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Griessmuehle_Nightclub_Berlin_Exit.jpg",
+      "note": "An exit and a neon tube inside, June 2015"
+     },
+     "sources": [
+      "https://ra.co/news/73399",
+      "https://mixmag.net/read/shuttered-berlin-club-griessmuehle-memorialised-plaque-venue-news",
+      "https://de.wikipedia.org/wiki/Liste_von_Clubs_und_Diskotheken_in_Berlin"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "temples",
+   "title": "The Temples",
+   "kicker": "Episode 3 · the road to Berghain",
+   "years": "Power stations and factories · 2004–",
+   "venues": [
+    {
+     "id": "kraftwerk",
+     "name": "Tresor at Kraftwerk",
+     "town": "Köpenicker Str. 70",
+     "era": "2007",
+     "status": "Still open",
+     "tag": "The vault moves into a power station.",
+     "story": "Two years after losing the Wertheim vault, Tresor reopened in May 2007 in the southern wing of the Mitte heating plant, which had been shut down in 1997. Dimitri Hegemann rented it from the power company Vattenfall. Some of the original safe-deposit boxes were moved into the lower room. In October 2010 the plant's 100-metre turbine hall opened as Kraftwerk Berlin, a space for exhibitions and concerts. A smaller club, OHM, has shared the address since 2013.",
+     "photo": {
+      "file": "venues/kraftwerk.jpg",
+      "credit": "Photo: Boca Dorada, CC BY-SA 2.0, via Wikimedia Commons (cropped)",
+      "license": "CC BY-SA 2.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Tresor_Berlin_2008.jpg",
+      "note": "The Tresor logo on the power station, 2008"
+     },
+     "sources": [
+      "https://de.wikipedia.org/wiki/Tresor_(Club)",
+      "https://de.wikipedia.org/wiki/Kraftwerk_Berlin",
+      "https://en.wikipedia.org/wiki/Tresor_(club)",
+      "https://de.wikipedia.org/wiki/Liste_von_Clubs_und_Diskotheken_in_Berlin"
+     ]
+    },
+    {
+     "id": "renate",
+     "name": "Wilde Renate",
+     "town": "Alt-Stralau 70",
+     "era": "2007",
+     "status": "Still open",
+     "tag": "An old tenement, room after room.",
+     "story": "Renate was founded in 2007, as Salon zur Wilden Renate, in an unrenovated tenement house near the Elsenbrücke. The dance floors are spread through its many rooms, and there is a garden in the yard. In August 2024 the operators announced that the club would close for good at the end of 2025 because the lease would not be renewed. In June 2025 a fire destroyed the fence, the entrance building and part of the garden. Two weeks before the lease ran out a new one was signed, and Renate went on in 2026.",
+     "photo": {
+      "file": "venues/renate.jpg",
+      "credit": "Photo: Tim Gage, CC BY-SA 2.0, via Wikimedia Commons (cropped)",
+      "license": "CC BY-SA 2.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Wilde_Renate_Berlin_Courtyard.jpg",
+      "note": "The yard at night, July 2014"
+     },
+     "sources": [
+      "https://de.wikipedia.org/wiki/Salon_zur_Wilden_Renate",
+      "https://mixmag.net/read/berlins-renate-will-reopen-in-2026-after-reaching-new-rental-agreement-news",
+      "https://de.wikipedia.org/wiki/Liste_von_Clubs_und_Diskotheken_in_Berlin"
+     ]
+    },
+    {
+     "id": "sisyphos",
+     "name": "Sisyphos",
+     "town": "Rummelsburg",
+     "era": "2009",
+     "status": "Still open",
+     "tag": "Friday night to Monday morning.",
+     "story": "In 2008 an association called Sommerleuchten took over a former dog biscuit factory in Rummelsburg. The first parties, for a small circle, followed in 2009. Today there are five floors, among them the Hammahalle for techno, the Wintergarten for house and an outdoor one called Strand, the beach. Parties often run without a break from ten on Friday night to ten on Monday morning. Two ducks on the iron main gate are its emblem, and the regulars call themselves ducks.",
+     "photo": {
+      "file": "venues/sisyphos.jpg",
+      "credit": "Photo: Rio65trio, CC BY-SA 4.0, via Wikimedia Commons",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Sisyphos_Nightclub_Berlin.jpg",
+      "note": "The main gate, August 2022"
+     },
+     "sources": [
+      "https://de.wikipedia.org/wiki/Sisyphos_(Berlin)",
+      "https://de.wikipedia.org/wiki/Liste_von_Clubs_und_Diskotheken_in_Berlin"
+     ]
+    },
+    {
+     "id": "blank",
+     "name": "://about blank",
+     "town": "Markgrafendamm",
+     "era": "2010",
+     "status": "Still open",
+     "tag": "Run by a collective. Owned by its staff.",
+     "story": "The Blank opened in 2010 in a plain two-storey building on Markgrafendamm. It is run by a collective and organized as a cooperative that belongs to the people who work there. The club is openly left-wing, and banners often hang from its roof. The first lease ran only until 2020 and was later extended. The planned extension of the A100 motorway could still take the site.",
+     "photo": {
+      "file": "venues/blank.jpg",
+      "credit": "Photo: Singlespeedfahrer, CC0, via Wikimedia Commons",
+      "license": "CC0",
+      "source": "https://commons.wikimedia.org/wiki/File:Techno-Club_About_Blank_Markgrafendamm_Berlin.jpg",
+      "note": "The building on Markgrafendamm, July 2022"
+     },
+     "sources": [
+      "https://de.wikipedia.org/wiki/About_Blank",
+      "https://de.wikipedia.org/wiki/Liste_von_Clubs_und_Diskotheken_in_Berlin"
+     ]
+    },
+    {
+     "id": "katerblau",
+     "name": "Kater Blau",
+     "town": "Holzmarktstr. 25",
+     "era": "2014",
+     "status": "Now called Kater",
+     "tag": "Back on the Bar 25 riverbank.",
+     "story": "When the old Bar 25 site came up for sale, the Bar 25 people formed a cooperative, Holzmarkt 25, and found a partner in Stiftung Abendrot, a pension fund from Basel. The fund bought the land and gave the cooperative a long building lease. Kater Blau opened on the edge of the site, beside the railway viaduct, on the first weekend of August 2014. It has two floors, the Heinz Hopper and the smaller Acid Bogen, and in season a boat is moored at the bank. Since August 2025 the club has gone by the name Kater.",
+     "photo": {
+      "file": "venues/katerblau.jpg",
+      "credit": "Photo: Felix Winkelnkemper, CC BY 2.0, via Wikimedia Commons (cropped)",
+      "license": "CC BY 2.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Kater_Blau_Berlin_Spree_View.jpg",
+      "note": "Seen from the Spree, August 2020"
+     },
+     "sources": [
+      "https://de.wikipedia.org/wiki/Kater_Blau",
+      "https://de.wikipedia.org/wiki/Bar_25",
+      "https://de.wikipedia.org/wiki/Liste_von_Clubs_und_Diskotheken_in_Berlin"
+     ]
+    },
+    {
+     "id": "rso",
+     "name": "RSO.Berlin",
+     "town": "Schöneweide",
+     "era": "2021",
+     "status": "Still open",
+     "tag": "The Griessmuehle crew, in a brewery.",
+     "story": "The Bärenquell brewery in Niederschöneweide was founded in 1882 and stopped brewing on April 1, 1994. Its listed brick buildings then stood largely unused for more than two decades. In 2020 the team of the closed Griessmuehle chose the site and named it Revier Südost. The beer garden opened that September, while dancing indoors was still forbidden in Berlin. The club itself, RSO.Berlin, followed in 2021.",
+     "photo": {
+      "file": "venues/rso.jpg",
+      "credit": "Photo: Neuköllner, CC BY-SA 4.0, via Wikimedia Commons (cropped)",
+      "license": "CC BY-SA 4.0",
+      "source": "https://commons.wikimedia.org/wiki/File:B%C3%A4renquell-Brauerei,_Schnellerstra%C3%9Fe_136,_Niedersch%C3%B6neweide,_Treptow-K%C3%B6penick,_Berlin,_2019,_Bild_1.jpg",
+      "note": "The brewery gate in 2019, before the club"
+     },
+     "sources": [
+      "https://de.wikipedia.org/wiki/B%C3%A4renquell-Brauerei",
+      "https://ra.co/news/73399",
+      "https://www.visitberlin.de/de/node/2259220",
+      "https://de.wikipedia.org/wiki/Liste_von_Clubs_und_Diskotheken_in_Berlin"
+     ]
+    },
+    {
+     "id": "kitkat",
+     "name": "KitKatClub",
+     "town": "Köpenicker Str. 76",
+     "era": "1994",
+     "status": "Still open",
+     "tag": "Dress code at the door. Techno inside.",
+     "story": "Simon Thaur and Kirsten Krüger started the KitKatClub in March 1994 as a Wednesday night at the Turbine in Kreuzberg. The name comes from the Kit Kat Club in the musical Cabaret. The dress code is strict and Krüger has worked the door from the beginning, but most of what goes on inside is the ordinary life of a techno club. Since July 2007 it has been in the rooms above the Heinrich-Heine-Straße station, where Walfisch once held its afterhours.",
+     "photo": {
+      "file": "venues/kitkat.jpg",
+      "credit": "Photo: Asio otus, CC BY-SA 3.0, via Wikimedia Commons",
+      "license": "CC BY-SA 3.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Berlin-GraffitiK%C3%B6penickerStr76-1-Asio.jpg",
+      "note": "Murals on the club's building, July 2025"
+     },
+     "sources": [
+      "https://de.wikipedia.org/wiki/KitKatClub",
+      "https://en.wikipedia.org/wiki/KitKatClub",
+      "https://de.wikipedia.org/wiki/Sage_Club"
+     ]
+    },
+    {
+     "id": "panoramabar",
+     "name": "Panorama Bar",
+     "town": "Above Berghain",
+     "era": "2004",
+     "status": "Still open",
+     "tag": "The house floor, up the stairs.",
+     "story": "The Panorama Bar began in 2000 as the second room at Ostgut. Its new home opened on October 15, 2004 in the former control room of the Friedrichshain heating plant, two months before the big hall below it. It is the smaller, upper floor, and where the main room plays techno, this one plays house. In 2017 it was given a new four-point sound system. Like the rest of the building, it allows no photographs inside.",
+     "photo": {
+      "file": "venues/panoramabar.jpg",
+      "credit": "Photo: mlaiacker, CC BY 2.0, via Wikimedia Commons (cropped)",
+      "license": "CC BY 2.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Berghain_at_night.jpg",
+      "note": "The building at night, May 2006"
+     },
+     "sources": [
+      "https://de.wikipedia.org/wiki/Berghain",
+      "https://en.wikipedia.org/wiki/Berghain"
+     ]
+    },
+    {
+     "id": "berghain",
+     "name": "Berghain",
+     "town": "Friedrichshain",
+     "era": "2004",
+     "status": "Still open",
+     "tag": "A power station at the end of the road.",
+     "story": "The heating plant behind the Ostbahnhof was built in 1953 and 1954 in the Socialist Classicist style of the nearby Stalinallee. Michael Teufele and Norbert Thormann, who had lost Ostgut, opened its machine hall as Berghain on December 18, 2004. The name joins Kreuzberg and Friedrichshain. The dance floor lies under an 18-metre ceiling, and the club holds about 1,500 people. No photographs are allowed, and the door does not explain a refusal. In 2009 DJ Magazine ranked it the best club in the world.",
+     "photo": {
+      "file": "venues/berghain.jpg",
+      "credit": "Photo: Michael Mayer, CC BY 2.0, via Wikimedia Commons (cropped)",
+      "license": "CC BY 2.0",
+      "source": "https://commons.wikimedia.org/wiki/File:Berghain_Berlin_Winter_Night.jpg",
+      "note": "The walk to the door, January 2016"
+     },
+     "sources": [
+      "https://de.wikipedia.org/wiki/Berghain",
+      "https://en.wikipedia.org/wiki/Berghain"
+     ]
+    }
+   ]
+  }
+ ]
+}

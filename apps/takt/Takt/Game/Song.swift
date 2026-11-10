@@ -48,6 +48,8 @@ struct Song {
         let style: String
         let key: String
         let tempo: Int
+        /// "blues" or "electronic" when the file says so; else read from the style (`genre`).
+        var genre: String? = nil
         /// The cover's glyph (`SongArt`).
         let art: String
         let line: String
@@ -135,6 +137,15 @@ struct Song {
         }
         guard band.form.count == band.bars, band.bars >= 2, meta.tempo >= 40, !meta.sections.isEmpty,
               meta.sections[0].bar == 0 else { throw fail("form, sections or tempo") }
+    }
+
+    /// The vibe the song belongs to (`Vibe`): the Stage shows the pinned tracks of the vibe
+    /// that's on and tucks the other's. The file's `genre`, or from its style: techno, house,
+    /// ambient and electro are electronic, everything else on the set list is the blues.
+    var genre: Vibe {
+        if let g = meta.genre.flatMap(Vibe.init(rawValue:)) { return g }
+        let style = meta.style.lowercased()
+        return ["techno", "house", "ambient", "electro"].contains { style.contains($0) } ? .electronic : .blues
     }
 
     /// The charting this song plays by: the bundle's, with a mod's own override on top.

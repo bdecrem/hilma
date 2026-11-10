@@ -4,8 +4,8 @@ import Foundation
 /// Content, not code: `Content/map-<world>.json` holds the episodes and the venues (story,
 /// photo, credit). The photos are imagesets named `<world>-<venue id>` in
 /// `Assets.xcassets/Venues/`. What a level asks for, and when it clears, is the player's
-/// `LearningPlan`: level n of the map is level n of the plan. A second world (the Berlin techno
-/// map) is a new JSON file, its photos, and its id in `all`; Settings picks it by `mapWorld`.
+/// `LearningPlan`: level n of the map is level n of the plan. There is a world per vibe
+/// (`Vibe`): the blues road and the Berlin clubs; the vibe switch picks it.
 struct MapWorld: Decodable {
     struct Photo: Decodable {
         let file: String
@@ -61,15 +61,12 @@ struct MapWorld: Decodable {
     let total: Int
     let episodes: [Episode]
 
-    /// The worlds that ship, in Settings order. The first is the default.
-    static let all = ["blues"]
-    static let defaultWorld = all[0]
+    /// The worlds that ship: one per vibe, under the vibe's own name (`map-blues.json`, the
+    /// blues road; `map-electronic.json`, the Berlin clubs). The vibe switch picks the world;
+    /// the levels cleared are the plan's, so the player stands at the same level on both.
+    static let all = Vibe.allCases.map(\.rawValue)
 
-    /// Settings → Taste → Map (`mapWorld`), falling back to the default for an unknown id.
-    static var selected: String {
-        let id = UserDefaults.standard.string(forKey: "mapWorld") ?? defaultWorld
-        return all.contains(id) ? id : defaultWorld
-    }
+    static func bundled(_ vibe: Vibe) -> MapWorld { bundled(vibe.rawValue) }
 
     static func bundled(_ world: String) -> MapWorld {
         guard let url = Bundle.main.url(forResource: "map-\(world)", withExtension: "json") else {

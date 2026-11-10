@@ -14,7 +14,6 @@ struct SettingsScreen: View {
     @State private var launchPreview: LaunchSound?
     @AppStorage("countIn") private var countIn = true
     @AppStorage("preferMinor") private var preferMinor = false
-    @AppStorage("mapWorld") private var mapWorld = MapWorld.defaultWorld
     @AppStorage("tapMode") private var tapMode = KeyboardStrip.tapModeDefault
     @AppStorage("showComputerKeys") private var showComputerKeys = false
     @AppStorage(MIDIInput.whiteKeyMinorKey) private var whiteKeysAMinor = false
@@ -173,20 +172,8 @@ struct SettingsScreen: View {
                         }
                         .tint(Palette.signal)
                         .onChange(of: preferMinor) { app.tasteChanged() }
-                        // The map's world: only once there is a second one (the techno map).
-                        if MapWorld.all.count > 1 {
-                            Hairline()
-                            HStack {
-                                Text("Map").bodyText(15).foregroundStyle(Palette.text)
-                                Spacer()
-                                Picker("Map", selection: $mapWorld) {
-                                    ForEach(MapWorld.all, id: \.self) { Text(MapWorld.bundled($0).title).tag($0) }
-                                }
-                                .pickerStyle(.segmented)
-                                .frame(maxWidth: 280)
-                            }
-                            .onChange(of: mapWorld) { app.mapWorldChanged() }
-                        }
+                        // The map's world follows the vibe: the switch beside the gear on the
+                        // three tabs (`VibeToggle`).
                     }
 
                     SettingsSection(title: "Display") {
