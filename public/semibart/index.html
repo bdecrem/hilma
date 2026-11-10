@@ -14,7 +14,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://ola.cx/semibart/og.png">
 <title>CASBS Quest</title>
-<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Jersey+15&display=swap" rel="stylesheet">
 <style>
 :root {
   --black: #000000;
@@ -22,7 +22,7 @@
   --cyan: #55ffff;
   --choice: #d58bff;
   --gold: #e6b547;
-  --font: 'Pixelify Sans', 'Courier New', monospace;
+  --font: 'Jersey 15', 'Courier New', monospace;
   /* layout: one full-bleed 320x180 pixel scene; text, labels and dialog choices float over it */
   color-scheme: dark;
 }
@@ -33,13 +33,13 @@ body { background: var(--black); container-type: size; display: flex; align-item
 #stage { position: relative; width: min(100cqw, calc(100cqh * 16 / 9)); aspect-ratio: 16 / 9; background: var(--black); overflow: hidden; container-type: inline-size; user-select: none; -webkit-user-select: none; }
 #cv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; image-rendering: pixelated; image-rendering: crisp-edges; cursor: crosshair; touch-action: none; transform-origin: 73.75% 56.7%; }
 .outlined { text-shadow: 0.22cqw 0 0 #000, -0.22cqw 0 0 #000, 0 0.22cqw 0 #000, 0 -0.22cqw 0 #000, 0.22cqw 0.22cqw 0 #000, -0.22cqw 0.22cqw 0 #000, 0.22cqw -0.22cqw 0 #000, -0.22cqw -0.22cqw 0 #000, 0.15cqw 0.45cqw 0 rgba(0,0,0,0.55); }
-#line { position: absolute; width: 62%; text-align: center; font-size: 2.85cqw; line-height: 1.18; font-weight: 600; letter-spacing: 0.03em; word-spacing: 0.08em; transform: translateY(-100%); pointer-events: none; text-wrap: balance; }
-#label { position: absolute; color: var(--cyan); font-size: 1.9cqw; line-height: 1; pointer-events: none; white-space: nowrap; transform: translate(-50%, -160%); }
+#line { position: absolute; width: 62%; text-align: center; font-size: 3.5cqw; line-height: 1.08; font-weight: 400; letter-spacing: 0.02em; word-spacing: 0.06em; transform: translateY(-100%); pointer-events: none; text-wrap: balance; }
+#label { position: absolute; color: var(--cyan); font-size: 2.5cqw; line-height: 1; pointer-events: none; white-space: nowrap; transform: translate(-50%, -160%); }
 #label[hidden] { display: none; }
 #choices { position: absolute; left: 0; right: 0; bottom: 0; padding: 1.2cqw 3cqw 1.6cqw; background: rgba(0, 0, 0, 0.84); display: flex; flex-direction: column; }
 #choices[hidden] { display: none; }
 button { font: inherit; background: none; border: 0; margin: 0; cursor: pointer; line-height: 1.1; color: inherit; }
-.choice { color: var(--choice); font-size: 2.4cqw; padding: 0.25cqw 0; text-align: left; }
+.choice { color: var(--choice); font-size: 3cqw; padding: 0.25cqw 0; text-align: left; }
 .choice:hover, .choice:focus-visible { color: var(--hot); outline: none; }
 #tools { position: absolute; right: 1cqw; bottom: 1cqw; display: flex; gap: 0.6cqw; opacity: 0.35; transition: opacity 0.2s; }
 #tools:hover, #tools:focus-within { opacity: 1; }
@@ -61,14 +61,14 @@ button { font: inherit; background: none; border: 0; margin: 0; cursor: pointer;
 #title { position: absolute; inset: 0; display: grid; place-items: center; }
 #title[hidden] { display: none; }
 .card { width: 62cqw; background: #12100c; color: #fff7e6; border: 0.5cqw solid var(--hot); box-shadow: 0 0 0 0.5cqw #000, 1.4cqw 1.4cqw 0 0.5cqw #000; padding: 2.4cqw 3.6cqw 2.6cqw; text-align: center; }
-.card .eyebrow { margin: 0 0 1cqw; color: var(--cyan); font-size: 1.6cqw; letter-spacing: 0.3em; text-transform: uppercase; }
-.card h1 { margin: 0; color: var(--hot); font-size: 7cqw; line-height: 1; white-space: nowrap; font-weight: 400; letter-spacing: 0.06em; }
-.card .tag { margin: 1.4cqw 0 0; font-size: 2.3cqw; line-height: 1.2; }
+.card .eyebrow { margin: 0 0 0.6cqw; color: var(--cyan); font-size: 2.1cqw; letter-spacing: 0.3em; text-transform: uppercase; }
+.card h1 { margin: 0; color: var(--hot); font-size: 9cqw; line-height: 0.9; white-space: nowrap; font-weight: 400; letter-spacing: 0.03em; }
+.card .tag { margin: 1cqw 0 0; font-size: 3cqw; line-height: 1.2; }
 .card hr { border: 0; border-top: 0.3cqw dashed #4a4436; margin: 2cqw 0 1.8cqw; }
-.card dl { display: grid; grid-template-columns: auto auto; justify-content: center; gap: 0.6cqw 1.6cqw; margin: 0; font-size: 1.7cqw; line-height: 1.1; text-align: left; }
+.card dl { display: grid; grid-template-columns: auto auto; justify-content: center; gap: 0.3cqw 1.6cqw; margin: 0; font-size: 2.3cqw; line-height: 1.1; text-align: left; }
 .card dt { color: var(--choice); text-align: right; }
 .card dd { margin: 0; color: #c9c3b4; }
-#startBtn { margin-top: 2.2cqw; background: var(--hot); color: #000; font-size: 2.8cqw; font-weight: 700; padding: 0.9cqw 5cqw; box-shadow: 0.5cqw 0.5cqw 0 #8a7a1e; letter-spacing: 0.08em; }
+#startBtn { margin-top: 2cqw; background: var(--hot); color: #000; font-size: 3.4cqw; font-weight: 400; padding: 0.9cqw 5cqw; box-shadow: 0.5cqw 0.5cqw 0 #8a7a1e; letter-spacing: 0.08em; }
 #startBtn:hover { background: #fff; }
 #startBtn:focus-visible { outline: 0.3cqw solid #fff; outline-offset: 0.4cqw; }
 #startBtn:active { transform: translate(0.5cqw, 0.5cqw); box-shadow: none; }
