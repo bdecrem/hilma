@@ -273,6 +273,25 @@
    "uses": []
   },
   {
+   "name": "song-gegenlicht",
+   "title": "Gegenlicht",
+   "style": "Techno",
+   "key": "A minor",
+   "tempo": 128,
+   "bars": 132,
+   "seconds": 248,
+   "line": "Techno at 128, four minutes. One acid line on white keys, a kick and its rumble, three clocks against each other.",
+   "sections": "Light (bar 1), Rumble (bar 9), Toms (bar 17), Acid (bar 25), Clap (bar 33), Rim (bar 41), Break (bar 49), Motif B (bar 57), Ride (bar 65), Shaker (bar 73), The line alone (bar 89), Return (bar 93), Thinning (bar 105), Fading (bar 113), Out (bar 121)",
+   "chorus": "1–32 A5 · 33–36 Asus2 · 37–40 F/A · 41–44 Asus2 · 45–48 Gsus2 · 49–52 Asus2 · 53–56 F/A · 57–60 Asus2 · 61–64 Gsus2 · 65–68 Asus2 · 69–72 F/A · 73–76 Asus2 · 77–80 Gsus2 · 81–84 Asus2 · 85–88 F/A · 89–132 Asus2",
+   "choruses": 1,
+   "parts": {
+    "chords": "The pad",
+    "melody": "The acid"
+   },
+   "shelf": "all tracks",
+   "uses": []
+  },
+  {
    "name": "song-hypnotist",
    "title": "Hypnotist",
    "style": "Minimal techno",

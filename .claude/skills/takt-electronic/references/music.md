@@ -198,3 +198,23 @@ Change the key and tempo, keep the method: decide the form in eight-bar blocks, 
 stab against the delay time, put the bass where the kick is not, give each lane one arc, hold
 two elements back (here the clap and the lead), and let the break carry the one harmonic
 event. Then render it and listen before anything else.
+
+## Gegenlicht: the third record, techno (2026-11-10)
+
+Written by Claude in the Claude app and handed over as a finished reference (`misc/GEGENLICHT.md`);
+Bart on hearing it: "this is FANTASTIC". What it is made of, for the next techno record:
+
+1. **Three clocks.** The kick counts in 4; the toms hit every third sixteenth of the whole song,
+   their counters running through the bars where they are silent; the ping is a 5-step gate
+   (x.xx.) with velocities cycling in 7. Nothing is random and nothing repeats in step: the
+   groove is the phase between them.
+2. **No bassline.** The low end is the kick's own echo through a dark room, so the bass moves
+   when the kick does and ducks out of its way.
+3. **One acid line, three motifs.** Two bars each: a sparse one (eight notes), A (fourteen) and B
+   (A's rhythm, a higher answer). The form is which motif plays, and the filter lanes; the notes
+   never change inside a motif. Every pitch is a white key.
+4. **The filter is the arrangement**, as in dub techno, but on the acid: base, envelope amount,
+   resonance and drive climb to bar 76 and fall away; the echo's feedback is thrown open at the
+   two drops (bars 47, 87).
+5. **The pad barely moves**: A and E for 32 bars, then four 4-bar chords that keep the A on the
+   bottom (only the last drops to G), no thirds on the outer chords.

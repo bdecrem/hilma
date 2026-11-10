@@ -54,6 +54,8 @@ class Song:
         self.amp = None
         # The console of a song mixed to a reference (Takt/Audio/Rack.swift): lanes, buses, …
         self.rack = None
+        # Gegenlicht's console (Takt/Audio/AcidRack.swift): the kick bus, the rumble, the acid, …
+        self.acid_rack = None
         self.drums = []
         self.bass = []
         self.keys = []
@@ -168,6 +170,7 @@ class Song:
             "knee": self.knee,
             **({"amp": self.amp} if self.amp else {}),
             **({"rack": self.rack} if self.rack else {}),
+            **({"acidRack": self.acid_rack} if self.acid_rack else {}),
             "channels": {"drums": self.drums, "bass": self.bass, "keys": self.keys, "horns": self.horns},
             "song": {
                 "title": self.title,

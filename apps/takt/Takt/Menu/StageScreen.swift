@@ -15,7 +15,7 @@ struct StageScreen: View {
     /// Since the vibes (2026-11-10) the default set carries electronic tracks too, so either
     /// vibe opens on a stage with something on it.
     static let bluesPins = Array(Song.catalog.prefix(6))
-    static let electronicPins = ["song-halbschatten", "song-gezeiten", "song-hypnotist-2", "song-warm-nine", "song-abyss"]
+    static let electronicPins = ["song-halbschatten", "song-gezeiten", "song-gegenlicht", "song-hypnotist-2", "song-warm-nine", "song-abyss"]
     static let defaultPins = bluesPins + electronicPins
     /// Tracks that joined the default set after players had sets of their own, and when: a
     /// stored set older than the date gets the track too (it had no say about it), one changed
@@ -25,8 +25,10 @@ struct StageScreen: View {
     /// date has to be the real ship time, never later: a set changed before it gets the track
     /// back on every read, so an unpin made before a future date never sticks.
     static let gezeitenShipped = ISO8601DateFormatter().date(from: "2026-11-10T19:29:29Z")!
+    /// Gegenlicht, the same day, once it was built (a time before the build that shipped it).
+    static let gegenlichtShipped = ISO8601DateFormatter().date(from: "2026-11-10T21:16:03Z")!
     static let joinedLater: [(song: String, at: Date)] = electronicPins.map {
-        ($0, $0 == "song-gezeiten" ? gezeitenShipped : Vibe.pinsEpoch)
+        ($0, $0 == "song-gezeiten" ? gezeitenShipped : $0 == "song-gegenlicht" ? gegenlichtShipped : Vibe.pinsEpoch)
     }
     /// The other vibe's pinned tracks, open under their header. Stored: once opened they stay
     /// open, on either vibe and across launches, until the player closes them (Bart, 2026-11-10).
@@ -754,6 +756,23 @@ struct SongArt: View {
                     p.move(to: CGPoint(x: w * (0.5 - width / 2), y: y))
                     p.addLine(to: CGPoint(x: w * (0.5 + width / 2), y: y))
                     ctx.stroke(p, with: .color(i == 0 ? ink : dim.opacity(i == 1 ? 1 : 0.6)), style: StrokeStyle(lineWidth: 2, lineCap: .round))
+                }
+            case "backlight":
+                // Gegenlicht, against the light: a disc in silhouette with the light behind it.
+                // Centred; the halo a lit ring of radius 0.27 of the short side, the silhouette a
+                // disc of 0.21 in the panel's colour, outlined, in front of it (so 0.06 of light shows round its edge), and
+                // eight rays from 0.32 to 0.40 (on an 80 pt tile they end 8 pt from the edges).
+                let c = CGPoint(x: w * 0.5, y: h * 0.5), m = min(w, h)
+                let halo = m * 0.27, disc = m * 0.21
+                ctx.fill(Path(ellipseIn: CGRect(x: c.x - halo, y: c.y - halo, width: 2 * halo, height: 2 * halo)), with: .color(hot))
+                ctx.fill(Path(ellipseIn: CGRect(x: c.x - disc, y: c.y - disc, width: 2 * disc, height: 2 * disc)), with: .color(Palette.panel))
+                ctx.stroke(Path(ellipseIn: CGRect(x: c.x - disc, y: c.y - disc, width: 2 * disc, height: 2 * disc)), with: .color(ink), lineWidth: 1.5)
+                for i in 0..<8 {
+                    let a = Double(i) * .pi / 4 + .pi / 8
+                    var p = Path()
+                    p.move(to: CGPoint(x: c.x + m * 0.32 * cos(a), y: c.y + m * 0.32 * sin(a)))
+                    p.addLine(to: CGPoint(x: c.x + m * 0.40 * cos(a), y: c.y + m * 0.40 * sin(a)))
+                    ctx.stroke(p, with: .color(i % 2 == 0 ? hot : dim), style: StrokeStyle(lineWidth: 2, lineCap: .round))
                 }
             case "stoptime":
                 // Chicago stop time: the riff's five bars climbing, then the gap, then the hit.

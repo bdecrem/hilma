@@ -147,3 +147,24 @@ against Halbschatten's 28):
 
 Not there yet: a second stab bus, a lead with another synthesis, an acid line (a filter per
 voice), per-step probability. Each is a port from a reference script, per the SKILL's step 5.
+
+## Gegenlicht's instruments (the acid rack, 2026-11-10)
+
+Every one-shot is the reference's own (`gl-*`, 44.1 and 48 kHz), cut by `scripts/gegenlicht.py`
+from the `parts/` the reference writes itself; nothing is shared with Halbschatten.
+
+- **Kick** (`kickGL`): A1 (55 Hz) body with a pitch drop and a band-passed click, into the kick
+  bus, whose lowpass walks open over bars 0–8 and shut over 118–128.
+- **Rumble**: no bassline. The kick bus and two echoes of it through a dark 0.9 s room, the low
+  band, tanh, so the low end sits between the kicks; ducked by its own longer envelope.
+- **Acid** (`rackAcid`, live): one mono 303 (see `system.md`): glide 38 ms, attack 2 ms, decay to
+  0.55 over 0.3 s, release 12 ms, accent +40 % amp and +45 % filter envelope, the filter's base,
+  amount, Q, envelope time and drive all on lanes. Three two-bar motifs (sparse, A, B), every
+  note a white key, E2–A3.
+- **Ping** (`glPing040…100`): one FM tone on E5, six velocities (the velocity changes the tone),
+  a pan per hit, on a 5-step gate against the bar.
+- **Pad** (`rackPad`, live): eight notes of four saws (−7/+4 cents left, +7/−3 right) from the
+  reference's phases, gated a bar at a time: A3 E4, then A3 E4 B4 · A3 F4 C5 · A3 E4 B4 · G3 D4 A4.
+- **Drums**: closed and open hats (the hat bus's 13 kHz lowpass baked in), ride, crash (stereo,
+  the right 37 samples late), shaker, clap, rim, toms on A3 E3 E3 G3 every third sixteenth (the
+  tom bus's 110 Hz highpass baked in, a pan per hit), five risers, a pink noise bed.

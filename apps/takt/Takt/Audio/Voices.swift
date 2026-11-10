@@ -132,12 +132,15 @@ struct SampleVoice {
     var delay = 0
     /// The rack bus it plays into (-1: its channel's own).
     var aux = -1
+    /// A hit's own pan (`BandData.Hit.p`): each side's gain.
+    var panL: Float = 1
+    var panR: Float = 1
 
     private static let scale: Float = 1 / 32768
 
     mutating func start(_ buffer: SampleBuffer, ratio: Double, gain: Float, heldFrames: Int,
                         releaseSeconds: Double, group: Int = 0, note: Int = -1, live: Bool = false,
-                        sustain: Bool = false, age: Int, sampleRate: Double, delay: Int = 0, aux: Int = -1) {
+                        sustain: Bool = false, age: Int, sampleRate: Double, delay: Int = 0, aux: Int = -1, pan: Float = .nan) {
         self.buffer = buffer
         active = true
         position = 0
@@ -155,6 +158,12 @@ struct SampleVoice {
         self.age = age
         self.delay = delay
         self.aux = aux
+        if pan.isNaN {
+            panL = 1; panR = 1
+        } else {
+            let a = (Double(pan) + 1) * Double.pi / 4
+            panL = Float(cos(a)); panR = Float(sin(a))
+        }
     }
 
     mutating func stop(releaseSeconds: Double, sampleRate: Double) {
@@ -207,8 +216,8 @@ struct SampleVoice {
                 sl += (ml - sl) * t
                 sr += (mr - sr) * t
             }
-            l[i] += sl * g
-            r[i] += sr * g
+            l[i] += sl * g * panL
+            r[i] += sr * g * panR
             position += step
         }
     }

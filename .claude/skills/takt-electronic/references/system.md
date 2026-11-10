@@ -210,3 +210,40 @@ starts with `kick`.
   `rackStab` and `rackLead`.
 - Limits in `Rack.swift`: 16 raw hits, 48 synthesized stab notes and 12 lead notes at once,
   24 drum voices, six kit buses in Halbschatten (any number), echo time up to 2.7 s.
+
+## The acid rack (Gegenlicht, 2026-11-10): `Takt/Audio/AcidRack.swift`
+
+The second console, for the first record that is not dub techno (`misc/gegenlicht_reference.py`,
+the brief `misc/GEGENLICHT.md`, the write-up `DUB-TECHNO.md` §10). A song names one console:
+`rack` (the dub techno one, `Rack`) or `acidRack` (this one); the renderer drives either through
+`Console` (`Takt/Audio/Console.swift`). The pieces are `Rack`'s (`Lane`, `Biquad`, `Tape`, `saw`,
+`Convolver`), so the numbers that carry over mean the same thing.
+
+```
+kick hits ─► kick bus: SVF lowpass (cutoff lane, log) × gain lane × 0.66, centre ─► mix
+                 └─► rumble: 0.6·k + 0.45·k[2 steps] + 0.7·k[3 steps] ─► ir_rumble (first block a
+                     direct FIR, the rest the convolver: the impulse has no predelay) ─► 34 Hz HP ─►
+                     105 Hz LP (4th) ─► tanh(3.2x / norm) ─► 260 Hz LP ─► × (1 − duck 2) × lane ─► mix
+acid notes ─► acid_ctrl (pitch glide, amp, filter env) ─► PolyBLEP saw × 0.8 ─► SVF (base·2^(amt·env)·lfo,
+              Q lane) ─► SVF (×1.25, Q 0.7) ─► tanh(drive·y·amp)/drive ─► 75 Hz HP ─► × gain
+                 ├─► × duck 0.32, centre ─► mix, hall 0.55
+                 └─► acid echo (3 steps, side swaps every half bar, feedback lane) × 0.7 × duck 0.4 ─► mix, hall 0.5
+ping hits (a pan each) ─► SVF a side (cutoff lane, log) ─► + 0.6 × echo(mono sum, 2 steps) ─► × gain × duck 0.2 ─► mix, hall 0.8
+pad notes ─► 8 voices × 4 saws, free-running, each × its gate (two 1.11 Hz one-poles) ─► SVF a side ─►
+             × level lane ─► 170 Hz HP ─► × gain × duck 0.6 ─► mix, hall 0.9
+drum buses (hats, ride, shaker, clap, rim, toms, crash, riser) × their ducks ─► mix, hall, room
+noise bed (32 s, looped) × lane × duck 0.4 ─► mix
+hall (gl-ir-hall) × duck 0.5, room (gl-ir-room) ─► mix ─► master: 25 Hz HP, fade, tanh(1.43x)/1.1, limiter 0.70
+```
+
+What is new against `Rack`, and how the song file says it:
+
+| | |
+|---|---|
+| **Two duck envelopes** | `duck` (2 ms, held 30 ms, 90 ms) and `duck.second` (held 100 ms, 60 ms) from the same kicks; the renderer computes both, the console reads `kick` and `kick2` |
+| **Log lanes** | the kick's, the acid's base and the ping's cutoffs are `exp` of a linear lane in the reference: their lanes hold logs; every lane is read per sample |
+| **A pan per hit** | `p` on a drum hit (`BandData.Hit.p`, the reference's sin/cos law): toms and pings |
+| **A gate in fractional ticks** | `hold` on a note (`Note.hold`): an acid note of 1.5 steps is 4.5 ticks, and the gate is the reference's to the sample |
+| **Slide = the gate is open** | the 303 slides when a note starts before the last one's gate has closed; the generator asserts that is exactly the record's slides; your keys slide when played legato, accent at velocity ≥ 0.9 |
+| **A voice that never stops** | the oscillator and both filters run from the song's first sample; the gate is only the amp |
+| **Gated pad voices** | the band's keys channel opens a record note's gate for its run of bars; your keys and the notes a level leaves out open it from your side (`live` or the monitor bus); a muted keys channel shuts the band's gates |

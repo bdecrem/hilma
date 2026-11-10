@@ -18,6 +18,9 @@ final class Convolver {
         let im: UnsafeMutablePointer<Float>
         /// What the trimmed first block held, as a share of the impulse's energy (should be ~0).
         let trimmed: Double
+        /// That first block itself: an impulse with no predelay plays it as a direct FIR beside
+        /// the convolver (`AcidRack`'s rumble), so nothing is lost and nothing is late.
+        let head: [Float]
 
         init(impulse: [Float], block: Int) {
             precondition(block > 0 && block & (block - 1) == 0, "the block is a power of two")
@@ -25,6 +28,7 @@ final class Convolver {
             let head = impulse.prefix(block).reduce(0.0) { $0 + Double($1) * Double($1) }
             let all = impulse.reduce(0.0) { $0 + Double($1) * Double($1) }
             trimmed = all > 0 ? head / all : 0
+            self.head = Array(impulse.prefix(block)) + [Float](repeating: 0, count: max(0, block - impulse.count))
             let body = Array(impulse.dropFirst(block))
             partitions = max(1, (body.count + block - 1) / block)
             re = .allocate(capacity: partitions * block)

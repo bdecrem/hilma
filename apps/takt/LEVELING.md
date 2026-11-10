@@ -60,6 +60,7 @@ The figures for every song, every tier (2026-11-08, `-LessonCheck` prints them a
 | Halsted (148, 0.1 (115)) | 10/10 · 3 · 19 | 36/20 · 6 · 27 | 41/17 · 6 · 27 | 41/17 · 6 · 27 (L4) | 82/6 · 6 · 27 |
 | McLemore (96, 2026-11-09; Easy = L2, Easy+ = L3) | 2/2 · 2 · 10 | 5/5 · 2 · 10 (L2) | 12/9 · 2 · 10 (L3) | 14/11 · 2 · 12 (L5) | 20/9 · 3 · 15 |
 | Gezeiten (116, 2026-11-10; Easy = L2, Medium = L6) | 0/0 · 1 · 10 | 0/0 · 1 · 10 (L2) | 0/0 · 1 · 10 | 0/0 · 1 · 10 (L6) | 0/0 · 1 · 10 |
+| Gegenlicht (128, 2026-11-10; Beginner gap 0.9) | 0/0 · 1 · 7 | 0/0 · 1 · 7 | 0/0 · 1 · 7 | 0/0 · 1 · 7 (L5) | 67/2 · 3 · 17 |
 
 ## 2. The budgets
 
@@ -134,6 +135,22 @@ it before and after every change (2026-11-08).
   my hand" gets a real answer.
 
 ## 4. Decisions and dates
+
+- **2026-11-10: Gegenlicht, an acid line under one hand up to Medium.** Bart asked for the record
+  he had heard ("this is FANTASTIC") and its charts by the skills. The melody is the 303's own
+  line, E2 to A3: home is A2 B2 C3 D3 E3 under the right hand (thumb on A2), where the sparse
+  motif and most of motif A live; G2 and E2 under the thumb and G3 and A3 over the pinky come in
+  with `from` 6 and 7. Every tier to Medium reads **0/0 · 1 · 7**; tier 6 10/8 · 2 · 12; Hard,
+  the record's line, 67/2 · 3 · 17 (motif A's octave drop to E2 and B's climb to A3, over and
+  over). Anchors: the A2 on the 1 and the E3 on step 18 of every two-bar motif (both accents) and
+  the A2 or D3 on step 12. The part has a line of its own where the record has no acid (bars
+  0–23 and 120–127: the sparse motif's accents, the whole sparse motif as the acid comes in), so
+  every level has notes from bar 1. Density 0.44 · 0.72 · 0.76 (Easy) · 1.33 (Easy+) · 1.45
+  (Medium) · 1.79 · 2.65 (Hard), Beginner's `gap` 0.9 in the song's patch (CHARTING.md rule 20).
+  Chords, the pad a hit a bar, the shape 1 3 5 all song: 0.13 · 0.26 (Easy, two notes every two
+  bars) · 0.26 (Easy+, the three) · 0.52 (Medium, every bar) · 0.52 · 0.52; tiers 2–4 `space` 4.0
+  so they keep to the 1 and the 3 of each four-bar chord instead of borrowing every bar. No
+  level's goal song, so printed, not asserted.
 
 - **2026-11-10: Gezeiten, a melody that is the record's own line in one hand position.** Bart
   asked for a second electronic track with its charts by the skills. The bell was written for

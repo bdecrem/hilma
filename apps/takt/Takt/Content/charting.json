@@ -332,6 +332,29 @@
     "easy": 2,
     "easy+": 3
    }
+  },
+  "song-gegenlicht": {
+   "melody": {
+    "tiers": {
+     "1": {
+      "gap": 0.9
+     }
+    }
+   },
+   "chords": {
+    "medium": 5,
+    "tiers": {
+     "2": {
+      "space": 4.0
+     },
+     "3": {
+      "space": 4.0
+     },
+     "4": {
+      "space": 4.0
+     }
+    }
+   }
   }
  }
 }

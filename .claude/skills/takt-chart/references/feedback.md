@@ -162,6 +162,14 @@ LEVELING.md, and this file keeps the pointer.
 - The Level 2 and Level 3 goal songs' figures are printed by `-LessonCheck`, Level 1's asserted;
   assert Level 2's now that Maxwell Street II holds its budget.
 
+- **2026-11-10, 0.1 (126).** "now implement GEGENLICHT in the app … and then use our skills to
+  also create charts for the track." Both axes, from scratch: an acid line (E2–A3) charted in
+  one hand position up to Medium (0/0 · 1 · 7; Hard 67/2 · 3 · 17), with a line of the part's
+  own in the bars the record has no acid (his 2026-11-09 rule: always notes to play). Beginner
+  first kept one key (CHARTING.md rule 20: `minBeats` and anchors of two lengths); a third anchor
+  and the song's Beginner `gap` 0.9 made it 0.44 · 0.72. The pad's chords: tiers 2–4 `space` 4.0
+  so they hold to two hits per four-bar chord. LEVELING.md §4 has the figures. Not played yet.
+
 ## How to add a line
 
 Date and build, his words in quotes, which axis, the figure before and after, what moved (the

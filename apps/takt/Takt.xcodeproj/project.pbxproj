@@ -13,6 +13,9 @@
 		019969BF7D1F891C9D76EA5A /* TempoKnob.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07C7B848B8453F7F9142B49C /* TempoKnob.swift */; };
 		01C3AEB985027024D28B7BE6 /* gtr-66-2-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 1ECC354693F79E3E24574EAB /* gtr-66-2-2.caf */; };
 		01E9B267C907BB0FD1562B52 /* hs-shk-1-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = 6384E314259BB2CB4AF4D981 /* hs-shk-1-44.caf */; };
+		01FEE8D461233E1E96A5EEA9 /* gl-ping-060.caf in Resources */ = {isa = PBXBuildFile; fileRef = 748AD924285DCCD217121040 /* gl-ping-060.caf */; };
+		0221D7EDE0F91F78BBCC2DC9 /* gl-shk-0.caf in Resources */ = {isa = PBXBuildFile; fileRef = ADB67EBA045A56589574A8E0 /* gl-shk-0.caf */; };
+		025305A12D41A224C2A671B1 /* gl-kick.caf in Resources */ = {isa = PBXBuildFile; fileRef = 15E94444377A735F980B6576 /* gl-kick.caf */; };
 		02686B316C72C149403D7689 /* gz-bass-15-38.caf in Resources */ = {isa = PBXBuildFile; fileRef = EB7EFC1B826C4866A0CB1C5B /* gz-bass-15-38.caf */; };
 		028D30A5C1F7C4741C633770 /* hs-shk-0.caf in Resources */ = {isa = PBXBuildFile; fileRef = 7CBBA03C0F074B23FE25C837 /* hs-shk-0.caf */; };
 		02D3C319F44ACDAA261C223B /* syn-subDub-40.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9EC8EEE099138C99CE27A172 /* syn-subDub-40.caf */; };
@@ -24,6 +27,7 @@
 		0558E9C44BDB9EC026C7D0D0 /* Calibration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DB500F26FA68652350CA0F7 /* Calibration.swift */; };
 		059C3922347B32A9DCDF5089 /* syn-rhodes-81-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = A40F3B91A413E389657A0688 /* syn-rhodes-81-1.caf */; };
 		059D2A1DFD9B679245496743 /* hs-kick-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = 6551CFCA1BEC2BDE43C0AA77 /* hs-kick-44.caf */; };
+		05C608D9852DF6FB0C174B7B /* gl-clap.caf in Resources */ = {isa = PBXBuildFile; fileRef = 833C0B74ECF827EC84E3290A /* gl-clap.caf */; };
 		05D3BD64A36FB3F61FAF9C60 /* syn-bleep-66-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = E9E8918DFF570C8BD791CEA3 /* syn-bleep-66-1.caf */; };
 		0694A04DCB9151BA97E84055 /* syn-rhodes-54-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = D8E888F1AA79F85A8B96A0D1 /* syn-rhodes-54-1.caf */; };
 		06D4A152FAAC81877671E319 /* song-abyss-ref.json in Resources */ = {isa = PBXBuildFile; fileRef = EEEF033DB9357648BCDCCD17 /* song-abyss-ref.json */; };
@@ -33,6 +37,7 @@
 		0766C357E82FF96C29B4CD8B /* syn-hatMin-1c.caf in Resources */ = {isa = PBXBuildFile; fileRef = 294C88CE0834922F4338A089 /* syn-hatMin-1c.caf */; };
 		0796E312A7C3B2C188EA70C0 /* rho-76-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = A47212EAD9D85FA20B031F3E /* rho-76-2.caf */; };
 		0911190BADC0DEC6DAD9C449 /* hs-stab-cm9-3-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = 0A5483C0D9811B02BFED7806 /* hs-stab-cm9-3-44.caf */; };
+		0912255C5FCC93D4E968CA39 /* gl-ir-hall-44.wav in Resources */ = {isa = PBXBuildFile; fileRef = 53D6FEF25BB26E8560F0C665 /* gl-ir-hall-44.wav */; };
 		09A2AD0B3EE0B65C472664DF /* gtr-42-2-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = AE67B97ADEF75B59BE262D0B /* gtr-42-2-1.caf */; };
 		09B121990E947E07C77CAF53 /* gtr-84-2-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 818EF590A151362162AF3D67 /* gtr-84-2-2.caf */; };
 		09BB85678DF21328E8AFD992 /* org-56.caf in Resources */ = {isa = PBXBuildFile; fileRef = 5D2A54CEAB5947107EFACFC4 /* org-56.caf */; };
@@ -51,12 +56,14 @@
 		0C90898023362CB317B66D22 /* SettingsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4287A8E13F473563716A0973 /* SettingsScreen.swift */; };
 		0CA2F59CE1D482E88E4CE77D /* rho-29-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = C13AAC48601B511375156F70 /* rho-29-2.caf */; };
 		0D0C5243B3D5B74AC76FC97F /* CoachPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8C3928533C5BB6418CCBE93 /* CoachPanel.swift */; };
+		0D61BBAA4148D71A995AFA11 /* gl-noise.caf in Resources */ = {isa = PBXBuildFile; fileRef = 0A1B295DEB234E546876B812 /* gl-noise.caf */; };
 		0D9811A370E821E1365AA3FF /* gtr-60-1-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 85BB35816099F8F1A8778A2B /* gtr-60-1-2.caf */; };
 		0DE168DE937CF47D7A71BA79 /* Voices.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF651FEB253E5456168706DA /* Voices.swift */; };
 		0E01760F44133FDD48BC7220 /* gz-bass-20-33.caf in Resources */ = {isa = PBXBuildFile; fileRef = 6FB9DBED0D2A2F8BC4C244E6 /* gz-bass-20-33.caf */; };
 		0F24F99C4897D1F3A7057E9A /* syn-rhodes-81-0.caf in Resources */ = {isa = PBXBuildFile; fileRef = 62215D4273ACE3EDE6C75414 /* syn-rhodes-81-0.caf */; };
 		0F5BA0B4074D4130C7C9D05D /* egt-45-1-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 7A3706B06F33C0AA53AC1E87 /* egt-45-1-1.caf */; };
 		0F85D668E2A62FE39AC2DABE /* syn-subDub-36.caf in Resources */ = {isa = PBXBuildFile; fileRef = FEA607ABB33E2E90AD432EF7 /* syn-subDub-36.caf */; };
+		0F8C4C908FB9877044A98DCE /* gl-ping-040.caf in Resources */ = {isa = PBXBuildFile; fileRef = 5D5FD6CC8AC758BD056F32D3 /* gl-ping-040.caf */; };
 		0F9F4211C471F980D752187A /* rho-65-4.caf in Resources */ = {isa = PBXBuildFile; fileRef = CFF566AFAD67FA1D9698D0B7 /* rho-65-4.caf */; };
 		0FAD184DA1EE195BF0A749EF /* gtr-37-1-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = CC4DA9DD70D6F607B4926B2B /* gtr-37-1-2.caf */; };
 		0FB9294605EAC4BAB6DD8C84 /* rho-91-5.caf in Resources */ = {isa = PBXBuildFile; fileRef = 717004B2938E04636A7CCE38 /* rho-91-5.caf */; };
@@ -80,6 +87,7 @@
 		13AAA52DFDB9E3FF87D67F6F /* gtr-84-1-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3F41C42CF7BD7D7EBF189E8D /* gtr-84-1-2.caf */; };
 		142FD6DDF17B4131E88C187B /* gtr-51-3-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 61F2E9FC710B54C34953C3AD /* gtr-51-3-1.caf */; };
 		149FCB186F1A01AD5C65CA5D /* pno-89-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 691BBB9CBF5C58C71B45280D /* pno-89-1.caf */; };
+		14A051AC16CD4CF81BCA4E3F /* gl-ohh-0.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9CF88C24B7A50FAD34F18A7F /* gl-ohh-0.caf */; };
 		14B52C7A04CF2A897613CBD1 /* hatFoot-0b.caf in Resources */ = {isa = PBXBuildFile; fileRef = EA91ACB18EDA2F1CC37EF5DE /* hatFoot-0b.caf */; };
 		1551D9825F3EA3224A20193C /* syn-hatDH-2b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 089E5741689396ACF33C6922 /* syn-hatDH-2b.caf */; };
 		15CB8CDE82AE0FEC9E5918F0 /* gz-stab-am11-1-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = 0BF20842CB6D67D78AC733C5 /* gz-stab-am11-1-44.caf */; };
@@ -93,6 +101,7 @@
 		1777768F6BE96B5CF69CAB43 /* gtr-81-2-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 26E7114C6E9D9472F00FB349 /* gtr-81-2-1.caf */; };
 		17DAC0C7D741F74668A07811 /* CountInSplash.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82DA1372D201825A42F58830 /* CountInSplash.swift */; };
 		183DF7C1BFE3436157FC3EF8 /* gz-noise.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE517B6239300C798974B5A3 /* gz-noise.caf */; };
+		184E66B98DD5ED5E943B0213 /* gl-ir-rumble-48.wav in Resources */ = {isa = PBXBuildFile; fileRef = EC5418B4AF2B184CF6BD0907 /* gl-ir-rumble-48.wav */; };
 		1876134DEFEACCD576DF1622 /* egmute-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 2D022F2CF2A63D46D2B6360E /* egmute-2.caf */; };
 		187675FA6E6A4ED5E508ED86 /* rho-59-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 8BBE4982E5AF38A37E5A9F37 /* rho-59-1.caf */; };
 		18876B7774139A34AC54D367 /* hs-tom-55-l-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = 4168CA23DD6DFFC264134674 /* hs-tom-55-l-44.caf */; };
@@ -121,6 +130,7 @@
 		1DCE1AF6BA595026B91A7B6C /* syn-bleep-81-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 559C43E3806F133B5FFDD119 /* syn-bleep-81-1.caf */; };
 		1DD87923F621FB63B0B1DE2A /* sax-86-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = 72FD3F6B35B76A7F8829D411 /* sax-86-h.caf */; };
 		1E40EFFABA5A2EC1D003E3FB /* VenueScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C93ACD2DD529AAE1C9FA057 /* VenueScreen.swift */; };
+		1E503EEE8A244D1AA2C5DD8C /* gl-chh-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 4124F0AF8A31D1116EDD35C0 /* gl-chh-2.caf */; };
 		1E80875C3B7E5E21C1126DAC /* rho-62-5.caf in Resources */ = {isa = PBXBuildFile; fileRef = E5E1FF72CCC04D821EF406E3 /* rho-62-5.caf */; };
 		1EA0E77CE86ED8ABF16965ED /* egt-60-1-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = CA1AC644814D796D07DB21B9 /* egt-60-1-2.caf */; };
 		1ED43417BE7B3047B602E21E /* saxl-86.caf in Resources */ = {isa = PBXBuildFile; fileRef = E9CDF65C85CCE001F6524983 /* saxl-86.caf */; };
@@ -149,6 +159,7 @@
 		232FCDBD801EADBE472D502F /* call-e-flat.caf in Resources */ = {isa = PBXBuildFile; fileRef = 2F7BED9C819639BBFEA9E700 /* call-e-flat.caf */; };
 		239EE12AFDA4AF1FFA8C97C5 /* egt-86-2-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9B81954B9B329447898AB8AE /* egt-86-2-2.caf */; };
 		23A5B19A0F445FAF54E993C4 /* gtr-63-2-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 09757F6DB58A9680EFFEA68A /* gtr-63-2-2.caf */; };
+		242CB49975EBEA97D4C63E74 /* gl-riser-90-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9F819CB2A24A79A82BB57269 /* gl-riser-90-44.caf */; };
 		2471A84673AADFCA3F54C671 /* rho-59-3.caf in Resources */ = {isa = PBXBuildFile; fileRef = 0555005D24C1DCEE60FFCFCD /* rho-59-3.caf */; };
 		24B8CC03C8A7346167B6C36F /* org-52.caf in Resources */ = {isa = PBXBuildFile; fileRef = 00DE8B29C2FDCEAE67DE4C90 /* org-52.caf */; };
 		2551A48606B1DBDE6BEC25D7 /* syn-hatDH-0a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 14ACA323E2115563FAC5B998 /* syn-hatDH-0a.caf */; };
@@ -158,12 +169,15 @@
 		264563E7DCED76C58DD64E39 /* hs-bass-15-41-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = 1DA6DE8DFA43579C6B29AC0D /* hs-bass-15-41-44.caf */; };
 		264A645D06F4433B1BFF4B3C /* egmute-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 8E68537036220CDA3ED13795 /* egmute-1.caf */; };
 		269955F6D8FF8FF7299AFCA1 /* egt-72-3-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = C4F3D03E2BFB5794DC2EF206 /* egt-72-3-2.caf */; };
+		26CDBCB453BFE5144B7AB202 /* gl-tom-57.caf in Resources */ = {isa = PBXBuildFile; fileRef = F39459793E7596043BAA7A38 /* gl-tom-57.caf */; };
 		27010E4416321E682911278A /* DubChamber.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFA2B474D4DCB275C2F9E1F2 /* DubChamber.swift */; };
+		2742A4974E7D9982898F0F79 /* gl-shk-2-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = 642479326993D8F6CBA0C833 /* gl-shk-2-44.caf */; };
 		276476E897CABA7D4D5F8115 /* pno-61-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = E3E4FC79A99C3303B6818F63 /* pno-61-1.caf */; };
 		27AA2E7801FB607CF7D8B0C3 /* sax-81-s.caf in Resources */ = {isa = PBXBuildFile; fileRef = 2FC86C2A9E24F7E687AF3D24 /* sax-81-s.caf */; };
 		27B53B12DC4AFEC9F0A2A476 /* egt-42-1-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = CD68121C2BDE9C154430BEE0 /* egt-42-1-2.caf */; };
 		27C557873BFCFDD3F8EF2D61 /* pno-65-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 114C7B43CE49393D6E343425 /* pno-65-1.caf */; };
 		27E84B8725E96D9217C3959D /* rho-81-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = E29AC33BDE173F9A6C1504E1 /* rho-81-1.caf */; };
+		281BD13BD4AE35031B113EF6 /* gl-shk-0-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = 6E7C0A64CEA29B4A619C4F33 /* gl-shk-0-44.caf */; };
 		28260EC29876402A52E991EB /* syn-rhodes-60-0.caf in Resources */ = {isa = PBXBuildFile; fileRef = 000D954249788686821EBF59 /* syn-rhodes-60-0.caf */; };
 		286BAFDBCE8D1316CE64C4BA /* gtr-75-2-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = B32FA4D47338DAFB61EB4DE5 /* gtr-75-2-1.caf */; };
 		2885F34905442B6F850D3ED7 /* rho-62-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE83C975A682A0B69DDA4664 /* rho-62-1.caf */; };
@@ -175,6 +189,7 @@
 		2A197B6A6EDF5BCACD01D3BC /* egt-69-3-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 12D750FEED1213DCB17D29DE /* egt-69-3-1.caf */; };
 		2A2E5F3F316AE0E6CDDC7CC5 /* egt-45-1-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 0463188A9B86A38F21A3BDE6 /* egt-45-1-2.caf */; };
 		2A56A3772796BC84F0D8893D /* gtr-42-1-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = F0639B3F485DAA1E241EA037 /* gtr-42-1-1.caf */; };
+		2A6AF5EA98A55E22483987AF /* gl-ping-060-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = C6ED04CA34B18250F9017A15 /* gl-ping-060-44.caf */; };
 		2A912573A7078819144078A8 /* hat-1b.caf in Resources */ = {isa = PBXBuildFile; fileRef = C29C4C33EBDFC92B4AE5359C /* hat-1b.caf */; };
 		2AB01C8A722B55EF730529D2 /* gtr-37-4-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = D27F20E3801EAD6D9EDA8DA5 /* gtr-37-4-1.caf */; };
 		2B4BE09443D54245093704D2 /* rho-59-4.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE1E824B0F9C75AD95659127 /* rho-59-4.caf */; };
@@ -217,8 +232,10 @@
 		342F38C477CE4A8DFE7BC8C0 /* rho-40-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 7077B50F66C05FD12337B365 /* rho-40-1.caf */; };
 		343C74862C002446BC1D95CE /* gtr-66-1-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 6E28F96988E12D8E4FACAAC9 /* gtr-66-1-1.caf */; };
 		345EE7F27C28A1E353DD0138 /* syn-rimMin-0a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 2B7AC68BECCA7461E7E2F619 /* syn-rimMin-0a.caf */; };
+		348928CF7F5DE0990D66F76E /* gl-riser-70-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = 832023D43CC8500F5D095C3F /* gl-riser-70-44.caf */; };
 		34B0AA66C79D99DEE0BF200C /* hs-stab-dm9-1-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = 91DCE60AB5E656FEDB1063B0 /* hs-stab-dm9-1-44.caf */; };
 		34D5B0EA3CE65C47A011D1EF /* saxl-74.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3BC0A0A5C5D66707D069836B /* saxl-74.caf */; };
+		34E6CBAD175AF89B8AD43BA3 /* AcidRack.swift in Sources */ = {isa = PBXBuildFile; fileRef = E75E7AADC7C0FC27DB07C80A /* AcidRack.swift */; };
 		3527363151879BB87F0C9A21 /* gz-bass-20-35.caf in Resources */ = {isa = PBXBuildFile; fileRef = 6DE986F34AFACB8465CD7940 /* gz-bass-20-35.caf */; };
 		3533561C345BC4026F05C545 /* syn-subMin-36.caf in Resources */ = {isa = PBXBuildFile; fileRef = F065B74AFD7A4A5DF4E99EAF /* syn-subMin-36.caf */; };
 		358B1D4C2115DBFAB960196B /* rho-65-5.caf in Resources */ = {isa = PBXBuildFile; fileRef = 18C76BD989648B4E3271DD97 /* rho-65-5.caf */; };
@@ -236,6 +253,7 @@
 		37755852123208B880047B90 /* gtr-63-3-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = B92C0E739C9D0F4F7368DE53 /* gtr-63-3-2.caf */; };
 		37AA6A5C5026931A37322F19 /* call-over.caf in Resources */ = {isa = PBXBuildFile; fileRef = 93BAD563C9F73725FBCD32ED /* call-over.caf */; };
 		382FA755A3A7C48BD5C82BF9 /* syn-stabMin-43-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 54ABC468408653889BE56BE1 /* syn-stabMin-43-1.caf */; };
+		384D55311C21AA7832CBCFAE /* gl-kick-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = 61DD414EC8D5374977527E41 /* gl-kick-44.caf */; };
 		3967409E534AE4665C8654D6 /* rho-96-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = FB67690DA5C6D3744F068851 /* rho-96-1.caf */; };
 		39B5B44EC27F7A35CB2947F0 /* egt-57-1-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = A8E4F30916DEEA941D5FDA17 /* egt-57-1-2.caf */; };
 		3A41EE37913006FA89E8AB8E /* egt-63-1-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = E585446A22916E871EDE87C9 /* egt-63-1-1.caf */; };
@@ -260,6 +278,7 @@
 		3E375F9FAA40BF5A41192806 /* ride-3b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3B3C55EDD7385BAD71C09CC8 /* ride-3b.caf */; };
 		3E6BDC3F4AC06B2CB9C61D36 /* egt-54-3-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = D60768895EDF11A9FAB47579 /* egt-54-3-1.caf */; };
 		3EBD1FDD3AF494BA48F0D4CA /* gtr-63-3-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = E7B49B4049602D89895C0464 /* gtr-63-3-1.caf */; };
+		3F057CF707098A1CD5709017 /* gl-ping-085.caf in Resources */ = {isa = PBXBuildFile; fileRef = FA7EA4142711D7A707618767 /* gl-ping-085.caf */; };
 		3F0F9F933FA8434D41547176 /* hat-2c.caf in Resources */ = {isa = PBXBuildFile; fileRef = 1D346A64372DD97C2368E256 /* hat-2c.caf */; };
 		3F6E1AF083DBD4B187B2AF5F /* gtr-63-1-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9A42659E5B70584DC16AA342 /* gtr-63-1-2.caf */; };
 		3FC5F4DF53358208CEE65355 /* rho-71-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 327756B50AFB66E2A583AC69 /* rho-71-1.caf */; };
@@ -287,6 +306,7 @@
 		433698AAC5FBC94FF0E34E9E /* syn-stabMin-52-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = C5CFA00D8702090CDEEF22F3 /* syn-stabMin-52-1.caf */; };
 		434F4E048558512DE357001F /* hs-tom-50-r-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = 1F5A9B92B590E20226D1608C /* hs-tom-50-r-44.caf */; };
 		43834C02E1E3D07B76725051 /* gtr-72-4-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = CC34557EE710435E34AEF819 /* gtr-72-4-1.caf */; };
+		439F4BE42F0AA96C0390E3D4 /* gl-ping-050-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = 272440F063876F64B3482D0B /* gl-ping-050-44.caf */; };
 		4482E5B532A015561FBEA48F /* rho-45-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 84A3A631B5D43783B563A8BD /* rho-45-1.caf */; };
 		4498A2ABD27FED8229D35D00 /* pno-45-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = CDD8BDE4868C7184EE587761 /* pno-45-2.caf */; };
 		44A13FDFD826D82B035D3FF5 /* pno-61-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 428C4046C5DBA2787A283561 /* pno-61-2.caf */; };
@@ -302,6 +322,7 @@
 		483B55AA6509794CC85A17C4 /* egt-60-3-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 67999A1CE9B38BF63753397D /* egt-60-3-2.caf */; };
 		486922DA20D6BC2D8B7890FD /* Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C9E81396F74E488321A3DE6 /* Palette.swift */; };
 		490A507C63CDE79840BCFBCC /* egt-72-1-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = B913F2131C26C47D92F45C9D /* egt-72-1-1.caf */; };
+		49216044AB66A232F8F7695B /* gl-rim-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9169003280F44EE4D2D0C057 /* gl-rim-44.caf */; };
 		4924A255266E7AFCBE8094AA /* egt-57-3-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = E35B069756C35738E074C997 /* egt-57-3-1.caf */; };
 		4934B5475029557E94019663 /* gtr-63-1-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 7BB5A561A8E27F2B6864CD08 /* gtr-63-1-1.caf */; };
 		495537C6E5D2EC4AA4A7E72F /* ResultScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73E28D3A2CB1F4DEF189BCD2 /* ResultScreen.swift */; };
@@ -332,6 +353,7 @@
 		4DEDFF5C4A2538EEB7EB8A9C /* syn-subMin-30.caf in Resources */ = {isa = PBXBuildFile; fileRef = BBF75A29D8CB98EFF4F1D415 /* syn-subMin-30.caf */; };
 		4E09447779779E9AB4D07C63 /* egt-78-1-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 1D39FD61591487918B238295 /* egt-78-1-2.caf */; };
 		4E2658D017F315DF499931E8 /* egt-63-3-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 81E55E8D0B1738315EE7AD7A /* egt-63-3-1.caf */; };
+		4E94CA466352AB7EDEB51B30 /* gl-chh-0.caf in Resources */ = {isa = PBXBuildFile; fileRef = D286E503725A16D9C063BF33 /* gl-chh-0.caf */; };
 		4EBC5DF2E429AE9F62C4F447 /* xstick-2b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 5493818141A471AEC30127DF /* xstick-2b.caf */; };
 		4EC2DC778875389686C3032D /* gtr-75-1-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = B05E1826B261424227F3610A /* gtr-75-1-2.caf */; };
 		4EFDA4833AA9A2FA824650C9 /* hs-stab-cm9-0.caf in Resources */ = {isa = PBXBuildFile; fileRef = 53CDD7C2DE9A56F3EDBD5EA7 /* hs-stab-cm9-0.caf */; };
@@ -345,6 +367,7 @@
 		50011F9199B2DA064EB0A9EC /* pno-57-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 5719C6805B1BC9CF816F01F4 /* pno-57-1.caf */; };
 		50079CEAB9934AF584B49679 /* syn-hatDH-2c.caf in Resources */ = {isa = PBXBuildFile; fileRef = ECCE5D8B8DA9951CE3802245 /* syn-hatDH-2c.caf */; };
 		5036DF71D1DB0E10668138E3 /* syn-bassDH-30.caf in Resources */ = {isa = PBXBuildFile; fileRef = 27C3ACA58B19235A402136F3 /* syn-bassDH-30.caf */; };
+		5069C1F5C13DA1E3C12CBF3C /* gl-ping-070-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = B9BA9CE79388D0164D78DC50 /* gl-ping-070-44.caf */; };
 		50BF308CD31A56422C424787 /* syn-stabMin-61-0.caf in Resources */ = {isa = PBXBuildFile; fileRef = 7EA6F5A2CBE7D3F314967A7C /* syn-stabMin-61-0.caf */; };
 		50D7684DF71A6781866A9A41 /* egt-69-4-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 5E9CD5EBA97140B50C3E5D02 /* egt-69-4-2.caf */; };
 		50F5A512D04D25F06B241CD0 /* egt-78-1-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 65713D3319CC5F8FF0DCEB00 /* egt-78-1-1.caf */; };
@@ -369,6 +392,7 @@
 		558B5F0664F0DFF92CCCDEE1 /* LearningPlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9397CD048B844FF2F10E74E /* LearningPlan.swift */; };
 		55C46563C2EAFFAE485DC584 /* syn-rhodes-69-0.caf in Resources */ = {isa = PBXBuildFile; fileRef = DDECB9C608B20BD717CFC010 /* syn-rhodes-69-0.caf */; };
 		55E022BF34CD95BFA0DB88B6 /* egt-37-1-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 6BA33B7F22BC2AC6F90869C9 /* egt-37-1-1.caf */; };
+		55E990F56D098FD484F33B9D /* gl-chh-2-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = 4C5F0865E4B773FEA0F648E0 /* gl-chh-2-44.caf */; };
 		56A61CC81A4A5942D06BC512 /* gz-bass-10-40-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = 59FA3D399DDBA4ECD43F2992 /* gz-bass-10-40-44.caf */; };
 		56BC41EA29FA1087444BE630 /* saxl-70.caf in Resources */ = {isa = PBXBuildFile; fileRef = 45F5942DC869BC3CF9B9B575 /* saxl-70.caf */; };
 		56C4ABBFF599E394474EA022 /* snare-2c.caf in Resources */ = {isa = PBXBuildFile; fileRef = 2AE10F73437308FCB63674FE /* snare-2c.caf */; };
@@ -388,6 +412,7 @@
 		5A217325235ECB3C0E21A295 /* rho-76-5.caf in Resources */ = {isa = PBXBuildFile; fileRef = 58EDE792C38D04BEBC1AA7CF /* rho-76-5.caf */; };
 		5A51C2F19E91B9FFEDEA30D0 /* syn-bassDH-40.caf in Resources */ = {isa = PBXBuildFile; fileRef = AF6DF7612F19C8BC4584B5E5 /* syn-bassDH-40.caf */; };
 		5AB26F64BF6DE47ED26151F1 /* ride-1a.caf in Resources */ = {isa = PBXBuildFile; fileRef = F471A2196F9AF3B8F004FA9C /* ride-1a.caf */; };
+		5AC4C7CDB843B4CAD9D54667 /* gl-rim.caf in Resources */ = {isa = PBXBuildFile; fileRef = EF3E7C63174FC6DD3987F8F0 /* gl-rim.caf */; };
 		5B33A6B9A5E5F7F702073F6D /* org-76.caf in Resources */ = {isa = PBXBuildFile; fileRef = 0B7846EF9A880EEB0ABCCC2C /* org-76.caf */; };
 		5B40702A3B9F3D708DA58C3F /* pno-51-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 637060E1B27D289D64972055 /* pno-51-1.caf */; };
 		5B50C91C72EF17ADAB84A7EE /* map-blues.json in Resources */ = {isa = PBXBuildFile; fileRef = 8126E18CD90A6679714BEC02 /* map-blues.json */; };
@@ -408,8 +433,10 @@
 		5E1181EC759182EF2871AC0D /* syn-rimMin-1a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 4CC025D91882F6E48366233D /* syn-rimMin-1a.caf */; };
 		5EB8705D1F50CCFEEC7BB213 /* gtr-37-3-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = CF4268FE763EBC4AA9832588 /* gtr-37-3-2.caf */; };
 		5EFED1E324609E9B1B739938 /* sax-72-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = B3A468091F78A4DA2AF64B51 /* sax-72-h.caf */; };
+		5F08C8F4E76B225E6EAD61A9 /* gl-ping-085-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = F2AE61F09F607D9860C60393 /* gl-ping-085-44.caf */; };
 		5F0FC123425094D0F68C94CC /* rideBell-0a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 10C5B9D6572FC6A770B67E87 /* rideBell-0a.caf */; };
 		5F7D161E0E63EB11FF865A87 /* pno-81-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = FEC4048F70F13C6E2582657F /* pno-81-1.caf */; };
+		5FE4AD7E6D87FA9808DBBC4C /* gl-ir-hall-48.wav in Resources */ = {isa = PBXBuildFile; fileRef = D560700C1C13EC06330AFA08 /* gl-ir-hall-48.wav */; };
 		602C89B9BD1D135332E2D855 /* pno-67-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 6D0A88D091F8C084FC7CF3B7 /* pno-67-2.caf */; };
 		6036D62DFA57E0454D6ED529 /* syn-subDub-26.caf in Resources */ = {isa = PBXBuildFile; fileRef = 8D07BEF4D55CC0F356AD18CE /* syn-subDub-26.caf */; };
 		603867B7E935740718006222 /* syn-stabMin-64-0.caf in Resources */ = {isa = PBXBuildFile; fileRef = CFA7AD30C601EF9FA6CBCE42 /* syn-stabMin-64-0.caf */; };
@@ -444,6 +471,7 @@
 		66CD0335B945C2BAC5BAFE30 /* saxl-66.caf in Resources */ = {isa = PBXBuildFile; fileRef = 60C528CEAD1BA483B07D7AB1 /* saxl-66.caf */; };
 		672497FC28365C4AEBD572A2 /* syn-stabMin-49-0.caf in Resources */ = {isa = PBXBuildFile; fileRef = 2A883E9FA4FF424ACE6FCCD1 /* syn-stabMin-49-0.caf */; };
 		672FA78612B7AF9CA6DA3BA6 /* tomHi-0a.caf in Resources */ = {isa = PBXBuildFile; fileRef = C4433A3A435531BD05D6A8D0 /* tomHi-0a.caf */; };
+		676C3C99B7FEBD22422CB33C /* gl-ping-100.caf in Resources */ = {isa = PBXBuildFile; fileRef = 1F9BA5E6EC16ED7C9BAD34F8 /* gl-ping-100.caf */; };
 		679372C225BC96526F86F4E5 /* call-four.caf in Resources */ = {isa = PBXBuildFile; fileRef = 63FCBA11846DD5CB0C9A0118 /* call-four.caf */; };
 		67A8779DC20972EC12E67331 /* gtr-48-2-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 5BEECBBC72BB23E5468C27AE /* gtr-48-2-1.caf */; };
 		67ABB86AD6A7CF46BEA613AE /* egt-84-1-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 5BE1D985DB1B5EBB66BEDB40 /* egt-84-1-2.caf */; };
@@ -477,9 +505,11 @@
 		6E477EDB4C9C1946B844AE1C /* sax-68-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3CA63CF0B7BFF7C906A2A7CB /* sax-68-h.caf */; };
 		6EBDEF02A511B1BC5AF6D15E /* gtr-54-3-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 1200258F8C715E4D92441D50 /* gtr-54-3-1.caf */; };
 		6ED947B852FBFB08607D2932 /* snare-0c.caf in Resources */ = {isa = PBXBuildFile; fileRef = 09EE1B46C7B231BDA2F2836D /* snare-0c.caf */; };
+		6EFFD8B761D01964F09AA318 /* gl-ping-040-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = 87914D3CCF7814F8D853D551 /* gl-ping-040-44.caf */; };
 		6FA0372DD36A92AC1C9539FB /* hs-stab-gm9-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3987D2DE3E6DCE8904A03CF4 /* hs-stab-gm9-2.caf */; };
 		6FA9C5F9479325AB48902BD8 /* egt-78-4-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9BF05B8546A962F19A873A30 /* egt-78-4-2.caf */; };
 		6FAC15354574E3EFEE5FFA8C /* sax-64-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = 76D748F28BE5EF7C9FBFC759 /* sax-64-h.caf */; };
+		6FAD8180638829B4B5093060 /* gl-crash.caf in Resources */ = {isa = PBXBuildFile; fileRef = 0AFF250F361F759DB37CA88E /* gl-crash.caf */; };
 		6FC903FE21D56D54BA26CEA4 /* band-blues-C.json in Resources */ = {isa = PBXBuildFile; fileRef = B439C1F30E776ACBBAA484B4 /* band-blues-C.json */; };
 		700E9FC41D0CFA71666F96B8 /* syn-stabMin-58-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9A6165C7FA30285BF75FA822 /* syn-stabMin-58-1.caf */; };
 		704838415DC8A481D5C6B7D0 /* sax-77-s.caf in Resources */ = {isa = PBXBuildFile; fileRef = E8AD1137F6FBE5C43A3EDFEB /* sax-77-s.caf */; };
@@ -499,6 +529,7 @@
 		741B81810987DA1EFE6E72D5 /* egt-78-3-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = C3B0B1AACD6306BD65F29B58 /* egt-78-3-2.caf */; };
 		743211B3677FB8E9BAD3C5F1 /* gtr-48-3-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 70B1D48080A278A68278AC3F /* gtr-48-3-1.caf */; };
 		749118434FF5059052881482 /* egt-54-1-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 51907B5DB1BBA3F7FF5706C8 /* egt-54-1-1.caf */; };
+		74B8EA73CBFCD7DDAFA328E6 /* gl-ping-100-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = 0E33074DCC16E77B5CA1E122 /* gl-ping-100-44.caf */; };
 		74BA911C913AB1B9444320F4 /* song-hypnotist.json in Resources */ = {isa = PBXBuildFile; fileRef = C1D12DD782A48B03D2950F0D /* song-hypnotist.json */; };
 		74BC4FE48F113110142AC7CF /* saxl-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3F2FD4DE4AC8AC4E9E3A9F9C /* saxl-44.caf */; };
 		750E930FBB99D2667090E3BB /* gz-stab-dm11-1-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = 1EBC910FC25A842839E24B6B /* gz-stab-dm11-1-44.caf */; };
@@ -511,6 +542,7 @@
 		76E3C28A75571B611AD4182D /* syn-hatDH-1b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 7AEA41955D3C4FD0169F6CDD /* syn-hatDH-1b.caf */; };
 		76E53571BD035AC1A63BA92C /* pno-31-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = D73559429F2291BC686D58A5 /* pno-31-1.caf */; };
 		76E8E73FE4D84D1C7836570A /* egt-81-4-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = AB14C8410FE25D30B2B99406 /* egt-81-4-2.caf */; };
+		770D11CC61DC49E297F5FCBB /* gl-ride.caf in Resources */ = {isa = PBXBuildFile; fileRef = 718CF53A560DBA31D7429F32 /* gl-ride.caf */; };
 		7721678540A00F81536797B8 /* gmute-50-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 45A47C726DF709EC0F90657F /* gmute-50-2.caf */; };
 		772741EEFC5AC55BE522FD6D /* rho-91-3.caf in Resources */ = {isa = PBXBuildFile; fileRef = 81BF333F6384FC69D429F256 /* rho-91-3.caf */; };
 		77425B539C37118AF3DB268E /* rho-59-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 42E9A96574CDC582F374D6D8 /* rho-59-2.caf */; };
@@ -563,8 +595,10 @@
 		82D31777AAB608B192EA3734 /* syn-hatDub-0b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3DAFD1AEC1EF1E44537846B8 /* syn-hatDub-0b.caf */; };
 		83249614F79FA5740C17B939 /* syn-stabMin-52-0.caf in Resources */ = {isa = PBXBuildFile; fileRef = 82ADF327CA05A66BBF1C09D6 /* syn-stabMin-52-0.caf */; };
 		8340069FB0FFBB75E3780D54 /* gtr-57-3-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 77062E4785B45C3758249F1C /* gtr-57-3-2.caf */; };
+		83CCD2B18C464606A617C863 /* gl-ohh-0-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = 23899E29038A6CFDC5EDE935 /* gl-ohh-0-44.caf */; };
 		8413B7B53945B06526129280 /* syn-stabMin-64-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = A7D3AA9BE236FA8C71F9FDC8 /* syn-stabMin-64-1.caf */; };
 		84829DCA8667BD6921267FD9 /* gmute-64-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = CF1160221469666DEE39F5E0 /* gmute-64-1.caf */; };
+		84E6B8786547ABBD8EEF4B39 /* gl-shk-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 4E47D8353EAD59A9D58C7AF1 /* gl-shk-2.caf */; };
 		854DFD0191152771C0C28253 /* ImprovSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE333F1E9743432C6DE4503B /* ImprovSheet.swift */; };
 		8599F5189FD20A3D7D7CFA94 /* syn-clapDH-1b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 0AFDD95578BB71349D0A60B8 /* syn-clapDH-1b.caf */; };
 		86042C55B51EB626B864C21E /* hs-stab-cm9-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = FC48D532734641E2D186986C /* hs-stab-cm9-1.caf */; };
@@ -622,10 +656,12 @@
 		913188C502DC22FAEB177062 /* ChannelStrip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C45267D4102101E567236B /* ChannelStrip.swift */; };
 		918E9ABAACB934DF432AF1CE /* hs-tom-55-l.caf in Resources */ = {isa = PBXBuildFile; fileRef = 63512EEEA4A4AB444FDF667E /* hs-tom-55-l.caf */; };
 		91D025BB6F71548A05A4BA6B /* egt-66-1-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 1DE50372E8BADDDDF85DD315 /* egt-66-1-1.caf */; };
+		91EC050F9C4578C425A076CA /* gl-tom-52.caf in Resources */ = {isa = PBXBuildFile; fileRef = 5E108BCCA813619BC7BCAC32 /* gl-tom-52.caf */; };
 		928920684437E2909B8706A3 /* snare-3a.caf in Resources */ = {isa = PBXBuildFile; fileRef = F7EE8892FF3ACE1F8E57E20C /* snare-3a.caf */; };
 		932E78A9F5004D94C1D2269C /* egt-66-3-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = D6CA6C78A2992861C96492D4 /* egt-66-3-1.caf */; };
 		934A3A1814A8B5F790654FAC /* syn-subDub-38.caf in Resources */ = {isa = PBXBuildFile; fileRef = E868AA730F2B11A67DF89964 /* syn-subDub-38.caf */; };
 		934BB9925B39B79498E1CCA6 /* gz-stab-am11-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = AE7E0C2A4C93A34FAF86A320 /* gz-stab-am11-1.caf */; };
+		9382146C8BFF58973EFE7007 /* gl-ir-rumble-44.wav in Resources */ = {isa = PBXBuildFile; fileRef = E582B9C57C9189AE67791AAD /* gl-ir-rumble-44.wav */; };
 		93F1EADEAC320F8E9DEF01DD /* AskSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FEECCBEDA9AC8EFA33AE0CA /* AskSheet.swift */; };
 		9483C322BE19B7F26CB07050 /* hs-stab-dm9-3.caf in Resources */ = {isa = PBXBuildFile; fileRef = 2B1272F5A8A7025431C9732D /* hs-stab-dm9-3.caf */; };
 		948906CD02A8D0C2AEDB523F /* kick-1a.caf in Resources */ = {isa = PBXBuildFile; fileRef = A06E9F4619CD031C522ED381 /* kick-1a.caf */; };
@@ -668,6 +704,7 @@
 		9C403E8F04C0CFCA4A1C94EA /* syn-bleep-66-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = B40E9CA6382EA76AC1BFC883 /* syn-bleep-66-2.caf */; };
 		9C763D05EFD44F0DB1967EB4 /* pno-83-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 76503928B2805F4DFE568B23 /* pno-83-1.caf */; };
 		9D23588E8E0AE66FCEB30711 /* gtr-81-2-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = EF601F05C127EBA229908C0D /* gtr-81-2-2.caf */; };
+		9D70009319910B69B680CE99 /* gl-tom-57-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = BD0E8CD2AE1793805A2FD8EF /* gl-tom-57-44.caf */; };
 		9DA55C6F8CA1245608D648AC /* rho-40-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 0AEC59939F1C9B3EAF92A16A /* rho-40-2.caf */; };
 		9DCC027ED0C0E1513B50A4D8 /* pno-59-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3A5EF2FC83C903D2F978A526 /* pno-59-2.caf */; };
 		9E4493760CD2111706864103 /* syn-bleep-81-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = FC712F427DF00A7A03CA490C /* syn-bleep-81-2.caf */; };
@@ -682,6 +719,7 @@
 		A0521FF66D6CE1B06441F125 /* call-g-flat.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3CA8B41B93844AC1CF50191F /* call-g-flat.caf */; };
 		A0BAA1B57E396FC1E8DF5BC9 /* syn-hatDH-0c.caf in Resources */ = {isa = PBXBuildFile; fileRef = CB708B542FFB3DBF33DCB15F /* syn-hatDH-0c.caf */; };
 		A133E227FCCD39629E348514 /* hs-stab-dm9-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = B28B57545A04BBD7BA2A9F55 /* hs-stab-dm9-2.caf */; };
+		A191DBDF5FD0EEDCAEAF461A /* gl-shk-1-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9D1E04AE37E23EC70ED0F691 /* gl-shk-1-44.caf */; };
 		A1A7EE74812439C474438F81 /* syn-rimMin-0b.caf in Resources */ = {isa = PBXBuildFile; fileRef = C47910C9BD0A5618EB775C48 /* syn-rimMin-0b.caf */; };
 		A1D662B39835C5E0436F45F4 /* egt-60-4-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9730232AFBEF0B71D55CC2B6 /* egt-60-4-2.caf */; };
 		A1E0BCFC05E36AFDA02D94DF /* hs-stab-cm9-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = D4436DAD4C795C942A008009 /* hs-stab-cm9-2.caf */; };
@@ -689,13 +727,17 @@
 		A20BFE8869A5292F0974B686 /* hatOpen-2a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 06351291D7D6B4435FAB00DB /* hatOpen-2a.caf */; };
 		A2230ABE5822F3B1FE2451D1 /* crash-0b.caf in Resources */ = {isa = PBXBuildFile; fileRef = C654F066EF66ECB5B4113E74 /* crash-0b.caf */; };
 		A243E5841AC3357C285BE2D4 /* gtr-78-2-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = E7DA7CB7D67C31051BF7E9F0 /* gtr-78-2-1.caf */; };
+		A2E288AD988233173510A929 /* gl-riser-86.caf in Resources */ = {isa = PBXBuildFile; fileRef = 0011898F4A85BFFA93167DE6 /* gl-riser-86.caf */; };
 		A3ECFB4408EF3553D8FB71FE /* sax-70-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = AB1055BF8F56FAC314DB971B /* sax-70-h.caf */; };
+		A4017E539A962F14AA8E7749 /* gl-shk-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = AD2AEA52E90B7782AF52367D /* gl-shk-1.caf */; };
 		A4563172F04DAE069130D85A /* sax-56-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = 00B6D6268A832E5804CFFCE6 /* sax-56-h.caf */; };
+		A49B98F1E083FF3A5E494D10 /* Console.swift in Sources */ = {isa = PBXBuildFile; fileRef = C35057D3BC12FFC4799D869E /* Console.swift */; };
 		A4A59000E20B327AB64A40BE /* launch-deep-b1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 4DC7428E8BC444F33D80E21E /* launch-deep-b1.caf */; };
 		A5046E6C6242F6795A4EAA25 /* gtr-45-3-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 599931DD239598074320D0BB /* gtr-45-3-2.caf */; };
 		A58B4155D00A5213BB6ECA2E /* gperc-4.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9D717994F956EEEB99A9918D /* gperc-4.caf */; };
 		A5A68B7782E2870135698A42 /* song-halsted.json in Resources */ = {isa = PBXBuildFile; fileRef = 08E299E096ACAFB40E745A59 /* song-halsted.json */; };
 		A608EB45A6965E39D1E8AD74 /* saxl-52.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9749BEF30BE468B93DE6053D /* saxl-52.caf */; };
+		A60D9B0FE1C148A6965C4611 /* gl-ohh-1-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = 712B2E8F6C44DF3B51B066A6 /* gl-ohh-1-44.caf */; };
 		A65B645F1D29A1ABD272BCB6 /* gtr-51-4-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 0DC9719117D91D7F70EBE2AA /* gtr-51-4-1.caf */; };
 		A698B7D81D67CC16D2E0E6B1 /* call-a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 81C613C3E7560D377410DF46 /* call-a.caf */; };
 		A6AB9B7ED485C96A6A0BC168 /* gtr-48-4-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 03CA2314165EF83BECDDF320 /* gtr-48-4-1.caf */; };
@@ -737,6 +779,7 @@
 		AD4D92D08AD7320087DEBC23 /* gtr-69-4-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 27E7DA4E99C3D8CDFB26EFE4 /* gtr-69-4-1.caf */; };
 		ADAF7B408770AEB9411E3B94 /* rho-62-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 46F0D3EC0520EF5197C9786D /* rho-62-2.caf */; };
 		ADDCEA2E6B183897D1806543 /* egt-63-2-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = A25C7B1B429FDDCB38985E71 /* egt-63-2-2.caf */; };
+		ADEC966D8ACFA1841D48192E /* gl-riser-90.caf in Resources */ = {isa = PBXBuildFile; fileRef = B9DFE2C64C2F3A62E2346567 /* gl-riser-90.caf */; };
 		AE1A019687DA74CDD30866E0 /* sax-54-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = B8EF0E657DD9D6482D0CAA66 /* sax-54-h.caf */; };
 		AE2E71F3FA06517D71C1ECE7 /* hs-riser-2-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = 563AD511379062CEE5F205BD /* hs-riser-2-44.caf */; };
 		AE3B689D3E614353D340AB3E /* gz-kick-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = 87A2325E7E97CA7A11612630 /* gz-kick-44.caf */; };
@@ -745,9 +788,11 @@
 		AF884A911A808889DF6D7F6E /* egt-51-3-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 85D0C4138BF2B7C4245FC437 /* egt-51-3-2.caf */; };
 		AFCBCFBCF808703345BA8090 /* egt-75-3-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = B253966448C37EBB8F4C00C8 /* egt-75-3-2.caf */; };
 		AFEA234614554AEFD8D8DD9D /* hs-noise.caf in Resources */ = {isa = PBXBuildFile; fileRef = 35F95BAA2F404CEAC521B93E /* hs-noise.caf */; };
+		B0A619B666BF4C118911C2E6 /* gl-tom-55.caf in Resources */ = {isa = PBXBuildFile; fileRef = 567B3826AD04DE9D6CF9EE96 /* gl-tom-55.caf */; };
 		B0B5832F56CACB4A7AA93234 /* syn-clapDH-0b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 42566E266BC54B8AEC8340D8 /* syn-clapDH-0b.caf */; };
 		B0C3F5B6F70894B6FDB1A73C /* ModStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D35D07C0AB11506D545094F /* ModStore.swift */; };
 		B0CE43F077894D9A3D4843E0 /* egt-37-1-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 8AED6249F61E716C1FFBDD8C /* egt-37-1-2.caf */; };
+		B10B5CD9EE025FDD61F2400F /* gl-chh-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 8C0D28E3B09FED0877F56DB8 /* gl-chh-1.caf */; };
 		B1286CBC8DA1624A989A107A /* egt-86-4-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = E02CA460ECA482786EDE067C /* egt-86-4-1.caf */; };
 		B1DEFAF845DBB4B1137BD306 /* gz-rim-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = 0F9D27C270734C6AC530BE5D /* gz-rim-44.caf */; };
 		B20D9DF1AD1322E57E155F83 /* saxl-78.caf in Resources */ = {isa = PBXBuildFile; fileRef = BDCAB8C4A4181B0997F6D361 /* saxl-78.caf */; };
@@ -764,6 +809,7 @@
 		B3C9C24DCC6F2C6B7E9C8135 /* gtr-57-4-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3C188D5916CACE8B3DFAC354 /* gtr-57-4-2.caf */; };
 		B3DE5FCB4B61E6D826C0B82D /* tomHi-0b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 147A244442CB1D7BBE930EA7 /* tomHi-0b.caf */; };
 		B42F6C7AD6013FC34A3BAF19 /* StepPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F927B4DE131369E7A7E7144B /* StepPanel.swift */; };
+		B48310D24581E5A3B31BBA30 /* gl-ohh-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 10D35FBCA06EB7CC351BA872 /* gl-ohh-1.caf */; };
 		B51317D566FD3F8DC1B1DC41 /* gmute-64-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = A858730D7259CDD88C0D21F9 /* gmute-64-2.caf */; };
 		B555851E683BA0A2F12685BC /* hs-bass-13-38.caf in Resources */ = {isa = PBXBuildFile; fileRef = F6CE1836BAB4850EE706E9B9 /* hs-bass-13-38.caf */; };
 		B583B8942D45177E86F16DF0 /* pno-71-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9D49AC24E5E404E221145538 /* pno-71-1.caf */; };
@@ -772,12 +818,14 @@
 		B6DAD1BCA55B23D1C24EBDF3 /* syn-stabMin-46-0.caf in Resources */ = {isa = PBXBuildFile; fileRef = 7082098CAA531A71F85C577E /* syn-stabMin-46-0.caf */; };
 		B6DE733165D952C50CF0431A /* gtr-75-1-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = D83D82AEE8652833FC9D27EA /* gtr-75-1-1.caf */; };
 		B6DF0EDC4B935A979B72E478 /* hs-stab-gm9-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3739A2F3A6EB693E539A927A /* hs-stab-gm9-1.caf */; };
+		B6E4DB45A4C8D4A2EB5B84EE /* gl-clap-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = 52E9FE2C862C6FE6AE949A58 /* gl-clap-44.caf */; };
 		B7ABA6D85A60951C0C39E302 /* call-two.caf in Resources */ = {isa = PBXBuildFile; fileRef = 8EA5F18E0F06577667D0A2BA /* call-two.caf */; };
 		B7D50027310A7BC4DE6033E4 /* AgentSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B87252E87FC7D6798123084B /* AgentSheet.swift */; };
 		B83DA9677B845F71D7E82E52 /* gtr-69-4-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 09E7904BB22C57FA26272161 /* gtr-69-4-2.caf */; };
 		B84F6789C3C4C591713A07B4 /* egt-37-3-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = AF9D3B42A8BF8BDE114260FF /* egt-37-3-1.caf */; };
 		B8A2FC0C6E190EFAACA2550D /* org-88.caf in Resources */ = {isa = PBXBuildFile; fileRef = 7C1E3CEDE55B4F0501B0DE78 /* org-88.caf */; };
 		B8A8A53B53EC8C11587BD4F7 /* egt-45-2-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 8258B6643E639DA1931DFE9F /* egt-45-2-1.caf */; };
+		B8B785D41750D64EC6B505F1 /* gl-tom-55-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = 7D78475D85D25298E2B9AD1C /* gl-tom-55-44.caf */; };
 		B8D93392B8A550AD6CAA1F23 /* syn-hatDub16-0b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 1B1C8AE9402CF726CDE67A87 /* syn-hatDub16-0b.caf */; };
 		B8E69AAB1D546042CCF3F9E8 /* pno-35-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = BE08321A78FC82A54F963A66 /* pno-35-1.caf */; };
 		B904FDF1A4B85FE9FCCF0419 /* syn-bassDH-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = 4AA4F0AC14899F70D3EC13C4 /* syn-bassDH-44.caf */; };
@@ -806,6 +854,7 @@
 		BED89CE6E7B8B4D511B1DB7B /* egt-86-3-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3FB296B4677549F6C75B1772 /* egt-86-3-2.caf */; };
 		BF1C5F13CB2DE6C3929AD52D /* gtr-54-1-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 0D1FCF81E8B6ED79589F7DFB /* gtr-54-1-2.caf */; };
 		BF611FACB5EFF7EC15BCB73B /* syn-bassDH-38.caf in Resources */ = {isa = PBXBuildFile; fileRef = DA983FCC785F900703E7C325 /* syn-bassDH-38.caf */; };
+		BF7BD294BA9DDA83B5102C21 /* gl-noise-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = D4AD97F4223EA9E5A71AC60D /* gl-noise-44.caf */; };
 		BF8D190A41E2FE1CB435D6A8 /* rho-29-4.caf in Resources */ = {isa = PBXBuildFile; fileRef = 18C9D9D3665796757E8889D1 /* rho-29-4.caf */; };
 		BFCA7830BBB95AF89999E79B /* egt-40-3-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3CC69383DAA5BF5A2413E4A5 /* egt-40-3-2.caf */; };
 		BFFCFB36052F27FA3D688C8B /* CalibrationScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8D5E1401A830BE79F20D77E /* CalibrationScreen.swift */; };
@@ -816,6 +865,7 @@
 		C1CB97B70DCE34B101AC0BF5 /* egt-48-1-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = F6ACACCCCF66248020AA9B9B /* egt-48-1-1.caf */; };
 		C2000EC7A5FFCB576B7299E2 /* gtr-72-4-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = AFC0D81EAB421DC7FDFEB62D /* gtr-72-4-2.caf */; };
 		C2044003D5825445641057D4 /* EarGame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C0F85E01FB5FD60D2A259A6 /* EarGame.swift */; };
+		C24DA68395CA13273BE5DA70 /* gl-riser-30.caf in Resources */ = {isa = PBXBuildFile; fileRef = 7C025C3F6DB6A490FA99BA72 /* gl-riser-30.caf */; };
 		C261EA1C512AA664F717240B /* sax-52-s.caf in Resources */ = {isa = PBXBuildFile; fileRef = E9F200DC2EA47CFB0488A59E /* sax-52-s.caf */; };
 		C296FC61EB252C199E0BBF98 /* call-g.caf in Resources */ = {isa = PBXBuildFile; fileRef = 8E690E31287E0F3F95770854 /* call-g.caf */; };
 		C2C25EA740BE2E48DC939F44 /* call-three.caf in Resources */ = {isa = PBXBuildFile; fileRef = 6F60F0893C8DA5D419E4F660 /* call-three.caf */; };
@@ -834,6 +884,7 @@
 		C67341B7D9F1F2D374F2E365 /* tomHi-1a.caf in Resources */ = {isa = PBXBuildFile; fileRef = FC1E799921D78CCB8272B10D /* tomHi-1a.caf */; };
 		C715878A6A94E03A4915639C /* rho-96-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 1D3A42604582A1D71A6F5D7B /* rho-96-2.caf */; };
 		C7B55B19F83C8D3031D51435 /* egt-66-4-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 90728A6E75B4F89F66E74085 /* egt-66-4-2.caf */; };
+		C7C8EF9832CE214B12135ACA /* gl-riser-86-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = E4CAF4BF327F3ECD0CBF1619 /* gl-riser-86-44.caf */; };
 		C80B6F25DA5362B82D201D1B /* xstick-0a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 7286A0A50F4BC75A3FD8881B /* xstick-0a.caf */; };
 		C8319DF97ACD2140A06E8D64 /* ChatStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 382B954C63F20BE552F9022E /* ChatStore.swift */; };
 		C86460F5BA92AA01CBF5629D /* bass-37.caf in Resources */ = {isa = PBXBuildFile; fileRef = 47D1A351F5FE0725EC15D54E /* bass-37.caf */; };
@@ -856,6 +907,7 @@
 		CC0F902C3AE370EBAB76644B /* hs-bass-25-36-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = 0E02E5A413615A85BD781A4B /* hs-bass-25-36-44.caf */; };
 		CC23D3F63D373F2EBF852C0D /* gtr-45-4-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = EFE4C8FB08277EEB783E33DD /* gtr-45-4-1.caf */; };
 		CC55505D43AD218B29CE148F /* egt-51-2-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 4221C3DD41B551402E3B297F /* egt-51-2-1.caf */; };
+		CC89F172B0C16CAF34D69087 /* gl-ir-room-48.wav in Resources */ = {isa = PBXBuildFile; fileRef = B0D83D27E3F1BB36F48313F1 /* gl-ir-room-48.wav */; };
 		CCAD5024070609183AA39B37 /* syn-bleep-60-0.caf in Resources */ = {isa = PBXBuildFile; fileRef = E28B07174C12D40E5DD1A399 /* syn-bleep-60-0.caf */; };
 		CCEF9CF69BC3A7F1C3F5E0D7 /* egt-54-3-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = F4F2DA3CBFB300C5DFD9A870 /* egt-54-3-2.caf */; };
 		CD2A1678E6F4475BD791FB2D /* QuizScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C34FA7B4C94CA0F72FFDB8 /* QuizScreen.swift */; };
@@ -873,6 +925,7 @@
 		D088B1B939156AAB43AEBAE6 /* gtr-54-4-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = A1C12EC94CF5D70518A280F0 /* gtr-54-4-1.caf */; };
 		D08F9AD8D242D5A9CE4CEE68 /* song-slow-burn.json in Resources */ = {isa = PBXBuildFile; fileRef = A4985865F2AE933A767D9B73 /* song-slow-burn.json */; };
 		D0BF0DE649723D8AC95AA894 /* egt-86-3-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 80F44E4878671A57FA94C9AF /* egt-86-3-1.caf */; };
+		D12BFAB513F2EA0B4ED2AD5B /* gl-chh-1-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3850DD4EA00102DB3C079571 /* gl-chh-1-44.caf */; };
 		D158A6D96D8477A4B860A2F3 /* snare-5b.caf in Resources */ = {isa = PBXBuildFile; fileRef = DF075103D924CB5A798DA0F7 /* snare-5b.caf */; };
 		D1A516CDE9A93D916572FCE7 /* rho-91-4.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3582F14C78B1231EE3950061 /* rho-91-4.caf */; };
 		D23E94521393F95C64ABD50D /* rho-91-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 7A3DCB0897B29EB5ECFDE38C /* rho-91-2.caf */; };
@@ -905,10 +958,12 @@
 		D8ADA4A1AEEB6E3A93D79C74 /* crash-1a.caf in Resources */ = {isa = PBXBuildFile; fileRef = CA9007E706E3DB2B1C1D276C /* crash-1a.caf */; };
 		D8C17C752DDFB7C879B14A85 /* gtr-40-3-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 7C85C0778E6948978AEA29F8 /* gtr-40-3-2.caf */; };
 		D8C651DD600ADF4743305551 /* LessonState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32E41EAC5ED6208C88F089CA /* LessonState.swift */; };
+		D8E45EC40D6C622979681F4A /* gl-riser-70.caf in Resources */ = {isa = PBXBuildFile; fileRef = B164FDFBEB33C6AD6A3ABC1E /* gl-riser-70.caf */; };
 		D8F0AB3D748C031FDC6D1E95 /* gtr-81-4-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 3159D9C63EE93748B0B3292A /* gtr-81-4-2.caf */; };
 		D94CC5D4603CF38CD7ACE95E /* syn-bleep-78-0.caf in Resources */ = {isa = PBXBuildFile; fileRef = 301C31E759DB7E68E46FC50B /* syn-bleep-78-0.caf */; };
 		D954957644C2FF8D186AF138 /* gtr-84-4-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 8F03931F7B451A34CFDC99B2 /* gtr-84-4-1.caf */; };
 		D9801D1201B44A2825B8BE18 /* gz-rim.caf in Resources */ = {isa = PBXBuildFile; fileRef = 5F86E3BAA967FAEAC67A7570 /* gz-rim.caf */; };
+		D9D543DA2777D39E28D0321F /* gl-ir-room-44.wav in Resources */ = {isa = PBXBuildFile; fileRef = 4D305125ACEB757979F6CBE3 /* gl-ir-room-44.wav */; };
 		D9D5DEBA3C29A033F50B5CD2 /* ride-2a.caf in Resources */ = {isa = PBXBuildFile; fileRef = EAE56DAF3548E3531E7FCA5B /* ride-2a.caf */; };
 		DA6EFD26386A1F1603E7DE80 /* song-boogie-shoes.json in Resources */ = {isa = PBXBuildFile; fileRef = 2BD66E2CAAD161BA1549DCAF /* song-boogie-shoes.json */; };
 		DA86B7B96D3207CF8C68EE5A /* syn-hatDub-0a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 8DAFBAAD5D41F640FB770778 /* syn-hatDub-0a.caf */; };
@@ -919,6 +974,7 @@
 		DB9796D168524426800FC1E9 /* hat-0b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 9CF3FF6959FA2BBE36F9531B /* hat-0b.caf */; };
 		DBA6A5504D2F5E4F47817A7B /* sax-74-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = CE01F94AD01BB99CFAF34156 /* sax-74-h.caf */; };
 		DBAFB98B08BAF72A39AEBE8C /* gtr-45-3-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = A2995D72DC42D48AA1EC3CA3 /* gtr-45-3-1.caf */; };
+		DBED3EDD6F08C64CC7721915 /* gl-riser-52-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = 29C2F640FA7FB059313A681D /* gl-riser-52-44.caf */; };
 		DC203B315E897EAFBEFF1F87 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 898AE1B7738C7AD8C5E99B04 /* Assets.xcassets */; };
 		DC2BA0E3A834C76308AA00DF /* saxl-50.caf in Resources */ = {isa = PBXBuildFile; fileRef = 0EF8A721DB5F0A472098AA20 /* saxl-50.caf */; };
 		DC2DA97416E6FEE1BAA86342 /* hs-ohh-1-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = AE9BE7DF55A71AD251120B35 /* hs-ohh-1-44.caf */; };
@@ -997,22 +1053,28 @@
 		EBD7C30A4E810FD2CDB979F3 /* pno-71-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 570FA5239D315419B76D4672 /* pno-71-2.caf */; };
 		EC244ED42EA4AA85C5445DB0 /* pno-47-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 71EDE15AD673D1FD68168739 /* pno-47-2.caf */; };
 		EC35290F2CD38D974DE48367 /* hat-3c.caf in Resources */ = {isa = PBXBuildFile; fileRef = A66200E551CD99C3A7EA5420 /* hat-3c.caf */; };
+		EC3AC7711A2A736D3AA15862 /* gl-riser-30-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = 0B4AD33913B756E60D2FF68B /* gl-riser-30-44.caf */; };
+		EC9819D926D9D278A78FFD96 /* gl-tom-52-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = 1D35F87D745C85EE36165960 /* gl-tom-52-44.caf */; };
 		ECCDBD4B4F40F60C066E8FC3 /* syn-bleep-78-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 2B4D936600C3ECE49485889A /* syn-bleep-78-1.caf */; };
 		ED8C27C716D5BCECA802A3F7 /* call-c.caf in Resources */ = {isa = PBXBuildFile; fileRef = 2E60BC6B522E835F02A10540 /* call-c.caf */; };
 		EDA4D17B5D7218F0E2BA8AFE /* gmute-59-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 2CC04CE9AF3B357E860F4B88 /* gmute-59-1.caf */; };
 		EDE47F32FE4402A8FBE3F2F5 /* rideBell-1a.caf in Resources */ = {isa = PBXBuildFile; fileRef = CADF682DF4FFC095D7CB3377 /* rideBell-1a.caf */; };
 		EEA8A7EC5A99C9BAFEE01D8A /* syn-bleep-75-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 21AF9C4A9B84E18FF59B0327 /* syn-bleep-75-2.caf */; };
+		EEAFBCD21DD6AF971415A24E /* gl-ping-050.caf in Resources */ = {isa = PBXBuildFile; fileRef = 31579FAABD2C5CA32A6FDF27 /* gl-ping-050.caf */; };
 		EEE52581AA849AB1B7209914 /* hs-ohh-0-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = 40CC7B85B9852657226FBB6F /* hs-ohh-0-44.caf */; };
 		EF4FB0CD09BBC3C2E7E0A2CA /* sax-50-s.caf in Resources */ = {isa = PBXBuildFile; fileRef = E1D60F4768483CFFF3FECF07 /* sax-50-s.caf */; };
 		EF6A75DCD793FA73E3D3CE73 /* gtr-54-3-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = E1ACFC57EA1177004F4DC7FC /* gtr-54-3-2.caf */; };
 		EFF3EBD83E11EC5BB488123C /* song-maxwell-street.json in Resources */ = {isa = PBXBuildFile; fileRef = 597EBA6ECE301E5C95CEBF1A /* song-maxwell-street.json */; };
 		F00359F6AA4C0413BBB446F3 /* rho-81-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = BEB4585209440E6ACDA6B36D /* rho-81-2.caf */; };
+		F036EF0D12E8B8FE649C7B23 /* song-gegenlicht.json in Resources */ = {isa = PBXBuildFile; fileRef = 81A6CCF32DC570231D1AE579 /* song-gegenlicht.json */; };
 		F07A1C8FC00567EE40788DDC /* gmute-45-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 5AFB979BD9F97A2837BFCEE2 /* gmute-45-1.caf */; };
 		F0C1135D9EE88C97D502FDC8 /* syn-hatDub16-0d.caf in Resources */ = {isa = PBXBuildFile; fileRef = 01043A86B250A6BF3DEB02BF /* syn-hatDub16-0d.caf */; };
 		F0D29695A1C134AE3B1841E2 /* bass-29.caf in Resources */ = {isa = PBXBuildFile; fileRef = F12738BF65384901373A6360 /* bass-29.caf */; };
 		F0D3B3A3CF7CD480B002D43A /* hs-bass-20-36-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = 6DDD11AA116F8B63D8365FB4 /* hs-bass-20-36-44.caf */; };
 		F10CE2C06C85CC837C6F4E03 /* egt-81-1-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 92569D7A40D21D889A4FCB26 /* egt-81-1-1.caf */; };
+		F12F0D4FE639BC68249AE371 /* gl-ride-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = 7D2A8E475CB6244CF3AFE6A9 /* gl-ride-44.caf */; };
 		F1920F30A6885CC2F9A7E206 /* sax-77-h.caf in Resources */ = {isa = PBXBuildFile; fileRef = CA8259831576B24EAC0A7161 /* sax-77-h.caf */; };
+		F1B688978DDB6D3CF8B85D6C /* gl-ping-070.caf in Resources */ = {isa = PBXBuildFile; fileRef = F3EF25E8C3172D3CCCD34D3C /* gl-ping-070.caf */; };
 		F1C9C3F729C2FBB2E0B2DFEC /* gtr-75-4-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 0645A4BC72A7D6B6B8A888B0 /* gtr-75-4-1.caf */; };
 		F201C940487774156F003241 /* gtr-72-3-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = F908793833FF834DBD269B60 /* gtr-72-3-2.caf */; };
 		F203FE09A10DEDB2A8B56F5C /* syn-bleep-63-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 2960B92901B880071D1F9E74 /* syn-bleep-63-2.caf */; };
@@ -1040,6 +1102,7 @@
 		F65F1739B222C80921810754 /* hs-tom-53-l.caf in Resources */ = {isa = PBXBuildFile; fileRef = 67F3234E4B1E99C50B96F36A /* hs-tom-53-l.caf */; };
 		F67FC477E423D9A1A6F11051 /* launch-deep-b2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 528FB480766B97B03F924156 /* launch-deep-b2.caf */; };
 		F68ABE19E5DFECC9FE5A5001 /* egt-37-3-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 99B4B28D145F72838834F9BC /* egt-37-3-2.caf */; };
+		F69BE0AC66BE04280DD0161C /* gl-crash-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = 852FA129DBF433E9D7C50DBB /* gl-crash-44.caf */; };
 		F6CDD80C428F919A0CE8E2E3 /* call-b.caf in Resources */ = {isa = PBXBuildFile; fileRef = C09F54444F7D437BB4B0227F /* call-b.caf */; };
 		F6E3387214CA428631BD1694 /* gz-bass-15-31.caf in Resources */ = {isa = PBXBuildFile; fileRef = FAA528E5A27B2284B77A480E /* gz-bass-15-31.caf */; };
 		F6E6BC20DF042E27FE4FA6B3 /* Autoplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61E80E5165303C091E17B75D /* Autoplay.swift */; };
@@ -1069,8 +1132,10 @@
 		FC1290EAE001AE16C4DFBF0A /* egt-86-1-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = AFCC8BC3B04AABCBBBBEB777 /* egt-86-1-1.caf */; };
 		FC5A33D72168EC87C930224F /* snare-2b.caf in Resources */ = {isa = PBXBuildFile; fileRef = 964352540F89FAC0C96E0420 /* snare-2b.caf */; };
 		FC66CD41D048DDC9840EC87C /* egt-66-2-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = EEC3217D3AC93CC7A939EF7C /* egt-66-2-2.caf */; };
+		FC73E017539FF8D8ED09AAD8 /* gl-riser-52.caf in Resources */ = {isa = PBXBuildFile; fileRef = 05BB253DDDFFE1D5C73CD991 /* gl-riser-52.caf */; };
 		FC7DD71C33EB71AD184AA546 /* hs-stab-cm9-3.caf in Resources */ = {isa = PBXBuildFile; fileRef = BEEB68C27866F733A099F257 /* hs-stab-cm9-3.caf */; };
 		FCD78500B341758546312CD3 /* ride-4a.caf in Resources */ = {isa = PBXBuildFile; fileRef = 82D568263799DBC86389B4D2 /* ride-4a.caf */; };
+		FD0F8E8B2230CB38C1F96417 /* gl-chh-0-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = 02CB979208324AED07D5801A /* gl-chh-0-44.caf */; };
 		FD1E26D4279899DD51CC29CB /* egt-86-4-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = E0FF5807D042803FFCB03EBF /* egt-86-4-2.caf */; };
 		FF098609992B64F48C556EAA /* DebugHooks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 012712C796C3F22B9A027D23 /* DebugHooks.swift */; };
 		FF5C87502FE79492DDDF3107 /* pno-77-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = B95EC50A329C813980EF7937 /* pno-77-2.caf */; };
@@ -1080,6 +1145,7 @@
 
 /* Begin PBXFileReference section */
 		000D954249788686821EBF59 /* syn-rhodes-60-0.caf */ = {isa = PBXFileReference; path = "syn-rhodes-60-0.caf"; sourceTree = "<group>"; };
+		0011898F4A85BFFA93167DE6 /* gl-riser-86.caf */ = {isa = PBXFileReference; path = "gl-riser-86.caf"; sourceTree = "<group>"; };
 		004393332020C1E4EF245A84 /* saxl-46.caf */ = {isa = PBXFileReference; path = "saxl-46.caf"; sourceTree = "<group>"; };
 		00A6B49FE327039F13B00F04 /* gtr-66-3-1.caf */ = {isa = PBXFileReference; path = "gtr-66-3-1.caf"; sourceTree = "<group>"; };
 		00B6D6268A832E5804CFFCE6 /* sax-56-h.caf */ = {isa = PBXFileReference; path = "sax-56-h.caf"; sourceTree = "<group>"; };
@@ -1091,6 +1157,7 @@
 		0207A1D90F32476889A27652 /* syn-stabMin-55-0.caf */ = {isa = PBXFileReference; path = "syn-stabMin-55-0.caf"; sourceTree = "<group>"; };
 		0240A5E7EA2C4BFF3B9BE7AE /* egt-60-2-2.caf */ = {isa = PBXFileReference; path = "egt-60-2-2.caf"; sourceTree = "<group>"; };
 		02B57441B8B8516E11D55E97 /* egt-42-2-2.caf */ = {isa = PBXFileReference; path = "egt-42-2-2.caf"; sourceTree = "<group>"; };
+		02CB979208324AED07D5801A /* gl-chh-0-44.caf */ = {isa = PBXFileReference; path = "gl-chh-0-44.caf"; sourceTree = "<group>"; };
 		03CA2314165EF83BECDDF320 /* gtr-48-4-1.caf */ = {isa = PBXFileReference; path = "gtr-48-4-1.caf"; sourceTree = "<group>"; };
 		0463188A9B86A38F21A3BDE6 /* egt-45-1-2.caf */ = {isa = PBXFileReference; path = "egt-45-1-2.caf"; sourceTree = "<group>"; };
 		046F59A202A9983B5E918C9D /* hs-chh-2-44.caf */ = {isa = PBXFileReference; path = "hs-chh-2-44.caf"; sourceTree = "<group>"; };
@@ -1101,6 +1168,7 @@
 		0555005D24C1DCEE60FFCFCD /* rho-59-3.caf */ = {isa = PBXFileReference; path = "rho-59-3.caf"; sourceTree = "<group>"; };
 		058FFD6EE8B7270F2B777CB6 /* syn-rhodes-69-1.caf */ = {isa = PBXFileReference; path = "syn-rhodes-69-1.caf"; sourceTree = "<group>"; };
 		05A59EC4E9101D5B9007882E /* syn-clapDH-1a.caf */ = {isa = PBXFileReference; path = "syn-clapDH-1a.caf"; sourceTree = "<group>"; };
+		05BB253DDDFFE1D5C73CD991 /* gl-riser-52.caf */ = {isa = PBXFileReference; path = "gl-riser-52.caf"; sourceTree = "<group>"; };
 		062DF873145E0C3C0BDEFAFF /* Hands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Hands.swift; sourceTree = "<group>"; };
 		06351291D7D6B4435FAB00DB /* hatOpen-2a.caf */ = {isa = PBXFileReference; path = "hatOpen-2a.caf"; sourceTree = "<group>"; };
 		0645A4BC72A7D6B6B8A888B0 /* gtr-75-4-1.caf */ = {isa = PBXFileReference; path = "gtr-75-4-1.caf"; sourceTree = "<group>"; };
@@ -1120,13 +1188,16 @@
 		09757F6DB58A9680EFFEA68A /* gtr-63-2-2.caf */ = {isa = PBXFileReference; path = "gtr-63-2-2.caf"; sourceTree = "<group>"; };
 		09E7904BB22C57FA26272161 /* gtr-69-4-2.caf */ = {isa = PBXFileReference; path = "gtr-69-4-2.caf"; sourceTree = "<group>"; };
 		09EE1B46C7B231BDA2F2836D /* snare-0c.caf */ = {isa = PBXFileReference; path = "snare-0c.caf"; sourceTree = "<group>"; };
+		0A1B295DEB234E546876B812 /* gl-noise.caf */ = {isa = PBXFileReference; path = "gl-noise.caf"; sourceTree = "<group>"; };
 		0A52A90572EE224B4FFCF01C /* rho-50-5.caf */ = {isa = PBXFileReference; path = "rho-50-5.caf"; sourceTree = "<group>"; };
 		0A5483C0D9811B02BFED7806 /* hs-stab-cm9-3-44.caf */ = {isa = PBXFileReference; path = "hs-stab-cm9-3-44.caf"; sourceTree = "<group>"; };
 		0A9B058FF1FCC9EC6EDA08FA /* gz-tom-52-l-44.caf */ = {isa = PBXFileReference; path = "gz-tom-52-l-44.caf"; sourceTree = "<group>"; };
 		0AEC59939F1C9B3EAF92A16A /* rho-40-2.caf */ = {isa = PBXFileReference; path = "rho-40-2.caf"; sourceTree = "<group>"; };
 		0AFDD95578BB71349D0A60B8 /* syn-clapDH-1b.caf */ = {isa = PBXFileReference; path = "syn-clapDH-1b.caf"; sourceTree = "<group>"; };
+		0AFF250F361F759DB37CA88E /* gl-crash.caf */ = {isa = PBXFileReference; path = "gl-crash.caf"; sourceTree = "<group>"; };
 		0B0D42BB8380AE4669C98F79 /* kick-0a.caf */ = {isa = PBXFileReference; path = "kick-0a.caf"; sourceTree = "<group>"; };
 		0B26863B63DA1BADC4F27B21 /* bass-33.caf */ = {isa = PBXFileReference; path = "bass-33.caf"; sourceTree = "<group>"; };
+		0B4AD33913B756E60D2FF68B /* gl-riser-30-44.caf */ = {isa = PBXFileReference; path = "gl-riser-30-44.caf"; sourceTree = "<group>"; };
 		0B7846EF9A880EEB0ABCCC2C /* org-76.caf */ = {isa = PBXFileReference; path = "org-76.caf"; sourceTree = "<group>"; };
 		0B83E63819D17057BC27FF18 /* gtr-40-2-1.caf */ = {isa = PBXFileReference; path = "gtr-40-2-1.caf"; sourceTree = "<group>"; };
 		0BEB8CA2CE12DE6F5AB5E1E5 /* ReadingStage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingStage.swift; sourceTree = "<group>"; };
@@ -1138,12 +1209,14 @@
 		0D1FCF81E8B6ED79589F7DFB /* gtr-54-1-2.caf */ = {isa = PBXFileReference; path = "gtr-54-1-2.caf"; sourceTree = "<group>"; };
 		0DC9719117D91D7F70EBE2AA /* gtr-51-4-1.caf */ = {isa = PBXFileReference; path = "gtr-51-4-1.caf"; sourceTree = "<group>"; };
 		0E02E5A413615A85BD781A4B /* hs-bass-25-36-44.caf */ = {isa = PBXFileReference; path = "hs-bass-25-36-44.caf"; sourceTree = "<group>"; };
+		0E33074DCC16E77B5CA1E122 /* gl-ping-100-44.caf */ = {isa = PBXFileReference; path = "gl-ping-100-44.caf"; sourceTree = "<group>"; };
 		0EE7F94904E75A661DD672E9 /* egt-40-4-2.caf */ = {isa = PBXFileReference; path = "egt-40-4-2.caf"; sourceTree = "<group>"; };
 		0EF8A721DB5F0A472098AA20 /* saxl-50.caf */ = {isa = PBXFileReference; path = "saxl-50.caf"; sourceTree = "<group>"; };
 		0F9D27C270734C6AC530BE5D /* gz-rim-44.caf */ = {isa = PBXFileReference; path = "gz-rim-44.caf"; sourceTree = "<group>"; };
 		1015C3B7893037323D28F441 /* saxl-62.caf */ = {isa = PBXFileReference; path = "saxl-62.caf"; sourceTree = "<group>"; };
 		105775A1E842DD365016449A /* egt-54-1-2.caf */ = {isa = PBXFileReference; path = "egt-54-1-2.caf"; sourceTree = "<group>"; };
 		10C5B9D6572FC6A770B67E87 /* rideBell-0a.caf */ = {isa = PBXFileReference; path = "rideBell-0a.caf"; sourceTree = "<group>"; };
+		10D35FBCA06EB7CC351BA872 /* gl-ohh-1.caf */ = {isa = PBXFileReference; path = "gl-ohh-1.caf"; sourceTree = "<group>"; };
 		114C7B43CE49393D6E343425 /* pno-65-1.caf */ = {isa = PBXFileReference; path = "pno-65-1.caf"; sourceTree = "<group>"; };
 		11B6CC6B1E376F8F63DFAC35 /* song-warm-nine.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "song-warm-nine.json"; sourceTree = "<group>"; };
 		11BB51D36C242B6F109A6F10 /* egt-45-3-1.caf */ = {isa = PBXFileReference; path = "egt-45-3-1.caf"; sourceTree = "<group>"; };
@@ -1160,6 +1233,7 @@
 		147A244442CB1D7BBE930EA7 /* tomHi-0b.caf */ = {isa = PBXFileReference; path = "tomHi-0b.caf"; sourceTree = "<group>"; };
 		14ACA323E2115563FAC5B998 /* syn-hatDH-0a.caf */ = {isa = PBXFileReference; path = "syn-hatDH-0a.caf"; sourceTree = "<group>"; };
 		14F47056EA74851352C6DEED /* gtr-78-3-2.caf */ = {isa = PBXFileReference; path = "gtr-78-3-2.caf"; sourceTree = "<group>"; };
+		15E94444377A735F980B6576 /* gl-kick.caf */ = {isa = PBXFileReference; path = "gl-kick.caf"; sourceTree = "<group>"; };
 		16036C5F61F10CECAAB571D5 /* rho-86-2.caf */ = {isa = PBXFileReference; path = "rho-86-2.caf"; sourceTree = "<group>"; };
 		16C45267D4102101E567236B /* ChannelStrip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChannelStrip.swift; sourceTree = "<group>"; };
 		16D3C1A880EFC8CDC8892A21 /* launch-deep-swell.caf */ = {isa = PBXFileReference; path = "launch-deep-swell.caf"; sourceTree = "<group>"; };
@@ -1189,6 +1263,7 @@
 		1C96CB8DD47C52B4164F778A /* syn-hatDub16-0a.caf */ = {isa = PBXFileReference; path = "syn-hatDub16-0a.caf"; sourceTree = "<group>"; };
 		1CFD0166B5EA3EEEB25CBCE5 /* sax-76-h.caf */ = {isa = PBXFileReference; path = "sax-76-h.caf"; sourceTree = "<group>"; };
 		1D346A64372DD97C2368E256 /* hat-2c.caf */ = {isa = PBXFileReference; path = "hat-2c.caf"; sourceTree = "<group>"; };
+		1D35F87D745C85EE36165960 /* gl-tom-52-44.caf */ = {isa = PBXFileReference; path = "gl-tom-52-44.caf"; sourceTree = "<group>"; };
 		1D39FD61591487918B238295 /* egt-78-1-2.caf */ = {isa = PBXFileReference; path = "egt-78-1-2.caf"; sourceTree = "<group>"; };
 		1D3A42604582A1D71A6F5D7B /* rho-96-2.caf */ = {isa = PBXFileReference; path = "rho-96-2.caf"; sourceTree = "<group>"; };
 		1D4B6455D8E1DDD555D13545 /* call-five.caf */ = {isa = PBXFileReference; path = "call-five.caf"; sourceTree = "<group>"; };
@@ -1204,6 +1279,7 @@
 		1EF8772815B2E3F86D27203A /* hs-bass-20-36.caf */ = {isa = PBXFileReference; path = "hs-bass-20-36.caf"; sourceTree = "<group>"; };
 		1F5A9B92B590E20226D1608C /* hs-tom-50-r-44.caf */ = {isa = PBXFileReference; path = "hs-tom-50-r-44.caf"; sourceTree = "<group>"; };
 		1F8EDD67F9F27812DD0B9A6B /* egt-40-2-1.caf */ = {isa = PBXFileReference; path = "egt-40-2-1.caf"; sourceTree = "<group>"; };
+		1F9BA5E6EC16ED7C9BAD34F8 /* gl-ping-100.caf */ = {isa = PBXFileReference; path = "gl-ping-100.caf"; sourceTree = "<group>"; };
 		200B3D21804E070AD5813975 /* song-gezeiten.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "song-gezeiten.json"; sourceTree = "<group>"; };
 		2120F8290B3A557F4E6C3EC4 /* song-mclemore.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "song-mclemore.json"; sourceTree = "<group>"; };
 		21AF9C4A9B84E18FF59B0327 /* syn-bleep-75-2.caf */ = {isa = PBXFileReference; path = "syn-bleep-75-2.caf"; sourceTree = "<group>"; };
@@ -1217,6 +1293,7 @@
 		22D6ACCC1BD8EE3E63D2004C /* gtr-78-1-1.caf */ = {isa = PBXFileReference; path = "gtr-78-1-1.caf"; sourceTree = "<group>"; };
 		232A23E4E2A0F43F6553B4E9 /* egt-84-1-1.caf */ = {isa = PBXFileReference; path = "egt-84-1-1.caf"; sourceTree = "<group>"; };
 		2386C1E3028F5C8405120F8E /* egt-81-3-2.caf */ = {isa = PBXFileReference; path = "egt-81-3-2.caf"; sourceTree = "<group>"; };
+		23899E29038A6CFDC5EDE935 /* gl-ohh-0-44.caf */ = {isa = PBXFileReference; path = "gl-ohh-0-44.caf"; sourceTree = "<group>"; };
 		23B174ED8C7C90AF736CB299 /* gmute-45-2.caf */ = {isa = PBXFileReference; path = "gmute-45-2.caf"; sourceTree = "<group>"; };
 		23DCFE5ABFBB4BA644071082 /* rho-71-3.caf */ = {isa = PBXFileReference; path = "rho-71-3.caf"; sourceTree = "<group>"; };
 		23E04196A27FBB05E3C8262D /* egt-40-2-2.caf */ = {isa = PBXFileReference; path = "egt-40-2-2.caf"; sourceTree = "<group>"; };
@@ -1228,6 +1305,7 @@
 		267004EF37AF394B9E9AFFE6 /* rho-55-3.caf */ = {isa = PBXFileReference; path = "rho-55-3.caf"; sourceTree = "<group>"; };
 		26B84E8E93E2821D7884EA2C /* rho-40-3.caf */ = {isa = PBXFileReference; path = "rho-40-3.caf"; sourceTree = "<group>"; };
 		26E7114C6E9D9472F00FB349 /* gtr-81-2-1.caf */ = {isa = PBXFileReference; path = "gtr-81-2-1.caf"; sourceTree = "<group>"; };
+		272440F063876F64B3482D0B /* gl-ping-050-44.caf */ = {isa = PBXFileReference; path = "gl-ping-050-44.caf"; sourceTree = "<group>"; };
 		2763CD88F8747DBE09D55E34 /* rho-45-5.caf */ = {isa = PBXFileReference; path = "rho-45-5.caf"; sourceTree = "<group>"; };
 		27AB3C2B9B543267B44D0E56 /* snare-1a.caf */ = {isa = PBXFileReference; path = "snare-1a.caf"; sourceTree = "<group>"; };
 		27C3ACA58B19235A402136F3 /* syn-bassDH-30.caf */ = {isa = PBXFileReference; path = "syn-bassDH-30.caf"; sourceTree = "<group>"; };
@@ -1244,6 +1322,7 @@
 		2973DECBF96FFD576F357818 /* song-friars-point.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "song-friars-point.json"; sourceTree = "<group>"; };
 		29A4BA6B00DF375F7858B6DE /* syn-bassDH-28.caf */ = {isa = PBXFileReference; path = "syn-bassDH-28.caf"; sourceTree = "<group>"; };
 		29AA8EF9E976DF81AAB0A63B /* snare-1b.caf */ = {isa = PBXFileReference; path = "snare-1b.caf"; sourceTree = "<group>"; };
+		29C2F640FA7FB059313A681D /* gl-riser-52-44.caf */ = {isa = PBXFileReference; path = "gl-riser-52-44.caf"; sourceTree = "<group>"; };
 		29D2F07433CCB3685CC2AFA1 /* egt-51-2-2.caf */ = {isa = PBXFileReference; path = "egt-51-2-2.caf"; sourceTree = "<group>"; };
 		29F64FFFD39206780DEB3FBD /* syn-rhodes-54-0.caf */ = {isa = PBXFileReference; path = "syn-rhodes-54-0.caf"; sourceTree = "<group>"; };
 		2A428DBA6EADB2B478F1115D /* gtr-57-1-1.caf */ = {isa = PBXFileReference; path = "gtr-57-1-1.caf"; sourceTree = "<group>"; };
@@ -1286,6 +1365,7 @@
 		312E4F4452FD2C18B30DC195 /* syn-hatDub-0c.caf */ = {isa = PBXFileReference; path = "syn-hatDub-0c.caf"; sourceTree = "<group>"; };
 		3130015DC259AF4D803749EF /* egt-86-2-1.caf */ = {isa = PBXFileReference; path = "egt-86-2-1.caf"; sourceTree = "<group>"; };
 		3143DCF79AD11366227B3334 /* hs-tom-53-r-44.caf */ = {isa = PBXFileReference; path = "hs-tom-53-r-44.caf"; sourceTree = "<group>"; };
+		31579FAABD2C5CA32A6FDF27 /* gl-ping-050.caf */ = {isa = PBXFileReference; path = "gl-ping-050.caf"; sourceTree = "<group>"; };
 		3159D9C63EE93748B0B3292A /* gtr-81-4-2.caf */ = {isa = PBXFileReference; path = "gtr-81-4-2.caf"; sourceTree = "<group>"; };
 		318447C1A9390056918E56C5 /* gz-stab-am11-0-44.caf */ = {isa = PBXFileReference; path = "gz-stab-am11-0-44.caf"; sourceTree = "<group>"; };
 		31D857B79808B93964EFFDEF /* egt-48-2-2.caf */ = {isa = PBXFileReference; path = "egt-48-2-2.caf"; sourceTree = "<group>"; };
@@ -1311,6 +1391,7 @@
 		38068BFF65C16DF9D08A8B48 /* org-36.caf */ = {isa = PBXFileReference; path = "org-36.caf"; sourceTree = "<group>"; };
 		382B954C63F20BE552F9022E /* ChatStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatStore.swift; sourceTree = "<group>"; };
 		383352AA5F8628AB9C118CA4 /* egt-54-4-2.caf */ = {isa = PBXFileReference; path = "egt-54-4-2.caf"; sourceTree = "<group>"; };
+		3850DD4EA00102DB3C079571 /* gl-chh-1-44.caf */ = {isa = PBXFileReference; path = "gl-chh-1-44.caf"; sourceTree = "<group>"; };
 		38B649DB06CA92616878DDF6 /* Convolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Convolver.swift; sourceTree = "<group>"; };
 		38E529345A2E7CF8AD577CA1 /* hs-riser-0-44.caf */ = {isa = PBXFileReference; path = "hs-riser-0-44.caf"; sourceTree = "<group>"; };
 		38E5F2DEA3C4568CFE64B5DF /* ride-1b.caf */ = {isa = PBXFileReference; path = "ride-1b.caf"; sourceTree = "<group>"; };
@@ -1350,6 +1431,7 @@
 		401A043648E01D4A31EEF2AD /* call-c-sharp.caf */ = {isa = PBXFileReference; path = "call-c-sharp.caf"; sourceTree = "<group>"; };
 		40963202F528F02BF5EEECD8 /* Takt.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Takt.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		40CC7B85B9852657226FBB6F /* hs-ohh-0-44.caf */ = {isa = PBXFileReference; path = "hs-ohh-0-44.caf"; sourceTree = "<group>"; };
+		4124F0AF8A31D1116EDD35C0 /* gl-chh-2.caf */ = {isa = PBXFileReference; path = "gl-chh-2.caf"; sourceTree = "<group>"; };
 		412FDA955CCEA16904AC68A1 /* rho-35-5.caf */ = {isa = PBXFileReference; path = "rho-35-5.caf"; sourceTree = "<group>"; };
 		415BCBA09CEB68768E2DAA8D /* gtr-84-1-1.caf */ = {isa = PBXFileReference; path = "gtr-84-1-1.caf"; sourceTree = "<group>"; };
 		4168CA23DD6DFFC264134674 /* hs-tom-55-l-44.caf */ = {isa = PBXFileReference; path = "hs-tom-55-l-44.caf"; sourceTree = "<group>"; };
@@ -1394,12 +1476,15 @@
 		4BF25C1A14D0AD0DEEA13D9D /* gtr-66-3-2.caf */ = {isa = PBXFileReference; path = "gtr-66-3-2.caf"; sourceTree = "<group>"; };
 		4C07A23D1D5D9AAEB045EDD9 /* tomLo-0a.caf */ = {isa = PBXFileReference; path = "tomLo-0a.caf"; sourceTree = "<group>"; };
 		4C07D000A243FF9E971A88A0 /* hs-bass-13-38-44.caf */ = {isa = PBXFileReference; path = "hs-bass-13-38-44.caf"; sourceTree = "<group>"; };
+		4C5F0865E4B773FEA0F648E0 /* gl-chh-2-44.caf */ = {isa = PBXFileReference; path = "gl-chh-2-44.caf"; sourceTree = "<group>"; };
 		4C853FD5A622D5AC04B93E72 /* saxl-72.caf */ = {isa = PBXFileReference; path = "saxl-72.caf"; sourceTree = "<group>"; };
 		4CC025D91882F6E48366233D /* syn-rimMin-1a.caf */ = {isa = PBXFileReference; path = "syn-rimMin-1a.caf"; sourceTree = "<group>"; };
 		4D049EC78694F75E339F2A71 /* egt-48-1-2.caf */ = {isa = PBXFileReference; path = "egt-48-1-2.caf"; sourceTree = "<group>"; };
+		4D305125ACEB757979F6CBE3 /* gl-ir-room-44.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = "gl-ir-room-44.wav"; sourceTree = "<group>"; };
 		4D35D07C0AB11506D545094F /* ModStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModStore.swift; sourceTree = "<group>"; };
 		4DC7428E8BC444F33D80E21E /* launch-deep-b1.caf */ = {isa = PBXFileReference; path = "launch-deep-b1.caf"; sourceTree = "<group>"; };
 		4DE1E5CAD21F33442D42DFA1 /* ride-2b.caf */ = {isa = PBXFileReference; path = "ride-2b.caf"; sourceTree = "<group>"; };
+		4E47D8353EAD59A9D58C7AF1 /* gl-shk-2.caf */ = {isa = PBXFileReference; path = "gl-shk-2.caf"; sourceTree = "<group>"; };
 		4EC60E3DA628811E3AE02856 /* egt-54-4-1.caf */ = {isa = PBXFileReference; path = "egt-54-4-1.caf"; sourceTree = "<group>"; };
 		4F0D6B35E527E3B3A1BF623A /* syn-hatMin-0a.caf */ = {isa = PBXFileReference; path = "syn-hatMin-0a.caf"; sourceTree = "<group>"; };
 		4F76712FF6CF6A4447B25237 /* gtr-78-3-1.caf */ = {isa = PBXFileReference; path = "gtr-78-3-1.caf"; sourceTree = "<group>"; };
@@ -1420,11 +1505,13 @@
 		5254F8F100E36088673E74CF /* gtr-57-3-1.caf */ = {isa = PBXFileReference; path = "gtr-57-3-1.caf"; sourceTree = "<group>"; };
 		528FB480766B97B03F924156 /* launch-deep-b2.caf */ = {isa = PBXFileReference; path = "launch-deep-b2.caf"; sourceTree = "<group>"; };
 		52E462F831449281758F5101 /* snare-0a.caf */ = {isa = PBXFileReference; path = "snare-0a.caf"; sourceTree = "<group>"; };
+		52E9FE2C862C6FE6AE949A58 /* gl-clap-44.caf */ = {isa = PBXFileReference; path = "gl-clap-44.caf"; sourceTree = "<group>"; };
 		52FB1F3EE4637523E5744522 /* syn-hatMin-1a.caf */ = {isa = PBXFileReference; path = "syn-hatMin-1a.caf"; sourceTree = "<group>"; };
 		531F3A3C4839D1C692857505 /* syn-stabMin-55-1.caf */ = {isa = PBXFileReference; path = "syn-stabMin-55-1.caf"; sourceTree = "<group>"; };
 		535894F49585BCFC32937B8A /* syn-bleep-57-0.caf */ = {isa = PBXFileReference; path = "syn-bleep-57-0.caf"; sourceTree = "<group>"; };
 		53A54832A8E6CC328A7C3809 /* call-f.caf */ = {isa = PBXFileReference; path = "call-f.caf"; sourceTree = "<group>"; };
 		53CDD7C2DE9A56F3EDBD5EA7 /* hs-stab-cm9-0.caf */ = {isa = PBXFileReference; path = "hs-stab-cm9-0.caf"; sourceTree = "<group>"; };
+		53D6FEF25BB26E8560F0C665 /* gl-ir-hall-44.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = "gl-ir-hall-44.wav"; sourceTree = "<group>"; };
 		5493818141A471AEC30127DF /* xstick-2b.caf */ = {isa = PBXFileReference; path = "xstick-2b.caf"; sourceTree = "<group>"; };
 		54ABC468408653889BE56BE1 /* syn-stabMin-43-1.caf */ = {isa = PBXFileReference; path = "syn-stabMin-43-1.caf"; sourceTree = "<group>"; };
 		54AFCA77390DED1B3DA5C100 /* syn-rhodes-51-0.caf */ = {isa = PBXFileReference; path = "syn-rhodes-51-0.caf"; sourceTree = "<group>"; };
@@ -1434,6 +1521,7 @@
 		55D66AB03017A5C38C28ED89 /* syn-clickMin-0b.caf */ = {isa = PBXFileReference; path = "syn-clickMin-0b.caf"; sourceTree = "<group>"; };
 		55E48D5B22424726E648FA7F /* syn-subDub-34.caf */ = {isa = PBXFileReference; path = "syn-subDub-34.caf"; sourceTree = "<group>"; };
 		563AD511379062CEE5F205BD /* hs-riser-2-44.caf */ = {isa = PBXFileReference; path = "hs-riser-2-44.caf"; sourceTree = "<group>"; };
+		567B3826AD04DE9D6CF9EE96 /* gl-tom-55.caf */ = {isa = PBXFileReference; path = "gl-tom-55.caf"; sourceTree = "<group>"; };
 		56803244196C9F93BED7043E /* hs-ir-hall-48.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = "hs-ir-hall-48.wav"; sourceTree = "<group>"; };
 		570FA5239D315419B76D4672 /* pno-71-2.caf */ = {isa = PBXFileReference; path = "pno-71-2.caf"; sourceTree = "<group>"; };
 		5719C6805B1BC9CF816F01F4 /* pno-57-1.caf */ = {isa = PBXFileReference; path = "pno-57-1.caf"; sourceTree = "<group>"; };
@@ -1468,8 +1556,10 @@
 		5D0D3D458E0B4C355A9F6F2D /* Player+Improv.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Player+Improv.swift"; sourceTree = "<group>"; };
 		5D2A54CEAB5947107EFACFC4 /* org-56.caf */ = {isa = PBXFileReference; path = "org-56.caf"; sourceTree = "<group>"; };
 		5D4FC811F6EE696996528CBE /* gz-stab-am11-0.caf */ = {isa = PBXFileReference; path = "gz-stab-am11-0.caf"; sourceTree = "<group>"; };
+		5D5FD6CC8AC758BD056F32D3 /* gl-ping-040.caf */ = {isa = PBXFileReference; path = "gl-ping-040.caf"; sourceTree = "<group>"; };
 		5DA528BE3136688A3099578E /* egt-60-3-1.caf */ = {isa = PBXFileReference; path = "egt-60-3-1.caf"; sourceTree = "<group>"; };
 		5DC3389AAEA27EE8B082522C /* egt-72-2-2.caf */ = {isa = PBXFileReference; path = "egt-72-2-2.caf"; sourceTree = "<group>"; };
+		5E108BCCA813619BC7BCAC32 /* gl-tom-52.caf */ = {isa = PBXFileReference; path = "gl-tom-52.caf"; sourceTree = "<group>"; };
 		5E9CD5EBA97140B50C3E5D02 /* egt-69-4-2.caf */ = {isa = PBXFileReference; path = "egt-69-4-2.caf"; sourceTree = "<group>"; };
 		5ECCE2F11B46DAB18432D62D /* syn-kickDub-0a.caf */ = {isa = PBXFileReference; path = "syn-kickDub-0a.caf"; sourceTree = "<group>"; };
 		5F06C281D136920E5618D0DD /* egt-51-1-2.caf */ = {isa = PBXFileReference; path = "egt-51-1-2.caf"; sourceTree = "<group>"; };
@@ -1484,6 +1574,7 @@
 		61650083680770ED6E7F7F10 /* egt-66-2-1.caf */ = {isa = PBXFileReference; path = "egt-66-2-1.caf"; sourceTree = "<group>"; };
 		618250646933A0CFD9CC7190 /* gtr-69-3-1.caf */ = {isa = PBXFileReference; path = "gtr-69-3-1.caf"; sourceTree = "<group>"; };
 		619369EF05979A4D439FADCD /* pno-95-2.caf */ = {isa = PBXFileReference; path = "pno-95-2.caf"; sourceTree = "<group>"; };
+		61DD414EC8D5374977527E41 /* gl-kick-44.caf */ = {isa = PBXFileReference; path = "gl-kick-44.caf"; sourceTree = "<group>"; };
 		61E80E5165303C091E17B75D /* Autoplay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Autoplay.swift; sourceTree = "<group>"; };
 		61EBE70311C69967025818D4 /* egt-51-4-1.caf */ = {isa = PBXFileReference; path = "egt-51-4-1.caf"; sourceTree = "<group>"; };
 		61F2E9FC710B54C34953C3AD /* gtr-51-3-1.caf */ = {isa = PBXFileReference; path = "gtr-51-3-1.caf"; sourceTree = "<group>"; };
@@ -1502,6 +1593,7 @@
 		63B88858CF5D73BAB81AEC19 /* hs-stab-dm9-3-44.caf */ = {isa = PBXFileReference; path = "hs-stab-dm9-3-44.caf"; sourceTree = "<group>"; };
 		63FCBA11846DD5CB0C9A0118 /* call-four.caf */ = {isa = PBXFileReference; path = "call-four.caf"; sourceTree = "<group>"; };
 		63FD563FD1411C16778CF386 /* syn-bassDH-26.caf */ = {isa = PBXFileReference; path = "syn-bassDH-26.caf"; sourceTree = "<group>"; };
+		642479326993D8F6CBA0C833 /* gl-shk-2-44.caf */ = {isa = PBXFileReference; path = "gl-shk-2-44.caf"; sourceTree = "<group>"; };
 		65295EEA1EB525ECEE125A7E /* song-dockery.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "song-dockery.json"; sourceTree = "<group>"; };
 		6551CFCA1BEC2BDE43C0AA77 /* hs-kick-44.caf */ = {isa = PBXFileReference; path = "hs-kick-44.caf"; sourceTree = "<group>"; };
 		65713D3319CC5F8FF0DCEB00 /* egt-78-1-1.caf */ = {isa = PBXFileReference; path = "egt-78-1-1.caf"; sourceTree = "<group>"; };
@@ -1531,6 +1623,7 @@
 		6DE986F34AFACB8465CD7940 /* gz-bass-20-35.caf */ = {isa = PBXFileReference; path = "gz-bass-20-35.caf"; sourceTree = "<group>"; };
 		6DEE889E3994E8E5713B6AD9 /* snare-0b.caf */ = {isa = PBXFileReference; path = "snare-0b.caf"; sourceTree = "<group>"; };
 		6E28F96988E12D8E4FACAAC9 /* gtr-66-1-1.caf */ = {isa = PBXFileReference; path = "gtr-66-1-1.caf"; sourceTree = "<group>"; };
+		6E7C0A64CEA29B4A619C4F33 /* gl-shk-0-44.caf */ = {isa = PBXFileReference; path = "gl-shk-0-44.caf"; sourceTree = "<group>"; };
 		6EA8414D96952B8DF25F4270 /* xstick-1a.caf */ = {isa = PBXFileReference; path = "xstick-1a.caf"; sourceTree = "<group>"; };
 		6EC77B2B220881A0E4397FB9 /* syn-bleep-60-1.caf */ = {isa = PBXFileReference; path = "syn-bleep-60-1.caf"; sourceTree = "<group>"; };
 		6ED0AFEDFA4BA218461534E3 /* pno-39-2.caf */ = {isa = PBXFileReference; path = "pno-39-2.caf"; sourceTree = "<group>"; };
@@ -1545,7 +1638,9 @@
 		7082098CAA531A71F85C577E /* syn-stabMin-46-0.caf */ = {isa = PBXFileReference; path = "syn-stabMin-46-0.caf"; sourceTree = "<group>"; };
 		70AE5489ED8DD0C0C0F30596 /* pno-73-1.caf */ = {isa = PBXFileReference; path = "pno-73-1.caf"; sourceTree = "<group>"; };
 		70B1D48080A278A68278AC3F /* gtr-48-3-1.caf */ = {isa = PBXFileReference; path = "gtr-48-3-1.caf"; sourceTree = "<group>"; };
+		712B2E8F6C44DF3B51B066A6 /* gl-ohh-1-44.caf */ = {isa = PBXFileReference; path = "gl-ohh-1-44.caf"; sourceTree = "<group>"; };
 		717004B2938E04636A7CCE38 /* rho-91-5.caf */ = {isa = PBXFileReference; path = "rho-91-5.caf"; sourceTree = "<group>"; };
+		718CF53A560DBA31D7429F32 /* gl-ride.caf */ = {isa = PBXFileReference; path = "gl-ride.caf"; sourceTree = "<group>"; };
 		719E2FB87C35A21B1EEF1C35 /* gtr-42-4-2.caf */ = {isa = PBXFileReference; path = "gtr-42-4-2.caf"; sourceTree = "<group>"; };
 		71EDE15AD673D1FD68168739 /* pno-47-2.caf */ = {isa = PBXFileReference; path = "pno-47-2.caf"; sourceTree = "<group>"; };
 		721BFC69BFA9630ECCB52332 /* org-92.caf */ = {isa = PBXFileReference; path = "org-92.caf"; sourceTree = "<group>"; };
@@ -1560,6 +1655,7 @@
 		73E28D3A2CB1F4DEF189BCD2 /* ResultScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultScreen.swift; sourceTree = "<group>"; };
 		7401172E0F08056ED38EEB1C /* egt-42-3-2.caf */ = {isa = PBXFileReference; path = "egt-42-3-2.caf"; sourceTree = "<group>"; };
 		7412D4CF9736BE1347D973CF /* Player+Reading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Player+Reading.swift"; sourceTree = "<group>"; };
+		748AD924285DCCD217121040 /* gl-ping-060.caf */ = {isa = PBXFileReference; path = "gl-ping-060.caf"; sourceTree = "<group>"; };
 		76503928B2805F4DFE568B23 /* pno-83-1.caf */ = {isa = PBXFileReference; path = "pno-83-1.caf"; sourceTree = "<group>"; };
 		76584AFAC158D7CF1DF38E00 /* sax-57-h.caf */ = {isa = PBXFileReference; path = "sax-57-h.caf"; sourceTree = "<group>"; };
 		765EC5583C83A92403A4D041 /* rho-62-4.caf */ = {isa = PBXFileReference; path = "rho-62-4.caf"; sourceTree = "<group>"; };
@@ -1588,13 +1684,16 @@
 		7BA7E1BFDEC1B07542856998 /* Charting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Charting.swift; sourceTree = "<group>"; };
 		7BA8F610E62F94144800F694 /* egt-51-3-1.caf */ = {isa = PBXFileReference; path = "egt-51-3-1.caf"; sourceTree = "<group>"; };
 		7BB5A561A8E27F2B6864CD08 /* gtr-63-1-1.caf */ = {isa = PBXFileReference; path = "gtr-63-1-1.caf"; sourceTree = "<group>"; };
+		7C025C3F6DB6A490FA99BA72 /* gl-riser-30.caf */ = {isa = PBXFileReference; path = "gl-riser-30.caf"; sourceTree = "<group>"; };
 		7C1E3CEDE55B4F0501B0DE78 /* org-88.caf */ = {isa = PBXFileReference; path = "org-88.caf"; sourceTree = "<group>"; };
 		7C44911616425535DBCE3DB5 /* ride-3a.caf */ = {isa = PBXFileReference; path = "ride-3a.caf"; sourceTree = "<group>"; };
 		7C85C0778E6948978AEA29F8 /* gtr-40-3-2.caf */ = {isa = PBXFileReference; path = "gtr-40-3-2.caf"; sourceTree = "<group>"; };
 		7C93ACD2DD529AAE1C9FA057 /* VenueScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VenueScreen.swift; sourceTree = "<group>"; };
 		7CBBA03C0F074B23FE25C837 /* hs-shk-0.caf */ = {isa = PBXFileReference; path = "hs-shk-0.caf"; sourceTree = "<group>"; };
 		7CE30DCBE3E72ECE014E12D0 /* syn-hatDH-1c.caf */ = {isa = PBXFileReference; path = "syn-hatDH-1c.caf"; sourceTree = "<group>"; };
+		7D2A8E475CB6244CF3AFE6A9 /* gl-ride-44.caf */ = {isa = PBXFileReference; path = "gl-ride-44.caf"; sourceTree = "<group>"; };
 		7D63AD26CC351CFF4E35F87F /* org-68.caf */ = {isa = PBXFileReference; path = "org-68.caf"; sourceTree = "<group>"; };
+		7D78475D85D25298E2B9AD1C /* gl-tom-55-44.caf */ = {isa = PBXFileReference; path = "gl-tom-55-44.caf"; sourceTree = "<group>"; };
 		7E265BEC0D78EFE05ABF5192 /* Fingering.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Fingering.swift; sourceTree = "<group>"; };
 		7E3E2A0CA1D7E6E8769485F4 /* DemoStage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoStage.swift; sourceTree = "<group>"; };
 		7EA6F5A2CBE7D3F314967A7C /* syn-stabMin-61-0.caf */ = {isa = PBXFileReference; path = "syn-stabMin-61-0.caf"; sourceTree = "<group>"; };
@@ -1605,6 +1704,7 @@
 		812CD9A42448D7DD21C7C2B8 /* rho-81-3.caf */ = {isa = PBXFileReference; path = "rho-81-3.caf"; sourceTree = "<group>"; };
 		817B2278CE9C61ADB69BDDB2 /* rho-65-2.caf */ = {isa = PBXFileReference; path = "rho-65-2.caf"; sourceTree = "<group>"; };
 		818EF590A151362162AF3D67 /* gtr-84-2-2.caf */ = {isa = PBXFileReference; path = "gtr-84-2-2.caf"; sourceTree = "<group>"; };
+		81A6CCF32DC570231D1AE579 /* song-gegenlicht.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "song-gegenlicht.json"; sourceTree = "<group>"; };
 		81BF333F6384FC69D429F256 /* rho-91-3.caf */ = {isa = PBXFileReference; path = "rho-91-3.caf"; sourceTree = "<group>"; };
 		81C613C3E7560D377410DF46 /* call-a.caf */ = {isa = PBXFileReference; path = "call-a.caf"; sourceTree = "<group>"; };
 		81D324181FB73737AD7F33A9 /* hatOpen-1a.caf */ = {isa = PBXFileReference; path = "hatOpen-1a.caf"; sourceTree = "<group>"; };
@@ -1620,6 +1720,8 @@
 		82F15EECAF029E8946F92D29 /* call-d-sharp.caf */ = {isa = PBXFileReference; path = "call-d-sharp.caf"; sourceTree = "<group>"; };
 		82FD9C8366FA9E3912D03F88 /* egt-84-3-1.caf */ = {isa = PBXFileReference; path = "egt-84-3-1.caf"; sourceTree = "<group>"; };
 		830A0D670A22A910C8242F7B /* rho-86-3.caf */ = {isa = PBXFileReference; path = "rho-86-3.caf"; sourceTree = "<group>"; };
+		832023D43CC8500F5D095C3F /* gl-riser-70-44.caf */ = {isa = PBXFileReference; path = "gl-riser-70-44.caf"; sourceTree = "<group>"; };
+		833C0B74ECF827EC84E3290A /* gl-clap.caf */ = {isa = PBXFileReference; path = "gl-clap.caf"; sourceTree = "<group>"; };
 		8379BCA88EDA82916046CC05 /* gz-tom-47-r-44.caf */ = {isa = PBXFileReference; path = "gz-tom-47-r-44.caf"; sourceTree = "<group>"; };
 		8420A1FB1E82D963A1DCDA15 /* egt-63-2-1.caf */ = {isa = PBXFileReference; path = "egt-63-2-1.caf"; sourceTree = "<group>"; };
 		844127AD3D01F28724943CC8 /* syn-bleep-57-2.caf */ = {isa = PBXFileReference; path = "syn-bleep-57-2.caf"; sourceTree = "<group>"; };
@@ -1630,11 +1732,13 @@
 		84A3A631B5D43783B563A8BD /* rho-45-1.caf */ = {isa = PBXFileReference; path = "rho-45-1.caf"; sourceTree = "<group>"; };
 		84ABAD1B2F6C9024E8EC8352 /* egt-84-2-1.caf */ = {isa = PBXFileReference; path = "egt-84-2-1.caf"; sourceTree = "<group>"; };
 		852568B43968DDBE749814B4 /* hs-ohh-0.caf */ = {isa = PBXFileReference; path = "hs-ohh-0.caf"; sourceTree = "<group>"; };
+		852FA129DBF433E9D7C50DBB /* gl-crash-44.caf */ = {isa = PBXFileReference; path = "gl-crash-44.caf"; sourceTree = "<group>"; };
 		85BB35816099F8F1A8778A2B /* gtr-60-1-2.caf */ = {isa = PBXFileReference; path = "gtr-60-1-2.caf"; sourceTree = "<group>"; };
 		85D0C4138BF2B7C4245FC437 /* egt-51-3-2.caf */ = {isa = PBXFileReference; path = "egt-51-3-2.caf"; sourceTree = "<group>"; };
 		860FB18E8F20F3DB3B4C75CB /* gtr-78-4-1.caf */ = {isa = PBXFileReference; path = "gtr-78-4-1.caf"; sourceTree = "<group>"; };
 		86635D96ACE01B11A891B866 /* gz-bass-20-28.caf */ = {isa = PBXFileReference; path = "gz-bass-20-28.caf"; sourceTree = "<group>"; };
 		86BE84F0F195C4A603C949EF /* org-80.caf */ = {isa = PBXFileReference; path = "org-80.caf"; sourceTree = "<group>"; };
+		87914D3CCF7814F8D853D551 /* gl-ping-040-44.caf */ = {isa = PBXFileReference; path = "gl-ping-040-44.caf"; sourceTree = "<group>"; };
 		87A2325E7E97CA7A11612630 /* gz-kick-44.caf */ = {isa = PBXFileReference; path = "gz-kick-44.caf"; sourceTree = "<group>"; };
 		87E776E3CBEC7B371054ACA9 /* pno-85-1.caf */ = {isa = PBXFileReference; path = "pno-85-1.caf"; sourceTree = "<group>"; };
 		880D9001CE96FC6DB96D7635 /* KeyboardStrip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardStrip.swift; sourceTree = "<group>"; };
@@ -1658,6 +1762,7 @@
 		8B7DE97334751A7155B3E0F7 /* rho-40-4.caf */ = {isa = PBXFileReference; path = "rho-40-4.caf"; sourceTree = "<group>"; };
 		8B8C810B29E6EE8E7C8AA24B /* rho-55-4.caf */ = {isa = PBXFileReference; path = "rho-55-4.caf"; sourceTree = "<group>"; };
 		8BBE4982E5AF38A37E5A9F37 /* rho-59-1.caf */ = {isa = PBXFileReference; path = "rho-59-1.caf"; sourceTree = "<group>"; };
+		8C0D28E3B09FED0877F56DB8 /* gl-chh-1.caf */ = {isa = PBXFileReference; path = "gl-chh-1.caf"; sourceTree = "<group>"; };
 		8C2AD5E6E4603374CD580DFF /* gtr-37-4-2.caf */ = {isa = PBXFileReference; path = "gtr-37-4-2.caf"; sourceTree = "<group>"; };
 		8C96EE4B424986081309B01A /* hs-stab-dm9-1.caf */ = {isa = PBXFileReference; path = "hs-stab-dm9-1.caf"; sourceTree = "<group>"; };
 		8D07BEF4D55CC0F356AD18CE /* syn-subDub-26.caf */ = {isa = PBXFileReference; path = "syn-subDub-26.caf"; sourceTree = "<group>"; };
@@ -1681,6 +1786,7 @@
 		910B4FB35953AD881FA108FF /* egt-51-1-1.caf */ = {isa = PBXFileReference; path = "egt-51-1-1.caf"; sourceTree = "<group>"; };
 		91293DD37242EE6423B9F0BD /* hs-tom-53-l-44.caf */ = {isa = PBXFileReference; path = "hs-tom-53-l-44.caf"; sourceTree = "<group>"; };
 		9130554CA1219416A8602B28 /* egt-40-4-1.caf */ = {isa = PBXFileReference; path = "egt-40-4-1.caf"; sourceTree = "<group>"; };
+		9169003280F44EE4D2D0C057 /* gl-rim-44.caf */ = {isa = PBXFileReference; path = "gl-rim-44.caf"; sourceTree = "<group>"; };
 		916FD543A12FA380C1D73381 /* gtr-66-2-1.caf */ = {isa = PBXFileReference; path = "gtr-66-2-1.caf"; sourceTree = "<group>"; };
 		91DCE60AB5E656FEDB1063B0 /* hs-stab-dm9-1-44.caf */ = {isa = PBXFileReference; path = "hs-stab-dm9-1-44.caf"; sourceTree = "<group>"; };
 		920675AD442023084DFC703B /* egt-37-4-1.caf */ = {isa = PBXFileReference; path = "egt-37-4-1.caf"; sourceTree = "<group>"; };
@@ -1723,6 +1829,8 @@
 		9C5D50691FC1FF69111BD66A /* gtr-66-4-1.caf */ = {isa = PBXFileReference; path = "gtr-66-4-1.caf"; sourceTree = "<group>"; };
 		9CC92115CD757FAA4E75B62A /* hs-bass-25-38.caf */ = {isa = PBXFileReference; path = "hs-bass-25-38.caf"; sourceTree = "<group>"; };
 		9CF3FF6959FA2BBE36F9531B /* hat-0b.caf */ = {isa = PBXFileReference; path = "hat-0b.caf"; sourceTree = "<group>"; };
+		9CF88C24B7A50FAD34F18A7F /* gl-ohh-0.caf */ = {isa = PBXFileReference; path = "gl-ohh-0.caf"; sourceTree = "<group>"; };
+		9D1E04AE37E23EC70ED0F691 /* gl-shk-1-44.caf */ = {isa = PBXFileReference; path = "gl-shk-1-44.caf"; sourceTree = "<group>"; };
 		9D49AC24E5E404E221145538 /* pno-71-1.caf */ = {isa = PBXFileReference; path = "pno-71-1.caf"; sourceTree = "<group>"; };
 		9D717994F956EEEB99A9918D /* gperc-4.caf */ = {isa = PBXFileReference; path = "gperc-4.caf"; sourceTree = "<group>"; };
 		9E22DEA24BBC50ED760212A2 /* hs-tom-50-r.caf */ = {isa = PBXFileReference; path = "hs-tom-50-r.caf"; sourceTree = "<group>"; };
@@ -1732,6 +1840,7 @@
 		9EB615A2BF73A5830696480A /* LessonsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonsScreen.swift; sourceTree = "<group>"; };
 		9EB67C9AF0D6422F1068D2A3 /* rideBell-0b.caf */ = {isa = PBXFileReference; path = "rideBell-0b.caf"; sourceTree = "<group>"; };
 		9EC8EEE099138C99CE27A172 /* syn-subDub-40.caf */ = {isa = PBXFileReference; path = "syn-subDub-40.caf"; sourceTree = "<group>"; };
+		9F819CB2A24A79A82BB57269 /* gl-riser-90-44.caf */ = {isa = PBXFileReference; path = "gl-riser-90-44.caf"; sourceTree = "<group>"; };
 		9FC9FBF5827AAB4DC69DF3E6 /* sax-60-s.caf */ = {isa = PBXFileReference; path = "sax-60-s.caf"; sourceTree = "<group>"; };
 		9FE5D306618D250DFEA4FD85 /* rho-65-1.caf */ = {isa = PBXFileReference; path = "rho-65-1.caf"; sourceTree = "<group>"; };
 		A00D441C90075D672C656B17 /* gtr-69-2-2.caf */ = {isa = PBXFileReference; path = "gtr-69-2-2.caf"; sourceTree = "<group>"; };
@@ -1785,8 +1894,10 @@
 		ABDAF7C7A7B9331CDA291E94 /* egt-45-4-2.caf */ = {isa = PBXFileReference; path = "egt-45-4-2.caf"; sourceTree = "<group>"; };
 		ACAE2F3A620055ABA7072176 /* rho-71-4.caf */ = {isa = PBXFileReference; path = "rho-71-4.caf"; sourceTree = "<group>"; };
 		ACAFCFE83B0144D8BD65D236 /* hat-0c.caf */ = {isa = PBXFileReference; path = "hat-0c.caf"; sourceTree = "<group>"; };
+		AD2AEA52E90B7782AF52367D /* gl-shk-1.caf */ = {isa = PBXFileReference; path = "gl-shk-1.caf"; sourceTree = "<group>"; };
 		AD841D7BC2734A8CECA8D3A6 /* egt-54-2-1.caf */ = {isa = PBXFileReference; path = "egt-54-2-1.caf"; sourceTree = "<group>"; };
 		AD8A3ACF263A0B9CE23283FB /* snare-3c.caf */ = {isa = PBXFileReference; path = "snare-3c.caf"; sourceTree = "<group>"; };
+		ADB67EBA045A56589574A8E0 /* gl-shk-0.caf */ = {isa = PBXFileReference; path = "gl-shk-0.caf"; sourceTree = "<group>"; };
 		ADD7193EFCD54AD5D6DAFFC3 /* hs-riser-3-44.caf */ = {isa = PBXFileReference; path = "hs-riser-3-44.caf"; sourceTree = "<group>"; };
 		AE67B97ADEF75B59BE262D0B /* gtr-42-2-1.caf */ = {isa = PBXFileReference; path = "gtr-42-2-1.caf"; sourceTree = "<group>"; };
 		AE7BCE1271F4400BD8881B3F /* gz-tom-50-l.caf */ = {isa = PBXFileReference; path = "gz-tom-50-l.caf"; sourceTree = "<group>"; };
@@ -1801,6 +1912,8 @@
 		AFDC50D8FDC5E2EF3C49A798 /* gtr-69-2-1.caf */ = {isa = PBXFileReference; path = "gtr-69-2-1.caf"; sourceTree = "<group>"; };
 		B05E1826B261424227F3610A /* gtr-75-1-2.caf */ = {isa = PBXFileReference; path = "gtr-75-1-2.caf"; sourceTree = "<group>"; };
 		B07FC46AE23BB7E121A3BD99 /* rho-86-5.caf */ = {isa = PBXFileReference; path = "rho-86-5.caf"; sourceTree = "<group>"; };
+		B0D83D27E3F1BB36F48313F1 /* gl-ir-room-48.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = "gl-ir-room-48.wav"; sourceTree = "<group>"; };
+		B164FDFBEB33C6AD6A3ABC1E /* gl-riser-70.caf */ = {isa = PBXFileReference; path = "gl-riser-70.caf"; sourceTree = "<group>"; };
 		B253966448C37EBB8F4C00C8 /* egt-75-3-2.caf */ = {isa = PBXFileReference; path = "egt-75-3-2.caf"; sourceTree = "<group>"; };
 		B26AA27B8C81AECA090C9123 /* bass-28.caf */ = {isa = PBXFileReference; path = "bass-28.caf"; sourceTree = "<group>"; };
 		B28B57545A04BBD7BA2A9F55 /* hs-stab-dm9-2.caf */ = {isa = PBXFileReference; path = "hs-stab-dm9-2.caf"; sourceTree = "<group>"; };
@@ -1830,6 +1943,8 @@
 		B95EC50A329C813980EF7937 /* pno-77-2.caf */ = {isa = PBXFileReference; path = "pno-77-2.caf"; sourceTree = "<group>"; };
 		B99F2898B21D3BB4EB9DE8F5 /* gperc-3.caf */ = {isa = PBXFileReference; path = "gperc-3.caf"; sourceTree = "<group>"; };
 		B9B602E9E710572C57122AD4 /* syn-stabMin-67-0.caf */ = {isa = PBXFileReference; path = "syn-stabMin-67-0.caf"; sourceTree = "<group>"; };
+		B9BA9CE79388D0164D78DC50 /* gl-ping-070-44.caf */ = {isa = PBXFileReference; path = "gl-ping-070-44.caf"; sourceTree = "<group>"; };
+		B9DFE2C64C2F3A62E2346567 /* gl-riser-90.caf */ = {isa = PBXFileReference; path = "gl-riser-90.caf"; sourceTree = "<group>"; };
 		B9F6D61A9E1DC6AFBA2CBBC5 /* DubStab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DubStab.swift; sourceTree = "<group>"; };
 		B9FA9FC704F36ABCBC4A7D66 /* sax-57-s.caf */ = {isa = PBXFileReference; path = "sax-57-s.caf"; sourceTree = "<group>"; };
 		BA75EABA79A2F34520FBF97A /* gtr-81-1-2.caf */ = {isa = PBXFileReference; path = "gtr-81-1-2.caf"; sourceTree = "<group>"; };
@@ -1840,6 +1955,7 @@
 		BC58CE0741F21EA7BB3F79ED /* egt-63-1-2.caf */ = {isa = PBXFileReference; path = "egt-63-1-2.caf"; sourceTree = "<group>"; };
 		BCE8225E2D595300ECB382EF /* gtr-72-2-2.caf */ = {isa = PBXFileReference; path = "gtr-72-2-2.caf"; sourceTree = "<group>"; };
 		BCFFFD49EB39BF2E6BAC0767 /* Motifs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Motifs.swift; sourceTree = "<group>"; };
+		BD0E8CD2AE1793805A2FD8EF /* gl-tom-57-44.caf */ = {isa = PBXFileReference; path = "gl-tom-57-44.caf"; sourceTree = "<group>"; };
 		BD11DAB0B358911FCB5FE7EA /* gtr-48-1-1.caf */ = {isa = PBXFileReference; path = "gtr-48-1-1.caf"; sourceTree = "<group>"; };
 		BDCAB8C4A4181B0997F6D361 /* saxl-78.caf */ = {isa = PBXFileReference; path = "saxl-78.caf"; sourceTree = "<group>"; };
 		BDD214DF24394D5087CE685E /* launch-deep-land.caf */ = {isa = PBXFileReference; path = "launch-deep-land.caf"; sourceTree = "<group>"; };
@@ -1862,6 +1978,7 @@
 		C25F3D56D94936B2DB7D9989 /* lesson-A1.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "lesson-A1.json"; sourceTree = "<group>"; };
 		C29C4C33EBDFC92B4AE5359C /* hat-1b.caf */ = {isa = PBXFileReference; path = "hat-1b.caf"; sourceTree = "<group>"; };
 		C2B9463350106EA3B68E80C0 /* pno-41-1.caf */ = {isa = PBXFileReference; path = "pno-41-1.caf"; sourceTree = "<group>"; };
+		C35057D3BC12FFC4799D869E /* Console.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Console.swift; sourceTree = "<group>"; };
 		C393AA882D4BCE76C9D4F921 /* egt-72-4-2.caf */ = {isa = PBXFileReference; path = "egt-72-4-2.caf"; sourceTree = "<group>"; };
 		C3B0B1AACD6306BD65F29B58 /* egt-78-3-2.caf */ = {isa = PBXFileReference; path = "egt-78-3-2.caf"; sourceTree = "<group>"; };
 		C3E924B94B40708FD93B57D0 /* egt-75-4-2.caf */ = {isa = PBXFileReference; path = "egt-75-4-2.caf"; sourceTree = "<group>"; };
@@ -1883,6 +2000,7 @@
 		C654F066EF66ECB5B4113E74 /* crash-0b.caf */ = {isa = PBXFileReference; path = "crash-0b.caf"; sourceTree = "<group>"; };
 		C6D223F724F431F16EA82FB3 /* egt-69-2-1.caf */ = {isa = PBXFileReference; path = "egt-69-2-1.caf"; sourceTree = "<group>"; };
 		C6EB3DA63013F985300E0E09 /* syn-subDub-24.caf */ = {isa = PBXFileReference; path = "syn-subDub-24.caf"; sourceTree = "<group>"; };
+		C6ED04CA34B18250F9017A15 /* gl-ping-060-44.caf */ = {isa = PBXFileReference; path = "gl-ping-060-44.caf"; sourceTree = "<group>"; };
 		C6F972FD0AD385D24F86BF29 /* bass-39.caf */ = {isa = PBXFileReference; path = "bass-39.caf"; sourceTree = "<group>"; };
 		C70B0FDF2DE2062992986E08 /* rho-55-5.caf */ = {isa = PBXFileReference; path = "rho-55-5.caf"; sourceTree = "<group>"; };
 		C75C9D7C3FCB5E0F7E7C9650 /* egmute-3.caf */ = {isa = PBXFileReference; path = "egmute-3.caf"; sourceTree = "<group>"; };
@@ -1936,6 +2054,7 @@
 		D17B6E8364C404EC386EA725 /* org-40.caf */ = {isa = PBXFileReference; path = "org-40.caf"; sourceTree = "<group>"; };
 		D1AF9FE7118D481D449642C1 /* gz-bass-20-31-44.caf */ = {isa = PBXFileReference; path = "gz-bass-20-31-44.caf"; sourceTree = "<group>"; };
 		D27F20E3801EAD6D9EDA8DA5 /* gtr-37-4-1.caf */ = {isa = PBXFileReference; path = "gtr-37-4-1.caf"; sourceTree = "<group>"; };
+		D286E503725A16D9C063BF33 /* gl-chh-0.caf */ = {isa = PBXFileReference; path = "gl-chh-0.caf"; sourceTree = "<group>"; };
 		D2CBE11E58BFC586CF25678C /* egt-48-3-2.caf */ = {isa = PBXFileReference; path = "egt-48-3-2.caf"; sourceTree = "<group>"; };
 		D2D63838E7F2476942DDE6F2 /* syn-bleep-66-0.caf */ = {isa = PBXFileReference; path = "syn-bleep-66-0.caf"; sourceTree = "<group>"; };
 		D30ADE0ACE6E4245621CD892 /* hs-stab-cm9-2-44.caf */ = {isa = PBXFileReference; path = "hs-stab-cm9-2-44.caf"; sourceTree = "<group>"; };
@@ -1948,8 +2067,10 @@
 		D3F53FD48CE9B89241FFB481 /* lesson-S1m.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "lesson-S1m.json"; sourceTree = "<group>"; };
 		D4123B82EEB06216B8B06790 /* hat-4c.caf */ = {isa = PBXFileReference; path = "hat-4c.caf"; sourceTree = "<group>"; };
 		D4436DAD4C795C942A008009 /* hs-stab-cm9-2.caf */ = {isa = PBXFileReference; path = "hs-stab-cm9-2.caf"; sourceTree = "<group>"; };
+		D4AD97F4223EA9E5A71AC60D /* gl-noise-44.caf */ = {isa = PBXFileReference; path = "gl-noise-44.caf"; sourceTree = "<group>"; };
 		D523211F03D0E521128D3051 /* org-64.caf */ = {isa = PBXFileReference; path = "org-64.caf"; sourceTree = "<group>"; };
 		D547A323DF4BB9614F6A2A35 /* launch-blues-b1.caf */ = {isa = PBXFileReference; path = "launch-blues-b1.caf"; sourceTree = "<group>"; };
+		D560700C1C13EC06330AFA08 /* gl-ir-hall-48.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = "gl-ir-hall-48.wav"; sourceTree = "<group>"; };
 		D5671658EBED1C841D01BAFD /* pno-93-2.caf */ = {isa = PBXFileReference; path = "pno-93-2.caf"; sourceTree = "<group>"; };
 		D58B2011E265A995E2034782 /* egt-75-2-1.caf */ = {isa = PBXFileReference; path = "egt-75-2-1.caf"; sourceTree = "<group>"; };
 		D590A8C5A5538F06E2DDC57D /* hs-bass-13-36-44.caf */ = {isa = PBXFileReference; path = "hs-bass-13-36-44.caf"; sourceTree = "<group>"; };
@@ -2017,6 +2138,8 @@
 		E3D6D4CF38F3499209465558 /* gtr-60-4-1.caf */ = {isa = PBXFileReference; path = "gtr-60-4-1.caf"; sourceTree = "<group>"; };
 		E3E4FC79A99C3303B6818F63 /* pno-61-1.caf */ = {isa = PBXFileReference; path = "pno-61-1.caf"; sourceTree = "<group>"; };
 		E4C4ED92F717DBEEBE684CD6 /* pno-93-1.caf */ = {isa = PBXFileReference; path = "pno-93-1.caf"; sourceTree = "<group>"; };
+		E4CAF4BF327F3ECD0CBF1619 /* gl-riser-86-44.caf */ = {isa = PBXFileReference; path = "gl-riser-86-44.caf"; sourceTree = "<group>"; };
+		E582B9C57C9189AE67791AAD /* gl-ir-rumble-44.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = "gl-ir-rumble-44.wav"; sourceTree = "<group>"; };
 		E585446A22916E871EDE87C9 /* egt-63-1-1.caf */ = {isa = PBXFileReference; path = "egt-63-1-1.caf"; sourceTree = "<group>"; };
 		E5E1FF72CCC04D821EF406E3 /* rho-62-5.caf */ = {isa = PBXFileReference; path = "rho-62-5.caf"; sourceTree = "<group>"; };
 		E5F20C186852CCB9FC32F75A /* rho-76-4.caf */ = {isa = PBXFileReference; path = "rho-76-4.caf"; sourceTree = "<group>"; };
@@ -2026,6 +2149,7 @@
 		E7447478F83F7B3F078A972A /* pno-43-2.caf */ = {isa = PBXFileReference; path = "pno-43-2.caf"; sourceTree = "<group>"; };
 		E748095ECFDC9C15ACCB5DEB /* syn-subDub-30.caf */ = {isa = PBXFileReference; path = "syn-subDub-30.caf"; sourceTree = "<group>"; };
 		E748E382F5D4D501FC76700F /* gtr-84-3-2.caf */ = {isa = PBXFileReference; path = "gtr-84-3-2.caf"; sourceTree = "<group>"; };
+		E75E7AADC7C0FC27DB07C80A /* AcidRack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AcidRack.swift; sourceTree = "<group>"; };
 		E7B49B4049602D89895C0464 /* gtr-63-3-1.caf */ = {isa = PBXFileReference; path = "gtr-63-3-1.caf"; sourceTree = "<group>"; };
 		E7D3256E72BF07EB6ACF1AC6 /* pno-47-1.caf */ = {isa = PBXFileReference; path = "pno-47-1.caf"; sourceTree = "<group>"; };
 		E7DA7CB7D67C31051BF7E9F0 /* gtr-78-2-1.caf */ = {isa = PBXFileReference; path = "gtr-78-2-1.caf"; sourceTree = "<group>"; };
@@ -2057,6 +2181,7 @@
 		EBDC46BA92070FCB3F1DB136 /* gtr-84-2-1.caf */ = {isa = PBXFileReference; path = "gtr-84-2-1.caf"; sourceTree = "<group>"; };
 		EC1B98ACF898FE895E4231EA /* sax-52-h.caf */ = {isa = PBXFileReference; path = "sax-52-h.caf"; sourceTree = "<group>"; };
 		EC1F2F025FFD570FE5193E0D /* bass-36.caf */ = {isa = PBXFileReference; path = "bass-36.caf"; sourceTree = "<group>"; };
+		EC5418B4AF2B184CF6BD0907 /* gl-ir-rumble-48.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = "gl-ir-rumble-48.wav"; sourceTree = "<group>"; };
 		EC974FC4D26003072C665F6A /* egt-84-2-2.caf */ = {isa = PBXFileReference; path = "egt-84-2-2.caf"; sourceTree = "<group>"; };
 		ECCE5D8B8DA9951CE3802245 /* syn-hatDH-2c.caf */ = {isa = PBXFileReference; path = "syn-hatDH-2c.caf"; sourceTree = "<group>"; };
 		ECECF1E4E590A9E81E139D89 /* lesson-S1.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "lesson-S1.json"; sourceTree = "<group>"; };
@@ -2069,6 +2194,7 @@
 		EDDE87D95A63C143F426870F /* hs-bass-20-38.caf */ = {isa = PBXFileReference; path = "hs-bass-20-38.caf"; sourceTree = "<group>"; };
 		EEC3217D3AC93CC7A939EF7C /* egt-66-2-2.caf */ = {isa = PBXFileReference; path = "egt-66-2-2.caf"; sourceTree = "<group>"; };
 		EEEF033DB9357648BCDCCD17 /* song-abyss-ref.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "song-abyss-ref.json"; sourceTree = "<group>"; };
+		EF3E7C63174FC6DD3987F8F0 /* gl-rim.caf */ = {isa = PBXFileReference; path = "gl-rim.caf"; sourceTree = "<group>"; };
 		EF601F05C127EBA229908C0D /* gtr-81-2-2.caf */ = {isa = PBXFileReference; path = "gtr-81-2-2.caf"; sourceTree = "<group>"; };
 		EFDC6ED7E7B9565666BF160B /* gtr-48-2-2.caf */ = {isa = PBXFileReference; path = "gtr-48-2-2.caf"; sourceTree = "<group>"; };
 		EFE4C8FB08277EEB783E33DD /* gtr-45-4-1.caf */ = {isa = PBXFileReference; path = "gtr-45-4-1.caf"; sourceTree = "<group>"; };
@@ -2088,6 +2214,7 @@
 		F1DE95F369838540232593BF /* pno-87-1.caf */ = {isa = PBXFileReference; path = "pno-87-1.caf"; sourceTree = "<group>"; };
 		F2398FB95AD7DC541CA86489 /* pno-49-2.caf */ = {isa = PBXFileReference; path = "pno-49-2.caf"; sourceTree = "<group>"; };
 		F28D57891FC57ED0FF418D6B /* syn-stabMin-61-1.caf */ = {isa = PBXFileReference; path = "syn-stabMin-61-1.caf"; sourceTree = "<group>"; };
+		F2AE61F09F607D9860C60393 /* gl-ping-085-44.caf */ = {isa = PBXFileReference; path = "gl-ping-085-44.caf"; sourceTree = "<group>"; };
 		F2AFDCC95F272232F3B29338 /* hs-rim.caf */ = {isa = PBXFileReference; path = "hs-rim.caf"; sourceTree = "<group>"; };
 		F2B685865EF18B2290810CC0 /* hs-stab-dm9-2-44.caf */ = {isa = PBXFileReference; path = "hs-stab-dm9-2-44.caf"; sourceTree = "<group>"; };
 		F2DE7F42AFB5948626DA2249 /* kick-1b.caf */ = {isa = PBXFileReference; path = "kick-1b.caf"; sourceTree = "<group>"; };
@@ -2095,7 +2222,9 @@
 		F347BF3E761D5E1CE27C58C1 /* gz-bass-15-33.caf */ = {isa = PBXFileReference; path = "gz-bass-15-33.caf"; sourceTree = "<group>"; };
 		F358C947F34CE61606AA1EB7 /* Player+Calibration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Player+Calibration.swift"; sourceTree = "<group>"; };
 		F371742327E70A03DF6031DE /* gtr-45-2-1.caf */ = {isa = PBXFileReference; path = "gtr-45-2-1.caf"; sourceTree = "<group>"; };
+		F39459793E7596043BAA7A38 /* gl-tom-57.caf */ = {isa = PBXFileReference; path = "gl-tom-57.caf"; sourceTree = "<group>"; };
 		F3AB985F2166D8474707314C /* gtr-37-1-1.caf */ = {isa = PBXFileReference; path = "gtr-37-1-1.caf"; sourceTree = "<group>"; };
+		F3EF25E8C3172D3CCCD34D3C /* gl-ping-070.caf */ = {isa = PBXFileReference; path = "gl-ping-070.caf"; sourceTree = "<group>"; };
 		F43509FD82D84A6E1255B37C /* Song.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Song.swift; sourceTree = "<group>"; };
 		F46182DA1CDF8141B291AABA /* sax-60-h.caf */ = {isa = PBXFileReference; path = "sax-60-h.caf"; sourceTree = "<group>"; };
 		F471A2196F9AF3B8F004FA9C /* ride-1a.caf */ = {isa = PBXFileReference; path = "ride-1a.caf"; sourceTree = "<group>"; };
@@ -2124,6 +2253,7 @@
 		F9CECDA90CD7CA866FFACF54 /* tomLo-1b.caf */ = {isa = PBXFileReference; path = "tomLo-1b.caf"; sourceTree = "<group>"; };
 		F9D54A76F64742CB59FC103E /* hs-rim-44.caf */ = {isa = PBXFileReference; path = "hs-rim-44.caf"; sourceTree = "<group>"; };
 		FA1B9F94998ABCB1BC013DDD /* sax-84-s.caf */ = {isa = PBXFileReference; path = "sax-84-s.caf"; sourceTree = "<group>"; };
+		FA7EA4142711D7A707618767 /* gl-ping-085.caf */ = {isa = PBXFileReference; path = "gl-ping-085.caf"; sourceTree = "<group>"; };
 		FAA528E5A27B2284B77A480E /* gz-bass-15-31.caf */ = {isa = PBXFileReference; path = "gz-bass-15-31.caf"; sourceTree = "<group>"; };
 		FAECE9A8F2CCA0F903CC5A97 /* gtr-51-2-1.caf */ = {isa = PBXFileReference; path = "gtr-51-2-1.caf"; sourceTree = "<group>"; };
 		FB559B9F4F345C1651E8B08D /* gtr-78-1-2.caf */ = {isa = PBXFileReference; path = "gtr-78-1-2.caf"; sourceTree = "<group>"; };
@@ -2269,9 +2399,11 @@
 		7E718AC35B0C62F76073A6EF /* Audio */ = {
 			isa = PBXGroup;
 			children = (
+				E75E7AADC7C0FC27DB07C80A /* AcidRack.swift */,
 				FF0A80DA756328D46986C659 /* AudioEngine.swift */,
 				E35CB620AC7721CE809CB3C0 /* BandData.swift */,
 				A356FC5F2FF8CA045494AB8D /* BandRenderer.swift */,
+				C35057D3BC12FFC4799D869E /* Console.swift */,
 				38B649DB06CA92616878DDF6 /* Convolver.swift */,
 				DFA2B474D4DCB275C2F9E1F2 /* DubChamber.swift */,
 				B9F6D61A9E1DC6AFBA2CBBC5 /* DubStab.swift */,
@@ -2406,6 +2538,7 @@
 				2BD66E2CAAD161BA1549DCAF /* song-boogie-shoes.json */,
 				65295EEA1EB525ECEE125A7E /* song-dockery.json */,
 				2973DECBF96FFD576F357818 /* song-friars-point.json */,
+				81A6CCF32DC570231D1AE579 /* song-gegenlicht.json */,
 				200B3D21804E070AD5813975 /* song-gezeiten.json */,
 				C4081550675C01E1EF274AF5 /* song-halbschatten.json */,
 				08E299E096ACAFB40E745A59 /* song-halsted.json */,
@@ -2647,6 +2780,68 @@
 				3FB296B4677549F6C75B1772 /* egt-86-3-2.caf */,
 				E02CA460ECA482786EDE067C /* egt-86-4-1.caf */,
 				E0FF5807D042803FFCB03EBF /* egt-86-4-2.caf */,
+				02CB979208324AED07D5801A /* gl-chh-0-44.caf */,
+				D286E503725A16D9C063BF33 /* gl-chh-0.caf */,
+				3850DD4EA00102DB3C079571 /* gl-chh-1-44.caf */,
+				8C0D28E3B09FED0877F56DB8 /* gl-chh-1.caf */,
+				4C5F0865E4B773FEA0F648E0 /* gl-chh-2-44.caf */,
+				4124F0AF8A31D1116EDD35C0 /* gl-chh-2.caf */,
+				52E9FE2C862C6FE6AE949A58 /* gl-clap-44.caf */,
+				833C0B74ECF827EC84E3290A /* gl-clap.caf */,
+				852FA129DBF433E9D7C50DBB /* gl-crash-44.caf */,
+				0AFF250F361F759DB37CA88E /* gl-crash.caf */,
+				53D6FEF25BB26E8560F0C665 /* gl-ir-hall-44.wav */,
+				D560700C1C13EC06330AFA08 /* gl-ir-hall-48.wav */,
+				4D305125ACEB757979F6CBE3 /* gl-ir-room-44.wav */,
+				B0D83D27E3F1BB36F48313F1 /* gl-ir-room-48.wav */,
+				E582B9C57C9189AE67791AAD /* gl-ir-rumble-44.wav */,
+				EC5418B4AF2B184CF6BD0907 /* gl-ir-rumble-48.wav */,
+				61DD414EC8D5374977527E41 /* gl-kick-44.caf */,
+				15E94444377A735F980B6576 /* gl-kick.caf */,
+				D4AD97F4223EA9E5A71AC60D /* gl-noise-44.caf */,
+				0A1B295DEB234E546876B812 /* gl-noise.caf */,
+				23899E29038A6CFDC5EDE935 /* gl-ohh-0-44.caf */,
+				9CF88C24B7A50FAD34F18A7F /* gl-ohh-0.caf */,
+				712B2E8F6C44DF3B51B066A6 /* gl-ohh-1-44.caf */,
+				10D35FBCA06EB7CC351BA872 /* gl-ohh-1.caf */,
+				87914D3CCF7814F8D853D551 /* gl-ping-040-44.caf */,
+				5D5FD6CC8AC758BD056F32D3 /* gl-ping-040.caf */,
+				272440F063876F64B3482D0B /* gl-ping-050-44.caf */,
+				31579FAABD2C5CA32A6FDF27 /* gl-ping-050.caf */,
+				C6ED04CA34B18250F9017A15 /* gl-ping-060-44.caf */,
+				748AD924285DCCD217121040 /* gl-ping-060.caf */,
+				B9BA9CE79388D0164D78DC50 /* gl-ping-070-44.caf */,
+				F3EF25E8C3172D3CCCD34D3C /* gl-ping-070.caf */,
+				F2AE61F09F607D9860C60393 /* gl-ping-085-44.caf */,
+				FA7EA4142711D7A707618767 /* gl-ping-085.caf */,
+				0E33074DCC16E77B5CA1E122 /* gl-ping-100-44.caf */,
+				1F9BA5E6EC16ED7C9BAD34F8 /* gl-ping-100.caf */,
+				7D2A8E475CB6244CF3AFE6A9 /* gl-ride-44.caf */,
+				718CF53A560DBA31D7429F32 /* gl-ride.caf */,
+				9169003280F44EE4D2D0C057 /* gl-rim-44.caf */,
+				EF3E7C63174FC6DD3987F8F0 /* gl-rim.caf */,
+				0B4AD33913B756E60D2FF68B /* gl-riser-30-44.caf */,
+				7C025C3F6DB6A490FA99BA72 /* gl-riser-30.caf */,
+				29C2F640FA7FB059313A681D /* gl-riser-52-44.caf */,
+				05BB253DDDFFE1D5C73CD991 /* gl-riser-52.caf */,
+				832023D43CC8500F5D095C3F /* gl-riser-70-44.caf */,
+				B164FDFBEB33C6AD6A3ABC1E /* gl-riser-70.caf */,
+				E4CAF4BF327F3ECD0CBF1619 /* gl-riser-86-44.caf */,
+				0011898F4A85BFFA93167DE6 /* gl-riser-86.caf */,
+				9F819CB2A24A79A82BB57269 /* gl-riser-90-44.caf */,
+				B9DFE2C64C2F3A62E2346567 /* gl-riser-90.caf */,
+				6E7C0A64CEA29B4A619C4F33 /* gl-shk-0-44.caf */,
+				ADB67EBA045A56589574A8E0 /* gl-shk-0.caf */,
+				9D1E04AE37E23EC70ED0F691 /* gl-shk-1-44.caf */,
+				AD2AEA52E90B7782AF52367D /* gl-shk-1.caf */,
+				642479326993D8F6CBA0C833 /* gl-shk-2-44.caf */,
+				4E47D8353EAD59A9D58C7AF1 /* gl-shk-2.caf */,
+				1D35F87D745C85EE36165960 /* gl-tom-52-44.caf */,
+				5E108BCCA813619BC7BCAC32 /* gl-tom-52.caf */,
+				7D78475D85D25298E2B9AD1C /* gl-tom-55-44.caf */,
+				567B3826AD04DE9D6CF9EE96 /* gl-tom-55.caf */,
+				BD0E8CD2AE1793805A2FD8EF /* gl-tom-57-44.caf */,
+				F39459793E7596043BAA7A38 /* gl-tom-57.caf */,
 				787B0A5439C3E8A50E68B805 /* gmute-40-1.caf */,
 				140686A9C708A4BF3CB223A3 /* gmute-40-2.caf */,
 				5AFB979BD9F97A2837BFCEE2 /* gmute-45-1.caf */,
@@ -3671,6 +3866,68 @@
 				BED89CE6E7B8B4D511B1DB7B /* egt-86-3-2.caf in Resources */,
 				B1286CBC8DA1624A989A107A /* egt-86-4-1.caf in Resources */,
 				FD1E26D4279899DD51CC29CB /* egt-86-4-2.caf in Resources */,
+				FD0F8E8B2230CB38C1F96417 /* gl-chh-0-44.caf in Resources */,
+				4E94CA466352AB7EDEB51B30 /* gl-chh-0.caf in Resources */,
+				D12BFAB513F2EA0B4ED2AD5B /* gl-chh-1-44.caf in Resources */,
+				B10B5CD9EE025FDD61F2400F /* gl-chh-1.caf in Resources */,
+				55E990F56D098FD484F33B9D /* gl-chh-2-44.caf in Resources */,
+				1E503EEE8A244D1AA2C5DD8C /* gl-chh-2.caf in Resources */,
+				B6E4DB45A4C8D4A2EB5B84EE /* gl-clap-44.caf in Resources */,
+				05C608D9852DF6FB0C174B7B /* gl-clap.caf in Resources */,
+				F69BE0AC66BE04280DD0161C /* gl-crash-44.caf in Resources */,
+				6FAD8180638829B4B5093060 /* gl-crash.caf in Resources */,
+				0912255C5FCC93D4E968CA39 /* gl-ir-hall-44.wav in Resources */,
+				5FE4AD7E6D87FA9808DBBC4C /* gl-ir-hall-48.wav in Resources */,
+				D9D543DA2777D39E28D0321F /* gl-ir-room-44.wav in Resources */,
+				CC89F172B0C16CAF34D69087 /* gl-ir-room-48.wav in Resources */,
+				9382146C8BFF58973EFE7007 /* gl-ir-rumble-44.wav in Resources */,
+				184E66B98DD5ED5E943B0213 /* gl-ir-rumble-48.wav in Resources */,
+				384D55311C21AA7832CBCFAE /* gl-kick-44.caf in Resources */,
+				025305A12D41A224C2A671B1 /* gl-kick.caf in Resources */,
+				BF7BD294BA9DDA83B5102C21 /* gl-noise-44.caf in Resources */,
+				0D61BBAA4148D71A995AFA11 /* gl-noise.caf in Resources */,
+				83CCD2B18C464606A617C863 /* gl-ohh-0-44.caf in Resources */,
+				14A051AC16CD4CF81BCA4E3F /* gl-ohh-0.caf in Resources */,
+				A60D9B0FE1C148A6965C4611 /* gl-ohh-1-44.caf in Resources */,
+				B48310D24581E5A3B31BBA30 /* gl-ohh-1.caf in Resources */,
+				6EFFD8B761D01964F09AA318 /* gl-ping-040-44.caf in Resources */,
+				0F8C4C908FB9877044A98DCE /* gl-ping-040.caf in Resources */,
+				439F4BE42F0AA96C0390E3D4 /* gl-ping-050-44.caf in Resources */,
+				EEAFBCD21DD6AF971415A24E /* gl-ping-050.caf in Resources */,
+				2A6AF5EA98A55E22483987AF /* gl-ping-060-44.caf in Resources */,
+				01FEE8D461233E1E96A5EEA9 /* gl-ping-060.caf in Resources */,
+				5069C1F5C13DA1E3C12CBF3C /* gl-ping-070-44.caf in Resources */,
+				F1B688978DDB6D3CF8B85D6C /* gl-ping-070.caf in Resources */,
+				5F08C8F4E76B225E6EAD61A9 /* gl-ping-085-44.caf in Resources */,
+				3F057CF707098A1CD5709017 /* gl-ping-085.caf in Resources */,
+				74B8EA73CBFCD7DDAFA328E6 /* gl-ping-100-44.caf in Resources */,
+				676C3C99B7FEBD22422CB33C /* gl-ping-100.caf in Resources */,
+				F12F0D4FE639BC68249AE371 /* gl-ride-44.caf in Resources */,
+				770D11CC61DC49E297F5FCBB /* gl-ride.caf in Resources */,
+				49216044AB66A232F8F7695B /* gl-rim-44.caf in Resources */,
+				5AC4C7CDB843B4CAD9D54667 /* gl-rim.caf in Resources */,
+				EC3AC7711A2A736D3AA15862 /* gl-riser-30-44.caf in Resources */,
+				C24DA68395CA13273BE5DA70 /* gl-riser-30.caf in Resources */,
+				DBED3EDD6F08C64CC7721915 /* gl-riser-52-44.caf in Resources */,
+				FC73E017539FF8D8ED09AAD8 /* gl-riser-52.caf in Resources */,
+				348928CF7F5DE0990D66F76E /* gl-riser-70-44.caf in Resources */,
+				D8E45EC40D6C622979681F4A /* gl-riser-70.caf in Resources */,
+				C7C8EF9832CE214B12135ACA /* gl-riser-86-44.caf in Resources */,
+				A2E288AD988233173510A929 /* gl-riser-86.caf in Resources */,
+				242CB49975EBEA97D4C63E74 /* gl-riser-90-44.caf in Resources */,
+				ADEC966D8ACFA1841D48192E /* gl-riser-90.caf in Resources */,
+				281BD13BD4AE35031B113EF6 /* gl-shk-0-44.caf in Resources */,
+				0221D7EDE0F91F78BBCC2DC9 /* gl-shk-0.caf in Resources */,
+				A191DBDF5FD0EEDCAEAF461A /* gl-shk-1-44.caf in Resources */,
+				A4017E539A962F14AA8E7749 /* gl-shk-1.caf in Resources */,
+				2742A4974E7D9982898F0F79 /* gl-shk-2-44.caf in Resources */,
+				84E6B8786547ABBD8EEF4B39 /* gl-shk-2.caf in Resources */,
+				EC9819D926D9D278A78FFD96 /* gl-tom-52-44.caf in Resources */,
+				91EC050F9C4578C425A076CA /* gl-tom-52.caf in Resources */,
+				B8B785D41750D64EC6B505F1 /* gl-tom-55-44.caf in Resources */,
+				B0A619B666BF4C118911C2E6 /* gl-tom-55.caf in Resources */,
+				9D70009319910B69B680CE99 /* gl-tom-57-44.caf in Resources */,
+				26CDBCB453BFE5144B7AB202 /* gl-tom-57.caf in Resources */,
 				BE650979ED5F8CB230F5FF84 /* gmute-40-1.caf in Resources */,
 				C4E3584B5F7C2912C28FA770 /* gmute-40-2.caf in Resources */,
 				F07A1C8FC00567EE40788DDC /* gmute-45-1.caf in Resources */,
@@ -4280,6 +4537,7 @@
 				DA6EFD26386A1F1603E7DE80 /* song-boogie-shoes.json in Resources */,
 				C86F76A99FD9DDFE3C3A37A6 /* song-dockery.json in Resources */,
 				F7CD8211EFC215035257192D /* song-friars-point.json in Resources */,
+				F036EF0D12E8B8FE649C7B23 /* song-gegenlicht.json in Resources */,
 				B3A80A16A157B8AA0A3A37BE /* song-gezeiten.json in Resources */,
 				69C7A11D3DA5BD956B1142F2 /* song-halbschatten.json in Resources */,
 				A5A68B7782E2870135698A42 /* song-halsted.json in Resources */,
@@ -4464,6 +4722,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				054A003EAFCDFFA4439BBE4B /* AccountStore.swift in Sources */,
+				34E6CBAD175AF89B8AD43BA3 /* AcidRack.swift in Sources */,
 				B7D50027310A7BC4DE6033E4 /* AgentSheet.swift in Sources */,
 				E41379494ACB34670B97F04A /* AppModel+Chat.swift in Sources */,
 				8E06D303F6A072274A6AA5EF /* AppModel.swift in Sources */,
@@ -4481,6 +4740,7 @@
 				B31B3F0FABFDD36B45A8069E /* ChatContext.swift in Sources */,
 				C8319DF97ACD2140A06E8D64 /* ChatStore.swift in Sources */,
 				0D0C5243B3D5B74AC76FC97F /* CoachPanel.swift in Sources */,
+				A49B98F1E083FF3A5E494D10 /* Console.swift in Sources */,
 				1F3AFA4AA18356CF3436EE95 /* Convolver.swift in Sources */,
 				17DAC0C7D741F74668A07811 /* CountInSplash.swift in Sources */,
 				FF098609992B64F48C556EAA /* DebugHooks.swift in Sources */,
@@ -4594,7 +4854,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 125;
+				CURRENT_PROJECT_VERSION = 126;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -4661,7 +4921,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 125;
+				CURRENT_PROJECT_VERSION = 126;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;

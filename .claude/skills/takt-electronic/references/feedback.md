@@ -56,6 +56,14 @@ meant, what changed. Add to the bottom of a section when he says something new.
   in a worktree while he was away, so his ears had not passed the record before it was ported:
   the mp3 pair is in `~/Desktop/takt/gezeiten/`.
 
+- **2026-11-10.** Gegenlicht, rendered by Claude in the Claude app: "this is FANTASTIC. now
+  provide instructions i can pass on to claude code so they can faithfully implement this track
+  in xcode/swift" → `misc/GEGENLICHT.md`; then here: "now implement GEGENLICHT in the app…
+  make sure we get the EXACT same track implemented in swift/xcode, and then use our skills to
+  also create charts for the track." The first record the dub techno console could not play:
+  a second console (`AcidRack`, `system.md` "The acid rack"), every stem nulled against the
+  reference (`DUB-TECHNO.md` §10), the parts by `takt-chart`. 0.1 (126).
+
 ## Open, to hear
 
 - **Gezeiten, the record itself** (2026-11-10): whether the bell as the motor works for him, its

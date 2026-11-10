@@ -621,8 +621,75 @@ app's render raised 8 dB to its level). Its mix was set against Halbschatten's o
 by block, since nothing else could judge it. Not rendered from the installed Mac app (§8's step
 4): the simulator only.
 
+## 10. Gegenlicht: techno on a second console (2026-11-10, 0.1 (126))
+
+Bart, on the record Claude rendered in the Claude app: "this is FANTASTIC"; then "now implement
+GEGENLICHT in the app … make sure we get the EXACT same track implemented in swift/xcode, and
+then use our skills to also create charts for the track." **Gegenlicht** (backlight): techno in
+A minor, 128, 128 bars and a 7 s tail (4:07). The record is `misc/gegenlicht_reference.py`, the
+brief `misc/GEGENLICHT.md`; the handoff's lossless master (`misc/gegenlicht/reference.flac`)
+and parts stay out of git (`misc/gegenlicht-handoff.zip`, 54 MB, on this iMac).
+
+**Not on `Rack`.** The record has no bassline (the rumble: the kick bus and two echoes of it
+through a 0.9 s impulse with no predelay, the low band, tanh), a 303 that runs from the first
+sample, a ping bus with its own echo, a pad gated a bar at a time, two duck envelopes and log
+lanes. So it got a console of its own, `Takt/Audio/AcidRack.swift`, behind a protocol both
+consoles keep (`Console.swift`); `Rack.swift` did not change, and Halbschatten and Gezeiten play
+what they played. The skill's `references/system.md` "The acid rack" has the signal flow; what
+the song file gained: `acidRack`, a pan per hit (`p`), a gate in fractional ticks (`hold`),
+`duck.second`. The renderer routes `rackAcid` and `rackPad` notes to it; the pad's notes from
+your side (keys, and the notes a level leaves out) open its gates even with the keys channel
+muted, the band's do only while it is not.
+
+**The reference logs itself**, so `scripts/gegenlicht.py` patches nothing: it runs it (this
+Mac's numpy/scipy/numba differ from the Claude app's on one sample of 21.8 million, by one
+LSB), cuts the one-shots (`gl-*`, 21 MB at both rates, the hat bus's lowpass and the tom bus's
+highpass baked in) and the three impulses, and writes `songs/gegenlicht-events.json` with the
+lanes read out of the reference's own source. `songs/gegenlicht.py` makes the song and asserts
+the 303's slides are exactly "a note that starts while the gate is open".
+
+**Measured** (`scripts/takt/gl-ab.py`, at 44.1 kHz, every stem over the whole song):
+
+| stem | level app / ref (dBFS) | null (dB) |
+|---|---|---|
+| kick | −17.5 / −17.5 | −77.8 |
+| rumble | −24.1 / −24.1 | −72.3 |
+| acid | −23.3 / −23.3 | −73.1 |
+| acid echo | −30.5 / −30.5 | −65.7 |
+| ping | −34.0 / −34.0 | −60.8 |
+| pad | −31.3 / −31.3 | −63.4 |
+| hats, ride, shaker, clap, rim, toms, crash | within 0.01 dB | −53 to −62 |
+| hall, room | within 0.01 dB | −64.0, −54.4 |
+| riser | −45.9 / −45.9 | −40.5 |
+| noise | −52.3 / −52.4 | none: the 32 s loop matches in level, not in samples |
+
+The master: mean −19.34 / −19.34 dBFS (the reference − 8 dB), peak −9.01 / −9.01, side/mid
+0.239 / 0.239, octave bands within 0.07 dB in all six of the brief's passages, null −65.8 dB
+over the first 32 s (before the noise loops) and −34.7 over the song. At 48 kHz: bands within
+0.11 dB, mean −19.35, peak −9.01 against −8.79 for the resampled reference (Gezeiten's 0.12).
+
+**The parts** (the `takt-chart` skill; LEVELING.md §4 and CHARTING.md rule 20): the melody is
+the acid line in its own octave, home A2–E3 under the right hand, 0 moves to Medium, with a line
+of the part's own in the bars the record has no acid; the chords are the pad a hit a bar,
+shape 1 3 5.
+
+**Running it again:**
+
+```bash
+V=~/.cache/takt-venv/bin/python
+$V apps/takt/scripts/gegenlicht.py --keep <work>               # verifies against misc/gegenlicht/reference.flac
+python3 apps/takt/scripts/songs/gegenlicht.py
+# build, install on the booted simulator, then:
+GL_SR=44100 $V scripts/takt/gl-ab.py render <work>             # 18 renders, about 70 minutes
+GL_SR=44100 $V scripts/takt/gl-ab.py stems <work> && GL_SR=44100 $V scripts/takt/gl-ab.py master <work>
+```
+
+**Not checked: Bart's ears** on the app against the record (`~/Desktop/takt/gegenlicht/`, the
+app's render raised 8 dB), and the parts played.
+
 ## Files
 
+- `misc/gegenlicht_reference.py`, `misc/GEGENLICHT.md`, `misc/gegenlicht_reference.mp3`: Gegenlicht's reference; `scripts/gegenlicht.py`, `scripts/songs/gegenlicht.py`, `scripts/songs/gegenlicht-events.json`; `Takt/Sounds/gl-*`; `Takt/Audio/AcidRack.swift`, `Takt/Audio/Console.swift`; `scripts/takt/gl-ab.py` (repo root)
 - `misc/gezeiten_reference.py`: Gezeiten's reference; `scripts/gezeiten.py` (sounds and the event log), `scripts/songs/gezeiten.py`, `scripts/songs/gezeiten-events.json`; `Takt/Sounds/gz-*`; `scripts/takt/gz-ab.py` (repo root)
 - `misc/halbschatten_reference.py`, `misc/Halbschatten.mp3`, `misc/HALBSCHATTEN.md`: Halbschatten's reference and brief
 - `scripts/halbschatten.py` (sounds and the event log), `scripts/songs/halbschatten.py`, `scripts/songs/halbschatten-events.json`

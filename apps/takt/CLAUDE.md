@@ -2215,6 +2215,13 @@ cover stealing anchors, a hand of 30 moves on a Level 2 song, a Beginner on one 
   gate before the club), Walfisch (the building in 2012). Not done: a launch sound and a menu band
   per vibe (the Chicago shuffle plays under both); not shipped to TestFlight.
 
+- **Gegenlicht, techno on a second console (`AcidRack`): 0.1 (126), 2026-11-10.** Bart's record
+  from the Claude app, implemented exactly: every stem nulls against the reference (−53 to −78
+  dB; the noise bed matches in level), the master's bands within 0.07 dB. A new console behind
+  `Console` (the rumble, the 303, the ping, the gated pad, two ducks), `Rack` untouched; charts
+  by `takt-chart` (melody 0 hand moves to Medium, a line of its own before bar 24). Pinned by
+  default (`gegenlichtShipped`). `DUB-TECHNO.md` §10; checks 551/551; installed on the M4; the
+  mp3 pair in `~/Desktop/takt/gegenlicht/`. Not heard or played by Bart yet.
 - **Gezeiten, a second record on the dub techno system: 0.1 (123), 2026-11-10.** Bart: "make
   another electronic track, patterned after Halfschatten, but make sure it's a different core
   track concept (can still be dub tech) - make sure to use the correct skills to make the music

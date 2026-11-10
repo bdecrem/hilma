@@ -5980,5 +5980,677 @@
     ]
    }
   ]
+ },
+ "kickGL": {
+  "release": 0.03,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-kick"
+    ]
+   }
+  ]
+ },
+ "kickGL@44": {
+  "release": 0.03,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-kick-44"
+    ]
+   }
+  ]
+ },
+ "glChh0": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-chh-0"
+    ]
+   }
+  ]
+ },
+ "glChh0@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-chh-0-44"
+    ]
+   }
+  ]
+ },
+ "glChh1": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-chh-1"
+    ]
+   }
+  ]
+ },
+ "glChh1@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-chh-1-44"
+    ]
+   }
+  ]
+ },
+ "glChh2": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-chh-2"
+    ]
+   }
+  ]
+ },
+ "glChh2@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-chh-2-44"
+    ]
+   }
+  ]
+ },
+ "glOhh0": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-ohh-0"
+    ]
+   }
+  ]
+ },
+ "glOhh0@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-ohh-0-44"
+    ]
+   }
+  ]
+ },
+ "glOhh1": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-ohh-1"
+    ]
+   }
+  ]
+ },
+ "glOhh1@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-ohh-1-44"
+    ]
+   }
+  ]
+ },
+ "glRide": {
+  "release": 0.1,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-ride"
+    ]
+   }
+  ]
+ },
+ "glRide@44": {
+  "release": 0.1,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-ride-44"
+    ]
+   }
+  ]
+ },
+ "glCrash": {
+  "release": 0.3,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-crash"
+    ]
+   }
+  ]
+ },
+ "glCrash@44": {
+  "release": 0.3,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-crash-44"
+    ]
+   }
+  ]
+ },
+ "glShk0": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-shk-0"
+    ]
+   }
+  ]
+ },
+ "glShk0@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-shk-0-44"
+    ]
+   }
+  ]
+ },
+ "glShk1": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-shk-1"
+    ]
+   }
+  ]
+ },
+ "glShk1@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-shk-1-44"
+    ]
+   }
+  ]
+ },
+ "glShk2": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-shk-2"
+    ]
+   }
+  ]
+ },
+ "glShk2@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-shk-2-44"
+    ]
+   }
+  ]
+ },
+ "glClap": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-clap"
+    ]
+   }
+  ]
+ },
+ "glClap@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-clap-44"
+    ]
+   }
+  ]
+ },
+ "glRim": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-rim"
+    ]
+   }
+  ]
+ },
+ "glRim@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-rim-44"
+    ]
+   }
+  ]
+ },
+ "glTom52": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-tom-52"
+    ]
+   }
+  ]
+ },
+ "glTom52@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-tom-52-44"
+    ]
+   }
+  ]
+ },
+ "glTom55": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-tom-55"
+    ]
+   }
+  ]
+ },
+ "glTom55@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-tom-55-44"
+    ]
+   }
+  ]
+ },
+ "glTom57": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-tom-57"
+    ]
+   }
+  ]
+ },
+ "glTom57@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-tom-57-44"
+    ]
+   }
+  ]
+ },
+ "glPing040": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-ping-040"
+    ]
+   }
+  ]
+ },
+ "glPing040@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-ping-040-44"
+    ]
+   }
+  ]
+ },
+ "glPing050": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-ping-050"
+    ]
+   }
+  ]
+ },
+ "glPing050@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-ping-050-44"
+    ]
+   }
+  ]
+ },
+ "glPing060": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-ping-060"
+    ]
+   }
+  ]
+ },
+ "glPing060@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-ping-060-44"
+    ]
+   }
+  ]
+ },
+ "glPing070": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-ping-070"
+    ]
+   }
+  ]
+ },
+ "glPing070@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-ping-070-44"
+    ]
+   }
+  ]
+ },
+ "glPing085": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-ping-085"
+    ]
+   }
+  ]
+ },
+ "glPing085@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-ping-085-44"
+    ]
+   }
+  ]
+ },
+ "glPing100": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-ping-100"
+    ]
+   }
+  ]
+ },
+ "glPing100@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-ping-100-44"
+    ]
+   }
+  ]
+ },
+ "glRiser30": {
+  "release": 0.2,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-riser-30"
+    ]
+   }
+  ]
+ },
+ "glRiser30@44": {
+  "release": 0.2,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-riser-30-44"
+    ]
+   }
+  ]
+ },
+ "glRiser52": {
+  "release": 0.2,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-riser-52"
+    ]
+   }
+  ]
+ },
+ "glRiser52@44": {
+  "release": 0.2,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-riser-52-44"
+    ]
+   }
+  ]
+ },
+ "glRiser70": {
+  "release": 0.2,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-riser-70"
+    ]
+   }
+  ]
+ },
+ "glRiser70@44": {
+  "release": 0.2,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-riser-70-44"
+    ]
+   }
+  ]
+ },
+ "glRiser86": {
+  "release": 0.2,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-riser-86"
+    ]
+   }
+  ]
+ },
+ "glRiser86@44": {
+  "release": 0.2,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-riser-86-44"
+    ]
+   }
+  ]
+ },
+ "glRiser90": {
+  "release": 0.2,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-riser-90"
+    ]
+   }
+  ]
+ },
+ "glRiser90@44": {
+  "release": 0.2,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-riser-90-44"
+    ]
+   }
+  ]
+ },
+ "glNoise": {
+  "release": 0.2,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-noise"
+    ]
+   }
+  ]
+ },
+ "glNoise@44": {
+  "release": 0.2,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "gl-noise-44"
+    ]
+   }
+  ]
  }
 }

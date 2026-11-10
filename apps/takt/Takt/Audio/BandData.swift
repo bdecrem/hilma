@@ -21,6 +21,9 @@ struct BandData: Decodable {
         var late: Double? = nil
         /// A linear gain on top of the velocity's (a level the velocity curve can't reach).
         var g: Double? = nil
+        /// A pan of the hit's own, −1…1, on a mono file (cos/sin of (p + 1)·π/4 a side, the
+        /// reference's law): Gegenlicht's toms and pings. Absent: the file as it is.
+        var p: Double? = nil
     }
 
     struct Note: Decodable {
@@ -33,6 +36,9 @@ struct BandData: Decodable {
         /// As a hit's: later than `t` by this many ticks, and a linear gain.
         var late: Double? = nil
         var g: Double? = nil
+        /// How long the gate holds, in ticks, when a whole number of them is not it (an acid
+        /// note of 1.5 steps is 4.5 ticks): absent, `len`.
+        var hold: Double? = nil
     }
 
     struct Channels: Decodable {
@@ -69,6 +75,9 @@ struct BandData: Decodable {
     /// The console of a song mixed to a reference (`Rack`): lanes, the stab bus, echoes, the
     /// pad, the lead, the kit's buses, the hall and the room, the master.
     var rack: Rack.Settings?
+    /// Gegenlicht's console (`AcidRack`): the kick bus and its rumble, the acid voice and its
+    /// echo, the ping, the gated pad, the kit's buses, the hall, the room, the master.
+    var acidRack: AcidRack.Settings?
     var channels: Channels
 
     struct Duck: Decodable {
@@ -81,6 +90,16 @@ struct BandData: Decodable {
         var length: Double? = nil
         /// Depth per channel (bass, keys, horns, monitor).
         var channels: [String: Double]
+        /// A second envelope from the same kicks, in its own shape (Gegenlicht's rumble ducks
+        /// longer than the rest): the console reads it.
+        var second: Shape? = nil
+
+        struct Shape: Decodable {
+            let attack: Double
+            let hold: Double
+            let release: Double
+            let length: Double
+        }
     }
 
     struct Dub: Decodable {

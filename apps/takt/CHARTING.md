@@ -335,6 +335,16 @@ every song and part.
     line: the second bar opens on E5. Write a motor's downbeats as a melody of their own before
     filling in the steps between.
 
+20. **Beginner's `minBeats` reads the anchors' median length, so anchors of two lengths can lose
+    a key** (Gegenlicht, 2026-11-10). An acid line's notes are all shorter than a beat, so
+    `minBeats` falls back to the usual length of the weight-1 notes, the upper median. With an
+    A2 of 1.5 steps and an E3 of 2.5 steps as the anchors, half and half, the median was the
+    longer one and Beginner kept only the E3: one key with a rhythm (rule 7; measure.ts printed
+    span 0). The cure was a third anchor of the short length (the A2 or D3 on step 12), which
+    moves the median to it; then the ladder's own Beginner `gap` (2.4 s, over a 1.9 s bar at
+    128) left it at 0.22 against the next rung's 0.58, and the song's patch sets tier 1's `gap`
+    to 0.9 (0.44 · 0.72). Read span and keys on Beginner, not only the onsets.
+
 ## Where this comes from
 
 Rhythm-game charters (Rock Band, Guitar Hero, Clone Hero) chart the top difficulty first and
