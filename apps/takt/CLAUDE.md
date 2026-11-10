@@ -10,7 +10,7 @@ Catalyst (macOS 14+) with the Mac idiom ("Optimize Interface for Mac", device fa
 iPhone-only on iOS (no iPad). Everything runs on the device; an account on ola.cx (Dodo's shape,
 since 2026-10-25, Bart's call over the brief's "no login") only syncs progress.
 
-## The two skills: always, for a track and for anything leveled (2026-11-08)
+## The skills: always, for a track and for anything leveled (2026-11-08; electronic 2026-11-09)
 
 Bart, 2026-11-08, after the skills were built and tested: "make sure to update the claude.md
 etc so that these skills are always used when we create new tracks or charts." A standing rule,
@@ -28,6 +28,14 @@ on every machine, in every session, for subagents too:
   **`takt-chart`** (`/takt-chart`, `.claude/skills/takt-chart/SKILL.md`) before changing a
   weight, a `from`, a patch, a step or a prompt. It judges on both axes of `LEVELING.md` and
   runs `scripts/takt/measure.ts` before and after.
+- **An electronic track, or the sound of one** (dub techno today: Halbschatten, Abyss; a
+  record that must sound exactly like a rendered file; the stab, the echo, the reverbs, the
+  pad, the lead, the mix or the master; a new synth voice or effect in the engine): invoke
+  **`takt-electronic`** (`/takt-electronic`, `.claude/skills/takt-electronic/SKILL.md`,
+  added 2026-11-09 on Bart's ask). It documents the production system (a Python reference as
+  the studio, its samples and logged events as the song, `Audio/Rack.swift` as the console),
+  every instrument, both reverbs, the settings that keep the app's render the reference's,
+  and the musical principles the record was generated from. `takt-blues` is for the blues.
 - **Both when both apply.** A new track's charts come out of `takt-blues`' weights; when a
   level then sits outside its band or hand budget and the weights cannot bring it in, that is
   `takt-chart`'s job by its levers, not a guess in the generator. Charts for an existing track

@@ -508,6 +508,10 @@ times real time on the M4.
 
 **Not checked: Bart's ears.** The mp3, then the app, at the same volume.
 
+The system as a whole (every instrument, both reverbs, the fidelity checklist, and the musical
+principles the record was generated from) is the `takt-electronic` skill:
+`.claude/skills/takt-electronic/` (2026-11-09).
+
 ## Files
 
 - `misc/halbschatten_reference.py`, `misc/Halbschatten.mp3`, `misc/HALBSCHATTEN.md`: Halbschatten's reference and brief
