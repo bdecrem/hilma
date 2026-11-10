@@ -189,6 +189,9 @@ const mapBg = document.createElement('canvas'); mapBg.width = W; mapBg.height = 
   rect(m, 42, 47, 4, 7, C.lit); rect(m, 42, 47, 1, 7, '#fff3c4');
   oval(m, 44, 57, 6, 2, 'rgba(255,217,106,0.35)');
   oak(m, 160, 79, 8);
+  // the meeting room, just off the courtyard, its door facing the oak
+  rect(m, 203, 77, 6, 7, C.path); rect(m, 203, 77, 6, 1, C.pathEdge); rect(m, 203, 83, 6, 1, C.pathEdge);
+  wing(m, 212, 68, 22, 22, [80]);
   rect(m, 4, 98, 46, 42, C.ink); rect(m, 5, 99, 44, 40, C.asphalt);
   [19, 33].forEach(x => rect(m, x, 100, 1, 18, C.line));
   car(m, 7, 102, '#2b3fff'); car(m, 21, 102, '#ff9ccf'); car(m, 35, 102, '#fff7e6');
@@ -577,7 +580,8 @@ const MAP = [
   { name: 'Study 1', r: [34, 30, 20, 26], walk: { x: 44, y: 60 }, def: 'open', on: { look: "Study 1. The light's on. Someone's typing in there.", open: knockAndEnter } },
   lockedStudy(2, 228, 60), lockedStudy(3, 276, 60), lockedStudy(4, 190, 128), lockedStudy(5, 130, 128),
   lockedStudy(6, 250, 9), lockedStudy(7, 266, 9), lockedStudy(8, 282, 9), lockedStudy(9, 300, 106), lockedStudy(10, 300, 122),
-  { name: 'main hall', r: [128, 8, 64, 30], walk: { x: 160, y: 44 }, def: 'open', on: { look: 'The main hall. Seminars happen in there. Like this one.', open: "Not yet. I haven't visited the studies." } },
+  { name: 'main hall', r: [128, 8, 64, 30], walk: { x: 160, y: 44 }, def: 'open', on: { look: 'The main hall. Lounge, mailboxes, coffee.', open: "Just the lounge. Nobody's in. Everybody's in their study." } },
+  { name: 'meeting room', r: [206, 66, 30, 30], walk: { x: 206, y: 80 }, def: 'open', on: { look: 'The meeting room. Seminars happen in there. Like this one.', open: "Not yet. I haven't visited the studies." } },
   { name: 'picnic table', r: [122, 73, 20, 16], walk: { x: 132, y: 64 }, def: 'look', on: { look: 'A picnic table. Someone carved a regression line into it.', use: 'I sit for a second. Very restorative. Back to it.' } },
   { name: 'picnic table', r: [178, 73, 20, 16], walk: { x: 188, y: 64 }, def: 'look', on: { look: 'A picnic table. The good one, in the shade. Taken at noon.', use: 'I sit for a second. Very restorative. Back to it.' } },
   { name: 'courtyard oak', r: [148, 68, 24, 24], walk: { x: 160, y: 64 }, def: 'look', on: { look: 'A big oak in a brick courtyard. Good for thinking under.' } },
