@@ -269,6 +269,10 @@ function makeRoomBg(bart) {
   rect(m, 158, 20, 30, 24, '#5c2e18'); rect(m, 160, 22, 26, 20, '#d9b48a');
   rect(m, 162, 24, 7, 7, '#ffd93b'); rect(m, 171, 25, 7, 6, '#ff9ccf'); rect(m, 163, 33, 8, 6, '#7ee0b5'); rect(m, 174, 33, 9, 7, '#fff7e6'); rect(m, 181, 24, 2, 2, '#ff5a1f');
   rect(m, 175, 35, 6, 1, '#2b3fff'); rect(m, 175, 37, 4, 1, '#2b3fff');
+  // framed record: Gegenlicht, a warm light through blinds, the disc sliding out
+  rect(m, 198, 14, 30, 28, '#5c2e18'); rect(m, 200, 16, 26, 24, '#141414');
+  rect(m, 201, 17, 11, 22, '#ffd96a'); for (let y = 18; y < 39; y += 3) rect(m, 201, y, 11, 1, '#b8873a');
+  disc(m, 218, 28, 8, '#0c0c0c'); disc(m, 218, 28, 6, '#26262b'); disc(m, 218, 28, 4, '#0c0c0c'); disc(m, 218, 28, 2, '#ff5a1f'); rect(m, 218, 28, 1, 1, '#141414');
   }
   // bookshelf
   rect(m, 266, 10, 48, 96, '#5c2e18'); rect(m, 269, 13, 42, 90, '#3d2112');
@@ -688,6 +692,7 @@ const ROOM = [
     talk: talkBart
   } },
   { name: 'Takt poster', r: [130, 16, 22, 32], walk: { x: 142, y: 130 }, def: 'look', on: { look: async () => { await say('you', 'A poster for Takt. Eins, zwei, drei, vier.'); await ringPhone(); } } },
+  { name: 'Gegenlicht', r: [196, 12, 34, 32], walk: { x: 212, y: 130 }, def: 'play', href: 'https://www.daskollektiv.rip/dk024.html', on: { look: 'A framed record. Das Kollektiv, Gegenlicht. Techno with an acid riff, one warm light behind the blinds.', play: 'Gegenlicht. Playing in a new tab.' } },
   { name: 'pinboard', r: [158, 20, 30, 24], walk: { x: 172, y: 130 }, def: 'look', on: { look: 'Sticky notes. One says: ASK CLAUDE.' } },
   { name: 'bookshelf', r: [266, 10, 48, 90], walk: { x: 284, y: 132 }, def: 'push', on: { look: 'Social science. Lots of it.', push: 'No secret passage. I checked.' } },
   { name: 'window', r: [44, 14, 78, 60], walk: { x: 84, y: 130 }, def: 'look', on: { look: 'The hills, the Dish, Stanford down below. Good office.' } },
@@ -724,7 +729,10 @@ function act(e, verb) {
   if (S.line) { skipLine(); return; }
   if (S.busy || S.choices || S.zoomT >= 0) return;
   const p = toScene(e), h = hit(p[0], p[1]);
-  if (h) { run(() => doAction(verb || h.def, h)); return; }
+  if (h) {
+    if (h.href && (verb || h.def) === h.def) window.open(h.href, '_blank', 'noopener');
+    run(() => doAction(verb || h.def, h)); return;
+  }
   if (verb) return;
   if (S.scene === 'map') { const ry = rail(p[1]), lo = ry === 9 ? 10 : ry === 64 ? 10 : 50, hi = ry === 9 ? 82 : ry === 64 ? 304 : 292; goTo({ x: Math.max(lo, Math.min(hi, p[0])), y: ry }); }
   else goTo({ x: p[0], y: p[1] });
