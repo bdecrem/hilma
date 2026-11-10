@@ -30,7 +30,8 @@ enum Vibe: String, CaseIterable, Identifiable {
     }
 
     /// A pinned set last changed before this day never had a say about electronic tracks
-    /// (they all sat under All tracks by default): it gets the electronic defaults too.
+    /// (they all sat under All tracks by default): it gets the electronic defaults too
+    /// (`StageScreen.joinedLater`).
     static let pinsEpoch = ISO8601DateFormatter().date(from: "2026-11-10T00:00:00Z")!
 
     var id: String { rawValue }

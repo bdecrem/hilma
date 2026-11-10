@@ -823,9 +823,8 @@ final class AppModel {
         if let list = UserDefaults.standard.string(forKey: "Pinned") { return list.split(separator: ",").map(String.init) }
         #endif
         guard let pins = progress.snapshot.pins else { return StageScreen.defaultPins }
-        // A set from before the vibes had no say about electronic tracks: it gets their defaults.
-        if pins.at < Vibe.pinsEpoch { return pins.songs + StageScreen.electronicPins.filter { !pins.songs.contains($0) } }
-        return pins.songs
+        // A set older than a track's place in the default set had no say about it: it gets it.
+        return pins.songs + StageScreen.joinedLater.filter { $0.at > pins.at && !pins.songs.contains($0.song) }.map(\.song)
     }
 
     /// Whether a card's track is pinned: a mod by its own pin when the player set one, else it

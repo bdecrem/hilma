@@ -17,6 +17,11 @@ struct StageScreen: View {
     static let bluesPins = Array(Song.catalog.prefix(6))
     static let electronicPins = ["song-halbschatten", "song-hypnotist-2", "song-warm-nine", "song-abyss"]
     static let defaultPins = bluesPins + electronicPins
+    /// Tracks that joined the default set after players had sets of their own, and when: a
+    /// stored set older than the date gets the track too (it had no say about it), one changed
+    /// since is as the player set it. The electronic defaults joined with the vibes; a new
+    /// track that should open pinned goes here with the day it shipped.
+    static let joinedLater: [(song: String, at: Date)] = electronicPins.map { ($0, Vibe.pinsEpoch) }
     /// The other vibe's pinned tracks, open under their header. Stored: once opened they stay
     /// open, on either vibe and across launches, until the player closes them (Bart, 2026-11-10).
     @AppStorage("stageOtherOpen") private var otherOpen = false
