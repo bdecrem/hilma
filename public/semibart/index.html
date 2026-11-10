@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#000000">
-<meta name="description" content="Ten studies. Ten fellows. One afternoon. A point-and-click walk through CASBS.">
+<meta name="description" content="Fourteen studies. One afternoon. A point-and-click walk through CASBS.">
 <meta property="og:title" content="CASBS Quest">
-<meta property="og:description" content="Ten studies. Ten fellows. One afternoon.">
+<meta property="og:description" content="Fourteen studies. One afternoon.">
 <meta property="og:url" content="https://ola.cx/semibart">
 <meta property="og:image" content="https://ola.cx/semibart/og.png">
 <meta property="og:image:width" content="1200">
@@ -98,7 +98,7 @@ button { font: inherit; background: none; border: 0; margin: 0; cursor: pointer;
     <div class="card">
       <p class="eyebrow">A point-and-click visit</p>
       <h1 id="titleH">CASBS Quest</h1>
-      <p class="tag">Ten studies. Ten fellows. One afternoon.</p>
+      <p class="tag">Fourteen studies. One afternoon.</p>
       <hr>
       <dl>
         <dt>Click</dt><dd>walk, talk, open</dd>
@@ -163,6 +163,10 @@ function wing(m, x, y, w, h, doorYs, side = -1) {
   rect(m, sx, y + 1, 4, h + 3, C.wall); rect(m, side < 0 ? sx : sx + 3, y + 1, 1, h + 3, C.fascia);
   doorYs.forEach(dy => { rect(m, sx, dy - 3, 4, 7, C.fascia); rect(m, gx, dy - 2, 3, 5, C.glass); rect(m, gx, dy - 2, 3, 1, C.glassHi); });
 }
+function litDoor(m, dx, top, h) {
+  rect(m, dx - 2, top, 4, h, C.lit); rect(m, dx - 2, top, 1, h, '#fff3c4');
+  oval(m, dx, top + h + 3, 6, 2, 'rgba(255,217,106,0.35)');
+}
 function oak(m, x, y, r) { oval(m, x + 1, y + r + 2, r, 2, C.shadow); rect(m, x - 1, y + r - 2, 2, 5, C.trunk); disc(m, x, y, r, C.oak2); disc(m, x - 1, y - 1, r - 1, C.oak); disc(m, x - Math.round(r / 3), y - Math.round(r / 3), Math.max(1, Math.round(r / 3)), C.oak3); }
 function car(m, x, y, col) { rect(m, x, y, 10, 15, C.ink); rect(m, x + 1, y + 1, 8, 13, col); rect(m, x + 2, y + 3, 6, 3, C.glassHi); rect(m, x + 2, y + 10, 6, 2, C.glassHi); }
 function cow(m, x, y) { rect(m, x, y + 2, 9, 5, C.ink); rect(m, x + 1, y + 3, 7, 3, '#fffaf0'); rect(m, x + 2, y + 3, 2, 2, C.ink); rect(m, x + 6, y + 4, 1, 2, C.ink); rect(m, x + 8, y + 1, 4, 4, C.ink); rect(m, x + 9, y + 2, 2, 2, '#fffaf0'); rect(m, x + 1, y + 7, 1, 2, C.ink); rect(m, x + 7, y + 7, 1, 2, C.ink); }
@@ -187,8 +191,8 @@ const mapBg = document.createElement('canvas'); mapBg.width = W; mapBg.height = 
   building(m, 128, 8, 64, 20, 10, [160], true);
   [140, 180].forEach(dx => { rect(m, dx - 3, 28, 6, 10, C.fascia); rect(m, dx - 2, 29, 4, 9, C.glass); rect(m, dx - 2, 29, 1, 9, C.glassHi); });
   building(m, 100, 98, 120, 16, 8, DOORS_C);
-  rect(m, 42, 47, 4, 7, C.lit); rect(m, 42, 47, 1, 7, '#fff3c4');
-  oval(m, 44, 57, 6, 2, 'rgba(255,217,106,0.35)');
+  // the five studies with the lights on
+  litDoor(m, 180, 29, 9); litDoor(m, 292, 47, 7); litDoor(m, 76, 47, 7); litDoor(m, 114, 115, 7);
   oak(m, 160, 79, 8);
   // the meeting room, just off the courtyard, its door facing the oak
   rect(m, 108, 77, 10, 7, C.path); rect(m, 108, 77, 10, 1, C.pathEdge); rect(m, 108, 83, 10, 1, C.pathEdge);
@@ -217,9 +221,9 @@ const mapBg = document.createElement('canvas'); mapBg.width = W; mapBg.height = 
 })();
 
 /* ---------- Bart's study ---------- */
-const roomBg = document.createElement('canvas'); roomBg.width = W; roomBg.height = H;
-(function () {
-  const m = roomBg.getContext('2d'), r = rng(23);
+function makeRoomBg(bart) {
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const m = c.getContext('2d'), r = rng(23);
   // wall: wood panels
   rect(m, 0, 0, W, 106, '#9a5631');
   for (let x = 0; x < W; x += 14) { rect(m, x, 4, 1, 102, '#7f4426'); rect(m, x + 1, 4, 1, 102, '#ac6a42'); }
@@ -250,6 +254,7 @@ const roomBg = document.createElement('canvas'); roomBg.width = W; roomBg.height
   rect(m, 108, 52, 1, 4, '#141414'); rect(m, 112, 52, 1, 4, '#141414'); oval(m, 110, 50, 4, 2, '#141414'); oval(m, 110, 50, 3, 1, '#fffaf0');
   rect(m, 70, 17, 2, 52, '#5c2e18'); rect(m, 95, 17, 2, 52, '#5c2e18');
   rect(m, 42, 72, 82, 3, '#5c2e18'); rect(m, 42, 72, 82, 1, '#c27e52');
+  if (bart) {
   // Takt poster
   rect(m, 130, 16, 22, 32, '#141414');
   rect(m, 134, 19, 14, 3, '#f0efea'); rect(m, 139, 22, 4, 9, '#f0efea');
@@ -258,6 +263,7 @@ const roomBg = document.createElement('canvas'); roomBg.width = W; roomBg.height
   rect(m, 158, 20, 30, 24, '#5c2e18'); rect(m, 160, 22, 26, 20, '#d9b48a');
   rect(m, 162, 24, 7, 7, '#ffd93b'); rect(m, 171, 25, 7, 6, '#ff9ccf'); rect(m, 163, 33, 8, 6, '#7ee0b5'); rect(m, 174, 33, 9, 7, '#fff7e6'); rect(m, 181, 24, 2, 2, '#ff5a1f');
   rect(m, 175, 35, 6, 1, '#2b3fff'); rect(m, 175, 37, 4, 1, '#2b3fff');
+  }
   // bookshelf
   rect(m, 266, 10, 48, 96, '#5c2e18'); rect(m, 269, 13, 42, 90, '#3d2112');
   const cols = ['#ff5a1f', '#2b3fff', '#ffd93b', '#ff9ccf', '#7ee0b5', '#fff7e6', '#c46a4a', '#34446e', '#2f6b45'];
@@ -267,8 +273,10 @@ const roomBg = document.createElement('canvas'); roomBg.width = W; roomBg.height
     while (x < 309) { const w = 2 + Math.floor(r() * 3), h = 10 + Math.floor(r() * 5); if (r() < 0.1 && k) { x += 4; continue; } rect(m, x, sy + 16 - h, Math.min(w, 309 - x), h, cols[Math.floor(r() * cols.length)]); x += w + (r() < 0.3 ? 1 : 0); }
   });
   // chair back
-  rect(m, 170, 58, 40, 3, '#141414'); rect(m, 168, 61, 44, 36, '#141414'); rect(m, 170, 61, 40, 36, '#3b3d4a'); rect(m, 170, 61, 40, 1, '#4f5262');
-})();
+  if (bart) { rect(m, 170, 58, 40, 3, '#141414'); rect(m, 168, 61, 44, 36, '#141414'); rect(m, 170, 61, 40, 36, '#3b3d4a'); rect(m, 170, 61, 40, 1, '#4f5262'); }
+  return c;
+}
+const roomBg = makeRoomBg(true), roomBgEmpty = makeRoomBg(false);
 
 /* ---------- characters ---------- */
 const P = { W: '#f6f3ec', w: '#d9d5c9', S: '#f2bda6', s: '#dc9d88', r: '#ee9f8f', b: '#e3dccb', E: '#3c5a80', M: '#b8695c', K: '#3a1c18', O: '#ffffff', N: '#1c2540', n: '#34446e', T: '#f2efe6', G: '#e2b23c', L: '#4a3a1e' };
@@ -344,18 +352,21 @@ const mapFull = document.createElement('canvas'); mapFull.width = W; mapFull.hei
   for (let i = 0; i < 120; i++) { const y = r() < 0.5 ? r() * OY : FH - OY + r() * OY; rect(m, r() * W, y, 2, 1, r() < 0.6 ? C.grass2 : C.grass3); }
   m.drawImage(mapBg, 0, OY);
   building(m, 22, 2, 56, 12, 7, DOORS_TOP);
+  litDoor(m, 34, 15, 6);
   [[256, 6, 5], [300, 10, 6], [96, 170, 6], [180, 172, 5], [250, 168, 6], [30, 170, 5]].forEach(o => oak(m, o[0], o[1], o[2]));
   for (let i = 0; i < 14; i++) rect(m, 120 + r() * 120, 164 + r() * 14, 2, 2, C.orange);
 })();
-const roomFull = document.createElement('canvas'); roomFull.width = W; roomFull.height = FH;
-(function () {
-  const m = roomFull.getContext('2d'), r = rng(5);
+function makeRoomFull(bg) {
+  const c = document.createElement('canvas'); c.width = W; c.height = FH;
+  const m = c.getContext('2d'), r = rng(5);
   rect(m, 0, 0, W, OY, '#d9c9a8'); rect(m, 0, OY - 3, W, 3, '#bfae8c');
   for (let x = 0; x < W; x += 40) rect(m, x, 0, 3, OY - 3, '#cbb994');
   rect(m, 150, 0, 2, 6, '#3b3d4a'); rect(m, 140, 6, 22, 5, '#ffd96a'); rect(m, 140, 6, 22, 1, '#fff3c4');
-  m.drawImage(roomBg, 0, OY);
+  m.drawImage(bg, 0, OY);
   for (let y = OY + H; y < FH; y += 3) { rect(m, 0, y, W, 3, (y / 3) % 2 ? '#c9a77a' : '#bf9c6e'); for (let k = 0; k < 3; k++) rect(m, Math.floor(r() * W), y, 1, 3, '#a8865b'); }
-})();
+  return c;
+}
+const roomFull = makeRoomFull(roomBg), roomFullEmpty = makeRoomFull(roomBgEmpty);
 
 /* ---------- sound ---------- */
 let AC = null, master = null, muted = false;
@@ -497,10 +508,20 @@ async function knockAndEnter() {
   SFX.knock(); await say('you', 'Knock, knock.');
   await enterRoom();
 }
+async function enterEmpty() {
+  SFX.knock(); await say('you', 'Knock, knock.');
+  await wait(0.5); await say('you', 'Nobody. The door is open, though.');
+  SFX.creak();
+  await fadeTo(true);
+  S.scene = 'room'; S.room = 'empty'; S.x = 30; S.y = 132; S.face = 1; S.path = [];
+  await fadeTo(false);
+  await walkTo([{ x: 120, y: 134 }]);
+  await say('you', "Empty. Nobody's moved in yet.");
+}
 async function enterRoom() {
   SFX.creak();
   await fadeTo(true);
-  S.scene = 'room'; S.x = 30; S.y = 132; S.face = 1; S.path = []; S.bart.mode = S.met ? 'idle' : 'type';
+  S.scene = 'room'; S.room = 'bart'; S.x = 30; S.y = 132; S.face = 1; S.path = []; S.bart.mode = S.met ? 'idle' : 'type';
   await fadeTo(false);
   await walkTo([{ x: 120, y: 134 }]);
   if (!S.met) {
@@ -518,7 +539,7 @@ async function exitRoom() {
   await goTo({ x: 40, y: 132 }); S.face = -1;
   SFX.creak();
   await fadeTo(true);
-  S.scene = 'map'; S.x = 44; S.y = 60; S.path = [];
+  S.scene = 'map'; S.x = S.door.walk.x; S.y = S.door.walk.y; S.path = [];
   await fadeTo(false);
 }
 async function ringPhone() {
@@ -536,7 +557,7 @@ async function lookPhone() {
   SFX.unzoom(); screenEl.hidden = true; S.zoomT = -1; cv.style.transform = '';
   await say('bart', 'Well?');
   await say('you', 'Eins, zwei, drei, vier.');
-  await say('bart', 'You found it. Nine more studies. Go knock.');
+  await say('bart', 'You found it. Thirteen more studies. Go knock.');
 }
 async function talkBart() {
   await say('you', S.talked ? 'Me again.' : 'Hi, Bart.');
@@ -570,11 +591,14 @@ async function talkBart() {
   }
 }
 
-const NOTES = { 2: 'At lunch. Lunch is sacred.', 3: 'Thinking under the oak.', 4: 'Back in five. Five what, unclear.', 5: 'In a seminar. Possibly this one.',
-  6: 'Walking to the Dish. Not listening to it.', 7: 'Writing. Do not knock. (You knocked.)', 8: 'Gone to see the cows. For research.', 9: 'Napping counts as fieldwork.', 10: 'Back after this paragraph.' };
+const NOTES = { 6: 'At lunch. Lunch is sacred.', 7: 'Thinking under the oak.', 8: 'Back in five. Five what, unclear.', 9: 'In a seminar. Possibly this one.',
+  10: 'Walking to the Dish. Not listening to it.', 11: 'Writing. Do not knock. (You knocked.)', 12: 'Gone to see the cows. For research.', 13: 'Napping counts as fieldwork.', 14: 'Back after this paragraph.' };
+function litStudy(n, r, walk) {
+  return { name: 'Study ' + n, study: true, r, walk, def: 'open', on: { look: n === 1 ? "Study 1. The light's on. Someone's typing in there." : `Study ${n}. The light's on.`, open: n === 1 ? knockAndEnter : enterEmpty } };
+}
 function lockedStudy(n, x, y) {
   return {
-    name: 'Study ' + n, r: y < 20 ? [x - 8, -16, 16, 20] : x > 290 ? [294, y - 8, 20, 16] : [x - 8, y < 98 ? 30 : 98, 16, 26], walk: y < 20 ? { x, y: 9 } : x > 290 ? { x: 292, y } : { x, y: y < 98 ? 60 : 128 }, def: 'open',
+    name: 'Study ' + n, study: true, r: y < 20 ? [x - 8, -16, 16, 20] : x > 290 ? [294, y - 8, 20, 16] : [x - 8, y < 98 ? 30 : 98, 16, 26], walk: y < 20 ? { x, y: 9 } : x > 290 ? { x: 292, y } : { x, y: y < 98 ? 60 : 128 }, def: 'open',
     on: {
       look: `Study ${n}. Dark. There's a note on the door.`,
       open: async () => { SFX.rattle(); await say('you', `Locked. The note says: "${NOTES[n]}"`); }
@@ -582,9 +606,10 @@ function lockedStudy(n, x, y) {
   };
 }
 const MAP = [
-  { name: 'Study 1', r: [34, 30, 20, 26], walk: { x: 44, y: 60 }, def: 'open', on: { look: "Study 1. The light's on. Someone's typing in there.", open: knockAndEnter } },
-  lockedStudy(2, 228, 60), lockedStudy(3, 276, 60), lockedStudy(4, 190, 128), lockedStudy(5, 130, 128),
-  lockedStudy(6, 34, 9), lockedStudy(7, 50, 9), lockedStudy(8, 66, 9), lockedStudy(9, 300, 106), lockedStudy(10, 300, 122),
+  litStudy(1, [172, 22, 16, 18], { x: 180, y: 44 }), litStudy(2, [26, -16, 16, 20], { x: 34, y: 9 }), litStudy(3, [284, 30, 16, 26], { x: 292, y: 60 }),
+  litStudy(4, [68, 30, 16, 26], { x: 76, y: 60 }), litStudy(5, [106, 98, 16, 26], { x: 114, y: 128 }),
+  lockedStudy(6, 44, 60), lockedStudy(7, 228, 60), lockedStudy(8, 276, 60), lockedStudy(9, 190, 128), lockedStudy(10, 130, 128),
+  lockedStudy(11, 50, 9), lockedStudy(12, 66, 9), lockedStudy(13, 300, 106), lockedStudy(14, 300, 122),
   { name: 'main hall', r: [128, 8, 64, 30], walk: { x: 160, y: 44 }, def: 'open', on: { look: 'The main hall. Lounge, mailboxes, coffee.', open: "Just the lounge. Nobody's in. Everybody's in their study." } },
   { name: 'meeting room', r: [80, 66, 30, 30], walk: { x: 112, y: 80 }, def: 'open', on: { look: 'The meeting room. Seminars happen in there. Like this one.', open: "Not yet. I haven't visited the studies." } },
   { name: 'picnic table', r: [122, 73, 20, 16], walk: { x: 132, y: 64 }, def: 'look', on: { look: 'A picnic table. Someone carved a regression line into it.', use: 'I sit for a second. Very restorative. Back to it.' } },
@@ -594,7 +619,12 @@ const MAP = [
   { name: 'cow', r: [252, 96, 30, 32], walk: { x: 240, y: 112 }, def: 'talk', on: { look: 'A cow. Looks tenured.', talk: [['you', 'Moo.'], ['cow', 'Moo.']] } },
   { name: 'parking lot', r: [4, 98, 46, 42], walk: { x: 54, y: 132 }, def: 'look', on: { look: 'Three cars. Nobody biked today.' } }
 ];
-const STUDIES = MAP.slice(0, 10);
+const STUDIES = MAP.filter(h => h.study);
+const ROOM_EMPTY = [
+  { name: 'bookshelf', r: [266, 10, 48, 90], walk: { x: 284, y: 132 }, def: 'look', on: { look: 'Books left by the last fellow. Mostly about time.', push: 'No secret passage. I checked.' } },
+  { name: 'window', r: [44, 14, 78, 60], walk: { x: 84, y: 130 }, def: 'look', on: { look: 'Same hills, same Dish. Good office, nobody in it.' } },
+  { name: 'door', r: [4, 30, 32, 76], walk: { x: 40, y: 132 }, def: 'open', on: { look: 'The way out.', open: exitRoom } }
+];
 const ROOM = [
   { name: 'plant', r: [284, 100, 22, 32], walk: { x: 270, y: 134 }, def: 'talk', on: { look: "It's thriving. Someone waters it.", talk: 'I tell the plant about my research. It grows a little.' } },
   { name: 'coffee mug', r: [204, 86, 13, 12], walk: { x: 212, y: 130 }, def: 'pick', on: { look: 'Coffee. Still hot. The mug says TAKT.', pick: "It's Bart's. He'd notice. He'd definitely notice." } },
@@ -608,9 +638,9 @@ const ROOM = [
   { name: 'pinboard', r: [158, 20, 30, 24], walk: { x: 172, y: 130 }, def: 'look', on: { look: 'Sticky notes. One says: ASK CLAUDE.' } },
   { name: 'bookshelf', r: [266, 10, 48, 90], walk: { x: 284, y: 132 }, def: 'push', on: { look: 'Social science. Lots of it.', push: 'No secret passage. I checked.' } },
   { name: 'window', r: [44, 14, 78, 60], walk: { x: 84, y: 130 }, def: 'look', on: { look: 'The hills, the Dish, Stanford down below. Good office.' } },
-  { name: 'door', r: [4, 30, 32, 76], walk: { x: 40, y: 132 }, def: 'open', on: { look: 'The way out. Nine more studies out there.', open: exitRoom } }
+  { name: 'door', r: [4, 30, 32, 76], walk: { x: 40, y: 132 }, def: 'open', on: { look: 'The way out. Thirteen more studies out there.', open: exitRoom } }
 ];
-function hotspots() { return S.scene === 'map' ? MAP : ROOM; }
+function hotspots() { return S.scene === 'map' ? MAP : S.room === 'empty' ? ROOM_EMPTY : ROOM; }
 function hit(x, y) { return hotspots().find(h => x >= h.r[0] && x < h.r[0] + h.r[2] && y >= h.r[1] && y < h.r[1] + h.r[3]); }
 async function perform(r) {
   if (typeof r === 'function') await r();
@@ -618,6 +648,7 @@ async function perform(r) {
   else if (Array.isArray(r)) for (const l of r) await say(l[0], l[1]);
 }
 async function doAction(verb, h) {
+  if (h.study) S.door = h;
   await goTo(h.walk);
   const cx = h.r[0] + h.r[2] / 2; if (Math.abs(cx - S.x) > 3) S.face = Math.sign(cx - S.x);
   const r = h.on[verb];
@@ -659,7 +690,7 @@ $('bFull').addEventListener('click', e => { e.stopPropagation(); fullscreen(); }
 function start() {
   if (S.started) return;
   audio(); S.started = true; titleEl.hidden = true; SFX.jingle(); cv.focus && cv.focus();
-  run(async () => { await wait(0.6); await say('you', 'CASBS. Ten studies.'); await say('you', "Somebody's typing in one of them."); });
+  run(async () => { await wait(0.6); await say('you', 'CASBS. Fourteen studies.'); await say('you', "Somebody's typing in one of them."); });
 }
 $('startBtn').addEventListener('click', e => { e.stopPropagation(); start(); });
 $('startBtn').focus({ preventScroll: true });
@@ -712,6 +743,14 @@ function drawMap(t) {
 }
 function drawRoom(t) {
   const B = S.bart;
+  if (S.room === 'empty') {
+    g.drawImage(roomFullEmpty, 0, 0);
+    g.save(); g.translate(0, OY);
+    const moving = S.path.length > 0, fr = moving ? 1 + Math.floor(t * 7) % 2 : 0;
+    drawYou(S.x, S.y, S.face, fr, S.line && S.line.who === 'you' && (calm || Math.floor(t * 8) % 2 === 0));
+    g.restore();
+    return;
+  }
   g.drawImage(roomFull, 0, 0);
   g.save(); g.translate(0, OY);
   const bartTalk = S.line && S.line.who === 'bart' && (calm || Math.floor(t * 8) % 2 === 0);
