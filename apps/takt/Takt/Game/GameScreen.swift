@@ -921,10 +921,22 @@ struct GameResultPanel: View {
     /// Play again, Practice (the song held at bar 1 with the scrubber: the way to work on what
     /// the grade says, from the map as from the set list), and the way back.
     private var buttons: some View {
-        HStack(spacing: 10) {
-            PrimaryButton(title: "Play again", action: controls.restart)
-            QuietButton(title: "Practice", action: controls.practice)
-            QuietButton(title: controls.leaveTitle, action: controls.leave)
+        // One row where it fits (the Mac, a 420 pt phone); on a narrower phone the three
+        // fixed-size buttons came to 18 pt more than a 402 pt screen and pushed the whole card
+        // past both edges (2026-11-10), so there the way back takes a row of its own.
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 10) {
+                PrimaryButton(title: "Play again", action: controls.restart)
+                QuietButton(title: "Practice", action: controls.practice)
+                QuietButton(title: controls.leaveTitle, action: controls.leave)
+            }
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 10) {
+                    PrimaryButton(title: "Play again", action: controls.restart)
+                    QuietButton(title: "Practice", action: controls.practice)
+                }
+                QuietButton(title: controls.leaveTitle, action: controls.leave)
+            }
         }
     }
 }

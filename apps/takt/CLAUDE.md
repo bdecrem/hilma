@@ -1338,7 +1338,8 @@ cover stealing anchors, a hand of 30 moves on a Level 2 song, a Beginner on one 
   **Content is data, ready for the techno map:** `Content/map-<world>.json` (episodes, venues,
   `levels: [{venue, module, lesson}]`, `total`), photos as imagesets `<world>-<venue>` in
   `Assets.xcassets/Venues/`, `MapWorld.all` lists the worlds, `@AppStorage("mapWorld")` picks one,
-  and Settings → Taste shows a Map picker once there are two. A second world = its JSON, its
+  and Settings → Taste shows a Map picker once there are two (since 2026-11-10 the vibe switch
+  picks the world and that picker is gone: see "The vibes"). A second world = its JSON, its
   photos, its id in `all`. Levels 1–7 = A1 lessons 1–7, 8–20 = Scales 1–13 (the handoff had the
   ear lessons at 8–10, but they never log a finished lesson, so they could never clear a level);
   a level's Lesson button starts its lesson, or the module's next open one if it isn't reached.
@@ -2157,6 +2158,100 @@ cover stealing anchors, a hand of 30 moves on a Level 2 song, a Beginner on one 
   Ladder 0.18 · 0.36 · 0.48 · 0.67 · 0.67 · 0.67 · 0.72 (was 0.08 … 0.36; 176 notes on Hard), no
   eight bars empty on any level; every other song's figures unchanged; `-LessonCheck` 520/520.
 
+- **The vibes, Blues and Electronic: 0.1 (123), 2026-11-10.** Bart: "make a toggle in the UI to
+  switch between Blues and Electronic vibes… a nice looking little toggle at the top of the
+  screen, somewhere near the Settings icon… switches the apps look and feel (vibe) in SUBTLE
+  WAYS: the current UI is MOSTLY aimed at electronic, so tweak some of the aesthetic choices to be
+  A LITTLE more old-school blues… the MAP needs to completely switch… the journey is across epic
+  underground Berlin nightclubs (the most epic one of course is berghain)… progress/level on the
+  map stays the same… the pinned tracks on STAGE are organized by genre: the ones for the toggled
+  genre are just shown, the pinned tracks from the other genre are under a disclosure header type
+  of thing, and if the user expands it, it stays expanded until they close it".
+  **`Design/Vibe.swift`**: `Vibe` (blues | electronic; stored on the device under `vibe`, default
+  blues: Level 1 is the blues and so was everyone's map; `-vibe electronic` on the command line),
+  `Vibe.current` (what the tokens and the type read), `AppModel.vibe` (sets it, stores it, swaps
+  the map's world), and `VibeToggle`, the switch beside the gear on Learn, Stage and Map: a 56 × 30
+  track, a `signal` knob carrying the vibe's glyph (`VibeGlyph`: ♭ for the blues, a waveform for
+  electronic), the other's glyph faint at the far end, the two names either side on the Mac. The
+  knob slides, then the screen cross-fades: `RootView`'s route switch has `.id(app.vibe)`, because
+  **the tokens are read when a view is made**, so a vibe change rebuilds the screen (scroll
+  positions reset; nothing else lives in view state). **The look:** Electronic is the brief's own,
+  untouched. Blues is the same seven tokens a little older (`Palette`: each token's `blues:` pair,
+  sepia ink and cream paper, `signal` #F2811F amber instead of #FF5A1F, `cue` toward denim), data
+  labels in American Typewriter instead of SF Mono (a point larger, 9% tracking; it runs narrower
+  than the mono, so nothing a label fits in gets tighter), and body text in New York (serif).
+  The display face, every layout and the needles' green / yellow / red are the same.
+  **The map** (`MapWorld.all` = the vibes' names; `mapWorld` in Settings → Taste and its picker are
+  gone, the switch is the picker): `Content/map-electronic.json`, "Berlin nights", 26 clubs in
+  three episodes (After the Wall: UFO, Tekknozid, Tresor, Planet, Walfisch, WMF, Bunker, E-Werk,
+  Ostgut; Along the Spree: Maria am Ostbahnhof, Club der Visionaere, Watergate, Bar 25, Weekend,
+  Stattbad Wedding, Kater Holzig, Griessmuehle; The Temples: Tresor at Kraftwerk, Wilde Renate,
+  Sisyphos, ://about blank, Kater Blau, RSO.Berlin, KitKatClub, Panorama Bar, **Berghain at 26**),
+  every one with a Wikimedia Commons photo (`Venues/electronic-<id>.imageset`; credit, license
+  and source in the JSON, listed in Credits), collected and fact-checked by a subagent; no
+  placeholders. Its road is drawn as a line (two thin rails, the cleared stretch a solid cable)
+  instead of a highway with ties. Levels are the plan's, so you stand at the same level on both.
+  The phone's map header is two rows now (title · switch · Ask · gear, then the world and
+  episode · count · XP): 358 pt could not hold a switch as well. **The Stage:** `Song.genre` (a
+  file's `genre`, else from the style: techno / house / ambient / electro are electronic); the
+  pinned tracks of the vibe show, the other vibe's sit under `GenreHeader` ("Blues · Six pinned",
+  a chevron, their names faint until open), the open state in `@AppStorage("stageOtherOpen")`, so
+  it stays open on either vibe and across launches until closed; All tracks lists the vibe's own
+  first. **Default pins** are the six blues tracks plus `electronicPins` (Halbschatten, Gezeiten,
+  Hypnotist II, Warm Nine, Abyss); `StageScreen.joinedLater` gives a track that joined the
+  defaults after a player's set was last changed to that set too (the electronic ones at
+  `Vibe.pinsEpoch`, Gezeiten that evening); a set changed since is as the player set it. Fixed on
+  the way: the phone's result card was 18 pt wider than a 402 pt screen (three fixed buttons) and
+  ran past both edges; the way back wraps to its own row there. The chat teacher and the library
+  know the switch (`chat-agent.ts`, `library.ts`). DEBUG: `-vibe`, `-VibeFlip <s>` (flips like a
+  tap s seconds in, and stores it), `-stageOtherOpen YES`, `-ScrollTo other`, `-Venue n
+  -VenueStory YES`. Checks 539/539 (a world per vibe, Berlin's 26 with Berghain last, genres, the
+  pin rules). Verified on the simulator in both vibes and both themes (the three tabs, a live
+  flip, a venue's story, the header open and closed, a run and its result) and on the Mac build
+  before the Gezeiten merge (the three tabs in both vibes); the merged 0.1 (123) is installed on
+  the MacBook Air but its window could not be captured (the screen was locked by then). Photos
+  worth a second look: UFO (the street at the Wall in 1986, not the cellar), Tekknozid (the
+  Podewil, where the raves were held), KitKatClub (the murals on its building), RSO (the brewery
+  gate before the club), Walfisch (the building in 2012). Not done: a launch sound and a menu band
+  per vibe (the Chicago shuffle plays under both); not shipped to TestFlight.
+
+- **Gezeiten, a second record on the dub techno system: 0.1 (123), 2026-11-10.** Bart: "make
+  another electronic track, patterned after Halfschatten, but make sure it's a different core
+  track concept (can still be dub tech) - make sure to use the correct skills to make the music
+  and the charts". Made by a fork in a worktree with `takt-electronic` and `takt-chart`. The
+  record is `misc/gezeiten_reference.py` (dub techno, E minor, 116, 112 bars, 3:59); **read
+  `DUB-TECHNO.md` §9**. Different at the core, same sounds: the FM bell is the motor from bar 1
+  (a four-bar tune on A4 B4 D5 E5 G5, steps 0, 3, 8, 11; its dotted-eighth echo answers on 6 and
+  14), the chord is an off-beat skank (a minor eleventh as a five-white-key cluster, a slower
+  bloom, a dotted-quarter echo), kick and bass never leave E while the chords plane Em11 → Dm11
+  (Am11 at the crest), the clap is a one drop, and the form is two tides (the filter up to bar
+  38, an ebb with no kick 40–47, higher to bar 70, out). **No engine change**: every difference
+  is a number in the song file or an event (the skill's `references/system.md` has the table).
+  **Sounds** (`scripts/gezeiten.py` → 44 `Sounds/gz-*` files, 10.5 MB, and
+  `scripts/songs/gezeiten-events.json`): its own kick, rim, toms, bass notes, six raw stab
+  buffers (`hsStabGz0…1`: the renderer sends any `hsStab…` into the rack), one riser and a 16 s
+  noise tile the reference itself repeats; the hats, shaker, clap and both impulses are
+  Halbschatten's files (same functions and seeds, asserted against the committed files). **The
+  song** (`scripts/songs/gezeiten.py` → `song-gezeiten.json`, after Halbschatten in the catalog,
+  glyph `tide`, pinned by default): chords = the cluster, one hand shape (0.23 · 0.46 · 0.87 ·
+  0.87 · 0.97 · 0.97 · 0.97; Easy tier 2, Easy+ 3); melody = the bell, the record's own line from
+  bar 1 in one hand position (0.23 · 0.47 · 0.69 · 0.91 · 0.91 · 1.31 · 1.67; Easy 2, Easy+ 4,
+  Medium 6; hand 0/0 · 1 · 10 at every level; CHARTING.md rule 19). **Measured**
+  (`scripts/takt/gz-ab.py`, `TAKT_SIM=<udid>`): against the reference − 8 dB, mean −19.20 /
+  −19.20 dBFS, peak −9.01 / −9.01, every octave band of five passages within 0.01 dB at 44.1 kHz
+  and 0.04 at 48, side/mid 0.258 / 0.258; every stem within 0.01 dB (noise 0.04) and nulling at
+  −51 to −79 dB (noise −44), the master at −56 dB over the whole song (the noise tile loops
+  exactly). Every other song's charts unchanged (`measure.ts --compare`); both parts autoplayed
+  on Hard on the simulator to an S, and the melody again in the merged build. For his ears:
+  `~/Desktop/takt/gezeiten/` on the MacBook Air (the reference mp3 and the app's render, level
+  matched). **Open: nobody has heard it.** The record was written while Bart was away and its mix
+  set against Halbschatten's render block by block; changes go into the reference script first.
+  Not rendered from the installed Mac app, not on the phone. The fingering badges on the bell
+  alternate fingers on some keys inside the one position (D5 under 2 or 3; noted in
+  `LEVELING.md`). No profile entry in `../vibeceo/jambot/library.json` yet. `~/.cache/takt-venv`
+  (numpy, scipy, numba, soundfile) now exists on the Air; a "Takt Track" simulator is left shut
+  down.
+
 ## The one transport (2026-11-08)
 
 Every screen that plays music draws the same controls in the same order and they always work:
@@ -2183,7 +2278,9 @@ a mode-specific control without putting it in the same place on the other screen
 - `Map/MapWorld.swift`: a map world from `Content/map-<world>.json` (episodes, venues). `Goals/LearningPlan.swift`:
   the plan (`Content/plan-<id>.json`), `GoalRecord`, `GoalProgress` (levels cleared, each goal's state).
   `Menu/MapScreen.swift` (the road), `Menu/LevelGoalsScreen.swift` (the level up next), `Menu/VenueScreen.swift`.
-- `Design/Palette.swift`: the brief's seven tokens as dynamic colors. `signal` = now, `cue` = next;
+- `Design/Vibe.swift`: the two vibes (Blues, Electronic), `Vibe.current`, the switch (`VibeToggle`).
+  The tokens, the small type, the map's world and the Stage's pinned set follow it.
+- `Design/Palette.swift`: the brief's seven tokens as dynamic colors (a `blues:` pair each). `signal` = now, `cue` = next;
   never add a third accent, never red/green. White keys are `panel`, black keys `#0D0D0D` in both themes.
 - `Design/Typography.swift`: `Font.display` (SF Pro compressed heavy), `.dataLabel()` (SF Mono,
   uppercase, +12% tracking), `.bodyText()`. Sizes go through `@ScaledMetric` with point bases,
