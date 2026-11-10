@@ -321,6 +321,20 @@ every song and part.
     ornament into every riff bar (1.31 for 1.11); the song's patch sets `space` 1.3 on tier 5
     (still between tier 4's 1.5 and tier 6's 1.0). Any song from about 92 to 100 has both edges.
 
+19. **A motor line is charted by its place in the bar, with `from` as the rungs, and the 1 of
+    every bar has to move** (Gezeiten, 2026-11-10). A line that plays the same four steps every
+    bar (0, 3, 8, 11) has only three weights for five rungs, and the phrase cover would hand
+    every level the keys of the off-beat notes. So each place in the bar gets a weight and a
+    floor: the 1 weight 1 (every level), the 3 weight 2 with `from` 3 in even bars and 4 in odd
+    ones, the "a" of 1 weight 3 `from` 6, the "a" of 3 weight 3 `from` 7. The ladder reads 0.23
+    · 0.47 · 0.69 · 0.91 · 0.91 · 1.31 · 1.67: every other 1, every 1, a 3 every other bar, every
+    3, then the syncopation, then all of it, with no rung over twice the one below. And since
+    Easy is then the 1s alone, **the notes on the 1s must be a tune** (rule 7): the crest's
+    first draft opened two bars running on G5 and `-LessonCheck` failed it ("every level plays
+    the line's keys, not one": one key in three two-bar phrases at tier 2). The cure was the
+    line: the second bar opens on E5. Write a motor's downbeats as a melody of their own before
+    filling in the steps between.
+
 ## Where this comes from
 
 Rhythm-game charters (Rock Band, Guitar Hero, Clone Hero) chart the top difficulty first and

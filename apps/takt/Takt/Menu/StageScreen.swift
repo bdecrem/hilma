@@ -15,13 +15,16 @@ struct StageScreen: View {
     /// Since the vibes (2026-11-10) the default set carries electronic tracks too, so either
     /// vibe opens on a stage with something on it.
     static let bluesPins = Array(Song.catalog.prefix(6))
-    static let electronicPins = ["song-halbschatten", "song-hypnotist-2", "song-warm-nine", "song-abyss"]
+    static let electronicPins = ["song-halbschatten", "song-gezeiten", "song-hypnotist-2", "song-warm-nine", "song-abyss"]
     static let defaultPins = bluesPins + electronicPins
     /// Tracks that joined the default set after players had sets of their own, and when: a
     /// stored set older than the date gets the track too (it had no say about it), one changed
     /// since is as the player set it. The electronic defaults joined with the vibes; a new
     /// track that should open pinned goes here with the day it shipped.
-    static let joinedLater: [(song: String, at: Date)] = electronicPins.map { ($0, Vibe.pinsEpoch) }
+    /// Gezeiten shipped the evening of 2026-11-10, after sets changed that day.
+    static let joinedLater: [(song: String, at: Date)] = electronicPins.map {
+        ($0, $0 == "song-gezeiten" ? Vibe.pinsEpoch.addingTimeInterval(22 * 3600) : Vibe.pinsEpoch)
+    }
     /// The other vibe's pinned tracks, open under their header. Stored: once opened they stay
     /// open, on either vibe and across launches, until the player closes them (Bart, 2026-11-10).
     @AppStorage("stageOtherOpen") private var otherOpen = false
@@ -725,6 +728,30 @@ struct SongArt: View {
                 lens.clip(to: a)
                 lens.fill(b, with: .color(hot))
                 ctx.stroke(a, with: .color(ink), lineWidth: 2)
+            case "tide":
+                // Gezeiten, the tides: the moon on the water. The horizon is a line at 0.6 h from
+                // 0.14 w to 0.86 w. The moon is a half disc sitting on it, centred at 0.5 w, radius
+                // 0.22 of the short side (on an 80 pt tile: 0.28 w to 0.72 w, its top at 0.38 h),
+                // lit. Under the horizon its reflection: three strokes 0.09 h apart (0.69, 0.78,
+                // 0.87 h), each narrower (0.36, 0.24, 0.12 w), centred, the nearest in ink and the
+                // two below fading, so the pull reads down the tile. Margins 0.14 w a side, 0.13 h
+                // under the last stroke.
+                let rr = min(w, h) * 0.22
+                var moon = Path()
+                moon.addArc(center: CGPoint(x: w * 0.5, y: h * 0.6), radius: rr, startAngle: .degrees(180), endAngle: .degrees(0), clockwise: false)
+                moon.closeSubpath()
+                ctx.fill(moon, with: .color(hot))
+                var horizon = Path()
+                horizon.move(to: CGPoint(x: w * 0.14, y: h * 0.6))
+                horizon.addLine(to: CGPoint(x: w * 0.86, y: h * 0.6))
+                ctx.stroke(horizon, with: .color(ink), lineWidth: 2)
+                for (i, width) in [0.36, 0.24, 0.12].enumerated() {
+                    var p = Path()
+                    let y = h * (0.69 + 0.09 * CGFloat(i))
+                    p.move(to: CGPoint(x: w * (0.5 - width / 2), y: y))
+                    p.addLine(to: CGPoint(x: w * (0.5 + width / 2), y: y))
+                    ctx.stroke(p, with: .color(i == 0 ? ink : dim.opacity(i == 1 ? 1 : 0.6)), style: StrokeStyle(lineWidth: 2, lineCap: .round))
+                }
             case "stoptime":
                 // Chicago stop time: the riff's five bars climbing, then the gap, then the hit.
                 // Five bars 0.09 w wide at 0.11 w apart from x = 0.1 w end at 0.64 w; the hit sits

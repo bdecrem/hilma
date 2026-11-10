@@ -1872,10 +1872,15 @@ enum LessonCheck {
                 let before = ProgressStore(url: nil), since = ProgressStore(url: nil)
                 before.setPinned("song-dockery", true, current: [], at: Vibe.pinsEpoch.addingTimeInterval(-86400))
                 since.setPinned("song-dockery", true, current: [], at: Vibe.pinsEpoch.addingTimeInterval(86400))
+                // A set changed on the day of the vibes, before Gezeiten shipped: Gezeiten alone joins it.
+                let sameDay = ProgressStore(url: nil)
+                sameDay.setPinned("song-dockery", true, current: [], at: Vibe.pinsEpoch.addingTimeInterval(3600))
+                let sameDayApp = AppModel(player: nil, progress: sameDay, account: AccountStore(progress: ProgressStore(url: nil)))
                 let oldApp = AppModel(player: nil, progress: before, account: AccountStore(progress: ProgressStore(url: nil)))
                 let newApp = AppModel(player: nil, progress: since, account: AccountStore(progress: ProgressStore(url: nil)))
                 check("vibes: a pinned set from before the vibes gets the electronic defaults, one changed since is as set",
-                      oldApp.pinnedSongs == ["song-dockery"] + StageScreen.electronicPins && newApp.pinnedSongs == ["song-dockery"],
+                      oldApp.pinnedSongs == ["song-dockery"] + StageScreen.electronicPins && newApp.pinnedSongs == ["song-dockery"]
+                      && sameDayApp.pinnedSongs == ["song-dockery", "song-gezeiten"],
                       oldApp.pinnedSongs.joined(separator: " "))
                 oldApp.setPinned(songs.first { $0.name == "song-halbschatten" }!, false)
                 check("vibes: unpinning from that set writes it whole, the rest of the electronic defaults kept",
@@ -2306,7 +2311,7 @@ enum LessonCheck {
             // the hand may jump to a new position in order (F♯4 to E5 with 1 then 2), as it does.
             let names = ["C", "C♯", "D", "E♭", "E", "F", "F♯", "G", "A♭", "A", "B♭", "B"]
             func name(_ n: Int) -> String { "\(names[n % 12])\(n / 12 - 1)" }
-            for songName in ["song-blue-lantern-white", "song-maxwell-street-five", "song-slow-burn", "song-pearl-street", "song-boogie-shoes", "song-dockery", "song-friars-point", "song-halsted", "song-mclemore", "song-halbschatten", "song-maxwell-street", "song-blue-lantern"] {
+            for songName in ["song-blue-lantern-white", "song-maxwell-street-five", "song-slow-burn", "song-pearl-street", "song-boogie-shoes", "song-dockery", "song-friars-point", "song-halsted", "song-mclemore", "song-halbschatten", "song-gezeiten", "song-maxwell-street", "song-blue-lantern"] {
                 let song = Song.bundled(songName)
                 let e = GameEngine(song: song, part: .melody, difficulty: .hard)
                 var faults: [String] = []

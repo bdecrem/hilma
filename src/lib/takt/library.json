@@ -248,7 +248,26 @@
    "choruses": 31,
    "parts": {
     "chords": "The stab",
-    "melody": "The lead (from bar 49)"
+    "melody": "The lead"
+   },
+   "shelf": "all tracks",
+   "uses": []
+  },
+  {
+   "name": "song-gezeiten",
+   "title": "Gezeiten",
+   "style": "Dub techno",
+   "key": "E minor",
+   "tempo": 116,
+   "bars": 116,
+   "seconds": 240,
+   "line": "Dub techno at 116, four minutes. A bell on five white keys from the first bar, an off-beat chord that planes over a ground that never moves.",
+   "sections": "Still water (bar 1), Kick (bar 9), Bass (bar 17), Hats (bar 25), First tide (bar 33), Ebb (bar 41), Flood (bar 49), Shaker (bar 57), Crest (bar 65), High water (bar 73), One chord (bar 81), Thinning (bar 89), Low (bar 97), Out (bar 105)",
+   "chorus": "1–4 Em11",
+   "choruses": 29,
+   "parts": {
+    "chords": "The skank",
+    "melody": "The bell"
    },
    "shelf": "all tracks",
    "uses": []

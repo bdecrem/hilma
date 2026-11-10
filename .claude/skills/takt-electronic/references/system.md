@@ -170,6 +170,34 @@ lead echo −34.6 / −18.0, pad −31.8 / −17.6, hats −35.2 / −13.5, clap
 −33.5 / −15.0, shaker −41.5 / −17.6, rim −44.9 / −11.0, room −39.2 / −20.2, noise −53.4.
 The kick and the bass carry the level; everything tonal sits 7 to 15 dB under them.
 
+## What a song sets without touching Swift (Gezeiten, 2026-11-10)
+
+Gezeiten runs on `Rack.swift` exactly as Halbschatten left it. Everything that made it another
+record is in its song file:
+
+| setting | Halbschatten | Gezeiten |
+|---|---|---|
+| `echo.beats` (the chord's echo) | 0.75 | **1.5** |
+| `echo.lowpass` / `highpass` in the loop | 4200 / 130 | 3400 / 150 (a longer echo: darker a pass) |
+| `echoFeedback` lane | 0.62–0.74, throws to 0.90 | 0.50–0.66, throws to 0.86 (a repeat is twice as long, so it gets less) |
+| `echo.level` | 1.2 | 1.0 |
+| `leadEcho.beats` / `feedback` / `level` | 1.5 / 0.42 / 0.7 | **0.75** / 0.46 / 0.8 |
+| `stab.env` / `envTime` | 1.6 oct / 85 ms | 1.3 oct / **150 ms** |
+| `stabDecay` lane | 0.10–0.24 s | 0.18–0.30 s (the raw buffers are 2.1 s: seven decay times) |
+| `stab.lfoBars` | 6.5 | 5.5 |
+| `stabCutoff` lane | one arc, 2500 Hz at bar 76 | two: 1250 at bar 38, 520 in the ebb, 2600 at bar 70 |
+| `lead.hall`, the lead's level | 0.7, −24 dB | 0.6, −24.5 dB (it plays all song) |
+| `pad.notes` | G2 D3 G3 D4 F4 | E2 B2 E3 B3 D4 |
+| stab instruments | `hsStab0…3`, zones Gm9 Cm9 Dm9 | `hsStabGz0…1`, zones Em11 Dm11 Am11 (a zone's root is the chord's lowest note) |
+| the noise | `hsNoise`, 32 s | `gzNoise`, a 16 s tile |
+
+Fixed in `Rack.swift` (a port if a record needs them otherwise): the lead's synthesis
+(`fm_pluck`'s index 2.4·vel, its 0.11 s and 0.55 s times, the 1.2 s tail), the lead's echo
+entering on the right, no duck on the lead, the stab's alternating sides, one stab bus. An
+instrument is sent into the stab bus **when its name starts with `hsStab`**
+(`BandRenderer.load`), which is why Gezeiten's are `hsStabGz…`; a kit ducks when its name
+starts with `kick`.
+
 ## The song file's side of it
 
 - `rack` (`Rack.Settings`): `lanes`, `buses` (name, `hall`, `room`, `echo` sends), `stab`,
