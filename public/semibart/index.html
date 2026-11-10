@@ -210,7 +210,6 @@ const mapBg = document.createElement('canvas'); mapBg.width = W; mapBg.height = 
   car(m, 7, 102, '#2b3fff'); car(m, 21, 102, '#ff9ccf'); car(m, 35, 102, '#fff7e6');
   oval(m, 224, 22, 10, 3, C.shadow); rect(m, 221, 14, 1, 8, C.ink); rect(m, 227, 14, 1, 8, C.ink);
   oval(m, 224, 11, 8, 4, C.ink); oval(m, 224, 11, 7, 3, '#fffaf0'); rect(m, 224, 5, 1, 6, C.ink);
-  turkey(m, 256, 98); turkey(m, 266, 116);
   [[100, 14, 5], [308, 82, 7], [22, 82, 6], [82, 116, 5], [118, 6, 4]].forEach(o => oak(m, o[0], o[1], o[2]));
   for (let i = 0; i < 26; i++) rect(m, 250 + r() * 66, 90 + r() * 46, 2, 2, C.orange);
   wing(m, 300, 96, 12, 36, WING_DOORS);
@@ -471,7 +470,7 @@ function garble(who, text) {
 
 /* ---------- state ---------- */
 const S = {
-  scene: 'map', x: 54, y: 132, face: 1, path: [], arrive: null, stepT: 0, keyT: 0,
+  scene: 'map', turkeyT: -9, x: 54, y: 132, face: 1, path: [], arrive: null, stepT: 0, keyT: 0,
   hover: null, busy: false, line: null, choices: null, started: false, study: -1,
   bart: { mode: 'type', t: 0, shades: false }, met: false, talked: false, phoneOn: false, phoneT: 0, zoomT: -1, screenDone: null
 };
@@ -729,6 +728,7 @@ function act(e, verb) {
   if (S.line) { skipLine(); return; }
   if (S.busy || S.choices || S.zoomT >= 0) return;
   const p = toScene(e), h = hit(p[0], p[1]);
+  if (h && h.name === 'turkey' && !verb) { S.turkeyT = performance.now() / 1000; SFX.gobble(); return; }
   if (h) {
     if (h.href && (verb || h.def) === h.def) window.open(h.href, '_blank', 'noopener');
     run(() => doAction(verb || h.def, h)); return;
@@ -800,6 +800,13 @@ function drawMap(t) {
   const moving = S.path.length > 0, fr = moving ? Math.floor(t * 8) % 2 : 0;
   oval(g, S.x, S.y + 1, 3, 1, C.shadow);
   sprite(g, TINY[fr], TPAL, S.x - 2, S.y - 8);
+  // the turkeys: drawn live so they can hop when poked
+  [[256, 98], [266, 116]].forEach(([x, y], i) => {
+    const k = (t - S.turkeyT - i * 0.09) / 0.32;
+    const dy = k > 0 && k < 2 && !calm ? Math.round(Math.abs(Math.sin(k * Math.PI)) * (k < 1 ? 5 : 3)) : 0;
+    oval(g, x + 6, y + 10, 5, 1, C.shadow);
+    turkey(g, x, y - dy);
+  });
   if (!calm) { const cx = ((t * 6) % (W + 120)) - 60; oval(g, cx, 96, 34, 9, 'rgba(20,20,20,0.06)'); oval(g, cx - 170, 30, 26, 7, 'rgba(20,20,20,0.06)'); }
   g.restore();
 }
