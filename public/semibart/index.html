@@ -795,39 +795,39 @@ function drawLine() {
 }
 /* ---------- small delights: dust, a click mark, glowing doors, the Dish beacon,
    butterflies, a passing flock, oak leaves, sunlight in the studies ---------- */
-const FX = { dust: [], leaves: [], birds: null, mark: null, last: 0, dustT: 0, flockT: 12, leafT: 2 };
+const FX = { dust: [], leaves: [], birds: null, mark: null, last: 0, dustT: 0, flockT: 4, leafT: 1 };
 function mapUnder(t, dt) {
   // lit doors breathe
-  const glow = 0.1 + 0.08 * Math.sin(t * 2.2);
-  [[180, 41], [292, 57], [76, 57], [114, 125], [34, 6]].forEach(([x, y], i) => oval(g, x, y, 5, 1, 'rgba(255,217,106,' + (glow + 0.04 * Math.sin(t * 3.1 + i)).toFixed(3) + ')'));
+  const glow = 0.28 + 0.2 * Math.sin(t * 2.2);
+  [[180, 41], [292, 57], [76, 57], [114, 125], [34, 6]].forEach(([x, y], i) => oval(g, x, y + 1, 8, 3, 'rgba(255,217,106,' + (glow + 0.04 * Math.sin(t * 3.1 + i)).toFixed(3) + ')'));
   // a puff of dust behind each step
   if (S.path.length) { FX.dustT -= dt; if (FX.dustT <= 0) { FX.dustT = 0.11; FX.dust.push({ x: S.x + (Math.random() - 0.5) * 3, y: S.y, a: 0 }); } }
   FX.dust = FX.dust.filter(d => (d.a += dt) < 0.45);
-  FX.dust.forEach(d => rect(g, d.x, d.y - d.a * 7, 1, 1, 'rgba(176,138,82,' + (0.8 * (1 - d.a / 0.45)).toFixed(2) + ')'));
+  FX.dust.forEach(d => rect(g, d.x - 1, d.y - d.a * 7, 2, 2, 'rgba(176,138,82,' + (0.8 * (1 - d.a / 0.45)).toFixed(2) + ')'));
   // where you clicked
   if (FX.mark) {
     const a = t - FX.mark.t0, m = FX.mark;
     if (a > 0.45) FX.mark = null;
-    else { const r = 2 + a * 9, c = 'rgba(255,255,85,' + (1 - a / 0.45).toFixed(2) + ')'; rect(g, m.x - r, m.y, 1, 1, c); rect(g, m.x + r, m.y, 1, 1, c); rect(g, m.x, m.y - r / 2, 1, 1, c); rect(g, m.x, m.y + r / 2, 1, 1, c); }
+    else { const r = 3 + a * 14, c = 'rgba(255,255,85,' + (1 - a / 0.45).toFixed(2) + ')'; rect(g, m.x - r - 1, m.y, 2, 1, c); rect(g, m.x + r, m.y, 2, 1, c); rect(g, m.x - 1, m.y - r / 2, 2, 1, c); rect(g, m.x - 1, m.y + r / 2, 2, 1, c); }
   }
 }
 function mapOver(t, dt) {
   // the Dish keeps a red light on
-  if (Math.floor(t * 0.9) % 2 === 0) { rect(g, 223, 4, 3, 1, 'rgba(255,59,47,0.35)'); rect(g, 224, 4, 1, 1, '#ff3b2f'); }
+  if (Math.floor(t * 0.9) % 2 === 0) { oval(g, 224, 4, 4, 3, 'rgba(255,59,47,0.4)'); rect(g, 223, 3, 2, 2, '#ff3b2f'); }
   // the gold star on the meeting room glints now and then
   const ph = t % 3.4;
-  if (ph < 0.32) { const c = ph < 0.16 ? '#ffffff' : '#fff3c4'; rect(g, 95, 75, 3, 1, c); rect(g, 96, 74, 1, 3, c); }
+  if (ph < 0.4) { const c = ph < 0.2 ? '#ffffff' : '#fff3c4'; rect(g, 92, 75, 9, 1, c); rect(g, 96, 71, 1, 9, c); rect(g, 95, 74, 3, 3, c); }
   // two butterflies
   [[44, 92, 18, 9, 0, '#fffaf0'], [214, 104, 12, 7, 2.1, '#ffd93b']].forEach(([cx, cy, ax, ay, p, c]) => {
     const x = Math.round(cx + ax * Math.sin(t * 0.6 + p) + 3 * Math.sin(t * 2.3 + p)), y = Math.round(cy + ay * Math.sin(t * 0.47 + p * 2) + 2 * Math.sin(t * 3.7));
-    if (Math.floor(t * 9 + p) % 2) { rect(g, x - 1, y, 1, 1, c); rect(g, x + 1, y, 1, 1, c); } else { rect(g, x - 1, y - 1, 1, 1, c); rect(g, x + 1, y - 1, 1, 1, c); }
-    rect(g, x, y, 1, 1, C.ink);
+    if (Math.floor(t * 9 + p) % 2) { rect(g, x - 2, y - 1, 2, 2, c); rect(g, x + 1, y - 1, 2, 2, c); } else { rect(g, x - 1, y - 3, 1, 3, c); rect(g, x + 1, y - 3, 1, 3, c); }
+    rect(g, x, y - 1, 1, 2, C.ink);
   });
   // a leaf drifts off the courtyard oak
   FX.leafT -= dt;
   if (FX.leafT <= 0) { FX.leafT = 2.5 + Math.random() * 3.5; FX.leaves.push({ x: 154 + Math.random() * 12, y: 74, a: 0, p: Math.random() * 6, c: Math.random() < 0.5 ? C.oak3 : '#d9b44a' }); }
   FX.leaves = FX.leaves.filter(l => (l.a += dt) < 2.6);
-  FX.leaves.forEach(l => { const k = l.a / 2.6; rect(g, l.x + Math.sin(l.a * 3 + l.p) * 2.5, l.y + l.a * 6, 1, 1, l.c); });
+  FX.leaves.forEach(l => { const k = l.a / 2.6; rect(g, l.x + Math.sin(l.a * 3 + l.p) * 3, l.y + l.a * 7, 2, 2, l.c); });
   // now and then a little flock crosses
   FX.flockT -= dt;
   if (!FX.birds && FX.flockT <= 0) { FX.birds = { x: -16, y: 6 + Math.random() * 40 }; FX.flockT = 24 + Math.random() * 18; SFX.chirp(); }
@@ -835,18 +835,18 @@ function mapOver(t, dt) {
     const b = FX.birds; b.x += 34 * dt; b.y += Math.sin(t * 1.3) * 3 * dt;
     [[0, 0], [-6, -3], [-6, 3], [-12, -6]].forEach(([ox, oy], i) => {
       const x = Math.round(b.x + ox), y = Math.round(b.y + oy), up = Math.floor(t * 7 + i) % 2, c = 'rgba(20,20,20,0.7)';
-      rect(g, x, y, 1, 1, c); rect(g, x - 1, y - up, 1, 1, c); rect(g, x + 1, y - up, 1, 1, c);
+      rect(g, x, y, 1, 1, c); rect(g, x - 2, y - up, 2, 1, c); rect(g, x + 1, y - up, 2, 1, c);
     });
     if (b.x > W + 24) FX.birds = null;
   }
 }
 function roomLight(t) {
   // late sun through the window: a soft patch on the floor, dust turning in it
-  for (let j = 0; j < 62; j++) rect(g, 47 + j * 0.9, 69 + j, 72, 1, 'rgba(255,236,190,0.05)');
+  for (let j = 0; j < 62; j++) rect(g, 47 + j * 0.9, 69 + j, 72, 1, 'rgba(255,236,190,0.13)');
   if (calm) return;
   for (let i = 0; i < 9; i++) {
     const x = 52 + ((i * 29) % 66) + 3 * Math.sin(t * 0.5 + i) + ((t * 1.5 + i * 7) % 20), y = 28 + ((i * 17 + t * (i % 2 ? 2.2 : 1.4)) % 70);
-    rect(g, x, y, 1, 1, 'rgba(255,243,196,' + (0.25 + 0.2 * Math.sin(t * 1.7 + i)).toFixed(2) + ')');
+    rect(g, x, y, 2, 2, 'rgba(255,243,196,' + (0.45 + 0.25 * Math.sin(t * 1.7 + i)).toFixed(2) + ')');
   }
 }
 function drawMap(t) {
