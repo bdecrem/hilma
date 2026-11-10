@@ -40,14 +40,19 @@ meant, what changed. Add to the bottom of a section when he says something new.
   just document this dub tech production system, incl instruments, reverb, settings for
   production fidelity, as well as musical principles used to generate this" → this skill.
 
+- **2026-11-09.** Playing Halbschatten melody on Medium: "there was nothing to do for a minute/
+  at any level there should always be notes to play". A part taken from a record that enters
+  late gets a line of its own before it, in the record's voice and keys (here the lead's phrase
+  in one hand, G4–D5, bars 0–47); the band's channel stays the record, so the chords part still
+  plays it as rendered. 0.1 (122).
+
 ## Open, to hear
 
 - Halbschatten by ear on this iMac and on the phone: the reference mp3 against the app at the
   same volume (`~/Desktop/takt/halbschatten/`).
 - Whether the Stage should play it at the reference's own level (−11 dBFS) instead of 8 dB
   under it with the other electronic tracks.
-- The melody part waits 48 bars for the lead: whether that part wants something to play
-  before it (it would be an addition to the record).
+
 
 ## How to add a line
 

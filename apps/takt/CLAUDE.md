@@ -2139,6 +2139,24 @@ cover stealing anchors, a hand of 30 moves on a Level 2 song, a Beginner on one 
   `~/Desktop/takt/halbschatten/` (the reference mp3 and the app's render, level matched).
   Open: his A/B; a debug build renders it at 6.4× real time on the M4, not timed on the phone.
 
+- **Agent mode works again; Halbschatten's melody has notes from bar 1: 0.1 (122), 2026-11-09.**
+  Bart on the phone, Agent mode on Halbschatten: "In melody, I think it was medium difficulty
+  there was nothing to do for a minute/ at any level there should always be notes to play - add
+  notes to play to the charts for this song", answered by a 400: "tools.5.custom.input_schema.
+  properties: Property keys should match pattern '^[a-zA-Z0-9_.-]{1,64}$'". **Agent mode had been
+  refused on every song since 0.1 (109):** `set_levels` declared a property named `easy+`, which
+  the API does not allow in a tool schema. The tool says `easy_plus` now and `setLevels` maps it
+  to the override's `easy+` key (`src/lib/takt/mod-tools.ts`); the old schema reproduces his exact
+  error through `messages.countTokens`, the new one is accepted. Server-side, live on push.
+  **The melody:** the part was the lead alone, which enters at bar 48 (1:34). Bars 0–47 now carry
+  a line of the part's own (`scripts/songs/halbschatten.py`): one hand position G4–D5, long tones
+  falling D5 B♭4 A4 G4 (bars 0–15), the lead's first bar answered by a held G4 (16–31), the lead's
+  four-bar phrase kept in the hand (32–47, the last bar on A4 under the Dm9 hint), velocity 0.7.
+  The band's horns channel is still the reference's, so the chords part plays the record as
+  rendered; with the melody taken, the rack's lead plays the part's notes your level leaves out.
+  Ladder 0.18 · 0.36 · 0.48 · 0.67 · 0.67 · 0.67 · 0.72 (was 0.08 … 0.36; 176 notes on Hard), no
+  eight bars empty on any level; every other song's figures unchanged; `-LessonCheck` 520/520.
+
 ## The one transport (2026-11-08)
 
 Every screen that plays music draws the same controls in the same order and they always work:

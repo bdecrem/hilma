@@ -111,6 +111,13 @@ LEVELING.md, and this file keeps the pointer.
   printed (rule 16). **Measured: 10 moves in 7 moments was "crazy"; 6 in 3 was "2 or 3
   moments", right.**
 
+- **2026-11-09, Halbschatten melody, Medium.** "there was nothing to do for a minute/ at any
+  level there should always be notes to play - add notes to play to the charts for this song".
+  Not a rung: the line. A part whose record enters late (the lead from bar 48) gets a line of
+  its own under the empty bars, in the record's keys and one hand position, growing into the
+  record's phrase; the band's channel stays the record. Figures in LEVELING.md §4. Rule: no
+  level has a stretch of more than eight bars with nothing to play.
+
 ## Done by the skill's first runs (2026-11-08, to hear)
 
 - **Maxwell Street II** (Level 2's song): the `--five` line rewritten into two pentatonic boxes

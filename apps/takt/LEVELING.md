@@ -134,6 +134,16 @@ it before and after every change (2026-11-08).
 
 ## 4. Decisions and dates
 
+- **2026-11-09, 0.1 (122): Halbschatten melody, notes from bar 1.** Bart, in Agent mode: "In
+  melody, I think it was medium difficulty there was nothing to do for a minute/ at any level
+  there should always be notes to play". The density axis at its floor: the part was the lead
+  alone, which enters at bar 48 (1:34), so every level was empty for 94 s. The part got a line of
+  its own under bars 0–47 (`scripts/songs/halbschatten.py`, the record untouched): one hand
+  position G4–D5, long tones, then the lead's first bar, then its whole phrase kept in the hand.
+  Melody 0.08 · 0.15 · 0.21 · 0.33 · 0.33 · 0.33 · 0.36 → 0.18 · 0.36 · 0.48 · 0.67 · 0.67 ·
+  0.67 · 0.72 (88 → 176 notes on Hard); the quietest eight bars on Easy 0.5 a second (was 0).
+  Hand unchanged above Beginner (Easy 7/7 · 2 · 10, Medium 15/9 · 2 · 14). Every other song's
+  figures unchanged (`--compare`).
 - **2026-11-08.** The hand becomes an axis. Budgets set from Blue Lantern II's Easy+ (0/0, 1,
   10) and Medium (6/3, 3, 13) and from the first solo (10/7, 2–3, 15: too hard). The Level 1
   solo budget is 4 moves, Bart's own number ("maybe 4 times"). Bart's solo was rewritten under

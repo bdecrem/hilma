@@ -164,14 +164,14 @@ export const TOOLS: ToolDef[] = [
   },
   {
     name: 'set_levels',
-    description: 'This song’s own charting for a part, the shape of charting.json’s songs entry: which tier a difficulty plays (beginner/easy/easy+/medium/hard), a phrase of its own (bars: every key the line plays in each phrase stays at every level), and patches to a tier’s gap (seconds between onsets, at least) or space (seconds of silence at most before a lighter hit is borrowed; 0 = never borrow). Pass only the keys you set; null clears one. The ladder must still loosen going up. Returns the new figures.',
+    description: 'This song’s own charting for a part, the shape of charting.json’s songs entry: which tier a difficulty plays (beginner/easy/easy_plus/medium/hard; easy_plus is the Easy+ difficulty), a phrase of its own (bars: every key the line plays in each phrase stays at every level), and patches to a tier’s gap (seconds between onsets, at least) or space (seconds of silence at most before a lighter hit is borrowed; 0 = never borrow). Pass only the keys you set; null clears one. The ladder must still loosen going up. Returns the new figures.',
     input_schema: {
       type: 'object',
       properties: {
         part: { type: 'string', enum: ['chords', 'melody'] },
         beginner: { type: ['integer', 'null'] },
         easy: { type: ['integer', 'null'] },
-        'easy+': { type: ['integer', 'null'] },
+        easy_plus: { type: ['integer', 'null'], description: 'The Easy+ difficulty.' },
         medium: { type: ['integer', 'null'] },
         hard: { type: ['integer', 'null'] },
         phrase: { type: ['integer', 'null'] },
@@ -512,10 +512,11 @@ function setLevels(d: Draft, charting: Charting, input: Record<string, unknown>)
   const k = asPart(d, input.part)
   const next: SongOverride = JSON.parse(JSON.stringify(d.override ?? {}))
   const o = { ...(next[k] ?? {}) } as Record<string, unknown>
-  for (const key of ['beginner', 'easy', 'easy+', 'medium', 'hard', 'phrase'] as const) {
-    if (key in input) {
-      if (input[key] == null) delete o[key]
-      else o[key] = asInt(input[key], key)
+  // The API allows only [a-zA-Z0-9_.-] in a schema's property names, so the tool says easy_plus for easy+.
+  for (const [arg, key] of [['beginner', 'beginner'], ['easy', 'easy'], ['easy_plus', 'easy+'], ['medium', 'medium'], ['hard', 'hard'], ['phrase', 'phrase']] as const) {
+    if (arg in input) {
+      if (input[arg] == null) delete o[key]
+      else o[key] = asInt(input[arg], key)
     }
   }
   if ('tiers' in input) {

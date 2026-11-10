@@ -27,7 +27,7 @@ Stage's electronic tracks (about −19 dBFS mean; the reference is at −11).
 
 The parts: the chords are the stab's five-note voicings (Gm9, Cm9, Dm9; your keys play the
 rack's synthesized stab into the same filter, echo and hall); the melody is the lead line (the
-rack's FM voice). Weights by the takt-chart skill (BLUES.md does not apply: CHARTING.md's rules).
+rack's FM voice), with a line of the part's own under bars 0–47 so it has notes from the start. Weights by the takt-chart skill (BLUES.md does not apply: CHARTING.md's rules).
 """
 import json
 import math
@@ -166,7 +166,7 @@ s.rack = {
         "padCutoff": [[0, 300], [16, 480], [48, 900], [56, 620], [76, 1100], [96, 600], [120, 300]],
         "padLevel": [[0, 0.0], [4, 0.8], [8, 1.0], [16, 0.75], [32, 0.6], [47, 0.7], [48, 1.0], [55, 1.0], [56, 0.6], [88, 0.75],
                      [112, 1.0], [118, 0.7], [BARS + 2, 0.0]],
-        "leadLevel": [[48, 0.55], [56, 1.0], [72, 1.0], [80, 0.8], [88, 0.8]],
+        "leadLevel": [[0, 0.55], [48, 0.55], [56, 1.0], [72, 1.0], [80, 0.8], [88, 0.8]],
         "noise": [[0, 0.0], [1, 1.0], [16, 0.8], [32, 0.6], [48, 1.0], [56, 0.6], [96, 0.8], [112, 1.0], [120, 0.9], [BARS + 2.5, 0.0]],
         # The master's fade: half a cosine from bar 118 to the end of the tail.
         "fade": [[118 + fade_bars * i / 64, round(0.5 * (1 + math.cos(math.pi * i / 64)), 6)] for i in range(65)],
@@ -220,7 +220,45 @@ for bar, step, ch, v in STAB:
 
 # MARK: Melody part: the lead
 
-melody = s.part("melody", "The lead (from bar 49)", "rackLead", "horns", "rackLead")
+melody = s.part("melody", "The lead", "rackLead", "horns", "rackLead")
+# Before the lead (bars 0–47) the part has a line of its own, so every level has notes from
+# the first bar (Bart, 2026-11-09: "at any level there should always be notes to play"). It is
+# not the record's: the band's horns channel stays the reference's, so taking the chords part
+# plays the record as rendered; taking the melody, the rack's lead plays these where your level
+# leaves them out. One hand position, G4 to D5 (thumb on G, pinky on D), the lead's own keys,
+# and it grows into the lead's phrase eight bars a step:
+#   0–15  long tones falling D5 B♭4 A4 G4, a bar each;
+#   16–31 the lead's first bar (D5 B♭4 A4 on steps 0, 6, 10), answered by a held G4;
+#   32–47 the whole four-bar phrase kept in the hand: D5 B♭4 A4 | G4 – A4 B♭4 | C5 B♭4 A4 | G4,
+#         the last bar of the section on A4, the fifth of the Dm9 the stab hints at.
+D5, C5, BB4, A4, G4 = 74, 72, 70, 69, 67
+INTRO_V = 0.7
+
+
+def intro(bar, step, note, ln, lv):
+    s.pnote(melody, bar * BAR + step * 3, note, ln * 3, lv)
+    melody[-1]["v"] = INTRO_V
+
+
+for bar in range(16):
+    intro(bar, 0, [D5, BB4, A4, G4][bar % 4], 14, 1 if bar % 2 == 0 else 2)
+for bar in range(16, 32):
+    if bar % 2 == 0:
+        intro(bar, 0, D5, 6, 1)
+        intro(bar, 6, BB4, 4, 2)
+        intro(bar, 10, A4, 6, 2)
+    else:
+        intro(bar, 0, G4, 14, 2)
+for bar in range(32, 48):
+    k = bar % 4
+    if k == 0:
+        intro(bar, 0, D5, 6, 1); intro(bar, 6, BB4, 4, 2); intro(bar, 10, A4, 6, 2)
+    elif k == 1:
+        intro(bar, 0, G4, 10, 1); intro(bar, 10, A4, 2, 3); intro(bar, 12, BB4, 4, 2)
+    elif k == 2:
+        intro(bar, 0, C5, 6, 1); intro(bar, 6, BB4, 4, 2); intro(bar, 10, A4, 6, 2)
+    else:
+        intro(bar, 0, A4 if bar == 47 else G4, 14, 1)
 for bar, step, note, ln, vel in LEAD:
     # A phrase is four bars; each bar's first note is the one it stands on (1), the others the
     # line (2), the two-step A into the B♭ of the phrase's second bar a pickup (3).
