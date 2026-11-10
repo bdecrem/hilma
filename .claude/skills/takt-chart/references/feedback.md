@@ -145,6 +145,15 @@ LEVELING.md, and this file keeps the pointer.
   its own bars it is 0.5 a second on Easy (each bar's first note) to 1.4 on Hard. BLUES.md's
   bands do not apply to it. Not yet played by Bart.
 
+- **Gezeiten** (2026-11-10, dub techno; the second record on the rack, both parts the record's
+  own). Melody, the bell: one hand position all song (A4 under the thumb to G5 under the pinky),
+  0/0 · 1 · 10 at every tier; 0.23 · 0.47 (Easy) · 0.69 · 0.91 (Easy+) · 0.91 · 1.31 (Medium) ·
+  1.67 (Hard). A motor line charted by its place in the bar with `from` floors (CHARTING.md rule
+  19); `-LessonCheck` failed the first draft where two bars opened on the same key (rule 7), and
+  the cure was the line. Chords, the cluster: 0.23 · 0.46 (Easy) · 0.87 (Easy+) · 0.87 (Medium) ·
+  0.97 (Hard); the eleventh on top carries the role `ninth` (the ladder has no name for it, and
+  it is the note to drop first). Not yet played by Bart.
+
 ## Open (LEVELING.md §4, BLUES.md §6)
 
 - Whether the comping ladders want a rhythm step between Easy and Medium.

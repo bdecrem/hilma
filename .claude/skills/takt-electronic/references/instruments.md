@@ -105,6 +105,33 @@ over two or four bars, highpass 200 Hz, level rising as u^2.2; then a two-bar **
 the downbeat (noise through a lowpass falling from 6.4 kHz to 400 Hz, `e^(−t/0.7 s)`). Four
 of them, ending on bars 16, 32, 56 and 88, at 0.4, 0.5, 1.0 and 0.6 of full. 0.8 to the hall.
 
+## Gezeiten's kit (2026-11-10): what is shared, what is its own
+
+The reference (`misc/gezeiten_reference.py`) calls Halbschatten's functions with Halbschatten's
+seeds for the **closed and open hats, the shaker, the clap and both reverb impulses**, so its
+parts are the same samples and the app plays Halbschatten's files for them (`hsChh…`,
+`hsOhh…`, `hsShk…`, `hsClap`, `hs-ir-hall`, `hs-ir-room`); `scripts/gezeiten.py` asserts that
+against the committed files before it writes anything. Its own, as `gz-*` (44 files, 10.5 MB
+against Halbschatten's 28):
+
+- **Kick** (`kickGZ`): the same kick landing on **E1** (41.2 Hz); its click from its own seeded
+  generator, so nothing else in the render moves when it does.
+- **Bass** (`gzBass10/15/20`): the same voice on E1, G1, A1, B1, D2 and the popped E2.
+- **The chord** (`hsStabGz0…1`): the same three saws a note, on a **minor eleventh as a
+  pentatonic cluster**, fifth at the bottom (Em11 = B3 D4 E4 G4 A4; Dm11 a white key down; Am11 =
+  E4 G4 A4 C5 D5). Two variants a chord, 2.1 s each.
+- **Rim** (`gzRim`, its click seeded), **toms** tuned E3, D3, B2 (`gzTom52L`, `50L`, `50R`,
+  `47R`).
+- **One riser** (`gzRiser`): two bars of sweep and the wash, placed four times at four gains
+  (Halbschatten cut four different ones from the bus: 4.6 MB for the same job).
+- **The noise tile** (`gzNoise`): 16 s from its own generator, **repeated by the reference**,
+  so the rack's loop is the reference's noise sample for sample and the master nulls over the
+  whole song. The file is the tile plus its first sample (the rack reads frames 0 … count − 2
+  and wraps); the 48 kHz file is the tile resampled as a loop.
+- **The bell** is `rackLead`, the FM voice unchanged, an octave region lower than
+  Halbschatten's lead (A4–G5) and played from 0.5 to 0.98 of full velocity: the velocity is its
+  brightness.
+
 ## What the engine can play today (for a new track)
 
 | need | have |

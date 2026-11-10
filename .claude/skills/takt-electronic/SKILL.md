@@ -17,8 +17,20 @@ electronic track from here on: **the reference is a target to measure against, n
 description.**
 
 One system is documented here, the one that exists: **the dub techno system** (Halbschatten,
-2026-11-09). Other styles get their own section when they are built; most of the system
-(lanes, echoes, convolution reverb, sidechain, master, the A/B) carries over unchanged.
+2026-11-09; **Gezeiten**, 2026-11-10, the second record on it, with no change to the engine).
+Other styles get their own section when they are built; most of the system (lanes, echoes,
+convolution reverb, sidechain, master, the A/B) carries over unchanged.
+
+**A second track on a system is a different record, not the first with its notes changed.**
+`references/music.md` "The second record" is how Gezeiten was made different at its core
+(which voice carries it, where the chord sits, what the bass does, the form) while every
+sound Bart had passed stayed; `references/fidelity.md` "What the second record added" is the
+tooling that came out of it. Start the next one from **Gezeiten's three scripts**
+(`misc/gezeiten_reference.py`, `apps/takt/scripts/gezeiten.py`,
+`apps/takt/scripts/songs/gezeiten.py`, `scripts/takt/gz-ab.py`): they are Halbschatten's with
+the lanes and the mix's numbers named once in the reference and carried to the song file by
+the event log, the shared kit checked against the files it reuses, and a noise bed that loops
+exactly.
 
 **Read these first, in this order:**
 
@@ -68,7 +80,8 @@ profile entry there, by the standing rule in the repo's `CLAUDE.md`).
    needs a synthesized twin in the rack (`rackStab`, `rackLead`), since the record's own is
    one event a hit.
 8. **Register, build, check, ship**: `Song.catalog`, a cover glyph in `SongArt`, the
-   `charting.json` entry, `LessonCheck`'s melody list, `npx tsx scripts/takt/library.ts`,
+   `charting.json` entry, `LessonCheck`'s melody list (the hand check near "Every blues melody
+   at every tier"), `Licenses/README.md`, `npx tsx scripts/takt/library.ts`,
    `xcodegen generate` (new files), `-LessonCheck 1`, the Mac app installed, the mp3 pair to
    the Desktop for his A/B, a section in `DUB-TECHNO.md`, a status entry in
    `apps/takt/CLAUDE.md`, commit, push.

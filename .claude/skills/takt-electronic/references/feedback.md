@@ -46,7 +46,21 @@ meant, what changed. Add to the bottom of a section when he says something new.
   in one hand, G4–D5, bars 0–47); the band's channel stays the record, so the chords part still
   plays it as rendered. 0.1 (122).
 
+- **2026-11-10.** "make another electronic track, patterned after Halfschatten, but make sure
+  it's a different core track concept (can still be dub tech) - make sure to use the correct
+  skills to make the music and the charts" → **Gezeiten** (E minor, 116; `music.md` "The second
+  record"). Read as: the same system and the same bar (the app is the reference, measured), a
+  record that is not Halbschatten with the notes changed. What was changed is the role of every
+  voice (the bell leads from bar 1, the chord answers off the beat, the bass never moves, the
+  form has two rises); what was kept is every voice's sound, which he had called "great". Made
+  in a worktree while he was away, so his ears had not passed the record before it was ported:
+  the mp3 pair is in `~/Desktop/takt/gezeiten/`.
+
 ## Open, to hear
+
+- **Gezeiten, the record itself** (2026-11-10): whether the bell as the motor works for him, its
+  level (levelled to −24.5 dB on its loud passages; Halbschatten's lead is −24), the dotted-quarter
+  echo on the chord, the one-drop clap. Changes go into `misc/gezeiten_reference.py` first.
 
 - Halbschatten by ear on this iMac and on the phone: the reference mp3 against the app at the
   same volume (`~/Desktop/takt/halbschatten/`).

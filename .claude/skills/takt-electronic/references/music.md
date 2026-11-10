@@ -152,6 +152,46 @@ top, the stab 9 dB under the bass, the hall and the pad 5 dB under the stab, the
 by its peaks (the clap and the rim near −11 dB, the hats −13.5, the shaker −17). Then one master: tanh for density, a limiter that barely works, −10 LUFS. Nothing is
 fixed in the master that should have been fixed on a bus.
 
+## The second record: Gezeiten, and what "a different core" meant (2026-11-10)
+
+Bart asked for another track "patterned after Halbschatten" with "a different core track
+concept". The sounds stayed (he had passed them); the roles moved. `misc/gezeiten_reference.py`,
+E minor, 116, 112 bars.
+
+| | Halbschatten | Gezeiten |
+|---|---|---|
+| what carries the track | the stab and its echo; the lead arrives at 40 % and says little | **the bell, from bar 1**: a four-bar tune on five keys, a note on steps 0, 3, 8, 11 |
+| how the echo finishes the rhythm | the stab on 2, the dotted eighth answers on 5, 8, 11 | the bell's dotted eighth answers on **6 and 14**: written line + echo = a double tresillo (3 + 3 + 2) |
+| the chord | a tick on off-beat 16ths (2, 7, 11 / 13), decay 0.11–0.24 s, filter kick 1.6 oct in 85 ms | **a skank** on the "and" of 2 and of 4 (6, 14; a ghost on 9), decay 0.18–0.30 s, the filter opening 1.3 oct and closing in 150 ms: a bloom |
+| its echo | a dotted eighth | **a dotted quarter**: the two echoes live on different grids (the bell's on 16ths, the chord's on 8ths), and the chord's repeats rise into the next hit |
+| harmony | minor ninths in close position, i · i · iv · v under the lead | **a minor eleventh as a pentatonic cluster** (B D E G A: five white keys), **planed**: Em11 → Dm11 two bars each, Em · Dm · Am · Em a bar each at the crest |
+| the ground | the bass follows the chords from bar 56 | **never moves**: kick and bass stay on E while the chords plane over them (the whole track is the white keys: E phrygian by the time Dm11 arrives) |
+| bass | steps 3, 6, 10, 14 | steps 2, 7, 10, 13; the 7 is the octave popped (E2 over the E1), so the line reads on small speakers |
+| backbeat | clap on 2 and 4 from a third in | **a one drop**: the clap on beat 3 only; a cross-stick on beat 2 into the echo |
+| form | one arc with a break at 40 % and the peak at 63 % | **two tides**: the filter up to bar 38, an ebb with no kick (40–47), higher to bar 70, out the way it came |
+| the player | chords = the stab; melody = the lead plus a written line before it | chords = the cluster, **one hand shape that moves a white key**; melody = the bell, **the record's own line from bar 1, one hand position** (A4 under the thumb, G5 under the pinky) |
+
+What that taught, for the third:
+
+- **Change roles, not sounds.** A new record on the same console is a new answer to "what
+  carries it, what answers, what never moves, where the form turns". Nothing in `Rack.swift`
+  changed: every difference above is a number in the song file (`echo.beats`,
+  `leadEcho.beats`, `stab.env` / `envTime`, the lanes) or an event.
+- **Write the part the player takes into the record.** The bell is a tune a hand can hold
+  (five keys, one position) and the cluster is one shape; so the charts are the record, and no
+  part needed a line added before it enters (Halbschatten's melody did).
+- **Put the two echoes on different grids** when both voices are busy: a dotted eighth on the
+  line that should chatter, a dotted quarter on the one that should swell.
+- **The velocity is the bell's filter.** The FM index follows velocity, so the lead's
+  brightness is arranged by how hard the reference plays it (0.74 of full in the still water,
+  1.0 at the crest), and its level by the lead lane.
+- **A low root needs an octave in the line.** E1 is 41 Hz; the popped E2 on step 7 and the
+  bass's octave-up layer are what a laptop hears.
+- **Decide blind, then measure against the record you trust.** With no ears in the loop, the
+  check on the mix was Halbschatten's own render: the same master chain, every block's level
+  and octave bands side by side (`analyze` in the session), the bell pulled down until the
+  480–960 Hz band sat where Halbschatten's lead puts it.
+
 ## Writing the next one
 
 Change the key and tempo, keep the method: decide the form in eight-bar blocks, write the

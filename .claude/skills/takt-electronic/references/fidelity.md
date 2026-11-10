@@ -65,6 +65,31 @@ what a first pass can reach when the method is followed.
 Kick and bass side/mid near 0 (mono). No clipping. The app's debug build renders the song at
 6.4 times real time on the M4.
 
+## What the second record added (Gezeiten, 2026-11-10)
+
+It matched on the first render (every stem within 0.01 dB, the master's bands within 0.01 dB at
+44.1 kHz and 0.04 at 48). What made that cheap, and what to keep:
+
+| | |
+|---|---|
+| **The lanes and the mix's numbers are named once, in the reference** (`LANES`, `STAB_ENV`, `ECHO_STEPS`, `LEAD_ECHO_FB`, `PAD_NOTES`, …) and the cut script writes them into the event log (`lanes`, `mix`, `chords`) | the song file reads them; nothing is typed twice, so a lane cannot drift from the render |
+| **`--verify <master.wav>`**: the logged render against a master the unpatched reference wrote | Halbschatten's check needed a `reference.flac` that only one Mac has |
+| **Shared samples are asserted, not assumed**: each part × Halbschatten's scale against its committed `.caf`, each impulse against its `.wav` | reuse is only right while the functions and seeds are the same; the assert fails the day one of them moves |
+| **The noise bed is a tile the reference repeats** | the app's loop is then the reference's noise: the master nulls over the whole song (−56 dB; Halbschatten's is −34.5 once its bed loops) |
+| **A lead note's length is a whole number of ticks** (`BELL_LEN` 8/3 and 7/3 steps = 8 and 7 ticks) | a note's `len` is an integer in the song file and the release starts there |
+| **Seeded generators for one-shots** (the kick's and the rim's click, the riser, the noise) | changing one sound does not move the random stream every later event is drawn from |
+| **`TAKT_SIM=<udid>`** on the A/B's renders | a second session can use the booted simulator |
+| A render writes into the work folder, not `/tmp` | two A/Bs can run on one Mac |
+
+Reached: mean −19.20 / −19.20 dBFS, peak −9.01 / −9.01 (−8.89 the reference resampled to 48),
+side/mid 0.258 / 0.258; stems kick −79 dB, bass −55, chords −67, dub_delay −62, hall −65, lead
+−67, lead_echo −61, pad −65, hats −59, clap −61, toms −64, shaker −54, rim −61, room −51, riser
+−59, noise −44 (its 16-bit floor at that level) over the whole song. The commands are
+`DUB-TECHNO.md` §9.
+
+One trap it found: `halbschatten.py` cleared every instrument named `hs…` before writing its
+own, which would have dropped `hsStabGz…`; it now leaves those.
+
 ## Your keys are the one thing that is not the record
 
 When the player takes a part, the band's events for it stop, and the keys play the rack's

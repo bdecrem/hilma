@@ -512,8 +512,118 @@ The system as a whole (every instrument, both reverbs, the fidelity checklist, a
 principles the record was generated from) is the `takt-electronic` skill:
 `.claude/skills/takt-electronic/` (2026-11-09).
 
+## 9. Gezeiten: a second record on the same console (2026-11-10)
+
+Bart: "make another electronic track, patterned after Halfschatten, but make sure it's a
+different core track concept (can still be dub tech) - make sure to use the correct skills to
+make the music and the charts". **Gezeiten** (tides): dub techno in E minor, 116, 112 bars and a
+7 s tail (3:59). The record is `misc/gezeiten_reference.py`, made on §8's method with the
+`takt-electronic` skill; the app's render of it is the reference by the same measurements, and
+**`Rack.swift` did not change**: Halbschatten's render is what it was by construction.
+
+**The record** (the skill's `references/music.md`, "The second record", has the comparison):
+
+- **The bell is the motor.** The FM lead plays a four-bar tune on five white keys (A4 B4 D5 E5
+  G5: `E B D E | G E D B | E B D E | A B D B`) from bar 1, a note on steps 0, 3, 8 and 11. Its
+  echo is a dotted eighth, so the repeats land on 6 and 14: the written line and the echo are
+  one double tresillo. Two notes a bar in the first eight bars, all four from the kick; at the
+  crest (64–79) the tune starts from its top (`G E D E | E G D B | G E D E | A B D E`).
+- **The chord is a skank.** A minor eleventh as a pentatonic cluster, fifth at the bottom (Em11
+  = B3 D4 E4 G4 A4), on the "and" of 2 in every bar, the "and" of 4 as the answer, a ghost on
+  step 9 in the full sections: the reggae off-beat. Longer than Halbschatten's tick (decay
+  0.18–0.30 s; the filter opens 1.3 octaves and closes in 150 ms), into a **dotted-quarter**
+  echo whose repeats swell back into the next hit.
+- **The ground does not move.** Kick (landing on E1) and bass (steps 2, 7, 10, 13: E1, the
+  octave popped on 7, two notes walking the pentatonic) stay on E from bar 16 to 99. Over them
+  the chords **plane**: Em11 · Em11 · Dm11 · Dm11 from bar 32 (the same hand shape a white key
+  down), Em · Dm · Am · Em a bar each at the crest, one chord again from 80. Everything is on the
+  white keys.
+- **Two tides.** The filter climbs to 1250 Hz at bar 38, ebbs (bars 40–47: no kick, bass or
+  hats, the pad up, the echo's feedback at 0.66, one bell note and air in bar 47), climbs higher
+  to 2600 at bar 70, and runs out the way it came. The clap is a **one drop** (beat 3 only,
+  bars 32–38 and 48–79); a cross-stick on beat 2 goes into the echo; the shaker is 56–79.
+
+| bars | |
+|---|---|
+| 0–7 Still water | the bell's two beats, the chord once a bar, pad, noise |
+| 8–15 Kick | + kick, the bell's whole line; hat build 12–15, riser into 16 |
+| 16–23 Bass | + bass, + open hat; the chord twice a bar |
+| 24–31 Hats | + closed 16ths, rim, toms; bar 31's last chord is Dm11 (the hint); riser into 32 |
+| 32–39 First tide | + clap; the chords plane; bar 39: kick, bass and clap out from beat 3, the throw |
+| 40–47 Ebb | no drums; the bell softer, the chord long; hat build and riser 44–47; bar 47 ends on Am11 |
+| 48–55 Flood | everything |
+| 56–63 Shaker | + shaker, rim, toms |
+| 64–71 Crest | a chord a bar (Em Dm Am Em), the bell from its top; the filter's peak at 70 |
+| 72–79 High water | the same; bar 79: kick out on beat 4 |
+| 80–87 One chord | Em11 again; no clap, no shaker |
+| 88–95 Thinning | no closed hats, no rim; the hats fading |
+| 96–103 Low | no hats or toms; the bell drops its last note; bass to 99 |
+| 104–111 Out | no kick; the bell's two beats, then one; the chord to 109; the fade from 110 |
+
+**What it shares with Halbschatten, and what is its own.** The reference makes the hats, the
+shaker, the clap and both reverb impulses with Halbschatten's functions and seeds, so they are
+the same samples: the app plays `hsChh…`, `hsOhh…`, `hsShk…`, `hsClap`, `hs-ir-hall`,
+`hs-ir-room` for them, and `scripts/gezeiten.py` asserts each against the committed file. Its
+own are 44 `gz-*` files, 10.5 MB (Halbschatten's are 94 and 28): the kick, the rim, four toms,
+eight bass notes, six raw stab buffers (`hsStabGz0…1`: the renderer sends an instrument named
+`hsStab…` into the stab bus), one riser played at four gains, and a **16 s noise tile the
+reference itself repeats**, so the rack's loop is the reference's noise to the sample.
+
+**The numbers** (`scripts/takt/gz-ab.py`, a simulator; reference = its master − 8 dB):
+
+| | 44.1 kHz | 48 kHz |
+|---|---|---|
+| mean level, app / reference | −19.20 / −19.20 dBFS | −19.20 / −19.20 |
+| peak | −9.01 / −9.01 | −9.01 / −8.89 |
+| octave bands 30 Hz–21 kHz, bars 0–7, 24–31, 40–47, 64–71, 96–103, worst | 0.01 dB | 0.04 dB |
+| side / mid | 0.258 / 0.258 | 0.258 / 0.258 |
+| the master, app − reference, the whole song | −56 dB | −30 dB |
+
+Stems at 44.1 kHz over the whole song (level difference; the null): kick 0.00 dB, −79; bass
+0.00, −55; chords 0.00, −67; dub_delay 0.00, −62; hall 0.00, −65; lead 0.00, −67; lead_echo
+0.00, −61; pad 0.00, −65; hats 0.00, −59; clap 0.00, −61; toms 0.00, −64; shaker 0.01, −54; rim
+0.00, −61; room 0.01, −51; riser 0.00, −59; noise 0.04, −44 (the tile's 16 bits at that level).
+The master nulls over all four minutes because the noise does not stop being the reference's
+after the first loop. What is still not the reference: the limiter's forward pass, and at
+48 kHz an event on the nearest 48 kHz frame (§8).
+
+**The song** (`scripts/songs/gezeiten.py`, from `gezeiten-events.json`): 2,004 drum hits, 302
+bass notes, 233 chord hits, 401 bell notes. Both parts are the record's own, by the
+`takt-chart` skill (`LEVELING.md` §4, `CHARTING.md` rule 19):
+
+- **Chords, "The skank"**: the cluster, one hand shape (low to high fifth, seventh, root,
+  third, eleventh; the eleventh carries the role `ninth`, the first note a level drops).
+  0.23 · 0.46 · 0.87 · 0.87 · 0.97 · 0.97 · 0.97 onsets a second: Beginner the root every other
+  bar, Easy root and third once a bar (tier 2), Easy+ twice a bar (3), Medium the triad, Hard
+  all five with the ghost.
+- **Melody, "The bell"**: the line, in one hand position (A4 under the thumb, G5 under the
+  pinky): 0/0 · 1 · 10 at every level. 0.23 · 0.47 · 0.69 · 0.91 · 0.91 · 1.31 · 1.67: Beginner
+  every other 1, Easy the 1 of every bar (tier 2), Easy+ the 1 and the 3 (4), Medium with the
+  "a" of 1 (6), Hard all four. The first draft's crest opened two bars running on G5 and the
+  check "every level plays the line's keys, not one" failed it; the second bar opens on E5.
+
+**Running it again:**
+
+```bash
+V=~/.cache/takt-venv/bin/python                               # numpy, scipy, numba, soundfile
+$V misc/gezeiten_reference.py /tmp/gz/master.wav               # the record, on its own
+$V apps/takt/scripts/gezeiten.py --keep /tmp/gz/work --verify /tmp/gz/master.wav   # sounds, the event log; stems kept
+python3 apps/takt/scripts/songs/gezeiten.py                    # the song file
+# build, install on a simulator, then (TAKT_SIM=<udid> for one that is not the booted one):
+GZ_SR=44100 $V scripts/takt/gz-ab.py render /tmp/gz/work       # 17 renders, about 12 minutes
+GZ_SR=44100 $V scripts/takt/gz-ab.py stems /tmp/gz/work && GZ_SR=44100 $V scripts/takt/gz-ab.py master /tmp/gz/work
+$V scripts/takt/gz-ab.py render /tmp/gz/work master && $V scripts/takt/gz-ab.py master /tmp/gz/work   # at 48 kHz
+```
+
+**Not checked: Bart's ears.** The record was written while he was away, so nobody has heard
+it: the mp3 pair is in `~/Desktop/takt/gezeiten/` on the MacBook Air (the reference, and the
+app's render raised 8 dB to its level). Its mix was set against Halbschatten's own render, block
+by block, since nothing else could judge it. Not rendered from the installed Mac app (§8's step
+4): the simulator only.
+
 ## Files
 
+- `misc/gezeiten_reference.py`: Gezeiten's reference; `scripts/gezeiten.py` (sounds and the event log), `scripts/songs/gezeiten.py`, `scripts/songs/gezeiten-events.json`; `Takt/Sounds/gz-*`; `scripts/takt/gz-ab.py` (repo root)
 - `misc/halbschatten_reference.py`, `misc/Halbschatten.mp3`, `misc/HALBSCHATTEN.md`: Halbschatten's reference and brief
 - `scripts/halbschatten.py` (sounds and the event log), `scripts/songs/halbschatten.py`, `scripts/songs/halbschatten-events.json`
 - `Takt/Audio/Rack.swift`, `Takt/Audio/Convolver.swift`; `Takt/Sounds/hs-*`; `scripts/takt/halb-ab.py` (repo root)

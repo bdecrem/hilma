@@ -59,6 +59,7 @@ The figures for every song, every tier (2026-11-08, `-LessonCheck` prints them a
 | Hypnotist II | 0/0 · 1 · 5 | 0/0 · 1 · 7 | 0/0 · 1 · 7 | 0/0 · 1 · 7 (L5) | 0/0 · 1 · 7 |
 | Halsted (148, 0.1 (115)) | 10/10 · 3 · 19 | 36/20 · 6 · 27 | 41/17 · 6 · 27 | 41/17 · 6 · 27 (L4) | 82/6 · 6 · 27 |
 | McLemore (96, 2026-11-09; Easy = L2, Easy+ = L3) | 2/2 · 2 · 10 | 5/5 · 2 · 10 (L2) | 12/9 · 2 · 10 (L3) | 14/11 · 2 · 12 (L5) | 20/9 · 3 · 15 |
+| Gezeiten (116, 2026-11-10; Easy = L2, Medium = L6) | 0/0 · 1 · 10 | 0/0 · 1 · 10 (L2) | 0/0 · 1 · 10 | 0/0 · 1 · 10 (L6) | 0/0 · 1 · 10 |
 
 ## 2. The budgets
 
@@ -134,6 +135,24 @@ it before and after every change (2026-11-08).
 
 ## 4. Decisions and dates
 
+- **2026-11-10: Gezeiten, a melody that is the record's own line in one hand position.** Bart
+  asked for a second electronic track with its charts by the skills. The bell was written for
+  the hand before it was a record (`misc/gezeiten_reference.py`): five white keys, A4 under the
+  thumb, B4, D5, E5, G5 under the pinky, a note on steps 0, 3, 8 and 11 of every bar, from bar 1
+  (so no line had to be added in front of it, as Halbschatten's needed). Every tier reads
+  **0/0 · 1 · 10**: no hand move in four minutes, at any level. The density is the whole
+  difficulty: 0.23 · 0.47 (Easy, the 1 of every bar) · 0.69 · 0.91 (Easy+, the 1 and the 3) ·
+  0.91 · 1.31 (Medium, with the "a" of 1) · 1.67 (Hard, all four; 1.9 in the full sections), by
+  weights and `from` floors per place in the bar (CHARTING.md rule 19); the song's patch names
+  Easy tier 2, Easy+ 4, Medium 6. Chords, the cluster (one shape, a white key down for Dm11):
+  0.23 · 0.46 (Easy, two notes once a bar) · 0.87 (Easy+, twice a bar) · 0.87 (Medium, the
+  triad) · 0.97 · 0.97 · 0.97 (Hard, all five). No level's goal song, so printed, not asserted.
+  The planner keeps the thumb on A4 and B4 and the pinky on G5 and fingers D5 and E5 under 2–3
+  or 3–4 by where the line goes next (`chart-dump.ts song-gezeiten --tier 7`): no move by this
+  sheet's measure, but not one finger a key; if the badges read as fussy, that is the planner's
+  cost for a minor third under 4–5, not the line. Not yet played by Bart; if Medium at 1.31 with
+  a still hand reads too easy or the step from Easy to Easy+ (×1.9) too steep, tier 3 (0.69) and
+  tier 5 are the rungs to name.
 - **2026-11-09, 0.1 (122): Halbschatten melody, notes from bar 1.** Bart, in Agent mode: "In
   melody, I think it was medium difficulty there was nothing to do for a minute/ at any level
   there should always be notes to play". The density axis at its floor: the part was the lead
