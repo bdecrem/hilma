@@ -2172,7 +2172,7 @@ cover stealing anchors, a hand of 30 moves on a Level 2 song, a Beginner on one 
   `Vibe.current` (what the tokens and the type read), `AppModel.vibe` (sets it, stores it, swaps
   the map's world), and `VibeToggle`, the switch beside the gear on Learn, Stage and Map: a 56 × 30
   track, a `signal` knob carrying the vibe's glyph (`VibeGlyph`: ♭ for the blues, a waveform for
-  electronic), the other's glyph faint at the far end, the two names either side on the Mac. The
+  electronic), the other's glyph faint at the far end, no names beside it (Bart dropped them, 0.1 (125)). The
   knob slides, then the screen cross-fades: `RootView`'s route switch has `.id(app.vibe)`, because
   **the tokens are read when a view is made**, so a vibe change rebuilds the screen (scroll
   positions reset; nothing else lives in view state). **The look:** Electronic is the brief's own,
@@ -2200,7 +2200,7 @@ cover stealing anchors, a hand of 30 moves on a Level 2 song, a Beginner on one 
   first. **Default pins** are the six blues tracks plus `electronicPins` (Halbschatten, Gezeiten,
   Hypnotist II, Warm Nine, Abyss); `StageScreen.joinedLater` gives a track that joined the
   defaults after a player's set was last changed to that set too (the electronic ones at
-  `Vibe.pinsEpoch`, Gezeiten that evening); a set changed since is as the player set it. Fixed on
+  `Vibe.pinsEpoch`, Gezeiten at its real ship time, `gezeitenShipped`, 19:29 UTC); a set changed since is as the player set it. **A join date must never be later than the ship:** Gezeiten's first sat at 22:00 UTC, so every unpin made before then came back on the next read (fixed 0.1 (125)). **Flipping the vibe sets Settings → Launch sound** to the vibe's set (`Vibe.launchSet`: blues, or deep for electronic) for the next launch; Off stays off. Fixed on
   the way: the phone's result card was 18 pt wider than a 402 pt screen (three fixed buttons) and
   ran past both edges; the way back wraps to its own row there. The chat teacher and the library
   know the switch (`chat-agent.ts`, `library.ts`). DEBUG: `-vibe`, `-VibeFlip <s>` (flips like a

@@ -21,9 +21,12 @@ struct StageScreen: View {
     /// stored set older than the date gets the track too (it had no say about it), one changed
     /// since is as the player set it. The electronic defaults joined with the vibes; a new
     /// track that should open pinned goes here with the day it shipped.
-    /// Gezeiten shipped the evening of 2026-11-10, after sets changed that day.
+    /// Gezeiten shipped at 11:29 PT on 2026-11-10 (eef25ff), after sets changed that day. The
+    /// date has to be the real ship time, never later: a set changed before it gets the track
+    /// back on every read, so an unpin made before a future date never sticks.
+    static let gezeitenShipped = ISO8601DateFormatter().date(from: "2026-11-10T19:29:29Z")!
     static let joinedLater: [(song: String, at: Date)] = electronicPins.map {
-        ($0, $0 == "song-gezeiten" ? Vibe.pinsEpoch.addingTimeInterval(22 * 3600) : Vibe.pinsEpoch)
+        ($0, $0 == "song-gezeiten" ? gezeitenShipped : Vibe.pinsEpoch)
     }
     /// The other vibe's pinned tracks, open under their header. Stored: once opened they stay
     /// open, on either vibe and across launches, until the player closes them (Bart, 2026-11-10).
@@ -59,7 +62,7 @@ struct StageScreen: View {
                     .foregroundStyle(Palette.text)
                 StaffLines()
                     .frame(maxWidth: .infinity)
-                VibeToggle(app: app, labels: !compact)
+                VibeToggle(app: app)
                 AskButton(size: compact ? 34 : 36)
                 TransportButton(symbol: "gearshape", lit: false, size: compact ? 34 : 36, label: "Settings") {
                     app.route = .settings

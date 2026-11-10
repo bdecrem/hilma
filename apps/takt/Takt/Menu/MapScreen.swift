@@ -162,7 +162,7 @@ private struct MapHeader: View {
     }
 
     @ViewBuilder private var buttons: some View {
-        VibeToggle(app: app, labels: !compact)
+        VibeToggle(app: app)
         AskButton(size: compact ? 34 : 36)
         TransportButton(symbol: "gearshape", lit: false, size: compact ? 34 : 36, label: "Settings", action: settings)
     }

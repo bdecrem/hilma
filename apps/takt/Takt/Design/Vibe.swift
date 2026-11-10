@@ -12,6 +12,9 @@ import SwiftUI
 ///   and Blues reads its body text in a serif, like liner notes;
 /// - the map's world (`MapWorld`): the blues road, or the Berlin clubs; level n is level n of
 ///   the same plan on both;
+/// - the launch sound: flipping the vibe sets Settings → Launch sound to the vibe's set (blues,
+///   or deep for electronic), so the next launch counts in with it; Off stays off (Bart,
+///   2026-11-10);
 /// - the Stage: the pinned tracks of the vibe's genre show, the other genre's pinned tracks sit
 ///   under a disclosure header (`Song.genre`).
 enum Vibe: String, CaseIterable, Identifiable {
@@ -38,6 +41,8 @@ enum Vibe: String, CaseIterable, Identifiable {
     var title: String { self == .blues ? "Blues" : "Electronic" }
     var symbol: String { self == .blues ? "music.note" : "waveform" }
     var other: Vibe { self == .blues ? .electronic : .blues }
+    /// The launch sound set the vibe picks (`LaunchSound`).
+    var launchSet: String { self == .blues ? "blues" : "deep" }
 }
 
 /// A vibe's mark: the flat sign for the blues (the blue note), a waveform for electronic.
@@ -59,13 +64,11 @@ struct VibeGlyph: View {
 }
 
 /// The vibe switch: a small track with a lit knob that carries the vibe's glyph, the other
-/// vibe's glyph faint at the far end. On the Mac the two names stand either side of it, the
-/// one that's on in `text`. The knob slides first, then the screen cross-fades to the other
+/// vibe's glyph faint at the far end; no names beside it, the glyphs say it (Bart, 2026-11-10).
+/// The knob slides first, then the screen cross-fades to the other
 /// vibe (the screens are rebuilt: the tokens are read when a view is made).
 struct VibeToggle: View {
     let app: AppModel
-    /// The names either side (the Mac's headers have the room; the phone's don't).
-    var labels = false
     /// Where the knob sits: ahead of `app.vibe` for the length of the slide.
     @State private var shown: Vibe?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -76,8 +79,7 @@ struct VibeToggle: View {
     var body: some View {
         let vibe = shown ?? app.vibe
         Button(action: flip) {
-            HStack(spacing: 8) {
-                if labels { name(.blues, on: vibe == .blues) }
+            Group {
                 // The track is 56 × 30; the knob 24 with 3 pt around it, so it travels 26 pt.
                 ZStack(alignment: vibe == .blues ? .leading : .trailing) {
                     Capsule().fill(Palette.panel)
@@ -95,7 +97,6 @@ struct VibeToggle: View {
                         .padding(3)
                 }
                 .frame(width: Self.width, height: Self.height)
-                if labels { name(.electronic, on: vibe == .electronic) }
             }
             .contentShape(Rectangle())
         }
@@ -106,13 +107,6 @@ struct VibeToggle: View {
         .accessibilityValue(app.vibe.title)
         .accessibilityHint("Switches to \(app.vibe.other.title): the look, the map and the Stage's tracks")
         .accessibilityAddTraits(.isButton)
-    }
-
-    private func name(_ v: Vibe, on: Bool) -> some View {
-        Text(v.title)
-            .dataLabel(10, weight: .semibold)
-            .foregroundStyle(on ? Palette.text : Palette.muted)
-            .fixedSize()
     }
 
     private func glyph(_ v: Vibe) -> some View {

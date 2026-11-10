@@ -30,6 +30,7 @@ final class AppModel {
             guard vibe != oldValue else { return }
             Vibe.current = vibe
             UserDefaults.standard.set(vibe.rawValue, forKey: Vibe.key)
+            if LaunchSound.chosen != nil { UserDefaults.standard.set(vibe.launchSet, forKey: LaunchSound.key) }
             mapWorld = .bundled(vibe)
             openVenue = nil
         }

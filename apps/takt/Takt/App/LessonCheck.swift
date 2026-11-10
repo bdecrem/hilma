@@ -1886,6 +1886,31 @@ enum LessonCheck {
                 check("vibes: unpinning from that set writes it whole, the rest of the electronic defaults kept",
                       oldApp.pinnedSongs == ["song-dockery"] + StageScreen.electronicPins.filter { $0 != "song-halbschatten" }
                       && (before.snapshot.pins?.at ?? .distantPast) > Vibe.pinsEpoch, oldApp.pinnedSongs.joined(separator: " "))
+                // Unpinning Gezeiten from the default set sticks (2026-11-10: its join date sat
+                // hours ahead of the ship, so every unpin came back on the next read).
+                let unpin = ProgressStore(url: nil)
+                let unpinApp = AppModel(player: nil, progress: unpin, account: AccountStore(progress: ProgressStore(url: nil)))
+                unpinApp.setPinned(songs.first { $0.name == "song-gezeiten" }!, false)
+                check("vibes: unpinning Gezeiten from the default set keeps it unpinned",
+                      !unpinApp.pinnedSongs.contains("song-gezeiten") && StageScreen.gezeitenShipped < Date(),
+                      unpinApp.pinnedSongs.joined(separator: " "))
+                // Flipping the vibe sets the next launch's sound; Off stays off.
+                let d = UserDefaults.standard, savedSound = d.string(forKey: LaunchSound.key), savedVibe = d.string(forKey: Vibe.key)
+                let flipApp = AppModel(player: nil, progress: ProgressStore(url: nil), account: AccountStore(progress: ProgressStore(url: nil)))
+                flipApp.vibe = .blues
+                d.set("blues", forKey: LaunchSound.key)
+                flipApp.vibe = .electronic
+                let toDeep = d.string(forKey: LaunchSound.key) == "deep"
+                flipApp.vibe = .blues
+                let toBlues = d.string(forKey: LaunchSound.key) == "blues"
+                d.set("off", forKey: LaunchSound.key)
+                flipApp.vibe = .electronic
+                let offStays = d.string(forKey: LaunchSound.key) == "off"
+                d.set(savedSound, forKey: LaunchSound.key)
+                d.set(savedVibe, forKey: Vibe.key)
+                Vibe.current = Vibe.stored
+                check("vibes: the switch sets the launch sound (electronic deep, blues blues), Off stays off",
+                      toDeep && toBlues && offStays, "\(toDeep) \(toBlues) \(offStays)")
                 var a = ProgressStore.Snapshot(), b = ProgressStore.Snapshot()
                 a.pins = .init(songs: ["song-dockery"], at: Date(timeIntervalSince1970: 100))
                 b.pins = .init(songs: ["song-pearl-street", "song-boogie-shoes"], at: Date(timeIntervalSince1970: 200))
