@@ -1,0 +1,806 @@
+/* takt.pizza/road: the landing page as the app's map. Two vibes, the app's own tokens
+   (apps/takt/Takt/Design/Vibe.swift): Blues on its paper, Electronic on its ink. The canvas
+   draws the keyboard and the falling notes in the same colors (LOOK in Road.tsx: keep the two
+   in step). Layers, bottom to top: the page (opening, map, end), the canvas (5), the trailer's
+   words (8), the now-playing button (9), the bar (10). */
+
+.takt-road {
+  --ground: #f0e8d6;
+  --panel: #e4d9c3;
+  --line: #cbbea4;
+  --ink: #17120c;
+  --muted: #62584a;
+  --signal: #c2540b;
+  --cue: #2d4e96;
+  --go-bg: #17120c;
+  --go-fg: #f0e8d6;
+  --go-radius: 999px;
+  --pad: clamp(20px, 5vw, 76px);
+  --display: var(--font-takt-display), 'Arial Narrow', sans-serif;
+  --serif: var(--font-takt-serif), Georgia, serif;
+  --mono: var(--font-takt-mono), ui-monospace, Menlo, monospace;
+
+  position: relative;
+  min-height: 100dvh;
+  background: var(--ground);
+  color: var(--ink);
+  transition: background-color 0.35s ease, color 0.35s ease;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+}
+
+.takt-road[data-vibe='electronic'] {
+  --ground: #0d0d0d;
+  --panel: #181818;
+  --line: #2a2a2a;
+  --ink: #f2f0eb;
+  --muted: #9a978f;
+  --signal: #ff5a1f;
+  --cue: #8fb3ff;
+  --go-bg: #ff5a1f;
+  --go-fg: #0d0d0d;
+  --go-radius: 0px;
+}
+
+.takt-road > canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+}
+
+/* ---- the bar: the name and the beta link arrive once the opening screen has gone */
+.takt-road .bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: calc(58px + env(safe-area-inset-top));
+  padding: env(safe-area-inset-top) calc(var(--pad) + env(safe-area-inset-right)) 0 calc(var(--pad) + env(safe-area-inset-left));
+  border-bottom: 1px solid transparent;
+  transition: background-color 0.3s ease, border-color 0.3s ease, opacity 0.2s ease;
+}
+.takt-road[data-past='true'] .bar {
+  background: var(--ground);
+  border-bottom-color: var(--line);
+}
+.takt-road .bar .mark {
+  margin-right: auto;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 30px;
+  line-height: 1;
+  letter-spacing: -0.005em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--ink);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, color 0.35s ease;
+}
+.takt-road[data-past='true'] .bar .mark {
+  opacity: 1;
+  pointer-events: auto;
+}
+.takt-road .bar .beta {
+  display: none;
+  padding: 8px 14px 9px;
+  border-radius: var(--go-radius);
+  background: var(--go-bg);
+  color: var(--go-fg);
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 1;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.takt-road[data-past='true'] .bar .beta {
+  display: inline-block;
+}
+
+/* the vibe switch: the app's own, a 56 x 30 track and a lit knob */
+.takt-road .vibe {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.takt-road .vibe .name {
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 8px 0;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+.takt-road .vibe .name[aria-pressed='true'] {
+  color: var(--ink);
+}
+.takt-road .switch {
+  appearance: none;
+  position: relative;
+  width: 56px;
+  height: 30px;
+  flex: none;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  cursor: pointer;
+  transition: background-color 0.35s ease, border-color 0.35s ease;
+}
+.takt-road .switch .knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--signal);
+  color: var(--ground);
+  display: grid;
+  place-items: center;
+  font-family: var(--serif);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+  transition: transform 0.22s cubic-bezier(0.3, 0.9, 0.3, 1.15), background-color 0.35s ease, color 0.35s ease;
+}
+.takt-road[data-vibe='electronic'] .switch .knob {
+  transform: translateX(26px);
+}
+.takt-road .switch .knob svg {
+  width: 13px;
+  height: 13px;
+  display: block;
+}
+
+/* ---- the opening screen */
+.takt-road .opening {
+  position: relative;
+  height: 100dvh;
+  min-height: 520px;
+}
+.takt-road .copy {
+  position: relative;
+  z-index: 6;
+  padding: calc(clamp(18px, 3.2vw, 44px) + env(safe-area-inset-top)) calc(var(--pad) + env(safe-area-inset-right)) 0 calc(var(--pad) + env(safe-area-inset-left));
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+}
+.takt-road .copy > * {
+  pointer-events: auto;
+}
+.takt-road h1 {
+  margin: 0 0 0 -0.035em;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: clamp(120px, 23vw, 330px);
+  line-height: 0.78;
+  letter-spacing: -0.012em;
+  text-transform: uppercase;
+}
+.takt-road .line {
+  margin: clamp(18px, 2.4vw, 34px) 0 0;
+  max-width: 13em;
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 420;
+  font-size: clamp(25px, 3vw, 42px);
+  line-height: 1.12;
+  letter-spacing: -0.012em;
+  text-wrap: balance;
+}
+.takt-road[data-vibe='electronic'] .line {
+  max-width: 15em;
+  font-family: var(--mono);
+  font-style: normal;
+  font-weight: 400;
+  font-size: clamp(19px, 2.2vw, 31px);
+  line-height: 1.28;
+  letter-spacing: -0.02em;
+}
+.takt-road .go {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px 16px;
+  margin-top: clamp(20px, 2.4vw, 32px);
+}
+.takt-road .go a,
+.takt-road .go .play {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 24px 14px;
+  border: 0;
+  border-radius: var(--go-radius);
+  background: var(--go-bg);
+  color: var(--go-fg);
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 21px;
+  line-height: 1;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.35s ease, color 0.35s ease, border-radius 0.35s ease, transform 0.12s ease;
+}
+/* beside Press play, the beta link is the quiet one */
+.takt-road .opening .go a {
+  background: none;
+  color: var(--ink);
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+.takt-road .go .play {
+  background: var(--signal);
+  color: var(--ground);
+}
+.takt-road .go .play svg {
+  width: 12px;
+  height: 14px;
+}
+.takt-road .go .play:disabled {
+  opacity: 0.6;
+}
+.takt-road .go :is(a, .play):hover {
+  transform: translateY(-2px);
+}
+.takt-road .go :is(a, .play):active {
+  transform: translateY(1px);
+}
+.takt-road .go span,
+.takt-road .hint,
+.takt-road .made {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  transition: color 0.35s ease;
+}
+.takt-road .hint {
+  margin: 18px 0 0;
+}
+
+/* ---- the trailer: words on the beat, three venues, then down the road */
+.takt-road .slam {
+  position: fixed;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+  overflow: hidden;
+}
+.takt-road[data-trailer='true'] .copy,
+.takt-road[data-trailer='true'] .bar {
+  opacity: 0;
+  pointer-events: none;
+}
+.takt-road .shot {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2vh;
+  padding: 0 4vw 12vh;
+  text-align: center;
+}
+.takt-road .shot.photo {
+  background: var(--ground);
+}
+.takt-road .shot img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(1) contrast(1.15);
+  opacity: 0.42;
+}
+.takt-road .shot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--signal);
+  opacity: 0;
+  animation: takt-flash 0.16s ease-out;
+}
+.takt-road .shot p {
+  position: relative;
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: min(23vw, 30vh);
+  line-height: 0.8;
+  letter-spacing: -0.012em;
+  text-transform: uppercase;
+  animation: takt-slam 0.14s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+.takt-road .shot p.wide {
+  font-size: min(15vw, 30vh);
+}
+.takt-road .shot p span {
+  display: block;
+}
+.takt-road .shot p span + span {
+  color: var(--signal);
+}
+.takt-road .shot small {
+  position: relative;
+  padding: 6px 10px;
+  background: var(--ink);
+  color: var(--ground);
+  font-family: var(--mono);
+  font-size: clamp(11px, 1.5vw, 16px);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+@keyframes takt-slam {
+  from {
+    transform: scale(1.22);
+    opacity: 0;
+  }
+}
+@keyframes takt-flash {
+  from {
+    opacity: 0.85;
+  }
+}
+
+/* ---- the map */
+.takt-road .map {
+  position: relative;
+  z-index: 1;
+  background: var(--ground);
+  border-top: 1px solid var(--line);
+  transition: background-color 0.35s ease, border-color 0.35s ease;
+}
+.takt-road .road {
+  position: relative;
+  width: min(100%, 760px);
+  min-height: 100vh;
+  margin: 0 auto;
+}
+.takt-road .road svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+}
+.takt-road .road path {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke 0.35s ease;
+}
+.takt-road .road .bed {
+  stroke: var(--line);
+  stroke-width: 40;
+}
+.takt-road .road .top {
+  stroke: var(--panel);
+  stroke-width: 34;
+}
+/* the blues road: a highway and its ties, the stretch behind you dashed in ink */
+.takt-road .road .ties {
+  stroke: var(--line);
+  stroke-width: 14;
+  stroke-dasharray: 2 9;
+  stroke-linecap: butt;
+}
+.takt-road .road .dashes {
+  stroke-dasharray: 1 7;
+}
+/* Berlin: a line on the U-Bahn map, two thin rails, the stretch behind you one cable */
+.takt-road .road .rail {
+  stroke: var(--line);
+  stroke-width: 10;
+}
+.takt-road .road .rail-gap {
+  stroke: var(--panel);
+  stroke-width: 6;
+}
+.takt-road .road .behind {
+  stroke: var(--ink);
+  stroke-width: 3;
+}
+
+.takt-road .sign {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+}
+.takt-road .sign div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 22px 11px;
+  background: var(--ink);
+  box-shadow: 0 0 0 3px var(--ground), 0 0 0 5px var(--ink);
+  white-space: nowrap;
+  transition: background-color 0.35s ease, box-shadow 0.35s ease;
+}
+.takt-road .sign span {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--line);
+}
+.takt-road .sign strong {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 32px;
+  line-height: 1;
+  text-transform: uppercase;
+  color: var(--ground);
+}
+
+/* a venue's card: an old washed-out print until you reach it */
+.takt-road .card {
+  position: absolute;
+  background: var(--ground);
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1.5px var(--line);
+  overflow: hidden;
+  cursor: pointer;
+  transform: rotate(-1.2deg);
+  transition: box-shadow 0.3s ease, background-color 0.35s ease, transform 0.3s ease;
+}
+.takt-road .card[data-side='right'] {
+  transform: rotate(1.2deg);
+}
+.takt-road .card[data-open='true'] {
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+.takt-road .card[data-here='true'] {
+  box-shadow: inset 0 0 0 3px var(--signal);
+}
+.takt-road .card .photo {
+  position: relative;
+  background: var(--panel);
+  overflow: hidden;
+}
+.takt-road .card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: grayscale(1);
+  transition: filter 0.6s ease;
+}
+.takt-road .card[data-open='true'] img {
+  filter: none;
+}
+.takt-road .card .wash {
+  position: absolute;
+  inset: 0;
+  background-color: var(--panel);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.84;
+  transition: opacity 0.6s ease, background-color 0.35s ease;
+}
+.takt-road .card[data-open='true'] .wash {
+  opacity: 0;
+}
+.takt-road .card .photo b {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  padding: 4px 6px;
+  border-radius: 2px;
+  background: var(--signal);
+  color: var(--ground);
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.takt-road .card[data-side='right'] .photo b {
+  left: auto;
+  right: 6px;
+}
+.takt-road .card .txt {
+  padding: 7px 9px 9px;
+  box-shadow: inset 0 0 0 0 transparent;
+}
+.takt-road .card h3 {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 19px;
+  line-height: 1.12;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--muted);
+  transition: color 0.35s ease;
+}
+.takt-road .card[data-open='true'] h3 {
+  color: var(--ink);
+}
+.takt-road .card .meta {
+  margin: 2px 0 0;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--muted);
+}
+.takt-road .card .tag {
+  margin: 6px 0 0;
+  min-height: 2.5em;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 12.5px;
+  line-height: 1.25;
+  color: var(--ink);
+  opacity: 0;
+  transition: opacity 0.5s ease 0.1s, color 0.35s ease;
+}
+.takt-road[data-vibe='electronic'] .card .tag {
+  font-family: var(--mono);
+  font-style: normal;
+  font-size: 10.5px;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+.takt-road .card[data-open='true'] .tag {
+  opacity: 1;
+}
+.takt-road .card.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-shadow: none;
+  border: 1.5px dashed var(--line);
+  cursor: default;
+  color: var(--muted);
+}
+.takt-road .card.empty[data-here='true'] {
+  border: 3px dashed var(--signal);
+}
+.takt-road .card.empty strong {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 19px;
+  text-transform: uppercase;
+}
+.takt-road .card.empty span {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* a stop's number: done filled in ink, here big in signal, next ringed in cue, ahead quiet */
+.takt-road .stop {
+  position: absolute;
+  width: 52px;
+  height: 52px;
+  margin: -26px 0 0 -26px;
+  padding: 0;
+  border: 2px solid var(--line);
+  border-radius: 50%;
+  background: var(--ground);
+  color: var(--muted);
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  transition: width 0.2s ease, height 0.2s ease, margin 0.2s ease, background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+}
+.takt-road .stop[data-state='next'] {
+  border: 3px solid var(--cue);
+  color: var(--ink);
+}
+.takt-road .stop[data-state='done'] {
+  border: 0;
+  background: var(--ink);
+  color: var(--ground);
+  box-shadow: inset 0 0 0 2px var(--ink), inset 0 0 0 6px var(--ground);
+}
+.takt-road .stop[data-state='here'] {
+  width: 66px;
+  height: 66px;
+  margin: -33px 0 0 -33px;
+  border: 0;
+  background: var(--signal);
+  color: var(--ground);
+  font-size: 30px;
+  box-shadow: inset 0 0 0 3px var(--signal), inset 0 0 0 8px var(--ground);
+}
+.takt-road .stop .pulse {
+  position: absolute;
+  inset: 0;
+  border: 3px solid var(--signal);
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ---- the end of the road */
+.takt-road .end {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px var(--pad) 220px;
+  background: var(--ground);
+  text-align: center;
+  transition: background-color 0.35s ease;
+}
+.takt-road .end h2 {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: clamp(64px, 12vw, 150px);
+  line-height: 0.84;
+  letter-spacing: -0.012em;
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+.takt-road .end .line {
+  max-width: 18em;
+}
+.takt-road .end .go {
+  justify-content: center;
+}
+.takt-road .made {
+  margin: 44px 0 0;
+}
+.takt-road .end details {
+  margin-top: 14px;
+  max-width: 640px;
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.takt-road .end summary {
+  cursor: pointer;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.takt-road .end ul {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+.takt-road .end ul a {
+  color: inherit;
+}
+
+/* ---- what's playing: the sound switch */
+.takt-road .now {
+  position: fixed;
+  left: calc(14px + env(safe-area-inset-left));
+  bottom: 80px;
+  z-index: 9;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  max-width: calc(100vw - 28px);
+  padding: 8px 13px 8px 11px;
+  border: 1px solid var(--line);
+  border-radius: var(--go-radius);
+  background: var(--ground);
+  color: var(--ink);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.35s ease, border-color 0.35s ease, color 0.35s ease, border-radius 0.35s ease;
+}
+.takt-road .now svg {
+  flex: none;
+  width: 16px;
+  height: 14px;
+  color: var(--muted);
+}
+.takt-road .now[data-sound='on'] {
+  border-color: var(--signal);
+}
+.takt-road .now[data-sound='on'] svg {
+  color: var(--signal);
+}
+.takt-road .now strong {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.takt-road .now span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.takt-road[data-trailer='true'] .now {
+  opacity: 0;
+}
+
+.takt-road :is(a, button, summary):focus-visible {
+  outline: 2px solid var(--cue);
+  outline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+  /* past the opening screen the bar holds the name, the switch and the beta link: no room for the vibes' names */
+  .takt-road[data-past='true'] .vibe .name {
+    display: none;
+  }
+  .takt-road .bar {
+    justify-content: flex-end;
+    gap: 12px;
+  }
+  .takt-road .copy {
+    padding-top: calc(58px + env(safe-area-inset-top));
+  }
+  .takt-road h1 {
+    font-size: clamp(120px, 40vw, 190px);
+  }
+  .takt-road .card h3 {
+    font-size: 17px;
+  }
+}
+
+@media (max-height: 560px) {
+  .takt-road h1 {
+    font-size: clamp(84px, 30vh, 170px);
+  }
+  .takt-road .line {
+    margin-top: 12px;
+  }
+  .takt-road .go {
+    margin-top: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .takt-road,
+  .takt-road * {
+    transition: none !important;
+    animation: none !important;
+  }
+  .takt-road .card,
+  .takt-road .card[data-side='right'] {
+    transform: none;
+  }
+}
