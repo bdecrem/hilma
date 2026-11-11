@@ -286,6 +286,20 @@ function makeRoomBg(bart) {
   return c;
 }
 const roomBg = makeRoomBg(true), roomBgEmpty = makeRoomBg(false);
+const seminarBg = (function () {
+  const c = document.createElement('canvas'); c.width = W; c.height = H; const m = c.getContext('2d');
+  m.drawImage(roomBgEmpty, 0, 0);
+  rect(m, 262, 5, 58, 99, '#9a5631'); for (let x = 266; x < W; x += 14) { rect(m, x, 5, 1, 99, '#7f4426'); rect(m, x + 1, 5, 1, 99, '#ac6a42'); }
+  // the sign
+  rect(m, 146, 12, 70, 32, '#5c2e18'); rect(m, 148, 14, 66, 28, '#fff7e6');
+  const no = (cx, cy, icon) => { disc(m, cx, cy, 10, '#d6402e'); disc(m, cx, cy, 8, '#fff7e6'); icon(); for (let i = -6; i <= 6; i++) rect(m, cx + i, cy + i, 2, 2, '#d6402e'); };
+  no(164, 28, () => { rect(m, 161, 22, 7, 12, C.ink); rect(m, 162, 23, 5, 9, '#86c9e6'); });
+  no(198, 28, () => { rect(m, 192, 23, 12, 8, C.ink); rect(m, 193, 24, 10, 6, '#86c9e6'); rect(m, 190, 31, 16, 2, C.ink); });
+  // a clock that says it's late
+  disc(m, 236, 26, 8, C.ink); disc(m, 236, 26, 7, '#fff7e6'); rect(m, 236, 20, 1, 6, C.ink); rect(m, 236, 26, 4, 1, C.ink);
+  return c;
+})();
+
 
 /* ---------- characters ---------- */
 const P = { W: '#f2cf4a', w: '#d4a92c', S: '#f2bda6', s: '#dc9d88', r: '#ee9f8f', b: '#e3dccb', E: '#3c5a80', M: '#b8695c', K: '#3a1c18', O: '#ffffff', N: '#f2efe6', n: '#d9d3c4', T: '#f2efe6', G: '#e2b23c', L: '#4a3a1e' };
@@ -341,6 +355,8 @@ const LOOKS = {
   frances: { skin: '#f2c4a8', skinD: '#d8a58a', hair: '#6b4a32', hairD: '#8a6648', brow: '#5a3e2a', style: 'back', top: 'cardigan', shirt: '#f4f1ea', shirtD: '#d9d4c8', trim: '#a9c4bb', earrings: '#6fa6c8' },
   ian: { skin: '#f3c5ae', skinD: '#dca48c', hair: '#e2cfa6', hairD: '#c9b083', brow: '#c9a77a', style: 'bald', top: 'collar', shirt: '#c8daf2', shirtD: '#a9c1e2', trim: '#e6eefa', glasses: '#4a2e22', round: true, stubble: '#caa58c' },
   jacqueline: { skin: '#ecbf9a', skinD: '#cf9e7a', hair: '#1c1918', hairD: '#322c2a', brow: '#1c1918', style: 'bob', top: 'jacket', shirt: '#26262c', shirtD: '#141418', trim: '#4c4c58', glasses: '#55565e', band: '#efe6d2' },
+  forrest: { skin: '#e8b896', skinD: '#c9946f', hair: '#7a4a2a', hairD: '#5e3820', brow: '#5e3820', style: 'short', top: 'collar', shirt: '#9ccc3c', shirtD: '#7fa82c', trim: '#c6e86e', sweat: '#ffffff' },
+  fellow: { skin: '#c8916a', skinD: '#a8734f', hair: '#3a2a20', hairD: '#2a1e16', brow: '#2a1e16', style: 'swept', top: 'vneck', shirt: '#7a6aa8', shirtD: '#5f5288', trim: '#efe3d0' },
   joseph: { skin: '#e4b28c', skinD: '#c69270', hair: '#2a2624', hairD: '#4a4440', brow: '#2a2624', style: 'receding', top: 'collar', shirt: '#f2f2f4', shirtD: '#d2d6de', trim: '#ffffff', dots: '#9aa8c0' }
 };
 function bust(o, x, y, st) {
@@ -366,11 +382,12 @@ function bust(o, x, y, st) {
   if (o.style === 'bald') { R(7, 0, 14, 2, o.skin); R(8, -1, 12, 1, o.skin); R(5, 3, 2, 8, h); R(21, 3, 2, 8, h); R(6, 1, 2, 3, h); R(20, 1, 2, 3, h); R(10, -1, 8, 1, 'rgba(226,207,166,0.45)'); }
   if (o.style === 'bob') { R(5, 0, 18, 5, h); R(4, 2, 3, 14, h); R(21, 2, 3, 14, h); R(3, 12, 2, 4, h); R(23, 11, 2, 4, h); R(7, 4, 5, 2, h); R(17, 4, 3, 1, h); R(5, 1, 18, 2, o.band); R(6, 0, 15, 1, o.band); R(10, 1, 3, 1, '#d7cbb2'); }
   if (o.style === 'receding') { R(9, 0, 10, 1, h); R(7, 1, 4, 2, h); R(17, 1, 4, 2, h); R(13, 1, 2, 2, h); R(6, 2, 2, 7, h); R(20, 2, 2, 7, h); }
+  if (o.sweat) { R(6, 3, 16, 2, o.sweat); R(5, 4, 1, 2, o.sweat); R(22, 4, 1, 2, o.sweat); }
   if (o.earrings) { R(5, 12, 1, 1, '#d0d0d0'); R(4, 13, 3, 3, o.earrings); R(22, 12, 1, 1, '#d0d0d0'); R(21, 13, 3, 3, o.earrings); }
   // face
   const ey = st.down ? 10 : 9;
   R(9, 7, 4, 1, o.brow); R(15, 7, 4, 1, o.brow);
-  if (st.blink || st.down) { R(9, ey + 1, 3, 1, INK); R(16, ey + 1, 3, 1, INK); } else { R(10, ey, 2, 2, INK); R(16, ey, 2, 2, INK); R(10, ey, 1, 1, '#ffffff'); R(16, ey, 1, 1, '#ffffff'); }
+  if (st.blink || st.down) { R(9, ey + 1, 3, 1, INK); R(16, ey + 1, 3, 1, INK); } else { const lx = st.look || 0; R(10 + lx, ey, 2, 2, INK); R(16 + lx, ey, 2, 2, INK); R(10 + lx, ey, 1, 1, '#ffffff'); R(16 + lx, ey, 1, 1, '#ffffff'); }
   R(13, 10, 2, 3, o.skinD);
   R(8, 12, 2, 1, 'rgba(238,159,143,0.6)'); R(18, 12, 2, 1, 'rgba(238,159,143,0.6)');
   if (o.mous) { R(11, 13, 6, 1, h); R(13, 16, 2, 1, h); }
@@ -398,10 +415,21 @@ function deskScene(k, o, t, talk, blink) {
   drawMonitor(0);
   const mug = { daniel: '#2b3fff', kahwee: '#7ee0b5', ian: '#fff7e6', jacqueline: '#ff9ccf' }[k];
   rect(g, 206, 88, 7, 8, INK); rect(g, 207, 89, 5, 6, mug); rect(g, 213, 90, 2, 3, INK);
-  if (k === 'daniel') { rect(g, 158, 88, 16, 7, INK); for (let i = 0; i < 3; i++) rect(g, 159, 89 + i * 2, 14, 1, '#fff7e6'); }
+  if (k === 'daniel') { // a little marble Socrates
+    rect(g, 155, 93, 14, 2, '#9a9a94'); rect(g, 157, 89, 10, 4, '#e8e6df'); rect(g, 158, 80, 8, 9, '#f2f0ea'); rect(g, 157, 78, 10, 3, '#d9d6cc');
+    rect(g, 158, 86, 8, 4, '#d9d6cc'); rect(g, 159, 83, 2, 1, '#8a8780'); rect(g, 163, 83, 2, 1, '#8a8780'); rect(g, 161, 84, 2, 2, '#cfccc2'); }
   if (k === 'kahwee') { rect(g, 156, 84, 6, 11, INK); rect(g, 157, 85, 4, 10, '#c46a4a'); rect(g, 157, 81, 1, 4, '#ffd93b'); rect(g, 159, 80, 1, 5, '#2b3fff'); }
-  if (k === 'ian') { [0, 2, 4, 6].forEach(i => rect(g, 154 + i, 92 - i, 18, 2, i % 4 ? '#fff7e6' : '#e8e2d2')); }
-  if (k === 'jacqueline') { rect(g, 156, 88, 9, 7, '#c46a4a'); disc(g, 160, 84, 4, '#2f6b45'); disc(g, 158, 82, 2, '#4a8f5f'); }
+  if (k === 'ian') { [0, 2, 4, 6].forEach(i => rect(g, 154 + i, 92 - i, 18, 2, i % 4 ? '#fff7e6' : '#e8e2d2'));
+    // a world map on the wall, pins in it
+    rect(g, 136, 14, 64, 38, '#5c2e18'); rect(g, 138, 16, 60, 34, '#a9cfe0');
+    [[142, 20, 12, 8], [146, 28, 7, 10], [160, 19, 10, 6], [161, 26, 9, 11], [172, 18, 18, 10], [184, 34, 8, 6]].forEach(c => rect(g, c[0], c[1], c[2], c[3], '#d9c99a'));
+    [[148, 23], [150, 33], [165, 30], [178, 22], [187, 36], [163, 21]].forEach(([x, y]) => { rect(g, x, y, 2, 2, '#d6402e'); rect(g, x, y - 2, 1, 2, INK); }); }
+  if (k === 'jacqueline') { rect(g, 156, 88, 9, 7, '#c46a4a'); disc(g, 160, 84, 4, '#2f6b45'); disc(g, 158, 82, 2, '#4a8f5f');
+    // an easel with the pitch on it
+    rect(g, 128, 74, 2, 54, '#5c3a20'); rect(g, 143, 74, 2, 54, '#5c3a20'); rect(g, 135, 44, 2, 70, '#5c3a20');
+    rect(g, 122, 48, 30, 26, INK); rect(g, 123, 49, 28, 24, '#fffaf0'); rect(g, 125, 51, 14, 2, '#141414'); rect(g, 125, 55, 10, 1, '#8a8478');
+    rect(g, 126, 66, 4, 5, '#2b8fff'); rect(g, 131, 62, 4, 9, '#2b8fff'); rect(g, 136, 58, 4, 13, '#ff5a1f'); rect(g, 141, 60, 8, 1, '#ff5a1f'); rect(g, 147, 58, 2, 3, '#ff5a1f');
+    rect(g, 121, 73, 32, 2, '#7d5632'); }
 }
 // Frances, deep in a book in the comfiest chair on campus
 function readingScene(o, t, talk, blink, speaking) {
@@ -548,7 +576,7 @@ function makeRoomFull(bg) {
   for (let y = OY + H; y < FH; y += 3) { rect(m, 0, y, W, 3, (y / 3) % 2 ? '#c9a77a' : '#bf9c6e'); for (let k = 0; k < 3; k++) rect(m, Math.floor(r() * W), y, 1, 3, '#a8865b'); }
   return c;
 }
-const roomFull = makeRoomFull(roomBg), roomFullEmpty = makeRoomFull(roomBgEmpty);
+const roomFull = makeRoomFull(roomBg), roomFullEmpty = makeRoomFull(roomBgEmpty), seminarFull = makeRoomFull(seminarBg);
 
 /* ---------- sound ---------- */
 let AC = null, master = null, muted = false;
@@ -626,6 +654,7 @@ const VOICES = {
   jacqueline: { base: 310, steps: [0, 3, 5, 7, 10], type: 'square', gap: 0.066, len: 0.055, vowels: [720, 1150, 1550, 560] },
   joseph: { base: 175, steps: [0, 2, 4, 7, 9, 12], type: 'sawtooth', gap: 0.075, len: 0.065, vowels: [480, 820, 1150, 420] },
   forrest: { base: 250, steps: [0, 4, 7, 12], type: 'square', gap: 0.06, len: 0.05, vowels: [650, 1050, 1450, 520] },
+  fellow: { base: 140, steps: [0, 2, 3], type: 'triangle', gap: 0.11, len: 0.09, vowels: [400, 600, 500] },
   bart: { base: 165, steps: [0, 3, 5, 7, 10, 12], type: 'sawtooth', gap: 0.085, len: 0.07, vowels: [500, 800, 1100, 650] }
 };
 function garble(who, text) {
@@ -722,6 +751,53 @@ async function enterPerson(k) {
   await walkTo([{ x: 120, y: 134 }]);
   if (!p.met) { p.met = true; for (const l of p.hello) await say(l[0], l[1]); }
   else await say(k, 'Back again? Come in.');
+}
+/* ---------- the seminar: no phones, no laptops ---------- */
+const SEATS = [
+  { k: 'daniel', x: 78, name: 'Daniel', look: 'Daniel is taking notes on a cafeteria tray. Returned on time, I hope.',
+    talk: [['daniel', "Shh. It's a tray. Trays are allowed. I checked rule 14."]] },
+  { k: 'kahwee', x: 106, name: 'Kah-Wee', look: "Kah-Wee's glasses are very shiny. Suspiciously shiny.",
+    talk: [['kahwee', "Shh. They're just glasses."], ['you', "They're showing your email."], ['kahwee', "...They're just glasses."]] },
+  { k: 'frances', x: 134, name: 'Frances', look: 'Frances is reading the handout. The handout has chapters.',
+    talk: [['frances', "Shh. I'm on the good part."]] },
+  { k: 'forrest', x: 162, name: 'Forrest', look: 'Forrest. Under the table, a pickleball. Pock. Pock. Pock.',
+    talk: [['forrest', "Shh. I'm working on my dink."], ['you', 'In a seminar?'], ['forrest', 'Soft hands. Quiet hands.']] },
+  { k: 'jacqueline', x: 190, name: 'Jacqueline', look: "Jacqueline's headband is glowing. Very faintly.",
+    talk: [['jacqueline', "Shh. I'm thinking very hard."], ['you', "It's glowing."], ['jacqueline', "That's how hard."]] },
+  { k: 'ian', x: 218, name: 'Ian', look: 'Ian is checking the numbers on his fingers. He ran out of fingers a while ago.',
+    talk: [['ian', "Shh. I'm checking the speaker's numbers."], ['you', 'And?'], ['ian', 'Mind the floor.']] },
+  { k: 'fellow', x: 246, name: 'a fellow', look: "A fellow I haven't met. Asleep, pen in hand. A professional.",
+    talk: [['fellow', 'Zzz... great question...'], ['fellow', 'Zzz... building on that...']] },
+  { k: 'joseph', x: 280, name: 'Joseph', look: 'Joseph, standing at the back, holding his spreadsheet. Printed. All of it.',
+    talk: [['joseph', "Shh. No laptops, they said. They didn't say anything about paper."]] }
+];
+S.sem = { rung: false, ringT: -1, phones: 40, ballT: 0 };
+async function enterSeminar() {
+  S.door = MAP.find(h => h.name === 'meeting room');
+  await say('you', 'The seminar. Everybody is in there.');
+  SFX.creak();
+  await fadeTo(true);
+  S.scene = 'room'; S.room = 'seminar'; S.x = 30; S.y = 132; S.face = 1; S.path = [];
+  await fadeTo(false);
+  await walkTo([{ x: 120, y: 134 }]);
+  await say('you', 'Oh. Everybody is here.');
+  await say('jacqueline', 'Shh.');
+}
+async function talkSeat(a) { for (const l of a.talk) await say(l[0], l[1]); if (a.k === 'forrest') SFX.pock(0.2); }
+async function leaveSeminar() {
+  if (S.sem.rung) { await exitRoom(); return; }
+  await goTo({ x: 74, y: 134 }); S.face = -1;
+  await say('you', 'Well. I should get going.');
+  S.sem.rung = true; S.sem.ringT = 0; SFX.beat(); await wait(0.3); SFX.beat();
+  await wait(1.6);
+  await say('you', '...');
+  S.face = 1;
+  await say('you', "That's not mine.");
+  await say('turkey', 'Gobble.');
+  await say('you', "Okay, it's mine.");
+  S.sem.ringT = -1; SFX.pock(0.15); S.sem.phones++;
+  await say('you', `Into the basket. ${S.sem.phones === 41 ? 'Forty-one' : S.sem.phones} phones.`);
+  await exitRoom();
 }
 async function talkPerson(k) {
   const p = PEOPLE[k];
@@ -827,7 +903,7 @@ const MAP = [
   personStudy('joseph', [26, -16, 16, 20], { x: 34, y: 9 }), lockedStudy(44, 50, 9), lockedStudy(45, 66, 9),
   lockedStudy(13, 300, 106), lockedStudy(14, 300, 122),
   { name: 'main hall', r: [128, 8, 64, 30], walk: { x: 160, y: 44 }, def: 'open', on: { look: 'The main hall. Lounge, mailboxes, coffee.', open: "Just the lounge. Nobody's in. Everybody's in their study." } },
-  { name: 'meeting room', r: [80, 66, 30, 30], walk: { x: 112, y: 80 }, def: 'open', on: { look: 'The meeting room. Seminars happen in there. Like this one.', open: "Not yet. I haven't visited the studies." } },
+  { name: 'meeting room', r: [80, 66, 30, 30], walk: { x: 112, y: 80 }, def: 'open', on: { look: 'The meeting room. Seminars happen in there. Like this one.', open: enterSeminar } },
   { name: 'picnic table', r: [122, 73, 20, 16], walk: { x: 132, y: 64 }, def: 'look', on: { look: 'A picnic table. Someone carved a regression line into it.', use: 'I sit for a second. Very restorative. Back to it.' } },
   { name: 'picnic table', r: [178, 73, 20, 16], walk: { x: 188, y: 64 }, def: 'look', on: { look: 'A picnic table. The good one, in the shade. Taken at noon.', use: 'I sit for a second. Very restorative. Back to it.' } },
   { name: 'courtyard oak', r: [148, 68, 24, 24], walk: { x: 160, y: 64 }, def: 'look', on: { look: 'A big oak in a brick courtyard. Good for thinking under.' } },
@@ -919,14 +995,28 @@ const ROOM = [
 const PERSON_R = { desk: [172, 56, 34, 42], read: [156, 54, 60, 70], stand: [176, 34, 30, 92] };
 Object.keys(PEOPLE).forEach(k => {
   const p = PEOPLE[k], sp = [{ name: p.name, r: PERSON_R[p.scene], walk: { x: 160, y: 134 }, def: 'talk', on: { look: p.look, talk: () => talkPerson(k) } }];
-  if (p.scene === 'read') sp.push({ name: 'book', r: [176, 84, 24, 14], walk: { x: 170, y: 134 }, def: 'look', on: { look: "I can't see the title. She is not going to let me see the title." } },
+  if (p.scene === 'read') sp.unshift({ name: 'the Almanac', r: [176, 84, 24, 14], walk: { x: 170, y: 134 }, def: 'open', href: 'https://almanac.tunn3l.sh/almanac/', on: { look: 'The Adaptation Almanac. Thousands of studies on how people adapt to a changing climate. She is on the good part.', open: 'The Almanac. Opening in a new tab.' } });
+  if (p.scene === 'read') sp.push(
     { name: 'reading chair', r: [146, 48, 80, 66], walk: { x: 200, y: 134 }, def: 'look', on: { look: 'A big soft reading chair. There is a waiting list for it. Frances is the list.' } },
     { name: 'lamp', r: [234, 44, 24, 84], walk: { x: 244, y: 134 }, def: 'look', on: { look: 'A reading lamp, on at three in the afternoon. Committed.' } });
   if (p.scene === 'stand') sp.push({ name: 'monitors', r: [106, 14, 172, 66], walk: { x: 190, y: 134 }, def: 'look', on: { look: 'Two monitors. You could land a plane on that spreadsheet.' } });
+  const LINKS = {
+    daniel: { name: 'Socrates', r: [154, 76, 16, 20], walk: { x: 136, y: 134 }, href: 'https://ola.cx/socratic', look: 'A little marble Socrates. He only asks questions. Daniel built him a tutor.', open: 'Socratic. Opening in a new tab.' },
+    jacqueline: { name: 'easel', r: [120, 44, 34, 84], walk: { x: 104, y: 134 }, href: 'https://claude.ai/artifact/GDghc49kAqy7JaTdwwYSbo#slide-3dd33bdac6c2', look: 'An easel with a pitch on it. The chart only goes up.', open: 'The pitch. Opening in a new tab.' },
+    ian: { name: 'world map', r: [136, 14, 64, 38], walk: { x: 168, y: 134 }, href: 'https://ola.cx/mrd/story', look: "A world map with pins in it. Every pin is a country's rules for migrants.", open: 'The migrant rights story. Opening in a new tab.' }
+  };
+  if (LINKS[k]) { const L = LINKS[k]; sp.unshift({ name: L.name, r: L.r, walk: L.walk, def: 'open', href: L.href, on: { look: L.look, open: L.open } }); }
   if (p.scene === 'desk') sp.push({ name: 'monitor', r: [218, 66, 28, 32], walk: { x: 236, y: 130 }, def: 'look', on: { look: 'I can only see the back. It has stickers.' } });
   p.spots = sp.concat(ROOM_EMPTY.map(h => h.name === 'window' ? Object.assign({}, h, { on: { look: 'The hills, the Dish, Stanford down below.' } }) : h.name === 'bookshelf' ? Object.assign({}, h, { on: { look: `${p.name}'s books. Organized by a system. The system is ${p.name}.`, push: 'No secret passage. I checked.' } }) : h));
 });
-function hotspots() { return S.scene === 'map' ? MAP : S.room === 'empty' ? ROOM_EMPTY : PEOPLE[S.room] ? PEOPLE[S.room].spots : ROOM; }
+const SEMINAR = SEATS.map(a => ({ name: a.name, r: a.k === 'joseph' ? [278, 34, 34, 94] : [a.x, 60, 28, 36], walk: { x: Math.min(a.x + 14, 280), y: 134 }, def: 'talk', on: { look: a.look, talk: () => talkSeat(a) } })).concat([
+  { name: 'basket of phones', r: [36, 98, 30, 28], walk: { x: 60, y: 134 }, def: 'look', on: { look: () => say('you', S.sem.phones > 40 ? 'Forty-one phones. One of them is mine. It is still buzzing.' : 'There are forty phones in here. There are thirty fellows.'), pick: "Better not. They're evidence." } },
+  { name: 'sign', r: [146, 12, 70, 32], walk: { x: 180, y: 134 }, def: 'look', on: { look: [['you', 'NO PHONES. NO LAPTOPS.'], ['you', 'Underneath, smaller: NO EXCEPTIONS.'], ['you', 'Underneath that, smaller: THAT MEANS YOU.']] } },
+  { name: 'clock', r: [228, 18, 16, 16], walk: { x: 236, y: 134 }, def: 'look', on: { look: 'Ten past four. The seminar was supposed to end at four. Questions are still going.' } },
+  { name: 'window', r: [44, 14, 78, 58], walk: { x: 84, y: 134 }, def: 'look', on: { look: () => say('you', S.sem.rung ? 'A turkey. It saw everything.' : 'The hills. Nobody is looking at them. Everybody is looking at me.') } },
+  { name: 'door', r: [4, 30, 32, 76], walk: { x: 40, y: 132 }, def: 'open', on: { look: 'The way out. Quietly.', open: leaveSeminar } }
+]);
+function hotspots() { return S.scene === 'map' ? MAP : S.room === 'seminar' ? SEMINAR : S.room === 'empty' ? ROOM_EMPTY : PEOPLE[S.room] ? PEOPLE[S.room].spots : ROOM; }
 function hit(x, y) { return hotspots().find(h => x >= h.r[0] && x < h.r[0] + h.r[2] && y >= h.r[1] && y < h.r[1] + h.r[3]); }
 async function perform(r) {
   if (typeof r === 'function') await r();
@@ -1010,10 +1100,11 @@ function speakerPos(who) {
   if (who === 'turkey') return [268, 94];
   if (who === 'eli') return [292, 112];
   if (who === 'forrest') return [50, 4];
+  if (S.scene === 'room' && S.room === 'seminar') { if (who === 'turkey') return [54, 50]; const a = SEATS.find(q => q.k === who); if (a) return [a.x + 14, a.k === 'joseph' ? 30 : 56]; }
   if (PEOPLE[who]) return PEOPLE[who].at;
   return S.scene === 'map' ? [S.x, S.y - 14] : [S.x, S.y - 78];
 }
-const COLORS = { you: '#ffffff', bart: '#ffff55', turkey: '#ffb070', eli: '#ff7a5c', forrest: '#d8e84a' };
+const COLORS = { you: '#ffffff', bart: '#ffff55', turkey: '#ffb070', eli: '#ff7a5c', forrest: '#d8e84a', fellow: '#c8b8ff' };
 Object.keys(PEOPLE).forEach(k => { COLORS[k] = PEOPLE[k].color; });
 function drawLine() {
   const l = S.line;
@@ -1103,8 +1194,62 @@ function drawMap(t) {
   if (!calm) mapOver(t, dt);
   g.restore();
 }
+function drawSeminar(t) {
+  g.drawImage(seminarFull, 0, 0);
+  g.save(); g.translate(0, OY);
+  roomLight(t);
+  const sp = S.line && S.line.who, flap = who => sp === who && (calm || Math.floor(t * 8) % 2 === 0);
+  // a turkey in the window, once your phone has gone off
+  if (S.sem.rung) turkey(g, 47, 57);
+  // the basket of phones, buzzing away on their own
+  const r = rng(Math.floor(t * 1.5) + 3);
+  for (let i = 0; i < 9; i++) { const x = 40 + (i * 7) % 22, y = 96 + (i % 3) * 3, on = !calm && r() < 0.18; rect(g, x, y, 5, 8, INK); rect(g, x + 1, y + 1, 3, 6, on ? ['#86c9e6', '#ff9ccf', '#ffd93b'][i % 3] : '#26262b'); }
+  if (S.sem.phones > 40) { const on = !calm && Math.floor(t * 4) % 2; rect(g, 52, 94, 5, 8, INK); rect(g, 53, 95, 3, 6, on ? '#ff5a1f' : '#0c0c0c'); }
+  rect(g, 36, 104, 30, 20, '#7d5632'); rect(g, 37, 105, 28, 18, '#c89a5a');
+  for (let y = 107; y < 123; y += 3) rect(g, 37, y, 28, 1, '#a07840'); for (let x = 40; x < 65; x += 5) rect(g, x, 105, 1, 18, '#a07840');
+  // Joseph, standing at the back with his spreadsheet
+  const jo = LOOKS.joseph, j = SEATS.find(a => a.k === 'joseph');
+  rect(g, j.x + 6, 84, 7, 40, '#2e3448'); rect(g, j.x + 15, 84, 7, 40, '#262b3c'); rect(g, j.x + 4, 124, 10, 4, INK); rect(g, j.x + 14, 124, 10, 4, INK);
+  rect(g, j.x + 2, 66, 24, 18, jo.shirt);
+  bust(jo, j.x, 38, { talk: flap('joseph'), look: Math.sign(S.x - j.x - 14) });
+  rect(g, j.x - 6, 74, 22, 1, INK); rect(g, j.x - 6, 75, 20, 53, '#fffaf0'); rect(g, j.x - 18, 124, 22, 4, '#fffaf0');
+  for (let y = 78; y < 126; y += 3) rect(g, j.x - 4, y, 16, 1, '#c9cfdc'); for (let x = j.x - 2; x < j.x + 14; x += 5) rect(g, x, 76, 1, 48, '#dfe3ec');
+  rect(g, j.x - 8, 72, 4, 4, jo.skin); rect(g, j.x + 12, 72, 4, 4, jo.skin);
+  // everyone else around the table, eyes on you
+  SEATS.filter(a => a.k !== 'joseph').forEach(a => {
+    const o = LOOKS[a.k], look = Math.sign(S.x - a.x - 14), asleep = a.k === 'fellow';
+    rect(g, a.x + 2, 58, 24, 3, INK); rect(g, a.x + 1, 61, 26, 34, INK); rect(g, a.x + 3, 61, 22, 34, '#3b3d4a');
+    bust(o, a.x, 66 + (asleep && !calm && Math.floor(t) % 3 === 0 ? 1 : 0), { talk: flap(a.k), look, blink: asleep || (!calm && (t + a.x) % 4.7 < 0.12), down: a.k === 'frances' && sp !== 'frances' });
+    if (a.k === 'kahwee' && !calm) { const al = (0.35 + 0.3 * Math.sin(t * 7)).toFixed(2); rect(g, a.x + 9, 75, 4, 3, `rgba(170,225,255,${al})`); rect(g, a.x + 16, 75, 4, 3, `rgba(170,225,255,${al})`); }
+    if (a.k === 'jacqueline') { const al = (0.25 + 0.2 * Math.sin(t * 2.4)).toFixed(2); oval(g, a.x + 14, 68, 13, 4, `rgba(255,244,190,${calm ? 0.3 : al})`); rect(g, a.x + 5, 67, 18, 2, '#fffbe8'); }
+    if (asleep && !calm) { const z = (t * 0.8) % 1; rect(g, a.x + 22 + z * 4, 62 - z * 10, 3, 1, `rgba(255,255,255,${(1 - z).toFixed(2)})`); rect(g, a.x + 24 + z * 4, 63 - z * 10, 1, 1, `rgba(255,255,255,${(1 - z).toFixed(2)})`); rect(g, a.x + 22 + z * 4, 64 - z * 10, 3, 1, `rgba(255,255,255,${(1 - z).toFixed(2)})`); }
+  });
+  // the long table
+  rect(g, 72, 95, 206, 1, INK); rect(g, 72, 96, 206, 4, '#e2b47e'); rect(g, 72, 100, 206, 1, INK);
+  rect(g, 75, 101, 200, 18, '#c08a55'); rect(g, 75, 101, 200, 1, '#9c6a3c');
+  rect(g, 78, 119, 5, 9, '#7d5632'); rect(g, 267, 119, 5, 9, '#7d5632');
+  // what everyone is up to on the table
+  SEATS.forEach(a => {
+    const o = LOOKS[a.k], x = a.x;
+    if (a.k === 'joseph') return;
+    if (a.k === 'daniel') { rect(g, x + 4, 90, 20, 6, '#8a8f99'); rect(g, x + 5, 91, 18, 4, '#b6bbc4'); rect(g, x + 7, 92, 12, 1, INK); rect(g, x + 7, 94, 9, 1, INK); }
+    else if (a.k === 'frances') { rect(g, x + 4, 89, 20, 7, '#fff7e6'); rect(g, x + 6, 87, 16, 3, '#c8553a'); rect(g, x + 13, 89, 1, 7, '#d9d4c8'); }
+    else if (a.k === 'ian') { const k = calm ? 0 : Math.floor(t * 3) % 3; rect(g, x + 6, 88 - k, 4, 6, o.skin); rect(g, x + 18, 88 - (2 - k), 4, 6, o.skin); rect(g, x + 6, 86 - k, 1, 2, o.skin); rect(g, x + 8, 85 - k, 1, 3, o.skin); rect(g, x + 18, 86 - (2 - k), 1, 2, o.skin); }
+    else { rect(g, x + 6, 92, 16, 3, '#fff7e6'); rect(g, x + 5, 92, 4, 2, o.skin); rect(g, x + 19, 92, 4, 2, o.skin); }
+  });
+  // Forrest's pickleball, bouncing under the table
+  { const f = SEATS.find(a => a.k === 'forrest'), ph = calm ? 0.5 : (t * 1.6) % 1, by = 127 - Math.round(Math.sin(ph * Math.PI) * 7);
+    const prev = S.sem.ballT; S.sem.ballT = ph; if (!calm && ph < prev && !S.line) SFX.pock(0.035);
+    rect(g, f.x + 12, by - 3, 4, 4, '#d8e84a'); rect(g, f.x + 12, by - 3, 4, 1, '#eef59a'); rect(g, f.x + 13, by - 2, 1, 1, '#9aa830'); }
+  // you, and your phone, when it goes off
+  const moving = S.path.length > 0, fr = moving ? 1 + Math.floor(t * 7) % 2 : 0;
+  drawYou(S.x, S.y, S.face, fr, flap('you'));
+  if (S.sem.ringT >= 0) { const on = calm || Math.floor(t * 9.6) % 2 === 0, px = S.x + (S.face > 0 ? 6 : -11); rect(g, px, S.y - 44, 6, 10, INK); rect(g, px + 1, S.y - 43, 4, 8, on ? '#ff5a1f' : '#0c0c0c'); if (on) { rect(g, px - 3, S.y - 42, 2, 1, '#ff5a1f'); rect(g, px + 7, S.y - 42, 2, 1, '#ff5a1f'); } }
+  g.restore();
+}
 function drawRoom(t) {
   const B = S.bart;
+  if (S.room === 'seminar') { drawSeminar(t); return; }
   if (PEOPLE[S.room]) {
     const k = S.room, p = PEOPLE[k], o = LOOKS[k];
     g.drawImage(roomFullEmpty, 0, 0);
@@ -1181,7 +1326,7 @@ function frame(now) {
   }
   if (S.scene === 'room' && S.bart.mode === 'type') { S.keyT -= dt; if (S.keyT <= 0) { S.keyT = 0.06 + Math.random() * 0.12; SFX.key(); } }
   if (S.line) { S.line.t += dt; if (S.line.t >= S.line.dur) skipLine(); }
-  S.bart.t += dt; if (S.phoneOn) S.phoneT += dt;
+  S.bart.t += dt; if (S.phoneOn) S.phoneT += dt; if (S.sem && S.sem.ringT >= 0) S.sem.ringT += dt;
   if (S.zoomT >= 0 && S.screenDone === null) {
     S.zoomT += dt; const k = Math.min(1, S.zoomT / 0.9), e = k * k;
     cv.style.transform = calm ? '' : 'scale(' + (1 + e * 9) + ')';
