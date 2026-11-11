@@ -519,15 +519,16 @@ struct CreditsPanel: View {
 }
 
 /// A connected MIDI keyboard in Settings → Input: its name, its own latency correction, and the
-/// octave its notes move by (`InputDevice`).
+/// shift its notes move by (`InputDevice`): − / + an octave a click, a semitone with ⌃ or ⌥ held,
+/// a right-click or a long press.
 private struct KeyboardRow: View {
     let device: String
-    @AppStorage private var octave: Int
+    @AppStorage private var transpose: Int
     @AppStorage private var latency: Double?
 
     init(device: String) {
         self.device = device
-        _octave = AppStorage(wrappedValue: 0, InputDevice.octaveKey(device))
+        _transpose = AppStorage(wrappedValue: InputDevice.transpose(device), InputDevice.transposeKey(device))
         _latency = AppStorage(InputDevice.latencyKey(device))
     }
 
@@ -537,23 +538,93 @@ private struct KeyboardRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(InputDevice.displayName(device)).bodyText(15).foregroundStyle(Palette.text)
                 Text(timing).dataLabel(10).foregroundStyle(Palette.muted)
+                #if targetEnvironment(macCatalyst)
+                Text("Shift: click an octave · ⌃ or ⌥ click a semitone").dataLabel(10).foregroundStyle(Palette.muted)
+                #else
+                Text("Shift: tap an octave · hold a semitone").dataLabel(10).foregroundStyle(Palette.muted)
+                #endif
             }
             Spacer(minLength: 12)
-            Text("Octave").dataLabel(10).foregroundStyle(Palette.muted)
-            QuietButton(title: "−") { octave = max(InputDevice.octaveRange.lowerBound, octave - 1) }
-                .disabled(octave <= InputDevice.octaveRange.lowerBound)
-            Text(octave == 0 ? "0" : String(format: "%+d", octave))
-                .dataLabel(12).foregroundStyle(octave == 0 ? Palette.muted : Palette.signal)
-                .frame(minWidth: 24)
-            QuietButton(title: "+") { octave = min(InputDevice.octaveRange.upperBound, octave + 1) }
-                .disabled(octave >= InputDevice.octaveRange.upperBound)
+            ShiftButton(title: "−", enabled: transpose > InputDevice.transposeRange.lowerBound) { step(-$0) }
+            Text(InputDevice.describe(transpose))
+                .dataLabel(12).foregroundStyle(transpose == 0 ? Palette.muted : Palette.signal)
+                .lineLimit(1)
+                .fixedSize()
+                .frame(minWidth: 84)
+            ShiftButton(title: "+", enabled: transpose < InputDevice.transposeRange.upperBound) { step($0) }
         }
         .accessibilityElement(children: .contain)
+    }
+
+    private func step(_ semitones: Int) {
+        let r = InputDevice.transposeRange
+        transpose = min(r.upperBound, max(r.lowerBound, transpose + semitones))
     }
 
     private var timing: String {
         if let latency { return Calibration.correction(latency) }
         let shared = InputDevice.sharedOffset
         return shared == 0 ? "Latency not measured" : "Not measured yet · using \(Int(abs(shared).rounded())) ms"
+    }
+}
+
+/// − or + for a keyboard's shift, drawn like `QuietButton`. A plain click or tap steps an octave;
+/// a click with ⌃ or ⌥ held, a right-click (a Mac's ⌃-click is one) or a long press steps a
+/// semitone. SwiftUI's Button can't see the modifiers, so a UIKit view under the label takes the clicks.
+private struct ShiftButton: View {
+    let title: String
+    let enabled: Bool
+    let action: (Int) -> Void
+
+    var body: some View {
+        Text(title)
+            .dataLabel(13, weight: .semibold)
+            .foregroundStyle(enabled ? Palette.text : Palette.muted)
+            .frame(width: 44, height: 44)
+            .overlay(RoundedRectangle(cornerRadius: 6).stroke(Palette.line, lineWidth: 1))
+            .overlay(ShiftClicks(action: enabled ? action : { _ in }))
+            .accessibilityElement()
+            .accessibilityLabel(title == "+" ? "Shift up an octave" : "Shift down an octave")
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAction { if enabled { action(12) } }
+            .accessibilityAction(named: title == "+" ? "Up a semitone" : "Down a semitone") { if enabled { action(1) } }
+    }
+}
+
+private struct ShiftClicks: UIViewRepresentable {
+    let action: (Int) -> Void
+
+    func makeUIView(context: Context) -> UIView {
+        let v = UIView()
+        v.backgroundColor = .clear
+        let tap = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.tap(_:)))
+        v.addGestureRecognizer(tap)
+        let hold = UILongPressGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.hold(_:)))
+        v.addGestureRecognizer(hold)
+        // A tap is a tap only once it can't be a long press (that fails the moment the finger lifts).
+        tap.require(toFail: hold)
+        #if targetEnvironment(macCatalyst)
+        let right = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.fine(_:)))
+        right.buttonMaskRequired = .secondary
+        v.addGestureRecognizer(right)
+        #endif
+        return v
+    }
+
+    func updateUIView(_ v: UIView, context: Context) { context.coordinator.action = action }
+
+    func makeCoordinator() -> Coordinator { Coordinator(action: action) }
+
+    final class Coordinator: NSObject {
+        var action: (Int) -> Void
+        init(action: @escaping (Int) -> Void) { self.action = action }
+
+        @objc func tap(_ g: UITapGestureRecognizer) {
+            action(g.modifierFlags.isDisjoint(with: [.control, .alternate]) ? 12 : 1)
+        }
+        @objc func fine(_ g: UITapGestureRecognizer) { action(1) }
+        @objc func hold(_ g: UILongPressGestureRecognizer) {
+            if g.state == .began { action(1) }
+        }
     }
 }

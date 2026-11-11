@@ -36,16 +36,30 @@ enum InputDevice {
         UserDefaults.standard.set(ms, forKey: latencyKey(device))
     }
 
-    // MARK: Octave
+    // MARK: Shift
 
+    /// The octave a keyboard's notes moved by before the shift was in semitones (2026-11-11).
     static func octaveKey(_ device: String) -> String { "octave·\(device)" }
-    static let octaveRange = -3...3
+    static func transposeKey(_ device: String) -> String { "transpose·\(device)" }
+    static let transposeRange = -36...36
 
-    /// Octaves this keyboard's notes move by, before anything hears them.
-    static func octave(_ device: String) -> Int {
-        UserDefaults.standard.integer(forKey: octaveKey(device))
+    /// Semitones this keyboard's notes move by, before anything hears them: its own setting, or
+    /// the octave it had before.
+    static func transpose(_ device: String) -> Int {
+        let d = UserDefaults.standard
+        if let t = d.object(forKey: transposeKey(device)) as? Int { return t }
+        return 12 * d.integer(forKey: octaveKey(device))
     }
 
-    /// A note from a keyboard moved by its octave, kept on the MIDI range.
-    static func shifted(_ note: Int, octave: Int) -> Int { min(127, max(0, note + 12 * octave)) }
+    /// A note from a keyboard moved by its shift, kept on the MIDI range.
+    static func shifted(_ note: Int, by semitones: Int) -> Int { min(127, max(0, note + semitones)) }
+
+    /// A shift as Settings shows it: "0", "+1 oct", "+1 oct +2", "−5".
+    static func describe(_ t: Int) -> String {
+        if t == 0 { return "0" }
+        let sign = t < 0 ? "−" : "+"
+        let octaves = abs(t) / 12, rest = abs(t) % 12
+        if octaves == 0 { return "\(sign)\(rest)" }
+        return rest == 0 ? "\(sign)\(octaves) oct" : "\(sign)\(octaves) oct \(sign)\(rest)"
+    }
 }

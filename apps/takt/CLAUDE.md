@@ -2298,6 +2298,13 @@ cover stealing anchors, a hand of 30 moves on a Level 2 song, a Beginner on one 
   connected keyboard with its correction ("Not measured yet · using 103 ms") and an Octave − 0 +
   stepper; `displayName` shows EP-133 as K.O. II. On the K.O. II itself, KEYS held with − / +
   moves its keys-mode octave. DEBUG `-SettingsSection input`. Checks 584/584 (three new).
+  **0.1 (131), same day:** Bart, playing Halbschatten on the K.O. II (its notes arrived as E3 under
+  a G4–C6 lead at Octave +1): "if I hold down ctrl i can shift up or down a step at a time". The
+  shift is semitones now (`transpose·<name>`, −36…36; a keyboard that only has the old
+  `octave·<name>` reads as 12 × it), shown "+1 oct +2". − / + step an octave on a plain click and
+  a semitone on a click with ⌃ or ⌥, a right-click (a Mac's ⌃-click arrives as one) or a long
+  press (`ShiftButton` / `ShiftClicks`: SwiftUI's Button can't see modifiers, so a UIKit view with
+  tap, secondary-tap and long-press recognizers takes the clicks). Checks 586/586.
 
 ## The one transport (2026-11-08)
 

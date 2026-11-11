@@ -57,9 +57,18 @@ enum LessonCheck {
             d.set(shared, forKey: "inputOffsetMs")
             check("latency is per keyboard: its own once measured, the shared one before",
                   before == -80 && after == -25 && other == -80, "\(before) \(after) \(other)")
-            check("a keyboard's octave moves its notes, kept on the MIDI range",
-                  InputDevice.shifted(48, octave: 1) == 60 && InputDevice.shifted(48, octave: -2) == 24
-                  && InputDevice.shifted(120, octave: 1) == 127 && InputDevice.shifted(5, octave: -1) == 0)
+            check("a keyboard's shift moves its notes, kept on the MIDI range",
+                  InputDevice.shifted(48, by: 12) == 60 && InputDevice.shifted(48, by: -25) == 23
+                  && InputDevice.shifted(120, by: 12) == 127 && InputDevice.shifted(5, by: -12) == 0)
+            check("a shift reads in octaves and semitones",
+                  [0, 12, 14, -5, -26, 24].map(InputDevice.describe) == ["0", "+1 oct", "+1 oct +2", "−5", "−2 oct −2", "+2 oct"],
+                  [0, 12, 14, -5, -26, 24].map(InputDevice.describe).joined(separator: ", "))
+            d.set(2, forKey: InputDevice.octaveKey(probe))
+            let legacy = InputDevice.transpose(probe)
+            d.set(-3, forKey: InputDevice.transposeKey(probe))
+            let own = InputDevice.transpose(probe)
+            d.removeObject(forKey: InputDevice.octaveKey(probe)); d.removeObject(forKey: InputDevice.transposeKey(probe))
+            check("a keyboard set in octaves before keeps that shift until it has its own", legacy == 24 && own == -3, "\(legacy) \(own)")
             check("the EP-133 shows as the K.O. II", InputDevice.displayName("EP-133") == "K.O. II"
                   && InputDevice.displayName("Keystation 49 MK3") == "Keystation 49 MK3"
                   && InputDevice.displayName(InputDevice.local) == "Computer keys")

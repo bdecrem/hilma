@@ -103,7 +103,7 @@ final class MIDIInput {
         namesLock.lock()
         let device = names[id] ?? InputDevice.local
         namesLock.unlock()
-        let octave = InputDevice.octave(device)
+        let shift = InputDevice.transpose(device)
         for packet in list.unsafeSequence() {
             // Hardware stamps packets with the host time of the key press; 0 means "now"
             // (virtual sources often send it), so stamp those on arrival.
@@ -113,7 +113,7 @@ final class MIDIInput {
                 // MIDI 1.0 channel voice in a UMP word: 0x2G SS NN VV.
                 guard word >> 28 == 0x2 else { continue }
                 let status = (word >> 16) & 0xF0
-                let note = MIDIInput.remap(InputDevice.shifted(Int((word >> 8) & 0x7F), octave: octave))
+                let note = MIDIInput.remap(InputDevice.shifted(Int((word >> 8) & 0x7F), by: shift))
                 let velocity = Int(word & 0x7F)
                 switch status {
                 case 0x90 where velocity > 0:
