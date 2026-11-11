@@ -36,6 +36,13 @@ struct CalibrationScreen: View {
                 .bodyText(compact ? 17 : 20, weight: .semibold, relativeTo: .title3)
                 .foregroundStyle(Palette.text)
                 .fixedSize(horizontal: false, vertical: true)
+            if c != nil {
+                Text("Measuring \(InputDevice.displayName(player.calibrationDevice)). Each keyboard keeps its own correction: tap with the one you want to measure.")
+                    .dataLabel(11)
+                    .foregroundStyle(Palette.cue)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 8)
+            }
             Text(detail(c))
                 .bodyText(15)
                 .foregroundStyle(Palette.muted)
@@ -98,7 +105,7 @@ struct CalibrationScreen: View {
     }
 
     private func detail(_ c: Calibration?) -> String {
-        let base = c?.base ?? Player.inputOffsetMs
+        let base = c?.base ?? player.inputOffsetMs
         let now = base == 0 ? "No latency correction yet, so the needle shows your raw timing."
                             : "The needle already applies your saved latency correction (\(Int(abs(base).rounded())) ms)."
         guard let c else {

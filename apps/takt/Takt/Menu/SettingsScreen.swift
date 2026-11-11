@@ -7,7 +7,6 @@ struct SettingsScreen: View {
     @AppStorage("theme") private var theme: Theme = .dark
     @AppStorage("bandLevel") private var bandLevel = 1.0
     @AppStorage("pianoLevel") private var pianoLevel = 1.0
-    @AppStorage("inputOffsetMs") private var inputOffsetMs = 0.0
     @AppStorage("menuMusic") private var menuMusic = true
     @AppStorage("instrument") private var instrument = "piano"
     @AppStorage(LaunchSound.key) private var launchSound = LaunchSound.defaultSet
@@ -112,15 +111,12 @@ struct SettingsScreen: View {
 
                     SettingsSection(title: "Input") {
                         let sources = app.player?.midiSources ?? []
+                        Color.clear.frame(height: 1).id("input")
                         if sources.isEmpty {
                             row("MIDI", "No keyboard connected")
                         } else {
                             ForEach(sources, id: \.self) { name in
-                                HStack(spacing: 8) {
-                                    LED(lit: true, size: 7)
-                                    Text(name).bodyText(15).foregroundStyle(Palette.text)
-                                    Spacer()
-                                }
+                                KeyboardRow(device: name)
                             }
                         }
                         Hairline()
@@ -154,11 +150,13 @@ struct SettingsScreen: View {
                         .tint(Palette.signal)
                         #endif
                         Hairline()
-                        HStack(alignment: .firstTextBaseline) {
-                            Text("Timing").bodyText(15).foregroundStyle(Palette.text)
+                        HStack(alignment: .center) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Timing").bodyText(15).foregroundStyle(Palette.text)
+                                Text("Each keyboard keeps its own latency correction. Calibrate, then tap with the one you want to measure")
+                                    .dataLabel(10).foregroundStyle(Palette.muted)
+                            }
                             Spacer(minLength: 12)
-                            Text(inputOffsetMs == 0 ? "Not measured" : Calibration.correction(inputOffsetMs))
-                                .dataLabel(11).foregroundStyle(Palette.muted)
                             QuietButton(title: "Calibrate") { app.calibrate(then: .settings) }
                         }
                     }
@@ -227,7 +225,11 @@ struct SettingsScreen: View {
             #if DEBUG
             // `-SettingsSection display`: open scrolled to a section (screenshots).
             .onAppear {
-                if let id = UserDefaults.standard.string(forKey: "SettingsSection") { proxy.scrollTo(id, anchor: .top) }
+                if let id = UserDefaults.standard.string(forKey: "SettingsSection") {
+                    proxy.scrollTo(id, anchor: .top)
+                    // Again once the MIDI sources are listed (they arrive after the first layout).
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { proxy.scrollTo(id, anchor: .top) }
+                }
             }
             #endif
             }
@@ -513,5 +515,45 @@ struct CreditsPanel: View {
             }
             .padding(24)
         }
+    }
+}
+
+/// A connected MIDI keyboard in Settings → Input: its name, its own latency correction, and the
+/// octave its notes move by (`InputDevice`).
+private struct KeyboardRow: View {
+    let device: String
+    @AppStorage private var octave: Int
+    @AppStorage private var latency: Double?
+
+    init(device: String) {
+        self.device = device
+        _octave = AppStorage(wrappedValue: 0, InputDevice.octaveKey(device))
+        _latency = AppStorage(InputDevice.latencyKey(device))
+    }
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 8) {
+            LED(lit: true, size: 7)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(InputDevice.displayName(device)).bodyText(15).foregroundStyle(Palette.text)
+                Text(timing).dataLabel(10).foregroundStyle(Palette.muted)
+            }
+            Spacer(minLength: 12)
+            Text("Octave").dataLabel(10).foregroundStyle(Palette.muted)
+            QuietButton(title: "−") { octave = max(InputDevice.octaveRange.lowerBound, octave - 1) }
+                .disabled(octave <= InputDevice.octaveRange.lowerBound)
+            Text(octave == 0 ? "0" : String(format: "%+d", octave))
+                .dataLabel(12).foregroundStyle(octave == 0 ? Palette.muted : Palette.signal)
+                .frame(minWidth: 24)
+            QuietButton(title: "+") { octave = min(InputDevice.octaveRange.upperBound, octave + 1) }
+                .disabled(octave >= InputDevice.octaveRange.upperBound)
+        }
+        .accessibilityElement(children: .contain)
+    }
+
+    private var timing: String {
+        if let latency { return Calibration.correction(latency) }
+        let shared = InputDevice.sharedOffset
+        return shared == 0 ? "Latency not measured" : "Not measured yet · using \(Int(abs(shared).rounded())) ms"
     }
 }

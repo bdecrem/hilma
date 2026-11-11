@@ -2282,6 +2282,23 @@ cover stealing anchors, a hand of 30 moves on a Level 2 song, a Beginner on one 
   (numpy, scipy, numba, soundfile) now exists on the Air; a "Takt Track" simulator is left shut
   down.
 
+- **Each keyboard its own timing and octave; the K.O. II by its name: 0.1 (130), 2026-11-11.**
+  Bart: "make sure Latency calibration is per-instrument-per-user, not just per-user (i use 3
+  different midi controllers)", and his Teenage Engineering K.O. II (CoreMIDI calls it "EP-133")
+  "not registering [its keys] on the correct octave". `MIDI/InputDevice.swift`: a keyboard is its
+  CoreMIDI display name (`local` = the computer keys and the keys on screen); each keeps
+  `latency·<name>` (ms) and `octave·<name>` (−3…+3) in UserDefaults on the device (not synced).
+  `MIDIInput` connects each source with its unique id as the refCon, so every `Note` carries its
+  `device`, and moves the note by that keyboard's octave before the A-minor remap and everything
+  else. `Player.device` is the last press's keyboard; `inputOffsetMs` (an instance property now) is
+  that keyboard's correction, or the one shared `inputOffsetMs` from before until it has its own.
+  Calibration measures the keyboard that taps (`calibrationDevice`; a tap from another one starts
+  the needle over from that one's correction), saves to it, and says which on screen ("Measuring
+  K.O. II"); `calibration-taps.csv` gained a keyboard column. Settings → Input lists every
+  connected keyboard with its correction ("Not measured yet · using 103 ms") and an Octave − 0 +
+  stepper; `displayName` shows EP-133 as K.O. II. On the K.O. II itself, KEYS held with − / +
+  moves its keys-mode octave. DEBUG `-SettingsSection input`. Checks 584/584 (three new).
+
 ## The one transport (2026-11-08)
 
 Every screen that plays music draws the same controls in the same order and they always work:

@@ -45,6 +45,25 @@ enum LessonCheck {
         let whites = [48, 50, 52, 53, 55, 57, 59, 60, 62, 64, 65, 67, 69, 71, 72].map { MIDIInput.remap($0, on: true) }
         check("white keys C3–C5 remap to A2–A4 white keys", whites == [45, 47, 48, 50, 52, 53, 55, 57, 59, 60, 62, 64, 65, 67, 69]
               && MIDIInput.remap(61, on: true) == 58 && MIDIInput.remap(60, on: false) == 60, "\(whites)")
+        // Each keyboard its own octave and latency (Settings → Input), the K.O. II by its name.
+        do {
+            let d = UserDefaults.standard, probe = "LessonCheck probe", shared = d.object(forKey: "inputOffsetMs")
+            d.removeObject(forKey: InputDevice.latencyKey(probe))
+            d.set(-80.0, forKey: "inputOffsetMs")
+            let before = InputDevice.offset(probe)
+            InputDevice.setOffset(-25, for: probe)
+            let after = InputDevice.offset(probe), other = InputDevice.offset(probe + " 2")
+            d.removeObject(forKey: InputDevice.latencyKey(probe))
+            d.set(shared, forKey: "inputOffsetMs")
+            check("latency is per keyboard: its own once measured, the shared one before",
+                  before == -80 && after == -25 && other == -80, "\(before) \(after) \(other)")
+            check("a keyboard's octave moves its notes, kept on the MIDI range",
+                  InputDevice.shifted(48, octave: 1) == 60 && InputDevice.shifted(48, octave: -2) == 24
+                  && InputDevice.shifted(120, octave: 1) == 127 && InputDevice.shifted(5, octave: -1) == 0)
+            check("the EP-133 shows as the K.O. II", InputDevice.displayName("EP-133") == "K.O. II"
+                  && InputDevice.displayName("Keystation 49 MK3") == "Keystation 49 MK3"
+                  && InputDevice.displayName(InputDevice.local) == "Computer keys")
+        }
         check("perfect at 70 is clean", r.clean && r.hits == 12 && r.extras.isEmpty && r.detail == "12 of 12", text(r))
         r = judge(chorus(offsetMs: { _ in -50 }))
         check("50 ms early at 70 is clean (±100)", r.clean && r.detail == "12 of 12", text(r))

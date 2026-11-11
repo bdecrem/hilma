@@ -10,6 +10,8 @@ final class MIDIInput {
         let velocity: Float
         let on: Bool
         let hostTime: UInt64
+        /// The source's CoreMIDI name (`InputDevice`).
+        let device: String
     }
 
     var onNote: ((Note) -> Void)?
@@ -19,6 +21,9 @@ final class MIDIInput {
     private var client = MIDIClientRef()
     private var port = MIDIPortRef()
     private var connected = Set<MIDIUniqueID>()
+    /// Each connected source's name by id, read on CoreMIDI's thread.
+    private var names: [MIDIUniqueID: String] = [:]
+    private let namesLock = NSLock()
     private let log = Logger(subsystem: "takt", category: "midi")
 
     init() {
@@ -31,8 +36,8 @@ final class MIDIInput {
             log.error("MIDIClientCreate failed: \(status)")
             return
         }
-        status = MIDIInputPortCreateWithProtocol(client, "Takt In" as CFString, ._1_0, &port) { [weak self] list, _ in
-            self?.receive(list)
+        status = MIDIInputPortCreateWithProtocol(client, "Takt In" as CFString, ._1_0, &port) { [weak self] list, refCon in
+            self?.receive(list, from: refCon)
         }
         guard status == noErr else {
             log.error("MIDIInputPortCreate failed: \(status)")
@@ -46,6 +51,7 @@ final class MIDIInput {
     private func connectAll() {
         var present = Set<MIDIUniqueID>()
         var names: [String] = []
+        var byId: [MIDIUniqueID: String] = [:]
         for i in 0..<MIDIGetNumberOfSources() {
             let source = MIDIGetSource(i)
             var id: MIDIUniqueID = 0
@@ -55,8 +61,9 @@ final class MIDIInput {
             MIDIObjectGetStringProperty(source, kMIDIPropertyDisplayName, &name)
             let display = (name?.takeRetainedValue() as String?) ?? "MIDI \(id)"
             names.append(display)
+            byId[id] = display
             if !connected.contains(id) {
-                let status = MIDIPortConnectSource(port, source, nil)
+                let status = MIDIPortConnectSource(port, source, Self.refCon(id))
                 if status == noErr {
                     connected.insert(id)
                     log.info("connected \(display, privacy: .public)")
@@ -66,6 +73,9 @@ final class MIDIInput {
             }
         }
         connected.formIntersection(present)
+        namesLock.lock()
+        self.names = byId
+        namesLock.unlock()
         onSources?(names)
     }
 
@@ -83,7 +93,17 @@ final class MIDIInput {
         return max(0, (d / 7) * 12 + whitePC[d % 7])
     }
 
-    private func receive(_ list: UnsafePointer<MIDIEventList>) {
+    /// A source's id as the connection's refCon (never nil: the high bit is set).
+    private static func refCon(_ id: MIDIUniqueID) -> UnsafeMutableRawPointer? {
+        UnsafeMutableRawPointer(bitPattern: UInt(UInt32(bitPattern: id)) | (1 << 40))
+    }
+
+    private func receive(_ list: UnsafePointer<MIDIEventList>, from refCon: UnsafeMutableRawPointer?) {
+        let id = MIDIUniqueID(truncatingIfNeeded: UInt(bitPattern: refCon) & 0xFFFF_FFFF)
+        namesLock.lock()
+        let device = names[id] ?? InputDevice.local
+        namesLock.unlock()
+        let octave = InputDevice.octave(device)
         for packet in list.unsafeSequence() {
             // Hardware stamps packets with the host time of the key press; 0 means "now"
             // (virtual sources often send it), so stamp those on arrival.
@@ -93,13 +113,13 @@ final class MIDIInput {
                 // MIDI 1.0 channel voice in a UMP word: 0x2G SS NN VV.
                 guard word >> 28 == 0x2 else { continue }
                 let status = (word >> 16) & 0xF0
-                let note = MIDIInput.remap(Int((word >> 8) & 0x7F))
+                let note = MIDIInput.remap(InputDevice.shifted(Int((word >> 8) & 0x7F), octave: octave))
                 let velocity = Int(word & 0x7F)
                 switch status {
                 case 0x90 where velocity > 0:
-                    onNote?(Note(note: note, velocity: Float(velocity) / 127, on: true, hostTime: host))
+                    onNote?(Note(note: note, velocity: Float(velocity) / 127, on: true, hostTime: host, device: device))
                 case 0x80, 0x90:
-                    onNote?(Note(note: note, velocity: 0, on: false, hostTime: host))
+                    onNote?(Note(note: note, velocity: 0, on: false, hostTime: host, device: device))
                 default:
                     break
                 }

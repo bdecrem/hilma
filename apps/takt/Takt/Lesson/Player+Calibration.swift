@@ -10,8 +10,9 @@ extension Player {
         let s = audio.snapshot()
         if bandBeforeCalibration == nil { bandBeforeCalibration = (playing, tempo, s.muted) }
         calibrationEpoch = s.epoch + 1
+        calibrationDevice = device
         let c = Calibration(firstTick: Double(2 * audio.band.ticksPerBeat), ticksPerBeat: audio.band.ticksPerBeat,
-                            base: Self.inputOffsetMs)
+                            base: inputOffsetMs)
         audio.send(.stop)
         for ch in Channel.band { audio.send(.mute(ch, true)) }
         audio.send(.tempo(Double(Calibration.tempo)))
@@ -20,7 +21,7 @@ extension Player {
         calibrationClick = nil
         clicksSent = 0
         sendClicks(through: 7)
-        lessonLog.info("calibration started from \(String(format: "%+.1f ms", Self.inputOffsetMs), privacy: .public)")
+        lessonLog.info("calibration started from \(String(format: "%+.1f ms", self.inputOffsetMs), privacy: .public)")
     }
 
     func sendClicks(through k: Int) {
@@ -34,12 +35,13 @@ extension Player {
     /// Every counted tap, raw and corrected, to the log and to Documents/calibration-taps.csv, so a
     /// real session can be read back afterwards.
     func logTap(_ t: (click: Int, ms: Double), base: Double) {
-        let line = String(format: "%@,%d,%.1f,%.1f,%.1f\n", ISO8601DateFormatter().string(from: Date()), t.click, t.ms + base, t.ms, base)
+        let line = String(format: "%@,%d,%.1f,%.1f,%.1f,%@\n", ISO8601DateFormatter().string(from: Date()), t.click, t.ms + base, t.ms, base,
+                          InputDevice.displayName(calibrationDevice).replacingOccurrences(of: ",", with: " "))
         lessonLog.notice("calibration tap: \(line, privacy: .public)")
         guard let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
         let url = dir.appendingPathComponent("calibration-taps.csv")
         if !FileManager.default.fileExists(atPath: url.path) {
-            try? "time,click,raw_ms,corrected_ms,base_ms\n".write(to: url, atomically: true, encoding: .utf8)
+            try? "time,click,raw_ms,corrected_ms,base_ms,keyboard\n".write(to: url, atomically: true, encoding: .utf8)
         }
         guard let h = try? FileHandle(forWritingTo: url) else { return }
         h.seekToEndOfFile()
@@ -51,8 +53,8 @@ extension Player {
     func useCalibration() {
         guard var c = calibration, let offset = c.proposed else { return }
         let taps = c.recent.map { String(format: "%+.1f", $0) }.joined(separator: " ")
-        lessonLog.info("calibration: [\(taps, privacy: .public)] from \(String(format: "%+.1f", c.base), privacy: .public) → \(String(format: "%+.1f ms", offset), privacy: .public)")
-        UserDefaults.standard.set(offset, forKey: "inputOffsetMs")
+        lessonLog.info("calibration: [\(taps, privacy: .public)] from \(String(format: "%+.1f", c.base), privacy: .public) → \(String(format: "%+.1f ms", offset), privacy: .public) for \(InputDevice.displayName(self.calibrationDevice), privacy: .public)")
+        InputDevice.setOffset(offset, for: calibrationDevice)
         UserDefaults.standard.set(true, forKey: "calibrated")
         c.rebase(offset)
         calibration = c

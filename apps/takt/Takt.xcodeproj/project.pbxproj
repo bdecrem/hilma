@@ -725,6 +725,7 @@
 		95B8120344BA9084DBC9862B /* saxl-88.caf in Resources */ = {isa = PBXBuildFile; fileRef = 694BD5B4735E8135DC2CDC8A /* saxl-88.caf */; };
 		95EA3AFD8F1AAFB00E319DCD /* syn-hatDub-0d.caf in Resources */ = {isa = PBXBuildFile; fileRef = 636C7978C41ED0DBE966DA6E /* syn-hatDub-0d.caf */; };
 		960359DD4BD6E9CF763A5FAE /* gtr-40-4-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 72A5768CE641C90251405CD7 /* gtr-40-4-1.caf */; };
+		961759D30BBFC87697CDF1BB /* InputDevice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 080E59023F8C3816D603AF00 /* InputDevice.swift */; };
 		962B76F42985D592CAEE7C7C /* gz-stab-dm11-0.caf in Resources */ = {isa = PBXBuildFile; fileRef = 967056D8D969683CCC04DA89 /* gz-stab-dm11-0.caf */; };
 		962D19045929545335A3904A /* hs-bass-20-38.caf in Resources */ = {isa = PBXBuildFile; fileRef = EDDE87D95A63C143F426870F /* hs-bass-20-38.caf */; };
 		9652061CCAC7F4DAC95F6ACD /* syn-bleep-57-1.caf in Resources */ = {isa = PBXBuildFile; fileRef = 589512E7CF6461E8F5610EBC /* syn-bleep-57-1.caf */; };
@@ -1264,6 +1265,7 @@
 		07422257FC2BCADDFC966F75 /* syn-rhodes-63-0.caf */ = {isa = PBXFileReference; path = "syn-rhodes-63-0.caf"; sourceTree = "<group>"; };
 		079F27C53BBC50233907FCD1 /* syn-hatOpenDH-1b.caf */ = {isa = PBXFileReference; path = "syn-hatOpenDH-1b.caf"; sourceTree = "<group>"; };
 		07C7B848B8453F7F9142B49C /* TempoKnob.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TempoKnob.swift; sourceTree = "<group>"; };
+		080E59023F8C3816D603AF00 /* InputDevice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputDevice.swift; sourceTree = "<group>"; };
 		0825C5B3244A6646713044EA /* hs-bass-25-34-44.caf */ = {isa = PBXFileReference; path = "hs-bass-25-34-44.caf"; sourceTree = "<group>"; };
 		0847E418058BB4F33454F1E5 /* il-drift.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "il-drift.json"; sourceTree = "<group>"; };
 		085D15DD7BF349CE7431D9D4 /* egt-66-4-1.caf */ = {isa = PBXFileReference; path = "egt-66-4-1.caf"; sourceTree = "<group>"; };
@@ -2731,6 +2733,7 @@
 		C5A8C31905666F590C737B60 /* MIDI */ = {
 			isa = PBXGroup;
 			children = (
+				080E59023F8C3816D603AF00 /* InputDevice.swift */,
 				2A745499F18AF47E90C45897 /* MIDIInput.swift */,
 			);
 			path = MIDI;
@@ -5093,6 +5096,7 @@
 				69B525824450221386E7F1C5 /* Improv.swift in Sources */,
 				6986166F1EEBD2709F5D1521 /* ImprovClient.swift in Sources */,
 				854DFD0191152771C0C28253 /* ImprovSheet.swift in Sources */,
+				961759D30BBFC87697CDF1BB /* InputDevice.swift in Sources */,
 				73D31E854898BB54BE5D4C0D /* Instrument.swift in Sources */,
 				7943EE24325ECDBDE8F2DC64 /* KeyCatcher.swift in Sources */,
 				C644B759F0C8337C5B487AC0 /* KeyboardStrip.swift in Sources */,
@@ -5190,7 +5194,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 129;
+				CURRENT_PROJECT_VERSION = 130;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -5257,7 +5261,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 129;
+				CURRENT_PROJECT_VERSION = 130;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;

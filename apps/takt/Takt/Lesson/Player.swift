@@ -28,6 +28,8 @@ final class Player {
     /// The calibration under way, and the click being heard.
     var calibration: Calibration?
     var calibrationClick: Int?
+    /// The keyboard the calibration is measuring: the one that tapped last.
+    var calibrationDevice = InputDevice.local
     /// The count-in's beat (1–4) while it plays, before bar 1.
     private(set) var countIn: Int?
     /// Play it back: the transport epoch the recorded chorus is playing in (it starts at tick 0).
@@ -154,9 +156,12 @@ final class Player {
     #endif
 
 
-    /// Calibration's result: how early (negative) or late this player presses, ms. Every scored
-    /// press moves by minus this.
-    static var inputOffsetMs: Double { UserDefaults.standard.double(forKey: "inputOffsetMs") }
+    /// The keyboard the last press came from (`InputDevice`): a MIDI source's name, or `local`
+    /// for the computer keys and the keys on screen.
+    @ObservationIgnored var device = InputDevice.local
+    /// Calibration's result for that keyboard: how early (negative) or late a press from it
+    /// lands, ms. Every scored press moves by minus this.
+    var inputOffsetMs: Double { InputDevice.offset(device) }
     static var calibrated: Bool { UserDefaults.standard.bool(forKey: "calibrated") }
     /// Settings → Count-in, on unless turned off. Headless runs (`-Silent`) start on bar 1
     /// unless they pass `-countIn YES`.
@@ -219,6 +224,7 @@ final class Player {
             self.audio.send(n.on ? .noteOn(note: n.note, velocity: n.velocity, hostTime: n.hostTime)
                                  : .noteOff(note: n.note, hostTime: n.hostTime))
             DispatchQueue.main.async {
+                self.device = n.device
                 if n.on {
                     CountInLaunch.onHit?(n.hostTime)
                     self.pressed.insert(n.note)
@@ -581,6 +587,7 @@ final class Player {
 
     func press(_ note: Int, velocity: Float = 0.8) {
         guard !pressed.contains(note) else { return }
+        device = InputDevice.local
         let now = mach_absolute_time()
         pressed.insert(note)
         audio.send(.noteOn(note: note, velocity: velocity, hostTime: now))
@@ -597,6 +604,7 @@ final class Player {
 
 
     func tapDown(_ touch: Int) {
+        device = InputDevice.local
         let fresh = dueNow().filter { !pressed.contains($0) }
         taps[touch] = fresh
         for n in fresh { press(n) }
@@ -628,6 +636,7 @@ final class Player {
             return
         }
         CountInLaunch.onHit?(mach_absolute_time())
+        device = InputDevice.local
         let plain = 48 + 12 * octave + semitone
         let named = dueNow().filter { ($0 - plain) % 12 == 0 && !pressed.contains($0) }
         let notes = named.isEmpty ? [plain] : named
@@ -652,6 +661,11 @@ final class Player {
         guard clock.valid else { return }
         if var c = calibration {
             guard s.epoch == calibrationEpoch else { return }
+            // Another keyboard: the needle starts over from that one's own correction.
+            if device != calibrationDevice {
+                calibrationDevice = device
+                c = Calibration(firstTick: c.firstTick, ticksPerBeat: c.ticksPerBeat, base: inputOffsetMs)
+            }
             let p = clock.position(atHost: hostTime)
             let before = c.taps.count
             c.tap(tick: p.tick, msPerTick: p.msPerTick)
@@ -698,7 +712,7 @@ final class Player {
 
     /// A press `inputOffsetMs` early (negative) is placed that much later.
     private func shifted(_ hostTime: UInt64, _ clock: TransportClock) -> UInt64 {
-        let delta = Int64((-Self.inputOffsetMs / 1000 * clock.hostTicksPerSecond).rounded())
+        let delta = Int64((-inputOffsetMs / 1000 * clock.hostTicksPerSecond).rounded())
         return UInt64(max(0, Int64(hostTime) + delta))
     }
 
