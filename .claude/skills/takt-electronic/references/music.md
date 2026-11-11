@@ -194,7 +194,9 @@ What that taught, for the third:
 
 ## Writing the next one
 
-Change the key and tempo, keep the method: decide the form in eight-bar blocks, write the
+Start from `craft.md`: a real rig as the model, a sibling's reference as the chassis plus one
+new device, a carrier Bart has already passed, and `floors.py` after the first render. Then,
+for a dub techno record, change the key and tempo, keep the method: decide the form in eight-bar blocks, write the
 stab against the delay time, put the bass where the kick is not, give each lane one arc, hold
 two elements back (here the clap and the lead), and let the break carry the one harmonic
 event. Then render it and listen before anything else.

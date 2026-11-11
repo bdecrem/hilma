@@ -1,6 +1,8 @@
 # Taste: what every electronic record here has to keep
 
-Read this before `music.md`. `music.md` describes one record. This file is what must hold in the next one, whatever else changes. From Claude, who wrote Halbschatten and Gegenlicht, 2026-11-10.
+Read this before `music.md`. `music.md` describes one record. This file is what must hold in the next one, whatever else changes. From Claude, who wrote Halbschatten and Gegenlicht, 2026-11-10. Revised 2026-11-11 from the same writer's review of Hohlraum (`misc/electronic-craft.md`).
+
+**This file sets ceilings; `craft.md` sets floors.** Read `craft.md` next: how the records Bart liked were made, and the `floors.py` checks for how full a record has to be. Where the two disagree, `craft.md` wins. A record can keep every rule here and still be half empty (Hohlraum).
 
 ## Why this file exists
 
@@ -26,12 +28,12 @@ The bell is the same voice, at the same level (−24.5 dB against −24), into t
 
 Nothing in the record asks for attention. A tune, a bright sound, a chord change, a fill and a build are all ways of asking. The listener leans in because the track does not.
 
-When two options are open: fewer notes, darker, later, quieter, longer.
+When two ideas are open, take the plainer one. Never settle a doubt by making the record emptier or quieter. The floors (`craft.md`) decide how full it is.
 
 ## What never changes
 
 1. **One carrier.** Exactly one voice carries the feeling. Name it before writing anything. Every other voice is floor (kick, low end), clock (hats, percussion) or room (pad, echo, hall, noise).
-2. **The carrier speaks through its timbre.** Its notes barely change in four minutes. A filter, a decay or a feedback changes, on a lane. If you are writing new notes to keep it interesting, move a lane instead.
+2. **The carrier speaks through its timbre.** Its notes barely change in four minutes. A filter, a decay or a feedback changes, on a lane. If you are writing new notes to keep it interesting, move a lane instead. Its level holds from its first bar. Only its timbre travels (a decay or density lane is a level change in disguise).
    - Halbschatten: one chord shape; its cutoff goes 250 → 2500 → 230 Hz.
    - Gegenlicht: one 2-bar riff in three densities; its filter base goes 170 → 950 → 150 Hz.
 3. **No tune on top.** A singable line above about E4, bright, repeating, is the fastest way to cheese. Bart on Hypnotist II: "a VERY REPETITIVE terrible set of notes". The Abyss fixes found the same thing: a square-wave melody read as a game tune. If a top line exists at all, it is a visitor:
@@ -56,10 +58,12 @@ When two options are open: fewer notes, darker, later, quieter, longer.
 This is where a new record gets to be different.
 
 - Key and tempo (dub techno 116–124, techno 126–132), with the kick tuned to the root at 44–55 Hz.
-- **The carrier**, from this list: a chord stab; a low riff; a pad whose filter moves; the echo itself (a click or rim that exists mostly as its repeats); a drone with one moving note; a figure on tuned toms. Not on the list: a bell tune, a lead, an arp.
+- **The carrier**, from one of two lists. Not on either: a bell tune, a lead, an arp.
+  - *Passed by Bart:* a chord stab (Halbschatten); a low riff (Gegenlicht); a sequenced line through a ladder filter (Streulicht); a sixteenth-note bass (Irrlicht); an oscillator stack whose tuning moves (Nordlicht).
+  - *Never made:* a pad whose filter moves; the echo itself (a click or rim that exists mostly as its repeats); a drone with one moving note; a figure on tuned toms. Bart sees the brief before anything from this list is written. (Hohlraum's tuned knock came from this list and failed every floor.)
 - The carrier's rhythm cell, and the echo time it is written against.
 - The clocks: straight 4; 3 or 5 against 4; a 2-bar or 3-bar phrase; where the hole in the hats is.
-- The ground: a bass in the gaps, a pedal, or no bassline and a rumble.
+- The ground: a bass in the gaps, a pedal, or no bassline and a rumble. "No bassline and a rumble" holds only when the carrier itself reaches under 110 Hz (Gegenlicht's riff goes down to E2); a pitched voice moving under 150 Hz is a floor (`craft.md`).
 - The form: one arc, two rises, a late break, no break.
 - The one harmonic event and where it sits.
 - The bed: hiss, crackle, room tone, hum.
@@ -93,16 +97,17 @@ How to level any of that is `takt-chart`'s.
 
 ## Making one
 
-1. **Write the brief first**, five lines, at the top of the reference script. Show it to Bart if he is there.
+1. **Write the brief first**, at the top of the reference script. Show it to Bart if he is there.
+   - the model: a real record or rig, and what each instrument in it plays (looked up, or marked "from memory"). If Bart named none, pick one
    - the image: one word, one sentence
-   - the carrier, and the lane that tells its story
+   - the carrier, which proven voice it is (`craft.md` 2), and the lane that tells its story
    - the one harmonic event (or none) and its bar
    - the one visitor (or none) and its bars
-   - three things you wanted to add and are refusing
-2. **Budget before patterns.** Pitched voices: 4 at most (carrier, low end, pad or drone, one visitor). Pitched ideas: 3 at most (the carrier's cell, the low end's cell, the visitor's phrase); densities of one cell count once. Lanes: 6 or more.
+   - for each thing a sibling record has that this one drops, what does its job now
+2. **Budget before patterns.** Pitched voices: 3 or 4 (carrier, low end, pad or drone, one visitor). Pitched ideas: 3 at most (the carrier's cell, the low end's cell, the visitor's phrase); densities of one cell count once. Lanes: 6 or more.
 3. **Write the lanes before the notes.** The form is the cutoff, decay and feedback curves. Patterns come after.
-4. **Render, then run the blind checks** below. Fix the score, not the mix.
-5. **The mute test.** Kick, carrier and its echo alone, for the whole length: is it still a track? If it needs the top line, the carrier is wrong.
+4. **Render, run `scripts/takt/floors.py`, then the blind checks** below. Fix the score and the voice, not the mix and never the master.
+5. **The mute test.** Kick, carrier and its echo alone, for the whole length: is it still a track? It passes when the carrier is present 50 % of the time or more and its timbre travels 10 dB or more (`floors.py`). If it needs the top line, the carrier is wrong.
 6. **Bart hears the mp3 before anything is ported.** If you were tempted by an extra idea, render both and send the plainer one first.
 7. His words, dated, into `feedback.md`.
 
@@ -127,8 +132,17 @@ Run them on the event log and the stems. They are how someone who cannot hear ke
 | any top line against the carrier | no louder | equal | none |
 | subtractions (a dropout, a voice alone, a filtered way in or out) | 2 or more | 3 | 4 |
 | longest stretch with no lane moving | ≤ 8 bars | 0 | 0 |
+| **the floors** (`floors.py`; the five records Bart praised or picked, and Hohlraum and Restlicht, are in `craft.md`) | | | |
+| pitched group under the kick, bars 16 to end − 16 | 2–5 dB | 2.7 | 3.7 |
+| pitched 500–2k under the kick, best 8 bars with a kick | 6–12 dB | 10.5 | 7.0 |
+| carrier present | ≥ 50 % | 53 | 66 |
+| carrier level spread, 25–85 % of the track | ≤ 3.5 dB | 2.9 | 2.8 |
+| carrier timbre travel | ≥ 10 dB | 10.6 | 20.1 |
+| carrier's first 8 bars under its middle | ≤ 4 dB | 1.5 | 0.4 |
+| a pitched voice that moves under 150 Hz | yes | yes | yes |
+| pitched voices sounding in the body | 3 or 4 | 3–4 | 3–4 |
 
-A record can pass every row and still be dull. It cannot fail the first four and be right.
+A record can pass every row and still be dull. It cannot fail the first four and be right, and it is not ready for Bart if it fails the first, third or fifth floor.
 
 ## Dub techno, as Halbschatten does it
 
@@ -156,4 +170,4 @@ A record can pass every row and still be dull. It cannot fail the first four and
 
 ## What this file cannot do
 
-These are the rules the two records were written by, and the counts are taken from their scores. Bart's ears passed those two; nothing else has been tested. When he says a third one works, add its row to the table. When he says one is cheesy, find the row it failed, or add the row that would have caught it.
+These are the rules the two records were written by, and the counts are taken from their scores. Bart has since praised two more from the same writer (Streulicht and Irrlicht, "terrific") and picked a third, Nordlicht, for a video without a word on its music. Those carry more than this file's spirit allows (`craft.md` 7). When he says a record works, add its row to the tables. When he says one is cheesy, find the row it failed, or add the row that would have caught it. When he says one is weak or thin (Hohlraum), the floors are where to look first.

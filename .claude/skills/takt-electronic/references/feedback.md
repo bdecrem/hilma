@@ -98,18 +98,25 @@ meant, what changed. Add to the bottom of a section when he says something new.
   null) played from the reference's own bounce at the song's position. `DUB-TECHNO.md` §13.
   0.1 (129).
 
+- **2026-11-10 → 11.** Hohlraum, Bart's verdict as relayed by the writer of `taste.md` (in
+  `misc/electronic-craft.md`, a review of it): the production is much less good than the records
+  made in the chat. Measured, it is half empty: everything pitched sits 9.3 dB under the kick (the
+  five he liked: 2.4–4.1), and the knock is a 200 Hz thud present 32 % of the time whose level,
+  not its timbre, tells the story. It had passed every blind check, because `taste.md` only set
+  ceilings. Then Bart, here: "review misc/electronic-craft* and misc/floors.py and update your .md
+  for how to create electronic tracks" → `references/craft.md` (the method and the floors),
+  `scripts/takt/floors.py`, `taste.md`'s nine edits, `SKILL.md`'s steps (a model and a chassis
+  first, `floors.py` before Bart hears anything). floors.py re-run here on six references
+  reproduces the review's figures exactly; Restlicht, not in its set, misses two floors (it is
+  the driest record; `craft.md`). The remake the review proposes (`craft.md` last section) is
+  not made.
+
 ## Open, to hear
 
-- **Hohlraum, the record itself** (2026-11-10): `~/Desktop/takt/hohlraum/Hohlraum (reference).mp3`
-  (the same file is `misc/hohlraum_reference.mp3`). Nobody has heard it. What the counting says:
-  every row of `taste.md`'s blind checks passes (no top line; 0 of 320 knocks on a beat; home
-  chord 94 % of bars; first move at 54 %; nothing new after bar 70), -10.4 LUFS against
-  Gegenlicht's -10.1, the kick 7.7 dB over the carrier. What only ears can say: whether the knock
-  (a sine shaped toward a square, thinned under 250 Hz, driven after its filter) carries a record
-  the way the acid line does, or reads as a tom loop; it is 1.6 dB darker than Halbschatten at
-  1-2 kHz and 2.5 dB at 2-4 kHz, on purpose but untested. The mute test (kick, knock and its echo
-  alone) is beside it on the Desktop. Changes go into the reference script first; when he passes
-  it, its row goes into `taste.md`'s table.
+- **Hohlraum remade under `craft.md`** (not made; the review's recipe): when Bart asks, he hears
+  both and his verdict settles whether the floors are right.
+- **Restlicht's floors**: it misses the pitched-group and 500–2k floors (5.2 and 13.6 dB). Whether
+  that is electro's shape or a weaker record is Bart's call; his words widen the fence or don't.
 
 - **Gezeiten, the record itself** (2026-11-10): whether the bell as the motor works for him, its
   level (levelled to −24.5 dB on its loud passages; Halbschatten's lead is −24), the dotted-quarter
