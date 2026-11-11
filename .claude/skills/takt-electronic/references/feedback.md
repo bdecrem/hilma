@@ -64,7 +64,30 @@ meant, what changed. Add to the bottom of a section when he says something new.
   a second console (`AcidRack`, `system.md` "The acid rack"), every stem nulled against the
   reference (`DUB-TECHNO.md` §10), the parts by `takt-chart`. 0.1 (126).
 
+- **2026-11-10.** "make another techno track, inspired by gegenlicht - think: same artist,
+  different album, different track. make sure to review the .md with instructions on how to think
+  like an electronic music producder etc. for now, ONLY make the .wav or .mp3, not the chart,
+  don't yet add to the app." → **Hohlraum** (`misc/hohlraum_reference.py`, G sharp, 126, 128 bars,
+  4:11; the brief is the script's docstring). Read as (my reading): `taste.md` first, the record
+  before any chart, his ears before any port. A different carrier from the list (a low tuned
+  knock and its dotted-eighth echo, where Gegenlicht has the acid line), no visitor, one harmonic
+  event (the fourth D#-G# up a semitone for two bars in eight, bars 70-95), new clocks (a tick
+  every seventh sixteenth, the shaker's accent every fifth), a late break (bars 64-71) and four
+  bars where the carrier is gone (96-99). Kept: the kick bus, the rumble, the tape echo, the pad's
+  saws, the hats, the master. Nothing ported, no chart, not in the app.
+
 ## Open, to hear
+
+- **Hohlraum, the record itself** (2026-11-10): `~/Desktop/takt/hohlraum/Hohlraum (reference).mp3`
+  (the same file is `misc/hohlraum_reference.mp3`). Nobody has heard it. What the counting says:
+  every row of `taste.md`'s blind checks passes (no top line; 0 of 320 knocks on a beat; home
+  chord 94 % of bars; first move at 54 %; nothing new after bar 70), -10.4 LUFS against
+  Gegenlicht's -10.1, the kick 7.7 dB over the carrier. What only ears can say: whether the knock
+  (a sine shaped toward a square, thinned under 250 Hz, driven after its filter) carries a record
+  the way the acid line does, or reads as a tom loop; it is 1.6 dB darker than Halbschatten at
+  1-2 kHz and 2.5 dB at 2-4 kHz, on purpose but untested. The mute test (kick, knock and its echo
+  alone) is beside it on the Desktop. Changes go into the reference script first; when he passes
+  it, its row goes into `taste.md`'s table.
 
 - **Gezeiten, the record itself** (2026-11-10): whether the bell as the motor works for him, its
   level (levelled to −24.5 dB on its loud passages; Halbschatten's lead is −24), the dotted-quarter
