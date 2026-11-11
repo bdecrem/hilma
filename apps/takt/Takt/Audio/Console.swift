@@ -1,7 +1,7 @@
 import Foundation
 
 /// A song's console mixed to a reference render, as the renderer drives it: `Rack` (the dub
-/// techno system: Halbschatten, Gezeiten) or `AcidRack` (Gegenlicht). The renderer routes the
+/// techno system: Halbschatten, Gezeiten), `AcidRack` (Gegenlicht), `ElectroRack` (Restlicht) or `MoogRack` (Streulicht). The renderer routes the
 /// kit's sounds into its buses, hands it the band's and your keys' voices, and lets it add its
 /// buses and run its own master after the channels are mixed.
 protocol Console: AnyObject {
@@ -20,11 +20,13 @@ protocol Console: AnyObject {
     func hit(_ buffer: SampleBuffer, gain: Float, offset: Int)
     /// A synthesized stab note (`Rack`).
     func note(_ note: Int, velocity: Float, gain: Float, offset: Int, live: Bool)
-    /// A lead note (`Rack`'s FM voice).
+    /// A lead note (`Rack`'s FM voice, `ElectroRack`'s whistle, `MoogRack`'s lead).
     func pluck(_ note: Int, velocity: Float, gain: Float, held: Int, offset: Int, live: Bool)
-    /// An acid note (`AcidRack`): the gate holds `held` frames (Int.max: a key holds it).
+    /// An acid note (`AcidRack`; `ElectroRack`'s bass; `MoogRack`'s line): the gate holds `held` frames (Int.max: a key holds it).
     func acid(_ note: Int, velocity: Float, gain: Float, held: Int, offset: Int, live: Bool)
-    /// A pad note (`AcidRack`): its gate opens, and closes after `held` frames. `live`: your
+    /// A bass note (`MoogRack`): as an acid note.
+    func bass(_ note: Int, velocity: Float, gain: Float, held: Int, offset: Int, live: Bool)
+    /// A pad note (`AcidRack`, `ElectroRack`, `MoogRack`): its gate opens, and closes after `held` frames. `live`: your
     /// side (a key, or a note the level leaves out played for you), not the keys channel's.
     func pad(_ note: Int, velocity: Float, gain: Float, held: Int, offset: Int, live: Bool)
     /// A key comes up, `offset` frames into the chunk.
@@ -42,6 +44,7 @@ extension Console {
     func note(_ note: Int, velocity: Float, gain: Float, offset: Int, live: Bool) {}
     func pluck(_ note: Int, velocity: Float, gain: Float, held: Int, offset: Int, live: Bool) {}
     func acid(_ note: Int, velocity: Float, gain: Float, held: Int, offset: Int, live: Bool) {}
+    func bass(_ note: Int, velocity: Float, gain: Float, held: Int, offset: Int, live: Bool) {}
     func pad(_ note: Int, velocity: Float, gain: Float, held: Int, offset: Int, live: Bool) {}
 }
 

@@ -135,15 +135,25 @@ struct SampleVoice {
     /// A hit's own pan (`BandData.Hit.p`): each side's gain.
     var panL: Float = 1
     var panR: Float = 1
+    /// A slice under its own envelope (`BandData.Hit.o / n / d`): (1 − a^t) · b^t per frame, and
+    /// the voice ends when its frames are up instead of releasing.
+    var shaped = false
+    var rise = 1.0, fall = 1.0
+    var riseK = 0.0, fallK = 0.0
 
     private static let scale: Float = 1 / 32768
 
     mutating func start(_ buffer: SampleBuffer, ratio: Double, gain: Float, heldFrames: Int,
                         releaseSeconds: Double, group: Int = 0, note: Int = -1, live: Bool = false,
-                        sustain: Bool = false, age: Int, sampleRate: Double, delay: Int = 0, aux: Int = -1, pan: Float = .nan) {
+                        sustain: Bool = false, age: Int, sampleRate: Double, delay: Int = 0, aux: Int = -1, pan: Float = .nan,
+                        from: Double = 0, decay: Double = 0) {
         self.buffer = buffer
         active = true
-        position = 0
+        position = from
+        shaped = decay > 0
+        rise = 1; fall = 1
+        riseK = exp(-1 / (0.0005 * sampleRate))
+        fallK = decay > 0 ? exp(-1 / (decay * sampleRate)) : 0
         step = ratio * buffer.rate / sampleRate
         self.gain = gain * Self.scale
         self.heldFrames = heldFrames
@@ -193,9 +203,17 @@ struct SampleVoice {
                 ip = Int(position)
             }
             if ip >= count - 1 { active = false; return }
-            if heldFrames == 0 { releasing = true }
+            if heldFrames == 0 {
+                if shaped { active = false; return }
+                releasing = true
+            }
             heldFrames -= 1
             var g = gain * sus
+            if shaped {
+                g *= Float((1 - rise) * fall)
+                rise *= riseK
+                fall *= fallK
+            }
             if releasing {
                 release *= releaseCoef
                 if release < 0.0001 { active = false; return }

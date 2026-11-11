@@ -56,6 +56,10 @@ class Song:
         self.rack = None
         # Gegenlicht's console (Takt/Audio/AcidRack.swift): the kick bus, the rumble, the acid, …
         self.acid_rack = None
+        # Restlicht's console (Takt/Audio/ElectroRack.swift): the bass voice, the whistle, the echo, …
+        self.electro_rack = None
+        # Streulicht's console (Takt/Audio/MoogRack.swift): three ladder voices, two echoes, the drifts, …
+        self.moog_rack = None
         self.drums = []
         self.bass = []
         self.keys = []
@@ -171,6 +175,8 @@ class Song:
             **({"amp": self.amp} if self.amp else {}),
             **({"rack": self.rack} if self.rack else {}),
             **({"acidRack": self.acid_rack} if self.acid_rack else {}),
+            **({"electroRack": self.electro_rack} if self.electro_rack else {}),
+            **({"moogRack": self.moog_rack} if self.moog_rack else {}),
             "channels": {"drums": self.drums, "bass": self.bass, "keys": self.keys, "horns": self.horns},
             "song": {
                 "title": self.title,

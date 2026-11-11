@@ -168,3 +168,25 @@ from the `parts/` the reference writes itself; nothing is shared with Halbschatt
 - **Drums**: closed and open hats (the hat bus's 13 kHz lowpass baked in), ride, crash (stereo,
   the right 37 samples late), shaker, clap, rim, toms on A3 E3 E3 G3 every third sixteenth (the
   tom bus's 110 Hz highpass baked in, a pan per hit), five risers, a pink noise bed.
+
+## Restlicht's instruments (the electro rack, 2026-11-10)
+
+`rl-*` files, cut by `apps/takt/scripts/restlicht.py`: an 808-shaped kick landing on A1 (55 Hz, a
+fifth under the D riff) and its short ghost, two snares (186 and 332 Hz tones and noise), three
+closed and two open metal hats (the hat bus's 12.5 kHz lowpass baked in), three shakers, a rim
+(1667 and 455 Hz), toms on A2 and D3, the noise bed's first 32 s (pink through 450 Hz, no
+crackle). Live in the console: the bass (saw and square, two SVFs, the filter lane the record's
+story: 190 Hz → 1100 at bar 76 → 200), the whistle and the pad's stacked fifths (D3 A3, + E4, the
+E4 up to G4, C3 G3 D4 one bar in four).
+
+## Streulicht's instruments (the moog rack, 2026-11-10)
+
+`sl-*` files, cut by `apps/takt/scripts/streulicht.py`: a kick landing on G1 (49 Hz), two claps
+(three bursts and a tail through 750–3600 Hz), two open hats (six square partials and noise
+through 6.8 kHz; their 10.5 kHz lowpass baked in), the closed hats' six seconds of noise
+(6.2–11.5 kHz), the noise bed's first 32 s (pink through 500 Hz), the drift curves. Live: the
+line (three oscillators, the third an octave up and on a lane, pulse width on a 9-bar sine), the
+bass (a saw and a pulse an octave down, E2 every sixteenth, punched by a 75 ms envelope), the lead
+(two saws ±4 cents, a pulse, a pulse an octave down, 65 ms glide, vibrato on long notes) and the
+pad (B3 D4 F#4, the B to C for a bar).
+

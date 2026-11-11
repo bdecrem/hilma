@@ -24,6 +24,12 @@ struct BandData: Decodable {
         /// A pan of the hit's own, −1…1, on a mono file (cos/sin of (p + 1)·π/4 a side, the
         /// reference's law): Gegenlicht's toms and pings. Absent: the file as it is.
         var p: Double? = nil
+        /// A slice of the file under an envelope of its own (Streulicht's closed hats, each cut
+        /// from six seconds of noise): it starts `o` seconds into the file, lasts `n` seconds
+        /// and is shaped (1 − e^(−t / 0.5 ms)) · e^(−t / d). Absent: the file from its top.
+        var o: Double? = nil
+        var n: Double? = nil
+        var d: Double? = nil
     }
 
     struct Note: Decodable {
@@ -78,6 +84,12 @@ struct BandData: Decodable {
     /// Gegenlicht's console (`AcidRack`): the kick bus and its rumble, the acid voice and its
     /// echo, the ping, the gated pad, the kit's buses, the hall, the room, the master.
     var acidRack: AcidRack.Settings?
+    /// Restlicht's console (`ElectroRack`): the bass voice, the whistle, one echo for the rim, the
+    /// snare and the whistle, the gated pad, the kit's buses, the hall, the room, the master.
+    var electroRack: ElectroRack.Settings?
+    /// Streulicht's console (`MoogRack`): three ladder-filter voices (the line, the bass, the
+    /// lead), two echoes, the drifts, the gated pad, the kit's buses, the hall, the room, the master.
+    var moogRack: MoogRack.Settings?
     var channels: Channels
 
     struct Duck: Decodable {

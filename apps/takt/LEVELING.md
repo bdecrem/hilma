@@ -61,6 +61,8 @@ The figures for every song, every tier (2026-11-08, `-LessonCheck` prints them a
 | McLemore (96, 2026-11-09; Easy = L2, Easy+ = L3) | 2/2 · 2 · 10 | 5/5 · 2 · 10 (L2) | 12/9 · 2 · 10 (L3) | 14/11 · 2 · 12 (L5) | 20/9 · 3 · 15 |
 | Gezeiten (116, 2026-11-10; Easy = L2, Medium = L6) | 0/0 · 1 · 10 | 0/0 · 1 · 10 (L2) | 0/0 · 1 · 10 | 0/0 · 1 · 10 (L6) | 0/0 · 1 · 10 |
 | Gegenlicht (128, 2026-11-10; Beginner gap 0.9) | 0/0 · 1 · 7 | 0/0 · 1 · 7 | 0/0 · 1 · 7 | 0/0 · 1 · 7 (L5) | 67/2 · 3 · 17 |
+| Restlicht (124, 2026-11-10; tiers 5–6 gap 0.24) | 0/0 · 1 · 3 | 0/0 · 1 · 3 | 0/0 · 1 · 3 | 0/0 · 1 · 10 (L5) | 72/3 · 2 · 12 |
+| Streulicht (122, 2026-11-10; Easy = L2, Easy+ = L3, Medium = L4) | 0/0 · 1 · 7 | 0/0 · 1 · 7 (L2) | 0/0 · 1 · 7 (L3) | 0/0 · 1 · 7 (L4) | 563/1 · 3 · 15 |
 
 ## 2. The budgets
 
@@ -135,6 +137,27 @@ it before and after every change (2026-11-08).
   my hand" gets a real answer.
 
 ## 4. Decisions and dates
+
+- **2026-11-10: Restlicht and Streulicht, two records from the Claude app, their own lines in one
+  hand.** Bart: "now implement misc/Restlich* and misc/restlicht* into the game, faithfully, like
+  the other tracks you've done", then "and then the same for misc/streu* and misc/Streulich*".
+  Both carriers are written for one position by their nature, so no line was rewritten; the
+  work was in the rungs. **Restlicht**, the bass riff (C2–C3, D2 under the thumb, C3 under the
+  pinky): every tier to Hard **0/0 · 1** (span 3 to Easy+, 10 at Medium), Hard the record's
+  72/3 · 2 · 12 (the low C2 under the riff, again and again); 0.23 · 0.44 · 0.67 (Easy) · 0.88
+  (Easy+) · 1.32 (Medium) · 1.83 · 2.65, rungs by place in the two-bar riff (CHARTING.md rule
+  21), the song's patch giving tiers 5 and 6 `gap` 0.24. Chords, the pad's fifths a hit a bar:
+  0.17 · 0.30 · 0.30 (Easy) · 0.30 (Easy+, three notes) · 0.50 (Medium, every bar) · 0.50 · 0.50,
+  Beginner `gap` 1.9 and tiers 2–4 `space` 4.0 as Gegenlicht's. **Streulicht**, the sequencer
+  row (E3–G4): the levels play the row's triad, E3 G3 B3, under one hand (thumb on E3), **0/0 · 1
+  · 7** at every tier to tier 6; D4 and F#4 / G4 and the A3 are the record's alone, so Hard is
+  563/1 · 3 · 15 (the row's sixteenths). Density 0.52 · 0.73 (Easy) · 1.04 (Easy+) · 1.51
+  (Medium) · 2.60 · 5.12 · 7.71 (Hard, the record), the named rungs moved down one (the record is
+  sixteenths at 122, and tier 5's 2.6 a second is not a Medium); how the rungs were found is
+  CHARTING.md rule 22. Chords, the pad a hit a bar, D4 F#4 under 3 and 1 all song and the moving
+  finger (B3 under 5, C4 under 4) from three notes: 0.18 · 0.30 · 0.30 · 0.30 · 0.49 · 0.49 ·
+  0.49. No level's goal song, so printed, not asserted. Every other song's figures unchanged
+  (`--compare`). Not yet played by Bart.
 
 - **2026-11-10: Gegenlicht, an acid line under one hand up to Medium.** Bart asked for the record
   he had heard ("this is FANTASTIC") and its charts by the skills. The melody is the 303's own

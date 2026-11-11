@@ -292,6 +292,44 @@
    "uses": []
   },
   {
+   "name": "song-restlicht",
+   "title": "Restlicht",
+   "style": "Electro",
+   "key": "D dorian",
+   "tempo": 124,
+   "bars": 124,
+   "seconds": 240,
+   "line": "Electro at 124, four minutes. One bass riff on white keys, its filter opening and closing; fifths with no third; a whistle that visits twice.",
+   "sections": "Empty room (bar 1), Kick (bar 5), Riff (bar 9), Full riff (bar 17), One finger (bar 33), Shaker (bar 41), Break (bar 49), A step down (bar 57), Whistle (bar 65), Floor (bar 81), No bass (bar 89), Return (bar 93), Whistle again (bar 97), Thinning (bar 105), Fifths (bar 113), Out (bar 117)",
+   "chorus": "1–16 D5 · 17–36 Dsus2 · 37–40 Dsus4 · 41–44 Dsus2 · 45–48 Dsus4 · 49–52 Dsus2 · 53–56 Dsus4 · 57 Dsus2 · 58 Dsus4 · 59 Dsus2 · 60 Csus2 · 61 Dsus2 · 62 Dsus4 · 63 Dsus2 · 64 Csus2 · 65 Dsus2 · 66 Dsus4 · 67 Dsus2 · 68 Csus2 · 69 Dsus2 · 70 Dsus4 · 71 Dsus2 · 72 Csus2 · 73 Dsus2 · 74 Dsus4 · 75 Dsus2 · 76 Csus2 · 77 Dsus2 · 78 Dsus4 · 79 Dsus2 · 80 Csus2 · 81 Dsus2 · 82 Dsus4 · 83 Dsus2 · 84 Csus2 · 85 Dsus2 · 86 Dsus4 · 87 Dsus2 · 88 Csus2 · 89 Dsus2 · 90 Dsus4 · 91 Dsus2 · 92 Csus2 · 93 Dsus2 · 94 Dsus4 · 95 Dsus2 · 96 Csus2 · 97 Dsus2 · 98 Dsus4 · 99 Dsus2 · 100 Csus2 · 101 Dsus2 · 102 Dsus4 · 103 Dsus2 · 104 Csus2 · 105–112 Dsus2 · 113–124 D5",
+   "choruses": 1,
+   "parts": {
+    "chords": "The fifths",
+    "melody": "The riff"
+   },
+   "shelf": "all tracks",
+   "uses": []
+  },
+  {
+   "name": "song-streulicht",
+   "title": "Streulicht",
+   "style": "Melodic Techno",
+   "key": "E minor",
+   "tempo": 122,
+   "bars": 133,
+   "seconds": 262,
+   "line": "Melodic techno at 122, four minutes. One sequencer row drifting against the bar, a bass that never leaves E, a lead that comes late.",
+   "sections": "The line alone (bar 1), Kick (bar 9), Bass (bar 17), Open hat (bar 25), Seven stages (bar 33), One finger (bar 41), Break (bar 57), Back (bar 65), Lead (bar 73), Peak (bar 89), Second break (bar 97), Lead again (bar 105), Closing (bar 113), Kick and line (bar 121), Out (bar 125)",
+   "chorus": "1–4 Bm",
+   "choruses": 33.3,
+   "parts": {
+    "chords": "The pad",
+    "melody": "The line"
+   },
+   "shelf": "all tracks",
+   "uses": []
+  },
+  {
    "name": "song-hypnotist",
    "title": "Hypnotist",
    "style": "Minimal techno",

@@ -6652,5 +6652,557 @@
     ]
    }
   ]
+ },
+ "kickRL": {
+  "release": 0.03,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "rl-kick"
+    ]
+   }
+  ]
+ },
+ "kickRL@44": {
+  "release": 0.03,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "rl-kick-44"
+    ]
+   }
+  ]
+ },
+ "rlGhost": {
+  "release": 0.03,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "rl-ghost"
+    ]
+   }
+  ]
+ },
+ "rlGhost@44": {
+  "release": 0.03,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "rl-ghost-44"
+    ]
+   }
+  ]
+ },
+ "rlSnare0": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "rl-snare-0"
+    ]
+   }
+  ]
+ },
+ "rlSnare0@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "rl-snare-0-44"
+    ]
+   }
+  ]
+ },
+ "rlSnare1": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "rl-snare-1"
+    ]
+   }
+  ]
+ },
+ "rlSnare1@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "rl-snare-1-44"
+    ]
+   }
+  ]
+ },
+ "rlChh0": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "rl-chh-0"
+    ]
+   }
+  ]
+ },
+ "rlChh0@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "rl-chh-0-44"
+    ]
+   }
+  ]
+ },
+ "rlChh1": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "rl-chh-1"
+    ]
+   }
+  ]
+ },
+ "rlChh1@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "rl-chh-1-44"
+    ]
+   }
+  ]
+ },
+ "rlChh2": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "rl-chh-2"
+    ]
+   }
+  ]
+ },
+ "rlChh2@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "rl-chh-2-44"
+    ]
+   }
+  ]
+ },
+ "rlOhh0": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "rl-ohh-0"
+    ]
+   }
+  ]
+ },
+ "rlOhh0@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "rl-ohh-0-44"
+    ]
+   }
+  ]
+ },
+ "rlOhh1": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "rl-ohh-1"
+    ]
+   }
+  ]
+ },
+ "rlOhh1@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "rl-ohh-1-44"
+    ]
+   }
+  ]
+ },
+ "rlShk0": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "rl-shk-0"
+    ]
+   }
+  ]
+ },
+ "rlShk0@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "rl-shk-0-44"
+    ]
+   }
+  ]
+ },
+ "rlShk1": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "rl-shk-1"
+    ]
+   }
+  ]
+ },
+ "rlShk1@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "rl-shk-1-44"
+    ]
+   }
+  ]
+ },
+ "rlShk2": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "rl-shk-2"
+    ]
+   }
+  ]
+ },
+ "rlShk2@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "rl-shk-2-44"
+    ]
+   }
+  ]
+ },
+ "rlRim": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "rl-rim"
+    ]
+   }
+  ]
+ },
+ "rlRim@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "rl-rim-44"
+    ]
+   }
+  ]
+ },
+ "rlTom45": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "rl-tom-45"
+    ]
+   }
+  ]
+ },
+ "rlTom45@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "rl-tom-45-44"
+    ]
+   }
+  ]
+ },
+ "rlTom50": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "rl-tom-50"
+    ]
+   }
+  ]
+ },
+ "rlTom50@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "rl-tom-50-44"
+    ]
+   }
+  ]
+ },
+ "rlNoise": {
+  "release": 0.2,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "rl-noise"
+    ]
+   }
+  ]
+ },
+ "rlNoise@44": {
+  "release": 0.2,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "rl-noise-44"
+    ]
+   }
+  ]
+ },
+ "kickSL": {
+  "release": 0.03,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "sl-kick"
+    ]
+   }
+  ]
+ },
+ "kickSL@44": {
+  "release": 0.03,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "sl-kick-44"
+    ]
+   }
+  ]
+ },
+ "slClap0": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "sl-clap-0"
+    ]
+   }
+  ]
+ },
+ "slClap0@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "sl-clap-0-44"
+    ]
+   }
+  ]
+ },
+ "slClap1": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "sl-clap-1"
+    ]
+   }
+  ]
+ },
+ "slClap1@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "sl-clap-1-44"
+    ]
+   }
+  ]
+ },
+ "slOhh0": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "sl-ohh-0"
+    ]
+   }
+  ]
+ },
+ "slOhh0@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "sl-ohh-0-44"
+    ]
+   }
+  ]
+ },
+ "slOhh1": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "sl-ohh-1"
+    ]
+   }
+  ]
+ },
+ "slOhh1@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "sl-ohh-1-44"
+    ]
+   }
+  ]
+ },
+ "slHatNoise": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "sl-hat-noise"
+    ]
+   }
+  ]
+ },
+ "slHatNoise@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "sl-hat-noise-44"
+    ]
+   }
+  ]
+ },
+ "slNoise": {
+  "release": 0.2,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "sl-noise"
+    ]
+   }
+  ]
+ },
+ "slNoise@44": {
+  "release": 0.2,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "sl-noise-44"
+    ]
+   }
+  ]
  }
 }

@@ -161,6 +161,10 @@ final class BandRenderer {
         var pan: Float = .nan
         /// Pitched: the gate in ticks when a whole number is not it (`Note.hold`), 0 for `lengthTicks`.
         var hold: Double = 0
+        /// A drum: a slice of its file under its own envelope (`Hit.o / n / d`), seconds; `decay` 0 for none.
+        var from: Double = 0
+        var span: Double = 0
+        var decay: Double = 0
     }
 
     /// What plays a pitched instrument: a recording, the live stab, or a voice of the band's rack.
@@ -170,8 +174,10 @@ final class BandRenderer {
         case rackHit
         /// A stab note synthesized into that bus, and the rack's FM lead.
         case rackStab, rackLead
-        /// The acid rack's 303 and its gated pad (`AcidRack`).
+        /// The acid rack's 303 and its gated pad (`AcidRack`; `ElectroRack`'s bass voice and pad).
         case rackAcid, rackPad
+        /// The moog rack's bass voice (`MoogRack`).
+        case rackBass
     }
 
     fileprivate struct DrumSound {
@@ -257,7 +263,7 @@ final class BandRenderer {
     /// your keys play.
     private var instruments: [SampledInstrument?]
     private var kinds: [Kind]
-    /// The loaded band's console (`Rack`, `AcidRack`), nil for a band without one.
+    /// The loaded band's console (`Rack`, `AcidRack`, `ElectroRack`, `MoogRack`), nil for a band without one.
     private var rack: (any Console)?
     private var duckSecond: BandData.Duck.Shape?
     /// Where in the chunk being rendered the event or note firing now falls.
@@ -421,6 +427,8 @@ final class BandRenderer {
     private static func load(_ band: BandData, sampleRate: Double, maxChunk: Int) -> Events {
         let rack: (any Console)? = band.rack.map { Rack($0, sampleRate: sampleRate, maxChunk: maxChunk) }
             ?? band.acidRack.map { AcidRack($0, sampleRate: sampleRate, maxChunk: maxChunk) }
+            ?? band.electroRack.map { ElectroRack($0, sampleRate: sampleRate, maxChunk: maxChunk) }
+            ?? band.moogRack.map { MoogRack($0, sampleRate: sampleRate, maxChunk: maxChunk) }
         let rated = { SampledInstrument.rated($0, sampleRate: sampleRate) }
         let names = band.sounds.keys.sorted()
         let drumSounds = UnsafeMutableBufferPointer<DrumSound>.allocate(capacity: names.count)
@@ -456,6 +464,7 @@ final class BandRenderer {
             case "rackLead": .rackLead
             case "rackAcid": .rackAcid
             case "rackPad": .rackPad
+            case "rackBass": .rackBass
             default: $0.hasPrefix("hsStab") ? .rackHit : .sample
             }
         }
@@ -484,7 +493,8 @@ final class BandRenderer {
         for h in band.channels.drums {
             guard let i = names.firstIndex(of: h.s) else { fatalError("band \(band.name): unknown drum sound \(h.s)") }
             list.append(Event(tick: h.t, channel: .drums, value: i, velocity: Float(h.v), lengthTicks: 0, instrument: 0,
-                              gain: Float(h.g ?? 1), late: Float(h.late ?? 0), pan: h.p.map(Float.init) ?? .nan))
+                              gain: Float(h.g ?? 1), late: Float(h.late ?? 0), pan: h.p.map(Float.init) ?? .nan,
+                              from: h.o ?? 0, span: h.n ?? 0, decay: h.d ?? 0))
         }
         for (channel, key, notes) in [(Channel.bass, "bass", band.channels.bass), (.keys, "keys", band.channels.keys),
                                       (.horns, "horns", band.channels.horns)] {
@@ -733,9 +743,12 @@ final class BandRenderer {
                 }
             }
             let p = s.kit.pick(note: 0, velocity: e.velocity)
-            drumVoices[slot(drumVoices)].start(p.buffer, ratio: 1, gain: s.gain * p.gain * (0.3 + 0.7 * e.velocity) * e.gain, heldFrames: .max,
+            let sliced = e.decay > 0
+            drumVoices[slot(drumVoices)].start(p.buffer, ratio: 1, gain: s.gain * p.gain * (0.3 + 0.7 * e.velocity) * e.gain,
+                                               heldFrames: sliced ? Int((e.span * sampleRate).rounded()) : .max,
                                                releaseSeconds: s.kit.release, group: s.group, age: age, sampleRate: sampleRate,
-                                               delay: delay, aux: s.aux, pan: e.pan)
+                                               delay: delay, aux: s.aux, pan: e.pan,
+                                               from: sliced ? (e.from * p.buffer.rate).rounded() : 0, decay: e.decay)
         case .bass:
             // Monophonic: the new note cuts the last one.
             for i in bassVoices.indices where bassVoices[i].active {
@@ -770,6 +783,8 @@ final class BandRenderer {
                 rack.note(note, velocity: velocity, gain: level, offset: offset, live: live)
             case .rackAcid:
                 rack.acid(note, velocity: velocity, gain: level, held: held, offset: offset, live: live)
+            case .rackBass:
+                rack.bass(note, velocity: velocity, gain: level, held: held, offset: offset, live: live)
             case .rackPad:
                 rack.pad(note, velocity: velocity, gain: level, held: held, offset: offset, live: live || bus == .monitor)
             default:

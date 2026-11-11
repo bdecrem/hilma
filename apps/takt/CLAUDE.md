@@ -2215,6 +2215,20 @@ cover stealing anchors, a hand of 30 moves on a Level 2 song, a Beginner on one 
   gate before the club), Walfisch (the building in 2012). Not done: a launch sound and a menu band
   per vibe (the Chicago shuffle plays under both); not shipped to TestFlight.
 
+- **Restlicht and Streulicht, two more records from the Claude app, on two new consoles: 0.1
+  (128), 2026-11-10.** Bart: "now implement misc/Restlich* and misc/restlicht* into the game,
+  faithfully, like the other tracks you've done", then "and then the same for misc/streu* and
+  misc/Streulich*". **Restlicht** (Detroit electro, D dorian, 124, 3:58) on `ElectroRack` (a
+  saw-and-square 303 bass, a whistle, one echo for the rim, the snare and the whistle);
+  **Streulicht** (melodic techno, E minor, 122, 4:20) on `MoogRack` (a ladder filter, three
+  Moog-shaped voices, drifts, two echoes, closed hats sliced from one noise file). Both
+  implemented exactly: every stem within 0.01 dB of its reference stem (nulls −52 to −79 dB but
+  Streulicht's room at −38; the noise beds match in level), the masters' octave bands within 0.02
+  and 0.08 dB. Charts by `takt-chart`: both melodies in one hand position up to the record's own
+  line (CHARTING.md rules 21–22). Pinned by default (`restlichtShipped`, `streulichtShipped`).
+  `DUB-TECHNO.md` §11–12; checks 571/571; installed on the MacBook Air; the mp3 pairs in
+  `~/Desktop/takt/restlicht/` and `~/Desktop/takt/streulicht/`. Not heard or played by Bart yet;
+  not rendered at 48 kHz or on the phone.
 - **Gegenlicht, techno on a second console (`AcidRack`): 0.1 (126), 2026-11-10.** Bart's record
   from the Claude app, implemented exactly: every stem nulls against the reference (−53 to −78
   dB; the noise bed matches in level), the master's bands within 0.07 dB. A new console behind

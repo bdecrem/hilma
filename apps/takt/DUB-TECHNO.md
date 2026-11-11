@@ -687,8 +687,135 @@ GL_SR=44100 $V scripts/takt/gl-ab.py stems <work> && GL_SR=44100 $V scripts/takt
 **Not checked: Bart's ears** on the app against the record (`~/Desktop/takt/gegenlicht/`, the
 app's render raised 8 dB), and the parts played.
 
+## 11. Restlicht: electro on a third console (2026-11-10, 0.1 (128))
+
+Bart, with the record Claude rendered in the Claude app and its handoff in hand: "now implement
+misc/Restlich* and misc/restlicht* into the game, faithfully, like the other tracks you've done".
+**Restlicht** (residual light): melancholic Detroit electro in D dorian, 124, 120 bars and a 6 s
+tail (3:58). The record is `misc/restlicht_reference.py`, the brief `misc/RESTLICHT.md`; the
+handoff's lossless master and parts (`misc/restlicht/`) stay out of git
+(`misc/restlicht-handoff.zip`, 47 MB, on the MacBook Air). This Mac's render is the handoff's
+master to 1 LSB on 276 of 21 million samples.
+
+**Not on `AcidRack` either.** Its bass is Gegenlicht's 303 control under three saws (a saw and
+the difference of two more, half a cycle apart: a square), there is a whistle (the 303's control
+again, its amp through a breath, its pitch through a glide on the log of the frequency, a vibrato
+that comes in while it sounds, a sine with a little second and third harmonic), one tape echo fed
+by the rim, a lane's worth of the snare and the whistle, its side swapping every beat, a gated
+pad of seven notes, no kick filter, no rumble, a ghost kick that does not duck. So it got a
+console of its own, `Takt/Audio/ElectroRack.swift`, behind `Console`, built from `Rack`'s and
+`AcidRack`'s pieces (lanes, the SVF, the Butterworths, `Rack.Tape`, the saw, the pad's voices and
+gates); neither of those changed. The renderer routes `rackAcid` (the bass, horns), `rackLead`
+(the whistle, the bass channel) and `rackPad` (keys) to it. The ghost kick's kit is `rlGhost`,
+not `kick…`, so it fires no duck, as in the record.
+
+One rule the port had to get exactly: **a note slides when it starts while the gate is still
+open, and not when it starts on the frame the gate ends.** 29 of the record's notes start on that
+frame; `acid_ctrl` retriggers them (their slide flag is 0), and so does the console.
+
+**Measured** (`scripts/takt/rl-ab.py`, at 44.1 kHz, every stem over the whole song; app / ref):
+
+| stem | level (dBFS) | null (dB) |
+|---|---|---|
+| kick | −15.5 / −15.5 | −79.2 |
+| bass | −21.9 / −21.9 | −74.2 |
+| lead (the whistle) | −35.1 / −35.1 | −66.9 |
+| echo | −44.2 / −44.2 | −52.6 |
+| pad | −29.5 / −29.5 | −65.2 |
+| snare, hats, shaker, rim, toms | within 0.01 dB | −53 to −71 |
+| hall, room | within 0.01 dB | −62.6, −55.9 |
+| noise | −50.5 / −50.6 | none: the 32 s loop matches in level, not in samples |
+
+The master: mean −18.76 / −18.76 dBFS (the reference − 8 dB), peak −9.01 / −9.01, side/mid
+0.175 / 0.175, octave bands within 0.02 dB in all six of the brief's passages, null −33.8 dB over
+the song (the noise loop, as Gegenlicht's −34.7).
+
+**The parts** (the `takt-chart` skill; LEVELING.md §4, CHARTING.md rule 21): the melody is the
+bass riff in its own octave (C2–C3), one hand position all song (D2 under the thumb, C3 under the
+pinky, the thumb reaching down to C2), rungs by the note's place in the two-bar riff, and the D2 on
+the 1 of bars 4–7 where the kick is in and the riff is not yet; the chords are the pad's fifths a
+hit a bar (pinky, index, thumb), the G4 an eleventh from the pinky so the record's alone.
+
+**Running it again:**
+
+```bash
+V=~/.cache/takt-venv/bin/python
+$V apps/takt/scripts/restlicht.py --keep <work>              # verifies against misc/restlicht/reference.flac
+python3 apps/takt/scripts/songs/restlicht.py
+# build, install on the booted simulator, then:
+RL_SR=44100 $V scripts/takt/rl-ab.py render <work>           # 14 renders, about 15 minutes
+RL_SR=44100 $V scripts/takt/rl-ab.py stems <work> && RL_SR=44100 $V scripts/takt/rl-ab.py master <work>
+```
+
+**Not checked: Bart's ears** on the app against the record (`~/Desktop/takt/restlicht/`, the
+app's render raised 8 dB), and the parts played.
+
+## 12. Streulicht: melodic techno on a fourth console (2026-11-10, 0.1 (128))
+
+Bart, the same day: "and then the same for misc/streu* and misc/Streulich*". **Streulicht**
+(stray light): melodic techno in E minor at 122, in the manner of Hannes Bieger, 128 bars and an
+8 s tail (4:20). The record is `misc/streulicht_reference.py`, the brief `misc/STREULICHT.md`; the
+handoff's master and parts (`misc/streulicht/`) stay out of git (`misc/streulicht-handoff.zip`,
+51 MB). This Mac's render is the handoff's master to 1 LSB.
+
+**Every pitched voice is Moog-shaped**, which no console had: a four-pole ladder filter, a saw
+and a pulse off one phase, and `seq_ctrl` (the successor to `acid_ctrl`: a velocity per note,
+decay toward a sustain, release, filter envelope and glide each a lane of time constants, a
+legato note keeping level, envelope and velocity). So a fourth console,
+`Takt/Audio/MoogRack.swift` (the skill's `references/system.md` "The moog rack"): three voices of
+one `Voice` class (the line, the bass, the lead, each set in the song file by a `prefix` that names
+its lanes), the six drifts (shipped as `Sounds/sl-drift.json`: the reference draws them from
+numpy's generator), the line's echo (side swapping every eighth) and the lead's (left in), the
+gated pad with a ladder a side, and a lowpass on a drum bus. Two small things in the renderer:
+the bass channel's `rackBass` kind, and **a drum hit that is a slice** (`Hit.o / n / d`): every
+closed hat is cut from one six-second noise file under its own attack and decay, its length and
+pan in the log, 1,540 hits from 0.9 MB. Nothing in `Rack`, `AcidRack` or `ElectroRack` changed;
+Restlicht re-rendered after the change reads as before.
+
+**Measured** (`scripts/takt/sl-ab.py`, at 44.1 kHz, every stem over the whole song; app / ref):
+
+| stem | level (dBFS) | null (dB) |
+|---|---|---|
+| kick | −15.6 / −15.6 | −77.3 |
+| bass | −21.6 / −21.6 | −74.1 |
+| line | −23.9 / −23.9 | −70.5 |
+| lead | −34.3 / −34.3 | −67.3 |
+| echo, lead echo | within 0.01 dB | −60.7, −57.3 |
+| pad | −32.3 / −32.3 | −63.0 |
+| clap, closed hats, open hats | within 0.01 dB | −62.3, −54.4, −58.5 |
+| hall | −29.8 / −29.8 | −65.0 |
+| room | −42.9 / −42.9 | −38.3 (the weakest null; the level is the reference's) |
+| noise | −51.4 / −51.5 | none: the 32 s loop matches in level, not in samples |
+
+The master: mean −19.08 / −19.09 dBFS (the reference − 8 dB), peak −9.01 / −9.01, side/mid
+0.174 / 0.174, octave bands within 0.08 dB in all seven of the brief's passages, null −34.9 dB
+over the song (the noise loop).
+
+**The parts** (the `takt-chart` skill; LEVELING.md §4, CHARTING.md rule 22): the melody is the
+sequencer row (E3–G4), charted by stage, not place in the bar (the row drifts against it); every
+level to tier 6 plays the row's triad E3 G3 B3 under one hand, D4, F#4 / G4 and the A3 are the
+record's alone; Easy, Easy+ and Medium are tiers 2, 3 and 4 (0.73, 1.04, 1.51 a second), Hard
+the record's sixteenths (7.71). The chords are the pad a hit a bar, D4 F#4 under 3 and 1 all song,
+the low note (B3 under 5, C4 under 4) from three notes. The lead stays the record's.
+
+**Running it again:**
+
+```bash
+V=~/.cache/takt-venv/bin/python
+$V apps/takt/scripts/streulicht.py --keep <work>             # verifies against misc/streulicht/reference.flac
+python3 apps/takt/scripts/songs/streulicht.py
+# build, install on the booted simulator, then:
+SL_SR=44100 $V scripts/takt/sl-ab.py render <work>           # 14 renders, about 20 minutes
+SL_SR=44100 $V scripts/takt/sl-ab.py stems <work> && SL_SR=44100 $V scripts/takt/sl-ab.py master <work>
+```
+
+**Not checked: Bart's ears** on the app against the record (`~/Desktop/takt/streulicht/`), the
+parts played, a render at 48 kHz (the phone's rate) for either record, and the iPhone.
+
 ## Files
 
+- `misc/streulicht_reference.py`, `misc/STREULICHT.md`, `misc/streulicht_reference.mp3`: Streulicht's reference; `scripts/streulicht.py`, `scripts/songs/streulicht.py`, `scripts/songs/streulicht-events.json`; `Takt/Sounds/sl-*`; `Takt/Audio/MoogRack.swift`; `scripts/takt/sl-ab.py` (repo root)
+- `misc/restlicht_reference.py`, `misc/RESTLICHT.md`, `misc/restlicht_reference.mp3`: Restlicht's reference; `scripts/restlicht.py`, `scripts/songs/restlicht.py`, `scripts/songs/restlicht-events.json`; `Takt/Sounds/rl-*`; `Takt/Audio/ElectroRack.swift`; `scripts/takt/rl-ab.py` (repo root)
 - `misc/gegenlicht_reference.py`, `misc/GEGENLICHT.md`, `misc/gegenlicht_reference.mp3`: Gegenlicht's reference; `scripts/gegenlicht.py`, `scripts/songs/gegenlicht.py`, `scripts/songs/gegenlicht-events.json`; `Takt/Sounds/gl-*`; `Takt/Audio/AcidRack.swift`, `Takt/Audio/Console.swift`; `scripts/takt/gl-ab.py` (repo root)
 - `misc/gezeiten_reference.py`: Gezeiten's reference; `scripts/gezeiten.py` (sounds and the event log), `scripts/songs/gezeiten.py`, `scripts/songs/gezeiten-events.json`; `Takt/Sounds/gz-*`; `scripts/takt/gz-ab.py` (repo root)
 - `misc/halbschatten_reference.py`, `misc/Halbschatten.mp3`, `misc/HALBSCHATTEN.md`: Halbschatten's reference and brief

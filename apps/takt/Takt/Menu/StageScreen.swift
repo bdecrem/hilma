@@ -15,7 +15,7 @@ struct StageScreen: View {
     /// Since the vibes (2026-11-10) the default set carries electronic tracks too, so either
     /// vibe opens on a stage with something on it.
     static let bluesPins = Array(Song.catalog.prefix(6))
-    static let electronicPins = ["song-halbschatten", "song-gezeiten", "song-gegenlicht", "song-hypnotist-2", "song-warm-nine", "song-abyss"]
+    static let electronicPins = ["song-halbschatten", "song-gezeiten", "song-gegenlicht", "song-restlicht", "song-streulicht", "song-hypnotist-2", "song-warm-nine", "song-abyss"]
     static let defaultPins = bluesPins + electronicPins
     /// Tracks that joined the default set after players had sets of their own, and when: a
     /// stored set older than the date gets the track too (it had no say about it), one changed
@@ -27,8 +27,13 @@ struct StageScreen: View {
     static let gezeitenShipped = ISO8601DateFormatter().date(from: "2026-11-10T19:29:29Z")!
     /// Gegenlicht, the same day, once it was built (a time before the build that shipped it).
     static let gegenlichtShipped = ISO8601DateFormatter().date(from: "2026-11-10T21:16:03Z")!
+    /// Restlicht, later the same day, on the MacBook Air (again a time before its build).
+    static let restlichtShipped = ISO8601DateFormatter().date(from: "2026-11-11T02:37:12Z")!
+    /// Streulicht, with it.
+    static let streulichtShipped = ISO8601DateFormatter().date(from: "2026-11-11T02:57:24Z")!
     static let joinedLater: [(song: String, at: Date)] = electronicPins.map {
-        ($0, $0 == "song-gezeiten" ? gezeitenShipped : $0 == "song-gegenlicht" ? gegenlichtShipped : Vibe.pinsEpoch)
+        ($0, $0 == "song-gezeiten" ? gezeitenShipped : $0 == "song-gegenlicht" ? gegenlichtShipped
+            : $0 == "song-restlicht" ? restlichtShipped : $0 == "song-streulicht" ? streulichtShipped : Vibe.pinsEpoch)
     }
     /// The other vibe's pinned tracks, open under their header. Stored: once opened they stay
     /// open, on either vibe and across launches, until the player closes them (Bart, 2026-11-10).
@@ -778,6 +783,47 @@ struct SongArt: View {
                     p.addLine(to: CGPoint(x: c.x + r1 * dx, y: c.y + r1 * dy))
                     ctx.stroke(p, with: .color(i % 2 == 0 ? hot : dim), style: StrokeStyle(lineWidth: 2, lineCap: .round))
                 }
+            case "afterglow":
+                // Restlicht, the light left on: a lit doorway seen from the dark room and its
+                // light on the floor. The door is 0.20 w wide and 0.46 h tall, centred (0.40 w to
+                // 0.60 w, 0.18 h to 0.64 h); its light falls from the sill to 0.84 h and widens
+                // to 0.20 w … 0.80 w, fainter than the door; the floor is a line at the sill from
+                // 0.14 w to 0.86 w. On an 80 pt tile: 14 pt over the door, 13 pt under the
+                // light, 16 pt each side of it.
+                let door = CGRect(x: w * 0.40, y: h * 0.18, width: w * 0.20, height: h * 0.46)
+                var spill = Path()
+                spill.move(to: CGPoint(x: door.minX, y: door.maxY))
+                spill.addLine(to: CGPoint(x: door.maxX, y: door.maxY))
+                spill.addLine(to: CGPoint(x: w * 0.80, y: h * 0.84))
+                spill.addLine(to: CGPoint(x: w * 0.20, y: h * 0.84))
+                spill.closeSubpath()
+                ctx.fill(spill, with: .color(hot.opacity(0.35)))
+                var floor = Path()
+                floor.move(to: CGPoint(x: w * 0.14, y: door.maxY))
+                floor.addLine(to: CGPoint(x: w * 0.86, y: door.maxY))
+                ctx.stroke(floor, with: .color(dim), lineWidth: 1)
+                ctx.fill(Path(door), with: .color(hot))
+                ctx.stroke(Path(door), with: .color(ink), lineWidth: 1.5)
+            case "scatter":
+                // Streulicht, stray light: a beam from the left edge to a point at 0.42 w, 0.5 h,
+                // scattered from there into seven short strokes at uneven angles and lengths, the
+                // longest lit. The strokes start 0.06 of the short side out from the point and end
+                // at most 0.36 out: on an 80 pt tile 0.78 w at the farthest, 11 pt from the edge.
+                let c = CGPoint(x: w * 0.42, y: h * 0.5), m = min(w, h)
+                var beam = Path()
+                beam.move(to: CGPoint(x: w * 0.08, y: h * 0.5))
+                beam.addLine(to: c)
+                ctx.stroke(beam, with: .color(hot), style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
+                let rays: [(Double, CGFloat)] = [(-1.1, 0.30), (-0.55, 0.36), (-0.1, 0.22), (0.35, 0.33), (0.8, 0.26), (1.3, 0.20), (2.2, 0.14)]
+                for (i, ray) in rays.enumerated() {
+                    let dx: CGFloat = CGFloat(cos(ray.0)), dy: CGFloat = CGFloat(sin(ray.0))
+                    let r0: CGFloat = m * 0.06, r1: CGFloat = m * ray.1
+                    var p = Path()
+                    p.move(to: CGPoint(x: c.x + r0 * dx, y: c.y + r0 * dy))
+                    p.addLine(to: CGPoint(x: c.x + r1 * dx, y: c.y + r1 * dy))
+                    ctx.stroke(p, with: .color(i == 1 ? hot : i % 2 == 0 ? ink : dim), style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
+                }
+                ctx.fill(Path(ellipseIn: CGRect(x: c.x - 3, y: c.y - 3, width: 6, height: 6)), with: .color(hot))
             case "stoptime":
                 // Chicago stop time: the riff's five bars climbing, then the gap, then the hit.
                 // Five bars 0.09 w wide at 0.11 w apart from x = 0.1 w end at 0.64 w; the hit sits

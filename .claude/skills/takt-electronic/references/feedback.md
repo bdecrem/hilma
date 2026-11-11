@@ -76,6 +76,19 @@ meant, what changed. Add to the bottom of a section when he says something new.
   bars where the carrier is gone (96-99). Kept: the kick bus, the rumble, the tape echo, the pad's
   saws, the hats, the master. Nothing ported, no chart, not in the app.
 
+- **2026-11-10.** Two records Claude rendered in the Claude app, each with a handoff bundle
+  (`misc/RESTLICHT.md`, `misc/STREULICHT.md`, the script, the lossless master, its parts): "now
+  implement misc/Restlich* and misc/restlicht* into the game, faithfully, like the other tracks
+  you've done", then "and then the same for misc/streu* and misc/Streulich*". Read as: exactly
+  Gegenlicht's job twice (the record is the target, every stem nulled, the parts by
+  `takt-chart`), no change to the music. **Restlicht** (Detroit electro, D dorian, 124) got a
+  third console, `ElectroRack` (a saw-and-square 303 bass, a whistle, one echo for the rim, the
+  snare and the whistle; `system.md` "The electro rack"); **Streulicht** (melodic techno in the
+  manner of Hannes Bieger, E minor, 122) a fourth, `MoogRack` (a ladder filter, a saw-and-pulse
+  oscillator, a successor to `acid_ctrl` with lanes on its times, three voices, two echoes, the
+  drifts, closed hats cut from one noise buffer; "The moog rack"). `DUB-TECHNO.md` §11–12 have
+  the measurements. 0.1 (128).
+
 ## Open, to hear
 
 - **Hohlraum, the record itself** (2026-11-10): `~/Desktop/takt/hohlraum/Hohlraum (reference).mp3`
@@ -98,6 +111,11 @@ meant, what changed. Add to the bottom of a section when he says something new.
 - Whether the Stage should play it at the reference's own level (−11 dBFS) instead of 8 dB
   under it with the other electronic tracks.
 
+
+- **Restlicht and Streulicht in the app** (2026-11-10): the mp3 pairs in
+  `~/Desktop/takt/restlicht/` and `~/Desktop/takt/streulicht/` (the reference, and the app's
+  render raised 8 dB to its level). The stems null, so a difference he hears is the noise loop
+  (32 s, not the record's 238 / 260 s) or the limiter's forward pass.
 
 ## How to add a line
 

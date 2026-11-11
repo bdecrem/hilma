@@ -247,3 +247,54 @@ What is new against `Rack`, and how the song file says it:
 | **Slide = the gate is open** | the 303 slides when a note starts before the last one's gate has closed; the generator asserts that is exactly the record's slides; your keys slide when played legato, accent at velocity ≥ 0.9 |
 | **A voice that never stops** | the oscillator and both filters run from the song's first sample; the gate is only the amp |
 | **Gated pad voices** | the band's keys channel opens a record note's gate for its run of bars; your keys and the notes a level leaves out open it from your side (`live` or the monitor bus); a muted keys channel shuts the band's gates |
+
+## The electro rack (Restlicht, 2026-11-10): `Takt/Audio/ElectroRack.swift`
+
+The third console (`misc/restlicht_reference.py`, the brief `misc/RESTLICHT.md`, the write-up
+`DUB-TECHNO.md` §11), a song's `electroRack`. Built from `Rack`'s and `AcidRack`'s pieces; neither
+changed.
+
+```
+bass notes (horns, rackAcid) ─► acid_ctrl ─► 0.7·saw + 0.45·(saw[φ 0.25] − saw[φ 0.75]) ─► SVF (base·2^(amt·env),
+              Q lane) ─► SVF (×1.3, Q 0.7) ─► tanh(drive·y·amp)/drive ─► 38 Hz HP ─► × gain × duck 0.4, centre ─► mix, hall 0.05
+whistle (bass channel, rackLead) ─► acid_ctrl, no slide ─► amp through two 14 Hz one-poles, pitch through a
+              one-pole on log f ─► vibrato while it sounds ─► sin φ + 0.22 sin(2φ + 0.4) + 0.06 sin 3φ ─►
+              2600 Hz LP ─► × level lane × gain ─► pan −0.08 ─► mix, hall 0.75
+echo in: rim bus + snare bus × send lane + whistle × 0.55 ─► side swaps every beat ─► tape (3 steps,
+              feedback lane) × 0.8 × duck 0.2 ─► mix, hall 0.5
+pad notes ─► 7 voices × 4 saws, gated (as the acid rack's) ─► SVF a side ─► level lane ─► 160 Hz HP ─► × duck 0.3
+drum buses (kick, snare, hats, shaker, rim, toms) ─► mix, hall, room; noise looped, no duck; master as Gegenlicht's
+```
+
+New against `AcidRack`: the kick bus has no filter (a plain bus); a ghost kick that ducks nothing
+is a kit not named `kick…` on the kick bus; the echo takes its drums from named buses
+(`echoBus`, `echoLaneBus` × the lane `snareSend`); `rackLead` here is the whistle. A note slides
+when the gate is still open at its frame, not when it starts on the frame the gate ends (29 of
+the record's notes do).
+
+## The moog rack (Streulicht, 2026-11-10): `Takt/Audio/MoogRack.swift`
+
+The fourth console (`misc/streulicht_reference.py`, `misc/STREULICHT.md`, `DUB-TECHNO.md` §12),
+a song's `moogRack`, for a record whose every pitched voice is Moog-shaped:
+
+- **`Ladder`**: `ladder` line for line: four one-pole lowpasses in a feedback loop in zero-delay
+  form, tanh at the input, cutoff and resonance per sample, capped at 0.45·sr.
+- **`Voice`**: one mono voice, `seq_ctrl` (a velocity per note as the note's gain; attack, decay
+  toward a sustain, release, filter envelope and glide each a number or a lane of time constants
+  named `<prefix>Decay` …; a legato note keeps level, envelope and velocity; a slid bass note
+  glides at `slideGlide` for its gate) → `osc_moog` oscillators (a saw and a pulse off one phase,
+  a level or a lane each, a drift each) → the ladder (base × 2^(amount·env) × key tracking × a
+  drift) → tanh(drive·y·amp·boost)/drive → highpass → gain × level lane. Three of them: the line
+  (horns, `rackAcid`, your keys on the melody part), the bass (`rackBass`, the bass channel) and
+  the lead (`rackLead`, the bass channel's notes with `i`).
+- **Drift**: six slow wanders the reference draws from numpy's generator, shipped as
+  `Sounds/sl-drift.json` (a unit curve at 100 Hz and a depth in cents each), read by time.
+- **Two echoes**: the line's (its send and feedback lanes, the side swapping every eighth) and
+  the lead's (left in only).
+- **The pad**: four notes of six saws (an octave-up pair at half level), gated, a ladder a side.
+- **A bus may have a lowpass** (`lowpass`): the closed hats' 11 kHz, which cannot be baked into
+  a file their hits are sliced from.
+- **A drum hit may be a slice** (`BandData.Hit.o / n / d`: start and length in seconds, a decay):
+  every closed hat is cut from one six-second noise buffer under (1 − e^(−t/0.5 ms))·e^(−t/d),
+  ended after its length, no release. 1,540 hits from one file.
+

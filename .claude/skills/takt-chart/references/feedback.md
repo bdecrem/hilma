@@ -154,6 +154,16 @@ LEVELING.md, and this file keeps the pointer.
   0.97 (Hard); the eleventh on top carries the role `ninth` (the ladder has no name for it, and
   it is the note to drop first). Not yet played by Bart.
 
+- **2026-11-10, 0.1 (128).** "now implement misc/Restlich* and misc/restlicht* into the game,
+  faithfully, like the other tracks you've done", then "and then the same for misc/streu* and
+  misc/Streulich*". Two records from the Claude app; both carriers already sit in one hand, so
+  the work was the rungs. Restlicht, the bass riff, rungs by place in the two-bar riff (CHARTING.md
+  rule 21): 0/0 · 1 to Medium, 0.23 → 2.65 a second. Streulicht, an eight-stage row in sixteenths
+  drifting against the bar: charted by stage, and the ladder would only double or stand still
+  until the `from` floors cut tier 5's stages to three in eight (rule 22); E G B under one hand
+  to tier 6, Medium named tier 4 (1.51 a second), Hard the record's 7.71. LEVELING.md §4 has the
+  figures. Not played yet.
+
 ## Open (LEVELING.md §4, BLUES.md §6)
 
 - Whether the comping ladders want a rhythm step between Easy and Medium.

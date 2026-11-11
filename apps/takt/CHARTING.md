@@ -345,6 +345,31 @@ every song and part.
     128) left it at 0.22 against the next rung's 0.58, and the song's patch sets tier 1's `gap`
     to 0.9 (0.44 · 0.72). Read span and keys on Beginner, not only the onsets.
 
+21. **A bass riff is charted by its place in the riff, and a voicing's wide note is the record's**
+    (Restlicht, 2026-11-10). A two-bar riff that never transposes has its rungs in its steps: the
+    accent on the 1 and the note on the kick's "and" of 2 in the second bar (two keys, a bar
+    apart) are the anchors, the second bar's 1 comes in on Easy, the first bar's F on Easy+, the
+    climb on Medium, and the record's sixteenths and its tied note on Hard. The anchors' two
+    keys decide Beginner (rule 7). On the chords side, a pad whose top note moves from a ninth to
+    an eleventh over the pinky (D3 A3 G4) gets that note on the top rung only (`from` 7), so every
+    level below is a hand that stays. And a song whose part starts after the record does (the
+    riff at bar 8, the kick at 4) takes the riff's first note on the 1 of the bars between, so
+    the hand is on the key the riff opens on: notes to play, not a tune written on top.
+
+22. **A sixteenth row drifting against the bar is charted by its stage, and its density by
+    `from`, not by gaps** (Streulicht, 2026-11-10). The line is an eight-stage row played one
+    stage a sixteenth, its length changed to seven or six by section so it walks against the
+    bar; a place in the bar means nothing there, a stage does. And at 122 a sixteenth is 0.123 s,
+    which broke the ladder's arithmetic: a tier starts from the whole tier below, so with every
+    candidate note two sixteenths from the next, a rung either takes the note between each pair
+    the tier below left (×2) or nothing. Gaps and spaces did not move the figure (swept: tier 5
+    held at 1.64, 1.77 or 3.55 a second whatever its `gap` and `space`). What moved it was which
+    stages a tier may take at all: anchors on stages 1 and 3 (E3 and G3), the groove the B3 on
+    stage 7, every other stage `from` 6 or 7, so tier 5 can take three stages in eight and lands
+    at 2.60 between 1.51 and 5.12. Then the song's patch spaces tiers 2–6 at about four, three,
+    two and one sixteenth (`gap` 0.9, 0.6, 0.36, 0.24, 0.12). Read the ladder before touching a
+    gap: if a rung is stuck, the candidates are the limit, not the rule.
+
 ## Where this comes from
 
 Rhythm-game charters (Rock Band, Guitar Hero, Clone Hero) chart the top difficulty first and
