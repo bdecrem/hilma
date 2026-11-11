@@ -195,7 +195,7 @@ const mapBg = document.createElement('canvas'); mapBg.width = W; mapBg.height = 
   [140, 180].forEach(dx => { rect(m, dx - 3, 28, 6, 10, C.fascia); rect(m, dx - 2, 29, 4, 9, C.glass); rect(m, dx - 2, 29, 1, 9, C.glassHi); });
   building(m, 100, 98, 120, 16, 8, DOORS_C);
   // the five studies with the lights on
-  litDoor(m, 180, 29, 9); litDoor(m, 292, 47, 7); litDoor(m, 76, 47, 7); litDoor(m, 114, 115, 7);
+  litDoor(m, 180, 29, 9); litDoor(m, 292, 47, 7); litDoor(m, 276, 47, 7); litDoor(m, 76, 47, 7); litDoor(m, 114, 115, 7); litDoor(m, 130, 115, 7);
   oak(m, 160, 79, 8);
   // the meeting room, just off the courtyard, its door facing the oak
   rect(m, 108, 77, 10, 7, C.path); rect(m, 108, 77, 10, 1, C.pathEdge); rect(m, 108, 83, 10, 1, C.pathEdge);
@@ -288,7 +288,7 @@ function makeRoomBg(bart) {
 const roomBg = makeRoomBg(true), roomBgEmpty = makeRoomBg(false);
 
 /* ---------- characters ---------- */
-const P = { W: '#f6f3ec', w: '#d9d5c9', S: '#f2bda6', s: '#dc9d88', r: '#ee9f8f', b: '#e3dccb', E: '#3c5a80', M: '#b8695c', K: '#3a1c18', O: '#ffffff', N: '#1c2540', n: '#34446e', T: '#f2efe6', G: '#e2b23c', L: '#4a3a1e' };
+const P = { W: '#f2cf4a', w: '#d4a92c', S: '#f2bda6', s: '#dc9d88', r: '#ee9f8f', b: '#e3dccb', E: '#3c5a80', M: '#b8695c', K: '#3a1c18', O: '#ffffff', N: '#f2efe6', n: '#d9d3c4', T: '#f2efe6', G: '#e2b23c', L: '#4a3a1e' };
 const BART = [
   '..........WW..WWW..W........', '........WWWWWWWWWWWWW.......', '.......WWWWWWWWWWWWWWW......', '......WWWWwSSSSSSSwWWWW.....',
   '......WWWSSSSSSSSSSSWWW.....', '.....WWWSSSSSSSSSSSSSWWW....', '.....WWSSSSSSSSSSSSSSSWW....', '.....WWSSSSSSSSSSSSSSSWW....',
@@ -332,6 +332,176 @@ function drawYou(x, y, f, frame, talk) {
   R(-2 + s, -49, 6, 20, SWd); R(-1 + s, -30, 5, 5, SK);
 }
 
+
+/* ---------- the neighbours ---------- */
+const INK = '#141414';
+const LOOKS = {
+  daniel: { skin: '#d9a07a', skinD: '#b98060', hair: '#2a2522', hairD: '#5f5a55', brow: '#2a2522', style: 'short', top: 'collar', shirt: '#bcd0ea', shirtD: '#9fb6d6', trim: '#e2ebf6' },
+  kahwee: { skin: '#e3b08a', skinD: '#c48f6a', hair: '#221c1a', hairD: '#3a302c', brow: '#221c1a', style: 'swept', top: 'vneck', shirt: '#efe3d0', shirtD: '#d8c9b0', trim: '#8a8478', glasses: INK, mous: true },
+  frances: { skin: '#f2c4a8', skinD: '#d8a58a', hair: '#6b4a32', hairD: '#8a6648', brow: '#5a3e2a', style: 'back', top: 'cardigan', shirt: '#f4f1ea', shirtD: '#d9d4c8', trim: '#a9c4bb', earrings: '#6fa6c8' },
+  ian: { skin: '#f3c5ae', skinD: '#dca48c', hair: '#e2cfa6', hairD: '#c9b083', brow: '#c9a77a', style: 'bald', top: 'collar', shirt: '#c8daf2', shirtD: '#a9c1e2', trim: '#e6eefa', glasses: '#4a2e22', round: true, stubble: '#caa58c' },
+  jacqueline: { skin: '#ecbf9a', skinD: '#cf9e7a', hair: '#1c1918', hairD: '#322c2a', brow: '#1c1918', style: 'bob', top: 'jacket', shirt: '#26262c', shirtD: '#141418', trim: '#4c4c58', glasses: '#55565e', band: '#efe6d2' },
+  joseph: { skin: '#e4b28c', skinD: '#c69270', hair: '#2a2624', hairD: '#4a4440', brow: '#2a2624', style: 'receding', top: 'collar', shirt: '#f2f2f4', shirtD: '#d2d6de', trim: '#ffffff', dots: '#9aa8c0' }
+};
+function bust(o, x, y, st) {
+  const R = (dx, dy, w, h, c) => rect(g, x + dx, y + dy, w, h, c);
+  // shoulders and top
+  R(4, 19, 20, 11, o.shirt); R(2, 21, 24, 9, o.shirt); R(3, 20, 22, 1, o.shirt);
+  R(2, 21, 2, 9, o.shirtD); R(24, 21, 2, 9, o.shirtD); R(9, 24, 1, 6, o.shirtD); R(18, 24, 1, 6, o.shirtD);
+  if (o.dots) for (let j = 21; j < 30; j += 3) for (let i = 4 + (j % 2); i < 24; i += 4) R(i, j, 1, 1, o.dots);
+  R(11, 15, 6, 6, o.skinD);
+  if (o.top === 'collar') { R(12, 19, 4, 2, o.skinD); R(9, 18, 4, 2, o.trim); R(10, 20, 2, 1, o.trim); R(15, 18, 4, 2, o.trim); R(16, 20, 2, 1, o.trim); R(13, 22, 1, 1, o.shirtD); R(13, 26, 1, 1, o.shirtD); }
+  if (o.top === 'vneck') { R(10, 19, 8, 1, o.trim); R(11, 20, 6, 1, o.trim); R(12, 21, 4, 1, o.trim); R(13, 22, 2, 1, o.trim); R(12, 19, 4, 1, o.skinD); R(13, 20, 2, 1, o.skinD); }
+  if (o.top === 'cardigan') { R(10, 19, 8, 11, o.trim); R(10, 19, 2, 11, o.shirt); R(16, 19, 2, 11, o.shirt); R(11, 19, 6, 1, o.skinD); [11, 13, 15].forEach(i => R(i, 21, 1, 1, '#c9c9c9')); R(12, 22, 1, 1, '#c9c9c9'); R(14, 22, 1, 1, '#c9c9c9'); }
+  if (o.top === 'jacket') { R(11, 19, 6, 11, '#0e0e10'); R(9, 18, 3, 4, o.trim); R(16, 18, 3, 4, o.trim); R(5, 22, 1, 5, o.trim); R(20, 23, 1, 3, o.trim); R(12, 19, 4, 1, o.skinD); }
+  // head
+  R(7, 2, 14, 15, o.skin); R(6, 4, 16, 11, o.skin); R(8, 16, 12, 1, o.skin); R(6, 12, 1, 2, o.skinD); R(21, 12, 1, 2, o.skinD);
+  R(5, 8, 1, 4, o.skin); R(22, 8, 1, 4, o.skin);
+  if (o.stubble) for (let j = 12; j < 17; j++) for (let i = 7 + (j % 2); i < 21; i += 2) if (j > 13 || i < 10 || i > 17) R(i, j, 1, 1, o.stubble);
+  // hair
+  const h = o.hair, d = o.hairD;
+  if (o.style === 'short') { R(6, 0, 16, 4, h); R(8, -1, 2, 1, h); R(12, -1, 4, 1, h); R(18, -1, 2, 1, h); R(5, 2, 2, 7, d); R(21, 2, 2, 7, d); R(7, 4, 5, 1, h); }
+  if (o.style === 'swept') { R(5, 0, 18, 4, h); R(5, -1, 13, 1, h); R(7, -2, 7, 1, h); R(5, 3, 2, 6, h); R(21, 3, 2, 5, h); R(7, 4, 8, 1, h); R(7, 5, 3, 1, h); R(9, -1, 4, 1, d); }
+  if (o.style === 'back') { R(11, -2, 6, 2, h); R(6, 0, 16, 4, h); R(5, 3, 2, 7, h); R(21, 3, 2, 7, h); R(9, 1, 6, 1, d); R(4, 6, 1, 3, d); R(23, 5, 1, 3, d); }
+  if (o.style === 'bald') { R(7, 0, 14, 2, o.skin); R(8, -1, 12, 1, o.skin); R(5, 3, 2, 8, h); R(21, 3, 2, 8, h); R(6, 1, 2, 3, h); R(20, 1, 2, 3, h); R(10, -1, 8, 1, 'rgba(226,207,166,0.45)'); }
+  if (o.style === 'bob') { R(5, 0, 18, 5, h); R(4, 2, 3, 14, h); R(21, 2, 3, 14, h); R(3, 12, 2, 4, h); R(23, 11, 2, 4, h); R(7, 4, 5, 2, h); R(17, 4, 3, 1, h); R(5, 1, 18, 2, o.band); R(6, 0, 15, 1, o.band); R(10, 1, 3, 1, '#d7cbb2'); }
+  if (o.style === 'receding') { R(9, 0, 10, 1, h); R(7, 1, 4, 2, h); R(17, 1, 4, 2, h); R(13, 1, 2, 2, h); R(6, 2, 2, 7, h); R(20, 2, 2, 7, h); }
+  if (o.earrings) { R(5, 12, 1, 1, '#d0d0d0'); R(4, 13, 3, 3, o.earrings); R(22, 12, 1, 1, '#d0d0d0'); R(21, 13, 3, 3, o.earrings); }
+  // face
+  const ey = st.down ? 10 : 9;
+  R(9, 7, 4, 1, o.brow); R(15, 7, 4, 1, o.brow);
+  if (st.blink || st.down) { R(9, ey + 1, 3, 1, INK); R(16, ey + 1, 3, 1, INK); } else { R(10, ey, 2, 2, INK); R(16, ey, 2, 2, INK); R(10, ey, 1, 1, '#ffffff'); R(16, ey, 1, 1, '#ffffff'); }
+  R(13, 10, 2, 3, o.skinD);
+  R(8, 12, 2, 1, 'rgba(238,159,143,0.6)'); R(18, 12, 2, 1, 'rgba(238,159,143,0.6)');
+  if (o.mous) { R(11, 13, 6, 1, h); R(13, 16, 2, 1, h); }
+  if (st.talk) R(12, 14, 4, 2, '#5a1f1a');
+  else { R(11, 14, 6, 1, '#a85a4e'); R(10, 13, 1, 1, '#a85a4e'); R(17, 13, 1, 1, '#a85a4e'); }
+  if (o.glasses) {
+    const f = o.glasses;
+    [8, 15].forEach(gx => {
+      if (o.round) { R(gx + 1, 8, 4, 1, f); R(gx + 1, 12, 4, 1, f); R(gx, 9, 1, 3, f); R(gx + 5, 9, 1, 3, f); }
+      else { R(gx, 8, 6, 1, f); R(gx, 12, 6, 1, f); R(gx, 8, 1, 5, f); R(gx + 5, 8, 1, 5, f); }
+    });
+    R(14, 9, 1, 1, f); R(6, 9, 2, 1, f); R(21, 9, 1, 1, f);
+  }
+}
+// a desk like Bart's: the neighbour sits behind it, hands on the keys
+function deskScene(k, o, t, talk, blink) {
+  rect(g, 170, 58, 40, 3, INK); rect(g, 168, 61, 44, 36, INK); rect(g, 170, 61, 40, 36, '#3b3d4a'); rect(g, 170, 61, 40, 1, '#4f5262');
+  bust(o, 176, 66, { talk, blink });
+  rect(g, 148, 95, 116, 1, INK); rect(g, 148, 96, 116, 4, '#e2b47e'); rect(g, 148, 100, 116, 1, INK);
+  rect(g, 151, 101, 110, 22, '#c08a55'); rect(g, 151, 101, 110, 1, '#9c6a3c'); rect(g, 151, 101, 1, 22, '#9c6a3c'); rect(g, 260, 101, 1, 22, '#9c6a3c');
+  rect(g, 154, 123, 5, 5, '#7d5632'); rect(g, 253, 123, 5, 5, '#7d5632');
+  rect(g, 178, 94, 24, 2, '#26262b');
+  const typing = !S.line && !calm, a = typing ? Math.floor(t * 9) % 2 : 0;
+  rect(g, 181, 92 - a, 5, 2, o.skin); rect(g, 194, 92 - (typing ? 1 - a : 0), 5, 2, o.skin);
+  drawMonitor(0);
+  const mug = { daniel: '#2b3fff', kahwee: '#7ee0b5', ian: '#fff7e6', jacqueline: '#ff9ccf' }[k];
+  rect(g, 206, 88, 7, 8, INK); rect(g, 207, 89, 5, 6, mug); rect(g, 213, 90, 2, 3, INK);
+  if (k === 'daniel') { rect(g, 158, 88, 16, 7, INK); for (let i = 0; i < 3; i++) rect(g, 159, 89 + i * 2, 14, 1, '#fff7e6'); }
+  if (k === 'kahwee') { rect(g, 156, 84, 6, 11, INK); rect(g, 157, 85, 4, 10, '#c46a4a'); rect(g, 157, 81, 1, 4, '#ffd93b'); rect(g, 159, 80, 1, 5, '#2b3fff'); }
+  if (k === 'ian') { [0, 2, 4, 6].forEach(i => rect(g, 154 + i, 92 - i, 18, 2, i % 4 ? '#fff7e6' : '#e8e2d2')); }
+  if (k === 'jacqueline') { rect(g, 156, 88, 9, 7, '#c46a4a'); disc(g, 160, 84, 4, '#2f6b45'); disc(g, 158, 82, 2, '#4a8f5f'); }
+}
+// Frances, deep in a book in the comfiest chair on campus
+function readingScene(o, t, talk, blink, speaking) {
+  // a floor lamp, warm
+  oval(g, 246, 74, 22, 30, 'rgba(255,217,106,0.10)');
+  rect(g, 245, 56, 2, 72, '#3b3d4a'); rect(g, 240, 126, 12, 2, '#3b3d4a');
+  rect(g, 236, 46, 20, 2, INK); rect(g, 237, 48, 18, 10, '#f2d58a'); rect(g, 235, 57, 22, 2, INK); rect(g, 238, 48, 2, 10, '#fff1c2');
+  // side table with tea
+  rect(g, 226, 100, 18, 3, '#7d5632'); rect(g, 233, 103, 4, 25, '#5c3a20');
+  rect(g, 230, 95, 6, 5, '#fff7e6'); rect(g, 236, 96, 2, 2, '#fff7e6'); rect(g, 229, 99, 8, 1, '#d9d4c8');
+  // the chair
+  const CH = '#5c7a52', CHd = '#46613d', CHh = '#7a9a6c';
+  rect(g, 154, 50, 64, 4, INK); rect(g, 152, 54, 68, 52, INK);
+  rect(g, 156, 52, 60, 52, CH); rect(g, 156, 52, 60, 2, CHh);
+  for (let i = 0; i < 3; i++) { disc(g, 170 + i * 16, 64, 1, CHd); disc(g, 170 + i * 16, 80, 1, CHd); }
+  bust(o, 172, 62, { talk, blink, down: !speaking });
+  // arms of the chair, seat, legs
+  rect(g, 146, 82, 16, 30, INK); rect(g, 147, 83, 14, 28, CH); rect(g, 147, 83, 14, 2, CHh);
+  rect(g, 210, 82, 16, 30, INK); rect(g, 211, 83, 14, 28, CH); rect(g, 211, 83, 14, 2, CHh);
+  rect(g, 160, 96, 52, 16, INK); rect(g, 161, 97, 50, 14, CHd); rect(g, 161, 97, 50, 2, CH);
+  rect(g, 150, 112, 72, 2, INK); rect(g, 152, 114, 4, 12, '#3d2112'); rect(g, 216, 114, 4, 12, '#3d2112');
+  // her knees and legs, a book in her hands
+  rect(g, 174, 96, 24, 8, '#5a5f73'); rect(g, 174, 96, 24, 1, '#6c7186');
+  rect(g, 177, 104, 8, 20, '#5a5f73'); rect(g, 188, 104, 8, 20, '#4c5063');
+  rect(g, 175, 124, 11, 4, '#6a3a24'); rect(g, 187, 124, 11, 4, '#6a3a24');
+  rect(g, 177, 85, 22, 12, INK); rect(g, 178, 86, 10, 10, '#fff7e6'); rect(g, 189, 86, 9, 10, '#f3ead6');
+  rect(g, 188, 86, 1, 10, '#c8553a');
+  if (!speaking) for (let i = 0; i < 4; i++) { rect(g, 179, 88 + i * 2, 8, 1, '#c9bfa8'); rect(g, 190, 88 + i * 2, 7, 1, '#c9bfa8'); }
+  rect(g, 175, 89, 4, 5, o.skin); rect(g, 197, 89, 4, 5, o.skin);
+  if (!calm && !speaking && Math.floor(t / 7) % 2 && (t % 7) < 0.3) rect(g, 189, 86, 6, 10, '#ffffff'); // a page turns
+}
+// Joseph, standing, between two enormous monitors
+function screen(x0, w, top0, top1, h0, h1, flip, t) {
+  for (let i = 0; i < w; i++) {
+    const k = i / (w - 1), top = Math.round(top0 + (top1 - top0) * k), hh = Math.round(h0 + (h1 - h0) * k), x = x0 + i;
+    rect(g, x, top - 2, 1, hh + 4, INK);
+    if (i < 2 || i > w - 3) continue;
+    rect(g, x, top, 1, hh, '#1b2a4a');
+    const u = flip ? 1 - k : k;
+    const at = f => top + Math.round(hh * f);
+    // code lines on the upper half, a bar chart on the lower half
+    [0.1, 0.16, 0.22, 0.28, 0.34, 0.4].forEach((f, j) => { if (u > 0.06 && u < 0.2 + ((j * 37) % 7) / 10) rect(g, x, at(f), 1, 1, ['#7ee0b5', '#ffd93b', '#ff9ccf', '#86c9e6'][j % 4]); });
+    const bar = Math.floor(u * 9);
+    if (u > 0.08 && u < 0.92 && Math.floor(u * 9 * 2) % 2 === 0) { const bh = 0.12 + ((bar * 53 + Math.floor(t * 0.5) * 17) % 11) / 30; rect(g, x, at(0.9 - bh), 1, Math.round(hh * bh), bar % 3 ? '#2b8fff' : '#ff5a1f'); }
+    rect(g, x, at(0.92), 1, 1, '#4b5d84');
+  }
+}
+function standingScene(o, t, talk, blink) {
+  oval(g, 190, 52, 90, 34, 'rgba(134,201,230,0.10)');
+  // legs under the desk, then the torso, then the head
+  rect(g, 182, 84, 8, 40, '#2e3448'); rect(g, 192, 84, 8, 40, '#262b3c'); rect(g, 180, 124, 11, 4, INK); rect(g, 191, 124, 11, 4, INK);
+  rect(g, 178, 66, 24, 18, o.shirt); rect(g, 178, 66, 2, 18, o.shirtD); rect(g, 200, 66, 2, 18, o.shirtD);
+  for (let j = 68; j < 84; j += 3) for (let i = 180 + (j % 2); i < 200; i += 4) rect(g, i, j, 1, 1, o.dots);
+  bust(o, 176, 38, { talk, blink });
+  // the standing desk
+  rect(g, 132, 80, 128, 1, INK); rect(g, 132, 81, 128, 3, '#d9d4c8'); rect(g, 132, 84, 128, 1, INK);
+  rect(g, 140, 85, 3, 41, '#3b3d4a'); rect(g, 249, 85, 3, 41, '#3b3d4a'); rect(g, 134, 125, 14, 3, '#3b3d4a'); rect(g, 244, 125, 14, 3, '#3b3d4a');
+  rect(g, 178, 78, 26, 2, '#26262b');
+  const typing = !S.line && !calm, a = typing ? Math.floor(t * 9) % 2 : 0;
+  rect(g, 181, 76 - a, 5, 2, o.skin); rect(g, 196, 76 - (typing ? 1 - a : 0), 5, 2, o.skin);
+  // two enormous monitors on arms, turned in toward him
+  rect(g, 150, 74, 4, 6, '#3b3d4a'); rect(g, 228, 74, 4, 6, '#3b3d4a');
+  screen(108, 66, 18, 26, 56, 44, false, t);
+  screen(208, 66, 26, 18, 44, 56, true, t);
+}
+
+const PEOPLE = {
+  daniel: { name: 'Daniel', n: 1, scene: 'desk', at: [190, 54], color: '#7ee0ff',
+    look: 'Daniel. Study 1. Blue shirt, good posture, three coffees in.',
+    hello: [['daniel', 'Oh, hi!'], ['you', 'Study 1. You got the first door.'], ['daniel', 'First in, every morning. The coffee is still hot.']],
+    talks: [[['you', 'What are you working on?'], ['daniel', 'A paper. It was due in the spring.'], ['daniel', "Which spring, it didn't say."]],
+      [['you', 'Any tips for the year?'], ['daniel', 'Go to lunch. Return your tray.'], ['daniel', 'Learn from history.']]] },
+  kahwee: { name: 'Kah-Wee', n: 2, scene: 'desk', at: [190, 54], color: '#b9f27c',
+    look: 'Kah-Wee. Black glasses, a neat moustache, a sweater that means business.',
+    hello: [['kahwee', 'Hello! You found me.'], ['you', 'Study 2. Right next to Daniel.'], ['kahwee', 'We share a wall. And a printer. Mostly the printer.']],
+    talks: [[['you', 'What are you working on?'], ['kahwee', 'Thinking. With the glasses on, it counts double.']],
+      [['you', 'Nice glasses.'], ['kahwee', 'Thank you. I see everything now.'], ['kahwee', 'Some of it I regret.']]] },
+  frances: { name: 'Frances', n: 10, scene: 'read', at: [186, 52], color: '#ffb3d9', come: 'Mm-hm.',
+    look: 'Frances, deep in a book, deep in the comfiest chair on campus.',
+    hello: [['you', 'Hi, Frances.'], ['frances', 'One more page.'], ['frances', '...'], ['frances', 'Okay. Hi! Sorry. It was a good page.']],
+    talks: [[['you', 'What are you reading?'], ['frances', 'Something long. I am on the good part.'], ['frances', 'I have been on the good part for a week.']],
+      [['you', 'Great chair.'], ['frances', "Best chair at CASBS. Don't tell anyone."], ['you', 'My lips are sealed.']]] },
+  ian: { name: 'Ian', n: 29, scene: 'desk', at: [190, 54], color: '#9ec5ff',
+    look: 'Ian. Round glasses, a crisp blue shirt, the calm of a man whose deadline is far away.',
+    hello: [['ian', 'Ah, hello! Mind the floor.'], ['you', 'What about the floor?'], ['ian', 'Nothing. I just like saying it.']],
+    talks: [[['you', 'What are you working on?'], ['ian', 'A model. It explains everything.'], ['ian', 'Everything but this year. Working on that.']],
+      [['you', 'Nice glasses.'], ['ian', 'Round. Like the numbers I prefer.']]] },
+  jacqueline: { name: 'Jacqueline', n: 28, scene: 'desk', at: [190, 54], color: '#ffd08a', come: 'Come in, come in!',
+    look: 'Jacqueline. Leather jacket, cream headband, glasses. The coolest person in the building.',
+    hello: [['you', 'Great jacket.'], ['jacqueline', 'Thank you. It does most of the work.']],
+    talks: [[['you', 'What are you working on?'], ['jacqueline', 'Three things. Four, if you count lunch.'], ['jacqueline', 'There is no lunch anymore. So, three.']],
+      [['you', 'Nice headband.'], ['jacqueline', 'It keeps the ideas in. Otherwise they fall out.']]] },
+  joseph: { name: 'Joseph', n: 43, scene: 'stand', at: [190, 28], color: '#c9a6ff',
+    look: 'Joseph. Standing, by choice, between two monitors the size of garage doors.',
+    hello: [['joseph', "Hey! Don't trip on the cable."], ['you', 'Those are... big monitors.'], ['joseph', 'These? These are the travel size.']],
+    talks: [[['you', 'Why are you standing?'], ['joseph', 'Sitting is a scam.'], ['joseph', "Don't tell Eli I said that. He'll say I stole it."]],
+      [['you', "What's on the screens?"], ['joseph', 'Left one: my data. Right one: more of my data.'], ['joseph', 'In the middle: me. Also data.']]] }
+};
+Object.keys(PEOPLE).forEach(k => { PEOPLE[k].talked = 0; });
+
 function drawMonitor(f) {
   const cx = 236, full = 30, w = Math.max(2, Math.round(full * Math.abs(Math.cos(Math.PI * f)))), x = cx - Math.round(w / 2);
   rect(g, 233, 91, 6, 5, '#26262b'); rect(g, 226, 95, 20, 2, '#26262b');
@@ -362,6 +532,9 @@ const mapFull = document.createElement('canvas'); mapFull.width = W; mapFull.hei
   m.drawImage(mapBg, 0, OY);
   building(m, 22, 2, 56, 12, 7, DOORS_TOP);
   litDoor(m, 34, 15, 6);
+  // Forrest's door (an easter egg): greener glass, and a pickleball that got away
+  rect(m, 48, 15, 4, 6, '#6b8c78'); rect(m, 48, 15, 1, 6, '#93b39f');
+  rect(m, 55, 22, 3, 3, '#d8e84a'); rect(m, 55, 22, 3, 1, '#eef59a'); rect(m, 56, 23, 1, 1, '#9aa830');
   [[256, 6, 5], [300, 10, 6], [96, 170, 6], [180, 172, 5], [250, 168, 6], [30, 170, 5]].forEach(o => oak(m, o[0], o[1], o[2]));
   for (let i = 0; i < 14; i++) rect(m, 120 + r() * 120, 164 + r() * 14, 2, 2, C.orange);
 })();
@@ -417,6 +590,12 @@ const SFX = {
   beat() { [0, 0.42, 0.84, 1.26].forEach((w, i) => { tone(i === 3 ? 880 : 440, 0.12, 'square', 0.1, w); noise(0.05, 0.25, 3000, 1500, w, 1); }); },
   buzz() { tone(150, 0.35, 'sawtooth', 0.06, 0); tone(150, 0.35, 'sawtooth', 0.06, 0.5); },
   pick() { tone(660, 0.05, 'square', 0.06); tone(990, 0.07, 'square', 0.06, 0.05); },
+  pock(v, when) { tone(1250 + Math.random() * 120, 0.035, 'sine', v, when); tone(2500, 0.018, 'triangle', v * 0.35, when); noise(0.022, v * 0.9, 2600, null, when, 3); },
+  rally() {
+    let w = 0;
+    for (let i = 0; i < 9; i++) { SFX.pock(i % 2 ? 0.09 : 0.2, w); w += i === 3 || i === 6 ? 0.22 : 0.42 + Math.random() * 0.12; }
+    noise(0.12, 0.12, 300, 120, w, 1, 'lowpass');
+  },
   chirp() { tone(2600, 0.05, 'sine', 0.035, 0, 3500); tone(2900, 0.05, 'sine', 0.03, 0.1, 3700); tone(2700, 0.04, 'sine', 0.025, 0.32, 3400); },
   jingle() { [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.16, 'square', 0.07, i * 0.11)); tone(1568, 0.4, 'triangle', 0.06, 0.44); },
   gobble() {
@@ -440,6 +619,13 @@ const SFX = {
 const VOICES = {
   you: { base: 300, steps: [0, 2, 4, 5, 7, 9], type: 'square', gap: 0.072, len: 0.06, vowels: [700, 1100, 1500, 500] },
   eli: { base: 230, steps: [0, 2, 3, 7, 10], type: 'square', gap: 0.066, len: 0.055, vowels: [600, 950, 1300, 450] },
+  daniel: { base: 200, steps: [0, 2, 4, 7, 9], type: 'square', gap: 0.07, len: 0.06, vowels: [600, 1000, 1400, 500] },
+  kahwee: { base: 215, steps: [0, 3, 5, 7, 10], type: 'square', gap: 0.074, len: 0.06, vowels: [550, 900, 1250, 480] },
+  frances: { base: 330, steps: [0, 2, 4, 7, 9, 12], type: 'triangle', gap: 0.07, len: 0.065, vowels: [750, 1200, 1600, 600] },
+  ian: { base: 185, steps: [0, 2, 5, 7, 9], type: 'square', gap: 0.08, len: 0.065, vowels: [520, 880, 1200, 450] },
+  jacqueline: { base: 310, steps: [0, 3, 5, 7, 10], type: 'square', gap: 0.066, len: 0.055, vowels: [720, 1150, 1550, 560] },
+  joseph: { base: 175, steps: [0, 2, 4, 7, 9, 12], type: 'sawtooth', gap: 0.075, len: 0.065, vowels: [480, 820, 1150, 420] },
+  forrest: { base: 250, steps: [0, 4, 7, 12], type: 'square', gap: 0.06, len: 0.05, vowels: [650, 1050, 1450, 520] },
   bart: { base: 165, steps: [0, 3, 5, 7, 10, 12], type: 'sawtooth', gap: 0.085, len: 0.07, vowels: [500, 800, 1100, 650] }
 };
 function garble(who, text) {
@@ -525,15 +711,22 @@ async function knockAndEnter() {
   SFX.knock(); await say('you', 'Knock, knock.');
   await enterRoom();
 }
-async function enterEmpty() {
+async function enterPerson(k) {
+  const p = PEOPLE[k];
   SFX.knock(); await say('you', 'Knock, knock.');
-  await wait(0.5); await say('you', 'Nobody. The door is open, though.');
+  await wait(0.3); await say(k, p.come || 'Come in!');
   SFX.creak();
   await fadeTo(true);
-  S.scene = 'room'; S.room = 'empty'; S.x = 30; S.y = 132; S.face = 1; S.path = [];
+  S.scene = 'room'; S.room = k; S.x = 30; S.y = 132; S.face = 1; S.path = [];
   await fadeTo(false);
   await walkTo([{ x: 120, y: 134 }]);
-  await say('you', "Empty. Nobody's moved in yet.");
+  if (!p.met) { p.met = true; for (const l of p.hello) await say(l[0], l[1]); }
+  else await say(k, 'Back again? Come in.');
+}
+async function talkPerson(k) {
+  const p = PEOPLE[k];
+  for (const l of p.talks[p.talked % p.talks.length]) await say(l[0], l[1]);
+  p.talked++;
 }
 async function enterRoom() {
   SFX.creak();
@@ -608,10 +801,14 @@ async function talkBart() {
   }
 }
 
-const NOTES = { 6: 'At lunch. Lunch is sacred.', 7: 'Thinking under the oak.', 8: 'Back in five. Five what, unclear.', 9: 'In a seminar. Possibly this one.',
-  10: 'Walking to the Dish. Not listening to it.', 11: 'Writing. Do not knock. (You knocked.)', 12: 'Gone to see the turkeys. For research.', 13: 'Napping counts as fieldwork.', 14: 'Back after this paragraph.' };
+const NOTES = { 8: 'At lunch. Lunch is sacred.', 25: 'Gone to see the turkeys. For research.', 4: 'In a seminar. Possibly this one.',
+  45: 'Writing. Do not knock. (You knocked.)', 13: 'Napping counts as fieldwork.', 14: 'Back after this paragraph.' };
 function litStudy(n, r, walk) {
-  return { name: 'Study ' + n, study: true, r, walk, def: 'open', on: { look: n === 1 ? "Study 1. The light's on. Someone's typing in there." : `Study ${n}. The light's on.`, open: n === 1 ? knockAndEnter : enterEmpty } };
+  return { name: 'Study ' + n, study: true, r, walk, def: 'open', on: { look: "Study 16. The light's on. Someone's typing in there.", open: knockAndEnter } };
+}
+function personStudy(k, r, walk) {
+  const p = PEOPLE[k];
+  return { name: 'Study ' + p.n, study: true, r, walk, def: 'open', on: { look: `Study ${p.n}. ${p.name}'s. The light's on.`, open: () => enterPerson(k) } };
 }
 function lockedStudy(n, x, y) {
   return {
@@ -623,10 +820,12 @@ function lockedStudy(n, x, y) {
   };
 }
 const MAP = [
-  litStudy(1, [172, 22, 16, 18], { x: 180, y: 44 }), litStudy(2, [26, -16, 16, 20], { x: 34, y: 9 }), litStudy(3, [284, 30, 16, 26], { x: 292, y: 60 }),
-  litStudy(4, [68, 30, 16, 26], { x: 76, y: 60 }), litStudy(5, [106, 98, 16, 26], { x: 114, y: 128 }),
-  lockedStudy(6, 44, 60), lockedStudy(7, 228, 60), lockedStudy(8, 276, 60), lockedStudy(9, 190, 128), lockedStudy(10, 130, 128),
-  lockedStudy(11, 50, 9), lockedStudy(12, 66, 9), lockedStudy(13, 300, 106), lockedStudy(14, 300, 122),
+  personStudy('daniel', [106, 98, 16, 26], { x: 114, y: 128 }), personStudy('kahwee', [122, 98, 16, 26], { x: 130, y: 128 }),
+  lockedStudy(4, 190, 128), lockedStudy(8, 44, 60), personStudy('frances', [68, 30, 16, 26], { x: 76, y: 60 }),
+  litStudy(16, [172, 22, 16, 18], { x: 180, y: 44 }), lockedStudy(25, 228, 60),
+  personStudy('jacqueline', [268, 30, 16, 26], { x: 276, y: 60 }), personStudy('ian', [284, 30, 16, 26], { x: 292, y: 60 }),
+  personStudy('joseph', [26, -16, 16, 20], { x: 34, y: 9 }), lockedStudy(44, 50, 9), lockedStudy(45, 66, 9),
+  lockedStudy(13, 300, 106), lockedStudy(14, 300, 122),
   { name: 'main hall', r: [128, 8, 64, 30], walk: { x: 160, y: 44 }, def: 'open', on: { look: 'The main hall. Lounge, mailboxes, coffee.', open: "Just the lounge. Nobody's in. Everybody's in their study." } },
   { name: 'meeting room', r: [80, 66, 30, 30], walk: { x: 112, y: 80 }, def: 'open', on: { look: 'The meeting room. Seminars happen in there. Like this one.', open: "Not yet. I haven't visited the studies." } },
   { name: 'picnic table', r: [122, 73, 20, 16], walk: { x: 132, y: 64 }, def: 'look', on: { look: 'A picnic table. Someone carved a regression line into it.', use: 'I sit for a second. Very restorative. Back to it.' } },
@@ -664,6 +863,24 @@ Object.assign(MAP.find(h => h.name === 'Study 14'), { on: {
     eliKnocks++;
   }
 } });
+// Forrest, Study 44, top row. He plays pickleball. In there. Right now.
+const FORREST = [
+  [['forrest', 'Zero, zero, start!'], ['you', 'Are you... playing pickleball in there?'], ['forrest', 'Dinking. There is a difference.']],
+  [['forrest', "Don't come in! You'd be standing in the kitchen."], ['you', "It's a study."], ['forrest', "Everything's a kitchen if you believe."]],
+  [['forrest', 'Eleven, nine. I am up.'], ['you', 'Against who?'], ['forrest', 'The wall. The wall is very good.']],
+  [['forrest', 'This is research. I am studying the third-shot drop.'], ['you', "What's the finding?"], ['forrest', 'It drops.']],
+  [['forrest', 'Pickleball is the fastest growing sport in America.'], ['you', 'Says who?'], ['forrest', 'Me. Every day. To everyone.']]
+];
+let forrestKnocks = 0;
+Object.assign(MAP.find(h => h.name === 'Study 44'), { on: {
+  look: "Study 44. Forrest's. Something in there goes pock. Pock. Pock.",
+  open: async () => {
+    SFX.knock(); await say('you', forrestKnocks ? 'Knock, knock. Again.' : 'Knock, knock.');
+    SFX.rally(); await wait(2.2);
+    for (const l of FORREST[Math.min(forrestKnocks, FORREST.length - 1)]) await say(l[0], l[1]);
+    forrestKnocks++;
+  }
+} });
 // the cafeteria used to be behind the last door on the bottom row. It had rules.
 MAP.unshift({ name: 'cafeteria', r: [198, 98, 16, 26], walk: { x: 206, y: 128 }, def: 'open', on: {
   look: 'There is a sign on the door. It is long.',
@@ -698,7 +915,17 @@ const ROOM = [
   { name: 'window', r: [44, 14, 78, 60], walk: { x: 84, y: 130 }, def: 'look', on: { look: 'The hills, the Dish, Stanford down below. Good office.' } },
   { name: 'door', r: [4, 30, 32, 76], walk: { x: 40, y: 132 }, def: 'open', on: { look: 'The way out. Thirteen more studies out there.', open: exitRoom } }
 ];
-function hotspots() { return S.scene === 'map' ? MAP : S.room === 'empty' ? ROOM_EMPTY : ROOM; }
+const PERSON_R = { desk: [172, 56, 34, 42], read: [156, 54, 60, 70], stand: [176, 34, 30, 92] };
+Object.keys(PEOPLE).forEach(k => {
+  const p = PEOPLE[k], sp = [{ name: p.name, r: PERSON_R[p.scene], walk: { x: 160, y: 134 }, def: 'talk', on: { look: p.look, talk: () => talkPerson(k) } }];
+  if (p.scene === 'read') sp.push({ name: 'book', r: [176, 84, 24, 14], walk: { x: 170, y: 134 }, def: 'look', on: { look: "I can't see the title. She is not going to let me see the title." } },
+    { name: 'reading chair', r: [146, 48, 80, 66], walk: { x: 200, y: 134 }, def: 'look', on: { look: 'A big soft reading chair. There is a waiting list for it. Frances is the list.' } },
+    { name: 'lamp', r: [234, 44, 24, 84], walk: { x: 244, y: 134 }, def: 'look', on: { look: 'A reading lamp, on at three in the afternoon. Committed.' } });
+  if (p.scene === 'stand') sp.push({ name: 'monitors', r: [106, 14, 172, 66], walk: { x: 190, y: 134 }, def: 'look', on: { look: 'Two monitors. You could land a plane on that spreadsheet.' } });
+  if (p.scene === 'desk') sp.push({ name: 'monitor', r: [218, 66, 28, 32], walk: { x: 236, y: 130 }, def: 'look', on: { look: 'I can only see the back. It has stickers.' } });
+  p.spots = sp.concat(ROOM_EMPTY.map(h => h.name === 'window' ? Object.assign({}, h, { on: { look: 'The hills, the Dish, Stanford down below.' } }) : h.name === 'bookshelf' ? Object.assign({}, h, { on: { look: `${p.name}'s books. Organized by a system. The system is ${p.name}.`, push: 'No secret passage. I checked.' } }) : h));
+});
+function hotspots() { return S.scene === 'map' ? MAP : S.room === 'empty' ? ROOM_EMPTY : PEOPLE[S.room] ? PEOPLE[S.room].spots : ROOM; }
 function hit(x, y) { return hotspots().find(h => x >= h.r[0] && x < h.r[0] + h.r[2] && y >= h.r[1] && y < h.r[1] + h.r[3]); }
 async function perform(r) {
   if (typeof r === 'function') await r();
@@ -781,9 +1008,12 @@ function speakerPos(who) {
   if (who === 'bart') return [190, 54];
   if (who === 'turkey') return [268, 94];
   if (who === 'eli') return [292, 112];
+  if (who === 'forrest') return [50, 4];
+  if (PEOPLE[who]) return PEOPLE[who].at;
   return S.scene === 'map' ? [S.x, S.y - 14] : [S.x, S.y - 78];
 }
-const COLORS = { you: '#ffffff', bart: '#ffff55', turkey: '#ffb070', eli: '#ff7a5c' };
+const COLORS = { you: '#ffffff', bart: '#ffff55', turkey: '#ffb070', eli: '#ff7a5c', forrest: '#d8e84a' };
+Object.keys(PEOPLE).forEach(k => { COLORS[k] = PEOPLE[k].color; });
 function drawLine() {
   const l = S.line;
   if (!l) { if (lineEl.textContent) lineEl.textContent = ''; return; }
@@ -799,7 +1029,7 @@ const FX = { dust: [], leaves: [], birds: null, mark: null, last: 0, dustT: 0, f
 function mapUnder(t, dt) {
   // lit doors breathe
   const glow = 0.28 + 0.2 * Math.sin(t * 2.2);
-  [[180, 41], [292, 57], [76, 57], [114, 125], [34, 6]].forEach(([x, y], i) => oval(g, x, y + 1, 8, 3, 'rgba(255,217,106,' + (glow + 0.04 * Math.sin(t * 3.1 + i)).toFixed(3) + ')'));
+  [[180, 41], [292, 57], [276, 57], [76, 57], [114, 125], [130, 125], [34, 6]].forEach(([x, y], i) => oval(g, x, y + 1, 8, 3, 'rgba(255,217,106,' + (glow + 0.04 * Math.sin(t * 3.1 + i)).toFixed(3) + ')'));
   // a puff of dust behind each step
   if (S.path.length) { FX.dustT -= dt; if (FX.dustT <= 0) { FX.dustT = 0.11; FX.dust.push({ x: S.x + (Math.random() - 0.5) * 3, y: S.y, a: 0 }); } }
   FX.dust = FX.dust.filter(d => (d.a += dt) < 0.45);
@@ -874,6 +1104,21 @@ function drawMap(t) {
 }
 function drawRoom(t) {
   const B = S.bart;
+  if (PEOPLE[S.room]) {
+    const k = S.room, p = PEOPLE[k], o = LOOKS[k];
+    g.drawImage(roomFullEmpty, 0, 0);
+    g.save(); g.translate(0, OY);
+    roomLight(t);
+    const talk = S.line && S.line.who === k && (calm || Math.floor(t * 8) % 2 === 0), speaking = S.line && S.line.who === k;
+    const blink = !calm && (t + k.length) % 4.3 < 0.13;
+    if (p.scene === 'desk') deskScene(k, o, t, talk, blink);
+    if (p.scene === 'read') readingScene(o, t, talk, blink, speaking);
+    if (p.scene === 'stand') standingScene(o, t, talk, blink);
+    const moving = S.path.length > 0, fr = moving ? 1 + Math.floor(t * 7) % 2 : 0;
+    drawYou(S.x, S.y, S.face, fr, S.line && S.line.who === 'you' && (calm || Math.floor(t * 8) % 2 === 0));
+    g.restore();
+    return;
+  }
   if (S.room === 'empty') {
     g.drawImage(roomFullEmpty, 0, 0);
     g.save(); g.translate(0, OY);
@@ -945,7 +1190,7 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
-window.quest = { S, hit, run, doAction, MAP, ROOM, start };
+window.quest = { S, hit, run, doAction, MAP, ROOM, start, hot: hotspots };
 })();
 </script>
 </body>
