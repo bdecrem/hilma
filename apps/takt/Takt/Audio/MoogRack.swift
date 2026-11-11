@@ -92,8 +92,11 @@ final class MoogRack: Console {
             let accentEnv: Double
             /// A drift on the voice's pitch.
             var drift: String?
-            /// The pulse width of every oscillator: 0.5 + depth · sin(2π · bar / bars).
+            /// The pulse width of every oscillator: centre + depth · sin(2π · bar / bars) (in
+            /// seconds instead of bars when `widthSeconds`; the centre 0.5 when none).
             var widthLfo: [Double]?
+            var widthCenter: Double?
+            var widthSeconds: Bool?
             let oscs: [Osc]
             /// The oscillators' sum × this into the ladder.
             let input: Double
@@ -146,13 +149,33 @@ final class MoogRack: Console {
             let hall: Float
         }
 
+        /// A stem played from a file at the song's position (Irrlicht's shadow: a frequency-shifted
+        /// voice no key plays, baked by the reference): `from` is the bar the file starts at.
+        struct Stem: Decodable {
+            let name: String
+            let kit: String
+            let from: Double
+            let gain: Float
+            let duck: Float
+            let hall: Float
+        }
+
         let lanes: [String: [[Double]]]
         let buses: [Bus]
+        /// The voice your keys play (`rackAcid`) and the main echo hears: Streulicht's line,
+        /// Irrlicht's bass.
         let line: Voice
-        let bass: Voice
+        /// The second sequenced voice (`rackBass`): Streulicht's bass; none in Irrlicht.
+        var bass: Voice?
         let lead: Voice
         let lineEcho: Rack.Settings.Echo
         let leadEcho: Rack.Settings.Echo
+        /// The main echo's feedback lane (`lineFeedback` when none) and a highpass on its input.
+        var echoFeedback: String?
+        var echoHighpass: Double?
+        /// The lead's echo takes its input on the right instead of the left.
+        var leadEchoRight: Bool?
+        var stem: Stem?
         /// The line echo's input side: it swaps every `sideBars` bars, smoothed by a centred
         /// boxcar `sideWindow` seconds long.
         let sideBars: Double
@@ -439,7 +462,7 @@ final class MoogRack: Console {
             // The oscillators: a saw and a pulse off each phase.
             var width = 0.5
             let lfo = s.widthLfo != nil
-            if let w = s.widthLfo { width = 0.5 + w[0] * sin(2 * Double.pi * bar / w[1]) }
+            if let w = s.widthLfo { width = (s.widthCenter ?? 0.5) + w[0] * sin(2 * Double.pi * (s.widthSeconds == true ? time : bar) / w[1]) }
             var mix = 0.0
             for j in oscs.indices {
                 var o = oscs[j]
@@ -501,7 +524,10 @@ final class MoogRack: Console {
     private let busHall: [Float], busRoom: [Float], busDuck: [Float], busFiltered: [Bool]
     private let busLP: UnsafeMutableBufferPointer<Rack.Biquad>
 
-    private let lineVoice: Voice, bassVoice: Voice, leadVoice: Voice
+    private let lineVoice: Voice, bassVoice: Voice?, leadVoice: Voice
+    private var echoHP: Rack.Biquad?
+    private var hallHL: Rack.Biquad?, hallHR: Rack.Biquad?
+    private let stemBuffer: SampleBuffer?
     private var lineFeedback: Rack.Lane, padCutoff: Rack.Lane, padLevel: Rack.Lane, noiseLevel: Rack.Lane, fade: Rack.Lane
     private var lineEcho: Rack.Tape, leadEcho: Rack.Tape
 
@@ -525,7 +551,7 @@ final class MoogRack: Console {
     private let raw: Bool
     func passes(_ name: String) -> Bool { solo?.contains(name) ?? true }
     private var busOn: [Bool] = []
-    private var on = (line: true, bass: true, lead: true, echo: true, leadEcho: true, pad: true, noise: true, hall: true, room: true)
+    private var on = (line: true, bass: true, lead: true, echo: true, leadEcho: true, pad: true, noise: true, hall: true, room: true, stem: true)
 
     init(_ s: Settings, sampleRate: Double, maxChunk: Int) {
         settings = s
@@ -563,14 +589,14 @@ final class MoogRack: Console {
             drifts[key] = Drift(curve: p, count: max(2, d.curve.count), rate: d.rate)
         }
         lineVoice = Voice(s.line, lanes: s.lanes, drifts: drifts, sampleRate: sampleRate)
-        bassVoice = Voice(s.bass, lanes: s.lanes, drifts: drifts, sampleRate: sampleRate)
+        bassVoice = s.bass.map { Voice($0, lanes: s.lanes, drifts: drifts, sampleRate: sampleRate) }
         leadVoice = Voice(s.lead, lanes: s.lanes, drifts: drifts, sampleRate: sampleRate)
 
         func lane(_ name: String) -> Rack.Lane {
             guard let points = s.lanes[name] else { fatalError("moog rack: no lane \(name)") }
             return Rack.Lane(points, default: 0)
         }
-        lineFeedback = lane("lineFeedback"); padCutoff = lane("padCutoff"); padLevel = lane("padLevel")
+        lineFeedback = lane(s.echoFeedback ?? "lineFeedback"); padCutoff = lane("padCutoff"); padLevel = lane("padLevel")
         noiseLevel = lane("noise"); fade = lane("fade")
         lineEcho = Rack.Tape(s.lineEcho, sampleRate: sampleRate)
         leadEcho = Rack.Tape(s.leadEcho, sampleRate: sampleRate)
@@ -586,6 +612,10 @@ final class MoogRack: Console {
 
         let kit = SampledInstrument.shared(SampledInstrument.rated(s.noise.kit, sampleRate: sampleRate))
         noise = kit.pick(note: 0, velocity: 1).buffer
+        echoHP = s.echoHighpass.map { .highpass($0, sr: sampleRate) }
+        hallHL = s.hall.highpass.map { .highpass($0, sr: sampleRate) }
+        hallHR = s.hall.highpass.map { .highpass($0, sr: sampleRate) }
+        stemBuffer = s.stem.map { SampledInstrument.shared(SampledInstrument.rated($0.kit, sampleRate: sampleRate)).pick(note: 0, velocity: 1).buffer }
         hallL = Convolver(.bundled(s.hall.ir, side: 0, sampleRate: sampleRate, block: s.hall.block))
         hallR = Convolver(.bundled(s.hall.ir, side: 1, sampleRate: sampleRate, block: s.hall.block))
         roomL = Convolver(.bundled(s.room.ir, side: 0, sampleRate: sampleRate, block: s.room.block))
@@ -600,8 +630,8 @@ final class MoogRack: Console {
         raw = false
         #endif
         busOn = busNames.map { passes($0) }
-        on = (passes("line"), passes("bass"), passes("lead"), passes("echo"), passes("lead_echo"), passes("pad"), passes("noise"),
-              passes("hall"), passes("room"))
+        on = (passes(s.line.prefix), passes("bass"), passes("lead"), passes("echo"), passes("lead_echo"),
+              passes("pad"), passes("noise"), passes("hall"), passes("room"), passes(s.stem?.name ?? "stem"))
         reset()
     }
 
@@ -625,7 +655,8 @@ final class MoogRack: Console {
     }
 
     func reset() {
-        lineVoice.reset(); bassVoice.reset(); leadVoice.reset()
+        lineVoice.reset(); bassVoice?.reset(); leadVoice.reset()
+        echoHP?.clear(); hallHL?.clear(); hallHR?.clear()
         lineEcho.clear(); leadEcho.clear()
         for i in busLP.indices { busLP[i].clear() }
         let s = settings.pad
@@ -643,7 +674,7 @@ final class MoogRack: Console {
 
     func releaseBand() {
         for i in pads.indices { pads[i].band = AcidRack.Gate() }
-        lineVoice.releaseBand(at: frame); bassVoice.releaseBand(at: frame); leadVoice.releaseBand(at: frame)
+        lineVoice.releaseBand(at: frame); bassVoice?.releaseBand(at: frame); leadVoice.releaseBand(at: frame)
     }
 
     /// A note of the line (the renderer's `rackAcid`).
@@ -653,7 +684,7 @@ final class MoogRack: Console {
 
     /// A bass note (the renderer's `rackBass`).
     func bass(_ note: Int, velocity: Float, gain: Float, held: Int, offset: Int, live: Bool) {
-        bassVoice.queue(note, velocity: velocity, gain: gain, held: held, offset: offset, live: live)
+        bassVoice?.queue(note, velocity: velocity, gain: gain, held: held, offset: offset, live: live)
     }
 
     /// A note of the lead (the renderer's `rackLead`).
@@ -690,7 +721,7 @@ final class MoogRack: Console {
 
     func release(_ note: Int, offset: Int) {
         let at = frame + Int64(offset)
-        lineVoice.release(note, at: at); bassVoice.release(note, at: at); leadVoice.release(note, at: at)
+        lineVoice.release(note, at: at); bassVoice?.release(note, at: at); leadVoice.release(note, at: at)
         for i in pads.indices where pads[i].note == note && pads[i].key.left == .max {
             pads[i].key.on = false
             pads[i].key.wait = -1
@@ -723,7 +754,8 @@ final class MoogRack: Console {
         let bandPads = keys > 0.5
         let pl = padLevels
         let line = lineVoice, bass = bassVoice, lead = leadVoice
-        line.begin(); bass.begin(); lead.begin()
+        line.begin(); bass?.begin(); lead.begin()
+        let leadRight = s.leadEchoRight == true
         for i in 0..<n {
             let bar = bar0 + barsPerFrame * Double(i)
             let live = playing && bar >= 0
@@ -733,12 +765,14 @@ final class MoogRack: Console {
             var sumL: Float = 0, sumR: Float = 0
             var hallIn: (Float, Float) = (0, 0), roomIn: (Float, Float) = (0, 0)
 
-            // The bass.
-            let bassMono = bass.tick(i, now: now, bar: bar, time: time) * (1 - s.bass.duck * k)
-            let bassL = bassMono * bass.panL, bassR = bassMono * bass.panR
-            if on.bass { sumL += bassL; sumR += bassR }
-            let bassHall = bass.hallLane.value(bar)
-            if bassHall != 0 { hallIn.0 += bassL * bassHall; hallIn.1 += bassR * bassHall }
+            // The bass (Streulicht's; Irrlicht's bass is the line's voice).
+            if let bass {
+                let bassMono = bass.tick(i, now: now, bar: bar, time: time) * (1 - bass.s.duck * k)
+                let bassL = bassMono * bass.panL, bassR = bassMono * bass.panR
+                if on.bass { sumL += bassL; sumR += bassR }
+                let bassHall = bass.hallLane.value(bar)
+                if bassHall != 0 { hallIn.0 += bassL * bassHall; hallIn.1 += bassR * bassHall }
+            }
 
             // The line, and its echo: its input on one side, then the other, every eighth.
             let lineMono = line.tick(i, now: now, bar: bar, time: time)
@@ -747,7 +781,7 @@ final class MoogRack: Console {
             if on.line { sumL += lineL; sumR += lineR }
             let lineHall = line.hallLane.value(bar)
             hallIn.0 += lineL * lineHall; hallIn.1 += lineR * lineHall
-            let echoIn = lineMono * line.sendLane.value(bar)
+            let echoIn = (echoHP?.run(lineMono) ?? lineMono) * line.sendLane.value(bar)
             let at = bar * samplesPerBar
             let edge = (at / sideSpan).rounded()
             let boundary = (edge * sideSpan).rounded(.up)
@@ -768,7 +802,8 @@ final class MoogRack: Console {
             if on.lead { sumL += leadL; sumR += leadR }
             let leadHall = lead.hallLane.value(bar)
             hallIn.0 += leadL * leadHall; hallIn.1 += leadR * leadHall
-            let (vL, vR) = leadEcho.run(leadMono * lead.sendLane.value(bar), 0, feedback: s.leadEcho.feedback, target: leadTarget,
+            let leadIn = leadMono * lead.sendLane.value(bar)
+            let (vL, vR) = leadEcho.run(leadRight ? 0 : leadIn, leadRight ? leadIn : 0, feedback: s.leadEcho.feedback, target: leadTarget,
                                         glide: tapeGlide, advance: live)
             let vg = s.leadEcho.level * (1 - s.leadEcho.duck * k)
             let leadEchoL = vL * vg, leadEchoR = vR * vg
@@ -819,6 +854,20 @@ final class MoogRack: Console {
                 if rm != 0 { roomIn.0 += l * rm; roomIn.1 += r * rm }
             }
 
+            // The stem, read at the song's position.
+            if let st = s.stem, let buf = stemBuffer, live {
+                let p = (bar - st.from) * barSeconds * buf.rate
+                if p >= 0 && p < Double(buf.count - 1) {
+                    let ip = Int(p)
+                    let fr = Float(p - Double(ip))
+                    let g = st.gain * (1 - st.duck * k) / 32768
+                    let l = (Float(buf.left[ip]) + (Float(buf.left[ip + 1]) - Float(buf.left[ip])) * fr) * g
+                    let r = (Float(buf.right[ip]) + (Float(buf.right[ip + 1]) - Float(buf.right[ip])) * fr) * g
+                    if on.stem { sumL += l; sumR += r }
+                    hallIn.0 += l * st.hall; hallIn.1 += r * st.hall
+                }
+            }
+
             // The noise bed, looped, under its lane.
             if live {
                 let ip = Int(noisePos)
@@ -833,6 +882,7 @@ final class MoogRack: Console {
 
             // The hall and the room.
             let hg = hallG * (1 - hallDuck * k)
+            if hallHL != nil { hallIn.0 = hallHL!.run(hallIn.0); hallIn.1 = hallHR!.run(hallIn.1) }
             let hL = hallL.tick(hallIn.0) * hg, hR = hallR.tick(hallIn.1) * hg
             let rL = roomL.tick(roomIn.0) * roomG, rR = roomR.tick(roomIn.1) * roomG
             if on.hall { sumL += hL; sumR += hR }
@@ -853,7 +903,7 @@ final class MoogRack: Console {
                 outR[i] = yR * limiter * out
             }
         }
-        line.end(n); bass.end(n); lead.end(n)
+        line.end(n); bass?.end(n); lead.end(n)
         frame += Int64(n)
     }
 }

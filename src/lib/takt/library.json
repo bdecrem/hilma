@@ -330,6 +330,25 @@
    "uses": []
   },
   {
+   "name": "song-irrlicht",
+   "title": "Irrlicht",
+   "style": "Melodic Techno",
+   "key": "B minor",
+   "tempo": 124,
+   "bars": 133,
+   "seconds": 257,
+   "line": "Melodic techno at 124, four minutes. A bass of sixteenths that never changes, its bright note wandering across the bar; a second voice through a frequency shifter.",
+   "sections": "The bass alone (bar 1), Kick (bar 5), Hats (bar 9), The whole bass (bar 17), Clap (bar 25), The shadow (bar 33), Toms (bar 41), In five (bar 49), Break (bar 57), Back (bar 65), Lead (bar 73), Peak (bar 89), Second break (bar 97), Drums back (bar 101), Closing (bar 113), Kick and bass (bar 121), Out (bar 125)",
+   "chorus": "1–8 Dmaj7",
+   "choruses": 16.6,
+   "parts": {
+    "chords": "The pad",
+    "melody": "The bass"
+   },
+   "shelf": "all tracks",
+   "uses": []
+  },
+  {
    "name": "song-hypnotist",
    "title": "Hypnotist",
    "style": "Minimal techno",

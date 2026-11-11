@@ -21,6 +21,7 @@ sample packs.
 | Techno kit (`gl-*`: Gegenlicht's kick, hats, ride, crash, shaker, clap, rim, toms, pings, risers, noise bed and the hall, room and rumble impulses, 2026-11-10) | Synthesized by `misc/gegenlicht_reference.py` (numpy, no samples), cut by `apps/takt/scripts/gegenlicht.py` | Own work |
 | Electro kit (`rl-*`: Restlicht's kick and ghost kick, snares, hats, shakers, rim, toms, noise bed and the hall and room impulses, 2026-11-10) | Synthesized by `misc/restlicht_reference.py` (numpy, no samples), cut by `apps/takt/scripts/restlicht.py` | Own work |
 | Melodic techno kit (`sl-*`: Streulicht's kick, claps, open hats, the closed hats' noise, noise bed, drift curves and the hall and room impulses, 2026-11-10) | Synthesized by `misc/streulicht_reference.py` (numpy, no samples), cut by `apps/takt/scripts/streulicht.py` | Own work |
+| Melodic techno kit (`il-*`: Irrlicht's kick, claps, open hats, toms, the closed hats' noise, the shadow voice baked, noise bed, drift curves and the hall and room impulses, 2026-11-10) | Synthesized by `misc/irrlicht_reference.py` (numpy, no samples), cut by `apps/takt/scripts/irrlicht.py` | Own work |
 | Call voice (`call-<word>.caf`: one…five, the twelve keys sharp and flat, tuck, over, no, done; Call on the Stage, 2026-11-05) | Rendered by `apps/takt/scripts/call-voice.py` on ElevenLabs (voice River, model eleven_turbo_v2) under our paid plan, which licenses the generated audio for commercial use | Generated, ours to use |
 
 **Attribution (CC BY 4.0), to show in the app's credits before release:**

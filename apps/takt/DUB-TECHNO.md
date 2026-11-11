@@ -812,8 +812,68 @@ SL_SR=44100 $V scripts/takt/sl-ab.py stems <work> && SL_SR=44100 $V scripts/takt
 **Not checked: Bart's ears** on the app against the record (`~/Desktop/takt/streulicht/`), the
 parts played, a render at 48 kHz (the phone's rate) for either record, and the iPhone.
 
+## 13. Irrlicht: the second record on the moog rack (2026-11-10, 0.1 (129))
+
+Bart, on the record in the Claude app: "Fantastic! Do a handoff package for it."; then here: "now
+add Irrlicht to the game - misc/irrlich* and misc/Irrlich*". **Irrlicht** (will-o'-the-wisp):
+melodic techno in B minor at 124, the second in the manner of Hannes Bieger, 128 bars and an 8 s
+tail (4:16). The record is `misc/irrlicht_reference.py`, the brief `misc/IRRLICHT.md`; the
+handoff's master and parts (`misc/irrlicht/`) stay out of git (`misc/irrlicht-handoff.zip`,
+61 MB). This Mac's render is the handoff's master to 1 LSB.
+
+**The carrier is the bass**: a two-bar pattern of sixteenths that never changes, and an accent (a
+filter envelope at 1.4 and 1.3 times the level) in a cycle of its own, 4, then 3, then 5
+sixteenths, so the bright note wanders across the bar. Its voice is Streulicht's blocks, so it
+went on `MoogRack` with five optional settings (the skill's `references/system.md`, "Irrlicht on
+the moog rack"): the voice your keys play is the bass (`line` with the prefix `bass`; no
+`rackBass` voice), a highpass into the main echo (it hears the bass's top), the lead's echo on
+the right, a highpass into the hall, a pulse width that moves in seconds. And one new idea, **a
+stem**: the shadow, a second voice on B1 through a frequency shifter, which no key plays and
+whose shifter is an FFT Hilbert transform over the whole song that no live block can null, is
+the reference's own bounce (`il-shadow-44`, bars 32–122, 6.8 MB) read at the song's position, so
+a seek or a practice loop finds it. Streulicht re-rendered after the change reads as before.
+
+**Measured** (`scripts/takt/il-ab.py`, at 44.1 kHz, every stem over the whole song; app / ref):
+
+| stem | level (dBFS) | null (dB) |
+|---|---|---|
+| kick | −15.4 / −15.4 | −80.0 |
+| bass | −20.4 / −20.4 | −73.7 |
+| shadow (the stem) | −30.0 / −30.0 | −66.0 |
+| lead | −34.8 / −34.8 | −67.0 |
+| echo, lead echo | within 0.01 dB | −57.4, −57.5 |
+| pad | −32.7 / −32.7 | −62.9 |
+| clap, closed hats, open hats, toms | within 0.01 dB | −57 to −65 |
+| hall | −30.9 / −30.9 | −63.9 |
+| room | −42.0 / −42.0 | −35.9 (as Streulicht's, the weakest null; the level is the reference's) |
+| noise | −51.4 / −51.5 | none: the 32 s loop |
+
+The master: mean −18.73 / −18.74 dBFS, peak −9.01 / −9.01, side/mid 0.188 / 0.188, octave bands
+within 0.06 dB in all eight of the brief's passages, null −34.9 dB over the song.
+
+**The parts** (the `takt-chart` skill; LEVELING.md §4, CHARTING.md rule 23): the melody is the
+bass, A1–B2; to Medium the hand sits on B1 (thumb) to F#2 (pinky), the accented notes the anchors,
+the B2 in only where the record has nothing else (bars 8–15); Easy, Easy+, Medium are tiers 2, 3,
+4 (0.78, 1.04, 1.83 a second), Hard the record (7.96). The chords are the pad a hit a bar from
+bar 24, C# under 5, D under 4, the thumb on A or G. The lead stays the record's.
+
+**Running it again:**
+
+```bash
+V=~/.cache/takt-venv/bin/python
+$V apps/takt/scripts/irrlicht.py --keep <work>               # verifies against misc/irrlicht/reference.flac
+python3 apps/takt/scripts/songs/irrlicht.py
+# build, install on the booted simulator, then:
+IL_SR=44100 $V scripts/takt/il-ab.py render <work>            # 15 renders, about 25 minutes
+IL_SR=44100 $V scripts/takt/il-ab.py stems <work> && IL_SR=44100 $V scripts/takt/il-ab.py master <work>
+```
+
+**Not checked: Bart's ears** on the app against the record (`~/Desktop/takt/irrlicht/`), the parts
+played, 48 kHz, the iPhone.
+
 ## Files
 
+- `misc/irrlicht_reference.py`, `misc/IRRLICHT.md`, `misc/irrlicht_reference.mp3`: Irrlicht's reference; `scripts/irrlicht.py`, `scripts/songs/irrlicht.py`, `scripts/songs/irrlicht-events.json`; `Takt/Sounds/il-*`; `scripts/takt/il-ab.py` (repo root)
 - `misc/streulicht_reference.py`, `misc/STREULICHT.md`, `misc/streulicht_reference.mp3`: Streulicht's reference; `scripts/streulicht.py`, `scripts/songs/streulicht.py`, `scripts/songs/streulicht-events.json`; `Takt/Sounds/sl-*`; `Takt/Audio/MoogRack.swift`; `scripts/takt/sl-ab.py` (repo root)
 - `misc/restlicht_reference.py`, `misc/RESTLICHT.md`, `misc/restlicht_reference.mp3`: Restlicht's reference; `scripts/restlicht.py`, `scripts/songs/restlicht.py`, `scripts/songs/restlicht-events.json`; `Takt/Sounds/rl-*`; `Takt/Audio/ElectroRack.swift`; `scripts/takt/rl-ab.py` (repo root)
 - `misc/gegenlicht_reference.py`, `misc/GEGENLICHT.md`, `misc/gegenlicht_reference.mp3`: Gegenlicht's reference; `scripts/gegenlicht.py`, `scripts/songs/gegenlicht.py`, `scripts/songs/gegenlicht-events.json`; `Takt/Sounds/gl-*`; `Takt/Audio/AcidRack.swift`, `Takt/Audio/Console.swift`; `scripts/takt/gl-ab.py` (repo root)

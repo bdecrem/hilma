@@ -106,6 +106,8 @@ final class Rack {
             let block: Int
             let level: Float
             var duck: Float?
+            /// A second-order Butterworth highpass on what goes in, Hz (`MoogRack`, Irrlicht's hall).
+            var highpass: Double? = nil
         }
 
         struct Noise: Decodable {

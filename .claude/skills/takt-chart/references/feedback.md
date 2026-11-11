@@ -164,6 +164,12 @@ LEVELING.md, and this file keeps the pointer.
   to tier 6, Medium named tier 4 (1.51 a second), Hard the record's 7.71. LEVELING.md §4 has the
   figures. Not played yet.
 
+- **2026-11-10, 0.1 (129).** "now add Irrlicht to the game". The bass as the melody: one position
+  on the octave's lower end to Medium, the octave in bars 8–15 only (CHARTING.md rule 23). The
+  first draft passed `measure.ts` and failed `-LessonCheck`'s "every level plays the line's
+  keys": a phrase where every accent lands on B1 was one key at Easy to Medium. Build and run the
+  app's checks before believing a ladder.
+
 ## Open (LEVELING.md §4, BLUES.md §6)
 
 - Whether the comping ladders want a rhythm step between Easy and Medium.

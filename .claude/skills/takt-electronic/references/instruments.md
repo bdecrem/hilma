@@ -190,3 +190,14 @@ bass (a saw and a pulse an octave down, E2 every sixteenth, punched by a 75 ms e
 (two saws ±4 cents, a pulse, a pulse an octave down, 65 ms glide, vibrato on long notes) and the
 pad (B3 D4 F#4, the B to C for a bar).
 
+## Irrlicht's instruments (the moog rack, 2026-11-10)
+
+`il-*` files, cut by `apps/takt/scripts/irrlicht.py`: Streulicht's kick, claps and open hats (the
+same functions, other seeds), two toms on B2 and F#3 with an FM blip (mono, a pan per hit), the
+closed hats' noise (seed 78), the noise bed's first 32 s, the drift curves, and **the shadow**
+(`il-shadow-44`, 6.8 MB): B1 as a saw and a pulse an octave up, a resonant ladder, shifted up on
+the left and down on the right by 0.4 to 28 Hz, 120 Hz–3.2 kHz, bars 32–122, played as a stem.
+Live: the bass (two oscillators, the accent a brighter, louder note in a cycle of its own), the
+lead (a saw and two pulses, glide, vibrato) and the pad (C#4 D4 A4, the A down to G for two bars
+in eight).
+

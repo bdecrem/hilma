@@ -7204,5 +7204,245 @@
     ]
    }
   ]
+ },
+ "kickIL": {
+  "release": 0.03,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "il-kick"
+    ]
+   }
+  ]
+ },
+ "kickIL@44": {
+  "release": 0.03,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "il-kick-44"
+    ]
+   }
+  ]
+ },
+ "ilClap0": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "il-clap-0"
+    ]
+   }
+  ]
+ },
+ "ilClap0@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "il-clap-0-44"
+    ]
+   }
+  ]
+ },
+ "ilClap1": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "il-clap-1"
+    ]
+   }
+  ]
+ },
+ "ilClap1@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "il-clap-1-44"
+    ]
+   }
+  ]
+ },
+ "ilOhh0": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "il-ohh-0"
+    ]
+   }
+  ]
+ },
+ "ilOhh0@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "il-ohh-0-44"
+    ]
+   }
+  ]
+ },
+ "ilOhh1": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "il-ohh-1"
+    ]
+   }
+  ]
+ },
+ "ilOhh1@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "il-ohh-1-44"
+    ]
+   }
+  ]
+ },
+ "ilTom47": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "il-tom-47"
+    ]
+   }
+  ]
+ },
+ "ilTom47@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "il-tom-47-44"
+    ]
+   }
+  ]
+ },
+ "ilTom54": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "il-tom-54"
+    ]
+   }
+  ]
+ },
+ "ilTom54@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "il-tom-54-44"
+    ]
+   }
+  ]
+ },
+ "ilHatNoise": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "il-hat-noise"
+    ]
+   }
+  ]
+ },
+ "ilHatNoise@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "il-hat-noise-44"
+    ]
+   }
+  ]
+ },
+ "ilNoise": {
+  "release": 0.2,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "il-noise"
+    ]
+   }
+  ]
+ },
+ "ilNoise@44": {
+  "release": 0.2,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "il-noise-44"
+    ]
+   }
+  ]
+ },
+ "ilShadow": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "il-shadow-44"
+    ]
+   }
+  ]
+ },
+ "ilShadow@44": {
+  "release": 0.05,
+  "zones": [
+   {
+    "root": 0,
+    "vel": 1.0,
+    "files": [
+     "il-shadow-44"
+    ]
+   }
+  ]
  }
 }

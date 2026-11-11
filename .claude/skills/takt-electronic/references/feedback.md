@@ -89,6 +89,15 @@ meant, what changed. Add to the bottom of a section when he says something new.
   drifts, closed hats cut from one noise buffer; "The moog rack"). `DUB-TECHNO.md` §11–12 have
   the measurements. 0.1 (128).
 
+- **2026-11-10.** Irrlicht, Bart on the record in the Claude app: "Fantastic! Do a handoff package
+  for it."; then here: "now add Irrlicht to the game - misc/irrlich* and misc/Irrlich*". Melodic
+  techno in B minor at 124, the second Hannes Bieger-style record; on `MoogRack` with five
+  additions (the bass in the slot your keys play, a highpass into the main echo, the lead's echo
+  on the right, a highpass into the hall, a pulse width that moves in seconds) and one new idea:
+  **a stem** (the shadow, a voice no key plays, through an FFT frequency shifter no live voice can
+  null) played from the reference's own bounce at the song's position. `DUB-TECHNO.md` §13.
+  0.1 (129).
+
 ## Open, to hear
 
 - **Hohlraum, the record itself** (2026-11-10): `~/Desktop/takt/hohlraum/Hohlraum (reference).mp3`
@@ -115,7 +124,8 @@ meant, what changed. Add to the bottom of a section when he says something new.
 - **Restlicht and Streulicht in the app** (2026-11-10): the mp3 pairs in
   `~/Desktop/takt/restlicht/` and `~/Desktop/takt/streulicht/` (the reference, and the app's
   render raised 8 dB to its level). The stems null, so a difference he hears is the noise loop
-  (32 s, not the record's 238 / 260 s) or the limiter's forward pass.
+  (32 s, not the record's 238 / 260 s) or the limiter's forward pass. Irrlicht's pair is in
+  `~/Desktop/takt/irrlicht/`.
 
 ## How to add a line
 

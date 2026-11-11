@@ -62,6 +62,7 @@ The figures for every song, every tier (2026-11-08, `-LessonCheck` prints them a
 | Gezeiten (116, 2026-11-10; Easy = L2, Medium = L6) | 0/0 · 1 · 10 | 0/0 · 1 · 10 (L2) | 0/0 · 1 · 10 | 0/0 · 1 · 10 (L6) | 0/0 · 1 · 10 |
 | Gegenlicht (128, 2026-11-10; Beginner gap 0.9) | 0/0 · 1 · 7 | 0/0 · 1 · 7 | 0/0 · 1 · 7 | 0/0 · 1 · 7 (L5) | 67/2 · 3 · 17 |
 | Restlicht (124, 2026-11-10; tiers 5–6 gap 0.24) | 0/0 · 1 · 3 | 0/0 · 1 · 3 | 0/0 · 1 · 3 | 0/0 · 1 · 10 (L5) | 72/3 · 2 · 12 |
+| Irrlicht (124, 2026-11-10; Easy = L2, Easy+ = L3, Medium = L4) | 4/3 · 2 · 12 | 16/1 · 2 · 12 (L2) | 16/1 · 2 · 12 (L3) | 16/1 · 2 · 12 (L4) | 824/1 · 3 · 14 |
 | Streulicht (122, 2026-11-10; Easy = L2, Easy+ = L3, Medium = L4) | 0/0 · 1 · 7 | 0/0 · 1 · 7 (L2) | 0/0 · 1 · 7 (L3) | 0/0 · 1 · 7 (L4) | 563/1 · 3 · 15 |
 
 ## 2. The budgets
@@ -137,6 +138,17 @@ it before and after every change (2026-11-08).
   my hand" gets a real answer.
 
 ## 4. Decisions and dates
+
+- **2026-11-10: Irrlicht, a bass of sixteenths with its octave.** Bart: "now add Irrlicht to the
+  game". The melody is the bass, A1–B2, every sixteenth: the hand sits on B1 (thumb) to F#2
+  (pinky) to Medium and the accented notes are the anchors; the octave is the record's own, so
+  bars 8–15 (B1 and B2 alone) are one moment of 16 moves at every level, and the rest of the
+  song none (CHARTING.md rule 23). Beginner 4/3 · 2 · 12, Easy to Medium **16/1 · 2 · 12**, over
+  Level 1's 6 moves (no level's goal song: printed, not asserted). Density 0.61 · 0.78 (Easy) ·
+  1.04 (Easy+) · 1.83 (Medium) · 2.68 · 4.68 · 7.96 (Hard, the record), the named rungs one down
+  as Streulicht's, gaps 1.0 · 0.75 · 0.5 · 0.36 · 0.24 · 0.12 in the song's patch. Chords, the pad
+  a hit a bar from bar 24 (the record's pad is silent before 22): 0.14 · 0.20 · 0.20 · 0.20 ·
+  0.40 · 0.40 · 0.40. Not yet played by Bart.
 
 - **2026-11-10: Restlicht and Streulicht, two records from the Claude app, their own lines in one
   hand.** Bart: "now implement misc/Restlich* and misc/restlicht* into the game, faithfully, like

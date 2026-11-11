@@ -2215,6 +2215,15 @@ cover stealing anchors, a hand of 30 moves on a Level 2 song, a Beginner on one 
   gate before the club), Walfisch (the building in 2012). Not done: a launch sound and a menu band
   per vibe (the Chicago shuffle plays under both); not shipped to TestFlight.
 
+- **Irrlicht, the second record on the moog rack: 0.1 (129), 2026-11-10.** Bart: "now add
+  Irrlicht to the game - misc/irrlich* and misc/Irrlich*" (melodic techno, B minor, 124, 4:16).
+  On `MoogRack` with five optional settings and a **stem** (the shadow, a frequency-shifted voice
+  no key plays, played from the reference's bounce at the song's position). Every stem within
+  0.01 dB of the reference (nulls −57 to −80 dB, the room −36), the master's bands within 0.06 dB;
+  Streulicht unchanged. Charts by `takt-chart` (the bass in one position to Medium but the
+  record's own octave in bars 8–15; CHARTING.md rule 23). Pinned by default (`irrlichtShipped`).
+  `DUB-TECHNO.md` §13; checks 581/581; installed on the MacBook Air; the mp3 pair in
+  `~/Desktop/takt/irrlicht/`. Not heard or played by Bart yet.
 - **Restlicht and Streulicht, two more records from the Claude app, on two new consoles: 0.1
   (128), 2026-11-10.** Bart: "now implement misc/Restlich* and misc/restlicht* into the game,
   faithfully, like the other tracks you've done", then "and then the same for misc/streu* and

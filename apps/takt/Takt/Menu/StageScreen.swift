@@ -15,7 +15,7 @@ struct StageScreen: View {
     /// Since the vibes (2026-11-10) the default set carries electronic tracks too, so either
     /// vibe opens on a stage with something on it.
     static let bluesPins = Array(Song.catalog.prefix(6))
-    static let electronicPins = ["song-halbschatten", "song-gezeiten", "song-gegenlicht", "song-restlicht", "song-streulicht", "song-hypnotist-2", "song-warm-nine", "song-abyss"]
+    static let electronicPins = ["song-halbschatten", "song-gezeiten", "song-gegenlicht", "song-restlicht", "song-streulicht", "song-irrlicht", "song-hypnotist-2", "song-warm-nine", "song-abyss"]
     static let defaultPins = bluesPins + electronicPins
     /// Tracks that joined the default set after players had sets of their own, and when: a
     /// stored set older than the date gets the track too (it had no say about it), one changed
@@ -31,9 +31,12 @@ struct StageScreen: View {
     static let restlichtShipped = ISO8601DateFormatter().date(from: "2026-11-11T02:37:12Z")!
     /// Streulicht, with it.
     static let streulichtShipped = ISO8601DateFormatter().date(from: "2026-11-11T02:57:24Z")!
+    /// Irrlicht, that evening.
+    static let irrlichtShipped = ISO8601DateFormatter().date(from: "2026-11-11T04:16:53Z")!
     static let joinedLater: [(song: String, at: Date)] = electronicPins.map {
         ($0, $0 == "song-gezeiten" ? gezeitenShipped : $0 == "song-gegenlicht" ? gegenlichtShipped
-            : $0 == "song-restlicht" ? restlichtShipped : $0 == "song-streulicht" ? streulichtShipped : Vibe.pinsEpoch)
+            : $0 == "song-restlicht" ? restlichtShipped : $0 == "song-streulicht" ? streulichtShipped
+            : $0 == "song-irrlicht" ? irrlichtShipped : Vibe.pinsEpoch)
     }
     /// The other vibe's pinned tracks, open under their header. Stored: once opened they stay
     /// open, on either vibe and across launches, until the player closes them (Bart, 2026-11-10).
@@ -824,6 +827,22 @@ struct SongArt: View {
                     ctx.stroke(p, with: .color(i == 1 ? hot : i % 2 == 0 ? ink : dim), style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
                 }
                 ctx.fill(Path(ellipseIn: CGRect(x: c.x - 3, y: c.y - 3, width: 6, height: 6)), with: .color(hot))
+            case "wisp":
+                // Irrlicht, the will-o'-the-wisp: a light that is never where you last saw it.
+                // Five faint dots along a wandering line from the lower left (0.18 w, 0.78 h)
+                // to the light at 0.70 w, 0.34 h: a lit disc of 0.07 of the short side in a
+                // halo of 0.16 (on an 80 pt tile it ends 11 pt from the right edge).
+                let m = min(w, h)
+                let trail: [(CGFloat, CGFloat)] = [(0.18, 0.78), (0.30, 0.62), (0.26, 0.48), (0.42, 0.44), (0.52, 0.58)]
+                for (i, q) in trail.enumerated() {
+                    let r: CGFloat = m * (0.022 + 0.006 * CGFloat(i))
+                    ctx.fill(Path(ellipseIn: CGRect(x: w * q.0 - r, y: h * q.1 - r, width: 2 * r, height: 2 * r)),
+                             with: .color(dim.opacity(0.35 + 0.12 * Double(i))))
+                }
+                let c = CGPoint(x: w * 0.70, y: h * 0.34)
+                let halo: CGFloat = m * 0.16, disc: CGFloat = m * 0.07
+                ctx.fill(Path(ellipseIn: CGRect(x: c.x - halo, y: c.y - halo, width: 2 * halo, height: 2 * halo)), with: .color(hot.opacity(0.25)))
+                ctx.fill(Path(ellipseIn: CGRect(x: c.x - disc, y: c.y - disc, width: 2 * disc, height: 2 * disc)), with: .color(hot))
             case "stoptime":
                 // Chicago stop time: the riff's five bars climbing, then the gap, then the hit.
                 // Five bars 0.09 w wide at 0.11 w apart from x = 0.1 w end at 0.64 w; the hit sits

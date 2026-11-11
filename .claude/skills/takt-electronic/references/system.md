@@ -298,3 +298,16 @@ a song's `moogRack`, for a record whose every pitched voice is Moog-shaped:
   every closed hat is cut from one six-second noise buffer under (1 − e^(−t/0.5 ms))·e^(−t/d),
   ended after its length, no release. 1,540 hits from one file.
 
+### Irrlicht on the moog rack (2026-11-10)
+
+The second record on it (`misc/irrlicht_reference.py`, `DUB-TECHNO.md` §13). What it added, all
+optional in the song file, so Streulicht's file reads as before:
+
+| | |
+|---|---|
+| **The keys' voice is the bass** | `line` is "the voice `rackAcid` plays and the main echo hears", whatever its `prefix` (`bass` here, so its lanes are `bassDecay` …); `bass` (the `rackBass` voice) may be absent |
+| **Echo options** | `echoFeedback` names the main echo's feedback lane; `echoHighpass` filters what goes in (the bass's echo hears its top, 420 Hz); `leadEchoRight` feeds the lead's echo on the right |
+| **A hall highpass** | `hall.highpass` (`Rack.Settings.Reverb.highpass`): the sum of the sends through a 180 Hz Butterworth before the impulse |
+| **Pulse width in seconds** | `widthCenter`, `widthSeconds` beside `widthLfo` (the lead: 0.36 + 0.08·sin(2π·0.23·t)) |
+| **A stem** | `stem` {name, kit, from, gain, duck, hall}: a bounce of the reference's own bus read at the song's position (`(bar − from)` × the bar's length × the file's rate), so a seek or a practice loop finds it; zero outside the file. For a voice no key plays and no live block can null (the shadow's shifter is an FFT Hilbert transform over the whole song) |
+

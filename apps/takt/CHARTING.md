@@ -370,6 +370,18 @@ every song and part.
     two and one sixteenth (`gap` 0.9, 0.6, 0.36, 0.24, 0.12). Read the ladder before touching a
     gap: if a rung is stuck, the candidates are the limit, not the rule.
 
+23. **A bass whose octave is the record's own is charted around one end of the octave** (Irrlicht,
+    2026-11-10). LEVELING.md counts an octave as a hand move (the pinky on B2 puts the thumb three
+    white keys from B1), so a line that leaps B1 to B2 and back over and over is a move on every
+    leap: the first draft's Beginner moved the hand 28 times. The levels to Medium sit on the
+    lower end, B1 under the thumb to F#2 under the pinky, with the accented notes as the anchors
+    (the record's own reduction: the note the ear follows); the B2 comes in with the sixteenths.
+    Two exceptions, both by rule 7: in bars 8–15 the record plays only B1 and B2, so the B2 stays
+    at every level there (one moment of 16 moves, the only one to Medium); and where the accents
+    all land on B1 (the cycle of five), a phrase was one key at Easy to Medium, until the D2 on
+    the "and" of 2 lost its floor so the key cover could take it. `-LessonCheck` caught that;
+    `measure.ts` does not run that check, so build and run it before believing a ladder.
+
 ## Where this comes from
 
 Rhythm-game charters (Rock Band, Guitar Hero, Clone Hero) chart the top difficulty first and
