@@ -159,6 +159,10 @@ final class Player {
     /// The keyboard the last press came from (`InputDevice`): a MIDI source's name, or `local`
     /// for the computer keys and the keys on screen.
     @ObservationIgnored var device = InputDevice.local
+    /// The last key that went down, any keyboard, for the Stage's played-key box: the note,
+    /// when (`CACurrentMediaTime`), and a count so the same key twice flashes twice.
+    @ObservationIgnored var lastKey: (note: Int, at: Double, seq: Int)?
+    func noteLastKey(_ note: Int) { lastKey = (note, CACurrentMediaTime(), (lastKey?.seq ?? 0) + 1) }
     /// Calibration's result for that keyboard: how early (negative) or late a press from it
     /// lands, ms. Every scored press moves by minus this.
     var inputOffsetMs: Double { InputDevice.offset(device) }
@@ -228,6 +232,7 @@ final class Player {
                 if n.on {
                     CountInLaunch.onHit?(n.hostTime)
                     self.pressed.insert(n.note)
+                    self.noteLastKey(n.note)
                     self.score(n.note, hostTime: n.hostTime, velocity: n.velocity)
                 } else {
                     self.pressed.remove(n.note)
@@ -590,6 +595,7 @@ final class Player {
         device = InputDevice.local
         let now = mach_absolute_time()
         pressed.insert(note)
+        noteLastKey(note)
         audio.send(.noteOn(note: note, velocity: velocity, hostTime: now))
         score(note, hostTime: now, velocity: velocity)
     }

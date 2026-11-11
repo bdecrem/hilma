@@ -74,6 +74,17 @@ struct GameState {
     var nowFingers: Set<Int> = []
     var nextFinger: Int? = nil
     var rightHand = true
+    /// The key you played last, under the hand (Bart, 2026-11-11, setting his K.O. II's shift
+    /// per track): its name, how long ago, and the octaves that would put it where the song is.
+    struct PlayedKey {
+        let note: Int
+        let age: Double
+        let seq: Int
+        /// Semitones to the song's nearest note of that name, or into the keyboard; nil when the
+        /// key already sits there.
+        let shift: Int?
+    }
+    var played: PlayedKey? = nil
     var result: GameEngine.Result? = nil
     var lastRun: ProgressStore.ScoreRecord? = nil
     /// The XP this run paid for mastering its level, the first time (the result card's brass
@@ -503,6 +514,15 @@ struct Highway: View {
                         .padding(.top, 10)
                         .padding(.trailing, 2)
                         .accessibilityLabel(state.nowFingers.isEmpty ? "Hand" : "Fingers \(state.nowFingers.sorted().map(String.init).joined(separator: ", "))")
+                }
+                if let played = state.played {
+                    HStack {
+                        Spacer()
+                        PlayedKeyBox(played: played, compact: compact)
+                            .frame(width: compact ? 84 : 124)
+                            .padding(.top, 6)
+                            .padding(.trailing, 2)
+                    }
                 }
                 Spacer()
             }
@@ -1083,5 +1103,54 @@ private struct StaffGlyph: View {
                        with: .foreground, style: StrokeStyle(lineWidth: 1.1))
         }
         .accessibilityHidden(true)
+    }
+}
+
+/// The key you played last, in a box under the hand: its name flashes `signal` on every press
+/// and settles, then dims after a few seconds; a key in the wrong octave for the song says how
+/// many octaves away it is ("+1 oct"), which is the K.O. II's shift to set (Settings → Input).
+struct PlayedKeyBox: View {
+    let played: GameState.PlayedKey
+    let compact: Bool
+
+    var body: some View {
+        let flash = max(0, 1 - played.age / 0.35)
+        let resting = played.age > 4 ? 0.4 : 1
+        VStack(spacing: 2) {
+            Text(Key.name(played.note))
+                .font(.display(compact ? 22 : 30))
+                .foregroundStyle(flash > 0.5 ? Palette.ground : Palette.text)
+            if let shift = played.shift {
+                Text(Self.octaves(shift))
+                    .dataLabel(compact ? 9 : 10, weight: .semibold)
+                    .foregroundStyle(flash > 0.5 ? Palette.ground : Palette.warn)
+            } else {
+                Text("You played").dataLabel(compact ? 8 : 9).foregroundStyle(flash > 0.5 ? Palette.ground : Palette.muted)
+            }
+        }
+        .padding(.vertical, compact ? 4 : 6)
+        .frame(maxWidth: .infinity)
+        .background(RoundedRectangle(cornerRadius: 8).fill(Palette.panel.opacity(0.85)))
+        .background(RoundedRectangle(cornerRadius: 8).fill(Palette.signal.opacity(flash)))
+        .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(played.shift == nil ? Palette.line : Palette.warn, lineWidth: 1))
+        .opacity(resting)
+    }
+
+    /// "+1 oct" up, "−2 oct" down; a shift that isn't whole octaves in semitones.
+    static func octaves(_ semitones: Int) -> String {
+        let sign = semitones < 0 ? "−" : "+"
+        return semitones % 12 == 0 ? "\(sign)\(abs(semitones) / 12) oct" : "\(sign)\(abs(semitones)) st"
+    }
+
+    /// Where a key sits against the song: the semitones to the nearest note of its name among
+    /// the notes in view, else into the keyboard's range by octaves; nil when it is already there.
+    static func shift(_ note: Int, song: [Int], keys: ClosedRange<Int>) -> Int? {
+        let same = song.filter { ($0 - note) % 12 == 0 }
+        if let target = same.min(by: { abs($0 - note) < abs($1 - note) }) {
+            return target == note ? nil : target - note
+        }
+        if keys.contains(note) { return nil }
+        let octaves = note < keys.lowerBound ? (keys.lowerBound - note + 11) / 12 : -((note - keys.upperBound + 11) / 12)
+        return 12 * octaves
     }
 }

@@ -69,6 +69,11 @@ enum LessonCheck {
             let own = InputDevice.transpose(probe)
             d.removeObject(forKey: InputDevice.octaveKey(probe)); d.removeObject(forKey: InputDevice.transposeKey(probe))
             check("a keyboard set in octaves before keeps that shift until it has its own", legacy == 24 && own == -3, "\(legacy) \(own)")
+            check("the played-key box: octaves to the song's note of that name, else into the keys",
+                  PlayedKeyBox.shift(55, song: [67, 69], keys: 64...84) == 12 && PlayedKeyBox.shift(52, song: [69], keys: 64...84) == 12
+                  && PlayedKeyBox.shift(40, song: [], keys: 64...84) == 24 && PlayedKeyBox.shift(96, song: [], keys: 64...84) == -12
+                  && PlayedKeyBox.shift(67, song: [67], keys: 64...84) == nil && PlayedKeyBox.shift(70, song: [], keys: 64...84) == nil
+                  && PlayedKeyBox.octaves(12) == "+1 oct" && PlayedKeyBox.octaves(-24) == "−2 oct")
             check("the EP-133 shows as the K.O. II", InputDevice.displayName("EP-133") == "K.O. II"
                   && InputDevice.displayName("Keystation 49 MK3") == "Keystation 49 MK3"
                   && InputDevice.displayName(InputDevice.local) == "Computer keys")

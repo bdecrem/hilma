@@ -2305,6 +2305,13 @@ cover stealing anchors, a hand of 30 moves on a Level 2 song, a Beginner on one 
   a semitone on a click with ⌃ or ⌥, a right-click (a Mac's ⌃-click arrives as one) or a long
   press (`ShiftButton` / `ShiftClicks`: SwiftUI's Button can't see modifiers, so a UIKit view with
   tap, secondary-tap and long-press recognizers takes the clicks). Checks 586/586.
+  **0.1 (132):** Bart: "flash the key i played in or near the box where the hand position is
+  during game play - i'm struggling to calibrate the KOii depending on the track". Under the
+  hand on the Stage, `PlayedKeyBox`: the last key down from any keyboard (`Player.lastKey`, set in
+  the MIDI handler and `press`) by name ("G3"), flashing `signal` for 0.35 s on every press, dim
+  after 4 s; when it sits in the wrong octave for the song it says by how much in `warn` ("+1
+  oct": the octaves to the nearest note of that name in view, else into the part's keyboard),
+  which is the shift to add in Settings → Input. Not on a Reading lesson's staff. Checks 587/587.
 
 ## The one transport (2026-11-08)
 

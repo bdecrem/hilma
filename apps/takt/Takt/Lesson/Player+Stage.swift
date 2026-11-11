@@ -295,6 +295,11 @@ extension Player {
             GameState.HighwayNote(id: $0.index, note: $0.note.n, tick: Double($0.note.t), length: Double($0.note.len),
                                   status: $0.status, finger: game.finger($0.index))
         }
+        let keyboard = song.keyboard(game.part)
+        let played = lastKey.map { k in
+            GameState.PlayedKey(note: k.note, age: CACurrentMediaTime() - k.at, seq: k.seq,
+                                shift: PlayedKeyBox.shift(k.note, song: visible.map(\.note) + Array(cue.now) + Array(cue.next), keys: keyboard))
+        }
         return GameState(
             title: song.meta.title, style: song.meta.style, part: game.part, partTitle: song.part(game.part).title,
             difficulty: game.difficulty, level: game.level, tiers: game.tiers, section: song.section(atBar: min(bar, song.bars - 1)),
@@ -310,7 +315,7 @@ extension Player {
             // A Reading lesson lights only the keys you press: the staff is the thing to read
             // (Bart, 2026-11-07: lit keys are a cheat that defeats the lesson).
             pressedNotes: pressed, fingers: reading != nil ? [:] : cue.fingers, nowFingers: cue.nowFingers, nextFinger: cue.nextFingers.min(),
-            rightHand: game.part == .melody, result: gameResult, lastRun: lastRun, mastery: lastMastery,
+            rightHand: game.part == .melody, played: reading == nil ? played : nil, result: gameResult, lastRun: lastRun, mastery: lastMastery,
             mastered: progress.mastered(song: song.name, part: game.part.rawValue, difficulty: game.difficulty.rawValue),
             board: progress.scores(song: song.name), sections: song.meta.sections, reading: reading,
             staff: reading == nil && gameResult == nil ? staffState(tick: tick, msPerTick: msPerTick) : nil)
