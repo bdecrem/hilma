@@ -1,0 +1,66 @@
+{
+  "about": "The twelve tasks, run in this order and repeated until the plan's limit stops the run. tier is the model: opus for hard coding, review, research and synthesis; sonnet for the rest (Bart's 'realistic split'). uses = the fixture folders copied into the task's workspace. Outputs are checked by checks.py.",
+  "order": ["C1", "K2", "D1", "C4", "K3", "C2", "D2", "C3", "K1", "C5", "D3", "C6"],
+  "tasks": [
+    {
+      "id": "C1", "kind": "coding", "tier": "opus", "title": "CASBS Quest: an easter egg on the Dish",
+      "uses": ["semibart"], "timeout_min": 25, "max_turns": 80,
+      "prompt": "CASBS Quest (semibart/index.html) is a point-and-click pixel game about the CASBS campus. Add an easter egg to the Dish on the map: when you talk to it, the Dish answers back with something it has 'heard from space', a different line each time (write at least six, funny, in the game's voice), with a short exchange around it, and its red light blinks fast while it talks. Keep to the existing code's style (the pixel helpers, SFX, say(), the hotspot list). Make sure the page still loads without errors."
+    },
+    {
+      "id": "C2", "kind": "coding", "tier": "sonnet", "title": "CASBS Quest mockup: a bug report",
+      "uses": ["semibart"], "timeout_min": 20, "max_turns": 60,
+      "prompt": "Bug report on the CASBS Quest layout mockup B (semibart/mockups/glide.html): clicking on the miniature campus strip at the bottom often jumps to the neighborhood to the right of the one you clicked, especially when you click on the right half of a segment. Find the cause and fix it. Explain the cause and the fix in a short paragraph."
+    },
+    {
+      "id": "C3", "kind": "coding", "tier": "opus", "title": "CASBS Quest mockup: a sixth neighborhood",
+      "uses": ["semibart"], "timeout_min": 30, "max_turns": 100,
+      "prompt": "In the CASBS Quest layout mockups (semibart/mockups/), add a sixth neighborhood, 'The Orchard', after The Grove: studies 55 to 60, built around a landmark of your choice that fits the pixel style (fruit trees, beehives, picnic blankets, a cider press...), with hover labels, a walking route and one small animation. The Grove currently ends the campus, so give it a way out on the east side whose walk meets The Orchard's at the seam. Make sure pages.html and glide.html both pick it up everywhere (the dots, the miniature strip, the 'n/6' counts) and update the strip captions in index.html. Check that all three pages load without errors."
+    },
+    {
+      "id": "C4", "kind": "coding", "tier": "sonnet", "title": "MRD: a two-country comparison page",
+      "uses": ["mrd"], "timeout_min": 25, "max_turns": 80,
+      "prompt": "Using the Migrant Rights Database data in mrd/data/ (see mrd/README.md), build a single static page mrd/compare.html (vanilla JS, no build step, no CDN) where you pick two countries and see all 18 categories side by side for the 2023 Protection scores: a table plus a horizontal bar chart drawn in SVG, with the rows where the two countries differ most highlighted. It should load mrd/data/scores.csv with fetch(), so it works from a local web server. Verify the CSV parsing and the numbers with a quick script, and test the page as far as you can."
+    },
+    {
+      "id": "C5", "kind": "coding", "tier": "sonnet", "title": "MRD: a movers script",
+      "uses": ["mrd"], "timeout_min": 20, "max_turns": 60,
+      "prompt": "Write mrd/movers.py (Python standard library only) that reads mrd/data/scores.csv and writes, into a folder out/ at the top of the workspace (next to mrd/), out/movers.csv: for every country and category, the 2020 and 2023 Protection scores and the change, sorted by the biggest absolute change; and out/movers.md with the ten biggest improvements and the ten biggest declines as tables, plus a paragraph of observations. Run it and check the output makes sense."
+    },
+    {
+      "id": "C6", "kind": "coding", "tier": "opus", "title": "CASBS Quest mockup: a code review",
+      "uses": ["semibart"], "timeout_min": 25, "max_turns": 80,
+      "prompt": "Review semibart/mockups/world.js and semibart/mockups/glide.html as a senior engineer: find real bugs (not style), rank them by severity, and write REVIEW.md with a file:line reference and a concrete failure scenario for each. Then fix the top two and add a note to REVIEW.md on what you changed."
+    },
+    {
+      "id": "K1", "kind": "knowledge", "tier": "sonnet", "title": "A lunch-talk deck on the MRD",
+      "uses": ["mrd"], "timeout_min": 25, "max_turns": 80,
+      "prompt": "Make a presentation for a CASBS lunch talk, 'What the Migrant Rights Database says about 46 countries': 8 to 10 slides as one self-contained HTML file, deck.html (arrow keys and click to advance, no CDN, readable on a projector), with real numbers computed from mrd/data/ (the top and bottom countries, the category where countries differ most, what changed from 2020 to 2023) and at least one chart drawn in SVG. Put speaker notes for every slide in notes.md."
+    },
+    {
+      "id": "K2", "kind": "knowledge", "tier": "sonnet", "title": "Questions about ingested legal text",
+      "uses": ["mrd"], "timeout_min": 20, "max_turns": 60,
+      "prompt": "The files in mrd/text/ hold what the Migrant Rights Database recorded in 2023 for six countries (Germany, Japan, Kenya, Mexico, Saudi Arabia, Singapore): every question, the coder's answer and subscore, and the legal text they cited. Answer these six questions in answers.md, one section each, every claim backed by a short quote and the law or source it comes from:\n1. In which of the six countries can regular migrants vote in local or regional elections, and on what legal basis?\n2. How does each country treat a migrant worker's right to change employers?\n3. Which countries give irregular migrants access to emergency health care, and on what basis?\n4. Compare the six on family reunification: who can bring whom, and on what conditions.\n5. Which of the six has the lowest average Protection subscore, and which three categories pull it down most?\n6. Where do the coders note a gap between the law on paper and how it is implemented? Give two examples.\nSay plainly when the text does not answer something."
+    },
+    {
+      "id": "K3", "kind": "knowledge", "tier": "opus", "title": "A synthesis memo on 40 adaptation studies",
+      "uses": ["gami"], "timeout_min": 25, "max_turns": 60,
+      "prompt": "gami/studies_40.csv holds 40 studies from the Global Adaptation Mapping Initiative (see gami/README.md): title, journal, the coders' summary and their coded fields with quotes. Write memo.md, about two pages, for a climate economist who leads a research group: what kinds of adaptation responses these studies document, who is acting, how deep and how broad the responses are, whether there is evidence of reduced risk, and what is missing. Include a table that codes every one of the 40 studies on four fields you choose (say why), quote evidence for the main claims, and flag any study where the coded fields seem to contradict the summary."
+    },
+    {
+      "id": "D1", "kind": "data", "tier": "sonnet", "title": "MRD: pull two countries from the live API",
+      "uses": ["mrd"], "timeout_min": 25, "max_turns": 80,
+      "prompt": "The Migrant Rights Database has an open Strapi API (its base URL and paging are in mrd/pull.py). Fetch the 2023 indicator answers for Argentina and Kenya live from the API (write your own small fetcher; be polite: small pages and a short pause between requests), and build a tidy out/answers.csv (country, category, question, answer, subscore) and out/summary.md describing the categories where the two countries differ most. Check your CSV against what the API returned (counts per country) and note anything odd."
+    },
+    {
+      "id": "D2", "kind": "data", "tier": "sonnet", "title": "GAMI: look up 15 studies in OpenAlex",
+      "uses": ["gami"], "timeout_min": 25, "max_turns": 80,
+      "prompt": "gami/titles_15.csv lists 15 studies from the GAMI database (id, title, journal). For each, find the DOI, publication year, journal, citation count and an open-access PDF link if there is one, using the OpenAlex API (https://api.openalex.org, no key needed) with Crossref as a fallback. Write out/gami_meta.csv (one row per study, with a match_confidence column: high, medium or low, and why) and out/notes.md listing the studies you could not match or are unsure about."
+    },
+    {
+      "id": "D3", "kind": "data", "tier": "opus", "title": "Web research: wages and domestic workers in six countries",
+      "uses": ["research"], "timeout_min": 30, "max_turns": 100,
+      "prompt": "For the six countries in research/countries.txt, collect from official or otherwise reputable sources: the statutory minimum wage (amount, currency, period, and the year it took effect), whether migrant domestic workers are covered by it, and whether the country has ratified ILO Convention 189 on domestic workers. Write out/wages.csv with a source URL for every value you fill in (leave a cell empty rather than guess), and out/method.md describing how you searched and how confident you are in each country."
+    }
+  ]
+}
