@@ -898,11 +898,28 @@ async function lookPhone() {
   await say('bart', 'You found it. Thirteen more studies. Go knock.');
 }
 /* ---------- Bart's talk, on his monitor: three slides ---------- */
-const TALK = [
-  { title: 'Data and Privacy', bullets: ['Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt.', 'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip.', 'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore.'] },
-  { title: 'Which AI Systems to Use', bullets: ['Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt.', 'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium.', 'Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit.'] },
-  { title: 'To Be Determined', bullets: ['Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur.', 'Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam.', 'At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis.'] }
-];
+// the slides live in talk.md next to this page: '# Title' starts a slide, '- ' lines are its bullets.
+// Read when the monitor turns on; on localhost it is reread every second while the talk is up, so edits show live.
+let TALK = [];
+function parseTalk(md) {
+  const out = [];
+  md.split('\n').forEach(l => {
+    const t = l.trim();
+    if (t.startsWith('# ')) out.push({ title: t.slice(2).trim(), bullets: [] });
+    else if (/^[-*] /.test(t) && out.length) out[out.length - 1].bullets.push(t.slice(2).trim());
+  });
+  return out;
+}
+let talkSrc = '';
+async function loadTalk() {
+  const r = await fetch('/semibart/talk.md', { cache: 'no-store' });
+  if (!r.ok) throw new Error('talk.md: ' + r.status);
+  const md = await r.text();
+  if (md === talkSrc) return false;
+  talkSrc = md; TALK = parseTalk(md);
+  return true;
+}
+const LIVE = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
 const deckEl = $('deck'), slideIn = deckEl.querySelector('.s-in'), endEl = $('dEnd');
 const DECK = { open: false, i: 0, done: null, seen: false };
 S.mon = { f: 0, to: 0 };
@@ -924,7 +941,7 @@ function showSlide(i, cut) {
   const fill = () => {
     const sl = TALK[DECK.i];
     $('sTitle').textContent = sl.title;
-    $('sList').innerHTML = sl.bullets.map(b => '<li>' + b + '</li>').join('');
+    $('sList').replaceChildren(...sl.bullets.map(b => { const li = document.createElement('li'); li.textContent = b; return li; }));
     $('sNum').textContent = (DECK.i + 1) + ' / ' + n;
   };
   if (cut || calm) { fill(); return; }
@@ -948,13 +965,17 @@ async function presentTalk() {
     await say('bart', 'My talk. Three slides on how to use AI.');
     await say('bart', "Here. I'll turn it around.");
   } else await say('bart', 'Again? Sure.');
+  const loaded = loadTalk();
   S.mon.to = 1; SFX.swoosh(); await wait(0.7);
+  await loaded;
   SFX.zoom(); await zoomMonitor(true, 1.1);
   showSlide(0, true);
   deckEl.hidden = false; DECK.open = true;
   void deckEl.offsetWidth; deckEl.classList.add('on');
   await wait(0.35); $('dNext').focus({ preventScroll: true });
+  const live = LIVE && setInterval(() => loadTalk().then(ch => { if (ch && DECK.open) showSlide(Math.min(DECK.i, TALK.length), true); }).catch(() => {}), 1000);
   await new Promise(res => { DECK.done = res; });
+  if (live) clearInterval(live);
   DECK.open = false; deckEl.classList.remove('on');
   await wait(0.35);
   deckEl.hidden = true; endEl.hidden = true;
