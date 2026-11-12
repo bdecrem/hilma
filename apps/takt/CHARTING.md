@@ -37,7 +37,7 @@ Each part, chords and melody, has a ladder of **tiers**, easiest first. A tier h
 | `notes` | chord notes kept, in the ladder's `keep` order (`root, third, fifth, seventh, sixth, ninth`: two notes are root and third, three a triad). `null` keeps them all |
 | `hits` | the heaviest weight played as written: 1 only the main hits, 3 all of them |
 | `gap` | seconds at least between two onsets. Seconds, not beats: it reads the same at 90 bpm and at 127 |
-| `space` | seconds at most without an onset where the part is playing. A longer silence borrows a lighter hit inside it (the heaviest that fits the gap, nearest the middle), so a sparse section or a slow song isn't boring. `null` never borrows |
+| `space` | seconds at most without an onset where the part is playing. A longer silence borrows a lighter hit inside it (the heaviest that fits the gap, nearest the middle), so a sparse section or a slow song isn't boring. `null` never borrows (it can only borrow what the part has: where the part itself rests, rule 24 asks for notes of the part's own) |
 | `bonus` | points per hit times this |
 
 **Every tier is the one below plus more** (since 0.1 (50)): the charter seeds each tier with
@@ -382,6 +382,37 @@ every song and part.
     the "and" of 2 lost its floor so the key cover could take it. `-LessonCheck` caught that;
     `measure.ts` does not run that check, so build and run it before believing a ladder.
 
+24. **Never more than 15 seconds with nothing to play, and only once a song** (2026-11-12, 0.1
+    (133)). Bart, on Halbschatten's melody at Easy: "2 sections where there's nothing to play for
+    +30 seconds… 15 seconds or so should be the longest break ever, and not more than once a
+    game, at any level of difficulty". At every tier of every part: no silence over 15 s, and at
+    most one of 10 s or more. A silence is measured from the start to the first onset, onset to
+    onset, and from the last note's end to where the game ends (half a bar into the tail). The
+    scan found 60 charts in 11 songs over it, and they were of two kinds:
+    - **The part itself rests.** Halbschatten's lead plays bars 48–71 and 80–87 and nothing
+      after (a 71 s end at every level), Irrlicht's pad starts at bar 24 (46 s), Hypnotist's
+      stab at bar 16 (31 s), and Warm Nine, Abyss and Hypnotist open on 8 empty bars (15–17 s).
+      No ladder knob can fix this: a tier only chooses among the part's notes. The fix is
+      **notes of the part's own**, chart-only (not mirrored into the band's channel, so the
+      record is unchanged). They are in the hand the line already sits in, weight-1 anchors a
+      bar or two apart, and they grow from or answer the record's line. Examples:
+      - Halbschatten's intro line, carried through bars 72–79 and walked back down to the end;
+      - Restlicht's D2 on the 1 of bars 116–119;
+      - the pad's first chord every other bar in Irrlicht's bars 4–23;
+      - the line's anchors in bars 4–7 of Warm Nine, Abyss and Hypnotist;
+      - a quiet closing chord after the record's last stab (Halbschatten, Gezeiten).
+    - **A low tier skips what the part has.** These are mostly Beginner's last hit, lost to the
+      2.4 s gap's every-other-bar rhythm, plus Halsted's Beginner, whose solo has few notes a
+      beat long, so `minBeats` 1 left it three silences of 10–14 s. The levers: make the
+      record's last chord an anchor (Streulicht, Irrlicht: `lv` 1 on the last bar), or a song's
+      tier patch `minBeats` (new: Halsted tier 1, 0.5).
+
+    `scripts/takt/gaps.ts` lists every silence of every chart. `measure.ts` prints each tier's
+    longest and FAILs the rule; Agent mode's ladder line carries the same figure, and its prompt
+    the rule. `-LessonCheck` asserts it for every song, part and level (315 checks). **A new
+    track's parts are written so the rule holds before any ladder is cut:** where the record's
+    voice rests for more than about 8 bars, the part gets its own notes there.
+
 ## Where this comes from
 
 Rhythm-game charters (Rock Band, Guitar Hero, Clone Hero) chart the top difficulty first and
@@ -401,7 +432,8 @@ LEVELING.md's budget, and `--snapshot` / `--compare` prove every other song's fi
 (rule 4). The two skills that make material (`.claude/skills/takt-blues`, `takt-chart`) run it
 first. `npx tsx scripts/takt/chart-dump.ts <song> [--part chords] [--tier N] [--bars a-b]` prints a
 tier's chart bar by bar with the Stage's fingers and a `^` on every hand move (2026-11-09): the
-read that shows an anchor missing from one bar or where the planner moved the hand. Then, with a build:
+read that shows an anchor missing from one bar or where the planner moved the hand. `npx tsx
+scripts/takt/gaps.ts [song] [--all]` lists every chart's silences against rule 24 (2026-11-12). Then, with a build:
 
 `-LessonCheck 1` checks that every tier of every song keeps its rules (gap and chord size, the
 top tier is the whole part), that every level is the one below plus more and never thinner

@@ -23,7 +23,7 @@ export type Tier = {
   minBeats?: number | null
 }
 
-export type TierPatch = { gap?: number | null; space?: number | null }
+export type TierPatch = { gap?: number | null; space?: number | null; minBeats?: number | null }
 
 export type PartOverride = {
   beginner?: number | null
@@ -80,6 +80,7 @@ function patched(t: Tier, p: TierPatch): Tier {
     ...t,
     gap: p.gap ?? t.gap,
     space: p.space != null ? (p.space > 0 ? p.space : null) : t.space,
+    minBeats: p.minBeats != null ? (p.minBeats > 0 ? p.minBeats : null) : t.minBeats,
   }
 }
 
@@ -131,6 +132,7 @@ export function validateOverride(c: Charting, override: SongOverride): string | 
       if (!(Number.isInteger(i) && i >= 1 && i <= n)) return `${part}.tiers: ${k} is not a tier (1…${n})`
       if (p.gap != null && !(p.gap >= 0)) return `${part}.tiers.${k}.gap must be 0 or more`
       if (p.space != null && !(p.space >= 0)) return `${part}.tiers.${k}.space must be 0 or more (0 = never borrows)`
+      if (p.minBeats != null && !(p.minBeats >= 0)) return `${part}.tiers.${k}.minBeats must be 0 or more (0 = any length)`
     }
     const tiers = tiersOf(c, override, part)
     const ladderPhrase = l.phrase ?? 1
@@ -381,7 +383,46 @@ export function masks(
 
 /** One tier's figures, the `-LessonCheck` ladder line's: onsets a second over the song, and
  *  the quietest and busiest eight bars the part plays in. */
-export type TierFigure = { tier: number; notes: number; onsets: number; perSecond: number; quietest: number; busiest: number; hand?: HandFigures }
+export type TierFigure = { tier: number; notes: number; onsets: number; perSecond: number; quietest: number; busiest: number; hand?: HandFigures; silence?: SilenceFigure }
+
+/** The silences a level leaves the player (Bart, 2026-11-12: "15 seconds or so should be the
+ *  longest break ever, and not more than once a game, at any level of difficulty"; CHARTING.md
+ *  rule 24): at every tier none over LONGEST_SILENCE seconds, and at most one of BREAK_SILENCE
+ *  or more. Measured from the start to the first onset, onset to onset, and from the last note's
+ *  end to where the game ends (half a bar into the tail, `Song.endTick`). LessonCheck asserts it. */
+export const LONGEST_SILENCE = 15
+export const BREAK_SILENCE = 10
+export type Silence = { seconds: number; fromTick: number; toTick: number }
+export type SilenceFigure = { longest: number; bar: number; breaks: number; ok: boolean }
+
+export function silences(s: SongFile, line: PartNote[]): Silence[] {
+  const spt = 60 / (s.song.tempo * s.ticksPerBeat)
+  const tpb = ticksPerBar(s)
+  const end = musicBars(s) * tpb + tpb / 2
+  const on: { t: number; end: number }[] = []
+  for (const n of [...line].sort((a, b) => a.t - b.t)) {
+    const last = on[on.length - 1]
+    if (last && last.t === n.t) last.end = Math.max(last.end, n.t + n.len)
+    else on.push({ t: n.t, end: n.t + n.len })
+  }
+  if (!on.length) return [{ seconds: end * spt, fromTick: 0, toTick: end }]
+  const out: Silence[] = [{ seconds: on[0].t * spt, fromTick: 0, toTick: on[0].t }]
+  for (let i = 1; i < on.length; i++) out.push({ seconds: (on[i].t - on[i - 1].t) * spt, fromTick: on[i - 1].t, toTick: on[i].t })
+  const last = on[on.length - 1]
+  const from = Math.max(last.end, last.t)
+  out.push({ seconds: Math.max(0, end - from) * spt, fromTick: from, toTick: end })
+  return out.sort((a, b) => b.seconds - a.seconds)
+}
+
+export function silenceFigure(s: SongFile, line: PartNote[]): SilenceFigure {
+  const all = silences(s, line)
+  const breaks = all.filter((x) => x.seconds >= BREAK_SILENCE).length
+  return { longest: all[0].seconds, bar: Math.floor(all[0].fromTick / ticksPerBar(s)) + 1, breaks, ok: line.length > 0 && all[0].seconds <= LONGEST_SILENCE && breaks <= 1 }
+}
+
+export function silenceLine(f: SilenceFigure): string {
+  return `longest silence ${f.longest.toFixed(1)} s from bar ${f.bar}${f.ok ? '' : ` — TOO LONG (at most ${LONGEST_SILENCE} s, and only one of ${BREAK_SILENCE} s or more: ${f.breaks})`}`
+}
 
 export function figures(c: Charting, override: SongOverride | null, s: SongFile, part: PartKey): TierFigure[] {
   const all = sortedNotes(s.song.parts[part]!.notes)
@@ -410,6 +451,7 @@ export function figures(c: Charting, override: SongOverride | null, s: SongFile,
       busiest: rates.length ? Math.max(...rates) : 0,
       // The hand (LEVELING.md): a melody tier's line fingered as the Stage fingers it.
       hand: part === 'melody' ? handFigures(all.filter((_, i) => m[i]), true, s.ticksPerBeat) : undefined,
+      silence: silenceFigure(s, all.filter((_, i) => m[i])),
     }
   })
 }
@@ -427,7 +469,7 @@ export function ladderLine(c: Charting, override: SongOverride | null, s: SongFi
   return figs
     .map((f) => {
       const tag = names.get(f.tier)?.join('/') ?? ''
-      return `L${f.tier}${tag ? ` (${tag})` : ''}: ${f.perSecond.toFixed(2)}/s [${f.quietest.toFixed(1)}–${f.busiest.toFixed(1)}], ${f.notes} notes${f.hand ? `, ${handLine(f.hand)}` : ''} — ${tiers[f.tier - 1].line}`
+      return `L${f.tier}${tag ? ` (${tag})` : ''}: ${f.perSecond.toFixed(2)}/s [${f.quietest.toFixed(1)}–${f.busiest.toFixed(1)}], ${f.notes} notes${f.hand ? `, ${handLine(f.hand)}` : ''}${f.silence ? `, ${silenceLine(f.silence)}` : ''} — ${tiers[f.tier - 1].line}`
     })
     .join('\n')
 }

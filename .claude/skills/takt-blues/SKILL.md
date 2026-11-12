@@ -69,7 +69,10 @@ chart through that one.
    bar, or every two bars when a bar is under 2 s; the main note of a riff weight 2, its
    ornament 3), never the ladder and never the tempo. Measure again. The two ladders must
    climb with no rung over twice the one below (a Beginner that can't reach its band on a fast
-   song is a noted exception).
+   song is a noted exception). And no level may leave the player more than 15 s with nothing
+   to play, or more than one stretch of 10 s or more (CHARTING.md rule 24): `npx tsx
+   scripts/takt/gaps.ts <song>`. Where the part rests in the record (a solo chorus for the
+   other instrument, an intro), write it notes of its own there.
 5. **Register it** (every one, or the app traps or the checks lie): `Song.catalog` in
    `apps/takt/Takt/Game/Song.swift` (set-list order; after Halsted means under All tracks, the
    first six are pinned by default); a cover glyph in `SongArt` (`Menu/StageScreen.swift`, a

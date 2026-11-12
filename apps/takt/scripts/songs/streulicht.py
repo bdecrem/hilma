@@ -276,7 +276,9 @@ for bar in range(BARS):
     moved = notes_ != pad_notes(bar - 1) if bar else True
     # The bar the chord changes on (and every fourth bar when it holds) is the anchor, the third
     # bar of the four the groove, the others the pushes.
-    lv = 1 if moved or bar % 4 == 0 else 2 if bar % 4 == 2 else 3
+    # The last bar is an anchor too, so every level plays the record's last chord and none ends
+    # on more than ten seconds with nothing to play (Bart, 2026-11-12; CHARTING.md rule 24).
+    lv = 1 if moved or bar % 4 == 0 or bar == BARS - 1 else 2 if bar % 4 == 2 else 3
     s.pchord(chords, bar * BAR, VOICING[notes_], lv, BAR)
 
 s.write()

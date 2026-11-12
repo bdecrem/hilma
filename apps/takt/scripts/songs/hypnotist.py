@@ -109,6 +109,12 @@ for bar in range(s.bars):
     if sec == "Full" and bar % 4 == 3:
         s.pchord(chords, o + 30, v, 2, 4)
 s.chart_to_channel(chords, s.keys, lambda e: 0.85 if section(e["t"] // BAR) == "Full" else 0.5)
+# Before the stab (bars 4-15) the part has hits of its own, the stab on the and of 2 every other
+# bar, so it does not open on 31 s with nothing to play (Bart, 2026-11-12: "15 seconds or so should be the longest break ever, and not more than once
+# a game"; CHARTING.md rule 24). They are the
+# chart's alone: the keys channel (the record) is copied above, before them.
+for bar in range(4, 16, 2):
+    s.pchord(chords, bar * BAR + 18, VOICING[s.chords[bar]], 1 if bar % 4 == 0 else 2, 5)
 
 # MARK: Melody part: the bleep
 
@@ -160,7 +166,18 @@ def bleep_velocity(e):
     return round(0.2 + 0.8 * (0.5 + 0.5 * math.sin(2 * math.pi * bar / 16)), 3)
 
 
+# The bleep's anchors in bars 4-7 (Hypnotist; II's phase already comes in at bar 4), the part's
+# own, so the line does not open on 15 s with nothing to play (Bart, 2026-11-12: "15 seconds or so should be the longest break ever, and not more than once
+# a game"; CHARTING.md rule 24).
+own = []
+if not II:
+    for bar in range(4, 8):
+        for t, n in SEQ.items():
+            if LEVEL[t] == 1:
+                s.pnote(melody, bar * BAR + t, n, 4, 1)
+                own.append(melody[-1])
+    melody.sort(key=lambda e: (e["t"], e["n"]))
 s.fingered(melody)
-s.chart_to_channel(melody, s.horns, bleep_velocity, spread=0.0)
+s.chart_to_channel([e for e in melody if not any(e is o for o in own)], s.horns, bleep_velocity, spread=0.0)
 
 s.write()

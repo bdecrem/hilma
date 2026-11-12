@@ -25,7 +25,7 @@
 
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
-import { type Charting, type Difficulty, type FixedDifficulty, DIFFICULTIES, figures, masks, tierFor, tiersOf } from '../../src/lib/takt/charting'
+import { type Charting, type Difficulty, type FixedDifficulty, DIFFICULTIES, figures, masks, silenceLine, tierFor, tiersOf } from '../../src/lib/takt/charting'
 import { type SongFile, type PartKey, partKeys, sortedNotes, ticksPerBar, validateSong, musicBars, noteName } from '../../src/lib/takt/songfile'
 import { handFigures, handLine, handMoves, handMoments, handPositions, plan, type HandFigures } from '../../src/lib/takt/fingering'
 import { handBudget, budgetLine, type HandBudget } from '../../src/lib/takt/leveling'
@@ -134,8 +134,12 @@ function measureSong(name: string, s: SongFile) {
     })
     line(`\n${name} · ${k} (${s.song.parts[k]!.title}) · ${s.song.tempo} bpm, ${musicBars(s)} bars`)
     for (const f of perTier) {
-      line(`  L${f.tier}${f.tag ? ` (${f.tag})` : ''}: ${f.perSecond.toFixed(2)}/s [${f.quietest.toFixed(1)}–${f.busiest.toFixed(1)}], ${f.notes} notes${f.hand ? `, hand ${short(f.hand)} (${handLine(f.hand)})` : ''} — ${tiers[f.tier - 1].line}`)
+      line(`  L${f.tier}${f.tag ? ` (${f.tag})` : ''}: ${f.perSecond.toFixed(2)}/s [${f.quietest.toFixed(1)}–${f.busiest.toFixed(1)}], ${f.notes} notes${f.hand ? `, hand ${short(f.hand)} (${handLine(f.hand)})` : ''}${f.silence ? `, ${silenceLine(f.silence)}` : ''} — ${tiers[f.tier - 1].line}`)
     }
+    // CHARTING.md rule 24: no silence over 15 s at any tier, at most one of 10 s or more.
+    const silent = figs.filter((f) => f.silence && !f.silence.ok)
+    if (silent.length) say('FAIL', `${name} ${k}: ${silent.map((f) => `L${f.tier} ${silenceLine(f.silence!)}`).join('; ')} (CHARTING.md rule 24; scripts/takt/gaps.ts lists every silence)`)
+    else say('PASS', `${name} ${k}: no level has a silence over 15 s, or two of 10 s or more`)
     // BLUES.md bands for the named levels.
     if (blues) {
       for (const d of ['beginner', 'easy', 'medium'] as FixedDifficulty[]) {

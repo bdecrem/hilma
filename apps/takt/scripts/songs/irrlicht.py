@@ -278,12 +278,23 @@ s.fingered(melody)
 VOICING = {(61, 62, 69): [(61, "seventh", 5), (62, "root", 4), (69, "fifth", 1)],
            (61, 62, 67): [(61, "seventh", 5), (62, "root", 4), (67, "fifth", 1)]}
 chords = s.part("chords", "The pad", "rackPad", "keys", "rackPad")
+# Before the pad (bars 4–23) the part has chords of its own, the pad's first chord every other
+# bar, quiet: the record has nothing pitched over the bass there, and the part started at 46 s
+# (Bart, 2026-11-12: "15 seconds or so should be the longest break ever, and not more than once
+# a game"; CHARTING.md rule 24). Taking the chords, the rack's pad plays them; the record's own
+# channel is untouched.
+for bar in range(4, 24, 2):
+    at = len(chords)
+    s.pchord(chords, bar * BAR, VOICING[pad_notes(24)], 1 if bar % 4 == 0 else 2, BAR)
+    for e in chords[at:]:
+        e["v"] = 0.6
 for bar in range(24, BARS):
     notes_ = pad_notes(bar)
     moved = notes_ != pad_notes(bar - 1)
     # The bar the chord changes on (and every fourth bar while it holds) is the anchor, the third
-    # bar of the four the groove, the others the pushes.
-    lv = 1 if moved or bar % 4 == 0 else 2 if bar % 4 == 2 else 3
+    # bar of the four the groove, the others the pushes; the last bar an anchor too, so no level
+    # ends on more than ten seconds with nothing to play.
+    lv = 1 if moved or bar % 4 == 0 or bar == BARS - 1 else 2 if bar % 4 == 2 else 3
     s.pchord(chords, bar * BAR, VOICING[notes_], lv, BAR)
 
 s.write()

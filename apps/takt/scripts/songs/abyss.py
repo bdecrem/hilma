@@ -179,7 +179,17 @@ for bar in range(s.bars if not REF16 else 0):
         if (sec == "Deep" and bar < 16 and lv > 1) or (sec == "Abyss" and lv > 2):
             continue  # the first eight bars and the break: the main notes alone
         s.pnote(melody, o + t, n, ln, lv)
+# The line's main notes in bars 4-7, the part's own (the record's line starts at bar 8), so it
+# does not open on 17 s with nothing to play (Bart, 2026-11-12: "15 seconds or so should be the longest break ever, and not more than once
+# a game"; CHARTING.md rule 24).
+own = []
+for bar in range(4, 8) if not REF16 else []:
+    for t, n, ln, lv in LINE[chord_at(bar)].get(bar % 4, []):
+        if lv == 1:
+            s.pnote(melody, bar * BAR + t, n, ln, 1)
+            own.append(melody[-1])
+melody.sort(key=lambda e: (e["t"], e["n"]))
 s.fingered(melody)
-s.chart_to_channel(melody, s.horns, lambda e: VEL[e["lv"]])
+s.chart_to_channel([e for e in melody if not any(e is o for o in own)], s.horns, lambda e: VEL[e["lv"]])
 
 s.write()

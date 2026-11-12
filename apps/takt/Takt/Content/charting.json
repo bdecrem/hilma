@@ -273,6 +273,9 @@
     "medium": 4,
     "phrase": 12,
     "tiers": {
+     "1": {
+      "minBeats": 0.5
+     },
      "2": {
       "space": 0
      }

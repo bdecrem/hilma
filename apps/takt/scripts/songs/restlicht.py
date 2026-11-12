@@ -238,10 +238,12 @@ for sec, note, ln, acc, slide in BASS:
     melody[-1]["v"] = 1.0 if acc else 0.6
 # The part's own notes where the kick is in and the riff is not yet (bars 4–7): its accent, the
 # D2 on the 1, so the hand is on the riff's first key when the riff starts (Bart, 2026-11-09, on
-# Halbschatten: "at any level there should always be notes to play"). The record's own rests
-# stay rests: the empty room before the kick (bars 0–3), the floor without the riff (88–91) and
-# the way out (116–119), four bars each.
-for bar in range(4, 8):
+# Halbschatten: "at any level there should always be notes to play"). The same on the way out
+# (116–119), where the riff has gone and the part ended on 16 s of nothing (Bart, 2026-11-12: "15 seconds or so should be the longest break ever, and not more than once
+# a game"; CHARTING.md rule 24).
+# The record's other rests stay rests: the empty room before the kick (bars 0–3) and the floor
+# without the riff (88–91), four bars each.
+for bar in list(range(4, 8)) + list(range(116, 120)):
     s.pnote(melody, bar * BAR, 38, 5, 1, tier=None if bar % 2 == 0 else 3)
     melody[-1]["v"] = 1.0
 assert {e["n"] for e in melody} == {36, 38, 41, 43, 45, 47, 48}, "the riff stays on C2 D2 F2 G2 A2 B2 C3"

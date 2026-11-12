@@ -152,7 +152,17 @@ for bar in range(s.bars):
         phrases = LINE_A if (bar // 4) % 2 == 0 else LINE_B
     for t, n, ln, lv in phrases.get(bar % 4, []):
         s.pnote(melody, o + t, n, ln, lv)
+# The groove line's anchors in bars 4-7, the part's own (the record's top line starts at bar 8),
+# so it does not open on 16 s with nothing to play (Bart, 2026-11-12: "15 seconds or so should be the longest break ever, and not more than once
+# a game"; CHARTING.md rule 24).
+own = []
+for bar in range(4, 8):
+    for t, n, ln, lv in GROOVE[bar % 4]:
+        if lv == 1:
+            s.pnote(melody, bar * BAR + t, n, ln, 1)
+            own.append(melody[-1])
+melody.sort(key=lambda e: (e["t"], e["n"]))
 s.fingered(melody)
-s.chart_to_channel(melody, s.horns, lambda e: 0.82 if e["lv"] == 1 else 0.7, spread=0.03)
+s.chart_to_channel([e for e in melody if not any(e is o for o in own)], s.horns, lambda e: 0.82 if e["lv"] == 1 else 0.7, spread=0.03)
 
 s.write()

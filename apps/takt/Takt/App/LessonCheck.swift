@@ -1808,12 +1808,34 @@ enum LessonCheck {
                     check("stage: \(s.meta.title) \(k.rawValue): Easy and above chart the same with Beginner under them as without", diffs.isEmpty, diffs.joined(separator: "; "))
                     // `minBeats`: no Beginner note shorter than a beat, or than the part's usual
                     // weight-1 note where the line is all short stabs (Hypnotist).
-                    if let beats = charting.ladder(k).tiers[0].minBeats {
+                    if let beats = charting.tiers(song: s.name, part: k)[0].minBeats {
                         let anchors = all.filter { $0.lv == 1 }.map(\.len).sorted()
                         let minLen = min(Int((beats * Double(s.band.ticksPerBeat)).rounded()), anchors[anchors.count / 2])
                         let short = all.indices.filter { masks[0][$0] && all[$0].len < minLen }
                         check("stage: \(s.meta.title) \(k.rawValue): no Beginner note shorter than \(minLen) ticks", short.isEmpty && !masks[0].allSatisfy { !$0 },
                               short.isEmpty ? "" : "\(short.count) short, first at bar \(all[short[0]].t / s.ticksPerBar + 1) len \(all[short[0]].len)")
+                    }
+                    // The silences (Bart, 2026-11-12: "15 seconds or so should be the longest break
+                    // ever, and not more than once a game, at any level of difficulty"; CHARTING.md
+                    // rule 24): at every tier, from the start to the first onset, onset to onset,
+                    // and the last note's end to where the game ends, none over 15 s and at most one
+                    // of 10 s or more. `scripts/takt/gaps.ts` is the same check without a build.
+                    let spt = 60 / Double(s.meta.tempo * s.band.ticksPerBeat)
+                    for (ti, m) in masks.enumerated() {
+                        var onsets: [(t: Int, end: Int)] = []
+                        for i in all.indices where m[i] {
+                            if let l = onsets.last, l.t == all[i].t { onsets[onsets.count - 1].end = max(l.end, all[i].t + all[i].len) }
+                            else { onsets.append((all[i].t, all[i].t + all[i].len)) }
+                        }
+                        var silences: [(Double, Int)] = []
+                        if let f = onsets.first { silences.append((Double(f.t) * spt, 0)) }
+                        for (a, b) in zip(onsets, onsets.dropFirst()) { silences.append((Double(b.t - a.t) * spt, a.t)) }
+                        if let l = onsets.last { silences.append((Double(s.endTick - max(l.end, l.t)) * spt, l.t)) }
+                        let long = silences.filter { $0.0 > 15 }, breaks = silences.filter { $0.0 >= 10 }
+                        let worst = silences.max { $0.0 < $1.0 }
+                        check("stage: \(s.meta.title) \(k.rawValue) level \(ti + 1): no silence over 15 s, at most one of 10 s or more",
+                              !onsets.isEmpty && long.isEmpty && breaks.count <= 1,
+                              worst.map { String(format: "longest %.1f s from bar %d, %d of 10 s or more", $0.0, $0.1 / s.ticksPerBar + 1, breaks.count) } ?? "no notes")
                     }
                     let subset = zip(masks, masks.dropFirst()).allSatisfy { lo, hi in zip(lo, hi).allSatisfy { !$0 || $1 } }
                     let rates = masks.map { m in Double(m.filter { $0 }.count) / s.seconds }

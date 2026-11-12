@@ -92,6 +92,7 @@ Bart's rule for the game stands: "at any level there should always be notes to p
   3. the pad's long tones. One note every 4 bars is still a note to play;
   4. the visitor line, where it exists.
 - Only when a part is still empty somewhere: a line of the part's own, in that part's voice, that exists in that part's chart and nowhere else (Halbschatten's bars 0–47). It never goes into the reference. It keeps to rule 3 anyway: 3 notes a bar at most, long.
+- **"Empty somewhere" has a number** (Bart, 2026-11-12): at every level, never more than 15 s with nothing to play, and only one stretch of 10 s or more, from the first bar to the game's end (`CHARTING.md` rule 24, `scripts/takt/gaps.ts`). A record's carrier or visitor rests for 8 bars or more, and its intro, break and outro are often longer than that. Each of those places needs the part's own notes. Halbschatten's lead resting in bars 72–79 and from bar 88 to the end left 17 s and 71 s at every level, and that is what he found.
 
 How to level any of that is `takt-chart`'s.
 

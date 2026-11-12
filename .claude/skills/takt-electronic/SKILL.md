@@ -99,7 +99,10 @@ profile entry there, by the standing rule in the repo's `CLAUDE.md`).
    null, then the master by octave band, at 44.1 and at 48 kHz. `references/fidelity.md` has
    the tolerances and the traps.
 9. **The parts and their levels** are `takt-chart`'s (`.claude/skills/takt-chart/SKILL.md`):
-   which voice is the chords part, which the melody, the weights. A voice the player takes
+   which voice is the chords part, which the melody, the weights. Before any ladder: where the
+   chosen voice rests in the record (an intro, a break, an outro, the bars a visitor is away),
+   the part gets notes of its own, chart-only, so no level leaves more than 15 s with nothing
+   to play (`taste.md` "The record and the chart", `scripts/takt/gaps.ts`). A voice the player takes
    needs a synthesized twin in the rack (`rackStab`, `rackLead`), since the record's own is
    one event a hit.
 10. **Register, build, check, ship**: `Song.catalog`, a cover glyph in `SongArt`, the

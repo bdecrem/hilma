@@ -2312,6 +2312,29 @@ cover stealing anchors, a hand of 30 moves on a Level 2 song, a Beginner on one 
   after 4 s; when it sits in the wrong octave for the song it says by how much in `warn` ("+1
   oct": the octaves to the nearest note of that name in view, else into the part's keyboard),
   which is the shift to add in Settings → Input. Not on a Reading lesson's staff. Checks 587/587.
+- **Never more than 15 s with nothing to play: 0.1 (133), 2026-11-12.** Bart: "halbschatten
+  Melody on Easy has 2 sections where there's nothing to play for +30 seconds… 15 seconds or so
+  should be the longest break ever, and not more than once a game, at any level of difficulty",
+  for every song, part and difficulty, with the charting instructions updated so it doesn't
+  happen again. The rule (CHARTING.md rule 24, LEVELING.md §2): at every tier no silence over
+  15 s, and at most one of 10 s or more, measured to where the game ends. 60 charts in 11 songs
+  broke it; now none do (the worst is 14.5 s, an ending):
+  - Notes of the part's own, chart-only, where the record's voice rests. Halbschatten's melody
+    keeps its intro line through bars 72–79 and walks it back down to the end (it had 17 s and
+    71 s at every level). There are chords before Irrlicht's pad (bars 4–23) and Hypnotist I
+    and II's stab (4–15); the line's anchors in bars 4–7 of Warm Nine, Abyss and Hypnotist;
+    Restlicht's D2 in its way out (116–119); a closing chord in Halbschatten and Gezeiten.
+  - The record's last chord made an anchor (Streulicht, Irrlicht).
+  - A tier patch knob, `minBeats` (Swift `TierPatch`, TS port, validation), so Halsted's
+    Beginner (0.5) can take its solo's shorter notes.
+
+  The band channels are byte-for-byte unchanged. Checks:
+  - `scripts/takt/gaps.ts` (new) lists every silence;
+  - `measure.ts` prints and judges each tier's longest silence;
+  - `silences()` in `src/lib/takt/charting.ts` puts it on Agent mode's ladder line, with a rule
+    9 in its prompt;
+  - `-LessonCheck` has 315 new assertions (902/902), and `charting-check` is 63/63;
+  - `measure.ts --compare` shows the other 13 songs unchanged.
 
 ## The one transport (2026-11-08)
 

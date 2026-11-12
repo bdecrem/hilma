@@ -51,6 +51,12 @@ Bart's rule (2026-11-08): every chart, step, drill, idea or mod goes through thi
    budget; `--step <module.json>:<id>` does a lesson step, `--notes <file> --tempo N` a raw
    line (a solo, an idea). Quote the figures in your answer: "Medium is 1.01 a second and
    30 moves in 9 moments over two octaves; Level 2 allows 12 moves in 3 positions".
+   **The third figure is the silence** (Bart, 2026-11-12, CHARTING.md rule 24): at every tier
+   of every part, never more than 15 s with nothing to play, and only one stretch of 10 s or
+   more. `measure.ts` prints each tier's longest and FAILs the rule; `npx tsx
+   scripts/takt/gaps.ts [song] [--all]` lists every silence of every chart. Any change that
+   thins a level (a rung, a weight, a `from`, a rest in the line) is checked against it, and so
+   is every new track's parts before a ladder is cut.
 3. **Pick the lever by the rules**, and say which rule:
    - Density over a band: the rung (rule 1: "half as hard" is half the figure; rule 3: find the
      rung nearest it and name what it plays, or say plainly that the ladder has no rung there),
@@ -106,6 +112,7 @@ Bart's rule (2026-11-08): every chart, step, drill, idea or mod goes through thi
 | "it's out of sync with the music" | eighths over a shuffle | the step's `feel: straight` |
 | "about half are valid in my opinion" (nothing counted) | the judged unit is too big, or the scoring too harsh | the run as the unit; the scoring, not the chart |
 | "it should be slow for that lesson" | a drill's tempo is its own | one note a beat at 60 first, eighths later |
+| "nothing to play for 30 seconds", "a minute with nothing to do" | a silence over the rule (15 s at most, one of 10 s or more) | if the part itself rests there: notes of the part's own (anchors in the line's hand, chart-only); if only a low tier skips it: make the record's last or lone note an anchor, or the tier's `minBeats` / `gap` patch (rule 24) |
 | "not too hard, but make it interesting" | interest is the changes and the shape, not moves or speed | chord tones on the changes, a peak, home on the tonic, inside the hand budget |
 
 ## Keep this skill getting better

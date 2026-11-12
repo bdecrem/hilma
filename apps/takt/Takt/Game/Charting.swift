@@ -34,18 +34,22 @@ struct Charting: Decodable {
         /// them all. A Beginner note shorter than a beat shows as a stub among the anchors.
         let minBeats: Double?
 
-        /// The same tier with a song's own gap or space (`Charting.songs`); space 0 borrows nothing.
+        /// The same tier with a song's own gap, space or minBeats (`Charting.songs`); space 0
+        /// borrows nothing, minBeats 0 takes onsets of any length.
         func patched(_ p: Charting.TierPatch) -> Tier {
             Tier(line: line, notes: notes, hits: hits, gap: p.gap ?? gap,
                  space: p.space.map { $0 > 0 ? $0 : nil } ?? space, bonus: bonus, phrase: phrase,
-                 fromAbove: fromAbove, minBeats: minBeats)
+                 fromAbove: fromAbove, minBeats: p.minBeats.map { $0 > 0 ? $0 : nil } ?? minBeats)
         }
     }
 
-    /// A song's change to one tier of a ladder: a gap or a space of its own (0 = never borrows).
+    /// A song's change to one tier of a ladder: a gap or a space of its own (0 = never borrows),
+    /// or a minBeats of its own (Halsted's Beginner, 0.5: its solo has few notes a beat long, and
+    /// at 1 the tier went 14 s without a note, CHARTING.md rule 24).
     struct TierPatch: Codable, Equatable {
         let gap: Double?
         let space: Double?
+        var minBeats: Double? = nil
     }
 
     /// A song's changes to one part's ladder: a tier of its own for a difficulty, a phrase of
@@ -212,7 +216,7 @@ struct Charting: Decodable {
                 guard let o = parts[name] else { continue }
                 guard [o.beginner, o.easy, o.easyPlus, o.medium, o.hard].allSatisfy({ $0 == nil || (1...n).contains($0!) }),
                       (o.phrase ?? 1) >= 1, (o.tiers ?? [:]).keys.allSatisfy({ Int($0).map { (1...n).contains($0) } ?? false }),
-                      (o.tiers ?? [:]).values.allSatisfy({ ($0.gap ?? 0) >= 0 && ($0.space ?? 0) >= 0 })
+                      (o.tiers ?? [:]).values.allSatisfy({ ($0.gap ?? 0) >= 0 && ($0.space ?? 0) >= 0 && ($0.minBeats ?? 0) >= 0 })
                 else { fatalError("charting.json: songs.\(song).\(name)") }
                 loosens(tiers(song: song, part: name == "chords" ? .chords : .melody), "songs.\(song).\(name)")
             }

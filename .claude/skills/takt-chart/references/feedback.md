@@ -186,6 +186,26 @@ LEVELING.md, and this file keeps the pointer.
   and the song's Beginner `gap` 0.9 made it 0.44 · 0.72. The pad's chords: tiers 2–4 `space` 4.0
   so they hold to two hits per four-bar chord. LEVELING.md §4 has the figures. Not played yet.
 
+- **2026-11-12, 0.1 (133): the silence rule.** "halbschatten Melody on Easy has 2 sections
+  where there's nothing to play for +30 seconds. one about 2/3 thru and then the last 60 or so
+  seconds at the end. 15 seconds or so should be the longest break ever, and not more than once
+  a game, at any level of difficulty. (1) fix / update Halbschatten accordingly (2) and ALL
+  levels, chords and melody, at all difficulties (3) and update the prompts/instructions for
+  charting so this won't happen in the future." A third axis next to density and the hand.
+  Read as: no silence over 15 s at any tier, and at most one of 10 s or more (his "15 or so,
+  once"; 10 s is where a stretch with nothing to do reads as a break). Measured by the new
+  `scripts/takt/gaps.ts`. Halbschatten's melody was 17 s and 71 s at every level, because the
+  record's lead rests there. Across the Stage, 60 charts in 11 songs broke the rule. Fixed:
+  - notes of the part's own where the record's voice rests (Halbschatten's intro line carried
+    through bars 72–79 and walked down to the end; Irrlicht, Hypnotist, Warm Nine, Abyss,
+    Restlicht, Gezeiten);
+  - the last chord made an anchor (Streulicht, Irrlicht);
+  - Halsted's Beginner `minBeats` 0.5, a new tier-patch knob.
+
+  Every chart now keeps it (the worst is 14.5 s, an ending). The rule is now CHARTING.md
+  rule 24, LEVELING.md §2, a FAIL in `measure.ts`, a figure on Agent mode's ladder line with
+  rule 9 in its prompt, and 315 `-LessonCheck` assertions.
+
 ## How to add a line
 
 Date and build, his words in quotes, which axis, the figure before and after, what moved (the

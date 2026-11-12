@@ -93,6 +93,11 @@ Rules of thumb that follow from it:
 - **The budget is for the whole piece**, not per chorus: four moves over 48 bars, not four a
   chorus. Forty-eight bars in one position with two excursions is a Level 1 song.
 - **Both hands never on Level 1–2 material** (`CURRICULUM.md`: one new thing a lesson).
+- **Never more than 15 seconds with nothing to play, and only once a piece, at every level**
+  (Bart, 2026-11-12). At every tier of every part: no silence over 15 s, and at most one of
+  10 s or more, from the first bar to where the game ends. It holds on every surface that
+  plays over a record: a Stage chart, a mod, a solo track. `CHARTING.md` rule 24 has how; the
+  checks are `scripts/takt/gaps.ts`, `measure.ts` and `-LessonCheck`.
 - **A level's material is measured, then played, then believed.** The figure is in the check;
   Bart playing it is what decides whether the budget is right. When he calls something too hard
   or too easy, put the figure and the date in §4 and move the number.
@@ -259,4 +264,17 @@ it before and after every change (2026-11-08).
   inside the Level 1 move count, Medium a Level 3–6 hand by its moments. The moves the planner
   adds inside the box are its choice between 4 and 3 on the C5 (a minor third to the E♭5 under
   the pinky is a stretch for 4–5), not a jump; no level's goal song, so printed, not asserted.
-
+- **2026-11-12, 0.1 (133): never more than 15 s with nothing to play.** Bart: "halbschatten
+  Melody on Easy has 2 sections where there's nothing to play for +30 seconds. one about 2/3
+  thru and then the last 60 or so seconds at the end. 15 seconds or so should be the longest
+  break ever, and not more than once a game, at any level of difficulty." Measured (the new
+  `scripts/takt/gaps.ts`): Halbschatten's melody went 17 s (bars 72–80) and 71 s (bar 89 to
+  the end) at every level. 60 charts in 11 songs were over a 15 s / one-break-of-10 s rule.
+  Every Stage chart now keeps it: the longest silence anywhere is 14.5 s (Restlicht's chords
+  at Beginner, its ending). The fixes are notes of the part's own where the record's voice
+  rests (Halbschatten, Irrlicht, Hypnotist I and II, Warm Nine, Abyss, Restlicht, Gezeiten),
+  the last chord made an anchor (Streulicht, Irrlicht), and Halsted's Beginner `minBeats` 0.5.
+  The figures moved only in those songs. Halbschatten melody: Beginner 0.18 → 0.27, Easy 0.36
+  → 0.53 (hand 7/7 → 8/8), Medium 0.67 → 0.97. Irrlicht chords: Beginner 0.14 → 0.16, Easy
+  0.20 → 0.24. Halsted melody: Beginner 0.18 → 0.25. Every other song and part is unchanged
+  (`measure.ts --compare`). CHARTING.md rule 24.

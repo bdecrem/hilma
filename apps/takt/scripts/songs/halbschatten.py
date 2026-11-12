@@ -217,6 +217,14 @@ for bar, step, ch, v in STAB:
     s.pchord(chords, bar * BAR + step * 3, VOICING[ch], lv, 6)
     for e in chords[at:]:
         e["v"] = round(min(1.0, v), 4)
+# The record's last stab is in bar 117; one closing Gm9 of the part's own in bar 119 (the
+# weight-1 place, quiet), so no level ends on more than ten seconds with nothing to play
+# (Bart, 2026-11-12: "15 seconds or so should be the longest break ever, and not more than
+# once a game"; CHARTING.md rule 24). Beginner, a hit every other bar, ended at bar 116.
+at = len(chords)
+s.pchord(chords, 119 * BAR + 2 * 3, VOICING["Gm9"], 1, 6)
+for e in chords[at:]:
+    e["v"] = 0.5
 
 # MARK: Melody part: the lead
 
@@ -259,6 +267,35 @@ for bar in range(32, 48):
         intro(bar, 0, C5, 6, 1); intro(bar, 6, BB4, 4, 2); intro(bar, 10, A4, 6, 2)
     else:
         intro(bar, 0, A4 if bar == 47 else G4, 14, 1)
+# Where the record's lead rests (bars 72–79, and from 88 to the end) the part keeps its own line
+# too, the same five keys in the same hand (Bart, 2026-11-12: the melody on Easy had "2 sections
+# where there's nothing to play for +30 seconds"; 15 s at most, once a game; CHARTING.md
+# rule 24). Bars 72–79 hold the lead's first bar answered by a held G4 (as 16–31); the outro
+# walks the intro back: the whole phrase (88–103), its first bar and G4 (104–111), the long
+# tones falling a bar each (112–115), and G4 held to the end of the music (116–119).
+for bar in range(72, 80):
+    if bar % 2 == 0:
+        intro(bar, 0, D5, 6, 1); intro(bar, 6, BB4, 4, 2); intro(bar, 10, A4, 6, 2)
+    else:
+        intro(bar, 0, G4, 14, 2)
+for bar in range(88, 104):
+    k = bar % 4
+    if k == 0:
+        intro(bar, 0, D5, 6, 1); intro(bar, 6, BB4, 4, 2); intro(bar, 10, A4, 6, 2)
+    elif k == 1:
+        intro(bar, 0, G4, 10, 1); intro(bar, 10, A4, 2, 3); intro(bar, 12, BB4, 4, 2)
+    elif k == 2:
+        intro(bar, 0, C5, 6, 1); intro(bar, 6, BB4, 4, 2); intro(bar, 10, A4, 6, 2)
+    else:
+        intro(bar, 0, G4, 14, 1)
+for bar in range(104, 112):
+    if bar % 2 == 0:
+        intro(bar, 0, D5, 6, 1); intro(bar, 6, BB4, 4, 2); intro(bar, 10, A4, 6, 2)
+    else:
+        intro(bar, 0, G4, 14, 2)
+for bar in range(112, 116):
+    intro(bar, 0, [D5, BB4, A4, G4][bar % 4], 14, 1 if bar % 2 == 0 else 2)
+intro(116, 0, G4, 62, 1)
 for bar, step, note, ln, vel in LEAD:
     # A phrase is four bars; each bar's first note is the one it stands on (1), the others the
     # line (2), the two-step A into the B♭ of the phrase's second bar a pickup (3).

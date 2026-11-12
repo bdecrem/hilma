@@ -226,6 +226,14 @@ for bar, step, ch, v in STAB:
     s.pchord(chords, bar * BAR + step * 3, VOICING[ch], lv, 6)
     for e in chords[at:]:
         e["v"] = round(min(1.0, v), 4)
+# The record's last skank is in bar 109; one closing chord of the part's own on the "and" of 2
+# of bar 111 (weight 1, quiet), so no level ends on more than ten seconds with nothing to play
+# (Bart, 2026-11-12: "15 seconds or so should be the longest break ever, and not more than once
+# a game"; CHARTING.md rule 24). Beginner, a hit every other bar, ended at bar 108.
+at = len(chords)
+s.pchord(chords, 111 * BAR + 6 * 3, VOICING[STAB[-1][2]], 1, 6)
+for e in chords[at:]:
+    e["v"] = 0.5
 
 # MARK: Melody part: the bell, the record's own line
 
