@@ -31,7 +31,9 @@ Claude Code logged in with the plan to test, and optionally node for the code ch
 
 Before you start: **turn off extra usage** on the account (claude.ai → Settings → Usage), or
 the run continues past the limit and costs money; start on a **fresh 5-hour window** (no
-Claude use for 5 hours, so `/usage` shows the session meter at 0%); plug the computer in.
+Claude use for 5 hours, so `/usage` shows the session meter at 0%); make sure the **weekly
+reset** (shown in `/usage`, a fixed time per account) is more than 6 hours away, or the week's
+extrapolation breaks; plug the computer in.
 
 ```bash
 python3 run.py --smoke      # two tiny calls, one per model: is everything wired up?

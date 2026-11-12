@@ -19,7 +19,9 @@ session short: do the checks, start the run, stop.
    - `claude -p /usage --output-format json`: the result must say the subscription powers
      Claude Code. Note the meters it shows. If a "Current session" meter shows more than 0%,
      the 5-hour window is already in use: tell me when it resets and stop. A clean
-     measurement starts on a fresh window.
+     measurement starts on a fresh window. Also look at when the weekly meter resets: if that
+     is less than 6 hours away, tell me and stop, because a weekly reset in the middle of the
+     run would break the week's extrapolation. Start after it.
 2. Ask me to confirm that **extra usage is turned off** for this account (claude.ai →
    Settings → Usage). If it is on, the run would keep going past the limit and spend money.
    Don't continue until I confirm.
