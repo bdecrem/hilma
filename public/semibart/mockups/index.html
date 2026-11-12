@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0a08">
+<meta name="description" content="Two ways to fit all 54 studies of CASBS Quest without losing the one-screen map: pages or a glide.">
+<meta property="og:title" content="CASBS Quest · the whole campus, two ways">
+<meta property="og:description" content="Five neighborhoods, 54 studies. Mockup A flips between them like rooms; mockup B glides along them as one strip.">
+<meta property="og:url" content="https://ola.cx/semibart/mockups/index.html">
+<meta property="og:image" content="https://ola.cx/semibart/mockups/og-glide.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<title>CASBS Quest · Mockups</title>
+<link href="https://fonts.googleapis.com/css2?family=Jersey+15&display=swap" rel="stylesheet">
+<style>
+:root { --bg: #0b0a08; --paper: #fff7e6; --dim: #a9a291; --hot: #ffff55; --cyan: #55ffff; --choice: #d58bff; --line: #2c2820; color-scheme: dark; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--paper); font-family: 'Jersey 15', 'Courier New', monospace; }
+body { min-height: 100dvh; padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
+main { max-width: 1120px; margin: 0 auto; }
+.eyebrow { margin: 24px 0 4px; color: var(--cyan); font-size: 18px; letter-spacing: 0.3em; text-transform: uppercase; }
+h1 { margin: 0; color: var(--hot); font-size: clamp(40px, 7vw, 76px); line-height: 0.95; font-weight: 400; letter-spacing: 0.02em; }
+.lede { max-width: 760px; margin: 14px 0 0; color: var(--dim); font-size: clamp(19px, 2.2vw, 23px); line-height: 1.25; }
+.lede b { color: var(--paper); font-weight: 400; }
+.strip { margin: 28px 0 0; }
+.strip canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; border: 3px solid #000; box-shadow: 0 0 0 3px var(--line); }
+.strip ol { display: grid; grid-template-columns: repeat(5, 1fr); margin: 10px 0 0; padding: 0; list-style: none; }
+.strip li { color: var(--hot); font-size: clamp(15px, 1.8vw, 20px); line-height: 1.1; text-align: center; }
+.strip li span { display: block; color: var(--choice); font-size: 0.82em; }
+.cards { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 40px 0 0; }
+.card { display: flex; flex-direction: column; color: inherit; text-decoration: none; background: #12100c; border: 3px solid var(--line); }
+.card:hover, .card:focus-visible { border-color: var(--hot); outline: none; }
+.card img { display: block; width: 100%; height: auto; aspect-ratio: 1200 / 630; object-fit: cover; image-rendering: pixelated; border-bottom: 3px solid #000; }
+.card .body { padding: 16px 18px 20px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.card h2 { margin: 0; color: var(--hot); font-size: 34px; line-height: 1; font-weight: 400; }
+.card h2 small { color: var(--cyan); font-size: 0.6em; letter-spacing: 0.2em; margin-right: 10px; }
+.card p { margin: 0; color: var(--paper); font-size: 20px; line-height: 1.25; }
+.card dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 4px 0 0; font-size: 18px; line-height: 1.2; }
+.card dt { color: var(--choice); }
+.card dd { margin: 0; color: var(--dim); }
+.card .go { margin-top: auto; padding-top: 8px; color: var(--hot); font-size: 22px; }
+footer { margin: 36px 0 0; color: var(--dim); font-size: 17px; line-height: 1.3; }
+footer a { color: var(--choice); }
+@media (max-width: 760px) { .cards { grid-template-columns: 1fr; } .strip ol { font-size: 13px; } }
+</style>
+</head>
+<body>
+<main>
+  <p class="eyebrow">CASBS Quest · layout mockups</p>
+  <h1>The whole campus, two ways</h1>
+  <p class="lede">All <b>54 studies</b> (and 016), without giving up a map that fits on one screen. The live map stays exactly as it is and becomes <b>The Heart</b>; the other studies move into four new neighborhoods, each built around one landmark so none of them is a wall of doors.</p>
+
+  <figure class="strip" aria-label="The five neighborhoods side by side">
+    <canvas id="strip" width="1600" height="180"></canvas>
+    <ol>
+      <li>The Heart<span>14 studies · the live map</span></li>
+      <li>The Green<span>10 · the court</span></li>
+      <li>The Hill<span>14 · the switchback</span></li>
+      <li>The Pasture<span>8 · the turkeys</span></li>
+      <li>The Grove<span>9 · the library</span></li>
+    </ol>
+  </figure>
+
+  <div class="cards">
+    <a class="card" href="pages.html">
+      <img src="og-pages.png" alt="Mockup A: The Green, its name coming up over the scene" width="1200" height="630">
+      <div class="body">
+        <h2><small>A</small>Pages</h2>
+        <p>Five rooms, one screen each, like an adventure game. Walk off an edge and the next room slides in, with its name and who lives there. The dots jump anywhere and show a little picture of each room.</p>
+        <dl>
+          <dt>Good</dt><dd>Every screen is a composed picture, like today's map. You always know where you are.</dd>
+          <dt>Cost</dt><dd>You never see two neighborhoods at once, and the campus reads as rooms more than as one place.</dd>
+        </dl>
+        <span class="go">Open A ▸</span>
+      </div>
+    </a>
+    <a class="card" href="glide.html">
+      <img src="og-glide.png" alt="Mockup B: the strip gliding from The Heart toward The Green" width="1200" height="630">
+      <div class="body">
+        <h2><small>B</small>Glide</h2>
+        <p>One strip, end to end. Scroll, drag or swipe and the campus slides past, branches in front moving faster than the ground; let go and it settles on the nearest neighborhood. The strip at the bottom is the whole campus in miniature.</p>
+        <dl>
+          <dt>Good</dt><dd>It feels like one place, a walk along the hill, and the miniature shows how far you can go.</dd>
+          <dt>Cost</dt><dd>The frames in between are less composed than the stops, and there is more motion.</dd>
+        </dl>
+        <span class="go">Open B ▸</span>
+      </div>
+    </a>
+  </div>
+  <footer>Both are mockups: the studies have names on hover and a line when clicked, but no rooms behind the new doors yet. Names follow the roster from the big-map version. The live game at <a href="/semibart">ola.cx/semibart</a> is unchanged.</footer>
+</main>
+<script src="world.js"></script>
+<script>
+(() => {
+  const c = document.getElementById('strip').getContext('2d');
+  World.art.forEach((a, i) => c.drawImage(a, i * World.W, 0));
+})();
+</script>
+</body>
+</html>

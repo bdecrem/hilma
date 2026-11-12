@@ -1,0 +1,43 @@
+/* CASBS Quest layout mockups: the stage and type are the live game's (public/semibart/index.html) */
+:root {
+  --black: #000000;
+  --hot: #ffff55;
+  --cyan: #55ffff;
+  --choice: #d58bff;
+  --paper: #fff7e6;
+  --card: #12100c;
+  --font: 'Jersey 15', 'Courier New', monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; background: #000; }
+body { height: 100dvh; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); background: var(--black); container-type: size; display: flex; align-items: center; justify-content: center; overflow: hidden; font-family: var(--font); }
+#stage { position: relative; width: min(100cqw, calc(100cqh * 16 / 9)); aspect-ratio: 16 / 9; background: var(--black); overflow: hidden; container-type: inline-size; user-select: none; -webkit-user-select: none; }
+#cv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; image-rendering: pixelated; image-rendering: crisp-edges; cursor: crosshair; touch-action: none; }
+.outlined { text-shadow: 0.22cqw 0 0 #000, -0.22cqw 0 0 #000, 0 0.22cqw 0 #000, 0 -0.22cqw 0 #000, 0.22cqw 0.22cqw 0 #000, -0.22cqw 0.22cqw 0 #000, 0.22cqw -0.22cqw 0 #000, -0.22cqw -0.22cqw 0 #000, 0.15cqw 0.45cqw 0 rgba(0,0,0,0.55); }
+#line { position: absolute; width: 62%; text-align: center; font-size: 3.2cqw; line-height: 1.08; letter-spacing: 0.02em; word-spacing: 0.06em; color: #fff; transform: translateY(-100%); pointer-events: none; text-wrap: balance; }
+#label { position: absolute; color: var(--cyan); font-size: 2.5cqw; line-height: 1; pointer-events: none; white-space: nowrap; transform: translate(-50%, -160%); }
+#label[hidden] { display: none; }
+button { font: inherit; background: none; border: 0; margin: 0; padding: 0; cursor: pointer; line-height: 1.1; color: inherit; }
+
+/* which mockup: a two-way switch, top right */
+#mock { position: absolute; top: 1cqw; right: 1cqw; display: flex; gap: 0.4cqw; font-size: 1.9cqw; z-index: 5; }
+#mock a { color: #c9c3b4; text-decoration: none; background: rgba(0,0,0,0.6); padding: 0.35cqw 1cqw; }
+#mock a[aria-current] { color: #000; background: var(--hot); }
+#mock a:hover:not([aria-current]) { color: var(--hot); }
+
+/* the start card (as on the live page) */
+#title { position: absolute; inset: 0; display: grid; place-items: center; z-index: 6; }
+#title[hidden] { display: none; }
+.card { width: 62cqw; background: var(--card); color: var(--paper); border: 0.5cqw solid var(--hot); box-shadow: 0 0 0 0.5cqw #000, 1.4cqw 1.4cqw 0 0.5cqw #000; padding: 2.4cqw 3.6cqw 2.6cqw; text-align: center; }
+.card .eyebrow { margin: 0 0 0.6cqw; color: var(--cyan); font-size: 2.1cqw; letter-spacing: 0.3em; text-transform: uppercase; }
+.card h1 { margin: 0; color: var(--hot); font-size: 9cqw; line-height: 0.9; white-space: nowrap; font-weight: 400; letter-spacing: 0.03em; }
+.card .tag { margin: 1cqw 0 0; font-size: 3cqw; line-height: 1.2; }
+.card hr { border: 0; border-top: 0.3cqw dashed #4a4436; margin: 2cqw 0 1.8cqw; }
+.card dl { display: grid; grid-template-columns: auto auto; justify-content: center; gap: 0.3cqw 1.6cqw; margin: 0; font-size: 2.3cqw; line-height: 1.1; text-align: left; }
+.card dt { color: var(--choice); text-align: right; }
+.card dd { margin: 0; color: #c9c3b4; }
+#startBtn { margin-top: 2cqw; background: var(--hot); color: #000; font-size: 3.4cqw; padding: 0.9cqw 5cqw; box-shadow: 0.5cqw 0.5cqw 0 #8a7a1e; letter-spacing: 0.08em; }
+#startBtn:hover { background: #fff; }
+#startBtn:focus-visible { outline: 0.3cqw solid #fff; outline-offset: 0.4cqw; }
+#startBtn:active { transform: translate(0.5cqw, 0.5cqw); box-shadow: none; }
