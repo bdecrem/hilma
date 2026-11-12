@@ -82,9 +82,9 @@ button { font: inherit; background: none; border: 0; margin: 0; cursor: pointer;
 #slide h2 { position: absolute; left: 7.7%; right: 7.7%; top: 6%; margin: 0; font: 400 5.4cqw/1.05 Georgia, 'Times New Roman', serif; color: #1d2a5a; letter-spacing: -0.005em; }
 #slide .rule { position: absolute; left: 7.7%; right: 7.7%; top: 24.5%; height: 0.35cqw; background: #1d2a5a; }
 #slide .rule::after { content: ''; position: absolute; left: 0; right: 0; top: 0.75cqw; height: 0.12cqw; background: #1d2a5a; }
-#slide ul { position: absolute; left: 7.7%; right: 9%; top: 34%; margin: 0; padding: 0; list-style: none; font: 2.55cqw/1.28 Arial, Helvetica, sans-serif; color: #2a2a2a; }
-#slide li { position: relative; padding-left: 3.2cqw; margin-bottom: 2.3cqw; }
-#slide li::before { content: ''; position: absolute; left: 0.3cqw; top: 1.05cqw; width: 1cqw; height: 1cqw; background: #1d2a5a; }
+#slide ul { --k: 1; position: absolute; left: 7.7%; right: 9%; top: 34%; margin: 0; padding: 0; list-style: none; font: calc(2.55cqw * var(--k))/1.28 Arial, Helvetica, sans-serif; color: #2a2a2a; }
+#slide li { position: relative; padding-left: 3.2cqw; margin-bottom: calc(2.3cqw * var(--k)); }
+#slide li::before { content: ''; position: absolute; left: 0.3cqw; top: calc(1.05cqw * var(--k)); width: calc(1cqw * var(--k)); height: calc(1cqw * var(--k)); background: #1d2a5a; }
 #slide .foot { position: absolute; left: 7.7%; right: 7.7%; bottom: 4.5%; display: flex; justify-content: space-between; border-top: 0.1cqw solid #b5ad9c; padding-top: 0.8cqw; font: 1.45cqw/1 Arial, Helvetica, sans-serif; color: #8a8273; letter-spacing: 0.04em; text-transform: uppercase; }
 #dEnd { position: absolute; inset: 0; background: #000; color: #fff; font: 1.9cqw/1 Arial, Helvetica, sans-serif; padding: 2cqw 2.4cqw; }
 #dEnd[hidden] { display: none; }
@@ -943,11 +943,19 @@ function showSlide(i, cut) {
     $('sTitle').textContent = sl.title;
     $('sList').replaceChildren(...sl.bullets.map(b => { const li = document.createElement('li'); li.textContent = b; return li; }));
     $('sNum').textContent = (DECK.i + 1) + ' / ' + n;
+    fitList();
   };
   if (cut || calm) { fill(); return; }
   slideIn.classList.add('swap');
   setTimeout(() => { fill(); slideIn.classList.remove('swap'); }, 140);
 }
+// a long slide's bullets shrink until they clear the footer
+function fitList() {
+  const ul = $('sList'), foot = deckEl.querySelector('.foot');
+  let k = 1; ul.style.setProperty('--k', k);
+  while (k > 0.5 && ul.getBoundingClientRect().bottom > foot.getBoundingClientRect().top - foot.offsetHeight * 0.6) { k -= 0.04; ul.style.setProperty('--k', k); }
+}
+window.addEventListener('resize', () => { if (DECK.open && DECK.i < TALK.length) fitList(); });
 function deckStep(d) {
   if (!DECK.open) return;
   if (DECK.i === TALK.length && d > 0) { closeDeck(); return; }
@@ -970,7 +978,7 @@ async function presentTalk() {
   await loaded;
   SFX.zoom(); await zoomMonitor(true, 1.1);
   showSlide(0, true);
-  deckEl.hidden = false; DECK.open = true;
+  deckEl.hidden = false; DECK.open = true; fitList();
   void deckEl.offsetWidth; deckEl.classList.add('on');
   await wait(0.35); $('dNext').focus({ preventScroll: true });
   const live = LIVE && setInterval(() => loadTalk().then(ch => { if (ch && DECK.open) showSlide(Math.min(DECK.i, TALK.length), true); }).catch(() => {}), 1000);
