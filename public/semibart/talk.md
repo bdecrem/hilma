@@ -1,14 +1,18 @@
 # Data and Privacy
-- Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt.
-- Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip.
-- Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore.
-
+- The only way to keep your data truly under your control is Local AI. ~A year away
+- Anthropic: by default, all of your conversations MAY be used to train future models. Turn that toggle off. OpenAI has a similar one
+- Even so, some of your data will still end up on their servers
+- Ask yourself: How much do I trust this company? What is their history? Business model? My answer: OpenAI and Meta are in the business of collecting and selling your data. Google, really, is as well. Apple and Anthropics much less so.
+- Anthropic comp: it's not unlike using iCloud. 
+ 
 # Which AI Systems to Use
-- Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt.
-- Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium.
-- Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit.
+- Vertical resources for scholars: Google Scholar, Consensus, Zotero etc
+- Personal agents: Muse, Dot, Duet, Instinct
+- ChatGPT, Gemini
+- Claude
 
-# To Be Determined
-- Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur.
-- Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam.
-- At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis.
+# The Quest
+- It gets twice as good every year
+- It's already pretty amazing
+- It's weird and jagged. You still have to check. Think: an RA
+- One key thing: you are learning how to best use this weird new tech
