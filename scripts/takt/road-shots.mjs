@@ -23,24 +23,36 @@ for (const [size, viewport] of Object.entries(sizes)) {
     const shot = (name) => page.screenshot({ path: `${out}/${size}-${vibe}-${name}.png` });
     const now = () => page.locator('.now').innerText().then((t) => t.replace(/\s+/g, ' '));
 
-    await page.goto(`${base}/takt/road?vibe=${vibe}`, { waitUntil: 'networkidle' });
-    await page.waitForTimeout(1500);
-    await shot('0-opening');
-
-    // the trailer
-    await page.locator('.play').click();
+    // the trailer runs silent from the first frame; tap for sound joins it in time
     const t0 = Date.now();
-    for (const at of [1.0, 3.0, 5.0, 6.6, 7.6, 8.6, 9.6, 10.6, 12.5]) {
-      await page.waitForTimeout(Math.max(0, at * 1000 - (Date.now() - t0)));
-      await shot(`1-trailer-${at.toFixed(1)}`);
-    }
+    await page.goto(`${base}/?vibe=${vibe}`.replace('/?', '/takt?'), { waitUntil: 'domcontentloaded' });
+    const at = async (sec, name) => {
+      await page.waitForTimeout(Math.max(0, sec * 1000 - (Date.now() - t0)));
+      await shot(name);
+    };
+    await at(1.2, '0-silent-1.2');
+    await at(4.5, '0-silent-4.5');
+    await at(7.0, '0-silent-7.0');
+    await page.waitForFunction(() => document.querySelector('.takt-road')?.dataset.trailer === 'false', null, { timeout: 20000 });
+    await page.waitForTimeout(2600);
+    await shot('1-opening');
+    await page.waitForTimeout(2200);
+    await shot('1-opening-next-bar');
+    console.log(size, vibe, 'opening wall:', await page.locator('.wall figcaption').innerText().catch(() => 'none'));
+    // the trailer again, with the sound: on down the road
+    await page.locator('.play').click();
+    await page.waitForTimeout(3000);
+    await page.locator('.unmute').count().then((n) => n && errors.push(`${size} ${vibe}: unmute still showing with sound on`));
+    await page.waitForFunction(() => document.querySelector('.takt-road')?.dataset.trailer === 'false', null, { timeout: 20000 });
+    await page.waitForTimeout(1500);
+    await shot('2-after-trailer');
     console.log(size, vibe, 'after the trailer:', await now(), '| scrollY', await page.evaluate(() => Math.round(scrollY)));
 
     // down the road
     for (const level of [3, 8, 11, 19, 26]) {
       await page.locator('.stop').nth(level - 1).click();
       await page.waitForTimeout(1900);
-      await shot(`2-stop-${String(level).padStart(2, '0')}`);
+      await shot(`3-stop-${String(level).padStart(2, '0')}`);
       console.log(size, vibe, 'stop', level, await now());
     }
     await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));

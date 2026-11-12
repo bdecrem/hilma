@@ -3,8 +3,10 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import data from './data.json';
 
-// takt.pizza/road: the landing page as the app's map. An opening screen (the keyboard playing
-// a real track from the app), a ten-second trailer when you press play, then the road itself:
+// takt.pizza: the landing page as the app's map. The trailer runs the moment the page opens,
+// silent, on the beat of the opening track (tap anywhere and the sound joins it in time); it
+// lands on the opening screen, where the keyboard plays on and the vibe's venues cut behind the
+// name one a bar. Press play runs the trailer again with sound and takes you down the road:
 // 26 stops down the blues road or through Berlin's clubs, each venue's card opening as you
 // reach it, and the track changing every few stops. The keyboard stays at the bottom of the
 // screen and plays the notes of whatever is on.
@@ -303,7 +305,8 @@ export default function Road() {
   const [reached, setReached] = useState(-1);
   const [past, setPast] = useState(false);
   const [sound, setSound] = useState<Sound>('off');
-  const [step, setStep] = useState(-1);
+  const [step, setStep] = useState(0); // the page opens on the trailer's first shot
+  const [wall, setWall] = useState(0);
   const [nowId, setNowId] = useState(OPENING.blues);
 
   const mainRef = useRef<HTMLElement>(null);
@@ -319,7 +322,9 @@ export default function Road() {
   const hereRef = useRef(-1);
   const viewRef = useRef<View>({ kbH: 120, pps: 200, mapTop: 9999, keepRight: 0, keepBottom: 0 });
   const measureRef = useRef<() => void>(() => {});
-  const trailerRef = useRef<{ when: number; spb: number; scrolled: boolean } | null>(null);
+  const trailerRef = useRef<{ spb: number; scrolled: boolean; last: number } | null>(null);
+  const barRef = useRef(-1);
+  const wallRef = useRef(0);
   const tweenRef = useRef<{ from: number; to: number; start: number; ms: number } | null>(null);
   const shiftRef = useRef(0);
   const eng = useRef<Engine>({ ctx: null, master: null, bytes: new Map(), bufs: new Map(), deck: null, on: false, track: OPENING.blues, t0: 0, token: 0 });
@@ -467,6 +472,20 @@ export default function Road() {
     setStep(-1);
   }, []);
 
+  // the trailer from its first beat, silent, on the opening track
+  const startTrailer = useCallback(() => {
+    const e = eng.current;
+    const id = OPENING[vibeRef.current];
+    if (e.track !== id) {
+      e.track = id;
+      setNowId(id);
+    }
+    e.t0 = performance.now() / 1000;
+    trailerRef.current = { spb: 60 / TRACKS[id].tempo, scrolled: false, last: -1 };
+    setStep(0);
+  }, []);
+
+  // Press play: the trailer again from the top, with the sound, and on down the road
   const play = useCallback(async () => {
     const e = eng.current;
     const id = OPENING[vibeRef.current];
@@ -475,9 +494,10 @@ export default function Road() {
       setNowId(id);
     }
     const when = await soundOn(true);
-    if (when == null || !e.ctx || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (when == null || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     if (window.scrollY > window.innerHeight * 0.4) return; // already down the road
-    trailerRef.current = { when, spb: 60 / TRACKS[id].tempo, scrolled: false };
+    trailerRef.current = { spb: 60 / TRACKS[id].tempo, scrolled: false, last: -1 };
+    setStep(0);
   }, [soundOn]);
 
   const toggleSound = useCallback(() => {
@@ -487,7 +507,7 @@ export default function Road() {
 
   // ---- the vibe
   const choose = useCallback(
-    (v: Vibe) => {
+    (v: Vibe, restart = true) => {
       if (v === vibeRef.current) return;
       const g = geosRef.current;
       const h = hereRef.current;
@@ -500,8 +520,13 @@ export default function Road() {
       try {
         localStorage.setItem('takt-vibe', v);
       } catch {}
+      // at the top of the page the other world's trailer starts over
+      if (restart && window.scrollY < window.innerHeight * 0.4 && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        if (eng.current.on) play();
+        else startTrailer();
+      }
     },
-    [stopTrailer],
+    [stopTrailer, play, startTrailer],
   );
 
   useEffect(() => {
@@ -511,9 +536,11 @@ export default function Road() {
         v = localStorage.getItem('takt-vibe');
       } catch {}
     }
-    if (v === 'electronic') choose('electronic');
+    if (v === 'electronic') choose('electronic', false);
     else bytes(OPENING.blues).catch(() => {});
-  }, [choose, bytes]);
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) setStep(-1);
+    else startTrailer();
+  }, [choose, bytes, startTrailer]);
 
   useLayoutEffect(() => {
     if (shiftRef.current) window.scrollBy(0, shiftRef.current);
@@ -627,26 +654,40 @@ export default function Road() {
       raf = requestAnimationFrame(frame);
       const e = eng.current;
 
-      // the trailer's words change on the beat of the sound's own clock
+      // the trailer's words change on the beat of the track's clock (the sound's own when it is on)
       const tr = trailerRef.current;
-      if (tr && e.ctx) {
-        const beat = (e.ctx.currentTime - (e.ctx.outputLatency || 0) - tr.when) / tr.spb;
+      if (tr) {
+        const tk = TRACKS[e.track];
+        let beat = phase() / tr.spb;
+        if (beat > tk.beats - 1) beat -= tk.beats; // a sound starting from the top is a moment early
         const steps = TRAILER[vibeRef.current];
-        let k = -1;
+        let k = 0;
         for (let i = 0; i < steps.length; i++) if (beat >= steps[i].at) k = i;
-        if (beat >= TRAILER_END) {
+        if (beat >= TRAILER_END || beat < tr.last - 1) {
           trailerRef.current = null;
           k = -1;
-        } else if (beat >= TRAILER_SCROLL && !tr.scrolled) {
-          tr.scrolled = true;
-          const g = geosRef.current?.[vibeRef.current];
-          const road = roadRef.current;
-          if (g && road) {
-            const to = road.getBoundingClientRect().top + window.scrollY + g.pts[0].y - window.innerHeight * HERE_AT;
-            tweenRef.current = { from: window.scrollY, to, start: now, ms: (TRAILER_END - TRAILER_SCROLL - 0.5) * tr.spb * 1000 };
+        } else {
+          tr.last = beat;
+          // with the sound on it goes on down the road; silent, it lands on the opening screen
+          if (beat >= TRAILER_SCROLL && !tr.scrolled && e.on) {
+            tr.scrolled = true;
+            const g = geosRef.current?.[vibeRef.current];
+            const road = roadRef.current;
+            if (g && road) {
+              const to = road.getBoundingClientRect().top + window.scrollY + g.pts[0].y - window.innerHeight * HERE_AT;
+              tweenRef.current = { from: window.scrollY, to, start: now, ms: (TRAILER_END - TRAILER_SCROLL - 0.5) * tr.spb * 1000 };
+            }
           }
         }
         setStep(k);
+      } else if (window.scrollY < window.innerHeight) {
+        // the opening screen: a venue a bar behind the name
+        const tk = TRACKS[e.track];
+        const bar = Math.floor((phase() * tk.tempo) / 240);
+        if (bar !== barRef.current) {
+          barRef.current = bar;
+          setWall(++wallRef.current);
+        }
       }
       const tw = tweenRef.current;
       if (tw) {
@@ -689,7 +730,7 @@ export default function Road() {
     addEventListener('resize', resize);
     addEventListener('scroll', measure, { passive: true });
     addEventListener('wheel', hand, { passive: true });
-    addEventListener('touchstart', hand, { passive: true });
+    addEventListener('touchmove', hand, { passive: true });
     addEventListener('keydown', key);
     document.addEventListener('visibilitychange', hidden);
     document.fonts?.ready.then(measure);
@@ -698,12 +739,13 @@ export default function Road() {
       removeEventListener('resize', resize);
       removeEventListener('scroll', measure);
       removeEventListener('wheel', hand);
-      removeEventListener('touchstart', hand);
+      removeEventListener('touchmove', hand);
       removeEventListener('keydown', key);
       document.removeEventListener('visibilitychange', hidden);
       measureRef.current = () => {};
     };
   }, [phase, setTrack, stopTrailer]);
+
 
   // the sound stops with the page
   useEffect(() => {
@@ -729,9 +771,14 @@ export default function Road() {
   const now = TRACKS[nowId];
   const slam = step >= 0 ? TRAILER[vibe][step] : null;
   const credits = useMemo(() => world.stops.filter((s) => s.photo), [world]);
+  const shown = credits.length ? credits[wall % credits.length] : null;
+  const upNext = credits.length ? credits[(wall + 1) % credits.length] : null;
+  useEffect(() => {
+    if (upNext?.photo) new Image().src = upNext.photo.src;
+  }, [upNext]);
 
   return (
-    <main className="takt-road" data-vibe={vibe} data-past={past} data-trailer={step >= 0} ref={mainRef}>
+    <main className="takt-road" data-vibe={vibe} data-past={past} data-trailer={step >= 0} data-sound={sound} ref={mainRef}>
       <canvas ref={canvasRef} aria-hidden="true" />
 
       <header className="bar">
@@ -767,6 +814,17 @@ export default function Road() {
       </header>
 
       <section className="opening" id="top">
+        <div className="wall" aria-hidden="true">
+          {step < 0 && shown?.photo && (
+            <figure key={`${vibe}-${wall}`}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={shown.photo.src} alt="" />
+              <figcaption>
+                <b>Stop {shown.level}</b> {shown.name} · {shown.town} · {shown.era}
+              </figcaption>
+            </figure>
+          )}
+        </div>
         <div className="copy" ref={copyRef}>
           <h1>Takt</h1>
           <p className="line">{LINE[vibe]}</p>
@@ -786,9 +844,9 @@ export default function Road() {
         </div>
       </section>
 
-      <div className="slam" aria-hidden="true">
+      <div className="slam" aria-hidden="true" onClick={() => sound === 'off' && soundOn(false)}>
         {slam && (
-          <div className={`shot${slam.photo ? ' photo' : ''}`} key={`${vibe}-${step}`}>
+          <div className={`shot${slam.photo ? ' photo' : ''}${step === 0 ? ' first' : ''}`} key={`${vibe}-${step}`}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             {slam.photo && <img src={slam.photo} alt="" />}
             <p className={slam.words.some((w) => w.length > 9) ? 'wide' : ''}>
@@ -800,6 +858,16 @@ export default function Road() {
           </div>
         )}
       </div>
+
+      {step >= 0 && sound !== 'on' && (
+        <button type="button" className="unmute" onClick={() => soundOn(false)} disabled={sound === 'loading'}>
+          <svg viewBox="0 0 16 14" aria-hidden="true">
+            <path d="M0 4.5h3.5L8 1v12L3.5 9.5H0z" fill="currentColor" />
+            <path d="M10.5 4a4 4 0 010 6M12.5 2a7 7 0 010 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+          {sound === 'loading' ? 'Loading' : 'Tap for sound'}
+        </button>
+      )}
 
       <section className="map" ref={mapRef} aria-label={world.title}>
         <div className="road" ref={roadRef} style={geo ? { height: geo.height } : undefined}>
