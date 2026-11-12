@@ -72,6 +72,30 @@ button { font: inherit; background: none; border: 0; margin: 0; cursor: pointer;
 #startBtn:hover { background: #fff; }
 #startBtn:focus-visible { outline: 0.3cqw solid #fff; outline-offset: 0.4cqw; }
 #startBtn:active { transform: translate(0.5cqw, 0.5cqw); box-shadow: none; }
+/* Bart's talk: the slide sits exactly where the zoomed monitor's screen lands (26x20 px at 9x = 73.125cqw by the full height, a 4:3-ish slide), so the crisp slide resolves out of the pixel one */
+#deck { position: absolute; inset: 0; }
+#deck[hidden] { display: none; }
+#slide { position: absolute; top: 0; bottom: 0; left: 13.4375cqw; width: 73.125cqw; background: #f7f3eb; color: #1f1f1f; opacity: 0; transition: opacity 0.35s linear; cursor: pointer; overflow: hidden; }
+#deck.on #slide { opacity: 1; }
+.s-in { position: absolute; inset: 0; transition: opacity 0.14s linear; }
+.s-in.swap { opacity: 0; }
+#slide h2 { position: absolute; left: 7.7%; right: 7.7%; top: 6%; margin: 0; font: 400 5.4cqw/1.05 Georgia, 'Times New Roman', serif; color: #1d2a5a; letter-spacing: -0.005em; }
+#slide .rule { position: absolute; left: 7.7%; right: 7.7%; top: 24.5%; height: 0.35cqw; background: #1d2a5a; }
+#slide .rule::after { content: ''; position: absolute; left: 0; right: 0; top: 0.75cqw; height: 0.12cqw; background: #1d2a5a; }
+#slide ul { position: absolute; left: 7.7%; right: 9%; top: 34%; margin: 0; padding: 0; list-style: none; font: 2.55cqw/1.28 Arial, Helvetica, sans-serif; color: #2a2a2a; }
+#slide li { position: relative; padding-left: 3.2cqw; margin-bottom: 2.3cqw; }
+#slide li::before { content: ''; position: absolute; left: 0.3cqw; top: 1.05cqw; width: 1cqw; height: 1cqw; background: #1d2a5a; }
+#slide .foot { position: absolute; left: 7.7%; right: 7.7%; bottom: 4.5%; display: flex; justify-content: space-between; border-top: 0.1cqw solid #b5ad9c; padding-top: 0.8cqw; font: 1.45cqw/1 Arial, Helvetica, sans-serif; color: #8a8273; letter-spacing: 0.04em; text-transform: uppercase; }
+#dEnd { position: absolute; inset: 0; background: #000; color: #fff; font: 1.9cqw/1 Arial, Helvetica, sans-serif; padding: 2cqw 2.4cqw; }
+#dEnd[hidden] { display: none; }
+.dnav, #dBack { position: absolute; color: var(--hot); opacity: 0; transition: opacity 0.3s linear 0.2s; }
+#deck.on .dnav, #deck.on #dBack { opacity: 1; }
+.dnav { top: 50%; transform: translateY(-50%); width: 13.4cqw; height: 30cqw; font-size: 4.5cqw; }
+.dnav:disabled { color: #6a6450; cursor: default; }
+#dPrev { left: 0; } #dNext { right: 0; }
+.dnav:hover:not(:disabled), .dnav:focus-visible { color: #fff; outline: none; }
+#dBack { top: 1.4cqw; right: 1.4cqw; font-size: 2.2cqw; border: 0.25cqw solid var(--hot); padding: 0.4cqw 1.4cqw; background: rgba(0,0,0,0.55); }
+#dBack:hover, #dBack:focus-visible { color: #fff; border-color: #fff; outline: none; }
 @keyframes blink { 50% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { #fade { transition: none; } }
 </style>
@@ -92,6 +116,15 @@ button { font: inherit; background: none; border: 0; margin: 0; cursor: pointer;
       <div class="phone"><img src="/semibart/takt-splash.png" alt="Takt opening screen: TAKT spelled down the side, eins zwei drei vier"></div>
       <div class="phone"><img src="/semibart/takt-map.png" alt="Takt map screen: The Blues, episode 1, The Delta"></div>
     </div>
+  </div>
+  <div id="deck" hidden role="dialog" aria-label="Bart's talk: How to use AI">
+    <div id="slide" aria-live="polite"><div class="s-in">
+      <h2 id="sTitle"></h2><div class="rule"></div><ul id="sList"></ul>
+      <div class="foot"><span>How to use AI &middot; B. Decrem &middot; CASBS</span><span id="sNum"></span></div>
+    </div><div id="dEnd" hidden>End of slide show, click to exit.</div></div>
+    <button class="dnav outlined" id="dPrev" type="button" aria-label="Previous slide">&#9664;</button>
+    <button class="dnav outlined" id="dNext" type="button" aria-label="Next slide">&#9654;</button>
+    <button id="dBack" class="outlined" type="button">Back</button>
   </div>
   <div id="fade"></div>
   <div id="title" role="dialog" aria-modal="true" aria-labelledby="titleH">
@@ -553,10 +586,11 @@ function drawMonitor(f) {
   if (w > 8) {
     const sx = x + 2, sw = w - 4; rect(g, sx, 70, sw, 20, '#f7f3eb');
     if (w >= full - 1) {
-      rect(g, sx + 1, 71, 3, 3, '#0b0b50'); rect(g, sx + 5, 71, 7, 1, '#0b0b50'); rect(g, sx + 5, 73, 5, 1, '#0b0b50'); rect(g, sx + 19, 71, 3, 2, '#0b0b50'); rect(g, sx + 23, 71, 2, 2, '#0b0b50');
-      rect(g, sx + 3, 76, 9, 2, '#141414'); rect(g, sx + 3, 79, 7, 2, '#141414'); rect(g, sx + 15, 76, 9, 3, '#0b0b50');
-      [3, 9, 15, 21].forEach(o => rect(g, sx + o, 83, 3, 1, '#0b0b50'));
-      [[4, '#3f4f8f'], [10, '#e9b93a'], [16, '#8fd36a'], [22, '#f26a5a']].forEach(d => { rect(g, sx + d[0] - 1, 86, 4, 3, '#e8e2d2'); rect(g, sx + d[0], 86, 1, 2, d[1]); });
+      // the talk's first slide, in pixels: the same layout the real slide resolves into
+      rect(g, sx + 2, 71, 14, 2, '#1d2a5a'); rect(g, sx + 17, 71, 5, 2, '#1d2a5a');
+      rect(g, sx + 2, 74, 22, 1, '#1d2a5a');
+      [[77, 19], [80, 16], [83, 18]].forEach(([y, l]) => { rect(g, sx + 2, y, 1, 1, '#1d2a5a'); rect(g, sx + 4, y, l, 1, '#8a8a8a'); });
+      rect(g, sx + 2, 87, 22, 1, '#d6cfbf'); rect(g, sx + 2, 88, 8, 1, '#b5ad9c'); rect(g, sx + 22, 88, 2, 1, '#b5ad9c');
     }
   }
 }
@@ -863,6 +897,77 @@ async function lookPhone() {
   await say('you', 'Eins, zwei, drei, vier.');
   await say('bart', 'You found it. Thirteen more studies. Go knock.');
 }
+/* ---------- Bart's talk, on his monitor: three slides ---------- */
+const TALK = [
+  { title: 'Data and Privacy', bullets: ['Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt.', 'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip.', 'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore.'] },
+  { title: 'Which AI Systems to Use', bullets: ['Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt.', 'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium.', 'Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit.'] },
+  { title: 'To Be Determined', bullets: ['Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur.', 'Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam.', 'At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis.'] }
+];
+const deckEl = $('deck'), slideIn = deckEl.querySelector('.s-in'), endEl = $('dEnd');
+const DECK = { open: false, i: 0, done: null, seen: false };
+S.mon = { f: 0, to: 0 };
+function zoomMonitor(on, dur) {
+  // pan and zoom so the monitor's screen (26x20 px, centred at 236,98) fills the stage's height, centred
+  const w = cv.offsetWidth, h = cv.offsetHeight, s = 9, px = 236 / W * w, py = 98 / FH * h;
+  cv.style.transformOrigin = '0 0';
+  cv.style.transition = calm || !dur ? 'none' : `transform ${dur}s ${on ? 'cubic-bezier(.55,0,.25,1)' : 'cubic-bezier(.4,0,.2,1)'}`;
+  cv.style.transform = on ? `translate(${w / 2 - px * s}px, ${h / 2 - py * s}px) scale(${s})` : 'translate(0px, 0px) scale(1)';
+  return dur ? wait(dur) : Promise.resolve();
+}
+window.addEventListener('resize', () => { if (DECK.open) zoomMonitor(true, 0); });
+function showSlide(i, cut) {
+  const n = TALK.length;
+  DECK.i = Math.max(0, Math.min(n, i));
+  $('dPrev').disabled = DECK.i === 0;
+  if (DECK.i === n) { endEl.hidden = false; $('dNext').disabled = true; return; }
+  endEl.hidden = true; $('dNext').disabled = false;
+  const fill = () => {
+    const sl = TALK[DECK.i];
+    $('sTitle').textContent = sl.title;
+    $('sList').innerHTML = sl.bullets.map(b => '<li>' + b + '</li>').join('');
+    $('sNum').textContent = (DECK.i + 1) + ' / ' + n;
+  };
+  if (cut || calm) { fill(); return; }
+  slideIn.classList.add('swap');
+  setTimeout(() => { fill(); slideIn.classList.remove('swap'); }, 140);
+}
+function deckStep(d) {
+  if (!DECK.open) return;
+  if (DECK.i === TALK.length && d > 0) { closeDeck(); return; }
+  if (DECK.i + d < 0) return;
+  SFX.key(); showSlide(DECK.i + d);
+}
+function closeDeck() { if (DECK.done) { const d = DECK.done; DECK.done = null; d(); } }
+$('slide').addEventListener('click', e => { e.stopPropagation(); const b = $('slide').getBoundingClientRect(); deckStep(e.clientX - b.left < b.width * 0.25 && DECK.i < TALK.length ? -1 : 1); });
+$('dPrev').addEventListener('click', e => { e.stopPropagation(); deckStep(-1); });
+$('dNext').addEventListener('click', e => { e.stopPropagation(); deckStep(1); });
+$('dBack').addEventListener('click', e => { e.stopPropagation(); closeDeck(); });
+async function presentTalk() {
+  if (!DECK.seen) {
+    await say('you', "What's on the monitor?");
+    await say('bart', 'My talk. Three slides on how to use AI.');
+    await say('bart', "Here. I'll turn it around.");
+  } else await say('bart', 'Again? Sure.');
+  S.mon.to = 1; SFX.swoosh(); await wait(0.7);
+  SFX.zoom(); await zoomMonitor(true, 1.1);
+  showSlide(0, true);
+  deckEl.hidden = false; DECK.open = true;
+  void deckEl.offsetWidth; deckEl.classList.add('on');
+  await wait(0.35); $('dNext').focus({ preventScroll: true });
+  await new Promise(res => { DECK.done = res; });
+  DECK.open = false; deckEl.classList.remove('on');
+  await wait(0.35);
+  deckEl.hidden = true; endEl.hidden = true;
+  SFX.unzoom(); await zoomMonitor(false, 0.85);
+  cv.style.transition = ''; cv.style.transform = ''; cv.style.transformOrigin = '';
+  S.mon.to = 0; SFX.swoosh(); await wait(0.5);
+  if (!DECK.seen) {
+    DECK.seen = true;
+    await say('bart', "That's the whole talk.");
+    await say('you', 'Shorter than the seminar.');
+    await say('bart', 'Everything is shorter than the seminar.');
+  } else await say('bart', 'Still three slides.');
+}
 async function talkBart() {
   await say('you', S.talked ? 'Me again.' : 'Hi, Bart.');
   if (!S.talked) await say('bart', 'Hi.');
@@ -871,7 +976,7 @@ async function talkBart() {
     const opts = [{ t: 'What are you working on?', k: 'work' }];
     if (!S.bart.shades) opts.push({ t: 'Nice sunglasses.', k: 'shades' });
     if (!S.phoneOn) opts.push({ t: 'Can I try it?', k: 'try' });
-    opts.push({ t: 'Why music?', k: 'why' }, { t: 'Bye.', k: 'bye' });
+    opts.push({ t: 'Can I see your talk?', k: 'talk' }, { t: 'Why music?', k: 'why' }, { t: 'Bye.', k: 'bye' });
     const c = opts[await choose(opts.map(o => o.t))];
     await say('you', c.t);
     if (c.k === 'work') {
@@ -884,6 +989,9 @@ async function talkBart() {
     } else if (c.k === 'try') {
       await say('bart', "It's on my phone.");
       await ringPhone();
+      return;
+    } else if (c.k === 'talk') {
+      await presentTalk();
       return;
     } else if (c.k === 'why') {
       await say('bart', 'I did free radio in Brussels from 14 to 18.');
@@ -998,7 +1106,7 @@ const ROOM = [
   { name: 'plant', r: [284, 100, 22, 32], walk: { x: 270, y: 134 }, def: 'talk', on: { look: "It's thriving. Someone waters it.", talk: 'I tell the plant about my research. It grows a little.' } },
   { name: 'coffee mug', r: [204, 86, 13, 12], walk: { x: 212, y: 130 }, def: 'pick', on: { look: 'Coffee. Still hot. The mug says TAKT.', pick: "It's Bart's. He'd notice. He'd definitely notice." } },
   { name: 'phone', r: [246, 76, 22, 22], walk: { x: 232, y: 132 }, def: 'use', on: { look: lookPhone, use: lookPhone } },
-  { name: 'monitor', r: [218, 66, 28, 32], walk: { x: 236, y: 130 }, def: 'look', on: { look: 'I can only see the back. It has stickers.', use: "It's pointed at Bart. That's how monitors work." } },
+  { name: 'monitor', r: [218, 66, 28, 32], walk: { x: 148, y: 134 }, def: 'use', on: { look: "The back of Bart's monitor. It has stickers. Something with slides is on the other side.", use: presentTalk } },
   { name: 'Bart', r: [172, 56, 34, 42], walk: { x: 160, y: 132 }, def: 'talk', on: {
     look: () => say('you', S.bart.shades ? 'Bart Decrem. Fellow. Builder of things. Currently cool.' : 'Bart Decrem. Fellow. Builder of things. Owner of sunglasses.'),
     talk: talkBart
@@ -1103,6 +1211,12 @@ async function hop(dir) {
 window.addEventListener('keydown', e => {
   audio();
   if (!S.started) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); start(); } return; }
+  if (DECK.open) {
+    if (e.key === 'Escape') closeDeck();
+    else if (['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Enter', 'n'].includes(e.key)) { e.preventDefault(); deckStep(1); }
+    else if (['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace', 'p'].includes(e.key)) { e.preventDefault(); deckStep(-1); }
+    return;
+  }
   if (e.key === 'Escape') { if (S.screenDone) closeScreen(); else skipLine(); return; }
   if (e.key === ' ' || e.key === '.' || (e.key === 'Enter' && S.line)) { if (S.line) { e.preventDefault(); skipLine(); } return; }
   if (e.key === 'm' || e.key === 'M') { setMute(!muted); return; }
@@ -1311,7 +1425,7 @@ function drawRoom(t) {
   if (B.mode === 'type') { const a = calm ? 0 : Math.floor(t * 9) % 2; rect(g, 181, 92 - a, 5, 2, P.S); rect(g, 194, 92 - (1 - a), 5, 2, P.S); }
   else if (B.mode === 'startle') { rect(g, 172, by + 13, 5, 5, P.S); rect(g, 203, by + 13, 5, 5, P.S); }
   else { rect(g, 181, 92, 5, 2, P.S); rect(g, 194, 92, 5, 2, P.S); }
-  drawMonitor(0);
+  drawMonitor(S.mon.f);
   { const on = S.phoneOn && (calm || Math.floor(S.phoneT * 4.8) % 2 === 0), jig = S.phoneOn && !calm && S.phoneT < 1.8 ? (Math.floor(t * 30) % 2) : 0;
     const px = 252 + jig;
     rect(g, 250, 94, 13, 2, '#6f3a20');
@@ -1344,6 +1458,7 @@ function frame(now) {
   }
   if (S.scene === 'room' && S.bart.mode === 'type') { S.keyT -= dt; if (S.keyT <= 0) { S.keyT = 0.06 + Math.random() * 0.12; SFX.key(); } }
   if (S.line) { S.line.t += dt; if (S.line.t >= S.line.dur) skipLine(); }
+  if (S.mon.f !== S.mon.to) S.mon.f = calm ? S.mon.to : S.mon.f < S.mon.to ? Math.min(S.mon.to, S.mon.f + dt / 0.6) : Math.max(S.mon.to, S.mon.f - dt / 0.5);
   S.bart.t += dt; if (S.phoneOn) S.phoneT += dt; if (S.sem && S.sem.ringT >= 0) S.sem.ringT += dt;
   if (S.zoomT >= 0 && S.screenDone === null) {
     S.zoomT += dt; const k = Math.min(1, S.zoomT / 0.9), e = k * k;
