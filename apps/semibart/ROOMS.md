@@ -40,6 +40,30 @@ the system prompt in `room-agent.ts`; the furniture positions there are copied f
 `public/semibart/index.html` (`makeRoomBg`, `deskScene`, `readingScene`, `standingScene`,
 `drawRoom`) and must move when those move.
 
+## Shared studies and decoration wars
+
+Four studies are shared: 28, 29 and 016 by two people, 27 by three. Everyone has a desk of their
+own, side by side between the window and the bookshelf (`PLANS` and `sharedScene` in
+`public/semibart/index.html`): two desks 72 wide for a pair, three narrow ones 46 wide for a trio,
+a brass name plaque on the wall above each person, the host's own things moved to fit (Ian's map,
+Jacqueline's easel). `PEOPLE[room].plan` is `'duo'` or `'trio'`, and the roster carries it as the
+room's scene. `quest.desks(room)` gives every desk's position, which is how the notes layer sticks
+each note to the right person's desk. `node scripts/semibart/shared-shots.mjs <dir>` shoots all
+four rooms and Study 27 from one of its own seats.
+
+Any occupant may change a shared room, and they will not always agree: that is a decoration war,
+and the decorator is told to play it straight. It does what the person asking wants, including
+removing a room-mate's thing; it keeps a comment in the code above each thing saying who asked for
+it; and its line names whose thing went ("Kevin's rats are out. A fat orange cat now sleeps across
+Mikael's desk"). To do that it is given who is asking, which desk is theirs, and the room's recent
+changes (`roomLog` in `rooms.ts`: who asked for what, and the decorator's line each time). Room
+code can address one person: `hide: ['person:1', 'desk:0', 'chair:2']` (numbers in occupant
+order; `rooms.js` turns them into the game's `person:<slug>` and so on) and
+`api.person(x, y, { who: 1 })`.
+
+`decorate-try.ts` plays a war without saving anything: `--as <character>` says who is asking and
+`--history h.json` carries the changes from one run to the next.
+
 ## The fence
 
 Room code is written by a model from a colleague's sentence and runs in every visitor's page.
@@ -95,4 +119,5 @@ The last two run against `next dev -p 3277`.
 "put a cute pink rat in my room": 11, 23 and 26 seconds at effort low, 40 at medium, first try
 each time. "a fireplace with a crackling fire, and a cat asleep in front of it": 34 seconds.
 "I'm on the couch taking a nap": 18 seconds (the occupant hidden, a couch, a blanket, the head
-asleep at one end). The rooms cost 0.04 to 0.07 ms a frame to draw.
+asleep at one end). A three-move war in Study 27 (Kevin's rats, Mikael's cat
+instead, Kevin's rats back under a NO CATS sign): 21, 9 and 39 seconds, first try each. The rooms cost 0.04 to 0.07 ms a frame to draw.

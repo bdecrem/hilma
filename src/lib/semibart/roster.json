@@ -99,6 +99,28 @@
     "Dessislava"
    ]
   },
+  "eli": {
+   "name": "Eli",
+   "study": "34",
+   "scene": "desk",
+   "occupants": [
+    "eli"
+   ],
+   "names": [
+    "Eli"
+   ]
+  },
+  "forrest": {
+   "name": "Forrest",
+   "study": "44",
+   "scene": "desk",
+   "occupants": [
+    "forrest"
+   ],
+   "names": [
+    "Forrest"
+   ]
+  },
   "frances": {
    "name": "Frances",
    "study": "10",
@@ -168,7 +190,7 @@
   "ian": {
    "name": "Ian",
    "study": "29",
-   "scene": "desk",
+   "scene": "duo",
    "occupants": [
     "ian",
     "ishara"
@@ -192,7 +214,7 @@
   "jacqueline": {
    "name": "Jacqueline",
    "study": "28",
-   "scene": "desk",
+   "scene": "duo",
    "occupants": [
     "jacqueline",
     "jurate"
@@ -304,7 +326,7 @@
   "kevin": {
    "name": "Kevin",
    "study": "27",
-   "scene": "desk",
+   "scene": "trio",
    "occupants": [
     "kevin",
     "mikael",
@@ -462,7 +484,7 @@
   "toussaint": {
    "name": "Toussaint",
    "study": "016",
-   "scene": "desk",
+   "scene": "duo",
    "occupants": [
     "toussaint",
     "matthew"

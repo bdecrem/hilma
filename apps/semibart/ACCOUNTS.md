@@ -69,7 +69,8 @@ Files that add to the game push functions into `window.quest.hooks` instead of e
 drawn), `roomFront` (after you), all in room coordinates inside the OY translate, in the
 person rooms and Bart's; `roomSpots(roomKey) -> hotspots` (prepended in those rooms);
 `keyBlock(e) -> true` holds the game's keys while an overlay is open. `quest.gfx` has the
-pixel helpers. Script tags, in order: accounts.js, rooms.js (rooms agent), notes.js (desk notes UI).
+pixel helpers. `quest.desks(room)` lists every desk in a room (one per person in the shared studies, see
+ROOMS.md) and `quest.plan(room)` says `'duo'`, `'trio'` or null. Script tags, in order: accounts.js, rooms.js (rooms agent), notes.js (desk notes UI).
 
 Check: `set -a; source .env.local; set +a; node scripts/semibart/accounts-check.mjs <dir>`
 against `next dev -p 3277`. It signs in with the check-only admin account (`check`, its long

@@ -31,6 +31,8 @@ stops('draws nothing in the room', `return { back(api, t) { api.rect(-50, -50, 1
 stops('far too many drawing calls', `return { back(api, t) { for (let i = 0; i < 20000; i++) api.px(i % 320, 5, '#fff'); } };`, /drawing calls/)
 stops('a colour that is not a string', `return { back(api, t) { api.rect(10, 10, 5, 5, undefined); } };`, /colour/)
 stops('NaN coordinates', `return { back(api, t) { api.rect(0 / 0, 10, 5, 5, '#fff'); } };`, /coordinate/)
+passes('a shared study: one person, one desk and one chair hidden by number', `return { hide: ['person:1', 'desk:0', 'chair:2'], mid(api) { api.person(60, 70, { who: 1, asleep: true }); api.rect(120, 96, 40, 20, '#7d5632'); } };`)
+stops('a fourth desk', `return { hide: ['desk:3'], back(api) { api.rect(10, 10, 5, 5, '#fff'); } };`, /"desk:3" is not one of/)
 stops('hides something that cannot be hidden', `return { hide: ['door'], back(api) { api.rect(10, 10, 5, 5, '#fff'); } };`, /"door" is not one of/)
 stops('hide that is not a list', `return { hide: 'desk', back(api) { api.rect(10, 10, 5, 5, '#fff'); } };`, /hide must be an array/)
 stops('a fourth occupant', `return { mid(api) { api.person(100, 60, { who: 7 }); } };`, /who must be/)

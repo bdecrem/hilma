@@ -5,7 +5,7 @@
 
 import type { SemibartUser } from './auth'
 import { decorateRoom, MAX_PROMPT } from './room-agent'
-import { changesSince, claimRoom, getRoom, mayDecorate, releaseRoom, rosterRoom, saveRoom, undoRoom } from './rooms'
+import { changesSince, claimRoom, getRoom, mayDecorate, releaseRoom, roomLog, rosterRoom, saveRoom, undoRoom } from './rooms'
 
 /** Changes one room takes in 24 hours: enough for an afternoon of fiddling, not for a loop. */
 const DAILY_CHANGES = 80
@@ -36,8 +36,8 @@ export async function changeRoom(user: SemibartUser | null, room: string, prompt
   if (await changesSince(room, Date.now() - 24 * 3600 * 1000) >= DAILY_CHANGES) return { ok: false, status: 429, say: 'This room has had enough changes for one day. Tomorrow.' }
   if (!(await claimRoom(room, CLAIM_SECONDS))) return { ok: false, status: 409, say: 'Someone is already changing this room. Give it a minute.' }
   try {
-    const before = await getRoom(room)
-    const result = await decorateRoom({ key: room, room: info, current: before.code, version: before.version, request: ask, asker: user!.name, log: line => console.log(`[semibart/rooms] ${room}: ${line}`) })
+    const [before, history] = await Promise.all([getRoom(room), roomLog(room)])
+    const result = await decorateRoom({ key: room, room: info, current: before.code, version: before.version, request: ask, asker: user!.name.split(' ')[0], askerCharacter: user!.character, history, log: line => console.log(`[semibart/rooms] ${room}: ${line}`) })
     if (!result.ok) return { ok: false, status: 200, say: result.say }
     const version = await saveRoom({ room, from: before.version, code: result.code, prompt: ask, say: result.say, author: user!.id, kind: 'decorate' })
     if (version === null) return { ok: false, status: 409, say: 'The room changed while I was working. Ask again.' }

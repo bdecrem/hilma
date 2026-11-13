@@ -11,7 +11,8 @@ import { db } from './db'
 import type { SemibartUser } from './auth'
 import rosterFile from './roster.json'
 
-export type RosterRoom = { name: string; study: string; scene: 'desk' | 'read' | 'stand' | 'bart'; occupants: string[]; names: string[] }
+/** scene: one desk, the reading chair, the standing desk, Bart's study, or a shared study with a desk each (duo, trio). */
+export type RosterRoom = { name: string; study: string; scene: 'desk' | 'read' | 'stand' | 'bart' | 'duo' | 'trio'; occupants: string[]; names: string[] }
 
 /** The game's rooms, generated from the game by scripts/semibart/roster.mjs. */
 export const ROSTER = (rosterFile as { rooms: Record<string, RosterRoom> }).rooms
@@ -66,6 +67,27 @@ export async function changesSince(room: string, sinceMs: number): Promise<numbe
     .gte('created_at', new Date(sinceMs).toISOString())
   if (error) throw new Error(`semibart_room_versions count: ${error.message}`)
   return count ?? 0
+}
+
+export type RoomLogEntry = { version: number; kind: 'decorate' | 'undo'; who: string; character: string; ask: string; say: string }
+
+/** The room's last few changes, oldest first: who asked, what for, and the decorator's line. The
+ *  decorator reads it, so that in a shared study it knows whose things are whose. */
+export async function roomLog(room: string, limit = 8): Promise<RoomLogEntry[]> {
+  const { data, error } = await db().from('semibart_room_versions').select('version, kind, prompt, say, author').eq('room', room).order('version', { ascending: false }).limit(limit)
+  if (error) throw new Error(`semibart_room_versions log: ${error.message}`)
+  const rows = (data ?? []).slice().reverse()
+  const ids = [...new Set(rows.map(r => r.author as string).filter(a => /^[0-9a-f-]{36}$/i.test(a)))]
+  const names = new Map<string, { name: string; character: string }>()
+  if (ids.length) {
+    const users = await db().from('semibart_users').select('id, name, character').in('id', ids)
+    if (users.error) throw new Error(`semibart_users: ${users.error.message}`)
+    for (const u of users.data ?? []) names.set(u.id as string, { name: String(u.name).split(' ')[0], character: u.character as string })
+  }
+  return rows.map(r => {
+    const by = names.get(r.author as string)
+    return { version: r.version as number, kind: r.kind as 'decorate' | 'undo', who: by ? by.name : 'someone', character: by ? by.character : '', ask: r.kind === 'undo' ? '' : (r.prompt as string), say: r.say as string }
+  })
 }
 
 export type SaveInput = { room: string; from: number; code: string; prompt: string; say: string; author: string; kind: 'decorate' | 'undo' }

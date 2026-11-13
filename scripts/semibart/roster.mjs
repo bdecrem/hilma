@@ -21,7 +21,7 @@ const rooms = await p.evaluate(() => {
   const nameOf = k => (PEOPLE[k] && PEOPLE[k].name) || (FELLOWS && FELLOWS[k] && FELLOWS[k].name) || k;
   for (const k of Object.keys(PEOPLE)) {
     const q = PEOPLE[k], occupants = [k, ...(q.mates || [])];
-    out[k] = { name: q.name, study: String(q.n), scene: q.scene, occupants, names: occupants.map(nameOf) };
+    out[k] = { name: q.name, study: String(q.n), scene: q.plan || q.scene, occupants, names: occupants.map(nameOf) };
   }
   // Bart's study is drawn by its own branch and is not in PEOPLE.
   out.bart = { name: 'Bart', study: '16', scene: 'bart', occupants: ['bart'], names: ['Bart'] };

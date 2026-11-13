@@ -123,7 +123,7 @@ function compile(code) {
   if (!mod || typeof mod !== 'object') return out;
   LAYERS.forEach(l => { if (typeof mod[l] === 'function') out[l] = mod[l]; });
   if (Array.isArray(mod.spots) || typeof mod.spots === 'function') out.spots = mod.spots;
-  if (Array.isArray(mod.hide)) out.hide = HIDEABLE.filter(n => mod.hide.includes(n));
+  if (Array.isArray(mod.hide)) out.hide = mod.hide.filter(n => typeof n === 'string' && (HIDEABLE.includes(n) || /^(person|desk|chair):[0-2]$/.test(n))).slice(0, 16);
   return out;
 }
 const rooms = {};      // room -> { version, mod }
@@ -194,7 +194,12 @@ function draw(layer, room, t) {
 // Hiding needs the game's side of it (quest.hooks.roomHide); without it nothing is hidden at all,
 // so a room never loses its bookshelf while keeping a desk it meant to lose.
 const canHide = Array.isArray(q.hooks.roomHide);
-if (canHide) q.hooks.roomHide.push(room => { const r = rooms[room], m = r && r.mod; return m && !m.dead ? m.hide : []; });
+// 'person:1', 'desk:0', 'chair:2' name an occupant by their place in the room; the game wants slugs.
+function hideFor(room, m) {
+  const who = typeof q.occupants === 'function' ? q.occupants(room) : [room];
+  return m.hide.map(n => { const i = n.indexOf(':'); return i < 0 ? n : who[+n.slice(i + 1)] ? n.slice(0, i + 1) + who[+n.slice(i + 1)] : null; }).filter(Boolean);
+}
+if (canHide) q.hooks.roomHide.push(room => { const r = rooms[room], m = r && r.mod; return m && !m.dead ? hideFor(room, m) : []; });
 if (Array.isArray(q.hooks.roomPersonAt)) q.hooks.roomPersonAt.push((room, slug) => {
   const r = rooms[room], m = r && r.mod, at = personAt[room] && personAt[room][slug];
   return m && !m.dead && at && Math.abs(frameT - at[2]) < 0.5 ? [at[0], at[1]] : null;

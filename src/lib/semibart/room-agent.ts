@@ -5,7 +5,7 @@
 
 import type Anthropic from '@anthropic-ai/sdk'
 import { checkRoomCode, MAX_CODE, MAX_OPS, type RoomCheck } from './room-check'
-import type { RosterRoom } from './rooms'
+import type { RoomLogEntry, RosterRoom } from './rooms'
 
 const MODEL = 'claude-opus-5-5'
 const MAX_REPAIRS = 2
@@ -17,28 +17,39 @@ export type DecorateResult =
 
 // What stands in each kind of room, in room coordinates. From public/semibart/index.html
 // (makeRoomBg, deskScene, readingScene, standingScene, drawRoom): if those move, move these.
-const SCENES: Record<RosterRoom['scene'], string> = {
+type SoloScene = Exclude<RosterRoom['scene'], 'duo' | 'trio'>
+const SCENES: Record<SoloScene, string> = {
   desk: `The occupant sits behind a desk, facing the visitor. Chair back x 168-211, y 58-96. The occupant's head and shoulders x 172-205, y 56-97. Desk top x 148-263, y 95-100; its front panel runs down to y 122, legs to y 127. On the desk: a closed laptop at x 178-201, y 94-95, a monitor seen from behind at x 218-245, y 66-97, a mug at x 206-214, y 88-95. Clear wall for hanging things: x 126-262, y 6-52.`,
   read: `No desk. The occupant sits reading in a big green armchair, x 146-225, y 50-125. A floor lamp stands at x 235-257, y 46-127; a side table with tea at x 226-243, y 95-127. Clear wall for hanging things: x 126-262, y 6-44.`,
   stand: `The occupant stands at a standing desk between two enormous monitors on arms. Monitors cover x 108-273, y 16-84. Desk top x 132-259, y 80-84, legs to y 127. The occupant stands at x 176-203, y 38-127. The wall between the window and the bookshelf is mostly behind the monitors; only x 126-262, y 4-13 is clear.`,
   bart: `The occupant sits behind a desk, facing the visitor. Chair back x 168-211, y 58-96; head and shoulders x 172-205, y 56-97. Desk top x 148-263, y 95-100, front panel to y 122, legs to y 127. On the desk: a laptop, a monitor seen from behind at x 218-245, y 66-97, a mug at x 206-214, y 88-95, a phone on a stand at x 250-262, y 80-95. On the wall already: a Takt poster x 130-151, y 16-47; a pinboard x 158-187, y 20-43; a framed record x 198-227, y 14-41. A plant in a pot stands on the floor at x 284-306, y 100-130. Clear wall: x 232-262, y 6-52.`,
 }
+// The shared studies: a desk each, side by side. The same numbers as PLANS in index.html.
+const PLANS = { duo: { w: 72, chair: 44, c: [147, 227] }, trio: { w: 46, chair: 32, c: [140, 190, 240] } }
 const EXTRAS: Record<string, string> = {
   daniel: 'Also on the desk: a small marble bust of Socrates, x 155-168, y 78-94.',
   kahwee: 'Also on the desk: a pencil cup, x 156-161, y 80-94.',
-  ian: 'Also here: a world map with pins on the wall, x 136-199, y 14-51 (so the clear wall is x 204-262, y 6-52), and a stack of papers on the desk, x 154-178, y 86-93.',
-  jacqueline: 'Also here: an easel with a chart on it, left of the desk, x 121-152, y 44-127, and a small plant on the desk, x 156-164, y 80-94.',
+  ian: 'Also here (hide name: extras): a world map with pins on the wall above the desks, x 155-218, y 8-45.',
+  jacqueline: 'Also here (hide name: extras): an easel with a chart on it, standing by the window, x 69-101, y 44-127; and a small plant on her desk.',
 }
-const MATE_X: Record<string, number[]> = { jacqueline: [250] }
 
-function roomNotes(key: string, room: RosterRoom): string {
-  const lines = [SCENES[room.scene]]
+function sharedNotes(room: RosterRoom, askerCharacter?: string): string {
+  const pl = PLANS[room.scene as 'duo' | 'trio']
+  const seats = room.occupants.map((slug, i) => {
+    const c = pl.c[i], x = c - pl.w / 2
+    return `- ${room.names[i]}${slug === askerCharacter ? ' (the one asking)' : ''}, number ${i}: desk top x ${x}-${x + pl.w - 1}, y 95-100, front panel down to y 122, legs to y 127; sits centred on it, head and shoulders x ${c - 14}-${c + 13}, y 56-97; chair back x ${c - pl.chair / 2}-${c + pl.chair / 2 - 1}, y 58-96; a brass name plaque on the wall above, x ${c - 24}-${c + 23}, y 49-57.`
+  })
+  return [
+    `A shared study: ${room.names.length === 2 ? 'two' : 'three'} people, each at a desk of their own, side by side between the window and the bookshelf, facing the visitor.`,
+    ...seats,
+    `On each desk: a closed laptop in the middle, a mug at the right end, a pad and pen at the left end. "My desk" and "my side" mean the asker's desk, the floor in front of it and the wall above it. The floor left of the desks (x 40-${pl.c[0] - pl.w / 2 - 4}, under the window) and the wall above the plaques (x 126-262, y 6-46) are shared ground.`,
+    `To hide one person, desk or chair, use hide names with their number: 'person:1', 'desk:0', 'chair:2'. api.person takes who: the same number.`,
+  ].join('\n')
+}
+
+function roomNotes(key: string, room: RosterRoom, askerCharacter?: string): string {
+  const lines = [room.scene === 'duo' || room.scene === 'trio' ? sharedNotes(room, askerCharacter) : SCENES[room.scene]]
   if (EXTRAS[key]) lines.push(EXTRAS[key])
-  const mates = room.names.slice(1)
-  if (mates.length) {
-    const xs = MATE_X[key] ?? [140, 250]
-    lines.push(`Room-mates stand behind the desk: ${mates.map((n, i) => `${n} at x ${xs[i] ?? xs[xs.length - 1]}-${(xs[i] ?? xs[xs.length - 1]) + 27}, y 62-96`).join('; ')}.`)
-  }
   return lines.join('\n')
 }
 
@@ -103,7 +114,8 @@ What else stands in this particular room comes with each request.
 Most requests only add things. When a request is about the room itself ("get rid of the desk", "I'm on the couch taking a nap", "redo the floor plan", "make it a jungle"), list what the game should stop drawing in hide:
 
   'occupant'   the person at the desk (or in the armchair, or at the standing desk). Draw them somewhere else with api.person, or leave them out when they are meant to be away
-  'mates'      the room-mates, in a shared study (draw them with api.person and who: 1, 2)
+  'mates'      everyone but the first occupant, in a shared study (draw them with api.person and who: 1, 2)
+  'person:N'   one occupant of a shared study by number, as numbered with the request; 'desk:N' and 'chair:N' likewise
   'desk'       the desk and everything on it (laptop, monitor, mug, and the small things listed for this room)
   'chair'      the desk chair (the armchair, lamp and side table in a reading room)
   'extras'     the room's own props listed with the request (a map, an easel, a floor plant, posters)
@@ -125,6 +137,16 @@ The game's palette, to stay in key: ink #141414, cream #fff7e6 and #f0efea, oran
 Scale, so things sit right next to what is there: a mug is 7 by 8, a book spine 3 by 12, the occupant's head about 28 wide, a framed poster 22 by 32, a floor lamp 22 by 82, the door 32 by 76. The whole room is shown on a small screen, so draw the thing that was asked for at cartoon scale, a little larger than life, and put it where it can be seen: a rat about 24 long with a big head and ears, a cat 32, a dog 40. A new arrival that spends half its time hidden behind the desk is a disappointment.
 
 Draw characters and objects as sprites (strings of palette characters) when they have a shape worth getting right, and give animals an eye, an ear and a readable silhouette. Make living things feel alive with small motion: a hop from Math.abs(Math.sin(t * 7)), a two-frame walk at about 7 frames a second, a blink every few seconds, a tail that flicks. Things that move should turn to face the way they are going. Restraint reads better than spectacle: one or two motions per thing.
+
+# Shared studies
+
+A few studies are shared by two or three fellows, each at their own desk, and any of them may ask you for changes. They will not always agree. One adds rats, the next wants them gone, the first brings back more: that is a decoration war, it is part of the game, and people enjoy it. Do what the person asking wants, including removing, replacing or overruling something a room-mate asked for. Do not referee, do not split the difference to keep the peace, and do not lecture.
+
+What makes a war work:
+- Keep track of whose is whose. Above each thing in the code, keep a short comment naming who asked for it ("// Kevin: three rats"), and carry those comments forward with the code, so that "get rid of Mikael's stuff" or "leave Raul's lamp alone" can be done exactly. The request comes with the room's recent changes, which say who asked for what.
+- When you remove or change a room-mate's thing, say so plainly in your line and name them: "Kevin's rats are out. A cat has the floor now." The room-mates read these lines.
+- Touch only what the request is about. Everything else in the room stays exactly as it is, whoever it belongs to.
+- A prank on a room-mate's side of the room is fair play. Meanness about the person is not: the limits under "When the answer is no" apply to room-mates too.
 
 # Working on a room that already has things
 
@@ -188,7 +210,11 @@ export type DecorateInput = {
   current: string
   version: number
   request: string
+  /** First name of who is asking, and their character slug (to mark their desk in a shared study). */
   asker: string
+  askerCharacter?: string
+  /** The room's recent changes, oldest first (rooms.ts roomLog). */
+  history?: RoomLogEntry[]
   /** How hard the model thinks. Low is the default: on the same request it answered in 11 s where
    *  medium took 40 s, and drew it as well (2026-11-12, one sample each; raise it if rooms look thin). */
   effort?: 'low' | 'medium' | 'high'
@@ -206,14 +232,17 @@ export async function decorateRoom(input: DecorateInput): Promise<DecorateResult
   const log = input.log ?? (() => {})
 
   const who = input.room.names.length > 1 ? `${input.room.names.join(', ')} share it` : `${input.room.name}'s`
+  const lives = !!input.askerCharacter && input.room.occupants.includes(input.askerCharacter)
+  const past = (input.history ?? []).map(h => h.kind === 'undo' ? `- ${h.who} undid the change before.` : `- ${h.who} asked: ${JSON.stringify(h.ask)} -> ${JSON.stringify(h.say)}`)
   const brief = [
     `Room: Study ${input.room.study} (${who}).`,
-    roomNotes(input.key, input.room),
+    roomNotes(input.key, input.room, input.askerCharacter),
+    past.length ? `The room's recent changes, oldest first:\n${past.join('\n')}` : '',
     input.current.trim()
       ? `The room's current code (version ${input.version}):\n<current>\n${input.current}\n</current>`
       : 'The room has nothing added yet.',
-    `${input.asker} asks: ${JSON.stringify(input.request)}`,
-  ].join('\n\n')
+    `${input.asker}${input.room.names.length > 1 && !lives ? ' (an admin, not one of the occupants)' : ''} asks: ${JSON.stringify(input.request)}`,
+  ].filter(Boolean).join('\n\n')
 
   const messages: Anthropic.Beta.BetaMessageParam[] = [{ role: 'user', content: brief }]
   let lastSay = ''

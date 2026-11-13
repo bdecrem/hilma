@@ -121,7 +121,8 @@ __CODE__
     for (var k in mod) if (LAYERS.indexOf(k) < 0 && k !== 'spots' && k !== 'hide') throw new Error('unknown key "' + k + '" in the returned object; use back, mid, front, spots, hide');
     if (mod.hide !== undefined) {
       if (!Array.isArray(mod.hide)) throw new Error('hide must be an array of names');
-      for (var hi = 0; hi < mod.hide.length; hi++) if (HIDEABLE.indexOf(mod.hide[hi]) < 0) throw new Error('hide: "' + String(mod.hide[hi]) + '" is not one of ' + HIDEABLE.join(', '));
+      if (mod.hide.length > 16) throw new Error('hide lists at most 16 names');
+      for (var hi = 0; hi < mod.hide.length; hi++) { var hn = mod.hide[hi]; if (typeof hn !== 'string' || (HIDEABLE.indexOf(hn) < 0 && !/^(person|desk|chair):[0-2]$/.test(hn))) throw new Error('hide: "' + String(hn) + '" is not one of ' + HIDEABLE.join(', ') + ', or person:N / desk:N / chair:N with N from 0 to 2'); }
       out.hide = mod.hide.slice();
     }
     LAYERS.forEach(function (l) { if (mod[l] !== undefined) { if (typeof mod[l] !== 'function') throw new Error(l + ' must be a function (api, t)'); out.layers.push(l); } });
