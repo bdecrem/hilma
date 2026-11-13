@@ -56,11 +56,15 @@ standing in, anyone's lines in it, and announcements on the wire.
 
 ## The wire (`public/semibart/ticker.js`)
 
-A bar that slides up along the bottom and scrolls each announcement once: "Bart just added ten
-cute rats to their study." "Inbal left a note on Mary's desk." Rows live in `semibart_events`
-(written by the desk route, the agent's tools, admins); `GET /api/semibart/events?after=ID`,
-polled every 12 s, held by the CDN for 4. On arrival it replays the last four of the day. It
-stays out of the way of dialog choices, the slides, and any open box. Each new row is also a
+A slide-out widget along the bottom (since 2026-11-13): the yellow CASBS WIRE tab sits at the
+bottom left and a dark strip slides out of it to the right. Click the tab to shut it or open it
+again; it starts open and the choice is kept on the device (`localStorage` `semibart:wire`). Open,
+each new announcement scrolls across ("Bart just added ten cute rats to their study." "Inbal left
+a note on Mary's desk.") and the day's last few come round again, dimmer, while it is quiet. Shut,
+the tab counts what arrived unseen. Rows live in `semibart_events` (written by the desk route, the
+agent's tools, admins); `GET /api/semibart/events?after=ID`, polled every 12 s, held by the CDN
+for 4. The whole widget stays out of the way of dialog choices, the slides, and any open box.
+Check: `node scripts/semibart/wire-shots.mjs <dir>` (the events API answered locally). Each new row is also a
 `semibart:event` on `window`, which is how an open room picks up a new note or new lines.
 `questTicker.local(text)` scrolls a line only this player sees. `/api/semibart/events` and
 `/api/semibart/personas` answer without a session on purpose: they are lines meant for the
