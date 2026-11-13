@@ -16,7 +16,9 @@ Why notes on the desk and not a board on the wall: the wall is where each room d
 easels, monitors) and where the decorator hangs things; the desk front is an empty panel in
 nearly every room, and a desk covered in notes reads at a glance as "people come by here".
 Rooms without that panel have their own places (`PLACES` in notes.js): the arms and back of
-Frances's chair and her lampshade, the front edge of Joseph's standing desk.
+Frances's chair and her lampshade, the front edge of Joseph's standing desk. When a room's own
+code hides the desk (`questRooms.hidden(room)`, the nap and floor-plan changes), the notes move
+to the wall under the window and the pad to the sill, which no room can hide.
 
 - `GET /api/semibart/desk?room=mary` → `{ notes }`, for anyone; `POST { to, body }` and
   `DELETE ?id=` signed in. Reads are `deskNotes` in `src/lib/semibart/social.ts`; writes go

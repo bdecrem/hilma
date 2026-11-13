@@ -46,7 +46,14 @@ const PLACES = {
   read: { pad: [214, 79], slots: [[149, 86], [214, 86], [149, 98], [214, 98], [158, 55], [205, 55], [241, 48]] },
   stand: { pad: [159, 77], slots: [[146, 86], [157, 86], [168, 86], [207, 86], [218, 86], [229, 86], [238, 86]] }
 };
-const placeOf = room => PLACES[sceneOf(room)] || null;
+// When the room's own code has hidden the desk (or the reading chair), the notes move to the
+// wall under the window, which no room can hide: two rows of six from x 50, the pad on the sill.
+const WALL = { pad: [48, 69], slots: grid(50, 6, [78, 89]) };
+function placeOf(room) {
+  const sc = sceneOf(room); if (!PLACES[sc]) return null;
+  const gone = window.questRooms && typeof window.questRooms.hidden === 'function' ? window.questRooms.hidden(room) || [] : [];
+  return gone.includes(sc === 'read' ? 'chair' : 'desk') ? WALL : PLACES[sc];
+}
 
 /* ---------- the notes of the room you are in ---------- */
 const desks = {};   // room -> { notes: [...], at: ms, loading }
