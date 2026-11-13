@@ -193,7 +193,11 @@ Checks: `improv-check.ts` (sixteenths, chords and a busier idea over a plain tak
 take in quarters refusing eighths); `solo-check.ts` (the take's budget and density, a busy take
 in sixteenths getting a busier track); `jam-check.ts` (Restlicht's 124-bar jam request, a
 beginner's and a busier take reviewed live, each idea at its take's level, the whole track
-from the busier one inside its band and budget).
+from the busier one inside its band and budget). First live run (2026-11-13): the beginner's
+take (quarters, one position) got a quarter-note idea in one position at 1.29 a second; the
+busier take (eighths, 3.88 a second, its hand moving) an eighth-note idea at 3.10; the whole
+Restlicht track from it took 352 s (the route allows 800), 556 notes in eleven parts, 2.32 a
+second inside its 2.0–2.6 band, 6 hand moves in 2 positions.
 
 ## XP
 
