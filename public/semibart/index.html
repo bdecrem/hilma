@@ -174,7 +174,11 @@ button { font: inherit; background: none; border: 0; margin: 0; cursor: pointer;
 'use strict';
 const W = 320, H = 144, OY = 18, FH = 180;
 // hooks for the files that ride on the game (accounts.js, rooms.js, notes.js): they push functions here
-const HOOKS = { roomBack: [], roomMid: [], roomFront: [], roomSpots: [], keyBlock: [] };
+const HOOKS = { roomBack: [], roomMid: [], roomFront: [], roomSpots: [], keyBlock: [], roomHide: [], roomPersonAt: [] };
+// parts of a room a rider draws its own way: 'occupant', 'desk', 'chair', 'mates', 'extras'
+function hiddenIn(room) { const out = new Set(); HOOKS.roomHide.forEach(f => { try { (f(room) || []).forEach(n => out.add(n)); } catch (e) { console.error('[hook]', e); } }); return out; }
+// where a rider has put a person instead (top-left of their head and shoulders), or null
+function personAt(room, slug) { if (povHidden(room, slug)) return null; for (const f of HOOKS.roomPersonAt) { try { const p = f(room, slug); if (p) return p; } catch (e) { console.error('[hook]', e); } } return null; }
 const runHooks = (list, ...a) => list.forEach(f => { try { f(...a); } catch (e) { console.error('[hook]', e); } });
 const $ = id => document.getElementById(id);
 const cv = $('cv'), g = cv.getContext('2d');
@@ -549,7 +553,7 @@ const TPAL = { H: '#3b2416', S: '#e8b08f', O: '#e8743b', P: '#2a2f55', K: '#1414
 
 function drawYou(x, y, f, frame, talk) {
   const R = (dx, dy, w, h, c) => rect(g, f > 0 ? x + dx : x - dx - w, y + dy, w, h, c);
-  const SK = '#e8b08f', SKd = '#c98d6c', HR = '#3b2416', SW = '#e8743b', SWd = '#c55a26', PN = '#2a2f55', PNd = '#1d2140';
+  const L0 = myLook(), SK = L0 ? L0.skin : '#e8b08f', SKd = L0 ? L0.skinD : '#c98d6c', HR = L0 ? L0.hair : '#3b2416', SW = L0 ? L0.shirt : '#e8743b', SWd = L0 ? L0.shirtD : '#c55a26', PN = '#2a2f55', PNd = '#1d2140';
   const a = frame === 1 ? -5 : frame === 2 ? 4 : 0, b = -a;
   oval(g, x, y, 11, 2, 'rgba(20,20,20,0.22)');
   R(-6 + a, -26, 6, 24, PNd); R(-6 + a, -3, 9, 3, '#141414');
@@ -629,15 +633,19 @@ function bust(o, x, y, st) {
   }
 }
 // a desk like Bart's: the neighbour sits behind it, hands on the keys
-function deskScene(k, o, t, talk, blink) {
-  rect(g, 170, 58, 40, 3, INK); rect(g, 168, 61, 44, 36, INK); rect(g, 170, 61, 40, 36, '#3b3d4a'); rect(g, 170, 61, 40, 1, '#4f5262');
-  bust(o, 176, 66, { talk, blink });
+function deskScene(k, o, t, talk, blink, hide) {
+  const show = n => !hide || !hide.has(n);
+  if (show('chair')) { rect(g, 170, 58, 40, 3, INK); rect(g, 168, 61, 44, 36, INK); rect(g, 170, 61, 40, 36, '#3b3d4a'); rect(g, 170, 61, 40, 1, '#4f5262'); }
+  if (show('occupant')) bust(o, 176, 66, { talk, blink });
+  if (show('desk')) {
   rect(g, 148, 95, 116, 1, INK); rect(g, 148, 96, 116, 4, '#e2b47e'); rect(g, 148, 100, 116, 1, INK);
   rect(g, 151, 101, 110, 22, '#c08a55'); rect(g, 151, 101, 110, 1, '#9c6a3c'); rect(g, 151, 101, 1, 22, '#9c6a3c'); rect(g, 260, 101, 1, 22, '#9c6a3c');
   rect(g, 154, 123, 5, 5, '#7d5632'); rect(g, 253, 123, 5, 5, '#7d5632');
   rect(g, 178, 94, 24, 2, '#26262b');
+  }
   const typing = !S.line && !calm, a = typing ? Math.floor(t * 9) % 2 : 0;
-  rect(g, 181, 92 - a, 5, 2, o.skin); rect(g, 194, 92 - (typing ? 1 - a : 0), 5, 2, o.skin);
+  if (show('occupant')) { rect(g, 181, 92 - a, 5, 2, o.skin); rect(g, 194, 92 - (typing ? 1 - a : 0), 5, 2, o.skin); }
+  if (!show('desk')) { deskExtras(k, show); return; }
   drawMonitor(0);
   const mug = { daniel: '#2b3fff', kahwee: '#7ee0b5', ian: '#fff7e6', jacqueline: '#ff9ccf' }[k] || ['#ff9ccf', '#2b3fff', '#7ee0b5', '#ffd93b', '#fff7e6'][hashK(k) % 5];
   rect(g, 206, 88, 7, 8, INK); rect(g, 207, 89, 5, 6, mug); rect(g, 213, 90, 2, 3, INK);
@@ -645,12 +653,19 @@ function deskScene(k, o, t, talk, blink) {
     rect(g, 155, 93, 14, 2, '#9a9a94'); rect(g, 157, 89, 10, 4, '#e8e6df'); rect(g, 158, 80, 8, 9, '#f2f0ea'); rect(g, 157, 78, 10, 3, '#d9d6cc');
     rect(g, 158, 86, 8, 4, '#d9d6cc'); rect(g, 159, 83, 2, 1, '#8a8780'); rect(g, 163, 83, 2, 1, '#8a8780'); rect(g, 161, 84, 2, 2, '#cfccc2'); }
   if (k === 'kahwee') { rect(g, 156, 84, 6, 11, INK); rect(g, 157, 85, 4, 10, '#c46a4a'); rect(g, 157, 81, 1, 4, '#ffd93b'); rect(g, 159, 80, 1, 5, '#2b3fff'); }
-  if (k === 'ian') { [0, 2, 4, 6].forEach(i => rect(g, 154 + i, 92 - i, 18, 2, i % 4 ? '#fff7e6' : '#e8e2d2'));
+  if (k === 'ian') [0, 2, 4, 6].forEach(i => rect(g, 154 + i, 92 - i, 18, 2, i % 4 ? '#fff7e6' : '#e8e2d2'));
+  if (k === 'jacqueline') { rect(g, 156, 88, 9, 7, '#c46a4a'); disc(g, 160, 84, 4, '#2f6b45'); disc(g, 158, 82, 2, '#4a8f5f'); }
+  deskExtras(k, show);
+}
+// what a desk scene puts on the walls and floor: Ian's map, Jacqueline's easel
+function deskExtras(k, show) {
+  if (!show('extras')) return;
+  if (k === 'ian') {
     // a world map on the wall, pins in it
     rect(g, 136, 14, 64, 38, '#5c2e18'); rect(g, 138, 16, 60, 34, '#a9cfe0');
     [[142, 20, 12, 8], [146, 28, 7, 10], [160, 19, 10, 6], [161, 26, 9, 11], [172, 18, 18, 10], [184, 34, 8, 6]].forEach(c => rect(g, c[0], c[1], c[2], c[3], '#d9c99a'));
     [[148, 23], [150, 33], [165, 30], [178, 22], [187, 36], [163, 21]].forEach(([x, y]) => { rect(g, x, y, 2, 2, '#d6402e'); rect(g, x, y - 2, 1, 2, INK); }); }
-  if (k === 'jacqueline') { rect(g, 156, 88, 9, 7, '#c46a4a'); disc(g, 160, 84, 4, '#2f6b45'); disc(g, 158, 82, 2, '#4a8f5f');
+  if (k === 'jacqueline') {
     // an easel with the pitch on it
     rect(g, 128, 74, 2, 54, '#5c3a20'); rect(g, 143, 74, 2, 54, '#5c3a20'); rect(g, 135, 44, 2, 70, '#5c3a20');
     rect(g, 122, 48, 30, 26, INK); rect(g, 123, 49, 28, 24, '#fffaf0'); rect(g, 125, 51, 14, 2, '#141414'); rect(g, 125, 55, 10, 1, '#8a8478');
@@ -658,7 +673,9 @@ function deskScene(k, o, t, talk, blink) {
     rect(g, 121, 73, 32, 2, '#7d5632'); }
 }
 // Frances, deep in a book in the comfiest chair on campus
-function readingScene(o, t, talk, blink, speaking) {
+function readingScene(o, t, talk, blink, speaking, hide) {
+  const show = n => !hide || !hide.has(n);
+  if (show('chair')) {
   // a floor lamp, warm
   oval(g, 246, 74, 22, 30, 'rgba(255,217,106,0.10)');
   rect(g, 245, 56, 2, 72, '#3b3d4a'); rect(g, 240, 126, 12, 2, '#3b3d4a');
@@ -671,12 +688,17 @@ function readingScene(o, t, talk, blink, speaking) {
   rect(g, 154, 50, 64, 4, INK); rect(g, 152, 54, 68, 52, INK);
   rect(g, 156, 52, 60, 52, CH); rect(g, 156, 52, 60, 2, CHh);
   for (let i = 0; i < 3; i++) { disc(g, 170 + i * 16, 64, 1, CHd); disc(g, 170 + i * 16, 80, 1, CHd); }
-  bust(o, 172, 62, { talk, blink, down: !speaking });
+  }
+  if (show('occupant')) bust(o, 172, 62, { talk, blink, down: !speaking });
+  if (show('chair')) {
+  const CH = '#5c7a52', CHd = '#46613d', CHh = '#7a9a6c';
   // arms of the chair, seat, legs
   rect(g, 146, 82, 16, 30, INK); rect(g, 147, 83, 14, 28, CH); rect(g, 147, 83, 14, 2, CHh);
   rect(g, 210, 82, 16, 30, INK); rect(g, 211, 83, 14, 28, CH); rect(g, 211, 83, 14, 2, CHh);
   rect(g, 160, 96, 52, 16, INK); rect(g, 161, 97, 50, 14, CHd); rect(g, 161, 97, 50, 2, CH);
   rect(g, 150, 112, 72, 2, INK); rect(g, 152, 114, 4, 12, '#3d2112'); rect(g, 216, 114, 4, 12, '#3d2112');
+  }
+  if (!show('occupant')) return;
   // her knees and legs, a book in her hands
   rect(g, 174, 96, 24, 8, '#5a5f73'); rect(g, 174, 96, 24, 1, '#6c7186');
   rect(g, 177, 104, 8, 20, '#5a5f73'); rect(g, 188, 104, 8, 20, '#4c5063');
@@ -703,19 +725,25 @@ function screen(x0, w, top0, top1, h0, h1, flip, t) {
     rect(g, x, at(0.92), 1, 1, '#4b5d84');
   }
 }
-function standingScene(o, t, talk, blink) {
-  oval(g, 190, 52, 90, 34, 'rgba(134,201,230,0.10)');
+function standingScene(o, t, talk, blink, hide) {
+  const show = n => !hide || !hide.has(n);
+  if (show('desk')) oval(g, 190, 52, 90, 34, 'rgba(134,201,230,0.10)');
+  if (show('occupant')) {
   // legs under the desk, then the torso, then the head
   rect(g, 182, 84, 8, 40, '#2e3448'); rect(g, 192, 84, 8, 40, '#262b3c'); rect(g, 180, 124, 11, 4, INK); rect(g, 191, 124, 11, 4, INK);
   rect(g, 178, 66, 24, 18, o.shirt); rect(g, 178, 66, 2, 18, o.shirtD); rect(g, 200, 66, 2, 18, o.shirtD);
   for (let j = 68; j < 84; j += 3) for (let i = 180 + (j % 2); i < 200; i += 4) rect(g, i, j, 1, 1, o.dots);
   bust(o, 176, 38, { talk, blink });
+  }
+  if (show('desk')) {
   // the standing desk
   rect(g, 132, 80, 128, 1, INK); rect(g, 132, 81, 128, 3, '#d9d4c8'); rect(g, 132, 84, 128, 1, INK);
   rect(g, 140, 85, 3, 41, '#3b3d4a'); rect(g, 249, 85, 3, 41, '#3b3d4a'); rect(g, 134, 125, 14, 3, '#3b3d4a'); rect(g, 244, 125, 14, 3, '#3b3d4a');
   rect(g, 178, 78, 26, 2, '#26262b');
+  }
   const typing = !S.line && !calm, a = typing ? Math.floor(t * 9) % 2 : 0;
-  rect(g, 181, 76 - a, 5, 2, o.skin); rect(g, 196, 76 - (typing ? 1 - a : 0), 5, 2, o.skin);
+  if (show('occupant')) { rect(g, 181, 76 - a, 5, 2, o.skin); rect(g, 196, 76 - (typing ? 1 - a : 0), 5, 2, o.skin); }
+  if (!show('desk')) return;
   // two enormous monitors on arms, turned in toward him
   rect(g, 150, 74, 4, 6, '#3b3d4a'); rect(g, 228, 74, 4, 6, '#3b3d4a');
   screen(108, 66, 18, 26, 56, 44, false, t);
@@ -998,7 +1026,7 @@ const FELLOWS = {"alison": {"name": "Alison", "look": "Alison. Political theoris
 Object.assign(LOOKS, {"alison": {"skin": "#f1c9a8", "skinD": "#cfa386", "hair": "#a8683a", "hairD": "#87502b", "brow": "#7a4a28", "style": "bob", "top": "blazer", "shirt": "#22262e", "shirtD": "#1a1d23", "trim": "#f2efe9"}, "andrius": {"skin": "#e6b995", "skinD": "#c49878", "hair": "#4a3a2c", "hairD": "#352a20", "brow": "#3c2e22", "style": "swept", "top": "jacket", "shirt": "#4a4d52", "shirtD": "#3e4146", "trim": "#1e1e22", "stubble": "#a08468"}, "brian": {"skin": "#ecc3a0", "skinD": "#c9a083", "hair": "#b98a45", "hairD": "#946b32", "brow": "#9a7238", "style": "short", "top": "collar", "shirt": "#7d92c4", "shirtD": "#6779a8", "trim": "#8ea2d0", "glasses": "#8a8f96"}, "brooke": {"skin": "#eac3a6", "skinD": "#c7a088", "hair": "#7d6a5c", "hairD": "#a39a92", "brow": "#5e4b3d", "style": "long", "top": "blazer", "shirt": "#2c2a30", "shirtD": "#232127", "trim": "#efe6d8", "glasses": "#5a4a66"}, "bryn": {"skin": "#ecc6aa", "skinD": "#c9a38a", "hair": "#4a2e22", "hairD": "#352018", "brow": "#3c261b", "style": "long", "top": "blazer", "shirt": "#a79fb0", "shirtD": "#8b8394", "trim": "#d8d4dc"}, "corey": {"skin": "#e2b896", "skinD": "#c09a7c", "hair": "#6b5a4a", "hairD": "#4e4034", "brow": "#4a3c30", "style": "bald", "top": "blazer", "shirt": "#6f6e76", "shirtD": "#5c5b63", "trim": "#c9c6e0", "glasses": "#6a6e72", "beard": "#3e3028"}, "dessislava": {"skin": "#e9bf9f", "skinD": "#c69d82", "hair": "#4a3022", "hairD": "#352117", "brow": "#3a271c", "style": "curly", "top": "tee", "shirt": "#1f2430", "shirtD": "#191d27", "trim": "#1f2430"}, "summerson": {"skin": "#efc4a8", "skinD": "#cca186", "hair": "#7a5a42", "hairD": "#5e4432", "brow": "#5a4130", "style": "long", "top": "tee", "shirt": "#6b4a40", "shirtD": "#573b33", "trim": "#6b4a40"}, "eli": {"skin": "#e0b08e", "skinD": "#bd9072", "hair": "#2e2420", "hairD": "#1e1815", "brow": "#241b17", "style": "curly", "top": "collar", "shirt": "#2a2c30", "shirtD": "#222428", "trim": "#3a3c40", "glasses": "#6a5a3a", "round": true, "beard": "#3a2e28"}, "forrest": {"skin": "#d9a77f", "skinD": "#b78a68", "hair": "#c9a77f", "hairD": "#a8896a", "brow": "#3a2b20", "style": "bald", "top": "jacket", "shirt": "#7c8ea0", "shirtD": "#687989", "trim": "#f0eee8"}, "frederick": {"skin": "#e8bd9a", "skinD": "#c59d7e", "hair": "#6e6a68", "hairD": "#9a9694", "brow": "#5a5450", "style": "short", "top": "collar", "shirt": "#1f2a6a", "shirtD": "#1a2358", "trim": "#1f2a6a"}, "garance": {"skin": "#f0cbb0", "skinD": "#cba58c", "hair": "#6a3524", "hairD": "#4e281b", "brow": "#573020", "style": "long", "top": "blazer", "shirt": "#1f2a4a", "shirtD": "#182139", "trim": "#dfe3ea"}, "graeme": {"skin": "#e6b996", "skinD": "#c3987a", "hair": "#7a4a2a", "hairD": "#5e3920", "brow": "#5a3a22", "style": "receding", "top": "blazer", "shirt": "#262a38", "shirtD": "#1e212d", "trim": "#aab0b8", "glasses": "#1e1e22", "round": true, "stubble": "#a8845f"}, "heeju": {"skin": "#ecc9ad", "skinD": "#c9a68b", "hair": "#241c1c", "hairD": "#181212", "brow": "#241c1c", "style": "bob", "top": "jacket", "shirt": "#1e1c22", "shirtD": "#17151a", "trim": "#6a4f7a", "glasses": "#9a4a52", "round": true}, "henry": {"skin": "#e0b394", "skinD": "#bf9679", "hair": "#5a4030", "hairD": "#3f2c20", "brow": "#4a3426", "style": "short", "top": "tee", "shirt": "#d9d3e8", "shirtD": "#b7b1c6", "trim": "#c9e0d6", "stubble": "#9a7d66"}, "inbal": {"skin": "#ecc7ad", "skinD": "#c8a68f", "hair": "#9a4a2a", "hairD": "#7a3a20", "brow": "#7a3a20", "style": "long", "top": "collar", "shirt": "#b9cbe6", "shirtD": "#97a7c2", "trim": "#d8e3f3", "glasses": "#2a2a2e"}, "ishara": {"skin": "#a9724f", "skinD": "#8f5d40", "hair": "#2a1c16", "hairD": "#1c1210", "brow": "#241812", "style": "curly", "top": "tee", "shirt": "#22262e", "shirtD": "#1a1d23", "trim": "#2c3038", "glasses": "#222222", "round": true}, "james": {"skin": "#e6b89c", "skinD": "#c49a80", "hair": "#a9a9a6", "hairD": "#8a8a88", "brow": "#8a8a88", "style": "short", "top": "blazer", "shirt": "#262f4a", "shirtD": "#1e2539", "trim": "#f2f2f4", "glasses": "#2a2a2a", "round": true}, "jamie": {"skin": "#e2b99c", "skinD": "#c09c82", "hair": "#3a2a22", "hairD": "#271b16", "brow": "#33241c", "style": "bob", "top": "jacket", "shirt": "#5a6b52", "shirtD": "#4a5944", "trim": "#23284a"}, "john": {"skin": "#e5bc9f", "skinD": "#c39f85", "hair": "#6a4a32", "hairD": "#503824", "brow": "#5a4030", "style": "swept", "top": "blazer", "shirt": "#262f48", "shirtD": "#1e2539", "trim": "#b9cbe6", "glasses": "#c9b88a"}, "juliana": {"skin": "#d9a98c", "skinD": "#b78e75", "hair": "#4a3426", "hairD": "#33241c", "brow": "#3a2a20", "style": "back", "top": "cardigan", "shirt": "#3e4a6e", "shirtD": "#323c59", "trim": "#e8e6ee"}, "june": {"skin": "#ecc7ad", "skinD": "#c8a68f", "hair": "#a8683a", "hairD": "#8a5430", "brow": "#8a5a38", "style": "long", "top": "jacket", "shirt": "#2a2022", "shirtD": "#1f1819", "trim": "#2a2022"}, "jurate": {"skin": "#ecc9b0", "skinD": "#c8a98f", "hair": "#d9b878", "hairD": "#b89a5e", "brow": "#b0905a", "style": "bob", "top": "blazer", "shirt": "#7a5a42", "shirtD": "#634934", "trim": "#1e1e22", "glasses": "#26262a", "round": true}, "katharyne": {"skin": "#e8bfa3", "skinD": "#c59f85", "hair": "#c98a4a", "hairD": "#a86f3a", "brow": "#a87a4a", "style": "curly", "top": "cardigan", "shirt": "#1f2328", "shirtD": "#181b1f", "trim": "#c8d9c0"}, "kepa": {"skin": "#dba98a", "skinD": "#b98f74", "hair": "#8a8a88", "hairD": "#6d6d6b", "brow": "#6d6d6b", "style": "bald", "top": "tee", "shirt": "#1e2430", "shirtD": "#171c26", "trim": "#1e2430", "beard": "#9a9a98"}, "kevin": {"skin": "#e6b497", "skinD": "#c49479", "hair": "#b27a46", "hairD": "#946238", "brow": "#9a6a3c", "style": "swept", "top": "collar", "shirt": "#f2f2f0", "shirtD": "#cfcfcd", "trim": "#ffffff", "stubble": "#b89270"}, "lana": {"skin": "#e8c1a8", "skinD": "#c5a189", "hair": "#2e2220", "hairD": "#1f1614", "brow": "#2a1e1a", "style": "long", "top": "vneck", "shirt": "#1c2230", "shirtD": "#151a26", "trim": "#d4b46a"}, "lawrence": {"skin": "#d9ab88", "skinD": "#b98f70", "hair": "#3a3a3c", "hairD": "#26262a", "brow": "#2c2c2e", "style": "short", "top": "vneck", "shirt": "#c4453a", "shirtD": "#a33a31", "trim": "#b9cbe6", "glasses": "#555a60"}, "lewis": {"skin": "#7a5238", "skinD": "#654330", "hair": "#2a2018", "hairD": "#2a2018", "brow": "#2a2018", "style": "bald", "top": "tee", "shirt": "#c8782a", "shirtD": "#aa6422", "trim": "#3a2a1a", "beard": "#3a2c22"}, "luke": {"skin": "#d8a888", "skinD": "#b88f73", "hair": "#4a3a2c", "hairD": "#8a8580", "brow": "#4a3a2c", "style": "swept", "top": "collar", "shirt": "#8a6ad8", "shirtD": "#7458b8", "trim": "#7a5ac8", "glasses": "#222222", "beard": "#8a8580"}, "lynda": {"skin": "#e8c4a8", "skinD": "#c6a68e", "hair": "#d8d0c0", "hairD": "#b8b0a0", "brow": "#a09080", "style": "curly", "top": "jacket", "shirt": "#b8bcb4", "shirtD": "#9a9e98", "trim": "#2a2630"}, "mary": {"skin": "#d8aa88", "skinD": "#b78f73", "hair": "#3a2a24", "hairD": "#2a1e1a", "brow": "#2e221c", "style": "long", "top": "cardigan", "shirt": "#ece4d4", "shirtD": "#c8c0b2", "trim": "#d8cfc0", "earrings": "#d8b050"}, "matthew": {"skin": "#e8b8a0", "skinD": "#c69c88", "hair": "#e8b8a0", "hairD": "#c69c88", "brow": "#c8967a", "style": "bald", "top": "jacket", "shirt": "#1e1e1e", "shirtD": "#141414", "trim": "#d89aa0"}, "mikael": {"skin": "#dcb498", "skinD": "#bb987f", "hair": "#a88860", "hairD": "#8a7050", "brow": "#8a7050", "style": "receding", "top": "tee", "shirt": "#22283a", "shirtD": "#1a1f2e", "trim": "#22283a", "glasses": "#2a2a2a", "stubble": "#b09878"}, "milena": {"skin": "#e0b898", "skinD": "#be9c80", "hair": "#9a9a9a", "hairD": "#7c7c7c", "brow": "#5a4a40", "style": "short", "top": "tee", "shirt": "#2a2a2e", "shirtD": "#1e1e22", "trim": "#2a2a2e"}, "ralph": {"skin": "#8a5a3e", "skinD": "#734b34", "hair": "#6a6a6a", "hairD": "#6a6a6a", "brow": "#4a4a4a", "style": "bald", "top": "blazer", "shirt": "#26262c", "shirtD": "#1c1c22", "trim": "#f0f0f0", "glasses": "#4a4a40"}, "raul": {"skin": "#d0a080", "skinD": "#ae846a", "hair": "#3a2c22", "hairD": "#2a2018", "brow": "#2a2018", "style": "long", "top": "jacket", "shirt": "#4a5a68", "shirtD": "#3c4a56", "trim": "#a8a490", "beard": "#4a3a30", "mous": true}, "robert": {"skin": "#e8bfa4", "skinD": "#c6a089", "hair": "#d4d0c8", "hairD": "#b8b4ac", "brow": "#b0a898", "style": "short", "top": "collar", "shirt": "#f4f4f4", "shirtD": "#d0d0d0", "trim": "#f4f4f4"}, "salman": {"skin": "#c89070", "skinD": "#a77a5f", "hair": "#1e1814", "hairD": "#1e1814", "brow": "#1e1814", "style": "swept", "top": "jacket", "shirt": "#3a3e58", "shirtD": "#2e3248", "trim": "#3a3e58", "glasses": "#4a4038", "stubble": "#4a3a30"}, "shigehiro": {"skin": "#dcb898", "skinD": "#bb9c80", "hair": "#1e1a18", "hairD": "#1e1a18", "brow": "#1e1a18", "style": "swept", "top": "collar", "shirt": "#e8c8c0", "shirtD": "#c6a9a2", "trim": "#e8c8c0"}, "tl": {"skin": "#e0b8a0", "skinD": "#be9b86", "hair": "#b0aaa0", "hairD": "#908a82", "brow": "#908a82", "style": "curly", "top": "jacket", "shirt": "#3a3e44", "shirtD": "#2e3238", "trim": "#1a1a1e", "glasses": "#222222", "round": true}, "toussaint": {"skin": "#d0a888", "skinD": "#ae8c72", "hair": "#3a2a20", "hairD": "#2a1e16", "brow": "#2a1e16", "style": "curly", "top": "collar", "shirt": "#2a2e36", "shirtD": "#1e2228", "trim": "#f0f0f0", "stubble": "#5a4a3c"}});
 // every fellow in their own study (numbers from the CASBS directory), drawn as they are in the seminar.
 // Daniel, Kah-Wee, Frances, Ian, Jacqueline and Joseph keep their rooms; Eli and Forrest keep their doors shut.
-const STUDY_OF = { lewis: '6', luke: '5', mary: '4', lawrence: '7', brooke: '8', katharyne: '9', james: '11', frederick: '12', john: '13', garance: '14', graeme: '15',
+const STUDY_OF = { eli: '34', forrest: '44', lewis: '6', luke: '5', mary: '4', lawrence: '7', brooke: '8', katharyne: '9', james: '11', frederick: '12', john: '13', garance: '14', graeme: '15',
   kevin: '27', mikael: '27', raul: '27', jurate: '28', ishara: '29', juliana: '30', inbal: '31', milena: '32', tl: '33', summerson: '35', alison: '36', salman: '37',
   june: '38', lynda: '39', robert: '40', ralph: '41', dessislava: '42', jamie: '45', kepa: '46', henry: '47', corey: '48', lana: '49', shigehiro: '50', andrius: '51',
   bryn: '52', brian: '53', heeju: '54', toussaint: '016', matthew: '016' };
@@ -1092,6 +1120,7 @@ async function enterRoom() {
   }
 }
 async function exitRoom() {
+  if (S.seated) standUp();
   await goTo({ x: 40, y: 132 }); S.face = -1;
   SFX.creak();
   await fadeTo(true);
@@ -1302,10 +1331,10 @@ const PERSON_AT = {}; Object.keys(PEOPLE).forEach(k => { PERSON_AT[String(PEOPLE
 function studySpot(n, r, walk) {
   const who = WHO[n] || [], office = /^00/.test(n) || n === '060', word = office ? 'Office' : 'Study';
   const base = { name: word + ' ' + n + (who.length ? ' · ' + who.join(', ') : ''), study: true, n, who, where: word + ' ' + n, r, walk, def: 'open' };
-  if (PERSON_AT[n]) { const k = PERSON_AT[n], p = PEOPLE[k]; return Object.assign(base, { on: { look: `Study ${n}. ${p.name}'s. The light's on.`, open: () => enterPerson(k) } }); }
-  if (n === '16') return Object.assign(base, { on: { look: "Study 16. Bart's. The light's on. Someone's typing in there.", open: knockAndEnter } });
   if (n === '34') return Object.assign(base, { on: ELI_ON });
   if (n === '44') return Object.assign(base, { on: FORREST_ON });
+  if (PERSON_AT[n]) { const k = PERSON_AT[n], p = PEOPLE[k]; return Object.assign(base, { on: { look: `Study ${n}. ${p.name}'s. The light's on.`, open: () => enterPerson(k) } }); }
+  if (n === '16') return Object.assign(base, { on: { look: "Study 16. Bart's. The light's on. Someone's typing in there.", open: knockAndEnter } });
   if (!who.length) return Object.assign(base, { on: { look: `${word} ${n}. Nobody in it this year.`, open: async () => { SFX.rattle(); await say('you', 'Locked. Through the glass: a desk, a chair, a very clean whiteboard.'); } } });
   const note = NOTE_POOL[(parseInt(n, 10) * 7 + 3) % NOTE_POOL.length];
   return Object.assign(base, { on: { look: `${word} ${n}, ${who.join(' and ')}. Dark. There's a note on the door.`, open: async () => { SFX.rattle(); await say('you', `Locked. The note says: "${note}"`); } } });
@@ -1350,6 +1379,60 @@ MAP.push(
 );
 const ORDER = n => /^\d+$/.test(n) && !/^0/.test(n) ? +n : 100 + parseInt(n, 10);
 const STUDIES = MAP.filter(h => h.study).sort((a, b) => ORDER(a.n) - ORDER(b.n));
+/* ---------- point of view: signed in, you are your character (2026-11-12) ----------
+   You walk the campus as yourself, in your own colors. Your study opens without a knock and your
+   chair is empty until you sit; sitting shows the room as everyone sees it, you at your desk.
+   Everyone else's study keeps them at their desk: their stand-in while they're away. */
+const me = () => { const u = window.quest && window.quest.me; return u ? u.character : null; };
+const BART_LOOK = { skin: P.S, skinD: P.s, hair: P.W, hairD: P.w, shirt: P.N, shirtD: P.n };
+function myLook() { const k = me(); return !k ? null : k === 'bart' ? BART_LOOK : LOOKS[k] || null; }
+function roomOf(slug) {
+  if (!slug) return null; if (slug === 'bart') return 'bart'; if (PEOPLE[slug]) return slug;
+  for (const k in PEOPLE) if ((PEOPLE[k].mates || []).includes(slug)) return k;
+  return null;
+}
+// where a person sits in their study: the top-left of their head and shoulders
+function seatOf(room, slug) {
+  if (room === 'bart') return slug === 'bart' ? [176, 66] : null;
+  const p = PEOPLE[room]; if (!p) return null;
+  if (slug === room) return { desk: [176, 66], read: [172, 62], stand: [176, 38] }[p.scene];
+  const i = (p.mates || []).indexOf(slug); return i >= 0 ? [mateX(room, i), 66] : null;
+}
+const inMyRoom = () => S.scene === 'room' && !!me() && roomOf(me()) === S.room;
+// in your own study, until you sit, you are the walker and nobody else draws you
+const povHidden = (room, slug) => !!slug && slug === me() && !S.seated && roomOf(slug) === room;
+// is this person talking right now (seated, your 'you' lines come from you at your desk)
+const voiced = slug => !!(S.line && (S.line.who === slug || (S.seated && slug === me() && S.line.who === 'you')));
+function setSeated(v) { v = !!v; if (!!S.seated === v) return; S.seated = v; window.dispatchEvent(new CustomEvent('semibart:seated', { detail: v })); }
+HOOKS.roomHide.push(room => povHidden(room, me()) ? ['person:' + me()] : []);
+async function enterMine() {
+  const room = roomOf(me());
+  SFX.creak(); await fadeTo(true);
+  S.scene = 'room'; S.room = room || 'empty'; S.x = 30; S.y = 132; S.face = 1; S.path = []; setSeated(false);
+  if (room === 'bart') S.bart.mode = 'idle';
+  await fadeTo(false);
+  await walkTo([{ x: 110, y: 134 }]);
+  await say('you', ['My study.', 'Home.', 'Back. The chair looks comfortable.'][Math.floor(Math.random() * 3)]);
+}
+async function sitDown() {
+  const st = seatOf(S.room, me()); if (!st) return;
+  await walkTo([{ x: Math.max(40, Math.min(300, st[0] + 14)), y: 134 }]);
+  setSeated(true);
+}
+async function standUp() {
+  const st = seatOf(S.room, me()); setSeated(false);
+  if (st) { S.x = Math.max(40, Math.min(300, st[0] + 14)); S.y = 134; S.face = -1; }
+}
+// your own study's door: no knock, and it's yours
+const mineStudy = h => { const u = window.quest && window.quest.me; return !!(u && h.study && u.study === h.n); };
+MAP.forEach(h => {
+  if (!h.study) return;
+  const on = h.on;
+  h.on = Object.assign({}, on, {
+    look: () => mineStudy(h) ? say('you', `Study ${h.n}. ${(WHO[h.n] || []).length > 1 ? 'Ours.' : 'Mine.'}`) : perform(on.look),
+    open: () => mineStudy(h) ? enterMine() : perform(on.open)
+  });
+});
 const ELI_AT = (() => { const c = L.w3037.cells.find(c => c.n === '34'); return [L.w3037.outer, c.dy - 10]; })();
 const FORREST_AT = (() => { const c = L.topW.cells.find(c => c.n === '44'); return [c.dx, L.topW.y - 4]; })();
 // the directory: everyone with a room, by last name
@@ -1370,7 +1453,7 @@ const ROOM = [
   { name: 'coffee mug', r: [204, 86, 13, 12], walk: { x: 212, y: 130 }, def: 'pick', on: { look: 'Coffee. Still hot. The mug says TAKT.', pick: "It's Bart's. He'd notice. He'd definitely notice." } },
   { name: 'phone', r: [246, 76, 22, 22], walk: { x: 232, y: 132 }, def: 'use', on: { look: lookPhone, use: lookPhone } },
   { name: 'monitor', r: [218, 66, 28, 32], walk: { x: 148, y: 134 }, def: 'use', on: { look: "The back of Bart's monitor. It has stickers. Something with slides is on the other side.", use: presentTalk } },
-  { name: 'Bart', r: [172, 56, 34, 42], walk: { x: 160, y: 132 }, def: 'talk', on: {
+  { name: 'Bart', who: 'bart', at0: [176, 66], r: [172, 56, 34, 42], walk: { x: 160, y: 132 }, def: 'talk', on: {
     look: () => say('you', S.bart.shades ? 'Bart Decrem. Fellow. Builder of things. Currently cool.' : 'Bart Decrem. Fellow. Builder of things. Owner of sunglasses.'),
     talk: talkBart
   } },
@@ -1383,7 +1466,7 @@ const ROOM = [
 ];
 const PERSON_R = { desk: [172, 56, 34, 42], read: [156, 54, 60, 70], stand: [176, 34, 30, 92] };
 Object.keys(PEOPLE).forEach(k => {
-  const p = PEOPLE[k], sp = [{ name: p.name, r: PERSON_R[p.scene], walk: { x: 160, y: 134 }, def: 'talk', on: { look: p.look, talk: () => talkPerson(k) } }];
+  const p = PEOPLE[k], sp = [{ name: p.name, who: k, at0: { desk: [176, 66], read: [172, 62], stand: [176, 38] }[p.scene], r: PERSON_R[p.scene], walk: { x: 160, y: 134 }, def: 'talk', on: { look: p.look, talk: () => talkPerson(k) } }];
   if (p.scene === 'read') sp.unshift({ name: 'the Almanac', r: [176, 84, 24, 14], walk: { x: 170, y: 134 }, def: 'open', href: 'https://almanac.tunn3l.sh/almanac/', on: { look: 'The Adaptation Almanac. Thousands of studies on how people adapt to a changing climate. She is on the good part.', open: 'The Almanac. Opening in a new tab.' } });
   if (p.scene === 'read') sp.push(
     { name: 'reading chair', r: [146, 48, 80, 66], walk: { x: 200, y: 134 }, def: 'look', on: { look: 'A big soft reading chair. There is a waiting list for it. Frances is the list.' } },
@@ -1395,7 +1478,7 @@ Object.keys(PEOPLE).forEach(k => {
     ian: { name: 'world map', r: [136, 14, 64, 38], walk: { x: 168, y: 134 }, href: 'https://ola.cx/mrd/story', look: "A world map with pins in it. Every pin is a country's rules for migrants.", open: 'The migrant rights story. Opening in a new tab.' }
   };
   if (LINKS[k]) { const L = LINKS[k]; sp.unshift({ name: L.name, r: L.r, walk: L.walk, def: 'open', href: L.href, on: { look: L.look, open: L.open } }); }
-  (p.mates || []).forEach((m, i) => sp.unshift({ name: FELLOWS[m].name, r: [mateX(k, i), 62, 28, 34], walk: { x: mateX(k, i) + 14, y: 134 }, def: 'talk', on: { look: FELLOWS[m].look, talk: [[m, unshh(FELLOWS[m].whisper)]] } }));
+  (p.mates || []).forEach((m, i) => sp.unshift({ name: FELLOWS[m].name, who: m, at0: [mateX(k, i), 66], r: [mateX(k, i), 62, 28, 34], walk: { x: mateX(k, i) + 14, y: 134 }, def: 'talk', on: { look: FELLOWS[m].look, talk: [[m, unshh(FELLOWS[m].whisper)]] } }));
   if (p.scene === 'desk') sp.push({ name: 'monitor', r: [218, 66, 28, 32], walk: { x: 236, y: 130 }, def: 'look', on: { look: 'I can only see the back. It has stickers.' } });
   p.spots = sp.concat(ROOM_EMPTY.map(h => h.name === 'window' ? Object.assign({}, h, { on: { look: 'The hills, the Dish, Stanford down below.' } }) : h.name === 'bookshelf' ? Object.assign({}, h, { on: { look: `${p.name}'s books. Organized by a system. The system is ${p.name}.`, push: 'No secret passage. I checked.' } }) : h));
 });
@@ -1406,11 +1489,22 @@ const SEMINAR_FIXED = ([
   { name: 'window', r: [44, 14, 78, 58], walk: { x: 84, y: 134 }, def: 'look', on: { look: () => say('you', S.sem.rung ? 'A turkey. It saw everything.' : 'The hills. Nobody is looking at them. Everybody is looking at me.') } },
   { name: 'door', r: [4, 30, 32, 76], walk: { x: 40, y: 132 }, def: 'open', on: { look: 'The way out. Quietly.', open: leaveSeminar } }
 ]);
-function seminarSpots() { const pr = presenter(); return [{ name: pr.name, r: [PRES_X - 2, 34, 32, 94], walk: { x: 250, y: 134 }, def: 'talk', on: { look: `${pr.name}, presenting. Still on slide two.`, talk: [[pr.k, 'Please. Questions at the end.']] } }].concat(seats().map(a => ({ name: a.name, r: [a.x, 60, 28, 36], walk: { x: a.x + 14, y: 134 }, def: 'talk', on: { look: a.look, talk: () => talkSeat(a) } }))).concat(SEMINAR_FIXED); }
+function seminarSpots() { const pr = presenter(); return [{ k: pr.k, name: pr.name, r: [PRES_X - 2, 34, 32, 94], walk: { x: 250, y: 134 }, def: 'talk', on: { look: `${pr.name}, presenting. Still on slide two.`, talk: [[pr.k, 'Please. Questions at the end.']] } }].concat(seats().map(a => ({ k: a.k, name: a.name, r: [a.x, 60, 28, 36], walk: { x: a.x + 14, y: 134 }, def: 'talk', on: { look: a.look, talk: () => talkSeat(a) } }))).concat(SEMINAR_FIXED).filter(h => !h.k || h.k !== me()); }
 function hotspots() {
   const base = S.scene === 'map' ? MAP : S.room === 'seminar' ? seminarSpots() : S.room === 'empty' ? ROOM_EMPTY : PEOPLE[S.room] ? PEOPLE[S.room].spots : ROOM;
-  if (S.scene !== 'room' || S.room === 'seminar' || S.room === 'empty' || !HOOKS.roomSpots.length) return base;
-  return [].concat(...HOOKS.roomSpots.map(f => { try { return f(S.room) || []; } catch (e) { console.error('[hook]', e); return []; } }), base);
+  if (S.scene !== 'room' || S.room === 'seminar' || S.room === 'empty') return base;
+  // a person a rider has moved (to the couch, say) is clicked where they are now
+  const placed = HOOKS.roomPersonAt.length ? base.map(h => { const p = h.who && h.at0 && personAt(S.room, h.who); if (!p) return h; const dx = p[0] - h.at0[0], dy = p[1] - h.at0[1];
+    return Object.assign({}, h, { r: [h.r[0] + dx, h.r[1] + dy, h.r[2], h.r[3]], walk: { x: Math.max(40, Math.min(300, h.walk.x + dx)), y: h.walk.y } }); }) : base;
+  const hid = hiddenIn(S.room);
+  let list = placed.filter(h => !(h.who && hid.has('person:' + h.who) && !personAt(S.room, h.who)) && !(h.name === 'bookshelf' && hid.has('bookshelf')));
+  if (inMyRoom()) {
+    const st = seatOf(S.room, me()), wx = st ? Math.max(40, Math.min(300, st[0] + 14)) : 0;
+    if (st && !S.seated) list = [{ name: 'my chair', r: [st[0] - 4, st[1] - 10, 36, 42], walk: { x: wx, y: 134 }, def: 'use', on: { look: 'My chair. Empty, for now.', use: sitDown, open: sitDown } }].concat(list);
+    if (S.seated) list = list.map(h => h.who === me() ? Object.assign({}, h, { name: 'me', def: 'use', on: { look: 'Me, at my desk.', use: standUp, talk: standUp, open: standUp } }) : h);
+  }
+  if (!HOOKS.roomSpots.length) return list;
+  return [].concat(...HOOKS.roomSpots.map(f => { try { return f(S.room) || []; } catch (e) { console.error('[hook]', e); return []; } }), list);
 }
 function hit(x, y) { return hotspots().find(h => x >= h.r[0] && x < h.r[0] + h.r[2] && y >= h.r[1] && y < h.r[1] + h.r[3]); }
 async function perform(r) {
@@ -1420,7 +1514,7 @@ async function perform(r) {
 }
 async function doAction(verb, h) {
   if (h.study) S.door = h;
-  await goTo(h.walk);
+  if (!S.seated) await goTo(h.walk);
   const cx = h.r[0] + h.r[2] / 2; if (Math.abs(cx - S.x) > 3) S.face = Math.sign(cx - S.x);
   const r = h.on[verb];
   await perform(r !== undefined ? r : 'Nothing special about it.');
@@ -1448,6 +1542,7 @@ function act(e, verb) {
     run(() => doAction(verb || h.def, h)); return;
   }
   if (verb) return;
+  if (S.seated) standUp();
   if (S.scene === 'map') { const q = nearestOnGraph({ x: p[0], y: p[1] }); if (q.d > 900) return; FX.mark = { x: q.x, y: q.y, t0: performance.now() / 1000 }; goTo({ x: q.x, y: q.y }); }
   else goTo({ x: p[0], y: p[1] });
 }
@@ -1525,7 +1620,13 @@ function start() {
   if (S.started) return;
   if (window.SEMIBART_GATE && !window.SEMIBART_GATE()) return;
   audio(); S.started = true; titleEl.hidden = true; SFX.jingle(); cv.focus && cv.focus();
-  run(async () => { await wait(0.6); await say('you', 'CASBS. Fifty-four studies.'); await say('you', "Somebody's typing in one of them."); await say('you', "Looking for someone? Who's where, top left."); });
+  const u = window.quest && window.quest.me;
+  run(async () => {
+    await wait(0.6);
+    if (u) { await say('you', `Study ${u.study}. ${(WHO[u.study] || []).length > 1 ? 'Ours.' : 'Mine.'}`); await say('you', u.character === 'bart' ? 'Fifty-three more out there.' : "Fifty-three more. Somebody's typing in one of them."); }
+    else { await say('you', 'CASBS. Fifty-four studies.'); await say('you', "Somebody's typing in one of them."); }
+    await say('you', "Looking for someone? Who's where, top left.");
+  });
 }
 $('startBtn').addEventListener('click', e => { e.stopPropagation(); start(); });
 $('startBtn').focus({ preventScroll: true });
@@ -1563,6 +1664,11 @@ window.addEventListener('keydown', e => {
 
 /* ---------- drawing ---------- */
 function speakerPos(who) {
+  if (S.scene === 'room') { const pp = personAt(S.room, who); if (pp) return [pp[0] + 14, pp[1] - 12]; }
+  if (me() && (who === me() || (who === 'you' && S.seated))) {
+    if (S.scene === 'room' && S.seated) { const st = seatOf(S.room, me()); if (st) return [st[0] + 14, st[1] - 12]; }
+    if (who === me()) return S.scene === 'map' ? [S.x, S.y - 14] : [S.x, S.y - 78];
+  }
   if (S.scene === 'room' && PEOPLE[S.room] && (PEOPLE[S.room].mates || []).includes(who)) return [mateX(S.room, PEOPLE[S.room].mates.indexOf(who)) + 14, 54];
   if (who === 'bart') return [190, 54];
   if (who === 'turkey' && S.scene === 'map') { const tk = TURKEYS.reduce((a, b) => Math.hypot(b[0] - S.x, b[1] - S.y) < Math.hypot(a[0] - S.x, a[1] - S.y) ? b : a); return [tk[0] + 6, tk[1] - 2]; }
@@ -1645,7 +1751,7 @@ function drawMap(t) {
   if (!calm) mapUnder(t, dt);
   const moving = S.path.length > 0, fr = moving ? Math.floor(t * (S.fast ? 14 : 8)) % 2 : 0;
   oval(g, S.x, S.y + 1, 3, 1, C.shadow);
-  sprite(g, TINY[fr], TPAL, S.x - 2, S.y - 8);
+  { const L0 = myLook(); sprite(g, TINY[fr], L0 ? { H: L0.hair, S: L0.skin, O: L0.shirt, P: '#2a2f55', K: '#141414' } : TPAL, S.x - 2, S.y - 8); }
   TURKEYS.forEach(([x, y], i) => {
     const k = (t - S.turkeyT - i * 0.09) / 0.32;
     const hop = k > 0 && k < 2 && !calm ? Math.round(Math.abs(Math.sin(k * Math.PI)) * (k < 1 ? 5 : 3)) : 0;
@@ -1682,7 +1788,7 @@ function drawSeminar(t) {
   SE.forEach(a => {
     const o = LOOKS[a.k], look = Math.sign(S.x - a.x - 14), asleep = a.k === 'fellow';
     rect(g, a.x + 2, 58, 24, 3, INK); rect(g, a.x + 1, 61, 26, 34, INK); rect(g, a.x + 3, 61, 22, 34, '#3b3d4a');
-    bust(o, a.x, 66 + (asleep && !calm && Math.floor(t) % 3 === 0 ? 1 : 0), { talk: flap(a.k), look, blink: asleep || (!calm && (t + a.x) % 4.7 < 0.12), down: a.k === 'frances' && sp !== 'frances' });
+    if (a.k !== me()) bust(o, a.x, 66 + (asleep && !calm && Math.floor(t) % 3 === 0 ? 1 : 0), { talk: flap(a.k), look, blink: asleep || (!calm && (t + a.x) % 4.7 < 0.12), down: a.k === 'frances' && sp !== 'frances' });
     if (a.k === 'kahwee' && !calm) { const al = (0.35 + 0.3 * Math.sin(t * 7)).toFixed(2); rect(g, a.x + 9, 75, 4, 3, `rgba(170,225,255,${al})`); rect(g, a.x + 16, 75, 4, 3, `rgba(170,225,255,${al})`); }
     if (a.k === 'jacqueline') { const al = (0.25 + 0.2 * Math.sin(t * 2.4)).toFixed(2); oval(g, a.x + 14, 68, 13, 4, `rgba(255,244,190,${calm ? 0.3 : al})`); rect(g, a.x + 5, 67, 18, 2, '#fffbe8'); }
     if (asleep && !calm) { const z = (t * 0.8) % 1; rect(g, a.x + 22 + z * 4, 62 - z * 10, 3, 1, `rgba(255,255,255,${(1 - z).toFixed(2)})`); rect(g, a.x + 24 + z * 4, 63 - z * 10, 1, 1, `rgba(255,255,255,${(1 - z).toFixed(2)})`); rect(g, a.x + 22 + z * 4, 64 - z * 10, 3, 1, `rgba(255,255,255,${(1 - z).toFixed(2)})`); }
@@ -1692,7 +1798,7 @@ function drawSeminar(t) {
   rect(g, 75, 101, 168, 18, '#c08a55'); rect(g, 75, 101, 168, 1, '#9c6a3c');
   rect(g, 78, 119, 5, 9, '#7d5632'); rect(g, 235, 119, 5, 9, '#7d5632');
   // the presenter, standing, trying
-  { const pr = presenter(), o = LOOKS[pr.k], x = pr.x, ptalk = flap(pr.k), wave = sp === pr.k && !calm ? Math.floor(t * 3) % 2 : 0;
+  if (presenter().k !== me()) { const pr = presenter(), o = LOOKS[pr.k], x = pr.x, ptalk = flap(pr.k), wave = sp === pr.k && !calm ? Math.floor(t * 3) % 2 : 0;
     rect(g, x + 6, 84, 7, 40, '#2e3448'); rect(g, x + 15, 84, 7, 40, '#262b3c'); rect(g, x + 4, 124, 10, 4, INK); rect(g, x + 14, 124, 10, 4, INK);
     rect(g, x + 2, 66, 24, 18, o.shirt); rect(g, x + 2, 66, 2, 18, o.shirtD); rect(g, x + 24, 66, 2, 18, o.shirtD);
     bust(o, x, 38, { talk: ptalk, look: sp === pr.k ? -1 : (Math.floor(t / 2) % 3 === 0 ? 1 : -1), blink: !calm && (t + 1.3) % 4.1 < 0.12 });
@@ -1724,16 +1830,18 @@ function drawRoom(t) {
     g.drawImage(roomFullEmpty, 0, 0);
     g.save(); g.translate(0, OY);
     roomLight(t);
-    const talk = S.line && S.line.who === k && (calm || Math.floor(t * 8) % 2 === 0), speaking = S.line && S.line.who === k;
+    const talk = voiced(k) && (calm || Math.floor(t * 8) % 2 === 0), speaking = S.line && S.line.who === k;
     const blink = !calm && (t + k.length) % 4.3 < 0.13;
     runHooks(HOOKS.roomBack, k, t);
-    (p.mates || []).forEach((m, i) => bust(LOOKS[m], mateX(k, i), 66, { talk: S.line && S.line.who === m && (calm || Math.floor(t * 8) % 2 === 0), blink: !calm && (t + m.length) % 4.7 < 0.13 }));
-    if (p.scene === 'desk') deskScene(k, o, t, talk, blink);
-    if (p.scene === 'read') readingScene(o, t, talk, blink, speaking);
-    if (p.scene === 'stand') standingScene(o, t, talk, blink);
+    const hide = hiddenIn(k);
+    if (hide.has('person:' + k)) hide.add('occupant');
+    if (!hide.has('mates')) (p.mates || []).forEach((m, i) => !hide.has('person:' + m) && bust(LOOKS[m], mateX(k, i), 66, { talk: voiced(m) && (calm || Math.floor(t * 8) % 2 === 0), blink: !calm && (t + m.length) % 4.7 < 0.13 }));
+    if (p.scene === 'desk') deskScene(k, o, t, talk, blink, hide);
+    if (p.scene === 'read') readingScene(o, t, talk, blink, speaking, hide);
+    if (p.scene === 'stand') standingScene(o, t, talk, blink, hide);
     const moving = S.path.length > 0, fr = moving ? 1 + Math.floor(t * 7) % 2 : 0;
     runHooks(HOOKS.roomMid, k, t);
-    drawYou(S.x, S.y, S.face, fr, S.line && S.line.who === 'you' && (calm || Math.floor(t * 8) % 2 === 0));
+    if (!S.seated) drawYou(S.x, S.y, S.face, fr, S.line && S.line.who === 'you' && (calm || Math.floor(t * 8) % 2 === 0));
     runHooks(HOOKS.roomFront, k, t);
     g.restore();
     return;
@@ -1751,22 +1859,29 @@ function drawRoom(t) {
   g.save(); g.translate(0, OY);
   roomLight(t);
   runHooks(HOOKS.roomBack, 'bart', t);
-  const bartTalk = S.line && S.line.who === 'bart' && (calm || Math.floor(t * 8) % 2 === 0);
+  const hide = hiddenIn('bart'); if (hide.has('person:bart')) hide.add('occupant');
+  const show = n => !hide.has(n);
+  const bartTalk = voiced('bart') && (calm || Math.floor(t * 8) % 2 === 0);
   let face = B.shades ? (bartTalk ? FACE.coolTalk : FACE.cool) : (bartTalk ? FACE.talk : FACE.idle);
   if (B.mode === 'type') face = FACE.type;
   if (B.mode === 'startle') face = FACE.startle;
   const hopY = B.mode === 'startle' && B.t < 0.35 && !calm ? Math.round(Math.sin(B.t / 0.35 * Math.PI) * 5) : 0;
   const by = 66 - hopY;
-  sprite(g, face, P, 176, by);
-  if (B.shades && !calm && Math.floor(t * 1.5) % 4 === 0) { rect(g, 184, by + 8, 1, 3, '#ffffff'); rect(g, 183, by + 9, 3, 1, '#ffffff'); }
+  if (show('occupant')) { sprite(g, face, P, 176, by);
+  if (B.shades && !calm && Math.floor(t * 1.5) % 4 === 0) { rect(g, 184, by + 8, 1, 3, '#ffffff'); rect(g, 183, by + 9, 3, 1, '#ffffff'); } }
+  if (show('desk')) {
   rect(g, 148, 95, 116, 1, '#141414'); rect(g, 148, 96, 116, 4, '#e2b47e'); rect(g, 148, 100, 116, 1, '#141414');
   rect(g, 151, 101, 110, 22, '#c08a55'); rect(g, 151, 101, 110, 1, '#9c6a3c'); rect(g, 151, 101, 1, 22, '#9c6a3c'); rect(g, 260, 101, 1, 22, '#9c6a3c');
   rect(g, 226, 105, 30, 8, '#9c6a3c'); rect(g, 227, 106, 28, 6, '#c99560'); rect(g, 239, 108, 4, 1, '#141414');
   rect(g, 154, 123, 5, 5, '#7d5632'); rect(g, 253, 123, 5, 5, '#7d5632');
   rect(g, 178, 94, 24, 2, '#26262b');
+  }
+  if (show('occupant')) {
   if (B.mode === 'type') { const a = calm ? 0 : Math.floor(t * 9) % 2; rect(g, 181, 92 - a, 5, 2, P.S); rect(g, 194, 92 - (1 - a), 5, 2, P.S); }
   else if (B.mode === 'startle') { rect(g, 172, by + 13, 5, 5, P.S); rect(g, 203, by + 13, 5, 5, P.S); }
   else { rect(g, 181, 92, 5, 2, P.S); rect(g, 194, 92, 5, 2, P.S); }
+  }
+  if (show('desk')) {
   drawMonitor(S.mon.f);
   { const on = S.phoneOn && (calm || Math.floor(S.phoneT * 4.8) % 2 === 0), jig = S.phoneOn && !calm && S.phoneT < 1.8 ? (Math.floor(t * 30) % 2) : 0;
     const px = 252 + jig;
@@ -1778,13 +1893,14 @@ function drawRoom(t) {
   const mh = B.mode === 'startle' && B.t < 0.4 && !calm ? Math.round(Math.sin(B.t / 0.4 * Math.PI) * 5) : 0;
   rect(g, 206, 88 - mh, 7, 8, '#141414'); rect(g, 207, 89 - mh, 5, 6, '#fff7e6'); rect(g, 207, 91 - mh, 5, 2, '#ff5a1f'); rect(g, 213, 90 - mh, 2, 3, '#141414');
   if (B.mode === 'type' && !calm) { const s = Math.floor(t * 3) % 3; rect(g, 209, 84 - s, 1, 1, 'rgba(255,247,230,0.8)'); }
-  if (B.mode === 'startle') { rect(g, 206, by - 12, 11, 14, '#141414'); rect(g, 207, by - 11, 9, 12, '#fff7e6'); rect(g, 211, by - 9, 2, 5, '#ff5a1f'); rect(g, 211, by - 3, 2, 2, '#ff5a1f'); }
-  disc(g, 295, 108, 7, '#2f6b45'); disc(g, 290, 112, 4, '#4a8f5f'); disc(g, 301, 112, 4, '#24553a');
-  rect(g, 288, 116, 15, 14, '#141414'); rect(g, 289, 116, 13, 13, '#c46a4a'); rect(g, 289, 116, 13, 2, '#d98463');
+  }
+  if (B.mode === 'startle' && show('occupant')) { rect(g, 206, by - 12, 11, 14, '#141414'); rect(g, 207, by - 11, 9, 12, '#fff7e6'); rect(g, 211, by - 9, 2, 5, '#ff5a1f'); rect(g, 211, by - 3, 2, 2, '#ff5a1f'); }
+  if (show('extras')) { disc(g, 295, 108, 7, '#2f6b45'); disc(g, 290, 112, 4, '#4a8f5f'); disc(g, 301, 112, 4, '#24553a');
+  rect(g, 288, 116, 15, 14, '#141414'); rect(g, 289, 116, 13, 13, '#c46a4a'); rect(g, 289, 116, 13, 2, '#d98463'); }
   const moving = S.path.length > 0, fr = moving ? 1 + Math.floor(t * 7) % 2 : 0;
   const youTalk = S.line && S.line.who === 'you' && (calm || Math.floor(t * 8) % 2 === 0);
   runHooks(HOOKS.roomMid, 'bart', t);
-  drawYou(S.x, S.y, S.face, fr, youTalk);
+  if (!S.seated) drawYou(S.x, S.y, S.face, fr, youTalk);
   runHooks(HOOKS.roomFront, 'bart', t);
   g.restore();
 }
@@ -1824,10 +1940,19 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
+// any character's head and shoulders, top-left at x, y in room coordinates; they talk when it's their line
+function person(slug, x, y, opts) {
+  opts = opts || {};
+  if (S.scene === 'room' && povHidden(S.room, slug)) return;
+  const now = performance.now() / 1000, talk = !!(S.line && S.line.who === slug && (calm || Math.floor(now * 8) % 2 === 0));
+  if (slug === 'bart') { sprite(g, opts.asleep || opts.down ? FACE.type : talk ? FACE.talk : FACE.idle, P, x, y); return; }
+  const o = LOOKS[slug]; if (!o) return;
+  bust(o, x, y, { talk, blink: !!opts.asleep || (!calm && (now + slug.length) % 4.3 < 0.13), down: !!opts.down });
+}
 window.quest = { S, hit, run, doAction, MAP, ROOM, start, hot: hotspots, world, L, DIRECTORY, openWho, goFind, STUDIES,
   say, wait, choose, skipLine, SFX, PEOPLE, FELLOWS, LOOKS, hooks: HOOKS, me: undefined,
   occupants: k => k === 'bart' ? ['bart'] : PEOPLE[k] ? [k].concat(PEOPLE[k].mates || []) : [],
-  gfx: { g, cv, rect, oval, disc, sprite, dither, rng, LET, DIG, calm, W, H, FH, OY } };
+  gfx: { g, cv, rect, oval, disc, sprite, dither, rng, LET, DIG, calm, W, H, FH, OY, person } };
 })();
 </script>
 <script src="/semibart/accounts.js"></script>

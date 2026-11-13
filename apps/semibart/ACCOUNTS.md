@@ -1,8 +1,9 @@
 # CASBS Quest accounts (2026-11-12)
 
 Everyone signs in before they play: **first name + passcode**. The first passcode is your
-study number (Bart: `bart` / `16`); in your own study a padlock by the door changes it to
-four digits of your own. All 49 people are seeded, so nobody signs up. Bart is the first admin.
+study number (Bart: `bart` / `16`); the chip with your name at top right is the one place to
+change it to four digits of your own (it shows a dot until you have). All 49 people are
+seeded, so nobody signs up. Bart is the first admin.
 
 ## Server (src/lib/semibart, no Next imports: movable to the game's own project)
 
@@ -42,7 +43,19 @@ four digits of your own. All 49 people are seeded, so nobody signs up. Bart is t
 - The title card asks for name + passcode before Start; you start at your own door.
 - `window.quest.me` = the `/me` user or null (undefined until loaded); a `semibart:user` event
   fires on window whenever it changes. Your own room: `quest.occupants(S.room).includes(quest.me.character)`.
-- The chip at top right: change passcode, sign out, and for admins the roster with a reset.
+- The chip at top right: your passcode ("Set your own passcode" and a dot while it's still the
+  study number), sign out, and for admins the roster with a reset. There is no padlock in the
+  rooms: one place for the account.
+
+## Point of view (index.html)
+
+Signed in, you are your character. You walk in your own colors (map sprite and room figure
+colored from your seminar look). Your study opens without a knock and your chair is empty
+until you sit (click it); sitting shows the room as everyone sees it, you at your desk, and
+clicking yourself, the floor or the door stands you up. Other studies keep their fellow at
+the desk: their stand-in while they're away. In the seminar you're never at the table twice.
+`quest.S.seated` and a `semibart:seated` event; a rider's `roomHide` name `person:<slug>`
+hides one person; `gfx.person` and `roomPersonAt` skip you while your own study waits for you.
 
 ## Riding on the game (public/semibart/index.html)
 
@@ -53,5 +66,8 @@ person rooms and Bart's; `roomSpots(roomKey) -> hotspots` (prepended in those ro
 `keyBlock(e) -> true` holds the game's keys while an overlay is open. `quest.gfx` has the
 pixel helpers. Script tags, in order: accounts.js, rooms.js (rooms agent), notes.js (desk notes UI).
 
-Check: `node scripts/semibart/accounts-check.mjs <dir>` against `next dev -p 3277`
-(signs in as Bart, changes his passcode in his study, then resets it to 16).
+Check: `set -a; source .env.local; set +a; node scripts/semibart/accounts-check.mjs <dir>`
+against `next dev -p 3277`. It signs in with the check-only admin account (`check`, its long
+passcode in `.env.local` as SEMIBART_CHECK_NAME / SEMIBART_CHECK_PASS and in the ops vault;
+recreate with `node scripts/semibart/make-check-account.mjs`), never a real fellow, and changes
+no passcode; the point-of-view part pretends in the page to be Inbal, Mikael and a seminar speaker.

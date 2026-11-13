@@ -3,8 +3,8 @@
      your study number); once you're in, you start at your own door
    - quest.me is { character, name, study, role, passcodeIsDefault } or null, and a
      'semibart:user' event fires on window whenever it changes (it starts undefined: wait for it)
-   - in your own study, a padlock by the door changes your passcode to four digits of your own
-   - the chip at top right: who you are, change passcode, sign out, and for admins the roster
+   - the chip at top right is the one place for your account: your passcode (a dot on the chip
+     until you've set your own four digits), sign out, and for admins the roster
    Server: src/lib/semibart (auth.ts, handlers.ts) behind /api/semibart/*. */
 (function () {
   'use strict';
@@ -29,6 +29,7 @@
   .sb-who b { color: var(--hot); font-weight: 400; }
   #sbChip { position: absolute; top: 1cqw; right: 1cqw; z-index: 4; color: var(--hot); font-size: 2.5cqw; padding: 0.4cqw 1.1cqw; background: rgba(0, 0, 0, 0.55); }
   #sbChip:hover { color: #fff; }
+  #sbChip .sb-dot { display: inline-block; width: 0.9cqw; height: 0.9cqw; margin-left: 0.6cqw; vertical-align: middle; background: var(--cyan); box-shadow: 0 0 0 0.2cqw #000; }
   #sbChip[hidden], #sbMenu[hidden], .sb-veil[hidden] { display: none; }
   #sbMenu { position: absolute; top: 5.2cqw; right: 1cqw; z-index: 5; background: #12100c; border: 0.35cqw solid var(--hot); display: flex; flex-direction: column; min-width: 24cqw; }
   #sbMenu button { text-align: left; padding: 0.8cqw 1.4cqw; font-size: 2.4cqw; color: #fff7e6; }
@@ -71,7 +72,7 @@
           <input id="sbCode" name="password" type="password" inputmode="numeric" autocomplete="current-password" placeholder="Passcode" aria-label="Passcode">
           <button class="sb-btn" type="submit">Sign in</button>
         </form>
-        <p class="sb-hint">First time? Your passcode is your study number. Change it in your study.</p>
+        <p class="sb-hint">First time? Your passcode is your study number. Change it from your name, top right.</p>
         <p class="sb-err" role="alert"></p>`;
       const f = box.querySelector('form'), err = box.querySelector('.sb-err');
       f.addEventListener('submit', async e => {
@@ -111,10 +112,12 @@
     const u = Q.me;
     chip.hidden = !(u && Q.S.started);
     if (!u) return;
+    // a dot until you've set your own passcode: the one nudge, in the one place for your account
     chip.textContent = u.name.split(' ')[0] + ' ▾';
+    if (u.passcodeIsDefault) { const d = document.createElement('span'); d.className = 'sb-dot'; d.title = 'Your passcode is still your study number'; chip.appendChild(d); }
     menu.innerHTML = '';
     const item = (label, fn) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = label; b.addEventListener('click', e => { e.stopPropagation(); menu.hidden = true; fn(); }); menu.appendChild(b); };
-    item('Change passcode', openPasscode);
+    item(u.passcodeIsDefault ? 'Set your own passcode' : 'Change passcode', openPasscode);
     if (u.role === 'admin') item('Everyone (admin)', openAdmin);
     item('Sign out', signOut);
   }
@@ -158,7 +161,7 @@
         if (f.sbNew.value !== f.sbNew2.value) { err.textContent = "Those two don't match."; return; }
         try {
           const r = await call('/passcode', { method: 'POST', body: JSON.stringify({ current: f.sbCur.value, next: f.sbNew.value }) });
-          closePane(); Q.me = r.user; window.dispatchEvent(new CustomEvent('semibart:user', { detail: r.user }));
+          closePane(); Q.me = r.user; window.dispatchEvent(new CustomEvent('semibart:user', { detail: r.user })); paintChip();
           if (Q.S.started) Q.say('you', 'New passcode. Better not write it on a sticky note.');
         } catch (x) { err.textContent = x.message; }
       });
@@ -177,18 +180,6 @@
       }));
     });
   }
-
-  /* ---------- in your own study: the padlock by the door ---------- */
-  const mine = room => !!(Q.me && Q.occupants(room).includes(Q.me.character));
-  Q.hooks.roomBack.push(room => {
-    if (!mine(room)) return;
-    const { g, rect } = Q.gfx;
-    rect(g, 40, 46, 1, 2, '#3b2416'); rect(g, 39, 48, 3, 1, '#3b2416');                              // a hook in the wall
-    rect(g, 38, 49, 5, 1, '#141414'); rect(g, 38, 49, 1, 4, '#141414'); rect(g, 42, 49, 1, 4, '#141414'); // the shackle
-    rect(g, 37, 52, 7, 7, '#141414'); rect(g, 38, 53, 5, 5, '#e6b547'); rect(g, 38, 53, 5, 1, '#ffd96a'); rect(g, 40, 55, 1, 2, '#7a5a18');
-  });
-  Q.hooks.roomSpots.push(room => mine(room) ? [{ name: 'Your passcode', r: [34, 44, 13, 18], walk: { x: 52, y: 132 }, def: 'open',
-    on: { look: 'A little padlock by the door. My passcode lives here.', open: async () => { openPasscode(); } } }] : []);
 
   /* ---------- go ---------- */
   paintCard();
