@@ -16,7 +16,9 @@ seeded, so nobody signs up. Bart is the first admin.
 - Session: cookie `semibart_session`, HMAC-signed with `SEMIBART_SESSION_SECRET`. Changing a
   passcode bumps `session_version`, which ends every other session.
 - Passcodes: scrypt; null hash = still the study number ("016" and "16" both open 016).
-  Six wrong tries lock a name for five minutes.
+  Six tries lock a name for five minutes; each attempt is counted and the lock checked in one
+  statement (`semibart_try_login`, schema 003) before the passcode is looked at, so parallel guesses
+  can't slip past it.
 - Handlers (`handlers.ts`, plain `Request -> Response`), mounted one line each in
   `src/app/api/semibart/<name>/route.ts`:
   - `GET /api/semibart/me` → `{ user: { character, name, study, role, passcodeIsDefault } | null }`
@@ -24,8 +26,10 @@ seeded, so nobody signs up. Bart is the first admin.
   - `POST /api/semibart/logout`
   - `POST /api/semibart/passcode { current, next }` (signed in; next = four digits)
   - `GET /api/semibart/notes?for=a,b` · `POST { to, body }` · `DELETE ?id=` (signed in).
-    Anyone sees that a note is on a desk; only its reader, its author and an admin get `body`.
-    140 characters, 30 a day per author.
+    **The rule: a note on a desk is readable by any signed-in fellow** (Bart's call, 2026-11-12).
+    The game reads desks through `/api/semibart/desk` (social.ts, same rule); this GET agrees.
+    Writes go through `leaveNote` / `removeNote` either way. 140 characters, 30 a day per author;
+    the reader, the author or an admin can take a note down.
   - `GET /api/semibart/admin/users`, `POST /api/semibart/admin/reset { character }` (admin)
 - Env: `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `SEMIBART_SESSION_SECRET` (in `.env.local`,
   Vercel `hilma` production, and the ops vault).
@@ -34,6 +38,7 @@ seeded, so nobody signs up. Bart is the first admin.
 
 - `001_semibart_users.sql`: `semibart_users` (+ the seed of all 49, Bart admin).
 - `002_semibart_notes.sql`: `semibart_notes` (sticky notes, soft-deleted with `removed_at`).
+- `003_semibart_login_attempts.sql`: `semibart_try_login(user)`, the atomic attempt counter.
 - Row-level security on, no policies; only server code with the service key touches them.
 - Apply: `supabase db query --linked -f apps/semibart/schema/<file>` (if the CLI's login has
   expired, prefix `SUPABASE_ACCESS_TOKEN` from the ops vault).

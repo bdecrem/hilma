@@ -18,7 +18,6 @@ type Row = SemibartUser & {
 }
 const FULL = 'id, character, name, study, role, login, aliases, passcode_hash, session_version, failed_attempts, locked_until, last_seen_at'
 const pub = (r: Row): SemibartUser => ({ id: r.id, character: r.character, name: r.name, study: r.study, role: r.role })
-const MAX_TRIES = 6, LOCK_MS = 5 * 60 * 1000
 
 async function rowById(id: string): Promise<Row | null> {
   const { data, error } = await db().from('semibart_users').select(FULL).eq('id', id).maybeSingle()
@@ -95,10 +94,11 @@ export async function findByName(typed: string): Promise<Row | null> {
 export async function logIn(name: string, passcode: string): Promise<{ user: SemibartUser; token: string } | Failure> {
   const row = await findByName(name || '')
   if (!row) return { error: "No fellow by that name. Try your first name.", status: 401 }
-  if (row.locked_until && Date.parse(row.locked_until) > Date.now()) return { error: 'Too many tries. Wait a few minutes, then try again.', status: 429 }
+  // count this attempt and check the lock in one statement (schema 003), before looking at the passcode
+  const { data: attempt, error } = await db().rpc('semibart_try_login', { p_user: row.id })
+  if (error) throw new Error(`semibart_try_login: ${error.message}`)
+  if (attempt === null || attempt === undefined) return { error: 'Too many tries. Wait a few minutes, then try again.', status: 429 }
   if (!passcodeMatches(row, passcode || '')) {
-    const tries = row.failed_attempts + 1, lock = tries >= MAX_TRIES
-    await db().from('semibart_users').update({ failed_attempts: lock ? 0 : tries, locked_until: lock ? new Date(Date.now() + LOCK_MS).toISOString() : null }).eq('id', row.id)
     return { error: row.passcode_hash ? "That passcode doesn't match." : "That passcode doesn't match. Your first passcode is your study number.", status: 401 }
   }
   await db().from('semibart_users').update({ failed_attempts: 0, locked_until: null, last_seen_at: new Date().toISOString() }).eq('id', row.id)

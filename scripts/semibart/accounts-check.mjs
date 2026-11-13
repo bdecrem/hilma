@@ -68,6 +68,13 @@ await settle(() => window.quest.S.scene === 'room' && !window.quest.S.busy);
 const trio = await p.evaluate(() => ({ room: window.quest.S.room, names: window.quest.hot().map(h => h.name) }));
 expect(trio.room === 'kevin' && trio.names.includes('my chair') && trio.names.includes('Kevin') && trio.names.includes('Raul') && !trio.names.includes('Mikael'), 'shared study: his seat empty, Kevin and Raul in');
 await quiet(); await shot('c6-mikael');
+// what room code hides can't be hovered: Daniel's room with his occupant and desk hidden
+await p.evaluate(() => { const q = window.quest; q.S.scene = 'map'; q.S.room = null; q.me = { character: 'check', study: '0', name: 'Check', role: 'admin', passcodeIsDefault: false }; q.hooks.roomHide.push(r => r === 'daniel' ? ['occupant', 'desk'] : []); });
+await open('1');
+await settle(() => window.quest.S.scene === 'room' && !window.quest.S.busy);
+const dan = await p.evaluate(() => window.quest.hot().map(h => h.name));
+expect(!dan.includes('Socrates') && !dan.includes('Daniel') && !dan.includes('monitor') && dan.includes('window'), 'hidden occupant and desk drop their hotspots');
+await p.evaluate(() => { const q = window.quest; q.hooks.roomHide.pop(); q.S.line = null; });
 // in the seminar you are never at the table twice
 const cast = await p.evaluate(() => { const q = window.quest; q.S.scene = 'room'; q.S.room = 'seminar'; return true; });
 const sem = await p.evaluate(() => {

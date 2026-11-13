@@ -2,8 +2,8 @@ import { db } from './db'
 import { allUsers, type Failure, type SemibartUser } from './auth'
 
 // Sticky notes (schema apps/semibart/schema/002): one fellow leaves a short note for another, and
-// it shows on their desk. Anyone can see that a note is there; only its reader, its author and an
-// admin get the text. The desk drawing is the client's (public/semibart/notes.js).
+// it shows on their desk, where any signed-in fellow can read it (Bart's call, 2026-11-12: a desk
+// is a desk). The game reads them through /api/semibart/desk (social.ts); this GET follows the same rule.
 
 export type NoteOut = {
   id: string; to: string; from: { character: string; name: string }; body: string | null
@@ -27,7 +27,7 @@ export async function notesFor(viewer: SemibartUser, characters: string[]): Prom
     const mine = n.from_user === viewer.id, yours = n.to_user === viewer.id
     return {
       id: n.id, to: to ? to.character : '', from: { character: from ? from.character : '', name: from ? from.name : 'someone' },
-      body: mine || yours || viewer.role === 'admin' ? n.body : null, color: n.color, created_at: n.created_at, mine, yours
+      body: n.body, color: n.color, created_at: n.created_at, mine, yours
     }
   })
 }

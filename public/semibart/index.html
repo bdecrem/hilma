@@ -176,6 +176,8 @@ const W = 320, H = 144, OY = 18, FH = 180;
 // hooks for the files that ride on the game (accounts.js, rooms.js, notes.js): they push functions here
 const HOOKS = { roomBack: [], roomMid: [], roomFront: [], roomSpots: [], keyBlock: [], roomHide: [], roomPersonAt: [] };
 // parts of a room a rider draws its own way: 'occupant', 'desk', 'chair', 'mates', 'extras'
+// which part of a room a hotspot belongs to, so hiding the part hides its hotspot too
+const PART_OF = { Socrates: 'desk', monitor: 'desk', monitors: 'desk', 'coffee mug': 'desk', phone: 'desk', 'the Almanac': 'occupant', 'reading chair': 'chair', lamp: 'chair', easel: 'extras', 'world map': 'extras', plant: 'extras' };
 function hiddenIn(room) { const out = new Set(); HOOKS.roomHide.forEach(f => { try { (f(room) || []).forEach(n => out.add(n)); } catch (e) { console.error('[hook]', e); } }); return out; }
 // where a rider has put a person instead (top-left of their head and shoulders), or null
 function personAt(room, slug) { if (povHidden(room, slug)) return null; for (const f of HOOKS.roomPersonAt) { try { const p = f(room, slug); if (p) return p; } catch (e) { console.error('[hook]', e); } } return null; }
@@ -1497,7 +1499,10 @@ function hotspots() {
   const placed = HOOKS.roomPersonAt.length ? base.map(h => { const p = h.who && h.at0 && personAt(S.room, h.who); if (!p) return h; const dx = p[0] - h.at0[0], dy = p[1] - h.at0[1];
     return Object.assign({}, h, { r: [h.r[0] + dx, h.r[1] + dy, h.r[2], h.r[3]], walk: { x: Math.max(40, Math.min(300, h.walk.x + dx)), y: h.walk.y } }); }) : base;
   const hid = hiddenIn(S.room);
-  let list = placed.filter(h => !(h.who && hid.has('person:' + h.who) && !personAt(S.room, h.who)) && !(h.name === 'bookshelf' && hid.has('bookshelf')));
+  // what a rider has hidden can't be hovered or clicked: the person (unless moved), the desk and its props, the extras
+  const host = S.room, partOf = h => PART_OF[h.name] || (h.name === 'bookshelf' ? 'bookshelf' : null);
+  const gone = h => h.who ? !personAt(S.room, h.who) && (hid.has('person:' + h.who) || (h.who === host ? hid.has('occupant') : hid.has('mates'))) : hid.has(partOf(h));
+  let list = placed.filter(h => !gone(h));
   if (inMyRoom()) {
     const st = seatOf(S.room, me()), wx = st ? Math.max(40, Math.min(300, st[0] + 14)) : 0;
     if (st && !S.seated) list = [{ name: 'my chair', r: [st[0] - 4, st[1] - 10, 36, 42], walk: { x: wx, y: 134 }, def: 'use', on: { look: 'My chair. Empty, for now.', use: sitDown, open: sitDown } }].concat(list);
