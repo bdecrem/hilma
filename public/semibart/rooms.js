@@ -48,6 +48,44 @@ function tick(n) { ops += n || 1; if (ops > MAX_OPS) throw new Error('too many d
 const ok = v => typeof v === 'number' && isFinite(v);
 function fill(x, y, w, h, col) { tick(); if (typeof col !== 'string' || !ok(x) || !ok(y) || !ok(w) || !ok(h)) return; G.rect(g, x, y, w, h, col); }
 let youNow = Object.freeze({ x: 0, y: 0, face: 1, moving: false });
+// The room's own wall and floor, for painting a fixture away (the bookshelf, the rug) or patching
+// behind something that moved. Same colours and grooves as makeRoomBg, and the window's light on top.
+function relight(x, y, w, h) {
+  g.fillStyle = 'rgba(255,236,190,0.13)';
+  for (let j = Math.max(0, y - 69); j < 62 && 69 + j < y + h; j++) { const a = Math.max(x, Math.round(47 + j * 0.9)), b = Math.min(x + w, Math.round(47 + j * 0.9) + 72); if (b > a) g.fillRect(a, 69 + j, b - a, 1); }
+}
+function wall(x, y, w, h) {
+  x = Math.max(0, Math.round(x)); y = Math.max(0, Math.round(y)); w = Math.min(W - x, Math.round(w)); h = Math.min(107 - y, Math.round(h));
+  if (!(w > 0 && h > 0)) return;
+  tick(8 + w / 4);
+  G.rect(g, x, y, w, h, '#9a5631');
+  const top = Math.max(y, 4), bot = Math.min(y + h, 106);
+  for (let i = x; i < x + w; i++) { const k = i % 14; if (k === 0) G.rect(g, i, top, 1, bot - top, '#7f4426'); else if (k === 1) G.rect(g, i, top, 1, bot - top, '#ac6a42'); }
+  if (y < 4) G.rect(g, x, y, w, 4 - y, '#5c2e18');
+  if (y <= 4 && y + h > 4) G.rect(g, x, 4, w, 1, '#c27e52');
+  if (y + h > 104) G.rect(g, x, Math.max(y, 104), w, y + h - Math.max(y, 104), '#5c2e18');
+  relight(x, y, w, h);
+}
+function floor(x, y, w, h) {
+  x = Math.max(0, Math.round(x)); y = Math.max(107, Math.round(y)); w = Math.min(W - x, Math.round(w)); h = Math.min(H - y, Math.round(h));
+  if (!(w > 0 && h > 0)) return;
+  tick(4);
+  G.rect(g, x, y, w, h, '#c9a77a');
+  relight(x, y, w, h);
+}
+// What room code may ask the game to leave out, and where an occupant it moved now is.
+const HIDEABLE = ['occupant', 'mates', 'desk', 'chair', 'extras', 'bookshelf', 'rug'];
+let roomNow = null;
+const personAt = {};   // room -> slug -> [x, y, t]
+function person(x, y, opts) {
+  if (typeof G.person !== 'function' || !roomNow || !ok(x) || !ok(y)) return;
+  const who = typeof q.occupants === 'function' ? q.occupants(roomNow) : [roomNow], o = opts && typeof opts === 'object' ? opts : {};
+  const slug = who[Math.max(0, Math.min(who.length - 1, o.who | 0))];
+  tick(260);
+  x = Math.round(x); y = Math.round(y);
+  G.person(slug, x, y, { asleep: !!o.asleep, down: !!o.down });
+  (personAt[roomNow] = personAt[roomNow] || {})[slug] = [x, y, frameT];
+}
 const api = Object.freeze(Object.defineProperties({
   W, H, calm: !!G.calm,
   rect: fill,
@@ -70,7 +108,10 @@ const api = Object.freeze(Object.defineProperties({
     let x = Math.round(cx - (s.length * 4 - 1) / 2); y = Math.round(y); g.fillStyle = col;
     for (const ch of s) { const d = FONT[ch]; if (d) for (let k = 0; k < 15; k++) if (d[k] === '1') g.fillRect(x + k % 3, y + (k / 3 | 0), 1, 1); x += 4; }
   },
-  rng: seed => { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
+  rng: seed => { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); },
+  wall: (x, y, w, h) => { if (ok(x) && ok(y) && ok(w) && ok(h)) wall(x, y, w, h); },
+  floor: (x, y, w, h) => { if (ok(x) && ok(y) && ok(w) && ok(h)) floor(x, y, w, h); },
+  person
 }, { you: { get: () => youNow, enumerable: true } }));
 
 /* ---------- loading and running a room's code ---------- */
@@ -78,10 +119,11 @@ const LAYERS = ['back', 'mid', 'front'];
 function compile(code) {
   const make = new Function(...SHADOW, '"use strict"; return (function () {\n' + code + '\n}).call(undefined);');
   const mod = make(...SHADOW_ARGS);
-  const out = { back: null, mid: null, front: null, spots: null, errors: 0, ms: 0, frames: 0, dead: false };
+  const out = { back: null, mid: null, front: null, spots: null, hide: [], errors: 0, ms: 0, frames: 0, dead: false };
   if (!mod || typeof mod !== 'object') return out;
   LAYERS.forEach(l => { if (typeof mod[l] === 'function') out[l] = mod[l]; });
   if (Array.isArray(mod.spots) || typeof mod.spots === 'function') out.spots = mod.spots;
+  if (Array.isArray(mod.hide)) out.hide = HIDEABLE.filter(n => mod.hide.includes(n));
   return out;
 }
 const rooms = {};      // room -> { version, mod }
@@ -130,13 +172,33 @@ function draw(layer, room, t) {
     m.frames++;
   }
   const fn = m[layer];
-  if (!fn) return;
+  if (!fn && !(layer === 'back' && m.hide.length)) return;
   const t0 = performance.now();
+  roomNow = room;
   g.save();
-  try { fn(api, t); } catch (e) { if (++m.errors >= 3) kill(room, m, e); }
+  try {
+    // Fixtures that are part of the room's painted background are hidden by painting the wall or
+    // floor back over them, before the room's own back layer.
+    if (layer === 'back' && canHide) {
+      if (m.hide.includes('bookshelf')) wall(266, 10, 48, 97);
+      if (m.hide.includes('rug')) floor(52, 124, 168, 18);
+      if (room === 'bart' && m.hide.includes('extras')) wall(130, 14, 100, 35);
+      if (room === 'bart' && m.hide.includes('chair')) wall(168, 58, 44, 40);
+    }
+    if (fn) fn(api, t);
+  } catch (e) { if (++m.errors >= 3) kill(room, m, e); }
   g.restore();
+  roomNow = null;
   m.ms += performance.now() - t0;
 }
+// Hiding needs the game's side of it (quest.hooks.roomHide); without it nothing is hidden at all,
+// so a room never loses its bookshelf while keeping a desk it meant to lose.
+const canHide = Array.isArray(q.hooks.roomHide);
+if (canHide) q.hooks.roomHide.push(room => { const r = rooms[room], m = r && r.mod; return m && !m.dead ? m.hide : []; });
+if (Array.isArray(q.hooks.roomPersonAt)) q.hooks.roomPersonAt.push((room, slug) => {
+  const r = rooms[room], m = r && r.mod, at = personAt[room] && personAt[room][slug];
+  return m && !m.dead && at && Math.abs(frameT - at[2]) < 0.5 ? [at[0], at[1]] : null;
+});
 const hasMid = Array.isArray(q.hooks.roomMid);
 q.hooks.roomBack.push((room, t) => draw('back', room, t));
 if (hasMid) q.hooks.roomMid.push((room, t) => draw('mid', room, t));
@@ -237,5 +299,7 @@ setInterval(() => {
 }, 200);
 
 // ui(false): another way in has taken over (the in-room chat), so the button and box stay away.
-window.questRooms = { rooms, refresh, api, compile, setRoom, ui(on) { uiOn = !!on; if (!uiOn) { btn.hidden = true; if (!box.hidden) closeBox(); } } };
+// hidden(room): what the room's code has asked the game to leave out (['desk', 'rug', ...]), for
+// other layers that draw on the furniture and need to know when it is gone.
+window.questRooms = { rooms, refresh, api, compile, setRoom, hidden(room) { const r = rooms[room], m = r && r.mod; return m && !m.dead && canHide ? m.hide.slice() : []; }, ui(on) { uiOn = !!on; if (!uiOn) { btn.hidden = true; if (!box.hidden) closeBox(); } } };
 })();

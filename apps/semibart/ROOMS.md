@@ -23,11 +23,19 @@ at once each wait only for their own request (10 to 40 seconds).
 
 ## What room code is
 
-The body of a function that returns `{ back, mid, front, spots }`: three optional draw functions
-`(api, t)` for three depths (behind the occupant and desk / in front of them but behind the
-visitor / over everything) and the things a visitor can hover and look at. `api` is the game's
-own pixel helpers (`rect`, `px`, `disc`, `oval`, `dither`, `sprite`, `text`, `rng`) plus the
-visitor's position (`api.you`) and `api.calm`. The full contract, with the room's coordinates, is
+The body of a function that returns `{ back, mid, front, spots, hide }`: three optional draw
+functions `(api, t)` for three depths (behind the occupant and desk / in front of them but behind
+the visitor / over everything), the things a visitor can hover and look at, and the parts of the
+room the game should leave out. `api` is the game's own pixel helpers (`rect`, `px`, `disc`,
+`oval`, `dither`, `sprite`, `text`, `rng`) plus the visitor's position (`api.you`) and `api.calm`.
+
+Rearranging ("I'm on the couch taking a nap", "redo the floor plan"): `hide` takes `occupant`,
+`mates`, `desk`, `chair`, `extras`, `bookshelf`, `rug`. The game skips the parts it draws live
+and drops their hover names (`quest.hooks.roomHide`, in index.html); `rooms.js` paints wall or
+floor over the ones baked into the background (`api.wall` / `api.floor` do the same for any
+rectangle). `api.person(x, y, { asleep, down, who })` draws the occupant's head and shoulders
+anywhere, and the game moves their hotspot and speech there (`quest.hooks.roomPersonAt`). The door
+and the window never go. The full contract, with the room's coordinates, is
 the system prompt in `room-agent.ts`; the furniture positions there are copied from
 `public/semibart/index.html` (`makeRoomBg`, `deskScene`, `readingScene`, `standingScene`,
 `drawRoom`) and must move when those move.
@@ -81,4 +89,5 @@ The last two run against `next dev -p 3277`.
 
 "put a cute pink rat in my room": 11, 23 and 26 seconds at effort low, 40 at medium, first try
 each time. "a fireplace with a crackling fire, and a cat asleep in front of it": 34 seconds.
-The rooms cost 0.04 to 0.07 ms a frame to draw.
+"I'm on the couch taking a nap": 18 seconds (the occupant hidden, a couch, a blanket, the head
+asleep at one end). The rooms cost 0.04 to 0.07 ms a frame to draw.

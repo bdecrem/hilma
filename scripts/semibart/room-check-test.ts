@@ -18,6 +18,8 @@ passes('a sprite that hops, with a moving spot', `
            spots: t => [{ name: 'pink rat', r: [at(t), 128, 4, 6], look: 'A rat. By the window, mostly.' }] };`)
 passes('every helper', `return { back(api, t) { api.px(1, 1, '#fff'); api.disc(150, 30, 6, '#ffd93b'); api.oval(180, 30, 8, 4, 'rgba(0,0,0,0.2)'); api.dither(200, 20, 10, 10, '#111', '#eee'); api.text(160, 50, 'HELLO, 2026!', '#141414'); const r = api.rng(7); api.rect(r() * 300, 10, 2, 2, '#f00'); const d = new Date(); api.rect(10, 10, d.getHours() % 3 + 1, 1, '#0f0'); Object.keys({ a: 1 }); } };`)
 passes('an emptied room', `return {};`)
+passes('a nap on the couch: the occupant hidden and drawn elsewhere', `return { hide: ['occupant'], back(api) { api.rect(60, 96, 110, 20, '#c46a4a'); }, mid(api) { api.person(64, 70, { asleep: true }); }, spots: [{ name: 'couch', r: [60, 96, 110, 20], look: 'A couch. Occupied.' }] };`)
+passes('a floor plan redone: fixtures hidden, wall and floor repainted', `return { hide: ['desk', 'chair', 'bookshelf', 'rug', 'extras', 'mates'], back(api) { api.wall(126, 6, 136, 46); api.floor(40, 110, 100, 20); api.rect(200, 90, 60, 30, '#7d5632'); }, mid(api) { api.person(216, 60, { who: 1, down: true }); } };`)
 passes('prose in strings and comments may name the window', `// next to the window, not the document
   return { back(api) { api.rect(130, 20, 4, 4, '#fff'); }, spots: [{ name: 'note', r: [130, 20, 4, 4], look: 'It says: fetch the window cleaner.' }] };`)
 
@@ -29,6 +31,9 @@ stops('draws nothing in the room', `return { back(api, t) { api.rect(-50, -50, 1
 stops('far too many drawing calls', `return { back(api, t) { for (let i = 0; i < 20000; i++) api.px(i % 320, 5, '#fff'); } };`, /drawing calls/)
 stops('a colour that is not a string', `return { back(api, t) { api.rect(10, 10, 5, 5, undefined); } };`, /colour/)
 stops('NaN coordinates', `return { back(api, t) { api.rect(0 / 0, 10, 5, 5, '#fff'); } };`, /coordinate/)
+stops('hides something that cannot be hidden', `return { hide: ['door'], back(api) { api.rect(10, 10, 5, 5, '#fff'); } };`, /"door" is not one of/)
+stops('hide that is not a list', `return { hide: 'desk', back(api) { api.rect(10, 10, 5, 5, '#fff'); } };`, /hide must be an array/)
+stops('a fourth occupant', `return { mid(api) { api.person(100, 60, { who: 7 }); } };`, /who must be/)
 stops('an unknown key', `return { draw(api, t) { api.rect(10, 10, 5, 5, '#fff'); } };`, /unknown key/)
 stops('a spot without a look line', `return { back(api) { api.rect(10, 10, 5, 5, '#fff'); }, spots: [{ name: 'thing', r: [10, 10, 5, 5] }] };`, /look line/)
 stops('names the window object', `return { back(api, t) { api.rect(window.innerWidth, 10, 5, 5, '#fff'); } };`, /"window"/)

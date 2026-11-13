@@ -15,7 +15,7 @@ export const MAX_OPS = 9000
 export type RoomSpot = { name: string; r: [number, number, number, number]; look: string }
 
 export type RoomCheck =
-  | { ok: true; layers: string[]; maxOps: number; painted: number; spots: number }
+  | { ok: true; layers: string[]; hide: string[]; maxOps: number; painted: number; spots: number }
   | { ok: false; error: string }
 
 // Names that only make sense for code trying to leave the room. The browser also shadows
@@ -85,8 +85,16 @@ const HARNESS = `(function () {
       }
     },
     text: function (cx, y, s, col) { if (typeof s !== 'string' && typeof s !== 'number') return note('text needs a string'); s = String(s); if (s.length > 60) return note('text is at most 60 characters'); fill(cx - s.length * 2, y, s.length * 4 - 1, 5, col); ops += s.length * 8; },
-    rng: function (seed) { var s = seed >>> 0; return function () { return ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }; }
+    rng: function (seed) { var s = seed >>> 0; return function () { return ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }; },
+    wall: function (x, y, w, h) { fill(x, y, w, h, '#9a5631'); ops += 8; },
+    floor: function (x, y, w, h) { fill(x, y, w, h, '#c9a77a'); ops += 4; },
+    person: function (x, y, opts) {
+      if (opts !== undefined && (opts === null || typeof opts !== 'object')) return note('person options must be an object');
+      if (opts && opts.who !== undefined && !(opts.who === 0 || opts.who === 1 || opts.who === 2)) return note('person who must be 0, 1 or 2');
+      fill(x + 2, y, 24, 31, '#e8b08f'); ops += 260; persons++;
+    }
   };
+  var persons = 0, HIDEABLE = ['occupant', 'mates', 'desk', 'chair', 'extras', 'bookshelf', 'rug'];
   function spotsOf(mod, t) {
     var list = typeof mod.spots === 'function' ? mod.spots(t) : mod.spots;
     if (list === undefined || list === null) return 0;
@@ -101,7 +109,7 @@ const HARNESS = `(function () {
     }
     return list.length;
   }
-  var out = { ok: false, error: '', layers: [], maxOps: 0, painted: 0, spots: 0 };
+  var out = { ok: false, error: '', layers: [], hide: [], maxOps: 0, painted: 0, spots: 0, persons: 0 };
   try {
     var SAFE = { keys: Object.keys, values: Object.values, entries: Object.entries, assign: Object.assign, freeze: Object.freeze, fromEntries: Object.fromEntries };
     var mod = (function (Object, console) {
@@ -110,7 +118,12 @@ __CODE__
     if (mod === undefined || mod === null) mod = {};
     if (typeof mod !== 'object') throw new Error('the code must return an object: { back, mid, front, spots }');
     var LAYERS = ['back', 'mid', 'front'];
-    for (var k in mod) if (LAYERS.indexOf(k) < 0 && k !== 'spots') throw new Error('unknown key "' + k + '" in the returned object; use back, mid, front, spots');
+    for (var k in mod) if (LAYERS.indexOf(k) < 0 && k !== 'spots' && k !== 'hide') throw new Error('unknown key "' + k + '" in the returned object; use back, mid, front, spots, hide');
+    if (mod.hide !== undefined) {
+      if (!Array.isArray(mod.hide)) throw new Error('hide must be an array of names');
+      for (var hi = 0; hi < mod.hide.length; hi++) if (HIDEABLE.indexOf(mod.hide[hi]) < 0) throw new Error('hide: "' + String(mod.hide[hi]) + '" is not one of ' + HIDEABLE.join(', '));
+      out.hide = mod.hide.slice();
+    }
     LAYERS.forEach(function (l) { if (mod[l] !== undefined) { if (typeof mod[l] !== 'function') throw new Error(l + ' must be a function (api, t)'); out.layers.push(l); } });
     var times = [];
     for (var i = 0; i < 480; i++) times.push(i * 0.25 + (i % 7) * 0.013);
@@ -127,6 +140,7 @@ __CODE__
       if (bad) throw new Error(bad + ' (at t=' + t.toFixed(1) + ')');
     }
     out.painted = painted;
+    out.persons = persons;
     out.ok = true;
   } catch (e) {
     out.error = String(e && e.message ? e.message : e).slice(0, 400);
@@ -151,8 +165,8 @@ export function checkRoomCode(code: string): RoomCheck {
     return { ok: false, error: `the code does not compile: ${msg}`.slice(0, 400) }
   }
   if (typeof raw !== 'string') return { ok: false, error: 'the check returned nothing' }
-  const out = JSON.parse(raw) as { ok: boolean; error: string; layers: string[]; maxOps: number; painted: number; spots: number }
+  const out = JSON.parse(raw) as { ok: boolean; error: string; layers: string[]; hide: string[]; maxOps: number; painted: number; spots: number; persons: number }
   if (!out.ok) return { ok: false, error: out.error || 'the code failed' }
   if (out.layers.length && out.painted === 0) return { ok: false, error: 'nothing was drawn inside the room (320 by 144) in two minutes of frames' }
-  return { ok: true, layers: out.layers, maxOps: out.maxOps, painted: out.painted, spots: out.spots }
+  return { ok: true, layers: out.layers, hide: out.hide, maxOps: out.maxOps, painted: out.painted, spots: out.spots }
 }

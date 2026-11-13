@@ -3,6 +3,9 @@
 // see the room change here and in a second tab that never reloads, look at the new thing, undo,
 // and check who is turned away. It leaves Bart's room as it found it when the room was empty
 // (history rows stay: one decorate, one undo).
+// It signs in with Bart's first passcode (his study number); once he has changed it, pass an
+// admin's name and passcode in SEMIBART_CHECK_NAME / SEMIBART_CHECK_PASS, and never guess: six
+// wrong tries lock the name for five minutes.
 // Usage: node scripts/semibart/rooms-check.mjs <out-dir> ["request"] [base]
 import { chromium } from 'playwright';
 const [out, ask = 'put a cute pink rat in my room', base = 'http://localhost:3277'] = process.argv.slice(2);
@@ -27,8 +30,9 @@ const room = p => p.evaluate(() => { const r = window.questRooms.rooms.bart; ret
 const names = p => p.evaluate(() => window.quest.hot().map(h => h.name));
 
 const a = await open();
-const login = await a.evaluate(async () => { const r = await fetch('/api/semibart/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name: 'bart', passcode: '16' }) }); return r.status; });
+const login = await a.evaluate(async ({ name, passcode }) => { const r = await fetch('/api/semibart/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name, passcode }) }); return r.status; }, { name: process.env.SEMIBART_CHECK_NAME || 'bart', passcode: process.env.SEMIBART_CHECK_PASS || '16' });
 expect('Bart signs in', login === 200, 'status ' + login);
+if (login !== 200) { console.log('Stopping: the sign-in was refused, so nothing else can run. Bart has probably changed his passcode.'); await b.close(); process.exit(1); }
 await a.reload(); await a.waitForFunction(() => window.quest && window.quest.me);
 await enter(a);
 const tabB = await open(); await enter(tabB);
