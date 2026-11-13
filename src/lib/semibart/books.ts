@@ -13,7 +13,7 @@ export const BOOK_PAGES = 10
 
 export type BookPage = { text: string; art: { rows: string[]; palette: Record<string, string> } | null }
 export type Book = { form: string; title: string; subtitle: string; pages: BookPage[] }
-export type BookRow = Book & { character: string; about: string; version: number; updated_at: string }
+export type BookRow = Book & { character: string; about: string; share: string; version: number; updated_at: string }
 
 // The spread to choose from. Each book is offered a few of these at random, so that fifty books
 // are not fifty plays, and is free to take none of them.
@@ -120,7 +120,7 @@ export function reviseBook(a: Author, book: Book, request: string): Promise<Book
 /* ---------- storage ---------- */
 
 export async function getBook(character: string): Promise<BookRow | null> {
-  const { data, error } = await db().from('semibart_books').select('character, form, title, subtitle, pages, about, version, updated_at').eq('character', character).maybeSingle()
+  const { data, error } = await db().from('semibart_books').select('character, form, title, subtitle, pages, about, share, version, updated_at').eq('character', character).maybeSingle()
   if (error) throw new Error(`semibart_books: ${error.message}`)
   return (data as BookRow | null) ?? null
 }
@@ -152,4 +152,12 @@ export async function undoBook(character: string, author: string): Promise<BookR
   if (!data) return null
   await saveBook(character, data.book as Book, '(undo)', author)
   return getBook(character)
+}
+
+/** The book whose own page is ola.cx/semibart/book/<share>. */
+export async function getBookByShare(share: string): Promise<BookRow | null> {
+  if (!/^[0-9a-f]{12}$/.test(share)) return null
+  const { data, error } = await db().from('semibart_books').select('character, form, title, subtitle, pages, about, share, version, updated_at').eq('share', share).maybeSingle()
+  if (error) throw new Error(`semibart_books: ${error.message}`)
+  return (data as BookRow | null) ?? null
 }

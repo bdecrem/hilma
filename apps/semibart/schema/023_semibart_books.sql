@@ -27,3 +27,10 @@ create table if not exists semibart_book_versions (
 );
 alter table semibart_books enable row level security;
 alter table semibart_book_versions enable row level security;
+
+-- Every book is also a page of its own at ola.cx/semibart/book/<share>: an unguessable id, so the
+-- link is what gives access (given to admins at any time, to its owner once it is finished).
+alter table semibart_books add column if not exists share text;
+update semibart_books set share = substr(md5(random()::text || character), 1, 12) where share is null;
+alter table semibart_books alter column share set default substr(md5(random()::text), 1, 12);
+create unique index if not exists semibart_books_share on semibart_books (share);
