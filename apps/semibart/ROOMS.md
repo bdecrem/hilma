@@ -79,9 +79,14 @@ decorate the room whose occupants include their character; an admin, any room.
   nothing saved (needs `.env.local` in the environment).
 - `node scripts/semibart/room-shots.mjs <dir> <room> <code.js>`: that code in the real game, six
   frames and a sheet, nothing saved.
-- `node scripts/semibart/rooms-check.mjs <dir>`: the whole thing through the page, API and
-  database as Bart: decorate (one real Claude call), a second tab that never reloads, the new
-  hotspot, undo, who is turned away. It leaves two history rows in Bart's room.
+- `node scripts/semibart/rooms-check.mjs <dir> ["request"] [base]`: the whole thing through the
+  page, API and database as the check account (`SEMIBART_CHECK_NAME` / `SEMIBART_CHECK_PASS`, an
+  admin that owns no study): decorate (one real Claude call), a second tab that never reloads,
+  the new hotspot, undo, who is turned away. `https://ola.cx` as base checks production. It works
+  in `SEMIBART_CHECK_ROOM` (`alison` unless set) and leaves that room as it was, two versions on.
+
+Never delete rows from `semibart_rooms` or `semibart_room_versions` to tidy up after a test: a
+room's version numbers must only ever go up, because `GET /rooms/:room?v=N` is cached for good.
 
 The last two run against `next dev -p 3277`.
 
