@@ -173,6 +173,9 @@ button { font: inherit; background: none; border: 0; margin: 0; cursor: pointer;
 (() => {
 'use strict';
 const W = 320, H = 144, OY = 18, FH = 180;
+// hooks for the files that ride on the game (accounts.js, rooms.js, notes.js): they push functions here
+const HOOKS = { roomBack: [], roomMid: [], roomFront: [], roomSpots: [], keyBlock: [] };
+const runHooks = (list, ...a) => list.forEach(f => { try { f(...a); } catch (e) { console.error('[hook]', e); } });
 const $ = id => document.getElementById(id);
 const cv = $('cv'), g = cv.getContext('2d');
 const lineEl = $('line'), labelEl = $('label'), choicesEl = $('choices'), fadeEl = $('fade'), screenEl = $('screen'), titleEl = $('title');
@@ -1404,7 +1407,11 @@ const SEMINAR_FIXED = ([
   { name: 'door', r: [4, 30, 32, 76], walk: { x: 40, y: 132 }, def: 'open', on: { look: 'The way out. Quietly.', open: leaveSeminar } }
 ]);
 function seminarSpots() { const pr = presenter(); return [{ name: pr.name, r: [PRES_X - 2, 34, 32, 94], walk: { x: 250, y: 134 }, def: 'talk', on: { look: `${pr.name}, presenting. Still on slide two.`, talk: [[pr.k, 'Please. Questions at the end.']] } }].concat(seats().map(a => ({ name: a.name, r: [a.x, 60, 28, 36], walk: { x: a.x + 14, y: 134 }, def: 'talk', on: { look: a.look, talk: () => talkSeat(a) } }))).concat(SEMINAR_FIXED); }
-function hotspots() { return S.scene === 'map' ? MAP : S.room === 'seminar' ? seminarSpots() : S.room === 'empty' ? ROOM_EMPTY : PEOPLE[S.room] ? PEOPLE[S.room].spots : ROOM; }
+function hotspots() {
+  const base = S.scene === 'map' ? MAP : S.room === 'seminar' ? seminarSpots() : S.room === 'empty' ? ROOM_EMPTY : PEOPLE[S.room] ? PEOPLE[S.room].spots : ROOM;
+  if (S.scene !== 'room' || S.room === 'seminar' || S.room === 'empty' || !HOOKS.roomSpots.length) return base;
+  return [].concat(...HOOKS.roomSpots.map(f => { try { return f(S.room) || []; } catch (e) { console.error('[hook]', e); return []; } }), base);
+}
 function hit(x, y) { return hotspots().find(h => x >= h.r[0] && x < h.r[0] + h.r[2] && y >= h.r[1] && y < h.r[1] + h.r[3]); }
 async function perform(r) {
   if (typeof r === 'function') await r();
@@ -1516,6 +1523,7 @@ function fullscreen() { try { const el = document.documentElement; if (document.
 $('bFull').addEventListener('click', e => { e.stopPropagation(); fullscreen(); });
 function start() {
   if (S.started) return;
+  if (window.SEMIBART_GATE && !window.SEMIBART_GATE()) return;
   audio(); S.started = true; titleEl.hidden = true; SFX.jingle(); cv.focus && cv.focus();
   run(async () => { await wait(0.6); await say('you', 'CASBS. Fifty-four studies.'); await say('you', "Somebody's typing in one of them."); await say('you', "Looking for someone? Who's where, top left."); });
 }
@@ -1531,6 +1539,8 @@ async function hop(dir) {
 window.addEventListener('keydown', e => {
   audio();
   if (WHO_UI.open) { if (e.key === 'Escape') { e.preventDefault(); closeWho(); } else if (e.key === 'Enter') { const b = whoList.querySelector('button'); if (b) { e.preventDefault(); b.click(); } } return; }
+  if (e.target && e.target.closest && e.target.closest('input, textarea, select')) return;
+  if (HOOKS.keyBlock.some(f => f(e))) return;
   if (!S.started) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); start(); } return; }
   if (DECK.open) {
     if (e.key === 'Escape') closeDeck();
@@ -1716,12 +1726,15 @@ function drawRoom(t) {
     roomLight(t);
     const talk = S.line && S.line.who === k && (calm || Math.floor(t * 8) % 2 === 0), speaking = S.line && S.line.who === k;
     const blink = !calm && (t + k.length) % 4.3 < 0.13;
+    runHooks(HOOKS.roomBack, k, t);
     (p.mates || []).forEach((m, i) => bust(LOOKS[m], mateX(k, i), 66, { talk: S.line && S.line.who === m && (calm || Math.floor(t * 8) % 2 === 0), blink: !calm && (t + m.length) % 4.7 < 0.13 }));
     if (p.scene === 'desk') deskScene(k, o, t, talk, blink);
     if (p.scene === 'read') readingScene(o, t, talk, blink, speaking);
     if (p.scene === 'stand') standingScene(o, t, talk, blink);
     const moving = S.path.length > 0, fr = moving ? 1 + Math.floor(t * 7) % 2 : 0;
+    runHooks(HOOKS.roomMid, k, t);
     drawYou(S.x, S.y, S.face, fr, S.line && S.line.who === 'you' && (calm || Math.floor(t * 8) % 2 === 0));
+    runHooks(HOOKS.roomFront, k, t);
     g.restore();
     return;
   }
@@ -1737,6 +1750,7 @@ function drawRoom(t) {
   g.drawImage(roomFull, 0, 0);
   g.save(); g.translate(0, OY);
   roomLight(t);
+  runHooks(HOOKS.roomBack, 'bart', t);
   const bartTalk = S.line && S.line.who === 'bart' && (calm || Math.floor(t * 8) % 2 === 0);
   let face = B.shades ? (bartTalk ? FACE.coolTalk : FACE.cool) : (bartTalk ? FACE.talk : FACE.idle);
   if (B.mode === 'type') face = FACE.type;
@@ -1769,7 +1783,9 @@ function drawRoom(t) {
   rect(g, 288, 116, 15, 14, '#141414'); rect(g, 289, 116, 13, 13, '#c46a4a'); rect(g, 289, 116, 13, 2, '#d98463');
   const moving = S.path.length > 0, fr = moving ? 1 + Math.floor(t * 7) % 2 : 0;
   const youTalk = S.line && S.line.who === 'you' && (calm || Math.floor(t * 8) % 2 === 0);
+  runHooks(HOOKS.roomMid, 'bart', t);
   drawYou(S.x, S.y, S.face, fr, youTalk);
+  runHooks(HOOKS.roomFront, 'bart', t);
   g.restore();
 }
 
@@ -1808,8 +1824,14 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
-window.quest = { S, hit, run, doAction, MAP, ROOM, start, hot: hotspots, world, L, DIRECTORY, openWho, goFind, STUDIES };
+window.quest = { S, hit, run, doAction, MAP, ROOM, start, hot: hotspots, world, L, DIRECTORY, openWho, goFind, STUDIES,
+  say, wait, choose, skipLine, SFX, PEOPLE, FELLOWS, LOOKS, hooks: HOOKS, me: undefined,
+  occupants: k => k === 'bart' ? ['bart'] : PEOPLE[k] ? [k].concat(PEOPLE[k].mates || []) : [],
+  gfx: { g, cv, rect, oval, disc, sprite, dither, rng, LET, DIG, calm, W, H, FH, OY } };
 })();
 </script>
+<script src="/semibart/accounts.js"></script>
+<script src="/semibart/rooms.js"></script>
+<script src="/semibart/notes.js"></script>
 </body>
 </html>
