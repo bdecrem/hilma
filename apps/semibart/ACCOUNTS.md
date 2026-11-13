@@ -76,3 +76,11 @@ against `next dev -p 3277`. It signs in with the check-only admin account (`chec
 passcode in `.env.local` as SEMIBART_CHECK_NAME / SEMIBART_CHECK_PASS and in the ops vault;
 recreate with `node scripts/semibart/make-check-account.mjs`), never a real fellow, and changes
 no passcode; the point-of-view part pretends in the page to be Inbal, Mikael and a seminar speaker.
+
+## Open (2026-11-12): sign-in strength, Bart's decision
+
+Names and study numbers are public in the game, and most accounts still use the study number as
+their passcode, so anyone with the link can sign in as a fellow who hasn't set their own code.
+Proposed (not built, waiting on Bart): a shared word given out at the seminar, required only while
+an account still uses its study number, plus choosing your own four digits at that first sign-in.
+Both live in accounts.js and src/lib/semibart/auth.ts; index.html doesn't change.
