@@ -159,6 +159,8 @@ css.textContent = `
 .bk-title { margin: 0; font-weight: 400; font-size: 5cqw; line-height: 0.95; }
 .bk-sub { font-size: 2.6cqw; line-height: 1.05; color: #d8dcff; }
 .bk-by { margin-top: auto; font-size: 2.4cqw; }
+.bk-link { font-size: 1.9cqw; color: #ffd93b; text-decoration: none; }
+.bk-link:hover { color: #fff; }
 .bk-text { white-space: pre-wrap; font-size: 2.75cqw; line-height: 1.1; }
 .bk-page canvas { image-rendering: pixelated; align-self: center; flex: 1 1 auto; min-height: 0; max-width: 100%; object-fit: contain; }
 .bk-blank { margin: auto; color: #a39c8c; font-size: 2.5cqw; text-align: center; }
@@ -183,6 +185,7 @@ function paint() {
     const t = document.createElement('h2'); t.className = 'bk-title'; t.textContent = book.title; pg.appendChild(t);
     if (book.subtitle) add('bk-sub', book.subtitle);
     add('bk-by', 'by ' + nameOf(book.character) + (book.unlocked ? '' : ` · ${book.found} of ${BOOK} pages found`));
+    if (book.link) { const a = document.createElement('a'); a.className = 'bk-link'; a.href = book.link; a.target = '_blank'; a.rel = 'noopener'; a.textContent = book.link.replace('https://', ''); a.addEventListener('click', e => e.stopPropagation()); pg.appendChild(a); }
   } else {
     const p = book.pages[i - 1];
     if (!p) add('bk-blank', 'Not found yet.');

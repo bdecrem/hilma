@@ -93,11 +93,13 @@ export const pages: Handler = guarded(async req => {
 
 /** What of a book a reader may see: an admin, the whole book at any time; anyone else, the
  *  whole book once it is finished (all ten pages found), and nothing before, its owner included. */
-export function visibleBook(b: { form: string; title: string; subtitle: string; pages: unknown[]; version: number }, who: string, found: number, viewer: { character: string; role: string }) {
+export function visibleBook(b: { form: string; title: string; subtitle: string; pages: unknown[]; version: number; share?: string }, who: string, found: number, viewer: { character: string; role: string }) {
   found = Math.max(0, Math.min(BOOK_PAGES, found))
   const unlocked = found >= BOOK_PAGES, admin = viewer.role === 'admin', mine = viewer.character === who
   if (!admin && !unlocked) return null
-  return { character: who, form: b.form, title: b.title, subtitle: b.subtitle, pages: b.pages, found, unlocked, version: b.version, mine, admin }
+  // its own page's link: for an admin, and for its owner once it is finished
+  const link = b.share && (admin || (mine && unlocked)) ? `https://ola.cx/semibart/book/${b.share}` : null
+  return { character: who, form: b.form, title: b.title, subtitle: b.subtitle, pages: b.pages, found, unlocked, version: b.version, mine, admin, link }
 }
 
 /** GET /api/semibart/books/:who (signed in) -> the book as far as this reader may see it. */

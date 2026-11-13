@@ -661,6 +661,32 @@
         }
       ]
     },
+    "Jersey 15": {
+      "family": "Jersey 15",
+      "dir": "jersey-15",
+      "kind": "static",
+      "repoDir": "ofl/jersey15",
+      "sources": {
+        "Jersey15-Regular.ttf": "e40b445922d36088c74d4825d9fc17ea280a45fc"
+      },
+      "axes": {},
+      "web": [
+        {
+          "file": "Jersey15-400.woff2",
+          "style": "normal",
+          "weight": 400,
+          "bytes": 7260
+        }
+      ],
+      "og": [
+        {
+          "file": "Jersey15-400.ttf",
+          "style": "normal",
+          "weight": 400,
+          "bytes": 35352
+        }
+      ]
+    },
     "JetBrains Mono": {
       "family": "JetBrains Mono",
       "dir": "jetbrains-mono",
@@ -972,5 +998,5 @@
       "og": []
     }
   },
-  "generated": "2026-11-06"
+  "generated": "2026-11-13"
 }

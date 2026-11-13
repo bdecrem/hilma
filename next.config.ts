@@ -5,6 +5,8 @@ const nextConfig: NextConfig = {
   // The Openlab chat route reads the constitution from apps/ at runtime.
   outputFileTracingIncludes: {
     '/api/openlab/chat': ['./apps/openlab/01-constitution/constitution.md'],
+    // a book's share card reads the game's font at request time
+    '/semibart/book/[id]/og': ['./src/fonts/jersey-15/Jersey15-400.ttf'],
     '/openlab/about': ['./apps/openlab/README.md'],
     // osai reads its documents from apps/osai/content at request time.
     '/osai': ['./apps/osai/content/**/*'],

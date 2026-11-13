@@ -29,7 +29,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
 <title>${esc(b.title)} · by ${esc(by)}</title>
 <meta name="description" content="${esc(b.form)}, by ${esc(by)}. A book from CASBS Quest.">
 <meta property="og:title" content="${esc(b.title)}"><meta property="og:description" content="${esc(b.form)}, by ${esc(by)}. From CASBS Quest.">
-<meta property="og:url" content="${url}"><meta property="og:image" content="https://ola.cx/semibart/og.png"><meta name="twitter:card" content="summary_large_image">
+<meta property="og:url" content="${url}"><meta property="og:image" content="https://ola.cx/semibart/book/${b.share}/og"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:image" content="https://ola.cx/semibart/book/${b.share}/og"><meta name="twitter:card" content="summary_large_image">
 <meta name="robots" content="noindex">
 <link href="https://fonts.googleapis.com/css2?family=Jersey+15&display=swap" rel="stylesheet">
 <style>

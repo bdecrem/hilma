@@ -32,7 +32,7 @@ list the file in `outputFileTracingIncludes` in `next.config.ts` (as
 
 ## Catalog
 
-Built 2026-11-06.
+Built 2026-11-13.
 
 ### Alfa Slab One
 
@@ -280,6 +280,17 @@ const font = localFont({ src: '../../fonts/inter-tight/InterTight.woff2', weight
 ```
 
 OG: `inter-tight/InterTight-600.ttf` → `{ name: 'Inter Tight', weight: 600, style: 'normal' }`; `inter-tight/InterTight-900.ttf` → `{ name: 'Inter Tight', weight: 900, style: 'normal' }`
+
+### Jersey 15
+
+static · `ofl/jersey15` · Jersey15-400.woff2 7 KB
+
+```ts
+import localFont from 'next/font/local'
+const font = localFont({ src: '../../fonts/jersey-15/Jersey15-400.woff2', weight: '400', variable: '--font-jersey-15', display: 'swap' })
+```
+
+OG: `jersey-15/Jersey15-400.ttf` → `{ name: 'Jersey 15', weight: 400, style: 'normal' }`
 
 ### JetBrains Mono
 
