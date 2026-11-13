@@ -58,8 +58,8 @@ if (part !== 'chat') {
   const wire = await p.evaluate(() => document.querySelector('#tk .tk-run').textContent + ' | ' + window.questTicker.queue.map(i => i.text).join(' | '));
   ok('on the wire', wire.includes("Check left a note on Daniel's desk"), wire);
   // peel it off
-  await p.mouse.click(note.x, note.y); await p.waitForSelector('.nb-off'); await p.click('.nb-off'); await p.waitForTimeout(800);
-  ok('peeled off', await p.evaluate(() => window.questNotes.shown('daniel').notes.length) === 0);
+  await p.mouse.click(note.x, note.y); await p.waitForSelector('.nb-off'); await p.click('.nb-off');
+  ok('peeled off', await p.waitForFunction(() => window.questNotes.shown('daniel').notes.length === 0, null, { timeout: 15000 }).then(() => true, () => false));
   await p.keyboard.press('Escape'); await idle();
   // Bart's desk: Daniel's note is there for a visitor to read
   await enter('bart'); await p.waitForTimeout(600); await shot('7-bart-room');
