@@ -280,5 +280,9 @@ window.addEventListener('semibart:user', () => { if (q.me && !told) { told = tru
 // A note announced on the ticker: if it is for the room you are standing in, pick it up now.
 window.addEventListener('semibart:event', e => { const ev = e.detail; if (ev && ev.kind === 'note' && S.scene === 'room' && ev.room === S.room) load(S.room, true); });
 
+// Bart's study already had a pinboard on the wall with painted sticky notes on it. It looks like
+// the place to read your notes, so it is one: clicking it opens the same desk close-up.
+{ const pin = q.ROOM.find(h => h.name === 'pinboard'); if (pin) { pin.def = 'read'; pin.on.look = 'My pinboard. One note says: ASK CLAUDE. The real ones are on the desk.'; pin.on.read = () => openDesk('bart', null); } }
+
 window.questNotes = { desks, load, openDesk, writeFlow, shown, placeOf };
 })();
