@@ -451,9 +451,11 @@ const world = document.createElement('canvas'); world.width = W; world.height = 
 })();
 
 /* ---------- Bart's study ---------- */
-function makeRoomBg(bart) {
+// lay: where the bookshelf and the rug go ({ shelf: [x, w], rug: [x, w] }); the shared studies move them
+function makeRoomBg(bart, lay) {
   const c = document.createElement('canvas'); c.width = W; c.height = H;
   const m = c.getContext('2d'), r = rng(23);
+  const [sx, sw] = (lay && lay.shelf) || [266, 48], [rx, rw] = (lay && lay.rug) || [52, 168];
   // wall: wood panels
   rect(m, 0, 0, W, 106, '#9a5631');
   for (let x = 0; x < W; x += 14) { rect(m, x, 4, 1, 102, '#7f4426'); rect(m, x + 1, 4, 1, 102, '#ac6a42'); }
@@ -463,8 +465,8 @@ function makeRoomBg(bart) {
   rect(m, 0, 104, W, 3, '#5c2e18');
   for (let y = 107; y < H; y += 3) { rect(m, 0, y, W, 3, (y / 3) % 2 ? '#c9a77a' : '#bf9c6e'); for (let k = 0; k < 3; k++) rect(m, Math.floor(r() * W), y, 1, 3, '#a8865b'); }
   // rug
-  rect(m, 52, 124, 168, 18, '#1f2c9e'); rect(m, 55, 126, 162, 14, '#ff9ccf'); rect(m, 58, 128, 156, 10, '#2b3fff');
-  for (let x = 62; x < 212; x += 8) { rect(m, x, 132, 4, 2, '#ffd93b'); }
+  rect(m, rx, 124, rw, 18, '#1f2c9e'); rect(m, rx + 3, 126, rw - 6, 14, '#ff9ccf'); rect(m, rx + 6, 128, rw - 12, 10, '#2b3fff');
+  for (let x = rx + 10; x < rx + rw - 8; x += 8) { rect(m, x, 132, 4, 2, '#ffd93b'); }
   // door
   rect(m, 4, 30, 32, 76, '#5c2e18'); rect(m, 7, 33, 26, 73, '#b8733f');
   rect(m, 10, 37, 20, 28, '#a5653a'); rect(m, 10, 70, 20, 30, '#a5653a'); rect(m, 10, 37, 20, 1, '#c98a55'); rect(m, 10, 70, 20, 1, '#c98a55');
@@ -499,18 +501,36 @@ function makeRoomBg(bart) {
   disc(m, 218, 28, 8, '#0c0c0c'); disc(m, 218, 28, 6, '#26262b'); disc(m, 218, 28, 4, '#0c0c0c'); disc(m, 218, 28, 2, '#ff5a1f'); rect(m, 218, 28, 1, 1, '#141414');
   }
   // bookshelf
-  rect(m, 266, 10, 48, 96, '#5c2e18'); rect(m, 269, 13, 42, 90, '#3d2112');
+  rect(m, sx, 10, sw, 96, '#5c2e18'); rect(m, sx + 3, 13, sw - 6, 90, '#3d2112');
   const cols = ['#ff5a1f', '#2b3fff', '#ffd93b', '#ff9ccf', '#7ee0b5', '#fff7e6', '#c46a4a', '#34446e', '#2f6b45'];
   [13, 31, 49, 67, 85].forEach((sy, k) => {
-    rect(m, 269, sy + 16, 42, 2, '#5c2e18');
-    let x = 270;
-    while (x < 309) { const w = 2 + Math.floor(r() * 3), h = 10 + Math.floor(r() * 5); if (r() < 0.1 && k) { x += 4; continue; } rect(m, x, sy + 16 - h, Math.min(w, 309 - x), h, cols[Math.floor(r() * cols.length)]); x += w + (r() < 0.3 ? 1 : 0); }
+    rect(m, sx + 3, sy + 16, sw - 6, 2, '#5c2e18');
+    let x = sx + 4; const end = sx + sw - 5;
+    while (x < end) { const w = 2 + Math.floor(r() * 3), h = 10 + Math.floor(r() * 5); if (r() < 0.1 && k) { x += 4; continue; } rect(m, x, sy + 16 - h, Math.min(w, end - x), h, cols[Math.floor(r() * cols.length)]); x += w + (r() < 0.3 ? 1 : 0); }
   });
+  if (lay && lay.cabinet) { // the bottom row behind two doors
+    const half = Math.floor((sw - 6) / 2);
+    rect(m, sx + 3, 85, sw - 6, 18, '#5c2e18'); rect(m, sx + 4, 86, half - 1, 16, '#8a5230'); rect(m, sx + 3 + half + 1, 86, sw - 6 - half - 2, 16, '#8a5230');
+    rect(m, sx + 4, 86, half - 1, 1, '#a5653a'); rect(m, sx + 3 + half + 1, 86, sw - 6 - half - 2, 1, '#a5653a');
+  }
   // chair back
   if (bart) { rect(m, 170, 58, 40, 3, '#141414'); rect(m, 168, 61, 44, 36, '#141414'); rect(m, 170, 61, 40, 36, '#3b3d4a'); rect(m, 170, 61, 40, 1, '#4f5262'); }
   return c;
 }
 const roomBg = makeRoomBg(true), roomBgEmpty = makeRoomBg(false);
+/* Shared studies (2026-11-13): a desk for everyone, the first in front of the window, the last at
+   the far right where the bookshelf used to be, and the bookshelf moved left to stand between
+   desks. c is each desk's centre; its person sits centred on it (head and shoulders from c - 14).
+   Seat 0 is the host, the room's key. src/lib/semibart/room-agent.ts repeats these numbers for
+   the decorator: change them in both. */
+const PLANS = {
+  // the rug lies in the open floor between the two desks; a visitor walks in to stand on it
+  2: { name: 'duo', w: 96, chair: 44, c: [88, 264], shelf: [140, 48], rug: [128, 96], enterX: 176 },
+  // three desks fill the room, so the rug runs under all their fronts and the shelf, seen between
+  // two desks, has a closed cabinet for its bottom row
+  3: { name: 'trio', w: 84, chair: 44, c: [88, 178, 268], shelf: [201, 44], rug: [58, 240], cabinet: true, enterX: 132 }
+};
+const roomBgShared = { duo: makeRoomBg(false, PLANS[2]), trio: makeRoomBg(false, PLANS[3]) };
 const seminarBg = (function () {
   const c = document.createElement('canvas'); c.width = W; c.height = H; const m = c.getContext('2d');
   m.drawImage(roomBgEmpty, 0, 0);
@@ -662,11 +682,13 @@ function deskScene(k, o, t, talk, blink, hide) {
   if (k === 'jacqueline') { rect(g, 156, 88, 9, 7, '#c46a4a'); disc(g, 160, 84, 4, '#2f6b45'); disc(g, 158, 82, 2, '#4a8f5f'); }
   deskExtras(k, show);
 }
-// A shared study: everyone at a desk of their own (PLANS), a brass plaque on the wall above each.
+// A shared study: everyone at a desk of their own (PLANS), a brass name plate on the front of each.
 // hide: 'occupant' is the host, 'mates' the others, 'person:<slug>' any one of them; 'desk' and
 // 'chair' take every desk (with its plaque and mug) and every chair, 'desk:<slug>' and
 // 'chair:<slug>' just that person's. The left end of each desk top is left clear for the pad and pen.
 const plaqueName = slug => ((FELLOWS[slug] || PEOPLE[slug] || {}).name || slug).normalize('NFD').replace(/[^A-Za-z]/g, '').toUpperCase().slice(0, 11);
+// the plate on a desk's front panel: [x, y, w, h], centred on the desk
+function plateOf(slug, c) { const tw = plaqueName(slug).length * 4 - 1; return [Math.round(c - (tw + 6) / 2), 103, tw + 6, 9]; }
 function sharedScene(k, t, hide) {
   const p = PEOPLE[k], pl = planOf(k), who = [k].concat(p.mates);
   const gone = (slug, i) => hide.has('person:' + slug) || hide.has(i === 0 ? 'occupant' : 'mates');
@@ -674,16 +696,14 @@ function sharedScene(k, t, hide) {
     const o = LOOKS[slug], c = pl.c[i], w = pl.w, X = c - w / 2, here = !gone(slug, i) && !!o;
     const show = n => !hide.has(n) && !hide.has(n + ':' + slug);
     if (show('chair')) { const cw = pl.chair, x0 = c - cw / 2; rect(g, x0 + 2, 58, cw - 4, 3, INK); rect(g, x0, 61, cw, 36, INK); rect(g, x0 + 2, 61, cw - 4, 36, '#3b3d4a'); rect(g, x0 + 2, 61, cw - 4, 1, '#4f5262'); }
-    if (show('desk')) { // the plaque: whose desk this is
-      const nm = plaqueName(slug), tw = nm.length * 4 - 1, px = Math.round(c - (tw + 6) / 2);
-      rect(g, px, 49, tw + 6, 9, '#5c2e18'); rect(g, px + 1, 50, tw + 4, 7, '#e6b547'); rect(g, px + 1, 50, tw + 4, 1, '#f6dc8a'); word(g, c, 51, nm, '#3d2112');
-    }
     if (here) bust(o, c - 14, 66, { talk: voiced(slug) && (calm || Math.floor(t * 8) % 2 === 0), blink: !calm && (t + slug.length * 1.7 + i) % (4.3 + i * 0.4) < 0.13 });
     if (show('desk')) {
       rect(g, X, 95, w, 1, INK); rect(g, X, 96, w, 4, '#e2b47e'); rect(g, X, 100, w, 1, INK);
       rect(g, X + 3, 101, w - 6, 22, '#c08a55'); rect(g, X + 3, 101, w - 6, 1, '#9c6a3c'); rect(g, X + 3, 101, 1, 22, '#9c6a3c'); rect(g, X + w - 4, 101, 1, 22, '#9c6a3c');
       rect(g, X + 6, 123, 5, 5, '#7d5632'); rect(g, X + w - 11, 123, 5, 5, '#7d5632');
       rect(g, c - 12, 94, 24, 2, '#26262b');
+      const [px, py, pw] = plateOf(slug, c); // whose desk this is
+      rect(g, px, py, pw, 9, '#5c2e18'); rect(g, px + 1, py + 1, pw - 2, 7, '#e6b547'); rect(g, px + 1, py + 1, pw - 2, 1, '#f6dc8a'); word(g, c, py + 2, plaqueName(slug), '#3d2112');
     }
     if (here) { // they type in bursts, each to their own rhythm
       const typing = !S.line && !calm && (t + i * 2.3 + slug.length) % 7 < 4.6, a = typing ? Math.floor(t * 9 + i * 3) % 2 : 0;
@@ -698,8 +718,8 @@ function sharedScene(k, t, hide) {
   const [dx, dy] = SHARED_EXTRAS[k] || [0, 0];
   g.save(); g.translate(dx, dy); deskExtras(k, n => !hide.has(n)); g.restore();
 }
-// Ian's map hangs between the two plaques' columns, higher up; Jacqueline's easel stands by the window
-const SHARED_EXTRAS = { ian: [19, -6], jacqueline: [-52, 0] };
+// Ian's map hangs to the right of the bookshelf; Jacqueline's easel stands between the bookshelf and the second desk
+const SHARED_EXTRAS = { ian: [64, -6], jacqueline: [68, 0] };
 // what a desk scene puts on the walls and floor: Ian's map, Jacqueline's easel
 function deskExtras(k, show) {
   if (!show('extras')) return;
@@ -861,6 +881,7 @@ function makeRoomFull(bg) {
   return c;
 }
 const roomFull = makeRoomFull(roomBg), roomFullEmpty = makeRoomFull(roomBgEmpty), seminarFull = makeRoomFull(seminarBg);
+const roomFullShared = { duo: makeRoomFull(roomBgShared.duo), trio: makeRoomFull(roomBgShared.trio) };
 
 /* ---------- sound ---------- */
 let AC = null, master = null, muted = false;
@@ -1060,7 +1081,7 @@ async function enterPerson(k) {
   await fadeTo(true);
   S.scene = 'room'; S.room = k; S.x = 30; S.y = 132; S.face = 1; S.path = [];
   await fadeTo(false);
-  await walkTo([{ x: 120, y: 134 }]);
+  await walkTo([{ x: p.enterX || 120, y: 134 }]);
   if (!p.met) { p.met = true; for (const l of p.hello) await say(l[0], l[1]); }
   else await say(k, 'Back again? Come in.');
 }
@@ -1074,11 +1095,6 @@ const STUDY_OF = { eli: '34', forrest: '44', lewis: '6', luke: '5', mary: '4', l
   june: '38', lynda: '39', robert: '40', ralph: '41', dessislava: '42', jamie: '45', kepa: '46', henry: '47', corey: '48', lana: '49', shigehiro: '50', andrius: '51',
   bryn: '52', brian: '53', heeju: '54', toussaint: '016', matthew: '016' };
 const MATES = { '27': ['kevin', 'mikael', 'raul'], '28': ['jacqueline', 'jurate'], '29': ['ian', 'ishara'], '016': ['toussaint', 'matthew'] };
-/* Shared studies: a desk for everyone, side by side between the window and the bookshelf.
-   Two people get two desks 72 wide (x 111-182 and 191-262); three get three narrow ones 46 wide
-   (x 117-162, 167-212, 217-262), elbow to elbow. c is each desk's centre; the person sits centred
-   on it (their head and shoulders start at c - 14). Seat 0 is the host, the room's key. */
-const PLANS = { 2: { name: 'duo', w: 72, chair: 44, c: [147, 227] }, 3: { name: 'trio', w: 46, chair: 32, c: [140, 190, 240] } };
 function planOf(room) { const p = PEOPLE[room]; return p && p.mates && p.mates.length ? PLANS[p.mates.length + 1] || null : null; }
 // where room-mate i (0 = the first one after the host) sits: the left edge of their head and shoulders
 function mateX(host, i) { const pl = planOf(host); return pl ? pl.c[i + 1] - 14 : [140, 250][i]; }
@@ -1088,9 +1104,11 @@ function desksOf(room) {
   if (room === 'bart') return one('bart');
   const p = PEOPLE[room]; if (!p) return [];
   const pl = planOf(room);
-  if (pl) { const hid = hiddenIn(room); return [room].concat(p.mates).map((slug, i) => { const x = pl.c[i] - pl.w / 2; return { slug, x, w: pl.w, c: pl.c[i], top: 95, panel: [x + 3, 101, pl.w - 6, 22], hidden: hid.has('desk') || hid.has('desk:' + slug) }; }); }
+  if (pl) { const hid = hiddenIn(room); return [room].concat(p.mates).map((slug, i) => { const x = pl.c[i] - pl.w / 2; return { slug, x, w: pl.w, c: pl.c[i], top: 95, panel: [x + 3, 101, pl.w - 6, 22], plate: plateOf(slug, pl.c[i]), hidden: hid.has('desk') || hid.has('desk:' + slug) }; }); }
   return p.scene === 'desk' ? one(room) : [];
 }
+// where a room's bookshelf and rug are: [x, y, w, h]
+function fixturesOf(room) { const pl = planOf(room) || { shelf: [266, 48], rug: [52, 168] }; return { bookshelf: [pl.shelf[0], 10, pl.shelf[1], 97], rug: [pl.rug[0], 124, pl.rug[1], 18] }; }
 const GREET = ['Oh, hi! Come in.', 'Hello! You found me.', 'Come in. The door sticks.', 'Oh! A visitor.', 'Hi! Mind the books.', 'Hey, come in, come in.', 'You knocked! Nobody knocks.', 'Come in. I was just thinking out loud.'];
 const CHATS = [
   [['you', 'What are you working on?'], ['K', 'A chapter. It was going to be short.'], ['K', 'It is not short.']],
@@ -1110,7 +1128,7 @@ Object.entries(STUDY_OF).forEach(([k, n]) => {
     talks: [0, 3].map(i => CHATS[(h + i) % CHATS.length].map(([w, t]) => [w === 'K' ? k : w, t])), talked: 0 };
 });
 Object.values(MATES).forEach(([host, ...rest]) => { const p = PEOPLE[host]; if (!p) return; p.mates = rest; rest.forEach(m => p.hello.push([m, unshh(FELLOWS[m].whisper)]));
-  const pl = planOf(host); if (pl) { p.plan = pl.name; p.at = [pl.c[0], 54]; } });
+  const pl = planOf(host); if (pl) { p.plan = pl.name; p.at = [pl.c[0], 54]; p.enterX = pl.enterX; } });
 const DEBATES = [{"seats": ["garance", "salman", "lawrence", "milena", "kevin", "daniel"], "topic": "Who gets blamed when the AI messes up?", "lines": [["garance", "I asked one city who built its AI. They said it's secret. Who do I call?"], ["salman", "I've built these systems. The blame always lands on a vendor nobody remembers hiring."], ["lawrence", "Some languages grammatically mark who is warning whom. English lets everyone off the hook."], ["milena", "Put bots and people in one group and everyone assumes someone else is in charge."], ["kevin", "In 1984 we blamed the modem. Blame always moves to the newest beige box."], ["daniel", "Judges rule differently late in the day. Maybe the machine just needs a snack."], ["garance", "A machine with no lunch break still needs a human to sign the paper. Name them."], ["milena", "Then who checks the checkers? Another bot? Now it's a group chat of robots."], ["kevin", "That's a bulletin board. We had those. Somebody always typed in all caps."], ["daniel", "This is more a comment than a question, but we are forty minutes over."], ["you", "So who's accountable for the empty coffee pot?"], ["garance", "Great story. Nobody will say."]]}, {"seats": ["mikael", "tl", "forrest", "june", "inbal", "shigehiro"], "topic": "Why do we play? Games, parks and happiness", "lines": [["mikael", "Games used to be about conquering things. Now people play to feel another side of the story."], ["tl", "Same in theme parks. Every line you wait in was designed. Nobody ends up there by accident."], ["forrest", "Sorry I'm late. Court three ran long. Anyway, play is basically public safety."], ["june", "Happiness isn't the only goal. Sad moods can help people notice things others miss."], ["inbal", "Rats free a trapped friend, even with chocolate sitting right there."], ["shigehiro", "Happiness depends on where you live and what everyone around you is choosing."], ["mikael", "A game where you play the other side is empathy with a score."], ["forrest", "Pickleball is a safety program with a paddle. My data is mostly sunburn."], ["june", "Forrest, I study positive emotion, and you are a very cheerful case."], ["inbal", "Would the rats let the slower rat into the game?"], ["shigehiro", "I predict that by spring, every fellow here owns a paddle."], ["you", "So happiness is a paddle. Who has the sign-up sheet?"]]}, {"seats": ["eli", "brooke", "lana", "frederick", "andrius", "joseph"], "topic": "Is money real? Markets, scams and trust", "lines": [["eli", "The stock market? Scam. Pension funds? Scam. This coffee cup? Probably also a scam."], ["brooke", "I trained as a wealth manager to get inside. The scam has a very nice office, Eli."], ["lana", "Every scam shows what a crowd believes counts as real money. That's my whole field."], ["frederick", "I've pitched investors. Every deck was a little optimistic. Let's call it hope."], ["andrius", "Show a household how its neighbors use energy and it suddenly cares about its bill."], ["joseph", "From my standing desk, I see people mostly copy each other's bets. Two screens agree."], ["eli", "Since the 1980s everyone owns stocks, so everyone's a little bit in on the scam."], ["brooke", "Most of the money isn't where you think it is. Think small island, big office."], ["lana", "People trust whatever looks like a bank app. The font does a lot of work."], ["frederick", "As a former CEO, yes. We followed the neighbors too."], ["you", "Is the free coffee a scam?"], ["eli", "Obviously. They want your attendance."]]}, {"seats": ["frances", "jurate", "heeju", "john", "jacqueline", "lewis"], "topic": "Hot planet, hard choices: who adapts and how?", "lines": [["frances", "I'm building a model where the laws change too. Nobody change any laws."], ["jurate", "Tell Americans what their own leaders say about solar, and the neighbors do the rest."], ["heeju", "When the flood comes, who calls Grandma? I count the cousins. Families are the safety net."], ["john", "My book is about guns and nature. Yes, they're connected. Yes, it's awkward."], ["jacqueline", "I use AI to link dirty air, genes and neighborhoods to memory loss in old age."], ["lewis", "In African cities, wetlands turn into fancy housing. Then the water wants its land back."], ["frances", "So the model needs cousins, condos and guns. Fine. Adding them."], ["john", "Frances, are you listening or reading?"], ["frances", "Yes."], ["jacqueline", "Can the model finish before I'm old? I'd like to remember the results."], ["you", "Can the model tell me if this room gets heat in winter?"], ["frances", "Page 212 says no."]]}, {"seats": ["ian", "graeme", "katharyne", "matthew", "kahwee", "toussaint"], "topic": "Who Owns the Line on the Map?", "lines": [["ian", "Let's start simple. A border is a line, and migrants have rights on both sides of it."], ["graeme", "Great. Where is the data on who crosses it? I filed a records request. Again."], ["katharyne", "Every border is a place first. Tempelhof Field was a parade ground, an airport, then a park."], ["kahwee", "Or a casino floor. Follow the money and you find the real map. Ask Macau."], ["matthew", "Follow the heat. Climate ignores your line, and farmworkers feel it first."], ["toussaint", "The line also runs through your phone. Free internet is never free. Ask what it costs."], ["ian", "I agree with all of that, and none of it changes the legal question."], ["graeme", "Has anyone tried randomizing the border? Asking for the methods section."], ["katharyne", "Same field, nine centuries, five owners. Hold on, I need another slide."], ["kahwee", "Different field, same chips. The house always draws the line."], ["toussaint", "This is more a comment than a question, but who owns the Wi-Fi at the border?"], ["you", "Time is up. The border is that door, and nobody here agrees where it is."]]}, {"seats": ["alison", "bryn", "james", "dessislava", "henry", "jamie"], "topic": "Who Gets to Say What Happened?", "lines": [["alison", "In 1649 they put a king on trial for treason. Who decided what betrayal meant? The winners."], ["james", "The winners had tools. Army, money, diplomats, ideas. I have a chart for that."], ["bryn", "Where I look, people hear the official story and then decide how risky it is to doubt it."], ["dessislava", "Or you check the photo. The shadows, the street sign, the date. Boring work, but it works."], ["henry", "Guess, test, repeat. Dewey would be proud of us. Mostly."], ["jamie", "Late Antique monks wrote everything down because they did not trust their own memory. Fair."], ["alison", "Treason is just a word for losing an argument against a sword."], ["james", "In my field we call that Tuesday."], ["bryn", "My survey respondents would like to speak. Also, they would like to stay anonymous."], ["dessislava", "Send me the video. I will find the street it was filmed on before the coffee gets cold."], ["henry", "Six therapies for anxiety, and this room could use all six."], ["you", "So what actually happened?"], ["jamie", "Write it down. We'll argue about it in four hundred years."]]}, {"seats": ["brian", "mary", "lynda", "robert", "corey", "summerson"], "topic": "Is Health in the Head or the Body?", "lines": [["brian", "Feelings drive choices. Your brain wants the snack before you decide you do."], ["mary", "Teenagers who think about big ideas are building their brains. So let them stare out windows."], ["lynda", "Meanwhile my trials ask whether midlife women can keep up the walks and the diet. Real life is hard."], ["robert", "Fine, but do people live longer or feel better? That is the number I count."], ["corey", "And who gets the good numbers depends on where they started. Spend a year with them and you see it."], ["summerson", "Facility dogs help people, and nobody can say why we trust them as experts. I study the dogs."], ["brian", "Does the dog light up the reward system?"], ["summerson", "The dog is not a brain scan, Brian."], ["mary", "Everyone here was a teenager once, and it shows."], ["robert", "Can we put that on a scale where zero is gone and one is perfect health?"], ["lynda", "Please do not tell the participants we planned this over lunch."], ["you", "Lunch is the only trial I signed up for."]]}, {"seats": ["juliana", "ralph", "kepa", "raul", "luke", "ishara"], "topic": "What Does Fair Even Mean?", "lines": [["juliana", "Fair means people relating as equals. Not just equal piles of stuff."], ["ralph", "Then why does college decide who is smart before anyone learns anything?"], ["ishara", "I interview students who had to leave home. Their road to a degree has no straight line."], ["luke", "Easy. Randomize them. Half get the program, half do not. Then we know."], ["ishara", "Please do not randomize my students, Luke."], ["kepa", "In which language is the test written? Whose word for fair are we using?"], ["raul", "Before that, is a whole fairer than its parts? Or are the parts all there is?"], ["juliana", "A basic income would help. Everyone gets a floor to stand on."], ["luke", "We could run the floor in forty cities and compare. Multisite, very clean."], ["ralph", "It is a law school question. We only want to know who gets in."], ["raul", "Is the floor a thing, or just a lot of pieces of wood?"], ["you", "The floor is where I would like to sit. This seminar ran over an hour ago."]]}];
 
 const SEAT_X = [80, 112, 144, 176, 208], PRES_X = 270;
@@ -1544,9 +1562,9 @@ Object.keys(PEOPLE).forEach(k => {
   };
   if (LINKS[k]) { const L = LINKS[k], [dx, dy] = (pl && SHARED_EXTRAS[k]) || [0, 0]; sp.unshift({ name: L.name, r: [L.r[0] + dx, L.r[1] + dy, L.r[2], L.r[3]], walk: { x: Math.max(40, L.walk.x + dx), y: L.walk.y }, def: 'open', href: L.href, on: { look: L.look, open: L.open } }); }
   (p.mates || []).forEach((m, i) => sp.unshift({ name: FELLOWS[m].name, who: m, at0: [mateX(k, i), 66], r: [mateX(k, i) - 3, 56, 34, 42], walk: pl ? standAt(i + 1) : { x: mateX(k, i) + 14, y: 134 }, def: 'talk', on: { look: FELLOWS[m].look, talk: [[m, unshh(FELLOWS[m].whisper)]] } }));
-  if (pl) [k].concat(p.mates).forEach((slug, i) => sp.push({ name: 'name plate', part: 'desk:' + slug, r: [pl.c[i] - 24, 49, 48, 9], walk: standAt(i), def: 'look', on: { look: `${(FELLOWS[slug] || PEOPLE[slug]).name}. In brass, so it's official.` } }));
+  if (pl) [k].concat(p.mates).forEach((slug, i) => sp.push({ name: 'name plate', part: 'desk:' + slug, r: plateOf(slug, pl.c[i]), walk: standAt(i), def: 'look', on: { look: `${(FELLOWS[slug] || PEOPLE[slug]).name}. In brass, so it's official.` } }));
   if (p.scene === 'desk' && !pl) sp.push({ name: 'monitor', r: [218, 66, 28, 32], walk: { x: 236, y: 130 }, def: 'look', on: { look: 'I can only see the back. It has stickers.' } });
-  p.spots = sp.concat(ROOM_EMPTY.map(h => h.name === 'window' ? Object.assign({}, h, { on: { look: 'The hills, the Dish, Stanford down below.' } }) : h.name === 'bookshelf' ? Object.assign({}, h, { on: { look: `${p.name}'s books. Organized by a system. The system is ${p.name}.`, push: 'No secret passage. I checked.' } }) : h));
+  p.spots = sp.concat(ROOM_EMPTY.map(h => h.name === 'window' ? Object.assign({}, h, { on: { look: 'The hills, the Dish, Stanford down below.' } }) : h.name === 'bookshelf' ? Object.assign({}, h, pl ? { r: [pl.shelf[0], 10, pl.shelf[1], 90], walk: { x: pl.shelf[0] + pl.shelf[1] / 2, y: 132 } } : {}, { on: { look: pl ? 'The shared shelf. Whose book is whose is a matter of record. The record is lost.' : `${p.name}'s books. Organized by a system. The system is ${p.name}.`, push: 'No secret passage. I checked.' } }) : h));
 });
 const SEMINAR_FIXED = ([
   { name: 'basket of phones', r: [36, 98, 30, 28], walk: { x: 60, y: 134 }, def: 'look', on: { look: () => say('you', S.sem.phones > 40 ? 'Forty-one phones. One of them is mine. It is still buzzing.' : 'There are forty phones in here. There are thirty fellows.'), pick: "Better not. They're evidence." } },
@@ -1896,7 +1914,7 @@ function drawRoom(t) {
   if (S.room === 'seminar') { drawSeminar(t); return; }
   if (PEOPLE[S.room]) {
     const k = S.room, p = PEOPLE[k], o = LOOKS[k];
-    g.drawImage(roomFullEmpty, 0, 0);
+    g.drawImage(p.plan ? roomFullShared[p.plan] : roomFullEmpty, 0, 0);
     g.save(); g.translate(0, OY);
     roomLight(t);
     const talk = voiced(k) && (calm || Math.floor(t * 8) % 2 === 0), speaking = S.line && S.line.who === k;
@@ -2021,7 +2039,7 @@ function person(slug, x, y, opts) {
 window.quest = { S, hit, run, doAction, MAP, ROOM, start, hot: hotspots, world, L, DIRECTORY, openWho, goFind, STUDIES,
   say, wait, choose, skipLine, SFX, PEOPLE, FELLOWS, LOOKS, hooks: HOOKS, me: undefined,
   occupants: k => k === 'bart' ? ['bart'] : PEOPLE[k] ? [k].concat(PEOPLE[k].mates || []) : [],
-  desks: desksOf, plan: k => (PEOPLE[k] && PEOPLE[k].plan) || null,
+  desks: desksOf, fixtures: fixturesOf, plan: k => (PEOPLE[k] && PEOPLE[k].plan) || null,
   gfx: { g, cv, rect, oval, disc, sprite, dither, rng, LET, DIG, calm, W, H, FH, OY, person } };
 })();
 </script>

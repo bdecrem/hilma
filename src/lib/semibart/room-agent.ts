@@ -24,25 +24,29 @@ const SCENES: Record<SoloScene, string> = {
   stand: `The occupant stands at a standing desk between two enormous monitors on arms. Monitors cover x 108-273, y 16-84. Desk top x 132-259, y 80-84, legs to y 127. The occupant stands at x 176-203, y 38-127. The wall between the window and the bookshelf is mostly behind the monitors; only x 126-262, y 4-13 is clear.`,
   bart: `The occupant sits behind a desk, facing the visitor. Chair back x 168-211, y 58-96; head and shoulders x 172-205, y 56-97. Desk top x 148-263, y 95-100, front panel to y 122, legs to y 127. On the desk: a laptop, a monitor seen from behind at x 218-245, y 66-97, a mug at x 206-214, y 88-95, a phone on a stand at x 250-262, y 80-95. On the wall already: a Takt poster x 130-151, y 16-47; a pinboard x 158-187, y 20-43; a framed record x 198-227, y 14-41. A plant in a pot stands on the floor at x 284-306, y 100-130. Clear wall: x 232-262, y 6-52.`,
 }
-// The shared studies: a desk each, side by side. The same numbers as PLANS in index.html.
-const PLANS = { duo: { w: 72, chair: 44, c: [147, 227] }, trio: { w: 46, chair: 32, c: [140, 190, 240] } }
+// The shared studies: a desk each, the first in front of the window, the last at the far right,
+// the bookshelf moved left to stand between desks. The same numbers as PLANS in index.html.
+const PLANS = {
+  duo: { w: 96, chair: 44, c: [88, 264], shelf: [140, 48], rug: [128, 96], wall: 'x 192-316, y 6-50 (to the right of the bookshelf and above the second desk)' },
+  trio: { w: 84, chair: 44, c: [88, 178, 268], shelf: [201, 44], rug: [58, 240], wall: 'x 126-198, y 6-50 (between the window and the bookshelf, above the middle desk) and x 248-316, y 6-50 (above the third desk)' },
+}
 const EXTRAS: Record<string, string> = {
   daniel: 'Also on the desk: a small marble bust of Socrates, x 155-168, y 78-94.',
   kahwee: 'Also on the desk: a pencil cup, x 156-161, y 80-94.',
-  ian: 'Also here (hide name: extras): a world map with pins on the wall above the desks, x 155-218, y 8-45.',
-  jacqueline: 'Also here (hide name: extras): an easel with a chart on it, standing by the window, x 69-101, y 44-127; and a small plant on her desk.',
+  ian: 'Also here (hide name: extras): a world map with pins on the wall to the right of the bookshelf, x 200-263, y 8-45.',
+  jacqueline: 'Also here (hide name: extras): an easel with a chart on it, standing between the bookshelf and the second desk, x 189-220, y 44-127; and a small plant on her desk.',
 }
 
 function sharedNotes(room: RosterRoom, askerCharacter?: string): string {
   const pl = PLANS[room.scene as 'duo' | 'trio']
   const seats = room.occupants.map((slug, i) => {
     const c = pl.c[i], x = c - pl.w / 2
-    return `- ${room.names[i]}${slug === askerCharacter ? ' (the one asking)' : ''}, number ${i}: desk top x ${x}-${x + pl.w - 1}, y 95-100, front panel down to y 122, legs to y 127; sits centred on it, head and shoulders x ${c - 14}-${c + 13}, y 56-97; chair back x ${c - pl.chair / 2}-${c + pl.chair / 2 - 1}, y 58-96; a brass name plaque on the wall above, x ${c - 24}-${c + 23}, y 49-57.`
+    return `- ${room.names[i]}${slug === askerCharacter ? ' (the one asking)' : ''}, number ${i}: desk top x ${x}-${x + pl.w - 1}, y 95-100, front panel down to y 122 with a brass name plate on it, legs to y 127; sits centred on it, head and shoulders x ${c - 14}-${c + 13}, y 56-97; chair back x ${c - pl.chair / 2}-${c + pl.chair / 2 - 1}, y 58-96.${i === 0 ? ' This desk stands in front of the window: its occupant sits with their back to it.' : ''}`
   })
   return [
-    `A shared study: ${room.names.length === 2 ? 'two' : 'three'} people, each at a desk of their own, side by side between the window and the bookshelf, facing the visitor.`,
+    `A shared study: ${room.names.length === 2 ? 'two' : 'three'} people, each at a desk of their own, facing the visitor. This room is laid out differently from the general description: the bookshelf stands at x ${pl.shelf[0]}-${pl.shelf[0] + pl.shelf[1] - 1}, y 10-105, and the rug lies at x ${pl.rug[0]}-${pl.rug[0] + pl.rug[1] - 1}, y 124-141. The door and the window are where they always are.`,
     ...seats,
-    `On each desk: a closed laptop in the middle, a mug at the right end, a pad and pen at the left end. "My desk" and "my side" mean the asker's desk, the floor in front of it and the wall above it. The floor left of the desks (x 40-${pl.c[0] - pl.w / 2 - 4}, under the window) and the wall above the plaques (x 126-262, y 6-46) are shared ground.`,
+    `On each desk: a closed laptop in the middle, a mug at the right end, a pad and pen at the left end. "My desk" and "my side" mean the asker's desk, the floor in front of it and the wall above it; the rest is shared ground. Clear wall for hanging things: ${pl.wall}.`,
     `To hide one person, desk or chair, use hide names with their number: 'person:1', 'desk:0', 'chair:2'. api.person takes who: the same number.`,
   ].join('\n')
 }

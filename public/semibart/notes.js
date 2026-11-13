@@ -78,8 +78,11 @@ function groupsOf(room) {
   const ds = p !== WALL && typeof q.desks === 'function' ? q.desks(room) || [] : [];
   if (ds.length < 2) return [{ to: null, pad: p.pad, slots: p.slots }];
   return ds.map(d => {
-    const [px, py, pw] = d.panel, cols = Math.max(1, Math.floor((pw - 6) / 11));
-    return { to: d.slug, pad: [d.x + 3, d.top - 3], slots: grid(px + 3 + Math.floor((pw - 6 - (cols * 11 - 2)) / 2), cols, [py + 2, py + 12]) };
+    // The bottom row is clear; the top row shares the panel with the desk's name plate, so notes
+    // go to either side of it. The bottom row fills first.
+    const [px, py, pw] = d.panel, cols = Math.max(1, Math.floor((pw - 6) / 11)), x0 = px + 3 + Math.floor((pw - 6 - (cols * 11 - 2)) / 2);
+    const beside = grid(x0, cols, [py + 2]).filter(([x]) => !d.plate || x + 9 <= d.plate[0] - 1 || x >= d.plate[0] + d.plate[2] + 1);
+    return { to: d.slug, pad: [d.x + 3, d.top - 3], slots: grid(x0, cols, [py + 12]).concat(beside) };
   });
 }
 // What is on show: per group the newest notes that fit, oldest first so a note keeps its place;

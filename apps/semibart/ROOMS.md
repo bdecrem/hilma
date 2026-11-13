@@ -43,13 +43,19 @@ the system prompt in `room-agent.ts`; the furniture positions there are copied f
 ## Shared studies and decoration wars
 
 Four studies are shared: 28, 29 and 016 by two people, 27 by three. Everyone has a desk of their
-own, side by side between the window and the bookshelf (`PLANS` and `sharedScene` in
-`public/semibart/index.html`): two desks 72 wide for a pair, three narrow ones 46 wide for a trio,
-a brass name plaque on the wall above each person, the host's own things moved to fit (Ian's map,
-Jacqueline's easel). `PEOPLE[room].plan` is `'duo'` or `'trio'`, and the roster carries it as the
-room's scene. `quest.desks(room)` gives every desk's position, which is how the notes layer sticks
-each note to the right person's desk. `node scripts/semibart/shared-shots.mjs <dir>` shoots all
-four rooms and Study 27 from one of its own seats.
+own (`PLANS` and `sharedScene` in `public/semibart/index.html`): the first person sits in front of
+the window, the last at the far right where the bookshelf stands in other rooms, and the
+bookshelf is moved left to stand between desks. Those rooms are painted on backgrounds of their
+own (`makeRoomBg(false, plan)`), with the rug fitted to the plan. Two people get desks 96 wide
+with open floor between them; three get desks 84 wide that fill the room. A brass name plate is
+on the front of each desk, and the host's own things are moved to fit (Ian's map, Jacqueline's
+easel). `PEOPLE[room].plan` is `'duo'` or `'trio'`, and the roster carries it as the room's scene.
+`quest.desks(room)` gives every desk (top, front panel, name plate) and `quest.fixtures(room)` the
+bookshelf and the rug, which is how the notes stick to the right person's desk and how a hidden
+bookshelf is painted away in the right place. **The same numbers are repeated in `PLANS` in
+`room-agent.ts`** for the decorator's description of the room: change both.
+`node scripts/semibart/shared-shots.mjs <dir>` shoots all four rooms and Study 27 from one of its
+own seats.
 
 Any occupant may change a shared room, and they will not always agree: that is a decoration war,
 and the decorator is told to play it straight. It does what the person asking wants, including
