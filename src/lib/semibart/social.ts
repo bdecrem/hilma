@@ -85,6 +85,23 @@ export async function eventsAfter(after: number): Promise<EventOut[]> {
   return after > 0 ? rows : rows.reverse()
 }
 
+/* ---------- the chat's daily allowance ---------- */
+
+/** Messages one person may send to a room's Claude in 24 hours. */
+export const DAILY_TURNS = 60
+
+/** Count this message against the asker's day. False when the day's allowance is used up
+ *  (and then nothing is recorded). */
+export async function countTurn(character: string, room: string): Promise<boolean> {
+  const since = new Date(Date.now() - 24 * 3600_000).toISOString()
+  const { count, error } = await db().from('semibart_agent_turns').select('id', { count: 'exact', head: true }).eq('character', character).gte('created_at', since)
+  if (error) throw new Error(`semibart_agent_turns: ${error.message}`)
+  if ((count || 0) >= DAILY_TURNS) return false
+  const { error: e2 } = await db().from('semibart_agent_turns').insert({ character, room })
+  if (e2) throw new Error(`semibart_agent_turns: ${e2.message}`)
+  return true
+}
+
 /* ---------- personas: a fellow's own lines ---------- */
 
 export type Persona = {

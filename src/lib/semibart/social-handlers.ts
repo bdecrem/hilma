@@ -22,17 +22,17 @@ async function readBody(req: Request): Promise<Record<string, unknown>> {
 }
 const first = (name: string) => name.split(' ')[0]
 
-/** GET ?room=mary -> { notes }: everything stuck to the desk, for anyone who walks in.
- *  POST { to, body } (signed in) -> { note }. DELETE ?id= (its reader, its author, an admin). */
+/** Signed in only. GET ?room=mary -> { notes }: everything stuck to the desk, for anyone in the
+ *  game who walks in. POST { to, body } -> { note }. DELETE ?id= (its reader, its author, an admin). */
 export const desk: Handler = guarded(async req => {
   const url = new URL(req.url)
   const user = await sessionUser(req)
+  if (!user) return json({ error: 'Sign in first.' }, 401)
   if (req.method === 'GET') {
     const room = (url.searchParams.get('room') || '').toLowerCase()
     if (!rosterRoom(room)) return json({ error: 'No such room.' }, 404)
     return json({ room, notes: await deskNotes(room, user) })
   }
-  if (!user) return json({ error: 'Sign in first.' }, 401)
   if (req.method === 'POST') {
     const { to, body } = await readBody(req)
     const r = await leaveNote(user, String(to || ''), String(body || ''))

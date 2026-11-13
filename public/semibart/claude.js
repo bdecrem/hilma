@@ -120,7 +120,7 @@ function openChat(room) {
       if (d.room && window.questRooms && window.questRooms.setRoom) window.questRooms.setRoom(d.room.room, d.room.version, d.room.code);
       if (d.personas) { Object.keys(d.personas).forEach(c => { personas[c] = d.personas[c]; }); applyAll(); }
       if ((d.room || d.personas) && window.questTicker) setTimeout(window.questTicker.poll, 400);
-      if (r.ok) log.push({ role: 'claude', text: reply }); else log.pop();
+      if (r.ok) log.push({ role: 'claude', text: reply }); else log.pop();   // a refusal (the daily limit, say) still shows its line
     } catch (e) { log.pop(); }
     if (!chat.open || chat.room !== room) { chat.busy = false; return; }
     setBusy(false); setBubble(reply); chat.hopT = performance.now() / 1000;

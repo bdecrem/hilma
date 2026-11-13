@@ -8,7 +8,7 @@ import type Anthropic from '@anthropic-ai/sdk'
 import type { SemibartUser } from './auth'
 import { changeRoom, undoChange } from './room-change'
 import { mayDecorate, rosterRoom } from './rooms'
-import { announce, getPersona, setPersona, type Persona } from './social'
+import { announce, countTurn, getPersona, setPersona, type Persona } from './social'
 
 const MODEL = 'claude-opus-5-5'
 const MAX_STEPS = 5
@@ -109,6 +109,7 @@ export async function runRoomChat(user: SemibartUser, room: string, turns: ChatT
   if (!turns.length || turns[turns.length - 1].role !== 'user') return { status: 400, body: { reply: 'Say what you would like.', error: 'Nothing asked.' } }
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY is not set')
+  if (!(await countTurn(user.character, room))) return { status: 429, body: { reply: 'We have talked enough for one day. I will be here tomorrow, same door frame.', error: 'Daily limit.' } }
   const { default: AnthropicSDK } = await import('@anthropic-ai/sdk')
   const client = new AnthropicSDK({ apiKey })
 
@@ -134,6 +135,8 @@ export async function runRoomChat(user: SemibartUser, room: string, turns: ChatT
   })
 
   const out: ChatResult['body'] = { reply: '' }
+  // A change that was saved stays saved: a ticker line that fails to write is logged, not thrown.
+  const tell = (e: Parameters<typeof announce>[0]) => announce(e).catch(err => console.error('[semibart/agent] announce', err))
   let roomCalls = 0
   const runTool = async (name: string, input: Record<string, unknown>): Promise<string> => {
     if (name === 'change_room') {
@@ -141,7 +144,7 @@ export async function runRoomChat(user: SemibartUser, room: string, turns: ChatT
       const r = await changeRoom(user, room, str(input.request).slice(0, 600))
       if (!r.ok) return `Nothing changed. The decorator says: ${r.say}`
       out.room = { room: r.room, version: r.version, code: r.code }
-      await announce({ kind: 'room', actor: user.character, room, text: str(input.headline).slice(0, 110) || `${first} changed Study ${info.study}.` })
+      await tell({ kind: 'room', actor: user.character, room, text: str(input.headline).slice(0, 110) || `${first} changed Study ${info.study}.` })
       return `The room changed (version ${r.version}). The decorator says: ${r.say}`
     }
     if (name === 'undo_room') {
@@ -156,7 +159,7 @@ export async function runRoomChat(user: SemibartUser, room: string, turns: ChatT
       if (!admin && who !== user.character) return 'Not done: a fellow changes only their own lines.'
       const next = await setPersona(who, input, user.character, input.reset === true)
       out.personas = { ...(out.personas || {}), [who]: next }
-      await announce({ kind: 'persona', actor: user.character, room, text: str(input.headline).slice(0, 110) || `${info.names[info.occupants.indexOf(who)]} has new things to say.` })
+      await tell({ kind: 'persona', actor: user.character, room, text: str(input.headline).slice(0, 110) || `${info.names[info.occupants.indexOf(who)]} has new things to say.` })
       return `Saved. ${who}'s lines now: ${JSON.stringify(next)}`
     }
     if (name === 'announce') {

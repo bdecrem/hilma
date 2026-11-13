@@ -20,8 +20,8 @@ Frances's chair and her lampshade, the front edge of Joseph's standing desk. Whe
 code hides the desk (`questRooms.hidden(room)`, the nap and floor-plan changes), the notes move
 to the wall under the window and the pad to the sill, which no room can hide.
 
-- `GET /api/semibart/desk?room=mary` → `{ notes }`, for anyone; `POST { to, body }` and
-  `DELETE ?id=` signed in. Reads are `deskNotes` in `src/lib/semibart/social.ts`; writes go
+- `GET /api/semibart/desk?room=mary` → `{ notes }`, `POST { to, body }` and `DELETE ?id=`, all
+  signed in only: "anyone who walks in" means anyone in the game, not anyone with curl. Reads are `deskNotes` in `src/lib/semibart/social.ts`; writes go
   through the accounts session's `leaveNote` / `removeNote` (`notes.ts`, table 002).
 - The older `/api/semibart/notes` hides a note's text from everyone but its reader and author.
   The game does not use it: Bart's call was that a note on a desk is in plain view.
@@ -44,6 +44,10 @@ bar along the bottom, so the room stays in view while it changes.
   door), `hello`, `lines` (when talked to), `doing`. claude.js lays them over the game's own.
 - `undo_room` steps the drawing back; `announce` (admins) puts a line on the wire.
 
+Each message to the chat counts against 60 a day per person (`semibart_agent_turns`, schema
+021; `countTurn` in social.ts); past that Claude says so and no model is called. Room changes
+have their own cap inside `changeRoom`.
+
 Two levels. A fellow: their own study, their own lines. An admin (Bart): also announcements
 on the wire. The server still lets an admin change any study and anyone's lines in it, but
 the game offers no way in outside your own study.
@@ -56,12 +60,14 @@ cute rats to their study." "Inbal left a note on Mary's desk." Rows live in `sem
 polled every 12 s, held by the CDN for 4. On arrival it replays the last four of the day. It
 stays out of the way of dialog choices, the slides, and any open box. Each new row is also a
 `semibart:event` on `window`, which is how an open room picks up a new note or new lines.
-`questTicker.local(text)` scrolls a line only this player sees.
+`questTicker.local(text)` scrolls a line only this player sees. `/api/semibart/events` and
+`/api/semibart/personas` answer without a session on purpose: they are lines meant for the
+whole campus and hold nothing a visitor to the game would not be shown.
 
 ## Tables, checks
 
 Schema `apps/semibart/schema/020_semibart_social.sql` (`semibart_events`,
-`semibart_personas`), applied 2026-11-12. The Supabase CLI login on the iMac was stale that
+`semibart_personas`) and `021_semibart_agent_turns.sql`, applied 2026-11-12. The Supabase CLI login on the iMac was stale that
 day; it ran with `SUPABASE_ACCESS_TOKEN` from the ops vault in the command's environment.
 
 `source ./.env.local && node scripts/semibart/social-check.mjs <dir> [url] [notes|chat|all]`
