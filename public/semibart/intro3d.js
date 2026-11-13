@@ -1,8 +1,12 @@
-// Act 1 in high fidelity: the three words as real extruded, bevelled metal (three.js, a studio
-// environment for reflections, a key light that sweeps a glint across them), bloom, an anamorphic
-// streak, and gold glitter that hangs in the dark, twinkles and bursts at every hit. Each word flies
-// in from past the camera and lands on its hit; the first two fly back into the dark for the pause.
-// Stateless like scene.js: ACT1.render(t) draws the frame for time t and returns the WebGL canvas.
+// CASBS Quest's intro, act 1 in high fidelity: THIS. / CHANGES. / EVERYTHING. as real extruded,
+// bevelled metal (three.js; silver, then gold) reflecting a black studio with softbox strips and a
+// horizon gradient, a key light that sweeps a glint across them, bloom, an anamorphic streak, and gold
+// glitter that hangs in the dark, twinkles and bursts at every hit. Each word flies in from past the
+// camera and lands on its hit; the first two fly back into the dark for the pause.
+// Used live by the demo page (intro.js) and frame by frame by the trailer (apps/semibart-trailer).
+// createIntro3D({ E, fontUrl, width, height, pixelRatio }) → { render(t), setSize(w, h), canvas, dispose() };
+// E holds the timings (HITS, WORDS, WORD_OUT, RISER, CRUMBLE). Stateless: render(t) draws time t.
+// three.js comes from the page's import map (pinned, three@0.170.0).
 import * as THREE from 'three';
 import { TTFLoader } from 'three/addons/loaders/TTFLoader.js';
 import { Font } from 'three/addons/loaders/FontLoader.js';
@@ -12,12 +16,13 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
-const E = window.E, W = 1920, H = 1080;
 const mulberry = s => () => { s |= 0; s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
 const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
 
+export async function createIntro3D({ E, fontUrl, width = 1920, height = 1080, pixelRatio = 1 }) {
+let W = width, H = height;
 const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true, powerPreference: 'high-performance' });
-renderer.setPixelRatio(1); renderer.setSize(W, H, false);
+renderer.setPixelRatio(pixelRatio); renderer.setSize(W, H, false);
 renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.0;
 const scene = new THREE.Scene(); scene.background = new THREE.Color(0x000000);
 const pmrem = new THREE.PMREMGenerator(renderer);
@@ -43,7 +48,7 @@ composer.addPass(bloom);
 composer.addPass(new OutputPass());
 
 /* ---------- the words ---------- */
-const ttf = await new Promise((res, rej) => new TTFLoader().load('out/Anton.ttf', res, undefined, rej));
+const ttf = await new Promise((res, rej) => new TTFLoader().load(fontUrl, res, undefined, rej));
 const font = new Font(ttf);
 const silver = [new THREE.MeshPhysicalMaterial({ color: 0xf0f2f6, metalness: 1, roughness: 0.1, clearcoat: 1, clearcoatRoughness: 0.08, envMapIntensity: 1.5, transparent: true }),
   new THREE.MeshPhysicalMaterial({ color: 0x8c909a, metalness: 1, roughness: 0.32, envMapIntensity: 1.1, transparent: true })];
@@ -97,7 +102,7 @@ function render(t) {
   const rs = mulberry(Math.floor(t * 30) * 13 + 1);
   let shake = 0; E.HITS.forEach(h => { if (t >= h) shake += 0.22 * Math.exp(-(t - h) * 7); });
   const rise = Math.pow(clamp((t - E.RISER[0]) / (E.RISER[1] - E.RISER[0])), 2); shake += rise * 0.07;
-  camera.position.set((rs() - 0.5) * shake, (rs() - 0.5) * shake, 10.6 - t * 0.09);
+  camera.position.set((rs() - 0.5) * shake, (rs() - 0.5) * shake, (10.6 - t * 0.09) * Math.max(1, (16 / 9) / (W / H)));   // narrower screens stand further back
   camera.lookAt(0, 0, 0); camera.rotation.z += (rs() - 0.5) * shake * 0.05;
 
   let flash = 0, live = -1;
@@ -143,4 +148,6 @@ function render(t) {
   composer.render();
   return renderer.domElement;
 }
-window.ACT1 = { render };
+function setSize(w, h) { W = w; H = h; renderer.setSize(w, h, false); composer.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+return { render, setSize, canvas: renderer.domElement, dispose() { renderer.dispose(); renderer.forceContextLoss(); } };
+}

@@ -4,7 +4,7 @@
 //   node apps/semibart-trailer/render.mjs --stills 1.3,6.2,8.6  [--sheet out/s.jpg]
 //   node apps/semibart-trailer/render.mjs --score               → out/score.wav only
 import { chromium } from 'playwright';
-import { execFileSync, spawn } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { createReadStream, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
@@ -13,8 +13,6 @@ import * as E from './edit.mjs';
 
 const dir = path.dirname(fileURLToPath(import.meta.url)), root = path.resolve(dir, '../..'), out = path.join(dir, 'out');
 const arg = k => { const i = process.argv.indexOf(k); return i > 0 ? process.argv[i + 1] : undefined; };
-// three.js's text geometry wants a TTF; the site bundles Anton as woff2, so make a TTF copy here
-if (!existsSync(path.join(out, 'Anton.ttf'))) execFileSync('python3', ['-c', "import sys; from fontTools.ttLib import TTFont; f = TTFont(sys.argv[1]); f.flavor = None; f.save(sys.argv[2])", path.join(root, 'src/fonts/anton/Anton-400.woff2'), path.join(out, 'Anton.ttf')]);
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.jpg': 'image/jpeg', '.woff2': 'font/woff2', '.ttf': 'font/ttf' };
 const server = http.createServer((req, res) => {
   const f = path.join(root, decodeURIComponent(new URL(req.url, 'http://x').pathname));

@@ -591,6 +591,7 @@ function drawYou(x, y, f, frame, talk) {
   R(-2, -54, 6, 4, SK);
   R(-6, -70, 14, 17, SK); R(8, -63, 2, 3, SK); R(8, -61, 2, 1, SKd);
   R(-7, -73, 15, 5, HR); R(-7, -69, 6, 10, HR); R(6, -71, 3, 2, HR);
+  if (L0 && L0.spiky) { R(-8, -77, 2, 4, HR); R(-5, -80, 2, 7, HR); R(-2, -82, 3, 9, HR); R(2, -80, 2, 7, HR); R(5, -78, 2, 5, HR); R(8, -75, 2, 3, HR); R(-10, -72, 3, 2, HR); R(-2, -82, 1, 2, L0.hairD); R(-5, -80, 1, 2, L0.hairD); }
   R(-1, -64, 3, 4, SKd);
   R(4, -66, 2, 2, '#141414'); R(3, -68, 4, 1, HR);
   R(3, -58, 4, talk ? 2 : 1, talk ? '#5a1f1a' : SKd);
@@ -1480,7 +1481,10 @@ const STUDIES = MAP.filter(h => h.study).sort((a, b) => ORDER(a.n) - ORDER(b.n))
    Everyone else's study keeps them at their desk: their stand-in while they're away. */
 const me = () => { const u = window.quest && window.quest.me; return u ? u.character : null; };
 const BART_LOOK = { skin: P.S, skinD: P.s, hair: P.W, hairD: P.w, shirt: P.N, shirtD: P.n };
-function myLook() { const k = me(); return !k ? null : k === 'bart' ? BART_LOOK : LOOKS[k] || null; }
+// the demo account (demobart): Bart with spiky hair and a pink T-shirt
+const DEMO_LOOK = { skin: P.S, skinD: P.s, hair: P.W, hairD: P.w, shirt: '#ff6fae', shirtD: '#d94f8c', spiky: true };
+const lookFor = k => !k ? null : k === 'bart' ? BART_LOOK : k === 'demobart' ? DEMO_LOOK : LOOKS[k] || null;
+function myLook() { return lookFor(me()); }
 function roomOf(slug) {
   if (!slug) return null; if (slug === 'bart') return 'bart'; if (PEOPLE[slug]) return slug;
   for (const k in PEOPLE) if ((PEOPLE[k].mates || []).includes(slug)) return k;
@@ -1727,10 +1731,11 @@ function start() {
   if (S.started) return;
   if (window.SEMIBART_GATE && !window.SEMIBART_GATE()) return;
   audio(); S.started = true; titleEl.hidden = true; SFX.jingle(); cv.focus && cv.focus();
+  if (window.questMusic && AC) window.questMusic.play(AC.currentTime + 0.8);   // the theme comes in after the jingle
   const u = window.quest && window.quest.me;
   run(async () => {
     await wait(0.6);
-    if (u) { await say('you', `Study ${u.study}. ${(WHO[u.study] || []).length > 1 ? 'Ours.' : 'Mine.'}`); await say('you', u.character === 'bart' ? 'Fifty-three more out there.' : "Fifty-three more. Somebody's typing in one of them."); }
+    if (u && roomOf(u.character)) { await say('you', `Study ${u.study}. ${(WHO[u.study] || []).length > 1 ? 'Ours.' : 'Mine.'}`); await say('you', u.character === 'bart' ? 'Fifty-three more out there.' : "Fifty-three more. Somebody's typing in one of them."); }
     else { await say('you', 'CASBS. Fifty-four studies.'); await say('you', "Somebody's typing in one of them."); }
     await say('you', "Looking for someone? Who's where, top left.");
   });
@@ -2060,11 +2065,13 @@ function person(slug, x, y, opts) {
 window.quest = { S, hit, run, doAction, MAP, ROOM, start, hot: hotspots, world, L, DIRECTORY, openWho, goFind, STUDIES,
   say, wait, choose, skipLine, SFX, PEOPLE, FELLOWS, LOOKS, hooks: HOOKS, me: undefined,
   occupants: k => k === 'bart' ? ['bart'] : PEOPLE[k] ? [k].concat(PEOPLE[k].mates || []) : [],
-  oaks: OAKS, setMute: m => { audio(); setMute(!!m); }, isMuted: () => muted, fullscreen, lookOf: slug => slug === 'bart' ? BART_LOOK : LOOKS[slug] || null,
+  oaks: OAKS, setMute: m => { audio(); setMute(!!m); }, isMuted: () => muted, fullscreen, lookOf: lookFor,
+  sound: () => { audio(); return { ac: AC, master }; },
   desks: desksOf, fixtures: fixturesOf, plan: k => (PEOPLE[k] && PEOPLE[k].plan) || null,
   gfx: { g, cv, rect, oval, disc, sprite, dither, rng, LET, DIG, calm, W, H, FH, OY, person } };
 })();
 </script>
+<script src="/semibart/music.js"></script>
 <script src="/semibart/accounts.js"></script>
 <script src="/semibart/rooms.js"></script>
 <script src="/semibart/notes.js"></script>

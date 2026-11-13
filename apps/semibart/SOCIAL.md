@@ -132,3 +132,22 @@ Checks: `npx tsx scripts/semibart/books-test.ts` (who reads what, the parser; of
 `node scripts/semibart/books-check.mjs <dir> [base] [room]` (an admin reads a real book from a
 desk; a fellow's partial manuscript and a visitor, with the APIs answered locally);
 `book-try.ts` and `book-sheet.mjs` to try the prompt and look at the results.
+
+## The demo page and the music (2026-11-13)
+
+- **ola.cx/semibart/demo.html** (`src/app/semibart/demo.html/route.ts`) is the game page with the
+  trailer's opening in front of it: the route adds a pinned three.js import map and
+  `public/semibart/intro.js`. Black and "Click to begin. Sound on." (no sound before a click), then
+  THIS. / CHANGES. / EVERYTHING. as 3D metal (`intro3d.js`, shared with the trailer render in
+  `apps/semibart-trailer`) with braams and glitter; the frame freezes and crumbles into the game's
+  palette, and on the jingle the game's own `start()` runs, so a signed-in player skips the title card
+  and the live game steps out of the mosaic. Signed out, the intro ends on the sign-in card. Esc or a
+  click skips. Its clock is the game's AudioContext. Check: `SEMIBART_DEMO_PASS=… node
+  scripts/semibart/demo-check.mjs <dir> [base]`.
+- **The demo account**: `demobart`, an admin with no study (study `0`), who walks as Bart with spiky
+  hair and a pink T-shirt (`DEMO_LOOK` in index.html). `scripts/semibart/make-demo-account.mjs
+  <passcode>` creates it or resets its passcode; the passcode is never in the repo. Someone without a
+  study starts with the visitor's lines ("CASBS. Fifty-four studies.").
+- **Music** (`public/semibart/music.js`): the trailer's chiptune theme, a 32-second loop, is the game's
+  background music on every page. It comes in after the start jingle, sits under the sound effects,
+  dips while anyone talks, and is silent when sound is off (your menu) or the tab is hidden.
