@@ -102,8 +102,11 @@ async function ask(messages: Anthropic.MessageParam[], effort: 'low' | 'medium' 
 export type Author = { name: string; look: string; say?: string }
 
 /** Write a fellow's book from scratch. */
-export function writeBook(a: Author, effort: 'low' | 'medium' | 'high' = 'medium', offered = [...FORMS].sort(() => Math.random() - 0.5).slice(0, 4)): Promise<Book | null> {
-  return ask([{ role: 'user', content: `The author: ${a.name}.\nWhat the game says about them: ${JSON.stringify(a.look)}${a.say ? `\nSomething they say in the game: ${JSON.stringify(a.say)}` : ''}\n\nForms on offer this time: ${offered.join('; ')}. Or a better one of your own.\n\nWrite their book.` }], effort)
+/** taken: forms colleagues' books already use; this one must be something else. */
+export function writeBook(a: Author, effort: 'low' | 'medium' | 'high' = 'medium', taken: string[] = []): Promise<Book | null> {
+  const used = (f: string) => taken.some(t => t.toLowerCase().split(/\W+/).filter(w => w.length > 4).some(w => f.toLowerCase().includes(w)))
+  const offered = FORMS.filter(f => !used(f)).sort(() => Math.random() - 0.5).slice(0, 4)
+  return ask([{ role: 'user', content: `The author: ${a.name}.\nWhat the game says about them: ${JSON.stringify(a.look)}${a.say ? `\nSomething they say in the game: ${JSON.stringify(a.say)}` : ''}\n\nForms on offer this time: ${offered.join('; ')}. Or a better one of your own.${taken.length ? `\nColleagues' books already take these forms, so this one must be something different: ${[...new Set(taken)].join('; ')}.` : ''}\n\nWrite their book.` }], effort)
 }
 
 const asText = (b: Book) => [`<form>${b.form}</form>`, `<title>${b.title}</title>`, `<subtitle>${b.subtitle}</subtitle>`,

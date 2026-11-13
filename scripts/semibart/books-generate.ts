@@ -3,8 +3,9 @@
 // about a minute at medium effort and some 6,000 output tokens.
 // Usage: set -a; source ./.env.local; set +a
 //        npx tsx scripts/semibart/books-generate.ts [--force] [--only kevin,inbal] [--effort low|medium|high]
+// Each new book is told which forms the books already stored use, so it picks another.
 import { readFileSync } from 'node:fs'
-import { getBook, saveBook, writeBook, type Author } from '../../src/lib/semibart/books'
+import { allBookTitles, getBook, saveBook, writeBook, type Author } from '../../src/lib/semibart/books'
 import roster from '../../src/lib/semibart/roster.json'
 
 const argv = process.argv.slice(2)
@@ -31,7 +32,8 @@ async function main() {
     while (next < todo.length) {
       const k = todo[next++], t = Date.now()
       try {
-        const book = await writeBook(A[k], effort)
+        const taken = Object.entries(await allBookTitles()).filter(([c]) => c !== k).map(([, b]) => b.form)
+        const book = await writeBook(A[k], effort, taken)
         if (!book) { failed.push(k); console.log(`FAIL ${k}: no whole book after two tries`); continue }
         const v = await saveBook(k, book, '', 'generator', A[k].look)
         ok++; console.log(`ok   ${k} v${v} ${((Date.now() - t) / 1000).toFixed(0)}s  ${book.form}: ${book.title}  (${book.pages.filter(p => p.art).length} drawings)`)
