@@ -38,7 +38,7 @@ expect('an oak drops a leaf', !!leaf, JSON.stringify(leaf));
 await p.evaluate(l => { const S = window.quest.S; S.cam = Math.max(0, Math.min(window.quest.world.height - 180, l.y - 90)); S.camFree = true; }, leaf);
 await p.waitForTimeout(500); await p.screenshot({ path: out + '/leaves-1-on-the-map.png' });
 const picked = await since(() => act('loose leaf', 'pick'));
-expect('picking it up adds a page and says so', await p.evaluate(() => window.questLeaves.state().mine) === 1 && /loose leaf/i.test(picked.join(' ')) && /my desk/.test(picked.join(' ')), JSON.stringify(picked));
+expect('picking it up adds a page and says so', await p.evaluate(() => window.questLeaves.state().mine) === 1 && /loose page/i.test(picked.join(' ')) && /my desk/.test(picked.join(' ')), JSON.stringify(picked));
 
 // how you talk, by how far the book has got
 const talk = await p.evaluate(() => { const L = window.questLeaves, lines = ['Knock, knock.', 'The library. Quiet.', 'Coffee. Still hot.', 'No secret passage. I checked.', 'Looking for someone?', 'It is thriving. Someone waters it.', 'Nothing special about it.', 'The way out.', 'Booked. It is always booked.', 'Good office, nobody in it.', 'Hello, space.', 'Lunch!', 'A big oak in a brick circle.', 'So this is Study 36.', 'I knocked.', 'What are you working on?', 'The hills, the Dish, Stanford down below.', 'Restrooms.', 'Occupied. Of course.', 'Mine now.']; const at = n => { L.pages.alison = n; return lines.map(l => L.reword(l)).filter((l, i) => l !== lines[i]); }; const r = { 0: at(0), 2: at(2), 5: at(5), 8: at(8), 10: at(10) }; L.pages.alison = 1; return r; });

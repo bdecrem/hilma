@@ -7,6 +7,7 @@ import { leaveNote, removeNote } from './notes'
 import { rosterRoom } from './rooms'
 import { runRoomChat, type ChatTurn } from './social-agent'
 import { allPages, allPersonas, announce, BOOK_PAGES, deskNotes, eventsAfter, pickLeaf, roomOf } from './social'
+import { getBook } from './books'
 
 const json = (body: unknown, status = 200, cache = 'no-store') =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', 'cache-control': cache } })
@@ -84,8 +85,28 @@ export const pages: Handler = guarded(async req => {
   if (!user) return json({ error: 'Sign in first.' }, 401)
   const n = await pickLeaf(user.character)
   if (n === BOOK_PAGES) {
-    await announce({ kind: 'system', actor: user.character, room: roomOf(user.character) || '', text: `${first(user.name)} finished the book. The oak is thanked in the acknowledgments.` })
+    await announce({ kind: 'system', actor: user.character, room: roomOf(user.character) || '', text: await getBook(user.character).then(b => b ? `${first(user.name)} finished their book: "${b.title}".` : `${first(user.name)} finished their book.`) })
       .catch(e => console.error('[semibart/social] announce', e))
   }
   return json({ pages: n ?? (await allPages())[user.character] ?? 0, picked: n !== null })
 })
+
+/** What of a book a reader may see: an admin, the whole book; its owner, the pages they have
+ *  found (the rest null); anyone else, the whole book once it is finished, and nothing before. */
+export function visibleBook(b: { form: string; title: string; subtitle: string; pages: unknown[]; version: number }, who: string, found: number, viewer: { character: string; role: string }) {
+  found = Math.max(0, Math.min(BOOK_PAGES, found))
+  const unlocked = found >= BOOK_PAGES, admin = viewer.role === 'admin', mine = viewer.character === who
+  if (!admin && !mine && !unlocked) return null
+  const pages = admin || unlocked ? b.pages : b.pages.map((p, i) => (i < found ? p : null))
+  return { character: who, form: b.form, title: b.title, subtitle: b.subtitle, pages, found, unlocked, version: b.version, mine, admin }
+}
+
+/** GET /api/semibart/books/:who (signed in) -> the book as far as this reader may see it. */
+export const book = (req: Request, who: string): Promise<Response> => guarded(async () => {
+  const user = await sessionUser(req)
+  if (!user) return json({ error: 'Sign in first.' }, 401)
+  const b = await getBook(who)
+  if (!b) return json({ error: 'No book yet.' }, 404)
+  const out = visibleBook(b, who, (await allPages())[who] || 0, user)
+  return out ? json(out) : json({ error: 'Not finished yet.' }, 403)
+})(req)

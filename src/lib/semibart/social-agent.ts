@@ -8,7 +8,8 @@ import type Anthropic from '@anthropic-ai/sdk'
 import type { SemibartUser } from './auth'
 import { changeRoom, undoChange } from './room-change'
 import { mayDecorate, rosterRoom } from './rooms'
-import { announce, countTurn, getPersona, setPersona, type Persona } from './social'
+import { allPages, announce, BOOK_PAGES, countTurn, getPersona, setPersona, type Persona } from './social'
+import { getBook, reviseBook, saveBook, undoBook } from './books'
 
 const MODEL = 'claude-opus-5-5'
 const MAX_STEPS = 5
@@ -20,6 +21,8 @@ export type ChatResult = {
     reply: string
     /** Set when the room's drawing changed: the game shows it at once. */
     room?: { room: string; version: number; code: string }
+    /** Set when a book changed: the reader shows the new version. */
+    book?: { character: string; version: number }
     /** Characters whose lines changed, with what is stored now. */
     personas?: Record<string, Persona>
     error?: string
@@ -39,6 +42,8 @@ You act only through tools, and you never claim a change that a tool did not con
 A request about what the fellow is doing usually needs both: draw it (change_room) and say it (set_lines, with look, lines and doing to match). Call both in the same turn.
 
 3. undo_room steps the room's drawing back one change.
+
+4. The fellow's book: change_book and undo_book. Every fellow has a short, funny book written about their work (the request tells you its title and form, and whether it is finished: they collect its ten pages one at a time). Once it is finished, its owner can ask you to change it: another form, a different joke, more about something, a page rewritten. Pass their request on whole; another model rewrites the book and you say what changed in a line. Before it is finished, it is not theirs to change yet: say so, kindly, and tell them how many pages are still out there. An admin may change anyone's book in the study they are standing in, finished or not.
 
 # The ticker
 
@@ -92,6 +97,25 @@ const TOOLS: Anthropic.Beta.BetaTool[] = [
     strict: true,
   },
 ]
+const BOOK_TOOLS: Anthropic.Beta.BetaTool[] = [
+  {
+    name: 'change_book',
+    description: 'Rewrite a finished book as its owner asks. Returns the new title and form, or why nothing changed.',
+    input_schema: {
+      type: 'object', additionalProperties: false, required: ['request', 'headline'],
+      properties: {
+        who: { type: 'string', description: 'Whose book: a lowercase character slug. Leave out for the person asking.' },
+        request: { type: 'string', description: 'The change, in the fellow\'s words where they gave them, at most 600 characters.' },
+        headline: { type: 'string', description: 'The ticker line if this works: one sentence, at most 90 characters.' },
+      },
+    },
+  },
+  {
+    name: 'undo_book',
+    description: 'Put a book back the way it was before its last change.',
+    input_schema: { type: 'object', additionalProperties: false, required: [], properties: { who: { type: 'string', description: 'Whose book; leave out for the person asking.' } } },
+  },
+]
 const ANNOUNCE: Anthropic.Beta.BetaTool = {
   name: 'announce',
   description: 'Admins only: put a line on the campus ticker that scrolls along the bottom of everyone\'s screen.',
@@ -119,10 +143,13 @@ export async function runRoomChat(user: SemibartUser, room: string, turns: ChatT
   /** Whose lines set_lines changes when it names nobody. */
   const self = lives ? user.character : info.occupants[0]
   const personasNow = await Promise.all(info.occupants.map(async c => [c, await getPersona(c)] as const))
+  const found = await allPages()
+  const booksNow = await Promise.all(info.occupants.map(async c => { const b = await getBook(c); const n = Math.min(BOOK_PAGES, found[c] || 0); return b ? `${c}: "${b.title}" (${b.form}), ${n >= BOOK_PAGES ? 'finished' : `${n} of ${BOOK_PAGES} pages found`}` : `${c}: no book yet` }))
   const context = [
     `Study ${info.study}. It belongs to: ${info.occupants.map((c, i) => `${info.names[i]} (${c})`).join(', ')}.`,
     `Asking: ${first} (${user.character}), ${admin ? 'an admin' : 'a fellow'}${lives ? ', who lives here' : ', who does not live here'}.`,
     `Lines changed so far (anything missing is as the game shipped it): ${JSON.stringify(Object.fromEntries(personasNow))}`,
+    `Books: ${booksNow.join('; ')}.`,
   ].join('\n')
 
   // The conversation: alternating turns, with this request's facts in front of the last message.
@@ -162,6 +189,27 @@ export async function runRoomChat(user: SemibartUser, room: string, turns: ChatT
       await tell({ kind: 'persona', actor: user.character, room, text: str(input.headline).slice(0, 110) || `${info.names[info.occupants.indexOf(who)]} has new things to say.` })
       return `Saved. ${who}'s lines now: ${JSON.stringify(next)}`
     }
+    if (name === 'change_book' || name === 'undo_book') {
+      const who = str(input.who).toLowerCase() || self
+      if (!info.occupants.includes(who)) return `Not done: ${who} does not live in this study.`
+      if (!admin && who !== user.character) return "Not done: a fellow changes only their own book."
+      const book = await getBook(who)
+      if (!book) return 'Not done: there is no book for them yet.'
+      const n = Math.min(BOOK_PAGES, (await allPages())[who] || 0)
+      if (!admin && n < BOOK_PAGES) return `Not done: the book is not finished. ${n} of ${BOOK_PAGES} pages found; the rest are under the oaks.`
+      if (name === 'undo_book') {
+        const back = await undoBook(who, user.id)
+        if (!back) return 'Nothing changed: this is the first version of the book.'
+        out.book = { character: who, version: back.version }
+        return `The book is back to "${back.title}" (${back.form}).`
+      }
+      const next = await reviseBook({ name: info.names[info.occupants.indexOf(who)], look: book.about || '' }, book, str(input.request).slice(0, 600))
+      if (!next) return 'Nothing changed: the rewrite did not come out whole. Ask them to try again, maybe more simply.'
+      const version = await saveBook(who, next, str(input.request).slice(0, 600), user.id)
+      out.book = { character: who, version }
+      await tell({ kind: 'persona', actor: user.character, room, text: str(input.headline).slice(0, 110) || `${first} rewrote their book.` })
+      return `Saved. The book is now "${next.title}" (${next.form}). Page 1 reads: ${JSON.stringify(next.pages[0].text.slice(0, 160))}`
+    }
     if (name === 'announce') {
       if (!admin) return 'Not done: only an admin announces.'
       const text = str(input.text).slice(0, 140)
@@ -182,7 +230,7 @@ export async function runRoomChat(user: SemibartUser, room: string, turns: ChatT
       fallbacks: 'default',
       output_config: { effort: 'low' },
       system: [{ type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } }],
-      tools: admin ? [...TOOLS, ANNOUNCE] : TOOLS,
+      tools: admin ? [...TOOLS, ...BOOK_TOOLS, ANNOUNCE] : [...TOOLS, ...BOOK_TOOLS],
       messages,
     })
     console.log(`[semibart/agent] ${room} step ${step}: stop=${res.stop_reason} in=${res.usage.input_tokens} cached=${res.usage.cache_read_input_tokens ?? 0} out=${res.usage.output_tokens}`)
@@ -204,6 +252,6 @@ export async function runRoomChat(user: SemibartUser, room: string, turns: ChatT
     }
     messages.push({ role: 'assistant', content: res.content }, { role: 'user', content: results })
   }
-  if (!out.reply) out.reply = out.room || out.personas ? 'Done.' : 'I lost my thread there. Say it again?'
+  if (!out.reply) out.reply = out.room || out.personas || out.book ? 'Done.' : 'I lost my thread there. Say it again?'
   return { status: 200, body: out }
 }

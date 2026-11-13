@@ -1,11 +1,15 @@
-/* CASBS Quest, loose leaves (2026-11-13). The one thing to collect.
-   Everyone at CASBS is supposed to be writing a book. The oaks are writing it for them: now and
-   then an oak drops a loose leaf, which is a page. Pick it up and it goes on the stack on your own
-   desk, where anyone who walks in can see how far you have got. Ten pages make the book.
-   The catch is that you start to talk like it. A page or two in, your lines grow footnotes. A few
-   more and you hedge. Then you cite yourself. With the book done, you mention the book.
-   Server: semibart_pages, GET and POST /api/semibart/pages (social-handlers.ts). Rides on the game
-   through quest.hooks (mapOver, mapSpots, sayYou, roomMid, roomSpots). Loaded by notes.js. */
+/* CASBS Quest, loose leaves and books (2026-11-13). The one thing to collect.
+   Everyone at CASBS is supposed to be writing a book. Theirs is already written (books.ts, ahead
+   of time, a different funny form for everyone: a Western, a cookbook, terms and conditions), and
+   its pages are lying around campus. Now and then a loose leaf falls under an oak; pick it up and
+   it is the next page of your book. Read what you have from the stack on your desk. At ten pages
+   the book is finished: it stands bound on your desk, anyone who walks in can read it, and you
+   can ask Claude on the door frame to change it. Admins can read every book, from every desk.
+   The other catch is that you start to talk like an author: footnotes, then hedges, then citing
+   yourself, then mentioning the book.
+   Server: semibart_pages and semibart_books; GET and POST /api/semibart/pages, GET
+   /api/semibart/books/:who (social-handlers.ts). Rides on the game through quest.hooks (mapOver,
+   mapSpots, sayYou, roomMid, roomSpots, keyBlock). Loaded by notes.js. */
 (() => {
 'use strict';
 const q = window.quest;
@@ -28,16 +32,16 @@ window.addEventListener('semibart:event', e => { if (e.detail && e.detail.kind =
 
 /* ---------- on the map: a leaf falls, lies there, gets picked up ---------- */
 const PICKED = [
-  "A loose leaf. From the oak. It is page 12 of something.",
-  'Another leaf. Page 3. The oak is not writing in order.',
-  'Page 40. It has footnotes. I am keeping the footnotes.',
-  'Page 7. This is starting to sound like an argument.',
-  'Half a manuscript. Arguably.',
-  'Page 91. I disagree with it. I am keeping it anyway.',
-  'The oak cites itself here. Oak, forthcoming.',
-  'Page 2. So that is how it starts.',
-  'One more and it is a book.',
-  'The last page. It says THE END. I wrote a book. The oak helped.'
+  'A loose page, under the oak. It says it is page one of my book. I have not written a book.',
+  'Page two. It is better than page one.',
+  'Page three. I would not have gone this way. It is working.',
+  'Page four. I keep wanting to read ahead.',
+  'Page five. Halfway. I have notes.',
+  'Page six. I am starting to take credit for this.',
+  'Page seven. My best work.',
+  'Page eight. Something is about to happen.',
+  'Page nine. One more.',
+  'The last page. My book is finished. I wrote it, in a sense.'
 ];
 let leaf = null;           // { ox, oy, x, y, t0 } falling until t0 + FALL, then on the ground
 let nextAt = 0, mapClock = 0, lastT = 0, picking = false;
@@ -78,7 +82,7 @@ async function pick() {
     if (n === null) { await q.say('you', 'It blew away before I could read it.'); return; }
     pages[me()] = n;
     await q.say('you', PICKED[Math.max(0, Math.min(BOOK, n) - 1)]);
-    if (n === 1) await q.say('you', 'It goes on my desk.');
+    if (n === 1) await q.say('you', 'It goes on my desk. I can read it there.');
     if (n >= BOOK) { q.SFX.jingle(); await q.say('you', 'It goes on my desk. I will be mentioning it.'); if (window.questTicker) setTimeout(window.questTicker.poll, 600); }
   } finally { picking = false; }
 }
@@ -92,9 +96,13 @@ function stackAt(room, slug) {
   const p = q.PEOPLE[room];
   return p && slug === room && ELSEWHERE[p.scene] ? ELSEWHERE[p.scene] : null;
 }
-const stacks = room => q.occupants(room).map(slug => ({ slug, n: Math.min(BOOK, pages[slug] || 0), at: stackAt(room, slug) })).filter(s => s.n > 0 && s.at);
+const isAdmin = () => !!(q.me && q.me.role === 'admin');
+// what is on each desk: a stack of found pages, the finished book, or (for an admin's eyes only)
+// the book nobody has started finding yet, shown faint
+const stacks = room => q.occupants(room).map(slug => ({ slug, n: Math.min(BOOK, pages[slug] || 0), at: stackAt(room, slug) })).filter(s => s.at && (s.n > 0 || isAdmin()));
 q.hooks.roomMid.push(room => {
   stacks(room).forEach(({ n, at: [x, y, w] }) => {
+    if (n === 0) { R(x + 1, y - 2, w - 2, 3, 'rgba(20,20,20,0.35)'); R(x + 2, y - 1, w - 4, 1, 'rgba(43,63,255,0.55)'); return; }
     if (n >= BOOK) {   // bound, standing up, with a title nobody can read from here
       R(x + 1, y - 13, w - 2, 14, '#141414'); R(x + 2, y - 12, w - 4, 12, '#2b3fff'); R(x + 2, y - 12, 1, 12, '#34446e'); R(x + 4, y - 10, w - 7, 1, '#ffd93b'); R(x + 4, y - 8, w - 8, 1, '#ffd93b');
       return;
@@ -105,12 +113,79 @@ q.hooks.roomMid.push(room => {
   });
 });
 q.hooks.roomSpots.push(room => stacks(room).map(({ slug, n, at: [x, y, w] }) => {
-  const own = slug === me(), who = nameOf(slug), done = n >= BOOK, h = done ? 14 : n + 1;
+  const own = slug === me(), who = nameOf(slug), done = n >= BOOK, h = done ? 14 : Math.max(3, n + 1);
+  const name = done ? (own ? 'my book' : `${who}'s book`) : n === 0 ? `${who}'s book, unread` : own ? 'my manuscript' : `${who}'s manuscript`;
+  const canRead = own || done || isAdmin();
   const line = done ? (own ? 'My book. Finished. I will be mentioning it.' : `${who}'s book. Finished. They will be mentioning it.`)
-    : own ? `My manuscript. ${n} page${n === 1 ? '' : 's'}, ${BOOK - n} to go. The oaks have the rest.`
-    : `${who}'s manuscript. ${n} loose page${n === 1 ? '' : 's'}. Found under the oaks, apparently.`;
-  return { name: done ? (own ? 'my book' : `${who}'s book`) : own ? 'my manuscript' : `${who}'s manuscript`, r: [x - 2, y - h - 1, w + 4, h + 4], walk: { x: Math.max(40, Math.min(300, x - 20)), y: 134 }, def: 'read', on: { look: line, read: line } };
+    : own ? `My manuscript. ${n} page${n === 1 ? '' : 's'}, ${BOOK - n} to go. The rest are lying around campus.`
+    : `${who}'s manuscript. ${n} loose page${n === 1 ? '' : 's'}. Not finished. I should not read it.`;
+  return { name, r: [x - 2, y - h - 1, w + 4, h + 4], walk: { x: Math.max(40, Math.min(300, x - 20)), y: 134 }, def: canRead ? 'read' : 'look', on: { look: line, read: canRead ? () => openBook(slug) : line } };
 }));
+
+/* ---------- reading a book ----------
+   A cream page on the dark, one at a time: the cover, then the pages. Arrows or a click on either
+   half to turn, Esc or a click outside to put it down. Pages you have not found yet are blank. */
+const css = document.createElement('style');
+css.textContent = `
+.bk-veil { position: absolute; inset: 0; z-index: 7; display: grid; place-items: center; background: rgba(8, 7, 5, 0.82); }
+.bk-page { position: relative; width: 52cqw; height: 47cqw; box-sizing: border-box; padding: 3cqw 3.6cqw 2.4cqw; background: #fff7e6; color: #2a2416; display: flex; flex-direction: column; gap: 1.6cqw; box-shadow: 0.8cqw 0.8cqw 0 #000; cursor: pointer; }
+.bk-page.cover { background: #2b3fff; color: #fff7e6; }
+.bk-form { color: #ffd93b; font-size: 2.1cqw; letter-spacing: 0.12em; text-transform: uppercase; }
+.bk-title { margin: 0; font-weight: 400; font-size: 5cqw; line-height: 0.95; }
+.bk-sub { font-size: 2.6cqw; line-height: 1.05; color: #d8dcff; }
+.bk-by { margin-top: auto; font-size: 2.4cqw; }
+.bk-text { white-space: pre-wrap; font-size: 2.75cqw; line-height: 1.1; }
+.bk-page canvas { image-rendering: pixelated; align-self: center; flex: 1 1 auto; min-height: 0; max-width: 100%; object-fit: contain; }
+.bk-blank { margin: auto; color: #a39c8c; font-size: 2.5cqw; text-align: center; }
+.bk-n { position: absolute; right: 2cqw; bottom: 1.2cqw; font-size: 1.9cqw; color: #9a917e; }
+.bk-page.cover .bk-n { color: #9aa2ff; }
+`;
+document.head.appendChild(css);
+let reader = null;
+function closeBook() { if (!reader) return; reader.el.remove(); reader = null; const cv = document.getElementById('cv'); cv && cv.focus && cv.focus(); }
+function drawArt(art) {
+  const c = document.createElement('canvas'), w = Math.max(...art.rows.map(r => r.length)), h = art.rows.length;
+  c.width = w; c.height = h; const x = c.getContext('2d');
+  art.rows.forEach((r, j) => { for (let i = 0; i < r.length; i++) { const col = art.palette[r[i]]; if (col) { x.fillStyle = col; x.fillRect(i, j, 1, 1); } } });
+  c.style.aspectRatio = w + ' / ' + h; return c;
+}
+function paint() {
+  const { book, i, el } = reader, pg = el.querySelector('.bk-page'), total = book.pages.length;
+  pg.className = 'bk-page' + (i === 0 ? ' cover' : ''); pg.textContent = '';
+  const add = (cls, text) => { const d = document.createElement('div'); d.className = cls; d.textContent = text; pg.appendChild(d); return d; };
+  if (i === 0) {
+    add('bk-form', book.form);
+    const t = document.createElement('h2'); t.className = 'bk-title'; t.textContent = book.title; pg.appendChild(t);
+    if (book.subtitle) add('bk-sub', book.subtitle);
+    add('bk-by', 'by ' + nameOf(book.character) + (book.unlocked ? '' : ` · ${book.found} of ${BOOK} pages found`));
+  } else {
+    const p = book.pages[i - 1];
+    if (!p) add('bk-blank', 'A page you have not found yet.');
+    else { if (p.art) pg.appendChild(drawArt(p.art)); if (p.text) add('bk-text', p.text); }
+  }
+  add('bk-n', i === 0 ? '' : `${i} / ${total}`);
+}
+function turn(d) { if (!reader) return; const n = reader.book.pages.length; reader.i = Math.max(0, Math.min(n, reader.i + d)); paint(); }
+async function openBook(slug) {
+  closeBook();
+  let book = null;
+  try { const r = await fetch('/api/semibart/books/' + encodeURIComponent(slug), { credentials: 'same-origin', cache: 'no-store' }); if (r.ok) book = await r.json(); } catch (e) {}
+  if (!book) { await q.say('you', 'The pages are stuck together. Later.'); return; }
+  const el = document.createElement('div'); el.className = 'bk-veil'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', book.title);
+  el.innerHTML = '<div class="bk-page"></div>';
+  ['pointerdown', 'pointerup', 'contextmenu', 'wheel', 'mousemove'].forEach(ev => el.addEventListener(ev, e => e.stopPropagation()));
+  el.addEventListener('click', e => { e.stopPropagation(); if (e.target === el) return closeBook(); const b = el.querySelector('.bk-page').getBoundingClientRect(); turn(e.clientX < b.left + b.width / 3 ? -1 : 1); });
+  document.getElementById('stage').appendChild(el);
+  // open at the newest page you have found, or the cover
+  const own = slug === me() && !book.unlocked;
+  reader = { el, book, i: own && book.found ? book.found : 0 };
+  q.SFX.pick(); paint();
+}
+q.hooks.keyBlock.push(e => {
+  if (!reader) return false;
+  if (e.key === 'Escape') closeBook(); else if (e.key === 'ArrowRight' || e.key === ' ') turn(1); else if (e.key === 'ArrowLeft') turn(-1);
+  return true;
+});
 
 /* ---------- how you talk: more like the book with every page ---------- */
 function reword(text) {
@@ -125,5 +200,5 @@ function reword(text) {
 }
 q.hooks.sayYou.push(reword);
 
-window.questLeaves = { pages, load, reword, state: () => ({ mine: mine(), leaf: leaf ? { x: leaf.x, y: leaf.y } : null }), dropNow: () => { nextAt = 0; drop(performance.now() / 1000 - (G.calm ? 0 : FALL)); return leaf; } };
+window.questLeaves = { pages, load, reword, openBook, closeBook, reading: () => (reader ? { who: reader.book.character, i: reader.i } : null), state: () => ({ mine: mine(), leaf: leaf ? { x: leaf.x, y: leaf.y } : null }), dropNow: () => { nextAt = 0; drop(performance.now() / 1000 - (G.calm ? 0 : FALL)); return leaf; } };
 })();

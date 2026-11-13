@@ -106,3 +106,27 @@ The rules behind these are in `VOICE.md`.
 
 Checks: `design-shots.mjs` (every screen on one sheet), `wire-shots.mjs`, `leaves-check.mjs`
 (the jokes, a leaf, the stacks, how your lines change); all answer the APIs locally.
+
+## Books (2026-11-13)
+
+Every fellow has a book, written ahead of time (`src/lib/semibart/books.ts`, tables
+`semibart_books` and `semibart_book_versions`, schema 023): Opus 5.5 at medium effort, from the
+one line in the game's `FELLOWS` table, in a form chosen for that person from a wide spread (it is
+offered four at random each time, so fifty books are not fifty plays), ten pages of text and pixel
+drawings. `node scripts/semibart/books-generate.ts` writes any that are missing (`--force` to
+rewrite, `--only a,b`); about 70 s and 6,000 output tokens each, four at a time.
+
+- Reading (`leaves.js`, `GET /api/semibart/books/:who`, `visibleBook` in `social-handlers.ts`):
+  an admin reads every book, whole, from every desk (a faint book where nobody has found a page);
+  its owner reads the pages they have found, the rest blank; anyone else reads it once it is
+  finished, and nothing before.
+- Changing: once a book is finished its owner asks the door-frame Claude ("make it a musical");
+  the agent's `change_book` tool calls `reviseBook`, which keeps what was not asked to change;
+  `undo_book` steps back. An admin may change anyone's book in the study they stand in. About a
+  minute a change.
+- The wire names a finished book: `Brian finished their book: "Farewell, My Cookie".`
+
+Checks: `npx tsx scripts/semibart/books-test.ts` (who reads what, the parser; offline);
+`node scripts/semibart/books-check.mjs <dir> [base] [room]` (an admin reads a real book from a
+desk; a fellow's partial manuscript and a visitor, with the APIs answered locally);
+`book-try.ts` and `book-sheet.mjs` to try the prompt and look at the results.

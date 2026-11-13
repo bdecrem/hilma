@@ -48,7 +48,13 @@ the thing changes, not the rule.
 
 ## The one collectible
 
-Loose leaves (`leaves.js`). Everyone at CASBS is writing a book; the oaks drop its pages. Pick
-them up and the stack grows on your own desk; ten make the book. The price is that you start to
-talk like it: footnotes, then hedges ("Arguably."), then citing yourself ("Me, forthcoming."),
-then mentioning the book. It is the only thing to collect, on purpose.
+Loose leaves and books (`leaves.js`, `books.ts`). Everyone at CASBS is writing a book, and theirs
+is already written: ahead of time, by Opus 5.5, from the one line the game knows about their work,
+in a form nobody would expect for it (a Western about deportation records, letters of complaint
+from a lab rat, the brain's terms of service), ten pages, pixel drawings allowed. Its pages lie
+around campus: now and then a loose leaf falls under an oak, and picking it up adds the next page.
+Read what you have from the stack on your desk. At ten the book is finished and bound on the desk:
+anyone can read it, the wire names it, and its owner can ask Claude on the door frame to change it.
+Admins can read every book from every desk. The other price is that you start to talk like an
+author: footnotes, then hedges ("Arguably."), then citing yourself ("Me, forthcoming."), then
+mentioning the book. It is the only thing to collect, on purpose.

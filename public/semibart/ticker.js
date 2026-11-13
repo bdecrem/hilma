@@ -108,7 +108,7 @@ paintTag();
 function blocked() {
   if (!S.started || S.choices || S.zoomT >= 0) return true;
   for (const id of ['deck', 'screen', 'who', 'deco']) { const el = $(id); if (el && !el.hidden) return true; }
-  return !!stage.querySelector('.nb-veil, .sb-veil, .cl-panel');
+  return !!stage.querySelector('.nb-veil, .sb-veil, .cl-panel, .bk-veil');
 }
 function begin(items) {
   run.innerHTML = items.map(it => `<span class="${it.cls || ''}"></span>`).join('<i>&#10022;</i>');
