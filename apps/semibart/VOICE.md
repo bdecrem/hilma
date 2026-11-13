@@ -53,7 +53,8 @@ is already written: ahead of time, by Opus 5.5, from the one line the game knows
 in a form nobody would expect for it (a Western about deportation records, letters of complaint
 from a lab rat, the brain's terms of service), ten pages, pixel drawings allowed. Its pages lie
 around campus: now and then a loose leaf falls under an oak, and picking it up adds the next page.
-Read what you have from the stack on your desk. At ten the book is finished and bound on the desk:
+Until then it sits on the bookshelf as an ordinary spine that nobody can open. At ten it leaves
+the shelf and stands face-out on the owner's desk:
 anyone can read it, the wire names it, and its owner can ask Claude on the door frame to change it.
 Admins can read every book from every desk. The other price is that you start to talk like an
 author: footnotes, then hedges ("Arguably."), then citing yourself ("Me, forthcoming."), then

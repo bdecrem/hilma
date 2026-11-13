@@ -91,14 +91,13 @@ export const pages: Handler = guarded(async req => {
   return json({ pages: n ?? (await allPages())[user.character] ?? 0, picked: n !== null })
 })
 
-/** What of a book a reader may see: an admin, the whole book; its owner, the pages they have
- *  found (the rest null); anyone else, the whole book once it is finished, and nothing before. */
+/** What of a book a reader may see: an admin, the whole book at any time; anyone else, the
+ *  whole book once it is finished (all ten pages found), and nothing before, its owner included. */
 export function visibleBook(b: { form: string; title: string; subtitle: string; pages: unknown[]; version: number }, who: string, found: number, viewer: { character: string; role: string }) {
   found = Math.max(0, Math.min(BOOK_PAGES, found))
   const unlocked = found >= BOOK_PAGES, admin = viewer.role === 'admin', mine = viewer.character === who
-  if (!admin && !mine && !unlocked) return null
-  const pages = admin || unlocked ? b.pages : b.pages.map((p, i) => (i < found ? p : null))
-  return { character: who, form: b.form, title: b.title, subtitle: b.subtitle, pages, found, unlocked, version: b.version, mine, admin }
+  if (!admin && !unlocked) return null
+  return { character: who, form: b.form, title: b.title, subtitle: b.subtitle, pages: b.pages, found, unlocked, version: b.version, mine, admin }
 }
 
 /** GET /api/semibart/books/:who (signed in) -> the book as far as this reader may see it. */

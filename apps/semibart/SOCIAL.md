@@ -116,10 +116,12 @@ offered four at random each time, so fifty books are not fifty plays), ten pages
 drawings. `node scripts/semibart/books-generate.ts` writes any that are missing (`--force` to
 rewrite, `--only a,b`); about 70 s and 6,000 output tokens each, four at a time.
 
-- Reading (`leaves.js`, `GET /api/semibart/books/:who`, `visibleBook` in `social-handlers.ts`):
-  an admin reads every book, whole, from every desk (a faint book where nobody has found a page);
-  its owner reads the pages they have found, the rest blank; anyone else reads it once it is
-  finished, and nothing before.
+- Where it is (`leaves.js`): until it is finished, the book is the first spine on the top shelf
+  of its owner's bookshelf (one spine per person in a shared study), drawn like the books around
+  it; it has no name and does nothing when clicked, except for an admin, who can take it down and
+  read it whole (`GET /api/semibart/books/:who`, `visibleBook` in `social-handlers.ts`). At ten
+  pages it leaves a gap on the shelf and stands face-out on its owner's desk, where anyone can
+  read it. The owner does not read pages early: the pickup lines tell them what they found.
 - Changing: once a book is finished its owner asks the door-frame Claude ("make it a musical");
   the agent's `change_book` tool calls `reviseBook`, which keeps what was not asked to change;
   `undo_book` steps back. An admin may change anyone's book in the study they stand in. About a

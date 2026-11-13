@@ -82,45 +82,70 @@ async function pick() {
     if (n === null) { await q.say('you', 'It blew away before I could read it.'); return; }
     pages[me()] = n;
     await q.say('you', PICKED[Math.max(0, Math.min(BOOK, n) - 1)]);
-    if (n === 1) await q.say('you', 'It goes on my desk. I can read it there.');
-    if (n >= BOOK) { q.SFX.jingle(); await q.say('you', 'It goes on my desk. I will be mentioning it.'); if (window.questTicker) setTimeout(window.questTicker.poll, 600); }
+    if (n === 1) await q.say('you', 'I will hold on to it. Nine more and I can read the thing.');
+    if (n >= BOOK) { q.SFX.jingle(); await q.say('you', 'It goes on my desk, face out. I will be mentioning it.'); if (window.questTicker) setTimeout(window.questTicker.poll, 600); }
   } finally { picking = false; }
 }
 q.hooks.mapSpots.push(() => leaf && (G.calm || performance.now() / 1000 - leaf.t0 >= FALL) && me() ? [{ name: 'loose leaf', r: [leaf.x - 5, leaf.y - 5, 11, 11], walk: { x: leaf.x, y: leaf.y + 2 }, def: 'pick', on: { look: 'A loose leaf under the oak. There is writing on it.', pick } }] : []);
 
-/* ---------- in a study: the stack on the desk ---------- */
-const ELSEWHERE = { read: [237, 99, 6], stand: [236, 79, 10] };   // no desk: the side table, the standing desk
-function stackAt(room, slug) {
+/* ---------- in a study: the book on the shelf, then on the desk ----------
+   Until it is finished, a fellow's book is the first spine on the top shelf of their study's
+   bookshelf (in a shared study, one spine each, left to right), drawn like the books around it.
+   Nothing marks it and nothing happens when it is clicked; only an admin gets its name and can
+   read it. Finished, it leaves the shelf, a gap where it stood, and stands face-out on its
+   owner's desk, where anyone can read it. */
+const ELSEWHERE = { read: [229, 95], stand: [236, 80] };   // no desk: the side table, the standing desk
+const isAdmin = () => !!(q.me && q.me.role === 'admin');
+const hiddenIn = room => (window.questRooms && typeof window.questRooms.hidden === 'function' ? window.questRooms.hidden(room) || [] : []);
+const SPINE = ['#7d2e2e', '#34446e', '#2f6b45', '#5c3a6e', '#8a5a1e'];
+function spineAt(room, i) {
+  const fx = typeof q.fixtures === 'function' ? q.fixtures(room) : { bookshelf: [266, 10, 48, 97] };
+  if (hiddenIn(room).includes('bookshelf')) return null;
+  return [fx.bookshelf[0] + 4 + i * 5, 15, 4, 14];   // top shelf: books stand on y 29, the shelf board
+}
+function standAt(room, slug) {   // where a finished book stands, face-out: [x, y of its foot]
   const d = (typeof q.desks === 'function' ? q.desks(room) || [] : []).find(e => e.slug === slug);
-  if (d) return d.hidden ? null : [room === 'bart' ? 167 : d.x + d.w - 14, d.top - 1, 10];
+  if (d) return d.hidden ? null : [room === 'bart' ? 165 : d.x + d.w - 18, d.top];
   const p = q.PEOPLE[room];
   return p && slug === room && ELSEWHERE[p.scene] ? ELSEWHERE[p.scene] : null;
 }
-const isAdmin = () => !!(q.me && q.me.role === 'admin');
-// what is on each desk: a stack of found pages, the finished book, or (for an admin's eyes only)
-// the book nobody has started finding yet, shown faint
-const stacks = room => q.occupants(room).map(slug => ({ slug, n: Math.min(BOOK, pages[slug] || 0), at: stackAt(room, slug) })).filter(s => s.at && (s.n > 0 || isAdmin()));
-q.hooks.roomMid.push(room => {
-  stacks(room).forEach(({ n, at: [x, y, w] }) => {
-    if (n === 0) { R(x + 1, y - 2, w - 2, 3, 'rgba(20,20,20,0.35)'); R(x + 2, y - 1, w - 4, 1, 'rgba(43,63,255,0.55)'); return; }
-    if (n >= BOOK) {   // bound, standing up, with a title nobody can read from here
-      R(x + 1, y - 13, w - 2, 14, '#141414'); R(x + 2, y - 12, w - 4, 12, '#2b3fff'); R(x + 2, y - 12, 1, 12, '#34446e'); R(x + 4, y - 10, w - 7, 1, '#ffd93b'); R(x + 4, y - 8, w - 8, 1, '#ffd93b');
-      return;
-    }
-    R(x - 1, y - n, w + 2, n + 1, '#141414');
-    for (let i = 0; i < n; i++) R(x + (i % 3 === 1 ? 1 : 0), y - i, w - (i % 3 === 1 ? 1 : 0), 1, i % 2 ? '#fff7e6' : '#e0d9c8');
-    R(x + 2, y - n + 1, w - 5, 1, '#9a917e');
+const books = room => q.occupants(room).map((slug, i) => ({ slug, i, done: (pages[slug] || 0) >= BOOK }));
+// The spines go on behind everyone (the shelf is part of the room); the finished books on the desks.
+q.hooks.roomBack.push(room => {
+  books(room).forEach(({ slug, i, done }) => {
+    const sp = spineAt(room, i); if (!sp) return;
+    const [x, y, w, h] = sp;
+    if (done) { R(x, y, w, h, '#3d2112'); R(x, y + h - 1, w, 1, '#2e180c'); return; }   // the gap
+    const c = SPINE[(slug.length * 7 + slug.charCodeAt(0)) % SPINE.length];
+    R(x, y, w, h, c); R(x, y, 1, h, 'rgba(255,255,255,0.18)'); R(x + 1, y + 3, w - 2, 1, '#e6b547'); R(x + 1, y + h - 4, w - 2, 1, '#e6b547');
   });
 });
-q.hooks.roomSpots.push(room => stacks(room).map(({ slug, n, at: [x, y, w] }) => {
-  const own = slug === me(), who = nameOf(slug), done = n >= BOOK, h = done ? 14 : Math.max(3, n + 1);
-  const name = done ? (own ? 'my book' : `${who}'s book`) : n === 0 ? `${who}'s book, unread` : own ? 'my manuscript' : `${who}'s manuscript`;
-  const canRead = own || done || isAdmin();
-  const line = done ? (own ? 'My book. Finished. I will be mentioning it.' : `${who}'s book. Finished. They will be mentioning it.`)
-    : own ? `My manuscript. ${n} page${n === 1 ? '' : 's'}, ${BOOK - n} to go. The rest are lying around campus.`
-    : `${who}'s manuscript. ${n} loose page${n === 1 ? '' : 's'}. Not finished. I should not read it.`;
-  return { name, r: [x - 2, y - h - 1, w + 4, h + 4], walk: { x: Math.max(40, Math.min(300, x - 20)), y: 134 }, def: canRead ? 'read' : 'look', on: { look: line, read: canRead ? () => openBook(slug) : line } };
-}));
+q.hooks.roomMid.push((room, t) => {
+  books(room).forEach(({ slug, done }) => {
+    if (!done) return;
+    const at = standAt(room, slug); if (!at) return;
+    const [x, foot] = at;   // a cover 12 x 15 on a little stand
+    R(x - 1, foot - 17, 14, 17, '#141414'); R(x, foot - 16, 12, 15, '#2b3fff'); R(x, foot - 16, 1, 15, '#1f2c9e');
+    R(x + 2, foot - 13, 8, 1, '#ffd93b'); R(x + 2, foot - 11, 6, 1, '#ffd93b'); R(x + 3, foot - 7, 6, 4, '#fff7e6'); R(x + 4, foot - 6, 4, 2, '#ff5a1f');
+    R(x + 3, foot - 1, 8, 1, '#5c3a20');
+    if (!G.calm && (t + slug.length) % 4.5 < 0.18) { R(x + 12, foot - 19, 1, 3, '#ffffff'); R(x + 11, foot - 18, 3, 1, '#ffffff'); }
+  });
+});
+q.hooks.roomSpots.push(room => {
+  const out = [];
+  books(room).forEach(({ slug, i, done }) => {
+    const own = slug === me(), who = own ? 'my' : nameOf(slug) + "'s";
+    if (done) {
+      const at = standAt(room, slug); if (!at) return;
+      const line = own ? 'My book. Finished. I will be mentioning it.' : `${nameOf(slug)}'s book. Finished. They will be mentioning it.`;
+      out.push({ name: `${who} book`, r: [at[0] - 3, at[1] - 19, 18, 21], walk: { x: Math.max(40, Math.min(300, at[0] - 16)), y: 134 }, def: 'read', on: { look: line, read: () => openBook(slug) } });
+    } else if (isAdmin()) {   // an admin can take it down before it is done; nobody else knows it is there
+      const sp = spineAt(room, i); if (!sp) return;
+      out.push({ name: `${who} book (not finished)`, r: [sp[0] - 1, sp[1] - 1, sp[2] + 2, sp[3] + 2], walk: { x: Math.max(40, Math.min(300, sp[0] + 2)), y: 132 }, def: 'read', on: { look: `${nameOf(slug)}'s book. ${Math.min(BOOK, pages[slug] || 0)} of ${BOOK} pages found.`, read: () => openBook(slug) } });
+    }
+  });
+  return out;
+});
 
 /* ---------- reading a book ----------
    A cream page on the dark, one at a time: the cover, then the pages. Arrows or a click on either
@@ -160,7 +185,7 @@ function paint() {
     add('bk-by', 'by ' + nameOf(book.character) + (book.unlocked ? '' : ` · ${book.found} of ${BOOK} pages found`));
   } else {
     const p = book.pages[i - 1];
-    if (!p) add('bk-blank', 'A page you have not found yet.');
+    if (!p) add('bk-blank', 'Not found yet.');
     else { if (p.art) pg.appendChild(drawArt(p.art)); if (p.text) add('bk-text', p.text); }
   }
   add('bk-n', i === 0 ? '' : `${i} / ${total}`);
@@ -176,9 +201,7 @@ async function openBook(slug) {
   ['pointerdown', 'pointerup', 'contextmenu', 'wheel', 'mousemove'].forEach(ev => el.addEventListener(ev, e => e.stopPropagation()));
   el.addEventListener('click', e => { e.stopPropagation(); if (e.target === el) return closeBook(); const b = el.querySelector('.bk-page').getBoundingClientRect(); turn(e.clientX < b.left + b.width / 3 ? -1 : 1); });
   document.getElementById('stage').appendChild(el);
-  // open at the newest page you have found, or the cover
-  const own = slug === me() && !book.unlocked;
-  reader = { el, book, i: own && book.found ? book.found : 0 };
+  reader = { el, book, i: 0 };
   q.SFX.pick(); paint();
 }
 q.hooks.keyBlock.push(e => {

@@ -1,7 +1,8 @@
 // Books in the game, end to end. Part one runs against the real server and database as the
-// check-only admin: an admin finds every fellow's book on their desk and reads it whole. Part two
-// answers the APIs locally to play a fellow: three pages found, the manuscript opens at page three,
-// the rest are blank, and a visitor cannot read someone else's unfinished one.
+// check-only admin: the unfinished book is the first spine on the top shelf, and an admin can take
+// it down and read it whole. Part two answers the APIs locally to play fellows: an unfinished book
+// has no name and does nothing for its owner or a visitor; a finished one has left the shelf and
+// stands on its owner's desk, where anyone can read it.
 // Usage: set -a; source ./.env.local; set +a
 //        node scripts/semibart/books-check.mjs <out-dir> [base] [room]   (base: http://localhost:3277, room: kevin)
 import { chromium } from 'playwright';
@@ -49,35 +50,35 @@ expect('the arrow keys turn the pages', !!pg && pg.at.i === 3, JSON.stringify(pg
 await p.keyboard.press('Escape'); await p.waitForTimeout(300);
 expect('Esc puts it down', !(await reader(p)));
 
-// ---------- part two: a fellow, with the APIs answered locally
+// ---------- part two: fellows, with the APIs answered locally
 const ALISON = { character: 'alison', name: 'Alison', study: '36', role: 'user', passcodeIsDefault: false };
-const BOOK = { ...api.body, character: 'alison', admin: false, mine: true, found: 3, unlocked: false, pages: api.body.pages.map((x, i) => (i < 3 ? x : null)) };
-async function play(me) {
+const BOOK = { ...api.body, character: 'alison', admin: false, mine: true, found: 10, unlocked: true };
+async function play(me, found) {
   const q = await (await b.newContext({ viewport: { width: 1280, height: 720 } })).newPage(); q.on('pageerror', e => errs.push(e.message));
   await q.route('**/api/semibart/me', r => r.fulfill(json({ user: me })));
   await q.route('**/api/semibart/rooms', r => r.fulfill(json({ rooms: {} })));
   await q.route('**/api/semibart/desk**', r => r.fulfill(json({ notes: [] })));
   await q.route('**/api/semibart/events**', r => r.fulfill(json({ events: [] })));
   await q.route('**/api/semibart/personas', r => r.fulfill(json({ personas: {} })));
-  await q.route('**/api/semibart/pages', r => r.fulfill(json({ pages: { alison: 3 } })));
-  await q.route('**/api/semibart/books/**', r => r.fulfill(json(BOOK)));
+  await q.route('**/api/semibart/pages', r => r.fulfill(json({ pages: { alison: found } })));
+  await q.route('**/api/semibart/books/**', r => found >= 10 ? r.fulfill(json(BOOK)) : r.fulfill({ status: 403, contentType: 'application/json', body: '{"error":"Not finished yet."}' }));
   await q.goto(base + '/semibart'); await ready(q); await q.evaluate(() => window.questTicker && window.questTicker.setOpen(false));
   await enter(q, 'alison'); await q.waitForTimeout(900);
   return q;
 }
-const own = await play(ALISON);
-expect('the owner sees "my manuscript"', (await hot(own)).includes('my manuscript'));
-await act(own, 'my manuscript'); await own.waitForSelector('.bk-veil', { timeout: 15000 }); await own.waitForTimeout(400);
-const at = await reader(own);
-expect('it opens at the newest page found (3)', !!at && at.at.i === 3, JSON.stringify(at));
-await own.screenshot({ path: out + '/books-3-owner-page-3.png' });
-await own.keyboard.press('ArrowRight'); await own.waitForTimeout(200);
-const blank = await reader(own);
-expect('page 4 is blank: not found yet', !!blank && /not found yet/.test(blank.text), JSON.stringify(blank));
-await own.screenshot({ path: out + '/books-4-owner-blank.png' });
-const visitor = await play({ ...ALISON, character: 'daniel', name: 'Daniel', study: '1' });
-const vis = await hot(visitor);
-expect("a visitor sees Alison's manuscript but cannot open it", vis.includes("Alison's manuscript") && (await act(visitor, "Alison's manuscript")) && (await visitor.waitForTimeout(800), !(await reader(visitor))), vis.slice(0, 5).join(', '));
+const own = await play(ALISON, 7);
+expect('unfinished: its owner sees no book to click', !(await hot(own)).some(n => /(my|'s) book/.test(n)), (await hot(own)).slice(0, 6).join(', '));
+await own.screenshot({ path: out + '/books-3-on-the-shelf.png' });
+const vis = await play({ ...ALISON, character: 'daniel', name: 'Daniel', study: '1' }, 7);
+expect('unfinished: a visitor sees none either', !(await hot(vis)).some(n => /(my|'s) book/.test(n)));
+const done = await play(ALISON, 10);
+const dn = await hot(done);
+expect('finished: it stands on the desk as "my book"', dn.includes('my book'), dn.slice(0, 6).join(', '));
+await done.screenshot({ path: out + '/books-4-on-the-desk.png' });
+await act(done, 'my book'); await done.waitForSelector('.bk-veil', { timeout: 15000 }); await done.waitForTimeout(300);
+expect('and opens at its cover', (await reader(done)).at.i === 0);
+const dv = await play({ ...ALISON, character: 'daniel', name: 'Daniel', study: '1' }, 10);
+expect("finished: a visitor reads Alison's book", (await hot(dv)).includes("Alison's book") && await act(dv, "Alison's book") && !!(await dv.waitForSelector('.bk-veil', { timeout: 15000 })));
 expect('no page errors', errs.length === 0, errs.join(' | '));
 await b.close();
 console.log(failed ? `${failed} FAILED` : 'all passed');
