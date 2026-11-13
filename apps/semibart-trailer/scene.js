@@ -80,6 +80,32 @@ function crumble(t) {
   g.globalAlpha = 1;
 }
 
+// the game's palette: every block of the crumbling frame becomes one of these
+const PAL = [[255, 255, 85], [230, 181, 71], [255, 247, 230], [85, 255, 255], [168, 115, 42]];
+let frozen = null;
+function crumbleHiFi(t) {
+  const [k0, k1] = E.CRUMBLE, p = (t - k0) / (k1 - k0);
+  if (!frozen) { const src = window.ACT1.render(k0 - 0.001); frozen = document.createElement('canvas'); frozen.width = W; frozen.height = H; frozen.getContext('2d').drawImage(src, 0, 0); }
+  const steps = [2, 3, 4, 6, 8, 12, 16, 24], b = steps[Math.min(steps.length - 1, Math.floor(p / 0.32 * steps.length))];
+  const c = document.createElement('canvas'); c.width = Math.ceil(W / b); c.height = Math.ceil(H / b);
+  const x = c.getContext('2d'); x.drawImage(frozen, 0, 0, c.width, c.height);
+  const d = x.getImageData(0, 0, c.width, c.height).data, r = mulberry(5), q = clamp((p - 0.32) / 0.68);
+  // early on the blocks keep a little of the real colour; by the time they fall they are all the game's
+  const snap = clamp(p / 0.25);
+  for (let y = 0; y < c.height; y++) for (let i = 0; i < c.width; i++) {
+    const o = (y * c.width + i) * 4, R = d[o], G = d[o + 1], B = d[o + 2], lum = 0.3 * R + 0.59 * G + 0.11 * B;
+    const delay = r() * 0.5, side = r() - 0.5, sp = 0.7 + r() * 0.6;
+    if (lum < 60) continue;
+    let best = PAL[0], bd = 1e9; for (const P of PAL) { const dd = (P[0] - R) ** 2 + (P[1] - G) ** 2 + (P[2] - B) ** 2; if (dd < bd) { bd = dd; best = P; } }
+    const col = best.map((v, k) => Math.round(v * snap + [R, G, B][k] * (1 - snap)));
+    const v = clamp((q - delay) / (1 - delay)), drop = v * v * H * 1.1 * sp;
+    g.globalAlpha = clamp((lum - 40) / 80) * clamp(1.15 - v);
+    g.fillStyle = `rgb(${col[0]},${col[1]},${col[2]})`;
+    const gap = b >= 8 ? 2 : 0; g.fillRect(i * b + side * 220 * v, y * b + drop, b - gap, b - gap);
+  }
+  g.globalAlpha = 1;
+}
+
 /* ---------- the game's font ---------- */
 function pixelText(text, x, y, size, fill, outline) {
   g.font = `${size}px 'Jersey 15'`; g.letterSpacing = '0px'; g.textAlign = 'center'; g.textBaseline = 'middle';
@@ -96,18 +122,10 @@ function mosaic(b) {
 
 async function renderAt(t) {
   g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.fillStyle = '#000'; g.fillRect(0, 0, W, H);
-  // act 1
-  if (t < E.CRUMBLE[0]) {
-    for (let i = 0; i < 3; i++) {
-      const u = t - E.HITS[i]; if (u < 0) continue;
-      const until = i < 2 ? E.WORD_OUT[i] : E.CRUMBLE[0]; if (t >= until) continue;
-      const rise = i === 2 ? Math.pow(clamp((t - E.RISER[0]) / (E.RISER[1] - E.RISER[0])), 2) : 0;
-      g.save(); if (i < 2) g.globalAlpha = clamp((until - t) / 0.22);
-      drawWord(E.WORDS[i], t, u, rise * 16); g.restore();
-    }
-    grain(t); return;
-  }
-  if (t < E.CRUMBLE[1]) { crumble(t); grain(t); return; }
+  // act 1: the high-fidelity 3D titles (act1.js)
+  if (t < E.CRUMBLE[0]) { g.drawImage(window.ACT1.render(t), 0, 0); grain(t); return; }
+  // the hinge: the last full-fidelity frame breaks into the game's pixels and falls away
+  if (t < E.CRUMBLE[1]) { crumbleHiFi(t); return; }
   if (t < E.JINGLE) return;
   // the title card resolves out of the pixels, a step at a time
   if (t < E.T0) {

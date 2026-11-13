@@ -6,9 +6,11 @@
 html, body { margin: 0; background: #000; } canvas { width: 960px; height: 540px; display: block; }
 </style></head>
 <body><canvas id="c" width="1920" height="1080"></canvas>
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/" } }</script>
 <script type="module">
 import * as E from './edit.mjs';
 window.E = E;
+await import('./act1.js');
 await Promise.all([document.fonts.load('300px Anton'), document.fonts.load("100px 'Jersey 15'")]);
 const s = document.createElement('script'); s.src = 'scene.js'; s.onload = () => { window.READY = true; }; document.body.appendChild(s);
 </script></body></html>

@@ -107,6 +107,16 @@ async function renderScore(cfg) {
     g.gain.setValueAtTime(0.0001, 0); g.gain.exponentialRampToValueAtTime(0.35, cfg.HITS[0] - 0.05); g.gain.exponentialRampToValueAtTime(0.0001, cfg.HITS[0] + 0.02);
     o.connect(g).connect(trailer); o.start(0); o.stop(cfg.HITS[0] + 0.1); }
   for (let t = 0.2; t < cfg.HITS[0]; t += 0.5) noise(0.03, 0.12, 3200, null, t, 6, 'bandpass', trailer);
+  // hi-fi detail: a whoosh into every hit (the word flying in) and a shimmer of glitter after it
+  const rs = (k => () => { k = (k * 16807) % 2147483647; return k / 2147483647; })(12345);
+  cfg.HITS.forEach((h, i) => {
+    const src = AC.createBufferSource(), f = AC.createBiquadFilter(), gw = AC.createGain(); src.buffer = noiseBuf;
+    f.type = 'bandpass'; f.Q.value = 1.2; f.frequency.setValueAtTime(350, h - 0.45); f.frequency.exponentialRampToValueAtTime(6000, h);
+    gw.gain.setValueAtTime(0.0001, h - 0.45); gw.gain.exponentialRampToValueAtTime(0.5, h - 0.01); gw.gain.linearRampToValueAtTime(0.0001, h + 0.02);
+    src.connect(f).connect(gw).connect(trailer); src.start(h - 0.45); src.stop(h + 0.05);
+    for (let k = 0; k < 26 + i * 10; k++) { const w = Math.pow(rs(), 1.7) * 1.8; tone(2400 + rs() * 6000, 0.25 + rs() * 0.5, 'sine', 0.035 * (1 - w / 2), h + 0.04 + w, 0, trailer); }
+  });
+  for (let t = cfg.RISER[0]; t < cfg.RISER[1]; t += 0.06 - 0.04 * (t - cfg.RISER[0]) / (cfg.RISER[1] - cfg.RISER[0])) tone(3000 + rs() * 5000, 0.18, 'sine', 0.02, t, 0, trailer);
   braam(cfg.HITS[0], C2, false);
   braam(cfg.HITS[1], Ab1, false);
   const last = braam(cfg.HITS[2], C2, true, cfg.CRUMBLE[0] - cfg.HITS[2] + 1.2);

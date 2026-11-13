@@ -4,7 +4,7 @@
 //   node apps/semibart-trailer/render.mjs --stills 1.3,6.2,8.6  [--sheet out/s.jpg]
 //   node apps/semibart-trailer/render.mjs --score               → out/score.wav only
 import { chromium } from 'playwright';
-import { spawn } from 'node:child_process';
+import { execFileSync, spawn } from 'node:child_process';
 import { createReadStream, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
@@ -13,14 +13,16 @@ import * as E from './edit.mjs';
 
 const dir = path.dirname(fileURLToPath(import.meta.url)), root = path.resolve(dir, '../..'), out = path.join(dir, 'out');
 const arg = k => { const i = process.argv.indexOf(k); return i > 0 ? process.argv[i + 1] : undefined; };
-const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.jpg': 'image/jpeg', '.woff2': 'font/woff2' };
+// three.js's text geometry wants a TTF; the site bundles Anton as woff2, so make a TTF copy here
+if (!existsSync(path.join(out, 'Anton.ttf'))) execFileSync('python3', ['-c', "import sys; from fontTools.ttLib import TTFont; f = TTFont(sys.argv[1]); f.flavor = None; f.save(sys.argv[2])", path.join(root, 'src/fonts/anton/Anton-400.woff2'), path.join(out, 'Anton.ttf')]);
+const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.jpg': 'image/jpeg', '.woff2': 'font/woff2', '.ttf': 'font/ttf' };
 const server = http.createServer((req, res) => {
   const f = path.join(root, decodeURIComponent(new URL(req.url, 'http://x').pathname));
   if (!f.startsWith(root) || !existsSync(f)) { res.writeHead(404); res.end(); return; }
   res.writeHead(200, { 'content-type': TYPES[path.extname(f)] || 'application/octet-stream' }); createReadStream(f).pipe(res);
 }).listen(0);
 const base = `http://localhost:${server.address().port}/apps/semibart-trailer/`;
-const browser = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] });
+const browser = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required', '--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist'] });
 
 // the game's sounds under the footage: every logged event inside a segment, at its time in the edit
 function events() {
@@ -48,7 +50,7 @@ const frame = t => page.evaluate(async t => { await window.renderAt(t); return d
 
 if (process.argv.includes('--score')) await score();
 else if (arg('--stills')) {
-  await page.goto(base + 'index.html'); await page.waitForFunction(() => window.READY);
+  await page.goto(base + 'index.html'); await page.waitForFunction(() => window.READY, null, { timeout: 120000 });
   const files = [];
   for (const s of arg('--stills').split(',').map(Number)) { const f = path.join(out, `still-${s.toFixed(2)}.jpg`); writeFileSync(f, Buffer.from(await frame(s), 'base64')); files.push(f); }
   const sheet = arg('--sheet');
@@ -64,7 +66,7 @@ else if (arg('--stills')) {
   console.log(files.length, 'stills');
 } else {
   const wav = await score();
-  await page.goto(base + 'index.html'); await page.waitForFunction(() => window.READY);
+  await page.goto(base + 'index.html'); await page.waitForFunction(() => window.READY, null, { timeout: 120000 });
   const f = arg('--out') || path.join(out, 'casbs-quest-trailer.mp4'), n = Math.round(E.DUR * E.FPS);
   const ff = spawn('ffmpeg', ['-v', 'error', '-y', '-f', 'image2pipe', '-c:v', 'mjpeg', '-framerate', String(E.FPS), '-i', '-', '-i', wav,
     '-map', '0:v', '-map', '1:a', '-c:v', 'libx264', '-preset', 'slow', '-crf', '18', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '256k', '-shortest', '-movflags', '+faststart', f], { stdio: ['pipe', 'inherit', 'inherit'] });

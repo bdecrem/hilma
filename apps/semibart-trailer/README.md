@@ -1,10 +1,15 @@
 # CASBS Quest — trailer
 
-A 48-second 1920×1080 trailer for the game (ola.cx/semibart), 2026-11-13. Act 1 is a movie trailer on
-black: three braams and THIS. / CHANGES. / EVERYTHING. slammed in Anton, a pause of black after each,
-then a riser. The hinge: the riser cuts, EVERYTHING. crumbles into yellow and cyan 8-bit blocks while
-the last braam's chord powers down as square waves, the game's own start jingle plays, and the title
-card steps out of the mosaic. Act 2 is the game: a chiptune theme built on that jingle (120 BPM,
+A 48-second 1920×1080 trailer for the game (ola.cx/semibart), 2026-11-13. Act 1 is a movie trailer in
+high fidelity (`act1.js`, three.js 0.170 from the CDN, used only by this local render page): THIS. /
+CHANGES. / EVERYTHING. as extruded, bevelled metal in Anton (silver, then gold), reflecting a black studio
+with softbox strips and a horizon gradient behind the camera, a key light sweeping a glint across, bloom,
+an anamorphic streak, gold glitter that twinkles in the dark and bursts at every hit. Each word flies in
+from past the camera on a whoosh and lands on a braam; the first two fly back into the dark for the
+pause; a riser. The hinge: the riser cuts, the last full-fidelity frame is resampled into ever bigger
+blocks snapped to the game's palette and they fall away, while the braam's chord powers down as square
+waves, the game's own start jingle plays, and the title card steps out of the mosaic. (`render.mjs`
+makes `out/Anton.ttf` from the bundled woff2 with fontTools, for three's text geometry.) Act 2 is the game: a chiptune theme built on that jingle (120 BPM,
 C – Am – F – G, pulse lead with an echo, triangle bass, noise drums), cut on the bar to real footage,
 with the game's own sounds and garble voices in sync, a reprise of the three words in the game's font,
 and an end card with the address.
