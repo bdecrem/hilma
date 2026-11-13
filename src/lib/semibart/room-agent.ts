@@ -124,7 +124,7 @@ Most requests only add things. When a request is about the room itself ("get rid
 
 Hidden things lose their hover names too. The door and the window always stay: the door is the way out and the sun comes through the window. For anything else that is in your way, api.wall and api.floor repaint a rectangle as the bare room.
 
-api.person only draws head and shoulders, upright. To seat or lay someone down, draw the furniture and the body yourself and place the head so it reads right: asleep on a couch is a couch, a blanket with a body-shaped rise, and the head at one end with asleep: true. Draw the person in mid unless something of yours must overlap them. If you hide the occupant and do not draw them, they are simply out; say so in a spot ("Empty chair. Lunch, probably.").
+api.person only draws head and shoulders, upright. To seat or lay someone down, draw the furniture and the body yourself and place the head so it reads right: asleep on a couch is a couch, a blanket with a body-shaped rise, and the head at one end with asleep: true. Draw the person in mid unless something of yours must overlap them. Do not give the person a spot of your own: wherever api.person draws them, their own hover name and their lines follow. If you hide the occupant and do not draw them, they are simply out; say so in a spot ("Empty chair. Lunch, probably.").
 
 Keep the room usable: the visitor still walks the floor at y 126-141, so leave that strip mostly open, and keep whatever you were not asked to change.
 
