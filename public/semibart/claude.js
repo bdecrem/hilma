@@ -1,6 +1,7 @@
 /* CASBS Quest, the Claude on the door frame (2026-11-12). Rides on the game through window.quest.
    - A small clay-colored spark sits on the door frame of your own study, and only there: in
-     anyone else's study there is nothing to see. Click it and type what you want: "add ten cute rats", "make it
+     anyone else's study there is nothing to see. An admin is the exception and has one in every
+     study, since an admin may change any of them. Click it and type what you want: "add ten cute rats", "make it
      pink", "I'm on the couch taking a nap", "make me grumpy today". It answers in a speech
      bubble while the room changes behind it.
    - The server (src/lib/semibart/social-agent.ts, POST /api/semibart/agent) is a Claude with
@@ -16,8 +17,9 @@ if (!q || !q.hooks || !q.gfx || window.questClaude) return;
 const G = q.gfx, g = G.g, S = q.S;
 const stage = document.getElementById('stage');
 const hasRoom = room => room === 'bart' || !!q.PEOPLE[room];
-// Yours alone: the spark is drawn, and answers, only in the study you live in (Bart, 2026-11-12).
-const canUse = room => !!(q.me && hasRoom(room) && q.occupants(room).includes(q.me.character));
+// Yours alone: the spark is drawn, and answers, only in the study you live in. An admin has one
+// in every study (Bart, 2026-11-12, both rules).
+const canUse = room => !!(q.me && hasRoom(room) && (q.me.role === 'admin' || q.occupants(room).includes(q.me.character)));
 const nameOf = c => c === 'bart' ? 'Bart' : q.PEOPLE[c] ? q.PEOPLE[c].name : q.FELLOWS[c] ? q.FELLOWS[c].name : c;
 
 /* ---------- the spark: 13 x 11, on top of the door frame (the door is x 4-35, from y 30) ---------- */
@@ -40,7 +42,7 @@ q.hooks.roomBack.push((room, t) => {
   if (busy && !calm) { const k = Math.floor(t * 5) % 3; G.rect(g, AT[0] + 15 + k * 3, AT[1] + 2 - k, 1, 1, '#ffd93b'); }
 });
 q.hooks.roomSpots.push(room => canUse(room) ? [{ name: 'Claude', r: [AT[0] - 2, AT[1] - 3, 17, 16], walk: { x: 46, y: 132 }, def: 'talk', on: {
-  look: 'Claude. Small, clay-colored, sitting on my door frame. It changes the room if I ask.',
+  look: q.occupants(room).includes(q.me.character) ? 'Claude. Small, clay-colored, sitting on my door frame. It changes the room if I ask.' : `Claude, on the door frame of ${q.occupants(room).length > 1 ? 'this study' : nameOf(room) + "'s study"}. I have the keys to this one.`,
   talk: () => openChat(room)
 } }] : []);
 

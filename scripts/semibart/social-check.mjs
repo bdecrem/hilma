@@ -72,8 +72,10 @@ if (part !== 'chat') {
   await rest(`semibart_notes?id=eq.${seed.id}`, { method: 'DELETE' });
 }
 if (part !== 'notes') {
-  // The spark is only in your own study, and the check account has none: nothing to click.
-  await enter('bart'); ok('no Claude in someone else\'s study', !(await spotXY('Claude')));
+  // The spark is in your own study only, except for an admin, who has one everywhere.
+  await enter('bart'); ok('an admin has Claude in any study', !!(await spotXY('Claude')));
+  await p.evaluate(() => { window.quest.me = Object.assign({}, window.quest.me, { role: 'user' }); });
+  ok('a fellow has none in someone else\'s study', !(await spotXY('Claude')));
   // The agent itself, asked something that changes nothing (the check account is an admin, so
   // the server answers for Bart's study; no tool runs, no room or lines are touched).
   const r = await p.evaluate(async () => { const r = await fetch('/api/semibart/agent', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ room: 'bart', messages: [{ role: 'user', text: 'Change nothing. In one line: what can you do for this study?' }] }) }); return { status: r.status, body: await r.json() }; });

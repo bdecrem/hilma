@@ -18,7 +18,10 @@ nearly every room, and a desk covered in notes reads at a glance as "people come
 Rooms without that panel have their own places (`PLACES` in notes.js): the arms and back of
 Frances's chair and her lampshade, the front edge of Joseph's standing desk. When a room's own
 code hides the desk (`questRooms.hidden(room)`, the nap and floor-plan changes), the notes move
-to the wall under the window and the pad to the sill, which no room can hide.
+to the wall under the window and the pad to the sill, which no room can hide. In a shared
+study with a desk per person (`quest.desks(room)` from the rooms layer, two or more entries)
+each person's notes stick to their own front panel and each desk has its own pad, which
+writes to that person; until that layer lands, shared studies use the one-desk layout.
 
 - `GET /api/semibart/desk?room=mary` → `{ notes }`, `POST { to, body }` and `DELETE ?id=`, all
   signed in only: "anyone who walks in" means anyone in the game, not anyone with curl. Reads are `deskNotes` in `src/lib/semibart/social.ts`; writes go
@@ -29,8 +32,8 @@ to the wall under the window and the pad to the sill, which no room can hide.
 ## Claude on the door frame (`public/semibart/claude.js`, `src/lib/semibart/social-agent.ts`)
 
 A small clay spark sits on the door frame of your own study, and only there (the character
-from `/claude`, at pixel size); in anyone else's study there is nothing to see or click (Bart,
-2026-11-12). Click it and type: "add ten cute rats", "make it pink", "I'm on
+from `/claude`, at pixel size); in anyone else's study there is nothing to see or click. An admin
+is the exception and has one in every study (Bart, 2026-11-12, both rules). Click it and type: "add ten cute rats", "make it pink", "I'm on
 the couch taking a nap", "make me grumpy today". It answers in a speech bubble; the input is a
 bar along the bottom, so the room stays in view while it changes.
 
@@ -48,9 +51,8 @@ Each message to the chat counts against 60 a day per person (`semibart_agent_tur
 021; `countTurn` in social.ts); past that Claude says so and no model is called. Room changes
 have their own cap inside `changeRoom`.
 
-Two levels. A fellow: their own study, their own lines. An admin (Bart): also announcements
-on the wire. The server still lets an admin change any study and anyone's lines in it, but
-the game offers no way in outside your own study.
+Two levels. A fellow: their own study, their own lines. An admin (Bart): any study he is
+standing in, anyone's lines in it, and announcements on the wire.
 
 ## The wire (`public/semibart/ticker.js`)
 

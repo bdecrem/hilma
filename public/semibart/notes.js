@@ -70,15 +70,29 @@ async function load(room, force) {
   return d;
 }
 const notesIn = room => (desks[room] ? desks[room].notes : []);
-// What is on show: the newest notes that fit, oldest first so a note keeps its place; when there
-// are more than fit, the last place is a stack.
-function shown(room) {
-  const p = placeOf(room), all = notesIn(room);
-  if (!p) return { notes: [], more: 0 };
-  if (all.length <= p.slots.length) return { notes: all, more: 0 };
-  const keep = p.slots.length - 1;
-  return { notes: all.slice(all.length - keep), more: all.length - keep };
+// A shared study with a desk per person (quest.desks, from the rooms layer) gets one group per
+// desk: that person's notes on their own front panel, and a pad on their desk top. Everywhere
+// else there is one group for the room.
+function groupsOf(room) {
+  const p = placeOf(room); if (!p) return [];
+  const ds = p !== WALL && typeof q.desks === 'function' ? q.desks(room) || [] : [];
+  if (ds.length < 2) return [{ to: null, pad: p.pad, slots: p.slots }];
+  return ds.map(d => {
+    const [px, py, pw] = d.panel, cols = Math.max(1, Math.floor((pw - 6) / 11));
+    return { to: d.slug, pad: [d.x + 3, d.top - 3], slots: grid(px + 3 + Math.floor((pw - 6 - (cols * 11 - 2)) / 2), cols, [py + 2, py + 12]) };
+  });
 }
+// What is on show: per group the newest notes that fit, oldest first so a note keeps its place;
+// when there are more than fit, the last place is a stack.
+function layout(room) {
+  const all = notesIn(room);
+  return groupsOf(room).map(gr => {
+    const mine = gr.to ? all.filter(n => n.to.character === gr.to) : all;
+    const keep = mine.length <= gr.slots.length ? mine : mine.slice(mine.length - (gr.slots.length - 1));
+    return { to: gr.to, pad: gr.pad, items: keep.map((n, i) => ({ n, x: gr.slots[i][0], y: gr.slots[i][1] })), more: mine.length - keep.length, last: gr.slots[gr.slots.length - 1] };
+  });
+}
+function shown(room) { const L = layout(room); return { notes: [].concat(...L.map(gr => gr.items.map(it => it.n))), more: L.reduce((a, gr) => a + gr.more, 0) }; }
 const seenKey = () => 'sb-notes-seen-' + (q.me ? q.me.character : '');
 function seenAt() { try { return localStorage.getItem(seenKey()) || ''; } catch (e) { return ''; } }
 function markSeen() { try { localStorage.setItem(seenKey(), new Date().toISOString()); } catch (e) {} }
@@ -106,27 +120,29 @@ q.hooks.roomMid.push((room, t) => {
   const p = placeOf(room); if (!p) return;
   if (room !== lastRoom) { lastRoom = room; load(room, true); }
   else if (performance.now() - pollT > 20000) { pollT = performance.now(); load(room, true); }
-  const s = shown(room);
-  s.notes.forEach((n, i) => drawNote(n, p.slots[i][0], p.slots[i][1], t));
-  if (s.more) { const [x, y] = p.slots[p.slots.length - 1]; for (let k = 2; k >= 0; k--) { rect(x + k, y + k - 1, 9, 9, k ? '#d9b93a' : '#ffe566'); } rect(x + 2, y + 3, 5, 1, '#8a7420'); rect(x + 4, y + 1, 1, 5, '#8a7420'); }
-  drawPad(p.pad[0], p.pad[1]);
+  layout(room).forEach(gr => {
+    gr.items.forEach(it => drawNote(it.n, it.x, it.y, t));
+    if (gr.more) { const [x, y] = gr.last; for (let k = 2; k >= 0; k--) { rect(x + k, y + k - 1, 9, 9, k ? '#d9b93a' : '#ffe566'); } rect(x + 2, y + 3, 5, 1, '#8a7420'); rect(x + 4, y + 1, 1, 5, '#8a7420'); }
+    drawPad(gr.pad[0], gr.pad[1]);
+  });
 });
 // Leaving a room: forget which one, so walking back in asks again.
 setInterval(() => { if (S.scene !== 'room') lastRoom = null; }, 500);
 
 /* ---------- hotspots: each note, and the pad ---------- */
 q.hooks.roomSpots.push(room => {
-  const p = placeOf(room); if (!p) return [];
-  const shared = q.occupants(room).length > 1, s = shown(room), out = [];
-  s.notes.forEach((n, i) => {
-    const [x, y] = p.slots[i];
-    out.push({ name: shared ? `note for ${n.to.name}, from ${n.from.name}` : `note from ${n.from.name}`, r: [x - 1, y - 1, 11, 11], walk: { x: Math.max(60, Math.min(290, x + 4)), y: 134 }, def: 'read',
-      on: { look: `A ${n.color} sticky note from ${n.from.name}. Stuck there ${ago(n.created_at)}.`, read: () => openDesk(room, n.id) } });
+  if (!placeOf(room)) return [];
+  const shared = q.occupants(room).length > 1, out = [], wx = x => Math.max(60, Math.min(290, x + 4));
+  layout(room).forEach(gr => {
+    const perDesk = !!gr.to;
+    gr.items.forEach(({ n, x, y }) => out.push({ name: shared && !perDesk ? `note for ${n.to.name}, from ${n.from.name}` : `note from ${n.from.name}`, r: [x - 1, y - 1, 11, 11], walk: { x: wx(x), y: 134 }, def: 'read',
+      on: { look: `A ${n.color} sticky note from ${n.from.name}${perDesk ? ', on ' + nameOf(gr.to) + "'s desk" : ''}. Stuck there ${ago(n.created_at)}.`, read: () => openDesk(room, n.id) } }));
+    if (gr.more) { const [x, y] = gr.last; out.push({ name: `${gr.more} more notes`, r: [x - 1, y - 2, 13, 13], walk: { x: wx(x), y: 134 }, def: 'read', on: { look: 'A whole stack of them. Somebody is popular.', read: () => openDesk(room, null) } }); }
+    const own = perDesk ? !!(q.me && q.me.character === gr.to) : mine(room);
+    const who = own ? 'My' : perDesk ? nameOf(gr.to) + "'s" : shared ? 'Their' : nameOf(room) + "'s";
+    out.push({ name: perDesk && !own ? `sticky notes and a pen, ${nameOf(gr.to)}'s` : 'sticky notes and a pen', r: [gr.pad[0] - 2, gr.pad[1] - 5, 13, 10], walk: { x: wx(gr.pad[0]), y: 134 }, def: 'write',
+      on: { look: own ? 'My pad of sticky notes, and a pen. Anyone who visits can leave me one.' : `${who} pad of sticky notes, and a pen. For leaving a note on the desk.`, write: () => writeFlow(room, gr.to) } });
   });
-  if (s.more) { const [x, y] = p.slots[p.slots.length - 1]; out.push({ name: `${s.more} more notes`, r: [x - 1, y - 2, 13, 13], walk: { x: Math.max(60, Math.min(290, x + 4)), y: 134 }, def: 'read', on: { look: 'A whole stack of them. Somebody is popular.', read: () => openDesk(room, null) } }); }
-  const who = mine(room) ? 'My' : shared ? 'Their' : nameOf(room) + "'s";
-  out.push({ name: 'sticky notes and a pen', r: [p.pad[0] - 2, p.pad[1] - 5, 13, 10], walk: { x: Math.max(60, Math.min(290, p.pad[0] + 4)), y: 134 }, def: 'write',
-    on: { look: mine(room) ? 'My pad of sticky notes, and a pen. Anyone who visits can leave me one.' : `${who} pad of sticky notes, and a pen. For leaving a note on the desk.`, write: () => writeFlow(room) } });
   return out;
 });
 
@@ -224,10 +240,10 @@ async function openDesk(room, focusId) {
 }
 
 const THANKS = ['A note! I will read it the second you leave.', "Ooh. Don't tell me what it says.", 'Stuck on straight and everything. Thank you.', 'I love mail I do not have to answer.', 'It goes with the desk. Thank you.', 'Finally, something on this desk I did not put there.'];
-async function writeFlow(room) {
+async function writeFlow(room, forWhom) {
   if (!q.me) { await q.say('you', 'Sticky notes and a pen. I should sign in before I sign anything.'); return; }
   const people = q.occupants(room);
-  let to = people.length === 1 ? people[0] : null;
+  let to = people.length === 1 ? people[0] : forWhom && people.includes(forWhom) ? forWhom : null;
   const title = () => to ? (to === q.me.character ? 'A note to self' : `A note for ${nameOf(to)}`) : 'A note for…';
   const done = openVeil(`<form class="nb-pad" role="dialog" aria-modal="true" aria-label="Write a sticky note">
     <h2></h2>
