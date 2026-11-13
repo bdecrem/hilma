@@ -1,0 +1,476 @@
+{
+ "rooms": {
+  "alison": {
+   "name": "Alison",
+   "study": "36",
+   "scene": "desk",
+   "occupants": [
+    "alison"
+   ],
+   "names": [
+    "Alison"
+   ]
+  },
+  "andrius": {
+   "name": "Andrius",
+   "study": "51",
+   "scene": "desk",
+   "occupants": [
+    "andrius"
+   ],
+   "names": [
+    "Andrius"
+   ]
+  },
+  "bart": {
+   "name": "Bart",
+   "study": "16",
+   "scene": "bart",
+   "occupants": [
+    "bart"
+   ],
+   "names": [
+    "Bart"
+   ]
+  },
+  "brian": {
+   "name": "Brian",
+   "study": "53",
+   "scene": "desk",
+   "occupants": [
+    "brian"
+   ],
+   "names": [
+    "Brian"
+   ]
+  },
+  "brooke": {
+   "name": "Brooke",
+   "study": "8",
+   "scene": "desk",
+   "occupants": [
+    "brooke"
+   ],
+   "names": [
+    "Brooke"
+   ]
+  },
+  "bryn": {
+   "name": "Bryn",
+   "study": "52",
+   "scene": "desk",
+   "occupants": [
+    "bryn"
+   ],
+   "names": [
+    "Bryn"
+   ]
+  },
+  "corey": {
+   "name": "Corey",
+   "study": "48",
+   "scene": "desk",
+   "occupants": [
+    "corey"
+   ],
+   "names": [
+    "Corey"
+   ]
+  },
+  "daniel": {
+   "name": "Daniel",
+   "study": "1",
+   "scene": "desk",
+   "occupants": [
+    "daniel"
+   ],
+   "names": [
+    "Daniel"
+   ]
+  },
+  "dessislava": {
+   "name": "Dessislava",
+   "study": "42",
+   "scene": "desk",
+   "occupants": [
+    "dessislava"
+   ],
+   "names": [
+    "Dessislava"
+   ]
+  },
+  "frances": {
+   "name": "Frances",
+   "study": "10",
+   "scene": "read",
+   "occupants": [
+    "frances"
+   ],
+   "names": [
+    "Frances"
+   ]
+  },
+  "frederick": {
+   "name": "Frederick",
+   "study": "12",
+   "scene": "desk",
+   "occupants": [
+    "frederick"
+   ],
+   "names": [
+    "Frederick"
+   ]
+  },
+  "garance": {
+   "name": "Garance",
+   "study": "14",
+   "scene": "desk",
+   "occupants": [
+    "garance"
+   ],
+   "names": [
+    "Garance"
+   ]
+  },
+  "graeme": {
+   "name": "Graeme",
+   "study": "15",
+   "scene": "desk",
+   "occupants": [
+    "graeme"
+   ],
+   "names": [
+    "Graeme"
+   ]
+  },
+  "heeju": {
+   "name": "Heeju",
+   "study": "54",
+   "scene": "desk",
+   "occupants": [
+    "heeju"
+   ],
+   "names": [
+    "Heeju"
+   ]
+  },
+  "henry": {
+   "name": "Henry",
+   "study": "47",
+   "scene": "desk",
+   "occupants": [
+    "henry"
+   ],
+   "names": [
+    "Henry"
+   ]
+  },
+  "ian": {
+   "name": "Ian",
+   "study": "29",
+   "scene": "desk",
+   "occupants": [
+    "ian",
+    "ishara"
+   ],
+   "names": [
+    "Ian",
+    "Ishara"
+   ]
+  },
+  "inbal": {
+   "name": "Inbal",
+   "study": "31",
+   "scene": "desk",
+   "occupants": [
+    "inbal"
+   ],
+   "names": [
+    "Inbal"
+   ]
+  },
+  "jacqueline": {
+   "name": "Jacqueline",
+   "study": "28",
+   "scene": "desk",
+   "occupants": [
+    "jacqueline",
+    "jurate"
+   ],
+   "names": [
+    "Jacqueline",
+    "Jūratė"
+   ]
+  },
+  "james": {
+   "name": "James",
+   "study": "11",
+   "scene": "desk",
+   "occupants": [
+    "james"
+   ],
+   "names": [
+    "James"
+   ]
+  },
+  "jamie": {
+   "name": "Jamie",
+   "study": "45",
+   "scene": "desk",
+   "occupants": [
+    "jamie"
+   ],
+   "names": [
+    "Jamie"
+   ]
+  },
+  "john": {
+   "name": "John",
+   "study": "13",
+   "scene": "desk",
+   "occupants": [
+    "john"
+   ],
+   "names": [
+    "John"
+   ]
+  },
+  "joseph": {
+   "name": "Joseph",
+   "study": "43",
+   "scene": "stand",
+   "occupants": [
+    "joseph"
+   ],
+   "names": [
+    "Joseph"
+   ]
+  },
+  "juliana": {
+   "name": "Juliana",
+   "study": "30",
+   "scene": "desk",
+   "occupants": [
+    "juliana"
+   ],
+   "names": [
+    "Juliana"
+   ]
+  },
+  "june": {
+   "name": "June",
+   "study": "38",
+   "scene": "desk",
+   "occupants": [
+    "june"
+   ],
+   "names": [
+    "June"
+   ]
+  },
+  "kahwee": {
+   "name": "Kah-Wee",
+   "study": "2",
+   "scene": "desk",
+   "occupants": [
+    "kahwee"
+   ],
+   "names": [
+    "Kah-Wee"
+   ]
+  },
+  "katharyne": {
+   "name": "Katharyne",
+   "study": "9",
+   "scene": "desk",
+   "occupants": [
+    "katharyne"
+   ],
+   "names": [
+    "Katharyne"
+   ]
+  },
+  "kepa": {
+   "name": "Kepa",
+   "study": "46",
+   "scene": "desk",
+   "occupants": [
+    "kepa"
+   ],
+   "names": [
+    "Kepa"
+   ]
+  },
+  "kevin": {
+   "name": "Kevin",
+   "study": "27",
+   "scene": "desk",
+   "occupants": [
+    "kevin",
+    "mikael",
+    "raul"
+   ],
+   "names": [
+    "Kevin",
+    "Mikael",
+    "Raul"
+   ]
+  },
+  "lana": {
+   "name": "Lana",
+   "study": "49",
+   "scene": "desk",
+   "occupants": [
+    "lana"
+   ],
+   "names": [
+    "Lana"
+   ]
+  },
+  "lawrence": {
+   "name": "Lawrence",
+   "study": "7",
+   "scene": "desk",
+   "occupants": [
+    "lawrence"
+   ],
+   "names": [
+    "Lawrence"
+   ]
+  },
+  "lewis": {
+   "name": "Lewis",
+   "study": "6",
+   "scene": "desk",
+   "occupants": [
+    "lewis"
+   ],
+   "names": [
+    "Lewis"
+   ]
+  },
+  "luke": {
+   "name": "Luke",
+   "study": "5",
+   "scene": "desk",
+   "occupants": [
+    "luke"
+   ],
+   "names": [
+    "Luke"
+   ]
+  },
+  "lynda": {
+   "name": "Lynda",
+   "study": "39",
+   "scene": "desk",
+   "occupants": [
+    "lynda"
+   ],
+   "names": [
+    "Lynda"
+   ]
+  },
+  "mary": {
+   "name": "Mary",
+   "study": "4",
+   "scene": "desk",
+   "occupants": [
+    "mary"
+   ],
+   "names": [
+    "Mary"
+   ]
+  },
+  "milena": {
+   "name": "Milena",
+   "study": "32",
+   "scene": "desk",
+   "occupants": [
+    "milena"
+   ],
+   "names": [
+    "Milena"
+   ]
+  },
+  "ralph": {
+   "name": "Ralph",
+   "study": "41",
+   "scene": "desk",
+   "occupants": [
+    "ralph"
+   ],
+   "names": [
+    "Ralph"
+   ]
+  },
+  "robert": {
+   "name": "Robert",
+   "study": "40",
+   "scene": "desk",
+   "occupants": [
+    "robert"
+   ],
+   "names": [
+    "Robert"
+   ]
+  },
+  "salman": {
+   "name": "Salman",
+   "study": "37",
+   "scene": "desk",
+   "occupants": [
+    "salman"
+   ],
+   "names": [
+    "Salman"
+   ]
+  },
+  "shigehiro": {
+   "name": "Shigehiro",
+   "study": "50",
+   "scene": "desk",
+   "occupants": [
+    "shigehiro"
+   ],
+   "names": [
+    "Shigehiro"
+   ]
+  },
+  "summerson": {
+   "name": "Summerson",
+   "study": "35",
+   "scene": "desk",
+   "occupants": [
+    "summerson"
+   ],
+   "names": [
+    "Summerson"
+   ]
+  },
+  "tl": {
+   "name": "T.L.",
+   "study": "33",
+   "scene": "desk",
+   "occupants": [
+    "tl"
+   ],
+   "names": [
+    "T.L."
+   ]
+  },
+  "toussaint": {
+   "name": "Toussaint",
+   "study": "016",
+   "scene": "desk",
+   "occupants": [
+    "toussaint",
+    "matthew"
+   ],
+   "names": [
+    "Toussaint",
+    "Matthew"
+   ]
+  }
+ }
+}
