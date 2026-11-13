@@ -20,18 +20,20 @@ const quiet = () => p.evaluate(() => { const S = window.quest.S; S.line = null; 
 // signing in
 await p.goto(base + '/semibart'); await p.waitForTimeout(1500);
 expect(await p.isVisible('#sbName') && !(await p.isVisible('#startBtn')), 'sign-in form shown, Start hidden');
-expect((await p.textContent('.sb-hint')).includes('top right'), 'hint points at the chip');
+expect((await p.textContent('.sb-hint')).includes('bottom left'), 'hint points at your square in the dock');
 await shot('c1-signin');
 await p.fill('#sbName', NAME); await p.fill('#sbCode', 'nope'); await p.click('.sb-form button'); await p.waitForTimeout(900);
 expect((await p.textContent('.sb-err')).length > 0, 'wrong passcode refused');
 await p.fill('#sbCode', PASS); await p.click('.sb-form button'); await p.waitForTimeout(1200);
 expect(await p.isVisible('#startBtn'), 'Start shown after sign-in');
 await p.click('#startBtn'); await p.waitForTimeout(1200); await quiet();
-expect(await p.isVisible('#sbChip') && !(await p.$('#sbChip .sb-dot')), 'chip shown, no dot (own passcode set)');
+expect(await p.isVisible('#tk .tk-me') && !(await p.isVisible('#tk .tk-dot')), 'your square is in the dock, no dot (own passcode set)');
+expect(!(await p.isVisible('#bWho')) && !(await p.isVisible('#tools')), 'no controls in the other corners');
 expect(!(await p.evaluate(() => window.quest.hot && window.quest.MAP.some(h => /padlock/i.test(h.name)))), 'no padlock anywhere');
 // the passcode pane validates without changing anything
-await p.click('#sbChip'); await p.waitForTimeout(200); await shot('c2-menu');
-await p.click('#sbMenu button'); await p.waitForTimeout(300);
+await p.click('#tk .tk-me'); await p.waitForTimeout(200); await shot('c2-menu');
+expect((await p.textContent('#sbMenu')).includes('Sound: on') && (await p.textContent('#sbMenu')).includes('Full screen'), 'sound and full screen live in your menu');
+await p.click('#sbMenu button:has-text("passcode")'); await p.waitForTimeout(300);
 await p.fill('#sbCur', 'nope'); await p.fill('#sbNew', '1234'); await p.fill('#sbNew2', '9999'); await p.click('.sb-pane .sb-btn'); await p.waitForTimeout(300);
 expect((await p.textContent('.sb-pane .sb-err')).includes("don't match"), 'mismatched new codes caught');
 await p.fill('#sbNew2', '1234'); await p.click('.sb-pane .sb-btn'); await p.waitForTimeout(900);

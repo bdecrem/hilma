@@ -82,3 +82,27 @@ admin `check` (it mints that account's session cookie; never a real fellow): wri
 Daniel's desk, reads and peels it, watches the wire, reads a note on Bart's desk as a visitor,
 confirms there is no spark in someone else's study, and asks the agent one question that
 changes nothing. It deletes the notes and announcements it made. `social-shots.mjs` shoots rooms.
+
+## The dock, the chat line, and loose leaves (2026-11-13, the design pass)
+
+The rules behind these are in `VOICE.md`.
+
+- **The dock** (`ticker.js`): three squares at the bottom left and nothing in any other corner:
+  the wire (an antenna; click to slide the strip shut or open), Who's where (map only), and you
+  (your own face; opens the menu `accounts.js` draws: sound, full screen, passcode, sign out).
+  The old Who's where button, the name chip and the sound and full-screen buttons are gone from
+  the corners.
+- **Talking to Claude** (`claude.js`): Claude answers in floating clay-coloured text by the door
+  frame, like every character. You type on one prompt line along the bottom: Enter sends, Esc
+  leaves, what you asked stays on the line while Claude works, and the empty line suggests one
+  thing to ask, a different one each time. No suggestion buttons, no speech box.
+- **Hover names** appear only for doors, people and things that open something; scenery and the
+  small jokes (anything whose only verb is look, and hotspots marked `quiet`) show none.
+- **Loose leaves** (`leaves.js`, `semibart_pages`, `GET`/`POST /api/semibart/pages`): the one
+  collectible, described in `VOICE.md`. A leaf falls from an oak in view every half minute or so
+  of map time (the first within fifteen seconds), one at a time, until your book is done. The
+  server counts pages (`semibart_pick_leaf`, at most ten, not faster than one in eight seconds)
+  and puts a line on the wire when a book is finished.
+
+Checks: `design-shots.mjs` (every screen on one sheet), `wire-shots.mjs`, `leaves-check.mjs`
+(the jokes, a leaf, the stacks, how your lines change); all answer the APIs locally.

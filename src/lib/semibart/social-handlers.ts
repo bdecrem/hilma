@@ -6,7 +6,7 @@ import { isFailure, sessionUser } from './auth'
 import { leaveNote, removeNote } from './notes'
 import { rosterRoom } from './rooms'
 import { runRoomChat, type ChatTurn } from './social-agent'
-import { allPersonas, announce, deskNotes, eventsAfter, roomOf } from './social'
+import { allPages, allPersonas, announce, BOOK_PAGES, deskNotes, eventsAfter, pickLeaf, roomOf } from './social'
 
 const json = (body: unknown, status = 200, cache = 'no-store') =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', 'cache-control': cache } })
@@ -74,4 +74,18 @@ export const agent: Handler = guarded(async req => {
     .filter(m => m.text).slice(-12)
   const r = await runRoomChat(user, room, turns)
   return json(r.body, r.status)
+})
+
+/** GET -> { pages: { mary: 4 } }: how far everyone's manuscript has got (the stacks on the desks).
+ *  POST (signed in) -> { pages, picked }: you picked up a loose leaf. The tenth makes the book. */
+export const pages: Handler = guarded(async req => {
+  if (req.method === 'GET') return json({ pages: await allPages() }, 200, 'public, max-age=0, s-maxage=5, stale-while-revalidate=10')
+  const user = await sessionUser(req)
+  if (!user) return json({ error: 'Sign in first.' }, 401)
+  const n = await pickLeaf(user.character)
+  if (n === BOOK_PAGES) {
+    await announce({ kind: 'system', actor: user.character, room: roomOf(user.character) || '', text: `${first(user.name)} finished the book. The oak is thanked in the acknowledgments.` })
+      .catch(e => console.error('[semibart/social] announce', e))
+  }
+  return json({ pages: n ?? (await allPages())[user.character] ?? 0, picked: n !== null })
 })

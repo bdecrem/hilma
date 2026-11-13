@@ -1,8 +1,8 @@
 # CASBS Quest accounts (2026-11-12)
 
 Everyone signs in before they play: **first name + passcode**. The first passcode is your
-study number (Bart: `bart` / `16`); the chip with your name at top right is the one place to
-change it to four digits of your own (it shows a dot until you have). All 49 people are
+study number (Bart: `bart` / `16`); your own square in the dock at the bottom left is the one
+place to change it to four digits of your own (it shows a dot until you have). All 49 people are
 seeded, so nobody signs up. Bart is the first admin.
 
 ## Server (src/lib/semibart, no Next imports: movable to the game's own project)
@@ -48,8 +48,9 @@ seeded, so nobody signs up. Bart is the first admin.
 - The title card asks for name + passcode before Start; you start at your own door.
 - `window.quest.me` = the `/me` user or null (undefined until loaded); a `semibart:user` event
   fires on window whenever it changes. Your own room: `quest.occupants(S.room).includes(quest.me.character)`.
-- The chip at top right: your passcode ("Set your own passcode" and a dot while it's still the
-  study number), sign out, and for admins the roster with a reset. There is no padlock in the
+- Your square in the dock (bottom left, `ticker.js`) opens your menu: sound, full screen, your
+  passcode ("Set your own passcode" and a dot while it's still the study number), sign out, and
+  for admins the roster with a reset. There is no padlock in the
   rooms: one place for the account.
 
 ## Point of view (index.html)

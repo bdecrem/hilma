@@ -15,7 +15,7 @@ const G = q.gfx, g = G.g, S = q.S, rect = (x, y, w, h, c) => G.rect(g, x, y, w, 
 const API = '/api/semibart/desk';
 const stage = document.getElementById('stage');
 const base = (document.currentScript && document.currentScript.src || '/semibart/notes.js').replace(/[^/]*$/, '');
-['ticker.js', 'claude.js'].forEach(f => { const s = document.createElement('script'); s.src = base + f; s.async = false; document.body.appendChild(s); });
+['ticker.js', 'claude.js', 'leaves.js'].forEach(f => { const s = document.createElement('script'); s.src = base + f; s.async = false; document.body.appendChild(s); });
 
 const INK = '#141414';
 const PAPER = {

@@ -3,8 +3,9 @@
      your study number); once you're in, you start at your own door
    - quest.me is { character, name, study, role, passcodeIsDefault } or null, and a
      'semibart:user' event fires on window whenever it changes (it starts undefined: wait for it)
-   - the chip at top right is the one place for your account: your passcode (a dot on the chip
-     until you've set your own four digits), sign out, and for admins the roster
+   - your own square in the dock at the bottom left (ticker.js) opens your menu, drawn here:
+     sound, full screen, your passcode (a dot on the square until you've set your own four
+     digits), sign out, and for admins the roster
    Server: src/lib/semibart (auth.ts, handlers.ts) behind /api/semibart/*. */
 (function () {
   'use strict';
@@ -27,11 +28,11 @@
   .sb-err { margin: 0.4cqw 0 0; font-size: 2.2cqw; color: #ff7a5c; min-height: 2.6cqw; }
   .sb-who { margin: 0 0 0.4cqw; font-size: 2.6cqw; color: #fff7e6; }
   .sb-who b { color: var(--hot); font-weight: 400; }
-  #sbChip { position: absolute; top: 1cqw; right: 1cqw; z-index: 4; color: var(--hot); font-size: 2.5cqw; padding: 0.4cqw 1.1cqw; background: rgba(0, 0, 0, 0.55); }
-  #sbChip:hover { color: #fff; }
-  #sbChip .sb-dot { display: inline-block; width: 0.9cqw; height: 0.9cqw; margin-left: 0.6cqw; vertical-align: middle; background: var(--cyan); box-shadow: 0 0 0 0.2cqw #000; }
-  #sbChip[hidden], #sbMenu[hidden], .sb-veil[hidden] { display: none; }
-  #sbMenu { position: absolute; top: 5.2cqw; right: 1cqw; z-index: 5; background: #12100c; border: 0.35cqw solid var(--hot); display: flex; flex-direction: column; min-width: 24cqw; }
+  #sbMenu[hidden], .sb-veil[hidden] { display: none; }
+  /* your menu opens upward from the dock at the bottom left (ticker.js) */
+  #sbMenu { position: absolute; left: 0.8cqw; bottom: calc(max(32px, 3.6cqw) + 0.8cqw); z-index: 5; background: #0a0907; border: 0.3cqw solid var(--hot); display: flex; flex-direction: column; min-width: 24cqw; }
+  #sbMenu .sb-me { margin: 0; padding: 0.7cqw 1.4cqw 0.6cqw; font-size: 2.1cqw; color: #c9c3b4; border-bottom: 0.2cqw solid #3a352a; }
+  #sbMenu .sb-me b { color: var(--hot); font-weight: 400; }
   #sbMenu button { text-align: left; padding: 0.8cqw 1.4cqw; font-size: 2.4cqw; color: #fff7e6; }
   #sbMenu button:hover, #sbMenu button:focus-visible { background: #2a2620; color: var(--hot); outline: none; }
   .sb-veil { position: absolute; inset: 0; z-index: 6; display: grid; place-items: center; background: rgba(0, 0, 0, 0.45); }
@@ -55,7 +56,7 @@
   function setUser(u) {
     Q.me = u;
     window.dispatchEvent(new CustomEvent('semibart:user', { detail: u }));
-    paintCard(); paintChip();
+    paintCard();
   }
   window.SEMIBART_GATE = () => { if (Q.me) return true; const n = document.getElementById('sbName'); if (n) n.focus(); return false; };
 
@@ -72,7 +73,7 @@
           <input id="sbCode" name="password" type="password" inputmode="numeric" autocomplete="current-password" placeholder="Passcode" aria-label="Passcode">
           <button class="sb-btn" type="submit">Sign in</button>
         </form>
-        <p class="sb-hint">First time? Your passcode is your study number. Change it from your name, top right.</p>
+        <p class="sb-hint">First time? Your passcode is your study number. Change it from your picture, bottom left.</p>
         <p class="sb-err" role="alert"></p>`;
       const f = box.querySelector('form'), err = box.querySelector('.sb-err');
       f.addEventListener('submit', async e => {
@@ -104,28 +105,28 @@
     location.reload();
   }
 
-  /* ---------- the chip, top right ---------- */
-  const chip = document.createElement('button'); chip.id = 'sbChip'; chip.type = 'button'; chip.className = 'outlined'; chip.hidden = true;
+  /* ---------- your menu: who you are, sound, full screen, passcode, sign out ----------
+     Opened by the dock's own button (ticker.js); there is no other account control on screen. */
   const menu = document.createElement('div'); menu.id = 'sbMenu'; menu.hidden = true;
-  stage.appendChild(chip); stage.appendChild(menu);
-  function paintChip() {
-    const u = Q.me;
-    chip.hidden = !(u && Q.S.started);
+  stage.appendChild(menu);
+  ['pointerdown', 'pointerup', 'click', 'contextmenu'].forEach(ev => menu.addEventListener(ev, e => e.stopPropagation()));
+  function paintMenu() {
+    const u = Q.me; menu.innerHTML = '';
     if (!u) return;
-    // a dot until you've set your own passcode: the one nudge, in the one place for your account
-    chip.textContent = u.name.split(' ')[0] + ' ▾';
-    if (u.passcodeIsDefault) { const d = document.createElement('span'); d.className = 'sb-dot'; d.title = 'Your passcode is still your study number'; chip.appendChild(d); }
-    menu.innerHTML = '';
-    const item = (label, fn) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = label; b.addEventListener('click', e => { e.stopPropagation(); menu.hidden = true; fn(); }); menu.appendChild(b); };
+    const who = document.createElement('p'); who.className = 'sb-me';
+    const b = document.createElement('b'); b.textContent = u.name; who.appendChild(b); who.appendChild(document.createTextNode(' · Study ' + u.study));
+    menu.appendChild(who);
+    const item = (label, fn) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = label; b.addEventListener('click', e => { e.stopPropagation(); closeMenu(); fn(); }); menu.appendChild(b); };
+    item(Q.isMuted() ? 'Sound: off' : 'Sound: on', () => Q.setMute(!Q.isMuted()));
+    item(document.fullscreenElement ? 'Leave full screen' : 'Full screen', () => Q.fullscreen());
     item(u.passcodeIsDefault ? 'Set your own passcode' : 'Change passcode', openPasscode);
     if (u.role === 'admin') item('Everyone (admin)', openAdmin);
     item('Sign out', signOut);
   }
-  chip.addEventListener('click', e => { e.stopPropagation(); menu.hidden = !menu.hidden; });
-  document.addEventListener('click', () => { menu.hidden = true; });
-  // the chip appears once the game starts
-  startBtn.addEventListener('click', () => setTimeout(paintChip, 0));
-  window.addEventListener('keydown', () => setTimeout(paintChip, 0));
+  function closeMenu() { if (menu.hidden) return; menu.hidden = true; const cv = document.getElementById('cv'); cv.focus && cv.focus(); }
+  function toggleMenu() { if (!menu.hidden) { closeMenu(); return; } paintMenu(); menu.hidden = !Q.me; const first = menu.querySelector('button'); if (first) first.focus({ preventScroll: true }); }
+  document.addEventListener('click', closeMenu);
+  Q.hooks.keyBlock.push(e => { if (menu.hidden) return false; if (e.key === 'Escape') closeMenu(); return e.key === 'Escape'; });
 
   /* ---------- panes: passcode, admin ---------- */
   let pane = null;
@@ -161,7 +162,7 @@
         if (f.sbNew.value !== f.sbNew2.value) { err.textContent = "Those two don't match."; return; }
         try {
           const r = await call('/passcode', { method: 'POST', body: JSON.stringify({ current: f.sbCur.value, next: f.sbNew.value }) });
-          closePane(); Q.me = r.user; window.dispatchEvent(new CustomEvent('semibart:user', { detail: r.user })); paintChip();
+          closePane(); Q.me = r.user; window.dispatchEvent(new CustomEvent('semibart:user', { detail: r.user }));
           if (Q.S.started) Q.say('you', 'New passcode. Better not write it on a sticky note.');
         } catch (x) { err.textContent = x.message; }
       });
@@ -185,5 +186,5 @@
   paintCard();
   call('/me').then(r => { atYourDoor(r.user); setUser(r.user); if (r.user) startBtn.focus({ preventScroll: true }); })
     .catch(() => { setUser(null); });
-  window.semibartAccounts = { call, openPasscode, signOut };
+  window.semibartAccounts = { call, openPasscode, signOut, toggleMenu, closeMenu, menuOpen: () => !menu.hidden };
 })();

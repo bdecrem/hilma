@@ -99,6 +99,10 @@ button { font: inherit; background: none; border: 0; margin: 0; cursor: pointer;
 #bWho { position: absolute; left: 1cqw; top: 1cqw; color: var(--cyan); font-size: 2.5cqw; padding: 0.4cqw 1.1cqw; background: rgba(0, 0, 0, 0.55); z-index: 4; }
 #bWho:hover, #bWho:focus-visible { color: var(--hot); outline: none; }
 #bWho[hidden], #rail[hidden], #who[hidden] { display: none; }
+/* One place for controls (2026-11-13): the dock at the bottom left (ticker.js) carries the wire,
+   Who's where and your own menu, where sound and full screen live. These two older sets of
+   buttons stay in the page for the code that drives them, out of sight. */
+#tools, #bWho { display: none; }
 #rail { position: absolute; left: 1cqw; top: 13%; height: 60%; width: 1cqw; background: rgba(0, 0, 0, 0.4); cursor: pointer; z-index: 3; touch-action: none; }
 #thumb { position: absolute; left: 0; right: 0; background: rgba(255, 255, 85, 0.9); box-shadow: 0 0 0 0.2cqw #000; pointer-events: none; }
 #who { position: absolute; right: 0; top: 0; bottom: 0; width: 44cqw; background: rgba(10, 9, 7, 0.95); border-left: 0.4cqw solid var(--hot); display: flex; flex-direction: column; z-index: 5; }
@@ -157,12 +161,8 @@ button { font: inherit; background: none; border: 0; margin: 0; cursor: pointer;
       <hr>
       <dl>
         <dt>Click</dt><dd>walk, talk, open</dd>
-        <dt>Right-click</dt><dd>look</dd>
+        <dt>Right-click</dt><dd>look closer</dd>
         <dt>Space</dt><dd>skip a line</dd>
-        <dt>Arrows</dt><dd>hop from study to study</dd>
-        <dt>Scroll · drag</dt><dd>up the hill, down to the lot</dd>
-        <dt>W</dt><dd>who's where</dd>
-        <dt>M · F</dt><dd>mute · full screen</dd>
       </dl>
       <button id="startBtn" type="button">Start</button>
     </div>
@@ -174,7 +174,9 @@ button { font: inherit; background: none; border: 0; margin: 0; cursor: pointer;
 'use strict';
 const W = 320, H = 144, OY = 18, FH = 180;
 // hooks for the files that ride on the game (accounts.js, rooms.js, notes.js): they push functions here
-const HOOKS = { roomBack: [], roomMid: [], roomFront: [], roomSpots: [], keyBlock: [], roomHide: [], roomPersonAt: [] };
+// on the map: mapOver(t) draws in map coordinates over the campus, mapSpots() adds hover targets;
+// sayYou(text) may reword what the player's own character says
+const HOOKS = { roomBack: [], roomMid: [], roomFront: [], roomSpots: [], keyBlock: [], roomHide: [], roomPersonAt: [], mapOver: [], mapSpots: [], sayYou: [] };
 // parts of a room a rider draws its own way: 'occupant', 'desk', 'chair', 'mates', 'extras'
 // which part of a room a hotspot belongs to, so hiding the part hides its hotspot too
 const PART_OF = { 'name plate': 'desk', Socrates: 'desk', monitor: 'desk', monitors: 'desk', 'coffee mug': 'desk', phone: 'desk', 'the Almanac': 'occupant', 'reading chair': 'chair', lamp: 'chair', easel: 'extras', 'world map': 'extras', plant: 'extras' };
@@ -381,6 +383,7 @@ const LIT = new Set(['1', '2', '4', '5', '6', '7', '8', '9', '10', '11', '12', '
 const TURKEYS = [[186, 66], [202, 78], [289, 428]];
 const STAR_AT = [185, 204], DISH_AT = [300, 14];
 const GLOWS = [];
+const OAKS = [];   // every oak on campus: [x, y, r], filled as the world is painted
 const world = document.createElement('canvas'); world.width = W; world.height = MH;
 (function () {
   const m = world.getContext('2d'), r = rng(11);
@@ -447,7 +450,7 @@ const world = document.createElement('canvas'); world.width = W; world.height = 
   // oaks
   [[50, 7, 4], [96, 6, 3], [150, 8, 4], [214, 7, 4], [244, 10, 4], [312, 40, 4], [80, 82, 7], [104, 96, 5], [128, 74, 4], [14, 64, 6], [16, 110, 7], [12, 150, 5], [24, 190, 5],
    [150, 90, 6], [228, 80, 5], [24, 222, 7], [30, 268, 6], [18, 304, 7], [136, 252, 5], [22, 350, 7], [30, 396, 6], [42, 440, 7], [86, 446, 5], [160, 416, 6], [292, 318, 7], [284, 364, 6],
-   [306, 392, 4], [252, 420, 5], [214, 350, 7], [108, 233, 8]].forEach(o => oak(m, o[0], o[1], o[2]));
+   [306, 392, 4], [252, 420, 5], [214, 350, 7], [108, 233, 8]].forEach(o => { OAKS.push(o); oak(m, o[0], o[1], o[2]); });
 })();
 
 /* ---------- Bart's study ---------- */
@@ -923,6 +926,8 @@ const SFX = {
   beat() { [0, 0.42, 0.84, 1.26].forEach((w, i) => { tone(i === 3 ? 880 : 440, 0.12, 'square', 0.1, w); noise(0.05, 0.25, 3000, 1500, w, 1); }); },
   buzz() { tone(150, 0.35, 'sawtooth', 0.06, 0); tone(150, 0.35, 'sawtooth', 0.06, 0.5); },
   pick() { tone(660, 0.05, 'square', 0.06); tone(990, 0.07, 'square', 0.06, 0.05); },
+  flush() { noise(1.1, 0.22, 2400, 180, 0, 0.8); noise(0.7, 0.12, 500, 120, 0.5, 4, 'lowpass'); [0.9, 1.05, 1.22, 1.42].forEach((w, i) => tone(300 - i * 40, 0.09, 'sine', 0.07, w, 180 - i * 20)); },
+  shush() { noise(0.5, 0.16, 5200, 3800, 0, 2.5); },
   pock(v, when) { tone(1250 + Math.random() * 120, 0.035, 'sine', v, when); tone(2500, 0.018, 'triangle', v * 0.35, when); noise(0.022, v * 0.9, 2600, null, when, 3); },
   rally() {
     let w = 0;
@@ -1005,6 +1010,7 @@ const S = {
 /* ---------- script plumbing ---------- */
 const wait = s => new Promise(res => setTimeout(res, calm ? Math.min(s, 0.2) * 1000 : s * 1000));
 function say(who, text) {
+  if (who === 'you') HOOKS.sayYou.forEach(f => { try { const v = f(text); if (typeof v === 'string' && v) text = v; } catch (e) { console.error('[hook]', e); } });
   return new Promise(res => { S.line = { who, text, t: 0, dur: Math.max(1.5, 0.75 + text.length * 0.062), res, nodes: garble(who, text) }; });
 }
 function skipLine() { if (!S.line) return; const l = S.line; S.line = null; (l.nodes || []).forEach(n => { try { n.stop(); } catch (e) {} }); l.res(); }
@@ -1417,15 +1423,26 @@ function studySpot(n, r, walk) {
   const note = NOTE_POOL[(parseInt(n, 10) * 7 + 3) % NOTE_POOL.length];
   return Object.assign(base, { on: { look: `${word} ${n}, ${who.join(' and ')}. Dark. There's a note on the door.`, open: async () => { SFX.rattle(); await say('you', `Locked. The note says: "${note}"`); } } });
 }
+// A place with more to say each time you try it: each entry is anything perform() takes, and the
+// last one is what it settles on.
+const TRIES = {};
+const again = (key, lines) => () => perform(lines[Math.min((TRIES[key] = (TRIES[key] || 0) + 1), lines.length) - 1]);
 const ROOMS = {
   lounge: { name: 'John Seely Brown Lounge', on: { look: 'The John Seely Brown Lounge. Coffee, mailboxes, a couch nobody leaves.', open: "Just the lounge. Nobody's in. Everybody's in their study." } },
   meeting: { name: 'Margaret Levi Meeting Room', seminar: true, on: { look: 'The Margaret Levi Meeting Room. Seminars happen in there. Like this one.', open: enterSeminar } },
   reception: { name: 'Reception · Cooper Smith', who: ['Cooper Smith'], where: 'Reception', on: { look: 'Reception. Cooper Smith knows where everybody is.', open: [['you', 'Hi. Looking for someone.'], ['you', '"Everyone is," says Cooper. "Try the directory, top left."']] } },
   janzen: { name: 'Office · Janzen Alejo', who: ['Janzen Alejo'], where: 'Main building', on: { look: "Janzen Alejo's office.", open: [['you', 'Knock, knock.'], ['you', 'On a call. A thumbs-up through the glass.']] } },
-  conf: { name: 'Small Conference Room', on: { look: 'The small conference room. Booked.', open: 'Booked. It is always booked.' } },
+  conf: { name: 'Small Conference Room', on: { look: 'The small conference room. Booked.', open: again('conf', ['Booked. It is always booked.', 'Booked through June. By someone called Hold.', 'Hold has it again. I would like to meet Hold.', 'I checked the calendar. Hold has tenure.']) } },
   liboffice: { name: 'Library Office · Jason Gonzales, Fatma Massoud', who: ['Jason Gonzales', 'Fatma Massoud'], where: 'Library office', on: { look: 'The library office. Jason Gonzales and Fatma Massoud know where every book is. Even the long one.', open: 'They point me at the stacks. Nicely.' } },
-  library: { name: 'Library', on: { look: 'The library. Quiet.', open: 'Quiet in there. The book is long.' } },
-  R: { name: 'Restrooms', on: { look: 'Restrooms.', open: 'Occupied. Of course.' } },
+  library: { name: 'Library', on: { look: 'The library. Quiet.', open: again('library', ['Quiet in there. The book is long.',
+    async () => { await say('you', 'Hello?'); SFX.shush(); await wait(0.5); await say('you', 'Somebody shushed me. There is nobody in there.'); },
+    async () => { SFX.shush(); await wait(0.5); await say('you', 'Shushed again. From a different shelf.'); },
+    'I am not going in. I can be shushed from here.']) } },
+  R: { name: 'Restrooms', on: { look: 'Restrooms.', open: again('restrooms', ['Occupied. Of course.',
+    async () => { SFX.flush(); await wait(1.5); await say('you', 'A flush. Nobody comes out.'); },
+    'Still occupied. It has been occupied since the fall term.',
+    async () => { SFX.flush(); await wait(1.5); await say('you', 'Another flush. Still nobody. I think it is a very long meeting.'); },
+    'I will wait. I have a fellowship. I have nothing but time.']) } },
   dining: { name: 'Dining Room', on: { look: 'The dining room. There is a sign on the door. It is long.', open: [
     ['you', 'The dining room. Lunch!'], ['you', 'There is a sign on the door.'],
     ['you', '"Too many trays were returned late. As of today, the cafeteria has been dissolved."'],
@@ -1448,10 +1465,10 @@ MAP.push(
   { name: 'picnic table', r: [121, 212, 18, 14], walk: { x: 150, y: 218 }, def: 'look', on: { look: 'A picnic table. Someone carved a regression line into it.', use: 'I sit for a second. Very restorative. Back to it.' } },
   { name: 'outdoor dining', r: [206, 138, 32, 102], walk: { x: 222, y: 196 }, def: 'look', on: { look: 'Outdoor dining. Umbrellas, a view. No cafeteria.' } },
   { name: 'the court', r: [186, 312, 50, 84], walk: { x: 210, y: 309 }, def: 'look', on: { look: "The main building's court. A tree, a bench, the sound of a printer." } },
-  { name: 'the Dish', r: [DISH_AT[0] - 10, 0, 20, 26], walk: { x: 244, y: 57 }, def: 'talk', on: { look: "The Dish. Up the hill. It's listening to space.", talk: [['you', 'Hello, space.'], ['you', '...']] } },
+  { name: 'the Dish', quiet: true, r: [DISH_AT[0] - 10, 0, 20, 26], walk: { x: 244, y: 57 }, def: 'talk', on: { look: "The Dish. Up the hill. It's listening to space.", talk: [['you', 'Hello, space.'], ['you', '...']] } },
   { name: 'annex', r: [252, 28, 36, 15], walk: { x: 244, y: 57 }, def: 'look', on: { look: 'An annex. A copier lives in there. It is jammed. Historically.' } },
-  { name: 'turkey', r: [TURKEYS[0][0] - 2, TURKEYS[0][1] - 2, 34, 26], walk: { x: 222, y: 134 }, def: 'talk', on: { look: 'Wild turkeys. They run the hill. Looks tenured.', talk: [['you', 'Gobble.'], ['turkey', 'Gobble gobble.']] } },
-  { name: 'turkey', r: [TURKEYS[2][0] - 2, TURKEYS[2][1] - 2, 18, 14], walk: { x: 266, y: 424 }, def: 'talk', on: { look: 'A turkey in the parking lot. It does not have a permit. Nobody is going to tell it.', talk: [['you', 'Gobble.'], ['turkey', 'Gobble.']] } },
+  { name: 'turkey', quiet: true, r: [TURKEYS[0][0] - 2, TURKEYS[0][1] - 2, 34, 26], walk: { x: 222, y: 134 }, def: 'talk', on: { look: 'Wild turkeys. They run the hill. Looks tenured.', talk: [['you', 'Gobble.'], ['turkey', 'Gobble gobble.']] } },
+  { name: 'turkey', quiet: true, r: [TURKEYS[2][0] - 2, TURKEYS[2][1] - 2, 18, 14], walk: { x: 266, y: 424 }, def: 'talk', on: { look: 'A turkey in the parking lot. It does not have a permit. Nobody is going to tell it.', talk: [['you', 'Gobble.'], ['turkey', 'Gobble.']] } },
   { name: 'parking lot', r: [274, 404, 42, 42], walk: { x: 278, y: 424 }, def: 'look', on: { look: 'Three cars. Nobody biked today.' } },
   { name: 'the lawn', r: [252, 102, 58, 20], walk: { x: 280, y: 96 }, def: 'look', on: { look: 'The lawn under 26 to 29. Mowed in stripes.' } }
 );
@@ -1576,6 +1593,7 @@ const SEMINAR_FIXED = ([
 function seminarSpots() { const pr = presenter(); return [{ k: pr.k, name: pr.name, r: [PRES_X - 2, 34, 32, 94], walk: { x: 250, y: 134 }, def: 'talk', on: { look: `${pr.name}, presenting. Still on slide two.`, talk: [[pr.k, 'Please. Questions at the end.']] } }].concat(seats().map(a => ({ k: a.k, name: a.name, r: [a.x, 60, 28, 36], walk: { x: a.x + 14, y: 134 }, def: 'talk', on: { look: a.look, talk: () => talkSeat(a) } }))).concat(SEMINAR_FIXED).filter(h => !h.k || h.k !== me()); }
 function hotspots() {
   const base = S.scene === 'map' ? MAP : S.room === 'seminar' ? seminarSpots() : S.room === 'empty' ? ROOM_EMPTY : PEOPLE[S.room] ? PEOPLE[S.room].spots : ROOM;
+  if (S.scene === 'map' && HOOKS.mapSpots.length) return [].concat(...HOOKS.mapSpots.map(f => { try { return f() || []; } catch (e) { console.error('[hook]', e); return []; } }), base);
   if (S.scene !== 'room' || S.room === 'seminar' || S.room === 'empty') return base;
   // a person a rider has moved (to the couch, say) is clicked where they are now
   const placed = HOOKS.roomPersonAt.length ? base.map(h => { const p = h.who && h.at0 && personAt(S.room, h.who); if (!p) return h; const dx = p[0] - h.at0[0], dy = p[1] - h.at0[1];
@@ -1610,7 +1628,9 @@ async function doAction(verb, h) {
 /* ---------- input ---------- */
 function toScene(e) { const b = cv.getBoundingClientRect(), fy = (e.clientY - b.top) / b.height * FH; return [(e.clientX - b.left) / b.width * W, S.scene === 'map' ? fy + S.cam : fy - OY]; }
 function showLabel(e) {
-  if (!S.started || S.busy || S.choices || S.zoomT >= 0 || !S.hover) { labelEl.hidden = true; return; }
+  // A name appears for doors, people and things that open something. Scenery and the campus's
+  // small jokes (def 'look', or marked quiet) say nothing until you click them.
+  if (!S.started || S.busy || S.choices || S.zoomT >= 0 || !S.hover || S.hover.quiet || S.hover.def === 'look') { labelEl.hidden = true; return; }
   const b = $('stage').getBoundingClientRect();
   labelEl.textContent = S.hover.name; labelEl.hidden = false;
   labelEl.style.left = Math.max(6, Math.min(94, (e.clientX - b.left) / b.width * 100)) + '%';
@@ -1848,6 +1868,7 @@ function drawMap(t) {
   });
   if (!calm) { const cx = ((t * 6) % (W + 120)) - 60; oval(g, cx, S.cam + 96, 34, 9, 'rgba(20,20,20,0.06)'); oval(g, cx - 170, S.cam + 30, 26, 7, 'rgba(20,20,20,0.06)'); }
   if (!calm) mapOver(t, dt);
+  runHooks(HOOKS.mapOver, t);
   if (FX.focus) {
     const a = t - FX.focus.t0, [x, y, w, h] = FX.focus.r;
     if (a > 5) FX.focus = null;
@@ -2039,6 +2060,7 @@ function person(slug, x, y, opts) {
 window.quest = { S, hit, run, doAction, MAP, ROOM, start, hot: hotspots, world, L, DIRECTORY, openWho, goFind, STUDIES,
   say, wait, choose, skipLine, SFX, PEOPLE, FELLOWS, LOOKS, hooks: HOOKS, me: undefined,
   occupants: k => k === 'bart' ? ['bart'] : PEOPLE[k] ? [k].concat(PEOPLE[k].mates || []) : [],
+  oaks: OAKS, setMute: m => { audio(); setMute(!!m); }, isMuted: () => muted, fullscreen, lookOf: slug => slug === 'bart' ? BART_LOOK : LOOKS[slug] || null,
   desks: desksOf, fixtures: fixturesOf, plan: k => (PEOPLE[k] && PEOPLE[k].plan) || null,
   gfx: { g, cv, rect, oval, disc, sprite, dither, rng, LET, DIG, calm, W, H, FH, OY, person } };
 })();

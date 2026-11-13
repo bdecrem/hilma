@@ -46,40 +46,33 @@ q.hooks.roomSpots.push(room => canUse(room) ? [{ name: 'Claude', r: [AT[0] - 2, 
   talk: () => openChat(room)
 } }] : []);
 
-/* ---------- the chat: a bubble by the spark, an input along the bottom ---------- */
+/* ---------- the chat ----------
+   Claude talks the way everyone in the game talks: plain outlined text floating by its own head,
+   in its own colour, no box. You type on one line along the bottom, the way you type at a parser:
+   Enter sends, Esc leaves. While Claude works, what you asked stays on the line. No buttons to
+   choose from: the line itself suggests something different each time you open it. */
 const css = document.createElement('style');
 css.textContent = `
-.cl-bubble { position: absolute; left: 11.5cqw; top: 4.2cqw; max-width: 58cqw; min-width: 16cqw; z-index: 6; background: #fff7e6; color: #1d1b1e; border: 0.4cqw solid #141414; box-shadow: 0.6cqw 0.6cqw 0 rgba(0, 0, 0, 0.55); padding: 0.9cqw 4.6cqw 1cqw 1.5cqw; font-size: 2.7cqw; line-height: 1.05; }
-.cl-close { position: absolute; top: 0.5cqw; right: 0.5cqw; width: max(30px, 3.4cqw); height: max(30px, 3.4cqw); display: grid; place-items: center; font-size: 2.8cqw; line-height: 1; color: #1d1b1e; border: 0.3cqw solid #141414; background: #f39a6d; }
-.cl-close:hover, .cl-close:focus-visible { background: #141414; color: #fff7e6; outline: none; }
-.cl-bubble::before { content: ''; position: absolute; left: -1.5cqw; top: 3.2cqw; border: 0.8cqw solid transparent; border-right-color: #141414; }
-.cl-bubble b { display: block; font-weight: 400; color: #b45a3c; font-size: 2.1cqw; letter-spacing: 0.12em; margin-bottom: 0.2cqw; }
-.cl-bubble.wait span::after { content: ''; display: inline-block; width: 0.5em; height: 0.9em; margin-left: 0.3em; background: #d97757; vertical-align: -0.1em; animation: blink 0.8s steps(1) infinite; }
-.cl-panel { position: absolute; left: 0; right: 0; bottom: 0; z-index: 6; padding: 1cqw 2cqw 1.3cqw; background: rgba(10, 9, 7, 0.93); border-top: 0.4cqw solid #d97757; color: #fff7e6; }
-.cl-you { margin: 0 0 0.7cqw; min-height: 1em; font-size: 2.3cqw; line-height: 1.05; color: #c9c3b4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.cl-you em { font-style: normal; color: var(--cyan); }
-.cl-ideas[hidden] { display: none; }
-.cl-ideas { display: flex; flex-wrap: wrap; gap: 0.8cqw; margin: 0 0 0.8cqw; }
-.cl-ideas button { font-size: 2.2cqw; color: var(--choice); border: 0.25cqw solid #4a4436; padding: 0.15cqw 1cqw; }
-.cl-ideas button:hover, .cl-ideas button:focus-visible { color: var(--hot); border-color: var(--hot); outline: none; }
-.cl-panel form { display: flex; gap: 1cqw; align-items: stretch; }
-.cl-panel input { flex: 1; min-width: 0; font: inherit; font-size: max(16px, 2.6cqw); padding: 0.5cqw 1cqw; background: #000; color: #fff7e6; border: 0.25cqw solid #4a4436; outline: none; border-radius: 0; }
-.cl-panel input:focus { border-color: #d97757; }
-.cl-panel input:disabled { color: #8a8478; }
-.cl-panel form button { font-size: max(15px, 2.5cqw); padding: 0.4cqw 1.4cqw; white-space: nowrap; }
-.cl-go { background: #d97757; color: #000; }
-.cl-go:disabled { background: #6a6450; cursor: default; }
-.cl-x { color: var(--cyan); border: 0.25cqw solid #4a4436; }
-.cl-x:hover { color: var(--hot); border-color: var(--hot); }
+.cl-say { position: absolute; left: 10.5cqw; top: 5.5cqw; max-width: 62cqw; z-index: 6; margin: 0; color: #ffb38a; font-size: 3.5cqw; line-height: 1.08; letter-spacing: 0.02em; word-spacing: 0.06em; pointer-events: none; text-wrap: balance; }
+.cl-say.wait::after { content: ''; display: inline-block; width: 0.45em; height: 0.8em; margin-left: 0.25em; background: #ffb38a; box-shadow: 0 0 0 0.22cqw #000; vertical-align: -0.05em; animation: blink 0.8s steps(1) infinite; }
+.cl-panel { --h: max(36px, 4.4cqw); position: absolute; left: 0; right: 0; bottom: 0; height: var(--h); z-index: 6; background: rgba(8, 7, 5, 0.9); border-top: 0.3cqw solid #d97757; color: #fff7e6; }
+.cl-panel form { display: flex; align-items: stretch; height: 100%; }
+.cl-gt { flex: none; display: grid; place-items: center; width: var(--h); color: #d97757; font-size: 3cqw; line-height: 1; }
+.cl-panel input { flex: 1; min-width: 0; font: inherit; font-size: max(16px, 2.8cqw); padding: 0; background: none; color: #fff7e6; border: 0; outline: none; border-radius: 0; caret-color: #d97757; }
+.cl-panel input::placeholder { color: #7d766a; }
+.cl-panel input:disabled { color: #a39c8c; -webkit-text-fill-color: #a39c8c; opacity: 1; }
+.cl-x { flex: none; padding: 0 1.6cqw; color: #7d766a; font-size: max(13px, 2.1cqw); letter-spacing: 0.08em; }
+.cl-x:hover, .cl-x:focus-visible { color: var(--hot); outline: none; }
 `;
 document.head.appendChild(css);
-const IDEAS = ['Add ten cute rats running around', 'Make it pink', "I'm on the couch taking a nap", 'Make me grumpy today'];
-const WAITING = ['Thinking.', 'Measuring the wall.', 'Finding the right pixels.', 'Moving a few things around.', 'Checking it against the furniture.', 'Sweeping up.', 'Nearly there.'];
-let bubble = null, panel = null, chatDone = null, waitTimer = 0;
+// What the empty line suggests, one each time it opens. Things a fellow might actually want.
+const TRY = ['ten cute rats', 'make it pink', "I'm on the couch, napping", 'make me grumpy today', 'a fireplace and a cat', 'rain outside the window', 'a disco ball. no questions'];
+const WAITING = ['Thinking.', 'Measuring the wall.', 'Finding the right pixels.', 'Moving things around.', 'Checking it against the furniture.', 'Sweeping up.', 'Nearly there.'];
+let bubble = null, panel = null, chatDone = null, waitTimer = 0, tries = Math.floor(Math.random() * TRY.length);
 function setBubble(text, waiting) {
   if (!bubble) return;
   bubble.classList.toggle('wait', !!waiting);
-  bubble.querySelector('span').textContent = text;
+  bubble.textContent = text;
 }
 function closeChat() {
   if (!chat.open) return;
@@ -93,28 +86,24 @@ function openChat(room) {
   chat.open = true; chat.room = room; chat.hopT = performance.now() / 1000; q.SFX.pick && q.SFX.pick();
   const log = chat.logs[room] || (chat.logs[room] = []);
   const own = q.occupants(room).includes(q.me.character);
-  bubble = document.createElement('div'); bubble.className = 'cl-bubble'; bubble.innerHTML = '<b>CLAUDE</b><span></span><button type="button" class="cl-close" aria-label="Close the chat with Claude">X</button>';
+  bubble = document.createElement('p'); bubble.className = 'cl-say outlined'; bubble.setAttribute('aria-live', 'polite');
   panel = document.createElement('div'); panel.className = 'cl-panel'; panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-label', 'Talk to Claude');
-  panel.innerHTML = `<p class="cl-you"></p><div class="cl-ideas"></div>
-    <form><input type="text" maxlength="600" autocomplete="off" aria-label="Tell Claude what you want" placeholder="${own ? 'What should change in here? Or about you?' : 'What should change in ' + nameOf(room) + "'s study?"}"><button class="cl-go" type="submit">Ask</button><button class="cl-x" type="button">Done</button></form>`;
+  panel.innerHTML = '<form><span class="cl-gt" aria-hidden="true">&gt;</span><input type="text" maxlength="600" autocomplete="off" spellcheck="false" aria-label="Tell Claude what you want"><button class="cl-x" type="button" aria-label="Done talking to Claude">esc</button></form>';
   stage.appendChild(bubble); stage.appendChild(panel);
-  ['pointerdown', 'pointerup', 'click', 'contextmenu', 'keyup', 'wheel', 'mousemove'].forEach(ev => { panel.addEventListener(ev, e => e.stopPropagation()); bubble.addEventListener(ev, e => e.stopPropagation()); });
-  bubble.querySelector('.cl-close').addEventListener('click', closeChat);
-  const inp = panel.querySelector('input'), go = panel.querySelector('.cl-go'), you = panel.querySelector('.cl-you'), ideas = panel.querySelector('.cl-ideas');
+  ['pointerdown', 'pointerup', 'click', 'contextmenu', 'keyup', 'wheel', 'mousemove'].forEach(ev => panel.addEventListener(ev, e => e.stopPropagation()));
+  const inp = panel.querySelector('input');
+  inp.placeholder = TRY[tries++ % TRY.length];
   const last = [...log].reverse().find(m => m.role === 'claude');
-  setBubble(last ? last.text : own ? 'Hello. This is your study, so I take requests. What would you like in it, or about you?' : `Hello. You have the keys, so: what should change in ${nameOf(room)}'s study?`);
-  ideas.innerHTML = IDEAS.map(t => '<button type="button"></button>').join('');
-  ideas.querySelectorAll('button').forEach((b, i) => { b.textContent = IDEAS[i]; b.addEventListener('click', () => { if (!chat.busy) send(IDEAS[i]); }); });
+  setBubble(last ? last.text : own ? 'Your study. Say what you want in it. Or what you want to be.' : `You have the keys. What changes in ${q.occupants(room).length > 1 ? 'here' : nameOf(room) + "'s study"}?`);
   const setBusy = on => {
-    chat.busy = on; inp.disabled = on; go.disabled = on; clearInterval(waitTimer);
+    chat.busy = on; inp.disabled = on; clearInterval(waitTimer);
     if (on) { let i = 0; setBubble(WAITING[0], true); waitTimer = setInterval(() => { i = Math.min(WAITING.length - 1, i + 1); setBubble(WAITING[i], true); }, 6000); }
   };
   async function send(text) {
     text = text.trim(); if (!text || chat.busy) return;
-    log.push({ role: 'user', text }); inp.value = ''; ideas.hidden = true;
-    you.innerHTML = '<em>You:</em> '; you.appendChild(document.createTextNode(text));
-    setBusy(true);
-    let reply = 'That did not go through. Try again.';
+    log.push({ role: 'user', text });
+    setBusy(true);   // what you asked stays on the line while Claude works
+    let reply = 'That did not go through. Say it again.';
     try {
       const r = await fetch('/api/semibart/agent', { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ room, messages: log.slice(-12) }) });
       const d = await r.json().catch(() => ({}));
@@ -125,7 +114,7 @@ function openChat(room) {
       if (r.ok) log.push({ role: 'claude', text: reply }); else log.pop();   // a refusal (the daily limit, say) still shows its line
     } catch (e) { log.pop(); }
     if (!chat.open || chat.room !== room) { chat.busy = false; return; }
-    setBusy(false); setBubble(reply); chat.hopT = performance.now() / 1000;
+    setBusy(false); inp.value = ''; inp.placeholder = ''; setBubble(reply); chat.hopT = performance.now() / 1000;
     inp.focus();
   }
   panel.querySelector('form').addEventListener('submit', e => { e.preventDefault(); send(inp.value); });

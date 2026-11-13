@@ -161,3 +161,24 @@ export async function setPersona(character: string, patch: Record<string, unknow
   if (error) throw new Error(`semibart_personas: ${error.message}`)
   return next
 }
+
+/* ---------- loose leaves: the manuscript on your desk (schema 022) ---------- */
+
+export const BOOK_PAGES = 10
+
+/** character -> pages, for everyone who has picked up at least one. */
+export async function allPages(): Promise<Record<string, number>> {
+  const { data, error } = await db().from('semibart_pages').select('character, pages').gt('pages', 0)
+  if (error) throw new Error(`semibart_pages: ${error.message}`)
+  const out: Record<string, number> = {}
+  for (const r of data || []) out[r.character as string] = r.pages as number
+  return out
+}
+
+/** One more page for this character. Returns the new count, or null when nothing was added (the
+ *  book is done, or the last leaf was seconds ago). */
+export async function pickLeaf(character: string): Promise<number | null> {
+  const { data, error } = await db().rpc('semibart_pick_leaf', { p_character: character })
+  if (error) throw new Error(`semibart_pick_leaf: ${error.message}`)
+  return typeof data === 'number' ? data : null
+}

@@ -1,14 +1,15 @@
-/* CASBS Quest, the wire (2026-11-12): announcements along the bottom of the screen.
-   "Bart just added ten cute rats to their study." "Inbal left a note on Mary's desk."
-   The server keeps them (semibart_events, written when a note is left, a room changes, someone
-   changes their lines, or an admin announces); this file polls GET /api/semibart/events and tells
-   the other files with a 'semibart:event' event on window (detail { id, kind, actor, room, text }).
-
-   The wire is a slide-out widget (2026-11-13): the yellow CASBS WIRE tab sits at the bottom left
-   and the dark strip slides out of it to the right. Click the tab to shut it or open it again;
-   it starts open, and the choice is remembered on this device. Open, new lines scroll across
-   as they arrive and the day's last few come round again in between. Shut, the tab counts what
-   you have not seen. Nothing shows over a dialog, a slide or a box that owns the bottom edge.
+/* CASBS Quest, the dock and the wire. One place for everything that is not the game itself: three
+   small squares at the bottom left, and nothing in any other corner.
+     - the wire (an antenna): announcements from the server ("Bart just added ten cute rats to
+       their study." "Inbal left a note on Mary's desk."). The dark strip slides out of the dock
+       to the right; click the antenna to shut it or open it again. It starts open and the choice
+       is kept on this device. Open, new lines scroll as they arrive and the day's last few come
+       round again in between. Shut, the square counts what you have not seen.
+     - Who's where (a magnifier), on the map only.
+     - you (your own face): your menu, drawn by accounts.js: sound, full screen, passcode, sign out.
+   The server keeps the announcements (semibart_events); this file polls GET /api/semibart/events
+   and tells the other files with a 'semibart:event' event on window (detail { id, kind, actor,
+   room, text }). Nothing shows over a dialog, a slide or a box that owns the bottom edge.
    window.questTicker.local(text) scrolls a line only this player sees. Loaded by notes.js. */
 (() => {
 'use strict';
@@ -20,14 +21,19 @@ const API = '/api/semibart/events', POLL_MS = 12000, KEEP = 6, REPLAY_AFTER_MS =
 
 const css = document.createElement('style');
 css.textContent = `
-#tk { position: absolute; left: 0; right: 0; bottom: 0; height: 3.6cqw; z-index: 3; display: flex; align-items: stretch; pointer-events: none; transform: translateY(110%); transition: transform 0.25s steps(5); }
+#tk { --h: max(32px, 3.6cqw); position: absolute; left: 0; right: 0; bottom: 0; height: var(--h); z-index: 3; display: flex; align-items: stretch; pointer-events: none; transform: translateY(110%); transition: transform 0.25s steps(5); }
 #tk.on { transform: none; }
-#tk .tk-tag { flex: none; display: flex; align-items: center; gap: 0.7cqw; padding: 0 1cqw 0 1.2cqw; background: var(--hot); color: #000; font-size: 2.2cqw; line-height: 1; letter-spacing: 0.12em; pointer-events: auto; cursor: pointer; border-top: 0.3cqw solid var(--hot); position: relative; z-index: 1; }
-#tk .tk-tag:hover, #tk .tk-tag:focus-visible { background: #fff; border-top-color: #fff; outline: none; }
-#tk .tk-arrow { width: 0; height: 0; border-top: 0.6cqw solid transparent; border-bottom: 0.6cqw solid transparent; border-right: 0.8cqw solid #000; }
-#tk.shut .tk-arrow { border-right: 0; border-left: 0.8cqw solid #000; }
-#tk .tk-new { min-width: 2cqw; padding: 0.15cqw 0.4cqw; background: #000; color: var(--hot); font-size: 1.9cqw; letter-spacing: 0; text-align: center; }
-#tk .tk-new[hidden] { display: none; }
+#tk .tk-b { flex: none; width: var(--h); display: grid; place-items: center; position: relative; z-index: 1; pointer-events: auto; cursor: pointer; background: rgba(8, 7, 5, 0.86); color: #fff7e6; border-top: 0.3cqw solid var(--hot); }
+#tk .tk-b[hidden] { display: none; }
+#tk .tk-b:hover, #tk .tk-b:focus-visible { color: var(--hot); outline: none; }
+#tk .tk-b svg, #tk .tk-b canvas { width: 62%; height: 62%; display: block; image-rendering: pixelated; }
+#tk .tk-tag { background: var(--hot); color: #000; }
+#tk .tk-tag:hover, #tk .tk-tag:focus-visible { background: #fff; color: #000; border-top-color: #fff; }
+#tk.shut .tk-tag { background: rgba(8, 7, 5, 0.86); color: var(--hot); }
+#tk.shut .tk-tag:hover, #tk.shut .tk-tag:focus-visible { color: #fff; border-top-color: var(--hot); }
+#tk .tk-new { position: absolute; right: 0; top: 0; min-width: 1.7cqw; padding: 0 0.3cqw; background: var(--hot); color: #000; font-size: max(10px, 1.7cqw); line-height: 1.15; text-align: center; }
+#tk .tk-new[hidden], #tk .tk-dot[hidden] { display: none; }
+#tk .tk-dot { position: absolute; right: 12%; top: 12%; width: 18%; height: 18%; background: var(--cyan); box-shadow: 0 0 0 0.15cqw #000; }
 #tk .tk-body { flex: 1; min-width: 0; overflow: hidden; }
 #tk .tk-strip { height: 100%; display: flex; background: rgba(8, 7, 5, 0.86); border-top: 0.3cqw solid var(--hot); transition: transform 0.3s steps(8); }
 #tk.shut .tk-strip { transform: translateX(-101%); }
@@ -37,14 +43,39 @@ css.textContent = `
 #tk .tk-run .sys { color: var(--hot); }
 #tk .tk-run .old { color: #b9b2a0; }
 #tk .tk-run i { font-style: normal; color: var(--choice); padding: 0 1.6cqw; }
-#stage.tk-on #tools { bottom: 4.4cqw; }
 @media (prefers-reduced-motion: reduce) { #tk, #tk .tk-strip { transition: none; } }
 `;
 document.head.appendChild(css);
+const ICON = {
+  wire: 'M1 1h1v1H1zM0 2h1v4H0zM1 6h1v1H1zM3 2h1v1H3zM2 3h1v2H2zM3 5h1v1H3zM5 3h2v2H5zM5 6h2v3H5zM4 9h4v1H4zM8 2h1v1H8zM9 3h1v2H9zM8 5h1v1H8zM10 1h1v1h-1zM11 2h1v4h-1zM10 6h1v1h-1z',
+  who: 'M3 1h4v1H3zM2 2h1v1H2zM7 2h1v1H7zM1 3h1v4H1zM8 3h1v4H8zM2 7h1v1H2zM7 7h1v1H7zM3 8h4v1H3zM8 8h1v1H8zM9 9h1v1H9zM10 10h1v1h-1z'
+};
+const svg = d => `<svg viewBox="0 0 12 12" aria-hidden="true"><path fill="currentColor" d="${d}"/></svg>`;
 const bar = document.createElement('div'); bar.id = 'tk';
-bar.innerHTML = '<button type="button" class="tk-tag" aria-expanded="true" aria-controls="tkStrip"><span>CASBS WIRE</span><span class="tk-new" hidden></span><span class="tk-arrow" aria-hidden="true"></span></button><div class="tk-body"><div class="tk-strip" id="tkStrip"><div class="tk-win" aria-live="polite"><div class="tk-run"></div></div></div></div>';
+bar.innerHTML = `<button type="button" class="tk-b tk-tag" aria-expanded="true" aria-controls="tkStrip">${svg(ICON.wire)}<span class="tk-new" hidden></span></button>`
+  + `<button type="button" class="tk-b tk-who" aria-label="Who's where">${svg(ICON.who)}</button>`
+  + `<button type="button" class="tk-b tk-me" aria-label="You: sound, full screen, passcode, sign out"><canvas width="12" height="12"></canvas><span class="tk-dot" hidden></span></button>`
+  + '<div class="tk-body"><div class="tk-strip" id="tkStrip"><div class="tk-win" aria-live="polite"><div class="tk-run"></div></div></div></div>';
 stage.insertBefore(bar, $('fade'));
 const tag = bar.querySelector('.tk-tag'), badge = bar.querySelector('.tk-new'), win = bar.querySelector('.tk-win'), run = bar.querySelector('.tk-run');
+const whoBtn = bar.querySelector('.tk-who'), meBtn = bar.querySelector('.tk-me'), dot = bar.querySelector('.tk-dot');
+// The canvas listens for clicks and keys on the stage and the window; the dock's are its own.
+bar.querySelectorAll('.tk-b').forEach(b => {
+  ['pointerdown', 'pointerup', 'contextmenu'].forEach(ev => b.addEventListener(ev, e => e.stopPropagation()));
+  b.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter') e.stopPropagation(); });
+});
+whoBtn.addEventListener('click', e => { e.stopPropagation(); if (typeof q.openWho === 'function') q.openWho(); });
+meBtn.addEventListener('click', e => { e.stopPropagation(); if (window.semibartAccounts && window.semibartAccounts.toggleMenu) window.semibartAccounts.toggleMenu(); });
+// Your square is your own face, in your character's colours.
+function paintMe() {
+  const u = q.me, c = meBtn.querySelector('canvas').getContext('2d'), L = (u && typeof q.lookOf === 'function' && q.lookOf(u.character)) || { skin: '#e8b08f', skinD: '#c98d6c', hair: '#3b2416', shirt: '#e8743b' };
+  const R = (x, y, w, h, col) => { c.fillStyle = col; c.fillRect(x, y, w, h); };
+  c.clearRect(0, 0, 12, 12);
+  R(3, 1, 6, 2, L.hair); R(2, 2, 8, 2, L.hair); R(3, 3, 6, 5, L.skin); R(2, 4, 1, 2, L.hair); R(9, 4, 1, 2, L.hair);
+  R(4, 5, 1, 1, '#141414'); R(7, 5, 1, 1, '#141414'); R(5, 8, 2, 1, L.skinD || L.skin); R(1, 9, 10, 3, L.shirt); R(0, 10, 12, 2, L.shirt);
+  dot.hidden = !(u && u.passcodeIsDefault);
+}
+paintMe(); window.addEventListener('semibart:user', paintMe);
 
 const queue = [];          // { text, cls } waiting to scroll
 const recent = [];         // the last few real announcements, to come round again while it is quiet
@@ -59,7 +90,7 @@ try { open = localStorage.getItem(STORE) !== 'shut'; } catch (e) {}
 function paintTag() {
   bar.classList.toggle('shut', !open);
   tag.setAttribute('aria-expanded', String(open));
-  tag.setAttribute('aria-label', open ? 'CASBS Wire. Click to close.' : `CASBS Wire, closed${unseen ? ', ' + unseen + ' new' : ''}. Click to open.`);
+  tag.setAttribute('aria-label', open ? 'The CASBS wire, open. Click to close.' : `The CASBS wire, closed${unseen ? ', ' + unseen + ' new' : ''}. Click to open.`);
   badge.hidden = open || !unseen; badge.textContent = unseen > 9 ? '9+' : String(unseen);
 }
 function setOpen(v) {
@@ -70,9 +101,6 @@ function setOpen(v) {
   paintTag();
 }
 tag.addEventListener('click', e => { e.stopPropagation(); setOpen(!open); const cv = $('cv'); if (cv && cv.focus) cv.focus(); });
-// The canvas listens for clicks and keys on the stage and the window; the tab's are its own.
-['pointerdown', 'pointerup', 'contextmenu'].forEach(ev => tag.addEventListener(ev, e => e.stopPropagation()));
-tag.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter') e.stopPropagation(); });
 paintTag();
 
 /* ---------- what scrolls ---------- */
@@ -93,7 +121,8 @@ function begin(items) {
 function frame(now) {
   const hide = blocked();
   bar.classList.toggle('on', !hide);
-  stage.classList.toggle('tk-on', !hide && open);
+  if (whoBtn.hidden !== (S.scene !== 'map')) whoBtn.hidden = S.scene !== 'map';
+  if (hide && window.semibartAccounts && window.semibartAccounts.menuOpen && window.semibartAccounts.menuOpen()) window.semibartAccounts.closeMenu();
   if (running) {
     if (hide) {
       // Cut off before most of it was read: the new lines go back in line.
