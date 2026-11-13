@@ -1,9 +1,9 @@
 // The social features end to end, in a real browser against a dev server: sticky notes (write
 // one, see it on the desk, read the desk close up, peel it off), the ticker, and the chat with
-// the room's Claude (a room change, new lines, undo). Signs in as Bart by minting his session
-// cookie from SEMIBART_SESSION_SECRET, so no passcode is typed or changed. It writes to the real
-// tables and cleans up after itself: the notes it left, the announcements it caused, Bart's
-// lines; the room change is undone through the chat.
+// the room's Claude (it answers; nothing is changed). Signs in as the check-only admin `check`
+// (scripts/semibart/make-check-account.mjs) by minting its session cookie from
+// SEMIBART_SESSION_SECRET, never as a real fellow; the chat half runs in Bart's study. It writes to the real
+// tables and cleans up after itself: the notes it left and the announcements it caused.
 //   source ./.env.local && node scripts/semibart/social-check.mjs <dir> [url] [notes|chat|all]
 import { chromium } from 'playwright';
 import { createHmac } from 'node:crypto';
@@ -11,12 +11,12 @@ const out = process.argv[2], url = process.argv[3] || 'http://localhost:3277/sem
 const { SUPABASE_URL: SU, SUPABASE_SERVICE_KEY: SK, SEMIBART_SESSION_SECRET: SECRET } = process.env;
 if (!out || !SU || !SK || !SECRET) { console.error('need <dir> and SUPABASE_URL, SUPABASE_SERVICE_KEY, SEMIBART_SESSION_SECRET in the environment'); process.exit(1); }
 const rest = async (path, opts = {}) => { const r = await fetch(`${SU}/rest/v1/${path}`, { ...opts, headers: { apikey: SK, authorization: `Bearer ${SK}`, 'content-type': 'application/json', prefer: 'return=representation', ...(opts.headers || {}) } }); const t = await r.text(); if (!r.ok) throw new Error(`${path}: ${r.status} ${t}`); return t ? JSON.parse(t) : null; };
-const users = await rest('semibart_users?select=id,character,session_version&character=in.(bart,daniel)');
-const bart = users.find(u => u.character === 'bart'), daniel = users.find(u => u.character === 'daniel');
-const payload = `${bart.id}.${bart.session_version}.${Date.now() + 3600e3}`;
+const users = await rest('semibart_users?select=id,character,session_version&character=in.(bart,daniel,check)');
+const bart = users.find(u => u.character === 'bart'), daniel = users.find(u => u.character === 'daniel'), me = users.find(u => u.character === 'check');
+if (!me) { console.error('no check account: run node scripts/semibart/make-check-account.mjs'); process.exit(1); }
+const payload = `${me.id}.${me.session_version}.${Date.now() + 3600e3}`;
 const token = `${payload}.${createHmac('sha256', SECRET).update(`semibart.${payload}`).digest('hex')}`;
 const startEvent = ((await rest('semibart_events?select=id&order=id.desc&limit=1'))[0] || { id: 0 }).id;
-const personaBefore = (await rest('semibart_personas?select=data&character=eq.bart'))[0];
 const started = new Date().toISOString();
 let failed = 0; const ok = (name, cond, extra) => { console.log(`${cond ? 'ok  ' : 'FAIL'} ${name}${extra !== undefined ? '  ' + JSON.stringify(extra) : ''}`); if (!cond) failed++; };
 
@@ -32,7 +32,7 @@ const idle = (ms = 60000) => p.waitForFunction(() => !window.quest.S.busy && !wi
 const enter = async k => { await p.evaluate(k => { const S = window.quest.S; S.scene = 'room'; S.room = k; S.x = 120; S.y = 134; S.path = []; S.line = null; }, k); await p.waitForTimeout(1500); };
 const spotXY = name => p.evaluate(n => { const h = window.quest.hot().find(x => x.name.startsWith(n)), c = document.getElementById('cv').getBoundingClientRect(); return h ? { x: c.left + (h.r[0] + h.r[2] / 2) / 320 * c.width, y: c.top + (h.r[1] + h.r[3] / 2 + 18) / 180 * c.height, name: h.name } : null; }, name);
 const shot = n => p.screenshot({ path: `${out}/social-${n}.png` });
-ok('signed in as', await p.evaluate(() => window.quest.me.character) === 'bart');
+ok('signed in as', await p.evaluate(() => window.quest.me.character) === 'check');
 
 try {
 if (part !== 'chat') {
@@ -48,55 +48,43 @@ if (part !== 'chat') {
   await p.waitForTimeout(500); await shot('3-thanks'); await idle();
   const onDesk = await p.evaluate(() => window.questNotes.shown('daniel').notes.map(n => n.body)); ok('note on the desk', onDesk.includes('Your Socrates is judging me. I can feel it.'), onDesk);
   await shot('4-on-desk');
-  const note = await spotXY('note from Bart'); ok('note hotspot', !!note, note);
+  const note = await spotXY('note from Check'); ok('note hotspot', !!note, note);
   await p.mouse.click(note.x, note.y); await p.waitForSelector('.nb-board', { timeout: 20000 }); await p.waitForTimeout(300); await shot('5-desk-close-up');
   ok('close-up shows the text', (await p.textContent('.nb-notes')).includes('Socrates is judging me'));
   // the wire picks it up
   await p.keyboard.press('Escape'); await idle();
   await p.evaluate(() => window.questTicker.poll());
   await p.waitForSelector('#tk.on', { timeout: 20000 }); await p.waitForTimeout(2600); await shot('6-ticker');
-  ok('ticker text', (await p.textContent('#tk .tk-run')).includes("Bart left a note on Daniel's desk"), await p.textContent('#tk .tk-run'));
+  const wire = await p.evaluate(() => document.querySelector('#tk .tk-run').textContent + ' | ' + window.questTicker.queue.map(i => i.text).join(' | '));
+  ok('on the wire', wire.includes("Check left a note on Daniel's desk"), wire);
   // peel it off
   await p.mouse.click(note.x, note.y); await p.waitForSelector('.nb-off'); await p.click('.nb-off'); await p.waitForTimeout(800);
   ok('peeled off', await p.evaluate(() => window.questNotes.shown('daniel').notes.length) === 0);
   await p.keyboard.press('Escape'); await idle();
-  // Bart's own desk: Daniel's note is new
+  // Bart's desk: Daniel's note is there for a visitor to read
   await enter('bart'); await p.waitForTimeout(600); await shot('7-bart-room');
-  const mine = await spotXY('note from Daniel'); ok('note from Daniel on my desk', !!mine, mine);
+  const mine = await spotXY('note from Daniel'); ok('note from Daniel on Bart\'s desk', !!mine, mine);
   await p.mouse.click(mine.x, mine.y); await p.waitForSelector('.nb-board'); await p.waitForTimeout(300); await shot('8-my-desk');
-  ok('marked new', await p.locator('.nb-note.nb-new').count() === 1);
+  ok('a visitor reads it', (await p.textContent('.nb-notes')).includes('under the oak'));
   await p.keyboard.press('Escape'); await idle();
   // other rooms, for the eye
   for (const k of ['frances', 'joseph', 'kevin']) { await enter(k); await shot('9-' + k); }
   await rest(`semibart_notes?id=eq.${seed.id}`, { method: 'DELETE' });
 }
 if (part !== 'notes') {
-  await enter('bart');
-  const cl = await spotXY('Claude'); ok('Claude hotspot', !!cl, cl);
-  await p.mouse.click(cl.x, cl.y); await p.waitForSelector('.cl-panel input', { timeout: 20000 }); await p.waitForTimeout(400); await shot('10-claude-hello');
-  const ask = async (text, n) => {
-    const before = await p.textContent('.cl-bubble span');
-    await p.fill('.cl-panel input', text); await p.keyboard.press('Enter'); await p.waitForTimeout(1500); await shot(`${n}-waiting`);
-    await p.waitForFunction(() => !window.questClaude.chat.busy, null, { timeout: 280000 }); await p.waitForTimeout(600);
-    const reply = await p.textContent('.cl-bubble span'); console.log(`    you: ${text}\n    claude: ${reply}`); await shot(`${n}-reply`); return reply !== before ? reply : '';
-  };
-  const v0 = await p.evaluate(() => (window.questRooms.rooms.bart || { version: 0 }).version);
-  ok('room change answered', !!(await ask('Put a small cactus on the windowsill, and make me sound grumpy today.', 11)));
-  const v1 = await p.evaluate(() => (window.questRooms.rooms.bart || { version: 0 }).version); ok('room version moved', v1 > v0, [v0, v1]);
-  const lines = await p.evaluate(() => window.questClaude.personas.bart); ok('lines changed', !!(lines && (lines.lines || lines.look)), lines);
-  await p.evaluate(() => window.questTicker.poll()); await p.waitForTimeout(1500);
-  console.log('    wire:', (await rest(`semibart_events?select=kind,text&id=gt.${startEvent}&order=id`)).map(e => `[${e.kind}] ${e.text}`));
-  ok('undo answered', !!(await ask('Undo the cactus, and give me my normal lines back.', 12)));
-  const v2 = await p.evaluate(() => (window.questRooms.rooms.bart || { version: 0 }).version); ok('room undone (a new version)', v2 > v1, [v1, v2]);
-  await p.click('.cl-x'); await idle(); await p.waitForTimeout(3000); await shot('13-after');
+  // The spark is only in your own study, and the check account has none: nothing to click.
+  await enter('bart'); ok('no Claude in someone else\'s study', !(await spotXY('Claude')));
+  // The agent itself, asked something that changes nothing (the check account is an admin, so
+  // the server answers for Bart's study; no tool runs, no room or lines are touched).
+  const r = await p.evaluate(async () => { const r = await fetch('/api/semibart/agent', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ room: 'bart', messages: [{ role: 'user', text: 'Change nothing. In one line: what can you do for this study?' }] }) }); return { status: r.status, body: await r.json() }; });
+  console.log('    claude:', r.body.reply);
+  ok('agent answers', r.status === 200 && !!r.body.reply && !r.body.room && !r.body.personas, r.status);
 }
 } finally {
   // leave the tables as they were
-  await rest(`semibart_notes?from_user=eq.${bart.id}&created_at=gte.${encodeURIComponent(started)}`, { method: 'DELETE' });
+  await rest(`semibart_notes?from_user=eq.${me.id}&created_at=gte.${encodeURIComponent(started)}`, { method: 'DELETE' });
   await rest(`semibart_notes?from_user=eq.${daniel.id}&to_user=eq.${bart.id}&created_at=gte.${encodeURIComponent(started)}`, { method: 'DELETE' });
-  await rest(`semibart_events?id=gt.${startEvent}`, { method: 'DELETE' });
-  if (personaBefore) await rest('semibart_personas?character=eq.bart', { method: 'PATCH', body: JSON.stringify({ data: personaBefore.data }) });
-  else await rest('semibart_personas?character=eq.bart', { method: 'DELETE' });
+  await rest(`semibart_events?id=gt.${startEvent}&actor=eq.check`, { method: 'DELETE' });
   console.log('page errors', errs); await b.close();
 }
 console.log(failed ? `${failed} FAILED` : 'all ok'); process.exit(failed ? 1 : 0);

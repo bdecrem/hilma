@@ -28,8 +28,9 @@ to the wall under the window and the pad to the sill, which no room can hide.
 
 ## Claude on the door frame (`public/semibart/claude.js`, `src/lib/semibart/social-agent.ts`)
 
-A small clay spark sits on the door frame of every study (the character from `/claude`, at
-pixel size). In your own study, click it and type: "add ten cute rats", "make it pink", "I'm on
+A small clay spark sits on the door frame of your own study, and only there (the character
+from `/claude`, at pixel size); in anyone else's study there is nothing to see or click (Bart,
+2026-11-12). Click it and type: "add ten cute rats", "make it pink", "I'm on
 the couch taking a nap", "make me grumpy today". It answers in a speech bubble; the input is a
 bar along the bottom, so the room stays in view while it changes.
 
@@ -43,8 +44,9 @@ bar along the bottom, so the room stays in view while it changes.
   door), `hello`, `lines` (when talked to), `doing`. claude.js lays them over the game's own.
 - `undo_room` steps the drawing back; `announce` (admins) puts a line on the wire.
 
-Two levels. A fellow: their own study, their own lines. An admin (Bart): any study he is
-standing in, anyone's lines in it, and announcements. Visitors get a wave.
+Two levels. A fellow: their own study, their own lines. An admin (Bart): also announcements
+on the wire. The server still lets an admin change any study and anyone's lines in it, but
+the game offers no way in outside your own study.
 
 ## The wire (`public/semibart/ticker.js`)
 
@@ -63,7 +65,8 @@ Schema `apps/semibart/schema/020_semibart_social.sql` (`semibart_events`,
 day; it ran with `SUPABASE_ACCESS_TOKEN` from the ops vault in the command's environment.
 
 `source ./.env.local && node scripts/semibart/social-check.mjs <dir> [url] [notes|chat|all]`
-against a dev server drives all of it in a browser as Bart (it mints his session cookie, no
-passcode involved): writes a note, reads and peels it, watches the wire, asks Claude for a
-cactus and a grumpy mood, undoes both, then deletes the rows it made. The chat half makes real
-Opus calls (about a minute). `social-shots.mjs` shoots rooms.
+against a dev server (or `https://ola.cx/semibart`) drives it in a browser as the check-only
+admin `check` (it mints that account's session cookie; never a real fellow): writes a note on
+Daniel's desk, reads and peels it, watches the wire, reads a note on Bart's desk as a visitor,
+confirms there is no spark in someone else's study, and asks the agent one question that
+changes nothing. It deletes the notes and announcements it made. `social-shots.mjs` shoots rooms.
