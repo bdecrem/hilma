@@ -129,6 +129,72 @@ over Blue Lantern II, Level 2's over Maxwell Street II), the teacher writes **th
    one position, in 78 s. Bart's own row was rewritten the same day as its v2 (v1 is in the
    history and in `scripts/takt/fixtures/solo-blue-lantern-2026-11-07.json`).
 
+## Jam on any song (2026-11-13)
+
+Bart: "for all games, offer an JAM/improvize mode like we offer in the Map, I'm guessing from
+the main card on Stage. And then the agent offers a variant on that." Every Stage card has
+**Jam** beside Practice and Call (`AppModel.jam(song:)`). It opens the same kind of step as the
+map's improvs, made from the song (`Improv/StageJam.swift`, `Lesson.stageJam`): a lesson of its
+own, code `jam-<song>` (never a bundled module, so nothing else loads it), a hidden play step
+first (the lesson engine opens every lesson on one), then the free step, which the player opens
+on its intro. Its parts:
+
+- **The backing:** the song's band with its melody's channel out (a song with no melody part
+  plays whole). Its feel comes off the drums (`Lesson.swung`: the shuffle's late eighth more
+  often than the straight one).
+- **Its form**, one chorus of the backing (`Lesson.jamForm`), is one of three:
+  - the chords' own cycle when they repeat every 16 bars or fewer, made a multiple of four
+    (Hypnotist 4, Abyss 8);
+  - 12 bars when most of the song keeps a 12-bar cycle (the blues, and the long holds of
+    Halbschatten and Irrlicht);
+  - else the whole track in whole four-bar phrases (Restlicht 124, Gegenlicht 132).
+
+  `BandData.looped` keeps the whole song and goes round it; the form only counts choruses and
+  names each bar's chord for the teacher. The server now takes forms up to 256 bars (64 before).
+- **The chords:** rooted from their symbols and numbered in the song's key.
+
+Back (and Esc) land on the Stage, and the module that was open comes back (`leaveStageJam`).
+The review, the idea and the whole track as the song's Solo work as over Blue Lantern II.
+The Solo writer now writes a long track in parts of 24 bars at most (two halves up to 48 bars,
+as before). DEBUG: `-Jam <song>` opens it as the card does.
+
+## The same level as the take (2026-11-13)
+
+"The key for all agent variants on jams is that it should be at the same general complexity /
+difficulty as what the user did." `src/lib/takt/take-shape.ts` measures the take:
+
+- **How busy:** onsets a second over the bars they played in, and over the take with its rests.
+- **How quick:** their quick step, the gap a sixth of their in-phrase gaps are at or under.
+- **How many keys at once:** the most keys struck together on a tenth of their onsets.
+- **The range,** and **the hand:** their line fingered as the Stage fingers it, with its moves a
+  bar.
+
+Both agents read it in the message, and both checks hold them to it.
+
+- **The idea** (`checkIdea`) uses the same density measure as the take (the bars with notes):
+  - 0.6× to 1.5× as busy as they were;
+  - no gap under three quarters of their quick step (a take in quarters gets no eighths);
+  - no more keys at once than theirs (two at most);
+  - one hand position when their take stayed in one (a stray move in a long take counts as
+    one), else as many moves a bar as theirs.
+- **The whole track** (`rulesFor`):
+  - 0.8× to 1.3× their notes a second with the rests, between 0.45 and 2.5;
+  - sixteenths on the grid only when they played them;
+  - runs of quick notes no longer than their longest (four at least);
+  - a hand budget of their moves a bar over the song, a quarter more, at least 2;
+  - a jam's range is where they played and a step either side.
+
+  A map level's improv keeps its level's solo budget as a ceiling, whichever is less, and its
+  home-position range.
+
+The fixed numbers before this were 0.45–1.2 a second, eighths at most and one position.
+
+Checks: `improv-check.ts` (sixteenths, chords and a busier idea over a plain take sent back, a
+take in quarters refusing eighths); `solo-check.ts` (the take's budget and density, a busy take
+in sixteenths getting a busier track); `jam-check.ts` (Restlicht's 124-bar jam request, a
+beginner's and a busier take reviewed live, each idea at its take's level, the whole track
+from the busier one inside its band and budget).
+
 ## XP
 
 `Snapshot.xp: [XPEntry]` (id, day, kind, points), merged as a union by id, so nothing pays twice

@@ -11,7 +11,7 @@ import type Anthropic from '@anthropic-ai/sdk'
 import { f2Supabase } from '@/lib/f2/supabase'
 import { libraryText } from './library'
 import { handFigures, handLine } from './fingering'
-import { handBudget } from './leveling'
+import { ideaLimits, ideaShapeProblems, shapeLine, takeShape, valueName } from './take-shape'
 
 export const IMPROV_MODEL = 'claude-opus-5-5'
 
@@ -62,7 +62,7 @@ export function parseRequest(body: unknown): ImprovRequest | string {
     notes.push({ t: Math.round(n.t as number), n: Math.round(n.n as number), v: num(n.v, 0, 1) ? (n.v as number) : 0.7, len: Math.max(1, Math.round(n.len as number)) })
   }
   notes.sort((a, b) => a.t - b.t || a.n - b.n)
-  if (!Array.isArray(k.form) || !k.form.length || k.form.length > 64 || !k.form.every((x) => typeof x === 'string')) return 'backing: form (the chord of every bar).'
+  if (!Array.isArray(k.form) || !k.form.length || k.form.length > 256 || !k.form.every((x) => typeof x === 'string')) return 'backing: form (the chord of every bar).'
   let scale: number[] | null = null
   if (k.scale != null) {
     if (!Array.isArray(k.scale) || !k.scale.length || !k.scale.every((x) => Number.isInteger(x) && x >= 0 && x < 12)) return 'backing: scale (pitch classes 0–11) or null.'
@@ -187,15 +187,23 @@ export function checkIdea(raw: unknown, r: ImprovRequest): { idea: Idea } | { pr
   for (const n of notes) byTick.set(n.t, (byTick.get(n.t) ?? 0) + 1)
   if ([...byTick.values()].some((c) => c > 2)) problems.push('at most two notes at once: it is a line, not chords')
   if (problems.length) return { problems }
-  // One hand position (LEVELING.md §3): fingered as the app will finger it, the idea never
-  // moves the hand and spans a seventh at most; the fingers the app shows are the planner's.
+  // The same level as the take (Bart, 2026-11-13: "the same general complexity / difficulty as
+  // what the user did", take-shape.ts): as busy, no quicker, no more keys at once.
+  const shape = takeShape(r.take.notes, r.take.tempo, r.context.hand === 'right')
+  const limits = ideaLimits(shape, bars as number, IDEA_SPAN)
+  problems.push(...ideaShapeProblems(notes, bars as number, r.take.tempo, shape, limits))
+  // The hand (LEVELING.md §3), fingered as the app will finger it: one position when their
+  // take stayed in one (a seventh at most, no move), else no more moves than theirs; the
+  // fingers the app shows are the planner's.
   const line = notes.filter((n, i) => i === 0 || n.t !== notes[i - 1].t)
   const hand = handFigures(line, r.context.hand === 'right', 12)
-  if (hand.moves.length || hand.span > IDEA_SPAN) {
+  if (hand.moves.length > limits.moves || hand.span > limits.span) {
     const low = Math.min(...notes.map((n) => n.n)), high = Math.max(...notes.map((n) => n.n))
-    problems.push(`the idea must sit in one hand position (five fingers over five or six scale keys, no thumb-under, nothing wider than a seventh): this one is ${noteName(low)} to ${noteName(high)}, ${handLine(hand)}. Keep it where their hand already sits`)
-    return { problems }
+    problems.push(limits.moves === 0
+      ? `the idea must sit in one hand position, as their take did (five fingers over five or six scale keys, no thumb-under, nothing wider than a seventh): this one is ${noteName(low)} to ${noteName(high)}, ${handLine(hand)}. Keep it where their hand already sits`
+      : `the hand moves more than theirs did: this one is ${noteName(low)} to ${noteName(high)}, ${handLine(hand)}; their take moved ${shape.hand.moves.length} times in ${shape.spanBars} bars, so a ${bars}-bar idea moves at most ${limits.moves} time${limits.moves === 1 ? '' : 's'} and spans ${limits.span} semitones at most`)
   }
+  if (problems.length) return { problems }
   const byIndex = new Map(line.map((n, i) => [n, hand.fingers[i]]))
   for (const n of notes) n.f = byIndex.get(n) ?? n.f
   return { idea: { title, why, bars: bars as number, notes } }
@@ -221,9 +229,9 @@ The idea's rules (the app checks them and sends it back if one is broken):
 - bars: 1, 2 or 4. The app loops it over the whole form, every chord, so it must sound good over every chord in it (in a blues, a phrase on the minor pentatonic or the blues scale does). A 2-bar idea with the second bar mostly rest (a call that leaves room) is often the best.
 - 3 to 16 notes. beat is counted in beats from the start of the idea, starting at 0 (0 = bar 1 beat 1, 4 = bar 2 beat 1), on the grid: whole beats, halves (0.5), triplets (0.333, 0.667) or sixteenths (0.25). beats is the length in beats. Nothing rings past the end of the idea.
 - note is a MIDI number (60 = middle C). Stay near where they played. If the transcript lists notes allowed, use only those.
-- ONE HAND POSITION. The idea sits where their hand already sits: five fingers over five or six neighbouring keys of the scale, nothing wider than a seventh, no thumb-under, no jump (the app fingers it by hand position and sends it back if the hand would have to move). A beginner's whole difficulty is knowing where their hand is; an idea that moves it is not an idea they can play tonight.
+- THE SAME LEVEL AS THEIR TAKE. The message measures the take: how many notes a second they played while playing, their quickest notes, how many keys at once, how often their hand moved. The idea matches it, neither harder nor easier: about as busy as they were (the message gives the band), no note values quicker than theirs, no more keys at once than they played, and the hand where theirs was. If their take stayed in one hand position, the idea sits in one position too: five fingers over five or six neighbouring keys of the scale, nothing wider than a seventh, no thumb-under, no jump. If they moved, it may move as often as they did, no more. The app measures the idea the same way and sends it back if it is harder or easier than the take.
 - finger 1 to 5 for every note, for the hand given (right: 1 = thumb, 5 = pinky, low notes on the thumb side), as the hand lies in that position (the app re-fingers it the same way).
-- It should be playable by this student today: about as fast as their own playing, not faster. Simpler beats busier.
+- It should be playable by this student today, and worth their time: their own level, made more musical, not more difficult.
 - title: at most 40 characters, names it ("Your bar 5 lick, landing on D").
 
 The music in Takt, for when a note points them somewhere next (another backing this idea would also sit on, by its name and where it is: a Stage song, or the module whose band it is; only ones listed here):
@@ -235,9 +243,10 @@ function userMessage(r: ImprovRequest): string {
   const allowed = r.backing.scale
     ? `Notes allowed: ${r.backing.scaleName ? `${r.backing.scaleName}, ` : ''}${r.backing.scale.map((p) => NAMES[p]).join(' ')} (any octave).`
     : 'Notes allowed: any (this is a free jam; the backing\'s key is the guide).'
-  const b = handBudget(r.context.level)
-  return `Where: ${r.context.where === 'level' ? `a Level ${r.context.level} goal on the map` : 'a jam under a lesson'}: "${r.context.title}".${r.context.about ? `\nWhat they were working on: ${r.context.about}` : ''}
-The student is on Level ${b.level}: an idea for them sits in one hand position (see the rules).
+  const shape = takeShape(r.take.notes, r.take.tempo, r.context.hand === 'right')
+  const two = ideaLimits(shape, 2, IDEA_SPAN)
+  return `Where: ${r.context.where === 'level' ? `a Level ${r.context.level} goal on the map` : 'a jam'}: "${r.context.title}".${r.context.about ? `\nWhat they were working on: ${r.context.about}` : ''}
+Their level, measured from the take: ${shapeLine(shape)}. So the idea: ${two.minPerSecond.toFixed(2)} to ${two.maxPerSecond.toFixed(2)} notes a second (a 2-bar idea: ${Math.ceil(two.minPerSecond * (8 * 60) / r.take.tempo)} to ${Math.floor(two.maxPerSecond * (8 * 60) / r.take.tempo)} notes), nothing quicker than ${valueName(two.quickest)}, ${two.atOnce === 1 ? 'one note at a time' : 'at most two keys at once'}, ${two.moves === 0 ? 'one hand position' : `the hand moving about as often as theirs (${two.moves} in 2 bars at most)`}.
 Backing: ${r.backing.title}${r.backing.style ? `, ${r.backing.style}` : ''}${r.backing.key ? ` in ${r.backing.key}` : ''}, ${r.take.tempo} bpm, ${r.backing.feel === 'straight' ? 'straight eighths' : 'a shuffle (swung eighths)'}.
 The form, one chorus: ${r.backing.form.join(' | ')}.
 ${allowed}

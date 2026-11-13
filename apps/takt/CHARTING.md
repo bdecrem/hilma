@@ -173,6 +173,24 @@ bar for a minute. The rules:
   teaches nothing;
 - it never sinks under `floorBelowStart` (1) tiers below where the run began, and never under 1.
 
+**Adaptive's own rungs between two tiers** (0.1 (134), rule 25). Adaptive walks a longer ladder
+than the chips show: every tier, and between two neighbours whose step is big, one or two rungs
+of its own (`Charting.rungs`, `rungs` in charting.ts; `adaptive.ghosts` in charting.json). A
+rung is the lower tier plus part of what the upper one adds, in this order: the notes it adds
+on the lower tier's own onsets (a chord's next note); on a melody each new key with every note
+of it, nearest the lower tier's keys first, then the new onsets on the keys the hand already
+has; on a chords part the new onsets by weight, the heaviest first; each group's notes on a beat
+before those between. A step gets a rung when it adds `share` (25%) of the lower tier's notes
+or `keys` (2) new keys, two when it adds `twoShare` (40%) or `twoKeys` (3); a rung is cut where
+the notes added come nearest an even share, at a group's edge (a key never arrives half), and
+only where every rung adds 15% of the step. Each rung holds the one below and sits inside the
+one above, so the gap, the silence rule and "a climb never takes a note away" hold on every
+rung. The HUD names a rung by its share of the way up ("Level 4.5", "6.3"); the result, the
+board and `resume` count the tier under it; the floor is in tiers; a rung's points are its
+share of the way between the two tiers' bonuses. Fixed difficulties never see a rung.
+`measure.ts` prints them ("L4.5 (Adaptive only)"), `charting-check.ts` compares the Swift and the
+TS rung by rung (108/108 with the tiers), and 91 rungs sit between the tiers of the 23 songs.
+
 A wrong key (one the record doesn't play there at any tier) counts as a miss; playing more of
 the record than the level asks doesn't. In a chord, a dropped finger is a miss for that note but
 breaks the combo only when the whole chord went by unplayed. The first run starts at `start`;
@@ -412,6 +430,18 @@ every song and part.
     the rule. `-LessonCheck` asserts it for every song, part and level (315 checks). **A new
     track's parts are written so the rule holds before any ladder is cut:** where the record's
     voice rests for more than about 8 bars, the part gets its own notes there.
+
+25. **When two levels are too far apart, Adaptive makes the level between** (2026-11-13, 0.1
+    (134)). Bart, on Restlicht's melody: "Easy is too easy (just two notes); Medium a little
+    challenging (5 notes / fingers, quite spread out). In adaptive mode, it toggles correctly
+    between those two modes. HOWEVER, what would be better is if there was either (a) a little
+    algorithm that can make up a difficulty in between easy/medium or any other two levels OR
+    (b) 'ghost difficulties' not shown in the ui that are used for adaptive mode". Both, as one
+    thing: the charter makes the in-between rungs (the Adaptive section) from the two tiers
+    around them, and only Adaptive walks them. Restlicht's melody: Easy+ is D and F at 0.90 a
+    second, Medium D F A C at 1.33; the rung between them, 4.5, is D F A at 1.12. One new key a
+    step, the nearest first. Don't add a tier to the ladder for one song's gap (rule 4: the
+    ladder moves every song); a fixed level that is wrong for a song is still a song patch.
 
 ## Where this comes from
 

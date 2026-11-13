@@ -374,6 +374,17 @@ struct SongCard: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Call: \(song.meta.title) one note at a time, each called out, finger then key")
+            // Jam (Bart, 2026-11-13): the song's band, your solo, the teacher after.
+            Button { app.jam(song: song) } label: {
+                Text("Jam")
+                    .dataLabel(11, weight: .semibold)
+                    .foregroundStyle(Palette.muted)
+                    .padding(.horizontal, 12)
+                    .frame(height: 32)
+                    .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Palette.line, lineWidth: 1))
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Jam: improvise over \(song.meta.title)'s band; the teacher sends back an idea at your level")
             Button { app.openAgent(song: song) } label: {
                 Text("Agent")
                     .dataLabel(11, weight: .semibold)

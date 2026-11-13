@@ -429,6 +429,18 @@ final class Player {
         return max(r.lessonsDone, content.lessonsDone(reachedStep: r.reachedStep))
     }
 
+    /// A jam on a Stage song (`Improv/StageJam.swift`): its lesson in, from the intro.
+    func start(stageJam song: Song) {
+        let jam = Lesson.stageJam(song)
+        versionBase = nil
+        if content.code != jam.code {
+            content = jam
+            channels = Self.channels(of: jam)
+            lessonLog.info("jam \(song.name, privacy: .public)")
+        }
+        restartLesson(at: Lesson.stageJamStep)
+    }
+
     /// A plan goal: the step by id from its intro, the knob set to `tempo` (the ladder's next
     /// number; the step still counts at its own tempo).
     func start(stepId: String, tempo: Int?) {
@@ -874,7 +886,8 @@ final class Player {
             canDemo: canDemo,
             improv: engine.step.kind == .free && lesson.intro == nil && !demo
                 ? LessonState.Improv(notes: takeNotes, canSend: takeNotes >= Self.takeMinimum) : nil,
-            highway: engine.step.id.hasPrefix(Improv.versionPrefix) && lesson.intro == nil && lesson.complete == nil
+            highway: engine.step.id.hasPrefix(Improv.versionPrefix) && lesson.intro == nil && lesson.complete == nil,
+            stageJam: content.isStageJam
         )
     }
 

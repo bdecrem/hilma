@@ -49,7 +49,12 @@ export type Ladder = {
   tiers: Tier[]
 }
 
-export type Adaptive = { start: number; window: number; ahead: number } & Record<string, unknown>
+/** When Adaptive puts rungs of its own between two tiers (`rungs`): a step adding at least
+ *  `share` of the lower tier's notes or `keys` new keys gets one, a step adding `twoShare` or
+ *  `twoKeys` gets two. */
+export type Ghosts = { share: number; keys: number; twoShare: number; twoKeys: number }
+
+export type Adaptive = { start: number; window: number; ahead: number; ghosts?: Ghosts | null } & Record<string, unknown>
 
 export type Charting = {
   chords: Ladder
@@ -379,6 +384,94 @@ export function masks(
     preferred = preferNext
     return mask
   })
+}
+
+/** A rung of Adaptive's ladder: a tier (`step` 0), or one of the `steps` rungs Adaptive puts
+ *  between it and the tier above (`step` 1…steps), never offered as a difficulty. */
+export type Rung = { tier: number; step: number; steps: number; mask: boolean[] }
+
+/** Adaptive's ladder (Bart, 2026-11-13, on Restlicht's melody: Easy "just two notes", Medium
+ *  "5 notes / fingers, quite spread out", Adaptive toggling between them; he asked for "a little
+ *  algorithm that can make up a difficulty in between… or 'ghost difficulties' not shown in the
+ *  ui that are used for adaptive mode"). Every tier, and between two neighbours whose step is big
+ *  (`Ghosts`), one or two rungs made from the two: the lower tier plus part of what the upper one
+ *  adds, in this order: the notes it adds on the lower tier's own onsets (a chord's next note);
+ *  then, on a melody, each new key with every note of it, nearest the lower tier's keys first,
+ *  then the new onsets on the keys the hand already has (more of the tune); on a chords part the
+ *  new onsets by weight, the heaviest first; each group of new onsets those on a beat before
+ *  those between. A rung is cut where the notes added so far come nearest an even share, at a
+ *  group's edge (a key never arrives half), and only where every rung adds 15% of the step. Each
+ *  rung holds the one below and sits inside the one above, so the gap, the silence rule and
+ *  Rock Band's rule (a climb never takes a note away) hold on every rung as on the tiers. The
+ *  Swift (`Charting.rungs`) is the same; `charting-check.ts` compares them. */
+export function rungs(c: Charting, notes: PartNote[], ms: boolean[][], part: PartKey, ticksPerBeat: number): Rung[] {
+  const g = c.adaptive.ghosts ?? null
+  const out: Rung[] = []
+  ms.forEach((m, ti) => {
+    out.push({ tier: ti + 1, step: 0, steps: 0, mask: m })
+    const up = ms[ti + 1]
+    if (!up || !g) return
+    const all = notes.map((_, i) => i)
+    const extra = all.filter((i) => up[i] && !m[i])
+    const below = all.filter((i) => m[i])
+    if (!extra.length) return
+    const ticks = new Set(below.map((i) => notes[i].t))
+    const keys = new Set(below.map((i) => notes[i].n))
+    const newKeys = [...new Set(extra.map((i) => notes[i].n))].filter((k) => !keys.has(k))
+    const room = Math.max(1, below.length)
+    if (extra.length < g.share * room && newKeys.length < g.keys) return
+    // A group of new onsets: the ones on a beat, then the ones between.
+    const beats = (group: number[]) => [group.filter((i) => notes[i].t % ticksPerBeat === 0), group.filter((i) => notes[i].t % ticksPerBeat !== 0)]
+    const units: number[][] = [extra.filter((i) => ticks.has(notes[i].t))]
+    const fresh = extra.filter((i) => !ticks.has(notes[i].t))
+    if (part === 'melody') {
+      const near = (k: number) => (keys.size ? Math.min(...[...keys].map((a) => Math.abs(a - k))) : 0)
+      const count = (k: number) => fresh.filter((i) => notes[i].n === k).length
+      newKeys.sort((a, b) => near(a) - near(b) || count(b) - count(a) || a - b)
+      for (const k of newKeys) units.push(fresh.filter((i) => notes[i].n === k))
+      units.push(...beats(fresh.filter((i) => keys.has(notes[i].n))))
+    } else {
+      const weight = new Map<number, number>()
+      for (const i of fresh) weight.set(notes[i].t, Math.min(weight.get(notes[i].t) ?? 9, notes[i].lv))
+      for (const lv of [1, 2, 3]) units.push(...beats(fresh.filter((i) => weight.get(notes[i].t) === lv)))
+    }
+    const us = units.filter((u) => u.length)
+    const cum = [0]
+    for (const u of us) cum.push(cum[cum.length - 1] + u.length)
+    // The cuts for `steps` rungs, each where the notes added come nearest an even share; none
+    // when a rung would add under `least` of the step (a rung next to a tier is no rung).
+    const least = 0.15 * extra.length
+    const cutsFor = (steps: number): number[] | null => {
+      const cuts: number[] = []
+      let prev = 0
+      for (let j = 1; j <= steps; j++) {
+        const target = (j * extra.length) / (steps + 1)
+        let best = -1
+        for (let cut = prev + 1; cut <= us.length - (steps - j) - 1; cut++) {
+          if (best < 0 || Math.abs(cum[cut] - target) < Math.abs(cum[best] - target)) best = cut
+        }
+        if (best < 0) return null
+        cuts.push(best)
+        prev = best
+      }
+      const edges = [0, ...cuts, us.length]
+      return edges.slice(1).every((e, k) => cum[e] - cum[edges[k]] >= least) ? cuts : null
+    }
+    const two = extra.length >= g.twoShare * room || newKeys.length >= g.twoKeys
+    const cuts = (two ? cutsFor(2) : null) ?? cutsFor(1)
+    if (!cuts) return
+    cuts.forEach((cut, j) => {
+      const mask = m.slice()
+      for (const u of us.slice(0, cut)) for (const i of u) mask[i] = true
+      out.push({ tier: ti + 1, step: j + 1, steps: cuts.length, mask })
+    })
+  })
+  return out
+}
+
+/** A rung's name: the tier's number, a ghost's with its share of the way up ("4.5", "4.3"). */
+export function rungName(r: Rung): string {
+  return r.step === 0 ? `${r.tier}` : (r.tier + r.step / (r.steps + 1)).toFixed(1)
 }
 
 /** One tier's figures, the `-LessonCheck` ladder line's: onsets a second over the song, and

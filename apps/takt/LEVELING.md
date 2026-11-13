@@ -278,3 +278,18 @@ it before and after every change (2026-11-08).
   → 0.53 (hand 7/7 → 8/8), Medium 0.67 → 0.97. Irrlicht chords: Beginner 0.14 → 0.16, Easy
   0.20 → 0.24. Halsted melody: Beginner 0.18 → 0.25. Every other song and part is unchanged
   (`measure.ts --compare`). CHARTING.md rule 24.
+- **2026-11-13, Adaptive's rungs between two levels (0.1 (134)).** Bart, practicing Restlicht's
+  melody: Easy "just two notes" is too easy, Medium "5 notes / fingers, quite spread out" a
+  little challenging, and Adaptive toggles between them; he asked for a made-up difficulty in
+  between, or "ghost difficulties" only Adaptive uses. The figures: Easy+ 0.90 a second on D F
+  (one position, a minor third), Medium 1.33 on D F A C (one position, a seventh). Now Adaptive
+  walks rungs of its own where a step is big (CHARTING.md rule 25): Restlicht's 4.5 is D F A at
+  1.12 (inside a fifth), 91 rungs across the set list, most of them between Beginner and its
+  neighbour and between the top tiers. No tier, band or budget here moved; a rung is always
+  inside the two tiers' figures.
+- **2026-11-13, the improv teacher at the take's level.** Bart: "The key for all agent variants
+  on jams is that it should be at the same general complexity / difficulty as what the user
+  did." The idea and the whole track are held to the take's measure (`take-shape.ts`, IMPROV.md
+  "The same level as the take") instead of a fixed beginner's: as busy, no quicker notes, no more
+  keys at once, the hand moving no more than theirs. A map level's improv keeps its level's
+  solo budget as a ceiling (§2), whichever is less.

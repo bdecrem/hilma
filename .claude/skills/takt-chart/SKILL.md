@@ -112,6 +112,8 @@ Bart's rule (2026-11-08): every chart, step, drill, idea or mod goes through thi
 | "it's out of sync with the music" | eighths over a shuffle | the step's `feel: straight` |
 | "about half are valid in my opinion" (nothing counted) | the judged unit is too big, or the scoring too harsh | the run as the unit; the scoring, not the chart |
 | "it should be slow for that lesson" | a drill's tempo is its own | one note a beat at 60 first, eighths later |
+| "Easy too easy, Medium a little challenging, Adaptive toggles between them", "a difficulty in between" | Adaptive's step between two tiers is too big | the charter's own rungs between them (rule 25, `adaptive.ghosts`; `measure.ts` prints them); a fixed level that is wrong for one song is still a song patch |
+| "the agent's variant should be at my level", an idea or a solo harder or easier than the take | the teacher held to a fixed level instead of the take | the take's measure (`take-shape.ts`): `checkIdea` and `rulesFor` (IMPROV.md "The same level as the take") |
 | "nothing to play for 30 seconds", "a minute with nothing to do" | a silence over the rule (15 s at most, one of 10 s or more) | if the part itself rests there: notes of the part's own (anchors in the line's hand, chart-only); if only a low tier skips it: make the record's last or lone note an anchor, or the tier's `minBeats` / `gap` patch (rule 24) |
 | "not too hard, but make it interesting" | interest is the changes and the shape, not moves or speed | chord tones on the changes, a peak, home on the tonic, inside the hand budget |
 

@@ -101,6 +101,8 @@ struct LessonState {
     var improv: Improv? = nil
     /// The teacher's idea being played (past its intro): its notes come down a highway, as in the game.
     var highway = false
+    /// A jam on a Stage song (`Lesson.isStageJam`): the header says "Jam", not a lesson number.
+    var stageJam = false
 
     struct Improv: Equatable {
         let notes: Int

@@ -68,6 +68,22 @@ check('idea: a triplet is on the grid', 'idea' in checkIdea({ ...good, notes: [.
 check('idea: the fingers are the planner\'s (1 3 4 5 on D F G A: the thumb on D, the third on F)', 'idea' in ok && ok.idea.notes.map((n) => n.f).join('') === '1345', 'idea' in ok ? ok.idea.notes.map((n) => n.f).join('') : '')
 const wide = checkIdea({ ...good, notes: [{ beat: 0, note: 62, beats: 1, finger: 1 }, { beat: 1, note: 65, beats: 1, finger: 2 }, { beat: 2, note: 69, beats: 1, finger: 3 }, { beat: 3, note: 74, beats: 1, finger: 5 }, { beat: 4, note: 76, beats: 2, finger: 5 }] }, r)
 check('idea: one that moves the hand (D4 up to E5) is sent back for the hand', 'problems' in wide && wide.problems.some((p) => p.startsWith('the idea must sit in one hand position')), 'problems' in wide ? wide.problems.join(' | ') : 'accepted')
+// The same level as the take (take-shape.ts, 2026-11-13): this take plays eighths at most, one
+// note at a time, about 1.2 notes a second in the bars it plays. An idea in sixteenths, or in
+// two-note chords, or twice as busy, is sent back; a take in quarter notes refuses eighths.
+const quick = checkIdea({ ...good, notes: [0, 0.25, 0.5, 0.75, 1, 1.25].map((b, i) => ({ beat: b, note: [62, 64, 65, 67, 65, 64][i], beats: 0.25, finger: 1 })) }, r)
+check('idea: sixteenths over a take of eighths, and too busy, are sent back as harder than the take', 'problems' in quick && quick.problems.some((p) => p.startsWith('quicker than they played')),
+  'problems' in quick ? quick.problems.join(' | ') : 'accepted')
+const chordal = checkIdea({ ...good, notes: [...good.notes, { beat: 0, note: 65, beats: 1, finger: 3 }] }, r)
+check('idea: two keys at once over a take of single notes is sent back', 'problems' in chordal && chordal.problems.some((p) => p.includes('one note at a time')), 'problems' in chordal ? chordal.problems.join(' | ') : 'accepted')
+{
+  const quarters = { ...body, take: { ...body.take, notes: Array.from({ length: 48 }, (_, i) => ({ t: i * 12 + Math.floor(i / 4) * 0, n: [62, 65, 67, 69][i % 4], v: 0.6, len: 12 })) } }
+  const rq = parseRequest(quarters) as ImprovRequest
+  const eighths = checkIdea({ ...good, notes: [0, 0.5, 1, 1.5, 2, 3].map((b, i) => ({ beat: b, note: [62, 65, 67, 69, 67, 65][i], beats: 0.5, finger: 1 })) }, rq)
+  const ok4 = checkIdea({ ...good, notes: [0, 1, 2, 3, 4, 5, 6].map((b, i) => ({ beat: b, note: [62, 65, 67, 69, 67, 65, 62][i], beats: 1, finger: 1 })) }, rq)
+  check('idea: a take in quarter notes refuses an idea in eighths and takes one in quarters', 'problems' in eighths && 'idea' in ok4,
+    `${'problems' in eighths ? eighths.problems.join(' | ') : 'eighths accepted'} · ${'problems' in ok4 ? ok4.problems.join(' | ') : 'quarters accepted'}`)
+}
 check('parse: the level rides along (3), and defaults to 1', (parseRequest({ ...body, context: { ...body.context, level: 3 } }) as ImprovRequest).context.level === 3 && r.context.level === 1)
 
 async function live() {

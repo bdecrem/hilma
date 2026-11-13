@@ -80,12 +80,30 @@ check('chordLine: every chord once, the tones among the white keys, the rest nam
 
 const rules = rulesFor(r)
 // Level 1 (LEVELING.md): the home position is the five white keys the take sat on (D4 to A4:
-// the take is D, F, G, A with one C5), the range a step either side, the solo budget 4 moves.
-check('rules: Level 1, the home position D4–A4 (thumb on D4), the range C4–B4, the white keys, the solo budget 4 moves in 2 places',
-  rules.hand.level === 1 && rules.hand.moves === 4 && rules.hand.moments === 2 && rules.home.keys.join() === '62,64,65,67,69' && rules.low === 60 && rules.high === 71
+// the take is D, F, G, A with one C5), the range a step either side. The hand budget and the
+// density are the take's own (take-shape.ts, 2026-11-13: it never moved, so 2 moves in 1 place,
+// under Level 1's 4; 0.77 notes a second, so 0.62 to 1.0), no sixteenths, runs of 4 at most.
+check('rules: Level 1, the home position D4–A4 (thumb on D4), the range C4–B4, the white keys, the take\'s own budget (2 moves in 1 place, under Level 1\'s 4) and density (0.62–1.0)',
+  rules.hand.level === 1 && rules.hand.moves === 2 && rules.hand.moments === 1 && rules.home.keys.join() === '62,64,65,67,69' && rules.low === 60 && rules.high === 71
+  && rules.minPerSecond === 0.62 && rules.maxPerSecond === 1 && !rules.sixteenths && rules.run === 4
   && rules.scale!.length === 7 && !rules.shuffle && homeLine(rules.home) === 'thumb on D4, then E4 F4 G4, pinky on A4', JSON.stringify({ ...rules, home: rules.home, hand: rules.hand }))
 const level3 = rulesFor({ ...r, context: { ...r.context, level: 3 } })
-check('rules: Level 3 keeps the old range (a seventh under the take, an octave over it) and a 20-move budget', level3.low === 55 && level3.high === 81 && level3.hand.moves === 20, JSON.stringify(level3.hand))
+check('rules: Level 3 keeps the old range (a seventh under the take, an octave over it); its budget is the take\'s (2 moves), under the level\'s 20', level3.low === 55 && level3.high === 81 && level3.hand.moves === 2, JSON.stringify(level3.hand))
+// A jam (Bart, 2026-11-13: variants "at the same general complexity / difficulty as what the
+// user did"): a busy take in sixteenths that moves its hand gets a busier track, sixteenths on
+// the grid, longer runs and more moves; its range is where it played.
+{
+  const busy: typeof body.take.notes = []
+  for (let bar = 0; bar < 16; bar++) {
+    const lo = bar % 4 < 2 ? 62 : 69
+    for (let k = 0; k < 8; k++) busy.push({ t: bar * 48 + k * 3, n: lo + [0, 2, 3, 5, 3, 2, 0, 2][k], v: 0.6, len: 3 })
+  }
+  const jam = parseRequest({ ...body, take: { ...body.take, bars: 16, notes: busy }, context: { ...body.context, where: 'jam' } }) as ImprovRequest
+  const jr = rulesFor(jam, 48)
+  check('rules: a jam at the take\'s level: a busy take in sixteenths that moves gets sixteenths, longer runs, more moves, its own range',
+    jr.sixteenths && jr.run >= 8 && jr.minPerSecond > 1.2 && jr.hand.moves > 4 && jr.low === 60 && jr.high === 76,
+    JSON.stringify({ min: jr.minPerSecond, max: jr.maxPerSecond, run: jr.run, hand: jr.hand, low: jr.low, high: jr.high }))
+}
 
 // MARK: The hand (the fingering port against the app's figures, LEVELING.md §1)
 
@@ -191,7 +209,7 @@ check('a solo off the changes is sent back naming the bars', changeProblems.some
 const busy: PartNote[] = []
 for (let b = 0; b < bars; b++) for (let e = 0; e < 8; e++) busy.push({ t: b * tpb + e * 6, n: 62 + (e % 4) * 2, len: 6, lv: e === 0 ? 1 : 2 })
 const busyProblems = checkSolo(withSolo(busy), rules, review.idea)
-check('a solo of straight eighths is too busy and runs too long', busyProblems.some((p) => p.startsWith('too busy')) && busyProblems.some((p) => p.startsWith('runs of five')), busyProblems.join(' | '))
+check('a solo of straight eighths is too busy and runs too long', busyProblems.some((p) => p.startsWith('too busy')) && busyProblems.some((p) => p.startsWith('runs of 5')), busyProblems.join(' | '))
 const chords = good.flatMap((n) => (n.lv === 1 ? [n, { ...n, n: n.n + 4 }] : [n]))
 check('two notes at once are refused', checkSolo(withSolo(chords), rules, review.idea).some((p) => p.startsWith('two notes at once')))
 const black = good.map((n, i) => (i === 5 ? { ...n, n: 61 } : n))

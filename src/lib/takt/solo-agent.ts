@@ -18,6 +18,7 @@ import { type ModBundle, type ModRow, bundle, createMod, findSolo, saveMod } fro
 import { type PartNote, type SongFile, cloneSong, musicBars, sortedNotes, ticksPerBar } from './songfile'
 import { handFigures, handLine } from './fingering'
 import { type HandBudget, type HomePosition, budgetLine, handBudget, handProblems, homeLine, homePosition, noteNameSharp } from './leveling'
+import { type TakeShape, shapeLine, takeShape, trackLimits } from './take-shape'
 
 export const SOLO_MODEL = 'claude-opus-5-5'
 
@@ -116,21 +117,45 @@ export type SoloRules = {
   hand: HandBudget
   home: HomePosition
   right: boolean
+  /** The take's level (take-shape.ts): sixteenths on the grid only when they played them, and
+   *  the longest run of eighths (or quicker) in a row. */
+  sixteenths: boolean
+  run: number
+  shape: TakeShape
 }
 
-/** The rules for this backing and take. The hand first (LEVELING.md, 2026-11-08): the budget
- *  of the player's map level for a solo track (Level 1: at most 4 moves in 2 places, 2
- *  positions, inside an octave), and the home position, the five scale keys where their take
- *  mostly sat. On Levels 1–2 the range is that position and a step either side; from Level 3
- *  the range is near where they played (a seventh under, an octave over, two octaves at most).
- *  The density is a grown-up beginner's (0.45 to 1.2 onsets a second). */
-export function rulesFor(r: ImprovRequest): SoloRules {
+/** The rules for this backing and take, at the take's level (Bart, 2026-11-13: "the same
+ *  general complexity / difficulty as what the user did"; take-shape.ts): the density is 0.8× to
+ *  1.3× their notes a second with the rests, sixteenths only when they played them, runs of
+ *  quick notes no longer than theirs (four at least), and the hand budget their own moves a bar
+ *  over the song (a quarter more, at least 2). The hand first (LEVELING.md, 2026-11-08): on a
+ *  map level's improv the budget is also the level's for a solo track (Level 1: at most 4 moves
+ *  in 2 places, 2 positions, inside an octave), whichever is less, and on Levels 1–2 the range
+ *  is the home position (the five scale keys where their take mostly sat) and a step either
+ *  side. A jam's range is where they played and a step either side, a sixth at least; from
+ *  Level 3 near where they played (a seventh under, an octave over, two octaves at most).
+ *  `bars`: the song's, for the hand budget. */
+export function rulesFor(r: ImprovRequest, bars = 48): SoloRules {
   const s = stats(r)
   const level = r.context.level || 1
-  const hand = handBudget(level, true)
   const right = r.context.hand === 'right'
+  const shape = takeShape(r.take.notes, r.take.tempo, right)
+  const track = trackLimits(shape, bars)
+  const own: HandBudget = { level, positions: track.positions, moves: track.moves, moments: track.moments, span: track.span }
+  const cap = handBudget(level, true)
+  const hand: HandBudget = r.context.where === 'level'
+    ? { level, positions: Math.min(own.positions, cap.positions), moves: Math.min(own.moves, cap.moves), moments: Math.min(own.moments, cap.moments), span: Math.min(own.span, cap.span) }
+    : own
   const home = homePosition(r.take.notes, r.backing.scale, level <= 1 ? 5 : 6)
+  const tail = { sixteenths: track.sixteenths, run: Math.max(4, shape.longestRun), shape }
   let low: number, high: number
+  if (r.context.where === 'jam') {
+    const lo = s.low ?? 60, hi = s.high ?? 72
+    low = Math.max(36, lo - 2)
+    high = Math.min(96, hi + 2)
+    if (high - low < 9) high = Math.min(96, low + 9)
+    return { scale: r.backing.scale, scaleName: r.backing.scaleName, low, high, shuffle: r.backing.feel === 'shuffle', minPerSecond: track.minPerSecond, maxPerSecond: track.maxPerSecond, hand, home, right, ...tail }
+  }
   if (level <= 2) {
     low = home.low
     high = home.high
@@ -148,7 +173,7 @@ export function rulesFor(r: ImprovRequest): SoloRules {
     }
     if (high - low < 14) high = Math.min(96, low + 14)
   }
-  return { scale: r.backing.scale, scaleName: r.backing.scaleName, low, high, shuffle: r.backing.feel === 'shuffle', minPerSecond: 0.45, maxPerSecond: 1.2, hand, home, right }
+  return { scale: r.backing.scale, scaleName: r.backing.scaleName, low, high, shuffle: r.backing.feel === 'shuffle', minPerSecond: track.minPerSecond, maxPerSecond: track.maxPerSecond, hand, home, right, ...tail }
 }
 
 const barOf = (t: number, tpb: number) => Math.floor(t / tpb) + 1
@@ -174,9 +199,9 @@ export function checkSolo(song: SongFile, rules: SoloRules, idea: Idea): string[
   if (together.length) problems.push(`two notes at once at ${list(together.map((t) => barOf(t, tpb)))} (bars): it is a line, one note at a time`)
 
   // The grid and the lengths.
-  const offGrid = notes.filter((n) => !(n.t % 6 === 0 || (rules.shuffle && n.t % 4 === 0)))
-  if (offGrid.length) problems.push(`off the grid (beats and halves${rules.shuffle ? ', or the shuffle\'s 8 + 4' : ''}): ${list(offGrid.map((n) => Number(`${barOf(n.t, tpb)}.${n.t % tpb}`)))} (bar.tick)`)
-  const minLen = rules.shuffle ? 4 : 6
+  const offGrid = notes.filter((n) => !(n.t % (rules.sixteenths ? 3 : 6) === 0 || (rules.shuffle && n.t % 4 === 0)))
+  if (offGrid.length) problems.push(`off the grid (beats and halves${rules.sixteenths ? ' and sixteenths' : ''}${rules.shuffle ? ', or the shuffle\'s 8 + 4' : ''}): ${list(offGrid.map((n) => Number(`${barOf(n.t, tpb)}.${n.t % tpb}`)))} (bar.tick)`)
+  const minLen = rules.sixteenths ? 3 : rules.shuffle ? 4 : 6
   const short = notes.filter((n) => n.len < minLen)
   if (short.length) problems.push(`notes shorter than an eighth (${minLen} ticks) at bars ${list(short.map((n) => barOf(n.t, tpb)))}`)
   const long = notes.filter((n) => n.len > 2 * tpb)
@@ -206,9 +231,9 @@ export function checkSolo(song: SongFile, rules: SoloRules, idea: Idea): string[
   for (let i = 1; i < onsets.length; i++) {
     if (onsets[i] - onsets[i - 1] <= 8) run++
     else run = 1
-    if (run === 5) runs.push(barOf(onsets[i - 4], tpb))
+    if (run === rules.run + 1) runs.push(barOf(onsets[i - rules.run], tpb))
   }
-  if (runs.length) problems.push(`runs of five or more eighths in a row from bars ${list(runs)}: at most four eighths together, then a longer note or a rest`)
+  if (runs.length) problems.push(`runs of ${rules.run + 1} or more quick notes (an eighth or less apart) in a row from bars ${list(runs)}: at most ${rules.run} together, as in their take, then a longer note or a rest`)
   const silences: string[] = []
   if (onsets[0] > tpb + 12) silences.push(`bars 1–${barOf(onsets[0], tpb) - 1}`)
   for (let i = 1; i < onsets.length; i++) {
@@ -300,11 +325,21 @@ The changes: the solo must say the chords. On a bar where the chord changes, the
 
 THE HAND FIRST. This is the rule the student cares most about: a beginner's whole difficulty is knowing where their hand is. The message names their HOME POSITION (five neighbouring keys of the scale, one finger each, where their own take sat) and their level's HAND BUDGET: how many times in the WHOLE SONG the hand may move at all. Write every bar inside the home position. The few figures that leave it are the interest of the track: a short climb or a reach over the top note, a bar or two, and the hand comes straight home. Never settle in a new position for a chorus; never move the hand twice in one bar; never ask for a thumb-under or a jump where the line could stay put. The app fingers your line the way the Stage will (a dynamic program over the five fingers) and counts the moves; over the budget it comes back with the bars named. Interest at this level comes from rhythm, repetition and variation, space, and landing on the chord tones, not from range.
 
-Not too hard, and interesting: a grown-up beginner plays this with one hand while reading the notes coming down. Mostly quarter notes and held notes, eighths in pairs or short groups, never more than four eighths in a row, no sixteenths, never two notes at once, steps and small leaps (a fifth at most; nothing wider than the range given). Rests are music: at least one bar in four is mostly silence or one held note, and never more than two bars without a note. About 0.6 to 1.0 notes a second over the whole song; the message says how many notes a bar that is at this tempo.
+At their level, and interesting: the student plays this with one hand while reading the notes coming down, and the track is exactly as hard as their own take, neither harder nor easier (the message measures the take: notes a second, their quickest notes, their longest run of quick notes, how often their hand moved). Keep to the density band the message gives, no note values quicker than theirs (sixteenths only when the message allows them), runs of quick notes no longer than theirs, never two notes at once, steps and small leaps (a fifth at most; nothing wider than the range given). Rests are music: at least one bar in four is mostly silence or one held note, and never more than two bars without a note. Hold back where a beginner's take was simple: mostly quarter notes and held notes then.
 
 The format (the app checks every rule and sends the solo back with what to fix): bar is 1-based; tick is counted inside the bar from 0, 12 a beat, 48 a bar, on the grid: beats (0, 12, 24, 36) and halves (6, 18, 30, 42), and in a shuffle the short eighth on 8, 20, 32, 44; n is a MIDI number (60 = middle C), only the notes allowed, inside the range given; len in ticks, 6 or more (a quarter is 12, a half 24, a whole bar 48; a note may ring over the bar line, up to two bars); lv is the weight for the game's levels under Solo: 1 for one anchor a bar (the note held on a strong beat, a chord tone), 2 the rest of the line, 3 pickups and ornaments. No fingers: the app fingers it.
 
-Write every bar from the first to the last with write_notes, in two halves, in order, then call finish with a title (at most 40 characters, like "Lantern climb") and one sentence for the song's card: what this solo is and where it came from, at most 160 characters, plain words, no markdown. If finish comes back with problems, rewrite the bars it names with write_notes and call finish again.`
+Write every bar from the first to the last with write_notes, in order, in the parts the message names (24 bars at most a call), then call finish with a title (at most 40 characters, like "Lantern climb") and one sentence for the song's card: what this solo is and where it came from, at most 160 characters, plain words, no markdown. If finish comes back with problems, rewrite the bars it names with write_notes and call finish again.`
+}
+
+/** The parts the track is written in: two halves up to 48 bars (a blues of four choruses, as
+ *  before), else even parts of at most 24 bars (a whole techno track, a Stage jam's Solo). */
+function chunks(bars: number): [number, number][] {
+  const n = Math.max(2, Math.ceil(bars / 24))
+  const size = Math.ceil(bars / n)
+  const out: [number, number][] = []
+  for (let a = 1; a <= bars; a += size) out.push([a, Math.min(bars, a + size - 1)])
+  return out
 }
 
 function userMessage(r: ImprovRequest, review: Review, song: SongFile, rules: SoloRules): string {
@@ -330,8 +365,9 @@ Sections: ${sections}.
 Chords by bar: ${formRuns(song.form, bars)}.
 Chord tones among the notes allowed: ${chordLine(song.form.slice(0, bars), rules.scale)}.
 ${allowed}
-Level ${rules.hand.level}. Home position (${r.context.hand} hand): ${homeLine(rules.home, rules.right)}; the figures may reach one step either side (${noteNameSharp(rules.low)} to ${noteNameSharp(rules.high)}, MIDI ${rules.low}–${rules.high}), and nothing outside that. Hand budget for the whole song: ${budgetLine(rules.hand)}. They played ${s.low != null ? noteName(s.low) : '-'} to ${s.high != null ? noteName(s.high) : '-'}.
-Density: 0.6 to 1.0 notes a second is ${perBar(0.6)} to ${perBar(1.0)} notes a bar at ${song.song.tempo} bpm, about ${Math.round(0.6 * seconds)} to ${Math.round(1.0 * seconds)} notes in all.
+Their level, measured from the take: ${shapeLine(rules.shape)}; their longest run of quick notes ${rules.shape.longestRun}.
+Home position (${r.context.hand} hand): ${homeLine(rules.home, rules.right)}; the range is ${noteNameSharp(rules.low)} to ${noteNameSharp(rules.high)} (MIDI ${rules.low}–${rules.high}), and nothing outside that. Hand budget for the whole song, from their take: ${budgetLine(rules.hand)}. They played ${s.low != null ? noteName(s.low) : '-'} to ${s.high != null ? noteName(s.high) : '-'}.
+Density, from their take: ${rules.minPerSecond} to ${rules.maxPerSecond} notes a second is ${perBar(rules.minPerSecond)} to ${perBar(rules.maxPerSecond)} notes a bar at ${song.song.tempo} bpm, about ${Math.round(rules.minPerSecond * seconds)} to ${Math.round(rules.maxPerSecond * seconds)} notes in all. ${rules.sixteenths ? 'They played sixteenths: ticks on multiples of 3 and lengths of 3 or more are allowed.' : 'No sixteenths: they played none.'} At most ${rules.run} quick notes (an eighth or less apart) in a row.
 Hand: ${r.context.hand}.
 ${tuneLines.length ? `
 The record's own line, the tune the ${song.instruments.horns} plays (one chorus), for reference; the solo is new, in the student's voice, but may nod to it:
@@ -343,7 +379,7 @@ ${transcript(r)}
 Your review: "${review.headline}" ${review.notes.join(' ')}
 Your idea, "${review.idea.title}" (${review.idea.bars} bar${review.idea.bars === 1 ? '' : 's'}): ${review.idea.why} Its notes, beats from its start: ${ideaBeats}.
 
-Write the whole track now: bars 1–${Math.ceil(bars / 2)}, then ${Math.ceil(bars / 2) + 1}–${bars}, then finish.`
+Write the whole track now: ${chunks(bars).map(([a, b]) => `bars ${a}–${b}`).join(', then ')}, then finish.`
 }
 
 const NOTE = {
@@ -361,7 +397,7 @@ const NOTE = {
 const TOOLS = [
   {
     name: 'write_notes',
-    description: 'Write the solo into a range of bars (1-based, inclusive), replacing whatever the range held. Write the track in two halves, in order; a call may hold at most 24 bars. The app validates the notes and keeps the band in step.',
+    description: 'Write the solo into a range of bars (1-based, inclusive), replacing whatever the range held. Write the track in order, in the parts the message names; a call may hold at most 24 bars. The app validates the notes and keeps the band in step.',
     input_schema: {
       type: 'object' as const,
       properties: {
@@ -403,7 +439,7 @@ export async function writeSolo(r: ImprovRequest, review: Review, base: SongFile
     song.song.parts.melody = { title: 'Solo', monitor: song.instruments.monitor ?? 'piano', channel: 'horns', notes: [] }
   }
   const draft: Draft = { song, override, title: song.song.title, mutated: false }
-  const rules = rulesFor(r)
+  const rules = rulesFor(r, musicBars(song))
   const bars = musicBars(song)
   const tpb = ticksPerBar(song)
   emit({ type: 'status', text: 'Reading your take and the changes' })

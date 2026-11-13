@@ -206,6 +206,27 @@ LEVELING.md, and this file keeps the pointer.
   rule 24, LEVELING.md §2, a FAIL in `measure.ts`, a figure on Agent mode's ladder line with
   rule 9 in its prompt, and 315 `-LessonCheck` assertions.
 
+- **2026-11-13, 0.1 (134): a level between two levels, for Adaptive.** "Adaptive mode: I'm
+  practicing Restlicht, Melody. Easy is too easy (just two notes); Medium a little challenging
+  (5 notes/ fingers, quite spread out). In adaptive mode, it toggles correctly between those two
+  modes. HOWEVER, what would be better is if there was either (a) a little algorithm that can
+  make up a difficulty in between easy/medium or any other two levels OR if (b) there were
+  'ghost difficulties' not shown in the ui that are used for adaptive mode." Both axes: Easy+
+  was D F at 0.90 a second, Medium D F A C at 1.33. Read as: Adaptive's step is too big where a
+  tier adds keys and density at once, and no song patch fixes a gap the ladder has everywhere.
+  Built: the charter makes rungs between two tiers whose step is big (CHARTING.md rule 25,
+  `Charting.rungs` / `rungs`), new keys one at a time, nearest first; only Adaptive walks them,
+  and the HUD names them "Level 4.5". Restlicht's 4.5 is D F A at 1.12. 91 rungs across the set
+  list; fixed levels untouched (LessonCheck, charting-check 108/108). Not played by him yet.
+- **2026-11-13, 0.1 (134): the teacher's variants at the take's level.** "Improvise: for all
+  games, offer an JAM/improvize mode like we offer in the Map… And then the agent offers a
+  variant on that. The key for all agent variants on jams is that it should be at the same
+  general complexity / difficulty as what the user did." A jam on every Stage card (IMPROV.md
+  "Jam on any song"), and the idea and the whole track held to the take's own measure
+  (`take-shape.ts`: density, quickest value, keys at once, hand moves) instead of a fixed
+  beginner's (IMPROV.md "The same level as the take"). The level's budget stays the ceiling on a
+  map level's improv.
+
 ## How to add a line
 
 Date and build, his words in quotes, which axis, the figure before and after, what moved (the

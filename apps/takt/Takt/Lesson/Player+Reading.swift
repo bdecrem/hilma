@@ -204,6 +204,8 @@ struct ReadingState: Equatable {
         let ticks: Int
         let event: Reading.Event
         let mark: Mark
+        /// The Stage's staff view: how a played note was judged (its colour on the staff).
+        var judgment: GameEngine.Judgment? = nil
     }
 
     struct Bar: Equatable {

@@ -254,7 +254,7 @@ struct LiveLessonScreen: View {
                 beginStep: player.beginStep,
                 nextStep: player.nextStep,
                 back: { app.leaveLesson() },
-                backTitle: app.fromLevel == nil ? "Back to the module" : "Back to the map",
+                backTitle: player.content.isStageJam ? "Back to the stage" : app.fromLevel == nil ? "Back to the module" : "Back to the map",
                 showMe: player.toggleDemo,
                 sendTake: app.sendTake,
                 highway: { player.versionHighway(keys: $0) }

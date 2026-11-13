@@ -23,6 +23,8 @@ struct GameState {
     /// The tier being played and the ladder's height.
     var level = 1
     var tiers = 1
+    /// The level's name on Adaptive: the tier's number, or a rung's between two ("4.5").
+    var levelName = ""
     var section = ""
     var chord = ""
     var nextChord = ""
@@ -99,7 +101,7 @@ struct GameState {
     /// Reading module's staff, scrolling past the playhead, in the highway's place.
     var staff: ReadingState? = nil
 
-    var levelTitle: String { "Level \(level)" }
+    var levelTitle: String { "Level \(levelName.isEmpty ? "\(level)" : levelName)" }
 }
 
 /// What the game screen's buttons do. One transport everywhere (2026-11-08, Bart: "make it so
@@ -181,6 +183,21 @@ struct GameScreen: View {
                         StaffView(reading: staff, heardTick: state.heardTick, ticksPerBeat: state.ticksPerBeat, compact: compact)
                             .accessibilityElement()
                             .accessibilityLabel(staff.coach)
+                            .overlay {
+                                // The judgment of every note, as on the highway (Bart, 2026-11-13:
+                                // "Staff mode: show the note accuracy feedback"): the pop springs
+                                // at the playhead, just under the staff, and rises into it.
+                                if let pop = state.pop {
+                                    GeometryReader { geo in
+                                        let p = StaffView.playhead(clef: staff.clef, size: geo.size, compact: compact)
+                                        HitPop(pop: pop, compact: compact)
+                                            .id(pop.seq)
+                                            .fixedSize()
+                                            .position(x: p.x, y: min(geo.size.height - 20, p.low + (compact ? 14 : 20)))
+                                    }
+                                    .allowsHitTesting(false)
+                                }
+                            }
                             .padding(.horizontal, compact ? 16 : 24)
                             .padding(.top, compact ? 8 : 14)
                     } else {

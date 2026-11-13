@@ -47,13 +47,14 @@ extension Player {
             let e = Reading.Event(midi: n.n, beats: beats, finger: game.finger(w.index), hand: h,
                                   letter: spelled.letter, accidental: spelled.accidental)
             var mark = ReadingState.Mark.ahead
+            var judgment: GameEngine.Judgment?
             switch w.status {
-            case .hit: mark = .played
+            case .hit(let j): mark = .played; judgment = j
             case .missed: mark = .missed
             case .pending:
                 if n.t == nowT { mark = .now; nowEvents.append(e) } else if n.t == nextT { mark = .next }
             }
-            notes.append(ReadingState.Note(id: w.index, tick: n.t, ticks: n.len, event: e, mark: mark))
+            notes.append(ReadingState.Note(id: w.index, tick: n.t, ticks: n.len, event: e, mark: mark, judgment: judgment))
         }
         var bars: [ReadingState.Bar] = []
         let first = max(0, Int(lo) / tpBar), last = min(song.bars - 1, Int(hi) / tpBar)

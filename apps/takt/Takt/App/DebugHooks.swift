@@ -131,7 +131,11 @@ enum DebugHooks {
             let song = Song.bundled(name)
             var parts: [String: [[Int]]] = [:]
             for k in song.partKeys {
-                parts[k.rawValue] = song.masks(k).map { m in m.indices.filter { m[$0] } }
+                let tm = song.masks(k)
+                parts[k.rawValue] = tm.map { m in m.indices.filter { m[$0] } }
+                // Adaptive's ladder, rung by rung (`Charting.rungs`), checked the same way.
+                parts[k.rawValue + ":rungs"] = song.charting.rungs(song.notes(k), masks: tm, part: k, ticksPerBeat: song.band.ticksPerBeat)
+                    .map { r in r.mask.indices.filter { r.mask[$0] } }
             }
             out[name] = parts
         }

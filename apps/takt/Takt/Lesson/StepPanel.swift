@@ -57,7 +57,7 @@ struct StepPanel: View {
                     VStack(alignment: .leading, spacing: 8) { completeButtons(c) }
                 }
             } else if let i = state.intro {
-                Text(i.jam ? "\(state.moduleTitle) · Play · after lesson \(i.number)" : "\(state.moduleTitle) · Lesson \(i.number) of \(i.count)")
+                Text(state.stageJam ? "Stage · \(state.moduleTitle) · Jam" : i.jam ? "\(state.moduleTitle) · Play · after lesson \(i.number)" : "\(state.moduleTitle) · Lesson \(i.number) of \(i.count)")
                     .dataLabel(11)
                     .foregroundStyle(Palette.muted)
                 about(i, compact: compact, titleSize: compact ? 28 : 40, hand: true)

@@ -94,6 +94,11 @@ final class AppModel {
     /// Out of the lesson: back to the map's level it was started from, else `fallback` (the
     /// module screen; Esc and the result screen go to the menu).
     func leaveLesson(else fallback: Route = .module) {
+        if player?.content.isStageJam == true {
+            leaveStageJam()
+            route = .stage
+            return
+        }
         if let level = fromLevel {
             route = .map
             openVenue = level
@@ -201,7 +206,8 @@ final class AppModel {
             "title": song?.meta.title ?? "\(player.audio.band.name)\((step.transpose ?? 0) != 0 ? ", moved to \(names[root])" : "") (the \(content.module.title) band)",
             "style": song?.meta.style ?? content.module.title,
             "key": song?.meta.key ?? step.key ?? content.key ?? names[root],
-            "feel": step.straight ? "straight" : "shuffle",
+            // A Stage song says its own feel: swung when its drums play the shuffle's late eighth.
+            "feel": step.straight || (song.map { !Lesson.swung($0) } ?? false) ? "straight" : "shuffle",
             "form": content.form(of: step),
             "scale": step.scale == nil ? NSNull() : Array(allowed).sorted(),
             "scaleName": step.scale == nil ? "" : (0..<12).map { (root + $0) % 12 }.filter { allowed.contains($0) }.map { names[$0] }.joined(separator: " "),
@@ -536,6 +542,12 @@ final class AppModel {
             pick(song: song, part: Song.PartKey(rawValue: d.string(forKey: "Part") ?? "chords") ?? .chords)
             pick(song: song, difficulty: GameEngine.Difficulty(rawValue: d.string(forKey: "Difficulty") ?? "adaptive") ?? .adaptive)
             if d.bool(forKey: "Call") { call(song: song) } else if d.bool(forKey: "Practice") { practice(song: song) } else { play(song: song) }
+        }
+        // `-Jam <song>` opens the Stage jam on that song, as the card's Jam does (with
+        // `-ImprovPlay <choruses>` it plays and sends a take).
+        if let name = d.string(forKey: "Jam") {
+            guard let song = songs.first(where: { $0.name == name }) else { fatalError("-Jam: no song \(name)") }
+            jam(song: song)
         }
         // `-AgentSheet <song>` opens Agent mode on that song (over the stage, or over the run
         // `-Route game` started, with the position); `-AgentSay "<text>"` sends it at once.
@@ -977,6 +989,24 @@ final class AppModel {
         route = .game
     }
 
+    /// The card's Jam (Bart, 2026-11-13; `Improv/StageJam.swift`): the song's band with its
+    /// melody out, your solo over it, then the teacher's notes, an idea at your level and the
+    /// whole track as the song's Solo. Back lands on the Stage.
+    func jam(song: Song) {
+        guard let player else { return }
+        openVenue = nil
+        fromLevel = nil
+        player.start(stageJam: song)
+        guard Player.calibrated else { return calibrate(then: .lesson) }
+        route = .lesson
+    }
+
+    /// Out of a Stage jam: the module that was open comes back (its band, its lesson).
+    private func leaveStageJam() {
+        guard let player, player.content.isStageJam else { return }
+        player.switchModule(to: module(currentModule))
+    }
+
     /// Call: the same, with the first note called out at once (Player+Call).
     func call(song: Song) {
         guard let player else { return }
@@ -993,6 +1023,8 @@ final class AppModel {
             return
         }
         player?.endGame()
+        // A song played from a Stage jam's whole track: the jam is over too.
+        leaveStageJam()
         if let level = fromLevel {
             route = .map
             openVenue = level

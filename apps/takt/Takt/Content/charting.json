@@ -156,7 +156,13 @@
   "afterClimb": 1,
   "afterDrop": 2,
   "missRun": 3,
-  "floorBelowStart": 1
+  "floorBelowStart": 1,
+  "ghosts": {
+   "share": 0.25,
+   "keys": 2,
+   "twoShare": 0.4,
+   "twoKeys": 3
+  }
  },
  "songs": {
   "song-slow-burn": {

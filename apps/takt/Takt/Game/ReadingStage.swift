@@ -302,9 +302,13 @@ struct StaffView: View {
                         StaffView.chord(&lc, group, s: s, x: nx, grand: L.grand)
                         continue
                     }
-                    let color: Color = n.mark == .now ? Palette.signal : n.mark == .next ? Palette.cue : Palette.text
+                    var color: Color = n.mark == .now ? Palette.signal : n.mark == .next ? Palette.cue : Palette.text
                     var c = layer
-                    if n.mark == .played || n.mark == .missed { c.opacity = 0.32 }
+                    if let j = n.judgment, n.mark == .played {
+                        // The Stage's staff: a played note keeps its judgment's colour (the pop's).
+                        color = StaffView.color(of: j)
+                        c.opacity = 0.85
+                    } else if n.mark == .played || n.mark == .missed { c.opacity = 0.32 }
                     guard let step = Reading.step(n.event, clef: s.clef) else {
                         StaffDraw.rest(&c, s, x: nx, beats: n.event.beats, color: color)
                         continue
@@ -349,14 +353,41 @@ extension Reading.Event {
 }
 
 extension StaffView {
+    /// A judgment's colour, the hit pop's (`HitPop`): Perfect in signal, Good in cue, Early and
+    /// Late in a paler cue, a miss muted.
+    static func color(of j: GameEngine.Judgment) -> Color {
+        switch j {
+        case .perfect: return Palette.signal
+        case .good: return Palette.cue
+        case .early, .late: return Palette.cue.opacity(0.6)
+        case .miss: return Palette.muted
+        }
+    }
+
+    /// Where the playhead stands in a staff of this size, and the row under the lowest staff
+    /// (where the Stage's staff view springs its hit pop).
+    static func playhead(clef: Reading.Clef, size: CGSize, compact: Bool) -> (x: CGFloat, low: CGFloat) {
+        let L = StaffLayout(clef: clef, size: size, compact: compact)
+        let last = L.staves[L.staves.count - 1]
+        let low = L.grand ? last.bottom + 3.4 * last.g + 10 : last.bottom + (clef == .bass ? 2.0 * last.g + 18 : 1.6 * last.g + 10)
+        return (L.playX, low)
+    }
+}
+
+extension StaffView {
     /// A chord: its heads on one stem (a second's upper head on the stem's other side), each
     /// accidental staggered left, framed as one when it is the one to play now (or next), the
     /// fingers stacked over it.
     static func chord(_ ctx: inout GraphicsContext, _ group: [ReadingState.Note], s: StaffLayout.Staff, x nx: CGFloat, grand: Bool) {
         let mark = group.contains { $0.mark == .now } ? ReadingState.Mark.now : group.contains { $0.mark == .next } ? .next : group[0].mark
-        let color: Color = mark == .now ? Palette.signal : mark == .next ? Palette.cue : Palette.text
+        var color: Color = mark == .now ? Palette.signal : mark == .next ? Palette.cue : Palette.text
         var c = ctx
-        if mark == .played || mark == .missed { c.opacity = 0.32 }
+        // The Stage's staff: a chord played whole keeps its worst note's judgment's colour.
+        let judged = group.compactMap(\.judgment)
+        if mark == .played, judged.count == group.count, let worst = judged.max(by: { $0.rank < $1.rank }) {
+            color = StaffView.color(of: worst)
+            c.opacity = 0.85
+        } else if mark == .played || mark == .missed { c.opacity = 0.32 }
         let heads = group.compactMap { n -> (step: Int, acc: Int, finger: Int?)? in
             guard let st = Reading.step(n.event, clef: s.clef) else { return nil }
             return (st, n.event.accidental, n.event.finger)

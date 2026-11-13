@@ -9,7 +9,7 @@
 
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { type Charting, figures, masks, validateOverride } from '../../src/lib/takt/charting'
+import { type Charting, figures, masks, rungs, rungName, validateOverride } from '../../src/lib/takt/charting'
 import { type SongFile, sortedNotes, ticksPerBar, validateSong, partKeys, musicBars } from '../../src/lib/takt/songfile'
 import { type Draft, runTool } from '../../src/lib/takt/mod-tools'
 
@@ -32,8 +32,18 @@ function check(name: string, ok: boolean, info = '') {
 for (const [name, parts] of Object.entries(dump)) {
   const song = JSON.parse(readFileSync(join(CONTENT, `${name}.json`), 'utf8')) as SongFile
   const override = charting.songs[name] ?? null
-  for (const [part, theirs] of Object.entries(parts)) {
-    const notes = sortedNotes(song.song.parts[part as 'chords' | 'melody']!.notes)
+  for (const [key, theirs] of Object.entries(parts)) {
+    const [part, kind] = key.split(':') as ['chords' | 'melody', string | undefined]
+    const notes = sortedNotes(song.song.parts[part]!.notes)
+    if (kind === 'rungs') {
+      // Adaptive's rungs (Charting.rungs / rungs): the same ladder, rung by rung.
+      const tm = masks(charting, override, notes, part, song.song.tempo, song.ticksPerBeat, ticksPerBar(song))
+      const rs = rungs(charting, notes, tm, part, song.ticksPerBeat)
+      const ours = rs.map((r) => r.mask.map((v, i) => (v ? i : -1)).filter((i) => i >= 0))
+      const same = theirs.length === ours.length && theirs.every((t, k) => t.length === ours[k].length && t.every((v, i) => v === ours[k][i]))
+      check(`${name} ${part}: Adaptive's ${theirs.length} rungs chart the same`, same, rs.filter((r) => r.step > 0).map(rungName).join(' ') || 'no rungs between tiers')
+      continue
+    }
     const ours = masks(charting, override, notes, part as 'chords' | 'melody', song.song.tempo, song.ticksPerBeat, ticksPerBar(song)).map((m) =>
       m.map((v, i) => (v ? i : -1)).filter((i) => i >= 0),
     )

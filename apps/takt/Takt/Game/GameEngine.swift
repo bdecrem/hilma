@@ -87,7 +87,7 @@ final class GameEngine {
         /// The mean offset of the notes played, ms, negative early. A steady lean is the
         /// setup's latency, not the hand: the verdict sends it to the calibration.
         let leanMs: Double
-        /// The highest tier played (adaptive), or the difficulty's.
+        /// The highest tier played (adaptive: the tier under a rung counts), or the difficulty's.
         let level: Int
         let grade: String
         /// The run as a map: every judged onset at its place in the song (0...1), and how it
@@ -245,7 +245,14 @@ final class GameEngine {
         ticksPerBar = song.ticksPerBar
         let notes = song.notes(part)
         // A Reading line is played as written: one tier, every note, its own fingers.
-        let masks = song.exact ? [notes.map { _ in true }] : song.masks(part, charting: charting)
+        let tierMasks = song.exact ? [notes.map { _ in true }] : song.masks(part, charting: charting)
+        // Adaptive walks the tiers and the rungs it makes between them (`Charting.rungs`);
+        // a fixed difficulty, the tiers.
+        let rungs = difficulty == .adaptive && !song.exact
+            ? charting.rungs(notes, masks: tierMasks, part: part, ticksPerBeat: song.band.ticksPerBeat)
+            : tierMasks.enumerated().map { Charting.Rung(tier: $0.offset + 1, step: 0, steps: 0, mask: $0.element) }
+        let masks = rungs.map(\.mask)
+        self.rungs = rungs.map { Charting.Rung(tier: $0.tier, step: $0.step, steps: $0.steps, mask: []) }
         self.notes = notes
         self.masks = masks
         fingers = song.exact ? [notes.map(\.f)] : part == .melody ? masks.map { m in
@@ -259,9 +266,24 @@ final class GameEngine {
         let window = charting.adaptive.window
         let blocks = (song.band.bars + window - 1) / window + 1
         let first = song.exact ? 1 : charting.tier(difficulty, song: song.name, part: part) ?? start ?? charting.adaptive.start
-        startLevel = max(1, min(masks.count, first))
+        let firstTier = max(1, min(tierMasks.count, first))
+        startLevel = rungs.firstIndex { $0.tier == firstTier && $0.step == 0 }.map { $0 + 1 } ?? 1
         blockLevel = Array(repeating: startLevel, count: blocks)
     }
+
+    /// The ladder `masks` index: the tiers, and on Adaptive the rungs between them (masks dropped).
+    let rungs: [Charting.Rung]
+
+    /// The tier a level (a rung) belongs to: itself, or the tier under a ghost.
+    func tier(ofLevel level: Int) -> Int { rungs[max(1, min(rungs.count, level)) - 1].tier }
+
+    /// The level (rung) of a tier.
+    func level(ofTier tier: Int) -> Int {
+        (rungs.firstIndex { $0.tier == tier && $0.step == 0 } ?? (tier < 1 ? 0 : rungs.count - 1)) + 1
+    }
+
+    /// A level's name for the HUD: "4", or a rung's "4.5".
+    func name(ofLevel level: Int) -> String { rungs[max(1, min(rungs.count, level)) - 1].name }
 
     /// Where an adaptive run starts: `resume` tiers under the top of the last adaptive run of
     /// this song and part, so a player who got to level 5 doesn't sit through level 1 again.
@@ -293,9 +315,13 @@ final class GameEngine {
 
     var multiplier: Int { 1 + Self.steps.filter { combo >= $0 }.count }
 
-    /// Points for a hit at the tier being played: the multiplier, and the tier's bonus.
+    /// Points for a hit at the tier being played: the multiplier, and the tier's bonus (a rung's
+    /// its share of the way to the next tier's).
     func points(_ j: Judgment, multiplier: Int, level: Int) -> Int {
-        Int((Double(Self.points[j]! * multiplier) * charting.ladder(part).tier(level).bonus).rounded())
+        let r = rungs[max(1, min(rungs.count, level)) - 1]
+        let l = charting.ladder(part)
+        let bonus = l.tier(r.tier).bonus + r.fraction * (l.tier(r.tier + 1).bonus - l.tier(r.tier).bonus)
+        return Int((Double(Self.points[j]! * multiplier) * bonus).rounded())
     }
 
     /// Whether note `i` plays at the tier of its bar.
@@ -424,7 +450,8 @@ final class GameEngine {
         var long = Window()
         for b in atTier { let w = window(b, b + 1); long.hits += w.hits; long.misses += w.misses; long.offsets += w.offsets }
         var level = current
-        let floor = max(1, startLevel - a.floorBelowStart)
+        // The floor is in tiers: never more than `floorBelowStart` tiers under the start.
+        let floor = self.level(ofTier: max(1, tier(ofLevel: startLevel) - a.floorBelowStart))
         // A cooldown holds climbs only: a player who falls apart right after a climb (or a
         // drop) goes down at once, not after the hold.
         let held = cooldown > 0
@@ -548,7 +575,7 @@ final class GameEngine {
         return Result(song: song.name, part: part.rawValue, difficulty: difficulty.rawValue, score: score,
                       notes: hits + missed, perfect: perfect, good: good, early: early, late: late, missed: missed,
                       extras: extras, wrong: wrong, maxCombo: maxCombo, accuracy: accuracy, timing: timing, leanMs: leanMs,
-                      level: difficulty == .adaptive ? topLevel : blockLevel[0],
+                      level: tier(ofLevel: difficulty == .adaptive ? topLevel : blockLevel[0]),
                       grade: Result.grade(accuracy: accuracy, timing: timing), map: map, strays: wrongTicks.map { min(1, max(0, $0 / end)) })
     }
 

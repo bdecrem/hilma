@@ -1659,7 +1659,7 @@ enum LessonCheck {
                 }
                 let clean = adaptive(wrong: nil, extra: true), sloppy = adaptive(wrong: 63, extra: false)
                 check("stage: a wrong key with every note holds adaptive down; playing more of the record doesn't",
-                      clean.result().level == 7 && sloppy.result().level == 4 && sloppy.blockLevel.min() == 3,
+                      clean.result().level == 7 && sloppy.result().level == 4 && sloppy.tier(ofLevel: sloppy.blockLevel.min()!) == 3,
                       "clean + record notes: top \(clean.result().level), \(clean.extras) extras · with a wrong key: top \(sloppy.result().level)")
 
                 // The adaptive rules (charting.json `adaptive`, CHARTING.md): one tier a step, a
@@ -1686,7 +1686,8 @@ enum LessonCheck {
                 drive(steady) { _, _ in 0 }
                 let gaps = zip(steady.changes, steady.changes.dropFirst()).map { $1.block - $0.block }
                 check("stage: a perfect run climbs one tier at a time, a whole block at each tier before the next (afterClimb \(a.afterClimb)), from \(a.start) to the top",
-                      steady.changes.count == steady.tiers - a.start && steady.changes.allSatisfy { $0.to == $0.from + 1 }
+                      steady.changes.count == steady.tiers - steady.level(ofTier: a.start) && steady.changes.allSatisfy { $0.to == $0.from + 1 }
+                      && steady.result().level == 7
                       && gaps.allSatisfy { $0 == a.afterClimb + 1 }, "changes at blocks \(steady.changes.map(\.block))")
                 let scatter = GameEngine(song: two, part: .melody, difficulty: .adaptive)
                 drive(scatter) { i, _ in i % 2 == 0 ? 70 : -70 }
@@ -1708,7 +1709,8 @@ enum LessonCheck {
                 let floorRun = GameEngine(song: two, part: .melody, difficulty: .adaptive, start: 5)
                 drive(floorRun) { _, _ in nil }
                 check("stage: a run that started on 5 and plays nothing sinks to 4 and no further (floorBelowStart \(a.floorBelowStart))",
-                      floorRun.blockLevel.min() == 4 && floorRun.blockLevel[0] == 5 && floorRun.result().level == 5, "levels \(floorRun.blockLevel)")
+                      floorRun.tier(ofLevel: floorRun.blockLevel.min()!) == 4 && floorRun.blockLevel.min() == floorRun.level(ofTier: 4)
+                      && floorRun.tier(ofLevel: floorRun.blockLevel[0]) == 5 && floorRun.result().level == 5, "levels \(floorRun.blockLevel.map { floorRun.name(ofLevel: $0) })")
                 // A player model: clean up to their tier, 70% a tier above, under half beyond;
                 // offsets normal with 30 / 45 / 60 ms spread (a seeded LCG with Box–Muller). Adaptive
                 // should settle on the tier above theirs (hysteresis: 75% is between ease and climb)
@@ -1719,7 +1721,7 @@ enum LessonCheck {
                 let own = 4
                 let bot = GameEngine(song: two, part: .melody, difficulty: .adaptive)
                 drive(bot) { _, n in
-                    let t = bot.level(atBar: n.t / two.ticksPerBar)
+                    let t = bot.tier(ofLevel: bot.level(atBar: n.t / two.ticksPerBar))
                     let (p, sd) = t <= own ? (0.95, 30.0) : t == own + 1 ? (0.7, 45.0) : (0.45, 60.0)
                     return rand() < p ? gauss(sd) : nil
                 }
@@ -1728,9 +1730,9 @@ enum LessonCheck {
                 // A 70% player sits in the hold band on average; a window still scatters the
                 // rate, so the bound is on how far and how often it wanders, not zero changes.
                 check("stage: a level-\(own) player model ends on level \(own) or \(own + 1), stays within \(own)–\(own + 2) in the second half, changing at most twice",
-                      (own...own + 1).contains(bot.blockLevel.last!) && late.count <= 2
-                      && bot.blockLevel[half...].allSatisfy { (own...own + 2).contains($0) },
-                      "levels \(bot.blockLevel), changes \(bot.changes.map { "\($0.block):\($0.from)→\($0.to)" })")
+                      (own...own + 1).contains(bot.tier(ofLevel: bot.blockLevel.last!)) && late.count <= 2
+                      && bot.blockLevel[half...].allSatisfy { (own...own + 2).contains(bot.tier(ofLevel: $0)) },
+                      "levels \(bot.blockLevel.map { bot.name(ofLevel: $0) }), changes \(bot.changes.map { "\($0.block):\(bot.name(ofLevel: $0.from))→\(bot.name(ofLevel: $0.to))" })")
                 // A thin part cuts the same chart on two or three tiers (Abyss's long tones at
                 // the top of its ladder): a climb lands on the next tier that differs.
                 if let abyss = songs.first(where: { $0.name == "song-abyss" }) {
@@ -1746,12 +1748,90 @@ enum LessonCheck {
                         tick += 4
                         skip.heard(tick: tick, msPerTick: ams)
                     }
-                    let m = abyss.masks(.melody)
+                    let m = abyss.masks(.melody), rm = skip.masks
                     check("stage: on Abyss's melody every adaptive climb changes the chart or lands on the top (identical tiers are skipped)",
-                          skip.changes.allSatisfy { m[$0.to - 1] != m[$0.from - 1] || $0.to == skip.tiers } && skip.result().level == skip.tiers
-                          && skip.distinct(from: 5, up: true) == 7 && m[4] == m[6],
+                          skip.changes.allSatisfy { rm[$0.to - 1] != rm[$0.from - 1] || $0.to == skip.tiers } && skip.result().level == m.count
+                          && skip.tier(ofLevel: skip.distinct(from: skip.level(ofTier: 5), up: true)) == 7 && m[4] == m[6],
                           "changes \(skip.changes.map { "\($0.block):\($0.from)→\($0.to)" })")
                 }
+            }
+            // A jam on every Stage song (Bart, 2026-11-13; Improv/StageJam.swift): a free step over
+            // the song's band with its melody's channel out, a form in whole four-bar phrases
+            // that the backing loops by, every chord with a root, its own lesson code.
+            var jamTrouble: [String] = []
+            var forms: [String: Int] = [:]
+            for s in songs where !s.exact {
+                let l = Lesson.stageJam(s)
+                let step = l.steps[Lesson.stageJamStep]
+                let form = l.form(of: step)
+                forms[s.name] = form.count
+                let out = !s.partKeys.contains(.melody) ? "none" : s.channel(of: .melody) == .keys ? "keys" : "horns"
+                let looped = s.band.looped(by: form)
+                let ok = l.isStageJam && step.kind == .free && step.backing == s.name && step.tempo == s.meta.tempo
+                    && form.count % 4 == 0 && !form.isEmpty && form.count <= 256 && form.allSatisfy { l.chords(of: step)[$0] != nil }
+                    && looped.bars >= form.count && looped.bars % form.count == 0 && !(step.band ?? []).contains(out) && (step.band ?? []).contains("drums")
+                    && l.jam(ofStep: Lesson.stageJamStep)?.step == step.id && l.steps[0].kind == .play && l.lessonStepCount == 1
+                // The engine opens it as it opens any lesson, and the jam's step is the free one.
+                let engine = LessonEngine(lesson: l, ticksPerBeat: s.band.ticksPerBeat)
+                engine.start(step: Lesson.stageJamStep)
+                if !ok || engine.step.kind != .free { jamTrouble.append("\(s.name): the engine") }
+                if !ok { jamTrouble.append("\(s.name): form \(form.count), loop \(looped.bars), band \(step.band ?? [])") }
+            }
+            check("stage: a jam on every song: its band without the melody, looping by whole four-bar phrases, every chord rooted (Hypnotist 4, Abyss 8, Blue Lantern 12, Restlicht the whole track)",
+                  jamTrouble.isEmpty && forms["song-hypnotist"] == 4 && forms["song-abyss"] == 8 && forms["song-blue-lantern"] == 12 && forms["song-restlicht"] == 124,
+                  "\(jamTrouble.prefix(3).joined(separator: "; ")) · forms \(forms.sorted { $0.key < $1.key }.map { "\($0.key.dropFirst(5)) \($0.value)" }.joined(separator: ", "))")
+            check("stage: a jam's chords are rooted and numbered in the key (Blue Lantern: Dm7 i… as I, Gm7 IV, Bb7 ♭VI, A7 V)",
+                  songs.first { $0.name == "song-blue-lantern" }.map { s in
+                      let c = Lesson.stageJam(s).chords
+                      return c["Dm7"]?.root == 2 && c["Gm7"]?.numeral == "IV" && c["Bb7"]?.root == 10 && c["Bb7"]?.numeral == "♭VI" && c["A7"]?.numeral == "V"
+                  } ?? false)
+            check("stage: a jam reads the feel off the drums: the shuffles swing, the techno doesn't",
+                  ["song-slow-burn", "song-pearl-street"].allSatisfy { n in songs.first { $0.name == n }.map(Lesson.swung) ?? false }
+                  && ["song-restlicht", "song-hypnotist", "song-halbschatten"].allSatisfy { n in !(songs.first { $0.name == n }.map(Lesson.swung) ?? true) })
+            // Adaptive's own rungs between two tiers (Bart, 2026-11-13, Restlicht melody: Easy two
+            // notes, Medium five fingers spread out, Adaptive toggling between them). Every song
+            // and part: the tiers are rungs as they are, every rung holds the one below, a rung
+            // between two tiers differs from both, and nothing changes for a fixed difficulty.
+            var rungTrouble: [String] = []
+            var ghostCount = 0
+            for s in songs where !s.exact {
+                for k in s.partKeys {
+                    let tm = s.masks(k), notes = s.notes(k)
+                    let rs = charting.rungs(notes, masks: tm, part: k, ticksPerBeat: s.band.ticksPerBeat)
+                    ghostCount += rs.filter { $0.step > 0 }.count
+                    let tiersKept = (1...tm.count).allSatisfy { t in rs.first { $0.tier == t && $0.step == 0 }?.mask == tm[t - 1] }
+                    let nested = zip(rs, rs.dropFirst()).allSatisfy { lo, hi in zip(lo.mask, hi.mask).allSatisfy { !$0 || $1 } }
+                    let distinctGhosts = rs.indices.filter { rs[$0].step > 0 }.allSatisfy { i in rs[i].mask != rs[i - 1].mask && rs[i].mask != rs[i + 1].mask }
+                    let fixed = GameEngine(song: s, part: k, difficulty: .medium)
+                    if !tiersKept || !nested || !distinctGhosts || fixed.masks != tm {
+                        rungTrouble.append("\(s.name) \(k.rawValue): tiers \(tiersKept) nested \(nested) distinct \(distinctGhosts)")
+                    }
+                }
+            }
+            check("stage: Adaptive's rungs: every tier kept, each rung the one below plus more, every in-between rung its own chart, fixed levels untouched",
+                  rungTrouble.isEmpty && ghostCount > 0, "\(ghostCount) in-between rungs · \(rungTrouble.prefix(3).joined(separator: "; "))")
+            if let rl = songs.first(where: { $0.name == "song-restlicht" }) {
+                let notes = rl.notes(.melody), tm = rl.masks(.melody)
+                let rs = charting.rungs(notes, masks: tm, part: .melody, ticksPerBeat: rl.band.ticksPerBeat)
+                func keys(_ m: [Bool]) -> Set<Int> { Set(notes.indices.filter { m[$0] }.map { notes[$0].n }) }
+                let between = rs.filter { $0.tier == 4 && $0.step > 0 }
+                let k4 = keys(tm[3]), k5 = keys(tm[4])
+                // A perfect run from Easy+ (tier 4) climbs through the rung, not past it.
+                let g = GameEngine(song: rl, part: .melody, difficulty: .adaptive, start: 4)
+                let rms = 60000 / (Double(rl.meta.tempo) * Double(rl.band.ticksPerBeat))
+                var tick = 0.0, i = 0
+                while tick < Double(g.endTick) {
+                    while i < g.notes.count, Double(g.notes[i].t) < tick + 4 {
+                        if g.active(i) { g.heard(tick: Double(g.notes[i].t), msPerTick: rms); g.played(note: g.notes[i].n, tick: Double(g.notes[i].t), msPerTick: rms) }
+                        i += 1
+                    }
+                    tick += 4
+                    g.heard(tick: tick, msPerTick: rms)
+                }
+                let path = g.changes.map { g.name(ofLevel: $0.to) }
+                check("stage: Restlicht melody: between Easy+ (\(k4.count) keys) and Medium (\(k5.count)) a rung that adds one key, and a clean run climbs through it",
+                      between.count == 1 && keys(between[0].mask).count == k4.count + 1 && keys(between[0].mask).isSubset(of: k5)
+                      && path.prefix(2) == ["4.5", "5"], "keys \(k4.sorted()) → \(between.map { keys($0.mask).sorted() }) → \(k5.sorted()); climbs \(path)")
             }
             // Ladder health, every song and part: each level is the one below plus more (seeded
             // masks), so it never has fewer notes a second; and level 1 is at most half the top,
@@ -2181,8 +2261,8 @@ enum LessonCheck {
                 let adaptive = run(.adaptive) { _, _ in 0 }
                 let steps = zip(adaptive.blockLevel, adaptive.blockLevel.dropFirst())
                 check("stage: adaptive climbs one level at a time to the top on clean playing (past a level whose chart is the same)",
-                      adaptive.blockLevel[0] == charting.adaptive.start && steps.allSatisfy { $1 == $0 || $1 == adaptive.distinct(from: $0, up: true) }
-                      && adaptive.result().level == adaptive.tiers, "levels \(adaptive.blockLevel)")
+                      adaptive.blockLevel[0] == adaptive.level(ofTier: charting.adaptive.start) && steps.allSatisfy { $1 == $0 || $1 == adaptive.distinct(from: $0, up: true) }
+                      && adaptive.result().level == adaptive.tier(ofLevel: adaptive.tiers), "levels \(adaptive.blockLevel.map { adaptive.name(ofLevel: $0) })")
                 let eases = run(.adaptive) { n, _ in n.t / tpbar >= 12 && n.t / tpbar < 20 ? nil : 0 }
                 let down = zip(eases.blockLevel, eases.blockLevel.dropFirst()).enumerated().first { $0.element.1 < $0.element.0 }?.offset
                 check("stage: missed bars ease it off a level at a time, clean ones bring it back",

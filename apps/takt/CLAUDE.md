@@ -2336,6 +2336,51 @@ cover stealing anchors, a hand of 30 moves on a Level 2 song, a Beginner on one 
   - `-LessonCheck` has 315 new assertions (902/902), and `charting-check` is 63/63;
   - `measure.ts --compare` shows the other 13 songs unchanged.
 
+- **Staff feedback, a jam on every song, Adaptive's in-between rungs: 0.1 (134), 2026-11-13.**
+  Bart, three asks:
+  1. **Staff mode** "show the note accuracy feedback", and "I think we're dropping the musical
+     response, or it's more muted than when in guitar hero mode" (switching mid-run).
+     - The sound was measured, not guessed. `-RecordTo` of Restlicht's melody with `-AutoKeys`
+       in each view, and with the view switched to the staff 18 s in: within 0.1 dB of the
+       highway in every 2 s window. Your keys and the band go straight to the render thread,
+       and the view never touches them.
+     - What the staff lacked was the response on screen: no PERFECT / GOOD / EARLY / LATE /
+       MISS pop, and a played note faded to the same grey as a missed one.
+     - Now the pop springs at the playhead under the staff (`StaffView.playhead`). A played
+       note keeps its judgment's colour at 85% (`ReadingState.Note.judgment`,
+       `StaffView.color(of:)`; a chord keeps its worst note's). A missed note fades as before;
+       Reading lessons are unchanged.
+  2. **Jam on every song**: "offer an JAM/improvize mode like we offer in the Map… from the main
+     card on Stage. And then the agent offers a variant… at the same general complexity /
+     difficulty as what the user did". IMPROV.md "Jam on any song" and "The same level as the
+     take".
+     - The card's **Jam** opens the song's band with its melody out (`Improv/StageJam.swift`,
+       lesson `jam-<song>`); Back returns to the Stage.
+     - The review, the idea and the whole track as the song's Solo work as over Blue Lantern II.
+     - The teacher is held to the take's measure (`src/lib/takt/take-shape.ts`), not a fixed
+       beginner's. Server: `checkIdea`, `rulesFor`; forms up to 256 bars; long tracks written
+       in parts of 24 bars at most.
+  3. **Adaptive**: Restlicht melody Easy "just two notes", Medium "5 notes… spread out", and he
+     asked for "a little algorithm that can make up a difficulty in between… or 'ghost
+     difficulties' not shown in the ui". CHARTING.md rule 25.
+     - The charter makes rungs between two tiers whose step is big (`Charting.rungs`, `rungs`
+       in charting.ts, `adaptive.ghosts`). New keys come in one at a time, nearest first.
+     - Only Adaptive walks them, and the HUD says "Level 4.5". Restlicht's 4.5 is D F A at 1.12
+       a second, between Easy+'s D F at 0.90 and Medium's D F A C at 1.33.
+     - `GameEngine.rungs`, `tier(ofLevel:)`, `level(ofTier:)`, `name(ofLevel:)`. The result,
+       the board and `resume` count tiers; the floor is in tiers; bonuses are interpolated.
+
+  Checks:
+  - `-LessonCheck` 907/907: the rungs on every song, Restlicht's climb through 4.5, the jam on
+    every song and its engine, the chords, the feel;
+  - `charting-check` 108/108 (tiers and rungs, Swift against TS);
+  - `improv-check` and `solo-check` with their live runs;
+  - `jam-check.ts` (new).
+
+  Seen on this Mac, captured from the live window: the staff with LATE and GOOD springing at
+  the playhead, an Adaptive run at "Level 4.5", the card's Jam, and Restlicht's jam screen.
+  DEBUG: `-Jam <song>`.
+
 ## The one transport (2026-11-08)
 
 Every screen that plays music draws the same controls in the same order and they always work:

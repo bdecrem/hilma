@@ -143,11 +143,116 @@ struct Charting: Decodable {
             afterDrop = try c.decodeIfPresent(Int.self, forKey: .afterDrop) ?? 0
             missRun = try c.decodeIfPresent(Int.self, forKey: .missRun)
             floorBelowStart = try c.decodeIfPresent(Int.self, forKey: .floorBelowStart) ?? Int.max
+            ghosts = try c.decodeIfPresent(Ghosts.self, forKey: .ghosts)
         }
 
+        /// When Adaptive puts rungs of its own between two tiers (`rungs`). Nil: the tiers alone.
+        let ghosts: Ghosts?
+
         private enum CodingKeys: String, CodingKey {
-            case start, resume, window, ahead, climb, ease, judged, spreadMaxMs, afterClimb, afterDrop, missRun, floorBelowStart
+            case start, resume, window, ahead, climb, ease, judged, spreadMaxMs, afterClimb, afterDrop, missRun, floorBelowStart, ghosts
         }
+    }
+
+    /// A step adding at least `share` of the lower tier's notes or `keys` new keys gets a rung of
+    /// Adaptive's own; one adding `twoShare` or `twoKeys` gets two.
+    struct Ghosts: Decodable {
+        let share: Double
+        let keys: Int
+        let twoShare: Double
+        let twoKeys: Int
+    }
+
+    /// A rung of Adaptive's ladder: a tier (`step` 0), or one of the `steps` rungs Adaptive puts
+    /// between it and the tier above (`step` 1…steps), never offered as a difficulty.
+    struct Rung: Equatable {
+        let tier: Int
+        let step: Int
+        let steps: Int
+        let mask: [Bool]
+
+        /// The tier's number, a ghost's with its share of the way up ("4.5", "4.3").
+        var name: String { step == 0 ? "\(tier)" : String(format: "%.1f", Double(tier) + Double(step) / Double(steps + 1)) }
+        /// How far up from its tier, 0..<1.
+        var fraction: Double { step == 0 ? 0 : Double(step) / Double(steps + 1) }
+    }
+
+    /// Adaptive's ladder (Bart, 2026-11-13, on Restlicht's melody: Easy "just two notes", Medium
+    /// "5 notes / fingers, quite spread out", Adaptive toggling between them; "a little algorithm
+    /// that can make up a difficulty in between… or 'ghost difficulties' not shown in the ui that
+    /// are used for adaptive mode"). Every tier, and between two neighbours whose step is big
+    /// (`Ghosts`), one or two rungs made from the two: the lower tier plus part of what the upper
+    /// one adds, in this order: the notes it adds on the lower tier's own onsets (a chord's next
+    /// note); then, on a melody, each new key with every note of it, nearest the lower tier's keys
+    /// first, then the new onsets on the keys the hand already has (more of the tune); on a chords
+    /// part the new onsets by weight, the heaviest first; each group of new onsets those on a beat
+    /// before those between. A rung is cut where the notes added so far come nearest an even
+    /// share, at a group's edge (a key never arrives half), and only where every rung adds 15% of
+    /// the step. Each rung holds the one below and sits inside the one above, so the gap, the
+    /// silence rule and Rock Band's rule (a climb never takes a note away) hold on every rung as
+    /// on the tiers. `rungs` in src/lib/takt/charting.ts is the same (`charting-check.ts`).
+    func rungs(_ notes: [Song.Note], masks: [[Bool]], part: Song.PartKey, ticksPerBeat: Int) -> [Rung] {
+        var out: [Rung] = []
+        for (ti, m) in masks.enumerated() {
+            out.append(Rung(tier: ti + 1, step: 0, steps: 0, mask: m))
+            guard ti + 1 < masks.count, let g = adaptive.ghosts else { continue }
+            let up = masks[ti + 1]
+            let extra = notes.indices.filter { up[$0] && !m[$0] }
+            let below = notes.indices.filter { m[$0] }
+            guard !extra.isEmpty else { continue }
+            let ticks = Set(below.map { notes[$0].t })
+            let keys = Set(below.map { notes[$0].n })
+            var newKeys: [Int] = []
+            for i in extra where !keys.contains(notes[i].n) && !newKeys.contains(notes[i].n) { newKeys.append(notes[i].n) }
+            let room = Double(max(1, below.count))
+            guard Double(extra.count) >= g.share * room || newKeys.count >= g.keys else { continue }
+            func beats(_ group: [Int]) -> [[Int]] {
+                [group.filter { notes[$0].t % ticksPerBeat == 0 }, group.filter { notes[$0].t % ticksPerBeat != 0 }]
+            }
+            var units: [[Int]] = [extra.filter { ticks.contains(notes[$0].t) }]
+            let fresh = extra.filter { !ticks.contains(notes[$0].t) }
+            if part == .melody {
+                func near(_ k: Int) -> Int { keys.map { abs($0 - k) }.min() ?? 0 }
+                func count(_ k: Int) -> Int { fresh.filter { notes[$0].n == k }.count }
+                newKeys.sort { (near($0), -count($0), $0) < (near($1), -count($1), $1) }
+                for k in newKeys { units.append(fresh.filter { notes[$0].n == k }) }
+                units += beats(fresh.filter { keys.contains(notes[$0].n) })
+            } else {
+                var weight: [Int: Int] = [:]
+                for i in fresh { weight[notes[i].t] = min(weight[notes[i].t] ?? 9, notes[i].lv) }
+                for lv in 1...3 { units += beats(fresh.filter { weight[notes[$0].t] == lv }) }
+            }
+            let us = units.filter { !$0.isEmpty }
+            var cum = [0]
+            for u in us { cum.append(cum.last! + u.count) }
+            let least = 0.15 * Double(extra.count)
+            func cuts(_ steps: Int) -> [Int]? {
+                var out: [Int] = []
+                var prev = 0
+                for j in 1...steps {
+                    let target = Double(j * extra.count) / Double(steps + 1)
+                    var best = -1
+                    if prev + 1 <= us.count - (steps - j) - 1 {
+                        for cut in (prev + 1)...(us.count - (steps - j) - 1) where best < 0 || abs(Double(cum[cut]) - target) < abs(Double(cum[best]) - target) {
+                            best = cut
+                        }
+                    }
+                    if best < 0 { return nil }
+                    out.append(best)
+                    prev = best
+                }
+                let edges = [0] + out + [us.count]
+                return zip(edges, edges.dropFirst()).allSatisfy { Double(cum[$1] - cum[$0]) >= least } ? out : nil
+            }
+            let two = Double(extra.count) >= g.twoShare * room || newKeys.count >= g.twoKeys
+            guard let cs = (two ? cuts(2) : nil) ?? cuts(1) else { continue }
+            for (j, cut) in cs.enumerated() {
+                var mask = m
+                for u in us.prefix(cut) { for i in u { mask[i] = true } }
+                out.append(Rung(tier: ti + 1, step: j + 1, steps: cs.count, mask: mask))
+            }
+        }
+        return out
     }
 
     let chords: Ladder
@@ -224,7 +329,8 @@ struct Charting: Decodable {
         guard (1...melody.tiers.count).contains(adaptive.start), (1...chords.tiers.count).contains(adaptive.start),
               adaptive.window >= 1, adaptive.ahead >= 0, adaptive.ahead < adaptive.window, adaptive.ease <= adaptive.climb,
               adaptive.resume >= 0, adaptive.afterClimb >= 0, adaptive.afterDrop >= 0, (adaptive.missRun ?? 1) >= 1,
-              adaptive.floorBelowStart >= 0, (adaptive.spreadMaxMs ?? 1) > 0
+              adaptive.floorBelowStart >= 0, (adaptive.spreadMaxMs ?? 1) > 0,
+              adaptive.ghosts.map({ $0.share > 0 && $0.keys >= 1 && $0.twoShare >= $0.share && $0.twoKeys >= $0.keys }) ?? true
         else { fatalError("charting.json: adaptive") }
     }
 
@@ -251,7 +357,7 @@ struct Charting: Decodable {
         if difficulty == .solo { return "The teacher's whole track from your take, every note as written." }
         guard let t = tier(difficulty, song: song, part: part) else {
             let n = ladder(part).tiers.count
-            return "Level \(adaptive.start) of \(n) the first time, then just under where your last run got to. Clean bars climb it a level at a time, misses and wrong keys step it back at once, and the band plays whatever the level leaves out."
+            return "Level \(adaptive.start) of \(n) the first time, then just under where your last run got to. Clean bars climb it a level at a time, with steps of its own between two levels where the jump is big; misses and wrong keys step it back at once, and the band plays whatever the level leaves out."
         }
         return "Level \(t) of \(ladder(part).tiers.count). " + ladder(part).tier(t).line
     }

@@ -25,8 +25,8 @@
 
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
-import { type Charting, type Difficulty, type FixedDifficulty, DIFFICULTIES, figures, masks, silenceLine, tierFor, tiersOf } from '../../src/lib/takt/charting'
-import { type SongFile, type PartKey, partKeys, sortedNotes, ticksPerBar, validateSong, musicBars, noteName } from '../../src/lib/takt/songfile'
+import { type Charting, type Difficulty, type FixedDifficulty, DIFFICULTIES, figures, masks, rungs, rungName, silenceLine, tierFor, tiersOf } from '../../src/lib/takt/charting'
+import { type SongFile, type PartKey, partKeys, sortedNotes, ticksPerBar, validateSong, musicBars, noteName, seconds as songSeconds } from '../../src/lib/takt/songfile'
 import { handFigures, handLine, handMoves, handMoments, handPositions, plan, type HandFigures } from '../../src/lib/takt/fingering'
 import { handBudget, budgetLine, type HandBudget } from '../../src/lib/takt/leveling'
 
@@ -135,6 +135,13 @@ function measureSong(name: string, s: SongFile) {
     line(`\n${name} · ${k} (${s.song.parts[k]!.title}) · ${s.song.tempo} bpm, ${musicBars(s)} bars`)
     for (const f of perTier) {
       line(`  L${f.tier}${f.tag ? ` (${f.tag})` : ''}: ${f.perSecond.toFixed(2)}/s [${f.quietest.toFixed(1)}–${f.busiest.toFixed(1)}], ${f.notes} notes${f.hand ? `, hand ${short(f.hand)} (${handLine(f.hand)})` : ''}${f.silence ? `, ${silenceLine(f.silence)}` : ''} — ${tiers[f.tier - 1].line}`)
+    }
+    // Adaptive's own rungs between tiers (Charting.rungs): never a difficulty, only Adaptive's.
+    const tm = masks(charting, override, all, k, s.song.tempo, s.ticksPerBeat, tpb)
+    for (const r of rungs(charting, all, tm, k, s.ticksPerBeat).filter((r) => r.step > 0)) {
+      const on = all.filter((_, i) => r.mask[i])
+      const hand = k === 'melody' ? handFigures(on, true, s.ticksPerBeat) : null
+      line(`    L${rungName(r)} (Adaptive only): ${(new Set(on.map((n) => n.t)).size / songSeconds(s)).toFixed(2)}/s, ${on.length} notes, ${new Set(on.map((n) => n.n)).size} keys${hand ? `, hand ${short(hand)}` : ''}`)
     }
     // CHARTING.md rule 24: no silence over 15 s at any tier, at most one of 10 s or more.
     const silent = figs.filter((f) => f.silence && !f.silence.ok)

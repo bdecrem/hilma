@@ -458,6 +458,7 @@
 		5C4178F8558AB7BA43B34EE0 /* egt-48-1-2.caf in Resources */ = {isa = PBXBuildFile; fileRef = 4D049EC78694F75E339F2A71 /* egt-48-1-2.caf */; };
 		5C5C485DBC8426EFAA7708DC /* song-streulicht.json in Resources */ = {isa = PBXBuildFile; fileRef = CB62AFE3B2808DEB4AD2119E /* song-streulicht.json */; };
 		5C8C0499DFC1F7E9473C6121 /* launch-deep-swell.caf in Resources */ = {isa = PBXBuildFile; fileRef = 16D3C1A880EFC8CDC8892A21 /* launch-deep-swell.caf */; };
+		5CA3417DB26BA90A046C9707 /* StageJam.swift in Sources */ = {isa = PBXBuildFile; fileRef = 545208F2A7ED03EE4FE9CA6F /* StageJam.swift */; };
 		5CC33E75EC13B122255A1ED6 /* gz-bass-20-28-44.caf in Resources */ = {isa = PBXBuildFile; fileRef = C007D7D516B434C4DBCCD156 /* gz-bass-20-28-44.caf */; };
 		5CE3DCE614CF66FD55273FF2 /* ThemeCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = D325CD2AF734C9D5A942DE43 /* ThemeCard.swift */; };
 		5D12A4B666A44E9CE2C6914B /* LessonScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA77ED30BAF689A04B1E5B94 /* LessonScreen.swift */; };
@@ -1623,6 +1624,7 @@
 		53A54832A8E6CC328A7C3809 /* call-f.caf */ = {isa = PBXFileReference; path = "call-f.caf"; sourceTree = "<group>"; };
 		53CDD7C2DE9A56F3EDBD5EA7 /* hs-stab-cm9-0.caf */ = {isa = PBXFileReference; path = "hs-stab-cm9-0.caf"; sourceTree = "<group>"; };
 		53D6FEF25BB26E8560F0C665 /* gl-ir-hall-44.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = "gl-ir-hall-44.wav"; sourceTree = "<group>"; };
+		545208F2A7ED03EE4FE9CA6F /* StageJam.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StageJam.swift; sourceTree = "<group>"; };
 		5493818141A471AEC30127DF /* xstick-2b.caf */ = {isa = PBXFileReference; path = "xstick-2b.caf"; sourceTree = "<group>"; };
 		54ABC468408653889BE56BE1 /* syn-stabMin-43-1.caf */ = {isa = PBXFileReference; path = "syn-stabMin-43-1.caf"; sourceTree = "<group>"; };
 		54AFCA77390DED1B3DA5C100 /* syn-rhodes-51-0.caf */ = {isa = PBXFileReference; path = "syn-rhodes-51-0.caf"; sourceTree = "<group>"; };
@@ -2562,6 +2564,7 @@
 				A45F13233D2FE821A99750DC /* Improv.swift */,
 				DA10D801EA2FE78D9545B7F1 /* ImprovClient.swift */,
 				CE333F1E9743432C6DE4503B /* ImprovSheet.swift */,
+				545208F2A7ED03EE4FE9CA6F /* StageJam.swift */,
 			);
 			path = Improv;
 			sourceTree = "<group>";
@@ -5142,6 +5145,7 @@
 				2280B159810DADB2C948CEFC /* Scorer.swift in Sources */,
 				0C90898023362CB317B66D22 /* SettingsScreen.swift in Sources */,
 				C5096265404F7B693B650056 /* Song.swift in Sources */,
+				5CA3417DB26BA90A046C9707 /* StageJam.swift in Sources */,
 				8D5849C1A3DC106EFB5472AB /* StageScreen.swift in Sources */,
 				B42F6C7AD6013FC34A3BAF19 /* StepPanel.swift in Sources */,
 				DDF031824410D6EF39EF2FE9 /* TaktApp.swift in Sources */,
@@ -5194,7 +5198,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 133;
+				CURRENT_PROJECT_VERSION = 134;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -5261,7 +5265,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 133;
+				CURRENT_PROJECT_VERSION = 134;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 274T5WCVD2;
 				ENABLE_NS_ASSERTIONS = NO;
