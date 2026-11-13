@@ -1,0 +1,1505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="description" content="Fourteen studies. One afternoon. A point-and-click walk through CASBS.">
+<meta property="og:title" content="CASBS Quest">
+<meta property="og:description" content="Fourteen studies. One afternoon.">
+<meta property="og:url" content="https://ola.cx/semibart/classic">
+<meta property="og:image" content="https://ola.cx/semibart/og-classic.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://ola.cx/semibart/og-classic.png">
+<title>CASBS Quest · Classic</title>
+<link href="https://fonts.googleapis.com/css2?family=Jersey+15&display=swap" rel="stylesheet">
+<style>
+:root {
+  --black: #000000;
+  --hot: #ffff55;
+  --cyan: #55ffff;
+  --choice: #d58bff;
+  --gold: #e6b547;
+  --font: 'Jersey 15', 'Courier New', monospace;
+  /* layout: one full-bleed 320x180 pixel scene; text, labels and dialog choices float over it */
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; background: #000; }
+body { height: 100dvh; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+body { background: var(--black); container-type: size; display: flex; align-items: center; justify-content: center; overflow: hidden; font-family: var(--font); }
+#stage { position: relative; width: min(100cqw, calc(100cqh * 16 / 9)); aspect-ratio: 16 / 9; background: var(--black); overflow: hidden; container-type: inline-size; user-select: none; -webkit-user-select: none; }
+#cv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; image-rendering: pixelated; image-rendering: crisp-edges; cursor: crosshair; touch-action: none; transform-origin: 73.75% 56.7%; }
+.outlined { text-shadow: 0.22cqw 0 0 #000, -0.22cqw 0 0 #000, 0 0.22cqw 0 #000, 0 -0.22cqw 0 #000, 0.22cqw 0.22cqw 0 #000, -0.22cqw 0.22cqw 0 #000, 0.22cqw -0.22cqw 0 #000, -0.22cqw -0.22cqw 0 #000, 0.15cqw 0.45cqw 0 rgba(0,0,0,0.55); }
+#line { position: absolute; width: 62%; text-align: center; font-size: 3.5cqw; line-height: 1.08; font-weight: 400; letter-spacing: 0.02em; word-spacing: 0.06em; transform: translateY(-100%); pointer-events: none; text-wrap: balance; }
+#label { position: absolute; color: var(--cyan); font-size: 2.5cqw; line-height: 1; pointer-events: none; white-space: nowrap; transform: translate(-50%, -160%); }
+#label[hidden] { display: none; }
+#choices { position: absolute; left: 0; right: 0; bottom: 0; padding: 1.2cqw 3cqw 1.6cqw; background: rgba(0, 0, 0, 0.84); display: flex; flex-direction: column; }
+#choices[hidden] { display: none; }
+button { font: inherit; background: none; border: 0; margin: 0; cursor: pointer; line-height: 1.1; color: inherit; }
+.choice { color: var(--choice); font-size: 3cqw; padding: 0.25cqw 0; text-align: left; }
+.choice:hover, .choice:focus-visible { color: var(--hot); outline: none; }
+#tools { position: absolute; right: 1cqw; bottom: 1cqw; display: flex; gap: 0.6cqw; opacity: 0.35; transition: opacity 0.2s; }
+#tools:hover, #tools:focus-within { opacity: 1; }
+#tools button { width: max(36px, 3.6cqw); height: max(36px, 3.6cqw); display: grid; place-items: center; color: #fff7e6; background: rgba(0, 0, 0, 0.55); }
+#tools button:focus-visible { outline: 0.25cqw solid var(--hot); }
+#tools svg { width: 60%; height: 60%; display: block; }
+#fade { position: absolute; inset: 0; background: #000; opacity: 0; pointer-events: none; transition: opacity 0.3s linear; }
+#fade.on { opacity: 1; }
+#screen { position: absolute; inset: 0; display: flex; flex-direction: column; background: #000; }
+#screen[hidden] { display: none; }
+#screenBar { flex: none; display: flex; align-items: center; gap: 2cqw; padding: 0.8cqw 2cqw; color: var(--cyan); font-size: 2cqw; line-height: 1.1; }
+#screenBar span { flex: 1; min-width: 0; }
+#screenBar a { color: var(--choice); }
+#screenBar a:hover { color: var(--hot); }
+#screenBack { color: var(--hot); font-size: 2.2cqw; border: 0.25cqw solid var(--hot); padding: 0.4cqw 1.4cqw; }
+#phones { flex: 1; min-height: 0; display: flex; justify-content: center; align-items: center; gap: 5cqw; padding: 1cqw 0 3cqw; background: #1a1a18; }
+.phone { height: 100%; aspect-ratio: 640 / 1247; padding: 0.8cqw; background: #0c0c0c; border-radius: 3cqw; box-shadow: 0 0 0 0.3cqw #3a3a3a; }
+.phone img { width: 100%; height: 100%; display: block; border-radius: 2.2cqw; object-fit: cover; }
+#title { position: absolute; inset: 0; display: grid; place-items: center; }
+#title[hidden] { display: none; }
+.card { width: 62cqw; background: #12100c; color: #fff7e6; border: 0.5cqw solid var(--hot); box-shadow: 0 0 0 0.5cqw #000, 1.4cqw 1.4cqw 0 0.5cqw #000; padding: 2.4cqw 3.6cqw 2.6cqw; text-align: center; }
+.card .eyebrow { margin: 0 0 0.6cqw; color: var(--cyan); font-size: 2.1cqw; letter-spacing: 0.3em; text-transform: uppercase; }
+.card h1 { margin: 0; color: var(--hot); font-size: 9cqw; line-height: 0.9; white-space: nowrap; font-weight: 400; letter-spacing: 0.03em; }
+.card .tag { margin: 1cqw 0 0; font-size: 3cqw; line-height: 1.2; }
+.card hr { border: 0; border-top: 0.3cqw dashed #4a4436; margin: 2cqw 0 1.8cqw; }
+.card dl { display: grid; grid-template-columns: auto auto; justify-content: center; gap: 0.3cqw 1.6cqw; margin: 0; font-size: 2.3cqw; line-height: 1.1; text-align: left; }
+.card dt { color: var(--choice); text-align: right; }
+.card dd { margin: 0; color: #c9c3b4; }
+#startBtn { margin-top: 2cqw; background: var(--hot); color: #000; font-size: 3.4cqw; font-weight: 400; padding: 0.9cqw 5cqw; box-shadow: 0.5cqw 0.5cqw 0 #8a7a1e; letter-spacing: 0.08em; }
+#startBtn:hover { background: #fff; }
+#startBtn:focus-visible { outline: 0.3cqw solid #fff; outline-offset: 0.4cqw; }
+#startBtn:active { transform: translate(0.5cqw, 0.5cqw); box-shadow: none; }
+/* Bart's talk: the slide sits exactly where the zoomed monitor's screen lands (26x20 px at 9x = 73.125cqw by the full height, a 4:3-ish slide), so the crisp slide resolves out of the pixel one */
+#deck { position: absolute; inset: 0; }
+#deck[hidden] { display: none; }
+#slide { position: absolute; top: 0; bottom: 0; left: 13.4375cqw; width: 73.125cqw; background: #f7f3eb; color: #1f1f1f; opacity: 0; transition: opacity 0.35s linear; cursor: pointer; overflow: hidden; }
+#deck.on #slide { opacity: 1; }
+.s-in { position: absolute; inset: 0; transition: opacity 0.14s linear; }
+.s-in.swap { opacity: 0; }
+#slide h2 { position: absolute; left: 7.7%; right: 7.7%; top: 6%; margin: 0; font: 400 5.4cqw/1.05 Georgia, 'Times New Roman', serif; color: #1d2a5a; letter-spacing: -0.005em; }
+#slide .rule { position: absolute; left: 7.7%; right: 7.7%; top: 24.5%; height: 0.35cqw; background: #1d2a5a; }
+#slide .rule::after { content: ''; position: absolute; left: 0; right: 0; top: 0.75cqw; height: 0.12cqw; background: #1d2a5a; }
+#slide ul { --k: 1; position: absolute; left: 7.7%; right: 9%; top: 34%; margin: 0; padding: 0; list-style: none; font: calc(2.55cqw * var(--k))/1.28 Arial, Helvetica, sans-serif; color: #2a2a2a; }
+#slide li { position: relative; padding-left: 3.2cqw; margin-bottom: calc(2.3cqw * var(--k)); }
+#slide li::before { content: ''; position: absolute; left: 0.3cqw; top: calc(1.05cqw * var(--k)); width: calc(1cqw * var(--k)); height: calc(1cqw * var(--k)); background: #1d2a5a; }
+#slide .foot { position: absolute; left: 7.7%; right: 7.7%; bottom: 4.5%; display: flex; justify-content: space-between; border-top: 0.1cqw solid #b5ad9c; padding-top: 0.8cqw; font: 1.45cqw/1 Arial, Helvetica, sans-serif; color: #8a8273; letter-spacing: 0.04em; text-transform: uppercase; }
+#dEnd { position: absolute; inset: 0; background: #000; color: #fff; font: 1.9cqw/1 Arial, Helvetica, sans-serif; padding: 2cqw 2.4cqw; }
+#dEnd[hidden] { display: none; }
+.dnav, #dBack { position: absolute; color: var(--hot); opacity: 0; transition: opacity 0.3s linear 0.2s; }
+#deck.on .dnav, #deck.on #dBack { opacity: 1; }
+.dnav { top: 50%; transform: translateY(-50%); width: 13.4cqw; height: 30cqw; font-size: 4.5cqw; }
+.dnav:disabled { color: #6a6450; cursor: default; }
+#dPrev { left: 0; } #dNext { right: 0; }
+.dnav:hover:not(:disabled), .dnav:focus-visible { color: #fff; outline: none; }
+#dBack { top: 1.4cqw; right: 1.4cqw; font-size: 2.2cqw; border: 0.25cqw solid var(--hot); padding: 0.4cqw 1.4cqw; background: rgba(0,0,0,0.55); }
+#dBack:hover, #dBack:focus-visible { color: #fff; border-color: #fff; outline: none; }
+@keyframes blink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { #fade { transition: none; } }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="cv" width="320" height="180" role="img" aria-label="CASBS Quest, a point-and-click game scene"></canvas>
+  <div id="line" class="outlined" aria-live="polite"></div>
+  <div id="label" class="outlined" hidden></div>
+  <div id="choices" hidden></div>
+  <div id="tools">
+    <button id="bMute" type="button" aria-label="Mute sound" aria-pressed="false"><svg viewBox="0 0 12 12" aria-hidden="true"><path fill="currentColor" d="M1 4h2l3-3h1v10H6L3 8H1z"/><path id="waves" fill="currentColor" d="M8 4h1v4H8zM10 2h1v8h-1z"/></svg></button>
+    <button id="bFull" type="button" aria-label="Full screen"><svg viewBox="0 0 12 12" aria-hidden="true"><path fill="currentColor" d="M1 1h4v1H2v3H1zM7 1h4v4h-1V2H7zM1 7h1v3h3v1H1zM10 7h1v4H7v-1h3z"/></svg></button>
+  </div>
+  <div id="screen" hidden>
+    <div id="screenBar"><span></span><button id="screenBack" type="button">Back</button></div>
+    <div id="phones">
+      <div class="phone"><img src="/semibart/takt-splash.png" alt="Takt opening screen: TAKT spelled down the side, eins zwei drei vier"></div>
+      <div class="phone"><img src="/semibart/takt-map.png" alt="Takt map screen: The Blues, episode 1, The Delta"></div>
+    </div>
+  </div>
+  <div id="deck" hidden role="dialog" aria-label="Bart's talk: How to use AI">
+    <div id="slide" aria-live="polite"><div class="s-in">
+      <h2 id="sTitle"></h2><div class="rule"></div><ul id="sList"></ul>
+      <div class="foot"><span>How to use AI &middot; B. Decrem &middot; CASBS</span><span id="sNum"></span></div>
+    </div><div id="dEnd" hidden>End of slide show, click to exit.</div></div>
+    <button class="dnav outlined" id="dPrev" type="button" aria-label="Previous slide">&#9664;</button>
+    <button class="dnav outlined" id="dNext" type="button" aria-label="Next slide">&#9654;</button>
+    <button id="dBack" class="outlined" type="button">Back</button>
+  </div>
+  <div id="fade"></div>
+  <div id="title" role="dialog" aria-modal="true" aria-labelledby="titleH">
+    <div class="card">
+      <p class="eyebrow">A point-and-click visit</p>
+      <h1 id="titleH">CASBS Quest</h1>
+      <p class="tag">Fourteen studies. One afternoon.</p>
+      <hr>
+      <dl>
+        <dt>Click</dt><dd>walk, talk, open</dd>
+        <dt>Right-click</dt><dd>look</dd>
+        <dt>Space</dt><dd>skip a line</dd>
+        <dt>Arrows</dt><dd>hop between studies</dd>
+        <dt>M · F</dt><dd>mute · full screen</dd>
+      </dl>
+      <button id="startBtn" type="button">Start</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+const W = 320, H = 144, OY = 18, FH = 180;
+const $ = id => document.getElementById(id);
+const cv = $('cv'), g = cv.getContext('2d');
+const lineEl = $('line'), labelEl = $('label'), choicesEl = $('choices'), fadeEl = $('fade'), screenEl = $('screen'), titleEl = $('title');
+const calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- pixel helpers ---------- */
+function rect(c, x, y, w, h, col) { c.fillStyle = col; c.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); }
+function disc(c, cx, cy, r, col) { c.fillStyle = col; for (let y = -r; y <= r; y++) { const w = Math.floor(Math.sqrt(r * r - y * y) + 0.5); c.fillRect(Math.round(cx - w), Math.round(cy + y), w * 2 + 1, 1); } }
+function oval(c, cx, cy, rx, ry, col) { c.fillStyle = col; for (let y = -ry; y <= ry; y++) { const w = Math.floor(rx * Math.sqrt(1 - (y * y) / (ry * ry)) + 0.5); c.fillRect(Math.round(cx - w), Math.round(cy + y), w * 2 + 1, 1); } }
+function dither(c, x, y, w, h, a, b) { for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) { c.fillStyle = (i + j) % 2 ? a : b; c.fillRect(x + i, y + j, 1, 1); } }
+function sprite(c, rows, pal, x, y) { x = Math.round(x); y = Math.round(y); for (let j = 0; j < rows.length; j++) for (let i = 0; i < rows[j].length; i++) { const col = pal[rows[j][i]]; if (col) { c.fillStyle = col; c.fillRect(x + i, y + j, 1, 1); } } }
+function rng(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
+
+/* ---------- the campus map ---------- */
+const C = {
+  grass: '#e6b547', grass2: '#d9a63c', grass3: '#f1c962', path: '#f3e2bd', pathEdge: '#c9a469',
+  roof: '#ded3bb', roofLine: '#cdc0a5', fascia: '#6f3a20', wall: '#9a5631', wallLo: '#7d4326', glass: '#5d7f8c', glassHi: '#86a8b4',
+  brick: '#c46a4a', brick2: '#ad593c', stone: '#b9b4a8', oak: '#2f6b45', oak2: '#24553a', oak3: '#4a8f5f', trunk: '#5b3a21',
+  asphalt: '#7b7771', line: '#f4efe2', shadow: 'rgba(20,20,20,0.2)', ink: '#141414', paper: '#fff7e6', orange: '#ff5a1f', lit: '#ffd96a'
+};
+const DOORS_TOP = [34, 50, 66], WING_DOORS = [106, 122];
+const DOORS_A = [28, 44, 60, 76, 92, 108], DOORS_B = [212, 228, 244, 260, 276, 292], DOORS_C = [114, 130, 146, 174, 190, 206];
+function building(m, x, y, w, rh, wh, doors, wide) {
+  rect(m, x + 2, y + rh + wh, w, 2, C.shadow);
+  rect(m, x, y, w, rh, C.roof);
+  for (let i = 4; i < rh - 1; i += 4) rect(m, x + 2, y + i, w - 4, 1, C.roofLine);
+  rect(m, x, y, w, 1, C.fascia); rect(m, x, y, 1, rh, C.fascia); rect(m, x + w - 1, y, 1, rh, C.fascia); rect(m, x, y + rh - 1, w, 1, C.fascia);
+  rect(m, x, y + rh, w, wh, C.wall);
+  for (let i = x + 1; i < x + w; i += 3) rect(m, i, y + rh, 1, wh, C.wallLo);
+  rect(m, x, y + rh + wh - 1, w, 1, C.fascia);
+  doors.forEach(dx => {
+    const half = wide ? 5 : 3;
+    rect(m, dx - half, y + rh, half * 2, wh, C.fascia);
+    rect(m, dx - half + 1, y + rh + 1, half * 2 - 2, wh - 1, C.glass);
+    rect(m, dx - half + 1, y + rh + 1, 1, wh - 1, C.glassHi);
+  });
+}
+function wing(m, x, y, w, h, doorYs, side = -1) {
+  rect(m, x + 2, y + 2, w + 2, h + 6, C.shadow);
+  rect(m, x, y, w, h, C.roof);
+  for (let i = x + 3; i < x + w - 2; i += 4) rect(m, i, y + 2, 1, h - 4, C.roofLine);
+  rect(m, x, y, w, 1, C.fascia); rect(m, x, y + h - 1, w, 1, C.fascia); rect(m, x, y, 1, h, C.fascia); rect(m, x + w - 1, y, 1, h, C.fascia);
+  rect(m, x, y + h, w, 5, C.wall); for (let i = x + 1; i < x + w; i += 3) rect(m, i, y + h, 1, 5, C.wallLo); rect(m, x, y + h + 4, w, 1, C.fascia);
+  const sx = side < 0 ? x - 4 : x + w, gx = side < 0 ? sx + 1 : sx;
+  rect(m, sx, y + 1, 4, h + 3, C.wall); rect(m, side < 0 ? sx : sx + 3, y + 1, 1, h + 3, C.fascia);
+  doorYs.forEach(dy => { rect(m, sx, dy - 3, 4, 7, C.fascia); rect(m, gx, dy - 2, 3, 5, C.glass); rect(m, gx, dy - 2, 3, 1, C.glassHi); });
+}
+function litDoor(m, dx, top, h) {
+  rect(m, dx - 2, top, 4, h, C.lit); rect(m, dx - 2, top, 1, h, '#fff3c4');
+  oval(m, dx, top + h + 3, 6, 2, 'rgba(255,217,106,0.35)');
+}
+function oak(m, x, y, r) { oval(m, x + 1, y + r + 2, r, 2, C.shadow); rect(m, x - 1, y + r - 2, 2, 5, C.trunk); disc(m, x, y, r, C.oak2); disc(m, x - 1, y - 1, r - 1, C.oak); disc(m, x - Math.round(r / 3), y - Math.round(r / 3), Math.max(1, Math.round(r / 3)), C.oak3); }
+function car(m, x, y, col) { rect(m, x, y, 10, 15, C.ink); rect(m, x + 1, y + 1, 8, 13, col); rect(m, x + 2, y + 3, 6, 3, C.glassHi); rect(m, x + 2, y + 10, 6, 2, C.glassHi); }
+function turkey(m, x, y) {
+  sprite(m, ['..kTk........', '.kTtTk.......', 'kTtktTk...HH.', 'TtkBBBBB.HHEb', 'kBBBBBBBBRHH.', '.BBBBBBBBRR..', '..BBBBBBBR...', '...BBBBBB....', '....L..L.....', '...LL.LL.....'],
+    { k: C.ink, T: '#e0892e', t: '#9a5326', B: '#4e3322', H: '#c7d3de', E: C.ink, b: '#e8b13a', R: '#d6402e', L: '#e8a33a' }, x, y);
+}
+
+const mapBg = document.createElement('canvas'); mapBg.width = W; mapBg.height = H;
+(function () {
+  const m = mapBg.getContext('2d'), r = rng(7);
+  rect(m, 0, 0, W, H, C.grass);
+  for (let i = 0; i < 360; i++) rect(m, r() * W, r() * H, 2, 1, r() < 0.6 ? C.grass2 : C.grass3);
+  const paths = [[60, 64, 60, 132], [10, 64, 304, 64], [240, 64, 240, 132], [50, 132, 292, 132], [160, 38, 160, 64], [140, 38, 140, 64], [180, 38, 180, 64], [10, 9, 82, 9], [10, 9, 10, 64], [292, 100, 292, 132]];
+  DOORS_TOP.forEach(x => paths.push([x, 2, x, 9]));
+  DOORS_A.concat(DOORS_B).forEach(x => paths.push([x, 54, x, 64]));
+  DOORS_C.forEach(x => paths.push([x, 122, x, 132]));
+  const box = (p, pad) => [Math.min(p[0], p[2]) - pad, Math.min(p[1], p[3]) - pad, Math.abs(p[2] - p[0]) + pad * 2, Math.abs(p[3] - p[1]) + pad * 2];
+  paths.forEach(p => { const b = box(p, 4); rect(m, b[0], b[1], b[2], b[3], C.pathEdge); });
+  paths.forEach(p => { const b = box(p, 3); rect(m, b[0], b[1], b[2], b[3], C.path); });
+  rect(m, 117, 68, 86, 27, C.stone); rect(m, 118, 69, 84, 25, C.brick);
+  for (let y = 69; y < 94; y += 2) for (let x = 118 + (((y - 69) / 2) % 2) * 2; x < 202; x += 4) rect(m, x, y, 1, 1, C.brick2);
+  rect(m, 150, 68, 20, 1, C.brick); rect(m, 150, 94, 20, 1, C.brick);
+  building(m, 16, 30, 100, 16, 8, DOORS_A);
+  building(m, 204, 30, 100, 16, 8, DOORS_B);
+  building(m, 128, 8, 64, 20, 10, [160], true);
+  [140, 180].forEach(dx => { rect(m, dx - 3, 28, 6, 10, C.fascia); rect(m, dx - 2, 29, 4, 9, C.glass); rect(m, dx - 2, 29, 1, 9, C.glassHi); });
+  building(m, 100, 98, 120, 16, 8, DOORS_C);
+  // the five studies with the lights on
+  litDoor(m, 180, 29, 9); litDoor(m, 292, 47, 7); litDoor(m, 276, 47, 7); litDoor(m, 76, 47, 7); litDoor(m, 114, 115, 7); litDoor(m, 130, 115, 7);
+  oak(m, 160, 79, 8);
+  // the meeting room, just off the courtyard, its door facing the oak
+  rect(m, 108, 77, 10, 7, C.path); rect(m, 108, 77, 10, 1, C.pathEdge); rect(m, 108, 83, 10, 1, C.pathEdge);
+  wing(m, 82, 68, 22, 22, [80], 1);
+  { // a gold star on the roof: this is where the seminars happen
+    const STAR = ['...X...', '...X...', '..XXX..', 'XXXXXXX', '.XXXXX.', '..XXX..', '.XX.XX.', '.X...X.'];
+    [[-1, 0], [1, 0], [0, -1], [0, 1]].forEach(([ox, oy]) => sprite(m, STAR, { X: C.ink }, 90 + ox, 75 + oy));
+    sprite(m, STAR, { X: '#ffd93b' }, 90, 75); rect(m, 92, 78, 1, 1, '#fff3c4');
+  }
+  rect(m, 4, 98, 46, 42, C.ink); rect(m, 5, 99, 44, 40, C.asphalt);
+  [19, 33].forEach(x => rect(m, x, 100, 1, 18, C.line));
+  car(m, 7, 102, '#2b3fff'); car(m, 21, 102, '#ff9ccf'); car(m, 35, 102, '#fff7e6');
+  oval(m, 224, 22, 10, 3, C.shadow); rect(m, 221, 14, 1, 8, C.ink); rect(m, 227, 14, 1, 8, C.ink);
+  oval(m, 224, 11, 8, 4, C.ink); oval(m, 224, 11, 7, 3, '#fffaf0'); rect(m, 224, 5, 1, 6, C.ink);
+  [[100, 14, 5], [308, 82, 7], [22, 82, 6], [82, 116, 5], [118, 6, 4]].forEach(o => oak(m, o[0], o[1], o[2]));
+  for (let i = 0; i < 26; i++) rect(m, 250 + r() * 66, 90 + r() * 46, 2, 2, C.orange);
+  wing(m, 300, 96, 12, 36, WING_DOORS);
+  // the two easter-egg doors (Eli, the cafeteria): glass a shade greener than the rest
+  rect(m, 297, 120, 3, 5, '#6b8c78'); rect(m, 297, 120, 3, 1, '#93b39f');
+  rect(m, 204, 115, 4, 7, '#6b8c78'); rect(m, 204, 115, 1, 7, '#93b39f');
+  // picnic tables on the courtyard, either side of the oak
+  [[124, 75], [180, 75]].forEach(([x, y]) => {
+    oval(m, x + 8, y + 13, 9, 2, C.shadow);
+    rect(m, x, y, 16, 2, '#7d5632'); rect(m, x, y + 10, 16, 2, '#7d5632');
+    rect(m, x - 1, y + 3, 18, 6, C.ink); rect(m, x, y + 4, 16, 4, '#b07a45'); rect(m, x, y + 6, 16, 1, '#9c6a3c');
+  });
+  rect(m, 196, 22, 1, 20, C.ink);
+})();
+
+/* ---------- Bart's study ---------- */
+function makeRoomBg(bart) {
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const m = c.getContext('2d'), r = rng(23);
+  // wall: wood panels
+  rect(m, 0, 0, W, 106, '#9a5631');
+  for (let x = 0; x < W; x += 14) { rect(m, x, 4, 1, 102, '#7f4426'); rect(m, x + 1, 4, 1, 102, '#ac6a42'); }
+  rect(m, 0, 0, W, 4, '#5c2e18'); rect(m, 0, 4, W, 1, '#c27e52');
+  dither(m, 40, 74, 90, 6, '#9a5631', '#a86a42');
+  // floor
+  rect(m, 0, 104, W, 3, '#5c2e18');
+  for (let y = 107; y < H; y += 3) { rect(m, 0, y, W, 3, (y / 3) % 2 ? '#c9a77a' : '#bf9c6e'); for (let k = 0; k < 3; k++) rect(m, Math.floor(r() * W), y, 1, 3, '#a8865b'); }
+  // rug
+  rect(m, 52, 124, 168, 18, '#1f2c9e'); rect(m, 55, 126, 162, 14, '#ff9ccf'); rect(m, 58, 128, 156, 10, '#2b3fff');
+  for (let x = 62; x < 212; x += 8) { rect(m, x, 132, 4, 2, '#ffd93b'); }
+  // door
+  rect(m, 4, 30, 32, 76, '#5c2e18'); rect(m, 7, 33, 26, 73, '#b8733f');
+  rect(m, 10, 37, 20, 28, '#a5653a'); rect(m, 10, 70, 20, 30, '#a5653a'); rect(m, 10, 37, 20, 1, '#c98a55'); rect(m, 10, 70, 20, 1, '#c98a55');
+  disc(m, 29, 68, 1, '#ffd93b');
+  // window onto the hill
+  rect(m, 44, 14, 78, 58, '#5c2e18');
+  const gx = 47, gy = 17, gw = 72, gh = 52;
+  rect(m, gx, gy, gw, 14, '#86c9e6'); dither(m, gx, gy + 14, gw, 2, '#86c9e6', '#a6dbf0'); rect(m, gx, gy + 16, gw, 8, '#a6dbf0'); dither(m, gx, gy + 24, gw, 2, '#a6dbf0', '#c4e8f4');
+  rect(m, 54, 22, 12, 2, '#ffffff'); rect(m, 57, 21, 6, 1, '#ffffff'); rect(m, 96, 25, 10, 2, '#ffffff');
+  for (let x = gx; x < gx + gw; x++) { const h = 3 + Math.round(2 * Math.sin(x / 6) + Math.sin(x / 2.7)); rect(m, x, gy + 31 - h, 1, h + 1, '#8fb5c9'); }
+  rect(m, gx, gy + 31, gw, 8, '#8cc9a6');
+  [[50, 49, 7], [61, 50, 6], [72, 48, 8], [96, 49, 6], [108, 50, 6]].forEach(b => { rect(m, b[0], b[1], b[2], 1, '#c8553a'); rect(m, b[0], b[1] + 1, b[2], 2, '#ead9b6'); });
+  rect(m, 84, 37, 4, 13, '#ead9b6'); rect(m, 84, 36, 4, 1, '#c8553a'); rect(m, 85, 34, 2, 2, '#c8553a');
+  for (let x = gx; x < gx + gw; x++) { const y = gy + 42 - Math.round(4 * Math.sin((x - gx) / gw * Math.PI)); rect(m, x, y, 1, gy + gh - y, '#f4c64f'); }
+  dither(m, gx, gy + gh - 4, gw, 4, '#f4c64f', '#e5ab3c');
+  disc(m, 56, 60, 5, '#2f6b45'); disc(m, 55, 59, 3, '#4a8f5f'); rect(m, 56, 64, 1, 4, '#5b3a21');
+  rect(m, 108, 52, 1, 4, '#141414'); rect(m, 112, 52, 1, 4, '#141414'); oval(m, 110, 50, 4, 2, '#141414'); oval(m, 110, 50, 3, 1, '#fffaf0');
+  rect(m, 70, 17, 2, 52, '#5c2e18'); rect(m, 95, 17, 2, 52, '#5c2e18');
+  rect(m, 42, 72, 82, 3, '#5c2e18'); rect(m, 42, 72, 82, 1, '#c27e52');
+  if (bart) {
+  // Takt poster
+  rect(m, 130, 16, 22, 32, '#141414');
+  rect(m, 134, 19, 14, 3, '#f0efea'); rect(m, 139, 22, 4, 9, '#f0efea');
+  rect(m, 134, 33, 14, 3, '#ff5a1f'); rect(m, 139, 36, 4, 9, '#ff5a1f');
+  // pinboard
+  rect(m, 158, 20, 30, 24, '#5c2e18'); rect(m, 160, 22, 26, 20, '#d9b48a');
+  rect(m, 162, 24, 7, 7, '#ffd93b'); rect(m, 171, 25, 7, 6, '#ff9ccf'); rect(m, 163, 33, 8, 6, '#7ee0b5'); rect(m, 174, 33, 9, 7, '#fff7e6'); rect(m, 181, 24, 2, 2, '#ff5a1f');
+  rect(m, 175, 35, 6, 1, '#2b3fff'); rect(m, 175, 37, 4, 1, '#2b3fff');
+  // framed record: Gegenlicht, a warm light through blinds, the disc sliding out
+  rect(m, 198, 14, 30, 28, '#5c2e18'); rect(m, 200, 16, 26, 24, '#141414');
+  rect(m, 201, 17, 11, 22, '#ffd96a'); for (let y = 18; y < 39; y += 3) rect(m, 201, y, 11, 1, '#b8873a');
+  disc(m, 218, 28, 8, '#0c0c0c'); disc(m, 218, 28, 6, '#26262b'); disc(m, 218, 28, 4, '#0c0c0c'); disc(m, 218, 28, 2, '#ff5a1f'); rect(m, 218, 28, 1, 1, '#141414');
+  }
+  // bookshelf
+  rect(m, 266, 10, 48, 96, '#5c2e18'); rect(m, 269, 13, 42, 90, '#3d2112');
+  const cols = ['#ff5a1f', '#2b3fff', '#ffd93b', '#ff9ccf', '#7ee0b5', '#fff7e6', '#c46a4a', '#34446e', '#2f6b45'];
+  [13, 31, 49, 67, 85].forEach((sy, k) => {
+    rect(m, 269, sy + 16, 42, 2, '#5c2e18');
+    let x = 270;
+    while (x < 309) { const w = 2 + Math.floor(r() * 3), h = 10 + Math.floor(r() * 5); if (r() < 0.1 && k) { x += 4; continue; } rect(m, x, sy + 16 - h, Math.min(w, 309 - x), h, cols[Math.floor(r() * cols.length)]); x += w + (r() < 0.3 ? 1 : 0); }
+  });
+  // chair back
+  if (bart) { rect(m, 170, 58, 40, 3, '#141414'); rect(m, 168, 61, 44, 36, '#141414'); rect(m, 170, 61, 40, 36, '#3b3d4a'); rect(m, 170, 61, 40, 1, '#4f5262'); }
+  return c;
+}
+const roomBg = makeRoomBg(true), roomBgEmpty = makeRoomBg(false);
+const seminarBg = (function () {
+  const c = document.createElement('canvas'); c.width = W; c.height = H; const m = c.getContext('2d');
+  m.drawImage(roomBgEmpty, 0, 0);
+  rect(m, 262, 5, 58, 99, '#9a5631'); for (let x = 266; x < W; x += 14) { rect(m, x, 5, 1, 99, '#7f4426'); rect(m, x + 1, 5, 1, 99, '#ac6a42'); }
+  // the sign
+  rect(m, 146, 12, 70, 32, '#5c2e18'); rect(m, 148, 14, 66, 28, '#fff7e6');
+  const no = (cx, cy, icon) => { disc(m, cx, cy, 10, '#d6402e'); disc(m, cx, cy, 8, '#fff7e6'); icon(); for (let i = -6; i <= 6; i++) rect(m, cx + i, cy + i, 2, 2, '#d6402e'); };
+  no(164, 28, () => { rect(m, 161, 22, 7, 12, C.ink); rect(m, 162, 23, 5, 9, '#86c9e6'); });
+  no(198, 28, () => { rect(m, 192, 23, 12, 8, C.ink); rect(m, 193, 24, 10, 6, '#86c9e6'); rect(m, 190, 31, 16, 2, C.ink); });
+  // a clock that says it's late
+  disc(m, 230, 26, 8, C.ink); disc(m, 230, 26, 7, '#fff7e6'); rect(m, 230, 20, 1, 6, C.ink); rect(m, 230, 26, 4, 1, C.ink);
+  // the projector screen, slide two of many
+  rect(m, 248, 6, 68, 2, C.ink); rect(m, 250, 8, 64, 46, '#f4f1ea'); rect(m, 250, 53, 64, 1, '#c9c3b4');
+  rect(m, 254, 12, 40, 4, '#2b3fff'); [20, 25, 30, 35].forEach((y, i) => { rect(m, 256, y, 2, 2, C.ink); rect(m, 260, y, 30 - i * 5, 1, '#8a8478'); });
+  rect(m, 296, 30, 4, 12, '#ff5a1f'); rect(m, 301, 24, 4, 18, '#2b3fff'); rect(m, 306, 34, 4, 8, '#ffd93b'); rect(m, 254, 46, 56, 1, '#c9c3b4'); rect(m, 300, 48, 10, 3, '#8a8478');
+  return c;
+})();
+
+
+/* ---------- characters ---------- */
+const P = { W: '#f2cf4a', w: '#d4a92c', S: '#f2bda6', s: '#dc9d88', r: '#ee9f8f', b: '#e3dccb', E: '#3c5a80', M: '#b8695c', K: '#3a1c18', O: '#ffffff', N: '#f2efe6', n: '#d9d3c4', T: '#f2efe6', G: '#e2b23c', L: '#4a3a1e' };
+const BART = [
+  '..........WW..WWW..W........', '........WWWWWWWWWWWWW.......', '.......WWWWWWWWWWWWWWW......', '......WWWWwSSSSSSSwWWWW.....',
+  '......WWWSSSSSSSSSSSWWW.....', '.....WWWSSSSSSSSSSSSSWWW....', '.....WWSSSSSSSSSSSSSSSWW....', '.....WWSSSSSSSSSSSSSSSWW....',
+  '.....WSSbbbSSSSSSSbbbSSW....', '.....sSSEEESSSSSSSEEESSs....', '.....sSSSSSSSSsSSSSSSSSs....', '......SSSSSSSssSSSSSSSS.....',
+  '......SrrSSSSSSSSSSSrrS.....', '.......SSSSMMMMMMMSSSS......', '.......SSSSSSSSSSSSSSS......', '........SSSSSSSSSSSSS.......',
+  '..........sSSSSSSSs.........', '...........SSSSSSS..........', '......NNNNNTSSSSSTNNNNN.....', '....NNNNNNNTTSSSTTNNNNNNN...',
+  '...NNNNNNNnTTTSTTTnNNNNNNNN..', '..NNNNNNNNnTTTTTTTnNNNNNNNNN.', '..NNNNNNNnTTGGGGGTTnNNNNNNN.', '..NNNNNNNnTTGLLLGTTnNNNNNNN.',
+  '..NNNNNNNnTTGLLLGTTnNNNNNNN.', '..NNNNNNNnTTTGGGTTTnNNNNNNN.', '..NNNNNNNnTTGLLLGTTnNNNNNNN.', '..NNNNNNNnTTGLLLGTTnNNNNNNN.',
+  '..NNNNNNNnTTTGGGTTTnNNNNNNN.', '..NNNNNNNNNnTTTTTnNNNNNNNNN.'
+];
+const TEE = '..NNNNNNNnTTTTTTTTTnNNNNNNN.';
+const v = patch => { const rows = BART.slice(); Object.keys(patch).forEach(k => { rows[+k] = patch[k]; }); return rows; };
+const SHADES = { 8: '.....WGGGGGGGGGGGGGGGGGW....', 9: '.....sGLLLLLGSSSGLLLLLGs....', 10: '.....sSGLLLGSSsSSGLLLGSs....', 22: TEE, 23: TEE, 24: TEE, 25: TEE, 26: TEE, 27: TEE, 28: TEE };
+const OPEN = { 13: '.......SSSSSMMMMMSSSSS......', 14: '.......SSSSSMKKKMSSSSS......' };
+const FACE = {
+  type: v({ 9: '.....sSSSSSSSSSSSSSSSSSs....', 10: '.....sSSEEESSSsSSSEEESSs....' }),
+  idle: BART, talk: v(OPEN),
+  startle: v(Object.assign({ 7: '.....WWSbbbSSSSSSSbbbSWW....', 8: '.....WSSOOOSSSSSSSOOOSSW....', 9: '.....sSSOEOSSSSSSSOEOSSs....', 10: '.....sSSOOOSSsSSSSOOOSSs....' }, OPEN)),
+  cool: v(Object.assign({ 13: '.......SSSSSSMMMMMMMSS......' }, SHADES)),
+  coolTalk: v(Object.assign({}, SHADES, OPEN))
+};
+const TINY = [['.HHH.', 'HSSS.', '.SSS.', 'OOOOO', '.OOO.', '.OOO.', '.P.P.', '.P.P.', '.K.K.'], ['.HHH.', 'HSSS.', '.SSS.', 'OOOOO', '.OOO.', '.OOO.', '..PP.', '.P.P.', 'K..K.']];
+const TPAL = { H: '#3b2416', S: '#e8b08f', O: '#e8743b', P: '#2a2f55', K: '#141414' };
+
+function drawYou(x, y, f, frame, talk) {
+  const R = (dx, dy, w, h, c) => rect(g, f > 0 ? x + dx : x - dx - w, y + dy, w, h, c);
+  const SK = '#e8b08f', SKd = '#c98d6c', HR = '#3b2416', SW = '#e8743b', SWd = '#c55a26', PN = '#2a2f55', PNd = '#1d2140';
+  const a = frame === 1 ? -5 : frame === 2 ? 4 : 0, b = -a;
+  oval(g, x, y, 11, 2, 'rgba(20,20,20,0.22)');
+  R(-6 + a, -26, 6, 24, PNd); R(-6 + a, -3, 9, 3, '#141414');
+  R(-1 + b, -26, 6, 24, PN); R(-1 + b, -3, 9, 3, '#141414');
+  R(-10, -50, 20, 25, SW); R(-10, -50, 4, 25, SWd); R(-10, -27, 20, 2, SWd);
+  R(-3, -51, 8, 2, '#fff7e6');
+  R(-2, -54, 6, 4, SK);
+  R(-6, -70, 14, 17, SK); R(8, -63, 2, 3, SK); R(8, -61, 2, 1, SKd);
+  R(-7, -73, 15, 5, HR); R(-7, -69, 6, 10, HR); R(6, -71, 3, 2, HR);
+  R(-1, -64, 3, 4, SKd);
+  R(4, -66, 2, 2, '#141414'); R(3, -68, 4, 1, HR);
+  R(3, -58, 4, talk ? 2 : 1, talk ? '#5a1f1a' : SKd);
+  const s = frame === 1 ? 3 : frame === 2 ? -3 : 0;
+  R(-2 + s, -49, 6, 20, SWd); R(-1 + s, -30, 5, 5, SK);
+}
+
+
+/* ---------- the neighbours ---------- */
+const INK = '#141414';
+const LOOKS = {
+  daniel: { skin: '#d9a07a', skinD: '#b98060', hair: '#2a2522', hairD: '#5f5a55', brow: '#2a2522', style: 'short', top: 'collar', shirt: '#bcd0ea', shirtD: '#9fb6d6', trim: '#e2ebf6' },
+  kahwee: { skin: '#e3b08a', skinD: '#c48f6a', hair: '#221c1a', hairD: '#3a302c', brow: '#221c1a', style: 'swept', top: 'vneck', shirt: '#efe3d0', shirtD: '#d8c9b0', trim: '#8a8478', glasses: INK, mous: true },
+  frances: { skin: '#f2c4a8', skinD: '#d8a58a', hair: '#6b4a32', hairD: '#8a6648', brow: '#5a3e2a', style: 'back', top: 'cardigan', shirt: '#f4f1ea', shirtD: '#d9d4c8', trim: '#a9c4bb', earrings: '#6fa6c8' },
+  ian: { skin: '#f3c5ae', skinD: '#dca48c', hair: '#e2cfa6', hairD: '#c9b083', brow: '#c9a77a', style: 'bald', top: 'collar', shirt: '#c8daf2', shirtD: '#a9c1e2', trim: '#e6eefa', glasses: '#4a2e22', round: true, stubble: '#caa58c' },
+  jacqueline: { skin: '#ecbf9a', skinD: '#cf9e7a', hair: '#1c1918', hairD: '#322c2a', brow: '#1c1918', style: 'bob', top: 'jacket', shirt: '#26262c', shirtD: '#141418', trim: '#4c4c58', glasses: '#55565e', band: '#efe6d2' },
+  forrest: { skin: '#e8b896', skinD: '#c9946f', hair: '#7a4a2a', hairD: '#5e3820', brow: '#5e3820', style: 'short', top: 'collar', shirt: '#9ccc3c', shirtD: '#7fa82c', trim: '#c6e86e', sweat: '#ffffff' },
+  fellow: { skin: '#c8916a', skinD: '#a8734f', hair: '#3a2a20', hairD: '#2a1e16', brow: '#2a1e16', style: 'swept', top: 'vneck', shirt: '#7a6aa8', shirtD: '#5f5288', trim: '#efe3d0' },
+  joseph: { skin: '#e4b28c', skinD: '#c69270', hair: '#2a2624', hairD: '#4a4440', brow: '#2a2624', style: 'receding', top: 'collar', shirt: '#f2f2f4', shirtD: '#d2d6de', trim: '#ffffff', dots: '#9aa8c0' }
+};
+function bust(o, x, y, st) {
+  const R = (dx, dy, w, h, c) => rect(g, x + dx, y + dy, w, h, c);
+  // shoulders and top
+  R(4, 19, 20, 11, o.shirt); R(2, 21, 24, 9, o.shirt); R(3, 20, 22, 1, o.shirt);
+  R(2, 21, 2, 9, o.shirtD); R(24, 21, 2, 9, o.shirtD); R(9, 24, 1, 6, o.shirtD); R(18, 24, 1, 6, o.shirtD);
+  if (o.dots) for (let j = 21; j < 30; j += 3) for (let i = 4 + (j % 2); i < 24; i += 4) R(i, j, 1, 1, o.dots);
+  R(11, 15, 6, 6, o.skinD);
+  if (o.top === 'collar') { R(12, 19, 4, 2, o.skinD); R(9, 18, 4, 2, o.trim); R(10, 20, 2, 1, o.trim); R(15, 18, 4, 2, o.trim); R(16, 20, 2, 1, o.trim); R(13, 22, 1, 1, o.shirtD); R(13, 26, 1, 1, o.shirtD); }
+  if (o.top === 'vneck') { R(10, 19, 8, 1, o.trim); R(11, 20, 6, 1, o.trim); R(12, 21, 4, 1, o.trim); R(13, 22, 2, 1, o.trim); R(12, 19, 4, 1, o.skinD); R(13, 20, 2, 1, o.skinD); }
+  if (o.top === 'cardigan') { R(10, 19, 8, 11, o.trim); R(10, 19, 2, 11, o.shirt); R(16, 19, 2, 11, o.shirt); R(11, 19, 6, 1, o.skinD); [11, 13, 15].forEach(i => R(i, 21, 1, 1, '#c9c9c9')); R(12, 22, 1, 1, '#c9c9c9'); R(14, 22, 1, 1, '#c9c9c9'); }
+  if (o.top === 'tee') { R(11, 19, 6, 1, o.trim); R(10, 18, 1, 1, o.trim); R(17, 18, 1, 1, o.trim); R(12, 19, 4, 1, o.skinD); }
+  if (o.top === 'blazer') { R(11, 19, 6, 11, o.trim); R(9, 18, 3, 6, o.shirtD); R(16, 18, 3, 6, o.shirtD); R(12, 19, 4, 1, o.skinD); R(13, 21, 1, 1, o.shirtD); R(13, 25, 1, 1, o.shirtD); }
+  if (o.top === 'jacket') { R(11, 19, 6, 11, '#0e0e10'); R(9, 18, 3, 4, o.trim); R(16, 18, 3, 4, o.trim); R(5, 22, 1, 5, o.trim); R(20, 23, 1, 3, o.trim); R(12, 19, 4, 1, o.skinD); }
+  // head
+  R(7, 2, 14, 15, o.skin); R(6, 4, 16, 11, o.skin); R(8, 16, 12, 1, o.skin); R(6, 12, 1, 2, o.skinD); R(21, 12, 1, 2, o.skinD);
+  R(5, 8, 1, 4, o.skin); R(22, 8, 1, 4, o.skin);
+  if (o.stubble) for (let j = 12; j < 17; j++) for (let i = 7 + (j % 2); i < 21; i += 2) if (j > 13 || i < 10 || i > 17) R(i, j, 1, 1, o.stubble);
+  // hair
+  const h = o.hair, d = o.hairD;
+  if (o.style === 'short') { R(6, 0, 16, 4, h); R(8, -1, 2, 1, h); R(12, -1, 4, 1, h); R(18, -1, 2, 1, h); R(5, 2, 2, 7, d); R(21, 2, 2, 7, d); R(7, 4, 5, 1, h); }
+  if (o.style === 'swept') { R(5, 0, 18, 4, h); R(5, -1, 13, 1, h); R(7, -2, 7, 1, h); R(5, 3, 2, 6, h); R(21, 3, 2, 5, h); R(7, 4, 8, 1, h); R(7, 5, 3, 1, h); R(9, -1, 4, 1, d); }
+  if (o.style === 'back') { R(11, -2, 6, 2, h); R(6, 0, 16, 4, h); R(5, 3, 2, 7, h); R(21, 3, 2, 7, h); R(9, 1, 6, 1, d); R(4, 6, 1, 3, d); R(23, 5, 1, 3, d); }
+  if (o.style === 'bald') { R(7, 0, 14, 2, o.skin); R(8, -1, 12, 1, o.skin); R(5, 3, 2, 8, h); R(21, 3, 2, 8, h); R(6, 1, 2, 3, h); R(20, 1, 2, 3, h); R(10, -1, 8, 1, 'rgba(226,207,166,0.45)'); }
+  if (o.style === 'bob') { R(5, 0, 18, 5, h); R(4, 2, 3, 14, h); R(21, 2, 3, 14, h); R(3, 12, 2, 4, h); R(23, 11, 2, 4, h); R(7, 4, 5, 2, h); R(17, 4, 3, 1, h); R(5, 1, 18, 2, o.band); R(6, 0, 15, 1, o.band); R(10, 1, 3, 1, '#d7cbb2'); }
+  if (o.style === 'long') { R(5, 0, 18, 5, h); R(4, 2, 3, 22, h); R(21, 2, 3, 22, h); R(3, 14, 2, 10, h); R(23, 14, 2, 10, h); R(7, 4, 6, 1, h); R(15, 4, 5, 1, h); R(10, 0, 4, 1, d); }
+  if (o.style === 'curly') { R(4, -2, 20, 6, h); R(3, 0, 3, 11, h); R(22, 0, 3, 11, h); R(6, -3, 16, 1, h); R(7, 4, 4, 1, h); R(17, 4, 4, 1, h); [[6, -1], [11, -2], [16, 0], [20, -1], [4, 3], [23, 4], [9, 1], [14, 1]].forEach(([i, j]) => R(i, j, 1, 1, d)); }
+  if (o.style === 'buzz') { R(7, 0, 14, 3, d); R(6, 2, 2, 5, d); R(20, 2, 2, 5, d); for (let i = 8; i < 20; i += 2) R(i, 0, 1, 1, h); }
+  if (o.style === 'receding') { R(9, 0, 10, 1, h); R(7, 1, 4, 2, h); R(17, 1, 4, 2, h); R(13, 1, 2, 2, h); R(6, 2, 2, 7, h); R(20, 2, 2, 7, h); }
+  if (o.beard) { R(6, 11, 2, 5, o.beard); R(20, 11, 2, 5, o.beard); R(7, 15, 14, 2, o.beard); R(9, 17, 10, 1, o.beard); R(11, 13, 6, 1, o.beard); }
+  if (o.sweat) { R(6, 3, 16, 2, o.sweat); R(5, 4, 1, 2, o.sweat); R(22, 4, 1, 2, o.sweat); }
+  if (o.earrings) { R(5, 12, 1, 1, '#d0d0d0'); R(4, 13, 3, 3, o.earrings); R(22, 12, 1, 1, '#d0d0d0'); R(21, 13, 3, 3, o.earrings); }
+  // face
+  const ey = st.down ? 10 : 9;
+  R(9, 7, 4, 1, o.brow); R(15, 7, 4, 1, o.brow);
+  if (st.blink || st.down) { R(9, ey + 1, 3, 1, INK); R(16, ey + 1, 3, 1, INK); } else { const lx = st.look || 0; R(10 + lx, ey, 2, 2, INK); R(16 + lx, ey, 2, 2, INK); R(10 + lx, ey, 1, 1, '#ffffff'); R(16 + lx, ey, 1, 1, '#ffffff'); }
+  R(13, 10, 2, 3, o.skinD);
+  R(8, 12, 2, 1, 'rgba(238,159,143,0.6)'); R(18, 12, 2, 1, 'rgba(238,159,143,0.6)');
+  if (o.mous) { R(11, 13, 6, 1, h); R(13, 16, 2, 1, h); }
+  if (st.talk) R(12, 14, 4, 2, '#5a1f1a');
+  else { R(11, 14, 6, 1, '#a85a4e'); R(10, 13, 1, 1, '#a85a4e'); R(17, 13, 1, 1, '#a85a4e'); }
+  if (o.glasses) {
+    const f = o.glasses;
+    [8, 15].forEach(gx => {
+      if (o.round) { R(gx + 1, 8, 4, 1, f); R(gx + 1, 12, 4, 1, f); R(gx, 9, 1, 3, f); R(gx + 5, 9, 1, 3, f); }
+      else { R(gx, 8, 6, 1, f); R(gx, 12, 6, 1, f); R(gx, 8, 1, 5, f); R(gx + 5, 8, 1, 5, f); }
+    });
+    R(14, 9, 1, 1, f); R(6, 9, 2, 1, f); R(21, 9, 1, 1, f);
+  }
+}
+// a desk like Bart's: the neighbour sits behind it, hands on the keys
+function deskScene(k, o, t, talk, blink) {
+  rect(g, 170, 58, 40, 3, INK); rect(g, 168, 61, 44, 36, INK); rect(g, 170, 61, 40, 36, '#3b3d4a'); rect(g, 170, 61, 40, 1, '#4f5262');
+  bust(o, 176, 66, { talk, blink });
+  rect(g, 148, 95, 116, 1, INK); rect(g, 148, 96, 116, 4, '#e2b47e'); rect(g, 148, 100, 116, 1, INK);
+  rect(g, 151, 101, 110, 22, '#c08a55'); rect(g, 151, 101, 110, 1, '#9c6a3c'); rect(g, 151, 101, 1, 22, '#9c6a3c'); rect(g, 260, 101, 1, 22, '#9c6a3c');
+  rect(g, 154, 123, 5, 5, '#7d5632'); rect(g, 253, 123, 5, 5, '#7d5632');
+  rect(g, 178, 94, 24, 2, '#26262b');
+  const typing = !S.line && !calm, a = typing ? Math.floor(t * 9) % 2 : 0;
+  rect(g, 181, 92 - a, 5, 2, o.skin); rect(g, 194, 92 - (typing ? 1 - a : 0), 5, 2, o.skin);
+  drawMonitor(0);
+  const mug = { daniel: '#2b3fff', kahwee: '#7ee0b5', ian: '#fff7e6', jacqueline: '#ff9ccf' }[k];
+  rect(g, 206, 88, 7, 8, INK); rect(g, 207, 89, 5, 6, mug); rect(g, 213, 90, 2, 3, INK);
+  if (k === 'daniel') { // a little marble Socrates
+    rect(g, 155, 93, 14, 2, '#9a9a94'); rect(g, 157, 89, 10, 4, '#e8e6df'); rect(g, 158, 80, 8, 9, '#f2f0ea'); rect(g, 157, 78, 10, 3, '#d9d6cc');
+    rect(g, 158, 86, 8, 4, '#d9d6cc'); rect(g, 159, 83, 2, 1, '#8a8780'); rect(g, 163, 83, 2, 1, '#8a8780'); rect(g, 161, 84, 2, 2, '#cfccc2'); }
+  if (k === 'kahwee') { rect(g, 156, 84, 6, 11, INK); rect(g, 157, 85, 4, 10, '#c46a4a'); rect(g, 157, 81, 1, 4, '#ffd93b'); rect(g, 159, 80, 1, 5, '#2b3fff'); }
+  if (k === 'ian') { [0, 2, 4, 6].forEach(i => rect(g, 154 + i, 92 - i, 18, 2, i % 4 ? '#fff7e6' : '#e8e2d2'));
+    // a world map on the wall, pins in it
+    rect(g, 136, 14, 64, 38, '#5c2e18'); rect(g, 138, 16, 60, 34, '#a9cfe0');
+    [[142, 20, 12, 8], [146, 28, 7, 10], [160, 19, 10, 6], [161, 26, 9, 11], [172, 18, 18, 10], [184, 34, 8, 6]].forEach(c => rect(g, c[0], c[1], c[2], c[3], '#d9c99a'));
+    [[148, 23], [150, 33], [165, 30], [178, 22], [187, 36], [163, 21]].forEach(([x, y]) => { rect(g, x, y, 2, 2, '#d6402e'); rect(g, x, y - 2, 1, 2, INK); }); }
+  if (k === 'jacqueline') { rect(g, 156, 88, 9, 7, '#c46a4a'); disc(g, 160, 84, 4, '#2f6b45'); disc(g, 158, 82, 2, '#4a8f5f');
+    // an easel with the pitch on it
+    rect(g, 128, 74, 2, 54, '#5c3a20'); rect(g, 143, 74, 2, 54, '#5c3a20'); rect(g, 135, 44, 2, 70, '#5c3a20');
+    rect(g, 122, 48, 30, 26, INK); rect(g, 123, 49, 28, 24, '#fffaf0'); rect(g, 125, 51, 14, 2, '#141414'); rect(g, 125, 55, 10, 1, '#8a8478');
+    rect(g, 126, 66, 4, 5, '#2b8fff'); rect(g, 131, 62, 4, 9, '#2b8fff'); rect(g, 136, 58, 4, 13, '#ff5a1f'); rect(g, 141, 60, 8, 1, '#ff5a1f'); rect(g, 147, 58, 2, 3, '#ff5a1f');
+    rect(g, 121, 73, 32, 2, '#7d5632'); }
+}
+// Frances, deep in a book in the comfiest chair on campus
+function readingScene(o, t, talk, blink, speaking) {
+  // a floor lamp, warm
+  oval(g, 246, 74, 22, 30, 'rgba(255,217,106,0.10)');
+  rect(g, 245, 56, 2, 72, '#3b3d4a'); rect(g, 240, 126, 12, 2, '#3b3d4a');
+  rect(g, 236, 46, 20, 2, INK); rect(g, 237, 48, 18, 10, '#f2d58a'); rect(g, 235, 57, 22, 2, INK); rect(g, 238, 48, 2, 10, '#fff1c2');
+  // side table with tea
+  rect(g, 226, 100, 18, 3, '#7d5632'); rect(g, 233, 103, 4, 25, '#5c3a20');
+  rect(g, 230, 95, 6, 5, '#fff7e6'); rect(g, 236, 96, 2, 2, '#fff7e6'); rect(g, 229, 99, 8, 1, '#d9d4c8');
+  // the chair
+  const CH = '#5c7a52', CHd = '#46613d', CHh = '#7a9a6c';
+  rect(g, 154, 50, 64, 4, INK); rect(g, 152, 54, 68, 52, INK);
+  rect(g, 156, 52, 60, 52, CH); rect(g, 156, 52, 60, 2, CHh);
+  for (let i = 0; i < 3; i++) { disc(g, 170 + i * 16, 64, 1, CHd); disc(g, 170 + i * 16, 80, 1, CHd); }
+  bust(o, 172, 62, { talk, blink, down: !speaking });
+  // arms of the chair, seat, legs
+  rect(g, 146, 82, 16, 30, INK); rect(g, 147, 83, 14, 28, CH); rect(g, 147, 83, 14, 2, CHh);
+  rect(g, 210, 82, 16, 30, INK); rect(g, 211, 83, 14, 28, CH); rect(g, 211, 83, 14, 2, CHh);
+  rect(g, 160, 96, 52, 16, INK); rect(g, 161, 97, 50, 14, CHd); rect(g, 161, 97, 50, 2, CH);
+  rect(g, 150, 112, 72, 2, INK); rect(g, 152, 114, 4, 12, '#3d2112'); rect(g, 216, 114, 4, 12, '#3d2112');
+  // her knees and legs, a book in her hands
+  rect(g, 174, 96, 24, 8, '#5a5f73'); rect(g, 174, 96, 24, 1, '#6c7186');
+  rect(g, 177, 104, 8, 20, '#5a5f73'); rect(g, 188, 104, 8, 20, '#4c5063');
+  rect(g, 175, 124, 11, 4, '#6a3a24'); rect(g, 187, 124, 11, 4, '#6a3a24');
+  rect(g, 177, 85, 22, 12, INK); rect(g, 178, 86, 10, 10, '#fff7e6'); rect(g, 189, 86, 9, 10, '#f3ead6');
+  rect(g, 188, 86, 1, 10, '#c8553a');
+  if (!speaking) for (let i = 0; i < 4; i++) { rect(g, 179, 88 + i * 2, 8, 1, '#c9bfa8'); rect(g, 190, 88 + i * 2, 7, 1, '#c9bfa8'); }
+  rect(g, 175, 89, 4, 5, o.skin); rect(g, 197, 89, 4, 5, o.skin);
+  if (!calm && !speaking && Math.floor(t / 7) % 2 && (t % 7) < 0.3) rect(g, 189, 86, 6, 10, '#ffffff'); // a page turns
+}
+// Joseph, standing, between two enormous monitors
+function screen(x0, w, top0, top1, h0, h1, flip, t) {
+  for (let i = 0; i < w; i++) {
+    const k = i / (w - 1), top = Math.round(top0 + (top1 - top0) * k), hh = Math.round(h0 + (h1 - h0) * k), x = x0 + i;
+    rect(g, x, top - 2, 1, hh + 4, INK);
+    if (i < 2 || i > w - 3) continue;
+    rect(g, x, top, 1, hh, '#1b2a4a');
+    const u = flip ? 1 - k : k;
+    const at = f => top + Math.round(hh * f);
+    // code lines on the upper half, a bar chart on the lower half
+    [0.1, 0.16, 0.22, 0.28, 0.34, 0.4].forEach((f, j) => { if (u > 0.06 && u < 0.2 + ((j * 37) % 7) / 10) rect(g, x, at(f), 1, 1, ['#7ee0b5', '#ffd93b', '#ff9ccf', '#86c9e6'][j % 4]); });
+    const bar = Math.floor(u * 9);
+    if (u > 0.08 && u < 0.92 && Math.floor(u * 9 * 2) % 2 === 0) { const bh = 0.12 + ((bar * 53 + Math.floor(t * 0.5) * 17) % 11) / 30; rect(g, x, at(0.9 - bh), 1, Math.round(hh * bh), bar % 3 ? '#2b8fff' : '#ff5a1f'); }
+    rect(g, x, at(0.92), 1, 1, '#4b5d84');
+  }
+}
+function standingScene(o, t, talk, blink) {
+  oval(g, 190, 52, 90, 34, 'rgba(134,201,230,0.10)');
+  // legs under the desk, then the torso, then the head
+  rect(g, 182, 84, 8, 40, '#2e3448'); rect(g, 192, 84, 8, 40, '#262b3c'); rect(g, 180, 124, 11, 4, INK); rect(g, 191, 124, 11, 4, INK);
+  rect(g, 178, 66, 24, 18, o.shirt); rect(g, 178, 66, 2, 18, o.shirtD); rect(g, 200, 66, 2, 18, o.shirtD);
+  for (let j = 68; j < 84; j += 3) for (let i = 180 + (j % 2); i < 200; i += 4) rect(g, i, j, 1, 1, o.dots);
+  bust(o, 176, 38, { talk, blink });
+  // the standing desk
+  rect(g, 132, 80, 128, 1, INK); rect(g, 132, 81, 128, 3, '#d9d4c8'); rect(g, 132, 84, 128, 1, INK);
+  rect(g, 140, 85, 3, 41, '#3b3d4a'); rect(g, 249, 85, 3, 41, '#3b3d4a'); rect(g, 134, 125, 14, 3, '#3b3d4a'); rect(g, 244, 125, 14, 3, '#3b3d4a');
+  rect(g, 178, 78, 26, 2, '#26262b');
+  const typing = !S.line && !calm, a = typing ? Math.floor(t * 9) % 2 : 0;
+  rect(g, 181, 76 - a, 5, 2, o.skin); rect(g, 196, 76 - (typing ? 1 - a : 0), 5, 2, o.skin);
+  // two enormous monitors on arms, turned in toward him
+  rect(g, 150, 74, 4, 6, '#3b3d4a'); rect(g, 228, 74, 4, 6, '#3b3d4a');
+  screen(108, 66, 18, 26, 56, 44, false, t);
+  screen(208, 66, 26, 18, 44, 56, true, t);
+}
+
+const PEOPLE = {
+  daniel: { name: 'Daniel', n: 1, scene: 'desk', at: [190, 54], color: '#7ee0ff',
+    look: 'Daniel. Study 1. Blue shirt, good posture, three coffees in.',
+    hello: [['daniel', 'Oh, hi!'], ['you', 'Study 1. You got the first door.'], ['daniel', 'First in, every morning. The coffee is still hot.']],
+    talks: [[['you', 'What are you working on?'], ['daniel', 'A paper. It was due in the spring.'], ['daniel', "Which spring, it didn't say."]],
+      [['you', 'Any tips for the year?'], ['daniel', 'Go to lunch. Return your tray.'], ['daniel', 'Learn from history.']]] },
+  kahwee: { name: 'Kah-Wee', n: 2, scene: 'desk', at: [190, 54], color: '#b9f27c',
+    look: 'Kah-Wee. Black glasses, a neat moustache, a sweater that means business.',
+    hello: [['kahwee', 'Hello! You found me.'], ['you', 'Study 2. Right next to Daniel.'], ['kahwee', 'We share a wall. And a printer. Mostly the printer.']],
+    talks: [[['you', 'What are you working on?'], ['kahwee', 'Thinking. With the glasses on, it counts double.']],
+      [['you', 'Nice glasses.'], ['kahwee', 'Thank you. I see everything now.'], ['kahwee', 'Some of it I regret.']]] },
+  frances: { name: 'Frances', n: 10, scene: 'read', at: [186, 52], color: '#ffb3d9', come: 'Mm-hm.',
+    look: 'Frances, deep in a book, deep in the comfiest chair on campus.',
+    hello: [['you', 'Hi, Frances.'], ['frances', 'One more page.'], ['frances', '...'], ['frances', 'Okay. Hi! Sorry. It was a good page.']],
+    talks: [[['you', 'What are you reading?'], ['frances', 'Something long. I am on the good part.'], ['frances', 'I have been on the good part for a week.']],
+      [['you', 'Great chair.'], ['frances', "Best chair at CASBS. Don't tell anyone."], ['you', 'My lips are sealed.']]] },
+  ian: { name: 'Ian', n: 29, scene: 'desk', at: [190, 54], color: '#9ec5ff',
+    look: 'Ian. Round glasses, a crisp blue shirt, the calm of a man whose deadline is far away.',
+    hello: [['ian', 'Ah, hello! Mind the floor.'], ['you', 'What about the floor?'], ['ian', 'Nothing. I just like saying it.']],
+    talks: [[['you', 'What are you working on?'], ['ian', 'A model. It explains everything.'], ['ian', 'Everything but this year. Working on that.']],
+      [['you', 'Nice glasses.'], ['ian', 'Round. Like the numbers I prefer.']]] },
+  jacqueline: { name: 'Jacqueline', n: 28, scene: 'desk', at: [190, 54], color: '#ffd08a', come: 'Come in, come in!',
+    look: 'Jacqueline. Leather jacket, cream headband, glasses. The coolest person in the building.',
+    hello: [['you', 'Great jacket.'], ['jacqueline', 'Thank you. It does most of the work.']],
+    talks: [[['you', 'What are you working on?'], ['jacqueline', 'Three things. Four, if you count lunch.'], ['jacqueline', 'There is no lunch anymore. So, three.']],
+      [['you', 'Nice headband.'], ['jacqueline', 'It keeps the ideas in. Otherwise they fall out.']]] },
+  joseph: { name: 'Joseph', n: 43, scene: 'stand', at: [190, 28], color: '#c9a6ff',
+    look: 'Joseph. Standing, by choice, between two monitors the size of garage doors.',
+    hello: [['joseph', "Hey! Don't trip on the cable."], ['you', 'Those are... big monitors.'], ['joseph', 'These? These are the travel size.']],
+    talks: [[['you', 'Why are you standing?'], ['joseph', 'Sitting is a scam.'], ['joseph', "Don't tell Eli I said that. He'll say I stole it."]],
+      [['you', "What's on the screens?"], ['joseph', 'Left one: my data. Right one: more of my data.'], ['joseph', 'In the middle: me. Also data.']]] }
+};
+Object.keys(PEOPLE).forEach(k => { PEOPLE[k].talked = 0; });
+
+function drawMonitor(f) {
+  const cx = 236, full = 30, w = Math.max(2, Math.round(full * Math.abs(Math.cos(Math.PI * f)))), x = cx - Math.round(w / 2);
+  rect(g, 233, 91, 6, 5, '#26262b'); rect(g, 226, 95, 20, 2, '#26262b');
+  if (f <= 0.5) {
+    rect(g, x, 68, w, 24, '#141414'); rect(g, x + 1, 69, w - 2, 22, '#4b4d5c');
+    if (w > 18) { disc(g, cx + 7, 75, 2, '#ff5a1f'); rect(g, cx - 10, 83, 7, 5, '#ffd93b'); rect(g, cx - 2, 73, 4, 4, '#7ee0b5'); }
+    return;
+  }
+  rect(g, x - 2, 66, w + 4, 28, 'rgba(255,247,230,0.25)');
+  rect(g, x, 68, w, 24, '#141414'); rect(g, x + 1, 69, w - 2, 22, '#26262b');
+  if (w > 8) {
+    const sx = x + 2, sw = w - 4; rect(g, sx, 70, sw, 20, '#f7f3eb');
+    if (w >= full - 1) {
+      // the talk's first slide, in pixels: the same layout the real slide resolves into
+      rect(g, sx + 2, 71, 14, 2, '#1d2a5a'); rect(g, sx + 17, 71, 5, 2, '#1d2a5a');
+      rect(g, sx + 2, 74, 22, 1, '#1d2a5a');
+      [[77, 19], [80, 16], [83, 18]].forEach(([y, l]) => { rect(g, sx + 2, y, 1, 1, '#1d2a5a'); rect(g, sx + 4, y, l, 1, '#8a8a8a'); });
+      rect(g, sx + 2, 87, 22, 1, '#d6cfbf'); rect(g, sx + 2, 88, 8, 1, '#b5ad9c'); rect(g, sx + 22, 88, 2, 1, '#b5ad9c');
+    }
+  }
+}
+
+/* ---------- full 16:9 frames ---------- */
+const mapFull = document.createElement('canvas'); mapFull.width = W; mapFull.height = FH;
+(function () {
+  const m = mapFull.getContext('2d'), r = rng(91);
+  rect(m, 0, 0, W, FH, C.grass);
+  for (let i = 0; i < 120; i++) { const y = r() < 0.5 ? r() * OY : FH - OY + r() * OY; rect(m, r() * W, y, 2, 1, r() < 0.6 ? C.grass2 : C.grass3); }
+  m.drawImage(mapBg, 0, OY);
+  building(m, 22, 2, 56, 12, 7, DOORS_TOP);
+  litDoor(m, 34, 15, 6);
+  // Forrest's door (an easter egg): greener glass, and a pickleball that got away
+  rect(m, 48, 15, 4, 6, '#6b8c78'); rect(m, 48, 15, 1, 6, '#93b39f');
+  rect(m, 55, 22, 3, 3, '#d8e84a'); rect(m, 55, 22, 3, 1, '#eef59a'); rect(m, 56, 23, 1, 1, '#9aa830');
+  [[256, 6, 5], [300, 10, 6], [96, 170, 6], [180, 172, 5], [250, 168, 6], [30, 170, 5]].forEach(o => oak(m, o[0], o[1], o[2]));
+  for (let i = 0; i < 14; i++) rect(m, 120 + r() * 120, 164 + r() * 14, 2, 2, C.orange);
+})();
+function makeRoomFull(bg) {
+  const c = document.createElement('canvas'); c.width = W; c.height = FH;
+  const m = c.getContext('2d'), r = rng(5);
+  rect(m, 0, 0, W, OY, '#d9c9a8'); rect(m, 0, OY - 3, W, 3, '#bfae8c');
+  for (let x = 0; x < W; x += 40) rect(m, x, 0, 3, OY - 3, '#cbb994');
+  rect(m, 150, 0, 2, 6, '#3b3d4a'); rect(m, 140, 6, 22, 5, '#ffd96a'); rect(m, 140, 6, 22, 1, '#fff3c4');
+  m.drawImage(bg, 0, OY);
+  for (let y = OY + H; y < FH; y += 3) { rect(m, 0, y, W, 3, (y / 3) % 2 ? '#c9a77a' : '#bf9c6e'); for (let k = 0; k < 3; k++) rect(m, Math.floor(r() * W), y, 1, 3, '#a8865b'); }
+  return c;
+}
+const roomFull = makeRoomFull(roomBg), roomFullEmpty = makeRoomFull(roomBgEmpty), seminarFull = makeRoomFull(seminarBg);
+
+/* ---------- sound ---------- */
+let AC = null, master = null, muted = false;
+function audio() {
+  if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); master = AC.createGain(); master.gain.value = 0.55; master.connect(AC.destination); } catch (e) { AC = null; } }
+  if (AC && AC.state === 'suspended') AC.resume();
+  return AC;
+}
+function tone(freq, dur, type, vol, when, slideTo) {
+  if (!AC || muted) return null;
+  const t = AC.currentTime + (when || 0), o = AC.createOscillator(), gn = AC.createGain();
+  o.type = type || 'square'; o.frequency.setValueAtTime(freq, t);
+  if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
+  gn.gain.setValueAtTime(0.0001, t); gn.gain.exponentialRampToValueAtTime(vol || 0.1, t + 0.008); gn.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(gn).connect(master); o.start(t); o.stop(t + dur + 0.03);
+  return o;
+}
+let noiseBuf = null;
+function noise(dur, vol, f1, f2, when, q, ftype) {
+  if (!AC || muted) return;
+  if (!noiseBuf) { noiseBuf = AC.createBuffer(1, AC.sampleRate, AC.sampleRate); const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+  const t = AC.currentTime + (when || 0), src = AC.createBufferSource(), f = AC.createBiquadFilter(), gn = AC.createGain();
+  src.buffer = noiseBuf; f.type = ftype || 'bandpass'; f.Q.value = q || 1;
+  f.frequency.setValueAtTime(f1, t); if (f2) f.frequency.exponentialRampToValueAtTime(f2, t + dur);
+  gn.gain.setValueAtTime(0.0001, t); gn.gain.exponentialRampToValueAtTime(vol, t + 0.01); gn.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  src.connect(f).connect(gn).connect(master); src.start(t, Math.random() * 0.5); src.stop(t + dur + 0.03);
+}
+const SFX = {
+  step(soft) { noise(0.05, soft ? 0.05 : 0.14, 900, 300, 0, 1.2); },
+  key() { tone(1700 + Math.random() * 900, 0.025, 'square', 0.025); },
+  knock() { [0, 0.22].forEach(w => { noise(0.09, 0.5, 260, 120, w, 2, 'lowpass'); tone(95, 0.1, 'sine', 0.35, w, 70); }); },
+  creak() { const o = tone(170, 0.6, 'sawtooth', 0.04, 0, 260); noise(0.5, 0.05, 600, 1400, 0, 6); },
+  rattle() { [0, 0.09, 0.18, 0.27].forEach(w => noise(0.06, 0.18, 1800, 900, w, 3)); },
+  boing() { tone(180, 0.4, 'triangle', 0.28, 0, 900); tone(2300, 0.18, 'sine', 0.08, 0.14); tone(3100, 0.14, 'sine', 0.06, 0.18); },
+  sparkle() { [1047, 1319, 1568, 2093, 2637].forEach((f, i) => tone(f, 0.18, 'sine', 0.09, i * 0.06)); },
+  swoosh() { noise(0.45, 0.18, 400, 2400, 0, 1.4); },
+  zoom() { noise(0.9, 0.2, 250, 4000, 0, 1); tone(180, 0.9, 'triangle', 0.08, 0, 1400); },
+  unzoom() { noise(0.4, 0.15, 3000, 300, 0, 1); },
+  beat() { [0, 0.42, 0.84, 1.26].forEach((w, i) => { tone(i === 3 ? 880 : 440, 0.12, 'square', 0.1, w); noise(0.05, 0.25, 3000, 1500, w, 1); }); },
+  buzz() { tone(150, 0.35, 'sawtooth', 0.06, 0); tone(150, 0.35, 'sawtooth', 0.06, 0.5); },
+  pick() { tone(660, 0.05, 'square', 0.06); tone(990, 0.07, 'square', 0.06, 0.05); },
+  pock(v, when) { tone(1250 + Math.random() * 120, 0.035, 'sine', v, when); tone(2500, 0.018, 'triangle', v * 0.35, when); noise(0.022, v * 0.9, 2600, null, when, 3); },
+  rally() {
+    let w = 0;
+    for (let i = 0; i < 9; i++) { SFX.pock(i % 2 ? 0.09 : 0.2, w); w += i === 3 || i === 6 ? 0.22 : 0.42 + Math.random() * 0.12; }
+    noise(0.12, 0.12, 300, 120, w, 1, 'lowpass');
+  },
+  chirp() { tone(2600, 0.05, 'sine', 0.035, 0, 3500); tone(2900, 0.05, 'sine', 0.03, 0.1, 3700); tone(2700, 0.04, 'sine', 0.025, 0.32, 3400); },
+  jingle() { [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.16, 'square', 0.07, i * 0.11)); tone(1568, 0.4, 'triangle', 0.06, 0.44); },
+  gobble() {
+    if (!AC || muted) return [];
+    const out = [];
+    for (let i = 0; i < 9; i++) out.push(tone(560 + (i % 2) * 260 + Math.random() * 40, 0.06, 'square', 0.1, i * 0.058, 420));
+    return out.filter(Boolean);
+  },
+  moo() {
+    if (!AC || muted) return [];
+    const t = AC.currentTime, o = AC.createOscillator(), lfo = AC.createOscillator(), lg = AC.createGain(), f = AC.createBiquadFilter(), gn = AC.createGain();
+    o.type = 'sawtooth'; o.frequency.setValueAtTime(120, t); o.frequency.linearRampToValueAtTime(150, t + 0.25); o.frequency.linearRampToValueAtTime(92, t + 1.1);
+    lfo.frequency.value = 6; lg.gain.value = 4; lfo.connect(lg).connect(o.frequency);
+    f.type = 'lowpass'; f.frequency.setValueAtTime(400, t); f.frequency.linearRampToValueAtTime(900, t + 0.3); f.frequency.linearRampToValueAtTime(350, t + 1.1);
+    gn.gain.setValueAtTime(0.0001, t); gn.gain.exponentialRampToValueAtTime(0.3, t + 0.12); gn.gain.setValueAtTime(0.3, t + 0.8); gn.gain.exponentialRampToValueAtTime(0.0001, t + 1.15);
+    o.connect(f).connect(gn).connect(master); o.start(t); lfo.start(t); o.stop(t + 1.2); lfo.stop(t + 1.2);
+    return [o, lfo];
+  }
+};
+// garble voices: one blip per syllable-ish chunk, pitched per speaker
+const VOICES = {
+  you: { base: 300, steps: [0, 2, 4, 5, 7, 9], type: 'square', gap: 0.072, len: 0.06, vowels: [700, 1100, 1500, 500] },
+  eli: { base: 230, steps: [0, 2, 3, 7, 10], type: 'square', gap: 0.066, len: 0.055, vowels: [600, 950, 1300, 450] },
+  daniel: { base: 200, steps: [0, 2, 4, 7, 9], type: 'square', gap: 0.07, len: 0.06, vowels: [600, 1000, 1400, 500] },
+  kahwee: { base: 215, steps: [0, 3, 5, 7, 10], type: 'square', gap: 0.074, len: 0.06, vowels: [550, 900, 1250, 480] },
+  frances: { base: 330, steps: [0, 2, 4, 7, 9, 12], type: 'triangle', gap: 0.07, len: 0.065, vowels: [750, 1200, 1600, 600] },
+  ian: { base: 185, steps: [0, 2, 5, 7, 9], type: 'square', gap: 0.08, len: 0.065, vowels: [520, 880, 1200, 450] },
+  jacqueline: { base: 310, steps: [0, 3, 5, 7, 10], type: 'square', gap: 0.066, len: 0.055, vowels: [720, 1150, 1550, 560] },
+  joseph: { base: 175, steps: [0, 2, 4, 7, 9, 12], type: 'sawtooth', gap: 0.075, len: 0.065, vowels: [480, 820, 1150, 420] },
+  forrest: { base: 250, steps: [0, 4, 7, 12], type: 'square', gap: 0.06, len: 0.05, vowels: [650, 1050, 1450, 520] },
+  fellow: { base: 140, steps: [0, 2, 3], type: 'triangle', gap: 0.11, len: 0.09, vowels: [400, 600, 500] },
+  bart: { base: 165, steps: [0, 3, 5, 7, 10, 12], type: 'sawtooth', gap: 0.085, len: 0.07, vowels: [500, 800, 1100, 650] }
+};
+function hashK(k) { let h = 7; for (const c of k) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h; }
+function autoVoice(k) {
+  if (!LOOKS[k]) return null;
+  const h = hashK(k), base = [150, 175, 200, 230, 260, 300, 330][h % 7];
+  return (VOICES[k] = { base, steps: [[0, 2, 4, 7, 9], [0, 3, 5, 7, 10], [0, 2, 5, 7, 12]][h % 3], type: ['square', 'triangle', 'sawtooth'][(h >> 3) % 3], gap: 0.066 + (h % 5) * 0.004, len: 0.06, vowels: [600, 950, 1300, 480] });
+}
+function garble(who, text) {
+  const v = VOICES[who] || autoVoice(who);
+  if (!AC || muted) return [];
+  if (who === 'turkey') return SFX.gobble();
+  if (!v) return [];
+  const nodes = [];
+  let t = AC.currentTime + 0.02, chunk = 0;
+  const end = t + Math.min(4.5, text.length * 0.05);
+  for (let i = 0; i < text.length && t < end; i++) {
+    const ch = text[i];
+    if (ch === ' ') { t += v.gap * 0.6; chunk = 0; continue; }
+    if ('.,!?:;'.includes(ch)) { t += v.gap * 2.2; chunk = 0; continue; }
+    if (++chunk % 2 === 0) continue;
+    const semi = v.steps[Math.floor(Math.random() * v.steps.length)] + (ch === ch.toUpperCase() && /[A-Z]/.test(ch) ? 3 : 0);
+    const f = v.base * Math.pow(2, semi / 12), len = v.len * (0.8 + Math.random() * 0.5);
+    const o = AC.createOscillator(), bp = AC.createBiquadFilter(), lp = AC.createBiquadFilter(), gn = AC.createGain();
+    o.type = v.type; o.frequency.setValueAtTime(f, t); o.frequency.linearRampToValueAtTime(f * (0.88 + Math.random() * 0.3), t + len);
+    bp.type = 'bandpass'; bp.frequency.value = v.vowels[Math.floor(Math.random() * v.vowels.length)]; bp.Q.value = 1.6;
+    lp.type = 'lowpass'; lp.frequency.value = 2400;
+    gn.gain.setValueAtTime(0.0001, t); gn.gain.exponentialRampToValueAtTime(0.32, t + 0.012); gn.gain.exponentialRampToValueAtTime(0.0001, t + len);
+    o.connect(bp).connect(lp).connect(gn).connect(master); o.start(t); o.stop(t + len + 0.02);
+    nodes.push(o);
+    t += v.gap * (0.85 + Math.random() * 0.35);
+  }
+  return nodes;
+}
+
+/* ---------- state ---------- */
+const S = {
+  scene: 'map', turkeyT: -9, x: 54, y: 132, face: 1, path: [], arrive: null, stepT: 0, keyT: 0,
+  hover: null, busy: false, line: null, choices: null, started: false, study: -1,
+  bart: { mode: 'type', t: 0, shades: false }, met: false, talked: false, phoneOn: false, phoneT: 0, zoomT: -1, screenDone: null
+};
+
+/* ---------- script plumbing ---------- */
+const wait = s => new Promise(res => setTimeout(res, calm ? Math.min(s, 0.2) * 1000 : s * 1000));
+function say(who, text) {
+  return new Promise(res => { S.line = { who, text, t: 0, dur: Math.max(1.5, 0.75 + text.length * 0.062), res, nodes: garble(who, text) }; });
+}
+function skipLine() { if (!S.line) return; const l = S.line; S.line = null; (l.nodes || []).forEach(n => { try { n.stop(); } catch (e) {} }); l.res(); }
+function walkTo(pts) {
+  return new Promise(res => {
+    if (S.arrive) { const a = S.arrive; S.arrive = null; a(); }
+    S.path = pts.map(p => S.scene === 'room' ? clampRoom(p) : p);
+    if (!S.path.length) { res(); return; }
+    S.arrive = res;
+  });
+}
+function clampRoom(p) { return { x: Math.max(40, Math.min(300, p.x)), y: Math.max(126, Math.min(141, p.y)) }; }
+function rail(y) { return y < 20 ? 9 : y < 98 ? 64 : 132; }
+function route(to) {
+  const pts = [], fy = rail(S.y), ty = rail(to.y);
+  if (Math.abs(S.y - fy) > 0.5) pts.push({ x: S.x, y: fy });
+  let fx = S.x, ry = fy;
+  while (ry !== ty) {
+    const next = ry !== 64 ? 64 : ty;
+    const cx = ry === 9 || next === 9 ? 10 : (Math.abs(fx - 60) + Math.abs(to.x - 60) <= Math.abs(fx - 240) + Math.abs(to.x - 240) ? 60 : 240);
+    pts.push({ x: cx, y: ry }, { x: cx, y: next }); fx = cx; ry = next;
+  }
+  pts.push({ x: to.x, y: ty });
+  if (Math.abs(to.y - ty) > 0.5) pts.push({ x: to.x, y: to.y });
+  return pts;
+}
+function goTo(p) { return S.scene === 'map' ? walkTo(route(p)) : walkTo([p]); }
+function fadeTo(on) { fadeEl.classList.toggle('on', on); return wait(0.32); }
+async function run(fn) { if (S.busy) return; S.busy = true; labelEl.hidden = true; try { await fn(); } finally { S.busy = false; } }
+function choose(opts) {
+  return new Promise(res => {
+    S.choices = true; choicesEl.innerHTML = '';
+    opts.forEach((o, i) => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'choice outlined'; b.textContent = o;
+      b.addEventListener('click', e => { e.stopPropagation(); SFX.pick(); S.choices = null; choicesEl.hidden = true; res(i); });
+      choicesEl.appendChild(b);
+    });
+    choicesEl.hidden = false; choicesEl.querySelector('button').focus({ preventScroll: true });
+  });
+}
+
+/* ---------- scenes ---------- */
+async function knockAndEnter() {
+  SFX.knock(); await say('you', 'Knock, knock.');
+  await enterRoom();
+}
+async function enterPerson(k) {
+  const p = PEOPLE[k];
+  SFX.knock(); await say('you', 'Knock, knock.');
+  await wait(0.3); await say(k, p.come || 'Come in!');
+  SFX.creak();
+  await fadeTo(true);
+  S.scene = 'room'; S.room = k; S.x = 30; S.y = 132; S.face = 1; S.path = [];
+  await fadeTo(false);
+  await walkTo([{ x: 120, y: 134 }]);
+  if (!p.met) { p.met = true; for (const l of p.hello) await say(l[0], l[1]); }
+  else await say(k, 'Back again? Come in.');
+}
+/* ---------- the seminar: no phones, no laptops ---------- */
+const FELLOWS = {"alison": {"name": "Alison", "look": "Alison. Political theorist. Writing about treason and a king's trial in 1649.", "whisper": "Shh. I am enjoying a seminar where nobody has been beheaded yet."}, "andrius": {"name": "Andrius", "look": "Andrius. Economist. Runs experiments on how people use and save energy.", "whisper": "Shh. I'm measuring how many people nod."}, "brian": {"name": "Brian", "look": "Brian. Neuroscientist. Studies how feelings steer our choices in the brain.", "whisper": "Shh. Your brain wants the cookies. I can tell."}, "brooke": {"name": "Brooke", "look": "Brooke. Studies offshore wealth. Trained as a wealth manager to get inside.", "whisper": "Shh. I know where the money is. Not telling."}, "bryn": {"name": "Bryn", "look": "Bryn. Studies how people in autocracies read the news and take political risks.", "whisper": "Shh. Do not use my name in the survey. Or anywhere."}, "jacqueline": {"name": "Jacqueline", "look": "Jacqueline. Uses AI to link air, genes and neighborhoods to brain aging.", "whisper": "Shh. Drink water. Your brain will thank you."}, "corey": {"name": "Corey", "look": "Corey. Sociologist. Studies how inequality gets into health over a lifetime.", "whisper": "Shh. I am watching who gets the good chair. It is data."}, "daniel": {"name": "Daniel", "look": "Daniel. Economist and law scholar. Studies fairness, judges and AI in court.", "whisper": "Shh. Judges are fairer before lunch. Just saying."}, "dessislava": {"name": "Dessislava", "look": "Dessislava. Runs Bellingcat's operations. Spots fake news for a living.", "whisper": "Shh. That photo on the wall? Wrong shadows. Tell no one."}, "summerson": {"name": "Summerson", "look": "Summerson. Anthropologist. Studies facility dogs and why we treat them as experts.", "whisper": "Shh. The dog is smarter than the committee. Do not quote me."}, "eli": {"name": "Eli", "look": "Eli. Historian of American capitalism. Writing about how stock ownership changed politics.", "whisper": "Shh. It's all a scam. Even this whisper."}, "forrest": {"name": "Forrest", "look": "Forrest. Sociologist. Studies how ex-prisoners keep streets safe without force.", "whisper": "Shh. Do you play? I have an extra paddle."}, "frances": {"name": "Frances", "look": "Frances. Climate economist. Builds models of how weather, energy and laws affect each other.", "whisper": "Shh. Chapter nine is amazing. Don't spoil it."}, "frederick": {"name": "Frederick", "look": "Frederick. Founded WashingtonPost.com and Echo360. Studies high achievers' dilemmas.", "whisper": "Shh. I've sat through worse pitch meetings."}, "garance": {"name": "Garance", "look": "Garance. Pulitzer-winning reporter. Investigates who AI hurts and who answers for it.", "whisper": "Shh. I'm taking notes. Everything is on the record."}, "graeme": {"name": "Graeme", "look": "Graeme. Counts deportations from government records, then checks the method twice.", "whisper": "Shh. I have a records request pending. It has been pending a while."}, "heeju": {"name": "Heeju", "look": "Heeju. Demographer. Maps family ties to see who helps whom in disasters.", "whisper": "Shh. Who would you call in an emergency?"}, "henry": {"name": "Henry", "look": "Henry. Historian of science. Writing on how America treated anxiety and depression.", "whisper": "Shh. Everyone here could use a therapy session. I count six."}, "ian": {"name": "Ian", "look": "Ian. Studies the legal rights of migrants. Built a database of them.", "whisper": "Shh. Ask me about the database. Please. Nobody ever does."}, "inbal": {"name": "Inbal", "look": "Inbal. Neuroscientist. Showed that rats will free a trapped friend.", "whisper": "Shh. The rats were nicer than this room."}, "ishara": {"name": "Ishara", "look": "Ishara. Studies college paths of refugee and displaced students.", "whisper": "Shh. Ask the students, not the spreadsheet. They have answers."}, "james": {"name": "James", "look": "James. Studies how great powers push other countries around, and with what tools.", "whisper": "Shh. I have a chart. I always have a chart."}, "jamie": {"name": "Jamie", "look": "Jamie. Medieval historian. Studies how monks thought with notes and habits.", "whisper": "Shh. Write it down. Monks never trusted their memory. Smart."}, "john": {"name": "John", "look": "John. Geographer. Writing about how conservation and the gun industry shaped each other.", "whisper": "Shh. Yes, the book title gets looks."}, "joseph": {"name": "Joseph", "look": "Joseph. Experimental economist. Tests how people reason and talk, even with AI models.", "whisper": "Shh. I'm running a second experiment on this one."}, "juliana": {"name": "Juliana", "look": "Juliana. Philosopher. Writes about equality and what a fair society owes people.", "whisper": "Shh. Equal slices of cake is not the same as equal. Discuss."}, "june": {"name": "June", "look": "June. Clinical psychologist. Studies the strengths hidden inside hard emotions.", "whisper": "Shh. You look like you want a snack. That's okay."}, "jurate": {"name": "Jūratė", "look": "Jurate. Energy economist. Studies how leaders' words change views on solar and EVs.", "whisper": "Shh. What do your neighbors think? Seriously."}, "kahwee": {"name": "Kah-Wee", "look": "Kah-Wee. Studies how casinos and money reshaped Macau, Singapore and Manila.", "whisper": "Shh. Ten bucks says this seminar runs over."}, "katharyne": {"name": "Katharyne", "look": "Katharyne. Geographer. Follows one Berlin airfield through nine centuries of rulers.", "whisper": "Shh. Everything here used to be something else. Mostly a field."}, "kepa": {"name": "Kepa", "look": "Kepa. Philosopher of language. Writes about the rights of smaller languages.", "whisper": "Shh. Say it in your own language. It will feel better."}, "kevin": {"name": "Kevin", "look": "Kevin. Media historian. Wrote the book on the modem and the early internet.", "whisper": "Shh. I miss the sound of the dial-up."}, "lana": {"name": "Lana", "look": "Lana. Studies payments, crypto and scams. Asks what makes money feel legit.", "whisper": "Shh. That crypto uncle is real. Ask me later."}, "lawrence": {"name": "Lawrence", "look": "Lawrence. Linguist. Uses AI to spot early dementia in how people talk.", "whisper": "Shh. Your sentence just gave me three clues."}, "lewis": {"name": "Lewis", "look": "Lewis. Studies housing and land in African cities, and wetlands lost to development.", "whisper": "Shh. The meeting room used to be a marsh. Probably."}, "luke": {"name": "Luke", "look": "Luke. Statistician. Tests programs by randomly choosing who gets them.", "whisper": "Shh. Pick a number. Even or odd. Congratulations, you are in the trial."}, "lynda": {"name": "Lynda", "look": "Lynda. Doctor. Runs trials on helping midlife women with heart health and mood.", "whisper": "Shh. Did you take your walk today? I am only asking as a scientist."}, "mary": {"name": "Mary", "look": "Mary. Neuroscientist. Studies how teenagers' big ideas build healthy brains.", "whisper": "Shh. Staring out the window counts as research. I wrote the paper."}, "matthew": {"name": "Matthew", "look": "Matthew. Studies how heat and climate hit the health of California farmworkers.", "whisper": "Shh. It is hot in here. I am keeping notes."}, "mikael": {"name": "Mikael", "look": "Mikael. Designs and studies games. Looks at games that give voice to the underdog.", "whisper": "Shh. This seminar needs a save point."}, "milena": {"name": "Milena", "look": "Milena. Studies how people and machines act in groups. Writing a book on it.", "whisper": "Shh. Don't look now, you are in my experiment."}, "ralph": {"name": "Ralph", "look": "Ralph. Law professor. Asks if college gatekeeping blocks learning and fairness.", "whisper": "Shh. Who decided you were allowed in this room? Think about it."}, "raul": {"name": "Raul", "look": "Raul. Philosopher. Asks if a whole is more than its parts, or just the parts.", "whisper": "Shh. Are we a group, or just six people? Do not answer fast."}, "robert": {"name": "Robert", "look": "Robert. Health researcher. Measures whether treatments help people live better.", "whisper": "Shh. On a scale of zero to one, how is this seminar going?"}, "salman": {"name": "Salman", "look": "Salman. Built AI systems for years. Studies what AI does to office jobs.", "whisper": "Shh. Don't tell them my laptop is in my bag."}, "shigehiro": {"name": "Shigehiro", "look": "Shigehiro. Psychologist. Studies happiness and why careers cluster in herds.", "whisper": "Shh. Everyone here picked the same seat. Notice?"}, "tl": {"name": "T.L.", "look": "T.L. Taylor. Studies online worlds, games and theme parks as designed places.", "whisper": "Shh. Did you see how they built this queue?"}, "toussaint": {"name": "Toussaint", "look": "Toussaint. Studies Facebook's free internet push in the Global South.", "whisper": "Shh. If the seminar is free, you are the product."}};
+Object.assign(LOOKS, {"alison": {"skin": "#f1c9a8", "skinD": "#cfa386", "hair": "#a8683a", "hairD": "#87502b", "brow": "#7a4a28", "style": "bob", "top": "blazer", "shirt": "#22262e", "shirtD": "#1a1d23", "trim": "#f2efe9"}, "andrius": {"skin": "#e6b995", "skinD": "#c49878", "hair": "#4a3a2c", "hairD": "#352a20", "brow": "#3c2e22", "style": "swept", "top": "jacket", "shirt": "#4a4d52", "shirtD": "#3e4146", "trim": "#1e1e22", "stubble": "#a08468"}, "brian": {"skin": "#ecc3a0", "skinD": "#c9a083", "hair": "#b98a45", "hairD": "#946b32", "brow": "#9a7238", "style": "short", "top": "collar", "shirt": "#7d92c4", "shirtD": "#6779a8", "trim": "#8ea2d0", "glasses": "#8a8f96"}, "brooke": {"skin": "#eac3a6", "skinD": "#c7a088", "hair": "#7d6a5c", "hairD": "#a39a92", "brow": "#5e4b3d", "style": "long", "top": "blazer", "shirt": "#2c2a30", "shirtD": "#232127", "trim": "#efe6d8", "glasses": "#5a4a66"}, "bryn": {"skin": "#ecc6aa", "skinD": "#c9a38a", "hair": "#4a2e22", "hairD": "#352018", "brow": "#3c261b", "style": "long", "top": "blazer", "shirt": "#a79fb0", "shirtD": "#8b8394", "trim": "#d8d4dc"}, "corey": {"skin": "#e2b896", "skinD": "#c09a7c", "hair": "#6b5a4a", "hairD": "#4e4034", "brow": "#4a3c30", "style": "bald", "top": "blazer", "shirt": "#6f6e76", "shirtD": "#5c5b63", "trim": "#c9c6e0", "glasses": "#6a6e72", "beard": "#3e3028"}, "dessislava": {"skin": "#e9bf9f", "skinD": "#c69d82", "hair": "#4a3022", "hairD": "#352117", "brow": "#3a271c", "style": "curly", "top": "tee", "shirt": "#1f2430", "shirtD": "#191d27", "trim": "#1f2430"}, "summerson": {"skin": "#efc4a8", "skinD": "#cca186", "hair": "#7a5a42", "hairD": "#5e4432", "brow": "#5a4130", "style": "long", "top": "tee", "shirt": "#6b4a40", "shirtD": "#573b33", "trim": "#6b4a40"}, "eli": {"skin": "#e0b08e", "skinD": "#bd9072", "hair": "#2e2420", "hairD": "#1e1815", "brow": "#241b17", "style": "curly", "top": "collar", "shirt": "#2a2c30", "shirtD": "#222428", "trim": "#3a3c40", "glasses": "#6a5a3a", "round": true, "beard": "#3a2e28"}, "forrest": {"skin": "#d9a77f", "skinD": "#b78a68", "hair": "#c9a77f", "hairD": "#a8896a", "brow": "#3a2b20", "style": "bald", "top": "jacket", "shirt": "#7c8ea0", "shirtD": "#687989", "trim": "#f0eee8"}, "frederick": {"skin": "#e8bd9a", "skinD": "#c59d7e", "hair": "#6e6a68", "hairD": "#9a9694", "brow": "#5a5450", "style": "short", "top": "collar", "shirt": "#1f2a6a", "shirtD": "#1a2358", "trim": "#1f2a6a"}, "garance": {"skin": "#f0cbb0", "skinD": "#cba58c", "hair": "#6a3524", "hairD": "#4e281b", "brow": "#573020", "style": "long", "top": "blazer", "shirt": "#1f2a4a", "shirtD": "#182139", "trim": "#dfe3ea"}, "graeme": {"skin": "#e6b996", "skinD": "#c3987a", "hair": "#7a4a2a", "hairD": "#5e3920", "brow": "#5a3a22", "style": "receding", "top": "blazer", "shirt": "#262a38", "shirtD": "#1e212d", "trim": "#aab0b8", "glasses": "#1e1e22", "round": true, "stubble": "#a8845f"}, "heeju": {"skin": "#ecc9ad", "skinD": "#c9a68b", "hair": "#241c1c", "hairD": "#181212", "brow": "#241c1c", "style": "bob", "top": "jacket", "shirt": "#1e1c22", "shirtD": "#17151a", "trim": "#6a4f7a", "glasses": "#9a4a52", "round": true}, "henry": {"skin": "#e0b394", "skinD": "#bf9679", "hair": "#5a4030", "hairD": "#3f2c20", "brow": "#4a3426", "style": "short", "top": "tee", "shirt": "#d9d3e8", "shirtD": "#b7b1c6", "trim": "#c9e0d6", "stubble": "#9a7d66"}, "inbal": {"skin": "#ecc7ad", "skinD": "#c8a68f", "hair": "#9a4a2a", "hairD": "#7a3a20", "brow": "#7a3a20", "style": "long", "top": "collar", "shirt": "#b9cbe6", "shirtD": "#97a7c2", "trim": "#d8e3f3", "glasses": "#2a2a2e"}, "ishara": {"skin": "#a9724f", "skinD": "#8f5d40", "hair": "#2a1c16", "hairD": "#1c1210", "brow": "#241812", "style": "curly", "top": "tee", "shirt": "#22262e", "shirtD": "#1a1d23", "trim": "#2c3038", "glasses": "#222222", "round": true}, "james": {"skin": "#e6b89c", "skinD": "#c49a80", "hair": "#a9a9a6", "hairD": "#8a8a88", "brow": "#8a8a88", "style": "short", "top": "blazer", "shirt": "#262f4a", "shirtD": "#1e2539", "trim": "#f2f2f4", "glasses": "#2a2a2a", "round": true}, "jamie": {"skin": "#e2b99c", "skinD": "#c09c82", "hair": "#3a2a22", "hairD": "#271b16", "brow": "#33241c", "style": "bob", "top": "jacket", "shirt": "#5a6b52", "shirtD": "#4a5944", "trim": "#23284a"}, "john": {"skin": "#e5bc9f", "skinD": "#c39f85", "hair": "#6a4a32", "hairD": "#503824", "brow": "#5a4030", "style": "swept", "top": "blazer", "shirt": "#262f48", "shirtD": "#1e2539", "trim": "#b9cbe6", "glasses": "#c9b88a"}, "juliana": {"skin": "#d9a98c", "skinD": "#b78e75", "hair": "#4a3426", "hairD": "#33241c", "brow": "#3a2a20", "style": "back", "top": "cardigan", "shirt": "#3e4a6e", "shirtD": "#323c59", "trim": "#e8e6ee"}, "june": {"skin": "#ecc7ad", "skinD": "#c8a68f", "hair": "#a8683a", "hairD": "#8a5430", "brow": "#8a5a38", "style": "long", "top": "jacket", "shirt": "#2a2022", "shirtD": "#1f1819", "trim": "#2a2022"}, "jurate": {"skin": "#ecc9b0", "skinD": "#c8a98f", "hair": "#d9b878", "hairD": "#b89a5e", "brow": "#b0905a", "style": "bob", "top": "blazer", "shirt": "#7a5a42", "shirtD": "#634934", "trim": "#1e1e22", "glasses": "#26262a", "round": true}, "katharyne": {"skin": "#e8bfa3", "skinD": "#c59f85", "hair": "#c98a4a", "hairD": "#a86f3a", "brow": "#a87a4a", "style": "curly", "top": "cardigan", "shirt": "#1f2328", "shirtD": "#181b1f", "trim": "#c8d9c0"}, "kepa": {"skin": "#dba98a", "skinD": "#b98f74", "hair": "#8a8a88", "hairD": "#6d6d6b", "brow": "#6d6d6b", "style": "bald", "top": "tee", "shirt": "#1e2430", "shirtD": "#171c26", "trim": "#1e2430", "beard": "#9a9a98"}, "kevin": {"skin": "#e6b497", "skinD": "#c49479", "hair": "#b27a46", "hairD": "#946238", "brow": "#9a6a3c", "style": "swept", "top": "collar", "shirt": "#f2f2f0", "shirtD": "#cfcfcd", "trim": "#ffffff", "stubble": "#b89270"}, "lana": {"skin": "#e8c1a8", "skinD": "#c5a189", "hair": "#2e2220", "hairD": "#1f1614", "brow": "#2a1e1a", "style": "long", "top": "vneck", "shirt": "#1c2230", "shirtD": "#151a26", "trim": "#d4b46a"}, "lawrence": {"skin": "#d9ab88", "skinD": "#b98f70", "hair": "#3a3a3c", "hairD": "#26262a", "brow": "#2c2c2e", "style": "short", "top": "vneck", "shirt": "#c4453a", "shirtD": "#a33a31", "trim": "#b9cbe6", "glasses": "#555a60"}, "lewis": {"skin": "#7a5238", "skinD": "#654330", "hair": "#2a2018", "hairD": "#2a2018", "brow": "#2a2018", "style": "bald", "top": "tee", "shirt": "#c8782a", "shirtD": "#aa6422", "trim": "#3a2a1a", "beard": "#3a2c22"}, "luke": {"skin": "#d8a888", "skinD": "#b88f73", "hair": "#4a3a2c", "hairD": "#8a8580", "brow": "#4a3a2c", "style": "swept", "top": "collar", "shirt": "#8a6ad8", "shirtD": "#7458b8", "trim": "#7a5ac8", "glasses": "#222222", "beard": "#8a8580"}, "lynda": {"skin": "#e8c4a8", "skinD": "#c6a68e", "hair": "#d8d0c0", "hairD": "#b8b0a0", "brow": "#a09080", "style": "curly", "top": "jacket", "shirt": "#b8bcb4", "shirtD": "#9a9e98", "trim": "#2a2630"}, "mary": {"skin": "#d8aa88", "skinD": "#b78f73", "hair": "#3a2a24", "hairD": "#2a1e1a", "brow": "#2e221c", "style": "long", "top": "cardigan", "shirt": "#ece4d4", "shirtD": "#c8c0b2", "trim": "#d8cfc0", "earrings": "#d8b050"}, "matthew": {"skin": "#e8b8a0", "skinD": "#c69c88", "hair": "#e8b8a0", "hairD": "#c69c88", "brow": "#c8967a", "style": "bald", "top": "jacket", "shirt": "#1e1e1e", "shirtD": "#141414", "trim": "#d89aa0"}, "mikael": {"skin": "#dcb498", "skinD": "#bb987f", "hair": "#a88860", "hairD": "#8a7050", "brow": "#8a7050", "style": "receding", "top": "tee", "shirt": "#22283a", "shirtD": "#1a1f2e", "trim": "#22283a", "glasses": "#2a2a2a", "stubble": "#b09878"}, "milena": {"skin": "#e0b898", "skinD": "#be9c80", "hair": "#9a9a9a", "hairD": "#7c7c7c", "brow": "#5a4a40", "style": "short", "top": "tee", "shirt": "#2a2a2e", "shirtD": "#1e1e22", "trim": "#2a2a2e"}, "ralph": {"skin": "#8a5a3e", "skinD": "#734b34", "hair": "#6a6a6a", "hairD": "#6a6a6a", "brow": "#4a4a4a", "style": "bald", "top": "blazer", "shirt": "#26262c", "shirtD": "#1c1c22", "trim": "#f0f0f0", "glasses": "#4a4a40"}, "raul": {"skin": "#d0a080", "skinD": "#ae846a", "hair": "#3a2c22", "hairD": "#2a2018", "brow": "#2a2018", "style": "long", "top": "jacket", "shirt": "#4a5a68", "shirtD": "#3c4a56", "trim": "#a8a490", "beard": "#4a3a30", "mous": true}, "robert": {"skin": "#e8bfa4", "skinD": "#c6a089", "hair": "#d4d0c8", "hairD": "#b8b4ac", "brow": "#b0a898", "style": "short", "top": "collar", "shirt": "#f4f4f4", "shirtD": "#d0d0d0", "trim": "#f4f4f4"}, "salman": {"skin": "#c89070", "skinD": "#a77a5f", "hair": "#1e1814", "hairD": "#1e1814", "brow": "#1e1814", "style": "swept", "top": "jacket", "shirt": "#3a3e58", "shirtD": "#2e3248", "trim": "#3a3e58", "glasses": "#4a4038", "stubble": "#4a3a30"}, "shigehiro": {"skin": "#dcb898", "skinD": "#bb9c80", "hair": "#1e1a18", "hairD": "#1e1a18", "brow": "#1e1a18", "style": "swept", "top": "collar", "shirt": "#e8c8c0", "shirtD": "#c6a9a2", "trim": "#e8c8c0"}, "tl": {"skin": "#e0b8a0", "skinD": "#be9b86", "hair": "#b0aaa0", "hairD": "#908a82", "brow": "#908a82", "style": "curly", "top": "jacket", "shirt": "#3a3e44", "shirtD": "#2e3238", "trim": "#1a1a1e", "glasses": "#222222", "round": true}, "toussaint": {"skin": "#d0a888", "skinD": "#ae8c72", "hair": "#3a2a20", "hairD": "#2a1e16", "brow": "#2a1e16", "style": "curly", "top": "collar", "shirt": "#2a2e36", "shirtD": "#1e2228", "trim": "#f0f0f0", "stubble": "#5a4a3c"}});
+const DEBATES = [{"seats": ["garance", "salman", "lawrence", "milena", "kevin", "daniel"], "topic": "Who gets blamed when the AI messes up?", "lines": [["garance", "I asked one city who built its AI. They said it's secret. Who do I call?"], ["salman", "I've built these systems. The blame always lands on a vendor nobody remembers hiring."], ["lawrence", "Some languages grammatically mark who is warning whom. English lets everyone off the hook."], ["milena", "Put bots and people in one group and everyone assumes someone else is in charge."], ["kevin", "In 1984 we blamed the modem. Blame always moves to the newest beige box."], ["daniel", "Judges rule differently late in the day. Maybe the machine just needs a snack."], ["garance", "A machine with no lunch break still needs a human to sign the paper. Name them."], ["milena", "Then who checks the checkers? Another bot? Now it's a group chat of robots."], ["kevin", "That's a bulletin board. We had those. Somebody always typed in all caps."], ["daniel", "This is more a comment than a question, but we are forty minutes over."], ["you", "So who's accountable for the empty coffee pot?"], ["garance", "Great story. Nobody will say."]]}, {"seats": ["mikael", "tl", "forrest", "june", "inbal", "shigehiro"], "topic": "Why do we play? Games, parks and happiness", "lines": [["mikael", "Games used to be about conquering things. Now people play to feel another side of the story."], ["tl", "Same in theme parks. Every line you wait in was designed. Nobody ends up there by accident."], ["forrest", "Sorry I'm late. Court three ran long. Anyway, play is basically public safety."], ["june", "Happiness isn't the only goal. Sad moods can help people notice things others miss."], ["inbal", "Rats free a trapped friend, even with chocolate sitting right there."], ["shigehiro", "Happiness depends on where you live and what everyone around you is choosing."], ["mikael", "A game where you play the other side is empathy with a score."], ["forrest", "Pickleball is a safety program with a paddle. My data is mostly sunburn."], ["june", "Forrest, I study positive emotion, and you are a very cheerful case."], ["inbal", "Would the rats let the slower rat into the game?"], ["shigehiro", "I predict that by spring, every fellow here owns a paddle."], ["you", "So happiness is a paddle. Who has the sign-up sheet?"]]}, {"seats": ["eli", "brooke", "lana", "frederick", "andrius", "joseph"], "topic": "Is money real? Markets, scams and trust", "lines": [["eli", "The stock market? Scam. Pension funds? Scam. This coffee cup? Probably also a scam."], ["brooke", "I trained as a wealth manager to get inside. The scam has a very nice office, Eli."], ["lana", "Every scam shows what a crowd believes counts as real money. That's my whole field."], ["frederick", "I've pitched investors. Every deck was a little optimistic. Let's call it hope."], ["andrius", "Show a household how its neighbors use energy and it suddenly cares about its bill."], ["joseph", "From my standing desk, I see people mostly copy each other's bets. Two screens agree."], ["eli", "Since the 1980s everyone owns stocks, so everyone's a little bit in on the scam."], ["brooke", "Most of the money isn't where you think it is. Think small island, big office."], ["lana", "People trust whatever looks like a bank app. The font does a lot of work."], ["frederick", "As a former CEO, yes. We followed the neighbors too."], ["you", "Is the free coffee a scam?"], ["eli", "Obviously. They want your attendance."]]}, {"seats": ["frances", "jurate", "heeju", "john", "jacqueline", "lewis"], "topic": "Hot planet, hard choices: who adapts and how?", "lines": [["frances", "I'm building a model where the laws change too. Nobody change any laws."], ["jurate", "Tell Americans what their own leaders say about solar, and the neighbors do the rest."], ["heeju", "When the flood comes, who calls Grandma? I count the cousins. Families are the safety net."], ["john", "My book is about guns and nature. Yes, they're connected. Yes, it's awkward."], ["jacqueline", "I use AI to link dirty air, genes and neighborhoods to memory loss in old age."], ["lewis", "In African cities, wetlands turn into fancy housing. Then the water wants its land back."], ["frances", "So the model needs cousins, condos and guns. Fine. Adding them."], ["john", "Frances, are you listening or reading?"], ["frances", "Yes."], ["jacqueline", "Can the model finish before I'm old? I'd like to remember the results."], ["you", "Can the model tell me if this room gets heat in winter?"], ["frances", "Page 212 says no."]]}, {"seats": ["ian", "graeme", "katharyne", "matthew", "kahwee", "toussaint"], "topic": "Who Owns the Line on the Map?", "lines": [["ian", "Let's start simple. A border is a line, and migrants have rights on both sides of it."], ["graeme", "Great. Where is the data on who crosses it? I filed a records request. Again."], ["katharyne", "Every border is a place first. Tempelhof Field was a parade ground, an airport, then a park."], ["kahwee", "Or a casino floor. Follow the money and you find the real map. Ask Macau."], ["matthew", "Follow the heat. Climate ignores your line, and farmworkers feel it first."], ["toussaint", "The line also runs through your phone. Free internet is never free. Ask what it costs."], ["ian", "I agree with all of that, and none of it changes the legal question."], ["graeme", "Has anyone tried randomizing the border? Asking for the methods section."], ["katharyne", "Same field, nine centuries, five owners. Hold on, I need another slide."], ["kahwee", "Different field, same chips. The house always draws the line."], ["toussaint", "This is more a comment than a question, but who owns the Wi-Fi at the border?"], ["you", "Time is up. The border is that door, and nobody here agrees where it is."]]}, {"seats": ["alison", "bryn", "james", "dessislava", "henry", "jamie"], "topic": "Who Gets to Say What Happened?", "lines": [["alison", "In 1649 they put a king on trial for treason. Who decided what betrayal meant? The winners."], ["james", "The winners had tools. Army, money, diplomats, ideas. I have a chart for that."], ["bryn", "Where I look, people hear the official story and then decide how risky it is to doubt it."], ["dessislava", "Or you check the photo. The shadows, the street sign, the date. Boring work, but it works."], ["henry", "Guess, test, repeat. Dewey would be proud of us. Mostly."], ["jamie", "Late Antique monks wrote everything down because they did not trust their own memory. Fair."], ["alison", "Treason is just a word for losing an argument against a sword."], ["james", "In my field we call that Tuesday."], ["bryn", "My survey respondents would like to speak. Also, they would like to stay anonymous."], ["dessislava", "Send me the video. I will find the street it was filmed on before the coffee gets cold."], ["henry", "Six therapies for anxiety, and this room could use all six."], ["you", "So what actually happened?"], ["jamie", "Write it down. We'll argue about it in four hundred years."]]}, {"seats": ["brian", "mary", "lynda", "robert", "corey", "summerson"], "topic": "Is Health in the Head or the Body?", "lines": [["brian", "Feelings drive choices. Your brain wants the snack before you decide you do."], ["mary", "Teenagers who think about big ideas are building their brains. So let them stare out windows."], ["lynda", "Meanwhile my trials ask whether midlife women can keep up the walks and the diet. Real life is hard."], ["robert", "Fine, but do people live longer or feel better? That is the number I count."], ["corey", "And who gets the good numbers depends on where they started. Spend a year with them and you see it."], ["summerson", "Facility dogs help people, and nobody can say why we trust them as experts. I study the dogs."], ["brian", "Does the dog light up the reward system?"], ["summerson", "The dog is not a brain scan, Brian."], ["mary", "Everyone here was a teenager once, and it shows."], ["robert", "Can we put that on a scale where zero is gone and one is perfect health?"], ["lynda", "Please do not tell the participants we planned this over lunch."], ["you", "Lunch is the only trial I signed up for."]]}, {"seats": ["juliana", "ralph", "kepa", "raul", "luke", "ishara"], "topic": "What Does Fair Even Mean?", "lines": [["juliana", "Fair means people relating as equals. Not just equal piles of stuff."], ["ralph", "Then why does college decide who is smart before anyone learns anything?"], ["ishara", "I interview students who had to leave home. Their road to a degree has no straight line."], ["luke", "Easy. Randomize them. Half get the program, half do not. Then we know."], ["ishara", "Please do not randomize my students, Luke."], ["kepa", "In which language is the test written? Whose word for fair are we using?"], ["raul", "Before that, is a whole fairer than its parts? Or are the parts all there is?"], ["juliana", "A basic income would help. Everyone gets a floor to stand on."], ["luke", "We could run the floor in forty cities and compare. Multisite, very clean."], ["ralph", "It is a law school question. We only want to know who gets in."], ["raul", "Is the floor a thing, or just a lot of pieces of wood?"], ["you", "The floor is where I would like to sit. This seminar ran over an hour ago."]]}];
+
+const SEAT_X = [80, 112, 144, 176, 208], PRES_X = 270;
+const BUTTINS = ['If I could just get to slide two.', "I'll take questions at the end.", "That's actually on my next slide.", "Can everyone see the screen? No? Good.",
+  "I have forty minutes of slides. We're on slide two.", 'Let me just...', 'As I was saying.', 'Hold that thought. Hold all the thoughts.'];
+function presenter() { const d = DEBATES[S.sem.v % DEBATES.length], k = d.seats[0]; return { k, x: PRES_X, name: FELLOWS[k].name }; }
+function seats() { const d = DEBATES[S.sem.v % DEBATES.length]; return d.seats.slice(1).map((k, i) => ({ k, x: SEAT_X[i], name: FELLOWS[k].name, look: FELLOWS[k].look, talk: [[k, FELLOWS[k].whisper]] })); }
+S.sem = { rung: false, ringT: -1, phones: 40, ballT: 0, v: 0, heard: false };
+async function enterSeminar() {
+  S.door = MAP.find(h => h.name === 'meeting room');
+  await say('you', 'The seminar. Everybody is in there.');
+  SFX.creak();
+  await fadeTo(true);
+  S.scene = 'room'; S.room = 'seminar'; S.x = 30; S.y = 132; S.face = 1; S.path = [];
+  await fadeTo(false);
+  await walkTo([{ x: 66, y: 134 }]);
+  const d = DEBATES[S.sem.v % DEBATES.length];
+  await say('you', `Today's seminar: ${d.topic}`);
+  await say(d.seats[2], 'Shh. It just got good.');
+  const pk = d.seats[0]; let since = 0, b = S.sem.v * 3;
+  await say(pk, 'Thanks for coming. So. Slide one.');
+  for (const l of d.lines) {
+    await say(l[0], l[1]);
+    since = l[0] === pk ? 0 : since + 1;
+    if (since >= 2 && l[0] !== 'you') { await say(pk, BUTTINS[b++ % BUTTINS.length]); since = 0; }
+  }
+  await say(pk, 'Great. Thank you. Slide three, next week.');
+  S.sem.heard = true;
+}
+async function talkSeat(a) { for (const l of a.talk) await say(l[0], l[1]); if (a.k === 'forrest') SFX.pock(0.2); }
+async function leaveSeminar() {
+  if (S.sem.rung) { S.sem.v++; await exitRoom(); return; }
+  await goTo({ x: 74, y: 134 }); S.face = -1;
+  await say('you', 'Well. I should get going.');
+  S.sem.rung = true; S.sem.ringT = 0; SFX.beat(); await wait(0.3); SFX.beat();
+  await wait(1.6);
+  await say('you', '...');
+  S.face = 1;
+  await say('you', "That's not mine.");
+  await say('turkey', 'Gobble.');
+  await say('you', "Okay, it's mine.");
+  S.sem.ringT = -1; SFX.pock(0.15); S.sem.phones++;
+  await say('you', `Into the basket. ${S.sem.phones === 41 ? 'Forty-one' : S.sem.phones} phones.`);
+  S.sem.v++;
+  await exitRoom();
+}
+async function talkPerson(k) {
+  const p = PEOPLE[k];
+  for (const l of p.talks[p.talked % p.talks.length]) await say(l[0], l[1]);
+  p.talked++;
+}
+async function enterRoom() {
+  SFX.creak();
+  await fadeTo(true);
+  S.scene = 'room'; S.room = 'bart'; S.x = 30; S.y = 132; S.face = 1; S.path = []; S.bart.mode = S.met ? 'idle' : 'type';
+  await fadeTo(false);
+  await walkTo([{ x: 120, y: 134 }]);
+  if (!S.met) {
+    S.met = true; S.bart.mode = 'startle'; S.bart.t = 0; SFX.boing();
+    await say('bart', 'Gah!');
+    S.bart.mode = 'idle';
+    await say('bart', "You're early. Nobody's supposed to see this yet.");
+    await say('you', 'I knocked.');
+    await say('bart', 'I was in the zone.');
+  } else {
+    await say('bart', 'Back again?');
+  }
+}
+async function exitRoom() {
+  await goTo({ x: 40, y: 132 }); S.face = -1;
+  SFX.creak();
+  await fadeTo(true);
+  S.scene = 'map'; S.x = S.door.walk.x; S.y = S.door.walk.y; S.path = [];
+  await fadeTo(false);
+}
+async function ringPhone() {
+  if (S.phoneOn) return;
+  S.phoneOn = true; S.phoneT = 0; SFX.beat(); await wait(1.5);
+  await say('bart', "That's Takt. Go on, pick it up.");
+}
+async function lookPhone() {
+  if (!S.phoneOn) { await say('you', "It's Bart's phone. I should ask first."); return; }
+  await say('you', "Let's see it.");
+  cv.style.transformOrigin = '80.3% 58.3%';
+  SFX.zoom(); S.zoomT = 0; await wait(1.0);
+  screenEl.hidden = false; $('screenBack').focus({ preventScroll: true });
+  await new Promise(res => { S.screenDone = res; });
+  SFX.unzoom(); screenEl.hidden = true; S.zoomT = -1; cv.style.transform = '';
+  await say('bart', 'Well?');
+  await say('you', 'Eins, zwei, drei, vier.');
+  await say('bart', 'You found it. Thirteen more studies. Go knock.');
+}
+/* ---------- Bart's talk, on his monitor: three slides ---------- */
+// the slides live in talk.md next to this page: '# Title' starts a slide, '- ' lines are its bullets.
+// Read when the monitor turns on; on localhost it is reread every second while the talk is up, so edits show live.
+let TALK = [];
+function parseTalk(md) {
+  const out = [];
+  md.split('\n').forEach(l => {
+    const t = l.trim();
+    if (t.startsWith('# ')) out.push({ title: t.slice(2).trim(), bullets: [] });
+    else if (/^[-*] /.test(t) && out.length) out[out.length - 1].bullets.push(t.slice(2).trim());
+  });
+  return out;
+}
+let talkSrc = '';
+async function loadTalk() {
+  const r = await fetch('/semibart/talk.md', { cache: 'no-store' });
+  if (!r.ok) throw new Error('talk.md: ' + r.status);
+  const md = await r.text();
+  if (md === talkSrc) return false;
+  talkSrc = md; TALK = parseTalk(md);
+  return true;
+}
+const LIVE = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+const deckEl = $('deck'), slideIn = deckEl.querySelector('.s-in'), endEl = $('dEnd');
+const DECK = { open: false, i: 0, done: null, seen: false };
+S.mon = { f: 0, to: 0 };
+function zoomMonitor(on, dur) {
+  // pan and zoom so the monitor's screen (26x20 px, centred at 236,98) fills the stage's height, centred
+  const w = cv.offsetWidth, h = cv.offsetHeight, s = 9, px = 236 / W * w, py = 98 / FH * h;
+  cv.style.transformOrigin = '0 0';
+  cv.style.transition = calm || !dur ? 'none' : `transform ${dur}s ${on ? 'cubic-bezier(.55,0,.25,1)' : 'cubic-bezier(.4,0,.2,1)'}`;
+  cv.style.transform = on ? `translate(${w / 2 - px * s}px, ${h / 2 - py * s}px) scale(${s})` : 'translate(0px, 0px) scale(1)';
+  return dur ? wait(dur) : Promise.resolve();
+}
+window.addEventListener('resize', () => { if (DECK.open) zoomMonitor(true, 0); });
+function showSlide(i, cut) {
+  const n = TALK.length;
+  DECK.i = Math.max(0, Math.min(n, i));
+  $('dPrev').disabled = DECK.i === 0;
+  if (DECK.i === n) { endEl.hidden = false; $('dNext').disabled = true; return; }
+  endEl.hidden = true; $('dNext').disabled = false;
+  const fill = () => {
+    const sl = TALK[DECK.i];
+    $('sTitle').textContent = sl.title;
+    $('sList').replaceChildren(...sl.bullets.map(b => { const li = document.createElement('li'); li.textContent = b; return li; }));
+    $('sNum').textContent = (DECK.i + 1) + ' / ' + n;
+    fitList();
+  };
+  if (cut || calm) { fill(); return; }
+  slideIn.classList.add('swap');
+  setTimeout(() => { fill(); slideIn.classList.remove('swap'); }, 140);
+}
+// a long slide's bullets shrink until they clear the footer
+function fitList() {
+  const ul = $('sList'), foot = deckEl.querySelector('.foot');
+  let k = 1; ul.style.setProperty('--k', k);
+  while (k > 0.5 && ul.getBoundingClientRect().bottom > foot.getBoundingClientRect().top - foot.offsetHeight * 0.6) { k -= 0.04; ul.style.setProperty('--k', k); }
+}
+window.addEventListener('resize', () => { if (DECK.open && DECK.i < TALK.length) fitList(); });
+function deckStep(d) {
+  if (!DECK.open) return;
+  if (DECK.i === TALK.length && d > 0) { closeDeck(); return; }
+  if (DECK.i + d < 0) return;
+  SFX.key(); showSlide(DECK.i + d);
+}
+function closeDeck() { if (DECK.done) { const d = DECK.done; DECK.done = null; d(); } }
+$('slide').addEventListener('click', e => { e.stopPropagation(); const b = $('slide').getBoundingClientRect(); deckStep(e.clientX - b.left < b.width * 0.25 && DECK.i < TALK.length ? -1 : 1); });
+$('dPrev').addEventListener('click', e => { e.stopPropagation(); deckStep(-1); });
+$('dNext').addEventListener('click', e => { e.stopPropagation(); deckStep(1); });
+$('dBack').addEventListener('click', e => { e.stopPropagation(); closeDeck(); });
+async function presentTalk() {
+  if (!DECK.seen) {
+    await say('you', "What's on the monitor?");
+    await say('bart', 'My talk. Three slides on how to use AI.');
+    await say('bart', "Here. I'll turn it around.");
+  } else await say('bart', 'Again? Sure.');
+  const loaded = loadTalk();
+  S.mon.to = 1; SFX.swoosh(); await wait(0.7);
+  await loaded;
+  SFX.zoom(); await zoomMonitor(true, 1.1);
+  showSlide(0, true);
+  deckEl.hidden = false; DECK.open = true; fitList();
+  void deckEl.offsetWidth; deckEl.classList.add('on');
+  await wait(0.35); $('dNext').focus({ preventScroll: true });
+  const live = LIVE && setInterval(() => loadTalk().then(ch => { if (ch && DECK.open) showSlide(Math.min(DECK.i, TALK.length), true); }).catch(() => {}), 1000);
+  await new Promise(res => { DECK.done = res; });
+  if (live) clearInterval(live);
+  DECK.open = false; deckEl.classList.remove('on');
+  await wait(0.35);
+  deckEl.hidden = true; endEl.hidden = true;
+  SFX.unzoom(); await zoomMonitor(false, 0.85);
+  cv.style.transition = ''; cv.style.transform = ''; cv.style.transformOrigin = '';
+  S.mon.to = 0; SFX.swoosh(); await wait(0.5);
+  if (!DECK.seen) {
+    DECK.seen = true;
+    await say('bart', "That's the whole talk.");
+    await say('you', 'Shorter than the seminar.');
+    await say('bart', 'Everything is shorter than the seminar.');
+  } else await say('bart', 'Still three slides.');
+}
+async function talkBart() {
+  await say('you', S.talked ? 'Me again.' : 'Hi, Bart.');
+  if (!S.talked) await say('bart', 'Hi.');
+  S.talked = true;
+  for (;;) {
+    const opts = [{ t: 'What are you working on?', k: 'work' }];
+    if (!S.bart.shades) opts.push({ t: 'Nice sunglasses.', k: 'shades' });
+    if (!S.phoneOn) opts.push({ t: 'Can I try it?', k: 'try' });
+    opts.push({ t: 'Can I see your talk?', k: 'talk' }, { t: 'Why music?', k: 'why' }, { t: 'Bye.', k: 'bye' });
+    const c = opts[await choose(opts.map(o => o.t))];
+    await say('you', c.t);
+    if (c.k === 'work') {
+      await say('bart', 'Takt. It teaches you to find the beat.');
+      await say('bart', 'Eins, zwei, drei, vier. Takt is German for the beat.');
+    } else if (c.k === 'shades') {
+      await say('bart', 'These?');
+      await wait(0.3); S.bart.shades = true; SFX.sparkle(); await wait(0.6);
+      await say('bart', 'Polarized. For the glare off the stage lights.');
+    } else if (c.k === 'try') {
+      await say('bart', "It's on my phone.");
+      await ringPhone();
+      return;
+    } else if (c.k === 'talk') {
+      await presentTalk();
+      return;
+    } else if (c.k === 'why') {
+      await say('bart', 'I did free radio in Brussels from 14 to 18.');
+      await say('bart', 'It never really left.');
+    } else {
+      await say('bart', 'Close the door behind you. It sticks.');
+      return;
+    }
+  }
+}
+
+const NOTES = { 8: 'At lunch. Lunch is sacred.', 25: 'Gone to see the turkeys. For research.', 4: 'In a seminar. Possibly this one.',
+  45: 'Writing. Do not knock. (You knocked.)', 13: 'Napping counts as fieldwork.', 14: 'Back after this paragraph.' };
+function litStudy(n, r, walk) {
+  return { name: 'Study ' + n, study: true, r, walk, def: 'open', on: { look: "Study 16. The light's on. Someone's typing in there.", open: knockAndEnter } };
+}
+function personStudy(k, r, walk) {
+  const p = PEOPLE[k];
+  return { name: 'Study ' + p.n, study: true, r, walk, def: 'open', on: { look: `Study ${p.n}. ${p.name}'s. The light's on.`, open: () => enterPerson(k) } };
+}
+function lockedStudy(n, x, y) {
+  return {
+    name: 'Study ' + n, study: true, r: y < 20 ? [x - 8, -16, 16, 20] : x > 290 ? [294, y - 8, 20, 16] : [x - 8, y < 98 ? 30 : 98, 16, 26], walk: y < 20 ? { x, y: 9 } : x > 290 ? { x: 292, y } : { x, y: y < 98 ? 60 : 128 }, def: 'open',
+    on: {
+      look: `Study ${n}. Dark. There's a note on the door.`,
+      open: async () => { SFX.rattle(); await say('you', `Locked. The note says: "${NOTES[n]}"`); }
+    }
+  };
+}
+const MAP = [
+  personStudy('daniel', [106, 98, 16, 26], { x: 114, y: 128 }), personStudy('kahwee', [122, 98, 16, 26], { x: 130, y: 128 }),
+  lockedStudy(4, 190, 128), lockedStudy(8, 44, 60), personStudy('frances', [68, 30, 16, 26], { x: 76, y: 60 }),
+  litStudy(16, [172, 22, 16, 18], { x: 180, y: 44 }), lockedStudy(25, 228, 60),
+  personStudy('jacqueline', [268, 30, 16, 26], { x: 276, y: 60 }), personStudy('ian', [284, 30, 16, 26], { x: 292, y: 60 }),
+  personStudy('joseph', [26, -16, 16, 20], { x: 34, y: 9 }), lockedStudy(44, 50, 9), lockedStudy(45, 66, 9),
+  lockedStudy(13, 300, 106), lockedStudy(14, 300, 122),
+  { name: 'main hall', r: [128, 8, 64, 30], walk: { x: 160, y: 44 }, def: 'open', on: { look: 'The main hall. Lounge, mailboxes, coffee.', open: "Just the lounge. Nobody's in. Everybody's in their study." } },
+  { name: 'meeting room', r: [80, 66, 30, 30], walk: { x: 112, y: 80 }, def: 'open', on: { look: 'The meeting room. Seminars happen in there. Like this one.', open: enterSeminar } },
+  { name: 'picnic table', r: [122, 73, 20, 16], walk: { x: 132, y: 64 }, def: 'look', on: { look: 'A picnic table. Someone carved a regression line into it.', use: 'I sit for a second. Very restorative. Back to it.' } },
+  { name: 'picnic table', r: [178, 73, 20, 16], walk: { x: 188, y: 64 }, def: 'look', on: { look: 'A picnic table. The good one, in the shade. Taken at noon.', use: 'I sit for a second. Very restorative. Back to it.' } },
+  { name: 'courtyard oak', r: [148, 68, 24, 24], walk: { x: 160, y: 64 }, def: 'look', on: { look: 'A big oak in a brick courtyard. Good for thinking under.' } },
+  { name: 'the Dish', r: [212, 2, 24, 22], walk: { x: 224, y: 64 }, def: 'talk', on: { look: "The Dish. It's listening to space.", talk: [['you', 'Hello, space.'], ['you', '...']] } },
+  { name: 'turkey', r: [252, 94, 30, 34], walk: { x: 240, y: 112 }, def: 'talk', on: { look: 'Wild turkeys. They run this part of campus. Looks tenured.', talk: [['you', 'Gobble.'], ['turkey', 'Gobble gobble.']] } },
+  { name: 'turkey', r: [18, 120, 20, 16], walk: { x: 54, y: 132 }, def: 'talk', on: { look: 'A turkey in the parking lot. It does not have a permit. Nobody is going to tell it.', talk: [['you', 'Gobble.'], ['turkey', 'Gobble.']] } },
+  { name: 'parking lot', r: [4, 98, 46, 42], walk: { x: 54, y: 132 }, def: 'look', on: { look: 'Three cars. Nobody biked today.' } }
+];
+// Eli, lower-right wing. Everything is a scam. He talks through the door.
+const ELI = [
+  [['eli', "Who's there? Wait, don't answer. \"Who\" is a construct of late capitalism."],
+   ['you', 'I just wanted to say hi.'],
+   ['eli', '"Hi." Free for now. Give it a year. They\'ll put it behind a subscription.']],
+  [['eli', "If you're selling something, I'm not buying."],
+   ['eli', "If you're buying something, I'm also not buying."],
+   ['eli', 'The coffee here is free. That is exactly how they get you.']],
+  [['eli', 'Brunch is a scam. Breakfast and lunch should unionize.'],
+   ['eli', 'Loyalty points are a scam. I am loyal to no points.'],
+   ['eli', 'And the turkeys? Unpaid labor. Look at them. They have no idea.']],
+  [['eli', 'The lights are off. Electricity is a scam.'],
+   ['you', "It's three in the afternoon."],
+   ['eli', 'The sun is the only honest utility.']],
+  [['eli', 'This door is a scam. It only opens for people with keys.'],
+   ['you', 'You have the key.'],
+   ['eli', "...I'm working through that."]]
+];
+let eliKnocks = 0;
+Object.assign(MAP.find(h => h.name === 'Study 14'), { on: {
+  look: "Study 14. Eli's. A sticker on the door says EVERYTHING IS A SCAM. The sticker was $4.",
+  open: async () => {
+    SFX.knock(); await say('you', eliKnocks ? 'Knock, knock. Again.' : 'Knock, knock.');
+    await wait(0.4);
+    for (const l of ELI[Math.min(eliKnocks, ELI.length - 1)]) await say(l[0], l[1]);
+    eliKnocks++;
+  }
+} });
+// Forrest, Study 44, top row. He plays pickleball. In there. Right now.
+const FORREST = [
+  [['forrest', 'Zero, zero, start!'], ['you', 'Are you... playing pickleball in there?'], ['forrest', 'Dinking. There is a difference.']],
+  [['forrest', "Don't come in! You'd be standing in the kitchen."], ['you', "It's a study."], ['forrest', "Everything's a kitchen if you believe."]],
+  [['forrest', 'Eleven, nine. I am up.'], ['you', 'Against who?'], ['forrest', 'The wall. The wall is very good.']],
+  [['forrest', 'This is research. I am studying the third-shot drop.'], ['you', "What's the finding?"], ['forrest', 'It drops.']],
+  [['forrest', 'Pickleball is the fastest growing sport in America.'], ['you', 'Says who?'], ['forrest', 'Me. Every day. To everyone.']]
+];
+let forrestKnocks = 0;
+Object.assign(MAP.find(h => h.name === 'Study 44'), { on: {
+  look: "Study 44. Forrest's. Something in there goes pock. Pock. Pock.",
+  open: async () => {
+    SFX.knock(); await say('you', forrestKnocks ? 'Knock, knock. Again.' : 'Knock, knock.');
+    SFX.rally(); await wait(2.2);
+    for (const l of FORREST[Math.min(forrestKnocks, FORREST.length - 1)]) await say(l[0], l[1]);
+    forrestKnocks++;
+  }
+} });
+// the cafeteria used to be behind the last door on the bottom row. It had rules.
+MAP.unshift({ name: 'cafeteria', r: [198, 98, 16, 26], walk: { x: 206, y: 128 }, def: 'open', on: {
+  look: 'There is a sign on the door. It is long.',
+  open: [
+    ['you', 'The cafeteria. Lunch!'],
+    ['you', 'There is a sign on the door.'],
+    ['you', '"Too many trays were returned late. As of today, the cafeteria has been dissolved."'],
+    ['you', '"Rule 14: trays back by 1:15. Rule 15: not before 1:14. Rule 16: do not discuss rule 14."'],
+    ['you', 'Poof. No more cafeteria.'],
+    ['you', 'I knew I should have returned that tray in March.']
+  ]
+} });
+const STUDIES = MAP.filter(h => h.study);
+const ROOM_EMPTY = [
+  { name: 'bookshelf', r: [266, 10, 48, 90], walk: { x: 284, y: 132 }, def: 'look', on: { look: 'Books left by the last fellow. Mostly about time.', push: 'No secret passage. I checked.' } },
+  { name: 'window', r: [44, 14, 78, 60], walk: { x: 84, y: 130 }, def: 'look', on: { look: 'Same hills, same Dish. Good office, nobody in it.' } },
+  { name: 'door', r: [4, 30, 32, 76], walk: { x: 40, y: 132 }, def: 'open', on: { look: 'The way out.', open: exitRoom } }
+];
+const ROOM = [
+  { name: 'plant', r: [284, 100, 22, 32], walk: { x: 270, y: 134 }, def: 'talk', on: { look: "It's thriving. Someone waters it.", talk: 'I tell the plant about my research. It grows a little.' } },
+  { name: 'coffee mug', r: [204, 86, 13, 12], walk: { x: 212, y: 130 }, def: 'pick', on: { look: 'Coffee. Still hot. The mug says TAKT.', pick: "It's Bart's. He'd notice. He'd definitely notice." } },
+  { name: 'phone', r: [246, 76, 22, 22], walk: { x: 232, y: 132 }, def: 'use', on: { look: lookPhone, use: lookPhone } },
+  { name: 'monitor', r: [218, 66, 28, 32], walk: { x: 148, y: 134 }, def: 'use', on: { look: "The back of Bart's monitor. It has stickers. Something with slides is on the other side.", use: presentTalk } },
+  { name: 'Bart', r: [172, 56, 34, 42], walk: { x: 160, y: 132 }, def: 'talk', on: {
+    look: () => say('you', S.bart.shades ? 'Bart Decrem. Fellow. Builder of things. Currently cool.' : 'Bart Decrem. Fellow. Builder of things. Owner of sunglasses.'),
+    talk: talkBart
+  } },
+  { name: 'Takt poster', r: [130, 16, 22, 32], walk: { x: 142, y: 130 }, def: 'look', on: { look: async () => { await say('you', 'A poster for Takt. Eins, zwei, drei, vier.'); await ringPhone(); } } },
+  { name: 'Gegenlicht', r: [196, 12, 34, 32], walk: { x: 212, y: 130 }, def: 'play', href: 'https://www.daskollektiv.rip/dk024.html', on: { look: 'A framed record. Das Kollektiv, Gegenlicht. Techno with an acid riff, one warm light behind the blinds.', play: 'Gegenlicht. Playing in a new tab.' } },
+  { name: 'pinboard', r: [158, 20, 30, 24], walk: { x: 172, y: 130 }, def: 'look', on: { look: 'Sticky notes. One says: ASK CLAUDE.' } },
+  { name: 'bookshelf', r: [266, 10, 48, 90], walk: { x: 284, y: 132 }, def: 'push', on: { look: 'Social science. Lots of it.', push: 'No secret passage. I checked.' } },
+  { name: 'window', r: [44, 14, 78, 60], walk: { x: 84, y: 130 }, def: 'look', on: { look: 'The hills, the Dish, Stanford down below. Good office.' } },
+  { name: 'door', r: [4, 30, 32, 76], walk: { x: 40, y: 132 }, def: 'open', on: { look: 'The way out. Thirteen more studies out there.', open: exitRoom } }
+];
+const PERSON_R = { desk: [172, 56, 34, 42], read: [156, 54, 60, 70], stand: [176, 34, 30, 92] };
+Object.keys(PEOPLE).forEach(k => {
+  const p = PEOPLE[k], sp = [{ name: p.name, r: PERSON_R[p.scene], walk: { x: 160, y: 134 }, def: 'talk', on: { look: p.look, talk: () => talkPerson(k) } }];
+  if (p.scene === 'read') sp.unshift({ name: 'the Almanac', r: [176, 84, 24, 14], walk: { x: 170, y: 134 }, def: 'open', href: 'https://almanac.tunn3l.sh/almanac/', on: { look: 'The Adaptation Almanac. Thousands of studies on how people adapt to a changing climate. She is on the good part.', open: 'The Almanac. Opening in a new tab.' } });
+  if (p.scene === 'read') sp.push(
+    { name: 'reading chair', r: [146, 48, 80, 66], walk: { x: 200, y: 134 }, def: 'look', on: { look: 'A big soft reading chair. There is a waiting list for it. Frances is the list.' } },
+    { name: 'lamp', r: [234, 44, 24, 84], walk: { x: 244, y: 134 }, def: 'look', on: { look: 'A reading lamp, on at three in the afternoon. Committed.' } });
+  if (p.scene === 'stand') sp.push({ name: 'monitors', r: [106, 14, 172, 66], walk: { x: 190, y: 134 }, def: 'look', on: { look: 'Two monitors. You could land a plane on that spreadsheet.' } });
+  const LINKS = {
+    daniel: { name: 'Socrates', r: [154, 76, 16, 20], walk: { x: 136, y: 134 }, href: 'https://ola.cx/socratic', look: 'A little marble Socrates. He only asks questions. Daniel built him a tutor.', open: 'Socratic. Opening in a new tab.' },
+    jacqueline: { name: 'easel', r: [120, 44, 34, 84], walk: { x: 104, y: 134 }, href: 'https://claude.ai/artifact/GDghc49kAqy7JaTdwwYSbo#slide-3dd33bdac6c2', look: 'An easel with a pitch on it. The chart only goes up.', open: 'The pitch. Opening in a new tab.' },
+    ian: { name: 'world map', r: [136, 14, 64, 38], walk: { x: 168, y: 134 }, href: 'https://ola.cx/mrd/story', look: "A world map with pins in it. Every pin is a country's rules for migrants.", open: 'The migrant rights story. Opening in a new tab.' }
+  };
+  if (LINKS[k]) { const L = LINKS[k]; sp.unshift({ name: L.name, r: L.r, walk: L.walk, def: 'open', href: L.href, on: { look: L.look, open: L.open } }); }
+  if (p.scene === 'desk') sp.push({ name: 'monitor', r: [218, 66, 28, 32], walk: { x: 236, y: 130 }, def: 'look', on: { look: 'I can only see the back. It has stickers.' } });
+  p.spots = sp.concat(ROOM_EMPTY.map(h => h.name === 'window' ? Object.assign({}, h, { on: { look: 'The hills, the Dish, Stanford down below.' } }) : h.name === 'bookshelf' ? Object.assign({}, h, { on: { look: `${p.name}'s books. Organized by a system. The system is ${p.name}.`, push: 'No secret passage. I checked.' } }) : h));
+});
+const SEMINAR_FIXED = ([
+  { name: 'basket of phones', r: [36, 98, 30, 28], walk: { x: 60, y: 134 }, def: 'look', on: { look: () => say('you', S.sem.phones > 40 ? 'Forty-one phones. One of them is mine. It is still buzzing.' : 'There are forty phones in here. There are thirty fellows.'), pick: "Better not. They're evidence." } },
+  { name: 'sign', r: [146, 12, 70, 32], walk: { x: 180, y: 134 }, def: 'look', on: { look: [['you', 'NO PHONES. NO LAPTOPS.'], ['you', 'Underneath, smaller: NO EXCEPTIONS.'], ['you', 'Underneath that, smaller: THAT MEANS YOU.']] } },
+  { name: 'clock', r: [228, 18, 16, 16], walk: { x: 236, y: 134 }, def: 'look', on: { look: 'Ten past four. The seminar was supposed to end at four. Questions are still going.' } },
+  { name: 'window', r: [44, 14, 78, 58], walk: { x: 84, y: 134 }, def: 'look', on: { look: () => say('you', S.sem.rung ? 'A turkey. It saw everything.' : 'The hills. Nobody is looking at them. Everybody is looking at me.') } },
+  { name: 'door', r: [4, 30, 32, 76], walk: { x: 40, y: 132 }, def: 'open', on: { look: 'The way out. Quietly.', open: leaveSeminar } }
+]);
+function seminarSpots() { const pr = presenter(); return [{ name: pr.name, r: [PRES_X - 2, 34, 32, 94], walk: { x: 250, y: 134 }, def: 'talk', on: { look: `${pr.name}, presenting. Still on slide two.`, talk: [[pr.k, 'Please. Questions at the end.']] } }].concat(seats().map(a => ({ name: a.name, r: [a.x, 60, 28, 36], walk: { x: a.x + 14, y: 134 }, def: 'talk', on: { look: a.look, talk: () => talkSeat(a) } }))).concat(SEMINAR_FIXED); }
+function hotspots() { return S.scene === 'map' ? MAP : S.room === 'seminar' ? seminarSpots() : S.room === 'empty' ? ROOM_EMPTY : PEOPLE[S.room] ? PEOPLE[S.room].spots : ROOM; }
+function hit(x, y) { return hotspots().find(h => x >= h.r[0] && x < h.r[0] + h.r[2] && y >= h.r[1] && y < h.r[1] + h.r[3]); }
+async function perform(r) {
+  if (typeof r === 'function') await r();
+  else if (typeof r === 'string') await say('you', r);
+  else if (Array.isArray(r)) for (const l of r) await say(l[0], l[1]);
+}
+async function doAction(verb, h) {
+  if (h.study) S.door = h;
+  await goTo(h.walk);
+  const cx = h.r[0] + h.r[2] / 2; if (Math.abs(cx - S.x) > 3) S.face = Math.sign(cx - S.x);
+  const r = h.on[verb];
+  await perform(r !== undefined ? r : 'Nothing special about it.');
+}
+
+/* ---------- input ---------- */
+function toScene(e) { const b = cv.getBoundingClientRect(); return [(e.clientX - b.left) / b.width * W, (e.clientY - b.top) / b.height * FH - OY]; }
+function showLabel(e) {
+  if (!S.started || S.busy || S.choices || S.zoomT >= 0 || !S.hover) { labelEl.hidden = true; return; }
+  const b = $('stage').getBoundingClientRect();
+  labelEl.textContent = S.hover.name; labelEl.hidden = false;
+  labelEl.style.left = Math.max(6, Math.min(94, (e.clientX - b.left) / b.width * 100)) + '%';
+  labelEl.style.top = Math.max(6, (e.clientY - b.top) / b.height * 100) + '%';
+}
+cv.addEventListener('mousemove', e => { const p = toScene(e); S.hover = hit(p[0], p[1]) || null; showLabel(e); });
+cv.addEventListener('mouseleave', () => { S.hover = null; labelEl.hidden = true; });
+function act(e, verb) {
+  if (!S.started) return;
+  if (S.line) { skipLine(); return; }
+  if (S.busy || S.choices || S.zoomT >= 0) return;
+  const p = toScene(e), h = hit(p[0], p[1]);
+  if (h && h.name === 'turkey' && !verb) { S.turkeyT = performance.now() / 1000; SFX.gobble(); return; }
+  if (h) {
+    if (h.href && (verb || h.def) === h.def) window.open(h.href, '_blank', 'noopener');
+    run(() => doAction(verb || h.def, h)); return;
+  }
+  if (verb) return;
+  if (S.scene === 'map') { const ry = rail(p[1]), lo = ry === 9 ? 10 : ry === 64 ? 10 : 50, hi = ry === 9 ? 82 : ry === 64 ? 304 : 292; const tx = Math.max(lo, Math.min(hi, p[0])); FX.mark = { x: tx, y: ry, t0: performance.now() / 1000 }; goTo({ x: tx, y: ry }); }
+  else goTo({ x: p[0], y: p[1] });
+}
+cv.addEventListener('click', e => act(e, null));
+cv.addEventListener('contextmenu', e => { e.preventDefault(); act(e, 'look'); });
+function closeScreen() { if (S.screenDone) { const d = S.screenDone; S.screenDone = null; d(); } }
+$('screenBack').addEventListener('click', e => { e.stopPropagation(); closeScreen(); });
+function setMute(m) {
+  muted = m; $('bMute').setAttribute('aria-pressed', String(m)); $('bMute').setAttribute('aria-label', m ? 'Unmute sound' : 'Mute sound');
+  $('waves').style.display = m ? 'none' : '';
+}
+$('bMute').addEventListener('click', e => { e.stopPropagation(); audio(); setMute(!muted); });
+function fullscreen() { try { const el = document.documentElement; if (document.fullscreenElement) document.exitFullscreen(); else if (el.requestFullscreen) el.requestFullscreen().catch(() => {}); } catch (e) {} }
+$('bFull').addEventListener('click', e => { e.stopPropagation(); fullscreen(); });
+function start() {
+  if (S.started) return;
+  audio(); S.started = true; titleEl.hidden = true; SFX.jingle(); cv.focus && cv.focus();
+  run(async () => { await wait(0.6); await say('you', 'CASBS. Fourteen studies.'); await say('you', "Somebody's typing in one of them."); });
+}
+$('startBtn').addEventListener('click', e => { e.stopPropagation(); start(); });
+$('startBtn').focus({ preventScroll: true });
+async function hop(dir) {
+  if (S.busy || S.choices) return;
+  if (S.scene === 'room') { run(exitRoom); return; }
+  S.study = (S.study + dir + STUDIES.length) % STUDIES.length;
+  const h = STUDIES[S.study];
+  run(() => doAction(h.def, h));
+}
+window.addEventListener('keydown', e => {
+  audio();
+  if (!S.started) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); start(); } return; }
+  if (DECK.open) {
+    if (e.key === 'Escape') closeDeck();
+    else if (['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Enter', 'n'].includes(e.key)) { e.preventDefault(); deckStep(1); }
+    else if (['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace', 'p'].includes(e.key)) { e.preventDefault(); deckStep(-1); }
+    return;
+  }
+  if (e.key === 'Escape') { if (S.screenDone) closeScreen(); else skipLine(); return; }
+  if (e.key === ' ' || e.key === '.' || (e.key === 'Enter' && S.line)) { if (S.line) { e.preventDefault(); skipLine(); } return; }
+  if (e.key === 'm' || e.key === 'M') { setMute(!muted); return; }
+  if (e.key === 'f' || e.key === 'F') { fullscreen(); return; }
+  if (S.choices && /^[1-9]$/.test(e.key)) { const b = choicesEl.querySelectorAll('button')[+e.key - 1]; if (b) b.click(); return; }
+  if (S.screenDone) return;
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); hop(1); }
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); hop(-1); }
+});
+
+/* ---------- drawing ---------- */
+function speakerPos(who) {
+  if (who === 'bart') return [190, 54];
+  if (who === 'turkey') return [268, 94];
+  if (who === 'eli') return [292, 112];
+  if (who === 'forrest') return [50, 4];
+  if (S.scene === 'room' && S.room === 'seminar') { if (who === 'turkey') return [54, 50]; const a = seats().find(q => q.k === who); if (a) return [a.x + 14, 56]; if (who === presenter().k) return [PRES_X + 6, 28]; }
+  if (PEOPLE[who]) return PEOPLE[who].at;
+  return S.scene === 'map' ? [S.x, S.y - 14] : [S.x, S.y - 78];
+}
+const COLORS = { you: '#ffffff', bart: '#ffff55', turkey: '#ffb070', eli: '#ff7a5c', forrest: '#d8e84a', fellow: '#c8b8ff' };
+Object.keys(PEOPLE).forEach(k => { COLORS[k] = PEOPLE[k].color; });
+function drawLine() {
+  const l = S.line;
+  if (!l) { if (lineEl.textContent) lineEl.textContent = ''; return; }
+  if (lineEl.textContent !== l.text) lineEl.textContent = l.text;
+  const p = speakerPos(l.who), xp = p[0] / W * 100;
+  lineEl.style.left = Math.max(1, Math.min(37, xp - 31)) + '%';
+  lineEl.style.top = Math.max(10, (p[1] + OY) / FH * 100) + '%';
+  lineEl.style.color = COLORS[l.who] || (LOOKS[l.who] ? ['#7ee0ff', '#b9f27c', '#ffb3d9', '#9ec5ff', '#ffd08a', '#c9a6ff', '#ff9c7a', '#a6ffe0', '#ffe27a'][hashK(l.who) % 9] : '#ffffff');
+}
+/* ---------- small delights: dust, a click mark, glowing doors, the Dish beacon,
+   butterflies, a passing flock, oak leaves, sunlight in the studies ---------- */
+const FX = { dust: [], leaves: [], birds: null, mark: null, last: 0, dustT: 0, flockT: 4, leafT: 1 };
+function mapUnder(t, dt) {
+  // lit doors breathe
+  const glow = 0.28 + 0.2 * Math.sin(t * 2.2);
+  [[180, 41], [292, 57], [276, 57], [76, 57], [114, 125], [130, 125], [34, 6]].forEach(([x, y], i) => oval(g, x, y + 1, 8, 3, 'rgba(255,217,106,' + (glow + 0.04 * Math.sin(t * 3.1 + i)).toFixed(3) + ')'));
+  // a puff of dust behind each step
+  if (S.path.length) { FX.dustT -= dt; if (FX.dustT <= 0) { FX.dustT = 0.11; FX.dust.push({ x: S.x + (Math.random() - 0.5) * 3, y: S.y, a: 0 }); } }
+  FX.dust = FX.dust.filter(d => (d.a += dt) < 0.45);
+  FX.dust.forEach(d => rect(g, d.x - 1, d.y - d.a * 7, 2, 2, 'rgba(176,138,82,' + (0.8 * (1 - d.a / 0.45)).toFixed(2) + ')'));
+  // where you clicked
+  if (FX.mark) {
+    const a = t - FX.mark.t0, m = FX.mark;
+    if (a > 0.45) FX.mark = null;
+    else { const r = 3 + a * 14, c = 'rgba(255,255,85,' + (1 - a / 0.45).toFixed(2) + ')'; rect(g, m.x - r - 1, m.y, 2, 1, c); rect(g, m.x + r, m.y, 2, 1, c); rect(g, m.x - 1, m.y - r / 2, 2, 1, c); rect(g, m.x - 1, m.y + r / 2, 2, 1, c); }
+  }
+}
+function mapOver(t, dt) {
+  // the Dish keeps a red light on
+  if (Math.floor(t * 0.9) % 2 === 0) { oval(g, 224, 4, 4, 3, 'rgba(255,59,47,0.4)'); rect(g, 223, 3, 2, 2, '#ff3b2f'); }
+  // the gold star on the meeting room glints now and then
+  const ph = t % 3.4;
+  if (ph < 0.4) { const c = ph < 0.2 ? '#ffffff' : '#fff3c4'; rect(g, 92, 75, 9, 1, c); rect(g, 96, 71, 1, 9, c); rect(g, 95, 74, 3, 3, c); }
+  // two butterflies
+  [[44, 92, 18, 9, 0, '#fffaf0'], [214, 104, 12, 7, 2.1, '#ffd93b']].forEach(([cx, cy, ax, ay, p, c]) => {
+    const x = Math.round(cx + ax * Math.sin(t * 0.6 + p) + 3 * Math.sin(t * 2.3 + p)), y = Math.round(cy + ay * Math.sin(t * 0.47 + p * 2) + 2 * Math.sin(t * 3.7));
+    if (Math.floor(t * 9 + p) % 2) { rect(g, x - 2, y - 1, 2, 2, c); rect(g, x + 1, y - 1, 2, 2, c); } else { rect(g, x - 1, y - 3, 1, 3, c); rect(g, x + 1, y - 3, 1, 3, c); }
+    rect(g, x, y - 1, 1, 2, C.ink);
+  });
+  // a leaf drifts off the courtyard oak
+  FX.leafT -= dt;
+  if (FX.leafT <= 0) { FX.leafT = 2.5 + Math.random() * 3.5; FX.leaves.push({ x: 154 + Math.random() * 12, y: 74, a: 0, p: Math.random() * 6, c: Math.random() < 0.5 ? C.oak3 : '#d9b44a' }); }
+  FX.leaves = FX.leaves.filter(l => (l.a += dt) < 2.6);
+  FX.leaves.forEach(l => { const k = l.a / 2.6; rect(g, l.x + Math.sin(l.a * 3 + l.p) * 3, l.y + l.a * 7, 2, 2, l.c); });
+  // now and then a little flock crosses
+  FX.flockT -= dt;
+  if (!FX.birds && FX.flockT <= 0) { FX.birds = { x: -16, y: 6 + Math.random() * 40 }; FX.flockT = 24 + Math.random() * 18; SFX.chirp(); }
+  if (FX.birds) {
+    const b = FX.birds; b.x += 34 * dt; b.y += Math.sin(t * 1.3) * 3 * dt;
+    [[0, 0], [-6, -3], [-6, 3], [-12, -6]].forEach(([ox, oy], i) => {
+      const x = Math.round(b.x + ox), y = Math.round(b.y + oy), up = Math.floor(t * 7 + i) % 2, c = 'rgba(20,20,20,0.7)';
+      rect(g, x, y, 1, 1, c); rect(g, x - 2, y - up, 2, 1, c); rect(g, x + 1, y - up, 2, 1, c);
+    });
+    if (b.x > W + 24) FX.birds = null;
+  }
+}
+function roomLight(t) {
+  // late sun through the window: a soft patch on the floor, dust turning in it
+  for (let j = 0; j < 62; j++) rect(g, 47 + j * 0.9, 69 + j, 72, 1, 'rgba(255,236,190,0.13)');
+  if (calm) return;
+  for (let i = 0; i < 9; i++) {
+    const x = 52 + ((i * 29) % 66) + 3 * Math.sin(t * 0.5 + i) + ((t * 1.5 + i * 7) % 20), y = 28 + ((i * 17 + t * (i % 2 ? 2.2 : 1.4)) % 70);
+    rect(g, x, y, 2, 2, 'rgba(255,243,196,' + (0.45 + 0.25 * Math.sin(t * 1.7 + i)).toFixed(2) + ')');
+  }
+}
+function drawMap(t) {
+  const dt = Math.min(0.05, Math.max(0, t - (FX.last || t))); FX.last = t;
+  g.drawImage(mapFull, 0, 0);
+  g.save(); g.translate(0, OY);
+  const wave = calm ? 0 : Math.round(Math.sin(t * 5));
+  rect(g, 197, 22, 8, 5, C.ink); rect(g, 197, 23, 7, 3, C.orange); rect(g, 201, 23 + wave, 3, 3, C.orange);
+  if (!calm) mapUnder(t, dt);
+  const moving = S.path.length > 0, fr = moving ? Math.floor(t * 8) % 2 : 0;
+  oval(g, S.x, S.y + 1, 3, 1, C.shadow);
+  sprite(g, TINY[fr], TPAL, S.x - 2, S.y - 8);
+  // the turkeys: drawn live so they can hop when poked
+  [[256, 98], [266, 116], [22, 124]].forEach(([x, y], i) => {
+    const k = (t - S.turkeyT - i * 0.09) / 0.32;
+    const hop = k > 0 && k < 2 && !calm ? Math.round(Math.abs(Math.sin(k * Math.PI)) * (k < 1 ? 5 : 3)) : 0;
+    const peck = !hop && !calm && Math.floor(t * 1.3 + i * 2.7) % 6 === 0 ? -1 : 0; // a little bob, now and then
+    const dy = hop + peck;
+    oval(g, x + 6, y + 10, 5, 1, C.shadow);
+    turkey(g, x, y - dy);
+  });
+  if (!calm) { const cx = ((t * 6) % (W + 120)) - 60; oval(g, cx, 96, 34, 9, 'rgba(20,20,20,0.06)'); oval(g, cx - 170, 30, 26, 7, 'rgba(20,20,20,0.06)'); }
+  if (!calm) mapOver(t, dt);
+  g.restore();
+}
+function drawSeminar(t) {
+  g.drawImage(seminarFull, 0, 0);
+  g.save(); g.translate(0, OY);
+  roomLight(t);
+  const sp = S.line && S.line.who, flap = who => sp === who && (calm || Math.floor(t * 8) % 2 === 0);
+  // a turkey in the window, once your phone has gone off
+  if (S.sem.rung) turkey(g, 47, 57);
+  // the basket of phones, buzzing away on their own
+  const r = rng(Math.floor(t * 1.5) + 3);
+  for (let i = 0; i < 9; i++) { const x = 40 + (i * 7) % 22, y = 96 + (i % 3) * 3, on = !calm && r() < 0.18; rect(g, x, y, 5, 8, INK); rect(g, x + 1, y + 1, 3, 6, on ? ['#86c9e6', '#ff9ccf', '#ffd93b'][i % 3] : '#26262b'); }
+  if (S.sem.phones > 40) { const on = !calm && Math.floor(t * 4) % 2; rect(g, 52, 94, 5, 8, INK); rect(g, 53, 95, 3, 6, on ? '#ff5a1f' : '#0c0c0c'); }
+  rect(g, 36, 104, 30, 20, '#7d5632'); rect(g, 37, 105, 28, 18, '#c89a5a');
+  for (let y = 107; y < 123; y += 3) rect(g, 37, y, 28, 1, '#a07840'); for (let x = 40; x < 65; x += 5) rect(g, x, 105, 1, 18, '#a07840');
+  // everyone else around the table, eyes on you
+  const SE = seats();
+  SE.forEach(a => {
+    const o = LOOKS[a.k], look = Math.sign(S.x - a.x - 14), asleep = a.k === 'fellow';
+    rect(g, a.x + 2, 58, 24, 3, INK); rect(g, a.x + 1, 61, 26, 34, INK); rect(g, a.x + 3, 61, 22, 34, '#3b3d4a');
+    bust(o, a.x, 66 + (asleep && !calm && Math.floor(t) % 3 === 0 ? 1 : 0), { talk: flap(a.k), look, blink: asleep || (!calm && (t + a.x) % 4.7 < 0.12), down: a.k === 'frances' && sp !== 'frances' });
+    if (a.k === 'kahwee' && !calm) { const al = (0.35 + 0.3 * Math.sin(t * 7)).toFixed(2); rect(g, a.x + 9, 75, 4, 3, `rgba(170,225,255,${al})`); rect(g, a.x + 16, 75, 4, 3, `rgba(170,225,255,${al})`); }
+    if (a.k === 'jacqueline') { const al = (0.25 + 0.2 * Math.sin(t * 2.4)).toFixed(2); oval(g, a.x + 14, 68, 13, 4, `rgba(255,244,190,${calm ? 0.3 : al})`); rect(g, a.x + 5, 67, 18, 2, '#fffbe8'); }
+    if (asleep && !calm) { const z = (t * 0.8) % 1; rect(g, a.x + 22 + z * 4, 62 - z * 10, 3, 1, `rgba(255,255,255,${(1 - z).toFixed(2)})`); rect(g, a.x + 24 + z * 4, 63 - z * 10, 1, 1, `rgba(255,255,255,${(1 - z).toFixed(2)})`); rect(g, a.x + 22 + z * 4, 64 - z * 10, 3, 1, `rgba(255,255,255,${(1 - z).toFixed(2)})`); }
+  });
+  // the long table
+  rect(g, 72, 95, 174, 1, INK); rect(g, 72, 96, 174, 4, '#e2b47e'); rect(g, 72, 100, 174, 1, INK);
+  rect(g, 75, 101, 168, 18, '#c08a55'); rect(g, 75, 101, 168, 1, '#9c6a3c');
+  rect(g, 78, 119, 5, 9, '#7d5632'); rect(g, 235, 119, 5, 9, '#7d5632');
+  // the presenter, standing, trying
+  { const pr = presenter(), o = LOOKS[pr.k], x = pr.x, ptalk = flap(pr.k), wave = sp === pr.k && !calm ? Math.floor(t * 3) % 2 : 0;
+    rect(g, x + 6, 84, 7, 40, '#2e3448'); rect(g, x + 15, 84, 7, 40, '#262b3c'); rect(g, x + 4, 124, 10, 4, INK); rect(g, x + 14, 124, 10, 4, INK);
+    rect(g, x + 2, 66, 24, 18, o.shirt); rect(g, x + 2, 66, 2, 18, o.shirtD); rect(g, x + 24, 66, 2, 18, o.shirtD);
+    bust(o, x, 38, { talk: ptalk, look: sp === pr.k ? -1 : (Math.floor(t / 2) % 3 === 0 ? 1 : -1), blink: !calm && (t + 1.3) % 4.1 < 0.12 });
+    rect(g, x - 2, 70, 4, 12, o.shirt); rect(g, x - 2, 82 - wave * 3, 4, 3, o.skin); rect(g, x - 3, 80 - wave * 3, 2, 3, INK); if (wave) rect(g, x - 4, 78, 1, 1, '#ff3b2f');
+    rect(g, x + 26, 68, 4, 14, o.shirt); rect(g, x + 26, 82, 4, 3, o.skin); }
+  // what everyone is up to on the table
+  SE.forEach(a => {
+    const o = LOOKS[a.k], x = a.x;
+    if (a.k === 'daniel') { rect(g, x + 4, 90, 20, 6, '#8a8f99'); rect(g, x + 5, 91, 18, 4, '#b6bbc4'); rect(g, x + 7, 92, 12, 1, INK); rect(g, x + 7, 94, 9, 1, INK); }
+    else if (a.k === 'frances') { rect(g, x + 4, 89, 20, 7, '#fff7e6'); rect(g, x + 6, 87, 16, 3, '#c8553a'); rect(g, x + 13, 89, 1, 7, '#d9d4c8'); }
+    else if (a.k === 'ian') { const k = calm ? 0 : Math.floor(t * 3) % 3; rect(g, x + 6, 88 - k, 4, 6, o.skin); rect(g, x + 18, 88 - (2 - k), 4, 6, o.skin); rect(g, x + 6, 86 - k, 1, 2, o.skin); rect(g, x + 8, 85 - k, 1, 3, o.skin); rect(g, x + 18, 86 - (2 - k), 1, 2, o.skin); }
+    else { rect(g, x + 6, 92, 16, 3, '#fff7e6'); rect(g, x + 5, 92, 4, 2, o.skin); rect(g, x + 19, 92, 4, 2, o.skin); }
+  });
+  // Forrest's pickleball, bouncing under the table
+  { const f = SE.find(a => a.k === 'forrest') || { x: -99 }, ph = calm ? 0.5 : (t * 1.6) % 1, by = 127 - Math.round(Math.sin(ph * Math.PI) * 7);
+    const prev = S.sem.ballT; S.sem.ballT = ph; if (!calm && ph < prev && !S.line && f.x > 0) SFX.pock(0.035);
+    rect(g, f.x + 12, by - 3, 4, 4, '#d8e84a'); rect(g, f.x + 12, by - 3, 4, 1, '#eef59a'); rect(g, f.x + 13, by - 2, 1, 1, '#9aa830'); }
+  // you, and your phone, when it goes off
+  const moving = S.path.length > 0, fr = moving ? 1 + Math.floor(t * 7) % 2 : 0;
+  drawYou(S.x, S.y, S.face, fr, flap('you'));
+  if (S.sem.ringT >= 0) { const on = calm || Math.floor(t * 9.6) % 2 === 0, px = S.x + (S.face > 0 ? 6 : -11); rect(g, px, S.y - 44, 6, 10, INK); rect(g, px + 1, S.y - 43, 4, 8, on ? '#ff5a1f' : '#0c0c0c'); if (on) { rect(g, px - 3, S.y - 42, 2, 1, '#ff5a1f'); rect(g, px + 7, S.y - 42, 2, 1, '#ff5a1f'); } }
+  g.restore();
+}
+function drawRoom(t) {
+  const B = S.bart;
+  if (S.room === 'seminar') { drawSeminar(t); return; }
+  if (PEOPLE[S.room]) {
+    const k = S.room, p = PEOPLE[k], o = LOOKS[k];
+    g.drawImage(roomFullEmpty, 0, 0);
+    g.save(); g.translate(0, OY);
+    roomLight(t);
+    const talk = S.line && S.line.who === k && (calm || Math.floor(t * 8) % 2 === 0), speaking = S.line && S.line.who === k;
+    const blink = !calm && (t + k.length) % 4.3 < 0.13;
+    if (p.scene === 'desk') deskScene(k, o, t, talk, blink);
+    if (p.scene === 'read') readingScene(o, t, talk, blink, speaking);
+    if (p.scene === 'stand') standingScene(o, t, talk, blink);
+    const moving = S.path.length > 0, fr = moving ? 1 + Math.floor(t * 7) % 2 : 0;
+    drawYou(S.x, S.y, S.face, fr, S.line && S.line.who === 'you' && (calm || Math.floor(t * 8) % 2 === 0));
+    g.restore();
+    return;
+  }
+  if (S.room === 'empty') {
+    g.drawImage(roomFullEmpty, 0, 0);
+    g.save(); g.translate(0, OY);
+    roomLight(t);
+    const moving = S.path.length > 0, fr = moving ? 1 + Math.floor(t * 7) % 2 : 0;
+    drawYou(S.x, S.y, S.face, fr, S.line && S.line.who === 'you' && (calm || Math.floor(t * 8) % 2 === 0));
+    g.restore();
+    return;
+  }
+  g.drawImage(roomFull, 0, 0);
+  g.save(); g.translate(0, OY);
+  roomLight(t);
+  const bartTalk = S.line && S.line.who === 'bart' && (calm || Math.floor(t * 8) % 2 === 0);
+  let face = B.shades ? (bartTalk ? FACE.coolTalk : FACE.cool) : (bartTalk ? FACE.talk : FACE.idle);
+  if (B.mode === 'type') face = FACE.type;
+  if (B.mode === 'startle') face = FACE.startle;
+  const hopY = B.mode === 'startle' && B.t < 0.35 && !calm ? Math.round(Math.sin(B.t / 0.35 * Math.PI) * 5) : 0;
+  const by = 66 - hopY;
+  sprite(g, face, P, 176, by);
+  if (B.shades && !calm && Math.floor(t * 1.5) % 4 === 0) { rect(g, 184, by + 8, 1, 3, '#ffffff'); rect(g, 183, by + 9, 3, 1, '#ffffff'); }
+  rect(g, 148, 95, 116, 1, '#141414'); rect(g, 148, 96, 116, 4, '#e2b47e'); rect(g, 148, 100, 116, 1, '#141414');
+  rect(g, 151, 101, 110, 22, '#c08a55'); rect(g, 151, 101, 110, 1, '#9c6a3c'); rect(g, 151, 101, 1, 22, '#9c6a3c'); rect(g, 260, 101, 1, 22, '#9c6a3c');
+  rect(g, 226, 105, 30, 8, '#9c6a3c'); rect(g, 227, 106, 28, 6, '#c99560'); rect(g, 239, 108, 4, 1, '#141414');
+  rect(g, 154, 123, 5, 5, '#7d5632'); rect(g, 253, 123, 5, 5, '#7d5632');
+  rect(g, 178, 94, 24, 2, '#26262b');
+  if (B.mode === 'type') { const a = calm ? 0 : Math.floor(t * 9) % 2; rect(g, 181, 92 - a, 5, 2, P.S); rect(g, 194, 92 - (1 - a), 5, 2, P.S); }
+  else if (B.mode === 'startle') { rect(g, 172, by + 13, 5, 5, P.S); rect(g, 203, by + 13, 5, 5, P.S); }
+  else { rect(g, 181, 92, 5, 2, P.S); rect(g, 194, 92, 5, 2, P.S); }
+  drawMonitor(S.mon.f);
+  { const on = S.phoneOn && (calm || Math.floor(S.phoneT * 4.8) % 2 === 0), jig = S.phoneOn && !calm && S.phoneT < 1.8 ? (Math.floor(t * 30) % 2) : 0;
+    const px = 252 + jig;
+    rect(g, 250, 94, 13, 2, '#6f3a20');
+    rect(g, px, 80, 9, 15, '#141414'); rect(g, px + 1, 81, 7, 13, on ? '#ff5a1f' : '#0c0c0c');
+    rect(g, px + 2, 83, 5, 1, on ? '#141414' : '#f0efea'); rect(g, px + 4, 84, 1, 3, on ? '#141414' : '#f0efea');
+    rect(g, px + 2, 88, 5, 1, on ? '#141414' : '#ff5a1f'); rect(g, px + 4, 89, 1, 3, on ? '#141414' : '#ff5a1f');
+    if (on) { rect(g, px - 3, 82, 2, 1, '#ff5a1f'); rect(g, px + 10, 82, 2, 1, '#ff5a1f'); rect(g, px - 3, 90, 2, 1, '#ff5a1f'); rect(g, px + 10, 90, 2, 1, '#ff5a1f'); } }
+  const mh = B.mode === 'startle' && B.t < 0.4 && !calm ? Math.round(Math.sin(B.t / 0.4 * Math.PI) * 5) : 0;
+  rect(g, 206, 88 - mh, 7, 8, '#141414'); rect(g, 207, 89 - mh, 5, 6, '#fff7e6'); rect(g, 207, 91 - mh, 5, 2, '#ff5a1f'); rect(g, 213, 90 - mh, 2, 3, '#141414');
+  if (B.mode === 'type' && !calm) { const s = Math.floor(t * 3) % 3; rect(g, 209, 84 - s, 1, 1, 'rgba(255,247,230,0.8)'); }
+  if (B.mode === 'startle') { rect(g, 206, by - 12, 11, 14, '#141414'); rect(g, 207, by - 11, 9, 12, '#fff7e6'); rect(g, 211, by - 9, 2, 5, '#ff5a1f'); rect(g, 211, by - 3, 2, 2, '#ff5a1f'); }
+  disc(g, 295, 108, 7, '#2f6b45'); disc(g, 290, 112, 4, '#4a8f5f'); disc(g, 301, 112, 4, '#24553a');
+  rect(g, 288, 116, 15, 14, '#141414'); rect(g, 289, 116, 13, 13, '#c46a4a'); rect(g, 289, 116, 13, 2, '#d98463');
+  const moving = S.path.length > 0, fr = moving ? 1 + Math.floor(t * 7) % 2 : 0;
+  const youTalk = S.line && S.line.who === 'you' && (calm || Math.floor(t * 8) % 2 === 0);
+  drawYou(S.x, S.y, S.face, fr, youTalk);
+  g.restore();
+}
+
+/* ---------- loop ---------- */
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000), t = now / 1000; last = now;
+  if (S.path.length) {
+    const p = S.path[0], dx = p.x - S.x, dy = p.y - S.y, d = Math.hypot(dx, dy), step = (S.scene === 'map' ? 72 : 76) * dt;
+    if (Math.abs(dx) > 0.5) S.face = Math.sign(dx);
+    S.stepT += dt; if (S.stepT > (S.scene === 'map' ? 0.2 : 0.27)) { S.stepT = 0; SFX.step(S.scene === 'map'); }
+    if (d <= step) { S.x = p.x; S.y = p.y; S.path.shift(); if (!S.path.length && S.arrive) { const a = S.arrive; S.arrive = null; a(); } }
+    else { S.x += dx / d * step; S.y += dy / d * step; }
+  }
+  if (S.scene === 'room' && S.bart.mode === 'type') { S.keyT -= dt; if (S.keyT <= 0) { S.keyT = 0.06 + Math.random() * 0.12; SFX.key(); } }
+  if (S.line) { S.line.t += dt; if (S.line.t >= S.line.dur) skipLine(); }
+  if (S.mon.f !== S.mon.to) S.mon.f = calm ? S.mon.to : S.mon.f < S.mon.to ? Math.min(S.mon.to, S.mon.f + dt / 0.6) : Math.max(S.mon.to, S.mon.f - dt / 0.5);
+  S.bart.t += dt; if (S.phoneOn) S.phoneT += dt; if (S.sem && S.sem.ringT >= 0) S.sem.ringT += dt;
+  if (S.zoomT >= 0 && S.screenDone === null) {
+    S.zoomT += dt; const k = Math.min(1, S.zoomT / 0.9), e = k * k;
+    cv.style.transform = calm ? '' : 'scale(' + (1 + e * 9) + ')';
+  }
+  if (S.scene === 'map') drawMap(t); else drawRoom(t);
+  drawLine();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+window.quest = { S, hit, run, doAction, MAP, ROOM, start, hot: hotspots };
+})();
+</script>
+</body>
+</html>

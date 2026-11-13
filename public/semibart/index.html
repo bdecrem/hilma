@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#000000">
-<meta name="description" content="Fourteen studies. One afternoon. A point-and-click walk through CASBS.">
+<meta name="description" content="Fifty-four studies. One afternoon. A point-and-click walk through CASBS, the whole campus.">
 <meta property="og:title" content="CASBS Quest">
-<meta property="og:description" content="Fourteen studies. One afternoon.">
+<meta property="og:description" content="Fifty-four studies. One afternoon.">
 <meta property="og:url" content="https://ola.cx/semibart">
 <meta property="og:image" content="https://ola.cx/semibart/og.png">
 <meta property="og:image:width" content="1200">
@@ -96,6 +96,21 @@ button { font: inherit; background: none; border: 0; margin: 0; cursor: pointer;
 .dnav:hover:not(:disabled), .dnav:focus-visible { color: #fff; outline: none; }
 #dBack { top: 1.4cqw; right: 1.4cqw; font-size: 2.2cqw; border: 0.25cqw solid var(--hot); padding: 0.4cqw 1.4cqw; background: rgba(0,0,0,0.55); }
 #dBack:hover, #dBack:focus-visible { color: #fff; border-color: #fff; outline: none; }
+#bWho { position: absolute; left: 1cqw; top: 1cqw; color: var(--cyan); font-size: 2.5cqw; padding: 0.4cqw 1.1cqw; background: rgba(0, 0, 0, 0.55); z-index: 4; }
+#bWho:hover, #bWho:focus-visible { color: var(--hot); outline: none; }
+#bWho[hidden], #rail[hidden], #who[hidden] { display: none; }
+#rail { position: absolute; left: 1cqw; top: 13%; height: 60%; width: 1cqw; background: rgba(0, 0, 0, 0.4); cursor: pointer; z-index: 3; touch-action: none; }
+#thumb { position: absolute; left: 0; right: 0; background: rgba(255, 255, 85, 0.9); box-shadow: 0 0 0 0.2cqw #000; pointer-events: none; }
+#who { position: absolute; right: 0; top: 0; bottom: 0; width: 44cqw; background: rgba(10, 9, 7, 0.95); border-left: 0.4cqw solid var(--hot); display: flex; flex-direction: column; z-index: 5; }
+.whoTop { display: flex; align-items: center; justify-content: space-between; padding: 1.2cqw 1.6cqw 0.6cqw; color: var(--hot); font-size: 3.2cqw; }
+#whoClose { color: var(--cyan); font-size: 2.3cqw; }
+#whoClose:hover { color: var(--hot); }
+#whoQ { margin: 0 1.6cqw 0.8cqw; font: inherit; font-size: 2.5cqw; padding: 0.5cqw 0.9cqw; background: #000; color: #fff7e6; border: 0.25cqw solid #4a4436; outline: none; }
+#whoQ:focus { border-color: var(--hot); }
+#whoList { list-style: none; margin: 0; padding: 0 0.8cqw 1cqw; overflow-y: auto; flex: 1; }
+#whoList button { width: 100%; display: flex; justify-content: space-between; gap: 1.2cqw; padding: 0.3cqw 0.8cqw; font-size: 2.4cqw; color: #fff7e6; text-align: left; }
+#whoList button span:last-child { color: var(--hot); white-space: nowrap; }
+#whoList button:hover, #whoList button:focus-visible { background: #2a2620; color: var(--hot); outline: none; }
 @keyframes blink { 50% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { #fade { transition: none; } }
 </style>
@@ -106,6 +121,13 @@ button { font: inherit; background: none; border: 0; margin: 0; cursor: pointer;
   <div id="line" class="outlined" aria-live="polite"></div>
   <div id="label" class="outlined" hidden></div>
   <div id="choices" hidden></div>
+  <button id="bWho" type="button" class="outlined" hidden>Who's where</button>
+  <div id="rail" hidden><div id="thumb"></div></div>
+  <div id="who" hidden role="dialog" aria-label="Who's where">
+    <div class="whoTop"><span>Who's where</span><button id="whoClose" type="button">Close</button></div>
+    <input id="whoQ" type="search" placeholder="A name or a study number" autocomplete="off" spellcheck="false">
+    <ol id="whoList"></ol>
+  </div>
   <div id="tools">
     <button id="bMute" type="button" aria-label="Mute sound" aria-pressed="false"><svg viewBox="0 0 12 12" aria-hidden="true"><path fill="currentColor" d="M1 4h2l3-3h1v10H6L3 8H1z"/><path id="waves" fill="currentColor" d="M8 4h1v4H8zM10 2h1v8h-1z"/></svg></button>
     <button id="bFull" type="button" aria-label="Full screen"><svg viewBox="0 0 12 12" aria-hidden="true"><path fill="currentColor" d="M1 1h4v1H2v3H1zM7 1h4v4h-1V2H7zM1 7h1v3h3v1H1zM10 7h1v4H7v-1h3z"/></svg></button>
@@ -131,13 +153,15 @@ button { font: inherit; background: none; border: 0; margin: 0; cursor: pointer;
     <div class="card">
       <p class="eyebrow">A point-and-click visit</p>
       <h1 id="titleH">CASBS Quest</h1>
-      <p class="tag">Fourteen studies. One afternoon.</p>
+      <p class="tag">Fifty-four studies. One afternoon.</p>
       <hr>
       <dl>
         <dt>Click</dt><dd>walk, talk, open</dd>
         <dt>Right-click</dt><dd>look</dd>
         <dt>Space</dt><dd>skip a line</dd>
-        <dt>Arrows</dt><dd>hop between studies</dd>
+        <dt>Arrows</dt><dd>hop from study to study</dd>
+        <dt>Scroll · drag</dt><dd>up the hill, down to the lot</dd>
+        <dt>W</dt><dd>who's where</dd>
         <dt>M · F</dt><dd>mute · full screen</dd>
       </dl>
       <button id="startBtn" type="button">Start</button>
@@ -207,55 +231,211 @@ function turkey(m, x, y) {
     { k: C.ink, T: '#e0892e', t: '#9a5326', B: '#4e3322', H: '#c7d3de', E: C.ink, b: '#e8b13a', R: '#d6402e', L: '#e8a33a' }, x, y);
 }
 
-const mapBg = document.createElement('canvas'); mapBg.width = W; mapBg.height = H;
-(function () {
-  const m = mapBg.getContext('2d'), r = rng(7);
-  rect(m, 0, 0, W, H, C.grass);
-  for (let i = 0; i < 360; i++) rect(m, r() * W, r() * H, 2, 1, r() < 0.6 ? C.grass2 : C.grass3);
-  const paths = [[60, 64, 60, 132], [10, 64, 304, 64], [240, 64, 240, 132], [50, 132, 292, 132], [160, 38, 160, 64], [140, 38, 140, 64], [180, 38, 180, 64], [10, 9, 82, 9], [10, 9, 10, 64], [292, 100, 292, 132]];
-  DOORS_TOP.forEach(x => paths.push([x, 2, x, 9]));
-  DOORS_A.concat(DOORS_B).forEach(x => paths.push([x, 54, x, 64]));
-  DOORS_C.forEach(x => paths.push([x, 122, x, 132]));
-  const box = (p, pad) => [Math.min(p[0], p[2]) - pad, Math.min(p[1], p[3]) - pad, Math.abs(p[2] - p[0]) + pad * 2, Math.abs(p[3] - p[1]) + pad * 2];
-  paths.forEach(p => { const b = box(p, 4); rect(m, b[0], b[1], b[2], b[3], C.pathEdge); });
-  paths.forEach(p => { const b = box(p, 3); rect(m, b[0], b[1], b[2], b[3], C.path); });
-  rect(m, 117, 68, 86, 27, C.stone); rect(m, 118, 69, 84, 25, C.brick);
-  for (let y = 69; y < 94; y += 2) for (let x = 118 + (((y - 69) / 2) % 2) * 2; x < 202; x += 4) rect(m, x, y, 1, 1, C.brick2);
-  rect(m, 150, 68, 20, 1, C.brick); rect(m, 150, 94, 20, 1, C.brick);
-  building(m, 16, 30, 100, 16, 8, DOORS_A);
-  building(m, 204, 30, 100, 16, 8, DOORS_B);
-  building(m, 128, 8, 64, 20, 10, [160], true);
-  [140, 180].forEach(dx => { rect(m, dx - 3, 28, 6, 10, C.fascia); rect(m, dx - 2, 29, 4, 9, C.glass); rect(m, dx - 2, 29, 1, 9, C.glassHi); });
-  building(m, 100, 98, 120, 16, 8, DOORS_C);
-  // the five studies with the lights on
-  litDoor(m, 180, 29, 9); litDoor(m, 292, 47, 7); litDoor(m, 276, 47, 7); litDoor(m, 76, 47, 7); litDoor(m, 114, 115, 7); litDoor(m, 130, 115, 7);
-  oak(m, 160, 79, 8);
-  // the meeting room, just off the courtyard, its door facing the oak
-  rect(m, 108, 77, 10, 7, C.path); rect(m, 108, 77, 10, 1, C.pathEdge); rect(m, 108, 83, 10, 1, C.pathEdge);
-  wing(m, 82, 68, 22, 22, [80], 1);
-  { // a gold star on the roof: this is where the seminars happen
-    const STAR = ['...X...', '...X...', '..XXX..', 'XXXXXXX', '.XXXXX.', '..XXX..', '.XX.XX.', '.X...X.'];
-    [[-1, 0], [1, 0], [0, -1], [0, 1]].forEach(([ox, oy]) => sprite(m, STAR, { X: C.ink }, 90 + ox, 75 + oy));
-    sprite(m, STAR, { X: '#ffd93b' }, 90, 75); rect(m, 92, 78, 1, 1, '#fff3c4');
-  }
-  rect(m, 4, 98, 46, 42, C.ink); rect(m, 5, 99, 44, 40, C.asphalt);
-  [19, 33].forEach(x => rect(m, x, 100, 1, 18, C.line));
-  car(m, 7, 102, '#2b3fff'); car(m, 21, 102, '#ff9ccf'); car(m, 35, 102, '#fff7e6');
-  oval(m, 224, 22, 10, 3, C.shadow); rect(m, 221, 14, 1, 8, C.ink); rect(m, 227, 14, 1, 8, C.ink);
-  oval(m, 224, 11, 8, 4, C.ink); oval(m, 224, 11, 7, 3, '#fffaf0'); rect(m, 224, 5, 1, 6, C.ink);
-  [[100, 14, 5], [308, 82, 7], [22, 82, 6], [82, 116, 5], [118, 6, 4]].forEach(o => oak(m, o[0], o[1], o[2]));
-  for (let i = 0; i < 26; i++) rect(m, 250 + r() * 66, 90 + r() * 46, 2, 2, C.orange);
-  wing(m, 300, 96, 12, 36, WING_DOORS);
-  // the two easter-egg doors (Eli, the cafeteria): glass a shade greener than the rest
-  rect(m, 297, 120, 3, 5, '#6b8c78'); rect(m, 297, 120, 3, 1, '#93b39f');
-  rect(m, 204, 115, 4, 7, '#6b8c78'); rect(m, 204, 115, 1, 7, '#93b39f');
-  // picnic tables on the courtyard, either side of the oak
-  [[124, 75], [180, 75]].forEach(([x, y]) => {
-    oval(m, x + 8, y + 13, 9, 2, C.shadow);
-    rect(m, x, y, 16, 2, '#7d5632'); rect(m, x, y + 10, 16, 2, '#7d5632');
-    rect(m, x - 1, y + 3, 18, 6, C.ink); rect(m, x, y + 4, 16, 4, '#b07a45'); rect(m, x, y + 6, 16, 1, '#9c6a3c');
+/* ---------- the campus, after the CASBS floor plan: one tall map that scrolls up and down ----------
+   Not to scale, but laid out like the plan, so a fellow can find their study after a quick head
+   scratch: the long row up the hill (38-54) and the switchback below it, 26-29 over the lawn, Bart's
+   row (13-16), 7-12, the lounge and the meeting room, outdoor dining, the wings 1-6, 17-20, 21-25
+   and 30-37, the library, the main building round its court, the conference rooms, the parking lot.
+   Every study has its number on the roof. */
+const MH = 480, MAXCAM = MH - FH;
+const WHO = {
+  1: ['Daniel Chen'], 2: ['Kah-Wee Lee'], 4: ['Mary Helen Immordino-Yang'], 5: ['Luke Miratrix'], 6: ['Lewis Asante'],
+  7: ['Lawrence Cheung'], 8: ['Brooke Harrington'], 9: ['Katharyne Mitchell'], 10: ['Fran Moore'], 11: ['Jim Goldgeier'], 12: ['Fred Singer'],
+  13: ['John Casellas Connors'], 14: ['Garance Burke'], 15: ['Graeme Blair'], 16: ['Bart Decrem'],
+  21: ['Mike Gaetani'], 22: ['Manny Pulido'], 24: ['Sejung Park'], 25: ['Bruce Young'],
+  27: ['Kevin Driscoll', 'Mikael Jakobsson', 'Raul Saucedo'], 28: ['Jacqueline Lam', 'Jurate Jaraite-Kazukauske'], 29: ['Ian Kysel', 'Ishara Casellas Connors'],
+  30: ['Juliana Bidadanure'], 31: ['Inbal Ben Ami Bartal'], 32: ['Milena Tsvetkova'], 33: ['TL Taylor'], 34: ['Eli Cook'], 35: ['Summerson Carr'], 36: ['Alison McQueen'], 37: ['Salman Chaudhry'],
+  38: ['June Gruber'], 39: ['Lynda Powell'], 40: ['Bob Kaplan'], 41: ['Rick Banks'], 42: ['Dessislava Lange-Damianova'], 43: ['Joseph Tao-yi Wang'], 44: ['Forrest Stuart'], 45: ['Jamie Kreiner'],
+  46: ['Kepa Korta'], 47: ['Henry Cowles'], 48: ['Corey Abramson'], 49: ['Lana Swartz'], 50: ['Shige Oishi'], 51: ['Andrius Kazukauskas'], 52: ['Bryn Rosenfeld'], 53: ['Brian Knutson'], 54: ['Heeju Sohn'],
+  '016': ['Toussaint Nothias', 'Matt Sparke'], '060': ['Wayne Thomas'], '005': ['Laurenn Vives'], '003': ['Sally Schroeder'], '002': ['the Director']
+};
+// room numbers on the roofs, in a 3x5 pixel font
+const DIG = { 0: ['111', '101', '101', '101', '111'], 1: ['010', '110', '010', '010', '111'], 2: ['111', '001', '111', '100', '111'], 3: ['111', '001', '111', '001', '111'], 4: ['101', '101', '111', '001', '001'],
+  5: ['111', '100', '111', '001', '111'], 6: ['111', '100', '111', '101', '111'], 7: ['111', '001', '001', '010', '010'], 8: ['111', '101', '111', '101', '111'], 9: ['111', '101', '111', '001', '111'] };
+const LET = { A: ['010', '101', '111', '101', '101'], B: ['110', '101', '110', '101', '110'], C: ['011', '100', '100', '100', '011'], D: ['110', '101', '101', '101', '110'],
+  E: ['111', '100', '110', '100', '111'], F: ['111', '100', '110', '100', '100'], G: ['011', '100', '101', '101', '011'], I: ['111', '010', '010', '010', '111'],
+  L: ['100', '100', '100', '100', '111'], N: ['110', '101', '101', '101', '101'], O: ['010', '101', '101', '101', '010'], R: ['110', '101', '110', '101', '101'], Y: ['101', '101', '010', '010', '010'] };
+function word(m, cx, y, s, col) { let x = Math.round(cx - (s.length * 4 - 1) / 2); for (const ch of s) { const d = LET[ch]; if (d) d.forEach((rw, j) => { for (let i = 0; i < 3; i++) if (rw[i] === '1') rect(m, x + i, y + j, 1, 1, col); }); x += 4; } }
+function digits(m, cx, y, s, col) { s = String(s); let x = Math.round(cx - (s.length * 4 - 1) / 2); for (const ch of s) { const d = DIG[ch]; if (d) d.forEach((rw, j) => { for (let i = 0; i < 3; i++) if (rw[i] === '1') rect(m, x + i, y + j, 1, 1, col); }); x += 4; } }
+const NUMC = '#7a6448';
+function cellsOf(list) { return list.map(c => typeof c === 'object' ? Object.assign({}, c, c.n !== undefined ? { n: String(c.n) } : {}) : /^\d/.test(String(c)) ? { n: String(c) } : { u: c }); }
+// a row of rooms whose doors face south; cells are 12 px for a study, 7 for a restroom or maintenance room
+function rowLayout(x, y, list, rh = 12, wh = 7) {
+  let cx = x;
+  const cells = cellsOf(list).map(c => { const w = c.w || (c.n !== undefined ? 12 : 7); const o = Object.assign(c, { x: cx, w, dx: cx + Math.floor(w / 2) }); cx += w; return o; });
+  return { kind: 'row', x, y, w: cx - x, rh, wh, cells, bottom: y + rh + wh };
+}
+// a wing seen from above, its doors along one side
+function wingLayout(x, y, w, side, list, sh = 16, uh = 8) {
+  let cy = y;
+  const cells = cellsOf(list).map(c => { const h = c.h || (c.n !== undefined ? sh : uh); const o = Object.assign(c, { y: cy, h, dy: cy + Math.floor(h / 2) }); cy += h; return o; });
+  return { kind: 'wing', x, y, w, h: cy - y, side, sx: side < 0 ? x - 4 : x + w, outer: side < 0 ? x - 4 : x + w + 4, cells };
+}
+function doorPaint(m, dx, top, h, wide) { const half = wide ? 5 : 3; rect(m, dx - half, top, half * 2, h, C.fascia); rect(m, dx - half + 1, top + 1, half * 2 - 2, h - 1, C.glass); rect(m, dx - half + 1, top + 1, 1, h - 1, C.glassHi); }
+function paintRow(m, R) {
+  const { x, y, w, rh, wh } = R;
+  rect(m, x + 2, y + rh + wh, w, 2, C.shadow);
+  rect(m, x, y, w, rh, C.roof);
+  for (let i = 3; i < rh - 1; i += 4) rect(m, x + 1, y + i, w - 2, 1, C.roofLine);
+  R.cells.forEach((c, i) => { if (i) rect(m, c.x, y + 1, 1, rh - 2, '#c6b797'); });
+  rect(m, x, y, w, 1, C.fascia); rect(m, x, y, 1, rh, C.fascia); rect(m, x + w - 1, y, 1, rh, C.fascia); rect(m, x, y + rh - 1, w, 1, C.fascia);
+  rect(m, x, y + rh, w, wh, C.wall); for (let i = x + 1; i < x + w; i += 3) rect(m, i, y + rh, 1, wh, C.wallLo); rect(m, x, y + rh + wh - 1, w, 1, C.fascia);
+  R.cells.forEach(c => {
+    if (c.n !== undefined) { doorPaint(m, c.dx, y + rh, wh, c.wide); digits(m, c.dx, y + rh - 8, c.n, NUMC); }
+    else if (c.u === 'R') { rect(m, c.dx - 1, y + rh + 1, 3, wh - 1, '#4b5a73'); rect(m, c.dx - 1, y + rh + 1, 3, 1, '#7d8fae'); }
+    else if (c.u === 'M' || c.u === 'IT' || c.door === false) rect(m, c.dx - 1, y + rh + 2, 3, wh - 2, '#5b3a21');
+    else doorPaint(m, c.dx, y + rh, wh, c.wide);
   });
-  rect(m, 196, 22, 1, 20, C.ink);
+}
+function paintWing(m, G) {
+  const { x, y, w, h, side, sx } = G, gx = side < 0 ? sx + 1 : sx;
+  rect(m, x + 2, y + 2, w + 2, h + 6, C.shadow);
+  rect(m, x, y, w, h, C.roof);
+  for (let i = x + 3; i < x + w - 2; i += 4) rect(m, i, y + 2, 1, h - 4, C.roofLine);
+  G.cells.forEach((c, i) => { if (i) rect(m, x + 1, c.y, w - 2, 1, '#c6b797'); });
+  rect(m, x, y, w, 1, C.fascia); rect(m, x, y + h - 1, w, 1, C.fascia); rect(m, x, y, 1, h, C.fascia); rect(m, x + w - 1, y, 1, h, C.fascia);
+  rect(m, x, y + h, w, 5, C.wall); for (let i = x + 1; i < x + w; i += 3) rect(m, i, y + h, 1, 5, C.wallLo); rect(m, x, y + h + 4, w, 1, C.fascia);
+  rect(m, sx, y + 1, 4, h + 3, C.wall); rect(m, side < 0 ? sx : sx + 3, y + 1, 1, h + 3, C.fascia);
+  G.cells.forEach(c => {
+    if (c.n !== undefined || c.label) { rect(m, sx, c.dy - 3, 4, 7, C.fascia); rect(m, gx, c.dy - 2, 3, 5, C.glass); rect(m, gx, c.dy - 2, 3, 1, C.glassHi); }
+    if (c.n !== undefined) digits(m, x + w / 2, c.dy - 2, c.n, NUMC);
+    else if (c.u === 'R') rect(m, gx, c.dy - 1, 3, 3, '#4b5a73');
+  });
+}
+function dotted(m, x, y, w, h, col) { for (let i = 0; i < w; i += 3) { rect(m, x + i, y, 1, 1, col); rect(m, x + i, y + h - 1, 1, 1, col); } for (let j = 0; j < h; j += 3) { rect(m, x, y + j, 1, 1, col); rect(m, x + w - 1, y + j, 1, 1, col); } }
+function stampSeg(m, s, h, col) { const n = Math.max(1, Math.ceil(Math.hypot(s[2] - s[0], s[3] - s[1]))); for (let i = 0; i <= n; i++) rect(m, s[0] + (s[2] - s[0]) * i / n - h, s[1] + (s[3] - s[1]) * i / n - h, h * 2, h * 2, col); }
+function walks(m, segs) { segs.forEach(s => stampSeg(m, s, 4, C.pathEdge)); segs.forEach(s => stampSeg(m, s, 3, C.path)); }
+function stairsV(m, x, y0, y1) { rect(m, x - 4, y0, 8, y1 - y0, C.pathEdge); rect(m, x - 3, y0, 6, y1 - y0, '#e6d2a6'); for (let y = y0 + 1; y < y1; y += 2) rect(m, x - 3, y, 6, 1, '#c9a469'); }
+function lawn(m, x, y, w, h) { rect(m, x, y, w, h, '#5f8a3e'); for (let j = 1; j < h - 1; j++) rect(m, x + 1, y + j, w - 2, 1, Math.floor(j / 3) % 2 ? '#7aa34d' : '#86b056'); }
+
+const L = {
+  topW: rowLayout(6, 18, [38, 39, 40, 41, 'R', 42, 43, 44, 45, 'M']),
+  topE1: rowLayout(118, 21, [46, 47, 48, 49, 50]),
+  topE2: rowLayout(180, 25, ['R', 51, 52, 53, 54]),
+  r2629: rowLayout(252, 70, [26, 'R', 27, 28, 'IT', 29]),
+  r1316: rowLayout(176, 108, [13, 14, 'R', 'M', 15, 16]),
+  r712: rowLayout(46, 150, [7, 8, 9, 'R', 'M', 10, 11, 12]),
+  lib: rowLayout(94, 280, [{ n: '016', w: 16 }, { u: 'conf', w: 14 }, { u: 'liboffice', w: 12 }, { u: 'library', w: 16, wide: true }], 14, 8),
+  admin: rowLayout(162, 280, [{ u: 'supplies', w: 12, door: false }, { u: 'R', w: 12 }, { u: 'dining', w: 30, wide: true }, { u: 'kitchen', w: 20 }], 14, 8),
+  conf: rowLayout(186, 428, [{ u: 'confA', w: 16, wide: true }, { u: 'confB', w: 12 }, { u: 'confC', w: 12 }, { n: '060', w: 14 }]),
+  w16: wingLayout(66, 206, 12, -1, [6, 5, 4, 'M', 'R', 3, 2, 1]),
+  w1720: wingLayout(246, 150, 12, 1, [17, 18, 'R', 'M', 19, 20]),
+  w3037: wingLayout(296, 130, 12, 1, [30, 31, 32, 33, 'R', 'M', 34, 35, 36, 37]),
+  w2125: wingLayout(246, 302, 12, 1, [21, 22, 'R', 'M', 23, 24, 25]),
+  staff: wingLayout(162, 306, 14, 1, [{ label: 'reception', h: 14 }, { n: '005', h: 14 }, { n: '004', h: 14 }, { n: '003', h: 14 }, { n: '002', h: 14 }, { label: 'janzen', h: 14 }]),
+  lounge: wingLayout(178, 150, 22, -1, [{ label: 'lounge', h: 32 }, { label: 'meeting', h: 56 }])
+};
+// where you stand at each door: the walk in front of a row (the long row bends, so its walk slopes), beside a wing
+L.topW.walkY = () => 47; L.topE1.walkY = x => 47 + (x - 116) * 3 / 62; L.topE2.walkY = x => 50 + (x - 178) * 4 / 58;
+L.r2629.walkY = () => 96; L.r1316.walkY = () => 134; L.r712.walkY = () => 176; L.lib.walkY = () => 310; L.admin.walkY = () => 309; L.conf.walkY = () => 454;
+L.w16.walkX = 58; L.w1720.walkX = 266; L.w3037.walkX = 316; L.w2125.walkX = 266; L.staff.walkX = 184; L.lounge.walkX = 170;
+function doorOf(G, c) { return G.kind === 'row' ? { x: c.dx, y: G.walkY(c.dx) } : { x: G.walkX, y: c.dy }; }
+function cellRect(G, c) { return G.kind === 'row' ? [c.x, G.y, c.w, G.rh + G.wh] : [Math.min(G.x, G.sx), c.y, G.w + 4, c.h]; }
+function spurOf(G, c) { return G.kind === 'row' ? [c.dx, G.bottom, c.dx, G.walkY(c.dx)] : [G.outer, c.dy, G.walkX, c.dy]; }
+const hasDoor = c => c.n !== undefined || c.label || (c.u && c.u !== 'R' && c.u !== 'M' && c.u !== 'IT' && c.door !== false) || (c.u === 'R' && c.w >= 12);
+
+// the walks, as segments: where one ends on another they join (the walking graph below)
+const SEGS = [
+  [2, 47, 116, 47], [116, 47, 178, 50], [178, 50, 236, 54], [236, 54, 244, 57],            // under the long row up the hill
+  [244, 57, 244, 96], [244, 96, 316, 96], [244, 96, 244, 134],                           // stairs down past 26-29 to Bart's row
+  [170, 134, 266, 134],                                                                  // Bart's row
+  [266, 134, 266, 454], [316, 96, 316, 286], [266, 286, 316, 286],                       // the east walks
+  [116, 47, 34, 84], [34, 84, 134, 124], [134, 124, 150, 148], [150, 148, 150, 176],      // the switchback
+  [40, 176, 150, 176], [150, 176, 150, 200], [150, 200, 150, 272],                        // 7-12, down the middle
+  [58, 200, 170, 200], [170, 134, 170, 272], [58, 196, 58, 330],                          // across, the lounge walk, wing 1-6
+  [108, 200, 108, 224], [108, 224, 97, 236], [97, 236, 108, 248], [108, 248, 108, 272],   // round the courtyard oak
+  [84, 272, 241, 272], [90, 272, 90, 310], [90, 310, 156, 310],                           // the cross walk, the library
+  [241, 272, 241, 309], [184, 309, 241, 309], [184, 309, 184, 392],                        // into the main building's court
+  [222, 134, 222, 272],                                                                  // through outdoor dining
+  [58, 330, 64, 364], [64, 364, 82, 398], [82, 398, 112, 428], [112, 428, 150, 446], [150, 446, 186, 454], [186, 454, 266, 454], // down to the conference rooms
+  [266, 424, 278, 424]                                                                   // into the parking lot
+];
+const GRAPH = (function () {
+  let segs = SEGS.map(s => s.slice());
+  SEGS.forEach(s => [[s[0], s[1]], [s[2], s[3]]].forEach(([px, py]) => {
+    const out = [];
+    segs.forEach(q => {
+      const dx = q[2] - q[0], dy = q[3] - q[1], Lq = dx * dx + dy * dy, t = ((px - q[0]) * dx + (py - q[1]) * dy) / Lq;
+      const ex = q[0] + dx * t - px, ey = q[1] + dy * t - py;
+      if (t > 0.001 && t < 0.999 && ex * ex + ey * ey < 0.25) out.push([q[0], q[1], px, py], [px, py, q[2], q[3]]); else out.push(q);
+    });
+    segs = out;
+  }));
+  const adj = new Map(), add = (a, b, w) => { if (!adj.has(a)) adj.set(a, []); adj.get(a).push([b, w]); };
+  segs.forEach(s => { const a = s[0] + ',' + s[1], b = s[2] + ',' + s[3], w = Math.hypot(s[2] - s[0], s[3] - s[1]); add(a, b, w); add(b, a, w); });
+  return { segs, adj };
+})();
+const LIT = new Set(['1', '2', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '27', '28', '29', '30', '31', '32', '33', '35', '36', '37', '38', '39', '40', '41', '42', '43', '45', '46', '47', '48', '49', '50', '51', '52', '53', '54', '016']);
+const TURKEYS = [[186, 66], [202, 78], [289, 428]];
+const STAR_AT = [185, 204], DISH_AT = [300, 14];
+const GLOWS = [];
+const world = document.createElement('canvas'); world.width = W; world.height = MH;
+(function () {
+  const m = world.getContext('2d'), r = rng(11);
+  rect(m, 0, 0, W, MH, C.grass);
+  for (let i = 0; i < 1300; i++) rect(m, r() * W, r() * MH, 2, 1, r() < 0.6 ? C.grass2 : C.grass3);
+  // the hill: contour lines across the top
+  for (let k = 0; k < 5; k++) { const base = 3 + k * 13; for (let x = 0; x < W; x++) { const y = Math.round(base + 3 * Math.sin(x / 37 + k * 1.7) + 2 * Math.sin(x / 11 + k)); rect(m, x, y, 1, 1, k % 2 ? C.grass2 : '#d39a35'); } }
+  for (let i = 0; i < 34; i++) rect(m, 140 + r() * 96, 58 + r() * 40, 2, 2, C.orange);
+  for (let i = 0; i < 22; i++) rect(m, 4 + r() * 46, 340 + r() * 110, 2, 2, C.orange);
+  for (let i = 0; i < 14; i++) rect(m, 274 + r() * 40, 296 + r() * 96, 2, 2, C.orange);
+  for (let i = 0; i < 10; i++) rect(m, 4 + r() * 40, 60 + r() * 120, 2, 2, C.orange);
+  // lawns, mowed in stripes; the big lawn below the library curves away like on the plan
+  lawn(m, 252, 102, 58, 20); lawn(m, 272, 150, 18, 86);
+  for (let y = 316; y <= 400; y++) for (let x = 94; x <= 152; x++) {
+    const e = ((x - 152) / 58) ** 2 + ((y - 316) / 84) ** 2;
+    if (e <= 1) rect(m, x, y, 1, 1, e > 0.93 ? '#5f8a3e' : Math.floor((y - 316) / 3) % 2 ? '#7aa34d' : '#86b056');
+  }
+  // the walks, with a short spur to every door
+  const spurs = [];
+  Object.values(L).forEach(G => G.cells.forEach(c => { if (hasDoor(c)) spurs.push(spurOf(G, c)); }));
+  walks(m, SEGS.concat(spurs));
+  stairsV(m, 244, 58, 95); stairsV(m, 244, 98, 133);
+  // patios, dotted as on the plan
+  dotted(m, 4, 9, 114, 8, C.pathEdge); dotted(m, 172, 100, 68, 7, C.pathEdge); dotted(m, 42, 141, 94, 8, C.pathEdge);
+  // the courtyard oak in its brick circle, with a picnic table
+  disc(m, 108, 236, 14, C.stone); disc(m, 108, 236, 13, C.brick);
+  for (let y = 224; y < 249; y += 2) for (let x = 96 + ((y / 2) % 2) * 2; x < 121; x += 4) if ((x - 108) ** 2 + (y - 236) ** 2 < 150) rect(m, x, y, 1, 1, C.brick2);
+  // outdoor dining: a terrace with a round end, umbrellas
+  disc(m, 222, 152, 15, C.pathEdge); disc(m, 222, 152, 14, C.path);
+  rect(m, 206, 152, 32, 88, C.pathEdge); rect(m, 207, 152, 30, 87, C.path);
+  for (let y = 158; y < 238; y += 6) rect(m, 207, y, 30, 1, '#eadab2');
+  // the main building's court
+  rect(m, 189, 304, 47, 92, C.pathEdge); rect(m, 190, 305, 45, 90, '#ead9b4');
+  for (let y = 311; y < 394; y += 6) rect(m, 190, y, 45, 1, '#dcc89c');
+  // asphalt: the parking lot, its drive, the road along the bottom
+  rect(m, 274, 404, 42, 42, C.ink); rect(m, 275, 405, 40, 40, C.asphalt);
+  [288, 301].forEach(x => rect(m, x, 406, 1, 17, C.line));
+  rect(m, 294, 445, 12, 20, C.ink); rect(m, 295, 445, 10, 20, C.asphalt);
+  rect(m, 0, 464, W, 16, C.ink); rect(m, 0, 465, W, 15, C.asphalt); for (let x = 4; x < W; x += 14) rect(m, x, 472, 7, 1, C.line);
+  rect(m, 295, 464, 10, 2, C.asphalt);
+  // the buildings
+  Object.values(L).forEach(G => (G.kind === 'row' ? paintRow : paintWing)(m, G));
+  word(m, 136, 282, 'LIBRARY', NUMC); word(m, 201, 282, 'DINING', NUMC); word(m, 206, 430, 'CONFERENCE', NUMC);
+  // the lights that are on
+  Object.values(L).forEach(G => G.cells.forEach(c => {
+    if (!LIT.has(c.n)) return;
+    if (G.kind === 'row') { litDoor(m, c.dx, G.y + G.rh + 1, G.wh - 1); GLOWS.push([c.dx, G.bottom + 2, 8, 3]); }
+    else { const gx = G.side < 0 ? G.sx + 1 : G.sx; rect(m, gx, c.dy - 2, 3, 5, C.lit); rect(m, gx, c.dy - 2, 3, 1, '#fff3c4'); GLOWS.push([G.outer + G.side * 2, c.dy, 3, 5]); }
+  }));
+  // a gold star on the meeting room's roof: the seminars
+  { const STAR = ['...X...', '...X...', '..XXX..', 'XXXXXXX', '.XXXXX.', '..XXX..', '.XX.XX.', '.X...X.'];
+    [[-1, 0], [1, 0], [0, -1], [0, 1]].forEach(([ox, oy]) => sprite(m, STAR, { X: C.ink }, STAR_AT[0] + ox, STAR_AT[1] + oy));
+    sprite(m, STAR, { X: '#ffd93b' }, STAR_AT[0], STAR_AT[1]); }
+  // the Dish, up the hill; an annex in dotted lines
+  { const [x, y] = DISH_AT; oval(m, x, y + 11, 10, 3, C.shadow); rect(m, x - 3, y + 3, 1, 8, C.ink); rect(m, x + 3, y + 3, 1, 8, C.ink); oval(m, x, y, 8, 4, C.ink); oval(m, x, y, 7, 3, '#fffaf0'); rect(m, x, y - 6, 1, 6, C.ink); }
+  dotted(m, 252, 28, 36, 15, '#a8865b'); rect(m, 264, 33, 9, 6, C.ink); rect(m, 265, 34, 7, 4, '#b9b4a8');
+  // umbrellas on the terrace, picnic tables, benches, cars
+  [[214, 168, '#ff9ccf'], [230, 184, '#2b3fff'], [214, 204, '#ffd93b'], [230, 222, '#ff5a1f']].forEach(([x, y, col]) => { oval(m, x + 1, y + 5, 5, 1, C.shadow); disc(m, x, y, 4, C.ink); disc(m, x, y, 3, col); rect(m, x, y, 1, 1, C.paper); });
+  const table = (x, y) => { oval(m, x + 8, y + 13, 9, 2, C.shadow); rect(m, x, y, 16, 2, '#7d5632'); rect(m, x, y + 10, 16, 2, '#7d5632'); rect(m, x - 1, y + 3, 18, 6, C.ink); rect(m, x, y + 4, 16, 4, '#b07a45'); rect(m, x, y + 6, 16, 1, '#9c6a3c'); };
+  table(122, 212); table(194, 340);
+  const bench = (x, y) => { oval(m, x + 6, y + 7, 7, 1, C.shadow); rect(m, x, y, 12, 2, '#7d5632'); rect(m, x - 1, y + 2, 14, 4, C.ink); rect(m, x, y + 3, 12, 2, '#b07a45'); };
+  bench(150, 104); bench(204, 376);
+  car(m, 277, 407, '#2b3fff'); car(m, 290, 407, '#ff9ccf'); car(m, 303, 407, '#fff7e6');
+  // oaks
+  [[50, 7, 4], [96, 6, 3], [150, 8, 4], [214, 7, 4], [244, 10, 4], [312, 40, 4], [80, 82, 7], [104, 96, 5], [128, 74, 4], [14, 64, 6], [16, 110, 7], [12, 150, 5], [24, 190, 5],
+   [150, 90, 6], [228, 80, 5], [24, 222, 7], [30, 268, 6], [18, 304, 7], [136, 252, 5], [22, 350, 7], [30, 396, 6], [42, 440, 7], [86, 446, 5], [160, 416, 6], [292, 318, 7], [284, 364, 6],
+   [306, 392, 4], [252, 420, 5], [214, 350, 7], [108, 233, 8]].forEach(o => oak(m, o[0], o[1], o[2]));
 })();
 
 /* ---------- Bart's study ---------- */
@@ -456,7 +636,7 @@ function deskScene(k, o, t, talk, blink) {
   const typing = !S.line && !calm, a = typing ? Math.floor(t * 9) % 2 : 0;
   rect(g, 181, 92 - a, 5, 2, o.skin); rect(g, 194, 92 - (typing ? 1 - a : 0), 5, 2, o.skin);
   drawMonitor(0);
-  const mug = { daniel: '#2b3fff', kahwee: '#7ee0b5', ian: '#fff7e6', jacqueline: '#ff9ccf' }[k];
+  const mug = { daniel: '#2b3fff', kahwee: '#7ee0b5', ian: '#fff7e6', jacqueline: '#ff9ccf' }[k] || ['#ff9ccf', '#2b3fff', '#7ee0b5', '#ffd93b', '#fff7e6'][hashK(k) % 5];
   rect(g, 206, 88, 7, 8, INK); rect(g, 207, 89, 5, 6, mug); rect(g, 213, 90, 2, 3, INK);
   if (k === 'daniel') { // a little marble Socrates
     rect(g, 155, 93, 14, 2, '#9a9a94'); rect(g, 157, 89, 10, 4, '#e8e6df'); rect(g, 158, 80, 8, 9, '#f2f0ea'); rect(g, 157, 78, 10, 3, '#d9d6cc');
@@ -596,20 +776,6 @@ function drawMonitor(f) {
 }
 
 /* ---------- full 16:9 frames ---------- */
-const mapFull = document.createElement('canvas'); mapFull.width = W; mapFull.height = FH;
-(function () {
-  const m = mapFull.getContext('2d'), r = rng(91);
-  rect(m, 0, 0, W, FH, C.grass);
-  for (let i = 0; i < 120; i++) { const y = r() < 0.5 ? r() * OY : FH - OY + r() * OY; rect(m, r() * W, y, 2, 1, r() < 0.6 ? C.grass2 : C.grass3); }
-  m.drawImage(mapBg, 0, OY);
-  building(m, 22, 2, 56, 12, 7, DOORS_TOP);
-  litDoor(m, 34, 15, 6);
-  // Forrest's door (an easter egg): greener glass, and a pickleball that got away
-  rect(m, 48, 15, 4, 6, '#6b8c78'); rect(m, 48, 15, 1, 6, '#93b39f');
-  rect(m, 55, 22, 3, 3, '#d8e84a'); rect(m, 55, 22, 3, 1, '#eef59a'); rect(m, 56, 23, 1, 1, '#9aa830');
-  [[256, 6, 5], [300, 10, 6], [96, 170, 6], [180, 172, 5], [250, 168, 6], [30, 170, 5]].forEach(o => oak(m, o[0], o[1], o[2]));
-  for (let i = 0; i < 14; i++) rect(m, 120 + r() * 120, 164 + r() * 14, 2, 2, C.orange);
-})();
 function makeRoomFull(bg) {
   const c = document.createElement('canvas'); c.width = W; c.height = FH;
   const m = c.getContext('2d'), r = rng(5);
@@ -736,7 +902,7 @@ function garble(who, text) {
 
 /* ---------- state ---------- */
 const S = {
-  scene: 'map', turkeyT: -9, x: 54, y: 132, face: 1, path: [], arrive: null, stepT: 0, keyT: 0,
+  scene: 'map', turkeyT: -9, x: 150, y: 200, cam: 96, camFree: false, fast: false, drag: null, dragged: false, railDrag: false, uiShown: null, face: 1, path: [], arrive: null, stepT: 0, keyT: 0,
   hover: null, busy: false, line: null, choices: null, started: false, study: -1,
   bart: { mode: 'type', t: 0, shades: false }, met: false, talked: false, phoneOn: false, phoneT: 0, zoomT: -1, screenDone: null
 };
@@ -751,25 +917,47 @@ function walkTo(pts) {
   return new Promise(res => {
     if (S.arrive) { const a = S.arrive; S.arrive = null; a(); }
     S.path = pts.map(p => S.scene === 'room' ? clampRoom(p) : p);
+    if (S.scene === 'map' && S.path.length) S.camFree = false;
     if (!S.path.length) { res(); return; }
     S.arrive = res;
   });
 }
 function clampRoom(p) { return { x: Math.max(40, Math.min(300, p.x)), y: Math.max(126, Math.min(141, p.y)) }; }
-function rail(y) { return y < 20 ? 9 : y < 98 ? 64 : 132; }
+function nearestOnGraph(p) {
+  let best = null;
+  GRAPH.segs.forEach((s, i) => {
+    const dx = s[2] - s[0], dy = s[3] - s[1], Ls = dx * dx + dy * dy;
+    const t = Math.max(0, Math.min(1, Ls ? ((p.x - s[0]) * dx + (p.y - s[1]) * dy) / Ls : 0));
+    const x = s[0] + dx * t, y = s[1] + dy * t, d = (x - p.x) ** 2 + (y - p.y) ** 2;
+    if (!best || d < best.d) best = { i, x, y, d };
+  });
+  return best;
+}
 function route(to) {
-  const pts = [], fy = rail(S.y), ty = rail(to.y);
-  if (Math.abs(S.y - fy) > 0.5) pts.push({ x: S.x, y: fy });
-  let fx = S.x, ry = fy;
-  while (ry !== ty) {
-    const next = ry !== 64 ? 64 : ty;
-    const cx = ry === 9 || next === 9 ? 10 : (Math.abs(fx - 60) + Math.abs(to.x - 60) <= Math.abs(fx - 240) + Math.abs(to.x - 240) ? 60 : 240);
-    pts.push({ x: cx, y: ry }, { x: cx, y: next }); fx = cx; ry = next;
+  const A = nearestOnGraph({ x: S.x, y: S.y }), B = nearestOnGraph(to), pts = [];
+  if (A.d > 0.25) pts.push({ x: A.x, y: A.y });
+  if (A.i === B.i) { pts.push({ x: B.x, y: B.y }); return pts; }
+  const sa = GRAPH.segs[A.i], sb = GRAPH.segs[B.i], dist = new Map(), prev = new Map(), done = new Set();
+  [[sa[0], sa[1]], [sa[2], sa[3]]].forEach(([x, y]) => { const k = x + ',' + y, d = Math.hypot(x - A.x, y - A.y); if (!dist.has(k) || d < dist.get(k)) { dist.set(k, d); prev.set(k, null); } });
+  for (;;) {
+    let bk = null, bd = Infinity;
+    dist.forEach((d, k) => { if (!done.has(k) && d < bd) { bd = d; bk = k; } });
+    if (bk === null) break;
+    done.add(bk);
+    (GRAPH.adj.get(bk) || []).forEach(([nk, w]) => { const nd = bd + w; if (!dist.has(nk) || nd < dist.get(nk)) { dist.set(nk, nd); prev.set(nk, bk); } });
   }
-  pts.push({ x: to.x, y: ty });
-  if (Math.abs(to.y - ty) > 0.5) pts.push({ x: to.x, y: to.y });
+  let best = null;
+  [[sb[0], sb[1]], [sb[2], sb[3]]].forEach(([x, y]) => { const k = x + ',' + y; if (!dist.has(k)) return; const d = dist.get(k) + Math.hypot(x - B.x, y - B.y); if (!best || d < best.d) best = { k, d }; });
+  if (!best) { pts.push({ x: B.x, y: B.y }); return pts; }
+  const chain = [];
+  for (let k = best.k; k !== null && k !== undefined; k = prev.get(k)) chain.unshift(k);
+  chain.forEach(k => { const [x, y] = k.split(',').map(Number); pts.push({ x, y }); });
+  pts.push({ x: B.x, y: B.y });
+  if (Math.hypot(to.x - B.x, to.y - B.y) > 0.5) pts.push({ x: to.x, y: to.y });
   return pts;
 }
+function clampCam(y) { return Math.max(0, Math.min(MAXCAM, y)); }
+
 function goTo(p) { return S.scene === 'map' ? walkTo(route(p)) : walkTo([p]); }
 function fadeTo(on) { fadeEl.classList.toggle('on', on); return wait(0.32); }
 async function run(fn) { if (S.busy) return; S.busy = true; labelEl.hidden = true; try { await fn(); } finally { S.busy = false; } }
@@ -805,6 +993,33 @@ async function enterPerson(k) {
 /* ---------- the seminar: no phones, no laptops ---------- */
 const FELLOWS = {"alison": {"name": "Alison", "look": "Alison. Political theorist. Writing about treason and a king's trial in 1649.", "whisper": "Shh. I am enjoying a seminar where nobody has been beheaded yet."}, "andrius": {"name": "Andrius", "look": "Andrius. Economist. Runs experiments on how people use and save energy.", "whisper": "Shh. I'm measuring how many people nod."}, "brian": {"name": "Brian", "look": "Brian. Neuroscientist. Studies how feelings steer our choices in the brain.", "whisper": "Shh. Your brain wants the cookies. I can tell."}, "brooke": {"name": "Brooke", "look": "Brooke. Studies offshore wealth. Trained as a wealth manager to get inside.", "whisper": "Shh. I know where the money is. Not telling."}, "bryn": {"name": "Bryn", "look": "Bryn. Studies how people in autocracies read the news and take political risks.", "whisper": "Shh. Do not use my name in the survey. Or anywhere."}, "jacqueline": {"name": "Jacqueline", "look": "Jacqueline. Uses AI to link air, genes and neighborhoods to brain aging.", "whisper": "Shh. Drink water. Your brain will thank you."}, "corey": {"name": "Corey", "look": "Corey. Sociologist. Studies how inequality gets into health over a lifetime.", "whisper": "Shh. I am watching who gets the good chair. It is data."}, "daniel": {"name": "Daniel", "look": "Daniel. Economist and law scholar. Studies fairness, judges and AI in court.", "whisper": "Shh. Judges are fairer before lunch. Just saying."}, "dessislava": {"name": "Dessislava", "look": "Dessislava. Runs Bellingcat's operations. Spots fake news for a living.", "whisper": "Shh. That photo on the wall? Wrong shadows. Tell no one."}, "summerson": {"name": "Summerson", "look": "Summerson. Anthropologist. Studies facility dogs and why we treat them as experts.", "whisper": "Shh. The dog is smarter than the committee. Do not quote me."}, "eli": {"name": "Eli", "look": "Eli. Historian of American capitalism. Writing about how stock ownership changed politics.", "whisper": "Shh. It's all a scam. Even this whisper."}, "forrest": {"name": "Forrest", "look": "Forrest. Sociologist. Studies how ex-prisoners keep streets safe without force.", "whisper": "Shh. Do you play? I have an extra paddle."}, "frances": {"name": "Frances", "look": "Frances. Climate economist. Builds models of how weather, energy and laws affect each other.", "whisper": "Shh. Chapter nine is amazing. Don't spoil it."}, "frederick": {"name": "Frederick", "look": "Frederick. Founded WashingtonPost.com and Echo360. Studies high achievers' dilemmas.", "whisper": "Shh. I've sat through worse pitch meetings."}, "garance": {"name": "Garance", "look": "Garance. Pulitzer-winning reporter. Investigates who AI hurts and who answers for it.", "whisper": "Shh. I'm taking notes. Everything is on the record."}, "graeme": {"name": "Graeme", "look": "Graeme. Counts deportations from government records, then checks the method twice.", "whisper": "Shh. I have a records request pending. It has been pending a while."}, "heeju": {"name": "Heeju", "look": "Heeju. Demographer. Maps family ties to see who helps whom in disasters.", "whisper": "Shh. Who would you call in an emergency?"}, "henry": {"name": "Henry", "look": "Henry. Historian of science. Writing on how America treated anxiety and depression.", "whisper": "Shh. Everyone here could use a therapy session. I count six."}, "ian": {"name": "Ian", "look": "Ian. Studies the legal rights of migrants. Built a database of them.", "whisper": "Shh. Ask me about the database. Please. Nobody ever does."}, "inbal": {"name": "Inbal", "look": "Inbal. Neuroscientist. Showed that rats will free a trapped friend.", "whisper": "Shh. The rats were nicer than this room."}, "ishara": {"name": "Ishara", "look": "Ishara. Studies college paths of refugee and displaced students.", "whisper": "Shh. Ask the students, not the spreadsheet. They have answers."}, "james": {"name": "James", "look": "James. Studies how great powers push other countries around, and with what tools.", "whisper": "Shh. I have a chart. I always have a chart."}, "jamie": {"name": "Jamie", "look": "Jamie. Medieval historian. Studies how monks thought with notes and habits.", "whisper": "Shh. Write it down. Monks never trusted their memory. Smart."}, "john": {"name": "John", "look": "John. Geographer. Writing about how conservation and the gun industry shaped each other.", "whisper": "Shh. Yes, the book title gets looks."}, "joseph": {"name": "Joseph", "look": "Joseph. Experimental economist. Tests how people reason and talk, even with AI models.", "whisper": "Shh. I'm running a second experiment on this one."}, "juliana": {"name": "Juliana", "look": "Juliana. Philosopher. Writes about equality and what a fair society owes people.", "whisper": "Shh. Equal slices of cake is not the same as equal. Discuss."}, "june": {"name": "June", "look": "June. Clinical psychologist. Studies the strengths hidden inside hard emotions.", "whisper": "Shh. You look like you want a snack. That's okay."}, "jurate": {"name": "Jūratė", "look": "Jurate. Energy economist. Studies how leaders' words change views on solar and EVs.", "whisper": "Shh. What do your neighbors think? Seriously."}, "kahwee": {"name": "Kah-Wee", "look": "Kah-Wee. Studies how casinos and money reshaped Macau, Singapore and Manila.", "whisper": "Shh. Ten bucks says this seminar runs over."}, "katharyne": {"name": "Katharyne", "look": "Katharyne. Geographer. Follows one Berlin airfield through nine centuries of rulers.", "whisper": "Shh. Everything here used to be something else. Mostly a field."}, "kepa": {"name": "Kepa", "look": "Kepa. Philosopher of language. Writes about the rights of smaller languages.", "whisper": "Shh. Say it in your own language. It will feel better."}, "kevin": {"name": "Kevin", "look": "Kevin. Media historian. Wrote the book on the modem and the early internet.", "whisper": "Shh. I miss the sound of the dial-up."}, "lana": {"name": "Lana", "look": "Lana. Studies payments, crypto and scams. Asks what makes money feel legit.", "whisper": "Shh. That crypto uncle is real. Ask me later."}, "lawrence": {"name": "Lawrence", "look": "Lawrence. Linguist. Uses AI to spot early dementia in how people talk.", "whisper": "Shh. Your sentence just gave me three clues."}, "lewis": {"name": "Lewis", "look": "Lewis. Studies housing and land in African cities, and wetlands lost to development.", "whisper": "Shh. The meeting room used to be a marsh. Probably."}, "luke": {"name": "Luke", "look": "Luke. Statistician. Tests programs by randomly choosing who gets them.", "whisper": "Shh. Pick a number. Even or odd. Congratulations, you are in the trial."}, "lynda": {"name": "Lynda", "look": "Lynda. Doctor. Runs trials on helping midlife women with heart health and mood.", "whisper": "Shh. Did you take your walk today? I am only asking as a scientist."}, "mary": {"name": "Mary", "look": "Mary. Neuroscientist. Studies how teenagers' big ideas build healthy brains.", "whisper": "Shh. Staring out the window counts as research. I wrote the paper."}, "matthew": {"name": "Matthew", "look": "Matthew. Studies how heat and climate hit the health of California farmworkers.", "whisper": "Shh. It is hot in here. I am keeping notes."}, "mikael": {"name": "Mikael", "look": "Mikael. Designs and studies games. Looks at games that give voice to the underdog.", "whisper": "Shh. This seminar needs a save point."}, "milena": {"name": "Milena", "look": "Milena. Studies how people and machines act in groups. Writing a book on it.", "whisper": "Shh. Don't look now, you are in my experiment."}, "ralph": {"name": "Ralph", "look": "Ralph. Law professor. Asks if college gatekeeping blocks learning and fairness.", "whisper": "Shh. Who decided you were allowed in this room? Think about it."}, "raul": {"name": "Raul", "look": "Raul. Philosopher. Asks if a whole is more than its parts, or just the parts.", "whisper": "Shh. Are we a group, or just six people? Do not answer fast."}, "robert": {"name": "Robert", "look": "Robert. Health researcher. Measures whether treatments help people live better.", "whisper": "Shh. On a scale of zero to one, how is this seminar going?"}, "salman": {"name": "Salman", "look": "Salman. Built AI systems for years. Studies what AI does to office jobs.", "whisper": "Shh. Don't tell them my laptop is in my bag."}, "shigehiro": {"name": "Shigehiro", "look": "Shigehiro. Psychologist. Studies happiness and why careers cluster in herds.", "whisper": "Shh. Everyone here picked the same seat. Notice?"}, "tl": {"name": "T.L.", "look": "T.L. Taylor. Studies online worlds, games and theme parks as designed places.", "whisper": "Shh. Did you see how they built this queue?"}, "toussaint": {"name": "Toussaint", "look": "Toussaint. Studies Facebook's free internet push in the Global South.", "whisper": "Shh. If the seminar is free, you are the product."}};
 Object.assign(LOOKS, {"alison": {"skin": "#f1c9a8", "skinD": "#cfa386", "hair": "#a8683a", "hairD": "#87502b", "brow": "#7a4a28", "style": "bob", "top": "blazer", "shirt": "#22262e", "shirtD": "#1a1d23", "trim": "#f2efe9"}, "andrius": {"skin": "#e6b995", "skinD": "#c49878", "hair": "#4a3a2c", "hairD": "#352a20", "brow": "#3c2e22", "style": "swept", "top": "jacket", "shirt": "#4a4d52", "shirtD": "#3e4146", "trim": "#1e1e22", "stubble": "#a08468"}, "brian": {"skin": "#ecc3a0", "skinD": "#c9a083", "hair": "#b98a45", "hairD": "#946b32", "brow": "#9a7238", "style": "short", "top": "collar", "shirt": "#7d92c4", "shirtD": "#6779a8", "trim": "#8ea2d0", "glasses": "#8a8f96"}, "brooke": {"skin": "#eac3a6", "skinD": "#c7a088", "hair": "#7d6a5c", "hairD": "#a39a92", "brow": "#5e4b3d", "style": "long", "top": "blazer", "shirt": "#2c2a30", "shirtD": "#232127", "trim": "#efe6d8", "glasses": "#5a4a66"}, "bryn": {"skin": "#ecc6aa", "skinD": "#c9a38a", "hair": "#4a2e22", "hairD": "#352018", "brow": "#3c261b", "style": "long", "top": "blazer", "shirt": "#a79fb0", "shirtD": "#8b8394", "trim": "#d8d4dc"}, "corey": {"skin": "#e2b896", "skinD": "#c09a7c", "hair": "#6b5a4a", "hairD": "#4e4034", "brow": "#4a3c30", "style": "bald", "top": "blazer", "shirt": "#6f6e76", "shirtD": "#5c5b63", "trim": "#c9c6e0", "glasses": "#6a6e72", "beard": "#3e3028"}, "dessislava": {"skin": "#e9bf9f", "skinD": "#c69d82", "hair": "#4a3022", "hairD": "#352117", "brow": "#3a271c", "style": "curly", "top": "tee", "shirt": "#1f2430", "shirtD": "#191d27", "trim": "#1f2430"}, "summerson": {"skin": "#efc4a8", "skinD": "#cca186", "hair": "#7a5a42", "hairD": "#5e4432", "brow": "#5a4130", "style": "long", "top": "tee", "shirt": "#6b4a40", "shirtD": "#573b33", "trim": "#6b4a40"}, "eli": {"skin": "#e0b08e", "skinD": "#bd9072", "hair": "#2e2420", "hairD": "#1e1815", "brow": "#241b17", "style": "curly", "top": "collar", "shirt": "#2a2c30", "shirtD": "#222428", "trim": "#3a3c40", "glasses": "#6a5a3a", "round": true, "beard": "#3a2e28"}, "forrest": {"skin": "#d9a77f", "skinD": "#b78a68", "hair": "#c9a77f", "hairD": "#a8896a", "brow": "#3a2b20", "style": "bald", "top": "jacket", "shirt": "#7c8ea0", "shirtD": "#687989", "trim": "#f0eee8"}, "frederick": {"skin": "#e8bd9a", "skinD": "#c59d7e", "hair": "#6e6a68", "hairD": "#9a9694", "brow": "#5a5450", "style": "short", "top": "collar", "shirt": "#1f2a6a", "shirtD": "#1a2358", "trim": "#1f2a6a"}, "garance": {"skin": "#f0cbb0", "skinD": "#cba58c", "hair": "#6a3524", "hairD": "#4e281b", "brow": "#573020", "style": "long", "top": "blazer", "shirt": "#1f2a4a", "shirtD": "#182139", "trim": "#dfe3ea"}, "graeme": {"skin": "#e6b996", "skinD": "#c3987a", "hair": "#7a4a2a", "hairD": "#5e3920", "brow": "#5a3a22", "style": "receding", "top": "blazer", "shirt": "#262a38", "shirtD": "#1e212d", "trim": "#aab0b8", "glasses": "#1e1e22", "round": true, "stubble": "#a8845f"}, "heeju": {"skin": "#ecc9ad", "skinD": "#c9a68b", "hair": "#241c1c", "hairD": "#181212", "brow": "#241c1c", "style": "bob", "top": "jacket", "shirt": "#1e1c22", "shirtD": "#17151a", "trim": "#6a4f7a", "glasses": "#9a4a52", "round": true}, "henry": {"skin": "#e0b394", "skinD": "#bf9679", "hair": "#5a4030", "hairD": "#3f2c20", "brow": "#4a3426", "style": "short", "top": "tee", "shirt": "#d9d3e8", "shirtD": "#b7b1c6", "trim": "#c9e0d6", "stubble": "#9a7d66"}, "inbal": {"skin": "#ecc7ad", "skinD": "#c8a68f", "hair": "#9a4a2a", "hairD": "#7a3a20", "brow": "#7a3a20", "style": "long", "top": "collar", "shirt": "#b9cbe6", "shirtD": "#97a7c2", "trim": "#d8e3f3", "glasses": "#2a2a2e"}, "ishara": {"skin": "#a9724f", "skinD": "#8f5d40", "hair": "#2a1c16", "hairD": "#1c1210", "brow": "#241812", "style": "curly", "top": "tee", "shirt": "#22262e", "shirtD": "#1a1d23", "trim": "#2c3038", "glasses": "#222222", "round": true}, "james": {"skin": "#e6b89c", "skinD": "#c49a80", "hair": "#a9a9a6", "hairD": "#8a8a88", "brow": "#8a8a88", "style": "short", "top": "blazer", "shirt": "#262f4a", "shirtD": "#1e2539", "trim": "#f2f2f4", "glasses": "#2a2a2a", "round": true}, "jamie": {"skin": "#e2b99c", "skinD": "#c09c82", "hair": "#3a2a22", "hairD": "#271b16", "brow": "#33241c", "style": "bob", "top": "jacket", "shirt": "#5a6b52", "shirtD": "#4a5944", "trim": "#23284a"}, "john": {"skin": "#e5bc9f", "skinD": "#c39f85", "hair": "#6a4a32", "hairD": "#503824", "brow": "#5a4030", "style": "swept", "top": "blazer", "shirt": "#262f48", "shirtD": "#1e2539", "trim": "#b9cbe6", "glasses": "#c9b88a"}, "juliana": {"skin": "#d9a98c", "skinD": "#b78e75", "hair": "#4a3426", "hairD": "#33241c", "brow": "#3a2a20", "style": "back", "top": "cardigan", "shirt": "#3e4a6e", "shirtD": "#323c59", "trim": "#e8e6ee"}, "june": {"skin": "#ecc7ad", "skinD": "#c8a68f", "hair": "#a8683a", "hairD": "#8a5430", "brow": "#8a5a38", "style": "long", "top": "jacket", "shirt": "#2a2022", "shirtD": "#1f1819", "trim": "#2a2022"}, "jurate": {"skin": "#ecc9b0", "skinD": "#c8a98f", "hair": "#d9b878", "hairD": "#b89a5e", "brow": "#b0905a", "style": "bob", "top": "blazer", "shirt": "#7a5a42", "shirtD": "#634934", "trim": "#1e1e22", "glasses": "#26262a", "round": true}, "katharyne": {"skin": "#e8bfa3", "skinD": "#c59f85", "hair": "#c98a4a", "hairD": "#a86f3a", "brow": "#a87a4a", "style": "curly", "top": "cardigan", "shirt": "#1f2328", "shirtD": "#181b1f", "trim": "#c8d9c0"}, "kepa": {"skin": "#dba98a", "skinD": "#b98f74", "hair": "#8a8a88", "hairD": "#6d6d6b", "brow": "#6d6d6b", "style": "bald", "top": "tee", "shirt": "#1e2430", "shirtD": "#171c26", "trim": "#1e2430", "beard": "#9a9a98"}, "kevin": {"skin": "#e6b497", "skinD": "#c49479", "hair": "#b27a46", "hairD": "#946238", "brow": "#9a6a3c", "style": "swept", "top": "collar", "shirt": "#f2f2f0", "shirtD": "#cfcfcd", "trim": "#ffffff", "stubble": "#b89270"}, "lana": {"skin": "#e8c1a8", "skinD": "#c5a189", "hair": "#2e2220", "hairD": "#1f1614", "brow": "#2a1e1a", "style": "long", "top": "vneck", "shirt": "#1c2230", "shirtD": "#151a26", "trim": "#d4b46a"}, "lawrence": {"skin": "#d9ab88", "skinD": "#b98f70", "hair": "#3a3a3c", "hairD": "#26262a", "brow": "#2c2c2e", "style": "short", "top": "vneck", "shirt": "#c4453a", "shirtD": "#a33a31", "trim": "#b9cbe6", "glasses": "#555a60"}, "lewis": {"skin": "#7a5238", "skinD": "#654330", "hair": "#2a2018", "hairD": "#2a2018", "brow": "#2a2018", "style": "bald", "top": "tee", "shirt": "#c8782a", "shirtD": "#aa6422", "trim": "#3a2a1a", "beard": "#3a2c22"}, "luke": {"skin": "#d8a888", "skinD": "#b88f73", "hair": "#4a3a2c", "hairD": "#8a8580", "brow": "#4a3a2c", "style": "swept", "top": "collar", "shirt": "#8a6ad8", "shirtD": "#7458b8", "trim": "#7a5ac8", "glasses": "#222222", "beard": "#8a8580"}, "lynda": {"skin": "#e8c4a8", "skinD": "#c6a68e", "hair": "#d8d0c0", "hairD": "#b8b0a0", "brow": "#a09080", "style": "curly", "top": "jacket", "shirt": "#b8bcb4", "shirtD": "#9a9e98", "trim": "#2a2630"}, "mary": {"skin": "#d8aa88", "skinD": "#b78f73", "hair": "#3a2a24", "hairD": "#2a1e1a", "brow": "#2e221c", "style": "long", "top": "cardigan", "shirt": "#ece4d4", "shirtD": "#c8c0b2", "trim": "#d8cfc0", "earrings": "#d8b050"}, "matthew": {"skin": "#e8b8a0", "skinD": "#c69c88", "hair": "#e8b8a0", "hairD": "#c69c88", "brow": "#c8967a", "style": "bald", "top": "jacket", "shirt": "#1e1e1e", "shirtD": "#141414", "trim": "#d89aa0"}, "mikael": {"skin": "#dcb498", "skinD": "#bb987f", "hair": "#a88860", "hairD": "#8a7050", "brow": "#8a7050", "style": "receding", "top": "tee", "shirt": "#22283a", "shirtD": "#1a1f2e", "trim": "#22283a", "glasses": "#2a2a2a", "stubble": "#b09878"}, "milena": {"skin": "#e0b898", "skinD": "#be9c80", "hair": "#9a9a9a", "hairD": "#7c7c7c", "brow": "#5a4a40", "style": "short", "top": "tee", "shirt": "#2a2a2e", "shirtD": "#1e1e22", "trim": "#2a2a2e"}, "ralph": {"skin": "#8a5a3e", "skinD": "#734b34", "hair": "#6a6a6a", "hairD": "#6a6a6a", "brow": "#4a4a4a", "style": "bald", "top": "blazer", "shirt": "#26262c", "shirtD": "#1c1c22", "trim": "#f0f0f0", "glasses": "#4a4a40"}, "raul": {"skin": "#d0a080", "skinD": "#ae846a", "hair": "#3a2c22", "hairD": "#2a2018", "brow": "#2a2018", "style": "long", "top": "jacket", "shirt": "#4a5a68", "shirtD": "#3c4a56", "trim": "#a8a490", "beard": "#4a3a30", "mous": true}, "robert": {"skin": "#e8bfa4", "skinD": "#c6a089", "hair": "#d4d0c8", "hairD": "#b8b4ac", "brow": "#b0a898", "style": "short", "top": "collar", "shirt": "#f4f4f4", "shirtD": "#d0d0d0", "trim": "#f4f4f4"}, "salman": {"skin": "#c89070", "skinD": "#a77a5f", "hair": "#1e1814", "hairD": "#1e1814", "brow": "#1e1814", "style": "swept", "top": "jacket", "shirt": "#3a3e58", "shirtD": "#2e3248", "trim": "#3a3e58", "glasses": "#4a4038", "stubble": "#4a3a30"}, "shigehiro": {"skin": "#dcb898", "skinD": "#bb9c80", "hair": "#1e1a18", "hairD": "#1e1a18", "brow": "#1e1a18", "style": "swept", "top": "collar", "shirt": "#e8c8c0", "shirtD": "#c6a9a2", "trim": "#e8c8c0"}, "tl": {"skin": "#e0b8a0", "skinD": "#be9b86", "hair": "#b0aaa0", "hairD": "#908a82", "brow": "#908a82", "style": "curly", "top": "jacket", "shirt": "#3a3e44", "shirtD": "#2e3238", "trim": "#1a1a1e", "glasses": "#222222", "round": true}, "toussaint": {"skin": "#d0a888", "skinD": "#ae8c72", "hair": "#3a2a20", "hairD": "#2a1e16", "brow": "#2a1e16", "style": "curly", "top": "collar", "shirt": "#2a2e36", "shirtD": "#1e2228", "trim": "#f0f0f0", "stubble": "#5a4a3c"}});
+// every fellow in their own study (numbers from the CASBS directory), drawn as they are in the seminar.
+// Daniel, Kah-Wee, Frances, Ian, Jacqueline and Joseph keep their rooms; Eli and Forrest keep their doors shut.
+const STUDY_OF = { lewis: '6', luke: '5', mary: '4', lawrence: '7', brooke: '8', katharyne: '9', james: '11', frederick: '12', john: '13', garance: '14', graeme: '15',
+  kevin: '27', mikael: '27', raul: '27', jurate: '28', ishara: '29', juliana: '30', inbal: '31', milena: '32', tl: '33', summerson: '35', alison: '36', salman: '37',
+  june: '38', lynda: '39', robert: '40', ralph: '41', dessislava: '42', jamie: '45', kepa: '46', henry: '47', corey: '48', lana: '49', shigehiro: '50', andrius: '51',
+  bryn: '52', brian: '53', heeju: '54', toussaint: '016', matthew: '016' };
+const MATES = { '27': ['kevin', 'mikael', 'raul'], '28': ['jacqueline', 'jurate'], '29': ['ian', 'ishara'], '016': ['toussaint', 'matthew'] };
+function mateX(host, i) { return host === 'jacqueline' ? 250 : [140, 250][i]; }
+const GREET = ['Oh, hi! Come in.', 'Hello! You found me.', 'Come in. The door sticks.', 'Oh! A visitor.', 'Hi! Mind the books.', 'Hey, come in, come in.', 'You knocked! Nobody knocks.', 'Come in. I was just thinking out loud.'];
+const CHATS = [
+  [['you', 'What are you working on?'], ['K', 'A chapter. It was going to be short.'], ['K', 'It is not short.']],
+  [['you', 'How is the year going?'], ['K', 'Fast. I came for the quiet and stayed for the lunches.']],
+  [['you', 'Nice view.'], ['K', 'The Dish is out there. Some days I think it is listening to me.']],
+  [['you', 'Any tips?'], ['K', 'Go to the seminar. Sit near the door.']],
+  [['you', 'Busy?'], ['K', 'Always. Never. It depends who is asking.']],
+  [['you', 'See you at lunch?'], ['K', 'Of course. I return my tray.']]
+];
+const unshh = s => s.replace(/^Shh\.\s*/, '');
+Object.entries(STUDY_OF).forEach(([k, n]) => {
+  const mates = MATES[n];
+  if (!FELLOWS[k] || !LOOKS[k] || (mates && mates[0] !== k)) return;
+  const f = FELLOWS[k], h = hashK(k);
+  PEOPLE[k] = { name: f.name, n, scene: 'desk', at: [190, 54], color: ['#7ee0ff', '#b9f27c', '#ffb3d9', '#9ec5ff', '#ffd08a', '#c9a6ff', '#ff9c7a', '#a6ffe0', '#ffe27a'][h % 9],
+    look: f.look, hello: [[k, GREET[h % GREET.length]], ['you', `So this is Study ${n}.`], [k, unshh(f.whisper)]],
+    talks: [0, 3].map(i => CHATS[(h + i) % CHATS.length].map(([w, t]) => [w === 'K' ? k : w, t])), talked: 0 };
+});
+Object.values(MATES).forEach(([host, ...rest]) => { const p = PEOPLE[host]; if (!p) return; p.mates = rest; rest.forEach(m => p.hello.push([m, unshh(FELLOWS[m].whisper)])); });
 const DEBATES = [{"seats": ["garance", "salman", "lawrence", "milena", "kevin", "daniel"], "topic": "Who gets blamed when the AI messes up?", "lines": [["garance", "I asked one city who built its AI. They said it's secret. Who do I call?"], ["salman", "I've built these systems. The blame always lands on a vendor nobody remembers hiring."], ["lawrence", "Some languages grammatically mark who is warning whom. English lets everyone off the hook."], ["milena", "Put bots and people in one group and everyone assumes someone else is in charge."], ["kevin", "In 1984 we blamed the modem. Blame always moves to the newest beige box."], ["daniel", "Judges rule differently late in the day. Maybe the machine just needs a snack."], ["garance", "A machine with no lunch break still needs a human to sign the paper. Name them."], ["milena", "Then who checks the checkers? Another bot? Now it's a group chat of robots."], ["kevin", "That's a bulletin board. We had those. Somebody always typed in all caps."], ["daniel", "This is more a comment than a question, but we are forty minutes over."], ["you", "So who's accountable for the empty coffee pot?"], ["garance", "Great story. Nobody will say."]]}, {"seats": ["mikael", "tl", "forrest", "june", "inbal", "shigehiro"], "topic": "Why do we play? Games, parks and happiness", "lines": [["mikael", "Games used to be about conquering things. Now people play to feel another side of the story."], ["tl", "Same in theme parks. Every line you wait in was designed. Nobody ends up there by accident."], ["forrest", "Sorry I'm late. Court three ran long. Anyway, play is basically public safety."], ["june", "Happiness isn't the only goal. Sad moods can help people notice things others miss."], ["inbal", "Rats free a trapped friend, even with chocolate sitting right there."], ["shigehiro", "Happiness depends on where you live and what everyone around you is choosing."], ["mikael", "A game where you play the other side is empathy with a score."], ["forrest", "Pickleball is a safety program with a paddle. My data is mostly sunburn."], ["june", "Forrest, I study positive emotion, and you are a very cheerful case."], ["inbal", "Would the rats let the slower rat into the game?"], ["shigehiro", "I predict that by spring, every fellow here owns a paddle."], ["you", "So happiness is a paddle. Who has the sign-up sheet?"]]}, {"seats": ["eli", "brooke", "lana", "frederick", "andrius", "joseph"], "topic": "Is money real? Markets, scams and trust", "lines": [["eli", "The stock market? Scam. Pension funds? Scam. This coffee cup? Probably also a scam."], ["brooke", "I trained as a wealth manager to get inside. The scam has a very nice office, Eli."], ["lana", "Every scam shows what a crowd believes counts as real money. That's my whole field."], ["frederick", "I've pitched investors. Every deck was a little optimistic. Let's call it hope."], ["andrius", "Show a household how its neighbors use energy and it suddenly cares about its bill."], ["joseph", "From my standing desk, I see people mostly copy each other's bets. Two screens agree."], ["eli", "Since the 1980s everyone owns stocks, so everyone's a little bit in on the scam."], ["brooke", "Most of the money isn't where you think it is. Think small island, big office."], ["lana", "People trust whatever looks like a bank app. The font does a lot of work."], ["frederick", "As a former CEO, yes. We followed the neighbors too."], ["you", "Is the free coffee a scam?"], ["eli", "Obviously. They want your attendance."]]}, {"seats": ["frances", "jurate", "heeju", "john", "jacqueline", "lewis"], "topic": "Hot planet, hard choices: who adapts and how?", "lines": [["frances", "I'm building a model where the laws change too. Nobody change any laws."], ["jurate", "Tell Americans what their own leaders say about solar, and the neighbors do the rest."], ["heeju", "When the flood comes, who calls Grandma? I count the cousins. Families are the safety net."], ["john", "My book is about guns and nature. Yes, they're connected. Yes, it's awkward."], ["jacqueline", "I use AI to link dirty air, genes and neighborhoods to memory loss in old age."], ["lewis", "In African cities, wetlands turn into fancy housing. Then the water wants its land back."], ["frances", "So the model needs cousins, condos and guns. Fine. Adding them."], ["john", "Frances, are you listening or reading?"], ["frances", "Yes."], ["jacqueline", "Can the model finish before I'm old? I'd like to remember the results."], ["you", "Can the model tell me if this room gets heat in winter?"], ["frances", "Page 212 says no."]]}, {"seats": ["ian", "graeme", "katharyne", "matthew", "kahwee", "toussaint"], "topic": "Who Owns the Line on the Map?", "lines": [["ian", "Let's start simple. A border is a line, and migrants have rights on both sides of it."], ["graeme", "Great. Where is the data on who crosses it? I filed a records request. Again."], ["katharyne", "Every border is a place first. Tempelhof Field was a parade ground, an airport, then a park."], ["kahwee", "Or a casino floor. Follow the money and you find the real map. Ask Macau."], ["matthew", "Follow the heat. Climate ignores your line, and farmworkers feel it first."], ["toussaint", "The line also runs through your phone. Free internet is never free. Ask what it costs."], ["ian", "I agree with all of that, and none of it changes the legal question."], ["graeme", "Has anyone tried randomizing the border? Asking for the methods section."], ["katharyne", "Same field, nine centuries, five owners. Hold on, I need another slide."], ["kahwee", "Different field, same chips. The house always draws the line."], ["toussaint", "This is more a comment than a question, but who owns the Wi-Fi at the border?"], ["you", "Time is up. The border is that door, and nobody here agrees where it is."]]}, {"seats": ["alison", "bryn", "james", "dessislava", "henry", "jamie"], "topic": "Who Gets to Say What Happened?", "lines": [["alison", "In 1649 they put a king on trial for treason. Who decided what betrayal meant? The winners."], ["james", "The winners had tools. Army, money, diplomats, ideas. I have a chart for that."], ["bryn", "Where I look, people hear the official story and then decide how risky it is to doubt it."], ["dessislava", "Or you check the photo. The shadows, the street sign, the date. Boring work, but it works."], ["henry", "Guess, test, repeat. Dewey would be proud of us. Mostly."], ["jamie", "Late Antique monks wrote everything down because they did not trust their own memory. Fair."], ["alison", "Treason is just a word for losing an argument against a sword."], ["james", "In my field we call that Tuesday."], ["bryn", "My survey respondents would like to speak. Also, they would like to stay anonymous."], ["dessislava", "Send me the video. I will find the street it was filmed on before the coffee gets cold."], ["henry", "Six therapies for anxiety, and this room could use all six."], ["you", "So what actually happened?"], ["jamie", "Write it down. We'll argue about it in four hundred years."]]}, {"seats": ["brian", "mary", "lynda", "robert", "corey", "summerson"], "topic": "Is Health in the Head or the Body?", "lines": [["brian", "Feelings drive choices. Your brain wants the snack before you decide you do."], ["mary", "Teenagers who think about big ideas are building their brains. So let them stare out windows."], ["lynda", "Meanwhile my trials ask whether midlife women can keep up the walks and the diet. Real life is hard."], ["robert", "Fine, but do people live longer or feel better? That is the number I count."], ["corey", "And who gets the good numbers depends on where they started. Spend a year with them and you see it."], ["summerson", "Facility dogs help people, and nobody can say why we trust them as experts. I study the dogs."], ["brian", "Does the dog light up the reward system?"], ["summerson", "The dog is not a brain scan, Brian."], ["mary", "Everyone here was a teenager once, and it shows."], ["robert", "Can we put that on a scale where zero is gone and one is perfect health?"], ["lynda", "Please do not tell the participants we planned this over lunch."], ["you", "Lunch is the only trial I signed up for."]]}, {"seats": ["juliana", "ralph", "kepa", "raul", "luke", "ishara"], "topic": "What Does Fair Even Mean?", "lines": [["juliana", "Fair means people relating as equals. Not just equal piles of stuff."], ["ralph", "Then why does college decide who is smart before anyone learns anything?"], ["ishara", "I interview students who had to leave home. Their road to a degree has no straight line."], ["luke", "Easy. Randomize them. Half get the program, half do not. Then we know."], ["ishara", "Please do not randomize my students, Luke."], ["kepa", "In which language is the test written? Whose word for fair are we using?"], ["raul", "Before that, is a whole fairer than its parts? Or are the parts all there is?"], ["juliana", "A basic income would help. Everyone gets a floor to stand on."], ["luke", "We could run the floor in forty cities and compare. Multisite, very clean."], ["ralph", "It is a law school question. We only want to know who gets in."], ["raul", "Is the floor a thing, or just a lot of pieces of wood?"], ["you", "The floor is where I would like to sit. This seminar ran over an hour ago."]]}];
 
 const SEAT_X = [80, 112, 144, 176, 208], PRES_X = 270;
@@ -814,7 +1029,7 @@ function presenter() { const d = DEBATES[S.sem.v % DEBATES.length], k = d.seats[
 function seats() { const d = DEBATES[S.sem.v % DEBATES.length]; return d.seats.slice(1).map((k, i) => ({ k, x: SEAT_X[i], name: FELLOWS[k].name, look: FELLOWS[k].look, talk: [[k, FELLOWS[k].whisper]] })); }
 S.sem = { rung: false, ringT: -1, phones: 40, ballT: 0, v: 0, heard: false };
 async function enterSeminar() {
-  S.door = MAP.find(h => h.name === 'meeting room');
+  S.door = MAP.find(h => h.seminar);
   await say('you', 'The seminar. Everybody is in there.');
   SFX.creak();
   await fadeTo(true);
@@ -877,7 +1092,7 @@ async function exitRoom() {
   await goTo({ x: 40, y: 132 }); S.face = -1;
   SFX.creak();
   await fadeTo(true);
-  S.scene = 'map'; S.x = S.door.walk.x; S.y = S.door.walk.y; S.path = [];
+  S.scene = 'map'; S.x = S.door.walk.x; S.y = S.door.walk.y; S.path = []; S.cam = clampCam(S.y - FH / 2); S.camFree = false;
   await fadeTo(false);
 }
 async function ringPhone() {
@@ -895,7 +1110,7 @@ async function lookPhone() {
   SFX.unzoom(); screenEl.hidden = true; S.zoomT = -1; cv.style.transform = '';
   await say('bart', 'Well?');
   await say('you', 'Eins, zwei, drei, vier.');
-  await say('bart', 'You found it. Thirteen more studies. Go knock.');
+  await say('bart', 'You found it. Fifty-three more studies. Go knock.');
 }
 /* ---------- Bart's talk, on his monitor: three slides ---------- */
 // the slides live in talk.md next to this page: '# Title' starts a slide, '- ' lines are its bullets.
@@ -1032,42 +1247,10 @@ async function talkBart() {
   }
 }
 
-const NOTES = { 8: 'At lunch. Lunch is sacred.', 25: 'Gone to see the turkeys. For research.', 4: 'In a seminar. Possibly this one.',
-  45: 'Writing. Do not knock. (You knocked.)', 13: 'Napping counts as fieldwork.', 14: 'Back after this paragraph.' };
-function litStudy(n, r, walk) {
-  return { name: 'Study ' + n, study: true, r, walk, def: 'open', on: { look: "Study 16. The light's on. Someone's typing in there.", open: knockAndEnter } };
-}
-function personStudy(k, r, walk) {
-  const p = PEOPLE[k];
-  return { name: 'Study ' + p.n, study: true, r, walk, def: 'open', on: { look: `Study ${p.n}. ${p.name}'s. The light's on.`, open: () => enterPerson(k) } };
-}
-function lockedStudy(n, x, y) {
-  return {
-    name: 'Study ' + n, study: true, r: y < 20 ? [x - 8, -16, 16, 20] : x > 290 ? [294, y - 8, 20, 16] : [x - 8, y < 98 ? 30 : 98, 16, 26], walk: y < 20 ? { x, y: 9 } : x > 290 ? { x: 292, y } : { x, y: y < 98 ? 60 : 128 }, def: 'open',
-    on: {
-      look: `Study ${n}. Dark. There's a note on the door.`,
-      open: async () => { SFX.rattle(); await say('you', `Locked. The note says: "${NOTES[n]}"`); }
-    }
-  };
-}
-const MAP = [
-  personStudy('daniel', [106, 98, 16, 26], { x: 114, y: 128 }), personStudy('kahwee', [122, 98, 16, 26], { x: 130, y: 128 }),
-  lockedStudy(4, 190, 128), lockedStudy(8, 44, 60), personStudy('frances', [68, 30, 16, 26], { x: 76, y: 60 }),
-  litStudy(16, [172, 22, 16, 18], { x: 180, y: 44 }), lockedStudy(25, 228, 60),
-  personStudy('jacqueline', [268, 30, 16, 26], { x: 276, y: 60 }), personStudy('ian', [284, 30, 16, 26], { x: 292, y: 60 }),
-  personStudy('joseph', [26, -16, 16, 20], { x: 34, y: 9 }), lockedStudy(44, 50, 9), lockedStudy(45, 66, 9),
-  lockedStudy(13, 300, 106), lockedStudy(14, 300, 122),
-  { name: 'main hall', r: [128, 8, 64, 30], walk: { x: 160, y: 44 }, def: 'open', on: { look: 'The main hall. Lounge, mailboxes, coffee.', open: "Just the lounge. Nobody's in. Everybody's in their study." } },
-  { name: 'meeting room', r: [80, 66, 30, 30], walk: { x: 112, y: 80 }, def: 'open', on: { look: 'The meeting room. Seminars happen in there. Like this one.', open: enterSeminar } },
-  { name: 'picnic table', r: [122, 73, 20, 16], walk: { x: 132, y: 64 }, def: 'look', on: { look: 'A picnic table. Someone carved a regression line into it.', use: 'I sit for a second. Very restorative. Back to it.' } },
-  { name: 'picnic table', r: [178, 73, 20, 16], walk: { x: 188, y: 64 }, def: 'look', on: { look: 'A picnic table. The good one, in the shade. Taken at noon.', use: 'I sit for a second. Very restorative. Back to it.' } },
-  { name: 'courtyard oak', r: [148, 68, 24, 24], walk: { x: 160, y: 64 }, def: 'look', on: { look: 'A big oak in a brick courtyard. Good for thinking under.' } },
-  { name: 'the Dish', r: [212, 2, 24, 22], walk: { x: 224, y: 64 }, def: 'talk', on: { look: "The Dish. It's listening to space.", talk: [['you', 'Hello, space.'], ['you', '...']] } },
-  { name: 'turkey', r: [252, 94, 30, 34], walk: { x: 240, y: 112 }, def: 'talk', on: { look: 'Wild turkeys. They run this part of campus. Looks tenured.', talk: [['you', 'Gobble.'], ['turkey', 'Gobble gobble.']] } },
-  { name: 'turkey', r: [18, 120, 20, 16], walk: { x: 54, y: 132 }, def: 'talk', on: { look: 'A turkey in the parking lot. It does not have a permit. Nobody is going to tell it.', talk: [['you', 'Gobble.'], ['turkey', 'Gobble.']] } },
-  { name: 'parking lot', r: [4, 98, 46, 42], walk: { x: 54, y: 132 }, def: 'look', on: { look: 'Three cars. Nobody biked today.' } }
-];
-// Eli, lower-right wing. Everything is a scam. He talks through the door.
+const NOTE_POOL = ['At lunch. Lunch is sacred.', 'Thinking under the oak.', 'Back in five. Five what, unclear.', 'In a seminar. Possibly this one.',
+  'Walking to the Dish. Not listening to it.', 'Writing. Do not knock. (You knocked.)', 'On a call with a different time zone.',
+  'In the library. The book is long.', 'Napping counts as fieldwork.', 'Gone to see the turkeys. For research.', 'Back after this paragraph.',
+  'At the coffee. The coffee is far.', 'Out. Thinking. Same thing.'];
 const ELI = [
   [['eli', "Who's there? Wait, don't answer. \"Who\" is a construct of late capitalism."],
    ['you', 'I just wanted to say hi.'],
@@ -1086,16 +1269,15 @@ const ELI = [
    ['eli', "...I'm working through that."]]
 ];
 let eliKnocks = 0;
-Object.assign(MAP.find(h => h.name === 'Study 14'), { on: {
-  look: "Study 14. Eli's. A sticker on the door says EVERYTHING IS A SCAM. The sticker was $4.",
+const ELI_ON = {
+  look: "Study 34. Eli's. A sticker on the door says EVERYTHING IS A SCAM. The sticker was $4.",
   open: async () => {
     SFX.knock(); await say('you', eliKnocks ? 'Knock, knock. Again.' : 'Knock, knock.');
     await wait(0.4);
     for (const l of ELI[Math.min(eliKnocks, ELI.length - 1)]) await say(l[0], l[1]);
     eliKnocks++;
   }
-} });
-// Forrest, Study 44, top row. He plays pickleball. In there. Right now.
+};
 const FORREST = [
   [['forrest', 'Zero, zero, start!'], ['you', 'Are you... playing pickleball in there?'], ['forrest', 'Dinking. There is a difference.']],
   [['forrest', "Don't come in! You'd be standing in the kitchen."], ['you', "It's a study."], ['forrest', "Everything's a kitchen if you believe."]],
@@ -1104,7 +1286,7 @@ const FORREST = [
   [['forrest', 'Pickleball is the fastest growing sport in America.'], ['you', 'Says who?'], ['forrest', 'Me. Every day. To everyone.']]
 ];
 let forrestKnocks = 0;
-Object.assign(MAP.find(h => h.name === 'Study 44'), { on: {
+const FORREST_ON = {
   look: "Study 44. Forrest's. Something in there goes pock. Pock. Pock.",
   open: async () => {
     SFX.knock(); await say('you', forrestKnocks ? 'Knock, knock. Again.' : 'Knock, knock.');
@@ -1112,20 +1294,69 @@ Object.assign(MAP.find(h => h.name === 'Study 44'), { on: {
     for (const l of FORREST[Math.min(forrestKnocks, FORREST.length - 1)]) await say(l[0], l[1]);
     forrestKnocks++;
   }
-} });
-// the cafeteria used to be behind the last door on the bottom row. It had rules.
-MAP.unshift({ name: 'cafeteria', r: [198, 98, 16, 26], walk: { x: 206, y: 128 }, def: 'open', on: {
-  look: 'There is a sign on the door. It is long.',
-  open: [
-    ['you', 'The cafeteria. Lunch!'],
-    ['you', 'There is a sign on the door.'],
+};
+const PERSON_AT = {}; Object.keys(PEOPLE).forEach(k => { PERSON_AT[String(PEOPLE[k].n)] = k; });
+function studySpot(n, r, walk) {
+  const who = WHO[n] || [], office = /^00/.test(n) || n === '060', word = office ? 'Office' : 'Study';
+  const base = { name: word + ' ' + n + (who.length ? ' · ' + who.join(', ') : ''), study: true, n, who, where: word + ' ' + n, r, walk, def: 'open' };
+  if (PERSON_AT[n]) { const k = PERSON_AT[n], p = PEOPLE[k]; return Object.assign(base, { on: { look: `Study ${n}. ${p.name}'s. The light's on.`, open: () => enterPerson(k) } }); }
+  if (n === '16') return Object.assign(base, { on: { look: "Study 16. Bart's. The light's on. Someone's typing in there.", open: knockAndEnter } });
+  if (n === '34') return Object.assign(base, { on: ELI_ON });
+  if (n === '44') return Object.assign(base, { on: FORREST_ON });
+  if (!who.length) return Object.assign(base, { on: { look: `${word} ${n}. Nobody in it this year.`, open: async () => { SFX.rattle(); await say('you', 'Locked. Through the glass: a desk, a chair, a very clean whiteboard.'); } } });
+  const note = NOTE_POOL[(parseInt(n, 10) * 7 + 3) % NOTE_POOL.length];
+  return Object.assign(base, { on: { look: `${word} ${n}, ${who.join(' and ')}. Dark. There's a note on the door.`, open: async () => { SFX.rattle(); await say('you', `Locked. The note says: "${note}"`); } } });
+}
+const ROOMS = {
+  lounge: { name: 'John Seely Brown Lounge', on: { look: 'The John Seely Brown Lounge. Coffee, mailboxes, a couch nobody leaves.', open: "Just the lounge. Nobody's in. Everybody's in their study." } },
+  meeting: { name: 'Margaret Levi Meeting Room', seminar: true, on: { look: 'The Margaret Levi Meeting Room. Seminars happen in there. Like this one.', open: enterSeminar } },
+  reception: { name: 'Reception · Cooper Smith', who: ['Cooper Smith'], where: 'Reception', on: { look: 'Reception. Cooper Smith knows where everybody is.', open: [['you', 'Hi. Looking for someone.'], ['you', '"Everyone is," says Cooper. "Try the directory, top left."']] } },
+  janzen: { name: 'Office · Janzen Alejo', who: ['Janzen Alejo'], where: 'Main building', on: { look: "Janzen Alejo's office.", open: [['you', 'Knock, knock.'], ['you', 'On a call. A thumbs-up through the glass.']] } },
+  conf: { name: 'Small Conference Room', on: { look: 'The small conference room. Booked.', open: 'Booked. It is always booked.' } },
+  liboffice: { name: 'Library Office · Jason Gonzales, Fatma Massoud', who: ['Jason Gonzales', 'Fatma Massoud'], where: 'Library office', on: { look: 'The library office. Jason Gonzales and Fatma Massoud know where every book is. Even the long one.', open: 'They point me at the stacks. Nicely.' } },
+  library: { name: 'Library', on: { look: 'The library. Quiet.', open: 'Quiet in there. The book is long.' } },
+  R: { name: 'Restrooms', on: { look: 'Restrooms.', open: 'Occupied. Of course.' } },
+  dining: { name: 'Dining Room', on: { look: 'The dining room. There is a sign on the door. It is long.', open: [
+    ['you', 'The dining room. Lunch!'], ['you', 'There is a sign on the door.'],
     ['you', '"Too many trays were returned late. As of today, the cafeteria has been dissolved."'],
     ['you', '"Rule 14: trays back by 1:15. Rule 15: not before 1:14. Rule 16: do not discuss rule 14."'],
-    ['you', 'Poof. No more cafeteria.'],
-    ['you', 'I knew I should have returned that tray in March.']
-  ]
-} });
-const STUDIES = MAP.filter(h => h.study);
+    ['you', 'I knew I should have returned that tray in March.']] } },
+  kitchen: { name: 'Kitchen · Jeremy Damon, dining office', who: ['Jeremy Damon'], where: 'Kitchen (dining office)', on: { look: 'The kitchen, and the dining office. Jeremy Damon runs it.', open: 'Something smells like lunch. Suspicious, given the rules.' } },
+  confA: { name: 'Conference Room A', on: { look: 'Conference Room A. Booked until 2031.', open: 'A whiteboard that says DO NOT ERASE, from 2019.' } },
+  confB: { name: 'Conference Rooms B and D', on: { look: 'Conference Rooms B and D, and the shower nobody has used.', open: 'Booked.' } },
+  confC: { name: 'Conference Room C', on: { look: 'Conference Room C. The one with the good chairs.', open: 'Someone is presenting to an empty room. Practicing.' } }
+};
+const MAP = [];
+Object.values(L).forEach(G => G.cells.forEach(c => {
+  if (!hasDoor(c)) return;
+  const r = cellRect(G, c), walk = doorOf(G, c);
+  if (c.n !== undefined) MAP.push(studySpot(c.n, r, walk));
+  else { const k = c.label || c.u, R = ROOMS[k]; if (R) MAP.push(Object.assign({ r, walk, def: 'open' }, R)); }
+}));
+MAP.push(
+  { name: 'courtyard oak', r: [96, 224, 24, 24], walk: { x: 108, y: 224 }, def: 'look', on: { look: 'A big oak in a brick circle. Good for thinking under.' } },
+  { name: 'picnic table', r: [121, 212, 18, 14], walk: { x: 150, y: 218 }, def: 'look', on: { look: 'A picnic table. Someone carved a regression line into it.', use: 'I sit for a second. Very restorative. Back to it.' } },
+  { name: 'outdoor dining', r: [206, 138, 32, 102], walk: { x: 222, y: 196 }, def: 'look', on: { look: 'Outdoor dining. Umbrellas, a view. No cafeteria.' } },
+  { name: 'the court', r: [186, 312, 50, 84], walk: { x: 210, y: 309 }, def: 'look', on: { look: "The main building's court. A tree, a bench, the sound of a printer." } },
+  { name: 'the Dish', r: [DISH_AT[0] - 10, 0, 20, 26], walk: { x: 244, y: 57 }, def: 'talk', on: { look: "The Dish. Up the hill. It's listening to space.", talk: [['you', 'Hello, space.'], ['you', '...']] } },
+  { name: 'annex', r: [252, 28, 36, 15], walk: { x: 244, y: 57 }, def: 'look', on: { look: 'An annex. A copier lives in there. It is jammed. Historically.' } },
+  { name: 'turkey', r: [TURKEYS[0][0] - 2, TURKEYS[0][1] - 2, 34, 26], walk: { x: 222, y: 134 }, def: 'talk', on: { look: 'Wild turkeys. They run the hill. Looks tenured.', talk: [['you', 'Gobble.'], ['turkey', 'Gobble gobble.']] } },
+  { name: 'turkey', r: [TURKEYS[2][0] - 2, TURKEYS[2][1] - 2, 18, 14], walk: { x: 266, y: 424 }, def: 'talk', on: { look: 'A turkey in the parking lot. It does not have a permit. Nobody is going to tell it.', talk: [['you', 'Gobble.'], ['turkey', 'Gobble.']] } },
+  { name: 'parking lot', r: [274, 404, 42, 42], walk: { x: 278, y: 424 }, def: 'look', on: { look: 'Three cars. Nobody biked today.' } },
+  { name: 'the lawn', r: [252, 102, 58, 20], walk: { x: 280, y: 96 }, def: 'look', on: { look: 'The lawn under 26 to 29. Mowed in stripes.' } }
+);
+const ORDER = n => /^\d+$/.test(n) && !/^0/.test(n) ? +n : 100 + parseInt(n, 10);
+const STUDIES = MAP.filter(h => h.study).sort((a, b) => ORDER(a.n) - ORDER(b.n));
+const ELI_AT = (() => { const c = L.w3037.cells.find(c => c.n === '34'); return [L.w3037.outer, c.dy - 10]; })();
+const FORREST_AT = (() => { const c = L.topW.cells.find(c => c.n === '44'); return [c.dx, L.topW.y - 4]; })();
+// the directory: everyone with a room, by last name
+const DIRECTORY = (function () {
+  const out = [];
+  MAP.forEach(h => (h.who || []).forEach(name => out.push({ name, last: name.replace(/^the /, '').split(' ').pop(), where: h.where || h.name, h })));
+  return out.sort((a, b) => a.last.localeCompare(b.last) || a.name.localeCompare(b.name));
+})();
+
+
 const ROOM_EMPTY = [
   { name: 'bookshelf', r: [266, 10, 48, 90], walk: { x: 284, y: 132 }, def: 'look', on: { look: 'Books left by the last fellow. Mostly about time.', push: 'No secret passage. I checked.' } },
   { name: 'window', r: [44, 14, 78, 60], walk: { x: 84, y: 130 }, def: 'look', on: { look: 'Same hills, same Dish. Good office, nobody in it.' } },
@@ -1145,7 +1376,7 @@ const ROOM = [
   { name: 'pinboard', r: [158, 20, 30, 24], walk: { x: 172, y: 130 }, def: 'look', on: { look: 'Sticky notes. One says: ASK CLAUDE.' } },
   { name: 'bookshelf', r: [266, 10, 48, 90], walk: { x: 284, y: 132 }, def: 'push', on: { look: 'Social science. Lots of it.', push: 'No secret passage. I checked.' } },
   { name: 'window', r: [44, 14, 78, 60], walk: { x: 84, y: 130 }, def: 'look', on: { look: 'The hills, the Dish, Stanford down below. Good office.' } },
-  { name: 'door', r: [4, 30, 32, 76], walk: { x: 40, y: 132 }, def: 'open', on: { look: 'The way out. Thirteen more studies out there.', open: exitRoom } }
+  { name: 'door', r: [4, 30, 32, 76], walk: { x: 40, y: 132 }, def: 'open', on: { look: 'The way out. Fifty-three more studies out there.', open: exitRoom } }
 ];
 const PERSON_R = { desk: [172, 56, 34, 42], read: [156, 54, 60, 70], stand: [176, 34, 30, 92] };
 Object.keys(PEOPLE).forEach(k => {
@@ -1161,6 +1392,7 @@ Object.keys(PEOPLE).forEach(k => {
     ian: { name: 'world map', r: [136, 14, 64, 38], walk: { x: 168, y: 134 }, href: 'https://ola.cx/mrd/story', look: "A world map with pins in it. Every pin is a country's rules for migrants.", open: 'The migrant rights story. Opening in a new tab.' }
   };
   if (LINKS[k]) { const L = LINKS[k]; sp.unshift({ name: L.name, r: L.r, walk: L.walk, def: 'open', href: L.href, on: { look: L.look, open: L.open } }); }
+  (p.mates || []).forEach((m, i) => sp.unshift({ name: FELLOWS[m].name, r: [mateX(k, i), 62, 28, 34], walk: { x: mateX(k, i) + 14, y: 134 }, def: 'talk', on: { look: FELLOWS[m].look, talk: [[m, unshh(FELLOWS[m].whisper)]] } }));
   if (p.scene === 'desk') sp.push({ name: 'monitor', r: [218, 66, 28, 32], walk: { x: 236, y: 130 }, def: 'look', on: { look: 'I can only see the back. It has stickers.' } });
   p.spots = sp.concat(ROOM_EMPTY.map(h => h.name === 'window' ? Object.assign({}, h, { on: { look: 'The hills, the Dish, Stanford down below.' } }) : h.name === 'bookshelf' ? Object.assign({}, h, { on: { look: `${p.name}'s books. Organized by a system. The system is ${p.name}.`, push: 'No secret passage. I checked.' } }) : h));
 });
@@ -1188,7 +1420,7 @@ async function doAction(verb, h) {
 }
 
 /* ---------- input ---------- */
-function toScene(e) { const b = cv.getBoundingClientRect(); return [(e.clientX - b.left) / b.width * W, (e.clientY - b.top) / b.height * FH - OY]; }
+function toScene(e) { const b = cv.getBoundingClientRect(), fy = (e.clientY - b.top) / b.height * FH; return [(e.clientX - b.left) / b.width * W, S.scene === 'map' ? fy + S.cam : fy - OY]; }
 function showLabel(e) {
   if (!S.started || S.busy || S.choices || S.zoomT >= 0 || !S.hover) { labelEl.hidden = true; return; }
   const b = $('stage').getBoundingClientRect();
@@ -1199,7 +1431,7 @@ function showLabel(e) {
 cv.addEventListener('mousemove', e => { const p = toScene(e); S.hover = hit(p[0], p[1]) || null; showLabel(e); });
 cv.addEventListener('mouseleave', () => { S.hover = null; labelEl.hidden = true; });
 function act(e, verb) {
-  if (!S.started) return;
+  if (!S.started || S.dragged || WHO_UI.open) return;
   if (S.line) { skipLine(); return; }
   if (S.busy || S.choices || S.zoomT >= 0) return;
   const p = toScene(e), h = hit(p[0], p[1]);
@@ -1209,11 +1441,70 @@ function act(e, verb) {
     run(() => doAction(verb || h.def, h)); return;
   }
   if (verb) return;
-  if (S.scene === 'map') { const ry = rail(p[1]), lo = ry === 9 ? 10 : ry === 64 ? 10 : 50, hi = ry === 9 ? 82 : ry === 64 ? 304 : 292; const tx = Math.max(lo, Math.min(hi, p[0])); FX.mark = { x: tx, y: ry, t0: performance.now() / 1000 }; goTo({ x: tx, y: ry }); }
+  if (S.scene === 'map') { const q = nearestOnGraph({ x: p[0], y: p[1] }); if (q.d > 900) return; FX.mark = { x: q.x, y: q.y, t0: performance.now() / 1000 }; goTo({ x: q.x, y: q.y }); }
   else goTo({ x: p[0], y: p[1] });
 }
 cv.addEventListener('click', e => act(e, null));
 cv.addEventListener('contextmenu', e => { e.preventDefault(); act(e, 'look'); });
+/* ---------- looking around: the map scrolls up and down (drag, wheel, Page Up/Down, the bar on the right) ---------- */
+function canPan() { return S.started && S.scene === 'map' && !S.choices && S.zoomT < 0 && !DECK.open; }
+function panBy(dy) { S.cam = clampCam(S.cam + dy); S.camFree = true; }
+cv.addEventListener('pointerdown', e => { if (e.button !== 0 || !canPan()) return; S.drag = { x: e.clientX, y: e.clientY, moved: false }; });
+cv.addEventListener('pointermove', e => {
+  const d = S.drag; if (!d) return;
+  if (!d.moved && Math.hypot(e.clientX - d.x, e.clientY - d.y) > 6) { d.moved = true; try { cv.setPointerCapture(e.pointerId); } catch (err) {} labelEl.hidden = true; cv.style.cursor = 'grabbing'; }
+  if (d.moved) { panBy((d.y - e.clientY) * FH / cv.getBoundingClientRect().height); d.y = e.clientY; }
+});
+function endDrag() { if (S.drag && S.drag.moved) { S.dragged = true; setTimeout(() => { S.dragged = false; }, 0); } S.drag = null; cv.style.cursor = ''; }
+cv.addEventListener('pointerup', endDrag); cv.addEventListener('pointercancel', endDrag);
+$('stage').addEventListener('wheel', e => {
+  if (!canPan() || WHO_UI.open) return;
+  e.preventDefault();
+  const k = FH / cv.getBoundingClientRect().height * (e.deltaMode === 1 ? 16 : 1);
+  panBy((Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX) * k);
+}, { passive: false });
+const railEl = $('rail'), thumbEl = $('thumb');
+function railTo(e) { const b = railEl.getBoundingClientRect(); S.cam = clampCam((e.clientY - b.top) / b.height * MH - FH / 2); S.camFree = true; }
+railEl.addEventListener('pointerdown', e => { if (!canPan()) return; e.stopPropagation(); railEl.setPointerCapture(e.pointerId); S.railDrag = true; railTo(e); });
+railEl.addEventListener('pointermove', e => { if (S.railDrag) railTo(e); });
+railEl.addEventListener('pointerup', () => { S.railDrag = false; });
+/* ---------- who's where: everyone with a room, by last name; pick one and you run to their door ---------- */
+const WHO_UI = { open: false };
+const whoEl = $('who'), whoQ = $('whoQ'), whoList = $('whoList');
+function fold(s) { return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
+function renderWho() {
+  const q = fold(whoQ.value.trim());
+  whoList.innerHTML = '';
+  DIRECTORY.filter(d => !q || fold(d.name).includes(q) || fold(d.where).includes(q)).forEach(d => {
+    const li = document.createElement('li'), b = document.createElement('button');
+    b.type = 'button'; b.innerHTML = '<span></span><span></span>';
+    b.firstChild.textContent = d.name; b.lastChild.textContent = d.where.replace(/^Study /, '');
+    b.addEventListener('click', e => { e.stopPropagation(); closeWho(); goFind(d); });
+    li.appendChild(b); whoList.appendChild(li);
+  });
+}
+function openWho() {
+  if (!S.started || S.scene !== 'map' || S.busy || S.choices) return;
+  WHO_UI.open = true; whoEl.hidden = false; whoQ.value = ''; renderWho(); whoQ.focus({ preventScroll: true }); labelEl.hidden = true;
+}
+function closeWho() { WHO_UI.open = false; whoEl.hidden = true; cv.focus && cv.focus(); }
+function goFind(d) {
+  const h = d.h;
+  run(async () => {
+    S.fast = true; FX.focus = { r: h.r, t0: performance.now() / 1000 };
+    await goTo(h.walk);
+    S.fast = false;
+    const cx = h.r[0] + h.r[2] / 2; if (Math.abs(cx - S.x) > 3) S.face = Math.sign(cx - S.x);
+    FX.focus = { r: h.r, t0: performance.now() / 1000 };
+    await say('you', `${d.where}. ${d.name}.`);
+  });
+}
+$('bWho').addEventListener('click', e => { e.stopPropagation(); openWho(); });
+$('whoClose').addEventListener('click', e => { e.stopPropagation(); closeWho(); });
+whoQ.addEventListener('input', renderWho);
+whoEl.addEventListener('click', e => e.stopPropagation());
+
+
 function closeScreen() { if (S.screenDone) { const d = S.screenDone; S.screenDone = null; d(); } }
 $('screenBack').addEventListener('click', e => { e.stopPropagation(); closeScreen(); });
 function setMute(m) {
@@ -1226,7 +1517,7 @@ $('bFull').addEventListener('click', e => { e.stopPropagation(); fullscreen(); }
 function start() {
   if (S.started) return;
   audio(); S.started = true; titleEl.hidden = true; SFX.jingle(); cv.focus && cv.focus();
-  run(async () => { await wait(0.6); await say('you', 'CASBS. Fourteen studies.'); await say('you', "Somebody's typing in one of them."); });
+  run(async () => { await wait(0.6); await say('you', 'CASBS. Fifty-four studies.'); await say('you', "Somebody's typing in one of them."); await say('you', "Looking for someone? Who's where, top left."); });
 }
 $('startBtn').addEventListener('click', e => { e.stopPropagation(); start(); });
 $('startBtn').focus({ preventScroll: true });
@@ -1239,6 +1530,7 @@ async function hop(dir) {
 }
 window.addEventListener('keydown', e => {
   audio();
+  if (WHO_UI.open) { if (e.key === 'Escape') { e.preventDefault(); closeWho(); } else if (e.key === 'Enter') { const b = whoList.querySelector('button'); if (b) { e.preventDefault(); b.click(); } } return; }
   if (!S.started) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); start(); } return; }
   if (DECK.open) {
     if (e.key === 'Escape') closeDeck();
@@ -1252,16 +1544,20 @@ window.addEventListener('keydown', e => {
   if (e.key === 'f' || e.key === 'F') { fullscreen(); return; }
   if (S.choices && /^[1-9]$/.test(e.key)) { const b = choicesEl.querySelectorAll('button')[+e.key - 1]; if (b) b.click(); return; }
   if (S.screenDone) return;
+  if (S.scene === 'map' && (e.key === 'PageDown' || e.key === 'PageUp')) { e.preventDefault(); panBy((e.key === 'PageDown' ? 1 : -1) * 120); return; }
+  if (S.scene === 'map' && (e.key === 'Home' || e.key === 'End')) { e.preventDefault(); panBy(e.key === 'End' ? MH : -MH); return; }
+  if (e.key === 'w' || e.key === 'W' || e.key === '/') { e.preventDefault(); openWho(); return; }
   if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); hop(1); }
   if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); hop(-1); }
 });
 
 /* ---------- drawing ---------- */
 function speakerPos(who) {
+  if (S.scene === 'room' && PEOPLE[S.room] && (PEOPLE[S.room].mates || []).includes(who)) return [mateX(S.room, PEOPLE[S.room].mates.indexOf(who)) + 14, 54];
   if (who === 'bart') return [190, 54];
-  if (who === 'turkey') return [268, 94];
-  if (who === 'eli') return [292, 112];
-  if (who === 'forrest') return [50, 4];
+  if (who === 'turkey' && S.scene === 'map') { const tk = TURKEYS.reduce((a, b) => Math.hypot(b[0] - S.x, b[1] - S.y) < Math.hypot(a[0] - S.x, a[1] - S.y) ? b : a); return [tk[0] + 6, tk[1] - 2]; }
+  if (who === 'eli') return ELI_AT;
+  if (who === 'forrest') return FORREST_AT;
   if (S.scene === 'room' && S.room === 'seminar') { if (who === 'turkey') return [54, 50]; const a = seats().find(q => q.k === who); if (a) return [a.x + 14, 56]; if (who === presenter().k) return [PRES_X + 6, 28]; }
   if (PEOPLE[who]) return PEOPLE[who].at;
   return S.scene === 'map' ? [S.x, S.y - 14] : [S.x, S.y - 78];
@@ -1274,21 +1570,18 @@ function drawLine() {
   if (lineEl.textContent !== l.text) lineEl.textContent = l.text;
   const p = speakerPos(l.who), xp = p[0] / W * 100;
   lineEl.style.left = Math.max(1, Math.min(37, xp - 31)) + '%';
-  lineEl.style.top = Math.max(10, (p[1] + OY) / FH * 100) + '%';
+  lineEl.style.top = Math.max(10, (S.scene === 'map' ? p[1] - S.cam : p[1] + OY) / FH * 100) + '%';
   lineEl.style.color = COLORS[l.who] || (LOOKS[l.who] ? ['#7ee0ff', '#b9f27c', '#ffb3d9', '#9ec5ff', '#ffd08a', '#c9a6ff', '#ff9c7a', '#a6ffe0', '#ffe27a'][hashK(l.who) % 9] : '#ffffff');
 }
 /* ---------- small delights: dust, a click mark, glowing doors, the Dish beacon,
    butterflies, a passing flock, oak leaves, sunlight in the studies ---------- */
-const FX = { dust: [], leaves: [], birds: null, mark: null, last: 0, dustT: 0, flockT: 4, leafT: 1 };
+const FX = { dust: [], leaves: [], birds: null, mark: null, last: 0, dustT: 0, flockT: 4, leafT: 1, focus: null };
 function mapUnder(t, dt) {
-  // lit doors breathe
   const glow = 0.28 + 0.2 * Math.sin(t * 2.2);
-  [[180, 41], [292, 57], [276, 57], [76, 57], [114, 125], [130, 125], [34, 6]].forEach(([x, y], i) => oval(g, x, y + 1, 8, 3, 'rgba(255,217,106,' + (glow + 0.04 * Math.sin(t * 3.1 + i)).toFixed(3) + ')'));
-  // a puff of dust behind each step
-  if (S.path.length) { FX.dustT -= dt; if (FX.dustT <= 0) { FX.dustT = 0.11; FX.dust.push({ x: S.x + (Math.random() - 0.5) * 3, y: S.y, a: 0 }); } }
+  GLOWS.forEach(([x, y, rx, ry], i) => oval(g, x, y, rx, ry, 'rgba(255,217,106,' + (glow + 0.04 * Math.sin(t * 3.1 + i)).toFixed(3) + ')'));
+  if (S.path.length) { FX.dustT -= dt; if (FX.dustT <= 0) { FX.dustT = S.fast ? 0.05 : 0.11; FX.dust.push({ x: S.x + (Math.random() - 0.5) * 3, y: S.y, a: 0 }); } }
   FX.dust = FX.dust.filter(d => (d.a += dt) < 0.45);
   FX.dust.forEach(d => rect(g, d.x - 1, d.y - d.a * 7, 2, 2, 'rgba(176,138,82,' + (0.8 * (1 - d.a / 0.45)).toFixed(2) + ')'));
-  // where you clicked
   if (FX.mark) {
     const a = t - FX.mark.t0, m = FX.mark;
     if (a > 0.45) FX.mark = null;
@@ -1296,29 +1589,24 @@ function mapUnder(t, dt) {
   }
 }
 function mapOver(t, dt) {
-  // the Dish keeps a red light on
-  if (Math.floor(t * 0.9) % 2 === 0) { oval(g, 224, 4, 4, 3, 'rgba(255,59,47,0.4)'); rect(g, 223, 3, 2, 2, '#ff3b2f'); }
-  // the gold star on the meeting room glints now and then
+  if (Math.floor(t * 0.9) % 2 === 0) { oval(g, DISH_AT[0], DISH_AT[1] - 7, 4, 3, 'rgba(255,59,47,0.4)'); rect(g, DISH_AT[0] - 1, DISH_AT[1] - 8, 2, 2, '#ff3b2f'); }
   const ph = t % 3.4;
-  if (ph < 0.4) { const c = ph < 0.2 ? '#ffffff' : '#fff3c4'; rect(g, 92, 75, 9, 1, c); rect(g, 96, 71, 1, 9, c); rect(g, 95, 74, 3, 3, c); }
-  // two butterflies
-  [[44, 92, 18, 9, 0, '#fffaf0'], [214, 104, 12, 7, 2.1, '#ffd93b']].forEach(([cx, cy, ax, ay, p, c]) => {
+  if (ph < 0.4) { const c = ph < 0.2 ? '#ffffff' : '#fff3c4', [sx, sy] = STAR_AT; rect(g, sx - 1, sy + 3, 9, 1, c); rect(g, sx + 3, sy - 1, 1, 9, c); rect(g, sx + 2, sy + 2, 3, 3, c); }
+  [[44, 128, 18, 9, 0, '#fffaf0'], [176, 84, 12, 7, 2.1, '#ffd93b'], [40, 330, 14, 8, 1.2, '#fffaf0'], [296, 340, 10, 6, 3.3, '#ffd93b']].forEach(([cx, cy, ax, ay, p, c]) => {
     const x = Math.round(cx + ax * Math.sin(t * 0.6 + p) + 3 * Math.sin(t * 2.3 + p)), y = Math.round(cy + ay * Math.sin(t * 0.47 + p * 2) + 2 * Math.sin(t * 3.7));
     if (Math.floor(t * 9 + p) % 2) { rect(g, x - 2, y - 1, 2, 2, c); rect(g, x + 1, y - 1, 2, 2, c); } else { rect(g, x - 1, y - 3, 1, 3, c); rect(g, x + 1, y - 3, 1, 3, c); }
     rect(g, x, y - 1, 1, 2, C.ink);
   });
-  // a leaf drifts off the courtyard oak
   FX.leafT -= dt;
-  if (FX.leafT <= 0) { FX.leafT = 2.5 + Math.random() * 3.5; FX.leaves.push({ x: 154 + Math.random() * 12, y: 74, a: 0, p: Math.random() * 6, c: Math.random() < 0.5 ? C.oak3 : '#d9b44a' }); }
+  if (FX.leafT <= 0) { FX.leafT = 2.5 + Math.random() * 3.5; FX.leaves.push({ x: 102 + Math.random() * 12, y: 230, a: 0, p: Math.random() * 6, c: Math.random() < 0.5 ? C.oak3 : '#d9b44a' }); }
   FX.leaves = FX.leaves.filter(l => (l.a += dt) < 2.6);
-  FX.leaves.forEach(l => { const k = l.a / 2.6; rect(g, l.x + Math.sin(l.a * 3 + l.p) * 3, l.y + l.a * 7, 2, 2, l.c); });
-  // now and then a little flock crosses
+  FX.leaves.forEach(l => rect(g, l.x + Math.sin(l.a * 3 + l.p) * 3, l.y + l.a * 7, 2, 2, l.c));
   FX.flockT -= dt;
   if (!FX.birds && FX.flockT <= 0) { FX.birds = { x: -16, y: 6 + Math.random() * 40 }; FX.flockT = 24 + Math.random() * 18; SFX.chirp(); }
   if (FX.birds) {
     const b = FX.birds; b.x += 34 * dt; b.y += Math.sin(t * 1.3) * 3 * dt;
     [[0, 0], [-6, -3], [-6, 3], [-12, -6]].forEach(([ox, oy], i) => {
-      const x = Math.round(b.x + ox), y = Math.round(b.y + oy), up = Math.floor(t * 7 + i) % 2, c = 'rgba(20,20,20,0.7)';
+      const x = Math.round(b.x + ox), y = Math.round(S.cam + b.y + oy), up = Math.floor(t * 7 + i) % 2, c = 'rgba(20,20,20,0.7)';
       rect(g, x, y, 1, 1, c); rect(g, x - 2, y - up, 2, 1, c); rect(g, x + 1, y - up, 2, 1, c);
     });
     if (b.x > W + 24) FX.birds = null;
@@ -1333,29 +1621,39 @@ function roomLight(t) {
     rect(g, x, y, 2, 2, 'rgba(255,243,196,' + (0.45 + 0.25 * Math.sin(t * 1.7 + i)).toFixed(2) + ')');
   }
 }
+function chevron(x, y, up, t) {
+  const b = calm ? 0 : Math.round(Math.sin(t * 4) * 1.5) * (up ? -1 : 1);
+  const rows = up ? ['...X...', '..XXX..', '.XXXXX.', 'XXX.XXX'] : ['XXX.XXX', '.XXXXX.', '..XXX..', '...X...'];
+  [[-1, 0], [1, 0], [0, -1], [0, 1]].forEach(([ox, oy]) => sprite(g, rows, { X: C.ink }, x - 3 + ox, y + b + oy));
+  sprite(g, rows, { X: '#ffff55' }, x - 3, y + b);
+}
 function drawMap(t) {
   const dt = Math.min(0.05, Math.max(0, t - (FX.last || t))); FX.last = t;
-  g.drawImage(mapFull, 0, 0);
-  g.save(); g.translate(0, OY);
-  const wave = calm ? 0 : Math.round(Math.sin(t * 5));
-  rect(g, 197, 22, 8, 5, C.ink); rect(g, 197, 23, 7, 3, C.orange); rect(g, 201, 23 + wave, 3, 3, C.orange);
+  const cy = Math.round(S.cam);
+  g.drawImage(world, 0, cy, W, FH, 0, 0, W, FH);
+  g.save(); g.translate(0, -cy);
   if (!calm) mapUnder(t, dt);
-  const moving = S.path.length > 0, fr = moving ? Math.floor(t * 8) % 2 : 0;
+  const moving = S.path.length > 0, fr = moving ? Math.floor(t * (S.fast ? 14 : 8)) % 2 : 0;
   oval(g, S.x, S.y + 1, 3, 1, C.shadow);
   sprite(g, TINY[fr], TPAL, S.x - 2, S.y - 8);
-  // the turkeys: drawn live so they can hop when poked
-  [[256, 98], [266, 116], [22, 124]].forEach(([x, y], i) => {
+  TURKEYS.forEach(([x, y], i) => {
     const k = (t - S.turkeyT - i * 0.09) / 0.32;
     const hop = k > 0 && k < 2 && !calm ? Math.round(Math.abs(Math.sin(k * Math.PI)) * (k < 1 ? 5 : 3)) : 0;
-    const peck = !hop && !calm && Math.floor(t * 1.3 + i * 2.7) % 6 === 0 ? -1 : 0; // a little bob, now and then
-    const dy = hop + peck;
+    const peck = !hop && !calm && Math.floor(t * 1.3 + i * 2.7) % 6 === 0 ? -1 : 0;
     oval(g, x + 6, y + 10, 5, 1, C.shadow);
-    turkey(g, x, y - dy);
+    turkey(g, x, y - hop - peck);
   });
-  if (!calm) { const cx = ((t * 6) % (W + 120)) - 60; oval(g, cx, 96, 34, 9, 'rgba(20,20,20,0.06)'); oval(g, cx - 170, 30, 26, 7, 'rgba(20,20,20,0.06)'); }
+  if (!calm) { const cx = ((t * 6) % (W + 120)) - 60; oval(g, cx, S.cam + 96, 34, 9, 'rgba(20,20,20,0.06)'); oval(g, cx - 170, S.cam + 30, 26, 7, 'rgba(20,20,20,0.06)'); }
   if (!calm) mapOver(t, dt);
+  if (FX.focus) {
+    const a = t - FX.focus.t0, [x, y, w, h] = FX.focus.r;
+    if (a > 5) FX.focus = null;
+    else if (Math.floor(a * 4) % 2 === 0) { const c = '#ffff55'; rect(g, x - 2, y - 2, w + 4, 1, c); rect(g, x - 2, y + h + 1, w + 4, 1, c); rect(g, x - 2, y - 2, 1, h + 4, c); rect(g, x + w + 1, y - 2, 1, h + 4, c); }
+  }
   g.restore();
+  if (S.started && !S.busy) { if (S.cam > 3) chevron(W / 2, 3, true, t); if (S.cam < MAXCAM - 3) chevron(W / 2, FH - 7, false, t); }
 }
+
 function drawSeminar(t) {
   g.drawImage(seminarFull, 0, 0);
   g.save(); g.translate(0, OY);
@@ -1418,6 +1716,7 @@ function drawRoom(t) {
     roomLight(t);
     const talk = S.line && S.line.who === k && (calm || Math.floor(t * 8) % 2 === 0), speaking = S.line && S.line.who === k;
     const blink = !calm && (t + k.length) % 4.3 < 0.13;
+    (p.mates || []).forEach((m, i) => bust(LOOKS[m], mateX(k, i), 66, { talk: S.line && S.line.who === m && (calm || Math.floor(t * 8) % 2 === 0), blink: !calm && (t + m.length) % 4.7 < 0.13 }));
     if (p.scene === 'desk') deskScene(k, o, t, talk, blink);
     if (p.scene === 'read') readingScene(o, t, talk, blink, speaking);
     if (p.scene === 'stand') standingScene(o, t, talk, blink);
@@ -1479,7 +1778,7 @@ let last = performance.now();
 function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000), t = now / 1000; last = now;
   if (S.path.length) {
-    const p = S.path[0], dx = p.x - S.x, dy = p.y - S.y, d = Math.hypot(dx, dy), step = (S.scene === 'map' ? 72 : 76) * dt;
+    const p = S.path[0], dx = p.x - S.x, dy = p.y - S.y, d = Math.hypot(dx, dy), step = (S.scene === 'map' ? (S.fast ? 210 : 72) : 76) * dt;
     if (Math.abs(dx) > 0.5) S.face = Math.sign(dx);
     S.stepT += dt; if (S.stepT > (S.scene === 'map' ? 0.2 : 0.27)) { S.stepT = 0; SFX.step(S.scene === 'map'); }
     if (d <= step) { S.x = p.x; S.y = p.y; S.path.shift(); if (!S.path.length && S.arrive) { const a = S.arrive; S.arrive = null; a(); } }
@@ -1493,12 +1792,23 @@ function frame(now) {
     S.zoomT += dt; const k = Math.min(1, S.zoomT / 0.9), e = k * k;
     cv.style.transform = calm ? '' : 'scale(' + (1 + e * 9) + ')';
   }
+  if (S.scene === 'map') {
+    if (!S.camFree || S.path.length) {
+      let goal = S.cam;
+      if (S.y - goal < 58) goal = S.y - 58;
+      if (S.y - goal > FH - 34) goal = S.y - (FH - 34);
+      goal = clampCam(goal);
+      S.cam += (goal - S.cam) * (calm ? 1 : Math.min(1, dt * (S.fast ? 8 : 5)));
+    }
+    thumbEl.style.top = (S.cam / MH * 100) + '%'; thumbEl.style.height = (FH / MH * 100) + '%';
+  }
+  { const show = S.started && S.scene === 'map' && !DECK.open; if (show !== S.uiShown) { S.uiShown = show; railEl.hidden = !show; $('bWho').hidden = !show; } }
   if (S.scene === 'map') drawMap(t); else drawRoom(t);
   drawLine();
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
-window.quest = { S, hit, run, doAction, MAP, ROOM, start, hot: hotspots };
+window.quest = { S, hit, run, doAction, MAP, ROOM, start, hot: hotspots, world, L, DIRECTORY, openWho, goFind, STUDIES };
 })();
 </script>
 </body>
