@@ -40,7 +40,8 @@ the thing changes, not the rule.
 
 - **You are one click from the game at all times.** Esc closes anything. Nothing opens by itself.
 - **Nothing asks twice.** No confirmations, no tutorials, no tips. The title card has three lines
-  of instructions and that is all the game ever explains, unless asked: the menu under your
+  (the three things worth doing: decorate, leave notes, pick up leaves; the controls left it on
+  2026-11-13) and that is all the game ever explains, unless asked: the menu under your
   picture has one Help pane, four short things to do, and it never opens by itself (Bart,
   2026-11-13).
 - **The game rewards looking around,** quietly: a leaf under an oak, a second line at a door. It
