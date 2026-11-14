@@ -111,6 +111,26 @@ given, types a turn, talks over the reply and checks the cut. Run it against
 `next dev -p 3288` only when no other dev server shares the checkout: two of
 them fight over `.next` and API routes 404 on the first try.
 
+## The project's home page
+
+    https://kochitolabs.com/kit?k=<key>
+
+Bart, 2026-11-14: "a landing page for this project on kochitolabs, that
+includes your profile pic/avatar as well as a journal with stuff you've done
+recently and a link to our 3 different voice systems (memos, interviews,
+conversations)". The agent's persona is **Kit, a beaver** (he chose "a critter"
+over a non-gendered person or a robot); `src/app/kochito/Kit.tsx` holds three
+drawings (A mark, B seal, C portrait) and `FACE` in
+`src/app/kochito/kit/page.tsx` says which one was signed off (null = the page
+shows all three and asks). The page is behind the venture key and never
+indexed. It links voice notes (`/venture/memo`), the open conversation
+(`/venture/talk`) and a standing five-minute interview
+(`/venture/call/checkin`, agenda in `private/call-checkin.md`), lists what is
+waiting on Bart, and renders the journal: the `venture_docs` row `journal`,
+source `private/JOURNAL.md` ("## Now", "## Waiting on you", then one "## day"
+section per day with `- **time** what`), so it changes with a `sync.mjs push`
+and no deploy.
+
 ## Voice notes
 
 Bart, 2026-11-14: "a permanent conversation URL I can bookmark... a URL where I

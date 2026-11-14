@@ -69,7 +69,8 @@ is restarted after it has been handled:
     node scripts/venture/imsg.mjs --wait
     node scripts/venture/transcript.mjs --wait talk
 
-Add `transcript.mjs --wait <slug>` while an agenda call is open.
+Add `transcript.mjs --wait <slug>` while an agenda call is open; `checkin`
+(the five-minute interview linked from his page) is always open.
 
 ## 3b. A correction from Bart is a failure of the system
 
@@ -128,6 +129,8 @@ He is usually not looking at the terminal.
   open. He writes back by starting a text with `v` or `venture`.
 - **Discussion:** `https://ola.cx/venture/talk?k=<key>` (open voice
   conversation; Claude answers from the documents, so push NOW.md first).
+- **The project's home page, the one link he keeps:** `https://kochitolabs.com/kit?k=<key>`
+  (Kit's face, the three voice systems, what is waiting on him, the journal).
 - **His voice notes to me:** `https://ola.cx/venture/memo?k=<key>`, a page he
   bookmarks: record, stop and send. Each note is transcribed into the text
   thread, so `imsg.mjs --wait` wakes on it; he never has to say a note exists.
@@ -142,7 +145,11 @@ Before the turn ends, and right after anything that matters (a decision of
 his, money moved, something sent to a stranger, research returned):
 
 1. Rewrite `NOW.md`: state, in flight, next actions, waiting on Bart, which
-   background tasks should be running.
+   background tasks should be running. Then `JOURNAL.md`, which Bart reads at
+   `kochitolabs.com/kit?k=<key>`: a line or two per thing done, newest first,
+   the time read from the clock, and the "Waiting on you" list kept exact. If
+   the open questions changed, rewrite `call-checkin.md` and publish it
+   (`put.mjs call checkin …`).
 2. Append to `LOG.md`: the date, what happened, what was decided, his words
    quoted where they set direction.
 3. **Learn.** If a result came in, close its bet in BETS.md (result, the gap
