@@ -28,9 +28,23 @@ const unseen = async () => {
 }
 const show = (l) => console.log(`${l.at.slice(0, 16).replace('T', ' ')}Z  ${l.page.padEnd(5)} ${l.email}  ${l.detail ?? ''}  [${l.src}${l.campaign ? '/' + l.campaign : ''}${l.term ? ' "' + l.term + '"' : ''}]`)
 
+// A watcher must outlive a network blip (both died on one failed poll, 2026-11-14):
+// keep trying for half an hour before giving up.
+async function patient(fn) {
+  for (let fails = 0; ; fails++) {
+    try {
+      return await fn()
+    } catch (e) {
+      if (fails >= 60) throw e
+      if (fails === 0) console.error(`(the network failed: ${e.message}; retrying)`)
+      await new Promise((r) => setTimeout(r, 30_000))
+    }
+  }
+}
+
 if (args.includes('--wait')) {
   for (;;) {
-    const fresh = await unseen()
+    const fresh = await patient(unseen)
     if (fresh.length) {
       fresh.forEach(show)
       await db.from('kochito_leads').update({ seen_at: new Date().toISOString() }).in('id', fresh.map((l) => l.id))

@@ -32,6 +32,20 @@ async function printAndMark(rows) {
   await db.from('venture_messages').update({ seen_at: new Date().toISOString() }).in('id', rows.map((r) => r.id))
 }
 
+// A watcher must outlive a network blip (both died on one failed poll, 2026-11-14):
+// keep trying for half an hour before giving up.
+async function patient(fn) {
+  for (let fails = 0; ; fails++) {
+    try {
+      return await fn()
+    } catch (e) {
+      if (fails >= 60) throw e
+      if (fails === 0) console.error(`(the network failed: ${e.message}; retrying)`)
+      await new Promise((r) => setTimeout(r, 30_000))
+    }
+  }
+}
+
 const [cmd, arg] = process.argv.slice(2)
 if (cmd === 'send') {
   if (!arg?.trim()) throw new Error('usage: imsg.mjs send "text"')
@@ -49,7 +63,7 @@ if (cmd === 'send') {
   for (const m of data.reverse()) console.log(line(m))
 } else if (cmd === '--wait') {
   for (;;) {
-    const rows = await unseen()
+    const rows = await patient(unseen)
     // Give the auto-reply a moment to land so it prints with his text.
     if (rows.length && Date.now() - new Date(rows[rows.length - 1].at).getTime() > 25_000) {
       await printAndMark(rows)
