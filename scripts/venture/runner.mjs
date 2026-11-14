@@ -17,6 +17,7 @@
 //   node scripts/venture/runner.mjs tick            what launchd runs
 //   node scripts/venture/runner.mjs status          who is working, what is pending, the last run
 //   node scripts/venture/runner.mjs tick --dry      decide and print, start nothing
+//   node scripts/venture/runner.mjs tick --force "why"   run now, whatever the state (a test, or by hand)
 //   node scripts/venture/runner.mjs probe           start Claude Code once, read-only (checks the login, the checkout and the state)
 //
 // It uses the Claude login saved on the machine it runs on (CLAUDE_CODE_OAUTH_TOKEN
@@ -119,10 +120,15 @@ if (cmd === 'status') {
   console.log(`pull: ${pulled.status === 0 ? 'ok' : pulled.stderr}\nclaude exit ${res.code}\n${res.out.trim()}\nlog: ${res.log}`)
   process.exit(res.code === 0 ? 0 : 1)
 } else if (cmd === 'tick') {
-  const { session, runner, why } = await look()
-  if (session && age(session.at) < SESSION_FRESH) { say(`a session is open on ${session.value.host} (${mins(age(session.at))}): idle`); process.exit(0) }
-  if (runner?.value?.running && age(runner.value.started) < RUN_LIMIT + 10 * MIN) { say('a run is already going: idle'); process.exit(0) }
-  if (!why.length) process.exit(0) // nothing to do; stay silent so the log stays short
+  const seen = await look()
+  const { session, runner } = seen
+  // --force "<reason>": run now whatever the state (a test, or a run asked for by hand)
+  const why = flag === '--force' ? [process.argv[4] || 'a run was asked for by hand'] : seen.why
+  if (flag !== '--force') {
+    if (session && age(session.at) < SESSION_FRESH) { say(`a session is open on ${session.value.host} (${mins(age(session.at))}): idle`); process.exit(0) }
+    if (runner?.value?.running && age(runner.value.started) < RUN_LIMIT + 10 * MIN) { say('a run is already going: idle'); process.exit(0) }
+    if (!why.length) process.exit(0) // nothing to do; stay silent so the log stays short
+  }
   say(`waking: ${why.join('; ')}`)
   if (flag === '--dry') process.exit(0)
   const started = new Date().toISOString()
@@ -145,6 +151,6 @@ if (cmd === 'status') {
     await setState(db, 'runner', { running: false, host: hostname(), started, ended: new Date().toISOString(), why, code: res.code, log: res.log, left })
   }
 } else {
-  console.error('usage: runner.mjs tick [--dry] | status | probe')
+  console.error('usage: runner.mjs tick [--dry | --force "why"] | status | probe')
   process.exit(1)
 }
