@@ -9,6 +9,7 @@ import { runRoomChat, type ChatTurn } from './social-agent'
 import { allPages, allPersonas, announce, BOOK_PAGES, deskNotes, eventsAfter, pickLeaf, roomOf } from './social'
 import { getBook } from './books'
 import { MAX_COMMENT, runFlamewar } from './flamewar'
+import { getWreck, sweepWreck } from './seminar'
 
 const json = (body: unknown, status = 200, cache = 'no-store') =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', 'cache-control': cache } })
@@ -126,4 +127,16 @@ export const flamewar: Handler = guarded(async req => {
     topic: String(b.topic || ''),
   })
   return r.ok ? json(r) : json({ ok: false, say: r.say }, r.status)
+})
+
+/** GET -> { wreck }: the seminar room as the last grab of the mic left it (null: tidy). Anyone.
+ *  POST (signed in) -> { swept }: the broom; the room is tidy again for everyone. */
+export const seminar: Handler = guarded(async req => {
+  const user = await sessionUser(req)
+  if (req.method === 'GET') return json({ wreck: await getWreck(user?.character) })
+  if (req.method !== 'POST') return json({ error: 'Method not allowed.' }, 405)
+  if (!user) return json({ error: 'Sign in first.' }, 401)
+  const swept = await sweepWreck(user.character)
+  if (swept && user.character !== 'check') await announce({ kind: 'system', actor: user.character, room: 'seminar', text: `${first(user.name)} swept up the seminar room. Mostly.`, quietMinutes: 30 }).catch(e => console.error('[semibart/social] announce', e))
+  return json({ swept })
 })

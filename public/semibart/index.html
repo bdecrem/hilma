@@ -176,7 +176,7 @@ const W = 320, H = 144, OY = 18, FH = 180;
 // hooks for the files that ride on the game (accounts.js, rooms.js, notes.js): they push functions here
 // on the map: mapOver(t) draws in map coordinates over the campus, mapSpots() adds hover targets;
 // sayYou(text) may reword what the player's own character says
-const HOOKS = { roomBack: [], roomMid: [], roomFront: [], roomSpots: [], keyBlock: [], roomHide: [], roomPersonAt: [], roomSeats: [], seminarBack: [], seminarMid: [], seminarFront: [], seminarSpots: [], mapOver: [], mapSpots: [], sayYou: [] };
+const HOOKS = { roomBack: [], roomMid: [], roomFront: [], roomSpots: [], keyBlock: [], roomHide: [], roomPersonAt: [], roomSeats: [], seminarWall: [], seminarBack: [], seminarMid: [], seminarFront: [], seminarSpots: [], seminarEnter: [], mapOver: [], mapSpots: [], sayYou: [] };
 // parts of a room a rider draws its own way: 'occupant', 'desk', 'chair', 'mates', 'extras'
 // which part of a room a hotspot belongs to, so hiding the part hides its hotspot too
 const PART_OF = { 'name plate': 'desk', Socrates: 'desk', monitor: 'desk', monitors: 'desk', 'coffee mug': 'desk', phone: 'desk', 'the Almanac': 'occupant', 'reading chair': 'chair', lamp: 'chair', easel: 'extras', 'world map': 'extras', plant: 'extras', window: 'window' };
@@ -533,10 +533,16 @@ const PLANS = {
   3: { name: 'trio', w: 84, chair: 44, c: [88, 178, 268], shelf: [201, 44], rug: [58, 240], cabinet: true, enterX: 132 }
 };
 const roomBgShared = { duo: makeRoomBg(false, PLANS[2]), trio: makeRoomBg(false, PLANS[3]) };
-const seminarBg = (function () {
+// the meeting room's walls with nothing on them: what is left behind when the clock or the screen comes down (flamewar.js)
+const seminarBare = (function () {
   const c = document.createElement('canvas'); c.width = W; c.height = H; const m = c.getContext('2d');
   m.drawImage(roomBgEmpty, 0, 0);
   rect(m, 262, 5, 58, 99, '#9a5631'); for (let x = 266; x < W; x += 14) { rect(m, x, 5, 1, 99, '#7f4426'); rect(m, x + 1, 5, 1, 99, '#ac6a42'); }
+  return c;
+})();
+const seminarBg = (function () {
+  const c = document.createElement('canvas'); c.width = W; c.height = H; const m = c.getContext('2d');
+  m.drawImage(seminarBare, 0, 0);
   // the sign
   rect(m, 146, 12, 70, 32, '#5c2e18'); rect(m, 148, 14, 66, 28, '#fff7e6');
   const no = (cx, cy, icon) => { disc(m, cx, cy, 10, '#d6402e'); disc(m, cx, cy, 8, '#fff7e6'); icon(); for (let i = -6; i <= 6; i++) rect(m, cx + i, cy + i, 2, 2, '#d6402e'); };
@@ -1159,12 +1165,16 @@ function seats() { const d = DEBATES[S.sem.v % DEBATES.length]; return d.seats.s
 S.sem = { rung: false, ringT: -1, phones: 40, ballT: 0, v: 0, heard: false, gone: new Set(), lift: {}, presX: undefined, pose: {}, at: {}, wild: false };   // pose/at/wild: flamewar.js has taken a body over, where it speaks from, the room is wrecked
 async function enterSeminar() {
   S.door = MAP.find(h => h.seminar);
+  // a hook may find the room as somebody left it (flamewar.js: the mess after the chaos); it answers with how to play the entrance
+  const ahead = HOOKS.seminarEnter.map(f => { try { return Promise.resolve(f()).catch(() => null); } catch (e) { return null; } });
   await say('you', 'The seminar. Everybody is in there.');
   SFX.creak();
   await fadeTo(true);
+  const takeover = (await Promise.all(ahead)).find(x => typeof x === 'function');
   S.scene = 'room'; S.room = 'seminar'; S.x = 30; S.y = 132; S.face = 1; S.path = [];
   await fadeTo(false);
   await walkTo([{ x: 66, y: 134 }]);
+  if (takeover) { await takeover(); S.sem.heard = true; return; }
   const d = DEBATES[S.sem.v % DEBATES.length];
   if (!S.cut) await say('you', `Today's seminar: ${d.topic}`);
   if (!S.cut) await say(d.seats[2], 'Shh. It just got good.');
@@ -1913,6 +1923,7 @@ function drawSeminar(t) {
   g.drawImage(seminarFull, 0, 0);
   g.save(); g.translate(0, OY);
   roomLight(t);
+  runHooks(HOOKS.seminarWall, t);   // what the chaos did to the walls, the window, the ceiling (flamewar.js)
   const sp = S.line && S.line.who, flap = who => sp === who && (calm || Math.floor(t * 8) % 2 === 0);
   // a turkey in the window, once your phone has gone off
   if (S.sem.rung) turkey(g, 47, 57);
@@ -2094,13 +2105,13 @@ function person(slug, x, y, opts) {
   bust(o, x, y, { talk, blink: !!opts.asleep || (!calm && (now + slug.length) % 4.3 < 0.13), down: !!opts.down });
 }
 window.quest = { S, hit, run, doAction, MAP, ROOM, start, hot: hotspots, world, L, DIRECTORY, openWho, goFind, STUDIES,
-  say, wait, choose, skipLine, SFX, PEOPLE, FELLOWS, LOOKS, hooks: HOOKS, me: undefined,
+  say, wait, choose, skipLine, walkTo, SFX, PEOPLE, FELLOWS, LOOKS, hooks: HOOKS, me: undefined,
   occupants: k => k === 'bart' ? ['bart'] : PEOPLE[k] ? [k].concat(PEOPLE[k].mates || []) : [],
   oaks: OAKS, setMute: m => { audio(); setMute(!!m); }, isMuted: () => muted, fullscreen, lookOf: lookFor,
   sound: () => { audio(); return { ac: AC, master }; },
   seminar: { cast: () => [presenter().k].concat(seats().map(a => a.k)), topic: () => DEBATES[S.sem.v % DEBATES.length].topic, seats, presenter, PRES_X },
   desks: desksOf, fixtures: fixturesOf, plan: k => (PEOPLE[k] && PEOPLE[k].plan) || null,
-  gfx: { g, cv, rect, oval, disc, sprite, dither, rng, LET, DIG, calm, W, H, FH, OY, person, bust, turkey } };
+  gfx: { g, cv, rect, oval, disc, sprite, dither, rng, LET, DIG, calm, W, H, FH, OY, person, bust, turkey, seminarBare } };
 })();
 </script>
 <script src="/semibart/music.js"></script>

@@ -6,17 +6,23 @@
 // whole room dances. One Claude call writes the scene as a short script of lines and moves from a
 // fixed vocabulary (MOVES); the game plays each move with its own animation (flamewar.js). Each grab
 // of the mic is handed one of SHAPES at random so no two seminars go the same way; the model may
-// bend it. Nothing is stored but a line on the wire. No Next imports.
+// bend it. Level 9 since the evening of 2026-11-14 (Bart: "it's at level 3, I want level 9"): two
+// lines at most before the first move, a real wreck (a smashed window, the trash can kicked across
+// the room, the screen torn down, the light hanging by a wire, the door slammed so hard the clock
+// falls), nobody sits back down, and the mess stays in the room for everyone (seminar.ts) until the
+// next visitor picks up the broom. No Next imports.
 
 import type Anthropic from '@anthropic-ai/sdk'
 import type { SemibartUser } from './auth'
 import rosterFile from './roster.json'
 import { allPersonas, announce, countTurn } from './social'
+import { saveWreck } from './seminar'
 
 const MODEL = 'claude-opus-5-5'
 export const MAX_COMMENT = 280
 const LINE_MAX = 70
-const MAX_LINES = 9
+const MAX_LINES = 5
+const LEAD_MAX = 2   // lines after the comment before the first move
 
 const FELLOWS = (rosterFile as unknown as { fellows: Record<string, { name: string; look: string }> }).fellows
 
@@ -27,7 +33,7 @@ export const MOVES = {
   throw: 'who throws their whole stack of papers into the air; it rains paper',
   spill: 'who knocks over their coffee; it floods along the table and drips on the floor, the neighbors leap up',
   jump: 'who climbs up and stands on the table',
-  storm: 'who storms out through the door, slamming it (they are gone for the rest of the scene)',
+  storm: 'who storms out through the door (gone for the rest of the scene); style="slam" slams it so hard the clock falls off the wall, style="open" leaves it swinging open',
   faint: 'who slides slowly under the table and stays there (they can still talk from down there)',
   clap: 'who starts a slow clap that the whole room picks up, faster and faster',
   spin: 'who spins round and round in their chair',
@@ -35,27 +41,34 @@ export const MOVES = {
   dance: 'everyone still in the room dances (only after music)',
   conga: 'everyone still in the room forms a conga line and dances out the door (only after music; ends the scene, the player is left alone)',
   alarm: 'the fire alarm goes off, red light, sprinklers rain on everyone, papers held over heads',
-  lights: 'the lights go out for a moment; crashes in the dark; when they come on, who is standing on the table and paper is everywhere',
+  lights: 'the lights go out; crashes in the dark; when they come back, the ceiling light hangs by one wire, flickering, who is standing on the table and paper is everywhere',
   freeze: 'dead silence; nobody moves; a cricket chirps',
   turkey: 'the wild turkey from outside walks in through the door (after this it may speak as who="turkey", only gobbles)',
+  smash: 'who hurls their coffee mug through the window; the glass explodes, wind blows in, papers swirl',
+  kick: 'who kicks the trash can clean across the room; it bounces off the wall, garbage everywhere',
+  screen: 'who yanks the projector screen; it crashes down and hangs by one corner, slide two upside down',
 } as const
 type Move = keyof typeof MOVES
-const PERSON_MOVES = new Set<Move>(['rise', 'slam', 'throw', 'spill', 'jump', 'storm', 'faint', 'clap', 'spin', 'lights'])
+const PERSON_MOVES = new Set<Move>(['rise', 'slam', 'throw', 'spill', 'jump', 'storm', 'faint', 'clap', 'spin', 'lights', 'smash', 'kick', 'screen'])
+/** The moves that leave a mess behind: the room stays like that for the next visitor. */
+const WRECK_MOVES = new Set<Move>(['throw', 'spill', 'smash', 'kick', 'screen', 'lights', 'alarm', 'storm'])
+const MIN_MOVES = 4, MIN_WRECK = 2
 const STYLES = ['disco', 'tango', 'polka']
+const DOOR = ['slam', 'open']
 
 /** Ways a scene can go. One is handed to the model at random each time. */
 const SHAPES = [
-  'Paper storm: the comment, a two-word reply from the presenter, one more line from the table, then someone throws their papers into the air and storms out.',
-  'Coffee: someone slams the table, the coffee spills, the neighbors leap up, two short lines, and someone faints under the table.',
-  'Table dance: someone climbs on the table to make a point, music starts mid-sentence, and everyone dances.',
-  'Fire drill: it gets so heated the fire alarm goes off, the sprinklers rain on everyone, someone says something dry, and the presenter storms out.',
-  'The turkey: dead silence, a cricket; the wild turkey walks in and gobbles; someone calls it the best question all year; music, and everyone dances.',
-  'Blackout: someone says one word, the lights go out, crashes in the dark, and when they come on that person is on the table. A dry line after.',
-  'Slow clap: one person rises and starts a slow clap, the room joins, music starts, and everyone congas out the door, leaving the player alone.',
-  'Tango: two people rise and face each other, a tango starts, everyone dances, and the presenter faints under the table.',
-  'Walkout: one by one, people storm out, each with two words at most, until one is left; that one spins in their chair.',
-  'Polka: someone jumps on the table, a polka plays, everyone dances, then they conga out the door.',
-  'Escalation: someone slams the table, someone else spills coffee, a third throws papers, and the presenter storms out.',
+  'Paper storm: a two-word reply from the presenter, then someone throws their papers into the air, slams the table and storms out, slamming the door so hard the clock falls; the presenter yanks the screen down.',
+  'Coffee: someone slams the table, the coffee spills, the neighbors leap up, someone kicks the trash can across the room, and someone faints under the table.',
+  'The window: one word; someone hurls their mug through the window; the wind blows in; someone throws their papers into it; the turkey walks in through the door.',
+  'Table dance: someone climbs on the table, music starts mid-sentence, everyone dances, someone kicks the trash can, the screen comes down, and they conga out the door.',
+  'Fire drill: someone slams the table so hard the fire alarm goes off, the sprinklers rain on everyone, the presenter yanks the screen down and storms out, leaving the door open.',
+  'Blackout: someone says one word, the lights go out, crashes in the dark; when they come back the light hangs by a wire, that person is on the table, someone else has fainted, and someone storms out.',
+  'Walkout: one by one, people storm out, each with two words at most, slamming the door; one throws their papers on the way; the last one kicks the trash can and leaves the door open.',
+  'The turkey: dead silence, a cricket; the turkey walks in; someone smashes the window to let it out; it does not go; a polka, and everyone congas out the door with the turkey.',
+  'Escalation: someone slams the table, someone else spills coffee, a third throws papers, a fourth smashes the window, the presenter yanks the screen down and storms out.',
+  'Slow clap: one person rises and starts a slow clap, the room joins, music, someone jumps on the table, someone kicks the trash can, and everyone congas out the door.',
+  'Tango: two people rise and face each other, a tango starts, everyone dances, someone spins, the screen comes down on the presenter, who faints under the table.',
 ]
 
 export type FlameItem = { who: string; text: string } | { act: Move; who?: string; style?: string }
@@ -69,9 +82,11 @@ The scene: a seminar in the Margaret Levi Meeting Room. One fellow presents, sta
 
 # It is physical comedy
 
-Not a debate. Almost nobody argues. The words are few and short, and the comedy is in what bodies and objects do: papers in the air, coffee on the table, someone on the table, music out of nowhere, a whole faculty dancing, a door slammed. Think silent film, Mr. Bean, a sitcom cold open. The timing is the joke: a two-word reply, a pause, then the chaos.
+Not a debate. Almost nobody argues. The words are few and short, and the comedy is in what bodies and objects do: papers in the air, coffee everywhere, a mug through the window, the trash can across the room, the screen torn down, someone on the table, music out of nowhere, a whole faculty dancing, a door slammed so hard the clock falls. Think silent film, Mr. Bean, a sitcom cold open, turned all the way up. The timing is the joke: a two-word reply, then the chaos, fast, one thing setting off the next.
 
-You are given a shape for this scene. Follow it, or bend it if the room and the comment suggest something funnier, but keep it this short and this physical.
+Two lines at most between the comment and the first move: it goes off almost at once. At least ${MIN_MOVES} moves, and at least ${MIN_WRECK} that leave a mess (${[...WRECK_MOVES].join(', ')}). The room stays wrecked after the scene, for whoever walks in next, and nobody sits back down: everyone ends where the chaos left them.
+
+You are given a shape for this scene. Follow it, or bend it if the room and the comment suggest something funnier, but keep it this short, this physical and this big.
 
 # The moves
 
@@ -79,11 +94,11 @@ The game can animate exactly these, nothing else:
 
 ${Object.entries(MOVES).map(([k, v]) => `- ${k}: ${v}`).join('\n')}
 
-Write a move as <do act="name" who="slug"/> (who is required for: ${[...PERSON_MOVES].join(', ')}), <do act="music" style="disco|tango|polka"/>, or <do act="dance"/> and the other room moves without who.
+Write a move as <do act="name" who="slug"/> (who is required for: ${[...PERSON_MOVES].join(', ')}), <do act="storm" who="slug" style="slam|open"/>, <do act="music" style="disco|tango|polka"/>, or <do act="dance"/> and the other room moves without who.
 
 # The words
 
-- At most ${MAX_LINES - 1} lines after the comment, usually four to six. Many are one or two words ("Bold.", "Excuse me?", "Slide two.", "Respectfully, no."). None over ${LINE_MAX} characters.
+- At most ${MAX_LINES - 1} lines after the comment, usually two or three, and at most ${LEAD_MAX} before the first move. The moves carry the scene. Many are one or two words ("Bold.", "Excuse me?", "Slide two.", "Respectfully, no."). None over ${LINE_MAX} characters.
 - The comment: the player's words if they gave them. If not, invent one provocation this particular room cannot leave alone, about academic life or their fields: methods, framing, who said it first, whether anyone reads past the abstract.
 - Each person who speaks speaks from their own work and their one line, in character, deadpan. The presenter keeps trying to get back to slide two.
 - Dry. Short declarative sentences. No exclamation marks except for real alarm, no emoji, no stage directions in lines, no asterisks, no names at the start of lines.
@@ -97,7 +112,7 @@ Never put a real person on a side of a real-world political, religious or identi
 
 # Format
 
-<comment>the player's comment as spoken, one line</comment>
+<comment>the player's comment as spoken, one line (they have already said "It's more of a comment than a question"; do not repeat it)</comment>
 then lines and moves in the order they happen:
 <line who="slug">what they say</line>
 <do act="throw" who="slug"/>
@@ -110,7 +125,7 @@ const tag = (s: string) => s.replace(/\s+/g, ' ').trim()
 const attr = (s: string, k: string) => new RegExp(`\\b${k}="([^"]*)"`).exec(s)?.[1]
 
 function parse(text: string, cast: Set<string>): { comment: string; script: FlameItem[]; headline: string; junk: string[] } {
-  const comment = tag(/<comment>([\s\S]*?)<\/comment>/.exec(text)?.[1] ?? '')
+  const comment = tag(/<comment>([\s\S]*?)<\/comment>/.exec(text)?.[1] ?? '').replace(/^it'?s more of a comment than a question[.,:]?\s*/i, '')
   const headline = tag(/<headline>([\s\S]*?)<\/headline>/.exec(text)?.[1] ?? '')
   const script: FlameItem[] = [], junk: string[] = []
   const re = /<line\s+who="([a-z]+)"\s*>([\s\S]*?)<\/line>|<do\b([^>]*?)\/?>/g
@@ -120,6 +135,7 @@ function parse(text: string, cast: Set<string>): { comment: string; script: Flam
       if (!act || !(act in MOVES)) { junk.push(`unknown move ${JSON.stringify(act)}`); continue }
       if (PERSON_MOVES.has(act) && (!who || !cast.has(who))) { junk.push(`${act} needs who= one of the people in the room`); continue }
       if (act === 'music' && (!style || !STYLES.includes(style))) { junk.push('music needs style="disco", "tango" or "polka"'); continue }
+      if (act === 'storm') { script.push({ act, who, style: style && DOOR.includes(style) ? style : 'slam' }); continue }
       script.push(PERSON_MOVES.has(act) ? { act, who } : act === 'music' ? { act, style } : { act })
       continue
     }
@@ -137,7 +153,11 @@ function problem(s: ReturnType<typeof parse>): string | null {
   const lines = s.script.filter((i): i is { who: string; text: string } => 'text' in i)
   const moves = s.script.filter((i): i is Extract<FlameItem, { act: Move }> => 'act' in i)
   if (lines.length > MAX_LINES - 1) return `${lines.length} lines; at most ${MAX_LINES - 1}, most of them a word or two`
-  if (moves.length < 2) return 'only one move; this is physical comedy, at least two moves'
+  if (moves.length < MIN_MOVES) return `only ${moves.length} moves; this is physical comedy turned all the way up, at least ${MIN_MOVES}`
+  const wrecks = moves.filter(m => WRECK_MOVES.has(m.act)).length
+  if (wrecks < MIN_WRECK) return `only ${wrecks} moves leave a mess; at least ${MIN_WRECK} of ${[...WRECK_MOVES].join(', ')}`
+  const lead = s.script.findIndex(i => 'act' in i)
+  if (lead > LEAD_MAX) return `${lead} lines before the first move; at most ${LEAD_MAX}, the chaos starts almost at once`
   const long = lines.find(l => l.text.length > LINE_MAX)
   if (long) return `this line is over ${LINE_MAX} characters: ${JSON.stringify(long.text)}`
   const gone = new Set<string>()
@@ -216,8 +236,11 @@ export async function runFlamewar(user: SemibartUser, req: FlameRequest, opts: {
     const why = problem(scene) || (gendered ? `this line uses he/she pronouns: ${JSON.stringify(gendered)}; use names or they` : null)
     if (!why) {
       const headline = scene.headline.slice(0, 110) || `${first} grabbed the mic at the seminar. It did not go well.`
-      // The wire is everyone's: tests (the check account, flamewar-try) stay off it.
+      // The wire is everyone's: tests (the check account, flamewar-try) stay off it. The mess is
+      // kept for the next visitor; the check account keeps its own, flamewar-try none.
       if (!opts.quiet && user.character !== 'check') await announce({ kind: 'system', actor: user.character, room: 'seminar', text: headline }).catch(e => console.error('[semibart/flamewar] announce', e))
+      if (!opts.quiet) await saveWreck(user.character, { by: user.character, name: first, at: new Date().toISOString(), headline, moves: scene.script.filter((i): i is Extract<FlameItem, { act: Move }> => 'act' in i) })
+        .catch(e => console.error('[semibart/flamewar] wreck', e))
       return { ok: true, comment: scene.comment, script: scene.script, headline, shape: shape.split(':')[0] }
     }
     console.log(`[semibart/flamewar] attempt ${attempt}: ${why}`)

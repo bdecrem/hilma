@@ -191,60 +191,84 @@ desk; a fellow's partial manuscript and a visitor, with the APIs answered locall
   background music on every page. It comes in after the start jingle, sits under the sound effects,
   dips while anyone talks, and is silent when sound is off (your menu) or the tab is hidden.
 
-## The chaos at the seminar (`public/semibart/flamewar.js`, `src/lib/semibart/flamewar.ts`)
+## The chaos at the seminar (`public/semibart/flamewar.js`, `src/lib/semibart/flamewar.ts`, `src/lib/semibart/seminar.ts`)
 
 Bart, 2026-11-13: a floor mic stands in the Margaret Levi Meeting Room, between the end of the
 table and the presenter. Click it: the mic goes live (red light, a squeal), the presenter asks for
 questions at the end, and a line opens along the bottom: type a comment (it is never a question),
-or press **Stir up some stuff for me**. You say "It's more of a comment than a question.", the room
-murmurs while the scene is written, and then all hell breaks loose. One a seminar; leaving the room
-brings next week's, with everyone back and the mess gone.
+or press **Stir up some stuff for me**. You say "It's more of a comment than a question." and the
+room goes silent while the scene is written: every head turns, the clock ticks louder and faster,
+the presenter starts to steam, a mug rattles, somebody half rises (no murmured lines). Then all
+hell breaks loose.
 
 **Physical comedy, not debate** (Bart, 2026-11-14: the first version was "a bunch of boring
-conversation"). A scene is a handful of short lines (often two words: "Bold.", "Slide two.") and a
-string of moves. The moves are a fixed vocabulary, each animated in flamewar.js:
+conversation"), **at level 9** (the same evening: "correct direction but it's at level 3"). Two
+lines at most between your comment and the first move, four lines in all, at least four moves and
+at least two that leave a mess. Nobody sits back down: the scene ends with everyone where the
+chaos left them. The moves are a fixed vocabulary, each animated in flamewar.js:
 
-| move | what happens |
-|---|---|
-| `rise` / `slam` | stands bolt upright / a fist on the table, the room shakes, papers jump |
-| `throw` | the whole stack of papers into the air; it rains paper and stays on the floor |
-| `spill` | the mug tips, coffee floods along the table and drips on the floor, the neighbors leap up |
-| `jump` | onto the table |
-| `storm` | walks out the door and slams it |
-| `faint` | slides under the table (and can still talk from there; a hand waves now and then) |
-| `clap` | a slow clap the whole room picks up, faster and faster |
-| `spin` | spins in the chair |
-| `music` | disco, tango or polka (WebAudio, the game's own music stops); disco brings a ball and lights |
-| `dance` / `conga` | everyone left dances / dances out the door in a line, leaving the player alone |
-| `alarm` | fire alarm, red light, sprinklers, papers held over heads |
-| `lights` | a blackout with only eyes, crashes; lights up with that person on the table and paper everywhere |
-| `freeze` / `turkey` | dead silence and a cricket / the wild turkey walks in (and may gobble lines) |
+| move | what happens | what stays |
+|---|---|---|
+| `rise` / `slam` | stands bolt upright / a fist on the table, the room shakes, papers jump | |
+| `throw` | the whole stack of papers into the air; it rains paper, most of it lands on the table | paper on the table and the floor |
+| `spill` | the mug tips, coffee floods along the table and drips on the floor, the neighbors leap up | coffee, a tipped mug |
+| `smash` | the mug through the window: glass everywhere, wind blows in and lifts the paper off the table | a hole and cracks, glass on the floor |
+| `kick` | walks out from behind the table and kicks the trash can across the room; it hits the far wall, bounces, rolls; garbage everywhere | the can on its side, garbage |
+| `screen` | yanks the projector screen; it comes down and swings, hanging by one end of its rod | the screen hanging |
+| `jump` | onto the table | footprints on the table |
+| `storm` | walks out; the door swings open as they reach it. `style="slam"`: slammed so hard the clock falls off the wall; `"open"`: left swinging | the clock on the floor / the door open |
+| `faint` | slides under the table (and can still talk from there; a hand waves now and then) | |
+| `clap` | a slow clap the whole room picks up, faster and faster | |
+| `spin` | spins in the chair | |
+| `music` | disco, tango or polka (WebAudio, the game's own music stops); disco brings a ball and lights | the mirror ball |
+| `dance` / `conga` | everyone left dances / dances out the door in a line, leaving the player alone | the door open |
+| `alarm` | fire alarm, red light, sprinklers, papers held over heads | puddles, soggy paper |
+| `lights` | a blackout with only eyes, crashes; lights up with that person on the table, paper everywhere, the ceiling light hanging by one chain, flickering, the room dimmed | the light hanging, flickering |
+| `freeze` / `turkey` | dead silence and a cricket / the wild turkey walks in (and may gobble lines) | the turkey stays |
 
-Each grab of the mic is handed one of `SHAPES` at random (paper storm, coffee, table dance, fire
-drill, the turkey, blackout, slow clap, tango, walkout, polka, escalation), which the model follows
-or bends, so no two seminars go alike. A new move needs a line in `MOVES` (server) and a function in
-`MOVE` (flamewar.js); a new shape is one sentence in `SHAPES`.
+Each grab of the mic is handed one of `SHAPES` at random (paper storm, coffee, the window, table
+dance, fire drill, blackout, walkout, the turkey, escalation, slow clap, tango), which the model
+follows or bends, so no two seminars go alike. A new move needs a line in `MOVES` (server), a
+function in `MOVE` (flamewar.js), and, if it leaves something behind, a line in `buildWreck` and
+`WRECK_MOVES`; a new shape is one sentence in `SHAPES`.
+
+**The mess stays for the next visitor.** Every scene's moves are stored (`semibart_seminar`,
+schema `024_semibart_seminar.sql`, one row `room`; the check account has its own row `check`, so
+checks never wreck or sweep the fellows' room; `flamewar-try.ts` stores nothing). Whoever walks in
+next, any fellow, finds the room empty and wrecked the way those moves wreck it (`buildWreck`; paper
+and garbage fall in the same places for everyone, seeded by the time), says "Where is everybody?"
+and that the commenter had a comment, and finds a broom leaning by the screen. The mic refuses until
+someone sweeps. Sweeping walks you across the room with the broom (the mess goes where it has been),
+puts everything back one thing at a time (the can, the screen, the clock, the light, the glass, the
+door; the turkey leaves), clears the row for everyone (the wire: "X swept up the seminar room.
+Mostly.") and brings next week's seminar in.
 
 - `POST /api/semibart/flamewar { comment?, cast, topic }` (signed in) runs one Claude call (Opus
   5.5, effort low; 4 to 10 seconds) that returns `<comment>`, `<line who>` and `<do act who style>`
   tags and a wire headline. The scene is checked before it plays (known moves and people, at most
-  eight lines of at most 70 characters, two moves at least, music before any dance or conga, nobody
-  acts after leaving, the turkey speaks only once it is in, no he/she: the cast are real colleagues)
-  and written again once if it fails. It counts against the day's Claude turns (`countTurn`, shared
-  with the door frame).
+  four lines of at most 70 characters, at most two before the first move, four moves at least and
+  two that leave a mess, music before any dance or conga, nobody acts after leaving, the turkey
+  speaks only once it is in, no he/she: the cast are real colleagues) and written again once if it
+  fails. It counts against the day's Claude turns (`countTurn`, shared with the door frame), and
+  stores the wreck.
+- `GET /api/semibart/seminar` -> `{ wreck }` (null when tidy); `POST` (signed in) is the broom.
 - The prompt keeps it something everyone in it would show a friend: ridiculous, never humiliated
   or hurt, and no real colleague put on a side of a real political fight or made to talk about a
   public figure; such a comment becomes its academic proxy.
 - Who is who comes from `roster.json`'s `fellows` table, plus anyone's changed lines from their persona.
-- The game's side (index.html): from the first move flamewar.js draws the six people itself.
-  `S.sem.pose[k]` tells the game to leave a body alone, `S.sem.at[k]` is where its lines float,
-  `HOOKS.seminarBack` draws behind the table (standing people, the table hides their legs) and
-  `seminarMid` / `seminarFront` on and in front of it; `S.sem.wild` makes leaving bring next week.
-  `gfx.bust` and `gfx.turkey` are exposed for it. At the end the music fades and everyone still in
-  the room sits back down; the paper, coffee and water stay until you leave.
+- The game's side (index.html): from the moment you speak, flamewar.js draws the six people itself.
+  `S.sem.pose[k]` tells the game to leave a body alone, `S.sem.at[k]` is where its lines float.
+  `HOOKS.seminarWall` draws on the walls, window, door and ceiling (behind everybody),
+  `seminarBack` behind the table (standing people, the table hides their legs), `seminarMid` /
+  `seminarFront` on and in front of it; `HOOKS.seminarEnter` lets flamewar.js fetch the wreck before
+  you walk in and play the entrance; `S.sem.wild` makes leaving bring next week. `gfx.bust`,
+  `gfx.turkey` and `gfx.seminarBare` (the walls with nothing on them, for what falls off) are
+  exposed for it, and `quest.walkTo` for the broom.
 - The wire gets the headline. The check account's scenes and `flamewar-try.ts` stay off it.
 - Checks: `npx tsx scripts/semibart/flamewar-try.ts [--shape N] [--as c] [--cast a,b,c,d,e,f] ["comment"]`
-  prints one scene; `node scripts/semibart/chaos-check.mjs <dir> [base] [--no-live] [--only paper,coffee]`
-  plays six hand-written scenes that use every move (no Claude call, a sheet of frames each), then
-  clicks the mic as the check account, stirs once, and checks it plays to the end, refuses a second
-  grab and resets when you leave.
+  prints one scene; `node scripts/semibart/chaos-check.mjs <dir> [base] [--no-live] [--only paper,coffee,persist]`
+  plays seven hand-written scenes that use every move (no Claude call, a sheet of frames each),
+  draws a wreck with every lasting move and sweeps it (`persist`), then clicks the mic as the check
+  account, stirs once, checks it plays to the end, refuses a second grab and resets when you leave,
+  walks back in through the door to find the check account's wreck waiting, and sweeps it off the
+  server. Its sheets are drawn by Playwright, not ffmpeg.
