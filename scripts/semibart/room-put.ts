@@ -13,7 +13,7 @@ async function main() {
   if (!rosterRoom(room) || !file || !character || !prompt || !say) { console.error('usage: room-put.ts <room> <code.js> <character> "<request>" "<say>"'); process.exit(1) }
   const code = readFileSync(file, 'utf8')
   const check = checkRoomCode(code)
-  if (!check.ok) { console.error('the test run failed:', check.reason); process.exit(1) }
+  if (!check.ok) { console.error('the test run failed:', check.error); process.exit(1) }
   const { data: user, error } = await db().from('semibart_users').select('*').eq('character', character).single()
   if (error || !user) { console.error('no such account:', character, error?.message); process.exit(1) }
   if (!mayDecorate(user, room)) { console.error(`${character} may not decorate ${room}`); process.exit(1) }
