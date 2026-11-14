@@ -54,7 +54,9 @@ export type Sample = {
   original_url: string
   fixed_url: string
   before: { failedChecks: number; failedRules: number; rules?: { clause: string; failedChecks: number; description: string }[] }
-  after: { failedChecks: number; failedRules: number }
+  // identical: the fixed pages render pixel for pixel like the original. False when fonts the
+  // original did not carry had to be embedded (same layout, slightly different letter shapes).
+  after: { failedChecks: number; failedRules: number; identical?: boolean }
   transcript: string
 }
 

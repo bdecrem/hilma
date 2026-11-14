@@ -247,3 +247,11 @@ body:has(.vi) {
   border-top: 1px solid var(--line);
   margin: 32px 0;
 }
+
+/* voice notes (/venture/memo): the running time while recording */
+.vi-memo-clock {
+  margin-top: 14px;
+  height: 34px;
+  font-size: 26px;
+  letter-spacing: 0.02em;
+}

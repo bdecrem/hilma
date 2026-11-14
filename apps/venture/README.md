@@ -111,6 +111,27 @@ given, types a turn, talks over the reply and checks the cut. Run it against
 `next dev -p 3288` only when no other dev server shares the checkout: two of
 them fight over `.next` and API routes 404 on the first try.
 
+## Voice notes
+
+Bart, 2026-11-14: "a permanent conversation URL I can bookmark... a URL where I
+can leave you voice notes."
+
+    https://ola.cx/venture/memo?k=<key>
+
+Record, then stop and send (or discard). The browser records with
+`MediaRecorder` at 32 kbit/s, one upload per note, nine minutes at most; the
+server transcribes it (`gpt-4o-transcribe`) and stores it in the text thread,
+`venture_messages`, marked `(voice note)`. So the watcher the working session
+already runs (`imsg.mjs --wait`) wakes on it, and he never has to say a note
+exists. Nothing answers on the page; the list under the button shows each note
+and when the session read it.
+
+| What | Where |
+|---|---|
+| Transcribe, store, list | `src/lib/venture/memo.ts`, route `src/app/api/venture/memo/route.ts` |
+| Page | `src/app/venture/memo/`, `src/app/venture/Memo.tsx` |
+| Test, no human | `node scripts/venture/memo-check.mjs <outDir> [base]` (a fake microphone plays one note; sent as a test, so it is stored as read and deleted after) |
+
 ## iMessage
 
 Bart, 2026-11-13: "you can/should communicate with me using iMessage; we have
@@ -171,10 +192,18 @@ resume your work." Nothing that matters is kept only in a conversation:
 | The rules | `private/CHARTER.md` (doc `charter`) |
 | A copy of every private document off this disk | `venture_docs`, with the file name in `source`; `node scripts/venture/sync.mjs push | pull | status` |
 | Everything Bart said by voice or text | `venture_interview_turns`, `venture_messages` |
+| The standing rules, each distilled from a correction Bart had to make, with the checklists to run before he or a customer sees anything | `private/RULES.md` (doc `rules`). On this machine a SessionStart hook (`.claude/hooks/venture-rules.sh`, untracked like the rest of `.claude/hooks`) injects it into every session in the repo, also after compaction; the voice and the texting Claude get it right after `now` |
+| Every correction, in his words, with the cause, the rule and the generalization | `private/CORRECTIONS.md` (doc `corrections`) |
 | What has proved true and wrong (how he works, ideas, customers, tools, mistakes), read at every start and written at every result | `private/LESSONS.md` (doc `lessons`) |
 | Every test's prediction, written before its result, then the result and the gap; the calibration so far | `private/BETS.md` (doc `bets`) |
 | Data files (`private/data/` lead lists and scans, `private/pdf-proof/` samples) | the private storage bucket `venture-private`, by the same `sync.mjs push / pull` |
 | The few rules every Claude session must know | the memory file `project_venture.md` |
+
+Later the same day he made it stricter: "every time I correct something, that's a
+failure... update your memory so that you don't make that same mistake again...
+can I generalize additional learnings from this?... make sure that those
+memories are always part of your context." The protocol is in the skill (step
+3b) and at the top of RULES.md.
 
 Bart asked on 2026-11-14 for the agent to learn as well as remember ("so that
 it can inform and you can improve your work over time"). The skill makes every

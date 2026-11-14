@@ -49,7 +49,10 @@ if (cmd === 'list') {
   if (up.error) throw new Error(`upload: ${up.error.message}`)
   const fixed_url = db.storage.from(BUCKET).getPublicUrl(name).data.publicUrl
   const lean = (v) => ({ failedChecks: v.failedChecks, failedRules: v.failedRules, rules: (v.rules || []).map((x) => ({ clause: x.clause, failedChecks: x.failedChecks, description: x.description })) })
-  const row = { slug, org: r.org, title, pages: r.pages, original_url: r.url, fixed_url, before: lean(r.before), after: lean(r.after), transcript, published: flag === '--publish' }
+  if ((r.silent_pages || []).length) throw new Error(`${slug}: pages ${r.silent_pages.join(', ')} would read as nothing; not publishing it`)
+  // pixel-identical pages, by the fixing run's own comparison ("differing samples 0")
+  const identical = /differing samples 0\b/.test(r.fidelity || '')
+  const row = { slug, org: r.org, title, pages: r.pages, original_url: r.url, fixed_url, before: lean(r.before), after: { ...lean(r.after), identical }, transcript, published: flag === '--publish' }
   const { error } = await db.from('kochito_samples').upsert(row)
   if (error) throw new Error(error.message)
   console.log(`${slug}: ${row.published ? 'public at' : 'stored, hidden; publish to show it at'} https://kochitolabs.com/s/${slug}`)

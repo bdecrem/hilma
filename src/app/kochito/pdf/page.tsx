@@ -38,7 +38,7 @@ export default function PdfDesk() {
                 <strong>One business day</strong> for most documents.
               </li>
               <li>
-                <strong>Nothing changes on the page.</strong> We add structure underneath; the document looks and prints as before.
+                <strong>The page stays as it is.</strong> We add structure underneath; the layout, the wording and the page count do not change.
               </li>
             </ul>
           </div>
@@ -219,7 +219,7 @@ export default function PdfDesk() {
             <div className="kl-qa">
               <div>
                 <h3>Does the fixed PDF look different?</h3>
-                <p>No. We add structure around what is already on the page and leave the page itself untouched. It looks and prints exactly as before.</p>
+                <p>No. We add structure around what is already on the page and leave the page itself untouched. One exception: if a PDF does not carry its own fonts, the standard requires them, so we embed open-licensed fonts of the same size and spacing. The letters may look slightly different; nothing moves.</p>
               </div>
               <div>
                 <h3>Can you fix scanned documents?</h3>

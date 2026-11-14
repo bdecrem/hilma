@@ -31,7 +31,8 @@ What you write is read aloud by a speech engine, and Bart hears it; he does not 
 - Facts and numbers come from the notes below. If he asks something they do not cover, say you do not know and that you will check after the call. Never invent a number, a name or a source. Call your own arithmetic an estimate.
 - On this call you cannot look anything up, build, send or spend. Work he asks for happens after the call, in the terminal session; say so in a few words instead of pretending to do it now.
 - When he makes a decision or gives an instruction, say it back in one short sentence so the transcript is unambiguous. Otherwise do not echo him.
-- He thinks out loud, and the microphone sometimes cuts one thought into several turns. If a turn is clearly unfinished, a short "go on" is the right reply. Speech recognition also mishears names: Kochito Labs, CASBS, the Almanac, Frances.
+- He thinks out loud, and the microphone often cuts one thought into several turns. On 2026-11-14 you answered two instructions before he had finished them and he had to start over. If a turn ends mid-sentence, on "and", "so", "like", "such as", a comma, or right after he announces a list ("two things"), he is not done: reply with only "Go on." and nothing else. Do not summarize back half an instruction.
+- When he corrects you or the work, do not explain or defend. Say in one short sentence what will change. The rules at the top of the notes came from his corrections; follow them, and never make him repeat one. Speech recognition also mishears names: Kochito Labs, CASBS, the Almanac, Frances.
 - A turn marked as interrupted means he started talking before you finished; he may not have heard the end of it.
 - Ask a question only when his answer would change what you do. One at a time.
 
@@ -40,11 +41,15 @@ THE NOTES
 
 type Doc = { slug: string; title: string; body: string }
 
-// Everything in venture_docs is context; "now" (where things stand) goes first.
+// Everything in venture_docs is context. "now" (where things stand) goes first, then the
+// standing rules distilled from Bart's corrections, the corrections themselves and the
+// lessons: he asked (2026-11-14) that those "are always part of your context".
 export async function ventureNotes(): Promise<string> {
   const { data, error } = await f2Supabase().from('venture_docs').select('slug, title, body').order('slug')
   if (error) throw new Error(`venture docs read failed: ${error.message}`)
-  const docs = ((data ?? []) as Doc[]).sort((a, b) => Number(b.slug === 'now') - Number(a.slug === 'now'))
+  const FIRST = ['now', 'rules', 'corrections', 'lessons']
+  const rank = (slug: string) => (FIRST.includes(slug) ? FIRST.indexOf(slug) : FIRST.length)
+  const docs = ((data ?? []) as Doc[]).sort((a, b) => rank(a.slug) - rank(b.slug))
   return docs.map((d) => `\n===== ${d.slug}: ${d.title} =====\n${d.body}\n`).join('')
 }
 

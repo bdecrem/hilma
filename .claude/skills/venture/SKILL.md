@@ -20,6 +20,12 @@ call agendas, transcripts, the access key) is **never committed**. It lives in
 
 Read, in this order:
 
+0. `apps/venture/private/RULES.md` — the standing rules, each one distilled
+   from a correction Bart had to make, with the checklists to run before he or
+   a customer sees anything. (A SessionStart hook, `.claude/hooks/venture-rules.sh`,
+   also injects this file into every session in the repo on this machine;
+   read it here anyway, the hook is local and untracked.) Then
+   `apps/venture/private/CORRECTIONS.md`, the ledger behind the rules.
 1. `apps/venture/private/NOW.md` — where things stand, what is in flight, the
    next actions, what is waiting on Bart.
 2. `apps/venture/private/CHARTER.md` — the rules Bart set (spending limit, what
@@ -45,7 +51,9 @@ gone, every link in Bart's iMessage thread carries it.
 ## 2. Catch up on Bart
 
 - `node scripts/venture/imsg.mjs inbox` — texts he sent that no session has
-  read (with the answers the server already gave him). Marks them read.
+  read (with the answers the server already gave him), and his voice notes
+  from `ola.cx/venture/memo` (they arrive in the same thread, marked
+  "(voice note)"). Marks them read.
 - `node scripts/venture/transcript.mjs --list` — every voice session. Read any
   real one (not marked test) that is newer than the last LOG entry:
   `node scripts/venture/transcript.mjs <session>`.
@@ -62,6 +70,30 @@ is restarted after it has been handled:
     node scripts/venture/transcript.mjs --wait talk
 
 Add `transcript.mjs --wait <slug>` while an agenda call is open.
+
+## 3b. A correction from Bart is a failure of the system
+
+His words (2026-11-14): "every time I correct something, that's a failure...
+update your memory so that you don't make that same mistake again... can I
+generalize additional learnings from this?... make sure that those memories are
+always part of your context." A request he should not have had to make counts
+too. The same turn, before other work:
+
+1. Fix what he pointed at.
+2. Write it in `private/CORRECTIONS.md`: his words, what I had done, the real
+   cause, the rule, the generalization (where else the same cause bites), and
+   where the rule is enforced. If it repeats an earlier entry, mark it REPEAT
+   and say what the earlier fix lacked.
+3. Add or sharpen a rule in `private/RULES.md` (concrete enough to check), and
+   a checklist line or a guard in code where one can enforce it.
+4. Apply the generalization at once: go through what is in flight and what has
+   shipped, and fix the other instances without being asked.
+5. If the rule holds outside Venture (design, writing, anticipating), also
+   save it to the auto-memory directory as a feedback memory.
+6. `sync.mjs push`, and tell him in one line what changed in the system.
+
+Before Bart or a customer sees anything, run the matching checklist at the end
+of RULES.md.
 
 ## 4. Work
 
@@ -96,6 +128,9 @@ He is usually not looking at the terminal.
   open. He writes back by starting a text with `v` or `venture`.
 - **Discussion:** `https://ola.cx/venture/talk?k=<key>` (open voice
   conversation; Claude answers from the documents, so push NOW.md first).
+- **His voice notes to me:** `https://ola.cx/venture/memo?k=<key>`, a page he
+  bookmarks: record, stop and send. Each note is transcribed into the text
+  thread, so `imsg.mjs --wait` wakes on it; he never has to say a note exists.
 - **Fixed asks that need him at a keyboard:** an agenda call,
   `node scripts/venture/put.mjs call <slug> <file.md>` →
   `https://ola.cx/venture/call/<slug>?k=<key>`.
@@ -126,7 +161,10 @@ before long-running work, not only after.
 
 ## 7. Review, at the end of every cycle
 
-Each Friday (the end of a week's bet) and whenever a bet is killed: reread
+Each Friday (the end of a week's bet) and whenever a bet is killed: count the
+week's entries in CORRECTIONS.md and the repeats (a repeat means a rule was
+missing, vague or not loaded: fix that first), check every rule in RULES.md
+is still concrete and still enforced; then reread
 LESSONS.md whole, merge duplicates, rewrite vague lessons into specific ones,
 move what no longer applies to a "Retired" section with the reason, and
 recompute the calibration in BETS.md (how many predictions were right, and

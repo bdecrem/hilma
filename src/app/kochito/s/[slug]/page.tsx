@@ -42,6 +42,7 @@ export default async function SamplePage({ params }: { params: Promise<{ slug: s
   const lines = rows(s.transcript)
   const count = (t: string[]) => lines.filter((l) => t.includes(l.tag)).length
   const page = `s/${s.slug}`
+  const same = s.after.identical !== false
   const added = (
     [
       ['Headings', count(['H1', 'H2', 'H3', 'H4'])],
@@ -60,7 +61,7 @@ export default async function SamplePage({ params }: { params: Promise<{ slug: s
           <p className="kl-note">Prepared for {s.org}</p>
           <h1>{s.title}, fixed for screen readers</h1>
           <p className="kl-lede">
-            This is your own document, {s.pages} {s.pages === 1 ? 'page' : 'pages'}, as you posted it. Nothing visible has changed. Underneath, it now has the structure a screen reader needs, and it passes the PDF/UA checker.
+            This is your own document, {s.pages} {s.pages === 1 ? 'page' : 'pages'}, as you posted it. {same ? 'Nothing visible has changed.' : 'The layout, the wording and the page count are unchanged.'} Underneath, it now has the structure a screen reader needs, and it passes the PDF/UA checker.
           </p>
           <p className="kl-actions">
             <a className="kl-btn" href={s.fixed_url}>
@@ -100,9 +101,13 @@ export default async function SamplePage({ params }: { params: Promise<{ slug: s
                   </tr>
                 ))}
                 <tr>
-                  <th scope="row">Pages that look different</th>
+                  <th scope="row">{same ? 'Pages that look different' : 'Appearance'}</th>
                   <td>n/a</td>
-                  <td className="num">0 of {s.pages}</td>
+                  <td className={same ? 'num' : undefined}>
+                    {same
+                      ? `0 of ${s.pages}`
+                      : 'Same layout and line breaks. The original did not carry its fonts, which the standard requires, so open-licensed equivalents are embedded; letter shapes differ slightly.'}
+                  </td>
                 </tr>
               </tbody>
             </table>
