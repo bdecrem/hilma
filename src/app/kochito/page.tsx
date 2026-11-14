@@ -25,7 +25,7 @@ export default function KochitoHome() {
           </a>
           <a className="kl-door kl-apps" href="/apps">
             <h2>App adoption</h2>
-            <p>For the app you built and no longer have time for. We keep it working through the platform deadlines, for a share of what it earns. You keep the app.</p>
+            <p>For the Shopify app you built and no longer have time for. We keep it working through Shopify’s 2027 deadlines, for a share of what it earns. You keep the app.</p>
             <span className="go">Check an app →</span>
           </a>
         </div>

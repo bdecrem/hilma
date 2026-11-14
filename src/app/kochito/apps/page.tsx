@@ -7,8 +7,8 @@ import { Foot, Top } from '../Chrome'
 // has users and no longer has their time: we keep it working for a share of
 // what it earns. Facts on this page are sourced in apps/venture (private
 // notes); change them there first.
-const TITLE = 'We keep your app working, for a share of what it earns'
-const DESCRIPTION = 'You built an app, people still use it, and you have no time for it. We do the platform migrations, the fixes and the support. No fee: a share of revenue, and you keep the app.'
+const TITLE = 'We keep your Shopify app working, for a share of what it earns'
+const DESCRIPTION = 'You built a Shopify app, merchants still pay for it, and you have no time for it. We do the 2027 migrations, the fixes and the support. No fee: a share of revenue, and you keep the app.'
 
 export const metadata: Metadata = {
   title: 'App adoption',
@@ -30,18 +30,18 @@ export default function AppAdoption() {
               Your app still has users. <em>We’ll keep it working.</em>
             </h1>
             <p className="kl-lede">
-              You built it, people still pay for it, and you have no time for it. We take over the migrations, the fixes and the support email. You keep the app. No fee: an agreed share of what it earns.
+              You built a Shopify app, merchants still pay for it, and you have no time for Shopify’s 2027 deadlines. We take over the migrations, the fixes and the support email. You keep the app. No fee: an agreed share of what it earns.
             </p>
             <LeadForm
               page="apps"
               emailPlaceholder="you@yourapp.com"
               detailLabel="Link to the app"
               detailPlaceholder="https://apps.shopify.com/your-app"
-              detailHint="A Shopify App Store or Apple App Store link. Leave it empty if you would rather talk first."
+              detailHint="Your Shopify App Store listing. Leave it empty if you would rather talk first."
               button="Check my app, free"
               done="Your app’s report will be in your inbox within one business day."
             />
-            <p className="kl-fine">The report is yours whether or not you ever talk to us again: what breaks at the next platform deadline, what reviewers say is broken now, and what fixing it involves.</p>
+            <p className="kl-fine">The report is yours whether or not you ever talk to us again: which of Shopify’s dates hit your app, what reviewers say is broken now, and what fixing it involves.</p>
           </div>
 
           <figure className="kl-pic">
@@ -60,7 +60,7 @@ export default function AppAdoption() {
                 <ul className="kl-log">
                   <li>
                     <b>Platform notice</b>
-                    The API it is built on is being turned off.
+                    Its storefront script stops running March 1.
                   </li>
                   <li>
                     <b>Support inbox</b>
@@ -71,7 +71,7 @@ export default function AppAdoption() {
                     Busy with the thing you do now.
                   </li>
                 </ul>
-                <span className="kl-chip bad">Breaks at the deadline</span>
+                <span className="kl-chip bad">Goes dark March 1</span>
               </div>
               <div className="kl-sheet kl-after">
                 <p className="kl-sheet-tag">
@@ -87,7 +87,7 @@ export default function AppAdoption() {
                 <ul className="kl-log">
                   <li>
                     <b>Platform notice</b>
-                    Migrated. You approved the release.
+                    Moved to an app embed. You approved the release.
                   </li>
                   <li>
                     <b>Support inbox</b>
@@ -98,7 +98,7 @@ export default function AppAdoption() {
                     Still the owner. A statement every month.
                   </li>
                 </ul>
-                <span className="kl-chip good">Ready for the deadline</span>
+                <span className="kl-chip good">Ready for 2027</span>
               </div>
             </div>
             <figcaption>A drawing, not a customer. The free report on your own app says what is true for it.</figcaption>
@@ -125,6 +125,29 @@ export default function AppAdoption() {
                 <p>You give access to the code. Every change is a pull request you can read, and nothing ships until you say so. Support email forwards to us.</p>
               </li>
             </ol>
+          </div>
+        </section>
+
+        <section className="kl-band" aria-labelledby="dates">
+          <div className="kl-wrap kl-two">
+            <div>
+              <h2 id="dates">Shopify’s dates</h2>
+              <p>Two changes land in early 2027, and an app nobody is maintaining will miss both. Since October 1, 2026, apps can no longer create script tags, so an app that depends on them has been broken for every new install since then.</p>
+              <p>Merchants on a broken app keep being billed until they notice. Then come the one-star reviews and the cancellations. Both migrations are ordinary code work; they just need someone to do them.</p>
+            </div>
+            <div className="kl-fact">
+              <dl>
+                <dt>January 1, 2027</dt>
+                <dd>Public apps still on non-expiring offline access tokens are delisted and blocked from new installs.</dd>
+                <dt>March 1, 2027</dt>
+                <dd>Shopify stops running script tags on storefronts. The replacement is an app embed.</dd>
+                <dt>April 1, 2027</dt>
+                <dd>Admin API calls made with non-expiring tokens are refused.</dd>
+              </dl>
+              <p className="src">
+                Sources: Shopify’s developer changelog, <a href="https://shopify.dev/changelog/online-store-script-tags-deprecation">script tags</a> (August 24, 2026) and <a href="https://shopify.dev/changelog/posts/expiring-offline-access-tokens-required-for-all-public-apps-as-of-january-1-2027">expiring access tokens</a> (May 20, 2026). Shopify has said it will look at the March date again in January.
+              </p>
+            </div>
           </div>
         </section>
 
@@ -157,7 +180,7 @@ export default function AppAdoption() {
               <h2>Questions</h2>
               <details>
                 <summary>Which apps do you take?</summary>
-                <p>Shopify apps and iPhone apps with paying users, built by one person or a small team who have moved on to other work. If yours is something else, send it anyway and we will say plainly whether we can help.</p>
+                <p>Shopify apps with paying merchants, built by one person or a small team who have moved on to other work. If yours is something else, an iPhone app for example, send it anyway and we will say plainly whether we can help.</p>
               </details>
               <details>
                 <summary>What access do you need?</summary>
@@ -176,7 +199,7 @@ export default function AppAdoption() {
         </section>
 
         <section className="kl-wrap kl-close">
-          <h2>Find out what breaks, and when.</h2>
+          <h2>Find out which dates hit your app.</h2>
           <p className="kl-lede" style={{ margin: '0 auto 14px' }}>
             The report is free and takes you one link.
           </p>
