@@ -12,10 +12,10 @@ const TITLE = 'Shopify app maintenance, paid as a share of revenue'
 const DESCRIPTION = 'Your Shopify app still has paying merchants and you have no time for the 2027 platform changes. We do the migrations, the fixes and the support for a share of revenue. No fee, and you keep the app.'
 
 export const metadata: Metadata = {
-  title: TITLE,
+  title: { absolute: `AppAdopt: ${TITLE}` },
   description: DESCRIPTION,
-  alternates: { canonical: '/apps' },
-  openGraph: { title: `${TITLE} | Kochito Labs`, description: DESCRIPTION, url: 'https://kochitolabs.com/apps', siteName: 'Kochito Labs', type: 'website' },
+  alternates: { canonical: 'https://appadopt.com' },
+  openGraph: { title: `AppAdopt: ${TITLE}`, description: DESCRIPTION, url: 'https://appadopt.com', siteName: 'AppAdopt', type: 'website' },
 }
 
 const form = {

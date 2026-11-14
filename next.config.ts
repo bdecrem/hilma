@@ -184,6 +184,28 @@ const nextConfig: NextConfig = {
           has: [{ type: 'host', value: 'www.takt.pizza' }],
           destination: '/takt',
         },
+        // clerkpdf.com root → /kochito/pdf (ClerkPDF, the accessible PDF service; a Kochito Labs product on its own domain)
+        {
+          source: '/',
+          has: [{ type: 'host', value: 'clerkpdf.com' }],
+          destination: '/kochito/pdf',
+        },
+        {
+          source: '/',
+          has: [{ type: 'host', value: 'www.clerkpdf.com' }],
+          destination: '/kochito/pdf',
+        },
+        // appadopt.com root → /kochito/apps (AppAdopt, Shopify app maintenance; a Kochito Labs product on its own domain)
+        {
+          source: '/',
+          has: [{ type: 'host', value: 'appadopt.com' }],
+          destination: '/kochito/apps',
+        },
+        {
+          source: '/',
+          has: [{ type: 'host', value: 'www.appadopt.com' }],
+          destination: '/kochito/apps',
+        },
         // kochitolabs.com root → /kochito (the company's site; /pdf and /apps below)
         {
           source: '/',
@@ -346,6 +368,27 @@ const nextConfig: NextConfig = {
           source: '/:path((?!(?:takt|api|_next)(?:/|$)).*)',
           has: [{ type: 'host', value: 'www.takt.pizza' }],
           destination: '/takt/:path',
+        },
+        // clerkpdf.com and appadopt.com /anything → /kochito/anything (sample pages /s/<slug>, /pdf, /apps, icons)
+        {
+          source: '/:path((?!(?:kochito|api|_next)(?:/|$)).*)',
+          has: [{ type: 'host', value: 'clerkpdf.com' }],
+          destination: '/kochito/:path',
+        },
+        {
+          source: '/:path((?!(?:kochito|api|_next)(?:/|$)).*)',
+          has: [{ type: 'host', value: 'www.clerkpdf.com' }],
+          destination: '/kochito/:path',
+        },
+        {
+          source: '/:path((?!(?:kochito|api|_next)(?:/|$)).*)',
+          has: [{ type: 'host', value: 'appadopt.com' }],
+          destination: '/kochito/:path',
+        },
+        {
+          source: '/:path((?!(?:kochito|api|_next)(?:/|$)).*)',
+          has: [{ type: 'host', value: 'www.appadopt.com' }],
+          destination: '/kochito/:path',
         },
         // kochitolabs.com/anything → /kochito/anything (/pdf, /apps, og images)
         {

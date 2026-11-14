@@ -12,10 +12,10 @@ const TITLE = 'Accessible PDFs for city and county websites'
 const DESCRIPTION = 'Send an agenda, a budget or scanned minutes. We return the same document, tagged so a screen reader can read it, with the checker’s report. The first document is free.'
 
 export const metadata: Metadata = {
-  title: TITLE,
+  title: { absolute: `ClerkPDF: ${TITLE}` },
   description: DESCRIPTION,
-  alternates: { canonical: '/pdf' },
-  openGraph: { title: `${TITLE} | Kochito Labs`, description: DESCRIPTION, url: 'https://kochitolabs.com/pdf', siteName: 'Kochito Labs', type: 'website' },
+  alternates: { canonical: 'https://clerkpdf.com' },
+  openGraph: { title: `ClerkPDF: ${TITLE}`, description: DESCRIPTION, url: 'https://clerkpdf.com', siteName: 'ClerkPDF', type: 'website' },
 }
 
 const form = {
