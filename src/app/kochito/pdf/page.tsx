@@ -27,6 +27,9 @@ export default function PdfDesk() {
           <div>
             <h1>{TITLE}</h1>
             <p className="kl-lede">Send us an agenda, a budget or a set of scanned minutes. We return the same document, tagged so a screen reader can read it, together with the checker’s report. The first document is free.</p>
+            <a className="kl-btn kl-jump" href="#start">
+              Request the free fix
+            </a>
             <ul className="kl-points">
               <li>
                 <strong>$1 per page</strong> after the first document. No minimum and no contract.

@@ -27,6 +27,9 @@ export default function AppMaintenance() {
           <div>
             <h1>{TITLE}</h1>
             <p className="kl-lede">Your app still has paying merchants, and you no longer have time for it. We take over the 2027 platform migrations, the bug fixes and the support inbox. You keep the app.</p>
+            <a className="kl-btn kl-jump" href="#start">
+              Request the report
+            </a>
             <ul className="kl-points">
               <li>
                 <strong>No fee.</strong> We are paid an agreed share of what the app earns.

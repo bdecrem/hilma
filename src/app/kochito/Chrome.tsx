@@ -18,7 +18,7 @@ export function Top({ current }: { current?: 'pdf' | 'apps' }) {
               Accessible PDFs
             </a>
             <a href="/apps" aria-current={current === 'apps' ? 'page' : undefined}>
-              Shopify app maintenance
+              Shopify apps
             </a>
             <a href="mailto:hello@kochitolabs.com">Contact</a>
           </nav>

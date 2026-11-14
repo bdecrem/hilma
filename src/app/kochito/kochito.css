@@ -61,6 +61,10 @@
 .kl-points li { padding: 10px 0; border-top: 1px solid var(--rule); }
 .kl-points li:last-child { border-bottom: 1px solid var(--rule); }
 @media (max-width: 900px) { .kl-hero { grid-template-columns: 1fr; gap: 36px; padding-block: 36px 44px; } }
+/* on a phone the form is a screen away: a button under the first paragraph jumps to it */
+.kl-jump { display: none; margin-top: 20px; }
+@media (max-width: 900px) { .kl-jump { display: inline-block; } }
+@media (max-width: 480px) { .kl-nav { gap: 6px 20px; font-size: 15px; } .kl-head .kl-wrap { padding-block: 14px; } }
 
 .kl-form { background: var(--bg-alt); border: 1px solid var(--rule); border-radius: 3px; padding: 24px; }
 .kl-form h2 { font-size: 20px; margin-bottom: 4px; }
