@@ -8,6 +8,7 @@ import { rosterRoom } from './rooms'
 import { runRoomChat, type ChatTurn } from './social-agent'
 import { allPages, allPersonas, announce, BOOK_PAGES, deskNotes, eventsAfter, pickLeaf, roomOf } from './social'
 import { getBook } from './books'
+import { MAX_COMMENT, runFlamewar } from './flamewar'
 
 const json = (body: unknown, status = 200, cache = 'no-store') =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', 'cache-control': cache } })
@@ -111,3 +112,18 @@ export const book = (req: Request, who: string): Promise<Response> => guarded(as
   const out = visibleBook(b, who, (await allPages())[who] || 0, user)
   return out ? json(out) : json({ error: 'Not finished yet.' }, 403)
 })(req)
+
+/** POST { comment?, cast: [presenter, ...the five at the table], topic } -> the flame war the
+ *  question mic starts: { ok, comment, script, leaver, headline } or { ok: false, say }.
+ *  Signed in only; counts against the day's Claude turns. Takes 20 to 60 seconds. */
+export const flamewar: Handler = guarded(async req => {
+  const user = await sessionUser(req)
+  if (!user) return json({ ok: false, say: 'Sign in first.' }, 401)
+  const b = await readBody(req)
+  const r = await runFlamewar(user, {
+    comment: String(b.comment || '').slice(0, MAX_COMMENT),
+    cast: Array.isArray(b.cast) ? b.cast.map(String).slice(0, 8) : [],
+    topic: String(b.topic || ''),
+  })
+  return r.ok ? json(r) : json({ ok: false, say: r.say }, r.status)
+})

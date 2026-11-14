@@ -494,5 +494,199 @@
     "Matthew"
    ]
   }
+ },
+ "fellows": {
+  "alison": {
+   "name": "Alison",
+   "look": "Alison. Political theorist. Writing about treason and a king's trial in 1649."
+  },
+  "andrius": {
+   "name": "Andrius",
+   "look": "Andrius. Economist. Runs experiments on how people use and save energy."
+  },
+  "brian": {
+   "name": "Brian",
+   "look": "Brian. Neuroscientist. Studies how feelings steer our choices in the brain."
+  },
+  "brooke": {
+   "name": "Brooke",
+   "look": "Brooke. Studies offshore wealth. Trained as a wealth manager to get inside."
+  },
+  "bryn": {
+   "name": "Bryn",
+   "look": "Bryn. Studies how people in autocracies read the news and take political risks."
+  },
+  "corey": {
+   "name": "Corey",
+   "look": "Corey. Sociologist. Studies how inequality gets into health over a lifetime."
+  },
+  "daniel": {
+   "name": "Daniel",
+   "look": "Daniel. Economist and law scholar. Studies fairness, judges and AI in court."
+  },
+  "dessislava": {
+   "name": "Dessislava",
+   "look": "Dessislava. Runs Bellingcat's operations. Spots fake news for a living."
+  },
+  "eli": {
+   "name": "Eli",
+   "look": "Eli. Historian of American capitalism. Writing about how stock ownership changed politics."
+  },
+  "forrest": {
+   "name": "Forrest",
+   "look": "Forrest. Sociologist. Studies how ex-prisoners keep streets safe without force."
+  },
+  "frances": {
+   "name": "Frances",
+   "look": "Frances. Climate economist. Builds models of how weather, energy and laws affect each other."
+  },
+  "frederick": {
+   "name": "Frederick",
+   "look": "Frederick. Founded WashingtonPost.com and Echo360. Studies high achievers' dilemmas."
+  },
+  "garance": {
+   "name": "Garance",
+   "look": "Garance. Pulitzer-winning reporter. Investigates who AI hurts and who answers for it."
+  },
+  "graeme": {
+   "name": "Graeme",
+   "look": "Graeme. Counts deportations from government records, then checks the method twice."
+  },
+  "heeju": {
+   "name": "Heeju",
+   "look": "Heeju. Demographer. Maps family ties to see who helps whom in disasters."
+  },
+  "henry": {
+   "name": "Henry",
+   "look": "Henry. Historian of science. Writing on how America treated anxiety and depression."
+  },
+  "ian": {
+   "name": "Ian",
+   "look": "Ian. Studies the legal rights of migrants. Built a database of them."
+  },
+  "inbal": {
+   "name": "Inbal",
+   "look": "Inbal. Neuroscientist. Showed that rats will free a trapped friend."
+  },
+  "ishara": {
+   "name": "Ishara",
+   "look": "Ishara. Studies college paths of refugee and displaced students."
+  },
+  "jacqueline": {
+   "name": "Jacqueline",
+   "look": "Jacqueline. Uses AI to link air, genes and neighborhoods to brain aging."
+  },
+  "james": {
+   "name": "James",
+   "look": "James. Studies how great powers push other countries around, and with what tools."
+  },
+  "jamie": {
+   "name": "Jamie",
+   "look": "Jamie. Medieval historian. Studies how monks thought with notes and habits."
+  },
+  "john": {
+   "name": "John",
+   "look": "John. Geographer. Writing about how conservation and the gun industry shaped each other."
+  },
+  "joseph": {
+   "name": "Joseph",
+   "look": "Joseph. Experimental economist. Tests how people reason and talk, even with AI models."
+  },
+  "juliana": {
+   "name": "Juliana",
+   "look": "Juliana. Philosopher. Writes about equality and what a fair society owes people."
+  },
+  "june": {
+   "name": "June",
+   "look": "June. Clinical psychologist. Studies the strengths hidden inside hard emotions."
+  },
+  "jurate": {
+   "name": "Jūratė",
+   "look": "Jurate. Energy economist. Studies how leaders' words change views on solar and EVs."
+  },
+  "kahwee": {
+   "name": "Kah-Wee",
+   "look": "Kah-Wee. Studies how casinos and money reshaped Macau, Singapore and Manila."
+  },
+  "katharyne": {
+   "name": "Katharyne",
+   "look": "Katharyne. Geographer. Follows one Berlin airfield through nine centuries of rulers."
+  },
+  "kepa": {
+   "name": "Kepa",
+   "look": "Kepa. Philosopher of language. Writes about the rights of smaller languages."
+  },
+  "kevin": {
+   "name": "Kevin",
+   "look": "Kevin. Media historian. Wrote the book on the modem and the early internet."
+  },
+  "lana": {
+   "name": "Lana",
+   "look": "Lana. Studies payments, crypto and scams. Asks what makes money feel legit."
+  },
+  "lawrence": {
+   "name": "Lawrence",
+   "look": "Lawrence. Linguist. Uses AI to spot early dementia in how people talk."
+  },
+  "lewis": {
+   "name": "Lewis",
+   "look": "Lewis. Studies housing and land in African cities, and wetlands lost to development."
+  },
+  "luke": {
+   "name": "Luke",
+   "look": "Luke. Statistician. Tests programs by randomly choosing who gets them."
+  },
+  "lynda": {
+   "name": "Lynda",
+   "look": "Lynda. Doctor. Runs trials on helping midlife women with heart health and mood."
+  },
+  "mary": {
+   "name": "Mary",
+   "look": "Mary. Neuroscientist. Studies how teenagers' big ideas build healthy brains."
+  },
+  "matthew": {
+   "name": "Matthew",
+   "look": "Matthew. Studies how heat and climate hit the health of California farmworkers."
+  },
+  "mikael": {
+   "name": "Mikael",
+   "look": "Mikael. Designs and studies games. Looks at games that give voice to the underdog."
+  },
+  "milena": {
+   "name": "Milena",
+   "look": "Milena. Studies how people and machines act in groups. Writing a book on it."
+  },
+  "ralph": {
+   "name": "Ralph",
+   "look": "Ralph. Law professor. Asks if college gatekeeping blocks learning and fairness."
+  },
+  "raul": {
+   "name": "Raul",
+   "look": "Raul. Philosopher. Asks if a whole is more than its parts, or just the parts."
+  },
+  "robert": {
+   "name": "Robert",
+   "look": "Robert. Health researcher. Measures whether treatments help people live better."
+  },
+  "salman": {
+   "name": "Salman",
+   "look": "Salman. Built AI systems for years. Studies what AI does to office jobs."
+  },
+  "shigehiro": {
+   "name": "Shigehiro",
+   "look": "Shigehiro. Psychologist. Studies happiness and why careers cluster in herds."
+  },
+  "summerson": {
+   "name": "Summerson",
+   "look": "Summerson. Anthropologist. Studies facility dogs and why we treat them as experts."
+  },
+  "tl": {
+   "name": "T.L.",
+   "look": "T.L. Taylor. Studies online worlds, games and theme parks as designed places."
+  },
+  "toussaint": {
+   "name": "Toussaint",
+   "look": "Toussaint. Studies Facebook's free internet push in the Global South."
+  }
  }
 }

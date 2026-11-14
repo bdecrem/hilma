@@ -9,7 +9,7 @@
      author and an admin can peel one off.
    - New notes on your own desk wiggle until you have read them, and the ticker tells you.
    Server: src/lib/semibart/social.ts behind /api/semibart/desk. This file also loads the two
-   other social files (ticker.js, claude.js), so index.html needs one script tag for all three. */
+   other social files (ticker.js, claude.js, leaves.js, flamewar.js), so index.html needs one script tag for all of them. */
 (() => {
 'use strict';
 const q = window.quest;
@@ -18,7 +18,7 @@ const G = q.gfx, g = G.g, S = q.S, rect = (x, y, w, h, c) => G.rect(g, x, y, w, 
 const API = '/api/semibart/desk';
 const stage = document.getElementById('stage');
 const base = (document.currentScript && document.currentScript.src || '/semibart/notes.js').replace(/[^/]*$/, '');
-['ticker.js', 'claude.js', 'leaves.js'].forEach(f => { const s = document.createElement('script'); s.src = base + f; s.async = false; document.body.appendChild(s); });
+['ticker.js', 'claude.js', 'leaves.js', 'flamewar.js'].forEach(f => { const s = document.createElement('script'); s.src = base + f; s.async = false; document.body.appendChild(s); });
 
 const INK = '#141414';
 const PAPER = {
