@@ -15,6 +15,7 @@ export default function LeadForm({
   detailLabel,
   detailPlaceholder,
   done,
+  fromEmail = 'hello@kochitolabs.com',
   anchor = true,
 }: {
   page: string // 'pdf', 'apps', or a sample page ('s/killeen')
@@ -25,6 +26,7 @@ export default function LeadForm({
   detailLabel: string
   detailPlaceholder: string
   done: string
+  fromEmail?: string // the address our reply will come from (per domain)
   anchor?: boolean // carries id="start" (one form per page does)
 }) {
   const id = useId()
@@ -54,7 +56,7 @@ export default function LeadForm({
       if (!res.ok) throw new Error((await res.json()).error || 'Something went wrong.')
       setState('done')
     } catch (err) {
-      setError((err as Error).message.startsWith('kochito') ? 'That did not go through. Please email hello@kochitolabs.com instead.' : (err as Error).message)
+      setError((err as Error).message.startsWith('kochito') ? `That did not go through. Please email ${fromEmail} instead.` : (err as Error).message)
       setState('idle')
     }
   }
@@ -64,7 +66,7 @@ export default function LeadForm({
       <div className="kl-form kl-done" role="status" id={anchor ? 'start' : undefined}>
         <p className="kl-done-h">Request received.</p>
         <p>
-          {done} We will write to <strong>{email}</strong> from hello@kochitolabs.com.
+          {done} We will write to <strong>{email}</strong> from {fromEmail}.
         </p>
       </div>
     )

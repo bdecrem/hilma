@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import LeadForm from '../LeadForm'
 import PrVisual from '../PrVisual'
 import Track from '../Track'
+import { brand } from '../brand'
 import { Foot, Top } from '../Chrome'
 
 // kochitolabs.com/apps: maintenance for Shopify apps, paid as a share of the
@@ -29,7 +30,8 @@ const form = {
   done: 'Your report will arrive within one business day.',
 }
 
-export default function AppMaintenance() {
+export default async function AppMaintenance() {
+  const { email } = await brand()
   return (
     <>
       <Track page="apps" />
@@ -40,7 +42,7 @@ export default function AppMaintenance() {
             <p className="kl-kicker">For Shopify app developers</p>
             <h1>Your app still has merchants. We keep it running.</h1>
             <p className="kl-lede">You built it, merchants still pay for it, and you have no time for Shopify’s 2027 changes. We take over the migrations, the bug fixes and the support inbox, for a share of what the app earns.</p>
-            <LeadForm {...form} />
+            <LeadForm {...form} fromEmail={email} />
             <ul className="kl-trust">
               <li>
                 <strong>No fee</strong>
@@ -224,7 +226,7 @@ export default function AppMaintenance() {
         <section className="kl-band dark">
           <div className="kl-wrap kl-close">
             <h2>Find out which dates affect your app.</h2>
-            <LeadForm {...form} anchor={false} />
+            <LeadForm {...form} fromEmail={email} anchor={false} />
           </div>
         </section>
       </main>

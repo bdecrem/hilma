@@ -34,7 +34,7 @@ export async function Top({ current, cta }: { current?: 'pdf' | 'apps'; cta?: st
                 <a href="/#questions">Questions</a>
               </>
             )}
-            <a href="mailto:hello@kochitolabs.com">Contact</a>
+            <a href={`mailto:${b.email}`}>Contact</a>
             {cta && (
               <a className="kl-nav-cta" href="#start">
                 {cta}
@@ -56,7 +56,7 @@ export async function Foot() {
           <strong>{b.site === 'kochito' ? 'Kochito Labs LLC' : `${b.name}, a service of Kochito Labs LLC`}</strong>
           Wyoming, USA
           <br />
-          <a href="mailto:hello@kochitolabs.com">hello@kochitolabs.com</a>
+          <a href={`mailto:${b.email}`}>{b.email}</a>
         </div>
         <div>
           <strong>Kochito Labs</strong>

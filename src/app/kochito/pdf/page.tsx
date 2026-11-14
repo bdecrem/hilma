@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import DocVisual from '../DocVisual'
 import LeadForm from '../LeadForm'
 import Track from '../Track'
+import { brand } from '../brand'
 import { Foot, Top } from '../Chrome'
 
 // kochitolabs.com/pdf: accessible PDFs for city and county websites. One
@@ -29,7 +30,8 @@ const form = {
   done: 'Your fixed PDF and its report will arrive within one business day.',
 }
 
-export default function PdfDesk() {
+export default async function PdfDesk() {
+  const { email } = await brand()
   return (
     <>
       <Track page="pdf" />
@@ -40,7 +42,7 @@ export default function PdfDesk() {
             <p className="kl-kicker">For city and county clerks</p>
             <h1>Every PDF you post, readable by a screen reader.</h1>
             <p className="kl-lede">Send an agenda, a budget or a set of scanned minutes. You get the same document back with the structure a screen reader needs, and the checker’s report to prove it. The first one is free.</p>
-            <LeadForm {...form} />
+            <LeadForm {...form} fromEmail={email} />
             <ul className="kl-trust">
               <li>
                 <strong>$1</strong> per page
@@ -300,7 +302,7 @@ export default function PdfDesk() {
         <section className="kl-band dark">
           <div className="kl-wrap kl-close">
             <h2>Send one PDF and see the result.</h2>
-            <LeadForm {...form} anchor={false} />
+            <LeadForm {...form} fromEmail={email} anchor={false} />
           </div>
         </section>
       </main>

@@ -151,6 +151,7 @@ export default async function SamplePage({ params }: { params: Promise<{ slug: s
               detailLabel="Anything we should know"
               detailPlaceholder="For example: we post a packet every other Thursday"
               done="We will be in touch within one business day."
+              fromEmail="hello@clerkpdf.com"
             />
           </div>
         </section>
