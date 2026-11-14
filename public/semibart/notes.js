@@ -1,7 +1,10 @@
 /* CASBS Quest sticky notes (2026-11-12). Rides on the game through window.quest.
    - Every desk has a pad of sticky notes and a pen. Click it in someone's study to leave them a
      note (140 characters); it lands on the front of their desk, where anyone who walks in can
-     pick it up and read it. In a shared study you choose who it is for.
+     pick it up and read it. In a shared study you choose who it is for. In Bart's study the
+     notes go on the pinboard on the wall instead (BOARD); the pad stays on the desk.
+   - The pad and pen are the one thing on a desk that does something, so they are drawn to say
+     so: an ink outline, a pen in the game's orange, and a small twinkle every few seconds.
    - Click a note to read the desk close up: every note, who left it, when. Its reader, its
      author and an admin can peel one off.
    - New notes on your own desk wiggle until you have read them, and the ticker tells you.
@@ -49,11 +52,19 @@ const PLACES = {
 // When the room's own code has hidden the desk (or the reading chair), the notes move to the
 // wall under the window, which no room can hide: two rows of six from x 50, the pad on the sill.
 const WALL = { pad: [48, 69], slots: grid(50, 6, [78, 89]) };
+// Bart's study has a pinboard on the wall (index.html, x 155-194, y 12-49; cork x 157-192,
+// y 14-47): his notes are pinned there, three across (159 + 2 * 11 + 9 = 190) and three down
+// (15 + 2 * 11 + 9 = 46). The pad stays where it would be. If his room's code hides the wall
+// things ('extras'), the notes go back to the desk.
+const BOARD = grid(159, 3, [15, 26, 37]);
 function placeOf(room) {
   const sc = sceneOf(room); if (!PLACES[sc]) return null;
   const gone = window.questRooms && typeof window.questRooms.hidden === 'function' ? window.questRooms.hidden(room) || [] : [];
-  return gone.includes(sc === 'read' ? 'chair' : 'desk') ? WALL : PLACES[sc];
+  const p = gone.includes(sc === 'read' ? 'chair' : 'desk') ? WALL : PLACES[sc];
+  return sc === 'bart' && !gone.includes('extras') ? { pad: p.pad, slots: BOARD, board: true } : p;
 }
+/** Where a room's notes are kept, as a word: 'pinboard' in Bart's study, 'desk' everywhere else. */
+const spotOf = room => { const p = placeOf(room); return p && p.board ? 'pinboard' : 'desk'; };
 
 /* ---------- the notes of the room you are in ---------- */
 const desks = {};   // room -> { notes: [...], at: ms, loading }
@@ -113,10 +124,20 @@ function drawNote(n, x, y, t) {
   for (let i = 0; i < 3; i++) rect(x + 1, y + 3 + i * 2, 3 + ((h >> (5 + i * 3)) % 5), 1, c.i);
   if (fresh(n)) { rect(x + 6, y - 1, 3, 3, INK); rect(x + 7, y, 1, 1, '#ff5a1f'); }
 }
-function drawPad(x, y) {
-  rect(x - 1, y + 3, 11, 1, 'rgba(20,20,20,0.3)');
-  rect(x, y + 1, 9, 2, '#d9b93a'); rect(x, y, 9, 2, '#ffe566'); rect(x, y, 9, 1, '#fff3a6');
-  for (let i = 0; i < 7; i++) rect(x + 1 + i, y - 3 + Math.floor(i / 2), 1, 1, i === 6 ? INK : i === 0 ? '#fff7e6' : '#2b3fff');
+// The pad and pen, x, y = the pad's top-left. Everything else on a desk is scenery; this is a
+// control, so it gets what the game gives things you can use: a full ink outline (pad 11 x 5,
+// pen 3 thick), the pen in the interface's orange, and a twinkle at the pen's cap for 0.45 s
+// every 3.6 s (three stepped frames; a still spark when motion is reduced). Each pad twinkles
+// at its own moment, so a shared study does not blink in unison.
+function drawPad(x, y, t) {
+  rect(x - 1, y - 1, 11, 5, INK);
+  rect(x, y, 9, 3, '#ffe566'); rect(x, y, 9, 1, '#fff3a6'); rect(x, y + 2, 9, 1, '#d9b93a');
+  const pen = i => [x + 2 + i, y - 5 + Math.round(i * 0.67)];
+  for (let i = 0; i < 7; i++) { const [px, py] = pen(i); rect(px - 1, py - 1, 3, 3, INK); }
+  for (let i = 0; i < 7; i++) { const [px, py] = pen(i); rect(px, py, 1, 1, i === 0 ? '#fff7e6' : i === 6 ? '#ffd93b' : '#ff5a1f'); }
+  const sx = x + 1, sy = y - 7, k = G.calm ? 1 : Math.floor((((t + x * 0.37) % 3.6) + 3.6) % 3.6 / 0.15);
+  if (k === 0 || k === 2) { rect(sx - 1, sy, 3, 1, '#ffd93b'); rect(sx, sy - 1, 1, 3, '#ffd93b'); rect(sx, sy, 1, 1, '#fff7e6'); }
+  if (k === 1) { rect(sx - 2, sy, 5, 1, '#ffd93b'); rect(sx, sy - 2, 1, 5, '#ffd93b'); rect(sx - 1, sy - 1, 3, 3, '#fff7e6'); }
 }
 let lastRoom = null, pollT = 0;
 q.hooks.roomMid.push((room, t) => {
@@ -126,7 +147,7 @@ q.hooks.roomMid.push((room, t) => {
   layout(room).forEach(gr => {
     gr.items.forEach(it => drawNote(it.n, it.x, it.y, t));
     if (gr.more) { const [x, y] = gr.last; for (let k = 2; k >= 0; k--) { rect(x + k, y + k - 1, 9, 9, k ? '#d9b93a' : '#ffe566'); } rect(x + 2, y + 3, 5, 1, '#8a7420'); rect(x + 4, y + 1, 1, 5, '#8a7420'); }
-    drawPad(gr.pad[0], gr.pad[1]);
+    drawPad(gr.pad[0], gr.pad[1], t);
   });
 });
 // Leaving a room: forget which one, so walking back in asks again.
@@ -143,8 +164,8 @@ q.hooks.roomSpots.push(room => {
     if (gr.more) { const [x, y] = gr.last; out.push({ name: `${gr.more} more notes`, r: [x - 1, y - 2, 13, 13], walk: { x: wx(x), y: 134 }, def: 'read', on: { look: 'A whole stack of them. Somebody is popular.', read: () => openDesk(room, null) } }); }
     const own = perDesk ? !!(q.me && q.me.character === gr.to) : mine(room);
     const who = own ? 'My' : perDesk ? nameOf(gr.to) + "'s" : shared ? 'Their' : nameOf(room) + "'s";
-    out.push({ name: perDesk && !own ? `sticky notes and a pen, ${nameOf(gr.to)}'s` : 'sticky notes and a pen', r: [gr.pad[0] - 2, gr.pad[1] - 5, 13, 10], walk: { x: wx(gr.pad[0]), y: 134 }, def: 'write',
-      on: { look: own ? 'My pad of sticky notes, and a pen. Anyone who visits can leave me one.' : `${who} pad of sticky notes, and a pen. For leaving a note on the desk.`, write: () => writeFlow(room, gr.to) } });
+    out.push({ name: perDesk && !own ? `sticky notes and a pen, ${nameOf(gr.to)}'s` : 'sticky notes and a pen', r: [gr.pad[0] - 3, gr.pad[1] - 10, 15, 15], walk: { x: wx(gr.pad[0]), y: 134 }, def: 'write',
+      on: { look: own ? 'My pad of sticky notes, and a pen. Anyone who visits can leave me one.' : `${who} pad of sticky notes, and a pen. For leaving a note on the ${spotOf(room)}.`, write: () => writeFlow(room, gr.to) } });
   });
   return out;
 });
@@ -155,6 +176,7 @@ css.textContent = `
 .nb-veil { position: absolute; inset: 0; z-index: 7; display: grid; place-items: center; background: rgba(0, 0, 0, 0.6); }
 .nb-board { width: 86cqw; height: 48cqw; display: flex; flex-direction: column; background: #c08a55; border: 0.5cqw solid #141414; box-shadow: inset 0 0 0 0.4cqw #9c6a3c, 1.2cqw 1.2cqw 0 #000; color: #fff7e6;
   background-image: repeating-linear-gradient(90deg, rgba(0,0,0,0) 0 11.6cqw, rgba(124, 78, 40, 0.5) 11.6cqw 12cqw); }
+.nb-board.nb-cork { background: #d9b48a; background-image: none; box-shadow: inset 0 0 0 1cqw #5c2e18, 1.2cqw 1.2cqw 0 #000; padding: 1cqw; }
 .nb-top { flex: none; display: flex; align-items: center; justify-content: space-between; padding: 1.2cqw 2cqw 0.4cqw; font-size: 3.2cqw; color: #2a1608; }
 .nb-top button, .nb-bottom .nb-quiet { color: #2a1608; font-size: 2.4cqw; border: 0.25cqw solid #2a1608; padding: 0.2cqw 1.2cqw; }
 .nb-top button:hover, .nb-bottom .nb-quiet:hover { background: #2a1608; color: #ffe566; }
@@ -218,11 +240,12 @@ function noteHtml(n, room, focusId) {
 /** The desk close up. Resolves 'write' when the visitor asked for the pad, else undefined. */
 async function openDesk(room, focusId) {
   await load(room, true);
-  const title = mine(room) ? 'My desk' : q.occupants(room).length > 1 ? `The desk in Study ${q.PEOPLE[room] ? q.PEOPLE[room].n : ''}` : `${nameOf(room)}'s desk`;
+  const board = spotOf(room) === 'pinboard';
+  const title = board ? (mine(room) ? 'My pinboard' : `${nameOf(room)}'s pinboard`) : mine(room) ? 'My desk' : q.occupants(room).length > 1 ? `The desk in Study ${q.PEOPLE[room] ? q.PEOPLE[room].n : ''}` : `${nameOf(room)}'s desk`;
   const all = notesIn(room).slice().reverse();
-  const done = openVeil(`<div class="nb-board" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+  const done = openVeil(`<div class="nb-board${board ? ' nb-cork' : ''}" role="dialog" aria-modal="true" aria-label="${esc(title)}">
     <div class="nb-top"><span>${esc(title)}</span><button type="button" data-close>Close</button></div>
-    <div class="nb-notes">${all.length ? all.map(n => noteHtml(n, room, focusId)).join('') : '<p class="nb-empty">No notes yet.<br>The pad is right there.</p>'}</div>
+    <div class="nb-notes">${all.length ? all.map(n => noteHtml(n, room, focusId)).join('') : `<p class="nb-empty">No notes yet.<br>The pad is ${board ? 'on the desk' : 'right there'}.</p>`}</div>
     <div class="nb-bottom"><button type="button" class="nb-btn" data-write>${mine(room) ? 'Note to self' : 'Leave a note'}</button><span class="nb-hint">${all.length ? all.length + (all.length === 1 ? ' note' : ' notes') + '. Anyone who walks in can read them.' : ''}</span></div>
   </div>`);
   const el = veil;
@@ -234,7 +257,7 @@ async function openDesk(room, focusId) {
       const r = await fetch(API + '?id=' + encodeURIComponent(id), { method: 'DELETE', credentials: 'same-origin' });
       if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || 'That did not come off.');
       desks[room].notes = desks[room].notes.filter(n => n.id !== id); card.remove(); q.SFX.pick && q.SFX.pick();
-      if (!el.querySelector('.nb-note')) el.querySelector('.nb-notes').innerHTML = '<p class="nb-empty">A clean desk.</p>';
+      if (!el.querySelector('.nb-note')) el.querySelector('.nb-notes').innerHTML = `<p class="nb-empty">A clean ${board ? 'board' : 'desk'}.</p>`;
     } catch (x) { b.disabled = false; b.textContent = x.message; }
   }));
   const f = el.querySelector('.nb-focus'); if (f) f.scrollIntoView({ block: 'center' });
@@ -243,6 +266,7 @@ async function openDesk(room, focusId) {
 }
 
 const THANKS = ['A note! I will read it the second you leave.', "Ooh. Don't tell me what it says.", 'Stuck on straight and everything. Thank you.', 'I love mail I do not have to answer.', 'It goes with the desk. Thank you.', 'Finally, something on this desk I did not put there.'];
+const BOARD_THANKS = THANKS.filter(l => !/desk/.test(l)).concat(['Straight onto the board. Thank you.', 'Pinned. It outranks everything else up there.']);
 async function writeFlow(room, forWhom) {
   if (!q.me) { await q.say('you', 'Sticky notes and a pen. I should sign in before I sign anything.'); return; }
   const people = q.occupants(room);
@@ -283,7 +307,7 @@ async function writeFlow(room, forWhom) {
   dropped = { id: note.id, t0: performance.now() }; q.SFX.pick && q.SFX.pick();
   await q.wait(0.35);
   if (to === q.me.character) await q.say('you', 'A note to self. Future me will be thrilled.');
-  else await q.say(to, THANKS[hash(note.id) % THANKS.length]);
+  else { const lines = spotOf(room) === 'pinboard' ? BOARD_THANKS : THANKS; await q.say(to, lines[hash(note.id) % lines.length]); }
 }
 
 /* ---------- your own desk: tell you when something new is on it ---------- */
@@ -292,16 +316,16 @@ async function checkMine() {
   const room = myRoom(); if (!room) return;
   await load(room, true);
   const n = notesIn(room).filter(fresh).length;
-  if (n && window.questTicker) window.questTicker.local(n === 1 ? 'There is a new note on your desk.' : `There are ${n} new notes on your desk.`);
+  if (n && window.questTicker) window.questTicker.local(n === 1 ? `There is a new note on your ${spotOf(room)}.` : `There are ${n} new notes on your ${spotOf(room)}.`);
 }
 let told = false;
 window.addEventListener('semibart:user', () => { if (q.me && !told) { told = true; setTimeout(checkMine, 2500); } });
 // A note announced on the ticker: if it is for the room you are standing in, pick it up now.
 window.addEventListener('semibart:event', e => { const ev = e.detail; if (ev && ev.kind === 'note' && S.scene === 'room' && ev.room === S.room) load(S.room, true); });
 
-// Bart's study already had a pinboard on the wall with painted sticky notes on it. It looks like
-// the place to read your notes, so it is one: clicking it opens the same desk close-up.
-{ const pin = q.ROOM.find(h => h.name === 'pinboard'); if (pin) { pin.def = 'read'; pin.on.look = 'My pinboard. One note says: ASK CLAUDE. The real ones are on the desk.'; pin.on.read = () => openDesk('bart', null); } }
+// Bart's study has a pinboard on the wall, and the notes people leave him are pinned to it
+// (BOARD above). Clicking the board itself opens the same close-up as clicking a note.
+{ const pin = q.ROOM.find(h => h.name === 'pinboard'); if (pin) { pin.def = 'read'; pin.on.look = 'The pinboard. People leave notes. They stay up.'; pin.on.read = () => openDesk('bart', null); } }
 
 window.questNotes = { desks, load, openDesk, writeFlow, shown, placeOf };
 })();

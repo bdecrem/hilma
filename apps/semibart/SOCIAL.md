@@ -23,6 +23,18 @@ study with a desk per person (`quest.desks(room)` from the rooms layer, two or m
 each person's notes stick to their own front panel and each desk has its own pad, which
 writes to that person; until that layer lands, shared studies use the one-desk layout.
 
+Bart's study is the exception (2026-11-13, his ask): it has a pinboard on the wall, so his notes
+are pinned there, three by three (`BOARD` in notes.js; the board is painted empty in
+`makeRoomBg`, x 155-194, y 12-49), the close-up is cork, and the wire says "pinned a note to
+Bart's board". The pad stays on his desk. If his room's code hides the wall things (`extras`),
+the notes go back to the desk.
+
+The pad and pen are the one thing on a desk that does something, so `drawPad` marks them as a
+control in the game's own terms (VOICE.md: honest pixels, one accent): a full ink outline, the
+pen in orange, and a three-frame twinkle at the pen's cap every 3.6 seconds, still when motion
+is reduced. `node scripts/semibart/notes-shots.mjs <dir> [base] [bart-room-code.js]` shoots one
+room of each kind with mocked notes and prints the note and pad hotspots.
+
 - `GET /api/semibart/desk?room=mary` → `{ notes }`, `POST { to, body }` and `DELETE ?id=`, all
   signed in only: "anyone who walks in" means anyone in the game, not anyone with curl. Reads are `deskNotes` in `src/lib/semibart/social.ts`; writes go
   through the accounts session's `leaveNote` / `removeNote` (`notes.ts`, table 002).

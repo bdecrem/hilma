@@ -188,7 +188,7 @@ function draw(layer, room, t) {
       const fx = typeof q.fixtures === 'function' ? q.fixtures(room) : { bookshelf: [266, 10, 48, 97], rug: [52, 124, 168, 18] };
       if (m.hide.includes('bookshelf')) wall(...fx.bookshelf);
       if (m.hide.includes('rug')) floor(...fx.rug);
-      if (room === 'bart' && m.hide.includes('extras')) wall(130, 14, 100, 35);
+      if (room === 'bart' && m.hide.includes('extras')) wall(130, 12, 100, 38);
       if (room === 'bart' && m.hide.includes('chair')) wall(168, 58, 44, 40);
     }
     if (fn) fn(api, t);
