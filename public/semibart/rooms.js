@@ -119,11 +119,16 @@ const LAYERS = ['back', 'mid', 'front'];
 function compile(code) {
   const make = new Function(...SHADOW, '"use strict"; return (function () {\n' + code + '\n}).call(undefined);');
   const mod = make(...SHADOW_ARGS);
-  const out = { back: null, mid: null, front: null, spots: null, hide: [], errors: 0, ms: 0, frames: 0, dead: false };
+  const out = { back: null, mid: null, front: null, spots: null, hide: [], seats: null, errors: 0, ms: 0, frames: 0, dead: false };
   if (!mod || typeof mod !== 'object') return out;
   LAYERS.forEach(l => { if (typeof mod[l] === 'function') out[l] = mod[l]; });
   if (Array.isArray(mod.spots) || typeof mod.spots === 'function') out.spots = mod.spots;
   if (Array.isArray(mod.hide)) out.hide = mod.hide.filter(n => typeof n === 'string' && (HIDEABLE.includes(n) || /^(person|desk|chair):[0-2]$/.test(n))).slice(0, 16);
+  // seats: { 1: [centre x, desk width] } squeezes and moves an occupant's desk in a shared study
+  if (mod.seats && typeof mod.seats === 'object') for (const k of ['0', '1', '2']) {
+    const s = mod.seats[k];
+    if (Array.isArray(s) && ok(s[0]) && ok(s[1]) && s[1] >= 30 && s[1] <= 120 && s[0] - s[1] / 2 >= 40 && s[0] + s[1] / 2 <= 319) (out.seats = out.seats || {})[k] = [Math.round(s[0]), Math.round(s[1])];
+  }
   return out;
 }
 const rooms = {};      // room -> { version, mod }
@@ -201,6 +206,12 @@ function hideFor(room, m) {
   return m.hide.map(n => { const i = n.indexOf(':'); return i < 0 ? n : who[+n.slice(i + 1)] ? n.slice(0, i + 1) + who[+n.slice(i + 1)] : null; }).filter(Boolean);
 }
 if (canHide) q.hooks.roomHide.push(room => { const r = rooms[room], m = r && r.mod; return m && !m.dead ? hideFor(room, m) : []; });
+if (canHide && Array.isArray(q.hooks.roomSeats)) q.hooks.roomSeats.push(room => {
+  const r = rooms[room], m = r && r.mod; if (!m || m.dead || !m.seats || typeof q.occupants !== 'function') return null;
+  const who = q.occupants(room), out = {};
+  for (const k in m.seats) if (who[+k]) out[who[+k]] = m.seats[k];
+  return out;
+});
 if (Array.isArray(q.hooks.roomPersonAt)) q.hooks.roomPersonAt.push((room, slug) => {
   const r = rooms[room], m = r && r.mod, at = personAt[room] && personAt[room][slug];
   return m && !m.dead && at && Math.abs(frameT - at[2]) < 0.5 ? [at[0], at[1]] : null;

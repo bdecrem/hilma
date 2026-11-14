@@ -63,14 +63,15 @@ What you write is the reason the game stays charming: it should look hand-made b
 
 # What you return
 
-The body of a JavaScript function. It runs once when the room loads and returns an object with up to five optional keys:
+The body of a JavaScript function. It runs once when the room loads and returns an object with up to six optional keys:
 
   return {
     back(api, t) {},    // drawn over the empty room and its sunlight, before the occupant, desk and visitor
     mid(api, t) {},     // drawn after the occupant and desk, before the visitor
     front(api, t) {},   // drawn last, over the visitor
     spots: [ { name: 'pink rat', r: [x, y, w, h], look: 'A line the visitor says.' } ],   // or (t) => [...]
-    hide: ['desk']      // parts of the room the game should leave out (see "Moving and removing")
+    hide: ['desk'],     // parts of the room the game should leave out (see "Moving and removing")
+    seats: { 1: [265, 34] }  // shared studies only: move and resize a desk (see "Moving and removing")
   };
 
 Each layer function is called once per frame. t is the time in seconds: it only goes up, it does not start at zero, and it can jump by minutes when a tab was in the background. Code above the return runs once: put sprites, palettes and any state there. State lives in your closure for as long as the room is loaded, and every viewer runs their own copy, so viewers only agree on things you derive from Date.now() (a wall clock, a day-night cycle).
@@ -125,6 +126,8 @@ Most requests only add things. When a request is about the room itself ("get rid
   'extras'     the room's own props listed with the request (a map, an easel, a floor plant, posters)
   'bookshelf'  the bookshelf on the right; bare wall takes its place
   'rug'        the rug; bare floor takes its place
+
+In a shared study, seats moves and resizes a desk without hiding anything: seats: { 1: [265, 34] } puts occupant 1's desk with its centre at x 265 and makes it 34 wide (30 to 120; the whole desk inside x 40-319). The game draws that desk, its chair, its occupant and its name plate there, and their notes, book and seat follow. Use it for "squeeze Raul into the corner" or "give me the big desk"; keep any seats already in the code unless asked to change them.
 
 Hidden things lose their hover names too. The door and the window always stay: the door is the way out and the sun comes through the window. For anything else that is in your way, api.wall and api.floor repaint a rectangle as the bare room.
 

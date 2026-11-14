@@ -118,7 +118,15 @@ __CODE__
     if (mod === undefined || mod === null) mod = {};
     if (typeof mod !== 'object') throw new Error('the code must return an object: { back, mid, front, spots }');
     var LAYERS = ['back', 'mid', 'front'];
-    for (var k in mod) if (LAYERS.indexOf(k) < 0 && k !== 'spots' && k !== 'hide') throw new Error('unknown key "' + k + '" in the returned object; use back, mid, front, spots, hide');
+    for (var k in mod) if (LAYERS.indexOf(k) < 0 && k !== 'spots' && k !== 'hide' && k !== 'seats') throw new Error('unknown key "' + k + '" in the returned object; use back, mid, front, spots, hide, seats');
+    if (mod.seats !== undefined) {
+      if (!mod.seats || typeof mod.seats !== 'object' || Array.isArray(mod.seats)) throw new Error('seats must be an object like { 1: [centre x, desk width] }');
+      for (var sk in mod.seats) {
+        var sv = mod.seats[sk];
+        if (sk !== '0' && sk !== '1' && sk !== '2') throw new Error('seats: "' + sk + '" is not an occupant number (0 to 2)');
+        if (!Array.isArray(sv) || !num(sv[0]) || !num(sv[1]) || sv[1] < 30 || sv[1] > 120 || sv[0] - sv[1] / 2 < 40 || sv[0] + sv[1] / 2 > 319) throw new Error('seats: each is [centre x, desk width], the width 30 to 120 and the whole desk inside x 40-319');
+      }
+    }
     if (mod.hide !== undefined) {
       if (!Array.isArray(mod.hide)) throw new Error('hide must be an array of names');
       if (mod.hide.length > 16) throw new Error('hide lists at most 16 names');

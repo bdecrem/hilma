@@ -105,7 +105,7 @@ function spineAt(room, i) {
 }
 function standAt(room, slug) {   // where a finished book stands, face-out: [x, y of its foot]
   const d = (typeof q.desks === 'function' ? q.desks(room) || [] : []).find(e => e.slug === slug);
-  if (d) return d.hidden ? null : [room === 'bart' ? 165 : d.x + d.w - 18, d.top];
+  if (d) return d.hidden ? null : [room === 'bart' ? 165 : d.x + d.w - (d.w < 50 ? 13 : 18), d.top];   // a squeezed desk: at its very end
   const p = q.PEOPLE[room];
   return p && slug === room && ELSEWHERE[p.scene] ? ELSEWHERE[p.scene] : null;
 }

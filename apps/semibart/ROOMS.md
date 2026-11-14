@@ -67,6 +67,12 @@ code can address one person: `hide: ['person:1', 'desk:0', 'chair:2']` (numbers 
 order; `rooms.js` turns them into the game's `person:<slug>` and so on) and
 `api.person(x, y, { who: 1 })`.
 
+**Moved desks** (2026-11-13): room code may also return `seats: { 1: [265, 34] }`, a new centre x
+and width for an occupant's desk. `rooms.js` hands it to the game through `quest.hooks.roomSeats`,
+and `planOf` in `index.html` then answers with a centre and a width per desk, so the desk, chair,
+person, name plate, seat, hotspots, notes and book all move together (a desk under 50 wide loses
+its mug). Study 27 uses it: Mikael and Raul sit at 34-wide desks in the right-hand corner.
+
 `decorate-try.ts` plays a war without saving anything: `--as <character>` says who is asking and
 `--history h.json` carries the changes from one run to the next.
 

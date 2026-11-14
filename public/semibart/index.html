@@ -176,7 +176,7 @@ const W = 320, H = 144, OY = 18, FH = 180;
 // hooks for the files that ride on the game (accounts.js, rooms.js, notes.js): they push functions here
 // on the map: mapOver(t) draws in map coordinates over the campus, mapSpots() adds hover targets;
 // sayYou(text) may reword what the player's own character says
-const HOOKS = { roomBack: [], roomMid: [], roomFront: [], roomSpots: [], keyBlock: [], roomHide: [], roomPersonAt: [], mapOver: [], mapSpots: [], sayYou: [] };
+const HOOKS = { roomBack: [], roomMid: [], roomFront: [], roomSpots: [], keyBlock: [], roomHide: [], roomPersonAt: [], roomSeats: [], mapOver: [], mapSpots: [], sayYou: [] };
 // parts of a room a rider draws its own way: 'occupant', 'desk', 'chair', 'mates', 'extras'
 // which part of a room a hotspot belongs to, so hiding the part hides its hotspot too
 const PART_OF = { 'name plate': 'desk', Socrates: 'desk', monitor: 'desk', monitors: 'desk', 'coffee mug': 'desk', phone: 'desk', 'the Almanac': 'occupant', 'reading chair': 'chair', lamp: 'chair', easel: 'extras', 'world map': 'extras', plant: 'extras' };
@@ -697,9 +697,9 @@ function sharedScene(k, t, hide) {
   const p = PEOPLE[k], pl = planOf(k), who = [k].concat(p.mates);
   const gone = (slug, i) => hide.has('person:' + slug) || hide.has(i === 0 ? 'occupant' : 'mates');
   who.forEach((slug, i) => {
-    const o = LOOKS[slug], c = pl.c[i], w = pl.w, X = c - w / 2, here = !gone(slug, i) && !!o;
+    const o = LOOKS[slug], c = pl.c[i], w = deskW(pl, i), X = c - w / 2, here = !gone(slug, i) && !!o;
     const show = n => !hide.has(n) && !hide.has(n + ':' + slug);
-    if (show('chair')) { const cw = pl.chair, x0 = c - cw / 2; rect(g, x0 + 2, 58, cw - 4, 3, INK); rect(g, x0, 61, cw, 36, INK); rect(g, x0 + 2, 61, cw - 4, 36, '#3b3d4a'); rect(g, x0 + 2, 61, cw - 4, 1, '#4f5262'); }
+    if (show('chair')) { const cw = Math.min(pl.chair, w), x0 = c - cw / 2; rect(g, x0 + 2, 58, cw - 4, 3, INK); rect(g, x0, 61, cw, 36, INK); rect(g, x0 + 2, 61, cw - 4, 36, '#3b3d4a'); rect(g, x0 + 2, 61, cw - 4, 1, '#4f5262'); }
     if (here) bust(o, c - 14, 66, { talk: voiced(slug) && (calm || Math.floor(t * 8) % 2 === 0), blink: !calm && (t + slug.length * 1.7 + i) % (4.3 + i * 0.4) < 0.13 });
     if (show('desk')) {
       rect(g, X, 95, w, 1, INK); rect(g, X, 96, w, 4, '#e2b47e'); rect(g, X, 100, w, 1, INK);
@@ -713,7 +713,7 @@ function sharedScene(k, t, hide) {
       const typing = !S.line && !calm && (t + i * 2.3 + slug.length) % 7 < 4.6, a = typing ? Math.floor(t * 9 + i * 3) % 2 : 0;
       rect(g, c - 9, 92 - a, 5, 2, o.skin); rect(g, c + 4, 92 - (typing ? 1 - a : 0), 5, 2, o.skin);
     }
-    if (!show('desk')) return;
+    if (!show('desk') || w < 50) return;   // a squeezed desk has no room for the mug
     const mx = w >= 70 ? c + 18 : c + 14;
     rect(g, mx, 88, 7, 8, INK); rect(g, mx + 1, 89, 5, 6, { ian: '#fff7e6', jacqueline: '#ff9ccf' }[slug] || ['#ff9ccf', '#2b3fff', '#7ee0b5', '#ffd93b', '#fff7e6'][hashK(slug) % 5]); rect(g, mx + 7, 90, 2, 3, INK);
     if (slug === 'jacqueline') { rect(g, X + 15, 88, 9, 7, '#c46a4a'); disc(g, X + 19, 84, 4, '#2f6b45'); disc(g, X + 17, 82, 2, '#4a8f5f'); }
@@ -1102,7 +1102,18 @@ const STUDY_OF = { eli: '34', forrest: '44', lewis: '6', luke: '5', mary: '4', l
   june: '38', lynda: '39', robert: '40', ralph: '41', dessislava: '42', jamie: '45', kepa: '46', henry: '47', corey: '48', lana: '49', shigehiro: '50', andrius: '51',
   bryn: '52', brian: '53', heeju: '54', toussaint: '016', matthew: '016' };
 const MATES = { '27': ['kevin', 'mikael', 'raul'], '28': ['jacqueline', 'jurate'], '29': ['ian', 'ishara'], '016': ['toussaint', 'matthew'] };
-function planOf(room) { const p = PEOPLE[room]; return p && p.mates && p.mates.length ? PLANS[p.mates.length + 1] || null : null; }
+// A rider may squeeze and move the desks of a shared study (room code's `seats`): hooks.roomSeats
+// answers { slug: [centre x, desk width] }. The plan then carries a centre and a width per desk
+// (c, ws) and the plan's own centres as c0, and everything that asks the plan follows: the desk,
+// chair and person, the name plate, the seat, the notes, the book, the hotspots.
+function seatsIn(room) { let out = null; HOOKS.roomSeats.forEach(f => { try { const s = f(room); if (s) out = Object.assign(out || {}, s); } catch (e) { console.error('[hook]', e); } }); return out; }
+function planOf(room) {
+  const p = PEOPLE[room], base = p && p.mates && p.mates.length ? PLANS[p.mates.length + 1] || null : null, mv = base && seatsIn(room);
+  if (!mv) return base;
+  const who = [room].concat(p.mates);
+  return Object.assign({}, base, { c: base.c.map((c, i) => mv[who[i]] ? mv[who[i]][0] : c), ws: base.c.map((c, i) => mv[who[i]] ? mv[who[i]][1] : base.w), c0: base.c });
+}
+const deskW = (pl, i) => pl.ws ? pl.ws[i] : pl.w;
 // where room-mate i (0 = the first one after the host) sits: the left edge of their head and shoulders
 function mateX(host, i) { const pl = planOf(host); return pl ? pl.c[i + 1] - 14 : [140, 250][i]; }
 // every desk in a room, for whoever sticks things to them: [{ slug, x, w, c, top, panel: [x, y, w, h] }]
@@ -1111,7 +1122,7 @@ function desksOf(room) {
   if (room === 'bart') return one('bart');
   const p = PEOPLE[room]; if (!p) return [];
   const pl = planOf(room);
-  if (pl) { const hid = hiddenIn(room); return [room].concat(p.mates).map((slug, i) => { const x = pl.c[i] - pl.w / 2; return { slug, x, w: pl.w, c: pl.c[i], top: 95, panel: [x + 3, 101, pl.w - 6, 22], plate: plateOf(slug, pl.c[i]), hidden: hid.has('desk') || hid.has('desk:' + slug) }; }); }
+  if (pl) { const hid = hiddenIn(room); return [room].concat(p.mates).map((slug, i) => { const w = deskW(pl, i), x = pl.c[i] - w / 2; return { slug, x, w, c: pl.c[i], top: 95, panel: [x + 3, 101, w - 6, 22], plate: plateOf(slug, pl.c[i]), hidden: hid.has('desk') || hid.has('desk:' + slug) }; }); }
   return p.scene === 'desk' ? one(room) : [];
 }
 // where a room's bookshelf and rug are: [x, y, w, h]
@@ -1600,8 +1611,14 @@ function hotspots() {
   if (S.scene === 'map' && HOOKS.mapSpots.length) return [].concat(...HOOKS.mapSpots.map(f => { try { return f() || []; } catch (e) { console.error('[hook]', e); return []; } }), base);
   if (S.scene !== 'room' || S.room === 'seminar' || S.room === 'empty') return base;
   // a person a rider has moved (to the couch, say) is clicked where they are now
-  const placed = HOOKS.roomPersonAt.length ? base.map(h => { const p = h.who && h.at0 && personAt(S.room, h.who); if (!p) return h; const dx = p[0] - h.at0[0], dy = p[1] - h.at0[1];
-    return Object.assign({}, h, { r: [h.r[0] + dx, h.r[1] + dy, h.r[2], h.r[3]], walk: { x: Math.max(40, Math.min(300, h.walk.x + dx)), y: h.walk.y } }); }) : base;
+  // desks a rider has moved take their person and name plate with them
+  const plNow = PEOPLE[S.room] ? planOf(S.room) : null, crew = plNow && plNow.c0 ? [S.room].concat(PEOPLE[S.room].mates) : null;
+  const seated = !crew ? base : base.map(h => {
+    const slug = h.who || (h.part && h.part.split(':')[1]), i = slug ? crew.indexOf(slug) : -1, dx = i >= 0 ? plNow.c[i] - plNow.c0[i] : 0;
+    return dx ? Object.assign({}, h, { r: [h.r[0] + dx, h.r[1], h.r[2], h.r[3]], walk: { x: Math.max(40, Math.min(300, h.walk.x + dx)), y: h.walk.y } }, h.at0 ? { at0: [h.at0[0] + dx, h.at0[1]] } : null) : h;
+  });
+  const placed = HOOKS.roomPersonAt.length ? seated.map(h => { const p = h.who && h.at0 && personAt(S.room, h.who); if (!p) return h; const dx = p[0] - h.at0[0], dy = p[1] - h.at0[1];
+    return Object.assign({}, h, { r: [h.r[0] + dx, h.r[1] + dy, h.r[2], h.r[3]], walk: { x: Math.max(40, Math.min(300, h.walk.x + dx)), y: h.walk.y } }); }) : seated;
   const hid = hiddenIn(S.room);
   // what a rider has hidden can't be hovered or clicked: the person (unless moved), the desk and its props, the extras
   const host = S.room, partOf = h => PART_OF[h.name] || (h.name === 'bookshelf' ? 'bookshelf' : null);
