@@ -30,12 +30,12 @@ room the game should leave out. `api` is the game's own pixel helpers (`rect`, `
 `oval`, `dither`, `sprite`, `text`, `rng`) plus the visitor's position (`api.you`) and `api.calm`.
 
 Rearranging ("I'm on the couch taking a nap", "redo the floor plan"): `hide` takes `occupant`,
-`mates`, `desk`, `chair`, `extras`, `bookshelf`, `rug`. The game skips the parts it draws live
+`mates`, `desk`, `chair`, `extras`, `bookshelf`, `rug`, `board` (the message board; notes go back on the desk), `window` (painted over as wall, and the sun on the floor goes too). The game skips the parts it draws live
 and drops their hover names (`quest.hooks.roomHide`, in index.html); `rooms.js` paints wall or
 floor over the ones baked into the background (`api.wall` / `api.floor` do the same for any
 rectangle). `api.person(x, y, { asleep, down, who })` draws the occupant's head and shoulders
 anywhere, and the game moves their hotspot and speech there (`quest.hooks.roomPersonAt`). The door
-and the window never go. The full contract, with the room's coordinates, is
+never goes; the window can (`window`, since 2026-11-13: Inbal's study has none). The full contract, with the room's coordinates, is
 the system prompt in `room-agent.ts`; the furniture positions there are copied from
 `public/semibart/index.html` (`makeRoomBg`, `deskScene`, `readingScene`, `standingScene`,
 `drawRoom`) and must move when those move.

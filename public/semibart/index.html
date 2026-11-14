@@ -179,7 +179,7 @@ const W = 320, H = 144, OY = 18, FH = 180;
 const HOOKS = { roomBack: [], roomMid: [], roomFront: [], roomSpots: [], keyBlock: [], roomHide: [], roomPersonAt: [], roomSeats: [], seminarMid: [], seminarFront: [], seminarSpots: [], mapOver: [], mapSpots: [], sayYou: [] };
 // parts of a room a rider draws its own way: 'occupant', 'desk', 'chair', 'mates', 'extras'
 // which part of a room a hotspot belongs to, so hiding the part hides its hotspot too
-const PART_OF = { 'name plate': 'desk', Socrates: 'desk', monitor: 'desk', monitors: 'desk', 'coffee mug': 'desk', phone: 'desk', 'the Almanac': 'occupant', 'reading chair': 'chair', lamp: 'chair', easel: 'extras', 'world map': 'extras', plant: 'extras' };
+const PART_OF = { 'name plate': 'desk', Socrates: 'desk', monitor: 'desk', monitors: 'desk', 'coffee mug': 'desk', phone: 'desk', 'the Almanac': 'occupant', 'reading chair': 'chair', lamp: 'chair', easel: 'extras', 'world map': 'extras', plant: 'extras', window: 'window' };
 function hiddenIn(room) { const out = new Set(); HOOKS.roomHide.forEach(f => { try { (f(room) || []).forEach(n => out.add(n)); } catch (e) { console.error('[hook]', e); } }); return out; }
 // where a rider has put a person instead (top-left of their head and shoulders), or null
 function personAt(room, slug) { if (povHidden(room, slug)) return null; for (const f of HOOKS.roomPersonAt) { try { const p = f(room, slug); if (p) return p; } catch (e) { console.error('[hook]', e); } } return null; }
@@ -1860,8 +1860,10 @@ function mapOver(t, dt) {
     if (b.x > W + 24) FX.birds = null;
   }
 }
-function roomLight(t) {
-  // late sun through the window: a soft patch on the floor, dust turning in it
+function roomLight(t, room) {
+  // late sun through the window: a soft patch on the floor, dust turning in it. A room whose code has
+  // taken the window away ('window', rooms.js paints wall over it) has no sun.
+  if (room && hiddenIn(room).has('window')) return;
   for (let j = 0; j < 62; j++) rect(g, 47 + j * 0.9, 69 + j, 72, 1, 'rgba(255,236,190,0.13)');
   if (calm) return;
   for (let i = 0; i < 9; i++) {
@@ -1966,7 +1968,7 @@ function drawRoom(t) {
     const k = S.room, p = PEOPLE[k], o = LOOKS[k];
     g.drawImage(p.plan ? roomFullShared[p.plan] : roomFullEmpty, 0, 0);
     g.save(); g.translate(0, OY);
-    roomLight(t);
+    roomLight(t, k);
     const talk = voiced(k) && (calm || Math.floor(t * 8) % 2 === 0), speaking = S.line && S.line.who === k;
     const blink = !calm && (t + k.length) % 4.3 < 0.13;
     runHooks(HOOKS.roomBack, k, t);
@@ -1994,7 +1996,7 @@ function drawRoom(t) {
   }
   g.drawImage(roomFull, 0, 0);
   g.save(); g.translate(0, OY);
-  roomLight(t);
+  roomLight(t, 'bart');
   runHooks(HOOKS.roomBack, 'bart', t);
   const hide = hiddenIn('bart'); if (hide.has('person:bart')) hide.add('occupant');
   const show = n => !hide.has(n);

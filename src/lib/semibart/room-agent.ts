@@ -31,7 +31,6 @@ const PLANS = {
   trio: { w: 84, chair: 44, c: [88, 178, 268], shelf: [201, 44], rug: [58, 240], wall: 'x 126-198, y 6-50 (between the window and the bookshelf, above the middle desk) and x 248-316, y 6-50 (above the third desk)' },
 }
 const EXTRAS: Record<string, string> = {
-  kevin: 'Also here, drawn by the game over the room: a cork message board on the wall at x 128-165, y 8-35, where the notes people leave are pinned. Keep that rectangle clear of anything that should be seen.',
   daniel: 'Also on the desk: a small marble bust of Socrates, x 155-168, y 78-94.',
   kahwee: 'Also on the desk: a pencil cup, x 156-161, y 80-94.',
   ian: 'Also here (hide name: extras): a world map with pins on the wall to the right of the bookshelf, x 200-263, y 8-45.',
@@ -52,9 +51,19 @@ function sharedNotes(room: RosterRoom, askerCharacter?: string): string {
   ].join('\n')
 }
 
+// Where each study's message board hangs (x, y, w, h): the same numbers as BOARD_AT and BOARDS in
+// public/semibart/notes.js, which draws it. Change both.
+const BOARD_AT: Record<string, [number, number, number, number]> = { desk: [158, 8, 76, 44], read: [147, 4, 76, 42], stand: [44, 76, 62, 26], duo: [226, 8, 70, 42] }
+const BOARD_ROOM: Record<string, [number, number, number, number]> = { bart: [155, 12, 40, 38], kevin: [128, 8, 38, 28], ian: [268, 8, 46, 42] }
+export function boardOf(key: string, room: RosterRoom): [number, number, number, number] | null {
+  return BOARD_ROOM[key] || BOARD_AT[room.scene === 'trio' ? '' : room.scene] || null
+}
+
 function roomNotes(key: string, room: RosterRoom, askerCharacter?: string): string {
   const lines = [room.scene === 'duo' || room.scene === 'trio' ? sharedNotes(room, askerCharacter) : SCENES[room.scene]]
   if (EXTRAS[key]) lines.push(EXTRAS[key])
+  const b = boardOf(key, room)
+  if (b) lines.push(`The message board: a walnut-framed cork board on the wall at x ${b[0]}-${b[0] + b[2] - 1}, y ${b[1]}-${b[1] + b[3] + 1} (with its little brass plate), drawn by the game behind the people. The notes colleagues leave are pinned to it. Keep that rectangle clear: hang and route things around it, never over it, unless the request is about the board itself (hide name: board, and the notes go back on the desk).`)
   return lines.join('\n')
 }
 
@@ -111,7 +120,7 @@ Coordinates: x 0-319 left to right, y 0-143 top to bottom. One unit is one fat p
 - Rug: x 52-219, y 124-141, blue (#2b3fff) with a pink border and yellow dashes.
 - The visitor walks the floor with their feet at x 40-300, y 126-141. They are about 20 wide and 73 tall, drawn upward from the feet.
 
-In every room the game also draws a few small things of its own, which you should leave uncovered: a little spark on the door frame (x 14-26, y 19-29), sticky notes that colleagues leave on the front of the desk (x 155-255, y 102-122), and a pad and pen on the desk top.
+In every room the game also draws a few small things of its own, which you should leave uncovered: a little spark on the door frame (x 14-26, y 19-29), a message board on the wall where colleagues' sticky notes are pinned (where it hangs comes with each request), and a pad and pen on the desk top.
 
 What else stands in this particular room comes with each request.
 
@@ -127,10 +136,12 @@ Most requests only add things. When a request is about the room itself ("get rid
   'extras'     the room's own props listed with the request (a map, an easel, a floor plant, posters)
   'bookshelf'  the bookshelf on the right; bare wall takes its place
   'rug'        the rug; bare floor takes its place
+  'window'     the window, frame, glass and sill; wall takes its place and the late sun on the floor goes with it
+  'board'      the message board; the notes colleagues leave go back on the front of the desk
 
 In a shared study, seats moves and resizes a desk without hiding anything: seats: { 1: [265, 34] } puts occupant 1's desk with its centre at x 265 and makes it 34 wide (30 to 120; the whole desk inside x 40-319). The game draws that desk, its chair, its occupant and its name plate there, and their notes, book and seat follow. Use it for "squeeze Raul into the corner" or "give me the big desk"; keep any seats already in the code unless asked to change them.
 
-Hidden things lose their hover names too. The door and the window always stay: the door is the way out and the sun comes through the window. For anything else that is in your way, api.wall and api.floor repaint a rectangle as the bare room.
+Hidden things lose their hover names too. The door always stays: it is the way out. The window stays unless the request is about it (a room with no window, a wall to fill). For anything else that is in your way, api.wall and api.floor repaint a rectangle as the bare room.
 
 api.person only draws head and shoulders, upright. To seat or lay someone down, draw the furniture and the body yourself and place the head so it reads right: asleep on a couch is a couch, a blanket with a body-shaped rise, and the head at one end with asleep: true. Draw the person in mid unless something of yours must overlap them. Do not give the person a spot of your own: wherever api.person draws them, their own hover name and their lines follow. If you hide the occupant and do not draw them, they are simply out; say so in a spot ("Empty chair. Lunch, probably.").
 

@@ -94,7 +94,7 @@ const HARNESS = `(function () {
       fill(x + 2, y, 24, 31, '#e8b08f'); ops += 260; persons++;
     }
   };
-  var persons = 0, HIDEABLE = ['occupant', 'mates', 'desk', 'chair', 'extras', 'bookshelf', 'rug'];
+  var persons = 0, HIDEABLE = ['occupant', 'mates', 'desk', 'chair', 'extras', 'bookshelf', 'rug', 'board', 'window'];
   function spotsOf(mod, t) {
     var list = typeof mod.spots === 'function' ? mod.spots(t) : mod.spots;
     if (list === undefined || list === null) return 0;

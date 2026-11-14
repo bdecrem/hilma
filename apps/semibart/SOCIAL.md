@@ -7,23 +7,27 @@ registry in `public/semibart/index.html`), next to accounts (`ACCOUNTS.md`) and 
 ## Sticky notes (`public/semibart/notes.js`)
 
 Every desk has a pad of sticky notes and a pen. Click it in someone's study and write (140
-characters); the note lands on the front of their desk, and anyone who walks in can click it
-and read the desk close up. In a shared study you pick who it is for. Its reader, its author
-and an admin can peel a note off. New notes on your own desk wiggle and carry a red dot until
-you have opened the desk, and the wire tells you when you arrive.
+characters); the note is pinned to the message board on their wall, and anyone who walks in can
+click it, or the board, and read it close up. In a shared study you pick who it is for (one
+board for the room, a pad on every desk). Its reader, its author and an admin can peel a note
+off. New notes for you wiggle and carry a red dot until you have opened the board, and the
+wire tells you when you arrive ("Check pinned a note to Daniel's board").
 
-Why notes on the desk and not a board on the wall: the wall is where each room differs (maps,
-easels, monitors) and where the decorator hangs things; the desk front is an empty panel in
-nearly every room, and a desk covered in notes reads at a glance as "people come by here".
-Rooms without that panel have their own places (`PLACES` in notes.js): the arms and back of
-Frances's chair and her lampshade, the front edge of Joseph's standing desk. When a room's own
-code hides the desk (`questRooms.hidden(room)`, the nap and floor-plan changes), the notes move
-to the wall under the window and the pad to the sill, which no room can hide. In a shared
-study with a desk per person (`quest.desks(room)` from the rooms layer, two or more entries)
-each person's notes stick to their own front panel and each desk has its own pad, which
-writes to that person; until that layer lands, shared studies use the one-desk layout.
+**The message boards** (2026-11-13, Bart: "in ALL ROOMS we need a message board on the wall,
+where the notes people leave will go"). Every study has one: a walnut frame with a lit top
+edge, speckled cork, a little brass plate underneath, the notes held by colored pushpins, and a
+few pins waiting in the cork while it is empty; a full board ends in a stack. Where it hangs
+(`BOARD_AT` and `BOARDS` in notes.js, repeated in `room-agent.ts` for the decorator): over the
+desk in a desk room (x 158-233, y 8-51, six by three), over Frances's armchair, low under the
+window sill in Joseph's room (his wall is all monitors), above the second desk in a shared
+study (Ian's at the far right, beside his map), Kevin's between the poster and the arcade
+cabinet. The board is drawn behind the people (roomBack), so heads and monitors stay in front.
+The decorator is told where the board is and keeps it clear; a room's code can take it down
+(hide name `board`) and then its notes go back on the front of the desk (`PLACES`, and the wall
+under the window when the desk is hidden too). `node scripts/semibart/study-sheet.mjs <dir>`
+shoots every study on one sheet.
 
-Bart's study is the exception (2026-11-13, his ask): it has a pinboard on the wall, so his notes
+Bart's study had the first one (2026-11-13, his ask): a pinboard on the wall, so his notes
 are pinned there, three by three (`BOARD` in notes.js; the board is painted empty in
 `makeRoomBg`, x 155-194, y 12-49), the close-up is cork, and the wire says "pinned a note to
 Bart's board". The pad stays on his desk. If his room's code hides the wall things (`extras`),

@@ -56,7 +56,7 @@ if (part !== 'chat') {
   await p.evaluate(() => window.questTicker.poll());
   await p.waitForSelector('#tk.on', { timeout: 20000 }); await p.waitForTimeout(2600); await shot('6-ticker');
   const wire = await p.evaluate(() => document.querySelector('#tk .tk-run').textContent + ' | ' + window.questTicker.queue.map(i => i.text).join(' | '));
-  ok('on the wire', wire.includes("Check left a note on Daniel's desk"), wire);
+  ok('on the wire', wire.includes("Check pinned a note to Daniel's board"), wire);
   // peel it off
   await p.mouse.click(note.x, note.y); await p.waitForSelector('.nb-off'); await p.click('.nb-off');
   ok('peeled off', await p.waitForFunction(() => window.questNotes.shown('daniel').notes.length === 0, null, { timeout: 15000 }).then(() => true, () => false));
