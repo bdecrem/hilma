@@ -9,7 +9,8 @@ export default function PrVisual() {
           <div className="kl-app-icon">A</div>
           <div>
             <div className="kl-app-name">Your app</div>
-            <div className="kl-app-meta">4.7 stars · 452 reviews</div>
+            {/* invented numbers: checked against the lead list so the card never shows a real app's rating (the runner caught 4.7 / 452, a real lead, on 2026-11-14) */}
+            <div className="kl-app-meta">4.6 stars · 238 reviews</div>
           </div>
         </div>
         <ul className="kl-app-rows">

@@ -202,7 +202,7 @@ export default async function PdfDesk() {
               <p className="kl-price">
                 $1<span>per page</span>
               </p>
-              <p className="kl-lede">One price for every kind of page: text, tables, charts and scans. No minimum order, no contract. A purchase order or a card.</p>
+              <p className="kl-lede">One price for every kind of page: text, tables, charts and scans. No minimum order, no contract. Billed by invoice; a purchase order is fine.</p>
             </div>
             <ul className="kl-bars" aria-label="Price per page, compared">
               <li className="us">
@@ -217,7 +217,7 @@ export default async function PdfDesk() {
               <li className="hand">
                 <div className="lab">
                   <b>Remediation by hand</b>
-                  <span>$4 to $12 per page, with a minimum order</span>
+                  <span>$4 to $18 per page, most with a minimum order</span>
                 </div>
                 <div className="bar" aria-hidden="true">
                   <i />
