@@ -111,6 +111,41 @@ given, types a turn, talks over the reply and checks the cut. Run it against
 `next dev -p 3288` only when no other dev server shares the checkout: two of
 them fight over `.next` and API routes 404 on the first try.
 
+## The runner: work goes on when no terminal is open
+
+Bart, 2026-11-14: "runner yes". On the Mac mini, launchd `sh.venture.runner`
+runs `node scripts/venture/runner.mjs tick` every five minutes from its own
+checkout, `~/hilma-venture`. A tick starts no model unless there is something
+to do:
+
+- an interactive session is open (the `imsg.mjs --wait` and `mail.mjs --wait`
+  watchers write a heartbeat to `venture_state`, schema 008; fresh for ten
+  minutes) → idle;
+- a run is already going → idle;
+- nothing new and no work block due → idle;
+- otherwise (a text or voice note from Bart, mail from a customer, a sign-up, a
+  finished voice conversation, or three hours since the last run between 6 am
+  and 10 pm): `git pull`, `sync.mjs pull`, Claude Code headless with
+  `apps/venture/runner/PROMPT.md` and the reasons, thirty minutes at most, then
+  `sync.mjs push`.
+
+The unattended session reads, writes the private notes, researches, answers
+people who wrote to us and texts Bart when he needs to know; it cannot commit,
+push, spend or write to a stranger (the tool list in `runner.mjs`, and the
+prompt). Its Claude login is `CLAUDE_CODE_OAUTH_TOKEN` in `~/.venture-runner.env`
+on the mini, like the Almanac's; the four venture keys are in the checkout's
+`.env.local`.
+
+    node scripts/venture/runner.mjs status            # from any machine
+    ssh admin@100.95.51.98 'tail -20 ~/Library/Logs/venture-runner/runner.log'
+    ssh admin@100.95.51.98 'bash ~/hilma-venture/apps/venture/runner/install.sh'   # install or update
+    ssh admin@100.95.51.98 'launchctl bootout gui/501/sh.venture.runner'            # stop it
+
+Each run's own output is a file in `~/Library/Logs/venture-runner/` on the
+mini. `tick --dry` prints the decision, `tick --force "why"` runs now, `probe`
+starts Claude Code once read-only. A new session takes over with step 0 of the
+`/venture` skill (status, then `sync.mjs pull`).
+
 ## The project's home page
 
     https://app.kochitolabs.com

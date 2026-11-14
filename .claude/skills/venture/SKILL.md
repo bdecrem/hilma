@@ -16,6 +16,20 @@ call agendas, transcripts, the access key) is **never committed**. It lives in
 (`venture_docs`, `venture_calls`, `venture_interview_turns`,
 `venture_messages`). This file holds the procedure only; keep it that way.
 
+## 0. Take over from the runner
+
+Since 2026-11-14 a runner on the Mac mini (`scripts/venture/runner.mjs`, launchd
+`sh.venture.runner`) works while no terminal session is open, and it edits the
+same private notes. So before reading anything:
+
+    node scripts/venture/runner.mjs status     # is a run going? what did the last one do?
+    node scripts/venture/sync.mjs pull         # its notes are newer than this folder's
+
+If it says RUNNING, wait until it is idle (a run lasts at most thirty minutes),
+then pull. Start the watchers early (step 3): their heartbeat is what tells the
+runner a session is open, and it stays idle within ten minutes of the last one.
+Read the LOG lines starting "runner:" to see what it did while you were away.
+
 ## 1. Load the state
 
 Read, in this order:
