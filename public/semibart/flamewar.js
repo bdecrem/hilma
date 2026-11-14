@@ -37,10 +37,12 @@ q.hooks.seminarMid.push(t => {
 });
 // Generous on purpose: the stand is thin, so the whole of it, the base and the cable on the floor
 // all answer, well past the pixels.
+// interrupt: the mic answers even while the seminar is still going (index.html's act cuts in).
+const canCut = () => S.scene === 'room' && S.room === 'seminar' && !fw.busy && !fw.done && !S.sem.gone.size && !panel;
 const MIC_ON = { look: 'The question mic. Nobody has asked a question at it since 2009.', use: () => grabMic(), talk: () => grabMic(), open: () => grabMic() };
 q.hooks.seminarSpots.push(() => [
-  { name: 'microphone', r: [MX - 11, 82, 23, 52], walk: { x: MX - 12, y: 134 }, def: 'use', on: MIC_ON },
-  { name: 'microphone', r: [MX + 12, 124, 26, 9], walk: { x: MX - 12, y: 134 }, def: 'use', on: MIC_ON },
+  { name: 'microphone', r: [MX - 11, 82, 23, 52], walk: { x: MX - 12, y: 134 }, def: 'use', interrupt: canCut, on: MIC_ON },
+  { name: 'microphone', r: [MX + 12, 124, 26, 9], walk: { x: MX - 12, y: 134 }, def: 'use', interrupt: canCut, on: MIC_ON },
 ]);
 
 /* ---------- the heat: people half out of their seats, steam, papers in the air ---------- */

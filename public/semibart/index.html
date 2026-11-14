@@ -1166,15 +1166,17 @@ async function enterSeminar() {
   await fadeTo(false);
   await walkTo([{ x: 66, y: 134 }]);
   const d = DEBATES[S.sem.v % DEBATES.length];
-  await say('you', `Today's seminar: ${d.topic}`);
-  await say(d.seats[2], 'Shh. It just got good.');
+  if (!S.cut) await say('you', `Today's seminar: ${d.topic}`);
+  if (!S.cut) await say(d.seats[2], 'Shh. It just got good.');
   const pk = d.seats[0]; let since = 0, b = S.sem.v * 3;
-  await say(pk, 'Thanks for coming. So. Slide one.');
+  if (!S.cut) await say(pk, 'Thanks for coming. So. Slide one.');
   for (const l of d.lines) {
+    if (S.cut) break;   // someone grabbed the mic
     await say(l[0], l[1]);
     since = l[0] === pk ? 0 : since + 1;
     if (since >= 2 && l[0] !== 'you') { await say(pk, BUTTINS[b++ % BUTTINS.length]); since = 0; }
   }
+  if (S.cut) { const h = S.cut; S.cut = null; S.sem.heard = true; await doAction(h.def, h); return; }
   await say(pk, 'Great. Thank you. Slide three, next week.');
   S.sem.heard = true;
 }
@@ -1664,9 +1666,11 @@ cv.addEventListener('mousemove', e => { const p = toScene(e); S.hover = hit(p[0]
 cv.addEventListener('mouseleave', () => { S.hover = null; labelEl.hidden = true; });
 function act(e, verb) {
   if (!S.started || S.dragged || WHO_UI.open) return;
+  const p = toScene(e), h = hit(p[0], p[1]);
+  // a thing marked interrupt (the seminar's question mic) cuts into a running scene instead of waiting for it
+  if (h && h.interrupt && S.busy && !S.choices && typeof h.interrupt === 'function' && h.interrupt()) { S.cut = h; skipLine(); return; }
   if (S.line) { skipLine(); return; }
   if (S.busy || S.choices || S.zoomT >= 0) return;
-  const p = toScene(e), h = hit(p[0], p[1]);
   if (h && h.name === 'turkey' && !verb) { S.turkeyT = performance.now() / 1000; SFX.gobble(); return; }
   if (h) {
     if (h.href && (verb || h.def) === h.def) window.open(h.href, '_blank', 'noopener');
