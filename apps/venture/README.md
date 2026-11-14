@@ -60,3 +60,9 @@ Sources live in `apps/venture/private/` (gitignored) and are published with
 `node scripts/venture/transcript.mjs --wait <call>` blocks until that call has
 ended. `node scripts/venture/shot.mjs <url> <png> [full]` is a phone-size
 screenshot.
+`VENTURE_KEY=<key> node scripts/venture/call-listen.mjs <slug>` joins a call
+with a silent microphone and prints how it opens (marks the session `test`).
+
+`apps/venture/private/` on the iMac holds the key (`KEY`), the charter, the
+ideas, the call agendas, the interview transcript and the research notes. None
+of it is in git; the published copies are the database rows.
