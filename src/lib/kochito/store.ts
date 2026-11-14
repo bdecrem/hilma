@@ -5,6 +5,8 @@ import { f2Supabase } from '@/lib/f2/supabase'
 
 export const PAGES = ['home', 'pdf', 'apps'] as const
 export type Page = (typeof PAGES)[number]
+// a sample page, kochitolabs.com/s/<slug>, counts under its own name: 's/killeen'
+const isPage = (p: unknown): p is string => typeof p === 'string' && ((PAGES as readonly string[]).includes(p) || /^s\/[a-z0-9-]{1,60}$/.test(p))
 const KINDS = ['view', 'cta'] as const
 
 const BOT = /bot|crawl|spider|slurp|preview|headless|lighthouse|monitor|curl|wget|python|scrapy|facebookexternalhit|whatsapp|telegram|discord|slack/i
@@ -21,9 +23,9 @@ function origin(body: Record<string, unknown>) {
 }
 
 export async function recordEvent(body: Record<string, unknown>, ua: string | null) {
-  const page = body.page as Page
+  const page = body.page
   const kind = body.kind as (typeof KINDS)[number]
-  if (!PAGES.includes(page) || !KINDS.includes(kind)) throw new Error('bad event')
+  if (!isPage(page) || !KINDS.includes(kind)) throw new Error('bad event')
   const { error } = await f2Supabase()
     .from('kochito_events')
     .insert({ page, kind, ...origin(body), ref: clip(body.ref, 120), ua: clip(ua, 300), bot: !ua || BOT.test(ua) })
@@ -31,9 +33,9 @@ export async function recordEvent(body: Record<string, unknown>, ua: string | nu
 }
 
 export async function recordLead(body: Record<string, unknown>, ua: string | null) {
-  const page = body.page as Page
+  const page = body.page
   const email = clip(body.email, 200)
-  if (!PAGES.includes(page)) throw new Error('bad page')
+  if (!isPage(page)) throw new Error('bad page')
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('That email address does not look right.')
   const from = origin(body)
   const db = f2Supabase()
@@ -41,4 +43,24 @@ export async function recordLead(body: Record<string, unknown>, ua: string | nul
   if (error) throw new Error(`kochito lead: ${error.message}`)
   // the sign-up is also an event, so one table answers "views, clicks, sign-ups"
   await db.from('kochito_events').insert({ page, kind: 'lead', ...from, ua: clip(ua, 300), bot: !ua || BOT.test(ua) })
+}
+
+// One fixed document shown to its owner (kochitolabs.com/s/<slug>); schema 005.
+export type Sample = {
+  slug: string
+  org: string
+  title: string
+  pages: number
+  original_url: string
+  fixed_url: string
+  before: { failedChecks: number; failedRules: number; rules?: { clause: string; failedChecks: number; description: string }[] }
+  after: { failedChecks: number; failedRules: number }
+  transcript: string
+}
+
+export async function getSample(slug: string): Promise<Sample | null> {
+  if (!/^[a-z0-9-]{1,60}$/.test(slug)) return null
+  const { data, error } = await f2Supabase().from('kochito_samples').select('*').eq('slug', slug).eq('published', true).maybeSingle()
+  if (error) throw new Error(`kochito sample: ${error.message}`)
+  return (data as Sample) ?? null
 }

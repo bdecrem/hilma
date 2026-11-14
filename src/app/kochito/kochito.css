@@ -144,3 +144,24 @@
 .kl-door p { color: #2c2920; }
 .kl-door .go { color: var(--acc); font-weight: 650; }
 @media (prefers-reduced-motion: reduce) { .kl * { transition: none !important; } }
+
+/* a sample page: one fixed document shown to its owner (/s/<slug>) */
+.kl-sample { padding-block: 44px 64px; }
+.kl-sample h1 { max-width: 20em; }
+.kl-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 26px; margin: 26px 0 40px; }
+.kl-actions .kl-btn { display: inline-block; background: var(--acc); color: #fff !important; text-decoration: none; font-weight: 650; padding: 14px 24px; border-radius: 9px; }
+.kl-score { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+@media (max-width: 760px) { .kl-score { grid-template-columns: 1fr; } }
+.kl-score-card { background: var(--card); border: 1px solid var(--rule); border-top: 5px solid var(--ink); border-radius: 12px; padding: 18px 20px; }
+.kl-score-card.bad { border-top-color: var(--fail); }
+.kl-score-card.good { border-top-color: var(--pass); }
+.kl-score-card p { margin: 0; color: #2c2920; font-size: 15.5px; }
+.kl-score-card .kl-sheet-tag { margin-bottom: 4px; }
+.kl-num { font-family: var(--kl-display), Georgia, serif; font-size: 52px !important; font-weight: 560; letter-spacing: -0.03em; line-height: 1.05; color: var(--ink) !important; }
+.kl-score-card.bad .kl-num { color: var(--fail) !important; }
+.kl-score-card.good .kl-num { color: var(--pass) !important; }
+.kl-read { list-style: none; margin: 26px 0 0; padding: 18px 22px; background: var(--card); border: 1px solid var(--rule); border-radius: 12px; max-width: 880px; font-size: 15.5px; line-height: 1.5; }
+.kl-read li { padding: 5px 0; overflow-wrap: anywhere; }
+.kl-read li.h { font-weight: 650; padding-top: 12px; }
+.kl-tag { display: inline-block; font-family: var(--kl-mono), monospace; font-size: 10.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--acc); background: var(--acc-soft); border-radius: 4px; padding: 1px 6px; margin-right: 8px; vertical-align: 1px; white-space: nowrap; }
+.kl-two .kl-form { margin-top: 0; }

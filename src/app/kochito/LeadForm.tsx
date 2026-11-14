@@ -14,7 +14,7 @@ export default function LeadForm({
   button,
   done,
 }: {
-  page: 'pdf' | 'apps'
+  page: string // 'pdf', 'apps', or a sample page ('s/killeen')
   emailPlaceholder: string
   detailLabel: string
   detailHint: string
