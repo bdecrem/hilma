@@ -184,6 +184,17 @@ const nextConfig: NextConfig = {
           has: [{ type: 'host', value: 'www.takt.pizza' }],
           destination: '/takt',
         },
+        // kochitolabs.com root → /kochito (the company's site; /pdf and /apps below)
+        {
+          source: '/',
+          has: [{ type: 'host', value: 'kochitolabs.com' }],
+          destination: '/kochito',
+        },
+        {
+          source: '/',
+          has: [{ type: 'host', value: 'www.kochitolabs.com' }],
+          destination: '/kochito',
+        },
         // tokensurfers.app + brainrot.surf root → /surf (Token Surfers)
         {
           source: '/',
@@ -335,6 +346,17 @@ const nextConfig: NextConfig = {
           source: '/:path((?!(?:takt|api|_next)(?:/|$)).*)',
           has: [{ type: 'host', value: 'www.takt.pizza' }],
           destination: '/takt/:path',
+        },
+        // kochitolabs.com/anything → /kochito/anything (/pdf, /apps, og images)
+        {
+          source: '/:path((?!(?:kochito|api|_next)(?:/|$)).*)',
+          has: [{ type: 'host', value: 'kochitolabs.com' }],
+          destination: '/kochito/:path',
+        },
+        {
+          source: '/:path((?!(?:kochito|api|_next)(?:/|$)).*)',
+          has: [{ type: 'host', value: 'www.kochitolabs.com' }],
+          destination: '/kochito/:path',
         },
         // tokensurfers.app + brainrot.surf /anything → /surf/anything (gallery, /a/<slug>, og)
         {
