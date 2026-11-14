@@ -111,3 +111,46 @@ given, types a turn, talks over the reply and checks the cut. Run it against
 `next dev -p 3288` only when no other dev server shares the checkout: two of
 them fight over `.next` and API routes 404 on the first try.
 
+## iMessage
+
+Bart, 2026-11-13: "you can/should communicate with me using iMessage; we have
+an iMessage bridge running on the Mac mini." Both directions go through the
+plumbing Dodo and Onething already use (see "iMessage — one inbox" in the root
+CLAUDE.md); the thread is the table `venture_messages`
+(`schema/003_messages.sql`).
+
+- **Out.** `node scripts/venture/imsg.mjs send "…"` posts to
+  `/api/venture/imsg` (behind the key), which sends through `sendIMessage` to
+  the phone handle paired to the f2 account `bart` and stores the row. Every
+  text starts with `✴️` (`VENTURE_MARK`); the webhook drops from-me echoes that
+  carry it.
+- **In.** A text from one of Bart's paired handles that starts with `v` or
+  `venture` is Venture's: `dispatchInbound` hands it to
+  `src/lib/venture/messages.ts` before Onething or Dodo see it. It is stored,
+  and Claude (Opus 5.5, with every `venture_docs` row as notes and the last 40
+  messages) answers at once; an acknowledgment gets no answer. That reply
+  cannot act; the working session reads the thread when it runs
+  (`imsg.mjs inbox`, or `imsg.mjs --wait` as a background task).
+
+## Persistence: a session is not the business
+
+Bart, same evening: "we need to save this session as a skill or agent or
+whatever so that when this computer restarts or this terminal closes, we can
+resume your work." Nothing that matters is kept only in a conversation:
+
+| What | Where |
+|---|---|
+| The procedure for resuming (read state, catch up on Bart, restart watchers, work, checkpoint) | the project skill `.claude/skills/venture/SKILL.md`: type `/venture` in any session |
+| Where things stand and the next actions | `private/NOW.md` (doc `now`), rewritten at every checkpoint |
+| What happened and what Bart said, dated | `private/LOG.md` (doc `log`), append only |
+| The rules | `private/CHARTER.md` (doc `charter`) |
+| A copy of every private document off this disk | `venture_docs`, with the file name in `source`; `node scripts/venture/sync.mjs push | pull | status` |
+| Everything Bart said by voice or text | `venture_interview_turns`, `venture_messages` |
+| Durable lessons about how he wants this run | the memory file `project_venture.md` |
+
+`sync.mjs pull` on another machine (with the repo and `.env.local`) rebuilds
+the private folder, so the mini or the laptop can pick the work up. The access
+key is in `private/KEY` and as `VENTURE_KEY` in `.env.local`; it is not in
+Supabase, but every link texted to Bart carries it. Not built yet: a scheduled
+headless session that works with no terminal open.
+

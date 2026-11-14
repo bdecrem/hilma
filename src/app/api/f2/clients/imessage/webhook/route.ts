@@ -4,6 +4,7 @@ import { findUserByDailyChatGuid } from '@/lib/f2/imessage'
 import { f2Supabase } from '@/lib/f2/supabase'
 import { isOnethingChat } from '@/lib/onething/inbound'
 import { dispatchInbound, POLLY_MARK } from '@/lib/imessage/dispatch'
+import { VENTURE_MARK } from '@/lib/venture/messages'
 
 export const runtime = 'nodejs'
 // BlueBubbles fire-and-forget: if we don't ack fast it drops the message
@@ -82,6 +83,10 @@ export async function POST(req: Request) {
     // as their answer.
     if (text.startsWith(POLLY_MARK)) {
       return NextResponse.json({ ok: true, skipped: 'polly-echo' })
+    }
+    // Venture's texts to Bart carry their own mark, for the same reason.
+    if (text.startsWith(VENTURE_MARK)) {
+      return NextResponse.json({ ok: true, skipped: 'venture-echo' })
     }
     const dodoOwner = await findUserByDailyChatGuid(chatGuid)
     owner = dodoOwner ? { app: 'dodo', id: dodoOwner.id } : null

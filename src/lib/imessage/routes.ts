@@ -7,12 +7,12 @@
 
 import { f2Supabase } from '@/lib/f2/supabase'
 
-export type Route = 'onething' | 'dodo' | 'drop'
+export type Route = 'onething' | 'dodo' | 'venture' | 'drop'
 
 /// Inbound: the app a message was routed to. Outbound: an app that just asked
 /// this handle a question (the daily card).
 export async function rememberRoute(handle: string, route: Route, reason: string): Promise<void> {
-  if (route === 'drop' || !handle) return
+  if (route === 'drop' || route === 'venture' || !handle) return
   const { error } = await f2Supabase()
     .from('imessage_routes')
     .upsert({ handle, route, reason, routed_at: new Date().toISOString() }, { onConflict: 'handle' })

@@ -11,10 +11,10 @@ import type { Turn } from './interview'
 // Turns land in venture_interview_turns under call = 'talk'.
 
 export const TALK = 'talk'
-const MODEL = 'claude-opus-5-5'
+export const VENTURE_MODEL = 'claude-opus-5-5'
 
 let _anthropic: Anthropic | null = null
-function anthropic() {
+export function ventureAnthropic() {
   if (!_anthropic) _anthropic = new Anthropic()
   return _anthropic
 }
@@ -41,11 +41,15 @@ THE NOTES
 type Doc = { slug: string; title: string; body: string }
 
 // Everything in venture_docs is context; "now" (where things stand) goes first.
-export async function talkSystem(): Promise<string> {
+export async function ventureNotes(): Promise<string> {
   const { data, error } = await f2Supabase().from('venture_docs').select('slug, title, body').order('slug')
   if (error) throw new Error(`venture docs read failed: ${error.message}`)
   const docs = ((data ?? []) as Doc[]).sort((a, b) => Number(b.slug === 'now') - Number(a.slug === 'now'))
-  return PERSONA + docs.map((d) => `\n===== ${d.slug}: ${d.title} =====\n${d.body}\n`).join('')
+  return docs.map((d) => `\n===== ${d.slug}: ${d.title} =====\n${d.body}\n`).join('')
+}
+
+export async function talkSystem(): Promise<string> {
+  return PERSONA + (await ventureNotes())
 }
 
 // The stored turns as a Messages conversation. Claude speaks first on the
@@ -68,8 +72,8 @@ export function talkMessages(turns: Turn[]): Anthropic.MessageParam[] {
 // Claude's reply as a stream of text. Effort is low because a person is
 // waiting on the line; the system prompt is cached between turns.
 export async function* talkReply(turns: Turn[]): AsyncGenerator<string> {
-  const stream = anthropic().beta.messages.stream({
-    model: MODEL,
+  const stream = ventureAnthropic().beta.messages.stream({
+    model: VENTURE_MODEL,
     max_tokens: 8000,
     output_config: { effort: 'low' },
     // A declined request is re-run on a fallback model in the same call.

@@ -5,6 +5,8 @@
 // Vercel project and database). Each backend keeps what is its own; the mini
 // stays a dumb pipe — BlueBubbles in, the send agent out — because the tables
 // that say who a handle belongs to live on the servers. Here:
+//   0. "v …" / "venture …" from Bart's own handle is Venture's (2026-11-13):
+//      stored and answered by src/lib/venture/messages.ts, nobody else sees it.
 //   1. Onething claims first (its own rules: a user with today's question
 //      open, the "onething" join word, an "Onething:" prefix).
 //   2. A text starting "polly" is Polly's: dropped here, Polly's webhook
@@ -26,6 +28,7 @@ import {
 } from '@/lib/f2/imessage'
 import { sendIMessage as dodoSend, type BBAttachment } from '@/lib/f2/bluebubbles'
 import { handleInbound as onethingInbound } from '@/lib/onething/inbound'
+import { isVentureOwner, VENTURE_PREFIX, ventureInbound } from '@/lib/venture/messages'
 import { rememberRoute as remember, type Route } from './routes'
 
 export type { Route }
@@ -71,6 +74,14 @@ export async function decide(
 
 /// Route the message and run the app that owns it. Returns the route taken.
 export async function dispatchInbound(m: Inbound): Promise<Route> {
+  // Venture before everything: "v …" or "venture …" from Bart's own handle is
+  // a text to Claude about the business (src/lib/venture/messages.ts).
+  if (m.text && VENTURE_PREFIX.test(m.text) && (await isVentureOwner(m.handle))) {
+    console.log(`[imessage] ${m.guid} → venture`)
+    await ventureInbound(m.text)
+    return 'venture'
+  }
+
   // Onething first — it claims only what is clearly its own.
   if (await onethingInbound({ handle: m.handle, chatGuid: m.chatGuid, text: m.text, attachments: m.attachments })) {
     await remember(m.handle, 'onething', 'claimed')
