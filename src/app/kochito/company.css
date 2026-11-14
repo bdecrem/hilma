@@ -137,3 +137,41 @@
 .ko-prods p { color: var(--ink-2); flex: 1; }
 .ko-prods .go { margin-top: 16px; font-weight: 600; color: var(--acc); }
 @media (prefers-reduced-motion: reduce) { .ko * { transition: none !important; } }
+
+/* The door of app.kochitolabs.com (kit/Login.tsx). The same drawing, paper and
+   ink as the page behind it: Kit at the door, the name underlined in the
+   drawing's sky blue, two fields in one ink-edged box, a navy button.
+   Heights on a phone: face 220, 20 gap, headline, 22, line, 30, fields (2 x 58
+   + 1.5 divider), 12, button 54. */
+.ko-gate { display: grid; place-items: center; padding-inline: 20px; }
+.ko-gate main { width: 100%; max-width: 380px; padding-block: 40px 56px; }
+.ko-gate-face { display: block; width: 220px; height: 220px; margin: 0 0 20px -26px; }
+.ko-gate h1 { font-size: clamp(48px, 13vw, 64px); line-height: 1; }
+.ko-gate-sub { color: var(--ink-2); margin: 22px 0 30px !important; max-width: 22em; }
+.ko-gate-fields { border: 1.5px solid var(--edge); border-radius: 12px; background: var(--card); overflow: hidden; }
+.ko-gate-fields label { display: grid; grid-template-columns: 92px minmax(0, 1fr); align-items: center; height: 58px; padding-left: 16px; }
+.ko-gate-fields label + label { border-top: 1.5px solid var(--edge); }
+.ko-gate-fields span { color: var(--ink-3); }
+.ko-gate-fields input { width: 100%; height: 100%; border: 0; background: transparent; color: var(--ink); font: inherit; font-size: 18px; padding: 0 16px 0 0; outline: none; border-radius: 0; }
+.ko-gate-fields input:focus-visible { outline: none; }
+.ko-gate-fields label:focus-within { background: #fff; box-shadow: inset 0 0 0 1.5px var(--acc); }
+.ko-gate-fields label:first-child:focus-within { border-radius: 10.5px 10.5px 0 0; }
+.ko-gate-fields label:last-child:focus-within { border-radius: 0 0 10.5px 10.5px; }
+.ko-gate-fields label:focus-within span { color: var(--acc); }
+.ko-gate button { width: 100%; height: 54px; margin-top: 12px; border: 1.5px solid var(--edge); border-radius: 12px; background: var(--acc); color: var(--acc-ink); font: inherit; font-weight: 600; font-size: 17px; cursor: pointer; transition: transform 0.12s, box-shadow 0.12s; }
+.ko-gate button:hover:not(:disabled) { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 var(--edge); }
+.ko-gate button:disabled { opacity: 0.6; cursor: default; }
+.ko-gate-error { min-height: 1.55em; margin: 12px 0 0 !important; color: #b3392f; font-size: 15px; }
+.ko-gate-foot { margin: 18px 0 0 !important; color: var(--ink-3); font-size: 14.5px; }
+@media (prefers-reduced-motion: reduce) { .ko-gate button { transition: none; } }
+/* From 820px up: the form on the left and Kit large on the right, the same
+   arrangement as the page behind the door (compared side by side with the
+   stacked version, where Kit was a small picture above a form). */
+@media (min-width: 820px) {
+  .ko-gate main { max-width: 880px; display: grid; grid-template-columns: minmax(0, 380px) 380px; justify-content: space-between; column-gap: 64px; align-items: center; }
+  .ko-gate main > * { grid-column: 1; }
+  .ko-gate-face { grid-column: 2 !important; grid-row: 1 / span 5; width: 380px; height: 380px; margin: 0; }
+}
+.ko-out { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin: 0; }
+.ko-out button { border: 0; background: none; padding: 0; font: inherit; color: var(--ink-2); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; cursor: pointer; }
+.ko-out button:hover { color: var(--acc); }

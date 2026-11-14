@@ -133,7 +133,7 @@ He is usually not looking at the terminal.
   open. He writes back by starting a text with `v` or `venture`.
 - **Discussion:** `https://ola.cx/venture/talk?k=<key>` (open voice
   conversation; Claude answers from the documents, so push NOW.md first).
-- **The project's home page, the one link he keeps:** `https://kochitolabs.com/kit?k=<key>`
+- **The project's home page, the one link he keeps:** `https://app.kochitolabs.com`
   (Kit's face, the three voice systems, what is waiting on him, the journal).
 - **His voice notes to me:** `https://ola.cx/venture/memo?k=<key>`, a page he
   bookmarks: record, stop and send. Each note is transcribed into the text
@@ -150,7 +150,7 @@ his, money moved, something sent to a stranger, research returned):
 
 1. Rewrite `NOW.md`: state, in flight, next actions, waiting on Bart, which
    background tasks should be running. Then `JOURNAL.md`, which Bart reads at
-   `kochitolabs.com/kit?k=<key>`: a line or two per thing done, newest first,
+   `app.kochitolabs.com`: a line or two per thing done, newest first,
    the time read from the clock, and the "Waiting on you" list kept exact. If
    the open questions changed, rewrite `call-checkin.md` and publish it
    (`put.mjs call checkin …`).

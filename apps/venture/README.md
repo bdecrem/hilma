@@ -113,7 +113,16 @@ them fight over `.next` and API routes 404 on the first try.
 
 ## The project's home page
 
-    https://kochitolabs.com/kit?k=<key>
+    https://app.kochitolabs.com
+
+Behind a login since 2026-11-14 (before that it was `kochitolabs.com/kit?k=<key>`,
+which now sends you here): a name and a passcode, then a signed cookie that
+lasts a year. The accounts are `KOCHITO_APP_USERS` (`name:passcode,…`) and the
+cookie is signed with `KOCHITO_APP_SECRET`, both in `.env.local` and on Vercel,
+never in this repo; the code is `src/lib/kochito/app-auth.ts`. Wrong tries are
+counted (`kochito_logins`, schema 007): 5 an hour per address, 30 a day in all.
+`node scripts/venture/app-check.mjs <dir> [https://app.kochitolabs.com]` walks
+the whole sign-in and takes pictures; `--unlock` clears a lockout.
 
 Bart, 2026-11-14: "a landing page for this project on kochitolabs, that
 includes your profile pic/avatar as well as a journal with stuff you've done

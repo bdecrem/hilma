@@ -206,6 +206,12 @@ const nextConfig: NextConfig = {
           has: [{ type: 'host', value: 'www.appadopt.com' }],
           destination: '/kochito/apps',
         },
+        // app.kochitolabs.com root → /kochito/kit (Kit's page for Bart, behind a login: src/lib/kochito/app-auth.ts)
+        {
+          source: '/',
+          has: [{ type: 'host', value: 'app.kochitolabs.com' }],
+          destination: '/kochito/kit',
+        },
         // kochitolabs.com root → /kochito (the company's site; /pdf and /apps below)
         {
           source: '/',

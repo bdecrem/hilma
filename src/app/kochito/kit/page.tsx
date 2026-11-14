@@ -1,13 +1,20 @@
 import type { Metadata, Viewport } from 'next'
-import { notFound } from 'next/navigation'
+import { headers } from 'next/headers'
+import { redirect } from 'next/navigation'
+import { APP_HOST, sessionUser } from '@/lib/kochito/app-auth'
 import { getDoc, keyOk } from '@/lib/venture/interview'
+import Login from './Login'
 import '../company.css'
 
-// kochitolabs.com/kit?k=<key>: the project's home page, for Bart. Kit is the
-// AI agent that runs Kochito Labs with him. The page has Kit's face, honest
-// numbers, the three ways to talk to it (voice notes, an open conversation, a
-// short interview), what is waiting on him, and a journal of what Kit did.
-// Private: the same key as the /venture pages, and never indexed. The text
+// app.kochitolabs.com: the project's home page, for Bart. Kit is the AI agent
+// that runs Kochito Labs with him. The page has Kit's face, honest numbers, the
+// three ways to talk to it (voice notes, an open conversation, a short
+// interview), what is waiting on him, and a journal of what Kit did.
+// Private: behind a login with a cookie that lasts a year
+// (src/lib/kochito/app-auth.ts; Bart, 2026-11-14: "change the url for the
+// dashboard to app.kochitolabs.com, and have that behind a login, with a cookie
+// to make it stick"), and never indexed. Its old address, kochitolabs.com/kit?k=,
+// and any other host send you to the new one. The text
 // comes from the venture_docs row "journal" (apps/venture/private/JOURNAL.md,
 // pushed by scripts/venture/sync.mjs), so it changes without a deploy.
 // The look is the company's own (company.css), not the products'.
@@ -76,10 +83,15 @@ function parse(body: string) {
   return { now: (get('Now')?.lines ?? []).join(' '), numbers: items('Numbers'), waiting: items('Waiting on you'), parked: items('Parked, your call'), days }
 }
 
-export default async function Page({ searchParams }: { searchParams: Promise<{ k?: string }> }) {
-  const { k } = await searchParams
-  if (!keyOk(k)) notFound()
+export default async function Page() {
+  const host = ((await headers()).get('host') ?? '').replace(/:\d+$/, '')
+  if (host !== APP_HOST && host !== 'localhost' && host !== '127.0.0.1') redirect(`https://${APP_HOST}/`)
+  const user = await sessionUser()
+  if (!user) return <Login face={src(FACE ?? 'brain-1')} />
   const j = parse((await getDoc('journal'))?.body ?? '')
+  // the voice pages on ola.cx still open with the venture key; a signed-in reader gets it in the links
+  const k = process.env.VENTURE_KEY
+  if (!keyOk(k)) throw new Error('VENTURE_KEY is not set, or is not the current key')
   const q = `?k=${encodeURIComponent(k as string)}`
   const last = j.days[0]?.entries[0]
   const voices = [
@@ -249,9 +261,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ k
 
         <footer className="ko-foot">
           <span>Kochito Labs LLC · Wyoming</span>
-          <span>
-            Private page. <a href="https://kochitolabs.com">kochitolabs.com</a>
-          </span>
+          <form method="post" action="/api/kochito/app/logout" className="ko-out">
+            <span>Signed in as {user}.</span> <button>Sign out</button> <a href="https://kochitolabs.com">kochitolabs.com</a>
+          </form>
         </footer>
       </div>
     </div>
