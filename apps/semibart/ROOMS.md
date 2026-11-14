@@ -109,6 +109,8 @@ decorate the room whose occupants include their character; an admin, any room.
   nothing saved (needs `.env.local` in the environment).
 - `node scripts/semibart/room-shots.mjs <dir> <room> <code.js>`: that code in the real game, six
   frames and a sheet, nothing saved.
+- `npx tsx scripts/semibart/room-put.ts <room> <code.js> <character> "<request>" "<say>"`: saves
+  code you have looked at with the two above as the room's next version, through the same test run.
 - `node scripts/semibart/rooms-check.mjs <dir> ["request"] [base]`: the whole thing through the
   page, API and database as the check account (`SEMIBART_CHECK_NAME` / `SEMIBART_CHECK_PASS`, an
   admin that owns no study): decorate (one real Claude call), a second tab that never reloads,
