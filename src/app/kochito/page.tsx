@@ -20,7 +20,7 @@ export default function KochitoHome() {
         <div className="kl-doors">
           <a className="kl-door kl-pdf" href="/pdf">
             <h2>Accessible PDFs</h2>
-            <p>For public websites facing the ADA Title II deadline. Send one PDF; it comes back readable by a screen reader, with the checker’s report. The first one is free.</p>
+            <p>For cities and counties facing the ADA Title II date of April 26, 2027. Send one PDF; it comes back readable by a screen reader, with the checker’s report. The first one is free.</p>
             <span className="go">Fix a PDF →</span>
           </a>
           <a className="kl-door kl-apps" href="/apps">
