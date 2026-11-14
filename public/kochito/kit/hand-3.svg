@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<rect width="512" height="512" fill="#f4efe4"/>
+<g fill="#ff5c8a" opacity=".9" style="mix-blend-mode:multiply">
+<path d="M60 330 Q40 250 90 230 Q140 240 150 330 Q150 420 100 430 Q60 410 60 330Z"/>
+<path d="M150 490 Q140 330 250 312 Q370 318 372 490Z"/>
+<path d="M126 132 Q120 92 156 92 Q182 102 176 136Z M332 136 Q334 94 366 96 Q392 110 378 142Z"/>
+<path d="M114 230 Q110 120 252 112 Q396 120 394 232 Q390 334 252 342 Q120 336 114 230Z"/>
+<path d="M370 300 Q420 250 452 200 Q470 196 470 214 Q446 280 392 330Z"/>
+</g>
+<g fill="none" stroke="#2b4bd6" stroke-linecap="round" stroke-linejoin="round" style="mix-blend-mode:multiply">
+<path d="M70 320 Q52 248 96 238 Q144 248 154 330 Q152 412 104 422 Q66 400 70 320Z" stroke-width="6"/>
+<path d="M84 280 L140 290 M78 320 L148 330 M84 362 L146 370" stroke-width="3"/>
+<path d="M160 496 Q152 340 258 322 Q372 330 378 496" stroke-width="7"/>
+<path d="M136 140 Q130 100 164 100 Q188 110 184 142 M342 144 Q344 102 374 104 Q398 118 386 150" stroke-width="7"/>
+<path d="M124 238 Q120 128 262 120 Q404 128 402 240 Q398 342 262 350 Q130 344 124 238Z" stroke-width="7"/>
+<path d="M200 270 Q216 228 262 228 Q312 232 322 272 Q308 308 262 310 Q214 306 200 270Z" stroke-width="5"/>
+<path d="M244 240 Q262 232 282 242 Q276 258 262 260 Q248 256 244 240Z" fill="#2b4bd6" stroke-width="3"/>
+<path d="M226 274 Q262 296 300 272" stroke-width="5"/>
+<path d="M246 282 L246 312 L278 312 L278 282" fill="#f4efe4" stroke-width="5"/>
+<path d="M262 284 L262 311" stroke-width="3"/>
+<path d="M176 196 Q194 214 214 196" stroke-width="7"/>
+<path d="M308 196 Q328 214 346 196" stroke-width="7"/>
+<path d="M380 306 Q430 250 460 206" stroke-width="7"/>
+<path d="M440 196 Q470 180 478 204 Q470 226 450 226" stroke-width="6"/>
+<path d="M430 140 l10 -22 M462 150 l20 -14 M410 160 l-12 -18" stroke-width="5"/>
+<path d="M200 380 Q262 400 324 380 L320 440 Q262 456 204 440Z" fill="#2b4bd6" stroke-width="4"/>
+<path d="M222 404 L304 404 M222 420 L290 420" stroke="#f4efe4" stroke-width="5"/>
+</g></svg>

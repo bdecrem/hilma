@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<rect width="512" height="512" fill="#f6ecd9"/>
+<path d="M60 70 Q250 40 455 66 Q472 260 450 452 Q250 476 58 450 Q40 260 60 70Z" fill="#ffd27a" opacity=".55"/>
+<g stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="#1d1712">
+<path d="M330 402 Q418 380 446 430 Q430 470 352 462" fill="#8a5a3c" stroke-width="5"/>
+<path d="M360 420 l60 8 M368 440 l58 4 M392 410 l-4 48" stroke-width="2"/>
+<path d="M150 470 Q130 360 168 318 Q256 286 344 322 Q384 372 366 472" fill="#c98a5a" stroke-width="6"/>
+<path d="M198 470 Q200 390 256 382 Q316 388 316 470" fill="#f1cfa6" stroke-width="3"/>
+<path d="M132 190 Q120 140 162 134 Q190 140 186 170" fill="#c98a5a" stroke-width="6"/>
+<path d="M150 160 Q160 148 170 162" stroke-width="3"/>
+<path d="M330 168 Q330 128 368 130 Q396 146 378 188" fill="#c98a5a" stroke-width="6"/>
+<path d="M120 262 Q112 168 200 148 Q290 128 360 160 Q414 196 400 272 Q392 336 300 352 Q200 362 152 330 Q122 304 120 262Z" fill="#c98a5a" stroke-width="7"/>
+<path d="M126 258 Q118 176 204 156 Q296 138 356 168 Q408 204 396 262" stroke-width="2"/><path d="M156 466 Q138 370 172 326" stroke-width="2"/><path d="M190 300 Q206 250 258 252 Q316 256 326 300 Q310 340 256 344 Q202 340 190 300Z" fill="#f1cfa6" stroke-width="4"/>
+<path d="M236 264 Q256 254 278 266 Q272 284 256 286 Q240 282 236 264Z" fill="#1d1712" stroke-width="3"/>
+<path d="M256 288 Q252 304 230 306 M256 290 Q266 306 286 302" stroke-width="4"/>
+<path d="M238 310 L240 336 Q256 342 272 336 L274 310 Z" fill="#fffaf0" stroke-width="4"/>
+<path d="M256 312 L256 337" stroke-width="2.5"/>
+<path d="M172 222 Q190 200 210 222" stroke-width="8"/>
+<ellipse cx="318" cy="222" rx="17" ry="22" fill="#1d1712" stroke="none"/>
+<circle cx="324" cy="214" r="6" fill="#fff" stroke="none"/>
+<path d="M290 186 Q318 174 344 188" stroke-width="5"/>
+<path d="M162 186 Q186 172 208 182" stroke-width="5"/>
+<path d="M162 270 Q176 262 184 274" stroke="#e8645a" stroke-width="7" opacity=".7"/>
+<path d="M336 272 Q352 262 362 276" stroke="#e8645a" stroke-width="7" opacity=".7"/>
+<path d="M372 170 L430 92" stroke="#1d1712" stroke-width="16"/>
+<path d="M372 170 L430 92" stroke="#f2b13c" stroke-width="10"/>
+<path d="M430 92 L440 78 L426 86Z" fill="#1d1712" stroke-width="4"/>
+<path d="M384 154 L392 160" stroke="#e8645a" stroke-width="12"/>
+<path d="M90 110 l14 -14 M96 132 l22 -4 M74 140 l6 -16" stroke-width="3"/>
+</g></svg>

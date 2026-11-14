@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<rect width="512" height="512" fill="#ff6b4a"/>
+<path d="M256 34 Q440 40 474 230 Q486 430 270 478 Q60 486 40 280 Q30 70 256 34Z" fill="#ffc63a"/>
+<g stroke-linecap="round" stroke-linejoin="round" stroke="#2a1b4a">
+<path d="M96 432 Q60 380 110 350 Q150 372 150 430 Q130 470 96 432Z" fill="#6b4a33" stroke-width="12"/>
+<path d="M140 500 Q150 360 256 350 Q370 360 376 500" fill="#9b6a44" stroke-width="13"/>
+<path d="M120 150 Q110 104 150 98 Q182 104 176 148" fill="#9b6a44" stroke-width="13"/>
+<path d="M336 146 Q338 98 374 100 Q404 112 390 156" fill="#9b6a44" stroke-width="13"/>
+<path d="M108 250 Q100 140 256 128 Q412 132 404 250 Q402 362 256 372 Q110 366 108 250Z" fill="#9b6a44" stroke-width="14"/>
+<path d="M176 300 Q186 238 256 236 Q330 240 338 300 Q320 352 256 354 Q190 350 176 300Z" fill="#ffe2bd" stroke-width="9"/>
+<path d="M232 252 Q256 238 282 254 Q274 274 256 276 Q238 272 232 252Z" fill="#2a1b4a" stroke-width="6"/>
+<path d="M196 298 Q256 322 318 296" fill="none" stroke-width="9"/>
+<path d="M228 308 L226 350 L254 352 L256 312Z M258 312 L260 352 L288 350 L286 308Z" fill="#fff" stroke-width="8"/>
+<circle cx="190" cy="206" r="24" fill="#2a1b4a" stroke="none"/>
+<circle cx="322" cy="206" r="24" fill="#2a1b4a" stroke="none"/>
+<circle cx="198" cy="196" r="8" fill="#fff" stroke="none"/>
+<circle cx="330" cy="196" r="8" fill="#fff" stroke="none"/>
+<path d="M150 254 Q168 246 178 258" fill="none" stroke="#ff6b9a" stroke-width="14"/>
+<path d="M336 258 Q350 246 366 254" fill="none" stroke="#ff6b9a" stroke-width="14"/>
+<path d="M160 160 Q190 150 214 168" fill="none" stroke-width="9"/>
+<path d="M300 170 Q324 148 352 158" fill="none" stroke-width="9"/>
+<path d="M392 404 L456 300" stroke-width="30" fill="none"/>
+<path d="M392 404 L456 300" stroke="#c9d0dd" stroke-width="16" fill="none"/>
+<path d="M440 270 Q470 270 474 300 L458 306 L450 290 L436 296 L432 312 L416 304 Q414 278 440 270Z" fill="#c9d0dd" stroke-width="9"/>
+<path d="M360 430 Q376 392 402 398 Q420 420 404 446 Q380 462 360 430Z" fill="#9b6a44" stroke-width="11"/>
+</g></svg>

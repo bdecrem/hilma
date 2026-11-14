@@ -1,0 +1,141 @@
+/* Kochito Labs itself: the company's front page and Kit's page. Not the two
+   products (ClerkPDF and AppAdopt keep kochito.css, the look Bart approved for
+   them). His phrase for this one, 2026-11-14: "cool little YC startup with
+   good taste", and "green is not the right dominant color".
+   The idea: the mascot brings the color and the charm; the frame around it is
+   crisp and a little dry. A big friendly grotesque, mono for real metadata
+   (times, numbers, commands), honest numbers up top, a changelog for a
+   journal, thin lines, small corners, no shadows. Two looks on one
+   structure, switched by data-look: "day" (near-white, ink, ultramarine, a
+   stroke of sunflower) and "night" (near-black, bone, vermillion).
+   Scoped under .ko, which sits inside the layout's .kl and covers it. */
+.ko {
+  --bg: #fcfcfa;
+  --card: #ffffff;
+  --ink: #101014;
+  --ink-2: #55555e;
+  --ink-3: #8a8a93;
+  --line: #e6e6e1;
+  --acc: #3d3bff;
+  --acc-ink: #ffffff;
+  --mark: #ffc31f;
+  --ok: #17a05b;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100dvh;
+  margin: calc(-1 * env(safe-area-inset-top)) calc(-1 * env(safe-area-inset-right)) calc(-1 * env(safe-area-inset-bottom)) calc(-1 * env(safe-area-inset-left));
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  font-family: var(--kl-sans), 'Helvetica Neue', Arial, sans-serif;
+  font-size: 17px;
+  line-height: 1.55;
+}
+.ko[data-look='night'] {
+  --bg: #0d0d10;
+  --card: #151519;
+  --ink: #f3f2ec;
+  --ink-2: #a9a8a2;
+  --ink-3: #77767a;
+  --line: #27272d;
+  --acc: #ff5a2b;
+  --acc-ink: #0d0d10;
+  --mark: #ff5a2b;
+  --ok: #4ade80;
+}
+.ko a { color: inherit; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+.ko a:hover { color: var(--acc); }
+.ko :focus-visible { outline: 2px solid var(--acc); outline-offset: 3px; border-radius: 4px; }
+.ko-wrap { max-width: 1040px; margin: 0 auto; padding-inline: 28px; }
+@media (max-width: 560px) { .ko-wrap { padding-inline: 20px; } }
+.ko-mono { font-family: var(--kl-mono), ui-monospace, Menlo, monospace; font-size: 12.5px; letter-spacing: 0.01em; }
+
+.ko-top { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding-block: 22px; }
+.ko-name { font-family: var(--kl-display-grot), system-ui, sans-serif; font-weight: 700; font-size: 19px; letter-spacing: -0.02em; text-decoration: none; }
+.ko-name span { color: var(--acc); }
+.ko-top nav { display: flex; gap: 22px; font-size: 15px; color: var(--ink-2); }
+.ko-top nav a { text-decoration: none; }
+
+.ko h1, .ko h2 { font-family: var(--kl-display-grot), system-ui, sans-serif; font-weight: 700; letter-spacing: -0.035em; margin: 0; text-wrap: balance; }
+.ko h1 { font-size: clamp(52px, 9.4vw, 116px); line-height: 0.94; }
+.ko h1 .u { position: relative; white-space: nowrap; }
+.ko h1 .u svg { position: absolute; left: -2%; bottom: -0.13em; width: 104%; height: 0.2em; color: var(--mark); }
+.ko h2 { font-size: clamp(26px, 3.2vw, 38px); line-height: 1.05; }
+.ko p { margin: 0 0 14px; }
+.ko-lede { font-size: clamp(18px, 1.8vw, 22px); line-height: 1.45; color: var(--ink-2); max-width: 30em; margin-top: 40px !important; }
+.ko-lede strong { color: var(--ink); font-weight: 600; }
+
+.ko-hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 48px; align-items: center; padding-block: 56px 40px; }
+.ko-face { width: 248px; height: 248px; border-radius: 28px; overflow: hidden; border: 1px solid var(--line); background: var(--card); display: grid; place-items: center; }
+.ko-face img { width: 100%; height: 100%; display: block; }
+.ko-face.empty { border-style: dashed; border-width: 2px; color: var(--ink-3); text-align: center; padding: 20px; font-size: 14px; line-height: 1.4; }
+.ko-face.empty b { display: block; font-family: var(--kl-display-grot), sans-serif; font-size: 64px; line-height: 1; color: var(--ink); letter-spacing: -0.04em; margin-bottom: 8px; }
+@media (max-width: 820px) { .ko-hero { grid-template-columns: 1fr; padding-block: 28px 28px; gap: 28px; } .ko-face { width: 132px; height: 132px; border-radius: 20px; order: -1; } .ko-face.empty b { font-size: 34px; } .ko-face.empty span { display: none; } }
+
+.ko-stats { display: flex; flex-wrap: wrap; gap: 8px; margin: 34px 0 0; padding: 0; list-style: none; }
+.ko-stats li { border: 1px solid var(--line); border-radius: 8px; padding: 7px 12px; background: var(--card); color: var(--ink-2); }
+.ko-stats b { color: var(--ink); font-weight: 700; }
+.ko-seen { display: inline-flex; align-items: center; gap: 8px; color: var(--ink-2); margin-bottom: 26px; }
+.ko-seen::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 4px color-mix(in srgb, var(--ok) 22%, transparent); }
+
+.ko-sec { border-top: 1px solid var(--line); padding-block: 56px; }
+.ko-sec-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 10px 24px; margin-bottom: 28px; }
+.ko-sec-head p { color: var(--ink-2); margin: 0; max-width: 34em; }
+.ko-kbd { font-family: var(--kl-mono), monospace; font-size: 13px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 6px; padding: 2px 7px; background: var(--card); color: var(--ink); white-space: nowrap; }
+
+.ko-faces { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 0; padding: 0; list-style: none; }
+@media (max-width: 820px) { .ko-faces { grid-template-columns: repeat(2, 1fr); } }
+.ko-faces li { border: 1px solid var(--line); border-radius: 12px; background: var(--card); padding: 10px 10px 12px; }
+.ko-faces .big { display: block; width: 100%; aspect-ratio: 1; border-radius: 8px; overflow: hidden; background: color-mix(in srgb, var(--line) 50%, transparent); }
+.ko-faces .big img { width: 100%; height: 100%; display: block; }
+.ko-faces .big .pending { display: grid; place-items: center; width: 100%; height: 100%; color: var(--ink-3); border: 1.5px dashed var(--line); border-radius: 8px; }
+.ko-faces .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; }
+.ko-faces .num { font-family: var(--kl-display-grot), sans-serif; font-weight: 700; font-size: 22px; letter-spacing: -0.03em; }
+.ko-faces .small { display: flex; align-items: center; gap: 8px; }
+.ko-faces .small img { border-radius: 50%; display: block; }
+.ko-faces .by { color: var(--ink-3); }
+
+.ko-talk { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+@media (max-width: 820px) { .ko-talk { grid-template-columns: 1fr; } }
+.ko-talk a { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 12px; background: var(--card); padding: 22px 22px 20px; text-decoration: none; transition: border-color 0.12s ease, transform 0.12s ease; }
+.ko-talk a:hover { border-color: var(--acc); transform: translateY(-2px); color: inherit; }
+.ko-talk h3 { font-family: var(--kl-display-grot), sans-serif; font-weight: 700; font-size: 24px; letter-spacing: -0.03em; margin: 0 0 8px; }
+.ko-talk p { color: var(--ink-2); font-size: 15.5px; flex: 1; }
+.ko-talk .go { margin-top: 14px; font-weight: 600; color: var(--acc); }
+.ko-talk .tag { color: var(--ink-3); margin-bottom: 14px; }
+
+.ko-two { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+@media (max-width: 820px) { .ko-two { grid-template-columns: 1fr; gap: 32px; } }
+.ko-list { list-style: none; margin: 0; padding: 0; }
+.ko-list li { position: relative; padding: 13px 0 13px 32px; border-top: 1px solid var(--line); color: var(--ink-2); font-size: 16px; }
+.ko-list li:first-child { border-top: 0; padding-top: 2px; }
+.ko-list li::before { content: ''; position: absolute; left: 0; top: 17px; width: 16px; height: 16px; border: 1.5px solid var(--ink); border-radius: 4px; }
+.ko-list li:first-child::before { top: 6px; }
+.ko-two > .ko-lede { margin-top: 0 !important; }
+.ko-list.parked li::before { border-color: var(--ink-3); border-style: dashed; }
+.ko-list.plain li { padding-left: 22px; }
+.ko-list.plain li::before { width: 8px; height: 8px; border: 0; border-radius: 50%; background: var(--acc); top: 23px; }
+.ko-list.plain li:first-child::before { top: 12px; }
+.ko-list strong { color: var(--ink); font-weight: 600; }
+.ko-list a { color: var(--acc); }
+.ko-sub { font-family: var(--kl-mono), monospace; font-size: 12.5px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 14px !important; }
+
+.ko-day { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 8px 32px; padding-block: 26px; border-top: 1px solid var(--line); }
+.ko-day:first-of-type { border-top: 0; padding-top: 0; }
+.ko-day h3 { font-family: var(--kl-display-grot), sans-serif; font-weight: 700; font-size: 20px; letter-spacing: -0.025em; margin: 0; position: sticky; top: 16px; align-self: start; }
+.ko-day ol { list-style: none; margin: 0; padding: 0; }
+.ko-day li { display: grid; grid-template-columns: 78px minmax(0, 1fr); gap: 0 14px; padding: 9px 0; color: var(--ink-2); font-size: 16px; }
+.ko-day li .t { color: var(--ink-3); padding-top: 3px; }
+.ko-day li a { color: var(--acc); }
+@media (max-width: 820px) { .ko-day { grid-template-columns: 1fr; } .ko-day h3 { position: static; } .ko-day li { grid-template-columns: 70px minmax(0, 1fr); } }
+
+.ko-foot { border-top: 1px solid var(--line); padding-block: 26px 40px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; color: var(--ink-3); font-size: 14px; }
+.ko-foot a { color: var(--ink-2); }
+
+/* the company's front page: two products */
+.ko-prods { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 820px) { .ko-prods { grid-template-columns: 1fr; } }
+.ko-prods a { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 12px; background: var(--card); padding: 26px; text-decoration: none; transition: border-color 0.12s ease, transform 0.12s ease; }
+.ko-prods a:hover { border-color: var(--acc); transform: translateY(-2px); color: inherit; }
+.ko-prods h3 { font-family: var(--kl-display-grot), sans-serif; font-weight: 700; font-size: 30px; letter-spacing: -0.035em; margin: 6px 0 10px; }
+.ko-prods p { color: var(--ink-2); flex: 1; }
+.ko-prods .go { margin-top: 16px; font-weight: 600; color: var(--acc); }
+@media (prefers-reduced-motion: reduce) { .ko * { transition: none !important; } }
