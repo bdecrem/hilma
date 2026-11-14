@@ -66,3 +66,48 @@ with a silent microphone and prints how it opens (marks the session `test`).
 `apps/venture/private/` on the iMac holds the key (`KEY`), the charter, the
 ideas, the call agendas, the interview transcript and the research notes. None
 of it is in git; the published copies are the database rows.
+
+## The open conversation (voice mode)
+
+Added 2026-11-13, when Bart asked to discuss the ideas instead of answering an
+agenda: "an open ended voice conversation, like voice mode, where I give
+comments and you react."
+
+    https://ola.cx/venture/talk?k=<key>
+
+A fork of the call with the two halves pulled apart. OpenAI Realtime is only
+the ears and the mouth: voice activity detection, transcription, and reading
+text aloud (`create_response: false`, so it never answers by itself). Every
+reply is written by Claude (`claude-opus-5-5`, effort low, the system prompt
+cached), with every row of `venture_docs` loaded as its notes; the row `now`
+(source `private/NOW.md`, "where things stand") goes first, so update and
+republish it before a conversation.
+
+1. Bart stops talking; the transcript of his turn arrives on the data channel.
+2. The page posts it to `/api/venture/talk/reply`, which stores it and streams
+   Claude's reply back as plain text.
+3. The page hands the text to the voice a sentence or two at a time
+   (`response.create` with `conversation: 'none'` and the text in `<line>`
+   tags), so the first sentence is heard while the rest is still being
+   written. About three seconds from the end of his turn to the first sound.
+4. Talking over Claude stops it: the stream is aborted, the audio buffer
+   cleared, and the stored turn keeps only as much as he can have heard
+   (playback time at about 2.7 words a second), followed by an `interrupted`
+   event that Claude sees on its next reply.
+
+Turns land in `venture_interview_turns` with `call = 'talk'`; "End the call"
+writes the `ended` marker, so `transcript.mjs --wait talk` returns at once.
+
+| What | Where |
+|---|---|
+| Claude's side (persona, notes, messages, the reader voice's mint) | `src/lib/venture/talk.ts` |
+| Routes | `src/app/api/venture/talk/{session,reply}/route.ts` (turns still go to `interview/turn`) |
+| Page | `src/app/venture/talk/`, `src/app/venture/Talk.tsx` |
+| Test call, no human | `VENTURE_KEY=<key> node scripts/venture/talk-check.mjs <outDir> [base]` |
+
+The check plays one spoken comment through a fake microphone, then (on a dev
+server, through `window.__talk`) compares what the voice said with what it was
+given, types a turn, talks over the reply and checks the cut. Run it against
+`next dev -p 3288` only when no other dev server shares the checkout: two of
+them fight over `.next` and API routes 404 on the first try.
+
