@@ -1,6 +1,6 @@
 // Fills in both forms on kochitolabs.com's pages as a visitor from an ad would,
 // and checks the row that lands in kochito_leads (page, email, link, the ad's
-// source and keyword), the "Got it" state, and that a bad address is refused.
+// source and keyword), the confirmation, and that a bad address is refused.
 // Its sign-ups use @kochito-check.test, which leads.mjs never counts, and it
 // deletes them when it is done.
 // Usage: node scripts/venture/kochito-check.mjs [base]   base defaults to http://localhost:3277/kochito
@@ -26,7 +26,7 @@ for (const [page, detail] of [['pdf', 'https://example.gov/agenda.pdf'], ['apps'
   await p.locator('.kl-form input[name=detail]').fill(detail)
   await p.locator('.kl-form button').click()
   await p.locator('.kl-done').waitFor({ timeout: 15000 }).catch(() => {})
-  ok(await p.locator('.kl-done').count() === 1 && (await p.locator('.kl-done').innerText()).includes(email), `${page}: the form says "Got it" and names the address`)
+  ok(await p.locator('.kl-done').count() === 1 && (await p.locator('.kl-done').innerText()).includes(email), `${page}: the form confirms the request and names the address`)
   const { data } = await db.from('kochito_leads').select('*').eq('email', email)
   const row = data?.[0]
   ok(!!row && row.page === page && row.detail === detail, `${page}: the sign-up is stored with its link`)

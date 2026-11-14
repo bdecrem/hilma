@@ -42,93 +42,115 @@ export default async function SamplePage({ params }: { params: Promise<{ slug: s
   const lines = rows(s.transcript)
   const count = (t: string[]) => lines.filter((l) => t.includes(l.tag)).length
   const page = `s/${s.slug}`
-  const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
-  const added = [
-    [count(['L']), 'list', 'lists'],
-    [count(['Table']), 'table', 'tables'],
-    [count(['Figure']), 'image description', 'image descriptions'],
-    [count(['Link']), 'labeled link', 'labeled links'],
-  ]
-    .filter(([n]) => (n as number) > 0)
-    .map(([n, one, many]) => `, ${plural(n as number, one as string, many as string)}`)
-    .join('')
+  const added = (
+    [
+      ['Headings', count(['H1', 'H2', 'H3', 'H4'])],
+      ['Lists', count(['L'])],
+      ['Tables', count(['Table'])],
+      ['Images with a description', count(['Figure'])],
+      ['Links with a label', count(['Link'])],
+    ] as [string, number][]
+  ).filter(([, n]) => n > 0)
   return (
-    <div className="kl-pdf">
+    <>
       <Track page={page} />
-      <Top />
+      <Top current="pdf" />
       <main id="main">
         <div className="kl-wrap kl-sample">
-          <p className="kl-eyebrow">Fixed for {s.org}</p>
-          <h1>
-            {s.title}, <em>readable by a screen reader.</em>
-          </h1>
+          <p className="kl-note">Prepared for {s.org}</p>
+          <h1>{s.title}, fixed for screen readers</h1>
           <p className="kl-lede">
-            This is your own document, {s.pages} {s.pages === 1 ? 'page' : 'pages'}, as you posted it. Nothing you can see has changed. Underneath, it now has the structure a screen reader needs, and it passes the PDF/UA checker.
+            This is your own document, {s.pages} {s.pages === 1 ? 'page' : 'pages'}, as you posted it. Nothing visible has changed. Underneath, it now has the structure a screen reader needs, and it passes the PDF/UA checker.
           </p>
           <p className="kl-actions">
             <a className="kl-btn" href={s.fixed_url}>
               Download the fixed PDF
             </a>
-            <a href={s.original_url}>The original on your website</a>
+            <a href={s.original_url}>View the original on your website</a>
           </p>
-
-          <div className="kl-score" role="group" aria-label="Checker results">
-            <div className="kl-score-card bad">
-              <p className="kl-sheet-tag">Before</p>
-              <p className="kl-num">{s.before.failedChecks.toLocaleString('en-US')}</p>
-              <p>failed checks, across {s.before.failedRules} rules of the PDF/UA standard</p>
-            </div>
-            <div className="kl-score-card good">
-              <p className="kl-sheet-tag">After</p>
-              <p className="kl-num">{s.after.failedChecks.toLocaleString('en-US')}</p>
-              <p>failed checks. Checked with veraPDF, the open-source reference checker.</p>
-            </div>
-            <div className="kl-score-card">
-              <p className="kl-sheet-tag">Added</p>
-              <p className="kl-num">{count(['H1', 'H2', 'H3', 'H4'])}</p>
-              <p>headings{added}, the document’s title and its language</p>
-            </div>
-          </div>
         </div>
+
+        <section className="kl-band alt" aria-labelledby="results">
+          <div className="kl-wrap kl-split">
+            <div>
+              <h2 id="results">Results</h2>
+              <p className="kl-note">The checker is veraPDF, the open-source reference checker for the PDF/UA standard.</p>
+            </div>
+            <table className="kl-table">
+              <thead>
+                <tr>
+                  <th scope="col">
+                    <span className="kl-skip">Measure</span>
+                  </th>
+                  <th scope="col">As posted</th>
+                  <th scope="col">After fixing</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">Failed checks, PDF/UA-1</th>
+                  <td className="num bad">{s.before.failedChecks.toLocaleString('en-US')}</td>
+                  <td className="num good">{s.after.failedChecks.toLocaleString('en-US')}</td>
+                </tr>
+                {added.map(([label, n]) => (
+                  <tr key={label}>
+                    <th scope="row">{label}</th>
+                    <td className="num">0</td>
+                    <td className="num">{n}</td>
+                  </tr>
+                ))}
+                <tr>
+                  <th scope="row">Pages that look different</th>
+                  <td>n/a</td>
+                  <td className="num">0 of {s.pages}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
 
         <section className="kl-band" aria-labelledby="reads">
           <div className="kl-wrap">
             <h2 id="reads">What a screen reader now reads</h2>
-            <p className="kl-lede">A checker only proves the structure is there, not that it is right. So here is the whole document as a screen reader walks it, for you to check against the page. If anything is wrong, tell us and we fix it.</p>
+            <p className="kl-prose">A checker proves the structure exists, not that it is right. This is the whole document as a screen reader walks it, so you can compare it with the page. If anything is wrong, tell us and we will correct it.</p>
             <ol className="kl-read">
               {lines.map((l, i) => (
-                <li key={i} style={{ marginLeft: Math.min(l.depth, 5) * 18 }} className={/^H\d$/.test(l.tag) ? 'h' : undefined}>
+                <li key={i} className={/^H\d$/.test(l.tag) ? 'h' : undefined}>
                   <span className="kl-tag">{NAMES[l.tag] ?? l.tag}</span>
-                  {l.text}
+                  <span className="kl-read-text" style={{ paddingLeft: Math.min(l.depth, 5) * 16 }}>
+                    {l.text}
+                  </span>
                 </li>
               ))}
             </ol>
           </div>
         </section>
 
-        <section className="kl-band tint" aria-labelledby="next">
-          <div className="kl-wrap kl-two">
-            <div>
-              <h2 id="next">It is yours to post</h2>
+        <section className="kl-band alt" aria-labelledby="next">
+          <div className="kl-wrap kl-hero" style={{ paddingBlock: 0 }}>
+            <div className="kl-prose">
+              <h2 id="next">The document is yours to post</h2>
               <p>There is nothing to pay or sign for this one. Replace the file on your website with the fixed one. The federal rule that takes effect on April 26, 2027 covers everything you post from then on, agendas and packets included.</p>
-              <p>If it would help to have each agenda and packet done this way before it goes up, that is $1 a page, back within one business day. Leave an address and we will write to you, or reply to the email that brought you here.</p>
-              <p className="kl-fine">
-                Kochito Labs is a small company, and this work was done by AI agents. <a href="/pdf">How it works, the price and the questions people ask.</a>
+              <p>If you would like each agenda and packet prepared this way before it is posted, the price is $1 per page, returned within one business day. Leave an address and we will write to you, or reply to the email that brought you here.</p>
+              <p className="kl-note">
+                Kochito Labs is a small company, and this work was done by AI agents. <a href="/pdf">How the service works, the price and common questions.</a>
               </p>
             </div>
             <LeadForm
               page={page}
-              emailPlaceholder="you@yourcity.gov"
+              heading="Ask about the rest of your documents"
+              intro="We reply within one business day."
+              emailPlaceholder="name@yourcity.gov"
               detailLabel="Anything we should know"
-              detailPlaceholder="For example: we post a packet every other Thursday"
-              detailHint="Or leave it empty."
-              button="Write to me about the rest"
+              detailPlaceholder=""
+              detailHint="For example: how often you post a packet."
+              button="Send"
               done="We will be in touch within one business day."
             />
           </div>
         </section>
       </main>
       <Foot />
-    </div>
+    </>
   )
 }

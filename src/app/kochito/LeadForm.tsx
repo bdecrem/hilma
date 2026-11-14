@@ -7,6 +7,8 @@ import { origin, send } from './Track'
 // PDF, an app's store page) lets the free work start before the first reply.
 export default function LeadForm({
   page,
+  heading,
+  intro,
   emailPlaceholder,
   detailLabel,
   detailHint,
@@ -15,6 +17,8 @@ export default function LeadForm({
   done,
 }: {
   page: string // 'pdf', 'apps', or a sample page ('s/killeen')
+  heading: string
+  intro: string
   emailPlaceholder: string
   detailLabel: string
   detailHint: string
@@ -48,7 +52,7 @@ export default function LeadForm({
       if (!res.ok) throw new Error((await res.json()).error || 'Something went wrong.')
       setState('done')
     } catch (err) {
-      setError((err as Error).message.startsWith('kochito') ? 'That did not go through. Email hello@kochitolabs.com instead.' : (err as Error).message)
+      setError((err as Error).message.startsWith('kochito') ? 'That did not go through. Please email hello@kochitolabs.com instead.' : (err as Error).message)
       setState('idle')
     }
   }
@@ -56,7 +60,7 @@ export default function LeadForm({
   if (state === 'done')
     return (
       <div className="kl-form kl-done" role="status">
-        <p className="kl-done-h">Got it.</p>
+        <p className="kl-done-h">Request received.</p>
         <p>
           {done} We will write to <strong>{email}</strong> from hello@kochitolabs.com.
         </p>
@@ -64,16 +68,18 @@ export default function LeadForm({
     )
 
   return (
-    <form className="kl-form" id="start" onSubmit={submit} onFocus={focus}>
+    <form className="kl-form" id="start" onSubmit={submit} onFocus={focus} aria-labelledby={`${id}-t`}>
+      <h2 id={`${id}-t`}>{heading}</h2>
+      <p className="kl-note">{intro}</p>
       <label htmlFor={`${id}-e`}>Work email</label>
       <input id={`${id}-e`} name="email" type="email" required autoComplete="email" placeholder={emailPlaceholder} value={email} onChange={(e) => setEmail(e.target.value)} />
       <label htmlFor={`${id}-d`}>
-        {detailLabel} <span className="kl-opt">optional</span>
+        {detailLabel} <span className="kl-opt">(optional)</span>
       </label>
-      <input id={`${id}-d`} name="detail" type="text" inputMode="url" placeholder={detailPlaceholder} aria-describedby={`${id}-h`} />
       <p className="kl-hint" id={`${id}-h`}>
         {detailHint}
       </p>
+      <input id={`${id}-d`} name="detail" type="text" placeholder={detailPlaceholder} aria-describedby={`${id}-h`} />
       <button type="submit" disabled={state === 'sending'}>
         {state === 'sending' ? 'Sending…' : button}
       </button>

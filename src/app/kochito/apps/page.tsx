@@ -3,212 +3,221 @@ import LeadForm from '../LeadForm'
 import Track from '../Track'
 import { Foot, Top } from '../Chrome'
 
-// kochitolabs.com/apps: app adoption. For the owner of a small app that still
-// has users and no longer has their time: we keep it working for a share of
-// what it earns. Facts on this page are sourced in apps/venture (private
-// notes); change them there first.
-const TITLE = 'We keep your Shopify app working, for a share of what it earns'
-const DESCRIPTION = 'You built a Shopify app, merchants still pay for it, and you have no time for it. We do the 2027 migrations, the fixes and the support. No fee: a share of revenue, and you keep the app.'
+// kochitolabs.com/apps: maintenance for Shopify apps, paid as a share of the
+// app's revenue. For the owner of a small app that still has paying merchants
+// and no longer has their time. Every fact here (Shopify's dates, the terms)
+// is sourced in Venture's private notes; change it there first.
+const TITLE = 'Shopify app maintenance, paid as a share of revenue'
+const DESCRIPTION = 'Your Shopify app still has paying merchants and you have no time for the 2027 platform changes. We do the migrations, the fixes and the support for a share of revenue. No fee, and you keep the app.'
 
 export const metadata: Metadata = {
-  title: 'App adoption',
+  title: TITLE,
   description: DESCRIPTION,
   alternates: { canonical: '/apps' },
-  openGraph: { title: `${TITLE} · Kochito Labs`, description: DESCRIPTION, url: 'https://kochitolabs.com/apps', siteName: 'Kochito Labs', type: 'website' },
+  openGraph: { title: `${TITLE} | Kochito Labs`, description: DESCRIPTION, url: 'https://kochitolabs.com/apps', siteName: 'Kochito Labs', type: 'website' },
 }
 
-export default function AppAdoption() {
+export default function AppMaintenance() {
   return (
-    <div className="kl-apps">
+    <>
       <Track page="apps" />
-      <Top />
+      <Top current="apps" />
       <main id="main">
         <div className="kl-wrap kl-hero">
           <div>
-            <p className="kl-eyebrow">App adoption</p>
-            <h1>
-              Your app still has users. <em>We’ll keep it working.</em>
-            </h1>
-            <p className="kl-lede">
-              You built a Shopify app, merchants still pay for it, and you have no time for Shopify’s 2027 deadlines. We take over the migrations, the fixes and the support email. You keep the app. No fee: an agreed share of what it earns.
-            </p>
-            <LeadForm
-              page="apps"
-              emailPlaceholder="you@yourapp.com"
-              detailLabel="Link to the app"
-              detailPlaceholder="https://apps.shopify.com/your-app"
-              detailHint="Your Shopify App Store listing. Leave it empty if you would rather talk first."
-              button="Check my app, free"
-              done="Your app’s report will be in your inbox within one business day."
-            />
-            <p className="kl-fine">The report is yours whether or not you ever talk to us again: which of Shopify’s dates hit your app, what reviewers say is broken now, and what fixing it involves.</p>
+            <h1>{TITLE}</h1>
+            <p className="kl-lede">Your app still has paying merchants, and you no longer have time for it. We take over the 2027 platform migrations, the bug fixes and the support inbox. You keep the app.</p>
+            <ul className="kl-points">
+              <li>
+                <strong>No fee.</strong> We are paid an agreed share of what the app earns.
+              </li>
+              <li>
+                <strong>You stay the owner</strong> of the app, the code, the accounts and the merchants.
+              </li>
+              <li>
+                <strong>You approve every release.</strong> Each change is a pull request you can read.
+              </li>
+            </ul>
           </div>
-
-          <figure className="kl-pic">
-            <div className="kl-pair" aria-hidden="true">
-              <div className="kl-sheet">
-                <p className="kl-sheet-tag">
-                  <span>Today</span>
-                </p>
-                <div className="kl-app-head">
-                  <span className="kl-app-icon">A</span>
-                  <span>
-                    <span className="kl-app-name">Your app</span>
-                    <span className="kl-app-sub">Updated 14 months ago</span>
-                  </span>
-                </div>
-                <ul className="kl-log">
-                  <li>
-                    <b>Platform notice</b>
-                    Its storefront script stops running March 1.
-                  </li>
-                  <li>
-                    <b>Support inbox</b>
-                    31 unanswered.
-                  </li>
-                  <li>
-                    <b>You</b>
-                    Busy with the thing you do now.
-                  </li>
-                </ul>
-                <span className="kl-chip bad">Goes dark March 1</span>
-              </div>
-              <div className="kl-sheet kl-after">
-                <p className="kl-sheet-tag">
-                  <span>Adopted</span>
-                </p>
-                <div className="kl-app-head">
-                  <span className="kl-app-icon">A</span>
-                  <span>
-                    <span className="kl-app-name">Your app</span>
-                    <span className="kl-app-sub">Updated this week</span>
-                  </span>
-                </div>
-                <ul className="kl-log">
-                  <li>
-                    <b>Platform notice</b>
-                    Moved to an app embed. You approved the release.
-                  </li>
-                  <li>
-                    <b>Support inbox</b>
-                    Answered within a day.
-                  </li>
-                  <li>
-                    <b>You</b>
-                    Still the owner. A statement every month.
-                  </li>
-                </ul>
-                <span className="kl-chip good">Ready for 2027</span>
-              </div>
-            </div>
-            <figcaption>A drawing, not a customer. The free report on your own app says what is true for it.</figcaption>
-          </figure>
+          <LeadForm
+            page="apps"
+            heading="Get a free report on your app"
+            intro="Which of Shopify’s dates affect it, and what the work involves."
+            emailPlaceholder="name@yourcompany.com"
+            detailLabel="Your app’s Shopify App Store link"
+            detailPlaceholder="https://apps.shopify.com/"
+            detailHint="Or leave this empty if you would rather talk first."
+            button="Request the report"
+            done="Your report will arrive within one business day."
+          />
         </div>
 
-        <section className="kl-band" aria-labelledby="how">
-          <div className="kl-wrap">
-            <h2 id="how">How it works</h2>
-            <ol className="kl-three">
+        <section className="kl-band" aria-labelledby="dates">
+          <div className="kl-wrap kl-split">
+            <div>
+              <h2 id="dates">Shopify’s 2027 dates</h2>
+              <p>Two platform changes take effect in early 2027. An app that nobody is maintaining will miss both.</p>
+              <p className="kl-note">
+                Sources: Shopify’s developer changelog, <a href="https://shopify.dev/changelog/online-store-script-tags-deprecation">script tags</a> (August 24, 2026) and <a href="https://shopify.dev/changelog/posts/expiring-offline-access-tokens-required-for-all-public-apps-as-of-january-1-2027">expiring access tokens</a> (May 20, 2026). Shopify has said it will review the March date in January.
+              </p>
+            </div>
+            <table className="kl-table">
+              <thead>
+                <tr>
+                  <th scope="col">Date</th>
+                  <th scope="col">What changes</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className="date">October 1, 2026</td>
+                  <td>In effect now. Apps can no longer create or update script tags, so a new install of an app that depends on them gets no storefront script.</td>
+                </tr>
+                <tr>
+                  <td className="date">January 1, 2027</td>
+                  <td>Public apps still using non-expiring offline access tokens are delisted from the App Store and blocked from new installs.</td>
+                </tr>
+                <tr>
+                  <td className="date">March 1, 2027</td>
+                  <td>Shopify stops running script tags on storefronts. The replacement is an app embed, which each merchant has to switch on.</td>
+                </tr>
+                <tr>
+                  <td className="date">April 1, 2027</td>
+                  <td>Admin API requests made with non-expiring tokens are refused.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section className="kl-band alt" aria-labelledby="work">
+          <div className="kl-wrap kl-split">
+            <h2 id="work">What we take on</h2>
+            <dl className="kl-rows">
+              <div>
+                <dt>The 2027 migrations</dt>
+                <dd>Building the app embed that replaces your script tags, moving to expiring access tokens, and helping each merchant switch the embed on.</dd>
+              </div>
+              <div>
+                <dt>Bug fixes</dt>
+                <dd>Starting with what your recent reviews say is broken.</dd>
+              </div>
+              <div>
+                <dt>Merchant support</dt>
+                <dd>Your support address forwards to us. Merchants get an answer within one business day.</dd>
+              </div>
+              <div>
+                <dt>Platform upkeep</dt>
+                <dd>API version updates and App Store requirements as Shopify announces them.</dd>
+              </div>
+            </dl>
+          </div>
+        </section>
+
+        <section className="kl-band" aria-labelledby="terms">
+          <div className="kl-wrap kl-split">
+            <div>
+              <h2 id="terms">Terms</h2>
+              <p>An app that still earns is worth more maintained than abandoned. Selling it means finding a buyer and handing over your merchants. An agency charges before you know whether the work pays for itself. This is neither.</p>
+            </div>
+            <dl className="kl-rows">
+              <div>
+                <dt>Fee</dt>
+                <dd>None, now or later.</dd>
+              </div>
+              <div>
+                <dt>Our share</dt>
+                <dd>A percentage of the app’s revenue, proposed in writing before any work starts and sized to how much work the app needs. If the app earns nothing, we earn nothing.</dd>
+              </div>
+              <div>
+                <dt>Ownership</dt>
+                <dd>You keep the app, the code, the developer accounts and the merchant relationships.</dd>
+              </div>
+              <div>
+                <dt>Releases</dt>
+                <dd>You approve each one. Nothing ships until you say so.</dd>
+              </div>
+              <div>
+                <dt>Reporting</dt>
+                <dd>A monthly statement of what we did and what the app earned.</dd>
+              </div>
+              <div>
+                <dt>Ending</dt>
+                <dd>Either side can end the arrangement with 30 days’ notice. You keep all the work.</dd>
+              </div>
+            </dl>
+          </div>
+        </section>
+
+        <section className="kl-band alt" aria-labelledby="how">
+          <div className="kl-wrap kl-split">
+            <h2 id="how">How it starts</h2>
+            <ol className="kl-steps kl-prose">
               <li>
-                <span className="n">01</span>
-                <h3>Send the link</h3>
-                <p>Within one business day you get a report on your app: what stops working and when, what users are complaining about, and how much work it is.</p>
+                <strong>Send your App Store link.</strong> Within one business day you receive a report: which dates affect your app, what merchants are reporting, and what the work involves. The report is yours whether or not we work together.
               </li>
               <li>
-                <span className="n">02</span>
-                <h3>Agree on a share</h3>
-                <p>If you want us, we propose a share of revenue in writing, sized to how much work the app needs. Nothing is owed up front, and nothing if the app earns nothing.</p>
+                <strong>Agree on a share.</strong> If you want us to take it on, we propose terms in writing.
               </li>
               <li>
-                <span className="n">03</span>
-                <h3>We do the work, you approve it</h3>
-                <p>You give access to the code. Every change is a pull request you can read, and nothing ships until you say so. Support email forwards to us.</p>
+                <strong>Give access to the code.</strong> We work in branches and open pull requests. You, or anyone you trust, review each change before release.
               </li>
             </ol>
           </div>
         </section>
 
-        <section className="kl-band" aria-labelledby="dates">
-          <div className="kl-wrap kl-two">
-            <div>
-              <h2 id="dates">Shopify’s dates</h2>
-              <p>Two changes land in early 2027, and an app nobody is maintaining will miss both. Since October 1, 2026, apps can no longer create script tags, so an app that depends on them has been broken for every new install since then.</p>
-              <p>Merchants on a broken app keep being billed until they notice. Then come the one-star reviews and the cancellations. Both migrations are ordinary code work; they just need someone to do them.</p>
-            </div>
-            <div className="kl-fact">
-              <dl>
-                <dt>January 1, 2027</dt>
-                <dd>Public apps still on non-expiring offline access tokens are delisted and blocked from new installs.</dd>
-                <dt>March 1, 2027</dt>
-                <dd>Shopify stops running script tags on storefronts. The replacement is an app embed.</dd>
-                <dt>April 1, 2027</dt>
-                <dd>Admin API calls made with non-expiring tokens are refused.</dd>
-              </dl>
-              <p className="src">
-                Sources: Shopify’s developer changelog, <a href="https://shopify.dev/changelog/online-store-script-tags-deprecation">script tags</a> (August 24, 2026) and <a href="https://shopify.dev/changelog/posts/expiring-offline-access-tokens-required-for-all-public-apps-as-of-january-1-2027">expiring access tokens</a> (May 20, 2026). Shopify has said it will look at the March date again in January.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <section className="kl-band tint" aria-labelledby="terms">
-          <div className="kl-wrap kl-two">
-            <div>
-              <h2 id="terms">The terms, in plain words</h2>
-              <p>An app that still earns is worth more alive than abandoned or sold for parts. Selling it means finding a buyer and handing over your customers. Hiring an agency means paying before you know whether it is worth it. This is neither.</p>
-            </div>
-            <div>
-              <ul className="kl-list">
-                <li>No fee, ever. A share of revenue, agreed in writing first</li>
-                <li>You own the app, the code, the accounts and the customers</li>
-                <li>You approve every release</li>
-                <li>Either of us can end it with 30 days’ notice, and you keep all the work</li>
-                <li>A monthly statement: what we did, what it earned</li>
-              </ul>
-            </div>
-          </div>
-        </section>
-
         <section className="kl-band" aria-labelledby="who">
-          <div className="kl-wrap kl-two">
-            <div>
-              <h2 id="who">Who does the work</h2>
-              <p>Kochito Labs is a small company, and the engineering is done by AI agents. That is what makes a revenue share work on an app too small for an agency to bother with.</p>
-              <p>It is also why you approve every release. The agents write the code and the tests; you, or anyone you trust, read the change before it reaches your users.</p>
-            </div>
-            <div className="kl-faq">
-              <h2>Questions</h2>
-              <details>
-                <summary>Which apps do you take?</summary>
-                <p>Shopify apps with paying merchants, built by one person or a small team who have moved on to other work. If yours is something else, an iPhone app for example, send it anyway and we will say plainly whether we can help.</p>
-              </details>
-              <details>
-                <summary>What access do you need?</summary>
-                <p>Read and write access to the code repository, so we can open pull requests. You keep the developer account and do the release yourself, or give us a limited role for it. We never ask for your password.</p>
-              </details>
-              <details>
-                <summary>What if the app earns very little?</summary>
-                <p>Then our share is very little, and that is our risk. The free report will say honestly if we think the app is not worth saving.</p>
-              </details>
-              <details>
-                <summary>Do you buy apps?</summary>
-                <p>Not today. If you would rather sell, say so in your email and we will tell you if that changes.</p>
-              </details>
+          <div className="kl-wrap kl-split">
+            <h2 id="who">Who does the work</h2>
+            <div className="kl-prose">
+              <p>Kochito Labs is a small company, and the engineering is done by AI agents. That is what makes a revenue share workable for an app too small for an agency to take on.</p>
+              <p>It is also why you approve every release. The agents write the code and the tests; a person on your side reads each change before it reaches your merchants.</p>
             </div>
           </div>
         </section>
 
-        <section className="kl-wrap kl-close">
-          <h2>Find out which dates hit your app.</h2>
-          <p className="kl-lede" style={{ margin: '0 auto 14px' }}>
-            The report is free and takes you one link.
-          </p>
-          <a className="kl-btn" href="#start">
-            Check my app, free
-          </a>
+        <section className="kl-band alt" aria-labelledby="questions">
+          <div className="kl-wrap">
+            <h2 id="questions">Questions</h2>
+            <div className="kl-qa">
+              <div>
+                <h3>Which apps do you take?</h3>
+                <p>Shopify apps with paying merchants, built by one person or a small team who have moved on to other work. If yours is something else, send it and we will say plainly whether we can help.</p>
+              </div>
+              <div>
+                <h3>What access do you need?</h3>
+                <p>Read and write access to the code repository, so we can open pull requests. You keep the Partner account and publish releases yourself, or give us a limited staff role. We never ask for a password.</p>
+              </div>
+              <div>
+                <h3>What if the app earns very little?</h3>
+                <p>Then our share is very little, and that is our risk. The report will say so if we think the app is not worth the work.</p>
+              </div>
+              <div>
+                <h3>My app is maintained, but stores are still on script tags.</h3>
+                <p>We can do that part alone: build what is missing, write to each affected merchant with the steps to switch, and track who has moved.</p>
+              </div>
+              <div>
+                <h3>Do you buy apps?</h3>
+                <p>Not at present. If you would rather sell, say so and we will tell you if that changes.</p>
+              </div>
+              <div>
+                <h3>Do you work on apps for other platforms?</h3>
+                <p>Shopify first, because its dates are fixed. Ask about others.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="kl-band">
+          <div className="kl-wrap kl-close">
+            <h2>Find out which dates affect your app.</h2>
+            <a className="kl-btn" href="#start">
+              Request the report
+            </a>
+          </div>
         </section>
       </main>
       <Foot />
-    </div>
+    </>
   )
 }

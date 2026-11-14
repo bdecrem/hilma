@@ -32,7 +32,7 @@ list the file in `outputFileTracingIncludes` in `next.config.ts` (as
 
 ## Catalog
 
-Built 2026-11-13.
+Built 2026-11-14.
 
 ### Alfa Slab One
 
@@ -45,7 +45,7 @@ const font = localFont({ src: '../../fonts/alfa-slab-one/AlfaSlabOne-400.woff2',
 
 ### Anton
 
-static · `ofl/anton` · Anton-400.woff2 30 KB
+static · `ofl/anton` · Anton-400.woff2 31 KB
 
 ```ts
 import localFont from 'next/font/local'
@@ -263,7 +263,7 @@ const font = localFont({
 
 ### Inter
 
-variable (opsz 14–32, wght 100–900) · `ofl/inter` · Inter.woff2 132 KB
+variable (opsz 14–32, wght 100–900) · `ofl/inter` · Inter.woff2 133 KB
 
 ```ts
 import localFont from 'next/font/local'
@@ -337,6 +337,22 @@ static · `apache/permanentmarker` · PermanentMarker-400.woff2 29 KB
 ```ts
 import localFont from 'next/font/local'
 const font = localFont({ src: '../../fonts/permanent-marker/PermanentMarker-400.woff2', weight: '400', variable: '--font-permanent-marker', display: 'swap' })
+```
+
+### Public Sans
+
+variable (wght 100–900) · `ofl/publicsans` · PublicSans.woff2 33 KB, PublicSans-Italic.woff2 35 KB
+
+```ts
+import localFont from 'next/font/local'
+const font = localFont({
+  src: [
+    { path: '../../fonts/public-sans/PublicSans.woff2', style: 'normal' },
+    { path: '../../fonts/public-sans/PublicSans-Italic.woff2', style: 'italic' },
+  ],
+  weight: '100 900',
+  variable: '--font-public-sans', display: 'swap',
+})
 ```
 
 ### Quicksand

@@ -1,36 +1,33 @@
 import Track from './Track'
 import { Foot, Top } from './Chrome'
 
-// kochitolabs.com: the company's front door. Two services, one page each.
-// The links are written for kochitolabs.com, where /pdf and /apps are the
-// pages' addresses (host rewrites in next.config.ts).
+// kochitolabs.com: the company's front page. Two services, one page each.
+// Links are written for kochitolabs.com (host rewrites in next.config.ts).
+/* eslint-disable @next/next/no-html-link-for-pages */
 export default function KochitoHome() {
   return (
-    <div>
+    <>
       <Track page="home" />
       <Top />
       <main id="main" className="kl-wrap">
         <div className="kl-home">
-          <p className="kl-eyebrow" style={{ color: 'var(--muted)' }}>
-            Kochito Labs
-          </p>
-          <h1>Desk work with a deadline on it, done and checked before you pay.</h1>
-          <p className="kl-lede">We are a small company whose work is done by AI agents. We do the job first, show you the result and the checks it passed, and charge only if you want more.</p>
+          <h1>Work with a deadline on it, done and checked before you pay.</h1>
+          <p className="kl-lede">Kochito Labs is a small company whose work is done by AI agents. We do the job first, show you the result with the evidence that it was checked, and charge only if you want more.</p>
         </div>
-        <div className="kl-doors">
-          <a className="kl-door kl-pdf" href="/pdf">
+        <ul className="kl-services">
+          <li>
             <h2>Accessible PDFs</h2>
-            <p>For cities and counties facing the ADA Title II date of April 26, 2027. Send one PDF; it comes back readable by a screen reader, with the checker’s report. The first one is free.</p>
-            <span className="go">Fix a PDF →</span>
-          </a>
-          <a className="kl-door kl-apps" href="/apps">
-            <h2>App adoption</h2>
-            <p>For the Shopify app you built and no longer have time for. We keep it working through Shopify’s 2027 deadlines, for a share of what it earns. You keep the app.</p>
-            <span className="go">Check an app →</span>
-          </a>
-        </div>
+            <p>For city and county websites ahead of the ADA Title II date of April 26, 2027. Send one PDF and receive it tagged for screen readers, with the checker’s report. The first document is free.</p>
+            <a href="/pdf">Accessible PDFs</a>
+          </li>
+          <li>
+            <h2>Shopify app maintenance</h2>
+            <p>For the app you built and no longer have time for. We handle Shopify’s 2027 platform changes, bug fixes and support for a share of the app’s revenue. You keep the app.</p>
+            <a href="/apps">Shopify app maintenance</a>
+          </li>
+        </ul>
       </main>
       <Foot />
-    </div>
+    </>
   )
 }

@@ -10,13 +10,14 @@ for (const [path, out] of [['', 'src/app/kochito/opengraph-image.png'], ['/pdf',
   await p.goto(base + path, { waitUntil: 'load', timeout: 90000 })
   await p.waitForTimeout(1500)
   await p.addStyleTag({ content: `
-    .kl-form, .kl-fine, .kl-mail, .kl-pic figcaption, .kl-skip { display: none !important; }
-    .kl-wrap { max-width: 1080px !important; }
-    .kl-top { padding-top: 44px !important; } .kl-mark { font-size: 26px !important; }
-    .kl-hero { padding-block: 56px 0 !important; gap: 44px !important; grid-template-columns: 1.05fr 0.95fr !important; }
-    .kl h1 { font-size: 58px !important; } .kl-lede { font-size: 23px !important; }
-    .kl-home { padding-block: 60px 30px !important; } .kl-home h1 { font-size: 54px !important; }
-    .kl-doors .go, .kl-band, .kl-close, .kl-foot { display: none !important; }` })
+    .kl-form, .kl-nav, .kl-skip, .kl-band, .kl-foot, .kl-services a { display: none !important; }
+    .kl { min-height: 630px; }
+    .kl-wrap { max-width: 1040px !important; }
+    .kl-head .kl-wrap { padding-block: 34px !important; } .kl-mark { font-size: 30px !important; }
+    .kl-hero { grid-template-columns: 1fr !important; padding-block: 52px 0 !important; }
+    .kl h1 { font-size: 66px !important; max-width: 14em; } .kl-lede { font-size: 28px !important; max-width: 31em !important; }
+    .kl-points { display: none; }
+    .kl-home { padding-block: 52px 0 !important; } .kl-services { display: none; }` })
   await p.evaluate(() => document.fonts.ready)
   await p.screenshot({ path: out })
   console.log(out)
