@@ -40,7 +40,9 @@ the thing changes, not the rule.
 
 - **You are one click from the game at all times.** Esc closes anything. Nothing opens by itself.
 - **Nothing asks twice.** No confirmations, no tutorials, no tips. The title card has three lines
-  of instructions and that is all the game ever explains.
+  of instructions and that is all the game ever explains, unless asked: the menu under your
+  picture has one Help pane, four short things to do, and it never opens by itself (Bart,
+  2026-11-13).
 - **The game rewards looking around,** quietly: a leaf under an oak, a second line at a door. It
   never points at its own rewards.
 - **Other people are the point.** What a fellow does shows up for everyone: on their desk, in

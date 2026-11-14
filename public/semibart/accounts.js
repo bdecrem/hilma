@@ -38,6 +38,9 @@
   .sb-veil { position: absolute; inset: 0; z-index: 6; display: grid; place-items: center; background: rgba(0, 0, 0, 0.45); }
   .sb-pane { width: 52cqw; max-height: 50cqw; overflow-y: auto; background: #12100c; color: #fff7e6; border: 0.5cqw solid var(--hot); box-shadow: 0 0 0 0.5cqw #000, 1.2cqw 1.2cqw 0 0.5cqw #000; padding: 2cqw 3cqw 2.2cqw; }
   .sb-pane h2 { margin: 0 0 1.2cqw; color: var(--hot); font-size: 4.4cqw; font-weight: 400; line-height: 1; }
+  .sb-help p { margin: 0 0 0.9cqw; font-size: 2.1cqw; line-height: 1.2; }
+  .sb-help p b { display: block; color: var(--hot); font-weight: 400; font-size: 2.5cqw; letter-spacing: 0.04em; }
+  .sb-help + .sb-row { margin-top: 1.2cqw; }
   .sb-pane label { display: block; margin: 0.8cqw 0 0.3cqw; font-size: 2.2cqw; color: var(--choice); }
   .sb-pane input { width: 100%; letter-spacing: 0.3em; }
   .sb-row { display: flex; gap: 1.6cqw; align-items: center; margin-top: 1.6cqw; }
@@ -119,6 +122,7 @@
     const item = (label, fn) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = label; b.addEventListener('click', e => { e.stopPropagation(); closeMenu(); fn(); }); menu.appendChild(b); };
     item(Q.isMuted() ? 'Sound: off' : 'Sound: on', () => Q.setMute(!Q.isMuted()));
     item(document.fullscreenElement ? 'Leave full screen' : 'Full screen', () => Q.fullscreen());
+    item('Help', openHelp);
     item(u.passcodeIsDefault ? 'Set your own passcode' : 'Change passcode', openPasscode);
     if (u.role === 'admin') item('Everyone (admin)', openAdmin);
     item('Sign out', signOut);
@@ -139,6 +143,20 @@
   }
   function closePane() { if (pane) { pane.remove(); pane = null; } }
   Q.hooks.keyBlock.push(e => { if (!pane) return false; if (e.key === 'Escape') closePane(); return true; });
+
+  // The one place the game explains itself, and only when asked (VOICE.md).
+  function openHelp() {
+    openPane(`<h2>Things to do</h2>
+      <div class="sb-help">
+        <p><b>Collect leaves</b>They fall under the oaks. Ten finish a book. The book is worth it.</p>
+        <p><b>Leave notes</b>Every desk has a pad and a pen. Click it in someone's study.</p>
+        <p><b>Start a flame war</b>Walk into the seminar. It needs very little help.</p>
+        <p><b>Redecorate</b>The spark on your door frame is Claude. Ask it to change your study, or what you say.</p>
+      </div>
+      <div class="sb-row"><button class="sb-btn" type="button">Back to work</button></div>`, el => {
+      el.style.width = '62cqw'; const b = el.querySelector('button'); b.addEventListener('click', closePane); b.focus({ preventScroll: true });
+    });
+  }
 
   function openPasscode() {
     const u = Q.me; if (!u) return;
@@ -186,5 +204,5 @@
   paintCard();
   call('/me').then(r => { atYourDoor(r.user); setUser(r.user); if (r.user) startBtn.focus({ preventScroll: true }); })
     .catch(() => { setUser(null); });
-  window.semibartAccounts = { call, openPasscode, signOut, toggleMenu, closeMenu, menuOpen: () => !menu.hidden };
+  window.semibartAccounts = { call, openHelp, openPasscode, signOut, toggleMenu, closeMenu, menuOpen: () => !menu.hidden };
 })();
