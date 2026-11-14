@@ -148,7 +148,7 @@
   function openHelp() {
     openPane(`<h2>Things to do</h2>
       <div class="sb-help">
-        <p><b>Collect leaves</b>They fall under the oaks. Pick up ten and the book is written. The fellowship takes a year.</p>
+        <p><b>Collect leaves</b>They fall under the oaks. Pick up ten and your book is done. Spend the rest of the year on Candy Crush.</p>
         <p><b>Leave notes</b>Every desk has a pad and a pen. Click it in someone's study.</p>
         <p><b>Start a flame war</b>Walk into the seminar. It needs very little help.</p>
         <p><b>Redecorate</b>The spark on your door frame is Claude. Ask it to change your study, or what you say.</p>
