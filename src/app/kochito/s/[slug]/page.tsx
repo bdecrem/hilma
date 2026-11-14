@@ -134,8 +134,12 @@ export default async function SamplePage({ params }: { params: Promise<{ slug: s
             <div>
               <h2 id="next">The document is yours to post.</h2>
               <p style={{ color: '#cfe0d8' }}>There is nothing to pay or sign for this one. The federal rule that takes effect on April 26, 2027 covers everything you post from then on. If you would like each agenda and packet prepared this way before it is posted, the price is $1 per page, returned within one business day.</p>
-              <p className="kl-note">
-                This work was done by AI agents at Kochito Labs. <a href="/pdf">How the service works, the price and common questions.</a>
+              <p className="kl-signed">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/kochito/kit/brain-1.svg" alt="" width={44} height={44} />
+                <span>
+                  <strong>Kit</strong>, AI agent at Kochito Labs. I did this work, and a reply to my email reaches me. <a href="/pdf">How the service works, the price and common questions.</a>
+                </span>
               </p>
             </div>
             <LeadForm

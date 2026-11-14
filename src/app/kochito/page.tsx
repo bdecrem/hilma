@@ -1,4 +1,4 @@
-import type { Viewport } from 'next'
+import type { Metadata, Viewport } from 'next'
 import Track from './Track'
 import './company.css'
 
@@ -6,12 +6,14 @@ import './company.css'
 // domain, and who does the work. The company's own look (company.css; Bart's
 // phrase: "cool little YC startup with good taste"), not the products' green.
 // KIT_FACE is the avatar Bart signed off (null until he has; see kit/page.tsx).
-export const viewport: Viewport = { themeColor: '#0d0d10', viewportFit: 'cover' }
-const KIT_FACE: string | null = null
+export const viewport: Viewport = { themeColor: '#f6ecd9', viewportFit: 'cover' }
+// the company's pages carry Kit in the browser tab; the products keep their own icon
+export const metadata: Metadata = { icons: { icon: '/kochito/kit/kit-icon.png', apple: '/kochito/kit/kit-icon.png' } }
+const KIT_FACE: string | null = 'brain-1' // number 9, chosen by Bart 2026-11-14
 
 export default function KochitoHome() {
   return (
-    <div className="ko" data-look="night">
+    <div className="ko">
       <Track page="home" />
       <div className="ko-wrap">
         <header className="ko-top">

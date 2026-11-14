@@ -12,13 +12,13 @@ import '../company.css'
 // pushed by scripts/venture/sync.mjs), so it changes without a deploy.
 // The look is the company's own (company.css), not the products'.
 export const dynamic = 'force-dynamic'
-export const metadata: Metadata = { title: 'Kit', robots: { index: false, follow: false } }
-export const viewport: Viewport = { themeColor: '#0d0d10', viewportFit: 'cover' }
+export const metadata: Metadata = { title: 'Kit', robots: { index: false, follow: false }, icons: { icon: '/kochito/kit/kit-icon.png', apple: '/kochito/kit/kit-icon.png' } }
+export const viewport: Viewport = { themeColor: '#f6ecd9', viewportFit: 'cover' }
 
 // Kit's face. Candidates by two designers (public/kochito/kit/<id>.svg);
 // FACE is the one Bart signed off, null until he has: the page then shows all
 // candidates, numbered, and asks. The character sheet is apps/venture/private/KIT.md.
-const FACE: string | null = null
+const FACE: string | null = 'brain-1' // number 9, chosen by Bart 2026-11-14
 const CANDIDATES: { id: string; by: string }[] = [
   { id: 'hand-1', by: 'hand-drawn' },
   { id: 'hand-2', by: 'hand-drawn' },
@@ -76,8 +76,8 @@ function parse(body: string) {
   return { now: (get('Now')?.lines ?? []).join(' '), numbers: items('Numbers'), waiting: items('Waiting on you'), parked: items('Parked, your call'), days }
 }
 
-export default async function Page({ searchParams }: { searchParams: Promise<{ k?: string; look?: string }> }) {
-  const { k, look } = await searchParams
+export default async function Page({ searchParams }: { searchParams: Promise<{ k?: string }> }) {
+  const { k } = await searchParams
   if (!keyOk(k)) notFound()
   const j = parse((await getDoc('journal'))?.body ?? '')
   const q = `?k=${encodeURIComponent(k as string)}`
@@ -88,7 +88,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ k
     { href: `https://ola.cx/venture/call/checkin${q}`, tag: 'interview', name: 'Answer my questions', what: 'I ask the things only you can settle, one at a time. About five minutes.', go: 'Start the check-in' },
   ]
   return (
-    <div className="ko" data-look={look === 'day' ? 'day' : 'night'}>
+    <div className="ko">
       <div className="ko-wrap">
         <header className="ko-top">
           <a className="ko-name" href="/">
