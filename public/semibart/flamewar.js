@@ -35,10 +35,13 @@ q.hooks.seminarMid.push(t => {
   R(MX, 99, 2, 1, on ? '#ff3b2f' : '#3b1612');
   if (fw.live && !calm) { const k = Math.floor(t * 6) % 3; R(MX + 5 + k * 2, 89 - k, 1, 1, 'rgba(255,255,255,0.7)'); R(MX - 5 - k * 2, 89 - k, 1, 1, 'rgba(255,255,255,0.7)'); }
 });
-q.hooks.seminarSpots.push(() => [{ name: 'microphone', r: [MX - 8, 84, 17, 46], walk: { x: MX - 12, y: 134 }, def: 'use', on: {
-  look: 'The question mic. Nobody has asked a question at it since 2009.',
-  use: grabMic, talk: grabMic, open: grabMic,
-} }]);
+// Generous on purpose: the stand is thin, so the whole of it, the base and the cable on the floor
+// all answer, well past the pixels.
+const MIC_ON = { look: 'The question mic. Nobody has asked a question at it since 2009.', use: () => grabMic(), talk: () => grabMic(), open: () => grabMic() };
+q.hooks.seminarSpots.push(() => [
+  { name: 'microphone', r: [MX - 11, 82, 23, 52], walk: { x: MX - 12, y: 134 }, def: 'use', on: MIC_ON },
+  { name: 'microphone', r: [MX + 12, 124, 26, 9], walk: { x: MX - 12, y: 134 }, def: 'use', on: MIC_ON },
+]);
 
 /* ---------- the heat: people half out of their seats, steam, papers in the air ---------- */
 const seatOf = k => { const a = q.seminar.seats().find(s => s.k === k); return a ? { x: a.x + 14, y: 62 - (S.sem.lift[k] || 0) } : null; };
