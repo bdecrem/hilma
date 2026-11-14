@@ -19,8 +19,9 @@
 //   node scripts/venture/runner.mjs tick --dry      decide and print, start nothing
 //   node scripts/venture/runner.mjs probe           start Claude Code once, read-only (checks the login, the checkout and the state)
 //
-// It uses the Claude login of the machine it runs on (ANTHROPIC_API_KEY is
-// removed from the environment, as the Token Surfers agent does). What the
+// It uses the Claude login saved on the machine it runs on (CLAUDE_CODE_OAUTH_TOKEN
+// in ~/.venture-runner.env, read by the launchd job; ANTHROPIC_API_KEY is removed
+// from the environment, as the Almanac and the Token Surfers agent do). What the
 // unattended session may and may not do is in the prompt and in the tool list
 // below: it reads, writes notes, answers people who wrote to us, researches;
 // it does not commit, push, spend, or write to a stranger.

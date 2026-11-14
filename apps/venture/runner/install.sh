@@ -12,6 +12,9 @@ DIR=$HOME/hilma-venture
 cd "$DIR"
 git pull --ff-only --quiet
 [ -f .env.local ] || { echo "missing $DIR/.env.local (copy the four venture keys into it)"; exit 1; }
+# The Claude login for unattended runs: CLAUDE_CODE_OAUTH_TOKEN in a file of its
+# own, as the Almanac and the Token Surfers agent on this machine have theirs.
+[ -f "$HOME/.venture-runner.env" ] || { echo "missing ~/.venture-runner.env (one line: CLAUDE_CODE_OAUTH_TOKEN=..., chmod 600)"; exit 1; }
 if grep -q '^ANTHROPIC_API_KEY=' .env.local; then echo "remove ANTHROPIC_API_KEY from $DIR/.env.local: the runner uses the machine's Claude login"; exit 1; fi
 # the scripts need @supabase/supabase-js; borrow the dev tree's packages
 [ -e node_modules ] || ln -s "$HOME/Documents/code/hilma/node_modules" node_modules
