@@ -68,7 +68,7 @@
 .ko-face img { width: 100%; height: 100%; display: block; }
 .ko-face.empty { border-style: dashed; border-width: 2px; color: var(--ink-3); text-align: center; padding: 20px; font-size: 14px; line-height: 1.4; }
 .ko-face.empty b { display: block; font-family: var(--kl-display-grot), sans-serif; font-size: 64px; line-height: 1; color: var(--ink); letter-spacing: -0.04em; margin-bottom: 8px; }
-@media (max-width: 820px) { .ko-hero { grid-template-columns: 1fr; padding-block: 28px 28px; gap: 28px; } .ko-face { width: 132px; height: 132px; border-radius: 20px; order: -1; } .ko-face.empty b { font-size: 34px; } .ko-face.empty span { display: none; } }
+@media (max-width: 820px) { .ko-hero { grid-template-columns: 1fr; padding-block: 28px 28px; gap: 28px; } .ko-face { width: 132px; height: 132px; border-radius: 20px; order: -1; } .ko-face.empty { display: none; } }
 
 .ko-stats { display: flex; flex-wrap: wrap; gap: 8px; margin: 34px 0 0; padding: 0; list-style: none; }
 .ko-stats li { border: 1px solid var(--line); border-radius: 8px; padding: 7px 12px; background: var(--card); color: var(--ink-2); }

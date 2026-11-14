@@ -15,9 +15,9 @@ export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Kit', robots: { index: false, follow: false } }
 export const viewport: Viewport = { themeColor: '#0d0d10', viewportFit: 'cover' }
 
-// Kit's face. Eight candidates by two designers (public/kochito/kit/<id>.svg);
+// Kit's face. Candidates by two designers (public/kochito/kit/<id>.svg);
 // FACE is the one Bart signed off, null until he has: the page then shows all
-// eight, numbered, and asks.
+// candidates, numbered, and asks. The character sheet is apps/venture/private/KIT.md.
 const FACE: string | null = null
 const CANDIDATES: { id: string; by: string }[] = [
   { id: 'hand-1', by: 'hand-drawn' },
@@ -28,10 +28,15 @@ const CANDIDATES: { id: string; by: string }[] = [
   { id: 'pixel-2', by: 'pixel' },
   { id: 'pixel-3', by: 'pixel' },
   { id: 'pixel-4', by: 'pixel' },
+  // after his note on 1 to 4 ("the buck teeth make you a little too silly... we want you to have a brainiac vibe")
+  { id: 'brain-1', by: 'brainiac' },
+  { id: 'brain-2', by: 'brainiac' },
+  { id: 'brain-3', by: 'brainiac' },
+  { id: 'brain-4', by: 'brainiac' },
 ]
 const src = (id: string) => `/kochito/kit/${id}.svg`
 // the drawings that exist in public/kochito/kit/ (a candidate not listed shows as "still being drawn")
-const READY = new Set(['hand-1', 'hand-2', 'hand-3', 'hand-4'])
+const READY = new Set(['hand-1', 'hand-2', 'hand-3', 'hand-4', 'pixel-1', 'pixel-2', 'pixel-3', 'pixel-4'])
 
 // **bold** and [text](url), nothing else
 function inline(text: string) {
@@ -143,7 +148,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ k
               <div className="ko-sec-head">
                 <h2 id="face">Pick my face</h2>
                 <p>
-                  {READY.size === CANDIDATES.length ? 'Eight takes on Kit by two designers, one drawing by hand, one in pixels.' : `${READY.size} of 8 are in: one designer draws by hand, the other in pixels and is still working.`} Text me the number: <span className="ko-kbd">v kit 3</span>
+                  {READY.size === CANDIDATES.length ? 'Twelve takes on Kit by two designers: 1 to 4 by hand, 5 to 8 in pixels, 9 to 12 the brainiac versions you asked for.' : `${READY.size} of ${CANDIDATES.length} are in: 1 to 4 by hand, 5 to 8 in pixels. 9 to 12, the brainiac versions you asked for, are being drawn.`} Text me the number: <span className="ko-kbd">v kit 3</span>
                 </p>
               </div>
               <ol className="ko-faces">
