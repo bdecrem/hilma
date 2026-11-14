@@ -13,6 +13,7 @@
 // beside it. There is no flag to skip the guard.
 import { existsSync, readFileSync } from 'node:fs'
 import { createClient } from '@supabase/supabase-js'
+import { beat } from './_state.mjs'
 
 const root = new URL('../../', import.meta.url)
 const env = Object.fromEntries(
@@ -52,6 +53,7 @@ if (args[0] === 'inbox') {
   if (rows.length) await markSeen(rows)
 } else if (args[0] === '--wait') {
   for (;;) {
+    await beat(db, 'mail') // the runner on the Mac mini stays idle while a session is open
     const rows = await patient(unseen)
     if (rows.length) {
       rows.forEach(show)

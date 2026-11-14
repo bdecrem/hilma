@@ -7,6 +7,7 @@
 // He writes to Venture by starting a text with "v" or "venture".
 import { readFileSync } from 'node:fs'
 import { createClient } from '@supabase/supabase-js'
+import { beat } from './_state.mjs'
 
 const root = new URL('../../', import.meta.url)
 const env = Object.fromEntries(
@@ -63,6 +64,7 @@ if (cmd === 'send') {
   for (const m of data.reverse()) console.log(line(m))
 } else if (cmd === '--wait') {
   for (;;) {
+    await beat(db, 'texts') // the runner on the Mac mini stays idle while a session is open
     const rows = await patient(unseen)
     // Give the auto-reply a moment to land so it prints with his text.
     if (rows.length && Date.now() - new Date(rows[rows.length - 1].at).getTime() > 25_000) {
