@@ -57,16 +57,17 @@ const WALL = { pad: [48, 69], slots: grid(50, 6, [78, 89]) };
    a walnut frame 2 wide, a bevel, cork inside. Where it hangs, per kind of room, clear of heads,
    monitors and the room's own things (src/lib/semibart/room-agent.ts repeats these numbers for
    the decorator; change both):
-   - desk: over the desk, between the window (ends x 121) and the bookshelf (starts 266), bottom at
-     y 51, above the occupant's head (y 56): six notes across, three down.
-   - read: over the armchair (x 146-225, top y 50): six across, three down, bottom at y 45.
+   - desk: centred over the occupant's head (x 172-205, top y 56), bottom at y 45: four notes
+     across, two down, and a stack when there are more. A board is a thing on the wall, not a
+     billboard: at 76 x 44 it was the biggest, brightest thing in every room (2026-11-13).
+   - read: over the armchair (x 146-225, top y 50), the same size.
    - stand: the wall behind the standing desk is all monitors, so the board hangs low under the
      window sill (x 44-105, y 77-102), five across and two down.
    - duo: above the second desk, right of the bookshelf; Ian's map is there, so his is narrower, at
      the far right. Study 27 (trio) keeps the board it had between the poster and the arcade
      cabinet. Bart's is painted into his room (BOARD below) and has no frame of its own here.
    A room's code can take the board down ('board'); its notes then go back on the desk. */
-const BOARD_AT = { desk: [158, 8, 76, 44], read: [147, 4, 76, 42], stand: [44, 76, 62, 26], duo: [226, 8, 70, 42] };
+const BOARD_AT = { desk: [160, 12, 57, 34], read: [157, 8, 57, 34], stand: [44, 76, 62, 26], duo: [236, 10, 57, 34] };
 // the note grid inside a frame: cork is the frame less 3 on each side; notes are 9 wide on an 11 pitch,
 // centred, with a pixel more room on top for the pins
 function slotsIn([x, y, w, h]) {
@@ -83,7 +84,9 @@ const boardFor = frame => ({ frame, slots: slotsIn(frame) });
 const BOARDS = {
   bart: { slots: BOARD },
   kevin: { frame: [128, 8, 38, 28], slots: grid(131, 3, [11, 22]), look: 'The message board. The oldest network in the room.' },
-  ian: boardFor([268, 8, 46, 42])
+  ian: boardFor([268, 8, 46, 40]),
+  // Inbal's study is a rat palace on the left; her board hangs upper right, over the monitor, to balance it
+  inbal: boardFor([200, 14, 57, 34])
 };
 function boardOf(room) {
   if (BOARDS[room]) return BOARDS[room];
@@ -183,9 +186,9 @@ function drawBoard([x, y, w, h], empty) {
   rect(x + 2, y + 2, w, h, 'rgba(20,10,4,0.32)');
   rect(x, y, w, h, '#2e160a'); rect(x + 1, y + 1, w - 2, h - 2, '#7a4424');
   rect(x + 1, y + 1, w - 2, 1, '#a8693c'); rect(x + 1, y + 1, 1, h - 2, '#94582f'); rect(x + 1, y + h - 2, w - 2, 1, '#53290f'); rect(x + w - 2, y + 1, 1, h - 2, '#5e3016');
-  rect(x + 3, y + 3, w - 6, h - 6, '#c9975f'); rect(x + 3, y + 3, w - 6, 1, '#9f7243'); rect(x + 3, y + 3, 1, h - 6, '#a87b4b');
+  rect(x + 3, y + 3, w - 6, h - 6, '#b4854f'); rect(x + 3, y + 3, w - 6, 1, '#8c6238'); rect(x + 3, y + 3, 1, h - 6, '#976b40');
   let k = hash(x + ',' + y + ',' + w);
-  for (let i = 0; i < (w * h) / 26; i++) { k = Math.imul(k ^ (k >>> 15), 2246822507) >>> 0; const px = x + 4 + (k % (w - 8)), py = y + 4 + ((k >>> 8) % (h - 8)); rect(px, py, 1, 1, (k >>> 20) % 3 ? '#b4844f' : '#ddb07a'); }
+  for (let i = 0; i < (w * h) / 26; i++) { k = Math.imul(k ^ (k >>> 15), 2246822507) >>> 0; const px = x + 4 + (k % (w - 8)), py = y + 4 + ((k >>> 8) % (h - 8)); rect(px, py, 1, 1, (k >>> 20) % 3 ? '#a27443' : '#c99a64'); }
   const bx = x + Math.floor(w / 2) - 6; rect(bx, y + h - 1, 12, 3, '#3d1f0d'); rect(bx + 1, y + h - 1, 10, 2, '#d9a93a'); rect(bx + 1, y + h - 1, 10, 1, '#f2d27a'); rect(bx + 3, y + h, 6, 1, '#a07a24');
   if (empty) [[0.3, 0.4, 0], [0.62, 0.3, 1], [0.48, 0.66, 3]].forEach(([fx, fy, c]) => pin(x + Math.round(w * fx), y + Math.round(h * fy), PINS[c]));
 }

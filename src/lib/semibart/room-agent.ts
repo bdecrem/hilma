@@ -53,8 +53,8 @@ function sharedNotes(room: RosterRoom, askerCharacter?: string): string {
 
 // Where each study's message board hangs (x, y, w, h): the same numbers as BOARD_AT and BOARDS in
 // public/semibart/notes.js, which draws it. Change both.
-const BOARD_AT: Record<string, [number, number, number, number]> = { desk: [158, 8, 76, 44], read: [147, 4, 76, 42], stand: [44, 76, 62, 26], duo: [226, 8, 70, 42] }
-const BOARD_ROOM: Record<string, [number, number, number, number]> = { bart: [155, 12, 40, 38], kevin: [128, 8, 38, 28], ian: [268, 8, 46, 42] }
+const BOARD_AT: Record<string, [number, number, number, number]> = { desk: [160, 12, 57, 34], read: [157, 8, 57, 34], stand: [44, 76, 62, 26], duo: [236, 10, 57, 34] }
+const BOARD_ROOM: Record<string, [number, number, number, number]> = { bart: [155, 12, 40, 38], kevin: [128, 8, 38, 28], ian: [268, 8, 46, 40], inbal: [200, 14, 57, 34] }
 export function boardOf(key: string, room: RosterRoom): [number, number, number, number] | null {
   return BOARD_ROOM[key] || BOARD_AT[room.scene === 'trio' ? '' : room.scene] || null
 }

@@ -18,9 +18,9 @@ where the notes people leave will go"). Every study has one: a walnut frame with
 edge, speckled cork, a little brass plate underneath, the notes held by colored pushpins, and a
 few pins waiting in the cork while it is empty; a full board ends in a stack. Where it hangs
 (`BOARD_AT` and `BOARDS` in notes.js, repeated in `room-agent.ts` for the decorator): over the
-desk in a desk room (x 158-233, y 8-51, six by three), over Frances's armchair, low under the
+desk in a desk room (x 160-216, y 12-47, four by two and then a stack: the first boards were 76 x 44 and were the biggest, brightest thing in every room), over Frances's armchair, low under the
 window sill in Joseph's room (his wall is all monitors), above the second desk in a shared
-study (Ian's at the far right, beside his map), Kevin's between the poster and the arcade
+study (Ian's at the far right, beside his map), Inbal's upper right over her monitor to balance the rat palace, Kevin's between the poster and the arcade
 cabinet. The board is drawn behind the people (roomBack), so heads and monitors stay in front.
 The decorator is told where the board is and keeps it clear; a room's code can take it down
 (hide name `board`) and then its notes go back on the front of the desk (`PLACES`, and the wall
