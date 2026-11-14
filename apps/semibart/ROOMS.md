@@ -117,6 +117,11 @@ decorate the room whose occupants include their character; an admin, any room.
   frames and a sheet, nothing saved.
 - `npx tsx scripts/semibart/room-put.ts <room> <code.js> <character> "<request>" "<say>"`: saves
   code you have looked at with the two above as the room's next version, through the same test run.
+- `npx tsx scripts/semibart/rooms-batch.ts <requests.json> <character> [--only a,b] [--dry]`: many
+  rooms at once through `changeRoom`, four at a time, nothing on the wire. On 2026-11-14 every
+  study but Bart's got two things of its own this way (a sentence per room, from a quick look at
+  each fellow's interests and work: T.L.'s old white dog, Kepa's txalaparta, June's dog doing
+  downward dog); the sentences are kept in `semibart_room_versions.prompt`.
 - `node scripts/semibart/rooms-check.mjs <dir> ["request"] [base]`: the whole thing through the
   page, API and database as the check account (`SEMIBART_CHECK_NAME` / `SEMIBART_CHECK_PASS`, an
   admin that owns no study): decorate (one real Claude call), a second tab that never reloads,

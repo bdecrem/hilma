@@ -114,7 +114,7 @@ export const book = (req: Request, who: string): Promise<Response> => guarded(as
 })(req)
 
 /** POST { comment?, cast: [presenter, ...the five at the table], topic } -> the flame war the
- *  question mic starts: { ok, comment, script, leaver, headline } or { ok: false, say }.
+ *  question mic starts: { ok, comment, script, headline, shape } or { ok: false, say }.
  *  Signed in only; counts against the day's Claude turns. Takes 20 to 60 seconds. */
 export const flamewar: Handler = guarded(async req => {
   const user = await sessionUser(req)

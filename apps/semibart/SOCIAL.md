@@ -191,35 +191,60 @@ desk; a fellow's partial manuscript and a visitor, with the APIs answered locall
   background music on every page. It comes in after the start jingle, sits under the sound effects,
   dips while anyone talks, and is silent when sound is off (your menu) or the tab is hidden.
 
-## The flame war at the seminar (`public/semibart/flamewar.js`, `src/lib/semibart/flamewar.ts`)
+## The chaos at the seminar (`public/semibart/flamewar.js`, `src/lib/semibart/flamewar.ts`)
 
 Bart, 2026-11-13: a floor mic stands in the Margaret Levi Meeting Room, between the end of the
 table and the presenter. Click it: the mic goes live (red light, a squeal), the presenter asks for
-questions at the end, and a line opens along the bottom, red where Claude's is clay: type a comment
-(it is never a question), or press **Stir up some stuff for me** and the room picks its own fight.
-You say "It's more of a comment than a question.", the room murmurs while the scene is written,
-then it plays: the six people tear into the comment in character, rise out of their seats and
-shake, steam comes off whoever is talking, papers fly off the table, and the presenter storms out
-through the door (when you are the presenter, the first person at the table leaves instead). One
-flame war a seminar; leaving the room brings next week's, with everyone back.
+questions at the end, and a line opens along the bottom: type a comment (it is never a question),
+or press **Stir up some stuff for me**. You say "It's more of a comment than a question.", the room
+murmurs while the scene is written, and then all hell breaks loose. One a seminar; leaving the room
+brings next week's, with everyone back and the mess gone.
+
+**Physical comedy, not debate** (Bart, 2026-11-14: the first version was "a bunch of boring
+conversation"). A scene is a handful of short lines (often two words: "Bold.", "Slide two.") and a
+string of moves. The moves are a fixed vocabulary, each animated in flamewar.js:
+
+| move | what happens |
+|---|---|
+| `rise` / `slam` | stands bolt upright / a fist on the table, the room shakes, papers jump |
+| `throw` | the whole stack of papers into the air; it rains paper and stays on the floor |
+| `spill` | the mug tips, coffee floods along the table and drips on the floor, the neighbors leap up |
+| `jump` | onto the table |
+| `storm` | walks out the door and slams it |
+| `faint` | slides under the table (and can still talk from there; a hand waves now and then) |
+| `clap` | a slow clap the whole room picks up, faster and faster |
+| `spin` | spins in the chair |
+| `music` | disco, tango or polka (WebAudio, the game's own music stops); disco brings a ball and lights |
+| `dance` / `conga` | everyone left dances / dances out the door in a line, leaving the player alone |
+| `alarm` | fire alarm, red light, sprinklers, papers held over heads |
+| `lights` | a blackout with only eyes, crashes; lights up with that person on the table and paper everywhere |
+| `freeze` / `turkey` | dead silence and a cricket / the wild turkey walks in (and may gobble lines) |
+
+Each grab of the mic is handed one of `SHAPES` at random (paper storm, coffee, table dance, fire
+drill, the turkey, blackout, slow clap, tango, walkout, polka, escalation), which the model follows
+or bends, so no two seminars go alike. A new move needs a line in `MOVES` (server) and a function in
+`MOVE` (flamewar.js); a new shape is one sentence in `SHAPES`.
 
 - `POST /api/semibart/flamewar { comment?, cast, topic }` (signed in) runs one Claude call (Opus
-  5.5, effort low; 10 to 25 seconds) that writes the whole scene as tagged lines: the comment, the
-  lines, one `<exit>` for whoever leaves, and the wire's headline. The scene is checked before it
-  plays (everyone at the table speaks, one exit, nobody speaks after leaving, no he/she: the cast
-  are real colleagues) and written again once if it fails. It counts against the day's Claude
-  turns (`countTurn`, shared with the door frame).
-- The prompt keeps it something everyone in it would show a friend: nobody humiliated, no person
-  attacked rather than an idea, and no real colleague put on a side of a real political fight or
-  made to talk about a public figure; such a comment becomes its academic proxy (the method, the
-  framing, who cites whom).
-- Who is who comes from `roster.json`'s `fellows` table (name and the game's one line each, written
-  by `roster.mjs`), plus anyone's changed lines from their persona.
-- The game's side: `HOOKS.seminarMid` / `seminarFront` / `seminarSpots`, `S.sem.gone` (who left),
-  `S.sem.lift` (who is out of their seat), `S.sem.presX` (the presenter walking out), and
-  `quest.seminar` (the cast and the topic) in `index.html`.
-- The wire gets the headline. The check account's flame wars and `flamewar-try.ts` stay off it.
-- Checks: `npx tsx scripts/semibart/flamewar-try.ts [--as c] [--cast a,b,c,d,e,f] ["comment"]`
-  prints one scene; `node scripts/semibart/flamewar-check.mjs <dir> [base]` clicks the mic in the
-  real page as the check account, types a comment once and stirs once, and checks the scene plays
-  to the end, the leaver and their hotspot are gone, a second grab is refused and leaving resets it.
+  5.5, effort low; 4 to 10 seconds) that returns `<comment>`, `<line who>` and `<do act who style>`
+  tags and a wire headline. The scene is checked before it plays (known moves and people, at most
+  eight lines of at most 70 characters, two moves at least, music before any dance or conga, nobody
+  acts after leaving, the turkey speaks only once it is in, no he/she: the cast are real colleagues)
+  and written again once if it fails. It counts against the day's Claude turns (`countTurn`, shared
+  with the door frame).
+- The prompt keeps it something everyone in it would show a friend: ridiculous, never humiliated
+  or hurt, and no real colleague put on a side of a real political fight or made to talk about a
+  public figure; such a comment becomes its academic proxy.
+- Who is who comes from `roster.json`'s `fellows` table, plus anyone's changed lines from their persona.
+- The game's side (index.html): from the first move flamewar.js draws the six people itself.
+  `S.sem.pose[k]` tells the game to leave a body alone, `S.sem.at[k]` is where its lines float,
+  `HOOKS.seminarBack` draws behind the table (standing people, the table hides their legs) and
+  `seminarMid` / `seminarFront` on and in front of it; `S.sem.wild` makes leaving bring next week.
+  `gfx.bust` and `gfx.turkey` are exposed for it. At the end the music fades and everyone still in
+  the room sits back down; the paper, coffee and water stay until you leave.
+- The wire gets the headline. The check account's scenes and `flamewar-try.ts` stay off it.
+- Checks: `npx tsx scripts/semibart/flamewar-try.ts [--shape N] [--as c] [--cast a,b,c,d,e,f] ["comment"]`
+  prints one scene; `node scripts/semibart/chaos-check.mjs <dir> [base] [--no-live] [--only paper,coffee]`
+  plays six hand-written scenes that use every move (no Claude call, a sheet of frames each), then
+  clicks the mic as the check account, stirs once, and checks it plays to the end, refuses a second
+  grab and resets when you leave.

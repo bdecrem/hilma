@@ -176,7 +176,7 @@ const W = 320, H = 144, OY = 18, FH = 180;
 // hooks for the files that ride on the game (accounts.js, rooms.js, notes.js): they push functions here
 // on the map: mapOver(t) draws in map coordinates over the campus, mapSpots() adds hover targets;
 // sayYou(text) may reword what the player's own character says
-const HOOKS = { roomBack: [], roomMid: [], roomFront: [], roomSpots: [], keyBlock: [], roomHide: [], roomPersonAt: [], roomSeats: [], seminarMid: [], seminarFront: [], seminarSpots: [], mapOver: [], mapSpots: [], sayYou: [] };
+const HOOKS = { roomBack: [], roomMid: [], roomFront: [], roomSpots: [], keyBlock: [], roomHide: [], roomPersonAt: [], roomSeats: [], seminarBack: [], seminarMid: [], seminarFront: [], seminarSpots: [], mapOver: [], mapSpots: [], sayYou: [] };
 // parts of a room a rider draws its own way: 'occupant', 'desk', 'chair', 'mates', 'extras'
 // which part of a room a hotspot belongs to, so hiding the part hides its hotspot too
 const PART_OF = { 'name plate': 'desk', Socrates: 'desk', monitor: 'desk', monitors: 'desk', 'coffee mug': 'desk', phone: 'desk', 'the Almanac': 'occupant', 'reading chair': 'chair', lamp: 'chair', easel: 'extras', 'world map': 'extras', plant: 'extras', window: 'window' };
@@ -1156,7 +1156,7 @@ const BUTTINS = ['If I could just get to slide two.', "I'll take questions at th
 function presenter() { const d = DEBATES[S.sem.v % DEBATES.length], k = d.seats[0]; return { k, x: S.sem.presX ?? PRES_X, name: FELLOWS[k].name }; }
 function seats() { const d = DEBATES[S.sem.v % DEBATES.length]; return d.seats.slice(1).map((k, i) => ({ k, x: SEAT_X[i], name: FELLOWS[k].name, look: FELLOWS[k].look, talk: [[k, FELLOWS[k].whisper]] })); }
 // gone: who has stormed out of this seminar (flamewar.js); lift: how far someone has risen out of their seat; presX: the presenter, walking
-S.sem = { rung: false, ringT: -1, phones: 40, ballT: 0, v: 0, heard: false, gone: new Set(), lift: {}, presX: undefined };
+S.sem = { rung: false, ringT: -1, phones: 40, ballT: 0, v: 0, heard: false, gone: new Set(), lift: {}, presX: undefined, pose: {}, at: {}, wild: false };   // pose/at/wild: flamewar.js has taken a body over, where it speaks from, the room is wrecked
 async function enterSeminar() {
   S.door = MAP.find(h => h.seminar);
   await say('you', 'The seminar. Everybody is in there.');
@@ -1182,7 +1182,7 @@ async function enterSeminar() {
 }
 async function talkSeat(a) { for (const l of a.talk) await say(l[0], l[1]); if (a.k === 'forrest') SFX.pock(0.2); }
 async function leaveSeminar() {
-  if (S.sem.gone.size) { S.sem.gone.clear(); S.sem.lift = {}; S.sem.presX = undefined; S.sem.v++; await exitRoom(); return; }   // after a flame war: next week's seminar
+  if (S.sem.gone.size || S.sem.wild) { S.sem.gone.clear(); S.sem.lift = {}; S.sem.presX = undefined; S.sem.pose = {}; S.sem.at = {}; S.sem.wild = false; S.sem.v++; await exitRoom(); return; }   // after the chaos at the mic: next week's seminar
   if (S.sem.rung) { S.sem.v++; await exitRoom(); return; }
   await goTo({ x: 74, y: 134 }); S.face = -1;
   await say('you', 'Well. I should get going.');
@@ -1808,9 +1808,9 @@ function speakerPos(who) {
   if (S.scene === 'room' && PEOPLE[S.room] && (PEOPLE[S.room].mates || []).includes(who)) return [mateX(S.room, PEOPLE[S.room].mates.indexOf(who)) + 14, 54];
   if (who === 'bart') return [190, 54];
   if (who === 'turkey' && S.scene === 'map') { const tk = TURKEYS.reduce((a, b) => Math.hypot(b[0] - S.x, b[1] - S.y) < Math.hypot(a[0] - S.x, a[1] - S.y) ? b : a); return [tk[0] + 6, tk[1] - 2]; }
+  if (S.scene === 'room' && S.room === 'seminar') { if (S.sem.at[who]) return S.sem.at[who]; if (who === 'turkey') return [54, 50]; const a = seats().find(q => q.k === who); if (a) return [a.x + 14, 56]; if (who === presenter().k) return [PRES_X + 6, 28]; }
   if (who === 'eli') return ELI_AT;
   if (who === 'forrest') return FORREST_AT;
-  if (S.scene === 'room' && S.room === 'seminar') { if (who === 'turkey') return [54, 50]; const a = seats().find(q => q.k === who); if (a) return [a.x + 14, 56]; if (who === presenter().k) return [PRES_X + 6, 28]; }
   if (PEOPLE[who]) return PEOPLE[who].at;
   return S.scene === 'map' ? [S.x, S.y - 14] : [S.x, S.y - 78];
 }
@@ -1927,17 +1927,18 @@ function drawSeminar(t) {
   SE.forEach(a => {
     const o = LOOKS[a.k], look = Math.sign(S.x - a.x - 14), asleep = a.k === 'fellow';
     rect(g, a.x + 2, 58, 24, 3, INK); rect(g, a.x + 1, 61, 26, 34, INK); rect(g, a.x + 3, 61, 22, 34, '#3b3d4a');
-    if (a.k !== me() && !S.sem.gone.has(a.k)) bust(o, a.x, 66 - (S.sem.lift[a.k] || 0) + (asleep && !calm && Math.floor(t) % 3 === 0 ? 1 : 0), { talk: flap(a.k), look, blink: asleep || (!calm && (t + a.x) % 4.7 < 0.12), down: a.k === 'frances' && sp !== 'frances' });
+    if (a.k !== me() && !S.sem.gone.has(a.k) && !S.sem.pose[a.k]) bust(o, a.x, 66 - (S.sem.lift[a.k] || 0) + (asleep && !calm && Math.floor(t) % 3 === 0 ? 1 : 0), { talk: flap(a.k), look, blink: asleep || (!calm && (t + a.x) % 4.7 < 0.12), down: a.k === 'frances' && sp !== 'frances' });
     if (a.k === 'kahwee' && !calm) { const al = (0.35 + 0.3 * Math.sin(t * 7)).toFixed(2); rect(g, a.x + 9, 75, 4, 3, `rgba(170,225,255,${al})`); rect(g, a.x + 16, 75, 4, 3, `rgba(170,225,255,${al})`); }
     if (a.k === 'jacqueline') { const al = (0.25 + 0.2 * Math.sin(t * 2.4)).toFixed(2); oval(g, a.x + 14, 68, 13, 4, `rgba(255,244,190,${calm ? 0.3 : al})`); rect(g, a.x + 5, 67, 18, 2, '#fffbe8'); }
     if (asleep && !calm) { const z = (t * 0.8) % 1; rect(g, a.x + 22 + z * 4, 62 - z * 10, 3, 1, `rgba(255,255,255,${(1 - z).toFixed(2)})`); rect(g, a.x + 24 + z * 4, 63 - z * 10, 1, 1, `rgba(255,255,255,${(1 - z).toFixed(2)})`); rect(g, a.x + 22 + z * 4, 64 - z * 10, 3, 1, `rgba(255,255,255,${(1 - z).toFixed(2)})`); }
   });
+  runHooks(HOOKS.seminarBack, t);   // behind the table: people standing up (flamewar.js)
   // the long table
   rect(g, 72, 95, 174, 1, INK); rect(g, 72, 96, 174, 4, '#e2b47e'); rect(g, 72, 100, 174, 1, INK);
   rect(g, 75, 101, 168, 18, '#c08a55'); rect(g, 75, 101, 168, 1, '#9c6a3c');
   rect(g, 78, 119, 5, 9, '#7d5632'); rect(g, 235, 119, 5, 9, '#7d5632');
   // the presenter, standing, trying
-  if (presenter().k !== me() && !S.sem.gone.has(presenter().k)) { const pr = presenter(), o = LOOKS[pr.k], x = pr.x, ptalk = flap(pr.k), wave = sp === pr.k && !calm ? Math.floor(t * 3) % 2 : 0;
+  if (presenter().k !== me() && !S.sem.gone.has(presenter().k) && !S.sem.pose[presenter().k]) { const pr = presenter(), o = LOOKS[pr.k], x = pr.x, ptalk = flap(pr.k), wave = sp === pr.k && !calm ? Math.floor(t * 3) % 2 : 0;
     const st = S.sem.presX !== undefined && !calm ? Math.floor(t * 9) % 2 : -1;   // walking out (flamewar.js): the legs take turns
     rect(g, x + 6, 84, 7, 40 - (st === 0 ? 3 : 0), '#2e3448'); rect(g, x + 15, 84, 7, 40 - (st === 1 ? 3 : 0), '#262b3c'); rect(g, x + 4, 124 - (st === 0 ? 3 : 0), 10, 4, INK); rect(g, x + 14, 124 - (st === 1 ? 3 : 0), 10, 4, INK);
     rect(g, x + 2, 66, 24, 18, o.shirt); rect(g, x + 2, 66, 2, 18, o.shirtD); rect(g, x + 24, 66, 2, 18, o.shirtD);
@@ -1947,7 +1948,7 @@ function drawSeminar(t) {
   // what everyone is up to on the table
   SE.forEach(a => {
     const o = LOOKS[a.k], x = a.x;
-    if (S.sem.gone.has(a.k)) return;
+    if (S.sem.gone.has(a.k) || S.sem.pose[a.k]) return;
     if (a.k === 'daniel') { rect(g, x + 4, 90, 20, 6, '#8a8f99'); rect(g, x + 5, 91, 18, 4, '#b6bbc4'); rect(g, x + 7, 92, 12, 1, INK); rect(g, x + 7, 94, 9, 1, INK); }
     else if (a.k === 'frances') { rect(g, x + 4, 89, 20, 7, '#fff7e6'); rect(g, x + 6, 87, 16, 3, '#c8553a'); rect(g, x + 13, 89, 1, 7, '#d9d4c8'); }
     else if (a.k === 'ian') { const k = calm ? 0 : Math.floor(t * 3) % 3; rect(g, x + 6, 88 - k, 4, 6, o.skin); rect(g, x + 18, 88 - (2 - k), 4, 6, o.skin); rect(g, x + 6, 86 - k, 1, 2, o.skin); rect(g, x + 8, 85 - k, 1, 3, o.skin); rect(g, x + 18, 86 - (2 - k), 1, 2, o.skin); }
@@ -2099,7 +2100,7 @@ window.quest = { S, hit, run, doAction, MAP, ROOM, start, hot: hotspots, world, 
   sound: () => { audio(); return { ac: AC, master }; },
   seminar: { cast: () => [presenter().k].concat(seats().map(a => a.k)), topic: () => DEBATES[S.sem.v % DEBATES.length].topic, seats, presenter, PRES_X },
   desks: desksOf, fixtures: fixturesOf, plan: k => (PEOPLE[k] && PEOPLE[k].plan) || null,
-  gfx: { g, cv, rect, oval, disc, sprite, dither, rng, LET, DIG, calm, W, H, FH, OY, person } };
+  gfx: { g, cv, rect, oval, disc, sprite, dither, rng, LET, DIG, calm, W, H, FH, OY, person, bust, turkey } };
 })();
 </script>
 <script src="/semibart/music.js"></script>
