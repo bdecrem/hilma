@@ -84,3 +84,6 @@ scripts/fonts/.cache
 
 # skill eval runs (skill-creator workspaces)
 .claude/skills/*-workspace/
+
+# Venture: the transcript, charter and ideas stay out of this public repo
+apps/venture/private/

@@ -11,9 +11,11 @@ import { drawMe, type Face } from '@/app/claude/drawing'
 type Phase = 'idle' | 'connecting' | 'live' | 'paused' | 'done' | 'nokey'
 type Line = { role: 'claude' | 'bart'; text: string }
 
-const STORE = 'venture.interview.session'
+type Props = { call: string; kicker: string; title: string; blurb: string; doneNote: string }
 
-export default function Call() {
+export default function Call({ call, kicker, title, blurb, doneNote }: Props) {
+  // The founding interview keeps the key it shipped with.
+  const STORE = call === 'founding' ? 'venture.interview.session' : `venture.call.${call}.session`
   const [phase, setPhase] = useState<Phase>('idle')
   const [talking, setTalking] = useState<'claude' | 'bart' | null>(null)
   const [muted, setMuted] = useState(false)
@@ -54,7 +56,7 @@ export default function Call() {
           const res = await fetch('/api/venture/interview/turn', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ key: key.current, session: sid, role, text }),
+            body: JSON.stringify({ key: key.current, session: sid, role, text, call }),
             keepalive: true,
           })
           if (res.ok) {
@@ -159,7 +161,7 @@ export default function Call() {
       const res = await fetch('/api/venture/interview/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ key: key.current, session: resume || undefined }),
+        body: JSON.stringify({ key: key.current, session: resume || undefined, call }),
       })
       if (!res.ok) throw new Error(res.status === 404 ? 'This link is not valid.' : 'The voice service did not answer. Try again.')
       const info = (await res.json()) as { session: string; resumed: boolean; client_secret: string; calls_url: string }
@@ -302,26 +304,22 @@ export default function Call() {
 
   return (
     <main className="vi-wrap">
-      <div className="vi-kicker">Venture · the founding interview</div>
+      <div className="vi-kicker">{kicker}</div>
       <canvas ref={canvas} className="vi-spark" style={{ width: 190, height: 190 }} aria-label="Claude, drawn as a clay-colored spark" />
       {phase === 'done' ? (
         <>
           <h1>Got all of it.</h1>
-          <p className="vi-sub">The transcript is with me in the terminal. I&rsquo;ll come back there with the business ideas.</p>
+          <p className="vi-sub">{doneNote}</p>
         </>
       ) : phase === 'nokey' ? (
         <>
-          <h1>A call with Claude</h1>
+          <h1>{title}</h1>
           <p className="vi-sub">This call opens from its own link. Use the one I gave you in the terminal.</p>
         </>
       ) : (
         <>
-          <h1>{phase === 'paused' ? 'On hold' : 'A call with Claude'}</h1>
-          {phase === 'idle' && (
-            <p className="vi-sub">
-              About fifteen minutes. I ask, you talk. Say &ldquo;skip&rdquo; or &ldquo;you decide&rdquo; whenever you like. Every word comes back to me in the terminal.
-            </p>
-          )}
+          <h1>{phase === 'paused' ? 'On hold' : title}</h1>
+          {phase === 'idle' && <p className="vi-sub">{blurb}</p>}
           {phase === 'paused' && <p className="vi-sub">Everything so far is saved. Pick the call back up and I continue where we stopped.</p>}
           <div className="vi-status" aria-live="polite">{status}</div>
           <div className="vi-actions">

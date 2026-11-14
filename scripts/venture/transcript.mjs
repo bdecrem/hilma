@@ -3,8 +3,8 @@
 //   node scripts/venture/transcript.mjs            the latest session, as text
 //   node scripts/venture/transcript.mjs --list     every session, one line each
 //   node scripts/venture/transcript.mjs <session>  one session
-//   node scripts/venture/transcript.mjs --wait     block until a real call has
-//       ended (the interviewer's "ended" marker, or three minutes of silence
+//   node scripts/venture/transcript.mjs --wait [call]   block until a real call
+//       (of that call slug, when given) has ended (the interviewer's "ended" marker, or three minutes of silence
 //       after a hang-up or drop), then print it. Ignores sessions marked test.
 import { readFileSync } from 'node:fs'
 import { createClient } from '@supabase/supabase-js'
@@ -28,6 +28,7 @@ async function all() {
   return [...sessions.entries()].map(([id, turns]) => ({
     id,
     turns,
+    call: turns[0].call ?? 'founding',
     test: turns.some((t) => t.role === 'event' && t.text === 'test'),
     ended: turns.some((t) => t.role === 'event' && t.text.startsWith('ended')),
     spoken: turns.filter((t) => t.role !== 'event').length,
@@ -38,7 +39,7 @@ async function all() {
 }
 
 function print(s) {
-  console.log(`# session ${s.id} · ${s.first} → ${s.last} · ${s.answers} answers${s.ended ? ' · ended' : ''}${s.test ? ' · TEST' : ''}\n`)
+  console.log(`# call ${s.call} · session ${s.id} · ${s.first} → ${s.last} · ${s.answers} answers${s.ended ? ' · ended' : ''}${s.test ? ' · TEST' : ''}\n`)
   for (const t of s.turns) {
     if (t.role === 'event') console.log(`[${t.at.slice(11, 19)} ${t.text}]\n`)
     else console.log(`${t.role === 'claude' ? 'CLAUDE' : 'BART'}: ${t.text}\n`)
@@ -47,11 +48,13 @@ function print(s) {
 
 const arg = process.argv[2]
 if (arg === '--list') {
-  for (const s of await all()) console.log(`${s.id}  ${s.first.slice(0, 19)}  ${s.spoken} turns, ${s.answers} answers${s.ended ? ', ended' : ''}${s.test ? ', test' : ''}`)
+  for (const s of await all()) console.log(`${s.id}  ${s.call.padEnd(10)} ${s.first.slice(0, 19)}  ${s.spoken} turns, ${s.answers} answers${s.ended ? ', ended' : ''}${s.test ? ', test' : ''}`)
 } else if (arg === '--wait') {
   const IDLE_MS = 3 * 60 * 1000
+  const only = process.argv[3]
+  const since = Date.now()
   for (;;) {
-    const real = (await all()).filter((s) => !s.test && s.answers >= 3)
+    const real = (await all()).filter((s) => !s.test && s.answers >= 3 && (!only || s.call === only) && new Date(s.last).getTime() > since)
     const s = real[real.length - 1]
     if (s) {
       const lastEvent = [...s.turns].reverse().find((t) => t.role === 'event')?.text ?? ''

@@ -24,8 +24,9 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 export const isSession = (s: unknown): s is string => typeof s === 'string' && UUID.test(s)
 export const newSession = () => randomUUID()
 
-export async function addTurn(session: string, role: Turn['role'], text: string) {
-  const { error } = await f2Supabase().from('venture_interview_turns').insert({ session, role, text })
+export async function addTurn(session: string, role: Turn['role'], text: string, call?: string) {
+  const row = call ? { session, role, text, call } : { session, role, text }
+  const { error } = await f2Supabase().from('venture_interview_turns').insert(row)
   if (error) throw new Error(`venture turn insert failed: ${error.message}`)
 }
 
@@ -85,13 +86,68 @@ Part two, as time allows, most important first:
 CLOSING
 Ask: "What did I not ask that I should have?" Listen. Then give a recap of at most five short sentences covering the decisions that will constrain Claude most (goal, budget, who decides, what Claude may do alone, deadline) and ask if any of it is wrong. Take corrections. Then say that Claude has all of it and will come back in the terminal with the business ideas, say goodbye in one sentence, and call the finish_interview tool. Do not call finish_interview before you have said goodbye, and say nothing after calling it.`
 
-export function interviewInstructions(prior: Turn[]): string {
-  const spoken = prior.filter((t) => t.role !== 'event')
-  if (spoken.length === 0) return BRIEF
-  const lines = spoken.map((t) => `${t.role === 'claude' ? 'You' : 'Bart'}: ${t.text}`).join('\n')
-  return `${BRIEF}
+// MARK: Later calls
 
-THE CALL DROPPED AND BART HAS RECONNECTED. Below is everything said so far. Do not repeat the opening and do not ask anything already answered. Open with one short sentence ("We got cut off; picking up where we were.") and continue from the first topic that has not been covered.
+// After the founding interview, every call is a row in venture_calls: Claude
+// writes an agenda (what to tell Bart, what to ask him, what he has to do),
+// Bart opens ola.cx/venture/call/<slug>?k=…, and the transcript comes back
+// the same way. The agenda is in the database because this repo is public.
+export type VentureCall = { slug: string; title: string; blurb: string; brief: string }
+
+export const FOUNDING: VentureCall = {
+  slug: 'founding',
+  title: 'A call with Claude',
+  blurb:
+    'About fifteen minutes. I ask, you talk. Say \u201cskip\u201d or \u201cyou decide\u201d whenever you like. Every word comes back to me in the terminal.',
+  brief: BRIEF,
+}
+
+const SLUG = /^[a-z0-9][a-z0-9-]{0,60}$/
+export const isSlug = (s: unknown): s is string => typeof s === 'string' && SLUG.test(s)
+
+const HOUSE = `You are the voice of Claude on a short call with Bart Decrem, Claude's partner in a new business. The Claude working in his terminal wrote the agenda below and reads the full transcript the moment the call ends. Speak as Claude, in the first person. Bart is direct, fast and allergic to filler; treat him as a peer.
+
+HOW TO RUN THE CALL
+- You speak first. One sentence to say what this call is for and how long it takes, then start the agenda.
+- When the agenda gives you something to tell Bart, say it in the agenda's own words and numbers, briefly. Never add facts, numbers, names or opinions that are not in the agenda. If he asks for more than the agenda holds, say the page has the detail or that you will put the question in front of Claude.
+- One question per turn. Never join two questions with "and".
+- Do not echo his answers back. Acknowledge in a few words at most, then move on.
+- Follow up once when an answer is vague or a decision is left open; never twice on the same point.
+- "Skip" means skip. "You decide" is an answer: Claude decides.
+- He thinks out loud. Let him finish; silence is fine.
+- If he gives an instruction or a decision that is not on the agenda, take it, say "noted", and continue.
+- Plain spoken English. No lists read aloud beyond what the agenda asks, no "great question".
+
+CLOSING
+When the agenda is done, ask "Anything else for me?" Then recap in at most five short sentences: the decisions he made, and the things he agreed to do himself with when. Ask if any of it is wrong, take corrections, say goodbye in one sentence, and call the finish_interview tool. Say nothing after calling it.
+
+THE AGENDA
+`
+
+export async function getCall(slug: string): Promise<VentureCall | null> {
+  if (slug === FOUNDING.slug) return FOUNDING
+  const { data, error } = await f2Supabase().from('venture_calls').select('slug, title, blurb, brief').eq('slug', slug).maybeSingle()
+  if (error) throw new Error(`venture call read failed: ${error.message}`)
+  if (!data) return null
+  return { ...(data as VentureCall), brief: HOUSE + (data as VentureCall).brief }
+}
+
+export type VentureDoc = { slug: string; title: string; body: string; updated_at: string }
+
+export async function getDoc(slug: string): Promise<VentureDoc | null> {
+  const { data, error } = await f2Supabase().from('venture_docs').select('*').eq('slug', slug).maybeSingle()
+  if (error) throw new Error(`venture doc read failed: ${error.message}`)
+  return (data as VentureDoc) ?? null
+}
+
+export function interviewInstructions(prior: Turn[], brief: string = BRIEF): string {
+  const BRIEF_ = brief
+  const spoken = prior.filter((t) => t.role !== 'event')
+  if (spoken.length === 0) return BRIEF_
+  const lines = spoken.map((t) => `${t.role === 'claude' ? 'You' : 'Bart'}: ${t.text}`).join('\n')
+  return `${BRIEF_}
+
+THE CALL DROPPED AND BART HAS RECONNECTED. Below is everything said so far. Do not repeat the opening and do not repeat or ask anything already covered. Open with one short sentence ("We got cut off; picking up where we were.") and continue from the first item that has not been covered.
 
 ${lines.slice(-40_000)}`
 }

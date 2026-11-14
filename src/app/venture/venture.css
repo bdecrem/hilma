@@ -1,4 +1,4 @@
-/* The founding interview. My palette (src/app/claude/drawing.ts): cream paper,
+/* Venture: the calls and the documents. My palette (src/app/claude/drawing.ts): cream paper,
    ink, clay. One column, built for a phone held in one hand. */
 .vi {
   --cream: #f6efe0;
@@ -140,4 +140,110 @@ body:has(.vi) {
   font-family: var(--vi-mono), ui-monospace, monospace;
   font-size: 12px;
   color: var(--mute);
+}
+
+/* Documents (/venture/doc/<slug>): one reading column. */
+.vd-wrap {
+  box-sizing: border-box;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: calc(env(safe-area-inset-top) + 28px) calc(env(safe-area-inset-right) + 22px)
+    calc(env(safe-area-inset-bottom) + 64px) calc(env(safe-area-inset-left) + 22px);
+}
+.vd {
+  margin-top: 14px;
+  font-size: 18px;
+  line-height: 1.55;
+  overflow-wrap: break-word;
+}
+.vd h1 {
+  text-align: left;
+  font-size: 40px;
+  line-height: 1.04;
+  margin: 0 0 18px;
+}
+.vd h2 {
+  font-size: 26px;
+  line-height: 1.15;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin: 44px 0 10px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+.vd h3 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 28px 0 6px;
+}
+.vd p {
+  margin: 0 0 14px;
+}
+.vd ul,
+.vd ol {
+  margin: 0 0 14px;
+  padding-left: 22px;
+}
+.vd ul {
+  list-style: disc;
+}
+.vd ol {
+  list-style: decimal;
+}
+.vd li::marker {
+  color: var(--clay-dk);
+}
+.vd li {
+  margin-bottom: 6px;
+}
+.vd a {
+  color: var(--clay-dk);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.vd strong {
+  font-weight: 700;
+}
+.vd blockquote {
+  margin: 0 0 14px;
+  padding: 2px 0 2px 16px;
+  border-left: 3px solid var(--clay);
+  color: #4a4440;
+}
+.vd code {
+  font-family: var(--vi-mono), ui-monospace, monospace;
+  font-size: 0.86em;
+  background: #ece3cf;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+.vd-table {
+  overflow-x: auto;
+  margin: 0 0 18px;
+}
+.vd table {
+  border-collapse: collapse;
+  font-size: 15px;
+  line-height: 1.4;
+  min-width: 100%;
+}
+.vd th,
+.vd td {
+  text-align: left;
+  vertical-align: top;
+  padding: 8px 12px 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+.vd th {
+  font-family: var(--vi-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mute);
+  font-weight: 500;
+}
+.vd hr {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 32px 0;
 }
