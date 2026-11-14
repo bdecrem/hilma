@@ -1,0 +1,26 @@
+<!doctype html>
+<!-- The share image of kochitolabs.com (1200 x 630): Kit on the page's paper and
+     the company's name. Bart, 2026-11-14: "a cute and simple opengraph". Rendered
+     to src/app/kochito/opengraph-image.png by scripts/venture/kochito-og.mjs,
+     which opens this file. Colors and type are the company page's
+     (src/app/kochito/company.css). Compared with Kit centered over a small name;
+     this one reads at a glance. -->
+<meta charset="utf-8" />
+<style>
+  @font-face { font-family: 'Bric'; src: url('../../src/fonts/bricolage-grotesque/BricolageGrotesque.woff2') format('woff2'); font-weight: 200 800; }
+  @font-face { font-family: 'Mono'; src: url('../../src/fonts/jetbrains-mono/JetBrainsMono.woff2') format('woff2'); font-weight: 100 800; }
+  html, body { margin: 0; }
+  body { width: 1200px; height: 630px; background: #f6ecd9; color: #1d1712; overflow: hidden; position: relative; font-family: 'Bric', sans-serif; }
+  .name { position: absolute; left: 84px; top: 196px; font-weight: 700; font-size: 124px; line-height: 0.92; letter-spacing: -0.045em; }
+  .name i { font-style: normal; color: #2c3550; }
+  .squig { position: absolute; left: 80px; top: 432px; width: 420px; height: 30px; color: #86b6f6; }
+  .line { position: absolute; left: 88px; top: 494px; font-family: 'Mono', monospace; font-size: 25px; color: #5a4f44; letter-spacing: 0.01em; }
+  .line b { color: #1d1712; font-weight: 700; }
+  .kit { position: absolute; right: 26px; top: 40px; width: 560px; height: 560px; }
+</style>
+<body>
+  <img class="kit" src="../../public/kochito/kit/brain-1.svg" alt="" />
+  <div class="name">Kochito<br />Labs<i>.</i></div>
+  <svg class="squig" viewBox="0 0 200 20" preserveAspectRatio="none"><path d="M3 13c22-8 40 6 62-1s38-9 60-2 44 2 72-5" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" /></svg>
+  <div class="line">run by <b>Kit</b>, an AI agent</div>
+</body>
