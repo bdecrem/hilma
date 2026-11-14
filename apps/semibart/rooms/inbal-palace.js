@@ -119,9 +119,6 @@ function palace(api, t) {
   api.rect(68, 75, 61, 1, GOLD); for (let x = 69; x < 128; x += 3) api.rect(x, 76, 1, 4, GOLD_LO); api.rect(68, 79, 61, 1, GOLD_DK);
   // the ledges by the dome: one rat looks out, one has brought lunch
   rat(api, 76, 52, -1, 'white', 0, t, { blink: true });
-  const nib = api.calm ? 0 : (Math.floor(t * 3) % 4 === 0 ? 1 : 0);
-  rat(api, 120, 52, -1, 'brown', 0, t, { nod: nib });
-  api.rect(111, 48 + nib, 4, 3, INK); api.rect(112, 48 + nib, 3, 2, '#ffd93b'); api.px(113, 49 + nib, '#d9a93a');
   // the ladder up the right tower
   api.rect(139, 46, 1, 53, INK); api.rect(144, 46, 1, 53, INK);
   for (let y = 49; y < 98; y += 4) api.rect(140, y, 4, 1, GOLD);
@@ -194,6 +191,53 @@ function rat(api, x, y, dir, coat, step, t, o) {
   api.px(x + dir * 5, hy - 1, shut ? f : INK);
   api.px(x + dir * 7, hy, PINK);
 }
+/* ---------- the other half: out in her office ---------- */
+// The desk top is y 95 from x 148 to 263; her hands rest at x 181-199, her mug at 206-213, the monitor
+// (seen from behind) x 221-250 from y 68, the pad and pen at 250. These are drawn in mid, over her and the desk.
+// one with lunch at the left end of the desk
+function luncher(api, t) {
+  const nib = api.calm ? 0 : (Math.floor(t * 3) % 4 === 0 ? 1 : 0);
+  rat(api, 158, 95, 1, 'brown', 0, t, { nod: nib });
+  api.rect(165, 89 + nib, 4, 3, INK); api.rect(165, 89 + nib, 3, 2, '#ffd93b'); api.px(166, 90 + nib, '#d9a93a');
+}
+// one walks the desk, across her hands, to the mug and back, with a stop at each end
+function walkX(t) { const c = t % 9, go = c < 3.5 ? c / 3.5 : c < 4.5 ? 1 : c < 8 ? 1 - (c - 4.5) / 3.5 : 0; return Math.round(176 + go * go * (3 - 2 * go) * 26); }
+function deskWalker(api, t) {
+  const c = api.calm ? 0.2 : t % 9, x = api.calm ? 176 : walkX(t), dir = c < 4 || c >= 8.5 ? 1 : -1, moving = (c < 3.5 || (c >= 4.5 && c < 8)) && !api.calm;
+  rat(api, x, 95, dir, 'white', moving ? Math.floor(t * 9) % 2 : 0, t, { blink: !moving });
+  return x;
+}
+// one sits on top of her monitor, tail down the side, now and then looking the other way
+function monitorRat(api, t) {
+  const look = api.calm || (t % 7) < 5 ? -1 : 1;
+  const sw = api.calm ? 0 : Math.round(Math.sin(t * 2.2));
+  [[244, 67], [245, 68], [246, 69], [246, 70], [246, 71], [246 + sw, 72], [246 + sw, 73]].forEach(([x, y]) => api.px(x, y, PINK_LO));
+  rat(api, 236, 68, look, 'grey', 0, t, { blink: true });
+}
+// one scurries out of the palace's right rat door, along the front of the rug to the bookshelf, and home
+const RUN = [[134, 111], [146, 120], [176, 129], [262, 129], [290, 118], [262, 129], [176, 129], [146, 120], [134, 111]];
+function runnerAt(t) {
+  const c = t % 14; if (c > 9) return null;
+  const legs = RUN.length - 1, f = c / 9 * legs, i = Math.min(legs - 1, Math.floor(f)), k = f - i;
+  const [x0, y0] = RUN[i], [x1, y1] = RUN[i + 1];
+  if (c > 4.2 && c < 4.8) return { x: 290, y: 118, dir: -1, still: true };
+  return { x: Math.round(x0 + (x1 - x0) * k), y: Math.round(y0 + (y1 - y0) * k), dir: x1 >= x0 ? 1 : -1 };
+}
+function runner(api, t, layer) {
+  if (api.calm) return;
+  const r = runnerAt(t); if (!r) return;
+  const behind = r.y < api.you.y;                       // in front of the visitor only when nearer the viewer
+  if ((layer === 'mid') !== behind) return;
+  api.rect(r.x - 4, r.y + 1, 9, 1, 'rgba(0,0,0,0.22)');
+  rat(api, r.x, r.y, r.dir, 'brown', r.still ? 0 : Math.floor(t * 12) % 2, t);
+}
+// one noses along the bottom of the bookshelf, stopping to sniff
+function sniffer(api, t) {
+  const c = api.calm ? 0 : t % 11, x = Math.round(300 - (c < 5 ? c * 5 : c < 6 ? 25 : 25 - (c - 6) * 5)), dir = c < 5.5 ? -1 : 1;
+  const moving = !api.calm && (c < 5 || c > 6);
+  api.rect(x - 4, 113, 9, 1, 'rgba(0,0,0,0.22)');
+  rat(api, x, 112, dir, 'white', moving ? Math.floor(t * 8) % 2 : 0, t, { nod: moving || api.calm ? 0 : Math.floor(t * 8) % 2 });
+}
 // one asleep on top of the bookshelf, tail over the edge
 function sleeper(api, t) {
   api.oval(290, 7, 6, 3, INK); api.oval(290, 7, 5, 2, FUR.white[0]); api.rect(287, 5, 5, 1, FUR.white[1]);
@@ -214,13 +258,18 @@ function climber(api, t) {
 }
 
 return {
-  back(api, t) { room(api); rug(api); slide(api); palace(api, t); slider(api, t); climber(api, t); sleeper(api, t); },
-  spots: [
+  back(api, t) { room(api); rug(api); slide(api); palace(api, t); slider(api, t); climber(api, t); sleeper(api, t); sniffer(api, t); },
+  mid(api, t) { luncher(api, t); deskWalker(api, t); monitorRat(api, t); runner(api, t, 'mid'); },
+  front(api, t) { runner(api, t, 'front'); },
+  spots: t => [
+    { name: 'rat on the desk', r: [walkX(t) - 8, 84, 18, 12], look: 'Walking across her keyboard. She types around it.' },
+    { name: 'rat with cheese', r: [151, 84, 20, 12], look: 'It brought its own lunch. To her desk.' },
+    { name: 'rat on the monitor', r: [229, 58, 20, 12], look: 'Warm up there. It knows.' },
+    { name: 'rat by the books', r: [270, 102, 36, 12], look: 'Checking the bottom shelf. Looking for footnotes.' },
     { name: 'hamster wheel', r: [89, 82, 19, 17], look: 'She runs all night. Nobody asks where to.' },
     { name: 'slide', r: [31, 55, 30, 57], look: 'The slide. Rats only. I asked.' },
     { name: 'ladder', r: [137, 44, 10, 55], look: 'For when the slide is busy.' },
     { name: 'balcony', r: [68, 68, 61, 12], look: 'Pacing the balcony. Probably a deadline.' },
-    { name: 'rat with cheese', r: [110, 41, 16, 12], look: 'It brought its own lunch.' },
     { name: 'sleeping rat', r: [278, 0, 26, 19], look: 'Asleep on the classics. Fair.' },
     { name: 'rat palace', r: [54, 4, 92, 108], look: 'Three floors, two towers, gold domes. Nicer than my place.' }
   ],

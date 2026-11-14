@@ -73,12 +73,16 @@ export async function announce(e: { kind: EventKind; actor: string; room: string
   if (error) throw new Error(`semibart_events: ${error.message}`)
 }
 
-/** Announcements after an id, oldest first. With after = 0: the last few of the past day, so a
- *  fresh page has something to scroll. */
+/** How old an announcement may be and still scroll by on the wire. */
+const FRESH_MS = 3 * 3600_000
+/** Announcements after an id, oldest first. With after = 0: the last few of the past three hours,
+ *  so a fresh page has something to scroll. */
 export async function eventsAfter(after: number): Promise<EventOut[]> {
   let q = db().from('semibart_events').select('id, kind, actor, room, text, created_at')
   if (after > 0) q = q.gt('id', after).order('id', { ascending: true }).limit(20)
-  else q = q.gte('created_at', new Date(Date.now() - 24 * 3600_000).toISOString()).order('id', { ascending: false }).limit(4)
+  // on arrival: the last few lines of the last three hours. A day's worth replayed yesterday's notes as if
+  // they had just happened, in whatever room you stood in ("Bart left a note on Toussaint's desk", read in Inbal's study).
+  else q = q.gte('created_at', new Date(Date.now() - FRESH_MS).toISOString()).order('id', { ascending: false }).limit(4)
   const { data, error } = await q
   if (error) throw new Error(`semibart_events: ${error.message}`)
   const rows = (data || []).map(r => ({ id: r.id as number, kind: r.kind as EventKind, actor: r.actor as string, room: r.room as string, text: r.text as string, at: r.created_at as string }))

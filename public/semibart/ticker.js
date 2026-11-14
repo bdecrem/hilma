@@ -17,7 +17,7 @@ const q = window.quest;
 if (!q || window.questTicker) return;
 const S = q.S, calm = !!(q.gfx && q.gfx.calm);
 const stage = document.getElementById('stage'), $ = id => document.getElementById(id);
-const API = '/api/semibart/events', POLL_MS = 12000, KEEP = 6, REPLAY_AFTER_MS = 6000;
+const API = '/api/semibart/events', POLL_MS = 12000, KEEP = 6, REPLAY_AFTER_MS = 6000, FRESH_MS = 3 * 3600e3;   // the server's FRESH_MS too
 
 const css = document.createElement('style');
 css.textContent = `
@@ -135,13 +135,15 @@ function frame(now) {
     }
   } else if (!hide && open) {
     if (queue.length) begin(queue.splice(0, 4));
-    else if (recent.length && now - idleSince > REPLAY_AFTER_MS) begin(recent.slice(-4).map(it => ({ text: it.text, cls: 'old' })));
-    else if (!recent.length && primed && !run.firstChild) { run.innerHTML = '<span class="old"></span>'; run.firstChild.textContent = 'Quiet on the wire.'; run.style.transform = 'translateX(8px)'; }
+    else if (fresh().length && now - idleSince > REPLAY_AFTER_MS) begin(fresh().slice(-4).map(it => ({ text: it.text, cls: 'old' })));
+    else if (!fresh().length && primed && !run.firstChild) { run.innerHTML = '<span class="old"></span>'; run.firstChild.textContent = 'Quiet on the wire.'; run.style.transform = 'translateX(8px)'; }
   }
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
 
+// what may come round again: lines of the last three hours, never yesterday's
+const fresh = () => recent.filter(it => !it.at || Date.now() - it.at < FRESH_MS);
 function add(item, isNew) {
   queue.push(item);
   while (queue.length > 12) queue.shift();
@@ -158,7 +160,7 @@ async function poll() {
     for (const ev of evs) {
       if (seen.has(ev.id)) continue;
       seen.add(ev.id); lastId = Math.max(lastId, ev.id);
-      add({ text: ev.text, cls: ev.kind === 'system' ? 'sys' : '' }, primed);
+      add({ text: ev.text, cls: ev.kind === 'system' ? 'sys' : '', at: Date.parse(ev.at) || Date.now() }, primed);
       if (primed) window.dispatchEvent(new CustomEvent('semibart:event', { detail: ev }));
     }
     primed = true;
