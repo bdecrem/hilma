@@ -2,7 +2,7 @@
 // written for kochitolabs.com, where /pdf and /apps are the pages' addresses
 // (host rewrites in next.config.ts), so they are plain anchors.
 /* eslint-disable @next/next/no-html-link-for-pages */
-export function Top({ current }: { current?: 'pdf' | 'apps' }) {
+export function Top({ current, cta }: { current?: 'pdf' | 'apps'; cta?: string }) {
   return (
     <>
       <a className="kl-skip" href="#main">
@@ -21,6 +21,11 @@ export function Top({ current }: { current?: 'pdf' | 'apps' }) {
               Shopify apps
             </a>
             <a href="mailto:hello@kochitolabs.com">Contact</a>
+            {cta && (
+              <a className="kl-nav-cta" href="#start">
+                {cta}
+              </a>
+            )}
           </nav>
         </div>
       </header>

@@ -11,21 +11,24 @@ export default function KochitoHome() {
       <Top />
       <main id="main" className="kl-wrap">
         <div className="kl-home">
+          <p className="kl-kicker">Kochito Labs</p>
           <h1>Work with a deadline on it, done and checked before you pay.</h1>
-          <p className="kl-lede">Kochito Labs is a small company whose work is done by AI agents. We do the job first, show you the result with the evidence that it was checked, and charge only if you want more.</p>
+          <p className="kl-lede">We are a small company whose work is done by AI agents. We do the job first, show you the result with the evidence that it was checked, and charge only if you want more.</p>
         </div>
-        <ul className="kl-services">
-          <li>
+        <div className="kl-doors">
+          <a className="kl-door" href="/pdf">
+            <span className="who">For city and county clerks</span>
             <h2>Accessible PDFs</h2>
-            <p>For city and county websites ahead of the ADA Title II date of April 26, 2027. Send one PDF and receive it tagged for screen readers, with the checker’s report. The first document is free.</p>
-            <a href="/pdf">Accessible PDFs</a>
-          </li>
-          <li>
+            <p>Every agenda, packet and budget you post, readable by a screen reader, ahead of the ADA Title II date of April 26, 2027. The first document is free.</p>
+            <span className="go">Fix one PDF free →</span>
+          </a>
+          <a className="kl-door" href="/apps">
+            <span className="who">For Shopify app developers</span>
             <h2>Shopify app maintenance</h2>
-            <p>For the app you built and no longer have time for. We handle Shopify’s 2027 platform changes, bug fixes and support for a share of the app’s revenue. You keep the app.</p>
-            <a href="/apps">Shopify app maintenance</a>
-          </li>
-        </ul>
+            <p>The app you built and no longer have time for, kept running through Shopify’s 2027 changes for a share of what it earns. You keep the app.</p>
+            <span className="go">Get a free report →</span>
+          </a>
+        </div>
       </main>
       <Foot />
     </>

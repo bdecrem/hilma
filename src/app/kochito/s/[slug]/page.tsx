@@ -43,23 +43,26 @@ export default async function SamplePage({ params }: { params: Promise<{ slug: s
   const count = (t: string[]) => lines.filter((l) => t.includes(l.tag)).length
   const page = `s/${s.slug}`
   const same = s.after.identical !== false
+  const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
   const added = (
     [
-      ['Headings', count(['H1', 'H2', 'H3', 'H4'])],
-      ['Lists', count(['L'])],
-      ['Tables', count(['Table'])],
-      ['Images with a description', count(['Figure'])],
-      ['Links with a label', count(['Link'])],
-    ] as [string, number][]
-  ).filter(([, n]) => n > 0)
+      [count(['L']), 'list', 'lists'],
+      [count(['Table']), 'table', 'tables'],
+      [count(['Figure']), 'image description', 'image descriptions'],
+      [count(['Link']), 'labeled link', 'labeled links'],
+    ] as [number, string, string][]
+  )
+    .filter(([n]) => n > 0)
+    .map(([n, one, many]) => `, ${plural(n, one, many)}`)
+    .join('')
   return (
     <>
       <Track page={page} />
       <Top current="pdf" />
       <main id="main">
         <div className="kl-wrap kl-sample">
-          <p className="kl-note">Prepared for {s.org}</p>
-          <h1>{s.title}, fixed for screen readers</h1>
+          <p className="kl-kicker">Prepared for {s.org}</p>
+          <h1>{s.title}, fixed for screen readers.</h1>
           <p className="kl-lede">
             This is your own document, {s.pages} {s.pages === 1 ? 'page' : 'pages'}, as you posted it. {same ? 'Nothing visible has changed.' : 'The layout, the wording and the page count are unchanged.'} Underneath, it now has the structure a screen reader needs, and it passes the PDF/UA checker.
           </p>
@@ -71,57 +74,52 @@ export default async function SamplePage({ params }: { params: Promise<{ slug: s
           </p>
         </div>
 
-        <section className="kl-band alt" aria-labelledby="results">
-          <div className="kl-wrap kl-split">
-            <div>
-              <h2 id="results">Results</h2>
-              <p className="kl-note">The checker is veraPDF, the open-source reference checker for the PDF/UA standard.</p>
+        <section className="kl-band dark" aria-labelledby="results">
+          <div className="kl-wrap">
+            <div className="kl-sec-head">
+              <h2 id="results">Before and after.</h2>
+              <p>Checked with veraPDF, the open-source reference checker for the PDF/UA standard.</p>
             </div>
-            <table className="kl-table">
-              <thead>
-                <tr>
-                  <th scope="col">
-                    <span className="kl-skip">Measure</span>
-                  </th>
-                  <th scope="col">As posted</th>
-                  <th scope="col">After fixing</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <th scope="row">Failed checks, PDF/UA-1</th>
-                  <td className="num bad">{s.before.failedChecks.toLocaleString('en-US')}</td>
-                  <td className="num good">{s.after.failedChecks.toLocaleString('en-US')}</td>
-                </tr>
-                {added.map(([label, n]) => (
-                  <tr key={label}>
-                    <th scope="row">{label}</th>
-                    <td className="num">0</td>
-                    <td className="num">{n}</td>
-                  </tr>
-                ))}
-                <tr>
-                  <th scope="row">{same ? 'Pages that look different' : 'Appearance'}</th>
-                  <td>n/a</td>
-                  <td className={same ? 'num' : undefined}>
-                    {same
-                      ? `0 of ${s.pages}`
-                      : 'Same layout and line breaks. The original did not carry its fonts, which the standard requires, so open-licensed equivalents are embedded; letter shapes differ slightly.'}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <dl className="kl-stats">
+              <div>
+                <dd>
+                  <span className="from">{s.before.failedChecks.toLocaleString('en-US')}</span>
+                  <span className="arrow" aria-hidden="true">
+                    →
+                  </span>
+                  <span className="kl-sr"> to </span>
+                  <span className="to">{s.after.failedChecks.toLocaleString('en-US')}</span>
+                </dd>
+                <dt>failed checks against the PDF/UA standard</dt>
+              </div>
+              <div>
+                <dd>
+                  {count(['H1', 'H2', 'H3', 'H4'])}
+                  <small>added</small>
+                </dd>
+                <dt>headings{added}, the title and the language</dt>
+              </div>
+              <div>
+                <dd>
+                  {same ? 0 : s.pages}
+                  <small>of {s.pages}</small>
+                </dd>
+                <dt>{same ? 'pages that look any different' : 'pages with the same layout and line breaks. The original lacked its fonts, which the standard requires, so open-licensed equivalents are embedded; letter shapes differ slightly.'}</dt>
+              </div>
+            </dl>
           </div>
         </section>
 
         <section className="kl-band" aria-labelledby="reads">
           <div className="kl-wrap">
-            <h2 id="reads">What a screen reader now reads</h2>
-            <p className="kl-prose">A checker proves the structure exists, not that it is right. This is the whole document as a screen reader walks it, so you can compare it with the page. If anything is wrong, tell us and we will correct it.</p>
+            <div className="kl-sec-head">
+              <h2 id="reads">What a screen reader now reads</h2>
+              <p>A checker proves the structure exists, not that it is right. This is the whole document as a screen reader walks it, so you can compare it with the page. If anything is wrong, tell us and we will correct it.</p>
+            </div>
             <ol className="kl-read">
               {lines.map((l, i) => (
                 <li key={i} className={/^H\d$/.test(l.tag) ? 'h' : undefined}>
-                  <span className="kl-tag">{NAMES[l.tag] ?? l.tag}</span>
+                  <span className="kl-tag">{(NAMES[l.tag] ?? l.tag).toUpperCase()}</span>
                   <span className="kl-read-text" style={{ paddingLeft: Math.min(l.depth, 5) * 16 }}>
                     {l.text}
                   </span>
@@ -131,25 +129,23 @@ export default async function SamplePage({ params }: { params: Promise<{ slug: s
           </div>
         </section>
 
-        <section className="kl-band alt" aria-labelledby="next">
-          <div className="kl-wrap kl-hero" style={{ paddingBlock: 0 }}>
-            <div className="kl-prose">
-              <h2 id="next">The document is yours to post</h2>
-              <p>There is nothing to pay or sign for this one. Replace the file on your website with the fixed one. The federal rule that takes effect on April 26, 2027 covers everything you post from then on, agendas and packets included.</p>
-              <p>If you would like each agenda and packet prepared this way before it is posted, the price is $1 per page, returned within one business day. Leave an address and we will write to you, or reply to the email that brought you here.</p>
+        <section className="kl-band dark" aria-labelledby="next">
+          <div className="kl-wrap kl-close">
+            <div>
+              <h2 id="next">The document is yours to post.</h2>
+              <p style={{ color: '#cfe0d8' }}>There is nothing to pay or sign for this one. The federal rule that takes effect on April 26, 2027 covers everything you post from then on. If you would like each agenda and packet prepared this way before it is posted, the price is $1 per page, returned within one business day.</p>
               <p className="kl-note">
-                Kochito Labs is a small company, and this work was done by AI agents. <a href="/pdf">How the service works, the price and common questions.</a>
+                This work was done by AI agents at Kochito Labs. <a href="/pdf">How the service works, the price and common questions.</a>
               </p>
             </div>
             <LeadForm
               page={page}
-              heading="Ask about the rest of your documents"
-              intro="We reply within one business day."
               emailPlaceholder="name@yourcity.gov"
+              button="Ask about the rest"
+              under="We reply within one business day. You can"
+              moreLabel="add a note now"
               detailLabel="Anything we should know"
-              detailPlaceholder=""
-              detailHint="For example: how often you post a packet."
-              button="Send"
+              detailPlaceholder="For example: we post a packet every other Thursday"
               done="We will be in touch within one business day."
             />
           </div>

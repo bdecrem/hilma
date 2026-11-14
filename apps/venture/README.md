@@ -169,9 +169,10 @@ registered at Vercel): `/pdf` and `/apps`, one form each.
 | One fixed document shown to its owner, `kochitolabs.com/s/<slug>` | `src/app/kochito/s/[slug]/`, `schema/005_kochito_samples.sql`, `node scripts/venture/kochito-sample.mjs put <slug> [--publish] \| unpublish <slug> \| list` (reads a private fixing run; refuses a file that does not pass the checker) |
 | Look at every page; rebuild the share images | `kochito-shots.mjs <dir> [base]`, `kochito-og.mjs` (both against a dev server; pass `https://kochitolabs.com` to look at the live site) |
 
-The look is plain on purpose: white, one blue, Public Sans, real tables, no
-decoration. Bart's words on the first version and the rule are at the top of
-`kochito.css`.
+The design and the rule it is held to are at the top of `kochito.css`: the
+third version, after Bart called the first "ai slop" and the second "too
+plain". Each page has one explanatory picture (`DocVisual.tsx`,
+`PrVisual.tsx`); change the design by comparing two directions side by side.
 
 Ad links carry `utm_source`, `utm_campaign` and `utm_term`; the page remembers
 the first ones a browser arrived with, so a sign-up counts for the ad that

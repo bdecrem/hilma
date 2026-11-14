@@ -19,12 +19,13 @@ for (const [page, detail] of [['pdf', 'https://example.gov/agenda.pdf'], ['apps'
   const email = `${page}-${stamp}@kochito-check.test`
   const p = await b.newPage({ userAgent: 'kochito-check headless check' })
   await p.goto(`${base}/${page}?utm_source=google&utm_campaign=${page}-test&utm_term=check+keyword`, { waitUntil: 'networkidle' })
-  await p.getByLabel('Work email').fill('not-an-address')
-  await p.locator('.kl-form button').click()
+  await p.locator('#start input[name=email]').fill('not-an-address')
+  await p.locator('#start button[type=submit]').click()
   ok(await p.locator('.kl-done').count() === 0, `${page}: a bad address is not accepted`)
-  await p.getByLabel('Work email').fill(email)
-  await p.locator('.kl-form input[name=detail]').fill(detail)
-  await p.locator('.kl-form button').click()
+  await p.locator('#start input[name=email]').fill(email)
+  await p.locator('#start .kl-linkbtn').click() // the link field sits behind "add a link now"
+  await p.locator('#start input[name=detail]').fill(detail)
+  await p.locator('#start button[type=submit]').click()
   await p.locator('.kl-done').waitFor({ timeout: 15000 }).catch(() => {})
   ok(await p.locator('.kl-done').count() === 1 && (await p.locator('.kl-done').innerText()).includes(email), `${page}: the form confirms the request and names the address`)
   const { data } = await db.from('kochito_leads').select('*').eq('email', email)

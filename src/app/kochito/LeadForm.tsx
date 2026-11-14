@@ -3,32 +3,34 @@
 import { useId, useRef, useState } from 'react'
 import { origin, send } from './Track'
 
-// The one form on each service page. An email is all it needs; the link (a
-// PDF, an app's store page) lets the free work start before the first reply.
+// The one form on each page: an address and a button on one line. The link (a
+// PDF, an app's store page) is optional and sits behind "add a link now", so
+// the first step is as small as it can be.
 export default function LeadForm({
   page,
-  heading,
-  intro,
   emailPlaceholder,
-  detailLabel,
-  detailHint,
-  detailPlaceholder,
   button,
+  under,
+  moreLabel,
+  detailLabel,
+  detailPlaceholder,
   done,
+  anchor = true,
 }: {
   page: string // 'pdf', 'apps', or a sample page ('s/killeen')
-  heading: string
-  intro: string
   emailPlaceholder: string
-  detailLabel: string
-  detailHint: string
-  detailPlaceholder: string
   button: string
+  under: string // the line under the form, before the "add a link" control
+  moreLabel: string // the control that reveals the second field
+  detailLabel: string
+  detailPlaceholder: string
   done: string
+  anchor?: boolean // carries id="start" (one form per page does)
 }) {
   const id = useId()
   const touched = useRef(false)
   const [state, setState] = useState<'idle' | 'sending' | 'done'>('idle')
+  const [more, setMore] = useState(false)
   const [error, setError] = useState('')
   const [email, setEmail] = useState('')
 
@@ -59,7 +61,7 @@ export default function LeadForm({
 
   if (state === 'done')
     return (
-      <div className="kl-form kl-done" role="status">
+      <div className="kl-form kl-done" role="status" id={anchor ? 'start' : undefined}>
         <p className="kl-done-h">Request received.</p>
         <p>
           {done} We will write to <strong>{email}</strong> from hello@kochitolabs.com.
@@ -68,21 +70,34 @@ export default function LeadForm({
     )
 
   return (
-    <form className="kl-form" id="start" onSubmit={submit} onFocus={focus} aria-labelledby={`${id}-t`}>
-      <h2 id={`${id}-t`}>{heading}</h2>
-      <p className="kl-note">{intro}</p>
-      <label htmlFor={`${id}-e`}>Work email</label>
-      <input id={`${id}-e`} name="email" type="email" required autoComplete="email" placeholder={emailPlaceholder} value={email} onChange={(e) => setEmail(e.target.value)} />
-      <label htmlFor={`${id}-d`}>
-        {detailLabel} <span className="kl-opt">(optional)</span>
-      </label>
-      <p className="kl-hint" id={`${id}-h`}>
-        {detailHint}
+    <form className="kl-form" id={anchor ? 'start' : undefined} onSubmit={submit} onFocus={focus}>
+      <div className="kl-form-row">
+        <label className="kl-sr" htmlFor={`${id}-e`}>
+          Work email
+        </label>
+        <input id={`${id}-e`} name="email" type="email" required autoComplete="email" placeholder={emailPlaceholder} value={email} onChange={(e) => setEmail(e.target.value)} />
+        <button type="submit" disabled={state === 'sending'}>
+          {state === 'sending' ? 'Sending…' : button}
+        </button>
+      </div>
+      {more && (
+        <div className="kl-form-more">
+          <div className="kl-form-row">
+            <label className="kl-sr" htmlFor={`${id}-d`}>
+              {detailLabel}
+            </label>
+            <input id={`${id}-d`} name="detail" type="text" placeholder={detailPlaceholder} autoFocus />
+          </div>
+        </div>
+      )}
+      <p className="kl-form-under">
+        {under}{' '}
+        {!more && (
+          <button type="button" className="kl-linkbtn" onClick={() => setMore(true)}>
+            {moreLabel}
+          </button>
+        )}
       </p>
-      <input id={`${id}-d`} name="detail" type="text" placeholder={detailPlaceholder} aria-describedby={`${id}-h`} />
-      <button type="submit" disabled={state === 'sending'}>
-        {state === 'sending' ? 'Sending…' : button}
-      </button>
       <p className="kl-error" role="alert">
         {error}
       </p>

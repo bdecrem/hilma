@@ -10,14 +10,13 @@ for (const [path, out] of [['', 'src/app/kochito/opengraph-image.png'], ['/pdf',
   await p.goto(base + path, { waitUntil: 'load', timeout: 90000 })
   await p.waitForTimeout(1500)
   await p.addStyleTag({ content: `
-    .kl-form, .kl-nav, .kl-skip, .kl-band, .kl-foot, .kl-services a { display: none !important; }
-    .kl { min-height: 630px; }
-    .kl-wrap { max-width: 1040px !important; }
-    .kl-head .kl-wrap { padding-block: 34px !important; } .kl-mark { font-size: 30px !important; }
-    .kl-hero { grid-template-columns: 1fr !important; padding-block: 52px 0 !important; }
-    .kl h1 { font-size: 66px !important; max-width: 14em; } .kl-lede { font-size: 28px !important; max-width: 31em !important; }
-    .kl-points { display: none; }
-    .kl-home { padding-block: 52px 0 !important; } .kl-services { display: none; }` })
+    .kl-form, .kl-nav, .kl-skip, .kl-band, .kl-foot, .kl-trust, .kl-vis-tabs, .kl-vis figcaption, .kl-door .go { display: none !important; }
+    .kl { min-height: 630px; overflow: hidden; height: 630px; }
+    .kl-wrap { max-width: 1120px !important; }
+    .kl-head .kl-wrap { padding-block: 30px 0 !important; } .kl-mark { font-size: 26px !important; }
+    .kl-hero { grid-template-columns: 1.05fr 0.95fr !important; gap: 40px !important; padding-block: 34px 0 !important; align-items: start !important; }
+    .kl h1 { font-size: 58px !important; } .kl-lede { font-size: 22px !important; }
+    .kl-home { padding-block: 40px 30px !important; } .kl-home h1 { font-size: 54px !important; }` })
   await p.evaluate(() => document.fonts.ready)
   await p.screenshot({ path: out })
   console.log(out)
