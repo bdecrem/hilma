@@ -113,8 +113,8 @@ export default async function SamplePage({ params }: { params: Promise<{ slug: s
         <section className="kl-band" aria-labelledby="reads">
           <div className="kl-wrap">
             <div className="kl-sec-head">
-              <h2 id="reads">What a screen reader now reads</h2>
-              <p>A checker proves the structure exists, not that it is right. This is the whole document as a screen reader walks it, so you can compare it with the page. If anything is wrong, tell us and we will correct it.</p>
+              <h2 id="reads">What a screen reader is now given</h2>
+              <p>A checker proves the structure exists, not that it is right. This is the whole document, read from the file’s tags in the order a screen reader follows, so you can compare it with the page. It is not a recording of a screen reader. If anything is wrong, tell us and we will correct it.</p>
             </div>
             <ol className="kl-read">
               {lines.map((l, i) => (

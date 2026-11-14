@@ -160,7 +160,7 @@ export default async function PdfDesk() {
                   </div>
                 </div>
                 <h3>A reading transcript</h3>
-                <p>The whole document as a screen reader walks it. A checker proves the structure exists, not that it is right; the transcript lets anyone in your office confirm it in minutes.</p>
+                <p>The whole document, read from its tags in the order a screen reader follows. A checker proves the structure exists, not that it is right; the transcript lets anyone in your office confirm it in minutes.</p>
               </div>
             </div>
           </div>
