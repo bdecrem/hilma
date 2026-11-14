@@ -57,13 +57,23 @@ const WALL = { pad: [48, 69], slots: grid(50, 6, [78, 89]) };
 // (15 + 2 * 11 + 9 = 46). The pad stays where it would be. If his room's code hides the wall
 // things ('extras'), the notes go back to the desk.
 const BOARD = grid(159, 3, [15, 26, 37]);
+// Rooms whose notes go on a message board on the wall. Bart's is painted into his room. Any
+// other is drawn here, over the room's own decoration (frame = x, y, w, h; the cork is 2 in):
+// Study 27's hangs between the tour poster and the arcade cabinet, three across and two down
+// (131 + 2 * 11 + 9 = 162 inside cork x 130-163; 11 + 11 + 9 = 31 inside cork y 10-33). In a
+// shared study the board is one for the room; every desk keeps its own pad.
+const BOARDS = {
+  bart: { slots: BOARD },
+  kevin: { frame: [128, 8, 38, 28], slots: grid(131, 3, [11, 22]), look: 'The message board. The oldest network in the room.' }
+};
 function placeOf(room) {
   const sc = sceneOf(room); if (!PLACES[sc]) return null;
   const gone = window.questRooms && typeof window.questRooms.hidden === 'function' ? window.questRooms.hidden(room) || [] : [];
   const p = gone.includes(sc === 'read' ? 'chair' : 'desk') ? WALL : PLACES[sc];
-  return sc === 'bart' && !gone.includes('extras') ? { pad: p.pad, slots: BOARD, board: true } : p;
+  const bd = BOARDS[room];
+  return bd && !(room === 'bart' && gone.includes('extras')) ? { pad: p.pad, slots: bd.slots, board: bd } : p;
 }
-/** Where a room's notes are kept, as a word: 'pinboard' in Bart's study, 'desk' everywhere else. */
+/** Where a room's notes are kept, as a word: 'pinboard' in a room with a board, 'desk' everywhere else. */
 const spotOf = room => { const p = placeOf(room); return p && p.board ? 'pinboard' : 'desk'; };
 
 /* ---------- the notes of the room you are in ---------- */
@@ -88,6 +98,7 @@ function groupsOf(room) {
   const p = placeOf(room); if (!p) return [];
   const ds = p !== WALL && typeof q.desks === 'function' ? q.desks(room) || [] : [];
   if (ds.length < 2) return [{ to: null, pad: p.pad, slots: p.slots }];
+  if (p.board) return [{ to: null, pad: null, slots: p.slots }].concat(ds.map(d => ({ to: d.slug, pad: [d.x + 3, d.top - 3], slots: [], padOnly: true })));
   return ds.map(d => {
     // The bottom row is clear; the top row shares the panel with the desk's name plate, so notes
     // go to either side of it. The bottom row fills first.
@@ -101,7 +112,7 @@ function groupsOf(room) {
 function layout(room) {
   const all = notesIn(room);
   return groupsOf(room).map(gr => {
-    const mine = gr.to ? all.filter(n => n.to.character === gr.to) : all;
+    const mine = gr.padOnly ? [] : gr.to ? all.filter(n => n.to.character === gr.to) : all;
     const keep = mine.length <= gr.slots.length ? mine : mine.slice(mine.length - (gr.slots.length - 1));
     return { to: gr.to, pad: gr.pad, items: keep.map((n, i) => ({ n, x: gr.slots[i][0], y: gr.slots[i][1] })), more: mine.length - keep.length, last: gr.slots[gr.slots.length - 1] };
   });
@@ -144,10 +155,11 @@ q.hooks.roomMid.push((room, t) => {
   const p = placeOf(room); if (!p) return;
   if (room !== lastRoom) { lastRoom = room; load(room, true); }
   else if (performance.now() - pollT > 20000) { pollT = performance.now(); load(room, true); }
+  if (p.board && p.board.frame) { const [x, y, w, h] = p.board.frame; rect(x + 1, y + 1, w, h, 'rgba(0,0,0,0.3)'); rect(x, y, w, h, '#5c2e18'); rect(x + 2, y + 2, w - 4, h - 4, '#d9b48a'); rect(x + 2, y + 2, w - 4, 1, '#c29a6e'); rect(x + 2, y + 2, 1, h - 4, '#c29a6e'); }
   layout(room).forEach(gr => {
     gr.items.forEach(it => drawNote(it.n, it.x, it.y, t));
     if (gr.more) { const [x, y] = gr.last; for (let k = 2; k >= 0; k--) { rect(x + k, y + k - 1, 9, 9, k ? '#d9b93a' : '#ffe566'); } rect(x + 2, y + 3, 5, 1, '#8a7420'); rect(x + 4, y + 1, 1, 5, '#8a7420'); }
-    drawPad(gr.pad[0], gr.pad[1], t);
+    if (gr.pad) drawPad(gr.pad[0], gr.pad[1], t);
   });
 });
 // Leaving a room: forget which one, so walking back in asks again.
@@ -162,11 +174,14 @@ q.hooks.roomSpots.push(room => {
     gr.items.forEach(({ n, x, y }) => out.push({ name: shared && !perDesk ? `note for ${n.to.name}, from ${n.from.name}` : `note from ${n.from.name}`, r: [x - 1, y - 1, 11, 11], walk: { x: wx(x), y: 134 }, def: 'read',
       on: { look: `A ${n.color} sticky note from ${n.from.name}${perDesk ? ', on ' + nameOf(gr.to) + "'s desk" : ''}. Stuck there ${ago(n.created_at)}.`, read: () => openDesk(room, n.id) } }));
     if (gr.more) { const [x, y] = gr.last; out.push({ name: `${gr.more} more notes`, r: [x - 1, y - 2, 13, 13], walk: { x: wx(x), y: 134 }, def: 'read', on: { look: 'A whole stack of them. Somebody is popular.', read: () => openDesk(room, null) } }); }
+    if (!gr.pad) return;
     const own = perDesk ? !!(q.me && q.me.character === gr.to) : mine(room);
     const who = own ? 'My' : perDesk ? nameOf(gr.to) + "'s" : shared ? 'Their' : nameOf(room) + "'s";
     out.push({ name: perDesk && !own ? `sticky notes and a pen, ${nameOf(gr.to)}'s` : 'sticky notes and a pen', r: [gr.pad[0] - 3, gr.pad[1] - 10, 15, 15], walk: { x: wx(gr.pad[0]), y: 134 }, def: 'write',
       on: { look: own ? 'My pad of sticky notes, and a pen. Anyone who visits can leave me one.' : `${who} pad of sticky notes, and a pen. For leaving a note on the ${spotOf(room)}.`, write: () => writeFlow(room, gr.to) } });
   });
+  const bd = placeOf(room).board;
+  if (bd && bd.frame) out.push({ name: 'message board', r: bd.frame, walk: { x: wx(bd.frame[0] + bd.frame[2] / 2), y: 134 }, def: 'read', on: { look: bd.look, read: () => openDesk(room, null) } });
   return out;
 });
 
@@ -241,7 +256,7 @@ function noteHtml(n, room, focusId) {
 async function openDesk(room, focusId) {
   await load(room, true);
   const board = spotOf(room) === 'pinboard';
-  const title = board ? (mine(room) ? 'My pinboard' : `${nameOf(room)}'s pinboard`) : mine(room) ? 'My desk' : q.occupants(room).length > 1 ? `The desk in Study ${q.PEOPLE[room] ? q.PEOPLE[room].n : ''}` : `${nameOf(room)}'s desk`;
+  const title = board ? (q.occupants(room).length > 1 ? `The board in Study ${q.PEOPLE[room] ? q.PEOPLE[room].n : ''}` : mine(room) ? 'My pinboard' : `${nameOf(room)}'s pinboard`) : mine(room) ? 'My desk' : q.occupants(room).length > 1 ? `The desk in Study ${q.PEOPLE[room] ? q.PEOPLE[room].n : ''}` : `${nameOf(room)}'s desk`;
   const all = notesIn(room).slice().reverse();
   const done = openVeil(`<div class="nb-board${board ? ' nb-cork' : ''}" role="dialog" aria-modal="true" aria-label="${esc(title)}">
     <div class="nb-top"><span>${esc(title)}</span><button type="button" data-close>Close</button></div>

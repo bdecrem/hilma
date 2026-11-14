@@ -31,6 +31,7 @@ const PLANS = {
   trio: { w: 84, chair: 44, c: [88, 178, 268], shelf: [201, 44], rug: [58, 240], wall: 'x 126-198, y 6-50 (between the window and the bookshelf, above the middle desk) and x 248-316, y 6-50 (above the third desk)' },
 }
 const EXTRAS: Record<string, string> = {
+  kevin: 'Also here, drawn by the game over the room: a cork message board on the wall at x 128-165, y 8-35, where the notes people leave are pinned. Keep that rectangle clear of anything that should be seen.',
   daniel: 'Also on the desk: a small marble bust of Socrates, x 155-168, y 78-94.',
   kahwee: 'Also on the desk: a pencil cup, x 156-161, y 80-94.',
   ian: 'Also here (hide name: extras): a world map with pins on the wall to the right of the bookshelf, x 200-263, y 8-45.',

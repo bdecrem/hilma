@@ -40,7 +40,7 @@ export const desk: Handler = guarded(async req => {
     if (isFailure(r)) return json({ error: r.error }, r.status)
     if (r.to !== user.character) {
       const toName = (await deskNotes(roomOf(r.to) || r.to, user)).find(n => n.id === r.id)?.to.name || r.to
-      await announce({ kind: 'note', actor: user.character, room: roomOf(r.to) || r.to, text: r.to === 'bart' ? `${first(user.name)} pinned a note to Bart's board.` : `${first(user.name)} left a note on ${toName}'s desk.`, quietMinutes: 10 })
+      await announce({ kind: 'note', actor: user.character, room: roomOf(r.to) || r.to, text: r.to === 'bart' ? `${first(user.name)} pinned a note to Bart's board.` : (roomOf(r.to) || r.to) === 'kevin' ? `${first(user.name)} pinned a note for ${toName} to the board in Study 27.` : `${first(user.name)} left a note on ${toName}'s desk.`, quietMinutes: 10 })
         .catch(e => console.error('[semibart/social] announce', e))
     }
     return json({ note: { id: r.id, to: { character: r.to, name: r.to }, from: { character: user.character, name: first(user.name) }, body: r.body, color: r.color, created_at: r.created_at, canRemove: true } })

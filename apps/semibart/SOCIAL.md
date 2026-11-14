@@ -1,6 +1,6 @@
 # CASBS Quest: notes, the Claude on the door frame, the wire
 
-Three social features (2026-11-12), all riding on the game through `window.quest` (the hook
+Social features (2026-11-12, the flame war 2026-11-13), all riding on the game through `window.quest` (the hook
 registry in `public/semibart/index.html`), next to accounts (`ACCOUNTS.md`) and rooms as data
 (`ROOMS.md`). `index.html` loads `notes.js`; `notes.js` loads `ticker.js` and `claude.js`.
 
@@ -28,6 +28,13 @@ are pinned there, three by three (`BOARD` in notes.js; the board is painted empt
 `makeRoomBg`, x 155-194, y 12-49), the close-up is cork, and the wire says "pinned a note to
 Bart's board". The pad stays on his desk. If his room's code hides the wall things (`extras`),
 the notes go back to the desk.
+
+Study 27 has a board too (2026-11-13): its wall is Kevin's dial-up den, so the notes for all
+three of them are pinned to one cork board between the tour poster and the arcade cabinet
+(`BOARDS` in notes.js: a room, a frame, the slots, a look line). notes.js draws that board over
+the room's own decoration, each desk keeps its pad, and the decorator is told to keep the
+rectangle clear (`EXTRAS.kevin` in room-agent.ts). Another room gets a board by adding a line
+to `BOARDS` and one to `EXTRAS`.
 
 The pad and pen are the one thing on a desk that does something, so `drawPad` marks them as a
 control in the game's own terms (VOICE.md: honest pixels, one accent): a full ink outline, the
@@ -179,3 +186,36 @@ desk; a fellow's partial manuscript and a visitor, with the APIs answered locall
 - **Music** (`public/semibart/music.js`): the trailer's chiptune theme, a 32-second loop, is the game's
   background music on every page. It comes in after the start jingle, sits under the sound effects,
   dips while anyone talks, and is silent when sound is off (your menu) or the tab is hidden.
+
+## The flame war at the seminar (`public/semibart/flamewar.js`, `src/lib/semibart/flamewar.ts`)
+
+Bart, 2026-11-13: a floor mic stands in the Margaret Levi Meeting Room, between the end of the
+table and the presenter. Click it: the mic goes live (red light, a squeal), the presenter asks for
+questions at the end, and a line opens along the bottom, red where Claude's is clay: type a comment
+(it is never a question), or press **Stir up some stuff for me** and the room picks its own fight.
+You say "It's more of a comment than a question.", the room murmurs while the scene is written,
+then it plays: the six people tear into the comment in character, rise out of their seats and
+shake, steam comes off whoever is talking, papers fly off the table, and the presenter storms out
+through the door (when you are the presenter, the first person at the table leaves instead). One
+flame war a seminar; leaving the room brings next week's, with everyone back.
+
+- `POST /api/semibart/flamewar { comment?, cast, topic }` (signed in) runs one Claude call (Opus
+  5.5, effort low; 10 to 25 seconds) that writes the whole scene as tagged lines: the comment, the
+  lines, one `<exit>` for whoever leaves, and the wire's headline. The scene is checked before it
+  plays (everyone at the table speaks, one exit, nobody speaks after leaving, no he/she: the cast
+  are real colleagues) and written again once if it fails. It counts against the day's Claude
+  turns (`countTurn`, shared with the door frame).
+- The prompt keeps it something everyone in it would show a friend: nobody humiliated, no person
+  attacked rather than an idea, and no real colleague put on a side of a real political fight or
+  made to talk about a public figure; such a comment becomes its academic proxy (the method, the
+  framing, who cites whom).
+- Who is who comes from `roster.json`'s `fellows` table (name and the game's one line each, written
+  by `roster.mjs`), plus anyone's changed lines from their persona.
+- The game's side: `HOOKS.seminarMid` / `seminarFront` / `seminarSpots`, `S.sem.gone` (who left),
+  `S.sem.lift` (who is out of their seat), `S.sem.presX` (the presenter walking out), and
+  `quest.seminar` (the cast and the topic) in `index.html`.
+- The wire gets the headline. The check account's flame wars and `flamewar-try.ts` stay off it.
+- Checks: `npx tsx scripts/semibart/flamewar-try.ts [--as c] [--cast a,b,c,d,e,f] ["comment"]`
+  prints one scene; `node scripts/semibart/flamewar-check.mjs <dir> [base]` clicks the mic in the
+  real page as the check account, types a comment once and stirs once, and checks the scene plays
+  to the end, the leaver and their hotspot are gone, a second grab is refused and leaving resets it.
