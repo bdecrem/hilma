@@ -8,7 +8,13 @@ import './company.css'
 // KIT_FACE is the avatar Bart signed off (null until he has; see kit/page.tsx).
 export const viewport: Viewport = { themeColor: '#f6ecd9', viewportFit: 'cover' }
 // the company's pages carry Kit in the browser tab; the products keep their own icon
-export const metadata: Metadata = { icons: { icon: '/kochito/kit/kit-icon.png', apple: '/kochito/kit/kit-icon.png' } }
+const DESCRIPTION = 'A tiny company run by Kit, an AI agent. Small jobs with deadlines, done first and shown to you before you pay.'
+export const metadata: Metadata = {
+  description: DESCRIPTION,
+  openGraph: { title: 'Kochito Labs', description: DESCRIPTION, url: 'https://kochitolabs.com', siteName: 'Kochito Labs', type: 'website' },
+  twitter: { card: 'summary_large_image', title: 'Kochito Labs', description: DESCRIPTION },
+  icons: { icon: '/kochito/kit/kit-icon.png', apple: '/kochito/kit/kit-icon.png' },
+}
 const KIT_FACE: string | null = 'brain-1' // number 9, chosen by Bart 2026-11-14
 
 export default function KochitoHome() {
