@@ -99,7 +99,7 @@ function crumbleHiFi(t) {
     let best = PAL[0], bd = 1e9; for (const P of PAL) { const dd = (P[0] - R) ** 2 + (P[1] - G) ** 2 + (P[2] - B) ** 2; if (dd < bd) { bd = dd; best = P; } }
     const col = best.map((v, k) => Math.round(v * snap + [R, G, B][k] * (1 - snap)));
     const v = clamp((q - delay) / (1 - delay)), drop = v * v * H * 1.1 * sp;
-    g.globalAlpha = clamp((lum - 40) / 80) * clamp(1.15 - v);
+    g.globalAlpha = Math.pow(clamp((lum - 50) / 120), 1.2) * clamp(1.15 - v);        // the letters outshine the haze around them
     g.fillStyle = `rgb(${col[0]},${col[1]},${col[2]})`;
     const gap = b >= 8 ? 2 : 0; g.fillRect(i * b + side * 220 * v, y * b + drop, b - gap, b - gap);
   }

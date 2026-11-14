@@ -120,6 +120,13 @@ async function renderScore(cfg) {
   braam(cfg.HITS[0], C2, false);
   braam(cfg.HITS[1], Ab1, false);
   const last = braam(cfg.HITS[2], C2, true, cfg.CRUMBLE[0] - cfg.HITS[2] + 1.2);
+  // the hot line crossing CHANGES.: a sear that climbs as it goes, a growl under it, crackle off the sparks (as in intro.js)
+  { const h0 = cfg.HITS[1] + cfg.HEAT[0], d = cfg.HEAT[1], src = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain(), rc = (k => () => { k = (k * 16807) % 2147483647; return k / 2147483647; })(777); src.buffer = noiseBuf; src.loop = true;
+    f.type = 'bandpass'; f.Q.value = 2.2; f.frequency.setValueAtTime(900, h0); f.frequency.exponentialRampToValueAtTime(5600, h0 + d);
+    g.gain.setValueAtTime(0.0001, h0); g.gain.exponentialRampToValueAtTime(0.42, h0 + 0.14); g.gain.setValueAtTime(0.42, h0 + d - 0.08); g.gain.exponentialRampToValueAtTime(0.0001, h0 + d + 0.22);
+    src.connect(f).connect(g).connect(trailer); src.start(h0); src.stop(h0 + d + 0.3);
+    tone(150, d, 'sawtooth', 0.045, h0, 620, trailer);
+    for (let k = 0; k < 26; k++) noise(0.018, 0.16 + rc() * 0.12, 4500 + rc() * 5000, null, h0 + 0.05 + rc() * (d + 0.15), 9, 'bandpass', trailer); }
   // the riser: rushing noise, a rising saw and a clock that speeds up, all cut dead at the crumble
   const [r0, r1] = cfg.RISER, cut = AC.createGain(); cut.gain.setValueAtTime(1, 0); cut.gain.setValueAtTime(1, r1 - 0.004); cut.gain.linearRampToValueAtTime(0, r1); cut.connect(trailer);
   last.gain.cancelScheduledValues(r1 - 0.01); last.gain.setValueAtTime(0.05, r1 - 0.01); last.gain.linearRampToValueAtTime(0, r1 + 0.02);

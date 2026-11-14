@@ -149,13 +149,29 @@ desk; a fellow's partial manuscript and a visitor, with the APIs answered locall
 
 - **ola.cx/semibart/demo.html** (`src/app/semibart/demo.html/route.ts`) is the game page with the
   trailer's opening in front of it: the route adds a pinned three.js import map and
-  `public/semibart/intro.js`. Black and "Click to begin. Sound on." (no sound before a click), then
-  THIS. / CHANGES. / EVERYTHING. as 3D metal (`intro3d.js`, shared with the trailer render in
-  `apps/semibart-trailer`) with braams and glitter; the frame freezes and crumbles into the game's
-  palette, and on the jingle the game's own `start()` runs, so a signed-in player skips the title card
-  and the live game steps out of the mosaic. Signed out, the intro ends on the sign-in card. Esc or a
-  click skips. Its clock is the game's AudioContext. Check: `SEMIBART_DEMO_PASS=… node
-  scripts/semibart/demo-check.mjs <dir> [base]`.
+  `public/semibart/intro.js`. A dark floor under a night sky and "Click to begin. Sound on." (no sound
+  before a click), then THIS. / CHANGES. / EVERYTHING. as 3D metal (`intro3d.js`, shared with the
+  trailer render in `apps/semibart-trailer`) with braams and glitter; the frame freezes and crumbles
+  into the game's palette, and on the jingle the game's own `start()` runs, so a signed-in player skips
+  the title card and the live game steps out of the mosaic. Signed out, the intro ends on the sign-in
+  card. Esc or a click skips. Its clock is the game's AudioContext. Check: `SEMIBART_DEMO_PASS=… node
+  scripts/semibart/demo-check.mjs <dir> [base]` (without the demo passcode it runs as the check-only
+  account and skips the two demobart-only lines).
+- **The look of the 3D act** (redone 2026-11-13, after "a little flat"): one color to a word. THIS. is
+  cold steel under an ultramarine light; CHANGES. lands as steel and a white-hot line crosses it and
+  leaves it copper (two meshes and a clipping plane, with a sear in the score); EVERYTHING. is gold.
+  Each word is slammed onto a black mirror floor, a light comes up behind it and shines through the
+  letters (an occlusion pass smeared away from the light), the camera drifts low around it and swings
+  to the other side in the dark between words. The metal looks like metal because of what it reflects:
+  three painted studio panoramas (`room()` in `intro3d.js`) with a white horizon that crosses the
+  letters. To change it, look first: `node scripts/semibart/intro-shots.mjs <dir> [--times 2.2,4.3]`
+  renders any moment without the game (`--tune '{"sun":0,"bloom":0}'` shows the bare metal, `--browser
+  webkit` is Safari's engine, `--size 390x844` a phone), and `--perf` times a frame: 11 ms at 1080p on
+  the M1 iMac, so `intro.js` caps the picture at about 1080p of pixels however big the window is.
+  Two things cost half the frame until they were moved: post passes writing into the multisampled
+  buffer, and the floor drawing its mirror image in the middle of the scene. `node
+  scripts/semibart/intro-listen.mjs [base]` plays the page and prints its loudness a quarter second at
+  a time (exit 1 if anything reaches full scale).
 - **The demo account**: `demobart`, an admin with no study (study `0`), who walks as Bart with spiky
   hair and a pink T-shirt (`DEMO_LOOK` in index.html). `scripts/semibart/make-demo-account.mjs
   <passcode>` creates it or resets its passcode; the passcode is never in the repo. Someone without a

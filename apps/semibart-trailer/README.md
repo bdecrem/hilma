@@ -1,12 +1,14 @@
 # CASBS Quest — trailer
 
 A 48-second 1920×1080 trailer for the game (ola.cx/semibart), 2026-11-13. Act 1 is a movie trailer in
-high fidelity (`act1.js`, three.js 0.170 from the CDN, used only by this local render page): THIS. /
-CHANGES. / EVERYTHING. as extruded, bevelled metal in Anton (silver, then gold), reflecting a black studio
-with softbox strips and a horizon gradient behind the camera, a key light sweeping a glint across, bloom,
-an anamorphic streak, gold glitter that twinkles in the dark and bursts at every hit. Each word flies in
-from past the camera on a whoosh and lands on a braam; the first two fly back into the dark for the
-pause; a riser. The hinge: the riser cuts, the last full-fidelity frame is resampled into ever bigger
+high fidelity (`public/semibart/intro3d.js`, three.js 0.170 from the CDN, the same module the demo page
+plays live): THIS. / CHANGES. / EVERYTHING. as extruded, bevelled metal in Anton, one color to a word.
+THIS. is cold steel under an ultramarine light; CHANGES. lands as steel and a white-hot line crosses it
+and leaves it copper; EVERYTHING. is gold. Each word comes over the camera's shoulder on a whoosh and
+slams onto a black mirror floor on a braam, sparks leave the floor and a ring runs out across it, a
+light comes up behind the word and shines through the letters, and the camera drifts low around it and
+swings to the other side in the dark of the pause; a riser, with gold glitter pouring upward. The hinge:
+the riser cuts, the last full-fidelity frame is resampled into ever bigger
 blocks snapped to the game's palette and they fall away, while the braam's chord powers down as square
 waves, the game's own start jingle plays, and the title card steps out of the mosaic. (`render.mjs`
 makes `out/Anton.ttf` from the bundled woff2 with fontTools, for three's text geometry.) Act 2 is the game: a chiptune theme built on that jingle (120 BPM,

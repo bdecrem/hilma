@@ -1,6 +1,8 @@
 // The demo intro (ola.cx/semibart/demo.html): the trailer's opening, live, over the real game.
-// Black, one line ("Click to begin. Sound on." — browsers play no sound before a click), then
-// THIS. / CHANGES. / EVERYTHING. in 3D metal (intro3d.js) with braams, whooshes and glitter; at the
+// A dark floor under a night sky and one line ("Click to begin. Sound on." — browsers play no sound
+// before a click), then THIS. / CHANGES. / EVERYTHING. in 3D metal (intro3d.js: steel, then copper as
+// a hot line crosses the word, then gold, each slammed onto a mirror floor with a light coming up behind
+// it) with braams, whooshes and glitter; at the
 // peak the frame freezes and crumbles into the game's palette in ever bigger blocks that fall away,
 // the chord powers down as square waves, and on the jingle the game's own Start runs: the title card
 // goes (for anyone signed in), the jingle plays, and the live game steps out of the mosaic. The theme
@@ -8,7 +10,7 @@
 // The clock is the game's AudioContext, so the picture cannot drift from the sound.
 import { createIntro3D } from '/semibart/intro3d.js';
 
-const E = { HITS: [1.2, 3.6, 6.0], WORDS: ['THIS.', 'CHANGES.', 'EVERYTHING.'], WORD_OUT: [3.0, 5.4], RISER: [6.7, 8.4], CRUMBLE: [8.4, 9.05], JINGLE: 9.2, T0: 10.0 };
+const E = { HITS: [1.2, 3.6, 6.0], WORDS: ['THIS.', 'CHANGES.', 'EVERYTHING.'], WORD_OUT: [3.0, 5.4], HEAT: [0.3, 0.85], RISER: [6.7, 8.4], CRUMBLE: [8.4, 9.05], JINGLE: 9.2, T0: 10.0 };
 const q = window.quest;
 const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
 const mulberry = s => () => { s |= 0; s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
@@ -31,19 +33,24 @@ const go = box.querySelector('.qi-go');
 const flat = document.createElement('canvas'), fg = flat.getContext('2d');
 
 let W = innerWidth, H = innerHeight;
-const DPR = Math.min(devicePixelRatio || 1, 1.5);
+// about 1080p of pixels at most, however big the window: the act draws the scene twice (once in the floor) and
+// runs four passes over it, 11 ms a frame at 1080p on an M1 (node scripts/semibart/intro-shots.mjs <dir> --perf)
+const pxr = () => Math.min(devicePixelRatio || 1, 1.5, Math.sqrt(2.1e6 / (W * H)));
 let three = null, threeErr = null;
-const ready = createIntro3D({ E, fontUrl: '/semibart/intro/Anton.ttf', width: W, height: H, pixelRatio: DPR })
-  .then(x => { three = x; three.canvas.style.visibility = 'hidden'; box.insertBefore(three.canvas, go); })
+const idle0 = performance.now(); let amb0 = 0;
+// under the prompt the dark is already alive: dust and a glow on the horizon (time -1, the drifting clock running)
+function idle() { if (started || done || !three) return; three.render(-1, (performance.now() - idle0) / 1000); requestAnimationFrame(idle); }
+const ready = createIntro3D({ E, fontUrl: '/semibart/intro/Anton.ttf', width: W, height: H, pixelRatio: pxr() })
+  .then(x => { three = x; three.canvas.style.opacity = '0'; three.canvas.style.transition = 'opacity 0.9s'; box.insertBefore(three.canvas, go); idle(); requestAnimationFrame(() => requestAnimationFrame(() => { three.canvas.style.opacity = '1'; })); })   // the dark comes up, it does not pop in
   .catch(e => { threeErr = e; console.error('[intro]', e); });
 box.appendChild(flat); flat.style.zIndex = 1; go.style.zIndex = 2;
-function size() { W = innerWidth; H = innerHeight; flat.width = W; flat.height = H; if (three) three.setSize(W, H); }
+function size() { W = innerWidth; H = innerHeight; flat.width = W; flat.height = H; if (three) three.setSize(W, H, pxr()); }
 size(); addEventListener('resize', size);
 
 /* ---------- the sound of act 1 (the trailer's score, live) ---------- */
 let bus = null;
 function scheduleSound(AC, T) {
-  bus = AC.createGain(); bus.gain.value = q.isMuted && q.isMuted() ? 0 : 0.9;
+  bus = AC.createGain(); bus.gain.value = q.isMuted && q.isMuted() ? 0 : 0.84;       // 0.9 put the first braam 0.2 dB over full scale (intro-listen.mjs)
   const comp = AC.createDynamicsCompressor(); comp.threshold.value = -14; comp.knee.value = 8; comp.ratio.value = 4; comp.attack.value = 0.004; comp.release.value = 0.2;
   comp.connect(bus).connect(AC.destination);
   const SR = AC.sampleRate, hall = AC.createConvolver(), irLen = Math.floor(SR * 4.5), ir = AC.createBuffer(2, irLen, SR);
@@ -110,6 +117,13 @@ function scheduleSound(AC, T) {
   [261.63, 311.13, 392.0, 523.25].forEach((fr, i) => tone(fr, k1 - k0, 'square', 0.055, k0 + i * 0.012, fr / 4, chip));
   noise(0.35, 0.3, 3000, 400, k0, 1, 'bandpass', chip);
   for (let i = 0; i < 8; i++) noise(0.04, 0.1, 1200 + i * 300, null, k0 + 0.05 + i * 0.07, 4, 'bandpass', chip);
+  // the hot line crossing CHANGES.: a sear that climbs as it goes, a growl under it, crackle off the sparks
+  { const h0 = E.HITS[1] + E.HEAT[0], d = E.HEAT[1], src = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain(), rc = mulberry(77); src.buffer = noiseBuf; src.loop = true;
+    f.type = 'bandpass'; f.Q.value = 2.2; f.frequency.setValueAtTime(900, T + h0); f.frequency.exponentialRampToValueAtTime(5600, T + h0 + d);
+    g.gain.setValueAtTime(0.0001, T + h0); g.gain.exponentialRampToValueAtTime(0.42, T + h0 + 0.14); g.gain.setValueAtTime(0.42, T + h0 + d - 0.08); g.gain.exponentialRampToValueAtTime(0.0001, T + h0 + d + 0.22);
+    src.connect(f).connect(g).connect(trailer); src.start(T + h0); src.stop(T + h0 + d + 0.3);
+    tone(150, d, 'sawtooth', 0.045, h0, 620, trailer);
+    for (let k = 0; k < 26; k++) noise(0.018, 0.16 + rc() * 0.12, 4500 + rc() * 5000, null, h0 + 0.05 + rc() * (d + 0.15), 9, 'bandpass', trailer); }
   // the jingle itself is the game's: start() plays it
 }
 
@@ -135,7 +149,7 @@ function crumble(t) {
       const o = (y * c.width + i) * 4, R = d[o], G = d[o + 1], B = d[o + 2], lum = 0.3 * R + 0.59 * G + 0.11 * B;
       const delay = r() * 0.5, side = r() - 0.5, sp = 0.7 + r() * 0.6; if (lum < 60) continue;
       let best = PAL[0], bd = 1e9; for (const P of PAL) { const dd = (P[0] - R) ** 2 + (P[1] - G) ** 2 + (P[2] - B) ** 2; if (dd < bd) { bd = dd; best = P; } }
-      list.push([i, y, `rgb(${best[0]},${best[1]},${best[2]})`, clamp((lum - 40) / 80), delay, side, sp]);
+      list.push([i, y, `rgb(${best[0]},${best[1]},${best[2]})`, Math.pow(clamp((lum - 50) / 120), 1.2), delay, side, sp]);       // the letters outshine the haze around them
     }
     cells = { b, list };
   }
@@ -175,7 +189,7 @@ function frame() {
   if (done) return;
   const t = AC.currentTime - T;
   if (t < E.CRUMBLE[0]) {
-    if (three) { three.canvas.style.visibility = 'visible'; three.render(Math.max(0, t)); }
+    if (three) three.render(t, amb0 + t);
     fg.clearRect(0, 0, W, H);
     if (!three) { fg.fillStyle = '#000'; fg.fillRect(0, 0, W, H); }
   } else if (t < E.CRUMBLE[1]) crumble(t);
@@ -191,7 +205,7 @@ async function begin() {
   go.innerHTML = '<span>&nbsp;</span>';
   await ready;
   if (threeErr) { finish(); return; }            // no WebGL: straight into the game
-  T = AC.currentTime + 0.2;
+  T = AC.currentTime + 0.2; amb0 = (performance.now() - idle0) / 1000 + 0.2;      // the drift goes on from where the prompt left it
   scheduleSound(AC, T);
   const sk = document.createElement('div'); sk.className = 'qi-skip'; sk.textContent = 'Esc to skip'; sk.style.zIndex = 3; box.appendChild(sk);
   requestAnimationFrame(frame);

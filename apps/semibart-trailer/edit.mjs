@@ -8,6 +8,7 @@ export const FPS = 30;
 export const HITS = [1.2, 3.6, 6.0];          // THIS. CHANGES. EVERYTHING.
 export const WORDS = ['THIS.', 'CHANGES.', 'EVERYTHING.'];
 export const WORD_OUT = [3.0, 5.4];            // the first two words go to black before the next hit: the pause
+export const HEAT = [0.3, 0.85];               // CHANGES.: the hot line starts this long after its hit and takes this long to cross (steel to copper)
 export const RISER = [6.7, 8.4];
 export const CRUMBLE = [8.4, 9.05];            // EVERYTHING. falls apart into pixels, the chord powers down
 export const JINGLE = 9.2;                     // the game's start jingle; the title resolves out of the pixels
