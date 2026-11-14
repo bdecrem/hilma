@@ -36,7 +36,7 @@ const CANDIDATES: { id: string; by: string }[] = [
 ]
 const src = (id: string) => `/kochito/kit/${id}.svg`
 // the drawings that exist in public/kochito/kit/ (a candidate not listed shows as "still being drawn")
-const READY = new Set(['hand-1', 'hand-2', 'hand-3', 'hand-4', 'pixel-1', 'pixel-2', 'pixel-3', 'pixel-4'])
+const READY = new Set(['hand-1', 'hand-2', 'hand-3', 'hand-4', 'pixel-1', 'pixel-2', 'pixel-3', 'pixel-4', 'brain-1', 'brain-2', 'brain-3', 'brain-4'])
 
 // **bold** and [text](url), nothing else
 function inline(text: string) {

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<rect width="512" height="512" fill="#f4efe4"/>
+<g fill="none" stroke="#ff5c8a" stroke-width="5" stroke-linecap="round" opacity=".9">
+<path d="M40 60 L130 60 L130 130 L40 130Z M54 110 Q74 70 96 100 T124 80 M380 50 Q420 40 460 70 M396 90 l40 0 M400 110 l26 -14"/>
+</g>
+<g fill="#ff5c8a" opacity=".9" style="mix-blend-mode:multiply">
+<path d="M380 400 Q430 380 470 410 Q470 470 400 480Z"/>
+<path d="M140 500 Q130 330 250 312 Q370 318 380 500Z"/>
+<path d="M126 152 Q120 112 156 112 Q182 122 176 156Z M332 156 Q334 114 366 116 Q392 130 378 162Z"/>
+<path d="M114 250 Q110 140 252 132 Q396 140 394 252 Q390 354 252 362 Q120 356 114 250Z"/>
+</g>
+<g fill="none" stroke="#2b4bd6" stroke-linecap="round" stroke-linejoin="round" style="mix-blend-mode:multiply">
+<path d="M390 410 Q438 392 474 420 Q470 474 406 484 M404 432 L462 428 M408 456 L458 450 M432 404 L436 480" stroke-width="5"/>
+<path d="M150 506 Q142 340 258 322 Q372 330 388 506" stroke-width="7"/>
+<path d="M136 160 Q130 120 164 120 Q188 130 184 162 M342 164 Q344 122 374 124 Q398 138 386 170" stroke-width="7"/>
+<path d="M124 258 Q120 148 262 140 Q404 148 402 260 Q398 362 262 370 Q130 364 124 258Z" stroke-width="7"/>
+<path d="M204 292 Q218 254 262 254 Q308 258 318 292 Q304 326 262 328 Q218 324 204 292Z" stroke-width="5"/>
+<path d="M246 264 Q262 256 280 266 Q274 280 262 282 Q250 278 246 264Z" fill="#2b4bd6" stroke-width="3"/>
+<path d="M254 309 L255 324 L272 323 L271 307" fill="#f4efe4" stroke-width="4"/><path d="M262 310 L263 323" stroke-width="3"/><path d="M236 304 Q262 312 290 300" stroke-width="5"/>
+<path d="M176 220 Q194 210 212 220" stroke-width="6"/>
+<circle cx="196" cy="226" r="8" fill="#2b4bd6"/>
+<path d="M310 220 Q328 210 346 220" stroke-width="6"/>
+<circle cx="330" cy="226" r="8" fill="#2b4bd6"/>
+<path d="M172 188 Q194 182 216 190 M306 184 Q330 170 352 182" stroke-width="6"/>
+<path d="M160 430 L300 400 L320 470 L180 500Z" fill="#f4efe4" stroke-width="6"/>
+<path d="M190 440 l40 -8 M196 462 l60 -12 M244 428 Q262 410 280 432 Q290 446 300 420" stroke-width="4"/>
+<path d="M150 470 Q140 430 176 436" stroke-width="7"/>
+</g></svg>
