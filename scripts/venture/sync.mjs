@@ -6,7 +6,14 @@
 //                                         (a new machine, or a lost folder; never overwrites a newer file)
 //   node scripts/venture/sync.mjs status  which side is newer, file by file
 // Call agendas (call-*.md) are not documents; publish those with put.mjs.
+// Every other file under private/ (data/ lead lists and scans, pdf-proof/ samples; not the KEY)
+// goes to the private storage bucket `venture-private` at the same relative path: push uploads
+// what changed (sha-256, remembered in private/.sync-manifest.json) and removes what was deleted here
+// since the last push; pull downloads what is missing (a new machine, a lost folder).
+import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
+import { dirname, join, relative } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { createClient } from '@supabase/supabase-js'
 
 const root = new URL('../../', import.meta.url)
@@ -26,6 +33,39 @@ const rows = async () => {
   return data
 }
 
+const BUCKET = 'venture-private'
+const dirPath = fileURLToPath(dir)
+const manifestPath = join(dirPath, '.sync-manifest.json')
+const SKIP = new Set(['KEY', '.sync-manifest.json', '.DS_Store'])
+// every non-document file below private/, as paths relative to it
+const dataFiles = (d = dirPath) =>
+  existsSync(d)
+    ? readdirSync(d, { withFileTypes: true }).flatMap((e) => {
+        const p = join(d, e.name)
+        if (e.isDirectory()) return e.name.startsWith('.') || ['node_modules', '__pycache__', 'venv'].includes(e.name) ? [] : dataFiles(p)
+        const rel = relative(dirPath, p)
+        if (SKIP.has(e.name) || e.name.startsWith('.') || (d === dirPath && e.name.endsWith('.md'))) return []
+        return [rel]
+      })
+    : []
+async function bucket() {
+  const { data } = await db.storage.getBucket(BUCKET)
+  if (data) return
+  const { error } = await db.storage.createBucket(BUCKET, { public: false })
+  if (error && !/exists/i.test(error.message)) throw new Error(`bucket: ${error.message}`)
+}
+async function listAll(prefix = '') {
+  const { data, error } = await db.storage.from(BUCKET).list(prefix, { limit: 1000 })
+  if (error) throw new Error(`list ${prefix}: ${error.message}`)
+  const out = []
+  for (const o of data) {
+    const p = prefix ? `${prefix}/${o.name}` : o.name
+    if (o.id === null) out.push(...(await listAll(p))) // a folder
+    else out.push(p)
+  }
+  return out
+}
+
 const cmd = process.argv[2]
 if (cmd === 'push') {
   const have = new Map((await rows()).map((r) => [r.slug, r]))
@@ -39,6 +79,26 @@ if (cmd === 'push') {
     if (error) throw new Error(error.message)
     console.log(`pushed ${f} → ${slug}`)
   }
+  await bucket()
+  const manifest = existsSync(manifestPath) ? JSON.parse(readFileSync(manifestPath, 'utf8')) : {}
+  for (const rel of dataFiles()) {
+    const buf = readFileSync(join(dirPath, rel))
+    const sha = createHash('sha256').update(buf).digest('hex')
+    if (manifest[rel] === sha) continue
+    const { error } = await db.storage.from(BUCKET).upload(rel, buf, { upsert: true, contentType: 'application/octet-stream' })
+    if (error) throw new Error(`upload ${rel}: ${error.message}`)
+    manifest[rel] = sha
+    console.log(`uploaded ${rel} (${(buf.length / 1024).toFixed(0)} KB)`)
+  }
+  // a file pushed from here before and deleted here since: remove its copy too, or pull would bring it back
+  const here = new Set(dataFiles())
+  const gone = Object.keys(manifest).filter((rel) => !here.has(rel))
+  if (gone.length) {
+    const { error } = await db.storage.from(BUCKET).remove(gone)
+    if (error) throw new Error(`remove: ${error.message}`)
+    for (const rel of gone) delete manifest[rel], console.log(`removed ${rel} (deleted here)`)
+  }
+  writeFileSync(manifestPath, JSON.stringify(manifest, null, 1))
   console.log('push done')
 } else if (cmd === 'pull') {
   mkdirSync(dir, { recursive: true })
@@ -54,6 +114,16 @@ if (cmd === 'push') {
     }
     writeFileSync(path, r.body + '\n')
     console.log(`pulled ${r.slug} → ${r.source}`)
+  }
+  await bucket()
+  for (const rel of await listAll()) {
+    const path = join(dirPath, rel)
+    if (existsSync(path)) continue
+    const { data, error } = await db.storage.from(BUCKET).download(rel)
+    if (error) throw new Error(`download ${rel}: ${error.message}`)
+    mkdirSync(dirname(path), { recursive: true })
+    writeFileSync(path, Buffer.from(await data.arrayBuffer()))
+    console.log(`downloaded ${rel}`)
   }
   console.log('pull done')
 } else if (cmd === 'status') {

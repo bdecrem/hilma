@@ -146,7 +146,16 @@ resume your work." Nothing that matters is kept only in a conversation:
 | The rules | `private/CHARTER.md` (doc `charter`) |
 | A copy of every private document off this disk | `venture_docs`, with the file name in `source`; `node scripts/venture/sync.mjs push | pull | status` |
 | Everything Bart said by voice or text | `venture_interview_turns`, `venture_messages` |
-| Durable lessons about how he wants this run | the memory file `project_venture.md` |
+| What has proved true and wrong (how he works, ideas, customers, tools, mistakes), read at every start and written at every result | `private/LESSONS.md` (doc `lessons`) |
+| Every test's prediction, written before its result, then the result and the gap; the calibration so far | `private/BETS.md` (doc `bets`) |
+| Data files (`private/data/` lead lists and scans, `private/pdf-proof/` samples) | the private storage bucket `venture-private`, by the same `sync.mjs push / pull` |
+| The few rules every Claude session must know | the memory file `project_venture.md` |
+
+Bart asked on 2026-11-14 for the agent to learn as well as remember ("so that
+it can inform and you can improve your work over time"). The skill makes every
+session read LESSONS and BETS first, write a prediction before every test,
+close it with the result, add a lesson whenever he corrects or decides
+something, and review the whole file at the end of each weekly cycle.
 
 `sync.mjs pull` on another machine (with the repo and `.env.local`) rebuilds
 the private folder, so the mini or the laptop can pick the work up. The access
