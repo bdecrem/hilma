@@ -131,6 +131,28 @@ source `private/JOURNAL.md` ("## Now", "## Waiting on you", then one "## day"
 section per day with `- **time** what`), so it changes with a `sync.mjs push`
 and no deploy.
 
+## Mail on the company's domains
+
+kochitolabs.com, clerkpdf.com and appadopt.com send and receive through
+SendGrid (set up 2026-11-14 with a full-access key that lives only in the ops
+vault as `SENDGRID_FULL_API_KEY`; day-to-day sending uses the send-only
+`SENDGRID_API_KEY`).
+
+- **Out.** Each domain is authenticated (three CNAMEs and a DMARC record;
+  Namecheap records added with `node scripts/domains/nc-hosts.mjs`, which keeps
+  the existing ones; kochitolabs.com is on Vercel DNS).
+  `node scripts/venture/mail.mjs send --from hello@clerkpdf.com --to … --subject … --file body.txt`
+  sends plain text and stores the message. **Its guard has no override:** it
+  sends only to an address that has written to us, signed up on a page, or is
+  listed in `private/approved-recipients.txt`, where a stranger's address goes
+  only with Bart's yes quoted beside it.
+- **In.** Each domain's MX is `mx.sendgrid.net`; SendGrid Inbound Parse posts
+  every message to `/api/kochito/mail/in?t=<KOCHITO_MAIL_TOKEN>`
+  (`src/lib/kochito/mail.ts`), which stores it in `kochito_mail`
+  (`schema/006_kochito_mail.sql`). `mail.mjs inbox` reads what no session has
+  read; `mail.mjs --wait` is the watcher; `mail.mjs thread <address>` shows one
+  correspondence.
+
 ## Voice notes
 
 Bart, 2026-11-14: "a permanent conversation URL I can bookmark... a URL where I

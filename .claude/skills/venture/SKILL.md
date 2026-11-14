@@ -54,6 +54,8 @@ gone, every link in Bart's iMessage thread carries it.
   read (with the answers the server already gave him), and his voice notes
   from `ola.cx/venture/memo` (they arrive in the same thread, marked
   "(voice note)"). Marks them read.
+- `node scripts/venture/mail.mjs inbox` — mail from customers and strangers to
+  hello@ at the three domains. `node scripts/venture/leads.mjs` — sign-ups.
 - `node scripts/venture/transcript.mjs --list` — every voice session. Read any
   real one (not marked test) that is newer than the last LOG entry:
   `node scripts/venture/transcript.mjs <session>`.
@@ -68,6 +70,8 @@ is restarted after it has been handled:
 
     node scripts/venture/imsg.mjs --wait
     node scripts/venture/transcript.mjs --wait talk
+    node scripts/venture/mail.mjs --wait        (mail to the company's domains)
+    node scripts/venture/leads.mjs --wait       (sign-ups on the sites)
 
 Add `transcript.mjs --wait <slug>` while an agenda call is open; `checkin`
 (the five-minute interview linked from his page) is always open.
