@@ -132,6 +132,26 @@ CLAUDE.md); the thread is the table `venture_messages`
   cannot act; the working session reads the thread when it runs
   (`imsg.mjs inbox`, or `imsg.mjs --wait` as a background task).
 
+## The company's site: kochitolabs.com
+
+Bart asked (2026-11-14) for demand exploration before picking an idea: landing
+pages and a small ad campaign. The pages are the company's site,
+`src/app/kochito/` (kochitolabs.com through host rewrites; the domain is
+registered at Vercel): `/pdf` and `/apps`, one form each.
+
+| What | Where |
+|---|---|
+| Pages, the form, the visit counter | `src/app/kochito/` (`LeadForm.tsx`, `Track.tsx`, `kochito.css`) |
+| Storage (events without cookies, sign-ups) | `src/lib/kochito/store.ts`, `schema/004_kochito.sql`, routes `/api/kochito/{event,lead}` |
+| The numbers: people per page and source; new sign-ups | `node scripts/venture/leads.mjs` (`--all`, `--since <day>`, `--wait`) |
+| Form check, as a visitor from an ad | `node scripts/venture/kochito-check.mjs [base]` (its sign-ups use `@kochito-check.test`, never counted, deleted after) |
+| Look at every page; rebuild the share images | `kochito-shots.mjs <dir> [base]`, `kochito-og.mjs` (both against a dev server; pass `https://kochitolabs.com` to look at the live site) |
+
+Ad links carry `utm_source`, `utm_campaign` and `utm_term`; the page remembers
+the first ones a browser arrived with, so a sign-up counts for the ad that
+brought the visitor. What the pages claim (dates, prices, what is offered) is
+sourced in the private notes; correct it there first, then here.
+
 ## Persistence: a session is not the business
 
 Bart, same evening: "we need to save this session as a skill or agent or
