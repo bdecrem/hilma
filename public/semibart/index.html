@@ -1484,7 +1484,7 @@ const STICKERS = [
     look: 'Recruit two fellows, get tenure. That is roughly how tenure works.' }
 ];
 function paintSticker(m, s) {
-  const under = s.x >= 124 && s.x < 196 ? DOOR_WOOD : DOOR_WALL;
+  const under = s.under || (s.x >= 124 && s.x < 196 ? DOOR_WOOD : DOOR_WALL);
   let cx, ty;
   if (s.disc) {
     const [x, y, r] = s.disc;
@@ -1543,14 +1543,27 @@ async function toLanaDoor() {
   await walkTo([{ x: 108, y: 134 }]);
   if (!lanaDoorSeen) { lanaDoorSeen = true; await say('you', "Lana's door. Every sticker is an offer."); }
 }
-const LANA_DOOR_SPOTS = STICKERS.map(s => ({ name: s.k, r: s.disc ? [s.disc[0] - s.disc[2], s.disc[1] - s.disc[2], s.disc[2] * 2 + 1, s.disc[2] * 2 + 1] : [s.x, s.y, s.w, s.h],
+const onDoor = s => s.disc ? s.disc[0] - s.disc[2] >= 124 && s.disc[0] + s.disc[2] <= 196 : s.x >= 124 && s.x + s.w <= 196;
+const LANA_DOOR_SPOTS = STICKERS.filter(s => !onDoor(s)).map(s => ({ name: s.k, r: s.disc ? [s.disc[0] - s.disc[2], s.disc[1] - s.disc[2], s.disc[2] * 2 + 1, s.disc[2] * 2 + 1] : [s.x, s.y, s.w, s.h],
   walk: { x: s.walk, y: 134 }, def: 'look', on: { look: s.look } })).concat([
   { name: 'doormat', r: [132, 105, 56, 15], walk: { x: 160, y: 130 }, def: 'look', on: { look: 'INVESTORS WELCOME. The one honest thing out here.' } },
   { name: 'Study 49 · Lana Swartz', r: [124, 4, 72, 100], walk: { x: 160, y: 132 }, def: 'open', on: {
-    look: "Study 49. Lana's. There is a door under there somewhere.",
+    look: "Study 49. Lana's. There is a door under the stickers somewhere.",
     open: () => mineStudy(S.door) ? enterMine() : enterPerson('lana') } },
   { name: 'the walk', r: [0, 104, 34, 58], walk: { x: 40, y: 134 }, def: 'open', on: { look: 'The walk back to campus.', open: exitRoom } }
 ]);
+// the inside of her door (makeRoomBg's door, x 4-36): smaller stickers, drawn behind everything in her study
+const LANA_INSIDE = [
+  { x: 8, y: 36, w: 23, h: 9, bg: DOOR_INK, fg: '#ffd93b', lines: ['$LANA'] },
+  { disc: [18, 54, 8], burst: true, bg: '#ffd93b', fg: '#d6402e', lines: ['WIN'], ty: 52 },
+  { x: 8, y: 66, w: 19, h: 22, bg: '#ffffff', fg: DOOR_INK, lines: ['SCAN'], top: 13,
+    art: (m, s) => { const r = rng(94), ox = s.x + 4, oy = s.y + 2;
+      for (let j = 0; j < 11; j++) for (let i = 0; i < 11; i++) if (r() < 0.5) rect(m, ox + i, oy + j, 1, 1, DOOR_INK);
+      [[0, 0], [7, 0], [0, 7]].forEach(([a, b]) => { rect(m, ox + a, oy + b, 4, 4, DOOR_INK); rect(m, ox + a + 1, oy + b + 1, 2, 2, '#ffffff'); }); } },
+  { x: 12, y: 92, w: 19, h: 9, bg: '#ff9ccf', fg: DOOR_INK, lines: ['HODL'], peel: true }
+].map(s => Object.assign(s, { under: '#b8733f' }));
+const lanaInside = (() => { const c = document.createElement('canvas'); c.width = W; c.height = H; const m = c.getContext('2d'); LANA_INSIDE.forEach(s => paintSticker(m, s)); return c; })();
+HOOKS.roomBack.push(room => { if (room === 'lana') g.drawImage(lanaInside, 0, 0); });
 const LANA_ON = { closeup: true, look: "Study 49. Lana's. The door is all stickers. From here they look like deals.", open: toLanaDoor };
 function drawLanaDoor(t) {
   g.drawImage(lanaDoorFull, 0, 0);

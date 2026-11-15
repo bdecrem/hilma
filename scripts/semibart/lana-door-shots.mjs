@@ -17,13 +17,15 @@ await act('open', 'Study 49'); await p.waitForTimeout(14000);
 await p.screenshot({ path: out + '/door.png' });
 const st = await p.evaluate(() => ({ scene: window.quest.S.scene, room: window.quest.S.room }));
 await p.keyboard.press('Space').catch(() => {});
-await act('look', 'boss'); await p.waitForTimeout(2600);
+await act('look', 'car'); await p.waitForTimeout(2600);
 await p.screenshot({ path: out + '/sticker.png' });
 await p.waitForTimeout(3500);
-await act('open', 'Study 49'); await p.waitForTimeout(6000);
+// a click on a sticker on the door (BE YOUR OWN BOSS) is a click on the door
+const onSticker = await p.evaluate(() => { const h = window.quest.hit(145, 70); window.quest.run(() => window.quest.doAction(h.def, h)); return h.name; });
+await p.waitForTimeout(7000);
 const st2 = await p.evaluate(() => ({ scene: window.quest.S.scene, room: window.quest.S.room }));
 await p.screenshot({ path: out + '/inside.png' });
 await p.keyboard.press('Escape'); await p.waitForTimeout(4000);
 const st3 = await p.evaluate(() => ({ scene: window.quest.S.scene, room: window.quest.S.room }));
-console.log(JSON.stringify({ st, st2, st3, errs }));
+console.log(JSON.stringify({ st, onSticker, st2, st3, errs }));
 await b.close();
