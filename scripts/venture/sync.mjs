@@ -9,7 +9,12 @@
 // Every other file under private/ (data/ lead lists and scans, pdf-proof/ samples; not the KEY)
 // goes to the private storage bucket `venture-private` at the same relative path: push uploads
 // what changed (sha-256, remembered in private/.sync-manifest.json) and removes what was deleted here
-// since the last push; pull downloads what is missing (a new machine, a lost folder).
+// since the last push; pull downloads what is missing (a new machine, a lost folder) and what
+// another machine changed. Two machines write here (a terminal session and the runner on the
+// Mac mini), so the bucket keeps its own list, `.manifest.json` (path → sha-256 of what it holds):
+// a file that is unchanged here since this machine last synced and differs there is replaced by
+// pull; a file changed both here and there is never overwritten in either direction, it is
+// printed as a conflict and left for a person to settle.
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { dirname, join, relative } from 'node:path'
@@ -65,6 +70,19 @@ async function listAll(prefix = '') {
   }
   return out
 }
+const REMOTE_MANIFEST = '.manifest.json'
+async function remoteManifest() {
+  const found = await db.storage.from(BUCKET).list('', { limit: 1000 })
+  if (found.error) throw new Error(`list: ${found.error.message}`)
+  if (!found.data.some((o) => o.name === REMOTE_MANIFEST)) return null // not written yet
+  const { data, error } = await db.storage.from(BUCKET).download(REMOTE_MANIFEST)
+  if (error) throw new Error(`manifest: ${error.message}`) // never treat a failed read as "empty"
+  return JSON.parse(await data.text())
+}
+async function putRemoteManifest(m) {
+  const { error } = await db.storage.from(BUCKET).upload(REMOTE_MANIFEST, Buffer.from(JSON.stringify(m)), { upsert: true, contentType: 'application/json' })
+  if (error) throw new Error(`manifest: ${error.message}`)
+}
 
 const cmd = process.argv[2]
 if (cmd === 'push') {
@@ -81,23 +99,34 @@ if (cmd === 'push') {
   }
   await bucket()
   const manifest = existsSync(manifestPath) ? JSON.parse(readFileSync(manifestPath, 'utf8')) : {}
+  // what the bucket holds; the first time, this machine's own record of what it uploaded
+  const remote = (await remoteManifest()) ?? { ...manifest }
   for (const rel of dataFiles()) {
     const buf = readFileSync(join(dirPath, rel))
     const sha = createHash('sha256').update(buf).digest('hex')
-    if (manifest[rel] === sha) continue
+    if (remote[rel] === sha) { manifest[rel] = sha; continue } // the bucket already has exactly this
+    if (manifest[rel] === sha) continue // unchanged here; the bucket has a newer one, pull brings it
+    if (remote[rel] && remote[rel] !== manifest[rel]) {
+      console.log(`conflict ${rel}: changed here and on another machine; not uploaded (compare by hand, then delete one side)`)
+      continue
+    }
     const { error } = await db.storage.from(BUCKET).upload(rel, buf, { upsert: true, contentType: 'application/octet-stream' })
     if (error) throw new Error(`upload ${rel}: ${error.message}`)
-    manifest[rel] = sha
+    manifest[rel] = remote[rel] = sha
     console.log(`uploaded ${rel} (${(buf.length / 1024).toFixed(0)} KB)`)
   }
   // a file pushed from here before and deleted here since: remove its copy too, or pull would bring it back
+  // (only when the bucket still holds the version this machine last saw)
   const here = new Set(dataFiles())
   const gone = Object.keys(manifest).filter((rel) => !here.has(rel))
-  if (gone.length) {
-    const { error } = await db.storage.from(BUCKET).remove(gone)
+  const removable = gone.filter((rel) => !remote[rel] || remote[rel] === manifest[rel])
+  if (removable.length) {
+    const { error } = await db.storage.from(BUCKET).remove(removable)
     if (error) throw new Error(`remove: ${error.message}`)
-    for (const rel of gone) delete manifest[rel], console.log(`removed ${rel} (deleted here)`)
+    for (const rel of removable) delete remote[rel], console.log(`removed ${rel} (deleted here)`)
   }
+  for (const rel of gone) delete manifest[rel]
+  await putRemoteManifest(remote)
   writeFileSync(manifestPath, JSON.stringify(manifest, null, 1))
   console.log('push done')
 } else if (cmd === 'pull') {
@@ -116,15 +145,26 @@ if (cmd === 'push') {
     console.log(`pulled ${r.slug} → ${r.source}`)
   }
   await bucket()
-  for (const rel of await listAll()) {
+  const manifest = existsSync(manifestPath) ? JSON.parse(readFileSync(manifestPath, 'utf8')) : {}
+  const remote = await remoteManifest()
+  const listed = remote ? Object.keys(remote) : (await listAll()).filter((rel) => rel !== REMOTE_MANIFEST)
+  for (const rel of listed) {
     const path = join(dirPath, rel)
-    if (existsSync(path)) continue
+    if (existsSync(path)) {
+      if (!remote) continue // an old bucket without a list: only what is missing
+      const sha = createHash('sha256').update(readFileSync(path)).digest('hex')
+      if (sha === remote[rel]) { manifest[rel] = sha; continue }
+      if (sha !== manifest[rel]) { console.log(`kept ${rel} (changed here; the bucket has another version)`); continue }
+    }
     const { data, error } = await db.storage.from(BUCKET).download(rel)
     if (error) throw new Error(`download ${rel}: ${error.message}`)
+    const buf = Buffer.from(await data.arrayBuffer())
     mkdirSync(dirname(path), { recursive: true })
-    writeFileSync(path, Buffer.from(await data.arrayBuffer()))
-    console.log(`downloaded ${rel}`)
+    console.log(`${existsSync(path) ? 'updated' : 'downloaded'} ${rel}`)
+    writeFileSync(path, buf)
+    manifest[rel] = createHash('sha256').update(buf).digest('hex')
   }
+  writeFileSync(manifestPath, JSON.stringify(manifest, null, 1))
   console.log('pull done')
 } else if (cmd === 'status') {
   const have = new Map((await rows()).map((r) => [r.source, r]))
