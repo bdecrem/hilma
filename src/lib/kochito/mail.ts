@@ -56,5 +56,15 @@ export async function storeInbound(form: FormData): Promise<void> {
     const rec = await db.from('kochito_files').insert({ source: 'mail', mail_id: row.id, from_addr: from.addr, name: file.name || safe, path: up.error ? null : path, bytes: file.size, content_type: file.type || null })
     // the message itself is stored; a file that could not be kept is logged, and shows in the ledger with no path
     if (up.error || rec.error) console.error('[kochito/mail] attachment not kept:', file.name, up.error?.message ?? rec.error?.message)
+  }  // Files the first stop already put in the bucket (supabase/functions/kochito-mail-in, which
+  // takes messages too large for this host): only their rows are written here.
+  let stored: { name: string; path: string; bytes: number; type: string | null }[] = []
+  try {
+    stored = JSON.parse(get('stored_files') || '[]')
+  } catch {}
+  for (const f of stored) {
+    if (typeof f?.path !== 'string' || !f.path.startsWith('mail/')) continue
+    const rec = await db.from('kochito_files').insert({ source: 'mail', mail_id: row.id, from_addr: from.addr, name: String(f.name ?? f.path).slice(0, 300), path: f.path, bytes: Number(f.bytes) || 0, content_type: f.type ?? null })
+    if (rec.error) throw new Error(`kochito file row failed: ${rec.error.message}`) // SendGrid retries; the upload is repeated under a new path
   }
 }
