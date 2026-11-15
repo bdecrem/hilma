@@ -207,6 +207,11 @@ vault as `SENDGRID_FULL_API_KEY`; day-to-day sending uses the send-only
   take a request over about 4 MB: the function stores the attachments and passes the
   rest on to `/api/kochito/mail/in`. Checked with a real 7 MB email and a 26 MB post.
   To undo, point the three Inbound Parse settings back at the site's webhook.
+- **Watching agenda pages:** `node scripts/venture/watch.mjs check | newest | volume [months]` lists what the
+  public bodies in `private/data/watch.json` have posted (Legistar's API and meeting pages, CivicPlus Agenda
+  Center, CivicClerk): what is new since the last run, each body's newest agenda, and a year's meetings, files
+  and pages. It names no body itself, spaces its requests a second apart per site, and counts pages with
+  poppler's `pdfinfo` from a pipe. Its header documents the config and the output columns.
 - **Fixing one document:** `node scripts/venture/fix.mjs <url-or-file> <folder under private/>`
   runs the private PDF pipeline on it (installed on the iMac and, since 2026-11-14, on the
   Mac mini: a uv venv at `private/pdf-proof/.venv`, plus veraPDF, poppler and ocrmypdf from
