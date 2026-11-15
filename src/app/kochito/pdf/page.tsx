@@ -30,6 +30,10 @@ const form = {
   done: 'Your fixed PDF and its report will arrive within one business day.',
 }
 
+// The yearly plan. Price and page cap are set in the private notes
+// (YEARLY-PLAN-2026-11-14.md); change them there first.
+const YEARLY = { price: '$2,900', pages: '10,000' }
+
 export default async function PdfDesk() {
   const { email } = await brand()
   return (
@@ -227,6 +231,55 @@ export default async function PdfDesk() {
           </div>
         </section>
 
+        <section className="kl-band rule" aria-labelledby="yearly">
+          <div className="kl-wrap">
+            <div className="kl-plan">
+              <div>
+                <p className="kl-kicker">The yearly plan</p>
+                <h2 id="yearly">Or have every one done, all year.</h2>
+                <p className="kl-lede">We watch your agenda page. Each agenda, packet and set of minutes your council posts comes back fixed within one business day. There is nothing to send and nothing to remember.</p>
+                <p className="kl-price kl-price-2">
+                  {YEARLY.price}
+                  <span>per year</span>
+                </p>
+                <p className="kl-plan-terms">Everything one governing body posts, up to {YEARLY.pages} pages a year; larger councils are quoted. A one-year term with no automatic renewal. Billed by invoice; a purchase order is fine.</p>
+              </div>
+              <ol className="kl-time kl-watch" aria-label="What happens when you post a document">
+                <li>
+                  <span className="when">Thursday, 4:10 pm</span>
+                  <p>You post the packet for next week’s meeting, as you do today.</p>
+                </li>
+                <li>
+                  <span className="when">The same afternoon</span>
+                  <p>We find it on your agenda page. Nobody had to send it.</p>
+                </li>
+                <li>
+                  <span className="when">Friday</span>
+                  <p>The fixed packet and its report are in your inbox, ready to post in place of the original.</p>
+                </li>
+              </ol>
+            </div>
+            <ul className="kl-plan-facts">
+              <li>
+                <b>Nothing to send</b>
+                <span>We find each new document on your agenda page. To post the fixed one first, send it ahead and it comes back the same way.</span>
+              </li>
+              <li>
+                <b>The file itself, fixed</b>
+                <span>The same pages with the same look, tagged, to post in place of the original. Not a separate web copy.</span>
+              </li>
+              <li>
+                <b>A report with every file</b>
+                <span>The checker’s result and the reading transcript, and one log for the year: what was posted, when it came back, how many pages.</span>
+              </li>
+              <li>
+                <b>Fixed again, free</b>
+                <span>If anyone reports a problem in a file we returned, we correct it within one business day, for as long as the file is posted.</span>
+              </li>
+            </ul>
+          </div>
+        </section>
+
         <section className="kl-band rule" aria-labelledby="how">
           <div className="kl-wrap">
             <div className="kl-sec-head">
@@ -243,7 +296,7 @@ export default async function PdfDesk() {
               </li>
               <li>
                 <h3>Decide about the rest</h3>
-                <p>If it is good, send each agenda and packet before you post it. If it is not, you owe nothing and keep the fixed document.</p>
+                <p>If it is good, send each agenda and packet as you post it, or take the yearly plan and send nothing. If it is not, you owe nothing and keep the fixed document.</p>
               </li>
             </ol>
           </div>
@@ -285,6 +338,10 @@ export default async function PdfDesk() {
                 <details>
                   <summary>What happens to the documents we send?</summary>
                   <p>They are used to do the work and for nothing else, and are deleted 30 days after delivery, or sooner on request. Please send only documents that are public or that you are allowed to share.</p>
+                </details>
+                <details>
+                  <summary>Will every screen reader user hear the structure?</summary>
+                  <p>That depends on the program a person opens the PDF with. The viewer built into Firefox reads our headings, lists and decoration marks from the file and hands them to a screen reader; we inspected what it hands over, and a test with a screen reader itself is still to come. Adobe Acrobat Reader also reads PDF tags. Chrome’s built-in viewer currently ignores the tags of any PDF, ours or anyone’s. The standard asks for the structure to be in the file, and that is what we add.</p>
                 </details>
                 <details>
                   <summary>Is this a guarantee of compliance?</summary>
