@@ -140,8 +140,18 @@ struct SampleVoice {
     var shaped = false
     var rise = 1.0, fall = 1.0
     var riseK = 0.0, fallK = 0.0
+    /// Muffled (a fill note under Muffle, 2026-11-14): two one-pole lowpasses, `lpK` their
+    /// coefficient (0: off).
+    var lpK: Float = 0
+    var lp = (l1: Float(0), r1: Float(0), l2: Float(0), r2: Float(0))
 
     private static let scale: Float = 1 / 32768
+
+    /// Muffles the voice from here on: two one-pole lowpasses at `hz`.
+    mutating func muffle(hz: Double, sampleRate: Double) {
+        lpK = Float(1 - exp(-2 * Double.pi * hz / sampleRate))
+        lp = (0, 0, 0, 0)
+    }
 
     mutating func start(_ buffer: SampleBuffer, ratio: Double, gain: Float, heldFrames: Int,
                         releaseSeconds: Double, group: Int = 0, note: Int = -1, live: Bool = false,
@@ -149,6 +159,7 @@ struct SampleVoice {
                         from: Double = 0, decay: Double = 0) {
         self.buffer = buffer
         active = true
+        lpK = 0
         position = from
         shaped = decay > 0
         rise = 1; fall = 1
@@ -233,6 +244,10 @@ struct SampleVoice {
                 let mr = (Float(br[iq]) + (Float(br[iq + 1]) - Float(br[iq])) * fq) * decay
                 sl += (ml - sl) * t
                 sr += (mr - sr) * t
+            }
+            if lpK > 0 {
+                lp.l1 += lpK * (sl - lp.l1); lp.l2 += lpK * (lp.l1 - lp.l2); sl = lp.l2
+                lp.r1 += lpK * (sr - lp.r1); lp.r2 += lpK * (lp.r1 - lp.r2); sr = lp.r2
             }
             l[i] += sl * g * panL
             r[i] += sr * g * panR

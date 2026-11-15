@@ -297,7 +297,8 @@ struct LiveGameScreen: View {
                 back: { player.practiceBack() },
                 tempo: player.nudgeGameTempo,
                 agent: { app.openAgent(fromGame: player) },
-                call: player.toggleCall
+                call: player.toggleCall,
+                muffle: { player.muffleFills.toggle() }
             ))
     }
 }

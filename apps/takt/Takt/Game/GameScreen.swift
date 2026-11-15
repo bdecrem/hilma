@@ -52,6 +52,8 @@ struct GameState {
         var done = false
     }
     var call: CallState? = nil
+    /// Muffle: the notes the level leaves out play muffled, so yours stand out.
+    var muffle = false
     /// The knob: the band at this fraction of the song's tempo (0.5...1), the band's tempo now,
     /// the one waiting for the downbeat, and the song's own (full speed).
     var speed = 1.0
@@ -131,6 +133,8 @@ struct GameControls {
     var agent: () -> Void = {}
     /// Call on and off: the next note called out, finger then key, the band held.
     var call: () -> Void = {}
+    /// Muffle on and off: the notes the level leaves out, muffled.
+    var muffle: () -> Void = {}
 }
 
 private struct GameControlsKey: EnvironmentKey {
@@ -671,7 +675,7 @@ struct TransportRow: View {
         VStack(spacing: compact ? 6 : 8) {
             Scrubber(state: state)
                 .frame(height: 18)
-            HStack(spacing: compact ? 6 : 10) {
+            HStack(spacing: compact ? 4 : 10) {
                 Text(state.countIn.map { "Count-in \($0)" } ?? "Bar \(state.bar + 1)\(compact ? "" : " · \(state.section)")")
                     .dataLabel(10)
                     .foregroundStyle(state.countIn == nil ? Palette.muted : Palette.signal)
@@ -690,6 +694,8 @@ struct TransportRow: View {
                     Button(action: controls.call) {
                         Text("Call")
                             .dataLabel(10, weight: .semibold)
+                            .lineLimit(1)
+                            .fixedSize()
                             .foregroundStyle(state.call != nil ? Palette.ground : Palette.text)
                             .padding(.horizontal, 10)
                             .frame(height: 28)
@@ -698,6 +704,27 @@ struct TransportRow: View {
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(state.call != nil ? "Stop calling the notes" : "Call the notes: the next one spoken, finger then key")
+                }
+                // Muffle: the line's notes your level leaves out play muffled, so yours stand out
+                // (Bart, 2026-11-14); lit while on.
+                // On the phone the row has no room for a word: an ear, lit while on.
+                if compact, state.result == nil, state.reading == nil {
+                    SmallButton(symbol: "ear", lit: state.muffle,
+                                label: state.muffle ? "Play the whole line full" : "Muffle the notes played for you, so yours stand out",
+                                action: controls.muffle)
+                } else if state.result == nil, state.reading == nil {
+                    Button(action: controls.muffle) {
+                        Text("Muffle")
+                            .dataLabel(10, weight: .semibold)
+                            .foregroundStyle(state.muffle ? Palette.ground : Palette.text)
+                            .padding(.horizontal, 10)
+                            .frame(height: 28)
+                            .background(RoundedRectangle(cornerRadius: 6).fill(state.muffle ? Palette.signal : Palette.panel))
+                            .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(state.muffle ? Palette.signal : Palette.line, lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(state.muffle ? "Play the whole line full" : "Muffle the notes played for you, so yours stand out")
+                    .help(state.muffle ? "Muffled: the notes your level leaves out play quieter and darker" : "Muffle the notes your level leaves out, so yours stand out")
                 }
                 // The phone's HUD has no room for the teacher (or the cheat sheet): they sit here.
                 if compact, state.reading != nil { CheatToggle(compact: true).scaleEffect(28 / 34) }

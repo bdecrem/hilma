@@ -6,7 +6,8 @@ import SwiftUI
 /// `-RenderTo <wav> [-RenderSeconds 30] [-Tempo 70] [-RenderScript "0:play,10:tempo=90"]`
 ///   renders the band offline (no device, faster than realtime) and exits. Script items are
 ///   `<seconds>:<command>`: play, pause, stop, tempo=N, mute=<channel>, unmute=<channel>,
-///   on=<note>@<velocity>, off=<note>, band=<band>, song=<song>/<part> (the song with your keys on
+///   on=<note>@<velocity>, off=<note>, fill=<note>@<velocity>@<tick>@<length>, muffle=0|1,
+///   band=<band>, song=<song>/<part> (the song with your keys on
 ///   the part's instrument, as the Stage loads it). Channels: drums, bass, keys, horns.
 ///
 /// `-RecordTo <wav> [-RecordSeconds 10]` records the live render (use with `-Silent 1`) and exits.
@@ -276,6 +277,12 @@ enum DebugHooks {
                 let nv = v.split(separator: "@")
                 command = .noteOn(note: Int(nv[0])!, velocity: nv.count > 1 ? Float(nv[1])! : 0.8)
             case ("off", let v?): command = .noteOff(note: Int(v)!)
+            // `fill=<note>@<velocity>@<tick>@<length ticks>`: a note the level leaves out, as the
+            // Stage schedules it; `muffle=1` muffles those (Muffle, 2026-11-14).
+            case ("fill", let v?):
+                let f = v.split(separator: "@").map { Double($0)! }
+                command = .schedule(note: Int(f[0]), velocity: Float(f[1]), tick: f[2], lengthTicks: f[3], fill: true)
+            case ("muffle", let v?): command = .muffleFills(v == "1")
             case ("transpose", let v?): command = .transpose(Int(v)!)
             case ("organ", let v?): command = .monitor(v == "1" ? SampledInstrument.shared("organ") : nil)
             case ("keys", let v?): command = .monitor(v == "0" ? nil : SampledInstrument.shared(v))  // your keys' instrument by name

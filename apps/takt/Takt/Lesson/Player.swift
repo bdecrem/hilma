@@ -113,6 +113,14 @@ final class Player {
     /// still sounds like the song and the player plays a part of it (Guitar Hero's rule).
     @ObservationIgnored var fillVelocity: [Int: Float] = [:]
     @ObservationIgnored var fillThrough = -1
+    /// Muffle (Bart, 2026-11-14): those fills play muffled (quieter, softer, lowpassed) so your
+    /// own notes stand out from the line around them. The run screen's toggle; remembered.
+    var muffleFills = UserDefaults.standard.bool(forKey: "muffleFills") {
+        didSet {
+            UserDefaults.standard.set(muffleFills, forKey: "muffleFills")
+            audio.send(.muffleFills(muffleFills))
+        }
+    }
     @ObservationIgnored var gameDifficulty = GameEngine.Difficulty.adaptive
     /// `practiceTick` is where practice sits while held (observed, so a scrub redraws the
     /// highway); `practiceCountBase` is the tick a practice count-in lands on.

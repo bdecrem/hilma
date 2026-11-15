@@ -38,6 +38,7 @@ extension Player {
         for n in song.part(part).notes { if let v = n.v { fillVelocity[n.t * 128 + n.n] = Float(v) } }
         fillThrough = -1
         applyInstrument()
+        audio.send(.muffleFills(muffleFills))
         audio.send(.stop)
         audio.send(.transpose(0))
         audio.send(.silence(from: 0, to: 0))
@@ -230,7 +231,8 @@ extension Player {
         while fillThrough < min(game.heardBar + 1, game.song.bars - 1) {
             fillThrough += 1
             for n in game.fill(bar: fillThrough) {
-                audio.send(.schedule(note: n.n, velocity: fillVelocity[n.t * 128 + n.n] ?? 0.6, tick: Double(n.t), lengthTicks: Double(n.len)))
+                audio.send(.schedule(note: n.n, velocity: fillVelocity[n.t * 128 + n.n] ?? 0.6, tick: Double(n.t), lengthTicks: Double(n.len),
+                                     fill: true))
             }
         }
         #if DEBUG
@@ -309,7 +311,7 @@ extension Player {
             bar: min(bar, song.bars - 1), bars: song.bars, beat: beat,
             score: game.score, combo: game.combo, maxCombo: game.maxCombo, multiplier: game.multiplier,
             accuracy: game.accuracy, progress: min(1, max(0, tick / Double(song.bars * game.ticksPerBar))),
-            countIn: countIn, playing: playing, pop: game.pop, practice: practice, call: callState(), speed: gameSpeed,
+            countIn: countIn, playing: playing, pop: game.pop, practice: practice, call: callState(), muffle: muffleFills, speed: gameSpeed,
             tempo: tempo, pendingTempo: pendingTempo, songTempo: song.meta.tempo,
             heardTick: tick, lookaheadTicks: lookahead, ticksPerBeat: game.ticksPerBeat, ticksPerBar: game.ticksPerBar,
             notes: visible, keys: song.keyboard(game.part), nowNotes: reading != nil ? [] : cue.now, nextNotes: reading != nil ? [] : cue.next,

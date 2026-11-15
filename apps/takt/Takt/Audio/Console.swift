@@ -31,6 +31,9 @@ protocol Console: AnyObject {
     func pad(_ note: Int, velocity: Float, gain: Float, held: Int, offset: Int, live: Bool)
     /// A key comes up, `offset` frames into the chunk.
     func release(_ note: Int, offset: Int)
+    /// The next note call is a fill under Muffle (2026-11-14): a console that can darken that
+    /// one note does (`AcidRack`: the 303's filter down); the others only take its lower gain.
+    func muffleNext()
     /// Adds every bus to `outL` / `outR` and runs the master. `kick` is the duck envelope,
     /// `kick2` the band's second one (`Duck.second`; the first again when it has none), `drums`
     /// and `keys` those channels' faders (1, or gliding to 0 when muted).
@@ -46,6 +49,7 @@ extension Console {
     func acid(_ note: Int, velocity: Float, gain: Float, held: Int, offset: Int, live: Bool) {}
     func bass(_ note: Int, velocity: Float, gain: Float, held: Int, offset: Int, live: Bool) {}
     func pad(_ note: Int, velocity: Float, gain: Float, held: Int, offset: Int, live: Bool) {}
+    func muffleNext() {}
 }
 
 extension Rack: Console {

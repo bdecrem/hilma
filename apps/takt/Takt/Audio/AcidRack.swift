@@ -181,6 +181,8 @@ final class AcidRack: Console {
         var held = 0
         var gain: Float = 1
         var live = false
+        /// A fill under Muffle: the filter well down while it sounds.
+        var muffled = false
     }
 
     /// One side of a pad note's gate: opens `wait` frames into the chunk it was set in, closes
@@ -264,6 +266,10 @@ final class AcidRack: Console {
     private var attacking = false
     private var fe = 0.0
     private var accent = 0.0
+    /// The sounding note is a muffled fill (its filter × `muffleCutoff`), and the next call is one.
+    private var muffled = false
+    private var muffleArmed = false
+    private static let muffleCutoff = 0.4
     private var level: Float = 1
     private var acidNote = -1
     private var acidLive = false
@@ -440,7 +446,10 @@ final class AcidRack: Console {
     func acid(_ note: Int, velocity: Float, gain: Float, held: Int, offset: Int, live: Bool) {
         guard pendingCount < pending.count else { return }
         var i = pendingCount
-        let p = Pending(offset: offset, note: note, accent: velocity >= settings.acid.accentVelocity, held: held, gain: gain, live: live)
+        let m = muffleArmed
+        muffleArmed = false
+        let p = Pending(offset: offset, note: note, accent: !m && velocity >= settings.acid.accentVelocity, held: held, gain: gain, live: live,
+                        muffled: m)
         while i > 0 && pending[i - 1].offset > offset {
             pending[i] = pending[i - 1]
             i -= 1
@@ -481,6 +490,8 @@ final class AcidRack: Console {
         // until it comes up.
         if live { pads[slot].key.set(offset: offset, held: held) } else { pads[slot].band.set(offset: offset, held: held) }
     }
+
+    func muffleNext() { muffleArmed = true }
 
     func release(_ note: Int, offset: Int) {
         if acidLive && acidNote == note { gateEnd = min(gateEnd, frame + Int64(offset)) }
@@ -562,6 +573,7 @@ final class AcidRack: Console {
                 }
                 accent = p.accent ? 1 : 0
                 level = p.gain
+                muffled = p.muffled
                 acidNote = p.note
                 acidLive = p.live
                 gate = true
@@ -585,7 +597,7 @@ final class AcidRack: Console {
             fe *= exp(-1 / (Double(acidTau.value(bar)) * sr))
             let osc = Double(Rack.saw(&oscPhase, cur * invSr) * a.osc)
             let fc = Swift.min(Swift.max(exp(Double(acidBase.value(bar))) * pow(2, Double(acidAmount.value(bar)) * env)
-                                         * (1 + a.lfoDepth * sin(lfoAcid * bar)), a.min), a.max)
+                                         * (1 + a.lfoDepth * sin(lfoAcid * bar)) * (muffled ? Self.muffleCutoff : 1), a.min), a.max)
             let y1 = a1.low(osc, g: tan(Double.pi * fc * invSr), k: 1 / Double(acidQ.value(bar)))
             let y2 = a2.low(y1, g: tan(Double.pi * Swift.min(fc * a.ratio2, a.max2) * invSr), k: 1 / Double(a.q2))
             let drive = Double(acidDrive.value(bar))

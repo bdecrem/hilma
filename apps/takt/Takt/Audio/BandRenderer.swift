@@ -34,7 +34,10 @@ enum EngineCommand {
     case noteOn(note: Int, velocity: Float, hostTime: UInt64 = 0)
     case noteOff(note: Int, hostTime: UInt64 = 0)
     /// A monitor note at a transport tick, sample-accurate (autoplay). Held for `lengthTicks`.
-    case schedule(note: Int, velocity: Float, tick: Double, lengthTicks: Double)
+    case schedule(note: Int, velocity: Float, tick: Double, lengthTicks: Double, fill: Bool = false)
+    /// Muffle (2026-11-14): the notes a level leaves out (`schedule(fill: true)`) play muffled,
+    /// so your own stand out: quieter, softer, and through a lowpass where the voice has one.
+    case muffleFills(Bool)
     /// A cross-stick click at a transport tick, sample-accurate, on the monitor's bus so it
     /// sounds whatever the mutes (calibration).
     case click(tick: Double, velocity: Float)
@@ -312,7 +315,15 @@ final class BandRenderer {
         var lengthTicks: Double
         /// A click (the cross-stick) instead of a monitor note.
         var click = false
+        /// A note the level leaves out, played for you (muffled under Muffle).
+        var fill = false
     }
+    /// Muffle: the fills' gain (−5 dB), their velocity (a softer layer, no accent) and the
+    /// lowpass on a sampled voice.
+    private var muffleFills = false
+    private static let muffleGain: Float = 0.55
+    private static let muffleVelocity: Float = 0.75
+    private static let muffleHz = 900.0
     private let scheduled = UnsafeMutableBufferPointer<Scheduled>.allocate(capacity: 256)
     private var scheduledCount = 0
 
@@ -540,8 +551,8 @@ final class BandRenderer {
                     queueLive(note: note, velocity: velocity, on: true, host: host, now: callbackTime, frames: n)
                 case .noteOff(let note, let host):
                     queueLive(note: note, velocity: 0, on: false, host: host, now: callbackTime, frames: n)
-                case .schedule(let note, let velocity, let tick, let length):
-                    schedule(Scheduled(tick: tick, note: note, velocity: velocity, lengthTicks: length))
+                case .schedule(let note, let velocity, let tick, let length, let fill):
+                    schedule(Scheduled(tick: tick, note: note, velocity: velocity, lengthTicks: length, fill: fill))
                 case .click(let tick, let velocity):
                     schedule(Scheduled(tick: tick, note: 0, velocity: velocity, lengthTicks: 0, click: true))
                 default:
@@ -658,8 +669,9 @@ final class BandRenderer {
                                                      sampleRate: sampleRate)
             return
         }
-        play(monitor, note: s.note, velocity: s.velocity, held: Int(s.lengthTicks * samplesPerTick),
-             live: false, in: monitorVoices, bus: .monitor, gain: monitorGain, tick: s.tick)
+        let muffle = s.fill && muffleFills
+        play(monitor, note: s.note, velocity: muffle ? s.velocity * Self.muffleVelocity : s.velocity, held: Int(s.lengthTicks * samplesPerTick),
+             live: false, in: monitorVoices, bus: .monitor, gain: monitorGain * (muffle ? Self.muffleGain : 1), tick: s.tick, muffle: muffle)
     }
 
     /// Publishes the frame → tick mapping after the transport changed it.
@@ -770,7 +782,8 @@ final class BandRenderer {
     /// Starts a pitched note on instrument `index`: the same note still sounding is damped first
     /// (a key restruck). The live stab reads its breath at `tick` (the song's, from its top).
     private func play(_ index: Int, note: Int, velocity: Float, held: Int, live: Bool,
-                      in pool: UnsafeMutableBufferPointer<SampleVoice>, bus: Channel, gain: Float = 1, tick: Double, delay: Int = 0) {
+                      in pool: UnsafeMutableBufferPointer<SampleVoice>, bus: Channel, gain: Float = 1, tick: Double, delay: Int = 0,
+                      muffle: Bool = false) {
         age += 1
         if let rack, kinds[index] != .sample, kinds[index] != .dubStab {
             // The rack's voices, in the reference's own units: your keys bring their trim.
@@ -782,6 +795,7 @@ final class BandRenderer {
             case .rackStab:
                 rack.note(note, velocity: velocity, gain: level, offset: offset, live: live)
             case .rackAcid:
+                if muffle { rack.muffleNext() }
                 rack.acid(note, velocity: velocity, gain: level, held: held, offset: offset, live: live)
             case .rackBass:
                 rack.bass(note, velocity: velocity, gain: level, held: held, offset: offset, live: live)
@@ -816,9 +830,11 @@ final class BandRenderer {
         }
         let p = inst.pick(note: note, velocity: velocity)
         // Level follows velocity on top of the layer's own loudness.
-        pool[slot(pool)].start(p.buffer, ratio: p.ratio, gain: p.gain * gain * (0.35 + 0.65 * p.velocity), heldFrames: held,
-                               releaseSeconds: inst.release, note: note, live: live, sustain: true, age: age, sampleRate: sampleRate,
-                               delay: delay)
+        let k = slot(pool)
+        pool[k].start(p.buffer, ratio: p.ratio, gain: p.gain * gain * (0.35 + 0.65 * p.velocity), heldFrames: held,
+                      releaseSeconds: inst.release, note: note, live: live, sustain: true, age: age, sampleRate: sampleRate,
+                      delay: delay)
+        if muffle { pool[k].muffle(hz: Self.muffleHz, sampleRate: sampleRate) }
     }
 
     /// A free voice, or the oldest one.
@@ -1094,6 +1110,8 @@ final class BandRenderer {
             }
         case .noteOn, .noteOff, .schedule, .click:
             break  // placed in time by `render`
+        case .muffleFills(let on):
+            muffleFills = on
         case .outputLatency(let s):
             latencySeconds = s
         case .silence(let from, let to):
