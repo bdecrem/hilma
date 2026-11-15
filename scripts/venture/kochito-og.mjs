@@ -5,7 +5,11 @@
 // Rerun after a change to a headline, the palette or the drawings.
 import { chromium } from 'playwright'
 const base = process.argv[2] || 'http://localhost:3277/kochito'
-const b = await chromium.launch()
+// Each product's image carries its own name (ClerkPDF, AppAdopt), which the pages take from the
+// host: the two domains are pointed at the dev server for this browser only.
+const dev = new URL(base)
+const b = await chromium.launch({ args: [`--host-resolver-rules=MAP clerkpdf.com ${dev.hostname === 'localhost' ? '127.0.0.1' : dev.hostname}, MAP appadopt.com ${dev.hostname === 'localhost' ? '127.0.0.1' : dev.hostname}`] })
+const on = (domain, path) => `${dev.protocol}//${domain}${dev.port ? ':' + dev.port : ''}${dev.pathname.replace(/\/$/, '')}${path}`
 const p = await b.newPage({ viewport: { width: 1200, height: 630 }, userAgent: 'kochito-og headless check' })
 // the company's front page: its own card (Kit and the name), from a template beside this script
 await p.goto(new URL('./kochito-og-home.html', import.meta.url).href)
@@ -14,8 +18,10 @@ await p.waitForTimeout(400)
 await p.screenshot({ path: 'src/app/kochito/opengraph-image.png' })
 console.log('src/app/kochito/opengraph-image.png')
 // the two products: each page's own opening
-for (const [path, out] of [['/pdf', 'src/app/kochito/pdf/opengraph-image.png'], ['/apps', 'src/app/kochito/apps/opengraph-image.png']]) {
-  await p.goto(base + path, { waitUntil: 'load', timeout: 90000 })
+for (const [domain, path, out] of [['clerkpdf.com', '/pdf', 'src/app/kochito/pdf/opengraph-image.png'], ['appadopt.com', '/apps', 'src/app/kochito/apps/opengraph-image.png']]) {
+  await p.goto(on(domain, path), { waitUntil: 'load', timeout: 90000 })
+  const mark = (await p.locator('.kl-mark').first().textContent())?.trim()
+  if (!/ClerkPDF|AppAdopt/.test(mark ?? '')) throw new Error(`${domain}: the header says ${JSON.stringify(mark)}, not the product's name`)
   await p.waitForTimeout(1500)
   await p.addStyleTag({ content: `
     .kl-form, .kl-nav, .kl-skip, .kl-band, .kl-foot, .kl-trust, .kl-vis-tabs, .kl-vis figcaption, .kl-door .go { display: none !important; }
