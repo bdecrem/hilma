@@ -98,7 +98,7 @@ final class AudioEngine {
             var band = song.band
             band.instruments["monitor"] = p.monitor
             var levels = band.levels ?? [:]
-            levels["monitor"] = levels[p.channel] ?? 0
+            levels["monitor"] = p.level ?? levels[p.channel] ?? 0
             band.levels = levels
             // Your keys pump with the kick the way the record's part does.
             if var duck = band.duck, let depth = duck.channels[p.channel] {

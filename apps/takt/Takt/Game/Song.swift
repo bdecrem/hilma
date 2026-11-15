@@ -36,6 +36,10 @@ struct Song {
         /// The band channel it replaces: "keys" or "horns".
         let channel: String
         let notes: [Note]
+        /// Your keys' level on this part in dB, in place of the record's channel level: for a
+        /// part whose record voice is a haze under the mix (Gegenlicht's pad, 2026-11-14: −36 dB
+        /// alone against a −20.5 dB mix, Bart heard nothing of his chords).
+        var level: Double? = nil
     }
 
     struct Section: Decodable, Equatable {

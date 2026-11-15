@@ -272,10 +272,15 @@ s.fingered(melody)
 
 # MARK: Chords part: the pad, a hit a bar
 
-FINGERS = {2: (1, 3), 3: (1, 3, 5)}
+# The left hand, as every other song's chords (Bart, 2026-11-14: "chords should be mostly left
+# hand ... 5 - 1"): the pinky on the low note, the thumb on the top; the three-note shapes span
+# a ninth or a tenth, so the index takes the middle.
+FINGERS = {2: (5, 1), 3: (5, 2, 1)}
 ROLES = {(57, 64): ("root", "fifth"), (57, 64, 71): ("root", "fifth", "ninth"), (57, 65, 72): ("third", "root", "fifth"),
          (55, 62, 69): ("root", "fifth", "ninth")}
-chords = s.part("chords", "The pad", "rackPad", "keys", "rackPad")
+# Your keys 12 dB over the record's pad (Bart, 2026-11-14: "not hearing my chords play at all"):
+# the pad is a haze in the record, A3 E4 held alone measured -36 dB against a -20.5 dB mix.
+chords = s.part("chords", "The pad", "rackPad", "keys", "rackPad", level=12.0)
 for bar in range(BARS):
     notes = pad_notes(bar)
     # The bar the chord arrives on (every four from bar 32, every four before it too) is the

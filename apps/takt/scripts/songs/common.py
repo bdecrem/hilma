@@ -91,10 +91,14 @@ class Song:
 
     # MARK: Parts
 
-    def part(self, key, title, monitor, channel, instrument):
+    def part(self, key, title, monitor, channel, instrument, level=None):
         """A part the player can take: `channel` is the band channel it replaces (keys or
-        horns), `monitor` the instrument their keys play, `instrument` the band's for it."""
+        horns), `monitor` the instrument their keys play, `instrument` the band's for it.
+        `level`: their keys' level in dB in place of the channel's (a record voice too quiet to
+        hear yourself on)."""
         p = {"title": title, "monitor": monitor, "channel": channel, "notes": []}
+        if level is not None:
+            p["level"] = level
         self.parts[key] = p
         self.instruments[channel] = instrument
         return p["notes"]

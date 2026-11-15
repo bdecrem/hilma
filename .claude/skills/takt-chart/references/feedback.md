@@ -226,6 +226,16 @@ LEVELING.md, and this file keeps the pointer.
   (`take-shape.ts`: density, quickest value, keys at once, hand moves) instead of a fixed
   beginner's (IMPROV.md "The same level as the take"). The level's budget stays the ceiling on a
   map level's improv.
+- **2026-11-14, 0.1 (136), Gegenlicht chords Easy**: "the fingering is all wrong ... chords
+  should be mostly left hand, right? so i'm seeing mostly 5 - 1 is what's needed." The hand
+  (fingering). Gegenlicht was the only one of 23 songs whose chords carried right-hand fingers
+  (the thumb on the low note, `FINGERS = {2: (1, 3), 3: (1, 3, 5)}` in
+  `scripts/songs/gegenlicht.py`); now the left hand like the rest, 5 1 on the fifth and 5 2 1 on
+  the ninth and tenth shapes. A chords part's fingers are the song file's own (the Stage fingers
+  only the melody), so a new track's generator must write them pinky-low. Same report: "not
+  hearing my chords play at all": the record's pad is a haze (A3 E4 alone −36 dB against a
+  −20.5 dB mix); a part now takes `level` (dB, `Song.Part.level`) for your keys, Gegenlicht's
+  pad +12 (−24.3 dB alone).
 
 ## How to add a line
 
