@@ -1438,12 +1438,134 @@ const FORREST_ON = {
     forrestKnocks++;
   }
 };
+/* ---------- Lana's door, from the walk (2026-11-14) ----------
+   Lana studies payments, crypto and scams, so her door is papered with stickers that try to talk
+   you into one. Opening Study 49 on the map walks you up to the door first: every sticker has its
+   line, and the door itself still knocks and goes in. Room coordinates, as in makeRoomBg. */
+const LANA_DOOR = 'door49';
+const GLYPH = Object.assign({}, LET, DIG, { $: ['011', '110', '111', '011', '110'], '%': ['101', '001', '010', '100', '101'], '?': ['110', '001', '010', '000', '010'] });
+function glyphs(m, cx, y, s, col) { let x = Math.round(cx - (s.length * 4 - 1) / 2); for (const ch of s) { const d = GLYPH[ch]; if (d) d.forEach((rw, j) => { for (let i = 0; i < 3; i++) if (rw[i] === '1') rect(m, x + i, y + j, 1, 1, col); }); x += 4; } }
+const DOOR_WOOD = '#b8733f', DOOR_WALL = '#8e4f2e', DOOR_INK = '#141414';
+// x, y, w, h; the text is centred under `top` px of art; `peel` lifts the top-right corner
+const STICKERS = [
+  { k: 'moon', x: 130, y: 10, w: 40, h: 21, bg: DOOR_INK, fg: '#ffd93b', lines: ['$LANA', 'TO THE', 'MOON'], tx: -6, walk: 112,
+    art: (m, s) => sprite(m, ['..w..', '.wbw.', '.www.', '.www.', 'rwwwr', 'r.w.r', '.o.o.', 'o...o'], { w: '#fff7e6', b: '#2b3fff', r: '#ff5a1f', o: '#ffd93b' }, s.x + s.w - 8, s.y + 6),
+    look: '$LANA. To the moon. The market cap is one sticker.' },
+  { k: 'ponzi', disc: [182, 21, 11], bg: '#d4b46a', ring: '#a8873a', fg: DOOR_INK, lines: ['PONZI', '1920'], ty: 15, walk: 214,
+    look: 'A gold seal. Ponzi, since 1920. A heritage brand.' },
+  { k: 'btc', x: 140, y: 35, w: 37, h: 21, bg: '#ff5a1f', fg: '#fff7e6', lines: ['FREE BTC', 'SEND 1', 'GET 2'], walk: 112,
+    look: 'Send one, get two. The math is very confident.' },
+  { k: 'boss', x: 128, y: 60, w: 35, h: 29, bg: '#7ee0b5', fg: DOOR_INK, lines: ['BE YOUR', 'OWN BOSS'], top: 11, walk: 112,
+    art: (m, s) => { for (let j = 0; j < 9; j++) rect(m, s.x + 17 - j, s.y + 3 + j, j * 2 + 1, 1, j % 3 === 2 ? '#2f6b45' : DOOR_INK); rect(m, s.x + 17, s.y + 3, 1, 1, '#ffd93b'); },
+    look: 'Be your own boss. The drawing is a pyramid. They did not hide it.' },
+  { k: 'won', disc: [176, 66, 11], burst: true, bg: '#ffd93b', fg: '#d6402e', lines: ['YOU', 'WON'], ty: 60, walk: 214,
+    look: 'I won. I did not enter. That is the best way to win.' },
+  { k: 'grant', x: 148, y: 88, w: 43, h: 15, bg: '#fff7e6', fg: '#2b3fff', lines: ['DOUBLE', 'YOUR GRANT'], walk: 214,
+    look: 'Double your grant. First, a small processing fee.' },
+  { k: 'prince', x: 62, y: 10, w: 43, h: 21, bg: '#2b3fff', fg: '#ffd93b', lines: ['A PRINCE', 'NEEDS YOUR', 'HELP'], walk: 84,
+    art: (m, s) => sprite(m, ['g.g.g', 'ggggg', 'grgrg'], { g: '#ffd93b', r: '#d6402e' }, s.x + 19, s.y - 3),
+    look: 'A prince needs my help. Princes rarely need help.' },
+  { k: 'apy', x: 64, y: 36, w: 43, h: 15, bg: '#ff9ccf', fg: DOOR_INK, lines: ['40% APY', 'GUARANTEED'], peel: true, walk: 84,
+    look: 'Forty percent a year, guaranteed. Two words that should never touch.' },
+  { k: 'car', x: 18, y: 62, w: 35, h: 21, bg: '#fff7e6', fg: '#d6402e', lines: ['YOUR CAR', 'WARRANTY', 'EXPIRING'], walk: 112,
+    look: "My car's warranty is expiring. I walked here." },
+  { k: 'qr', x: 60, y: 60, w: 37, h: 33, bg: '#ffffff', fg: DOOR_INK, lines: ['SCAN FOR', 'COFFEE'], top: 18, walk: 112,
+    art: (m, s) => { const r = rng(49), ox = s.x + 11, oy = s.y + 3;
+      for (let j = 0; j < 15; j++) for (let i = 0; i < 15; i++) if (r() < 0.5) rect(m, ox + i, oy + j, 1, 1, DOOR_INK);
+      [[0, 0], [10, 0], [0, 10]].forEach(([a, b]) => { rect(m, ox + a, oy + b, 5, 5, DOOR_INK); rect(m, ox + a + 1, oy + b + 1, 3, 3, '#ffffff'); rect(m, ox + a + 2, oy + b + 2, 1, 1, DOOR_INK); }); },
+    look: 'Scan for free coffee. Eli warned me about the free coffee.' },
+  { k: 'journal', x: 200, y: 26, w: 39, h: 22, bg: '#f0efea', fg: DOOR_INK, lines: ['ACCEPTED', 'IN 48 HRS', '$99'], top: 1, band: '#d6402e', walk: 214,
+    look: 'Accepted in 48 hours, for 99 dollars. Reviewer two would never.' },
+  { k: 'irs', x: 246, y: 8, w: 43, h: 21, bg: '#34446e', fg: '#fff7e6', lines: ['IRS', 'GIFT CARDS', 'ONLY'], walk: 230,
+    look: 'The IRS takes gift cards now. Only gift cards.' },
+  { k: 'wrong', x: 252, y: 34, w: 31, h: 27, bubble: true, bg: '#4a8f5f', fg: '#ffffff', lines: ['WRONG', 'NUMBER?', 'LETS BE', 'FRIENDS'], walk: 230,
+    look: 'A wrong number that wants to be friends. Next it will ask about crypto.' },
+  { k: 'tenure', x: 242, y: 70, w: 43, h: 21, bg: '#ffd93b', fg: '#2b3fff', lines: ['RECRUIT 2', 'FELLOWS', 'GET TENURE'], peel: true, walk: 214,
+    look: 'Recruit two fellows, get tenure. That is roughly how tenure works.' }
+];
+function paintSticker(m, s) {
+  const under = s.x >= 124 && s.x < 196 ? DOOR_WOOD : DOOR_WALL;
+  let cx, ty;
+  if (s.disc) {
+    const [x, y, r] = s.disc;
+    if (s.burst) for (let a = 0; a < 16; a++) { const an = a / 16 * Math.PI * 2; rect(m, Math.round(x + Math.cos(an) * (r + 1)) - 1, Math.round(y + Math.sin(an) * (r + 1)) - 1, 3, 3, s.bg); }
+    disc(m, x + 1, y + 1, r, 'rgba(0,0,0,0.3)'); disc(m, x, y, r, '#ffffff'); disc(m, x, y, r - 1, s.bg);
+    if (s.ring) { disc(m, x, y, r - 2, s.ring); disc(m, x, y, r - 3, s.bg); }
+    cx = x; ty = s.ty;
+  } else {
+    rect(m, s.x + 1, s.y + 1, s.w, s.h, 'rgba(0,0,0,0.3)');
+    rect(m, s.x, s.y, s.w, s.h, '#ffffff'); rect(m, s.x + 1, s.y + 1, s.w - 2, s.h - 2, s.bg);
+    if (s.bubble) { rect(m, s.x, s.y, 1, 1, under); rect(m, s.x + s.w - 1, s.y, 1, 1, under); rect(m, s.x, s.y + s.h - 1, 1, 1, under); rect(m, s.x + s.w - 1, s.y + s.h - 1, 1, 1, under);
+      rect(m, s.x + 4, s.y + s.h, 4, 1, '#ffffff'); rect(m, s.x + 5, s.y + s.h - 1, 2, 1, s.bg); rect(m, s.x + 3, s.y + s.h + 1, 3, 1, '#ffffff'); rect(m, s.x + 2, s.y + s.h + 2, 2, 1, '#ffffff'); }
+    if (s.band) rect(m, s.x + 1, s.y + 1, s.w - 2, 2, s.band);
+    if (s.peel) { const ex = s.x + s.w - 1; for (let j = 0; j < 4; j++) { rect(m, ex - 3 + j, s.y + j, 4 - j, 1, under); rect(m, ex - 4 + j, s.y + j, 1, 1, '#d8d2c4'); }
+      rect(m, ex - 3, s.y + 1, 1, 2, '#d8d2c4'); rect(m, ex - 2, s.y + 2, 1, 1, '#d8d2c4'); rect(m, ex, s.y + 4, 1, 1, 'rgba(0,0,0,0.3)'); }
+    cx = s.x + s.w / 2 + (s.tx || 0) / 2; ty = s.y + 3 + (s.top || 0);
+  }
+  if (s.art) s.art(m, s);
+  s.lines.forEach((l, i) => glyphs(m, cx, ty + i * 6, l, s.fg));
+}
+const lanaDoorFull = (() => {
+  const c = document.createElement('canvas'); c.width = W; c.height = FH;
+  const m = c.getContext('2d'), r = rng(49);
+  // the eave overhead, its rafter ends
+  rect(m, 0, 0, W, OY, '#4a2614'); for (let x = 6; x < W; x += 18) rect(m, x, 0, 4, OY - 2, '#2e170c'); rect(m, 0, OY - 2, W, 2, '#2e170c');
+  m.save(); m.translate(0, OY);
+  // the outside wall: redwood board and batten
+  rect(m, 0, 0, W, 104, DOOR_WALL);
+  for (let x = 4; x < W; x += 12) { rect(m, x, 0, 2, 104, '#74401f'); rect(m, x + 2, 0, 1, 104, '#a8653c'); }
+  // the walk: concrete in slabs, the lawn at the edge
+  rect(m, 0, 104, W, 3, '#6a5a48');
+  rect(m, 0, 107, W, 44, '#cdc4b2'); for (let y = 107; y < 151; y++) for (let k = 0; k < 4; k++) rect(m, Math.floor(r() * W), y, 1, 1, '#bdb3a0');
+  for (let x = 40; x < W; x += 80) rect(m, x, 107, 1, 44, '#a99f8b'); rect(m, 0, 128, W, 1, '#a99f8b');
+  dither(m, 0, 151, W, 2, '#6f9a4a', '#cdc4b2'); rect(m, 0, 153, W, FH - OY - 153, '#6f9a4a');
+  for (let k = 0; k < 40; k++) rect(m, Math.floor(r() * W), 153 + Math.floor(r() * 8), 1, 2, '#5f8a3e');
+  // the door: the same wood door as inside, from this side
+  rect(m, 124, 4, 72, 100, '#3d2112'); rect(m, 127, 7, 66, 97, DOOR_WOOD);
+  rect(m, 132, 12, 56, 38, '#a5653a'); rect(m, 132, 56, 56, 42, '#a5653a'); rect(m, 132, 12, 56, 1, '#c98a55'); rect(m, 132, 56, 56, 1, '#c98a55');
+  disc(m, 189, 60, 1, '#ffd93b');
+  // the doormat
+  rect(m, 132, 105, 56, 15, '#3b3d4a'); rect(m, 133, 106, 54, 13, '#5a4a3a'); glyphs(m, 160, 108, 'INVESTORS', '#d4b46a'); glyphs(m, 160, 114, 'WELCOME', '#d4b46a');
+  // the lamp, the number, a pot of rosemary
+  rect(m, 113, 12, 6, 2, '#2e170c'); rect(m, 112, 14, 8, 10, '#2e170c'); rect(m, 113, 15, 6, 8, '#ffd96a'); rect(m, 113, 15, 2, 8, '#fff3c4');
+  rect(m, 199, 11, 16, 10, '#8a6a2a'); rect(m, 200, 12, 14, 8, '#d4b46a'); glyphs(m, 207, 14, '49', DOOR_INK);
+  rect(m, 294, 90, 18, 14, '#c46a4a'); rect(m, 294, 90, 18, 2, '#d98463'); rect(m, 296, 102, 14, 2, '#9c5236');
+  for (let k = 0; k < 9; k++) rect(m, 296 + k * 2, 76 + (k % 3) * 3, 1, 14 - (k % 3) * 3, k % 2 ? '#4a8f5f' : '#2f6b45');
+  STICKERS.forEach(s => paintSticker(m, s));
+  m.restore();
+  return c;
+})();
+let lanaDoorSeen = false;
+async function toLanaDoor() {
+  await fadeTo(true);
+  S.scene = 'room'; S.room = LANA_DOOR; S.x = 40; S.y = 134; S.face = 1; S.path = []; setSeated(false);
+  await fadeTo(false);
+  await walkTo([{ x: 108, y: 134 }]);
+  if (!lanaDoorSeen) { lanaDoorSeen = true; await say('you', "Lana's door. Every sticker is an offer."); }
+}
+const LANA_DOOR_SPOTS = STICKERS.map(s => ({ name: s.k, r: s.disc ? [s.disc[0] - s.disc[2], s.disc[1] - s.disc[2], s.disc[2] * 2 + 1, s.disc[2] * 2 + 1] : [s.x, s.y, s.w, s.h],
+  walk: { x: s.walk, y: 134 }, def: 'look', on: { look: s.look } })).concat([
+  { name: 'doormat', r: [132, 105, 56, 15], walk: { x: 160, y: 130 }, def: 'look', on: { look: 'INVESTORS WELCOME. The one honest thing out here.' } },
+  { name: 'Study 49 · Lana Swartz', r: [124, 4, 72, 100], walk: { x: 160, y: 132 }, def: 'open', on: {
+    look: "Study 49. Lana's. There is a door under there somewhere.",
+    open: () => mineStudy(S.door) ? enterMine() : enterPerson('lana') } },
+  { name: 'the walk', r: [0, 104, 34, 58], walk: { x: 40, y: 134 }, def: 'open', on: { look: 'The walk back to campus.', open: exitRoom } }
+]);
+const LANA_ON = { closeup: true, look: "Study 49. Lana's. The door is all stickers. From here they look like deals.", open: toLanaDoor };
+function drawLanaDoor(t) {
+  g.drawImage(lanaDoorFull, 0, 0);
+  g.save(); g.translate(0, OY);
+  const fr = S.path.length > 0 ? 1 + Math.floor(t * 7) % 2 : 0;
+  drawYou(S.x, S.y, S.face, fr, S.line && S.line.who === 'you' && (calm || Math.floor(t * 8) % 2 === 0));
+  g.restore();
+}
 const PERSON_AT = {}; Object.keys(PEOPLE).forEach(k => { PERSON_AT[String(PEOPLE[k].n)] = k; });
 function studySpot(n, r, walk) {
   const who = WHO[n] || [], office = /^00/.test(n) || n === '060', word = office ? 'Office' : 'Study';
   const base = { name: word + ' ' + n + (who.length ? ' · ' + who.join(', ') : ''), study: true, n, who, where: word + ' ' + n, r, walk, def: 'open' };
   if (n === '34') return Object.assign(base, { on: ELI_ON });
   if (n === '44') return Object.assign(base, { on: FORREST_ON });
+  if (n === '49') return Object.assign(base, { on: LANA_ON });
   if (PERSON_AT[n]) { const k = PERSON_AT[n], p = PEOPLE[k]; return Object.assign(base, { on: { look: `Study ${n}. ${p.name}'s. The light's on.`, open: () => enterPerson(k) } }); }
   if (n === '16') return Object.assign(base, { on: { look: "Study 16. Bart's. The light's on. Someone's typing in there.", open: knockAndEnter } });
   if (!who.length) return Object.assign(base, { on: { look: `${word} ${n}. Nobody in it this year.`, open: async () => { SFX.rattle(); await say('you', 'Locked. Through the glass: a desk, a chair, a very clean whiteboard.'); } } });
@@ -1557,7 +1679,7 @@ MAP.forEach(h => {
   const on = h.on;
   h.on = Object.assign({}, on, {
     look: () => mineStudy(h) ? say('you', `Study ${h.n}. ${(WHO[h.n] || []).length > 1 ? 'Ours.' : 'Mine.'}`) : perform(on.look),
-    open: () => mineStudy(h) ? enterMine() : perform(on.open)
+    open: () => mineStudy(h) && !on.closeup ? enterMine() : perform(on.open)
   });
 });
 const ELI_AT = (() => { const c = L.w3037.cells.find(c => c.n === '34'); return [L.w3037.outer, c.dy - 10]; })();
@@ -1622,6 +1744,7 @@ const SEMINAR_FIXED = ([
 ]);
 function seminarSpots() { const pr = presenter(); return [{ k: pr.k, name: pr.name, r: [pr.x - 2, 34, 32, 94], walk: { x: 250, y: 134 }, def: 'talk', on: { look: `${pr.name}, presenting. Still on slide two.`, talk: [[pr.k, 'Please. Questions at the end.']] } }].concat(seats().map(a => ({ k: a.k, name: a.name, r: [a.x, 60, 28, 36], walk: { x: a.x + 14, y: 134 }, def: 'talk', on: { look: a.look, talk: () => talkSeat(a) } }))).concat(...HOOKS.seminarSpots.map(f => { try { return f() || []; } catch (e) { console.error('[hook]', e); return []; } })).concat(SEMINAR_FIXED).filter(h => !h.k || (h.k !== me() && !S.sem.gone.has(h.k))); }
 function hotspots() {
+  if (S.scene === 'room' && S.room === LANA_DOOR) return LANA_DOOR_SPOTS;
   const base = S.scene === 'map' ? MAP : S.room === 'seminar' ? seminarSpots() : S.room === 'empty' ? ROOM_EMPTY : PEOPLE[S.room] ? PEOPLE[S.room].spots : ROOM;
   if (S.scene === 'map' && HOOKS.mapSpots.length) return [].concat(...HOOKS.mapSpots.map(f => { try { return f() || []; } catch (e) { console.error('[hook]', e); return []; } }), base);
   if (S.scene !== 'room' || S.room === 'seminar' || S.room === 'empty') return base;
@@ -1819,6 +1942,7 @@ function speakerPos(who) {
   if (who === 'bart') return [190, 54];
   if (who === 'turkey' && S.scene === 'map') { const tk = TURKEYS.reduce((a, b) => Math.hypot(b[0] - S.x, b[1] - S.y) < Math.hypot(a[0] - S.x, a[1] - S.y) ? b : a); return [tk[0] + 6, tk[1] - 2]; }
   if (S.scene === 'room' && S.room === 'seminar') { if (S.sem.at[who]) return S.sem.at[who]; if (who === 'turkey') return [54, 50]; const a = seats().find(q => q.k === who); if (a) return [a.x + 14, 56]; if (who === presenter().k) return [PRES_X + 6, 28]; }
+  if (S.scene === 'room' && S.room === LANA_DOOR && who === 'lana') return [160, 2];
   if (who === 'eli') return ELI_AT;
   if (who === 'forrest') return FORREST_AT;
   if (PEOPLE[who]) return PEOPLE[who].at;
@@ -1980,6 +2104,7 @@ function drawSeminar(t) {
 function drawRoom(t) {
   const B = S.bart;
   if (S.room === 'seminar') { drawSeminar(t); return; }
+  if (S.room === LANA_DOOR) { drawLanaDoor(t); return; }
   if (PEOPLE[S.room]) {
     const k = S.room, p = PEOPLE[k], o = LOOKS[k];
     g.drawImage(p.plan ? roomFullShared[p.plan] : roomFullEmpty, 0, 0);

@@ -243,6 +243,7 @@ q.hooks.roomSpots.push(room => {
 function mine(room) {
   const me = q.me;
   if (!me || !room) return false;
+  if (room !== 'bart' && !(q.PEOPLE && q.PEOPLE[room])) return false; // not a study (Lana's door from outside)
   if (me.role === 'admin') return true;
   const who = typeof q.occupants === 'function' ? q.occupants(room) : [room];
   return Array.isArray(who) && who.includes(me.character);

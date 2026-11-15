@@ -111,6 +111,7 @@ decorate the room whose occupants include their character; an admin, any room.
 ## Checks
 
 - `npx tsx scripts/semibart/room-check-test.ts`: the fence and the ownership rule, no network.
+- `node scripts/semibart/lana-door-shots.mjs <dir>` (serve `public/` on 3471): Lana's door seen from the walk, the one door with a close-up of its own (`LANA_DOOR` in `index.html`, scam stickers, 2026-11-14), then the knock into her study. It is game code, not room code: room code only draws inside a study.
 - `npx tsx scripts/semibart/decorate-try.ts <room> "<request>" <out.js>`: one real request,
   nothing saved (needs `.env.local` in the environment).
 - `node scripts/semibart/room-shots.mjs <dir> <room> <code.js>`: that code in the real game, six
