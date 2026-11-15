@@ -25,7 +25,7 @@ differences because you are unattended:
   reviewed (`kochito-sample.mjs`); text Bart.
 - **What you may not do here:** change code, commit or push (there is no
   build check on this machine; write what is needed in NOW.md for the next
-  terminal session); spend money; write to anyone who has not written to us;
+  terminal session); spend money (the one exception is fixing a customer's document, below); write to anyone who has not written to us;
   add an address to `approved-recipients.txt`; promise a customer anything that
   is not on the pages.
 - **A text to Bart is a touch.** His own texts and voice notes already got an
@@ -38,6 +38,19 @@ differences because you are unattended:
   deletes customer files that are 30 days past delivery (the service page
   promises it) and names any file held too long without a delivery. A file a
   customer mailed is listed by `node scripts/venture/files.mjs`.
+- **Fixing a customer's document is allowed here, and only that:** when a
+  customer (someone who wrote to us or signed up) sent a PDF or a link to one,
+  `node scripts/venture/fix.mjs <url-or-file> customers/<file id or a short name>`
+  fixes it with the pipeline and prints PASS or DOES NOT PASS. The model calls
+  cost about ten cents a page and the script refuses past its daily cap; never
+  raise the cap or the page limit from here. Record the file first
+  (`files.mjs add`, unless it arrived as an attachment and is already listed).
+  Send the fixed file back only if it says PASS and you have read its
+  `transcript.txt` against the pages (headings that are headings, nothing
+  silent, links described); then `files.mjs delivered <id>`. If it does not
+  pass, or the transcript reads wrong, do not send it: tell the customer when
+  they will have it and put it at the top of NOW.md. Do not use it on anything
+  that is not a customer's document.
 - **A customer comes first.** Mail from someone outside, or a sign-up, is
   answered in this run. If they sent a document to fix and it cannot be fixed
   from here, say when they will have it (within one business day of their

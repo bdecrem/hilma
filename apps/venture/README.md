@@ -202,6 +202,13 @@ vault as `SENDGRID_FULL_API_KEY`; day-to-day sending uses the send-only
   service page promises, `purge` deletes what is due (the runner does it on every
   run). A message over about 4 MB never reaches the webhook (the host's limit on a
   request), so large documents have to come as a link.
+- **Fixing one document:** `node scripts/venture/fix.mjs <url-or-file> <folder under private/>`
+  runs the private PDF pipeline on it (installed on the iMac and, since 2026-11-14, on the
+  Mac mini: a uv venv at `private/pdf-proof/.venv`, plus veraPDF, poppler and ocrmypdf from
+  Homebrew) and prints PASS or DOES NOT PASS by the pipeline's own rule. It keeps a daily cap
+  on what the model calls cost (`FIX_CAP_USD`, default 3, shared by all machines through
+  `venture_state`; `fix.mjs --spent`) and a page limit per run. The runner may use it only on
+  a document a customer sent.
 
 ## Voice notes
 
