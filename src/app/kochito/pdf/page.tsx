@@ -242,7 +242,7 @@ export default async function PdfDesk() {
                   {YEARLY.price}
                   <span>per year</span>
                 </p>
-                <p className="kl-plan-terms">Everything one governing body posts, up to {YEARLY.pages} pages a year; larger councils are quoted. A one-year term with no automatic renewal. Billed by invoice; a purchase order is fine.</p>
+                <p className="kl-plan-terms">Every agenda, packet and set of minutes one governing body posts, up to {YEARLY.pages} pages a year; larger councils are quoted. A one-year term with no automatic renewal. Billed by invoice; a purchase order is fine.</p>
               </div>
               <ol className="kl-time kl-watch" aria-label="What happens when you post a document">
                 <li>
