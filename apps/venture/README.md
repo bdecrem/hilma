@@ -200,8 +200,13 @@ vault as `SENDGRID_FULL_API_KEY`; day-to-day sending uses the send-only
   `kochito_files` (`schema/009_kochito_files.sql`): `node scripts/venture/files.mjs`
   lists them, `get <id>` downloads one, `delivered <id>` starts the 30 days the
   service page promises, `purge` deletes what is due (the runner does it on every
-  run). A message over about 4 MB never reaches the webhook (the host's limit on a
-  request), so large documents have to come as a link.
+  run). Since the evening of 2026-11-14 SendGrid posts each message first to a
+  Supabase function (`supabase/functions/kochito-mail-in`, project sms-bot, deployed
+  with `supabase functions deploy kochito-mail-in --no-verify-jwt --use-api`; secrets
+  `KOCHITO_MAIL_TOKEN` and `KOCHITO_MAIL_FORWARD`), because the site's webhook cannot
+  take a request over about 4 MB: the function stores the attachments and passes the
+  rest on to `/api/kochito/mail/in`. Checked with a real 7 MB email and a 26 MB post.
+  To undo, point the three Inbound Parse settings back at the site's webhook.
 - **Fixing one document:** `node scripts/venture/fix.mjs <url-or-file> <folder under private/>`
   runs the private PDF pipeline on it (installed on the iMac and, since 2026-11-14, on the
   Mac mini: a uv venv at `private/pdf-proof/.venv`, plus veraPDF, poppler and ocrmypdf from

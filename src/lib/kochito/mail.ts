@@ -47,7 +47,7 @@ export async function storeInbound(form: FormData): Promise<void> {
   if (error) throw new Error(`kochito mail store failed: ${error.message}`)
   // Attachments are kept (private bucket, a row each in kochito_files: schema 009), so a
   // document a customer mails us is never dropped and its deletion date can be kept.
-  // A message over about 4 MB never arrives here at all: the host refuses the post.
+  // (Only small messages carry their files this far; the first stop takes the rest, below.)
   const files = [...form.entries()].filter((e): e is [string, File] => typeof e[1] !== 'string' && e[1].size > 0)
   for (const [i, [, file]] of files.entries()) {
     const safe = (file.name || `attachment-${i + 1}`).replace(/[^\w.\-]+/g, '_').slice(-120)
