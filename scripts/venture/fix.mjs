@@ -16,6 +16,13 @@
 // would pass the cap is refused, and so is a document over --max-pages (default 60)
 // unless the flag raises it. Exit code 0 = fixed and passes, 1 = fixed but does not
 // pass (the folder says why), 2 = refused or failed to run.
+//
+// A paying customer's documents are counted apart: `--customer <slug>` uses that
+// customer's own cap for the month and page limit per document, read from
+// apps/venture/private/data/customers.json ({ "<slug>": { "name": "...",
+// "monthly_cap_usd": 150, "max_pages": 1200 } }). Only a terminal session adds a
+// customer to that file, when someone has actually ordered; a slug that is not in
+// it is refused, so the unattended runner cannot widen its own limit.
 import { spawnSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
@@ -37,19 +44,32 @@ const PER_PAGE = 0.1
 const today = new Date().toLocaleDateString('en-CA')
 const stop = (m) => { console.error(m); process.exit(2) }
 
+const argv = process.argv.slice(2)
+const customerSlug = argv.includes('--customer') ? argv[argv.indexOf('--customer') + 1] : null
+let customer = null
+if (customerSlug) {
+  const file = join(priv, 'data/customers.json')
+  customer = existsSync(file) ? JSON.parse(readFileSync(file, 'utf8'))[customerSlug] : null
+  if (!customer?.monthly_cap_usd) stop(`"${customerSlug}" is not a customer in apps/venture/private/data/customers.json (a terminal session adds one when someone has ordered)`)
+}
+// the period and the limit that apply: the day's general cap, or this customer's month
+const period = customer ? today.slice(0, 7) : today
+const stateKey = customer ? `fix_spend:${customerSlug}` : 'fix_spend'
+const LIMIT = customer ? Number(customer.monthly_cap_usd) : CAP
+const per = customer ? `this month for ${customer.name ?? customerSlug}` : 'today'
 async function spent() {
-  const s = (await getState(db, 'fix_spend'))?.value
-  return s?.date === today ? s : { date: today, usd: 0, runs: 0 }
+  const s = (await getState(db, stateKey))?.value
+  return s?.date === period ? s : { date: period, usd: 0, runs: 0 }
 }
 
 const args = process.argv.slice(2)
 if (args[0] === '--spent') {
   const s = await spent()
-  console.log(`${s.date}: $${s.usd.toFixed(2)} in ${s.runs} run(s); the cap is $${CAP.toFixed(2)} a day`)
+  console.log(`${s.date}: $${s.usd.toFixed(2)} in ${s.runs} run(s); the cap is $${LIMIT.toFixed(2)} ${customer ? 'a month for this customer' : 'a day'}`)
   process.exit(0)
 }
 const opt = (k, d) => (args.includes(k) ? args[args.indexOf(k) + 1] : d)
-const [src, folder] = args
+const [src, folder] = args.filter((a, i) => !a.startsWith('--') && !['--org', '--max-pages', '--customer'].includes(args[i - 1]))
 if (!src || !folder || folder.startsWith('--')) stop('usage: fix.mjs <url-or-file> <folder under apps/venture/private/> [--org "…"] [--max-pages N] | --spent')
 const dir = resolve(priv, folder)
 if (!dir.startsWith(priv + '/')) stop(`the folder must be inside ${priv}`)
@@ -73,11 +93,11 @@ else file = resolve(src) // the pipeline runs from its own folder
 const count = spawnSync(py, ['-I', '-c', 'import sys, pikepdf; print(len(pikepdf.open(sys.argv[1]).pages))', file], { encoding: 'utf8' })
 const pages = Number(count.stdout.trim())
 if (!pages) stop(`could not open the PDF: ${count.stderr.trim().split('\n').pop()}`)
-const maxPages = Number(opt('--max-pages', 60))
+const maxPages = Number(opt('--max-pages', customer?.max_pages ?? 60))
 if (pages > maxPages) stop(`${pages} pages is over the limit of ${maxPages} for one run; pass --max-pages ${pages} to allow it (about $${(pages * PER_PAGE).toFixed(2)})`)
 const before = await spent()
 const estimate = pages * PER_PAGE
-if (before.usd + estimate > CAP) stop(`refused: $${before.usd.toFixed(2)} already spent today and this document (${pages} pages, about $${estimate.toFixed(2)}) would pass the cap of $${CAP.toFixed(2)}. Set FIX_CAP_USD higher in a terminal session if that is intended.`)
+if (before.usd + estimate > LIMIT) stop(`refused: $${before.usd.toFixed(2)} already spent ${per} and this document (${pages} pages, about $${estimate.toFixed(2)}) would pass the cap of $${LIMIT.toFixed(2)}. ${customer ? 'Raise monthly_cap_usd in customers.json in a terminal session if that is intended.' : 'Set FIX_CAP_USD higher in a terminal session if that is intended.'}`)
 
 const out = spawnSync(py, ['-I', run, '--url', file, '--dir', dir, '--org', opt('--org', '')], { cwd: join(priv, 'pdf-desk'), encoding: 'utf8', timeout: 50 * 60e3, maxBuffer: 64e6 })
 let r = null
@@ -85,7 +105,7 @@ try { r = JSON.parse(out.stdout.trim().split('\n').pop()) } catch {}
 // count the cost whatever happened: a failed run has usually paid for its pages
 const cost = r?.cost_this_run_usd ?? (out.status === 0 ? 0 : estimate)
 const now = await spent()
-await setState(db, 'fix_spend', { date: today, usd: Math.round((now.usd + cost) * 1e4) / 1e4, runs: now.runs + 1 })
+await setState(db, stateKey, { date: period, usd: Math.round((now.usd + cost) * 1e4) / 1e4, runs: now.runs + 1 })
 if (!r) stop(`the pipeline did not finish: ${(out.stderr || out.stdout).trim().split('\n').slice(-3).join(' | ')}`)
 if (/^https?:\/\//.test(src)) {
   // keep where it came from beside the result
@@ -95,5 +115,5 @@ if (/^https?:\/\//.test(src)) {
 }
 console.log(`${r.after_pass ? 'PASS' : 'DOES NOT PASS'}  ${pages} page(s)  $${cost.toFixed(2)}  ${dir}`)
 console.log(r.verdict ?? r.error ?? '')
-console.log(`today so far: $${(now.usd + cost).toFixed(2)} of $${CAP.toFixed(2)}`)
+console.log(`${per} so far: $${(now.usd + cost).toFixed(2)} of $${LIMIT.toFixed(2)}`)
 process.exit(r.after_pass ? 0 : 1)
