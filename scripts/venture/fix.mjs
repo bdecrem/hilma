@@ -24,6 +24,9 @@
 // document a second time from nothing (into <folder>/_second, at the same cost
 // again) and compares the two transcripts, figure descriptions aside: the direct
 // test of whether the result depends on the day.
+// READY is the pipeline's own verdict: necessary, not sufficient (on its first day two of four
+// READY files were rejected by a reviewer). Nothing goes out before the independent read in
+// apps/venture/runner/REVIEW.md.
 // Exit code 0 = READY (passes, nothing to read, and with --twice both runs agree),
 // 3 = passes but must be read by a terminal session before it goes anywhere,
 // 1 = does not pass (the folder says why), 2 = refused or failed to run.
