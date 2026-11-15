@@ -42,10 +42,11 @@ differences because you are unattended:
   customer (someone who wrote to us or signed up) sent a PDF or a link to one,
   `node scripts/venture/fix.mjs <url-or-file> customers/<file id or a short name> --twice`
   fixes it with the pipeline, twice from nothing, and prints one of three
-  things. **READY**: it passes, the two results agree and nothing is flagged;
-  read its `transcript.txt` against the pages anyway (headings that are
-  headings, nothing silent, links described), then send the fixed file back
-  and run `files.mjs delivered <id>`. **PASSES, READ FIRST** or **DOES NOT
+  things. **READY**: it passes, the two results agree and nothing is flagged.
+  That is not yet permission to send (on November 14 two of four READY files
+  were not ready): give `apps/venture/runner/REVIEW.md` to a fresh agent with
+  the folder, and send the fixed file back, then `files.mjs delivered <id>`,
+  only if that review says READY or READY WITH NOTES. **PASSES, READ FIRST** or **DOES NOT
   PASS**: do not send it; tell the customer when they will have it (within one
   business day of their message) and put it at the top of NOW.md for a
   terminal session, with the lines the script printed. The model calls cost
