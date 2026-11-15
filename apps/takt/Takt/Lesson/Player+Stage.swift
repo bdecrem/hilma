@@ -257,9 +257,9 @@ extension Player {
             if !ProgressStore.readOnly {
                 // Mastered for the first time (`ProgressStore.master`, inside the record): the
                 // result card says so, with the XP.
-                let was = progress.mastered(song: r.song, part: r.part, difficulty: r.difficulty)
+                let was = progress.masteredExactly(song: r.song, part: r.part, difficulty: r.difficulty)
                 lastRun = progress.record(run: r)
-                let now = progress.mastered(song: r.song, part: r.part, difficulty: r.difficulty)
+                let now = progress.masteredExactly(song: r.song, part: r.part, difficulty: r.difficulty)
                 lastMastery = !was && now ? GameEngine.Difficulty(rawValue: r.difficulty).map(Improv.XP.mastery) : nil
             }
             // The plan's song goals score themselves off the same run.

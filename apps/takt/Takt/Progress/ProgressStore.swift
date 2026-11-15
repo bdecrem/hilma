@@ -258,7 +258,20 @@ final class ProgressStore {
         return floor >= GameEngine.Result.floor(of: "A")!
     }
 
+    /// Whether a level shows as mastered (gold), counting down the ladder (Bart, 2026-11-14: "if
+    /// I A the medium, also gold mark the easy etc."): a rung is mastered when it or any harder
+    /// rung of the same song and part is. Only the XP and the "mastered" banner stay per level
+    /// (`masteredExactly`). Adaptive and Solo are off the ladder: they count only for themselves.
     func mastered(song: String, part: String, difficulty: String) -> Bool {
+        let ladder: [GameEngine.Difficulty] = [.beginner, .easy, .easyPlus, .medium, .hard]
+        guard let d = GameEngine.Difficulty(rawValue: difficulty), let i = ladder.firstIndex(of: d) else {
+            return masteredExactly(song: song, part: part, difficulty: difficulty)
+        }
+        return ladder[i...].contains { masteredExactly(song: song, part: part, difficulty: $0.rawValue) }
+    }
+
+    /// The level itself was played for an A or better (its mastery XP is on the record).
+    func masteredExactly(song: String, part: String, difficulty: String) -> Bool {
         let id = Self.masteryID(song: song, part: part, difficulty: difficulty)
         return snapshot.xp.contains { $0.id == id }
     }

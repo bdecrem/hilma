@@ -1092,9 +1092,21 @@ enum LessonCheck {
         let loaded = ProgressStore(url: nil)
         loaded.replace(with: oldCopy)
         check("mastery: an A already on the board masters its level when the copy loads, and merges with the XP",
-              loaded.mastered(song: "song-halsted", part: "melody", difficulty: "hard") && !loaded.mastered(song: "song-halsted", part: "melody", difficulty: "easy")
+              loaded.mastered(song: "song-halsted", part: "melody", difficulty: "hard") && !loaded.masteredExactly(song: "song-halsted", part: "melody", difficulty: "easy")
               && loaded.xp == Improv.XP.mastery(.hard)
               && ProgressStore.xp(AccountStore.merge(loaded.snapshot, ms.snapshot)) == loaded.xp + ms.xp)
+        // Mastery counts down the ladder (2026-11-14): an A on Medium golds Beginner, Easy and
+        // Easy+ too, not Hard, not Adaptive, not the other part; the XP stays Medium's alone.
+        let down = ProgressStore(url: nil)
+        down.record(run: masteryRun("song-slow-burn", "medium", "A"))
+        check("mastery: an A on Medium golds every easier rung, not Hard or Adaptive, and pays Medium only",
+              ["beginner", "easy", "easy+", "medium"].allSatisfy { down.mastered(song: "song-slow-burn", part: "melody", difficulty: $0) }
+              && !down.mastered(song: "song-slow-burn", part: "melody", difficulty: "hard")
+              && !down.mastered(song: "song-slow-burn", part: "melody", difficulty: "adaptive")
+              && !down.mastered(song: "song-slow-burn", part: "chords", difficulty: "easy")
+              && !down.masteredExactly(song: "song-slow-burn", part: "melody", difficulty: "easy")
+              && down.xp == Improv.XP.stage + Improv.XP.mastery(.medium),
+              "xp \(down.xp)")
 
         // The Stage's staff view (Player+Staff): pitches spelled in the key, the clef from the
         // part's range, lengths from the next onset.
