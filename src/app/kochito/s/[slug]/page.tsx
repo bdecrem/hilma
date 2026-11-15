@@ -1,3 +1,4 @@
+import { parseTranscript, pieces } from '@/lib/kochito/transcript'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getSample } from '@/lib/kochito/store'
@@ -14,33 +15,16 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return { title: s ? `${s.org}: ${s.title}, fixed` : 'Not found', robots: { index: false, follow: false } }
 }
 
-// The transcript is dump.py's outline: two spaces of indent per level, then
-// "Tag: text" or "Tag Alt=...". Shown as the list a screen reader walks.
+// The transcript is read by src/lib/kochito/transcript.ts (both of dump.py's formats).
 const NAMES: Record<string, string> = {
   H1: 'Heading 1', H2: 'Heading 2', H3: 'Heading 3', H4: 'Heading 4', P: 'Paragraph', L: 'List', LI: 'Item', LBody: 'Item', Lbl: 'Label',
   Table: 'Table', TR: 'Row', TH: 'Header cell', TD: 'Cell', Figure: 'Image', Link: 'Link', Span: 'Text', Document: 'Document', TOC: 'Contents', TOCI: 'Entry',
 }
-function rows(transcript: string) {
-  const out: { depth: number; tag: string; text: string }[] = []
-  for (const line of transcript.split('\n')) {
-    const m = line.match(/^(\s*)([A-Za-z0-9]+)(?::\s?|\s+)?(.*)$/)
-    if (!m || !m[2]) continue
-    const tag = m[2]
-    let text = m[3] ?? ''
-    if (tag === 'Document' || tag === 'LI' || (tag === 'TR' && !text)) continue
-    const alt = text.match(/^Alt="(.*)"$/)
-    if (alt) text = `“${alt[1]}”`
-    text = text.replace(/\s*\[annot\]\s*$/, '')
-    out.push({ depth: Math.max(0, Math.floor(m[1].length / 2) - 1), tag, text })
-  }
-  return out
-}
-
 export default async function SamplePage({ params }: { params: Promise<{ slug: string }> }) {
   const s = await getSample((await params).slug)
   if (!s) notFound()
-  const lines = rows(s.transcript)
-  const count = (t: string[]) => lines.filter((l) => t.includes(l.tag)).length
+  const tr = parseTranscript(s.transcript)
+  const count = (t: string[]) => tr.rows.filter((l) => l.kind === 'el' && t.includes(l.tag)).length
   const page = `s/${s.slug}`
   const same = s.after.identical !== false
   const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
@@ -49,7 +33,7 @@ export default async function SamplePage({ params }: { params: Promise<{ slug: s
       [count(['L']), 'list', 'lists'],
       [count(['Table']), 'table', 'tables'],
       [count(['Figure']), 'image description', 'image descriptions'],
-      [count(['Link']), 'labeled link', 'labeled links'],
+      [count(['Link']) + tr.rows.reduce((n, l) => n + (l.kind === 'el' ? pieces(l.text).filter((x) => typeof x !== 'string').length : 0), 0), 'labeled link', 'labeled links'],
     ] as [number, string, string][]
   )
     .filter(([n]) => n > 0)
@@ -116,16 +100,50 @@ export default async function SamplePage({ params }: { params: Promise<{ slug: s
               <h2 id="reads">What a screen reader is now given</h2>
               <p>A checker proves the structure exists, not that it is right. This is the whole document, read from the file’s tags in the order a screen reader follows, so you can compare it with the page. It is not a recording of a screen reader. If anything is wrong, tell us and we will correct it.</p>
             </div>
+            {tr.title && (
+              <p className="kl-read-open">
+                <span className="kl-tag">ON OPENING</span> {tr.title}
+                {tr.lang && <span className="kl-read-note"> · language {tr.lang}</span>}
+              </p>
+            )}
             <ol className="kl-read">
-              {lines.map((l, i) => (
-                <li key={i} className={/^H\d$/.test(l.tag) ? 'h' : undefined}>
-                  <span className="kl-tag">{(NAMES[l.tag] ?? l.tag).toUpperCase()}</span>
-                  <span className="kl-read-text" style={{ paddingLeft: Math.min(l.depth, 5) * 16 }}>
-                    {l.text}
-                  </span>
-                </li>
-              ))}
+              {tr.rows.map((l, i) =>
+                l.kind === 'page' ? (
+                  <li key={i} className="pg">
+                    <span className="kl-tag">PAGE {l.n}</span>
+                  </li>
+                ) : (
+                  <li key={i} className={/^H\d$/.test(l.tag) ? 'h' : undefined}>
+                    <span className="kl-tag">{(NAMES[l.tag] ?? l.tag).toUpperCase()}</span>
+                    <span className="kl-read-text" style={{ paddingLeft: Math.min(l.depth, 5) * 16 }} lang={l.lang}>
+                      {pieces(l.text).map((p, k) =>
+                        typeof p === 'string' ? (
+                          p
+                        ) : (
+                          <span key={k}>
+                            <span className="kl-read-link">{p.link}</span>
+                            <span className="kl-read-note"> (link{p.described ? `, described as “${p.described}”` : ''})</span>
+                          </span>
+                        ),
+                      )}
+                      {l.note && <span className="kl-read-note">{l.text ? ' · ' : ''}{l.note}</span>}
+                      {l.lang && <span className="kl-read-note"> · marked as {l.lang}</span>}
+                    </span>
+                  </li>
+                ),
+              )}
             </ol>
+            {tr.silent.length > 0 && (
+              <div className="kl-read-silent">
+                <h3>Not read aloud</h3>
+                <p>Marked as decoration, so a screen reader skips it: running headers and footers, page numbers, ruled lines.</p>
+                <ul>
+                  {tr.silent.map((x, i) => (
+                    <li key={i}>{x}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </section>
 
