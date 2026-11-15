@@ -347,6 +347,7 @@
 .kl-read li.pg { grid-template-columns: 1fr; padding: 18px 0 4px; border-top: 2px solid var(--ink); }
 .kl-read li.pg:first-child { border-top: 0; padding-top: 8px; }
 .kl-read li.pg .kl-tag { color: var(--ink); }
+.kl-read-label { font-weight: 650; }
 .kl-read-link { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
 .kl-read-note { color: var(--muted, #6b7872); font-size: 0.86em; }
 .kl-read-open { max-width: 920px; margin: 0 0 14px; font-size: 16px; }

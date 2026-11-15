@@ -8,7 +8,7 @@
 //     may carry `Lang=xx` or a note in square brackets (`L [list, 3 items]`), links
 //     written inline as `[link: text | described as: description]`, and at the end
 //     "Not read aloud (...)" with one "- item" per line.
-export type Row = { kind: 'page'; n: string } | { kind: 'el'; depth: number; tag: string; text: string; lang?: string; note?: string }
+export type Row = { kind: 'page'; n: string } | { kind: 'el'; depth: number; tag: string; text: string; lang?: string; note?: string; label?: string }
 export type Transcript = { title: string; lang: string; rows: Row[]; silent: string[] }
 
 const TAGS = new Set(['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'P', 'L', 'LI', 'LBody', 'Lbl', 'Table', 'THead', 'TBody', 'TR', 'TH', 'TD', 'Figure', 'Link', 'Span', 'Document', 'Sect', 'Part', 'Art', 'Div', 'TOC', 'TOCI', 'Caption', 'Note', 'Em', 'Strong', 'BlockQuote', 'Quote', 'Form', 'Formula'])
@@ -17,6 +17,7 @@ export function parseTranscript(transcript: string): Transcript {
   const out: Transcript = { title: '', lang: '', rows: [], silent: [] }
   const lines = transcript.split('\n')
   let mode: 'pre' | 'body' | 'silent' = lines.some((l) => /^Title announced/.test(l)) ? 'pre' : 'body'
+  let label: string | undefined
   for (const line of lines) {
     if (mode === 'pre') {
       const t = line.match(/^Title announced[^:]*:\s*(.*)$/)
@@ -53,21 +54,26 @@ export function parseTranscript(transcript: string): Transcript {
     else if (rest.trim()) continue // not an element line
     text = text.replace(/\s*\[annot\]\s*$/, '')
     if (tag === 'Document' || tag === 'LI' || ((tag === 'TR' || tag === 'LBody' || tag === 'THead' || tag === 'TBody') && !text && !note)) continue
-    out.rows.push({ kind: 'el', depth: Math.max(0, Math.floor(m[1].length / 2) - 1), tag, text, lang, note })
+    // a list item's label (its number, letter or bullet) is heard with the item: it goes on the item's row
+    if (tag === 'Lbl') { label = text || undefined; continue }
+    out.rows.push({ kind: 'el', depth: Math.max(0, Math.floor(m[1].length / 2) - 1), tag, text, lang, note, label })
+    label = undefined
   }
   return out
 }
 
-// A line's text, with its links pulled out: plain strings and { link, described }.
-export type Piece = string | { link: string; described?: string }
+// A line's text, with its notes pulled out: plain strings, { link, described } for a link, and
+// { read, why } where what is read aloud replaces what is printed (a corrected reading, or text
+// that is struck through on the page and announced as such).
+export type Piece = string | { link: string; described?: string } | { read: string; why?: string }
 export function pieces(text: string): Piece[] {
   const out: Piece[] = []
-  const re = /\[link: ([^\]|]+?)(?: \| described as: ([^\]]+))?\]/g
+  const re = /\[link: ([^\]|]+?)(?: \| described as: ([^\]]+))?\]|\[(?:([^\];:]+); )?read as: ([^\]]+)\]/g
   let last = 0
   let m: RegExpExecArray | null
   while ((m = re.exec(text))) {
     if (m.index > last) out.push(text.slice(last, m.index))
-    out.push({ link: m[1], described: m[2] })
+    out.push(m[1] !== undefined ? { link: m[1], described: m[2] } : { read: m[4], why: m[3] })
     last = m.index + m[0].length
   }
   if (last < text.length) out.push(text.slice(last))

@@ -33,7 +33,7 @@ export default async function SamplePage({ params }: { params: Promise<{ slug: s
       [count(['L']), 'list', 'lists'],
       [count(['Table']), 'table', 'tables'],
       [count(['Figure']), 'image description', 'image descriptions'],
-      [count(['Link']) + tr.rows.reduce((n, l) => n + (l.kind === 'el' ? pieces(l.text).filter((x) => typeof x !== 'string').length : 0), 0), 'labeled link', 'labeled links'],
+      [count(['Link']) + tr.rows.reduce((n, l) => n + (l.kind === 'el' ? pieces(l.text).filter((x) => typeof x !== 'string' && 'link' in x).length : 0), 0), 'labeled link', 'labeled links'],
     ] as [number, string, string][]
   )
     .filter(([n]) => n > 0)
@@ -116,9 +116,15 @@ export default async function SamplePage({ params }: { params: Promise<{ slug: s
                   <li key={i} className={/^H\d$/.test(l.tag) ? 'h' : undefined}>
                     <span className="kl-tag">{(NAMES[l.tag] ?? l.tag).toUpperCase()}</span>
                     <span className="kl-read-text" style={{ paddingLeft: Math.min(l.depth, 5) * 16 }} lang={l.lang}>
+                      {l.label && <span className="kl-read-label">{l.label} </span>}
                       {pieces(l.text).map((p, k) =>
                         typeof p === 'string' ? (
                           p
+                        ) : 'read' in p ? (
+                          <span key={k}>
+                            {p.read}
+                            <span className="kl-read-note"> ({p.why ?? 'read this way in place of the printed characters'})</span>
+                          </span>
                         ) : (
                           <span key={k}>
                             <span className="kl-read-link">{p.link}</span>
