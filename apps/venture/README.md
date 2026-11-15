@@ -196,6 +196,12 @@ vault as `SENDGRID_FULL_API_KEY`; day-to-day sending uses the send-only
   (`schema/006_kochito_mail.sql`). `mail.mjs inbox` reads what no session has
   read; `mail.mjs --wait` is the watcher; `mail.mjs thread <address>` shows one
   correspondence.
+  Attachments are kept in the private bucket `kochito-files` with a row each in
+  `kochito_files` (`schema/009_kochito_files.sql`): `node scripts/venture/files.mjs`
+  lists them, `get <id>` downloads one, `delivered <id>` starts the 30 days the
+  service page promises, `purge` deletes what is due (the runner does it on every
+  run). A message over about 4 MB never reaches the webhook (the host's limit on a
+  request), so large documents have to come as a link.
 
 ## Voice notes
 

@@ -5,6 +5,7 @@
 import { f2Supabase } from '@/lib/f2/supabase'
 
 const DOMAINS = ['kochitolabs.com', 'clerkpdf.com', 'appadopt.com']
+export const FILES_BUCKET = 'kochito-files'
 
 // "Jane Doe <jane@city.gov>" → { addr: 'jane@city.gov', name: 'Jane Doe' }
 export function parseAddress(raw: string): { addr: string; name: string | null } {
@@ -26,7 +27,8 @@ export async function storeInbound(form: FormData): Promise<void> {
   const to = [...(envelope.to ?? []), ...get('to').split(',').map((t) => parseAddress(t).addr)].map((t) => t.toLowerCase()).find((t) => DOMAINS.some((d) => t.endsWith('@' + d))) ?? parseAddress(get('to')).addr
   if (!from.addr || !to) throw new Error('mail without a sender or a recipient')
   const headers = get('headers')
-  const { error } = await f2Supabase()
+  const db = f2Supabase()
+  const { data: row, error } = await db
     .from('kochito_mail')
     .insert({
       direction: 'in',
@@ -40,5 +42,19 @@ export async function storeInbound(form: FormData): Promise<void> {
       in_reply_to: header(headers, 'In-Reply-To'),
       meta: { envelope, spam_score: get('spam_score') || null, attachments: Number(get('attachments') || 0), spf: get('SPF') || null, dkim: get('dkim') || null },
     })
+    .select('id')
+    .single()
   if (error) throw new Error(`kochito mail store failed: ${error.message}`)
+  // Attachments are kept (private bucket, a row each in kochito_files: schema 009), so a
+  // document a customer mails us is never dropped and its deletion date can be kept.
+  // A message over about 4 MB never arrives here at all: the host refuses the post.
+  const files = [...form.entries()].filter((e): e is [string, File] => typeof e[1] !== 'string' && e[1].size > 0)
+  for (const [i, [, file]] of files.entries()) {
+    const safe = (file.name || `attachment-${i + 1}`).replace(/[^\w.\-]+/g, '_').slice(-120)
+    const path = `mail/${row.id}/${i + 1}-${safe}`
+    const up = await db.storage.from(FILES_BUCKET).upload(path, Buffer.from(await file.arrayBuffer()), { contentType: file.type || 'application/octet-stream', upsert: true })
+    const rec = await db.from('kochito_files').insert({ source: 'mail', mail_id: row.id, from_addr: from.addr, name: file.name || safe, path: up.error ? null : path, bytes: file.size, content_type: file.type || null })
+    // the message itself is stored; a file that could not be kept is logged, and shows in the ledger with no path
+    if (up.error || rec.error) console.error('[kochito/mail] attachment not kept:', file.name, up.error?.message ?? rec.error?.message)
+  }
 }

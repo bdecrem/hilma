@@ -34,6 +34,10 @@ differences because you are unattended:
   stake. At most one text in a run. Never a question that can wait for the
   day's one ask (see NOW.md, "Waiting on Bart"). Log every touch in
   INDEPENDENCE.md.
+- **Every run, keep the deletion promise:** `node scripts/venture/files.mjs purge`
+  deletes customer files that are 30 days past delivery (the service page
+  promises it) and names any file held too long without a delivery. A file a
+  customer mailed is listed by `node scripts/venture/files.mjs`.
 - **A customer comes first.** Mail from someone outside, or a sign-up, is
   answered in this run. If they sent a document to fix and it cannot be fixed
   from here, say when they will have it (within one business day of their
