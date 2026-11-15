@@ -210,7 +210,10 @@ vault as `SENDGRID_FULL_API_KEY`; day-to-day sending uses the send-only
 - **Fixing one document:** `node scripts/venture/fix.mjs <url-or-file> <folder under private/>`
   runs the private PDF pipeline on it (installed on the iMac and, since 2026-11-14, on the
   Mac mini: a uv venv at `private/pdf-proof/.venv`, plus veraPDF, poppler and ocrmypdf from
-  Homebrew) and prints PASS or DOES NOT PASS by the pipeline's own rule. It keeps a daily cap
+  Homebrew) and prints PASS or DOES NOT PASS by the pipeline's own rule. It prints READY only when the result passes and the pipeline
+  flagged nothing to read (`--twice` also fixes it a second time from nothing and compares the
+  two transcripts); PASSES, READ FIRST means a terminal session reads it before it goes anywhere.
+  It keeps a daily cap
   on what the model calls cost (`FIX_CAP_USD`, default 3, shared by all machines through
   `venture_state`; `fix.mjs --spent`) and a page limit per run. The runner may use it only on
   a document a customer sent.

@@ -40,17 +40,21 @@ differences because you are unattended:
   customer mailed is listed by `node scripts/venture/files.mjs`.
 - **Fixing a customer's document is allowed here, and only that:** when a
   customer (someone who wrote to us or signed up) sent a PDF or a link to one,
-  `node scripts/venture/fix.mjs <url-or-file> customers/<file id or a short name>`
-  fixes it with the pipeline and prints PASS or DOES NOT PASS. The model calls
-  cost about ten cents a page and the script refuses past its daily cap; never
-  raise the cap or the page limit from here. Record the file first
+  `node scripts/venture/fix.mjs <url-or-file> customers/<file id or a short name> --twice`
+  fixes it with the pipeline, twice from nothing, and prints one of three
+  things. **READY**: it passes, the two results agree and nothing is flagged;
+  read its `transcript.txt` against the pages anyway (headings that are
+  headings, nothing silent, links described), then send the fixed file back
+  and run `files.mjs delivered <id>`. **PASSES, READ FIRST** or **DOES NOT
+  PASS**: do not send it; tell the customer when they will have it (within one
+  business day of their message) and put it at the top of NOW.md for a
+  terminal session, with the lines the script printed. The model calls cost
+  about ten cents a page (twice that with `--twice`) and the script refuses
+  past its cap; never raise a cap or a page limit from here. For a customer
+  listed in `private/data/customers.json` add `--customer <slug>`, which
+  counts against that customer's own monthly cap. Record the file first
   (`files.mjs add`, unless it arrived as an attachment and is already listed).
-  Send the fixed file back only if it says PASS and you have read its
-  `transcript.txt` against the pages (headings that are headings, nothing
-  silent, links described); then `files.mjs delivered <id>`. If it does not
-  pass, or the transcript reads wrong, do not send it: tell the customer when
-  they will have it and put it at the top of NOW.md. Do not use it on anything
-  that is not a customer's document.
+  Do not use it on anything that is not a customer's document.
 - **A customer comes first.** Mail from someone outside, or a sign-up, is
   answered in this run. If they sent a document to fix and it cannot be fixed
   from here, say when they will have it (within one business day of their

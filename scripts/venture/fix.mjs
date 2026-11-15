@@ -7,15 +7,26 @@
 // may only run `node scripts/venture/*`, can fix a document a customer sent, and
 // so no run, attended or not, can spend without a limit.
 //
-//   node scripts/venture/fix.mjs <url-or-file> <folder under apps/venture/private/> [--org "City of X"] [--max-pages N]
+//   node scripts/venture/fix.mjs <url-or-file> <folder under apps/venture/private/> [--org "City of X"] [--max-pages N] [--twice] [--customer <slug>]
 //   node scripts/venture/fix.mjs --spent           what today's runs cost, on every machine together
 //
 // The cap: FIX_CAP_USD a day (default 3), counted in venture_state key "fix_spend"
 // so the terminal session and the runner share it. Before a run the cost is
 // estimated at 10 cents a page (measured: 5 to 12 cents on agendas); a run that
 // would pass the cap is refused, and so is a document over --max-pages (default 60)
-// unless the flag raises it. Exit code 0 = fixed and passes, 1 = fixed but does not
-// pass (the folder says why), 2 = refused or failed to run.
+// unless the flag raises it.
+//
+// Passing the machine rule is not the same as being right. The pipeline writes a
+// list `to_read` into result.json: places where the result rests on a single model
+// answer or looks odd (a numbered series tagged two ways, a link with no text,
+// readings that replace the page's characters). A document is READY only when it
+// passes and that list holds nothing but figure descriptions. `--twice` fixes the
+// document a second time from nothing (into <folder>/_second, at the same cost
+// again) and compares the two transcripts, figure descriptions aside: the direct
+// test of whether the result depends on the day.
+// Exit code 0 = READY (passes, nothing to read, and with --twice both runs agree),
+// 3 = passes but must be read by a terminal session before it goes anywhere,
+// 1 = does not pass (the folder says why), 2 = refused or failed to run.
 //
 // A paying customer's documents are counted apart: `--customer <slug>` uses that
 // customer's own cap for the month and page limit per document, read from
@@ -99,11 +110,33 @@ const before = await spent()
 const estimate = pages * PER_PAGE
 if (before.usd + estimate > LIMIT) stop(`refused: $${before.usd.toFixed(2)} already spent ${per} and this document (${pages} pages, about $${estimate.toFixed(2)}) would pass the cap of $${LIMIT.toFixed(2)}. ${customer ? 'Raise monthly_cap_usd in customers.json in a terminal session if that is intended.' : 'Set FIX_CAP_USD higher in a terminal session if that is intended.'}`)
 
-const out = spawnSync(py, ['-I', run, '--url', file, '--dir', dir, '--org', opt('--org', '')], { cwd: join(priv, 'pdf-desk'), encoding: 'utf8', timeout: 50 * 60e3, maxBuffer: 64e6 })
-let r = null
-try { r = JSON.parse(out.stdout.trim().split('\n').pop()) } catch {}
+const twice = args.includes('--twice')
+if (twice && before.usd + 2 * estimate > LIMIT) stop(`refused: fixing it twice (about $${(2 * estimate).toFixed(2)}) would pass the cap of $${LIMIT.toFixed(2)}; $${before.usd.toFixed(2)} already spent ${per}`)
+const fixInto = (d) => {
+  const o = spawnSync(py, ['-I', run, '--url', file, '--dir', d, '--org', opt('--org', '')], { cwd: join(priv, 'pdf-desk'), encoding: 'utf8', timeout: 50 * 60e3, maxBuffer: 64e6 })
+  let res = null
+  try { res = JSON.parse(o.stdout.trim().split('\n').pop()) } catch {}
+  return { o, res }
+}
+const { o: out, res: first } = fixInto(dir)
+let r = first
 // count the cost whatever happened: a failed run has usually paid for its pages
-const cost = r?.cost_this_run_usd ?? (out.status === 0 ? 0 : estimate)
+let cost = r?.cost_this_run_usd ?? (out.status === 0 ? 0 : estimate)
+// what the transcript says, without its three header lines and without figure descriptions (a model's wording, new on every run)
+const said = (d) => (existsSync(join(d, 'transcript.txt')) ? readFileSync(join(d, 'transcript.txt'), 'utf8').split('\n').slice(3).filter((l) => !/^\s*Figure Alt=/.test(l)) : null)
+let disagree = null
+if (twice && r?.after_pass) {
+  const second = fixInto(join(dir, '_second'))
+  cost += second.res?.cost_this_run_usd ?? estimate
+  const a = said(dir), b = said(join(dir, '_second'))
+  if (!second.res?.after_pass) disagree = 'the second run does not pass'
+  else if (!a || !b) disagree = 'a transcript is missing'
+  else {
+    const n = Math.max(a.length, b.length), diff = []
+    for (let i = 0; i < n; i++) if (a[i] !== b[i]) diff.push(i)
+    if (diff.length) disagree = `${diff.length} line(s) differ, first at line ${diff[0] + 4}: ${JSON.stringify((a[diff[0]] ?? '').trim().slice(0, 80))} / ${JSON.stringify((b[diff[0]] ?? '').trim().slice(0, 80))}`
+  }
+}
 const now = await spent()
 await setState(db, stateKey, { date: period, usd: Math.round((now.usd + cost) * 1e4) / 1e4, runs: now.runs + 1 })
 if (!r) stop(`the pipeline did not finish: ${(out.stderr || out.stdout).trim().split('\n').slice(-3).join(' | ')}`)
@@ -113,7 +146,15 @@ if (/^https?:\/\//.test(src)) {
   const p = join(dir, 'result.json')
   if (existsSync(p)) writeFileSync(p, JSON.stringify({ ...JSON.parse(readFileSync(p, 'utf8')), url: src }, null, 1))
 }
-console.log(`${r.after_pass ? 'PASS' : 'DOES NOT PASS'}  ${pages} page(s)  $${cost.toFixed(2)}  ${dir}`)
+const resultFile = join(dir, 'result.json')
+const toRead = (existsSync(resultFile) ? JSON.parse(readFileSync(resultFile, 'utf8')).to_read : null) ?? []
+const points = toRead.filter((t) => !/figure description/.test(t))
+if (disagree) points.unshift(`fixed twice, and the two results differ: ${disagree}`)
+const ready = r.after_pass && !points.length
+console.log(`${!r.after_pass ? 'DOES NOT PASS' : ready ? 'READY' : 'PASSES, READ FIRST'}  ${pages} page(s)  $${cost.toFixed(2)}  ${dir}`)
 console.log(r.verdict ?? r.error ?? '')
+if (r.after_pass && twice && !disagree) console.log('fixed twice from nothing: the two transcripts agree (figure descriptions aside)')
+for (const t of points.slice(0, 12)) console.log(`  to read: ${t}`)
+if (points.length > 12) console.log(`  … and ${points.length - 12} more in result.json`)
 console.log(`${per} so far: $${(now.usd + cost).toFixed(2)} of $${LIMIT.toFixed(2)}`)
-process.exit(r.after_pass ? 0 : 1)
+process.exit(!r.after_pass ? 1 : ready ? 0 : 3)
