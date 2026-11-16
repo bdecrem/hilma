@@ -17,6 +17,8 @@ const HERE = path.dirname(fileURLToPath(import.meta.url))
 const WS_CLI = path.join(HERE, '../workspace/ws.mjs')
 // The desk takes 16 connections per workspace; keep a few for ws.mjs's own checks.
 const MAX_SOCKETS = 12
+// "Read by a run" rows a prompt may add (see watch).
+const READS_PER_PROMPT = 200
 
 export function makeWorkspaces({ db, keys, log }) {
   const ready = new Map() // slug -> time it last answered
@@ -90,10 +92,15 @@ export function makeWorkspaces({ db, keys, log }) {
   // While a run may be going, the front desk keeps its own subscription to the workspace's event
   // stream and writes one audit row for each file opencode's `read` tool opens (by keyed name
   // hash). A shell command that reads a file is not seen here: it is recorded as the run itself.
+  //
+  // The stream is the workspace's word, and a hostile agent can answer on opencode's port with
+  // as many forged `read` events as it likes (review of 2026-11-16, H2: 100,000 rows in 5 s, on
+  // the host's shared disk). So: one row per file per watch, and at most READS_PER_PROMPT rows
+  // per prompt a person sent (each new prompt allows that many more).
   function watch(slug, workspaceId) {
     const w = watchers.get(slug)
-    if (w) return (w.until = Date.now() + 15 * 60_000)
-    const state = { until: Date.now() + 15 * 60_000, names: new Map(), seen: new Set(), req: null }
+    if (w) return (w.until = Date.now() + 15 * 60_000), (w.budget = Math.min(w.budget + READS_PER_PROMPT, 4 * READS_PER_PROMPT))
+    const state = { until: Date.now() + 15 * 60_000, names: new Map(), seen: new Set(), budget: READS_PER_PROMPT, req: null }
     watchers.set(slug, state)
     const req = http.request({ socketPath: ws.paths(slug).opencode, agent: agentFor(slug), path: '/api/event', headers: { authorization: authorization(slug)(), accept: 'text/event-stream' } }, (res) => {
       let buf = ''
@@ -133,10 +140,14 @@ export function makeWorkspaces({ db, keys, log }) {
         let p = d.input?.path ?? d.input?.filePath
         if (typeof p !== 'string' || p.length > 1300) return
         if (p.startsWith('/work/')) p = p.slice(6)
-        if (!ws.validRel(p)) return
-        state.seen.add(d.id)
+        if (!ws.validRel(p) || state.budget <= 0) return
+        const ref = nameRef(keys, workspaceId, p)
+        const key = ref.toString('hex')
+        if (state.seen.has(key)) return
+        state.seen.add(key)
+        state.budget--
         const actor = runBy.get(`${slug}:${d.sessionID}`) ?? null
-        audit(db, { actorKind: 'run', actor, action: 'file_read_by_run', workspace: workspaceId, nameRef: nameRef(keys, workspaceId, p) })
+        audit(db, { actorKind: 'run', actor, action: 'file_read_by_run', workspace: workspaceId, nameRef: ref })
       }
     }
   }

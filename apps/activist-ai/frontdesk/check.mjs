@@ -152,6 +152,19 @@ async function api(pathname, { method = 'GET', cookie, csrf, ws, origin = method
   } catch {}
   return { status: r.status, json, text, headers: r.headers }
 }
+/** An open event stream (GET /oc/api/event), collecting what arrives until it ends. */
+function openStream(cookie, ws) {
+  const ctl = new AbortController()
+  const st = { text: '', open: true, status: null, stop: () => ctl.abort() }
+  fetch(`${ORIGIN}/oc/api/event`, { headers: { cookie: `__Host-ola=${cookie}`, 'x-ola-workspace': ws, accept: 'text/event-stream' }, signal: ctl.signal })
+    .then(async (r) => {
+      st.status = r.status
+      for await (const c of r.body) st.text += Buffer.from(c).toString('utf8')
+    })
+    .catch(() => {})
+    .finally(() => (st.open = false))
+  return st
+}
 async function signedIn(p) {
   const c = await cookieOf(p.ctx)
   const me = await api('/api/me', { cookie: c?.value })
@@ -325,6 +338,25 @@ await check('uploads are limited: size, names, and a planted symlink is not foll
   spawnSync('/usr/local/bin/container', ['exec', 'ola-fd-a', 'rm', '-f', '/work/env.txt'])
 })
 
+await check('a workspace that forges "read by a run" events cannot flood the audit log or bury what people did', async () => {
+  // The agent answers on opencode's port: 20,000 forged reads of different files after one prompt.
+  const r = spawnSync(process.execPath, [path.join(HERE, 'test/hostile-events.mjs'), '20000'], { encoding: 'utf8' })
+  const j = JSON.parse(r.stdout.trim().split('\n').pop() || '{}')
+  assert(j.auditRowsWritten > 0 && j.auditRowsWritten <= 200, `forged reads: ${r.stdout.trim() || r.stderr.trim().slice(-200)}`)
+  // And the activity view: 500 run rows (what a flood before the cap left) do not push out people's rows.
+  const db = new DatabaseSync(path.join(env.OLA_FD_DATA, 'platform.db'))
+  db.exec('PRAGMA busy_timeout = 5000')
+  const wsId = db.prepare("SELECT id FROM workspaces WHERE slug = 'fd-a'").get().id
+  const ins = db.prepare("INSERT INTO audit (at, actor_kind, action, workspace_id, name_ref) VALUES (?, 'run', 'file_read_by_run', ?, ?)")
+  for (let i = 0; i < 500; i++) ins.run(Date.now(), wsId, randomBytes(32))
+  const act = await api('/api/activity', { cookie: a.cookie, ws: 'fd-a' })
+  db.prepare("DELETE FROM audit WHERE workspace_id = ? AND actor_kind = 'run' AND actor_person_id IS NULL").run(wsId)
+  db.close()
+  const people = (act.json?.activity ?? []).filter((x) => !x.viaRun).map((x) => x.action)
+  assert(people.includes('file_uploaded') && people.includes('file_deleted'), `the view kept: ${[...new Set(people)].join()}`)
+  return `${j.auditRowsWritten} of ${j.forgedEvents} forged reads written (stall ${j.worstEventLoopStallMs} ms); people's rows kept beside 500 run rows`
+})
+
 // ---------------------------------------------------------------- roles
 await check('a viewer reads but cannot upload, delete or run', async () => {
   const base = { cookie: v.cookie, csrf: v.csrf, ws: 'fd-a' }
@@ -340,6 +372,34 @@ await check('a viewer reads but cannot upload, delete or run', async () => {
   await V.page.waitForSelector('.viewer-note')
   assert(!(await V.page.locator('#askbar-input').isVisible()) && !(await V.page.getByRole('button', { name: 'Add files' }).count()), 'the viewer sees Ask Ola or Add files')
   return `${sampleRoutes.filter(([m]) => m !== 'GET').length + 2} writes refused`
+})
+
+await check('an open event stream ends when its viewer is removed; a member\'s stays open', async () => {
+  const gone = openStream(v.cookie, 'fd-a')
+  const stays = openStream(a.cookie, 'fd-a')
+  await until(() => gone.status === 200 && stays.status === 200, 30_000, 'both streams opening')
+  admin('remove-member', 'team-a', 'vera')
+  const t0 = Date.now()
+  try {
+    await until(() => !gone.open, 10_000, "the removed viewer's stream closing")
+    const ms = Date.now() - t0
+    const mark = `made-up after removal ${Date.now()}`
+    const made = await api('/oc/api/session', { method: 'POST', cookie: a.cookie, csrf: a.csrf, ws: 'fd-a', body: JSON.stringify({ title: mark }), headers: { 'content-type': 'application/json' } })
+    await until(() => stays.text.includes(mark), 10_000, "the member's stream getting the new session")
+    assert(made.status === 200 && stays.open && !gone.text.includes(mark), 'the removed viewer saw a later event')
+    return `closed ${ms} ms after the removal`
+  } finally {
+    gone.stop()
+    stays.stop()
+    admin('add-member', 'team-a', 'vera', 'viewer')
+  }
+})
+await check('the query to opencode cannot pick another folder (?directory=)', async () => {
+  const ids = (r) => (r.json?.data ?? []).map((x) => x.id).join()
+  const plain = await api('/oc/api/session', { cookie: v.cookie, ws: 'fd-a' })
+  const other = await api('/oc/api/session?directory=/opt/ola', { cookie: v.cookie, ws: 'fd-a' })
+  assert(plain.status === 200 && ids(plain) && ids(other) === ids(plain), `plain ${plain.status} [${ids(plain)}], directory=/opt/ola ${other.status} [${ids(other)}]`)
+  return `${plain.json.data.length} session(s), the same list either way`
 })
 
 // ---------------------------------------------------------------- CSRF and other origins
@@ -383,7 +443,10 @@ await check("another site's page cannot act as alice (form post and fetch)", asy
 await check('a stolen cookie works until revoked, then fails', async () => {
   const thief = { cookie: a.cookie, csrf: a.csrf }
   assert((await api('/api/files', { cookie: thief.cookie, ws: 'fd-a' })).status === 200, 'the cookie did not work before revocation')
+  const open = openStream(thief.cookie, 'fd-a')
+  await until(() => open.status === 200, 30_000, "the thief's event stream opening")
   admin('revoke-sessions', 'alice')
+  await until(() => !open.open, 10_000, "the thief's open event stream closing after revocation")
   const after = await Promise.all([api('/api/me', thief), api('/api/files', { ...thief, ws: 'fd-a' }), api('/api/files?name=t.txt', { ...thief, method: 'POST', ws: 'fd-a', body: 'x' }), api('/oc/api/session', { ...thief, ws: 'fd-a' })])
   assert(after.every((r) => r.status === 401), `after: ${after.map((r) => r.status)}`)
   // The open page notices on its next request and goes back to the sign-in screen.
@@ -392,7 +455,7 @@ await check('a stolen cookie works until revoked, then fails', async () => {
   await A.page.getByRole('button', { name: 'Sign in with your passkey' }).waitFor({ timeout: 15_000 })
   await signInWithPasskey(A)
   a = await signedIn(A)
-  return 'refused on 4 routes; alice signed in again'
+  return 'refused on 4 routes and the open stream cut; alice signed in again'
 })
 await check('a session ends at its expiry and after the idle limit', async () => {
   const db = new DatabaseSync(path.join(env.OLA_FD_DATA, 'platform.db'))

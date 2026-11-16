@@ -2,7 +2,7 @@
 // created with, and which file names are accepted. Run: npm test
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { allowed, permissionsFor, rewriteSessionCreate, rewriteSessionUpdate } from '../server/proxy.mjs'
+import { allowed, forwardedQuery, permissionsFor, rewriteSessionCreate, rewriteSessionUpdate } from '../server/proxy.mjs'
 import { safeRelative, validName } from '../server/files.mjs'
 
 test('the door lets through only what the page uses', () => {
@@ -45,4 +45,11 @@ test('file names: plain names only', () => {
   assert.equal(safeRelative('notes/a.md'), 'notes/a.md')
   assert.equal(safeRelative('../etc/passwd'), null)
   assert.equal(safeRelative('.ola/opencode.db'), null)
+})
+
+test('the query to opencode never names a directory or workspace (review 2026-11-16, M5)', () => {
+  assert.equal(forwardedQuery('?directory=/opt/ola&limit=5'), '?limit=5')
+  assert.equal(forwardedQuery('?Directory=/&WORKSPACE=x'), '')
+  assert.equal(forwardedQuery(''), '')
+  assert.equal(forwardedQuery('?w=fd-a'), '?w=fd-a')
 })

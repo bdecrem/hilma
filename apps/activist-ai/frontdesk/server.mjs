@@ -80,6 +80,8 @@ function secure(res, https) {
 }
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.woff2': 'font/woff2', '.svg': 'image/svg+xml', '.png': 'image/png', '.txt': 'text/plain; charset=utf-8', '.ico': 'image/x-icon' }
 
+// How often a request that stays open rechecks its session and membership (see `hold`).
+const RECHECK_MS = Math.max(250, Number(process.env.OLA_FD_RECHECK_MS) || 1000)
 const json = (res, status, body, extra = {}) => res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', ...extra }).end(JSON.stringify(body))
 const NOT_FOUND = { error: 'not_found', message: 'That is not here, or it is not yours to open.' }
 
@@ -164,11 +166,25 @@ export function makeFrontDesk(cfg = config()) {
     const canRun = ws.role === 'owner' || ws.role === 'member'
     const readOnly = { error: 'read_only', message: 'You can read this project, but not change it or ask Ola to work in it. Ask its owner if you need more.' }
 
+    // A request that stays open (the event stream above all, also a download) is checked again
+    // while it runs: removal from the team, sign-out, revocation, suspension, expiry or the idle
+    // limit cuts it within RECHECK_MS. Checked once at the start only, a removed member's or a
+    // thief's open stream kept receiving every event of the workspace (review of 2026-11-16, H1).
+    const hold = () => {
+      const timer = setInterval(() => {
+        if (auth.stillValid(sess) && membership(sess.personId, ws.slug)) return
+        clearInterval(timer)
+        res.destroy()
+      }, RECHECK_MS)
+      res.on('close', () => clearInterval(timer))
+    }
+
     if (p.startsWith('/oc/')) {
       const need = routeNeed(req.method, p.slice(3))
       if (!need) return json(res, 403, { error: 'not_allowed' })
       if (need === 'run' && !canRun) return json(res, 403, readOnly)
       await workspaces.ensureRunning(ws.slug)
+      hold()
       return workspaces.forward(ws.slug, ws.id, sess.personId, req, res, p.slice(3), url.search)
     }
     await workspaces.ensureRunning(ws.slug)
@@ -218,6 +234,7 @@ export function makeFrontDesk(cfg = config()) {
       if (req.method === 'GET') {
         const f = await workspaces.getStream(ws.slug, rel)
         if (!f) return json(res, 404, NOT_FOUND)
+        hold()
         res.writeHead(200, {
           'content-type': 'application/octet-stream',
           'content-length': String(f.size),
@@ -256,12 +273,17 @@ export function makeFrontDesk(cfg = config()) {
       // What happened to this workspace's data, newest first. File names are matched back from
       // the keyed hashes of the files that are still there; a deleted file shows no name.
       const names = new Map((await fileEntries(ws)).map((f) => [nameRef(keys, ws.id, f.path).toString('hex'), f.path]))
-      const rows = db
-        .prepare(
-          `SELECT a.at, a.action, a.actor_kind, p.display_name AS who, a.name_ref, a.sha256, a.size, a.ok FROM audit a LEFT JOIN people p ON p.id = a.actor_person_id
-           WHERE a.workspace_id = ? ORDER BY a.id DESC LIMIT 200`,
-        )
-        .all(ws.id)
+      // "Read by a run" rows are the workspace's own claim (from its event stream), so they get
+      // their own 200: however many a hostile run reports, they cannot push what people did
+      // (uploads, downloads, deletes, runs started) out of the view (review of 2026-11-16, H2).
+      const q = (kind) =>
+        db
+          .prepare(
+            `SELECT a.id, a.at, a.action, a.actor_kind, p.display_name AS who, a.name_ref, a.sha256, a.size, a.ok FROM audit a LEFT JOIN people p ON p.id = a.actor_person_id
+             WHERE a.workspace_id = ? AND (a.actor_kind = 'run') = ? ORDER BY a.id DESC LIMIT 200`,
+          )
+          .all(ws.id, kind ? 1 : 0)
+      const rows = [...q(false), ...q(true)].sort((x, y) => y.id - x.id)
       return json(res, 200, {
         activity: rows.map((r) => ({ at: new Date(r.at).toISOString(), action: r.action, by: r.actor_kind === 'admin' ? 'Bart' : r.who ?? null, viaRun: r.actor_kind === 'run', file: r.name_ref ? names.get(Buffer.from(r.name_ref).toString('hex')) ?? null : null, size: r.size, sha256: r.sha256, ok: !!r.ok })),
       })

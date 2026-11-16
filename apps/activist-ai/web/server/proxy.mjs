@@ -83,6 +83,17 @@ export function rewriteSessionCreate(raw, work) {
   }
 }
 
+// opencode picks its project instance from `?directory=` (and `?workspace=`): a viewer's GET
+// with `?directory=/opt/ola` made it open an instance there (review of 2026-11-16, M5). The
+// folder is decided here, so those never pass; the rest of the query does.
+const NEVER_FORWARDED = ['directory', 'workspace']
+export function forwardedQuery(search) {
+  const q = new URLSearchParams(search ?? '')
+  for (const k of [...q.keys()]) if (NEVER_FORWARDED.includes(k.toLowerCase())) q.delete(k)
+  const s = q.toString()
+  return s ? `?${s}` : ''
+}
+
 const MAX_BODY = 256 * 1024
 // What comes back from opencode is the workspace's word (the agent can replace opencode on its
 // own loopback): its type is forced to JSON or an event stream, and a plain reply is capped.
@@ -136,7 +147,7 @@ export function makeProxy({ target, socketPath, agent, authorization, work, log 
       headers['content-length'] = String(body.length)
     }
     const where = socketPath ? { socketPath, agent } : { host: upstream.hostname, port: upstream.port, agent }
-    const up = http.request({ ...where, method: req.method, path: pathname + search, headers }, (upRes) => {
+    const up = http.request({ ...where, method: req.method, path: pathname + forwardedQuery(search), headers }, (upRes) => {
       const stream = /^text\/event-stream\b/i.test(upRes.headers['content-type'] ?? '')
       const out = { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'content-type': stream ? 'text/event-stream' : 'application/json; charset=utf-8' }
       const declared = Number(upRes.headers['content-length'])

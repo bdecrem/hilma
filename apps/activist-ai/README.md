@@ -350,6 +350,9 @@ invitation from Bart.
 Path=/, no Domain). The database keeps its sha256. Every request checks: not revoked, before
 its absolute expiry (14 days), used within the idle limit (24 hours), person active. Sign-out
 revokes it; `admin.mjs revoke-sessions` and `suspend` end every session of a person at once.
+A request that stays open (the event stream, a download) is checked again every second, so
+removal from the team, sign-out, revocation, suspension, expiry and the idle limit cut it too; an
+open stream does not count as use.
 **CSRF**: a write must carry our exact `Origin` and `X-Ola-CSRF`, an HMAC of the session id the
 page learns from `/api/me`, compared in constant time; a fetch marked cross-site or same-site
 (`Sec-Fetch-Site`) is refused on `/api` and `/oc`. **Rate limits** on `/api/auth/*`: per client
@@ -363,7 +366,8 @@ the same answer as a workspace that does not exist. Viewers read (the project, f
 conversations); owners and members also upload, delete and run. The opencode routes the page
 may use, and whether each needs `read` or `run`, are one list: `ALLOWED` in
 `web/server/proxy.mjs`, used by both the front desk and the dev server. Anything else is 403.
-The proxy talks to the workspace's desk socket with the workspace's opencode password, read
+The query string goes to opencode without `directory` or `workspace` (opencode would open
+another project instance there). The proxy talks to the workspace's desk socket with the workspace's opencode password, read
 from its secrets file (600) per request, never sent to the browser. What comes back is the
 workspace's word (the agent can replace opencode on its own loopback): its type is forced to
 JSON or an event stream, a plain reply is capped at 32 MiB, and every API response carries a
@@ -434,19 +438,26 @@ itself, and opencode's own permission prompts as a boundary.
 install chromium` in `frontdesk/`). It makes three made-up people and two 1 GiB workspaces and
 drives Chromium with a virtual authenticator holding each person's passkey: invite → passkey →
 project; an invitation works once and expires; the cookie's attributes; sign-out and sign-in
-again; bob gets 404 from all 17 workspace routes of alice's workspace by API (and for malformed
+again; an open event stream ends when its viewer is removed (a member's stays open), the
+query cannot pick another folder, and a workspace that forges 20,000 "read by a run" events gets
+200 rows written and cannot push people's rows out of the activity view; bob gets 404 from all 17 workspace routes of alice's workspace by API (and for malformed
 names) and sees "not one of yours" by direct URL; the opencode door refuses routes the page
 does not use; upload, list, download (same bytes) and delete through the page, with the 14-day
 wording in the confirmation, each in the audit log, and no file name or content anywhere in the
 database file; size and name limits and a planted symlink refused; a viewer reads and cannot
 upload, delete or run (every write route); 7 CSRF and cross-site cases refused, and a hostile
-page's form post and fetch do nothing; a stolen cookie fails on every route after revocation
-and the open page goes back to sign-in; expiry and idle limit; the headers and a wrong Host;
+page's form post and fetch do nothing; a stolen cookie fails on every route after revocation,
+its open event stream is cut, and the open page goes back to sign-in; expiry and idle limit; the headers and a wrong Host;
 the working count; one real request in the drawer inside the sealed workspace through the
 gateway (Together as the stand-in; `--no-live` skips it); the sign-in rate limits; and no
 request from any page to another origin.
 
-**Measured 2026-11-16 on the mini:** `frontdesk/check.mjs` **22 of 22** (twice with the live
+**After the outside review (2026-11-16, private notes):** `frontdesk/check.mjs` **25 of 25** on
+the mini with the live request, 24 of 24 with `--no-live`; `web/check.mjs` 21 of 21 on the iMac.
+"Read by a run" now writes one row per file per watch and at most 200 per prompt (the stream is
+the workspace's word), and `/api/activity` gives run rows their own 200.
+
+**Measured 2026-11-16 on the mini, before the review:** `frontdesk/check.mjs` **22 of 22** (twice with the live
 request: GLM-5.3-Flash read `survey.csv` and wrote `summary.md` inside fd-a, 3 gateway requests
 from `ws-fd-a`, one `file_read_by_run` row, the right count of 48), and 21 of 21 with
 `--no-live`; `workspace/check.mjs` 64 of 64 on image 2.3.0-3; `web/check.mjs` 21 of 21 on the
@@ -459,7 +470,11 @@ global bucket is what holds); "read by a run" sees opencode's `read` tool, not a
 that reads a file; an upload cut off mid-way can leave a hidden `.upload-*` temp file in the
 workspace; the activity view in the page (the API exists); a second passkey from inside the app
 (today: a new invitation); the preview origin; the admin web page; a launchd job for the front
-desk; and the outside review.
+desk. Open from the outside review: a connection with an unread body is held after an early
+refusal (requestTimeout 15 min, 512 connections); the global sign-in bucket lets anyone hold off
+every sign-in; `/api/project` runs one `container exec` per `.csv`/`.md` the agent wrote; no cap
+on one person's concurrent uploads and downloads; a download of a FIFO hangs and leaves its exec
+running; an unused invitation stays good after a new one, and adds a passkey to an active account.
 
 ## Rules for this code
 

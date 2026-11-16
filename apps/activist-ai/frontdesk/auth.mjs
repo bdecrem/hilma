@@ -111,6 +111,18 @@ export function makeAuth({ db, keys, origin, rpName = 'Ola', session: { absolute
       return { id, personId: row.person_id, handle: row.handle, name: row.display_name, isAdmin: !!row.is_admin, csrf: createHmac('sha256', keys.csrf).update(id).digest('base64url') }
     },
 
+    /**
+     * Is a session found earlier still good? For a request that stays open (an event stream, a
+     * download): rechecked while it runs, so sign-out, revocation, suspension, expiry and the
+     * idle limit end it too. It does not count as use, so an open stream alone never keeps a
+     * session from going idle.
+     */
+    stillValid(sess) {
+      const row = db.prepare('SELECT s.expires_at, s.last_used_at, s.revoked_at, p.status FROM sessions s JOIN people p ON p.id = s.person_id WHERE s.id = ?').get(sess.id)
+      const now = Date.now()
+      return !!row && row.revoked_at === null && row.expires_at > now && now - row.last_used_at <= idleMs && row.status === 'active'
+    },
+
     csrfOk(sess, req) {
       return !!sess && same(String(req.headers['x-ola-csrf'] ?? ''), sess.csrf)
     },
