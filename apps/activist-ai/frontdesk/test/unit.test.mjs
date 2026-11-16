@@ -7,6 +7,7 @@ import path from 'node:path'
 import { test } from 'node:test'
 import { audit, loadKeys, nameRef, openDb } from '../db.mjs'
 import { Limiter, makeInvite, same } from '../auth.mjs'
+import { signinLimits } from '../server.mjs'
 import { config } from '../server.mjs'
 
 const dir = () => mkdtempSync(path.join(tmpdir(), 'ola-fd-test-'))
@@ -32,9 +33,28 @@ test('an invitation is stored as a hash, never in clear', () => {
   const d = dir()
   const db = openDb(path.join(d, 'fd'))
   db.prepare("INSERT INTO people (handle, display_name, status, webauthn_user_id, created_at) VALUES ('alice', 'A', 'invited', randomblob(32), 0)").run()
-  const raw = makeInvite(db, 1, 1000)
+  const { raw } = makeInvite(db, 1, 1000)
   const row = db.prepare('SELECT token_hash FROM invitations').get()
   assert.ok(raw.length >= 43 && !Buffer.from(row.token_hash).includes(Buffer.from(raw)))
+})
+
+test('a new invitation voids the person\'s earlier unused ones, and only theirs', () => {
+  const db = openDb(path.join(dir(), 'fd'))
+  for (const h of ['alice', 'bob']) db.prepare("INSERT INTO people (handle, display_name, status, webauthn_user_id, created_at) VALUES (?, 'A', 'invited', randomblob(32), 0)").run(h)
+  makeInvite(db, 1, 60_000)
+  makeInvite(db, 2, 60_000)
+  const second = makeInvite(db, 1, 60_000, 'device')
+  assert.equal(second.voided, 1)
+  const open = db.prepare('SELECT person_id, kind FROM invitations WHERE voided_at IS NULL ORDER BY id').all().map((r) => `${r.person_id}:${r.kind}`)
+  assert.deepEqual(open, ['2:first', '1:device'])
+  assert.throws(() => makeInvite(db, 1, 60_000, 'other'))
+})
+
+test('sign-in limits: the global ceiling is at least 30 addresses\' worth', () => {
+  for (const [b, m] of [[10, 10], [40, 40], [1, 1], [1000, 1000]]) {
+    const l = signinLimits(b, m)
+    assert.ok(l.global.perMinute >= 30 * m && l.global.capacity >= 30 * b && l.perCredential.capacity > 0)
+  }
 })
 
 test('name refs are keyed per workspace and stable', () => {

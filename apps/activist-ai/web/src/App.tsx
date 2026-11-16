@@ -26,7 +26,25 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
   window.addEventListener('hashchange', onHash)
   onCleanup(() => window.removeEventListener('hashchange', onHash))
 
-  const [project, { refetch }] = createResource(() => desk.project())
+  // A workspace stopped for idleness is started when its project opens: until it answers, the
+  // front desk says "waking" and the page asks again each second.
+  const [waking, setWaking] = createSignal(false)
+  const [project, { refetch }] = createResource(async () => {
+    for (let tries = 0; ; tries++) {
+      try {
+        const p = await desk.project()
+        setWaking(false)
+        return p
+      } catch (e) {
+        if (!(e instanceof DeskError && e.status === 503 && /waking/.test(e.problem.detail ?? '')) || tries >= 90) {
+          setWaking(false)
+          throw e
+        }
+        setWaking(true)
+        await new Promise((r) => setTimeout(r, 1000))
+      }
+    }
+  })
   const ola = createOla({ live: !STILL })
   onCleanup(() => ola.dispose())
 
@@ -194,7 +212,7 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
               </Show>
             </div>
           </section>
-          <Show when={project()} fallback={<p class="loading">Opening your project…</p>}>
+          <Show when={project()} fallback={<p class="loading" role="status">{waking() ? 'Waking your workspace…' : 'Opening your project…'}</p>}>
             <div class="things" role="list" aria-label="Your things">
               <For each={project()!.things}>
                 {(t) => (

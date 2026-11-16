@@ -3,12 +3,18 @@
 // owns the platform database and the workspaces, on the machine itself.
 //
 //   node admin.mjs add-person <handle> --name "Maria L." [--admin]
-//   node admin.mjs invite <handle> [--hours 72]          prints a single-use link, once
+//   node admin.mjs invite <handle> [--hours 72]          prints a single-use link, once; voids
+//                  the person's earlier unused invitations. Refused for a person who already has
+//                  a passkey, unless:
+//   node admin.mjs invite <handle> --add-device [--hours 24]   one more passkey (another device);
+//                  logged, and the person is told on their next sign-in from another device
+//   node admin.mjs remove-passkey <handle> <passkey id>  (ids in `list`); ends its sessions
+//   node admin.mjs rotate <workspace>                    new opencode password and gateway token
 //   node admin.mjs create-workspace <slug> --name "Spring eviction report" --team <team-slug>
 //                  [--team-name "North District Tenants' Union"] [--owner <handle>]
 //                  [--memory 6g --disk 50g --cpus 4]    calls workspace/ws.mjs create
 //   node admin.mjs add-member <team-slug> <handle> <owner|member|viewer>   (also changes a role)
-//   node admin.mjs remove-member <team-slug> <handle>
+//   node admin.mjs remove-member <team-slug> <handle>   then rotates every workspace of the team
 //   node admin.mjs revoke-sessions <handle>             every session of that person ends now
 //   node admin.mjs suspend <handle>                      no sign-in, sessions revoked
 //   node admin.mjs shown-to-cloud <workspace> --by <handle>   record a cloud agent's look (with the customer's yes)
@@ -36,7 +42,7 @@ const [cmd, ...rest] = argv
 const flags = {}
 const args = []
 for (let i = 0; i < rest.length; i++) {
-  if (['--admin', '--json'].includes(rest[i])) flags[rest[i].slice(2)] = true
+  if (['--admin', '--json', '--add-device'].includes(rest[i])) flags[rest[i].slice(2)] = true
   else if (rest[i].startsWith('--')) flags[rest[i].slice(2)] = rest[++i]
   else args.push(rest[i])
 }
@@ -47,6 +53,13 @@ const person = (handle) => db.prepare('SELECT * FROM people WHERE handle = ?').g
 const team = (slug) => db.prepare('SELECT * FROM teams WHERE slug = ?').get(slug) ?? fail(`no team ${slug}`)
 const workspace = (slug) => db.prepare('SELECT * FROM workspaces WHERE slug = ?').get(slug) ?? fail(`no workspace ${slug}`)
 const admin = (row) => audit(db, { actorKind: 'admin', ...row })
+/** New secrets for one workspace (ws.mjs rotate): the old opencode password and gateway token stop working. */
+function rotate(w) {
+  const r = spawnSync(process.execPath, [path.join(HERE, '../workspace/ws.mjs'), 'rotate', w.slug], { stdio: ['ignore', 'pipe', 'inherit'], env: process.env, encoding: 'utf8' })
+  if (r.status !== 0) fail(`rotating ${w.slug} failed; its old secrets may still work. Run again: node admin.mjs rotate ${w.slug}`)
+  admin({ action: 'secrets_rotated', workspace: w.id })
+  console.log(r.stdout.trim())
+}
 const now = Date.now()
 
 switch (cmd) {
@@ -63,13 +76,35 @@ switch (cmd) {
   case 'invite': {
     const p = person(args[0])
     if (p.status === 'suspended') fail(`${p.handle} is suspended`)
-    const hours = Number(flags.hours ?? 72)
-    if (!(hours > 0 && hours <= 24 * 14)) fail('--hours is more than 0 and at most 336')
-    const raw = makeInvite(db, p.id, hours * 3600_000)
-    admin({ action: 'invited', subject: p.id })
+    const keys = db.prepare('SELECT count(*) AS n FROM passkeys WHERE person_id = ?').get(p.id).n
+    const device = !!flags['add-device']
+    // An invitation for someone who already has a passkey would add a second one without them
+    // seeing anything (review of 2026-11-16, M6): that is a separate, explicit act.
+    if (keys && !device) fail(`${p.handle} already has ${keys} passkey(s). To let them add another device: invite ${p.handle} --add-device`)
+    if (!keys && device) fail(`${p.handle} has no passkey yet; send a first invitation (without --add-device)`)
+    const hours = Number(flags.hours ?? (device ? 24 : 72))
+    const max = device ? 72 : 24 * 14
+    if (!(hours > 0 && hours <= max)) fail(`--hours is more than 0 and at most ${max}`)
+    const { raw, voided } = makeInvite(db, p.id, hours * 3600_000, device ? 'device' : 'first')
+    if (voided) admin({ action: 'invitations_voided', subject: p.id })
+    admin({ action: device ? 'device_invited' : 'invited', subject: p.id })
     // The link is a secret until it is used: send it to the person by a channel you trust.
     console.log(`${cfg.origin}/#/invite/${raw}`)
-    console.error(`single use, expires in ${hours} h. Send it only to ${p.display_name}.`)
+    console.error(`${device ? 'adds a passkey for another device; ' : ''}single use, expires in ${hours} h. Send it only to ${p.display_name}.${voided ? ` ${voided} earlier unused invitation(s) no longer work.` : ''}`)
+    break
+  }
+  case 'remove-passkey': {
+    const p = person(args[0])
+    const id = Number(args[1])
+    const k = db.prepare('SELECT id FROM passkeys WHERE id = ? AND person_id = ?').get(id, p.id) ?? fail(`${p.handle} has no passkey #${args[1]} (see: list)`)
+    db.prepare('UPDATE sessions SET revoked_at = ? WHERE passkey_id = ? AND revoked_at IS NULL').run(now, k.id)
+    db.prepare('DELETE FROM passkeys WHERE id = ?').run(k.id)
+    admin({ action: 'passkey_removed', subject: p.id })
+    console.log(`passkey #${k.id} of ${p.handle} removed; the sessions it opened are ended`)
+    break
+  }
+  case 'rotate': {
+    rotate(workspace(args[0]))
     break
   }
   case 'create-workspace': {
@@ -93,7 +128,7 @@ switch (cmd) {
       db.prepare("INSERT INTO memberships (team_id, person_id, role, added_at) VALUES (?, ?, 'owner', ?) ON CONFLICT (team_id, person_id) DO UPDATE SET role = 'owner'").run(t.id, owner.id, now)
       admin({ action: 'member_added', subject: owner.id, role: 'owner', workspace: Number(w.lastInsertRowid) })
     }
-    console.log(`workspace ${slug} created for team ${t.slug}. Restart the gateway so it learns the new token (ws.mjs wrote ${process.env.OLA_HOME ?? '~/.ola'}/gateway-tokens).`)
+    console.log(`workspace ${slug} created for team ${t.slug}; the gateway picks up its token from ${process.env.OLA_HOME ?? '~/.ola'}/gateway-tokens by itself.`)
     break
   }
   case 'add-member': {
@@ -115,7 +150,12 @@ switch (cmd) {
     if (!r.changes) fail(`${handle} was not in ${teamSlug}`)
     admin({ action: 'member_removed', subject: p.id })
     console.log(`${handle} removed from ${teamSlug}; their next request to its workspaces is refused.`)
-    console.log('Not done automatically yet: rotating the workspaces\' opencode password and gateway token (they may have seen both from inside).')
+    // They may have seen the workspaces' opencode password and gateway token from inside (the
+    // agent can read both). Give the front desk two of its one-second rechecks to cut their open
+    // streams on membership alone, then make new secrets; each workspace restarts if it ran.
+    const list = db.prepare("SELECT * FROM workspaces WHERE team_id = ? AND status = 'active'").all(t.id)
+    if (list.length) Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 2000)
+    for (const w of list) rotate(w)
     break
   }
   case 'revoke-sessions':
@@ -154,7 +194,11 @@ switch (cmd) {
     break
   }
   case 'list': {
-    for (const p of db.prepare('SELECT handle, display_name, status, is_admin, (SELECT count(*) FROM passkeys k WHERE k.person_id = people.id) AS keys FROM people ORDER BY handle').all()) console.log(`person ${p.handle} (${p.display_name}) ${p.status}${p.is_admin ? ' admin' : ''}, ${p.keys} passkey(s)`)
+    for (const p of db.prepare('SELECT id, handle, display_name, status, is_admin FROM people ORDER BY handle').all()) {
+      const keys = db.prepare('SELECT id, created_at, last_used_on, via FROM passkeys WHERE person_id = ? ORDER BY id').all(p.id)
+      const day = (ms) => new Date(ms).toISOString().slice(0, 10)
+      console.log(`person ${p.handle} (${p.display_name}) ${p.status}${p.is_admin ? ' admin' : ''}, ${keys.length} passkey(s)${keys.length ? ': ' + keys.map((k) => `#${k.id} added ${day(k.created_at)}${k.via === 'device' ? ' (another device)' : ''}, last used ${k.last_used_on ?? 'never'}`).join('; ') : ''}`)
+    }
     for (const w of db.prepare('SELECT w.slug, w.name, w.status, t.slug AS team FROM workspaces w JOIN teams t ON t.id = w.team_id ORDER BY w.slug').all()) {
       const members = db.prepare('SELECT p.handle, m.role FROM memberships m JOIN people p ON p.id = m.person_id JOIN teams t ON t.id = m.team_id WHERE t.slug = ?').all(w.team)
       console.log(`workspace ${w.slug} (${w.name}) ${w.status}, team ${w.team}: ${members.map((m) => `${m.handle} ${m.role}`).join(', ') || 'no members'}`)
@@ -162,7 +206,7 @@ switch (cmd) {
     break
   }
   default:
-    console.error('usage: admin.mjs add-person | invite | create-workspace | add-member | remove-member | revoke-sessions | suspend | shown-to-cloud | audit | list  (see the top of this file)')
+    console.error('usage: admin.mjs add-person | invite | remove-passkey | create-workspace | add-member | remove-member | rotate | revoke-sessions | suspend | shown-to-cloud | audit | list  (see the top of this file)')
     process.exit(2)
 }
 db.close()

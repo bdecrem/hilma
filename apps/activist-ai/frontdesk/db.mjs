@@ -14,13 +14,17 @@ import path from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
 
 export const ROLES = ['owner', 'member', 'viewer']
-/** What the audit log may say. A row with any other action is refused by the table itself. */
-export const ACTIONS = [
-  // people and access
+// The audit log's words in the first schema (migration 1 is frozen; migration 2 widens the list).
+const ACTIONS_V1 = [
   'person_added', 'invited', 'passkey_registered', 'signed_in', 'sign_in_refused', 'signed_out', 'sessions_revoked', 'person_suspended',
   'workspace_created', 'member_added', 'member_removed', 'role_changed',
-  // a customer's data
   'file_uploaded', 'file_downloaded', 'file_deleted', 'run_started', 'file_read_by_run', 'shown_to_cloud_agent',
+]
+/** What the audit log may say. A row with any other action is refused by the table itself. */
+export const ACTIONS = [
+  ...ACTIONS_V1,
+  // migration 2: invitations and devices, secrets
+  'invitations_voided', 'device_invited', 'device_added', 'passkey_removed', 'secrets_rotated',
 ]
 
 const sqlList = (xs) => xs.map((x) => `'${x}'`).join(', ')
@@ -113,6 +117,32 @@ const MIGRATIONS = [
     at INTEGER NOT NULL,
     actor_kind TEXT NOT NULL CHECK (actor_kind IN ('person', 'admin', 'run', 'system')),
     actor_person_id INTEGER REFERENCES people(id),
+    action TEXT NOT NULL CHECK (action IN (${sqlList(ACTIONS_V1)})),
+    workspace_id INTEGER REFERENCES workspaces(id),
+    subject_person_id INTEGER REFERENCES people(id),
+    name_ref BLOB,
+    sha256 TEXT CHECK (sha256 IS NULL OR length(sha256) = 64),
+    size INTEGER,
+    role TEXT CHECK (role IS NULL OR role IN (${sqlList(ROLES)})),
+    ok INTEGER NOT NULL DEFAULT 1 CHECK (ok IN (0, 1))
+  ) STRICT;
+  CREATE INDEX audit_workspace ON audit(workspace_id, at);
+  `,
+  // 2: invitations of two kinds (a first passkey, or another device for someone who has one), a
+  // new invitation voiding the person's earlier unused ones; which passkey a session came from,
+  // so a person is told on their next sign-in that a device was added; new audit words (the
+  // table is rebuilt: SQLite cannot change a CHECK in place).
+  `
+  ALTER TABLE invitations ADD COLUMN kind TEXT NOT NULL DEFAULT 'first' CHECK (kind IN ('first', 'device'));
+  ALTER TABLE invitations ADD COLUMN voided_at INTEGER;
+  ALTER TABLE passkeys ADD COLUMN via TEXT NOT NULL DEFAULT 'first' CHECK (via IN ('first', 'device'));
+  ALTER TABLE passkeys ADD COLUMN noticed_at INTEGER;
+  ALTER TABLE sessions ADD COLUMN passkey_id INTEGER;
+  CREATE TABLE audit_v2 (
+    id INTEGER PRIMARY KEY,
+    at INTEGER NOT NULL,
+    actor_kind TEXT NOT NULL CHECK (actor_kind IN ('person', 'admin', 'run', 'system')),
+    actor_person_id INTEGER REFERENCES people(id),
     action TEXT NOT NULL CHECK (action IN (${sqlList(ACTIONS)})),
     workspace_id INTEGER REFERENCES workspaces(id),
     subject_person_id INTEGER REFERENCES people(id),
@@ -122,6 +152,9 @@ const MIGRATIONS = [
     role TEXT CHECK (role IS NULL OR role IN (${sqlList(ROLES)})),
     ok INTEGER NOT NULL DEFAULT 1 CHECK (ok IN (0, 1))
   ) STRICT;
+  INSERT INTO audit_v2 SELECT id, at, actor_kind, actor_person_id, action, workspace_id, subject_person_id, name_ref, sha256, size, role, ok FROM audit;
+  DROP TABLE audit;
+  ALTER TABLE audit_v2 RENAME TO audit;
   CREATE INDEX audit_workspace ON audit(workspace_id, at);
   `,
 ]

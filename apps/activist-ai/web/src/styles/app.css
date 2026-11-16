@@ -1810,3 +1810,27 @@ code {
     font-size: 15px;
   }
 }
+
+/* A notice the front desk says the person must read once (a passkey added for another device). */
+.notice-bar {
+  position: fixed;
+  z-index: 50;
+  top: var(--s3);
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(40rem, calc(100vw - 2 * var(--s4)));
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--s3) var(--s4);
+  border-left: 3px solid var(--vermilion);
+  background: var(--room-deep);
+  color: var(--on-room);
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.25);
+}
+.notice-bar p {
+  margin: 0;
+  flex: 1 1 24rem;
+}

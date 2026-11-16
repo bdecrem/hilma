@@ -54,12 +54,29 @@ export function Gate() {
         <SignIn invite={inviteOf()} onSignedIn={signedIn} />
       </Match>
       <Match when={me() && current()}>
+        <Notices notices={me()!.notices} />
         <App me={me()!} role={current()!.role} onSignOut={signOut} />
       </Match>
       <Match when={me()}>
+        <Notices notices={me()!.notices} />
         <Projects me={me()!} unknown={!!workspace()} onSignOut={signOut} />
       </Match>
     </Switch>
+  )
+}
+
+/** What the front desk says the person must hear once (a passkey added for another device). */
+function Notices(props: { notices?: Me['notices'] }) {
+  const [shown, setShown] = createSignal(props.notices ?? [])
+  return (
+    <Show when={shown().length}>
+      <div class="notice-bar" role="alert">
+        <For each={shown()}>{(n) => <p>{n.text}</p>}</For>
+        <button type="button" class="ghost-button" onClick={() => setShown([])}>
+          I have read this
+        </button>
+      </div>
+    </Show>
   )
 }
 

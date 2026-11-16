@@ -6,6 +6,7 @@
 // opencode on its own loopback. Replies are typed and capped by the proxy; file lists are parsed
 // strictly by ws.mjs; no host path is ever built from anything the workspace says.
 import { spawn } from 'node:child_process'
+import { statSync } from 'node:fs'
 import http from 'node:http'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -20,24 +21,54 @@ const MAX_SOCKETS = 12
 // "Read by a run" rows a prompt may add (see watch).
 const READS_PER_PROMPT = 200
 
-export function makeWorkspaces({ db, keys, log }) {
+export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000 }) {
   const ready = new Map() // slug -> time it last answered
   const starting = new Map() // slug -> Promise
+  const stopping = new Map() // slug -> Promise
   const agents = new Map()
   const proxies = new Map()
   const watchers = new Map()
   const runBy = new Map() // `${slug}:${sessionID}` -> person id of the last prompt
+  const lastUse = new Map() // slug -> time of the last request a person made to it
+  const busy = new Map() // slug -> transfers in flight (an upload or download keeps it awake)
+  const asleep = new Set() // stopped for idleness here; its event stream does not wake it
+  const secretsSeen = new Map() // slug -> the secrets file's mtime when the connections were made
+
+  const run = (cmd, slug) =>
+    new Promise((resolve, reject) => {
+      const child = spawn(process.execPath, [WS_CLI, cmd, slug], { stdio: ['ignore', 'ignore', 'pipe'], env: process.env })
+      let err = ''
+      child.stderr.on('data', (d) => (err = (err + d).slice(-500)))
+      child.on('close', (code) => (code === 0 ? resolve() : reject(Object.assign(new Error(err.trim() || `ws ${cmd} exited ${code}`), { code: 'START_FAILED' }))))
+    })
+
+  // After `ws.mjs rotate` (a member removed) the password changed and the container was made
+  // again: drop the pooled connections and the watcher made with the old one.
+  function fresh(slug) {
+    let m = 0
+    try {
+      m = statSync(ws.paths(slug).secrets).mtimeMs
+    } catch {}
+    if (secretsSeen.has(slug) && secretsSeen.get(slug) !== m) reset(slug)
+    secretsSeen.set(slug, m)
+  }
+  function reset(slug) {
+    ready.delete(slug)
+    watchers.get(slug)?.req?.destroy()
+    agents.get(slug)?.destroy()
+    agents.delete(slug)
+    proxies.delete(slug)
+  }
 
   /** Starts the workspace if it is not running (ws.mjs start is idempotent), at most once at a time. */
   async function ensureRunning(slug) {
+    fresh(slug)
+    lastUse.set(slug, Date.now())
+    asleep.delete(slug)
     if (Date.now() - (ready.get(slug) ?? 0) < 30_000) return
+    if (stopping.has(slug)) await stopping.get(slug).catch(() => {})
     if (!starting.has(slug)) {
-      const p = new Promise((resolve, reject) => {
-        const child = spawn(process.execPath, [WS_CLI, 'start', slug], { stdio: ['ignore', 'ignore', 'pipe'], env: process.env })
-        let err = ''
-        child.stderr.on('data', (d) => (err = (err + d).slice(-500)))
-        child.on('close', (code) => (code === 0 ? resolve() : reject(Object.assign(new Error(err.trim() || `ws start exited ${code}`), { code: 'START_FAILED' }))))
-      })
+      const p = run('start', slug)
         .then(() => ready.set(slug, Date.now()))
         .finally(() => starting.delete(slug))
       starting.set(slug, p)
@@ -45,6 +76,45 @@ export function makeWorkspaces({ db, keys, log }) {
     return starting.get(slug)
   }
   const forget = (slug) => ready.delete(slug)
+  const isReady = (slug) => Date.now() - (ready.get(slug) ?? 0) < 30_000
+  const isAsleep = (slug) => asleep.has(slug)
+  /** An upload or download under way: the workspace is not stopped for idleness meanwhile. */
+  function holdBusy(slug) {
+    busy.set(slug, (busy.get(slug) ?? 0) + 1)
+    let done = false
+    return () => {
+      if (done) return
+      done = true
+      busy.set(slug, busy.get(slug) - 1)
+      lastUse.set(slug, Date.now())
+    }
+  }
+
+  // -------------------------------------------------------------- idle stop
+  //
+  // A workspace no one has made a request to for idleStopMs (OLA_FD_IDLE_STOP_MIN, 30 minutes),
+  // with no transfer under way and no prompt in the last 15 minutes (the read-by-run watch), is
+  // stopped: an idle VM keeps the memory it once used (Apple's documented limit). An open event
+  // stream is not use: a tab left open all night does not hold a VM. Opening the project starts
+  // it again (the page says "Waking your workspace…"). Its event stream alone does not wake it.
+  function sweep() {
+    const now = Date.now()
+    for (const [slug, at] of lastUse) {
+      if (now - at < idleStopMs || (busy.get(slug) ?? 0) > 0 || watchers.has(slug) || starting.has(slug) || stopping.has(slug) || asleep.has(slug)) continue
+      asleep.add(slug)
+      reset(slug)
+      const p = run('stop', slug)
+        .then(() => log(`${slug}: stopped after ${Math.round((now - at) / 60_000)} min idle`))
+        .catch((e) => (asleep.delete(slug), log(`${slug}: idle stop failed (${e.code ?? 'error'})`)))
+        .finally(() => stopping.delete(slug))
+      stopping.set(slug, p)
+    }
+  }
+  // Every workspace the platform knows counts as just used when the front desk starts, so one left
+  // running across a restart is stopped after the same idle time.
+  for (const w of db.prepare("SELECT slug FROM workspaces WHERE status = 'active'").all()) lastUse.set(w.slug, Date.now())
+  const sweeper = idleStopMs > 0 ? setInterval(sweep, Math.max(1000, Math.min(60_000, idleStopMs / 4))) : null
+  sweeper?.unref()
 
   function agentFor(slug) {
     if (!agents.has(slug)) agents.set(slug, new http.Agent({ keepAlive: true, maxSockets: MAX_SOCKETS, maxFreeSockets: 2, timeout: 120_000 }))
@@ -79,6 +149,7 @@ export function makeWorkspaces({ db, keys, log }) {
 
   /** Forwards one page request to the workspace's opencode; records who started a run. */
   async function forward(slug, workspaceId, personId, req, res, pathname, search) {
+    fresh(slug)
     const m = /^\/api\/session\/([A-Za-z0-9_-]{1,80})\/prompt$/.exec(pathname)
     if (req.method === 'POST' && m) {
       runBy.set(`${slug}:${m[1]}`, personId)
@@ -155,13 +226,20 @@ export function makeWorkspaces({ db, keys, log }) {
   return {
     ensureRunning,
     forget,
+    isReady,
+    isAsleep,
+    holdBusy,
+    touch: (slug) => lastUse.set(slug, Date.now()),
+    sweep,
     forward,
     putStream: ws.putStream,
     getStream: ws.getStream,
     removeFile: ws.removeFile,
     filesAsync: ws.filesAsync,
+    peek: ws.peek,
     validRel: ws.validRel,
     close() {
+      if (sweeper) clearInterval(sweeper)
       for (const w of watchers.values()) w.req?.destroy()
       for (const a of agents.values()) a.destroy()
     },

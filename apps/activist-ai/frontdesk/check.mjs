@@ -13,12 +13,14 @@ import { spawn, spawnSync } from 'node:child_process'
 import { createHash, randomBytes } from 'node:crypto'
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import http from 'node:http'
+import net from 'node:net'
 import { homedir, tmpdir } from 'node:os'
 import path from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
 import { fileURLToPath } from 'node:url'
 import { chromium } from 'playwright'
 import { ALLOWED } from '../web/server/proxy.mjs'
+import { SoftAuthn } from './review/softauthn.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const AI = path.join(HERE, '..')
@@ -41,6 +43,7 @@ const env = {
   OLA_FD_SIGNIN_BURST: '40',
   OLA_FD_SIGNIN_PER_MIN: '40',
   OLA_FD_MAX_UPLOAD_MB: '2',
+  OLA_FD_WORKING_WINDOW_S: '4', // "people working" changes once per window; 4 s so the check can watch it
 }
 const node = (script, argv, opts = {}) => spawnSync(process.execPath, [path.join(AI, script), ...argv], { env, encoding: 'utf8', ...opts })
 const admin = (...a) => {
@@ -48,6 +51,41 @@ const admin = (...a) => {
   if (r.status !== 0) throw new Error(`admin ${a[0]}: ${r.stderr.trim().split('\n').pop()}`)
   return r.stdout.trim()
 }
+const adminAsync = (...a) =>
+  new Promise((resolve) => {
+    const c = spawn(process.execPath, [path.join(AI, 'frontdesk/admin.mjs'), ...a], { env, stdio: ['ignore', 'pipe', 'pipe'] })
+    let out = ''
+    let err = ''
+    c.stdout.on('data', (d) => (out += d))
+    c.stderr.on('data', (d) => (err += d))
+    c.on('close', (code) => resolve({ code, out, err }))
+  })
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+const CTR = '/usr/local/bin/container'
+const secretsOf = (id) => Object.fromEntries(readFileSync(path.join(env.OLA_HOME, 'ws', id, 'secrets.env'), 'utf8').trim().split('\n').map((l) => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1)]))
+// From inside a workspace, through its door: the gateway's answer to a token (given on stdin).
+const PROBE = 'import sys, urllib.request\nreq = urllib.request.Request("http://127.0.0.1:4180/v1/models", headers={"Authorization": "Bearer " + sys.stdin.read().strip()})\ntry:\n    print(urllib.request.urlopen(req, timeout=10).status)\nexcept urllib.error.HTTPError as e:\n    print(e.code)\nexcept Exception:\n    print("error")\n'
+const insideToken = (id, token) => spawnSync(CTR, ['exec', '-i', `ola-${id}`, 'python3', '-I', '-c', PROBE], { input: token, encoding: 'utf8' }).stdout.trim()
+// opencode's answer through the workspace's desk socket to a password.
+const deskStatus = (id, password) =>
+  new Promise((resolve) => {
+    const r = http.request({ socketPath: path.join(env.OLA_HOME, 'ws', id, 'opencode.sock'), path: '/api/info', headers: { authorization: `Basic ${Buffer.from(`opencode:${password}`).toString('base64')}` }, timeout: 10_000 }, (res) => (res.resume(), resolve(res.statusCode)))
+    r.on('error', () => resolve(0))
+    r.on('timeout', () => (r.destroy(), resolve(0)))
+    r.end()
+  })
+// Raw bytes to the front desk: how it answers and when it closes the connection.
+const raw = (text, { port = PORT, pre = '' } = {}) =>
+  new Promise((resolve) => {
+    const t0 = Date.now()
+    const sock = net.connect(port, '127.0.0.1')
+    let got = ''
+    sock.on('data', (d) => (got += d))
+    sock.on('close', () => resolve({ ms: Date.now() - t0, got: got.split('\r\n')[0] }))
+    sock.on('error', () => {})
+    sock.write(pre + text)
+    setTimeout(() => sock.destroy(), 30_000)
+  })
 const sha = (b) => createHash('sha256').update(b).digest('hex')
 const results = []
 const ok = (name, pass, detail = '') => {
@@ -108,18 +146,19 @@ admin('add-person', 'vera', '--name', 'Vera V.')
 admin('create-workspace', 'fd-a', '--name', 'Made-up eviction report', '--team', 'team-a', '--team-name', 'Made-up Tenants’ Union', '--owner', 'alice', '--memory', '1g', '--disk', '1g', '--cpus', '1')
 admin('create-workspace', 'fd-b', '--name', 'Made-up wage survey', '--team', 'team-b', '--team-name', 'Made-up Workers’ Center', '--owner', 'bob', '--memory', '1g', '--disk', '1g', '--cpus', '1')
 admin('add-member', 'team-a', 'vera', 'viewer')
-const tokens = readFileSync(path.join(env.OLA_HOME, 'gateway-tokens'), 'utf8').trim().slice('GATEWAY_TOKENS='.length)
 const gateway = start('gateway', 'gateway/server.mjs', {
   HOME: homedir(),
   UPSTREAM_BASE_URL: 'https://api.together.xyz/v1',
   UPSTREAM_API_KEY: together(),
-  GATEWAY_TOKENS: tokens,
+  // The tokens file ws.mjs keeps (reloaded when it changes) and the workspaces' door sockets.
+  GATEWAY_TOKENS_FILE: path.join(env.OLA_HOME, 'gateway-tokens'),
+  GATEWAY_DOOR_DIR: path.join(env.OLA_HOME, 'gw'),
   GATEWAY_MODELS: 'general=zai-org/GLM-5.3-Flash',
   GATEWAY_PORT: String(GW_PORT),
   GATEWAY_DB: path.join(run, 'usage.db'),
 })
 await until(() => gateway.log.includes('"event":"start"'), 10_000, 'the gateway start')
-const fd = start('frontdesk', 'frontdesk/server.mjs')
+let fd = start('frontdesk', 'frontdesk/server.mjs')
 await until(async () => (await fetch(`${ORIGIN}/api/health`)).ok, 10_000, 'the front desk start')
 // The invitations, printed once by the admin CLI.
 const invites = { alice: admin('invite', 'alice'), bob: admin('invite', 'bob'), vera: admin('invite', 'vera') }
@@ -221,7 +260,8 @@ await check('an invitation works once', async () => {
   assert(rows.length === 3, `${rows.length} passkeys registered`)
 })
 await check('an expired invitation is refused', async () => {
-  const link = admin('invite', 'bob', '--hours', '0.0003') // about a second
+  admin('add-person', 'evan', '--name', 'Evan E.')
+  const link = admin('invite', 'evan', '--hours', '0.0003') // about a second
   await new Promise((r) => setTimeout(r, 1600))
   const r = await api('/api/auth/register/options', { method: 'POST', body: JSON.stringify({ invite: link.split('/').pop() }), headers: { 'content-type': 'application/json' } })
   assert(r.status === 404, `answered ${r.status}`)
@@ -247,6 +287,37 @@ await check('sign out, then sign in again with the passkey', async () => {
   await signInWithPasskey(A)
   a = await signedIn(A)
   assert(a.me.status === 200 && a.cookie !== before, 'no new session')
+})
+
+await check('invitations: a new one voids the older; a person with a passkey gets one only by --add-device, and is told once', async () => {
+  const ro = (t) => api('/api/auth/register/options', { method: 'POST', body: JSON.stringify({ invite: t }), headers: { 'content-type': 'application/json' } })
+  admin('add-person', 'dora', '--name', 'Dora D.')
+  const older = admin('invite', 'dora').split('/').pop()
+  const newer = admin('invite', 'dora').split('/').pop()
+  const [r1, r2] = [await ro(older), await ro(newer)]
+  assert(r1.status === 404 && r2.status === 200, `older ${r1.status}, newer ${r2.status}`)
+  const plain = node('frontdesk/admin.mjs', ['invite', 'alice'])
+  assert(plain.status !== 0 && /--add-device/.test(plain.stderr), 'an ordinary invitation was made for alice, who has a passkey')
+  const link = admin('invite', 'alice', '--add-device')
+  const device = new SoftAuthn({ rpId: 'localhost', origin: ORIGIN })
+  const o = await ro(link.split('/').pop())
+  const reg = await fetch(`${ORIGIN}/api/auth/register/verify`, { method: 'POST', headers: { origin: ORIGIN, 'content-type': 'application/json' }, body: JSON.stringify({ ceremony: o.json.ceremony, response: device.create(o.json.options) }) })
+  assert(reg.status === 200, `the new device registered: ${reg.status}`)
+  const devCookie = /__Host-ola=([^;]+)/.exec(reg.headers.get('set-cookie') ?? '')?.[1]
+  assert(!(await api('/api/me', { cookie: devCookie })).json.notices?.length, 'the new device is told about itself instead of the person')
+  // Alice's own browser hears of it on its next load, once. (about:blank first: a goto to the
+  // address the page is already on is only a hash change, not a load.)
+  await A.page.goto('about:blank')
+  await A.page.goto(`${ORIGIN}/?w=fd-a#/`)
+  await A.page.waitForSelector('.notice-bar', { timeout: 15_000 })
+  const text = await A.page.locator('.notice-bar p').first().innerText()
+  await A.page.getByRole('button', { name: 'I have read this' }).click()
+  assert(!(await api('/api/me', { cookie: a.cookie })).json.notices?.length, 'told twice')
+  const rows = JSON.parse(admin('audit', '--limit', '500', '--json')).map((x) => x.action)
+  assert(['invitations_voided', 'device_invited', 'device_added'].every((x) => rows.includes(x)), 'audit rows missing')
+  const listed = admin('list').split('\n').find((l) => l.startsWith('person alice '))
+  assert(/2 passkey\(s\)/.test(listed) && listed.includes('another device'), listed)
+  return `older invitation 404, plain invite for alice refused; notice: "${text.slice(0, 70)}…"`
 })
 
 // ---------------------------------------------------------------- authorization
@@ -338,6 +409,69 @@ await check('uploads are limited: size, names, and a planted symlink is not foll
   spawnSync('/usr/local/bin/container', ['exec', 'ola-fd-a', 'rm', '-f', '/work/env.txt'])
 })
 
+await check('a refused request with an unread body is closed at once; slow headers and a trickled sign-in body are cut', async () => {
+  const [body, heads, trickle] = await Promise.all([
+    raw(`POST /api/files?name=x HTTP/1.1\r\nHost: localhost:${PORT}\r\nOrigin: ${ORIGIN}\r\nContent-Length: 100000000\r\n\r\nab`),
+    raw(`GET /api/me HTTP/1.1\r\nHost: local`),
+    raw(`POST /api/auth/login/options HTTP/1.1\r\nHost: localhost:${PORT}\r\nOrigin: ${ORIGIN}\r\nContent-Type: application/json\r\nContent-Length: 100\r\n\r\n{`),
+  ])
+  assert(body.got.startsWith('HTTP/1.1 401') && body.ms < 2000, `unread body: ${body.got} after ${body.ms} ms`)
+  assert(heads.ms < 8000, `slow headers held ${heads.ms} ms`)
+  assert(trickle.ms < 13_000, `a trickled sign-in body held ${trickle.ms} ms`)
+  return `401 then closed after ${body.ms} ms (before: open past 30 s); slow headers cut after ${heads.ms} ms; trickled body after ${trickle.ms} ms`
+})
+await check('the project view reads at most 12 documents, in one exec, and caches them', async () => {
+  // The agent writes 200 small documents (review: 13.6 s and 200 execs per page load).
+  spawnSync(CTR, ['exec', 'ola-fd-a', 'python3', '-I', '-c', 'for i in range(200):\n    open(f"/work/note-{i:03}.md", "w").write(f"# Made-up note {i}\\n\\nLine {i}.\\n")'])
+  try {
+    let t0 = Date.now()
+    const first = await api('/api/project', { cookie: a.cookie, ws: 'fd-a' })
+    const ms1 = Date.now() - t0
+    t0 = Date.now()
+    const again = await api('/api/project', { cookie: a.cookie, ws: 'fd-a' })
+    const ms2 = Date.now() - t0
+    const notes = (first.json?.things ?? []).filter((t) => String(t.id).startsWith('file:note-'))
+    assert(first.status === 200 && notes.length === 12 && notes.every((t) => /^Made-up note \d+$/.test(t.title)), `${first.status}, ${notes.length} things`)
+    assert(ms1 < 6000 && again.json.things.length === first.json.things.length, `${ms1} ms`)
+    return `200 files: ${notes.length} things in ${ms1} ms, ${ms2} ms again (cached)`
+  } finally {
+    spawnSync(CTR, ['exec', 'ola-fd-a', 'python3', '-I', '-c', 'import glob, os\nfor f in glob.glob("/work/note-*.md"):\n    os.remove(f)'])
+  }
+})
+await check("one person's concurrent uploads are capped at 3; the rest are refused at once, and uploads work again after", async () => {
+  const one = (i) =>
+    new Promise((resolve) => {
+      let done = false
+      const end = (v) => !done && ((done = true), resolve(v))
+      const r = http.request({ host: '127.0.0.1', port: PORT, method: 'POST', path: `/api/files?name=slow-${i}.bin`, headers: { host: `localhost:${PORT}`, origin: ORIGIN, cookie: `__Host-ola=${a.cookie}`, 'x-ola-csrf': a.csrf, 'x-ola-workspace': 'fd-a', 'content-length': String(1024 * 1024) } }, (res) => (res.resume(), end(res.statusCode)))
+      r.on('error', () => end('closed'))
+      r.write(Buffer.alloc(1000))
+      setTimeout(() => (end('held'), r.destroy()), 5000)
+    })
+  const codes = await Promise.all(Array.from({ length: 8 }, (_, i) => one(i)))
+  const held = codes.filter((c) => c === 'held').length
+  const refused = codes.filter((c) => c === 429).length
+  assert(held === 3 && refused === 5, codes.join(' '))
+  await until(async () => (await api('/api/files?name=after-cap.txt', { method: 'POST', cookie: a.cookie, csrf: a.csrf, ws: 'fd-a', body: 'x' })).status === 201, 15_000, 'an upload after the slow ones ended')
+  await api('/api/files/after-cap.txt', { method: 'DELETE', cookie: a.cookie, csrf: a.csrf, ws: 'fd-a' })
+  return `8 at once: ${held} held, ${refused} refused with 429`
+})
+await check('a download of a FIFO the agent made fails at once and leaves no process behind', async () => {
+  spawnSync(CTR, ['exec', 'ola-fd-a', 'mkfifo', '/work/pipe.csv'])
+  try {
+    const t0 = Date.now()
+    const r = await api('/api/files/pipe.csv?w=fd-a', { cookie: a.cookie })
+    const ms = Date.now() - t0
+    await sleep(500)
+    const host = spawnSync('pgrep', ['-f', 'ola-get pipe.csv'], { encoding: 'utf8' }).stdout.trim()
+    const vm = spawnSync(CTR, ['exec', 'ola-fd-a', 'python3', '-I', '-c', 'import os\nn = b"ola" + b"-get"\nprint(sum(1 for p in os.listdir("/proc") if p.isdigit() and n in open(f"/proc/{p}/cmdline", "rb").read()))'], { encoding: 'utf8' }).stdout.trim()
+    assert(r.status === 404 && ms < 3000 && host === '' && vm === '0', `${r.status} after ${ms} ms; host processes [${host}], in the VM ${vm}`)
+    return `404 after ${ms} ms; no ola-get on the host or in the VM`
+  } finally {
+    spawnSync(CTR, ['exec', 'ola-fd-a', 'rm', '-f', '/work/pipe.csv'])
+  }
+})
+
 await check('a workspace that forges "read by a run" events cannot flood the audit log or bury what people did', async () => {
   // The agent answers on opencode's port: 20,000 forged reads of different files after one prompt.
   const r = spawnSync(process.execPath, [path.join(HERE, 'test/hostile-events.mjs'), '20000'], { encoding: 'utf8' })
@@ -374,23 +508,42 @@ await check('a viewer reads but cannot upload, delete or run', async () => {
   return `${sampleRoutes.filter(([m]) => m !== 'GET').length + 2} writes refused`
 })
 
-await check('an open event stream ends when its viewer is removed; a member\'s stays open', async () => {
+await check("removing a member: their open stream is cut by the recheck, then the workspace gets new secrets", async () => {
+  const old = secretsOf('fd-a')
   const gone = openStream(v.cookie, 'fd-a')
   const stays = openStream(a.cookie, 'fd-a')
   await until(() => gone.status === 200 && stays.status === 200, 30_000, 'both streams opening')
-  admin('remove-member', 'team-a', 'vera')
   const t0 = Date.now()
+  const removal = adminAsync('remove-member', 'team-a', 'vera')
   try {
     await until(() => !gone.open, 10_000, "the removed viewer's stream closing")
     const ms = Date.now() - t0
+    // The member's stream was still open when the viewer's was cut: membership did it, not the restart.
+    const memberOpen = stays.open
+    const r = await removal
+    assert(r.code === 0, `remove-member: ${r.err.trim().split('\n').pop()}`)
+    assert(memberOpen, "the member's stream had closed too: the cut came from the restart, not the recheck")
+    const now = secretsOf('fd-a')
+    assert(now.OPENCODE_PASSWORD !== old.OPENCODE_PASSWORD && now.BOX_API_KEY !== old.BOX_API_KEY, 'the secrets did not change')
+    // The gateway (not restarted) picks up the new token from its file; the old one is refused.
+    await until(() => insideToken('fd-a', now.BOX_API_KEY) === '200', 15_000, 'the new token working through the door')
+    const oldToken = insideToken('fd-a', old.BOX_API_KEY)
+    const pw = [await deskStatus('fd-a', old.OPENCODE_PASSWORD), await deskStatus('fd-a', now.OPENCODE_PASSWORD)]
+    assert(oldToken === '401' && pw[0] === 401 && pw[1] === 200, `old token ${oldToken}, old password ${pw[0]}, new password ${pw[1]}`)
+    // Alice carries on through the front desk; the removed viewer's stream saw nothing after.
+    const again = openStream(a.cookie, 'fd-a')
+    await until(() => again.status === 200, 30_000, "alice's stream after the restart")
     const mark = `made-up after removal ${Date.now()}`
     const made = await api('/oc/api/session', { method: 'POST', cookie: a.cookie, csrf: a.csrf, ws: 'fd-a', body: JSON.stringify({ title: mark }), headers: { 'content-type': 'application/json' } })
-    await until(() => stays.text.includes(mark), 10_000, "the member's stream getting the new session")
-    assert(made.status === 200 && stays.open && !gone.text.includes(mark), 'the removed viewer saw a later event')
-    return `closed ${ms} ms after the removal`
+    await until(() => again.text.includes(mark), 15_000, "alice's stream getting the new session")
+    again.stop()
+    assert(made.status === 200 && !gone.text.includes(mark), 'the removed viewer saw a later event')
+    assert(auditRows('fd-a').some((x) => x.action === 'secrets_rotated'), 'no secrets_rotated row')
+    return `cut ${ms} ms after the removal with the member's stream still open; then old token ${oldToken} and old password ${pw[0]}, the new ones 200, gateway not restarted`
   } finally {
     gone.stop()
     stays.stop()
+    await removal
     admin('add-member', 'team-a', 'vera', 'viewer')
   }
 })
@@ -493,13 +646,22 @@ await check('strict headers on the page, the API and a download; wrong Host refu
 })
 
 // ---------------------------------------------------------------- the machine count
-await check('"people working" is the real count of people active, never who', async () => {
-  const r = await api('/api/project', { cookie: a.cookie, ws: 'fd-a' })
-  const m = r.json.machine
-  assert(Object.keys(m).sort().join() === 'capacity,working' && m.working === 3 && m.capacity === 4, JSON.stringify(m))
-  const lights = await A.page.locator('.machine-lights .light.on').count()
-  assert(lights >= 3, `${lights} lights on`)
-  return `${m.working} of ${m.capacity}`
+await check('"people working" is one number per whole window, all teams, never who or when within it', async () => {
+  const W = 4000
+  const boundary = () => sleep(W - (Date.now() % W) + 200)
+  // Only the requests below count: the other browsers go quiet.
+  for (const P of [B, V]) await P.page.goto('about:blank')
+  await boundary()
+  await Promise.all([a, b, v].map((x) => api('/api/me', { cookie: x.cookie })))
+  await boundary()
+  const n1 = (await api('/api/me', { cookie: a.cookie })).json.machine.working
+  await sleep(1200)
+  await api('/api/me', { cookie: b.cookie }) // bob, from another team, mid-window
+  const n2 = (await api('/api/me', { cookie: a.cookie })).json.machine.working
+  await boundary()
+  const m = (await api('/api/project', { cookie: a.cookie, ws: 'fd-a' })).json.machine
+  assert(n1 === 3 && n2 === 3 && m.working === 2 && Object.keys(m).sort().join() === 'capacity,working' && m.capacity === 4, `windows: ${n1}, then ${n2} after bob's request, then ${JSON.stringify(m)}`)
+  return `${n1} for the window of three people; still ${n2} after bob's request mid-window; ${m.working} at the next window`
 })
 
 // ---------------------------------------------------------------- one real request
@@ -554,6 +716,96 @@ await check('sign-in routes are rate-limited', async () => {
   const guess = await api('/api/auth/register/options', { method: 'POST', body: JSON.stringify({ invite: 'A'.repeat(43) }), headers: { 'content-type': 'application/json' } })
   assert(guess.status === 429, `an invitation guess answered ${guess.status}`)
   return `${limited} of 70 refused with 429; invitation guessing too`
+})
+
+await check('behind the relay (PROXY protocol): an attacker hammering sign-in from one address cannot keep a real person out', async () => {
+  const PP = 4792
+  const PORIGIN = `http://localhost:${PP}`
+  const fdp = start('frontdesk-proxy', 'frontdesk/server.mjs', { OLA_FD_PORT: String(PP), OLA_FD_ORIGIN: PORIGIN, OLA_FD_PROXY_PROTOCOL: '1', OLA_FD_SIGNIN_BURST: '10', OLA_FD_SIGNIN_PER_MIN: '10', OLA_FD_IDLE_STOP_MIN: '0' })
+  const via = (from, method, p, body, cookie) =>
+    new Promise((resolve) => {
+      const r = http.request(
+        {
+          method,
+          path: p,
+          headers: { host: `localhost:${PP}`, origin: PORIGIN, 'content-type': 'application/json', ...(cookie ? { cookie } : {}) },
+          createConnection: () => {
+            const sock = net.connect(PP, '127.0.0.1')
+            sock.write(`PROXY TCP4 ${from} 127.0.0.1 40000 ${PP}\r\n`)
+            return sock
+          },
+        },
+        (res) => {
+          let t = ''
+          res.on('data', (d) => (t += d))
+          res.on('end', () => {
+            let j = null
+            try {
+              j = JSON.parse(t)
+            } catch {}
+            resolve({ status: res.statusCode, json: j, cookie: res.headers['set-cookie']?.[0]?.split(';')[0] })
+          })
+        },
+      )
+      r.on('error', () => resolve({ status: 0 }))
+      r.end(body === undefined ? undefined : JSON.stringify(body))
+    })
+  try {
+    await until(async () => (await via('198.51.100.4', 'GET', '/api/health')).status === 200, 10_000, 'the front desk behind the relay')
+    const bare = await raw(`GET /api/health HTTP/1.1\r\nHost: localhost:${PP}\r\n\r\n`, { port: PP })
+    assert(bare.got === '', `a connection without a PROXY line was answered: ${bare.got}`)
+    admin('add-person', 'pia', '--name', 'Pia P.')
+    const pia = new SoftAuthn({ rpId: 'localhost', origin: PORIGIN })
+    const o = await via('198.51.100.4', 'POST', '/api/auth/register/options', { invite: admin('invite', 'pia').split('/').pop() })
+    const rg = await via('198.51.100.4', 'POST', '/api/auth/register/verify', { ceremony: o.json?.ceremony, response: pia.create(o.json.options) })
+    assert(rg.status === 200, `pia registered: ${rg.status}`)
+    // The attacker: 900 requests from one address on every anonymous route, garbage assertions too.
+    const codes = {}
+    const kinds = [['/api/auth/login/options', {}], ['/api/auth/register/options', { invite: 'A'.repeat(43) }], ['/api/auth/login/verify', { ceremony: 'x'.repeat(43), response: { id: 'made-up' } }]]
+    const attack = (async () => {
+      for (let i = 0; i < 900; i++) {
+        const r = await via('203.0.113.7', 'POST', kinds[i % 3][0], kinds[i % 3][1])
+        codes[r.status] = (codes[r.status] ?? 0) + 1
+      }
+    })()
+    await sleep(1500)
+    // While it runs, pia signs in from her own address.
+    const lo = await via('198.51.100.4', 'POST', '/api/auth/login/options', {})
+    const lv = await via('198.51.100.4', 'POST', '/api/auth/login/verify', { ceremony: lo.json?.ceremony, response: pia.get(lo.json.options) })
+    const me = await via('198.51.100.4', 'GET', '/api/me', undefined, lv.cookie)
+    await attack
+    assert(lo.status === 200 && lv.status === 200 && me.json?.person?.handle === 'pia', `pia: options ${lo.status}, verify ${lv.status}, me ${me.status}`)
+    assert((codes[429] ?? 0) >= 850, `the attacker was refused only ${codes[429] ?? 0} times`)
+    // And after the attack she signs in again.
+    const lo2 = await via('198.51.100.4', 'POST', '/api/auth/login/options', {})
+    const lv2 = await via('198.51.100.4', 'POST', '/api/auth/login/verify', { ceremony: lo2.json?.ceremony, response: pia.get(lo2.json.options) })
+    assert(lv2.status === 200, `pia after the attack: ${lv2.status}`)
+    return `attacker: ${JSON.stringify(codes)}; pia signed in during and after; a connection without a PROXY line gets nothing`
+  } finally {
+    fdp.kill('SIGTERM')
+  }
+})
+
+await check('an idle workspace stops, its event stream does not wake it, and opening the project does ("Waking your workspace…")', async () => {
+  fd.kill('SIGTERM')
+  await until(() => fd.exitCode !== null, 10_000, 'the front desk stopping')
+  fd = start('frontdesk', 'frontdesk/server.mjs', { OLA_FD_IDLE_STOP_MIN: '0.05', OLA_FD_WAKE_WAIT_MS: '0' })
+  await until(async () => (await fetch(`${ORIGIN}/api/health`)).ok, 10_000, 'the front desk start')
+  const state = () => JSON.parse(node('workspace/ws.mjs', ['status', 'fd-a', '--json']).stdout)[0]?.state
+  assert((await api('/api/files', { cookie: a.cookie, ws: 'fd-a' })).status === 200, 'a request to fd-a')
+  const t0 = Date.now()
+  await until(() => state() !== 'running', 30_000, 'the idle stop')
+  const after = Date.now() - t0
+  const ev = await fetch(`${ORIGIN}/oc/api/event`, { headers: { cookie: `__Host-ola=${a.cookie}`, 'x-ola-workspace': 'fd-a' }, signal: AbortSignal.timeout(5000) }).then(async (r) => [r.status, (await r.json()).error], () => ['no answer'])
+  await sleep(1500)
+  assert(ev[0] === 503 && ev[1] === 'asleep' && state() !== 'running', `event stream: ${ev.join(' ')}, state ${state()}`)
+  await A.page.goto('about:blank')
+  await A.page.goto(`${ORIGIN}/?w=fd-a#/`)
+  await A.page.getByText('Waking your workspace…').waitFor({ timeout: 10_000 })
+  await A.page.waitForFunction(() => document.querySelector('.project-title')?.textContent === 'Made-up eviction report', null, { timeout: 60_000 })
+  const back = state()
+  assert(back === 'running', `after opening: ${back}`)
+  return `stopped ${(after / 1000).toFixed(1)} s after its last request (limit 3 s, swept each second); event stream 503 asleep; the page said "Waking your workspace…", then opened it`
 })
 
 await browser.close()
