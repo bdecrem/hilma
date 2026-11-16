@@ -21,8 +21,8 @@ const OUT = path.join(HERE, '../../..', 'public', BASE.replace(/^\/|\/$/g, ''))
 
 // ---------- copy ----------
 const TITLE = 'Ola: a private AI agent for activists and academics'
-const DESCRIPTION = 'An AI agent for activists and academics that works with your documents and data, and writes the code to do it, on one computer that never shares your work. By invitation, from December 2026.'
-const MAILTO = 'mailto:hello@ola.cx?subject=An%20invitation%20to%20Ola'
+const DESCRIPTION = 'An AI agent for activists and academics. It builds code, websites and data analysis on one computer in Bart’s office, on open models, so none of your data goes to an AI company. Starting in December 2026, with about ten people.'
+const MAILTO = 'mailto:bart@ola.cx?subject=Joining%20Ola'
 const SCENE_LABEL = 'Drawing: a small computer on a desk in a study at night, with a paper tag reading Ola tied to it. A desk lamp bends over it, and its cable runs to the wall socket. Around it: books on a shelf and on the desk, a trailing plant, a mug, a wastepaper basket, and a window with the moon over the rooftops.'
 
 // ---------- the signature slot: signature.svg, viewBox 0 0 160 70, one color ----------
@@ -91,18 +91,13 @@ const btn = (text, href) => `<a class="paint" href="${href}"><svg viewBox="0 0 3
 // letter's box dissolves (display:contents) and the drawing is ordered in under the name.
 const LANDING_CSS = `
 .page{max-width:1360px;min-height:100dvh;margin:0 auto;padding:26px 0 26px 56px;display:grid;grid-template-columns:minmax(0,540px) minmax(0,1fr);grid-template-rows:auto 1fr;column-gap:40px}
-.date{grid-column:1/-1;padding-right:56px;display:flex;justify-content:space-between;align-items:baseline;gap:16px;font-style:italic;font-size:15px;color:var(--text2);margin:0;max-width:none;font-variant-numeric:lining-nums}
-.date a{color:var(--text);text-decoration:none;font-style:normal;font-family:var(--grot);font-weight:650;letter-spacing:.01em}
-.date a:hover{color:var(--link)}
 .letter{grid-column:1;grid-row:2;align-self:center;padding:4px 0}
 .hello{display:block;width:236px;height:auto;margin:0 0 14px -7px;overflow:visible}
 h1{margin:0 0 16px;font-weight:400}
 h1 .h{display:block;font-family:var(--grot);font-weight:720;font-size:37px;line-height:1.06;letter-spacing:-.028em;max-width:14em;text-wrap:balance;font-variation-settings:'opsz' 72}
 h1 .k{display:block;font-family:var(--book);font-size:20.5px;line-height:1.45;margin-top:10px;max-width:26em;text-wrap:pretty}
 p{margin:0 0 12px;max-width:34em;text-wrap:pretty}
-.sig{width:116px;height:auto;display:block;margin:0 0 4px -2px;color:var(--word)}
-.ps{font-size:15.5px;line-height:1.5;color:var(--text2);margin:0 0 22px;max-width:35em}
-.ps b{font-family:var(--grot);color:var(--text);font-weight:700;margin-right:.15em}
+.sig{width:116px;height:auto;display:block;margin:4px 0 18px -2px;color:var(--word)}
 .act{display:flex;align-items:center;flex-wrap:wrap;gap:12px 22px}
 .act small{font-size:15px;color:var(--text2)}
 .act small a{color:var(--text);text-underline-offset:3px;text-decoration-color:var(--comma);text-decoration-thickness:1.5px}
@@ -114,7 +109,6 @@ figcaption{font-style:italic;font-size:14.5px;color:var(--text2);margin-top:4px;
   body{font-size:17px}
   .page{display:flex;flex-direction:column;padding:18px 20px 40px}
   .letter{display:contents}
-  .date{order:0;font-size:13px;padding-right:0}
   .hello{order:1;align-self:flex-start;width:172px;margin-top:20px}
   .art{order:2;display:block;align-self:stretch;margin:0 -6px 18px}
   .art svg{width:100%;max-width:none;max-height:none}
@@ -126,16 +120,25 @@ figcaption{font-style:italic;font-size:14.5px;color:var(--text2);margin-top:4px;
   .sig{width:92px}
   .paint{min-width:100%}
 }
+/* short desktop windows (a 13-inch laptop): the letter is longer since 2026-11-16, so it is set a step tighter to keep the button in view */
+@media (min-width:901px) and (max-height:860px){
+  body{font-size:16.5px;line-height:1.5}
+  .page{padding-top:18px;padding-bottom:18px}
+  .hello{width:198px;margin-bottom:10px}
+  h1{margin-bottom:12px}
+  h1 .h{font-size:34px}
+  p{margin-bottom:10px}
+  .sig{width:104px;margin:2px 0 12px -2px}
+  .paint{height:56px}
+}
 /* large screens: the same letter, a size up (about ×1.13), so it does not float small in a big field */
 @media (min-width:1680px) and (min-height:960px){
   body{font-size:19.5px}
   .page{max-width:1560px;padding:32px 0 32px 64px;grid-template-columns:minmax(0,610px) minmax(0,1fr);column-gap:48px}
-  .date{font-size:16.5px;padding-right:64px}
   .hello{width:268px;margin-bottom:16px}
   h1 .h{font-size:42px}
   h1 .k{font-size:23px}
   .sig{width:132px}
-  .ps{font-size:17.5px}
   .act small{font-size:17px}
   .paint{min-width:296px;height:70px;font-size:20.5px}
   .art svg{max-width:840px;max-height:calc(100dvh - 116px)}
@@ -145,7 +148,6 @@ figcaption{font-style:italic;font-size:14.5px;color:var(--text2);margin-top:4px;
 @media (min-width:601px) and (max-width:900px){
   body{font-size:17.5px}
   .page{max-width:680px;margin:0 auto;padding:26px 32px 48px}
-  .date{font-size:15px}
   .hello{width:236px;margin:20px 0 6px -7px}
   .art{margin:0 0 24px}
   .art svg{width:min(100%,calc(56dvh * 600 / 586));margin-left:auto}
@@ -173,16 +175,17 @@ function landing() {
 ` })}
 <body>
 <main class="page">
-  <p class="date"><span>From Bart Decrem’s office, November 2026</span><a href="/">ola.cx</a></p>
   <div class="letter">
     ${word('display', { cls: 'hello', label: 'Ola' })}
-    <h1><span class="h">An AI agent for activists and academics</span> <span class="k">that works with your documents and data, and writes the code to do it, on one computer that never shares your work.</span></h1>
-    <p>It reads what you give it, builds the small websites, databases and analyses you ask for, and runs on open models on a computer that I own and look after in my office, so no AI company sees your work. It opens in December, by invitation, to five to ten people.</p>
+    <h1><span class="h">An AI agent for activists and academics</span></h1>
+    <p>Hi. This is something I’m building for a few friends, community groups and researchers.</p>
+    <p>Most of you don’t love Big Tech, and you think hard about where your data goes. So I’ve set up a system on one computer in my office, just for this. It can build code, websites and data analysis. You decide what data you give it, and it runs on open models, so none of it goes to an AI company.</p>
+    <p>It isn’t bulletproof. It’s one machine and one person, me. What I can promise is that you’ll always know where your stuff is and what’s happening to it, and you can see all of it and delete it anytime.</p>
+    <p>I want to find out whether AI can be small, honest, and actually useful to people doing work that matters. Starting in December, with about 10 of you.</p>
     ${signature()}
-    <p class="ps"><b>P.S.</b> You would be trusting me, a person, not a proof: Ola is not built to stand up to a government that targets you. And open models trail the best closed ones, so it tells you, task by task, how well it is likely to do.</p>
-    <div class="act">${btn('Ask for an invitation', MAILTO)}<small>or write to <a href="${MAILTO}">hello@ola.cx</a></small></div>
+    <div class="act">${btn('Ask to join', MAILTO)}<small>or write to <a href="${MAILTO}">bart@ola.cx</a></small></div>
   </div>
-  <figure class="art"><svg viewBox="0 26 600 586" role="img" aria-label="${SCENE_LABEL}">${scene(T)}</svg><figcaption>The computer, on my desk. Your files<span class="wide"> and the models</span> stay on it.</figcaption></figure>
+  <figure class="art"><svg viewBox="0 26 600 586" role="img" aria-label="${SCENE_LABEL}">${scene(T)}</svg><figcaption>Our datacenter.</figcaption></figure>
 </main>
 </body>
 </html>

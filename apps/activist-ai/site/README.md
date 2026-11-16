@@ -57,7 +57,7 @@ Screenshots of design work: `node scripts/ola-brand/shot.mjs <url-or-file> <png>
 1. **The ola.cx move.** ola.cx still serves other projects (Dolly's universal links, among others,
    in `next.config.ts`). The rewrite of `/` to `/ola-site/index.html` and the 404 handling are set
    up in hilma's `next.config.ts`, not here.
-2. **hello@ola.cx must receive mail.** The button and the link both write to it, and today the
+2. **bart@ola.cx must receive mail** (any address at ola.cx does, through SendGrid Inbound Parse, since 2026-11-15). The button and the link both write to it, and today the
    address may not exist. Set up receiving (forwarding to Bart is enough) and send a test message.
 3. **The real signature** in `signature.svg`, then rebuild.
 4. Run `check.mjs https://ola.cx/` against the live site, and preview the share card in a
