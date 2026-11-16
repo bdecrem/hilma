@@ -1,0 +1,43 @@
+// Which of the documents in venture_docs the voice call and the text replies carry.
+// No imports: scripts/venture/notes-check.ts runs this against the live table.
+
+export type Doc = { slug: string; title: string; body: string; updated_at?: string | null }
+
+// The notes have a size budget. On 2026-11-15 seven raw research files (1.5 MB) were synced
+// into venture_docs, the prompt came to 1,097,063 tokens against the model's 1,000,000, and
+// every voice reply and every text reply failed for eight hours; Bart found out by saying
+// "Hello, can you hear me?" to a dead line. Measured that day: 2.5 characters a token in the
+// worst files, so 1,000,000 characters is at most about 400,000 tokens.
+export const NOTES_BUDGET = 1_000_000 // characters, all documents together
+export const NOTES_DOC_MAX = 150_000 // a longer file is a raw dump, not a note: listed, never loaded
+// "now" (where things stand) goes first, then the standing rules distilled from Bart's
+// corrections, the corrections themselves and the lessons: he asked (2026-11-14) that those
+// "are always part of your context". These load whatever their size.
+const FIRST = ['now', 'rules', 'corrections', 'lessons', 'charter', 'bets', 'kit', '001-founding-interview']
+
+// Which documents are loaded in full and which are only listed: the FIRST ones, then the
+// rest newest first, each taken if it is under the per-file limit and still fits.
+export function pickNotes(all: Doc[]): { loaded: Doc[]; listed: Doc[] } {
+  const rank = (slug: string) => (FIRST.includes(slug) ? FIRST.indexOf(slug) : FIRST.length)
+  const docs = [...all].sort(
+    (a, b) => rank(a.slug) - rank(b.slug) || (b.updated_at ?? '').localeCompare(a.updated_at ?? '') || a.slug.localeCompare(b.slug),
+  )
+  const loaded: Doc[] = []
+  const listed: Doc[] = []
+  let used = 0
+  for (const d of docs) {
+    const core = FIRST.includes(d.slug)
+    if (core || (d.body.length <= NOTES_DOC_MAX && used + d.body.length <= NOTES_BUDGET)) {
+      loaded.push(d)
+      used += d.body.length
+    } else listed.push(d)
+  }
+  return { loaded, listed }
+}
+
+export function notesText({ loaded, listed }: { loaded: Doc[]; listed: Doc[] }): string {
+  const full = loaded.map((d) => `\n===== ${d.slug}: ${d.title} =====\n${d.body}\n`).join('')
+  if (listed.length === 0) return full
+  const titles = listed.map((d) => `- ${d.slug}: ${d.title} (${Math.round(d.body.length / 1000)}k characters)`).join('\n')
+  return `${full}\n===== files that exist but are not loaded here (too long) =====\nOnly the terminal session can read these. If Bart asks for something that is in one of them, say that the file is not loaded here and that you will check after.\n${titles}\n`
+}

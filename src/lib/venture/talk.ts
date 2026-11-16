@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { f2Supabase } from '@/lib/f2/supabase'
 import { realtimeModel } from '@/lib/f2/realtime'
 import type { Turn } from './interview'
+import { notesText, pickNotes, type Doc } from './notes'
 
 // The open conversation (2026-11-13): Bart asked for "voice mode" in place of
 // an agenda — he comments, Claude reacts. A fork of the interview call with
@@ -39,18 +40,10 @@ What you write is read aloud by a speech engine, and Bart hears it; he does not 
 THE NOTES
 `
 
-type Doc = { slug: string; title: string; body: string }
-
-// Everything in venture_docs is context. "now" (where things stand) goes first, then the
-// standing rules distilled from Bart's corrections, the corrections themselves and the
-// lessons: he asked (2026-11-14) that those "are always part of your context".
 export async function ventureNotes(): Promise<string> {
-  const { data, error } = await f2Supabase().from('venture_docs').select('slug, title, body').order('slug')
+  const { data, error } = await f2Supabase().from('venture_docs').select('slug, title, body, updated_at')
   if (error) throw new Error(`venture docs read failed: ${error.message}`)
-  const FIRST = ['now', 'rules', 'corrections', 'lessons']
-  const rank = (slug: string) => (FIRST.includes(slug) ? FIRST.indexOf(slug) : FIRST.length)
-  const docs = ((data ?? []) as Doc[]).sort((a, b) => rank(a.slug) - rank(b.slug))
-  return docs.map((d) => `\n===== ${d.slug}: ${d.title} =====\n${d.body}\n`).join('')
+  return notesText(pickNotes((data ?? []) as Doc[]))
 }
 
 export async function talkSystem(): Promise<string> {
