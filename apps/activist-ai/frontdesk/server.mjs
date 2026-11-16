@@ -62,6 +62,8 @@ export function config(env = process.env) {
     // in flight at once: per person, uploads per person, per workspace, and bytes in all.
     transfers: { perPerson: 6, uploadsPerPerson: 3, perWorkspace: 12, bytes: num('OLA_FD_INFLIGHT_MB', 512, 16, 16_384) * 1024 * 1024 },
     idleStopMs: num('OLA_FD_IDLE_STOP_MIN', 30, 0, 24 * 60) * 60_000, // 0: never
+    // The longest one run may execute before the front desk interrupts it (and tells the page).
+    runCeilingMs: num('OLA_FD_RUN_CEILING_MIN', 120, 0.1, 7 * 24 * 60) * 60_000,
     wakeWaitMs: num('OLA_FD_WAKE_WAIT_MS', 1500, 0, 30_000),
     workingWindowMs: num('OLA_FD_WORKING_WINDOW_S', 300, 2, 3600) * 1000,
     capacity: 4, // workspaces the machine runs at once (ws.mjs MAX_RUNNING)
@@ -144,7 +146,7 @@ export function makeFrontDesk(cfg = config()) {
   const originHost = new URL(cfg.origin).host
   const log = (m) => console.log(JSON.stringify({ t: new Date().toISOString(), event: 'frontdesk', msg: String(m).slice(0, 300) }))
   const auth = makeAuth({ db, keys, origin: cfg.origin, session: cfg.session, limits: cfg.limits, log })
-  const workspaces = makeWorkspaces({ db, keys, log, idleStopMs: cfg.idleStopMs })
+  const workspaces = makeWorkspaces({ db, keys, log, idleStopMs: cfg.idleStopMs, runCeilingMs: cfg.runCeilingMs })
   const clientOf = (req) => req.socket.olaClient ?? req.socket.remoteAddress ?? '?'
 
   // "People working": how many people made a request in the last whole window (5 minutes), all
@@ -302,6 +304,9 @@ export function makeFrontDesk(cfg = config()) {
         role: ws.role,
       })
     }
+    // Runs stopped at the ceiling (the page asks when a run is interrupted, to say why), from the
+    // front desk's memory: no exec, does not wake the workspace, is not use.
+    if (p === '/api/runs' && req.method === 'GET') return json(res, 200, workspaces.runsOf(ws.slug))
     // Every other route runs at least one `container exec`: one transfer slot each.
     const upload = p === '/api/files' && req.method === 'POST'
     let slot = null
@@ -567,7 +572,7 @@ export function makeFrontDesk(cfg = config()) {
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const fd = makeFrontDesk()
-  fd.listener.listen(fd.cfg.port, fd.cfg.host, () => console.log(JSON.stringify({ t: new Date().toISOString(), event: 'start', origin: fd.cfg.origin, port: fd.listener.address().port, proxyProtocol: fd.cfg.proxyProtocol, idleStopMin: fd.cfg.idleStopMs / 60_000 })))
+  fd.listener.listen(fd.cfg.port, fd.cfg.host, () => console.log(JSON.stringify({ t: new Date().toISOString(), event: 'start', origin: fd.cfg.origin, port: fd.listener.address().port, proxyProtocol: fd.cfg.proxyProtocol, idleStopMin: fd.cfg.idleStopMs / 60_000, runCeilingMin: fd.cfg.runCeilingMs / 60_000 })))
   const stop = () => (fd.close(), process.exit(0))
   process.on('SIGTERM', stop)
   process.on('SIGINT', stop)

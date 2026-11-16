@@ -493,13 +493,35 @@ team's activity), and so roughly when other groups work, at 5-minute resolution;
 customers that is a signal, and the alternative is no number at all.
 
 **Idle workspaces stop, and wake on demand** (`OLA_FD_IDLE_STOP_MIN`, 30 by default; 0 never). A
-workspace no one has made a request to for that long, with no transfer under way and no prompt in
-the last 15 minutes, is stopped (`ws.mjs stop`; its door and desk go too). An open event stream
+workspace no one has made a request to for that long, with no transfer under way and **no run
+executing in it**, is stopped (`ws.mjs stop`; its door and desk go too). An open event stream
 does not count as use, and does not wake a stopped workspace (it gets 503 `asleep`), so a tab left
 open overnight does not hold a VM. Opening the project (or any other request) starts it again: if
 that takes longer than `OLA_FD_WAKE_WAIT_MS` (1.5 s), `/api/project` answers 503 `waking` and the
 page shows **"Waking your workspace…"** and asks again each second. A viewer's visit wakes it too
 (they need the files). A full machine says so instead (503 `machine_busy`).
+
+**A run is activity** (2026-11-16; before, a run that outlasted the idle limit with no new request
+from the browser was stopped mid-task). Each sweep (a quarter of the shorter of the idle limit and
+the ceiling, between 1 and 60 s) asks each workspace's opencode, through its desk, which sessions
+are executing (`GET /api/session/active`). While one is, the workspace is not stopped, and the idle
+time counts from the later of the last request and the last sweep that saw a run, so a person who
+comes back after a long run finds the workspace still up. No answer from the desk means nothing
+there is executing. "Read by a run" keeps watching for as long as the run goes.
+
+**The run ceiling** (`OLA_FD_RUN_CEILING_MIN`, 120 by default). A session executing for that long
+without a break is interrupted through opencode's own interrupt route (the same one as the page's
+Stop), and the front desk notes it before it interrupts. The page asks `GET /api/runs` (read;
+from the front desk's memory for 24 hours; no exec, does not wake the workspace, not use) when a
+run ends interrupted, and on opening a conversation, and the turn says: "Ola stopped this after 2
+hours: that is the longest one request may run, so that no request can hold Ola’s computer for
+good. What it finished is in the folder. Ask again to carry on, in smaller steps." The clock starts
+when a sweep first sees the session executing (so it is up to one sweep late), or at a person's
+prompt that followed the end of its last run; the workspace's event stream alone never restarts
+it, because that stream is the workspace's word. A session still reported as executing a minute
+after its interrupt (a stuck or lying opencode) stops counting as activity, so the idle stop then
+ends it. Not kept: which run was stopped is in memory only, so a front desk restart forgets it (the
+turn then shows a plain stop) and nothing is in the audit log yet.
 
 **The admin CLI** (`frontdesk/admin.mjs`; no admin web page in this milestone):
 
@@ -528,7 +550,7 @@ workspaces ends with the restart, and the page reconnects. Settings: `OLA_FD_ORI
 `OLA_FD_BIND`, `OLA_FD_DATA` (`~/.ola-frontdesk`), `OLA_FD_DIST`, `OLA_FD_MAX_UPLOAD_MB`,
 `OLA_FD_SESSION_HOURS`, `OLA_FD_IDLE_HOURS`, `OLA_FD_SIGNIN_BURST`, `OLA_FD_SIGNIN_PER_MIN`,
 `OLA_FD_PROXY_PROTOCOL`, `OLA_FD_CONNECTIONS_PER_ADDRESS`, `OLA_FD_INFLIGHT_MB`,
-`OLA_FD_IDLE_STOP_MIN`, `OLA_FD_WAKE_WAIT_MS`, `OLA_FD_WORKING_WINDOW_S`, `OLA_FD_DELETE_NOTICE`,
+`OLA_FD_IDLE_STOP_MIN`, `OLA_FD_RUN_CEILING_MIN`, `OLA_FD_WAKE_WAIT_MS`, `OLA_FD_WORKING_WINDOW_S`, `OLA_FD_DELETE_NOTICE`,
 and the workspace's `OLA_HOME`, `OLA_GATEWAY_PORT` and `OLA_LAUNCHD`. The web page is built on the iMac
 (`cd web && npm run build`) and copied with the rest.
 
@@ -568,7 +590,13 @@ refused; a FIFO download fails in 63 ms with no `ola-get` left on the host or in
 member cuts their stream while another member's stays open, then the old gateway token and the old
 opencode password are refused and the new ones work, without a gateway restart; an attacker behind
 the PROXY protocol cannot keep a real person out; an idle workspace stops, its event stream does
-not wake it, and opening the project shows "Waking your workspace…" and opens it.
+not wake it, and opening the project shows "Waking your workspace…" and opens it. Since the
+long-run fix (same day), with a 3 s idle limit, a 24 s ceiling and the scripted fake model
+(`web/server/fake-model.mjs`, its `slow <steps>x<ms>` runs; `--no-live` now uses it for the whole
+suite, the live run keeps Together and the long-run checks switch the gateway to the fake): a run
+of about 15 s with no browser request finishes with the workspace running throughout, then the
+workspace stops a few seconds after it ends; a run of 80 s is interrupted at about 24 s, the model
+is called no more, `/api/runs` lists it, and the page's turn says why.
 
 **Second round, the review's open findings (2026-11-16), on the mini:** `frontdesk/check.mjs`
 **32 of 32** with the live request (31 of 31 with `--no-live`), `workspace/check.mjs` **65 of 65**
@@ -602,6 +630,9 @@ ceiling (it then refuses only anonymous requests; sign-ins with a known passkey 
 
 `ops/ola.mjs` (Node, no dependencies) installs Ola's services as **launchd user agents** of the
 account that runs the workspaces: no sudo, loopback only, no port open to the network, no tunnel.
+All three fixed jobs run `~/ola-staging/current/apps/activist-ai` (see "Deploying staging"
+below) with Homebrew's stable `/opt/homebrew/bin/node`, not the versioned Cellar path a brew
+upgrade removes.
 
 | Job | What it runs | Listens |
 |---|---|---|
@@ -620,27 +651,77 @@ model key and the usage token live only in `gateway.env`.
 # ~/.ola/gateway.env (600): UPSTREAM_BASE_URL, UPSTREAM_API_KEY, GATEWAY_MODELS, GATEWAY_PORT=4180,
 #   GATEWAY_TOKENS_FILE=~/.ola/gateway-tokens, GATEWAY_DOOR_DIR=~/.ola/gw, GATEWAY_USAGE_TOKEN (for status)
 # ~/.ola/frontdesk.env (600): OLA_FD_ORIGIN, OLA_FD_PORT=4700, OLA_LAUNCHD=1
-cd apps/activist-ai && npm ci && (cd frontdesk && npm ci) && (cd web && npm ci && npm run build)
-node ops/ola.mjs install          # writes and loads the three jobs
-node ops/ola.mjs status           # every job, the front desk, the gateway, each workspace, door and desk; exit 1 if anything is down
+node ops/ola.mjs deploy           # the only way staging changes (below); writes and loads the jobs
+node ops/ola.mjs install          # (re)load the three jobs, pointed at the deployed release
+node ops/ola.mjs status           # the deployed commit, where the jobs run from, every job, the front desk,
+                                  # the gateway, each workspace, door and desk; exit 1 if anything is down
 node ops/ola.mjs prove-restarts   # kickstart -k each job; one signed-in session must work after each
 node ops/ola.mjs uninstall
 ```
 
-**On the mini (2026-11-16)**, installed from `~/hilma-venture/apps/activist-ai` under `admin`, with
-Together as the stand-in (made-up data only) and `OLA_FD_ORIGIN=http://localhost:4700`.
-`prove-restarts` signed in the made-up `stage-kim` once (a software passkey kept in
-`~/.ola/stage-key.json`, 600), opened the made-up 1 GiB workspace `stage-a` (which started it and
-its door and desk jobs), then ran `launchctl kickstart -k` on each job in turn and, after each, used
-the same session for `/api/me`, `/api/project`, opencode through the desk and the gateway through
-the door from inside the VM: **5 of 5**, each back within 0.7 to 1.0 s (container 0.7, gateway 0.8,
-front desk 1.0, door 0.7, desk 0.8). `stage-a` is left stopped. The mini was not rebooted.
+**On the mini (2026-11-16)**, under `admin`, with Together as the stand-in (made-up data only) and
+`OLA_FD_ORIGIN=http://localhost:4700`. `prove-restarts` signs in the made-up `stage-kim` once (a
+software passkey kept in `~/.ola/stage-key.json`, 600), opens the made-up 1 GiB workspace `stage-a`
+(which starts it and its door and desk jobs), then runs `launchctl kickstart -k` on each job in
+turn and, after each, uses the same session for `/api/me`, `/api/project`, opencode through the
+desk and the gateway through the door from inside the VM. First measured from `~/hilma-venture`:
+5 of 5, each back within 0.7 to 1.0 s. `stage-a` is left stopped. The mini was not rebooted.
 
-Notes: the services run from a git checkout, so a `git pull` there changes what the next restart
-runs (restart with `launchctl kickstart -k gui/$(id -u)/cx.ola.frontdesk`, same for the gateway).
 After an unattended reboot no workspace runs until someone opens it. The checks
 (`workspace/check.mjs`, `frontdesk/check.mjs`) count running workspaces machine-wide against their
-own limit of 2, so leave `stage-a` stopped while they run.
+own limit of 2, so leave `stage-a` stopped while they run (a deploy runs them).
+
+## Deploying staging
+
+Until 2026-11-16 the jobs ran from `~/hilma-venture`, a checkout another system works in and
+`git pull`s (the venture runner, a 10 am job), so what the next restart ran could change without
+anyone deciding it. Now staging has its own clone, **`~/ola-staging`** (`OLA_STAGING`), which
+nothing else touches, and changes only by `node ops/ola.mjs deploy`:
+
+```
+~/ola-staging/            a clone of this repo with no working tree (git clone --no-checkout)
+  releases/<commit12>/apps/activist-ai   one commit, unpacked by git archive, its own node_modules and web/dist
+  current -> releases/<commit12>         what the jobs run; switched by rename, so atomically
+  deployed.json                          the commit, the ref asked for, when, the suites' counts, the one before
+  deploys.log                            one line per deploy, passed or refused
+```
+
+```bash
+node ~/ola-staging/current/apps/activist-ai/ops/ola.mjs deploy            # origin/main
+node ~/ola-staging/current/apps/activist-ai/ops/ola.mjs deploy 6d45c77e   # a named commit (also a rollback)
+```
+
+A deploy, one at a time (a lock file): `git fetch`; unpack the commit fresh into its release; per
+package folder (`.`, `frontdesk`, `web`), an APFS clone of the served release's `node_modules` when
+the lockfile is unchanged, `npm ci` when it changed; build `web/dist`; run the four suites from the
+release, `--no-live` (no model call, no key): `gateway/test.mjs`, `workspace/check.mjs`,
+`web/check.mjs`, `frontdesk/check.mjs`. Only if all pass: `current` is switched, `deployed.json`
+written, the jobs rewritten and restarted (`kickstart -k`; the container job is not restarted), and
+the front desk and the gateway must answer within 30 s or the previous release is switched back and
+restarted. **On a failed suite nothing that runs is touched**: the message names the suite and its
+count, says the running version was left alone, and keeps the release for a look; the whole output
+is in `~/Library/Logs/ola/deploy-<commit12>.log`. The five newest releases are kept, plus the served
+one, the one before and any a running workspace's door or desk still uses. Running workspaces keep
+their door and desk from the release they were started with until they next start. A deploy takes
+about as long as the suites (minutes); run it with `nohup` over ssh.
+
+**State lives outside every release**, so a deploy or a rollback never touches it: the platform
+database and its key in `~/.ola-frontdesk`, workspaces, gateway tokens, door sockets, the staging
+passkey and the env files in `~/.ola`, the gateway's usage in `~/.local/state/ola-gateway`, logs in
+`~/Library/Logs/ola`. (It already was; the move changed no state.)
+
+The first time (done on the mini 2026-11-16; the clone was made from `~/hilma-venture`'s objects,
+then pointed at GitHub):
+
+```bash
+git clone --no-checkout https://github.com/bdecrem/hilma ~/ola-staging
+mkdir -p /tmp/ola-boot && git -C ~/ola-staging archive origin/main apps/activist-ai/ops | tar -x -C /tmp/ola-boot
+node /tmp/ola-boot/apps/activist-ai/ops/ola.mjs deploy    # moves the installed jobs to ~/ola-staging
+```
+
+`status` shows the deployed commit and that `current` points at it, fails if any Ola plist (the
+three jobs, and each workspace's door and desk in `~/.ola/launchd`) points outside `~/ola-staging`,
+and notes any Ola process running from elsewhere (a check or a dev run).
 
 ## Rules for this code
 

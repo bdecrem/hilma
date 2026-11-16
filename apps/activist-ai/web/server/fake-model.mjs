@@ -10,6 +10,9 @@
 //   5. answer in two sentences
 //
 // A request whose text contains "please fail" gets a 400, so the page's error path can be seen.
+// A request whose text contains "slow <steps>x<ms>" (say "slow 5x2000") is a long run instead:
+// <steps> folder listings, each reply held <ms> first, then a one-line answer. The front desk's
+// checks use it for runs longer than the idle limit, and longer than the run ceiling.
 import http from 'node:http'
 
 function lastUserText(messages) {
@@ -65,6 +68,17 @@ export function startFakeModel() {
     if (/please fail/i.test(lastUserText(messages))) return send(400, { error: { message: 'The model refused this request (scripted failure).', type: 'invalid_request_error' } })
     // Titles and other side calls carry no tools: answer them briefly.
     if (!body.tools?.length) return send(200, reply({ content: 'Counting the survey rows' }))
+    const slow = /\bslow (\d{1,3})x(\d{1,6})\b/.exec(lastUserText(messages))
+    if (slow) {
+      let since = -1
+      messages.forEach((m, i) => m.role === 'user' && (since = i))
+      const done = messages.slice(since + 1).filter((m) => m.role === 'tool').length
+      const glob = pick(body.tools, 'glob', 'list', 'ls')
+      await new Promise((r) => setTimeout(r, Number(slow[2])))
+      if (res.destroyed || !res.socket || res.socket.destroyed) return // the caller went away (an interrupt)
+      if (glob && done < Number(slow[1])) return send(200, reply({ tool: { id: `call_${calls}_${done}`, name: glob, args: glob === 'glob' ? { pattern: '*' } : { path: '.' } } }))
+      return send(200, reply({ content: `Done after ${done} slow steps.` }))
+    }
     // Where are we in the script? Count the tool results since the last user message.
     let lastUser = -1
     messages.forEach((m, i) => m.role === 'user' && (lastUser = i))

@@ -44,10 +44,17 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
 }
 const post = <T>(path: string, body: unknown) => call<T>(path, { method: 'POST', body: JSON.stringify(body), headers: { 'content-type': 'application/json' } })
 
+export interface RunsPayload {
+  executing: number
+  stopped: { session: string; at: string; minutes: number; message: string }[]
+}
+
 export interface FrontDesk {
   me(): Promise<Me>
   signOut(): Promise<void>
   project(): Promise<ProjectPayload>
+  /** Runs the front desk stopped at the run ceiling in the last day, and why (the message to show). */
+  runs(): Promise<RunsPayload>
   files(): Promise<FileEntry[]>
   /** Sends one file to the workspace. Rejects with a DeskError (409 when the name is taken). */
   upload(file: File, opts?: { replace?: boolean }): Promise<{ path: string; size: number }>
@@ -63,6 +70,7 @@ export const desk: FrontDesk = {
     await call('/api/signout', { method: 'POST' })
   },
   project: () => call<ProjectPayload>('/api/project'),
+  runs: () => call<RunsPayload>('/api/runs'),
   files: async () => (await call<{ files: FileEntry[] }>('/api/files')).files,
   upload: (file, opts) =>
     call(`/api/files?name=${encodeURIComponent(file.name)}${opts?.replace ? '&replace=1' : ''}`, {

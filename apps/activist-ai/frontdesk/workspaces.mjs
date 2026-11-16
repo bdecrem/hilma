@@ -20,8 +20,14 @@ const WS_CLI = path.join(HERE, '../workspace/ws.mjs')
 const MAX_SOCKETS = 12
 // "Read by a run" rows a prompt may add (see watch).
 const READS_PER_PROMPT = 200
+// A run the front desk interrupted at the ceiling that its workspace still reports as running this
+// long after: no longer activity (a stuck or lying opencode does not hold the VM).
+const CANCEL_GRACE_MS = 60_000
+// What the page shows on a run stopped at the ceiling (GET /api/runs).
+export const ceilingMessage = (minutes) =>
+  `Ola stopped this after ${minutes >= 60 && minutes % 60 === 0 ? `${minutes / 60} hour${minutes === 60 ? '' : 's'}` : minutes < 1 ? `${Math.round(minutes * 60)} seconds` : `${Math.round(minutes * 10) / 10} minutes`}: that is the longest one request may run, so that no request can hold Ola’s computer for good. What it finished is in the folder. Ask again to carry on, in smaller steps.`
 
-export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000 }) {
+export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCeilingMs = 120 * 60_000 }) {
   const ready = new Map() // slug -> time it last answered
   const starting = new Map() // slug -> Promise
   const stopping = new Map() // slug -> Promise
@@ -33,6 +39,11 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000 }) {
   const busy = new Map() // slug -> transfers in flight (an upload or download keeps it awake)
   const asleep = new Set() // stopped for idleness here; its event stream does not wake it
   const secretsSeen = new Map() // slug -> the secrets file's mtime when the connections were made
+  const runs = new Map() // slug -> Map(sessionID -> { since, cancelledAt }): sessions seen executing
+  const lastRun = new Map() // slug -> the last time a session in it was seen executing
+  const prompted = new Map() // `${slug}:${sessionID}` -> when a person's prompt for it last went through
+  const ended = new Map() // `${slug}:${sessionID}` -> when its event stream last said a run ended
+  const ceilingStops = new Map() // `${slug}:${sessionID}` -> { at, minutes }, for the page (24 h)
 
   const run = (cmd, slug) =>
     new Promise((resolve, reject) => {
@@ -90,30 +101,132 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000 }) {
     }
   }
 
-  // -------------------------------------------------------------- idle stop
+  // -------------------------------------------------------------- idle stop and the run ceiling
   //
   // A workspace no one has made a request to for idleStopMs (OLA_FD_IDLE_STOP_MIN, 30 minutes),
-  // with no transfer under way and no prompt in the last 15 minutes (the read-by-run watch), is
-  // stopped: an idle VM keeps the memory it once used (Apple's documented limit). An open event
-  // stream is not use: a tab left open all night does not hold a VM. Opening the project starts
-  // it again (the page says "Waking your workspace…"). Its event stream alone does not wake it.
-  function sweep() {
-    const now = Date.now()
-    for (const [slug, at] of lastUse) {
-      if (now - at < idleStopMs || (busy.get(slug) ?? 0) > 0 || watchers.has(slug) || starting.has(slug) || stopping.has(slug) || asleep.has(slug)) continue
-      asleep.add(slug)
-      reset(slug)
-      const p = run('stop', slug)
-        .then(() => log(`${slug}: stopped after ${Math.round((now - at) / 60_000)} min idle`))
-        .catch((e) => (asleep.delete(slug), log(`${slug}: idle stop failed (${e.code ?? 'error'})`)))
-        .finally(() => stopping.delete(slug))
-      stopping.set(slug, p)
+  // with no transfer under way and no run executing in it, is stopped: an idle VM keeps the memory
+  // it once used (Apple's documented limit). An open event stream is not use: a tab left open all
+  // night does not hold a VM. Opening the project starts it again (the page says "Waking your
+  // workspace…"). Its event stream alone does not wake it.
+  //
+  // A run is activity. Each sweep asks the workspace's opencode, through its desk, which sessions
+  // are executing (GET /api/session/active); while one is, the workspace is not stopped, and idle
+  // time counts from the later of the last request and the last sweep that saw a run. Before, a
+  // run that went past the idle limit with no new request from the browser was stopped mid-task.
+  //
+  // The ceiling (OLA_FD_RUN_CEILING_MIN, 2 hours): a session executing for that long without a
+  // break is interrupted through opencode's own interrupt route, and the page is told why (GET
+  // /api/runs). The clock starts when a sweep first sees the session executing, or at the person's
+  // prompt that followed the end of its last run; the workspace's event stream alone can never
+  // restart it (that stream is the workspace's word). A session still reported as executing a
+  // minute after its interrupt no longer counts as activity, so the idle stop ends it.
+  async function active(slug) {
+    return new Promise((resolve) => {
+      let auth
+      try {
+        auth = authorization(slug)()
+      } catch {
+        return resolve(null)
+      }
+      const req = http.request({ socketPath: ws.paths(slug).opencode, agent: agentFor(slug), path: '/api/session/active', headers: { authorization: auth, accept: 'application/json' }, timeout: 10_000 }, (res) => {
+        let t = ''
+        res.setEncoding('utf8')
+        res.on('data', (d) => {
+          t += d
+          if (t.length > 256 * 1024) req.destroy()
+        })
+        res.on('end', () => {
+          if (res.statusCode !== 200) return resolve(null)
+          try {
+            const data = JSON.parse(t)?.data
+            if (!data || typeof data !== 'object' || Array.isArray(data)) return resolve(null)
+            resolve(new Set(Object.keys(data).filter((id) => /^[A-Za-z0-9_-]{1,80}$/.test(id) && data[id]?.type === 'running').slice(0, 200)))
+          } catch {
+            resolve(null)
+          }
+        })
+        res.on('error', () => resolve(null))
+      })
+      req.on('error', () => resolve(null))
+      req.on('timeout', () => req.destroy())
+      req.end()
+    })
+  }
+  function interrupt(slug, sessionID) {
+    return new Promise((resolve) => {
+      let auth
+      try {
+        auth = authorization(slug)()
+      } catch {
+        return resolve(0)
+      }
+      const req = http.request({ socketPath: ws.paths(slug).opencode, agent: agentFor(slug), method: 'POST', path: `/api/session/${sessionID}/interrupt`, headers: { authorization: auth, 'content-length': '0' }, timeout: 10_000 }, (res) => (res.resume(), resolve(res.statusCode)))
+      req.on('error', () => resolve(0))
+      req.on('timeout', () => req.destroy())
+      req.end()
+    })
+  }
+  /** Folds what opencode says is executing into `runs`; returns how many count as activity. */
+  function track(slug, now, executing) {
+    if (!runs.has(slug)) runs.set(slug, new Map())
+    const mine = runs.get(slug)
+    if (!executing) return mine.clear(), 0 // no answer: nothing is executing there that anyone can see
+    for (const id of mine.keys()) if (!executing.has(id)) mine.delete(id)
+    let counting = 0
+    for (const id of executing) {
+      const key = `${slug}:${id}`
+      let r = mine.get(id)
+      if (!r) mine.set(id, (r = { since: now, cancelledAt: 0 }))
+      else if ((ended.get(key) ?? 0) > r.since && (prompted.get(key) ?? 0) > (ended.get(key) ?? 0)) Object.assign(r, { since: prompted.get(key), cancelledAt: 0 })
+      if (runCeilingMs > 0 && !r.cancelledAt && now - r.since >= runCeilingMs) {
+        r.cancelledAt = now
+        const minutes = Math.round((runCeilingMs / 60_000) * 100) / 100
+        if (ceilingStops.size >= 500) ceilingStops.delete(ceilingStops.keys().next().value)
+        ceilingStops.set(key, { at: now, minutes }) // before the interrupt, so the page finds it
+        interrupt(slug, id).then((status) => log(`${slug}: a run reached the ${minutes} min ceiling and was interrupted (${status})`))
+      }
+      if (r.cancelledAt && now - r.cancelledAt > CANCEL_GRACE_MS) continue
+      counting++
+    }
+    return counting
+  }
+  let sweeping = false
+  async function sweep() {
+    if (sweeping) return
+    sweeping = true
+    try {
+      for (const slug of [...lastUse.keys()]) {
+        if (starting.has(slug) || stopping.has(slug) || asleep.has(slug)) continue
+        const now = Date.now()
+        const counting = track(slug, now, await active(slug))
+        if (counting > 0) {
+          lastRun.set(slug, now)
+          const w = watchers.get(slug)
+          if (w) w.until = Math.max(w.until, now + 15 * 60_000) // "read by a run" keeps watching a long run
+          continue
+        }
+        const at = Math.max(lastUse.get(slug) ?? 0, lastRun.get(slug) ?? 0)
+        if (idleStopMs <= 0 || now - at < idleStopMs || (busy.get(slug) ?? 0) > 0 || starting.has(slug) || stopping.has(slug) || asleep.has(slug)) continue
+        asleep.add(slug)
+        reset(slug)
+        const p = run('stop', slug)
+          .then(() => log(`${slug}: stopped after ${Math.round((now - at) / 60_000)} min idle`))
+          .catch((e) => (asleep.delete(slug), log(`${slug}: idle stop failed (${e.code ?? 'error'})`)))
+          .finally(() => stopping.delete(slug))
+        stopping.set(slug, p)
+      }
+      const old = Date.now() - 24 * 3600_000
+      for (const [k, v] of ceilingStops) if (v.at < old) ceilingStops.delete(k)
+      for (const m of [prompted, ended]) if (m.size > 5000) m.clear()
+    } finally {
+      sweeping = false
     }
   }
   // Every workspace the platform knows counts as just used when the front desk starts, so one left
   // running across a restart is stopped after the same idle time.
   for (const w of db.prepare("SELECT slug FROM workspaces WHERE status = 'active'").all()) lastUse.set(w.slug, Date.now())
-  const sweeper = idleStopMs > 0 ? setInterval(sweep, Math.max(1000, Math.min(60_000, idleStopMs / 4))) : null
+  const sweepMs = Math.max(1000, Math.min(60_000, Math.min(idleStopMs > 0 ? idleStopMs : Infinity, runCeilingMs > 0 ? runCeilingMs : Infinity) / 4))
+  const sweeper = idleStopMs > 0 || runCeilingMs > 0 ? setInterval(sweep, sweepMs) : null
   sweeper?.unref()
 
   function agentFor(slug) {
@@ -153,6 +266,7 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000 }) {
     const m = /^\/api\/session\/([A-Za-z0-9_-]{1,80})\/prompt$/.exec(pathname)
     if (req.method === 'POST' && m) {
       runBy.set(`${slug}:${m[1]}`, personId)
+      prompted.set(`${slug}:${m[1]}`, Date.now())
       audit(db, { actor: personId, action: 'run_started', workspace: workspaceId })
     }
     return proxyFor(slug, workspaceId)(req, res, pathname, search)
@@ -203,6 +317,10 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000 }) {
         return
       }
       const d = ev?.data
+      if (d && typeof d.sessionID === 'string' && d.sessionID.length <= 80 && /^session\.execution\.(succeeded|failed|interrupted)$/.test(ev.type)) {
+        ended.set(`${slug}:${d.sessionID}`, Date.now())
+        return
+      }
       if (!d || typeof d.id !== 'string' || d.id.length > 120) return
       if (ev.type === 'session.tool.input.started' && typeof d.name === 'string') {
         if (state.names.size > 5000) state.names.clear()
@@ -230,6 +348,11 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000 }) {
     isAsleep,
     holdBusy,
     touch: (slug) => lastUse.set(slug, Date.now()),
+    /** Runs stopped at the ceiling in the last 24 hours, and how many sessions are executing. */
+    runsOf: (slug) => ({
+      executing: runs.get(slug)?.size ?? 0,
+      stopped: [...ceilingStops].filter(([k]) => k.startsWith(`${slug}:`)).map(([k, v]) => ({ session: k.slice(slug.length + 1), at: new Date(v.at).toISOString(), minutes: v.minutes, message: ceilingMessage(v.minutes) })),
+    }),
     sweep,
     forward,
     putStream: ws.putStream,

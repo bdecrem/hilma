@@ -4,7 +4,8 @@
 //   node frontdesk/check.mjs [--no-live] [--keep] [--shots <dir>]
 //
 // It starts its own model gateway (port 4182; Together as the stand-in, key from TOGETHER_API_KEY
-// or ~/Documents/code/hilma/.env.local, never printed), makes a fresh platform database, three
+// or ~/Documents/code/hilma/.env.local, never printed; with --no-live the scripted fake model of
+// web/server/fake-model.mjs instead, and the long-run checks always use the fake), makes a fresh platform database, three
 // made-up people (alice owns team A, vera is its viewer, bob owns team B) and two small sealed
 // workspaces (fd-a, fd-b under ~/.ola-fdcheck), starts the front desk on 127.0.0.1:4790 (origin
 // http://localhost:4790), and drives it with Chromium, whose virtual authenticator holds each
@@ -19,6 +20,7 @@ import path from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
 import { fileURLToPath } from 'node:url'
 import { chromium } from 'playwright'
+import { startFakeModel } from '../web/server/fake-model.mjs'
 import { ALLOWED } from '../web/server/proxy.mjs'
 import { SoftAuthn } from './review/softauthn.mjs'
 
@@ -146,17 +148,19 @@ admin('add-person', 'vera', '--name', 'Vera V.')
 admin('create-workspace', 'fd-a', '--name', 'Made-up eviction report', '--team', 'team-a', '--team-name', 'Made-up Tenants’ Union', '--owner', 'alice', '--memory', '1g', '--disk', '1g', '--cpus', '1')
 admin('create-workspace', 'fd-b', '--name', 'Made-up wage survey', '--team', 'team-b', '--team-name', 'Made-up Workers’ Center', '--owner', 'bob', '--memory', '1g', '--disk', '1g', '--cpus', '1')
 admin('add-member', 'team-a', 'vera', 'viewer')
-const gateway = start('gateway', 'gateway/server.mjs', {
+const fake = await startFakeModel()
+fake.server.unref()
+const FAKE_UP = { UPSTREAM_BASE_URL: `http://127.0.0.1:${fake.port}/v1`, UPSTREAM_API_KEY: 'fake-model-key-not-a-secret', GATEWAY_MODELS: 'general=fake' }
+const gwEnv = {
   HOME: homedir(),
-  UPSTREAM_BASE_URL: 'https://api.together.xyz/v1',
-  UPSTREAM_API_KEY: together(),
+  ...(LIVE ? { UPSTREAM_BASE_URL: 'https://api.together.xyz/v1', UPSTREAM_API_KEY: together(), GATEWAY_MODELS: 'general=zai-org/GLM-5.3-Flash' } : FAKE_UP),
   // The tokens file ws.mjs keeps (reloaded when it changes) and the workspaces' door sockets.
   GATEWAY_TOKENS_FILE: path.join(env.OLA_HOME, 'gateway-tokens'),
   GATEWAY_DOOR_DIR: path.join(env.OLA_HOME, 'gw'),
-  GATEWAY_MODELS: 'general=zai-org/GLM-5.3-Flash',
   GATEWAY_PORT: String(GW_PORT),
   GATEWAY_DB: path.join(run, 'usage.db'),
-})
+}
+let gateway = start('gateway', 'gateway/server.mjs', gwEnv)
 await until(() => gateway.log.includes('"event":"start"'), 10_000, 'the gateway start')
 let fd = start('frontdesk', 'frontdesk/server.mjs')
 await until(async () => (await fetch(`${ORIGIN}/api/health`)).ok, 10_000, 'the front desk start')
@@ -326,7 +330,7 @@ const sampleRoutes = ALLOWED.map(([m, re]) => {
   return [m, `/oc${p}`]
 })
 const deskRoutes = [
-  ['GET', '/api/project'], ['GET', '/api/files'], ['GET', '/api/activity'], ['POST', '/api/files?name=planted.txt'],
+  ['GET', '/api/project'], ['GET', '/api/files'], ['GET', '/api/activity'], ['GET', '/api/runs'], ['POST', '/api/files?name=planted.txt'],
   ['GET', '/api/files/survey.csv?w=fd-a'], ['DELETE', '/api/files/survey.csv'], ...sampleRoutes,
 ]
 await check(`bob cannot reach alice's workspace: ${deskRoutes.length} routes by API, all 404`, async () => {
@@ -396,7 +400,15 @@ await check('upload, download and delete are in the audit log, with no file name
   return 'name kept only as a keyed hash'
 })
 await check('uploads are limited: size, names, and a planted symlink is not followed', async () => {
-  const big = await api('/api/files?name=big.bin', { method: 'POST', cookie: a.cookie, csrf: a.csrf, ws: 'fd-a', body: randomBytes(3 * 1024 * 1024), headers: { 'content-type': 'application/octet-stream' } })
+  // The front desk answers 413 on the declared size and closes the connection while the body is
+  // still being sent (on purpose, M2); fetch can then fail with a reset before it reads the answer,
+  // so this one is sent with node:http, which reads the answer as soon as it comes.
+  const big = await new Promise((resolve) => {
+    const size = 3 * 1024 * 1024
+    const r = http.request({ host: '127.0.0.1', port: PORT, method: 'POST', path: '/api/files?name=big.bin', headers: { host: `localhost:${PORT}`, origin: ORIGIN, cookie: `__Host-ola=${a.cookie}`, 'x-ola-csrf': a.csrf, 'x-ola-workspace': 'fd-a', 'content-type': 'application/octet-stream', 'content-length': size } }, (res) => (res.resume(), resolve({ status: res.statusCode })))
+    r.on('error', () => resolve({ status: 'a reset before any answer' }))
+    r.end(randomBytes(size))
+  })
   assert(big.status === 413, `3 MiB answered ${big.status}`)
   for (const name of ['../escape.txt', '.hidden', 'a/b.txt', '--replace', 'x'.repeat(240)]) {
     const r = await api(`/api/files?name=${encodeURIComponent(name)}`, { method: 'POST', cookie: a.cookie, csrf: a.csrf, ws: 'fd-a', body: 'x' })
@@ -784,6 +796,97 @@ await check('behind the relay (PROXY protocol): an attacker hammering sign-in fr
   } finally {
     fdp.kill('SIGTERM')
   }
+})
+
+// ---------------------------------------------------------------- long runs (the fake model)
+// A run is activity: the idle stop must not end it. The ceiling ends a run that goes on too long,
+// and the page says why. Idle limit 3 s, ceiling 24 s, the fake model's "slow" runs.
+const deskGet = (id, p) =>
+  new Promise((resolve) => {
+    const r = http.request({ socketPath: path.join(env.OLA_HOME, 'ws', id, 'opencode.sock'), path: p, headers: { authorization: `Basic ${Buffer.from(`opencode:${secretsOf(id).OPENCODE_PASSWORD}`).toString('base64')}` }, timeout: 10_000 }, (res) => {
+      let t = ''
+      res.on('data', (d) => (t += d))
+      res.on('end', () => {
+        try {
+          resolve(JSON.parse(t))
+        } catch {
+          resolve(null)
+        }
+      })
+    })
+    r.on('error', () => resolve(null))
+    r.on('timeout', () => (r.destroy(), resolve(null)))
+    r.end()
+  })
+const executing = async (id) => Object.keys((await deskGet(id, '/api/session/active'))?.data ?? {})
+const wsState = (id) => JSON.parse(node('workspace/ws.mjs', ['status', id, '--json']).stdout)[0]?.state
+async function restartForLongRuns() {
+  if (LIVE) {
+    gateway.kill('SIGTERM')
+    await until(() => gateway.exitCode !== null, 10_000, 'the gateway stopping')
+    gateway = start('gateway-fake', 'gateway/server.mjs', { ...gwEnv, ...FAKE_UP })
+    await until(() => gateway.log.includes('"event":"start"'), 10_000, 'the gateway start (fake model)')
+  }
+  fd.kill('SIGTERM')
+  await until(() => fd.exitCode !== null, 10_000, 'the front desk stopping')
+  fd = start('frontdesk', 'frontdesk/server.mjs', { OLA_FD_IDLE_STOP_MIN: '0.05', OLA_FD_RUN_CEILING_MIN: '0.4', OLA_FD_WAKE_WAIT_MS: '0' })
+  await until(async () => (await fetch(`${ORIGIN}/api/health`)).ok, 10_000, 'the front desk start')
+}
+async function ask(text) {
+  await A.page.goto('about:blank')
+  await A.page.goto(`${ORIGIN}/?w=fd-a#/`)
+  await A.page.waitForFunction(() => document.querySelector('.project-title')?.textContent === 'Made-up eviction report', null, { timeout: 60_000 })
+  await A.page.locator('.ask-new, button:has-text("New conversation")').first().click({ timeout: 2000 }).catch(() => {})
+  await A.page.fill('#askbar-input', text)
+  await A.page.press('#askbar-input', 'Enter')
+  const t0 = Date.now()
+  await until(async () => (await executing('fd-a')).length > 0, 20_000, 'the run starting')
+  return { t0, sid: (await executing('fd-a'))[0] }
+}
+
+await check('a run longer than the idle limit finishes with no request from the browser, and the workspace stops only after it ends', async () => {
+  await restartForLongRuns()
+  const calls0 = fake.calls()
+  const { t0, sid } = await ask('List the folder, slowly. slow 4x1500')
+  await A.page.goto('about:blank') // no request from any browser while it runs
+  const states = new Set()
+  let lastSeen = Date.now()
+  // The workspace's state, sampled only between two sightings of the run executing.
+  while (Date.now() - t0 < 90_000) {
+    if (!(await executing('fd-a')).length) break
+    const st = wsState('fd-a')
+    if (!(await executing('fd-a')).length) break
+    states.add(st)
+    lastSeen = Date.now()
+    await sleep(500)
+  }
+  const ran = lastSeen - t0
+  const msgs = JSON.stringify(await deskGet('fd-a', `/api/session/${sid}/message`))
+  assert(states.size && [...states].every((s) => s === 'running'), `states during the run: ${[...states].join(', ')} (ran ${ran} ms)`)
+  assert(ran > 6000, `the run lasted only ${ran} ms (idle limit 3 s)`)
+  assert(msgs.includes('Done after 4 slow steps'), `the run did not reach its answer after ${ran} ms, ${fake.calls() - calls0} calls: ${msgs.slice(0, 900)}`)
+  const ended = Date.now()
+  await until(() => wsState('fd-a') !== 'running', 30_000, 'the idle stop after the run')
+  return `ran ${(ran / 1000).toFixed(1)} s past a 3 s idle limit, running throughout, ${fake.calls() - calls0} model calls, answered; stopped ${((Date.now() - ended) / 1000).toFixed(1)} s after it ended`
+})
+
+await check('the run ceiling interrupts a run cleanly and the page says why', async () => {
+  const { t0, sid } = await ask('List the folder, very slowly. slow 40x2000')
+  const last = A.page.locator('.drawer .turn').last()
+  await until(async () => (await last.getAttribute('data-status')) === 'stopped', 60_000, 'the run stopping at the ceiling')
+  const at = Date.now() - t0
+  await A.page.waitForFunction(() => /longest one request may run/.test(document.querySelector('.drawer .turn:last-of-type')?.textContent ?? ''), null, { timeout: 10_000 })
+  const text = (await last.innerText()).replace(/\s+/g, ' ')
+  assert(at >= 23_000 && at < 50_000, `stopped after ${at} ms (ceiling 24 s)`)
+  assert(!(await executing('fd-a')).length, 'the session is still executing')
+  const c1 = fake.calls()
+  await sleep(3000)
+  assert(fake.calls() === c1, 'the model is still being called after the stop')
+  const runs = await api('/api/runs', { cookie: a.cookie, ws: 'fd-a' })
+  const stops = runs.json?.stopped ?? []
+  assert(stops.length === 1 && stops[0].session === sid && stops[0].minutes === 0.4, `/api/runs: ${stops.length} stops (${stops.map((x) => x.session === sid ? 'this run' : 'another').join(', ')})`)
+  const m = /Ola stopped this after[^.]*\./.exec(text)?.[0] ?? text.slice(0, 80)
+  return `stopped ${(at / 1000).toFixed(1)} s after the request (ceiling 24 s); no model call after; the turn says: "${m}"`
 })
 
 await check('an idle workspace stops, its event stream does not wake it, and opening the project does ("Waking your workspace…")', async () => {

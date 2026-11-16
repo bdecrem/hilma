@@ -7,7 +7,7 @@ import { createStore, produce, reconcile } from 'solid-js/store'
 import { applyEvent, emptyConversation, startTurn, turnsFromMessages, type ConversationState } from './conversation.ts'
 import { describeApproval } from './steps.ts'
 import type { Autonomy, Connection, Problem } from './types.ts'
-import { deskHeaders } from './api.ts'
+import { desk, deskHeaders } from './api.ts'
 
 export interface EarlierConversation {
   id: string
@@ -40,7 +40,33 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
   let disposed = false
   let streamAbort: AbortController | null = null
 
-  const fold = (ev: any) => setState(produce((s) => void applyEvent(s, ev)))
+  const fold = (ev: any) => {
+    setState(produce((s) => void applyEvent(s, ev)))
+    if (ev?.type === 'session.execution.interrupted') void noteCeiling(ev.data?.sessionID ?? null)
+  }
+  /**
+   * A run the front desk interrupted at the run ceiling ends like a Stop in opencode's events; the
+   * front desk says which runs it stopped (GET /api/runs), and the turn shows why.
+   */
+  async function noteCeiling(sessionID: string | null) {
+    if (!sessionID) return
+    let stops
+    try {
+      stops = (await desk.runs()).stopped.filter((r) => r.session === sessionID)
+    } catch {
+      return
+    }
+    const stop = stops[stops.length - 1]
+    if (!stop || state.sessionID !== sessionID) return
+    setState(
+      produce((s) => {
+        const turn = s.turns[s.turns.length - 1]
+        if (!turn || turn.status === 'sending' || turn.status === 'working' || turn.at > Date.parse(stop.at)) return
+        turn.status = 'stopped'
+        turn.error = { text: stop.message, detail: `stopped at the run limit (${stop.minutes} min)` }
+      }),
+    )
+  }
   const markLost = () => {
     if (state.connection !== 'lost') setState({ connection: 'lost', lostSince: Date.now() })
   }
@@ -94,6 +120,7 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
       // A turn still running has no idle marker yet: keep it working, the stream will finish it.
       setState('turns', reconcile(turns))
       if (last && last.status === 'working') setState('answerMessage', null)
+      else void noteCeiling(sessionID)
       const pending = await client.permission.list({ sessionID })
       const p = (pending as any[])[0]
       setState('approval', p ? { id: p.id, sessionID, action: p.action, ...describeApproval(p.action, p.resources ?? [], p.metadata, state.directory), stepID: p.source?.id ?? null } : null)
@@ -191,6 +218,7 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
       const list = await client.message.list({ sessionID: id, limit: 200 })
       setState({ ...emptyConversation(), sessionID: id, directory: session.location?.directory ?? null, problem: null, autonomy: (session.metadata as any)?.autonomy === 'ask' ? 'ask' : 'go' })
       setState('turns', turnsFromMessages((list as any).data ?? [], session.location?.directory ?? null))
+      void noteCeiling(id)
       const pending = (await client.permission.list({ sessionID: id })) as any[]
       const p = pending[0]
       if (p) setState('approval', { id: p.id, sessionID: id, action: p.action, ...describeApproval(p.action, p.resources ?? [], p.metadata, state.directory), stepID: p.source?.id ?? null })
