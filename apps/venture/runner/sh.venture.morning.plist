@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- The daily 10 am text to Bart that sets the check-in (scripts/venture/morning.mjs).
+     Install on the Mac mini: cp to ~/Library/LaunchAgents/ and launchctl bootstrap gui/501 <plist>.
+     It pulls the checkout first so the script is current; the once-a-day guard is in venture_state. -->
+<plist version="1.0"><dict>
+  <key>Label</key><string>sh.venture.morning</string>
+  <key>ProgramArguments</key><array>
+    <string>/bin/bash</string><string>-lc</string>
+    <string>cd $HOME/hilma-venture &amp;&amp; git pull -q --ff-only; exec /opt/homebrew/bin/node scripts/venture/morning.mjs</string>
+  </array>
+  <key>StartCalendarInterval</key><dict>
+    <key>Hour</key><integer>10</integer>
+    <key>Minute</key><integer>0</integer>
+  </dict>
+  <key>EnvironmentVariables</key><dict>
+    <key>HOME</key><string>/Users/admin</string>
+    <key>PATH</key><string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+  </dict>
+  <key>StandardOutPath</key><string>/Users/admin/Library/Logs/venture-runner/morning.log</string>
+  <key>StandardErrorPath</key><string>/Users/admin/Library/Logs/venture-runner/morning.log</string>
+</dict></plist>

@@ -68,7 +68,7 @@ function parse(body: string) {
     if (line.startsWith('## ')) sections.push({ title: line.slice(3).trim(), lines: [] })
     else if (sections.length && line.trim()) sections[sections.length - 1].lines.push(line.trim())
   }
-  const named = ['Now', 'Numbers', 'Waiting on you', 'Parked, your call']
+  const named = ['Now', 'Numbers', 'Waiting on you', 'Parked, your call', 'Active project', 'On my plate', 'Decided']
   const get = (t: string) => sections.find((s) => s.title === t)
   const items = (t: string) => (get(t)?.lines ?? []).filter((l) => l.startsWith('- ')).map((l) => l.slice(2))
   const days = sections
@@ -80,7 +80,19 @@ function parse(body: string) {
         .map((l) => l.slice(2).match(/^\*\*([^*]+)\*\*\s*(.*)$/))
         .map((m, i, all) => (m ? { time: m[1], text: m[2] } : { time: '', text: String(all[i]) })),
     }))
-  return { now: (get('Now')?.lines ?? []).join(' '), numbers: items('Numbers'), waiting: items('Waiting on you'), parked: items('Parked, your call'), days }
+  // "- **P1** text" → a priority and the item; "- **Nov 16** text" → a date and the decision
+  const tagged = (t: string) => items(t).map((l) => { const m = l.match(/^\*\*([^*]+)\*\*\s*(.*)$/); return m ? { tag: m[1], text: m[2] } : { tag: '', text: l } })
+  const active = get('Active project')?.lines ?? []
+  return {
+    now: (get('Now')?.lines ?? []).join(' '),
+    numbers: items('Numbers'),
+    waiting: items('Waiting on you'),
+    parked: items('Parked, your call'),
+    project: { title: active.find((l) => l.startsWith('# '))?.slice(2) ?? '', text: active.filter((l) => !l.startsWith('# ') && !l.startsWith('- ')).join(' '), links: active.filter((l) => l.startsWith('- ')).map((l) => l.slice(2)) },
+    plate: tagged('On my plate'),
+    decided: tagged('Decided'),
+    days,
+  }
 }
 
 export default async function Page() {
@@ -107,8 +119,7 @@ export default async function Page() {
             Kochito Labs<span>.</span>
           </a>
           <nav aria-label="Products">
-            <a href="https://clerkpdf.com">ClerkPDF ↗</a>
-            <a href="https://appadopt.com">AppAdopt ↗</a>
+            <a href="https://ola.cx">Ola ↗</a>
           </nav>
         </header>
 
@@ -194,6 +205,40 @@ export default async function Page() {
             </section>
           )}
 
+          {j.project.title && (
+            <section className="ko-sec" aria-labelledby="project">
+              <div className="ko-sec-head">
+                <p className="ko-sub">Active project</p>
+                <h2 id="project">{j.project.title}</h2>
+                <p>{inline(j.project.text)}</p>
+              </div>
+              {j.project.links.length > 0 && (
+                <ul className="ko-links">
+                  {j.project.links.map((l, i) => (
+                    <li key={i}>{inline(l)}</li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          )}
+
+          {j.plate.length > 0 && (
+            <section className="ko-sec" aria-labelledby="plate">
+              <div className="ko-sec-head">
+                <h2 id="plate">On my plate</h2>
+                <p>What I am doing or will do next, most important first. P0 is now, P1 this week, P2 after that.</p>
+              </div>
+              <ol className="ko-plate">
+                {j.plate.map((p, i) => (
+                  <li key={i}>
+                    <span className={`ko-mono ko-pri ${p.tag.toLowerCase()}`}>{p.tag}</span>
+                    <span>{inline(p.text)}</span>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )}
+
           <section className="ko-sec" aria-labelledby="talk">
             <div className="ko-sec-head">
               <h2 id="talk">Talk to me</h2>
@@ -238,9 +283,26 @@ export default async function Page() {
             </section>
           )}
 
+          {j.decided.length > 0 && (
+            <section className="ko-sec" aria-labelledby="decided">
+              <div className="ko-sec-head">
+                <h2 id="decided">Decided</h2>
+                <p>What we settled, newest first. Your words where they matter.</p>
+              </div>
+              <ol className="ko-decided">
+                {j.decided.map((d, i) => (
+                  <li key={i}>
+                    <span className="ko-mono t">{d.tag}</span>
+                    <span>{inline(d.text)}</span>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )}
+
           <section className="ko-sec" aria-labelledby="journal">
             <div className="ko-sec-head">
-              <h2 id="journal">Journal</h2>
+              <h2 id="journal">Done</h2>
               <p>What I did, newest first.</p>
             </div>
             {j.days.map((d) => (

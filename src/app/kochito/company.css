@@ -175,3 +175,15 @@
 .ko-out { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin: 0; }
 .ko-out button { border: 0; background: none; padding: 0; font: inherit; color: var(--ink-2); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; cursor: pointer; }
 .ko-out button:hover { color: var(--acc); }
+
+/* app.kochitolabs.com: the active project, on my plate, decided (2026-11-16) */
+.ko-links { list-style: none; padding: 0; margin: 22px 0 0; display: flex; flex-wrap: wrap; gap: 10px; }
+.ko-links li { border: 1.5px solid var(--edge); border-radius: 9px; background: var(--card); padding: 8px 14px; }
+.ko-plate, .ko-decided { list-style: none; padding: 0; margin: 0; display: grid; gap: 0; max-width: 46em; }
+.ko-plate li, .ko-decided li { display: grid; grid-template-columns: 5.5em 1fr; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--line); line-height: 1.5; }
+.ko-pri { justify-self: start; align-self: start; border: 1.5px solid var(--edge); border-radius: 6px; padding: 1px 8px; font-weight: 700; background: var(--card); }
+.ko-pri.p0 { background: var(--ok); color: var(--ink); }
+.ko-pri.p1 { background: var(--mark); color: var(--ink); }
+.ko-pri.p2 { color: var(--ink-3); border-color: var(--line); }
+.ko-decided .t { color: var(--ink-3); padding-top: 2px; }
+@media (max-width: 560px) { .ko-plate li, .ko-decided li { grid-template-columns: 1fr; gap: 4px; } }
