@@ -4,10 +4,10 @@
 export type Doc = { slug: string; title: string; body: string; updated_at?: string | null }
 
 // The notes have a size budget. On 2026-11-15 seven raw research files (1.5 MB) were synced
-// into venture_docs, the prompt came to 1,097,063 tokens against the model's 1,000,000, and
-// every voice reply and every text reply failed for eight hours; Bart found out by saying
-// "Hello, can you hear me?" to a dead line. Measured that day: 2.5 characters a token in the
-// worst files, so 1,000,000 characters is at most about 400,000 tokens.
+// into venture_docs in the morning; at 4:09 pm the prompt was 1,097,063 tokens against the
+// model's 1,000,000 and every reply failed: one text, then nineteen voice replies across
+// three calls, while Bart said "Hello, can you hear me?" to a dead line. Measured that
+// day: about 2.7 characters a token, so 1,000,000 characters is about 370,000 tokens.
 export const NOTES_BUDGET = 1_000_000 // characters, all documents together
 export const NOTES_DOC_MAX = 150_000 // a longer file is a raw dump, not a note: listed, never loaded
 // "now" (where things stand) goes first, then the standing rules distilled from Bart's

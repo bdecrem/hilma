@@ -79,8 +79,8 @@ export async function ventureInbound(raw: string): Promise<void> {
     else messages.push({ role, content: body })
   }
 
-  // A failed call must not be silence: on 2026-11-15 the notes outgrew the model and his
-  // texts went unanswered for eight hours with nothing said to him.
+  // A failed call must not be silence: on 2026-11-15 the notes had outgrown the model and
+  // his text got no answer and no word that anything was wrong.
   const SORRY = 'Got it. I could not write a proper answer just now; the session will pick this up.'
   let res: Anthropic.Beta.BetaMessage
   try {
