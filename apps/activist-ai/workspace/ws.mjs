@@ -186,7 +186,9 @@ async function openRelay(kind, id) {
   if (relayPid(kind, id)) return
   const r = relays[kind](id)
   rmSync(r.sock, { force: true })
-  const argv = [process.execPath, path.join(here, r.script), r.sock, ...r.args]
+  // Homebrew's stable link, not the versioned Cellar path a brew upgrade removes (a door or desk
+  // restarted by launchd after an upgrade would not start).
+  const argv = [existsSync('/opt/homebrew/bin/node') ? '/opt/homebrew/bin/node' : process.execPath, path.join(here, r.script), r.sock, ...r.args]
   if (LAUNCHD) {
     // A user agent, loaded while the workspace runs (ws.mjs stop unloads it), restarted by launchd
     // if it dies. Its plist lives in ~/.ola/launchd, not ~/Library/LaunchAgents: after a reboot no

@@ -64,8 +64,10 @@ const DEPLOYED = path.join(STAGING, 'deployed.json')
 // upgrade removes that one, and every job with it).
 const NODE = existsSync('/opt/homebrew/bin/node') ? '/opt/homebrew/bin/node' : process.execPath
 // status and prove-restarts use the deployed code (its admin CLI and ws.mjs match the running
-// services and the database's migrations), wherever this script was started from.
-const CODE = existsSync(path.join(SERVED, 'ops/ola.mjs')) ? SERVED : AI
+// services and the database's migrations), wherever this script was started from. By its real
+// path: ws.mjs and admin.mjs run as a command only when argv[1] is their own (resolved) file, so
+// through the `current` symlink they would load, do nothing and exit 0.
+const CODE = existsSync(path.join(SERVED, 'ops/ola.mjs')) ? realpathSync(SERVED) : AI
 
 const fail = (m) => {
   console.error(`ola: ${m}`)
@@ -349,8 +351,10 @@ async function proveRestarts() {
     console.log(`${problem ? 'FAIL' : 'pass'}  ${label}: pid ${before.pid ?? '-'} -> ${after.pid ?? '-'}, ${problem ? problem : `the session works again after ${(ms / 1000).toFixed(1)} s`}`)
   }
   // Leave the staging workspace stopped (the checks count running workspaces machine-wide).
-  sh(process.execPath, [path.join(CODE, 'workspace/ws.mjs'), 'stop', 'stage-a'], { env })
-  console.log(failed ? `${failed} of ${labels.length} restarts failed` : `all ${labels.length} restarts passed; stage-a stopped again`)
+  const stop = sh(process.execPath, [path.join(CODE, 'workspace/ws.mjs'), 'stop', 'stage-a'], { env })
+  const st = JSON.parse(sh(process.execPath, [path.join(CODE, 'workspace/ws.mjs'), 'status', 'stage-a', '--json'], { env }).stdout || '[]')[0]?.state
+  if (stop.status !== 0 || st === 'running') (failed++, console.log(`FAIL  stopping stage-a again: exit ${stop.status}, state ${st}`))
+  console.log(failed ? `${failed} check(s) failed` : `all ${labels.length} restarts passed; stage-a stopped again (${st})`)
   process.exit(failed ? 1 : 0)
 }
 
