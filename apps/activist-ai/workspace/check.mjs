@@ -15,7 +15,7 @@
 //   5. destroy leaves nothing behind
 // Only made-up data. Prints one line per check, the measurements, and exits 0 only if all pass.
 import { spawn, spawnSync } from 'node:child_process'
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs'
 import net from 'node:net'
 import { homedir, tmpdir } from 'node:os'
 import path from 'node:path'
@@ -181,6 +181,48 @@ print(json.dumps({"nproc": os.cpu_count(), "cpu_max": open("/sys/fs/cgroup/cpu.m
   "cap_eff": [l.split()[1] for l in open("/proc/self/status") if l.startswith("CapEff")][0]}))
 `
 
+// Every directory on the image, outside /work and the /tmp tmpfs: a file is tried in each, and the ones that took it are listed. Plus any setuid or
+// setgid file anywhere on the image.
+const WRITABLE_PROBE = String.raw`
+import json, os, stat
+skip = ("/proc", "/sys", "/dev", "/work", "/tmp", "/.cz-init")
+wrote, suid = [], []
+for d, dirs, fs in os.walk("/"):
+    dirs[:] = [x for x in dirs if not os.path.join(d, x).startswith(skip)]
+    for f in fs:
+        try:
+            if os.lstat(os.path.join(d, f)).st_mode & (stat.S_ISUID | stat.S_ISGID): suid.append(os.path.join(d, f))
+        except OSError: pass
+    try:
+        fd = os.open(os.path.join(d, ".ola-probe"), os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        os.close(fd); os.unlink(os.path.join(d, ".ola-probe")); wrote.append(d)
+    except OSError: pass
+print(json.dumps({"wrote": wrote, "suid": suid}))
+`
+
+// Opens 48 connections through the door at once, each with a request the gateway is still
+// waiting to finish (so none is closed by an answer), and counts which the door kept open
+// and which it closed at once; then lets them go and asks once more.
+const DOOR_FLOOD_PROBE = String.raw`
+import json, select, socket, time
+conns = []
+for i in range(48):
+    s = socket.create_connection(("127.0.0.1", 4180), timeout=5)
+    s.sendall(b"GET /v1/models HTTP/1.1\r\nHost: gw\r\n")
+    conns.append(s)
+time.sleep(0.5)
+held = refused = 0
+for s in conns:
+    r, _, _ = select.select([s], [], [], 0)
+    if r and s.recv(1) == b"": refused += 1
+    else: held += 1
+for s in conns: s.close()
+time.sleep(1)
+s = socket.create_connection(("127.0.0.1", 4180), timeout=5)
+s.sendall(b"GET /v1/models HTTP/1.1\r\nHost: gw\r\nConnection: close\r\n\r\n")
+print(json.dumps({"held": held, "refused": refused, "after": s.recv(12).decode("latin-1")}))
+`
+
 // Touches every page of `mib` MiB; prints ALLOCATED if the VM let it.
 const ALLOC = (mib) => `x = bytearray(${mib} * 1048576)\nfor i in range(0, len(x), 4096): x[i] = 1\nprint("ALLOCATED")`
 // Writes until the disk is full or `mib` MiB are written; prints how far it got and why it stopped.
@@ -238,7 +280,8 @@ try {
     const sockets = JSON.stringify(cfg.sockets || cfg.publishedSockets || [])
     const other = id === A ? B : A
     t(`${id}: mounts only its own volume and door`, mounts.includes(`ola-${id}`) && mounts.includes(`/ws/${id}/gateway.sock`) && !mounts.includes(`ola-${other}`) && !mounts.includes(`/ws/${other}/`) && (cfg.mounts || []).filter((m) => !m.type?.tmpfs).length === 2, (cfg.mounts || []).map((m) => `${Object.keys(m.type || {})[0]} ${m.destination}`).join(', '))
-    t(`${id}: publishes only its own opencode socket`, sockets.includes(`/ws/${id}/opencode.sock`) && !sockets.includes(`/ws/${other}/`), sockets.length > 2 ? 'published' : sockets)
+    // opencode is reached through the desk (container exec), so nothing is published.
+    t(`${id}: publishes no socket; its desk (container exec) is open`, (sockets === '[]' || sockets === '{}') && Boolean(ws.deskPid(id)), sockets)
   }
   const modes = [ws.HOME, path.join(ws.HOME, 'ws', A), path.join(ws.HOME, 'ws', A, 'secrets.env'), path.join(ws.HOME, 'gateway-tokens')].map((f) => (statSync(f).mode & 0o777).toString(8))
   t('host state: folders 700, secrets 600', modes.join(' ') === '700 700 600 600', modes.join(' '))
@@ -287,6 +330,45 @@ try {
   t(`${B}: 256 MiB fits, and the workspace survived`, small.out.includes('ALLOCATED') && (await ws.opencodeRequest(B, '/api/info')) === 200)
   const fill = insideJSON(B, FILL(1300), { timeout: 300_000 })
   t(`${B}: writing past its 1 GiB volume fails`, fill.stopped && fill.stopped !== 'wrote all' && fill.mib < 1024, `${fill.mib} MiB written, then: ${fill.stopped}`)
+
+  const madeUpPath = path.join(run, 'made-up-notes.txt')
+  writeFileSync(madeUpPath, 'invented notes for the check\n')
+  // -------- the review of 2026-11-16: the root is read-only, no setuid, ids and names
+  const w = insideJSON(A, WRITABLE_PROBE, { timeout: 120_000 })
+  t(`${A}: nothing outside /work and /tmp takes a file (the root is read-only)`, Array.isArray(w.wrote) && w.wrote.length === 0, w.error || JSON.stringify(w.wrote))
+  t(`${A}: no setuid or setgid program in the image`, Array.isArray(w.suid) && w.suid.length === 0, w.error || JSON.stringify(w.suid))
+  const past = insideJSON(B, String.raw`
+import json, os
+n = 0; why = "wrote all"
+try:
+    with open("/var/tmp/past.bin", "wb") as f:
+        for _ in range(64): f.write(b"\1" * 1048576); n += 1
+        f.flush(); os.fsync(f.fileno())
+except OSError as e:
+    why = os.strerror(e.errno)
+print(json.dumps({"mib": n, "stopped": why}))
+`)
+  t(`${B}: writing outside /work, past the volume's limit, fails at once`, past.mib === 0 && past.stopped !== 'wrote all', `${past.mib} MiB, then: ${past.stopped}`)
+  inside(B, 'open("/tmp/marker", "w").write("x")')
+  ws.stop(B)
+  await ws.start(B)
+  const kept = inside(B, 'import os; print(os.path.exists("/tmp/marker"))')
+  t(`${B}: nothing written outside /work survives a stop`, kept.out.trim() === 'False', kept.out.trim() || kept.err.trim().split('\n').pop())
+  const rdirs = ws.runtimeDirs(A)
+  t(`${A}: the runtime's folders (container config with its environment, volume image) are mode 700`, rdirs.length === 2 && rdirs.every((d) => (statSync(d).mode & 0o777) === 0o700), rdirs.map((d) => (statSync(d).mode & 0o777).toString(8)).join(' '))
+  const badIds = ['../chk-a', '-rf', '--help', 'chk-a/../chk-b', 'CHK-A', 'a']
+  const idRefusals = []
+  for (const bad of badIds)
+    for (const [name, f] of Object.entries({ start: () => ws.start(bad), stop: () => ws.stop(bad), status: () => ws.status(bad), files: () => ws.files(bad), upload: () => ws.upload(bad, [madeUpPath]), destroy: () => ws.destroy(bad, { confirm: bad }) }))
+      idRefusals.push(await Promise.resolve().then(f).then(() => `${name} ${bad}: accepted`, (e) => (/workspace id is/.test(e.message) ? null : `${name} ${bad}: ${e.message}`)))
+  t('every command refuses an id that is not a workspace id, before anything runs', idRefusals.every((r) => r === null), idRefusals.filter(Boolean).join('; ').slice(0, 200) || `${idRefusals.length} refusals`)
+  symlinkSync(madeUpPath, path.join(run, 'link.txt'))
+  t('upload: a symlink on the host is refused, not followed', (await ws.upload(A, [path.join(run, 'link.txt')]).then(() => 'uploaded', (e) => e.message)) !== 'uploaded')
+  writeFileSync(path.join(run, '--replace'), 'x')
+  const optName = await ws.upload(A, [path.join(run, '--replace')]).then(() => 'uploaded', (e) => e.message)
+  t('upload: a name that looks like an option is refused on the host', /upload name is a plain file name/.test(optName), optName)
+  const flood = insideJSON(A, DOOR_FLOOD_PROBE, { timeout: 120_000 })
+  t('door: 48 connections at once, 32 held, the rest refused, and it answers again after', flood.held === 32 && flood.refused === 16 && /^HTTP\/1\.1 /.test(flood.after || '') && ws.doorPid(A), flood.error || `held ${flood.held}, refused ${flood.refused}, after: ${flood.after}`)
 
   // -------- upload and files
   const madeUp = path.join(run, 'made-up-notes.txt')
@@ -361,8 +443,8 @@ try {
     const r = await ws.destroy(id, { confirm: id }).then(() => 'ok', (e) => e.message)
     t(`destroy ${id}: container, volume, its files on disk, state folder and token all gone`, r === 'ok', r)
   }
-  const doors = spawnSync('pgrep', ['-f', `door.mjs ${ws.HOME}`], { encoding: 'utf8' }).stdout.trim()
-  t('destroy: no door process left', doors === '', doors)
+  const doors = spawnSync('pgrep', ['-f', `(door|desk).mjs ${ws.HOME}`], { encoding: 'utf8' }).stdout.trim()
+  t('destroy: no door or desk process left', doors === '', doors)
   const leftovers = ws.listOla().filter((c) => /ola-chk-/.test(c.configuration?.id || c.id))
   t('destroy: no ola-chk container or volume left', leftovers.length === 0 && [A, B, C].every((id) => !ws.volumeOf(id)))
 } catch (e) {

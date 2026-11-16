@@ -1,15 +1,17 @@
 # The workspace image: one sealed Linux VM per customer workspace (Apple `container`).
 #
 # What is in it: Debian bookworm-slim (pinned by digest), opencode 2.3.0 (pinned by npm
-# integrity), python3 (the agent needs a language to run code on files), socat (the two
-# socket bridges in ola-init), and a non-root user `work`. Nothing else: no sudo, no
-# package manager use after build, no ssh, no CA bundle (there is no internet to talk to).
+# integrity), python3 (the agent needs a language to run code on files), socat (the bridge to the door in
+# ola-init, and the desk's relay to opencode), and a non-root user `work`. Nothing else: no sudo, no setuid
+# or setgid programs, no package manager use after build,
+# no ssh, no CA bundle (there is no internet to talk to).
 #
 # The VM runs with `--network none`: its only interface is loopback. ola-init bridges
 # 127.0.0.1:4180 to the one host socket mounted in (the door, which leads only to the
-# gateway), and publishes opencode's port as a socket the host connects to.
+# gateway). The host reaches opencode through `container exec` (workspace/desk.mjs), and the
+# root file system is read-only (ws.mjs creates the container with --read-only).
 #
-#   container build -t ola-workspace:2.3.0-1 -f Containerfile .
+#   container build -t ola-workspace:2.3.0-2 -f Containerfile .
 
 ARG DEBIAN=docker.io/library/debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc
 
@@ -29,8 +31,12 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends python3 socat \
  && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*.deb \
  && useradd --create-home --uid 1000 --shell /bin/bash work \
- && mkdir -p /work /ola/run /ola/gw \
- && chown work:work /work /ola/run
+ && mkdir -p /work /ola/gw \
+ && chown work:work /work \
+ # No setuid or setgid programs (su, passwd, mount, chsh...): no program in the image hands
+ # out root, which would reach the fifth vCPU, the cgroup and the guest's root-owned files.
+ && find / -xdev -type f -perm /6000 -exec chmod a-s {} + \
+ && rm -f /etc/shadow- /etc/gshadow-
 COPY --from=fetch /opencode /usr/local/bin/opencode
 COPY opencode.jsonc /opt/ola/config/opencode/opencode.jsonc
 COPY ola-init ola-files ola-put /opt/ola/bin/

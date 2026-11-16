@@ -14,8 +14,10 @@
 //   - the door (door.mjs): a host socket mounted into the VM, whose listener connects only
 //     to the model gateway on 127.0.0.1 (OLA_GATEWAY_PORT, 4180). ola-init bridges it to
 //     127.0.0.1:4180 inside the VM.
-//   - opencode's socket, published to the host (--publish-socket); the front desk talks to
-//     `opencode serve` through it with the workspace's Basic-auth password.
+//   - the desk (desk.mjs): a host socket, ~/.ola/ws/<id>/opencode.sock, where each connection
+//     becomes a `container exec` of socat to opencode on the VM's loopback; the front desk
+//     talks to `opencode serve` through it with the workspace's Basic-auth password. Nothing
+//     is published with --publish-socket, so the image's root stays read-only.
 // opencode's own permission settings are not part of the seal (the agent's shell can
 // ignore them). Nothing here needs root, and no host firewall rule is involved.
 //
@@ -28,7 +30,7 @@
 // included, under /work/.ola), so `files` shows all of it and `destroy` removes all of it.
 import { spawn, spawnSync } from 'node:child_process'
 import { createHash, randomBytes } from 'node:crypto'
-import { chmodSync, closeSync, createReadStream, existsSync, mkdirSync, openSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { chmodSync, closeSync, createReadStream, existsSync, lstatSync, mkdirSync, openSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import http from 'node:http'
 import { homedir } from 'node:os'
 import path from 'node:path'
@@ -37,7 +39,7 @@ import { fileURLToPath } from 'node:url'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 export const CONTAINER = process.env.OLA_CONTAINER_BIN || '/usr/local/bin/container'
-export const IMAGE = 'ola-workspace:2.3.0-1'
+export const IMAGE = 'ola-workspace:2.3.0-2'
 export const HOME = process.env.OLA_HOME || path.join(homedir(), '.ola')
 export const GATEWAY_PORT = Number(process.env.OLA_GATEWAY_PORT || 4180)
 const GIB = 1024 ** 3
@@ -49,10 +51,20 @@ const ID = /^[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$/
 // The container's data root, where volume images live (checked by destroy).
 const DATA_ROOT = path.join(homedir(), 'Library/Application Support/com.apple.container')
 
+// Every command checks the id before it reaches a path or the container CLI.
+export const validId = (id) => (typeof id === 'string' && ID.test(id)) || refuse('a workspace id is 3 to 32 lowercase letters, digits or dashes')
+// What ola-put accepts, checked on the host too, before anything reaches `container exec`.
+const UPLOAD_NAME = /^[A-Za-z0-9][A-Za-z0-9 ._()+,-]{0,199}$/
+
 export const names = (id) => ({ container: `ola-${id}`, volume: `ola-${id}`, caller: `ws-${id}` })
+// The runtime's own folders for a workspace: the container's (config, rootfs) and the volume's.
+export function runtimeDirs(id) {
+  const img = volumeOf(id)?.configuration?.source
+  return [path.join(DATA_ROOT, 'containers', names(id).container), ...(img ? [path.dirname(img)] : [])].filter((d) => existsSync(d))
+}
 export function paths(id) {
   const dir = path.join(HOME, 'ws', id)
-  return { dir, secrets: path.join(dir, 'secrets.env'), meta: path.join(dir, 'meta.json'), door: path.join(dir, 'gateway.sock'), opencode: path.join(dir, 'opencode.sock'), doorPid: path.join(dir, 'door.pid'), doorLog: path.join(dir, 'door.log') }
+  return { dir, secrets: path.join(dir, 'secrets.env'), meta: path.join(dir, 'meta.json'), door: path.join(dir, 'gateway.sock'), opencode: path.join(dir, 'opencode.sock'), doorPid: path.join(dir, 'door.pid'), doorLog: path.join(dir, 'door.log'), deskPid: path.join(dir, 'desk.pid'), deskLog: path.join(dir, 'desk.log') }
 }
 
 class Refusal extends Error {}
@@ -105,7 +117,7 @@ export function writeGatewayTokens() {
   const entries = []
   for (const id of existsSync(dir) ? readdirSync(dir).sort() : []) {
     const f = paths(id).secrets
-    if (existsSync(f)) entries.push(`${names(id).caller}:${readEnvFile(f).BOX_API_KEY}`)
+    if (ID.test(id) && existsSync(f)) entries.push(`${names(id).caller}:${readEnvFile(f).BOX_API_KEY}`)
   }
   const file = path.join(HOME, 'gateway-tokens')
   writeFileSync(file, `GATEWAY_TOKENS=${entries.join(',')}\n`, { mode: 0o600 })
@@ -132,38 +144,50 @@ const alive = (pid) => {
     return false
   }
 }
-export function doorPid(id) {
-  const f = paths(id).doorPid
-  if (!existsSync(f)) return null
-  const pid = Number(readFileSync(f, 'utf8'))
-  if (!pid || !alive(pid)) return null
-  // Make sure the pid is still our door, not a recycled number.
-  const ps = spawnSync('ps', ['-o', 'command=', '-p', String(pid)], { encoding: 'utf8' }).stdout || ''
-  return ps.includes('door.mjs') && ps.includes(paths(id).door) ? pid : null
+// Two host processes per running workspace, both detached and found again by their pid
+// file: the door (door.mjs, the VM's way out to the gateway) and the desk (desk.mjs, the
+// host's way in to opencode).
+const relays = {
+  door: (id) => ({ script: 'door.mjs', sock: paths(id).door, args: [String(GATEWAY_PORT)], pid: paths(id).doorPid, log: paths(id).doorLog }),
+  desk: (id) => ({ script: 'desk.mjs', sock: paths(id).opencode, args: [names(id).container], pid: paths(id).deskPid, log: paths(id).deskLog }),
 }
-export async function openDoor(id) {
-  if (doorPid(id)) return
-  const p = paths(id)
-  const log = openSync(p.doorLog, 'a', 0o600)
-  const child = spawn(process.execPath, [path.join(here, 'door.mjs'), p.door, String(GATEWAY_PORT)], { detached: true, stdio: ['ignore', log, log] })
+function relayPid(kind, id) {
+  const r = relays[kind](id)
+  if (!existsSync(r.pid)) return null
+  const pid = Number(readFileSync(r.pid, 'utf8'))
+  if (!pid || !alive(pid)) return null
+  // Make sure the pid is still ours, not a recycled number.
+  const ps = spawnSync('ps', ['-o', 'command=', '-p', String(pid)], { encoding: 'utf8' }).stdout || ''
+  return ps.includes(r.script) && ps.includes(r.sock) ? pid : null
+}
+async function openRelay(kind, id) {
+  if (relayPid(kind, id)) return
+  const r = relays[kind](id)
+  rmSync(r.sock, { force: true })
+  const log = openSync(r.log, 'a', 0o600)
+  const child = spawn(process.execPath, [path.join(here, r.script), r.sock, ...r.args], { detached: true, stdio: ['ignore', log, log], env: { PATH: process.env.PATH, OLA_CONTAINER_BIN: CONTAINER } })
   closeSync(log)
   child.unref()
-  writeFileSync(p.doorPid, String(child.pid), { mode: 0o600 })
+  writeFileSync(r.pid, String(child.pid), { mode: 0o600 })
   for (let i = 0; i < 50; i++) {
-    if (existsSync(p.door)) return
-    await new Promise((r) => setTimeout(r, 100))
+    if (existsSync(r.sock)) return
+    await new Promise((res) => setTimeout(res, 100))
   }
-  refuse('the door did not open its socket')
+  refuse(`the ${kind} did not open its socket`)
 }
-function closeDoor(id) {
-  const pid = doorPid(id)
+function closeRelay(kind, id) {
+  const pid = relayPid(kind, id)
   if (pid) process.kill(pid, 'SIGTERM')
-  rmSync(paths(id).doorPid, { force: true })
+  rmSync(relays[kind](id).pid, { force: true })
 }
+export const doorPid = (id) => relayPid('door', id)
+export const deskPid = (id) => relayPid('desk', id)
+const openDoor = (id) => openRelay('door', id)
+const closeDoor = (id) => closeRelay('door', id)
 
 // ---------------------------------------------------------------- talking to opencode
 
-// One HTTP request to the workspace's opencode over its published socket.
+// One HTTP request to the workspace's opencode through its desk socket.
 export function opencodeRequest(id, urlPath, { auth = true } = {}) {
   const { opencode } = paths(id)
   const headers = auth ? { authorization: `Basic ${Buffer.from(`opencode:${secrets(id).OPENCODE_PASSWORD}`).toString('base64')}` } : {}
@@ -181,7 +205,7 @@ export function opencodeRequest(id, urlPath, { auth = true } = {}) {
 // ---------------------------------------------------------------- commands
 
 export async function create(id, opts = {}) {
-  if (!ID.test(id)) refuse('a workspace id is 3 to 32 lowercase letters, digits or dashes')
+  validId(id)
   const cpus = opts.cpus === undefined ? LIMITS.cpus : Number(opts.cpus)
   const memory = opts.memory === undefined ? LIMITS.memory : bytes(opts.memory, '--memory')
   const disk = opts.disk === undefined ? LIMITS.disk : bytes(opts.disk, '--disk')
@@ -211,19 +235,29 @@ export async function create(id, opts = {}) {
     '--cpus', String(cpus),
     '--memory', `${Math.floor(memory / 1024 ** 2)}M`,
     '--cap-drop', 'ALL',
+    // The image's root is read-only: without it the agent wrote 1.5 GiB into a 1 GiB
+    // workspace through /var/tmp and /home/work (the rootfs is a 512 GiB sparse image on the
+    // host, outside the volume's limit, invisible to `files`, and kept across `stop`). The
+    // tmpfs at /tmp lives in the VM's memory, so the memory limit bounds it. Nothing is
+    // published with --publish-socket, which needs a writable root (see desk.mjs).
+    '--read-only',
     '--tmpfs', '/tmp',
     '--env-file', p.secrets,
     '-v', `${n.volume}:/work`,
     '-v', `${p.door}:/ola/gw/gateway.sock`,
-    '--publish-socket', `${p.opencode}:/ola/run/opencode.sock`,
     IMAGE,
   ])
   closeDoor(id)
+  // The runtime keeps the container's config (the environment, secrets included) in files of
+  // mode 644 and the volume image at 644. Close their folders to this account alone, so the
+  // secrets and the customer's disk do not rest on ~/Library's mode.
+  for (const dir of runtimeDirs(id)) chmodSync(dir, 0o700)
   writeGatewayTokens()
   return { id, cpus, memory, disk }
 }
 
 export async function start(id) {
+  validId(id)
   const c = inspect(id) || refuse(`no workspace ${id}`)
   const t0 = Date.now()
   await openDoor(id) // also reopens a door that died while the VM ran
@@ -235,6 +269,7 @@ export async function start(id) {
     }
     ctr(['start', names(id).container])
   }
+  await openRelay('desk', id) // the way in to opencode, through `container exec`
   for (let i = 0; i < 300; i++) {
     if ((await opencodeRequest(id, '/api/info')) === 200) return { ms: Date.now() - t0 }
     if (i % 10 === 9 && stateOf(inspect(id)) !== 'running') refuse(`workspace ${id} stopped while starting; see: container logs ${names(id).container}`)
@@ -244,12 +279,15 @@ export async function start(id) {
 }
 
 export function stop(id) {
+  validId(id)
   inspect(id) || refuse(`no workspace ${id}`)
   ctr(['stop', names(id).container], { allowFail: true })
   closeDoor(id)
+  closeRelay('desk', id)
 }
 
 export async function status(id) {
+  if (id !== undefined) validId(id)
   const ids = id ? [id] : listOla().map((c) => (c.configuration?.id || c.id).slice(4))
   const stats = new Map()
   const up = running()
@@ -275,6 +313,7 @@ export async function status(id) {
       disk_on_host: img && existsSync(img) ? spaceOf(img) : null,
       network: (cfg.networks || []).length ? 'ATTACHED (should be none)' : 'none',
       door: doorPid(w) ? 'open' : 'closed',
+      desk: deskPid(w) ? 'open' : 'closed',
       opencode: stateOf(c) === 'running' ? await opencodeRequest(w, '/api/info') : null,
     })
   }
@@ -286,12 +325,15 @@ function spaceOf(file) {
 }
 
 export async function upload(id, files, { replace = false } = {}) {
+  validId(id)
   stateOf(inspect(id)) === 'running' || refuse(`workspace ${id} is not running; start it first`)
   const done = []
   for (const f of files) {
-    const st = statSync(f, { throwIfNoEntry: false })
-    if (!st?.isFile()) refuse(`${f} is not a file`)
+    // lstat: a symlink is refused, not followed, so a staged upload cannot point elsewhere on the host.
+    const st = lstatSync(f, { throwIfNoEntry: false })
+    if (!st?.isFile()) refuse(`${f} is not a plain file (symlinks are refused)`)
     const name = path.basename(f)
+    if (!UPLOAD_NAME.test(name)) refuse(`${JSON.stringify(name)}: an upload name is a plain file name (letters, digits, space . _ ( ) + , -), not starting with a dot, at most 200`)
     const sha = createHash('sha256')
     await new Promise((res, rej) => createReadStream(f).on('data', (d) => sha.update(d)).on('end', res).on('error', rej))
     const want = sha.digest('hex')
@@ -302,6 +344,9 @@ export async function upload(id, files, { replace = false } = {}) {
       child.stdout.on('data', (d) => (out += d))
       child.stderr.on('data', (d) => (err += d))
       child.on('close', (code) => resolve({ code, out, err }))
+      // ola-put may exit before reading everything (a refusal): the broken pipe is its answer, not a crash.
+      child.stdin.on('error', () => {})
+      child.on('error', () => resolve({ code: -1, out, err: 'could not run container exec' }))
       createReadStream(f).pipe(child.stdin)
     })
     if (r.code !== 0) refuse(`${name}: ${(r.err.trim().split('\n').pop() || `ola-put exited ${r.code}`).slice(0, 300)}`)
@@ -320,6 +365,7 @@ export async function upload(id, files, { replace = false } = {}) {
 // What is in /work, as the VM reports it (see ola-files). Each line is checked for shape;
 // anything else is refused rather than shown.
 export function files(id) {
+  validId(id)
   stateOf(inspect(id)) === 'running' || refuse(`workspace ${id} is not running; start it first`)
   const r = ctr(['exec', names(id).container, '/opt/ola/bin/ola-files'])
   return r.stdout
@@ -334,7 +380,7 @@ export function files(id) {
 }
 
 export async function destroy(id, { confirm } = {}) {
-  if (!ID.test(id)) refuse('not a workspace id')
+  validId(id)
   if (confirm !== id) {
     if (!process.stdin.isTTY) refuse(`destroy wipes every file in ${id}; pass --confirm ${id} to do it without a prompt`)
     const rl = createInterface({ input: process.stdin, output: process.stdout })
@@ -350,6 +396,7 @@ export async function destroy(id, { confirm } = {}) {
     ctr(['rm', '--force', n.container], { allowFail: true })
   }
   closeDoor(id)
+  closeRelay('desk', id)
   if (vol) ctr(['volume', 'rm', n.volume])
   rmSync(paths(id).dir, { recursive: true, force: true })
   writeGatewayTokens()
@@ -405,7 +452,7 @@ async function main(argv) {
         if (r.state === 'missing') console.log(`${r.id}: no such workspace`)
         else
           console.log(
-            `${r.id}: ${r.state}, ${r.cpus} CPUs, memory ${r.memory_used == null ? '-' : human(r.memory_used)} of ${human(r.memory_limit)}, volume ${r.disk_on_host == null ? '-' : human(r.disk_on_host)} on disk of ${human(r.disk_limit)}, network ${r.network}, door ${r.door}${r.opencode == null ? '' : `, opencode ${r.opencode}`}`,
+            `${r.id}: ${r.state}, ${r.cpus} CPUs, memory ${r.memory_used == null ? '-' : human(r.memory_used)} of ${human(r.memory_limit)}, volume ${r.disk_on_host == null ? '-' : human(r.disk_on_host)} on disk of ${human(r.disk_limit)}, network ${r.network}, door ${r.door}, desk ${r.desk}${r.opencode == null ? '' : `, opencode ${r.opencode}`}`,
           )
       }
       return

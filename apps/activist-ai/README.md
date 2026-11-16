@@ -162,13 +162,13 @@ and per-request output caps (`max_tokens` is passed on as sent).
 
 ## The workspace
 
-`workspace/`: the image (`Containerfile`), the CLI (`ws.mjs`), the door (`door.mjs`) and the
-proofs (`check.mjs`). It runs on the machine that hosts the VMs, as the account that runs
+`workspace/`: the image (`Containerfile`), the CLI (`ws.mjs`), the door (`door.mjs`), the desk
+(`desk.mjs`) and the proofs (`check.mjs`). It runs on the machine that hosts the VMs, as the account that runs
 `container system start`. Node 22 or later. Nothing in it needs root.
 
 **The seal: no network, one socket.** Each workspace VM runs with `--network none`. Its only
 interface is loopback: no route to the internet, the host, the LAN, the tailnet or another
-workspace. It has exactly two ways in or out, both unix sockets:
+workspace. It has exactly two ways in or out:
 
 - **Out, the door.** `ws.mjs` mounts one host socket into the VM (`~/.ola/ws/<id>/gateway.sock`
   at `/ola/gw/gateway.sock`). Its listener, `door.mjs`, pipes every connection to
@@ -176,9 +176,12 @@ workspace. It has exactly two ways in or out, both unix sockets:
   chosen by what the VM sends (a proxy request, a `Host:` header or a `CONNECT` still lands on
   the gateway, which wants a token). Inside, `ola-init` bridges `127.0.0.1:4180` to the socket,
   so opencode's config just says `http://127.0.0.1:4180/v1`.
-- **In, opencode.** `opencode serve` listens on 127.0.0.1:4096 inside; `--publish-socket` gives the
-  host `~/.ola/ws/<id>/opencode.sock`. The front desk talks to it with the workspace's Basic-auth
-  password.
+- **In, the desk.** `opencode serve` listens on 127.0.0.1:4096 inside. On the host, `desk.mjs`
+  listens on `~/.ola/ws/<id>/opencode.sock` (mode 600) and turns each connection into a
+  `container exec -i ola-<id> socat STDIO TCP:127.0.0.1:4096` (about 60 ms to connect, at most 16
+  at once). The front desk talks to it with the workspace's Basic-auth password. Nothing is
+  published with `--publish-socket`: Apple's in-VM init looks for a published socket on the root
+  file system as it sits on disk, so it would need a writable root (see the read-only root below).
 
 **Why not a host-only network and pf.** That was the plan (`--internal` networks plus a pf anchor).
 Measured on the mini: an `--internal` network does block the internet, but the VM reached the
@@ -193,16 +196,22 @@ is about the host, not the workspaces.)
 **What a workspace is.** Container `ola-<id>`, volume `ola-<id>` at `/work` (ext4, sized at
 creation), and `~/.ola/ws/<id>/` (mode 700) with `secrets.env` (600: the opencode password and
 the gateway token, both generated; they reach the VM by `--env-file`, never a command line, and
-are never printed), the door's pid and log, and the two sockets. `~/.ola/gateway-tokens` (600)
+are never printed), the door's and the desk's pid and log, and the two sockets. The runtime's own
+folders for the workspace (the container's config, which holds its environment, and the volume
+image) are set to mode 700 at `create`. `~/.ola/gateway-tokens` (600)
 holds the `GATEWAY_TOKENS` line for the gateway: restart the gateway after a `create` or
 `destroy`. Everything opencode keeps (its session database, logs, caches) is under
 `/work/.ola`, so `files` shows it and `destroy` removes it; the image's root holds nothing of the
-customer's. The agent runs as `work` (uid 1000) with no capabilities (`--cap-drop ALL`) and no
-sudo; `/tmp` is a tmpfs. Image: Debian bookworm-slim pinned by digest, opencode 2.3.0 checked
-against npm's sha512, python3, socat, nothing else (no curl, no CA bundle, no ssh).
+customer's. **The image's root is read-only** (`--read-only`): `/work` and the `/tmp` tmpfs (in the
+VM's memory, so bounded by it) are the only places anything can be written. Before the review of
+2026-11-16 the root was writable, and a 1 GiB workspace wrote 1.5 GiB into `/var/tmp`: the root is a
+512 GiB sparse image on the host, outside the volume's limit, invisible to `files`, and kept across
+`stop`. The agent runs as `work` (uid 1000) with no capabilities (`--cap-drop ALL`), no sudo, and no
+setuid or setgid program in the image (Debian's `su`, `passwd`, `mount` and the rest are stripped). Image: Debian bookworm-slim pinned by digest, opencode 2.3.0 checked
+against npm's sha512, python3, socat, nothing else (no curl, no CA bundle, no ssh). Image tag `ola-workspace:2.3.0-2`.
 
 ```bash
-node workspace/ws.mjs image                    # build ola-workspace:2.3.0-1 (about 25 s)
+node workspace/ws.mjs image                    # build ola-workspace:2.3.0-2 (about 25 s)
 node workspace/ws.mjs create alice             # 4 CPUs, 6 GiB, 50 GiB: the ceilings
 node workspace/ws.mjs create test --memory 1g --disk 1g --cpus 1   # lower only; higher is refused
 node workspace/ws.mjs start alice              # opens the door, boots, waits for opencode
@@ -239,12 +248,18 @@ workspaces under `~/.ola-check`, and checks from inside the VMs:
 - **the survey spike's task, run by opencode inside the VM through the door and the gateway:
   16 of 16 checks**;
 - `destroy` leaves no container, no volume, no volume files under the container data root, no
-  state folder, no gateway token and no door process.
+  state folder, no gateway token and no door or desk process;
+- from the review of 2026-11-16: no directory outside `/work` and `/tmp` takes a file, writing outside
+  `/work` fails at once, nothing outside `/work` survives a stop, no setuid or setgid file is in the
+  image, the runtime's folders are mode 700, every command refuses a malformed id (36 cases), upload
+  refuses a host symlink and an option-like name on the host, and the door holds 32 of 48
+  connections at once, refuses the rest and answers again after.
 
 **Measured 2026-11-16 on the mini** (Mac mini, Apple M4, 16 GB, macOS 26.3.1, container 1.7.1),
 three full runs of the check, the last 55 of 55:
 
-- `create` 0.7 to 0.8 s (volume, ownership, container); `start` to opencode answering: **0.9 s**.
+- `create` 0.7 to 0.8 s (volume, ownership, container); `start` to opencode answering: **0.9 to 1.0 s**.
+- After the review's changes (read-only root, the desk), against the gateway at 22191758: **64 of 64**.
 - Memory: about **315 MiB** for an idle 6 GiB workspace, 216 to 231 MiB for an idle 1 GiB one,
   **465 MiB** after the survey task. The VM keeps what it has used until it stops (Apple's
   documented limit), which is why the front desk will stop idle workspaces.
@@ -256,11 +271,20 @@ three full runs of the check, the last 55 of 55:
 
 **Things a reviewer should know.**
 
-- The VM shows **5 vCPUs** for `--cpus 4`; the container's cgroup caps it at 4 CPUs of time. A
-  root process in the guest could use the fifth; nothing in the workspace runs as root.
+- The VM shows **5 vCPUs** for `--cpus 4`; the container's cgroup caps it at 4 CPUs of time (measured:
+  5 spinning processes get 4.02, and `work` cannot write `cpu.max`). Only guest root could use the
+  fifth; nothing in the workspace runs as root and no setuid program is left to get there.
 - `container inspect ola-<id>` on the host shows the container's environment, the opencode
-  password and gateway token included. `ws.mjs` never prints it; the host account already holds
-  both secrets in `secrets.env`.
+  password and gateway token included, and the runtime keeps it in `config.json` and
+  `runtime-configuration.json` (mode 644) under its data root; `create` closes those folders to
+  mode 700. `ws.mjs` never prints it; the host account already holds both secrets in
+  `secrets.env`. Inside, the agent can read both from the environment: the password guards the
+  host's way in, not anything from the agent, so whatever opencode answers the desk is the
+  agent's word and the front desk must treat it as untrusted content.
+- The gateway reads `GATEWAY_TOKENS` once at start: a destroyed workspace's token keeps working
+  until the gateway restarts.
+- `destroy` unlinks the volume image; on a disk without FileVault (the mini has it off) the blocks
+  stay readable until reused. FileVault on the Studio is the at-rest protection.
 - The door socket is mode 0666 because the VM sees the host file's mode with owner root, and
   `work` must connect. Its folder is mode 700, which is what keeps other host accounts out.
 - `/proc/net/unix` inside lists a `/run/sockets/<uuid>.sock` that does not exist in the
