@@ -28,7 +28,7 @@ PREAMBLE = ("You are working in a snapshot folder copied for this one task: ther
             "including running and checking what you make. Do not commit, push, deploy or run the Next.js build, whatever "
             "CLAUDE.md says about that. End with a short summary of what you did and anything left undone.\n\nThe task:\n")
 # what Claude Code says when the plan runs out (headless wording varies by version, so match loosely)
-LIMIT_RE = re.compile(r"usage limit|limit reached|reached your limit|hit your limit|limit will reset|resets? at \d|out of (?:extra )?usage|rate_limit|API Error: 429", re.I)
+LIMIT_RE = report.LIMIT_RE
 SMOKE = {'id': 'SMOKE', 'kind': 'smoke', 'title': 'smoke test', 'uses': [], 'timeout_min': 5, 'max_turns': 6,
          'prompt': 'Create a file hello.txt containing the single word hello, then reply with the word done.'}
 

@@ -1,11 +1,17 @@
 #!/usr/bin/env python3
 """Turns a results folder into report.md and report.json.  python3 report.py results/<run>"""
-import json, os, statistics, sys
+import json, os, re, statistics, sys
+
+# What Claude Code prints when a plan limit stops a call. "You've hit your 5-hour limit · resets 4pm"
+# slipped past the first version (2026-11-12): the run went on through 20 empty calls after the cutoff.
+LIMIT_RE = re.compile(r"usage limit|limit reached|reached your limit|hit your (?:[\w-]+ )?limit|limit will reset|resets? (?:at )?\d|out of (?:extra )?usage|rate_limit|API Error: 429", re.I)
 
 def _load(root):
     run = json.load(open(os.path.join(root, 'run.json')))
     p = os.path.join(root, 'events.jsonl')
     events = [json.loads(l) for l in open(p)] if os.path.exists(p) else []
+    for e in events:  # re-read the limit from what Claude Code said, so runs logged before the fix report right
+        if not e['limit_hit'] and not e['ok'] and LIMIT_RE.search(e.get('limit_text') or ''): e['limit_hit'] = True
     return run, events
 
 def _bar(m, *words):

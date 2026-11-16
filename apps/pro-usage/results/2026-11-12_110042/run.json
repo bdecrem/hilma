@@ -1,0 +1,71 @@
+{
+ "started": "2026-11-12T11:00:44-08:00",
+ "started_ts": 1794510044.2802508,
+ "host": "MacBook-Neo.local",
+ "os": "macOS-27.2-arm64-arm-64bit",
+ "claude_version": "2.1.322 (Claude Code)",
+ "claude_path": "/Users/bart/.local/bin/claude",
+ "models": {
+  "opus": "claude-opus-5-5",
+  "sonnet": "claude-sonnet-5-5"
+ },
+ "claude_md": true,
+ "bare": false,
+ "mode": "until-limit",
+ "max_hours": 5.5,
+ "clock_start": {
+  "https://www.google.com": -0.6,
+  "https://www.cloudflare.com": -0.7,
+  "https://www.apple.com": -0.8
+ },
+ "meter_start": {
+  "at": "2026-11-12T11:00:42-08:00",
+  "bars": {
+   "Current session": {
+    "pct": 2.0,
+    "resets": "Nov 12 at 3:59pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 0.0,
+    "resets": "Nov 13 at 10:59pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 0.0,
+    "resets": "Nov 13 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "subscription": true,
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 2% used \u00b7 resets Nov 12 at 3:59pm (America/Los_Angeles)\nCurrent week (all models): 0% used \u00b7 resets Nov 13 at 10:59pm (America/Los_Angeles)\nCurrent week (Fable): 0% used \u00b7 resets Nov 13 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate \u00b7 sessions on this machine only \u00b7 shares overlap\n\nLast 24h \u00b7 11 requests \u00b7 2 sessions\n  94%  Trim ~/Documents/code/hilma/CLAUDE.md \u00b7 17k tokens per request\n\nLast 7d \u00b7 11 requests \u00b7 2 sessions\n  94%  Trim ~/Documents/code/hilma/CLAUDE.md \u00b7 17k tokens per request",
+  "seconds": 1.4
+ },
+ "env_dropped": [],
+ "node": true,
+ "stopped": "2026-11-12T11:40:45-08:00",
+ "stopped_ts": 1794512445.9743161,
+ "stop_reason": "session meter at 100%",
+ "clock_end": {
+  "https://www.google.com": -0.0,
+  "https://www.cloudflare.com": -0.1,
+  "https://www.apple.com": -0.3
+ },
+ "meter_end": {
+  "at": "2026-11-12T11:40:46-08:00",
+  "bars": {
+   "Current session": {
+    "pct": 100.0,
+    "resets": "Nov 12 at 4pm (America/Los_Angeles)"
+   },
+   "Current week (all models)": {
+    "pct": 9.0,
+    "resets": "Nov 13 at 11pm (America/Los_Angeles)"
+   },
+   "Current week (Fable)": {
+    "pct": 0.0,
+    "resets": "Nov 13 at 11pm (America/Los_Angeles)"
+   }
+  },
+  "subscription": true,
+  "text": "You are currently using your subscription to power your Claude Code usage\n\nCurrent session: 100% used \u00b7 resets Nov 12 at 4pm (America/Los_Angeles)\nCurrent week (all models): 9% used \u00b7 resets Nov 13 at 11pm (America/Los_Angeles)\nCurrent week (Fable): 0% used \u00b7 resets Nov 13 at 11pm (America/Los_Angeles)\n\nWhat's contributing to your usage?\nApproximate \u00b7 sessions on this machine only \u00b7 shares overlap\n\nLast 24h \u00b7 14 requests \u00b7 2 sessions\n  92%  Trim ~/Documents/code/hilma/CLAUDE.md \u00b7 17k tokens per request\n\nLast 7d \u00b7 14 requests \u00b7 2 sessions\n  92%  Trim ~/Documents/code/hilma/CLAUDE.md \u00b7 17k tokens per request",
+  "seconds": 1.4
+ }
+}
