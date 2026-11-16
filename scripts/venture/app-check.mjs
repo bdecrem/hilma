@@ -42,7 +42,7 @@ const ctx = await b.newContext({ viewport: { width: 1280, height: 800 }, deviceS
 const p = await ctx.newPage()
 p.on('pageerror', (e) => problems.push(`page error: ${e.message}`))
 const shut = async (pg) => (await pg.locator('input[name=passcode]').count()) === 1 && (await pg.getByText('Journal', { exact: true }).count()) === 0
-const open = async (pg) => (await pg.getByRole('heading', { name: 'Journal' }).count()) === 1 && (await pg.locator('input[name=passcode]').count()) === 0
+const open = async (pg) => (await pg.getByRole('heading', { name: 'Done', exact: true }).count()) === 1 && (await pg.locator('input[name=passcode]').count()) === 0
 const shoot = async (pg, file) => {
   for (const [tag, w, h] of [['desk', 1280, 800], ['phone', 390, 844]]) {
     await pg.setViewportSize({ width: w, height: h })
