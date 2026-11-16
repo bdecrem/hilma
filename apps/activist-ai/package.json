@@ -1,0 +1,10 @@
+{
+  "name": "activist-ai",
+  "private": true,
+  "type": "module",
+  "description": "AI for activists: a private agent service on our own machine. See README.md.",
+  "dependencies": {
+    "@opencode/cli": "2.3.0",
+    "@opencode/client": "2.3.0"
+  }
+}
