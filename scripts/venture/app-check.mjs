@@ -48,6 +48,7 @@ const shoot = async (pg, file) => {
     await pg.setViewportSize({ width: w, height: h })
     await pg.evaluate(() => document.fonts.ready)
     await pg.screenshot({ path: `${out}/${file}-${tag}.png` })
+    await pg.screenshot({ path: `${out}/${file}-${tag}-full.png`, fullPage: true })
     const over = await pg.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
     if (over > 0) problems.push(`${file} ${tag}: ${over}px wider than the screen`)
   }

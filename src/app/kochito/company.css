@@ -187,3 +187,4 @@
 .ko-pri.p2 { color: var(--ink-3); border-color: var(--line); }
 .ko-decided .t { color: var(--ink-3); padding-top: 2px; }
 @media (max-width: 560px) { .ko-plate li, .ko-decided li { grid-template-columns: 1fr; gap: 4px; } }
+.ko-now { font-size: 17px; line-height: 1.55; color: var(--ink-2); max-width: 34em; margin-top: 18px !important; }
