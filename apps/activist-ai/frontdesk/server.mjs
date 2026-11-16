@@ -25,7 +25,7 @@ import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { audit, nameRef, openDb, loadKeys } from './db.mjs'
-import { makeAuth } from './auth.mjs'
+import { addressKey, makeAuth } from './auth.mjs'
 import { makeWorkspaces } from './workspaces.mjs'
 import { routeNeed } from '../web/server/proxy.mjs'
 import { validName } from '../web/server/files.mjs'
@@ -147,7 +147,7 @@ export function makeFrontDesk(cfg = config()) {
   const log = (m) => console.log(JSON.stringify({ t: new Date().toISOString(), event: 'frontdesk', msg: String(m).slice(0, 300) }))
   const auth = makeAuth({ db, keys, origin: cfg.origin, session: cfg.session, limits: cfg.limits, log })
   const workspaces = makeWorkspaces({ db, keys, log, idleStopMs: cfg.idleStopMs, runCeilingMs: cfg.runCeilingMs })
-  const clientOf = (req) => req.socket.olaClient ?? req.socket.remoteAddress ?? '?'
+  const clientOf = (req) => req.socket.olaClient ?? addressKey(req.socket.remoteAddress)
 
   // "People working": how many people made a request in the last whole window (5 minutes), all
   // teams together, in memory only, never who. The number changes only at a window's end, so
@@ -164,22 +164,31 @@ export function makeFrontDesk(cfg = config()) {
   const working = () => (prev.k === roll() - 1 ? prev.n : 0)
 
   // Transfers in flight (review of 2026-11-16, M5): each holds a host `container exec`.
-  const flights = { person: new Map(), uploads: new Map(), ws: new Map(), bytes: 0 }
+  // One person may hold at most a quarter of the bytes in flight (second review, 2026-11-16: one
+  // viewer's four unread downloads of a 128 MiB file held all 512 MiB, for good, and every other
+  // customer's uploads and downloads were refused).
+  const flights = { person: new Map(), uploads: new Map(), ws: new Map(), personBytes: new Map(), bytes: 0 }
   const T = cfg.transfers
   const bump = (m, k, d) => m.set(k, (m.get(k) ?? 0) + d)
   function takeSlot(personId, slug, { upload = false, bytes = 0 } = {}) {
-    if ((flights.person.get(personId) ?? 0) >= T.perPerson || (upload && (flights.uploads.get(personId) ?? 0) >= T.uploadsPerPerson) || (flights.ws.get(slug) ?? 0) >= T.perWorkspace || flights.bytes + bytes > T.bytes) return null
+    // A person's first transfer may be as large as the total allows (a big file must stay
+    // downloadable); further ones must fit within their quarter.
+    const mine = () => flights.personBytes.get(personId) ?? 0
+    const overShare = (n) => mine() > 0 && mine() + n > T.bytes / 4
+    if ((flights.person.get(personId) ?? 0) >= T.perPerson || (upload && (flights.uploads.get(personId) ?? 0) >= T.uploadsPerPerson) || (flights.ws.get(slug) ?? 0) >= T.perWorkspace || flights.bytes + bytes > T.bytes || overShare(bytes)) return null
     bump(flights.person, personId, 1)
     bump(flights.ws, slug, 1)
     if (upload) bump(flights.uploads, personId, 1)
     flights.bytes += bytes
+    bump(flights.personBytes, personId, bytes)
     let held = bytes
     let done = false
     return {
       /** Adds bytes once they are known (a download's size); false if that is over the total. */
       grow(n) {
-        if (flights.bytes + n > T.bytes) return false
+        if (flights.bytes + n > T.bytes || (held > 0 ? mine() + n > T.bytes / 4 : overShare(n))) return false
         flights.bytes += n
+        bump(flights.personBytes, personId, n)
         held += n
         return true
       },
@@ -190,6 +199,8 @@ export function makeFrontDesk(cfg = config()) {
         bump(flights.ws, slug, -1)
         if (upload) bump(flights.uploads, personId, -1)
         flights.bytes -= held
+        bump(flights.personBytes, personId, -held)
+        if (!flights.personBytes.get(personId)) flights.personBytes.delete(personId)
       },
     }
   }
@@ -395,6 +406,10 @@ export function makeFrontDesk(cfg = config()) {
         })
         const sha = createHash('sha256')
         let sent = 0
+        // A download must keep moving like an upload: under 32 KiB taken in 30 s ends it, so an
+        // unread one cannot hold its exec and its bytes for good (second review, 2026-11-16).
+        let mark = 0
+        const slow = setInterval(() => (sent - mark < 32 * 1024 ? res.destroy() : (mark = sent)), Number(process.env.OLA_FD_SLOW_MS) || 30_000)
         try {
           for await (const c of f.stream) {
             sha.update(c)
@@ -406,6 +421,7 @@ export function makeFrontDesk(cfg = config()) {
         } catch {
           res.destroy()
         } finally {
+          clearInterval(slow)
           f.kill()
         }
         const whole = sent === f.size && !res.destroyed
@@ -545,14 +561,18 @@ export function makeFrontDesk(cfg = config()) {
       const onData = (d) => {
         head = Buffer.concat([head, d])
         const nl = head.indexOf('\r\n')
-        if (nl < 0) return head.length > 107 ? (clearTimeout(timer), sock.destroy()) : undefined
+        // The spec's longest v1 line is 107 bytes with its CRLF; anything longer is refused.
+        if (nl < 0 ? head.length > 107 : nl > 105) return clearTimeout(timer), sock.destroy()
+        if (nl < 0) return
         clearTimeout(timer)
         sock.off('data', onData)
         sock.pause()
-        const m = /^PROXY (TCP4|TCP6) (\S+) (\S+) (\d{1,5}) (\d{1,5})$/.exec(head.subarray(0, nl).toString('latin1'))
-        if (!m || net.isIP(m[2]) !== (m[1] === 'TCP4' ? 4 : 6)) return sock.destroy()
-        sock.olaClient = m[2]
-        if (!admit(sock, m[2])) return
+        const m = /^PROXY (TCP4|TCP6) (\S{2,45}) (\S{2,45}) (\d{1,5}) (\d{1,5})$/.exec(head.subarray(0, nl).toString('latin1'))
+        const fam = m && (m[1] === 'TCP4' ? 4 : 6)
+        if (!m || net.isIP(m[2]) !== fam || net.isIP(m[3]) !== fam || +m[4] > 65535 || +m[5] > 65535) return sock.destroy()
+        // Limited by its key: an IPv6 client by its /64 (auth.mjs addressKey).
+        sock.olaClient = addressKey(m[2])
+        if (!admit(sock, sock.olaClient)) return
         const rest = head.subarray(nl + 2)
         if (rest.length) sock.unshift(rest)
         // The HTTP parser must read through the stream (where the rest of the first chunk was put
@@ -566,7 +586,14 @@ export function makeFrontDesk(cfg = config()) {
       sock.resume()
     })
     listener.maxConnections = 512
-  } else server.on('connection', (sock) => admit(sock, sock.remoteAddress ?? '?'))
+    // The HTTP server never listens itself here, and Node starts its header and request timeouts
+    // (headersTimeout, requestTimeout, checked each connectionsCheckingInterval) on its 'listening'
+    // event: without this, behind the PROXY protocol a client could send its headers one byte at a
+    // time for as long as it liked (second review, 2026-11-16: still open after 12 s, against a
+    // 408 at 6 s without the PROXY protocol). Refuse to start if that hook is not where it was.
+    if (!server.listeners('listening').some((f) => f.name === 'setupConnectionsTracking')) throw new Error('this Node does not start HTTP timeouts on listening; the PROXY protocol mode needs review')
+    listener.once('listening', () => server.emit('listening'))
+  } else server.on('connection', (sock) => admit(sock, addressKey(sock.remoteAddress)))
   return { server, listener, db, cfg, workspaces, close: () => (workspaces.close(), listener.close(), listener !== server && server.close(), db.close()) }
 }
 

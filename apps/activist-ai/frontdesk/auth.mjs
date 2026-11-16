@@ -17,6 +17,7 @@
 //   X-Ola-CSRF, an HMAC of the session id under the front desk's key, compared in constant time.
 import { createHash, randomBytes, timingSafeEqual, createHmac } from 'node:crypto'
 import { generateAuthenticationOptions, generateRegistrationOptions, verifyAuthenticationResponse, verifyRegistrationResponse } from '@simplewebauthn/server'
+import { isIP } from 'node:net'
 import { audit, today } from './db.mjs'
 
 export const COOKIE = '__Host-ola'
@@ -53,13 +54,34 @@ export class Limiter {
   }
 }
 
+/**
+ * The key a client address is limited under: an IPv4 address as it is (an IPv4-mapped IPv6 one as
+ * its IPv4), an IPv6 address as its /64, the block any one IPv6 client holds (second review,
+ * 2026-11-16: 50 addresses of one /64 had 50 buckets, and the same client spelled two ways two).
+ */
+export function addressKey(addr) {
+  const a = String(addr ?? '?').toLowerCase()
+  const v4 = /^(?:::ffff:)?(\d{1,3}(?:\.\d{1,3}){3})$/.exec(a)
+  if (v4 && isIP(v4[1]) === 4) return v4[1]
+  if (isIP(a) !== 6) return a.slice(0, 64)
+  let [head, tail = ''] = a.split('::')
+  if (!a.includes('::')) (head = a), (tail = '')
+  const parts = (x) => (x ? x.split(':') : []).flatMap((g) => (g.includes('.') ? [((+g.split('.')[0] << 8) | +g.split('.')[1]).toString(16), ((+g.split('.')[2] << 8) | +g.split('.')[3]).toString(16)] : [g]))
+  const h = parts(head)
+  const t = parts(tail)
+  const groups = [...h, ...Array(8 - h.length - t.length).fill('0'), ...t].map((g) => parseInt(g, 16).toString(16))
+  if (groups.slice(0, 5).every((g) => g === '0') && groups[5] === 'ffff') return [groups[6], groups[7]].flatMap((g) => [parseInt(g, 16) >> 8, parseInt(g, 16) & 255]).join('.')
+  return `${groups.slice(0, 4).join(':')}::/64`
+}
+
 // ---------------------------------------------------------------- the auth service
 
 export function makeAuth({ db, keys, origin, rpName = 'Ola', session: { absoluteMs, idleMs }, limits, log = () => {} }) {
   const rpID = new URL(origin).hostname
   const ceremonies = new Map() // id -> { kind, challenge, personId?, inviteId?, expires }
-  // Each address can hold at most perAddress.capacity + 5 × perMinute of these at once (they live
-  // 5 minutes), so filling the map takes hundreds of addresses, not one.
+  // Each address (an IPv6 /64) can hold at most perAddress.capacity + 5 × perMinute of these at
+  // once (they live 5 minutes); when the map is full the oldest goes, so a flood can at worst void
+  // ceremonies younger than a person's few seconds only at thousands of requests a second.
   const MAX_CEREMONIES = 20_000
 
   // ------------------------------------------------ rate limits (review of 2026-11-16, M3)
@@ -80,28 +102,44 @@ export function makeAuth({ db, keys, origin, rpName = 'Ola', session: { absolute
   const everyone = new Limiter(limits.global)
   let globalRefused = 0
   let globalNoted = 0
-  const anonymous = (addr) => {
-    if (!perAddress.take(addr)) return false
+  const anonymous = (key) => {
+    if (!perAddress.take(key)) return false
     if (everyone.take('*')) return true
     globalRefused++
     // Counts only, at most once a minute: that the ceiling was reached, not by whom.
     if (Date.now() - globalNoted > 60_000) (globalNoted = Date.now()), log(`sign-in ceiling reached (${globalRefused} refused so far)`)
     return false
   }
-  const knownCredential = (id) => typeof id === 'string' && id.length <= 1400 && !!db.prepare('SELECT 1 FROM passkeys WHERE credential_id = ?').get(id)
+  const live = (id, kind) => {
+    const c = typeof id === 'string' && id.length <= 100 ? ceremonies.get(id) : null
+    return !!c && c.kind === kind && c.expires > Date.now()
+  }
   /**
    * May this sign-in request go ahead? `route` is the path under /api/auth/, `body` its JSON.
-   * An assertion for a known passkey is charged to that passkey; everything else to the address.
+   *
+   * Second review (2026-11-16): the global ceiling also charged `login/options`, the first step of
+   * every sign-in, so about 60 addresses (one IPv6 /64 before addresses were keyed by /64) kept
+   * every person out, passkey or not; and anyone who knew a credential id (not a secret in
+   * WebAuthn) emptied that passkey's own bucket with garbage and locked its owner out. Now:
+   *   - login/options (a random challenge, nothing else) is charged to the address alone; the
+   *     ceremony table is bounded by evicting its oldest entry, never by refusing;
+   *   - a verify that names a live ceremony of its kind was paid for when that ceremony was
+   *     issued, and goes ahead; anything else is anonymous (address, then the global ceiling);
+   *   - register/options (an invitation) is anonymous.
+   * Per passkey, only the "sign-in refused" audit rows are limited (10 a minute).
    */
   const allow = (route, addr, body) => {
-    if (route === 'login/verify' && knownCredential(body?.response?.id)) return perCredential.take(body.response.id)
-    return anonymous(addr)
+    const key = addressKey(addr)
+    if (route === 'login/options') return perAddress.take(key)
+    if (route === 'login/verify' && live(body?.ceremony, 'login')) return true
+    if (route === 'register/verify' && live(body?.ceremony, 'register')) return true
+    return anonymous(key)
   }
 
   function newCeremony(c) {
     const now = Date.now()
     for (const [k, v] of ceremonies) if (v.expires < now) ceremonies.delete(k)
-    if (ceremonies.size >= MAX_CEREMONIES) return null
+    while (ceremonies.size >= MAX_CEREMONIES) ceremonies.delete(ceremonies.keys().next().value)
     const id = token()
     ceremonies.set(id, { ...c, expires: now + 5 * 60_000 })
     return id
@@ -267,7 +305,7 @@ export function makeAuth({ db, keys, origin, rpName = 'Ola', session: { absolute
         v = { verified: false }
       }
       if (!v.verified || pk.status !== 'active') {
-        audit(db, { actorKind: 'system', subject: pk.person_id, action: 'sign_in_refused', ok: false })
+        if (perCredential.take(pk.credential_id)) audit(db, { actorKind: 'system', subject: pk.person_id, action: 'sign_in_refused', ok: false })
         return refused
       }
       db.prepare('UPDATE passkeys SET counter = ?, last_used_on = ? WHERE id = ?').run(v.authenticationInfo.newCounter, today(), pk.id)

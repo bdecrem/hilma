@@ -27,7 +27,7 @@ const CANCEL_GRACE_MS = 60_000
 export const ceilingMessage = (minutes) =>
   `Ola stopped this after ${minutes >= 60 && minutes % 60 === 0 ? `${minutes / 60} hour${minutes === 60 ? '' : 's'}` : minutes < 1 ? `${Math.round(minutes * 60)} seconds` : `${Math.round(minutes * 10) / 10} minutes`}: that is the longest one request may run, so that no request can hold Ola’s computer for good. What it finished is in the folder. Ask again to carry on, in smaller steps.`
 
-export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCeilingMs = 120 * 60_000 }) {
+export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCeilingMs = 120 * 60_000, cancelGraceMs = CANCEL_GRACE_MS }) {
   const ready = new Map() // slug -> time it last answered
   const starting = new Map() // slug -> Promise
   const stopping = new Map() // slug -> Promise
@@ -44,6 +44,9 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
   const prompted = new Map() // `${slug}:${sessionID}` -> when a person's prompt for it last went through
   const ended = new Map() // `${slug}:${sessionID}` -> when its event stream last said a run ended
   const ceilingStops = new Map() // `${slug}:${sessionID}` -> { at, minutes }, for the page (24 h)
+  // slug -> when a person's prompt in it last went through. From the audit log at start, so a front
+  // desk restart does not hand a run a fresh ceiling (second review, 2026-11-16).
+  const lastPrompt = new Map(db.prepare("SELECT w.slug, max(a.at) AS at FROM audit a JOIN workspaces w ON w.id = a.workspace_id WHERE a.action = 'run_started' GROUP BY w.slug").all().map((r) => [r.slug, r.at]))
 
   const run = (cmd, slug) =>
     new Promise((resolve, reject) => {
@@ -167,11 +170,33 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
     })
   }
   /** Folds what opencode says is executing into `runs`; returns how many count as activity. */
+  //
+  // The ceiling also holds for the whole workspace (second review, 2026-11-16: a hostile opencode
+  // that names a new session id at every sweep was never interrupted and never stopped, and held a
+  // VM slot for good with no one using it; a run's subagent sessions have new ids too). Runs count
+  // as activity only up to the ceiling after the last prompt a PERSON sent in that workspace; past
+  // that, whatever still says it is executing is interrupted (at most 20 a sweep) and the idle stop
+  // applies as if nothing ran.
   function track(slug, now, executing) {
     if (!runs.has(slug)) runs.set(slug, new Map())
     const mine = runs.get(slug)
     if (!executing) return mine.clear(), 0 // no answer: nothing is executing there that anyone can see
     for (const id of mine.keys()) if (!executing.has(id)) mine.delete(id)
+    const minutes = Math.round((runCeilingMs / 60_000) * 100) / 100
+    if (runCeilingMs > 0 && now > (lastPrompt.get(slug) ?? 0) + runCeilingMs + cancelGraceMs + sweepMs) {
+      let sent = 0
+      for (const id of executing) {
+        let r = mine.get(id)
+        if (!r) mine.set(id, (r = { since: now, cancelledAt: 0 }))
+        if (r.cancelledAt || sent >= 20) continue
+        sent++
+        r.cancelledAt = now
+        if (ceilingStops.size >= 500) ceilingStops.delete(ceilingStops.keys().next().value)
+        ceilingStops.set(`${slug}:${id}`, { at: now, minutes })
+        interrupt(slug, id).then((status) => log(`${slug}: a run went past the ${minutes} min ceiling after the last prompt and was interrupted (${status})`))
+      }
+      return 0
+    }
     let counting = 0
     for (const id of executing) {
       const key = `${slug}:${id}`
@@ -180,12 +205,11 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
       else if ((ended.get(key) ?? 0) > r.since && (prompted.get(key) ?? 0) > (ended.get(key) ?? 0)) Object.assign(r, { since: prompted.get(key), cancelledAt: 0 })
       if (runCeilingMs > 0 && !r.cancelledAt && now - r.since >= runCeilingMs) {
         r.cancelledAt = now
-        const minutes = Math.round((runCeilingMs / 60_000) * 100) / 100
         if (ceilingStops.size >= 500) ceilingStops.delete(ceilingStops.keys().next().value)
         ceilingStops.set(key, { at: now, minutes }) // before the interrupt, so the page finds it
         interrupt(slug, id).then((status) => log(`${slug}: a run reached the ${minutes} min ceiling and was interrupted (${status})`))
       }
-      if (r.cancelledAt && now - r.cancelledAt > CANCEL_GRACE_MS) continue
+      if (r.cancelledAt && now - r.cancelledAt > cancelGraceMs) continue
       counting++
     }
     return counting
@@ -267,6 +291,7 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
     if (req.method === 'POST' && m) {
       runBy.set(`${slug}:${m[1]}`, personId)
       prompted.set(`${slug}:${m[1]}`, Date.now())
+      lastPrompt.set(slug, Date.now())
       audit(db, { actor: personId, action: 'run_started', workspace: workspaceId })
     }
     return proxyFor(slug, workspaceId)(req, res, pathname, search)

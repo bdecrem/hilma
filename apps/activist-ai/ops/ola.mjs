@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 // Ola's services as launchd user agents (no sudo), one deploy command, and one status command.
 //
-//   node ops/ola.mjs deploy [<commit> | origin/main]   (default origin/main) the only way staging
+//   node ops/ola.mjs deploy [<commit> | origin/main] [--unsigned]   (default origin/main; the commit
+//                                     must be signed by a key in ~/.ola/allowed-signers, or
+//                                     --unsigned, which is logged) the only way staging
 //                                     changes: fetch, unpack that commit as a new release, npm ci
 //                                     where the lockfile changed, build web/dist, run the --no-live
 //                                     suites, and only if all pass point `current` at it and
@@ -194,7 +196,7 @@ if (cmd === 'container-up') {
 } else if (cmd === 'install') {
   install({ restart: false })
 } else if (cmd === 'deploy') {
-  await deploy(process.argv[3] || 'origin/main')
+  await deploy(process.argv.slice(3).find((a) => !a.startsWith('--')) || 'origin/main', { unsigned: process.argv.includes('--unsigned') })
 } else if (cmd === 'uninstall') {
   for (const j of JOBS) {
     sh('/bin/launchctl', ['bootout', `${DOMAIN}/${j.label}`])
@@ -382,7 +384,7 @@ function counts(tail) {
   return all.length ? `${all.at(-1)[1]} of ${all.at(-1)[2]}` : '?'
 }
 
-async function deploy(ref) {
+async function deploy(ref, { unsigned = false } = {}) {
   // The suites a release must pass before it serves: the same four the README counts, without the
   // live model run (deploys must not spend model calls or need a key).
   const SUITES = [
@@ -415,6 +417,18 @@ async function deploy(ref) {
   if (r.status !== 0) fail(`${ref} is not a commit in ${STAGING}`)
   const commit = r.stdout.trim()
   const short = commit.slice(0, 12)
+  // What a deploy trusts (second review, 2026-11-16): origin/main of a public repo that unattended
+  // agents push to (the Discord bot and the venture runner, from this same machine), under one
+  // author name. A commit is deployed only when it is signed by a key listed in
+  // ~/.ola/allowed-signers (git's ssh allowed-signers format; the key lives off this machine), or
+  // with --unsigned, which deploys.log records.
+  const signers = path.join(OLA, 'allowed-signers')
+  let signed = false
+  if (existsSync(signers)) {
+    const v = git('-c', `gpg.ssh.allowedSignersFile=${signers}`, 'verify-commit', commit)
+    signed = v.status === 0
+    if (!signed && !unsigned) fail(`${short} is not signed by a key in ${signers}; nothing was changed`)
+  } else if (!unsigned) fail(`${signers} is missing, so no commit can be checked: add the deploying key there (see the README, "Deploying staging"), or deploy with --unsigned (recorded in deploys.log)`)
   const before = existsSync(DEPLOYED) ? JSON.parse(readFileSync(DEPLOYED, 'utf8')) : null
   if (before?.commit === commit) {
     console.log(`${short} is already deployed (${before.at})`)
@@ -499,7 +513,7 @@ async function deploy(ref) {
     }
     if (!healthy) return refuse('after the restart the front desk or the gateway did not answer')
   } else say('no env files in ~/.ola: nothing to restart (node ops/ola.mjs install once they exist)')
-  history(`deployed ${short} (${ref}); ${Object.entries(suites).map(([k, v]) => `${k} ${v}`).join(', ')}`)
+  history(`deployed ${short} (${ref})${signed ? '' : ' UNSIGNED'}; ${Object.entries(suites).map(([k, v]) => `${k} ${v}`).join(', ')}`)
   say(`deployed ${short}: ${Object.entries(suites).map(([k, v]) => `${k} ${v}`).join(', ')}`)
   prune(short, before?.commit.slice(0, 12))
   out.end()

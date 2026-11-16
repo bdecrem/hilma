@@ -399,16 +399,18 @@ page learns from `/api/me`, compared in constant time; a fetch marked cross-site
 (`Sec-Fetch-Site`) is refused on `/api` and `/oc`.
 
 **Sign-in limits** (review of 2026-11-16, M3: one caller at about a request a second held off every
-sign-in). In memory only, nothing about who asked is written. An anonymous request (sign-in
-options, an invitation, an assertion naming no passkey we hold) is charged to its **client address**
-(10 at once, 10 a minute: `OLA_FD_SIGNIN_BURST`, `OLA_FD_SIGNIN_PER_MIN`) and then to a **global
-ceiling** of at least 30 addresses' worth (600 a minute by default), which one caller alone cannot
-reach because its own bucket stops it first; when the ceiling is reached a line with counts only is
-logged, at most once a minute. An assertion for a **passkey we hold** is charged to that passkey's
-own bucket (10 at once, 10 a minute) and to nothing else, so an attacker hammering the routes does
-not touch a real person's sign-in (credential ids never leave the server except to the person's
-own browser, in the registration's exclude list). The ceremony table holds up to 20,000 (5 minutes
-each), so filling it takes hundreds of addresses. Proven in `check.mjs` through the PROXY protocol
+sign-in; second review, same day: the fix still let about 60 addresses, or ONE IPv6 /64, keep every
+person out, and anyone who knew a credential id lock its owner out). In memory only, nothing about
+who asked is written. A client is its **address key**: an IPv4 address (an IPv4-mapped IPv6 one as
+its IPv4), or an IPv6 address's **/64**. Asking for a sign-in challenge (`login/options`) is charged
+to the address key alone (10 at once, 10 a minute: `OLA_FD_SIGNIN_BURST`, `OLA_FD_SIGNIN_PER_MIN`).
+A verify that names a live ceremony of its kind was paid for when the ceremony was issued and goes
+ahead. Anything else (an invitation, a verify with no live ceremony) is charged to the address key
+and then to a **global ceiling** of at least 30 addresses' worth (600 a minute by default); when it
+is reached a line with counts only is logged, at most once a minute. So a distributed attacker can
+at worst hold off new invitees, never a person who has a passkey. "Sign-in refused" audit rows are
+limited per passkey (10 a minute). The ceremony table holds up to 20,000 (5 minutes each) and drops
+its oldest when full instead of refusing. Proven in `check.mjs` through the PROXY protocol
 with two made-up addresses: 900 requests from one, 890 refused, while a real person signs in from
 the other, during and after.
 
@@ -417,10 +419,15 @@ the other, during and after.
 per-address connection cap would key everyone together, and one caller could again lock out all.
 So the relay must send PROXY protocol v1 and the front desk must run with
 `OLA_FD_PROXY_PROTOCOL=1`. What changes then: the front desk listens with a TCP server that reads
-the `PROXY TCP4|TCP6 <client> <us> <port> <port>` line (within 5 s, at most 107 bytes), takes
-`<client>` as the address for the sign-in buckets and the connection cap, and refuses any
-connection that does not start with that line (so nothing on the machine can skip it). Nothing else
-changes. Never run behind the relay without it. (Implemented and proven now; the relay itself is
+the `PROXY TCP4|TCP6 <client> <us> <port> <port>` line (within 5 s, at most 107 bytes, both
+addresses of the named family, ports up to 65535), takes `<client>`'s address key as the address
+for the sign-in buckets and the connection cap, and refuses any connection that does not start with
+that line (so nothing on the machine can skip it; any process on the machine can still claim any
+address, so only the relay may reach this port). The HTTP server never listens itself in this mode,
+and Node starts its header and request timeouts on its `listening` event, so the front desk emits
+that event when the TCP server listens, and refuses to start if Node no longer hooks the timeouts
+there (second review: behind the PROXY protocol, headers sent a byte at a time were still open after
+12 s, against a 408 at 6 s without it). Nothing else changes. Never run behind the relay without it. (Implemented and proven now; the relay itself is
 still to build.)
 
 **Connections that are refused, or slow** (M2). A reply sent before the request's body was read
@@ -435,7 +442,11 @@ must keep moving (under 32 KiB in 30 seconds ends it) and must declare its size 
 **Transfers in flight** (M5). Each upload, download, file list, activity view and project view holds
 a host `container exec`. One person may have 6 at once, 3 of them uploads; one workspace 12; and
 512 MiB in flight in all (`OLA_FD_INFLIGHT_MB`; an upload counts its declared size, a download its
-size once known). Past that: 429 with `Retry-After`, before any exec starts.
+size once known), and a person's second and later transfers must fit within a quarter of that.
+Past that: 429 (503 for a download) with `Retry-After`, before any exec starts. A download must keep
+moving like an upload: under 32 KiB taken in 30 s ends it (second review: a viewer's four unread
+downloads of a 128 MiB file held all 512 MiB and four execs for good, and every other customer's
+uploads were refused).
 
 **Authorization on every request.** The page names its workspace in `?w=<slug>` (per tab) and
 sends it as `X-Ola-Workspace` (a download link, which cannot carry a header, as `?w=`). The front
@@ -520,8 +531,13 @@ when a sweep first sees the session executing (so it is up to one sweep late), o
 prompt that followed the end of its last run; the workspace's event stream alone never restarts
 it, because that stream is the workspace's word. A session still reported as executing a minute
 after its interrupt (a stuck or lying opencode) stops counting as activity, so the idle stop then
-ends it. Not kept: which run was stopped is in memory only, so a front desk restart forgets it (the
-turn then shows a plain stop) and nothing is in the audit log yet.
+ends it. The ceiling also holds for the whole workspace (second review: a hostile opencode that
+named a new session id at every sweep was never interrupted and never stopped, holding a VM slot for
+good with no one using it; a front desk restart also gave a run a fresh ceiling): runs count as
+activity only up to the ceiling after the last prompt a person sent in that workspace (taken from the
+audit log's `run_started` rows when the front desk starts); past that, whatever still says it is
+executing is interrupted (at most 20 a sweep) and the idle stop applies. Not kept: which run was
+stopped is in memory only, so a front desk restart forgets it (the turn then shows a plain stop).
 
 **The admin CLI** (`frontdesk/admin.mjs`; no admin web page in this milestone):
 
@@ -597,6 +613,12 @@ suite, the live run keeps Together and the long-run checks switch the gateway to
 of about 15 s with no browser request finishes with the workspace running throughout, then the
 workspace stops a few seconds after it ends; a run of 80 s is interrupted at about 24 s, the model
 is called no more, `/api/runs` lists it, and the page's turn says why.
+
+**Second outside review (2026-11-16), from a copy on the mini, not yet deployed:**
+`frontdesk/check.mjs` **35 of 35** with `--no-live` (2 new: unread downloads, a workspace that always
+says it runs; the PROXY check extended: slow headers, malformed lines, one /64, a distributed
+attacker and garbage on a person's credential id), `workspace/check.mjs` 64 of 64 (`--no-live`),
+`gateway/test.mjs` 20 of 20, `web/check.mjs` 20 of 20 (`--no-live`); `npm test` in `frontdesk/` (8).
 
 **The long-run fix (2026-11-16), from `~/ola-staging` on the mini:** `frontdesk/check.mjs` **34 of
 34** with the live request (33 of 33 with `--no-live`), `workspace/check.mjs` 64 of 64
@@ -695,6 +717,14 @@ nothing else touches, and changes only by `node ops/ola.mjs deploy`:
 node ~/ola-staging/current/apps/activist-ai/ops/ola.mjs deploy            # origin/main
 node ~/ola-staging/current/apps/activist-ai/ops/ola.mjs deploy 6d45c77e   # a named commit (also a rollback)
 ```
+
+**Signed commits only** (second review, 2026-11-16). `origin/main` is a public repo that unattended
+agents push to (the Discord bot and the venture runner, from this same machine, under the same author
+name), so a commit that merely passes the suites is not proof that anyone meant to ship it. A deploy
+checks the commit with `git verify-commit` against `~/.ola/allowed-signers` (git's ssh allowed-signers
+format: `bart@ola namespaces="git" ssh-ed25519 AAAA…`, the key on a device that is not this machine)
+and refuses an unsigned or unknown one. `--unsigned` deploys anyway and `deploys.log` says UNSIGNED.
+On the Studio, no other agent or service may run under the account that runs Ola.
 
 A deploy, one at a time (a lock file): `git fetch`; unpack the commit fresh into its release; per
 package folder (`.`, `frontdesk`, `web`), an APFS clone of the served release's `node_modules` when

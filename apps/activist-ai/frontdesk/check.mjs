@@ -46,6 +46,7 @@ const env = {
   OLA_FD_SIGNIN_PER_MIN: '40',
   OLA_FD_MAX_UPLOAD_MB: '2',
   OLA_FD_WORKING_WINDOW_S: '4', // "people working" changes once per window; 4 s so the check can watch it
+  OLA_FD_SLOW_MS: '4000', // a download must move 32 KiB per window; 4 s here (30 s by default) so the check can watch it
 }
 const node = (script, argv, opts = {}) => spawnSync(process.execPath, [path.join(AI, script), ...argv], { env, encoding: 'utf8', ...opts })
 const admin = (...a) => {
@@ -484,6 +485,45 @@ await check('a download of a FIFO the agent made fails at once and leaves no pro
   }
 })
 
+await check("one person's unread downloads are cut, and cannot hold every other customer's transfers", async () => {
+  // Second review (2026-11-16): a viewer's 4 unread downloads of a 128 MiB file held all 512 MiB in
+  // flight and 4 execs for good; every other customer's uploads answered 429.
+  spawnSync(CTR, ['exec', '--user', '1000', 'ola-fd-a', 'sh', '-c', 'head -c 134217728 /dev/zero > /work/big.bin'])
+  const held = []
+  try {
+    const codes = []
+    for (let i = 0; i < 4; i++) {
+      const sock = net.connect(PORT, '127.0.0.1')
+      sock.write(`GET /api/files/big.bin?w=fd-a HTTP/1.1\r\nHost: localhost:${PORT}\r\nCookie: __Host-ola=${a.cookie}\r\n\r\n`)
+      const first = await new Promise((resolve) => (sock.once('data', (d) => resolve(String(d).slice(9, 12))), setTimeout(() => resolve('none'), 5000)))
+      sock.pause()
+      codes.push(first)
+      held.push(sock)
+    }
+    const bobUp = await api('/api/files?name=bob-while.txt', { method: 'POST', cookie: b.cookie, csrf: b.csrf, ws: 'fd-b', body: 'x' })
+    const ogets = () => spawnSync('pgrep', ['-f', 'ola-get big.bin'], { encoding: 'utf8' }).stdout.trim().split('\n').filter(Boolean).length
+    const during = ogets()
+    await until(async () => ogets() === 0, 20_000, 'the unread downloads cut')
+    await api('/api/files/bob-while.txt', { method: 'DELETE', cookie: b.cookie, csrf: b.csrf, ws: 'fd-b' })
+    assert(codes[0] === '200' && codes.slice(1).every((c) => c === '503') && bobUp.status === 201 && during === 1, `alice's downloads ${codes.join(' ')}, bob's upload ${bobUp.status}, ola-get ${during}`)
+    return `alice: ${codes.join(' ')} (one at a time beyond her share); bob's upload ${bobUp.status} meanwhile; the unread one cut, no ola-get left`
+  } finally {
+    for (const s of held) s.destroy()
+    spawnSync(CTR, ['exec', 'ola-fd-a', 'rm', '-f', '/work/big.bin'])
+  }
+})
+
+await check('a workspace that always says a run is executing is still interrupted and stopped, also after a restart', async () => {
+  // Second review (2026-11-16): a new session id at every sweep was never interrupted and never
+  // stopped; a front desk restart also gave a run a fresh ceiling.
+  const r = spawnSync(process.execPath, [path.join(HERE, 'test/hostile-active.mjs'), 'rotate', '14'], { encoding: 'utf8' })
+  const j = JSON.parse(r.stdout.trim().split('\n').pop() || '{}')
+  const first = j.first?.stopTriedAtMs
+  const again = j.afterRestart ? j.afterRestart.stopTriedAtMs - j.afterRestart.restartedAtMs : null
+  assert(first !== null && first < 10_000 && j.first.interrupts >= 1 && again !== null && again < 4000, `hostile active: ${r.stdout.trim() || r.stderr.trim().slice(-200)}`)
+  return `stop tried ${first} ms after the one prompt (idle 2 s, ceiling 3 s), ${j.first.interrupts} interrupt; after a restart, ${again} ms`
+})
+
 await check('a workspace that forges "read by a run" events cannot flood the audit log or bury what people did', async () => {
   // The agent answers on opencode's port: 20,000 forged reads of different files after one prompt.
   const r = spawnSync(process.execPath, [path.join(HERE, 'test/hostile-events.mjs'), '20000'], { encoding: 'utf8' })
@@ -743,7 +783,7 @@ await check('behind the relay (PROXY protocol): an attacker hammering sign-in fr
           headers: { host: `localhost:${PP}`, origin: PORIGIN, 'content-type': 'application/json', ...(cookie ? { cookie } : {}) },
           createConnection: () => {
             const sock = net.connect(PP, '127.0.0.1')
-            sock.write(`PROXY TCP4 ${from} 127.0.0.1 40000 ${PP}\r\n`)
+            sock.write(net.isIP(from) === 6 ? `PROXY TCP6 ${from} ::1 40000 ${PP}\r\n` : `PROXY TCP4 ${from} 127.0.0.1 40000 ${PP}\r\n`)
             return sock
           },
         },
@@ -792,7 +832,42 @@ await check('behind the relay (PROXY protocol): an attacker hammering sign-in fr
     const lo2 = await via('198.51.100.4', 'POST', '/api/auth/login/options', {})
     const lv2 = await via('198.51.100.4', 'POST', '/api/auth/login/verify', { ceremony: lo2.json?.ceremony, response: pia.get(lo2.json.options) })
     assert(lv2.status === 200, `pia after the attack: ${lv2.status}`)
-    return `attacker: ${JSON.stringify(codes)}; pia signed in during and after; a connection without a PROXY line gets nothing`
+
+    // Second review (2026-11-16). Header timeouts hold behind the PROXY protocol too (they did not:
+    // the HTTP server never listened, so Node never started its checks).
+    const slow = await new Promise((resolve) => {
+      const t0 = Date.now()
+      let got = ''
+      const sock = net.connect(PP, '127.0.0.1', () => sock.write(`PROXY TCP4 198.51.100.50 127.0.0.1 40000 ${PP}\r\nGET /api/health HTTP/1.1\r\nHost: localhost:${PP}\r\nX-Slow: `))
+      const drip = setInterval(() => sock.writable && sock.write('X'), 700)
+      const end = () => (clearInterval(drip), clearTimeout(cap), sock.destroy(), resolve({ ms: Date.now() - t0, got: got.slice(9, 12) }))
+      const cap = setTimeout(end, 12_000)
+      sock.on('data', (d) => (got += d))
+      sock.on('close', end)
+      sock.on('error', () => {})
+    })
+    assert(slow.got === '408' && slow.ms < 9000, `slow headers behind the PROXY protocol: ${JSON.stringify(slow)}`)
+    // Malformed lines get nothing.
+    for (const line of [`PROXY TCP4 198.51.100.52 127.0.0.1 99999 1`, `PROXY TCP4 198.51.100.53 ${'1'.repeat(120)} 1 1`, `PROXY TCP6 198.51.100.54 127.0.0.1 1 1`]) {
+      const r = await raw(`${line}\r\nGET /api/health HTTP/1.1\r\nHost: localhost:${PP}\r\n\r\n`, { port: PP })
+      assert(r.got === '', `a malformed PROXY line was answered: ${line.slice(0, 40)}`)
+    }
+    // One IPv6 /64 is one client, however many addresses it uses; the same IPv4 address mapped is the same.
+    let ok64 = 0
+    for (let i = 1; i <= 50; i++) for (let k = 0; k < 2; k++) if ((await via(`2001:db8:a:b::${i.toString(16)}`, 'POST', '/api/auth/login/options', {})).status === 200) ok64++
+    assert(ok64 <= 12, `50 addresses of one /64 got ${ok64} ceremonies`)
+    // A distributed attacker (70 different /64s) empties the global ceiling; pia, with a passkey,
+    // still signs in, and garbage naming her credential id does not lock her out.
+    const dist = {}
+    for (let i = 1; i <= 70; i++) for (let k = 0; k < 10; k++) {
+      const r = await via(`2001:db8:${i.toString(16)}::1`, 'POST', k % 2 ? '/api/auth/register/options' : '/api/auth/login/verify', k % 2 ? { invite: 'A'.repeat(43) } : { ceremony: 'x'.repeat(43), response: { id: 'made-up' } })
+      dist[r.status] = (dist[r.status] ?? 0) + 1
+    }
+    for (let i = 0; i < 15; i++) await via(`198.51.100.${120 + i}`, 'POST', '/api/auth/login/verify', { ceremony: 'x'.repeat(43), response: { id: pia.id } })
+    const lo3 = await via('192.0.2.77', 'POST', '/api/auth/login/options', {})
+    const lv3 = await via('192.0.2.77', 'POST', '/api/auth/login/verify', { ceremony: lo3.json?.ceremony, response: pia.get(lo3.json.options) })
+    assert((dist[429] ?? 0) > 0 && lo3.status === 200 && lv3.status === 200, `distributed attacker ${JSON.stringify(dist)}; pia: options ${lo3.status}, verify ${lv3.status}`)
+    return `attacker: ${JSON.stringify(codes)}; pia signed in during and after; a connection without a PROXY line gets nothing; slow headers 408 after ${slow.ms} ms; malformed lines nothing; one /64: ${ok64} of 100; 70 /64s ${JSON.stringify(dist)} and 15 garbage assertions on her id, pia still signs in`
   } finally {
     fdp.kill('SIGTERM')
   }
