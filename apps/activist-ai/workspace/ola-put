@@ -1,0 +1,37 @@
+#!/usr/bin/python3 -I
+# ola-put <name> [--replace]: writes stdin to /work/<name> (a plain file name, no folders,
+# not starting with a dot) through a temporary file and a rename, then prints
+# {"name","size","sha256"} so the host can compare with what it sent.
+# Run by `ws.mjs upload` through `container exec -i`.
+import hashlib, json, os, re, sys, tempfile
+
+args = sys.argv[1:]
+replace = "--replace" in args
+names = [a for a in args if a != "--replace"]
+if len(names) != 1 or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9 ._()+,-]{0,199}", names[0]):
+    sys.stderr.write("ola-put: the name must be a plain file name (letters, digits, space . _ ( ) + , -), at most 200\n")
+    sys.exit(2)
+name = names[0]
+dest = os.path.join("/work", name)
+if os.path.lexists(dest) and not replace:
+    sys.stderr.write("ola-put: a file with that name is already in the workspace\n")
+    sys.exit(3)
+h = hashlib.sha256()
+size = 0
+fd, tmp = tempfile.mkstemp(dir="/work", prefix=".upload-")
+try:
+    with os.fdopen(fd, "wb") as f:
+        for chunk in iter(lambda: sys.stdin.buffer.read(1 << 20), b""):
+            h.update(chunk)
+            size += len(chunk)
+            f.write(chunk)
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(tmp, dest)
+except BaseException:
+    try:
+        os.unlink(tmp)
+    except OSError:
+        pass
+    raise
+print(json.dumps({"name": name, "size": size, "sha256": h.hexdigest()}))

@@ -12,7 +12,7 @@ Started 2026-11-15. The plan, the promise and its limits are in the private note
 | **Agent** | [opencode](https://github.com/anomalyco/opencode) 2.3.0 (MIT), one copy per person's workspace | runs a real task end to end, from the command line and in server mode (see the spike) |
 | **Model gateway** | `gateway/server.mjs`: the one address a workspace may reach. Holds the model server's address and key, checks who is calling, caps size, concurrency, time and weekly tokens, keeps one line per request and never any content | built and tested (`gateway/test.mjs`), used by the spike; see [The gateway](#the-gateway) |
 | **Model** | an OpenAI-compatible server. On the Mac Studio (arrives Nov 30 to Dec 3, 2026): a local MLX server. Until then: Together.ai, made-up data only | stand-in works with GLM-5.3-Flash |
-| **Workspace** | one sealed Linux machine per person (Apple `container`), with a route to the gateway and nothing else | not built |
+| **Workspace** | `workspace/`: one sealed Linux VM per workspace (Apple `container` 1.7.1) with no network at all; one socket leads to the gateway and nowhere else | built and proven on the mini (`workspace/check.mjs`, 55 checks); see [The workspace](#the-workspace) |
 | **Front desk and page** | sign-in with passkeys, our own web page, starts and stops workspaces | not built |
 | **Way in** | Tailscale; nothing on the public internet | not built |
 | **Landing page** | `site/`: Ola's front door, a static page built into `public/ola-site/` for ola.cx, with no third-party requests (`site/check.mjs` proves it); see `site/README.md` | built, not live |
@@ -144,6 +144,122 @@ retries, no queue wait. The request-field allowlist did not change opencode's be
 **Not done yet:** per-workspace model grants (every token sees every model; that needs the
 platform DB), tokens from the DB instead of the environment, a daily (rather than weekly) quota,
 and per-request output caps (`max_tokens` is passed on as sent).
+
+## The workspace
+
+`workspace/`: the image (`Containerfile`), the CLI (`ws.mjs`), the door (`door.mjs`) and the
+proofs (`check.mjs`). It runs on the machine that hosts the VMs, as the account that runs
+`container system start`. Node 22 or later. Nothing in it needs root.
+
+**The seal: no network, one socket.** Each workspace VM runs with `--network none`. Its only
+interface is loopback: no route to the internet, the host, the LAN, the tailnet or another
+workspace. It has exactly two ways in or out, both unix sockets:
+
+- **Out, the door.** `ws.mjs` mounts one host socket into the VM (`~/.ola/ws/<id>/gateway.sock`
+  at `/ola/gw/gateway.sock`). Its listener, `door.mjs`, pipes every connection to
+  `127.0.0.1:4180`, the gateway, and to nothing else: the destination is fixed in the door, not
+  chosen by what the VM sends (a proxy request, a `Host:` header or a `CONNECT` still lands on
+  the gateway, which wants a token). Inside, `ola-init` bridges `127.0.0.1:4180` to the socket,
+  so opencode's config just says `http://127.0.0.1:4180/v1`.
+- **In, opencode.** `opencode serve` listens on 127.0.0.1:4096 inside; `--publish-socket` gives the
+  host `~/.ola/ws/<id>/opencode.sock`. The front desk talks to it with the workspace's Basic-auth
+  password.
+
+**Why not a host-only network and pf.** That was the plan (`--internal` networks plus a pf anchor).
+Measured on the mini: an `--internal` network does block the internet, but the VM reached the
+host's sshd at the network's gateway address (10.77.1.1:22), and so it would reach every host
+service that listens on all addresses. On the mini that includes BlueBubbles (:1234, the iMessage
+bridge), the Almanac and about twenty more. Closing that needs a pf anchor, which needs root, and
+it would make the seal depend on a rule set staying right as services come and go. With no
+network there is nothing to filter. The seal does not need pf, sudo or any setting on the host.
+(A machine-wide pf outbound allowlist is still planned for the Studio itself, arch step 11; that
+is about the host, not the workspaces.)
+
+**What a workspace is.** Container `ola-<id>`, volume `ola-<id>` at `/work` (ext4, sized at
+creation), and `~/.ola/ws/<id>/` (mode 700) with `secrets.env` (600: the opencode password and
+the gateway token, both generated; they reach the VM by `--env-file`, never a command line, and
+are never printed), the door's pid and log, and the two sockets. `~/.ola/gateway-tokens` (600)
+holds the `GATEWAY_TOKENS` line for the gateway: restart the gateway after a `create` or
+`destroy`. Everything opencode keeps (its session database, logs, caches) is under
+`/work/.ola`, so `files` shows it and `destroy` removes it; the image's root holds nothing of the
+customer's. The agent runs as `work` (uid 1000) with no capabilities (`--cap-drop ALL`) and no
+sudo; `/tmp` is a tmpfs. Image: Debian bookworm-slim pinned by digest, opencode 2.3.0 checked
+against npm's sha512, python3, socat, nothing else (no curl, no CA bundle, no ssh).
+
+```bash
+node workspace/ws.mjs image                    # build ola-workspace:2.3.0-1 (about 25 s)
+node workspace/ws.mjs create alice             # 4 CPUs, 6 GiB, 50 GiB: the ceilings
+node workspace/ws.mjs create test --memory 1g --disk 1g --cpus 1   # lower only; higher is refused
+node workspace/ws.mjs start alice              # opens the door, boots, waits for opencode
+node workspace/ws.mjs upload alice survey.csv  # plain names; same name refused without --replace
+node workspace/ws.mjs files alice              # size and sha256 of everything in /work
+node workspace/ws.mjs status                   # state, memory used, volume on disk, network, door
+node workspace/ws.mjs stop alice
+node workspace/ws.mjs destroy alice            # asks for the id; --confirm alice for scripts
+```
+
+At most 4 workspaces run at once (`OLA_MAX_RUNNING` can only lower it). The two-runs-at-once
+limit per workspace is the gateway's (`GATEWAY_MAX_INFLIGHT_PER_CALLER=2`).
+
+**The proofs.** `node workspace/check.mjs` on the host (from `apps/activist-ai`, after `npm ci`).
+It starts its own gateway on port 4181 with Together as the stand-in (the key is read from
+`TOGETHER_API_KEY` or `~/Documents/code/hilma/.env.local` and never printed), creates three
+workspaces under `~/.ola-check`, and checks from inside the VMs:
+
+- the gateway answers with the workspace's token and refuses without one;
+- the only interface is `lo`, with no IPv4 or IPv6 route; TCP to 1.1.1.1, 8.8.8.8 and Apple, to
+  the vmnet host address, a host-only gateway, the mini's LAN and tailnet addresses (sshd,
+  BlueBubbles, the gateway's own port) and a VM on the default network, IPv6, UDP and DNS all fail
+  (`ENETUNREACH`); the only TCP listeners in the VM are our two bridges, by port scan and by the
+  kernel's table;
+- the other workspace has the same seal, and a file uploaded to one is nowhere on the other's
+  disk; each VM mounts only its own volume and door and publishes only its own socket;
+- the limits: cgroup `cpu.max` of 4 CPUs, 5.92 GiB `MemTotal`, a 49.2 GiB `/work`, uid 1000 with
+  no capabilities; in a 1 GiB workspace touching 1.5 GiB is killed (exit 137) while 256 MiB fits
+  and the workspace lives on; writing past a 1 GiB volume stops at 991 MiB with "No space left on
+  device"; `create` refuses anything above the ceilings and `start` a third workspace when two may
+  run;
+- upload keeps size and sha256, refuses a repeat name and a dot name; with the door closed the VM
+  cannot reach the gateway, and reopened (`start` on a running workspace) it can again;
+- **the survey spike's task, run by opencode inside the VM through the door and the gateway:
+  16 of 16 checks**;
+- `destroy` leaves no container, no volume, no volume files under the container data root, no
+  state folder, no gateway token and no door process.
+
+**Measured 2026-11-16 on the mini** (Mac mini, Apple M4, 16 GB, macOS 26.3.1, container 1.7.1),
+three full runs of the check, the last 55 of 55:
+
+- `create` 0.7 to 0.8 s (volume, ownership, container); `start` to opencode answering: **0.9 s**.
+- Memory: about **315 MiB** for an idle 6 GiB workspace, 216 to 231 MiB for an idle 1 GiB one,
+  **465 MiB** after the survey task. The VM keeps what it has used until it stops (Apple's
+  documented limit), which is why the front desk will stop idle workspaces.
+- Disk: an empty 50 GiB volume takes **5.7 MiB** on the host (a sparse image); after the task,
+  9 to 11 MiB.
+- The task: 15 to 32 s, 7 to 9 model requests, 63,000 to 72,000 tokens (GLM-5.3-Flash on Together).
+  opencode's catalog fetch from models.dev, seen on the iMac as `models-dev.refreshed`, never
+  appears inside the VM, and opencode works without it.
+
+**Things a reviewer should know.**
+
+- The VM shows **5 vCPUs** for `--cpus 4`; the container's cgroup caps it at 4 CPUs of time. A
+  root process in the guest could use the fifth; nothing in the workspace runs as root.
+- `container inspect ola-<id>` on the host shows the container's environment, the opencode
+  password and gateway token included. `ws.mjs` never prints it; the host account already holds
+  both secrets in `secrets.env`.
+- The door socket is mode 0666 because the VM sees the host file's mode with owner root, and
+  `work` must connect. Its folder is mode 700, which is what keeps other host accounts out.
+- `/proc/net/unix` inside lists a `/run/sockets/<uuid>.sock` that does not exist in the
+  workspace's file system: it belongs to Apple's in-VM init (`vminitd`), which relays the
+  mounted socket.
+- `files` is what the VM says about its own disk (the host cannot read ext4). Its output is
+  parsed strictly and anything out of shape is refused, but a compromised VM could misreport.
+- If the door dies while a VM runs, the workspace loses the gateway until `ws.mjs start` reopens
+  it. On the Studio the door becomes a launchd job.
+
+**Not done yet:** start at boot and after an unattended reboot (Apple's `container` has no
+restart policy); doors as launchd jobs; per-workspace tokens read by the gateway from the
+platform DB instead of a restart; idle stop after 30 minutes; ssh into a workspace; backups of
+the volumes; a test VM left up for the outside reviewer.
 
 ## Rules for this code
 

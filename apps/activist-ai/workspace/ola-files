@@ -1,0 +1,33 @@
+#!/usr/bin/python3 -I
+# Lists everything under /work as JSON lines: {"path","type","size","sha256"}.
+# Symlinks are reported, never followed. Run by `ws.mjs files` through `container exec`.
+# The host parses each line strictly; this runs inside the VM, so its output is treated
+# as the VM's claim about its own disk, not as trusted input.
+import hashlib, json, os, stat, sys
+
+ROOT = "/work"
+out = sys.stdout
+for dirpath, dirnames, filenames in os.walk(ROOT, followlinks=False):
+    dirnames.sort()
+    for name in sorted(filenames) + [d for d in dirnames if os.path.islink(os.path.join(dirpath, d))]:
+        full = os.path.join(dirpath, name)
+        rel = os.path.relpath(full, ROOT)
+        try:
+            st = os.lstat(full)
+        except OSError:
+            continue
+        rec = {"path": rel, "size": st.st_size}
+        if stat.S_ISLNK(st.st_mode):
+            rec.update(type="link", sha256=None)
+        elif stat.S_ISREG(st.st_mode):
+            h = hashlib.sha256()
+            try:
+                with open(full, "rb") as f:
+                    for chunk in iter(lambda: f.read(1 << 20), b""):
+                        h.update(chunk)
+                rec.update(type="file", sha256=h.hexdigest())
+            except OSError:
+                rec.update(type="file", sha256=None)
+        else:
+            rec.update(type="other", sha256=None)
+        out.write(json.dumps(rec, ensure_ascii=True) + "\n")

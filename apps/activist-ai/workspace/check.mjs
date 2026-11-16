@@ -1,0 +1,378 @@
+#!/usr/bin/env node
+// The sealing proofs, run on the machine that hosts the workspaces (the Mac mini for now):
+//
+//   node workspace/check.mjs            (from apps/activist-ai, after `npm ci`)
+//
+// It starts its own model gateway (port 4181, Together as the stand-in model, key read from
+// TOGETHER_API_KEY or ~/Documents/code/hilma/.env.local and never printed), creates three
+// workspaces under a separate state folder (~/.ola-check), and proves from inside the VMs:
+//   1. the workspace reaches the gateway, and the door leads nowhere else
+//   2. it cannot reach the internet (TCP, UDP, DNS, IPv6), the host's ports (every host
+//      address it might guess), the LAN, the tailnet, or another workspace
+//   3. the limits hold: CPUs, memory (an allocation past it is killed), disk (writing past
+//      it fails), refusals above the ceilings, at most N running
+//   4. a real task through the gateway (the survey spike: 16 checks) passes inside the VM
+//   5. destroy leaves nothing behind
+// Only made-up data. Prints one line per check, the measurements, and exits 0 only if all pass.
+import { spawn, spawnSync } from 'node:child_process'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import net from 'node:net'
+import { homedir, tmpdir } from 'node:os'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const here = path.dirname(fileURLToPath(import.meta.url))
+const spike = path.join(here, '../spike')
+const GW_PORT = 4181
+process.env.OLA_HOME = path.join(homedir(), '.ola-check')
+process.env.OLA_GATEWAY_PORT = String(GW_PORT)
+process.env.OLA_MAX_RUNNING = '2'
+const ws = await import('./ws.mjs')
+const { OpenCode } = await import('@opencode/client')
+
+const run = mkdtempSync(path.join(tmpdir(), 'ola-check-'))
+const results = []
+const measured = {}
+const t = (name, ok, detail = '') => {
+  results.push(ok)
+  console.log(`${ok ? 'pass' : 'FAIL'}  ${name}${detail ? `  (${detail})` : ''}`)
+}
+const GIB = 1024 ** 3
+const A = 'chk-a'
+const B = 'chk-b'
+const C = 'chk-c'
+
+// Runs python inside a workspace (as its user `work`) and returns { code, out, err }.
+function inside(id, code, { timeout = 120_000 } = {}) {
+  const r = spawnSync(ws.CONTAINER, ['exec', ws.names(id).container, 'python3', '-I', '-c', code], { encoding: 'utf8', timeout, maxBuffer: 16 * 1024 * 1024 })
+  return { code: r.status, out: r.stdout || '', err: r.stderr || '' }
+}
+const insideJSON = (id, code, opts) => {
+  const r = inside(id, code, opts)
+  try {
+    return JSON.parse(r.out.trim().split('\n').pop())
+  } catch {
+    return { error: `exit ${r.code}: ${r.err.trim().split('\n').pop()}` }
+  }
+}
+
+// ---------------------------------------------------------------- the gateway
+
+function together() {
+  if (process.env.TOGETHER_API_KEY) return process.env.TOGETHER_API_KEY
+  const f = path.join(homedir(), 'Documents/code/hilma/.env.local')
+  const line = readFileSync(f, 'utf8').split('\n').find((l) => l.startsWith('TOGETHER_API_KEY='))
+  if (!line) throw new Error('no TOGETHER_API_KEY in the environment or in ~/Documents/code/hilma/.env.local')
+  return line.slice('TOGETHER_API_KEY='.length).replace(/^["']|["']$/g, '').trim()
+}
+let gateway = null
+let gatewayLog = ''
+async function startGateway() {
+  if (gateway) gateway.kill('SIGTERM')
+  const tokens = readFileSync(path.join(ws.HOME, 'gateway-tokens'), 'utf8').trim().slice('GATEWAY_TOKENS='.length)
+  gateway = spawn(process.execPath, [path.join(here, '../gateway/server.mjs')], {
+    env: {
+      PATH: process.env.PATH,
+      HOME: homedir(),
+      UPSTREAM_BASE_URL: 'https://api.together.xyz/v1',
+      UPSTREAM_API_KEY: together(),
+      GATEWAY_TOKENS: tokens,
+      GATEWAY_MODELS: 'general=zai-org/GLM-5.3-Flash',
+      GATEWAY_PORT: String(GW_PORT),
+      GATEWAY_DB: path.join(run, 'usage.db'),
+    },
+    stdio: ['ignore', 'pipe', 'pipe'],
+  })
+  gateway.stdout.on('data', (d) => (gatewayLog += d))
+  gateway.stderr.on('data', (d) => (gatewayLog += d))
+  for (let i = 0; i < 50 && !gatewayLog.includes('"event":"start"'); i++) await new Promise((r) => setTimeout(r, 100))
+  if (!gatewayLog.includes('"event":"start"')) throw new Error('the gateway did not start')
+}
+
+// ---------------------------------------------------------------- probes run inside a VM
+
+const NET_PROBE = String.raw`
+import json, os, socket, errno
+def tcp(host, port, fam=socket.AF_INET):
+    s = socket.socket(fam, socket.SOCK_STREAM); s.settimeout(3)
+    try:
+        s.connect((host, port)); return "OPEN"
+    except OSError as e:
+        return errno.errorcode.get(e.errno, str(e)) if e.errno else type(e).__name__
+    finally:
+        s.close()
+out = {}
+out["interfaces"] = sorted(l.split(":")[0].strip() for l in open("/proc/net/dev").read().splitlines()[2:])
+out["ipv4_routes"] = len(open("/proc/net/route").read().splitlines()) - 1
+try:
+    out["ipv6_routes"] = [l for l in open("/proc/net/ipv6_route").read().splitlines() if not l.split()[-1] == "lo"]
+except OSError:
+    out["ipv6_routes"] = []
+targets = {
+  "internet 1.1.1.1:443": ("1.1.1.1", 443), "internet 8.8.8.8:53": ("8.8.8.8", 53),
+  "internet 17.253.144.10:80 (apple)": ("17.253.144.10", 80),
+  "vmnet host 192.168.64.1:22": ("192.168.64.1", 22), "vmnet host 192.168.64.1:4181 (gateway)": ("192.168.64.1", 4181),
+  "host-only 10.77.1.1:22": ("10.77.1.1", 22), "mini LAN 171.66.240.175:22": ("171.66.240.175", 22),
+  "mini LAN 171.66.240.175:1234 (BlueBubbles)": ("171.66.240.175", 1234), "tailnet 100.95.51.98:1234": ("100.95.51.98", 1234),
+  "tailnet 100.95.51.98:4181 (gateway)": ("100.95.51.98", 4181), "default-network peer 192.168.64.3:22": ("192.168.64.3", 22),
+}
+out["tcp"] = {k: tcp(*v) for k, v in targets.items()}
+out["tcp6 2606:4700:4700::1111:443"] = tcp("2606:4700:4700::1111", 443, socket.AF_INET6)
+try:
+    socket.getaddrinfo("example.com", 443); out["dns"] = "RESOLVED"
+except OSError as e:
+    out["dns"] = type(e).__name__
+u = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+try:
+    u.sendto(b"x", ("8.8.8.8", 53)); out["udp 8.8.8.8:53"] = "SENT"
+except OSError as e:
+    out["udp 8.8.8.8:53"] = errno.errorcode.get(e.errno, str(e))
+opened = []
+for p in range(1, 65536):
+    s = socket.socket(); s.settimeout(0.2)
+    # A connect that lands on its own source port is Linux's TCP self-connect, not a listener.
+    if s.connect_ex(("127.0.0.1", p)) == 0 and s.getsockname() != s.getpeername(): opened.append(p)
+    s.close()
+out["loopback_open"] = opened
+listen = set()
+for f in ("/proc/net/tcp", "/proc/net/tcp6"):
+    try:
+        for l in open(f).read().splitlines()[1:]:
+            parts = l.split()
+            if parts[3] == "0A": listen.add(parts[1])
+    except OSError:
+        pass
+out["listen_table"] = sorted(listen)
+out["unix_sockets"] = sorted(set(l.split()[-1] for l in open("/proc/net/unix").read().splitlines()[1:] if len(l.split()) > 7 and l.split()[-1].startswith("/")))
+print(json.dumps(out))
+`
+
+const GATEWAY_PROBE = String.raw`
+import json, os, socket, urllib.request
+def get(path, token=None):
+    req = urllib.request.Request("http://127.0.0.1:4180" + path, headers={"Authorization": "Bearer " + token} if token else {})
+    try:
+        r = urllib.request.urlopen(req, timeout=10); return r.status, json.loads(r.read())
+    except urllib.error.HTTPError as e:
+        return e.code, json.loads(e.read() or b"null")
+def raw(data):
+    s = socket.create_connection(("127.0.0.1", 4180), timeout=10); s.sendall(data)
+    got = b""
+    while True:
+        c = s.recv(65536)
+        if not c: break
+        got += c
+    s.close(); return got.split(b"\r\n", 1)[0].decode("latin-1")
+out = {}
+out["models_with_token"] = get("/v1/models", os.environ["BOX_API_KEY"])
+out["models_without_token"] = get("/v1/models")[0]
+out["proxy_request"] = raw(b"GET http://example.com/ HTTP/1.1\r\nHost: example.com\r\nConnection: close\r\n\r\n")
+out["connect_tunnel"] = raw(b"CONNECT example.com:443 HTTP/1.1\r\nHost: example.com:443\r\nConnection: close\r\n\r\n")
+out["host_header"] = raw(b"GET /v1/models HTTP/1.1\r\nHost: 127.0.0.1:1234\r\nConnection: close\r\n\r\n")
+print(json.dumps(out))
+`
+
+const LIMITS_PROBE = String.raw`
+import json, os
+st = os.statvfs("/work")
+print(json.dumps({"nproc": os.cpu_count(), "cpu_max": open("/sys/fs/cgroup/cpu.max").read().strip(),
+  "mem_total": int(open("/proc/meminfo").read().split("MemTotal:")[1].split()[0]) * 1024,
+  "work_size": st.f_blocks * st.f_frsize, "uid": os.getuid(),
+  "cap_eff": [l.split()[1] for l in open("/proc/self/status") if l.startswith("CapEff")][0]}))
+`
+
+// Touches every page of `mib` MiB; prints ALLOCATED if the VM let it.
+const ALLOC = (mib) => `x = bytearray(${mib} * 1048576)\nfor i in range(0, len(x), 4096): x[i] = 1\nprint("ALLOCATED")`
+// Writes until the disk is full or `mib` MiB are written; prints how far it got and why it stopped.
+const FILL = (mib) => String.raw`
+import json, os
+n = 0; why = "wrote all"
+try:
+    with open("/work/fill.bin", "wb") as f:
+        for _ in range(${mib}):
+            f.write(b"\0" * 1048576); n += 1
+        f.flush(); os.fsync(f.fileno())
+except OSError as e:
+    why = os.strerror(e.errno)
+os.unlink("/work/fill.bin")
+print(json.dumps({"mib": n, "stopped": why}))
+`
+
+// ---------------------------------------------------------------- the run
+
+const destroyAll = async () => {
+  for (const id of [A, B, C]) if (ws.inspect(id) || ws.volumeOf(id)) await ws.destroy(id, { confirm: id }).catch(() => {})
+}
+
+try {
+  if (spawnSync(ws.CONTAINER, ['image', 'inspect', ws.IMAGE]).status !== 0) ws.buildImage()
+  await destroyAll() // leftovers from an interrupted run
+  rmSync(ws.HOME, { recursive: true, force: true })
+
+  // -------- create, and the refusals
+  let t0 = Date.now()
+  await ws.create(A)
+  measured.create_s = (Date.now() - t0) / 1000
+  await ws.create(B, { memory: '1g', disk: '1g', cpus: 1 })
+  await ws.create(C, { memory: '512m', disk: '1g', cpus: 1 })
+  for (const [flag, value] of [['memory', '7g'], ['disk', '60g'], ['cpus', 5]]) {
+    const r = await ws.create('chk-over', { [flag]: value }).then(() => 'created', (e) => e.message)
+    t(`create refuses --${flag} ${value} (above the ceiling)`, r !== 'created' && !ws.inspect('chk-over'), r)
+  }
+  await startGateway()
+
+  t0 = Date.now()
+  const startA = await ws.start(A)
+  measured.start_s = startA.ms / 1000
+  await ws.start(B)
+  const third = await ws.start(C).then(() => 'started', (e) => e.message)
+  t('a third workspace is refused while 2 run (OLA_MAX_RUNNING=2)', third !== 'started', third)
+  ws.stop(C)
+
+  // -------- host-side shape
+  for (const id of [A, B]) {
+    const c = ws.inspect(id)
+    const cfg = c.configuration
+    t(`${id}: attached to no network`, (cfg.networks || []).length === 0 && !JSON.stringify(c.status || {}).match(/\d+\.\d+\.\d+\.\d+/), `networks: ${(cfg.networks || []).length}`)
+    const mounts = JSON.stringify(cfg.mounts || [])
+    const sockets = JSON.stringify(cfg.sockets || cfg.publishedSockets || [])
+    const other = id === A ? B : A
+    t(`${id}: mounts only its own volume and door`, mounts.includes(`ola-${id}`) && mounts.includes(`/ws/${id}/gateway.sock`) && !mounts.includes(`ola-${other}`) && !mounts.includes(`/ws/${other}/`) && (cfg.mounts || []).filter((m) => !m.type?.tmpfs).length === 2, (cfg.mounts || []).map((m) => `${Object.keys(m.type || {})[0]} ${m.destination}`).join(', '))
+    t(`${id}: publishes only its own opencode socket`, sockets.includes(`/ws/${id}/opencode.sock`) && !sockets.includes(`/ws/${other}/`), sockets.length > 2 ? 'published' : sockets)
+  }
+  const modes = [ws.HOME, path.join(ws.HOME, 'ws', A), path.join(ws.HOME, 'ws', A, 'secrets.env'), path.join(ws.HOME, 'gateway-tokens')].map((f) => (statSync(f).mode & 0o777).toString(8))
+  t('host state: folders 700, secrets 600', modes.join(' ') === '700 700 600 600', modes.join(' '))
+  t('opencode: 401 without the password, 200 with it', (await ws.opencodeRequest(A, '/api/info', { auth: false })) === 401 && (await ws.opencodeRequest(A, '/api/info')) === 200)
+
+  // -------- 1. the gateway, and only the gateway
+  const g = insideJSON(A, GATEWAY_PROBE)
+  t('inside: the gateway answers with the workspace token', g.models_with_token?.[0] === 200 && g.models_with_token[1].data.some((m) => m.id === 'general'), JSON.stringify(g.models_with_token ?? g.error).slice(0, 120))
+  t('inside: the gateway refuses without a token', g.models_without_token === 401)
+  for (const k of ['proxy_request', 'host_header']) t(`inside: a ${k.replace('_', ' ')} through the door still lands on the gateway`, /^HTTP\/1\.1 (401|404)/.test(g[k] || ''), g[k])
+  // Node's server drops a CONNECT it has no handler for: no tunnel, the connection just closes.
+  t('inside: a CONNECT through the door opens no tunnel', !/^HTTP\/1\.[01] 200/.test(g.connect_tunnel ?? 'HTTP/1.1 200'), g.connect_tunnel === '' ? 'the gateway closed the connection' : g.connect_tunnel)
+
+  // -------- 2. nothing else
+  const n = insideJSON(A, NET_PROBE, { timeout: 300_000 })
+  t('inside: the only interface is loopback', JSON.stringify(n.interfaces) === '["lo"]', JSON.stringify(n.interfaces))
+  t('inside: no IPv4 or IPv6 route', n.ipv4_routes === 0 && (n.ipv6_routes || []).length === 0, `${n.ipv4_routes} v4, ${(n.ipv6_routes || []).length} v6`)
+  for (const [k, v] of Object.entries(n.tcp || {})) t(`inside: cannot reach ${k}`, v !== 'OPEN', v)
+  t('inside: cannot reach the internet over IPv6', n['tcp6 2606:4700:4700::1111:443'] !== 'OPEN', n['tcp6 2606:4700:4700::1111:443'])
+  t('inside: DNS does not resolve', n.dns !== 'RESOLVED', n.dns)
+  t('inside: UDP cannot be sent out', n['udp 8.8.8.8:53'] !== 'SENT', n['udp 8.8.8.8:53'])
+  t('inside: on loopback only our two bridges listen (4096 opencode, 4180 door)', JSON.stringify(n.loopback_open) === '[4096,4180]', JSON.stringify(n.loopback_open))
+  // The kernel's own table of listening TCP sockets (every user's): 127.0.0.1:4096 and :4180 only.
+  t("inside: the kernel's listen table holds only those two", JSON.stringify(n.listen_table) === '["0100007F:1000","0100007F:1054"]', JSON.stringify(n.listen_table))
+  measured.unix_sockets_inside = n.unix_sockets
+  // Another workspace: neither has an address, so there is nothing to connect to; and B's
+  // own probe sees the same seal from its side.
+  const nb = insideJSON(B, NET_PROBE, { timeout: 300_000 })
+  t(`${B} (the other workspace) has the same seal`, JSON.stringify(nb.interfaces) === '["lo"]' && Object.values(nb.tcp || { x: 'OPEN' }).every((v) => v !== 'OPEN'))
+  writeFileSync(path.join(run, 'secret-of-b.txt'), 'made-up marker for workspace b\n')
+  await ws.upload(B, [path.join(run, 'secret-of-b.txt')])
+  const peek = inside(A, `import os\nfound=[os.path.join(d,f) for top in ["/"] for d,_,fs in os.walk(top) if not d.startswith(("/proc","/sys")) for f in fs if f=="secret-of-b.txt"]\nprint(found)`)
+  t(`${A} cannot find ${B}'s file anywhere on its disk`, peek.out.trim() === '[]', peek.out.trim() || peek.err.trim().split('\n').pop())
+
+  // -------- 3. limits
+  const la = insideJSON(A, LIMITS_PROBE)
+  t(`${A}: CPU quota is 4 CPUs`, la.cpu_max === '400000 100000', `cgroup cpu.max ${la.cpu_max}; the VM shows ${la.nproc} vCPUs`)
+  t(`${A}: memory is 6 GiB`, la.mem_total > 5.5 * GIB && la.mem_total <= 6 * GIB, `MemTotal ${(la.mem_total / GIB).toFixed(2)} GiB`)
+  t(`${A}: /work is 50 GiB`, la.work_size > 48 * GIB && la.work_size <= 50 * GIB, `${(la.work_size / GIB).toFixed(1)} GiB`)
+  t(`${A}: runs as uid 1000 with no capabilities`, la.uid === 1000 && /^0+$/.test(la.cap_eff), `uid ${la.uid}, CapEff ${la.cap_eff}`)
+  const lb = insideJSON(B, LIMITS_PROBE)
+  t(`${B}: CPU quota is 1 CPU`, lb.cpu_max === '100000 100000', lb.cpu_max)
+  const alloc = inside(B, ALLOC(1536))
+  t(`${B}: touching 1.5 GiB in a 1 GiB workspace is stopped`, !alloc.out.includes('ALLOCATED'), `exit ${alloc.code}${alloc.err.includes('MemoryError') ? ', MemoryError' : alloc.code === 137 ? ', killed' : ''}`)
+  const small = inside(B, ALLOC(256))
+  t(`${B}: 256 MiB fits, and the workspace survived`, small.out.includes('ALLOCATED') && (await ws.opencodeRequest(B, '/api/info')) === 200)
+  const fill = insideJSON(B, FILL(1300), { timeout: 300_000 })
+  t(`${B}: writing past its 1 GiB volume fails`, fill.stopped && fill.stopped !== 'wrote all' && fill.mib < 1024, `${fill.mib} MiB written, then: ${fill.stopped}`)
+
+  // -------- upload and files
+  const madeUp = path.join(run, 'made-up-notes.txt')
+  writeFileSync(madeUp, 'invented notes for the check\n')
+  const up = await ws.upload(A, [madeUp])
+  const list = ws.files(A)
+  const seen = list.find((f) => f.path === 'made-up-notes.txt')
+  t('upload: the file is in /work with the same size and sha256', seen && seen.sha256 === up[0].sha256 && seen.size === up[0].size)
+  t('upload: a second upload of the same name is refused', (await ws.upload(A, [madeUp]).then(() => 'uploaded', (e) => e.message)) !== 'uploaded')
+  writeFileSync(path.join(run, '.hidden'), 'x')
+  t('upload: a name starting with a dot is refused', (await ws.upload(A, [path.join(run, '.hidden')]).then(() => 'uploaded', (e) => e.message)) !== 'uploaded')
+
+  // -------- the door restarts under a running VM
+  process.kill(ws.doorPid(A), 'SIGTERM')
+  await new Promise((r) => setTimeout(r, 300))
+  const down = insideJSON(A, GATEWAY_PROBE)
+  await ws.start(A) // reopens the door
+  const back = insideJSON(A, GATEWAY_PROBE)
+  t('door: with it closed the gateway is unreachable; reopened, it answers again', down.models_with_token?.[0] !== 200 && back.models_with_token?.[0] === 200, `closed: ${down.error ? 'no answer' : down.models_with_token?.[0]}, reopened: ${back.models_with_token?.[0] ?? back.error}`)
+
+  // -------- 4. the real task, inside the VM
+  const hostWork = path.join(run, 'survey')
+  mkdirSync(hostWork)
+  const made = spawnSync('python3', [path.join(spike, 'make-survey.py'), hostWork], { encoding: 'utf8' })
+  writeFileSync(path.join(run, 'truth.json'), made.stdout) // the answers never enter the VM
+  await ws.upload(A, [path.join(hostWork, 'survey.csv')])
+  const bridge = net.createServer((c) => {
+    const u = net.connect(ws.paths(A).opencode)
+    c.pipe(u).pipe(c)
+    c.on('error', () => u.destroy())
+    u.on('error', () => c.destroy())
+  })
+  await new Promise((r) => bridge.listen(0, '127.0.0.1', r))
+  const client = OpenCode.make({ baseUrl: `http://127.0.0.1:${bridge.address().port}`, headers: { authorization: `Basic ${Buffer.from(`opencode:${ws.secrets(A).OPENCODE_PASSWORD}`).toString('base64')}` } })
+  const events = new Map()
+  ;(async () => {
+    try {
+      for await (const ev of client.event.subscribe()) events.set(ev.type, (events.get(ev.type) || 0) + 1)
+    } catch {}
+  })()
+  t0 = Date.now()
+  let taskError = null
+  try {
+    const session = await client.session.create({ location: { directory: '/work' } })
+    await client.session.prompt({ sessionID: session.id, text: readFileSync(path.join(spike, 'task-survey.txt'), 'utf8') })
+    await Promise.race([client.session.wait({ sessionID: session.id }), new Promise((_, rej) => setTimeout(() => rej(new Error('no end after 300 s')), 300_000))])
+  } catch (e) {
+    taskError = e?.message || String(e)
+  }
+  measured.task_s = (Date.now() - t0) / 1000
+  for (const f of ['survey_clean.csv', 'summary.md']) {
+    const r = spawnSync(ws.CONTAINER, ['exec', ws.names(A).container, 'cat', `/work/${f}`], { encoding: 'utf8' })
+    if (r.status === 0) writeFileSync(path.join(hostWork, f), r.stdout)
+  }
+  const checked = spawnSync('python3', [path.join(spike, 'check-survey.py'), hostWork, path.join(run, 'truth.json')], { encoding: 'utf8' })
+  const lastLine = checked.stdout.trim().split('\n').pop()
+  t('the survey task, run by opencode inside the VM through the gateway, passes its checks', !taskError && checked.status === 0, taskError || lastLine)
+  if (checked.status !== 0) console.log(checked.stdout.split('\n').filter((l) => l.startsWith('FAIL')).join('\n'))
+  bridge.close()
+  const lines = gatewayLog.split('\n').filter((l) => l.includes('"caller":"ws-chk-a"') && l.includes('"route":"chat"')).map((l) => JSON.parse(l))
+  measured.task_model_requests = lines.length
+  measured.task_tokens = lines.reduce((s, l) => s + (l.tokens_in || 0) + (l.tokens_out || 0), 0)
+  measured.events = Object.fromEntries(events)
+  const st = (await ws.status(A))[0]
+  measured.memory_after_task_mib = Math.round(st.memory_used / 1024 ** 2)
+  measured.volume_on_host_after_task_mib = Math.round(st.disk_on_host / 1024 ** 2)
+  const stb = (await ws.status(B))[0]
+  measured.memory_idle_small_ws_mib = Math.round(stb.memory_used / 1024 ** 2)
+
+  // -------- 5. destroy
+  for (const id of [A, B, C]) {
+    const r = await ws.destroy(id, { confirm: id }).then(() => 'ok', (e) => e.message)
+    t(`destroy ${id}: container, volume, its files on disk, state folder and token all gone`, r === 'ok', r)
+  }
+  const doors = spawnSync('pgrep', ['-f', `door.mjs ${ws.HOME}`], { encoding: 'utf8' }).stdout.trim()
+  t('destroy: no door process left', doors === '', doors)
+  const leftovers = ws.listOla().filter((c) => /ola-chk-/.test(c.configuration?.id || c.id))
+  t('destroy: no ola-chk container or volume left', leftovers.length === 0 && [A, B, C].every((id) => !ws.volumeOf(id)))
+} catch (e) {
+  t('the check ran to the end', false, `${e?.name}: ${e?.message}`)
+} finally {
+  await destroyAll()
+  if (gateway) gateway.kill('SIGTERM')
+}
+
+console.log(`\nmeasured: ${JSON.stringify(measured)}`)
+const passed = results.filter(Boolean).length
+console.log(`${passed} of ${results.length} checks passed  (files: ${run})`)
+process.exit(passed === results.length ? 0 : 1)

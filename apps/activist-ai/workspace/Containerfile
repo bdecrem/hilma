@@ -1,0 +1,50 @@
+# The workspace image: one sealed Linux VM per customer workspace (Apple `container`).
+#
+# What is in it: Debian bookworm-slim (pinned by digest), opencode 2.3.0 (pinned by npm
+# integrity), python3 (the agent needs a language to run code on files), socat (the two
+# socket bridges in ola-init), and a non-root user `work`. Nothing else: no sudo, no
+# package manager use after build, no ssh, no CA bundle (there is no internet to talk to).
+#
+# The VM runs with `--network none`: its only interface is loopback. ola-init bridges
+# 127.0.0.1:4180 to the one host socket mounted in (the door, which leads only to the
+# gateway), and publishes opencode's port as a socket the host connects to.
+#
+#   container build -t ola-workspace:2.3.0-1 -f Containerfile .
+
+ARG DEBIAN=docker.io/library/debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc
+
+FROM ${DEBIAN} AS fetch
+ARG OPENCODE_VERSION=2.3.0
+# npm's own integrity for @opencode/cli-linux-arm64@2.3.0 (registry.npmjs.org, 2026-11-16)
+ARG OPENCODE_SHA512=1IF1NQFD5mdZ7NcU81UifdYAVKEDAP/J07ylbgE4ZATminS7pOn5SOXVzyOkuN1WLcDzXunkju0hw8hug48wTg==
+RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates openssl && rm -rf /var/lib/apt/lists/*
+RUN curl -fsSL -o /tmp/oc.tgz "https://registry.npmjs.org/@opencode/cli-linux-arm64/-/cli-linux-arm64-${OPENCODE_VERSION}.tgz" \
+ && got="$(openssl dgst -sha512 -binary /tmp/oc.tgz | openssl base64 -A)" \
+ && [ "$got" = "$OPENCODE_SHA512" ] || { echo "opencode tarball integrity mismatch" >&2; exit 1; } \
+ && mkdir /tmp/oc && tar -xzf /tmp/oc.tgz -C /tmp/oc \
+ && install -m 0755 /tmp/oc/package/bin/opencode /opencode
+
+FROM ${DEBIAN}
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends python3 socat \
+ && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*.deb \
+ && useradd --create-home --uid 1000 --shell /bin/bash work \
+ && mkdir -p /work /ola/run /ola/gw \
+ && chown work:work /work /ola/run
+COPY --from=fetch /opencode /usr/local/bin/opencode
+COPY opencode.jsonc /opt/ola/config/opencode/opencode.jsonc
+COPY ola-init ola-files ola-put /opt/ola/bin/
+RUN chmod 0755 /opt/ola/bin/* && chmod -R a+rX,go-w /opt/ola
+
+# Everything the agent keeps lives in /work, so `ws.mjs files` shows all of it and
+# `ws.mjs destroy` removes all of it. The config is read-only in the image.
+ENV HOME=/work/.ola/home \
+    XDG_CONFIG_HOME=/opt/ola/config \
+    XDG_DATA_HOME=/work/.ola/data \
+    XDG_STATE_HOME=/work/.ola/state \
+    XDG_CACHE_HOME=/work/.ola/cache \
+    PATH=/opt/ola/bin:/usr/local/bin:/usr/bin:/bin
+USER work
+WORKDIR /work
+VOLUME /work
+ENTRYPOINT ["/opt/ola/bin/ola-init"]

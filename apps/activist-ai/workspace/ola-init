@@ -1,0 +1,19 @@
+#!/bin/sh
+# PID 1's child inside a workspace VM (run with --init, so tini reaps and forwards signals).
+#
+# The VM has no network interface but loopback. Two bridges make the only two paths:
+#   out: 127.0.0.1:4180 inside the VM -> /ola/gw/gateway.sock, a host socket mounted in.
+#        On the host, that socket's listener (workspace/door.mjs) connects only to the
+#        model gateway. Nothing else on the host is reachable from here.
+#   in:  /ola/run/opencode.sock, published to the host with --publish-socket, -> opencode
+#        serve on 127.0.0.1:4096. The host's front desk talks to opencode only this way,
+#        with the workspace's Basic-auth password.
+# None of this is the security boundary. The boundary is that the VM has no route
+# anywhere: rewriting this file from inside changes nothing a hostile process could not
+# already do, which is talk to the door socket.
+set -eu
+mkdir -p "$HOME" "$XDG_DATA_HOME" "$XDG_STATE_HOME" "$XDG_CACHE_HOME"
+rm -f /ola/run/opencode.sock
+socat TCP-LISTEN:4180,bind=127.0.0.1,fork,reuseaddr UNIX-CONNECT:/ola/gw/gateway.sock &
+socat UNIX-LISTEN:/ola/run/opencode.sock,fork,mode=600 TCP:127.0.0.1:4096 &
+exec opencode serve --hostname 127.0.0.1 --port 4096
