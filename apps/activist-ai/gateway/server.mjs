@@ -128,7 +128,8 @@ async function complete(body, offered) {
         last = 'the model produced output its server could not parse'
         continue
       }
-      return { status: res.status, error: message, attempts: attempt }
+      // The caller gets the model server's own words about its own request; the log gets only the status.
+      return { status: res.status, error: message, logWhy: `the model server answered ${res.status}`, attempts: attempt }
     }
     const message = json.choices?.[0]?.message
     if (!message) {
@@ -143,7 +144,7 @@ async function complete(body, offered) {
     if ((message.tool_calls || []).length && !KEEP_TEXT) message.content = null
     return { status: 200, json, attempts: attempt }
   }
-  return { status: 502, error: `${last}, ${TRIES} times`, attempts: TRIES }
+  return { status: 502, error: `${last}, ${TRIES} times`, logWhy: `${last}, ${TRIES} times`, attempts: TRIES }
 }
 
 function stream(res, json, wantUsage) {
@@ -187,10 +188,11 @@ const server = createServer(async (req, res) => {
   const { stream: _s, stream_options: _o, ...rest } = body
   const out = await complete({ ...rest, model: upstreamModel, stream: false }, offered)
   const usage = out.json?.usage
-  // The whole record of this request. No content, ever (a failure's reason is the
-  // model server's error text or one of this file's own shape descriptions).
+  // The whole record of this request. No content, ever: a failure's reason is one of this
+  // file's own fixed descriptions or the upstream status, never the model server's error
+  // text, which can quote the request (found in review, 2026-11-15).
   console.log(
-    [new Date().toISOString(), who, body.model, `status=${out.status}`, `tries=${out.attempts}`, `in=${usage?.prompt_tokens ?? '-'}`, `out=${usage?.completion_tokens ?? '-'}`, `ms=${Date.now() - started}`, ...(out.status === 200 ? [] : [`why="${out.error.replace(/"/g, "'").slice(0, 160)}"`])].join(' '),
+    [new Date().toISOString(), who, body.model, `status=${out.status}`, `tries=${out.attempts}`, `in=${usage?.prompt_tokens ?? '-'}`, `out=${usage?.completion_tokens ?? '-'}`, `ms=${Date.now() - started}`, ...(out.status === 200 ? [] : [`why="${out.logWhy}"`])].join(' '),
   )
   if (out.status !== 200) return fail(res, out.status, out.error, 'upstream_error')
   out.json.model = body.model
