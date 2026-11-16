@@ -12,8 +12,9 @@ Started 2026-11-15. The plan, the promise and its limits are in the private note
 | **Agent** | [opencode](https://github.com/anomalyco/opencode) 2.3.0 (MIT), one copy per person's workspace | runs a real task end to end, from the command line and in server mode (see the spike) |
 | **Model gateway** | `gateway/server.mjs`: the one address a workspace may reach. Holds the model server's address and key, checks who is calling, caps size, concurrency, time and weekly tokens, keeps one line per request and never any content | built and tested (`gateway/test.mjs`), used by the spike; see [The gateway](#the-gateway) |
 | **Model** | an OpenAI-compatible server. On the Mac Studio (arrives Nov 30 to Dec 3, 2026): a local MLX server. Until then: Together.ai, made-up data only | stand-in works with GLM-5.3-Flash |
-| **Workspace** | `workspace/`: one sealed Linux VM per workspace (Apple `container` 1.7.1) with no network at all; one socket leads to the gateway and nowhere else | built and proven on the mini (`workspace/check.mjs`, 55 checks); see [The workspace](#the-workspace) |
+| **Workspace** | `workspace/`: one sealed Linux VM per workspace (Apple `container` 1.7.1) with no network at all; one socket leads to the gateway and nowhere else | built and proven on the mini (`workspace/check.mjs`, 65 checks); see [The workspace](#the-workspace) |
 | **Front desk and page** | `frontdesk/`: the one service a browser talks to. Passkey sign-in by invitation, the platform database (one SQLite file), roles, the audit log, files and the opencode door to each sealed workspace; serves `web/` (look A) from the same origin | built and proven on the mini (`frontdesk/check.mjs`); see [The front desk](#the-front-desk) |
+| **Start at boot** | `ops/`: launchd user agents for the gateway, the front desk and Apple's container system, the doors and desks as jobs while their workspace runs, one `status` command | installed and proven on the mini; see [Start at boot](#start-at-boot-launchd) |
 | **Way in** | Tailscale; nothing on the public internet | not built |
 | **Landing page** | `site/`: Ola's front door, a static page built into `public/ola-site/` for ola.cx, with no third-party requests (`site/check.mjs` proves it); see `site/README.md` | built, not live |
 
@@ -73,9 +74,24 @@ Measured 2026-11-15 on the iMac, through the gateway:
 
 `gateway/server.mjs`, one file, Node 22.13 or later, no dependencies. Every caller is treated as
 hostile: a workspace's agent can be prompt-injected, and its shell can send anything to port 4180.
-Tests: `node --test gateway/test.mjs` (13 tests, about 13 seconds; each starts the real server
-against a fake model server, so config refusal, restarts and timeouts are tested on the program
-that runs).
+Tests: `node --test gateway/test.mjs` (20 tests, about 13 seconds; each starts the real server
+against a fake model server, so config refusal, restarts, reloads and timeouts are tested on the
+program that runs).
+
+**Callers from a file, reloaded; each workspace's token bound to its door.**
+`GATEWAY_TOKENS_FILE` names the file `workspace/ws.mjs` keeps (`~/.ola/gateway-tokens`, mode 600,
+one `GATEWAY_TOKENS=` line, written by rename). The gateway reads it again on `SIGHUP` and whenever
+it changes (a watch, plus a stat every 3 seconds): a new workspace's token works and a destroyed or
+rotated one is refused, with no restart. A file that does not check out (a bad entry, a mode other
+than 600) is not used: the callers in force stay, and the problem is printed by setting and entry
+number, never by value. Each reload logs one line, `{"event":"tokens","ok":true,"callers":3,"added":1,"removed":0}`.
+With `GATEWAY_DOOR_DIR` (`~/.ola/gw`), every caller named `ws-*` gets its own unix socket,
+`<dir>/ws-<id>.sock` (mode 600, folder 700), and that workspace's door connects to it and to nothing
+else. Through a door only that door's own token is accepted, so a token that leaks out of one
+workspace (the agent can read its own) is refused through every other workspace's door; a door's
+token is also refused on the TCP port. The binding is which socket a connection arrived on, which
+nothing the caller sends can choose. `GATEWAY_TOKENS` in the environment still works for callers
+that are not workspaces (the spike, the web check).
 
 **The reply is rebuilt, not relayed.** A successful reply is reconstructed from a fixed allowlist
 (`id`, `object`, `created`, `model` as the gateway's own name, `choices` with `role`/`content`/
@@ -157,8 +173,9 @@ errors quote their input, and that input is content.
 retries, no queue wait. The request-field allowlist did not change opencode's behavior.
 
 **Not done yet:** per-workspace model grants (every token sees every model; that needs the
-platform DB), tokens from the DB instead of the environment, a daily (rather than weekly) quota,
-and per-request output caps (`max_tokens` is passed on as sent).
+platform DB), a daily (rather than weekly) quota, and per-request output caps (`max_tokens` is
+passed on as sent). The tokens' source of truth is each workspace's `secrets.env`, gathered into the
+tokens file by `ws.mjs`; the platform database does not hold them (it holds no secret).
 
 ## The workspace
 
@@ -171,9 +188,9 @@ interface is loopback: no route to the internet, the host, the LAN, the tailnet 
 workspace. It has exactly two ways in or out:
 
 - **Out, the door.** `ws.mjs` mounts one host socket into the VM (`~/.ola/ws/<id>/gateway.sock`
-  at `/ola/gw/gateway.sock`). Its listener, `door.mjs`, pipes every connection to
-  `127.0.0.1:4180`, the gateway, and to nothing else: the destination is fixed in the door, not
-  chosen by what the VM sends (a proxy request, a `Host:` header or a `CONNECT` still lands on
+  at `/ola/gw/gateway.sock`). Its listener, `door.mjs`, pipes every connection to the gateway's
+  socket for this workspace (`~/.ola/gw/ws-<id>.sock`), and to nothing else: the destination is
+  fixed in the door, not chosen by what the VM sends (a proxy request, a `Host:` header or a `CONNECT` still lands on
   the gateway, which wants a token). Inside, `ola-init` bridges `127.0.0.1:4180` to the socket,
   so opencode's config just says `http://127.0.0.1:4180/v1`.
 - **In, the desk.** `opencode serve` listens on 127.0.0.1:4096 inside. On the host, `desk.mjs`
@@ -199,8 +216,8 @@ the gateway token, both generated; they reach the VM by `--env-file`, never a co
 are never printed), the door's and the desk's pid and log, and the two sockets. The runtime's own
 folders for the workspace (the container's config, which holds its environment, and the volume
 image) are set to mode 700 at `create`. `~/.ola/gateway-tokens` (600)
-holds the `GATEWAY_TOKENS` line for the gateway: restart the gateway after a `create` or
-`destroy`. Everything opencode keeps (its session database, logs, caches) is under
+holds the `GATEWAY_TOKENS` line for the gateway, which reloads it by itself after a `create`,
+`rotate` or `destroy`. Everything opencode keeps (its session database, logs, caches) is under
 `/work/.ola`, so `files` shows it and `destroy` removes it; the image's root holds nothing of the
 customer's. **The image's root is read-only** (`--read-only`): `/work` and the `/tmp` tmpfs (in the
 VM's memory, so bounded by it) are the only places anything can be written. Before the review of
@@ -208,10 +225,10 @@ VM's memory, so bounded by it) are the only places anything can be written. Befo
 512 GiB sparse image on the host, outside the volume's limit, invisible to `files`, and kept across
 `stop`. The agent runs as `work` (uid 1000) with no capabilities (`--cap-drop ALL`), no sudo, and no
 setuid or setgid program in the image (Debian's `su`, `passwd`, `mount` and the rest are stripped). Image: Debian bookworm-slim pinned by digest, opencode 2.3.0 checked
-against npm's sha512, python3, socat, nothing else (no curl, no CA bundle, no ssh). Image tag `ola-workspace:2.3.0-3` (2.3.0-3 added `ola-get` and `ola-rm` for the front desk's downloads and deletes, and a file's mtime in `ola-files`).
+against npm's sha512, python3, socat, nothing else (no curl, no CA bundle, no ssh). Image tag `ola-workspace:2.3.0-4` (2.3.0-3 added `ola-get` and `ola-rm` for the front desk's downloads and deletes, and a file's mtime in `ola-files`; 2.3.0-4: `ola-get` opens with `O_NONBLOCK` and refuses anything but a regular file at once, so a FIFO the agent makes cannot hold a download).
 
 ```bash
-node workspace/ws.mjs image                    # build ola-workspace:2.3.0-3 (about 25 s)
+node workspace/ws.mjs image                    # build ola-workspace:2.3.0-4 (about 25 s)
 node workspace/ws.mjs create alice             # 4 CPUs, 6 GiB, 50 GiB: the ceilings
 node workspace/ws.mjs create test --memory 1g --disk 1g --cpus 1   # lower only; higher is refused
 node workspace/ws.mjs start alice              # opens the door, boots, waits for opencode
@@ -219,18 +236,33 @@ node workspace/ws.mjs upload alice survey.csv  # plain names; same name refused 
 node workspace/ws.mjs files alice              # size and sha256 of everything in /work
 node workspace/ws.mjs status                   # state, memory used, volume on disk, network, door
 node workspace/ws.mjs stop alice
+node workspace/ws.mjs rotate alice             # new opencode password and gateway token (see below)
 node workspace/ws.mjs destroy alice            # asks for the id; --confirm alice for scripts
 ```
+
+**Rotating a workspace's secrets** (`ws.mjs rotate`, run by `admin.mjs remove-member` and
+`admin.mjs rotate`): both secrets reach the VM only through `--env-file` at `container create`, so
+the container is made again from the same volume with new ones (the root is read-only, so nothing
+outside `/work` is lost; its old config, which held the old secrets, goes with it). The tokens file
+is rewritten and the gateway reloads it: the old token is refused at once, through the door too. A
+workspace that was running is started again, which ends every open connection to it.
+
+**Doors and desks as launchd jobs.** With `OLA_LAUNCHD=1` (the installed front desk sets it),
+`start` loads the door and the desk as user agents (`cx.ola.door.<id>`, `cx.ola.desk.<id>`, KeepAlive,
+plists in `~/.ola/launchd/`, logs in the workspace's folder) and `stop` unloads them, so a door
+that dies while its VM runs is restarted by launchd. Without it (the checks, a development machine)
+they are detached processes, as before.
 
 At most 4 workspaces run at once (`OLA_MAX_RUNNING` can only lower it). The two-runs-at-once
 limit per workspace is the gateway's (`GATEWAY_MAX_INFLIGHT_PER_CALLER=2`).
 
-**The proofs.** `node workspace/check.mjs` on the host (from `apps/activist-ai`, after `npm ci`).
+**The proofs.** `node workspace/check.mjs [--no-live]` on the host (from `apps/activist-ai`, after `npm ci`; `--no-live` skips the one real task).
 It starts its own gateway on port 4181 with Together as the stand-in (the key is read from
 `TOGETHER_API_KEY` or `~/Documents/code/hilma/.env.local` and never printed), creates three
 workspaces under `~/.ola-check`, and checks from inside the VMs:
 
-- the gateway answers with the workspace's token and refuses without one;
+- the gateway answers with the workspace's token and refuses without one, and refuses another
+  workspace's token through this workspace's door;
 - the only interface is `lo`, with no IPv4 or IPv6 route; TCP to 1.1.1.1, 8.8.8.8 and Apple, to
   the vmnet host address, a host-only gateway, the mini's LAN and tailnet addresses (sshd,
   BlueBubbles, the gateway's own port) and a VM on the default network, IPv6, UDP and DNS all fail
@@ -281,8 +313,6 @@ three full runs of the check, the last 55 of 55:
   `secrets.env`. Inside, the agent can read both from the environment: the password guards the
   host's way in, not anything from the agent, so whatever opencode answers the desk is the
   agent's word and the front desk must treat it as untrusted content.
-- The gateway reads `GATEWAY_TOKENS` once at start: a destroyed workspace's token keeps working
-  until the gateway restarts.
 - `destroy` unlinks the volume image; on a disk without FileVault (the mini has it off) the blocks
   stay readable until reused. FileVault on the Studio is the at-rest protection.
 - The door socket is mode 0666 because the VM sees the host file's mode with owner root, and
@@ -292,13 +322,13 @@ three full runs of the check, the last 55 of 55:
   mounted socket.
 - `files` is what the VM says about its own disk (the host cannot read ext4). Its output is
   parsed strictly and anything out of shape is refused, but a compromised VM could misreport.
-- If the door dies while a VM runs, the workspace loses the gateway until `ws.mjs start` reopens
-  it. On the Studio the door becomes a launchd job.
+- If the door dies while a VM runs without launchd mode, the workspace loses the gateway until
+  `ws.mjs start` reopens it; under launchd it is restarted within seconds.
 
-**Not done yet:** start at boot and after an unattended reboot (Apple's `container` has no
-restart policy); doors as launchd jobs; per-workspace tokens read by the gateway from the
-platform DB instead of a restart; idle stop after 30 minutes; ssh into a workspace; backups of
-the volumes; a test VM left up for the outside reviewer.
+**Not done yet:** ssh into a workspace; backups of the volumes. (Start at boot, doors as launchd
+jobs, token reloads and idle stop are done; see above and [Start at boot](#start-at-boot-launchd).
+After an unattended reboot no workspace runs until someone opens it, by design.) A test workspace
+for the outside reviewer is left on the mini, stopped: `stage-a`, owned by the made-up `stage-kim`.
 
 ## The front desk
 
@@ -346,6 +376,17 @@ owner, and the signature counter is kept. A ceremony (challenge) lives 5 minutes
 is good once, right or wrong. No passwords, no email sign-in, no recovery other than a new
 invitation from Bart.
 
+**Invitations** (review of 2026-11-16, M6). A new invitation for a person voids their earlier unused
+ones, in the same transaction (`invitations_voided` in the audit log), so a link re-sent because
+the first went astray leaves only one that works. An invitation for someone who already has a
+passkey is refused: adding a device is its own act, `admin.mjs invite <handle> --add-device` (24 h by
+default, at most 72; `device_invited`, then `device_added` when used). The next time the person signs
+in from another device, the page tells them once, in a bar at the top, that a passkey for another
+device was added on that date, and to tell Bart at once if it was not them (shown to a session that
+did not come from the new passkey, so whoever holds the new one cannot hide it). `admin.mjs list`
+shows each person's passkeys with their dates; `remove-passkey <handle> <id>` removes one and ends
+the sessions it opened.
+
 **Sessions** are a random 32-byte token in `__Host-ola` (HttpOnly, Secure, SameSite=Strict,
 Path=/, no Domain). The database keeps its sha256. Every request checks: not revoked, before
 its absolute expiry (14 days), used within the idle limit (24 hours), person active. Sign-out
@@ -355,8 +396,46 @@ removal from the team, sign-out, revocation, suspension, expiry and the idle lim
 open stream does not count as use.
 **CSRF**: a write must carry our exact `Origin` and `X-Ola-CSRF`, an HMAC of the session id the
 page learns from `/api/me`, compared in constant time; a fetch marked cross-site or same-site
-(`Sec-Fetch-Site`) is refused on `/api` and `/oc`. **Rate limits** on `/api/auth/*`: per client
-address (10 at once, 10 a minute) and for everyone together (60 a minute), in memory only.
+(`Sec-Fetch-Site`) is refused on `/api` and `/oc`.
+
+**Sign-in limits** (review of 2026-11-16, M3: one caller at about a request a second held off every
+sign-in). In memory only, nothing about who asked is written. An anonymous request (sign-in
+options, an invitation, an assertion naming no passkey we hold) is charged to its **client address**
+(10 at once, 10 a minute: `OLA_FD_SIGNIN_BURST`, `OLA_FD_SIGNIN_PER_MIN`) and then to a **global
+ceiling** of at least 30 addresses' worth (600 a minute by default), which one caller alone cannot
+reach because its own bucket stops it first; when the ceiling is reached a line with counts only is
+logged, at most once a minute. An assertion for a **passkey we hold** is charged to that passkey's
+own bucket (10 at once, 10 a minute) and to nothing else, so an attacker hammering the routes does
+not touch a real person's sign-in (credential ids never leave the server except to the person's
+own browser, in the registration's exclude list). The ceremony table holds up to 20,000 (5 minutes
+each), so filling it takes hundreds of addresses. Proven in `check.mjs` through the PROXY protocol
+with two made-up addresses: 900 requests from one, 890 refused, while a real person signs in from
+the other, during and after.
+
+**Behind the relay: the PROXY protocol.** The client address is the socket's peer. Behind the relay
+(not built) every client would arrive from the relay's address, the per-address buckets and the
+per-address connection cap would key everyone together, and one caller could again lock out all.
+So the relay must send PROXY protocol v1 and the front desk must run with
+`OLA_FD_PROXY_PROTOCOL=1`. What changes then: the front desk listens with a TCP server that reads
+the `PROXY TCP4|TCP6 <client> <us> <port> <port>` line (within 5 s, at most 107 bytes), takes
+`<client>` as the address for the sign-in buckets and the connection cap, and refuses any
+connection that does not start with that line (so nothing on the machine can skip it). Nothing else
+changes. Never run behind the relay without it. (Implemented and proven now; the relay itself is
+still to build.)
+
+**Connections that are refused, or slow** (M2). A reply sent before the request's body was read
+(a 401, a refusal, a 413, a 429) says `Connection: close` and the socket is destroyed when it is
+sent: an unauthenticated `POST` declaring 100 MB was held open past 30 seconds after its 401 before,
+and is closed within 2 ms now. Headers must arrive whole within 5 seconds and fit in 8 KiB (checked
+every second); an idle kept-alive connection closes after 5 seconds; a sign-in body must arrive
+within 10 seconds; at most 128 connections per client address (`OLA_FD_CONNECTIONS_PER_ADDRESS`)
+and 512 in all. The 15-minute request limit is left only for an upload that passed sign-in, which
+must keep moving (under 32 KiB in 30 seconds ends it) and must declare its size (411 otherwise).
+
+**Transfers in flight** (M5). Each upload, download, file list, activity view and project view holds
+a host `container exec`. One person may have 6 at once, 3 of them uploads; one workspace 12; and
+512 MiB in flight in all (`OLA_FD_INFLIGHT_MB`; an upload counts its declared size, a download its
+size once known). Past that: 429 with `Retry-After`, before any exec starts.
 
 **Authorization on every request.** The page names its workspace in `?w=<slug>` (per tab) and
 sends it as `X-Ola-Workspace` (a download link, which cannot carry a header, as `?w=`). The front
@@ -374,7 +453,8 @@ JSON or an event stream, a plain reply is capped at 32 MiB, and every API respon
 `sandbox` CSP and `nosniff`.
 
 **Files** go through the workspace's own tools over `container exec`, without blocking the
-server: uploads stream into `ola-put` (50 MiB by default, plain names only, counted and hashed
+server (a download's `ola-get` is killed when the browser goes away, even before the header; a FIFO
+is refused at once, L1): uploads stream into `ola-put` (50 MiB by default, plain names only, counted and hashed
 on the way and compared with what the VM reports; no copy on the host's disk), downloads come
 from `ola-get` (which opens each part of the path with `O_NOFOLLOW`, so a link the agent plants,
 say to `/proc/1/environ`, is refused), deletes from `ola-rm`, the list from `ola-files`. Each is
@@ -397,9 +477,29 @@ cookies would be sent to it and its pages could be "same-site" to the app), each
 own subdomain, with a sandboxed CSP, no cookies of ours, and access by a short-lived signed
 link minted here for members. The seam is the "Open" action on a thing; today it downloads.
 
-**"People working"** in the header is the number of people who made a request in the last five
-minutes (counted in memory, never written, never who), out of the 4 workspaces the machine runs
-at once.
+**The project view** (M4) shows the 12 newest `.csv` and `.md` files Ola made at the top of the
+folder, each at most 1 MiB; their first 32 KiB are read in **one** `container exec` for the whole
+request, and kept by sha256 (which `ola-files` reports), so an unchanged file is not read again. 200
+documents in the folder: 12 things, 170 ms (before: 200 execs, 13.6 s). The file list returns at
+most 1,000 entries.
+
+**"People working"** in the header (L2) is the number of distinct people, all teams together, who
+made a request during the last whole 5-minute window (`OLA_FD_WORKING_WINDOW_S`), out of the 4
+workspaces the machine runs at once; counted in memory, never written, never who. It changes only
+when a window ends. **What it reveals:** to anyone signed in, once per 5 minutes, how many people
+used the machine in the previous 5 minutes. Not who, not which team, not when within the window. A
+customer can still learn that the machine is in use when they are not (a count above their own
+team's activity), and so roughly when other groups work, at 5-minute resolution; with very few
+customers that is a signal, and the alternative is no number at all.
+
+**Idle workspaces stop, and wake on demand** (`OLA_FD_IDLE_STOP_MIN`, 30 by default; 0 never). A
+workspace no one has made a request to for that long, with no transfer under way and no prompt in
+the last 15 minutes, is stopped (`ws.mjs stop`; its door and desk go too). An open event stream
+does not count as use, and does not wake a stopped workspace (it gets 503 `asleep`), so a tab left
+open overnight does not hold a VM. Opening the project (or any other request) starts it again: if
+that takes longer than `OLA_FD_WAKE_WAIT_MS` (1.5 s), `/api/project` answers 503 `waking` and the
+page shows **"Waking your workspace…"** and asks again each second. A viewer's visit wakes it too
+(they need the files). A full machine says so instead (503 `machine_busy`).
 
 **The admin CLI** (`frontdesk/admin.mjs`; no admin web page in this milestone):
 
@@ -410,17 +510,26 @@ node admin.mjs add-person maria --name "Maria L."
 node admin.mjs create-workspace eviction --name "Spring eviction report" --team ndtu --team-name "North District Tenants’ Union" --owner maria
 node admin.mjs add-member ndtu dana member        # or viewer, owner; run again to change a role
 node admin.mjs invite maria                       # prints the link once; send it by a channel you trust
-node admin.mjs remove-member ndtu dana | revoke-sessions maria | suspend maria
+node admin.mjs invite maria --add-device          # another passkey for someone who has one (logged, she is told)
+node admin.mjs remove-passkey maria 7             # passkey ids in `list`
+node admin.mjs remove-member ndtu dana            # cuts her open streams, then new secrets for the team's workspaces
+node admin.mjs rotate eviction | revoke-sessions maria | suspend maria
 node admin.mjs shown-to-cloud eviction --by maria # record a cloud agent's look, with her yes
 node admin.mjs audit --workspace eviction | list
 node server.mjs                                   # serves http://localhost:4700 on 127.0.0.1 only
 ```
 
-`create-workspace` calls `ws.mjs create`; restart the gateway afterwards (it reads its tokens at
-start). Settings: `OLA_FD_ORIGIN`, `OLA_FD_PORT`, `OLA_FD_BIND`, `OLA_FD_DATA`
-(`~/.ola-frontdesk`), `OLA_FD_DIST`, `OLA_FD_MAX_UPLOAD_MB`, `OLA_FD_SESSION_HOURS`,
-`OLA_FD_IDLE_HOURS`, `OLA_FD_SIGNIN_BURST`, `OLA_FD_SIGNIN_PER_MIN`, `OLA_FD_DELETE_NOTICE`,
-and the workspace's `OLA_HOME` and `OLA_GATEWAY_PORT`. The web page is built on the iMac
+`create-workspace` calls `ws.mjs create`; the gateway picks up the new token by itself.
+**Removing a member** deletes the membership (the front desk's per-second recheck cuts their open
+streams on that alone; the check proves it was cut while another member's stream was still open),
+waits two seconds, then rotates every workspace of the team (`secrets_rotated` in the audit log),
+because the person may have seen both secrets from inside: every other open connection to those
+workspaces ends with the restart, and the page reconnects. Settings: `OLA_FD_ORIGIN`, `OLA_FD_PORT`,
+`OLA_FD_BIND`, `OLA_FD_DATA` (`~/.ola-frontdesk`), `OLA_FD_DIST`, `OLA_FD_MAX_UPLOAD_MB`,
+`OLA_FD_SESSION_HOURS`, `OLA_FD_IDLE_HOURS`, `OLA_FD_SIGNIN_BURST`, `OLA_FD_SIGNIN_PER_MIN`,
+`OLA_FD_PROXY_PROTOCOL`, `OLA_FD_CONNECTIONS_PER_ADDRESS`, `OLA_FD_INFLIGHT_MB`,
+`OLA_FD_IDLE_STOP_MIN`, `OLA_FD_WAKE_WAIT_MS`, `OLA_FD_WORKING_WINDOW_S`, `OLA_FD_DELETE_NOTICE`,
+and the workspace's `OLA_HOME`, `OLA_GATEWAY_PORT` and `OLA_LAUNCHD`. The web page is built on the iMac
 (`cd web && npm run build`) and copied with the rest.
 
 **Threat model.** Built against: (1) an outsider on the internet with no account (guessing
@@ -448,9 +557,24 @@ database file; size and name limits and a planted symlink refused; a viewer read
 upload, delete or run (every write route); 7 CSRF and cross-site cases refused, and a hostile
 page's form post and fetch do nothing; a stolen cookie fails on every route after revocation,
 its open event stream is cut, and the open page goes back to sign-in; expiry and idle limit; the headers and a wrong Host;
-the working count; one real request in the drawer inside the sealed workspace through the
-gateway (Together as the stand-in; `--no-live` skips it); the sign-in rate limits; and no
-request from any page to another origin.
+the working count changing only per window; one real request in the drawer inside the sealed
+workspace through the gateway (Together as the stand-in; `--no-live` skips it); the sign-in rate
+limits; and no request from any page to another origin. Since the second round (2026-11-16, after
+the review): an older invitation is void after a new one, a plain invitation for someone with a
+passkey is refused, `--add-device` works and the person's own browser is told once; a refused
+request with an unread body is closed at once, slow headers and a trickled sign-in body are cut;
+200 agent-written documents give 12 things in one exec; 8 slow uploads from one person: 3 held, 5
+refused; a FIFO download fails in 63 ms with no `ola-get` left on the host or in the VM; removing a
+member cuts their stream while another member's stays open, then the old gateway token and the old
+opencode password are refused and the new ones work, without a gateway restart; an attacker behind
+the PROXY protocol cannot keep a real person out; an idle workspace stops, its event stream does
+not wake it, and opening the project shows "Waking your workspace…" and opens it.
+
+**Second round, the review's open findings (2026-11-16), on the mini:** `frontdesk/check.mjs`
+**32 of 32** with the live request (31 of 31 with `--no-live`), `workspace/check.mjs` **65 of 65**
+with its live task (64 of 64 with `--no-live`), `gateway/test.mjs` **20 of 20**, `web/check.mjs`
+**20 of 20** with `--no-live`, and `ops/ola.mjs prove-restarts` 5 of 5; `npm test` in `frontdesk/`
+(8) and `web/` (11).
 
 **After the outside review (2026-11-16, private notes):** `frontdesk/check.mjs` **25 of 25** on
 the mini with the live request, 24 of 24 with `--no-live`; `web/check.mjs` 21 of 21 on the iMac.
@@ -463,18 +587,60 @@ from `ws-fd-a`, one `file_read_by_run` row, the right count of 48), and 21 of 21
 `--no-live`; `workspace/check.mjs` 64 of 64 on image 2.3.0-3; `web/check.mjs` 21 of 21 on the
 iMac; `npm test` in `frontdesk/` (6) and `web/` (10).
 
-**Not done yet.** Idle stop of workspaces (30 minutes); rotating a workspace's opencode password
-and gateway token when a member is removed; the gateway still needs a restart after a new
-workspace (M6); per-address rate limits behind the relay need the PROXY protocol (until then the
-global bucket is what holds); "read by a run" sees opencode's `read` tool, not a shell command
-that reads a file; an upload cut off mid-way can leave a hidden `.upload-*` temp file in the
-workspace; the activity view in the page (the API exists); a second passkey from inside the app
-(today: a new invitation); the preview origin; the admin web page; a launchd job for the front
-desk. Open from the outside review: a connection with an unread body is held after an early
-refusal (requestTimeout 15 min, 512 connections); the global sign-in bucket lets anyone hold off
-every sign-in; `/api/project` runs one `container exec` per `.csv`/`.md` the agent wrote; no cap
-on one person's concurrent uploads and downloads; a download of a FIFO hangs and leaves its exec
-running; an unused invitation stays good after a new one, and adds a passkey to an active account.
+**Not done yet.** The relay and TLS in front (the PROXY protocol side is ready); "read by a run"
+sees opencode's `read` tool, not a shell command that reads a file, and the page should label those
+rows "reported by the workspace" (L3); an upload cut off mid-way can leave a hidden `.upload-*`
+temp file in the workspace; the activity view in the page (the API exists); adding a device from
+inside the app (today: `invite --add-device`); the preview origin; the admin web page; the front desk
+still runs as the account that owns every workspace and the `container` CLI (L4: on the Studio, its
+own account with a narrow helper); `runBy` and the ceremony table are bounded but not pruned by age;
+the prompt body is forwarded as sent (which opencode fields a member may set per prompt is not
+mapped); a distributed attacker with dozens of addresses can still reach the global sign-in
+ceiling (it then refuses only anonymous requests; sign-ins with a known passkey still pass).
+
+## Start at boot (launchd)
+
+`ops/ola.mjs` (Node, no dependencies) installs Ola's services as **launchd user agents** of the
+account that runs the workspaces: no sudo, loopback only, no port open to the network, no tunnel.
+
+| Job | What it runs | Listens |
+|---|---|---|
+| `cx.ola.container` | `ops/ola.mjs container-up`, once at load: starts Apple's container system if it is not running (after a reboot it is not) | — |
+| `cx.ola.gateway` | `ops/run.mjs ~/.ola/gateway.env gateway/server.mjs` | 127.0.0.1:4180, and `~/.ola/gw/ws-<id>.sock` per workspace |
+| `cx.ola.frontdesk` | `ops/run.mjs ~/.ola/frontdesk.env frontdesk/server.mjs` | 127.0.0.1:4700 |
+| `cx.ola.door.<id>`, `cx.ola.desk.<id>` | a workspace's door and desk, loaded by `ws.mjs start` and unloaded by `stop` (plists in `~/.ola/launchd/`) | the workspace's two sockets |
+
+The three fixed jobs live in `~/Library/LaunchAgents` (loaded at login: the machine signs in its
+account at boot), with `KeepAlive` (restarted when they exit), a 5-second `ThrottleInterval`, and
+logs in `~/Library/Logs/ola/<job>.log`. `ops/run.mjs` reads each service's settings from its env
+file and refuses one that is not this account's with mode 600; nothing from it is printed. The
+model key and the usage token live only in `gateway.env`.
+
+```bash
+# ~/.ola/gateway.env (600): UPSTREAM_BASE_URL, UPSTREAM_API_KEY, GATEWAY_MODELS, GATEWAY_PORT=4180,
+#   GATEWAY_TOKENS_FILE=~/.ola/gateway-tokens, GATEWAY_DOOR_DIR=~/.ola/gw, GATEWAY_USAGE_TOKEN (for status)
+# ~/.ola/frontdesk.env (600): OLA_FD_ORIGIN, OLA_FD_PORT=4700, OLA_LAUNCHD=1
+cd apps/activist-ai && npm ci && (cd frontdesk && npm ci) && (cd web && npm ci && npm run build)
+node ops/ola.mjs install          # writes and loads the three jobs
+node ops/ola.mjs status           # every job, the front desk, the gateway, each workspace, door and desk; exit 1 if anything is down
+node ops/ola.mjs prove-restarts   # kickstart -k each job; one signed-in session must work after each
+node ops/ola.mjs uninstall
+```
+
+**On the mini (2026-11-16)**, installed from `~/hilma-venture/apps/activist-ai` under `admin`, with
+Together as the stand-in (made-up data only) and `OLA_FD_ORIGIN=http://localhost:4700`.
+`prove-restarts` signed in the made-up `stage-kim` once (a software passkey kept in
+`~/.ola/stage-key.json`, 600), opened the made-up 1 GiB workspace `stage-a` (which started it and
+its door and desk jobs), then ran `launchctl kickstart -k` on each job in turn and, after each, used
+the same session for `/api/me`, `/api/project`, opencode through the desk and the gateway through
+the door from inside the VM: **5 of 5**, each back within 0.7 to 1.0 s (container 0.7, gateway 0.8,
+front desk 1.0, door 0.7, desk 0.8). `stage-a` is left stopped. The mini was not rebooted.
+
+Notes: the services run from a git checkout, so a `git pull` there changes what the next restart
+runs (restart with `launchctl kickstart -k gui/$(id -u)/cx.ola.frontdesk`, same for the gateway).
+After an unattended reboot no workspace runs until someone opens it. The checks
+(`workspace/check.mjs`, `frontdesk/check.mjs`) count running workspaces machine-wide against their
+own limit of 2, so leave `stage-a` stopped while they run.
 
 ## Rules for this code
 
