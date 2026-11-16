@@ -16,7 +16,7 @@
 //
 // It reads nothing and logs nothing about what passes through, and caps connections at once.
 import { spawn } from 'node:child_process'
-import { chmodSync, existsSync, unlinkSync } from 'node:fs'
+import { chmodSync, existsSync, unlinkSync, writeFileSync } from 'node:fs'
 import net from 'node:net'
 
 const [sock, name] = process.argv.slice(2)
@@ -59,6 +59,7 @@ server.on('error', (e) => {
 })
 server.listen(sock, () => {
   chmodSync(sock, 0o600)
+  if (process.env.OLA_PIDFILE) writeFileSync(process.env.OLA_PIDFILE, String(process.pid), { mode: 0o600 })
   console.log(JSON.stringify({ t: new Date().toISOString(), event: 'desk-open', container: name }))
 })
 const stop = () => {

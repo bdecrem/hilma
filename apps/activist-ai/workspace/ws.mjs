@@ -4,6 +4,7 @@
 //   node ws.mjs image                      build the workspace image from the Containerfile
 //   node ws.mjs create <id> [--memory 6g] [--disk 50g] [--cpus 4]   (limits can only go down)
 //   node ws.mjs start <id> | stop <id> | status [id]
+//   node ws.mjs rotate <id>                new opencode password and gateway token (restarts it if running)
 //   node ws.mjs upload <id> <file>... [--replace]
 //   node ws.mjs files <id> [--json]
 //   (the front desk also uses putStream / getStream / removeFile / filesAsync, below: ola-put,
@@ -32,7 +33,7 @@
 // included, under /work/.ola), so `files` shows all of it and `destroy` removes all of it.
 import { spawn, spawnSync } from 'node:child_process'
 import { createHash, randomBytes } from 'node:crypto'
-import { chmodSync, closeSync, createReadStream, existsSync, lstatSync, mkdirSync, openSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { chmodSync, closeSync, createReadStream, existsSync, lstatSync, mkdirSync, openSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import http from 'node:http'
 import { homedir } from 'node:os'
 import path from 'node:path'
@@ -41,9 +42,16 @@ import { fileURLToPath } from 'node:url'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 export const CONTAINER = process.env.OLA_CONTAINER_BIN || '/usr/local/bin/container'
-export const IMAGE = 'ola-workspace:2.3.0-3'
+export const IMAGE = 'ola-workspace:2.3.0-4'
 export const HOME = process.env.OLA_HOME || path.join(homedir(), '.ola')
 export const GATEWAY_PORT = Number(process.env.OLA_GATEWAY_PORT || 4180)
+// The gateway's door sockets, one per workspace (the gateway's GATEWAY_DOOR_DIR): each door
+// connects to its own, which is how the gateway binds a workspace's token to its door.
+export const GATEWAY_DOORS = process.env.OLA_GATEWAY_DOORS || path.join(HOME, 'gw')
+// OLA_LAUNCHD=1: the door and the desk run as launchd jobs (restarted if they die) while the
+// workspace runs; otherwise as detached processes (the checks, a development machine).
+const LAUNCHD = process.env.OLA_LAUNCHD === '1'
+const LAUNCHD_DIR = path.join(HOME, 'launchd')
 const GIB = 1024 ** 3
 // The ceilings (arch, section B). `create` may set less, never more.
 export const LIMITS = { cpus: 4, memory: 6 * GIB, disk: 50 * GIB }
@@ -122,8 +130,11 @@ export function writeGatewayTokens() {
     if (ID.test(id) && existsSync(f)) entries.push(`${names(id).caller}:${readEnvFile(f).BOX_API_KEY}`)
   }
   const file = path.join(HOME, 'gateway-tokens')
-  writeFileSync(file, `GATEWAY_TOKENS=${entries.join(',')}\n`, { mode: 0o600 })
-  chmodSync(file, 0o600)
+  // Written beside and renamed into place, so the gateway (which reloads it on a change) never
+  // reads half a file.
+  writeFileSync(`${file}.tmp`, `GATEWAY_TOKENS=${entries.join(',')}\n`, { mode: 0o600 })
+  chmodSync(`${file}.tmp`, 0o600)
+  renameSync(`${file}.tmp`, file)
   return file
 }
 
@@ -150,7 +161,7 @@ const alive = (pid) => {
 // file: the door (door.mjs, the VM's way out to the gateway) and the desk (desk.mjs, the
 // host's way in to opencode).
 const relays = {
-  door: (id) => ({ script: 'door.mjs', sock: paths(id).door, args: [String(GATEWAY_PORT)], pid: paths(id).doorPid, log: paths(id).doorLog }),
+  door: (id) => ({ script: 'door.mjs', sock: paths(id).door, args: [path.join(GATEWAY_DOORS, `${names(id).caller}.sock`)], pid: paths(id).doorPid, log: paths(id).doorLog }),
   desk: (id) => ({ script: 'desk.mjs', sock: paths(id).opencode, args: [names(id).container], pid: paths(id).deskPid, log: paths(id).deskLog }),
 }
 function relayPid(kind, id) {
@@ -162,22 +173,71 @@ function relayPid(kind, id) {
   const ps = spawnSync('ps', ['-o', 'command=', '-p', String(pid)], { encoding: 'utf8' }).stdout || ''
   return ps.includes(r.script) && ps.includes(r.sock) ? pid : null
 }
+// The launchd label of a workspace's door or desk: cx.ola.door.<id> for the machine's own
+// ~/.ola, with the folder's name after it for any other OLA_HOME (the checks' homes).
+export function relayLabel(kind, id) {
+  const tag = path.basename(HOME).replace(/^\./, '')
+  return `cx.ola.${kind}.${id}${tag === 'ola' ? '' : `.${tag}`}`
+}
+const xml = (v) => String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+const launchctl = (...a) => spawnSync('/bin/launchctl', a, { encoding: 'utf8' })
+const domain = () => `gui/${process.getuid()}`
 async function openRelay(kind, id) {
   if (relayPid(kind, id)) return
   const r = relays[kind](id)
   rmSync(r.sock, { force: true })
-  const log = openSync(r.log, 'a', 0o600)
-  const child = spawn(process.execPath, [path.join(here, r.script), r.sock, ...r.args], { detached: true, stdio: ['ignore', log, log], env: { PATH: process.env.PATH, OLA_CONTAINER_BIN: CONTAINER } })
-  closeSync(log)
-  child.unref()
-  writeFileSync(r.pid, String(child.pid), { mode: 0o600 })
+  const argv = [process.execPath, path.join(here, r.script), r.sock, ...r.args]
+  if (LAUNCHD) {
+    // A user agent, loaded while the workspace runs (ws.mjs stop unloads it), restarted by launchd
+    // if it dies. Its plist lives in ~/.ola/launchd, not ~/Library/LaunchAgents: after a reboot no
+    // workspace runs, so no door or desk should either.
+    const label = relayLabel(kind, id)
+    mkdirSync(LAUNCHD_DIR, { recursive: true, mode: 0o700 })
+    const plist = path.join(LAUNCHD_DIR, `${label}.plist`)
+    const env = { PATH: process.env.PATH ?? '/usr/bin:/bin', OLA_CONTAINER_BIN: CONTAINER, OLA_PIDFILE: r.pid }
+    writeFileSync(
+      plist,
+      `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>Label</key><string>${xml(label)}</string>
+  <key>ProgramArguments</key><array>${argv.map((a) => `<string>${xml(a)}</string>`).join('')}</array>
+  <key>EnvironmentVariables</key><dict>${Object.entries(env).map(([k, v]) => `<key>${k}</key><string>${xml(v)}</string>`).join('')}</dict>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>ThrottleInterval</key><integer>2</integer>
+  <key>StandardOutPath</key><string>${xml(r.log)}</string>
+  <key>StandardErrorPath</key><string>${xml(r.log)}</string>
+</dict></plist>
+`,
+      { mode: 0o600 },
+    )
+    rmSync(r.pid, { force: true })
+    launchctl('bootout', `${domain()}/${label}`)
+    const b = launchctl('bootstrap', domain(), plist)
+    if (b.status !== 0) refuse(`launchd did not load the ${kind}: ${(b.stderr || '').trim().split('\n').pop()}`)
+  } else {
+    const log = openSync(r.log, 'a', 0o600)
+    const child = spawn(argv[0], argv.slice(1), { detached: true, stdio: ['ignore', log, log], env: { PATH: process.env.PATH, OLA_CONTAINER_BIN: CONTAINER } })
+    closeSync(log)
+    child.unref()
+    writeFileSync(r.pid, String(child.pid), { mode: 0o600 })
+  }
   for (let i = 0; i < 50; i++) {
-    if (existsSync(r.sock)) return
+    if (existsSync(r.sock) && (!LAUNCHD || existsSync(r.pid))) return
     await new Promise((res) => setTimeout(res, 100))
   }
   refuse(`the ${kind} did not open its socket`)
 }
 function closeRelay(kind, id) {
+  const label = relayLabel(kind, id)
+  const plist = path.join(LAUNCHD_DIR, `${label}.plist`)
+  // A job loaded earlier is unloaded whatever this process's mode (a front desk under launchd
+  // may have started it, and a check stop it).
+  if (LAUNCHD || existsSync(plist)) {
+    launchctl('bootout', `${domain()}/${label}`)
+    rmSync(plist, { force: true })
+  }
   const pid = relayPid(kind, id)
   if (pid) process.kill(pid, 'SIGTERM')
   rmSync(relays[kind](id).pid, { force: true })
@@ -221,7 +281,7 @@ export async function create(id, opts = {}) {
   mkdirSync(path.join(HOME, 'ws'), { recursive: true, mode: 0o700 })
   chmodSync(HOME, 0o700)
   mkdirSync(p.dir, { mode: 0o700 })
-  writeFileSync(p.secrets, `OPENCODE_PASSWORD=${randomBytes(24).toString('base64url')}\nBOX_API_KEY=${randomBytes(32).toString('hex')}\n`, { mode: 0o600 })
+  writeFileSync(p.secrets, newSecrets(), { mode: 0o600 })
   writeFileSync(p.meta, JSON.stringify({ id, created: new Date().toISOString(), image: IMAGE, cpus, memory, disk }, null, 2) + '\n', { mode: 0o600 })
   ctr(['volume', 'create', '-s', String(disk), '--label', `ola.workspace=${id}`, n.volume])
   // A new volume's root belongs to root. Hand it to `work` once, in a throwaway VM with no
@@ -229,7 +289,20 @@ export async function create(id, opts = {}) {
   ctr(['run', '--rm', '--network', 'none', '--user', 'root', '--entrypoint', '/bin/chown', '-v', `${n.volume}:/work`, IMAGE, '1000:1000', '/work'])
   // The mount source must exist when the container is created.
   await openDoor(id)
-  ctr([
+  ctr(createArgs(id, { cpus, memory }))
+  closeDoor(id)
+  // The runtime keeps the container's config (the environment, secrets included) in files of
+  // mode 644 and the volume image at 644. Close their folders to this account alone, so the
+  // secrets and the customer's disk do not rest on ~/Library's mode.
+  for (const dir of runtimeDirs(id)) chmodSync(dir, 0o700)
+  writeGatewayTokens()
+  return { id, cpus, memory, disk }
+}
+
+function createArgs(id, { cpus, memory }) {
+  const n = names(id)
+  const p = paths(id)
+  return [
     'create', '--name', n.container,
     '--label', `ola.workspace=${id}`,
     '--init',
@@ -248,14 +321,38 @@ export async function create(id, opts = {}) {
     '-v', `${n.volume}:/work`,
     '-v', `${p.door}:/ola/gw/gateway.sock`,
     IMAGE,
-  ])
+  ]
+}
+
+const newSecrets = () => `OPENCODE_PASSWORD=${randomBytes(24).toString('base64url')}\nBOX_API_KEY=${randomBytes(32).toString('hex')}\n`
+
+/**
+ * New secrets for a workspace: a new opencode password and gateway token. Both reach the VM only
+ * through --env-file at `container create`, so the container is made again from the same volume
+ * (nothing outside /work survives a stop anyway: the root is read-only). The old container's
+ * config, which held the old secrets, goes with it. The gateway picks up the new token from
+ * ~/.ola/gateway-tokens without a restart, and the old one stops working at once.
+ * A workspace that was running is started again; open connections to it end.
+ */
+export async function rotate(id) {
+  validId(id)
+  const c = inspect(id) || refuse(`no workspace ${id}`)
+  const meta = JSON.parse(readFileSync(paths(id).meta, 'utf8'))
+  const wasRunning = stateOf(c) === 'running'
+  ctr(['stop', names(id).container], { allowFail: true })
+  closeRelay('desk', id)
   closeDoor(id)
-  // The runtime keeps the container's config (the environment, secrets included) in files of
-  // mode 644 and the volume image at 644. Close their folders to this account alone, so the
-  // secrets and the customer's disk do not rest on ~/Library's mode.
-  for (const dir of runtimeDirs(id)) chmodSync(dir, 0o700)
+  ctr(['rm', '--force', names(id).container])
+  const p = paths(id)
+  writeFileSync(`${p.secrets}.tmp`, newSecrets(), { mode: 0o600 })
+  renameSync(`${p.secrets}.tmp`, p.secrets)
   writeGatewayTokens()
-  return { id, cpus, memory, disk }
+  await openDoor(id)
+  ctr(createArgs(id, { cpus: meta.cpus, memory: meta.memory }))
+  closeDoor(id)
+  for (const dir of runtimeDirs(id)) chmodSync(dir, 0o700)
+  if (wasRunning) await start(id)
+  return { id, restarted: wasRunning }
 }
 
 export async function start(id) {
@@ -421,7 +518,7 @@ export async function putStream(id, name, source, { replace = false, maxBytes = 
  * said the file's size, or null when there is no such plain file. The stream ends after exactly
  * `size` bytes; fewer (the file changed while read) ends it with an error.
  */
-export async function getStream(id, rel) {
+export async function getStream(id, rel, { headerMs = 15_000, signal } = {}) {
   validId(id)
   if (!validRel(rel)) return null
   const child = execTool(id, 'ola-get', [rel])
@@ -430,9 +527,14 @@ export async function getStream(id, rel) {
     let head = Buffer.alloc(0)
     let settled = false
     const fail = () => {
+      clearTimeout(timer)
       if (!settled) (settled = true), resolve(null)
       child.kill('SIGKILL')
     }
+    // No header in time (ola-get refuses a FIFO at once since 2.3.0-4; this is the backstop), or
+    // the asker went away before it came: the exec is killed, never left running.
+    const timer = setTimeout(fail, headerMs)
+    signal?.addEventListener('abort', () => !settled && fail(), { once: true })
     child.on('error', fail)
     child.on('close', fail)
     const onData = (d) => {
@@ -446,6 +548,7 @@ export async function getStream(id, rel) {
         size = JSON.parse(head.subarray(0, nl).toString('utf8')).size
       } catch {}
       if (!Number.isSafeInteger(size) || size < 0) return fail()
+      clearTimeout(timer)
       settled = true
       const rest = head.subarray(nl + 1)
       async function* body() {
@@ -467,6 +570,48 @@ export async function getStream(id, rel) {
     }
     child.stdout.on('data', onData)
   })
+}
+
+// The first bytes of several plain files in /work, in one `container exec` (the project view's
+// things; review of 2026-11-16, M4: one exec per file before). The same walk as ola-get: each
+// part opened with O_NOFOLLOW from the folder before it, O_NONBLOCK so a FIFO cannot hold it,
+// regular files only. Output: one JSON line per file, {"i": n, "b": base64} or {"i": n}.
+const PEEK = String.raw`
+import base64, json, os, stat, sys
+cap = int(sys.argv[1])
+for i, rel in enumerate(sys.argv[2:]):
+    out = {"i": i}
+    try:
+        fd = os.open("/work", os.O_RDONLY | os.O_DIRECTORY)
+        parts = rel.split("/")
+        for j, part in enumerate(parts):
+            nfd = os.open(part, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK | (0 if j == len(parts) - 1 else os.O_DIRECTORY), dir_fd=fd)
+            os.close(fd)
+            fd = nfd
+        if stat.S_ISREG(os.fstat(fd).st_mode):
+            os.set_blocking(fd, True)
+            out["b"] = base64.b64encode(os.read(fd, cap)).decode()
+        os.close(fd)
+    except OSError:
+        pass
+    sys.stdout.write(json.dumps(out) + "\n")
+`
+export async function peek(id, rels, maxBytes) {
+  validId(id)
+  const list = rels.filter(validRel).slice(0, 32)
+  if (!list.length) return new Map()
+  const child = spawn(CONTAINER, ['exec', names(id).container, '/usr/bin/python3', '-I', '-c', PEEK, String(maxBytes), ...list], { stdio: ['ignore', 'pipe', 'pipe'] })
+  const timer = setTimeout(() => child.kill('SIGKILL'), 15_000)
+  const r = await collect(child, list.length * (maxBytes * 1.4 + 64) + 1024)
+  clearTimeout(timer)
+  const got = new Map()
+  for (const line of r.out.split('\n')) {
+    try {
+      const x = JSON.parse(line)
+      if (Number.isInteger(x.i) && list[x.i] !== undefined && typeof x.b === 'string') got.set(list[x.i], Buffer.from(x.b, 'base64').subarray(0, maxBytes))
+    } catch {}
+  }
+  return got
 }
 
 /** Deletes /work/<rel> through ola-rm. true when deleted, false when there was no such file. */
@@ -569,6 +714,10 @@ async function main(argv) {
     case 'start': {
       const { ms } = await start(need())
       return console.log(`${id} is running; opencode answered after ${(ms / 1000).toFixed(1)} s`)
+    }
+    case 'rotate': {
+      const r = await rotate(need())
+      return console.log(`${id}: new opencode password and gateway token${r.restarted ? '; restarted' : ''}`)
     }
     case 'stop':
       stop(need())

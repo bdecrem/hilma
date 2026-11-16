@@ -23,7 +23,9 @@ fd = os.open("/work", os.O_RDONLY | os.O_DIRECTORY)
 for i, part in enumerate(parts):
     last = i == len(parts) - 1
     try:
-        nfd = os.open(part, os.O_RDONLY | os.O_NOFOLLOW | (0 if last else os.O_DIRECTORY), dir_fd=fd)
+        # O_NONBLOCK: opening a FIFO the agent made returns at once instead of waiting for a
+        # writer (review of 2026-11-16, L1); anything but a regular file is refused below.
+        nfd = os.open(part, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK | (0 if last else os.O_DIRECTORY), dir_fd=fd)
     except OSError:
         fail(4, "no such file")
     os.close(fd)
@@ -31,6 +33,7 @@ for i, part in enumerate(parts):
 st = os.fstat(fd)
 if not stat.S_ISREG(st.st_mode):
     fail(4, "not a file")
+os.set_blocking(fd, True)
 out = sys.stdout.buffer
 out.write((json.dumps({"size": st.st_size}) + "\n").encode())
 left = st.st_size

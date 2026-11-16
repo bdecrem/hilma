@@ -27,6 +27,8 @@ const GW_PORT = 4181
 process.env.OLA_HOME = path.join(homedir(), '.ola-check')
 process.env.OLA_GATEWAY_PORT = String(GW_PORT)
 process.env.OLA_MAX_RUNNING = '2'
+// --no-live skips the one real task (a live model run on the stand-in); everything else runs.
+const LIVE = !process.argv.includes('--no-live')
 const ws = await import('./ws.mjs')
 const { OpenCode } = await import('@opencode/client')
 
@@ -69,14 +71,15 @@ let gateway = null
 let gatewayLog = ''
 async function startGateway() {
   if (gateway) gateway.kill('SIGTERM')
-  const tokens = readFileSync(path.join(ws.HOME, 'gateway-tokens'), 'utf8').trim().slice('GATEWAY_TOKENS='.length)
   gateway = spawn(process.execPath, [path.join(here, '../gateway/server.mjs')], {
     env: {
       PATH: process.env.PATH,
       HOME: homedir(),
       UPSTREAM_BASE_URL: 'https://api.together.xyz/v1',
       UPSTREAM_API_KEY: together(),
-      GATEWAY_TOKENS: tokens,
+      // The tokens file ws.mjs keeps, reloaded on a change; each workspace's door socket.
+      GATEWAY_TOKENS_FILE: path.join(ws.HOME, 'gateway-tokens'),
+      GATEWAY_DOOR_DIR: ws.GATEWAY_DOORS,
       GATEWAY_MODELS: 'general=zai-org/GLM-5.3-Flash',
       GATEWAY_PORT: String(GW_PORT),
       GATEWAY_DB: path.join(run, 'usage.db'),
@@ -291,6 +294,15 @@ try {
   const g = insideJSON(A, GATEWAY_PROBE)
   t('inside: the gateway answers with the workspace token', g.models_with_token?.[0] === 200 && g.models_with_token[1].data.some((m) => m.id === 'general'), JSON.stringify(g.models_with_token ?? g.error).slice(0, 120))
   t('inside: the gateway refuses without a token', g.models_without_token === 401)
+  // Another workspace's token, handed to this one (from stdin, never on a command line): refused
+  // through this door. The gateway binds each token to its own workspace's door.
+  {
+    const probe = 'import sys, urllib.request\nreq = urllib.request.Request("http://127.0.0.1:4180/v1/models", headers={"Authorization": "Bearer " + sys.stdin.read().strip()})\ntry:\n    print(urllib.request.urlopen(req, timeout=10).status)\nexcept urllib.error.HTTPError as e:\n    print(e.code)\n'
+    const tryToken = (token) => spawnSync(ws.CONTAINER, ['exec', '-i', ws.names(A).container, 'python3', '-I', '-c', probe], { input: token, encoding: 'utf8' }).stdout.trim()
+    const theirs = tryToken(ws.secrets(B).BOX_API_KEY)
+    const own = tryToken(ws.secrets(A).BOX_API_KEY)
+    t(`inside: ${B}'s token through ${A}'s door is refused; ${A}'s own works`, theirs === '401' && own === '200', `theirs ${theirs}, own ${own}`)
+  }
   for (const k of ['proxy_request', 'host_header']) t(`inside: a ${k.replace('_', ' ')} through the door still lands on the gateway`, /^HTTP\/1\.1 (401|404)/.test(g[k] || ''), g[k])
   // Node's server drops a CONNECT it has no handler for: no tunnel, the connection just closes.
   t('inside: a CONNECT through the door opens no tunnel', !/^HTTP\/1\.[01] 200/.test(g.connect_tunnel ?? 'HTTP/1.1 200'), g.connect_tunnel === '' ? 'the gateway closed the connection' : g.connect_tunnel)
@@ -390,6 +402,7 @@ print(json.dumps({"mib": n, "stopped": why}))
   t('door: with it closed the gateway is unreachable; reopened, it answers again', down.models_with_token?.[0] !== 200 && back.models_with_token?.[0] === 200, `closed: ${down.error ? 'no answer' : down.models_with_token?.[0]}, reopened: ${back.models_with_token?.[0] ?? back.error}`)
 
   // -------- 4. the real task, inside the VM
+  if (LIVE) {
   const hostWork = path.join(run, 'survey')
   mkdirSync(hostWork)
   const made = spawnSync('python3', [path.join(spike, 'make-survey.py'), hostWork], { encoding: 'utf8' })
@@ -432,6 +445,7 @@ print(json.dumps({"mib": n, "stopped": why}))
   measured.task_model_requests = lines.length
   measured.task_tokens = lines.reduce((s, l) => s + (l.tokens_in || 0) + (l.tokens_out || 0), 0)
   measured.events = Object.fromEntries(events)
+  }
   const st = (await ws.status(A))[0]
   measured.memory_after_task_mib = Math.round(st.memory_used / 1024 ** 2)
   measured.volume_on_host_after_task_mib = Math.round(st.disk_on_host / 1024 ** 2)
