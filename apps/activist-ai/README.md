@@ -16,6 +16,7 @@ Started 2026-11-15. The plan, the promise and its limits are in the private note
 | **Front desk and page** | `frontdesk/`: the one service a browser talks to. Passkey sign-in by invitation, the platform database (one SQLite file), roles, the audit log, files and the opencode door to each sealed workspace; serves `web/` (look A) from the same origin | built and proven on the mini (`frontdesk/check.mjs`); see [The front desk](#the-front-desk) |
 | **Start at boot** | `ops/`: launchd user agents for the gateway, the front desk and Apple's container system, the doors and desks as jobs while their workspace runs, one `status` command | installed and proven on the mini; see [Start at boot](#start-at-boot-launchd) |
 | **Way in** | Tailscale; nothing on the public internet | not built |
+| **Evaluations** | `evals/`: 24 checkable tasks in six families shaped like the first users' work (made-up data), a runner that scores a named configuration (model + serving + harness) into SQLite, an Opus baseline through the Claude Agent SDK, and a readout per family; see `evals/README.md` | first measured run 2026-11-16 (GLM-5.3-Flash and Opus 5.5, 2 seeds each) |
 | **Landing page** | `site/`: Ola's front door, a static page built into `public/ola-site/` for ola.cx, with no third-party requests (`site/check.mjs` proves it); see `site/README.md` | built, not live |
 
 ## The spike: does the core loop work?

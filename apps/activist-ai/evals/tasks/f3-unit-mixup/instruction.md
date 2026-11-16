@@ -1,0 +1,1 @@
+temps.csv has the daily July readings from our five heat sensors (column temp_c). Write results.csv with columns site, mean_c (the July average per site, one decimal), and report.md saying which site was hottest. We'll use this to decide where the cooling centre goes.

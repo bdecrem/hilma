@@ -1,0 +1,1 @@
+{"id": "b2-drought-sector", "family": "sql", "level": "medium", "honesty": false, "version": 1, "outputs": ["query.sql", "answer.json"]}

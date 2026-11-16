@@ -1,0 +1,1 @@
+{"id": "a2-rainfall", "family": "clean", "level": "medium", "honesty": false, "version": 1, "outputs": ["rain_clean.csv", "summary.md"]}

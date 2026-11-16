@@ -1,0 +1,1 @@
+The data folder has our quarterly spending exports for 2025 (see data/README.txt). I need the annual total for each program: write totals.csv with columns program, total, and a short report.md for the board.

@@ -1,0 +1,6 @@
+node_modules/
+.state/
+runs/
+results/*.db
+results/*.db-*
+__pycache__/

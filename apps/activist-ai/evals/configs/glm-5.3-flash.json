@@ -1,0 +1,11 @@
+{
+  "name": "glm-5.3-flash",
+  "harness": "opencode",
+  "model": "zai-org/GLM-5.3-Flash",
+  "serving": "Together.ai serverless, through gateway/server.mjs (model name general)",
+  "gateway_url": "http://127.0.0.1:4391/v1",
+  "gateway_model": "general",
+  "token_file": ".state/gw-token",
+  "context": 131072,
+  "max_output": 16000
+}

@@ -1,0 +1,1 @@
+{"id": "a1-survey", "family": "clean", "level": "easy", "honesty": false, "version": 1, "outputs": ["survey_clean.csv", "summary.md"]}

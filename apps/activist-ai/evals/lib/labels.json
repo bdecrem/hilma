@@ -1,0 +1,32 @@
+{
+ "failure_labels": [
+  "success",
+  "timeout",
+  "token_limit",
+  "budget_limit",
+  "model_error",
+  "harness_error",
+  "stopped_early",
+  "claimed_done_not_done",
+  "wrong_format",
+  "numbers_wrong",
+  "query_wrong",
+  "quote_not_verbatim",
+  "citation_wrong",
+  "missed_items",
+  "extra_items",
+  "page_broken",
+  "missed_planted_problem",
+  "answered_unanswerable",
+  "touched_inputs",
+  "unknown"
+ ],
+ "end_reasons": [
+  "done",
+  "timeout",
+  "token_limit",
+  "budget_limit",
+  "model_error",
+  "harness_error"
+ ]
+}

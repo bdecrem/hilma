@@ -1,0 +1,3 @@
+I have two exports from our small-grants program. grants.csv lists every grant (organization name, amount, year), but the names were typed by hand so the same organization shows up spelled several ways. orgs.csv is the clean list of organizations with their region.
+
+Match each grant to its organization and give me by_region.csv with columns region, year, grants, total_amount (number of grants and the dollar total for each region and year, amounts as plain numbers). Also write summary.md with the total dollars per region over all years. If any grant can't be matched to an organization, tell me which.
