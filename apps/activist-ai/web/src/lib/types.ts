@@ -103,7 +103,7 @@ export interface Me {
   csrf: string
   workspaces: { slug: string; name: string; team: string; role: Role }[]
   machine: { working: number; capacity: number }
-  policy: { deleteNotice: string }
+  policy: { deleteNotice: string; maxUpload?: number }
   /** What the person must be told once, such as a passkey added for another device. */
   notices?: { kind: string; at: string; text: string }[]
 }

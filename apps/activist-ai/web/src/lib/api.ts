@@ -23,6 +23,12 @@ const UNREACHABLE: Problem = { text: 'Ola’s computer did not answer. Check you
 export const workspace = (): string | null => new URLSearchParams(location.search).get('w')
 let csrf = ''
 export const setCsrf = (t: string) => (csrf = t)
+// The largest file the front desk accepts (from /api/me). A larger one is refused here, before a
+// byte is sent: a browser still sending a body rarely reads the 413 the server answered with.
+let maxUpload = 0
+export const setMaxUpload = (n: number | undefined) => (maxUpload = Number.isSafeInteger(n) && n! > 0 ? n! : 0)
+/** The same sentence as the server's (web/server/files.mjs, tooLargeMessage). */
+const tooLarge = (max: number) => `That file is larger than ${Math.round((max / 1024 / 1024) * 10) / 10} MB, the most Ola accepts.`
 /** Headers for every request to the front desk (the opencode client gets them too). */
 export const deskHeaders = (): Record<string, string> => ({ ...(workspace() ? { 'x-ola-workspace': workspace()! } : {}), ...(csrf ? { 'x-ola-csrf': csrf } : {}) })
 
@@ -73,7 +79,9 @@ export const desk: FrontDesk = {
   runs: () => call<RunsPayload>('/api/runs'),
   files: async () => (await call<{ files: FileEntry[] }>('/api/files')).files,
   upload: (file, opts) =>
-    call(`/api/files?name=${encodeURIComponent(file.name)}${opts?.replace ? '&replace=1' : ''}`, {
+    maxUpload && file.size > maxUpload
+      ? Promise.reject(new DeskError({ text: tooLarge(maxUpload), detail: '413 too_large (not sent)' }, 413))
+      : call(`/api/files?name=${encodeURIComponent(file.name)}${opts?.replace ? '&replace=1' : ''}`, {
       method: 'POST',
       body: file,
       headers: { 'content-type': 'application/octet-stream' },

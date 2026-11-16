@@ -401,16 +401,50 @@ await check('upload, download and delete are in the audit log, with no file name
   return 'name kept only as a keyed hash'
 })
 await check('uploads are limited: size, names, and a planted symlink is not followed', async () => {
-  // The front desk answers 413 on the declared size and closes the connection while the body is
-  // still being sent (on purpose, M2); fetch can then fail with a reset before it reads the answer,
-  // so this one is sent with node:http, which reads the answer as soon as it comes.
-  const big = await new Promise((resolve) => {
-    const size = 3 * 1024 * 1024
-    const r = http.request({ host: '127.0.0.1', port: PORT, method: 'POST', path: '/api/files?name=big.bin', headers: { host: `localhost:${PORT}`, origin: ORIGIN, cookie: `__Host-ola=${a.cookie}`, 'x-ola-csrf': a.csrf, 'x-ola-workspace': 'fd-a', 'content-type': 'application/octet-stream', 'content-length': size } }, (res) => (res.resume(), resolve({ status: res.statusCode })))
-    r.on('error', () => resolve({ status: 'a reset before any answer' }))
-    r.end(randomBytes(size))
-  })
-  assert(big.status === 413, `3 MiB answered ${big.status}`)
+  // The front desk answers 413 on the declared size while the body is still being sent, and
+  // closes the lingering way (web/server/linger.mjs). Destroyed at once (M2), the unread bytes drew
+  // a reset and the client often lost the answer: this check failed about half the time on the
+  // mini (2026-11-16). Now 30 tries with node:http and 30 with fetch (what the page uses) must all
+  // read the 413 and its sentence; the page refuses a larger file before sending it, in words.
+  const size = 3 * 1024 * 1024
+  const want = 'That file is larger than 2 MB, the most Ola accepts.'
+  const headers = { host: `localhost:${PORT}`, origin: ORIGIN, cookie: `__Host-ola=${a.cookie}`, 'x-ola-csrf': a.csrf, 'x-ola-workspace': 'fd-a', 'content-type': 'application/octet-stream' }
+  const viaHttp = () =>
+    new Promise((resolve) => {
+      const r = http.request({ host: '127.0.0.1', port: PORT, method: 'POST', path: '/api/files?name=big.bin', headers: { ...headers, 'content-length': size } }, (res) => {
+        let text = ''
+        res.on('data', (d) => (text += d))
+        res.on('end', () => resolve(`${res.statusCode} ${text}`))
+      })
+      r.on('error', (e) => resolve(`a reset before any answer (${e.code})`))
+      r.setTimeout(15_000, () => (r.destroy(), resolve('no answer in 15 s')))
+      r.end(randomBytes(size))
+    })
+  const viaFetch = async () => {
+    try {
+      const r = await fetch(`${ORIGIN}/api/files?name=big.bin`, { method: 'POST', headers, body: randomBytes(size), signal: AbortSignal.timeout(15_000) })
+      return `${r.status} ${await r.text()}`
+    } catch (e) {
+      return `a reset before any answer (${e.cause?.code ?? e.name})`
+    }
+  }
+  const tally = {}
+  for (const [how, send] of [['node:http', viaHttp], ['fetch', viaFetch]])
+    for (let i = 0; i < 30; i++) {
+      const got = await send()
+      const k = `${how} ${got.startsWith('413 ') && JSON.parse(got.slice(4)).message === want ? '413 with its sentence' : got.slice(0, 80)}`
+      tally[k] = (tally[k] ?? 0) + 1
+    }
+  assert(tally['node:http 413 with its sentence'] === 30 && tally['fetch 413 with its sentence'] === 30, `3 MiB answered ${JSON.stringify(tally)}`)
+  const me = await api('/api/me', { cookie: a.cookie })
+  assert(me.json?.policy?.maxUpload === 2 * 1024 * 1024, `/api/me policy ${JSON.stringify(me.json?.policy)}`)
+  const bigFile = path.join(run, 'too big.bin')
+  writeFileSync(bigFile, randomBytes(size))
+  await A.page.goto(`${ORIGIN}/?w=fd-a#/files`)
+  await A.page.waitForSelector('#files-title')
+  await A.page.setInputFiles('#file-picker', bigFile)
+  const shown = await A.page.locator('.problem[role=alert] p').first().innerText({ timeout: 15_000 })
+  assert(shown === `too big.bin was not sent. ${want}`, `the page says: ${shown}`)
   for (const name of ['../escape.txt', '.hidden', 'a/b.txt', '--replace', 'x'.repeat(240)]) {
     const r = await api(`/api/files?name=${encodeURIComponent(name)}`, { method: 'POST', cookie: a.cookie, csrf: a.csrf, ws: 'fd-a', body: 'x' })
     assert(r.status === 400, `${name} answered ${r.status}`)
@@ -420,6 +454,7 @@ await check('uploads are limited: size, names, and a planted symlink is not foll
   const r = await api('/api/files/env.txt?w=fd-a', { cookie: a.cookie })
   assert(r.status === 404 && !r.text.includes('OPENCODE_PASSWORD'), `the link answered ${r.status}`)
   spawnSync('/usr/local/bin/container', ['exec', 'ola-fd-a', 'rm', '-f', '/work/env.txt'])
+  return `3 MiB: 413 and its sentence 30 of 30 with node:http, 30 of 30 with fetch; the page: "${shown}"`
 })
 
 await check('a refused request with an unread body is closed at once; slow headers and a trickled sign-in body are cut', async () => {

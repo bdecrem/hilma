@@ -601,8 +601,38 @@ async function complete(body, offered, signal, deadline, tally, overQuota) {
 
 // ---------------------------------------------------------------- talking to the caller
 
+// An answer sent while the request's body is still arriving (a 413 over the cap, a 401, too
+// busy) closes the connection the lingering way: the whole answer with Connection: close, our FIN,
+// then what the caller still sends is read and dropped until it stops, for at most LINGER_MS and
+// LINGER_BYTES. Destroying the socket at once left those bytes unread, the kernel answered them
+// with a reset, and the caller often lost the 413 and saw "connection reset" (2026-11-16). The
+// same as ../web/server/linger.mjs; this file imports nothing of ours.
+const LINGER_MS = 3_000
+const LINGER_BYTES = 8 * 1024 * 1024
+function closeAfter(req, res) {
+  const sock = req.socket
+  res.setHeader('Connection', 'close')
+  if (!sock || sock.olaLinger) return
+  sock.olaLinger = true
+  // Node ends a Connection: close answer with socket.destroySoon(); this one waits, within bounds.
+  sock.destroySoon = function lingerSoon() {
+    if (this.destroyed) return
+    const start = this.bytesRead
+    const stop = () => this.destroy()
+    const timer = setTimeout(stop, LINGER_MS)
+    const count = setInterval(() => this.bytesRead - start > LINGER_BYTES && stop(), 25)
+    timer.unref()
+    count.unref()
+    this.once('close', () => (clearTimeout(timer), clearInterval(count)))
+    this.once('end', stop)
+    this.end()
+    if (!req.complete) req.resume()
+  }
+}
+
 function send(res, status, body, headers = {}) {
   if (res.headersSent || res.destroyed) return
+  if (res.req && !res.req.complete) closeAfter(res.req, res)
   res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', ...headers })
   res.end(redact(JSON.stringify(body)))
 }
@@ -727,11 +757,9 @@ async function handle(req, res, rec, signal) {
     raw = await readBody(req)
   } catch (e) {
     if (e.code === 'too_large') {
-      res.once('finish', () => req.socket?.destroy())
       return no(413, 'the body was over the size cap', `the request is larger than ${C.maxBody} bytes`, 'invalid_request_error', { Connection: 'close' })
     }
     if (e.code === 'too_busy') {
-      res.once('finish', () => req.socket?.destroy())
       return no(503, 'too many bodies in memory at once', 'the gateway is receiving too many requests at once; retry shortly', 'overloaded_error', { 'Retry-After': '5', Connection: 'close' })
     }
     rec.status = 499
@@ -820,6 +848,8 @@ async function handle(req, res, rec, signal) {
 const log = (rec) => process.stdout.write(redact(JSON.stringify({ t: new Date().toISOString(), ...rec })) + '\n')
 
 async function onRequest(req, res) {
+  // A request pipelined behind one already refused and closing is not answered.
+  if (req.socket?.olaLinger) return req.socket.destroy()
   const started = Date.now()
   const rec = { caller: '-', route: 'other', model: '-', status: 0, why: null, tries: 0, tokens_in: null, tokens_out: null, estimated: null, wait_ms: null, ms: 0 }
   const ac = new AbortController()

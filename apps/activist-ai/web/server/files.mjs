@@ -14,6 +14,8 @@ import { pipeline } from 'node:stream/promises'
 
 export const NAME = /^[A-Za-z0-9][A-Za-z0-9 ._()+,-]{0,199}$/
 export const MAX_UPLOAD_BYTES = 50 * 1024 * 1024
+/** What a person sees when a file is over the limit (the page says the same before sending; see src/lib/api.ts). */
+export const tooLargeMessage = (max) => `That file is larger than ${Math.round((max / 1024 / 1024) * 10) / 10} MB, the most Ola accepts.`
 // What opencode and git keep in the folder; never listed, never served.
 const HIDDEN = (rel) => rel.split('/').some((part) => part.startsWith('.') || part === 'node_modules' || part === '__pycache__')
 
@@ -76,7 +78,7 @@ export function makeFiles({ work, manifestPath }) {
   async function upload(name, req, { replace = false } = {}) {
     if (!validName(name)) return { status: 400, body: { error: 'bad_name', message: 'The file name has characters Ola does not accept. Rename it with letters, digits and spaces.' } }
     const declared = Number(req.headers['content-length'] ?? NaN)
-    if (Number.isFinite(declared) && declared > MAX_UPLOAD_BYTES) return { status: 413, body: { error: 'too_large', message: `The file is larger than ${MAX_UPLOAD_BYTES / 1024 / 1024} MB.` } }
+    if (Number.isFinite(declared) && declared > MAX_UPLOAD_BYTES) return { status: 413, body: { error: 'too_large', message: tooLargeMessage(MAX_UPLOAD_BYTES) } }
     const dest = path.join(work, name)
     const exists = await fs.lstat(dest).then(() => true, () => false)
     if (exists && !replace) return { status: 409, body: { error: 'exists', message: `There is already a file called ${name}.` } }
@@ -99,7 +101,7 @@ export function makeFiles({ work, manifestPath }) {
       await fs.rename(tmp, dest)
     } catch (e) {
       await fs.rm(tmp, { force: true })
-      if (e?.code === 'TOO_LARGE') return { status: 413, body: { error: 'too_large', message: `The file is larger than ${MAX_UPLOAD_BYTES / 1024 / 1024} MB.` } }
+      if (e?.code === 'TOO_LARGE') return { status: 413, body: { error: 'too_large', message: tooLargeMessage(MAX_UPLOAD_BYTES) } }
       return { status: 500, body: { error: 'write_failed', message: 'The file could not be written on Ola’s computer.' } }
     }
     const manifest = await readManifest()

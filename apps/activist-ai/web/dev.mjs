@@ -22,7 +22,7 @@ import http from 'node:http'
 import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { makeFiles } from './server/files.mjs'
+import { makeFiles, MAX_UPLOAD_BYTES } from './server/files.mjs'
 import { makeProxy } from './server/proxy.mjs'
 import { projectPayload } from './server/project.mjs'
 import { startFakeModel } from './server/fake-model.mjs'
@@ -254,7 +254,7 @@ const server = http.createServer(async (req, res) => {
         csrf: 'dev',
         workspaces: [{ slug: 'dev', name: fixtureName, team: 'Dev', role: 'owner' }],
         machine: { working: 1, capacity: 4 },
-        policy: { deleteNotice: 'It is removed from Ola’s computer, and Ola can no longer read it. This cannot be undone. Your own copy, if you have one, is not touched.' },
+        policy: { maxUpload: MAX_UPLOAD_BYTES, deleteNotice: 'It is removed from Ola’s computer, and Ola can no longer read it. This cannot be undone. Your own copy, if you have one, is not touched.' },
       })
     if (p === '/api/signout' && req.method === 'POST') return json(res, 200, { ok: true })
     // Dev-only switches for the checks: stop and start the workspace's opencode.

@@ -7,6 +7,7 @@
 // Creating a session is rewritten: the folder and the permission rules are decided here, from
 // the autonomy the page asked for, never taken from the browser.
 import http from 'node:http'
+import { closeAfter, readUpTo } from './linger.mjs'
 
 /**
  * Routes the page may use, and what each needs: `read` (any member, viewers included) or `run`
@@ -113,17 +114,14 @@ export function makeProxy({ target, socketPath, agent, authorization, work, log 
     }
     let body = null
     if (req.method !== 'GET') {
-      const chunks = []
-      let size = 0
-      for await (const c of req) {
-        size += c.length
-        if (size > MAX_BODY) {
-          res.writeHead(413, { 'content-type': 'application/json' }).end(JSON.stringify({ error: 'too_large' }))
-          return
-        }
-        chunks.push(c)
+      // Over MAX_BODY: the 413 with a lingering close, so the page reads it (./linger.mjs).
+      body = await readUpTo(req, MAX_BODY)
+      if (!body) {
+        if (req.destroyed) return
+        closeAfter(req, res)
+        res.writeHead(413, { 'content-type': 'application/json' }).end(JSON.stringify({ error: 'too_large', message: 'That message is longer than Ola accepts. Send it in shorter parts.' }))
+        return
       }
-      body = Buffer.concat(chunks)
       if (req.method === 'POST' && pathname === '/api/session') {
         const rewritten = rewriteSessionCreate(body.toString('utf8'), work)
         if (!rewritten) {

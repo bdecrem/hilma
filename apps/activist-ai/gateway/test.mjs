@@ -248,6 +248,62 @@ test('an oversize body is refused before it is read whole', async () => {
   await g.stop()
 })
 
+test('a caller sending an oversize body at full speed reads the 413 and its message, every time', async () => {
+  // The gateway answers before the body is read. When it destroyed the socket right after its
+  // answer, the unread bytes drew a reset and the caller often saw "connection reset" instead of
+  // the 413 (2026-11-16); it now closes the lingering way. 30 tries each with node:http and fetch,
+  // with and without a declared length; then a refused sender that never stops is cut within the
+  // linger bound and the gateway still answers others.
+  const up = await fakeUpstream()
+  const g = await gateway({ ...baseEnv(up.url), GATEWAY_MAX_BODY_BYTES: '4096' })
+  const u = new URL(g.url + '/v1/chat/completions')
+  const big = Buffer.alloc(3 * 1024 * 1024, 'x')
+  const viaHttp = (chunked) =>
+    new Promise((resolve) => {
+      const headers = { Authorization: `Bearer ${T.a}`, 'Content-Type': 'application/json', ...(chunked ? { 'Transfer-Encoding': 'chunked' } : { 'Content-Length': String(big.length) }) }
+      const req = http.request({ host: u.hostname, port: u.port, path: u.pathname, method: 'POST', headers }, (res) => {
+        let text = ''
+        res.on('data', (d) => (text += d))
+        res.on('end', () => resolve(`${res.statusCode} ${text}`))
+      })
+      req.on('error', (e) => resolve(`error ${e.code}`))
+      req.setTimeout(10_000, () => (req.destroy(), resolve('timeout')))
+      req.end(big)
+    })
+  const viaFetch = async () => {
+    try {
+      const r = await fetch(u, { method: 'POST', headers: { Authorization: `Bearer ${T.a}`, 'Content-Type': 'application/json' }, body: big, signal: AbortSignal.timeout(10_000) })
+      return `${r.status} ${await r.text()}`
+    } catch (e) {
+      return `error ${e.cause?.code ?? e.name}`
+    }
+  }
+  const want = `the request is larger than 4096 bytes`
+  const tally = {}
+  for (const [name, send] of [['http', () => viaHttp(false)], ['http chunked', () => viaHttp(true)], ['fetch', viaFetch]])
+    for (let i = 0; i < 30; i++) {
+      const got = await send()
+      const k = `${name}: ${got.startsWith('413 ') && got.includes(want) ? '413 with its message' : got.slice(0, 60)}`
+      tally[k] = (tally[k] ?? 0) + 1
+    }
+  assert.deepEqual(tally, { 'http: 413 with its message': 30, 'http chunked: 413 with its message': 30, 'fetch: 413 with its message': 30 })
+  // A sender that keeps sending after its 413 is cut within the bound (3 s linger, 8 MiB).
+  const t0 = Date.now()
+  const endless = await new Promise((resolve) => {
+    const sock = net.connect(Number(u.port), u.hostname)
+    let got = ''
+    sock.on('data', (d) => (got += d))
+    sock.on('error', () => {})
+    sock.on('close', () => resolve({ ms: Date.now() - t0, got: got.split('\r\n')[0] }))
+    sock.write(`POST /v1/chat/completions HTTP/1.1\r\nHost: x\r\nAuthorization: Bearer ${T.a}\r\nContent-Length: 1000000000\r\n\r\n`)
+    const pump = setInterval(() => (sock.destroyed ? clearInterval(pump) : sock.write(Buffer.alloc(64 * 1024))), 5)
+  })
+  assert.ok(endless.got.startsWith('HTTP/1.1 413') && endless.ms < 6000, JSON.stringify(endless))
+  assert.equal((await call(g, T.a, chat({}))).status, 200)
+  assert.equal(up.st.seen.length, 1)
+  await g.stop()
+})
+
 // ---------------------------------------------------------------- concurrency
 
 test('the global limit holds across callers', async () => {

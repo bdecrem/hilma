@@ -7,7 +7,7 @@
 // Passkeys only: no password, no email. WebAuthn options are fetched before the button is
 // pressed, so the browser's passkey prompt runs straight from the click (Safari requires that).
 import { createResource, createSignal, For, Match, onCleanup, Show, Switch } from 'solid-js'
-import { desk, DeskError, passkeys, setCsrf, workspace } from '../lib/api.ts'
+import { desk, DeskError, passkeys, setCsrf, setMaxUpload, workspace } from '../lib/api.ts'
 import type { Me, Problem } from '../lib/types.ts'
 import { App } from '../App.tsx'
 
@@ -18,6 +18,7 @@ export function Gate() {
     try {
       const m = await desk.me()
       setCsrf(m.csrf)
+      setMaxUpload(m.policy?.maxUpload)
       // One project and none named in the address: open it, in place (no reload).
       if (!workspace() && m.workspaces.length === 1) history.replaceState(null, '', `?w=${encodeURIComponent(m.workspaces[0].slug)}${location.hash || '#/'}`)
       return m

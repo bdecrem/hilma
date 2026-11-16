@@ -28,7 +28,8 @@ import { audit, nameRef, openDb, loadKeys } from './db.mjs'
 import { addressKey, makeAuth } from './auth.mjs'
 import { makeWorkspaces } from './workspaces.mjs'
 import { routeNeed } from '../web/server/proxy.mjs'
-import { validName } from '../web/server/files.mjs'
+import { tooLargeMessage, validName } from '../web/server/files.mjs'
+import { closeAfter, lingering, readUpTo } from '../web/server/linger.mjs'
 import { derivedThings } from '../web/server/project.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
@@ -104,35 +105,24 @@ const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; ch
 const RECHECK_MS = Math.max(250, Number(process.env.OLA_FD_RECHECK_MS) || 1000)
 // A reply sent before the request's body was read (a 401, a refusal, a 413) closes the
 // connection: otherwise Node keeps reading a body nobody wants, and a slow sender held the socket
-// for up to 15 minutes after its 401 (review of 2026-11-16, M2).
+// for up to 15 minutes after its 401 (review of 2026-11-16, M2). It closes the lingering way
+// (../web/server/linger.mjs): destroyed at once, the client often got a reset instead of the
+// answer, and a person whose file was too large saw a network error (2026-11-16).
 const json = (res, status, body, extra = {}) => {
   const req = res.req
-  if (req && !req.complete) {
-    extra = { ...extra, connection: 'close' }
-    res.once('finish', () => req.socket?.destroy())
-  }
+  if (req && !req.complete) closeAfter(req, res)
   res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', ...extra }).end(JSON.stringify(body))
 }
 const NOT_FOUND = { error: 'not_found', message: 'That is not here, or it is not yours to open.' }
 
 async function readJson(req, max = 64 * 1024, ms = 10_000) {
-  let size = 0
-  const chunks = []
   // A small JSON body, whole within ms, or nothing: a trickled body does not hold the socket.
+  // One over max is left unread (not destroyed), so the 400 that follows reaches the client.
   const timer = setTimeout(() => req.destroy(), ms)
+  const got = await readUpTo(req, max).finally(() => clearTimeout(timer))
+  if (!got) return null
   try {
-    for await (const c of req) {
-      size += c.length
-      if (size > max) return null
-      chunks.push(c)
-    }
-  } catch {
-    return null
-  } finally {
-    clearTimeout(timer)
-  }
-  try {
-    return JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}')
+    return JSON.parse(got.toString('utf8') || '{}')
   } catch {
     return null
   }
@@ -327,7 +317,7 @@ export function makeFrontDesk(cfg = config()) {
       if (!validName(name)) return json(res, 400, { error: 'bad_name', message: 'The file name has characters Ola does not accept. Rename it with letters, digits and spaces.' })
       const declared = Number(req.headers['content-length'] ?? NaN)
       if (!Number.isSafeInteger(declared) || declared < 0) return json(res, 411, { error: 'length_required', message: 'The upload did not say its size. Try again from the page.' })
-      if (declared > cfg.maxUpload) return json(res, 413, { error: 'too_large', message: `The file is larger than ${cfg.maxUpload / 1024 / 1024} MB.` })
+      if (declared > cfg.maxUpload) return json(res, 413, { error: 'too_large', message: tooLargeMessage(cfg.maxUpload) })
       slot = takeSlot(sess.personId, ws.slug, { upload: true, bytes: declared })
     } else if (['/api/files', '/api/activity'].includes(p) || p.startsWith('/api/files/')) slot = takeSlot(sess.personId, ws.slug)
     else return json(res, 404, NOT_FOUND)
@@ -349,7 +339,7 @@ export function makeFrontDesk(cfg = config()) {
     }
     if (p === '/api/files' && req.method === 'POST') {
       const name = url.searchParams.get('name') ?? ''
-      const tooBig = { error: 'too_large', message: `The file is larger than ${cfg.maxUpload / 1024 / 1024} MB.` }
+      const tooBig = { error: 'too_large', message: tooLargeMessage(cfg.maxUpload) }
       // A signed-in upload may take its time, but not trickle: under 32 KiB in 30 s ends it.
       let got
       let moved = 0
@@ -460,6 +450,8 @@ export function makeFrontDesk(cfg = config()) {
   }
 
   async function handle(req, res) {
+    // A request pipelined behind one already refused and closing is not answered.
+    if (lingering(req)) return req.socket.destroy()
     secure(res, https)
     if (req.headers.host !== originHost) return json(res, 421, { error: 'wrong_host' })
     const url = new URL(req.url ?? '/', cfg.origin)
@@ -500,7 +492,7 @@ export function makeFrontDesk(cfg = config()) {
              WHERE m.person_id = ? AND w.status = 'active' ORDER BY w.name`,
           )
           .all(sess.personId)
-        return json(res, 200, { person: { handle: sess.handle, name: sess.name }, csrf: sess.csrf, workspaces: list, machine: { working: working(), capacity: cfg.capacity }, policy: { deleteNotice: cfg.deleteNotice }, notices: auth.notices(sess) })
+        return json(res, 200, { person: { handle: sess.handle, name: sess.name }, csrf: sess.csrf, workspaces: list, machine: { working: working(), capacity: cfg.capacity }, policy: { deleteNotice: cfg.deleteNotice, maxUpload: cfg.maxUpload }, notices: auth.notices(sess) })
       }
       if (p === '/api/signout' && req.method === 'POST') {
         auth.signOut(sess)
