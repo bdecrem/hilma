@@ -13,7 +13,7 @@ Started 2026-11-15. The plan, the promise and its limits are in the private note
 | **Model gateway** | `gateway/server.mjs`: the one address a workspace may reach. Holds the model server's address and key, checks who is calling, caps size, concurrency, time and weekly tokens, keeps one line per request and never any content | built and tested (`gateway/test.mjs`), used by the spike; see [The gateway](#the-gateway) |
 | **Model** | an OpenAI-compatible server. On the Mac Studio (arrives Nov 30 to Dec 3, 2026): a local MLX server. Until then: Together.ai, made-up data only | stand-in works with GLM-5.3-Flash |
 | **Workspace** | `workspace/`: one sealed Linux VM per workspace (Apple `container` 1.7.1) with no network at all; one socket leads to the gateway and nowhere else | built and proven on the mini (`workspace/check.mjs`, 55 checks); see [The workspace](#the-workspace) |
-| **Front desk and page** | sign-in with passkeys, our own web page, starts and stops workspaces | not built |
+| **Front desk and page** | `frontdesk/`: the one service a browser talks to. Passkey sign-in by invitation, the platform database (one SQLite file), roles, the audit log, files and the opencode door to each sealed workspace; serves `web/` (look A) from the same origin | built and proven on the mini (`frontdesk/check.mjs`); see [The front desk](#the-front-desk) |
 | **Way in** | Tailscale; nothing on the public internet | not built |
 | **Landing page** | `site/`: Ola's front door, a static page built into `public/ola-site/` for ola.cx, with no third-party requests (`site/check.mjs` proves it); see `site/README.md` | built, not live |
 
@@ -208,10 +208,10 @@ VM's memory, so bounded by it) are the only places anything can be written. Befo
 512 GiB sparse image on the host, outside the volume's limit, invisible to `files`, and kept across
 `stop`. The agent runs as `work` (uid 1000) with no capabilities (`--cap-drop ALL`), no sudo, and no
 setuid or setgid program in the image (Debian's `su`, `passwd`, `mount` and the rest are stripped). Image: Debian bookworm-slim pinned by digest, opencode 2.3.0 checked
-against npm's sha512, python3, socat, nothing else (no curl, no CA bundle, no ssh). Image tag `ola-workspace:2.3.0-2`.
+against npm's sha512, python3, socat, nothing else (no curl, no CA bundle, no ssh). Image tag `ola-workspace:2.3.0-3` (2.3.0-3 added `ola-get` and `ola-rm` for the front desk's downloads and deletes, and a file's mtime in `ola-files`).
 
 ```bash
-node workspace/ws.mjs image                    # build ola-workspace:2.3.0-2 (about 25 s)
+node workspace/ws.mjs image                    # build ola-workspace:2.3.0-3 (about 25 s)
 node workspace/ws.mjs create alice             # 4 CPUs, 6 GiB, 50 GiB: the ceilings
 node workspace/ws.mjs create test --memory 1g --disk 1g --cpus 1   # lower only; higher is refused
 node workspace/ws.mjs start alice              # opens the door, boots, waits for opencode
@@ -299,6 +299,167 @@ three full runs of the check, the last 55 of 55:
 restart policy); doors as launchd jobs; per-workspace tokens read by the gateway from the
 platform DB instead of a restart; idle stop after 30 minutes; ssh into a workspace; backups of
 the volumes; a test VM left up for the outside reviewer.
+
+## The front desk
+
+`frontdesk/`: the one service a customer's browser talks to. It replaces `web/dev.mjs` (which
+stays, for working on the page with no sign-in) and keeps the page's three paths, so the page
+changed only where it had to: a sign-in screen, the person's projects, a header on each request.
+
+```
+browser ── TLS (Caddy on the Studio, later) ──► front desk, 127.0.0.1 only (frontdesk/server.mjs)
+                                                  │  web/dist: the page, CSP default-src 'none' + self
+                                                  │  /api/auth/*   passkeys (invitation, sign-in), rate-limited
+                                                  │  /api/me, /api/signout
+                                                  │  /api/project, /api/files, /api/activity   ─┐ X-Ola-Workspace,
+                                                  │  /oc/api/*  (web/server/proxy.mjs ALLOWED)  ─┘ membership per request
+                                                  ├── platform.db (node:sqlite) + frontdesk.key (600, beside it)
+                                                  ├── ws.mjs start / ola-put / ola-get / ola-rm / ola-files  (container exec)
+                                                  └── ~/.ola/ws/<id>/opencode.sock (desk.mjs) + the workspace's opencode password
+                                                         └─► sealed VM ─ door ─► gateway ─► model
+```
+
+**The platform database** (`frontdesk/db.mjs`, one SQLite file, migrations numbered in
+`schema_migrations`, mode 600 in a 700 folder, WAL, `secure_delete`): `people` (handle, a
+display name the admin types, status, admin flag, a random WebAuthn user id), `invitations`
+(sha256 of the token, expiry, used), `passkeys` (credential id, public key, counter), `sessions`
+(sha256 of the cookie, created, expires, last used, revoked; no IP, no user agent), `teams`,
+`memberships` (owner, member, viewer), `workspaces` (the `ws.mjs` id), `uploads` and `audit`.
+**No file name, file content or text from a person is stored.** A file is identified by
+`name_ref`, an HMAC of its name under a key kept in `frontdesk.key` beside the database (so a
+copy of the database alone cannot test names), plus its sha256 and size. The audit log's columns
+are numbers, fixed words (a CHECK constraint lists every action), keyed hashes and sha256s:
+`person_added`, `invited`, `passkey_registered`, `signed_in`, `sign_in_refused`, `signed_out`,
+`sessions_revoked`, `person_suspended`, `workspace_created`, `member_added`, `member_removed`,
+`role_changed`, `file_uploaded`, `file_downloaded`, `file_deleted`, `run_started`,
+`file_read_by_run`, `shown_to_cloud_agent`. `GET /api/activity` shows a workspace's members its
+own log, with names matched back from the files still there.
+
+**Sign-in: passkeys only, by invitation** (`frontdesk/auth.mjs`, `@simplewebauthn/server`
+14.0.3, pinned). `admin.mjs invite <handle>` prints a single-use link that expires (72 h by
+default); its token is in the fragment (`/#/invite/<token>`), so it is in no request line or
+Referer; the page posts it. Registration requires a resident key and user verification
+(Face ID, Touch ID, Windows Hello, a PIN), attestation none, ES256 or RS256. The invitation is
+spent in the same transaction that stores the passkey. Sign-in uses discoverable credentials, so
+the page asks for nothing but the passkey; the returned user handle must match the passkey's
+owner, and the signature counter is kept. A ceremony (challenge) lives 5 minutes in memory and
+is good once, right or wrong. No passwords, no email sign-in, no recovery other than a new
+invitation from Bart.
+
+**Sessions** are a random 32-byte token in `__Host-ola` (HttpOnly, Secure, SameSite=Strict,
+Path=/, no Domain). The database keeps its sha256. Every request checks: not revoked, before
+its absolute expiry (14 days), used within the idle limit (24 hours), person active. Sign-out
+revokes it; `admin.mjs revoke-sessions` and `suspend` end every session of a person at once.
+**CSRF**: a write must carry our exact `Origin` and `X-Ola-CSRF`, an HMAC of the session id the
+page learns from `/api/me`, compared in constant time; a fetch marked cross-site or same-site
+(`Sec-Fetch-Site`) is refused on `/api` and `/oc`. **Rate limits** on `/api/auth/*`: per client
+address (10 at once, 10 a minute) and for everyone together (60 a minute), in memory only.
+
+**Authorization on every request.** The page names its workspace in `?w=<slug>` (per tab) and
+sends it as `X-Ola-Workspace` (a download link, which cannot carry a header, as `?w=`). The front
+desk looks up the person's role in that workspace's team on each request, so removing a member
+takes effect on their next request. Not a member, a closed workspace, a malformed name: 404,
+the same answer as a workspace that does not exist. Viewers read (the project, files, downloads,
+conversations); owners and members also upload, delete and run. The opencode routes the page
+may use, and whether each needs `read` or `run`, are one list: `ALLOWED` in
+`web/server/proxy.mjs`, used by both the front desk and the dev server. Anything else is 403.
+The proxy talks to the workspace's desk socket with the workspace's opencode password, read
+from its secrets file (600) per request, never sent to the browser. What comes back is the
+workspace's word (the agent can replace opencode on its own loopback): its type is forced to
+JSON or an event stream, a plain reply is capped at 32 MiB, and every API response carries a
+`sandbox` CSP and `nosniff`.
+
+**Files** go through the workspace's own tools over `container exec`, without blocking the
+server: uploads stream into `ola-put` (50 MiB by default, plain names only, counted and hashed
+on the way and compared with what the VM reports; no copy on the host's disk), downloads come
+from `ola-get` (which opens each part of the path with `O_NOFOLLOW`, so a link the agent plants,
+say to `/proc/1/environ`, is refused), deletes from `ola-rm`, the list from `ola-files`. Each is
+in the audit log. The delete confirmation's text is a setting (`OLA_FD_DELETE_NOTICE`); the
+default says the product decision: the file leaves the workspace at once and stays in encrypted
+backups for up to 14 days.
+
+**Serving.** One origin: the built page and the API. Every response: HSTS, `nosniff`,
+`Referrer-Policy: no-referrer`, `X-Frame-Options: DENY`, COOP and CORP same-origin, a
+Permissions-Policy. The page's CSP: `default-src 'none'; script-src 'self'; style-src 'self';
+img-src 'self' data:; font-src 'self'; connect-src 'self'; … frame-ancestors 'none'` (no inline
+script; `index.html` has none). The Host header must be the origin's, or 421. The server binds
+127.0.0.1 (or ::1) and refuses any other bind address.
+
+**The preview origin (not in this milestone).** Nothing a workspace makes is ever served from
+this origin as a page: downloads are `attachment` with a `sandbox` CSP. Sites and previews the
+agent builds will be served from a **separate registrable domain** (for example
+`ola-preview.net`, not `preview.ola.cx`: a subdomain is the same site, so SameSite=Strict
+cookies would be sent to it and its pages could be "same-site" to the app), each preview on its
+own subdomain, with a sandboxed CSP, no cookies of ours, and access by a short-lived signed
+link minted here for members. The seam is the "Open" action on a thing; today it downloads.
+
+**"People working"** in the header is the number of people who made a request in the last five
+minutes (counted in memory, never written, never who), out of the 4 workspaces the machine runs
+at once.
+
+**The admin CLI** (`frontdesk/admin.mjs`; no admin web page in this milestone):
+
+```bash
+cd apps/activist-ai/frontdesk && npm ci
+export OLA_FD_ORIGIN=http://localhost:4700   # https://app.ola.cx on the Studio
+node admin.mjs add-person maria --name "Maria L."
+node admin.mjs create-workspace eviction --name "Spring eviction report" --team ndtu --team-name "North District Tenants’ Union" --owner maria
+node admin.mjs add-member ndtu dana member        # or viewer, owner; run again to change a role
+node admin.mjs invite maria                       # prints the link once; send it by a channel you trust
+node admin.mjs remove-member ndtu dana | revoke-sessions maria | suspend maria
+node admin.mjs shown-to-cloud eviction --by maria # record a cloud agent's look, with her yes
+node admin.mjs audit --workspace eviction | list
+node server.mjs                                   # serves http://localhost:4700 on 127.0.0.1 only
+```
+
+`create-workspace` calls `ws.mjs create`; restart the gateway afterwards (it reads its tokens at
+start). Settings: `OLA_FD_ORIGIN`, `OLA_FD_PORT`, `OLA_FD_BIND`, `OLA_FD_DATA`
+(`~/.ola-frontdesk`), `OLA_FD_DIST`, `OLA_FD_MAX_UPLOAD_MB`, `OLA_FD_SESSION_HOURS`,
+`OLA_FD_IDLE_HOURS`, `OLA_FD_SIGNIN_BURST`, `OLA_FD_SIGNIN_PER_MIN`, `OLA_FD_DELETE_NOTICE`,
+and the workspace's `OLA_HOME` and `OLA_GATEWAY_PORT`. The web page is built on the iMac
+(`cd web && npm run build`) and copied with the rest.
+
+**Threat model.** Built against: (1) an outsider on the internet with no account (guessing
+invitations and sessions, CSRF, clickjacking, DNS rebinding, a hostile site the person visits);
+(2) a signed-in person reaching a workspace that is not theirs, or doing more than their role
+allows; (3) a stolen cookie (it dies at sign-out, revocation, expiry or idle); (4) a hostile
+agent inside a workspace, whose every byte back is untrusted (typed and capped replies, strict
+file lists, no symlink followed, no host path built from what it says, nothing it makes served
+as a page); (5) a copy of the platform database (no session or invitation in clear, no file
+name or content). Not in it: Bart or anyone with the host account (it reads every workspace;
+M3 of the workspace review), the relay and TLS (not built), the browser or the person's device
+itself, and opencode's own permission prompts as a boundary.
+
+**The proofs: `node frontdesk/check.mjs`** on the mini (after `npm ci` and `npx playwright
+install chromium` in `frontdesk/`). It makes three made-up people and two 1 GiB workspaces and
+drives Chromium with a virtual authenticator holding each person's passkey: invite → passkey →
+project; an invitation works once and expires; the cookie's attributes; sign-out and sign-in
+again; bob gets 404 from all 17 workspace routes of alice's workspace by API (and for malformed
+names) and sees "not one of yours" by direct URL; the opencode door refuses routes the page
+does not use; upload, list, download (same bytes) and delete through the page, with the 14-day
+wording in the confirmation, each in the audit log, and no file name or content anywhere in the
+database file; size and name limits and a planted symlink refused; a viewer reads and cannot
+upload, delete or run (every write route); 7 CSRF and cross-site cases refused, and a hostile
+page's form post and fetch do nothing; a stolen cookie fails on every route after revocation
+and the open page goes back to sign-in; expiry and idle limit; the headers and a wrong Host;
+the working count; one real request in the drawer inside the sealed workspace through the
+gateway (Together as the stand-in; `--no-live` skips it); the sign-in rate limits; and no
+request from any page to another origin.
+
+**Measured 2026-11-16 on the mini:** `frontdesk/check.mjs` **22 of 22** (twice with the live
+request: GLM-5.3-Flash read `survey.csv` and wrote `summary.md` inside fd-a, 3 gateway requests
+from `ws-fd-a`, one `file_read_by_run` row, the right count of 48), and 21 of 21 with
+`--no-live`; `workspace/check.mjs` 64 of 64 on image 2.3.0-3; `web/check.mjs` 21 of 21 on the
+iMac; `npm test` in `frontdesk/` (6) and `web/` (10).
+
+**Not done yet.** Idle stop of workspaces (30 minutes); rotating a workspace's opencode password
+and gateway token when a member is removed; the gateway still needs a restart after a new
+workspace (M6); per-address rate limits behind the relay need the PROXY protocol (until then the
+global bucket is what holds); "read by a run" sees opencode's `read` tool, not a shell command
+that reads a file; an upload cut off mid-way can leave a hidden `.upload-*` temp file in the
+workspace; the activity view in the page (the API exists); a second passkey from inside the app
+(today: a new invitation); the preview origin; the admin web page; a launchd job for the front
+desk; and the outside review.
 
 ## Rules for this code
 

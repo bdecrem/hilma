@@ -1,0 +1,20 @@
+{
+  "name": "ola-frontdesk",
+  "private": true,
+  "type": "module",
+  "description": "Ola's front desk: sign-in, the platform database, and the one door from a browser to a workspace. See ../README.md, The front desk.",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test test/*.test.mjs",
+    "check": "node check.mjs"
+  },
+  "dependencies": {
+    "@simplewebauthn/server": "14.0.3"
+  },
+  "devDependencies": {
+    "playwright": "1.59.1"
+  },
+  "engines": {
+    "node": ">=22.13"
+  }
+}
