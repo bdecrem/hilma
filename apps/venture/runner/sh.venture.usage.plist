@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- On Bart's iMac (where the Claude Code sessions run): at 9:45 store the last 24 h of model usage
+     in venture_state "usage" for the 10 am text (scripts/venture/morning.mjs). Install:
+     cp to ~/Library/LaunchAgents/ and launchctl bootstrap gui/$(id -u) <plist>. -->
+<plist version="1.0"><dict>
+  <key>Label</key><string>sh.venture.usage</string>
+  <key>ProgramArguments</key><array>
+    <string>/opt/homebrew/bin/node</string><string>scripts/venture/usage.mjs</string><string>24</string><string>--all</string><string>--save</string>
+  </array>
+  <key>WorkingDirectory</key><string>/Users/bart/Documents/code/hilma</string>
+  <key>StartCalendarInterval</key><dict>
+    <key>Hour</key><integer>9</integer>
+    <key>Minute</key><integer>45</integer>
+  </dict>
+  <key>StandardOutPath</key><string>/Users/bart/Library/Logs/venture-usage.log</string>
+  <key>StandardErrorPath</key><string>/Users/bart/Library/Logs/venture-usage.log</string>
+</dict></plist>

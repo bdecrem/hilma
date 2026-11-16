@@ -23,7 +23,7 @@ const db = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY, { auth: { pe
 const key = process.env.VENTURE_KEY || env.VENTURE_KEY || readFileSync(new URL('apps/venture/private/KEY', root), 'utf8').trim()
 const dry = process.argv.includes('--dry')
 
-const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' })
+const today = process.env.MORNING_TODAY || new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' }) // MORNING_TODAY: test a day ahead with --dry
 const sent = await getState(db, 'morning_text')
 if (!dry && sent?.value?.date === today) {
   console.log(`already sent today (${today})`)
@@ -44,11 +44,29 @@ const plate = section('On my plate')
   .map((m) => `${m[1]} ${plain(m[2]).split(/(?<=\.)\s/)[0]}`)
 const waiting = section('Waiting on you').map((l) => (l.match(/^\*\*([^*]+?):?\*\*/)?.[1] ?? plain(l).split(/[:.,]/)[0]).replace(/[:,.]+$/, '').trim())
 
+// Fable usage (Bart, 2026-11-16: "send me a USAGE update - the correct numbers are 70% this time
+// tomorrow, 80% this time Wed, 90% this time Thu. if not, we need to increase the percentage of tasks
+// given to Opus agents"). The iMac stores the last 24 h of Claude usage at 9:45 (usage.mjs --all --save,
+// launchd sh.venture.usage); the weekly % is an estimate from his 60% reading of Nov 16 (venture_state
+// "fable_week"). It only sees this iMac's sessions, so his real number from Settings wins.
+const usage = (await getState(db, 'usage'))?.value
+const fw = (await getState(db, 'fable_week'))?.value
+let usageLine = ''
+const fresh = usage && Date.now() - Date.parse(usage.at) < 6 * 3600_000
+if (fw && fresh && fw.est_date !== today) {
+  const est = Math.round(fw.est_pct + (usage.fable_out / fw.cap_est) * 100)
+  const target = fw.targets?.[today]
+  const k = (x) => `${Math.round(x / 1000)}k`
+  usageLine = `Usage: Fable about ${est}% of the week (my estimate)${target ? `, target ${target}%` : ''}. Last 24 h: Fable ${k(usage.fable_out)}, Opus ${k(usage.opus_out)} tokens out.${target ? (est > target ? ' Over: I am moving more work to Opus agents today.' : ' On track.') : ''} Send me the real % from Settings if it differs.`
+  if (!dry) await setState(db, 'fable_week', { ...fw, est_pct: est, est_date: today })
+} else if (fw && !fresh) usageLine = 'Usage: no fresh numbers from the iMac this morning (is it asleep?). Send me the % from Settings.'
+
 const weekday = new Date().toLocaleDateString('en-US', { weekday: 'long', timeZone: 'America/Los_Angeles' })
 const text = [
   `Good morning. ${weekday}'s check-in: when works for you? Reply with a time, and "cli" or "voice".`,
   plate.length ? `On my plate:\n${plate.map((p, i) => `${i + 1}. ${p}`).join('\n')}` : '',
   waiting.length ? `Waiting on you: ${waiting.join('; ')}.` : '',
+  usageLine,
   `Voice, any time: https://ola.cx/venture/call/checkin?k=${encodeURIComponent(key)}`,
   'The board: https://app.kochitolabs.com',
 ]
