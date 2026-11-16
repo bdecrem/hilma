@@ -346,6 +346,21 @@ All secrets and API keys live in `.env.local` (gitignored). Key variables:
 > `ANTHROPIC_API_KEY`. Nothing about the Discord bots is configured from
 > `.env.local`. See `apps/golembot/CLAUDE.md`.
 
+- `ANTHROPIC_API_KEY` — **expiring keys since 2026-11.** The key named `oct2026`
+  (ends `kgAA`) dies on 2026-11-21; its replacement `nov2027` (prefix
+  `sk-ant-usr-`, ends `hgAA`) went in on 2026-11-16: this iMac's `.env.local`
+  and `apps/mrd/.env`, Vercel project `hilma` (production + preview, then a
+  redeploy), and on the Mac mini `~/.macplus-backend.env`,
+  `~/Documents/code/hilma/.env.local`, `~/hilma-venture/.env.local` (the 18
+  `sh.macplus.*` launchd services were kickstarted to load it). **Any other
+  machine (M1 iMac, MacBook Air) still carries the old key**: if its
+  `.env.local` key ends `kgAA`, copy the line from the mini
+  (`ssh admin@171.66.240.175 'grep ^ANTHROPIC_API_KEY= ~/Documents/code/hilma/.env.local'`).
+  Next rotation, same list: `vercel env update ANTHROPIC_API_KEY production`
+  (and `preview`), `vercel redeploy <prod url> --target production`, then the
+  mini's files and `launchctl kickstart -k gui/501/sh.macplus.<name>` for each.
+  Check which key a process holds by its last four characters only; printing an
+  env file or `ps eww` output puts every secret in the transcript.
 - `TOGETHER_API_KEY` — Together.ai API for model fine-tuning and inference
 - `TWITTER_*` — Twitter API credentials
 - `DISCORD_*` — Discord bot credentials
