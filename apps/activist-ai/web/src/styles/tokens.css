@@ -1,0 +1,108 @@
+/* Design tokens: look A, "paper under the lamp" (~/Desktop/ola-brand/app/spec.md).
+   The room is evening blue: navigation and the machine live there. Whatever you read is paper.
+   Lamp yellow marks only what is happening now. Vermilion marks only what needs you.
+   Contrast ratios are the spec's, measured against the surface each color is used on. */
+
+@font-face {
+  font-family: 'Bricolage Grotesque';
+  src: url('/fonts/bricolage.woff2') format('woff2');
+  font-weight: 400 760;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Literata';
+  src: url('/fonts/literata.woff2') format('woff2');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Literata';
+  src: url('/fonts/literata-italic.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+:root {
+  /* The room */
+  --room: #25407a;
+  --room-selected: #1f386d;
+  --room-deep: #1d3566;
+  --on-room: #f7f0e3; /* 8.9 */
+  --mist: #c9d2ea; /* 6.6 on room */
+  --dim: #9fb0d6; /* 4.6 on room */
+  --lamp: #efcf82; /* 6.6 on room */
+
+  /* Paper */
+  --paper: #f7f0e3;
+  --paper-2: #efe6d3; /* details, card headers */
+  --rule: #dccfb6;
+  --ink: #141c33; /* 14.9 */
+  --ink-2: #4b5268; /* 6.8 */
+  --ink-3: #5c6175; /* 5.4; 4.9 on paper-2 */
+  --link: #25407a; /* blue on paper, 8.9 */
+
+  /* Marks */
+  --vermilion: #ff6a3d; /* marks only, never text on paper */
+  --vermilion-text: #b93d17; /* as text on paper, 5.0 */
+  --lamp-wash: #f6e4ae; /* with ink 13.4 */
+  --leaf: #3c7334; /* 4.6 */
+  --bar: #25407a;
+  --bar-track: #e6dcc6;
+  --chart-green: #2f5d4e;
+
+  /* Type */
+  --font-ui: 'Bricolage Grotesque', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-read: 'Literata', ui-serif, Georgia, 'Times New Roman', serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  --fs-display: 34px;
+  --fs-title: 25px;
+  --fs-section: 19px;
+  --fs-read: 17px;
+  --fs-quote: 16.5px;
+  --fs-ui: 15px;
+  --fs-meta: 15px; /* the spec's 13–13.5 is raised: no content under 15 px for readers over forty */
+  --fs-small: 15px; /* chart axis labels; nothing is set smaller */
+  --fs-mono: 15px;
+  --lh-read: 1.62;
+
+  /* Space: a 4 px base */
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 24px;
+  --s6: 32px;
+  --s7: 56px;
+
+  --radius: 3px;
+  --shadow: 0 1px 0 rgba(20, 28, 51, 0.06), 0 6px 18px rgba(10, 18, 40, 0.18);
+  --focus: 0 0 0 3px var(--lamp);
+
+  --t-step: 120ms;
+  --t-sheet: 180ms;
+
+  --drawer-w: 560px;
+  --gutter: 24px;
+
+  color-scheme: light;
+}
+
+@media (max-width: 640px) {
+  :root {
+    --fs-display: 28px;
+    --fs-title: 22px;
+    --fs-read: 16.5px;
+    --gutter: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --t-step: 0ms;
+    --t-sheet: 0ms;
+  }
+}
