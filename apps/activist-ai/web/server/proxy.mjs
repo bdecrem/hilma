@@ -1,4 +1,5 @@
-// The door from the page to the workspace's opencode server.
+// The door from the page to the workspace's opencode server. The one allowlist of opencode routes:
+// the dev server (dev.mjs) and the front desk (../../frontdesk/server.mjs) both use this file.
 //
 // The browser talks to /oc/api/... on our own origin. This module forwards a short list of
 // routes to `opencode serve` with the workspace's Basic-auth password, which the browser never
@@ -7,23 +8,30 @@
 // the autonomy the page asked for, never taken from the browser.
 import http from 'node:http'
 
-/** Routes the page may use. Anything else answers 403. */
+/**
+ * Routes the page may use, and what each needs: `read` (any member, viewers included) or `run`
+ * (owners and members: it starts, steers or answers the agent). Anything else answers 403.
+ */
 export const ALLOWED = [
-  ['GET', /^\/api\/event$/],
-  ['GET', /^\/api\/session$/],
-  ['POST', /^\/api\/session$/],
-  ['GET', /^\/api\/session\/[A-Za-z0-9_-]{1,80}$/],
-  ['PATCH', /^\/api\/session\/[A-Za-z0-9_-]{1,80}$/],
-  ['POST', /^\/api\/session\/[A-Za-z0-9_-]{1,80}\/prompt$/],
-  ['POST', /^\/api\/session\/[A-Za-z0-9_-]{1,80}\/interrupt$/],
-  ['GET', /^\/api\/session\/[A-Za-z0-9_-]{1,80}\/message$/],
-  ['GET', /^\/api\/session\/[A-Za-z0-9_-]{1,80}\/context$/],
-  ['GET', /^\/api\/session\/[A-Za-z0-9_-]{1,80}\/permission$/],
-  ['POST', /^\/api\/session\/[A-Za-z0-9_-]{1,80}\/permission\/[A-Za-z0-9_-]{1,80}\/reply$/],
+  ['GET', /^\/api\/event$/, 'read'],
+  ['GET', /^\/api\/session$/, 'read'],
+  ['POST', /^\/api\/session$/, 'run'],
+  ['GET', /^\/api\/session\/[A-Za-z0-9_-]{1,80}$/, 'read'],
+  ['PATCH', /^\/api\/session\/[A-Za-z0-9_-]{1,80}$/, 'run'],
+  ['POST', /^\/api\/session\/[A-Za-z0-9_-]{1,80}\/prompt$/, 'run'],
+  ['POST', /^\/api\/session\/[A-Za-z0-9_-]{1,80}\/interrupt$/, 'run'],
+  ['GET', /^\/api\/session\/[A-Za-z0-9_-]{1,80}\/message$/, 'read'],
+  ['GET', /^\/api\/session\/[A-Za-z0-9_-]{1,80}\/context$/, 'read'],
+  ['GET', /^\/api\/session\/[A-Za-z0-9_-]{1,80}\/permission$/, 'read'],
+  ['POST', /^\/api\/session\/[A-Za-z0-9_-]{1,80}\/permission\/[A-Za-z0-9_-]{1,80}\/reply$/, 'run'],
 ]
 
+/** What a route needs ('read' or 'run'), or null when the page may not use it. */
+export function routeNeed(method, pathname) {
+  return ALLOWED.find(([m, re]) => m === method && re.test(pathname))?.[2] ?? null
+}
 export function allowed(method, pathname) {
-  return ALLOWED.some(([m, re]) => m === method && re.test(pathname))
+  return routeNeed(method, pathname) !== null
 }
 
 // Never allowed in a workspace, whatever the autonomy: these would reach outside it.
@@ -76,9 +84,17 @@ export function rewriteSessionCreate(raw, work) {
 }
 
 const MAX_BODY = 256 * 1024
+// What comes back from opencode is the workspace's word (the agent can replace opencode on its
+// own loopback): its type is forced to JSON or an event stream, and a plain reply is capped.
+const MAX_REPLY = 32 * 1024 * 1024
 
-export function makeProxy({ target, authorization, work, log = () => {} }) {
-  const upstream = new URL(target)
+/**
+ * One proxy to one workspace's opencode. `target` is a URL (the dev server's local opencode) or
+ * `socketPath` a unix socket (a sealed workspace's desk); `agent` is an optional http.Agent.
+ * `onForward({ method, pathname })` is told about each request that reached opencode with a 2xx.
+ */
+export function makeProxy({ target, socketPath, agent, authorization, work, log = () => {}, onForward = () => {} }) {
+  const upstream = target ? new URL(target) : null
   return async function proxy(req, res, pathname, search) {
     if (!allowed(req.method, pathname)) {
       res.writeHead(403, { 'content-type': 'application/json' }).end(JSON.stringify({ error: 'not_allowed' }))
@@ -114,27 +130,44 @@ export function makeProxy({ target, authorization, work, log = () => {} }) {
         body = Buffer.from(JSON.stringify(rewritten))
       }
     }
-    const headers = { authorization, accept: req.headers.accept ?? '*/*' }
+    const headers = { authorization: typeof authorization === 'function' ? authorization() : authorization, accept: req.headers.accept ?? '*/*' }
     if (body) {
       headers['content-type'] = 'application/json'
       headers['content-length'] = String(body.length)
     }
-    const up = http.request(
-      { host: upstream.hostname, port: upstream.port, method: req.method, path: pathname + search, headers },
-      (upRes) => {
-        const out = { 'cache-control': 'no-store' }
-        for (const h of ['content-type', 'content-length']) if (upRes.headers[h]) out[h] = upRes.headers[h]
-        res.writeHead(upRes.statusCode ?? 502, out)
-        upRes.pipe(res)
-        // opencode went away mid-stream: end the page's stream too, so it notices at once.
-        upRes.on('aborted', () => res.destroy())
-        upRes.on('error', () => res.destroy())
-        res.on('close', () => upRes.destroy())
-      },
-    )
+    const where = socketPath ? { socketPath, agent } : { host: upstream.hostname, port: upstream.port, agent }
+    const up = http.request({ ...where, method: req.method, path: pathname + search, headers }, (upRes) => {
+      const stream = /^text\/event-stream\b/i.test(upRes.headers['content-type'] ?? '')
+      const out = { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'content-type': stream ? 'text/event-stream' : 'application/json; charset=utf-8' }
+      const declared = Number(upRes.headers['content-length'])
+      if (!stream && Number.isFinite(declared)) {
+        if (declared > MAX_REPLY) {
+          upRes.destroy()
+          res.writeHead(502, { 'content-type': 'application/json' }).end(JSON.stringify({ error: 'reply_too_large' }))
+          return
+        }
+        out['content-length'] = String(declared)
+      }
+      res.writeHead(upRes.statusCode ?? 502, out)
+      if (stream) res.flushHeaders?.()
+      let seen = 0
+      upRes.on('data', (c) => {
+        seen += c.length
+        if (!stream && seen > MAX_REPLY) return res.destroy(), upRes.destroy()
+        res.write(c)
+      })
+      upRes.on('end', () => {
+        res.end()
+        if ((upRes.statusCode ?? 500) < 300) onForward({ method: req.method, pathname })
+      })
+      // opencode went away mid-stream: end the page's stream too, so it notices at once.
+      upRes.on('aborted', () => res.destroy())
+      upRes.on('error', () => res.destroy())
+      res.on('close', () => upRes.destroy())
+    })
     up.on('error', (e) => {
       log(`opencode unreachable: ${e.code ?? e.message}`)
-      if (!res.headersSent) res.writeHead(502, { 'content-type': 'application/json' }).end(JSON.stringify({ error: 'workspace_unreachable' }))
+      if (!res.headersSent) res.writeHead(502, { 'content-type': 'application/json' }).end(JSON.stringify({ error: 'workspace_unreachable', message: 'Ola’s computer could not reach this project just now. Nothing was changed.' }))
       else res.destroy()
     })
     // The page went away (closed tab, lost network): stop the upstream request too.

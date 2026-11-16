@@ -7,7 +7,8 @@ import { bytes, cap, count, when } from '../lib/format.ts'
 import { Icon } from './Icon.tsx'
 import { ProblemBox } from './Drawer.tsx'
 
-export function FilesView(props: { onChanged: () => void; uploadRef?: (el: HTMLButtonElement) => void }) {
+export function FilesView(props: { onChanged: () => void; uploadRef?: (el: HTMLButtonElement) => void; canWrite?: boolean; deleteNotice?: string }) {
+  const canWrite = () => props.canWrite !== false
   const [files, { refetch }] = createResource(() => desk.files())
   const [problem, setProblem] = createSignal<Problem | null>(null)
   const [status, setStatus] = createSignal('')
@@ -87,6 +88,7 @@ export function FilesView(props: { onChanged: () => void; uploadRef?: (el: HTMLB
               </Show>
             </p>
           </div>
+          <Show when={canWrite()}>
           <div class="files-upload">
             <input ref={picker} id="file-picker" type="file" multiple class="sr-only" tabindex="-1" onChange={(e) => send(e.currentTarget.files)} />
             <button type="button" class="primary-button" ref={props.uploadRef} disabled={busy()} onClick={() => picker?.click()}>
@@ -94,6 +96,7 @@ export function FilesView(props: { onChanged: () => void; uploadRef?: (el: HTMLB
             </button>
             <p class="upload-line">A file you upload is copied to Ola’s computer, the Mac in Bart’s office. It does not go to any AI company.</p>
           </div>
+          </Show>
         </div>
 
         <p class="files-status" role="status" aria-live="polite">
@@ -119,8 +122,8 @@ export function FilesView(props: { onChanged: () => void; uploadRef?: (el: HTMLB
           </div>
         </dl>
 
-        <FileTable title="You uploaded" files={uploaded()} empty="Nothing yet. Upload a file and Ola can work with it." onDelete={askDelete} />
-        <FileTable title="Ola made from them" files={made()} empty="Nothing yet. What Ola writes for you appears here." onDelete={askDelete} />
+        <FileTable title="You uploaded" files={uploaded()} empty="Nothing yet. Upload a file and Ola can work with it." onDelete={canWrite() ? askDelete : undefined} />
+        <FileTable title="Ola made from them" files={made()} empty="Nothing yet. What Ola writes for you appears here." onDelete={canWrite() ? askDelete : undefined} />
       </div>
 
       <dialog ref={confirm} class="sheet confirm" aria-labelledby="confirm-title" onClose={() => setToDelete(null)}>
@@ -130,7 +133,7 @@ export function FilesView(props: { onChanged: () => void; uploadRef?: (el: HTMLB
               <h2 id="confirm-title" class="sheet-title">
                 Delete {f().path}?
               </h2>
-              <p class="sheet-lede">It is removed from Ola’s computer, and Ola can no longer read it. This cannot be undone. Your own copy, if you have one, is not touched.</p>
+              <p class="sheet-lede">{props.deleteNotice ?? 'It is removed from Ola’s computer, and Ola can no longer read it. This cannot be undone. Your own copy, if you have one, is not touched.'}</p>
               <div class="sheet-actions">
                 <button type="button" class="primary-button danger-fill" onClick={doDelete}>
                   Delete {f().path}
@@ -147,7 +150,7 @@ export function FilesView(props: { onChanged: () => void; uploadRef?: (el: HTMLB
   )
 }
 
-function FileTable(props: { title: string; files: FileEntry[]; empty: string; onDelete: (f: FileEntry) => void }) {
+function FileTable(props: { title: string; files: FileEntry[]; empty: string; onDelete?: (f: FileEntry) => void }) {
   const headingId = `files-${props.title.replace(/\W+/g, '-').toLowerCase()}`
   return (
     <section class="file-group" aria-labelledby={headingId}>
@@ -181,9 +184,11 @@ function FileTable(props: { title: string; files: FileEntry[]; empty: string; on
                     <a href={desk.downloadUrl(f.path)} download={f.path.split('/').pop()}>
                       Download<span class="sr-only"> {f.path}</span>
                     </a>
-                    <button type="button" class="link-button danger" onClick={() => props.onDelete(f)}>
-                      Delete<span class="sr-only"> {f.path}</span>
-                    </button>
+                    <Show when={props.onDelete}>
+                      <button type="button" class="link-button danger" onClick={() => props.onDelete!(f)}>
+                        Delete<span class="sr-only"> {f.path}</span>
+                      </button>
+                    </Show>
                   </td>
                 </tr>
               )}

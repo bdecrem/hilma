@@ -26,6 +26,8 @@ import { makeFiles } from './server/files.mjs'
 import { makeProxy } from './server/proxy.mjs'
 import { projectPayload } from './server/project.mjs'
 import { startFakeModel } from './server/fake-model.mjs'
+import { fixture } from './server/fixture.mjs'
+const fixtureName = fixture.project.name
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const AI = path.join(HERE, '..')
@@ -244,6 +246,17 @@ const server = http.createServer(async (req, res) => {
       if (req.method === 'DELETE') return (await files.remove(rel)) ? json(res, 200, { deleted: rel }) : json(res, 404, { error: 'not_found' })
     }
     if (p === '/api/health') return json(res, 200, { ok: true })
+    // The front desk's /api/me, for one made-up person who owns the one dev workspace. The dev
+    // server has no sign-in; the real one is ../frontdesk/server.mjs.
+    if (p === '/api/me' && req.method === 'GET')
+      return json(res, 200, {
+        person: { handle: 'dev', name: 'You' },
+        csrf: 'dev',
+        workspaces: [{ slug: 'dev', name: fixtureName, team: 'Dev', role: 'owner' }],
+        machine: { working: 1, capacity: 4 },
+        policy: { deleteNotice: 'It is removed from Ola’s computer, and Ola can no longer read it. This cannot be undone. Your own copy, if you have one, is not touched.' },
+      })
+    if (p === '/api/signout' && req.method === 'POST') return json(res, 200, { ok: true })
     // Dev-only switches for the checks: stop and start the workspace's opencode.
     if (process.env.OLA_DEV_CONTROLS === '1' && p === '/__dev/opencode' && req.method === 'POST') {
       const want = url.searchParams.get('to')

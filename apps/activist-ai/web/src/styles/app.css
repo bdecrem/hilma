@@ -1580,3 +1580,233 @@ code {
 .turn {
   scroll-margin-top: var(--s4);
 }
+
+/* ---------------------------------------------------------------- the way in (Gate.tsx)
+   The room, the brushed greeting, the study at night: the sign-in mock in
+   ~/Desktop/ola-brand/7-letter-and-desk/b2 ("It travels"), with a passkey in place of the
+   email and passcode fields. */
+.gate {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding: max(var(--s6), env(safe-area-inset-top)) max(var(--s7), env(safe-area-inset-right)) max(var(--s5), env(safe-area-inset-bottom)) max(var(--s7), env(safe-area-inset-left));
+  background: var(--room);
+  color: var(--on-room);
+}
+.gate-main {
+  flex: 1;
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--s5);
+}
+.gate-main.wide {
+  max-width: 1180px;
+}
+.gate-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  gap: var(--s7);
+  align-items: center;
+}
+.gate-letter {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s5);
+}
+.gate-hello {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--s3);
+  flex-wrap: wrap;
+  margin: 0;
+}
+.gate-word {
+  display: block;
+  width: 215px;
+  height: auto;
+}
+.gate-name {
+  font-size: 56px;
+  font-weight: 720;
+  letter-spacing: -0.022em;
+  line-height: 1;
+  padding-bottom: 26px;
+}
+.gate-lede {
+  font-family: var(--font-read);
+  font-size: 23px;
+  line-height: 1.5;
+  color: var(--mist);
+  max-width: 30ch;
+}
+.paper-button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 56px;
+  padding: 0 var(--s5);
+  border-radius: 6px;
+  border: none;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: 19px;
+  cursor: pointer;
+}
+.paper-button:hover:not(:disabled) {
+  background: #ece3d1;
+}
+.paper-button:disabled {
+  background: var(--mist);
+  color: var(--ink-2);
+  cursor: default;
+}
+.gate-how {
+  font-size: 15px;
+  color: var(--mist);
+  max-width: 44ch;
+  line-height: 1.5;
+}
+.gate-problem {
+  display: flex;
+  gap: var(--s3);
+  align-items: baseline;
+  padding: var(--s3) var(--s4);
+  border-left: 3px solid var(--vermilion);
+  background: var(--room-deep);
+  color: var(--on-room);
+  max-width: 48ch;
+  font-size: 16px;
+}
+.gate-art {
+  margin: 0;
+}
+.gate-art img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.gate-art figcaption {
+  margin-top: var(--s2);
+  text-align: right;
+  font-family: var(--font-read);
+  font-style: italic;
+  font-size: 15px;
+  color: var(--dim);
+}
+.gate-foot {
+  max-width: 1180px;
+  width: 100%;
+  margin: var(--s6) auto 0;
+  padding-top: var(--s4);
+  border-top: 1px solid rgba(201, 210, 234, 0.28);
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  color: var(--mist);
+  font-size: 15px;
+}
+.gate-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s4);
+  flex-wrap: wrap;
+}
+.gate-title {
+  font-size: 34px;
+  font-weight: 720;
+  letter-spacing: -0.022em;
+  line-height: 1.15;
+}
+.gate-projects {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: var(--s4);
+}
+.gate-project {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+  padding: var(--s4) var(--s5);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--ink);
+  text-decoration: none;
+  box-shadow: 0 1px 2px rgba(10, 20, 45, 0.25);
+}
+.gate-project:hover .gate-project-name {
+  text-decoration: underline;
+}
+.gate-project-name {
+  font-size: 20px;
+  font-weight: 700;
+}
+.gate-project-meta {
+  color: var(--ink-2);
+  font-size: 15px;
+}
+.viewer-note {
+  position: fixed;
+  left: 50%;
+  bottom: var(--s5);
+  transform: translateX(-50%);
+  max-width: min(640px, calc(100vw - 32px));
+  padding: var(--s3) var(--s4);
+  border-radius: var(--radius);
+  background: var(--room-deep);
+  color: var(--mist);
+  font-size: 15px;
+}
+@media (max-width: 860px) {
+  .gate {
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+  }
+  .gate-grid {
+    grid-template-columns: 1fr;
+    gap: var(--s5);
+  }
+  .gate-art {
+    order: -1;
+    max-width: 340px;
+  }
+  .gate-art figcaption {
+    display: none;
+  }
+  .gate-word {
+    width: 150px;
+  }
+  .gate-name {
+    font-size: 40px;
+    padding-bottom: 18px;
+  }
+  .gate-lede {
+    font-size: 19px;
+  }
+  .paper-button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+@media (max-width: 760px) {
+  /* The phone's top line keeps the icon; the words stay for screen readers. */
+  .narrow-hide {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .topbar-right .signout {
+    padding: 0 var(--s2);
+    font-size: 15px;
+  }
+}

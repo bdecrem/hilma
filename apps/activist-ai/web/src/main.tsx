@@ -1,6 +1,6 @@
 import { render } from 'solid-js/web'
-import { App } from './App.tsx'
+import { Gate } from './components/Gate.tsx'
 import './styles/tokens.css'
 import './styles/app.css'
 
-render(() => <App />, document.getElementById('root')!)
+render(() => <Gate />, document.getElementById('root')!)

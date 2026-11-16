@@ -86,10 +86,24 @@ export interface Project {
   filesUploaded: number
 }
 
+export type Role = 'owner' | 'member' | 'viewer'
+
 export interface ProjectPayload {
   project: Project
+  /** How many people are working on the machine right now, and how many it can take. Never who. */
   machine: { working: number; capacity: number }
   things: Thing[]
+  /** The signed-in person's role in this workspace (the dev server leaves it out: owner). */
+  role?: Role
+}
+
+/** GET /api/me: the signed-in person, their workspaces, and the front desk's wording. */
+export interface Me {
+  person: { handle: string; name: string }
+  csrf: string
+  workspaces: { slug: string; name: string; team: string; role: Role }[]
+  machine: { working: number; capacity: number }
+  policy: { deleteNotice: string }
 }
 
 export interface FileEntry {

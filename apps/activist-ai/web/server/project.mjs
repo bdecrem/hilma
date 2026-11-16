@@ -60,7 +60,7 @@ function markdownToSections(text) {
 }
 
 /** Things made from what Ola wrote in the workspace. */
-async function derivedThings(files) {
+export async function derivedThings(files) {
   const list = await files.list()
   const things = []
   for (const f of list) {

@@ -1,6 +1,7 @@
 // The app: a project opens on its things; "Ask Ola" is a bar at the bottom that opens into a
 // drawer with the conversation; "What Ola has of yours" is one click from the header.
 // Routes are hash routes (#/ and #/files) so the front desk serves one page for every path.
+import type { Me, Role } from './lib/types.ts'
 import { createEffect, createResource, createSignal, For, onCleanup, onMount, Show } from 'solid-js'
 import { desk, DeskError } from './lib/api.ts'
 import { createOla } from './lib/ola.ts'
@@ -18,7 +19,8 @@ const askOf = (hash: string): string | null => new URLSearchParams(hash.split('?
 /** `?still` in the address: no live stream (screenshots, printing). */
 const STILL = new URLSearchParams(location.search).has('still')
 
-export function App() {
+export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
+  const canRun = () => props.role !== 'viewer'
   const [route, setRoute] = createSignal<Route>(routeOf(location.hash))
   const onHash = () => setRoute(routeOf(location.hash))
   window.addEventListener('hashchange', onHash)
@@ -145,7 +147,10 @@ export function App() {
             )}
           </Show>
           <button type="button" class="ghost-button on-room" onClick={() => setPromise(true)}>
-            <Icon name="machine" size={18} /> On this machine
+            <Icon name="machine" size={18} /> <span class="narrow-hide">On this machine</span>
+          </button>
+          <button type="button" class="ghost-button on-room signout" onClick={props.onSignOut} title={`Signed in as ${props.me.person.name}`}>
+            Sign out
           </button>
         </div>
       </header>
@@ -163,7 +168,7 @@ export function App() {
               <a class="back-link" href="#/">
                 <Icon name="back" size={16} /> Back to {project() ? count(project()!.things.length, 'thing') : 'the things'}
               </a>
-              <FilesView onChanged={() => void refetch()} uploadRef={(el) => (uploadButton = el)} />
+              <FilesView onChanged={() => void refetch()} uploadRef={(el) => (uploadButton = el)} canWrite={canRun()} deleteNotice={props.me.policy.deleteNotice} />
             </>
           }
         >
@@ -182,9 +187,11 @@ export function App() {
               <a class="ghost-button on-room" href="#/files">
                 <Icon name="eye" size={18} /> What Ola has of yours
               </a>
-              <button type="button" class="ghost-button on-room" onClick={addFiles}>
-                <Icon name="plus" size={18} /> Add files
-              </button>
+              <Show when={canRun()}>
+                <button type="button" class="ghost-button on-room" onClick={addFiles}>
+                  <Icon name="plus" size={18} /> Add files
+                </button>
+              </Show>
             </div>
           </section>
           <Show when={project()} fallback={<p class="loading">Opening your project…</p>}>
@@ -201,7 +208,12 @@ export function App() {
         </Show>
       </main>
 
-      <div class="askdock" classList={{ hidden: drawer() }}>
+      <Show when={!canRun()}>
+        <p class="viewer-note" role="note">
+          You can read this project. Asking Ola and adding or deleting files are for its owner and members.
+        </p>
+      </Show>
+      <div class="askdock" classList={{ hidden: drawer() || !canRun() }}>
         <form class="askbar" onSubmit={sendFromBar} aria-label="Ask Ola">
           <button type="button" class="askbar-open" onClick={openDrawer} aria-expanded={drawer()} aria-controls="ask-drawer" aria-label="Ask Ola">
             <span class="drawer-mark" classList={{ working: working() }} aria-hidden="true" />

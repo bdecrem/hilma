@@ -7,6 +7,7 @@ import { createStore, produce, reconcile } from 'solid-js/store'
 import { applyEvent, emptyConversation, startTurn, turnsFromMessages, type ConversationState } from './conversation.ts'
 import { describeApproval } from './steps.ts'
 import type { Autonomy, Connection, Problem } from './types.ts'
+import { deskHeaders } from './api.ts'
 
 export interface EarlierConversation {
   id: string
@@ -33,7 +34,8 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
  * stream would keep the page from ever being "loaded".
  */
 export function createOla({ baseUrl = new URL('/oc', location.origin).href, live = true }: { baseUrl?: string; live?: boolean } = {}) {
-  const client = OpenCode.make({ baseUrl })
+  // The workspace and the CSRF token ride on every request; the front desk checks both.
+  const client = OpenCode.make({ baseUrl, headers: deskHeaders() })
   const [state, setState] = createStore<OlaState>({ ...emptyConversation(), connection: 'connecting', lostSince: null, autonomy: 'go', problem: null, earlier: [] })
   let disposed = false
   let streamAbort: AbortController | null = null
