@@ -15,6 +15,7 @@ Started 2026-11-15. The plan, the promise and its limits are in the private note
 | **Workspace** | one sealed Linux machine per person (Apple `container`), with a route to the gateway and nothing else | not built |
 | **Front desk and page** | sign-in with passkeys, our own web page, starts and stops workspaces | not built |
 | **Way in** | Tailscale; nothing on the public internet | not built |
+| **Landing page** | `site/`: Ola's front door, a static page built into `public/ola-site/` for ola.cx, with no third-party requests (`site/check.mjs` proves it); see `site/README.md` | built, not live |
 
 ## The spike: does the core loop work?
 
