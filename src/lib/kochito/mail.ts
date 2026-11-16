@@ -4,7 +4,7 @@
 // session reads them (scripts/venture/mail.mjs inbox | --wait) and replies.
 import { f2Supabase } from '@/lib/f2/supabase'
 
-const DOMAINS = ['kochitolabs.com', 'clerkpdf.com', 'appadopt.com']
+const DOMAINS = ['kochitolabs.com', 'clerkpdf.com', 'appadopt.com', 'ola.cx']
 export const FILES_BUCKET = 'kochito-files'
 
 // "Jane Doe <jane@city.gov>" → { addr: 'jane@city.gov', name: 'Jane Doe' }

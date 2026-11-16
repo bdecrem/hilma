@@ -94,6 +94,19 @@ const nextConfig: NextConfig = {
           has: [{ type: 'host', value: 'www.nowwhat.cc' }],
           destination: '/nowwhat',
         },
+        // ola.cx's front page is Ola's landing page (2026-11-15), a static site built
+        // by apps/activist-ai/site/build.mjs into public/ola-site/. Only "/" moves;
+        // every other path on ola.cx still serves this app until the move off ola.cx.
+        {
+          source: '/',
+          has: [{ type: 'host', value: 'ola.cx' }],
+          destination: '/ola-site/index.html',
+        },
+        {
+          source: '/',
+          has: [{ type: 'host', value: 'www.ola.cx' }],
+          destination: '/ola-site/index.html',
+        },
         // ola.cx universal-link manifest — Dolly (apps/dolly) opens
         // https://ola.cx/dolly/today, the daily text's link, on its map.
         {

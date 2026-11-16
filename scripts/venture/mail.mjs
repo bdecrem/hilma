@@ -23,7 +23,7 @@ const env = Object.fromEntries(
     .map((l) => [l.slice(0, l.indexOf('=')), l.slice(l.indexOf('=') + 1).replace(/^["']|["']$/g, '')]),
 )
 const db = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_KEY, { auth: { persistSession: false } })
-const OURS = ['kochitolabs.com', 'clerkpdf.com', 'appadopt.com']
+const OURS = ['kochitolabs.com', 'clerkpdf.com', 'appadopt.com', 'ola.cx']
 const args = process.argv.slice(2)
 const opt = (k) => (args.includes(k) ? args[args.indexOf(k) + 1] : undefined)
 const show = (m) => console.log(`\n${m.at.slice(0, 16).replace('T', ' ')}Z  ${m.direction === 'in' ? 'FROM' : 'TO  '} ${m.direction === 'in' ? (m.from_name ? `${m.from_name} <${m.from_addr}>` : m.from_addr) + ' → ' + m.to_addr : m.to_addr + ' (as ' + m.from_addr + ')'}\n  ${m.subject}\n${(m.body || '').trim().split('\n').map((l) => '  | ' + l).join('\n')}`)
