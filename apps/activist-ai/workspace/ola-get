@@ -1,0 +1,43 @@
+#!/usr/bin/python3 -I
+# ola-get <path>: one header line {"size": N}, then the N bytes of /work/<path>.
+# Run by the front desk (ws.mjs getStream) through `container exec`, for a download.
+# Every part of the path must be a plain name (ola-put's rule, no ".."), at most 6 parts, and
+# no part may be a symlink: each step is opened with O_NOFOLLOW relative to the one before, so
+# a link the agent planted (to /proc/1/environ, say, which holds the workspace's secrets) is
+# refused instead of followed. The host still treats every byte as the VM's word.
+import json, os, re, stat, sys
+
+NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9 ._()+,-]{0,199}")
+
+def fail(code, msg):
+    sys.stderr.write("ola-get: " + msg + "\n")
+    sys.exit(code)
+
+args = sys.argv[1:]
+if len(args) != 1:
+    fail(2, "one path")
+parts = args[0].split("/")
+if not 1 <= len(parts) <= 6 or not all(NAME.fullmatch(p) and ".." not in p for p in parts):
+    fail(2, "not a plain path")
+fd = os.open("/work", os.O_RDONLY | os.O_DIRECTORY)
+for i, part in enumerate(parts):
+    last = i == len(parts) - 1
+    try:
+        nfd = os.open(part, os.O_RDONLY | os.O_NOFOLLOW | (0 if last else os.O_DIRECTORY), dir_fd=fd)
+    except OSError:
+        fail(4, "no such file")
+    os.close(fd)
+    fd = nfd
+st = os.fstat(fd)
+if not stat.S_ISREG(st.st_mode):
+    fail(4, "not a file")
+out = sys.stdout.buffer
+out.write((json.dumps({"size": st.st_size}) + "\n").encode())
+left = st.st_size
+while left > 0:
+    chunk = os.read(fd, min(1 << 20, left))
+    if not chunk:
+        break
+    out.write(chunk)
+    left -= len(chunk)
+out.flush()

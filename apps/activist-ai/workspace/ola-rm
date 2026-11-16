@@ -1,0 +1,35 @@
+#!/usr/bin/python3 -I
+# ola-rm <path>: deletes the file /work/<path> and prints {"deleted": true}.
+# Run by the front desk (ws.mjs removeFile) through `container exec`.
+# The same path rule as ola-get: plain names, at most 6 parts, folders opened with O_NOFOLLOW,
+# and the last part must be a regular file (a folder or a link is refused, not followed).
+import json, os, re, stat, sys
+
+NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9 ._()+,-]{0,199}")
+
+def fail(code, msg):
+    sys.stderr.write("ola-rm: " + msg + "\n")
+    sys.exit(code)
+
+args = sys.argv[1:]
+if len(args) != 1:
+    fail(2, "one path")
+parts = args[0].split("/")
+if not 1 <= len(parts) <= 6 or not all(NAME.fullmatch(p) and ".." not in p for p in parts):
+    fail(2, "not a plain path")
+fd = os.open("/work", os.O_RDONLY | os.O_DIRECTORY)
+for part in parts[:-1]:
+    try:
+        nfd = os.open(part, os.O_RDONLY | os.O_NOFOLLOW | os.O_DIRECTORY, dir_fd=fd)
+    except OSError:
+        fail(4, "no such file")
+    os.close(fd)
+    fd = nfd
+try:
+    st = os.lstat(parts[-1], dir_fd=fd)
+except OSError:
+    fail(4, "no such file")
+if not stat.S_ISREG(st.st_mode):
+    fail(4, "not a file")
+os.unlink(parts[-1], dir_fd=fd)
+print(json.dumps({"deleted": True}))

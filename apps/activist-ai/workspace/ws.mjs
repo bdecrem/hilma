@@ -6,6 +6,8 @@
 //   node ws.mjs start <id> | stop <id> | status [id]
 //   node ws.mjs upload <id> <file>... [--replace]
 //   node ws.mjs files <id> [--json]
+//   (the front desk also uses putStream / getStream / removeFile / filesAsync, below: ola-put,
+//   ola-get, ola-rm and ola-files through `container exec`, without blocking its event loop)
 //   node ws.mjs destroy <id> [--confirm <id>]     wipes the volume; asks unless --confirm <id>
 //
 // The seal. A workspace VM runs with `--network none`: no interface but loopback, so no
@@ -39,7 +41,7 @@ import { fileURLToPath } from 'node:url'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 export const CONTAINER = process.env.OLA_CONTAINER_BIN || '/usr/local/bin/container'
-export const IMAGE = 'ola-workspace:2.3.0-2'
+export const IMAGE = 'ola-workspace:2.3.0-3'
 export const HOME = process.env.OLA_HOME || path.join(homedir(), '.ola')
 export const GATEWAY_PORT = Number(process.env.OLA_GATEWAY_PORT || 4180)
 const GIB = 1024 ** 3
@@ -67,7 +69,7 @@ export function paths(id) {
   return { dir, secrets: path.join(dir, 'secrets.env'), meta: path.join(dir, 'meta.json'), door: path.join(dir, 'gateway.sock'), opencode: path.join(dir, 'opencode.sock'), doorPid: path.join(dir, 'door.pid'), doorLog: path.join(dir, 'door.log'), deskPid: path.join(dir, 'desk.pid'), deskLog: path.join(dir, 'desk.log') }
 }
 
-class Refusal extends Error {}
+export class Refusal extends Error {}
 const refuse = (m) => {
   throw new Refusal(m)
 }
@@ -332,34 +334,170 @@ export async function upload(id, files, { replace = false } = {}) {
     // lstat: a symlink is refused, not followed, so a staged upload cannot point elsewhere on the host.
     const st = lstatSync(f, { throwIfNoEntry: false })
     if (!st?.isFile()) refuse(`${f} is not a plain file (symlinks are refused)`)
-    const name = path.basename(f)
-    if (!UPLOAD_NAME.test(name)) refuse(`${JSON.stringify(name)}: an upload name is a plain file name (letters, digits, space . _ ( ) + , -), not starting with a dot, at most 200`)
-    const sha = createHash('sha256')
-    await new Promise((res, rej) => createReadStream(f).on('data', (d) => sha.update(d)).on('end', res).on('error', rej))
-    const want = sha.digest('hex')
-    const r = await new Promise((resolve) => {
-      const child = spawn(CONTAINER, ['exec', '-i', names(id).container, '/opt/ola/bin/ola-put', name, ...(replace ? ['--replace'] : [])], { stdio: ['pipe', 'pipe', 'pipe'] })
-      let out = ''
-      let err = ''
-      child.stdout.on('data', (d) => (out += d))
-      child.stderr.on('data', (d) => (err += d))
-      child.on('close', (code) => resolve({ code, out, err }))
-      // ola-put may exit before reading everything (a refusal): the broken pipe is its answer, not a crash.
-      child.stdin.on('error', () => {})
-      child.on('error', () => resolve({ code: -1, out, err: 'could not run container exec' }))
-      createReadStream(f).pipe(child.stdin)
-    })
-    if (r.code !== 0) refuse(`${name}: ${(r.err.trim().split('\n').pop() || `ola-put exited ${r.code}`).slice(0, 300)}`)
-    let got
-    try {
-      got = JSON.parse(r.out.trim().split('\n').pop())
-    } catch {
-      refuse(`${name}: the workspace did not confirm the upload`)
-    }
-    if (got.sha256 !== want || got.size !== st.size) refuse(`${name}: the workspace holds a different file than was sent`)
-    done.push({ name, size: st.size, sha256: want })
+    const got = await putStream(id, path.basename(f), createReadStream(f), { replace })
+    if (got.size !== st.size) refuse(`${got.name}: the workspace holds a different file than was sent`)
+    done.push(got)
   }
   return done
+}
+
+// ---------------------------------------------------------------- for the front desk (async)
+
+// A path inside /work as ola-get and ola-rm accept it: plain names, no "..", at most 6 parts.
+export const validRel = (rel) => typeof rel === 'string' && rel.length <= 1300 && rel.split('/').length <= 6 && rel.split('/').every((p) => UPLOAD_NAME.test(p) && !p.includes('..'))
+
+// One `container exec` of an /opt/ola/bin tool, without blocking. stdout is returned as a stream.
+function execTool(id, tool, args, { stdin = false } = {}) {
+  return spawn(CONTAINER, ['exec', ...(stdin ? ['-i'] : []), names(id).container, `/opt/ola/bin/${tool}`, ...args], { stdio: [stdin ? 'pipe' : 'ignore', 'pipe', 'pipe'] })
+}
+function collect(child, max) {
+  return new Promise((resolve) => {
+    let out = ''
+    let err = ''
+    child.stdout.on('data', (d) => {
+      out += d
+      if (out.length > max) child.kill('SIGKILL')
+    })
+    child.stderr.on('data', (d) => (err = (err + d).slice(-2000)))
+    child.on('error', () => resolve({ code: -1, out, err: 'could not run container exec' }))
+    child.on('close', (code) => resolve({ code, out, err }))
+  })
+}
+const lastLine = (s) => s.trim().split('\n').pop() || ''
+
+/**
+ * Streams `source` into /work/<name> through ola-put. Counts and hashes on the way; refuses past
+ * maxBytes (the VM's temp file is removed by ola-put when its stdin breaks). Resolves to
+ * { name, size, sha256 } only when the VM reports the same size and hash.
+ */
+export async function putStream(id, name, source, { replace = false, maxBytes = Infinity } = {}) {
+  validId(id)
+  if (!UPLOAD_NAME.test(name)) refuse(`${JSON.stringify(name)}: an upload name is a plain file name (letters, digits, space . _ ( ) + , -), not starting with a dot, at most 200`)
+  const child = execTool(id, 'ola-put', [name, ...(replace ? ['--replace'] : [])], { stdin: true })
+  const done = collect(child, 64 * 1024)
+  // ola-put may exit before reading everything (a refusal): the broken pipe is its answer, not a crash.
+  child.stdin.on('error', () => {})
+  const sha = createHash('sha256')
+  let size = 0
+  let tooBig = false
+  let broken = null
+  try {
+    for await (const chunk of source) {
+      size += chunk.length
+      if (size > maxBytes) {
+        tooBig = true
+        break
+      }
+      sha.update(chunk)
+      if (!child.stdin.write(chunk)) await new Promise((r) => (child.stdin.once('drain', r), child.once('close', r)))
+      if (child.exitCode !== null) break
+    }
+  } catch (e) {
+    broken = e
+  } finally {
+    // Too big, or the sender went away: kill ola-put rather than end its input, so a partial
+    // file is never renamed into place (its hidden temp file may stay in /work).
+    if (tooBig || broken) child.kill('SIGKILL')
+    else child.stdin.end()
+  }
+  const r = await done
+  if (broken) throw Object.assign(new Refusal(`${name}: the upload did not arrive whole`), { code: 'ABORTED' })
+  if (tooBig) throw Object.assign(new Refusal(`${name}: larger than ${human(maxBytes)}`), { code: 'TOO_LARGE' })
+  if (r.code === 3) throw Object.assign(new Refusal(`${name}: a file with that name is already in the workspace`), { code: 'EXISTS' })
+  if (r.code !== 0) refuse(`${name}: ${(lastLine(r.err) || `ola-put exited ${r.code}`).slice(0, 300)}`)
+  let got
+  try {
+    got = JSON.parse(lastLine(r.out))
+  } catch {
+    refuse(`${name}: the workspace did not confirm the upload`)
+  }
+  const want = sha.digest('hex')
+  if (got?.sha256 !== want || got?.size !== size) refuse(`${name}: the workspace holds a different file than was sent`)
+  return { name, size, sha256: want }
+}
+
+/**
+ * Opens /work/<rel> for reading through ola-get. Resolves to { size, stream } once the VM has
+ * said the file's size, or null when there is no such plain file. The stream ends after exactly
+ * `size` bytes; fewer (the file changed while read) ends it with an error.
+ */
+export async function getStream(id, rel) {
+  validId(id)
+  if (!validRel(rel)) return null
+  const child = execTool(id, 'ola-get', [rel])
+  child.stderr.resume()
+  return new Promise((resolve) => {
+    let head = Buffer.alloc(0)
+    let settled = false
+    const fail = () => {
+      if (!settled) (settled = true), resolve(null)
+      child.kill('SIGKILL')
+    }
+    child.on('error', fail)
+    child.on('close', fail)
+    const onData = (d) => {
+      head = Buffer.concat([head, d])
+      const nl = head.indexOf(10)
+      if (nl < 0) return head.length > 100 ? fail() : undefined
+      child.stdout.off('data', onData)
+      child.stdout.pause()
+      let size
+      try {
+        size = JSON.parse(head.subarray(0, nl).toString('utf8')).size
+      } catch {}
+      if (!Number.isSafeInteger(size) || size < 0) return fail()
+      settled = true
+      const rest = head.subarray(nl + 1)
+      async function* body() {
+        let left = size
+        if (rest.length) {
+          const c = rest.subarray(0, left)
+          left -= c.length
+          yield c
+        }
+        for await (const c of child.stdout) {
+          if (left <= 0) break
+          const part = c.subarray(0, left)
+          left -= part.length
+          yield part
+        }
+        if (left > 0) throw new Error('the file changed while it was read')
+      }
+      resolve({ size, stream: body(), kill: () => child.kill('SIGKILL') })
+    }
+    child.stdout.on('data', onData)
+  })
+}
+
+/** Deletes /work/<rel> through ola-rm. true when deleted, false when there was no such file. */
+export async function removeFile(id, rel) {
+  validId(id)
+  if (!validRel(rel)) return false
+  const r = await collect(execTool(id, 'ola-rm', [rel]), 4096)
+  if (r.code === 4 || r.code === 2) return false
+  if (r.code !== 0) refuse(`delete failed: ${lastLine(r.err).slice(0, 200)}`)
+  return true
+}
+
+/** What is in /work, as the VM reports it (see ola-files), without blocking. */
+export async function filesAsync(id) {
+  validId(id)
+  const r = await collect(execTool(id, 'ola-files', []), 64 * 1024 * 1024)
+  if (r.code !== 0) refuse(`workspace ${id} did not list its files`)
+  return r.out.split('\n').filter(Boolean).map(parseFileLine)
+}
+
+// One line of ola-files, checked for shape; anything else is refused rather than shown.
+function parseFileLine(line) {
+  let x
+  try {
+    x = JSON.parse(line)
+  } catch {
+    refuse('the workspace reported a file list that is not in the expected shape')
+  }
+  const ok = typeof x?.path === 'string' && x.path.length < 4096 && !/[\x00-\x1f\x7f]/.test(x.path) && Number.isSafeInteger(x.size) && (x.mtime === undefined || Number.isSafeInteger(x.mtime)) && ['file', 'link', 'other'].includes(x.type) && (x.sha256 === null || /^[0-9a-f]{64}$/.test(x.sha256))
+  if (!ok) refuse('the workspace reported a file list that is not in the expected shape')
+  return { path: x.path, type: x.type, size: x.size, mtime: x.mtime ?? null, sha256: x.sha256, ola: x.path.startsWith('.ola/') }
 }
 
 // What is in /work, as the VM reports it (see ola-files). Each line is checked for shape;
@@ -367,16 +505,7 @@ export async function upload(id, files, { replace = false } = {}) {
 export function files(id) {
   validId(id)
   stateOf(inspect(id)) === 'running' || refuse(`workspace ${id} is not running; start it first`)
-  const r = ctr(['exec', names(id).container, '/opt/ola/bin/ola-files'])
-  return r.stdout
-    .split('\n')
-    .filter(Boolean)
-    .map((line) => {
-      const x = JSON.parse(line)
-      const ok = typeof x.path === 'string' && x.path.length < 4096 && !/[\x00-\x1f\x7f]/.test(x.path) && Number.isSafeInteger(x.size) && ['file', 'link', 'other'].includes(x.type) && (x.sha256 === null || /^[0-9a-f]{64}$/.test(x.sha256))
-      if (!ok) refuse('the workspace reported a file list that is not in the expected shape')
-      return { path: x.path, type: x.type, size: x.size, sha256: x.sha256, ola: x.path.startsWith('.ola/') }
-    })
+  return ctr(['exec', names(id).container, '/opt/ola/bin/ola-files']).stdout.split('\n').filter(Boolean).map(parseFileLine)
 }
 
 export async function destroy(id, { confirm } = {}) {
