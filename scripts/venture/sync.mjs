@@ -15,6 +15,7 @@
 // a file that is unchanged here since this machine last synced and differs there is replaced by
 // pull; a file changed both here and there is never overwritten in either direction, it is
 // printed as a conflict and left for a person to settle.
+import { spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { dirname, join, relative } from 'node:path'
@@ -129,6 +130,11 @@ if (cmd === 'push') {
   await putRemoteManifest(remote)
   writeFileSync(manifestPath, JSON.stringify(manifest, null, 1))
   console.log('push done')
+  // What was just pushed is what the voice call and the text replies load. Say how big it
+  // is, and fail here when it nears the model's limit (2026-11-15: research files pushed
+  // the notes past it and both lines went dead until Bart spoke to one).
+  const check = spawnSync('npx', ['tsx', fileURLToPath(new URL('scripts/venture/notes-check.ts', root)), '--quiet'], { stdio: 'inherit' })
+  if (check.status !== 0) process.exit(check.status ?? 1)
 } else if (cmd === 'pull') {
   mkdirSync(dir, { recursive: true })
   for (const r of await rows()) {

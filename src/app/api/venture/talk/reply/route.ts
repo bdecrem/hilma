@@ -5,6 +5,9 @@ import { TALK, talkReply } from '@/lib/venture/talk'
 export const runtime = 'nodejs'
 export const maxDuration = 120
 
+// Said aloud when a reply cannot be written at all.
+const BROKEN_LINE = 'Something is broken on my side and I cannot answer on this call. Text me instead. The reason is in the transcript, and the terminal session will fix it.'
+
 // POST /api/venture/talk/reply  { key, session, text? }
 // Bart said `text`; store it and stream back what Claude says to it, as plain
 // text the page hands to the voice sentence by sentence. Without `text` it
@@ -30,15 +33,27 @@ export async function POST(req: Request) {
 
   const enc = new TextEncoder()
   const reply = talkReply(turns)
+  const session = body.session
+  let sent = false
   const stream = new ReadableStream<Uint8Array>({
     async pull(controller) {
       try {
         const { value, done } = await reply.next()
         if (done) controller.close()
-        else controller.enqueue(enc.encode(value))
+        else {
+          sent = true
+          controller.enqueue(enc.encode(value))
+        }
       } catch (e) {
         console.error('[venture/talk] reply failed:', e)
-        controller.error(e)
+        // A reply that fails must be heard and must be in the transcript. On 2026-11-15 the
+        // notes had outgrown the model, every reply failed, the page showed one small line of
+        // text, and Bart asked a silent phone "Hello, can you hear me?".
+        const why = (e instanceof Error ? e.message : String(e)).replace(/\s+/g, ' ').slice(0, 300)
+        await addTurn(session, 'event', `reply failed: ${why}`, TALK).catch(() => {})
+        if (sent) return controller.error(e)
+        controller.enqueue(enc.encode(BROKEN_LINE))
+        controller.close()
       }
     },
     cancel() {

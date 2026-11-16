@@ -1,3 +1,4 @@
+import type Anthropic from '@anthropic-ai/sdk'
 import { f2Supabase } from '@/lib/f2/supabase'
 import { sendIMessage } from '@/lib/f2/bluebubbles'
 import { VENTURE_MODEL, ventureAnthropic, ventureNotes } from './talk'
@@ -78,18 +79,28 @@ export async function ventureInbound(raw: string): Promise<void> {
     else messages.push({ role, content: body })
   }
 
-  const res = await ventureAnthropic().beta.messages.create({
-    model: VENTURE_MODEL,
-    max_tokens: 8000,
-    output_config: { effort: 'low' },
-    betas: ['server-side-fallback-2026-07-01'],
-    fallbacks: 'default',
-    system: [{ type: 'text', text: TEXTER + (await ventureNotes()), cache_control: { type: 'ephemeral' } }],
-    messages,
-  } as never)
+  // A failed call must not be silence: on 2026-11-15 the notes outgrew the model and his
+  // texts went unanswered for eight hours with nothing said to him.
+  const SORRY = 'Got it. I could not write a proper answer just now; the session will pick this up.'
+  let res: Anthropic.Beta.BetaMessage
+  try {
+    res = (await ventureAnthropic().beta.messages.create({
+      model: VENTURE_MODEL,
+      max_tokens: 8000,
+      output_config: { effort: 'low' },
+      betas: ['server-side-fallback-2026-07-01'],
+      fallbacks: 'default',
+      system: [{ type: 'text', text: TEXTER + (await ventureNotes()), cache_control: { type: 'ephemeral' } }],
+      messages,
+    } as never)) as Anthropic.Beta.BetaMessage
+  } catch (e) {
+    console.error('[venture/imsg] reply failed:', e)
+    await sendVenture(SORRY, 'reply')
+    return
+  }
   if (res.stop_reason !== 'end_turn') {
     console.error('[venture/imsg] no reply:', res.stop_reason)
-    await sendVenture('Got it. I could not write a proper answer just now; the session will pick this up.', 'reply')
+    await sendVenture(SORRY, 'reply')
     return
   }
   const reply = res.content
