@@ -55,6 +55,12 @@ async function fakeUpstream() {
     })
     if (cmd.delay) await sleep(cmd.delay)
     if (res.destroyed) return
+    if (cmd.echoAuth) {
+      // A model server that quotes the offending request back on an auth failure — the gateway's
+      // own Authorization header, which carries the upstream key — as some really do.
+      res.writeHead(401, { 'Content-Type': 'application/json' })
+      return res.end(JSON.stringify({ error: { message: `invalid api key: ${req.headers.authorization} rejected`, type: 'authentication_error' } }))
+    }
     if (cmd.status) {
       res.writeHead(cmd.status, { 'Content-Type': 'application/json' })
       return res.end(JSON.stringify({ error: { message: cmd.error || 'no' } }))
@@ -62,7 +68,10 @@ async function fakeUpstream() {
     const message = cmd.textCalls
       ? { role: 'assistant', content: 'invented result', tool_calls: [{ id: 'c1', type: 'function', function: { name: 'read', arguments: '{"path":"x"}' } }] }
       : { role: 'assistant', content: cmd.reply ?? 'ok' }
-    const reply = JSON.stringify({ id: 'x1', model: body.model, choices: [{ index: 0, message, finish_reason: 'stop' }], usage: { prompt_tokens: cmd.usage?.[0] ?? 10, completion_tokens: cmd.usage?.[1] ?? 5 } })
+    // Optional extras let a test see whether the gateway passes fields it should strip.
+    const out = { id: 'x1', model: body.model, choices: [{ index: 0, message, finish_reason: 'stop' }], ...(cmd.extra || {}) }
+    if (!cmd.noUsage) out.usage = { prompt_tokens: cmd.usage?.[0] ?? 10, completion_tokens: cmd.usage?.[1] ?? 5, ...(cmd.usageExtra || {}) }
+    const reply = JSON.stringify(out)
     res.writeHead(200, { 'Content-Type': 'application/json' })
     if (cmd.trickle) {
       const end = Date.now() + cmd.trickle
@@ -425,7 +434,7 @@ test('log lines cannot be injected or carry content', async () => {
   await waitFor(() => g.logs().length >= 8, 3000, 'eight log lines')
   const raw = g.out
   for (const word of ['INJECTED', 'root', 'SECRET-PROMPT', 'SECRET-REPLY', 'xxxxxxxx', T.a, UPSTREAM_KEY]) assert.ok(!raw.includes(word), `the log contains ${word.slice(0, 12)}`)
-  const KEYS = ['caller', 'model', 'ms', 'route', 'status', 't', 'tokens_in', 'tokens_out', 'tries', 'wait_ms', 'why']
+  const KEYS = ['caller', 'estimated', 'model', 'ms', 'route', 'status', 't', 'tokens_in', 'tokens_out', 'tries', 'wait_ms', 'why']
   for (const line of raw.split('\n').filter(Boolean)) {
     assert.ok(line.length < 400, 'a line stays short')
     const l = JSON.parse(line)
@@ -438,4 +447,141 @@ test('log lines cannot be injected or carry content', async () => {
     assert.ok(l.why === null || /^[a-z0-9 ,'-]+$/i.test(l.why), `why is from the fixed vocabulary: ${l.why}`)
   }
   await g.stop()
+})
+
+// ---------------------------------------------------------------- review 2026-11-16: reply allowlist
+
+test('the reply to the caller is rebuilt from an allowlist; upstream extras and cache details are dropped', async () => {
+  const up = await fakeUpstream()
+  const g = await gateway(baseEnv(up.url))
+  // a reply larded with extra top-level fields and a prompt-cache side channel in usage
+  const extra = { system_fingerprint: 'fp_other_tenant', x_leak: 'secret', prompt_logprobs: [1, 2, 3] }
+  const usageExtra = { prompt_tokens_details: { cached_tokens: 991 }, cached_tokens: 991, cost: 0.42 }
+  const r = await call(g, T.a, chat({ reply: 'hello', extra, usageExtra }))
+  assert.equal(r.status, 200)
+  assert.deepEqual(Object.keys(r.json).sort(), ['choices', 'created', 'id', 'model', 'object', 'usage'])
+  assert.equal(r.json.model, 'general')
+  assert.deepEqual(Object.keys(r.json.usage).sort(), ['completion_tokens', 'prompt_tokens', 'total_tokens'])
+  assert.equal(r.json.usage.total_tokens, 15)
+  for (const bad of ['fp_other_tenant', 'x_leak', 'secret', 'cached_tokens', 'prompt_logprobs', 'cost', 'prompt_tokens_details']) {
+    assert.ok(!r.text.includes(bad), `the reply still carries ${bad}`)
+  }
+  assert.deepEqual(Object.keys(r.json.choices[0]).sort(), ['finish_reason', 'index', 'message'])
+  assert.deepEqual(Object.keys(r.json.choices[0].message).sort(), ['content', 'role'])
+  // the same, streamed: no leaked field survives the SSE either
+  const s = await call(g, T.a, chat({ reply: 'hi', extra, usageExtra }, 'general', { stream: true, stream_options: { include_usage: true } }))
+  assert.equal(s.status, 200)
+  for (const bad of ['fp_other_tenant', 'x_leak', 'secret', 'cached_tokens', 'prompt_logprobs', 'cost', 'prompt_tokens_details']) {
+    assert.ok(!s.text.includes(bad), `the stream still carries ${bad}`)
+  }
+  assert.ok(s.text.includes('"content":"hi"'))
+  await g.stop()
+})
+
+// ---------------------------------------------------------------- review 2026-11-16: quota re-check (no overshoot)
+
+test('a burst cannot run the whole queue past the quota; retries re-check too', async () => {
+  const up = await fakeUpstream()
+  // one at a time so each request commits before the next is granted its slot
+  const g = await gateway({ ...baseEnv(up.url), GATEWAY_WEEKLY_TOKENS: '100', GATEWAY_MAX_INFLIGHT: '1', GATEWAY_MAX_INFLIGHT_PER_CALLER: '1', GATEWAY_MAX_QUEUED_PER_CALLER: '10' })
+  // six requests at once, each 50 tokens (40 in + 10 out); the quota is 100
+  const rs = await Promise.all([0, 1, 2, 3, 4, 5].map((i) => call(g, T.a, chat({ tag: `q${i}`, delay: 40, usage: [40, 10] }))))
+  const ok = rs.filter((r) => r.status === 200).length
+  const refused = rs.filter((r) => r.status === 429)
+  assert.equal(ok, 2, 'only two 50-token requests fit in a 100-token quota')
+  assert.ok(refused.length === 4 && refused.every((r) => r.json.error.type === 'insufficient_quota'))
+  assert.ok(up.st.seen.length <= 2, `the refused requests never reached the model server (saw ${up.st.seen.length})`)
+  const u = await call(g, T.a, null, { method: 'GET', path: '/v1/usage' })
+  assert.equal(u.json.tokens_used, 100, 'no overshoot beyond the two committed requests')
+
+  // retries: one request whose reply is rejected-but-costed (empty, so fault() retries it), each
+  // try 60 tokens; the per-try re-check counts the spend so far and stops before a 3rd try.
+  const up2 = await fakeUpstream()
+  const g2 = await gateway({ ...baseEnv(up2.url), GATEWAY_WEEKLY_TOKENS: '100' })
+  const r = await call(g2, T.b, chat({ reply: '', usage: [60, 0] }))
+  // try1 (60) ok, before try2 pending=60<100 ok, try2 (120) then before try3 pending=120>=100 -> quota 429
+  assert.equal(r.status, 429)
+  assert.equal(r.json.error.type, 'insufficient_quota')
+  assert.ok(up2.st.seen.length === 2, `stopped before the third try (saw ${up2.st.seen.length})`)
+  await g.stop()
+  await g2.stop()
+})
+
+// ---------------------------------------------------------------- review 2026-11-16: upstream error text is never passed on
+
+test('the model server error text never reaches the caller, and 401/403 is hidden as 502', async () => {
+  const up = await fakeUpstream()
+  const g = await gateway(baseEnv(up.url))
+  // a 401 whose message quotes the gateway's Authorization header (the upstream key)
+  const auth = await call(g, T.a, chat({ echoAuth: true }))
+  assert.equal(auth.status, 502, '401/403 upstream is hidden as a 502')
+  assert.ok(!auth.text.includes(UPSTREAM_KEY), 'the upstream key never reaches the caller')
+  assert.ok(!auth.text.includes('invalid api key'), 'the upstream words never reach the caller')
+  assert.match(auth.json.error.message, /model server/)
+  // a 400 with attacker/model text in the message: the caller gets a fixed message, not the text
+  const four = await call(g, T.a, chat({ status: 400, error: 'SECRET model said: your prompt was ...' }))
+  assert.equal(four.status, 400)
+  assert.ok(!four.text.includes('SECRET'), 'the upstream 400 text is not echoed')
+  assert.equal(four.json.error.message, 'the model server rejected the request')
+  // the log never carries the upstream status text or the key
+  const lines = await waitFor(() => (g.logs().length >= 2 ? g.logs() : null))
+  for (const l of lines) assert.ok(/^the model server/.test(l.why), `why is fixed: ${l.why}`)
+  assert.ok(!g.out.includes(UPSTREAM_KEY) && !g.out.includes('SECRET'))
+  await g.stop()
+})
+
+// ---------------------------------------------------------------- review 2026-11-16: no-usage is charged, not free
+
+test('a model server that reports no usage is charged an estimate, so the quota still bites', async () => {
+  const up = await fakeUpstream()
+  const g = await gateway({ ...baseEnv(up.url), GATEWAY_WEEKLY_TOKENS: '50' })
+  // a long reply with no usage block: estimated from bytes (~4 per token), not counted as zero
+  const r = await call(g, T.a, chat({ noUsage: true, reply: 'z'.repeat(400) }))
+  assert.equal(r.status, 200)
+  const u = await call(g, T.a, null, { method: 'GET', path: '/v1/usage' })
+  assert.ok(u.json.tokens_used > 50, `charged an estimate (${u.json.tokens_used} tokens)`)
+  // next request is refused: the estimate pushed the caller over its 50-token quota
+  const over = await call(g, T.a, chat({ noUsage: true, reply: 'x' }))
+  assert.equal(over.status, 429)
+  assert.equal(over.json.error.type, 'insufficient_quota')
+  const line = await waitFor(() => g.logs().find((l) => l.status === 200 && l.route === 'chat'))
+  assert.equal(line.estimated, 'bytes', 'the estimate is flagged in the log')
+  await g.stop()
+})
+
+// ---------------------------------------------------------------- review 2026-11-16: total buffered-body cap
+
+test('the process will not buffer unbounded request bodies; small callers still get through', async () => {
+  const up = await fakeUpstream()
+  // total cap just above one body, inflight small so bodies pile up in readBody, not upstream
+  const g = await gateway({ ...baseEnv(up.url), GATEWAY_MAX_BODY_BYTES: '1048576', GATEWAY_MAX_TOTAL_BODY_BYTES: '1572864', GATEWAY_MAX_INFLIGHT: '1', GATEWAY_MAX_INFLIGHT_PER_CALLER: '1', GATEWAY_MAX_QUEUED_PER_CALLER: '50', GATEWAY_READ_TIMEOUT_MS: '2000' })
+  // slow senders that each push ~900 KiB without finishing; together they exceed the 1.5 MiB cap
+  const slow = (token) =>
+    new Promise((resolve) => {
+      const u = new URL(g.url + '/v1/chat/completions')
+      const req = http.request({ host: u.hostname, port: u.port, path: u.pathname, method: 'POST', agent: false, headers: { Authorization: `Bearer ${token}`, 'Transfer-Encoding': 'chunked' } })
+      let status = null
+      req.on('response', (res) => {
+        status = res.statusCode
+        res.resume()
+        res.on('end', () => resolve(status))
+      })
+      req.on('error', () => resolve(status || 'err'))
+      req.write('{"model":"general","messages":[{"role":"user","content":"')
+      let sent = 0
+      const iv = setInterval(() => {
+        if (sent >= 900 * 1024 || status !== null || req.destroyed) return clearInterval(iv)
+        req.write('x'.repeat(64 * 1024))
+        sent += 64 * 1024
+      }, 15)
+    })
+  const many = Promise.allSettled([slow(T.a), slow(T.a), slow(T.b)])
+  // once the process is holding its cap of unread bodies, a further body is shed with 503 overloaded
+  const got503 = await waitFor(() => (g.logs().some((l) => l.status === 503 && l.why === 'too many bodies in memory at once') ? true : null), 5000, 'a 503 overloaded line')
+  assert.ok(got503, 'at least one body was shed once the total buffered-bytes cap was reached')
+  // the cap sheds load, it does not wedge the process: a fresh small caller is still answered
+  const small = await call(g, T.c, chat({ reply: 'ok' }))
+  assert.equal(small.status, 200, 'a small caller is still served while big bodies are shed')
+  await g.stop() // reaps the stuck senders; `many` settles as their sockets error
+  await many
 })

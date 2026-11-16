@@ -56,6 +56,7 @@ const SETTINGS = {
   // name: [default, min, max]  (whole numbers)
   GATEWAY_PORT: [4180, 0, 65535],
   GATEWAY_MAX_BODY_BYTES: [4 * 1024 * 1024, 1024, 64 * 1024 * 1024],
+  GATEWAY_MAX_TOTAL_BODY_BYTES: [32 * 1024 * 1024, 1024, 1024 * 1024 * 1024],
   GATEWAY_MAX_REPLY_BYTES: [16 * 1024 * 1024, 1024, 256 * 1024 * 1024],
   GATEWAY_MAX_INFLIGHT: [4, 1, 256],
   GATEWAY_MAX_INFLIGHT_PER_CALLER: [2, 1, 256],
@@ -91,6 +92,7 @@ function loadConfig(env) {
     num[k] = n
   }
   if (num.GATEWAY_MAX_INFLIGHT_PER_CALLER > num.GATEWAY_MAX_INFLIGHT) bad('GATEWAY_MAX_INFLIGHT_PER_CALLER cannot be more than GATEWAY_MAX_INFLIGHT')
+  if (num.GATEWAY_MAX_TOTAL_BODY_BYTES < num.GATEWAY_MAX_BODY_BYTES) bad('GATEWAY_MAX_TOTAL_BODY_BYTES cannot be less than GATEWAY_MAX_BODY_BYTES')
   if (num.GATEWAY_FIRST_BYTE_TIMEOUT_MS > num.GATEWAY_TOTAL_TIMEOUT_MS) bad('GATEWAY_FIRST_BYTE_TIMEOUT_MS cannot be more than GATEWAY_TOTAL_TIMEOUT_MS')
 
   let upstream = null
@@ -190,6 +192,7 @@ function loadConfig(env) {
     keepText: textWithCalls === 'keep',
     port: num.GATEWAY_PORT,
     maxBody: num.GATEWAY_MAX_BODY_BYTES,
+    maxTotalBody: num.GATEWAY_MAX_TOTAL_BODY_BYTES,
     maxReply: num.GATEWAY_MAX_REPLY_BYTES,
     maxInflight: num.GATEWAY_MAX_INFLIGHT,
     perCaller: num.GATEWAY_MAX_INFLIGHT_PER_CALLER,
@@ -208,6 +211,13 @@ function sha(s) {
 
 const C = loadConfig(process.env)
 const TRIES = 3
+
+// A last-layer scrub: the upstream key must never appear in anything sent to a caller or
+// written to a log, whatever path put it there. The key is fixed and non-empty, so this is a
+// plain substring replace; it runs on already-serialized strings only.
+function redact(s) {
+  return typeof s === 'string' && s.includes(C.key) ? s.split(C.key).join('[redacted]') : s
+}
 // The fields a caller may send on to the model server. Anything else is dropped: `n` would
 // multiply the work, `user` names a person, and unknown fields are untested surface.
 const PASS = ['messages', 'tools', 'tool_choice', 'parallel_tool_calls', 'temperature', 'top_p', 'top_k', 'min_p', 'max_tokens', 'max_completion_tokens', 'stop', 'seed', 'frequency_penalty', 'presence_penalty', 'repetition_penalty', 'response_format', 'reasoning_effort', 'reasoning']
@@ -401,6 +411,49 @@ const pause = (ms, signal) =>
   })
 const count = (v) => (Number.isSafeInteger(v) && v >= 0 && v < 1e9 ? v : 0)
 
+// A fixed message per status class for an upstream failure. Never the model server's own words.
+function upstreamMessage(status) {
+  if (status === 400) return 'the model server rejected the request'
+  if (status === 404) return 'the requested model is not available on the model server'
+  if (status === 408) return 'the model server timed out on the request'
+  if (status === 413) return 'the request was too large for the model server'
+  if (status === 429) return 'the model server is rate limiting the gateway'
+  if (status >= 400 && status <= 499) return 'the model server rejected the request'
+  return 'the model server failed'
+}
+
+// Rebuilds the reply the caller gets from a fixed allowlist, so no field the model server
+// invents reaches a caller: not a top-level extra, not `prompt_tokens_details` (which can carry
+// a prompt-cache hit count that is a side channel between callers), nothing but what is listed
+// here. `model` is replaced with the gateway's own name, never the upstream id.
+function sanitizeCompletion(json, modelName) {
+  const out = {
+    id: typeof json.id === 'string' ? json.id : `chatcmpl-${randomUUID()}`,
+    object: 'chat.completion',
+    created: Number.isSafeInteger(json.created) ? json.created : Math.floor(Date.now() / 1000),
+    model: modelName,
+    choices: (Array.isArray(json.choices) ? json.choices : []).map((ch, i) => {
+      const m = (ch && typeof ch.message === 'object' && ch.message) || {}
+      const msg = { role: 'assistant', content: typeof m.content === 'string' ? m.content : m.content == null ? null : '' }
+      const calls = Array.isArray(m.tool_calls) ? m.tool_calls : []
+      if (calls.length) {
+        msg.tool_calls = calls.map((call, index) => ({
+          id: typeof call?.id === 'string' ? call.id : `call_${randomUUID()}`,
+          index: Number.isSafeInteger(call?.index) ? call.index : index,
+          type: 'function',
+          function: { name: String(call?.function?.name ?? ''), arguments: typeof call?.function?.arguments === 'string' ? call.function.arguments : '{}' },
+        }))
+      }
+      return { index: Number.isSafeInteger(ch?.index) ? ch.index : i, message: msg, finish_reason: typeof ch?.finish_reason === 'string' ? ch.finish_reason : null }
+    }),
+  }
+  const u = json.usage
+  if (u && typeof u === 'object') {
+    out.usage = { prompt_tokens: count(u.prompt_tokens), completion_tokens: count(u.completion_tokens), total_tokens: count(u.total_tokens) || count(u.prompt_tokens) + count(u.completion_tokens) }
+  }
+  return out
+}
+
 // What is wrong with a reply, or null. Only shape is judged, never content.
 function fault(message, offered) {
   for (const call of message.tool_calls || []) {
@@ -420,10 +473,15 @@ function fault(message, offered) {
 // Asks the model server for one whole reply, retrying what is worth retrying. `tally` gets
 // the tokens of every try that reported them: a rejected reply was still work done.
 // Returns { status, json } or { status, error (for the caller), why (for the log, fixed) }.
-async function complete(body, offered, signal, deadline, tally) {
+async function complete(body, offered, signal, deadline, tally, overQuota) {
   let last = 'no attempt made'
   let lastStatus = 502
   for (let attempt = 1; attempt <= TRIES; attempt++) {
+    // The quota is re-checked before every try: the tokens a slow burst already spent are in the
+    // store by now, so a caller cannot keep retrying (or keep its queued requests going) past the
+    // limit. The first try catches a caller that went over while it waited for a slot.
+    const q = overQuota && overQuota(tally.in + tally.out)
+    if (q) return { status: 429, type: 'insufficient_quota', error: `this week's quota of ${q.quota} tokens is used up; it resets at ${q.resets_at}`, why: 'the weekly quota is used up', headers: { 'Retry-After': secondsUntil(Date.parse(q.resets_at)) } }
     tally.tries = attempt
     let r
     try {
@@ -445,8 +503,18 @@ async function complete(body, offered, signal, deadline, tally) {
       json = JSON.parse(r.text)
     } catch {}
     if (json && typeof json === 'object') {
-      tally.in += count(json.usage?.prompt_tokens)
-      tally.out += count(json.usage?.completion_tokens)
+      const u = json.usage
+      const reported = u && typeof u === 'object' && (Number.isSafeInteger(u.prompt_tokens) || Number.isSafeInteger(u.completion_tokens))
+      if (reported) {
+        tally.in += count(u.prompt_tokens)
+        tally.out += count(u.completion_tokens)
+      } else {
+        // A model server that reports no usage must not be free: charge an estimate from the
+        // bytes on the wire (~4 bytes per token) so the quota still bites. Flagged for the log.
+        tally.in += Math.ceil(Buffer.byteLength(JSON.stringify(body)) / 4)
+        tally.out += Math.ceil(Buffer.byteLength(r.text) / 4)
+        tally.estimated = true
+      }
     }
     if (r.status === 429 || r.status >= 500) {
       last = `the model server answered ${r.status}`
@@ -459,16 +527,19 @@ async function complete(body, offered, signal, deadline, tally) {
       continue
     }
     if (r.status < 200 || r.status > 299) {
-      const said = json.error?.message
-      const message = typeof said === 'string' ? said.slice(0, 1000) : `the model server answered ${r.status}`
-      // Together reports the model's own malformed output as a 4xx "Parse error"; that is worth another try.
-      if (/parse error|failed to process token/i.test(message)) {
+      const said = typeof json.error?.message === 'string' ? json.error.message : ''
+      // Together reports the model's own malformed output as a 4xx "Parse error"; that is worth
+      // another try. The text is read here only to classify it; it is never sent on.
+      if (/parse error|failed to process token/i.test(said)) {
         last = 'the model produced output its server could not parse'
         continue
       }
-      // The caller gets the model server's own words about its own request; the log gets only the status.
-      const status = r.status >= 400 && r.status <= 499 ? r.status : 502
-      return { status, error: message, why: `the model server answered ${r.status}` }
+      // The caller never gets the model server's words: they can carry the gateway's own
+      // Authorization header back (a 401 that echoes the bearer token). The caller gets a fixed
+      // message per status class, and 401/403 is hidden as a 502 so a bad key looks like any
+      // other upstream failure.
+      const status = r.status === 401 || r.status === 403 ? 502 : r.status >= 400 && r.status <= 499 ? r.status : 502
+      return { status, error: upstreamMessage(r.status), why: `the model server answered ${r.status}` }
     }
     const message = json.choices?.[0]?.message
     if (!message || typeof message !== 'object') {
@@ -491,7 +562,7 @@ async function complete(body, offered, signal, deadline, tally) {
 function send(res, status, body, headers = {}) {
   if (res.headersSent || res.destroyed) return
   res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', ...headers })
-  res.end(JSON.stringify(body))
+  res.end(redact(JSON.stringify(body)))
 }
 const fail = (res, status, message, type, headers) => send(res, status, { error: { message, type } }, headers)
 
@@ -500,32 +571,43 @@ function stream(res, json, wantUsage) {
   const choice = json.choices[0]
   const m = choice.message
   const base = { id: json.id || `chatcmpl-${randomUUID()}`, object: 'chat.completion.chunk', created: json.created || Math.floor(Date.now() / 1000), model: json.model }
-  const chunk = (delta, finish = null) => res.write(`data: ${JSON.stringify({ ...base, choices: [{ index: 0, delta, finish_reason: finish }] })}\n\n`)
+  const chunk = (delta, finish = null) => res.write(redact(`data: ${JSON.stringify({ ...base, choices: [{ index: 0, delta, finish_reason: finish }] })}\n\n`))
   res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-store', Connection: 'keep-alive' })
   chunk({ role: 'assistant', content: '' })
-  const reasoning = m.reasoning_content ?? m.reasoning
-  if (reasoning) chunk({ reasoning_content: reasoning })
   if (m.content) chunk({ content: m.content })
   ;(m.tool_calls || []).forEach((call, index) =>
     chunk({ tool_calls: [{ index, id: call.id || `call_${randomUUID()}`, type: 'function', function: { name: call.function.name, arguments: call.function.arguments || '{}' } }] }),
   )
   chunk({}, choice.finish_reason || ((m.tool_calls || []).length ? 'tool_calls' : 'stop'))
-  if (wantUsage && json.usage) res.write(`data: ${JSON.stringify({ ...base, choices: [], usage: json.usage })}\n\n`)
+  if (wantUsage && json.usage) res.write(redact(`data: ${JSON.stringify({ ...base, choices: [], usage: json.usage })}\n\n`))
   res.end('data: [DONE]\n\n')
 }
 
-// Reads the body up to maxBody. Refuses on Content-Length before reading a byte, and
-// otherwise stops reading the moment the cap is passed.
+// The bytes held in all readBody buffers at once. One caller's maxBody is capped, but 256
+// connections each sending a slow 4 MiB body would otherwise pin maxBody * connections of memory
+// in the one process every workspace shares. This ceiling bounds that to GATEWAY_MAX_TOTAL_BODY_BYTES.
+let buffering = 0
+
+// Reads the body up to maxBody. Refuses on Content-Length before reading a byte, otherwise stops
+// the moment the per-request cap is passed, and refuses outright once the whole process is already
+// holding GATEWAY_MAX_TOTAL_BODY_BYTES of unread bodies.
 function readBody(req) {
   return new Promise((resolve, reject) => {
     const declared = req.headers['content-length']
     if (declared !== undefined && !(Number(declared) <= C.maxBody)) return reject(refusal('too_large'))
+    if (buffering >= C.maxTotalBody) return reject(refusal('too_busy'))
     const chunks = []
     let size = 0
+    let held = 0
     let settled = false
+    const release = () => {
+      buffering -= held
+      held = 0
+    }
     const end = (err, value) => {
       if (settled) return
       settled = true
+      release()
       if (err) {
         req.removeAllListeners('data')
         req.pause()
@@ -534,7 +616,10 @@ function readBody(req) {
     }
     req.on('data', (c) => {
       size += c.length
+      buffering += c.length
+      held += c.length
       if (size > C.maxBody) return end('too_large')
+      if (buffering > C.maxTotalBody) return end('too_busy')
       chunks.push(c)
     })
     req.on('end', () => end(null, Buffer.concat(chunks)))
@@ -591,6 +676,10 @@ async function handle(req, res, rec, signal) {
       res.once('finish', () => req.socket?.destroy())
       return no(413, 'the body was over the size cap', `the request is larger than ${C.maxBody} bytes`, 'invalid_request_error', { Connection: 'close' })
     }
+    if (e.code === 'too_busy') {
+      res.once('finish', () => req.socket?.destroy())
+      return no(503, 'too many bodies in memory at once', 'the gateway is receiving too many requests at once; retry shortly', 'overloaded_error', { 'Retry-After': '5', Connection: 'close' })
+    }
     rec.status = 499
     rec.why = 'the caller went away'
     return
@@ -608,8 +697,16 @@ async function handle(req, res, rec, signal) {
   rec.model = body.model
   if (!Array.isArray(body.messages) || !body.messages.length) return no(400, 'no messages', 'messages must be a non-empty list', 'invalid_request_error')
 
-  const before = usageOf(who)
-  if (before.tokens_used >= before.quota) {
+  // Over quota counting what is already committed to the store plus `pending`, the tokens the
+  // current request has already spent on earlier tries (not yet written). This is what re-checks
+  // on every try and before a queued request starts, so a burst cannot run the whole queue past
+  // the limit and a single request cannot keep retrying once its own tries have crossed it.
+  const overQuota = (pending = 0) => {
+    const u = usageOf(who)
+    return u.tokens_used + pending >= u.quota ? u : null
+  }
+  const before = overQuota()
+  if (before) {
     return no(429, 'the weekly quota is used up', `this week's quota of ${before.quota} tokens is used up; it resets at ${before.resets_at}`, 'insufficient_quota', {
       'Retry-After': secondsUntil(Date.parse(before.resets_at)),
     })
@@ -641,21 +738,22 @@ async function handle(req, res, rec, signal) {
     const offered = new Set((Array.isArray(body.tools) ? body.tools : []).map((t) => t?.function?.name).filter((n) => typeof n === 'string'))
     const upstreamBody = { model: C.models.get(body.model), stream: false }
     for (const k of PASS) if (k in body) upstreamBody[k] = body[k]
-    out = await complete(upstreamBody, offered, signal, Date.now() + C.totalMs, tally)
+    out = await complete(upstreamBody, offered, signal, Date.now() + C.totalMs, tally, overQuota)
     rec.status = out.status
     if (out.status === 200) {
-      out.json.model = body.model
-      if (wantStream) stream(res, out.json, wantUsage)
-      else send(res, 200, out.json)
+      const clean = sanitizeCompletion(out.json, body.model)
+      if (wantStream) stream(res, clean, wantUsage)
+      else send(res, 200, clean)
     } else {
       rec.why = out.why
-      if (out.status !== 499) fail(res, out.status, out.error, 'upstream_error')
+      if (out.status !== 499) fail(res, out.status, out.error, out.type || 'upstream_error', out.headers)
     }
   } finally {
     release()
     rec.tries = tally.tries
     rec.tokens_in = tally.in
     rec.tokens_out = tally.out
+    rec.estimated = tally.estimated ? 'bytes' : null
     if (tally.tries) addUsage.run(weekKey(weekStart()), who, body.model, tally.in, tally.out)
   }
 }
@@ -663,11 +761,11 @@ async function handle(req, res, rec, signal) {
 // The whole record of a request. Each field is a number, null, a caller name or model name
 // checked at start, or one of this file's own strings: no value a caller or the model server
 // chose. JSON.stringify escapes anything else, so a line stays one line regardless.
-const log = (rec) => process.stdout.write(JSON.stringify({ t: new Date().toISOString(), ...rec }) + '\n')
+const log = (rec) => process.stdout.write(redact(JSON.stringify({ t: new Date().toISOString(), ...rec })) + '\n')
 
 const server = http.createServer(async (req, res) => {
   const started = Date.now()
-  const rec = { caller: '-', route: 'other', model: '-', status: 0, why: null, tries: 0, tokens_in: null, tokens_out: null, wait_ms: null, ms: 0 }
+  const rec = { caller: '-', route: 'other', model: '-', status: 0, why: null, tries: 0, tokens_in: null, tokens_out: null, estimated: null, wait_ms: null, ms: 0 }
   const ac = new AbortController()
   res.on('close', () => {
     if (!res.writableFinished) ac.abort()
@@ -714,7 +812,7 @@ server.listen(C.port, C.host, () => {
       upstream: C.upstream.host,
       models: [...C.models.keys()],
       callers: C.tokens.length,
-      limits: { max_body: C.maxBody, inflight: C.maxInflight, per_caller: C.perCaller, queued_per_caller: C.perCallerQueue, queue_wait_ms: C.maxWait, connect_ms: C.connectMs, first_byte_ms: C.firstByteMs, total_ms: C.totalMs },
+      limits: { max_body: C.maxBody, max_total_body: C.maxTotalBody, inflight: C.maxInflight, per_caller: C.perCaller, queued_per_caller: C.perCallerQueue, queue_wait_ms: C.maxWait, connect_ms: C.connectMs, first_byte_ms: C.firstByteMs, total_ms: C.totalMs },
     }),
   )
 })

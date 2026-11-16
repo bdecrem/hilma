@@ -77,6 +77,16 @@ Tests: `node --test gateway/test.mjs` (13 tests, about 13 seconds; each starts t
 against a fake model server, so config refusal, restarts and timeouts are tested on the program
 that runs).
 
+**The reply is rebuilt, not relayed.** A successful reply is reconstructed from a fixed allowlist
+(`id`, `object`, `created`, `model` as the gateway's own name, `choices` with `role`/`content`/
+`tool_calls`/`finish_reason`, and `usage` trimmed to `prompt_tokens`/`completion_tokens`/
+`total_tokens`) — so no field the model server invents reaches a caller, including
+`prompt_tokens_details.cached_tokens`, a prompt-cache hit count that would otherwise be a side
+channel between callers. An upstream **error** is never relayed either: the caller gets one fixed
+message per status class, and an upstream 401/403 is hidden as a 502 (its text can quote the
+gateway's own `Authorization` header, i.e. the model key). As a last layer the configured upstream
+key is scrubbed from anything written to a reply or the log.
+
 **Routes.** `POST /v1/chat/completions` (streamed or not), `GET /v1/models` (the names in
 `GATEWAY_MODELS`), `GET /v1/usage` (with a caller token: that caller's week, e.g.
 `"fraction_used": 0.38`; with `GATEWAY_USAGE_TOKEN`: every caller plus requests in flight and
@@ -88,6 +98,7 @@ waiting. That token can read usage and nothing else, so the web app never needs 
 |---|---|---|---|
 | Who | `GATEWAY_TOKENS` `name:token,…` (token 24+ printable chars) | required | 401 |
 | Body size | `GATEWAY_MAX_BODY_BYTES` | 4 MiB | 413, from `Content-Length` before a byte is read, or the moment a chunked body passes the cap; the connection is closed |
+| Bodies in memory at once, all callers | `GATEWAY_MAX_TOTAL_BODY_BYTES` | 32 MiB | 503 `overloaded_error`, `Retry-After: 5`; bounds `maxBody × connections` so slow senders cannot pin the process's memory |
 | Reading the request | `GATEWAY_READ_TIMEOUT_MS` (headers: 10 s) | 30 s | 408 from Node (slow senders) |
 | Model name | `GATEWAY_MODELS` `general=<upstream id>,fast=…,code=…` | required | 400 for any other name; the caller's string never goes upstream, and only known request fields are passed on (`n` and `user` are dropped) |
 | Weekly tokens | `GATEWAY_WEEKLY_TOKENS`, per-caller `GATEWAY_QUOTAS` `name=tokens,…` | 20,000,000 | 429 `insufficient_quota`, `Retry-After` = seconds to Monday 00:00 UTC |
@@ -117,14 +128,18 @@ way the slot frees at once.
 try (a reply rejected and retried was still work), per caller per week starting Monday 00:00
 UTC, in SQLite via `node:sqlite`: it ships with Node, so there is no native addon to build and no
 npm package in the process that holds the model key. A restart forgets nothing. The check is made
-before a request is queued, so the requests already in flight can overshoot by at most their own
-size. A model server that reports no usage is counted as zero.
+before a request is queued **and again when a queued request is granted its slot and before every
+retry**, counting the tokens already committed plus what the request in hand has spent on earlier
+tries — so a burst cannot run its whole queue past the limit, and a single request cannot keep
+retrying once its own tries have crossed it. A model server that reports no usage is **charged an
+estimate from the bytes on the wire** (~4 bytes per token), logged with `"estimated":"bytes"`, so a
+silent server is never free.
 
 **Reading the log.** stdout, one JSON line per request, plus one `"event":"start"` line with
 the limits in force:
 
 ```json
-{"t":"2026-11-16T18:06:24.357Z","caller":"spike","route":"chat","model":"general","status":200,"why":null,"tries":1,"tokens_in":6393,"tokens_out":4875,"wait_ms":0,"ms":23180}
+{"t":"2026-11-16T18:06:24.357Z","caller":"spike","route":"chat","model":"general","status":200,"why":null,"tries":1,"tokens_in":6393,"tokens_out":4875,"estimated":null,"wait_ms":0,"ms":23180}
 ```
 
 `caller` is a name from `GATEWAY_TOKENS` (`-` if unknown, `usage` for the usage token); `route`
