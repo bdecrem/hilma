@@ -9,7 +9,7 @@ Started 2026-11-15. The plan, the promise and its limits are in the private note
 
 | Part | What it is | State |
 |---|---|---|
-| **Agent** | [opencode](https://github.com/anomalyco/opencode) 2.3.0 (MIT), one copy per person's workspace | runs a real task end to end (see the spike) |
+| **Agent** | [opencode](https://github.com/anomalyco/opencode) 2.3.0 (MIT), one copy per person's workspace | runs a real task end to end, from the command line and in server mode (see the spike) |
 | **Model gateway** | `gateway/server.mjs`: the one address a workspace may reach. Holds the model server's address and key, checks who is calling, keeps one line per request and never any content | built, used by the spike |
 | **Model** | an OpenAI-compatible server. On the Mac Studio (arrives Nov 30 to Dec 3, 2026): a local MLX server. Until then: Together.ai, made-up data only | stand-in works with GLM-5.3-Flash |
 | **Workspace** | one sealed Linux machine per person (Apple `container`), with a route to the gateway and nothing else | not built |
@@ -32,7 +32,24 @@ UPSTREAM_BASE_URL=https://api.together.xyz/v1 UPSTREAM_API_KEY=$TOGETHER_API_KEY
 BOX_API_KEY=$(cat /tmp/gw-token) SPIKE_TAIL=30 spike/run-once.sh glm glm-5.3-flash http://127.0.0.1:4180/v1
 ```
 
+`spike/serve-drive.mjs` runs the same task the way our own page will: `opencode serve` headless in the
+workspace, and the script as the page, over HTTP with `@opencode/client` (create a session, send the
+request, follow the event stream, wait for the end).
+
+```bash
+BOX_API_KEY=$(cat /tmp/gw-token) SPIKE_TAIL=30 node spike/serve-drive.mjs glm glm-5.3-flash
+```
+
 Measured 2026-11-15 on the iMac, through the gateway:
+
+- **Server mode, driven by our own code: 16 of 16 checks, 31 seconds** (GLM-5.3-Flash, one run). The
+  server came up in 0.4 seconds and answered 401 with no credentials, 401 with a wrong password and
+  200 with ours: opencode 2 wants Basic auth (user `opencode`, the password from `OPENCODE_PASSWORD`),
+  so the front desk makes one password per workspace. The event stream carries what a page needs:
+  steps, reasoning, each tool call and its result, text as it is written, and the end of the run.
+- **opencode itself reaches out.** The event stream showed `models-dev.refreshed`: it fetches a model
+  catalog from models.dev. Update checks are off in our config (`"update": "disable"`). In a sealed
+  workspace neither has a route; that it still works there is to be tested when the workspaces exist.
 
 - **GLM-5.3-Flash on Together.ai: 16 of 16 checks, 25 seconds, 6 model requests, 44,681 tokens in and
   5,233 out** (about one cent at Together's listed price). One run; not a reliability figure.
