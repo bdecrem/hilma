@@ -598,6 +598,11 @@ of about 15 s with no browser request finishes with the workspace running throug
 workspace stops a few seconds after it ends; a run of 80 s is interrupted at about 24 s, the model
 is called no more, `/api/runs` lists it, and the page's turn says why.
 
+**The long-run fix (2026-11-16), from `~/ola-staging` on the mini:** `frontdesk/check.mjs` **34 of
+34** with the live request (33 of 33 with `--no-live`), `workspace/check.mjs` 64 of 64
+(`--no-live`), `gateway/test.mjs` 20 of 20, `web/check.mjs` 20 of 20 (`--no-live`); `npm test` in
+`frontdesk/` (8) and `web/` (11).
+
 **Second round, the review's open findings (2026-11-16), on the mini:** `frontdesk/check.mjs`
 **32 of 32** with the live request (31 of 31 with `--no-live`), `workspace/check.mjs` **65 of 65**
 with its live task (64 of 64 with `--no-live`), `gateway/test.mjs` **20 of 20**, `web/check.mjs`
@@ -718,6 +723,18 @@ git clone --no-checkout https://github.com/bdecrem/hilma ~/ola-staging
 mkdir -p /tmp/ola-boot && git -C ~/ola-staging archive origin/main apps/activist-ai/ops | tar -x -C /tmp/ola-boot
 node /tmp/ola-boot/apps/activist-ai/ops/ola.mjs deploy    # moves the installed jobs to ~/ola-staging
 ```
+
+**On the mini (2026-11-16).** `~/ola-staging` was cloned, and the first deploy (`b70ef044`, run
+from the commit's own `ops/` unpacked in `/tmp`) passed gateway 20 of 20, workspace 64 of 64, web 20
+of 20 and front desk 33 of 33 (all `--no-live`) and moved the three jobs off `~/hilma-venture`. A
+deploy of `6fccc5f0` with the front desk suite's port held by another process was **refused** at
+that suite; the gateway and the front desk kept their pids and `current` its target. Deployed again
+with the port free: the same four counts, the jobs restarted by `kickstart -k`. Then, from
+`~/ola-staging`: `prove-restarts` 5 of 5 (0.7 to 1.0 s each), `status` all ok (`6fccc5f02d53`), no
+process and no plist naming `~/hilma-venture`, and the one live run, `frontdesk/check.mjs` **34 of
+34** (GLM-5.3-Flash through Together read the made-up survey and wrote `summary.md`; truth 48).
+The platform database, tokens and `stage-a` were not moved or changed. Deploys cloned
+`node_modules` once the lockfiles matched; the suites take about three minutes.
 
 `status` shows the deployed commit and that `current` points at it, fails if any Ola plist (the
 three jobs, and each workspace's door and desk in `~/.ola/launchd`) points outside `~/ola-staging`,
