@@ -44,9 +44,9 @@
 import http from 'node:http'
 import https from 'node:https'
 import { createHash, randomUUID, timingSafeEqual } from 'node:crypto'
-import { chmodSync, mkdirSync } from 'node:fs'
+import { chmodSync, mkdirSync, readFileSync, rmSync, statSync, watch } from 'node:fs'
 import { homedir } from 'node:os'
-import { dirname, resolve } from 'node:path'
+import { basename, dirname, join, resolve } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
 
 // ---------------------------------------------------------------- config
@@ -68,7 +68,7 @@ const SETTINGS = {
   GATEWAY_READ_TIMEOUT_MS: [30_000, 1_000, 600_000],
   GATEWAY_WEEKLY_TOKENS: [20_000_000, 1, 1e12],
 }
-const OTHER_GATEWAY_SETTINGS = ['GATEWAY_TOKENS', 'GATEWAY_MODELS', 'GATEWAY_HOST', 'GATEWAY_DB', 'GATEWAY_QUOTAS', 'GATEWAY_USAGE_TOKEN']
+const OTHER_GATEWAY_SETTINGS = ['GATEWAY_TOKENS', 'GATEWAY_TOKENS_FILE', 'GATEWAY_DOOR_DIR', 'GATEWAY_MODELS', 'GATEWAY_HOST', 'GATEWAY_DB', 'GATEWAY_QUOTAS', 'GATEWAY_USAGE_TOKEN']
 const NAME = /^[a-z0-9][a-z0-9._-]{0,63}$/i
 const TOKEN = /^[\x21-\x2b\x2d-\x7e]{24,512}$/ // printable ASCII, no space, no comma
 
@@ -113,27 +113,15 @@ function loadConfig(env) {
   if (!key) bad('UPSTREAM_API_KEY is not set')
   else if (!/^[\x21-\x7e]+$/.test(key)) bad('UPSTREAM_API_KEY has spaces or control characters')
 
-  // GATEWAY_TOKENS: "name:token,name:token"
-  const tokens = [] // [{ name, digest }]
-  const names = new Set()
-  const digests = new Set()
-  if (!env.GATEWAY_TOKENS) bad('GATEWAY_TOKENS is not set')
-  else {
-    env.GATEWAY_TOKENS.split(',').forEach((pair, i) => {
-      const at = pair.indexOf(':')
-      const name = pair.slice(0, at).trim()
-      const token = pair.slice(at + 1).trim()
-      if (at < 1 || !NAME.test(name)) return bad(`GATEWAY_TOKENS entry ${i + 1}: the name must be letters, digits, dot, dash or underscore (at most 64)`)
-      if (!TOKEN.test(token)) return bad(`GATEWAY_TOKENS entry ${i + 1} (${name}): the token must be 24 to 512 printable characters with no space or comma`)
-      const digest = sha(token)
-      if (name === 'usage') bad(`GATEWAY_TOKENS entry ${i + 1}: the name usage is reserved for the usage token`)
-      if (names.has(name)) bad(`GATEWAY_TOKENS: the name ${name} appears twice`)
-      if (digests.has(digest.toString('hex'))) bad(`GATEWAY_TOKENS entry ${i + 1} (${name}): this token is already given to another caller`)
-      names.add(name)
-      digests.add(digest.toString('hex'))
-      tokens.push({ name, digest })
-    })
-  }
+  // GATEWAY_TOKENS: "name:token,name:token", and/or GATEWAY_TOKENS_FILE: a file (mode 600) holding
+  // one such line (workspace/ws.mjs writes ~/.ola/gateway-tokens). The file is read again on
+  // SIGHUP and whenever it changes, so a new or removed workspace needs no restart.
+  const tokensFile = env.GATEWAY_TOKENS_FILE ? resolve(env.GATEWAY_TOKENS_FILE) : null
+  const doorDir = env.GATEWAY_DOOR_DIR ? resolve(env.GATEWAY_DOOR_DIR) : null
+  if (!env.GATEWAY_TOKENS && !tokensFile) bad('GATEWAY_TOKENS is not set (nor GATEWAY_TOKENS_FILE)')
+  const tokens = readTokens(env.GATEWAY_TOKENS, tokensFile, bad)
+  const names = new Set(tokens.map((t) => t.name))
+  const digests = new Set(tokens.map((t) => t.digest.toString('hex')))
   let usageDigest = null
   if (env.GATEWAY_USAGE_TOKEN) {
     if (!TOKEN.test(env.GATEWAY_USAGE_TOKEN) || env.GATEWAY_USAGE_TOKEN.length < 32) bad('GATEWAY_USAGE_TOKEN must be 32 to 512 printable characters with no space or comma')
@@ -184,6 +172,9 @@ function loadConfig(env) {
     upstream,
     key,
     tokens,
+    tokensFile,
+    doorDir,
+    weekly: num.GATEWAY_WEEKLY_TOKENS,
     usageDigest,
     models,
     quotas,
@@ -203,6 +194,47 @@ function loadConfig(env) {
     totalMs: num.GATEWAY_TOTAL_TIMEOUT_MS,
     readMs: num.GATEWAY_READ_TIMEOUT_MS,
   }
+}
+
+// The caller tokens from both sources, checked; problems go to `bad`, by name and entry number,
+// never by value. A token file must be mode 600 and hold one GATEWAY_TOKENS= line (it may list
+// no caller: a machine with no workspace yet).
+function readTokens(line, file, bad) {
+  const tokens = []
+  const names = new Set()
+  const digests = new Set()
+  const parse = (text, where) => {
+    if (!text) return
+    text.split(',').forEach((pair, i) => {
+      const at = pair.indexOf(':')
+      const name = pair.slice(0, at).trim()
+      const token = pair.slice(at + 1).trim()
+      if (at < 1 || !NAME.test(name)) return bad(`${where} entry ${i + 1}: the name must be letters, digits, dot, dash or underscore (at most 64)`)
+      if (!TOKEN.test(token)) return bad(`${where} entry ${i + 1} (${name}): the token must be 24 to 512 printable characters with no space or comma`)
+      const digest = sha(token)
+      if (name === 'usage') return bad(`${where} entry ${i + 1}: the name usage is reserved for the usage token`)
+      if (names.has(name)) return bad(`${where}: the name ${name} appears twice`)
+      if (digests.has(digest.toString('hex'))) return bad(`${where} entry ${i + 1} (${name}): this token is already given to another caller`)
+      names.add(name)
+      digests.add(digest.toString('hex'))
+      tokens.push({ name, digest })
+    })
+  }
+  parse(line, 'GATEWAY_TOKENS')
+  if (file) {
+    let st = null
+    try {
+      st = statSync(file)
+    } catch {}
+    if (!st?.isFile()) bad('GATEWAY_TOKENS_FILE: no such file')
+    else if ((st.mode & 0o077) !== 0) bad('GATEWAY_TOKENS_FILE must be readable by this account only (mode 600)')
+    else {
+      const text = readFileSync(file, 'utf8').trim()
+      if (!/^GATEWAY_TOKENS=[^\n]*$/.test(text)) bad('GATEWAY_TOKENS_FILE must hold one line, GATEWAY_TOKENS=name:token,...')
+      else parse(text.slice('GATEWAY_TOKENS='.length), 'GATEWAY_TOKENS_FILE')
+    }
+  }
+  return tokens
 }
 
 function sha(s) {
@@ -287,9 +319,19 @@ class FairQueue {
     for (const l of this.lanes.values()) n += l.queue.length
     return n
   }
+  // A caller added by a token reload gets its own line; a removed one's line goes once empty.
+  addCaller(name) {
+    if (!this.lanes.has(name)) this.lanes.set(name, { inflight: 0, queue: [] }), this.ring.push(name)
+    return this.lanes.get(name)
+  }
+  prune(keep) {
+    for (const [n, l] of this.lanes) if (!keep.has(n) && !l.inflight && !l.queue.length) this.lanes.delete(n)
+    this.ring = this.ring.filter((n) => this.lanes.has(n))
+    this.cursor = this.ring.length ? this.cursor % this.ring.length : 0
+  }
   // Resolves with a release function once the request may go upstream.
   acquire(name, signal) {
-    const lane = this.lanes.get(name)
+    const lane = this.addCaller(name)
     return new Promise((resolve, reject) => {
       if (signal.aborted) return reject(refusal('aborted'))
       const now = this.inflight < this.max && lane.inflight < this.perCaller && lane.queue.length === 0
@@ -322,7 +364,7 @@ class FairQueue {
       for (let i = 0; i < this.ring.length; i++) {
         const at = (this.cursor + i) % this.ring.length
         const l = this.lanes.get(this.ring[at])
-        if (l.queue.length && l.inflight < this.perCaller) {
+        if (l && l.queue.length && l.inflight < this.perCaller) {
           lane = l
           this.cursor = (at + 1) % this.ring.length
           break
@@ -630,13 +672,25 @@ function readBody(req) {
 
 // Who is calling: a caller's name, 'usage' for the read-only usage token, or null.
 // Digests have one length, so the compare leaks nothing about a token's length.
+//
+// A workspace's token is bound to its door. With GATEWAY_DOOR_DIR set, every caller named ws-*
+// gets its own unix socket there (<dir>/<name>.sock, mode 600), and that workspace's door
+// (workspace/door.mjs) connects to it and to nothing else. Through a door only that door's own
+// token is accepted, so a token that leaked from one workspace is refused through every other
+// workspace's door; and a door's token is refused on the TCP port. The binding is which socket
+// the connection arrived on: nothing the caller sends can choose it.
+const isDoorName = (name) => !!C.doorDir && name.startsWith('ws-')
 function identify(req) {
   const given = sha(String(req.headers.authorization || '').replace(/^Bearer\s+/i, ''))
+  const door = req.socket?.server?.olaDoor ?? null
   let who = null
   for (const t of C.tokens) if (timingSafeEqual(given, t.digest) && !who) who = t.name
+  if (door) return who === door ? who : null
+  if (who && isDoorName(who)) return null
   if (!who && C.usageDigest && timingSafeEqual(given, C.usageDigest)) who = 'usage'
   return who
 }
+const known = (name) => name === 'usage' || C.tokens.some((t) => t.name === name)
 
 const ROUTES = { '/v1/chat/completions': 'chat', '/v1/models': 'models', '/v1/usage': 'usage' }
 const secondsUntil = (ms) => String(Math.max(1, Math.ceil((ms - Date.now()) / 1000)))
@@ -684,6 +738,8 @@ async function handle(req, res, rec, signal) {
     rec.why = 'the caller went away'
     return
   }
+  // A token reload may have removed this caller while its body arrived.
+  if (!known(who)) return no(401, 'unknown caller', 'unknown caller', 'authentication_error', { Connection: 'close' })
   let body
   try {
     body = JSON.parse(raw.toString('utf8'))
@@ -763,7 +819,7 @@ async function handle(req, res, rec, signal) {
 // chose. JSON.stringify escapes anything else, so a line stays one line regardless.
 const log = (rec) => process.stdout.write(redact(JSON.stringify({ t: new Date().toISOString(), ...rec })) + '\n')
 
-const server = http.createServer(async (req, res) => {
+async function onRequest(req, res) {
   const started = Date.now()
   const rec = { caller: '-', route: 'other', model: '-', status: 0, why: null, tries: 0, tokens_in: null, tokens_out: null, estimated: null, wait_ms: null, ms: 0 }
   const ac = new AbortController()
@@ -786,14 +842,98 @@ const server = http.createServer(async (req, res) => {
     rec.ms = Date.now() - started
     log(rec)
   }
-})
-server.headersTimeout = Math.min(10_000, C.readMs)
-server.requestTimeout = C.readMs // receiving the request; the response has its own timeouts
-server.maxConnections = 256
-server.maxRequestsPerSocket = 1000
+}
+function makeServer(maxConnections) {
+  const s = http.createServer(onRequest)
+  s.headersTimeout = Math.min(10_000, C.readMs)
+  s.requestTimeout = C.readMs // receiving the request; the response has its own timeouts
+  s.maxConnections = maxConnections
+  s.maxRequestsPerSocket = 1000
+  return s
+}
+const server = makeServer(256)
+
+// ---------------------------------------------------------------- doors and token reloads
+
+const doors = new Map() // caller name -> its http server on <doorDir>/<name>.sock
+function syncDoors() {
+  if (!C.doorDir) return
+  const want = new Set(C.tokens.filter((t) => isDoorName(t.name)).map((t) => t.name))
+  for (const [name, s] of doors) {
+    if (want.has(name)) continue
+    s.close()
+    s.closeAllConnections()
+    rmSync(join(C.doorDir, `${name}.sock`), { force: true })
+    doors.delete(name)
+  }
+  for (const name of want) {
+    if (doors.has(name)) continue
+    const file = join(C.doorDir, `${name}.sock`)
+    const s = makeServer(64)
+    s.olaDoor = name
+    s.on('error', (e) => console.error(`gateway: the door socket for ${name} failed (${e.code || e.name})`))
+    rmSync(file, { force: true })
+    s.listen(file, () => chmodSync(file, 0o600))
+    doors.set(name, s)
+  }
+}
+
+let tokenState = ''
+const stateOf = (tokens) => tokens.map((t) => `${t.name}:${t.digest.toString('hex')}`).sort().join(',')
+// Reads the callers again (SIGHUP, or the file changed). A file that does not check out is not
+// used: the callers already in force stay, and the problems are printed by name, never value.
+function reloadTokens(why) {
+  const problems = []
+  const fresh = readTokens(process.env.GATEWAY_TOKENS, C.tokensFile, (m) => problems.push(m))
+  if (problems.length) {
+    for (const p of problems) console.error(`tokens: ${p}`)
+    process.stdout.write(JSON.stringify({ t: new Date().toISOString(), event: 'tokens', why, ok: false, callers: C.tokens.length }) + '\n')
+    return false
+  }
+  const next = stateOf(fresh)
+  if (next === tokenState) return true
+  const before = new Set(C.tokens.map((t) => t.name))
+  const after = new Set(fresh.map((t) => t.name))
+  C.tokens = fresh
+  tokenState = next
+  for (const n of after) {
+    if (!C.quotas.has(n)) C.quotas.set(n, C.weekly)
+    queue.addCaller(n)
+  }
+  queue.prune(after)
+  syncDoors()
+  process.stdout.write(JSON.stringify({ t: new Date().toISOString(), event: 'tokens', why, ok: true, callers: fresh.length, added: [...after].filter((n) => !before.has(n)).length, removed: [...before].filter((n) => !after.has(n)).length }) + '\n')
+  return true
+}
+tokenState = stateOf(C.tokens)
+if (C.doorDir) {
+  mkdirSync(C.doorDir, { recursive: true, mode: 0o700 })
+  chmodSync(C.doorDir, 0o700)
+  syncDoors()
+}
+process.on('SIGHUP', () => reloadTokens('signal'))
+if (C.tokensFile) {
+  // A change to the file (ws.mjs replaces it by rename) is picked up at once; a stat every few
+  // seconds catches what a watch can miss.
+  let soon = null
+  const later = () => (clearTimeout(soon), (soon = setTimeout(() => reloadTokens('file'), 100)))
+  try {
+    watch(dirname(C.tokensFile), (_, f) => (!f || f === basename(C.tokensFile)) && later())
+  } catch {}
+  let seen = ''
+  setInterval(() => {
+    let st = ''
+    try {
+      const x = statSync(C.tokensFile)
+      st = `${x.ino}:${x.size}:${x.mtimeMs}`
+    } catch {}
+    if (st !== seen) (seen = st), later()
+  }, 3000).unref()
+}
 
 const stop = () => {
   server.close()
+  for (const [name, d] of doors) d.close(), rmSync(join(C.doorDir, `${name}.sock`), { force: true })
   try {
     db.close()
   } catch {}
@@ -812,6 +952,8 @@ server.listen(C.port, C.host, () => {
       upstream: C.upstream.host,
       models: [...C.models.keys()],
       callers: C.tokens.length,
+      doors: doors.size,
+      tokens_file: !!C.tokensFile,
       limits: { max_body: C.maxBody, max_total_body: C.maxTotalBody, inflight: C.maxInflight, per_caller: C.perCaller, queued_per_caller: C.perCallerQueue, queue_wait_ms: C.maxWait, connect_ms: C.connectMs, first_byte_ms: C.firstByteMs, total_ms: C.totalMs },
     }),
   )

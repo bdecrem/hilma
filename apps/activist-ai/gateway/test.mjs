@@ -5,7 +5,7 @@ import { test, after } from 'node:test'
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
-import { mkdtempSync, rmSync } from 'node:fs'
+import { chmodSync, mkdtempSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import http from 'node:http'
 import net from 'node:net'
 import { tmpdir } from 'node:os'
@@ -584,4 +584,97 @@ test('the process will not buffer unbounded request bodies; small callers still 
   assert.equal(small.status, 200, 'a small caller is still served while big bodies are shed')
   await g.stop() // reaps the stuck senders; `many` settles as their sockets error
   await many
+})
+
+// ---------------------------------------------------------------- token reloads and doors
+
+function writeTokens(file, line) {
+  writeFileSync(`${file}.tmp`, `GATEWAY_TOKENS=${line}\n`, { mode: 0o600 })
+  chmodSync(`${file}.tmp`, 0o600)
+  renameSync(`${file}.tmp`, file) // as ws.mjs does: the gateway never reads half a file
+}
+// One request over a door's unix socket, as workspace/door.mjs would carry it.
+function viaSocket(socketPath, token, p = '/v1/models') {
+  return new Promise((resolve) => {
+    const req = http.request({ socketPath, path: p, headers: token ? { authorization: `Bearer ${token}` } : {} }, (res) => {
+      let text = ''
+      res.on('data', (d) => (text += d))
+      res.on('end', () => resolve({ status: res.statusCode, text }))
+    })
+    req.on('error', (e) => resolve({ status: 0, text: e.code }))
+    req.end()
+  })
+}
+
+test('a new or removed caller in GATEWAY_TOKENS_FILE takes effect without a restart; a bad file keeps the callers in force', async () => {
+  const up = await fakeUpstream()
+  const dir = mkdtempSync(path.join(TMP, 'tok-'))
+  const file = path.join(dir, 'gateway-tokens')
+  const d = tok()
+  writeTokens(file, `a:${T.a}`)
+  const env = { ...baseEnv(up.url), GATEWAY_TOKENS_FILE: file }
+  delete env.GATEWAY_TOKENS
+  const g = await gateway(env)
+  try {
+    assert.equal((await call(g, T.a, null, { path: '/v1/models', method: 'GET' })).status, 200)
+    assert.equal((await call(g, d, null, { path: '/v1/models', method: 'GET' })).status, 401)
+    // A workspace is created (d) and another destroyed (a): the file changes, nothing restarts.
+    writeTokens(file, `d:${d}`)
+    await waitFor(() => g.lines.some((l) => l.includes('"event":"tokens"') && l.includes('"added":1')), 5000, 'the reload')
+    assert.equal((await call(g, d, chat({ tag: 'new' }))).status, 200, 'the new caller is served')
+    assert.equal((await call(g, T.a, null, { path: '/v1/models', method: 'GET' })).status, 401, 'the removed caller is refused')
+    // SIGHUP reads it again too.
+    writeFileSync(file, `GATEWAY_TOKENS=d:${d},b:${T.b}\n`, { mode: 0o600 })
+    g.child.kill('SIGHUP')
+    await waitFor(async () => true, 10)
+    await waitFor(() => g.lines.filter((l) => l.includes('"event":"tokens"') && l.includes('"ok":true')).length >= 2, 5000, 'the SIGHUP reload')
+    assert.equal((await call(g, T.b, null, { path: '/v1/models', method: 'GET' })).status, 200, 'b after SIGHUP')
+    // A file that does not check out (a short token, and a mode other than 600) is not used.
+    writeTokens(file, `d:${d},e:short`)
+    await waitFor(() => g.lines.some((l) => l.includes('"event":"tokens"') && l.includes('"ok":false')), 5000, 'the refused reload')
+    assert.equal((await call(g, d, null, { path: '/v1/models', method: 'GET' })).status, 200, 'the callers in force stay')
+    assert.equal((await call(g, T.b, null, { path: '/v1/models', method: 'GET' })).status, 200)
+    writeTokens(file, `d:${d}`)
+    chmodSync(file, 0o644)
+    g.child.kill('SIGHUP')
+    await waitFor(() => g.err.includes('mode 600'), 5000, 'the mode refusal')
+    assert.equal((await call(g, T.b, null, { path: '/v1/models', method: 'GET' })).status, 200, 'a readable file is not trusted')
+    for (const secret of [T.a, T.b, d, UPSTREAM_KEY]) assert.ok(!g.err.includes(secret) && !g.out.includes(secret), 'a secret was printed')
+  } finally {
+    await g.stop()
+  }
+})
+
+test("a workspace's token works only through its own door: not another workspace's door, not the TCP port", async () => {
+  const up = await fakeUpstream()
+  const dir = mkdtempSync(path.join(TMP, 'door-'))
+  const file = path.join(dir, 'gateway-tokens')
+  const doorDir = path.join(dir, 'gw')
+  const x = tok()
+  const y = tok()
+  writeTokens(file, `ws-x:${x},ws-y:${y}`)
+  const env = { ...baseEnv(up.url), GATEWAY_TOKENS_FILE: file, GATEWAY_DOOR_DIR: doorDir, GATEWAY_USAGE_TOKEN: T.usage + T.usage }
+  const g = await gateway(env)
+  const sx = path.join(doorDir, 'ws-x.sock')
+  const sy = path.join(doorDir, 'ws-y.sock')
+  try {
+    assert.equal((await viaSocket(sx, x)).status, 200, "x's token through x's door")
+    assert.equal((await viaSocket(sy, y)).status, 200, "y's token through y's door")
+    assert.equal((await viaSocket(sx, y)).status, 401, "y's token through x's door")
+    assert.equal((await viaSocket(sx, T.a)).status, 401, 'a plain caller token through a door')
+    assert.equal((await viaSocket(sx, T.usage + T.usage, '/v1/usage')).status, 401, 'the usage token through a door')
+    assert.equal((await viaSocket(sx, null)).status, 401, 'no token through a door')
+    assert.equal((await call(g, x, null, { path: '/v1/models', method: 'GET' })).status, 401, "a door's token on the TCP port")
+    assert.equal((await call(g, T.a, null, { path: '/v1/models', method: 'GET' })).status, 200, 'a plain caller still works on TCP')
+    // A new workspace gets its door at once; a removed one's door is gone.
+    const z = tok()
+    writeTokens(file, `ws-x:${x},ws-z:${z}`)
+    await waitFor(() => g.lines.some((l) => l.includes('"event":"tokens"') && l.includes('"removed":1')), 5000, 'the reload')
+    assert.equal((await viaSocket(path.join(doorDir, 'ws-z.sock'), z)).status, 200, "the new workspace's door")
+    assert.equal((await viaSocket(sy, y)).status, 0, "the removed workspace's door is closed")
+    const usage = await call(g, T.usage + T.usage, null, { path: '/v1/usage', method: 'GET' })
+    assert.deepEqual(usage.json.data.map((u) => u.caller).sort(), ['a', 'b', 'c', 'ws-x', 'ws-z'])
+  } finally {
+    await g.stop()
+  }
 })
