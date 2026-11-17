@@ -6,7 +6,7 @@ export type SideLink = { name: string; url: string | null; note?: string }
 export const OPEN: SideLink[] = [
   { name: 'The web app', url: 'https://app.ola.cx', note: 'app.ola.cx' },
   { name: 'The landing page', url: 'https://ola.cx', note: 'ola.cx' },
-  { name: 'The Mac app', url: 'https://ola.cx/ola-site/mac/Ola-0.1-2.dmg', note: 'signed download, unlisted' },
+  { name: 'The Mac app', url: 'https://github.com/bdecrem/hilma/releases/download/ola-mac-0.1-4/Ola-0.1-4.dmg', note: 'signed download, 0.1 (4)' },
   { name: 'TestFlight', url: null, note: 'coming: Apple’s agreement is signed, the iPhone app is on its way' },
 ]
 export const CODE: SideLink[] = [{ name: 'The code', url: 'https://github.com/bdecrem/hilma', note: 'github.com/bdecrem/hilma' }]
