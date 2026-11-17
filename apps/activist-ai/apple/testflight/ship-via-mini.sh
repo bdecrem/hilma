@@ -252,16 +252,28 @@ PLIST
   local root; root=$(git rev-parse --show-toplevel)
   local pub="$root/public/ola-site/mac"
   mkdir -p "$pub" && git -C "$root" rm -q --ignore-unmatch "public/ola-site/mac/Ola-*.dmg" >/dev/null
-  cp "$dmg" "$pub/"
+  # Since Ola's opencode is inside (0.1 (3), about 230 MB) the image is past GitHub's 100 MB file
+  # limit, so it goes up as a prerelease on the public repo (2 GB limit) and latest.json, still on
+  # ola.cx, points there. A small image stays beside latest.json.
+  local url="https://ola.cx/ola-site/mac/Ola-$VERSION-$BUILD.dmg"
+  if [ "$(stat -f %z "$dmg")" -gt 95000000 ]; then
+    local tag="ola-mac-$VERSION-$BUILD"
+    (cd "$root" && gh release create "$tag" "$dmg" --repo bdecrem/hilma --prerelease --target main \
+      --title "Ola for Mac $VERSION ($BUILD)" --notes "Developer ID signed and notarized. Ola's own opencode (MIT) is inside.") >/dev/null \
+      || { echo "error: the GitHub release failed" >&2; exit 1; }
+    url="https://github.com/bdecrem/hilma/releases/download/$tag/$(basename "$dmg")"
+  else
+    cp "$dmg" "$pub/"
+  fi
   cat > "$pub/latest.json" <<JSON
-{"version":"$VERSION","build":"$BUILD","url":"https://ola.cx/ola-site/mac/Ola-$VERSION-$BUILD.dmg","notes":"${OLA_NOTES:-}"}
+{"version":"$VERSION","build":"$BUILD","url":"$url","notes":"${OLA_NOTES:-}"}
 JSON
   git -C "$root" add "public/ola-site/mac"
   git -C "$root" commit -q -m "ola apple: TestFlight, the Mac download $VERSION ($BUILD) [${OLA_ISSUE:-OLA-118}]" \
     -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" \
     -m "Claude-Session: https://claude.ai/code/session_012SXcnn2YuX2WXNrf6GerJQ"
   git -C "$root" fetch -q origin && git -C "$root" rebase -q origin/main && git -C "$root" push -q origin HEAD:main
-  echo "   published: https://ola.cx/ola-site/mac/Ola-$VERSION-$BUILD.dmg (live in about 3 minutes)"
+  echo "   published: $url (latest.json on ola.cx in about 3 minutes)"
 }
 notarize() { # $1 a zip or dmg; exits unless Apple accepts it
   local f="$1" j="$1.notary.json"
