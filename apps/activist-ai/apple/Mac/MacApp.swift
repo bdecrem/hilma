@@ -46,6 +46,7 @@ struct OlaMacApp: App {
   /// Who is signed in comes from plain settings; the token is read only when a request needs it.
   @State private var account = AccountController()
   @State private var cli = CLIInstaller()
+  @State private var skills = SkillsInfo()
   @NSApplicationDelegateAdaptor private var delegate: AppDelegate
 
   var body: some Scene {
@@ -87,7 +88,7 @@ struct OlaMacApp: App {
     .defaultSize(width: 1000, height: 760)
 
     Settings {
-      SettingsView(store: store, whereOla: whereOla, phoneLink: phoneLink, phonePush: phonePush, account: account, cli: cli)
+      SettingsView(store: store, whereOla: whereOla, phoneLink: phoneLink, phonePush: phonePush, account: account, cli: cli, skills: skills)
     }
   }
 }
@@ -242,6 +243,8 @@ struct SettingsView: View {
   var account: AccountController? = nil
   var cli: CLIInstaller? = nil
   var tokenKnown: Bool? = nil
+  /// Ola's skills (version, the Ola machine's, what each needs here).
+  var skills: SkillsInfo? = nil
   var look: SettingsLook = .native
   @State private var connecting = false
   @AppStorage(LocalSettings.modeKey) private var mode = "machine"
@@ -265,6 +268,7 @@ struct SettingsView: View {
   @ViewBuilder var groups: some View {
     if let account { AccountSettings(account: account, cli: cli) }
     if let whereOla { WhereSettings(controller: whereOla, tokenKnown: tokenKnown) }
+    if let skills { SkillsSettings(info: skills) }
     if let whereOla { SettingsGroup(title: "Claude") { ClaudeSettings(controller: whereOla) } }
     if let phoneLink { PhoneSettings(link: phoneLink) }
     if let phonePush { SettingsGroup(title: "Phone notifications") { PushSettings(push: phonePush) } }

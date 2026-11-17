@@ -1,3 +1,5 @@
 Ola.xcodeproj/
 OlaKit/.build/
 OlaKit/.swiftpm/
+# Ola's skills, staged for the Mac app by tools/skills.mjs
+/build/

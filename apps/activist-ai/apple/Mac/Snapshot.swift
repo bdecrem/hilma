@@ -59,6 +59,23 @@ enum Snapshot {
       let view = SettingsView(store: store, whereOla: controller, phoneLink: PhoneLink(store: store), tokenKnown: true, look: look).defaultAppStorage(defaults)
       write(view, size: SettingsView.snapshotSize, appearance: appearance, to: dir.appendingPathComponent("\(name).png"), titled: false, fit: true)
     }
+    // Ola's skills in Settings (apple-shots/skills), light and dark, from the bundled skills' own
+    // files when the app carries them, the states made up so every kind shows.
+    let other = OlaSkills.Version(hash: "0123456789abcdef", commit: "fedcba9876543210")
+    let variants: [(String, NSAppearance.Name, OlaSkills.Version?)] = [("same-light", .aqua, OlaSkills.version()), ("same-dark", .darkAqua, OlaSkills.version()), ("different-light", .aqua, other), ("unknown-light", .aqua, nil)]
+    for (mode, appearance, machine) in variants where only == nil || "skills-settings-\(mode)".contains(only!) || only == "skills" {
+      defaults.set("mac", forKey: LocalSettings.modeKey)
+      defaults.set(false, forKey: "ola.phone.enabled")
+      defaults.set(NSHomeDirectory() + "/Documents/court-watch", forKey: LocalSettings.folderKey)
+      let store = OlaStore(fixture: Fixture.main)
+      let skills = OlaSkills.read()
+      let states: [OlaSkills.State] = skills.map { s in
+        OlaSkills.State(skill: s, missing: s.name == "report" ? s.needs.filter { if case .command = $0 { return true } else { return false } } : [])
+      }
+      let info = SkillsInfo(preview: OlaSkills.version(), states: states, machine: OlaSkills.compare(OlaSkills.version(), machine))
+      let view = SettingsView(store: store, whereOla: WhereOlaWorks(store: store), tokenKnown: true, skills: info).defaultAppStorage(defaults)
+      write(view, size: SettingsView.snapshotSize, appearance: appearance, to: dir.appendingPathComponent("skills-settings-\(mode).png"), titled: false, fit: true)
+    }
     // Signing in and the first run (apple-shots/signin), light and dark: every screen before the
     // window, and Settings with the Account section. Made-up names, no Keychain, no network.
     for (mode, appearance) in [("light", NSAppearance.Name.aqua), ("dark", .darkAqua)] {

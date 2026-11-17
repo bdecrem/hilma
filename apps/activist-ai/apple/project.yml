@@ -45,9 +45,11 @@ targets:
         includes: [ola-page-mac]
         buildPhase: resources
         group: WebTools
-      # Ola's own skills (designer, app-designer, chart, ...), installed for the local agent at each
+      # Ola's own skills (designer, app-designer, chart, ...), staged fresh from ../skills at the
+      # commit, with VERSION.json, by tools/skills.mjs (tools/build.sh and testflight/ship-via-mini.sh
+      # do it, and refuse a build that carries anything else); installed for the local agent at each
       # start (LocalServer.installSkills), the only skills it is offered.
-      - path: ../skills
+      - path: build/OlaSkills
         type: folder
         buildPhase: resources
     dependencies:

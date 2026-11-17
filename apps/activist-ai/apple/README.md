@@ -45,6 +45,59 @@ and in it the agent cannot run git, Python, Node, scripts or Claude Code: measur
 that README), so it ships as a Developer ID signed, notarized disk image on ola.cx with an update
 check (Ola, Check for Updates…). Both wait on Bart accepting Apple's updated Program License Agreement.
 
+## Every release
+
+The standard steps for any build that leaves this Mac (a download, TestFlight, or /Applications).
+The scripts enforce the skills part; a build that breaks it does not come out.
+
+1. **Commit first.** Ola's skills go into the Mac app from `apps/activist-ai/skills` as committed:
+   `tools/skills.mjs stage` (run by `tools/build.sh` and `testflight/ship-via-mini.sh`) copies them
+   fresh into `build/OlaSkills` with `VERSION.json` (the commit and the content hash, the same hash
+   the workspace image is labeled with) and **refuses** when the skills folder has uncommitted
+   changes.
+2. **Build or ship.** `tools/build.sh mac` (and `install-mac`) and `ship-via-mini.sh mac` check the
+   built or archived app with `tools/skills.mjs verify`: its `Resources/OlaSkills` must hash to the
+   skills at HEAD, or the build is refused ("Not shipping that build").
+3. **Bump and ship** as in `testflight/README.md` (`bump-build.sh`, commit, `ship-via-mini.sh`).
+4. **The Ola machine.** `node ops/ola.mjs deploy` records the skills version it installs
+   (`deployed.json` `skills`, and `release.json` beside the release, which the front desk gives a
+   signed-in Mac at `GET /api/device/version`); it refuses when the workspace image's `ola.skills`
+   label is not the release's skills. A skills change needs a new image tag
+   (`workspace/ws.mjs IMAGE`). Mac and machine compare in Settings, Ola's skills, and `ola status`.
+5. **Check:** `cd OlaKit && swift test`, `tools/skills.mjs verify <Ola.app>/Contents/Resources/OlaSkills`,
+   and one skill end to end: `tools/skill-check.py <Ola.app> <scratch>` (after `ola skills setup`
+   in that scratch support folder; see "Ola's skills on the Mac").
+
+## Ola's skills on the Mac (2026-11-17)
+
+"On this Mac" and the `ola` command use Ola's own skills, the same folder the Ola machine's sealed
+box gets (`apps/activist-ai/skills`, `/opt/ola/skills` there), bundled in the app (`OlaSkills/`,
+see "Every release"). Personal Claude skills stay blocked (`OPENCODE_DISABLE_CLAUDE_CODE`, and in
+the config every skill ID is denied but Ola's; a project's own `.opencode/skills` or `.claude/skills`
+with the same name is not used: `tools/skill-check.py` plants both).
+
+- **At each start** (`LocalServer.prepare`, so the app and the command alike): the bundle is copied
+  fresh and read-only to `~/Library/Ola/skills` (`installSkills`, with `/opt/ola/skills` made that
+  folder, and `VERSION.json` beside the skills); the config names that folder (`skills`) and allows
+  only the skills that can run here.
+- **What each skill needs** is in its SKILL.md (`ola/needs`: `python:<module>`, `cmd:<program>`;
+  `ola/mac`: yes, or no and why; `skills/check.py` requires both). Before a start they are checked
+  with the agent's own PATH; a skill that lacks something is not offered, and the agent is told in
+  its instructions what is missing and how to get it, and to say so instead of improvising.
+  What works here: **chart, workbook, report** (with their Python libraries; report also needs
+  poppler, `brew install poppler`); **designer** and **app-designer** (their `ola-page` is the app's
+  own web view, so in the `ola` command only while the Ola app is open, and they say so);
+  **batch-quotes** is a placeholder.
+- **The Python libraries** go into Ola's own folder, never the system's: `ola skills setup`, or
+  Settings, Ola's skills, Get Python Libraries, makes `Application Support/Ola/python` (a virtual
+  environment from this Mac's python3) and installs matplotlib, pillow, openpyxl, python-docx and
+  reportlab (about 150 MB); it is first on the agent's PATH from then on. Asked for, never automatic.
+- **The version** (the content hash and the commit) shows in Settings, Ola's skills, and in
+  `ola status` / `ola skills`, with one sentence comparing it with the Ola machine's (from the
+  front desk, for a signed-in Mac): the same, different (one of the two is newer), or not known.
+- `ola` without an account, on the owner's own setup (a gateway token pasted in Settings, Where Ola
+  works), uses that token through the machine's forwarder, as the app does.
+
 ## Why macOS used to ask again after every build (fixed 2026-11-17)
 
 Bart: the "Ola wants to use your confidential information stored in "cx.ola.opencode"" dialog came
@@ -426,7 +479,8 @@ opencode 2.3.0 reads Claude Code's skills, agents and `CLAUDE.md` unless `OPENCO
 is set, and a project's own opencode config unless `OPENCODE_DISABLE_PROJECT_CONFIG` is. Both servers
 (the local one the Mac app starts, and `bart/ola-bart.sh` on the machine) now set both, run with their
 own config folder (`XDG_CONFIG_HOME`, so no `~/.config/opencode` agents, commands or AGENTS.md), and
-deny the `skill` tool. What stays: the project's own `AGENTS.md` and its files. Proof:
+deny the `skill` tool. (Since 2026-11-17 the Mac offers Ola's own skills, and only those: "Ola's
+skills on the Mac".) What stays: the project's own `AGENTS.md` and its files. Proof:
 `OLA_SKILLS_CHECK=1 OLA_MODEL_TOKEN_FILE=<file> swift run olakit-selftest` plants skills that say
 "write HIJACKED" where Bart's are, in a temporary home folder, and asks once for "a simple abstract
 painting": no skill offered or loaded, no HIJACKED, `abstract-painting.svg` made (4 of 4).

@@ -60,9 +60,9 @@ public final class LocalServer: @unchecked Sendable {
     return ok
   }
 
-  /// Ola's own skills (apps/activist-ai/skills): in the app's Resources, or the repo for a check.
-  nonisolated(unsafe) public static var skillsSource: URL? = Bundle.main.resourceURL.map { $0.appendingPathComponent("skills") }
-    .flatMap { FileManager.default.fileExists(atPath: $0.appendingPathComponent("designer/SKILL.md").path) ? $0 : nil }
+  /// Ola's own skills (apps/activist-ai/skills as committed, with VERSION.json; tools/skills.mjs
+  /// stages them): in the app's Resources (OlaSkills.bundled), or the repo for a check.
+  nonisolated(unsafe) public static var skillsSource: URL? = OlaSkills.bundled
   /// Where they are installed for opencode: written fresh by this app at each start, read-only, and
   /// named in the config as the only skills. No spaces in the path, so the commands in the skills
   /// work as written (Application Support has one).
@@ -86,6 +86,8 @@ public final class LocalServer: @unchecked Sendable {
     for n in names {
       guard (try? fm.copyItem(at: src.appendingPathComponent(n), to: dir.appendingPathComponent(n))) != nil else { return [] }
     }
+    // Which version this is (OlaSkills.version): the commit and the content hash.
+    try? fm.copyItem(at: src.appendingPathComponent("VERSION.json"), to: dir.appendingPathComponent("VERSION.json"))
     var files: [String] = []
     if let all = fm.enumerator(atPath: dir.path) { for case let rel as String in all { files.append(rel) } }
     for rel in files {
@@ -119,6 +121,9 @@ public final class LocalServer: @unchecked Sendable {
   public var tiedToThisProcess = false
   /// The agent's environment from the last start (the `ola` command gives its interface the same).
   public private(set) var environment: [String: String] = [:]
+  /// Ola's skills at the last start: where they are, their version, and each one's state here.
+  public private(set) var skillsDir: URL?
+  public private(set) var skillStates: [OlaSkills.State] = []
   /// For checks: a different HOME and the like for the child only.
   public var extraEnvironment: [String: String] = [:]
   private var process: Process?
@@ -246,19 +251,33 @@ public final class LocalServer: @unchecked Sendable {
     try fm.createDirectory(at: config.appendingPathComponent("opencode"), withIntermediateDirectories: true)
     for d in ["data", "state", "cache"] { try fm.createDirectory(at: base.appendingPathComponent(d), withIntermediateDirectories: true) }
     let instructions = config.appendingPathComponent("opencode/ola-reactions.md")
-    try AgentNotes.opencode.write(to: instructions, atomically: true, encoding: .utf8)
     let webTools = Self.support.appendingPathComponent("web-tools")
     let haveWeb = Self.installWebTools(into: webTools)
     trace?(haveWeb ? "web commands in \(webTools.path)" : "web commands NOT found (ola-search will be missing)")
+    // The agent's PATH: Ola's web commands, then the skills' own Python (once set up), then the usual.
+    let python = OlaSkills.pythonBin
+    let path = webTools.path + (fm.isExecutableFile(atPath: python.appendingPathComponent("python3").path) ? ":" + python.path : "") + ":/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+    // Ola's skills: the app's bundled copy, installed fresh; each checked for what it needs here
+    // (OlaSkills), and only the ones that can run offered. The agent is told about the rest.
     let skillsDir = Self.skillsHome
-    let skills = Self.installSkills(into: skillsDir)
-    trace?(skills.isEmpty ? "Ola's skills NOT found (none offered)" : "Ola's skills in \(skillsDir.path): \(skills.joined(separator: ", "))")
-    try Self.config(modelURL: route.baseURL, instructionsPath: instructions.path, skills: skills, skillsPath: skillsDir.path).write(to: config.appendingPathComponent("opencode/opencode.jsonc"), atomically: true, encoding: .utf8)
+    let installed = Self.installSkills(into: skillsDir)
+    self.skillsDir = installed.isEmpty ? nil : skillsDir
+    skillStates = installed.isEmpty ? [] : OlaSkills.check(OlaSkills.read(at: skillsDir), path: path)
+    var notes = AgentNotes.opencode
+    if installed.isEmpty {
+      trace?("Ola's skills NOT found (none offered)")
+    } else {
+      notes += "\n\n" + OlaSkills.notes(skillStates, dir: skillsDir.path)
+      trace?("Ola's skills \(OlaSkills.version(at: skillsDir)?.label ?? "(no version)") in \(skillsDir.path): " + skillStates.map(\.line).joined(separator: "; "))
+    }
+    try notes.write(to: instructions, atomically: true, encoding: .utf8)
+    let offered = installed.isEmpty ? [] : skillStates.filter(\.ready).map(\.skill.name)
+    try Self.config(modelURL: route.baseURL, instructionsPath: instructions.path, skills: offered, skillsPath: skillsDir.path).write(to: config.appendingPathComponent("opencode/opencode.jsonc"), atomically: true, encoding: .utf8)
 
     var env: [String: String] = [:]
     let mine = ProcessInfo.processInfo.environment
     for k in Self.passedEnvironment { if let v = mine[k] { env[k] = v } }
-    env["PATH"] = webTools.path + ":/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+    env["PATH"] = path
     // Where the web commands go: the same way as the model (the door, or the machine's forwarder);
     // downloads land in the project's sources/.
     env["OLA_GATEWAY_HOSTPORT"] = route.hostPort

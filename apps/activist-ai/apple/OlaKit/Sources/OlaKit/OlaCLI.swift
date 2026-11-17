@@ -14,6 +14,8 @@ public enum OlaCLI {
     /// One request, the reply printed.
     case run(String)
     case login, logout, whoami, status, help, version
+    /// Ola's skills here: their version and what each needs; `setup` installs the Python libraries.
+    case skills(setup: Bool)
     case installCommand
     case bad(String)
   }
@@ -32,6 +34,9 @@ public enum OlaCLI {
       let text = args.dropFirst().joined(separator: " ").trimmingCharacters(in: .whitespacesAndNewlines)
       return text.isEmpty ? .bad("Say what Ola should do: ola run \"your request\".") : .run(text)
     case "install-command": return .installCommand
+    case "skills":
+      if args.count == 1 { return .skills(setup: false) }
+      return args.count == 2 && args[1] == "setup" ? .skills(setup: true) : .bad("ola skills takes nothing after it, or setup.")
     default:
       if first.hasPrefix("-") { return .bad("ola doesn\u{2019}t know \(first). Try ola --help.") }
       return .run(args.joined(separator: " ").trimmingCharacters(in: .whitespacesAndNewlines))
@@ -47,7 +52,9 @@ public enum OlaCLI {
     ola login            sign in to your Ola account (your browser opens)
     ola logout           sign out on this Mac
     ola whoami           who is signed in
-    ola status           signed in or not, this folder, and whether the model answers
+    ola status           signed in or not, this folder, whether the model answers, Ola's skills
+    ola skills           Ola's skills here: their version, and what each one needs
+    ola skills setup     install the Python libraries the skills need (in Ola's own folder)
 
   Ola asks before it runs a command or changes a file. Conversations here also show in the Ola
   app, in "On this Mac". Ctrl-C stops.
@@ -78,7 +85,15 @@ public enum OlaCLI {
       LocalSettings.defaults = d
       AccountKeeper.defaults = d
     }
-    if let dir = env["OLA_SUPPORT_DIR"], !dir.isEmpty { LocalServer.support = URL(fileURLWithPath: dir) }
+    if let dir = env["OLA_SUPPORT_DIR"], !dir.isEmpty {
+      LocalServer.support = URL(fileURLWithPath: dir)
+      // The installed skills too (~/Library/Ola/skills is the real app's).
+      LocalServer.skillsHome = URL(fileURLWithPath: dir).appendingPathComponent("skills-home")
+    }
+    // The owner's own setup in a check: the gateway token from a file instead of the Keychain.
+    if let f = env["OLA_MODEL_TOKEN_FILE"], let t = try? String(contentsOfFile: f, encoding: .utf8).trimmingCharacters(in: .whitespacesAndNewlines), !t.isEmpty {
+      LocalSettings.tokenOverride = t
+    }
   }
 
   /// What happens, step by step, into a file (OLA_CLI_TRACE=<file>; for finding out why it is stuck).
@@ -114,6 +129,7 @@ public enum OlaCLI {
       case .logout: return blocking { await self.logout() }
       case .whoami: return blocking { await self.whoami() }
       case .status: return blocking { await self.status() }
+      case .skills(let setup): return blocking { await self.skills(setup: setup) }
       case .run(let text): return blocking { await self.work(.run(text)) }
       case .talk(let last): return blocking { await self.work(.talk(continueLast: last)) }
       }
@@ -186,7 +202,34 @@ public enum OlaCLI {
       }
     }
 
+    /// "Skills:" lines: this Mac's version, the Ola machine's, and each skill's state here.
+    func skillsLines() async -> [String] {
+      let (v, states) = OlaSkills.current()
+      guard let v else { return ["Skills:   none in this copy of Ola"] }
+      let machine = await OlaSkills.machineVersion(token: AccountKeeper.session?.token)
+      return ["Skills:   \(v.label). \(OlaSkills.compare(v, machine))"] + states.map { "          \($0.line)" }
+    }
+
+    func skills(setup: Bool) async -> Int32 {
+      if setup {
+        do {
+          say(try await OlaSkills.setUpPython(progress: { OlaCLI.say($0) }))
+        } catch {
+          say((error as? LocalizedError)?.errorDescription ?? "The Python libraries didn\u{2019}t install.")
+          return 1
+        }
+      }
+      for l in await skillsLines() { print(l) }
+      return 0
+    }
+
     func status() async -> Int32 {
+      let code = await account()
+      for l in await skillsLines() { print(l) }
+      return code
+    }
+
+    func account() async -> Int32 {
       var ok = true
       if let s = AccountKeeper.session {
         print("Account:  signed in as \(s.person.name)")
@@ -233,8 +276,11 @@ public enum OlaCLI {
     // MARK: working in this folder
 
     func work(_ c: Command) async -> Int32 {
-      guard AccountKeeper.session != nil else { say(notSignedIn); return 1 }
-      OlaCLI.trace?("signed in; folder \(folder.path)")
+      // Signed in: the account's door. Not signed in, on the owner's own setup (a gateway token
+      // pasted in Settings, Where Ola works): that, through the machine's forwarder, as the app does.
+      let pasted = AccountKeeper.session == nil ? LocalSettings.token : nil
+      guard AccountKeeper.session != nil || pasted != nil else { say(notSignedIn); return 1 }
+      OlaCLI.trace?("\(pasted == nil ? "signed in" : "the pasted token"); folder \(folder.path)")
       sweepOldConfigs()
       if LocalServer.binary == nil {
         say("Getting Ola ready on this Mac. This happens once (about 70 MB).")
@@ -252,7 +298,6 @@ public enum OlaCLI {
       }
       let config: ServerConfig
       do {
-        let d = try await openDoor()
         let s = LocalServer(folder: folder)
         // The sessions are the app's ("On this Mac"); the config is this command's own, since it
         // names this command's door. No pid file: the app can never take this server for one it
@@ -263,7 +308,9 @@ public enum OlaCLI {
         s.pidFileName = nil
         s.tiedToThisProcess = true
         server = s
-        config = try await s.start(route: .door(d), timeout: 45, trace: OlaCLI.trace)
+        let route: ModelRoute
+        if let pasted { route = .pasted(token: pasted) } else { route = .door(try await openDoor()) }
+        config = try await s.start(route: route, timeout: 45, trace: OlaCLI.trace)
       } catch {
         say((error as? LocalizedError)?.errorDescription ?? "Ola didn\u{2019}t start here.")
         cleanUp()

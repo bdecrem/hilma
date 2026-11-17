@@ -17,6 +17,9 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 DD="${OLA_DERIVED:-$HOME/Library/Developer/Xcode/DerivedData/ola-apple}"
 APP="$DD/Build/Products/Debug/Ola.app"
+# Ola's skills, copied fresh from apps/activist-ai/skills as committed (refuses uncommitted changes);
+# the Mac build is checked against them after it is made (README, "Every release").
+if [ "${1:-}" != install-mac ]; then node tools/skills.mjs stage build/OlaSkills; fi
 xcodegen generate >/dev/null
 
 # The signing identity's name and its team (the certificate's OU).
@@ -40,6 +43,7 @@ case "${1:-}" in
     # The designated requirement is what the Keychain and the folder permissions remember.
     REQ="$(codesign -d -r- "$APP" 2>&1 | sed -n 's/^.*designated => //p')"
     echo "designated requirement: $REQ"
+    node tools/skills.mjs verify "$APP/Contents/Resources/OlaSkills" || { echo "FAIL: not this build: its skills are not apps/activist-ai/skills at HEAD" >&2; exit 1; }
     if [ -n "$ID" ] && [[ "$REQ" == *cdhash* ]]; then
       echo "FAIL: signed with \"$ID\" but the requirement still names this build's hash; macOS would ask again after every build" >&2
       exit 1
@@ -61,6 +65,7 @@ case "${1:-}" in
     echo "$DD/Build/Products/Debug-iphoneos/Ola.app"
     ;;
   install-mac)
+    node tools/skills.mjs verify "$APP/Contents/Resources/OlaSkills" || { echo "FAIL: not installing: the built app's skills are not apps/activist-ai/skills at HEAD (build again)" >&2; exit 1; }
     rm -rf /Applications/Ola.app
     cp -R "$APP" /Applications/Ola.app
     echo "copied to /Applications/Ola.app (not opened)"

@@ -38,7 +38,8 @@
 //   releases/<commit12>/apps/activist-ai   one unpacked commit each (git archive), with its own
 //                                          node_modules and web/dist
 //   current -> releases/<commit12>         what the jobs run (switched by rename, atomically)
-//   deployed.json                          the deployed commit, when, and the suites' counts
+//   deployed.json                          the deployed commit, when, the suites' counts, and the skills
+//                                          version installed (skills/version.mjs; release.json too)
 //   deploys.log                            one line per deploy, passed or refused
 // State never lives in a release: the platform database in ~/.ola-frontdesk, workspaces, tokens
 // and env files in ~/.ola, the gateway's usage in ~/.local/state/ola-gateway, logs in
@@ -596,6 +597,21 @@ async function deploy(ref, { unsigned = false } = {}) {
   const img = await runLogged(NODE, ['workspace/ws.mjs', 'image', '--missing'], { cwd: code, out })
   if (img.code !== 0) return refuse('the workspace image could not be built (the log has the build output)')
 
+  // The skills it installs (skills/version.mjs): the release's skills folder and the image's label
+  // must be the same set, and that version is recorded (deployed.json, and release.json for the
+  // front desk, which tells signed-in Macs, so the Mac app's bundled skills can be compared).
+  const sv = sh(NODE, ['--input-type=module', '-e', `import { CONTAINER, IMAGE, skillsHash } from './workspace/ws.mjs'; import { spawnSync } from 'node:child_process'
+    const out = spawnSync(CONTAINER, ['image', 'inspect', IMAGE], { encoding: 'utf8' }).stdout || ''
+    console.log(JSON.stringify({ hash: skillsHash(), image: IMAGE, label: (/"ola\\.skills"\\s*:\\s*"([0-9a-f]+)"/.exec(out) || [])[1] ?? null }))`], { cwd: code })
+  let skills = null
+  try {
+    skills = JSON.parse(sv.stdout.trim().split('\n').pop())
+  } catch {}
+  if (!skills?.hash) return refuse(`the release's skills version could not be read: ${sv.stderr.trim().slice(0, 200)}`)
+  if (skills.label !== skills.hash) return refuse(`the workspace image ${skills.image} carries skills ${skills.label ?? '(no label)'}, this release's are ${skills.hash}: a skills change needs a new image tag (workspace/ws.mjs IMAGE)`)
+  say(`skills: ${skills.hash} in ${skills.image}`)
+  writeFileSync(path.join(code, 'release.json'), JSON.stringify({ commit, skills: { hash: skills.hash, commit } }, null, 2) + '\n')
+
   // The suites, from the release itself.
   const suites = {}
   for (const [name, args] of SUITES) {
@@ -612,7 +628,7 @@ async function deploy(ref, { unsigned = false } = {}) {
   rmSync(tmp, { force: true })
   symlinkSync(`releases/${short}`, tmp)
   renameSync(tmp, CURRENT)
-  const record = { commit, ref, at: new Date().toISOString(), release: `releases/${short}`, suites, previous: before?.commit ?? null }
+  const record = { commit, ref, at: new Date().toISOString(), release: `releases/${short}`, suites, skills: { hash: skills.hash, image: skills.image, commit }, previous: before?.commit ?? null }
   writeFileSync(DEPLOYED, JSON.stringify(record, null, 2) + '\n')
   if (existsSync(ENV.frontdesk) && existsSync(ENV.gateway)) {
     install({ restart: true })

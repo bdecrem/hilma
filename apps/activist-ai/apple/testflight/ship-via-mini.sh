@@ -41,6 +41,9 @@ echo "== Ola $VERSION ($BUILD): $WHAT${DRY:+ (dry run)}; logs in $OUT"
 echo "== the mini: disk, then syncing the sources"
 FREE=$(ssh -o ConnectTimeout=10 "$MINI" "df -g /System/Volumes/Data | awk 'NR==2{print \$4}'")
 [ "${FREE:-0}" -ge 10 ] || { echo "error: the mini has ${FREE:-?} GB free (under 10); not archiving there" >&2; exit 1; }
+# Ola's skills, fresh from apps/activist-ai/skills as committed (refuses uncommitted changes); the
+# archived Mac app is checked against them below (README, "Every release").
+node tools/skills.mjs stage build/OlaSkills
 xcodegen generate >/dev/null
 ssh -o ConnectTimeout=10 "$MINI" 'mkdir -p ~/ola-ship/apple ~/ola-ship/workspace'
 rsync -a --delete --exclude .build --exclude DerivedData --exclude xcuserdata --exclude .DS_Store ./ "$MINI:ola-ship/apple/"
@@ -132,6 +135,7 @@ profile_installed() {
 ship_mac() {
   archive OlaMac "generic/platform=macOS" ola-mac
   local app="$OUT/ola-mac.xcarchive/Products/Applications/Ola.app"
+  node tools/skills.mjs verify "$app/Contents/Resources/OlaSkills" || { echo "error: not shipping: the archived Mac app's skills are not apps/activist-ai/skills at HEAD" >&2; exit 1; }
   local devid; devid=$(security find-identity -v -p codesigning | sed -n 's/.*"\(Developer ID Application: [^"]*\)".*/\1/p' | head -1)
   if [ -n "$devid" ]; then
     echo "== signing the Mac app with $devid (hardened runtime, timestamp)"

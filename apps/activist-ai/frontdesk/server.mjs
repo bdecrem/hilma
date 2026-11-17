@@ -42,8 +42,26 @@ import { routeNeed } from '../web/server/proxy.mjs'
 import { tooLargeMessage, validName } from '../web/server/files.mjs'
 import { closeAfter, lingering, readUpTo } from '../web/server/linger.mjs'
 import { derivedThings, isThingFile, otherCount, otherFiles } from '../web/server/project.mjs'
+import { skillsHash } from '../skills/version.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
+
+/**
+ * What this release serves, for a signed-in Mac (GET /api/device/version): the commit and the
+ * version of Ola's skills it installed, from the deploy's release.json (ops/ola.mjs), else the
+ * skills folder beside this file. The Mac app compares its bundled skills with these.
+ */
+export function releaseVersion(dir = path.join(HERE, '..')) {
+  try {
+    const r = JSON.parse(fs.readFileSync(path.join(dir, 'release.json'), 'utf8'))
+    if (r?.skills?.hash) return { commit: r.commit ?? null, skills: { hash: r.skills.hash, commit: r.skills.commit ?? r.commit ?? null } }
+  } catch {}
+  try {
+    return { commit: null, skills: { hash: skillsHash(path.join(dir, 'skills')), commit: null } }
+  } catch {
+    return { commit: null, skills: null }
+  }
+}
 
 // ---------------------------------------------------------------- config
 export function config(env = process.env) {
@@ -174,6 +192,7 @@ export function makeFrontDesk(cfg = config()) {
   const keys = loadKeys(cfg.data)
   const https = cfg.origin.startsWith('https:')
   const originHost = new URL(cfg.origin).host
+  const release = releaseVersion()
   const log = (m) => console.log(JSON.stringify({ t: new Date().toISOString(), event: 'frontdesk', msg: String(m).slice(0, 300) }))
   let devices = null
   const auth = makeAuth({ db, keys, origin: cfg.origin, session: cfg.session, limits: cfg.limits, passwordMin: cfg.passwordMin, onAppKeysRevoked: () => devices?.sync(), log })
@@ -929,6 +948,8 @@ export function makeFrontDesk(cfg = config()) {
     const api = p.startsWith('/api/') || p.startsWith('/oc/')
     const site = req.headers['sec-fetch-site']
     if (api && site && site !== 'same-origin' && site !== 'none') return json(res, 403, { error: 'cross_site' })
+    // What this release serves (only past the door with a device's pass): the Mac app compares skills.
+    if (p === '/api/device/version' && req.method === 'GET') return json(res, 200, release)
     // A signed-in device (the Mac app, the command line): its pass, no cookie, no Origin (devices.mjs).
     if (devices.isDeviceRoute(p)) return devices.handle(req, res, p)
     const writes = req.method !== 'GET' && req.method !== 'HEAD'
