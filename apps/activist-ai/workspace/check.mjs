@@ -706,7 +706,7 @@ print(json.dumps(out))
       await reload()
       const seen = fileToolsSeen.filter(Boolean)
       const bad = seen.filter((x) => /ripgrep|execution failed|error|not found/i.test(x.result) || !/fx-tools\.txt/.test(x.result))
-      t('file search works inside the sealed box: opencode’s glob, grep and list tools each run once and find the file (ripgrep from the image, nothing downloaded)', /^\/usr\/bin\/rg \d/.test(rg) && p.status < 300 && idle && seen.length >= 3 && ['glob', 'grep', 'list'].every((n) => seen.some((x) => x.tool === n)) && !bad.length, `rg: ${rg}; tools offered ${JSON.stringify(seen[0]?.offered)}; ${seen.map((x) => `${x.tool}: ${x.result.replace(/\s+/g, ' ').slice(0, 90)}`).join(' | ')}`)
+      t('file search works inside the sealed box: opencode’s glob and grep tools (and list, where it offers one: 2.3.0 lists folders with glob) each run once and find the file (ripgrep from the image, nothing downloaded)', /^\/usr\/bin\/rg \d/.test(rg) && p.status < 300 && idle && seen.length >= 2 && ['glob', 'grep', ...(seen[0]?.offered?.includes('list') ? ['list'] : [])].every((n) => seen.some((x) => x.tool === n)) && !bad.length, `rg: ${rg}; tools offered ${JSON.stringify(seen[0]?.offered)}; ${seen.map((x) => `${x.tool}: ${x.result.replace(/\s+/g, ' ').slice(0, 90)}`).join(' | ')}`)
     }
     t('inside: the image names the model `hosted`; the gateway serves it only with a grant, a one-time grant only until its moment', named && off === '403' && on === '200' && once === '200' && ended === '403' && back === '403' && JSON.stringify(upstream) === '["Made-up/Open-Model"]', `named ${named}; off ${off}, on ${on}, once ${once}, ended ${ended}, taken back ${back}; upstream saw ${upstream}`)
   }
