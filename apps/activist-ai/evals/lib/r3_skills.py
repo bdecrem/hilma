@@ -7,8 +7,8 @@ and without it (run.mjs --skills on|off), so the difference is what the skill is
     s4-workbook-safe-text workbook: phone numbers, ids with leading zeros, notes that start with = + - @
     s5-report-brief       report: a Word and PDF brief from three PDFs, every number cited with its page
     s6-report-quotes      report: a memo with four direct quotes, each word for word on its cited page
-    s7-design-report-page design-pass: a survey results page that breaks on a phone
-    s8-design-dashboard   design-pass: a dashboard with cramped stats, low contrast and a wide chart
+    s7-design-report-page designer: a survey results page that breaks on a phone
+    s8-design-dashboard   designer: a dashboard with cramped stats, low contrast and a wide chart
 
 Made-up data only. Checkers are standard library (office.py reads the Office files; page.mjs loads
 pages headless with the same measurements as the image's ola-page).
@@ -693,8 +693,8 @@ TASKS = {
     "s4-workbook-safe-text": dict(family="skills", skill="workbook", level="medium", outputs=["*.xlsx"], generate=s4_generate, check=s4_check, solve=lambda w, t: s4_solve(w, t), wrong=W(s4_solve)),
     "s5-report-brief": dict(family="skills", skill="report", level="hard", outputs=["*.docx", "*.pdf"], generate=s5_generate, check=s5_check, solve=lambda w, t: s5_solve(w, t), wrong=W(s5_solve)),
     "s6-report-quotes": dict(family="skills", skill="report", level="medium", outputs=["*.docx"], generate=s6_generate, check=s6_check, solve=lambda w, t: s6_solve(w, t), wrong=W(s6_solve)),
-    "s7-design-report-page": dict(family="skills", skill="design-pass", level="medium", outputs=["index.html"], generate=s7_generate, check=design_check, solve=lambda w, t: s7_solve(w, t), wrong=W(s7_solve)),
-    "s8-design-dashboard": dict(family="skills", skill="design-pass", level="medium", outputs=["index.html"], generate=s8_generate, check=design_check, solve=lambda w, t: s8_solve(w, t), wrong=W(s8_solve)),
+    "s7-design-report-page": dict(family="skills", skill="designer", level="medium", outputs=["index.html"], generate=s7_generate, check=design_check, solve=lambda w, t: s7_solve(w, t), wrong=W(s7_solve)),
+    "s8-design-dashboard": dict(family="skills", skill="designer", level="medium", outputs=["index.html"], generate=s8_generate, check=design_check, solve=lambda w, t: s8_solve(w, t), wrong=W(s8_solve)),
 }
 for k, v in TASKS.items():
     v["instruction"] = INSTR[k]

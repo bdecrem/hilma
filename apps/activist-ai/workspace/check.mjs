@@ -542,7 +542,7 @@ print("planted")
     for (const s of ours) {
       const dir = path.join(skillsDir, s, 'tests')
       for (const f of existsSync(dir) ? readdirSync(dir).filter((x) => /^test_.*\.py$/.test(x)) : []) {
-        // Not spawnSync: design-pass asks ola-see, whose stand-in server runs in this process, so the
+        // Not spawnSync: the designer skill asks ola-see, whose stand-in server runs in this process, so the
         // event loop must stay free while the test waits on the gateway, which waits on the stand-in.
         const r = await new Promise((resolve) => {
           const c = spawn(ws.CONTAINER, ['exec', ws.names(A).container, 'python3', '-I', `/opt/ola/skills/${s}/tests/${f}`], { stdio: ['ignore', 'pipe', 'pipe'] })

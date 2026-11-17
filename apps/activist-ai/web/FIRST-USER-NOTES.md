@@ -127,7 +127,7 @@ Status words: **fixed** (in this pass, with a check), **open** (written up, not 
 - **B9, open (image).** The agent's own check screenshots (`shots/hello-390.png`, from `ola-page`,
   as `AGENTS.md` asks) show on the project home under "Other files" as things "Ola made". To a
   first person they are noise. Either `AGENTS.md` saves them under a hidden folder, or the home
-  leaves `shots/` out (the design-pass skill keeps before/after shots on purpose, so the second
+  leaves `shots/` out (the designer skill keeps before/after shots on purpose, so the second
   needs a decision).
 
 - **B10, fixed (feedback).** Asked to run a question over every study, the model wrote the job down

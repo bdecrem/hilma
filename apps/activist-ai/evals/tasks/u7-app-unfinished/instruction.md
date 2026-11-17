@@ -1,0 +1,1 @@
+prototype.html is the phone app for our meeting notes. People who tried it say it feels unfinished, like a web page, not a real app. Fix the design so it feels like a normal, finished iPhone app. Keep our notes in it.

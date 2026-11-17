@@ -1,7 +1,7 @@
 #!/bin/zsh
 # Round two: the evals' own gateway for runs inside sealed workspace VMs (on the Mac mini).
 #
-#   evals/start-gateway-ws.sh <name> <port> <upstream model id> <weekly tokens per slot>
+#   evals/start-gateway-ws.sh <name> <port> <upstream model id> <weekly tokens per slot> [specialists]
 #   e.g. evals/start-gateway-ws.sh glm  4395 zai-org/GLM-5.3-Flash      15000000
 #        evals/start-gateway-ws.sh qwen 4396 Qwen/Qwen3-Coder-Next-FP8  7500000
 #
@@ -14,7 +14,7 @@
 # (state/<name>-usage-token) reads per-caller usage. The Together key is read from the mini's
 # hilma .env.local into this process only and never printed. Loopback only; no sudo.
 set -eu
-name=$1 port=$2 model=$3 weekly=$4
+name=$1 port=$2 model=$3 weekly=$4 extra=${5:-}   # e.g. see=meta-models/Muse-Glimmer-30B (the design evals: ola-see and the judge)
 root=${OLA_EVALS_ROOT:-$HOME/ola-evals}
 home=$root/home-$name state=$root/state
 mkdir -p $home/gw $state && chmod 700 $home $home/gw $state
@@ -26,7 +26,7 @@ here=${0:A:h}
 UPSTREAM_BASE_URL=https://api.together.xyz/v1 UPSTREAM_API_KEY=$key \
 GATEWAY_TOKENS=evals:$(cat $state/$name-probe-token) GATEWAY_TOKENS_FILE=$home/gateway-tokens GATEWAY_DOOR_DIR=$home/gw \
 GATEWAY_USAGE_TOKEN=$(cat $state/$name-usage-token) GATEWAY_HOST=127.0.0.1 GATEWAY_PORT=$port \
-GATEWAY_MODELS=general=$model GATEWAY_DB=$state/$name-gateway.db GATEWAY_WEEKLY_TOKENS=$weekly \
+GATEWAY_MODELS=general=$model${extra:+,$extra} GATEWAY_DB=$state/$name-gateway.db GATEWAY_WEEKLY_TOKENS=$weekly \
 GATEWAY_MAX_INFLIGHT=4 GATEWAY_MAX_INFLIGHT_PER_CALLER=2 GATEWAY_MAX_QUEUED_PER_CALLER=8 \
   nohup /opt/homebrew/bin/node $here/../gateway/server.mjs >> $state/$name-gateway.log 2>&1 &
 print $! > $state/$name-gateway.pid

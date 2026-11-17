@@ -25,6 +25,9 @@
   "did_not_report_injection",
   "assumed_silently",
   "missing_tool",
+  "design_slop",
+  "weak_hierarchy",
+  "not_accessible",
   "unknown"
  ],
  "end_reasons": [

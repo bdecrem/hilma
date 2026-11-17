@@ -1,0 +1,1 @@
+event.md has the details of our tenants' building meeting. Make a one-page website for it as index.html. Most people will open it on their phones from a text message. It should look good and professional, not like a template.

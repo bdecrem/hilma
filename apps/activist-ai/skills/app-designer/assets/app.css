@@ -1,0 +1,94 @@
+/* app-designer: iPhone and Mac screens in plain HTML and CSS, at the platform's sizes
+   (references/anatomy.md). Change --tint to the app's accent (palette.py); leave the rest. */
+:root {
+  --tint: #0b63b0; --on-tint: #ffffff; --red: #d70015;
+  --bg: #ffffff; --grouped: #f2f2f7; --group: #ffffff; --label: #000000; --label-2: #6c6c70; --sep: #c6c6c8; --fill: #7676801f;
+  --font: -apple-system, BlinkMacSystemFont, "Instrument Sans", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #000000; --grouped: #000000; --group: #1c1c1e; --label: #ffffff; --label-2: #a1a1a6; --sep: #38383a; --fill: #7676803d; --red: #ff6961; }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { background: #e4e2de; font-family: var(--font); color: var(--label); -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+a { color: var(--tint); text-decoration: none; }
+:focus-visible { outline: 3px solid var(--tint); outline-offset: 2px; }
+.i { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+/* ---------- iPhone ---------- */
+.device { position: relative; width: 393px; height: 852px; margin: 32px auto; overflow: hidden; background: var(--bg);
+          border-radius: 55px; box-shadow: 0 0 0 12px #1d1d1f; }
+@media (max-width: 430px) { body { background: var(--bg); } .device { margin: 0; border-radius: 0; box-shadow: none; width: 100vw; height: 100vh; } }
+.status { position: absolute; top: 0; left: 0; right: 0; height: 54px; display: flex; align-items: center; justify-content: space-between;
+          padding: 6px 32px 0 48px; font-size: 17px; font-weight: 600; z-index: 3; }
+.status .sys { display: flex; gap: 6px; align-items: center; }
+.screen { position: absolute; inset: 54px 0 0 0; overflow-y: auto; background: var(--bg); padding-bottom: 100px; }
+.screen.grouped { background: var(--grouped); }
+.screen[hidden] { display: none; }
+.bar { height: 44px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 16px; font-size: 17px; }
+.bar .title { font-weight: 600; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; margin: 0; font-size: 17px; }
+.bar .back { display: inline-flex; align-items: center; gap: 2px; margin-left: -8px; min-height: 44px; }
+.bar .end { justify-self: end; display: flex; gap: 20px; align-items: center; min-height: 44px; }
+.large { font-size: 34px; font-weight: 700; letter-spacing: 0.01em; line-height: 41px; margin: 2px 16px 8px; }
+.search { display: flex; align-items: center; gap: 6px; margin: 0 16px 12px; height: 36px; padding: 0 8px; border-radius: 10px; background: var(--fill);
+          color: var(--label-2); font-size: 17px; }
+.search .i { width: 18px; height: 18px; }
+.section-head { font-size: 13px; color: var(--label-2); margin: 24px 32px 6px; text-transform: none; }
+.section-foot { font-size: 13px; color: var(--label-2); margin: 6px 32px 0; line-height: 1.35; }
+.list { list-style: none; margin: 0; padding: 0; background: var(--group); }
+.grouped .list { margin: 0 16px; border-radius: 10px; overflow: hidden; }
+.row { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 10px 16px; font-size: 17px; color: var(--label); position: relative; }
+.row + .row::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; border-top: 0.5px solid var(--sep); }
+.row.with-icon + .row.with-icon::before { left: 56px; }
+.row .text { flex: 1; min-width: 0; }
+.row .sub { display: block; font-size: 15px; color: var(--label-2); margin-top: 2px; }
+.row .value { color: var(--label-2); font-size: 17px; }
+.row .chev { width: 14px; height: 14px; color: #c4c4c7; stroke-width: 2.4; }
+.row .badge { width: 28px; height: 28px; border-radius: 7px; background: var(--tint); color: var(--on-tint); display: grid; place-items: center; }
+.row .badge .i { width: 18px; height: 18px; }
+.row.destructive { color: var(--red); justify-content: center; }
+.toggle { width: 51px; height: 31px; border-radius: 16px; background: #34c759; position: relative; flex: none; }
+.toggle::after { content: ""; position: absolute; top: 2px; right: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 2px 4px #0003; }
+.toggle.off { background: #e9e9eb; } .toggle.off::after { right: auto; left: 2px; }
+.body { padding: 0 16px; font-size: 17px; line-height: 1.45; }
+.body p { margin: 0 0 12px; }
+.meta { font-size: 15px; color: var(--label-2); }
+.filled { display: flex; align-items: center; justify-content: center; height: 50px; margin: 24px 16px; border-radius: 12px; background: var(--tint);
+          color: var(--on-tint); font-size: 17px; font-weight: 600; }
+.segmented { display: flex; margin: 0 16px 12px; padding: 2px; border-radius: 9px; background: var(--fill); font-size: 13px; font-weight: 500; }
+.segmented span { flex: 1; text-align: center; padding: 6px 0; border-radius: 7px; }
+.segmented .on { background: var(--group); box-shadow: 0 1px 3px #0002; }
+.empty { text-align: center; padding: 64px 32px; color: var(--label-2); font-size: 15px; }
+.empty b { display: block; color: var(--label); font-size: 20px; margin-bottom: 6px; }
+.tabbar { position: absolute; left: 0; right: 0; bottom: 0; height: 83px; display: flex; justify-content: space-around; padding-top: 7px; z-index: 3;
+          background: var(--bg); border-top: 0.5px solid var(--sep); }  /* solid: a still picture has no blur, so text would ghost through */
+.tabbar button { display: flex; flex-direction: column; align-items: center; gap: 3px; width: 80px; font-size: 10px; font-weight: 500; color: var(--label-2); }
+.tabbar button[aria-current=page] { color: var(--tint); }
+.tabbar .i { width: 26px; height: 26px; }
+.home { position: absolute; bottom: 8px; left: 50%; width: 134px; height: 5px; margin-left: -67px; border-radius: 3px; background: var(--label); z-index: 4; }
+.screen.sheet { top: 64px; border-radius: 10px 10px 0 0; box-shadow: 0 0 0 100vmax #0006; z-index: 5; }
+.screen.sheet::before { content: ""; display: block; width: 36px; height: 5px; border-radius: 3px; background: var(--sep); margin: 6px auto 0; }
+.field { display: flex; align-items: center; min-height: 44px; padding: 0 16px; font-size: 17px; }
+.field label { width: 110px; flex: none; }
+.field input, .field textarea { flex: 1; border: 0; font: inherit; color: var(--label); background: none; padding: 11px 0; outline-offset: -2px; }
+
+/* ---------- Mac ---------- */
+.window { width: 1180px; height: 760px; margin: 32px auto; display: grid; grid-template-columns: 240px 1fr; grid-template-rows: 52px 1fr;
+          background: var(--bg); border-radius: 12px; overflow: hidden; box-shadow: 0 0 0 1px #0003, 0 20px 50px #0003; font-size: 13px; }
+@media (max-width: 1200px) { .window { margin: 0; border-radius: 0; width: 100vw; height: 100vh; } }
+.window .titlebar { grid-column: 1 / -1; display: flex; align-items: center; gap: 16px; padding: 0 16px 0 20px; border-bottom: 1px solid var(--sep); }
+.lights { display: flex; gap: 8px; } .lights i { width: 12px; height: 12px; border-radius: 50%; background: #ff5f57; } .lights i + i { background: #febc2e; } .lights i + i + i { background: #28c840; }
+.titlebar h1 { font-size: 13px; font-weight: 700; margin: 0 0 0 60px; }
+.titlebar .tools { margin-left: auto; display: flex; gap: 14px; align-items: center; color: var(--label-2); }
+.titlebar .tools .i { width: 18px; height: 18px; }
+.sidebar { background: var(--grouped); padding: 12px 10px; border-right: 1px solid var(--sep); }
+.sidebar h2 { font-size: 11px; font-weight: 600; color: var(--label-2); margin: 12px 10px 4px; }
+.sidebar a { display: flex; align-items: center; gap: 8px; height: 28px; padding: 0 10px; border-radius: 6px; color: var(--label); }
+.sidebar a[aria-current=page] { background: var(--tint); color: var(--on-tint); }
+.sidebar .i { width: 16px; height: 16px; }
+.content { padding: 20px 24px; overflow: auto; }
+.content h2 { font-size: 22px; margin: 0 0 12px; }
+.mac-row { display: grid; grid-template-columns: 1fr 120px 100px; gap: 12px; align-items: center; height: 30px; padding: 0 8px; border-radius: 6px; }
+.mac-row:nth-child(even) { background: var(--grouped); }
+.mac-btn { height: 24px; padding: 0 12px; border-radius: 6px; background: var(--tint); color: var(--on-tint); font-size: 13px; display: inline-flex; align-items: center; }

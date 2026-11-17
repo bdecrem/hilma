@@ -54,7 +54,7 @@ export function permissionsFor(autonomy, web = 'ask') {
   rules.push(...webRules(web === 'always' && autonomy !== 'ask' ? 'allow' : 'ask'))
   for (const action of ALWAYS_DENY) rules.push({ action, resource: '*', effect: 'deny' })
   // Ola's own skills are files in the image, read-only, outside the project folder: a skill tells the
-  // agent to read its references (design-pass: references/design.md), and the denial above refused
+  // agent to read its references (designer: references/brief.md), and the denial above refused
   // every read, so "make it look better" stopped at once (first-user pass, 2026-11-17). Reading them
   // gives nothing new: the agent can already print them with the shell. Last, so it wins.
   rules.push(SKILLS_READ)

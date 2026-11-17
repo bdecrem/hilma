@@ -1858,7 +1858,7 @@ is a page that says so.
 ## Skills and seeing pages (image 2.3.0-15)
 
 **Skills** are Ola's own written know-how, versioned and tested in `skills/` (read `skills/README.md`):
-`chart`, `workbook`, `report` and `design-pass`, each a folder in the open Agent Skills format
+`chart`, `workbook`, `report`, `designer` (design-pass grew into it on 2026-11-17) and `app-designer`, each a folder in the open Agent Skills format
 (`SKILL.md`, `scripts/`, `references/`, `assets/`, a `CHANGELOG.md`, `tests/`), plus `batch-quotes`,
 a hidden placeholder until `ola-batch` lands. opencode 2.3.0 reads the format natively: the agent sees
 each skill's description at every step and loads one with its `skill` tool. They are built into the
@@ -1878,7 +1878,7 @@ the page's own colors), the smallest and the most common text size, fonts in use
 missing files and script errors. `AGENTS.md` tells the agent to look before it says a page is done (the
 evals had it loop up to 104 steps guessing at pages it could not see). The renderer adds 292 MB to
 `/usr/lib/chromium` unpacked; with its libraries and the Python libraries the image went from 370 MB to 808 MB (compressed, as `container image list` reports it), most of it the renderer. When
-`ola-see <image> "<question>"` is in the image, the `design-pass` skill asks it to look at each shot;
+`ola-see <image> "<question>"` is in the image, the `designer` skill asks it to look at each shot;
 without it, the skill says in one line that it could not look at the page itself and relies on the
 measurements.
 

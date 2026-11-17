@@ -78,6 +78,11 @@
 # PATH opencode downloads ripgrep from GitHub at first use, which a sealed VM cannot, so every file
 # search failed ("ripgrep execution failed"). The one on PATH is found first, so an `rg` the agent
 # puts in opencode's own data folder is never used.
+# 2.3.0-23: the designer skill (design-pass grown into a designer: brief, idea, type and color
+# systems, directions compared side by side, polish by looking; six OFL font families bundled in the
+# skill, about 0.5 MB) and the app-designer skill (iPhone and Mac screens as a clickable prototype);
+# ola-page measures taste (decoration, the first screen's order, accessibility) and takes --dark.
+# Builds on 2.3.0-20 (everything of it is in it). (Not 2.3.0-21 or 22: other builders' numbers.)
 
 ARG DEBIAN=docker.io/library/debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """ola-page: look at a page the way a visitor's browser shows it, inside the sealed computer.
 
-    ola-page index.html [--width 390] [--height 900] --out shot.png [--json checks.json] [--viewport]
+    ola-page index.html [--width 390] [--height 900] --out shot.png [--json checks.json] [--viewport] [--dark] [--scale 2]
 
 Serves the page's own folder on 127.0.0.1 (so the page's fetch() of its data files works, as it does
 under Open), loads it in a headless Chromium (chromium-headless-shell from Debian, driven over a
@@ -9,7 +9,9 @@ pipe, no network: the computer has none), saves a full-page screenshot, and meas
 can measure: horizontal scroll, elements that run past the right edge, clipped text, text below the
 WCAG contrast ratio (4.5, or 3 for large text) computed from the page's own colors, the smallest
 text, the type sizes and font families in use, broken images, script errors, missing files and any
-request to another address (a page here may load only its own files).
+request to another address (a page here may load only its own files); and under "taste" what the
+designer skill checks: decoration (gradients, glows, pills, rounded boxes, emoji, placeholder text,
+accent hues), the first screen in order of visual weight, and the accessibility basics.
 
 Prints a few plain lines, and with --json writes every finding. Exit 0 when the page loaded (even with
 findings), 1 when it could not be loaded, 2 on a usage error. Only Python's standard library.
@@ -132,7 +134,105 @@ MEASURE = r"""
   out.has_viewport_meta = /width\s*=\s*device-width/i.test(document.querySelector('meta[name=viewport]')?.getAttribute('content') || '')
   out.broken_images =[...document.images].filter((i) => i.complete && i.naturalWidth === 0).map((i) => i.getAttribute('src')).slice(0, 20)
   out.headings = [...document.querySelectorAll('h1,h2,h3')].map((h) => h.tagName.toLowerCase() + ' ' + say(h)).slice(0, 40)
+  try { out.taste = taste() } catch (e) { out.taste = { error: String(e).slice(0, 120) } }
   return JSON.stringify(out)
+
+  // What a program can see of the two failures the designer skill names (decorated and bare), the
+  // order of importance on the first screen, and the accessibility basics. Counts and labels only.
+  function taste() {
+    const vh = window.innerHeight, t = { gradients: [], glows: [], shadows: 0, round_boxes: 0, pills: 0, glass: 0, emoji: 0,
+      h1_accent: false, tiny_caps_labels: 0, centered_long_text: 0, placeholder: [], accent_hues: [], pictures: 0 }
+    const sat = (c) => (Math.max(c.r, c.g, c.b) - Math.min(c.r, c.g, c.b)) / 255
+    const hueOf = (c) => { const r = c.r / 255, g = c.g / 255, b = c.b / 255, mx = Math.max(r, g, b), d = mx - Math.min(r, g, b); if (!d) return 0
+      let h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h *= 60; return h < 0 ? h + 360 : h }
+    const hues = {}
+    const note = (c, w) => { if (!c || c.a < 0.5 || !w || sat(c) < 0.2) return; const k = (Math.round(hueOf(c) / 30) % 12) * 30; hues[k] = (hues[k] || 0) + w }
+    const own = (el) => [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())
+    for (const el of (body ? body.querySelectorAll('*') : [])) {
+      const s = getComputedStyle(el), r = el.getBoundingClientRect()
+      if (r.width < 1 || r.height < 1 || s.display === 'none' || s.visibility === 'hidden') continue
+      if (/gradient\(/.test(s.backgroundImage)) t.gradients.push(label(el))
+      if (s.boxShadow && s.boxShadow !== 'none') {
+        t.shadows++
+        const blur = Math.max(0, ...[...s.boxShadow.matchAll(/(-?[\d.]+)px\s+(-?[\d.]+)px\s+([\d.]+)px/g)].map((m) => +m[3]))
+        const col = parse(s.boxShadow), inset = /inset/.test(s.boxShadow)
+        // an inset hard line (an underline, a rule) is not a glow; a wide blur or a colored halo is
+        if (!(inset && blur < 4) && (blur >= 24 || (col && sat(col) >= 0.2 && blur > 0))) t.glows.push(label(el))
+      }
+      if (s.textShadow && s.textShadow !== 'none') t.glows.push(label(el))
+      if ((s.backdropFilter && s.backdropFilter !== 'none') || /blur/.test(s.filter)) t.glass++
+      const rad = parseFloat(s.borderTopLeftRadius) || 0, bgc = parse(s.backgroundColor)
+      const filled = (bgc && bgc.a > 0) || parseFloat(s.borderTopWidth) > 0
+      if (filled && rad >= 12 && r.width >= 120 && r.height >= 64) t.round_boxes++
+      if (filled && r.height <= 40 && rad >= r.height / 2 - 1 && r.width < 260 && own(el) && !['BUTTON', 'A', 'INPUT', 'SELECT', 'LABEL'].includes(el.tagName)) t.pills++
+      note(bgc, Math.min(r.width * r.height, vw * vh) / 20000)
+      if (own(el)) note(parse(s.color), 1)
+      if (parseFloat(s.borderTopWidth) > 0) note(parse(s.borderTopColor), 0.5)
+      if (el instanceof SVGElement && el.tagName !== 'svg') note(parse(s.fill), Math.min(r.width * r.height, 40000) / 4000)
+      if (['svg', 'IMG', 'CANVAS', 'PICTURE', 'VIDEO'].includes(el.tagName) && r.width >= 120 && r.height >= 80) t.pictures++
+      if (s.textTransform === 'uppercase' && parseFloat(s.fontSize) <= 13 && own(el)) t.tiny_caps_labels++
+      if (s.textAlign === 'center' && ['P', 'LI', 'DD'].includes(el.tagName) && (el.innerText || '').length > 180) t.centered_long_text++
+    }
+    t.accent_hues = Object.entries(hues).filter(([, w]) => w >= 3).sort((a, b) => b[1] - a[1]).map(([k]) => Number(k))
+    const words = body ? body.innerText : ''
+    t.emoji = [...words.matchAll(/\p{Extended_Pictographic}/gu)].filter((m) => !'©®™'.includes(m[0])).length
+    const ph = /lorem ipsum|dolor sit amet|your (headline|title|text|tagline|name) here|placeholder text|\bTBD\b|\bTODO\b|john doe|jane doe|acme (inc|corp)|example\.com|xxx-xxxx|\b(foo|bar)baz\b/gi
+    t.placeholder = [...new Set([...words.matchAll(ph)].map((m) => m[0]))].slice(0, 8)
+    for (const h of document.querySelectorAll('h1')) {
+      const hc = getComputedStyle(h).color
+      for (const k of h.querySelectorAll('*')) { const s = getComputedStyle(k); if (s.fontStyle === 'italic' || (s.color !== hc && sat(parse(s.color) || { r: 0, g: 0, b: 0 }) >= 0.2)) t.h1_accent = true }
+    }
+    const bg = background(body || de)
+    t.background = bg ? hex(bg) : null
+    // The first screen, in order of visual weight (size times weight): what a reader sees first.
+    const first = []
+    for (const el of seen) {
+      const r = el.getBoundingClientRect(), s = getComputedStyle(el)
+      if (r.top >= vh || r.bottom <= 0 || r.width < 1 || s.display === 'none' || s.visibility === 'hidden') continue
+      const size = parseFloat(s.fontSize), w = Number(s.fontWeight) || 400
+      first.push({ text: say(el).slice(0, 40), size, weight: w, score: Math.round(size * size * (w / 400)) })
+    }
+    first.sort((a, b) => b.score - a.score)
+    t.first_screen = first.slice(0, 6)
+    t.rivals = first.length ? first.filter((x) => x.score >= first[0].score * 0.7).length : 0
+    const h1 = document.querySelector('h1')
+    t.h1_px = h1 ? parseFloat(getComputedStyle(h1).fontSize) : null
+    // the reading size: the size most of the running text is set in (paragraphs, list items, cells),
+    // by amount of text, so a chart's many small labels do not count as the reading text
+    const read = {}
+    for (const el of document.querySelectorAll('p, li, dd, blockquote, td')) {
+      const n = (el.innerText || '').trim().length
+      if (n && !el.closest('svg')) { const k = Math.round(parseFloat(getComputedStyle(el).fontSize) * 2) / 2; read[k] = (read[k] || 0) + n }
+    }
+    t.reading_px = Object.keys(read).length ? Number(Object.entries(read).sort((a, b) => b[1] - a[1])[0][0]) : body_px
+    t.contrast_of_sizes = t.reading_px && first.length ? Math.round((first[0].size / t.reading_px) * 10) / 10 : null
+    // accessibility basics
+    t.images_without_alt = [...document.images].filter((i) => !i.hasAttribute('alt')).length
+    t.unlabeled_pictures = [...document.querySelectorAll('svg, canvas')].filter((e) => { const r = e.getBoundingClientRect(); return r.width >= 120 && r.height >= 80 && !e.closest('[aria-hidden=true]') &&
+      !(e.getAttribute('role') === 'img' && (e.getAttribute('aria-label') || e.querySelector('title') || e.getAttribute('aria-labelledby'))) && !e.closest('figure')?.querySelector('figcaption') }).length
+    t.unlabeled_inputs = [...document.querySelectorAll('input, select, textarea')].filter((i) => !['hidden', 'submit', 'button', 'reset', 'image'].includes(i.type) &&
+      !(i.id && document.querySelector(`label[for="${CSS.escape(i.id)}"]`)) && !i.closest('label') && !i.getAttribute('aria-label') && !i.getAttribute('aria-labelledby')).length
+    let lvl = 0; t.heading_skips = 0
+    for (const h of document.querySelectorAll('h1,h2,h3,h4,h5,h6')) { const n = +h.tagName[1]; if (lvl && n > lvl + 1) t.heading_skips++; lvl = n }
+    let focusRules = 0, motionRule = false, outlineKilled = 0
+    for (const sh of document.styleSheets) {
+      let rules; try { rules = sh.cssRules } catch { continue }
+      const walk = (list) => { for (const ru of list) {
+        if (ru.media && /prefers-reduced-motion/.test(ru.media.mediaText)) motionRule = true
+        if (ru.cssRules) walk(ru.cssRules)
+        if (ru.selectorText && /:focus/.test(ru.selectorText)) focusRules++
+        if (ru.selectorText && ru.style && /^(none|0)/.test(ru.style.outlineStyle || ru.style.outline || 'x') && !/:focus-visible/.test(ru.selectorText)) outlineKilled++ } }
+      walk(rules)
+    }
+    t.focus_rules = focusRules
+    t.outline_removed = outlineKilled
+    const moving = [...document.querySelectorAll('*')].some((e) => { const s = getComputedStyle(e); return (s.animationName && s.animationName !== 'none') || parseFloat(s.transitionDuration) > 0.2 })
+    t.motion_without_reduced_motion = moving && !motionRule
+    t.interactive = document.querySelectorAll('a[href], button, input:not([type=hidden]), select, textarea').length
+    t.small_targets = vw < 700 ? [...document.querySelectorAll('button, input:not([type=hidden]), select, a')].filter((e) => {
+      const s = getComputedStyle(e), r = e.getBoundingClientRect(); return r.width > 0 && s.display !== 'inline' && r.height < 32 }).length : 0
+    return t
+  }
 })()
 """
 
@@ -260,7 +360,8 @@ def png_size(path):
     return struct.unpack(">II", head[16:24]) if head[:8] == b"\x89PNG\r\n\x1a\n" else (0, 0)
 
 
-def main():
+def arguments():
+    """The command line, shared with the Mac's ola-page (bart/ola-page-mac), which renders in the app's web view."""
     ap = argparse.ArgumentParser(prog="ola-page", description="Screenshot a page and measure what a program can see.")
     ap.add_argument("page")
     ap.add_argument("--width", type=int, default=1280)
@@ -270,7 +371,12 @@ def main():
     ap.add_argument("--viewport", action="store_true", help="only what fits in the window, not the whole page")
     ap.add_argument("--wait", type=int, default=600, help="milliseconds to let the page settle after it loads")
     ap.add_argument("--scale", type=float, default=1.0)
-    a = ap.parse_args()
+    ap.add_argument("--dark", action="store_true", help="as a browser set to dark mode shows it (prefers-color-scheme: dark)")
+    return ap
+
+
+def main():
+    a = arguments().parse_args()
     page = Path(a.page).resolve()
     if not page.is_file():
         print(f"ola-page: no such page: {a.page}", file=sys.stderr)
@@ -306,6 +412,8 @@ def main():
         for m in ("Page.enable", "Runtime.enable", "Network.enable", "Log.enable"):
             cdp.send(m, session=sid)
         cdp.send("Emulation.setDeviceMetricsOverride", {"width": a.width, "height": a.height, "deviceScaleFactor": a.scale, "mobile": False}, session=sid)
+        if a.dark:
+            cdp.send("Emulation.setEmulatedMedia", {"features": [{"name": "prefers-color-scheme", "value": "dark"}]}, session=sid)
         cdp.send("Page.navigate", {"url": url}, session=sid)
         end = time.time() + 20
         while time.time() < end and not any(e.get("method") == "Page.loadEventFired" for e in cdp.events):
@@ -345,6 +453,11 @@ def main():
             cdp.close()
         srv.shutdown()
         shutil.rmtree(profile, ignore_errors=True)
+    return finish(a, report)
+
+
+def finish(a, report):
+    """Writes --json and prints the plain lines about what was measured."""
     if a.json:
         Path(a.json).write_text(json.dumps(report, indent=1))
     w, hh = report["shot_size"]

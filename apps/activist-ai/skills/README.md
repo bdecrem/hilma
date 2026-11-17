@@ -9,7 +9,8 @@ get better every week, whatever model runs underneath.
 | `chart` | "Make a chart of studies per region" | `chart.py draw` (bar, hbar, line, scatter from a CSV or a read-only query) and `chart.py check` | PNG and SVG reopened; the drawn values equal the data file; bars start at zero; missing values are gaps; the caption names the source and counts what was left out | `s1-chart-db`, `s2-chart-gaps` |
 | `workbook` | "Make an Excel file I can send to the board" | `workbook.py build` and `check` | Reopened: Summary, data, Notes in order; no formulas (text starting `= + - @` stays text); headers bold, frozen and filtered; row counts match | `s3-workbook-summary`, `s4-workbook-safe-text` |
 | `report` | "Write a two-page brief as a Word document" | `report.py check` and `build` (.docx with python-docx, .pdf with reportlab, no browser) | Every number or quotation has a source; cited files and pages exist; every quotation is word for word on its cited page | `s5-report-brief`, `s6-report-quotes` |
-| `design-pass` | "This page looks bad on a phone" | `look.py` (runs `ola-page` at 390 and 1280 px; `ola-see` when present) | Sideways scroll, things past the edge, cut-off text, contrast computed from the page's colors, tiny text, long lines, too many fonts or sizes, outside requests; rounds compared by count; before and after shots kept | `s7-design-report-page`, `s8-design-dashboard` |
+| `designer` | "Make a page for our meeting", "this page looks bad on a phone", "make it look professional" | `fonts.py` (six bundled OFL families), `palette.py` (a tonal palette from one hue, contrast checked), `sheet.py` (directions side by side), `look.py` (`ola-page` at 390 and 1280 px, `ola-see` on laptop, phone and a blurred view) | Everything design-pass checked (sideways scroll, things past the edge, cut-off text, contrast with the ratio, tiny text, long lines, too many fonts or sizes, outside requests), plus the decorated failures (gradients, glows, rounded cards, pills, emoji, a colored phrase in the headline, placeholder text, several accent colors), the bare ones (no size contrast, white with one blue and no picture), the first screen's order (the squint test) and the usable basics (alt text, labels, focus, reduced motion, tap targets) | `s7`, `s8`, `u1` to `u5` |
+| `app-designer` | "Design three screens of our phone app", "the app feels unfinished" | `screens.py` (every screen of a clickable prototype at 393 x 852 at 2x or 1180 x 760, light and dark, and a sheet of all); `app.css`, `prototype.js`, a starter | Links to screens that do not exist, screens nothing opens, no Settings or no About with a version, contrast, tiny text, decoration, placeholder text | `u6`, `u7` |
 | `batch-quotes` | (placeholder, hidden) | none yet | waits for `ola-batch` | the coding and PDF evals |
 
 ## The format
@@ -53,6 +54,20 @@ that list more and allow every skill, then proves opencode still offers exactly 
 `/opt/ola/skills`, refuses to load a planted one into a session, and that neither the skills nor the
 system config can be written from inside. opencode's built-in skills (its own docs, bug reports, the
 desktop browser) are denied too.
+
+## In Bart's own apps (2026-11-17)
+
+Bart's Mac app ("On this Mac") and his server on the machine (`bart/ola-bart.sh`) offer these skills
+too, and nothing else: each writes a fresh read-only copy (the Mac app from its Resources into
+`~/Library/Ola/skills`, the machine with `install.py` into `~/.ola-bart/skills`), with the image's path
+`/opt/ola/skills` rewritten to the copy's (which has no spaces, so the commands work as written), names
+that folder in its opencode config, denies every skill by name except Ola's (policies and permissions,
+as the image's system config does), lets the agent read the copy, and keeps Claude Code's skills out
+(`OPENCODE_DISABLE_CLAUDE_CODE`). `ola-see` is installed with the web commands and goes through the
+same forwarder and token; `ola-page` is the image's on the machine (driving Playwright's Chromium
+headless shell or Chrome) and, on the Mac, `bart/ola-page-mac`, which asks the Mac app to render the
+page in its own web view off screen (`Mac/PageRender.swift`). Checks: `bart/skills-check.mjs` on the
+machine; on the Mac `OLA_SKILLS_CHECK=1 swift run olakit-selftest` and `Ola --render-selftest <dir>`.
 
 ## Tested like code: with and without
 

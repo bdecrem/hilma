@@ -194,7 +194,7 @@ export function outcomeOf({ ola, claude, judged }) {
 
 // ------------------------------------------------------------------ what comes of a lost copy
 
-const SKILL_FOR = { chart: 'chart', writing: 'report', site: 'design-pass', clean: 'workbook', coding: 'batch-quotes', pdf: 'report' }
+const SKILL_FOR = { chart: 'chart', writing: 'report', site: 'designer', clean: 'workbook', coding: 'batch-quotes', pdf: 'report' }
 const FIX_FOR = {
   numbers_wrong: 'recompute every total with a short program from the cleaned file, and reconcile rows in, rows dropped and rows out before answering',
   missed_planted_problem: 'look for repeated rows, blanks, mixed formats and spelling variants before cleaning, and say what was found',

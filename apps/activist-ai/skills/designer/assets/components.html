@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Component recipes</title>
+<link rel="stylesheet" href="base.css">
+<style>
+/* Each recipe is marked RECIPE. Copy the HTML and the CSS under the same name; keep the classes.
+   The example content is a made-up tenants' association, to show real words in place: replace all of it. */
+
+/* RECIPE nav: name on the left, at most five links, wraps on a phone (no hamburger for five links) */
+.nav { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px;
+       max-width: 1040px; margin: 0 auto; padding: 16px; border-bottom: 1px solid var(--rule); }
+.nav b { font-size: var(--ui); font-weight: 700; }
+.nav ul { display: flex; flex-wrap: wrap; gap: 4px 20px; list-style: none; margin: 0; padding: 0; font-size: var(--ui); }
+.nav a { color: var(--ink-2); text-decoration: none; padding: 8px 0; display: inline-block; }
+.nav a[aria-current] { color: var(--ink); box-shadow: inset 0 -2px var(--accent); }
+
+/* RECIPE hero: the fact first (what, when, where), one sentence, one action. No slogan, no picture
+   unless it is the page's idea. */
+.hero { display: grid; gap: 24px; padding: 24px 0 48px; border-bottom: 1px solid var(--rule); }
+@media (min-width: 820px) { .hero { grid-template-columns: 1.4fr 1fr; align-items: end; } }
+.hero .when { font-size: var(--display); font-weight: 700; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.hero p { font-size: var(--read); color: var(--ink-2); margin: 12px 0 0; }
+
+/* RECIPE button: one primary per screen; label says what happens */
+.btn { display: inline-flex; align-items: center; min-height: 44px; padding: 0 20px; border: 0; border-radius: 4px;
+       background: var(--accent); color: var(--on-accent); font: 600 var(--ui)/1 var(--sans); text-decoration: none; cursor: pointer; }
+.btn:hover { filter: brightness(0.92); }
+.btn.quiet { background: transparent; color: var(--accent); box-shadow: inset 0 0 0 1.5px var(--rule); }
+
+/* RECIPE figures: key numbers as designed objects: the numeral, a short label, the source */
+.figures { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 24px 32px; margin: 32px 0; }
+.figures div { border-top: 1px solid var(--ink); padding-top: 12px; }
+.figures .n { display: block; font-size: clamp(30px, 2vw + 22px, 40px); font-weight: 700; line-height: 1; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+.figures .lab { display: block; font-size: var(--ui); color: var(--ink-2); margin-top: 6px; }
+
+/* RECIPE table: hairlines, no grid, no zebra; numbers right-aligned in tabular figures; scrolls in its own box */
+.table-wrap { overflow-x: auto; margin: 16px 0 8px; }
+table { border-collapse: collapse; width: 100%; font-size: var(--ui); }
+th { text-align: left; font-weight: 600; color: var(--ink-2); padding: 8px 16px 8px 0; border-bottom: 1px solid var(--ink); white-space: nowrap; }
+td { padding: 10px 16px 10px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+td.r, th.r { text-align: right; font-variant-numeric: tabular-nums; }
+tr.total td { font-weight: 700; border-bottom: 0; }
+
+/* RECIPE chart: an SVG drawn from the real numbers; the title states the finding; the caption gives the source */
+figure { margin: 24px 0; }
+figure h3 { margin: 0 0 12px; }
+figcaption { font-size: var(--small); color: var(--ink-3); margin-top: 8px; }
+.bars text { font: 13px var(--sans); fill: var(--ink-2); }
+.bars .v { fill: var(--ink); font-weight: 600; }
+
+/* RECIPE form: labels above, help under the label, 44 px fields with 16 px text, errors in words */
+.form { display: grid; gap: 20px; max-width: 480px; }
+.field label { display: block; font-weight: 600; font-size: var(--ui); }
+.field .help { display: block; font-size: var(--small); color: var(--ink-3); margin: 2px 0 6px; }
+.field input, .field select, .field textarea { width: 100%; min-height: 44px; padding: 8px 12px; font: 16px var(--sans); color: var(--ink);
+       background: #fff; border: 1.5px solid var(--rule); border-radius: 4px; }
+.field input:focus-visible { border-color: var(--accent); }
+.field .error { display: block; color: var(--alert); font-size: var(--small); margin-top: 6px; }
+.field [aria-invalid=true] { border-color: var(--alert); }
+.steps { font-size: var(--small); color: var(--ink-3); margin-bottom: 8px; }
+
+/* RECIPE card: only when items are separate objects a person picks between. Flat, 1 px rule, small radius */
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.card { border: 1px solid var(--rule); border-radius: 4px; padding: 16px; background: var(--paper); }
+.card h3 { margin: 0 0 4px; }
+
+/* RECIPE empty state: what goes here, how it gets filled, one action */
+.empty { border: 1px dashed var(--rule); padding: 24px; text-align: left; }
+.empty p { color: var(--ink-2); margin: 4px 0 16px; }
+
+/* RECIPE footer: who made it, the date, the source, a contact. On a dark band only when the page needs weight */
+.foot { margin-top: 64px; background: var(--ink); color: var(--paper); }
+.foot div { max-width: 1040px; margin: 0 auto; padding: 32px 16px; display: grid; gap: 8px; font-size: var(--ui); }
+.foot a { color: var(--paper); }
+</style>
+</head>
+<body>
+<nav class="nav" aria-label="Main">
+  <b>Grand Street Tenants</b>
+  <ul><li><a href="#" aria-current="page">Meeting</a></li><li><a href="#">Repairs</a></li><li><a href="#">Rent</a></li><li><a href="#">Contact</a></li></ul>
+</nav>
+<main>
+  <section class="hero">
+    <div>
+      <h1>Building meeting on the heat outages</h1>
+      <p>Everyone in 410 and 412 Grand Street is welcome. Interpretation in Spanish and Cantonese.</p>
+    </div>
+    <div>
+      <div class="when">Thu, March 12<br>7 pm</div>
+      <p>Community room, ground floor of 410</p>
+      <p><a class="btn" href="#rsvp">Save my seat</a></p>
+    </div>
+  </section>
+
+  <h2>The winter so far</h2>
+  <div class="figures">
+    <div><span class="n">14</span><span class="lab">days without heat since November</span></div>
+    <div><span class="n">63</span><span class="lab">apartments that reported it</span></div>
+    <div><span class="n">2</span><span class="lab">city inspections</span></div>
+  </div>
+
+  <h2>Outages by floor</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Floor</th><th class="r">Apartments</th><th class="r">Reported</th><th class="r">Longest outage</th></tr></thead>
+      <tbody>
+        <tr><td>1 to 2</td><td class="r">16</td><td class="r">9</td><td class="r">3 days</td></tr>
+        <tr><td>3 to 4</td><td class="r">16</td><td class="r">15</td><td class="r">5 days</td></tr>
+        <tr><td>5 to 6</td><td class="r">16</td><td class="r">16</td><td class="r">6 days</td></tr>
+        <tr class="total"><td>All</td><td class="r">48</td><td class="r">40</td><td class="r">6 days</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">Source: the association's repair log, November 1 to February 28.</p>
+
+  <figure>
+    <h3>The higher the floor, the longer without heat</h3>
+    <svg class="bars" viewBox="0 0 480 150" role="img" aria-label="Longest outage: floors 1 to 2, 3 days; 3 to 4, 5 days; 5 to 6, 6 days">
+      <line x1="96" y1="8" x2="96" y2="142" stroke="var(--rule)"/>
+      <text x="0" y="34">Floors 1 to 2</text><rect x="96" y="20" width="150" height="22" fill="var(--ink-3)"/><text class="v" x="254" y="36">3 days</text>
+      <text x="0" y="78">Floors 3 to 4</text><rect x="96" y="64" width="250" height="22" fill="var(--ink-3)"/><text class="v" x="354" y="80">5 days</text>
+      <text x="0" y="122">Floors 5 to 6</text><rect x="96" y="108" width="300" height="22" fill="var(--accent)"/><text class="v" x="404" y="124">6 days</text>
+    </svg>
+    <figcaption>Longest single outage per floor. Source: repair log.</figcaption>
+  </figure>
+
+  <h2 id="rsvp">Save a seat</h2>
+  <form class="form" onsubmit="return false">
+    <p class="steps">Step 1 of 2</p>
+    <div class="field"><label for="name">Your name</label><input id="name" autocomplete="name"></div>
+    <div class="field"><label for="apt">Apartment</label><span class="help" id="apt-help">For example 4C</span>
+      <input id="apt" aria-describedby="apt-help apt-err" aria-invalid="true" value="4"><span class="error" id="apt-err">Add the letter too, like 4C.</span></div>
+    <div><button class="btn">Continue</button></div>
+  </form>
+
+  <h2>Who to ask</h2>
+  <div class="cards">
+    <div class="card"><h3>Repairs</h3><p>Ana, apartment 2B. Evenings.</p></div>
+    <div class="card"><h3>Rent and leases</h3><p>Wei, apartment 5A. Weekends.</p></div>
+  </div>
+
+  <h2>Your reports</h2>
+  <div class="empty"><b>No reports from you yet.</b><p>When the heat goes out, a report here helps the next inspection.</p><a class="btn quiet" href="#">Report an outage</a></div>
+</main>
+<footer class="foot"><div><b>Grand Street Tenants Association</b><span>Updated March 1. Questions: write to the committee.</span></div></footer>
+</body>
+</html>
