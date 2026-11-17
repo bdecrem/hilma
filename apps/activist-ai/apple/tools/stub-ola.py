@@ -12,10 +12,12 @@ Routes (the contract in apple/README.md, "Sign in with an Ola account"):
   ANY  /api/device/gw/<rest>   the model door's far side: v1/models, v1/usage, v1/chat/completions
                                (a fake model: streamed "Hello from the stub model."), web/*; else 403
 """
-import base64, hashlib, json, secrets, sys, threading, time
+import base64, hashlib, json, os, secrets, sys, threading, time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 LOCK = threading.Lock()
+MODELS = []
+HOSTED = os.environ.get("OLA_STUB_HOSTED", "on") != "off"
 CODES = {}      # code -> challenge
 TOKENS = set()
 REVOKED = set()
@@ -67,6 +69,9 @@ class H(BaseHTTPRequestHandler):
         if path == "/stub/tools":
             with LOCK:
                 return self.send(200, TOOLS)
+        if path == "/stub/models":
+            with LOCK:
+                return self.send(200, MODELS)
         if path == "/stub/seen":
             with LOCK:
                 return self.send(200, SEEN)
@@ -127,13 +132,17 @@ class H(BaseHTTPRequestHandler):
             if not valid:
                 return self.send(401, {"error": "signed_out"})
             if rest == "v1/models":
-                return self.send(200, {"object": "list", "data": [{"id": "general", "object": "model"}]})
+                return self.send(200, {"object": "list", "data": [{"id": "general", "object": "model"}, {"id": "hosted", "object": "model"}]})
             if rest == "v1/usage":
                 return self.send(200, {"object": "usage", "caller": "p-1", "week_start": "2026-11-16T00:00:00.000Z",
                                        "resets_at": "2026-11-23T00:00:00.000Z", "requests": 12, "tokens_in": 1000, "tokens_out": 500,
                                        "tokens_used": 1500, "quota": 3000000, "fraction_used": 0.42,
                                        "by_model": {"general": {"requests": 12, "tokens_in": 1000, "tokens_out": 500}},
-                                       "claude_month": None, "web_week": {"used": 3, "limit": 200}, "batch_job": None})
+                                       "claude_month": None, "web_week": {"used": 3, "limit": 200}, "batch_job": None,
+                                       # The hosted open model (gateway/hosted.mjs), as a caller's own usage names it;
+                                       # OLA_STUB_HOSTED=off: set up, but not allowed for this person (admin.mjs app-hosted).
+                                       "hosted": {"provider": "Made-up Cloud"},
+                                       "hosted_month": {"granted": HOSTED, "cost_micro_usd": 30000, "cap_micro_usd": 20000000, "requests": 2}})
             if rest == "v1/chat/completions":
                 req = json.loads(raw or b"{}")
                 tools = [t.get("function", {}).get("name") for t in req.get("tools") or []]
@@ -145,7 +154,11 @@ class H(BaseHTTPRequestHandler):
                 # "RUN-A-COMMAND" in the request: the model asks to run one shell command (once).
                 if "RUN-A-COMMAND" in text and last.get("role") == "user" and req.get("stream"):
                     return self.tool_call(req, tools)
-                words = ["Hello", " from", " the", " stub", " model."]
+                with LOCK:
+                    MODELS.append(req.get("model"))
+                if req.get("model") == "hosted" and not HOSTED:
+                    return self.send(403, {"error": {"message": "The hosted open model is off for this project. Its owner can turn it on in Settings.", "type": "permission_error"}})
+                words = ["Hello", " from", " the", " hosted", " stub", " model."] if req.get("model") == "hosted" else ["Hello", " from", " the", " stub", " model."]
                 if not req.get("stream"):
                     return self.send(200, {"id": "c1", "object": "chat.completion", "model": "general",
                                            "choices": [{"index": 0, "message": {"role": "assistant", "content": "".join(words)}, "finish_reason": "stop"}],

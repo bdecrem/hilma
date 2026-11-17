@@ -123,7 +123,7 @@ enum Snapshot {
     let savedDefaults = LocalSettings.defaults
     LocalSettings.defaults = defaults
     for (mode, appearance) in [("light", NSAppearance.Name.aqua), ("dark", .darkAqua)] {
-      for (name, fixture) in [("mac-fallbacks", "fallbacks")] where only == nil || name.contains(only!) {
+      for (name, fixture) in [("mac-fallbacks", "fallbacks"), ("mac-fallbacks-ask-claude", "ask-claude")] where only == nil || name.contains(only!) {
         let store = OlaStore(fixture: Fixture.named(fixture))
         write(SnapshotFrame(store: store, treatment: chosen).environment(\.treatment, chosen), size: CGSize(width: 1440, height: 1100), appearance: appearance, to: dir.appendingPathComponent("\(name)-\(mode).png"), titled: false)
       }

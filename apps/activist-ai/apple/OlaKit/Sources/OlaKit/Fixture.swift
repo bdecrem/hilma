@@ -218,6 +218,13 @@ public struct Fixture: Sendable {
   public static func named(_ name: String) -> Fixture {
     switch name {
     case "fallbacks": return fallbacks
+    case "ask-claude":
+      // Bart, 2026-11-17: "hey can you use claude code for this next thing?": the Claude card.
+      var f = fallbacks
+      var s = StretchSuggestion(id: "st2", sessionID: "s1", request: "hey can you use claude code for this next thing?", reason: .asked, target: .claude, offers: [.claude], turnID: nil)
+      s.nextOnly = true
+      f.suggestion = s
+      return f
     case "results": return results
     case "reactions": return reactions
     case "approval": return approval
