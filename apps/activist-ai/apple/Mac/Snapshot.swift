@@ -38,6 +38,9 @@ enum Snapshot {
     // The connect sheet on its own.
     let connect = ConnectForm(store: OlaStore(config: nil)).frame(width: 440)
     write(connect, size: CGSize(width: 440, height: 470), appearance: .aqua, to: dir.appendingPathComponent("mac-connect.png"), titled: false)
+    // The pairing sheet, with a made-up code.
+    let sample = PairingCode(host: "imac-m1.tail1234.ts.net", port: 4330, secret: "ABCD-EFGH-JKLM-NPQR-STUV-WXYZ-23", name: "Bart\u{2019}s iMac")
+    write(PairingSheet(code: sample) {}, size: CGSize(width: 420, height: 640), appearance: .aqua, to: dir.appendingPathComponent("mac-pair-phone.png"), titled: false)
     print("wrote \(dir.path)")
     exit(0)
   }

@@ -18,6 +18,7 @@ enum Main {
 struct OlaMacApp: App {
   @State private var store = OlaStore(config: Credentials.load())
   @State private var whereOla: WhereOlaWorks?
+  @State private var phoneLink: PhoneLink?
   @NSApplicationDelegateAdaptor private var delegate: AppDelegate
 
   var body: some Scene {
@@ -31,6 +32,10 @@ struct OlaMacApp: App {
           delegate.store = store
           delegate.whereOla = w
           Notifier.wire(store)
+          let link = PhoneLink(store: store)
+          phoneLink = link
+          delegate.phoneLink = link
+          Task { await link.apply() }
           if LocalSettings.onThisMac { Task { await w.apply() } } else { store.start() }
         }
     }
@@ -43,7 +48,7 @@ struct OlaMacApp: App {
     .defaultSize(width: 1000, height: 760)
 
     Settings {
-      SettingsView(store: store, whereOla: whereOla)
+      SettingsView(store: store, whereOla: whereOla, phoneLink: phoneLink)
     }
   }
 }
@@ -51,8 +56,9 @@ struct OlaMacApp: App {
 final class AppDelegate: NSObject, NSApplicationDelegate {
   var store: OlaStore?
   var whereOla: WhereOlaWorks?
+  var phoneLink: PhoneLink?
   func applicationWillTerminate(_ notification: Notification) {
-    MainActor.assumeIsolated { whereOla?.stop() }
+    MainActor.assumeIsolated { whereOla?.stop(); phoneLink?.stop() }
   }
   func applicationDidBecomeActive(_ notification: Notification) {
     MainActor.assumeIsolated {
@@ -135,11 +141,15 @@ extension FocusedValues {
 struct SettingsView: View {
   var store: OlaStore
   var whereOla: WhereOlaWorks?
+  var phoneLink: PhoneLink?
   @State private var connecting = false
 
   var body: some View {
     VStack(alignment: .leading, spacing: 14) {
       if let whereOla { WhereSettings(controller: whereOla) }
+      Divider()
+      Text("Phone").font(.headline)
+      if let phoneLink { PhoneSettings(link: phoneLink) }
       Divider()
       LabeledContent("Machine", value: store.config?.url.absoluteString ?? "Not connected")
       LabeledContent("Status", value: statusText)

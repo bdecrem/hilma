@@ -9,8 +9,11 @@ public enum Credentials {
   public static func load() -> ServerConfig? {
     guard let address = UserDefaults.standard.string(forKey: addressKey), let url = URL(string: address),
           let password = password(for: address) else { return nil }
-    return ServerConfig(url: url, password: password)
+    let d = UserDefaults.standard
+    return ServerConfig(url: url, password: password, viaMac: d.bool(forKey: viaMacKey), macName: d.string(forKey: macNameKey))
   }
+  static let viaMacKey = "ola.viaMac"
+  static let macNameKey = "ola.macName"
 
   public static var savedAddress: String? { UserDefaults.standard.string(forKey: addressKey) }
 
@@ -25,6 +28,8 @@ public enum Credentials {
     let status = SecItemAdd(add as CFDictionary, nil)
     guard status == errSecSuccess else { throw OlaError.badReply("Keychain \(status)") }
     UserDefaults.standard.set(account, forKey: addressKey)
+    UserDefaults.standard.set(config.viaMac, forKey: viaMacKey)
+    UserDefaults.standard.set(config.macName, forKey: macNameKey)
   }
 
   public static func forget() {

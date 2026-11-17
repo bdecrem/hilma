@@ -35,8 +35,10 @@
 			</dict>
 		</dict>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>The camera reads the pairing code that Ola on your Mac shows.</string>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>Ola talks to your own machine over your private network.</string>
+	<string>Ola talks to Ola on your Mac over your private network.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

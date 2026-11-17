@@ -4,9 +4,15 @@ import Foundation
 public struct ServerConfig: Equatable, Sendable {
   public var url: URL
   public var password: String
-  public init(url: URL, password: String) {
+  /// The phone, paired with the Mac app: `password` is the pairing secret, sent as a Bearer token
+  /// to the Mac app's relay, which adds the real credentials.
+  public var viaMac: Bool
+  public var macName: String?
+  public init(url: URL, password: String, viaMac: Bool = false, macName: String? = nil) {
     self.url = url
     self.password = password
+    self.viaMac = viaMac
+    self.macName = macName
   }
   /// The mini's Tailscale name. Its address, http://100.95.51.98:4310, answers too, but App
   /// Transport Security cannot be told to allow plain HTTP to an IP address: in the simulator the
@@ -115,8 +121,14 @@ public final class OpenCodeClient: @unchecked Sendable {
   }
 
   private var authorization: String {
-    "Basic " + Data("opencode:\(config.password)".utf8).base64EncodedString()
+    config.viaMac ? "Bearer \(config.password)" : "Basic " + Data("opencode:\(config.password)".utf8).base64EncodedString()
   }
+
+  /// Any GET, for checks.
+  public func get(_ path: String) async throws -> JSON { try await json("GET", path) }
+
+  /// What the Mac app says about itself (only through its relay).
+  public func hello() async throws -> JSON { try await json("GET", "/ola/hello") }
 
   func url(_ path: String, _ query: [URLQueryItem] = []) -> URL {
     var c = URLComponents(url: config.url, resolvingAgainstBaseURL: false)!

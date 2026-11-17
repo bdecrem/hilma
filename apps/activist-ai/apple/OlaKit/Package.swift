@@ -10,10 +10,12 @@ let package = Package(
   products: [
     .library(name: "OlaKit", targets: ["OlaKit"]),
     .executable(name: "olakit-selftest", targets: ["olakit-selftest"]),
+    .executable(name: "olakit-relay", targets: ["olakit-relay"]),
   ],
   targets: [
     .target(name: "OlaKit"),
     .executableTarget(name: "olakit-selftest", dependencies: ["OlaKit"]),
+    .executableTarget(name: "olakit-relay", dependencies: ["OlaKit"]),
     .testTarget(name: "OlaKitTests", dependencies: ["OlaKit"]),
   ]
 )

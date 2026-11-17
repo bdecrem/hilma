@@ -40,7 +40,27 @@ if let folder = env["OLA_LOCAL_FOLDER"] {
   }
   pw = p
 }
-let client = OpenCodeClient(ServerConfig(url: URL(string: address)!, password: pw))
+// Through the Mac relay (OLA_VIA_RELAY=1): every step goes phone-style through a relay started
+// here (on OLA_RELAY_HOST, default 127.0.0.1), with a pairing secret, and the relay adds the real
+// password. The same relay the Mac app runs.
+var target = ServerConfig(url: URL(string: address)!, password: pw)
+var relay: MacRelay?
+if env["OLA_VIA_RELAY"] == "1" {
+  let book = PairingBook(file: nil)
+  let secret = PairingCode.newSecret()
+  book.add(secret: secret, label: "self-test")
+  let r = MacRelay(book: book, macName: "self-test")
+  r.setUpstream(target, mode: local == nil ? "machine" : "mac")
+  let host = env["OLA_RELAY_HOST"] ?? "127.0.0.1"
+  let port = try await r.start(host: host, port: 0)
+  relay = r
+  target = PairingCode(host: host, port: Int(port), secret: secret, name: "self-test").config
+  let hello = try? await OpenCodeClient(target).hello()
+  line(hello?["connected"].bool == true, "the phone reaches the Mac relay with its pairing secret", "\(host):\(port), mode \(hello?["mode"].str ?? "-")")
+  let blocked = (try? await OpenCodeClient(target).get("/api/config")) == nil
+  line(blocked, "the relay refuses a route the apps do not use", "/api/config")
+}
+let client = OpenCodeClient(target)
 var failures = 0
 func line(_ ok: Bool, _ what: String, _ note: String = "") {
   if !ok { failures += 1 }
@@ -79,7 +99,9 @@ do {
   exit(1)
 }
 do {
-  _ = try await OpenCodeClient(ServerConfig(url: URL(string: address)!, password: "wrong-password")).info()
+  var wrong = target
+  wrong.password = "WRONG-WRONG-WRONG-WRONG-WRONG"
+  _ = try await OpenCodeClient(wrong).info()
   line(false, "a wrong password is refused")
 } catch OlaError.unauthorized {
   line(true, "a wrong password is refused", "401")
@@ -171,5 +193,6 @@ line(gone && !still, "delete arrives on the stream, and the session is gone")
 listener.cancel()
 
 print(failures == 0 ? "ALL PASSED in \(Int(Date().timeIntervalSince(t0))) s" : "\(failures) FAILED")
+relay?.stop()
 local?.stop()
 exit(failures == 0 ? 0 : 1)

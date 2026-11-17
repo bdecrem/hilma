@@ -442,10 +442,12 @@ struct ConnectionBar: View {
       HStack(spacing: 10) {
         Image(systemName: "wifi.exclamationmark").foregroundStyle(Ola.vermilion)
         TimelineView(.periodic(from: .now, by: 5)) { ctx in
-          Text("The machine is not answering (\(Int(ctx.date.timeIntervalSince(since)))\u{2009}s). Is it on, and is this device on Tailscale? Trying again.")
+          Text(store.config?.viaMac == true
+            ? "Your Mac is not reachable. Ola on your phone works through the Mac app."
+            : "The machine is not answering (\(Int(ctx.date.timeIntervalSince(since)))\u{2009}s). Is it on, and is this device on Tailscale? Trying again.")
         }
         Spacer()
-        Button("Try now") { store.reconnect() }.buttonStyle(.plain).fontWeight(.semibold)
+        Button("Try again") { store.reconnect() }.buttonStyle(.plain).fontWeight(.semibold)
       }
       .font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.onRoom)
       .padding(.horizontal, 16).padding(.vertical, 9).background(Ola.roomRaised)

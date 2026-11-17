@@ -69,6 +69,47 @@ ATS cannot name an IP address: in the simulator `http://100.95.51.98:4310` was r
 Tailscale name worked, so the connect sheet is prefilled with
 `http://admins-mac-mini.tailde799a.ts.net:4310` (the same server). On the Studio, type its name.
 
+## The phone pairs with the Mac app (since 2026-11-16, evening)
+
+Bart's correction: "the iphone app must connect to the mac app - just like claude code in the app."
+The Mac app is the hub. Settings, Phone, **Let my phone connect** (off by default) starts the relay
+(`OlaKit/Relay.swift`, owned by `Mac/PhoneLink.swift`): an HTTP server on this Mac's **Tailscale
+address only** (found at runtime from the network interfaces, 100.64.0.0/10; port 4330; if Tailscale
+is off the section says so), in front of whichever server the Mac app uses now: the Ola machine, or
+its own local opencode in "On this Mac". **Pair a Phone** shows a QR code and the same thing as text:
+this Mac's name, its Tailscale name and port, and a 130-bit random secret. Nothing else; the phone
+never sees the machine's password or the local server's. The Mac keeps only the secret's SHA-256
+(`~/Library/Application Support/Ola/phones.json`, 600). Paired phones are listed with when they were
+last seen; **Remove** ends that phone's access at once, its open event stream included.
+
+The relay checks the secret in constant time against every phone, refuses an address for a minute
+after 8 wrong tries, forwards only the opencode routes the apps use (`MacRelay.allowList`; anything
+else is 403), passes on only `Content-Type` and `Accept` from the phone and replaces its
+`Authorization` with the server's own. When "Where Ola works" switches, the relay's server changes and
+every open event stream ends, so the phone reconnects to the new one without pairing again.
+
+The phone's first run is **Pair with your Mac** (scan the code, camera permission in plain words,
+or type it). When the Mac app is not running or the Mac sleeps it says "Your Mac is not reachable.
+Ola on your phone works through the Mac app." with Try again. The old address-and-password form is
+no longer on the phone's path (`ConnectForm` remains for the Mac's own connection to the machine).
+
+Proved 2026-11-16: `swift test` (relay: allow-list, pairing code round trip, through to server A with
+A's credentials, typed secret, 403 off the list, wrong and missing secret 401, mode switch to server
+B with the same secret, removed phone 401, too many tries 429); `OLA_VIA_RELAY=1 swift run
+olakit-selftest`, all 15 steps through a relay in front of the machine; a headless relay
+(`swift run olakit-relay`) bound to this iMac's Tailscale address, reached **from the mini over
+Tailscale**: 401 without the secret, 200 with it, 403 for `/api/config`, nothing on this Mac's
+loopback; and the iPhone app in the simulator paired with a relay on loopback. A Mac cannot reach its
+own Tailscale address (the request times out), so the simulator, which shares this Mac's network,
+used loopback: that proves pairing, the relay and the app, not the phone's Tailscale route, which is
+the same route the mini used.
+
+**Without Tailscale on the phone (a later version, design note only):** a small relay on the Ola
+machine with a public HTTPS name; the Mac app keeps one outbound connection to it, the phone another;
+the two do an end-to-end key exchange bound to the pairing code (for example Noise or an X25519
+handshake keyed by the QR secret), so the relay only moves ciphertext and cannot read or forge
+anything; the relay authenticates both by keys made at pairing and holds no opencode credential.
+
 ## Where Ola works (Mac Settings)
 
 One setting for the whole app:

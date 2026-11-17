@@ -26,8 +26,8 @@ struct OlaPhoneApp: App {
           // Simulator check against the real server: the password arrives in the environment
           // (SIMCTL_CHILD_OLA_PASSWORD), never on a command line, and goes into the Keychain.
           let env = ProcessInfo.processInfo.environment
-          if let pw = env["OLA_PASSWORD"], let s = env["OLA_SERVER"], let url = URL(string: s) {
-            Task { try? await store.connect(ServerConfig(url: url, password: pw)) }
+          if let code = env["OLA_PAIR"].flatMap(PairingCode.parse) {
+            Task { try? await store.connect(code.config) }
             return
           }
           #endif
@@ -49,7 +49,7 @@ struct PhoneRoot: View {
   var body: some View {
     Group {
       if store.connection == .notSetUp {
-        ScrollView { ConnectForm(store: store) }.background(Ola.paper).scrollDismissesKeyboard(.interactively)
+        PairScreen(store: store)
       } else {
         NavigationStack(path: $path) {
           SessionsScreen(store: store, open: { path = [$0] })
@@ -124,8 +124,8 @@ struct SessionsScreen: View {
       }
       ToolbarItem(placement: .topBarLeading) {
         Menu {
-          Button("Connect again", systemImage: "key") { reconnectShown = true }
-          Button("Forget this machine", systemImage: "xmark.circle", role: .destructive) { store.forget() }
+          Button("Pair again", systemImage: "qrcode") { reconnectShown = true }
+          Button("Forget this Mac", systemImage: "xmark.circle", role: .destructive) { store.forget() }
         } label: { Image(systemName: "ellipsis.circle") }
       }
       ToolbarItem(placement: .topBarTrailing) {
@@ -143,7 +143,7 @@ struct SessionsScreen: View {
       Text("It is deleted on the machine, for the Mac too. Files Ola made stay in the folder.")
     }
     .sheet(isPresented: Binding(get: { reconnectShown || store.connection == .refused }, set: { reconnectShown = $0 })) {
-      ScrollView { ConnectForm(store: store) { reconnectShown = false } }.background(Ola.paper)
+      PairScreen(store: store) { reconnectShown = false }
     }
   }
 }

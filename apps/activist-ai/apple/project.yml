@@ -69,7 +69,8 @@ targets:
         UISupportedInterfaceOrientations~ipad: [UIInterfaceOrientationPortrait, UIInterfaceOrientationPortraitUpsideDown, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
-        NSLocalNetworkUsageDescription: Ola talks to your own machine over your private network.
+        NSLocalNetworkUsageDescription: Ola talks to Ola on your Mac over your private network.
+        NSCameraUsageDescription: The camera reads the pairing code that Ola on your Mac shows.
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
           NSExceptionDomains:

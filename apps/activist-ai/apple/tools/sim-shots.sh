@@ -24,13 +24,12 @@ shot() { # name, appearance, args...
   echo "$OUT/$name.png"
 }
 if [ -n "${OLA_LIVE:-}" ]; then
-  # Against the real server: OLA_LIVE=<file holding the password>; it reaches the app as an
-  # environment variable, never on a command line.
-  export SIMCTL_CHILD_OLA_SERVER="${OLA_SERVER:-http://100.95.51.98:4310}"
-  SIMCTL_CHILD_OLA_PASSWORD="$(cat "$OLA_LIVE")"
-  export SIMCTL_CHILD_OLA_PASSWORD
+  # Paired with a Mac relay: OLA_LIVE=<file holding the pairing code> (olakit-relay writes one).
+  # It reaches the app as an environment variable, never on a command line.
+  SIMCTL_CHILD_OLA_PAIR="$(cat "$OLA_LIVE")"
+  export SIMCTL_CHILD_OLA_PAIR
   OLA_WAIT=15 shot phone-live-sessions light
-  unset SIMCTL_CHILD_OLA_PASSWORD SIMCTL_CHILD_OLA_SERVER
+  unset SIMCTL_CHILD_OLA_PAIR
   OLA_WAIT=12 shot phone-live-open light -OlaOpenFirst
 else
   shot phone-sessions light -OlaFixture main
