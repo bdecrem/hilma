@@ -910,13 +910,17 @@ wrong passcode, slow, and count toward the block; `Authorization` never arrives)
 `gateway/test.mjs` (the people file: load, reload, a bad file kept out without holding back the
 tokens file, duplicates across the files refused, p-names elsewhere refused at start; each person's
 own week; the standing web grant for `p-*`, and a workspace still refused without its project's yes
-whatever the people, grants or hosts files say); `frontdesk/check.mjs` (the whole sign-in in Chromium,
+whatever the people, grants or hosts files say); `frontdesk/check.mjs`, 8 device checks (the whole sign-in in Chromium,
 signed out first, with a virtual authenticator; in WebKit with a software passkey made at
 registration, so WebKit's signed-out branch is not proved; both browsers land on a real listener on
 127.0.0.1 and the code redeems; Cancel; every refusal above; the gateway route against the check's
-gateway and fake model, streaming, cut within two seconds of Remove; the token refused outside
-`/api/device/`; `add-device` writes one line; the people file 600, by rename, untouched by a `ws.mjs`
-rewrite of the tokens file).
+gateway and fake model, streaming, cut 0.5 s after Remove; the token refused outside `/api/device/`;
+the production path: a second front desk on the PROXY protocol behind the real `ops/tls.mjs` on
+`https://app.localhost` with a made-up CA and door passcode, where the code and the token pass the door
+with no passcode, a client's `X-Ola-Pass` is removed, a bearer sent straight to the front desk is not
+read, and Chromium and WebKit approve on https and land on `http://127.0.0.1`; `add-device` writes one
+line; the people file 600, by rename, untouched by a `ws.mjs` rewrite of the tokens file). The apps'
+probe is in `ops/tls-test.mjs` (the door's fixed 401 or 404) and the check (the front desk's 401).
 
 **Not done.** A person may not yet see a computer's own week of use (the gateway counts per person).
 Signing in from the Mac app is the Mac side's (`apple/`), built against this contract.
