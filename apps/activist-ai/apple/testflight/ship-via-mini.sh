@@ -12,6 +12,8 @@
 #
 #   apps/activist-ai/apple/testflight/ship-via-mini.sh [ios|mac|both]     (default both)
 #   DRY=1 …     archive, sign and check everything that needs no Apple server; nothing uploaded
+#   NOPUBLISH=1 … mac: the real Developer ID export and notarization, nothing copied or published
+#   MINI=local … archive on this Mac (the Mac download only, when the mini is full)
 #
 # Before the first ship: node testflight/asc-setup.mjs (bundle ids, push, the app record, the
 # internal group, the profile). Ships the build number in project.yml as committed: bump first
@@ -38,9 +40,18 @@ OUT=$(mktemp -d "${TMPDIR:-/tmp}/ola-ship.XXXXXX")
 echo "== Ola $VERSION ($BUILD): $WHAT${DRY:+ (dry run)}; logs in $OUT"
 
 # ---- archive on the mini --------------------------------------------------------------------
-echo "== the mini: disk, then syncing the sources"
-FREE=$(ssh -o ConnectTimeout=10 "$MINI" "df -g /System/Volumes/Data | awk 'NR==2{print \$4}'")
-[ "${FREE:-0}" -ge 10 ] || { echo "error: the mini has ${FREE:-?} GB free (under 10); not archiving there" >&2; exit 1; }
+# MINI=local archives on this Mac instead (when the mini is full or away). Only for the Mac
+# download: App Store Connect refuses an iPhone archive made with a beta Xcode.
+if [ "$MINI" = local ]; then
+  echo "== archiving here ($(xcodebuild -version | head -1)), disk"
+  FREE=$(df -g /System/Volumes/Data | awk 'NR==2{print $4}')
+  [ "${FREE:-0}" -ge 15 ] || { echo "error: this Mac has ${FREE:-?} GB free (under 15)" >&2; exit 1; }
+  if [ "$WHAT" != mac ] && [[ "$(xcode-select -p)" == *beta* ]]; then echo "error: MINI=local with a beta Xcode is for the Mac download only (TestFlight refuses beta SDKs)" >&2; exit 1; fi
+else
+  echo "== the mini: disk, then syncing the sources"
+  FREE=$(ssh -o ConnectTimeout=10 "$MINI" "df -g /System/Volumes/Data | awk 'NR==2{print \$4}'")
+  [ "${FREE:-0}" -ge 10 ] || { echo "error: the mini has ${FREE:-?} GB free (under 10); not archiving there (MINI=local for the Mac download)" >&2; exit 1; }
+fi
 # Ola's skills, fresh from apps/activist-ai/skills as committed (refuses uncommitted changes); the
 # archived Mac app is checked against them below (README, "Every release").
 node tools/skills.mjs stage build/OlaSkills
@@ -49,14 +60,23 @@ node tools/skills.mjs stage build/OlaSkills >/dev/null   # bundled in the Mac ap
 # about eight minutes, then a copy); the archived app is checked against it below.
 ../opencode-fork/stage.sh stage build/OlaOpencode
 xcodegen generate >/dev/null
+[ "$MINI" = local ] || {
 ssh -o ConnectTimeout=10 "$MINI" 'mkdir -p ~/ola-ship/apple'
 rsync -a --delete --exclude .build --exclude DerivedData --exclude xcuserdata --exclude .DS_Store ./ "$MINI:ola-ship/apple/"
 # Every folder project.yml reaches outside apple/ (`path: ../<dir>`), so the mini's copy builds.
 for d in $(sed -n 's#^ *- path: \.\./\([A-Za-z0-9_-]*\).*#\1#p' project.yml | sort -u); do
   rsync -a --delete --exclude node_modules --exclude .DS_Store "../$d/" "$MINI:ola-ship/$d/"
 done
+}
 
 archive() { # $1 scheme, $2 destination, $3 name
+  if [ "$MINI" = local ]; then
+    echo "== archiving $3 here (unsigned)"
+    xcodebuild archive -project Ola.xcodeproj -scheme "$1" -destination "$2" -archivePath "$OUT/$3.xcarchive" \
+      -configuration Release -derivedDataPath "$HOME/Library/Developer/Xcode/DerivedData/ola-apple-tf-$3" \
+      CODE_SIGN_IDENTITY='' CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO > "$OUT/$3-archive.log" 2>&1 \
+      || { grep -E 'error:' "$OUT/$3-archive.log" | sort -u | head -20; echo "error: archive failed ($OUT/$3-archive.log)" >&2; exit 1; }
+  else
   echo "== archiving $3 on the mini (release Xcode, unsigned)"
   ssh -o ConnectTimeout=10 "$MINI" "set -e; export PATH=/opt/homebrew/bin:/usr/local/bin:\$PATH; cd ~/ola-ship/apple
     rm -rf ~/ola-ship/$3.xcarchive ~/ola-ship/$3.xcarchive.tgz
@@ -67,6 +87,7 @@ archive() { # $1 scheme, $2 destination, $3 name
     cd ~/ola-ship && tar czf $3.xcarchive.tgz $3.xcarchive" \
     || { echo "error: archive on the mini failed (its log: $MINI:ola-ship/$3-archive.log)" >&2; exit 1; }
   scp -q "$MINI:ola-ship/$3.xcarchive.tgz" "$OUT/" && tar xzf "$OUT/$3.xcarchive.tgz" -C "$OUT"
+  fi
   local plist="$OUT/$3.xcarchive/Products/Applications/Ola.app/Info.plist"
   [ -f "$plist" ] || plist="$OUT/$3.xcarchive/Products/Applications/Ola.app/Contents/Info.plist"
   local got; got=$(/usr/libexec/PlistBuddy -c "Print CFBundleVersion" "$plist")
@@ -223,6 +244,7 @@ PLIST
   xcrun stapler validate -q "$dmg" || { echo "error: the disk image carries no valid notarization ticket" >&2; exit 1; }
   echo "   $(du -h "$dmg" | cut -f1) $dmg"
 
+  if [ -n "${NOPUBLISH:-}" ]; then echo "   NOPUBLISH: signed and notarized, not copied or published ($OUT)"; return; fi
   local desk=${OLA_DESKTOP_ZIP:-$HOME/Desktop/Ola/mac-download/Ola.zip}
   if [ -d "$(dirname "$desk")" ]; then cp "$zip" "$desk"; echo "   copied the stapled app to $desk"; fi
 
