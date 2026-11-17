@@ -924,6 +924,25 @@ async function commandChecks(engine, label) {
     if (await pg.getByRole('button', { name: 'New conversation' }).count()) await pg.getByRole('button', { name: 'New conversation' }).click()
   }
   try {
+    await check(`${label}: the app icon: the page names the favicon, the touch icon and the manifest on its own origin, and each loads with its type`, async () => {
+      await pg.goto(d.url)
+      await pg.waitForSelector('.thing')
+      const got = await pg.evaluate(async () => {
+        const links = [...document.querySelectorAll('link[rel~="icon"], link[rel="apple-touch-icon"], link[rel="manifest"]')].map((l) => l.href)
+        const manifest = links.find((h) => h.endsWith('.webmanifest'))
+        const icons = manifest ? (await (await fetch(manifest)).json()).icons.map((i) => new URL(i.src, manifest).href) : []
+        const all = [...links, ...icons, new URL('/favicon.ico', location.href).href]
+        return Promise.all(all.map(async (h) => {
+          const r = await fetch(h)
+          return { path: new URL(h).pathname, same: new URL(h).origin === location.origin, status: r.status, type: (r.headers.get('content-type') ?? '').split(';')[0] }
+        }))
+      })
+      const want = { '/favicon.svg': 'image/svg+xml', '/favicon-32.png': 'image/png', '/favicon-16.png': 'image/png', '/apple-touch-icon.png': 'image/png', '/manifest.webmanifest': 'application/manifest+json', '/icon-192.png': 'image/png', '/icon-512.png': 'image/png', '/favicon.ico': 'image/x-icon' }
+      const bad = got.filter((g) => !g.same || g.status !== 200 || want[g.path] !== g.type)
+      const missing = Object.keys(want).filter((p) => !got.some((g) => g.path === p))
+      assert(!bad.length && !missing.length, `bad ${JSON.stringify(bad)}; missing ${missing}`)
+      return `${got.length} files`
+    })
     await check(`${label}: "/" shows the commands with a line each; arrows and Return choose; a word that matches none says so`, async () => {
       await openDrawer()
       await type('/')

@@ -114,7 +114,7 @@ function secure(res, https) {
   res.setHeader('permissions-policy', 'camera=(), microphone=(), geolocation=(), usb=(), payment=(), interest-cohort=()')
   res.setHeader('content-security-policy', CSP_DATA + (https ? '; upgrade-insecure-requests' : ''))
 }
-const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.woff2': 'font/woff2', '.svg': 'image/svg+xml', '.png': 'image/png', '.txt': 'text/plain; charset=utf-8', '.ico': 'image/x-icon' }
+const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.woff2': 'font/woff2', '.svg': 'image/svg+xml', '.png': 'image/png', '.txt': 'text/plain; charset=utf-8', '.ico': 'image/x-icon', '.webmanifest': 'application/manifest+json' }
 
 // How often a request that stays open rechecks its session and membership (see `hold`).
 const RECHECK_MS = Math.max(250, Number(process.env.OLA_FD_RECHECK_MS) || 1000)
