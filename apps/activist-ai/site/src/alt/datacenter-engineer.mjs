@@ -70,7 +70,7 @@ function turbine(k) {
   return s
 }
 
-const STYLE = `<style>.dc-rotor{animation:dc-spin 8s linear infinite}@keyframes dc-spin{to{transform:rotate(360deg)}}@media (prefers-reduced-motion:reduce){.dc-rotor{animation:none}}</style>`
+const STYLE = `<style>.dc-rotor{animation:dc-spin 12s linear infinite}@keyframes dc-spin{to{transform:rotate(360deg)}}@media (prefers-reduced-motion:reduce){.dc-rotor{animation:dc-spin 24s linear infinite!important}}</style>`
 
 export default {
   title: 'The tidy engineer',

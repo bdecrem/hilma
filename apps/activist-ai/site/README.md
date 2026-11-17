@@ -10,6 +10,15 @@ The design is Ola identity 7b2 ("the letter and the desk", evening, lamp on), ap
 so the art, the wordmark and the mark match it. At 1280×800 and 390×844 the page matches the approved
 screenshots to about 0.1% of pixels; what differs is anti-aliasing.
 
+**The drawing since 2026-11-17: the datacenter with its own power and water.** The caption says "Our
+datacenter.", and Bart asked for the joke to be drawn: a small wind turbine in front of the computer,
+wired into it (power), and a stone-and-bamboo fountain where the plant and its books stood (water).
+It is an alternate of the first drawing, `src/alt/datacenter-engineer.mjs`, which `build.mjs` imports
+as `HERO` for the page, the 404 and the share card: `scene(T, alt)` leaves things out and adds layers,
+and with no alternate it is still the approved first drawing. The rotor turns once every 12 seconds in
+CSS (no script), and every 24 with Reduce Motion on. `/ola-site/alt/index.html` shows the first
+drawing and both alternates side by side (not indexed).
+
 ## Where things are
 
 | Path | What |

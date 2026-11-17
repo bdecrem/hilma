@@ -9,6 +9,9 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { word, mark, ulURI, BTN, scene, T, cr } from './src/drawing.mjs'
+// The drawing on the page since 2026-11-17: the datacenter with its own power and water (a wind
+// turbine wired into the computer, a stone-and-bamboo fountain where the plant stood).
+import HERO from './src/alt/datacenter-engineer.mjs'
 
 // The two places the address lives. SITE_URL is the public address (canonical, og:url, og:image);
 // BASE is the path the files are served from. Every asset URL is absolute under BASE, because the
@@ -160,8 +163,9 @@ figcaption{font-style:italic;font-size:14.5px;color:var(--text2);margin-top:4px;
 
 // `alt` is an alternate of the drawing (src/alt/<slug>.mjs): the same page with that drawing, not
 // indexed, written to alt/<slug>.html to be looked at beside the live one.
-function landing(alt) {
-  return `${head({ title: TITLE, description: DESCRIPTION, base: BASE, canonical: `${SITE_URL}/`, fonts: ['literata', 'literata-italic', 'bricolage'], css: LANDING_CSS, extra: `${alt ? '<meta name="robots" content="noindex">\n' : ''}<meta property="og:type" content="website">
+function landing(alt = HERO) {
+  const variant = alt !== HERO
+  return `${head({ title: TITLE, description: DESCRIPTION, base: BASE, canonical: `${SITE_URL}/`, fonts: ['literata', 'literata-italic', 'bricolage'], css: LANDING_CSS, extra: `${variant ? '<meta name="robots" content="noindex">\n' : ''}<meta property="og:type" content="website">
 <meta property="og:site_name" content="Ola">
 <meta property="og:url" content="${SITE_URL}/">
 <meta property="og:title" content="${TITLE}">
@@ -208,7 +212,7 @@ function notFound() {
 <body>
 <main class="nf">
   <a href="/" aria-label="Ola, home">${word('display', { cls: 'hello', label: 'Ola' }).replace('role="img" aria-label="Ola"', 'aria-hidden="true" focusable="false"')}</a>
-  <svg class="room" viewBox="0 26 600 586" role="img" aria-label="The same study at night with the desk lamp switched off: the computer with its Ola tag, the plant, the mug, and the window over the dark rooftops.">${scene(OFF)}</svg>
+  <svg class="room" viewBox="0 26 600 586" role="img" aria-label="The same study at night with the desk lamp switched off: the computer with its Ola tag, its small wind turbine and fountain, the mug, and the window over the dark rooftops.">${scene(OFF, HERO)}</svg>
   <h1>The lamp is off. There is nothing on this desk at that address.</h1>
   <a class="home" href="/">Back to the letter</a>
 </main>
@@ -229,7 +233,7 @@ html,body{width:1200px;height:630px;overflow:hidden;padding:0}
 .og svg.room{display:block;height:600px;width:auto;align-self:end;justify-self:end;margin:0 34px 4px 0}`
   return head({ title: 'Ola share card', description: '', base: fontsDir, fonts: [], css }) + `
 <body><div class="og"><div>${word('display', { cls: 'hello', label: 'Ola' })}<span class="tl">A private AI agent<br><span>for activists and academics.</span></span></div>
-<svg class="room" viewBox="0 26 600 586" aria-hidden="true">${scene(T)}</svg><span class="url">ola.cx</span></div></body></html>`
+<svg class="room" viewBox="0 26 600 586" aria-hidden="true">${scene(T, HERO)}</svg><span class="url">ola.cx</span></div></body></html>`
 }
 
 // ---------- icons ----------
@@ -259,6 +263,7 @@ const ALT = path.join(HERE, 'src', 'alt')
 if (fs.existsSync(ALT)) {
   fs.mkdirSync(path.join(OUT, 'alt'), { recursive: true })
   const alts = []
+  fs.writeFileSync(path.join(OUT, 'alt', 'original.html'), landing({ label: SCENE_LABEL }))
   for (const f of fs.readdirSync(ALT).filter((f) => f.endsWith('.mjs')).sort()) {
     const slug = f.replace(/\.mjs$/, '')
     try {
@@ -285,9 +290,9 @@ figcaption a{color:var(--link);font-size:15px}` })}
 <body>
 <main>
   <h1>Our datacenter, with its own power and water</h1>
-  <p>Today’s drawing, then the alternates. Each opens on the full page.</p>
+  <p>The first drawing, then the two alternates; the tidy engineer is the one on ola.cx now. Each opens on the full page.</p>
   <div class="row">
-    ${fig('Today', BASE, scene(T), SCENE_LABEL)}
+    ${fig('The first drawing', `${BASE}alt/original.html`, scene(T), SCENE_LABEL)}
     ${alts.map(({ slug, alt }) => fig(alt.title ?? alt.name ?? slug, `${BASE}alt/${slug}.html`, scene(T, alt), alt.label ?? SCENE_LABEL)).join('\n    ')}
   </div>
 </main>
