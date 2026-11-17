@@ -188,3 +188,29 @@
 .ko-decided .t { color: var(--ink-3); padding-top: 2px; }
 @media (max-width: 560px) { .ko-plate li, .ko-decided li { grid-template-columns: 1fr; gap: 4px; } }
 .ko-now { font-size: 17px; line-height: 1.55; color: var(--ink-2); max-width: 34em; margin-top: 18px !important; }
+
+/* app.kochitolabs.com: Independence, how often Bart had to steer Kit (2026-11-16).
+   The numbers are the honest-numbers idea of the hero made large: the latest day's
+   rate in the display grotesque, the day before beside it in ink-3, then a 14-day
+   strip. Bars are 96px tall at the window's top value (never below 20), the drawing's
+   sky blue, the latest day in its navy; a day not graded is a dashed 3px slot. */
+.ko-ind { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 32px 48px; align-items: end; }
+@media (max-width: 820px) { .ko-ind { grid-template-columns: 1fr; } }
+.ko-ind-nums { display: flex; gap: 40px; align-items: flex-end; }
+.ko-ind-nums .ko-sub { margin-bottom: 4px !important; }
+.ko-ind-big { font-family: var(--kl-display-grot), system-ui, sans-serif; font-weight: 700; font-size: clamp(72px, 10vw, 112px); line-height: 0.9; letter-spacing: -0.045em; margin: 0 0 10px !important; font-variant-numeric: tabular-nums; }
+.ko-ind-nums .prev .ko-ind-big { font-size: clamp(40px, 5vw, 56px); color: var(--ink-3); }
+.ko-ind-what { color: var(--ink-2); font-size: 15.5px; margin: 0 !important; max-width: 16em; }
+.ko-ind-bars { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); gap: 6px; align-items: end; height: 140px; }
+.ko-ind-bars li { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 4px; min-width: 0; }
+.ko-ind-bars .bar { width: 100%; max-width: 30px; background: var(--mark); border: 1.5px solid var(--edge); border-radius: 4px 4px 2px 2px; }
+.ko-ind-bars .bar.last { background: var(--acc); }
+.ko-ind-bars .bar.none { height: 3px; border: 0; border-top: 1.5px dashed var(--ink-3); border-radius: 0; background: none; }
+.ko-ind-bars .v { font-size: 11px; color: var(--ink-2); min-height: 1.2em; }
+.ko-ind-bars .d { font-size: 11px; color: var(--ink-3); }
+.ko-ind-head { margin-top: 40px !important; }
+.ko-steers .t { color: var(--ink-3); padding-top: 2px; }
+.ko-steers .c { display: flex; align-items: center; gap: 8px; margin-top: 4px; color: var(--ink-3); }
+.ko-steers .c .ko-pri { font-size: 11.5px; }
+.ko-ind-replay { margin-top: 28px !important; color: var(--ink-2); max-width: 46em; }
+.ko-ind-replay strong { color: var(--ink); font-weight: 600; }

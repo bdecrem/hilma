@@ -3,6 +3,7 @@ import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { APP_HOST, sessionUser } from '@/lib/kochito/app-auth'
 import { getDoc, keyOk } from '@/lib/venture/interview'
+import { f2Supabase } from '@/lib/f2/supabase'
 import Login from './Login'
 import '../company.css'
 
@@ -95,12 +96,38 @@ function parse(body: string) {
   }
 }
 
+// Independence (Bart, 2026-11-16: "each time i steer, that's a failure of sorts... i want some
+// sort of metric about if you're getting better and better at that"). scripts/venture/steers.mjs
+// grades every message he wrote on a day and stores the day in venture_state "steers";
+// steer-replay.mjs replays past mistakes against the rules and stores "steer_replay".
+type SteerItem = { time: string; label: 'steer' | 'maybe'; class: string; repeat: boolean; quote: string }
+type SteerDay = { day: string; messages: number; steers: number; repeats: number; maybes: number; rate: number | null; between: number | null; items: SteerItem[] }
+type Replay = { at: string; cases: number; with_rules: { passed: number; tries: number }; without_rules: { passed: number; tries: number }; prevented: number; prevented_without: number }
+async function independence() {
+  const { data, error } = await f2Supabase().from('venture_state').select('key, value').in('key', ['steers', 'steer_replay'])
+  if (error) throw new Error(`venture_state read failed: ${error.message}`)
+  const days = Object.values((data.find((r) => r.key === 'steers')?.value?.days ?? {}) as Record<string, SteerDay>).sort((a, b) => a.day.localeCompare(b.day))
+  return { days, replay: (data.find((r) => r.key === 'steer_replay')?.value ?? null) as Replay | null }
+}
+const dayName = (d: string) => new Date(`${d}T12:00:00Z`).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' })
+
 export default async function Page() {
   const host = ((await headers()).get('host') ?? '').replace(/:\d+$/, '')
   if (host !== APP_HOST && host !== 'localhost' && host !== '127.0.0.1') redirect(`https://${APP_HOST}/`)
   const user = await sessionUser()
   if (!user) return <Login face={src(FACE ?? 'brain-1')} />
   const j = parse((await getDoc('journal'))?.body ?? '')
+  const ind = await independence()
+  const latest = ind.days[ind.days.length - 1]
+  const before = ind.days[ind.days.length - 2]
+  // the last 14 calendar days up to the latest graded one; a day with no grade shows an empty slot
+  const window14 = latest
+    ? Array.from({ length: 14 }, (_, i) => {
+        const d = new Date(Date.parse(`${latest.day}T12:00:00Z`) - (13 - i) * 86400e3).toISOString().slice(0, 10)
+        return { day: d, row: ind.days.find((x) => x.day === d) }
+      })
+    : []
+  const top = Math.max(20, ...window14.map((w) => w.row?.rate ?? 0))
   // the voice pages on ola.cx still open with the venture key; a signed-in reader gets it in the links
   const k = process.env.VENTURE_KEY
   if (!keyOk(k)) throw new Error('VENTURE_KEY is not set, or is not the current key')
@@ -203,6 +230,73 @@ export default async function Page() {
                   </li>
                 ))}
               </ol>
+            </section>
+          )}
+
+          {latest && (
+            <section className="ko-sec" aria-labelledby="independence">
+              <div className="ko-sec-head">
+                <h2 id="independence">Independence</h2>
+                <p>How often you had to steer me: per 100 of your messages, every correction, repeat, re-explanation or chase counts once, and a repeat of something I was already told counts twice. Graded each morning by a separate Claude. Lower is better.</p>
+              </div>
+              <div className="ko-ind">
+                <div className="ko-ind-nums">
+                  <div>
+                    <p className="ko-sub">{dayName(latest.day)}</p>
+                    <p className="ko-ind-big">{latest.rate ?? '–'}</p>
+                    <p className="ko-ind-what">
+                      {latest.steers} {latest.steers === 1 ? 'steer' : 'steers'} in {latest.messages} messages, {latest.repeats} {latest.repeats === 1 ? 'repeat' : 'repeats'}
+                      {latest.between ? `. One steer every ${latest.between} messages.` : '.'}
+                    </p>
+                  </div>
+                  {before && (
+                    <div className="prev">
+                      <p className="ko-sub">{dayName(before.day)}</p>
+                      <p className="ko-ind-big">{before.rate ?? '–'}</p>
+                      <p className="ko-ind-what">
+                        {before.steers} in {before.messages}, {before.repeats} {before.repeats === 1 ? 'repeat' : 'repeats'}
+                      </p>
+                    </div>
+                  )}
+                </div>
+                <ol className="ko-ind-bars" aria-label="Steer rate, last 14 days">
+                  {window14.map((w) => (
+                    <li key={w.day} title={w.row ? `${dayName(w.day)}: ${w.row.rate}` : `${dayName(w.day)}: not graded`}>
+                      <span className="ko-mono v">{w.row?.rate ?? ''}</span>
+                      <span className={`bar${w.row ? '' : ' none'}${w.day === latest.day ? ' last' : ''}`} style={{ height: w.row ? `${Math.max(3, Math.round(((w.row.rate ?? 0) / top) * 96))}px` : undefined }} />
+                      <span className="ko-mono d">{w.day.slice(8).replace(/^0/, '')}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+              {latest.items.some((s) => s.label === 'steer') && (
+                <>
+                  <p className="ko-sub ko-ind-head">Your steers, {dayName(latest.day)}</p>
+                  <ol className="ko-plate ko-steers">
+                    {latest.items
+                      .filter((s) => s.label === 'steer')
+                      .map((s, i) => (
+                        <li key={i}>
+                          <span className="ko-mono t">{s.time}</span>
+                          <span>
+                            “{s.quote}”
+                            <span className="ko-mono c">
+                              {s.class} <span className={`ko-pri ${s.repeat ? 'p0' : 'p2'}`}>{s.repeat ? 'repeat' : 'new'}</span>
+                            </span>
+                          </span>
+                        </li>
+                      ))}
+                  </ol>
+                </>
+              )}
+              {ind.replay && (
+                <p className="ko-ind-replay">
+                  <strong>
+                    Replay: {ind.replay.prevented} of {ind.replay.cases} past mistakes prevented by the rules.
+                  </strong>{' '}
+                  Each past mistake is replayed three times to a fresh Claude with my rules and three times without; without the rules, {ind.replay.prevented_without} of {ind.replay.cases}. Run {dayName(ind.replay.at.slice(0, 10))}.
+                </p>
+              )}
             </section>
           )}
 

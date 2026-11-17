@@ -61,12 +61,23 @@ if (fw && fresh && fw.est_date !== today) {
   if (!dry) await setState(db, 'fable_week', { ...fw, est_pct: est, est_date: today })
 } else if (fw && !fresh) usageLine = 'Usage: no fresh numbers from the iMac this morning (is it asleep?). Send me the % from Settings.'
 
+// The steer count for yesterday (scripts/venture/steers.mjs, run on the iMac at 9:40 by launchd
+// sh.venture.steers, stored in venture_state "steers"). Only when that day was graded.
+const shift = (d, n) => new Date(Date.parse(`${d}T12:00:00Z`) + n * 86400e3).toISOString().slice(0, 10)
+const steerDays = (await getState(db, 'steers'))?.value?.days ?? {}
+const y = steerDays[shift(today, -1)]
+const y2 = steerDays[shift(today, -2)]
+const steerLine = y
+  ? `Yesterday you steered me ${y.steers} ${y.steers === 1 ? 'time' : 'times'} in ${y.messages} messages (${y.repeats} ${y.repeats === 1 ? 'repeat' : 'repeats'}). Steer rate ${y.rate}${y2 ? `, the day before ${y2.rate}` : ''}.`
+  : ''
+
 const weekday = new Date().toLocaleDateString('en-US', { weekday: 'long', timeZone: 'America/Los_Angeles' })
 const text = [
   `Good morning. ${weekday}'s check-in: when works for you? Reply with a time, and "cli" or "voice".`,
   plate.length ? `On my plate:\n${plate.map((p, i) => `${i + 1}. ${p}`).join('\n')}` : '',
   waiting.length ? `Waiting on you: ${waiting.join('; ')}.` : '',
   usageLine,
+  steerLine,
   `Voice, any time: https://ola.cx/venture/call/checkin?k=${encodeURIComponent(key)}`,
   'The board: https://app.kochitolabs.com',
 ]

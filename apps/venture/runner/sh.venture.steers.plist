@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- On Bart's iMac (where the Claude Code transcripts are): at 9:40 grade yesterday's messages from
+     Bart for steers (scripts/venture/steers.mjs) and store the day in venture_state "steers", for
+     app.kochitolabs.com and the 10 am text (morning.mjs on the Mac mini). Install:
+     cp to ~/Library/LaunchAgents/ and launchctl bootstrap gui/$(id -u) <plist>. -->
+<plist version="1.0"><dict>
+  <key>Label</key><string>sh.venture.steers</string>
+  <key>ProgramArguments</key><array>
+    <string>/opt/homebrew/bin/node</string><string>scripts/venture/steers.mjs</string>
+  </array>
+  <key>WorkingDirectory</key><string>/Users/bart/Documents/code/hilma</string>
+  <key>StartCalendarInterval</key><dict>
+    <key>Hour</key><integer>9</integer>
+    <key>Minute</key><integer>40</integer>
+  </dict>
+  <key>StandardOutPath</key><string>/Users/bart/Library/Logs/venture-steers.log</string>
+  <key>StandardErrorPath</key><string>/Users/bart/Library/Logs/venture-steers.log</string>
+</dict></plist>

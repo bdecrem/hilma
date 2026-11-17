@@ -175,6 +175,40 @@ source `private/JOURNAL.md` ("## Now", "## Waiting on you", then one "## day"
 section per day with `- **time** what`), so it changes with a `sync.mjs push`
 and no deploy.
 
+## Independence: the steer count and the replay suite
+
+Bart, 2026-11-16: "each time i steer, that's a failure of sorts, and you then
+learn from that... i want some sort of metric about if you're getting better
+and better at that. a number or some such." Two measures, both private in
+their content (his words, the rubric and the cases live in `private/` and
+Supabase, never in this repo):
+
+- **The steer rate.** `node scripts/venture/steers.mjs [--day D | --backfill
+  FROM TO] [--dry] [--collect]` collects every message he wrote on a day
+  (Pacific): what he typed into this project's Claude Code sessions on the iMac
+  (`origin.kind "human"` lines, mid-turn messages included; tool results,
+  reminders, notifications, hook output, compaction summaries and slash-command
+  boilerplate left out), his texts and voice notes (`venture_messages`), and his
+  turns on the voice calls (`venture_interview_turns`, test calls left out). An
+  independent Claude Opus 5.5 labels each against the rule titles in
+  `private/RULES.md`, the dated corrections in `private/CORRECTIONS.md` and the
+  feedback lessons in the session memory: steer, maybe or not, with a class and
+  "repeat" when the class was already covered before that message. Steer rate =
+  (steers + repeats) per 100 of his messages. Stored in `venture_state`
+  "steers" (a map by date) and `private/STEERS.md`. launchd
+  `apps/venture/runner/sh.venture.steers.plist` runs it on the iMac at 9:40 for
+  yesterday (the transcripts are only there); `morning.mjs` puts one line in
+  the 10 am text; app.kochitolabs.com shows the "Independence" block.
+- **The replay suite.** `node scripts/venture/steer-replay.mjs [--tries N]
+  [--only ids] [--dry]` turns past steers into tests
+  (`private/steer-cases/*.json`: the situation just before the mistake and a
+  must / must-not rubric), gives each to a fresh Opus 5.5 three times with
+  RULES.md and three times without, and grades each answer. Pass rate with the
+  rules says whether the learning is written down well enough; the lift over
+  no rules says whether the rules do the work. Cases that fail with the rules
+  name the rules that are too weak. Stored in `venture_state` "steer_replay"
+  and the "# Replay" section of `private/STEERS.md`. A run costs about $4.
+
 ## Mail on the company's domains
 
 kochitolabs.com, clerkpdf.com and appadopt.com send and receive through
