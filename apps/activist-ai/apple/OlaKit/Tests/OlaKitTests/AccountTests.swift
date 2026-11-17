@@ -11,11 +11,18 @@ final class StubOla: @unchecked Sendable {
   var server: MiniHTTPServer!
   var port: UInt16 = 0
   var challenges: Set<String> = []
-  let goodCode = "code-OK-12345678"
+  let goodCode = "olap1." + String(repeating: "eyJrIjoiY29kZSIsImlkIjoi", count: 4) + "." + String(repeating: "Ab_-9", count: 9)
   var issued: Set<String> = []
   var revoked: Set<String> = []
   var gatewayAuth: [String] = []
   var gatewayPaths: [String] = []
+  /// Every request after sign-in (who-am-I, sign out, the gateway), refused or not.
+  var requests = 0
+  /// The gateway's own usage reply, as the server passes it on.
+  static let usage: JSON = ["object": "usage", "caller": "p-1", "week_start": "2026-11-16T00:00:00Z", "resets_at": "2026-11-23T00:00:00Z",
+                            "requests": 12, "tokens_in": 1000, "tokens_out": 500, "tokens_used": 1500, "quota": 3_000_000, "fraction_used": .number(0.42),
+                            "by_model": ["general": ["requests": 12, "tokens_in": 1000, "tokens_out": 500]], "claude_month": .null,
+                            "web_week": ["used": 3, "limit": 200], "batch_job": .null]
   var slowClosed = false
   var slowOpen = false
   var base: URL { URL(string: "http://127.0.0.1:\(port)")! }
@@ -38,7 +45,7 @@ final class StubOla: @unchecked Sendable {
   }
 
   static func session(_ token: String) -> JSON {
-    ["token": .string(token), "expires_at": "2030-01-01T00:00:00Z", "person": ["handle": "bart", "name": "Bart", "admin": true], "device": ["id": "dev1", "name": "Test Mac", "kind": "mac"]]
+    ["token": .string(token), "expires_at": "2030-01-01T00:00:00Z", "person": ["handle": "bart", "name": "Bart", "admin": true], "device": ["id": 17, "name": "Test Mac", "kind": "mac"]]
   }
 
   func handle(_ req: HTTPRequest, _ res: HTTPResponder) async {
@@ -52,7 +59,15 @@ final class StubOla: @unchecked Sendable {
       lock.withLock { _ = issued.insert(token) }
       return await res.send(200, Self.session(token).data)
     }
+    lock.withLock { requests += 1 }
     let valid = lock.withLock { issued.contains(bearer) && !revoked.contains(bearer) }
+    // A pass the door does not know: its 401 page with a Basic challenge, as app.ola.cx's door does.
+    if !bearer.isEmpty, lock.withLock({ !issued.contains(bearer) }) {
+      let page = Data("<!doctype html><title>Ola</title><p>Wrong passcode.</p>".utf8)
+      _ = await res.head(401, ["Content-Type": "text/html", "WWW-Authenticate": "Basic realm=\"Ola\"", "Content-Length": String(page.count)])
+      _ = await res.write(page)
+      return res.end()
+    }
     if req.path == "/api/device/me" {
       return valid ? await res.send(200, Self.session(bearer).data) : await res.send(401, JSON.object(["error": "signed_out"]).data)
     }
@@ -83,7 +98,7 @@ final class StubOla: @unchecked Sendable {
         }
         return res.end()
       case "v1/usage":
-        return await res.send(200, JSON.object(["fraction": .number(0.42), "period": "week"]).data)
+        return await res.send(200, StubOla.usage.data)
       default:
         return await res.send(403, JSON.object(["error": "forbidden"]).data)
       }
@@ -133,7 +148,7 @@ final class AccountTests: XCTestCase {
     let me = try await api.me(got)
     XCTAssertEqual(me.person.name, "Bart")
     let usage = try await api.usage(got)
-    XCTAssertEqual(usage, "You\u{2019}ve used 42% of this week\u{2019}s share.")
+    XCTAssertTrue(usage?.hasPrefix("You\u{2019}ve used 42% of this week\u{2019}s share.") == true, usage ?? "nil")
     try await api.signOut(got)
     do { _ = try await api.me(got); XCTFail("signed out token still worked") } catch let e as AccountError { XCTAssertEqual(e, .signedOut) }
   }
@@ -192,8 +207,16 @@ final class AccountTests: XCTestCase {
     XCTAssertEqual(s?.person.name, "ana", "an empty name falls back to the handle")
     XCTAssertEqual(s?.expiresAt, Date(timeIntervalSince1970: 1_900_000_000))
     XCTAssertEqual(AccountSession.decode(s!.encoded()), s)
-    XCTAssertNil(AccountAPI.usageSentence(["remaining": 3]))
-    XCTAssertEqual(AccountAPI.usageSentence(["fraction": .number(1.0)]), "You\u{2019}ve used all of your share.")
+    XCTAssertEqual(s?.device.id, "d", "a string id is taken too")
+    XCTAssertEqual(AccountSession.decode(StubOla.session("t").data)?.device.id, "17", "the server's numeric device id")
+    XCTAssertNil(AccountAPI.usageSentence(["fraction": .number(0.4), "period": "week"]), "only the gateway's fraction_used")
+    var utc = Calendar(identifier: .gregorian)
+    utc.timeZone = TimeZone(identifier: "UTC")!
+    let tue = Date(timeIntervalSince1970: 1_795_000_000)  // 2026-11-18, a Wednesday in UTC
+    XCTAssertEqual(AccountAPI.usageSentence(StubOla.usage, now: tue, calendar: utc), "You\u{2019}ve used 42% of this week\u{2019}s share. It starts again Monday.")
+    var full = StubOla.usage.object
+    full["fraction_used"] = .number(1.0)
+    XCTAssertEqual(AccountAPI.usageSentence(.object(full), now: tue, calendar: utc), "You\u{2019}ve used all of this week\u{2019}s share. It starts again Monday.")
   }
 }
 
@@ -284,6 +307,72 @@ final class ModelDoorTests: XCTestCase {
     XCTAssertTrue(String(decoding: d, as: UTF8.self).contains("Signed out of Ola"))
     XCTAssertTrue(flag.value)
   }
+
+  /// Ten refused passes in 15 minutes block the person's whole address: a 401 is exactly one
+  /// request to the server, however many times opencode, the web commands or the app ask after.
+  func testA401IsExactlyOneRequest() async throws {
+    let stub = StubOla()
+    try await stub.start()
+    defer { stub.stop() }
+    // A pass the door refuses: its 401 HTML page with WWW-Authenticate: Basic.
+    let door = ModelDoor(api: AccountAPI(base: stub.base)) { "olap1.not-a-pass-the-door-knows.x" }
+    let told = Counter()
+    door.onSignedOut = { told.add() }
+    try await door.start()
+    defer { door.stop() }
+    let before = stub.lock.withLock { stub.requests }
+    for path in ["/v1/chat/completions", "/v1/models", "/web/search", "/v1/usage"] {
+      var r = URLRequest(url: URL(string: "http://127.0.0.1:\(door.port)\(path)")!)
+      r.httpMethod = path == "/v1/models" || path == "/v1/usage" ? "GET" : "POST"
+      r.setValue("Bearer \(door.key)", forHTTPHeaderField: "Authorization")
+      let (_, res) = try await URLSession(configuration: .ephemeral).data(for: r)
+      XCTAssertEqual((res as? HTTPURLResponse)?.statusCode, 401, path)
+    }
+    XCTAssertEqual(stub.lock.withLock { stub.requests } - before, 1, "one request reached the server; the rest were answered here")
+    XCTAssertEqual(told.value, 1, "the app was told once")
+    XCTAssertTrue(door.isSignedOut)
+
+    // Who-am-I and usage with that pass: one request each, an error, no retry.
+    let api = AccountAPI(base: stub.base)
+    let bad = AccountSession(token: "olap1.not-a-pass-the-door-knows.x", expiresAt: nil, person: .init(handle: "bart", name: "Bart", admin: true), device: .init(id: "1", name: "", kind: "mac"))
+    var n = stub.lock.withLock { stub.requests }
+    do { _ = try await api.me(bad); XCTFail("no error") } catch let e as AccountError { XCTAssertEqual(e, .signedOut) }
+    XCTAssertEqual(stub.lock.withLock { stub.requests } - n, 1)
+    n = stub.lock.withLock { stub.requests }
+    do { _ = try await api.usage(bad); XCTFail("no error") } catch let e as AccountError { XCTAssertEqual(e, .signedOut) }
+    XCTAssertEqual(stub.lock.withLock { stub.requests } - n, 1)
+    // The probe with no credential: one request, "open".
+    n = stub.lock.withLock { stub.requests }
+    try await api.checkOpen()
+    XCTAssertEqual(stub.lock.withLock { stub.requests } - n, 1)
+  }
+
+  /// Cancel on the account's page: a plain page, the wait ends quietly.
+  func testCancelInTheBrowser() async throws {
+    let stub = StubOla()
+    try await stub.start()
+    defer { stub.stop() }
+    let s = DeviceSignIn(api: AccountAPI(base: stub.base), timeout: 20)
+    let url = try await s.start()
+    let port = try XCTUnwrap(stub.approve(url))
+    async let session = s.finish()
+    let (d, res) = try await URLSession(configuration: .ephemeral).data(from: URL(string: "http://127.0.0.1:\(port)/?error=cancelled")!)
+    XCTAssertEqual((res as? HTTPURLResponse)?.statusCode, 200)
+    let page = String(decoding: d, as: UTF8.self)
+    XCTAssertTrue(page.contains("Sign-in was cancelled") && page.contains("You can close this window."))
+    do { _ = try await session; XCTFail("signed in") } catch let e as AccountError {
+      XCTAssertEqual(e, .cancelledInBrowser)
+      XCTAssertEqual(e.errorDescription, "Sign-in was cancelled.")
+    }
+    XCTAssertTrue(stub.lock.withLock { stub.issued.isEmpty }, "nothing was redeemed")
+  }
+}
+
+final class Counter: @unchecked Sendable {
+  private let lock = NSLock()
+  private var n = 0
+  func add() { lock.withLock { n += 1 } }
+  var value: Int { lock.withLock { n } }
 }
 
 final class Flag: @unchecked Sendable {

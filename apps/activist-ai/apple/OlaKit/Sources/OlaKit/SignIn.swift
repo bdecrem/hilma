@@ -123,6 +123,11 @@ public final class DeviceSignIn: @unchecked Sendable {
 
   func handle(_ req: HTTPRequest, _ res: HTTPResponder) async {
     let items = URLComponents(string: "http://x/?" + (req.query ?? ""))?.queryItems ?? []
+    // Cancel on the account's page: stop waiting, quietly.
+    if req.method == "GET", req.path == "/", items.first(where: { $0.name == "error" })?.value == "cancelled", lock.withLock({ !finished }) {
+      await res.send(200, Data(Self.page(title: "Sign-in was cancelled", body: "You can close this window.").utf8), type: "text/html; charset=utf-8")
+      return end(.failure(AccountError.cancelledInBrowser))
+    }
     guard req.method == "GET", req.path == "/", let code = items.first(where: { $0.name == "code" })?.value, Self.wellFormed(code) else {
       return await res.send(404, Data(Self.page(title: "Nothing here", body: "This is Ola, waiting for a sign-in.").utf8), type: "text/html; charset=utf-8")
     }

@@ -6,6 +6,7 @@ and the `ola` command (never the real server: a wrong credential there counts to
 
 Routes (the contract in apple/README.md, "Sign in with an Ola account"):
   POST /stub/approve {"challenge"} -> {"code"}   what the account page does after the passkey
+  /stub/count, /stub/revoke-all                  how many requests came after sign-in; sign every computer out
   POST /api/device/token  Bearer <code>, {"verifier"}  -> the sign-in, if sha256(verifier) matches
   GET  /api/device/me, POST /api/device/signout          (Bearer <token>)
   ANY  /api/device/gw/<rest>   the model door's far side: v1/models, v1/usage, v1/chat/completions
@@ -20,6 +21,7 @@ TOKENS = set()
 REVOKED = set()
 SEEN = []       # (path, bearer-is-a-token)
 TOOLS = []      # the tool names opencode offered in the last request
+COUNT = [0]     # requests after sign-in (who-am-I, sign out, the gateway), refused or not
 
 
 def b64url(b):
@@ -29,7 +31,7 @@ def b64url(b):
 def session(token):
     return {"token": token, "expires_at": "2030-01-01T00:00:00Z",
             "person": {"handle": "bart", "name": "Bart", "admin": True},
-            "device": {"id": "dev-stub", "name": "Stub Mac", "kind": "cli"}}
+            "device": {"id": 7, "name": "Stub Mac", "kind": "cli"}}
 
 
 class H(BaseHTTPRequestHandler):
@@ -58,7 +60,7 @@ class H(BaseHTTPRequestHandler):
         path, raw = self.path.split("?")[0], self.body()
         if path == "/stub/approve":
             ch = json.loads(raw or b"{}").get("challenge", "")
-            code = "stub-" + secrets.token_urlsafe(16)
+            code = "olap1." + secrets.token_urlsafe(80) + "." + secrets.token_urlsafe(32)
             with LOCK:
                 CODES[code] = ch
             return self.send(200, {"code": code})
@@ -74,13 +76,32 @@ class H(BaseHTTPRequestHandler):
                 ok = CODES.pop(code, None) == b64url(hashlib.sha256(verifier.encode()).digest())
             if not ok:
                 return self.send(401, {"error": "invalid_code"})
-            t = "stubtok-" + secrets.token_urlsafe(24)
+            t = "olap1." + secrets.token_urlsafe(80) + "." + secrets.token_urlsafe(32)
             with LOCK:
                 TOKENS.add(t)
             return self.send(200, session(t))
+        if path == "/stub/count":
+            with LOCK:
+                return self.send(200, {"requests": COUNT[0]})
+        if path == "/stub/revoke-all":
+            with LOCK:
+                REVOKED.update(TOKENS)
+            return self.send(200, {})
         t = self.bearer()
         with LOCK:
+            COUNT[0] += 1
             valid = t in TOKENS and t not in REVOKED
+            known = t in TOKENS
+        if t and not known:
+            # The door's own refusal: an HTML page that asks for Basic, as app.ola.cx's door does.
+            page = b"<!doctype html><title>Ola</title><p>Wrong passcode.</p>"
+            self.send_response(401)
+            self.send_header("content-type", "text/html")
+            self.send_header("www-authenticate", 'Basic realm="Ola"')
+            self.send_header("content-length", str(len(page)))
+            self.end_headers()
+            self.wfile.write(page)
+            return
         if path == "/api/device/me":
             return self.send(200, session(t)) if valid else self.send(401, {"error": "signed_out"})
         if path == "/api/device/signout":
@@ -96,7 +117,11 @@ class H(BaseHTTPRequestHandler):
             if rest == "v1/models":
                 return self.send(200, {"object": "list", "data": [{"id": "general", "object": "model"}]})
             if rest == "v1/usage":
-                return self.send(200, {"fraction": 0.42, "period": "week"})
+                return self.send(200, {"object": "usage", "caller": "p-1", "week_start": "2026-11-16T00:00:00.000Z",
+                                       "resets_at": "2026-11-23T00:00:00.000Z", "requests": 12, "tokens_in": 1000, "tokens_out": 500,
+                                       "tokens_used": 1500, "quota": 3000000, "fraction_used": 0.42,
+                                       "by_model": {"general": {"requests": 12, "tokens_in": 1000, "tokens_out": 500}},
+                                       "claude_month": None, "web_week": {"used": 3, "limit": 200}, "batch_job": None})
             if rest == "v1/chat/completions":
                 req = json.loads(raw or b"{}")
                 tools = [t.get("function", {}).get("name") for t in req.get("tools") or []]

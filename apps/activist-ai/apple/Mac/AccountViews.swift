@@ -54,6 +54,7 @@ final class AccountController {
   func signIn(fromGate gate: Bool = false) {
     attempt?.cancel()
     fromGate = gate || phase == .expired
+    let wasExpired = phase == .expired
     phase = .waiting
     let s = DeviceSignIn(api: api, kind: "mac")
     attempt = s
@@ -74,7 +75,8 @@ final class AccountController {
       } catch {
         guard attempt === s else { return }
         attempt = nil
-        if (error as? AccountError) == .cancelled { phase = .idle; return }
+        // Cancelled here or on the account's page: back to the signed-out screen, no error tone.
+        if [.cancelled, .cancelledInBrowser].contains(error as? AccountError) { phase = wasExpired ? .expired : .idle; return }
         let words = (error as? LocalizedError)?.errorDescription ?? "That didn\u{2019}t work. Try again."
         let calm: Set<AccountError> = [.notAvailableYet, .timedOut]
         phase = (error as? AccountError).map(calm.contains) == true ? .notice(words) : .problem(words)

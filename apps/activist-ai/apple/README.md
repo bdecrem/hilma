@@ -130,13 +130,31 @@ model through `https://app.ola.cx` (one constant, `AccountAPI.address`; `OLA_ACC
   open yet, took too long, failed, signed out by the server, choose a folder, getting ready, its
   failure, Settings signed in and out; light and dark): `~/Desktop/ola-brand/apple-shots/signin/`.
 
-What the server must do for this side (beyond the contract): answer `GET /api/device/me` with no
-credential with 401 (404 reads as "not open yet"); stream `gw` replies without buffering; give 401
-for a revoked or expired token on every route; let `gw` pass what Ola's commands call (`v1/chat/completions`,
-`v1/models`, `v1/usage`, `web/search`, `web/fetch`, `web/lookup`, and olaspec's `v1/embeddings`,
-`v1/rerank`, `v1/audio/transcriptions`, `v1/images/generations`). `expires_at` may be ISO 8601 or epoch
-seconds; `v1/usage` is shown when it has `fraction` (or `share_used`, `used`) from 0 to 1 and
-optionally `period` (`day`, `week`, `month`).
+Matched to the server as built (`../README.md`, "Signing in from the Mac app and the command line"):
+
+- **Signed out is any 401** on `/api/device/*`: the front desk's `{"error":"signed_out"}` or the door's
+  401 HTML page with `WWW-Authenticate: Basic`. Never retried: ten refused passes in 15 minutes block
+  the person's whole address, the web app included. Left to itself URLSession answers that Basic
+  challenge by sending the request again (measured: two requests per refusal), so every request to
+  app.ola.cx cancels the challenge and keeps the 401 it came with (`NoCredentials`, and the door's
+  `Upstream`); no credential store is consulted. The door then answers every later request itself
+  (`ModelDoor.isSignedOut`), the app forgets the sign-in and shows "You've been signed out on this Mac",
+  and the `ola` command forgets it at once. `swift test` proves one request per 401 for the door (four
+  requests in, one out), who-am-I, usage and the probe.
+- **Cancel** on the account's page lands on `/?error=cancelled`: the listener answers "Sign-in was
+  cancelled. You can close this window.", the app goes back to its signed-out screen with no error
+  tone, and `ola login` prints one line, "Sign-in was cancelled.", and exits 1.
+- **Usage** is the gateway's own reply: `fraction_used` (0 to 1) of the week's share and `resets_at`,
+  said as "You've used 42% of this week's share. It starts again Monday."
+- `device.id` is a number (a string is taken too); codes and tokens are passes (`olap1.…`, about 150
+  characters of `[A-Za-z0-9_.-]`, inside the listener's accepted `[A-Za-z0-9._~-]{8,512}`).
+- **Silence before the first byte**: the door allows 15 minutes between bytes (the gateway asks the
+  model for a whole reply first; its own limit is 10 minutes).
+- The probe (`GET /api/device/me`, no credential): 401 open, 404 not open yet.
+
+`tools/stub-ola.py` answers in these shapes (pass-shaped codes and tokens, a numeric device id, the
+gateway's usage reply, the door's HTML 401 for a pass it does not know, `{"error":"signed_out"}` for a
+revoked one).
 
 ## The `ola` command ("On this Mac" in a terminal)
 
@@ -171,11 +189,12 @@ ola login | logout | whoami | status | --help
   The ola command, Install does the same.
 - **Check**: `tools/cli-selftest.sh <Ola.app>` runs it end to end against `tools/stub-ola.py` (a
   stand-in for app.ola.cx with a fake model) and `tools/stub-browser.sh`, beside the real app without
-  touching it (own settings suite, scratch Application Support, throwaway Keychain names): 16 checks,
+  touching it (own settings suite, scratch Application Support, throwaway Keychain names): 19 checks,
   from "not signed in" through login, whoami, status, a printed reply, the account token upstream and
   never the door key, a refused command in a one-shot run, the shared store, the interface in a
   pseudo-terminal (draws, redraws on resize, Ctrl-C ends it, a command asks and waits), a SIGKILL
-  that leaves nothing running, and logout. **Live, once the server is deployed:**
+  that leaves nothing running, logout, Cancel in the browser, and a sign-in the server ended: at most
+  one request there, then forgotten. **Live, once the server is deployed:**
   `tools/cli-selftest.sh /Applications/Ola.app https://app.ola.cx` (the browser opens once for a
   passkey; the stand-in-only checks are skipped).
 

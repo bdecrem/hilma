@@ -63,7 +63,11 @@ public struct AccountSession: Codable, Equatable, Sendable {
   }
 
   static func person(_ j: JSON) -> Person { Person(handle: j["handle"].str, name: j["name"].str.isEmpty ? j["handle"].str : j["name"].str, admin: j["admin"].bool ?? false) }
-  static func device(_ j: JSON) -> Device { Device(id: j["id"].str, name: j["name"].str, kind: j["kind"].str) }
+  /// The server's `device.id` is a number; a string is taken too.
+  static func device(_ j: JSON) -> Device {
+    let id = j["id"].string ?? j["id"].double.map { $0 == $0.rounded() ? String(Int($0)) : String($0) } ?? ""
+    return Device(id: id, name: j["name"].str, kind: j["kind"].str)
+  }
 
   static func date(_ j: JSON) -> Date? {
     if let s = j.string {
@@ -85,6 +89,8 @@ public enum AccountError: Error, Hashable, LocalizedError {
   /// The browser step did not finish in time.
   case timedOut
   case cancelled
+  /// The person pressed Cancel on the account's page (`/?error=cancelled`).
+  case cancelledInBrowser
   /// Ola's sign-in does not exist at this address yet (the server is not deployed).
   case notAvailableYet
   case tooManyTries
@@ -98,6 +104,7 @@ public enum AccountError: Error, Hashable, LocalizedError {
     case .signedOut: return "You\u{2019}ve been signed out on this Mac. Sign in again to keep working."
     case .timedOut: return "Signing in took too long, so it was stopped. Try again when you\u{2019}re ready."
     case .cancelled: return "Signing in was stopped."
+    case .cancelledInBrowser: return "Sign-in was cancelled."
     case .notAvailableYet: return "Signing in with an Ola account isn\u{2019}t open yet. It will be soon."
     case .tooManyTries: return "Too many tries in a short time. Wait a few minutes, then try again."
     case .refused: return "That sign-in didn\u{2019}t go through. Try again."
@@ -119,7 +126,7 @@ public struct AccountAPI: Sendable {
 
   public var base: URL
   public var session: URLSession
-  public init(base: URL = AccountAPI.configured, session: URLSession = .shared) {
+  public init(base: URL = AccountAPI.configured, session: URLSession = AccountAPI.session) {
     self.base = base
     self.session = session
   }
@@ -165,7 +172,8 @@ public struct AccountAPI: Sendable {
     guard status == 200, let j = JSON.parse(d), !j["person"]["handle"].str.isEmpty else { throw AccountError.badReply }
     var out = s
     out.person = AccountSession.person(j["person"])
-    if !j["device"]["id"].str.isEmpty { out.device = AccountSession.device(j["device"]) }
+    let device = AccountSession.device(j["device"])
+    if !device.id.isEmpty { out.device = device }
     if let e = AccountSession.date(j["expires_at"]) { out.expiresAt = e }
     return out
   }
@@ -189,21 +197,43 @@ public struct AccountAPI: Sendable {
     return Self.usageSentence(j)
   }
 
-  /// `{"fraction": 0.42, "period": "week"}` (or `used`, `share_used`) → "You've used 42% of this week's share."
-  public static func usageSentence(_ j: JSON) -> String? {
-    guard let f = j["fraction"].double ?? j["share_used"].double ?? j["used"].double, f >= 0, f <= 1.5 else { return nil }
+  /// The gateway's own usage reply: `fraction_used` (0 to 1) of the week's share, and `resets_at`
+  /// → "You've used 42% of this week's share. It starts again Monday."
+  public static func usageSentence(_ j: JSON, now: Date = .now, calendar: Calendar = .current) -> String? {
+    guard let f = j["fraction_used"].double, f >= 0, f.isFinite else { return nil }
     let pct = Int((min(f, 1) * 100).rounded())
-    let period = j["period"].string.flatMap { ["day": "today\u{2019}s", "week": "this week\u{2019}s", "month": "this month\u{2019}s"][$0] } ?? "your"
-    if f >= 1 { return "You\u{2019}ve used all of \(period) share." }
-    if pct == 0 { return "You\u{2019}ve hardly used any of \(period) share yet." }
-    return "You\u{2019}ve used \(pct)% of \(period) share."
+    let used: String
+    if f >= 1 { used = "You\u{2019}ve used all of this week\u{2019}s share." }
+    else if pct == 0 { used = "You\u{2019}ve hardly used any of this week\u{2019}s share yet." }
+    else { used = "You\u{2019}ve used \(pct)% of this week\u{2019}s share." }
+    guard let reset = AccountSession.date(j["resets_at"]), reset > now else { return used }
+    let f2 = DateFormatter()
+    f2.calendar = calendar
+    f2.timeZone = calendar.timeZone
+    f2.locale = Locale(identifier: "en_US")
+    f2.dateFormat = reset.timeIntervalSince(now) < 6 * 86400 ? "EEEE" : "EEEE, MMMM d"
+    return used + " It starts again \(calendar.isDateInTomorrow(reset) ? "tomorrow" : f2.string(from: reset))."
   }
+
+  /// No saved credential is ever offered for the door's Basic challenge (a refused pass is a 401
+  /// page that asks for one), and nothing is retried: a 401 is one request, then "signed out".
+  public static let session: URLSession = {
+    let c = URLSessionConfiguration.ephemeral
+    c.urlCredentialStorage = nil
+    c.httpCookieStorage = nil
+    c.urlCache = nil
+    return URLSession(configuration: c, delegate: NoCredentials(), delegateQueue: nil)
+  }()
 
   /// Sends and maps the contract's errors: 401 is signed out (or, before sign-in, a refused code),
   /// 404 means the sign-in is not there yet, 429 too many tries.
   func send(_ r: URLRequest, signedIn: Bool) async throws -> (Data, Int) {
-    let d: Data, res: URLResponse
-    do { (d, res) = try await session.data(for: r) } catch is CancellationError { throw AccountError.cancelled } catch { throw AccountError.unreachable }
+    var d = Data(), res: URLResponse
+    let watch = NoCredentials()
+    do { (d, res) = try await session.data(for: r, delegate: watch) } catch {
+      // The door's Basic challenge, cancelled so the request is never sent twice: it was a 401.
+      if let refusal = watch.refusal { res = refusal } else if error is CancellationError { throw AccountError.cancelled } else { throw AccountError.unreachable }
+    }
     guard let h = res as? HTTPURLResponse else { throw AccountError.badReply }
     let word = JSON.parse(d)?["error"].string ?? ""
     switch h.statusCode {
@@ -246,5 +276,28 @@ public enum AccountKeeper {
     SecretStore.remove(.account)
     defaults.removeObject(forKey: handleKey)
     defaults.removeObject(forKey: nameKey)
+  }
+}
+
+/// The door's refusal is a 401 with `WWW-Authenticate: Basic`. Left to itself, URLSession answers
+/// that challenge by sending the request again (measured: two requests per refusal, and ten refused
+/// passes in 15 minutes block the person's address). So the challenge is cancelled, the 401 it came
+/// with is kept (`refusal`), and the caller treats it as the 401 it is. Nothing is looked up in a
+/// credential store or asked of anyone; the server's certificate is still checked the normal way.
+final class NoCredentials: NSObject, URLSessionTaskDelegate, @unchecked Sendable {
+  private let lock = NSLock()
+  private var seen: HTTPURLResponse?
+  /// The 401 a cancelled challenge came with.
+  var refusal: HTTPURLResponse? { lock.withLock { seen } }
+
+  func urlSession(_ session: URLSession, task: URLSessionTask, didReceive challenge: URLAuthenticationChallenge,
+                  completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+    if challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust {
+      completionHandler(.performDefaultHandling, nil)
+      return
+    }
+    let r = (challenge.failureResponse as? HTTPURLResponse) ?? HTTPURLResponse(url: task.originalRequest?.url ?? URL(string: "about:blank")!, statusCode: 401, httpVersion: nil, headerFields: nil)
+    lock.withLock { seen = r }
+    completionHandler(.cancelAuthenticationChallenge, nil)
   }
 }

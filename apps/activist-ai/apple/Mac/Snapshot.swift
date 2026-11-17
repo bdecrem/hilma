@@ -86,7 +86,7 @@ enum Snapshot {
         defaults.set(false, forKey: "ola.phone.enabled")
         defaults.set(NSHomeDirectory() + "/Documents/court-watch", forKey: LocalSettings.folderKey)
         let store = OlaStore(fixture: Fixture.main)
-        account.previewUsage = account.signedIn ? "You\u{2019}ve used 42% of this week\u{2019}s share." : nil
+        account.previewUsage = account.signedIn ? "You\u{2019}ve used 42% of this week\u{2019}s share. It starts again Monday." : nil
         let controller = WhereOlaWorks(store: store, account: account)
         let view = SettingsView(store: store, whereOla: controller, phoneLink: PhoneLink(store: store), account: account, cli: cli, tokenKnown: true).defaultAppStorage(defaults)
         write(view, size: SettingsView.snapshotSize, appearance: appearance, to: dir.appendingPathComponent("\(name)-\(mode).png"), titled: false, fit: true)

@@ -48,6 +48,10 @@ out=$(ola whoami 2>&1); rc=$?
 [ $rc = 1 ] && [[ "$out" == *"ola login"* ]]; check $? "before sign-in, ola whoami says so and offers ola login" "$out"
 out=$(ola "Say hello" 2>&1); rc=$?
 [ $rc = 1 ] && [[ "$out" == *"not signed in"* ]]; check $? "before sign-in, a request is refused plainly" "$out"
+if [ -n "$STUB" ]; then
+  out=$(OLA_STUB_CANCEL=1 ola login 2>&1); rc=$?
+  [ $rc = 1 ] && [ "$(echo "$out" | tail -1)" = "Sign-in was cancelled." ]; check $? "Cancel in the browser: one plain line, exit 1" "$(echo "$out" | tail -1)"
+fi
 out=$(ola login 2>&1); rc=$?
 check $rc "ola login (kind cli) signs in through the browser step" "$(echo "$out" | tail -1)"
 out=$(ola whoami 2>&1); rc=$?
@@ -89,5 +93,18 @@ out=$(ola logout 2>&1); rc=$?
 check $rc "ola logout" "$out"
 out=$(ola whoami 2>&1); rc=$?
 [ $rc = 1 ]; check $? "after logout, not signed in" "$out"
+if [ -n "$STUB" ]; then
+  # Signed out by the server (every computer revoked): never a retry loop. Ten refused passes in
+  # 15 minutes block the person's whole address at the real door.
+  ola login >/dev/null 2>&1
+  curl -s "$BASE/stub/revoke-all" >/dev/null
+  n0=$(curl -s "$BASE/stub/count" | python3 -c 'import json,sys; print(json.load(sys.stdin)["requests"])')
+  out=$(ola "Say hello" 2>&1 < /dev/null); rc=$?
+  n1=$(curl -s "$BASE/stub/count" | python3 -c 'import json,sys; print(json.load(sys.stdin)["requests"])')
+  [ $rc != 0 ] && [ $((n1 - n0)) -le 1 ]; check $? "signed out by the server, a request ends with an error after at most one request there" "exit $rc, $((n1 - n0)) request(s)"
+  out=$(ola whoami 2>&1); rc=$?
+  n2=$(curl -s "$BASE/stub/count" | python3 -c 'import json,sys; print(json.load(sys.stdin)["requests"])')
+  [ $rc = 1 ] && [[ "$out" == *"ola login"* ]] && [ $((n2 - n1)) = 0 ]; check $? "the Mac forgot the sign-in at once: whoami offers ola login and asks nothing" "$out; $((n2 - n1)) request(s)"
+fi
 echo; [ $FAILS = 0 ] && echo "ALL PASSED" || echo "$FAILS FAILED"
 exit $FAILS

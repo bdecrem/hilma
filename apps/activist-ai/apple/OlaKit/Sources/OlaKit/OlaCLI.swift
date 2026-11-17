@@ -220,7 +220,11 @@ public enum OlaCLI {
     func openDoor() async throws -> ModelDoor {
       if let door { return door }
       let d = ModelDoor(api: api) { AccountKeeper.session?.token }
-      d.onSignedOut = { OlaCLI.say("This Mac was signed out of Ola. Sign in again with: ola login") }
+      d.onSignedOut = {
+        // Forgotten at once: nothing more goes to the server with it.
+        AccountKeeper.forget()
+        OlaCLI.say("This Mac was signed out of Ola. Sign in again with: ola login")
+      }
       try await d.start()
       door = d
       return d

@@ -9,6 +9,8 @@ CH=$(printf '%s' "$Q" | tr '&' '\n' | sed -n 's/^challenge=//p')
 PORT=$(printf '%s' "$Q" | tr '&' '\n' | sed -n 's/^port=//p')
 (
   sleep 0.5
+  # OLA_STUB_CANCEL=1: the person presses Cancel on the page.
+  if [ -n "${OLA_STUB_CANCEL:-}" ]; then curl -s "http://127.0.0.1:$PORT/?error=cancelled" > "${OLA_STUB_PAGE:-/dev/null}"; exit 0; fi
   CODE=$(curl -s -X POST "$BASE/stub/approve" -d "{\"challenge\":\"$CH\"}" | python3 -c 'import json,sys; print(json.load(sys.stdin)["code"])')
   curl -s "http://127.0.0.1:$PORT/?code=$CODE" > "${OLA_STUB_PAGE:-/dev/null}"
 ) &

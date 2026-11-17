@@ -44,6 +44,20 @@ public final class ModelDoor: @unchecked Sendable {
     upstream.cancelAll()
   }
 
+  private let lock = NSLock()
+  private var signedOut = false
+  /// The server said this sign-in is over (sticky for this door; a new sign-in makes a new door).
+  public var isSignedOut: Bool { lock.withLock { signedOut } }
+
+  /// Tells the app once, however many requests saw it.
+  func markSignedOut() {
+    let first = lock.withLock { () -> Bool in
+      defer { signedOut = true }
+      return !signedOut
+    }
+    if first { onSignedOut?() }
+  }
+
   static func same(_ a: String, _ b: String) -> Bool {
     let x = Array(a.utf8), y = Array(b.utf8)
     var diff: UInt8 = x.count == y.count ? 0 : 1
@@ -55,18 +69,22 @@ public final class ModelDoor: @unchecked Sendable {
     let auth = req.header("authorization") ?? ""
     let presented = auth.hasPrefix("Bearer ") ? String(auth.dropFirst(7)) : (req.header("x-api-key") ?? "")
     guard Self.same(presented, key) else { return await res.send(401, Self.error("This door is only for Ola on this Mac.")) }
+    // Once the server has said "signed out", nothing more goes to it: ten refused passes in 15
+    // minutes block the person's whole address (the web app too), and opencode would try again.
+    if isSignedOut { return await res.send(401, Self.error("Signed out of Ola on this Mac. Sign in again in the Ola app.")) }
     let rest = String(req.path.drop(while: { $0 == "/" }))
     guard !rest.isEmpty, !rest.contains(".."), let base = api.gateway(rest),
           let target = URL(string: base.absoluteString + (req.query.map { "?\($0)" } ?? "")) else {
       return await res.send(404, Self.error("Nothing here."))
     }
     guard let token = token(), !token.isEmpty else {
-      onSignedOut?()
+      markSignedOut()
       return await res.send(401, Self.error("This Mac is not signed in to Ola. Sign in again in the Ola app."))
     }
     var r = URLRequest(url: target)
     r.httpMethod = req.method
-    r.timeoutInterval = 600
+    // The gateway may think for minutes before the first byte (its own limit is 10 minutes).
+    r.timeoutInterval = 900
     if let ct = req.header("content-type") { r.setValue(ct, forHTTPHeaderField: "Content-Type") }
     r.setValue(req.header("accept") ?? "*/*", forHTTPHeaderField: "Accept")
     r.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
@@ -82,7 +100,7 @@ public final class ModelDoor: @unchecked Sendable {
         case .response(let h):
           if h.statusCode == 401 {
             upstream.cancel(id)
-            onSignedOut?()
+            markSignedOut()
             return await res.send(401, Self.error("Signed out of Ola on this Mac. Sign in again in the Ola app."))
           }
           var headers = HTTPResponder.chunkedHeader
@@ -111,10 +129,11 @@ final class Upstream: NSObject, URLSessionDataDelegate, @unchecked Sendable {
   private var tasks: [Int: URLSessionDataTask] = [:]
   private lazy var session: URLSession = {
     let c = URLSessionConfiguration.ephemeral
-    c.timeoutIntervalForRequest = 600
+    c.timeoutIntervalForRequest = 900   // silence allowed between bytes: more than the gateway's 10 minutes
     c.timeoutIntervalForResource = 60 * 60 * 6
     c.urlCache = nil
     c.httpCookieStorage = nil
+    c.urlCredentialStorage = nil
     return URLSession(configuration: c, delegate: self, delegateQueue: nil)
   }()
 
@@ -158,6 +177,20 @@ final class Upstream: NSObject, URLSessionDataDelegate, @unchecked Sendable {
       return streams.removeValue(forKey: task.taskIdentifier)
     }
     if let error { c?.finish(throwing: error) } else { c?.finish() }
+  }
+
+  /// The door's Basic challenge on a refused pass: no credential, the 401 comes back as it is.
+  func urlSession(_ session: URLSession, task: URLSessionTask, didReceive challenge: URLAuthenticationChallenge,
+                  completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
+    if challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust {
+      completionHandler(.performDefaultHandling, nil)
+      return
+    }
+    // Left to itself URLSession would send the request again (NoCredentials in Account.swift): the
+    // 401 is handed on as the answer and the request ends here, sent once.
+    let refusal = (challenge.failureResponse as? HTTPURLResponse) ?? HTTPURLResponse(url: task.originalRequest?.url ?? URL(string: "about:blank")!, statusCode: 401, httpVersion: nil, headerFields: nil)!
+    _ = lock.withLock { streams[task.taskIdentifier] }?.yield(.response(refusal))
+    completionHandler(.cancelAuthenticationChallenge, nil)
   }
 
   /// Never follow a redirect with the account token.
