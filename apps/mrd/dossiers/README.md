@@ -89,6 +89,9 @@ findings, status, before / after, reason), runs and their cost in `dossier_check
    reader called wrong, three different answers, a redo whose sources fail): review, nothing is
    rewritten, a person decides. Implementation levels half a step apart count as the same.
 
+**`CAUGHT.md` is the running log of what the checks caught or fixed** (Bart asked for it on 2026-11-17): add
+to it when a country finishes, when a person decides a review item, and when a check itself was wrong.
+
 Tuning that mattered on the first run (Costa Rica): matching evidence to the answer by group labels
 alone failed every detention answer, because evidence about detained irregular migrants was "not
 about all migrants"; the check now asks whether the evidence fits the people the right matters for.
