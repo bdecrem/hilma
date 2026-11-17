@@ -1,0 +1,1 @@
+Sorry, change of plan: keep the people who have no email after all, we will phone them. Among those, the same phone number means the same person. And write every phone number as +1 followed by the ten digits, like +15105550134. Same file, please.

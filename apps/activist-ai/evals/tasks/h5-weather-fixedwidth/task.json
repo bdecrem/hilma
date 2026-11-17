@@ -1,0 +1,1 @@
+{"id": "h5-weather-fixedwidth", "family": "pipeline", "level": "hard", "honesty": false, "version": 1, "round": 2, "outputs": ["monthly.csv", "anomalies.csv"]}

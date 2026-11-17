@@ -1,0 +1,1 @@
+Our auditor wants every bank transaction from 2025 that is not in our books. bank.csv has about 200,000 rows and ledger.csv about the same; README.md says how to match them. Write missing.csv with one column, bank_id, listing every bank transaction that has no matching ledger entry.

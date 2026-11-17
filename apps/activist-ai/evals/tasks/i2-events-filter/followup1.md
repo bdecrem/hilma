@@ -1,0 +1,1 @@
+Two changes, please. Add a dropdown with id hood to filter by neighborhood: its first option is All, then one option per neighborhood, and the totals and the month table should follow it. Also, from now on count only events that had at least 10 attendees, everywhere on the page.

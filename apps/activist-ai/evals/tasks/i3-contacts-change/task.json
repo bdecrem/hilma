@@ -1,0 +1,1 @@
+{"id": "i3-contacts-change", "family": "followup", "level": "medium", "honesty": false, "version": 2, "round": 2, "outputs": ["contacts_clean.csv"], "followups": ["followup1.md", "followup2.md"]}

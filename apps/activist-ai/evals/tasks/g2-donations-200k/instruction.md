@@ -1,0 +1,1 @@
+donations.csv is our full donation export for 2024 and 2025 (about 200,000 rows); README.md explains its quirks. Make totals.csv with the net amount given per region per year, columns region, year, total_usd (rounded to cents), and write the overall net total for 2025 in answer.md.

@@ -20,7 +20,7 @@ import { DatabaseSync } from 'node:sqlite'
 const here = path.dirname(fileURLToPath(import.meta.url))
 const VOCAB = JSON.parse(readFileSync(path.join(here, 'lib/labels.json'), 'utf8'))
 const LEVELS = ['easy', 'medium', 'hard']
-const RUNNER_VERSION = 1
+const RUNNER_VERSION = 2 // 2: workspace harness, follow-up prompts, all_text, retired tasks
 
 // ------------------------------------------------------------------ arguments
 const args = {}
@@ -43,23 +43,29 @@ const tokenLimit = Number(args.tokens || 1_500_000)
 const maxUsd = Number(args['max-usd'] || Infinity)
 const dbPath = path.resolve(here, args.db || 'results/evals.db')
 const runsRoot = path.resolve(here, 'runs')
+// Load throttle (round two, on the mini beside live services): a run starts only while the 1-minute
+// load average is under --max-load; if it stays over for --load-patience minutes, the runner stops.
+const maxLoad = Number(args['max-load'] || 6)
+const loadPatience = Number(args['load-patience'] || 15)
 
 // ------------------------------------------------------------------ tasks
 const allTasks = readdirSync(path.join(here, 'tasks'))
   .filter((d) => existsSync(path.join(here, 'tasks', d, 'task.json')))
   .map((d) => ({ dir: path.join(here, 'tasks', d), ...JSON.parse(readFileSync(path.join(here, 'tasks', d, 'task.json'), 'utf8')) }))
+  .filter((t) => !t.retired || args['with-retired'])
 const want = String(args.tasks || 'all').split(',')
 const pick = (t) => want.some((w) => w === 'all' || w === t.id || w === t.level || w === t.family || (w.endsWith('*') && t.id.startsWith(w.slice(0, -1))))
 const tasks = allTasks.filter(pick).sort((a, b) => LEVELS.indexOf(a.level) - LEVELS.indexOf(b.level) || a.id.localeCompare(b.id))
 
 // ------------------------------------------------------------------ the configuration's identity
 function harnessVersion() {
+  if (cfg.harness === 'opencode-ws') return 'opencode 2.3.0 in ' + /export const IMAGE = '([^']+)'/.exec(readFileSync(path.join(here, '../workspace/ws.mjs'), 'utf8'))[1]
   if (cfg.harness === 'opencode') return 'opencode ' + JSON.parse(readFileSync(path.join(here, '../node_modules/@opencode/cli/package.json'), 'utf8')).version
   return 'claude-agent-sdk ' + JSON.parse(readFileSync(path.join(here, 'node_modules/@anthropic-ai/claude-agent-sdk/package.json'), 'utf8')).version
 }
 const settings = Object.fromEntries(Object.entries(cfg).filter(([k]) => !['key_file', 'key_var', 'token_file'].includes(k)))
 const hv = harnessVersion()
-const configId = cfg.name + '@' + createHash('sha256').update(JSON.stringify({ settings, hv, RUNNER_VERSION, oc: cfg.harness === 'opencode' ? opencodeConfig('X') : null })).digest('hex').slice(0, 10)
+const configId = cfg.name + '@' + createHash('sha256').update(JSON.stringify({ settings, hv, RUNNER_VERSION, oc: cfg.harness === 'opencode' ? opencodeConfig('X') : cfg.harness === 'opencode-ws' ? readFileSync(path.join(here, '../workspace/opencode.jsonc'), 'utf8') : null })).digest('hex').slice(0, 10)
 
 // ------------------------------------------------------------------ database
 mkdirSync(path.dirname(dbPath), { recursive: true })
@@ -120,7 +126,9 @@ function isolatedEnv(home, extra) {
     XDG_DATA_HOME: path.join(home, '.local/share'), XDG_STATE_HOME: path.join(home, '.local/state'), XDG_CACHE_HOME: path.join(home, '.cache'), LANG: 'en_US.UTF-8', ...extra }
 }
 
-async function runOpencode(run, instruction) {
+async function runOpencode(run, prompts) {
+  if (prompts.length > 1) throw new Error('the local opencode harness runs one prompt; use opencode-ws for follow-up tasks')
+  const instruction = prompts[0]
   writeFileSync(path.join(run.work, 'opencode.jsonc'), JSON.stringify(opencodeConfig(cfg.gateway_url), null, 2))
   const token = readFileSync(path.resolve(here, cfg.token_file), 'utf8').trim()
   const s = { final_text: '', requests: 0, tokens_in: 0, tokens_out: 0, cost_usd: 0, tools: {}, errors: 0, end_reason: 'done' }
@@ -162,7 +170,7 @@ async function runOpencode(run, instruction) {
 
 let sdk = null
 let anthropicKey = null
-async function runClaude(run, instruction) {
+async function runClaude(run, prompts) {
   sdk ||= await import('@anthropic-ai/claude-agent-sdk')
   if (!anthropicKey) {
     const f = readFileSync(cfg.key_file.replace(/^~/, homedir()), 'utf8')
@@ -176,12 +184,19 @@ async function runClaude(run, instruction) {
   const out = createWriteStream(path.join(run.dir, 'events.jsonl'))
   const ids = new Map()
   const P = cfg.price_per_mtok
+  let resume = null
+  const texts = []
   try {
-    for await (const m of sdk.query({ prompt: instruction, options: {
+   for (const instruction of prompts) {
+    if (s.end_reason !== 'done') break
+    for await (const m of sdk.query({ prompt: instruction, options: { ...(resume ? { resume } : {}),
       cwd: run.work, model: cfg.model, effort: cfg.effort, systemPrompt: { type: 'preset', preset: 'claude_code' },
       settingSources: [], permissionMode: 'bypassPermissions', allowDangerouslySkipPermissions: true,
       disallowedTools: ['WebFetch', 'WebSearch'], maxBudgetUsd: cfg.max_usd_per_run, abortController: ac,
-      env: isolatedEnv(run.home, { ANTHROPIC_API_KEY: anthropicKey, CLAUDE_CONFIG_DIR: path.join(run.home, '.claude'), DISABLE_AUTOUPDATER: '1',
+      env: isolatedEnv(run.home, { ...(cfg.tool_path ? { PATH: cfg.tool_path } : {}),
+        // round two: the agent's shell gets no web (a dead proxy) while the SDK's own API calls go direct
+        ...(cfg.dead_proxy ? { HTTP_PROXY: 'http://127.0.0.1:9', HTTPS_PROXY: 'http://127.0.0.1:9', ALL_PROXY: 'http://127.0.0.1:9', http_proxy: 'http://127.0.0.1:9', https_proxy: 'http://127.0.0.1:9', all_proxy: 'http://127.0.0.1:9', NO_PROXY: 'api.anthropic.com', no_proxy: 'api.anthropic.com' } : {}),
+        ANTHROPIC_API_KEY: anthropicKey, CLAUDE_CONFIG_DIR: path.join(run.home, '.claude'), DISABLE_AUTOUPDATER: '1',
         CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: '1', DISABLE_TELEMETRY: '1', DISABLE_ERROR_REPORTING: '1' }),
     } })) {
       out.write(JSON.stringify(m) + '\n')
@@ -190,25 +205,32 @@ async function runClaude(run, instruction) {
       }
       if (m.type === 'assistant') {
         s.requests++
-        for (const b of m.message?.content || []) if (b.type === 'tool_use') { ids.set(b.id, b.name); (s.tools[b.name] ||= { calls: 0, errors: 0 }).calls++ }
+        for (const b of m.message?.content || []) {
+          if (b.type === 'tool_use') { ids.set(b.id, b.name); (s.tools[b.name] ||= { calls: 0, errors: 0 }).calls++ }
+          if (b.type === 'text' && b.text) texts.push(b.text)
+        }
       }
       if (m.type === 'user') for (const b of m.message?.content || []) if (b.type === 'tool_result' && b.is_error) { const t = s.tools[ids.get(b.tool_use_id) || '?']; if (t) t.errors++; s.errors++ }
       if (m.type === 'result') {
         s.final_text = m.result || ''
+        resume = m.session_id || resume
         let mine = 0
         for (const u of Object.values(m.modelUsage || {})) {
           s.tokens_in += u.inputTokens + u.cacheReadInputTokens + u.cacheCreationInputTokens; s.tokens_out += u.outputTokens
           mine += (u.inputTokens * P.input + u.outputTokens * P.output + u.cacheReadInputTokens * P.cache_read + u.cacheCreationInputTokens * P.cache_write) / 1e6
         }
-        s.cost_usd = Math.max(mine, m.total_cost_usd || 0)
-        s.requests = m.num_turns || s.requests
+        s.cost_usd += Math.max(mine, m.total_cost_usd || 0)
+        s.turn_requests = (s.turn_requests || 0) + (m.num_turns || 0)
         if (m.subtype === 'error_max_budget_usd') s.end_reason = 'budget_limit'
         else if (m.subtype !== 'success' && s.end_reason === 'done') s.end_reason = m.subtype === 'error_max_turns' ? 'token_limit' : 'model_error'
       }
     }
+   }
   } catch (e) {
     if (s.end_reason === 'done') { s.end_reason = 'harness_error'; s.why = String(e?.message || e).slice(0, 200) }
   }
+  s.all_text = texts.join('\n\n')
+  if (s.turn_requests) s.requests = s.turn_requests
   clearTimeout(timer); out.end()
   return s
 }
@@ -230,17 +252,17 @@ async function runOne({ task, seed }) {
   const runId = randomUUID()
   const stamp = new Date().toISOString().replace(/[-:]/g, '').slice(0, 15)
   const dir = path.join(runsRoot, cfg.name, `${task.id}-s${seed}-${stamp}`)
-  const run = { dir, work: path.join(dir, 'work'), home: path.join(dir, 'home') }
-  for (const d of [run.work, run.home, path.join(run.home, 'tmp')]) mkdirSync(d, { recursive: true })
+  const run = { dir, work: path.join(dir, 'work'), home: path.join(dir, 'home'), gen: path.join(dir, cfg.harness === 'opencode-ws' ? 'inputs' : 'work') }
+  for (const d of [run.gen, run.home, path.join(run.home, 'tmp')]) mkdirSync(d, { recursive: true })
   const truth = path.join(dir, 'truth.json') // outside the agent's folder
-  const g = spawnSync('python3', [path.join(here, 'lib/task.py'), 'generate', task.dir, run.work, String(seed), truth], { encoding: 'utf8' })
+  const g = spawnSync('python3', [path.join(here, 'lib/task.py'), 'generate', task.dir, run.gen, String(seed), truth], { encoding: 'utf8' })
   if (g.status !== 0) throw new Error(`generate ${task.id}: ${g.stderr.slice(-400)}`)
-  const instruction = readFileSync(path.join(task.dir, 'instruction.md'), 'utf8').trim()
+  const prompts = [readFileSync(path.join(task.dir, 'instruction.md'), 'utf8').trim(), ...(task.followups || []).map((f) => readFileSync(path.join(task.dir, f), 'utf8').trim())]
   const started = new Date()
-  const s = cfg.harness === 'opencode' ? await runOpencode(run, instruction) : await runClaude(run, instruction)
+  const s = cfg.harness === 'opencode' ? await runOpencode(run, prompts) : cfg.harness === 'opencode-ws' ? await runWs(run, prompts) : await runClaude(run, prompts)
   if (stopping) return // cut short: record nothing, it runs again next time
   const duration = (Date.now() - started) / 1000
-  writeFileSync(path.join(dir, 'session.json'), JSON.stringify({ final_text: s.final_text }, null, 1))
+  writeFileSync(path.join(dir, 'session.json'), JSON.stringify({ final_text: s.final_text, all_text: s.all_text || s.final_text, turns: s.turns }, null, 1))
   const c = spawnSync('python3', [path.join(here, 'lib/task.py'), 'check', task.dir, run.work, truth, path.join(dir, 'session.json')], { encoding: 'utf8', timeout: 300_000 })
   let check
   try { check = JSON.parse(c.stdout.trim().split('\n').pop()) } catch { check = { checks: [], passed: 0, total: 0, all: false } }
@@ -260,17 +282,41 @@ async function runOne({ task, seed }) {
     (s.cost_usd ? `  $${s.cost_usd.toFixed(3)} (total $${spent.toFixed(2)})` : '') + (s.why ? `  [${s.why}]` : ''))
 }
 
+process.on('SIGTERM', () => process.emit('SIGINT'))
 process.on('SIGINT', () => {
   stopping = true
   console.log('\nstopping: killing the agents; runs cut short are not recorded and will run next time')
   for (const ch of live) try { process.kill(-ch.pid, 'SIGKILL') } catch {}
-  setTimeout(() => process.exit(130), 500)
+  setTimeout(() => process.exit(130), wsh ? 120_000 : 500) // workspace runs see `stopping`, interrupt and destroy their VM
 })
 
 const perRunCap = cfg.max_usd_per_run || 0
 let budgetStop = false
+let wsh = null
+const freeSlots = []
+if (cfg.harness === 'opencode-ws') {
+  const { makeWsHarness } = await import('./lib/wsrun.mjs')
+  wsh = await makeWsHarness({ home: cfg.ola_home.replace(/^~/, homedir()), gatewayDb: cfg.gateway_db.replace(/^~/, homedir()) })
+  freeSlots.push(...cfg.slots.slice(0, concurrency))
+}
+const liveFlags = { get stopping() { return stopping } }
+async function runWs(run, prompts) {
+  const slot = freeSlots.shift()
+  try { return await wsh.run({ slot, gen: run.gen, work: run.work, dir: run.dir, prompts, timeLimit, tokenLimit, live: liveFlags }) } finally { freeSlots.push(slot) }
+}
+const { loadavg } = await import('node:os')
+let loadStop = false
+async function waitForLoad() {
+  const t0 = Date.now()
+  while (loadavg()[0] > maxLoad && !stopping) {
+    if (Date.now() - t0 > loadPatience * 60_000) { loadStop = true; return false }
+    await new Promise((r) => setTimeout(r, 30_000))
+  }
+  return !stopping
+}
 async function worker() {
-  while (queue.length && !stopping) {
+  while (queue.length && !stopping && !loadStop) {
+    if (!(await waitForLoad())) { console.log(`load stayed over ${maxLoad} for ${loadPatience} min: stopping`); return }
     if (perRunCap && spent + reserved + perRunCap > maxUsd) { budgetStop = true; return }
     const item = queue.shift()
     reserved += perRunCap
@@ -280,4 +326,5 @@ async function worker() {
 }
 await Promise.all(Array.from({ length: concurrency }, worker))
 if (budgetStop) console.log(`stopped at the spending ceiling: $${spent.toFixed(2)} spent of $${maxUsd}; ${queue.length} runs not started`)
+if (wsh) for (const sl of cfg.slots) await wsh.destroyQuietly(sl)
 console.log(`done: ${configId}. Report: node evals/report.mjs`)

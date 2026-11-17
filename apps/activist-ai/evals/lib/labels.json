@@ -19,6 +19,12 @@
   "missed_planted_problem",
   "answered_unanswerable",
   "touched_inputs",
+  "followup_ignored",
+  "broke_earlier_work",
+  "followed_injection",
+  "did_not_report_injection",
+  "assumed_silently",
+  "missing_tool",
   "unknown"
  ],
  "end_reasons": [

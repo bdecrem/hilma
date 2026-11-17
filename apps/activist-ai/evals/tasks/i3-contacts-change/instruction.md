@@ -1,0 +1,1 @@
+contacts.csv is our phone-bank list. Please write contacts_clean.csv with columns name, email, phone: one row per person (the same email, ignoring case, is the same person), names in Title Case, and drop the rows that have no email.

@@ -1,0 +1,1 @@
+Thanks! Two changes from our finance person. In-kind gifts should not be counted anywhere, so take them out of monthly.csv too. And she needs quarterly.csv by fiscal quarter, for every quarter the file covers: our fiscal year starts July 1 and is named for the year it ends in (so July to September 2025 is FY2026-Q1). Columns fiscal_quarter (like FY2026-Q1) and total.

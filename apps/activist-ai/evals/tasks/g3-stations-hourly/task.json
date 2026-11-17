@@ -1,0 +1,1 @@
+{"id": "g3-stations-hourly", "family": "scale", "level": "hard", "honesty": false, "version": 2, "round": 2, "outputs": ["provinces.csv", "flagged.csv"]}

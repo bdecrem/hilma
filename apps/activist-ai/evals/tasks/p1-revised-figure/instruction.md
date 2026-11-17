@@ -1,0 +1,1 @@
+How many households did we serve in 2025, according to report.pdf? In answer.md give the number, quote the sentence or table row it comes from (in quotation marks), and say which page of the PDF it is on, counting pages the way a PDF viewer does (the cover is page 1).

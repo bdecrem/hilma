@@ -1,0 +1,1 @@
+events.csv lists our association's events this year. Make index.html, a static page that works with no internet connection, showing the number of events in an element with id total-events, the total number of attendees in an element with id total-attendees, and a table with id months with one row per month (month name written out, like March, and the number of events that month).

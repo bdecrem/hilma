@@ -1,0 +1,1 @@
+surveys/ has our household survey for each year from 2016 to 2025 (220,000 rows in all), and codebook.md explains how the files changed over the years. Write medians.csv with columns year and median_income_usd: the median household income in dollars among households that reported one, rounded to whole dollars.

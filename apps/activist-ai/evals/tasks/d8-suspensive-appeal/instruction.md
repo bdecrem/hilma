@@ -1,0 +1,1 @@
+laws.json has six immigration laws in their original languages. Under each, does an appeal against a removal order stop the removal while the appeal is heard, as the general rule? Write suspensive.csv with columns law, suspends (yes or no), article, quote (the decisive sentence, copied exactly in the original language).

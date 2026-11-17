@@ -1,0 +1,1 @@
+{"id": "i4-keep-answer", "family": "followup", "level": "easy", "honesty": false, "version": 2, "round": 2, "outputs": ["answer.md", "by_region.csv"], "followups": ["followup1.md", "followup2.md"]}

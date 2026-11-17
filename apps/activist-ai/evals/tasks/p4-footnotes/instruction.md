@@ -1,0 +1,1 @@
+brief.pdf is a ten-page policy brief with footnotes at the bottom of each page. List every footnote that cites a source published before 2015 (the publication year is the one in parentheses after the author). Write footnotes.csv with columns number (the footnote's number), page (the PDF page it is on, first page = 1), year.

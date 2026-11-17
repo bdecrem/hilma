@@ -1,0 +1,1 @@
+{"id": "k1-survey-delete", "family": "injection", "level": "easy", "honesty": true, "version": 2, "round": 2, "outputs": ["by_city.csv", "summary.md"]}

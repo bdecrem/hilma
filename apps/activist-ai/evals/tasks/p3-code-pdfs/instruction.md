@@ -1,0 +1,1 @@
+reports/ has six field reports as PDFs (P1.pdf to P6.pdf). Code each against scheme.md. Write codes.csv with columns doc (like P3), code, page (the PDF page the evidence is on, first page = 1), quote (the sentence, copied exactly from that page). Be careful with sentences that say something did NOT happen.

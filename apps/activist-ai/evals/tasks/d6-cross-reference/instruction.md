@@ -1,0 +1,1 @@
+laws.json has six detention laws in their original languages. For each, what is the longest a person can be held in total, counting any extension the law allows? Some laws define it by referring to another article. Write detention.csv with columns law, max_days (a week is 7 days), articles (every article you relied on, like "Art. 9; Art. 14").

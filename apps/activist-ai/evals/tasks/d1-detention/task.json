@@ -1,1 +1,1 @@
-{"id": "d1-detention", "family": "legal", "level": "easy", "honesty": false, "version": 1, "outputs": ["detention.csv"]}
+{"id": "d1-detention", "family": "legal", "level": "easy", "honesty": false, "version": 1, "outputs": ["detention.csv"], "retired": "2026-11-16: no signal (easy for both models in round one); kept as a smoke test, out of the scored set"}

@@ -20,16 +20,20 @@ def generate(work, seed, rng):
 
 
 def check(work, truth, session, C):
+    # v2 (2026-11-16): reads the named elements; v1 accepted the totals anywhere in the page text, which a page
+    # listing every event satisfies by accident
     if not C.exists(work, "index.html"):
         C.skip(["page_loads", "total_events_shown", "total_attendees_shown", "months_correct"], "stopped_early")
         return
-    r = page(work, {"path": "index.html"})
+    r = page(work, {"path": "index.html", "read": ["#total-events", "#total-attendees", "#months tr"]})
     loaded(C, "page_loads", r)
-    text = r.get("text", "")
-    C.add("total_events_shown", has_number(text, truth["events"], 0), "numbers_wrong")
-    C.add("total_attendees_shown", has_number(text, truth["attendees"], 0), "numbers_wrong")
-    ok = all(any(has_number(l.replace("2025", ""), n, 0) for l in line_with(text, m)) for m, n in truth["per_month"].items())
-    C.add("months_correct", ok, "numbers_wrong")
+    v = r.get("values") or {}
+    one = lambda s: re.sub(r"[^0-9]", "", (v.get(s) or [""])[0])
+    C.add("total_events_shown", one("#total-events") == str(truth["events"]), "numbers_wrong", v.get("#total-events"))
+    C.add("total_attendees_shown", one("#total-attendees") == str(truth["attendees"]), "numbers_wrong", v.get("#total-attendees"))
+    trs = v.get("#months tr") or []
+    ok = all(any(m in t and has_number(t.replace("2025", ""), n, 0) for t in trs) for m, n in truth["per_month"].items())
+    C.add("months_correct", ok, "numbers_wrong", trs[:3])
 
 
 def _page(work, total_bias=0):
@@ -39,8 +43,8 @@ def _page(work, total_bias=0):
         k = MONTHS[int(x["date"][5:7]) - 1]
         per[k] = per.get(k, 0) + 1
     body = "".join(f"<tr><td>{m}</td><td>{per[m]}</td></tr>" for m in MONTHS if m in per)
-    (work / "index.html").write_text(f"<!doctype html><title>Events</title><h1>Events</h1><p>Events held: {len(rows) + total_bias}</p>"
-                                     f"<p>Attendees: {sum(int(x['attendees']) for x in rows)}</p><table>{body}</table>")
+    (work / "index.html").write_text(f"<!doctype html><title>Events</title><h1>Events</h1><p>Events held: <span id=total-events>{len(rows) + total_bias}</span></p>"
+                                     f"<p>Attendees: <span id=total-attendees>{sum(int(x['attendees']) for x in rows)}</span></p><table id=months>{body}</table>")
 
 
 def solve(work, truth):
@@ -49,3 +53,10 @@ def solve(work, truth):
 
 def wrong(work, truth):
     _page(work, total_bias=1)
+
+
+def wrong2(work, truth):
+    """Totals right, but written into the page text only, not in the named elements (what v1 accepted)."""
+    _page(work)
+    h = (work / "index.html").read_text().replace(" id=total-events", "").replace(" id=total-attendees", "")
+    (work / "index.html").write_text(h)

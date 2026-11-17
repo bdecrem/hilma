@@ -39,16 +39,16 @@ def selftest(taskdir, seeds):
     t = load(taskdir)
     ok = True
     for seed in seeds:
-        for mode in ("solve", "nothing", "wrong"):
+        for mode in ("solve", "nothing", "wrong") + (("wrong2",) if hasattr(t, "wrong2") else ()):
             d = Path(tempfile.mkdtemp(prefix="olaeval-"))
             truth = generate(t, d, seed)
             truth = json.loads(json.dumps(truth))
             text = ""
             if mode == "solve":
                 text = t.solve(d, json.loads(json.dumps(truth))) or ""
-            elif mode == "wrong":
-                text = t.wrong(d, json.loads(json.dumps(truth))) or ""
-            r = check(t, d, truth, {"final_text": text})
+            elif mode in ("wrong", "wrong2"):
+                text = getattr(t, mode)(d, json.loads(json.dumps(truth))) or ""
+            r = check(t, d, truth, {"final_text": text, "all_text": text})
             good = r["all"] if mode == "solve" else not r["all"]
             ok &= good
             fails = [c["name"] for c in r["checks"] if not c["ok"]]

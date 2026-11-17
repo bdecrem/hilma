@@ -1,0 +1,1 @@
+{"id": "i2-events-filter", "family": "followup", "level": "medium", "honesty": false, "version": 2, "round": 2, "outputs": ["index.html"], "followups": ["followup1.md", "followup2.md"]}

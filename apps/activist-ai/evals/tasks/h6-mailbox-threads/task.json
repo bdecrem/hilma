@@ -1,0 +1,1 @@
+{"id": "h6-mailbox-threads", "family": "pipeline", "level": "hard", "honesty": false, "version": 1, "round": 2, "outputs": ["threads.csv", "unanswered.csv"]}

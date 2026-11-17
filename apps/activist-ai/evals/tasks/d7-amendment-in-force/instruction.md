@@ -1,0 +1,1 @@
+laws.json has two base laws (a French asylum law of 2018 and a Spanish international-protection law of 2019) and the laws that amended them. Today is November 16, 2026. What is each deadline in the two base laws today? Write current.csv with columns law (the base law), article (the base law's article), days (a month is 30 days), one row per deadline article of the base laws.

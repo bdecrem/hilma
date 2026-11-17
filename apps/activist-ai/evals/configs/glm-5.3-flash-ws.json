@@ -1,0 +1,12 @@
+{
+  "name": "glm-5.3-flash-ws",
+  "harness": "opencode-ws",
+  "model": "zai-org/GLM-5.3-Flash",
+  "serving": "Together.ai serverless, through the evals' own gateway/server.mjs on the Mac mini (127.0.0.1:4395, model name general), reached from a sealed workspace VM through its door",
+  "machine": "Mac mini (CASBS), Apple container 1.7.1, image ola-workspace:2.3.0-4, 4 CPUs, 6 GB, no network",
+  "ola_home": "~/ola-evals/home-glm",
+  "gateway_db": "~/ola-evals/state/glm-gateway.db",
+  "slots": ["ev-g1", "ev-g2"],
+  "context": 131072,
+  "max_output": 16000
+}
