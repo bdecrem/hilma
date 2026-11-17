@@ -36,6 +36,26 @@ export function startTurn(state: ConversationState, request: string, at = Date.n
   return turn
 }
 
+export const LOST_IN_RESTART = 'Ola’s computer restarted your project as this was starting, so it did not run. Send it again.'
+
+/**
+ * After a reconnect, the turns Ola's computer has (`fromServer`) replace the page's, except a
+ * request this page sent that the computer does not have (a project restarted as it was sent, for
+ * example after a member was removed): it stays on the page, said plainly, instead of vanishing
+ * (first-user pass, B12). A turn the server has is matched by its request and time.
+ */
+export function mergeResync(local: Turn[], fromServer: Turn[], now = Date.now()): Turn[] {
+  const known = (t: Turn) => fromServer.some((s) => s.request.trim() === t.request.trim() && Math.abs(s.at - t.at) < 5 * 60_000)
+  const lastServer = fromServer.length ? fromServer[fromServer.length - 1].at : 0
+  const lost = local.filter((t) => t.engine !== 'claude' && t.engine !== 'hosted' && t.request.trim() && t.at >= lastServer && !known(t))
+  // A request sent a moment ago may not have reached the computer yet: kept as it is, not failed.
+  const young = (t: Turn) => t.status === 'sending' && now - t.at < 15_000
+  return [
+    ...fromServer,
+    ...lost.map((t) => (young(t) ? t : { ...t, status: 'failed' as const, ended: t.ended ?? now, error: t.error ?? { text: LOST_IN_RESTART, detail: 'not in the conversation after a reconnect' } })),
+  ]
+}
+
 function current(state: ConversationState): Turn | null {
   const t = state.turns[state.turns.length - 1]
   return t ?? null

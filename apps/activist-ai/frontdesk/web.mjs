@@ -61,7 +61,7 @@ export function makeWeb({ db, file, providerName, log = () => {} }) {
   /** The project's web setting, as Settings shows it. */
   function settings(ws) {
     const row = db.prepare('SELECT a.always, a.changed_at, p.display_name FROM web_access a LEFT JOIN people p ON p.id = a.changed_by WHERE a.workspace_id = ?').get(ws.id)
-    return { always: row?.always === 1, changedAt: row ? new Date(row.changed_at).toISOString() : null, changedBy: row?.display_name ?? null, provider: providerName }
+    return { always: row?.always === 1, changedAt: row ? new Date(row.changed_at).toISOString() : null, changedBy: row?.display_name ?? null, provider: typeof providerName === 'function' ? providerName() : providerName }
   }
 
   /**

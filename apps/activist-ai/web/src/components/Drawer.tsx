@@ -61,16 +61,22 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
     const nearBottom = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < 240
     if (nearBottom) setTimeout(() => scroller && (scroller.scrollTop = scroller.scrollHeight), 60)
   }
+  // What the folder held when the run started: a file is the run's when it is new or changed since.
+  // Comparing times instead missed files when the project's clock ran behind the browser's (second
+  // first-user pass: a chart and an Excel file made by Python, nothing listed under the reply).
+  let before: Promise<Map<string, string> | null> = Promise.resolve(null)
   createEffect((prev: string | undefined) => {
     const t = s().turns[s().turns.length - 1]
     const status = t?.status
+    if (t && (status === 'sending' || status === 'working') && prev !== 'sending' && prev !== 'working')
+      before = desk.files().then((fs) => new Map(fs.map((f) => [f.path, f.modified]))).catch(() => null)
     if (t && prev && (prev === 'working' || prev === 'sending') && status && status !== prev) {
       toEnd()
       const since = t.at - 2000
-      desk
-        .files()
-        .then((fs) => {
-          const paths = fs.filter((f) => f.origin === 'made' && Date.parse(f.modified) >= since && canOpen(f.path) && plainPath(f.path)).map((f) => f.path)
+      Promise.all([before, desk.files()])
+        .then(([had, fs]) => {
+          const mine = (f: { path: string; modified: string }) => (had ? had.get(f.path) !== f.modified : Date.parse(f.modified) >= since)
+          const paths = fs.filter((f) => f.origin === 'made' && mine(f) && canOpen(f.path) && plainPath(f.path)).map((f) => f.path)
           setMadeByRun({ turn: t.id, paths })
           if (paths.length) toEnd()
         })

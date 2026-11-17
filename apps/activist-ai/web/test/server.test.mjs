@@ -54,3 +54,10 @@ test('the query to opencode never names a directory or workspace (review 2026-11
   assert.equal(forwardedQuery(''), '')
   assert.equal(forwardedQuery('?w=fd-a'), '?w=fd-a')
 })
+
+test('the home leaves out Ola’s own check screenshots; Files keeps them (first-user pass, B9)', async () => {
+  const { otherFiles, otherCount } = await import('../server/project.mjs')
+  const list = [{ path: 'shots/hello-390.png', origin: 'made' }, { path: 'shots/mine.png', origin: 'uploaded' }, { path: 'notes.txt', origin: 'made' }, { path: 'shots/deep/x.png', origin: 'made' }]
+  assert.deepEqual(otherFiles(list, []).map((f) => f.path), ['shots/mine.png', 'notes.txt', 'shots/deep/x.png'])
+  assert.equal(otherCount(list, []), 3)
+})

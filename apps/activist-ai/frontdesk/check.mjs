@@ -1179,8 +1179,10 @@ await check('"people working" is one number per whole window, all teams, never w
   const n2 = (await api('/api/me', { cookie: a.cookie })).json.machine.working
   await boundary()
   const m = (await api('/api/project', { cookie: a.cookie, ws: FA })).json.machine
-  assert(n1 === 3 && n2 === 3 && m.working === 2 && Object.keys(m).sort().join() === 'capacity,working' && m.capacity === 4, `windows: ${n1}, then ${n2} after bob's request, then ${JSON.stringify(m)}`)
-  return `${n1} for the window of three people; still ${n2} after bob's request mid-window; ${m.working} at the next window`
+  // The viewer always counts themself: v made no request in the last window (only a and b did).
+  const n3 = (await api('/api/me', { cookie: v.cookie })).json.machine.working
+  assert(n1 === 3 && n2 === 3 && m.working === 2 && n3 === 3 && Object.keys(m).sort().join() === 'capacity,working' && m.capacity === 4, `windows: ${n1}, then ${n2} after bob's request, then ${JSON.stringify(m)}, then ${n3} for a viewer not in it`)
+  return `${n1} for the window of three people; still ${n2} after bob's request mid-window; ${m.working} at the next window; ${n3} for a viewer who was quiet (they count themself)`
 })
 
 // ---------------------------------------------------------------- Fallback to Claude

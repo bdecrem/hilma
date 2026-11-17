@@ -4,10 +4,10 @@
 // drawer never shows a stale "working" after the network comes back.
 import { OpenCode } from '@opencode/client'
 import { createStore, produce, reconcile } from 'solid-js/store'
-import { applyClaudeEvent, applyEvent, contextOf, emptyConversation, startClaudeTurn, startTurn, turnFromClaudeRun, turnsFromMessages, type ConversationState } from './conversation.ts'
+import { applyClaudeEvent, applyEvent, contextOf, emptyConversation, mergeResync, startClaudeTurn, startTurn, turnFromClaudeRun, turnsFromMessages, type ConversationState } from './conversation.ts'
 import { describeApproval, handoffWords, precheck, stuckReason, type Stuck } from './steps.ts'
 import type { Autonomy, ClaudeInfo, Connection, Engine, Fallback, HostedInfo, Problem, Stretch, StretchReason, Suggestion, Turn } from './types.ts'
-import { claude, desk, deskHeaders, fallback, hosted } from './api.ts'
+import { claude, desk, deskHeaders, fallback, hosted, workspace } from './api.ts'
 import { parseCommand } from './commands.ts'
 
 /** How a fallback is named to the person: "the hosted open model" (at its provider), "Claude". */
@@ -142,6 +142,12 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
       } catch {
         if (disposed) return
         markLost()
+        // The stream is also cut when the person is taken off the project: if this project is no
+        // longer theirs, the page says so now instead of retrying until a reload (first-user pass, B11).
+        void desk
+          .me()
+          .then((m) => !disposed && !m.workspaces.some((w) => w.slug === workspace()) && window.dispatchEvent(new Event('ola:signed-out')))
+          .catch(() => {})
         await sleep(backoff)
         backoff = Math.min(backoff * 2, 10_000)
       }
@@ -154,7 +160,8 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
     if (!sessionID) return
     try {
       const list = await client.message.list({ sessionID, limit: 200 })
-      const turns = await withClaude(sessionID, turnsFromMessages((list as any).data ?? [], state.directory))
+      if (state.sessionID !== sessionID) return
+      const turns = mergeResync(state.turns, await withClaude(sessionID, turnsFromMessages((list as any).data ?? [], state.directory)))
       const last = turns[turns.length - 1]
       // A turn still running has no idle marker yet: keep it working, the stream will finish it.
       setState('turns', reconcile(turns))
@@ -229,8 +236,14 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
     try {
       await client.session.prompt({ sessionID, text: request })
     } catch (e) {
-      fail(e)
+      return fail(e)
     }
+    // Taken, but nothing heard of it in 20 s (the project restarted as it arrived): ask the
+    // computer what it has, so the request is either shown running or said not to have run.
+    setTimeout(() => {
+      const t = state.turns[state.turns.length - 1]
+      if (!disposed && state.sessionID === sessionID && t?.at === at && t.status === 'sending') void resync()
+    }, 20_000)
   }
 
   async function stop() {

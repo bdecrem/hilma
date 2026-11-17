@@ -76,7 +76,8 @@ const CSV = [
 ].join('\n')
 
 // ---------------------------------------------------------------- the stack
-const HOME = path.join(homedir(), '.ola-first-user')
+// OLA_FU_HOME: another state folder, so two engineers' walks never share one (with OLA_FU_TAG and the ports).
+const HOME = process.env.OLA_FU_HOME || path.join(homedir(), '.ola-first-user')
 rmSync(HOME, { recursive: true, force: true })
 mkdirSync(HOME, { recursive: true, mode: 0o700 })
 const env = {
@@ -170,7 +171,8 @@ const gw = start('gateway/server.mjs', {
   ...(process.env.OLA_FU_HOSTED && !FAKE ? { HOSTED_BASE_URL: 'https://api.together.xyz/v1', HOSTED_API_KEY: together(), HOSTED_MODEL: process.env.OLA_FU_HOSTED, HOSTED_PROVIDER: 'Together AI', GATEWAY_HOSTED_FILE: path.join(HOME, 'gateway-hosted'), GATEWAY_HOSTED_PRICES: 'in=1.4,out=4.4' } : {}),
 })
 await until(() => gw.log.includes('"event":"start"'), 15_000, 'the gateway start')
-start('frontdesk/server.mjs')
+const fd = start('frontdesk/server.mjs')
+fd.on('exit', (code, sig) => console.log(`the front desk exited (${code ?? sig}); its last lines are in ${path.join(SHOTS, 'frontdesk.log')}`))
 await until(async () => (await fetch(`${ORIGIN}/api/health`)).ok, 15_000, 'the front desk start')
 const wsLib = await import('../workspace/ws.mjs')
 await wsLib.waitForRoom(IDS, IDS.length)
@@ -374,6 +376,8 @@ try {
       await step(run, 'B', 'Open the chart and the Excel file', 40, async () => {
         const turn = page.locator('.drawer .turn').last()
         const pic = turn.locator('.made-picture img, .made-pictures img').first()
+        // What the run made is asked for once the run ends: a moment, not at once.
+        await pic.waitFor({ timeout: 10_000 }).catch(() => {})
         if (!(await pic.count())) throw new Error('no picture under the reply')
         const xl = turn.locator('.made-pages a').filter({ hasText: /\.xlsx/i }).first()
         if (!(await xl.count())) throw new Error('no Excel file under the reply')
@@ -434,6 +438,7 @@ try {
     await browser.close()
   }
 } finally {
+  writeFileSync(path.join(SHOTS, 'frontdesk.log'), fd.log) // the front desk's own lines (no secrets: it logs none)
   for (const p of children) p.kill('SIGTERM')
   if (!KEEP) {
     for (const id of IDS) node('workspace/ws.mjs', ['destroy', id, '--confirm', id])

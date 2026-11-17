@@ -87,6 +87,7 @@ export function config(env = process.env) {
     // the provider's name for the line under the approval ("The words of the search go to …").
     webFile: env.OLA_FD_WEB_FILE ?? path.join(WS_HOME, 'gateway-web'),
     searchProvider: env.OLA_FD_SEARCH_PROVIDER ?? 'Brave Search',
+    searchProviderFixed: env.OLA_FD_SEARCH_PROVIDER !== undefined,
     // Fallback to a hosted open model (hosted.mjs): the gateway's hosted grants file, the ceiling.
     hosted: hostedConfig(env),
     // Batch jobs (jobs.mjs): the gateway's job grants file, how often jobs are looked after.
@@ -168,7 +169,21 @@ export function makeFrontDesk(cfg = config()) {
   const originHost = new URL(cfg.origin).host
   const log = (m) => console.log(JSON.stringify({ t: new Date().toISOString(), event: 'frontdesk', msg: String(m).slice(0, 300) }))
   const auth = makeAuth({ db, keys, origin: cfg.origin, session: cfg.session, limits: cfg.limits, log })
-  const web = makeWeb({ db, file: cfg.webFile, providerName: cfg.searchProvider, log })
+  const web = makeWeb({ db, file: cfg.webFile, providerName: () => cfg.searchProvider, log })
+  // The search card names the provider the gateway really uses (first-user pass: it said "Brave
+  // Search" on a machine set up with another). OLA_FD_SEARCH_PROVIDER, when set, still wins.
+  if (!cfg.searchProviderFixed && cfg.claude.usageToken) {
+    const NAMES = { brave: 'Brave Search', mock: 'a made-up search (for checks)' }
+    const ask = async () => {
+      try {
+        const r = await fetch(`${cfg.claude.gateway}/v1/usage`, { headers: { authorization: `Bearer ${cfg.claude.usageToken}` }, signal: AbortSignal.timeout(5000) })
+        const p = r.ok ? (await r.json())?.web?.provider : null
+        if (typeof p === 'string' && NAMES[p]) cfg.searchProvider = NAMES[p]
+      } catch {}
+    }
+    void ask()
+    setInterval(ask, 10 * 60_000).unref()
+  }
   const workspaces = makeWorkspaces({ db, keys, log, idleStopMs: cfg.idleStopMs, runCeilingMs: cfg.runCeilingMs, webModeOf: (slug) => web.modeBySlug(slug) })
   const clientOf = (req) => req.socket.olaClient ?? addressKey(req.socket.remoteAddress)
 
@@ -176,15 +191,18 @@ export function makeFrontDesk(cfg = config()) {
   // teams together, in memory only, never who. The number changes only at a window's end, so
   // polling it shows one number per window and nothing about when within it anyone was active,
   // or on which team (review of 2026-11-16, L2).
+  // The viewer always counts themself (they are on the machine as they read it): a first person
+  // alone read "0 people working" before (first-user pass). Adding only the viewer tells them
+  // nothing they did not know about the last window.
   let cur = { k: -1, people: new Set() }
-  let prev = { k: -1, n: 0 }
+  let prev = { k: -1, n: 0, people: new Set() }
   const roll = () => {
     const k = Math.floor(Date.now() / cfg.workingWindowMs)
-    if (cur.k !== k) (prev = { k: cur.k, n: cur.people.size }), (cur = { k, people: new Set() })
+    if (cur.k !== k) (prev = { k: cur.k, n: cur.people.size, people: cur.people }), (cur = { k, people: new Set() })
     return k
   }
   const seen = (personId) => (roll(), cur.people.add(personId))
-  const working = () => (prev.k === roll() - 1 ? prev.n : 0)
+  const working = (viewer) => (prev.k === roll() - 1 ? prev.n + (prev.people.has(viewer) ? 0 : 1) : 1)
 
   // Transfers in flight (review of 2026-11-16, M5): each holds a host `container exec`.
   // One person may hold at most a quarter of the bytes in flight (second review, 2026-11-16: one
@@ -397,7 +415,7 @@ export function makeFrontDesk(cfg = config()) {
       const members = db.prepare('SELECT p.id, p.display_name FROM memberships m JOIN people p ON p.id = m.person_id JOIN workspaces w ON w.team_id = m.team_id WHERE w.id = ? ORDER BY p.display_name').all(ws.id)
       return json(res, 200, {
         project: { id: ws.slug, name: ws.name, group: ws.team, people: ['you', ...members.filter((m) => m.id !== sess.personId).map((m) => m.display_name)], filesUploaded: entries.filter((f) => f.origin === 'uploaded').length },
-        machine: { working: working(), capacity: cfg.capacity },
+        machine: { working: working(sess.personId), capacity: cfg.capacity },
         things: made,
         // Everything else in the folder, as it is (the home lists it under the things).
         files: otherFiles(entries, made),
@@ -937,7 +955,7 @@ export function makeFrontDesk(cfg = config()) {
              WHERE m.person_id = ? AND w.status = 'active' ORDER BY w.name`,
           )
           .all(sess.personId)
-        return json(res, 200, { person: { handle: sess.handle, name: sess.name, ...(sess.isAdmin ? { admin: true } : {}) }, csrf: sess.csrf, workspaces: list, machine: { working: working(), capacity: cfg.capacity }, policy: { deleteNotice: cfg.deleteNotice, maxUpload: cfg.maxUpload, searchProvider: cfg.searchProvider }, notices: auth.notices(sess) })
+        return json(res, 200, { person: { handle: sess.handle, name: sess.name, ...(sess.isAdmin ? { admin: true } : {}) }, csrf: sess.csrf, workspaces: list, machine: { working: working(sess.personId), capacity: cfg.capacity }, policy: { deleteNotice: cfg.deleteNotice, maxUpload: cfg.maxUpload, searchProvider: cfg.searchProvider }, notices: auth.notices(sess) })
       }
       // "Open" on a page: a navigation from the app (same-origin, so the Strict cookie came along).
       if (p === '/api/open' && req.method === 'GET') return views.open(req, res, sess, url)

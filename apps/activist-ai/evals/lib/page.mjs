@@ -16,8 +16,16 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
-const require = createRequire(path.join(here, '../../../../package.json')) // hilma's own playwright
-const { chromium } = require('playwright')
+// hilma's own playwright, or the nearest one up from here (a clone of apps/activist-ai alone, as on
+// the mini: hilma's path then points at the home folder and every page check failed as "page_reader_failed").
+const near = createRequire(import.meta.url)
+const { chromium } = (() => {
+  try {
+    return createRequire(path.join(here, '../../../../package.json'))('playwright')
+  } catch {
+    return near('playwright')
+  }
+})()
 const [site, specJson] = process.argv.slice(2)
 const spec = JSON.parse(specJson || '{}')
 const root = path.resolve(site)

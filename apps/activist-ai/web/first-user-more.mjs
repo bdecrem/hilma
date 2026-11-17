@@ -101,6 +101,9 @@ export async function moreJourneys(h) {
       await page.screenshot({ path: path.join(h.SHOTS, `${run.label}-C-trial.png`), fullPage: true })
       const go = page.getByRole('button', { name: 'Start the whole job' })
       if (await go.count()) {
+        const words = (await page.locator('.job-start').innerText()).replace(/\s+/g, ' ')
+        if (/\btokens?\b/i.test(words)) throw new Error(`the whole job's budget speaks in tokens: ${words.slice(0, 300)}`)
+        await page.locator('.job-start .job-consent input').last().check()
         await go.click()
         await page.waitForFunction(() => /Done/.test(document.querySelector('.job-head .job-state')?.textContent ?? ''), null, { timeout: 240_000 })
       }
@@ -111,7 +114,8 @@ export async function moreJourneys(h) {
       await page.waitForSelector('#data-title')
       await sleep(1500)
       const text = (await page.locator('main').innerText()).replace(/\s+/g, ' ')
-      const excel = page.locator('a', { hasText: /^Excel$/ }).first()
+      // The link reads "Excel" on screen; its full name (for a screen reader) names the table.
+      const excel = page.getByRole('link', { name: /^Excel download of/ }).first()
       if (!(await excel.count())) return `no Excel download in Data: ${text.slice(0, 200)}`
       const [dl] = await Promise.all([page.waitForEvent('download', { timeout: 20_000 }), excel.click()])
       return `downloaded ${dl.suggestedFilename()}`
@@ -255,16 +259,25 @@ export async function moreJourneys(h) {
     await step(m.run, 'H', 'removed from the project mid-visit', 90, async () => {
       await m.page.goto(`${ORIGIN}/?w=${run.id}#/`)
       await m.page.waitForSelector('.project-title')
+      // The owner has the project open too, drawer open, while the member is removed (B12).
+      await home()
+      await page.locator('.askbar-open').click()
+      await page.locator('.drawer.open').waitFor()
       const r = spawnSync(process.execPath, [path.join(AI, 'frontdesk/admin.mjs'), 'remove-member', run.team, m.who], { env: h.env, encoding: 'utf8' })
-      await sleep(3000)
-      await m.page.locator('.askbar-open').click().catch(() => {})
-      await sleep(2000)
-      const now = (await m.page.locator('body').innerText()).replace(/\s+/g, ' ').slice(0, 300)
-      await m.page.reload()
-      await sleep(2500)
-      return `admin exit ${r.status}; at once: ${now}; after a reload: ${(await m.page.locator('body').innerText()).replace(/\s+/g, ' ').slice(0, 200)}`
+      if (r.status !== 0) throw new Error(`remove-member: ${String(r.stderr).trim().split('\n').pop()}`)
+      // Without a reload: the member's page says the project is no longer theirs (B11).
+      await until(async () => /not one of yours/.test(await m.page.locator('body').innerText()), 30_000, 'the removed member told, without a reload')
+      return (await m.page.locator('body').innerText()).replace(/\s+/g, ' ').slice(0, 200)
     })
     await m.close()
+    await step(run, 'H', 'the owner’s next request, right after the removal, is seen through to its end', 240, async () => {
+      // Within seconds of the removal (the project restarts with new secrets): a new conversation and a request.
+      await ask(run, 'Say hello in one short sentence.')
+      const r = await finishRun(run, 220_000)
+      const turns = await page.locator('.drawer .turn').count()
+      if (!turns) throw new Error('the request vanished from the conversation')
+      return `ended ${r.status}: ${(await lastTurnText()).slice(0, 160)}`
+    })
   }
 
   if (ONLY.has('I')) {

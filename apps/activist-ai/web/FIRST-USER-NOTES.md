@@ -1,5 +1,53 @@
 # The first-user pass (2026-11-17)
 
+## Pass two (later the same day)
+
+A second walk on a fresh copy on the mini (own gateway, front desk and sealed projects, image
+2.3.0-20 with ripgrep; the everyday model real, Nemotron 3.5 Super VL; specialists on Muse Glimmer
+30B; Claude and search made up), WebKit at 1280 then Chromium at 390.
+
+Fixed, each with a check:
+
+- **B12, the owner's request vanished after a member was removed.** After a reconnect the page
+  replaced its conversation with what the computer had; a request the computer never got (the
+  project restarted as it arrived) disappeared. Now it stays, said plainly ("Ola's computer
+  restarted your project as this was starting, so it did not run. Send it again."), and a request
+  heard nothing of in 20 s asks the computer what it has. `web/test/conversation.test.ts`; walk H:
+  the owner's next request right after a removal ran and was shown to its end (1.2 s, WebKit).
+- **B11, the removed member saw nothing until a reload.** When the event stream drops, the page
+  asks whether the project is still theirs and, if not, says so at once. Walk H: told in 4 s.
+- **Jobs counted in tokens.** The proposal shows documents, time on this machine and the share of
+  the week; the whole job's budget is chosen as a little over, twice or three times the estimate,
+  read as a share of the week and, for an outside model, dollars. Tokens are under Show details.
+  `web/check.mjs` fails if "token" is on either screen; walk C checks the whole-job screen too.
+- **"0 people working on the machine" while you work.** The viewer always counts themself (the
+  last window's number plus one if they were not in it: nothing new about anyone else).
+  `frontdesk/check.mjs`; the walk's header read "One person working on the machine".
+- **B9, Ola's check screenshots on the home.** `shots/*.png` Ola made are left off the home's
+  other files; Files keeps them. `web/test/server.test.mjs`.
+- **The search card named Brave Search on a machine set up with another provider.** The gateway
+  says its provider in its usage answer and the front desk names that one. `gateway/test.mjs`.
+- **The approval sheet showed the conversation through it on a phone.** It is opaque from the
+  first frame and only slides.
+- **Files a run made, missing under the reply** (seen again in this pass, WebKit B: a chart and an
+  Excel file in Files, nothing under the reply). The page compared the project's clock with the
+  browser's; it now compares the folder before and after the run.
+- **The eval page reader** could not find Playwright in a clone of `apps/activist-ai` alone, so
+  every page task scored as broken (`evals/lib/page.mjs`).
+
+Journeys:
+
+| Journey | WebKit 1280 | Chromium 390 | Notes |
+|---|---|---|---|
+| A | whole | whole | 5 to 7 s |
+| B | whole but the made files (fixed after) | whole | the duplicate row still counted twice in WebKit |
+| C six studies, page 2, the job to Done, Data | whole: trial and the whole job ran to Done in 66 s; the table in Data | stopped by D (below) | the walk's own Excel locator was wrong (fixed) |
+| D | whole | the run did not end in 350 s | the model kept working after the download |
+| G Settings, every command, the compliment | whole: /help /files /new /claude /hosted /ola /stop /nope; the compliment got 🙏 and no reply | | |
+| G Compare with Claude | reaches "A made-up copy is waiting for you to read it"; the walk does not yet read and approve the copy, so the side-by-side was not reached | | not an app fault as far as seen |
+| H member added, removed; owner's next request | whole | | B11 and B12 above |
+| I reload, tabs, back, weird name, 60 MB, offline, unknown passkey, sleep | its first request did not reach the conversation in 20 s, so the rest was skipped | | open |
+
 One person, never seen Ola before, no patience, walked the whole web app on a fresh copy of
 everything on the Mac mini (own gateway, front desk and sealed projects; the everyday model real:
 Nemotron 3.5 Super VL on Together; Claude and the search provider made up; the specialists on

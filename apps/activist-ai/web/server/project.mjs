@@ -151,15 +151,22 @@ export async function derivedThings(files) {
   return things
 }
 
+/**
+ * Ola's own check screenshots (`ola-page --out shots/…`, as AGENTS.md asks) are how it looks at a
+ * page, not something it made for the person: the home leaves them out (first-user pass, B9).
+ * Files still lists them, and a design pass shows its before and after under its reply.
+ */
+export const isCheckShot = (f) => f.origin === 'made' && /^shots\/[^/]+\.png$/i.test(f.path)
+
 /** The files the home lists under its things: everything not already shown as a thing. */
 export const otherFiles = (list, things, max = 50) => {
   const shown = new Set(things.map((t) => t.file).filter(Boolean))
-  return list.filter((f) => !shown.has(f.path)).slice(0, max)
+  return list.filter((f) => !shown.has(f.path) && !isCheckShot(f)).slice(0, max)
 }
 
 export const otherCount = (list, things) => {
   const shown = new Set(things.map((t) => t.file).filter(Boolean))
-  return list.filter((f) => !shown.has(f.path)).length
+  return list.filter((f) => !shown.has(f.path) && !isCheckShot(f)).length
 }
 
 /** The dev server's payload: the fixture's made-up things, then the real ones. */

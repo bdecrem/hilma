@@ -26,6 +26,22 @@ export function duration(s: number | null | undefined): string {
   return `about ${Math.round((s / 86400) * 2) / 2} days`
 }
 const tokens = (n: number | null | undefined) => (n === null || n === undefined ? 'an unknown number of' : n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)} million` : num(n))
+/** A share of the project's week, in words a person reads: "About 3%", "Less than 1%". */
+export const share = (x: number) => (x < 0.01 ? 'Less than 1%' : `About ${Math.round(x * 100)}%`)
+const BUDGET_STEPS = [1.5, 2, 3]
+/** The model's own unit, for someone who wants it: shut by default. */
+function Details(props: { tokens: number | null | undefined; label?: string }) {
+  return (
+    <Show when={props.tokens != null}>
+      <details class="job-details">
+        <summary>Show details</summary>
+        <p class="file-meta flush">
+          {props.label ?? 'Model use'}: about {tokens(props.tokens)} tokens, the unit the model counts in.
+        </p>
+      </details>
+    </Show>
+  )
+}
 const dollars = (o: JobOption, e: { tokens_in: number | null; tokens_out: number | null } | null) =>
   o.prices && e?.tokens_in != null && e?.tokens_out != null ? (e.tokens_in * o.prices.in + e.tokens_out * o.prices.out) / 1e6 : null
 
@@ -352,17 +368,14 @@ function Proposal(props: { job: Job; options: JobOption[]; canRun: boolean; owne
           <dt>Time on this machine</dt>
           <dd>{cap(duration(e()?.seconds))}</dd>
         </div>
-        <div>
-          <dt>Model use</dt>
-          <dd>{cap(tokens(e()?.tokens))} tokens</dd>
-        </div>
         <Show when={e()?.weekShare != null}>
           <div>
             <dt>Of a week of this project’s use</dt>
-            <dd>About {Math.max(1, Math.round(e()!.weekShare! * 100))}%</dd>
+            <dd>{share(e()!.weekShare!)}</dd>
           </div>
         </Show>
       </dl>
+      <Details tokens={e()?.tokens} />
       <p class="file-meta flush">These are estimates. A job runs on a budget of its own, so your conversations with Ola keep their full share while it runs. The trial measures the real numbers.</p>
       <ModelChoice options={props.options} owner={props.owner} model={model()} setModel={setModel} consent={consent()} setConsent={setConsent} estimate={e()} />
       <div class="job-go">
@@ -379,11 +392,22 @@ function Proposal(props: { job: Job; options: JobOption[]; canRun: boolean; owne
 
 function StartFull(props: { job: Job; options: JobOption[]; owner: boolean; busy: boolean; onStart: (budget: number, model: string, consent: boolean) => void }) {
   const r = () => props.job.remainingEstimate ?? props.job.estimate
-  const [budget, setBudget] = createSignal<number>(r()?.budget ?? 1_000_000)
+  // A person sets the budget as a multiple of the estimate, read as a share of the week and, for an
+  // outside model, dollars. The job's contract with the gateway stays a number of tokens (under Show details).
+  const [times, setTimes] = createSignal<number>(1.5)
   const [ok, setOk] = createSignal(false)
   const [model, setModel] = createSignal<string>(props.job.model)
   const [consent, setConsent] = createSignal(false)
   const outside = () => props.options.find((o) => o.model === model())?.outside ?? false
+  const budget = () => (r()?.tokens ? Math.max(1000, Math.round((r()!.tokens! * times()) / 1000) * 1000) : (r()?.budget ?? 1_000_000))
+  const budgetWords = (x: number) => {
+    const e = r()
+    const o = props.options.find((o) => o.model === model())
+    const usd = o && e ? dollars(o, e) : null
+    const parts = [e?.weekShare != null ? `up to ${share(e.weekShare * x).toLowerCase()} of a week of this project’s use` : `up to ${x === 1.5 ? 'one and a half times' : x === 2 ? 'twice' : 'three times'} the estimate`]
+    if (o?.outside && usd !== null) parts.push(`at most about $${(usd * x).toFixed(2)}`)
+    return cap(parts.join(', ')) + '.'
+  }
   return (
     <section class="job-proposal job-start" aria-labelledby="start-title">
       <h2 id="start-title" class="file-group-title">
@@ -391,18 +415,30 @@ function StartFull(props: { job: Job; options: JobOption[]; owner: boolean; busy
       </h2>
       <p class="job-instructions">
         The trial is done: look at its rows above. If they look right, the other {num(props.job.progress.pending)} documents take {duration(r()?.seconds)} on this machine
-        {r()?.basis === 'measured in the trial' ? ', going by the trial' : ''}, and about {tokens(r()?.tokens)} tokens. You can close this page; the job keeps going, and you can pause it at any time.
+        {r()?.basis === 'measured in the trial' ? ', going by the trial' : ''}
+        {r()?.weekShare != null ? `, ${share(r()!.weekShare!).toLowerCase()} of a week of this project’s use` : ''}. You can close this page; the job keeps going, and you can pause it at any time.
       </p>
       <Show when={props.owner} fallback={<p class="meta">Only the project’s owner can start the whole job, because it sets how much of this machine the job may use. Show them the trial’s rows.</p>}>
         <ModelChoice options={props.options} owner={props.owner} model={model()} setModel={setModel} consent={consent()} setConsent={setConsent} estimate={r()} />
-        <label class="job-budget">
-          <span>Budget for this job, in tokens</span>
-          <input type="number" min="1000" step="1000" value={budget()} onInput={(e) => setBudget(Math.round(Number(e.currentTarget.value)))} />
-        </label>
+        <fieldset class="job-models job-budget">
+          <legend>How far it may go before it stops and asks you</legend>
+          <For each={BUDGET_STEPS}>
+            {(x) => (
+              <label class="job-model">
+                <input type="radio" name="job-budget" value={String(x)} checked={times() === x} onChange={() => setTimes(x)} />
+                <span>
+                  <strong>{x === 1.5 ? 'A little over the estimate' : x === 2 ? 'Twice the estimate' : 'Three times the estimate'}</strong>
+                  <span class="file-meta flush">{budgetWords(x)}</span>
+                </span>
+              </label>
+            )}
+          </For>
+        </fieldset>
         <label class="job-consent">
           <input type="checkbox" checked={ok()} onChange={(e) => setOk(e.currentTarget.checked)} />
-          <span>I approve a budget of {tokens(budget())} tokens. The job pauses if it reaches it, and asks again.</span>
+          <span>I approve this budget: {budgetWords(times()).replace(/\.$/, '').replace(/^U/, 'u')}. The job pauses if it reaches it, and asks again.</span>
         </label>
+        <Details tokens={budget()} label="The budget" />
         <div class="job-go">
           <button type="button" class="primary-button" disabled={props.busy || !ok() || !(budget() >= 1000) || (outside() && !consent())} onClick={() => props.onStart(budget(), model(), consent())}>
             <Icon name="run" size={18} /> Start the whole job

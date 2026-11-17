@@ -1228,9 +1228,10 @@ code {
 .sheet[open] {
   animation: sheet-in var(--t-sheet) ease-out;
 }
+/* The sheet is opaque from its first frame and only moves: faded in, the conversation's text showed
+   through it for a moment on a phone (first-user pass). */
 @keyframes sheet-in {
   from {
-    opacity: 0;
     transform: translateY(8px);
   }
 }

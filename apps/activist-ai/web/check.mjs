@@ -985,7 +985,8 @@ async function jobsChecks(engine, label) {
       for (const want of ['Who makes the adaptation decision?', 'households, local government, national government, firms, other, or not stated', 'In what year does the planning horizon end?', 'Documents 30', 'Of a week of this project’s use', 'Run a trial on 10 documents', 'never shown as checked']) assert(t.includes(want), `missing "${want}" in: ${t.slice(0, 600)}`)
       assert(!(await pg.locator('.job-models').count()), 'a model choice with no outside model on')
       await shot('proposal')
-      return /Time on this machine (.*?) Model use/.exec(t)?.[1] ?? ''
+      assert(!/\btokens?\b/i.test(t), `the proposal speaks in tokens: ${t.slice(0, 400)}`)
+      return /Time on this machine (.*?) Of a week/.exec(t)?.[1] ?? ''
     })
     await check(`${label}: with the hosted model on, the proposal offers it with its cost; a member cannot pick it, and the front desk refuses a member who tries`, async () => {
       assert((await post('/api/hosted/settings', { enabled: true, consent: true })).status === 200, 'hosted on')
@@ -1033,7 +1034,9 @@ async function jobsChecks(engine, label) {
       await dev('/__dev/role?to=owner')
       await dev('/__dev/batch?delay=250')
       await pg.reload()
-      await pg.waitForSelector('.job-start input[type=number]')
+      await pg.waitForSelector('.job-start .job-budget input')
+      const words = (await pg.locator('.job-start').innerText()).replace(/\s+/g, ' ')
+      assert(!/\btokens?\b/i.test(words) && /of a week of this project’s use/.test(words), `the budget is not in a person's units: ${words.slice(0, 400)}`)
       const go = pg.getByRole('button', { name: 'Start the whole job' })
       assert(await go.isDisabled(), 'started without the budget confirmed')
       await pg.locator('.job-start .job-consent input').check()

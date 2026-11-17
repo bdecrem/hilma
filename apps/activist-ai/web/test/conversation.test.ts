@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
-import { applyEvent, emptyConversation, runSummary, startTurn, turnsFromMessages } from '../src/lib/conversation.ts'
+import { applyEvent, emptyConversation, LOST_IN_RESTART, mergeResync, runSummary, startTurn, turnsFromMessages } from '../src/lib/conversation.ts'
 import { describeCommand, describeTool, precheck, runProblem, stepProblem, shortPath, STRETCH_CHECKS } from '../src/lib/steps.ts'
 
 function replay(file: string) {
@@ -133,4 +133,25 @@ test('a failed step is said in plain words; the machine’s message stays under 
   const p = stepProblem({ message: 'ripgrep execution failed' })
   assert.equal(p.text, 'This step did not work. Ola can try another way.')
   assert.equal(p.detail, 'ripgrep execution failed')
+})
+
+test('a request the computer lost in a restart stays on the page, said plainly (first-user pass, B12)', () => {
+  const s = emptyConversation()
+  const t0 = 1_800_000_000_000
+  startTurn(s, 'How many households came?', t0)
+  // The computer has nothing of it after the reconnect: kept, failed, with the sentence.
+  const merged = mergeResync(s.turns, [], t0 + 30_000)
+  assert.equal(merged.length, 1)
+  assert.equal(merged[0].status, 'failed')
+  assert.equal(merged[0].error?.text, LOST_IN_RESTART)
+  // Sent a moment ago: kept as it is, not failed yet.
+  assert.equal(mergeResync(s.turns, [], t0 + 3000)[0].status, 'sending')
+  // The computer has it: its version wins, nothing doubled.
+  const server = [{ ...s.turns[0], id: 'msg_1', status: 'working' as const, at: t0 + 400 }]
+  const both = mergeResync(s.turns, server, t0 + 30_000)
+  assert.equal(both.length, 1)
+  assert.equal(both[0].id, 'msg_1')
+  // Only requests newer than the last one the computer has are carried over.
+  const old = { ...s.turns[0], request: 'Older question', at: t0 - 60_000, status: 'done' as const }
+  assert.equal(mergeResync([old], server, t0 + 30_000).length, 1)
 })

@@ -563,6 +563,9 @@ used the machine in the previous 5 minutes. Not who, not which team, not when wi
 customer can still learn that the machine is in use when they are not (a count above their own
 team's activity), and so roughly when other groups work, at 5-minute resolution; with very few
 customers that is a signal, and the alternative is no number at all.
+The viewer always counts themself (first-user pass, 2026-11-17: a first person alone read "0 people
+working on the machine" while they worked): the number is the last window's plus one if the viewer
+was not in it, which tells them nothing they did not know.
 
 **Idle workspaces stop, and wake on demand** (`OLA_FD_IDLE_STOP_MIN`, 30 by default; 0 never). A
 workspace no one has made a request to for that long, with no transfer under way and **no run
@@ -1944,8 +1947,10 @@ without a key is no grant), `frontdesk/check.mjs` (during the job, from inside: 
 
 **The model's budget, and the person waiting in a conversation.** A project's two slots and its
 weekly quota (20 million tokens) were sized for conversations; one real job is about a week of it.
-So a job has its own budget, which the owner confirms when starting it (the proposal offers the
-estimate plus 30%; the trial gets its share of the estimate, twice over), and the gateway enforces
+So a job has its own budget, which the owner confirms when starting it (a little over, twice or three
+times the estimate, read as a share of the week and, for an outside model, dollars; the number of
+tokens is under Show details, since a person cannot judge one; the trial gets its share of the
+estimate, twice over), and the gateway enforces
 it: a request with `X-Ola-Lane: batch` is served only while the front desk's grant names that job
 (`{"ws-<id>": {"job", "tokens"}}`, written from the platform database: only jobs in their trial or
 running), is counted against the job (`batch_usage`), not the weekly quota, and may have **one**
