@@ -35,7 +35,7 @@ import { spawn } from 'node:child_process'
 import { createHash, randomBytes } from 'node:crypto'
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import http from 'node:http'
-import { homedir, tmpdir } from 'node:os'
+import { homedir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { audit } from './db.mjs'
@@ -43,6 +43,7 @@ import { modeFor } from './claude.mjs'
 import { permissionsFor } from '../web/server/proxy.mjs'
 import { webRules } from '../web/server/webask.mjs'
 import * as ws from '../workspace/ws.mjs'
+import { TWIN_UID } from '../workspace/ws.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 export const AUTO = ['ask', 'daily']
@@ -53,7 +54,7 @@ const ID = /^[0-9a-f]{12}$/
 const SID = /^[A-Za-z0-9_-]{1,80}$/
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
-export const CONSENT_REAL = 'Let Claude redo finished work in this project so we can compare. Your request and the files Ola read for it go to Anthropic. Off unless you turn it on. Every time is shown here.'
+export const CONSENT_REAL = 'Let Claude redo finished work in this project so we can compare. Your request and the files Ola read for it go to Anthropic. So do Ola’s answer and the files it wrote. Off unless you turn it on. Every time is shown here.'
 
 export function compareConfig(env = process.env) {
   const home = env.OLA_HOME || path.join(homedir(), '.ola')
@@ -349,8 +350,54 @@ const MSG = {
   notFinished: 'That request has not finished yet.',
 }
 
-export function makeCompare({ db, xc, cc, claude, hosted, workspaces, container, log }) {
+/**
+ * What a front desk that died mid-comparison left behind (review 5 follow-up, low): scratch VMs of
+ * this front desk's prefix with their state under $OLA_HOME/ws (a real task's files live in one),
+ * comparisons still "making" or "running" (no exec survives the front desk), the scratch VMs' gateway
+ * grants, and made-up files on their way into a scratch VM ($OLA_HOME/compare/tmp). Pure but for
+ * the database and the folders; the VMs are listed, and makeCompare destroys them.
+ */
+export function leftovers(db, xc, home = ws.HOME) {
+  const wsDir = path.join(home, 'ws')
+  const scratch = existsSync(wsDir) ? readdirSync(wsDir).filter((d) => d.startsWith(`${xc.prefix}-`) && /^[a-z0-9-]{3,32}$/.test(d)).sort() : []
+  const stuck = db.prepare("SELECT id, state FROM comparisons WHERE state IN ('making', 'running') ORDER BY created_at").all()
+  let grants = []
+  try {
+    grants = db.prepare('SELECT slug FROM compare_scratch ORDER BY slug').all().map((r) => r.slug)
+  } catch {}
+  const tmp = path.join(xc.dir, 'tmp')
+  const files = existsSync(tmp) ? readdirSync(tmp).length : 0
+  return { scratch, stuck, grants, files }
+}
+
+export function makeCompare({ db, xc, cc, claude, hosted, workspaces, container, log, home = ws.HOME }) {
   mkdirSync(xc.dir, { recursive: true, mode: 0o700 })
+  // At start: nothing of an earlier front desk's comparison is under way any more (its execs ended
+  // with it), so its rows are marked failed, its scratch grants taken back, its made-up files on the
+  // way removed, and its scratch VMs destroyed in the background (one slot each until then). What
+  // was found is kept in cleanup.json for `admin.mjs compare status`.
+  {
+    const found = leftovers(db, xc, home)
+    const now = Date.now()
+    db.prepare("UPDATE comparisons SET state = 'failed', finished_at = ? WHERE state IN ('making', 'running')").run(now)
+    try {
+      db.prepare('DELETE FROM compare_scratch').run()
+    } catch {}
+    rmSync(path.join(xc.dir, 'tmp'), { recursive: true, force: true })
+    claude.writeGrants()
+    hosted.writeGrants()
+    const record = { at: new Date(now).toISOString(), failed: found.stuck.map((r) => r.id), grants: found.grants, files: found.files, scratch: found.scratch.map((id) => ({ id, destroyed: null })) }
+    const keep = () => writeFileSync(path.join(xc.dir, 'cleanup.json'), JSON.stringify(record, null, 1) + '\n', { mode: 0o600 })
+    keep()
+    if (found.scratch.length || found.stuck.length) log(`compare: cleaned up after an earlier front desk (${found.stuck.length} comparisons marked failed, ${found.scratch.length} scratch VMs to remove)`)
+    // After this function returns (wsCli is defined below).
+    setImmediate(async () => {
+      for (const v of record.scratch) {
+        v.destroyed = await wsCli(['destroy', v.id, '--confirm', v.id]).then(() => true, () => false)
+        keep()
+      }
+    })
+  }
   const queue = [] // comparison ids waiting to run, one at a time on this machine
   let current = null
   const row = (wsId) => db.prepare('SELECT compare_real AS real, compare_auto AS auto, compare_per_day AS perDay, compare_cap_micro_usd AS cap FROM workspaces WHERE id = ?').get(wsId)
@@ -449,9 +496,9 @@ export function makeCompare({ db, xc, cc, claude, hosted, workspaces, container,
 
   // -------------------------------------------------------------- execs
 
-  function exec(id, args, { input = null, ms = 600_000, max = 32 * 1024 * 1024 } = {}) {
+  function exec(id, args, { input = null, ms = 600_000, max = 32 * 1024 * 1024, user = null } = {}) {
     return new Promise((resolve) => {
-      const c = spawn(container, ['exec', ...(input !== null ? ['-i'] : []), `ola-${id}`, ...args], { stdio: [input !== null ? 'pipe' : 'ignore', 'pipe', 'pipe'] })
+      const c = spawn(container, ['exec', ...(input !== null ? ['-i'] : []), ...(user ? ['--user', user] : []), `ola-${id}`, ...args], { stdio: [input !== null ? 'pipe' : 'ignore', 'pipe', 'pipe'] })
       const chunks = []
       let n = 0
       c.stdout.on('data', (d) => {
@@ -499,7 +546,9 @@ export function makeCompare({ db, xc, cc, claude, hosted, workspaces, container,
   const destroy = (id) => wsCli(['destroy', id, '--confirm', id]).catch((e) => log(`compare: a scratch VM could not be removed (${e.code ?? 'error'})`))
   /** Twin files from the host into a scratch VM, by tar. */
   async function putTwin(id, twin) {
-    const d = mkdtempSync(path.join(tmpdir(), 'ola-cmp-'))
+    // Under this front desk's own folder, so a crash's leftovers are found (and removed) at the next start.
+    mkdirSync(path.join(xc.dir, 'tmp'), { recursive: true, mode: 0o700 })
+    const d = mkdtempSync(path.join(xc.dir, 'tmp', 'put-'))
     try {
       for (const f of twin.files) {
         mkdirSync(path.dirname(path.join(d, f.name)), { recursive: true })
@@ -709,7 +758,12 @@ export function makeCompare({ db, xc, cc, claude, hosted, workspaces, container,
     }
     const busy = workspaces.holdBusy(ws.slug)
     try {
-      const out = await execJson(ws.slug, ['/opt/ola/bin/ola-twin', 'make', id], { input: JSON.stringify({ request: turn.request, context: turn.context, files: turn.read }), ms: 15 * 60_000 })
+      // Two execs (review 5 follow-up, medium): the agent's user hands over the files the run read
+      // and the project's text; then the copy is made, checked and printed by a user of its own
+      // (`twin`, uid 1002), whom nothing the agent left running can signal, trace or write to, and
+      // which reads nothing of /work but what it was handed. Its digest is taken here, on the host.
+      const gathered = await execJson(ws.slug, ['/opt/ola/bin/ola-twin', 'gather'], { input: JSON.stringify({ files: turn.read }), ms: 5 * 60_000, max: 96 * 1024 * 1024 })
+      const out = gathered?.read && Array.isArray(gathered.names) && Array.isArray(gathered.texts) ? await execJson(ws.slug, ['/opt/ola/bin/ola-twin', 'make', id], { input: JSON.stringify({ request: turn.request, context: turn.context, gathered }), ms: 15 * 60_000, user: `${TWIN_UID}:${TWIN_UID}` }) : null
       if (!out?.leak || !Array.isArray(out.files)) {
         set(id, { state: 'failed', finished_at: Date.now() })
         return { status: 502, body: { error: 'twin_failed', id, message: 'Ola could not make a made-up copy of this task just now. Nothing left this machine.' } }
@@ -719,6 +773,9 @@ export function makeCompare({ db, xc, cc, claude, hosted, workspaces, container,
       set(id, { verdict, kind, twin_sha256: digest(out), state: verdict === 'clean' ? 'ready' : verdict === 'unsure' ? 'held' : 'refused', ola_tokens: (out.tokens_in ?? 0) + (out.tokens_out ?? 0) })
       audit(db, { actor: personId, action: 'compare_twin_made', workspace: ws.id, ok: verdict !== 'leak', tokensIn: out.tokens_in ?? null, tokensOut: out.tokens_out ?? null })
       if (verdict === 'clean') keepTwin(id, out)
+      // A held or refused copy may carry the project's words: it is kept in the project's VM for the
+      // owner to read; the digest above is what a later yes is checked against.
+      else await exec(ws.slug, ['/opt/ola/bin/ola-twin', 'store', id], { input: JSON.stringify(out) })
       if (verdict === 'clean' && trigger === 'sampled') enqueue(id, { ws })
       return { status: 200, body: { id, state: verdict === 'clean' ? 'ready' : verdict === 'unsure' ? 'held' : 'refused' } }
     } finally {
@@ -925,6 +982,8 @@ export function makeCompare({ db, xc, cc, claude, hosted, workspaces, container,
     let findings = null
     if (x.mode === 'twin' && ['held', 'refused'].includes(x.state)) {
       const t = await execJson(ws.slug, ['/opt/ola/bin/ola-twin', 'show', id])
+      // What the owner reads must be the copy that was checked: one changed in the VM since is not shown.
+      if (t?.files && digest(t) !== x.twin_sha256) return { status: 409, body: { error: 'changed', message: 'This copy changed since it was made, so it stays here. Make a new one.' } }
       if (t?.files) (twin = { request: t.request, kind: t.kind, checks: t.checks, files: t.files.map(fileView) }), (findings = t.leak?.findings ?? [])
     } else if (x.mode === 'twin' && existsSync(path.join(xc.dir, id, 'twin.json'))) {
       const t = JSON.parse(readFileSync(path.join(xc.dir, id, 'twin.json'), 'utf8'))

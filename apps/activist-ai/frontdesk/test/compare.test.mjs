@@ -11,7 +11,7 @@ import path from 'node:path'
 import { test } from 'node:test'
 import { fileURLToPath } from 'node:url'
 import { openDb } from '../db.mjs'
-import { compareConfig, judgeTwice, makeCompare, outcomeOf, quality, readJudgement, realFiles, samplerChoice, skillNote, weekly, writeCandidate } from '../compare.mjs'
+import { compareConfig, judgeTwice, leftovers, makeCompare, outcomeOf, quality, readJudgement, realFiles, samplerChoice, skillNote, weekly, writeCandidate } from '../compare.mjs'
 import { GENERATOR } from '../../web/server/fake-twin.mjs'
 
 const AI = path.join(path.dirname(fileURLToPath(import.meta.url)), '../..')
@@ -119,7 +119,7 @@ test('a member sees nothing of it and can start nothing; with the real-task swit
   assert.equal((await c.setSettings(owner, o, { real: true })).status, 400, 'turning it on needs consent')
   const on = await c.setSettings(owner, o, { real: true, consent: true })
   assert.equal(on.body.real, true)
-  assert.match(on.body.consent, /^Let Claude redo finished work in this project so we can compare\. Your request and the files Ola read for it go to Anthropic\./)
+  assert.match(on.body.consent, /^Let Claude redo finished work in this project so we can compare\. Your request and the files Ola read for it go to Anthropic\. So do Ola’s answer and the files it wrote\./)
   assert.equal(db.prepare("SELECT count(*) AS n FROM audit WHERE action = 'compare_real_enabled'").get().n, 1)
   // No credential for the project's mode: nothing that sends is offered.
   const none = makeCompare({ db, xc, cc: {}, claude: { ...claude, info: async () => ({ configured: false, unavailable: 'Claude is not set up on this machine yet: there is no Anthropic account to use. Bart can set it up.', mode: 'api_key' }) }, hosted: { writeGrants: () => {} }, workspaces, container: '/nonexistent', log: () => {} })
@@ -129,6 +129,37 @@ test('a member sees nothing of it and can start nothing; with the real-task swit
   assert.equal((await none.start(owner, o, { conversation: 's1', message: 'm1', mode: 'twin' })).status, 503)
   c.close()
   none.close()
+})
+
+test('a front desk that died mid-comparison: at the next start its rows are failed, its scratch grants and made-up files gone, its scratch VMs listed for removal', async () => {
+  // Review 5 follow-up (low): before, "running" rows, scratch grants and VMs stayed for good.
+  const db = openDb(path.join(dir(), 'fd'))
+  const { w, o } = project(db, { auto: 'ask' })
+  const home = dir()
+  const xc = compareConfig({ OLA_HOME: home, OLA_FD_COMPARE_TICK_MS: '3600000', OLA_FD_COMPARE_PREFIX: 'cqx' })
+  const add = (id, state) => db.prepare("INSERT INTO comparisons (id, workspace_id, person_id, session, message, mode, trigger, state, created_at) VALUES (?, ?, ?, 's1', 'm1', 'real', 'asked', ?, ?)").run(id, w, o, state, Date.now())
+  add('a00000000001', 'running')
+  add('a00000000002', 'making')
+  add('a00000000003', 'ready')
+  db.prepare("INSERT INTO compare_scratch (slug, workspace_id, engine, mode, cap_micro_usd, cap_tokens, until) VALUES ('cqx-0badf00d', ?, 'claude', 'api_key', 1, 1, ?)").run(w, Date.now() + 600_000)
+  mkdirSync(path.join(home, 'ws', 'cqx-0badf00d'), { recursive: true })
+  mkdirSync(path.join(home, 'ws', 'other-proj'), { recursive: true })
+  mkdirSync(path.join(xc.dir, 'tmp', 'put-x'), { recursive: true })
+  writeFileSync(path.join(xc.dir, 'tmp', 'put-x', 'data.csv'), 'made,up\n')
+  const before = leftovers(db, xc, home)
+  assert.deepEqual([before.scratch, before.stuck.length, before.grants, before.files], [['cqx-0badf00d'], 2, ['cqx-0badf00d'], 1])
+  let wrote = 0
+  const stub = { info: async () => ({ configured: true, mode: 'api_key' }), writeGrants: () => wrote++ }
+  const workspaces = { oc: async () => ({ status: 200, json: { data: [] } }), ensureRunning: async () => {}, executing: async () => new Set(), isReady: () => true, holdBusy: () => () => {}, peek: async () => new Map() }
+  const c = makeCompare({ db, xc, cc: {}, claude: stub, hosted: stub, workspaces, container: '/nonexistent/container', log: () => {}, home })
+  const states = Object.fromEntries(db.prepare('SELECT id, state FROM comparisons').all().map((r) => [r.id, r.state]))
+  assert.deepEqual(states, { a00000000001: 'failed', a00000000002: 'failed', a00000000003: 'ready' }, 'a ready copy waits for its owner; nothing else was under way')
+  assert.equal(db.prepare('SELECT count(*) AS n FROM compare_scratch').get().n, 0, 'a scratch grant outlived its front desk')
+  assert.ok(wrote >= 2, 'the grants files were not written again')
+  assert.ok(!existsSync(path.join(xc.dir, 'tmp')), 'made-up files on their way were left')
+  const rec = JSON.parse(readFileSync(path.join(xc.dir, 'cleanup.json'), 'utf8'))
+  assert.deepEqual([rec.failed.sort(), rec.grants, rec.scratch.map((v) => v.id)], [['a00000000001', 'a00000000002'], ['cqx-0badf00d'], ['cqx-0badf00d']])
+  c.close()
 })
 
 test('a lost copy lands in the candidates queue as an eval task: task.py selftest passes Claude’s result and fails Ola’s, and run.mjs runs it', () => {

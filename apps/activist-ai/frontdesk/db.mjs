@@ -443,6 +443,14 @@ const MIGRATIONS = [
   ALTER TABLE audit_v9 RENAME TO audit;
   CREATE INDEX audit_workspace ON audit(workspace_id, at);
   `,
+  // 10: review 5 follow-up. A batch job's runner key (jobs.mjs): the sha256 of the key the job's
+  // runner made for itself in the VM, so the gateway's job grant (and the Claude or hosted grant of a
+  // job on those models) is the runner's alone. fallback_once now holds a lease for every Claude and
+  // hosted run the front desk starts, not only "Just this once": the grants files list a project
+  // only while one of its runs goes on (claude.mjs, hosted.mjs).
+  `
+  ALTER TABLE batch_jobs ADD COLUMN runner_key_sha256 TEXT CHECK (runner_key_sha256 IS NULL OR (length(runner_key_sha256) = 64 AND runner_key_sha256 NOT GLOB '*[^0-9a-f]*'));
+  `,
 ]
 
 /** Opens (and creates, and migrates) the platform database in `dir`. */

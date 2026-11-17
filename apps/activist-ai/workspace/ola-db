@@ -1014,6 +1014,70 @@ def disk():
 
 # ------------------------------------------------------------------ the front desk's view
 
+def snapshot_api(sub, opt):
+    """A snapshot's database copy, checked here and not on the host (review 4, open: the host opened
+    a file the agent controls). snapshot-check makes the copy by SQLite's online backup into
+    .ola/tmp, checks it (integrity_check with cell_size_check, nothing in its schema trusted), counts
+    its real tables, and prints {name, sha256, size, integrity, tables}. snapshot-send --name N
+    streams those bytes and removes the copy. The host keeps the bytes only if their sha256 is the
+    one this check reported, so it never opens the database itself."""
+    import hashlib
+    pat = r"snap-[0-9]+-[0-9a-f]{16}\.db"
+    if sub == "snapshot-send":
+        name = opt.get("name", "")
+        if not re.fullmatch(pat, name):
+            fail("snapshot-send: --name", 2)
+        p = os.path.join(TMP, name)
+        try:
+            fd = os.open(p, os.O_RDONLY | os.O_NOFOLLOW)
+        except OSError:
+            fail("snapshot-send: no such copy", 4)
+        try:
+            with os.fdopen(fd, "rb") as f:
+                shutil.copyfileobj(f, sys.stdout.buffer, 1 << 20)
+        finally:
+            try:
+                os.unlink(p)
+            except OSError:
+                pass
+        return
+    os.makedirs(TMP, exist_ok=True)
+    for n in os.listdir(TMP):  # an earlier snapshot's copy that was never sent
+        if re.fullmatch(pat, n):
+            try:
+                os.unlink(os.path.join(TMP, n))
+            except OSError:
+                pass
+    name = "snap-%d-%s.db" % (os.getpid(), os.urandom(8).hex())
+    p = os.path.join(TMP, name)
+    src = connect(False)
+    dst = sqlite3.connect(p)
+    src.backup(dst)
+    dst.execute("PRAGMA journal_mode = DELETE")  # one file, as the host keeps it
+    dst.close()
+    src.close()
+    integrity, tables = None, {}
+    try:
+        c = sqlite3.connect(p)
+        c.execute("PRAGMA query_only = ON")
+        c.execute("PRAGMA trusted_schema = OFF")
+        c.execute("PRAGMA cell_size_check = ON")
+        integrity = c.execute("PRAGMA integrity_check").fetchone()[0]
+        q = "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE 'doc_text_%' AND coalesce(sql, '') NOT LIKE 'CREATE VIRTUAL%' ORDER BY name"
+        for (t,) in c.execute(q).fetchall():
+            tables[t] = c.execute('SELECT count(*) FROM "%s"' % t.replace('"', '""')).fetchone()[0]
+        c.close()
+    except sqlite3.Error:
+        integrity = None
+    h = hashlib.sha256()
+    size = 0
+    with open(p, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+            size += len(chunk)
+    print(json.dumps({"name": name, "sha256": h.hexdigest(), "size": size, "integrity": integrity, "tables": tables}))
+
+
 def api(argv):
     sub = argv[0] if argv else ""
     opt = {}
@@ -1027,6 +1091,8 @@ def api(argv):
     if sub == "disk":
         print(json.dumps(disk()))
         return
+    if sub in ("snapshot-check", "snapshot-send"):
+        return snapshot_api(sub, opt)
     con = connect(False)
     deadline(con, 8)
     try:

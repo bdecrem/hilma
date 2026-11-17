@@ -37,6 +37,7 @@
 // whole reply); a reply that reports none is charged its bytes, ~4 per token. Nothing a request
 // or reply says is logged: the log line has the caller, route, status, mode, token counts, cost.
 import { readFileSync, statSync, watch } from 'node:fs'
+import { jobKeyOf, readGrants, runnerKeyOk } from './batch.mjs'
 import https from 'node:https'
 import http from 'node:http'
 
@@ -136,25 +137,14 @@ export function makeClaude({ cfg, db, readBody, send, fail }) {
   let seen = ''
   const loadGrants = () => {
     if (!cfg.file) return
-    try {
-      const st = statSync(cfg.file)
-      const stamp = `${st.mtimeMs}:${st.size}`
-      if (stamp === seen) return
-      seen = stamp
-      if ((st.mode & 0o077) !== 0) return console.error('GATEWAY_CLAUDE_FILE must be mode 600: the grants in force stay')
-      const raw = JSON.parse(readFileSync(cfg.file, 'utf8'))
-      const next = new Map()
-      for (const [name, g] of Object.entries(raw ?? {})) {
-        if (!/^ws-[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$/.test(name) || !g || !['oauth', 'api_key'].includes(g.mode)) continue
-        next.set(name, { mode: g.mode, capMicroUsd: Number.isSafeInteger(g.cap_micro_usd) && g.cap_micro_usd >= 0 ? g.cap_micro_usd : 20_000_000, capTokens: Number.isSafeInteger(g.cap_tokens) && g.cap_tokens >= 0 ? g.cap_tokens : 20_000_000, until: g.until === undefined ? null : Number.isSafeInteger(g.until) ? g.until : 0 })
-      }
-      const added = [...next.keys()].filter((k) => !grants.has(k)).length
-      const removed = [...grants.keys()].filter((k) => !next.has(k)).length
-      grants = next
-      process.stdout.write(JSON.stringify({ t: new Date().toISOString(), event: 'claude_grants', ok: true, callers: grants.size, added, removed }) + '\n')
-    } catch {
-      console.error('GATEWAY_CLAUDE_FILE could not be read: the grants in force stay')
-    }
+    const next = readGrants(cfg.file, 'GATEWAY_CLAUDE_FILE', seen, (name, g) =>
+      !g || !['oauth', 'api_key'].includes(g.mode) ? null : { mode: g.mode, capMicroUsd: Number.isSafeInteger(g.cap_micro_usd) && g.cap_micro_usd >= 0 ? g.cap_micro_usd : 20_000_000, capTokens: Number.isSafeInteger(g.cap_tokens) && g.cap_tokens >= 0 ? g.cap_tokens : 20_000_000, until: g.until === undefined ? null : Number.isSafeInteger(g.until) ? g.until : 0, keySha: jobKeyOf(g) })
+    if (!next) return
+    seen = next.stamp
+    const added = [...next.grants.keys()].filter((k) => !grants.has(k)).length
+    const removed = [...grants.keys()].filter((k) => !next.grants.has(k)).length
+    grants = next.grants
+    process.stdout.write(JSON.stringify({ t: new Date().toISOString(), event: 'claude_grants', ok: next.ok, callers: grants.size, added, removed }) + '\n')
   }
   loadGrants()
   const timers = [setInterval(() => (loadGrants(), loadOauth()), 2000)]
@@ -199,6 +189,8 @@ export function makeClaude({ cfg, db, readBody, send, fail }) {
     if (req.method !== 'POST') return no(404, 'not found', 'not found')
     const g = live(who)
     if (!g) return no(403, grants.has(who) ? 'the one-time Claude grant has ended' : 'fallback to Claude is off for this caller', 'Fallback to Claude is off for this project. Its owner can turn it on in Settings.', 'permission_error')
+    // A grant only a batch job's runner holds (its key): nothing else in the VM may use it.
+    if (!runnerKeyOk(g, req)) return no(403, 'the Claude grant is a job runner’s', 'Fallback to Claude is off for this project. Its owner can turn it on in Settings.', 'permission_error')
     if (rec.route === 'claude_count') return handleOne(req, res, rec, who, signal, no, g) // free, and Claude Code sends it beside a turn
     if ((inflight.get(who) ?? 0) >= 2 || allInflight >= 8) return no(429, 'too many Claude requests at once', 'Claude is already answering two requests for this project; try again when one finishes.', 'rate_limit_error', { 'Retry-After': '5' })
     inflight.set(who, (inflight.get(who) ?? 0) + 1)

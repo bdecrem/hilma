@@ -9,10 +9,12 @@
 // with the usage token answers `hosted: { provider }` or null); with no provider the switch is shown
 // disabled with one sentence.
 //
-// The grants file is written from the database alone (writeHostedGrants: every active project with
-// it on, and the one-time grants in force), by the server after every change and by the admin CLI
-// after a member is removed, a role changed, a workspace rotated, closed or reopened, exactly as the
-// Claude grants are.
+// The grants file is written from the database alone (writeHostedGrants: each active project with a
+// hosted run going on, by its lease, and each with a job on the hosted model running, bound to the
+// job runner's key), by the server after every change and by the admin CLI after a member is
+// removed, a role changed, a workspace rotated, closed or reopened, exactly as the Claude grants
+// are. As for Claude (review 5 follow-up): the switch lets runs start without asking each time; it
+// no longer gives the VM a standing grant to the hosted model.
 //
 // A run (POST /api/hosted/run): the same opencode in the same sealed VM, the same conversation. The
 // front desk, never the page, switches the session to `ola/hosted` (opencode's session.switchModel),
@@ -21,14 +23,14 @@
 // other; each assistant step names its model, so the page marks the reply. While the run lasts, the
 // page's own prompts into that conversation are refused (the next one would run on the hosted model
 // too). "Just this once" (the stretch card): the owner hands this one request over with the switch
-// left off; the gateway gets a one-time grant (fallback_once, with an `until`) for this run only,
-// taken back when it ends. Each run is audited hosted_used (or hosted_once) with numbers only, the
+// left off. Either way the gateway gets a grant for this run only (fallback_once, a lease renewed
+// while the run lives), taken back when it ends; every lease is dropped when the front desk starts. Each run is audited hosted_used (or hosted_once) with numbers only, the
 // gateway's own count before and after: tokens and cost, no content, no file names.
 import { randomBytes } from 'node:crypto'
 import { homedir } from 'node:os'
 import path from 'node:path'
 import { audit } from './db.mjs'
-import { gatewayUsage, onceGrants, onceUntil, scratchGrants, writeGrantsFile } from './claude.mjs'
+import { LEASE_MS, gatewayUsage, jobGrants, leaseUntil, onceGrants, scratchGrants, writeGrantsFile } from './claude.mjs'
 
 export const STRETCH = ['suggest', 'handover', 'never']
 export const STRETCH_TO = ['hosted', 'claude']
@@ -44,13 +46,15 @@ export function hostedConfig(env = process.env) {
   return { file: env.OLA_FD_HOSTED_FILE || path.join(home, 'gateway-hosted'), capMicroUsd: Math.round(usd * 1e6) }
 }
 
-/** The gateway's hosted grants file, from the database: every active project with it on, and the one-time grants in force. */
+/** The gateway's hosted grants file, from the database: each active project with a hosted run going on (its lease), or a hosted job running (its runner's key). */
 export function writeHostedGrants(db, hc) {
   const grants = {}
-  const once = onceGrants(db, 'hosted')
+  const lease = onceGrants(db, 'hosted')
+  const jobs = jobGrants(db, 'hosted')
   for (const w of db.prepare("SELECT id, slug, hosted_enabled AS enabled, hosted_cap_micro_usd AS usd FROM workspaces WHERE status = 'active' ORDER BY slug").all()) {
-    if (w.enabled !== 1 && !once.has(w.id)) continue
-    grants[`ws-${w.slug}`] = { cap_micro_usd: w.usd ?? hc.capMicroUsd, ...(w.enabled === 1 ? {} : { until: once.get(w.id) }) }
+    const job = w.enabled === 1 ? jobs.get(w.id) : undefined
+    if (!lease.has(w.id) && !job) continue
+    grants[`ws-${w.slug}`] = { cap_micro_usd: w.usd ?? hc.capMicroUsd, ...(lease.has(w.id) ? { until: lease.get(w.id) } : { key_sha256: job }) }
   }
   for (const g of scratchGrants(db, 'hosted')) grants[`ws-${g.slug}`] = { cap_micro_usd: g.cap_micro_usd, until: g.until }
   return writeGrantsFile(hc.file, grants)
@@ -69,7 +73,14 @@ export function makeHosted({ db, hc, cc, workspaces, runCeilingMs, log }) {
     return status.value
   }
   const runs = new Map() // slug -> the run in that project (one at a time)
+  db.prepare("DELETE FROM fallback_once WHERE engine = 'hosted'").run() // no run outlives the front desk that started it
   writeHostedGrants(db, hc)
+  const renew = setInterval(() => {
+    const live = [...runs.values()].filter((r) => !r.ended && r.leaseId !== null)
+    for (const r of live) db.prepare('UPDATE fallback_once SET until = ? WHERE id = ?').run(leaseUntil(), r.leaseId)
+    if (live.length) writeHostedGrants(db, hc)
+  }, LEASE_MS / 3)
+  renew.unref()
 
   const row = (wsId) => db.prepare('SELECT hosted_enabled AS enabled, hosted_cap_micro_usd AS usd, stretch, stretch_to AS stretchTo FROM workspaces WHERE id = ?').get(wsId)
 
@@ -144,14 +155,13 @@ export function makeHosted({ db, hc, cc, workspaces, runCeilingMs, log }) {
       if (now && !now.has(old.session)) await end(old, true)
     }
     if (runs.has(ws.slug)) return { status: 409, body: { error: 'hosted_busy', message: 'The hosted open model is already working on a request in this project. Wait for it to finish, or stop it.' } }
-    const run = { id: `h${Date.now().toString(36)}${randomBytes(6).toString('hex')}`, slug: ws.slug, wsId: ws.id, session, personId, onceId: null, before: null, ended: false, timer: null }
+    const run = { id: `h${Date.now().toString(36)}${randomBytes(6).toString('hex')}`, slug: ws.slug, wsId: ws.id, session, personId, once, leaseId: null, before: null, ended: false, timer: null }
     runs.set(ws.slug, run) // before any await below: a second start finds it
     try {
       await workspaces.ensureRunning(ws.slug)
-      if (once) {
-        run.onceId = Number(db.prepare("INSERT INTO fallback_once (workspace_id, engine, person_id, until) VALUES (?, 'hosted', ?, ?)").run(ws.id, personId, onceUntil(runCeilingMs)).lastInsertRowid)
-        writeHostedGrants(db, hc)
-      }
+      // This run's grant, with the switch on or just this once: renewed while it lives, gone at its end.
+      run.leaseId = Number(db.prepare("INSERT INTO fallback_once (workspace_id, engine, person_id, until) VALUES (?, 'hosted', ?, ?)").run(ws.id, personId, leaseUntil()).lastInsertRowid)
+      writeHostedGrants(db, hc)
       // The gateway reloads the grants file within about 2 s: wait (up to 6 s) until it lists this
       // project, or the run's first request would be refused as "off".
       const caller = `ws-${ws.slug}`
@@ -224,7 +234,8 @@ export function makeHosted({ db, hc, cc, workspaces, runCeilingMs, log }) {
       }
       if (!back) log(`${run.slug}: a conversation could not be switched back to Ola's own model after a hosted run`)
     }
-    if (run.onceId !== null) db.prepare('DELETE FROM fallback_once WHERE id = ?').run(run.onceId)
+    if (run.leaseId !== null) db.prepare('DELETE FROM fallback_once WHERE id = ?').run(run.leaseId)
+    run.leaseId = null
     writeHostedGrants(db, hc)
     runs.delete(run.slug)
     if (!started) return
@@ -233,7 +244,7 @@ export function makeHosted({ db, hc, cc, workspaces, runCeilingMs, log }) {
     const a = (await usage(true))?.hostedMonth.get(caller)
     const same = a && b && a.month === b.month
     const diff = (k) => (same ? Math.max(0, (a[k] ?? 0) - (b[k] ?? 0)) : a && !b ? (a[k] ?? 0) : null)
-    audit(db, { actor: run.personId, action: run.onceId !== null ? 'hosted_once' : 'hosted_used', workspace: run.wsId, tokensIn: diff('tokens_in'), tokensOut: diff('tokens_out'), costMicroUsd: diff('cost_micro_usd') })
+    audit(db, { actor: run.personId, action: run.once ? 'hosted_once' : 'hosted_used', workspace: run.wsId, tokensIn: diff('tokens_in'), tokensOut: diff('tokens_out'), costMicroUsd: diff('cost_micro_usd') })
     log(`${run.slug}: a hosted model run ended`)
   }
 
@@ -247,6 +258,7 @@ export function makeHosted({ db, hc, cc, workspaces, runCeilingMs, log }) {
     busy: (slug, session) => runs.get(slug)?.session === session,
     writeGrants: () => writeHostedGrants(db, hc),
     close() {
+      clearInterval(renew)
       for (const run of runs.values()) clearTimeout(run.timer)
     },
   }

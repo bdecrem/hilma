@@ -20,7 +20,7 @@ nothing behind. Files are written as plain data (mode 644): nothing in the zip i
 runnable. A zip inside the zip stays a file. Prints one JSON object: the folder, the files
 (path, size, sha256), what was renamed and left out. Exit 3 on a refusal, with the reason.
 """
-import hashlib, json, os, re, shutil, stat, sys, unicodedata, zipfile
+import hashlib, json, os, re, shutil, signal, stat, sys, unicodedata, zipfile
 
 WORK = os.environ.get("OLA_WORK", "/work")
 NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9 ._()+,-]{0,199}")
@@ -44,7 +44,34 @@ def safe_part(p):
     return a or "file"
 
 
+def clear_stale():
+    """Half-unpacked folders of an ola-unzip that was killed (a timeout, a stopped computer) are
+    removed by the next one (review 5 follow-up): its pid is gone, so nothing is writing there.
+    ola-init clears them all at every start too."""
+    d = os.path.join(WORK, ".ola", "tmp")
+    try:
+        names = os.listdir(d)
+    except OSError:
+        return
+    for n in names:
+        m = re.fullmatch(r"unzip-(\d+)", n)
+        if not m or int(m.group(1)) == os.getpid():
+            continue
+        try:
+            os.kill(int(m.group(1)), 0)
+            continue  # still running
+        except ProcessLookupError:
+            pass
+        except OSError:
+            continue
+        shutil.rmtree(os.path.join(d, n), ignore_errors=True)
+
+
 def main(argv):
+    # A stop asked for politely (TERM, HUP, INT) ends through the cleanup below, never midway.
+    for sig in (signal.SIGTERM, signal.SIGHUP, signal.SIGINT):
+        signal.signal(sig, lambda *_: refuse("stopped before it finished; nothing was unpacked", 5))
+    clear_stale()
     args, opt = [], {}
     i = 0
     while i < len(argv):

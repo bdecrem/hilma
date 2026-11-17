@@ -4,7 +4,7 @@
 // is held. Then the unit tests of the leak check and the sandbox (twin_test.py). Run by
 // workspace/check.mjs; on its own: node workspace/twin.test.mjs
 import { spawn, spawnSync } from 'node:child_process'
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdtempSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -26,13 +26,23 @@ mkdirSync(work)
 writeFileSync(path.join(work, 'harbor_roster.csv'), 'volunteer,shift,hours\nMarisol Quennell,Harbor kitchen,12\nTeodor Vashkin,Harbor kitchen,7\nmarisol quennell ,Harbor kitchen,12\nIlse Brandvold,,31\n')
 writeFileSync(path.join(work, 'memo.md'), 'The Ostrander committee kept the thaw schedule and 4,817 beds.\n')
 // Async: the scripted model answers from this same process.
+// Two steps, as the front desk runs them (review 5 follow-up): `gather` as the agent's user hands
+// over the files the run read and the project's text; `make` (in the VM a user of its own) works
+// only from that, in a private folder it removes, never in /work.
 const twin = (id, request) =>
   new Promise((resolve) => {
-    const c = spawn('python3', ['-I', path.join(HERE, 'ola-twin'), 'make', id], { env: { PATH: process.env.PATH, OLA_TWIN_WORK: work, OLA_BATCH_GATEWAY: `http://127.0.0.1:${port}`, BOX_API_KEY: 'x'.repeat(32), OLA_TWIN_ALLOW_HOST: '1' } })
+    const g = spawnSync('python3', ['-I', path.join(HERE, 'ola-twin'), 'gather'], { input: JSON.stringify({ files: ['harbor_roster.csv'] }), encoding: 'utf8', env: { PATH: process.env.PATH, OLA_TWIN_WORK: work }, maxBuffer: 64 * 1024 * 1024 })
+    let gathered = null
+    try {
+      gathered = JSON.parse(g.stdout)
+    } catch {
+      return resolve({ error: g.stdout + g.stderr })
+    }
+    const c = spawn('python3', ['-I', path.join(HERE, 'ola-twin'), 'make', id], { env: { PATH: process.env.PATH, OLA_TWIN_WORK: path.join(dir, 'nowhere'), OLA_TWIN_TMP: dir, OLA_BATCH_GATEWAY: `http://127.0.0.1:${port}`, BOX_API_KEY: 'x'.repeat(32), OLA_TWIN_ALLOW_HOST: '1' } })
     let out = ''
     c.stdout.on('data', (d) => (out += d))
     c.stderr.on('data', (d) => (out += d))
-    c.stdin.end(JSON.stringify({ request, context: '', files: ['harbor_roster.csv'] }))
+    c.stdin.end(JSON.stringify({ request, context: '', gathered }))
     c.on('close', () => {
       try {
         resolve(JSON.parse(out))
@@ -47,7 +57,9 @@ try {
   ok('the copy is clean: no name, number, phrase or file name of the project in it', c.leak?.verdict === 'clean', JSON.stringify(c.leak))
   const data = Buffer.from(c.files?.[0]?.b64 ?? '', 'base64').toString()
   ok('the stand-in mirrors nothing of the project (no planted name or file name in it)', c.files?.[0]?.name === 'data.csv' && !/Quennell|Vashkin|Brandvold|Harbor|harbor_roster/i.test(data + c.request) && data.split('\n').length > 25)
-  ok('the copy is kept in the project for the owner to read, with its digest', c.sha256?.length === 64 && spawnSync('python3', ['-I', path.join(HERE, 'ola-twin'), 'show', '0123456789ab'], { encoding: 'utf8', env: { PATH: process.env.PATH, OLA_TWIN_WORK: work } }).stdout.includes(c.sha256))
+  const twinEnv = { PATH: process.env.PATH, OLA_TWIN_WORK: work }
+  spawnSync('python3', ['-I', path.join(HERE, 'ola-twin'), 'store', '0123456789ab'], { input: JSON.stringify(c), encoding: 'utf8', env: twinEnv })
+  ok('make leaves nothing behind it (its folder is gone) and touched nothing of the project; a copy stored for the owner reads back with its digest', c.sha256?.length === 64 && !readdirSync(dir).some((n) => n.startsWith('ola-twin-')) && !existsSync(path.join(dir, 'nowhere')) && spawnSync('python3', ['-I', path.join(HERE, 'ola-twin'), 'show', '0123456789ab'], { encoding: 'utf8', env: twinEnv }).stdout.includes(c.sha256))
   // The copy's own checks, scored on a right and a wrong result (the scratch VM's work, here a folder).
   const sw = path.join(dir, 'scratch')
   mkdirSync(sw)

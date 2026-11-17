@@ -2072,8 +2072,11 @@ the project's VM (real task).
 
 **3. The real task, only with the owner's yes.** A second switch in Settings, "Compare the real
 task", off by default, owner only, with its own consent text: "Let Claude redo finished work in this
-project so we can compare. Your request and the files Ola read for it go to Anthropic. Off unless you
-turn it on. Every time is shown here." When on, Claude redoes the request in a scratch VM holding
+project so we can compare. Your request and the files Ola read for it go to Anthropic. So do Ola’s
+answer and the files it wrote. Off unless you turn it on. Every time is shown here." (The last but
+one sentence since review 5's follow-up: the judge reads Ola's result beside Claude's, so it goes
+too; the page shows the text the front desk sends, `CONSENT_REAL` in `frontdesk/compare.mjs`, so
+Settings and "Just this once" cannot drift apart.) When on, Claude redoes the request in a scratch VM holding
 copies of exactly the files Ola read (piped from the project's VM into the scratch VM; never on the
 host's disk; the person's files are never changed), Ola's result is the reply it gave, and the judge
 alone scores (there is no truth). The record stays in the project's VM (`ola-twin keep`). With the

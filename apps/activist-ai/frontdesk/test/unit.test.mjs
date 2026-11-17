@@ -101,7 +101,7 @@ test('the session cookie: __Host-, Secure, SameSite=Strict on https; a cookie Sa
   db.close()
 })
 
-test('the hosted and Claude grants files: off by default, independent, one-time grants only until their moment', async () => {
+test('the hosted and Claude grants files: a project is in them only while a run of it goes on (its lease) or a job holds its runner key; independent; leases only until their moment', async () => {
   const { writeHostedGrants } = await import('../hosted.mjs')
   const { writeGrants } = await import('../claude.mjs')
   const { readFileSync } = await import('node:fs')
@@ -120,15 +120,24 @@ test('the hosted and Claude grants files: off by default, independent, one-time 
   assert.equal(statSync(hc.file).mode & 0o777, 0o600)
   const row = db.prepare('SELECT hosted_enabled, claude_enabled, stretch, stretch_to FROM workspaces WHERE slug = ?').get('p-one')
   assert.deepEqual({ ...row }, { hosted_enabled: 0, claude_enabled: 0, stretch: 'suggest', stretch_to: 'hosted' })
-  db.prepare("UPDATE workspaces SET hosted_enabled = 1 WHERE slug = 'p-one'").run()
-  assert.deepEqual(writeHostedGrants(db, hc), { 'ws-p-one': { cap_micro_usd: 20_000_000 } })
-  assert.deepEqual(writeGrants(db, cc), {}, 'turning the hosted model on does not turn Claude on')
-  // A one-time grant for p-two, both engines: listed with its moment; a past one is not listed.
+  // Review 5 follow-up: the switch alone grants nothing (before, it gave the whole VM a standing grant).
+  db.prepare("UPDATE workspaces SET hosted_enabled = 1, claude_enabled = 1 WHERE slug = 'p-one'").run()
+  assert.deepEqual([writeHostedGrants(db, hc), writeGrants(db, cc)], [{}, {}], 'a switch on with no run going on grants nothing')
+  db.prepare("UPDATE workspaces SET claude_enabled = 0 WHERE slug = 'p-one'").run()
+  // A run's lease for p-two, both engines: listed with its moment; a past one is not listed.
   const until = Date.now() + 60_000
   db.prepare("INSERT INTO fallback_once (workspace_id, engine, until) VALUES (?, 'hosted', ?), (?, 'claude', ?), (?, 'hosted', ?)").run(id('p-two'), until, id('p-two'), until, id('p-one'), Date.now() - 1)
   assert.deepEqual(writeHostedGrants(db, hc)['ws-p-two'], { cap_micro_usd: 20_000_000, until })
-  assert.equal(writeHostedGrants(db, hc)['ws-p-one'].until, undefined, 'a project with the switch on has no moment')
+  assert.equal(writeHostedGrants(db, hc)['ws-p-one'], undefined, 'a lease past its moment')
   assert.equal(writeGrants(db, cc)['ws-p-two'].until, until)
+  assert.equal(writeGrants(db, cc)['ws-p-one'], undefined, 'turning the hosted model on does not turn Claude on')
+  // A hosted job running in p-one: its grant carries the runner's key, and only with the switch on.
+  const k = 'a'.repeat(64)
+  db.prepare("INSERT INTO batch_jobs (workspace_id, job, state, model, budget, created_at, updated_at, runner_key_sha256) VALUES (?, 'aaaaaaaaaaaa', 'running', 'hosted', 100, 0, 0, ?)").run(id('p-one'), k)
+  assert.deepEqual(writeHostedGrants(db, hc)['ws-p-one'], { cap_micro_usd: 20_000_000, key_sha256: k })
+  db.prepare("UPDATE workspaces SET hosted_enabled = 0 WHERE slug = 'p-one'").run()
+  assert.equal(writeHostedGrants(db, hc)['ws-p-one'], undefined, 'a job grant with the switch off')
+  db.prepare("UPDATE workspaces SET hosted_enabled = 1 WHERE slug = 'p-one'").run()
   db.prepare("DELETE FROM fallback_once WHERE engine = 'hosted'").run()
   assert.equal(writeHostedGrants(db, hc)['ws-p-two'], undefined, 'the run ended: the grant is gone')
   // A closed project has no grant, on or not.

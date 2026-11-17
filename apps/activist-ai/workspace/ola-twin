@@ -4,14 +4,29 @@
 Only the front desk runs it (`container exec -i ola-<id> /opt/ola/bin/ola-twin ...`), JSON on stdin
 and stdout:
 
-  ola-twin make <id>     stdin {request, context, files: [paths the run read], seed}. Makes a
-                         made-up copy of the request with Ola's own model through the door: the
-                         request in general terms, a generator program that writes stand-in files
-                         of the same shape (run in a sandbox: it can write only its own folder and
-                         read nothing of the project), and checks a program runs. Then the leak
-                         check (olatwin.check_leaks) against an index of the project's own text and
-                         numbers. Prints the copy with its verdict (clean, unsure, leak) and the
-                         findings; keeps it in /work/.ola/twins/<id>/ for the owner to read.
+  ola-twin gather         stdin {files: [paths the run read]}, as the agent's user: the bytes of
+                         those files and the project's other text (every file name in /work, the
+                         text files in it, the database's document text), for the index. Prints
+                         them; keeps nothing.
+  ola-twin make <id>     stdin {request, context, seed, gathered}, run by the front desk as a user
+                         of its own (`twin`, uid 1002; review 5 follow-up): makes a made-up copy of
+                         the request with Ola's own model through the door's socket (never the
+                         loopback bridge, which the agent's user runs): the request in general terms,
+                         a generator program that writes stand-in files of the same shape (run in
+                         the kernel jail: it can write only its own folder and read nothing of the
+                         project), and checks a program runs. Then the leak check
+                         (olatwin.check_leaks) against an index built here from what `gather` handed
+                         over and the request and conversation the front desk sent. Its folder is
+                         under /tmp, mode 700, this user's: the agent's user can neither write it nor
+                         signal, trace or read this process (a different uid), so a process the
+                         agent left running cannot change the copy, its files or its verdict after
+                         the check. Prints the copy with its verdict (clean, unsure, leak) and the
+                         findings, then removes its folder. The front desk takes the copy's digest
+                         from what it received, on the host.
+  ola-twin store <id>    stdin: a held or refused copy as `make` printed it, kept in
+                         /work/.ola/twins/<id>/copy.json for the owner to read (it may carry the
+                         project's words, so it stays in the VM). The agent can change it there; the
+                         front desk refuses to send a copy whose digest is not the one it took.
   ola-twin show <id>     the copy as kept, for the owner's page.
   ola-twin score         stdin {checks, truth, final_text, inputs}: runs the checks against /work
                          (in a scratch VM, after an engine's run). Prints passed / total / label.
@@ -31,6 +46,7 @@ import olatwin as T  # noqa: E402
 WORK = Path(os.environ.get("OLA_TWIN_WORK", "/work")).resolve()
 STORE = WORK / ".ola" / "twins"
 GATEWAY = os.environ.get("OLA_BATCH_GATEWAY", "http://127.0.0.1:4180")
+DOOR = os.environ.get("OLA_TWIN_DOOR", "/ola/gw/gateway.sock")
 ID = re.compile(r"^[0-9a-f]{12}$")
 MAX_INDEX = 48 * 1024 * 1024
 
@@ -58,27 +74,29 @@ def inside_work(rel):
 # ------------------------------------------------------------------ the index of the project
 
 
-def build_index(request, context, read_paths):
-    idx = T.Index()
-    idx.add_text(request)
-    idx.add_text(context)
-    budget = MAX_INDEX
-    seen = set()
-    for p in read_paths:
-        t = T.read_text(p)
-        budget -= len(t)
-        idx.add_text(t)
+def gather():
+    """As the agent's user: the files the run read and the project's other text, for `make`."""
+    spec = json.loads(sys.stdin.read() or "{}")
+    read, seen, budget = [], set(), MAX_INDEX
+    for rel in (spec.get("files") or [])[:40]:
+        p = inside_work(rel)
+        if not p or p in seen:
+            continue
         seen.add(p)
-    # every file name in the project, and the text of its text files (within the budget)
+        with open(p, "rb") as f:
+            data = f.read(min(budget, 8 * 1024 * 1024))
+        budget -= len(data)
+        read.append({"rel": str(p.relative_to(WORK)), "b64": base64.b64encode(data).decode()})
+    names, texts = [], []
     n = 0
-    for root, dirs, names in os.walk(WORK):
+    for root, dirs, files in os.walk(WORK):
         dirs[:] = [d for d in dirs if not (Path(root) == WORK and d == ".ola") and d not in ("node_modules", "__pycache__")]
-        for name in names:
+        for name in files:
             n += 1
             if n > 50_000:
                 break
             p = Path(root) / name
-            idx.add_name(str(p.relative_to(WORK)))
+            names.append(str(p.relative_to(WORK)))
             if p in seen or p.suffix.lower() not in T.TEXT_EXT or budget <= 0:
                 continue
             try:
@@ -88,21 +106,34 @@ def build_index(request, context, read_paths):
                 continue
             t = T.read_text(p)
             budget -= len(t)
-            idx.add_text(t)
+            texts.append(t)
     db = WORK / "project.db"
     if db.exists() and budget > 0:
         try:
             con = sqlite3.connect(f"file:{db}?mode=ro", uri=True, timeout=5)
             for (text,) in con.execute("SELECT text FROM doc_text"):
                 budget -= len(text or "")
-                idx.add_text(text)
+                texts.append(text or "")
                 if budget <= 0:
                     break
             for (title,) in con.execute("SELECT coalesce(title, '') || ' ' || coalesce(path, '') FROM documents"):
-                idx.add_text(title)
+                texts.append(title)
             con.close()
         except sqlite3.Error:
             pass
+    out({"read": read, "names": names, "texts": texts})
+
+
+def build_index(request, context, read_paths, names=(), texts=()):
+    idx = T.Index()
+    idx.add_text(request)
+    idx.add_text(context)
+    for p in read_paths:
+        idx.add_text(T.read_text(p))
+    for name in names:
+        idx.add_name(str(name))
+    for t in texts:
+        idx.add_text(t)
     return idx
 
 
@@ -110,10 +141,24 @@ def build_index(request, context, read_paths):
 
 
 def ask_model(messages, max_tokens=8000):
-    u = GATEWAY.split("://", 1)[1]
-    host, _, port = u.partition(":")
     body = json.dumps({"model": "general", "messages": messages, "max_tokens": max_tokens, "temperature": 0}).encode()
-    c = http.client.HTTPConnection(host, int(port or 80), timeout=900)
+    if "OLA_BATCH_GATEWAY" not in os.environ and os.path.exists(DOOR):
+        # The door's own socket (mounted from the host, read-only root): not the loopback bridge,
+        # which the agent's user runs and could replace with a "model" of its own.
+        import socket
+
+        class Door(http.client.HTTPConnection):
+            def connect(self):
+                sk = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                sk.settimeout(self.timeout)
+                sk.connect(DOOR)
+                self.sock = sk
+
+        c = Door("gateway", timeout=900)
+    else:
+        u = GATEWAY.split("://", 1)[1]
+        host, _, port = u.partition(":")
+        c = http.client.HTTPConnection(host, int(port or 80), timeout=900)
     try:
         c.request("POST", "/v1/chat/completions", body, {"Authorization": "Bearer " + os.environ.get("BOX_API_KEY", ""), "Content-Type": "application/json"})
         r = c.getresponse()
@@ -159,17 +204,32 @@ def make(tid):
     request = str(spec.get("request", ""))[:20000]
     context = str(spec.get("context", ""))[:64 * 1024]
     seed = int(spec.get("seed") or int(tid[:8], 16))
+    g = spec.get("gathered") or {}
+    # A folder of this user's own, made with a name no one can guess: the agent's user cannot
+    # write it, list it or put anything in its place.
+    import shutil, tempfile
+    folder = Path(tempfile.mkdtemp(prefix="ola-twin-", dir=os.environ.get("OLA_TWIN_TMP", "/tmp")))
+    os.chmod(folder, 0o700)
+    try:
+        make_in(tid, folder, request, context, seed, g)
+    finally:
+        shutil.rmtree(folder, ignore_errors=True)
+
+
+def make_in(tid, folder, request, context, seed, g):
     read = []
-    for rel in (spec.get("files") or [])[:40]:
-        p = inside_work(rel)
-        if p and p not in read:
-            read.append(p)
-    profiles = [T.profile(p, str(p.relative_to(WORK))) for p in read]
-    idx = build_index(request, context, read)
-    folder = STORE / tid
-    if folder.exists():
-        fail("that copy exists")
-    folder.mkdir(parents=True)
+    (folder / "in").mkdir()
+    for f in (g.get("read") or [])[:40]:
+        rel = str(f.get("rel", ""))
+        parts = Path(rel).parts
+        if not rel or rel.startswith("/") or ".." in parts or not parts:
+            continue
+        p = folder / "in" / rel
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_bytes(base64.b64decode(str(f.get("b64", ""))))
+        read.append((p, rel))
+    profiles = [T.profile(p, rel) for p, rel in read]
+    idx = build_index(request, context, [p for p, _ in read], [str(n) for n in (g.get("names") or [])[:50_000]], [str(t) for t in (g.get("texts") or [])])
     t0 = time.time()
     tokens_in = tokens_out = 0
     note = ""
@@ -219,8 +279,18 @@ def make(tid):
     bundle = {"id": tid, "kind": kind, "request": treq, "generator": source, "seed": seed, "checks": checks, "truth": truth, "files": files}
     digest = hashlib.sha256(json.dumps(bundle, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
     rec = dict(bundle, sha256=digest, leak=leak, tokens_in=tokens_in, tokens_out=tokens_out, ms=int((time.time() - t0) * 1000), read=len(read))
-    (folder / "copy.json").write_text(json.dumps(rec, ensure_ascii=False))
     out(rec)
+
+
+def store(tid):
+    if not ID.match(tid):
+        fail("bad id")
+    data = sys.stdin.read()[:48 * 1024 * 1024]
+    json.loads(data)
+    folder = STORE / tid
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / "copy.json").write_text(data)
+    out({"ok": True})
 
 
 def show(tid):
@@ -255,8 +325,12 @@ def result(cid):
 
 if __name__ == "__main__":
     a = sys.argv[1:]
-    if a[:1] == ["make"] and len(a) == 2:
+    if a == ["gather"]:
+        gather()
+    elif a[:1] == ["make"] and len(a) == 2:
         make(a[1])
+    elif a[:1] == ["store"] and len(a) == 2:
+        store(a[1])
     elif a[:1] == ["show"] and len(a) == 2:
         show(a[1])
     elif a == ["score"]:
@@ -266,4 +340,4 @@ if __name__ == "__main__":
     elif a[:1] == ["result"] and len(a) == 2:
         result(a[1])
     else:
-        fail("usage: ola-twin make <id> | show <id> | score | keep <id> | result <id>")
+        fail("usage: ola-twin gather | make <id> | store <id> | show <id> | score | keep <id> | result <id>")

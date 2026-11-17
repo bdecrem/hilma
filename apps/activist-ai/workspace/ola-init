@@ -20,5 +20,7 @@ mkdir -p "$HOME" "$XDG_DATA_HOME" "$XDG_STATE_HOME" "$XDG_CACHE_HOME"
 # Pieces of an upload left for two days, and views not used for a week, are cleared.
 find /work/.ola/uploads -maxdepth 1 -name "*.part" -mtime +2 -delete 2>/dev/null || true
 find /work/.ola/cache/views -maxdepth 1 -type f -mtime +7 -delete 2>/dev/null || true
+# Half-unpacked zips of an ola-unzip that was killed: nothing runs yet, so none is in use.
+rm -rf /work/.ola/tmp/unzip-* 2>/dev/null || true
 socat TCP-LISTEN:4180,bind=127.0.0.1,fork,reuseaddr UNIX-CONNECT:/ola/gw/gateway.sock &
 exec opencode serve --hostname 127.0.0.1 --port 4096

@@ -20,7 +20,7 @@
 //   GATEWAY_HOSTED_PRICES in=,out= dollars per million tokens
 import http from 'node:http'
 import https from 'node:https'
-import { readFileSync, statSync } from 'node:fs'
+import { jobKeyOf, readGrants, runnerKeyOk } from './batch.mjs'
 
 export const HOSTED_SETTINGS = ['GATEWAY_HOSTED_FILE', 'GATEWAY_HOSTED_PRICES']
 const MONTH = () => new Date().toISOString().slice(0, 7)
@@ -61,24 +61,12 @@ export function makeHosted({ cfg, db }) {
   let grants = new Map()
   let seen = ''
   const load = () => {
-    try {
-      const st = statSync(cfg.file)
-      const stamp = `${st.mtimeMs}:${st.size}`
-      if (stamp === seen) return
-      seen = stamp
-      if ((st.mode & 0o077) !== 0) return console.error('GATEWAY_HOSTED_FILE must be mode 600: the grants in force stay')
-      const raw = JSON.parse(readFileSync(cfg.file, 'utf8'))
-      const next = new Map()
-      for (const [name, g] of Object.entries(raw ?? {})) {
-        if (!/^ws-[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$/.test(name) || !g || typeof g !== 'object') continue
-        next.set(name, { capMicroUsd: Number.isSafeInteger(g.cap_micro_usd) && g.cap_micro_usd >= 0 ? g.cap_micro_usd : 20_000_000, until: g.until === undefined ? null : Number.isSafeInteger(g.until) ? g.until : 0 })
-      }
-      grants = next
-      process.stdout.write(JSON.stringify({ t: new Date().toISOString(), event: 'hosted_grants', ok: true, callers: grants.size }) + '\n')
-    } catch {
-      if (seen !== 'missing') console.error('GATEWAY_HOSTED_FILE could not be read: the grants in force stay')
-      seen = 'missing'
-    }
+    const next = readGrants(cfg.file, 'GATEWAY_HOSTED_FILE', seen, (name, g) =>
+      !g || typeof g !== 'object' ? null : { capMicroUsd: Number.isSafeInteger(g.cap_micro_usd) && g.cap_micro_usd >= 0 ? g.cap_micro_usd : 20_000_000, until: g.until === undefined ? null : Number.isSafeInteger(g.until) ? g.until : 0, keySha: jobKeyOf(g) })
+    if (!next) return
+    seen = next.stamp
+    grants = next.grants
+    process.stdout.write(JSON.stringify({ t: new Date().toISOString(), event: 'hosted_grants', ok: next.ok, callers: grants.size }) + '\n')
   }
   load()
   const timer = setInterval(load, 2000)
@@ -104,9 +92,9 @@ export function makeHosted({ cfg, db }) {
     provider: cfg.provider,
     monthOf,
     /** Null if the caller may use `hosted` now, else the refusal (status, why for the log, message). */
-    refusal(caller) {
+    refusal(caller, req = null) {
       const g = live(caller)
-      if (!g) return { status: 403, why: grants.has(caller) ? 'the one-time hosted grant has ended' : 'the hosted model is off for this caller', message: 'The hosted open model is off for this project. Its owner can turn it on in Settings.', type: 'permission_error' }
+      if (!g || (req && !runnerKeyOk(g, req)) || (!req && g.keySha)) return { status: 403, why: grants.has(caller) ? 'the one-time hosted grant has ended' : 'the hosted model is off for this caller', message: 'The hosted open model is off for this project. Its owner can turn it on in Settings.', type: 'permission_error' }
       const m = monthOf(caller)
       if (m.cost_micro_usd >= g.capMicroUsd) return { status: 429, why: 'the monthly hosted ceiling was reached', message: `This project has used its budget for the hosted open model this month ($${(g.capMicroUsd / 1e6).toFixed(2)}). It starts again on the first of next month.`, type: 'insufficient_quota' }
       return null

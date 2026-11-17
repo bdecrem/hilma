@@ -28,6 +28,7 @@
 //   node admin.mjs compare candidates                  the review queue: made-up copies Ola lost (evals/candidates)
 //   node admin.mjs compare show <id>                   one candidate's evidence: the copy, both results, the checks, the judge
 //   node admin.mjs compare promote <id>                copies it into the eval set (evals/tasks/t-<id>), after its selftest passes
+//   node admin.mjs compare status                      comparisons under way, scratch VMs, and what the last start cleaned up
 //   node admin.mjs compare weekly                      the weekly number, as JSON (also $OLA_HOME/compare/weekly.json)
 //   node admin.mjs audit [--workspace <slug>] [--limit 50] [--json]
 //   node admin.mjs list
@@ -48,7 +49,7 @@ import { config } from './server.mjs'
 import { AUTO, gatewayUsage, modeFor, writeGrants } from './claude.mjs'
 import { writeHostedGrants } from './hosted.mjs'
 import { writeBatchGrants } from './jobs.mjs'
-import { weekly } from './compare.mjs'
+import { leftovers, weekly } from './compare.mjs'
 import { cpSync, existsSync, readFileSync, readdirSync } from 'node:fs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
@@ -322,6 +323,18 @@ switch (cmd) {
     const list = () => (existsSync(queue) ? readdirSync(queue).filter((d) => /^t-[0-9a-f]{12}$/.test(d) && existsSync(path.join(queue, d, 'task.json'))) : [])
     if (sub === 'weekly') {
       console.log(JSON.stringify(weekly(db), null, 1))
+      break
+    }
+    if (sub === 'status') {
+      // What is under way now, and what the front desk cleaned up at its last start (compare.mjs).
+      const now = leftovers(db, cfg.compare)
+      console.log(`under way: ${now.stuck.length} comparisons (${now.stuck.map((r) => `${r.id} ${r.state}`).join(', ') || 'none'}); scratch VMs ${now.scratch.join(', ') || 'none'}; scratch grants ${now.grants.join(', ') || 'none'}`)
+      const f = path.join(cfg.compare.dir, 'cleanup.json')
+      if (!existsSync(f)) console.log('at the last start: no record (the front desk has not started with this version)')
+      else {
+        const c = JSON.parse(readFileSync(f, 'utf8'))
+        console.log(`at the last start (${c.at}): ${c.failed.length} comparisons marked failed${c.failed.length ? ` (${c.failed.join(', ')})` : ''}; ${c.grants.length} scratch grants taken back; ${c.files} made-up files removed; scratch VMs ${c.scratch.map((v) => `${v.id} ${v.destroyed === true ? 'destroyed' : v.destroyed === false ? 'NOT destroyed: ws.mjs destroy ' + v.id + ' --confirm ' + v.id : 'being destroyed'}`).join(', ') || 'none'}`)
+      }
       break
     }
     if (sub === 'candidates') {

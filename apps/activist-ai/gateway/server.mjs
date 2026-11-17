@@ -887,7 +887,7 @@ async function handle(req, res, rec, signal) {
   if (raw.length > cap) return no(413, 'the body was over the size cap', `the request is larger than ${cap} bytes`, 'invalid_request_error')
   // The hosted open model: only for a project whose owner turned it on, within its month's budget.
   if (isHosted) {
-    const r = hosted.refusal(who)
+    const r = hosted.refusal(who, req)
     if (r) return no(r.status, r.why, r.message, r.type)
   }
   if (!Array.isArray(body.messages) || !body.messages.length) return no(400, 'no messages', 'messages must be a non-empty list', 'invalid_request_error')

@@ -14,6 +14,7 @@
 // OLA_CHECK_TAG=<word> (a scratch copy run beside a deploy's suites): workspaces <word>-fd-a and
 // <word>-fd-b under ~/.ola-fdcheck-<word>, and the front desk and gateway ports from
 // OLA_CHECK_FD_PORT (4790; it also uses the next two) and OLA_CHECK_GW_PORT (4182).
+import { RUNNER_PEEK, TWIN_ATTACK } from './test/attacks.mjs'
 import { spawn, spawnSync } from 'node:child_process'
 import { createHash, randomBytes } from 'node:crypto'
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
@@ -1209,6 +1210,17 @@ async function claudeRun(who, body, { decide = null, onStarted = null } = {}) {
   return { status: 200, lines, ended: lines.find((e) => e.ola === 'ended') }
 }
 const inVm = (cmd) => spawnSync(CTR, ['exec', `ola-${FA}`, 'sh', '-c', cmd], { encoding: 'utf8' }).stdout.trim()
+// A request to the Claude route from inside the VM, as the agent's user, with the VM's own token:
+// what Ola's agent, or anything left running in the VM, could send. The gateway's status.
+const CLAUDE_PROBE = 'import sys, json, urllib.request\nbody = json.dumps({"model": "claude-opus-5-5", "max_tokens": 16, "messages": [{"role": "user", "content": "hi"}]}).encode()\nreq = urllib.request.Request("http://127.0.0.1:4180/anthropic/v1/messages", data=body, headers={"Authorization": "Bearer " + sys.stdin.read().strip(), "Content-Type": "application/json", "anthropic-version": "2023-06-01"})\ntry:\n    print(urllib.request.urlopen(req, timeout=30).status)\nexcept urllib.error.HTTPError as e:\n    print(e.code)\n'
+const claudeFromInside = () =>
+  new Promise((resolve) => {
+    const c = spawn(CTR, ['exec', '-i', '--user', '1000', `ola-${FA}`, 'python3', '-I', '-c', CLAUDE_PROBE], { stdio: ['pipe', 'pipe', 'ignore'] })
+    let out = ''
+    c.stdout.on('data', (d) => (out += d))
+    c.on('close', () => resolve(out.trim()))
+    c.stdin.end(secretsOf(FA).BOX_API_KEY)
+  })
 
 await check('Fallback to Claude is off by default; only the owner may turn it on, with consent; the grants file follows', async () => {
   const i = await api('/api/claude', { cookie: a.cookie, ws: FA })
@@ -1220,12 +1232,15 @@ await check('Fallback to Claude is off by default; only the owner may turn it on
   assert((await post(v, { enabled: true, consent: true })).status === 403, 'the viewer turned it on')
   assert((await post(a, { enabled: true })).status === 400, 'on without consent')
   const on = await post(a, { enabled: true, consent: true })
-  assert(on.status === 200 && on.json.enabled === true, `on: ${on.status}`)
-  const g = grantsFile()[`ws-${FA}`]
-  assert(g?.mode === 'api_key' && g.cap_micro_usd === 25_000_000, `grant: ${JSON.stringify(g)}`)
+  assert(on.status === 200 && on.json.enabled === true && on.json.mode === 'api_key', `on: ${on.status}`)
+  // Review 5 follow-up: the switch alone grants the VM nothing; a grant exists only while a run goes on.
+  assert(!grantsFile()[`ws-${FA}`], `a standing grant with no run: ${JSON.stringify(grantsFile())}`)
+  await sleep(2500) // the gateway reloads the grants file within 2 s
+  const inside = await claudeFromInside()
+  assert(inside === '403', `with the switch on and no run, a request from inside the VM got ${inside}`)
   assert((await api('/api/claude/run', { method: 'POST', cookie: v.cookie, csrf: v.csrf, ws: FA, body: '{}', headers: { 'content-type': 'application/json' } })).status === 403, 'the viewer may run Claude')
   assert(auditRows(FA).some((r) => r.action === 'claude_enabled' && r.actor === 'alice'), 'no claude_enabled row')
-  return 'api_key mode, $25.00 ceiling'
+  return 'api_key mode; no grant and 403 from inside the VM until a run starts'
 })
 await check('a request handed to Claude runs Claude Code inside the sealed VM through the gateway, writes its file, and is audited with numbers only', async () => {
   const r = await claudeRun(a, { request: 'write claude-go.txt saying hi', context: 'The person asked: hello\nOla answered: hello' })
@@ -1259,6 +1274,38 @@ await check('Stop ends a Claude run inside the VM, and nothing of it keeps runni
   assert(r.ended?.reason === 'stopped' && ms < 25_000 && !left, `ended ${r.ended?.reason} after ${ms} ms; left: ${left}`)
   return `stopped after ${Math.round(ms / 1000)} s`
 })
+await check('the Claude grant lives only while a run the front desk started goes on: from inside the VM it works during the run, and is refused after Stop and after the front desk is killed', async () => {
+  // Review 5 follow-up (medium): before, "Fallback to Claude" on gave the whole VM a standing grant.
+  const during = async () => {
+    let run = null
+    const p = claudeRun(a, { request: 'slow 40x1000' }, { onStarted: (e) => (run = e.run) })
+    await until(() => run !== null && grantsFile()[`ws-${FA}`]?.until > Date.now(), 20_000, 'the run and its lease')
+    await sleep(2500)
+    return { run, p, inside: await claudeFromInside(), lease: grantsFile()[`ws-${FA}`] }
+  }
+  const one = await during()
+  assert(one.inside === '200' && one.lease.until - Date.now() <= 95_000, `during a run: ${one.inside}, lease ${JSON.stringify(one.lease)}`)
+  await api('/api/claude/stop', { method: 'POST', cookie: a.cookie, csrf: a.csrf, ws: FA, body: JSON.stringify({ run: one.run }), headers: { 'content-type': 'application/json' } })
+  const r = await one.p
+  await sleep(2500)
+  const afterStop = await claudeFromInside()
+  assert(r.ended?.reason === 'stopped' && !grantsFile()[`ws-${FA}`] && afterStop === '403', `after Stop: ${r.ended?.reason}, file ${JSON.stringify(grantsFile())}, inside ${afterStop}`)
+  // A front desk killed mid-run: its lease is dropped when the next one starts (and would end on
+  // its own within 90 s): the run's leftovers in the VM get 403.
+  const two = await during()
+  assert(two.inside === '200', `the second run: ${two.inside}`)
+  fd.kill('SIGKILL')
+  await until(() => fd.exitCode !== null || fd.signalCode !== null, 10_000, 'the front desk dying')
+  two.p.catch(() => {})
+  fd = start('frontdesk', 'frontdesk/server.mjs')
+  await until(async () => (await fetch(`${ORIGIN}/api/health`).catch(() => ({ ok: false }))).ok, 15_000, 'the front desk start')
+  await sleep(2500)
+  const afterKill = await claudeFromInside()
+  assert(!grantsFile()[`ws-${FA}`] && afterKill === '403', `after the kill: file ${JSON.stringify(grantsFile())}, inside ${afterKill}`)
+  // Nothing of the orphaned run may keep going in the VM.
+  inVm('for p in /proc/[0-9]*; do tr "\\0" " " < $p/cmdline 2>/dev/null | grep -q "^claude " && kill $(basename $p); done; true')
+  return `during a run 200; after Stop ${afterStop}; after a killed front desk ${afterKill}`
+})
 await check('in the page: the drawer hands a request to Claude, marks the reply, and shows it again after a reload', async () => {
   await A.page.goto(`${ORIGIN}/?w=${FA}#/`)
   await A.page.waitForSelector('.project-title', { timeout: 60_000 })
@@ -1289,11 +1336,13 @@ await check('in the page: the drawer hands a request to Claude, marks the reply,
 await check('a role change that leaves only admins as owners moves the project to the subscription mode; turning it off removes the grant', async () => {
   admin('add-person', 'olga', '--name', 'Olga O.', '--admin')
   admin('add-member', 'team-a', 'olga', 'owner')
-  assert(grantsFile()[`ws-${FA}`]?.mode === 'api_key', 'one owner is not an admin, yet oauth')
+  assert((await api('/api/claude', { cookie: a.cookie, ws: FA })).json.mode === 'api_key', 'one owner is not an admin, yet oauth')
   admin('add-member', 'team-a', 'alice', 'member')
-  assert(grantsFile()[`ws-${FA}`]?.mode === 'oauth', `after alice became a member: ${JSON.stringify(grantsFile())}`)
   const line = admin('claude', FA)
   assert(/ON, subscription/.test(line), line)
+  // Review 4, open: a member of a team the admin owns does not get Bart's subscription.
+  const member = await claudeRun(a, { request: 'write x.txt saying x' })
+  assert(member.status === 403 && member.json?.error === 'owner_only' && /subscription/.test(member.json.message), `a member in subscription mode: ${member.status} ${JSON.stringify(member.json)}`)
   admin('add-member', 'team-a', 'alice', 'owner')
   const off = await api('/api/claude/settings', { method: 'POST', cookie: a.cookie, csrf: a.csrf, ws: FA, body: JSON.stringify({ enabled: false }), headers: { 'content-type': 'application/json' } })
   assert(off.status === 200 && !grantsFile()[`ws-${FA}`], 'the grant stayed after it was turned off')
@@ -1356,7 +1405,12 @@ if (!LIVE) {
     assert(fakeClaude.st.calls === calls && gateway.log.split('\n').filter((l) => l.includes('"route":"claude"')).length === lines, 'something reached the Claude route')
     return 'viewer: nothing; real task: refused, no request to Claude'
   })
-  await check('a made-up copy is made in the sealed VM, clean, kept for the owner to read before it goes, and holds nothing of the project', async () => {
+  await check('a made-up copy is made in the sealed VM, clean, kept for the owner to read before it goes, and holds nothing of the project; a process the agent left running cannot touch it', async () => {
+    // Review 5 follow-up (medium): the agent's user leaves a process that stops the copy-maker and
+    // rewrites every file of the copy it can reach. The copy is made by a user of its own: nothing
+    // of it can be signalled, read or written from there.
+    spawnSync(CTR, ['exec', '-i', '--user', '1000', `ola-${FA}`, 'sh', '-c', 'cat > /tmp/fx-attack.py; (nohup setsid python3 -I /tmp/fx-attack.py >/dev/null 2>&1 &)'], { input: TWIN_ATTACK, encoding: 'utf8' })
+    await sleep(500)
     const r = await cpost(a, '/api/compare/start', { ...conv, mode: 'twin' })
     assert(r.status === 200 && r.json.state === 'ready', `start: ${r.status} ${r.text}`)
     cmpId = r.json.id
@@ -1364,6 +1418,11 @@ if (!LIVE) {
     assert(it.verdict === 'clean' && it.twin?.request && it.twin.files?.[0]?.name === 'data.csv' && it.twin.checks?.length >= 4, JSON.stringify(it).slice(0, 300))
     const kept = readFileSync(path.join(env.OLA_HOME, 'compare', cmpId, 'twin.json'), 'utf8')
     assert(!PLANTED.some((w) => kept.includes(w)), 'a planted word in the copy on the host')
+    inVm('pkill -f fx-attack.py; true')
+    const log = inVm('cat /tmp/fx-attack.log 2>/dev/null').split('\n').filter(Boolean)
+    const touched = Buffer.from(JSON.parse(kept).files.map((f) => f.b64).join(''), 'base64').toString('latin1').includes('FXMARK') || kept.includes('FXMARK')
+    const saw = log.filter((l) => l.startsWith('maker '))
+    assert(!touched && saw.length > 0 && saw.every((l) => / stop refused/.test(l)) && !log.some((l) => l.startsWith('wrote ')), `the attacker: ${log.slice(0, 6).join(' | ')}; the copy carries its mark: ${touched}`)
     assert(auditRows(FA).some((x) => x.action === 'compare_twin_made'), 'not audited')
     return `${it.twin.files[0].size} bytes of made-up data, ${it.twin.checks.length} checks`
   })
@@ -1459,7 +1518,11 @@ await check('the hosted open model is off by default and independent of Claude; 
   assert((await jpost(a, '/api/hosted/settings', { enabled: true })).status === 400, 'on without consent')
   const on = await jpost(a, '/api/hosted/settings', { enabled: true, consent: true })
   assert(on.status === 200 && on.json.enabled === true, `on: ${on.status}`)
-  assert(hostedFile()[`ws-${FA}`]?.cap_micro_usd === 20_000_000 && hostedFile()[`ws-${FA}`].until === undefined, `hosted grant: ${JSON.stringify(hostedFile())}`)
+  // Review 5 follow-up: on means runs may start without asking; the VM itself holds no grant.
+  assert(!hostedFile()[`ws-${FA}`], `a standing hosted grant: ${JSON.stringify(hostedFile())}`)
+  await sleep(2500)
+  const inside = await hostedFromInside()
+  assert(inside === '403', `the hosted model from inside the VM with the switch on and no run: ${inside}`)
   assert(!grantsFile()[`ws-${FA}`], 'turning the hosted model on gave a Claude grant')
   assert((await jpost(v, '/api/fallback/settings', { stretch: 'never' })).status === 403, 'the viewer changed "when a request looks like a stretch"')
   const s = await jpost(a, '/api/fallback/settings', { stretch: 'handover', stretchTo: 'claude' })
@@ -1496,6 +1559,9 @@ await check(`a request handed to the hosted model runs in the same sealed VM and
   const models = (m2?.data ?? m2 ?? []).filter((x) => x.type === 'assistant').map((x) => x.model?.id)
   // opencode lists a conversation's messages newest first: the newest reply is the first.
   assert(models[0] === 'general' && models.includes('hosted'), `after the hosted run the conversation runs on ${models[0]} (newest first: ${models.join(', ')})`)
+  await sleep(2500)
+  const after = await hostedFromInside()
+  assert(!hostedFile()[`ws-${FA}`] && after === '403', `after the hosted run, from inside the VM: ${after}`)
   return `${Math.round((Date.now() - t0) / 1000)} s, ${lines.length} hosted requests; ${row.tokens_in} tokens in, ${row.tokens_out} out, $${(row.cost_micro_usd / 1e6).toFixed(4)}; ${HOSTED_LIVE ? `wrote ${file} (the survey has ${real})` : 'wrote rows.md'}; then Ola's model again`
 })
 await check('"Just this once": with the switches off the owner hands one request over; the gateway honors it for that run only, the next is refused from inside the VM; a member cannot; the same for Claude', async () => {
@@ -1944,7 +2010,7 @@ await check('batch jobs: a member who is not the owner cannot start a job on an 
 await check('batch jobs: the trial codes 15 documents in the VM and stops for a yes; its rows carry quotes, pages and checks', async () => {
   const r = await jpost(a, '/api/jobs/trial', { job: job60 })
   assert(r.status === 200, `trial: ${r.status} ${r.text.slice(0, 200)}`)
-  assert(batchGrants()[`ws-${FA}`]?.job === job60, 'no grant for the trial')
+  await until(() => batchGrants()[`ws-${FA}`]?.job === job60 && /^[0-9a-f]{64}$/.test(batchGrants()[`ws-${FA}`].key_sha256 ?? ''), 30_000, 'the trial’s grant, bound to its runner’s key')
   await until(async () => (await jobGet(a, job60)).job.approved?.state === 'trial_done', 120_000, 'the trial finishing')
   const g = await jobGet(a, job60, '&stage=trial')
   assert(g.results.total === 15 && g.job.progress.pending === 45, `trial rows ${g.results.total}, pending ${g.job.progress.pending}`)
@@ -1964,6 +2030,11 @@ await check('batch jobs: the whole job runs past the 24 s run ceiling and the 3 
   const conv = await pyInVm(CONVERSATION_PROBE, secretsOf(FA).BOX_API_KEY)
   const [cs, csec] = conv.out.split(' ')
   assert(cs === '200' && Number(csec) < 3, `a conversation during the job: ${conv.out} ${conv.err.slice(0, 100)}`)
+  // Review 5 follow-up (low): while the job runs, another process in the VM (the agent's user) knows
+  // the job's id but cannot spend its budget, and cannot read the runner's key from it.
+  const lane = await pyInVm(laneProbe(job60), secretsOf(FA).BOX_API_KEY)
+  const peek = await pyInVm(RUNNER_PEEK)
+  assert(lane.out === '403' && /^runner \d+: environ refused, fd refused, mem refused, maps refused$/.test(peek.out), `during the job: lane ${lane.out}; ${peek.out} ${peek.err.slice(0, 200)}`)
   // Pause: the grant goes, the count stops.
   assert((await jpost(a, '/api/jobs/pause', { job: job60 })).status === 200, 'pause')
   assert(!batchGrants()[`ws-${FA}`], 'the grant outlived the pause')
@@ -2121,7 +2192,7 @@ await check('an idle workspace stops, its event stream does not wake it, and ope
     try {
       assert(r.status === 0, `remove-member exited ${r.status}: ${r.stderr.trim().split('\n').pop()}`)
       const hg = hostedFile()
-      assert(hg[`ws-${FA}`]?.cap_micro_usd === 20_000_000 && !hg['ws-gone-zz'], `the hosted grants after the removal: ${JSON.stringify(hg)}`)
+      assert(!hg[`ws-${FA}`] && !hg['ws-gone-zz'], `the hosted grants after the removal (no run going on, so none): ${JSON.stringify(hg)}`)
       assert(/left stopped/.test(lineOf(r.stdout, FA)) && /stopped, it starts on its next request/.test(lineOf(r.stdout, FC)), r.stdout.trim().replace(/\n/g, ' | '))
       for (const id of [FA, FC]) {
         const now = secretsOf(id)
@@ -2161,7 +2232,7 @@ await check('an idle workspace stops, its event stream does not wake it, and ope
       assert(wsRow(FA).closed === true, 'the workspace is not marked closed on the machine')
       assert(!hostedFile()[`ws-${FA}`], 'a closed project kept its hosted grant')
       admin('reopen', FA)
-      assert(hostedFile()[`ws-${FA}`], 'the reopened project lost its hosted grant (it is still on)')
+      assert(!hostedFile()[`ws-${FA}`] && dbRow(`SELECT hosted_enabled AS h FROM workspaces WHERE slug = '${FA}'`).h === 1, 'the reopened project: its switch kept, no standing grant')
       const back = await project(FA)
       const now = secretsOf(FA)
       assert(back.status === 200 && (await deskStatus(FA, now.OPENCODE_PASSWORD)) === 200 && (await deskStatus(FA, old[FA].OPENCODE_PASSWORD)) === 401 && since(FA, t0).includes('workspace_reopened'), `after reopen: ${back.status}`)

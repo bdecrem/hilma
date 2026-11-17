@@ -4,7 +4,7 @@
 import { test, after } from 'node:test'
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
-import { randomBytes } from 'node:crypto'
+import { createHash, randomBytes } from 'node:crypto'
 import { chmodSync, mkdtempSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import http from 'node:http'
 import net from 'node:net'
@@ -18,13 +18,16 @@ after(() => rmSync(TMP, { recursive: true, force: true }))
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 const tok = () => randomBytes(20).toString('hex')
 const T = { a: tok(), b: tok(), c: tok(), usage: tok() }
+// The job runner's key (review 5 follow-up): the front desk hands it to the runner alone; the file holds its sha256.
+const JOB_KEY = tok() + tok()
+const keySha = (k) => createHash('sha256').update(k).digest('hex')
 const UPSTREAM_KEY = `up-${tok()}`
 const MODELS = 'general=up/general-1,fast=up/fast-1'
 
 async function waitFor(fn, ms = 3000, what = 'condition') {
   const end = Date.now() + ms
   for (;;) {
-    const v = fn()
+    const v = await fn() // awaited: a check may be async (it was not, so an async check always passed)
     if (v) return v
     if (Date.now() > end) throw new Error(`timed out waiting for ${what}`)
     await sleep(10)
@@ -1356,10 +1359,69 @@ test('a one-time grant ("Just this once") is honored until its moment and while 
   }
 })
 
+test('a grants file that is deleted, not mode 600 or not JSON means no grants, for Claude, the hosted model and batch jobs', async () => {
+  // Review 4, open: a deleted grants file left every old grant in force until the gateway restarted.
+  const up = await fakeUpstream()
+  const hostedUp = await fakeUpstream()
+  const an = await fakeAnthropic()
+  const dir = mkdtempSync(path.join(TMP, 'closed-'))
+  const f = { claude: path.join(dir, 'gateway-claude'), hosted: path.join(dir, 'gateway-hosted'), batch: path.join(dir, 'gateway-batch') }
+  const JOB = 'c0ffee000001'
+  const grantAll = () => {
+    writeGrants(f.claude, { 'ws-one': { mode: 'api_key' } })
+    writeGrants(f.hosted, { 'ws-one': {} })
+    writeGrants(f.batch, { 'ws-one': { job: JOB, tokens: 100000, key_sha256: keySha(JOB_KEY) } })
+  }
+  grantAll()
+  const k = tok()
+  const g = await gateway({ ...baseEnv(up.url), GATEWAY_TOKENS: `ws-one:${k}`, GATEWAY_CLAUDE_FILE: f.claude, GATEWAY_CLAUDE_UPSTREAM: an.url, CLAUDE_API_KEY: `sk-ant-api-${tok()}`,
+    HOSTED_BASE_URL: hostedUp.url, HOSTED_API_KEY: `hosted-key-${tok()}`, HOSTED_MODEL: 'Big/Open-Model-1', HOSTED_PROVIDER: 'Made-up Cloud', GATEWAY_HOSTED_FILE: f.hosted, GATEWAY_BATCH_FILE: f.batch })
+  const statuses = async () => [(await claudeCall(g, k, msg('hi'))).status, (await call(g, k, chat({ tag: 'h' }, 'hosted'))).status, (await laneCall(g, k, chat({ tag: 'j' }), JOB)).status]
+  try {
+    assert.deepEqual(await statuses(), [200, 200, 200], 'granted at start')
+    for (const [what, spoil] of [['deleted', (p) => rmSync(p)], ['mode 644', (p) => chmodSync(p, 0o644)], ['not JSON', (p) => (writeFileSync(`${p}.x`, '{"ws-one": {', { mode: 0o600 }), renameSync(`${p}.x`, p))]]) {
+      for (const p of Object.values(f)) spoil(p)
+      await waitFor(async () => JSON.stringify(await statuses()) === '[403,403,403]', 6000, `every grant gone once the files are ${what}`)
+      grantAll()
+      await waitFor(async () => JSON.stringify(await statuses()) === '[200,200,200]', 6000, `the grants back after ${what}`)
+    }
+  } finally {
+    await g.stop()
+  }
+})
+
+test('a Claude or hosted grant that a batch job holds works only with the job runner’s key', async () => {
+  // Review 5 (low): while a job on Claude or the hosted model ran, any process in the VM could use
+  // the project's grant. The front desk now writes such a grant with the runner's key_sha256.
+  const up = await fakeUpstream()
+  const hostedUp = await fakeUpstream()
+  const an = await fakeAnthropic()
+  const dir = mkdtempSync(path.join(TMP, 'jobkey-'))
+  const f = { claude: path.join(dir, 'gateway-claude'), hosted: path.join(dir, 'gateway-hosted') }
+  writeGrants(f.claude, { 'ws-one': { mode: 'api_key', until: Date.now() + 60_000, key_sha256: keySha(JOB_KEY) } })
+  writeGrants(f.hosted, { 'ws-one': { until: Date.now() + 60_000, key_sha256: keySha(JOB_KEY) } })
+  const k = tok()
+  const g = await gateway({ ...baseEnv(up.url), GATEWAY_TOKENS: `ws-one:${k}`, GATEWAY_CLAUDE_FILE: f.claude, GATEWAY_CLAUDE_UPSTREAM: an.url, CLAUDE_API_KEY: `sk-ant-api-${tok()}`,
+    HOSTED_BASE_URL: hostedUp.url, HOSTED_API_KEY: `hosted-key-${tok()}`, HOSTED_MODEL: 'Big/Open-Model-1', HOSTED_PROVIDER: 'Made-up Cloud', GATEWAY_HOSTED_FILE: f.hosted })
+  try {
+    assert.equal((await claudeCall(g, k, msg('hi'))).status, 403, 'Claude without the key')
+    assert.equal((await claudeCall(g, k, msg('hi'), { headers: { 'x-ola-job-key': tok() + tok() } })).status, 403, 'Claude with a wrong key')
+    assert.equal((await call(g, k, chat({ tag: 'h0' }, 'hosted'))).status, 403, 'hosted without the key')
+    assert.equal(an.st.seen.length, 0, 'a keyless request reached Anthropic')
+    assert.equal(hostedUp.st.seen.length, 0, 'a keyless request reached the hosted model')
+    assert.equal((await claudeCall(g, k, msg('hi'), { headers: { 'x-ola-job-key': JOB_KEY } })).status, 200, 'Claude with the runner’s key')
+    assert.equal((await laneCall(g, k, chat({ tag: 'h1' }, 'hosted'), 'c0ffee000002')).status, 403, 'the batch lane still needs its own grant')
+    const r = await fetch(g.url + '/v1/chat/completions', { method: 'POST', headers: { Authorization: `Bearer ${k}`, 'Content-Type': 'application/json', 'X-Ola-Job-Key': JOB_KEY }, body: JSON.stringify(chat({ tag: 'h2' }, 'hosted')) })
+    assert.equal(r.status, 200, 'hosted with the runner’s key')
+  } finally {
+    await g.stop()
+  }
+})
+
 // ---------------------------------------------------------------- batch jobs (batch.mjs)
 
-async function laneCall(g, token, body, job) {
-  const res = await fetch(g.url + '/v1/chat/completions', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', 'X-Ola-Lane': 'batch', ...(job ? { 'X-Ola-Job': job } : {}) }, body: JSON.stringify(body) })
+async function laneCall(g, token, body, job, key = JOB_KEY) {
+  const res = await fetch(g.url + '/v1/chat/completions', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', 'X-Ola-Lane': 'batch', ...(job ? { 'X-Ola-Job': job } : {}), ...(key ? { 'X-Ola-Job-Key': key } : {}) }, body: JSON.stringify(body) })
   const text = await res.text()
   let json = null
   try {
@@ -1389,9 +1451,17 @@ test('batch jobs: refused without the job’s grant; their own budget, not the w
       assert.match(r.json.error.message, /No job is approved/)
     }
     assert.equal(up.st.seen.length, 0)
+    // A grant without the runner's key is no grant.
     writeGrants(grants, { 'ws-one': { job: JOB, tokens: 300 } })
+    await waitFor(() => g.lines.some((l) => l.includes('"event":"batch_grants"') && l.includes('"callers":0')), 5000, 'the keyless grant read')
+    writeGrants(grants, { 'ws-one': { job: JOB, tokens: 300, key_sha256: keySha(JOB_KEY) } })
     await waitFor(() => g.lines.some((l) => l.includes('"event":"batch_grants"') && l.includes('"callers":1')), 5000, 'the batch grants reload')
     assert.equal((await laneCall(g, k.one, chat({ tag: 'b1' }), 'ffffffffffff')).status, 403, 'another job id')
+    // Another process in the VM knows the job id (it is in the project's database) but not the
+    // runner's key: refused, with no key and with a wrong one, and nothing reaches the model.
+    assert.equal((await laneCall(g, k.one, chat({ tag: 'bk1' }), JOB, null)).status, 403, 'the job id without the runner key')
+    assert.equal((await laneCall(g, k.one, chat({ tag: 'bk2' }), JOB, tok() + tok())).status, 403, 'a wrong runner key')
+    assert.equal(up.st.seen.length, 0, 'a keyless batch request reached the model server')
     assert.equal((await laneCall(g, k.two, chat({ tag: 'b2' }), JOB)).status, 403, 'another project')
     // Within the budget: 120 tokens a call, over a weekly quota of 100 that conversations keep whole.
     assert.equal((await laneCall(g, k.one, chat({ tag: 'b3', usage: [100, 20] }), JOB)).status, 200)
@@ -1404,7 +1474,7 @@ test('batch jobs: refused without the job’s grant; their own budget, not the w
     assert.equal(over.json.error.code, 'job_budget')
     assert.match(over.json.error.message, /budget that was approved/)
     // One request in flight per caller for the batch lane; a conversation still gets through beside it.
-    writeGrants(grants, { 'ws-one': { job: JOB, tokens: 100000 } })
+    writeGrants(grants, { 'ws-one': { job: JOB, tokens: 100000, key_sha256: keySha(JOB_KEY) } })
     await waitFor(() => g.lines.filter((l) => l.includes('"event":"batch_grants"') && l.includes('"callers":1')).length >= 2, 5000, 'the batch grants reload')
     const slow = laneCall(g, k.one, chat({ tag: 'b7', delay: 800 }), JOB)
     await sleep(200)

@@ -11,6 +11,12 @@
 //     "tokens": n } }, reloaded within 2 s) and names that job; else 403 in a plain sentence. The
 //     front desk lists a job only while it is in its trial or running, so a paused, cancelled or
 //     finished job has no grant, and an agent that sends the header on its own gets nothing.
+//   - carries `X-Ola-Job-Key`, a secret the front desk made for the job's runner when it started it
+//     and handed to it alone (on its input, after the runner made itself unreadable to the agent's
+//     user: workspace/ola-batch). The file holds its sha256 (`"key_sha256"`). Without the key, or
+//     with another, 403: another process in the VM cannot spend the job's budget on its own
+//     requests while the job runs (review 5, low; before, the job id alone was enough). A grant
+//     without a key is no grant.
 //   - is counted against that job's budget (batch_usage, by caller and job, kept across restarts
 //     and pauses), not the caller's weekly quota; 429 with error code `job_budget` once the job has
 //     used what was approved. Conversations keep their whole weekly quota while a job runs.
@@ -20,10 +26,12 @@
 //     ceiling (a job on the hosted model needs the project's hosted grant, like any request), size
 //     caps, the fair queue and the machine's total in flight.
 // No budget can be set above GATEWAY_BATCH_JOB_MAX_TOKENS (100,000,000) whatever the file says.
+import { createHash, timingSafeEqual } from 'node:crypto'
 import { readFileSync, statSync } from 'node:fs'
 
 export const BATCH_SETTINGS = ['GATEWAY_BATCH_FILE', 'GATEWAY_BATCH_JOB_MAX_TOKENS', 'GATEWAY_BATCH_INFLIGHT_PER_CALLER']
 const JOB = /^[0-9a-f]{12}$/
+const KEY = /^[0-9a-f]{64}$/
 
 export function batchConfig(env, bad) {
   const max = env.GATEWAY_BATCH_JOB_MAX_TOKENS === undefined ? 100_000_000 : Number(env.GATEWAY_BATCH_JOB_MAX_TOKENS)
@@ -38,7 +46,47 @@ export function laneOf(req) {
   const lane = String(req.headers['x-ola-lane'] ?? '').trim().toLowerCase()
   if (lane !== 'batch') return null
   const job = String(req.headers['x-ola-job'] ?? '').trim()
-  return { lane: 'batch', job: JOB.test(job) ? job : null }
+  const key = String(req.headers['x-ola-job-key'] ?? '').trim()
+  return { lane: 'batch', job: JOB.test(job) ? job : null, key: key.length >= 32 && key.length <= 128 ? key : null }
+}
+
+export const keyMatches = (g, key) => Boolean(key) && timingSafeEqual(createHash('sha256').update(String(key)).digest(), g.keySha)
+/** A Claude or hosted grant held by a batch job's runner alone carries `key_sha256`: the request must carry the key. */
+export const jobKeyOf = (g) => (KEY.test(g?.key_sha256 ?? '') ? Buffer.from(g.key_sha256, 'hex') : null)
+export const runnerKeyOk = (grant, req) => !grant.keySha || keyMatches(grant, String(req.headers['x-ola-job-key'] ?? '').trim())
+
+/**
+ * One grants file, read the way all three are (Claude, the hosted model, batch jobs). Returns null
+ * when nothing changed since `seen`; else { grants, stamp, ok }. Fails closed (review 4, open): a
+ * file that is missing, unreadable, not mode 600 or not JSON means NO grants, never the ones in
+ * force (before, a deleted file left every old grant working until the gateway restarted).
+ * entry(name, g) returns the grant or null to skip it.
+ */
+export function readGrants(file, setting, seen, entry) {
+  let st
+  try {
+    st = statSync(file)
+  } catch {
+    if (seen === 'missing') return null
+    console.error(`${setting} is missing: no grants are in force`)
+    return { grants: new Map(), stamp: 'missing', ok: false }
+  }
+  const stamp = `${st.mtimeMs}:${st.size}:${st.mode}`
+  if (stamp === seen) return null
+  try {
+    if ((st.mode & 0o077) !== 0) throw new Error('mode')
+    const raw = JSON.parse(readFileSync(file, 'utf8'))
+    const grants = new Map()
+    for (const [name, g] of Object.entries(raw && typeof raw === 'object' ? raw : {})) {
+      if (!/^ws-[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$/.test(name)) continue
+      const v = entry(name, g)
+      if (v) grants.set(name, v)
+    }
+    return { grants, stamp, ok: true }
+  } catch (e) {
+    console.error(e?.message === 'mode' ? `${setting} must be mode 600: no grants are in force` : `${setting} could not be read: no grants are in force`)
+    return { grants: new Map(), stamp, ok: false }
+  }
 }
 
 export function makeBatch({ cfg, db }) {
@@ -46,25 +94,15 @@ export function makeBatch({ cfg, db }) {
   let seen = ''
   const load = () => {
     if (!cfg.file) return
-    try {
-      const st = statSync(cfg.file)
-      const stamp = `${st.mtimeMs}:${st.size}`
-      if (stamp === seen) return
-      seen = stamp
-      if ((st.mode & 0o077) !== 0) return console.error('GATEWAY_BATCH_FILE must be mode 600: the grants in force stay')
-      const raw = JSON.parse(readFileSync(cfg.file, 'utf8'))
-      const next = new Map()
-      for (const [name, g] of Object.entries(raw ?? {})) {
-        if (!/^ws-[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$/.test(name) || !g || typeof g !== 'object' || !JOB.test(g.job ?? '')) continue
-        if (!Number.isSafeInteger(g.tokens) || g.tokens < 1) continue
-        next.set(name, { job: g.job, tokens: Math.min(g.tokens, cfg.maxTokens) })
-      }
-      grants = next
-      process.stdout.write(JSON.stringify({ t: new Date().toISOString(), event: 'batch_grants', ok: true, callers: grants.size }) + '\n')
-    } catch {
-      if (seen !== 'missing') console.error('GATEWAY_BATCH_FILE could not be read: the grants in force stay')
-      seen = 'missing'
-    }
+    const next = readGrants(cfg.file, 'GATEWAY_BATCH_FILE', seen, (name, g) => {
+      if (!g || typeof g !== 'object' || !JOB.test(g.job ?? '') || !KEY.test(g.key_sha256 ?? '')) return null
+      if (!Number.isSafeInteger(g.tokens) || g.tokens < 1) return null
+      return { job: g.job, tokens: Math.min(g.tokens, cfg.maxTokens), keySha: Buffer.from(g.key_sha256, 'hex') }
+    })
+    if (!next) return
+    seen = next.stamp
+    grants = next.grants
+    process.stdout.write(JSON.stringify({ t: new Date().toISOString(), event: 'batch_grants', ok: next.ok, callers: grants.size }) + '\n')
   }
   load()
   const timer = setInterval(load, 2000)
@@ -89,7 +127,7 @@ export function makeBatch({ cfg, db }) {
     /** Null if this batch request may go ahead now (and it then holds one of the caller's batch slots), else the refusal. */
     admit(caller, lane, pending = 0) {
       const g = grants.get(caller)
-      if (!g || !lane.job || lane.job !== g.job) return { status: 403, why: 'no batch job is approved for this caller', message: 'No job is approved to run for this project now. A person starts a job, or its trial, under Jobs in the app.', type: 'permission_error' }
+      if (!g || !lane.job || lane.job !== g.job || !keyMatches(g, lane.key)) return { status: 403, why: 'no batch job is approved for this caller', message: 'No job is approved to run for this project now. A person starts a job, or its trial, under Jobs in the app.', type: 'permission_error' }
       const u = usedBy(caller, g.job)
       if (u.tokens + pending >= g.tokens) return { status: 429, why: 'the job used its budget', message: `This job has used the budget that was approved for it (${g.tokens} tokens). Raise it under Jobs to carry on.`, type: 'insufficient_quota', code: 'job_budget' }
       if ((inflight.get(caller) ?? 0) >= cfg.perCaller) return { status: 429, why: 'the job already has its request in flight', message: `A job sends ${cfg.perCaller === 1 ? 'one request' : `${cfg.perCaller} requests`} at a time; retry when it is answered.`, type: 'rate_limit_error', retryAfter: 5 }
@@ -98,7 +136,7 @@ export function makeBatch({ cfg, db }) {
     /** Over budget, counting what this request already spent on earlier tries (the retry check). */
     over(caller, lane, pending) {
       const g = grants.get(caller)
-      return !g || g.job !== lane.job || usedBy(caller, g.job).tokens + pending >= g.tokens
+      return !g || g.job !== lane.job || !keyMatches(g, lane.key) || usedBy(caller, g.job).tokens + pending >= g.tokens
     },
     hold(caller) {
       inflight.set(caller, (inflight.get(caller) ?? 0) + 1)

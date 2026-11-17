@@ -47,7 +47,7 @@ import { fileURLToPath } from 'node:url'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 export const CONTAINER = process.env.OLA_CONTAINER_BIN || '/usr/local/bin/container'
-export const IMAGE = 'ola-workspace:2.3.0-19'
+export const IMAGE = 'ola-workspace:2.3.0-20'
 export const HOME = process.env.OLA_HOME || path.join(homedir(), '.ola')
 export const GATEWAY_PORT = Number(process.env.OLA_GATEWAY_PORT || 4180)
 // The gateway's door sockets, one per workspace (the gateway's GATEWAY_DOOR_DIR): each door
@@ -723,6 +723,10 @@ export async function upload(id, files, { replace = false } = {}) {
 export const validRel = (rel) => typeof rel === 'string' && rel.length <= 1300 && rel.split('/').length <= 6 && rel.split('/').every((p) => UPLOAD_NAME.test(p) && !p.includes('..'))
 
 // One `container exec` of an /opt/ola/bin tool, without blocking. stdout is returned as a stream.
+/** The agent's user in the VM, and the groups and user of our own (image 2.3.0-20, Containerfile). */
+export const WORK_UID = 1000
+export const RUNNER_GID = 1001
+export const TWIN_UID = 1002
 function execTool(id, tool, args, { stdin = false } = {}) {
   return spawn(CONTAINER, ['exec', ...(stdin ? ['-i'] : []), names(id).container, `/opt/ola/bin/${tool}`, ...args], { stdio: [stdin ? 'pipe' : 'ignore', 'pipe', 'pipe'] })
 }
@@ -988,10 +992,16 @@ export async function batchApi(id, args, { ms = 20_000, max = 8 * 1024 * 1024 } 
 }
 
 /** `ola-batch run <job>` in the VM: the job itself, for as long as it runs (the front desk keeps it going). */
-export function batchRunner(id, job) {
+export function batchRunner(id, job, key) {
   validId(id)
   if (!/^[0-9a-f]{12}$/.test(job)) refuse('not a job id')
-  const child = execTool(id, 'ola-batch', ['run', job])
+  if (!/^[0-9a-f]{64}$/.test(key ?? '')) refuse('not a runner key')
+  // The agent's user, in a group of its own (review 5 follow-up): it writes the project's database
+  // as the agent does, but the agent's processes cannot read its memory, environment or pipes (the
+  // kernel's ptrace check wants the same uid and gid), so the key on its input stays its own.
+  const child = spawn(CONTAINER, ['exec', '-i', '--user', `${WORK_UID}:${RUNNER_GID}`, names(id).container, '/opt/ola/bin/ola-batch', 'run', job, '--key-stdin'], { stdio: ['pipe', 'pipe', 'pipe'] })
+  child.stdin.on('error', () => {})
+  child.stdin.end(key + '\n')
   child.stdout.resume()
   return child
 }
@@ -1170,29 +1180,20 @@ export async function snapshot(id, dir) {
     mkdirSync(out, { recursive: true, mode: 0o700 })
     const at = new Date().toISOString()
     const dbFile = path.join(out, 'project.db.part')
-    const db = await pipeTo(spawn(CONTAINER, ['exec', names(id).container, '/opt/ola/bin/ola-db', 'api', 'backup'], { stdio: ['ignore', 'pipe', 'pipe'] }), dbFile)
+    // The database copy is made and checked INSIDE the VM (ola-db api snapshot-check: online backup,
+    // integrity_check, real tables counted); this machine only copies its bytes and keeps them if
+    // their sha256 is the one the check reported (review 4, open: the host used to open a file the
+    // agent controls with its own SQLite). A VM can still lie about its own copy; it cannot make
+    // this machine parse it.
+    const checked = await toolJson(id, 'ola-db', ['api', 'snapshot-check'], { ms: 30 * 60_000 })
+    const c = checked.json
+    if (checked.code !== 0 || !c || !/^snap-[0-9]+-[0-9a-f]{16}\.db$/.test(c.name ?? '') || !/^[0-9a-f]{64}$/.test(c.sha256 ?? '') || !Number.isSafeInteger(c.size)) refuse('the database copy could not be made')
+    const db = await pipeTo(spawn(CONTAINER, ['exec', names(id).container, '/opt/ola/bin/ola-db', 'api', 'snapshot-send', '--name', c.name], { stdio: ['ignore', 'pipe', 'pipe'] }), dbFile)
     const tarFile = path.join(out, 'files.tar.part')
     const tar = await pipeTo(spawn(CONTAINER, ['exec', names(id).container, 'tar', '-C', '/work', ...TAR_EXCLUDE.map((x) => `--exclude=${x}`), '-cf', '-', '.'], { stdio: ['ignore', 'pipe', 'pipe'] }), tarFile)
-    // The copy is checked before it replaces the last one: it opens, it is whole, it has the core.
-    // The file came out of the VM, which the agent controls (review 4, open; review 5): read on this
-    // machine with nothing in its schema trusted (no functions or virtual tables run from it), cell
-    // sizes checked, only real tables counted, and any error a refusal rather than a crash.
-    const { DatabaseSync } = await import('node:sqlite')
-    let integrity = null
-    let counts = {}
-    try {
-      const check = new DatabaseSync(dbFile, { readOnly: true })
-      try {
-        check.exec('PRAGMA trusted_schema = OFF; PRAGMA cell_size_check = ON;')
-        integrity = check.prepare('PRAGMA integrity_check').get()
-        counts = Object.fromEntries(check.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE 'doc_text_%' AND coalesce(sql, '') NOT LIKE 'CREATE VIRTUAL%' ORDER BY name").all().map((r) => [r.name, check.prepare(`SELECT count(*) AS n FROM "${r.name.replace(/"/g, '""')}"`).get().n]))
-      } finally {
-        check.close()
-      }
-    } catch {
-      integrity = null
-    }
-    if (!integrity || Object.values(integrity)[0] !== 'ok' || !('documents' in counts)) refuse('the database copy did not check out')
+    const counts = c.tables && typeof c.tables === 'object' && !Array.isArray(c.tables) ? Object.fromEntries(Object.entries(c.tables).filter(([k, v]) => /^[A-Za-z0-9_.]{1,128}$/.test(k) && Number.isSafeInteger(v) && v >= 0).slice(0, 2000)) : {}
+    if (db.sha256 !== c.sha256 || db.size !== c.size) refuse('the database copy changed between its check and its copy')
+    if (c.integrity !== 'ok' || !('documents' in counts)) refuse('the database copy did not check out')
     renameSync(dbFile, path.join(out, 'project.db'))
     renameSync(tarFile, path.join(out, 'files.tar'))
     const manifest = { id, at, image: IMAGE, database: { ...db, tables: counts }, files: tar }

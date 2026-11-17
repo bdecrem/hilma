@@ -303,7 +303,11 @@ devJobs = makeJobs({
   log,
   tool: {
     api: (_slug, args) => pyJson(['api', ...args]),
-    runner: (_slug, job) => spawn('python3', [path.join(AI, 'workspace/ola-batch'), 'run', job], { env: batchEnv, stdio: ['ignore', 'ignore', 'pipe'] }),
+    runner: (_slug, job, key) => {
+      const c = spawn('python3', [path.join(AI, 'workspace/ola-batch'), 'run', job, '--key-stdin'], { env: batchEnv, stdio: ['pipe', 'ignore', 'pipe'] })
+      c.stdin.end(key + '\n')
+      return c
+    },
   },
 })
 let pagePort = PORT

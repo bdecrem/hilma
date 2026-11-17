@@ -21,10 +21,19 @@
 // state, its model, its budget, who, when: no title, no field, no document, those are content and
 // stay in the VM). The gateway's grant for a job (GATEWAY_BATCH_FILE, writeBatchGrants) is written
 // from those rows alone: a job has a grant only while it is in its trial or running, so the budget
-// the person approved is what the gateway enforces, whatever the VM says.
+// the person approved is what the gateway enforces, whatever the VM says. The grant is the job
+// runner's alone (review 5 follow-up, low): each time the front desk starts a runner it makes a key,
+// hands it to that runner on its input, and keeps only its sha256 (batch_jobs.runner_key_sha256,
+// which the grants carry); the gateway serves the job's requests only with the key. The runner runs
+// as the agent's user but in a group of its own (`--user 1000:1001`): the kernel then refuses the
+// agent's processes its memory, its environment and its open pipes (ptrace access needs the same
+// uid AND gid), and it talks to the door's socket itself, not to the loopback bridge the agent could
+// replace. The agent can still end the runner (signals go by uid): the front desk then starts a new
+// one with a new key. A job on the hosted model or Claude gets that grant bound to the same key.
 //
 // Everything the VM says about a job (its state, progress, rows) is the VM's word: typed, capped,
 // and never trusted for a decision that matters. A VM that says "done" early only stops its own job.
+import { createHash, randomBytes } from 'node:crypto'
 import { homedir } from 'node:os'
 import path from 'node:path'
 import { audit } from './db.mjs'
@@ -51,10 +60,10 @@ export function jobsConfig(env = process.env) {
   }
 }
 
-/** The gateway's job grants, from the database alone: each active project's job in its trial or running. */
+/** The gateway's job grants, from the database alone: each active project's job in its trial or running, whose runner holds its key. */
 export function writeBatchGrants(db, jc) {
   const grants = {}
-  for (const r of db.prepare("SELECT w.slug, j.job, j.budget FROM batch_jobs j JOIN workspaces w ON w.id = j.workspace_id WHERE w.status = 'active' AND j.state IN ('trial', 'running') ORDER BY j.updated_at").all()) grants[`ws-${r.slug}`] = { job: r.job, tokens: r.budget }
+  for (const r of db.prepare("SELECT w.slug, j.job, j.budget, j.runner_key_sha256 AS k FROM batch_jobs j JOIN workspaces w ON w.id = j.workspace_id WHERE w.status = 'active' AND j.state IN ('trial', 'running') AND j.runner_key_sha256 IS NOT NULL ORDER BY j.updated_at").all()) grants[`ws-${r.slug}`] = { job: r.job, tokens: r.budget, key_sha256: r.k }
   return writeGrantsFile(jc.file, grants)
 }
 
@@ -103,11 +112,15 @@ export function unapproved(j, row) {
 
 // `tool` reaches ola-batch in a project's VM (ws.mjs: `container exec`); web/dev.mjs passes one that
 // runs it on its dev folder, so the page's checks drive this same code.
-export function makeJobs({ db, jc, cc, workspaces, hostedInfo, claudeInfo, log, tool = { api: ws.batchApi, runner: ws.batchRunner } }) {
+export function makeJobs({ db, jc, cc, workspaces, hostedInfo, claudeInfo, log, otherGrants = () => {}, tool = { api: ws.batchApi, runner: ws.batchRunner } }) {
   const runners = new Map() // `${slug}:${job}` -> the `container exec` child
   const holds = new Map() // slug -> release() of its busy hold (a job keeps the VM awake)
   const waiting = new Map() // slug -> what keeps the job from going on now ("the machine is full")
-  writeBatchGrants(db, jc)
+  // No runner outlives the front desk that started it (it is a child of its `container exec`): an
+  // earlier front desk's keys are dropped, and each runner started below gets a new one.
+  db.prepare('UPDATE batch_jobs SET runner_key_sha256 = NULL WHERE runner_key_sha256 IS NOT NULL').run()
+  const grantsAll = () => (writeBatchGrants(db, jc), otherGrants())
+  grantsAll()
 
   const rowsOf = (wsId) => db.prepare('SELECT job, state, stage, model, budget, started_by AS by, updated_at AS at FROM batch_jobs WHERE workspace_id = ?').all(wsId)
   const rowOf = (wsId, job) => db.prepare('SELECT * FROM batch_jobs WHERE workspace_id = ? AND job = ?').get(wsId, job)
@@ -233,7 +246,7 @@ export function makeJobs({ db, jc, cc, workspaces, hostedInfo, claudeInfo, log, 
       if (!['trial', 'running', 'paused', 'trial_done'].includes(row.state) || (action === 'pause' && row.state === 'paused')) return refuse(409, 'state', 'This job is not running.')
       const state = action === 'pause' ? 'paused' : 'cancelled'
       db.prepare('UPDATE batch_jobs SET state = ?, updated_at = ? WHERE id = ?').run(state, now, row.id)
-      writeBatchGrants(db, jc)
+      grantsAll()
       await vm(w.slug, ['set', '--job', job, '--state', state, '--note', action === 'pause' ? 'Paused by a person.' : 'Cancelled by a person. What was coded is kept.']).catch(() => {})
       stopRunner(w.slug, job)
       audit(db, { actor: personId, action: action === 'pause' ? 'job_paused' : 'job_cancelled', workspace: w.id })
@@ -273,12 +286,20 @@ export function makeJobs({ db, jc, cc, workspaces, hostedInfo, claudeInfo, log, 
   function startRunner(slug, job) {
     const key = `${slug}:${job}`
     if (runners.has(key)) return
-    const c = tool.runner(slug, job)
+    // This runner's key: given to it alone, its sha256 kept for the grants (and nothing else).
+    const secret = randomBytes(32).toString('hex')
+    const sha = createHash('sha256').update(secret).digest('hex')
+    const set = (v) => db.prepare('UPDATE batch_jobs SET runner_key_sha256 = ? WHERE job = ? AND workspace_id = (SELECT id FROM workspaces WHERE slug = ?)').run(v, job, slug)
+    set(sha)
+    grantsAll()
+    const c = tool.runner(slug, job, secret)
     runners.set(key, c)
     let err = ''
     c.stderr?.on('data', (d) => (err = (err + d).slice(-400)))
     c.on('close', (code) => {
       runners.delete(key)
+      // Its key goes with it: a runner the agent ended, or one that finished, leaves no grant behind.
+      if (db.prepare('SELECT 1 FROM batch_jobs WHERE job = ? AND runner_key_sha256 = ?').get(job, sha)) (set(null), grantsAll())
       if (code !== 0 && code !== 3) log(`${slug}: the job runner ended (${code}): ${err.trim().split('\n').pop() ?? ''}`.slice(0, 300))
     })
     log(`${slug}: job runner started`)
@@ -315,7 +336,7 @@ export function makeJobs({ db, jc, cc, workspaces, hostedInfo, claudeInfo, log, 
         if (['trial_done', 'done'].includes(s.state) || (s.state === 'paused' && /^Paused:/.test(s.note ?? ''))) {
           const state = s.state === 'paused' ? 'paused' : s.state
           db.prepare('UPDATE batch_jobs SET state = ?, updated_at = ? WHERE id = ?').run(state, now, r.id)
-          writeBatchGrants(db, jc)
+          grantsAll()
           const used = (await prices())?.used.get(`ws-${r.slug}`)
           audit(db, { actorKind: 'system', action: state === 'paused' ? 'job_paused' : 'job_finished', workspace: r.workspace_id, tokensIn: used?.job === r.job ? used.tokens_in : null, tokensOut: used?.job === r.job ? used.tokens_out : null })
           log(`${r.slug}: job ${state === 'done' ? 'finished' : state === 'trial_done' ? 'trial finished' : 'paused itself'}`)

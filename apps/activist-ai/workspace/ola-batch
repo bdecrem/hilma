@@ -42,6 +42,11 @@ WORK = os.environ.get("OLA_WORK", "/work")
 DB = os.path.join(WORK, "project.db")
 STATE_DIR = os.path.join(WORK, ".ola", "batch")
 GATEWAY = os.environ.get("OLA_BATCH_GATEWAY", "http://127.0.0.1:4180")
+# The door's own socket, mounted read-only from the host: the runner talks to it directly, never to
+# the loopback bridge (ola-init's socat runs as the agent's user, so the agent could replace it and
+# read the runner's key off the wire).
+DOOR = os.environ.get("OLA_BATCH_DOOR", "/ola/gw/gateway.sock")
+RUNNER_KEY = None  # the job runner's key from the front desk (run --key-stdin): the job's grant is bound to it
 MAX_DOC_CHARS = int(os.environ.get("OLA_BATCH_MAX_CHARS", "120000"))  # about 30,000 tokens of one document
 MIN_TEXT = 40  # fewer characters than this: "no text", not sent to a model
 MIN_QUOTE_WORDS = 4
@@ -571,10 +576,22 @@ def api(argv):
 
 # ------------------------------------------------------------------ the model
 
+class _DoorConnection(http.client.HTTPConnection):
+    def connect(self):
+        import socket
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.settimeout(self.timeout)
+        s.connect(DOOR)
+        self.sock = s
+
+
 def gw_request(method, path, body, token, headers=None, timeout=900):
-    u = GATEWAY.split("://", 1)[1]
-    host, _, port = u.partition(":")
-    c = http.client.HTTPConnection(host, int(port or 80), timeout=timeout)
+    if "OLA_BATCH_GATEWAY" not in os.environ and os.path.exists(DOOR):
+        c = _DoorConnection("gateway", timeout=timeout)
+    else:
+        u = GATEWAY.split("://", 1)[1]
+        host, _, port = u.partition(":")
+        c = http.client.HTTPConnection(host, int(port or 80), timeout=timeout)
     try:
         h = {"Authorization": "Bearer " + token, "Accept": "application/json"}
         data = None
@@ -610,7 +627,7 @@ class Stop(Exception):
 def ask_model(job, messages):
     """One model call. Returns (text, tokens_in, tokens_out)."""
     token = os.environ.get("BOX_API_KEY", "")
-    lane = {"X-Ola-Lane": "batch", "X-Ola-Job": job["id"]}
+    lane = {"X-Ola-Lane": "batch", "X-Ola-Job": job["id"], **({"X-Ola-Job-Key": RUNNER_KEY} if RUNNER_KEY else {})}
     model = job["model"]
     try:
         if model == "claude":
@@ -888,7 +905,13 @@ def main(argv):
     cmd, rest = argv[0], argv[1:]
     if cmd == "api":
         return api(rest)
-    if cmd == "run" and len(rest) == 1:
+    if cmd == "run" and len(rest) in (1, 2) and rest[1:] in ([], ["--key-stdin"]):
+        if rest[1:] == ["--key-stdin"]:
+            global RUNNER_KEY
+            k = sys.stdin.readline().strip()
+            if not re.fullmatch(r"[0-9a-f]{64}", k):
+                fail("run --key-stdin: no runner key on the input")
+            RUNNER_KEY = k
         return run(rest[0])
     if cmd == "propose" and len(rest) == 1:
         return propose(rest[0])

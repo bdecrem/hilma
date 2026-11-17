@@ -5,9 +5,16 @@
 // ceilings), is off by default, and is changed only by an owner of the project's team, with the
 // person's consent on turning it on; each change is audited (claude_enabled, claude_disabled).
 // The gateway learns who may use Claude from GATEWAY_CLAUDE_FILE, which this module writes from the
-// database alone (writeGrants: every active project with it on; mode 600, by rename), so the file
-// is right after any change, whoever made it (the server, or the admin CLI after a member is
-// removed, a role changed, a workspace rotated, closed or reopened).
+// database alone (writeGrants; mode 600, by rename), so the file is right after any change, whoever
+// made it (the server, or the admin CLI after a member is removed, a role changed, a workspace
+// rotated, closed or reopened). A project is in it only while a Claude run the front desk started
+// is going on in it (review 5 follow-up; before, the switch alone put the whole VM in it, so Ola's
+// own agent, or anything in the VM, could send content to Anthropic, logged but unmarked). Each run
+// holds a lease (a fallback_once row): the run's moment plus LEASE_MS, renewed while the run lives,
+// removed when it ends, stops or fails, and every lease is dropped when the front desk starts, so a
+// killed front desk's run loses its grant at the next start, or LEASE_MS later at most. The switch
+// means "Claude runs may be started without asking each time", not "the VM may call Claude". A batch
+// job on Claude (jobs.mjs) holds a grant too while it runs, bound to its runner's key.
 //
 // Which credential a project uses: subscription (oauth) mode only when every owner of its team is
 // an admin (Bart: it is his own subscription), API-key mode otherwise. Whether the gateway holds a
@@ -73,6 +80,10 @@ export function claudeConfig(env = process.env) {
   }
 }
 
+/** How long a run's grant lasts without being renewed: a killed front desk's run loses it this long after at most. */
+export const LEASE_MS = 90_000
+export const leaseUntil = () => Date.now() + LEASE_MS
+
 /** oauth only when the team has owners and every one of them is an admin; api_key otherwise. */
 export function modeFor(db, workspaceId) {
   const r = db.prepare("SELECT count(*) AS n, coalesce(sum(p.is_admin), 0) AS admins FROM memberships m JOIN people p ON p.id = m.person_id JOIN workspaces w ON w.team_id = m.team_id WHERE w.id = ? AND m.role = 'owner' AND p.status != 'suspended'").get(workspaceId)
@@ -80,12 +91,25 @@ export function modeFor(db, workspaceId) {
 }
 
 /**
- * The one-time grants in force for an engine ("Just this once" on the stretch card): workspace id ->
- * until (epoch ms). Rows past their moment are left out (and cleared by the server at the run's end).
+ * The run grants in force for an engine: workspace id -> until (epoch ms). One row per run the front
+ * desk started (with the switch on, or "Just this once" on the stretch card), renewed while it lives.
+ * Rows past their moment are left out (and cleared by the server at the run's end).
  */
 export function onceGrants(db, engine) {
   const out = new Map()
   for (const r of db.prepare('SELECT workspace_id AS id, max(until) AS until FROM fallback_once WHERE engine = ? AND until > ? GROUP BY workspace_id').all(engine, Date.now())) out.set(r.id, r.until)
+  return out
+}
+
+/**
+ * Batch jobs on an engine (claude or hosted) in their trial or running, whose runner holds its key:
+ * workspace id -> the key's sha256. The grant is then the runner's alone (gateway/batch.mjs).
+ */
+export function jobGrants(db, model) {
+  const out = new Map()
+  try {
+    for (const r of db.prepare("SELECT workspace_id AS id, runner_key_sha256 AS k FROM batch_jobs WHERE model = ? AND state IN ('trial', 'running') AND runner_key_sha256 IS NOT NULL").all(model)) out.set(r.id, r.k)
+  } catch {} // a database before migration 10
   return out
 }
 
@@ -110,16 +134,15 @@ export function writeGrantsFile(file, grants) {
   return grants
 }
 
-/** How long a one-time grant may last at most: the run ceiling and a minute (two hours with no ceiling). */
-export const onceUntil = (runCeilingMs) => Date.now() + (runCeilingMs > 0 ? runCeilingMs : 2 * 3600_000) + 60_000
-
-/** The gateway's grants file, from the database: every active project with Claude on, and the one-time grants in force. */
+/** The gateway's grants file, from the database: each active project with a Claude run going on (its lease), or a Claude job running (its runner's key). */
 export function writeGrants(db, cc) {
   const grants = {}
-  const once = onceGrants(db, 'claude')
+  const lease = onceGrants(db, 'claude')
+  const jobs = jobGrants(db, 'claude')
   for (const w of db.prepare("SELECT id, slug, claude_enabled AS enabled, claude_cap_micro_usd AS usd, claude_cap_tokens AS tokens FROM workspaces WHERE status = 'active' ORDER BY slug").all()) {
-    if (w.enabled !== 1 && !once.has(w.id)) continue
-    grants[`ws-${w.slug}`] = { mode: modeFor(db, w.id), cap_micro_usd: w.usd ?? cc.capMicroUsd, cap_tokens: w.tokens ?? cc.capTokens, ...(w.enabled === 1 ? {} : { until: once.get(w.id) }) }
+    const job = w.enabled === 1 ? jobs.get(w.id) : undefined
+    if (!lease.has(w.id) && !job) continue
+    grants[`ws-${w.slug}`] = { mode: modeFor(db, w.id), cap_micro_usd: w.usd ?? cc.capMicroUsd, cap_tokens: w.tokens ?? cc.capTokens, ...(lease.has(w.id) ? { until: lease.get(w.id) } : { key_sha256: job }) }
   }
   // "Compare with Claude" (compare.mjs): a scratch VM holding only a comparison's task, granted for
   // that comparison alone, its project's mode, what is left of its comparison budget as the ceiling.
@@ -210,7 +233,17 @@ export function makeClaude({ db, cc, container, workspaces, runCeilingMs, log })
   const runs = new Map() // run id -> run
   const bySlug = new Map() // slug -> run id (one Claude run per project at a time)
   const always = new Map() // `${slug}:${conversation}` -> Set of tool kinds the person allowed for the conversation
+  // No run outlives the front desk that started it (its `container exec` ends with it): every
+  // lease left by an earlier one (a crash, a kill) is dropped before the grants file is written.
+  db.prepare("DELETE FROM fallback_once WHERE engine = 'claude'").run()
   writeGrants(db, cc)
+  // Each live run's lease is renewed a third of the way through it.
+  const renew = setInterval(() => {
+    const live = [...runs.values()].filter((r) => !r.ended && r.leaseId !== null)
+    for (const r of live) db.prepare('UPDATE fallback_once SET until = ? WHERE id = ?').run(leaseUntil(), r.leaseId)
+    if (live.length) writeGrants(db, cc)
+  }, LEASE_MS / 3)
+  renew.unref()
 
   const row = (wsId) => db.prepare('SELECT claude_enabled AS enabled, claude_auto AS auto, claude_cap_micro_usd AS usd, claude_cap_tokens AS tokens FROM workspaces WHERE id = ?').get(wsId)
 
@@ -277,6 +310,9 @@ export function makeClaude({ db, cc, container, workspaces, runCeilingMs, log })
     const once = r.enabled !== 1 && body?.once === true
     if (r.enabled !== 1 && !once) return { status: 403, body: { error: 'claude_off', message: 'Fallback to Claude is off for this project. Its owner can turn it on in Settings.' } }
     if (once && ws.role !== 'owner') return { status: 403, body: { error: 'owner_only', message: 'Only the project’s owner can hand a request to Claude while it is off.' } }
+    // The subscription is Bart's own (review 4, open): only an owner of the project, whom the mode
+    // rule makes an admin, may spend it; a member of such a team is not handed Bart's account.
+    if (modeFor(db, ws.id) === 'oauth' && ws.role !== 'owner') return { status: 403, body: { error: 'owner_only', message: 'This project uses Bart’s own Claude subscription, so only its owner can hand a request to Claude.' } }
     const request = typeof body?.request === 'string' ? body.request.trim() : ''
     const context = typeof body?.context === 'string' ? body.context : ''
     const conv = body?.conversation
@@ -288,11 +324,10 @@ export function makeClaude({ db, cc, container, workspaces, runCeilingMs, log })
     if (bySlug.has(ws.slug)) return { status: 409, body: { error: 'claude_busy', message: 'Claude is already working on a request in this project. Wait for it to finish, or stop it.' } }
     await workspaces.ensureRunning(ws.slug)
     const id = `c${Date.now().toString(36)}${randomBytes(6).toString('hex')}`
-    let onceId = null
-    if (once) {
-      onceId = Number(db.prepare("INSERT INTO fallback_once (workspace_id, engine, person_id, until) VALUES (?, 'claude', ?, ?)").run(ws.id, personId, onceUntil(runCeilingMs)).lastInsertRowid)
-      writeGrants(db, cc)
-    }
+    // The run's grant, for this run only (both with the switch on and "Just this once"): taken back
+    // when it ends, renewed while it lives.
+    const leaseId = Number(db.prepare("INSERT INTO fallback_once (workspace_id, engine, person_id, until) VALUES (?, 'claude', ?, ?)").run(ws.id, personId, leaseUntil()).lastInsertRowid)
+    writeGrants(db, cc)
     // The gateway reloads the grants file within about 2 s: a run started right after the switch was
     // turned on waits (up to 6 s) until the gateway lists this project's grant, or Claude Code's first
     // request would be refused as "off".
@@ -302,7 +337,7 @@ export function makeClaude({ db, cc, container, workspaces, runCeilingMs, log })
       before = await usage(true)
     }
     const child = spawn(container, ['exec', '-i', `ola-${ws.slug}`, '/opt/ola/bin/ola-claude', autonomy, conv, id, why], { stdio: ['pipe', 'pipe', 'pipe'] })
-    const run = { id, onceId, slug: ws.slug, wsId: ws.id, conv, personId, autonomy, child, clients: new Set(), events: [], pending: new Map(), ended: null, at: Date.now(), result: null, before, release: workspaces.holdBusy(ws.slug), timers: [] }
+    const run = { id, once, leaseId, slug: ws.slug, wsId: ws.id, conv, personId, autonomy, child, clients: new Set(), events: [], pending: new Map(), ended: null, at: Date.now(), result: null, before, release: workspaces.holdBusy(ws.slug), timers: [] }
     runs.set(id, run)
     bySlug.set(ws.slug, id)
     child.stdin.on('error', () => {})
@@ -409,11 +444,10 @@ export function makeClaude({ db, cc, container, workspaces, runCeilingMs, log })
     run.timers.forEach(clearTimeout)
     bySlug.delete(run.slug)
     run.release()
-    // A one-time grant ends with its run: the next request is refused at the gateway.
-    if (run.onceId !== null) {
-      db.prepare('DELETE FROM fallback_once WHERE id = ?').run(run.onceId)
-      writeGrants(db, cc)
-    }
+    // The run's grant ends with it (done, stopped, failed): the next request is refused at the gateway.
+    db.prepare('DELETE FROM fallback_once WHERE id = ?').run(run.leaseId)
+    run.leaseId = null
+    writeGrants(db, cc)
     // The gateway's own count, before and after: numbers only.
     const after = await usage(true)
     const caller = `ws-${run.slug}`
@@ -423,7 +457,7 @@ export function makeClaude({ db, cc, container, workspaces, runCeilingMs, log })
     const cost = a && b && a.month === b.month ? Math.max(0, a.cost_micro_usd - b.cost_micro_usd) : a && !b ? a.cost_micro_usd : null
     const out = total === null ? null : Math.min(total, run.result?.usage?.output_tokens ?? 0)
     const mode = modeFor(db, run.wsId)
-    audit(db, { actor: run.personId, action: run.onceId !== null ? 'claude_once' : 'claude_used', workspace: run.wsId, ok: Boolean(run.result && !run.result.is_error && !run.stopping), tokensIn: total === null ? null : total - out, tokensOut: out, costMicroUsd: mode === 'api_key' ? cost : null })
+    audit(db, { actor: run.personId, action: run.once ? 'claude_once' : 'claude_used', workspace: run.wsId, ok: Boolean(run.result && !run.result.is_error && !run.stopping), tokensIn: total === null ? null : total - out, tokensOut: out, costMicroUsd: mode === 'api_key' ? cost : null })
     const reason = run.stopping === 'ceiling' ? 'ceiling' : run.stopping ? 'stopped' : run.result && !run.result.is_error ? 'done' : 'failed'
     const minutes = Math.round((runCeilingMs / 60_000) * 100) / 100
     send(run, { ola: 'ended', reason, ...(reason === 'ceiling' ? { message: ceilingMessage(minutes).replace(/^Ola stopped this/, 'Claude was stopped') } : {}), ...(reason === 'failed' && !run.result ? { message: code === 0 ? 'Claude stopped before it answered.' : 'Claude could not run in your project just now. Nothing else was changed.' } : {}) })
@@ -508,6 +542,7 @@ export function makeClaude({ db, cc, container, workspaces, runCeilingMs, log })
     writeGrants: () => writeGrants(db, cc),
     active: (slug) => bySlug.has(slug),
     close() {
+      clearInterval(renew)
       for (const run of runs.values()) if (!run.ended) run.child.kill('SIGKILL')
     },
   }

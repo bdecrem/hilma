@@ -242,7 +242,7 @@ export function makeFrontDesk(cfg = config()) {
   const views = makeViews({ cfg, db, keys, auth, membership, workspaces })
   const claude = makeClaude({ db, cc: cfg.claude, container: CONTAINER, workspaces, runCeilingMs: cfg.runCeilingMs, log })
   const hosted = makeHosted({ db, hc: cfg.hosted, cc: cfg.claude, workspaces, runCeilingMs: cfg.runCeilingMs, log })
-  const jobs = makeJobs({ db, jc: cfg.jobs, cc: cfg.claude, workspaces, hostedInfo: (w) => hosted.info(w), claudeInfo: (w) => claude.info(w), log })
+  const jobs = makeJobs({ db, jc: cfg.jobs, cc: cfg.claude, workspaces, hostedInfo: (w) => hosted.info(w), claudeInfo: (w) => claude.info(w), otherGrants: () => (claude.writeGrants(), hosted.writeGrants()), log })
   const compare = makeCompare({ db, xc: cfg.compare, cc: cfg.claude, claude, hosted, workspaces, container: CONTAINER, log })
 
   const shas = new Map() // `${slug}\0${path}` -> sha256, as ola-files last said

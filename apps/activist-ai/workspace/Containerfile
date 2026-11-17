@@ -70,6 +70,10 @@
 # 2.3.0-19 (review 5): the copy's generator runs in a kernel jail (lib/olatwin.py JAIL_SH: new user,
 # mount, process and network namespaces, /work and the other writable folders hidden, every
 # capability dropped), because a generator could switch off the Python audit hook and read /work.
+# 2.3.0-20 (review 5 follow-up): the made-up copy is made as the user `twin` (ola-twin gather / make
+# / store), the batch runner runs as work:olarun with its key on its input and talks to the door's
+# socket itself (ola-batch), the snapshot's database is checked here (ola-db api snapshot-check), and
+# a killed ola-unzip's half-unpacked folder is cleared (ola-unzip, ola-init).
 
 ARG DEBIAN=docker.io/library/debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc
 
@@ -101,6 +105,12 @@ RUN apt-get update \
       tesseract-ocr-rus tesseract-ocr-ara tesseract-ocr-chi-sim tesseract-ocr-chi-tra tesseract-ocr-heb tesseract-ocr-nor tesseract-ocr-fil \
  && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*.deb \
  && useradd --create-home --uid 1000 --shell /bin/bash work \
+ # Review 5 follow-up (2.3.0-20): a group for the batch job runner (it runs as work:olarun, so the
+ # agent's processes cannot read its memory or pipes: ptrace access needs the same uid and gid),
+ # and a user for making the made-up copy of "Compare with Claude" (twin: the agent's user cannot
+ # signal, trace or write to it). Neither has a home or a shell.
+ && groupadd --gid 1001 olarun \
+ && useradd --no-create-home --uid 1002 --user-group --home-dir /nonexistent --shell /usr/sbin/nologin twin \
  && mkdir -p /work /ola/gw \
  && chown work:work /work \
  # No setuid or setgid programs (su, passwd, mount, chsh...): no program in the image hands
