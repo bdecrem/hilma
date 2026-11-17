@@ -89,6 +89,17 @@ and the version strings driven by `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION
 production`, its icon and the privacy manifest; the Mac app signs with the hardened runtime, makes a
 3.7 MB disk image, and the release build starts and draws all 61 of its screens off screen.
 
+**After the agreement (2026-11-17, afternoon).** Apple's API took a few minutes to follow Bart's
+acceptance (calls were refused, then half refused, then all through). The API cannot create an app
+record ("The resource 'apps' does not allow 'CREATE'"): Bart makes it once with the fields above.
+The Mac download shipped as 0.1 (2): Developer ID through Xcode's cloud certificate (no click), with
+passkeys (`webcredentials:app.ola.cx`, a Developer ID profile the export makes), the app and the disk
+image each notarized and stapled; the disk image has no signature of its own, so the script checks its
+ticket (`stapler validate`) and Gatekeeper checks the app inside. The stapled app is also zipped to
+`~/Desktop/Ola/mac-download/Ola.zip`. The script syncs every `../<dir>` project.yml names (`bart/`
+for `ola-page-mac`) and stages the bundled skills; it refuses an archive whose skills are not HEAD's,
+so do not commit while a Mac ship runs.
+
 **The Developer ID certificate:** this iMac has none. Without one, the `mac` ship signs through Xcode's
 cloud-managed Developer ID (Bart's Apple ID is in Xcode-beta here), which needs no click. If that is
 refused, once: Xcode, Settings, Accounts, Manage Certificates, +, Developer ID Application; the script
