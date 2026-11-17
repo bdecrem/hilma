@@ -234,13 +234,26 @@ async function person(viewport = { width: 1280, height: 860 }) {
 }
 const cookieOf = async (ctx) => (await ctx.cookies(ORIGIN)).find((c) => c.name === CK)
 /** A request from outside the browser (node), as a thief with the cookie would send it. */
+let staleSockets = 0
 async function api(pathname, { method = 'GET', cookie, csrf, ws, origin = method === 'GET' ? undefined : ORIGIN, body, headers = {} } = {}) {
   const h = { ...headers }
   if (cookie) h.cookie = `${CK}=${cookie}`
   if (csrf) h['x-ola-csrf'] = csrf
   if (ws) h['x-ola-workspace'] = ws
   if (origin) h.origin = origin
-  const r = await fetch(`${ORIGIN}${pathname}`, { method, headers: h, body, redirect: 'manual' })
+  // This check blocks its own event loop with spawnSync (a VM start, a member's removal and its
+  // rotation: tens of seconds on a busy machine). Meanwhile the front desk closes the idle keep-alive
+  // sockets (keepAliveTimeout 5 s), and undici, not having run, sends the next request on one of them:
+  // "fetch failed", other side closed (UND_ERR_SOCKET) or a reset. That is this client's race, not the
+  // front desk's, so a GET is sent once more on a fresh socket, and counted (printed at the end).
+  let r
+  try {
+    r = await fetch(`${ORIGIN}${pathname}`, { method, headers: h, body, redirect: 'manual' })
+  } catch (e) {
+    if (method !== 'GET' || !['UND_ERR_SOCKET', 'ECONNRESET', 'EPIPE'].includes(e?.cause?.code) || fd?.exitCode !== null) throw e
+    staleSockets++
+    r = await fetch(`${ORIGIN}${pathname}`, { method, headers: { ...h, connection: 'close' }, body, redirect: 'manual' })
+  }
   const text = await r.text()
   let json = null
   try {
@@ -1777,6 +1790,7 @@ await check('an idle workspace stops, its event stream does not wake it, and ope
 
 await browser.close()
 ok('no request left the origin', foreign.size === 0, [...foreign].slice(0, 3).join(' '))
+if (staleSockets) console.log(`(a GET sent again on a fresh socket after a stale keep-alive one: ${staleSockets} time(s))`)
 const failed = results.filter((r) => !r).length
 console.log(`\n${results.length - failed} of ${results.length} checks passed`)
 if (failed) console.log(`front desk log (tail):\n${fd.log.split('\n').slice(-15).join('\n')}`)

@@ -394,21 +394,29 @@ try {
     const conf = spawnSync(ws.CONTAINER, ['exec', ws.names(A).container, 'cat', '/opt/ola/config/opencode/opencode.jsonc'], { encoding: 'utf8' }).stdout
     const named = /"hosted":\s*\{[^}]*"modelID":\s*"hosted"/.test(conf)
     const probe = 'import sys, json, urllib.request\nbody = json.dumps({"model": "hosted", "messages": [{"role": "user", "content": "hi"}]}).encode()\nreq = urllib.request.Request("http://127.0.0.1:4180/v1/chat/completions", data=body, headers={"Authorization": "Bearer " + sys.stdin.read().strip(), "Content-Type": "application/json"})\ntry:\n    print(urllib.request.urlopen(req, timeout=30).status)\nexcept urllib.error.HTTPError as e:\n    print(e.code)\n'
-    const ask = () => spawnSync(ws.CONTAINER, ['exec', '-i', ws.names(A).container, 'python3', '-I', '-c', probe], { input: ws.secrets(A).BOX_API_KEY, encoding: 'utf8' }).stdout.trim()
+    // Not spawnSync: the stand-in provider answers from this process, so its event loop must run.
+    const ask = () =>
+      new Promise((resolve) => {
+        const c = spawn(ws.CONTAINER, ['exec', '-i', ws.names(A).container, 'python3', '-I', '-c', probe], { stdio: ['pipe', 'pipe', 'ignore'] })
+        let out = ''
+        c.stdout.on('data', (d) => (out += d))
+        c.on('close', () => resolve(out.trim()))
+        c.stdin.end(ws.secrets(A).BOX_API_KEY)
+      })
     const reload = () => new Promise((r) => setTimeout(r, 2600)) // the gateway reloads the grants within 2 s
-    const off = ask()
+    const off = await ask()
     writeHosted({ [`ws-${A}`]: { cap_micro_usd: 1_000_000 } })
     await reload()
-    const on = ask()
+    const on = await ask()
     writeHosted({ [`ws-${A}`]: { until: Date.now() + 60_000 } })
     await reload()
-    const once = ask()
+    const once = await ask()
     writeHosted({ [`ws-${A}`]: { until: Date.now() - 1 } })
     await reload()
-    const ended = ask()
+    const ended = await ask()
     writeHosted({})
     await reload()
-    const back = ask()
+    const back = await ask()
     const upstream = [...new Set(hostedSeen)]
     t('inside: the image names the model `hosted`; the gateway serves it only with a grant, a one-time grant only until its moment', named && off === '403' && on === '200' && once === '200' && ended === '403' && back === '403' && JSON.stringify(upstream) === '["Made-up/Open-Model"]', `named ${named}; off ${off}, on ${on}, once ${once}, ended ${ended}, taken back ${back}; upstream saw ${upstream}`)
   }

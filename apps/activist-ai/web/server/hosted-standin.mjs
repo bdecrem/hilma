@@ -53,18 +53,29 @@ export function makeHostedStandin({ oc, grantsFile, provider, usage, claudeInfo,
     if (!st.enabled && !once) return { status: 403, body: { error: 'hosted_off', message: 'The hosted open model is off for this project. Its owner can turn it on in Settings.' } }
     if (once && role() !== 'owner') return { status: 403, body: { error: 'owner_only', message: 'Only the project’s owner can hand a request to the hosted open model while it is off.' } }
     if (!provider) return { status: 503, body: { error: 'not_set_up' } }
+    // As the front desk: a run whose session no longer executes is finished now, not a reason to refuse.
+    if (st.running) {
+      const a = await oc('GET', '/api/session/active')
+      if (a.json?.data && typeof a.json.data === 'object' && a.json.data[st.running]?.type !== 'running') await st.finish?.()
+    }
     if (st.running) return { status: 409, body: { error: 'hosted_busy', message: 'The hosted open model is already working on a request in this project. Wait for it to finish, or stop it.' } }
     const session = body.conversation
     st.running = session
     if (once) st.once = Date.now() + 10 * 60_000
     write()
     for (let i = 0; i < 12 && !(await granted()); i++) await sleep(500)
+    // Once per run (the watcher, or the next run finding this one over): back to Ola's own model.
+    let done = false
     const back = async () => {
+      if (done) return
+      done = true
       await oc('POST', `/api/session/${session}/model`, { model: { id: 'general', providerID: 'ola' } })
       st.once = null
-      st.running = null
+      if (st.running === session) st.running = null
+      st.finish = null
       write()
     }
+    st.finish = back
     const sw = await oc('POST', `/api/session/${session}/model`, { model: { id: 'hosted', providerID: 'ola' } })
     const p = sw.status < 300 ? await oc('POST', `/api/session/${session}/prompt`, { text: body.request }) : sw
     if (p.status >= 300) {
@@ -77,6 +88,7 @@ export function makeHostedStandin({ oc, grantsFile, provider, usage, claudeInfo,
       const t0 = Date.now()
       let seen = false
       for (;;) {
+        if (done) return
         await sleep(1000)
         const a = await oc('GET', '/api/session/active')
         const now = a.json?.data && typeof a.json.data === 'object' ? a.json.data[session]?.type === 'running' : null

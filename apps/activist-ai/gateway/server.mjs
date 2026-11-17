@@ -446,7 +446,10 @@ function post(body, signal, deadline, target = null) {
       clearTimeout(tConnect)
       if (!settled) tFirst = setTimeout(() => end('first_byte_timeout'), C.firstByteMs)
     }
-    req.on('socket', (s) => (req.reusedSocket || !s.connecting ? connected() : s.once(isTls ? 'secureConnect' : 'connect', connected)))
+    // The handshake to wait for is the target's own: the hosted provider may be plain http (to 127.0.0.1)
+    // beside an https model server, and a plain socket never says secureConnect (2026-11-17).
+    const tls = target ? target.url.protocol === 'https:' : isTls
+    req.on('socket', (s) => (req.reusedSocket || !s.connecting ? connected() : s.once(tls ? 'secureConnect' : 'connect', connected)))
     req.on('response', (res) => {
       clearTimeout(tFirst)
       const chunks = []

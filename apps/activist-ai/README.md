@@ -228,10 +228,10 @@ VM's memory, so bounded by it) are the only places anything can be written. Befo
 512 GiB sparse image on the host, outside the volume's limit, invisible to `files`, and kept across
 `stop`. The agent runs as `work` (uid 1000) with no capabilities (`--cap-drop ALL`), no sudo, and no
 setuid or setgid program in the image (Debian's `su`, `passwd`, `mount` and the rest are stripped). Image: Debian bookworm-slim pinned by digest, opencode 2.3.0 checked
-against npm's sha512, python3, socat, nothing else (no curl, no CA bundle, no ssh). Image tag `ola-workspace:2.3.0-7` (2.3.0-7 and 2.3.0-6: Claude Code and `ola-claude`, see [Fallback to Claude](#fallback-to-claude-2026-11-16); 2.3.0-5: Ola's standing instructions to the agent, `workspace/AGENTS.md`, say it is in a sealed box with no browser, preview pane or desktop app and that people see its pages under Files with Open; the desktop app's `browser` tool is denied; a stopped workspace made from an older image is made again from the current one at its next start, same volume and secrets. 2.3.0-3 added `ola-get` and `ola-rm` for the front desk's downloads and deletes, and a file's mtime in `ola-files`; 2.3.0-4: `ola-get` opens with `O_NONBLOCK` and refuses anything but a regular file at once, so a FIFO the agent makes cannot hold a download).
+against npm's sha512, python3, socat, nothing else (no curl, no CA bundle, no ssh). Image tag `ola-workspace:2.3.0-9` (2.3.0-9: the model `hosted`; 2.3.0-8: the project database and the web tools; 2.3.0-7 and 2.3.0-6: Claude Code and `ola-claude`, see [Fallback to Claude](#fallback-to-claude-2026-11-16); 2.3.0-5: Ola's standing instructions to the agent, `workspace/AGENTS.md`, say it is in a sealed box with no browser, preview pane or desktop app and that people see its pages under Files with Open; the desktop app's `browser` tool is denied; a stopped workspace made from an older image is made again from the current one at its next start, same volume and secrets. 2.3.0-3 added `ola-get` and `ola-rm` for the front desk's downloads and deletes, and a file's mtime in `ola-files`; 2.3.0-4: `ola-get` opens with `O_NONBLOCK` and refuses anything but a regular file at once, so a FIFO the agent makes cannot hold a download).
 
 ```bash
-node workspace/ws.mjs image                    # build ola-workspace:2.3.0-7 (a 370 MB download the first time; --missing: only if absent)
+node workspace/ws.mjs image                    # build ola-workspace:2.3.0-9 (a 370 MB download the first time; --missing: only if absent)
 node workspace/ws.mjs create alice             # 4 CPUs, 6 GiB, 50 GiB: the ceilings
 node workspace/ws.mjs create test --memory 1g --disk 1g --cpus 1   # lower only; higher is refused
 node workspace/ws.mjs start alice              # opens the door, boots, waits for opencode
@@ -1180,24 +1180,113 @@ node frontdesk/admin.mjs claude <workspace>   # its state: off, mode, ceiling, t
 ```
 
 The front desk writes `~/.ola/gateway-claude` at its start; the owner turns Claude on in Settings
-(or `admin.mjs claude <workspace> on`). Leave `HOSTED_*` unset until the hosted fallback's front
-desk and page are built (below).
+(or `admin.mjs claude <workspace> on`). Since 2026-11-17 "When Claude takes over by itself" (the
+three stops above, `claude_auto`) is replaced by the setting both fallbacks share, "When a request
+looks like a stretch" (below); migration 7 turned a project's "When Ola gets stuck" or "Always use
+Claude" into "Hand it over without asking", to Claude.
 
-## Fallback to a hosted open model (2026-11-16, the gateway only)
+## Fallback to a hosted open model, and the stretch card (2026-11-17)
 
-`gateway/hosted.mjs`: the model name `hosted`, served by a second OpenAI-compatible upstream
-(`HOSTED_BASE_URL`, `HOSTED_API_KEY`, `HOSTED_MODEL`, `HOSTED_PROVIDER` as people read it), only for
-callers listed in `GATEWAY_HOSTED_FILE` (`{"ws-<id>": {"cap_micro_usd": n}}`, mode 600, reloaded within
-2 s; else 403 in a plain sentence), with a monthly dollar ceiling per project (default $20; prices
-`GATEWAY_HOSTED_PRICES`, $/MTok). The caller's model string never goes upstream (`HOSTED_MODEL`
-does), the same field allowlist and reply rebuild apply, the hosted key is scrubbed like the main
-one, and `/v1/usage` (usage token) adds each caller's `hosted_month` and the provider's name. Tested
-in `gateway/test.mjs`. **Not built yet:** the front desk's setting (`hosted_enabled`, its consent text,
-audit words `hosted_enabled` / `hosted_disabled` / `hosted_used`, the grants file writer), the model
-`hosted` in the workspace's `opencode.jsonc` (an image change), the opencode route that switches a
-session's model (`session.switchModel`) in the page's allowed list, the drawer's third choice and
-marking, and the choice of model and provider (a probe of Together's serverless models, and the
-provider's data-retention terms for real customers, are open).
+Bart: "users can say 'fall back to claude' or 'fall back to hosted open weights model', default off
+both of those", and "hey, this may be a stretch for our local model. wanna toss it to Together.ai?"
+
+**The gateway** (`gateway/hosted.mjs`): the model name `hosted`, served by a second
+OpenAI-compatible upstream (`HOSTED_BASE_URL`, `HOSTED_API_KEY`, `HOSTED_MODEL`, `HOSTED_PROVIDER`
+as people read it), only for callers listed in `GATEWAY_HOSTED_FILE` (`{"ws-<id>": {"cap_micro_usd":
+n, "until": ms?}}`, mode 600, reloaded within 2 s; else 403 in a plain sentence), with a monthly
+dollar ceiling per project (default $20; prices `GATEWAY_HOSTED_PRICES`, $/MTok). The caller's model
+string never goes upstream (`HOSTED_MODEL` does), the same field allowlist and reply rebuild apply,
+the hosted key is scrubbed like the main one, and `/v1/usage` (usage token) adds each caller's
+`hosted_month` (with tokens in and out) and the provider's name. **One-time grants**, for both
+fallbacks (`GATEWAY_CLAUDE_FILE` too): an entry with `until` is honored only until that moment and
+only while it is listed; the front desk takes it back when the run ends.
+
+**The setting** (`frontdesk/hosted.mjs`, platform migration 7): `workspaces.hosted_enabled` (off by
+default, independent of Claude's), an optional ceiling (`admin.mjs hosted <ws> [on|off] [--cap-usd
+20]`), owner only (`POST /api/hosted/settings`, `consent: true` to turn it on), audited
+`hosted_enabled` / `hosted_disabled`. The consent text: "When this is on, you can hand a request to an
+open model that runs at <provider>, an outside company, instead of on this machine. Your request, and
+the parts of your files Ola reads to answer it, leave this machine and go to <provider>. It is off
+unless you turn it on. Every use is marked, and you can turn it off at any time." With no hosted
+provider on the gateway, the switch is disabled with one sentence. The grants file is written from
+the database alone, by the server and by the admin CLI after every command that changes owners,
+members, secrets or whether a project is open, exactly as Claude's.
+
+**A run** (`POST /api/hosted/run`, owners and members): the same opencode in the same sealed VM and
+the same conversation. The front desk (never the page: `session.switchModel` is not in the page's
+allowed routes) switches the session to `ola/hosted`, sends the request as the person's prompt,
+watches opencode until the session stops executing (or its record ends, for a run shorter than one
+look), and switches it back to `ola/general`. The page follows the run on opencode's own stream;
+each step names its model, so a reply by `hosted` is marked "Hosted open model, outside this
+machine", live and when the conversation is opened again. While it lasts, the page's own prompts
+into that conversation are refused (409): they would run on the hosted model too. Audited
+`hosted_used` with numbers only (the gateway's count before and after: tokens in and out, cost).
+The image (2.3.0-9) names the model in `workspace/opencode.jsonc`; projects pick it up at their next
+start.
+
+**"When a request looks like a stretch"** (`GET /api/fallback` for both fallbacks at once, `POST
+/api/fallback/settings`, owner only): Suggest it and let me decide (the default); Hand it over
+without asking (offered only while a switch is on; with both on, "Where it goes": the hosted open
+model by default, or Claude); Never suggest. Ola calls a request a stretch only from what it can
+see (`web/src/lib/steps.ts`): during a run, `stuckReason` (it ended in an error; it hit its step or
+token budget; three failed tool calls in a row, and then Ola is stopped, keeping what it did);
+before a run, `precheck`, with every threshold in `STRETCH_CHECKS`: the text files the request
+names are together more than 3 contexts of Ola's own model (bytes / 4 against 131,072 tokens), or it
+is a long build in many parts (at least 800 characters, 8 listed parts, a verb that makes
+something). No confidence number: models do not give a trustworthy one.
+
+**The stretch card** (`web/src/components/StretchCard.tsx`), in the conversation, the approval
+sheet's sibling: "This may be a stretch for Ola's own model. Hand it to the hosted open model at
+<provider>?" (or "… to Claude?" when only Claude is set up; with both, the hosted open model first
+and "or Claude" switches the card), one sentence of why, one of what leaves the machine and where it
+goes, and **Just this once / Always in this project / Not now**. It shows even with both switches
+off. For the owner, Just this once hands this one request over with the switch left off (a
+`fallback_once` row: a one-time grant for that run, audited `hosted_once` or `claude_once`); Always
+in this project asks with the consent text, turns the switch on and sets "Hand it over without
+asking" to that fallback, then hands the request over; Not now goes on with Ola and is not asked
+again for the same reason in that conversation. A member gets the card only to read: who can turn
+it on, and Not now. If neither fallback is set up on the machine, there is no card. The drawer's
+choice per request lists only what is on ("Ola", "Hosted open model", "Claude"), and a finished Ola
+reply offers "Ask the hosted model instead" and "Ask Claude instead" for what is on.
+
+**The hosted model for the rehearsal**: `zai-org/GLM-5.3` on Together (in $1.40, out $4.40 per
+million tokens; 1M context; set `GATEWAY_HOSTED_PRICES=in=1.4,out=4.4`). Probed 2026-11-17 through
+our gateway with a real tool call (read a file, then answer from it): GLM-5.3, DeepSeek-V4-Pro-0813
+and Kimi-K3.1-Pro all did it right; Qwen3-Coder-480B answered 400 (no longer serverless). GLM-5.3 is
+the bigger sibling of the everyday GLM-5.3-Flash, so its tool-call format is the one opencode is
+already proven on, at a third of Kimi's output price. The backup is DeepSeek-V4-Pro-0813. **Open:**
+the provider for real customers, which turns on its data-retention terms; nothing here decides it.
+
+**Proofs.** `gateway/test.mjs` (one-time grants for both, honored until their moment and while
+listed); `frontdesk/test/unit.test.mjs` (both grants files, independent, the migration's defaults);
+`web/test/conversation.test.ts` (`precheck`, the hosted marking); `web/check.mjs` in Chromium and
+WebKit against the stand-in (`web/server/hosted-standin.mjs`, with the real opencode and gateway and
+two scripted models): both switches independent, the drawer lists only what is on, a stuck run with
+both off shows the owner the card and a member the card with nothing that sends, Just this once runs
+one request and leaves the switch off (the next refused), Not now does not ask again, Always asks
+with the consent text and later stretches go over without asking, the before-run check, Ask the
+hosted model instead, 390 px; `frontdesk/check.mjs` (the sealed VM: the setting and its grants, a
+hosted run marked by its model and audited, the conversation back on Ola's model after, Just this
+once for both fallbacks with the next request refused from inside the VM, a member refused, the
+hosted grants kept right through a member's removal, a close and a reopen;
+`OLA_CHECK_HOSTED_LIVE=zai-org/GLM-5.3` makes its hosted run live); `workspace/check.mjs` (the image
+names `hosted`; from inside the VM the gateway serves it only with a grant).
+
+**After deploying** (the deploy builds image 2.3.0-9 before the suites):
+
+```bash
+# ~/.ola/gateway.env (600): add
+HOSTED_BASE_URL=https://api.together.xyz/v1
+HOSTED_API_KEY=<the same Together key as UPSTREAM_API_KEY, or a second one>
+HOSTED_MODEL=zai-org/GLM-5.3
+HOSTED_PROVIDER=Together AI
+GATEWAY_HOSTED_FILE=/Users/admin/.ola/gateway-hosted
+GATEWAY_HOSTED_PRICES=in=1.4,out=4.4
+# ~/.ola/frontdesk.env: nothing new is required (OLA_FD_GATEWAY_USAGE_TOKEN is already there for
+# Claude); optional OLA_FD_HOSTED_CAP_USD=20 (per project, a month)
+node ops/ola.mjs install                      # restarts the gateway and the front desk with them
+node frontdesk/admin.mjs hosted <workspace>   # its state: off, provider, ceiling, this month, the stretch setting
+```
 
 ## Web search and downloads (2026-11-17)
 

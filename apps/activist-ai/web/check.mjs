@@ -815,6 +815,8 @@ async function fallbackChecks(engine, label) {
       await waitDone(pg)
       const handoff = await lastTurn(pg).locator('.handoff').innerText()
       assert((await card().count()) === 0 && /ran into an error on this request\. This project hands such requests to the hosted open model/.test(handoff), `handed over: ${handoff}`)
+      const ended = await lastTurn(pg).getAttribute('data-status')
+      assert(ended === 'done' && (await who()) === 'Hosted open model, outside this machine', `the handed-over run ended ${ended}: ${(await lastTurn(pg).innerText()).slice(-160)}`)
       await shot('drawer-hosted-handover')
     })
     await check(`${label}: with the switch on, "Ask the hosted model instead" under Ola's finished reply`, async () => {

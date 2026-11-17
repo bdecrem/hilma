@@ -2408,15 +2408,15 @@ code {
 }
 
 /* ------------------------------------------------------------ Fallback to a hosted open model
-   Its reply is marked like Claude's: its own mark in ink (a ring cut in half: a model of the same
-   kind as Ola's, run elsewhere), "Hosted open model, outside this machine", the dashed rule. */
+   Its reply is marked like Claude's: its own mark in ink (a ring like Ola's, all ink, with a point
+   in it: a model of the same kind, run at someone else's place), "Hosted open model, outside this
+   machine", the dashed rule. Never a cut ring: that reads as "loading". */
 .hosted-dot {
   width: 14px;
   height: 14px;
   border-radius: 50%;
   border: 2.5px solid var(--ink);
-  border-right-color: transparent;
-  transform: rotate(-45deg);
+  background: radial-gradient(circle, var(--ink) 0 2px, transparent 2.5px);
 }
 .said-hosted {
   border-left: 2px dashed var(--rule);

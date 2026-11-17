@@ -135,6 +135,13 @@ export function makeHosted({ db, hc, cc, workspaces, runCeilingMs, log }) {
     status.at = 0
     const i = await info(ws)
     if (!i.configured) return { status: 503, body: { error: 'not_set_up', message: i.unavailable } }
+    // The page hears a run end on opencode's stream a moment before the watcher below does: a run
+    // whose session no longer executes is finished now, so the next request is not refused for it.
+    const old = runs.get(ws.slug)
+    if (old && !old.ended) {
+      const now = await workspaces.executing(ws.slug)
+      if (now && !now.has(old.session)) await end(old, true)
+    }
     if (runs.has(ws.slug)) return { status: 409, body: { error: 'hosted_busy', message: 'The hosted open model is already working on a request in this project. Wait for it to finish, or stop it.' } }
     const run = { id: `h${Date.now().toString(36)}${randomBytes(6).toString('hex')}`, slug: ws.slug, wsId: ws.id, session, personId, onceId: null, before: null, ended: false, timer: null }
     runs.set(ws.slug, run) // before any await below: a second start finds it
