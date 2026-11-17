@@ -27,16 +27,30 @@ final class WhereOlaWorks {
     }
     guard let folder = LocalSettings.folder else { problem = "Choose the folder Ola should work in."; return }
     guard let token = LocalSettings.token, !token.isEmpty else { problem = "Add the model token (on the machine: ola-bart.sh model-token)."; return }
+    if let p = Self.touch(folder) { problem = p; return }
     starting = true
     defer { starting = false }
     let server = LocalServer(folder: folder)
     do {
       local?.stop()
-      let config = try await server.start(modelToken: token)
+      let config = try await server.start(modelToken: token, timeout: 45)
       local = server
       store.attach(config)
     } catch {
       problem = error.localizedDescription
+      store.problem = Problem(text: "The agent on this Mac did not start. Settings has the details and Try again.", detail: error.localizedDescription)
+    }
+  }
+
+  /// Right after the folder is picked, the app itself reads it, so that if macOS asks whether Ola
+  /// may use that folder (Documents, Desktop, iCloud Drive), it asks now, while Bart is looking,
+  /// not later in the background where the agent would wait on it.
+  static func touch(_ folder: URL) -> String? {
+    do {
+      _ = try FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil)
+      return nil
+    } catch {
+      return "Ola cannot read \((folder.path as NSString).abbreviatingWithTildeInPath). Allow it in System Settings, Privacy and Security, Files and Folders, then Try again."
     }
   }
 
@@ -77,8 +91,17 @@ struct WhereSettings: View {
         Text("Commands and file changes still ask first. The conversations stay on this Mac, so the phone does not see them.")
           .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
       }
-      if controller.starting { ProgressView().controlSize(.small) }
-      if let p = controller.problem { Text(p).foregroundStyle(.red).fixedSize(horizontal: false, vertical: true) }
+      if controller.starting {
+        HStack(spacing: 8) {
+          ProgressView().controlSize(.small)
+          Text("Starting the agent on this Mac\u{2026} This can take up to 45 seconds.").foregroundStyle(.secondary)
+        }
+      } else if let p = controller.problem {
+        VStack(alignment: .leading, spacing: 6) {
+          Text(p).foregroundStyle(.red).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
+          Button("Try Again") { Task { await controller.apply() } }
+        }
+      }
     }
   }
 
@@ -90,6 +113,10 @@ struct WhereSettings: View {
     panel.prompt = "Work Here"
     if panel.runModal() == .OK, let url = panel.url {
       folder = url.path
+      if let p = WhereOlaWorks.touch(url) {
+        controller.problem = p
+        return
+      }
       Task { await controller.apply() }
     }
   }

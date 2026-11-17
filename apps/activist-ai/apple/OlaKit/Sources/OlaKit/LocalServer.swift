@@ -22,13 +22,46 @@ public final class LocalServer: @unchecked Sendable {
   public static let defaultModelURL = "http://100.95.51.98:4311/v1"
 
   public let folder: URL
-  public let port: Int
+  public private(set) var port: Int
+  /// Where opencode keeps its config, sessions and caches (default: Application Support/Ola/local).
+  public var stateBase: URL?
   private var process: Process?
+  private var pidFile: URL?
   public private(set) var log = ""
 
-  public init(folder: URL, port: Int = 4320) {
+  /// `port` 0 picks a free one at each start.
+  public init(folder: URL, port: Int = 0) {
     self.folder = folder
     self.port = port
+  }
+
+
+  static func freePort() -> Int {
+    let s = socket(AF_INET, SOCK_STREAM, 0)
+    defer { close(s) }
+    var addr = sockaddr_in()
+    addr.sin_family = sa_family_t(AF_INET)
+    addr.sin_addr.s_addr = inet_addr("127.0.0.1")
+    addr.sin_port = 0
+    var len = socklen_t(MemoryLayout<sockaddr_in>.size)
+    _ = withUnsafePointer(to: &addr) { $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { bind(s, $0, len) } }
+    _ = withUnsafeMutablePointer(to: &addr) { $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { getsockname(s, $0, &len) } }
+    return Int(UInt16(bigEndian: addr.sin_port))
+  }
+
+  /// Ends an opencode this app started earlier and did not stop, if it is still running.
+  static func endOrphan(_ pidFile: URL, trace: (@Sendable (String) -> Void)?) {
+    guard let text = try? String(contentsOf: pidFile, encoding: .utf8), let pid = Int32(text.trimmingCharacters(in: .whitespacesAndNewlines)) else { return }
+    try? FileManager.default.removeItem(at: pidFile)
+    var size = 0
+    var mib: [Int32] = [CTL_KERN, KERN_PROCARGS2, pid]
+    guard sysctl(&mib, 3, nil, &size, nil, 0) == 0, size > 0 else { return }
+    var buf = [UInt8](repeating: 0, count: size)
+    guard sysctl(&mib, 3, &buf, &size, nil, 0) == 0 else { return }
+    let cmd = String(decoding: buf.prefix(size), as: UTF8.self)
+    guard cmd.contains("opencode"), cmd.contains("serve") else { return }
+    trace?("ending an earlier local opencode (pid \(pid))")
+    kill(pid, SIGTERM)
   }
 
   public enum Failure: Error, LocalizedError {
@@ -83,11 +116,18 @@ public final class LocalServer: @unchecked Sendable {
   }
 
   /// Starts opencode and waits until it answers. Returns where to reach it.
-  public func start(modelToken: String, modelURL: String = LocalServer.defaultModelURL) async throws -> ServerConfig {
+  public func start(modelToken: String, modelURL: String = LocalServer.defaultModelURL, timeout: TimeInterval = 45, trace: (@Sendable (String) -> Void)? = nil) async throws -> ServerConfig {
     guard let bin = Self.binary else { throw Failure.noOpencode }
     stop()
     let fm = FileManager.default
-    let base = Self.support.appendingPathComponent("local")
+    let base = stateBase ?? Self.support.appendingPathComponent("local")
+    // A server left by an earlier run of the app (a crash or a force quit skips the clean stop)
+    // would hold the port and answer with another password; it is ended first.
+    let pf = base.appendingPathComponent("opencode.pid")
+    pidFile = pf
+    Self.endOrphan(pf, trace: trace)
+    // A free port each time, so nothing else on this Mac can be in the way.
+    if port == 0 { port = Self.freePort() }
     for d in ["config/opencode", "data", "state", "cache"] { try fm.createDirectory(at: base.appendingPathComponent(d), withIntermediateDirectories: true) }
     try Self.config(modelURL: modelURL).write(to: base.appendingPathComponent("config/opencode/opencode.jsonc"), atomically: true, encoding: .utf8)
     var bytes = [UInt8](repeating: 0, count: 24)
@@ -112,19 +152,42 @@ public final class LocalServer: @unchecked Sendable {
     p.standardError = pipe
     pipe.fileHandleForReading.readabilityHandler = { [weak self] h in
       let s = String(decoding: h.availableData, as: UTF8.self)
+      if !s.isEmpty { trace?("opencode: \(s.trimmingCharacters(in: .newlines))") }
       self?.log = String(((self?.log ?? "") + s).suffix(4000))
     }
+    trace?("starting \(bin.path) serve on 127.0.0.1:\(port) in \(folder.path)")
     try p.run()
     process = p
+    if let pidFile { try? String(p.processIdentifier).write(to: pidFile, atomically: true, encoding: .utf8) }
+    trace?("pid \(p.processIdentifier)")
     let config = ServerConfig(url: URL(string: "http://127.0.0.1:\(port)")!, password: password)
     let client = OpenCodeClient(config)
-    for _ in 0..<60 {
-      if !p.isRunning { throw Failure.didNotStart(log.split(separator: "\n").last.map(String.init) ?? "") }
-      if (try? await client.info()) != nil { return config }
-      try? await Task.sleep(nanoseconds: 250_000_000)
+    let t0 = Date()
+    var lastError = ""
+    while Date().timeIntervalSince(t0) < timeout {
+      if !p.isRunning {
+        throw Failure.didNotStart("opencode stopped (exit code \(p.terminationStatus)) after \(Int(Date().timeIntervalSince(t0))) seconds. \(lastLines)")
+      }
+      do {
+        _ = try await client.info()
+        trace?("answered after \(String(format: "%.1f", Date().timeIntervalSince(t0))) s")
+        return config
+      } catch {
+        let e = (error as? OlaError)?.detail ?? error.localizedDescription
+        if e != lastError { trace?("not answering yet: \(e)") }
+        lastError = e
+      }
+      try? await Task.sleep(nanoseconds: 300_000_000)
     }
+    let alive = p.isRunning
     stop()
-    throw Failure.didNotStart("It did not answer within 15 seconds.")
+    throw Failure.didNotStart("opencode was \(alive ? "still running" : "no longer running") but did not answer in \(Int(timeout)) seconds (the last try said: \(lastError)). \(lastLines)")
+  }
+
+  /// opencode's last lines, for the error Bart sees.
+  var lastLines: String {
+    let lines = log.split(separator: "\n").suffix(4).joined(separator: " / ")
+    return lines.isEmpty ? "It printed nothing." : "It printed: \(lines)"
   }
 
   public var isRunning: Bool { process?.isRunning ?? false }
@@ -134,6 +197,7 @@ public final class LocalServer: @unchecked Sendable {
     if p.isRunning { p.terminate() }
     p.waitUntilExit()
     process = nil
+    if let pidFile { try? FileManager.default.removeItem(at: pidFile) }
   }
 
   deinit { stop() }

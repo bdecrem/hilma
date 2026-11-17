@@ -83,6 +83,20 @@ One setting for the whole app:
   Shell commands and edits ask, as on the machine. These sessions live on the Mac; the phone does
   not see them.
 
+**The check from the real app** (keep it; it is the proof for this mode):
+`tools/local-selftest.sh <Ola.app> <folder> [token-file]` launches a second, background instance of
+the app through LaunchServices (`open -n -g`, no window), so macOS treats it as when Bart opens it,
+and the app runs `--local-selftest <folder>`: it starts opencode exactly as the setting does, prints
+every step and what opencode printed, checks `/api/info`, stops it and exits 0 or 1 (`--fresh` uses
+empty opencode state, as on a first start). It never uses the app's own state folder, so it cannot
+end the server of an app that is open. 2026-11-16: a folder in `~` and one in `~/Documents`, with
+warm and with empty state, 4 of 4, answering in 0.3 to 2.3 s.
+
+The server starts on a free port each time, ends a server an earlier run of the app left behind
+(its pid is kept in the state folder), waits up to 45 seconds with "Starting" shown, and on failure
+says whether opencode was still running and its last lines, with Try Again. Right after the folder
+is picked the app reads it itself, so a macOS privacy question about that folder comes up then.
+
 opencode for this mode: `tools/install-local-opencode.sh` (the pinned 2.3.0, user-level, into
 `~/Library/Application Support/Ola/opencode`). Proved with
 `OLA_LOCAL_FOLDER=<scratch> OLA_MODEL_TOKEN_FILE=<file> swift run olakit-selftest` (14 of 14).

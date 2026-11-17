@@ -6,6 +6,7 @@ import UserNotifications
 enum Main {
   static func main() {
     OlaFont.register()
+    if LocalSelfTest.requested { LocalSelfTest.run() }
     if let dir = Snapshot.outputDirectory {
       Snapshot.run(to: dir)
       return
