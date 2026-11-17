@@ -9,6 +9,9 @@ Spanish and French, then the law crawl (`../laws/`) over the citations. Everythi
 sets it from the country), ids 1001-1006, and the library shows it apart with a red badge.
 Progress: https://ola.cx/mrd/dossiers. Started 2026-11-06.
 
+**Next: `PLAN.md`** (2026-11-17): the due-diligence pass over these six, then 25 new countries
+through the same checks.
+
 ## How it runs
 
 Through Claude Code on the Max login (the Agent SDK, like the Almanac), not the API key: Bart's call
