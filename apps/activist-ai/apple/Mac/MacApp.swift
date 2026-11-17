@@ -25,7 +25,7 @@ enum Main {
 
   /// The options the executable knows. Anything else that starts with "--" (a typo, or a flag an
   /// older build does not have) exits with a line instead of opening the app's window.
-  static let knownOptions: Set<String> = ["--local-selftest", "--settings-selftest", "--import-secret", "--secret-status", "--forget-secret",
+  static let knownOptions: Set<String> = ["--local-selftest", "--settings-selftest", "--render-selftest", "--import-secret", "--secret-status", "--forget-secret",
                                           "--token-file", "--folder", "--fresh", "--key-id", "--cli", "--install-cli"]
 
   static func refuseUnknownOptions() {
