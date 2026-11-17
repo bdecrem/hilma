@@ -38,7 +38,7 @@ export async function docChecks({ check, assert, api, A, a, v, FA, CTR, ORIGIN, 
       const r = inside(['python3', '-I', '-', '/work/dx', '--beacon', BEACON], readFileSync(path.join(HERE, '../workspace/testdata/mkdocs.py')))
       assert(r.status === 0, r.stderr.trim().split('\n').pop())
       // Things "Ola made" at the top of the folder: a chart, the hostile SVG, a PDF, a Word file, a table.
-      const cp = inside(['sh', '-c', 'cp dx/chart.png chart.png && cp dx/hostile.svg drawing.svg && cp dx/two-column.pdf report.pdf && cp dx/remote-template.docx notes.docx && cp dx/formulas.xlsx budget.xlsx && ola-db add dx/scan.pdf >/dev/null && ola-db add report.pdf >/dev/null'])
+      const cp = inside(['sh', '-c', 'cp dx/chart.png chart.png && cp dx/hostile.svg drawing.svg && cp dx/two-column.pdf water-report.pdf && cp dx/remote-template.docx notes.docx && cp dx/formulas.xlsx budget.xlsx && ola-db add dx/scan.pdf >/dev/null && ola-db add water-report.pdf >/dev/null'])
       assert(cp.status === 0, cp.stderr)
       return 'in /work/dx and five at the top of the folder'
     })
