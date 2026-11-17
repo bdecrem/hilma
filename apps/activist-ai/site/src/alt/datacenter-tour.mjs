@@ -16,6 +16,7 @@ export default {
     ['computer', 'The computer', 'The whole cluster. It’s one computer.', [232, 328, 168, 104]],
     ['turbine', 'The wind turbine', 'Power: our own wind farm. “Farm” is a strong word.', [188, 324, 52, 116]],
     ['mug', 'The mug', 'Fuel for the one person on call. That’s me.', [512, 332, 60, 98]],
+    ['drawer', 'The desk drawer', 'Permits and community feedback. It barely closes.', [52, 443, 184, 24]],
     ['basket', 'The wastepaper basket', 'Our data retention policy.', [314, 514, 100, 92]],
   ],
 }
