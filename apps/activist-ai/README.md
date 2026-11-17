@@ -1010,7 +1010,7 @@ Levels live in `DEFAULTS` at the top of `ops/watch.mjs`; any of them can be set 
 `DISK_ALARM_GB=8`, `SWAP_ALARM_PCT=90`, `CERT_ALARM_DAYS=14`, `CERT_WARN_DAYS=21`, `VM_DROP_MIN=2`,
 `REPEAT_HOURS=2`, `QUIET_FROM=23`, `QUIET_TO=7`, `DIGEST_HOUR=9`, `OFF=public,almanac` (checks
 not to run at all), `KEY_FROM`, `ALMANAC_URL`, `PUBLIC_HOST`. Tests: `node --test ops/watch-test.mjs`
-(23, about 7 s, fakes only: no text is sent).
+(24, about 7 s, fakes only: no text is sent; after every run they check that the texting key is in no output, state or log).
 
 **What each alarm means and the first three things to do.** Commands are on the mini
 (`ssh admin@100.95.51.98`, then `export PATH=/opt/homebrew/bin:/usr/local/bin:$PATH` and

@@ -167,6 +167,10 @@ function watch(now, args = [], extra = {}) {
     c.stderr.on('data', (d) => (out += d))
     c.on('close', (code) => {
       all.out += out
+      // The texting key (and the other service's key in gateway.env) never reaches the output, the
+      // state file or any file in the log folder, after every single run.
+      const files = [path.join(OLA, 'watch-state.json'), ...readdirSync(LOGS).map((f) => path.join(LOGS, f))].filter(existsSync)
+      for (const [name, blob] of [['output', out], ...files.map((f) => [f, readFileSync(f, 'utf8')])]) assert.ok(!blob.includes(SECRET) && !blob.includes(SECRET.slice(3, 20)), `the key leaked into ${name}`)
       resolve({ code, out, sent: texts.slice(before) })
     })
   })
@@ -380,6 +384,21 @@ test('a text that does not go out is retried at the next run', async () => {
   assert.match(r.out, /NOT SENT \(the text service answered 500\), will retry/)
   up.imsg = 200
   assert.deepEqual((await watch(at('14:02'))).sent, ["Ola alarm: The mini's disk is almost full (4 GB left)."])
+})
+
+test('the key stays out of the output on every way a text can fail', async () => {
+  fakes({ freeGB: 4 })
+  const gone = http.createServer()
+  const port = await listen(gone)
+  await new Promise((r) => gone.close(r)) // nothing listens there now
+  const down = await watch(at('14:00'), [], { OLA_WATCH_SEND_BASE: `http://127.0.0.1:${port}` })
+  assert.match(down.out, /NOT SENT \(the text service did not answer \(ECONNREFUSED\)\)/)
+  const bad = await watch(at('14:02'), [], { OLA_WATCH_SEND_BASE: 'not a url' })
+  assert.match(bad.out, /NOT SENT \(the text service did not answer/)
+  const nokey = await watch(at('14:04'), [], { OLA_WATCH_KEY_FROM: path.join(OLA, 'gateway.env') }) // a file with other secrets, no VENTURE_KEY
+  assert.match(nokey.out, /NOT SENT \(no VENTURE_KEY in /)
+  const show = spawnSync(process.execPath, [path.join(HERE, 'watch.mjs'), 'show'], { env: ENV(), encoding: 'utf8' })
+  assert.ok(!show.stdout.includes(SECRET) && !show.stderr.includes(SECRET))
 })
 
 test('--dry prints what it would send and sends nothing', async () => {
