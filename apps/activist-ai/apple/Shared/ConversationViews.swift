@@ -191,7 +191,7 @@ struct ApprovalPanel: View {
       }
       ViewThatFits(in: .horizontal) {
         HStack(spacing: 10) { buttons }
-        VStack(alignment: .leading, spacing: 8) { buttons }
+        VStack(alignment: .leading, spacing: 8) { buttonRow(stacked: true) }
       }
       .disabled(busy)
     }
@@ -205,12 +205,16 @@ struct ApprovalPanel: View {
     .onChange(of: approval.id) { _, _ in busy = false; shown = [0] }
   }
 
-  @ViewBuilder var buttons: some View {
-    Button { reply(.once) } label: { Text("Yes, this once").padding(.horizontal, 4) }
+  var buttons: some View { buttonRow(stacked: false) }
+
+  /// Side by side where they fit; on a phone, full-width and stacked for the thumb.
+  @ViewBuilder func buttonRow(stacked: Bool) -> some View {
+    let w: CGFloat? = stacked ? .infinity : nil
+    Button { reply(.once) } label: { Text("Yes, this once").padding(.horizontal, 4).frame(maxWidth: w) }
       .buttonStyle(OlaButton(kind: .primary)).keyboardShortcut(.defaultAction)
-    Button { reply(.always) } label: { Text("Yes, for the rest of this session") }
+    Button { reply(.always) } label: { Text("Yes, for the rest of this session").frame(maxWidth: w) }
       .buttonStyle(OlaButton(kind: .ghost))
-    Button { reply(.reject) } label: { Text("No, don\u{2019}t") }
+    Button { reply(.reject) } label: { Text("No, don\u{2019}t").frame(maxWidth: w) }
       .buttonStyle(OlaButton(kind: .danger)).keyboardShortcut(.cancelAction)
   }
 
@@ -373,7 +377,7 @@ struct ConnectForm: View {
         .font(OlaFont.serif(Metrics.reading - 0.5)).foregroundStyle(Ola.ink2).lineSpacing(4).fixedSize(horizontal: false, vertical: true)
       VStack(alignment: .leading, spacing: 6) {
         Text("Address").font(OlaFont.sans(Metrics.meta, .semibold)).foregroundStyle(Ola.ink2)
-        TextField("http://100.95.51.98:4310", text: $address).textFieldStyle(.plain).font(OlaFont.mono(Metrics.ui)).field()
+        TextField("http://admins-mac-mini.tailde799a.ts.net:4310", text: $address).textFieldStyle(.plain).font(OlaFont.mono(Metrics.ui)).field()
           #if os(iOS)
           .keyboardType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled()
           #endif

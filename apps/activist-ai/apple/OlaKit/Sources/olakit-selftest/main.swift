@@ -8,11 +8,37 @@
 import Foundation
 import OlaKit
 
+//
+// Local mode ("On this Mac"), the way the Mac app runs it: starts opencode on 127.0.0.1 in a folder,
+// with the model through the machine's forwarder, runs the same steps, and stops it.
+//
+//   OLA_LOCAL_FOLDER=<scratch folder> OLA_MODEL_TOKEN_FILE=<file holding the bart gateway token> swift run olakit-selftest
 let env = ProcessInfo.processInfo.environment
-let address = env["OLA_SERVER"] ?? ServerConfig.defaultAddress
-guard let pwFile = env["OLA_PASSWORD_FILE"], let pw = try? String(contentsOfFile: pwFile, encoding: .utf8).trimmingCharacters(in: .whitespacesAndNewlines) else {
-  print("set OLA_PASSWORD_FILE to a file holding the password")
-  exit(2)
+var address = env["OLA_SERVER"] ?? ServerConfig.defaultAddress
+var pw = ""
+var local: LocalServer?
+if let folder = env["OLA_LOCAL_FOLDER"] {
+  guard let tf = env["OLA_MODEL_TOKEN_FILE"], let token = try? String(contentsOfFile: tf, encoding: .utf8).trimmingCharacters(in: .whitespacesAndNewlines) else {
+    print("set OLA_MODEL_TOKEN_FILE to a file holding the gateway token")
+    exit(2)
+  }
+  let server = LocalServer(folder: URL(fileURLWithPath: folder))
+  do {
+    let c = try await server.start(modelToken: token)
+    address = c.url.absoluteString
+    pw = c.password
+    local = server
+    print("PASS  local opencode started in \(folder)  (\(address))")
+  } catch {
+    print("FAIL  local opencode started  (\(error.localizedDescription))")
+    exit(1)
+  }
+} else {
+  guard let pwFile = env["OLA_PASSWORD_FILE"], let p = try? String(contentsOfFile: pwFile, encoding: .utf8).trimmingCharacters(in: .whitespacesAndNewlines) else {
+    print("set OLA_PASSWORD_FILE to a file holding the password")
+    exit(2)
+  }
+  pw = p
 }
 let client = OpenCodeClient(ServerConfig(url: URL(string: address)!, password: pw))
 var failures = 0
@@ -145,4 +171,5 @@ line(gone && !still, "delete arrives on the stream, and the session is gone")
 listener.cancel()
 
 print(failures == 0 ? "ALL PASSED in \(Int(Date().timeIntervalSince(t0))) s" : "\(failures) FAILED")
+local?.stop()
 exit(failures == 0 ? 0 : 1)

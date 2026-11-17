@@ -58,6 +58,22 @@ model refusing. Put it back with `ola-bart.sh token` (it is also checked by `sta
 a line in `ws.mjs` that keeps entries not named `ws-*`; that is staging's code, so it waits for a
 deliberate change there.
 
+## The model forwarder, for "On this Mac"
+
+The Mac app can run the agent on the Mac itself (Settings, "Where Ola works"). Then only its model
+requests come to the machine: `forward.mjs`, started by the same `cx.ola.bart` job beside opencode,
+listens on the Tailscale address only, port 4311, and passes each connection byte for byte to the
+gateway on `127.0.0.1:4180`, which stays on loopback. The gateway's token check is the gate: the Mac
+uses the `bart` caller token, read once with
+
+```bash
+ssh admin@100.95.51.98 'bash ~/.ola-bart/src/apps/activist-ai/bart/ola-bart.sh model-token' | pbcopy
+```
+
+and pasted into the Mac app's Settings (it goes into the Keychain). If either process stops, the job
+stops both and launchd starts the pair again. Proved from the iMac: `/v1/models` through port 4311 is
+401 without the token and 200 with it.
+
 ## What the agent may do
 
 Later rules win. Everything is allowed, except:

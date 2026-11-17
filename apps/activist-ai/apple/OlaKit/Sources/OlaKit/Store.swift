@@ -89,6 +89,24 @@ public final class OlaStore {
     start()
   }
 
+  /// Uses a server without keeping it in the Keychain: the local one of "On this Mac", whose
+  /// password is new at every start. `nil` goes back to the saved machine.
+  public func attach(_ config: ServerConfig?) {
+    stream?.cancel()
+    stream = nil
+    let target = config ?? Credentials.load()
+    self.config = target
+    client = target.map(OpenCodeClient.init)
+    sessions = []
+    conversations = [:]
+    files = [:]
+    models = []
+    running = []
+    selectedID = nil
+    connection = target == nil ? .notSetUp : .connecting
+    start()
+  }
+
   public func forget() {
     stream?.cancel()
     Credentials.forget()

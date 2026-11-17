@@ -25,6 +25,7 @@ TOKENS="$HOME/.ola/gateway-tokens"                # the gateway reloads this by 
 PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
 LOG="$HOME/Library/Logs/ola/bart.log"
 PORT="${OLA_BART_PORT:-4310}"
+FPORT="${OLA_BART_MODEL_PORT:-4311}"              # the forwarder to the gateway, for "On this Mac"
 HOST="${OLA_BART_HOST:-$(tailscale ip -4 2>/dev/null | head -1 || true)}"
 [ -n "$HOST" ] || HOST="$(/Applications/Tailscale.app/Contents/MacOS/Tailscale ip -4 2>/dev/null | head -1 || true)"
 UID_="$(id -u)"
@@ -154,8 +155,18 @@ export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
 set -a; . "$ENVF"; set +a
 export XDG_CONFIG_HOME="$STATE/config" XDG_DATA_HOME="$STATE/data" XDG_STATE_HOME="$STATE/state" XDG_CACHE_HOME="$STATE/cache"
 cd "$PROJECT"
-exec "$STATE/opencode/node_modules/.bin/opencode" serve --hostname "$HOST" --port "$PORT"
+# Two processes, one job: the forwarder for "On this Mac" mode (model requests from Bart's Mac to
+# the gateway) and opencode. If either stops, both stop, and launchd starts the pair again.
+node "$STATE/bin/forward.mjs" "$HOST" "$FPORT" 4180 &
+fwd=\$!
+"$STATE/opencode/node_modules/.bin/opencode" serve --hostname "$HOST" --port "$PORT" &
+oc=\$!
+trap 'kill \$fwd \$oc 2>/dev/null' TERM INT EXIT
+# macOS's bash 3.2 has no wait -n.
+while kill -0 \$fwd 2>/dev/null && kill -0 \$oc 2>/dev/null; do sleep 2; done
+exit 1
 SH
+  cp "$HERE/forward.mjs" "$STATE/bin/forward.mjs"
   chmod 700 "$STATE/bin/run.sh"
 }
 
@@ -229,6 +240,10 @@ case "${1:-}" in
   password)
     # For putting it into the apps' Keychain. Run it in your own terminal on the machine.
     sed -n 's/^OPENCODE_PASSWORD=//p' "$ENVF"
+    ;;
+  model-token)
+    # The gateway token for the Mac app's "On this Mac" mode (it goes into the Mac's Keychain).
+    sed -n 's/^BOX_API_KEY=//p' "$ENVF"
     ;;
   uninstall)
     launchctl bootout "gui/$UID_/$LABEL" 2>/dev/null || true

@@ -115,6 +115,10 @@ public struct Fixture: Sendable {
     case "approval": return approval
     case "empty": return empty
     case "unreachable": return unreachable
+    case "notset":
+      var f = Fixture(sessions: [])
+      f.connection = .notSetUp
+      return f
     default: return main
     }
   }

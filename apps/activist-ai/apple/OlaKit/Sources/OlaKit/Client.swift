@@ -8,7 +8,10 @@ public struct ServerConfig: Equatable, Sendable {
     self.url = url
     self.password = password
   }
-  public static let defaultAddress = "http://100.95.51.98:4310"
+  /// The mini's Tailscale name. Its address, http://100.95.51.98:4310, answers too, but App
+  /// Transport Security cannot be told to allow plain HTTP to an IP address: in the simulator the
+  /// IP was refused and the name worked. On the Studio, change it in the connect sheet.
+  public static let defaultAddress = "http://admins-mac-mini.tailde799a.ts.net:4310"
 }
 
 public enum OlaError: Error, Equatable, LocalizedError {

@@ -70,7 +70,7 @@ struct MacRoot: View {
     .toolbarBackground(.visible, for: .windowToolbar)
     .toolbarColorScheme(treatment == .sheet ? .dark : nil, for: .windowToolbar)
     .focusedSceneValue(\.olaDraft, $draft)
-    .sheet(isPresented: Binding(get: { store.connection == .notSetUp || connectShown }, set: { connectShown = $0 })) {
+    .sheet(isPresented: Binding(get: { (store.connection == .notSetUp && !LocalSettings.onThisMac) || connectShown }, set: { connectShown = $0 })) {
       ConnectForm(store: store) { connectShown = false }.frame(width: 440).interactiveDismissDisabled(store.connection == .notSetUp)
     }
     .onChange(of: store.connection) { _, c in if c == .refused { connectShown = true } }
@@ -92,11 +92,13 @@ struct MacRoot: View {
 
   var subtitle: String {
     switch store.connection {
-    case .open: (store.running.isEmpty ? "On the machine" : "On the machine \u{00B7} \(store.running.count) working")
-    case .connecting: "Connecting"
-    case .lost: "Not answering"
-    case .refused: "Password refused"
-    case .notSetUp: "Not connected"
+    case .open:
+      let place = store.config?.url.host() == "127.0.0.1" ? "On this Mac" : "On the machine"
+      return store.running.isEmpty ? place : "\(place) \u{00B7} \(store.running.count) working"
+    case .connecting: return "Connecting"
+    case .lost: return "Not answering"
+    case .refused: return "Password refused"
+    case .notSetUp: return "Not connected"
     }
   }
 }
@@ -203,7 +205,7 @@ struct MachineFooter: View {
         DeskMark(lit: store.connection == .open, working: !store.running.isEmpty)
         VStack(alignment: .leading, spacing: 2) {
           Text(title).font(OlaFont.sans(Metrics.ui, .semibold)).foregroundStyle(Ola.onRoom)
-          Text(store.config?.url.host() ?? "").font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.dim)
+          Text(store.config?.url.host()?.components(separatedBy: ".").first ?? "").font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.dim).lineLimit(1)
         }
       }
       .padding(.horizontal, 16).padding(.bottom, 14).padding(.top, 4)

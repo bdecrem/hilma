@@ -849,6 +849,19 @@ The platform database, tokens and `stage-a` were not moved or changed. Deploys c
 three jobs, and each workspace's door and desk in `~/.ola/launchd`) points outside `~/ola-staging`,
 and notes any Ola process running from elsewhere (a check or a dev run).
 
+## Bart's own apps (Part I)
+
+The other half of Ola: Bart himself, with full privileges on the machine, no sealed VM. `bart/`
+sets up **Bart's opencode** on the machine (`ola-bart.sh install`: one `opencode serve` as `admin`
+in `~/ola-bart`, on the Tailscale address only, port 4310, Basic auth with a password made on the
+machine, the model through the gateway as caller `bart`, launchd job `cx.ola.bart`; and port 4311,
+a byte-for-byte forwarder to the gateway for the Mac app's "On this Mac" mode). `apple/` holds the
+**Mac and iPhone apps** (SwiftUI, XcodeGen), both clients of that server, so a session started on the
+Mac is on the phone at once. `apple/OlaKit` ports `web/src/lib/steps.ts` and `conversation.ts`:
+change the words in both places. The apps' Mac setting "Where Ola works" can instead run opencode on
+the Mac itself in a chosen folder, with only the model on the machine. See `bart/README.md` and
+`apple/README.md`. Made-up data only while the model behind the gateway is the hosted stand-in.
+
 ## Rules for this code
 
 - Nothing here logs content: no prompts, files, tool arguments or replies. The gateway's request line

@@ -152,7 +152,7 @@ struct MarkdownView: View {
   @ViewBuilder func block(_ b: MDBlock) -> some View {
     switch b {
     case .paragraph(let s):
-      Text(MarkdownParser.inline(s, size: size)).font(OlaFont.serif(size)).lineSpacing(size * 0.42).foregroundStyle(Ola.ink)
+      Text(MarkdownParser.inline(s, size: size)).font(OlaFont.serif(size)).lineSpacing(size * 0.24).foregroundStyle(Ola.ink)
         .fixedSize(horizontal: false, vertical: true)
     case .heading(let level, let s):
       Text(MarkdownParser.inline(s, size: size)).font(level <= 1 ? OlaFont.sans(size * 1.3, .display) : level == 2 ? OlaFont.sans(size * 1.12, .semibold) : OlaFont.sans(size, .semibold))
@@ -162,7 +162,7 @@ struct MarkdownView: View {
         ForEach(Array(items.enumerated()), id: \.offset) { _, it in
           HStack(alignment: .firstTextBaseline, spacing: 10) {
             Text("\u{2022}").font(OlaFont.serif(size)).foregroundStyle(Ola.ink3)
-            Text(MarkdownParser.inline(it, size: size)).font(OlaFont.serif(size)).lineSpacing(size * 0.36).foregroundStyle(Ola.ink).fixedSize(horizontal: false, vertical: true)
+            Text(MarkdownParser.inline(it, size: size)).font(OlaFont.serif(size)).lineSpacing(size * 0.2).foregroundStyle(Ola.ink).fixedSize(horizontal: false, vertical: true)
           }
         }
       }
@@ -171,12 +171,12 @@ struct MarkdownView: View {
         ForEach(Array(items.enumerated()), id: \.offset) { n, it in
           HStack(alignment: .firstTextBaseline, spacing: 8) {
             Text("\(start + n).").font(OlaFont.sans(size * 0.9, .medium)).foregroundStyle(Ola.ink3).monospacedDigit().frame(minWidth: 18, alignment: .trailing)
-            Text(MarkdownParser.inline(it, size: size)).font(OlaFont.serif(size)).lineSpacing(size * 0.36).foregroundStyle(Ola.ink).fixedSize(horizontal: false, vertical: true)
+            Text(MarkdownParser.inline(it, size: size)).font(OlaFont.serif(size)).lineSpacing(size * 0.2).foregroundStyle(Ola.ink).fixedSize(horizontal: false, vertical: true)
           }
         }
       }
     case .quote(let s):
-      Text(MarkdownParser.inline(s, size: size)).font(OlaFont.serif(size * 0.97, .italic)).lineSpacing(size * 0.4).foregroundStyle(Ola.ink2)
+      Text(MarkdownParser.inline(s, size: size)).font(OlaFont.serif(size * 0.97, .italic)).lineSpacing(size * 0.22).foregroundStyle(Ola.ink2)
         .padding(.leading, 14).overlay(alignment: .leading) { Rectangle().fill(Ola.vermilion).frame(width: 3) }
     case .code(let lang, let code):
       CodeBlock(lang: lang, code: code)

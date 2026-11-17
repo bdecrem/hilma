@@ -16,6 +16,7 @@ enum Main {
 
 struct OlaMacApp: App {
   @State private var store = OlaStore(config: Credentials.load())
+  @State private var whereOla: WhereOlaWorks?
   @NSApplicationDelegateAdaptor private var delegate: AppDelegate
 
   var body: some Scene {
@@ -23,9 +24,13 @@ struct OlaMacApp: App {
       MacRoot(store: store)
         .frame(minWidth: 860, minHeight: 560)
         .onAppear {
+          guard whereOla == nil else { return }
+          let w = WhereOlaWorks(store: store)
+          whereOla = w
           delegate.store = store
+          delegate.whereOla = w
           Notifier.wire(store)
-          store.start()
+          if LocalSettings.onThisMac { Task { await w.apply() } } else { store.start() }
         }
     }
     .defaultSize(width: 1280, height: 820)
@@ -37,13 +42,17 @@ struct OlaMacApp: App {
     .defaultSize(width: 1000, height: 760)
 
     Settings {
-      SettingsView(store: store)
+      SettingsView(store: store, whereOla: whereOla)
     }
   }
 }
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
   var store: OlaStore?
+  var whereOla: WhereOlaWorks?
+  func applicationWillTerminate(_ notification: Notification) {
+    MainActor.assumeIsolated { whereOla?.stop() }
+  }
   func applicationDidBecomeActive(_ notification: Notification) {
     MainActor.assumeIsolated {
       store?.isActive = true
@@ -124,16 +133,12 @@ extension FocusedValues {
 
 struct SettingsView: View {
   var store: OlaStore
+  var whereOla: WhereOlaWorks?
   @State private var connecting = false
-  @AppStorage("ola.where") private var whereMode = "machine"
 
   var body: some View {
     VStack(alignment: .leading, spacing: 14) {
-      Picker("Where Ola works", selection: $whereMode) {
-        Text("On the Ola machine: the agent and the files are there, and the phone can follow").tag("machine")
-        Text("On this Mac, in a folder you pick (not yet)").tag("mac").disabled(true)
-      }
-      .pickerStyle(.radioGroup)
+      if let whereOla { WhereSettings(controller: whereOla) }
       Divider()
       LabeledContent("Machine", value: store.config?.url.absoluteString ?? "Not connected")
       LabeledContent("Status", value: statusText)
@@ -143,7 +148,7 @@ struct SettingsView: View {
       }
     }
     .padding(24)
-    .frame(width: 460)
+    .frame(width: 580)
     .sheet(isPresented: $connecting) { ConnectForm(store: store) { connecting = false }.frame(width: 440) }
   }
   var statusText: String {

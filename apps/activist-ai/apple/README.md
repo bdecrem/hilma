@@ -65,8 +65,27 @@ and `-OlaOpen` for simulator screenshots.
 The machine is reached by plain HTTP over the tailnet (WireGuard encrypts it). Both apps allow plain
 HTTP only to local addresses (`NSAllowsLocalNetworking`) and to Tailscale names (`*.ts.net`,
 `NSExceptionDomains` with `NSExceptionAllowsInsecureHTTPLoads`); everything else still needs HTTPS.
-ATS cannot name an IP address, so if a build refuses `http://100.95.51.98:4310`, use the machine's
-Tailscale name instead: `http://admins-mac-mini.tailde799a.ts.net:4310`.
+ATS cannot name an IP address: in the simulator `http://100.95.51.98:4310` was refused and the
+Tailscale name worked, so the connect sheet is prefilled with
+`http://admins-mac-mini.tailde799a.ts.net:4310` (the same server). On the Studio, type its name.
+
+## Where Ola works (Mac Settings)
+
+One setting for the whole app:
+
+- **On the Ola machine** (default): the agent and the files are on the machine; the phone follows.
+- **On this Mac**: the Claude Code arrangement. The app starts its own `opencode serve` on
+  `127.0.0.1:4320` in a folder Bart picks (`OlaKit/LocalServer.swift`) and stops it when the app
+  quits or the setting changes. Only model requests leave the Mac, to the machine's forwarder
+  (`http://100.95.51.98:4311/v1`, see `../bart/README.md`) with the `bart` gateway token from the
+  Keychain. The config is written to `~/Library/Application Support/Ola/local/config/` (never into the
+  project folder), the token and a fresh server password reach opencode only through its environment.
+  Shell commands and edits ask, as on the machine. These sessions live on the Mac; the phone does
+  not see them.
+
+opencode for this mode: `tools/install-local-opencode.sh` (the pinned 2.3.0, user-level, into
+`~/Library/Application Support/Ola/opencode`). Proved with
+`OLA_LOCAL_FOLDER=<scratch> OLA_MODEL_TOKEN_FILE=<file> swift run olakit-selftest` (14 of 14).
 
 ## Pages the agent built
 
