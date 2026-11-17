@@ -11,7 +11,7 @@
 # gateway). The host reaches opencode through `container exec` (workspace/desk.mjs), and the
 # root file system is read-only (ws.mjs creates the container with --read-only).
 #
-#   node ws.mjs image   (builds ola-workspace:2.3.0-7 under a temporary tag, then names it)
+#   node ws.mjs image   (builds ola-workspace:2.3.0-8 under a temporary tag, then names it)
 #
 # 2.3.0-6 adds Claude Code (Fallback to Claude, workspace/ola-claude): the Linux arm64 build from
 # npm, pinned by npm's integrity like opencode. It reaches only the door, like opencode.
@@ -19,6 +19,12 @@
 # command under "Ask me first" (--permission-prompt-tool stdio), keeps each run's record in
 # /work/.ola/claude-runs, and has `stop` and `log`. The downloads retry and give up on a stalled
 # connection instead of hanging (curl --retry, --speed-limit).
+#
+# 2.3.0-8: the project database and the web tools. ola-db (/work/project.db, SQLite with FTS5:
+# documents, their text by page, and any table the agent loads), ola-search and ola-fetch (web
+# search and one-document downloads through the gateway's /web routes, only with the person's
+# yes). Adds the sqlite3 command line, poppler-utils (pdftotext, pdfinfo) and python3-openpyxl
+# (Excel in and out). Still no CA bundle and no network: the gateway makes every web request.
 
 ARG DEBIAN=docker.io/library/debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc
 
@@ -44,7 +50,7 @@ RUN curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors --connect-timeout 30
 
 FROM ${DEBIAN}
 RUN apt-get update \
- && apt-get install -y --no-install-recommends python3 socat \
+ && apt-get install -y --no-install-recommends python3 socat sqlite3 poppler-utils python3-openpyxl \
  && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*.deb \
  && useradd --create-home --uid 1000 --shell /bin/bash work \
  && mkdir -p /work /ola/gw \
@@ -57,7 +63,7 @@ COPY --from=fetch /opencode /usr/local/bin/opencode
 COPY --from=fetch /claude /usr/local/bin/claude
 COPY opencode.jsonc AGENTS.md /opt/ola/config/opencode/
 COPY claude-ola.md /opt/ola/config/claude/ola.md
-COPY ola-init ola-files ola-put ola-get ola-rm ola-claude /opt/ola/bin/
+COPY ola-init ola-files ola-put ola-get ola-rm ola-claude ola-db ola-search ola-fetch /opt/ola/bin/
 RUN chmod 0755 /opt/ola/bin/* && chmod -R a+rX,go-w /opt/ola
 
 # Everything the agent keeps lives in /work, so `ws.mjs files` shows all of it and

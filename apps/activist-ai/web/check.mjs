@@ -18,7 +18,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { chromium } from 'playwright'
+import { chromium, webkit } from 'playwright'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const LIVE = !process.argv.includes('--no-live')
@@ -69,7 +69,7 @@ async function startDev(extra) {
     })
     p.on('exit', (c) => reject(new Error(`dev server exited ${c}:\n${out}`)))
   })
-  return { url, origin: new URL(url).origin, stop: () => new Promise((r) => (p.once('exit', r), p.kill('SIGTERM'))) }
+  return { url, origin: new URL(url).origin, work: /workspace folder: (\S+)/.exec(out)?.[1] ?? null, stop: () => new Promise((r) => (p.once('exit', r), p.kill('SIGTERM'))) }
 }
 
 const browser = await chromium.launch()
@@ -366,6 +366,135 @@ await check('reduced motion stops the lamp and the slides', async () => {
   await c3.close()
   assert(s.animation === 'none' && /^0s/.test(s.transition), JSON.stringify(s))
 })
+
+// ---------------------------------------------------------------- Data, Settings and the web approval
+// The project database of the dev folder, made up: a 200,000-row table and a three-page PDF,
+// through the real ola-db (../workspace/ola-db) as the agent would make them.
+const OLA_DB = path.join(HERE, '../workspace/ola-db')
+const seeded = (() => {
+  if (!dev.work) return 'the dev server did not say its folder'
+  const lines = ['id,country,year,title,score']
+  for (let i = 0; i < 200_000; i++) lines.push(`${i},Country ${i % 46},${1950 + (i % 70)},"Made-up law ${i}, on rights",${((i * 7919) % 10000) / 100}`)
+  fs.writeFileSync(path.join(dev.work, 'laws.csv'), lines.join('\n') + '\n')
+  const pdf = spawnSync('python3', [path.join(HERE, '../workspace/testdata/mkpdf.py'), 'Page one is about drought in the Sahel.', 'Page two covers mangrove restoration in Tanzania.', 'Page three is about flood insurance.'])
+  fs.writeFileSync(path.join(dev.work, 'report.pdf'), pdf.stdout)
+  const env = { ...process.env, OLA_WORK: dev.work }
+  for (const a of [['init'], ['load', 'laws.csv', '--table', 'laws', '--note', 'Made-up laws, one row each'], ['add', 'report.pdf', '--by', 'upload']]) {
+    const r = spawnSync('python3', [OLA_DB, ...a], { env, encoding: 'utf8' })
+    if (r.status !== 0) return `ola-db ${a[0]}: ${r.stderr}`
+  }
+  return null
+})()
+ok('the dev project database is made (200,000 rows and a three-page PDF)', !seeded, seeded ?? '')
+
+for (const [engine, launcher] of [['Chromium', null], ['WebKit', webkit]]) {
+  const b = launcher ? await launcher.launch().catch((e) => (ok(`${engine} starts`, false, String(e.message).split('\n')[0]), null)) : browser
+  if (!b) continue
+  const c = await b.newContext({ viewport: { width: 1440, height: 900 }, acceptDownloads: true })
+  const pg = await c.newPage()
+  pg.on('request', (r) => {
+    const u = r.url()
+    if (!u.startsWith('data:') && !u.startsWith('blob:') && new URL(u).origin !== dev.origin) foreign.add(u)
+  })
+  await check(`${engine}: Data lists the tables with their rows and where they came from`, async () => {
+    await pg.goto(`${dev.url}#/data`)
+    await pg.waitForSelector('table.data-tables')
+    const row = await pg.locator('table.data-tables tbody tr', { hasText: 'laws' }).innerText()
+    assert(/200,000/.test(row) && /laws\.csv/.test(row) && /Made-up laws/.test(row), `row: ${row}`)
+    assert((await pg.locator('h1').innerText()) === 'Your project’s data', 'heading')
+  })
+  await check(`${engine}: a 200,000-row table opens, sorts, searches and pages fast`, async () => {
+    const t0 = Date.now()
+    await pg.getByRole('button', { name: 'Open laws' }).click()
+    await pg.waitForSelector('.grid tbody tr')
+    const first = Date.now() - t0
+    assert((await pg.locator('.grid tbody tr').count()) === 50, 'one page of 50 rows')
+    assert(/Rows 1 to 50 of 200,000/.test(await pg.locator('.table-count').innerText()), 'the count')
+    const t1 = Date.now()
+    await pg.locator('.grid th button', { hasText: 'score' }).click()
+    await pg.locator('.grid th button', { hasText: 'score' }).click()
+    const settled = (what, fn, arg) => pg.waitForFunction(fn, arg, { timeout: 15_000 }).catch(() => pg.locator('.table-browser').innerText().then((t) => { throw new Error(`${what}: ${t.slice(0, 300).replace(/\s+/g, ' ')}`) }))
+    await settled('sorted', () => document.querySelector('.grid th[aria-sort="descending"]') && !document.querySelector('.table-count')?.textContent?.includes('loading'))
+    const top = Number(await pg.locator('.grid tbody tr:first-child td:nth-child(5)').innerText())
+    assert(top >= 99.9, `highest score first: ${top}`)
+    await pg.fill('#table-q', 'Country 7')
+    await pg.press('#table-q', 'Enter')
+    await settled('searched', () => /with “Country 7”/.test(document.querySelector('.table-count')?.textContent ?? '') && !/loading/.test(document.querySelector('.table-count')?.textContent ?? ''))
+    const n = await pg.locator('.table-count').innerText()
+    await pg.getByRole('button', { name: 'Next 50' }).click()
+    await settled('next page', () => /^Rows 51 to 100/.test(document.querySelector('.table-count')?.textContent ?? ''))
+    const rest = Date.now() - t1
+    assert(first < 3000 && rest < 8000, `slow: first page ${first} ms, sort + search + next ${rest} ms`)
+    return `first page ${first} ms; sort, search, next ${rest} ms; ${n}`
+  })
+  await check(`${engine}: a document search cites the right page`, async () => {
+    await pg.getByRole('button', { name: 'All tables and documents' }).click()
+    await pg.fill('#docs-q', 'mangrove')
+    await pg.press('#docs-q', 'Enter')
+    await pg.waitForSelector('.hit')
+    const hit = await pg.locator('.hit').first().innerText()
+    assert(/page 2/.test(hit) && /report\.pdf/.test(hit), `hit: ${hit}`)
+    assert((await pg.locator('.hit mark').first().innerText()).toLowerCase() === 'mangrove', 'the word is marked')
+  })
+  await check(`${engine}: Settings shows the web choice and turns Always on and off`, async () => {
+    await pg.goto(`${dev.url}#/settings`)
+    const sw = pg.getByRole('switch', { name: 'Search and download without asking' })
+    await pg.getByText('Off. Ola asks before each web search or download.', { exact: false }).waitFor()
+    assert((await sw.getAttribute('aria-checked')) === 'false', 'starts off')
+    await sw.click()
+    await pg.getByText('On. Ola may search the web and download documents', { exact: false }).waitFor()
+    assert((await sw.getAttribute('aria-checked')) === 'true', 'the switch is on')
+    await sw.click()
+    await pg.getByText('Off. Ola asks before each web search or download.', { exact: false }).waitFor()
+    assert(/Brave Search/.test(await pg.locator('.web-setting .facts').innerText()), 'names the provider')
+  })
+  await check(`${engine}: the first web search asks in plain words, with what leaves the machine; Not now refuses it`, async () => {
+    await pg.goto(dev.url)
+    await pg.waitForSelector('.thing')
+    await send(pg, 'Please search the web for coastal adaptation plans')
+    const dialog = pg.locator('dialog.approval[open]')
+    await dialog.waitFor({ timeout: 30_000 })
+    const title = await dialog.locator('h2').innerText()
+    assert(/Ola wants to search the web for:/.test(title) && /coastal adaptation plans/.test(title), `title: ${title}`)
+    assert(/The words of the search go to Brave Search\. Nothing from your files is sent\./.test(await dialog.locator('.web-leaves').innerText()), 'the line on what leaves')
+    for (const b of ['Allow once', 'Always in this project', 'Not now']) assert(await dialog.getByRole('button', { name: b }).isVisible(), `no ${b}`)
+    await dialog.getByRole('button', { name: 'Not now' }).click()
+    await waitDone(pg)
+    const words = await stepWords(pg)
+    assert(words.some((w) => /Searched the web for/.test(w)), `steps: ${words.join(' / ')}`)
+  })
+  await check(`${engine}: no sideways scroll at 390 px (data, a wide table, settings)`, async () => {
+    const c2 = await b.newContext({ viewport: { width: 390, height: 844 }, isMobile: engine === 'Chromium', hasTouch: true })
+    const p2 = await c2.newPage()
+    const over = []
+    const measure = async (label) => {
+      const [sw, cw] = await p2.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth])
+      if (sw > cw) over.push(`${label} ${sw}>${cw}`)
+    }
+    await p2.goto(`${dev.url}#/data`)
+    await p2.waitForSelector('table.data-tables')
+    await measure('data')
+    await p2.getByRole('button', { name: 'Open laws' }).click()
+    await p2.waitForSelector('.grid tbody tr')
+    await measure('table')
+    await p2.goto(`${dev.url}#/settings`)
+    await p2.getByRole('switch', { name: 'Search and download without asking' }).waitFor()
+    await measure('settings')
+    await c2.close()
+    assert(!over.length, over.join(', '))
+  })
+  await check(`${engine}: no text under 15 px and AA contrast: a table in Data`, async () => {
+    await pg.goto(`${dev.url}#/data`)
+    await pg.waitForSelector('table.data-tables')
+    await pg.getByRole('button', { name: 'Open laws' }).click()
+    await pg.waitForSelector('.grid tbody tr')
+    const { small, low } = await textAudit(pg)
+    assert(!small.length, `small: ${small.slice(0, 4).join('; ')}`)
+    assert(!low.length, `low contrast: ${low.slice(0, 4).join('; ')}`)
+  })
+  await c.close()
+  if (launcher) await b.close()
+}
 
 await ctx.close()
 await dev.stop()

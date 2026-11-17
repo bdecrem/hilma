@@ -26,6 +26,10 @@
 //   node admin.mjs claude-grants                       writes the gateway's grants file from the database again
 //   node admin.mjs audit [--workspace <slug>] [--limit 50] [--json]
 //   node admin.mjs list
+//   node admin.mjs data [--wake] [--json]              every project's database: its tables, rows, documents
+//                  and size, one place (like a dashboard's table list). Asks each running project's own
+//                  computer (ola-db, read-only); a resting one is listed as resting, or woken with --wake
+//                  (one at a time, stopped again after)
 //
 // Settings come from the same environment as the server (OLA_FD_DATA, OLA_FD_ORIGIN, OLA_HOME).
 // Display names are typed here by the admin; the database takes no text from the people themselves.
@@ -49,7 +53,7 @@ const [cmd, ...rest] = argv
 const flags = {}
 const args = []
 for (let i = 0; i < rest.length; i++) {
-  if (['--admin', '--json', '--add-device'].includes(rest[i])) flags[rest[i].slice(2)] = true
+  if (['--admin', '--json', '--add-device', '--wake'].includes(rest[i])) flags[rest[i].slice(2)] = true
   else if (rest[i].startsWith('--')) flags[rest[i].slice(2)] = rest[++i]
   else args.push(rest[i])
 }
@@ -318,8 +322,52 @@ switch (cmd) {
     }
     break
   }
+  case 'data': {
+    const ws = await import('../workspace/ws.mjs')
+    const all = []
+    const human = (n) => (n >= 1e9 ? `${(n / 1e9).toFixed(1)} GB` : n >= 1e6 ? `${(n / 1e6).toFixed(1)} MB` : `${Math.round(n / 1e3)} KB`)
+    for (const w of db.prepare("SELECT w.slug, w.name, w.status, t.name AS team FROM workspaces w JOIN teams t ON t.id = w.team_id ORDER BY t.name, w.name").all()) {
+      const row = { slug: w.slug, name: w.name, team: w.team, state: null, tables: [], documents: null, size: null }
+      const state = ws.inspect(w.slug)?.status?.state ?? ws.inspect(w.slug)?.status ?? 'no container'
+      row.state = w.status === 'closed' ? 'closed' : state
+      let woke = false
+      if (row.state !== 'running' && flags.wake && w.status !== 'closed') {
+        try {
+          await ws.waitForRoom([w.slug], 1, { say: () => {} })
+          await ws.start(w.slug)
+          woke = true
+          row.state = 'running'
+        } catch (e) {
+          row.state = `could not be woken (${e.message})`
+        }
+      }
+      if (row.state === 'running') {
+        try {
+          const d = await ws.dbApi(w.slug, ['tables'])
+          Object.assign(row, { tables: d.tables.map((t) => ({ name: t.name, rows: t.rows, source: t.source, description: t.description })), documents: d.documents, size: d.size })
+        } catch (e) {
+          row.state = `running; its database did not answer (${e.message})`
+        }
+      }
+      if (woke) ws.stop(w.slug)
+      all.push(row)
+    }
+    if (flags.json) {
+      console.log(JSON.stringify(all, null, 2))
+      break
+    }
+    for (const r of all) {
+      if (r.size === null) {
+        console.log(`${r.slug} (${r.name}, ${r.team}): ${r.state === 'running' ? 'running' : r.state}${r.state !== 'running' && !String(r.state).startsWith('could') ? '; run with --wake to look' : ''}`)
+        continue
+      }
+      console.log(`${r.slug} (${r.name}, ${r.team}): ${r.tables.length} table${r.tables.length === 1 ? '' : 's'}, ${r.documents.count} documents (${r.documents.pages} pages; ${r.documents.web} from the web, ${r.documents.upload} uploaded), ${human(r.size)}`)
+      for (const t of r.tables) console.log(`    ${t.name.padEnd(28)} ${String(t.rows).padStart(10)} rows   from ${t.source ?? '?'}${t.description ? `: ${t.description.slice(0, 60)}` : ''}`)
+    }
+    break
+  }
   default:
-    console.error('usage: admin.mjs add-person | invite | remove-passkey | create-workspace | add-member | remove-member | rotate | reopen | revoke-sessions | suspend | claude | claude-grants | shown-to-cloud | audit | list  (see the top of this file)')
+    console.error('usage: admin.mjs add-person | invite | remove-passkey | create-workspace | add-member | remove-member | rotate | reopen | revoke-sessions | suspend | claude | claude-grants | shown-to-cloud | audit | list | data  (see the top of this file)')
     process.exit(2)
 }
 db.close()

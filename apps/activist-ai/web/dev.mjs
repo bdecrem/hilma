@@ -198,7 +198,8 @@ startOpencode()
 await waitFor(`http://127.0.0.1:${ocPort}/api/info`, { authorization })
 
 // ---------------------------------------------------------------- the page's server
-const proxy = makeProxy({ target: `http://127.0.0.1:${ocPort}`, authorization, work, log })
+let devWeb = { always: false, changedAt: null, changedBy: null, provider: 'Brave Search' }
+const proxy = makeProxy({ target: `http://127.0.0.1:${ocPort}`, authorization, work, log, webMode: () => (devWeb.always ? 'always' : 'ask') })
 let vite = null
 if (!DIST) {
   const { createServer } = await import('vite')
@@ -258,9 +259,41 @@ const server = http.createServer(async (req, res) => {
         csrf: 'dev',
         workspaces: [{ slug: 'dev', name: fixtureName, team: 'Dev', role: 'owner' }],
         machine: { working: 1, capacity: 4 },
-        policy: { maxUpload: MAX_UPLOAD_BYTES, deleteNotice: 'It is removed from Ola’s computer, and Ola can no longer read it. This cannot be undone. Your own copy, if you have one, is not touched.' },
+        policy: { maxUpload: MAX_UPLOAD_BYTES, searchProvider: 'Brave Search', deleteNotice: 'It is removed from Ola’s computer, and Ola can no longer read it. This cannot be undone. Your own copy, if you have one, is not touched.' },
       })
     if (p === '/api/signout' && req.method === 'POST') return json(res, 200, { ok: true })
+    // Settings and Data, as the front desk serves them: the web choice in memory, the project
+    // database through the real ola-db (../workspace/ola-db) on the dev folder.
+    if (p === '/api/settings' && req.method === 'GET') return json(res, 200, { web: devWeb, role: 'owner' })
+    if (p === '/api/settings/web' && req.method === 'POST') {
+      let raw = ''
+      for await (const c of req) raw += c
+      const always = JSON.parse(raw || '{}').always
+      if (typeof always !== 'boolean') return json(res, 400, { error: 'bad_json' })
+      devWeb = { ...devWeb, always, changedAt: new Date().toISOString(), changedBy: 'You' }
+      return json(res, 200, { web: devWeb })
+    }
+    if (p.startsWith('/api/data') && req.method === 'GET') {
+      const q = url.searchParams
+      const opt = (k, flag) => (q.get(k) ? [flag, q.get(k)] : [])
+      const args =
+        p === '/api/data' ? ['tables']
+        : p === '/api/data/table' ? ['browse', '--table', q.get('name') ?? '', ...opt('offset', '--offset'), ...opt('limit', '--limit'), ...opt('sort', '--sort'), ...opt('dir', '--dir'), ...opt('q', '--q')]
+        : p === '/api/data/docs' ? ['docs', ...opt('offset', '--offset'), ...opt('q', '--q')]
+        : p === '/api/data/download' ? ['backup']
+        : p === '/api/data/xlsx' ? ['xlsx', '--table', q.get('name') ?? '']
+        : null
+      if (!args) return json(res, 404, { error: 'not_found' })
+      const child = spawn('python3', [path.join(AI, 'workspace/ola-db'), 'api', ...args], { env: { ...process.env, OLA_WORK: work }, stdio: ['ignore', 'pipe', 'pipe'] })
+      if (args[0] === 'backup' || args[0] === 'xlsx') {
+        res.writeHead(200, { 'content-type': 'application/octet-stream', 'content-disposition': `attachment; filename="${args[0] === 'backup' ? 'dev-data.db' : 'table.xlsx'}"`, 'cache-control': 'no-store' })
+        return child.stdout.pipe(res)
+      }
+      let out = ''
+      child.stdout.on('data', (d) => (out += d))
+      const code = await new Promise((r) => child.on('close', r))
+      return code === 0 ? json(res, 200, JSON.parse(out)) : json(res, code === 4 ? 404 : 502, { error: 'data_failed', message: 'The project’s data could not be read just now.' })
+    }
     // Dev-only switches for the checks: stop and start the workspace's opencode.
     if (process.env.OLA_DEV_CONTROLS === '1' && p === '/__dev/opencode' && req.method === 'POST') {
       const want = url.searchParams.get('to')

@@ -1,10 +1,16 @@
-// When opencode asks permission (under "Ask me first"), the question as a sheet over the page:
-// what Ola wants to do, exactly, and three answers. A native modal <dialog>: focus stays inside,
-// Escape does not answer for the person (it would be a silent "no"), the page behind is inert.
+// When opencode asks permission, the question as a sheet over the page: what Ola wants to do,
+// exactly, and three answers. A native modal <dialog>: focus stays inside, Escape does not answer
+// for the person (it would be a silent "no"), the page behind is inert.
+//
+// Two kinds of question. Under "Ask me first": a command or a change to files ("Yes, this once" /
+// "Yes, for the rest of this conversation" / "No, don't"). Always, the first time in a project: a
+// web search or a download ("Allow once" / "Always in this project" / "Not now"), with one line on
+// what leaves the machine. "Always in this project" is kept by the front desk for the project,
+// shown and reversible in Settings; the gateway enforces it.
 import { createEffect, createSignal, For, Show } from 'solid-js'
 import type { Ola } from '../lib/ola.ts'
 
-export function ApprovalSheet(props: { ola: Ola }) {
+export function ApprovalSheet(props: { ola: Ola; provider?: string }) {
   let dialog: HTMLDialogElement | undefined
   let first: HTMLButtonElement | undefined
   const a = () => props.ola.state.approval
@@ -22,33 +28,79 @@ export function ApprovalSheet(props: { ola: Ola }) {
     await props.ola.answer(d)
     setBusy(false)
   }
+  const host = (u: string | null) => {
+    try {
+      return u ? new URL(u).hostname : 'the site'
+    } catch {
+      return 'the site'
+    }
+  }
   return (
     <dialog ref={dialog} class="sheet approval" aria-labelledby="approval-title" aria-describedby="approval-why" onCancel={(e) => e.preventDefault()}>
       <Show when={a()}>
         {(ap) => (
           <div class="sheet-inner">
-            <h2 id="approval-title" class="sheet-title">
-              {ap().title}
-            </h2>
-            <p id="approval-why" class="sheet-lede">
-              {ap().engine === 'claude'
-                ? 'You asked to be checked with first. Nothing happens until you answer; the work itself is done here, in your project.'
-                : 'You asked Ola to check with you first. Nothing happens until you answer; it all stays on Ola’s computer.'}
-            </p>
-            <ul class="approval-items">
-              <For each={ap().items}>{(item) => <ApprovalItem label={item.label} detail={item.detail} action={ap().action} />}</For>
-            </ul>
-            <div class="sheet-actions">
-              <button type="button" class="primary-button" ref={first} disabled={busy()} onClick={() => reply('once')}>
-                Yes, this once
-              </button>
-              <button type="button" class="ghost-button on-paper" disabled={busy()} onClick={() => reply('always')}>
-                Yes, for the rest of this conversation
-              </button>
-              <button type="button" class="ghost-button on-paper danger" disabled={busy()} onClick={() => reply('reject')}>
-                No, don’t
-              </button>
-            </div>
+            <Show
+              when={ap().web}
+              fallback={
+                <>
+                  <h2 id="approval-title" class="sheet-title">
+                    {ap().title}
+                  </h2>
+                  <p id="approval-why" class="sheet-lede">
+                    {ap().engine === 'claude'
+                      ? 'You asked to be checked with first. Nothing happens until you answer; the work itself is done here, in your project.'
+                      : 'You asked Ola to check with you first. Nothing happens until you answer; it all stays on Ola’s computer.'}
+                  </p>
+                  <ul class="approval-items">
+                    <For each={ap().items}>{(item) => <ApprovalItem label={item.label} detail={item.detail} action={ap().action} />}</For>
+                  </ul>
+                  <div class="sheet-actions">
+                    <button type="button" class="primary-button" ref={first} disabled={busy()} onClick={() => reply('once')}>
+                      Yes, this once
+                    </button>
+                    <button type="button" class="ghost-button on-paper" disabled={busy()} onClick={() => reply('always')}>
+                      Yes, for the rest of this conversation
+                    </button>
+                    <button type="button" class="ghost-button on-paper danger" disabled={busy()} onClick={() => reply('reject')}>
+                      No, don’t
+                    </button>
+                  </div>
+                </>
+              }
+            >
+              {(w) => (
+                <>
+                  <h2 id="approval-title" class="sheet-title web-title">
+                    {w().kind === 'search' ? 'Ola wants to search the web for:' : 'Ola wants to download:'}
+                    <span class="web-item">{w().item ?? 'the command below'}</span>
+                  </h2>
+                  <p id="approval-why" class="sheet-lede">
+                    Before anything leaves this machine, Ola needs your yes.
+                  </p>
+                  <p class="web-leaves">
+                    {w().kind === 'search' ? `The words of the search go to ${props.provider ?? 'the search service'}. Nothing from your files is sent.` : `Ola asks ${host(w().item)} for this one address. Nothing from your files is sent.`}
+                  </p>
+                  <Show when={!w().item}>
+                    <ul class="approval-items">
+                      <For each={ap().items}>{(item) => <ApprovalItem label={item.label} detail={item.detail} action="shell" />}</For>
+                    </ul>
+                  </Show>
+                  <div class="sheet-actions">
+                    <button type="button" class="primary-button" ref={first} disabled={busy()} onClick={() => reply('once')}>
+                      Allow once
+                    </button>
+                    <button type="button" class="ghost-button on-paper" disabled={busy()} onClick={() => reply('always')}>
+                      Always in this project
+                    </button>
+                    <button type="button" class="ghost-button on-paper danger" disabled={busy()} onClick={() => reply('reject')}>
+                      Not now
+                    </button>
+                  </div>
+                  <p class="meta web-note">“Always” lets Ola search and download in this project without asking again. You can turn it off in Settings.</p>
+                </>
+              )}
+            </Show>
           </div>
         )}
       </Show>

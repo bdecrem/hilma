@@ -11,7 +11,7 @@ import http from 'node:http'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import * as ws from '../workspace/ws.mjs'
-import { makeProxy } from '../web/server/proxy.mjs'
+import { makeProxy, opencodeCall } from '../web/server/proxy.mjs'
 import { audit, nameRef } from './db.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
@@ -27,7 +27,7 @@ const CANCEL_GRACE_MS = 60_000
 export const ceilingMessage = (minutes) =>
   `Ola stopped this after ${minutes >= 60 && minutes % 60 === 0 ? `${minutes / 60} hour${minutes === 60 ? '' : 's'}` : minutes < 1 ? `${Math.round(minutes * 60)} seconds` : `${Math.round(minutes * 10) / 10} minutes`}: that is the longest one request may run, so that no request can hold Ola’s computer for good. What it finished is in the folder. Ask again to carry on, in smaller steps.`
 
-export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCeilingMs = 120 * 60_000, cancelGraceMs = CANCEL_GRACE_MS }) {
+export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCeilingMs = 120 * 60_000, cancelGraceMs = CANCEL_GRACE_MS, webModeOf = () => 'ask' }) {
   const ready = new Map() // slug -> time it last answered
   const starting = new Map() // slug -> Promise
   const refused = new Map() // slug -> { e, at }: the last start refused, for 2 s
@@ -279,6 +279,7 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
           agent: agentFor(slug),
           authorization: authorization(slug),
           work: '/work',
+          webMode: () => webModeOf(slug),
           log: (m) => {
             forget(slug)
             log(`${slug}: ${m}`)
@@ -389,6 +390,13 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
     }),
     sweep,
     forward,
+    /** One JSON request from the front desk itself to the workspace's opencode, through its desk. */
+    ocCall: (slug, method, pathname, body) => opencodeCall({ socketPath: ws.paths(slug).opencode, agent: agentFor(slug), authorization: authorization(slug) }, method, pathname, body),
+    dbApi: ws.dbApi,
+    dbStream: ws.dbStream,
+    dbAdd: ws.dbAdd,
+    dbRemove: ws.dbRemove,
+    isDocument: ws.isDocument,
     putStream: ws.putStream,
     getStream: ws.getStream,
     removeFile: ws.removeFile,

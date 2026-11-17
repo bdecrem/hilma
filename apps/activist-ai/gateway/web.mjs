@@ -93,7 +93,7 @@ export function refusedAddress(ip, ownSet = own()) {
 }
 
 // Names that are never on the public internet, whatever they resolve to today.
-const LOCAL_NAMES = /(^|\.)(localhost|local|internal|intranet|lan|home|corp|home\.arpa|ts\.net|onion)$/i
+const LOCAL_NAMES = /(^|\.)(localhost|local|internal|intranet|lan|home|corp|home\.arpa|ts\.net|onion|invalid|example)$/i
 
 export function webConfig(env, bad) {
   const num = (k, dflt, min, max) => {
@@ -504,11 +504,12 @@ export function makeWeb({ cfg, db, readBody, send, fail }) {
 
 // A made-up provider for tests and made-up runs: fixed results, one of them a real, stable public
 // document (the Universal Declaration of Human Rights from the UN's human rights office), so a
-// live check can fetch one real PDF. Never used when a real provider is set.
+// live check can fetch one real PDF; the others are under .invalid, refused by name, so a model that
+// follows them reaches nothing. Never used when a real provider is set.
 function mockResults(q, count) {
   return [
     { title: 'Universal Declaration of Human Rights (English)', url: 'https://www.ohchr.org/sites/default/files/UDHR/Documents/UDHR_Translations/eng.pdf', snippet: 'The full text of the Universal Declaration of Human Rights, adopted by the UN General Assembly in 1948.', age: null },
-    { title: `Made-up result for: ${q.slice(0, 80)}`, url: 'https://www.example.org/made-up/adaptation-report', snippet: 'A result made up by the test search. This page does not exist.', age: null },
-    { title: 'Example Domain', url: 'https://www.example.com/', snippet: 'This domain is for use in documentation examples.', age: null },
+    { title: `Made-up result for: ${q.slice(0, 80)}`, url: 'https://made-up.invalid/adaptation-report', snippet: 'A result made up by the test search. This page does not exist (.invalid never resolves).', age: null },
+    { title: 'Another made-up result', url: 'https://www.made-up.invalid/notes', snippet: 'Made up as well; the gateway refuses it by name, without asking anyone.', age: null },
   ].slice(0, count)
 }

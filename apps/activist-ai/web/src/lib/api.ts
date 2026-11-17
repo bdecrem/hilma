@@ -5,7 +5,7 @@
 // The workspace is named per tab, in the address (?w=<slug>), and sent on every request as
 // X-Ola-Workspace; the front desk checks membership on each one. Writes also carry the session's
 // CSRF token (X-Ola-CSRF), which the page learns from /api/me.
-import type { FileEntry, Me, Problem, ProjectPayload } from './types.ts'
+import type { DataSummary, DocsPage, FileEntry, Me, Problem, ProjectPayload, Settings, TablePage } from './types.ts'
 
 export class DeskError extends Error {
   problem: Problem
@@ -68,7 +68,21 @@ export interface FrontDesk {
   /** Where "Open" on a page goes: the front desk shows it, sandboxed, in a new tab. */
   openUrl(path: string): string
   remove(path: string): Promise<void>
+  settings(): Promise<Settings>
+  /** "Always in this project" for web search and downloads, on or off. */
+  setWeb(always: boolean): Promise<Settings['web']>
+  data(): Promise<DataSummary>
+  table(name: string, opts: { offset?: number; limit?: number; sort?: string; dir?: 'asc' | 'desc'; q?: string }): Promise<TablePage>
+  docs(opts: { q?: string; offset?: number }): Promise<DocsPage>
+  databaseUrl(): string
+  excelUrl(table: string): string
 }
+
+const qs = (o: Record<string, string | number | undefined>) =>
+  Object.entries(o)
+    .filter(([, v]) => v !== undefined && v !== '')
+    .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`)
+    .join('&')
 
 const filePath = (path: string) => `/api/files/${path.split('/').map(encodeURIComponent).join('/')}`
 
@@ -160,6 +174,13 @@ export const desk: FrontDesk = {
   remove: async (path) => {
     await call(filePath(path), { method: 'DELETE' })
   },
+  settings: () => call<Settings>('/api/settings'),
+  setWeb: async (always) => (await post<{ web: Settings['web'] }>('/api/settings/web', { always })).web,
+  data: () => call<DataSummary>('/api/data'),
+  table: (name, o) => call<TablePage>(`/api/data/table?${qs({ name, offset: o.offset, limit: o.limit, sort: o.sort, dir: o.dir, q: o.q })}`),
+  docs: (o) => call<DocsPage>(`/api/data/docs?${qs({ q: o.q, offset: o.offset })}`),
+  databaseUrl: () => `/api/data/download?w=${encodeURIComponent(workspace() ?? '')}`,
+  excelUrl: (table) => `/api/data/xlsx?${qs({ name: table, w: workspace() ?? '' })}`,
 }
 
 // ---------------------------------------------------------------- passkeys (WebAuthn)

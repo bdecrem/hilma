@@ -134,7 +134,7 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
                 : 'Claude works inside this project without asking. It cannot reach the internet from here.'
               : s().autonomy === 'ask'
                 ? 'Ola asks before it runs code or writes a file.'
-                : 'Ola works inside this project without asking. Anything that would leave the machine is blocked.'}
+                : 'Ola works inside this project without asking. A web search or download still asks you first.'}
           </span>
         </fieldset>
         <div class="composer-row">

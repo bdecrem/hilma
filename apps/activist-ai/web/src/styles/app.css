@@ -2019,6 +2019,269 @@ code {
   line-height: var(--lh-read);
   color: var(--ink-2);
 }
+/* ---------------------------------------------------------------- web approval */
+/* The question names exactly what would leave the machine: the words, or the address. */
+.web-title {
+  display: grid;
+  gap: var(--s2);
+}
+.web-item {
+  font-family: var(--font-read);
+  font-weight: 600;
+  font-size: 21px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  border-left: 3px solid var(--room);
+  padding-left: var(--s3);
+}
+.web-leaves {
+  margin-top: var(--s4);
+  padding: var(--s3) var(--s4);
+  background: var(--paper-2);
+  border-radius: var(--radius);
+  font-weight: 600;
+  font-size: 16px;
+}
+.web-note {
+  margin-top: var(--s3);
+}
+
+/* ---------------------------------------------------------------- data */
+.data-problem {
+  margin-top: var(--s4);
+  display: grid;
+  gap: var(--s2);
+  justify-items: start;
+}
+.data-sheet .file-group:first-of-type {
+  margin-top: var(--s6);
+}
+.files .num,
+.grid .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.data-tables th:nth-child(1),
+.data-docs th:nth-child(1) {
+  width: 46%;
+}
+.data-tables th:nth-child(2),
+.data-docs th:nth-child(2) {
+  width: 14%;
+  padding-right: var(--s5);
+}
+.data-tables td.num,
+.data-docs td.num {
+  padding-right: var(--s5);
+}
+.table-name {
+  display: flex;
+  gap: var(--s2);
+  align-items: center;
+  background: none;
+  border: 0;
+  padding: 0;
+  font-weight: 650;
+  font-size: 17px;
+  color: var(--ink);
+  text-align: left;
+  overflow-wrap: anywhere;
+  text-decoration: underline;
+  text-decoration-color: var(--rule);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+.table-name:hover {
+  text-decoration-color: var(--link);
+}
+.table-name svg {
+  color: var(--link);
+  flex: none;
+}
+.data-source {
+  overflow-wrap: anywhere;
+}
+.file-meta.flush {
+  margin-left: 0;
+}
+.file-actions .link-button {
+  margin-right: var(--s4);
+  font-size: 16px;
+  color: var(--ink);
+  text-decoration-color: var(--rule);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+.table-browser {
+  margin-top: var(--s5);
+}
+.table-head {
+  margin-top: var(--s4);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: var(--s4);
+  flex-wrap: wrap;
+}
+.table-title {
+  font-size: var(--fs-title);
+  font-weight: 720;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.table-title:focus {
+  outline: none;
+}
+.table-sub {
+  margin-top: var(--s1);
+  color: var(--ink-2);
+  font-size: 16px;
+}
+.data-search {
+  margin: var(--s4) 0 var(--s2);
+  display: grid;
+  gap: var(--s2);
+}
+.data-search label {
+  font-weight: 650;
+  font-size: 16px;
+}
+.data-search-row {
+  display: flex;
+  gap: var(--s3);
+  align-items: center;
+  flex-wrap: wrap;
+}
+.data-search input {
+  flex: 1 1 260px;
+  max-width: 460px;
+  min-height: 40px;
+  padding: 0 var(--s3);
+  border: 1.5px solid var(--rule);
+  border-radius: var(--radius);
+  background: #fffaf1;
+  color: var(--ink);
+  font: inherit;
+  font-size: 16px;
+}
+.data-search input:focus-visible {
+  outline: 3px solid var(--lamp);
+  outline-offset: 1px;
+  border-color: var(--room);
+}
+.table-count {
+  margin: var(--s2) 0 var(--s3);
+  color: var(--ink-2);
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+/* A wide table scrolls inside its own frame, never the page; the header stays in view. */
+.grid-wrap {
+  max-width: 100%;
+  max-height: min(64vh, 720px);
+  overflow: auto;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: #fbf6ec;
+}
+.grid-wrap:focus-visible {
+  outline: 3px solid var(--lamp);
+  outline-offset: 2px;
+}
+.grid {
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 100%;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+.grid th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--paper-2);
+  border-bottom: 1.5px solid var(--ink);
+  text-align: left;
+  white-space: nowrap;
+  padding: 0;
+}
+.grid th button {
+  display: flex;
+  gap: var(--s1);
+  align-items: center;
+  width: 100%;
+  background: none;
+  border: 0;
+  padding: var(--s2) var(--s3);
+  font: inherit;
+  font-weight: 650;
+  color: var(--ink);
+}
+.grid th.num button {
+  justify-content: flex-start; /* row-reverse: the label on the right, the sort mark beside it */
+  flex-direction: row-reverse;
+}
+.grid th button:hover {
+  background: var(--rule);
+}
+.sort-mark {
+  min-width: 1em;
+  font-size: 15px;
+  color: var(--link);
+}
+.grid td {
+  padding: var(--s2) var(--s3);
+  border-bottom: 1px solid var(--rule);
+  max-width: 420px;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+.grid tbody tr:hover td {
+  background: var(--paper-2);
+}
+.grid td.none {
+  color: var(--ink-3);
+}
+.pager {
+  margin-top: var(--s3);
+  display: flex;
+  gap: var(--s3);
+}
+.hits {
+  list-style: none;
+  margin-top: var(--s2);
+  display: grid;
+}
+.hit {
+  padding: var(--s4) 0;
+  border-bottom: 1px solid var(--rule);
+}
+.hit-where {
+  font-size: 17px;
+}
+.hit-text {
+  margin-top: var(--s2);
+  max-width: 760px;
+  font-family: var(--font-read);
+  font-size: var(--fs-read);
+  line-height: var(--lh-read);
+}
+.hit-text mark {
+  background: transparent;
+  color: var(--ink);
+  font-weight: 700;
+  box-shadow: inset 0 -3px 0 rgba(37, 64, 122, 0.35);
+}
+.hit-from {
+  margin-top: var(--s2);
+  overflow-wrap: anywhere;
+}
+.hit-from a,
+.data-source a {
+  color: var(--link);
+  font-weight: 600;
+}
+
 .setting-note {
   margin: 0 0 var(--s4);
   color: var(--ink-2);
@@ -2122,5 +2385,24 @@ code {
   }
   .settings .facts {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .data-tables th:nth-child(3),
+  .data-tables td:nth-child(3),
+  .data-docs th:nth-child(3),
+  .data-docs td:nth-child(3) {
+    display: none;
+  }
+  .data-tables th:nth-child(1),
+  .data-docs th:nth-child(1) {
+    width: auto;
+  }
+  .grid-wrap {
+    max-height: 70vh;
+  }
+  .web-item {
+    font-size: 19px;
   }
 }

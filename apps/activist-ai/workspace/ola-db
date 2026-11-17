@@ -1,0 +1,745 @@
+#!/usr/bin/python3 -I
+"""ola-db: the project's database, /work/project.db (SQLite, WAL), one per project.
+
+For the agent (and the person, through it):
+  ola-db query "<sql>"               read-only; prints a table (--json for JSON, --limit N rows)
+  ola-db query --write "<sql>"       change it (create a table, insert, update); one or more statements
+  ola-db load <file> --table <name> [--note "what it holds"] [--replace | --append] [--sheet <name>]
+                                     a CSV, TSV, Excel (.xlsx) or JSON file into a named table
+  ola-db search "<words>" [--limit N] [--json]
+                                     full-text search over every document; each hit names its page
+  ola-db add <path> [--source <address>] [--fetched <date>] [--title <title>] [--by upload|web|agent]
+                                     record a document (PDF, page, text, Word, PowerPoint) and index its text
+  ola-db remove <path>               forget a document (its row and its index entries)
+  ola-db tables                      what is in the database: every table, its rows, where it came from
+  ola-db describe <table>            a table's columns and three rows
+
+For the front desk, through `container exec` (always read-only, JSON out, bounded):
+  ola-db api tables | browse --table T [--offset N --limit N --sort C --dir asc|desc --q words]
+             | docs [--q words --offset N --limit N] | backup | xlsx --table T
+  ola-db init                        create what is missing (run at every start by ola-init)
+
+The fixed core: `documents` (one row per document), `doc_text` (FTS5, one row per page or part,
+so a hit can cite a page), `tables_catalog` (every other table: what it holds, where it came
+from, when). Everything else is the agent's to add. Text that came from the web or a file is
+data: nothing here runs it.
+"""
+import csv, datetime, hashlib, html.parser, io, json, os, re, shutil, sqlite3, subprocess, sys, time, zipfile
+
+WORK = os.environ.get("OLA_WORK", "/work")
+DB = os.path.join(WORK, "project.db")
+TMP = os.path.join(WORK, ".ola", "tmp")
+CORE = {"documents", "doc_text", "tables_catalog", "ola_meta"}
+SCHEMA_VERSION = "1"
+DOC_TYPES = {".pdf": "application/pdf", ".txt": "text/plain", ".md": "text/markdown", ".html": "text/html", ".htm": "text/html",
+             ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+             ".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+             ".odt": "application/vnd.oasis.opendocument.text", ".xml": "application/xml", ".json": "application/json", ".rtf": "application/rtf"}
+PART_CHARS = 4000
+MAX_TEXT = 40 * 1024 * 1024  # characters indexed from one document
+MAX_UNZIPPED = 64 * 1024 * 1024  # bytes read from one part of an office file (no zip bombs)
+
+
+def fail(msg, code=2):
+    sys.stderr.write("ola-db: " + msg + "\n")
+    sys.exit(code)
+
+
+def now():
+    return datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def connect(write):
+    if write:
+        con = sqlite3.connect(DB, timeout=10)
+        con.execute("PRAGMA journal_mode = WAL")
+        con.execute("PRAGMA busy_timeout = 10000")
+    else:
+        if not os.path.exists(DB):
+            init()
+        con = sqlite3.connect("file:" + DB + "?mode=ro", uri=True, timeout=10)
+        con.execute("PRAGMA query_only = 1")
+    con.row_factory = sqlite3.Row
+    return con
+
+
+def init():
+    con = sqlite3.connect(DB, timeout=10)
+    con.execute("PRAGMA journal_mode = WAL")
+    con.executescript("""
+      CREATE TABLE IF NOT EXISTS ola_meta (key TEXT PRIMARY KEY, value TEXT);
+      CREATE TABLE IF NOT EXISTS documents (
+        id INTEGER PRIMARY KEY,
+        title TEXT,
+        source_url TEXT,                 -- where it came from on the web (NULL for an upload)
+        fetched_at TEXT,                 -- when it was downloaded (UTC, ISO 8601)
+        path TEXT NOT NULL UNIQUE,       -- the file, relative to /work
+        sha256 TEXT,
+        mime TEXT,
+        pages INTEGER,                   -- pages (PDF, slides) or parts of about 4,000 characters
+        unit TEXT NOT NULL DEFAULT 'page' CHECK (unit IN ('page', 'slide', 'part')),
+        chars INTEGER,
+        added_by TEXT NOT NULL CHECK (added_by IN ('upload', 'web', 'agent')),
+        added_at TEXT NOT NULL
+      );
+      CREATE VIRTUAL TABLE IF NOT EXISTS doc_text USING fts5(text, doc_id UNINDEXED, page UNINDEXED, tokenize = 'porter unicode61 remove_diacritics 2');
+      CREATE TABLE IF NOT EXISTS tables_catalog (
+        name TEXT PRIMARY KEY,
+        description TEXT,                -- what it holds, in a sentence
+        source TEXT,                     -- the file it was loaded from, or 'made by Ola'
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+    """)
+    con.execute("INSERT OR REPLACE INTO ola_meta (key, value) VALUES ('schema', ?)", (SCHEMA_VERSION,))
+    # A document whose file is gone (deleted from Files, or by the agent) is forgotten.
+    for row in con.execute("SELECT id, path FROM documents").fetchall():
+        if not os.path.isfile(os.path.join(WORK, row[1])):
+            forget(con, row[0])
+    sync_catalog(con)
+    con.commit()
+    con.close()
+    try:
+        os.chmod(DB, 0o600)
+    except OSError:
+        pass
+
+
+def forget(con, doc_id):
+    con.execute("DELETE FROM doc_text WHERE doc_id = ?", (doc_id,))
+    con.execute("DELETE FROM documents WHERE id = ?", (doc_id,))
+
+
+def user_tables(con):
+    out = []
+    for r in con.execute("SELECT name, type FROM sqlite_master WHERE type IN ('table', 'view') ORDER BY name"):
+        n = r[0]
+        if n in CORE or n.startswith("sqlite_") or n.startswith("doc_text_"):
+            continue
+        out.append((n, r[1]))
+    return out
+
+
+def sync_catalog(con):
+    have = {n for n, _ in user_tables(con)}
+    listed = {r[0] for r in con.execute("SELECT name FROM tables_catalog")}
+    t = now()
+    for n in have - listed:
+        con.execute("INSERT INTO tables_catalog (name, description, source, created_at, updated_at) VALUES (?, NULL, 'made by Ola', ?, ?)", (n, t, t))
+    for n in listed - have:
+        con.execute("DELETE FROM tables_catalog WHERE name = ?", (n,))
+
+
+def qi(name):
+    return '"' + name.replace('"', '""') + '"'
+
+
+def columns(con, table):
+    return [(r[1], r[2] or "") for r in con.execute("SELECT * FROM pragma_table_info(?)", (table,))]
+
+
+def deadline(con, seconds):
+    end = time.monotonic() + seconds
+    con.set_progress_handler(lambda: 1 if time.monotonic() > end else 0, 10000)
+
+
+# ------------------------------------------------------------------ text from documents
+
+class _Text(html.parser.HTMLParser):
+    SKIP = {"script", "style", "noscript", "template", "svg", "head"}
+    BLOCK = {"p", "div", "br", "li", "tr", "h1", "h2", "h3", "h4", "h5", "h6", "section", "article", "table", "pre", "blockquote", "dd", "dt"}
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.out, self.skip, self.title, self.in_title = [], 0, "", False
+
+    def handle_starttag(self, tag, attrs):
+        if tag == "title":
+            self.in_title = True
+        if tag in self.SKIP:
+            self.skip += 1
+        if tag in self.BLOCK:
+            self.out.append("\n")
+
+    def handle_endtag(self, tag):
+        if tag == "title":
+            self.in_title = False
+        if tag in self.SKIP and self.skip:
+            self.skip -= 1
+        if tag in self.BLOCK:
+            self.out.append("\n")
+
+    def handle_data(self, data):
+        if self.in_title:
+            self.title += data
+        elif not self.skip:
+            self.out.append(data)
+
+
+def html_text(raw):
+    p = _Text()
+    p.feed(raw)
+    text = re.sub(r"[ \t\r\f\v]+", " ", "".join(p.out))
+    text = re.sub(r"\n\s*\n+", "\n\n", text).strip()
+    return re.sub(r"\s+", " ", p.title).strip() or None, text
+
+
+def decode(data):
+    for enc in ("utf-8", "cp1252", "latin-1"):
+        try:
+            return data.decode(enc)
+        except UnicodeDecodeError:
+            pass
+    return data.decode("utf-8", "replace")
+
+
+def parts(text):
+    """Splits long text into parts of about PART_CHARS characters, at paragraph or line ends."""
+    out, cur = [], ""
+    for para in re.split(r"(\n\n+)", text):
+        if len(cur) + len(para) > PART_CHARS and cur.strip():
+            out.append(cur.strip())
+            cur = ""
+        while len(para) > PART_CHARS * 2:
+            out.append(para[:PART_CHARS])
+            para = para[PART_CHARS:]
+        cur += para
+    if cur.strip():
+        out.append(cur.strip())
+    return out or [""]
+
+
+def zip_part(z, name):
+    info = z.getinfo(name)
+    if info.file_size > MAX_UNZIPPED:
+        raise ValueError("a part of the file is too large to open")
+    with z.open(info) as f:
+        return f.read(MAX_UNZIPPED + 1)[:MAX_UNZIPPED].decode("utf-8", "replace")
+
+
+def xml_paras(xml, para_tag, text_tag):
+    out = []
+    for p in re.findall(r"<%s[ >].*?</%s>" % (para_tag, para_tag), xml, re.S):
+        bits = re.findall(r"<%s(?: [^>]*)?>([^<]*)</%s>" % (text_tag, text_tag), p)
+        out.append(_unescape("".join(bits)))
+    return "\n".join(x for x in out if x.strip())
+
+
+def _unescape(s):
+    return s.replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", '"').replace("&apos;", "'").replace("&amp;", "&")
+
+
+def extract(full, mime):
+    """(title, [page texts], unit) for a document file."""
+    ext = os.path.splitext(full)[1].lower()
+    if ext == ".pdf" or mime == "application/pdf":
+        if not shutil.which("pdftotext"):
+            fail("pdftotext is not installed here", 5)
+        r = subprocess.run(["pdftotext", "-layout", "-enc", "UTF-8", full, "-"], capture_output=True, timeout=300)
+        pages = r.stdout.decode("utf-8", "replace").split("\f")
+        if pages and not pages[-1].strip():
+            pages = pages[:-1]
+        title = None
+        if shutil.which("pdfinfo"):
+            info = subprocess.run(["pdfinfo", full], capture_output=True, timeout=60).stdout.decode("utf-8", "replace")
+            m = re.search(r"^Title:\s*(.+)$", info, re.M)
+            title = m.group(1).strip() if m and m.group(1).strip() else None
+        return title, [re.sub(r"[ \t]+", " ", p).strip() for p in pages] or [""], "page"
+    if ext in (".docx", ".odt", ".pptx"):
+        with zipfile.ZipFile(full) as z:
+            if ext == ".docx":
+                return None, parts(xml_paras(zip_part(z, "word/document.xml"), "w:p", "w:t")), "part"
+            if ext == ".odt":
+                xml = zip_part(z, "content.xml")
+                text = _unescape(re.sub(r"<[^>]+>", "", re.sub(r"</text:(p|h)>", "\n", xml)))
+                return None, parts(text), "part"
+            slides = sorted((n for n in z.namelist() if re.fullmatch(r"ppt/slides/slide\d+\.xml", n)), key=lambda n: int(re.search(r"\d+", n.split("/")[-1]).group()))
+            return None, [xml_paras(zip_part(z, n), "a:p", "a:t") for n in slides[:2000]] or [""], "slide"
+    with open(full, "rb") as f:
+        raw = decode(f.read(MAX_TEXT))
+    if ext in (".html", ".htm") or (mime or "").startswith("text/html") or (mime or "") == "application/xhtml+xml":
+        title, text = html_text(raw)
+        return title, parts(text), "part"
+    if ext == ".rtf":
+        raw = re.sub(r"\\[a-z]+-?\d* ?|[{}]", "", raw)
+    return None, parts(raw), "part"
+
+
+def sha_of(full):
+    h = hashlib.sha256()
+    with open(full, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def rel_path(p):
+    full = os.path.realpath(os.path.join(WORK, p) if not p.startswith("/") else p)
+    if not full.startswith(os.path.realpath(WORK) + "/"):
+        fail("the file must be inside the project folder")
+    return full, os.path.relpath(full, os.path.realpath(WORK))
+
+
+def add(path, source=None, fetched=None, title=None, by="agent", mime=None, quiet=False):
+    full, rel = rel_path(path)
+    if not os.path.isfile(full):
+        fail("no such file: " + rel, 4)
+    mime = mime or DOC_TYPES.get(os.path.splitext(full)[1].lower()) or "text/plain"
+    found_title, pages, unit = extract(full, mime)
+    total = 0
+    kept = []
+    for p in pages:
+        p = p[: max(0, MAX_TEXT - total)]
+        total += len(p)
+        kept.append(p)
+    con = connect(True)
+    old = con.execute("SELECT id FROM documents WHERE path = ?", (rel,)).fetchone()
+    if old:
+        forget(con, old[0])
+    cur = con.execute(
+        "INSERT INTO documents (title, source_url, fetched_at, path, sha256, mime, pages, unit, chars, added_by, added_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (title or found_title or os.path.basename(rel), source, fetched, rel, sha_of(full), mime, len(kept), unit, total, by, now()))
+    doc_id = cur.lastrowid
+    con.executemany("INSERT INTO doc_text (text, doc_id, page) VALUES (?, ?, ?)", [(t, doc_id, i + 1) for i, t in enumerate(kept)])
+    con.commit()
+    out = {"id": doc_id, "path": rel, "title": title or found_title or os.path.basename(rel), "pages": len(kept), "unit": unit, "chars": total, "empty": total == 0}
+    if not quiet:
+        print(json.dumps(out))
+    return out, kept
+
+
+def remove(path):
+    rel = path[len(WORK) + 1:] if path.startswith(WORK + "/") else path
+    con = connect(True)
+    row = con.execute("SELECT id FROM documents WHERE path = ?", (rel,)).fetchone()
+    if row:
+        forget(con, row[0])
+    con.commit()
+    print(json.dumps({"removed": bool(row)}))
+
+
+# ------------------------------------------------------------------ tables
+
+def clean_name(n, taken):
+    base = re.sub(r"[^0-9a-zA-Z_]+", "_", (n or "").strip()).strip("_").lower() or "column"
+    if base[0].isdigit():
+        base = "c_" + base
+    name, i = base, 2
+    while name in taken:
+        name, i = "%s_%d" % (base, i), i + 1
+    taken.add(name)
+    return name
+
+
+def kind_of(values):
+    k = "INTEGER"
+    for v in values:
+        if v is None or v == "":
+            continue
+        if isinstance(v, bool):
+            continue
+        if isinstance(v, int):
+            continue
+        if isinstance(v, float):
+            k = "REAL" if k != "TEXT" else k
+            continue
+        s = str(v).strip()
+        if k == "INTEGER" and re.fullmatch(r"[+-]?\d{1,18}", s):
+            continue
+        if k in ("INTEGER", "REAL") and re.fullmatch(r"[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?", s):
+            k = "REAL"
+            continue
+        return "TEXT"
+    return k
+
+
+def convert(v, k):
+    if v is None or v == "":
+        return None
+    if isinstance(v, (datetime.date, datetime.datetime, datetime.time)):
+        return v.isoformat()
+    if k == "INTEGER":
+        try:
+            return int(str(v).strip()) if not isinstance(v, (int, float)) else int(v)
+        except ValueError:
+            return v
+    if k == "REAL":
+        try:
+            return float(v)
+        except (TypeError, ValueError):
+            return v
+    return str(v)
+
+
+def read_rows(full, sheet):
+    ext = os.path.splitext(full)[1].lower()
+    if ext in (".xlsx", ".xlsm"):
+        try:
+            import openpyxl
+        except ImportError:
+            fail("Excel files need openpyxl, which is not installed here", 5)
+        wb = openpyxl.load_workbook(full, read_only=True, data_only=True)
+        ws = wb[sheet] if sheet else wb.worksheets[0]
+        rows = ws.iter_rows(values_only=True)
+        head = next(rows, None) or []
+        return [str(h) if h is not None else "" for h in head], rows
+    if ext == ".json":
+        with open(full, "rb") as f:
+            data = json.loads(decode(f.read()))
+        if isinstance(data, dict):
+            data = next((v for v in data.values() if isinstance(v, list)), [data])
+        if not isinstance(data, list) or not all(isinstance(x, dict) for x in data):
+            fail("a JSON file loads when it is a list of objects")
+        head = []
+        for x in data:
+            for k in x:
+                if k not in head:
+                    head.append(k)
+        return head, ([json.dumps(x.get(k)) if isinstance(x.get(k), (dict, list)) else x.get(k) for k in head] for x in data)
+    f = open(full, "r", encoding="utf-8-sig", errors="replace", newline="")
+    sample = f.read(64 * 1024)
+    f.seek(0)
+    delim = "\t" if ext == ".tsv" else ","
+    try:
+        delim = csv.Sniffer().sniff(sample, delimiters=",;\t|").delimiter
+    except csv.Error:
+        pass
+    reader = csv.reader(f, delimiter=delim)
+    head = next(reader, [])
+    return head, reader
+
+
+def load(path, table, note, mode, sheet):
+    full, rel = rel_path(path)
+    if not os.path.isfile(full):
+        fail("no such file: " + rel, 4)
+    if not re.fullmatch(r"[A-Za-z][A-Za-z0-9_]{0,62}", table or "") or table.lower() in CORE or table.lower().startswith("sqlite_"):
+        fail("a table name is letters, digits and _, starting with a letter (and not a name Ola keeps for itself)")
+    head, rows = read_rows(full, sheet)
+    taken = set()
+    names = [clean_name(h, taken) for h in head]
+    if not names:
+        fail("the file has no header row")
+    # Types from the first 5,000 rows; everything after is converted the same way (or kept as text).
+    first = []
+    for r in rows:
+        first.append(list(r))
+        if len(first) >= 5000:
+            break
+    kinds = [kind_of([r[i] if i < len(r) else None for r in first]) for i in range(len(names))]
+    con = connect(True)
+    exists = con.execute("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?", (table,)).fetchone()
+    if exists and mode is None:
+        fail("there is already a table called %s: add --replace or --append" % table, 3)
+    if exists and mode == "replace":
+        con.execute("DROP TABLE " + qi(table))
+    if not exists or mode == "replace":
+        con.execute("CREATE TABLE %s (%s)" % (qi(table), ", ".join("%s %s" % (qi(n), k) for n, k in zip(names, kinds))))
+    else:
+        have = [c for c, _ in columns(con, table)]
+        if have != names:
+            fail("--append needs the same columns as the table (%s)" % ", ".join(have), 3)
+    ins = "INSERT INTO %s VALUES (%s)" % (qi(table), ", ".join("?" * len(names)))
+    n = 0
+
+    def batch(rs):
+        return [[convert(r[i] if i < len(r) else None, kinds[i]) for i in range(len(names))] for r in rs]
+
+    con.executemany(ins, batch(first))
+    n += len(first)
+    buf = []
+    for r in rows:
+        buf.append(list(r))
+        if len(buf) >= 5000:
+            con.executemany(ins, batch(buf))
+            n += len(buf)
+            buf = []
+    con.executemany(ins, batch(buf))
+    n += len(buf)
+    t = now()
+    con.execute("INSERT INTO tables_catalog (name, description, source, created_at, updated_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT (name) DO UPDATE SET description = coalesce(excluded.description, description), source = excluded.source, updated_at = excluded.updated_at",
+                (table, note, rel, t, t))
+    con.commit()
+    total = con.execute("SELECT count(*) FROM " + qi(table)).fetchone()[0]
+    print("Loaded %d rows from %s into the table %s (%d rows now). Columns: %s." % (n, rel, table, total, ", ".join("%s (%s)" % (c, k.lower()) for c, k in zip(names, kinds))))
+    if not note:
+        print("Say what it holds: ola-db query --write \"UPDATE tables_catalog SET description = '...' WHERE name = '%s'\"" % table)
+
+
+# ------------------------------------------------------------------ queries and search
+
+def fts_query(words, any_word=False):
+    toks = re.findall(r"[\w'-]+", words, re.U)
+    toks = [t.replace('"', "") for t in toks if t.strip("'-")][:40]
+    if not toks:
+        return None
+    return (" OR " if any_word else " ").join('"%s"' % t for t in toks)
+
+
+def search(words, limit, offset=0, mark=("[", "]")):
+    con = connect(False)
+    deadline(con, 10)
+    out = []
+    for any_word in (False, True):
+        q = fts_query(words, any_word)
+        if not q:
+            return [], 0, False
+        rows = con.execute(
+            """SELECT d.id, d.title, d.path, d.source_url, d.fetched_at, d.unit, t.page, snippet(doc_text, 0, ?, ?, ' … ', 40) AS snip
+               FROM doc_text t JOIN documents d ON d.id = t.doc_id WHERE doc_text MATCH ? ORDER BY bm25(doc_text) LIMIT ? OFFSET ?""",
+            (mark[0], mark[1], q, limit, offset)).fetchall()
+        total = con.execute("SELECT count(*) FROM doc_text WHERE doc_text MATCH ?", (q,)).fetchone()[0]
+        if rows or any_word:
+            return [dict(r) for r in rows], total, any_word
+    return [], 0, False
+
+
+def cell(v, cap=2000):
+    if isinstance(v, bytes):
+        return "(binary, %d bytes)" % len(v)
+    if isinstance(v, str) and len(v) > cap:
+        return v[:cap] + "…"
+    return v
+
+
+def print_table(cols, rows, more):
+    widths = [min(40, max([len(str(c))] + [len(str(cell(r[i], 40))) for r in rows])) for i, c in enumerate(cols)]
+    line = lambda vals: " | ".join(str(cell(v, 40)).replace("\n", " ")[:w].ljust(w) for v, w in zip(vals, widths))
+    print(line(cols))
+    print("-+-".join("-" * w for w in widths))
+    for r in rows:
+        print(line(r))
+    print("(%d row%s%s)" % (len(rows), "" if len(rows) == 1 else "s", ", %d more not shown: add LIMIT/OFFSET or --limit" % more if more else ""))
+
+
+def query(sql, write, as_json, limit):
+    con = connect(write)
+    deadline(con, 120 if write else 60)
+    try:
+        if write:
+            con.executescript(sql)
+            sync_catalog(con)
+            con.commit()
+            print("Done. Changes saved in the project database.")
+            return
+        cur = con.execute(sql)
+        cols = [d[0] for d in cur.description or []]
+        rows = cur.fetchmany(limit + 1)
+        more = 0
+        if len(rows) > limit:
+            more = len(rows) - limit + sum(1 for _ in cur)
+            rows = rows[:limit]
+    except sqlite3.OperationalError as e:
+        msg = str(e)
+        if "readonly" in msg or "query_only" in msg or "attempt to write" in msg:
+            fail("this command reads only; to change the database use: ola-db query --write \"...\"", 3)
+        if "interrupted" in msg:
+            fail("the query took too long and was stopped", 3)
+        fail("SQL: " + msg, 3)
+    except sqlite3.Error as e:
+        fail("SQL: " + str(e), 3)
+    if as_json:
+        print(json.dumps({"columns": cols, "rows": [[cell(v) for v in r] for r in rows], "more": more}, default=str))
+    else:
+        print_table(cols, [tuple(r) for r in rows], more)
+
+
+def tables_info(con):
+    cat = {r["name"]: dict(r) for r in con.execute("SELECT * FROM tables_catalog")}
+    out = []
+    for n, kind in user_tables(con):
+        c = cat.get(n, {})
+        out.append({"name": n, "kind": kind, "rows": con.execute("SELECT count(*) FROM " + qi(n)).fetchone()[0],
+                    "columns": [{"name": a, "type": b} for a, b in columns(con, n)],
+                    "description": c.get("description"), "source": c.get("source"), "created": c.get("created_at"), "updated": c.get("updated_at")})
+    return out
+
+
+def db_size():
+    return sum(os.path.getsize(DB + s) for s in ("", "-wal") if os.path.exists(DB + s))
+
+
+# ------------------------------------------------------------------ the front desk's view
+
+def api(argv):
+    sub = argv[0] if argv else ""
+    opt = {}
+    i = 1
+    while i < len(argv):
+        if argv[i].startswith("--") and i + 1 < len(argv):
+            opt[argv[i][2:]] = argv[i + 1]
+            i += 2
+        else:
+            i += 1
+    con = connect(False)
+    deadline(con, 8)
+    try:
+        if sub == "tables":
+            d = con.execute("SELECT count(*) AS n, coalesce(sum(pages), 0) AS pages FROM documents").fetchone()
+            by = {r[0]: r[1] for r in con.execute("SELECT added_by, count(*) FROM documents GROUP BY added_by")}
+            print(json.dumps({"tables": tables_info(con), "documents": {"count": d["n"], "pages": d["pages"], "web": by.get("web", 0), "upload": by.get("upload", 0), "agent": by.get("agent", 0)}, "size": db_size()}))
+        elif sub == "browse":
+            t = opt.get("table", "")
+            allowed = {n for n, _ in user_tables(con)} | {"documents"}
+            if t not in allowed:
+                fail("no such table", 4)
+            cols = [c for c, _ in columns(con, t)]
+            offset = max(0, int(opt.get("offset", 0)))
+            limit = min(200, max(1, int(opt.get("limit", 50))))
+            where, params = "", []
+            if opt.get("q"):
+                like = "%" + opt["q"].replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
+                where = " WHERE " + " OR ".join("CAST(%s AS TEXT) LIKE ? ESCAPE '\\'" % qi(c) for c in cols)
+                params = [like] * len(cols)
+            order = ""
+            if opt.get("sort") in cols:
+                order = " ORDER BY %s %s" % (qi(opt["sort"]), "DESC" if opt.get("dir") == "desc" else "ASC")
+            total = con.execute("SELECT count(*) FROM %s%s" % (qi(t), where), params).fetchone()[0]
+            rows = con.execute("SELECT * FROM %s%s%s LIMIT ? OFFSET ?" % (qi(t), where, order), params + [limit, offset]).fetchall()
+            print(json.dumps({"table": t, "columns": [{"name": a, "type": b} for a, b in columns(con, t)], "rows": [[cell(v) for v in r] for r in rows], "total": total, "offset": offset, "limit": limit}, default=str))
+        elif sub == "docs":
+            offset = max(0, int(opt.get("offset", 0)))
+            limit = min(100, max(1, int(opt.get("limit", 50))))
+            if opt.get("q"):
+                hits, total, loose = search(opt["q"], limit, offset, mark=("\u0002", "\u0003"))
+                print(json.dumps({"q": True, "hits": hits, "total": total, "anyWord": loose, "offset": offset}))
+            else:
+                total = con.execute("SELECT count(*) FROM documents").fetchone()[0]
+                rows = con.execute("SELECT id, title, path, source_url, fetched_at, mime, pages, unit, chars, added_by, added_at FROM documents ORDER BY added_at DESC, id DESC LIMIT ? OFFSET ?", (limit, offset)).fetchall()
+                print(json.dumps({"q": False, "documents": [dict(r) for r in rows], "total": total, "offset": offset}))
+        elif sub in ("backup", "xlsx"):
+            os.makedirs(TMP, exist_ok=True)
+            tmp = os.path.join(TMP, "out-%d-%d" % (os.getpid(), int(time.time())))
+            try:
+                if sub == "backup":
+                    # SQLite's online backup: a consistent copy while the agent may be writing.
+                    dst = sqlite3.connect(tmp)
+                    con.backup(dst)
+                    dst.close()
+                else:
+                    t = opt.get("table", "")
+                    if t not in {n for n, _ in user_tables(con)} | {"documents"}:
+                        fail("no such table", 4)
+                    try:
+                        import openpyxl
+                    except ImportError:
+                        fail("Excel files need openpyxl, which is not installed here", 5)
+                    con.set_progress_handler(None, 0)
+                    wb = openpyxl.Workbook(write_only=True)
+                    ws = wb.create_sheet(t[:31])
+                    cols = [c for c, _ in columns(con, t)]
+                    ws.append(cols)
+                    from openpyxl.cell import WriteOnlyCell
+
+                    def xcell(v):
+                        v = cell(v, 32000)
+                        if isinstance(v, str) and v[:1] == "=":
+                            c = WriteOnlyCell(ws, value=v)
+                            c.data_type = "s"  # text, never a formula
+                            return c
+                        return v
+
+                    for n, r in enumerate(con.execute("SELECT * FROM " + qi(t))):
+                        if n >= 1048575:
+                            break
+                        ws.append([xcell(v) for v in r])
+                    wb.save(tmp)
+                with open(tmp, "rb") as f:
+                    shutil.copyfileobj(f, sys.stdout.buffer, 1 << 20)
+            finally:
+                try:
+                    os.unlink(tmp)
+                except OSError:
+                    pass
+        else:
+            fail("api: tables, browse, docs, backup or xlsx")
+    except sqlite3.OperationalError as e:
+        fail("interrupted" if "interrupted" in str(e) else "SQL: " + str(e), 3)
+
+
+# ------------------------------------------------------------------ the command line
+
+def main(argv):
+    if not argv or argv[0] in ("-h", "--help", "help"):
+        print(__doc__.strip())
+        return
+    cmd, rest = argv[0], argv[1:]
+    flags, args = {}, []
+    i = 0
+    bools = {"--write", "--json", "--replace", "--append"}
+    while i < len(rest):
+        a = rest[i]
+        if a in bools:
+            flags[a[2:]] = True
+        elif a.startswith("--") and i + 1 < len(rest):
+            flags[a[2:]] = rest[i + 1]
+            i += 1
+        else:
+            args.append(a)
+        i += 1
+    if cmd == "init":
+        init()
+    elif cmd == "api":
+        api(rest)
+    elif cmd == "query":
+        if len(args) != 1:
+            fail('usage: ola-db query "<sql>" [--write] [--json] [--limit N]')
+        query(args[0], flags.get("write"), flags.get("json"), int(flags.get("limit", 200)))
+    elif cmd == "load":
+        if len(args) != 1 or "table" not in flags:
+            fail("usage: ola-db load <file> --table <name> [--note \"what it holds\"] [--replace | --append] [--sheet <name>]")
+        load(args[0], flags["table"], flags.get("note"), "replace" if flags.get("replace") else "append" if flags.get("append") else None, flags.get("sheet"))
+    elif cmd == "search":
+        if not args:
+            fail('usage: ola-db search "<words>" [--limit N]')
+        hits, total, loose = search(" ".join(args), int(flags.get("limit", 10)))
+        if flags.get("json"):
+            print(json.dumps({"hits": hits, "total": total, "anyWord": loose}))
+            return
+        if not hits:
+            print("No document in the project database mentions that.")
+            return
+        print("%d passage%s match%s%s; the best %d:" % (total, "" if total == 1 else "s", "es" if total == 1 else "", " (any of the words; none had all of them)" if loose else "", len(hits)))
+        for h in hits:
+            where = "%s %d" % (h["unit"], h["page"])
+            src = h["source_url"] or "uploaded"
+            print("\n- %s, %s (file %s; %s%s)\n  %s" % (h["title"], where, h["path"], src, ", fetched " + h["fetched_at"][:10] if h["fetched_at"] else "", re.sub(r"\s+", " ", h["snip"])))
+        print("\nRead the whole page with: ola-db query \"SELECT text FROM doc_text WHERE doc_id = <id> AND page = <n>\"  (ids: ola-db query \"SELECT id, title FROM documents\")")
+    elif cmd == "add":
+        if len(args) != 1:
+            fail("usage: ola-db add <path> [--source <address>] [--fetched <date>] [--title <title>] [--by upload|web|agent]")
+        by = flags.get("by", "agent")
+        if by not in ("upload", "web", "agent"):
+            fail("--by is upload, web or agent")
+        add(args[0], flags.get("source"), flags.get("fetched"), flags.get("title"), by)
+    elif cmd == "remove":
+        if len(args) != 1:
+            fail("usage: ola-db remove <path>")
+        remove(args[0])
+    elif cmd == "tables":
+        con = connect(False)
+        t = tables_info(con)
+        d = con.execute("SELECT count(*), coalesce(sum(pages), 0) FROM documents").fetchone()
+        print("Documents: %d (%d pages or parts), searchable with: ola-db search \"words\"" % (d[0], d[1]))
+        if not t:
+            print("No tables yet. Load one with: ola-db load <file> --table <name> --note \"what it holds\"")
+        for x in t:
+            print("- %s: %d rows, from %s%s" % (x["name"], x["rows"], x["source"] or "?", "; " + x["description"] if x["description"] else ""))
+    elif cmd == "describe":
+        con = connect(False)
+        if len(args) != 1 or args[0] not in {n for n, _ in user_tables(con)} | CORE:
+            fail("usage: ola-db describe <table>")
+        for c, k in columns(con, args[0]):
+            print("  %s %s" % (c, k))
+        query("SELECT * FROM %s LIMIT 3" % qi(args[0]), False, False, 3)
+    else:
+        fail("unknown command %s; see ola-db --help" % cmd)
+
+
+if __name__ == "__main__":
+    try:
+        main(sys.argv[1:])
+    except BrokenPipeError:
+        pass
+    except (ValueError, zipfile.BadZipFile, UnicodeError, OSError, subprocess.TimeoutExpired) as e:
+        fail(type(e).__name__ + ": " + str(e)[:300], 3)

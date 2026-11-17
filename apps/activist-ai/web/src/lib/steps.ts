@@ -4,6 +4,7 @@
 // well said. Verbs come from the design's fixed table: Looked through, Read, Wrote, Changed,
 // Ran, Checked, Searched.
 import type { Problem, StepIcon } from './types.ts'
+import { webRequestOf } from '../../server/webask.mjs'
 
 export interface Words {
   icon: StepIcon
@@ -31,6 +32,12 @@ function pathOf(input: Input): string {
 /** A shell command, said plainly. */
 export function describeCommand(command: string): Words {
   const c = command.trim()
+  const web = webRequestOf(c)
+  if (web?.kind === 'search') return { icon: 'search', verb: 'Searched the web for', object: web.item ? `“${web.item}”` : 'something' }
+  if (web?.kind === 'fetch') return { icon: 'read', verb: 'Downloaded', object: web.item ? hostOf(web.item) : 'a document' }
+  if (/^ola-db\s+search\b/.test(c)) return { icon: 'search', verb: 'Searched the documents', object: '' }
+  if (/^ola-db\s+load\b/.test(c)) return { icon: 'change', verb: 'Loaded a table into', object: 'the project’s data' }
+  if (/^ola-db\s+(query|tables|describe)\b/.test(c)) return { icon: 'look', verb: 'Looked in', object: 'the project’s data' }
   const script = /^(?:python3?|node|Rscript|bash|sh)\s+(?!-)([\w./-]+\.(?:py|js|mjs|R|sh))/.exec(c)
   if (script) return { icon: 'run', verb: 'Ran', object: script[1].split('/').pop() ?? script[1] }
   if (/^(python3?|node|Rscript)\s+-[ce]\b/.test(c) || /^(python3?|node)\s*<</.test(c)) return { icon: 'run', verb: 'Ran a short program', object: '' }
@@ -156,9 +163,28 @@ const PRESENT: [RegExp, string][] = [
 ]
 export const present = (verb: string) => PRESENT.reduce((v, [re, to]) => v.replace(re, to), verb)
 
+const hostOf = (u: string) => {
+  try {
+    return new URL(u).hostname.replace(/^www\./, '')
+  } catch {
+    return 'a document'
+  }
+}
+
 /** A permission request as a question the person can answer. */
-export function describeApproval(action: string, resources: string[], metadata: Record<string, unknown> | undefined, dir: string | null): { title: string; items: { label: string; detail: string | null }[] } {
+export function describeApproval(action: string, resources: string[], metadata: Record<string, unknown> | undefined, dir: string | null): { title: string; items: { label: string; detail: string | null }[]; web?: { kind: 'search' | 'fetch'; item: string | null } | null } {
   const files = Array.isArray(metadata?.files) ? (metadata.files as { file?: string; patch?: string; status?: string }[]) : []
+  // A web search or download: the question says exactly what would leave the machine.
+  const webs = action === 'shell' || action === 'bash' ? resources.map((r) => webRequestOf(r)).filter((x) => !!x) : []
+  if (webs.length && webs.length === resources.length) {
+    const w = webs[0]!
+    const what = w.item ?? 'something'
+    return {
+      title: w.kind === 'search' ? `Ola wants to search the web for: ${what}` : `Ola wants to download: ${what}`,
+      items: resources.map((cmd, i) => ({ label: webs[i]!.kind === 'search' ? `Search for ${webs[i]!.item ? `“${webs[i]!.item}”` : 'this'}` : `Download ${webs[i]!.item ?? 'this'}`, detail: cmd })),
+      web: w,
+    }
+  }
   if (action === 'shell' || action === 'bash') {
     return {
       title: 'Ola wants to run code on its computer',

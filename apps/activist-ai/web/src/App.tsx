@@ -12,9 +12,11 @@ import { Drawer, ProblemBox } from './components/Drawer.tsx'
 import { FilesView } from './components/FilesView.tsx'
 import { ApprovalSheet } from './components/ApprovalSheet.tsx'
 import { SettingsView } from './components/Settings.tsx'
+import { DataView } from './components/DataView.tsx'
 
-type Route = 'home' | 'files' | 'settings'
-const routeOf = (hash: string): Route => (hash.startsWith('#/files') ? 'files' : hash.startsWith('#/settings') ? 'settings' : 'home')
+type Route = 'home' | 'files' | 'data' | 'settings'
+const routeOf = (hash: string): Route => (hash.startsWith('#/files') ? 'files' : hash.startsWith('#/data') ? 'data' : hash.startsWith('#/settings') ? 'settings' : 'home')
+const ROUTE_TITLE: Record<Route, string> = { home: '', files: 'What Ola has of yours', data: 'Data', settings: 'Settings' }
 /** `#/?ask=<conversation id>` opens the drawer on that conversation. */
 const askOf = (hash: string): string | null => new URLSearchParams(hash.split('?')[1] ?? '').get('ask')
 /** `?still` in the address: no live stream (screenshots, printing). */
@@ -91,13 +93,13 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
   // A new view moves focus to its heading, so a screen reader hears where it is.
   createEffect((prev: Route | undefined) => {
     const r = route()
-    if (prev && prev !== r) queueMicrotask(() => (r === 'files' ? document.getElementById('files-title') : r === 'settings' ? settingsTitle : heading)?.focus())
+    if (prev && prev !== r) queueMicrotask(() => (r === 'home' ? heading : r === 'settings' ? settingsTitle : document.getElementById(r === 'files' ? 'files-title' : 'data-title'))?.focus())
     if (r === 'settings') void ola.loadClaude()
     return r
   })
   createEffect(() => {
     const p = project()?.project
-    document.title = p ? `${route() === 'files' ? 'What Ola has of yours · ' : route() === 'settings' ? 'Settings · ' : ''}${p.name} · Ola` : 'Ola'
+    document.title = p ? `${route() !== 'home' ? `${ROUTE_TITLE[route()]} · ` : ''}${p.name} · Ola` : 'Ola'
   })
   createEffect(() => {
     if (!promiseDialog) return
@@ -154,7 +156,7 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
               /
             </span>
             <span class="crumb-here" aria-current="page">
-              {route() === 'files' ? 'What Ola has of yours' : route() === 'settings' ? 'Settings' : p()!.name}
+              {route() !== 'home' ? ROUTE_TITLE[route()] : p()!.name}
             </span>
           </Show>
         </nav>
@@ -191,8 +193,14 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
               <a class="back-link" href="#/">
                 <Icon name="back" size={16} /> Back to {project() ? count(project()!.things.length, 'thing') : 'the things'}
               </a>
-              <Show when={route() === 'settings'} fallback={<FilesView onChanged={() => void refetch()} uploadRef={(el) => (uploadButton = el)} canWrite={canRun()} deleteNotice={props.me.policy.deleteNotice} claudeOn={claudeOn()} />}>
-                <SettingsView ola={ola} titleRef={(el) => (settingsTitle = el)} />
+              <Show when={route() === 'files'}>
+                <FilesView onChanged={() => void refetch()} uploadRef={(el) => (uploadButton = el)} canWrite={canRun()} deleteNotice={props.me.policy.deleteNotice} claudeOn={claudeOn()} />
+              </Show>
+              <Show when={route() === 'data'}>
+                <DataView />
+              </Show>
+              <Show when={route() === 'settings'}>
+                <SettingsView ola={ola} titleRef={(el) => (settingsTitle = el)} canWrite={canRun()} />
               </Show>
             </>
           }
@@ -217,6 +225,9 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
             <div class="project-actions">
               <a class="ghost-button on-room" href="#/files">
                 <Icon name="eye" size={18} /> What Ola has of yours
+              </a>
+              <a class="ghost-button on-room" href="#/data">
+                <Icon name="table" size={18} /> Data
               </a>
               <Show when={canRun()}>
                 <button type="button" class="ghost-button on-room" onClick={addFiles}>
@@ -290,7 +301,7 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
       </div>
 
       <Drawer ola={ola} open={drawer()} onClose={closeDrawer} onAddFiles={addFiles} draft={draft()} setDraft={setDraft} inputRef={(el) => (drawerInput = el)} />
-      <ApprovalSheet ola={ola} />
+      <ApprovalSheet ola={ola} provider={props.me.policy.searchProvider} />
 
       <dialog ref={promiseDialog} class="sheet promise" aria-labelledby="promise-title" onClose={() => setPromise(false)}>
         <div class="sheet-inner">
@@ -309,7 +320,7 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
             </Show>
             <li>Ola can read only the files you upload, listed under “What Ola has of yours”.</li>
             <li>Your conversations stay in your project until you delete them. Bart, who runs the machine, could read a session while it runs; he does not keep logs of what you ask.</li>
-            <li>Anything that would leave the machine, like a web search, is off unless you turn it on, and asks first.</li>
+            <li>A web search or a download asks you first, unless your project said Always (Settings). Only the words of the search, or the one address, leave the machine; your files never do.</li>
           </ul>
           <div class="sheet-actions">
             <button type="button" class="primary-button" onClick={() => setPromise(false)}>

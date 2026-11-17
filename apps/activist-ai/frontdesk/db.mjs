@@ -34,11 +34,18 @@ const ACTIONS_V3 = [
   // its next request; workspace_closed when it could not be made safe; workspace_reopened by the admin.
   'restart_deferred', 'workspace_closed', 'workspace_reopened',
 ]
-/** What the audit log may say. A row with any other action is refused by the table itself. */
-export const ACTIONS = [
+// Migration 4's list (frozen too).
+const ACTIONS_V4 = [
   ...ACTIONS_V3,
   // migration 4: a page opened from the project ("Open"), and Fallback to Claude
   'page_opened', 'claude_enabled', 'claude_disabled', 'claude_used',
+]
+/** What the audit log may say. A row with any other action is refused by the table itself. */
+export const ACTIONS = [
+  ...ACTIONS_V4,
+  // migration 6: web search and downloads turned on for a project ("Always in this project") and
+  // off again. No search words and no addresses: those are content.
+  'web_allowed', 'web_revoked',
 ]
 
 const sqlList = (xs) => xs.map((x) => `'${x}'`).join(', ')
@@ -201,7 +208,7 @@ const MIGRATIONS = [
     at INTEGER NOT NULL,
     actor_kind TEXT NOT NULL CHECK (actor_kind IN ('person', 'admin', 'run', 'system')),
     actor_person_id INTEGER REFERENCES people(id),
-    action TEXT NOT NULL CHECK (action IN (${sqlList(ACTIONS)})),
+    action TEXT NOT NULL CHECK (action IN (${sqlList(ACTIONS_V4)})),
     workspace_id INTEGER REFERENCES workspaces(id),
     subject_person_id INTEGER REFERENCES people(id),
     name_ref BLOB,
@@ -227,6 +234,37 @@ const MIGRATIONS = [
   ALTER TABLE workspaces ADD COLUMN claude_auto TEXT NOT NULL DEFAULT 'ask' CHECK (claude_auto IN ('ask', 'stuck', 'always'));
   ALTER TABLE workspaces ADD COLUMN claude_cap_micro_usd INTEGER CHECK (claude_cap_micro_usd IS NULL OR claude_cap_micro_usd >= 0);
   ALTER TABLE workspaces ADD COLUMN claude_cap_tokens INTEGER CHECK (claude_cap_tokens IS NULL OR claude_cap_tokens >= 0);
+  `,
+  // 6: a project's web choice ("Always in this project", or ask each time: no row), and its two
+  // audit words. The audit table is rebuilt for the CHECK, as in 2, 3 and 4.
+  `
+  CREATE TABLE web_access (
+    workspace_id INTEGER PRIMARY KEY REFERENCES workspaces(id),
+    always INTEGER NOT NULL CHECK (always IN (0, 1)),
+    changed_at INTEGER NOT NULL,
+    changed_by INTEGER REFERENCES people(id)
+  ) STRICT;
+  CREATE TABLE audit_v6 (
+    id INTEGER PRIMARY KEY,
+    at INTEGER NOT NULL,
+    actor_kind TEXT NOT NULL CHECK (actor_kind IN ('person', 'admin', 'run', 'system')),
+    actor_person_id INTEGER REFERENCES people(id),
+    action TEXT NOT NULL CHECK (action IN (${sqlList(ACTIONS)})),
+    workspace_id INTEGER REFERENCES workspaces(id),
+    subject_person_id INTEGER REFERENCES people(id),
+    name_ref BLOB,
+    sha256 TEXT CHECK (sha256 IS NULL OR length(sha256) = 64),
+    size INTEGER,
+    role TEXT CHECK (role IS NULL OR role IN (${sqlList(ROLES)})),
+    ok INTEGER NOT NULL DEFAULT 1 CHECK (ok IN (0, 1)),
+    tokens_in INTEGER CHECK (tokens_in IS NULL OR tokens_in >= 0),
+    tokens_out INTEGER CHECK (tokens_out IS NULL OR tokens_out >= 0),
+    cost_micro_usd INTEGER CHECK (cost_micro_usd IS NULL OR cost_micro_usd >= 0)
+  ) STRICT;
+  INSERT INTO audit_v6 SELECT * FROM audit;
+  DROP TABLE audit;
+  ALTER TABLE audit_v6 RENAME TO audit;
+  CREATE INDEX audit_workspace ON audit(workspace_id, at);
   `,
 ]
 

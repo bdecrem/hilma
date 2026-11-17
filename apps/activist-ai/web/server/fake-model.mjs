@@ -79,6 +79,16 @@ export function startFakeModel() {
       if (glob && done < Number(slow[1])) return send(200, reply({ tool: { id: `call_${calls}_${done}`, name: glob, args: glob === 'glob' ? { pattern: '*' } : { path: '.' } } }))
       return send(200, reply({ content: `Done after ${done} slow steps.` }))
     }
+    // "search the web for <words>": one ola-search (which asks the person first), then an answer.
+    const web = /search the web for (.{1,120})$/i.exec(lastUserText(messages).trim())
+    if (web) {
+      let since = -1
+      messages.forEach((m, i) => m.role === 'user' && (since = i))
+      const done = messages.slice(since + 1).filter((m) => m.role === 'tool').length
+      const bash = pick(body.tools, 'shell', 'bash')
+      if (bash && done === 0) return send(200, reply({ tool: { id: `call_${calls}_0`, name: bash, args: { command: `ola-search "${web[1].replace(/["\\$`]/g, '')}"`, description: 'Search the web' } } }))
+      return send(200, reply({ content: 'I did not search the web, so I worked from your files only.' }))
+    }
     // Where are we in the script? Count the tool results since the last user message.
     let lastUser = -1
     messages.forEach((m, i) => m.role === 'user' && (lastUser = i))

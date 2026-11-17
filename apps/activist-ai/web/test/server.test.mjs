@@ -25,12 +25,12 @@ test('a session is created in the workspace with rules the page cannot widen', (
   const body = rewriteSessionCreate(JSON.stringify({ title: 't', location: { directory: '/' }, permissions: [{ action: '*', resource: '*', effect: 'allow' }], metadata: { autonomy: 'ask' } }), '/work')
   assert.equal(body.location.directory, '/work')
   assert.deepEqual(body.metadata, { autonomy: 'ask' })
-  const last = body.permissions.slice(-3).map((r) => `${r.action}:${r.effect}`)
-  assert.deepEqual(last, ['webfetch:deny', 'websearch:deny', 'external_directory:deny'])
+  const last = body.permissions.slice(-4).map((r) => `${r.action}:${r.effect}`)
+  assert.deepEqual(last, ['webfetch:deny', 'websearch:deny', 'external_directory:deny', 'browser:deny'])
   assert.ok(body.permissions.some((r) => r.action === 'shell' && r.effect === 'ask'))
   assert.equal(rewriteSessionCreate('{not json', '/work'), null)
   const go = rewriteSessionCreate('{}', '/work')
-  assert.ok(!go.permissions.some((r) => r.effect === 'ask'), 'go ahead asks nothing')
+  assert.ok(!go.permissions.some((r) => r.effect === 'ask' && !/^(\/opt\/ola\/bin\/)?ola-(search|fetch) \*$/.test(r.resource)), 'go ahead asks nothing but a web search or download')
 })
 
 test('an update carries only a title and an autonomy', () => {

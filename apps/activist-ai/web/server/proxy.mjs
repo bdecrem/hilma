@@ -8,6 +8,7 @@
 // the autonomy the page asked for, never taken from the browser.
 import http from 'node:http'
 import { closeAfter, readUpTo } from './linger.mjs'
+import { webRules } from './webask.mjs'
 
 /**
  * Routes the page may use, and what each needs: `read` (any member, viewers included) or `run`
@@ -40,16 +41,23 @@ const ALWAYS_DENY = ['webfetch', 'websearch', 'external_directory', 'browser']
 // What "Ask me first" stops for: changing files and running code.
 const ASK_FIRST = ['shell', 'bash', 'edit', 'write', 'apply_patch', 'patch']
 
-/** opencode permission rules for an autonomy choice. Later rules win, so the denials go last. */
-export function permissionsFor(autonomy) {
+/**
+ * opencode permission rules for an autonomy choice and the project's web choice. Later rules win,
+ * so the denials go last. `ola-search` and `ola-fetch` ask the person (the approval says what would
+ * be searched or downloaded) unless the project said "Always in this project" and the person did
+ * not choose "Ask me first". These rules only carry the question: the gateway is what refuses a
+ * web request the project did not approve (gateway/web.mjs).
+ */
+export function permissionsFor(autonomy, web = 'ask') {
   const rules = [{ action: '*', resource: '*', effect: 'allow' }]
   if (autonomy === 'ask') for (const action of ASK_FIRST) rules.push({ action, resource: '*', effect: 'ask' })
+  rules.push(...webRules(web === 'always' && autonomy !== 'ask' ? 'allow' : 'ask'))
   for (const action of ALWAYS_DENY) rules.push({ action, resource: '*', effect: 'deny' })
   return rules
 }
 
 /** The body opencode gets for PATCH /api/session/:id: a title and the autonomy, nothing else. */
-export function rewriteSessionUpdate(raw) {
+export function rewriteSessionUpdate(raw, web = 'ask') {
   let sent = {}
   try {
     sent = raw.length ? JSON.parse(raw) : {}
@@ -61,13 +69,13 @@ export function rewriteSessionUpdate(raw) {
   const autonomy = sent?.metadata?.autonomy
   if (autonomy === 'ask' || autonomy === 'go') {
     out.metadata = { autonomy }
-    out.permissions = permissionsFor(autonomy)
+    out.permissions = permissionsFor(autonomy, web)
   }
   return out
 }
 
 /** The body opencode gets for POST /api/session, built from what the page sent. */
-export function rewriteSessionCreate(raw, work) {
+export function rewriteSessionCreate(raw, work, web = 'ask') {
   let sent = {}
   try {
     sent = raw.length ? JSON.parse(raw) : {}
@@ -80,7 +88,7 @@ export function rewriteSessionCreate(raw, work) {
     ...(title ? { title } : {}),
     location: { directory: work },
     metadata: { autonomy },
-    permissions: permissionsFor(autonomy),
+    permissions: permissionsFor(autonomy, web),
   }
 }
 
@@ -104,8 +112,9 @@ const MAX_REPLY = 32 * 1024 * 1024
  * One proxy to one workspace's opencode. `target` is a URL (the dev server's local opencode) or
  * `socketPath` a unix socket (a sealed workspace's desk); `agent` is an optional http.Agent.
  * `onForward({ method, pathname })` is told about each request that reached opencode with a 2xx.
+ * `webMode()` says the project's web choice ('ask' or 'always') for new or changed sessions.
  */
-export function makeProxy({ target, socketPath, agent, authorization, work, log = () => {}, onForward = () => {} }) {
+export function makeProxy({ target, socketPath, agent, authorization, work, log = () => {}, onForward = () => {}, webMode = () => 'ask' }) {
   const upstream = target ? new URL(target) : null
   return async function proxy(req, res, pathname, search) {
     if (!allowed(req.method, pathname)) {
@@ -123,7 +132,7 @@ export function makeProxy({ target, socketPath, agent, authorization, work, log 
         return
       }
       if (req.method === 'POST' && pathname === '/api/session') {
-        const rewritten = rewriteSessionCreate(body.toString('utf8'), work)
+        const rewritten = rewriteSessionCreate(body.toString('utf8'), work, webMode())
         if (!rewritten) {
           res.writeHead(400, { 'content-type': 'application/json' }).end(JSON.stringify({ error: 'bad_json' }))
           return
@@ -131,7 +140,7 @@ export function makeProxy({ target, socketPath, agent, authorization, work, log 
         body = Buffer.from(JSON.stringify(rewritten))
       }
       if (req.method === 'PATCH') {
-        const rewritten = rewriteSessionUpdate(body.toString('utf8'))
+        const rewritten = rewriteSessionUpdate(body.toString('utf8'), webMode())
         if (!rewritten) {
           res.writeHead(400, { 'content-type': 'application/json' }).end(JSON.stringify({ error: 'bad_json' }))
           return
@@ -185,4 +194,38 @@ export function makeProxy({ target, socketPath, agent, authorization, work, log 
     })
     up.end(body ?? undefined)
   }
+}
+
+/**
+ * One request to a workspace's opencode from the front desk itself (not the page): JSON in and out,
+ * capped and timed. What comes back is the workspace's word.
+ */
+export function opencodeCall({ target, socketPath, agent, authorization }, method, pathname, body, { ms = 10_000, max = 1024 * 1024 } = {}) {
+  const upstream = target ? new URL(target) : null
+  const data = body === undefined ? null : Buffer.from(JSON.stringify(body))
+  return new Promise((resolve) => {
+    const headers = { authorization: typeof authorization === 'function' ? authorization() : authorization, accept: 'application/json' }
+    if (data) (headers['content-type'] = 'application/json'), (headers['content-length'] = String(data.length))
+    const where = socketPath ? { socketPath, agent } : { host: upstream.hostname, port: upstream.port, agent }
+    const req = http.request({ ...where, method, path: pathname, headers, timeout: ms }, (res) => {
+      const chunks = []
+      let size = 0
+      res.on('data', (c) => {
+        size += c.length
+        if (size > max) return req.destroy()
+        chunks.push(c)
+      })
+      res.on('end', () => {
+        let json = null
+        try {
+          json = JSON.parse(Buffer.concat(chunks).toString('utf8'))
+        } catch {}
+        resolve({ status: res.statusCode ?? 502, json })
+      })
+      res.on('error', () => resolve({ status: 502, json: null }))
+    })
+    req.on('timeout', () => req.destroy())
+    req.on('error', () => resolve({ status: 502, json: null }))
+    req.end(data ?? undefined)
+  })
 }

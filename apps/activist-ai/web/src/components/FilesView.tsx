@@ -114,7 +114,7 @@ export function FilesView(props: { onChanged: () => void; uploadRef?: (el: HTMLB
           </div>
           <div>
             <dt>What left the machine</dt>
-            <dd>{props.claudeOn ? "Only what Claude read for a request handed to it (Fallback to Claude is on for this project). Web searches are off." : "None of these files. Web searches are off for this project."}</dd>
+            <dd>{props.claudeOn ? "Only what Claude read for a request handed to it (Fallback to Claude is on for this project). A web search or download sends only its words or its address, and asks you first unless your project said Always (Settings)." : "None of these files. A web search or download sends only its words or its address, and asks you first unless your project said Always (Settings)."}</dd>
           </div>
           <div>
             <dt>How long they stay</dt>

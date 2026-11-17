@@ -12,6 +12,9 @@
 //   (the front desk also uses putStream / getStream / removeFile / filesAsync, below: ola-put,
 //   ola-get, ola-rm and ola-files through `container exec`, without blocking its event loop)
 //   node ws.mjs destroy <id> [--confirm <id>]     wipes the volume; asks unless --confirm <id>
+//   node ws.mjs snapshot <id> <dir> | snapshot --all <dir>    a consistent copy: project.db by
+//                                          SQLite's online backup, files.tar, manifest.json
+//   node ws.mjs load-snapshot <id> <dir/id>  a snapshot into an empty workspace (a restore)
 //
 // The seal. A workspace VM runs with `--network none`: no interface but loopback, so no
 // route to the internet, the host, the LAN, the tailnet or another workspace. It has two
@@ -35,7 +38,7 @@
 // included, under /work/.ola), so `files` shows all of it and `destroy` removes all of it.
 import { spawn, spawnSync } from 'node:child_process'
 import { createHash, randomBytes } from 'node:crypto'
-import { chmodSync, closeSync, createReadStream, existsSync, lstatSync, mkdirSync, openSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { chmodSync, closeSync, createReadStream, createWriteStream, existsSync, lstatSync, mkdirSync, openSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import http from 'node:http'
 import { homedir } from 'node:os'
 import path from 'node:path'
@@ -44,7 +47,7 @@ import { fileURLToPath } from 'node:url'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 export const CONTAINER = process.env.OLA_CONTAINER_BIN || '/usr/local/bin/container'
-export const IMAGE = 'ola-workspace:2.3.0-7'
+export const IMAGE = 'ola-workspace:2.3.0-8'
 export const HOME = process.env.OLA_HOME || path.join(homedir(), '.ola')
 export const GATEWAY_PORT = Number(process.env.OLA_GATEWAY_PORT || 4180)
 // The gateway's door sockets, one per workspace (the gateway's GATEWAY_DOOR_DIR): each door
@@ -925,6 +928,167 @@ export function files(id) {
   return ctr(['exec', names(id).container, '/opt/ola/bin/ola-files']).stdout.split('\n').filter(Boolean).map(parseFileLine)
 }
 
+// ---------------------------------------------------------------- the project database
+//
+// /work/project.db lives inside the VM and is only ever opened there, by ola-db (the host cannot
+// read ext4, and must not open a file a hostile agent controls). The front desk and these commands
+// run `ola-db api ...` through `container exec`: read-only, JSON out, time and size capped.
+
+const DB_DOCS = /\.(pdf|txt|md|html?|docx|pptx|odt|rtf)$/i
+/** Whether a file is a document the project database indexes on upload. */
+export const isDocument = (rel) => DB_DOCS.test(rel)
+
+/** `ola-db api <args>` in the VM, parsed. Refuses on a timeout, a failure or output out of shape. */
+export async function dbApi(id, args, { ms = 15_000, max = 16 * 1024 * 1024 } = {}) {
+  validId(id)
+  const child = execTool(id, 'ola-db', ['api', ...args])
+  const timer = setTimeout(() => child.kill('SIGKILL'), ms)
+  const r = await collect(child, max)
+  clearTimeout(timer)
+  if (r.code !== 0) refuse(/interrupted/.test(r.err) ? 'the query took too long' : /no such table/.test(r.err) ? 'no such table' : 'the project database did not answer', /no such table/.test(r.err) ? 'NO_TABLE' : 'DB_FAILED')
+  try {
+    const x = JSON.parse(r.out)
+    if (x && typeof x === 'object' && !Array.isArray(x)) return x
+  } catch {}
+  refuse('the project database answered out of shape', 'DB_FAILED')
+}
+
+/** `ola-db api backup|xlsx ...` as a stream of bytes (a download); kill() ends it. */
+export function dbStream(id, args) {
+  validId(id)
+  const child = execTool(id, 'ola-db', ['api', ...args])
+  child.stderr.resume()
+  return { stream: child.stdout, kill: () => child.kill('SIGKILL'), done: new Promise((r) => child.on('close', (code) => r(code))) }
+}
+
+/** Records and indexes a document in the project database (an upload). true when it did. */
+export async function dbAdd(id, rel, { by = 'upload', ms = 120_000 } = {}) {
+  if (!validRel(rel)) return false
+  const child = execTool(id, 'ola-db', ['add', rel, '--by', by])
+  const timer = setTimeout(() => child.kill('SIGKILL'), ms)
+  const r = await collect(child, 64 * 1024)
+  clearTimeout(timer)
+  return r.code === 0
+}
+
+/** Forgets a document (its row and its index entries); used when its file is deleted. */
+export async function dbRemove(id, rel) {
+  if (!validRel(rel)) return false
+  const r = await collect(execTool(id, 'ola-db', ['remove', rel]), 64 * 1024)
+  return r.code === 0
+}
+
+// ---------------------------------------------------------------- snapshots (backups)
+//
+// A consistent copy of one project: the database by SQLite's online backup (consistent while the
+// agent may be writing), and every other file in /work as a tar, with a manifest of sha256s.
+//   <dir>/<id>/project.db   <dir>/<id>/files.tar   <dir>/<id>/manifest.json
+// A stopped workspace is started for its snapshot and stopped again (the host cannot read ext4).
+
+const TAR_EXCLUDE = ['./project.db', './project.db-wal', './project.db-shm', './.ola/cache', './.ola/tmp', './lost+found']
+function pipeTo(child, file) {
+  return new Promise((resolve, reject) => {
+    const out = createWriteStream(file, { mode: 0o600 })
+    const sha = createHash('sha256')
+    let size = 0
+    child.stdout.on('data', (c) => (sha.update(c), (size += c.length)))
+    child.stdout.pipe(out)
+    let err = ''
+    child.stderr.on('data', (d) => (err = (err + d).slice(-500)))
+    child.on('close', (code) => out.close(() => (code === 0 ? resolve({ sha256: sha.digest('hex'), size }) : reject(new Refusal(`the copy failed: ${err.trim().split('\n').pop() ?? ''}`.slice(0, 200))))))
+  })
+}
+
+export async function snapshot(id, dir) {
+  known(id)
+  const was = stateOf(inspect(id))
+  if (was !== 'running') await start(id)
+  try {
+    const out = path.join(path.resolve(dir), id)
+    mkdirSync(out, { recursive: true, mode: 0o700 })
+    const at = new Date().toISOString()
+    const dbFile = path.join(out, 'project.db.part')
+    const db = await pipeTo(spawn(CONTAINER, ['exec', names(id).container, '/opt/ola/bin/ola-db', 'api', 'backup'], { stdio: ['ignore', 'pipe', 'pipe'] }), dbFile)
+    const tarFile = path.join(out, 'files.tar.part')
+    const tar = await pipeTo(spawn(CONTAINER, ['exec', names(id).container, 'tar', '-C', '/work', ...TAR_EXCLUDE.map((x) => `--exclude=${x}`), '-cf', '-', '.'], { stdio: ['ignore', 'pipe', 'pipe'] }), tarFile)
+    // The copy is checked before it replaces the last one: it opens, it is whole, it has the core.
+    const { DatabaseSync } = await import('node:sqlite')
+    const check = new DatabaseSync(dbFile, { readOnly: true })
+    const integrity = check.prepare('PRAGMA integrity_check').get()
+    const counts = Object.fromEntries(check.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE 'doc_text_%' ORDER BY name").all().map((r) => [r.name, check.prepare(`SELECT count(*) AS n FROM "${r.name.replace(/"/g, '""')}"`).get().n]))
+    check.close()
+    if (Object.values(integrity)[0] !== 'ok' || !('documents' in counts)) refuse('the database copy did not check out')
+    renameSync(dbFile, path.join(out, 'project.db'))
+    renameSync(tarFile, path.join(out, 'files.tar'))
+    const manifest = { id, at, image: IMAGE, database: { ...db, tables: counts }, files: tar }
+    writeFileSync(path.join(out, 'manifest.json'), JSON.stringify(manifest, null, 2) + '\n', { mode: 0o600 })
+    return manifest
+  } finally {
+    if (was !== 'running') stop(id)
+  }
+}
+
+/** Every workspace on this machine, one at a time (each stopped one is started and stopped again). */
+export async function snapshotAll(dir, { say = console.log } = {}) {
+  const wsDir = path.join(HOME, 'ws')
+  const ids = existsSync(wsDir) ? readdirSync(wsDir).filter((x) => ID.test(x) && existsSync(paths(x).meta) && !isClosed(x)) : []
+  const done = []
+  const failed = []
+  for (const id of ids) {
+    try {
+      if (stateOf(inspect(id)) !== 'running') await waitForRoom([id], 1, { say })
+      const m = await snapshot(id, dir)
+      done.push(id)
+      say(`${id}: ${m.database.size} bytes of database (${Object.entries(m.database.tables).map(([t, n]) => `${t} ${n}`).join(', ')}), ${m.files.size} bytes of files`)
+    } catch (e) {
+      failed.push(id)
+      say(`${id}: FAILED (${e.message})`)
+    }
+  }
+  return { done, failed }
+}
+
+/**
+ * Puts a snapshot into a workspace (a new one, for a restore test or to move a project): the
+ * files first, then the database through SQLite's backup API into the live file (never by
+ * replacing it under an open WAL). Refuses a workspace that already holds files of its own.
+ */
+export async function loadSnapshot(id, dir) {
+  known(id)
+  const src = path.resolve(dir)
+  for (const f of ['project.db', 'files.tar', 'manifest.json']) existsSync(path.join(src, f)) || refuse(`${src} is not a snapshot (no ${f})`)
+  if (stateOf(inspect(id)) !== 'running') await start(id)
+  const mine = (await filesAsync(id)).filter((f) => !f.ola && !/^project\.db(-wal|-shm)?$/.test(f.path))
+  if (mine.length) refuse(`workspace ${id} already has files; load a snapshot only into an empty one`)
+  const run = (args, file) =>
+    new Promise((resolve, reject) => {
+      const child = spawn(CONTAINER, ['exec', '-i', names(id).container, ...args], { stdio: ['pipe', 'pipe', 'pipe'] })
+      let err = ''
+      child.stderr.on('data', (d) => (err = (err + d).slice(-500)))
+      child.stdout.resume()
+      child.stdin.on('error', () => {})
+      createReadStream(file).pipe(child.stdin)
+      child.on('close', (code) => (code === 0 ? resolve() : reject(new Refusal(`the restore failed: ${err.trim().split('\n').pop() ?? ''}`.slice(0, 200)))))
+    })
+  // The agent's own history (.ola: conversations, caches) is in files.tar too, but it is not put
+  // into a running workspace: opencode holds its database open. Restore it by hand with the
+  // workspace stopped (README, "Where the data lives").
+  await run(['tar', '-C', '/work', '--no-same-owner', '--exclude=./.ola', '-xf', '-'], path.join(src, 'files.tar'))
+  const restore = String.raw`
+import sqlite3, sys, os
+tmp = "/work/.ola/tmp/restore.db"
+os.makedirs("/work/.ola/tmp", exist_ok=True)
+with open(tmp, "wb") as f:
+    f.write(sys.stdin.buffer.read())
+src = sqlite3.connect(tmp)
+dst = sqlite3.connect("/work/project.db")
+src.backup(dst)
+dst.close(); src.close(); os.unlink(tmp)
+`
+  await run(['/usr/bin/python3', '-I', '-c', restore], path.join(src, 'project.db'))
+  return { id, from: src }
+}
+
 export async function destroy(id, { confirm } = {}) {
   validId(id)
   if (confirm !== id) {
@@ -1052,8 +1216,24 @@ async function main(argv) {
     case 'destroy':
       await destroy(need(), flags)
       return console.log(`${id} destroyed; nothing of it is left on this machine`)
+    case 'snapshot': {
+      if (flags.all) {
+        const r = await snapshotAll(flags.all)
+        console.log(`${r.done.length} project${r.done.length === 1 ? '' : 's'} copied to ${path.resolve(flags.all)}${r.failed.length ? `; FAILED: ${r.failed.join(', ')}` : ''}`)
+        if (r.failed.length) process.exit(1)
+        return
+      }
+      if (!args[1]) refuse('usage: ws.mjs snapshot <id> <dir> | snapshot --all <dir>')
+      const m = await snapshot(need(), args[1])
+      return console.log(flags.json ? JSON.stringify(m, null, 2) : `${id}: copied to ${path.join(path.resolve(args[1]), id)} (database ${human(m.database.size)}, files ${human(m.files.size)})`)
+    }
+    case 'load-snapshot': {
+      if (!args[1]) refuse('usage: ws.mjs load-snapshot <id> <dir>/<snapshot id>')
+      await loadSnapshot(need(), args[1])
+      return console.log(`${id}: loaded from ${path.resolve(args[1])}`)
+    }
     default:
-      console.error('usage: ws.mjs image | create <id> | start <id> | stop <id> | status [id] | rotate | revoke | restore | reopen | close <id> [--json] | upload <id> <file>... | files <id> | destroy <id>')
+      console.error('usage: ws.mjs image | create <id> | start <id> | stop <id> | status [id] | rotate | revoke | restore | reopen | close <id> [--json] | upload <id> <file>... | files <id> | snapshot <id> <dir> | snapshot --all <dir> | load-snapshot <id> <dir> | destroy <id>')
       process.exit(2)
   }
 }

@@ -109,7 +109,7 @@ export interface Me {
   csrf: string
   workspaces: { slug: string; name: string; team: string; role: Role }[]
   machine: { working: number; capacity: number }
-  policy: { deleteNotice: string; maxUpload?: number }
+  policy: { deleteNotice: string; maxUpload?: number; searchProvider?: string }
   /** What the person must be told once, such as a passkey added for another device. */
   notices?: { kind: string; at: string; text: string }[]
 }
@@ -202,7 +202,65 @@ export interface Approval {
   /** A question from Claude Code (answered through the front desk), not from opencode. */
   engine?: Engine
   run?: string
+  /** A web search or download: what would be searched or fetched (null when the command is not simple). */
+  web?: { kind: 'search' | 'fetch'; item: string | null } | null
 }
+
+/** The project's settings (GET /api/settings). */
+export interface Settings {
+  web: { always: boolean; changedAt: string | null; changedBy: string | null; provider: string }
+  role: Role
+}
+
+/** The project's data (GET /api/data): its tables and its documents. */
+export interface DataTable {
+  name: string
+  kind: 'table' | 'view'
+  rows: number
+  columns: { name: string; type: string }[]
+  description: string | null
+  source: string | null
+  created: string | null
+  updated: string | null
+}
+export interface DataSummary {
+  tables: DataTable[]
+  documents: { count: number; pages: number; web: number; upload: number; agent: number }
+  size: number
+}
+export interface TablePage {
+  table: string
+  columns: { name: string; type: string }[]
+  rows: (string | number | null)[][]
+  total: number
+  offset: number
+  limit: number
+}
+export interface DocumentRow {
+  id: number
+  title: string
+  path: string
+  source_url: string | null
+  fetched_at: string | null
+  mime: string | null
+  pages: number
+  unit: 'page' | 'slide' | 'part'
+  chars?: number
+  added_by: 'upload' | 'web' | 'agent'
+  added_at: string
+}
+export interface DocumentHit {
+  id: number
+  title: string
+  path: string
+  source_url: string | null
+  fetched_at: string | null
+  unit: 'page' | 'slide' | 'part'
+  page: number
+  /** The passage, with the matched words between \u0002 and \u0003. */
+  snip: string
+}
+export type DocsPage = { q: false; documents: DocumentRow[]; total: number; offset: number } | { q: true; hits: DocumentHit[]; total: number; anyWord: boolean; offset: number }
 
 export type Connection = 'connecting' | 'open' | 'lost'
 

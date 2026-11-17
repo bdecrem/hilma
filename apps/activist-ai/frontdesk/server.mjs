@@ -31,7 +31,8 @@ import { addressKey, makeAuth } from './auth.mjs'
 import { makeWorkspaces } from './workspaces.mjs'
 import { makeViews } from './views.mjs'
 import { claudeConfig, makeClaude } from './claude.mjs'
-import { CONTAINER } from '../workspace/ws.mjs'
+import { CONTAINER, HOME as WS_HOME } from '../workspace/ws.mjs'
+import { makeWeb } from './web.mjs'
 import { routeNeed } from '../web/server/proxy.mjs'
 import { tooLargeMessage, validName } from '../web/server/files.mjs'
 import { closeAfter, lingering, readUpTo } from '../web/server/linger.mjs'
@@ -75,6 +76,10 @@ export function config(env = process.env) {
     capacity: 4, // workspaces the machine runs at once (ws.mjs MAX_RUNNING)
     // Fallback to Claude (claude.mjs): the gateway's grants file, its usage token, the ceilings.
     claude: claudeConfig(env),
+    // Web search and downloads: the grants file the gateway reads (GATEWAY_WEB_FILE there), and
+    // the provider's name for the line under the approval ("The words of the search go to …").
+    webFile: env.OLA_FD_WEB_FILE ?? path.join(WS_HOME, 'gateway-web'),
+    searchProvider: env.OLA_FD_SEARCH_PROVIDER ?? 'Brave Search',
     // Shown in the delete confirmation. The product decision: a deleted file leaves the workspace
     // at once and stays in encrypted backups for up to 14 days.
     deleteNotice:
@@ -151,7 +156,8 @@ export function makeFrontDesk(cfg = config()) {
   const originHost = new URL(cfg.origin).host
   const log = (m) => console.log(JSON.stringify({ t: new Date().toISOString(), event: 'frontdesk', msg: String(m).slice(0, 300) }))
   const auth = makeAuth({ db, keys, origin: cfg.origin, session: cfg.session, limits: cfg.limits, log })
-  const workspaces = makeWorkspaces({ db, keys, log, idleStopMs: cfg.idleStopMs, runCeilingMs: cfg.runCeilingMs })
+  const web = makeWeb({ db, file: cfg.webFile, providerName: cfg.searchProvider, log })
+  const workspaces = makeWorkspaces({ db, keys, log, idleStopMs: cfg.idleStopMs, runCeilingMs: cfg.runCeilingMs, webModeOf: (slug) => web.modeBySlug(slug) })
   const clientOf = (req) => req.socket.olaClient ?? addressKey(req.socket.remoteAddress)
 
   // "People working": how many people made a request in the last whole window (5 minutes), all
@@ -234,6 +240,8 @@ export function makeFrontDesk(cfg = config()) {
     const out = []
     for (const f of list) {
       if (f.type !== 'file' || f.path.split('/').some((p) => p.startsWith('.') || p === 'node_modules' || p === '__pycache__') || !workspaces.validRel(f.path)) continue
+      // The project database is shown under Data, not as a file (and its -wal and -shm never).
+      if (/^project\.db(-wal|-shm|-journal)?$/.test(f.path)) continue
       const at = up.get(nameRef(keys, ws.id, f.path).toString('hex'))
       out.push({ path: f.path, size: f.size, modified: new Date((f.mtime ?? 0) * 1000).toISOString(), origin: at ? 'uploaded' : 'made', uploaded: at ? new Date(at).toISOString() : null })
       shas.set(`${ws.slug}\0${f.path}`, f.sha256)
@@ -294,8 +302,30 @@ export function makeFrontDesk(cfg = config()) {
       // project (or any other request) does.
       if (p === '/oc/api/event' && workspaces.isAsleep(ws.slug)) return json(res, 503, { error: 'asleep', message: 'Your workspace is resting. Open the project to wake it.' }, { 'retry-after': '30' })
       await workspaces.ensureRunning(ws.slug)
+      // An answer to a permission request: a web search or download in it becomes a grant for the
+      // gateway first (web.mjs), and "Always in this project" is kept for the project.
+      const reply = /^\/oc\/api\/session\/([A-Za-z0-9_-]{1,80})\/permission\/([A-Za-z0-9_-]{1,80})\/reply$/.exec(p)
+      if (reply && req.method === 'POST') {
+        const body = await readJson(req, 16 * 1024)
+        if (!body || typeof body.decision !== 'string') return json(res, 400, { error: 'bad_json' })
+        const ask = (m, pathname, b) => workspaces.ocCall(ws.slug, m, pathname, b)
+        const decision = await web.onReply(ws, sess.personId, reply[1], reply[2], body.decision, ask)
+        const r = await ask('POST', `/api/session/${reply[1]}/permission/${reply[2]}/reply`, { decision, ...(typeof body.message === 'string' ? { message: body.message.slice(0, 2000) } : {}) })
+        if (r.status >= 400) return json(res, r.status === 404 ? 404 : 502, { error: 'reply_failed', message: 'Your answer did not reach Ola. Try again.' })
+        return res.writeHead(204, { 'cache-control': 'no-store' }).end()
+      }
       hold()
       return workspaces.forward(ws.slug, ws.id, sess.personId, req, res, p.slice(3), url.search)
+    }
+
+    // The project's settings: web search and downloads (shown to everyone, changed by owners and members).
+    if (p === '/api/settings' && req.method === 'GET') return json(res, 200, { web: web.settings(ws), role: ws.role })
+    if (p === '/api/settings/web' && req.method === 'POST') {
+      if (!canRun) return json(res, 403, readOnly)
+      const body = await readJson(req)
+      if (typeof body?.always !== 'boolean') return json(res, 400, { error: 'bad_json' })
+      web.setAlways(ws, sess.personId, body.always)
+      return json(res, 200, { web: web.settings(ws) })
     }
 
     if (p === '/api/project' && req.method === 'GET') {
@@ -361,6 +391,25 @@ export function makeFrontDesk(cfg = config()) {
     // Runs stopped at the ceiling (the page asks when a run is interrupted, to say why), from the
     // front desk's memory: no exec, does not wake the workspace, is not use.
     if (p === '/api/runs' && req.method === 'GET') return json(res, 200, workspaces.runsOf(ws.slug))
+    // Data: the project database, read-only, through `ola-db api` inside the VM (never opened on
+    // the host). Each request is one exec with a time and size cap, and one transfer slot.
+    if (p.startsWith('/api/data') && req.method === 'GET') {
+      const slot = takeSlot(sess.personId, ws.slug)
+      if (!slot) return json(res, 429, tooMany, { 'retry-after': '5' })
+      const busy = workspaces.holdBusy(ws.slug)
+      try {
+        await workspaces.ensureRunning(ws.slug)
+        return await dataRoute(req, res, ws, url, p, hold)
+      } catch (e) {
+        if (e?.code === 'NO_TABLE') return json(res, 404, { error: 'no_table', message: 'That table is not in this project’s data any more.' })
+        if (e?.code === 'DB_FAILED') return json(res, 502, { error: 'data_failed', message: /long/.test(e.message) ? 'That took too long. Try a narrower search.' : 'The project’s data could not be read just now. Try again in a minute.' })
+        throw e
+      } finally {
+        slot.release()
+        busy()
+      }
+    }
+
     // Every other route runs at least one `container exec`: one transfer slot each.
     const upload = p === '/api/files' && req.method === 'POST'
     let slot = null
@@ -383,6 +432,50 @@ export function makeFrontDesk(cfg = config()) {
       slot.release()
       busy()
     }
+  }
+
+  const TABLE = /^[A-Za-z0-9_][A-Za-z0-9_ .-]{0,127}$/
+  const intParam = (url, k, d, max) => Math.min(max, Math.max(0, Number.parseInt(url.searchParams.get(k) ?? '', 10) || d))
+  async function dataRoute(req, res, ws, url, p, hold) {
+    if (p === '/api/data') return json(res, 200, await workspaces.dbApi(ws.slug, ['tables']))
+    if (p === '/api/data/table') {
+      const name = url.searchParams.get('name') ?? ''
+      if (!TABLE.test(name)) return json(res, 404, NOT_FOUND)
+      const args = ['browse', '--table', name, '--offset', String(intParam(url, 'offset', 0, 1e9)), '--limit', String(intParam(url, 'limit', 50, 200) || 50)]
+      const sort = url.searchParams.get('sort')
+      if (sort && sort.length <= 128) args.push('--sort', sort, '--dir', url.searchParams.get('dir') === 'desc' ? 'desc' : 'asc')
+      const q = url.searchParams.get('q')
+      if (q && q.trim()) args.push('--q', q.slice(0, 200))
+      return json(res, 200, await workspaces.dbApi(ws.slug, args))
+    }
+    if (p === '/api/data/docs') {
+      const args = ['docs', '--offset', String(intParam(url, 'offset', 0, 1e9)), '--limit', String(intParam(url, 'limit', 50, 100) || 50)]
+      const q = url.searchParams.get('q')
+      if (q && q.trim()) args.push('--q', q.slice(0, 200))
+      return json(res, 200, await workspaces.dbApi(ws.slug, args))
+    }
+    if (p === '/api/data/download' || p === '/api/data/xlsx') {
+      const name = url.searchParams.get('name') ?? ''
+      if (p === '/api/data/xlsx' && !TABLE.test(name)) return json(res, 404, NOT_FOUND)
+      const s = workspaces.dbStream(ws.slug, p === '/api/data/download' ? ['backup'] : ['xlsx', '--table', name])
+      res.on('close', () => s.kill())
+      hold()
+      const file = p === '/api/data/download' ? `${ws.slug}-data.db` : `${name}.xlsx`
+      let started = false
+      for await (const c of s.stream) {
+        if (!started) {
+          started = true
+          res.writeHead(200, { 'content-type': p === '/api/data/download' ? 'application/vnd.sqlite3' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'content-disposition': `attachment; filename*=UTF-8''${encodeURIComponent(file)}`, 'cache-control': 'no-store' })
+        }
+        if (!res.write(c)) await new Promise((r) => (res.once('drain', r), res.once('close', r)))
+        if (res.destroyed) break
+      }
+      const code = await s.done
+      if (!started) return json(res, code === 4 ? 404 : 502, code === 4 ? NOT_FOUND : { error: 'data_failed', message: 'The download could not be made just now. Try again in a minute.' })
+      if (code !== 0) return res.destroy()
+      return res.end()
+    }
+    return json(res, 404, NOT_FOUND)
   }
 
   async function transfer(req, res, sess, ws, url, p, canRun, readOnly, slot, hold) {
@@ -417,6 +510,12 @@ export function makeFrontDesk(cfg = config()) {
       const ref = nameRef(keys, ws.id, name)
       db.prepare('INSERT INTO uploads (workspace_id, name_ref, sha256, size, at) VALUES (?, ?, ?, ?, ?) ON CONFLICT (workspace_id, name_ref) DO UPDATE SET sha256 = excluded.sha256, size = excluded.size, at = excluded.at').run(ws.id, ref, got.sha256, got.size, Date.now())
       audit(db, { actor: sess.personId, action: 'file_uploaded', workspace: ws.id, nameRef: ref, sha256: got.sha256, size: got.size })
+      // A document (PDF, page, text, Word, PowerPoint) is recorded and indexed in the project
+      // database, as one Ola downloads is. Not awaited: a long PDF takes a few seconds.
+      if (workspaces.isDocument(name)) {
+        const done = workspaces.holdBusy(ws.slug)
+        workspaces.dbAdd(ws.slug, name, { by: 'upload' }).then((ok) => ok || log(`${ws.slug}: an upload could not be indexed`)).finally(done)
+      }
       return json(res, 201, { path: name, size: got.size, sha256: got.sha256 })
     }
     if (p.startsWith('/api/files/')) {
@@ -477,6 +576,8 @@ export function makeFrontDesk(cfg = config()) {
       if (req.method === 'DELETE') {
         if (!canRun) return json(res, 403, readOnly)
         if (!(await workspaces.removeFile(ws.slug, rel))) return json(res, 404, NOT_FOUND)
+        // Its document row and index entries go with it.
+        await workspaces.dbRemove(ws.slug, rel)
         const row = db.prepare('SELECT sha256, size FROM uploads WHERE workspace_id = ? AND name_ref = ?').get(ws.id, ref)
         db.prepare('DELETE FROM uploads WHERE workspace_id = ? AND name_ref = ?').run(ws.id, ref)
         audit(db, { actor: sess.personId, action: 'file_deleted', workspace: ws.id, nameRef: ref, sha256: row?.sha256 ?? null, size: row?.size ?? null })
@@ -550,7 +651,7 @@ export function makeFrontDesk(cfg = config()) {
              WHERE m.person_id = ? AND w.status = 'active' ORDER BY w.name`,
           )
           .all(sess.personId)
-        return json(res, 200, { person: { handle: sess.handle, name: sess.name }, csrf: sess.csrf, workspaces: list, machine: { working: working(), capacity: cfg.capacity }, policy: { deleteNotice: cfg.deleteNotice, maxUpload: cfg.maxUpload }, notices: auth.notices(sess) })
+        return json(res, 200, { person: { handle: sess.handle, name: sess.name }, csrf: sess.csrf, workspaces: list, machine: { working: working(), capacity: cfg.capacity }, policy: { deleteNotice: cfg.deleteNotice, maxUpload: cfg.maxUpload, searchProvider: cfg.searchProvider }, notices: auth.notices(sess) })
       }
       // "Open" on a page: a navigation from the app (same-origin, so the Strict cookie came along).
       if (p === '/api/open' && req.method === 'GET') return views.open(req, res, sess, url)
@@ -647,7 +748,7 @@ export function makeFrontDesk(cfg = config()) {
     if (!server.listeners('listening').some((f) => f.name === 'setupConnectionsTracking')) throw new Error('this Node does not start HTTP timeouts on listening; the PROXY protocol mode needs review')
     listener.once('listening', () => server.emit('listening'))
   } else server.on('connection', (sock) => admit(sock, addressKey(sock.remoteAddress)))
-  return { server, listener, db, cfg, workspaces, views, claude, close: () => (claude.close(), workspaces.close(), listener.close(), listener !== server && server.close(), db.close()) }
+  return { server, listener, db, cfg, workspaces, views, claude, close: () => (claude.close(), workspaces.close(), web.close(), listener.close(), listener !== server && server.close(), db.close()) }
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

@@ -27,6 +27,12 @@
     { "action": "*", "resource": "*", "effect": "allow" },
     { "action": "webfetch", "resource": "*", "effect": "deny" },
     { "action": "websearch", "resource": "*", "effect": "deny" },
+    // Ola's own web tools ask the person first (the front desk sets the same rules per session,
+    // from the project's choice); the gateway refuses what the project did not approve.
+    { "action": "shell", "resource": "ola-search *", "effect": "ask" },
+    { "action": "shell", "resource": "ola-fetch *", "effect": "ask" },
+    { "action": "shell", "resource": "/opt/ola/bin/ola-search *", "effect": "ask" },
+    { "action": "shell", "resource": "/opt/ola/bin/ola-fetch *", "effect": "ask" },
     { "action": "external_directory", "resource": "*", "effect": "deny" },
     // the desktop app's browser and preview tool: there is no desktop app here
     { "action": "browser", "resource": "*", "effect": "deny" }

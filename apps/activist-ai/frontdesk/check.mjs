@@ -16,7 +16,7 @@
 // OLA_CHECK_FD_PORT (4790; it also uses the next two) and OLA_CHECK_GW_PORT (4182).
 import { spawn, spawnSync } from 'node:child_process'
 import { createHash, randomBytes } from 'node:crypto'
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import http from 'node:http'
 import net from 'node:net'
 import { homedir, tmpdir } from 'node:os'
@@ -183,6 +183,10 @@ const gwEnv = {
   GATEWAY_CLAUDE_UPSTREAM: fakeClaude.url,
   CLAUDE_API_KEY: 'sk-made-up-key-for-the-stand-in-0000',
   GATEWAY_USAGE_TOKEN: env.OLA_FD_GATEWAY_USAGE_TOKEN,
+  // Web search and downloads: the front desk's grants file (OLA_FD_WEB_FILE defaults to this) and
+  // the made-up search provider.
+  GATEWAY_WEB_FILE: path.join(env.OLA_HOME, 'gateway-web'),
+  GATEWAY_SEARCH_PROVIDER: 'mock',
 }
 let gateway = start('gateway', 'gateway/server.mjs', gwEnv)
 await until(() => gateway.log.includes('"event":"start"'), 10_000, 'the gateway start')
@@ -825,6 +829,110 @@ await check('a viewer reads but cannot upload, delete or run', async () => {
   assert(!(await V.page.locator('#askbar-input').isVisible()) && !(await V.page.getByRole('button', { name: 'Add files' }).count()), 'the viewer sees Ask Ola or Add files')
   return `${sampleRoutes.filter(([m]) => m !== 'GET').length + 2} writes refused`
 })
+
+// ---------------------------------------------------------------- Data and the web (2.3.0-8)
+const PDF = spawnSync('python3', [path.join(AI, 'workspace/testdata/mkpdf.py'), 'Page one is about drought in the Sahel.', 'Page two covers mangrove restoration in Tanzania.', 'Page three is about flood insurance.']).stdout
+await check('Data: an uploaded PDF is indexed by page, a search cites page 2, the database downloads whole; delete takes it out; bob gets 404, the viewer reads', async () => {
+  const base = { cookie: a.cookie, csrf: a.csrf, ws: FA }
+  const up = await api('/api/files?name=made-up%20report.pdf', { ...base, method: 'POST', body: PDF, headers: { 'content-type': 'application/octet-stream' } })
+  assert(up.status === 201, `upload ${up.status}`)
+  await until(async () => (await api('/api/data', base)).json?.documents?.count === 1, 30_000, 'the PDF to be indexed')
+  const hits = (await api('/api/data/docs?q=mangrove', base)).json
+  assert(hits.hits?.[0]?.page === 2 && hits.hits[0].path === 'made-up report.pdf' && hits.hits[0].snip.includes('\u0002mangrove\u0003'), JSON.stringify(hits).slice(0, 200))
+  const list = (await api('/api/files', base)).json.files.map((f) => f.path)
+  assert(!list.some((f) => /^project\.db/.test(f)), 'the database files are listed under Files')
+  const dl = await fetch(`${ORIGIN}/api/data/download?w=${FA}`, { headers: { cookie: `${CK}=${a.cookie}` } })
+  const head = Buffer.from(await dl.arrayBuffer())
+  assert(dl.status === 200 && head.subarray(0, 15).toString() === 'SQLite format 3' && /attachment/.test(dl.headers.get('content-disposition') ?? ''), `download ${dl.status}`)
+  const bobs = await Promise.all(['/api/data', '/api/data/docs?q=x', '/api/data/table?name=documents', '/api/data/download', '/api/settings'].map((p) => api(p, { cookie: b.cookie, ws: FA })))
+  assert(bobs.every((r) => r.status === 404), `bob: ${bobs.map((r) => r.status)}`)
+  assert((await api('/api/data', { cookie: v.cookie, ws: FA })).status === 200, 'the viewer cannot read Data')
+  const del = await api(`/api/files/${encodeURIComponent('made-up report.pdf')}`, { ...base, method: 'DELETE' })
+  const after = (await api('/api/data/docs?q=mangrove', base)).json
+  assert(del.status === 200 && after.total === 0 && (await api('/api/data', base)).json.documents.count === 0, `after delete: ${JSON.stringify(after).slice(0, 120)}`)
+  return `${head.length} bytes of database`
+})
+
+const webFile = path.join(env.OLA_HOME, 'gateway-web')
+const grants = () => JSON.parse(readFileSync(webFile, 'utf8'))
+await check('Settings: web access per project, owners and members change it, the viewer cannot, each change in the audit log and the gateway file', async () => {
+  const base = { cookie: a.cookie, csrf: a.csrf, ws: FA }
+  assert((await api('/api/settings', { cookie: v.cookie, ws: FA })).json?.web?.always === false, 'starts off')
+  assert((await api('/api/settings/web', { cookie: v.cookie, csrf: v.csrf, ws: FA, method: 'POST', body: '{"always":true}' })).status === 403, 'the viewer changed it')
+  const on = await api('/api/settings/web', { ...base, method: 'POST', body: '{"always":true}' })
+  assert(on.json?.web?.always === true && on.json.web.changedBy === 'Alice A.', JSON.stringify(on.json))
+  assert(grants()[`ws-${FA}`]?.always === true && !grants()[`ws-${FB}`], 'the gateway file')
+  const off = await api('/api/settings/web', { ...base, method: 'POST', body: '{"always":false}' })
+  assert(off.json?.web?.always === false && !grants()[`ws-${FA}`], 'revoked in the gateway file')
+  const rows = auditRows(FA).map((r) => r.action)
+  assert(rows.includes('web_allowed') && rows.includes('web_revoked'), `audit: ${rows.slice(0, 6)}`)
+  assert((statSync(webFile).mode & 0o777) === 0o600, 'the gateway file is not mode 600')
+})
+
+if (!LIVE) {
+  // The approval in the page, with the scripted model ("search the web for …" runs one ola-search
+  // in the sealed workspace) and the made-up search provider behind the gateway.
+  const Q = 'made-up flood maps for Springfield'
+  const searchLines = () => gateway.log.split('\n').filter((l) => l.includes(`"caller":"ws-${FA}"`) && l.includes('"route":"search"')).map((l) => JSON.parse(l))
+  async function webAsk() {
+    await A.page.goto('about:blank')
+    await A.page.goto(`${ORIGIN}/?w=${FA}#/`)
+    await A.page.waitForSelector('.project-title')
+    await A.page.getByRole('button', { name: 'Ask Ola' }).first().click()
+    await A.page.locator('button:has-text("New conversation")').first().click({ timeout: 2000 }).catch(() => {})
+    await A.page.fill('#ask-input', `Please search the web for ${Q}`)
+    await A.page.press('#ask-input', 'Enter')
+  }
+  const done = () => A.page.waitForFunction(() => ['done', 'failed', 'stopped'].includes([...document.querySelectorAll('.drawer .turn')].pop()?.dataset.status ?? ''), null, { timeout: 60_000 })
+  await check('the first web search asks in plain words; Allow once runs that search and is not remembered', async () => {
+    const n = searchLines().length
+    await webAsk()
+    const dialog = A.page.locator('dialog.approval[open]')
+    await dialog.waitFor({ timeout: 60_000 })
+    const title = await dialog.locator('h2').innerText()
+    assert(title.includes('Ola wants to search the web for:') && title.includes(Q), title)
+    assert((await dialog.locator('.web-leaves').innerText()).includes('The words of the search go to Brave Search. Nothing from your files is sent.'), 'the line under it')
+    await dialog.getByRole('button', { name: 'Allow once' }).click()
+    await done()
+    await until(() => searchLines().length > n, 10_000, 'the search at the gateway')
+    const l = searchLines().at(-1)
+    assert(l.status === 200 && l.grant === 'once', JSON.stringify(l))
+    assert((await api('/api/settings', { cookie: a.cookie, ws: FA })).json.web.always === false, 'once was remembered as always')
+  })
+  await check('Always in this project: remembered across conversations (no second question), shown in Settings, revoked there, and then asked again; Not now searches nothing', async () => {
+    await webAsk()
+    let dialog = A.page.locator('dialog.approval[open]')
+    await dialog.waitFor({ timeout: 60_000 })
+    await dialog.getByRole('button', { name: 'Always in this project' }).click()
+    await done()
+    assert(searchLines().at(-1)?.grant === 'always' || searchLines().at(-1)?.grant === 'once', 'the search ran')
+    // A new conversation: no question this time, and the gateway lets it through as "always".
+    const n = searchLines().length
+    await webAsk()
+    await done()
+    assert(!(await A.page.locator('dialog.approval[open]').count()), 'asked again after Always')
+    await until(() => searchLines().length > n, 10_000, 'the second search')
+    assert(searchLines().at(-1).grant === 'always' && searchLines().at(-1).status === 200, JSON.stringify(searchLines().at(-1)))
+    // Settings shows it; its switch takes it back.
+    await A.page.goto(`${ORIGIN}/?w=${FA}#/settings`)
+    await A.page.getByText('On. Ola may search the web and download documents', { exact: false }).waitFor({ timeout: 15_000 })
+    await A.page.getByRole('switch', { name: 'Search and download without asking' }).click()
+    await A.page.getByText('Off. Ola asks before each web search or download.', { exact: false }).waitFor()
+    const m = searchLines().length
+    await webAsk()
+    dialog = A.page.locator('dialog.approval[open]')
+    await dialog.waitFor({ timeout: 60_000 })
+    await dialog.getByRole('button', { name: 'Not now' }).click()
+    await done()
+    await sleep(1500)
+    assert(searchLines().length === m, 'a search reached the gateway after Not now')
+    const actions = auditRows(FA).map((r) => r.action)
+    assert(actions.filter((x) => x === 'web_allowed').length >= 2 && actions.filter((x) => x === 'web_revoked').length >= 2, 'the audit log')
+    // Neither the platform database nor the gateway's file holds the search words.
+    const dbText = readFileSync(path.join(env.OLA_FD_DATA, 'platform.db')).toString('latin1') + (existsSync(path.join(env.OLA_FD_DATA, 'platform.db-wal')) ? readFileSync(path.join(env.OLA_FD_DATA, 'platform.db-wal')).toString('latin1') : '')
+    assert(!dbText.includes('flood maps') && !readFileSync(webFile, 'utf8').includes('flood') && !gateway.log.includes('flood maps'), 'the search words were written down')
+  })
+}
 
 await check("removing a member: their open stream is cut by the recheck, then the workspace gets new secrets", async () => {
   const old = secretsOf(FA)

@@ -1,4 +1,4 @@
-// The project's settings: today one, "Fallback to Claude". Off unless the project's owner turns
+// The project's settings: "Fallback to Claude" (below), and web search and downloads (WebSetting.tsx). Claude is off unless the project's owner turns
 // it on, after reading what it means and confirming. With it on: when Claude takes over by itself
 // (three stops, the first the default), and this month's use against the ceiling.
 import { createEffect, createSignal, For, Show } from 'solid-js'
@@ -6,6 +6,7 @@ import type { Ola } from '../lib/ola.ts'
 import type { ClaudeAuto, Problem } from '../lib/types.ts'
 import { claude, DeskError } from '../lib/api.ts'
 import { ProblemBox } from './Drawer.tsx'
+import { WebSetting } from './WebSetting.tsx'
 
 export const CONSENT =
   'When this is on, you can hand a request to Claude Code, run with Anthropic’s Claude. Your request, and the parts of your files Claude reads to answer it, leave this machine and go to Anthropic. It is off unless you turn it on. Every use is marked, and you can turn it off at any time.'
@@ -23,7 +24,7 @@ const share = (used: number, cap: number) => {
   return `${pct > 0 && pct < 1 ? 'Less than 1%' : `${Math.min(100, Math.round(pct))}%`} of this month’s share used`
 }
 
-export function SettingsView(props: { ola: Ola; titleRef?: (el: HTMLHeadingElement) => void }) {
+export function SettingsView(props: { ola: Ola; titleRef?: (el: HTMLHeadingElement) => void; canWrite?: boolean }) {
   const info = () => props.ola.state.claude
   const [busy, setBusy] = createSignal(false)
   const [problem, setProblem] = createSignal<Problem | null>(null)
@@ -57,7 +58,7 @@ export function SettingsView(props: { ola: Ola; titleRef?: (el: HTMLHeadingEleme
             <h1 id="settings-title" class="files-title" ref={props.titleRef} tabindex="-1">
               Settings
             </h1>
-            <p class="files-lede">How this project works. Only its owner can change these.</p>
+            <p class="files-lede">How this project works, and what may leave this machine.</p>
           </div>
         </div>
 
@@ -129,6 +130,7 @@ export function SettingsView(props: { ola: Ola; titleRef?: (el: HTMLHeadingEleme
             </div>
           )}
         </Show>
+        <WebSetting canWrite={props.canWrite ?? false} />
       </div>
 
       <dialog ref={confirm} class="sheet confirm" aria-labelledby="claude-confirm-title" aria-describedby="claude-confirm-text" onClose={() => setAsking(false)}>
