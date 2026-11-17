@@ -13,6 +13,7 @@
 // Claude Code also sends side requests (a title, a summary, count_tokens): each gets a short text.
 // Every reply reports usage, so the gateway counts tokens as it does for Anthropic.
 import http from 'node:http'
+import { claudeTwinStep, isJudgeRequest, judgeAnswer } from './fake-twin.mjs'
 
 const textOf = (content) => (typeof content === 'string' ? content : Array.isArray(content) ? content.map((p) => (p.type === 'text' ? p.text : '')).join(' ') : '')
 
@@ -25,11 +26,13 @@ const toolResults = (messages) => (messages ?? []).flatMap((m) => (m.role === 'u
 const has = (tools, name) => (tools ?? []).some((t) => t.name === name)
 
 export function startFakeAnthropic({ port = 0 } = {}) {
-  const st = { calls: 0, tasks: 0, reactionsRule: 0 }
+  // bodies: every request body as sent (the checks assert that nothing of a project reached Claude)
+  const st = { calls: 0, tasks: 0, reactionsRule: 0, judged: 0, bodies: [] }
   const server = http.createServer(async (req, res) => {
     let raw = ''
     for await (const c of req) raw += c
     st.calls++
+    if (st.bodies.length < 2000) st.bodies.push(raw)
     let body = {}
     try {
       body = JSON.parse(raw || '{}')
@@ -44,7 +47,12 @@ export function startFakeAnthropic({ port = 0 } = {}) {
     const w = /write (\S+) saying (\S+)/.exec(ask)
     const r = /run (.+?)(?:\.|$)/m.exec(ask)
     const s = /slow (\d+)x(\d+)/.exec(ask)
-    if (main && w && has(body.tools, 'Write')) {
+    const twin = main && has(body.tools, 'Bash') ? claudeTwinStep(ask, done) : null
+    if (isJudgeRequest(body)) {
+      st.judged++
+      reply = { text: judgeAnswer(body) }
+    } else if (twin) reply = twin
+    else if (main && w && has(body.tools, 'Write')) {
       if (!done.length) reply = { tool: 'Write', input: { file_path: `/work/${w[1]}`, content: `${w[2]}\n` } }
       else reply = { text: /denied|reject|not allowed|permission/i.test(JSON.stringify(done.at(-1))) ? `I was not allowed to write ${w[1]}.` : `Done. It is in your Files as ${w[1]}.` }
     } else if (main && s && has(body.tools, 'Bash')) {

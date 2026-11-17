@@ -89,6 +89,15 @@ export function onceGrants(db, engine) {
   return out
 }
 
+/** The comparisons' scratch VMs granted an engine now (compare.mjs), from the database. */
+export function scratchGrants(db, engine) {
+  try {
+    return db.prepare('SELECT slug, mode, cap_micro_usd, cap_tokens, until FROM compare_scratch WHERE engine = ? AND until > ? ORDER BY slug').all(engine, Date.now())
+  } catch {
+    return [] // a database before migration 9
+  }
+}
+
 /** Writes a grants file for the gateway: one JSON object, mode 600, by rename. */
 export function writeGrantsFile(file, grants) {
   // A name of its own per writer: the server and the admin CLI both write these files, and with
@@ -112,6 +121,9 @@ export function writeGrants(db, cc) {
     if (w.enabled !== 1 && !once.has(w.id)) continue
     grants[`ws-${w.slug}`] = { mode: modeFor(db, w.id), cap_micro_usd: w.usd ?? cc.capMicroUsd, cap_tokens: w.tokens ?? cc.capTokens, ...(w.enabled === 1 ? {} : { until: once.get(w.id) }) }
   }
+  // "Compare with Claude" (compare.mjs): a scratch VM holding only a comparison's task, granted for
+  // that comparison alone, its project's mode, what is left of its comparison budget as the ceiling.
+  for (const g of scratchGrants(db, 'claude')) grants[`ws-${g.slug}`] = { mode: g.mode, cap_micro_usd: g.cap_micro_usd, cap_tokens: g.cap_tokens, until: g.until }
   return writeGrantsFile(cc.file, grants)
 }
 

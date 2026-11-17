@@ -63,6 +63,10 @@
 # through the door to the gateway by a fixed name (gateway/specialists.mjs, /web/lookup); and
 # AGENTS.md says when to use them. pdftoppm
 # (already in poppler-utils) turns PDF pages into pictures.
+# 2.3.0-18: ola-twin ("Compare with Claude"): a made-up copy of a finished request, made here with
+# Ola's own model, its generator run in a sandbox, and the mechanical leak check against the
+# project's own text before anything leaves (lib/olatwin.py, lib/common-words.txt); and the
+# scoring of an engine's result against the copy's checks in a scratch VM.
 
 ARG DEBIAN=docker.io/library/debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc
 
@@ -104,8 +108,8 @@ COPY --from=fetch /opencode /usr/local/bin/opencode
 COPY --from=fetch /claude /usr/local/bin/claude
 COPY opencode.jsonc AGENTS.md /opt/ola/config/opencode/
 COPY claude-ola.md /opt/ola/config/claude/ola.md
-COPY ola-init ola-files ola-put ola-get ola-rm ola-claude ola-db ola-search ola-fetch ola-page ola-batch ola-unzip ola-view olaspec.py ola-see ola-ocr ola-embed ola-rerank ola-translate ola-transcribe ola-draw ola-lookup /opt/ola/bin/
-COPY lib/olatext.py /opt/ola/lib/
+COPY ola-init ola-files ola-put ola-get ola-rm ola-claude ola-db ola-search ola-fetch ola-page ola-batch ola-unzip ola-view olaspec.py ola-see ola-ocr ola-embed ola-rerank ola-translate ola-transcribe ola-draw ola-lookup ola-twin /opt/ola/bin/
+COPY lib/olatext.py lib/olatwin.py lib/common-words.txt /opt/ola/lib/
 # Ola's skills, and the system config that makes them the only ones (see the header).
 COPY opencode-system.jsonc /etc/opencode/opencode.jsonc
 COPY skills /opt/ola/skills

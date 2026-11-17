@@ -1,0 +1,34 @@
+# The fixed list for the leak check of a made-up copy (olatwin.py): common English words, and the
+# plain words for files and columns. A word on this list may appear in a copy and in a project's
+# own files at once without being a leak. Anything else shared is a finding. One or more words a
+# line; lines starting with # are notes.
+a about above across act action actions active actual actually add added adding address after again against age ago agree ahead all allow almost alone along already also although always am among amount an analysis and annual another answer answers any anyone anything appear apply approach april are area areas around as ask asked at august available average away
+back bad base based basic be became because become been before began begin behind being below best better between big bit both bottom box break bring brought build building built business but by
+call called came can cannot case cases category cause center central certain change changed changes check checked checks child children choose city clean cleaned clear close code coded coding column columns come common compare complete count counted counts country county course create created current cut
+daily data date dates day days december decide decided decision deep describe description detail details did different direction do document documents does done down draft due during duplicate duplicates
+each early easy edit eight either else empty end ended english enough entry entries error errors even event events ever every example except export extra
+fact fall false far february few field fields figure figures file files fill final find first five fix fixed follow following for form format formats found four free friday from front full
+gave general get give given go goal going good got great group groups grow
+had half hand happen has have he head header headers heading headings help her here high him his hold home hour hours how however hundred
+i id idea me mine ids if important in include included including income increase index info information input inputs inside instead into is issue issues it item items its itself
+january job join joined july june just keep key kind kinds know known
+label language large last late later least leave left less let level line lines list listed little local long look lost low
+made main make makes making many march mark matter may maybe mean measure meet member members message method middle might million minute minutes miss missing mixed monday money month monthly months more most move much must my
+name named names near need needed never new next nine no none not note notes nothing november now number numbers
+october of off office often old on once one only open or order other others our out output outputs over own
+page pages paper part parts past pay people per percent period person place plan point points possible present program project put
+quarter quarters question questions quick quite
+range rate rather read real really reason record records region regions remove removed report reports request result results right row rows rule rules run
+said same saturday save say says second section see seem september set seven several shall share sheet sheets short should show side since single six size small so some something sometimes soon sort source sources space start state states status step still stop study such sum summary sunday sure
+table tables take tell ten term test text than that the their them then there these they thing things think third this those though thousand three through thursday time times title to today together too top total totals toward town true try tuesday turn two type types
+under unique unit units until up update upon us use used using usual
+value values very view
+want was way we wednesday week weekly weeks well were what when where whether which while who whole why will with within without word words work write written wrong
+year yearly years yes yet you your
+# the words of requests: what people ask for
+repeat repeated repeats repeating removing removes drop dropped dropping cleaning sorted sorting filter filtered merge merged combine combined split convert converted extract extracted summarize summarized calculate calculated compute computed plot chart charts map maps rename renamed brief memo letter email emails quote quotes quoted cite cited citation citations median mean percent percentage share growth trend trends blank blanks typo typos misspelled misspelling misspellings spelling inconsistent spreadsheet workbook website webpage dashboard bullet bullets paragraph paragraphs sentence sentences translate translated translation spanish french german flag flagged highlight highlighted invented generic copy copies persons team teams north south east west
+# plain words for files, sheets and columns
+csv tsv xlsx xls md txt pdf docx json html htm db sqlite png svg jpg zip
+amount amounts category code comment comments cost costs count created_at currency email first_name last_name full_name notes phone postal_code status street zip_code
+file1 file2 file3 data1 data2 sheet1 sheet2 table1 table2 part1 part2 a1 b1
+survey surveys donation donations grant grants payment payments member members event events volunteer volunteers report reports response responses respondent respondents sale sales station stations reading readings measurement measurements vote votes minutes meeting meetings study studies law laws article articles case cases contact contacts site sites rainfall temperature budget budgets invoice invoices order orders entry entries

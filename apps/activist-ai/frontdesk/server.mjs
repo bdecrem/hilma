@@ -35,6 +35,7 @@ import { CONTAINER, HOME as WS_HOME } from '../workspace/ws.mjs'
 import { makeWeb } from './web.mjs'
 import { hostedConfig, makeHosted } from './hosted.mjs'
 import { jobsConfig, makeJobs } from './jobs.mjs'
+import { compareConfig, makeCompare } from './compare.mjs'
 import { routeNeed } from '../web/server/proxy.mjs'
 import { tooLargeMessage, validName } from '../web/server/files.mjs'
 import { closeAfter, lingering, readUpTo } from '../web/server/linger.mjs'
@@ -90,6 +91,7 @@ export function config(env = process.env) {
     hosted: hostedConfig(env),
     // Batch jobs (jobs.mjs): the gateway's job grants file, how often jobs are looked after.
     jobs: jobsConfig(env),
+    compare: compareConfig(env),
     // Shown in the delete confirmation. The product decision: a deleted file leaves the workspace
     // at once and stays in encrypted backups for up to 14 days.
     deleteNotice:
@@ -241,6 +243,7 @@ export function makeFrontDesk(cfg = config()) {
   const claude = makeClaude({ db, cc: cfg.claude, container: CONTAINER, workspaces, runCeilingMs: cfg.runCeilingMs, log })
   const hosted = makeHosted({ db, hc: cfg.hosted, cc: cfg.claude, workspaces, runCeilingMs: cfg.runCeilingMs, log })
   const jobs = makeJobs({ db, jc: cfg.jobs, cc: cfg.claude, workspaces, hostedInfo: (w) => hosted.info(w), claudeInfo: (w) => claude.info(w), log })
+  const compare = makeCompare({ db, xc: cfg.compare, cc: cfg.claude, claude, hosted, workspaces, container: CONTAINER, log })
 
   const shas = new Map() // `${slug}\0${path}` -> sha256, as ola-files last said
   const MAX_LISTED = 1000
@@ -449,6 +452,22 @@ export function makeFrontDesk(cfg = config()) {
         return r ? json(res, r.status, r.body) : undefined
       }
       const r = what === 'answer' ? claude.answer(ws, body) : claude.stop(ws, body.run)
+      return json(res, r.status, r.body)
+    }
+    // "Compare with Claude" (compare.mjs): everything of it is the owner's; members and viewers get
+    // { canCompare: false } and no route that sends anything.
+    if (p === '/api/compare' && req.method === 'GET') return json(res, 200, await compare.info(ws, url.searchParams.get('conversation')))
+    if (p === '/api/compare/item' && req.method === 'GET') {
+      const r = await compare.show(ws, url.searchParams.get('id'))
+      return json(res, r.status, r.body)
+    }
+    if (p.startsWith('/api/compare/') && req.method === 'POST') {
+      const what = p.slice('/api/compare/'.length)
+      if (!['settings', 'start', 'send', 'discard'].includes(what)) return json(res, 404, NOT_FOUND)
+      if (ws.role !== 'owner') return json(res, 403, { error: 'owner_only', message: 'Only the project’s owner can compare with Claude.' })
+      const body = await readJson(req, 16 * 1024)
+      if (!body) return json(res, 400, { error: 'bad_json' })
+      const r = what === 'settings' ? await compare.setSettings(ws, sess.personId, body) : what === 'start' ? await compare.start(ws, sess.personId, body) : what === 'send' ? await compare.send(ws, sess.personId, body) : compare.discard(ws, body)
       return json(res, r.status, r.body)
     }
     // Runs stopped at the ceiling (the page asks when a run is interrupted, to say why), from the
@@ -918,10 +937,16 @@ export function makeFrontDesk(cfg = config()) {
              WHERE m.person_id = ? AND w.status = 'active' ORDER BY w.name`,
           )
           .all(sess.personId)
-        return json(res, 200, { person: { handle: sess.handle, name: sess.name }, csrf: sess.csrf, workspaces: list, machine: { working: working(), capacity: cfg.capacity }, policy: { deleteNotice: cfg.deleteNotice, maxUpload: cfg.maxUpload, searchProvider: cfg.searchProvider }, notices: auth.notices(sess) })
+        return json(res, 200, { person: { handle: sess.handle, name: sess.name, ...(sess.isAdmin ? { admin: true } : {}) }, csrf: sess.csrf, workspaces: list, machine: { working: working(), capacity: cfg.capacity }, policy: { deleteNotice: cfg.deleteNotice, maxUpload: cfg.maxUpload, searchProvider: cfg.searchProvider }, notices: auth.notices(sess) })
       }
       // "Open" on a page: a navigation from the app (same-origin, so the Strict cookie came along).
       if (p === '/api/open' && req.method === 'GET') return views.open(req, res, sess, url)
+      // The Quality page (admins only): comparisons over time, Ola against Claude, the copies; and
+      // the weekly number as a small JSON for the lead's board.
+      if ((p === '/api/quality' || p === '/api/quality/weekly') && req.method === 'GET') {
+        if (!sess.isAdmin) return json(res, 404, NOT_FOUND)
+        return json(res, 200, p === '/api/quality' ? compare.quality() : compare.weekly())
+      }
       if (p === '/api/signout' && req.method === 'POST') {
         auth.signOut(sess)
         return json(res, 200, { ok: true }, { 'set-cookie': auth.clearCookie })
@@ -1015,7 +1040,7 @@ export function makeFrontDesk(cfg = config()) {
     if (!server.listeners('listening').some((f) => f.name === 'setupConnectionsTracking')) throw new Error('this Node does not start HTTP timeouts on listening; the PROXY protocol mode needs review')
     listener.once('listening', () => server.emit('listening'))
   } else server.on('connection', (sock) => admit(sock, addressKey(sock.remoteAddress)))
-  return { server, listener, db, cfg, workspaces, views, claude, hosted, jobs, close: () => (jobs.close(), claude.close(), hosted.close(), workspaces.close(), web.close(), listener.close(), listener !== server && server.close(), db.close()) }
+  return { server, listener, db, cfg, workspaces, views, claude, hosted, jobs, compare, close: () => (compare.close(), jobs.close(), claude.close(), hosted.close(), workspaces.close(), web.close(), listener.close(), listener !== server && server.close(), db.close()) }
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

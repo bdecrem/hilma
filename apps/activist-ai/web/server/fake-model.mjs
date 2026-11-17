@@ -18,6 +18,7 @@
 // checks use it for runs longer than the idle limit, and longer than the run ceiling.
 import http from 'node:http'
 import { batchAnswer, isBatchRequest, newBatchState } from './fake-batch.mjs'
+import { isTwinRequest, twinAnswer } from './fake-twin.mjs'
 
 function lastUserText(messages) {
   for (let i = messages.length - 1; i >= 0; i--) {
@@ -72,6 +73,13 @@ export function startFakeModel({ hosted = false } = {}) {
       return send(400, { error: { message: 'bad json' } })
     }
     calls++
+    // "Compare with Claude": Ola's own model making a made-up copy of a task (fake-twin.mjs).
+    if (isTwinRequest(body)) {
+      const a = twinAnswer(body)
+      const r = reply({ content: a.content })
+      r.usage = { prompt_tokens: a.prompt, completion_tokens: a.completion, total_tokens: a.prompt + a.completion }
+      return send(200, r)
+    }
     // A batch job's form (workspace/ola-batch): answered from the document, with planted wrong
     // quotes for the checker to catch (fake-batch.mjs).
     if (isBatchRequest(body)) {

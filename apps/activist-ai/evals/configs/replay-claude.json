@@ -1,0 +1,6 @@
+{
+  "name": "replay-claude",
+  "harness": "replay",
+  "arm": "claude",
+  "model": "the recorded result of Claude in a comparison"
+}

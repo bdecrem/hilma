@@ -1,0 +1,267 @@
+#!/usr/bin/python3 -I
+"""ola-twin: "Compare with Claude", the part that runs inside the project's sealed VM.
+
+Only the front desk runs it (`container exec -i ola-<id> /opt/ola/bin/ola-twin ...`), JSON on stdin
+and stdout:
+
+  ola-twin make <id>     stdin {request, context, files: [paths the run read], seed}. Makes a
+                         made-up copy of the request with Ola's own model through the door: the
+                         request in general terms, a generator program that writes stand-in files
+                         of the same shape (run in a sandbox: it can write only its own folder and
+                         read nothing of the project), and checks a program runs. Then the leak
+                         check (olatwin.check_leaks) against an index of the project's own text and
+                         numbers. Prints the copy with its verdict (clean, unsure, leak) and the
+                         findings; keeps it in /work/.ola/twins/<id>/ for the owner to read.
+  ola-twin show <id>     the copy as kept, for the owner's page.
+  ola-twin score         stdin {checks, truth, final_text, inputs}: runs the checks against /work
+                         (in a scratch VM, after an engine's run). Prints passed / total / label.
+  ola-twin keep <id>     stdin: a comparison of the real task (Claude's result, the judged
+                         difference): kept in /work/.ola/compare/<id>.json, never on the host.
+  ola-twin result <id>   prints what `keep` kept.
+
+Nothing here logs content. The index of the project's text exists only while `make` runs.
+"""
+import base64, hashlib, http.client, json, os, re, sqlite3, sys, time
+from pathlib import Path
+
+sys.path.insert(0, "/opt/ola/lib")
+sys.path.insert(0, str(Path(__file__).resolve().parent / "lib"))  # the tests run it from the repo
+import olatwin as T  # noqa: E402
+
+WORK = Path(os.environ.get("OLA_TWIN_WORK", "/work")).resolve()
+STORE = WORK / ".ola" / "twins"
+GATEWAY = os.environ.get("OLA_BATCH_GATEWAY", "http://127.0.0.1:4180")
+ID = re.compile(r"^[0-9a-f]{12}$")
+MAX_INDEX = 48 * 1024 * 1024
+
+
+def out(obj):
+    sys.stdout.write(json.dumps(obj, ensure_ascii=False) + "\n")
+
+
+def fail(msg, code=2):
+    out({"error": msg})
+    sys.exit(code)
+
+
+def inside_work(rel):
+    try:
+        p = (WORK / str(rel).lstrip("/").removeprefix("work/")).resolve()
+    except (OSError, ValueError):
+        return None
+    w = WORK.resolve()
+    if p != w and w not in p.parents or (w / ".ola") in p.parents or not p.is_file():
+        return None
+    return p
+
+
+# ------------------------------------------------------------------ the index of the project
+
+
+def build_index(request, context, read_paths):
+    idx = T.Index()
+    idx.add_text(request)
+    idx.add_text(context)
+    budget = MAX_INDEX
+    seen = set()
+    for p in read_paths:
+        t = T.read_text(p)
+        budget -= len(t)
+        idx.add_text(t)
+        seen.add(p)
+    # every file name in the project, and the text of its text files (within the budget)
+    n = 0
+    for root, dirs, names in os.walk(WORK):
+        dirs[:] = [d for d in dirs if not (Path(root) == WORK and d == ".ola") and d not in ("node_modules", "__pycache__")]
+        for name in names:
+            n += 1
+            if n > 50_000:
+                break
+            p = Path(root) / name
+            idx.add_name(str(p.relative_to(WORK)))
+            if p in seen or p.suffix.lower() not in T.TEXT_EXT or budget <= 0:
+                continue
+            try:
+                if p.stat().st_size > 4 * 1024 * 1024:
+                    continue
+            except OSError:
+                continue
+            t = T.read_text(p)
+            budget -= len(t)
+            idx.add_text(t)
+    db = WORK / "project.db"
+    if db.exists() and budget > 0:
+        try:
+            con = sqlite3.connect(f"file:{db}?mode=ro", uri=True, timeout=5)
+            for (text,) in con.execute("SELECT text FROM doc_text"):
+                budget -= len(text or "")
+                idx.add_text(text)
+                if budget <= 0:
+                    break
+            for (title,) in con.execute("SELECT coalesce(title, '') || ' ' || coalesce(path, '') FROM documents"):
+                idx.add_text(title)
+            con.close()
+        except sqlite3.Error:
+            pass
+    return idx
+
+
+# ------------------------------------------------------------------ the model
+
+
+def ask_model(messages, max_tokens=8000):
+    u = GATEWAY.split("://", 1)[1]
+    host, _, port = u.partition(":")
+    body = json.dumps({"model": "general", "messages": messages, "max_tokens": max_tokens, "temperature": 0}).encode()
+    c = http.client.HTTPConnection(host, int(port or 80), timeout=900)
+    try:
+        c.request("POST", "/v1/chat/completions", body, {"Authorization": "Bearer " + os.environ.get("BOX_API_KEY", ""), "Content-Type": "application/json"})
+        r = c.getresponse()
+        raw = r.read(8 * 1024 * 1024).decode("utf-8", "replace")
+    finally:
+        c.close()
+    if r.status != 200:
+        raise RuntimeError(f"the model answered {r.status}")
+    j = json.loads(raw)
+    u = j.get("usage") or {}
+    text = ((j.get("choices") or [{}])[0].get("message") or {}).get("content") or ""
+    return text, int(u.get("prompt_tokens") or 0), int(u.get("completion_tokens") or 0)
+
+
+SYSTEM = """OLA-TWIN-MAKER. You make a made-up copy of a task, so two assistants can be compared on it without anything of the person's leaving their machine.
+The copy has the same shape and difficulty as the task and none of its content.
+Answer with one JSON object and nothing else:
+{"kind": one of %(kinds)s,
+ "request": the request written again in general terms, as a person would ask it, about the made-up files,
+ "generator": Python 3 source that defines make(out, rng): it writes the stand-in files into the folder out (a pathlib.Path) using rng (a random.Random) for every random choice, and returns a dict of the right answers computed from what it wrote,
+ "checks": a list of checks a program can run on the result, each {"name", "type", "label", ...}}
+Rules for the copy:
+- Invent every name, number, word, heading, file name and column name. Use plain generic names: data.csv, notes.md, report.md, id, name, date, amount, category, region, status.
+- Never copy a word, a number or a phrase from the task or its files. Use made-up people, places and organizations.
+- Mirror the structure described below: the same kinds of files, similar sizes, the same column types and counts, and the same kinds of mess (duplicates, blanks, mixed date formats, misspellings, case and spacing variants, a missing part).
+- The generator uses only the standard library (csv, json, random, datetime, math, re, statistics, pathlib) and openpyxl for .xlsx. It writes only inside out and reads nothing else.
+- Check types: file {path}; csv_rows {path, truth}; csv_columns {path, columns}; csv_unique {path, column}; csv_sum {path, column, truth, tolerance}; says_number {truth, tolerance}; says {any: [words]} (the answer must say one of them, e.g. that something is missing); says_none {any: [words]}; quotes_verbatim {min}. "truth" names a key of the dict make returns. Labels: %(labels)s.
+- Write checks for what a correct result must contain, so a program can tell a right result from a wrong one."""
+
+
+def parse_json(text):
+    text = re.sub(r"(?s)<think>.*?</think>", "", text)
+    a, b = text.find("{"), text.rfind("}")
+    if a < 0 or b <= a:
+        raise ValueError("no JSON")
+    return json.loads(text[a:b + 1])
+
+
+def make(tid):
+    if not ID.match(tid):
+        fail("bad id")
+    spec = json.loads(sys.stdin.read() or "{}")
+    request = str(spec.get("request", ""))[:20000]
+    context = str(spec.get("context", ""))[:64 * 1024]
+    seed = int(spec.get("seed") or int(tid[:8], 16))
+    read = []
+    for rel in (spec.get("files") or [])[:40]:
+        p = inside_work(rel)
+        if p and p not in read:
+            read.append(p)
+    profiles = [T.profile(p, str(p.relative_to(WORK))) for p in read]
+    idx = build_index(request, context, read)
+    folder = STORE / tid
+    if folder.exists():
+        fail("that copy exists")
+    folder.mkdir(parents=True)
+    t0 = time.time()
+    tokens_in = tokens_out = 0
+    note = ""
+    last = None
+    for attempt in range(3):
+        files_dir = folder / f"try{attempt}"
+        user = "The task:\n" + request + "\n\nThe files it read, described (structure only):\n" + json.dumps(profiles, indent=1)[:40000] + (("\n\n" + note) if note else "")
+        try:
+            text, ti, to = ask_model([{"role": "system", "content": SYSTEM % {"kinds": T.KINDS, "labels": [l for l in T.LABELS if l != "success"]}}, {"role": "user", "content": user}])
+        except (OSError, http.client.HTTPException, RuntimeError, ValueError) as e:
+            fail("the model could not be reached: " + type(e).__name__, 3)
+        tokens_in += ti
+        tokens_out += to
+        try:
+            j = parse_json(text)
+            kind = j.get("kind") if j.get("kind") in T.KINDS else "other"
+            treq = str(j.get("request", "")).strip()[:8000]
+            source = str(j.get("generator", ""))[:60000]
+            checks = T.valid_checks(j.get("checks"))
+            if not treq or "def make" not in source:
+                raise ValueError("incomplete")
+            truth, names = T.run_generator(source, files_dir, seed)
+        except (ValueError, RuntimeError, OSError) as e:
+            note = "Your last answer could not be used (" + str(e)[:200] + "). Answer again with the JSON object only."
+            continue
+        checks = checks + [c for c in T.family_checks(kind) if c["name"] not in {x["name"] for x in checks}]
+        view = T.twin_view(files_dir, names)
+        leak = T.check_leaks(idx, {"request": treq + "\n" + source, "checks": checks, "files": view})
+        last = (kind, treq, source, checks, truth, names, files_dir, leak)
+        if leak["verdict"] != "leak":
+            break
+        note = "Your last copy still carried things from the task: " + ", ".join(sorted({f["text"] for f in leak["findings"] if f["severity"] == "leak"}))[:1500] + ". Invent them instead."
+    if not last:
+        fail("no usable copy could be made", 4)
+    kind, treq, source, checks, truth, names, files_dir, leak = last
+    files = []
+    total = 0
+    for n in names:
+        p = files_dir / n
+        data = p.read_bytes()
+        total += len(data)
+        files.append({"name": n, "size": len(data), "sha256": hashlib.sha256(data).hexdigest(), "b64": base64.b64encode(data).decode()})
+    if total > 8 * 1024 * 1024:
+        fail("the copy is too big to compare", 4)
+    bundle = {"id": tid, "kind": kind, "request": treq, "generator": source, "seed": seed, "checks": checks, "truth": truth, "files": files}
+    digest = hashlib.sha256(json.dumps(bundle, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+    rec = dict(bundle, sha256=digest, leak=leak, tokens_in=tokens_in, tokens_out=tokens_out, ms=int((time.time() - t0) * 1000), read=len(read))
+    (folder / "copy.json").write_text(json.dumps(rec, ensure_ascii=False))
+    out(rec)
+
+
+def show(tid):
+    if not ID.match(tid) or not (STORE / tid / "copy.json").is_file():
+        fail("no such copy")
+    sys.stdout.write((STORE / tid / "copy.json").read_text() + "\n")
+
+
+def score():
+    spec = json.loads(sys.stdin.read() or "{}")
+    inputs = {str(k): str(v) for k, v in (spec.get("inputs") or {}).items()}
+    out(T.score(WORK, spec.get("checks") or [], spec.get("truth") or {}, str(spec.get("final_text", ""))[:200000], inputs))
+
+
+def keep(cid):
+    if not ID.match(cid):
+        fail("bad id")
+    d = WORK / ".ola" / "compare"
+    d.mkdir(parents=True, exist_ok=True)
+    data = sys.stdin.read()[:4 * 1024 * 1024]
+    json.loads(data)
+    (d / f"{cid}.json").write_text(data)
+    out({"ok": True})
+
+
+def result(cid):
+    f = WORK / ".ola" / "compare" / f"{cid}.json"
+    if not ID.match(cid) or not f.is_file():
+        fail("no such comparison")
+    sys.stdout.write(f.read_text() + "\n")
+
+
+if __name__ == "__main__":
+    a = sys.argv[1:]
+    if a[:1] == ["make"] and len(a) == 2:
+        make(a[1])
+    elif a[:1] == ["show"] and len(a) == 2:
+        show(a[1])
+    elif a == ["score"]:
+        score()
+    elif a[:1] == ["keep"] and len(a) == 2:
+        keep(a[1])
+    elif a[:1] == ["result"] and len(a) == 2:
+        result(a[1])
+    else:
+        fail("usage: ola-twin make <id> | show <id> | score | keep <id> | result <id>")

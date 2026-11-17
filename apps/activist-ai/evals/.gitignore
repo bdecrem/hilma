@@ -4,3 +4,4 @@ runs/
 results/*.db
 results/*.db-*
 __pycache__/
+candidates/

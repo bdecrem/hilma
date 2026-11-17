@@ -28,7 +28,7 @@ import { randomBytes } from 'node:crypto'
 import { homedir } from 'node:os'
 import path from 'node:path'
 import { audit } from './db.mjs'
-import { gatewayUsage, onceGrants, onceUntil, writeGrantsFile } from './claude.mjs'
+import { gatewayUsage, onceGrants, onceUntil, scratchGrants, writeGrantsFile } from './claude.mjs'
 
 export const STRETCH = ['suggest', 'handover', 'never']
 export const STRETCH_TO = ['hosted', 'claude']
@@ -52,6 +52,7 @@ export function writeHostedGrants(db, hc) {
     if (w.enabled !== 1 && !once.has(w.id)) continue
     grants[`ws-${w.slug}`] = { cap_micro_usd: w.usd ?? hc.capMicroUsd, ...(w.enabled === 1 ? {} : { until: once.get(w.id) }) }
   }
+  for (const g of scratchGrants(db, 'hosted')) grants[`ws-${g.slug}`] = { cap_micro_usd: g.cap_micro_usd, until: g.until }
   return writeGrantsFile(hc.file, grants)
 }
 

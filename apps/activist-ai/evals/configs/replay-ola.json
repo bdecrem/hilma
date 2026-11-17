@@ -1,0 +1,6 @@
+{
+  "name": "replay-ola",
+  "harness": "replay",
+  "arm": "ola",
+  "model": "the recorded result of Ola in a comparison"
+}

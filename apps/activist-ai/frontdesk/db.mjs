@@ -54,14 +54,26 @@ const ACTIONS_V7 = [
   // either fallback "just this once" (the owner's yes on the stretch card, the switch left off)
   'hosted_enabled', 'hosted_disabled', 'hosted_used', 'hosted_once', 'claude_once',
 ]
-/** What the audit log may say. A row with any other action is refused by the table itself. */
-export const ACTIONS = [
+// Migration 8's list (frozen too).
+const ACTIONS_V8 = [
   ...ACTIONS_V7,
   // migration 8: batch jobs (jobs.mjs): a trial or a whole job started (tokens_in holds the budget
   // approved), paused, resumed, cancelled, finished (tokens_in and tokens_out: what it used).
   'job_trial_started', 'job_started', 'job_paused', 'job_resumed', 'job_cancelled', 'job_finished',
 ]
+/** What the audit log may say. A row with any other action is refused by the table itself. */
+export const ACTIONS_V9 = [
+  ...ACTIONS_V8,
+  // migration 9: "Compare with Claude" (compare.mjs): the real-task switch on and off, the real task
+  // sent just this once, a made-up copy made (ok = it may leave; tokens: Ola's own model) and
+  // released by the owner's yes, a comparison sent and done (tokens and cost: Claude and the judge).
+  'compare_real_enabled', 'compare_real_disabled', 'compare_real_once', 'compare_twin_made', 'compare_twin_released', 'compare_sent', 'compare_done',
+]
+export const ACTIONS = ACTIONS_V9
 
+// The comparisons' fixed words (frontdesk/compare.mjs; the labels are the eval set's own list).
+const COMPARE_KINDS = ['clean', 'sql', 'coding', 'legal', 'site', 'honesty', 'pdf', 'writing', 'chart', 'other']
+const EVAL_LABELS = JSON.parse(readFileSync(new URL('../evals/lib/labels.json', import.meta.url), 'utf8')).failure_labels
 const sqlList = (xs) => xs.map((x) => `'${x}'`).join(', ')
 
 const MIGRATIONS = [
@@ -345,7 +357,7 @@ const MIGRATIONS = [
     at INTEGER NOT NULL,
     actor_kind TEXT NOT NULL CHECK (actor_kind IN ('person', 'admin', 'run', 'system')),
     actor_person_id INTEGER REFERENCES people(id),
-    action TEXT NOT NULL CHECK (action IN (${sqlList(ACTIONS)})),
+    action TEXT NOT NULL CHECK (action IN (${sqlList(ACTIONS_V8)})),
     workspace_id INTEGER REFERENCES workspaces(id),
     subject_person_id INTEGER REFERENCES people(id),
     name_ref BLOB,
@@ -360,6 +372,75 @@ const MIGRATIONS = [
   INSERT INTO audit_v8 SELECT id, at, actor_kind, actor_person_id, action, workspace_id, subject_person_id, name_ref, sha256, size, role, ok, tokens_in, tokens_out, cost_micro_usd FROM audit;
   DROP TABLE audit;
   ALTER TABLE audit_v8 RENAME TO audit;
+  CREATE INDEX audit_workspace ON audit(workspace_id, at);
+  `,
+  // 9: "Compare with Claude" (frontdesk/compare.mjs). Per project: the real-task switch (off), when
+  // made-up copies are made (ask: only when the owner asks; daily: a few each day, on their own),
+  // how many a day, and the month's budget if the owner set one. One row per comparison: ids,
+  // fixed words and numbers only (the copy, the results and the judged sentence live in files under
+  // $OLA_HOME/compare for a made-up copy, and in the project's VM for the real task). The scratch
+  // VMs' one-time gateway grants (compare_scratch), so the grants files, written from the database
+  // alone, carry them. New audit words: the table is rebuilt for the CHECK, as in 2, 3, 4, 6, 7, 8.
+  `
+  ALTER TABLE workspaces ADD COLUMN compare_real INTEGER NOT NULL DEFAULT 0 CHECK (compare_real IN (0, 1));
+  ALTER TABLE workspaces ADD COLUMN compare_auto TEXT NOT NULL DEFAULT 'ask' CHECK (compare_auto IN ('ask', 'daily'));
+  ALTER TABLE workspaces ADD COLUMN compare_per_day INTEGER NOT NULL DEFAULT 2 CHECK (compare_per_day BETWEEN 1 AND 10);
+  ALTER TABLE workspaces ADD COLUMN compare_cap_micro_usd INTEGER CHECK (compare_cap_micro_usd IS NULL OR compare_cap_micro_usd >= 0);
+  CREATE TABLE comparisons (
+    id TEXT PRIMARY KEY CHECK (length(id) = 12),
+    workspace_id INTEGER NOT NULL REFERENCES workspaces(id),
+    person_id INTEGER REFERENCES people(id),
+    session TEXT NOT NULL CHECK (length(session) BETWEEN 1 AND 80),
+    message TEXT NOT NULL CHECK (length(message) BETWEEN 1 AND 80),
+    mode TEXT NOT NULL CHECK (mode IN ('twin', 'real')),
+    trigger TEXT NOT NULL CHECK (trigger IN ('asked', 'sampled')),
+    state TEXT NOT NULL CHECK (state IN ('making', 'held', 'refused', 'ready', 'running', 'done', 'failed', 'declined')),
+    verdict TEXT CHECK (verdict IS NULL OR verdict IN ('clean', 'unsure', 'leak')),
+    released_by INTEGER REFERENCES people(id),
+    twin_sha256 TEXT CHECK (twin_sha256 IS NULL OR length(twin_sha256) = 64),
+    kind TEXT CHECK (kind IS NULL OR kind IN (${sqlList(COMPARE_KINDS)})),
+    judged TEXT CHECK (judged IS NULL OR judged IN ('ola', 'claude', 'same', 'unsure')),
+    outcome TEXT CHECK (outcome IS NULL OR outcome IN ('both_right', 'claude_better', 'ola_better', 'both_wrong', 'unsure')),
+    label TEXT CHECK (label IS NULL OR label IN (${sqlList(EVAL_LABELS)})),
+    ola_model TEXT CHECK (ola_model IS NULL OR length(ola_model) <= 60),
+    claude_model TEXT CHECK (claude_model IS NULL OR length(claude_model) <= 60),
+    ola_passed INTEGER, ola_total INTEGER, claude_passed INTEGER, claude_total INTEGER,
+    ola_tokens INTEGER, ola_ms INTEGER, claude_tokens INTEGER, claude_ms INTEGER, judge_tokens INTEGER,
+    cost_micro_usd INTEGER CHECK (cost_micro_usd IS NULL OR cost_micro_usd >= 0),
+    candidate INTEGER NOT NULL DEFAULT 0 CHECK (candidate IN (0, 1)),
+    created_at INTEGER NOT NULL,
+    finished_at INTEGER
+  ) STRICT;
+  CREATE INDEX comparisons_workspace ON comparisons(workspace_id, created_at);
+  CREATE TABLE compare_scratch (
+    slug TEXT PRIMARY KEY CHECK (length(slug) BETWEEN 3 AND 32 AND slug NOT GLOB '*[^a-z0-9-]*'),
+    workspace_id INTEGER NOT NULL REFERENCES workspaces(id),
+    engine TEXT NOT NULL CHECK (engine IN ('claude', 'hosted')),
+    mode TEXT NOT NULL CHECK (mode IN ('oauth', 'api_key')),
+    cap_micro_usd INTEGER NOT NULL CHECK (cap_micro_usd >= 0),
+    cap_tokens INTEGER NOT NULL CHECK (cap_tokens >= 0),
+    until INTEGER NOT NULL
+  ) STRICT;
+  CREATE TABLE audit_v9 (
+    id INTEGER PRIMARY KEY,
+    at INTEGER NOT NULL,
+    actor_kind TEXT NOT NULL CHECK (actor_kind IN ('person', 'admin', 'run', 'system')),
+    actor_person_id INTEGER REFERENCES people(id),
+    action TEXT NOT NULL CHECK (action IN (${sqlList(ACTIONS_V9)})),
+    workspace_id INTEGER REFERENCES workspaces(id),
+    subject_person_id INTEGER REFERENCES people(id),
+    name_ref BLOB,
+    sha256 TEXT CHECK (sha256 IS NULL OR length(sha256) = 64),
+    size INTEGER,
+    role TEXT CHECK (role IS NULL OR role IN (${sqlList(ROLES)})),
+    ok INTEGER NOT NULL DEFAULT 1 CHECK (ok IN (0, 1)),
+    tokens_in INTEGER CHECK (tokens_in IS NULL OR tokens_in >= 0),
+    tokens_out INTEGER CHECK (tokens_out IS NULL OR tokens_out >= 0),
+    cost_micro_usd INTEGER CHECK (cost_micro_usd IS NULL OR cost_micro_usd >= 0)
+  ) STRICT;
+  INSERT INTO audit_v9 SELECT id, at, actor_kind, actor_person_id, action, workspace_id, subject_person_id, name_ref, sha256, size, role, ok, tokens_in, tokens_out, cost_micro_usd FROM audit;
+  DROP TABLE audit;
+  ALTER TABLE audit_v9 RENAME TO audit;
   CREATE INDEX audit_workspace ON audit(workspace_id, at);
   `,
 ]

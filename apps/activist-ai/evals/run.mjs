@@ -73,9 +73,11 @@ const maxLoad = Number(args['max-load'] || 6)
 const loadPatience = Number(args['load-patience'] || 15)
 
 // ------------------------------------------------------------------ tasks
-const allTasks = readdirSync(path.join(here, 'tasks'))
-  .filter((d) => existsSync(path.join(here, 'tasks', d, 'task.json')))
-  .map((d) => ({ dir: path.join(here, 'tasks', d), ...JSON.parse(readFileSync(path.join(here, 'tasks', d, 'task.json'), 'utf8')) }))
+// --tasks-dir candidates: the review queue of made-up copies Ola lost (frontdesk/compare.mjs), same format.
+const tasksDir = path.resolve(here, String(args['tasks-dir'] || 'tasks'))
+const allTasks = readdirSync(tasksDir)
+  .filter((d) => existsSync(path.join(tasksDir, d, 'task.json')))
+  .map((d) => ({ dir: path.join(tasksDir, d), ...JSON.parse(readFileSync(path.join(tasksDir, d, 'task.json'), 'utf8')) }))
   .filter((t) => !t.retired || args['with-retired'])
 const want = String(args.tasks || 'all').split(',')
 const pick = (t) => want.some((w) => w === 'all' || w === t.id || w === t.level || w === t.family || (t.skill && w === `skill:${t.skill}`) || (w.endsWith('*') && t.id.startsWith(w.slice(0, -1))))
@@ -84,6 +86,7 @@ const tasks = allTasks.filter(pick).sort((a, b) => LEVELS.indexOf(a.level) - LEV
 // ------------------------------------------------------------------ the configuration's identity
 function harnessVersion() {
   if (cfg.harness === 'opencode-ws') return 'opencode 2.3.0 in ' + /export const IMAGE = '([^']+)'/.exec(readFileSync(path.join(here, '../workspace/ws.mjs'), 'utf8'))[1]
+  if (cfg.harness === 'replay') return 'replay 1'
   if (cfg.harness === 'opencode') return 'opencode ' + JSON.parse(readFileSync(path.join(here, '../node_modules/@opencode/cli/package.json'), 'utf8')).version
   return 'claude-agent-sdk ' + JSON.parse(readFileSync(path.join(here, 'node_modules/@anthropic-ai/claude-agent-sdk/package.json'), 'utf8')).version
 }
@@ -283,7 +286,7 @@ async function runOne({ task, seed }) {
   if (g.status !== 0) throw new Error(`generate ${task.id}: ${g.stderr.slice(-400)}`)
   const prompts = [readFileSync(path.join(task.dir, 'instruction.md'), 'utf8').trim(), ...(task.followups || []).map((f) => readFileSync(path.join(task.dir, f), 'utf8').trim())]
   const started = new Date()
-  const s = cfg.harness === 'opencode' ? await runOpencode(run, prompts) : cfg.harness === 'opencode-ws' ? await runWs(run, prompts) : await runClaude(run, prompts)
+  const s = cfg.harness === 'replay' ? replay(task, run) : cfg.harness === 'opencode' ? await runOpencode(run, prompts) : cfg.harness === 'opencode-ws' ? await runWs(run, prompts) : await runClaude(run, prompts)
   if (stopping) return // cut short: record nothing, it runs again next time
   const duration = (Date.now() - started) / 1000
   writeFileSync(path.join(dir, 'session.json'), JSON.stringify({ final_text: s.final_text, all_text: s.all_text || s.final_text, turns: s.turns }, null, 1))
@@ -314,6 +317,16 @@ process.on('SIGINT', () => {
   setTimeout(() => process.exit(130), wsh ? 120_000 : 500) // workspace runs see `stopping`, interrupt and destroy their VM
 })
 
+// harness "replay" (a candidate from a comparison): no agent; the recorded result of one arm
+// (cfg.arm: "ola" or "claude", the task's reference/<arm>/) is put in the folder and checked like
+// any run. It proves a candidate runs through this runner, and replays the result Ola lost with.
+function replay(task, run) {
+  const src = path.join(task.dir, 'reference', cfg.arm)
+  if (!existsSync(src)) throw new Error(`${task.id} has no recorded ${cfg.arm} result`)
+  for (const f of readdirSync(src)) if (f !== 'final.txt') writeFileSync(path.join(run.work, f), readFileSync(path.join(src, f)))
+  const text = existsSync(path.join(src, 'final.txt')) ? readFileSync(path.join(src, 'final.txt'), 'utf8') : ''
+  return { final_text: text, all_text: text, turns: 1, tools: {}, errors: 0, tokens_in: 0, tokens_out: 0, cost_usd: 0, requests: 0, end_reason: 'done' }
+}
 const perRunCap = cfg.max_usd_per_run || 0
 let budgetStop = false
 let wsh = null
