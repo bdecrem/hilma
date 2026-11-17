@@ -19,7 +19,8 @@ app on the platform: standard sizes, standard navigation, and the screens every 
 
 - **Quick (the default):** do not read the reference files. Copy `assets/starter.html` to
   `prototype.html` with `app.css` and `prototype.js`, keep its structure (a tab bar, a list, a detail
-  with a back button, a sheet with Cancel and Save, Settings with About and the version), and replace
+  with a back button, a sheet with Cancel and Save, an empty state for a list with nothing in it,
+  Settings with About and the version), and replace
   every word with the real app's content. Run `screens.py` once, fix what it lists, run it once more
   only if you changed the layout, then hand off in three sentences.
 - **Thorough (only when the person asks for options, a full design, or a Mac app):** the stages below.
