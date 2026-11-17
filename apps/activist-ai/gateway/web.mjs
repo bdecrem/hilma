@@ -242,7 +242,7 @@ export const searchItem = (q) => String(q).replace(/\s+/g, ' ').trim()
 export const fetchItem = (u) => new URL(String(u).trim()).href
 export const itemHash = (kind, item) => sha(`${kind}\0${item}`)
 
-export function makeWeb({ cfg, db, readBody, send, fail }) {
+export function makeWeb({ cfg, db, readBody, send, fail, standing = () => false }) {
   // ------------------------------------------------------------ grants, from the front desk's file
   let grants = new Map()
   let seen = ''
@@ -330,6 +330,9 @@ export function makeWeb({ cfg, db, readBody, send, fail }) {
     for (let attempt = 0; attempt < 2; attempt++) {
       const g = grants.get(who) ?? hostGrants.get(who)
       if (g?.always) return 'always'
+      // A person's own caller (server.mjs: from the people file only, never a workspace): they
+      // answer each web question in their own app, on their own computer, before it gets here.
+      if (!who.startsWith('ws-') && standing(who)) return 'always'
       const now = Date.now()
       for (const o of g?.once ?? []) {
         if (o.kind !== kind || o.h !== h || o.exp < now) continue

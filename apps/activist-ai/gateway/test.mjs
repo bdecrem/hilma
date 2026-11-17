@@ -1807,3 +1807,140 @@ test('scholarly lookup: refused without the project’s yes; with it, fixed inde
     await g2.stop()
   }
 })
+
+// ---- people: one caller per person who signed in a device (frontdesk/devices.mjs writes the file)
+const models = (g, t) => call(g, t, null, { path: '/v1/models', method: 'GET' }).then((r) => r.status)
+const reloads = (g) => g.lines.filter((l) => l.includes('"event":"tokens"')).length
+const nextReload = (g, before) => waitFor(() => reloads(g) > before, 6000, 'a token reload')
+
+test('people file: p-<id> callers load and reload beside the tokens file; a bad people file is kept out and holds back nothing of the tokens file; duplicates across the files are refused', async () => {
+  const up = await fakeUpstream()
+  const dir = mkdtempSync(path.join(TMP, 'people-'))
+  const file = path.join(dir, 'gateway-tokens')
+  const people = path.join(dir, 'gateway-people')
+  const P = { one: tok(), two: tok() }
+  writeTokens(file, `a:${T.a}`)
+  const env = { ...baseEnv(up.url), GATEWAY_TOKENS_FILE: file, GATEWAY_PEOPLE_TOKENS_FILE: people }
+  delete env.GATEWAY_TOKENS
+  // No people file yet (no one has signed in a device): the gateway starts, with no person.
+  const g = await gateway(env)
+  try {
+    assert.equal(JSON.parse(g.lines.find((l) => l.includes('"event":"people"'))).callers, 0)
+    assert.equal(await models(g, P.one), 401)
+    let n = reloads(g)
+    writeTokens(people, `p-1:${P.one}`)
+    await nextReload(g, n)
+    assert.equal(await models(g, P.one), 200, 'a new person is served without a restart')
+    assert.equal((await call(g, P.one, chat({ tag: 'person' }))).status, 200)
+    // A people file that does not check out (a short token) is kept out: p-1 stays in force...
+    n = reloads(g)
+    writeTokens(people, `p-1:${P.one},p-2:short`)
+    await nextReload(g, n)
+    assert.equal(await models(g, P.one), 200, 'the people in force stay')
+    // ...and a workspace's new token in the other file still takes effect meanwhile.
+    n = reloads(g)
+    writeTokens(file, `a:${T.a},b:${T.b}`)
+    await nextReload(g, n)
+    assert.equal(await models(g, T.b), 200, 'the tokens file is not held back by a bad people file')
+    // Refused, each kept out with the people in force staying: a name that is not p-<number>, a
+    // token another caller holds, the same name twice, a file other than 600.
+    for (const [what, line, mode] of [
+      ['a name that is not p-<number>', `p-1:${P.one},bart:${P.two}`],
+      ['a token a workspace holds', `p-1:${P.one},p-3:${T.a}`],
+      ['a name twice', `p-1:${P.one},p-1:${P.two}`],
+      ['mode 644', `p-1:${P.one},p-2:${P.two}`, 0o644],
+    ]) {
+      n = reloads(g)
+      writeTokens(people, line)
+      if (mode) chmodSync(people, mode), g.child.kill('SIGHUP')
+      await nextReload(g, n)
+      assert.equal(await models(g, P.one), 200, `${what}: p-1 stays`)
+      assert.equal(await models(g, P.two), 401, `${what}: the new entry is kept out`)
+      assert.equal(await models(g, T.a), 200, `${what}: the workspace is untouched`)
+    }
+    assert.match(g.err, /people: GATEWAY_PEOPLE_TOKENS_FILE entry 2 \(p-3\): this token is already given to another caller/)
+    assert.match(g.err, /people: GATEWAY_PEOPLE_TOKENS_FILE must be readable by this account only/)
+    // The person is removed (their last device went): refused at once.
+    n = reloads(g)
+    writeTokens(people, '')
+    await nextReload(g, n)
+    assert.equal(await models(g, P.one), 401, 'a removed person is refused')
+    for (const secret of [T.a, T.b, P.one, P.two, UPSTREAM_KEY]) assert.ok(!g.err.includes(secret) && !g.out.includes(secret), 'a secret was printed')
+  } finally {
+    await g.stop()
+  }
+  // At start: a p-<number> name anywhere but the people file is refused; a bad people file is kept out.
+  const bad = run({ ...baseEnv(up.url), GATEWAY_TOKENS: `a:${T.a},p-5:${tok()}` })
+  await waitFor(() => bad.code !== undefined, 5000, 'the refusal')
+  assert.equal(bad.code, 1)
+  assert.match(bad.err, /names p-<number> are for GATEWAY_PEOPLE_TOKENS_FILE only/)
+  writeTokens(people, 'p-1:short')
+  const g2 = await gateway({ ...baseEnv(up.url), GATEWAY_PEOPLE_TOKENS_FILE: people })
+  try {
+    assert.equal(JSON.parse(g2.lines.find((l) => l.includes('"event":"people"'))).callers, 0)
+    assert.match(g2.err, /people: GATEWAY_PEOPLE_TOKENS_FILE entry 1/)
+    assert.equal(await models(g2, T.a), 200, 'the gateway started all the same')
+  } finally {
+    await g2.stop()
+  }
+})
+
+test('people: each p-<id> caller has its own weekly quota (GATEWAY_PEOPLE_WEEKLY_TOKENS), apart from workspaces and from each other', async () => {
+  const up = await fakeUpstream()
+  const dir = mkdtempSync(path.join(TMP, 'pq-'))
+  const people = path.join(dir, 'gateway-people')
+  const P = { one: tok(), two: tok() }
+  writeTokens(people, `p-1:${P.one},p-2:${P.two}`)
+  const g = await gateway({ ...baseEnv(up.url), GATEWAY_PEOPLE_TOKENS_FILE: people, GATEWAY_PEOPLE_WEEKLY_TOKENS: '20', GATEWAY_QUOTAS: 'p-2=1000' })
+  try {
+    assert.equal((await call(g, P.one, chat({ usage: [10, 5] }))).status, 200)
+    assert.equal((await call(g, P.one, chat({ usage: [10, 5] }))).status, 200)
+    const over = await call(g, P.one, chat({ usage: [10, 5] }))
+    assert.equal(over.status, 429)
+    assert.equal(over.json.error.type, 'insufficient_quota')
+    const u = await call(g, P.one, null, { path: '/v1/usage', method: 'GET' })
+    assert.equal(u.json.caller, 'p-1')
+    assert.equal(u.json.quota, 20)
+    assert.equal(u.json.tokens_used, 30)
+    // Another person (GATEWAY_QUOTAS names them) and a workspace caller: still served, each on their own count.
+    assert.equal((await call(g, P.two, chat({ usage: [10, 5] }))).status, 200)
+    assert.equal((await call(g, P.two, null, { path: '/v1/usage', method: 'GET' })).json.quota, 1000)
+    assert.equal((await call(g, T.a, chat({ usage: [10, 5] }))).status, 200)
+    assert.equal((await call(g, T.a, null, { path: '/v1/usage', method: 'GET' })).json.quota, 20_000_000)
+  } finally {
+    await g.stop()
+  }
+})
+
+test('web: a person’s own caller (p-<id>) has a standing grant; a workspace still needs its project’s yes, whatever the people, grants or hosts files say', async () => {
+  const dir = mkdtempSync(path.join(TMP, 'pweb-'))
+  const people = path.join(dir, 'gateway-people')
+  const pk = tok()
+  writeTokens(people, `p-7:${pk}`)
+  const { g, k, file } = await webGateway({ GATEWAY_PEOPLE_TOKENS_FILE: people })
+  try {
+    assert.equal((await webCall(g, pk, 'search', { q: 'tide gauges' })).status, 200, 'a person searches with no grant written anywhere')
+    const f = await webCall(g, pk, 'fetch', { url: 'https://good.test/doc.pdf' })
+    assert.equal(f.status, 200, JSON.stringify(f.json))
+    // A workspace: refused without its project’s grant, even with the person in the file, and
+    // a grants file naming p-7 or a hosts file naming ws-one gives it nothing.
+    assert.equal((await webCall(g, k.one, 'search', { q: 'tide gauges' })).status, 403)
+    writeGrants(file, { 'p-7': { always: true } })
+    writeGrants(`${file}-hosts`, { 'ws-one': { always: true } })
+    assert.equal((await webCall(g, k.one, 'search', { q: 'tide gauges' })).status, 403, 'still refused')
+    assert.equal((await webCall(g, k.one, 'fetch', { url: 'https://good.test/doc.pdf' })).status, 403, 'a fetch too')
+    writeGrants(file, { 'ws-one': { always: true } })
+    assert.equal((await webCall(g, k.one, 'search', { q: 'tide gauges' })).status, 200, 'with its project’s yes')
+    assert.equal((await webCall(g, k.two, 'search', { q: 'tide gauges' })).status, 403, 'another project is still off')
+    // The person is removed: their token is refused outright.
+    const n = reloads(g)
+    writeTokens(people, '')
+    await nextReload(g, n)
+    assert.equal((await webCall(g, pk, 'search', { q: 'tide gauges' })).status, 401)
+    await waitFor(() => g.logs().some((l) => l.route === 'search' && l.caller === 'p-7'), 3000, 'the log line')
+    assert.ok(g.logs().some((l) => l.route === 'search' && l.caller === 'p-7' && l.status === 200 && l.grant === 'always'), 'the log says the person searched, under the standing grant')
+    assert.ok(!g.out.includes('tide gauges'), 'the words are not in the log')
+  } finally {
+    await g.stop()
+  }
+})

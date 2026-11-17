@@ -71,8 +71,11 @@ const SETTINGS = {
   GATEWAY_TOTAL_TIMEOUT_MS: [600_000, 10, 3_600_000],
   GATEWAY_READ_TIMEOUT_MS: [30_000, 1_000, 600_000],
   GATEWAY_WEEKLY_TOKENS: [20_000_000, 1, 1e12],
+  // A person's own caller (p-<id>, from GATEWAY_PEOPLE_TOKENS_FILE): their week's tokens, all their
+  // devices together. 0: the same as GATEWAY_WEEKLY_TOKENS.
+  GATEWAY_PEOPLE_WEEKLY_TOKENS: [0, 0, 1e12],
 }
-const OTHER_GATEWAY_SETTINGS = ['GATEWAY_TOKENS', 'GATEWAY_TOKENS_FILE', 'GATEWAY_DOOR_DIR', 'GATEWAY_MODELS', 'GATEWAY_HOST', 'GATEWAY_DB', 'GATEWAY_QUOTAS', 'GATEWAY_USAGE_TOKEN', ...CLAUDE_SETTINGS, ...HOSTED_SETTINGS, ...WEB_SETTINGS, ...BATCH_SETTINGS, ...SPECIALIST_SETTINGS]
+const OTHER_GATEWAY_SETTINGS = ['GATEWAY_TOKENS', 'GATEWAY_TOKENS_FILE', 'GATEWAY_PEOPLE_TOKENS_FILE','GATEWAY_DOOR_DIR', 'GATEWAY_MODELS', 'GATEWAY_HOST', 'GATEWAY_DB', 'GATEWAY_QUOTAS', 'GATEWAY_USAGE_TOKEN', ...CLAUDE_SETTINGS, ...HOSTED_SETTINGS, ...WEB_SETTINGS, ...BATCH_SETTINGS, ...SPECIALIST_SETTINGS]
 const NAME = /^[a-z0-9][a-z0-9._-]{0,63}$/i
 const TOKEN = /^[\x21-\x2b\x2d-\x7e]{24,512}$/ // printable ASCII, no space, no comma
 
@@ -124,6 +127,13 @@ function loadConfig(env) {
   const doorDir = env.GATEWAY_DOOR_DIR ? resolve(env.GATEWAY_DOOR_DIR) : null
   if (!env.GATEWAY_TOKENS && !tokensFile) bad('GATEWAY_TOKENS is not set (nor GATEWAY_TOKENS_FILE)')
   const tokens = readTokens(env.GATEWAY_TOKENS, tokensFile, bad)
+  // GATEWAY_PEOPLE_TOKENS_FILE: the people who signed in a device (the Mac app, the command line),
+  // one caller each, kept by the front desk (frontdesk/devices.mjs). Optional; a missing file is no
+  // one yet. A file that does not check out is kept out (its problems printed by name), and the
+  // gateway starts all the same: it concerns devices only, never a workspace.
+  const peopleFile = env.GATEWAY_PEOPLE_TOKENS_FILE ? resolve(env.GATEWAY_PEOPLE_TOKENS_FILE) : null
+  const people = peopleFile ? readPeople(peopleFile, tokens, (m) => console.error(`people: ${m}`)) ?? [] : []
+  tokens.push(...people)
   const names = new Set(tokens.map((t) => t.name))
   const digests = new Set(tokens.map((t) => t.digest.toString('hex')))
   let usageDigest = null
@@ -160,11 +170,13 @@ function loadConfig(env) {
   sp.batchMax = Math.min(sp.batchMax, num.GATEWAY_MAX_INFLIGHT)
 
   // GATEWAY_QUOTAS: "name=tokens per week" for callers who differ from GATEWAY_WEEKLY_TOKENS
-  const quotas = new Map([...names].map((n) => [n, num.GATEWAY_WEEKLY_TOKENS]))
+  const peopleWeekly = num.GATEWAY_PEOPLE_WEEKLY_TOKENS || num.GATEWAY_WEEKLY_TOKENS
+  const quotas = new Map([...names].map((n) => [n, isPersonName(n) ? peopleWeekly : num.GATEWAY_WEEKLY_TOKENS]))
   if (env.GATEWAY_QUOTAS) {
     env.GATEWAY_QUOTAS.split(',').forEach((pair, i) => {
       const [name, raw] = pair.split('=').map((s) => s?.trim())
-      if (!names.has(name)) return bad(`GATEWAY_QUOTAS entry ${i + 1}: not a caller in GATEWAY_TOKENS`)
+      // A person's caller may be named before they have signed in a device.
+      if (!names.has(name) && !isPersonName(name ?? '')) return bad(`GATEWAY_QUOTAS entry ${i + 1}: not a caller in GATEWAY_TOKENS`)
       if (!/^\d+$/.test(raw || '') || Number(raw) < 1 || Number(raw) > 1e12) return bad(`GATEWAY_QUOTAS entry ${i + 1} (${name}): tokens must be a whole number from 1 to 10^12`)
       quotas.set(name, Number(raw))
     })
@@ -194,8 +206,11 @@ function loadConfig(env) {
     key,
     tokens,
     tokensFile,
+    peopleFile,
+    people: new Set(people.map((t) => t.name)),
     doorDir,
     weekly: num.GATEWAY_WEEKLY_TOKENS,
+    peopleWeekly,
     usageDigest,
     models,
     quotas,
@@ -239,6 +254,8 @@ function readTokens(line, file, bad) {
       if (!TOKEN.test(token)) return bad(`${where} entry ${i + 1} (${name}): the token must be 24 to 512 printable characters with no space or comma`)
       const digest = sha(token)
       if (name === 'usage') return bad(`${where} entry ${i + 1}: the name usage is reserved for the usage token`)
+      // p-<id> is a person's caller, given only by the people file (with its standing web grant).
+      if (isPersonName(name)) return bad(`${where} entry ${i + 1}: names p-<number> are for GATEWAY_PEOPLE_TOKENS_FILE only`)
       if (names.has(name)) return bad(`${where}: the name ${name} appears twice`)
       if (digests.has(digest.toString('hex'))) return bad(`${where} entry ${i + 1} (${name}): this token is already given to another caller`)
       names.add(name)
@@ -261,6 +278,61 @@ function readTokens(line, file, bad) {
     }
   }
   return tokens
+}
+
+/** A person's caller name: p-<their id in the platform database>. */
+function isPersonName(name) {
+  return /^p-[1-9][0-9]{0,11}$/.test(name)
+}
+
+/**
+ * The people file (GATEWAY_PEOPLE_TOKENS_FILE): mode 600, one GATEWAY_TOKENS= line like the tokens
+ * file, every name p-<number>, no name or token that is also in `others` (the other callers). A
+ * missing file is an empty list. On any problem: null, and the problems go to `bad`, by name and
+ * entry number, never by value.
+ */
+function readPeople(file, others, bad) {
+  let st = null
+  try {
+    st = statSync(file)
+  } catch {
+    return []
+  }
+  const problems = []
+  const no = (m) => problems.push(m)
+  if (!st.isFile()) no('GATEWAY_PEOPLE_TOKENS_FILE is not a file')
+  else if ((st.mode & 0o077) !== 0) no('GATEWAY_PEOPLE_TOKENS_FILE must be readable by this account only (mode 600)')
+  const out = []
+  if (!problems.length) {
+    const text = readFileSync(file, 'utf8').trim()
+    if (!/^GATEWAY_TOKENS=[^\n]*$/.test(text)) no('GATEWAY_PEOPLE_TOKENS_FILE must hold one line, GATEWAY_TOKENS=p-<id>:token,...')
+    else {
+      const names = new Set(others.map((t) => t.name))
+      const digests = new Set(others.map((t) => t.digest.toString('hex')))
+      text
+        .slice('GATEWAY_TOKENS='.length)
+        .split(',')
+        .filter((p) => p !== '')
+        .forEach((pair, i) => {
+          const at = pair.indexOf(':')
+          const name = pair.slice(0, at).trim()
+          const token = pair.slice(at + 1).trim()
+          if (at < 1 || !isPersonName(name)) return no(`GATEWAY_PEOPLE_TOKENS_FILE entry ${i + 1}: every name is p-<number>`)
+          if (!TOKEN.test(token)) return no(`GATEWAY_PEOPLE_TOKENS_FILE entry ${i + 1} (${name}): the token must be 24 to 512 printable characters with no space or comma`)
+          const digest = sha(token)
+          if (names.has(name)) return no(`GATEWAY_PEOPLE_TOKENS_FILE: the name ${name} appears twice`)
+          if (digests.has(digest.toString('hex'))) return no(`GATEWAY_PEOPLE_TOKENS_FILE entry ${i + 1} (${name}): this token is already given to another caller`)
+          names.add(name)
+          digests.add(digest.toString('hex'))
+          out.push({ name, digest })
+        })
+    }
+  }
+  if (problems.length) {
+    for (const p of problems) bad(p)
+    return null
+  }
+  return out
 }
 
 function sha(s) {
@@ -304,7 +376,10 @@ const addUsage = db.prepare(`INSERT INTO usage (week, caller, model, requests, t
 const claude = makeClaude({ cfg: C.claude, db, readBody: (req, max) => readBody(req, max), send: (...a) => send(...a), fail: (...a) => fail(...a) })
 const hosted = C.hosted ? makeHosted({ cfg: C.hosted, db }) : null
 const batch = makeBatch({ cfg: C.batch, db })
-const web = makeWeb({ cfg: C.web, db, readBody: (req, max) => readBody(req, max), send: (...a) => send(...a), fail: (...a) => fail(...a) })
+// A person's own caller (from the people file) answers every web question in their own app, as
+// Bart does for the `bart` caller: a standing grant, by where the caller came from, never by a
+// name a workspace could hold (readTokens refuses p-* anywhere else).
+const web = makeWeb({ cfg: C.web, db, readBody: (req, max) => readBody(req, max), send: (...a) => send(...a), fail: (...a) => fail(...a), standing: (who) => C.people.has(who) })
 const readByModel = db.prepare(`SELECT model, requests, tokens_in, tokens_out FROM usage WHERE week = ? AND caller = ? AND model NOT LIKE 'web-%' ORDER BY model`)
 const readUsage = db.prepare(`SELECT coalesce(sum(CASE WHEN model IN ('web-search', 'web-fetch', 'web-lookup') THEN 0 ELSE requests END), 0) AS requests, coalesce(sum(tokens_in), 0) AS tokens_in, coalesce(sum(tokens_out), 0) AS tokens_out FROM usage WHERE week = ? AND caller = ?`)
 
@@ -1178,28 +1253,39 @@ let tokenState = ''
 const stateOf = (tokens) => tokens.map((t) => `${t.name}:${t.digest.toString('hex')}`).sort().join(',')
 // Reads the callers again (SIGHUP, or the file changed). A file that does not check out is not
 // used: the callers already in force stay, and the problems are printed by name, never value.
+// The two files are judged apart: a people file that does not check out keeps its own callers in
+// force and never holds back a workspace's new or revoked token (and the other way round).
 function reloadTokens(why) {
   const problems = []
-  const fresh = readTokens(process.env.GATEWAY_TOKENS, C.tokensFile, (m) => problems.push(m))
-  if (problems.length) {
-    for (const p of problems) console.error(`tokens: ${p}`)
-    process.stdout.write(JSON.stringify({ t: new Date().toISOString(), event: 'tokens', why, ok: false, callers: C.tokens.length }) + '\n')
-    return false
-  }
+  const peopleProblems = []
+  const main = readTokens(process.env.GATEWAY_TOKENS, C.tokensFile, (m) => problems.push(m))
+  const mainOk = !problems.length
+  const others = mainOk ? main : C.tokens.filter((t) => !C.people.has(t.name))
+  let people = C.peopleFile ? readPeople(C.peopleFile, others, (m) => peopleProblems.push(m)) : []
+  // Kept out: the people in force stay, less any whose token a workspace now holds.
+  if (people === null) people = C.tokens.filter((t) => C.people.has(t.name) && !others.some((o) => o.digest.equals(t.digest) || o.name === t.name))
+  for (const p of problems) console.error(`tokens: ${p}`)
+  for (const p of peopleProblems) console.error(`people: ${p}`)
+  const fresh = [...others, ...people]
+  const ok = mainOk && !peopleProblems.length
   const next = stateOf(fresh)
-  if (next === tokenState) return true
+  if (next === tokenState) {
+    if (!ok) process.stdout.write(JSON.stringify({ t: new Date().toISOString(), event: 'tokens', why, ok: false, tokens_file: mainOk, people_file: !peopleProblems.length, callers: C.tokens.length }) + '\n')
+    return ok
+  }
   const before = new Set(C.tokens.map((t) => t.name))
   const after = new Set(fresh.map((t) => t.name))
   C.tokens = fresh
+  C.people = new Set(people.map((t) => t.name))
   tokenState = next
   for (const n of after) {
-    if (!C.quotas.has(n)) C.quotas.set(n, C.weekly)
+    if (!C.quotas.has(n)) C.quotas.set(n, C.people.has(n) ? C.peopleWeekly : C.weekly)
     queue.addCaller(n)
   }
   queue.prune(after)
   syncDoors()
-  process.stdout.write(JSON.stringify({ t: new Date().toISOString(), event: 'tokens', why, ok: true, callers: fresh.length, added: [...after].filter((n) => !before.has(n)).length, removed: [...before].filter((n) => !after.has(n)).length }) + '\n')
-  return true
+  process.stdout.write(JSON.stringify({ t: new Date().toISOString(), event: 'tokens', why, ok, ...(ok ? {} : { tokens_file: mainOk, people_file: !peopleProblems.length }), callers: fresh.length, people: people.length, added: [...after].filter((n) => !before.has(n)).length, removed: [...before].filter((n) => !after.has(n)).length }) + '\n')
+  return ok
 }
 tokenState = stateOf(C.tokens)
 if (C.doorDir) {
@@ -1208,23 +1294,29 @@ if (C.doorDir) {
   syncDoors()
 }
 process.on('SIGHUP', () => reloadTokens('signal'))
-if (C.tokensFile) {
-  // A change to the file (ws.mjs replaces it by rename) is picked up at once; a stat every few
-  // seconds catches what a watch can miss.
+{
+  // A change to either file (ws.mjs and the front desk replace theirs by rename) is picked up at
+  // once; a stat every few seconds catches what a watch can miss.
+  const files = [C.tokensFile, C.peopleFile].filter(Boolean)
   let soon = null
   const later = () => (clearTimeout(soon), (soon = setTimeout(() => reloadTokens('file'), 100)))
-  try {
-    watch(dirname(C.tokensFile), (_, f) => (!f || f === basename(C.tokensFile)) && later())
-  } catch {}
-  let seen = ''
-  setInterval(() => {
-    let st = ''
+  for (const dir of new Set(files.map((f) => dirname(f)))) {
     try {
-      const x = statSync(C.tokensFile)
-      st = `${x.ino}:${x.size}:${x.mtimeMs}`
+      watch(dir, (_, f) => (!f || files.some((x) => dirname(x) === dir && basename(x) === f)) && later())
     } catch {}
-    if (st !== seen) (seen = st), later()
-  }, 3000).unref()
+  }
+  const seen = new Map()
+  if (files.length)
+    setInterval(() => {
+      for (const file of files) {
+        let st = ''
+        try {
+          const x = statSync(file)
+          st = `${x.ino}:${x.size}:${x.mtimeMs}`
+        } catch {}
+        if (st !== (seen.get(file) ?? '')) seen.set(file, st), later()
+      }
+    }, 3000).unref()
 }
 
 const stop = () => {
@@ -1240,6 +1332,7 @@ process.on('SIGINT', stop)
 
 server.listen(C.port, C.host, () => {
   console.log(JSON.stringify({ t: new Date().toISOString(), event: 'specialists', configured: [...C.models.keys()].filter((n) => !['general', 'fast', 'code'].includes(n)), own_servers: [...targets.keys()], batch_inflight: C.sp.batchMax, batch_wait_ms: C.sp.batchWait }))
+  console.log(JSON.stringify({ t: new Date().toISOString(), event: 'people', file: !!C.peopleFile, callers: C.people.size, weekly: C.peopleWeekly }))
   console.log(JSON.stringify({ t: new Date().toISOString(), event: 'web', provider: C.web.provider, grants_file: !!C.web.file, weekly: C.web.weekly, per_minute: C.web.perMinute, test_hosts: C.web.testHosts.size }))
   console.log(
     JSON.stringify({
