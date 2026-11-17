@@ -73,6 +73,10 @@ const env = {
   OLA_FD_CANDIDATES_DIR: path.join(run, 'candidates'),
   OLA_FD_COMPARE_ENGINE_MIN: '3',
   OLA_FD_COMPARE_TICK_MS: '3600000',
+  // Devices (devices.mjs): a made-up pass key for this run only, and one-time codes that end after
+  // 6 s (120 by default) so the check can watch one expire.
+  OLA_GATE_PASS_KEY: randomBytes(32).toString('hex'),
+  OLA_FD_DEVICE_CODE_SECONDS: '6',
 }
 const node = (script, argv, opts = {}) => spawnSync(process.execPath, [path.join(AI, script), ...argv], { env, encoding: 'utf8', ...opts })
 const admin = (...a) => {
@@ -215,6 +219,8 @@ const gwEnv = {
   GATEWAY_HOSTED_FILE: path.join(env.OLA_HOME, 'gateway-hosted'),
   // batch jobs: the job grants the front desk writes (jobs.mjs, OLA_HOME/gateway-batch by default)
   GATEWAY_BATCH_FILE: path.join(env.OLA_HOME, 'gateway-batch'),
+  // devices: the people file the front desk keeps (devices.mjs, OLA_HOME/gateway-people by default)
+  GATEWAY_PEOPLE_TOKENS_FILE: path.join(env.OLA_HOME, 'gateway-people'),
 }
 let gateway = start('gateway', 'gateway/server.mjs', gwEnv)
 await until(() => gateway.log.includes('"event":"start"'), 10_000, 'the gateway start')
@@ -475,6 +481,330 @@ await check("bob cannot reach alice's workspace by direct URL in his browser", a
   const dl = await B.page.evaluate((w) => fetch(`/api/files/survey.csv?w=${w}`).then((r) => r.status), FA)
   assert(dl === 404, `download ${dl}`)
 })
+// ---------------------------------------------------------------- devices (devices.mjs)
+// The Mac app and the command line sign in through the browser. Here a made-up app: a secret, its
+// challenge, and a listener on 127.0.0.1 where the browser lands with the code. This front desk runs
+// without the TLS front, so a device sends its pass as `Authorization: Bearer` (ops/tls-test.mjs
+// proves the front's half: the pass arriving as X-Ola-Pass, and every refusal at the door).
+const PEOPLE_FILE = path.join(env.OLA_HOME, 'gateway-people')
+const dbRowDevices = (sql) => {
+  const d = new DatabaseSync(path.join(env.OLA_FD_DATA, 'platform.db'))
+  try {
+    return d.prepare(sql).get()
+  } finally {
+    d.close()
+  }
+}
+async function madeUpApp() {
+  const S = randomBytes(32).toString('base64url')
+  const challenge = createHash('sha256').update(S).digest('base64url')
+  const hits = []
+  const server = http.createServer((req, res) => {
+    hits.push(req.url)
+    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }).end('<!doctype html><meta charset="utf-8"><title>Made-up app</title><p>Made-up app: signed in. You can close this tab.</p>')
+  })
+  await new Promise((r) => server.listen(0, '127.0.0.1', r))
+  const port = server.address().port
+  return { S, challenge, hits, port, link: (name, kind = 'mac') => `${ORIGIN}/#/device?challenge=${challenge}&port=${port}&name=${encodeURIComponent(name)}&kind=${kind}`, close: () => (server.closeAllConnections(), server.close()) }
+}
+/** A request as the app sends it: its pass as a bearer, no cookie, no Origin. */
+const asDevice = (pathname, pass, { method = 'GET', body, headers = {} } = {}) => api(pathname, { method, origin: '', body: body === undefined ? undefined : JSON.stringify(body), headers: { ...(pass ? { authorization: `Bearer ${pass}` } : {}), ...(body === undefined ? {} : { 'content-type': 'application/json' }), ...headers } })
+const redeem = (code, verifier) => asDevice('/api/device/token', code, { method: 'POST', body: { verifier } })
+const codeOf = (hits) => new URL(hits.find((h) => h.includes('code=')) ?? '/', 'http://x').searchParams.get('code')
+async function chromiumContext() {
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 860 } })
+  const page = await ctx.newPage()
+  const cdp = await ctx.newCDPSession(page)
+  await cdp.send('WebAuthn.enable')
+  await cdp.send('WebAuthn.addVirtualAuthenticator', { options: { protocol: 'ctap2', transport: 'internal', hasResidentKey: true, hasUserVerification: true, isUserVerified: true, automaticPresenceSimulation: true } })
+  return { ctx, page }
+}
+let dina = null
+let dinaToken = null
+await check('devices, in Chromium: from the app’s link a signed-out person signs in with their passkey, is asked "Sign in to Ola on <name>?" (the name as text), says yes, and lands on the app’s loopback with a code the app redeems', async () => {
+  admin('add-person', 'dina', '--name', 'Dina D.')
+  admin('allow-devices', 'dina')
+  dina = await chromiumContext()
+  await dina.page.goto(admin('invite', 'dina'))
+  const make = dina.page.getByRole('button', { name: 'Make my passkey' })
+  await until(() => make.isEnabled(), 10_000, 'the passkey button')
+  await make.click()
+  await dina.page.getByRole('button', { name: 'Sign out' }).click()
+  await dina.page.getByRole('button', { name: 'Sign in with your passkey' }).waitFor()
+  const app = await madeUpApp()
+  try {
+    const name = 'Dina’s <b>Mac</b>'
+    await dina.page.goto(app.link(name))
+    const signIn = dina.page.getByRole('button', { name: 'Sign in with your passkey' })
+    await until(() => signIn.isEnabled(), 10_000, 'the sign-in button')
+    const lede = await dina.page.locator('.gate-lede').innerText()
+    assert(lede.includes(`let Ola on ${name} in`), `signed out, the page said: ${lede}`)
+    if (SHOTS) await dina.page.screenshot({ path: path.join(SHOTS, 'device-signin-first-1280.png') })
+    await signIn.click()
+    await dina.page.waitForSelector('.device-title', { timeout: 30_000 })
+    const title = await dina.page.locator('.device-title').innerText()
+    assert(title === `Sign in to Ola on ${name}?` && (await dina.page.locator('.device-title b').count()) === 0, `title ${title}`)
+    assert((await dina.page.locator('.device-warn').innerText()) === 'Only continue if you just asked Ola on that computer to sign in.', 'the caution line')
+    if (SHOTS) {
+      for (const [w, h] of [[1280, 860], [390, 844]]) {
+        await dina.page.setViewportSize({ width: w, height: h })
+        await dina.page.waitForTimeout(250)
+        await dina.page.screenshot({ path: path.join(SHOTS, `device-ask-${w}.png`) })
+      }
+      await dina.page.setViewportSize({ width: 1280, height: 860 })
+    }
+    await dina.page.getByRole('button', { name: 'Sign in', exact: true }).click()
+    await until(() => app.hits.some((h) => h.includes('code=')), 15_000, 'the browser at the app’s loopback')
+    await dina.page.waitForURL(`http://127.0.0.1:${app.port}/**`, { timeout: 10_000 })
+    const code = codeOf(app.hits)
+    const r = await redeem(code, app.S)
+    assert(r.status === 200 && r.json.token?.startsWith('olap1.') && r.json.person?.handle === 'dina' && r.json.device?.name === name && r.json.device?.kind === 'mac' && Date.parse(r.json.expires_at) > Date.now() + 179 * 86_400_000, `redeem ${r.status} ${JSON.stringify({ ...r.json, token: r.json?.token ? '…' : null })}`)
+    dinaToken = r.json.token
+    const me = await asDevice('/api/device/me', dinaToken)
+    assert(me.status === 200 && me.json.person.handle === 'dina' && me.json.device.id === r.json.device.id, `me ${me.status}`)
+    // Back at Ola, the request is gone from the address: Back does not offer it again.
+    await dina.page.goBack()
+    await dina.page.waitForSelector('.gate-title', { timeout: 10_000 })
+    assert(!(await dina.page.locator('.device-title').count()), 'the request was offered again after Back')
+    return `landed on 127.0.0.1:${app.port}/?code=…; redeemed: device #${r.json.device.id} until ${r.json.expires_at.slice(0, 10)}; /api/device/me 200`
+  } finally {
+    app.close()
+  }
+})
+
+await check('devices, in WebKit: the same question, yes lands on the app’s loopback (from http://localhost) and the code redeems; Cancel tells the app and signs nothing in', async () => {
+  const { webkit } = await import('playwright')
+  const wk = await webkit.launch()
+  const app = await madeUpApp()
+  const app2 = await madeUpApp()
+  try {
+    admin('add-person', 'wade', '--name', 'Wade W.')
+    admin('allow-devices', 'wade')
+    const link = admin('invite', 'wade')
+    const device = new SoftAuthn({ rpId: 'localhost', origin: ORIGIN })
+    const ctx = await wk.newContext()
+    const page = await ctx.newPage()
+    await page.exposeFunction('__softCreate', (o) => device.create(o))
+    await page.addInitScript(() => {
+      const b64 = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf instanceof ArrayBuffer ? buf : buf.buffer))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+      const bin = (s) => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((s.length + 3) % 4)), (c) => c.charCodeAt(0)).buffer
+      navigator.credentials.create = async ({ publicKey: o }) => {
+        const r = await window.__softCreate({ ...o, challenge: b64(o.challenge), user: { ...o.user, id: b64(o.user.id) }, excludeCredentials: [] })
+        return { id: r.id, rawId: bin(r.rawId), type: r.type, authenticatorAttachment: 'platform', getClientExtensionResults: () => ({}), response: { clientDataJSON: bin(r.response.clientDataJSON), attestationObject: bin(r.response.attestationObject), getTransports: () => ['internal'] } }
+      }
+    })
+    await page.goto(link)
+    const btn = page.getByRole('button', { name: 'Make my passkey' })
+    await until(() => btn.isEnabled(), 10_000, 'the passkey button')
+    await btn.click()
+    await until(async () => (await page.evaluate(() => fetch('/api/me').then((r) => r.status))) === 200, 15_000, 'signed in in WebKit')
+    await page.goto(app.link('Wade’s laptop', 'cli'))
+    await page.waitForSelector('.device-title', { timeout: 15_000 })
+    if (SHOTS) await page.screenshot({ path: path.join(SHOTS, 'device-ask-webkit-1280.png') })
+    await page.getByRole('button', { name: 'Sign in', exact: true }).click()
+    await until(() => app.hits.some((h) => h.includes('code=')), 15_000, 'WebKit at the app’s loopback')
+    const r = await redeem(codeOf(app.hits), app.S)
+    assert(r.status === 200 && r.json.device?.kind === 'cli' && r.json.person?.handle === 'wade', `redeem ${r.status}`)
+    // Cancel: the app hears it, nothing is made.
+    const before = JSON.parse(admin('devices', 'wade', '--json')).length
+    await page.goto(app2.link('Wade’s other laptop'))
+    await page.waitForSelector('.device-title', { timeout: 15_000 })
+    await page.getByRole('button', { name: 'Cancel' }).click()
+    await until(() => app2.hits.length > 0, 15_000, 'Cancel at the app’s loopback')
+    assert(app2.hits[0] === '/?error=cancelled' && JSON.parse(admin('devices', 'wade', '--json')).length === before, `cancel: ${app2.hits[0]}`)
+    await ctx.close()
+    return 'yes: the code reached 127.0.0.1 and redeemed (cli); Cancel: ?error=cancelled, no device. WebKit has no virtual authenticator: its passkey was a software one at registration, so the signed-out branch (passkey sign-in, then the question) is proved in Chromium only'
+  } finally {
+    app.close()
+    app2.close()
+    await wk.close()
+  }
+})
+
+await check('devices: refused: a grant without CSRF, cross-site or from another origin, from a person not allowed, with a bad request; a wrong verifier (and the code is then spent), an expired code, a code from another key, a person disallowed before the redeem', async () => {
+  const d = await signedIn(dina)
+  const app = { S: randomBytes(32).toString('base64url') }
+  app.challenge = createHash('sha256').update(app.S).digest('base64url')
+  const body = (o = {}) => JSON.stringify({ challenge: app.challenge, name: 'Made-up Mac', kind: 'mac', ...o })
+  const grant = (o = {}, { cookie = d.cookie, csrf = d.csrf, headers = {}, origin } = {}) => api('/api/device/grant', { method: 'POST', cookie, csrf, body: body(o), headers: { 'content-type': 'application/json', ...headers }, ...(origin !== undefined ? { origin } : {}) })
+  const seen = {}
+  seen.noCsrf = (await grant({}, { csrf: undefined })).status
+  seen.crossSite = (await grant({}, { headers: { 'sec-fetch-site': 'cross-site' } })).status
+  seen.otherOrigin = (await grant({}, { origin: 'https://evil.example' })).status
+  seen.signedOut = (await grant({}, { cookie: undefined, csrf: undefined })).status
+  seen.alice = (await grant({}, { cookie: a.cookie, csrf: a.csrf })).status
+  for (const [k, o] of Object.entries({ shortChallenge: { challenge: 'abc' }, longName: { name: 'x'.repeat(61) }, controlName: { name: 'Mac\u0007' }, bidiName: { name: 'Mac‮niam' }, kind: { kind: 'ios' }, lowPort: { port: 80 }, textPort: { port: '5555' } })) seen[k] = (await grant(o)).status
+  const want = { noCsrf: 403, crossSite: 403, otherOrigin: 403, signedOut: 401, alice: 403, shortChallenge: 400, longName: 400, controlName: 400, bidiName: 400, kind: 400, lowPort: 400, textPort: 400 }
+  assert(JSON.stringify(seen) === JSON.stringify(want), `grants: ${JSON.stringify(seen)}`)
+  // A wrong verifier spends the code: the right one after it is refused too.
+  const c1 = (await grant()).json.code
+  const wrong = await redeem(c1, randomBytes(32).toString('base64url'))
+  const after = await redeem(c1, app.S)
+  // Expired: good for 6 s in this check (120 by default).
+  const c2 = (await grant()).json.code
+  await sleep(6500)
+  const late = await redeem(c2, app.S)
+  // A code made with another key, a device token used as a code, no pass at all.
+  const { makePass } = await import('../ops/pass.mjs')
+  const forged = await redeem(makePass(randomBytes(32), 'code', Math.floor(Date.now() / 1000) + 60).pass, app.S)
+  const tokenAsCode = await redeem(dinaToken, app.S)
+  const none = await redeem(null, app.S)
+  // Disallowed between the yes and the redeem.
+  const c3 = (await grant()).json.code
+  admin('disallow-devices', 'dina')
+  const disallowed = await redeem(c3, app.S)
+  admin('allow-devices', 'dina')
+  const got = [wrong, after, late, forged, tokenAsCode, none, disallowed].map((r) => `${r.status} ${r.json?.error}`)
+  assert(got.join(',') === '401 invalid_code,401 invalid_code,401 invalid_code,401 invalid_code,401 invalid_code,401 invalid_code,403 not_allowed', got.join(', '))
+  // dina was disallowed: her device from the first check was signed out with it.
+  assert((await asDevice('/api/device/me', dinaToken)).status === 401, 'a disallowed person’s device still works')
+  const refusedRows = JSON.parse(admin('audit', '--limit', '200', '--json')).filter((r) => r.action === 'device_refused').length
+  assert(refusedRows >= 3, `device_refused rows: ${refusedRows}`)
+  return `grants ${Object.values(seen).join(' ')}; redeems ${got.join(', ')}; ${refusedRows} device_refused rows`
+})
+
+let gwDevice = null
+await check('devices: the token reaches the gateway as the person’s own caller (models, usage, web search under their standing grant, a streamed chat), only on the allowed routes, and works nowhere outside /api/device/', async () => {
+  // A fresh device for dina (the last one went with disallow-devices).
+  const out = node('frontdesk/admin.mjs', ['add-device', 'dina', '--name', 'Made-up Mac', '--kind', 'mac'])
+  gwDevice = out.stdout.trim()
+  const pid = dbRowDevices(`SELECT id FROM people WHERE handle = 'dina'`).id
+  await sleep(3500) // the gateway reads the people file again within 3 s
+  const models = await asDevice('/api/device/gw/v1/models', gwDevice)
+  const usage = await asDevice('/api/device/gw/v1/usage', gwDevice)
+  const search = await asDevice('/api/device/gw/web/search', gwDevice, { method: 'POST', body: { q: 'made-up tenant survey' } })
+  assert(models.status === 200 && Array.isArray(models.json?.data), `models ${models.status} ${models.text.slice(0, 120)}`)
+  assert(usage.status === 200 && usage.json.caller === `p-${pid}`, `usage ${usage.status} ${usage.json?.caller}`)
+  assert(search.status === 200 && Array.isArray(search.json?.results), `search ${search.status} ${search.text.slice(0, 160)}`)
+  let chat = 'skipped (the live run points the gateway at the outside model)'
+  if (!LIVE) {
+    const c = await asDevice('/api/device/gw/v1/chat/completions', gwDevice, { method: 'POST', body: { model: 'general', stream: true, messages: [{ role: 'user', content: 'say hi on one line' }] } })
+    assert(c.status === 200 && c.headers.get('content-type')?.startsWith('text/event-stream') && c.text.includes('data: [DONE]'), `chat ${c.status} ${c.headers.get('content-type')} ${c.text.slice(0, 120)}`)
+    chat = 'streamed chat 200 (text/event-stream, [DONE])'
+  }
+  // Only the allowed routes, methods included; the device's own headers never reach the gateway's choice of lane.
+  const refused = {
+    embeddings: (await asDevice('/api/device/gw/v1/embeddings', gwDevice, { method: 'POST', body: { input: 'x' } })).status,
+    anthropic: (await asDevice('/api/device/gw/anthropic/v1/messages', gwDevice, { method: 'POST', body: {} })).status,
+    getChat: (await asDevice('/api/device/gw/v1/chat/completions', gwDevice)).status,
+    postModels: (await asDevice('/api/device/gw/v1/models', gwDevice, { method: 'POST', body: {} })).status,
+    batchLane: (await asDevice('/api/device/gw/web/search', gwDevice, { method: 'POST', body: { q: 'x' }, headers: { 'x-ola-lane': 'batch', 'x-ola-job': 'abcdefabcdef' } })).status,
+  }
+  assert(refused.embeddings === 403 && refused.anthropic === 403 && refused.getChat === 403 && refused.postModels === 403 && refused.batchLane === 200, JSON.stringify(refused))
+  // The token outside /api/device/: as a bearer or an X-Ola-Pass, on the API, the opencode door and the page's own device list.
+  const outside = []
+  for (const p of ['/api/me', '/api/project', '/oc/api/session', '/api/devices', '/api/device/../me']) {
+    outside.push((await asDevice(p, gwDevice, { headers: { 'x-ola-workspace': FA } })).status)
+    outside.push((await api(p, { headers: { 'x-ola-pass': gwDevice, 'x-ola-workspace': FA } })).status)
+  }
+  assert(outside.every((s) => s === 401), `outside /api/device/: ${outside}`)
+  // Without the TLS front a client's X-Ola-Pass is not read at all (only the front's would be).
+  assert((await api('/api/device/me', { headers: { 'x-ola-pass': gwDevice } })).status === 401, 'X-Ola-Pass was read without the TLS front')
+  return `models 200, usage as p-${pid}, search 200 (standing grant), ${chat}; refused ${JSON.stringify(refused)}; outside /api/device/ all 401`
+})
+
+await check('devices: an open model request is cut within two seconds when the device is removed in the page; the person sees their devices and removes one', async () => {
+  const shots = []
+  // dina has no project: her devices are on the projects page.
+  await dina.page.goto(`${ORIGIN}/#/`)
+  await dina.page.waitForSelector('.your-devices .device-row', { timeout: 15_000 })
+  const rows = await dina.page.locator('.your-devices .device-row-name').allInnerTexts()
+  assert(rows.includes('Made-up Mac'), `the list: ${rows}`)
+  if (SHOTS) {
+    for (const [w, h] of [[1280, 860], [390, 844]]) {
+      await dina.page.setViewportSize({ width: w, height: h })
+      await dina.page.waitForTimeout(250)
+      await dina.page.screenshot({ path: path.join(SHOTS, `devices-projects-${w}.png`), fullPage: true })
+    }
+    await dina.page.setViewportSize({ width: 1280, height: 860 })
+  }
+  let cut = 'skipped (live run)'
+  if (!LIVE) {
+    // A request the model holds 8 s, then Remove: the stream must end within two seconds.
+    const ctl = new AbortController()
+    const st = { status: null, ended: null }
+    fetch(`${ORIGIN}/api/device/gw/v1/chat/completions`, { method: 'POST', signal: ctl.signal, headers: { authorization: `Bearer ${gwDevice}`, 'content-type': 'application/json' }, body: JSON.stringify({ model: 'general', stream: true, messages: [{ role: 'user', content: 'slow 1x8000' }] }) })
+      .then(async (r) => {
+        st.status = r.status
+        for await (const _ of r.body);
+      })
+      .catch(() => {})
+      .finally(() => (st.ended = Date.now()))
+    await sleep(1500)
+    assert(st.ended === null, 'the request ended before the removal')
+    const t0 = Date.now()
+    await dina.page.getByRole('button', { name: 'Remove Made-up Mac' }).click()
+    await until(() => st.ended !== null, 5000, 'the cut')
+    assert(st.ended - t0 < 2500, `cut after ${st.ended - t0} ms`)
+    cut = `cut ${st.ended - t0} ms after Remove`
+  } else await dina.page.getByRole('button', { name: 'Remove Made-up Mac' }).click()
+  await until(async () => !(await dina.page.locator('.your-devices .device-row-name', { hasText: 'Made-up Mac' }).count()), 5000, 'the row gone')
+  assert((await asDevice('/api/device/me', gwDevice)).status === 401, 'the removed device still works')
+  shots.push(cut)
+  // In a project, the list is under Settings: alice, allowed for this check, a device added by the admin.
+  admin('allow-devices', 'alice')
+  const tok = node('frontdesk/admin.mjs', ['add-device', 'alice', '--name', 'Alice’s made-up Mac', '--kind', 'mac']).stdout.trim()
+  try {
+    await A.page.goto(`${ORIGIN}/?w=${FA}#/settings`)
+    await A.page.reload()
+    await A.page.waitForSelector('.settings .your-devices .device-row', { timeout: 20_000 })
+    if (SHOTS) await A.page.locator('.settings .your-devices').screenshot({ path: path.join(SHOTS, 'devices-settings-1280.png') })
+    await A.page.getByRole('button', { name: 'Remove Alice’s made-up Mac' }).click()
+    await until(async () => (await asDevice('/api/device/me', tok)).status === 401, 5000, 'alice’s device signed out')
+  } finally {
+    admin('disallow-devices', 'alice')
+  }
+  return `${cut}; the projects page and Settings list the devices; Remove signs one out`
+})
+
+await check('devices: add-device writes only the token to stdout; the people file is 600, replaced by rename, and untouched by ws.mjs rewriting the tokens file; revoke-device, revoke-sessions, disallow-devices and suspend sign devices out and take the person out of the file', async () => {
+  const add = node('frontdesk/admin.mjs', ['add-device', 'dina', '--name', 'Made-up CLI', '--kind', 'cli'])
+  assert(add.status === 0 && /^olap1\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\n$/.test(add.stdout), `stdout is not exactly one token line (${add.stdout.split('\n').length - 1} lines)`)
+  const tok = add.stdout.trim()
+  assert(!add.stderr.includes(tok.slice(6, 30)), 'the token is on stderr too')
+  const st1 = statSync(PEOPLE_FILE)
+  const pid = dbRowDevices(`SELECT id FROM people WHERE handle = 'dina'`).id
+  const text = readFileSync(PEOPLE_FILE, 'utf8')
+  assert((st1.mode & 0o777) === 0o600 && new RegExp(`^GATEWAY_TOKENS=(p-\\d+:[0-9a-f]{48},)*p-${pid}:[0-9a-f]{48}(,p-\\d+:[0-9a-f]{48})*\\n$`).test(text), `the people file: mode ${(st1.mode & 0o777).toString(8)}, shape ${text.replace(/[0-9a-f]{48}/g, '…')}`)
+  // ws.mjs rewrites its own file (as a workspace's create or rotation does): the people file is not touched.
+  const tokens = path.join(env.OLA_HOME, 'gateway-tokens')
+  const before = statSync(tokens).ino
+  const w = spawnSync(process.execPath, ['--input-type=module', '-e', `const m = await import(${JSON.stringify(path.join(AI, 'workspace/ws.mjs'))}); m.writeGatewayTokens()`], { env, encoding: 'utf8' })
+  assert(w.status === 0 && statSync(tokens).ino !== before, `ws.mjs did not rewrite its file (${w.status})`)
+  const st2 = statSync(PEOPLE_FILE)
+  assert(st2.ino === st1.ino && readFileSync(PEOPLE_FILE, 'utf8') === text, 'the people file changed when ws.mjs wrote its own')
+  await sleep(3500)
+  assert((await asDevice('/api/device/gw/v1/models', tok)).status === 200, 'the person’s caller was lost after the ws.mjs rewrite')
+  // revoke-device: refused at once; and with no live device the person leaves the file (replaced by rename).
+  const id = JSON.parse(admin('devices', 'dina', '--json')).find((x) => x.name === 'Made-up CLI' && !x.revoked).id
+  admin('revoke-device', String(id))
+  assert((await asDevice('/api/device/me', tok)).status === 401, 'revoke-device')
+  const st3 = statSync(PEOPLE_FILE)
+  assert(st3.ino !== st1.ino && !readFileSync(PEOPLE_FILE, 'utf8').includes(`p-${pid}:`) && (st3.mode & 0o777) === 0o600, 'the person is still in the file')
+  // revoke-sessions and suspend end devices too; so does disallow-devices (proved in the refusals above).
+  const t2 = node('frontdesk/admin.mjs', ['add-device', 'dina', '--name', 'Made-up CLI 2', '--kind', 'cli']).stdout.trim()
+  admin('revoke-sessions', 'dina')
+  const afterRevoke = (await asDevice('/api/device/me', t2)).status
+  admin('add-person', 'sam', '--name', 'Sam S.')
+  admin('allow-devices', 'sam')
+  dbRowDevices(`UPDATE people SET status = 'active' WHERE handle = 'sam' RETURNING id`)
+  const t3 = node('frontdesk/admin.mjs', ['add-device', 'sam', '--name', 'Made-up Mac', '--kind', 'mac']).stdout.trim()
+  const samOk = (await asDevice('/api/device/me', t3)).status
+  admin('suspend', 'sam')
+  const afterSuspend = (await asDevice('/api/device/me', t3)).status
+  assert(afterRevoke === 401 && samOk === 200 && afterSuspend === 401, `revoke-sessions ${afterRevoke}, sam ${samOk} then suspended ${afterSuspend}`)
+  // An app signs itself out.
+  const t4 = node('frontdesk/admin.mjs', ['add-device', 'dina', '--name', 'Made-up CLI 3', '--kind', 'cli']).stdout.trim()
+  const out = await asDevice('/api/device/signout', t4, { method: 'POST', body: {} })
+  assert(out.status === 200 && (await asDevice('/api/device/me', t4)).status === 401, `signout ${out.status}`)
+  const words = new Set(JSON.parse(admin('audit', '--limit', '400', '--json')).map((r) => r.action))
+  assert(['device_signed_in', 'device_signed_out', 'device_revoked', 'device_refused'].every((x) => words.has(x)), `audit words: ${[...words].filter((x) => x.startsWith('device_'))}`)
+  // The database holds the token's sha256 only, never the token.
+  const raw = readFileSync(path.join(env.OLA_FD_DATA, 'platform.db'))
+  assert(![tok, t2, t3, t4].some((t) => raw.includes(Buffer.from(t))), 'a device token is in the database file')
+  return `one stdout line; people file 600, same inode across a ws.mjs rewrite, new inode after revoke-device; revoke-sessions, suspend, signout all 401 after`
+})
+
 await check('the opencode door refuses routes the page does not use, for an owner too', async () => {
   const bad = []
   for (const [m, p] of [['GET', '/oc/api/config'], ['POST', '/oc/api/session/x/shell'], ['GET', '/oc/api/credential'], ['POST', '/oc/api/pty'], ['GET', '/oc/api/provider'], ['GET', '/oc/api/file?path=/etc/passwd']]) {

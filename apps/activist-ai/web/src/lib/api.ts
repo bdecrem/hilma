@@ -210,6 +210,12 @@ export const compare = {
   send: (id: string, release = false) => post<{ id: string; state: string }>('/api/compare/send', { id, release }),
   discard: (id: string) => post<{ ok: true }>('/api/compare/discard', { id }),
 }
+/** Signing in the Mac app and the command line (frontdesk/devices.mjs). */
+export const devicesApi = {
+  grant: (b: { challenge: string; name: string; kind: 'mac' | 'cli'; port: number }) => post<{ code: string }>('/api/device/grant', b),
+  list: () => call<{ enabled: boolean; allowed: boolean; devices: import('./types.ts').Device[] }>('/api/devices'),
+  remove: (id: number) => call<{ ok: true }>(`/api/devices/${id}`, { method: 'DELETE' }),
+}
 /** The Quality page (admins only). */
 export const qualityApi = { get: () => call<import('./types.ts').Quality>('/api/quality') }
 

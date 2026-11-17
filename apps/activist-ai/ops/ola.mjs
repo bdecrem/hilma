@@ -317,6 +317,34 @@ if (cmd === 'container-up') {
   const u = gwEnv.GATEWAY_USAGE_TOKEN ? await request(gwPort, '/v1/usage', { headers: { authorization: `Bearer ${gwEnv.GATEWAY_USAGE_TOKEN}` } }) : { status: -1 }
   if (u.status !== 200) bad++
   console.log(`${u.status === 200 ? 'ok  ' : 'DOWN'}  gateway              127.0.0.1:${gwPort} ${u.status === 200 ? `${u.json.data.length} caller(s), ${u.json.inflight} in flight, ${u.json.queued} waiting` : u.status === -1 ? '(no GATEWAY_USAGE_TOKEN to ask with)' : `/v1/usage ${u.status || 'no answer'}`}`)
+  {
+    // Device sign-in (frontdesk/devices.mjs, ops/pass.mjs): on when the pass key is in the front
+    // desk's and the TLS front's env files, the same value in both, the front desk reads the front's
+    // X-Ola-Pass (the PROXY protocol), and the gateway reads the people file the front desk keeps.
+    // Off when neither file has the key. Nothing here prints a value.
+    const tlsEnv = existsSync(TLS_ENV) ? readEnv(TLS_ENV) : {}
+    const kFd = fdEnv.OLA_GATE_PASS_KEY || ''
+    const kTls = tlsEnv.OLA_GATE_PASS_KEY || ''
+    const peopleFd = fdEnv.OLA_FD_PEOPLE_TOKENS_FILE || path.join(OLA, 'gateway-people')
+    const peopleGw = gwEnv.GATEWAY_PEOPLE_TOKENS_FILE || ''
+    const why = []
+    if (!kFd && !kTls) console.log('ok    device sign-in       off (no OLA_GATE_PASS_KEY in frontdesk.env or tls.env)')
+    else {
+      if (!/^[0-9a-f]{64}$/i.test(kFd)) why.push('OLA_GATE_PASS_KEY missing or not 64 hex characters in frontdesk.env')
+      if (existsSync(TLS_ENV) && !/^[0-9a-f]{64}$/i.test(kTls)) why.push('OLA_GATE_PASS_KEY missing or not 64 hex characters in tls.env')
+      if (kFd && kTls && kFd.toLowerCase() !== kTls.toLowerCase()) why.push('OLA_GATE_PASS_KEY differs between frontdesk.env and tls.env')
+      if (existsSync(TLS_ENV) && fdEnv.OLA_FD_PROXY_PROTOCOL !== '1') why.push('the front desk is not on the PROXY protocol, so it would not read the TLS front’s X-Ola-Pass')
+      if (path.resolve(peopleGw || '/nowhere') !== path.resolve(peopleFd)) why.push(`GATEWAY_PEOPLE_TOKENS_FILE in gateway.env is not ${peopleFd}`)
+      let people = 0
+      try {
+        const st = statSync(peopleFd)
+        if ((st.mode & 0o077) !== 0) why.push('the people file is not mode 600')
+        people = (readFileSync(peopleFd, 'utf8').match(/(^|[=,])p-\d+:/g) ?? []).length
+      } catch {}
+      if (why.length) bad++
+      console.log(`${why.length ? 'DOWN' : 'ok  '}  device sign-in       ${why.length ? why.join('; ') : `on; ${people} person(s) with a signed-in device (node frontdesk/admin.mjs devices)`}`)
+    }
+  }
   const ws = sh(process.execPath, [path.join(CODE, 'workspace/ws.mjs'), 'status', '--json'], { env: { ...process.env, OLA_HOME: OLA } })
   let rows = []
   try {

@@ -10,6 +10,7 @@ import { createResource, createSignal, For, Match, onCleanup, Show, Switch } fro
 import { desk, DeskError, passkeys, setCsrf, setMaxUpload, workspace } from '../lib/api.ts'
 import type { Me, Problem } from '../lib/types.ts'
 import { App } from '../App.tsx'
+import { DeviceSignIn, deviceRequestOf, YourDevices } from './Device.tsx'
 
 const inviteOf = () => /^#\/invite\/([A-Za-z0-9_-]{20,100})$/.exec(location.hash)?.[1] ?? null
 
@@ -43,6 +44,11 @@ export function Gate() {
   window.addEventListener('ola:signed-out', onSignedOut)
   onCleanup(() => window.removeEventListener('ola:signed-out', onSignedOut))
   const current = () => me()?.workspaces.find((w) => w.slug === workspace())
+  // An app on another computer asking to sign in (#/device?…): after the person's own sign-in.
+  const [deviceAsk, setDeviceAsk] = createSignal(deviceRequestOf(location.hash))
+  const onHash = () => setDeviceAsk(deviceRequestOf(location.hash))
+  window.addEventListener('hashchange', onHash)
+  onCleanup(() => window.removeEventListener('hashchange', onHash))
 
   return (
     <Switch fallback={<Room><p class="gate-lede">Opening…</p></Room>}>
@@ -52,7 +58,12 @@ export function Gate() {
         </Room>
       </Match>
       <Match when={me() === null}>
-        <SignIn invite={inviteOf()} onSignedIn={signedIn} />
+        <SignIn invite={inviteOf()} onSignedIn={signedIn} device={deviceAsk()} />
+      </Match>
+      <Match when={me() && deviceAsk()}>
+        <Room>
+          <DeviceSignIn request={deviceAsk()!} me={me()!} onDone={() => (location.hash = '#/')} />
+        </Room>
       </Match>
       <Match when={me() && current()}>
         <Notices notices={me()!.notices} />
@@ -104,7 +115,7 @@ function GateProblem(props: { problem: Problem }) {
   )
 }
 
-function SignIn(props: { invite: string | null; onSignedIn: () => void }) {
+function SignIn(props: { invite: string | null; onSignedIn: () => void; device?: ReturnType<typeof deviceRequestOf> }) {
   const [problem, setProblem] = createSignal<Problem | null>(null)
   const [busy, setBusy] = createSignal(false)
   // The ceremony is prepared ahead and refreshed before the server's five minutes run out.
@@ -159,7 +170,13 @@ function SignIn(props: { invite: string | null; onSignedIn: () => void }) {
               <span class="gate-name">{name()}.</span>
             </Show>
           </h1>
-          <p class="gate-lede">{props.invite ? 'Bart invited you to the computer in his office. Make a passkey on this device, and you are in.' : 'Sign in to the computer in Bart’s office.'}</p>
+          <p class="gate-lede">
+            {props.invite
+              ? 'Bart invited you to the computer in his office. Make a passkey on this device, and you are in.'
+              : props.device && props.device !== 'bad'
+                ? `Sign in here first. Then you can let Ola on ${props.device.name} in.`
+                : 'Sign in to the computer in Bart’s office.'}
+          </p>
           <Show when={problem()}>{(p) => <GateProblem problem={p()} />}</Show>
           <button type="button" class="paper-button" onClick={go} disabled={busy() || !prepared()} aria-describedby="gate-how">
             {busy() ? 'Waiting for your passkey…' : props.invite ? 'Make my passkey' : 'Sign in with your passkey'}
@@ -209,6 +226,9 @@ function Projects(props: { me: Me; unknown: boolean; onSignOut: () => void }) {
             )}
           </For>
         </ul>
+      </Show>
+      <Show when={props.me.devices && (props.me.devices.allowed || props.me.devices.count > 0)}>
+        <YourDevices tone="room" />
       </Show>
     </Room>
   )

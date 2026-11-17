@@ -124,6 +124,18 @@ export interface Me {
   policy: { deleteNotice: string; maxUpload?: number; searchProvider?: string }
   /** What the person must be told once, such as a passkey added for another device. */
   notices?: { kind: string; at: string; text: string }[]
+  /** Signing in the Mac app and the command line: null when this machine has it off. */
+  devices?: { allowed: boolean; count: number } | null
+}
+
+/** A computer signed in to the person's account (the Mac app, the command line). */
+export interface Device {
+  id: number
+  name: string
+  kind: 'mac' | 'cli'
+  created: string
+  lastUsed: string | null
+  expires: string
 }
 
 export interface FileEntry {

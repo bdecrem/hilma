@@ -36,6 +36,7 @@ import { makeWeb } from './web.mjs'
 import { hostedConfig, makeHosted } from './hosted.mjs'
 import { jobsConfig, makeJobs } from './jobs.mjs'
 import { compareConfig, makeCompare } from './compare.mjs'
+import { devicesConfig, makeDevices } from './devices.mjs'
 import { routeNeed } from '../web/server/proxy.mjs'
 import { tooLargeMessage, validName } from '../web/server/files.mjs'
 import { closeAfter, lingering, readUpTo } from '../web/server/linger.mjs'
@@ -93,6 +94,9 @@ export function config(env = process.env) {
     // Batch jobs (jobs.mjs): the gateway's job grants file, how often jobs are looked after.
     jobs: jobsConfig(env),
     compare: compareConfig(env),
+    // Devices (devices.mjs): the Mac app and the command line signed in to an account. Off unless
+    // OLA_GATE_PASS_KEY is set (the same value as the TLS front's).
+    devices: devicesConfig(env, { home: WS_HOME, proxyProtocol: env.OLA_FD_PROXY_PROTOCOL === '1' }),
     // Shown in the delete confirmation. The product decision: a deleted file leaves the workspace
     // at once and stays in encrypted backups for up to 14 days.
     deleteNotice:
@@ -186,6 +190,7 @@ export function makeFrontDesk(cfg = config()) {
   }
   const workspaces = makeWorkspaces({ db, keys, log, idleStopMs: cfg.idleStopMs, runCeilingMs: cfg.runCeilingMs, webModeOf: (slug) => web.modeBySlug(slug) })
   const clientOf = (req) => req.socket.olaClient ?? addressKey(req.socket.remoteAddress)
+  const devices = makeDevices({ db, cfg: cfg.devices, gateway: cfg.claude.gateway, auth, clientOf, json, readJson, recheckMs: RECHECK_MS, log })
 
   // "People working": how many people made a request in the last whole window (5 minutes), all
   // teams together, in memory only, never who. The number changes only at a window's end, so
@@ -920,6 +925,8 @@ export function makeFrontDesk(cfg = config()) {
     const api = p.startsWith('/api/') || p.startsWith('/oc/')
     const site = req.headers['sec-fetch-site']
     if (api && site && site !== 'same-origin' && site !== 'none') return json(res, 403, { error: 'cross_site' })
+    // A signed-in device (the Mac app, the command line): its pass, no cookie, no Origin (devices.mjs).
+    if (devices.isDeviceRoute(p)) return devices.handle(req, res, p)
     const writes = req.method !== 'GET' && req.method !== 'HEAD'
     if (writes && req.headers.origin !== cfg.origin) return json(res, 403, { error: 'wrong_origin' })
 
@@ -955,7 +962,19 @@ export function makeFrontDesk(cfg = config()) {
              WHERE m.person_id = ? AND w.status = 'active' ORDER BY w.name`,
           )
           .all(sess.personId)
-        return json(res, 200, { person: { handle: sess.handle, name: sess.name, ...(sess.isAdmin ? { admin: true } : {}) }, csrf: sess.csrf, workspaces: list, machine: { working: working(sess.personId), capacity: cfg.capacity }, policy: { deleteNotice: cfg.deleteNotice, maxUpload: cfg.maxUpload, searchProvider: cfg.searchProvider }, notices: auth.notices(sess) })
+        const dl = devices.enabled ? devices.list(sess) : null
+        return json(res, 200, { person: { handle: sess.handle, name: sess.name, ...(sess.isAdmin ? { admin: true } : {}) }, csrf: sess.csrf, workspaces: list, machine: { working: working(sess.personId), capacity: cfg.capacity }, policy: { deleteNotice: cfg.deleteNotice, maxUpload: cfg.maxUpload, searchProvider: cfg.searchProvider }, notices: auth.notices(sess), devices: dl ? { allowed: dl.allowed, count: dl.devices.length } : null })
+      }
+      // Devices: the page approves an app's sign-in, lists the person's computers, removes one.
+      if (p === '/api/device/grant' && req.method === 'POST') return devices.grant(req, res, sess)
+      if (p === '/api/devices' || p.startsWith('/api/devices/')) {
+        if (!devices.enabled) return json(res, 404, NOT_FOUND)
+        if (p === '/api/devices' && req.method === 'GET') return json(res, 200, devices.list(sess))
+        if (req.method === 'DELETE') {
+          const r = devices.remove(sess, p.slice('/api/devices/'.length))
+          return json(res, r.status, r.body)
+        }
+        return json(res, 404, NOT_FOUND)
       }
       // "Open" on a page: a navigation from the app (same-origin, so the Strict cookie came along).
       if (p === '/api/open' && req.method === 'GET') return views.open(req, res, sess, url)
@@ -1058,7 +1077,7 @@ export function makeFrontDesk(cfg = config()) {
     if (!server.listeners('listening').some((f) => f.name === 'setupConnectionsTracking')) throw new Error('this Node does not start HTTP timeouts on listening; the PROXY protocol mode needs review')
     listener.once('listening', () => server.emit('listening'))
   } else server.on('connection', (sock) => admit(sock, addressKey(sock.remoteAddress)))
-  return { server, listener, db, cfg, workspaces, views, claude, hosted, jobs, compare, close: () => (compare.close(), jobs.close(), claude.close(), hosted.close(), workspaces.close(), web.close(), listener.close(), listener !== server && server.close(), db.close()) }
+  return { server, listener, db, cfg, workspaces, views, claude, hosted, jobs, compare, devices, close: () => (devices.close(), compare.close(), jobs.close(), claude.close(), hosted.close(), workspaces.close(), web.close(), listener.close(), listener !== server && server.close(), db.close()) }
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

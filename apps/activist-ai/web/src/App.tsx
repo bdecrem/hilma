@@ -223,7 +223,7 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
                 {(path) => <FileTableView path={path} />}
               </Show>
               <Show when={route() === 'settings'}>
-                <SettingsView ola={ola} titleRef={(el) => (settingsTitle = el)} canWrite={canRun()} />
+                <SettingsView ola={ola} titleRef={(el) => (settingsTitle = el)} canWrite={canRun()} showDevices={!!props.me.devices && (props.me.devices.allowed || props.me.devices.count > 0)} />
               </Show>
               {/* Bart's own page (admins only; the front desk answers 404 to anyone else). */}
               <Show when={route() === 'quality' && props.me.person.admin}>

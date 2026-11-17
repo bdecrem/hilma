@@ -14,6 +14,7 @@ import path from 'node:path'
 import { after, before, test } from 'node:test'
 import tls from 'node:tls'
 import { fileURLToPath } from 'node:url'
+import { makePass } from './pass.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const T = mkdtempSync(path.join(tmpdir(), 'ola-tls-test-'))
@@ -45,7 +46,7 @@ const swap = (dir) => (rmSync(`${LIVE}.new`, { force: true }), symlinkSync(path.
 let stub, STUB_PORT
 const stubHttp = http.createServer((req, res) => {
   const client = req.socket.olaClient ?? null
-  if (req.url === '/who' || req.url === '/api/health') return res.end(JSON.stringify({ client, host: req.headers.host, authorization: req.headers.authorization ?? null }))
+  if (req.url === '/who' || req.url === '/api/health' || req.url.startsWith('/api/device/')) return res.end(JSON.stringify({ client, host: req.headers.host, authorization: req.headers.authorization ?? null, pass: req.headers['x-ola-pass'] ?? null }))
   if (req.url === '/upload') {
     let n = 0
     req.on('data', (d) => (n += d.length))
@@ -120,11 +121,11 @@ function connect(port, { from = '100.101.102.103', proxy = true, servername = NA
     raw.once('error', reject)
   })
 }
-function get(port, p, { auth = `ola:${PASS}`, ...opts } = {}, body) {
+function get(port, p, { auth = `ola:${PASS}`, headers = {}, ...opts } = {}, body) {
   return connect(port, opts).then(
     (sock) =>
       new Promise((resolve, reject) => {
-        const req = https.request({ host: NAME, defaultPort: 443, path: p, method: body ? 'POST' : 'GET', createConnection: () => sock, headers: { ...(body ? { 'content-length': body.length } : {}), ...(auth ? { authorization: `Basic ${Buffer.from(auth).toString('base64')}` } : {}) } }, (res) => {
+        const req = https.request({ host: NAME, defaultPort: 443, path: p, method: body ? 'POST' : 'GET', createConnection: () => sock, headers: { ...(body ? { 'content-length': body.length } : {}), ...(auth ? { authorization: `Basic ${Buffer.from(auth).toString('base64')}` } : {}), ...headers } }, (res) => {
           let t = ''
           res.on('data', (d) => (t += d))
           res.on('end', () => resolve({ status: res.statusCode, headers: res.headers, body: t, serial: sock.getPeerX509Certificate()?.serialNumber, protocol: sock.getProtocol() }))
@@ -156,7 +157,7 @@ test('a request reaches the front desk with the client address from the relay, o
   const r = await get(f.port, '/who', { from: '100.64.7.9' })
   assert.equal(r.status, 200)
   // The passcode got it through, and the front desk never sees it.
-  assert.deepEqual(JSON.parse(r.body), { client: '100.64.7.9', host: NAME, authorization: null })
+  assert.deepEqual(JSON.parse(r.body), { client: '100.64.7.9', host: NAME, authorization: null, pass: null })
   assert.equal(r.serial, SERIAL_A)
   assert.equal(r.protocol, 'TLSv1.3')
   const r6 = await get(f.port, '/who', { from: 'fd7a:115c:a1e0::1' })
@@ -379,4 +380,65 @@ test('slow clients: headers a byte at a time are cut after about 5 s; a connecti
     s.on('error', () => {})
   })
   assert.ok(raw >= 9000 && raw < 12_500, `no handshake held ${raw} ms`)
+})
+
+// ------------------------------------------------------------------ device passes (ops/pass.mjs)
+const KEY = 'ab'.repeat(32)
+const KEYBUF = Buffer.from(KEY, 'hex')
+const soon = () => Math.floor(Date.now() / 1000) + 3600
+const bearer = (p) => ({ authorization: `Bearer ${p}` })
+
+test('device passes: a valid pass passes with no passcode and arrives as X-Ola-Pass; Authorization and a client-sent X-Ola-Pass never arrive', async () => {
+  const f = await startFront({ OLA_GATE_PASS_KEY: KEY })
+  const p = makePass(KEYBUF, 'device', soon()).pass
+  const r = await get(f.port, '/api/device/me', { auth: null, headers: { ...bearer(p), 'x-ola-pass': 'olap1.forged.forged' }, from: '100.64.61.1' })
+  assert.equal(r.status, 200, r.body)
+  assert.deepEqual(JSON.parse(r.body), { client: '100.64.61.1', host: NAME, authorization: null, pass: p })
+  const code = makePass(KEYBUF, 'code', Math.floor(Date.now() / 1000) + 120).pass
+  assert.equal(JSON.parse((await get(f.port, '/api/device/token', { auth: null, headers: bearer(code) })).body).pass, code)
+  // With the passcode, a pass a client puts in X-Ola-Pass itself is removed, on any path.
+  for (const where of ['/api/device/me', '/who']) assert.equal(JSON.parse((await get(f.port, where, { headers: { 'x-ola-pass': p } })).body).pass, null, where)
+  // The same with the gate off (the day the passcode goes): the pass is checked, the header is the front's.
+  const open = await startFront({ OLA_TLS_GATE: '0', OLA_TLS_GATE_PASSCODE: '', OLA_GATE_PASS_KEY: KEY })
+  assert.equal(JSON.parse((await get(open.port, '/api/device/me', { auth: null, headers: bearer(p) })).body).pass, p)
+  assert.equal(JSON.parse((await get(open.port, '/who', { auth: null, headers: { 'x-ola-pass': p } })).body).pass, null)
+  assert.match(f.out(), /"devicePasses":true/)
+})
+
+test('device passes: a bad MAC, an expired pass, a path outside /api/device/ and any pass with no key set are refused like a wrong passcode, and count toward the block', async () => {
+  const f = await startFront({ OLA_GATE_PASS_KEY: KEY })
+  const p = makePass(KEYBUF, 'device', soon()).pass
+  const forged = makePass(Buffer.from('cd'.repeat(32), 'hex'), 'device', soon()).pass
+  const expired = makePass(KEYBUF, 'device', Math.floor(Date.now() / 1000) - 5).pass
+  const tampered = p.slice(0, -2) + (p.endsWith('AA') ? 'AB' : 'AA')
+  const cases = [
+    ['a bad MAC', forged, '/api/device/me'],
+    ['a changed MAC', tampered, '/api/device/me'],
+    ['expired', expired, '/api/device/me'],
+    ['the web app', p, '/'],
+    ['another API', p, '/api/me'],
+    ['dot segments out of /api/device/', p, '/api/device/../me'],
+    ['encoded dot segments', p, '/api/device/%2e%2e/me'],
+    ['not a pass', 'k7Hm3Qp9Wx2Rt8Vn4Zc6', '/api/device/me'],
+  ]
+  let n = 0
+  for (const [what, pass, where] of cases) {
+    const t = Date.now()
+    const r = await get(f.port, where, { auth: null, headers: bearer(pass), from: `100.64.70.${++n}` })
+    assert.equal(r.status, 401, what)
+    assert.equal(r.headers['www-authenticate'], challenge, what)
+    assert.ok(!r.body.includes('client'), `${what}: reached the front desk`)
+    assert.ok(Date.now() - t >= 240, `${what}: answered at once, not as a wrong passcode`)
+  }
+  // No key: the feature is off, and a pass made with any key is a wrong credential.
+  const nokey = await startFront()
+  assert.equal((await get(nokey.port, '/api/device/me', { auth: null, headers: bearer(p) })).status, 401)
+  assert.match(nokey.out(), /"devicePasses":false/)
+  // Ten bad passes block the address: then a good pass and the right passcode are 429 too.
+  const b = '100.64.71.1'
+  await Promise.all(Array.from({ length: 10 }, () => get(f.port, '/api/device/me', { auth: null, headers: bearer(forged), from: b })))
+  assert.equal((await get(f.port, '/api/device/me', { auth: null, headers: bearer(p), from: b })).status, 429)
+  assert.equal((await get(f.port, '/who', { from: b })).status, 429)
+  // A bad key setting is refused at start.
+  for (const env of [{ OLA_GATE_PASS_KEY: 'abc' }, { OLA_GATE_PASS_KEY: 'zz'.repeat(32) }]) await assert.rejects(startFront(env), /exited 78/, JSON.stringify(env))
 })

@@ -41,6 +41,15 @@
 // `/api/health` passes without the passcode from loopback only (the status command asks there).
 // A request to upgrade the connection (WebSocket) is refused: the front desk uses none.
 //
+// Passes (2026-11-17; ops/pass.mjs). A signed-in device (the Mac app, the command line) sends
+// `Authorization: Bearer olap1.…` instead of the passcode. With OLA_GATE_PASS_KEY set (the same
+// value as the front desk's), a pass whose MAC checks out and has not expired, on a path under
+// /api/device/, goes through without the passcode: its Authorization is removed and the pass is
+// sent on as `X-Ola-Pass`, which the front desk checks again itself. Any other bearer (a bad MAC,
+// expired, another path, or no key set) is a wrong credential: the same growing delays, the same
+// block, the same reply. An `X-Ola-Pass` a client sends is always removed. This is the same with
+// the gate on or off, so a device keeps working the day the passcode goes.
+//
 // Logs: one JSON line per start and reload, and once a minute the counts of refusals. Never an
 // address, a path or a header.
 import { X509Certificate, createHash, timingSafeEqual } from 'node:crypto'
@@ -52,6 +61,7 @@ import { homedir } from 'node:os'
 import path from 'node:path'
 import tls from 'node:tls'
 import { fileURLToPath } from 'node:url'
+import { bearerPass, passKey, PASS_PATH, readPass } from './pass.mjs'
 
 export const CIPHERS = [
   'ECDHE-ECDSA-AES128-GCM-SHA256',
@@ -97,6 +107,8 @@ export function config(env = process.env) {
     proxyOut: flag('OLA_TLS_PROXY_OUT', '1'),
     gate,
     passDigest: gate ? createHash('sha256').update(pass).digest() : null,
+    // Device passes (ops/pass.mjs): null when OLA_GATE_PASS_KEY is unset, and then every bearer is refused.
+    passKey: passKey(env),
     perAddress: int('OLA_TLS_CONNECTIONS_PER_ADDRESS', 128, 1, 10_000),
     maxConnections: int('OLA_TLS_MAX_CONNECTIONS', 512, 1, 10_000),
   }
@@ -152,7 +164,7 @@ export function makeTlsFront(cfg = config()) {
   const log = (o) => console.log(JSON.stringify({ t: new Date().toISOString(), event: 'tls', ...o }))
   let current = loadCert(cfg.certDir, cfg.servername)
   let seen = stamp(cfg.certDir)
-  const counts = { noProxy: 0, handshake: 0, capped: 0, noPasscode: 0, wrongPasscode: 0, blocked: 0, upgrade: 0, upstreamDown: 0 }
+  const counts = { noProxy: 0, handshake: 0, capped: 0, noPasscode: 0, wrongPasscode: 0, badPass: 0, passes: 0, blocked: 0, upgrade: 0, upstreamDown: 0 }
 
   // ------------------------------------------------------------ the gate
   const fails = new Map() // address key -> { n, last, blockedUntil }
@@ -196,9 +208,11 @@ export function makeTlsFront(cfg = config()) {
   // ------------------------------------------------------------ to the front desk
   // Hop-by-hop headers stay on their own hop; Node frames each side itself.
   const HOP = new Set(['connection', 'keep-alive', 'proxy-connection', 'transfer-encoding', 'te', 'trailer', 'upgrade', 'proxy-authorization', 'proxy-authenticate'])
-  const pipeUp = (req, res, client) => {
+  const pipeUp = (req, res, client, pass = null) => {
     const headers = {}
-    for (const [k, v] of Object.entries(req.headers)) if (!HOP.has(k) && k !== 'authorization') headers[k] = v
+    // The client's own X-Ola-Pass never goes on: only one this front checked does.
+    for (const [k, v] of Object.entries(req.headers)) if (!HOP.has(k) && k !== 'authorization' && k !== 'x-ola-pass') headers[k] = v
+    if (pass) headers['x-ola-pass'] = pass
     // A chunked body stays chunked. Node's client frames a GET, HEAD or DELETE body only when told:
     // without this the body went up as raw bytes after the headers, where a request inside it was
     // stopped only by the front desk's parser refusing bytes after a `Connection: close` request
@@ -241,9 +255,33 @@ export function makeTlsFront(cfg = config()) {
     req.pipe(up)
   }
 
+  // A pass may be used only under /api/device/: the raw request line and the path as the front desk
+  // will read it (the URL parser resolves dot segments, %2e%2e included) must both be there.
+  const passPathOk = (url) => {
+    if (typeof url !== 'string' || !PASS_PATH.test(url)) return false
+    try {
+      return PASS_PATH.test(new URL(url, 'http://x').pathname)
+    } catch {
+      return false
+    }
+  }
   async function handle(req, res) {
     const client = req.socket.olaClient
     if (!client) return req.socket.destroy()
+    // A bearer is a device's pass, or a wrong credential: never the passcode, never let through.
+    if (typeof req.headers.authorization === 'string' && /^bearer\s/i.test(req.headers.authorization)) {
+      const key = addressKey(client.address)
+      if (blocked(key)) return counts.blocked++, refuse(res, 429, PAGE_429, { 'retry-after': String(Math.ceil(GATE.blockMs / 1000)) })
+      const pass = bearerPass(req.headers.authorization)
+      if (!pass || !passPathOk(req.url) || !readPass(cfg.passKey, pass)) {
+        counts.badPass++
+        const wait = failed(key)
+        return setTimeout(() => refuse(res, 401, PAGE_401, { 'www-authenticate': 'Basic realm="Ola", charset="UTF-8"' }), wait)
+      }
+      fails.delete(key)
+      counts.passes++
+      return pipeUp(req, res, client, pass)
+    }
     if (cfg.gate && !(req.url === '/api/health' && LOOPBACK.has(client.address))) {
       const key = addressKey(client.address)
       if (blocked(key)) return counts.blocked++, refuse(res, 429, PAGE_429, { 'retry-after': String(Math.ceil(GATE.blockMs / 1000)) })
@@ -390,7 +428,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const { cfg } = front
   front.listener.on('error', (e) => (console.error(`tls: listen: ${e.code}`), process.exit(1)))
   front.listener.listen(cfg.listen.port, cfg.listen.host, () =>
-    front.log({ msg: 'start', listen: `${cfg.listen.host}:${front.listener.address().port}`, upstream: `${cfg.upstream.host}:${cfg.upstream.port}`, servername: cfg.servername, proxyIn: cfg.proxyIn, proxyOut: cfg.proxyOut, gate: cfg.gate, ...front.cert() }),
+    front.log({ msg: 'start', listen: `${cfg.listen.host}:${front.listener.address().port}`, upstream: `${cfg.upstream.host}:${cfg.upstream.port}`, servername: cfg.servername, proxyIn: cfg.proxyIn, proxyOut: cfg.proxyOut, gate: cfg.gate, devicePasses: !!cfg.passKey, ...front.cert() }),
   )
   process.on('SIGHUP', () => front.reload('SIGHUP'))
   const stop = () => (front.close(), process.exit(0))

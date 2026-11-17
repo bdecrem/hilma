@@ -69,7 +69,9 @@ export const ACTIONS_V9 = [
   // released by the owner's yes, a comparison sent and done (tokens and cost: Claude and the judge).
   'compare_real_enabled', 'compare_real_disabled', 'compare_real_once', 'compare_twin_made', 'compare_twin_released', 'compare_sent', 'compare_done',
 ]
-export const ACTIONS = ACTIONS_V9
+/** Migration 11's list: devices (devices.mjs), a computer signed in to Ola, out, removed, or refused. */
+export const ACTIONS_V11 = [...ACTIONS_V9, 'device_signed_in', 'device_signed_out', 'device_revoked', 'device_refused']
+export const ACTIONS = ACTIONS_V11
 
 // The comparisons' fixed words (frontdesk/compare.mjs; the labels are the eval set's own list).
 const COMPARE_KINDS = ['clean', 'sql', 'coding', 'legal', 'site', 'honesty', 'pdf', 'writing', 'chart', 'other']
@@ -450,6 +452,48 @@ const MIGRATIONS = [
   // only while one of its runs goes on (claude.mjs, hosted.mjs).
   `
   ALTER TABLE batch_jobs ADD COLUMN runner_key_sha256 TEXT CHECK (runner_key_sha256 IS NULL OR (length(runner_key_sha256) = 64 AND runner_key_sha256 NOT GLOB '*[^0-9a-f]*'));
+  `,
+  // 11: devices (frontdesk/devices.mjs): the Mac app or the command line, signed in to a person's
+  // account through the browser. Who may (devices_allowed, off; admins always may), and one row per
+  // device: its name as the app gave it (shown back to the person; no other text from a person is
+  // kept), mac or cli, the sha256 of its token (never the token), when it was made, last used, when
+  // it ends (180 days) and when it was revoked. No IP, no user agent. New audit words: the table is
+  // rebuilt for the CHECK, as in 2, 3, 4, 6, 7, 8 and 9.
+  `
+  ALTER TABLE people ADD COLUMN devices_allowed INTEGER NOT NULL DEFAULT 0 CHECK (devices_allowed IN (0, 1));
+  CREATE TABLE devices (
+    id INTEGER PRIMARY KEY,
+    person_id INTEGER NOT NULL REFERENCES people(id),
+    name TEXT NOT NULL CHECK (length(name) BETWEEN 1 AND 60),
+    kind TEXT NOT NULL CHECK (kind IN ('mac', 'cli')),
+    token_sha256 BLOB NOT NULL UNIQUE CHECK (length(token_sha256) = 32),
+    created_at INTEGER NOT NULL,
+    last_used_at INTEGER,
+    expires_at INTEGER NOT NULL,
+    revoked_at INTEGER
+  ) STRICT;
+  CREATE INDEX devices_person ON devices(person_id);
+  CREATE TABLE audit_v11 (
+    id INTEGER PRIMARY KEY,
+    at INTEGER NOT NULL,
+    actor_kind TEXT NOT NULL CHECK (actor_kind IN ('person', 'admin', 'run', 'system')),
+    actor_person_id INTEGER REFERENCES people(id),
+    action TEXT NOT NULL CHECK (action IN (${sqlList(ACTIONS_V11)})),
+    workspace_id INTEGER REFERENCES workspaces(id),
+    subject_person_id INTEGER REFERENCES people(id),
+    name_ref BLOB,
+    sha256 TEXT CHECK (sha256 IS NULL OR length(sha256) = 64),
+    size INTEGER,
+    role TEXT CHECK (role IS NULL OR role IN (${sqlList(ROLES)})),
+    ok INTEGER NOT NULL DEFAULT 1 CHECK (ok IN (0, 1)),
+    tokens_in INTEGER CHECK (tokens_in IS NULL OR tokens_in >= 0),
+    tokens_out INTEGER CHECK (tokens_out IS NULL OR tokens_out >= 0),
+    cost_micro_usd INTEGER CHECK (cost_micro_usd IS NULL OR cost_micro_usd >= 0)
+  ) STRICT;
+  INSERT INTO audit_v11 SELECT id, at, actor_kind, actor_person_id, action, workspace_id, subject_person_id, name_ref, sha256, size, role, ok, tokens_in, tokens_out, cost_micro_usd FROM audit;
+  DROP TABLE audit;
+  ALTER TABLE audit_v11 RENAME TO audit;
+  CREATE INDEX audit_workspace ON audit(workspace_id, at);
   `,
 ]
 

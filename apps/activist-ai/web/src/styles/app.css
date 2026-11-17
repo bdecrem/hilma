@@ -2993,3 +2993,186 @@ code {
     min-width: 200px;
   }
 }
+
+
+/* ---------------------------------------------------------------- a computer signing in (Device.tsx)
+   The app on another computer asks; the person says yes here, on the room, in the gate's own
+   type: the question as the title, the computer as a paper card, one line of caution in the lamp's
+   color, then Sign in (paper) and Cancel. */
+.device-ask {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s5);
+  max-width: 640px;
+}
+.device-title {
+  max-width: 24ch;
+  overflow-wrap: anywhere;
+}
+.device-name {
+  color: var(--lamp);
+}
+.device-card {
+  display: flex;
+  align-items: center;
+  gap: var(--s4);
+  width: min(100%, 460px);
+  padding: var(--s4) var(--s5);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgba(10, 20, 45, 0.25);
+}
+.device-card-name {
+  font-size: 20px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.device-card-meta {
+  color: var(--ink-2);
+  font-size: 15px;
+}
+/* A laptop drawn in two strokes; the command line's has a prompt on its screen. */
+.device-glyph {
+  position: relative;
+  flex: none;
+  width: 40px;
+  height: 28px;
+  margin-bottom: 6px;
+  border: 2.5px solid currentColor;
+  border-radius: 4px;
+  color: var(--room);
+}
+.device-glyph::after {
+  content: '';
+  position: absolute;
+  left: -8px;
+  right: -8px;
+  bottom: -9px;
+  height: 4px;
+  border-radius: 2px;
+  background: currentColor;
+}
+.device-glyph[data-kind='cli']::before {
+  content: '>_';
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.device-glyph.small {
+  width: 28px;
+  height: 20px;
+  border-width: 2px;
+}
+.device-glyph.small::after {
+  left: -6px;
+  right: -6px;
+  bottom: -7px;
+  height: 3px;
+}
+.device-glyph.small[data-kind='cli']::before {
+  font-size: 9px;
+  left: 2px;
+  top: 0;
+}
+.device-warn {
+  font-family: var(--font-read);
+  font-size: 19px;
+  line-height: 1.5;
+  color: var(--on-room);
+  max-width: 44ch;
+  padding-left: var(--s3);
+  border-left: 3px solid var(--lamp);
+}
+.device-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s3);
+}
+.device-actions .ghost-button {
+  min-height: 56px;
+  padding: 0 var(--s5);
+  font-size: 17px;
+}
+
+/* Your devices: on paper in Settings, on the room on the projects page. */
+.your-devices .setting-row {
+  padding-bottom: var(--s3);
+}
+.devices-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.device-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s4);
+  padding: var(--s3) 0 var(--s3) var(--s2);
+  border-top: 1px solid var(--rule);
+}
+.device-row:last-child {
+  border-bottom: 1px solid var(--rule);
+}
+.device-row-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.device-row-name {
+  font-size: 17px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.device-row-meta,
+.devices-none {
+  color: var(--ink-2);
+  font-size: var(--fs-meta);
+}
+.devices-none {
+  padding: var(--s2) 0;
+}
+.devices-problem {
+  margin: var(--s2) 0;
+  padding-left: var(--s3);
+  border-left: 3px solid var(--vermilion);
+  font-size: var(--fs-ui);
+}
+.your-devices.on-room {
+  margin-top: var(--s4);
+}
+.your-devices.on-room .setting-row {
+  border-top-color: var(--mist);
+}
+.your-devices.on-room .setting-name {
+  color: var(--on-room);
+}
+.your-devices.on-room .setting-say,
+.your-devices.on-room .device-row-meta,
+.your-devices.on-room .devices-none,
+.your-devices.on-room .device-glyph {
+  color: var(--mist);
+}
+.your-devices.on-room .device-row {
+  border-color: rgba(201, 210, 234, 0.28);
+}
+@media (max-width: 560px) {
+  .device-actions > * {
+    flex: 1 1 100%;
+    justify-content: center;
+  }
+  .device-row {
+    flex-wrap: wrap;
+  }
+  .device-row .ghost-button {
+    margin-left: 44px;
+  }
+}

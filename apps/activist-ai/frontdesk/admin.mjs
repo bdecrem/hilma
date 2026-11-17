@@ -30,6 +30,14 @@
 //   node admin.mjs compare promote <id>                copies it into the eval set (evals/tasks/t-<id>), after its selftest passes
 //   node admin.mjs compare status                      comparisons under way, scratch VMs, and what the last start cleaned up
 //   node admin.mjs compare weekly                      the weekly number, as JSON (also $OLA_HOME/compare/weekly.json)
+//   node admin.mjs allow-devices <handle>             may sign in the Mac app and the command line (admins always may)
+//   node admin.mjs disallow-devices <handle>          may not any more; every device of theirs is signed out now
+//   node admin.mjs devices [<handle>]                  signed-in devices: id, person, name, kind, dates
+//   node admin.mjs revoke-device <id>                  one device signed out now
+//   node admin.mjs add-device <handle> --name "Bart's MacBook Air" --kind mac|cli
+//                  a device made here, for when the browser is not at hand: writes ONLY its token to
+//                  stdout (one line; everything else to stderr), so it can go straight into the app's
+//                  Keychain: ... add-device bart --name X --kind mac | (the app's import), never to a screen
 //   node admin.mjs audit [--workspace <slug>] [--limit 50] [--json]
 //   node admin.mjs list
 //   node admin.mjs data [--wake] [--json]              every project's database: its tables, rows, documents
@@ -50,6 +58,7 @@ import { AUTO, gatewayUsage, modeFor, writeGrants } from './claude.mjs'
 import { writeHostedGrants } from './hosted.mjs'
 import { writeBatchGrants } from './jobs.mjs'
 import { leftovers, weekly } from './compare.mjs'
+import { createDevice, deviceView, KINDS, mayUseDevices, revokeDevices, syncPeopleFile, validDeviceName } from './devices.mjs'
 import { cpSync, existsSync, readFileSync, readdirSync } from 'node:fs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
@@ -79,6 +88,13 @@ const admin = (row) => audit(db, { actorKind: 'admin', ...row })
 // model's (hosted.mjs writeHostedGrants), and batch jobs' (jobs.mjs writeBatchGrants: a closed project's
 // job loses its grant). Returns the Claude grants.
 const grants = () => (writeHostedGrants(db, cfg.hosted), writeBatchGrants(db, cfg.jobs), writeGrants(db, cfg.claude))
+// Devices end with their person's sessions; the gateway's people file follows the database.
+const endDevices = (p) => {
+  const n = revokeDevices(db, { personId: p.id })
+  if (n) admin({ action: 'device_revoked', subject: p.id })
+  if (cfg.devices.key || existsSync(cfg.devices.peopleFile)) syncPeopleFile(db, cfg.devices.peopleFile)
+  return n
+}
 
 // ---------------------------------------------------------------- rotation
 //
@@ -262,7 +278,48 @@ switch (cmd) {
       grants()
       admin({ action: 'person_suspended', subject: p.id })
     }
-    console.log(`${r.changes} session(s) of ${p.handle} revoked${cmd === 'suspend' ? '; suspended' : ''}`)
+    const d = endDevices(p)
+    console.log(`${r.changes} session(s) and ${d} device(s) of ${p.handle} revoked${cmd === 'suspend' ? '; suspended' : ''}`)
+    break
+  }
+  case 'allow-devices':
+  case 'disallow-devices': {
+    const p = person(args[0])
+    db.prepare('UPDATE people SET devices_allowed = ? WHERE id = ?').run(cmd === 'allow-devices' ? 1 : 0, p.id)
+    const d = cmd === 'disallow-devices' ? endDevices(p) : 0
+    console.log(cmd === 'allow-devices' ? `${p.handle} may sign in to Ola from the Mac app and the command line${cfg.devices.key ? '' : ' (device sign-in is off on this machine: OLA_GATE_PASS_KEY is not set)'}` : `${p.handle} may not sign in devices${p.is_admin ? ' (but is an admin, and admins always may)' : ''}; ${d} device(s) signed out`)
+    break
+  }
+  case 'devices': {
+    const who = args[0] ? person(args[0]) : null
+    const rows = db.prepare(`SELECT d.*, p.handle FROM devices d JOIN people p ON p.id = d.person_id ${who ? 'WHERE d.person_id = ?' : ''} ORDER BY d.id`).all(...(who ? [who.id] : []))
+    const day = (ms) => (ms ? new Date(ms).toISOString().slice(0, 16).replace('T', ' ') : 'never')
+    if (flags.json) console.log(JSON.stringify(rows.map((r) => ({ ...deviceView(r), person: r.handle, revoked: r.revoked_at ? new Date(r.revoked_at).toISOString() : null }))))
+    else if (!rows.length) console.log('no devices')
+    else for (const r of rows) console.log(`#${r.id}  ${r.handle.padEnd(16)} ${r.kind.padEnd(4)} ${JSON.stringify(r.name).padEnd(30)} made ${day(r.created_at)}, last used ${day(r.last_used_at)}, ${r.revoked_at ? `revoked ${day(r.revoked_at)}` : r.expires_at <= now ? 'expired' : `ends ${day(r.expires_at).slice(0, 10)}`}`)
+    break
+  }
+  case 'revoke-device': {
+    const id = /^[1-9][0-9]{0,11}$/.test(args[0] ?? '') ? Number(args[0]) : fail('which device? (node admin.mjs devices)')
+    const d = db.prepare('SELECT * FROM devices WHERE id = ?').get(id) ?? fail(`no device #${id}`)
+    if (!revokeDevices(db, { deviceId: id })) fail(`device #${id} was already signed out`)
+    admin({ action: 'device_revoked', subject: d.person_id })
+    syncPeopleFile(db, cfg.devices.peopleFile)
+    console.log(`device #${id} signed out; its next request is refused, and an open one is cut within a second`)
+    break
+  }
+  case 'add-device': {
+    // Only the token goes to stdout, so it can be piped into the app without anyone seeing it.
+    const p = person(args[0])
+    if (!cfg.devices.key) fail('device sign-in is off on this machine (OLA_GATE_PASS_KEY is not set in the front desk env)')
+    if (!mayUseDevices(p)) fail(`${p.handle} may not sign in devices (${p.status !== 'active' ? p.status : 'first: node admin.mjs allow-devices ' + p.handle})`)
+    const name = validDeviceName(flags.name) ?? fail('--name "the computer\'s name", 1 to 60 characters')
+    if (!KINDS.includes(flags.kind)) fail('--kind mac or --kind cli')
+    const d = createDevice(db, cfg.devices.key, p.id, name, flags.kind)
+    admin({ action: 'device_signed_in', subject: p.id })
+    syncPeopleFile(db, cfg.devices.peopleFile)
+    process.stdout.write(`${d.token}\n`)
+    console.error(`device #${d.id} for ${p.handle} (${flags.kind}), until ${new Date(d.expiresAt).toISOString().slice(0, 10)}. The token was written to stdout only; put it straight into the app.`)
     break
   }
   case 'claude': {
@@ -460,7 +517,7 @@ switch (cmd) {
     break
   }
   default:
-    console.error('usage: admin.mjs add-person | invite | remove-passkey | create-workspace | add-member | remove-member | rotate | reopen | revoke-sessions | suspend | claude | hosted | claude-grants | shown-to-cloud | audit | list | data  (see the top of this file)')
+    console.error('usage: admin.mjs add-person | invite | remove-passkey | create-workspace | add-member | remove-member | rotate | reopen | revoke-sessions | suspend | allow-devices | disallow-devices | devices | revoke-device | add-device | claude | hosted | claude-grants | shown-to-cloud | audit | list | data  (see the top of this file)')
     process.exit(2)
 }
 db.close()

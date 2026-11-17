@@ -12,6 +12,7 @@ import { bytes } from '../lib/format.ts'
 import { ProblemBox } from './Drawer.tsx'
 import { WebSetting } from './WebSetting.tsx'
 import { CompareSetting } from './Compare.tsx'
+import { YourDevices } from './Device.tsx'
 
 export const CONSENT =
   'When this is on, you can hand a request to Claude Code, run with Anthropic’s Claude. Your request, and the parts of your files Claude reads to answer it, leave this machine and go to Anthropic. It is off unless you turn it on. Every use is marked, and you can turn it off at any time.'
@@ -117,7 +118,7 @@ function DiskUseView() {
   )
 }
 
-export function SettingsView(props: { ola: Ola; titleRef?: (el: HTMLHeadingElement) => void; canWrite?: boolean }) {
+export function SettingsView(props: { ola: Ola; titleRef?: (el: HTMLHeadingElement) => void; canWrite?: boolean; showDevices?: boolean }) {
   const st = () => props.ola.state
   const [busy, setBusy] = createSignal(false)
   const [problem, setProblem] = createSignal<Problem | null>(null)
@@ -257,6 +258,10 @@ export function SettingsView(props: { ola: Ola; titleRef?: (el: HTMLHeadingEleme
         <CompareSetting />
         <WebSetting canWrite={props.canWrite ?? false} />
         <DiskUseView />
+        {/* The person's own computers (the Mac app, the command line): theirs, not the project's. */}
+        <Show when={props.showDevices}>
+          <YourDevices tone="paper" />
+        </Show>
       </div>
 
       <ConsentDialog
