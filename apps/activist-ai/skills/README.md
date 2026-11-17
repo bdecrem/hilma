@@ -69,6 +69,15 @@ headless shell or Chrome) and, on the Mac, `bart/ola-page-mac`, which asks the M
 page in its own web view off screen (`Mac/PageRender.swift`). Checks: `bart/skills-check.mjs` on the
 machine; on the Mac `OLA_SKILLS_CHECK=1 swift run olakit-selftest` and `Ola --render-selftest <dir>`.
 
+**Versioned and checked (2026-11-17, later).** The Mac app carries this same folder (apple/README.md, "Ola's skills on the Mac" and "Every
+release"): staged fresh at the commit by `apple/tools/skills.mjs`, a build refused if it differs,
+the version (`version.mjs`: the content hash, the same one the image's `ola.skills` label carries,
+and the commit) shown beside the Ola machine's. So every skill says, in its SKILL.md metadata, what
+it needs beyond the standard library (`ola/needs`: `python:<module>` and `cmd:<program>`, or `none`)
+and whether it works on a Mac (`ola/mac`: `yes`, or `no, <why>`); `check.py` holds every skill to
+it. A skill change also needs a new image tag (`workspace/ws.mjs IMAGE`): the deploy refuses an
+image whose label is not the release's skills.
+
 ## Tested like code: with and without
 
 Every skill names at least two eval tasks (`evals/tasks/s*`, written by `evals/lib/mk_r3.py` from

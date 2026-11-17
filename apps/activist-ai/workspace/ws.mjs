@@ -44,10 +44,11 @@ import { homedir, tmpdir } from 'node:os'
 import path from 'node:path'
 import { createInterface } from 'node:readline/promises'
 import { fileURLToPath } from 'node:url'
+import { skillFolders as listSkills, skillsHash as hashSkills } from '../skills/version.mjs'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 export const CONTAINER = process.env.OLA_CONTAINER_BIN || '/usr/local/bin/container'
-export const IMAGE = 'ola-workspace:2.3.0-23'
+export const IMAGE = 'ola-workspace:2.3.0-24'
 export const HOME = process.env.OLA_HOME || path.join(homedir(), '.ola')
 export const GATEWAY_PORT = Number(process.env.OLA_GATEWAY_PORT || 4180)
 // The gateway's door sockets, one per workspace (the gateway's GATEWAY_DOOR_DIR): each door
@@ -1306,19 +1307,11 @@ export async function destroy(id, { confirm } = {}) {
 // context; the folder's own README and check.py stay out, since opencode would read a loose .md at
 // the top as a skill), so the image's skills are exactly the repo's, labeled with their hash.
 const SKILLS_SRC = path.join(here, '../skills')
-const skillFolders = (dir = SKILLS_SRC) => readdirSync(dir, { withFileTypes: true }).filter((e) => e.isDirectory() && !e.name.startsWith('.') && !e.name.startsWith('_')).map((e) => e.name).sort()
+// The one hash of a skill set (skills/version.mjs): the same for the image, the Mac app's bundle
+// and the deploy's record, so they can be compared.
+const skillFolders = (dir = SKILLS_SRC) => listSkills(dir)
 export function skillsHash(dir = SKILLS_SRC) {
-  const h = createHash('sha256')
-  const walk = (d, rel) => {
-    for (const e of readdirSync(d, { withFileTypes: true }).sort((a, b) => (a.name < b.name ? -1 : 1))) {
-      if (e.name.startsWith('.') || e.name === '__pycache__') continue
-      const p = path.join(d, e.name)
-      if (e.isDirectory()) walk(p, `${rel}${e.name}/`)
-      else if (e.isFile()) h.update(`${rel}${e.name}\0`).update(readFileSync(p)).update('\0')
-    }
-  }
-  for (const s of skillFolders(dir)) walk(path.join(dir, s), `${s}/`)
-  return h.digest('hex').slice(0, 16)
+  return hashSkills(dir)
 }
 function stageContext() {
   const ctx = mkdtempSync(path.join(tmpdir(), 'ola-image-'))

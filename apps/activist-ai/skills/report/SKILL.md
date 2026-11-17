@@ -7,6 +7,8 @@ metadata:
   ola/specialists: "none"
   ola/evals: "s5-report-brief s6-report-quotes"
   ola/owner: "ola"
+  ola/needs: "python:docx python:reportlab cmd:pdfinfo cmd:pdftotext"
+  ola/mac: "yes"
 ---
 
 # Writing a report

@@ -7,6 +7,8 @@ metadata:
   ola/specialists: "see (ola-see), optional"
   ola/evals: "u6-phone-screens u7-app-unfinished"
   ola/owner: "ola"
+  ola/needs: "cmd:ola-page"
+  ola/mac: "yes"
 ---
 
 # Designing app screens

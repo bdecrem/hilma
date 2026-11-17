@@ -7,6 +7,8 @@ metadata:
   ola/specialists: "see (ola-see), optional"
   ola/evals: "s7-design-report-page s8-design-dashboard u1-tenants-event u2-results-page u3-dashboard u4-report-site u5-signup-flow"
   ola/owner: "ola"
+  ola/needs: "cmd:ola-page"
+  ola/mac: "yes"
 ---
 
 # Designing a page

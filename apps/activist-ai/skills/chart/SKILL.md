@@ -7,6 +7,8 @@ metadata:
   ola/specialists: "none"
   ola/evals: "s1-chart-db s2-chart-gaps"
   ola/owner: "ola"
+  ola/needs: "python:matplotlib python:PIL"
+  ola/mac: "yes"
 ---
 
 # Making a chart

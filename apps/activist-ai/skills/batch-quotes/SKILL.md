@@ -9,6 +9,8 @@ metadata:
   ola/specialists: "read ocr"
   ola/evals: "c2-code-traps c3-code-pages c4-code-corpus g1-code-360 p3-code-pdfs"
   ola/owner: "ola"
+  ola/needs: "none"
+  ola/mac: "no, a placeholder until the ola-batch job runner"
 ---
 
 # Asking the same thing of every document (placeholder)

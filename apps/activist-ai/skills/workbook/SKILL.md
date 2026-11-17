@@ -7,6 +7,8 @@ metadata:
   ola/specialists: "none"
   ola/evals: "s3-workbook-summary s4-workbook-safe-text"
   ola/owner: "ola"
+  ola/needs: "python:openpyxl"
+  ola/mac: "yes"
 ---
 
 # Making a workbook

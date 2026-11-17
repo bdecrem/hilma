@@ -4,7 +4,8 @@
     python3 apps/activist-ai/skills/check.py
 
 Every skill folder has a SKILL.md whose frontmatter has a name equal to the folder, a description,
-metadata ola/version and ola/evals; a CHANGELOG.md whose last line names that version; and a tests/
+metadata ola/version, ola/evals, ola/needs (what it needs beyond the standard library: python:<module>,
+cmd:<program>, or none) and ola/mac (yes, or "no, why"); a CHANGELOG.md whose last line names that version; and a tests/
 folder. Every eval it names exists in evals/tasks and names this skill back (except a placeholder,
 version 0, which may point at existing tasks). The system config's allow list
 (workspace/opencode-system.jsonc) is exactly these folders. Instructions stay under 500 lines.
@@ -76,6 +77,14 @@ for name in skills:
             problems.append(f"{name}: eval {tid} does not name this skill back")
     if version != "0" and len((meta.get("ola/evals") or "").split()) < 2:
         problems.append(f"{name}: fewer than two evals")
+    # What it needs to run, outside the standard library, and whether it works on a Mac (the Mac
+    # app checks the needs before a skill is used, and offers only the ones that work there).
+    needs = meta.get("ola/needs")
+    if needs is None or not (needs == "none" or all(re.fullmatch(r"(python|cmd):[A-Za-z0-9_.-]+", n) for n in needs.split())):
+        problems.append(f"{name}: metadata ola/needs must list python:<module> and cmd:<program>, or be none")
+    mac = meta.get("ola/mac")
+    if mac is None or not (mac == "yes" or mac.startswith("no, ")):
+        problems.append(f"{name}: metadata ola/mac must be yes, or no, and why")
     for s in re.findall(r"/opt/ola/skills/([a-z0-9-]+)/([\w./-]+)", text):
         if not (HERE / s[0] / s[1]).exists():
             problems.append(f"{name}: SKILL.md names /opt/ola/skills/{s[0]}/{s[1]}, which is not in the repo")
