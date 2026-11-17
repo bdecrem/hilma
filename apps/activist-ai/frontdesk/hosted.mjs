@@ -211,7 +211,18 @@ export function makeHosted({ db, hc, cc, workspaces, runCeilingMs, log }) {
     run.ended = true
     clearTimeout(run.timer)
     // Back to Ola's own model before anything else: the conversation's next request runs here.
-    if (started || run.before) await workspaces.oc(run.slug, 'POST', `/api/session/${run.session}/model`, { model: OLA_MODEL })
+    // opencode may refuse the switch while the session is still settling right after its run, so
+    // it is read back and tried again (up to about 10 s); a failure is logged, never silent.
+    if (started || run.before) {
+      let back = false
+      for (let n = 0; n < 20 && !back; n++) {
+        if (n) await new Promise((r) => setTimeout(r, 500))
+        await workspaces.oc(run.slug, 'POST', `/api/session/${run.session}/model`, { model: OLA_MODEL })
+        const s = await workspaces.oc(run.slug, 'GET', `/api/session/${run.session}`)
+        back = (s.json?.data ?? s.json)?.model?.id === OLA_MODEL.id
+      }
+      if (!back) log(`${run.slug}: a conversation could not be switched back to Ola's own model after a hosted run`)
+    }
     if (run.onceId !== null) db.prepare('DELETE FROM fallback_once WHERE id = ?').run(run.onceId)
     writeHostedGrants(db, hc)
     runs.delete(run.slug)

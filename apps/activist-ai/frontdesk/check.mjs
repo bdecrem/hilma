@@ -1294,7 +1294,7 @@ await check(`a request handed to the hosted model runs in the same sealed VM and
   const t0 = Date.now()
   const r = await hostedRun(a, HOSTED_ASK)
   assert(r.status === 200, `run: ${r.status} ${JSON.stringify(r.json)}`)
-  assert(JSON.stringify(r.models) === '["hosted"]' && r.idle.at(-1) === 'succeeded', `models ${r.models}, outcome ${r.idle}; gateway: ${hostedLog()}`)
+  assert(JSON.stringify(r.models) === '["hosted"]' && r.idle[0] === 'succeeded', `models ${r.models}, outcome ${r.idle}; gateway: ${hostedLog()}`)
   const file = HOSTED_LIVE ? inVm('cat /work/hosted-count.txt') : inVm('test -e /work/rows.md && echo there')
   const real = inVm("python3 -c \"import csv; print(sum(1 for _ in csv.reader(open('/work/survey.csv'))) - 1)\"")
   assert(HOSTED_LIVE ? file.trim() === real : file === 'there', `the file: ${file} (the survey has ${real})`)
@@ -1311,7 +1311,8 @@ await check(`a request handed to the hosted model runs in the same sealed VM and
   }, 120_000, 'the next request')
   const m2 = (await api(`/oc/api/session/${r.id}/message?limit=200`, { cookie: a.cookie, ws: FA })).json
   const models = (m2?.data ?? m2 ?? []).filter((x) => x.type === 'assistant').map((x) => x.model?.id)
-  assert(models.at(-1) === 'general', `after the hosted run the conversation runs on ${models.at(-1)}`)
+  // opencode lists a conversation's messages newest first: the newest reply is the first.
+  assert(models[0] === 'general' && models.includes('hosted'), `after the hosted run the conversation runs on ${models[0]} (newest first: ${models.join(', ')})`)
   return `${Math.round((Date.now() - t0) / 1000)} s, ${lines.length} hosted requests; ${row.tokens_in} tokens in, ${row.tokens_out} out, $${(row.cost_micro_usd / 1e6).toFixed(4)}; ${HOSTED_LIVE ? `wrote ${file} (the survey has ${real})` : 'wrote rows.md'}; then Ola's model again`
 })
 await check('"Just this once": with the switches off the owner hands one request over; the gateway honors it for that run only, the next is refused from inside the VM; a member cannot; the same for Claude', async () => {
@@ -1331,7 +1332,7 @@ await check('"Just this once": with the switches off the owner hands one request
     admin('add-member', 'team-a', 'vera', 'viewer')
   }
   const r = await hostedRun(a, 'Count the rows in survey.csv', { once: true })
-  assert(r.status === 200 && JSON.stringify(r.models) === '["hosted"]' && r.idle.at(-1) === 'succeeded', `once: ${r.status} ${r.models} ${r.idle}`)
+  assert(r.status === 200 && JSON.stringify(r.models) === '["hosted"]' && r.idle[0] === 'succeeded', `once: ${r.status} ${r.models} ${r.idle}`)
   const after = { file: hostedFile()[`ws-${FA}`] ?? null, on: (await api('/api/fallback', { cookie: a.cookie, ws: FA })).json.hosted.enabled, rows: dbRow("SELECT count(*) AS n FROM fallback_once").n }
   assert(after.file === null && after.on === false && after.rows === 0, `after the run: ${JSON.stringify(after)}`)
   await sleep(2500) // the gateway reloads the grants file within 2 s
@@ -1595,6 +1596,11 @@ async function restartForLongRuns() {
   await until(() => fd.exitCode !== null, 10_000, 'the front desk stopping')
   fd = start('frontdesk', 'frontdesk/server.mjs', { OLA_FD_IDLE_STOP_MIN: '0.05', OLA_FD_RUN_CEILING_MIN: '0.4', OLA_FD_WAKE_WAIT_MS: '0' })
   await until(async () => (await fetch(`${ORIGIN}/api/health`)).ok, 10_000, 'the front desk start')
+  // These checks are about the idle stop and the run ceiling. The scripted slow run's folder
+  // listings fail inside the VM ("ripgrep execution failed"), and three failed steps in a row is a
+  // stretch: with a fallback set up, the page would stop Ola and show the card before the ceiling.
+  // So this project says "Never suggest" here (the card has its own checks).
+  await jpost(a, '/api/fallback/settings', { stretch: 'never' })
 }
 async function ask(text) {
   await A.page.goto('about:blank')
