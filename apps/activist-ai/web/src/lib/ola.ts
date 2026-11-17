@@ -8,6 +8,7 @@ import { applyClaudeEvent, applyEvent, contextOf, emptyConversation, startClaude
 import { describeApproval, handoffWords, precheck, stuckReason, type Stuck } from './steps.ts'
 import type { Autonomy, ClaudeInfo, Connection, Engine, Fallback, HostedInfo, Problem, Stretch, StretchReason, Suggestion, Turn } from './types.ts'
 import { claude, desk, deskHeaders, fallback, hosted } from './api.ts'
+import { parseCommand } from './commands.ts'
 
 /** How a fallback is named to the person: "the hosted open model" (at its provider), "Claude". */
 export const fallbackName = (f: Fallback) => (f === 'claude' ? 'Claude' : 'the hosted open model')
@@ -43,6 +44,16 @@ export interface OlaState extends ConversationState {
   suggestion: Suggestion | null
   /** Reasons the person answered "Not now" to in this conversation: not asked again for them. */
   declined: StretchReason[]
+  /** One plain sentence about the last thing typed that was not sent (a command refused, "No such command"). */
+  said: string | null
+  /** /help: the commands, listed in the conversation (never sent to the model). */
+  help: boolean
+}
+
+/** What the page does after something typed: keep the text in the composer, or show the files. */
+export interface Typed {
+  keep: boolean
+  files?: boolean
 }
 
 const QUIET_MS = 60_000
@@ -56,7 +67,7 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 export function createOla({ baseUrl = new URL('/oc', location.origin).href, live = true }: { baseUrl?: string; live?: boolean } = {}) {
   // The workspace and the CSRF token ride on every request; the front desk checks both.
   const client = OpenCode.make({ baseUrl, headers: deskHeaders() })
-  const [state, setState] = createStore<OlaState>({ ...emptyConversation(), connection: 'connecting', lostSince: null, autonomy: 'go', problem: null, earlier: [], claude: null, hosted: null, stretch: 'suggest', stretchTo: 'hosted', owner: false, engine: 'ola', suggestion: null, declined: [] })
+  const [state, setState] = createStore<OlaState>({ ...emptyConversation(), connection: 'connecting', lostSince: null, autonomy: 'go', problem: null, earlier: [], claude: null, hosted: null, stretch: 'suggest', stretchTo: 'hosted', owner: false, engine: 'ola', suggestion: null, declined: [], said: null, help: false })
   let disposed = false
   let streamAbort: AbortController | null = null
 
@@ -177,12 +188,13 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
     return session.id
   }
 
-  async function send(text: string) {
+  /** A request. `via` overrides the choice beside the composer for this one request (a slash command). */
+  async function send(text: string, via: Engine = state.engine) {
     const request = text.trim()
     if (!request) return
-    setState('suggestion', null) // a new request answers an open card by moving on
-    if (state.claude?.enabled && state.engine === 'claude') return sendClaude(request, 'asked')
-    if (state.hosted?.enabled && state.engine === 'hosted') return sendHosted(request)
+    setState({ suggestion: null, said: null, help: false }) // a new request answers an open card by moving on
+    if (state.claude?.enabled && via === 'claude') return sendClaude(request, 'asked')
+    if (state.hosted?.enabled && via === 'hosted') return sendHosted(request)
     // Before a run: a few cheap checks on the request alone (steps.ts precheck). The project's
     // files are asked for only when the request seems to name one, and only if a card could follow.
     if (planFor('big_files').kind !== 'none' || planFor('long_build').kind !== 'none') {
@@ -480,7 +492,66 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
 
   function newConversation() {
     if (state.sessionID) void refreshEarlier()
-    setState({ ...emptyConversation(), problem: null, suggestion: null, declined: [] })
+    setState({ ...emptyConversation(), problem: null, suggestion: null, declined: [], said: null, help: false })
+  }
+
+  // ------------------------------------------------------------ what the person typed: a request or a slash command
+  //
+  // The README's "Slash commands and reactions (all surfaces)". The command word never reaches a
+  // model: only the request after it is sent. /claude and /hosted are the owner's yes for that one
+  // request: with the switch off it goes through the one-time grant ("Just this once", audited
+  // claude_once / hosted_once) and the switch stays off. A member with the switch off sends
+  // nothing and reads who can turn it on; a fallback not set up on this machine says so.
+  const busy = () => {
+    const t = state.turns[state.turns.length - 1]
+    return !!t && (t.status === 'working' || t.status === 'sending')
+  }
+  const BUSY = 'Ola is still working on your last request. Wait for it to finish, or type /stop.'
+  function typed(text: string): Typed {
+    const value = text.trim()
+    const p = parseCommand(value)
+    const say = (sentence: string): Typed => (setState('said', sentence), { keep: true })
+    setState('said', null)
+    if (p.kind === 'none') {
+      if (!value || busy() || state.connection === 'lost') return { keep: true }
+      void send(value)
+      return { keep: false }
+    }
+    if (p.kind === 'unknown') return say('No such command. Type / to see the commands.')
+    const { name, rest } = p
+    if (name === 'help') return setState('help', true), { keep: false }
+    if (name === 'files') return { keep: false, files: true }
+    if (name === 'stop') {
+      if (!busy()) return say('Nothing is running, so there is nothing to stop.')
+      void stop()
+      return { keep: false }
+    }
+    if (name === 'new') {
+      if (busy()) return say('Wait for this request to finish, or stop it, before starting a new conversation.')
+      newConversation()
+      return { keep: false }
+    }
+    if (busy()) return say(BUSY)
+    if (state.connection === 'lost') return say('The connection to Ola’s computer is lost. Send this again when it is back.')
+    const last = [...state.turns].reverse().find((t) => t.request.trim())
+    if (name === 'ola') {
+      if (!rest) return say('Type your request after /ola.')
+      void send(rest, 'ola')
+      return { keep: false }
+    }
+    // /claude or /hosted. With no text: the previous request again, as "Ask Claude instead".
+    const f: Fallback = name
+    const request = rest || last?.request || ''
+    if (!request) return say(`Type your request after /${name}.`)
+    const info = f === 'claude' ? state.claude : state.hosted
+    if (!info) return say('Ola’s computer has not said yet whether this is available here. Try again in a moment.')
+    if (!info.configured)
+      return say(f === 'claude' ? 'Claude Code is not set up on this machine, so this request cannot go to Claude.' : 'The hosted open model is not set up on this machine, so this request cannot go to it.')
+    const on = isOn(f)
+    if (!on && !state.owner) return say(f === 'claude' ? 'Claude is off for this project. The project’s owner can turn it on in Settings.' : 'The hosted open model is off for this project. The project’s owner can turn it on in Settings.')
+    setState({ suggestion: null, help: false })
+    void runOn(f, request, { why: 'asked', handoff: null, once: !on })
+    return { keep: false }
   }
 
   async function open(id: string) {
@@ -516,6 +587,8 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
   return {
     state,
     send,
+    typed,
+    clearSaid: () => state.said && setState('said', null),
     sendClaude,
     askInstead,
     answerSuggestion,

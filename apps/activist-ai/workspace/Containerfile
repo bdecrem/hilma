@@ -11,7 +11,7 @@
 # gateway). The host reaches opencode through `container exec` (workspace/desk.mjs), and the
 # root file system is read-only (ws.mjs creates the container with --read-only).
 #
-#   node ws.mjs image   (builds ola-workspace:2.3.0-10 under a temporary tag, then names it)
+#   node ws.mjs image   (builds ola-workspace:2.3.0-12 under a temporary tag, then names it)
 #
 # 2.3.0-6 adds Claude Code (Fallback to Claude, workspace/ola-claude): the Linux arm64 build from
 # npm, pinned by npm's integrity like opencode. It reaches only the door, like opencode.
@@ -29,6 +29,9 @@
 # same door and gateway, which serves it only to a project whose owner turned it on or handed one
 # request over (gateway/hosted.mjs). Everything of 2.3.0-8 is in it too. (Not 2.3.0-9: a parallel
 # branch built its own 2.3.0-9 on the mini, and a tag that two trees build is whichever built last.)
+# 2.3.0-12: AGENTS.md carries the reactions rule (README, "Slash commands and reactions"): the agent
+# may put [[ola:react NAME]] alone on the first line of its reply, and the page draws the emoji on
+# the person's message. (Not 2.3.0-11: another branch's number.)
 
 ARG DEBIAN=docker.io/library/debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc
 

@@ -228,10 +228,10 @@ VM's memory, so bounded by it) are the only places anything can be written. Befo
 512 GiB sparse image on the host, outside the volume's limit, invisible to `files`, and kept across
 `stop`. The agent runs as `work` (uid 1000) with no capabilities (`--cap-drop ALL`), no sudo, and no
 setuid or setgid program in the image (Debian's `su`, `passwd`, `mount` and the rest are stripped). Image: Debian bookworm-slim pinned by digest, opencode 2.3.0 checked
-against npm's sha512, python3, socat, nothing else (no curl, no CA bundle, no ssh). Image tag `ola-workspace:2.3.0-10` (2.3.0-10: the model `hosted`; 2.3.0-8: the project database and the web tools; 2.3.0-7 and 2.3.0-6: Claude Code and `ola-claude`, see [Fallback to Claude](#fallback-to-claude-2026-11-16); 2.3.0-5: Ola's standing instructions to the agent, `workspace/AGENTS.md`, say it is in a sealed box with no browser, preview pane or desktop app and that people see its pages under Files with Open; the desktop app's `browser` tool is denied; a stopped workspace made from an older image is made again from the current one at its next start, same volume and secrets. 2.3.0-3 added `ola-get` and `ola-rm` for the front desk's downloads and deletes, and a file's mtime in `ola-files`; 2.3.0-4: `ola-get` opens with `O_NONBLOCK` and refuses anything but a regular file at once, so a FIFO the agent makes cannot hold a download).
+against npm's sha512, python3, socat, nothing else (no curl, no CA bundle, no ssh). Image tag `ola-workspace:2.3.0-12` (2.3.0-12: the reactions rule in `AGENTS.md`; 2.3.0-10: the model `hosted`; 2.3.0-8: the project database and the web tools; 2.3.0-7 and 2.3.0-6: Claude Code and `ola-claude`, see [Fallback to Claude](#fallback-to-claude-2026-11-16); 2.3.0-5: Ola's standing instructions to the agent, `workspace/AGENTS.md`, say it is in a sealed box with no browser, preview pane or desktop app and that people see its pages under Files with Open; the desktop app's `browser` tool is denied; a stopped workspace made from an older image is made again from the current one at its next start, same volume and secrets. 2.3.0-3 added `ola-get` and `ola-rm` for the front desk's downloads and deletes, and a file's mtime in `ola-files`; 2.3.0-4: `ola-get` opens with `O_NONBLOCK` and refuses anything but a regular file at once, so a FIFO the agent makes cannot hold a download).
 
 ```bash
-node workspace/ws.mjs image                    # build ola-workspace:2.3.0-10 (a 370 MB download the first time; --missing: only if absent)
+node workspace/ws.mjs image                    # build ola-workspace:2.3.0-12 (a 370 MB download the first time; --missing: only if absent)
 node workspace/ws.mjs create alice             # 4 CPUs, 6 GiB, 50 GiB: the ceilings
 node workspace/ws.mjs create test --memory 1g --disk 1g --cpus 1   # lower only; higher is refused
 node workspace/ws.mjs start alice              # opens the door, boots, waits for opencode
@@ -1035,6 +1035,27 @@ think (you need something from them first), oops (they caught your mistake).
 Use at most one reaction, only on that first line, and never explain it or mention it.
 If the message is only thanks or a compliment, reply with the marker line alone and nothing else.
 ```
+
+**The web app** (`web/src/lib/commands.ts`, the menu and the chip in `web/src/components/Drawer.tsx`).
+The drawer and the home's bar both go through `ola.typed`, so a command typed in either is never sent
+as text. On the web, data leaving the machine is the project owner's decision, so `/claude <request>`
+and `/hosted <request>` are, for the **owner**, the yes for that one request: with the switch off it
+runs through the one-time grant of the stretch card's "Just this once" (no card, no extra click;
+audited `claude_once` / `hosted_once`; the switch stays off), and with the switch on it is a plain
+Claude or hosted run. A **member** with the switch off sends nothing and reads "Claude is off for this
+project. The project’s owner can turn it on in Settings."; a fallback not set up on the machine says
+so in one sentence. `/hosted` is live here (the Mac app answers "Not set up in this app yet."). The
+transcript marks such a request "Claude" or "Hosted open model" beside the time. `/files` opens the
+files view, `/new` a new conversation, `/stop` stops the run (the only commands taken while a run
+works), `/help` lists the commands in the conversation. The reaction is read from the first line of
+the turn's first text (a reply that speaks before its tools is still the reply), and while a reply
+streams, a first line that may yet become a marker is held back. Opencode in the VM reads the rule from
+`workspace/AGENTS.md` (image 2.3.0-12); Claude Code gets it as the first block of every request the
+front desk writes (`REACTIONS_NOTE` in `frontdesk/claude.mjs`); `web/test/commands.test.ts` holds all
+three to this text. Proofs: `web/test/commands.test.ts` (run by `web/check.mjs` too), `web/check.mjs`
+"Slash commands and reactions" in Chromium and WebKit, `frontdesk/check.mjs` (the rule reaches
+Claude Code in the VM; a compliment comes back as the marker alone), `workspace/check.mjs` (the
+image's instructions carry the rule).
 
 ## Bart's own apps (Part I)
 

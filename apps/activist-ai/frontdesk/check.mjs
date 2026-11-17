@@ -1349,7 +1349,13 @@ await check('"Just this once": with the switches off the owner hands one request
   assert(!grantsFile()[`ws-${FA}`] && claudeOff === false && auditRows(FA).some((x) => x.action === 'claude_once'), `after Claude once: ${JSON.stringify(grantsFile())}, on ${claudeOff}`)
   const again = await claudeRun(a, { request: 'write x.txt saying x' })
   assert(again.status === 403, `the next Claude request: ${again.status}`)
-  return 'hosted: one run, then 403 from inside; Claude: one run, then 403'
+  // /claude in the page is this same one-time path. The reactions rule rides with every request,
+  // and a compliment comes back as the reaction line alone (README, reactions).
+  assert(fakeClaude.st.reactionsRule > 0, 'the reactions rule did not reach Claude Code')
+  const thanks = await claudeRun(a, { request: 'Great job, thank you!', once: true })
+  const said = thanks.lines.filter((e) => e.type === 'assistant').flatMap((e) => e.message.content.filter((c) => c.type === 'text').map((c) => c.text))
+  assert(thanks.status === 200 && thanks.ended?.reason === 'done' && JSON.stringify(said) === '["[[ola:react thanks]]"]', `a compliment to Claude: ${JSON.stringify(said)}`)
+  return 'hosted: one run, then 403 from inside; Claude: one run, then 403; the reactions rule reached Claude Code'
 })
 // The hosted grants are kept right by the admin CLI through a rotation and a close (the checks at the
 // VM cap, at the end): turned on here, with a stale entry planted for the CLI to drop.

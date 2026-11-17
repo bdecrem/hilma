@@ -169,6 +169,8 @@ const gatewayUsage = () =>
     .catch(() => null)
 
 // opencode's config, as the workspace image has it, but pointed at this gateway.
+const reactionsNote = path.join(home, '.config/opencode/REACTIONS.md')
+fs.writeFileSync(reactionsNote, fs.readFileSync(path.join(AI, 'workspace/AGENTS.md'), 'utf8').split('\n# Reactions\n')[1].trim() + '\n')
 fs.writeFileSync(
   path.join(home, '.config/opencode/opencode.jsonc'),
   JSON.stringify(
@@ -187,6 +189,9 @@ fs.writeFileSync(
         },
       },
       model: 'ola/general',
+      // The reactions rule from the image's AGENTS.md (README, "Slash commands and reactions"); the
+      // rest of that file describes the sealed VM, which this dev folder is not.
+      instructions: [reactionsNote],
       update: 'disable',
       permissions: [
         { action: '*', resource: '*', effect: 'allow' },

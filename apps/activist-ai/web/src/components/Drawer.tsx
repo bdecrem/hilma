@@ -5,6 +5,7 @@ import { createEffect, createSignal, For, onCleanup, Show } from 'solid-js'
 import type { Ola } from '../lib/ola.ts'
 import type { Fallback, Problem, Step, Turn } from '../lib/types.ts'
 import { runSummary } from '../lib/conversation.ts'
+import { COMMANDS, commandMatches, parseCommand, reactionOnly, REACTIONS, shown, turnReaction, type CommandName } from '../lib/commands.ts'
 import { clock, when } from '../lib/format.ts'
 import { Answer } from './Answer.tsx'
 import { Icon } from './Icon.tsx'
@@ -14,7 +15,7 @@ import { desk } from '../lib/api.ts'
 // Requests that work in any project, empty or not: nothing here names a file the person may not have.
 const STARTERS = ['Make a hello world web page', 'Make a one-page site that says what our group does and when we meet', 'Look at the files I uploaded and tell me what is in them']
 
-export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; onAddFiles: () => void; draft: string; setDraft: (s: string) => void; inputRef?: (el: HTMLTextAreaElement) => void }) {
+export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; onAddFiles: () => void; onFiles: () => void; draft: string; setDraft: (s: string) => void; inputRef?: (el: HTMLTextAreaElement) => void }) {
   const s = () => props.ola.state
   const working = () => {
     const t = s().turns[s().turns.length - 1]
@@ -50,12 +51,70 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
   // "Ask … instead" under a finished Ola reply: one for each fallback that is switched on.
   const insteadOf = (): Fallback[] => (['hosted', 'claude'] as Fallback[]).filter((f) => (f === 'claude' ? s().claude?.enabled : s().hosted?.enabled))
 
+  // What was typed goes through ola.typed: a request, or a slash command (lib/commands.ts).
+  const run = (text: string) => {
+    const r = props.ola.typed(text)
+    if (!r.keep) props.setDraft('')
+    if (r.files) props.onFiles()
+  }
   const submit = (e: Event) => {
     e.preventDefault()
-    const text = props.draft.trim()
-    if (!text || working() || s().connection === 'lost') return
-    props.setDraft('')
-    void props.ola.send(text)
+    if (props.draft.trim()) run(props.draft)
+  }
+
+  // The command menu: "/" at the very start shows the commands that match what is typed so far,
+  // each with its line; arrow keys and Return, or a click or tap. A word that matches none says
+  // "No such command" at once. Escape puts the menu away until the text changes.
+  let input: HTMLTextAreaElement | undefined
+  const typedWord = () => props.draft.trim()
+  const matches = () => commandMatches(typedWord())
+  const [active, setActive] = createSignal(0)
+  const [dismissed, setDismissed] = createSignal(false)
+  createEffect((prev: string | undefined) => {
+    const d = props.draft
+    if (d !== prev) {
+      setActive(0)
+      setDismissed(false)
+      if (prev !== undefined) props.ola.clearSaid()
+    }
+    return d
+  })
+  const unknownWord = () => typedWord().startsWith('/') && !/\s/.test(typedWord()) && typedWord().length > 1 && !matches().length
+  const menuOpen = () => !dismissed() && (matches().length > 0 || unknownWord())
+  const NEEDS_TEXT: CommandName[] = ['claude', 'ola', 'hosted']
+  /** A command chosen in the menu: one that takes a request is written out for it; the others run. */
+  const pick = (name: CommandName, fromKeys: boolean) => {
+    const exact = parseCommand(typedWord())
+    if (NEEDS_TEXT.includes(name) && !(fromKeys && exact.kind === 'command' && exact.name === name && typedWord() === `/${name}`)) {
+      props.setDraft(`/${name} `)
+      queueMicrotask(() => input?.focus())
+      return
+    }
+    run(`/${name}`)
+    queueMicrotask(() => input?.focus())
+  }
+  const onKey = (e: KeyboardEvent) => {
+    if (e.isComposing) return
+    const list = matches()
+    if (menuOpen() && list.length) {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault()
+        setActive((a) => (a + (e.key === 'ArrowDown' ? 1 : list.length - 1)) % list.length)
+        return
+      }
+      if ((e.key === 'Enter' && !e.shiftKey) || e.key === 'Tab') {
+        e.preventDefault()
+        pick(list[Math.min(active(), list.length - 1)], true)
+        return
+      }
+    }
+    if (menuOpen() && e.key === 'Escape') {
+      e.preventDefault()
+      e.stopPropagation()
+      setDismissed(true)
+      return
+    }
+    if (e.key === 'Enter' && !e.shiftKey) submit(e)
   }
 
   return (
@@ -110,6 +169,22 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
         </Show>
         <Show when={s().suggestion}>
           <StretchCard ola={props.ola} />
+        </Show>
+        <Show when={s().help}>
+          <section class="command-help" aria-label="Commands">
+            <p class="command-help-title">Commands</p>
+            <p class="command-help-lede">Type one at the start of a message. Only the request after it is sent.</p>
+            <dl>
+              <For each={COMMANDS}>
+                {(c) => (
+                  <div>
+                    <dt>/{c.name}</dt>
+                    <dd>{c.summary}</dd>
+                  </div>
+                )}
+              </For>
+            </dl>
+          </section>
         </Show>
       </div>
 
@@ -166,20 +241,57 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
                 : 'Ola works inside this project without asking. A web search or download still asks you first.'}
           </span>
         </fieldset>
+        <Show when={s().said && !menuOpen()}>
+          <p class="command-note" role="status">
+            {s().said}
+          </p>
+        </Show>
         <div class="composer-row">
+          <Show when={menuOpen()}>
+            <div class="command-menu">
+              <Show when={unknownWord()}>
+                <p class="command-none" role="status">No such command</p>
+              </Show>
+              <Show when={matches().length}>
+                <ul id="command-list" role="listbox" aria-label="Commands">
+                  <For each={matches()}>
+                    {(name, i) => (
+                      <li
+                        id={`command-${name}`}
+                        role="option"
+                        aria-selected={i() === active()}
+                        classList={{ active: i() === active() }}
+                        onMouseDown={(e) => e.preventDefault()}
+                        onMouseEnter={() => setActive(i())}
+                        onClick={() => pick(name, false)}
+                      >
+                        <span class="command-name">/{name}</span>
+                        <span class="command-summary">{COMMANDS.find((c) => c.name === name)!.summary}</span>
+                      </li>
+                    )}
+                  </For>
+                </ul>
+              </Show>
+            </div>
+          </Show>
           <label for="ask-input" class="sr-only">
             Your request
           </label>
           <textarea
             id="ask-input"
-            ref={props.inputRef}
+            ref={(el) => {
+              input = el
+              props.inputRef?.(el)
+            }}
             rows={2}
+            aria-autocomplete="list"
+            aria-expanded={menuOpen() && matches().length > 0}
+            aria-controls={menuOpen() && matches().length ? 'command-list' : undefined}
+            aria-activedescendant={menuOpen() && matches().length ? `command-${matches()[Math.min(active(), matches().length - 1)]}` : undefined}
             value={props.draft}
             placeholder={working() ? 'Work is under way. You can write your next request.' : s().engine === 'claude' && s().claude?.enabled ? 'Ask Claude to make or change something…' : s().engine === 'hosted' && s().hosted?.enabled ? 'Ask the hosted open model to make or change something…' : 'Make something new, or change one of your things…'}
             onInput={(e) => props.setDraft(e.currentTarget.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) submit(e)
-            }}
+            onKeyDown={onKey}
           />
           <Show
             when={working()}
@@ -235,15 +347,31 @@ function TurnView(props: { turn: Turn; now: number; last: boolean; onStop: () =>
   const current = () => t().steps.findIndex((st) => st.status === 'running' || st.status === 'preparing' || st.status === 'waiting')
   const runId = () => `run-${t().id}`
   // Pages this run wrote or changed: an Open right under the reply, whatever the reply says.
+  const reaction = () => turnReaction(t())
+  const only = () => reactionOnly(t())
+  const shownNotes = () => t().notes.map((n) => shown(n, running())).filter(Boolean)
+  const shownAnswer = () => shown(t().answer, running())
   const madePages = () => [...new Set(t().steps.filter((st) => (st.icon === 'write' || st.icon === 'change') && st.status === 'done' && /\.html?$/i.test(st.object) && !st.object.startsWith('/')).map((st) => st.object))].slice(0, 4)
   return (
     <li class="turn" data-status={t().status}>
-      <div class="said-you">
+      <div class="said-you" classList={{ reacted: !!reaction() }}>
         <p class="who">
           You <span class="meta">{clock(t().at)}</span>
+          <Show when={byClaude() || byHosted()}>
+            <span class="engine-mark" classList={{ hosted: byHosted() }}>{byClaude() ? 'Claude' : 'Hosted open model'}</span>
+          </Show>
         </p>
         <p class="request">{t().request}</p>
+        {/* The agent's reaction to this message (lib/commands.ts): 👀 while it works, then the reply's own, or ✅. */}
+        <Show when={reaction()} keyed>
+          {(r) => (
+            <span class="reaction" data-reaction={r} role="img" aria-label={`Reaction: ${REACTIONS[r].meaning}`}>
+              {REACTIONS[r].emoji}
+            </span>
+          )}
+        </Show>
       </div>
+      <Show when={!only()}>
       <div class="said-ola" classList={{ 'said-claude': byClaude(), 'said-hosted': byHosted() }}>
         <Show
           when={byClaude() || byHosted()}
@@ -299,9 +427,9 @@ function TurnView(props: { turn: Turn; now: number; last: boolean; onStop: () =>
             </Show>
           </div>
         </Show>
-        <For each={t().notes}>{(n) => <Answer text={n} class="note" />}</For>
-        <Show when={t().answer}>
-          <Answer text={t().answer} />
+        <For each={shownNotes()}>{(n) => <Answer text={n} class="note" />}</For>
+        <Show when={shownAnswer()}>
+          <Answer text={shownAnswer()} />
         </Show>
         <Show when={!running() && madePages().length}>
           <p class="made-pages">
@@ -331,6 +459,7 @@ function TurnView(props: { turn: Turn; now: number; last: boolean; onStop: () =>
           </p>
         </Show>
       </div>
+      </Show>
     </li>
   )
 }

@@ -387,6 +387,13 @@ try {
     const own = tryToken(ws.secrets(A).BOX_API_KEY)
     t(`inside: ${B}'s token through ${A}'s door is refused; ${A}'s own works`, theirs === '401' && own === '200', `theirs ${theirs}, own ${own}`)
   }
+  // Reactions (README, "Slash commands and reactions"): the image's AGENTS.md, which opencode reads
+  // as its instructions, carries the standing instruction word for word.
+  {
+    const inImage = spawnSync(ws.CONTAINER, ['exec', ws.names(A).container, 'cat', '/opt/ola/config/opencode/AGENTS.md'], { encoding: 'utf8' }).stdout
+    const rule = /\*\*The standing instruction\*\*[\s\S]*?```text\n([\s\S]*?)\n```/.exec(readFileSync(new URL('../README.md', import.meta.url), 'utf8'))?.[1]
+    t('inside: the instructions carry the reactions rule, word for word', !!rule && inImage.includes(rule), rule ? `${inImage.length} bytes` : 'no rule in the README')
+  }
   // Fallback to a hosted open model: the image's opencode names `ola/hosted`; the gateway serves it
   // to this VM only while the project has a grant, a one-time grant only until its moment, and the
   // provider's model id (never the caller's) goes upstream.

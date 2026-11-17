@@ -9,6 +9,9 @@
 //   4. write rows.md              (write)
 //   5. answer in two sentences
 //
+// Reactions (README): "great job" or "thank you" gets the reaction line alone, "[[ola:react thanks]]";
+// "say hi on one line" gets "[[ola:react ok]] Hello!" (a marker on the same line as text, which the
+// real model sometimes writes: not a reaction, and the page must not show it).
 // A request whose text contains "please fail" gets a 400, so the page's error path can be seen.
 // A request whose text contains "slow <steps>x<ms>" (say "slow 5x2000") is a long run instead:
 // <steps> folder listings, each reply held <ms> first, then a one-line answer. The front desk's
@@ -71,6 +74,8 @@ export function startFakeModel({ hosted = false } = {}) {
     if (!hosted && /please fail/i.test(lastUserText(messages))) return send(400, { error: { message: 'The model refused this request (scripted failure).', type: 'invalid_request_error' } })
     // Titles and other side calls carry no tools: answer them briefly.
     if (!body.tools?.length) return send(200, reply({ content: 'Counting the survey rows' }))
+    if (/great job|thank you/i.test(lastUserText(messages))) return send(200, reply({ content: '[[ola:react thanks]]' }))
+    if (/say hi on one line/i.test(lastUserText(messages))) return send(200, reply({ content: '[[ola:react ok]] Hello!' }))
     const slow = /\bslow (\d{1,3})x(\d{1,6})\b/.exec(lastUserText(messages))
     if (slow) {
       let since = -1

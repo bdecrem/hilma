@@ -3,6 +3,7 @@
 // code runs in the page (inside a Solid store's `produce`) and in the tests against recorded
 // events (test/fixtures/*.jsonl). The event shapes are opencode 2.3.0's V2 events.
 import type { Approval, Problem, Step, Turn } from './types.ts'
+import { shown } from './commands.ts'
 import { claudeTool, describeApproval, describeClaudeApproval, describeClaudeTool, describeResult, describeTool, runProblem, shellFailed, stepProblem, STUCK_WORDS } from './steps.ts'
 
 export interface ConversationState {
@@ -393,7 +394,7 @@ export function turnFromClaudeRun(r: { run: string; at: number; request: string;
 export function contextOf(turns: Turn[], max = 24_000): string {
   const parts = turns
     .filter((t) => t.status !== 'sending' && t.status !== 'working')
-    .map((t) => `The person asked: ${t.request}\n${t.engine === 'claude' ? 'Claude' : t.engine === 'hosted' ? 'The hosted open model' : 'Ola'} answered: ${t.answer.trim() || (t.error ? `(it stopped: ${t.error.text})` : '(no answer)')}`)
+    .map((t) => `The person asked: ${t.request}\n${t.engine === 'claude' ? 'Claude' : t.engine === 'hosted' ? 'The hosted open model' : 'Ola'} answered: ${shown(t.answer) || (t.error ? `(it stopped: ${t.error.text})` : '(no answer)')}`)
   let out = ''
   for (let i = parts.length - 1; i >= 0; i--) {
     if (out.length + parts[i].length + 2 > max) break

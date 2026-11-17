@@ -127,13 +127,21 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
     setTimeout(() => uploadButton?.focus(), 50)
   }
 
+  /** /files: the files view (the drawer gives way on a narrow screen, as for Add files). */
+  const showFiles = () => {
+    if (window.matchMedia('(max-width: 1099px)').matches) setDrawer(false)
+    location.hash = '#/files'
+  }
+  // The bar sends what the drawer sends, slash commands included (lib/commands.ts): a command is
+  // never sent to the model as text.
   const sendFromBar = (e: Event) => {
     e.preventDefault()
     const text = draft().trim()
     openDrawer()
-    if (!text || working() || ola.state.connection === 'lost') return
-    setDraft('')
-    void ola.send(text)
+    if (!text) return
+    const r = ola.typed(text)
+    if (!r.keep) setDraft('')
+    if (r.files) showFiles()
   }
 
   const p = () => project()?.project
@@ -301,7 +309,7 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
           </Show>
       </div>
 
-      <Drawer ola={ola} open={drawer()} onClose={closeDrawer} onAddFiles={addFiles} draft={draft()} setDraft={setDraft} inputRef={(el) => (drawerInput = el)} />
+      <Drawer ola={ola} open={drawer()} onClose={closeDrawer} onAddFiles={addFiles} onFiles={showFiles} draft={draft()} setDraft={setDraft} inputRef={(el) => (drawerInput = el)} />
       <ApprovalSheet ola={ola} provider={props.me.policy.searchProvider} />
 
       <dialog ref={promiseDialog} class="sheet promise" aria-labelledby="promise-title" onClose={() => setPromise(false)}>

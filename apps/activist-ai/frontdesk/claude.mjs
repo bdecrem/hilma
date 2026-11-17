@@ -30,6 +30,15 @@ import { chmodSync, renameSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import path from 'node:path'
 import { audit } from './db.mjs'
+
+/** The standing instruction for reactions, word for word as the README has it (web/test/commands.test.ts checks). */
+export const REACTIONS_NOTE = `Reactions. You may react to the person's message with one emoji, like a reaction in a chat app.
+To react, make the very first line of your reply exactly [[ola:react NAME]], with NAME one of:
+eyes (you are on it), thanks (they thanked or complimented you), ok (noted: an instruction or
+preference that needs no work), done (you finished what they asked), party (they share a win),
+think (you need something from them first), oops (they caught your mistake).
+Use at most one reaction, only on that first line, and never explain it or mention it.
+If the message is only thanks or a compliment, reply with the marker line alone and nothing else.`
 import { ceilingMessage } from './workspaces.mjs'
 
 export const AUTO = ['ask', 'stuck', 'always']
@@ -281,7 +290,8 @@ export function makeClaude({ db, cc, container, workspaces, runCeilingMs, log })
     bySlug.set(ws.slug, id)
     child.stdin.on('error', () => {})
     child.stderr.on('data', () => {}) // never logged: it may quote content
-    const content = [...(context.trim() ? [{ type: 'text', text: `The conversation so far, for context (your earlier replies and Ola's are marked):\n\n${context.trim()}` }] : []), { type: 'text', text: request }]
+    // The reactions rule (README, "Slash commands and reactions"), with the request, so every run has it.
+    const content = [{ type: 'text', text: REACTIONS_NOTE }, ...(context.trim() ? [{ type: 'text', text: `The conversation so far, for context (your earlier replies and Ola's are marked):\n\n${context.trim()}` }] : []), { type: 'text', text: request }]
     toClaude(run, { type: 'user', message: { role: 'user', content }, parent_tool_use_id: null, session_id: '' })
 
     res.writeHead(200, { 'content-type': 'application/x-ndjson; charset=utf-8', 'cache-control': 'no-store', 'x-accel-buffering': 'no' })

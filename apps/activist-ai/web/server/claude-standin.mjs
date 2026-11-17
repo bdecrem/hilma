@@ -7,6 +7,7 @@
 //   "write <name> saying <word>"  writes <name> into the dev folder (after a yes under "Ask me first")
 //   "please fail"                 ends in an error
 //   "slow"                        works for 30 s, one step every 2 s (for Stop)
+//   "great job" / "thank you"     the reaction line alone, "[[ola:react thanks]]" (README, reactions)
 //   OLA_DEV_CLAUDE=unset          Claude is not set up: the setting cannot be turned on
 import fs from 'node:fs'
 import path from 'node:path'
@@ -90,8 +91,9 @@ export function makeClaudeStandin({ work, role = () => 'owner' }) {
       say({ type: 'result', subtype: 'success', is_error: false, result: text, usage: { input_tokens: 2400, output_tokens: 40 } })
       return end('done')
     }
-    say({ type: 'assistant', message: { id: 'm1', content: [{ type: 'text', text: 'Hello from Claude, the stand-in.' }] } })
-    say({ type: 'result', subtype: 'success', is_error: false, result: 'Hello from Claude, the stand-in.', usage: { input_tokens: 1200, output_tokens: 20 } })
+    const text = /great job|thank you/i.test(body.request) ? '[[ola:react thanks]]' : 'Hello from Claude, the stand-in.'
+    say({ type: 'assistant', message: { id: 'm1', content: [{ type: 'text', text }] } })
+    say({ type: 'result', subtype: 'success', is_error: false, result: text, usage: { input_tokens: 1200, output_tokens: 20 } })
     end('done')
   }
 

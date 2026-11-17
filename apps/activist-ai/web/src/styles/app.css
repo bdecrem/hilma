@@ -2503,3 +2503,160 @@ code {
     flex: 1 1 100%;
   }
 }
+
+/* ---------------------------------------------------------------- reactions and slash commands
+   README, "Slash commands and reactions (all surfaces)". A reaction is a small chip at the trailing
+   edge under the person's message, set on the end of its line like the Mac app's: the system emoji
+   on paper, a hairline, a gentle pop when it appears (none under reduced motion), no interaction. */
+.said-you {
+  position: relative;
+}
+.said-you.reacted {
+  padding-bottom: var(--s4);
+}
+/* The chip's shelf: a hairline from the request's first letter to the trailing edge, as on the Mac. */
+.said-you.reacted::after {
+  content: '';
+  position: absolute;
+  left: var(--s4);
+  right: 0;
+  bottom: 0;
+  border-bottom: 1px solid var(--rule);
+}
+.reaction {
+  position: absolute;
+  z-index: 1;
+  right: 0;
+  bottom: -14px;
+  display: inline-grid;
+  place-items: center;
+  min-width: 38px;
+  height: 28px;
+  padding: 0 9px;
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', var(--font-ui);
+  font-size: 17px;
+  line-height: 1;
+  background: var(--paper-2);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  box-shadow: 0 1px 2px rgba(20, 28, 51, 0.06);
+  user-select: none;
+  transform-origin: 50% 60%;
+  animation: reaction-pop 340ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes reaction-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reaction {
+    animation: none;
+  }
+}
+/* "Claude" / "Hosted open model" beside the time: who this request went to. */
+.engine-mark {
+  margin-left: var(--s1);
+  padding: 0 8px;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  color: var(--link);
+  font-size: var(--fs-meta);
+  font-weight: 650;
+  line-height: 1.5;
+}
+
+/* The menu is a popover over the conversation, attached to the top of the text box. */
+.composer-row {
+  position: relative;
+}
+.command-menu {
+  position: absolute;
+  z-index: 3;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + var(--s2));
+  max-height: min(340px, 50dvh);
+  overflow-y: auto;
+  background: #fbf7ee;
+  border: 1.5px solid var(--rule);
+  border-radius: var(--radius);
+  box-shadow: 0 6px 18px rgba(20, 28, 51, 0.08);
+  overflow: hidden;
+}
+.command-menu ul {
+  display: grid;
+  padding: var(--s1) 0;
+}
+.command-menu li {
+  display: grid;
+  grid-template-columns: 5em minmax(0, 1fr);
+  align-items: baseline;
+  gap: var(--s3);
+  min-height: 40px;
+  padding: var(--s2) var(--s4);
+  cursor: pointer;
+}
+.command-menu li.active {
+  background: var(--lamp-wash);
+}
+.command-name,
+.command-help dt {
+  flex: none;
+  min-width: 5em;
+  font-family: var(--font-mono);
+  font-size: 15.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.command-summary,
+.command-help dd {
+  font-size: 16px;
+  color: var(--ink-2);
+}
+.command-none,
+.command-note {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--vermilion-text);
+}
+.command-none {
+  padding: var(--s3) var(--s4);
+}
+.command-note {
+  padding: var(--s2) var(--s3);
+  border-left: 3px solid var(--vermilion);
+  background: #fbf7ee;
+}
+.command-help {
+  margin-top: var(--s5);
+  padding: var(--s4) var(--s5);
+  background: var(--paper);
+  border: 1.5px solid var(--rule);
+  border-radius: var(--radius);
+}
+.command-help-title {
+  font-weight: 720;
+  font-size: 17px;
+}
+.command-help-lede {
+  margin-top: var(--s1);
+  color: var(--ink-2);
+  font-size: 16px;
+}
+.command-help dl {
+  display: grid;
+  gap: var(--s2);
+  margin-top: var(--s3);
+}
+.command-help dl > div {
+  display: flex;
+  gap: var(--s3);
+  align-items: baseline;
+}
+@media (max-width: 760px) {
+  .command-help {
+    padding: var(--s4);
+  }
+}

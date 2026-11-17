@@ -879,6 +879,235 @@ async function fallbackChecks(engine, label) {
   await fallbackChecks(webkit, 'webkit')
 }
 
+// ---------------------------------------------------------------- slash commands and reactions
+// README, "Slash commands and reactions (all surfaces)". The page against the stand-ins (Claude's
+// and the hosted model's, with the real opencode and gateway and the scripted models), in Chromium
+// and WebKit. A watcher in the page records any text with a raw marker the moment it appears.
+const unit = spawnSync(process.execPath, ['--test', 'test/commands.test.ts'], { cwd: HERE, encoding: 'utf8' })
+ok('the command and reaction parsers (test/commands.test.ts)', unit.status === 0, (/(?:#|ℹ) pass (\d+)/.exec(unit.stdout)?.[1] ?? '?') + ' tests' + (unit.status === 0 ? '' : `: ${unit.stdout.split('\n').filter((l) => /not ok|Error/.test(l)).slice(0, 3).join(' | ')}`))
+async function commandChecks(engine, label) {
+  const b = await engine.launch()
+  const d = await startDev(['--fake-model'])
+  const c = await b.newContext({ viewport: { width: 1440, height: 900 } })
+  // Every text node the page ever shows is looked at as it appears: a raw marker anywhere is a failure.
+  await c.addInitScript(() => {
+    window.__rawMarkers = []
+    const look = (n) => {
+      const t = n.nodeType === 3 ? n.textContent : n.innerText ?? n.textContent
+      if (t && t.includes('[[ola:')) window.__rawMarkers.push(t.slice(0, 120))
+    }
+    new MutationObserver((ms) => ms.forEach((m) => (m.type === 'characterData' ? look(m.target) : m.addedNodes.forEach(look)))).observe(document, { subtree: true, childList: true, characterData: true })
+  })
+  const pg = await c.newPage()
+  pg.on('request', (r) => {
+    const u = r.url()
+    if (!u.startsWith('data:') && !u.startsWith('blob:') && new URL(u).origin !== d.origin) foreign.add(u)
+  })
+  const shot = async (name, page = pg) => SHOTS && (await page.waitForTimeout(450), await page.screenshot({ path: path.join(SHOTS, `${label}-${name}.png`), fullPage: false }))
+  const dev = (p, method = 'GET') => pg.evaluate(([p, method]) => fetch(p, { method }).then((r) => r.json()), [p, method])
+  const turns = () => pg.locator('.drawer .turn').count()
+  const rawBefore = []
+  const chip = () => lastTurn(pg).locator('.said-you .reaction')
+  const reactionOf = () => chip().getAttribute('data-reaction', { timeout: 2000 }).catch(() => null)
+  const type = async (text) => {
+    await pg.fill('#ask-input', text)
+  }
+  const enter = () => pg.press('#ask-input', 'Enter')
+  const ask = async (text) => (await type(text), await enter())
+  const openDrawer = async () => {
+    await pg.goto(`${d.url}#/`)
+    await pg.waitForSelector('.thing')
+    await pg.getByRole('button', { name: 'Ask Ola' }).click()
+    await pg.waitForTimeout(300)
+  }
+  const fresh = async () => {
+    if (await pg.getByRole('button', { name: 'New conversation' }).count()) await pg.getByRole('button', { name: 'New conversation' }).click()
+  }
+  try {
+    await check(`${label}: "/" shows the commands with a line each; arrows and Return choose; a word that matches none says so`, async () => {
+      await openDrawer()
+      await type('/')
+      const names = await pg.locator('.command-menu .command-name').allInnerTexts()
+      const lines = await pg.locator('.command-menu .command-summary').allInnerTexts()
+      assert(JSON.stringify(names) === JSON.stringify(['/claude', '/ola', '/hosted', '/new', '/stop', '/files', '/help']) && lines.every((l) => l.length > 8), `menu: ${names} / ${lines}`)
+      await pg.press('#ask-input', 'ArrowDown')
+      const active = await pg.locator('.command-menu li[aria-selected="true"] .command-name').innerText()
+      assert(active === '/ola', `after ArrowDown: ${active}`)
+      await shot('command-menu')
+      await enter()
+      const draft = await pg.inputValue('#ask-input')
+      assert(draft === '/ola ', `Return on /ola wrote: "${draft}"`)
+      await type('/he')
+      assert(JSON.stringify(await pg.locator('.command-menu .command-name').allInnerTexts()) === '["/help"]', 'typing /he does not narrow to /help')
+      await type('/zz')
+      assert(await pg.locator('.command-menu .command-none', { hasText: 'No such command' }).isVisible(), 'no "No such command" while typing /zz')
+      await pg.locator('#ask-input').press('Escape')
+      assert((await pg.locator('.command-menu').count()) === 0 && (await pg.locator('.drawer.open').count()) === 1, 'Escape did not put the menu away, or closed the drawer')
+    })
+    await check(`${label}: an unknown command is not sent: "No such command", the text left in place`, async () => {
+      const before = await turns()
+      await ask('/frobnicate the survey')
+      await pg.waitForTimeout(400)
+      const note = await pg.locator('.command-note').innerText()
+      assert(/No such command/.test(note) && (await pg.inputValue('#ask-input')) === '/frobnicate the survey' && (await turns()) === before, `note: ${note}`)
+    })
+    await check(`${label}: /help lists the commands in the conversation, and nothing is sent`, async () => {
+      await type('/help')
+      await enter() // Return on an exact command in the menu runs it
+      await pg.locator('.command-help').waitFor()
+      const rows = await pg.locator('.command-help dt').allInnerTexts()
+      assert(rows.length === 7 && (await turns()) === 0 && (await pg.inputValue('#ask-input')) === '', `help rows ${rows.length}, turns ${await turns()}`)
+      await shot('command-help')
+    })
+    await check(`${label}: /claude as the owner with the switch off: one request through the one-time path, the command not in the request, marked Claude; the switch stays off`, async () => {
+      const before = (await dev('/__dev/role?to=owner', 'POST')).claudeOnce
+      await ask('/claude write slash-claude.txt saying hi')
+      await pg.waitForFunction(() => document.querySelectorAll('.drawer .turn').length === 1)
+      await waitDone(pg)
+      const req = await lastTurn(pg).locator('.request').innerText()
+      const mark = await lastTurn(pg).locator('.said-you .engine-mark').innerText()
+      const who = (await lastTurn(pg).locator('.said-ola .who').innerText()).replace(/\s+/g, ' ').trim()
+      const after = (await dev('/__dev/role?to=owner', 'POST')).claudeOnce
+      const info = await dev('/api/claude')
+      const files = await dev('/api/files')
+      assert(req === 'write slash-claude.txt saying hi' && mark === 'Claude' && who === 'Claude, outside this machine', `request "${req}", mark ${mark}, who ${who}`)
+      assert(after === before + 1 && info.enabled === false && files.files.some((f) => f.path === 'slash-claude.txt'), `one-time runs ${before} -> ${after}, switch ${info.enabled}`)
+      assert((await reactionOf()) === 'done', `reaction ${await reactionOf()}`)
+      await shot('claude-once')
+      return 'one claude_once run; switch off; ✅'
+    })
+    await check(`${label}: /claude with no text runs the previous request again with Claude`, async () => {
+      const before = (await dev('/__dev/role?to=owner', 'POST')).claudeOnce
+      await type('/claude')
+      await enter()
+      await pg.waitForFunction(() => document.querySelectorAll('.drawer .turn').length === 2)
+      await waitDone(pg)
+      const req = await lastTurn(pg).locator('.request').innerText()
+      assert(req === 'write slash-claude.txt saying hi' && (await dev('/__dev/role?to=owner', 'POST')).claudeOnce === before + 1, `rerun: ${req}`)
+    })
+    await check(`${label}: /claude as a member with the switch off: nothing is sent; one sentence says the owner can turn it on`, async () => {
+      await dev('/__dev/role?to=member', 'POST')
+      await openDrawer()
+      const before = await turns()
+      await ask('/claude write member.txt saying no')
+      await pg.waitForTimeout(500)
+      const note = await pg.locator('.command-note').innerText()
+      const runs = (await dev('/__dev/role?to=owner', 'POST')).claudeOnce
+      await shot('claude-member')
+      assert(/owner can turn it on/.test(note) && (await turns()) === before && (await pg.inputValue('#ask-input')) === '/claude write member.txt saying no', `member: ${note}`)
+      assert(!(await dev('/api/files')).files.some((f) => f.path === 'member.txt'), `the member's request ran (${runs} one-time runs)`)
+      await openDrawer() // the owner again
+    })
+    await check(`${label}: /hosted as the owner with the switch off: one request with the hosted model, marked, the switch stays off`, async () => {
+      await fresh()
+      await ask('/hosted Count the rows in survey.csv')
+      await pg.waitForFunction(() => document.querySelectorAll('.drawer .turn').length === 1)
+      await waitDone(pg)
+      const mark = await lastTurn(pg).locator('.said-you .engine-mark').innerText()
+      const req = await lastTurn(pg).locator('.request').innerText()
+      let h
+      for (let i = 0; i < 20 && (h = await dev('/__dev/hosted')).running; i++) await pg.waitForTimeout(500)
+      assert(mark === 'Hosted open model' && req === 'Count the rows in survey.csv' && h.enabled === false && JSON.stringify(h.grants) === '{}', `hosted: ${mark} / ${req} / ${JSON.stringify(h)}`)
+    })
+    await check(`${label}: /ola sends this one request to Ola's own model, without the command`, async () => {
+      await ask('/ola say hi on one line')
+      await pg.waitForFunction(() => document.querySelectorAll('.drawer .turn').length === 2)
+      await waitDone(pg)
+      const who = (await lastTurn(pg).locator('.said-ola .who').innerText()).trim()
+      const req = await lastTurn(pg).locator('.request').innerText()
+      assert(who === 'Ola' && req === 'say hi on one line', `${who} / ${req}`)
+    })
+    await check(`${label}: a marker on the same line as text is not a reaction: the text shows without it, and ✅`, async () => {
+      const answer = await lastTurn(pg).locator('.answer').last().innerText()
+      assert(answer.trim() === 'Hello!' && (await reactionOf()) === 'done', `answer "${answer}", reaction ${await reactionOf()}`)
+    })
+    await check(`${label}: 👀 the moment a run starts, ✅ when it ends well without a marker`, async () => {
+      await ask('slow 2x1500')
+      await pg.waitForFunction(() => document.querySelector('.drawer .turn:last-child')?.dataset.status === 'working')
+      await chip().waitFor({ timeout: 3000 })
+      const during = await reactionOf()
+      await shot('reaction-eyes')
+      await waitDone(pg)
+      assert(during === 'eyes' && (await reactionOf()) === 'done', `during ${during}, after ${await reactionOf()}`)
+      await shot('reaction-done')
+    })
+    await check(`${label}: /stop stops the run, and the 👀 goes`, async () => {
+      await ask('slow 6x1500')
+      await pg.waitForFunction(() => document.querySelector('.drawer .turn:last-child')?.dataset.status === 'working')
+      await chip().waitFor({ timeout: 3000 })
+      await ask('/stop')
+      await waitDone(pg, 20_000)
+      assert((await lastTurn(pg).getAttribute('data-status')) === 'stopped' && (await chip().count()) === 0, `after /stop: ${await lastTurn(pg).getAttribute('data-status')}, chip ${await chip().count()}`)
+    })
+    await check(`${label}: a compliment gets 🙏 and no reply at all (Ola's model), and the reaction survives a reload`, async () => {
+      await type('/new')
+      await enter()
+      assert((await turns()) === 0, '/new did not start a new conversation')
+      await ask('Great job, thank you!')
+      await waitDone(pg)
+      const t = lastTurn(pg)
+      assert((await reactionOf()) === 'thanks' && (await t.locator('.said-ola').count()) === 0, `reaction ${await reactionOf()}, reply blocks ${await t.locator('.said-ola').count()}`)
+      await shot('reaction-thanks')
+      rawBefore.push(...(await pg.evaluate(() => window.__rawMarkers)))
+      await pg.reload()
+      await pg.waitForSelector('.thing')
+      await pg.getByRole('button', { name: 'Ask Ola' }).click()
+      await pg.locator('details.earlier summary').click()
+      await pg.locator('details.earlier li button').first().click() // the newest conversation (opencode may retitle it)
+      await pg.waitForFunction(() => document.querySelectorAll('.drawer .turn').length === 1)
+      await pg.waitForTimeout(300)
+      assert((await reactionOf()) === 'thanks' && (await lastTurn(pg).locator('.said-ola').count()) === 0, `after a reload: ${await reactionOf()}`)
+    })
+    await check(`${label}: a compliment to Claude gets 🙏 and no reply too`, async () => {
+      await ask('/claude Great job, thank you!')
+      await pg.waitForFunction(() => document.querySelectorAll('.drawer .turn').length === 2)
+      await waitDone(pg)
+      assert((await reactionOf()) === 'thanks' && (await lastTurn(pg).locator('.said-ola').count()) === 0, `Claude: ${await reactionOf()}`)
+    })
+    await check(`${label}: /files opens the files view`, async () => {
+      await ask('/files')
+      await pg.waitForFunction(() => location.hash.startsWith('#/files'))
+      await pg.locator('#files-title').waitFor()
+    })
+    await check(`${label}: no raw marker was ever on the page`, async () => {
+      const seen = [...rawBefore, ...(await pg.evaluate(() => window.__rawMarkers))]
+      assert(seen.length === 0, `seen: ${JSON.stringify(seen.slice(0, 3))}`)
+    })
+    await check(`${label}: at 390 px the menu and the reactions fit: no sideways scroll, no text under 15 px`, async () => {
+      const m = await b.newContext({ viewport: { width: 390, height: 844 } })
+      const mp = await m.newPage()
+      await mp.goto(`${d.url}#/`)
+      await mp.waitForSelector('.thing')
+      await mp.getByRole('button', { name: 'Ask Ola' }).first().click()
+      await mp.waitForTimeout(300)
+      await mp.fill('#ask-input', 'Thank you, this is great')
+      await mp.press('#ask-input', 'Enter')
+      await mp.waitForFunction(() => document.querySelector('.drawer .turn:last-child')?.dataset.status === 'done', null, { timeout: 30_000 })
+      await mp.fill('#ask-input', '/')
+      const wide = await mp.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
+      const small = await mp.evaluate(() => [...document.querySelectorAll('.command-menu *, .reaction')].filter((e) => [...e.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim()) && parseFloat(getComputedStyle(e).fontSize) < 15).map((e) => e.className))
+      const chipIn = await mp.evaluate(() => {
+        const r = document.querySelector('.reaction')?.getBoundingClientRect()
+        const d = document.querySelector('.drawer')?.getBoundingClientRect()
+        return !!r && !!d && r.right <= d.right && r.left >= d.left
+      })
+      await shot('phone-390', mp)
+      await m.close()
+      assert(wide <= 0 && small.length === 0 && chipIn, `sideways ${wide} px; small text in ${small.join(', ')}; chip inside ${chipIn}`)
+    })
+  } finally {
+    await c.close()
+    await b.close()
+    await d.stop()
+  }
+}
+{
+  const { webkit } = await import('playwright')
+  console.log('\nSlash commands and reactions (stand-in front desk, real opencode):')
+  await commandChecks(chromium, 'chromium')
+  await commandChecks(webkit, 'webkit')
+}
+
 // ---------------------------------------------------------------- one real request
 if (LIVE) {
   console.log('\nwith a real model (GLM-5.3-Flash on Together, through the gateway):')
@@ -910,6 +1139,16 @@ if (LIVE) {
       assert(!words.join(' ').includes('/var/') && !words.join(' ').includes('/tmp'), `machine paths in the words: ${words}`)
       assert(answer.trim().length > 0, 'no answer')
       return `${words.length} steps: ${words.join(' / ')}; answer: ${answer.slice(0, 80)}`
+    })
+    await check('a real model: "Great job, thank you!" gets 🙏 and no reply (README, reactions)', async () => {
+      await lp.getByRole('button', { name: 'New conversation' }).click()
+      await send(lp, 'Great job, thank you!')
+      await waitDone(lp, 120_000)
+      const r = await lastTurn(lp).locator('.said-you .reaction').getAttribute('data-reaction').catch(() => null)
+      const reply = await lastTurn(lp).locator('.said-ola').count() ? await lastTurn(lp).locator('.said-ola').innerText() : ''
+      if (SHOTS) await lp.screenshot({ path: path.join(SHOTS, 'live-thanks.png') })
+      assert(r === 'thanks' && !reply && !(await lp.locator('.drawer').innerText()).includes('[[ola:'), `reaction ${r}; reply: ${reply.slice(0, 160)}`)
+      return 'a 🙏 and nothing else'
     })
     await lc.close()
     await live.stop()

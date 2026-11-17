@@ -7,6 +7,7 @@
 //   "run <command>"                one Bash call, then a one-line answer with what it printed
 //   "please fail"                  a 400 the way Anthropic words one (Claude Code gives up)
 //   "slow <n>x<ms>"                n Bash calls of `true`, each reply held <ms> first (long runs)
+//   "great job" / "thank you"      only the reaction line, "[[ola:react thanks]]" (README, reactions)
 //   anything else                  "Hello from the stand-in." and the end of the turn
 //
 // Claude Code also sends side requests (a title, a summary, count_tokens): each gets a short text.
@@ -24,7 +25,7 @@ const toolResults = (messages) => (messages ?? []).flatMap((m) => (m.role === 'u
 const has = (tools, name) => (tools ?? []).some((t) => t.name === name)
 
 export function startFakeAnthropic({ port = 0 } = {}) {
-  const st = { calls: 0, tasks: 0 }
+  const st = { calls: 0, tasks: 0, reactionsRule: 0 }
   const server = http.createServer(async (req, res) => {
     let raw = ''
     for await (const c of req) raw += c
@@ -53,6 +54,10 @@ export function startFakeAnthropic({ port = 0 } = {}) {
       if (!done.length) reply = { tool: 'Bash', input: { command: r[1], description: 'Run the command' } }
       else reply = { text: `It printed: ${textOf(done.at(-1).content).trim().slice(0, 200)}` }
     }
+    if (main && ask.includes('make the very first line of your reply exactly [[ola:react NAME]]')) st.reactionsRule++
+    // The person's own words are the last text block of the first user message (the rule and the context come first).
+    const own = (() => { const m = (body.messages ?? []).find((x) => x.role === 'user' && textOf(x.content).trim()); return Array.isArray(m?.content) ? (m.content.filter((p) => p.type === 'text').pop()?.text ?? '') : textOf(m?.content) })()
+    if (main && !done.length && /great job|thank you/i.test(own)) reply = { text: '[[ola:react thanks]]' }
     if (main) st.tasks++
     const usage = { input_tokens: 1200, cache_creation_input_tokens: 0, cache_read_input_tokens: 0, output_tokens: 1 }
     const id = `msg_${st.calls}`
