@@ -856,6 +856,7 @@ upgrade removes.
 | `cx.ola.container` | `ops/ola.mjs container-up`, once at load: starts Apple's container system if it is not running (after a reboot it is not) | — |
 | `cx.ola.gateway` | `ops/run.mjs ~/.ola/gateway.env gateway/server.mjs` | 127.0.0.1:4180, and `~/.ola/gw/ws-<id>.sock` per workspace |
 | `cx.ola.frontdesk` | `ops/run.mjs ~/.ola/frontdesk.env frontdesk/server.mjs` | 127.0.0.1:4700 |
+| `cx.ola.watch` | `ops/watch.mjs` every 2 minutes (`StartInterval`, not kept alive, never restarted by a deploy): the alarm, see "When something breaks" | — |
 | `cx.ola.door.<id>`, `cx.ola.desk.<id>` | a workspace's door and desk, loaded by `ws.mjs start` and unloaded by `stop` (plists in `~/.ola/launchd/`) | the workspace's two sockets |
 
 The three fixed jobs live in `~/Library/LaunchAgents` (loaded at login: the machine signs in its
@@ -972,6 +973,110 @@ The platform database, tokens and `stage-a` were not moved or changed. Deploys c
 `status` shows the deployed commit and that `current` points at it, fails if any Ola plist (the
 three jobs, and each workspace's door and desk in `~/.ola/launchd`) points outside `~/ola-staging`,
 and notes any Ola process running from elsewhere (a check or a dev run).
+
+## When something breaks (the alarm, 2026-11-17)
+
+On 2026-11-16 the mini's disk filled to 100% and, twice the same evening, every sealed VM on it
+stopped at once; nobody was told until a builder got stuck. Since then `ops/watch.mjs` runs every 2
+minutes (launchd `cx.ola.watch`, loaded by `node ops/ola.mjs install`) and texts the owner. Each run
+takes under a second; it changes nothing it checks (the Almanac gets one GET, the public address
+one GET without a passcode).
+
+**How it texts.** The Venture bridge, as the morning text does: a POST to `/api/venture/imsg` on
+ola.cx with `VENTURE_KEY`, read at each run from `~/hilma-venture/.env.local` (`KEY_FROM`). The key
+is never copied, printed or saved. Texts start with "Ola alarm:" or "Ola:", in plain words.
+
+**Noise.** An alarm is texted when it starts, again at most every 2 hours while it lasts ("Still,
+since 3:10 am: ..."), and once more when it clears ("Ola: back to normal. ..."). Problems found in
+the same run go out as one text. Warnings are never texted one by one: they collect into one daily
+note at 9 am Pacific, only on a day there were any. From 11 pm to 7 am Pacific only alarms 1, 3, 4
+and 5 below are texted (and their all-clears); the others wait for 7 am, and one that starts and
+ends at night goes into the next note. A text that does not go out is tried again at the next run.
+
+**Silence or tune it.**
+
+```bash
+node ops/watch.mjs mute 3          # no texts for 3 hours (alarms still tracked; sent when it ends if they hold)
+node ops/watch.mjs unmute
+node ops/watch.mjs --dry           # check now, print what it would send; sends and saves nothing
+node ops/watch.mjs show            # the state: what is in alarm since when, the warnings, the last text
+node ops/ola.mjs status            # the "alarm" line: the last run and its result (DOWN if older than 6 min)
+tail -50 ~/Library/Logs/ola/watch.log   # one line per run
+launchctl bootout gui/$(id -u)/cx.ola.watch   # stop it entirely (ola.mjs install loads it again)
+```
+
+Levels live in `DEFAULTS` at the top of `ops/watch.mjs`; any of them can be set in
+`~/.ola/watch.env` (mode 600, `KEY=VALUE`), read at the next run, no restart: `DISK_WARN_GB=20`,
+`DISK_ALARM_GB=8`, `SWAP_ALARM_PCT=90`, `CERT_ALARM_DAYS=14`, `CERT_WARN_DAYS=21`, `VM_DROP_MIN=2`,
+`REPEAT_HOURS=2`, `QUIET_FROM=23`, `QUIET_TO=7`, `DIGEST_HOUR=9`, `OFF=public,almanac` (checks
+not to run at all), `KEY_FROM`, `ALMANAC_URL`, `PUBLIC_HOST`. Tests: `node --test ops/watch-test.mjs`
+(22, about 7 s, fakes only: no text is sent).
+
+**What each alarm means and the first three things to do.** Commands are on the mini
+(`ssh admin@100.95.51.98`, then `export PATH=/opt/homebrew/bin:/usr/local/bin:$PATH` and
+`cd ~/ola-staging/current/apps/activist-ai`).
+
+1. **"the mini's disk is almost full (N GB left)"**: under 8 GB free on `/System/Volumes/Data`
+   (under 20 is a warning in the daily note). VMs and builds fail when it fills.
+   - `df -h /System/Volumes/Data; cat ~/.ola/watch-state.json | grep -A8 '"sizes"'` (the hourly
+     sizes: the container store and each `~/ola-*` clone).
+   - Old builders' clones and check folders: `du -sh ~/ola-* ~/.ola-check* ~/.ola-fdcheck* 2>/dev/null | sort -h | tail`;
+     delete the ones no one is using (never `~/ola-staging`, `~/.ola`, `~/.ola-bart`, `~/.ola-frontdesk`).
+   - Old images: `container image list`; `container image delete <tag>` for any `ola-workspace` tag
+     that is neither the one main names (`grep -n "^export const IMAGE" workspace/ws.mjs`) nor
+     used by a running VM; `container image prune` for unnamed layers.
+2. **"the mini is running out of memory and will be slow"**: the system reports critical memory
+   pressure, or swap is 90% used, two runs in a row.
+   - `memory_pressure | tail -3; sysctl vm.swapusage`
+   - What uses it: `ps -axo rss,comm -r | head -15` (each VM is a `com.apple.Virtualization.VirtualMachine` process beside a `container-runtime-linux`).
+   - `container list` and stop VMs no one is using: check suites' (`<tag>-chk-*`) with
+     `container stop <id>`; a person's project rests by itself after 30 idle minutes (`OLA_FD_IDLE_STOP_MIN`), never stop one mid-task.
+3. **"the web app is not answering"**, **"the model connection is not answering"**, **"the
+   site's address cannot reach the web app"**, **"the site's address is cut off from the
+   internet"**: the front desk (`cx.ola.frontdesk`, 127.0.0.1:4700), the gateway
+   (`cx.ola.gateway`, 4180), the TLS front (`cx.ola.tls`, 4743) or the tunnel (`cx.ola.tunnel`,
+   ngrok) failed two runs in a row.
+   - `node ops/ola.mjs status` (which line is DOWN, its pid and last exit).
+   - `tail -40 ~/Library/Logs/ola/<frontdesk|gateway|tls|tunnel>.log`
+   - `launchctl kickstart -k gui/$(id -u)/cx.ola.<job>`, then `status` again. If it keeps dying
+     right after a deploy, roll back: `node ops/ola.mjs deploy <the previous commit in ~/ola-staging/deployed.json>`.
+4. **"the site (app.ola.cx) does not answer from the internet"** or **"the site's certificate
+   runs out in N days"**: from the public DNS answer (not this machine's shortcut), app.ola.cx
+   did not give its password prompt (401), or its certificate did not verify or has 14 days or
+   fewer, two runs in a row.
+   - `node ops/watch.mjs --dry --only public,web` (what it sees: the address, the answer, the days left).
+   - If alarm 3 is on too, fix that first. If only this one: ngrok's side (`tail -40 ~/Library/Logs/ola/tunnel.log`)
+     and DNS (`dig @1.1.1.1 app.ola.cx`, compare with "The address: app.ola.cx").
+   - Certificate: on the iMac, `cat ~/Library/Logs/ola/cert.log | tail -20` and
+     `node ops/cert.mjs renew` (see "When renewal fails").
+5. **"Frances's service is not answering"**: the Adaptation Almanac (`http://127.0.0.1:3920/almanac/`)
+   did not answer 200 twice in a row. It is not Ola's: do not restart or change it without its owner.
+   - `curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:3920/almanac/`
+   - `launchctl print gui/$(id -u)/sh.almanac.server | grep -E "state|pid|last exit"`
+   - Its runbook: `apps/almanac/README.md` in the repo (the restart is
+     `launchctl kickstart -k gui/$(id -u)/sh.almanac.server`, for its owner to decide).
+
+**Warnings (the daily note, never a text of their own):**
+
+- **"every running project stopped at once"**: 2 or more sealed VMs ran at the last run and none
+  now, with no deploy in progress (a check suite stopping only its own VMs does not count). The
+  evidence is in `~/Library/Logs/ola/watch-vm-drop-<time>.txt`: what ran before, memory, disk, the
+  container system's status and its log for the last 10 minutes, and the front desk log's recent
+  lines about starting and stopping (an idle stop of two projects in one window looks the same;
+  secrets removed). First: read it;
+  `container system status`; `grep -i -E "error|killed|jetsam|memory" ~/Library/Logs/ola/watch-vm-drop-*.txt`.
+- **"the site's certificate has not renewed (N days left)"**: 21 days or fewer left (renewal from
+  the iMac starts at 30), so renewal is failing; see "When renewal fails".
+- **"the nightly X job failed / has not run for N hours"**: a status file in
+  `~/Library/Logs/ola/` (`cert.json`, `backup.json`, `snapshot.json`: `{at, ok, error}`) said so,
+  or is older than 36 hours. Read the job's log beside it.
+- **"the disk was under 20 GB free"**, memory pressure at "warning", the container system not
+  answering: early signs of 1, 2 and 6.
+
+**Installing it** (the job is part of `ops/ola.mjs install`; a deploy run by an older `ola.mjs`
+does not know it yet): after the deploy that brings `ops/watch.mjs`,
+`node ~/ola-staging/current/apps/activist-ai/ops/ola.mjs install` (the other jobs say "already
+loaded" and are not restarted), then `node ops/watch.mjs --dry` and `node ops/ola.mjs status`.
 
 ## Slash commands and reactions (all surfaces)
 

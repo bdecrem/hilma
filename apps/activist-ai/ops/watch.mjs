@@ -164,7 +164,7 @@ function httpGet({ port, host = '127.0.0.1', p = '/', headers = {}, proxy = fals
           s.once('error', cb)
         }
       : undefined
-    const r = http.request({ host, port, path: p, headers, timeout, createConnection, agent: false }, (res) => {
+    const r = http.request({ host, port, path: p, headers, timeout, createConnection }, (res) => {
       res.resume()
       res.on('end', () => resolve({ status: res.statusCode }))
     })
@@ -527,6 +527,12 @@ function saveState(state) {
 async function saveDropEvidence(S, drop, readings, now) {
   const [status, logs] = await Promise.all([run(S.CONTAINER_BIN, ['system', 'status']), run(S.CONTAINER_BIN, ['system', 'logs', '--last', '10m'], 30_000)])
   const m = readings.memory
+  // The front desk stops idle projects itself (OLA_FD_IDLE_STOP_MIN): its recent lines about
+  // stopping tell an ordinary rest from the unexplained event.
+  let fdLines = ''
+  try {
+    fdLines = readFileSync(path.join(LOGS, 'frontdesk.log'), 'utf8').split('\n').slice(-400).filter((l) => /stop|idle|rest|start|wak/i.test(l)).slice(-30).join('\n')
+  } catch {}
   const text = [
     `Every running sealed VM stopped at once, seen at ${new Date(now).toISOString()} (between this run and the one before).`,
     `Running at the run before: ${drop.before.join(' ')}`,
@@ -540,6 +546,9 @@ async function saveDropEvidence(S, drop, readings, now) {
     '',
     '--- container system logs, last 10 minutes (tail)',
     redact((logs.out || logs.err).trim().split('\n').slice(-80).join('\n')),
+    '',
+    '--- the front desk log, recent lines about starting and stopping',
+    redact(fdLines) || '(none)',
   ].join('\n')
   mkdirSync(LOGS, { recursive: true, mode: 0o700 })
   const file = path.join(LOGS, `watch-vm-drop-${new Date(now).toISOString().replace(/[:.]/g, '-')}.txt`)

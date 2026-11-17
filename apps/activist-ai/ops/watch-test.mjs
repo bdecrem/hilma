@@ -8,6 +8,7 @@ import assert from 'node:assert/strict'
 import { spawn, spawnSync } from 'node:child_process'
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import http from 'node:http'
+import net from 'node:net'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { after, before, beforeEach, test } from 'node:test'
@@ -180,6 +181,36 @@ test('everything well: no text, one ok line with every check', async () => {
   assert.equal(state().lastRun.alarms.length, 0)
 })
 
+test('the web app behind the PROXY protocol: the line is sent first, as the front desk requires', async () => {
+  // A front desk with OLA_FD_PROXY_PROTOCOL=1 resets a connection that does not start with one.
+  const seen = []
+  const fdp = net.createServer((s) => {
+    let t = ''
+    s.on('data', (d) => {
+      t += d
+      if (!t.includes('\r\n')) return
+      if (!t.startsWith('PROXY TCP4 127.0.0.1 127.0.0.1 ')) return s.resetAndDestroy()
+      if (!t.includes('\r\n\r\n')) return
+      seen.push(t.split('\r\n')[1])
+      s.end('HTTP/1.1 200 OK\r\ncontent-length: 0\r\nconnection: close\r\n\r\n')
+    })
+    s.on('error', () => {})
+  })
+  const port = await listen(fdp)
+  const env = path.join(OLA, 'frontdesk.env')
+  const saved = readFileSync(env, 'utf8')
+  try {
+    writeFileSync(env, `OLA_FD_ORIGIN=https://app.ola.cx\nOLA_FD_PORT=${port}\nOLA_FD_PROXY_PROTOCOL=1\n`)
+    assert.match((await watch(at('14:00'))).out, /; fd 200;/)
+    assert.deepEqual(seen, ['GET /api/health HTTP/1.1'])
+    writeFileSync(env, `OLA_FD_ORIGIN=https://app.ola.cx\nOLA_FD_PORT=${port}\n`) // the line not sent: refused
+    assert.match((await watch(at('14:02'))).out, /; fd (ECONNRESET|EPIPE|0);/)
+  } finally {
+    writeFileSync(env, saved)
+    fdp.close()
+  }
+})
+
 test('disk: alarm at once, quiet for 2 hours, repeated, then back to normal once', async () => {
   fakes({ freeGB: 6 })
   assert.deepEqual((await watch(at('14:00'))).sent, ["Ola alarm: The mini's disk is almost full (6 GB left)."])
@@ -287,6 +318,7 @@ test('every VM stopping at once: evidence saved (no secrets in it), a warning, t
   mkdirSync(path.join(OLA, 'ws/stage-a'), { recursive: true })
   fakes({ vms: 'buildkit\nola-stage-a\nola-x-chk-a\n' })
   await watch(at('14:00'))
+  writeFileSync(path.join(LOGS, 'frontdesk.log'), 'ready\nstopped stage-a after 30 min idle token=abcdefabcdefabcdefabcdefabcdef\nsigned in kim\n')
   fakes({ vms: 'buildkit\n' })
   const r = await watch(at('14:02'))
   assert.deepEqual(r.sent, [])
@@ -297,6 +329,8 @@ test('every VM stopping at once: evidence saved (no secrets in it), a warning, t
   assert.match(ev, /Memory now: normal, swap 44%/)
   assert.match(ev, /apiserver: vm ola-a exited/)
   assert.doesNotMatch(ev, /4e45112f802a4a6da67cb0beb5f823dd|GB-K0Ma5rZE4kr/)
+  assert.match(ev, /stopped stage-a after 30 min idle token=\[removed\]/)
+  assert.doesNotMatch(ev, /signed in kim/)
   const m = await watch(at('09:00', 18))
   assert.equal(m.sent.length, 1)
   assert.match(m.sent[0], /every running project stopped at once \(2 of them, at 2:02 pm\)/)
