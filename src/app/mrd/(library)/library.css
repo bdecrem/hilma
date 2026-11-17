@@ -311,6 +311,11 @@
 .mri .ans.hi { border-left-color: #2e7d4f; } .mri .ans.mid { border-left-color: #e0a800; } .mri .ans.lo { border-left-color: #b3261e; } .mri .ans.na { border-left-color: #bbb; color: #6b6b6b; }
 .mri .conf { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: #6b6b6b; align-self: center; }
 .mri .conf.low { color: #b3261e; }
+.mri .chk { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; align-self: center; padding: 2px 7px; border-radius: 3px; border: 1px solid currentColor; }
+.mri .chk.verified { color: #1f6b3a; }
+.mri .chk.changed { color: #1d4ed8; }
+.mri .chk.review { color: #b3261e; }
+.mri .chk.pending { color: #6b6b6b; border-style: dashed; }
 .mri .sources { white-space: pre-wrap; font-family: inherit; font-size: 13px; line-height: 1.45; margin: 10px 0 0; color: #444; overflow-wrap: anywhere; }
 .mri .intl, .mri .notes { font-size: 14px; margin-top: 10px; color: #444; }
 .mri .evidence { margin-top: 12px; padding: 10px 12px; background: #f1ede4; border-radius: 8px; font-size: 14px; line-height: 1.5; }

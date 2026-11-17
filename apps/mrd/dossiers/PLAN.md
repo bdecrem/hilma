@@ -1,7 +1,8 @@
 # Dossier due diligence, and 25 new countries
 
-Agreed with Bart on 2026-11-17. Status: not started. He asked for it to run right after two short
-deep dives in the same session; if that session ended first, start here.
+Agreed with Bart on 2026-11-17. Status: Part 1 started that afternoon (`nohup ./check-all.sh`, log
+`logs/check-all.log`; `python3 audit.py <slug> --report` per country). Parts 2 to 4 follow in order.
+How it is built: "The checks" in README.md.
 
 **The rule:** no answer is published unless its sources were actually read and a second reader
 agrees with it.
@@ -81,12 +82,54 @@ all 25.
 
 All of it through Claude Code on the Max login, like the first run.
 
+## Part 3: the original 46, forward to January 2026
+
+Bart, 2026-11-17: "do it". The MRD's human-coded answers stop at January 2023. For each of the 46
+countries and each indicator, start from the MRD's 2023 answer and the law it cites, and establish
+whether that law was amended, repealed or replaced between January 2023 and January 2026, and
+whether practice shifted; most answers will not change. It is coded as "what changed since 2023",
+never as a fresh coding: a fresh 2026 answer set beside human-coded 2023 answers would show coder
+disagreement as if it were legal change (the blind review found 11 of 48 MRD answers partly correct
+or wrong). Where the 2023 answer itself looks wrong, record that apart from the change. The same
+checks apply. Not designed in detail yet: the 2023 instrument's own change scale (its "B.0"
+question: no protection then and now / gained / lost / same / implementation changed / protection
+changed) is the natural answer format.
+
+## Part 4: back in time, all 77 countries
+
+Bart, 2026-11-17: "do it". For each indicator, trace when the cited provisions were enacted and
+amended, and answer the earlier dates from that history, in the instrument's change scale. The
+2023 instrument already does this once ("as of January 1, 2020"). **Which dates is still open**: I
+asked Bart whether January 2020 alone (matching the MRD's existing years) or further back; no answer
+yet. Method, as relayed by the Venture session on 2026-11-17 from a voice call with Bart ("Decided.
+Decided."; confirm with him when the work on this part starts): his concern was that enactment
+dates miss later amendments, and that for answers that are No today they miss rights that existed
+and were repealed. So:
+
+1. Date every protection from its law's full amendment history, not only its enactment date.
+2. For answers that are No today, search for protections that existed and were repealed.
+3. Case-law answers get the same treatment: date each ruling, then check later rulings that
+   overturned or narrowed it.
+
+The same three rules apply to Part 3 (forward to January 1, 2026). Consolidated-law sites often keep past versions; where they do not, the older the date, the
+weaker the sourcing, and the answer has to say so.
+
+## Size (API-equivalent dollars, rough until the first batch is measured)
+
+Last week's law catalog and six dossiers: about $600. Part 1 and 2: about $5,700 ($110 a country to
+check, $200 to code and check a new one; measured on the first test chunk: source check $1.61,
+second reader $4.22 a chunk, 18 chunks a country). Part 3: about $100 a country, $4,600. Part 4:
+about $60 a country and date; two dates for all 77, about $9,000. All of it: about $19,000, five to
+six weeks of the whole Max weekly limit (about $3,500 a week at the July calibration), two to three
+months at half of it. Bart knows and said go. Check `scripts/usage-meter.py` before a long batch.
+
 ## Order of work
 
-1. Build the checks and the review page.
+1. Build the checks and the review page. (Done 2026-11-17: `audit.py`, `cc/check.mjs`,
+   `check-all.sh`, ola.cx/mrd/dossiers/checks.)
 2. Run Part 1 on the six countries.
 3. Review what it found with Bart and the MRD team.
-4. Run three new countries as a first batch: Panama, Uruguay and Jamaica.
+4. Fold the checks into the coding pipeline (`run-all.sh`), add the 25 countries to `COUNTRIES`,
+   and run three new countries as a first batch: Panama, Uruguay and Jamaica.
 5. Run the other 22.
-
-Steps 1 and 2 take about a day of machine time.
+6. Part 3, then Part 4, each with a first batch of three before the rest.

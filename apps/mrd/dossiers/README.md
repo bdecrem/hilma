@@ -48,6 +48,52 @@ mean over the 17 categories (that reproduces the MRD's published Protection and 
 its Implementation average runs 2-3 points higher than a category mean, method unknown). The overview
 is one Opus call on the API key (cents) in the style of the MRD's own write-ups.
 
+## The checks (since 2026-11-17)
+
+The rule: no answer stays published unless its sources were actually read and a second reader agrees
+with it. `PLAN.md` has the why and the order of work; ola.cx/mrd/dossiers/checks shows where every
+answer stands, and the library's country page carries a badge per answer (`lib_checks`).
+
+```bash
+nohup ./check-all.sh [slug ...] > logs/check-all.log 2>&1 &   # all phases, country by country; restartable
+node cc/check.mjs <slug> sources|verify|redo|sources2 [--only key,key] [--again]   # one phase
+python3 audit.py <slug> --report            # counts, cost, what changed, what waits
+python3 audit.py <slug> --decide [--dry]    # verified / changed / review; rewrites changed answers
+python3 audit.py <slug> --resolve <qid> original|redo "<reason>" --by <name>   # a person's decision on a review item
+```
+
+`audit.py` builds the prompts, takes the results and decides; `cc/check.mjs` runs the sessions on the
+Max login. State is one row per indicator in `dossier_checks` (the first answer, each check's
+findings, status, before / after, reason), runs and their cost in `dossier_check_runs`.
+
+1. **sources** (Sonnet 5.5, low, read only, a session per chunk): opens every URL the coder cited.
+   Per legal source: is the page the text itself or somebody's account of it, are the quoted words at
+   the cited article (it copies the original-language passage). Per evidence source: does it show
+   practice or only law, which people is it about, does it contain what the evidence paragraph says
+   it does; and for the indicator, do the practice sources fit the people the right matters for.
+   `judge_sources` then fails an answer mechanically: a source without a URL, a law or ruling read
+   as a secondary account, a quote that is not there, a page the coder never opened (unless the check
+   itself found the quote in the text), no practice source that the coder actually opened, or
+   practice evidence about other people. An evidence page seen only in search results does not count.
+2. **verify** (Opus 5.5, high, search + read): the second reader. It gets the coding rules, the
+   indicators and the answers with their citations, never the coder's confidence or notes, reads the
+   primary sources itself, looks for what would overturn the answer, and returns a verdict and its
+   own answer for protection and for implementation.
+3. **redo** (Fable 5.2, xhigh): whatever was marked low confidence, failed the source check or drew
+   an objection is coded again with all three in front of it and no reading limit; it labels each
+   evidence source (practice / law only, which people). **sources2** runs the source check over the
+   redo, against the pages the redo session opened (its reads are logged as `redo:<chunk>`).
+4. **decide**: passed both checks and not low confidence: verified. Redone with the same result and
+   clean sources: verified, the redo's text published. Redone with a different result that the
+   second reader's objection supports: changed. Anything else (the redo keeps an answer the second
+   reader called wrong, three different answers, a redo whose sources fail): review, nothing is
+   rewritten, a person decides. Implementation levels half a step apart count as the same.
+
+Tuning that mattered on the first run (Costa Rica): matching evidence to the answer by group labels
+alone failed every detention answer, because evidence about detained irregular migrants was "not
+about all migrants"; the check now asks whether the evidence fits the people the right matters for.
+A quote the check marks "partly" (an ellipsis, a longer article) is not a failure.
+
 ## What the data taught us
 
 - **The MRD's answers and citations point at the wrong question ids from id 73 on.** Its `questions`
@@ -75,3 +121,9 @@ is one Opus call on the API key (cents) in the style of the MRD's own write-ups.
   Still resting on court material that was not read, to check before anyone relies on them: Costa Rica 123
   (housing, a 2023 Sala judgment known from the press), Philippines 67 (a Supreme Court Rule known from
   its press release).
+- **Children's education (instrument Q65, question 125) is filed under Health.** The 2023 instrument
+  puts it in the Education block; the MRD site's `questions` table gives it `category_id` 16 (Health),
+  and we follow the table, so Education has one indicator (127) and Health three. Bart, 2026-11-17:
+  leave as is for now. The dossiers do use the 2023 instrument (checked that day: all 64 wordings
+  match the PDF; the 2020 questionnaire on the site differs in about 18 questions); what they do not
+  answer is the 2023 instrument's second pass, each question again "as of January 1, 2020".

@@ -20,6 +20,9 @@ type Country = {
 }
 
 const get = (slug: string) => rpc<Country | null>('lib_country', { p_slug: slug })
+type Checks = Record<string, { status: 'pending' | 'verified' | 'changed' | 'review'; reason: string | null }>
+const getChecks = (slug: string) => rpc<Checks>('lib_checks', { p_slug: slug }, 300)
+const CHECK_LABEL = { verified: 'checked', changed: 'changed after checks', review: 'under review', pending: 'being checked' } as const
 const n0 = (x: number | null | undefined) => (x === null || x === undefined ? '—' : String(Math.round(x)))
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -34,7 +37,7 @@ function Pill({ label, text, score }: { label: string; text: string | null; scor
 
 export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const [c, h] = await Promise.all([get(slug), home()])
+  const [c, h, checks] = await Promise.all([get(slug), home(), getChecks(slug)])
   if (!c) notFound()
   const me = h.countries.find(x => x.slug === slug)
   const { countries, categories } = options(h)
@@ -119,6 +122,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
                         {q.answer && <Pill label="Law" text={q.answer.text} score={q.answer.score} />}
                         {q.implementation && <Pill label="Practice" text={q.implementation.text} score={q.implementation.score} />}
                         {q.answer?.confidence && <span className={`conf ${q.answer.confidence}`}>{q.answer.confidence} confidence</span>}
+                        {checks[q.id] && <span className={`chk ${checks[q.id].status}`} title={checks[q.id].reason ?? undefined}>{CHECK_LABEL[checks[q.id].status]}</span>}
                       </div>
                     )}
                     {q.citations.map(ci => (
