@@ -46,9 +46,12 @@ FREE=$(ssh -o ConnectTimeout=10 "$MINI" "df -g /System/Volumes/Data | awk 'NR==2
 node tools/skills.mjs stage build/OlaSkills
 node tools/skills.mjs stage build/OlaSkills >/dev/null   # bundled in the Mac app, checked after the archive
 xcodegen generate >/dev/null
-ssh -o ConnectTimeout=10 "$MINI" 'mkdir -p ~/ola-ship/apple ~/ola-ship/workspace'
+ssh -o ConnectTimeout=10 "$MINI" 'mkdir -p ~/ola-ship/apple'
 rsync -a --delete --exclude .build --exclude DerivedData --exclude xcuserdata --exclude .DS_Store ./ "$MINI:ola-ship/apple/"
-rsync -a --delete --exclude node_modules --exclude .DS_Store ../workspace/ "$MINI:ola-ship/workspace/"
+# Every folder project.yml reaches outside apple/ (`path: ../<dir>`), so the mini's copy builds.
+for d in $(sed -n 's#^ *- path: \.\./\([A-Za-z0-9_-]*\).*#\1#p' project.yml | sort -u); do
+  rsync -a --delete --exclude node_modules --exclude .DS_Store "../$d/" "$MINI:ola-ship/$d/"
+done
 
 archive() { # $1 scheme, $2 destination, $3 name
   echo "== archiving $3 on the mini (release Xcode, unsigned)"
