@@ -820,12 +820,36 @@ def code_one(con, job, fields, doc_id, stage):
 
 def run(jid):
     os.makedirs(STATE_DIR, exist_ok=True)
-    lock = open(os.path.join(STATE_DIR, jid + ".lock"), "w")
+    lock = open(os.path.join(STATE_DIR, jid + ".lock"), "a+")
     try:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except OSError:
-        print(json.dumps({"running": "already"}))
-        sys.exit(3)
+        if not RUNNER_KEY:
+            print(json.dumps({"running": "already"}))
+            sys.exit(3)
+        # Started by the front desk with a new key (review 5 follow-up): the runner holding the lock
+        # is an older front desk's (killed under it, its `container exec` orphaned), and its key is no
+        # longer granted. It is ended, and this one carries on with the job.
+        try:
+            lock.seek(0)
+            old = int((lock.read().strip() or "0").split()[0])
+            if old > 1 and old != os.getpid():
+                os.kill(old, 15)
+        except (ValueError, OSError):
+            pass
+        for _ in range(60):
+            try:
+                fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break
+            except OSError:
+                time.sleep(0.5)
+        else:
+            print(json.dumps({"running": "already"}))
+            sys.exit(3)
+    lock.seek(0)
+    lock.truncate()
+    lock.write(str(os.getpid()))
+    lock.flush()
     con = connect()
     job = dict(job_row(con, jid))
     if job["state"] not in ACTIVE:

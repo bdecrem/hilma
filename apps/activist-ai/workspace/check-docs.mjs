@@ -136,7 +136,7 @@ print(json.dumps(ok))`)
   // folder in the project; the next ola-unzip removes it (and ola-init at every start).
   await sh(['python3', '-c', 'import zipfile, os\nz = zipfile.ZipFile("/work/slow.zip", "w")\nfor i in range(300): z.writestr("slow/f%d.bin" % i, os.urandom(1 << 20))\nz.close()'])
   // Killed the moment its hidden folder holds a file: mid-unpack, whatever the machine's speed.
-  const killed = (await sh(['sh', '-c', 'ola-unzip slow.zip >/dev/null 2>&1 & p=$!; for i in $(seq 1 400); do ls /work/.ola/tmp/unzip-*/slow/f1.bin >/dev/null 2>&1 && break; sleep 0.01; done; kill -9 $p; wait $p 2>/dev/null; ls -A /work/.ola/tmp | grep -c "^unzip-"; test -e /work/slow && echo folder || echo none; rm -rf /work/slow.zip /work/slow'])).out.trim().split('\n')
+  const killed = (await sh(['sh', '-c', 'ola-unzip slow.zip >/dev/null 2>&1 & p=$!; for i in $(seq 1 400); do ls /work/.ola/tmp/unzip-*/f1.bin >/dev/null 2>&1 && break; sleep 0.01; done; kill -9 $p; wait $p 2>/dev/null; ls -A /work/.ola/tmp | grep -c "^unzip-"; test -e /work/slow && echo folder || echo none; rm -rf /work/slow.zip /work/slow'])).out.trim().split('\n')
   await sh(['cp', '/work/dx/papers.zip', '/work/papers.zip'])
   const unz = await sh(['ola-unzip', 'papers.zip'])
   const staleLeft = (await sh(['sh', '-c', 'ls -A /work/.ola/tmp 2>/dev/null | grep -c "^unzip-"; true'])).out.trim()
