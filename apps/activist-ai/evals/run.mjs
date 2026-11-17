@@ -356,6 +356,7 @@ async function worker() {
     if (!(await waitForLoad())) { console.log(`load stayed over ${maxLoad} for ${loadPatience} min: stopping`); return }
     if (perRunCap && spent + reserved + perRunCap > maxUsd) { budgetStop = true; return }
     const item = queue.shift()
+    if (!item) return // another worker took the last one while this one waited on the load
     reserved += perRunCap
     try { await runOne(item) } catch (e) { console.log(`error  ${item.task.id} seed ${item.seed}: ${String(e.message || e).slice(0, 300)}`) }
     reserved -= perRunCap
