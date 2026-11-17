@@ -24,6 +24,10 @@ export const phoneDeps: PhoneDeps = {
     return data ?? []
   },
   addTurn: (session, role, text) => addTurn(session, role, text, PHONE),
+  async reviseTurn(id, text) {
+    const { error } = await f2Supabase().from('venture_interview_turns').update({ text }).eq('id', id).eq('role', 'bart')
+    if (error) throw new Error(`venture turn revise failed: ${error.message}`)
+  },
   mint: (engineId) => mintElevenConversationToken(engineId),
   system: () => talkSystem(PHONE_LEAD),
   warm: (system) => warmCache(system),

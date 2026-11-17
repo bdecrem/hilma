@@ -55,6 +55,10 @@ export type PhoneDeps = {
   turns(session: string): Promise<Row[]>
   phoneRows(since: Date, limit: number): Promise<Row[]>
   addTurn(session: string, role: Turn['role'], text: string): Promise<void>
+  /// Rewrites one of his rows when the engine sends the same spoken turn again, revised.
+  reviseTurn(id: number, text: string): Promise<void>
+  /// Tests only: how often a reply checks its question still stands.
+  checkEvery?: number
   mint(engineId: string): Promise<string>
   system(): Promise<string>
   warm(system: string): Promise<void>
@@ -145,6 +149,44 @@ export type BridgeTurn = { voice_session_id?: string; transcript?: { role: 'user
 /// Spoken text: no markdown, whatever the model does.
 export const spoken = (s: string) => s.replace(/[*#`_~]+/g, '')
 
+// What ElevenLabs does with a turn, as the first real meeting (2026-11-17) stored it: he paused,
+// the engine sent his words so far, he went on, and it sent the same turn again, longer ("What are
+// you blocking on?" then "What are you blocking on? List them ... really short."). The bridge
+// cancels its request for the first, but the cancel never reached this function on Vercel, so
+// Claude answered both and both answers were stored. Now a turn that revises the last one replaces
+// its row, and a reply whose question has since been revised or followed stops and is not kept.
+// The engine also heard Kit's own greeting through the speaker: "Hello. Hi Bart." was his line.
+
+const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9' ]+/g, ' ').replace(/\s+/g, ' ').trim()
+
+/// The same spoken turn, heard again: one is the other with more words (or the same words fixed up).
+export function isRevision(before: string, after: string): boolean {
+  const a = norm(before), b = norm(after)
+  if (!a || !b) return false
+  if (b.startsWith(a) || a.startsWith(b)) return true
+  const aw = a.split(' '), bw = b.split(' ')
+  const n = Math.min(aw.length, bw.length)
+  if (n < 4) return false
+  let same = 0
+  for (let i = 0; i < n; i++) if (aw[i] === bw[i]) same++
+  return same / n >= 0.8
+}
+
+/// His line without the sentences that are Kit's own last line coming back through the speaker.
+export function withoutEcho(said: string, kitLine: string | undefined): string {
+  if (!kitLine) return said
+  const kit = norm(kitLine)
+  const sentences = said.match(/[^.?!]+[.?!]*/g) ?? [said]
+  const kept = sentences.filter((x) => {
+    const n = norm(x)
+    return !(n.split(' ').length >= 2 && kit.includes(n))
+  })
+  return kept.join('').trim()
+}
+
+/// How often a reply in progress checks that its question still stands.
+export const SUPERSEDE_CHECK_MS = 600
+
 export async function kitTurn(body: BridgeTurn, signal: AbortSignal, d: PhoneDeps): Promise<Response> {
   const session = (body.voice_session_id ?? '').slice(PREFIX.length)
   if (!isSession(session) || !Array.isArray(body.transcript)) return json({ error: 'bad kit turn' }, 400)
@@ -153,24 +195,32 @@ export async function kitTurn(body: BridgeTurn, signal: AbortSignal, d: PhoneDep
   if (ended(rows)) return json({ error: 'the meeting has ended' }, 409)
 
   const lastEntry = body.transcript[body.transcript.length - 1]
-  const said = lastEntry?.role === 'user' ? (lastEntry.content ?? '').trim() : ''
+  const heard = lastEntry?.role === 'user' ? (lastEntry.content ?? '').trim() : ''
 
   const text = (s: string) => new Response(s, { headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' } })
-  if (said === KICKOFF) {
+  if (heard === KICKOFF) {
     const line = rows.some((t) => t.role === 'claude') ? BACK : GREETING
     await d.addTurn(session, 'claude', line)
     return text(line)
   }
-  // ElevenLabs asks for a turn when he has been quiet a while; no need to wake Claude for that.
+  const lastSpoken = [...rows].reverse().find((t) => t.role !== 'event')
+  const said = withoutEcho(heard, lastSpoken?.role === 'claude' ? lastSpoken.text : undefined)
+  // ElevenLabs asks for a turn when he has been quiet a while (or heard only Kit's own voice);
+  // no need to wake Claude for that.
   if (!said) return text(HERE)
 
-  const lastSpoken = [...rows].reverse().find((t) => t.role !== 'event')
-  if (!(lastSpoken?.role === 'bart' && lastSpoken.text === said)) await d.addTurn(session, 'bart', said)
+  // One row per spoken turn: a retry is the same row, a revision rewrites it.
+  if (lastSpoken?.role === 'bart' && lastSpoken.text !== said && isRevision(lastSpoken.text, said)) {
+    await d.reviseTurn(lastSpoken.id, said)
+  } else if (!(lastSpoken?.role === 'bart' && lastSpoken.text === said)) {
+    await d.addTurn(session, 'bart', said)
+  }
   const turns = await d.turns(session)
+  const asked = [...turns].reverse().find((t) => t.role === 'bart')!
   const messages = talkMessages(turns)
 
   const enc = new TextEncoder()
-  const gen = phoneReply(session, messages, signal, d)
+  const gen = phoneReply(session, { id: asked.id, text: asked.text }, messages, signal, d)
   const stream = new ReadableStream<Uint8Array>({
     async pull(controller) {
       try {
@@ -189,20 +239,44 @@ export async function kitTurn(body: BridgeTurn, signal: AbortSignal, d: PhoneDep
 }
 
 /// Claude's reply, stored as it ends: whole, cut off by Bart (what was written by then, and
-/// "interrupted"), or failed (an event saying why, and a line he hears).
-async function* phoneReply(session: string, messages: Anthropic.MessageParam[], signal: AbortSignal, d: PhoneDeps): AsyncGenerator<string> {
+/// "interrupted"), or failed (an event saying why, and a line he hears). A reply whose question
+/// was revised or followed by another turn while it ran (`asked` is no longer his last line) is
+/// stopped and not stored: the newer turn has its own answer.
+async function* phoneReply(session: string, asked: { id: number; text: string }, messages: Anthropic.MessageParam[], signal: AbortSignal, d: PhoneDeps): AsyncGenerator<string> {
   let out = ''
   let state: 'running' | 'done' | 'failed' = 'running'
+  const stop = new AbortController()
+  const both = AbortSignal.any([signal, stop.signal])
+  const superseded = async () => {
+    const last = [...(await d.turns(session))].reverse().find((t) => t.role === 'bart')
+    return !last || last.id !== asked.id || last.text !== asked.text
+  }
+  let replaced = false
+  const watch = setInterval(() => {
+    superseded()
+      .then((yes) => {
+        if (yes && !replaced) {
+          replaced = true
+          stop.abort()
+        }
+      })
+      .catch(() => {})
+  }, d.checkEvery ?? SUPERSEDE_CHECK_MS)
+  // A stream nobody reads to the end never reaches `finally`: the watch must not outlive the turn.
+  ;(watch as { unref?: () => void }).unref?.()
+  const giveUp = setTimeout(() => clearInterval(watch), 120_000)
+  ;(giveUp as { unref?: () => void }).unref?.()
   try {
-    for await (const chunk of d.reply(await d.system(), messages, signal)) {
+    for await (const chunk of d.reply(await d.system(), messages, both)) {
+      if (replaced) break
       const s = spoken(chunk)
       if (!s) continue
       out += s
       yield s
     }
-    state = 'done'
+    state = replaced ? 'running' : 'done'
   } catch (e) {
-    if (signal.aborted) return
+    if (both.aborted) return
     state = 'failed'
     console.error('[venture/phone] reply failed:', e)
     const why = (e instanceof Error ? e.message : String(e)).replace(/\s+/g, ' ').slice(0, 300)
@@ -212,8 +286,14 @@ async function* phoneReply(session: string, messages: Anthropic.MessageParam[], 
       yield BROKEN
     }
   } finally {
-    if (out.trim()) await d.addTurn(session, 'claude', out.trim()).catch((e) => console.error('[venture/phone] store failed:', e))
-    if (state === 'running') await d.addTurn(session, 'event', 'interrupted').catch(() => {})
+    clearInterval(watch)
+    if (!replaced) replaced = await superseded().catch(() => false)
+    if (replaced) {
+      await d.addTurn(session, 'event', 'reply dropped: he said more').catch(() => {})
+    } else {
+      if (out.trim()) await d.addTurn(session, 'claude', out.trim()).catch((e) => console.error('[venture/phone] store failed:', e))
+      if (state === 'running') await d.addTurn(session, 'event', 'interrupted').catch(() => {})
+    }
   }
 }
 

@@ -49,6 +49,11 @@ function fake(opts: { reply?: (signal?: AbortSignal) => AsyncIterable<string>; t
     },
     memos: async (n) => memos.slice(0, n),
     now: () => clock,
+    reviseTurn: async (rowId, text) => {
+      const r = rows.find((x) => x.id === rowId)
+      if (r) r.text = text
+    },
+    checkEvery: 5,
   }
   return { d, rows, memos, calls, later, tick: (s: number) => (clock += s * 1000) }
 }
@@ -227,6 +232,83 @@ test('a note: transcribed, stored as a voice note, answered with the text; limit
   const list = await read(await P.overview(get(), f.d))
   assert.equal(list.body.notes[0].text, 'Look at the pricing page tonight.')
   assert.equal(list.body.notes[0].read, false)
+})
+
+// The shape of the first real meeting (2026-11-17), with made-up words: he paused mid-question, the
+// engine sent the turn, he went on, the engine sent the same turn again, longer. Both reached
+// kitTurn; Claude answered both and both answers and both versions of his line were stored.
+test('a turn sent again, longer, is one row and one answer; the first answer stops and is not kept', async () => {
+  let call = 0
+  const f = fake({
+    reply: (signal) => {
+      const n = ++call
+      return (async function* () {
+        if (n === 1) {
+          yield 'An answer to half a question. '
+          await new Promise((resolve) => {
+            signal!.addEventListener('abort', resolve)
+            setTimeout(resolve, 2000)
+          })
+          yield 'And more of it.'
+        } else {
+          yield 'Three things, short.'
+        }
+      })()
+    },
+  })
+  const start = await read(await P.startMeeting(post({}), f.d))
+  const voice = start.body.dynamic_variables.dodo_voice_session
+  const head = [{ role: 'user' as const, content: '[begin]' }, { role: 'agent' as const, content: P.GREETING }]
+  await P.kitTurn(turn(voice, head.slice(0, 1)), new AbortController().signal, f.d)
+
+  // the engine's first send: his words so far
+  const first = await P.kitTurn(turn(voice, [...head, { role: 'user', content: 'What should I look at today?' }]), new AbortController().signal, f.d)
+  const r1 = first.body!.getReader()
+  assert.equal(new TextDecoder().decode((await r1.read()).value), 'An answer to half a question. ')
+  // the engine's second send of the same spoken turn (the bridge drops the first request, but
+  // that cancel never reaches the function, so nothing is aborted here)
+  const second = await read(await P.kitTurn(turn(voice, [...head, { role: 'user', content: 'What should I look at today? Keep it to three things.' }]), new AbortController().signal, f.d))
+  assert.equal(second.body, 'Three things, short.')
+  // the first reply notices its question was revised, stops, and is not stored
+  for (;;) if ((await r1.read()).done) break
+  await new Promise((r) => setTimeout(r, 20))
+  const spoken = f.rows.filter((x) => x.role !== 'event').map((x) => `${x.role}: ${x.text}`)
+  assert.deepEqual(spoken, [`claude: ${P.GREETING}`, 'bart: What should I look at today? Keep it to three things.', 'claude: Three things, short.'])
+  assert.ok(f.rows.some((x) => x.text === 'reply dropped: he said more'))
+  assert.equal(call, 2)
+})
+
+test('a revision is the same words with more after them, punctuation aside; a new line is not', () => {
+  // the second pair of that meeting, made-up words: a comma added, a sentence more
+  assert.ok(P.isRevision('Can you tell me how we check quality, uh, each time or in general?', 'Can you tell me how we check quality, uh, each time, or in general? The short version.'))
+  assert.ok(P.isRevision('Move the call to Thursday', 'Move the call to Thursday.'))
+  assert.equal(P.isRevision('Yes.', 'No, wait.'), false)
+  assert.equal(P.isRevision('What should I look at today?', 'Who is on the call tomorrow?'), false)
+})
+
+test("Kit's greeting heard through the speaker is not his line", async () => {
+  const f = fake()
+  const start = await read(await P.startMeeting(post({}), f.d))
+  const voice = start.body.dynamic_variables.dodo_voice_session
+  const head = [{ role: 'user' as const, content: '[begin]' }, { role: 'agent' as const, content: P.GREETING }]
+  await P.kitTurn(turn(voice, head.slice(0, 1)), new AbortController().signal, f.d)
+  // recorded: "Hello. Hi Bart." right after "Hi Bart, Kit here."
+  await read(await P.kitTurn(turn(voice, [...head, { role: 'user', content: 'Hello. Hi Bart.' }]), new AbortController().signal, f.d))
+  assert.deepEqual(f.rows.filter((x) => x.role === 'bart').map((x) => x.text), ['Hello.'])
+  assert.equal(P.withoutEcho('Hi Bart, Kit here.', P.GREETING), '')
+  assert.equal(P.withoutEcho('Kit, here is the plan.', P.GREETING), 'Kit, here is the plan.')
+})
+
+test('a turn that is only Kit\'s own voice gets a short line and no row', async () => {
+  const f = fake()
+  const start = await read(await P.startMeeting(post({}), f.d))
+  const voice = start.body.dynamic_variables.dodo_voice_session
+  const head = [{ role: 'user' as const, content: '[begin]' }, { role: 'agent' as const, content: P.GREETING }]
+  await P.kitTurn(turn(voice, head.slice(0, 1)), new AbortController().signal, f.d)
+  const r = await read(await P.kitTurn(turn(voice, [...head, { role: 'user', content: 'Hi Bart.' }]), new AbortController().signal, f.d))
+  assert.equal(r.body, "I'm here.")
+  assert.equal(f.rows.filter((x) => x.role === 'bart').length, 0)
+  assert.equal(f.calls.reply, 0)
 })
 
 test('an empty transcription is not stored', async () => {
