@@ -24,6 +24,8 @@
 //   cx.ola.container   container-up, once at load
 //   cx.ola.gateway     ops/run.mjs ~/.ola/gateway.env gateway/server.mjs     127.0.0.1:4180
 //   cx.ola.frontdesk   ops/run.mjs ~/.ola/frontdesk.env frontdesk/server.mjs 127.0.0.1:4700
+//   cx.ola.tls         ops/run.mjs ~/.ola/tls.env ops/tls.mjs                127.0.0.1:4743 (only where tls.env exists)
+//   cx.ola.tunnel      ops/run.mjs ~/.ola/tunnel.env ops/tunnel.mjs          ngrok, stage 2 (only where tunnel.env exists)
 // and, while a workspace runs, its door and desk (cx.ola.door.<id>, cx.ola.desk.<id>), loaded and
 // unloaded by workspace/ws.mjs start/stop under OLA_LAUNCHD=1 (set in frontdesk.env), with their
 // plists in ~/.ola/launchd/ (not loaded at login: after a reboot no workspace runs).
@@ -43,8 +45,10 @@
 import { spawn, spawnSync } from 'node:child_process'
 import { closeSync, createWriteStream, existsSync, mkdirSync, openSync, readFileSync, readdirSync, readlinkSync, realpathSync, renameSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs'
 import http from 'node:http'
+import net from 'node:net'
 import { homedir } from 'node:os'
 import path from 'node:path'
+import tls from 'node:tls'
 import { fileURLToPath } from 'node:url'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
@@ -58,6 +62,9 @@ const DOMAIN = `gui/${UID}`
 const CONTAINER = process.env.OLA_CONTAINER_BIN || '/usr/local/bin/container'
 const PATH = '/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin'
 const ENV = { gateway: path.join(OLA, 'gateway.env'), frontdesk: path.join(OLA, 'frontdesk.env') }
+// The TLS front's settings (ops/tls.mjs); its job is installed only where this file exists.
+const TLS_ENV = path.join(OLA, 'tls.env')
+const TUNNEL_ENV = path.join(OLA, 'tunnel.env')
 const STAGING = process.env.OLA_STAGING || path.join(HOME, 'ola-staging')
 const CURRENT = path.join(STAGING, 'current')
 const SERVED = path.join(CURRENT, 'apps/activist-ai') // what the jobs run, through the symlink
@@ -90,7 +97,12 @@ const JOBS = [
   { label: 'cx.ola.container', args: [NODE, path.join(SERVED, 'ops/ola.mjs'), 'container-up'], keepAlive: false, log: 'container' },
   { label: 'cx.ola.gateway', args: [NODE, path.join(SERVED, 'ops/run.mjs'), ENV.gateway, 'gateway/server.mjs'], keepAlive: true, log: 'gateway' },
   { label: 'cx.ola.frontdesk', args: [NODE, path.join(SERVED, 'ops/run.mjs'), ENV.frontdesk, 'frontdesk/server.mjs'], keepAlive: true, log: 'frontdesk' },
+  { label: 'cx.ola.tls', args: [NODE, path.join(SERVED, 'ops/run.mjs'), TLS_ENV, 'ops/tls.mjs'], keepAlive: true, log: 'tls', optional: TLS_ENV },
+  // Stage 2 only: the public tunnel. Installed by `install` once ~/.ola/tunnel.env exists, never before.
+  { label: 'cx.ola.tunnel', args: [NODE, path.join(SERVED, 'ops/run.mjs'), TUNNEL_ENV, 'ops/tunnel.mjs'], keepAlive: true, log: 'tunnel', optional: TUNNEL_ENV },
 ]
+/** The jobs this machine runs: the TLS front and the tunnel only where their env files exist. */
+const jobsHere = () => JOBS.filter((j) => !j.optional || existsSync(j.optional))
 function plist(job) {
   const log = path.join(LOGS, `${job.log}.log`)
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -118,9 +130,24 @@ function job(label) {
   return { label, loaded: true, state: get('state'), pid: Number(get('pid')) || null, lastExit: get('last exit code') ?? null, runs: Number(get('runs')) || 0 }
 }
 
+/**
+ * With OLA_FD_PROXY_PROTOCOL=1 the front desk refuses a connection that does not start with a PROXY
+ * line, so requests to its port send one (naming loopback) when that is set.
+ */
+function fdProxied(port) {
+  if (!existsSync(ENV.frontdesk)) return false
+  const e = readEnv(ENV.frontdesk)
+  return e.OLA_FD_PROXY_PROTOCOL === '1' && port === Number(e.OLA_FD_PORT || new URL(e.OLA_FD_ORIGIN || 'http://localhost:4700').port || 4700)
+}
 function request(port, p, { headers = {}, method = 'GET', body, socketPath } = {}) {
+  const createConnection = !socketPath && fdProxied(port)
+    ? (_o, cb) => {
+        const s = net.connect(port, '127.0.0.1', () => (s.write(`PROXY TCP4 127.0.0.1 127.0.0.1 1 ${port}\r\n`), cb(null, s)))
+        s.once('error', cb)
+      }
+    : undefined
   return new Promise((resolve) => {
-    const r = http.request({ host: '127.0.0.1', port, socketPath, path: p, method, headers, timeout: 15_000 }, (res) => {
+    const r = http.request({ host: '127.0.0.1', port, socketPath, path: p, method, headers, timeout: 15_000, createConnection }, (res) => {
       let t = ''
       res.on('data', (d) => (t += d))
       res.on('end', () => {
@@ -138,6 +165,30 @@ function request(port, p, { headers = {}, method = 'GET', body, socketPath } = {
 }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
+/** Through the TLS front from loopback: the certificate it serves and /api/health's status. */
+function tlsHealth(env) {
+  const [host, port] = (env.OLA_TLS_LISTEN || '127.0.0.1:4743').split(/:(?=\d+$)/)
+  const name = env.OLA_TLS_SERVERNAME || 'app.ola.cx'
+  return new Promise((resolve) => {
+    const done = (r) => (clearTimeout(timer), resolve({ listen: `${host}:${port}`, ...r }))
+    const timer = setTimeout(() => (raw.destroy(), done({ error: 'timeout' })), 10_000)
+    const raw = net.connect(+port, host, () => {
+      if ((env.OLA_TLS_PROXY_IN ?? '1') === '1') raw.write(`PROXY TCP4 127.0.0.1 127.0.0.1 1 ${port}\r\n`)
+      const s = tls.connect({ socket: raw, servername: name, rejectUnauthorized: false, ALPNProtocols: ['http/1.1'] }, () => {
+        const c = s.getPeerX509Certificate()
+        const info = { notAfter: c ? new Date(c.validTo).toISOString() : null, serial: c?.serialNumber ?? '' }
+        s.write(`GET /api/health HTTP/1.1\r\nHost: ${name}\r\nConnection: close\r\n\r\n`)
+        let t = ''
+        s.on('data', (d) => (t += d))
+        s.on('end', () => done({ ...info, status: Number(/^HTTP\/1\.1 (\d{3})/.exec(t)?.[1]) || 0 }))
+        s.on('error', () => done({ ...info, status: 0 }))
+      })
+      s.on('error', (e) => done({ error: e.code || 'tls error' }))
+    })
+    raw.on('error', (e) => done({ error: e.code || 'no answer' }))
+  })
+}
+
 /**
  * Writes the three jobs' plists (pointed at SERVED) and loads them. A job whose plist is unchanged
  * and loaded is restarted with kickstart -k when `restart` (the container job never is: it only
@@ -152,9 +203,10 @@ function install({ restart }) {
   const fd = readEnv(ENV.frontdesk)
   if (fd.OLA_LAUNCHD !== '1') fail(`${ENV.frontdesk} must set OLA_LAUNCHD=1 (doors and desks as launchd jobs)`)
   if (!existsSync(path.join(SERVED, 'web/dist/index.html'))) fail(`nothing is deployed in ${STAGING}: node ops/ola.mjs deploy (see the README, "Deploying staging")`)
+  for (const f of [TLS_ENV, TUNNEL_ENV]) if (existsSync(f) && (statSync(f).mode & 0o077) !== 0) fail(`${f} must be mode 600`)
   mkdirSync(AGENTS, { recursive: true })
   mkdirSync(LOGS, { recursive: true, mode: 0o700 })
-  for (const j of JOBS) {
+  for (const j of jobsHere()) {
     const file = path.join(AGENTS, `${j.label}.plist`)
     const text = plist(j)
     const same = existsSync(file) && readFileSync(file, 'utf8') === text && job(j.label).loaded
@@ -222,7 +274,7 @@ if (cmd === 'container-up') {
   console.log(`${outside.length ? 'DOWN' : 'ok  '}  jobs run from        ${outside.length ? `outside ${STAGING}: ${outside.map((f) => path.basename(f)).join(', ')}` : `${STAGING} (${plists.length} plists)`}`)
   const elsewhere = sh('/bin/ps', ['-axww', '-o', 'pid=,command=']).stdout.split('\n').filter((l) => /apps\/activist-ai\/(ops\/run|workspace\/(door|desk)|gateway\/server|frontdesk\/server)\.mjs/.test(l) && !l.includes(`${STAGING}/`))
   for (const l of elsewhere) console.log(`note  an Ola process outside ${STAGING} (a check or a dev run?): ${l.trim().slice(0, 160)}`)
-  for (const j of JOBS) {
+  for (const j of jobsHere()) {
     const s = job(j.label)
     const good = s.loaded && (j.keepAlive ? s.state === 'running' : true)
     if (!good) bad++
@@ -234,6 +286,18 @@ if (cmd === 'container-up') {
   const h = await request(fdPort, '/api/health', { headers: { host: origin.host } })
   if (h.status !== 200) bad++
   console.log(`${h.status === 200 ? 'ok  ' : 'DOWN'}  front desk           127.0.0.1:${fdPort} /api/health ${h.status || 'no answer'}`)
+  if (existsSync(TLS_ENV)) {
+    // The TLS front: what certificate it serves (DOWN with 21 days or fewer left: renewal from the
+    // iMac starts at 30) and what /api/health answers through it (from loopback, past the gate).
+    const t = await tlsHealth(readEnv(TLS_ENV))
+    const left = t.notAfter ? Math.floor((Date.parse(t.notAfter) - Date.now()) / 86_400_000) : null
+    const certOk = left !== null && left > 21
+    if (!certOk) bad++
+    console.log(`${certOk ? 'ok  ' : 'DOWN'}  certificate          ${t.notAfter ? `${left} days left (until ${t.notAfter}), serial ${t.serial.slice(0, 12)}…${left <= 21 ? '; renewal is failing: on the iMac, cat ~/Library/Logs/ola/cert.log' : ''}` : `none served (${t.error})`}`)
+    const hOk = t.status === 200 || t.status === 421
+    if (!hOk) bad++
+    console.log(`${hOk ? 'ok  ' : 'DOWN'}  tls front            ${t.listen} /api/health ${t.status || 'no answer'}${t.status === 421 ? ' (the front desk\'s origin is not this name yet)' : ''}`)
+  }
   const gwEnv = existsSync(ENV.gateway) ? readEnv(ENV.gateway) : {}
   const gwPort = Number(gwEnv.GATEWAY_PORT || 4180)
   const u = gwEnv.GATEWAY_USAGE_TOKEN ? await request(gwPort, '/v1/usage', { headers: { authorization: `Bearer ${gwEnv.GATEWAY_USAGE_TOKEN}` } }) : { status: -1 }

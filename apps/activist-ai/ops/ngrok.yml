@@ -1,0 +1,17 @@
+# Stage 2: app.ola.cx on the public internet through ngrok, TLS passed through (ngrok never holds
+# a key for app.ola.cx and never sees a byte in the clear: no terminate-tls action, no
+# agent_tls_termination). ngrok's agent connects out to ngrok and forwards each connection to the
+# TLS front on loopback, with a PROXY v1 line naming the real client (ops/tls.mjs reads v1 only).
+# The authtoken is not here: it comes from NGROK_AUTHTOKEN in ~/.ola/tunnel.env (mode 600).
+# Run by ops/tunnel.mjs as the launchd job cx.ola.tunnel; see the README, "The address".
+version: 3
+agent:
+  log: stdout
+  log_format: logfmt
+  update_check: false
+endpoints:
+  - name: ola
+    url: tls://app.ola.cx
+    upstream:
+      url: 127.0.0.1:4743
+      proxy_protocol: 1

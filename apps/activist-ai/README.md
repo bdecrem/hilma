@@ -15,7 +15,7 @@ Started 2026-11-15. The plan, the promise and its limits are in the private note
 | **Workspace** | `workspace/`: one sealed Linux VM per workspace (Apple `container` 1.7.1) with no network at all; one socket leads to the gateway and nowhere else | built and proven on the mini (`workspace/check.mjs`, 65 checks); see [The workspace](#the-workspace) |
 | **Front desk and page** | `frontdesk/`: the one service a browser talks to. Passkey sign-in by invitation, the platform database (one SQLite file), roles, the audit log, files and the opencode door to each sealed workspace; serves `web/` (look A) from the same origin | built and proven on the mini (`frontdesk/check.mjs`); see [The front desk](#the-front-desk) |
 | **Start at boot** | `ops/`: launchd user agents for the gateway, the front desk and Apple's container system, the doors and desks as jobs while their workspace runs, one `status` command | installed and proven on the mini; see [Start at boot](#start-at-boot-launchd) |
-| **Way in** | Tailscale; nothing on the public internet | not built |
+| **Way in** | `https://app.ola.cx`: a Let's Encrypt certificate, TLS ending on our machine in `ops/tls.mjs`, which also asks for a door passcode; stage 1 over Tailscale (`:8443`, Bart's devices), stage 2 through an ngrok TLS pass-through tunnel (`:443`, public) | stage 1 live 2026-11-16 (in front of a stub; staging's origin not switched yet); stage 2 written, not on; see [The address](#the-address-appolacx) |
 | **Evaluations** | `evals/`: 24 checkable tasks in six families shaped like the first users' work (made-up data), a runner that scores a named configuration (model + serving + harness) into SQLite, an Opus baseline through the Claude Agent SDK, and a readout per family; see `evals/README.md` | first measured run 2026-11-16 (GLM-5.3-Flash and Opus 5.5, 2 seeds each) |
 | **Landing page** | `site/`: Ola's front door, a static page built into `public/ola-site/` for ola.cx, with no third-party requests (`site/check.mjs` proves it); see `site/README.md` | built, not live |
 
@@ -720,6 +720,127 @@ own account with a narrow helper); `runBy` and the ceremony table are bounded bu
 the prompt body is forwarded as sent (which opencode fields a member may set per prompt is not
 mapped); a distributed attacker with dozens of addresses can still reach the global sign-in
 ceiling (it then refuses only anonymous requests; sign-ins with a known passkey still pass).
+
+## The address: app.ola.cx
+
+One name, `app.ola.cx`, in both stages, so a passkey made now stays good: WebAuthn binds a passkey
+to the host name (the RP ID), not the port, so stage 1's `https://app.ola.cx:8443` and stage 2's
+`https://app.ola.cx` share every passkey; only `OLA_FD_ORIGIN` changes. Encryption ends only on our
+machine: the certificate's key is made on the mini and never leaves it.
+
+```
+stage 1  Bart's device ─ tailnet ─► Tailscale serve tcp :8443 ─ PROXY v1 ─┐
+stage 2  anyone ─ ngrok edge, TLS passed through ─► ngrok agent ─ PROXY v1 ─┤
+                                                                           ▼
+          ops/tls.mjs on 127.0.0.1:4743: TLS (app.ola.cx, LE) ─ door passcode ─ PROXY v1 ─► front desk 127.0.0.1:4700
+```
+
+**DNS** (Namecheap BasicDNS, ola.cx): `app` A `100.95.51.98` (the mini's tailnet address: a private
+address, so nothing outside the tailnet can connect), and `app` CAA `0 issue "letsencrypt.org;
+accounturi=https://acme-v02.api.letsencrypt.org/acme/acct/4007948992"` (only Let's Encrypt, only our
+account; none on the root, whose certificates Vercel issues). Namecheap's API replaces every record at
+once and plumb's read drops MX priorities and the mail setting, so DNS changes go through
+`ops/dns.mjs` (on the iMac, the only whitelisted address): read all, change one host and type, write
+all, read back and compare, and on any surprise write the old set back and fail.
+
+```bash
+node ops/dns.mjs show | backup <file> | diff <backup file>
+node ops/dns.mjs set app A 100.95.51.98        # every record of that host+type replaced by this one
+node ops/dns.mjs remove app CAA
+```
+
+**Port 443 on the tailnet is taken.** The mini's Tailscale serve config holds TCP 443 for an older
+HTTPS Funnel entry (`admins-mac-mini.tailde799a.ts.net` → `127.0.0.1:18789`, where nothing listens);
+serve is configured per port, with no routing by SNI, so a raw TCP entry for our own certificate cannot
+share 443 with it, and binding 443 ourselves does not help (Tailscale takes that port's traffic first).
+Stage 1 therefore uses 8443: `tailscale serve --bg --tcp 8443 --proxy-protocol 1 tcp://127.0.0.1:4743`
+(tailnet only, never Funnel). Stage 2 is on 443 through ngrok.
+
+**The TLS front, `ops/tls.mjs`** (Node, no dependencies; job `cx.ola.tls`, settings in `~/.ola/tls.env`
+600, read by `ops/run.mjs`). It listens on loopback only and requires a PROXY v1 line first
+(`OLA_TLS_PROXY_IN=1`, 5 s, 107 bytes, as the front desk). TLS 1.2 and 1.3 only, ECDHE with AEAD
+ciphers on 1.2, ALPN `http/1.1`, SNI must be `app.ola.cx`, 10 s to finish the handshake. Then
+HTTP/1.1 with the front desk's limits (headers within 5 s and 8 KiB, idle keep-alive 5 s), and each
+request goes to the front desk on its own connection that starts with a PROXY v1 line naming the
+client (`OLA_TLS_PROXY_OUT=1`, with `OLA_FD_PROXY_PROTOCOL=1` there). Bodies and replies stream both
+ways (events, uploads); hop-by-hop headers stay on their hop; WebSocket upgrades are refused.
+HSTS and the other headers are the front desk's (it already sends HSTS on every reply). The
+certificate is read again on `SIGHUP` and whenever its files change (checked every 10 s); a pair that
+does not load is not used. 128 connections per client address, 512 in all.
+
+**The door passcode** (`OLA_TLS_GATE=1`, the default; `OLA_TLS_GATE_PASSCODE`, 20 to 200 printable
+characters; on the mini 24 from an alphabet without 0/O/1/l/I, made there, never printed). Until the
+review of the front desk is done, nothing reaches it without the passcode: HTTP Basic auth, any user
+name. Without credentials: 401 with `WWW-Authenticate: Basic realm="Ola"` and a one-line page (not a
+failure: browsers ask first without). A wrong passcode: the n-th in a row from an address (an IPv6 one
+by its /64, the PROXY address) is answered after min(250 ms × 2^(n−1), 8 s), and the 10th within 15
+minutes blocks the address for 15 minutes (429, the right passcode too). The check compares SHA-256
+digests in constant time. `Authorization` is removed before the front desk. `/api/health` passes
+without the passcode from loopback only. `OLA_TLS_GATE=0` turns the gate off.
+
+Tested in browsers behind the gate, 2026-11-16, through the real path (tailnet, serve, the TLS front)
+with Playwright on the mini and the browser asking for the passcode the way a person's would:
+**Chromium** loaded the page and its assets, `fetch` and an `EventSource` carried the credentials, and
+with a virtual authenticator a made-up person made a passkey from an invitation and signed in with it
+again (against a throwaway front desk with origin `https://app.ola.cx:8443`). **WebKit** (Safari's
+engine, not Safari.app) loaded the page, `fetch` and an `EventSource` carried the credentials; WebKit in
+Playwright has no virtual authenticator, so its passkey ceremony is not proven. A wrong passcode got
+401 and no page in both.
+
+**Tests: `node --test ops/tls-test.mjs`** (11 tests, about 50 s; the real program as a child process,
+a stub front desk that reads PROXY lines, a throwaway CA made by `openssl`): the client address
+arrives (IPv4 and IPv6), TLS 1.3 by default and 1.2 works; events arrive as written; a 20 MB upload
+passes; plain HTTP, TLS 1.1, RSA-key-exchange ciphers, a missing or malformed PROXY line and another
+server name are refused; a new certificate is used by poll and by SIGHUP while an open stream keeps
+running on the old one, and a mismatched pair or a wrong name is not used; bad settings are refused;
+the gate (challenge, any user name, a 20 MB body refused unread, upgrade refused, health from
+loopback only, gate off, growing delays, the same answer and time for near and far misses, the block
+and its /64, a reset on success); slow headers are cut by 8 s and a silent handshake at 10 s.
+
+**The certificate: `ops/cert.mjs`.** Let's Encrypt by DNS-01. The key is made on the mini for each
+renewal (P-256, `~/.ola/tls/<date>/key.pem`, 600, folder 700; `~/.ola/tls/current` switched by
+rename). The iMac holds the ACME account (`~/.ola/acme`, lego 5.6.0 from Homebrew) and the Namecheap
+key. A renewal: the iMac sends the mini a copy of `cert.mjs` and asks it for a CSR, lego solves DNS-01
+with its `exec` provider calling `ops/dns.mjs present|cleanup` (one TXT at `_acme-challenge.app`,
+added and removed by the read-compare-write above), the iMac hands the certificate back, the mini
+checks it against its key and switches, and the iMac checks that `app.ola.cx:8443` now serves it.
+(DNS-PERSIST-01, which would need no DNS write at renewal, is offered by Let's Encrypt's staging and
+not yet its production; when it is, the mini can renew alone.)
+
+```bash
+node ops/cert.mjs renew [--force] [--staging]   # on the iMac: renews at 30 days or fewer
+node ops/cert.mjs install-job                   # the iMac's job cx.ola.cert: daily 04:17 and at login,
+                                                # from a copy in ~/.ola/bin (cert.mjs + dns.mjs)
+```
+
+**When renewal fails:** the job exits 1, `~/Library/Logs/ola/cert.log` on the iMac says `RENEWAL
+FAILED` with the reason (lego's own output in `cert-lego.log`), `cert.json` holds the last result, a
+macOS notification appears on the iMac, and on the mini `node ops/ola.mjs status` shows the
+`certificate` line DOWN with 21 days or fewer left. The usual causes: the iMac is off or its public
+address changed (Namecheap → Profile → Tools → API Access → whitelist the new one), or it cannot ssh
+to the mini.
+
+**Switching staging to the address** (invalidates every passkey made at `http://localhost:4700`;
+people get new invitations): in `~/.ola/frontdesk.env` set `OLA_FD_ORIGIN=https://app.ola.cx:8443`
+(stage 1) and `OLA_FD_PROXY_PROTOCOL=1`; in `~/.ola/tls.env` set `OLA_TLS_PROXY_OUT=1`; then
+`launchctl kickstart -k gui/$(id -u)/cx.ola.frontdesk` and `…/cx.ola.tls`; then `node admin.mjs invite
+<handle>` with the new origin in the environment. With the PROXY protocol on, the front desk refuses
+any connection without a PROXY line; `ops/ola.mjs` (status, deploy's health wait, prove-restarts)
+sends one naming loopback when `frontdesk.env` sets it, and needs a deploy of this commit first.
+
+**Stage 2, the public tunnel** (ngrok, pay-as-you-go, `app.ola.cx` reserved there as a TLS endpoint,
+passed through, not terminated): `ops/ngrok.yml` (endpoint `tls://app.ola.cx`, upstream
+`127.0.0.1:4743`, `proxy_protocol: 1`) run by `ops/tunnel.mjs` as the job `cx.ola.tunnel`, which `ops/ola.mjs
+install` loads only once `~/.ola/tunnel.env` (600, `NGROK_AUTHTOKEN=…`) exists. The switch: write
+`tunnel.env`, `node ops/ola.mjs install`, then in DNS replace `app` A with `app` CNAME → the target ngrok
+gives (an A and a CNAME cannot both be on `app`, and neither can the CAA: a CNAME stands alone, so
+`app` CAA goes too and CAA lookups then follow the CNAME to ngrok's name, then the root, which has
+none), set `OLA_FD_ORIGIN=https://app.ola.cx` and restart the front desk. DNS-01 is unaffected (the
+challenge is at `_acme-challenge.app`, a different name). The tailnet path keeps working beside it.
+
+**Undo:** `tailscale serve --tcp=8443 off` (the Funnel entry stays); `launchctl bootout
+gui/$(id -u)/cx.ola.tls` and remove its plist and `~/.ola/tls.env`; on the iMac `node ops/cert.mjs
+uninstall-job`; `node ops/dns.mjs remove app A` and `remove app CAA`.
 
 ## Start at boot (launchd)
 
