@@ -11,7 +11,7 @@
 # gateway). The host reaches opencode through `container exec` (workspace/desk.mjs), and the
 # root file system is read-only (ws.mjs creates the container with --read-only).
 #
-#   container build -t ola-workspace:2.3.0-4 -f Containerfile .
+#   container build -t ola-workspace:2.3.0-5 -f Containerfile .
 
 ARG DEBIAN=docker.io/library/debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc
 
@@ -38,7 +38,7 @@ RUN apt-get update \
  && find / -xdev -type f -perm /6000 -exec chmod a-s {} + \
  && rm -f /etc/shadow- /etc/gshadow-
 COPY --from=fetch /opencode /usr/local/bin/opencode
-COPY opencode.jsonc /opt/ola/config/opencode/opencode.jsonc
+COPY opencode.jsonc AGENTS.md /opt/ola/config/opencode/
 COPY ola-init ola-files ola-put ola-get ola-rm /opt/ola/bin/
 RUN chmod 0755 /opt/ola/bin/* && chmod -R a+rX,go-w /opt/ola
 

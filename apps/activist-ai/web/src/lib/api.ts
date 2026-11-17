@@ -65,6 +65,8 @@ export interface FrontDesk {
   /** Sends one file to the workspace. Rejects with a DeskError (409 when the name is taken). */
   upload(file: File, opts?: { replace?: boolean }): Promise<{ path: string; size: number }>
   downloadUrl(path: string): string
+  /** Where "Open" on a page goes: the front desk shows it, sandboxed, in a new tab. */
+  openUrl(path: string): string
   remove(path: string): Promise<void>
 }
 
@@ -88,6 +90,7 @@ export const desk: FrontDesk = {
     }),
   // A download is a plain link (no custom headers), so it names the workspace in the address.
   downloadUrl: (path) => `${filePath(path)}?w=${encodeURIComponent(workspace() ?? '')}`,
+  openUrl: (path) => `/api/open?w=${encodeURIComponent(workspace() ?? '')}&path=${encodeURIComponent(path)}`,
   remove: async (path) => {
     await call(filePath(path), { method: 'DELETE' })
   },

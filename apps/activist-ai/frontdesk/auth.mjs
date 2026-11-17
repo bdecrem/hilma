@@ -10,7 +10,11 @@
 // - A ceremony (one passkey registration or sign-in) is a server-side challenge with a random id,
 //   kept in memory for 5 minutes and usable once.
 // - A session is a random 32-byte token in a cookie named __Host-ola (HttpOnly, Secure,
-//   SameSite=Strict, Path=/, no Domain). The database keeps its sha256. A session ends at its
+//   SameSite=Strict, Path=/, no Domain). Only when the origin is plain http://localhost (the
+//   rehearsal setup, reached through an ssh forward) is it `ola-local` instead, without Secure and
+//   so without the __Host- prefix: Safari does not keep a Secure cookie set over http, even on
+//   localhost (Chrome does), and Bart's first sign-in in Safari went in circles (2026-11-16). With
+//   an https origin nothing changes (sessionCookie below; test/unit.test.mjs proves it). The database keeps its sha256. A session ends at its
 //   absolute expiry, after an idle stretch, at sign-out, or when the admin revokes it; each is
 //   checked on every request, so a revoked cookie fails at once.
 // - CSRF: every state-changing request must come from our Origin (checked exactly) and carry
@@ -21,6 +25,12 @@ import { isIP } from 'node:net'
 import { audit, today } from './db.mjs'
 
 export const COOKIE = '__Host-ola'
+/** The session cookie's name and attributes for an origin (see the note on sessions above). */
+export function sessionCookie(origin) {
+  const u = new URL(origin)
+  const local = u.protocol === 'http:' && u.hostname === 'localhost'
+  return local ? { name: 'ola-local', attrs: 'Path=/; HttpOnly; SameSite=Strict' } : { name: COOKIE, attrs: 'Path=/; HttpOnly; Secure; SameSite=Strict' }
+}
 const sha256 = (s) => createHash('sha256').update(s).digest()
 export const token = () => randomBytes(32).toString('base64url')
 
@@ -78,6 +88,7 @@ export function addressKey(addr) {
 
 export function makeAuth({ db, keys, origin, rpName = 'Ola', session: { absoluteMs, idleMs }, limits, log = () => {} }) {
   const rpID = new URL(origin).hostname
+  const jar = sessionCookie(origin)
   const ceremonies = new Map() // id -> { kind, challenge, personId?, inviteId?, expires }
   // Each address (an IPv6 /64) can hold at most perAddress.capacity + 5 × perMinute of these at
   // once (they live 5 minutes); when the map is full the oldest goes, so a flood can at worst void
@@ -164,18 +175,19 @@ export function makeAuth({ db, keys, origin, rpName = 'Ola', session: { absolute
     const now = Date.now()
     db.prepare('INSERT INTO sessions (id, person_id, created_at, expires_at, last_used_at, passkey_id) VALUES (?, ?, ?, ?, ?, ?)').run(sha256(t), personId, now, now + absoluteMs, now, passkeyId)
     db.prepare('UPDATE people SET last_seen_on = ? WHERE id = ?').run(today(), personId)
-    return { cookie: `${COOKIE}=${t}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${Math.floor(absoluteMs / 1000)}` }
+    return { cookie: `${jar.name}=${t}; ${jar.attrs}; Max-Age=${Math.floor(absoluteMs / 1000)}` }
   }
-  const clearCookie = `${COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0`
+  const clearCookie = `${jar.name}=; ${jar.attrs}; Max-Age=0`
 
   return {
     rpID,
     allow,
     clearCookie,
+    cookieName: jar.name,
 
     /** The person behind a request's cookie, or null. Checks expiry, idle time, revocation, status. */
     session(req) {
-      const raw = parseCookie(req.headers.cookie ?? '')[COOKIE]
+      const raw = parseCookie(req.headers.cookie ?? '')[jar.name]
       if (!raw || raw.length > 100) return null
       const id = sha256(raw)
       const now = Date.now()

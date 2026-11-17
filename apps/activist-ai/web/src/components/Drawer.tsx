@@ -8,8 +8,10 @@ import { runSummary } from '../lib/conversation.ts'
 import { clock, when } from '../lib/format.ts'
 import { Answer } from './Answer.tsx'
 import { Icon } from './Icon.tsx'
+import { desk } from '../lib/api.ts'
 
-const STARTERS = ['Clean survey.csv and give me the totals by city', 'How many people in survey.csv are satisfied?', 'Write a one-page summary of survey.csv']
+// Requests that work in any project, empty or not: nothing here names a file the person may not have.
+const STARTERS = ['Make a hello world web page', 'Make a one-page site that says what our group does and when we meet', 'Look at the files I uploaded and tell me what is in them']
 
 export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; onAddFiles: () => void; draft: string; setDraft: (s: string) => void; inputRef?: (el: HTMLTextAreaElement) => void }) {
   const s = () => props.ola.state
@@ -174,6 +176,8 @@ function TurnView(props: { turn: Turn; now: number; last: boolean; onStop: () =>
   const failedSteps = () => t().steps.filter((st) => st.status === 'failed')
   const current = () => t().steps.findIndex((st) => st.status === 'running' || st.status === 'preparing' || st.status === 'waiting')
   const runId = () => `run-${t().id}`
+  // Pages this run wrote or changed: an Open right under the reply, whatever the reply says.
+  const madePages = () => [...new Set(t().steps.filter((st) => (st.icon === 'write' || st.icon === 'change') && st.status === 'done' && /\.html?$/i.test(st.object) && !st.object.startsWith('/')).map((st) => st.object))].slice(0, 4)
   return (
     <li class="turn" data-status={t().status}>
       <div class="said-you">
@@ -224,6 +228,18 @@ function TurnView(props: { turn: Turn; now: number; last: boolean; onStop: () =>
         <For each={t().notes}>{(n) => <Answer text={n} class="note" />}</For>
         <Show when={t().answer}>
           <Answer text={t().answer} />
+        </Show>
+        <Show when={!running() && madePages().length}>
+          <p class="made-pages">
+            <For each={madePages()}>
+              {(pg) => (
+                <a class="open-page" href={desk.openUrl(pg)} target="_blank" rel="noopener noreferrer">
+                  Open {pg}
+                  <span class="sr-only"> in a new tab</span>
+                </a>
+              )}
+            </For>
+          </p>
         </Show>
         <Show when={t().status === 'stopped' && !t().error}>
           <p class="meta stopped-line">You stopped this. Files Ola already wrote stay as they are.</p>

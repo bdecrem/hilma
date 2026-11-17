@@ -36,7 +36,7 @@ export function allowed(method, pathname) {
 }
 
 // Never allowed in a workspace, whatever the autonomy: these would reach outside it.
-const ALWAYS_DENY = ['webfetch', 'websearch', 'external_directory']
+const ALWAYS_DENY = ['webfetch', 'websearch', 'external_directory', 'browser']
 // What "Ask me first" stops for: changing files and running code.
 const ASK_FIRST = ['shell', 'bash', 'edit', 'write', 'apply_patch', 'patch']
 

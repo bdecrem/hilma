@@ -42,6 +42,9 @@ const FC = `${TAG ? `${TAG}-` : ''}fd-c` // team-a's second workspace, made for 
 const PORT = Number(process.env.OLA_CHECK_FD_PORT || 4790)
 const ORIGIN = `http://localhost:${PORT}`
 const GW_PORT = Number(process.env.OLA_CHECK_GW_PORT || 4182)
+// The session cookie's name for this origin (auth.mjs sessionCookie: ola-local on http://localhost).
+const CK = (await import('./auth.mjs')).sessionCookie(ORIGIN).name
+const CK_RE = new RegExp(`${CK}=([^;]+)`)
 const run = mkdtempSync(path.join(tmpdir(), 'ola-fdcheck-'))
 const env = {
   ...process.env,
@@ -202,11 +205,11 @@ async function person(viewport = { width: 1280, height: 860 }) {
   page.on('request', (r) => !r.url().startsWith(`${ORIGIN}/`) && !r.url().startsWith('data:') && foreign.add(r.url()))
   return { ctx, page, cdp }
 }
-const cookieOf = async (ctx) => (await ctx.cookies(ORIGIN)).find((c) => c.name === '__Host-ola')
+const cookieOf = async (ctx) => (await ctx.cookies(ORIGIN)).find((c) => c.name === CK)
 /** A request from outside the browser (node), as a thief with the cookie would send it. */
 async function api(pathname, { method = 'GET', cookie, csrf, ws, origin = method === 'GET' ? undefined : ORIGIN, body, headers = {} } = {}) {
   const h = { ...headers }
-  if (cookie) h.cookie = `__Host-ola=${cookie}`
+  if (cookie) h.cookie = `${CK}=${cookie}`
   if (csrf) h['x-ola-csrf'] = csrf
   if (ws) h['x-ola-workspace'] = ws
   if (origin) h.origin = origin
@@ -222,7 +225,7 @@ async function api(pathname, { method = 'GET', cookie, csrf, ws, origin = method
 function openStream(cookie, ws) {
   const ctl = new AbortController()
   const st = { text: '', open: true, status: null, stop: () => ctl.abort() }
-  fetch(`${ORIGIN}/oc/api/event`, { headers: { cookie: `__Host-ola=${cookie}`, 'x-ola-workspace': ws, accept: 'text/event-stream' }, signal: ctl.signal })
+  fetch(`${ORIGIN}/oc/api/event`, { headers: { cookie: `${CK}=${cookie}`, 'x-ola-workspace': ws, accept: 'text/event-stream' }, signal: ctl.signal })
     .then(async (r) => {
       st.status = r.status
       for await (const c of r.body) st.text += Buffer.from(c).toString('utf8')
@@ -286,6 +289,44 @@ await check('an invitation works once', async () => {
   const rows = JSON.parse(admin('audit', '--limit', '500', '--json')).filter((x) => x.action === 'passkey_registered')
   assert(rows.length === 3, `${rows.length} passkeys registered`)
 })
+// Safari did not keep the Secure session cookie over http://localhost, so Bart's first sign-in
+// went in circles (2026-11-16). WebKit (Playwright's build, not Safari itself) makes a passkey from
+// an invitation and makes an authenticated request. WebKit has no virtual authenticator, so the
+// page's navigator.credentials is answered by the software passkey through an exposed function;
+// everything else, the cookie above all, is WebKit's own.
+await check('in WebKit, an invitation makes a passkey, the sign-in sticks, and an authenticated request works', async () => {
+  const { webkit } = await import('playwright')
+  const wk = await webkit.launch()
+  try {
+    admin('add-person', 'wanda', '--name', 'Wanda W.')
+    const link = admin('invite', 'wanda')
+    const device = new SoftAuthn({ rpId: 'localhost', origin: ORIGIN })
+    const ctx = await wk.newContext()
+    const page = await ctx.newPage()
+    await page.exposeFunction('__softCreate', (o) => device.create(o))
+    await page.addInitScript(() => {
+      const b64 = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf instanceof ArrayBuffer ? buf : buf.buffer))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+      const bin = (s) => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((s.length + 3) % 4)), (c) => c.charCodeAt(0)).buffer
+      navigator.credentials.create = async ({ publicKey: o }) => {
+        const r = await window.__softCreate({ ...o, challenge: b64(o.challenge), user: { ...o.user, id: b64(o.user.id) }, excludeCredentials: [] })
+        return { id: r.id, rawId: bin(r.rawId), type: r.type, authenticatorAttachment: 'platform', getClientExtensionResults: () => ({}), response: { clientDataJSON: bin(r.response.clientDataJSON), attestationObject: bin(r.response.attestationObject), getTransports: () => ['internal'] } }
+      }
+    })
+    await page.goto(link)
+    const btn = page.getByRole('button', { name: 'Make my passkey' })
+    await until(() => btn.isEnabled(), 10_000, 'the passkey button')
+    await btn.click()
+    await until(async () => (await page.evaluate(() => fetch('/api/me').then((r) => r.status))) === 200, 15_000, 'an authenticated request from WebKit')
+    const me = await page.evaluate(() => fetch('/api/me').then((r) => r.json()))
+    const c = (await ctx.cookies(ORIGIN)).find((x) => x.name === CK)
+    const kept = await page.locator('.gate-problem').count()
+    await ctx.close()
+    assert(me.person?.handle === 'wanda' && c && c.httpOnly && c.sameSite === 'Strict' && !kept, `me ${me.person?.handle}, cookie ${c ? c.name : 'none'}, problem shown ${kept}`)
+    return `signed in as ${me.person.handle}; WebKit kept ${c.name} (HttpOnly, SameSite=${c.sameSite}, Secure ${c.secure})`
+  } finally {
+    await wk.close()
+  }
+})
 await check('an expired invitation is refused', async () => {
   admin('add-person', 'evan', '--name', 'Evan E.')
   const link = admin('invite', 'evan', '--hours', '0.0003') // about a second
@@ -293,10 +334,12 @@ await check('an expired invitation is refused', async () => {
   const r = await api('/api/auth/register/options', { method: 'POST', body: JSON.stringify({ invite: link.split('/').pop() }), headers: { 'content-type': 'application/json' } })
   assert(r.status === 404, `answered ${r.status}`)
 })
-await check('the session cookie is __Host-, HttpOnly, Secure, SameSite=Strict, Path=/', async () => {
+// On https the cookie is __Host-ola with Secure (test/unit.test.mjs); on this http://localhost
+// origin it is ola-local without Secure, because Safari drops a Secure cookie set over http.
+await check('the session cookie is HttpOnly, SameSite=Strict, Path=/ (ola-local on http://localhost, so Safari keeps it)', async () => {
   const c = await cookieOf(A.ctx)
-  assert(c && c.httpOnly && c.secure && c.sameSite === 'Strict' && c.path === '/', JSON.stringify({ ...c, value: '…' }))
-  assert(!(await A.page.evaluate(() => document.cookie)).includes('__Host-ola'), 'the page script can read the cookie')
+  assert(c && c.name === 'ola-local' && c.httpOnly && !c.secure && c.sameSite === 'Strict' && c.path === '/' && !c.domain?.startsWith('.'), JSON.stringify({ ...c, value: '…' }))
+  assert(!(await A.page.evaluate(() => document.cookie)).includes(CK), 'the page script can read the cookie')
 })
 await check('sign out, then sign in again with the passkey', async () => {
   const before = a.cookie
@@ -330,7 +373,7 @@ await check('invitations: a new one voids the older; a person with a passkey get
   const o = await ro(link.split('/').pop())
   const reg = await fetch(`${ORIGIN}/api/auth/register/verify`, { method: 'POST', headers: { origin: ORIGIN, 'content-type': 'application/json' }, body: JSON.stringify({ ceremony: o.json.ceremony, response: device.create(o.json.options) }) })
   assert(reg.status === 200, `the new device registered: ${reg.status}`)
-  const devCookie = /__Host-ola=([^;]+)/.exec(reg.headers.get('set-cookie') ?? '')?.[1]
+  const devCookie = CK_RE.exec(reg.headers.get('set-cookie') ?? '')?.[1]
   assert(!(await api('/api/me', { cookie: devCookie })).json.notices?.length, 'the new device is told about itself instead of the person')
   // Alice's own browser hears of it on its next load, once. (about:blank first: a goto to the
   // address the page is already on is only a hash change, not a load.)
@@ -430,7 +473,7 @@ await check('uploads are limited: size, names, and a planted symlink is not foll
   // read the 413 and its sentence; the page refuses a larger file before sending it, in words.
   const size = 3 * 1024 * 1024
   const want = 'That file is larger than 2 MB, the most Ola accepts.'
-  const headers = { host: `localhost:${PORT}`, origin: ORIGIN, cookie: `__Host-ola=${a.cookie}`, 'x-ola-csrf': a.csrf, 'x-ola-workspace': FA, 'content-type': 'application/octet-stream' }
+  const headers = { host: `localhost:${PORT}`, origin: ORIGIN, cookie: `${CK}=${a.cookie}`, 'x-ola-csrf': a.csrf, 'x-ola-workspace': FA, 'content-type': 'application/octet-stream' }
   const viaHttp = () =>
     new Promise((resolve) => {
       const r = http.request({ host: '127.0.0.1', port: PORT, method: 'POST', path: '/api/files?name=big.bin', headers: { ...headers, 'content-length': size } }, (res) => {
@@ -513,7 +556,7 @@ await check("one person's concurrent uploads are capped at 3; the rest are refus
     new Promise((resolve) => {
       let done = false
       const end = (v) => !done && ((done = true), resolve(v))
-      const r = http.request({ host: '127.0.0.1', port: PORT, method: 'POST', path: `/api/files?name=slow-${i}.bin`, headers: { host: `localhost:${PORT}`, origin: ORIGIN, cookie: `__Host-ola=${a.cookie}`, 'x-ola-csrf': a.csrf, 'x-ola-workspace': FA, 'content-length': String(1024 * 1024) } }, (res) => (res.resume(), end(res.statusCode)))
+      const r = http.request({ host: '127.0.0.1', port: PORT, method: 'POST', path: `/api/files?name=slow-${i}.bin`, headers: { host: `localhost:${PORT}`, origin: ORIGIN, cookie: `${CK}=${a.cookie}`, 'x-ola-csrf': a.csrf, 'x-ola-workspace': FA, 'content-length': String(1024 * 1024) } }, (res) => (res.resume(), end(res.statusCode)))
       r.on('error', () => end('closed'))
       r.write(Buffer.alloc(1000))
       setTimeout(() => (end('held'), r.destroy()), 5000)
@@ -551,7 +594,7 @@ await check("one person's unread downloads are cut, and cannot hold every other 
     const codes = []
     for (let i = 0; i < 4; i++) {
       const sock = net.connect(PORT, '127.0.0.1')
-      sock.write(`GET /api/files/big.bin?w=${FA} HTTP/1.1\r\nHost: localhost:${PORT}\r\nCookie: __Host-ola=${a.cookie}\r\n\r\n`)
+      sock.write(`GET /api/files/big.bin?w=${FA} HTTP/1.1\r\nHost: localhost:${PORT}\r\nCookie: ${CK}=${a.cookie}\r\n\r\n`)
       const first = await new Promise((resolve) => (sock.once('data', (d) => resolve(String(d).slice(9, 12))), setTimeout(() => resolve('none'), 5000)))
       sock.pause()
       codes.push(first)
@@ -600,6 +643,127 @@ await check('a workspace that forges "read by a run" events cannot flood the aud
   return `${j.auditRowsWritten} of ${j.forgedEvents} forged reads written (stall ${j.worstEventLoopStallMs} ms); people's rows kept beside 500 run rows`
 })
 
+// ---------------------------------------------------------------- "Open" on a page Ola built
+// The agent writes a hostile page (made-up, through the VM itself, as a model would): it tries to
+// read the cookie, call the API as the person, and reach another origin by fetch, beacon, image,
+// popup, top navigation and navigating itself. "Another origin" is a little server of ours on
+// 127.0.0.1 that counts what reaches it; it must count nothing.
+const grantOf = async (who, rel = 'hostile.html') => {
+  const r = await api(`/api/open?w=${FA}&path=${encodeURIComponent(rel)}`, { cookie: who.cookie })
+  return { status: r.status, grant: /\/v\/([A-Za-z0-9_-]{43})\//.exec(r.text)?.[1] ?? null, headers: r.headers, text: r.text }
+}
+const viewGet = (grant, rel, dest = 'iframe', extra = {}) => api(`/v/${grant}/${rel}`, { headers: { ...(dest ? { 'sec-fetch-dest': dest } : {}), 'sec-fetch-site': 'cross-site', ...extra } })
+await check('"Open" shows a page Ola built with its own files, and the page cannot read the cookie, call the API or reach another origin', async () => {
+  const hits = []
+  const outside = http.createServer((req, res) => (hits.push(req.url), res.writeHead(200, { 'access-control-allow-origin': '*' }).end('ok')))
+  await new Promise((r) => outside.listen(0, '127.0.0.1', r))
+  const OUT = `http://127.0.0.1:${outside.address().port}`
+  try {
+    const runJs = `
+const OUT = ${JSON.stringify(OUT)}
+const r = {}
+try { r.cookie = 'read:' + document.cookie } catch (e) { r.cookie = 'blocked:' + e.name }
+try { r.storage = 'read:' + localStorage.length } catch (e) { r.storage = 'blocked:' + e.name }
+const tries = {
+  api: () => fetch('/api/me', { credentials: 'include' }),
+  apiFiles: () => fetch(${JSON.stringify(ORIGIN)} + '/api/files', { credentials: 'include', headers: { 'x-ola-workspace': ${JSON.stringify(FA)} } }),
+  oc: () => fetch('/oc/api/session', { credentials: 'include' }),
+  outside: () => fetch(OUT + '/fetch'),
+  data: () => fetch('data.json').then((x) => x.json()).then((j) => ({ status: 'data ' + j.n })),
+}
+;(async () => {
+  for (const [k, f] of Object.entries(tries)) {
+    try { const x = await f(); r[k] = 'status ' + x.status } catch (e) { r[k] = 'blocked:' + e.name }
+  }
+  try { r.beacon = navigator.sendBeacon(OUT + '/beacon', 'x') ? 'sent' : 'refused' } catch (e) { r.beacon = 'blocked:' + e.name }
+  const img = new Image(); img.src = OUT + '/img'
+  try { r.popup = window.open(OUT + '/popup') ? 'opened' : 'refused' } catch (e) { r.popup = 'blocked:' + e.name }
+  try { top.location.href = OUT + '/top'; r.top = 'tried' } catch (e) { r.top = 'blocked:' + e.name }
+  r.css = getComputedStyle(document.getElementById('h')).color
+  await new Promise((ok) => setTimeout(ok, 300))
+  r.img = document.getElementById('pic').naturalWidth
+  document.getElementById('out').textContent = JSON.stringify(r)
+  document.body.dataset.done = '1'
+  setTimeout(() => { location.href = OUT + '/self' }, 1500)
+})()
+`
+    const files = {
+      'hostile.html': '<!doctype html><html><head><title>Made-up hostile page</title><link rel="stylesheet" href="look.css"></head><body><h1 id="h">Hello, world</h1><img id="pic" src="dot.svg" alt=""><pre id="out">running</pre><script src="run.js"></script></body></html>',
+      'look.css': 'h1 { color: rgb(1, 2, 3) }',
+      'dot.svg': '<svg xmlns="http://www.w3.org/2000/svg" width="7" height="7"><rect width="7" height="7"/></svg>',
+      'data.json': '{"n": 42}',
+      'run.js': runJs,
+    }
+    const py = 'import json, sys\nfor k, v in json.loads(sys.stdin.read()).items():\n    open("/work/" + k, "w").write(v)\n'
+    const w = spawnSync(CTR, ['exec', '-i', `ola-${FA}`, 'python3', '-I', '-c', py], { input: JSON.stringify(files), encoding: 'utf8' })
+    assert(w.status === 0, 'could not write the page inside the workspace')
+    // The home lists it as a page with Open.
+    await A.page.goto('about:blank')
+    await A.page.goto(`${ORIGIN}/?w=${FA}#/`)
+    const card = A.page.locator('.thing-slot[data-kind="site"]', { hasText: 'Made-up hostile page' })
+    await card.waitFor({ timeout: 30_000 })
+    const [tab] = await Promise.all([A.ctx.waitForEvent('page'), card.getByRole('link', { name: /^Open/ }).click()])
+    await tab.waitForLoadState()
+    let frame
+    await until(() => (frame = tab.frames().find((f) => f.url().includes('/v/'))), 15_000, 'the page frame')
+    await frame.waitForSelector('body[data-done]', { timeout: 20_000 })
+    const r = JSON.parse(await frame.locator('#out').innerText())
+    const heading = await frame.locator('h1').innerText()
+    if (SHOTS) await tab.screenshot({ path: path.join(SHOTS, 'open-hostile.png') })
+    await sleep(2500) // the self-navigation, the image, the beacon: time for each to reach the outside
+    await tab.close()
+    const blocked = (x) => typeof x === 'string' && x.startsWith('blocked')
+    const bad = []
+    if (heading !== 'Hello, world' || r.css !== 'rgb(1, 2, 3)' || r.img !== 7 || r.data !== 'status data 42') bad.push(`own files: heading ${heading}, css ${r.css}, img ${r.img}, data ${r.data}`)
+    if (!blocked(r.cookie) || !blocked(r.storage)) bad.push(`cookie ${r.cookie}, storage ${r.storage}`)
+    for (const k of ['api', 'apiFiles', 'oc', 'outside']) if (!blocked(r[k])) bad.push(`${k} ${r[k]}`)
+    if (r.popup === 'opened') bad.push('a popup opened')
+    if (hits.length) bad.push(`the outside got ${hits.join(' ')}`)
+    // Beneath the CSP: had a request to /api got out, it would be cross-site, and refused as such.
+    const marked = await api('/api/me', { cookie: a.cookie, headers: { 'sec-fetch-site': 'cross-site' } })
+    if (marked.status !== 403) bad.push(`a cross-site request with the cookie: ${marked.status}`)
+    assert(!bad.length, bad.join('; '))
+    return `own css, image and data loaded; cookie ${r.cookie}; /api ${r.api}; outside ${r.outside}; beacon ${r.beacon}; popup ${r.popup}; top ${r.top}; nothing reached the outside origin`
+  } finally {
+    outside.close()
+  }
+})
+await check('"Open": the headers, a top-level load refused, members only, and a link that ends with the session', async () => {
+  const g = await grantOf(a)
+  assert(g.status === 200 && g.grant, `open ${g.status}`)
+  const outer = g.headers.get('content-security-policy') ?? ''
+  assert(/script-src 'none'/.test(outer) && outer.includes(`frame-src ${ORIGIN}/v/${g.grant}/`) && /frame-ancestors 'none'/.test(outer), `wrapper CSP: ${outer}`)
+  const inner = await viewGet(g.grant, 'hostile.html')
+  const csp = inner.headers.get('content-security-policy') ?? ''
+  assert(inner.status === 200 && /^sandbox allow-scripts allow-forms;/.test(csp) && !csp.includes('allow-same-origin') && csp.includes(`connect-src ${ORIGIN}/v/${g.grant}/;`) && !inner.headers.get('set-cookie'), `inner ${inner.status} ${csp}`)
+  const top = await viewGet(g.grant, 'hostile.html', 'document')
+  const none = await viewGet(g.grant, 'hostile.html', null)
+  const hidden = await viewGet(g.grant, '.ola/opencode.db')
+  assert(top.status === 403 && none.status === 403 && hidden.status === 404, `top-level ${top.status}, no dest ${none.status}, hidden ${hidden.status}`)
+  const bobs = await grantOf(b)
+  const anon = await api('/api/open?w=${FA}&path=hostile.html')
+  const guess = await viewGet(randomBytes(32).toString('base64url'), 'hostile.html')
+  assert(bobs.status === 404 && !bobs.grant && anon.status === 401 && guess.status === 404, `bob ${bobs.status}, signed out ${anon.status}, a guessed grant ${guess.status}`)
+  // Another session of alice's (a second device): when it signs out, its grant stops at once.
+  const extra = new SoftAuthn({ rpId: 'localhost', origin: ORIGIN })
+  const link = admin('invite', 'alice', '--add-device')
+  const o = await api('/api/auth/register/options', { method: 'POST', body: JSON.stringify({ invite: link.split('/').pop() }), headers: { 'content-type': 'application/json' } })
+  const reg = await fetch(`${ORIGIN}/api/auth/register/verify`, { method: 'POST', headers: { origin: ORIGIN, 'content-type': 'application/json' }, body: JSON.stringify({ ceremony: o.json.ceremony, response: extra.create(o.json.options) }) })
+  const c2 = CK_RE.exec(reg.headers.get('set-cookie') ?? '')?.[1]
+  const me2 = await api('/api/me', { cookie: c2 })
+  const g2 = await grantOf({ cookie: c2 })
+  const before = (await viewGet(g2.grant, 'look.css', 'style')).status
+  await api('/api/signout', { method: 'POST', cookie: c2, csrf: me2.json.csrf })
+  const after = (await viewGet(g2.grant, 'look.css', 'style')).status
+  assert(before === 200 && after === 404, `before sign-out ${before}, after ${after}`)
+  await api('/api/me', { cookie: a.cookie }) // alice's own session hears of the added device here, not in a later check's page
+  const rows = auditRows(FA).filter((x) => x.action === 'page_opened')
+  assert(rows.length >= 2 && rows.every((x) => x.name_ref?.length === 64), `${rows.length} page_opened rows`)
+  const dbs = ['platform.db', 'platform.db-wal'].map((f) => path.join(env.OLA_FD_DATA, f)).filter(existsSync).map((f) => readFileSync(f))
+  assert(dbs.every((buf) => !buf.includes(Buffer.from('hostile'))), 'a page name is in the database')
+  return `wrapper and page CSPs as designed; top-level 403; bob 404, signed out 401, a guessed grant 404; a grant ends with its session (${before} then ${after}); ${rows.length} page_opened rows, no names`
+})
+
 // ---------------------------------------------------------------- roles
 await check('a viewer reads but cannot upload, delete or run', async () => {
   const base = { cookie: v.cookie, csrf: v.csrf, ws: FA }
@@ -619,6 +783,7 @@ await check('a viewer reads but cannot upload, delete or run', async () => {
 
 await check("removing a member: their open stream is cut by the recheck, then the workspace gets new secrets", async () => {
   const old = secretsOf(FA)
+  const veraPage = await grantOf(v) // a viewer may open a page; the link must end with her membership
   const gone = openStream(v.cookie, FA)
   const stays = openStream(a.cookie, FA)
   await until(() => gone.status === 200 && stays.status === 200, 30_000, 'both streams opening')
@@ -648,6 +813,8 @@ await check("removing a member: their open stream is cut by the recheck, then th
     again.stop()
     assert(made.status === 200 && !gone.text.includes(mark), 'the removed viewer saw a later event')
     assert(auditRows(FA).some((x) => x.action === 'secrets_rotated'), 'no secrets_rotated row')
+    const veraAfter = (await viewGet(veraPage.grant, 'look.css', 'style')).status
+    assert(veraPage.status === 200 && veraAfter === 404, `her open page: ${veraPage.status}, then ${veraAfter} after removal`)
     return `cut ${ms} ms after the removal with the member's stream still open; then old token ${oldToken} and old password ${pw[0]}, the new ones 200, gateway not restarted`
   } finally {
     gone.stop()
@@ -803,6 +970,59 @@ if (LIVE) {
     const gw = gateway.log.split('\n').filter((l) => l.includes(`"caller":"ws-${FA}"`)).length
     assert(gw > 0, `the gateway saw no request from ws-${FA}`)
     return `answer: ${answer.slice(0, 90).replace(/\s+/g, ' ')}; truth ${n}; summary.md ${files.some((f) => f.path === 'summary.md' && f.origin === 'made') ? 'made' : 'not made'}; ${gw} gateway requests from ws-${FA}; ${reads} read-by-run rows`
+  })
+  // Bart's first request, as a first-time person makes it: "Ask me first", the approval answered
+  // in its dialog, the reply's own Open, the page rendered. The reply must point at Files and
+  // Open, never at a preview pane, a desktop app or a /work path (2026-11-16: it did).
+  await check('a real "Make a hello world web page": approved, listed, opened from the reply, rendered; the reply says Files and Open', async () => {
+    // The hostile page of the "Open" checks goes first, so the home shows what this run made.
+    spawnSync(CTR, ['exec', `ola-${FA}`, 'python3', '-I', '-c', 'import os\nfor f in ["hostile.html", "look.css", "dot.svg", "data.json", "run.js", "index.html", "hello.html"]:\n    p = "/work/" + f\n    os.path.exists(p) and os.remove(p)'])
+    await A.page.goto('about:blank')
+    await A.page.goto(`${ORIGIN}/?w=${FA}#/`)
+    await A.page.waitForSelector('.project-title')
+    await A.page.getByRole('button', { name: 'Ask Ola' }).first().click()
+    if (await A.page.getByRole('button', { name: 'New conversation' }).count()) await A.page.getByRole('button', { name: 'New conversation' }).click()
+    await A.page.locator('.autonomy label', { hasText: 'Ask me first' }).click()
+    await A.page.fill('#ask-input', 'Make a hello world web page')
+    await A.page.press('#ask-input', 'Enter')
+    const last = A.page.locator('.drawer .turn').last()
+    let approvals = 0
+    const end = Date.now() + 300_000
+    while (Date.now() < end) {
+      const st = await last.getAttribute('data-status').catch(() => null)
+      if (st && ['done', 'failed', 'stopped'].includes(st)) break
+      if (await A.page.locator('dialog.approval[open]').count()) {
+        if (SHOTS && !approvals) await A.page.screenshot({ path: path.join(SHOTS, 'hello-approval.png') })
+        await A.page.getByRole('button', { name: 'Yes, this once' }).click()
+        approvals++
+      }
+      await A.page.waitForTimeout(500)
+    }
+    const st = await last.getAttribute('data-status')
+    const answer = (await last.locator('.answer').allInnerTexts()).join(' ').replace(/\s+/g, ' ')
+    assert(st === 'done', `ended ${st}: ${answer.slice(0, 200)}`)
+    const bad = /preview pane|desktop (app|browser)|\/work\b|open it in (a|your) browser/i.exec(answer)
+    assert(!bad && /\bFiles\b/.test(answer) && /\bOpen\b/.test(answer), `the reply: ${answer.slice(0, 300)}`)
+    const open = last.locator('.made-pages a').first()
+    await open.waitFor({ timeout: 5_000 })
+    const label = await open.innerText()
+    if (SHOTS) await A.page.screenshot({ path: path.join(SHOTS, 'hello-reply.png') })
+    const [tab] = await Promise.all([A.ctx.waitForEvent('page'), open.click()])
+    await tab.waitForLoadState()
+    let frame
+    await until(() => (frame = tab.frames().find((f) => f.url().includes('/v/'))), 15_000, 'the page frame')
+    await frame.waitForLoadState()
+    const text = await frame.locator('body').innerText()
+    assert(/hello/i.test(text), `the page says: ${text.slice(0, 120)}`)
+    if (SHOTS) await tab.screenshot({ path: path.join(SHOTS, 'hello-opened.png') })
+    await tab.close()
+    await A.page.keyboard.press('Escape')
+    await A.page.goto('about:blank')
+    await A.page.goto(`${ORIGIN}/?w=${FA}#/`)
+    const card = A.page.locator('.thing-slot[data-kind="site"]').first()
+    await card.waitFor({ timeout: 30_000 })
+    if (SHOTS) await A.page.screenshot({ path: path.join(SHOTS, 'hello-home.png') })
+    return `${approvals} approval(s); "${label.replace(/\s+/g, ' ').trim()}" from the reply; page says "${text.slice(0, 40).replace(/\s+/g, ' ')}"; reply: ${answer.slice(0, 160)}`
   })
 }
 if (SHOTS) {
@@ -1031,7 +1251,7 @@ await check('an idle workspace stops, its event stream does not wake it, and ope
   const t0 = Date.now()
   await until(() => state() !== 'running', 30_000, 'the idle stop')
   const after = Date.now() - t0
-  const ev = await fetch(`${ORIGIN}/oc/api/event`, { headers: { cookie: `__Host-ola=${a.cookie}`, 'x-ola-workspace': FA }, signal: AbortSignal.timeout(5000) }).then(async (r) => [r.status, (await r.json()).error], () => ['no answer'])
+  const ev = await fetch(`${ORIGIN}/oc/api/event`, { headers: { cookie: `${CK}=${a.cookie}`, 'x-ola-workspace': FA }, signal: AbortSignal.timeout(5000) }).then(async (r) => [r.status, (await r.json()).error], () => ['no answer'])
   await sleep(1500)
   assert(ev[0] === 503 && ev[1] === 'asleep' && state() !== 'running', `event stream: ${ev.join(' ')}, state ${state()}`)
   await A.page.goto('about:blank')

@@ -44,7 +44,7 @@ import { fileURLToPath } from 'node:url'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 export const CONTAINER = process.env.OLA_CONTAINER_BIN || '/usr/local/bin/container'
-export const IMAGE = 'ola-workspace:2.3.0-4'
+export const IMAGE = 'ola-workspace:2.3.0-5'
 export const HOME = process.env.OLA_HOME || path.join(homedir(), '.ola')
 export const GATEWAY_PORT = Number(process.env.OLA_GATEWAY_PORT || 4180)
 // The gateway's door sockets, one per workspace (the gateway's GATEWAY_DOOR_DIR): each door
@@ -516,7 +516,14 @@ async function revokeLocked(id) {
 
 // The container, made from the current secrets if it is missing (after a rotation, or a crash in one).
 async function ensureContainer(id) {
-  if (inspect(id)) return
+  const had = inspect(id)
+  // A stopped container made from an older image is made again from the current one, from the
+  // same volume and secrets: the root is read-only, so nothing outside /work is lost. A running
+  // one keeps its image until it next stops (so a deploy never cuts a run short).
+  if (had && stateOf(had) !== 'running' && !String(had.configuration?.image?.reference ?? '').endsWith(`/${IMAGE}`) && had.configuration?.image?.reference !== IMAGE) {
+    ctr(['rm', names(id).container])
+    step('made again from the current image')
+  } else if (had) return
   volumeOf(id) || refuse(`workspace ${id} has no volume`)
   const meta = JSON.parse(readFileSync(paths(id).meta, 'utf8'))
   await openDoor(id) // the mount source must exist when the container is created

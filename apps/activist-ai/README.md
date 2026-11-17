@@ -226,10 +226,10 @@ VM's memory, so bounded by it) are the only places anything can be written. Befo
 512 GiB sparse image on the host, outside the volume's limit, invisible to `files`, and kept across
 `stop`. The agent runs as `work` (uid 1000) with no capabilities (`--cap-drop ALL`), no sudo, and no
 setuid or setgid program in the image (Debian's `su`, `passwd`, `mount` and the rest are stripped). Image: Debian bookworm-slim pinned by digest, opencode 2.3.0 checked
-against npm's sha512, python3, socat, nothing else (no curl, no CA bundle, no ssh). Image tag `ola-workspace:2.3.0-4` (2.3.0-3 added `ola-get` and `ola-rm` for the front desk's downloads and deletes, and a file's mtime in `ola-files`; 2.3.0-4: `ola-get` opens with `O_NONBLOCK` and refuses anything but a regular file at once, so a FIFO the agent makes cannot hold a download).
+against npm's sha512, python3, socat, nothing else (no curl, no CA bundle, no ssh). Image tag `ola-workspace:2.3.0-5` (2.3.0-5: Ola's standing instructions to the agent, `workspace/AGENTS.md`, say it is in a sealed box with no browser, preview pane or desktop app and that people see its pages under Files with Open; the desktop app's `browser` tool is denied; a stopped workspace made from an older image is made again from the current one at its next start, same volume and secrets. 2.3.0-3 added `ola-get` and `ola-rm` for the front desk's downloads and deletes, and a file's mtime in `ola-files`; 2.3.0-4: `ola-get` opens with `O_NONBLOCK` and refuses anything but a regular file at once, so a FIFO the agent makes cannot hold a download).
 
 ```bash
-node workspace/ws.mjs image                    # build ola-workspace:2.3.0-4 (about 25 s)
+node workspace/ws.mjs image                    # build ola-workspace:2.3.0-5 (about 25 s)
 node workspace/ws.mjs create alice             # 4 CPUs, 6 GiB, 50 GiB: the ceilings
 node workspace/ws.mjs create test --memory 1g --disk 1g --cpus 1   # lower only; higher is refused
 node workspace/ws.mjs start alice              # opens the door, boots, waits for opencode
@@ -510,16 +510,44 @@ img-src 'self' data:; font-src 'self'; connect-src 'self'; … frame-ancestors '
 script; `index.html` has none). The Host header must be the origin's, or 421. The server binds
 127.0.0.1 (or ::1) and refuses any other bind address.
 
-**The preview origin (not in this milestone).** Nothing a workspace makes is ever served from
-this origin as a page: downloads are `attachment` with a `sandbox` CSP. Sites and previews the
+**"Open" for a page Ola built (v0.1, 2026-11-16; `frontdesk/views.mjs`).** An `.html` file has an
+Open action on the project home, in the files view and under the reply of the run that wrote it.
+`GET /api/open?w=&path=` (a same-origin navigation, so the session cookie comes along; members of
+any role) mints a **grant**: 32 random bytes in the front desk's memory, tied to that session and
+membership, the page's folder as its scope, 30 minutes idle and 8 hours at most. It answers a small
+wrapper page of ours (no script; `frame-src` only the grant's path) that frames
+`/v/<grant>/<path>`. Everything under `/v/` carries `Content-Security-Policy: sandbox allow-scripts
+allow-forms` (no `allow-same-origin`, so the page has an opaque origin: no cookie, no storage, and
+every request it makes is cross-site, which `/api` and `/oc` refuse) and allows loads only from
+`<origin>/v/<grant>/` plus inline code and `data:`; a top-level load of a page there
+(`Sec-Fetch-Dest: document`) is refused, so it always runs inside the wrapper, whose `frame-src`
+stops it navigating to another origin. A grant stops working at sign-out, revocation, expiry, the
+idle limit or removal from the team. Hidden files are never served. Each open is `page_opened` in
+the audit log (keyed name hash). Not covered on one origin, nor by a separate one: WebRTC to an
+outside STUN server and DNS prefetch hints. `frontdesk/check.mjs` proves it with a hostile page
+the agent writes (cookie, `/api`, `/oc`, fetch, beacon, image, popup, top and self navigation to a
+counting server on another origin: nothing arrives) and with bob, a guessed grant, sign-out and a
+removed viewer.
+
+**The session cookie on http://localhost** (v0.1). On an https origin it is `__Host-ola` with
+Secure, as above. Only for the plain `http://localhost` rehearsal origin it is `ola-local`, without
+Secure: Safari does not keep a Secure cookie set over http, and Bart's first sign-in in Safari went
+in circles. Proven in WebKit (Playwright's build, not Safari itself); `test/unit.test.mjs` proves
+the https cookie is unchanged. A browser that drops the cookie anyway is told so, not that the
+passkey failed.
+
+**The preview origin (not in this milestone).** Apart from "Open" above, nothing a workspace makes
+is served from this origin as a page: downloads are `attachment` with a `sandbox` CSP. Sites and previews the
 agent builds will be served from a **separate registrable domain** (for example
 `ola-preview.net`, not `preview.ola.cx`: a subdomain is the same site, so SameSite=Strict
 cookies would be sent to it and its pages could be "same-site" to the app), each preview on its
 own subdomain, with a sandboxed CSP, no cookies of ours, and access by a short-lived signed
 link minted here for members. The seam is the "Open" action on a thing; today it downloads.
 
-**The project view** (M4) shows the 12 newest `.csv` and `.md` files Ola made at the top of the
-folder, each at most 1 MiB; their first 32 KiB are read in **one** `container exec` for the whole
+**The project view** (M4; v0.1 shows only what is really there: no made-up examples, an empty
+project says so and points at Ask Ola, every other file is listed with its size and a download)
+shows the 12 newest pages (`.html`, anywhere, with Open) and `.csv` and `.md` files Ola made at
+the top of the folder, each at most 1 MiB; their first 32 KiB are read in **one** `container exec` for the whole
 request, and kept by sha256 (which `ola-files` reports), so an unchanged file is not read again. 200
 documents in the folder: 12 things, 170 ms (before: 200 execs, 13.6 s). The file list returns at
 most 1,000 entries.

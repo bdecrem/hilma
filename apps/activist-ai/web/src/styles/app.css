@@ -1834,3 +1834,126 @@ code {
   margin: 0;
   flex: 1 1 24rem;
 }
+
+/* ---------------------------------------------------------------- the home: pages, other files, an empty project */
+.thing-actions {
+  display: flex;
+  gap: var(--s4);
+  flex: none;
+}
+.thing-open {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--lamp);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+.other-files,
+.empty-project {
+  margin-top: var(--s4);
+}
+.other-list {
+  list-style: none;
+  margin: 0;
+  padding: var(--s2) var(--s5) var(--s3);
+}
+.other-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: var(--s4);
+  align-items: baseline;
+  padding: var(--s3) 0;
+  border-bottom: 1px solid var(--rule);
+}
+.other-row:last-child {
+  border-bottom: 0;
+}
+.other-name {
+  display: flex;
+  gap: var(--s2);
+  align-items: center;
+  min-width: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.other-name svg {
+  color: var(--link);
+  flex: none;
+}
+.other-meta {
+  color: var(--ink-2);
+  font-size: var(--fs-meta);
+  white-space: nowrap;
+}
+.other-action {
+  color: var(--link);
+  font-weight: 650;
+  text-decoration: none;
+}
+.other-action:hover {
+  text-decoration: underline;
+}
+.other-more {
+  padding: 0 var(--s5) var(--s4);
+}
+.other-more a {
+  color: var(--link);
+  font-weight: 650;
+}
+.empty-project {
+  max-width: 640px;
+}
+.empty-title {
+  font-size: var(--fs-title);
+  font-weight: 700;
+  line-height: 1.25;
+}
+.empty-text {
+  margin-top: var(--s3);
+  font-family: var(--font-read);
+  font-size: var(--fs-read);
+  line-height: var(--lh-read);
+  color: var(--ink-2);
+}
+.empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3);
+  margin-top: var(--s5);
+}
+@media (max-width: 760px) {
+  .other-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .other-meta {
+    grid-column: 1;
+    grid-row: 2;
+    white-space: normal;
+  }
+}
+
+/* Under a reply that made a page: Open it, right there. */
+.made-pages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3);
+  margin-top: var(--s3);
+}
+.open-page {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  padding: var(--s2) var(--s4);
+  border-radius: 999px;
+  background: var(--room);
+  color: var(--on-room);
+  font-weight: 650;
+  text-decoration: none;
+}
+.open-page:hover {
+  background: var(--room-selected);
+}
+.open-page:focus-visible {
+  outline: 3px solid var(--lamp);
+  outline-offset: 2px;
+}

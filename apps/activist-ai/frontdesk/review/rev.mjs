@@ -19,6 +19,8 @@ const ROOT = path.join(homedir(), 'rev-fd')
 const STATE = path.join(ROOT, 'state.json')
 const PORT = Number(process.env.REV_PORT ?? 4795)
 const ORIGIN = `http://localhost:${PORT}`
+const CK = (await import('../auth.mjs')).sessionCookie(ORIGIN).name
+const CK_RE = new RegExp(`${CK}=([^;]*)`)
 const CTR = '/usr/local/bin/container'
 const env = {
   ...process.env,
@@ -53,7 +55,7 @@ if (argv.includes('--destroy')) {
 
 async function api(p, { method = 'GET', cookie, csrf, ws, origin = method === 'GET' ? undefined : ORIGIN, body, headers = {}, signal } = {}) {
   const h = { ...headers }
-  if (cookie) h.cookie = `__Host-ola=${cookie}`
+  if (cookie) h.cookie = `${CK}=${cookie}`
   if (csrf) h['x-ola-csrf'] = csrf
   if (ws) h['x-ola-workspace'] = ws
   if (origin) h.origin = origin
@@ -64,7 +66,7 @@ async function api(p, { method = 'GET', cookie, csrf, ws, origin = method === 'G
   try {
     json = JSON.parse(text)
   } catch {}
-  return { status: r.status, json, text, headers: r.headers, cookie: /__Host-ola=([^;]*)/.exec(r.headers.get('set-cookie') ?? '')?.[1] }
+  return { status: r.status, json, text, headers: r.headers, cookie: CK_RE.exec(r.headers.get('set-cookie') ?? '')?.[1] }
 }
 const post = (p, b, o = {}) => api(p, { method: 'POST', body: JSON.stringify(b), ...o })
 
@@ -129,7 +131,7 @@ async function login(h, opts = {}) {
 function stream(p, s, ws) {
   const ctl = new AbortController()
   const st = { text: '', open: true, status: null, stop: () => ctl.abort() }
-  fetch(`${ORIGIN}${p}`, { headers: { cookie: `__Host-ola=${s.cookie}`, 'x-ola-workspace': ws, accept: 'text/event-stream' }, signal: ctl.signal })
+  fetch(`${ORIGIN}${p}`, { headers: { cookie: `${CK}=${s.cookie}`, 'x-ola-workspace': ws, accept: 'text/event-stream' }, signal: ctl.signal })
     .then(async (r) => {
       st.status = r.status
       for await (const c of r.body) st.text += Buffer.from(c).toString('utf8')
@@ -288,7 +290,7 @@ T.uploads = async () => {
   for (let i = 0; i < 8; i++) {
     const s = net.connect(PORT, '127.0.0.1')
     s.on('error', () => {})
-    s.write(`POST /api/files?name=slow${i}.bin HTTP/1.1\r\nHost: localhost:${PORT}\r\nOrigin: ${ORIGIN}\r\nCookie: __Host-ola=${S['rev-dan'].cookie}\r\nX-Ola-CSRF: ${S['rev-dan'].csrf}\r\nX-Ola-Workspace: rev-fa\r\nContent-Length: 1000000\r\n\r\nx`)
+    s.write(`POST /api/files?name=slow${i}.bin HTTP/1.1\r\nHost: localhost:${PORT}\r\nOrigin: ${ORIGIN}\r\nCookie: ${CK}=${S['rev-dan'].cookie}\r\nX-Ola-CSRF: ${S['rev-dan'].csrf}\r\nX-Ola-Workspace: rev-fa\r\nContent-Length: 1000000\r\n\r\nx`)
     socks.push(s)
   }
   await sleep(6000)

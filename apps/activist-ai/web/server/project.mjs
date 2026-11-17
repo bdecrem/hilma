@@ -1,10 +1,10 @@
 // The project and its things, as the front desk serves them to the page (GET /api/project).
 //
-// Milestone 1: the things Bart built with the group and the earlier work come from a fixture
-// (made-up data, the eviction-report project from the design mocks). Things Ola makes in this
-// workspace are real: a .csv it wrote becomes a table, a .md a document, read from the folder.
-// The real front desk replaces the fixture with the platform database; the JSON shape is the
-// contract (src/lib/types.ts, `ProjectPayload`).
+// Things are made from what is really in the workspace: a page (.html) Ola wrote becomes a page
+// with Open, a .csv a table, a .md a document, read from the folder. The rest of the files are
+// listed as they are. The dev server (../dev.mjs) adds the fixture's made-up things for the page's
+// own checks; the front desk never does. The JSON shape is the contract (src/lib/types.ts,
+// `ProjectPayload`).
 import { fixture } from './fixture.mjs'
 
 function parseCsv(text, maxRows) {
@@ -59,13 +59,40 @@ function markdownToSections(text) {
   return { heading, sections: sections.slice(0, 6) }
 }
 
-/** Things made from what Ola wrote in the workspace. */
+/** The page's own title, from its <title>, as plain text (the workspace's word: shown as text only). */
+export function pageTitle(html) {
+  const m = /<title[^>]*>([^<]{1,400})<\/title>/i.exec(html ?? '')
+  if (!m) return null
+  const t = m[1].replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/\s+/g, ' ').trim()
+  return t ? t.slice(0, 80) : null
+}
+export const isPageFile = (rel) => /\.html?$/i.test(rel)
+/** A file the home shows as a thing: any page, or a .csv/.md Ola wrote at the top of the folder. */
+export const isThingFile = (f) => isPageFile(f.path) || (f.origin === 'made' && !f.path.includes('/') && /\.(csv|md)$/.test(f.path))
+
+/** Things made from what is in the workspace. */
 export async function derivedThings(files) {
   const list = await files.list()
   const things = []
   for (const f of list) {
-    if (f.origin !== 'made' || f.path.includes('/')) continue
-    if (f.path.endsWith('.csv')) {
+    if (!isThingFile(f)) continue
+    if (isPageFile(f.path)) {
+      const name = f.path.split('/').pop()
+      const where = f.path.includes('/') ? f.path.slice(0, f.path.lastIndexOf('/')) : null
+      const title = pageTitle(await files.readText(f.path, 32 * 1024))
+      things.push({
+        kind: 'site',
+        id: `file:${f.path}`,
+        title: title ?? name,
+        byline: { madeBy: f.origin === 'made' ? 'ola' : 'you', when: f.modified, from: [] },
+        state: 'ready',
+        file: f.path,
+        openable: true,
+        visibility: 'private',
+        pages: 1,
+        summary: `${title ? `${f.path}, a` : 'A'} web page ${f.origin === 'made' ? 'Ola made' : 'you uploaded'}${where && !title ? ` in ${where}` : ''}. Open shows it in a new tab.`,
+      })
+    } else if (f.path.endsWith('.csv')) {
       const text = await files.readText(f.path, 32 * 1024)
       const rows = parseCsv(text ?? '', 7)
       if (rows.length < 2) continue
@@ -100,6 +127,18 @@ export async function derivedThings(files) {
   return things
 }
 
+/** The files the home lists under its things: everything not already shown as a thing. */
+export const otherFiles = (list, things, max = 50) => {
+  const shown = new Set(things.map((t) => t.file).filter(Boolean))
+  return list.filter((f) => !shown.has(f.path)).slice(0, max)
+}
+
+export const otherCount = (list, things) => {
+  const shown = new Set(things.map((t) => t.file).filter(Boolean))
+  return list.filter((f) => !shown.has(f.path)).length
+}
+
+/** The dev server's payload: the fixture's made-up things, then the real ones. */
 export async function projectPayload(files) {
   const list = await files.list()
   const uploaded = list.filter((f) => f.origin === 'uploaded')
@@ -108,5 +147,7 @@ export async function projectPayload(files) {
     project: { ...fixture.project, filesUploaded: uploaded.length },
     machine: fixture.machine,
     things: [...fixture.things, ...made],
+    files: otherFiles(list, made),
+    otherTotal: otherCount(list, made),
   }
 }

@@ -1,8 +1,8 @@
 // The project's things, each as paper on the desk: a header band (icon, title, who made it and
 // when) and a body that shows the thing itself, never a thumbnail too small to read.
 import { For, Match, Show, Switch } from 'solid-js'
-import type { Byline, ChartThing, DashboardThing, DocumentThing, SiteThing, TableThing, Thing } from '../lib/types.ts'
-import { when } from '../lib/format.ts'
+import type { Byline, ChartThing, DashboardThing, DocumentThing, FileEntry, SiteThing, TableThing, Thing } from '../lib/types.ts'
+import { bytes, count, when } from '../lib/format.ts'
 import { desk } from '../lib/api.ts'
 import { Icon } from './Icon.tsx'
 
@@ -37,9 +37,16 @@ export function ThingCard(props: { thing: Thing }) {
           </p>
         </div>
         <Show when={t().file}>
-          <a class="thing-action" href={desk.downloadUrl(t().file!)} download="">
-            Download<span class="sr-only"> {t().title}</span>
-          </a>
+          <div class="thing-actions">
+            <Show when={t().openable}>
+              <a class="thing-action thing-open" href={desk.openUrl(t().file!)} target="_blank" rel="noopener noreferrer">
+                Open<span class="sr-only"> {t().title} in a new tab</span>
+              </a>
+            </Show>
+            <a class="thing-action" href={desk.downloadUrl(t().file!)} download="">
+              Download<span class="sr-only"> {t().title}</span>
+            </a>
+          </div>
         </Show>
       </header>
       <div class="thing-body">
@@ -203,5 +210,75 @@ function Site(props: { thing: SiteThing }) {
         {s().pages === 1 ? 'One page' : `${s().pages} pages`} · {s().visibility === 'private' ? 'Private: only the people in this project can open it. It is not on the public web.' : 'Public'}
       </p>
     </div>
+  )
+}
+
+/** The rest of what is in the workspace, as it is: name, size, when, and a download. */
+export function OtherFiles(props: { files: FileEntry[]; total: number; hasThings: boolean }) {
+  const more = () => props.total - props.files.length
+  return (
+    <section class="thing other-files" aria-labelledby="other-files-title">
+      <header class="thing-head">
+        <span class="thing-icon">
+          <Icon name="file" />
+        </span>
+        <div class="thing-titles">
+          <h2 id="other-files-title" class="thing-title">
+            {props.hasThings ? 'Other files in this project' : 'Files in this project'}
+          </h2>
+          <p class="thing-byline">{count(props.files.length, 'file')}, as they are on Ola’s computer</p>
+        </div>
+      </header>
+      <ul class="other-list">
+        <For each={props.files}>
+          {(f) => (
+            <li class="other-row">
+              <span class="other-name">
+                <Icon name={/\.(csv|xlsx?|tsv)$/i.test(f.path) ? 'table' : 'file'} size={18} />
+                <span>{f.path}</span>
+              </span>
+              <span class="other-meta">
+                {bytes(f.size)} · {f.origin === 'uploaded' ? 'you uploaded' : 'Ola made'} · {when(f.uploaded ?? f.modified)}
+              </span>
+              <a class="other-action" href={desk.downloadUrl(f.path)} download={f.path.split('/').pop()}>
+                Download<span class="sr-only"> {f.path}</span>
+              </a>
+            </li>
+          )}
+        </For>
+      </ul>
+      <Show when={more() > 0}>
+        <p class="other-more">
+          <a href="#/files">See all {props.total} files in What Ola has of yours</a>
+        </p>
+      </Show>
+    </section>
+  )
+}
+
+/** A project with nothing in it yet says so, and points at Ask Ola. */
+export function EmptyProject(props: { canRun: boolean; onAsk: () => void; onAddFiles: () => void }) {
+  return (
+    <section class="thing empty-project" aria-labelledby="empty-title">
+      <div class="thing-body">
+        <h2 id="empty-title" class="empty-title">
+          Nothing here yet
+        </h2>
+        <Show
+          when={props.canRun}
+          fallback={<p class="empty-text">When the people in this project ask Ola for something, what it makes shows up here.</p>}
+        >
+          <p class="empty-text">Ask Ola for something and what it makes shows up here: a web page, a table, a short report. You can also add files for Ola to work with.</p>
+          <div class="empty-actions">
+            <button type="button" class="primary-button" onClick={props.onAsk}>
+              Ask Ola
+            </button>
+            <button type="button" class="ghost-button on-paper" onClick={props.onAddFiles}>
+              <Icon name="plus" size={16} /> Add files
+            </button>
+          </div>
+        </Show>
+      </div>
+    </section>
   )
 }

@@ -16,7 +16,9 @@
 //      Viewers read; owners and members also run the agent and change files. Not a member: 404.
 //   6. /oc/api/*: only the opencode routes in web/server/proxy.mjs (ALLOWED, the one list), to
 //      that workspace's desk socket, with the workspace's opencode password added here.
-// Things the agent builds (sites, previews) are never served from this origin; see README.
+// Pages the agent builds are never served as documents of this origin: "Open" shows them under
+// /v/<grant>/ with an opaque origin, a path-limited CSP and a wrapper that holds their navigation
+// (views.mjs, which says why); a separate origin per workspace comes later (README).
 import { createHash } from 'node:crypto'
 import fs from 'node:fs'
 import http from 'node:http'
@@ -27,10 +29,11 @@ import { fileURLToPath } from 'node:url'
 import { audit, nameRef, openDb, loadKeys } from './db.mjs'
 import { addressKey, makeAuth } from './auth.mjs'
 import { makeWorkspaces } from './workspaces.mjs'
+import { makeViews } from './views.mjs'
 import { routeNeed } from '../web/server/proxy.mjs'
 import { tooLargeMessage, validName } from '../web/server/files.mjs'
 import { closeAfter, lingering, readUpTo } from '../web/server/linger.mjs'
-import { derivedThings } from '../web/server/project.mjs'
+import { derivedThings, isThingFile, otherCount, otherFiles } from '../web/server/project.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 
@@ -214,6 +217,8 @@ export function makeFrontDesk(cfg = config()) {
           .get(personId, slug)
       : undefined
 
+  const views = makeViews({ cfg, db, keys, auth, membership, workspaces })
+
   const shas = new Map() // `${slug}\0${path}` -> sha256, as ola-files last said
   const MAX_LISTED = 1000
 
@@ -232,15 +237,16 @@ export function makeFrontDesk(cfg = config()) {
     out.sort((a, b) => (a.origin === b.origin ? a.path.localeCompare(b.path) : a.origin === 'uploaded' ? -1 : 1))
     return out
   }
-  // The things on the project view: the 12 newest .csv/.md files Ola made at the top of the
-  // folder, each at most 1 MiB, read 32 KiB each in ONE `container exec`, and cached by sha256
+  // The things on the project view: the 12 newest pages (.html, anywhere) and .csv/.md files Ola
+  // made at the top of the folder, each at most 1 MiB, read 32 KiB each in ONE `container exec`
+  // (a page for its <title>), and cached by sha256
   // so an unchanged file is not read again (review of 2026-11-16, M4: one exec per file, every
   // page load, unbounded).
   const MAX_THINGS = 12
   const texts = new Map() // `${slug}\0${path}\0${sha}` -> text
   async function madeThings(ws, entries) {
     const picks = entries
-      .filter((f) => f.origin === 'made' && !f.path.includes('/') && /\.(csv|md)$/.test(f.path) && f.size <= 1024 * 1024)
+      .filter((f) => isThingFile(f) && f.size <= 1024 * 1024)
       .sort((a, b) => b.modified.localeCompare(a.modified) || a.path.localeCompare(b.path))
       .slice(0, MAX_THINGS)
     const key = (f) => `${ws.slug}\0${f.path}\0${shas.get(`${ws.slug}\0${f.path}`) ?? '?'}`
@@ -312,6 +318,9 @@ export function makeFrontDesk(cfg = config()) {
         project: { id: ws.slug, name: ws.name, group: ws.team, people: ['you', ...members.filter((m) => m.id !== sess.personId).map((m) => m.display_name)], filesUploaded: entries.filter((f) => f.origin === 'uploaded').length },
         machine: { working: working(), capacity: cfg.capacity },
         things: made,
+        // Everything else in the folder, as it is (the home lists it under the things).
+        files: otherFiles(entries, made),
+        otherTotal: otherCount(entries, made),
         role: ws.role,
       })
     }
@@ -473,6 +482,8 @@ export function makeFrontDesk(cfg = config()) {
     if (writes && req.headers.origin !== cfg.origin) return json(res, 403, { error: 'wrong_origin' })
 
     if (p === '/api/health') return json(res, 200, { ok: true })
+    // A page Ola built, under its grant (views.mjs): no cookie is needed or wanted here.
+    if (p.startsWith('/v/')) return views.serve(req, res, p)
 
     // ---------------------------------------------- sign-in (no session yet)
     if (p.startsWith('/api/auth/')) {
@@ -504,6 +515,8 @@ export function makeFrontDesk(cfg = config()) {
           .all(sess.personId)
         return json(res, 200, { person: { handle: sess.handle, name: sess.name }, csrf: sess.csrf, workspaces: list, machine: { working: working(), capacity: cfg.capacity }, policy: { deleteNotice: cfg.deleteNotice, maxUpload: cfg.maxUpload }, notices: auth.notices(sess) })
       }
+      // "Open" on a page: a navigation from the app (same-origin, so the Strict cookie came along).
+      if (p === '/api/open' && req.method === 'GET') return views.open(req, res, sess, url)
       if (p === '/api/signout' && req.method === 'POST') {
         auth.signOut(sess)
         return json(res, 200, { ok: true }, { 'set-cookie': auth.clearCookie })
@@ -597,7 +610,7 @@ export function makeFrontDesk(cfg = config()) {
     if (!server.listeners('listening').some((f) => f.name === 'setupConnectionsTracking')) throw new Error('this Node does not start HTTP timeouts on listening; the PROXY protocol mode needs review')
     listener.once('listening', () => server.emit('listening'))
   } else server.on('connection', (sock) => admit(sock, addressKey(sock.remoteAddress)))
-  return { server, listener, db, cfg, workspaces, close: () => (workspaces.close(), listener.close(), listener !== server && server.close(), db.close()) }
+  return { server, listener, db, cfg, workspaces, views, close: () => (workspaces.close(), listener.close(), listener !== server && server.close(), db.close()) }
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

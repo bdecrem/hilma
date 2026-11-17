@@ -181,6 +181,11 @@ function FileTable(props: { title: string; files: FileEntry[]; empty: string; on
                   </td>
                   <td class="file-when">{when(f.uploaded ?? f.modified)}</td>
                   <td class="file-actions">
+                    <Show when={/\.html?$/i.test(f.path)}>
+                      <a href={desk.openUrl(f.path)} target="_blank" rel="noopener noreferrer">
+                        Open<span class="sr-only"> {f.path} in a new tab</span>
+                      </a>
+                    </Show>
                     <a href={desk.downloadUrl(f.path)} download={f.path.split('/').pop()}>
                       Download<span class="sr-only"> {f.path}</span>
                     </a>

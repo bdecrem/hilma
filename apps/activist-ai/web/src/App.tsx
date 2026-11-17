@@ -7,7 +7,7 @@ import { desk, DeskError } from './lib/api.ts'
 import { createOla } from './lib/ola.ts'
 import { count, people } from './lib/format.ts'
 import { Icon, Wordmark } from './components/Icon.tsx'
-import { ThingCard } from './components/Things.tsx'
+import { EmptyProject, OtherFiles, ThingCard } from './components/Things.tsx'
 import { Drawer, ProblemBox } from './components/Drawer.tsx'
 import { FilesView } from './components/FilesView.tsx'
 import { ApprovalSheet } from './components/ApprovalSheet.tsx'
@@ -197,7 +197,13 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
               </h1>
               <Show when={p()}>
                 <p class="project-sub">
-                  {p()!.group} · {people(p()!.people)} · <strong>{count(project()!.things.length, 'thing')}</strong>, made from <strong>{count(p()!.filesUploaded, 'file')} you uploaded</strong>
+                  {p()!.group} · {people(p()!.people)} ·{' '}
+                  <Show when={project()!.things.length} fallback={<strong>nothing made yet</strong>}>
+                    <strong>{count(project()!.things.length, 'thing')}</strong>
+                  </Show>
+                  <Show when={p()!.filesUploaded}>
+                    , from <strong>{count(p()!.filesUploaded, 'file')} you uploaded</strong>
+                  </Show>
                 </p>
               </Show>
             </div>
@@ -213,15 +219,22 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
             </div>
           </section>
           <Show when={project()} fallback={<p class="loading" role="status">{waking() ? 'Waking your workspace…' : 'Opening your project…'}</p>}>
-            <div class="things" role="list" aria-label="Your things">
-              <For each={project()!.things}>
-                {(t) => (
-                  <div role="listitem" class="thing-slot" data-kind={t.kind}>
-                    <ThingCard thing={t} />
-                  </div>
-                )}
-              </For>
-            </div>
+            <Show when={project()!.things.length || project()!.files?.length} fallback={<EmptyProject canRun={canRun()} onAsk={openDrawer} onAddFiles={addFiles} />}>
+              <Show when={project()!.things.length}>
+                <div class="things" role="list" aria-label="Your things">
+                  <For each={project()!.things}>
+                    {(t) => (
+                      <div role="listitem" class="thing-slot" data-kind={t.kind}>
+                        <ThingCard thing={t} />
+                      </div>
+                    )}
+                  </For>
+                </div>
+              </Show>
+              <Show when={project()!.files?.length}>
+                <OtherFiles files={project()!.files!} total={project()!.otherTotal ?? project()!.files!.length} hasThings={!!project()!.things.length} />
+              </Show>
+            </Show>
           </Show>
         </Show>
       </main>

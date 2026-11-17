@@ -26,13 +26,19 @@ const ACTIONS_V2 = [
   // migration 2: invitations and devices, secrets
   'invitations_voided', 'device_invited', 'device_added', 'passkey_removed', 'secrets_rotated',
 ]
-/** What the audit log may say. A row with any other action is refused by the table itself. */
-export const ACTIONS = [
+// Migration 3's list (frozen too).
+const ACTIONS_V3 = [
   ...ACTIONS_V2,
   // migration 3: a rotation's outcome. secrets_rotated is written only once the new secrets are in
   // force; restart_deferred when the workspace was left stopped (the machine was full), to start on
   // its next request; workspace_closed when it could not be made safe; workspace_reopened by the admin.
   'restart_deferred', 'workspace_closed', 'workspace_reopened',
+]
+/** What the audit log may say. A row with any other action is refused by the table itself. */
+export const ACTIONS = [
+  ...ACTIONS_V3,
+  // migration 4: a page opened from the project ("Open"), and Fallback to Claude
+  'page_opened', 'claude_enabled', 'claude_disabled', 'claude_used',
 ]
 
 const sqlList = (xs) => xs.map((x) => `'${x}'`).join(', ')
@@ -172,7 +178,7 @@ const MIGRATIONS = [
     at INTEGER NOT NULL,
     actor_kind TEXT NOT NULL CHECK (actor_kind IN ('person', 'admin', 'run', 'system')),
     actor_person_id INTEGER REFERENCES people(id),
-    action TEXT NOT NULL CHECK (action IN (${sqlList(ACTIONS)})),
+    action TEXT NOT NULL CHECK (action IN (${sqlList(ACTIONS_V3)})),
     workspace_id INTEGER REFERENCES workspaces(id),
     subject_person_id INTEGER REFERENCES people(id),
     name_ref BLOB,
@@ -184,6 +190,33 @@ const MIGRATIONS = [
   INSERT INTO audit_v3 SELECT id, at, actor_kind, actor_person_id, action, workspace_id, subject_person_id, name_ref, sha256, size, role, ok FROM audit;
   DROP TABLE audit;
   ALTER TABLE audit_v3 RENAME TO audit;
+  CREATE INDEX audit_workspace ON audit(workspace_id, at);
+  `,
+  // 4: new audit words (a page opened; Fallback to Claude turned on, off, used) and the numbers a
+  // Claude run is recorded with (tokens and cost in millionths of a dollar: numbers only, never
+  // content). The table is rebuilt for the CHECK, as in 2 and 3.
+  `
+  CREATE TABLE audit_v4 (
+    id INTEGER PRIMARY KEY,
+    at INTEGER NOT NULL,
+    actor_kind TEXT NOT NULL CHECK (actor_kind IN ('person', 'admin', 'run', 'system')),
+    actor_person_id INTEGER REFERENCES people(id),
+    action TEXT NOT NULL CHECK (action IN (${sqlList(ACTIONS)})),
+    workspace_id INTEGER REFERENCES workspaces(id),
+    subject_person_id INTEGER REFERENCES people(id),
+    name_ref BLOB,
+    sha256 TEXT CHECK (sha256 IS NULL OR length(sha256) = 64),
+    size INTEGER,
+    role TEXT CHECK (role IS NULL OR role IN (${sqlList(ROLES)})),
+    ok INTEGER NOT NULL DEFAULT 1 CHECK (ok IN (0, 1)),
+    tokens_in INTEGER CHECK (tokens_in IS NULL OR tokens_in >= 0),
+    tokens_out INTEGER CHECK (tokens_out IS NULL OR tokens_out >= 0),
+    cost_micro_usd INTEGER CHECK (cost_micro_usd IS NULL OR cost_micro_usd >= 0)
+  ) STRICT;
+  INSERT INTO audit_v4 (id, at, actor_kind, actor_person_id, action, workspace_id, subject_person_id, name_ref, sha256, size, role, ok)
+    SELECT id, at, actor_kind, actor_person_id, action, workspace_id, subject_person_id, name_ref, sha256, size, role, ok FROM audit;
+  DROP TABLE audit;
+  ALTER TABLE audit_v4 RENAME TO audit;
   CREATE INDEX audit_workspace ON audit(workspace_id, at);
   `,
 ]
@@ -235,9 +268,9 @@ export const nameRef = (keys, workspaceId, name) => createHmac('sha256', keys.na
 export function audit(db, row) {
   if (!ACTIONS.includes(row.action)) throw new Error(`unknown audit action ${row.action}`)
   db.prepare(
-    `INSERT INTO audit (at, actor_kind, actor_person_id, action, workspace_id, subject_person_id, name_ref, sha256, size, role, ok)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-  ).run(Date.now(), row.actorKind ?? 'person', row.actor ?? null, row.action, row.workspace ?? null, row.subject ?? null, row.nameRef ?? null, row.sha256 ?? null, row.size ?? null, row.role ?? null, row.ok === false ? 0 : 1)
+    `INSERT INTO audit (at, actor_kind, actor_person_id, action, workspace_id, subject_person_id, name_ref, sha256, size, role, ok, tokens_in, tokens_out, cost_micro_usd)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  ).run(Date.now(), row.actorKind ?? 'person', row.actor ?? null, row.action, row.workspace ?? null, row.subject ?? null, row.nameRef ?? null, row.sha256 ?? null, row.size ?? null, row.role ?? null, row.ok === false ? 0 : 1, row.tokensIn ?? null, row.tokensOut ?? null, row.costMicroUsd ?? null)
 }
 
 export const today = () => new Date().toISOString().slice(0, 10)

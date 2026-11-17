@@ -21,10 +21,14 @@
   },
   "model": "ola/general",
   "update": "disable",
+  // Where the agent is and how people see what it makes (AGENTS.md, beside this file).
+  "instructions": ["/opt/ola/config/opencode/AGENTS.md"],
   "permissions": [
     { "action": "*", "resource": "*", "effect": "allow" },
     { "action": "webfetch", "resource": "*", "effect": "deny" },
     { "action": "websearch", "resource": "*", "effect": "deny" },
-    { "action": "external_directory", "resource": "*", "effect": "deny" }
+    { "action": "external_directory", "resource": "*", "effect": "deny" },
+    // the desktop app's browser and preview tool: there is no desktop app here
+    { "action": "browser", "resource": "*", "effect": "deny" }
   ]
 }

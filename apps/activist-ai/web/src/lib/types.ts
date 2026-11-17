@@ -22,6 +22,8 @@ interface ThingBase {
   state: 'ready' | 'being-made'
   /** The workspace file behind it, when there is one (downloadable). */
   file?: string | null
+  /** A page Ola built: "Open" shows it rendered in a new tab (the front desk's /api/open). */
+  openable?: boolean
 }
 
 export interface Stat {
@@ -93,6 +95,10 @@ export interface ProjectPayload {
   /** How many people are working on the machine right now, and how many it can take. Never who. */
   machine: { working: number; capacity: number }
   things: Thing[]
+  /** Everything else in the workspace, not shown as a thing (the first 50). */
+  files?: FileEntry[]
+  /** How many files are not shown as things, in all (`files` lists the first 50). */
+  otherTotal?: number
   /** The signed-in person's role in this workspace (the dev server leaves it out: owner). */
   role?: Role
 }

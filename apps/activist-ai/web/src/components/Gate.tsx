@@ -126,6 +126,18 @@ function SignIn(props: { invite: string | null; onSignedIn: () => void }) {
     setBusy(true)
     try {
       await (props.invite ? passkeys.finishRegister(p) : passkeys.finishSignIn(p))
+      // The server let the person in and set the session cookie. If the very next request comes
+      // back signed out, the browser did not keep the cookie: say that, not that the passkey
+      // failed (Safari over plain http, 2026-11-16; private windows and blocked cookies do it too).
+      try {
+        await desk.me()
+      } catch (e) {
+        if (e instanceof DeskError && e.status === 401) {
+          setProblem({ text: 'Your passkey worked and Ola let you in, but this browser did not keep the sign-in: the next page arrived signed out. Private windows and blocked cookies do this. Try again in a normal window, or tell Bart.', detail: 'signed in, then 401 from /api/me: the session cookie was not stored or not sent' })
+          if (!props.invite) void refetch()
+          return
+        }
+      }
       props.onSignedIn()
     } catch (e) {
       setProblem(e instanceof DeskError ? e.problem : { text: 'Your passkey could not be used just now.', detail: String(e) })
