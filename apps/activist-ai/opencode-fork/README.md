@@ -30,7 +30,7 @@ one in `UPSTREAM`, and checks that the binary carries Ola's words.
 
 **License.** opencode is MIT. `dist/<target>/LICENSE` is its notice and travels with the binary; when the
 binary goes into the Mac app, the notice goes into the bundle and the app's credits: About Ola shows it
-(`apple/Mac/Credits.html`, opencode's text word for word; update it if their LICENSE changes), and `ola --version`
+(`apple/Mac/Credits.rtf`, opencode's text word for word; update it if their LICENSE changes. An RTF with no color table, so the panel's own text color applies in light and dark: the HTML version before it came out black on near-black in dark mode in the 0.1 (4) check on another Mac, though white on this M4 under macOS 27. `Ola\'92s` is the apostrophe in the file's cp1252), and `ola --version`
 names opencode and its license.
 
 Left as opencode on purpose: internal ids (`opencode.settings`, the theme named `opencode`), the provider
