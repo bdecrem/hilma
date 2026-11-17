@@ -45,6 +45,9 @@ FREE=$(ssh -o ConnectTimeout=10 "$MINI" "df -g /System/Volumes/Data | awk 'NR==2
 # archived Mac app is checked against them below (README, "Every release").
 node tools/skills.mjs stage build/OlaSkills
 node tools/skills.mjs stage build/OlaSkills >/dev/null   # bundled in the Mac app, checked after the archive
+# Ola's opencode for the Mac app's Contents/Helpers (../opencode-fork; built here the first time,
+# about eight minutes, then a copy); the archived app is checked against it below.
+../opencode-fork/stage.sh stage build/OlaOpencode
 xcodegen generate >/dev/null
 ssh -o ConnectTimeout=10 "$MINI" 'mkdir -p ~/ola-ship/apple'
 rsync -a --delete --exclude .build --exclude DerivedData --exclude xcuserdata --exclude .DS_Store ./ "$MINI:ola-ship/apple/"
@@ -140,6 +143,11 @@ ship_mac() {
   archive OlaMac "generic/platform=macOS" ola-mac
   local app="$OUT/ola-mac.xcarchive/Products/Applications/Ola.app"
   node tools/skills.mjs verify "$app/Contents/Resources/OlaSkills" || { echo "error: not shipping: the archived Mac app's skills are not apps/activist-ai/skills at HEAD" >&2; exit 1; }
+  ../opencode-fork/stage.sh verify "$app" || { echo "error: not shipping: the archived Mac app's opencode is not ../opencode-fork's" >&2; exit 1; }
+  # The opencode programs in Contents/Helpers are code of their own: under the hardened runtime they
+  # need Bun's entitlements (Mac/OlaOpencode.entitlements), so each is signed before the app is, and
+  # the export keeps what it finds. Checked after signing, below.
+  sign_opencode() { local h; for h in "$app"/Contents/Helpers/ola-opencode-*; do codesign -f -s "$1" -o runtime ${2:+--timestamp=none} --entitlements Mac/OlaOpencode.entitlements "$h" >/dev/null 2>&1 || { echo "error: could not sign $(basename "$h")" >&2; exit 1; }; done; }
   # Passkeys in the app (README, "Passkeys in the app") need webcredentials:app.ola.cx, which only a
   # provisioning profile allows; the export makes a Developer ID one. OLA_PASSKEY=0 ships without.
   local ent=() want_wc=1
@@ -147,6 +155,7 @@ ship_mac() {
   if [ -n "$DRY" ]; then
     local dev; dev=$(security find-identity -v -p codesigning | sed -n 's/.*"\(Apple Development: [^"]*\)".*/\1/p' | head -1)
     echo "== dry run: signing with $dev to check the bundle (no Developer ID export, no entitlements)"
+    sign_opencode "$dev" dry
     codesign -f -s "$dev" -o runtime --timestamp=none "$app" >/dev/null 2>&1
     want_wc=""
   else
@@ -154,6 +163,7 @@ ship_mac() {
     # click). An unsigned archive carries no entitlements and no hardened-runtime flag, and the
     # export keeps what the app is signed with, so an ad-hoc signature puts both in first.
     echo "== signing the Mac app with Developer ID (Xcode's cloud certificate, export)"
+    sign_opencode -
     codesign -f -s - -o runtime "${ent[@]}" "$app" >/dev/null 2>&1
     cat > "$OUT/mac-export.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -178,6 +188,13 @@ PLIST
     local ents; ents=$(codesign -d --entitlements - --xml "$app" 2>/dev/null)
     [[ "$ents" == *"webcredentials:app.ola.cx"* ]] || { echo "error: the signed Mac app lacks webcredentials:app.ola.cx (passkeys)" >&2; exit 1; }
   fi
+  # Each opencode program: hardened runtime, Bun's entitlements still on it, and this Mac's one starts.
+  local h hs he
+  for h in "$app"/Contents/Helpers/ola-opencode-*; do
+    hs=$(codesign -dvv "$h" 2>&1); he=$(codesign -d --entitlements - --xml "$h" 2>/dev/null)
+    [[ "$hs" == *"flags="*"runtime"* && "$he" == *"cs.allow-jit"* ]] || { echo "error: $(basename "$h") lost the hardened runtime or its entitlements in signing" >&2; exit 1; }
+  done
+  "$app/Contents/Helpers/ola-opencode-$(uname -m)" --version >/dev/null || { echo "error: the signed opencode inside the app does not start" >&2; exit 1; }
   echo "   signed: $(sed -n 's/^Authority=//p' <<<"$sig" | head -1), hardened runtime${want_wc:+, passkeys}"
 
   if [ -n "$DRY" ]; then

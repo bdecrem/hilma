@@ -13,11 +13,26 @@ import Security
 public final class LocalServer: @unchecked Sendable {
   /// Application Support/Ola. A self-test points it at a scratch folder.
   nonisolated(unsafe) public static var support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("Ola")
-  /// opencode 2.3.0: where the app installs it itself (`OpencodeInstall`), else where
-  /// tools/install-local-opencode.sh put it. Always the real install, also when a self-test points
-  /// `support` at a scratch folder. (Not Homebrew's: another version would not read this config.)
+  /// Ola's own build of opencode, carried inside the Mac app (Contents/Helpers, one per processor;
+  /// apps/activist-ai/opencode-fork: the same program with Ola's name in its terminal interface).
+  /// Nothing to download, and the `ola` command shows Ola's wordmark. Nil when this code runs
+  /// outside the app (a self-test, `swift run`), which then uses the installed one below.
+  public static var bundledBinary: URL? {
+    #if arch(arm64)
+    let name = "ola-opencode-arm64"
+    #else
+    let name = "ola-opencode-x86_64"
+    #endif
+    let u = Bundle.main.bundleURL.appendingPathComponent("Contents/Helpers/\(name)")
+    return FileManager.default.isExecutableFile(atPath: u.path) ? u : nil
+  }
+  /// opencode 2.3.0: the one inside the app (`bundledBinary`), else where the app installed it
+  /// itself (`OpencodeInstall`), else where tools/install-local-opencode.sh put it. Always the
+  /// real install, also when a self-test points `support` at a scratch folder. (Not Homebrew's:
+  /// another version would not read this config.)
   public static var binary: URL? {
     let fm = FileManager.default
+    if let b = bundledBinary { return b }
     let mine = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("Ola/opencode")
     for c in [OpencodeInstall.destination, mine.appendingPathComponent("node_modules/.bin/opencode")] where fm.isExecutableFile(atPath: c.path) { return c }
     return nil

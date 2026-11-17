@@ -265,12 +265,15 @@ permissions (commands and edits ask), web commands and config, from the same Ola
 app's signature and reads the Keychain with no question; `ola` itself is a three-line launcher.
 
 ```bash
-ola                    # the conversation, in this terminal (opencode 2.3.0's own interface, on Ola's server)
+ola                    # the conversation, in this terminal (opencode 2.3.0's interface with Ola's wordmark, on Ola's server)
 ola "a request"        # one request, the reply printed; also: ola run "…" (exit code: whether it worked)
 ola -c                 # pick up the last conversation
 ola login | logout | whoami | status | --help
 ```
 
+- **Which opencode:** Ola's own build, carried inside the app (`Contents/Helpers/ola-opencode-<processor>`,
+  `LocalServer.bundledBinary`; `../opencode-fork/README.md`): the pinned release with Ola's wordmark and
+  wording, nothing else changed. "On this Mac" in the app runs the same one.
 - It starts its own `opencode serve --stdio` (it ends when the command does, a kill included) and a
   door, then opencode's interface (`opencode --server <it>`) in the terminal's foreground group
   (posix_spawn: Foundation's Process puts a child in a background group, where the interface stopped

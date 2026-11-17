@@ -52,6 +52,23 @@ targets:
       - path: build/OlaSkills
         type: folder
         buildPhase: resources
+      # Ola's own build of opencode (../opencode-fork: the pinned release with Ola's wordmark and
+      # wording in its terminal interface), one program per processor, staged by
+      # ../opencode-fork/stage.sh (tools/build.sh and testflight/ship-via-mini.sh do it, and refuse a
+      # build that carries another). Contents/Helpers is a place macOS signs code in; OlaKit
+      # LocalServer.bundledBinary runs it from there. opencode's MIT notice rides in Resources.
+      - path: build/OlaOpencode
+        includes: [ola-opencode-arm64, ola-opencode-x86_64]
+        group: Opencode
+        buildPhase:
+          copyFiles:
+            destination: wrapper
+            subpath: Contents/Helpers
+        attributes: [CodeSignOnCopy]
+      - path: build/OlaOpencode
+        includes: [opencode-LICENSE.txt, opencode-source.txt]
+        group: Opencode
+        buildPhase: resources
     dependencies:
       - package: OlaKit
     info:
@@ -88,6 +105,8 @@ targets:
         CODE_SIGN_STYLE: Automatic
         ENABLE_HARDENED_RUNTIME: NO
         COMBINE_HIDPI_IMAGES: YES
+        # The opencode programs in Contents/Helpers carry their own payload; copy them as they are.
+        COPY_PHASE_STRIP: NO
       # The signed download (testflight/README.md): Developer ID and notarization need the hardened
       # runtime. Release only, so the Debug builds Bart installs sign exactly as before.
       configs:

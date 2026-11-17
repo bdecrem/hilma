@@ -35,6 +35,9 @@ const edits = [
   [T + 'mini/footer.prompt.tsx', 'description: "close OpenCode"', 'description: "close Ola"', 1],
   [T + 'component/terminal-pane.tsx', 'restart OpenCode"', 'restart Ola"', 1],
   [T + 'component/error-component.tsx', 'OpenCode crashed', 'Ola crashed', 1],
+  // What is printed when a conversation ends: how to pick it up again, with the ola command.
+  [T + 'util/presentation.ts', 'row("Continue", `opencode -s ${input.session.sessionID}`)', 'row("Continue", `ola -c`)', 1],
+  [T + 'mini/splash.ts', 'const command = `opencode mini -s ${meta.session_id}`', 'const command = `ola -c`', 1],
   [T + 'component/error-component.tsx', '<text fg={colors.muted}>OpenCode {app.version}</text>', '<text fg={colors.muted}>Ola (opencode {app.version})</text>', 1],
 ];
 

@@ -8,13 +8,14 @@ this folder builds the same program with Ola's wordmark, window title and a few 
 permissions, which models) is config and OlaKit, never a change here. A behavior change in this folder turns
 an hour of upkeep per opencode release into a real fork; put it in config or ask upstream instead.
 
-There is no copy of opencode's source in this repo. The fork is three small files:
+There is no copy of opencode's source in this repo. The fork is a few small files:
 
 | File | What |
 |---|---|
 | `UPSTREAM` | the opencode release Ola is built from: repo, tag, the tag's commit, the npm package |
 | `rebrand.mjs` | every change, as exact text to replace and how many times it must appear (the logo in `packages/tui/src/logo.ts`, the window title, "Tell Ola what to do differently", "close Ola", "restart Ola", "Ola crashed"). If upstream reworded or moved one it stops with `patches no longer apply: <file>: <text>` |
 | `build.sh` | fresh checkout of the pinned commit, the bun version opencode's `package.json` names, `rebrand.mjs`, opencode's own build → `dist/<target>/opencode` with `LICENSE` and `BUILD` |
+| `stage.sh` | hands the built programs to the Mac app's build, and checks a built app carries them |
 | `check-upstream.sh` | the daily check (below) |
 
 ```bash
@@ -32,15 +33,30 @@ binary goes into the Mac app, the notice goes into the bundle and the app's cred
 
 Left as opencode on purpose: internal ids (`opencode.settings`, the theme named `opencode`), the provider
 names "OpenCode Go" / "OpenCode Console" (their products), the update dialog, the `opencode` binary name and
-its `--help`, and the "Continue  opencode -s <id>" line printed when a conversation ends (it becomes `ola -c`
-when the binary is wired into the `ola` command).
+its `--help`. The line printed when a conversation ends says `Continue  ola -c`.
 
-## Status
+## In the Mac app (since 2026-11-17)
 
-Built and looked at on 2026-11-17 (the home screen draws "ola" in opencode's block letters). **Not yet what
-`ola` runs**: the Mac app still installs stock opencode from npm (`apple/tools/install-local-opencode.sh`).
-Wiring it in (the binary inside the signed app bundle, OlaKit pointing at it, `cli-selftest.sh` against it)
-waits for the sign-in and skills work on the same files to land.
+The app carries both programs in `Contents/Helpers` (`ola-opencode-arm64`, `ola-opencode-x86_64`, about
+230 MB each) and runs the one for its processor from there (`OlaKit LocalServer.bundledBinary`), for "On this
+Mac" and for the `ola` command; nothing is downloaded on first run any more. opencode's MIT notice and the
+tag, commit and rebrand hash ride in `Contents/Resources` (`opencode-LICENSE.txt`, `opencode-source.txt`).
+The copy the app used to download into Application Support is still the fallback when OlaKit runs outside
+the app (self-tests, `swift run`).
+
+- `stage.sh stage <dir>` puts the two programs and the notes where the build picks them up
+  (`apple/build/OlaOpencode`), building first if `dist/` is missing or was made from another tag or another
+  `rebrand.mjs`; `stage.sh verify <Ola.app>` refuses an app that carries anything else. `apple/tools/build.sh
+  mac` and `apple/testflight/ship-via-mini.sh` do both, so the first build on a machine takes about eight
+  minutes longer and the later ones a copy.
+- **The signed download.** Under the hardened runtime a Bun program needs entitlements of its own
+  (`apple/Mac/OlaOpencode.entitlements`: JIT, unsigned executable memory, library validation off). The ship
+  script signs each program with them before it signs the app, and after the Developer ID export checks that
+  each still has the hardened runtime and the entitlements and that this Mac's one starts. Signed that way
+  by hand with the development identity the program starts and draws (2026-11-17); the Developer ID export
+  and notarization with the programs inside have not been run yet: the first `ship-via-mini.sh mac` is the
+  proof.
+- `apple/tools/cli-selftest.sh <Ola.app>` passes against a build that carries it (21 of 21, 2026-11-17).
 
 ## The daily check
 

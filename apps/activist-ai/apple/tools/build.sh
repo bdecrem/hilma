@@ -21,6 +21,10 @@ APP="$DD/Build/Products/Debug/Ola.app"
 # Ola's skills, copied fresh from apps/activist-ai/skills as committed (refuses uncommitted changes);
 # the Mac build is checked against them after it is made (README, "Every release").
 if [ "${1:-}" != install-mac ]; then node tools/skills.mjs stage build/OlaSkills; fi
+# Ola's opencode (../opencode-fork: the pinned release with Ola's wordmark in its terminal interface),
+# staged for the Mac app's Contents/Helpers; the first time on a machine this builds it (about eight
+# minutes), after that it is a copy. The built app is checked against it below.
+if [ "${1:-}" = mac ]; then ../opencode-fork/stage.sh stage build/OlaOpencode; else mkdir -p build/OlaOpencode; fi   # the project names the folder
 xcodegen generate >/dev/null
 
 # The signing identity's name and its team (the certificate's OU).
@@ -49,6 +53,9 @@ case "${1:-}" in
     REQ="$(codesign -d -r- "$APP" 2>&1 | sed -n 's/^.*designated => //p')"
     echo "designated requirement: $REQ"
     node tools/skills.mjs verify "$APP/Contents/Resources/OlaSkills" || { echo "FAIL: not this build: its skills are not apps/activist-ai/skills at HEAD" >&2; exit 1; }
+    # Ola's opencode: this tag, this rebrand, and this Mac's one starts.
+    ../opencode-fork/stage.sh verify "$APP" || { echo "FAIL: not this build: its opencode is not ../opencode-fork's" >&2; exit 1; }
+    "$APP/Contents/Helpers/ola-opencode-$(uname -m)" --version >/dev/null || { echo "FAIL: the opencode inside the app does not start" >&2; exit 1; }
     if [ -n "$ID" ] && [[ "$REQ" == *cdhash* ]]; then
       echo "FAIL: signed with \"$ID\" but the requirement still names this build's hash; macOS would ask again after every build" >&2
       exit 1
@@ -71,6 +78,7 @@ case "${1:-}" in
     ;;
   install-mac)
     node tools/skills.mjs verify "$APP/Contents/Resources/OlaSkills" || { echo "FAIL: not installing: the built app's skills are not apps/activist-ai/skills at HEAD (build again)" >&2; exit 1; }
+    ../opencode-fork/stage.sh verify "$APP" >/dev/null || { echo "FAIL: not installing: the built app's opencode is not ../opencode-fork's (build again)" >&2; exit 1; }
     rm -rf /Applications/Ola.app
     cp -R "$APP" /Applications/Ola.app
     echo "copied to /Applications/Ola.app (not opened)"
