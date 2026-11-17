@@ -1,0 +1,598 @@
+{
+ "name": "nemotron-3.5-super-vl-ws-ds",
+ "image": "ola-workspace:2.3.0-23",
+ "seeds": [
+  1,
+  2,
+  3
+ ],
+ "rows": [
+  {
+   "arm": "with",
+   "mode": "thorough",
+   "task": "u1-tenants-event",
+   "seed": 2,
+   "passed": true,
+   "checks": "18/18",
+   "label": "success",
+   "tokens": 551924
+  },
+  {
+   "arm": "with",
+   "mode": "thorough",
+   "task": "u1-tenants-event",
+   "seed": 1,
+   "passed": true,
+   "checks": "18/18",
+   "label": "success",
+   "tokens": 498779
+  },
+  {
+   "arm": "with",
+   "mode": "thorough",
+   "task": "u1-tenants-event",
+   "seed": 3,
+   "passed": false,
+   "checks": "17/18",
+   "label": "token_limit",
+   "tokens": 554900
+  },
+  {
+   "arm": "without",
+   "mode": null,
+   "task": "u1-tenants-event",
+   "seed": 1,
+   "passed": false,
+   "checks": "13/18",
+   "label": "page_broken",
+   "tokens": 91467
+  },
+  {
+   "arm": "without",
+   "mode": null,
+   "task": "u1-tenants-event",
+   "seed": 2,
+   "passed": false,
+   "checks": "15/18",
+   "label": "design_slop",
+   "tokens": 119234
+  },
+  {
+   "arm": "without",
+   "mode": null,
+   "task": "u1-tenants-event",
+   "seed": 3,
+   "passed": false,
+   "checks": "16/18",
+   "label": "design_slop",
+   "tokens": 67993
+  },
+  {
+   "arm": "with",
+   "mode": "thorough",
+   "task": "u2-results-page",
+   "seed": 2,
+   "passed": true,
+   "checks": "20/20",
+   "label": "success",
+   "tokens": 520173
+  },
+  {
+   "arm": "with",
+   "mode": "thorough",
+   "task": "u2-results-page",
+   "seed": 1,
+   "passed": true,
+   "checks": "20/20",
+   "label": "success",
+   "tokens": 528494
+  },
+  {
+   "arm": "with",
+   "mode": "thorough",
+   "task": "u2-results-page",
+   "seed": 3,
+   "passed": true,
+   "checks": "20/20",
+   "label": "success",
+   "tokens": 578065
+  },
+  {
+   "arm": "without",
+   "mode": null,
+   "task": "u2-results-page",
+   "seed": 2,
+   "passed": false,
+   "checks": "17/20",
+   "label": "design_slop",
+   "tokens": 68235
+  },
+  {
+   "arm": "without",
+   "mode": null,
+   "task": "u2-results-page",
+   "seed": 1,
+   "passed": false,
+   "checks": "18/20",
+   "label": "page_broken",
+   "tokens": 123877
+  },
+  {
+   "arm": "without",
+   "mode": null,
+   "task": "u2-results-page",
+   "seed": 3,
+   "passed": false,
+   "checks": "19/20",
+   "label": "missed_items",
+   "tokens": 89942
+  },
+  {
+   "arm": "with",
+   "mode": "thorough",
+   "task": "u3-dashboard",
+   "seed": 1,
+   "passed": false,
+   "checks": "0/19",
+   "label": "token_limit",
+   "tokens": 546253
+  },
+  {
+   "arm": "with",
+   "mode": "thorough",
+   "task": "u3-dashboard",
+   "seed": 3,
+   "passed": false,
+   "checks": "17/19",
+   "label": "token_limit",
+   "tokens": 514330
+  },
+  {
+   "arm": "with",
+   "mode": "thorough",
+   "task": "u3-dashboard",
+   "seed": 2,
+   "passed": true,
+   "checks": "19/19",
+   "label": "success",
+   "tokens": 515240
+  },
+  {
+   "arm": "without",
+   "mode": null,
+   "task": "u3-dashboard",
+   "seed": 2,
+   "passed": false,
+   "checks": "15/19",
+   "label": "design_slop",
+   "tokens": 214085
+  },
+  {
+   "arm": "without",
+   "mode": null,
+   "task": "u3-dashboard",
+   "seed": 3,
+   "passed": false,
+   "checks": "14/19",
+   "label": "page_broken",
+   "tokens": 108625
+  },
+  {
+   "arm": "without",
+   "mode": null,
+   "task": "u3-dashboard",
+   "seed": 1,
+   "passed": true,
+   "checks": "19/19",
+   "label": "success",
+   "tokens": 522700
+  },
+  {
+   "arm": "with",
+   "mode": "thorough",
+   "task": "u4-report-site",
+   "seed": 2,
+   "passed": false,
+   "checks": "17/18",
+   "label": "token_limit",
+   "tokens": 576469
+  },
+  {
+   "arm": "with",
+   "mode": "thorough",
+   "task": "u4-report-site",
+   "seed": 1,
+   "passed": false,
+   "checks": "17/18",
+   "label": "token_limit",
+   "tokens": 546934
+  },
+  {
+   "arm": "with",
+   "mode": "thorough",
+   "task": "u4-report-site",
+   "seed": 3,
+   "passed": false,
+   "checks": "16/18",
+   "label": "token_limit",
+   "tokens": 525208
+  },
+  {
+   "arm": "without",
+   "mode": null,
+   "task": "u4-report-site",
+   "seed": 2,
+   "passed": false,
+   "checks": "15/18",
+   "label": "weak_hierarchy",
+   "tokens": 38261
+  },
+  {
+   "arm": "without",
+   "mode": null,
+   "task": "u4-report-site",
+   "seed": 1,
+   "passed": true,
+   "checks": "18/18",
+   "label": "success",
+   "tokens": 68111
+  },
+  {
+   "arm": "without",
+   "mode": null,
+   "task": "u4-report-site",
+   "seed": 3,
+   "passed": true,
+   "checks": "18/18",
+   "label": "success",
+   "tokens": 69789
+  },
+  {
+   "arm": "with",
+   "mode": "thorough",
+   "task": "u5-signup-flow",
+   "seed": 2,
+   "passed": false,
+   "checks": "20/21",
+   "label": "design_slop",
+   "tokens": 247887
+  },
+  {
+   "arm": "with",
+   "mode": "thorough",
+   "task": "u5-signup-flow",
+   "seed": 3,
+   "passed": true,
+   "checks": "21/21",
+   "label": "success",
+   "tokens": 556775
+  },
+  {
+   "arm": "with",
+   "mode": "thorough",
+   "task": "u5-signup-flow",
+   "seed": 1,
+   "passed": true,
+   "checks": "21/21",
+   "label": "success",
+   "tokens": 518886
+  },
+  {
+   "arm": "without",
+   "mode": null,
+   "task": "u5-signup-flow",
+   "seed": 1,
+   "passed": false,
+   "checks": "18/21",
+   "label": "page_broken",
+   "tokens": 112263
+  },
+  {
+   "arm": "without",
+   "mode": null,
+   "task": "u5-signup-flow",
+   "seed": 3,
+   "passed": false,
+   "checks": "19/21",
+   "label": "design_slop",
+   "tokens": 144091
+  },
+  {
+   "arm": "without",
+   "mode": null,
+   "task": "u5-signup-flow",
+   "seed": 2,
+   "passed": false,
+   "checks": "20/21",
+   "label": "weak_hierarchy",
+   "tokens": 466524
+  },
+  {
+   "arm": "with",
+   "mode": "thorough",
+   "task": "u6-phone-screens",
+   "seed": 2,
+   "passed": true,
+   "checks": "14/14",
+   "label": "success",
+   "tokens": 506687
+  },
+  {
+   "arm": "with",
+   "mode": "thorough",
+   "task": "u6-phone-screens",
+   "seed": 1,
+   "passed": true,
+   "checks": "14/14",
+   "label": "success",
+   "tokens": 509137
+  },
+  {
+   "arm": "with",
+   "mode": "thorough",
+   "task": "u6-phone-screens",
+   "seed": 3,
+   "passed": true,
+   "checks": "14/14",
+   "label": "success",
+   "tokens": 525617
+  },
+  {
+   "arm": "without",
+   "mode": null,
+   "task": "u6-phone-screens",
+   "seed": 1,
+   "passed": true,
+   "checks": "14/14",
+   "label": "success",
+   "tokens": 500516
+  },
+  {
+   "arm": "without",
+   "mode": null,
+   "task": "u6-phone-screens",
+   "seed": 2,
+   "passed": false,
+   "checks": "12/14",
+   "label": "token_limit",
+   "tokens": 509815
+  },
+  {
+   "arm": "without",
+   "mode": null,
+   "task": "u6-phone-screens",
+   "seed": 3,
+   "passed": false,
+   "checks": "10/14",
+   "label": "token_limit",
+   "tokens": 519853
+  },
+  {
+   "arm": "with",
+   "mode": "thorough",
+   "task": "u7-app-unfinished",
+   "seed": 2,
+   "passed": false,
+   "checks": "12/13",
+   "label": "token_limit",
+   "tokens": 500972
+  },
+  {
+   "arm": "with",
+   "mode": "thorough",
+   "task": "u7-app-unfinished",
+   "seed": 3,
+   "passed": false,
+   "checks": "8/13",
+   "label": "model_error",
+   "tokens": 26447
+  },
+  {
+   "arm": "with",
+   "mode": "thorough",
+   "task": "u7-app-unfinished",
+   "seed": 1,
+   "passed": false,
+   "checks": "12/13",
+   "label": "token_limit",
+   "tokens": 560900
+  },
+  {
+   "arm": "without",
+   "mode": null,
+   "task": "u7-app-unfinished",
+   "seed": 1,
+   "passed": false,
+   "checks": "12/13",
+   "label": "token_limit",
+   "tokens": 565162
+  },
+  {
+   "arm": "without",
+   "mode": null,
+   "task": "u7-app-unfinished",
+   "seed": 3,
+   "passed": false,
+   "checks": "10/13",
+   "label": "missed_items",
+   "tokens": 128255
+  },
+  {
+   "arm": "without",
+   "mode": null,
+   "task": "u7-app-unfinished",
+   "seed": 2,
+   "passed": false,
+   "checks": "11/13",
+   "label": "missed_items",
+   "tokens": 111909
+  },
+  {
+   "arm": "with",
+   "mode": "quick",
+   "task": "u1-tenants-event",
+   "seed": 2,
+   "passed": false,
+   "checks": "17/18",
+   "label": "weak_hierarchy",
+   "tokens": 259185
+  },
+  {
+   "arm": "with",
+   "mode": "quick",
+   "task": "u1-tenants-event",
+   "seed": 1,
+   "passed": true,
+   "checks": "18/18",
+   "label": "success",
+   "tokens": 399507
+  },
+  {
+   "arm": "with",
+   "mode": "quick",
+   "task": "u3-dashboard",
+   "seed": 1,
+   "passed": false,
+   "checks": "16/19",
+   "label": "page_broken",
+   "tokens": 166433
+  },
+  {
+   "arm": "with",
+   "mode": "quick",
+   "task": "u1-tenants-event",
+   "seed": 3,
+   "passed": true,
+   "checks": "18/18",
+   "label": "success",
+   "tokens": 237541
+  },
+  {
+   "arm": "with",
+   "mode": "quick",
+   "task": "u3-dashboard",
+   "seed": 2,
+   "passed": false,
+   "checks": "17/19",
+   "label": "design_slop",
+   "tokens": 183140
+  },
+  {
+   "arm": "with",
+   "mode": "quick",
+   "task": "u4-report-site",
+   "seed": 1,
+   "passed": true,
+   "checks": "18/18",
+   "label": "success",
+   "tokens": 447465
+  },
+  {
+   "arm": "with",
+   "mode": "quick",
+   "task": "u3-dashboard",
+   "seed": 3,
+   "passed": true,
+   "checks": "19/19",
+   "label": "success",
+   "tokens": 545989
+  },
+  {
+   "arm": "with",
+   "mode": "quick",
+   "task": "u4-report-site",
+   "seed": 2,
+   "passed": true,
+   "checks": "18/18",
+   "label": "success",
+   "tokens": 430686
+  },
+  {
+   "arm": "with",
+   "mode": "quick",
+   "task": "u4-report-site",
+   "seed": 3,
+   "passed": true,
+   "checks": "18/18",
+   "label": "success",
+   "tokens": 403727
+  },
+  {
+   "arm": "with",
+   "mode": "quick",
+   "task": "u7-app-unfinished",
+   "seed": 1,
+   "passed": false,
+   "checks": "12/13",
+   "label": "token_limit",
+   "tokens": 516157
+  },
+  {
+   "arm": "with",
+   "mode": "quick",
+   "task": "u7-app-unfinished",
+   "seed": 2,
+   "passed": false,
+   "checks": "12/13",
+   "label": "token_limit",
+   "tokens": 500562
+  },
+  {
+   "arm": "with",
+   "mode": "quick",
+   "task": "u7-app-unfinished",
+   "seed": 3,
+   "passed": false,
+   "checks": "12/13",
+   "label": "token_limit",
+   "tokens": 526413
+  }
+ ],
+ "judge": {
+  "u2-results-page": {
+   "with": 3,
+   "without": 0,
+   "split": 0
+  },
+  "u5-signup-flow": {
+   "with": 2,
+   "without": 1,
+   "split": 0
+  },
+  "u1-tenants-event": {
+   "with": 3,
+   "without": 0,
+   "same": 0,
+   "split": 0,
+   "other": 0
+  },
+  "u3-dashboard": {
+   "with": 1,
+   "without": 0,
+   "same": 0,
+   "split": 2,
+   "other": 0
+  },
+  "u4-report-site": {
+   "with": 1,
+   "without": 1,
+   "same": 0,
+   "split": 1,
+   "other": 0
+  },
+  "u6-phone-screens": {
+   "with": 2,
+   "without": 1,
+   "same": 0,
+   "split": 0,
+   "other": 0
+  },
+  "u7-app-unfinished": {
+   "with": 1,
+   "without": 0,
+   "same": 0,
+   "split": 2,
+   "other": 0
+  }
+ }
+}

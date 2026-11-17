@@ -110,7 +110,7 @@ image's `ola-page`). Every task: a reference solution and two wrong outputs, pro
 | chart | `s1-chart-db`, `s2-chart-gaps` | PNG and SVG that open; a data file with the right numbers; missing months not drawn as numbers; the caption names the source; says how many rows had no region, and which months are missing |
 | workbook | `s3-workbook-summary`, `s4-workbook-safe-text` | summary totals per program; duplicates and blanks out, and said in a notes sheet; frozen header and filter; no formulas; `=`, `+`, `-`, `@` text, phone numbers, ids and ZIP codes kept exactly |
 | report | `s5-report-brief`, `s6-report-quotes` | a .docx with a heading, a table and a picture, and a PDF; each town's figure in a paragraph citing its report and page; no citation past a report's last page; four quotes, each word for word on its cited page |
-| design-pass | `s7-design-report-page`, `s8-design-dashboard` | at 390 and 1280 px: no sideways scroll or element past the edge, text contrast AA, nothing under 12 px, one or two fonts, nothing clipped, nothing from another address, every number kept |
+| designer (was design-pass) | `s7-design-report-page`, `s8-design-dashboard` | at 390 and 1280 px: no sideways scroll or element past the edge, text contrast AA, nothing under 12 px, one or two fonts, nothing clipped, nothing from another address, every number kept |
 
 `run.mjs --skills on|off` (opencode-ws only) runs the same configuration with Ola's skills offered, or
 with the session's permissions denying every skill; the arms are two configurations
@@ -145,6 +145,51 @@ database, so its one remaining run says nothing. Rerun with
 `run-skills.sh design-pass` after the quota resets (Monday 00:00 UTC) or with a higher one. The
 tasks are easy for this model, like the rest of the set; harder twins (longer reports, messier
 workbooks, pages with more to fix) are needed before these numbers can steer.
+
+## Round four: the design skills, with and without (2026-11-17)
+
+Seven tasks for `designer` and `app-designer` (code in `lib/r4_design.py`, folders by `lib/mk_r3.py`,
+proved by `task.py selftest`): `u1-tenants-event` (a one-page site for a building meeting),
+`u2-results-page` (a finding, a chart and a table), `u3-dashboard` (this month against last, the
+year), `u4-report-site` (a report for council members), `u5-signup-flow` (steps, then a thank-you),
+`u6-phone-screens` (three screens of a tool library app, clickable, with pictures), `u7-app-unfinished`
+(a notes prototype that "feels like a web page", made a normal app). The program checks: no sideways
+scroll at 390 or 1280 px, contrast, no text under 12 px, one or two fonts, sizes on a scale, nothing
+from other addresses, no decoration (gradients, glows, rounded cards, pills, emoji, a colored phrase in
+the headline, small capital labels, placeholder text, more than two accent hues), a clear first thing on
+the first screen, headings and alt text, focus styles, and the task's real content (labels
+`design_slop`, `weak_hierarchy`, `not_accessible` were added to `labels.json`). How good a page looks
+beyond that is judged by `design-judge.mjs`: both arms' first screens side by side, unlabeled,
+rubric from the owner's corrections, asked of `see` twice with the order swapped; a pair counts only
+when both orders agree. It also writes the labeled sheets (`~/Desktop/Ola/web-shots/ds/`).
+
+**Measured on Nemotron 3.5 Super VL** (the everyday model) in sealed VMs, image `ola-workspace:2.3.0-23`,
+3 seeds, 900 s and 500,000 tokens a run, `see` = Muse-Glimmer-30B, configuration
+`nemotron-3.5-super-vl-ws-ds`, own gateway (`run-design.sh`). Runs passed (all checks), and checks passed:
+
+| Task | Without | With, thorough (the first version) | With, quick (the default now) | Judge (with / without / split) |
+|---|---|---|---|---|
+| u1 tenants' meeting | 0/3, 44/54 | 2/3, 53/54 | 2/3, 53/54 | 3 / 0 / 0 |
+| u2 results page | 0/3, 54/60 | 3/3, 60/60 | not run | 3 / 0 / 0 |
+| u3 dashboard | 1/3, 48/57 | 1/3, 36/57 (2 out of tokens) | 1/3, 52/57 | 1 / 0 / 2 |
+| u4 report site | 2/3, 51/54 | 0/3, 50/54 (3 out of tokens) | 3/3, 54/54 | 1 / 1 / 1 |
+| u5 sign-up flow | 0/3, 57/63 | 2/3, 62/63 | not run | 2 / 1 / 0 |
+| u6 phone screens | 1/3, 36/42 | 3/3, 42/42 | not run | 2 / 1 / 0 |
+| u7 unfinished app | 0/3, 33/39 | 0/3, 32/39 | 0/3, 36/39 | 1 / 0 / 2 |
+| all | 4/21, 323/378 (85%) | | best as shipped: 14/21, 359/378 (95%) | 13 / 3 / 5 |
+
+Tokens a run (median): without about 120,000; thorough about 530,000 (it ran into the cap in 8 of 21
+runs, failing pages it had nearly finished); quick 300,000 to 430,000 for pages, 510,000 for u7.
+Hence quick mode is the default and the stages are asked for. The judge agreed with itself across the
+swap in 16 of 21 pairs; it is a 30B model looking at small screenshots, so read it as a second
+opinion. Three findings on the way: Nemotron does not load a skill on its own (0 of 3 even with the
+skill named in AGENTS.md), so AGENTS.md now has a first-step rule (before writing any .html, load
+`designer`), which took it to every run; the `see` model needs about 2,000 output tokens (it thinks
+before answering; at 500 it returned empty replies); u7 is not solved in either arm (every run left
+out the empty state, and the agent keeps going until the cap). GLM-5.3-Flash, the earlier everyday
+model, passed a two-task pilot with the skill (u1, u6: 2 of 2, 18/18 and 14/14). Spend: about $4 at
+list price (Nemotron 16M tokens in, the pilot and checks on GLM 1.9M, `see` 0.3M).
+`results/summary-design.json` has the rows.
 
 ## Standing instructions, measured (2026-11-17): none shipped
 
