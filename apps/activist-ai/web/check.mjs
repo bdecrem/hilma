@@ -1092,6 +1092,190 @@ async function jobsChecks(engine, label) {
   await jobsChecks(webkit, 'jobs-webkit')
 }
 
+// ---------------------------------------------------------------- Compare with Claude
+// README, "Compare with Claude". The page against server/compare-standin.mjs (the front desk's routes
+// and replies, a canned copy and result; the sealed VMs are frontdesk/check.mjs's), in Chromium and
+// WebKit: the action under a finished reply, the made-up copy shown before it goes, the side-by-side
+// and the line it leaves, a held copy with what may be the person's, the real task just this once
+// with its consent text, the Settings switches, a member with nothing that sends, the Quality page,
+// 390 px, and none of our own words (twin, eval, judge) on any of it.
+async function compareChecks(engine, label) {
+  const b = await engine.launch()
+  const d = await startDev(['--fake-model'])
+  const c = await b.newContext({ viewport: { width: 1440, height: 900 } })
+  const pg = await c.newPage()
+  pg.on('request', (r) => {
+    const u = r.url()
+    if (!u.startsWith('data:') && !u.startsWith('blob:') && new URL(u).origin !== d.origin) foreign.add(u)
+  })
+  const shot = async (name, el = null) => SHOTS && (await pg.waitForTimeout(350), el ? await el.screenshot({ path: path.join(SHOTS, `${label}-${name}.png`) }) : await pg.screenshot({ path: path.join(SHOTS, `${label}-${name}.png`), fullPage: false }))
+  const dev = (p, method = 'POST') => pg.evaluate(([p, method]) => fetch(p, { method }).then((r) => r.json()), [p, method])
+  const post = (p, body) => pg.evaluate(([p, body]) => fetch(p, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }).then((r) => r.status), [p, body])
+  const sheet = () => pg.locator('dialog.compare-sheet[open]')
+  const ours = /\b(twin|twins|eval|evals|judge|judged)\b/i
+  const openDrawer = async () => {
+    await pg.goto(`${d.url}#/`)
+    await pg.waitForSelector('.thing')
+    await pg.getByRole('button', { name: 'Ask Ola' }).click()
+    await pg.waitForTimeout(300)
+  }
+  const askAndWait = async (text) => {
+    await pg.fill('#ask-input', text)
+    await pg.press('#ask-input', 'Enter')
+    await waitDone(pg)
+  }
+  try {
+    await openDrawer()
+    await askAndWait('How many rows does survey.csv have?')
+    await check(`${label}: under a finished reply the owner sees "Compare with Claude"; it offers a made-up copy first, and nothing of theirs leaves`, async () => {
+      const btn = lastTurn(pg).getByRole('button', { name: 'Compare with Claude' })
+      await btn.waitFor({ timeout: 10_000 })
+      await btn.click()
+      await sheet().waitFor()
+      const t = (await sheet().innerText()).replace(/\s+/g, ' ')
+      assert(/Ola makes a made-up copy of this task/.test(t) && /Nothing of yours leaves this machine\./.test(t) && /Make a made-up copy/.test(t) && /Just this once: the real task/.test(t), t)
+      assert(!/Send the real task/.test(t), 'the real task offered with the switch off')
+      return 'offered'
+    })
+    await check(`${label}: the made-up copy is shown before it goes (request, files, what a right result must have); Send it to Claude; both results side by side`, async () => {
+      await sheet().getByRole('button', { name: 'Make a made-up copy' }).click()
+      await sheet().getByRole('button', { name: 'Send it to Claude' }).waitFor({ timeout: 15_000 })
+      const t = (await sheet().innerText()).replace(/\s+/g, ' ')
+      assert(/Here is the made-up copy\. Nothing of yours is in it\./.test(t) && /Remove the repeated rows from data\.csv/.test(t) && /data\.csv/.test(t) && /What a right result must have/i.test(t) && /A file named clean\.csv/.test(t), t)
+      await shot('compare-copy', sheet())
+      await sheet().getByRole('button', { name: 'Send it to Claude' }).click()
+      await sheet().locator('.compare-sides').waitFor({ timeout: 20_000 })
+      const r = (await sheet().innerText()).replace(/\s+/g, ' ')
+      assert(/Claude did better: Claude removed the repeated rows into clean\.csv/.test(r) && /This was a made-up copy of your task\. Nothing of yours left this machine\./.test(r), r)
+      assert((await sheet().locator('.compare-side').count()) === 2 && /0 of 4 right/.test(r) && /4 of 4 right/.test(r), r)
+      assert(!ours.test(r), `our own words on the page: ${r.match(ours)}`)
+      await shot('compare-side-by-side', sheet())
+      return 'side by side'
+    })
+    await check(`${label}: closed, the reply keeps one line, "How did Ola do?", which opens the side-by-side again`, async () => {
+      await sheet().getByRole('button', { name: 'Close' }).last().click()
+      const line = lastTurn(pg).locator('.compare-line')
+      await line.locator('.compare-q').waitFor({ timeout: 8000 })
+      const t = (await line.innerText()).replace(/\s+/g, ' ')
+      assert(/^How did Ola do\? Claude did better: Claude removed the repeated rows into clean\.csv and said how many; Ola only counted the rows\.$/.test(t.trim()), t)
+      await shot('compare-line', pg.locator('.drawer'))
+      await line.getByRole('button').click()
+      await sheet().locator('.compare-sides').waitFor()
+      await sheet().getByRole('button', { name: 'Close' }).last().click()
+      return t
+    })
+    await check(`${label}: a copy that may still hold something of the person's is held: they read what, and "Don’t send" keeps it here`, async () => {
+      await pg.getByRole('button', { name: 'New conversation' }).click()
+      await askAndWait('How many rows does survey.csv have, again?')
+      await dev('/__dev/compare?held=1')
+      await lastTurn(pg).getByRole('button', { name: 'Compare with Claude' }).click()
+      await sheet().getByRole('button', { name: 'Make a made-up copy' }).click()
+      await sheet().getByRole('button', { name: 'Send it anyway' }).waitFor({ timeout: 15_000 })
+      const t = (await sheet().innerText()).replace(/\s+/g, ' ')
+      assert(/This made-up copy may still hold something of yours\. Read it before it goes\./.test(t) && /a word from your files: thaw/.test(t), t)
+      await shot('compare-held', sheet())
+      await sheet().getByRole('button', { name: 'Don’t send' }).click()
+      await sheet().getByText('Not sent. It stays on this machine.').waitFor()
+      await sheet().getByRole('button', { name: 'Close' }).click()
+      return 'held, not sent'
+    })
+    await check(`${label}: the real task "Just this once" shows the consent text word for word first, then runs, and says it was the real task`, async () => {
+      await pg.getByRole('button', { name: 'New conversation' }).click()
+      await askAndWait('Count survey.csv once more.')
+      await lastTurn(pg).getByRole('button', { name: 'Compare with Claude' }).click()
+      await sheet().getByRole('button', { name: 'Just this once: the real task' }).click()
+      const t = (await sheet().locator('.compare-once').innerText()).replace(/\s+/g, ' ')
+      assert(t.includes('Let Claude redo finished work in this project so we can compare. Your request and the files Ola read for it go to Anthropic. Off unless you turn it on. Every time is shown here.') && /The switch in Settings stays off/.test(t), t)
+      await shot('compare-once', sheet())
+      await sheet().getByRole('button', { name: 'Send it this once' }).click()
+      await sheet().locator('.compare-sides').waitFor({ timeout: 20_000 })
+      assert(/This was your real task, sent to Claude with your yes\. Your files were not changed\./.test(await sheet().innerText()), 'real-task note')
+      await sheet().getByRole('button', { name: 'Close' }).last().click()
+      return 'sent once'
+    })
+    await check(`${label}: Settings: "Compare the real task" is off, turns on only after its consent text, off again; "A few each day, on their own" with a daily number and a budget`, async () => {
+      await pg.goto(`${d.url}#/settings`)
+      const sw = pg.getByRole('switch', { name: 'Compare the real task' })
+      await sw.waitFor()
+      assert((await sw.getAttribute('aria-checked')) === 'false', 'on by default')
+      await sw.click()
+      const consent = pg.locator('.compare-setting .compare-once')
+      await consent.waitFor()
+      assert((await consent.innerText()).includes('Let Claude redo finished work in this project so we can compare.'), await consent.innerText())
+      assert((await post('/api/compare/settings', { real: true })) === 400, 'turned on without consent')
+      await consent.getByRole('button', { name: 'Turn it on' }).click()
+      await pg.waitForFunction(() => document.querySelector('[role=switch][aria-labelledby=compare-real]')?.getAttribute('aria-checked') === 'true')
+      await pg.locator('.compare-setting label', { hasText: 'A few each day, on their own' }).click()
+      await pg.locator('#compare-per-day').waitFor()
+      await shot('compare-settings', pg.locator('.compare-setting'))
+      await sw.click()
+      await pg.waitForFunction(() => document.querySelector('[role=switch][aria-labelledby=compare-real]')?.getAttribute('aria-checked') === 'false')
+      const t = await pg.locator('.compare-setting').innerText()
+      assert(!ours.test(t), `our own words in Settings: ${t.match(ours)}`)
+      return 'on with consent, off again'
+    })
+    await check(`${label}: the Quality page (admins): win, tie and loss by kind and model, why Ola lost, the cost, the list; no sideways scroll at 390 px`, async () => {
+      await pg.goto(`${d.url}#/quality`)
+      await pg.locator('.quality-table').first().waitFor()
+      const t = (await pg.locator('.quality').innerText()).replace(/\s+/g, ' ')
+      assert(/Compared/.test(t) && /By kind of work/.test(t) && /clean/.test(t) && /By model/.test(t) && /Why Ola lost/.test(t) && /stopped_early/.test(t) && /Remove the repeated rows from data\.csv/.test(t) && /made-up copy/.test(t), t.slice(0, 600))
+      assert(!/\b(twin|eval|judge)\b/i.test(t), `our own words: ${t.match(/\b(twin|eval|judge)\b/i)}`)
+      await shot('quality')
+      await pg.setViewportSize({ width: 390, height: 844 })
+      await pg.waitForTimeout(300)
+      const wide = await pg.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
+      await shot('quality-390')
+      await pg.setViewportSize({ width: 1440, height: 900 })
+      assert(wide <= 0, `${wide} px sideways`)
+      return 'quality'
+    })
+    await check(`${label}: at 390 px the side-by-side stacks, with no sideways scroll`, async () => {
+      await pg.setViewportSize({ width: 390, height: 844 })
+      await openDrawer()
+      await askAndWait('How many rows, at phone width?')
+      await lastTurn(pg).getByRole('button', { name: 'Compare with Claude' }).click()
+      await sheet().getByRole('button', { name: 'Make a made-up copy' }).click()
+      await sheet().getByRole('button', { name: 'Send it to Claude' }).click({ timeout: 15_000 })
+      await sheet().locator('.compare-sides').waitFor({ timeout: 20_000 })
+      const cols = await sheet().locator('.compare-sides').evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(' ').length)
+      const wide = await sheet().evaluate((el) => el.scrollWidth - el.clientWidth)
+      await shot('compare-390', sheet())
+      await sheet().getByRole('button', { name: 'Close' }).last().click()
+      await pg.setViewportSize({ width: 1440, height: 900 })
+      assert(cols === 1 && wide <= 0, `${cols} columns, ${wide} px sideways`)
+      return 'one column'
+    })
+    await check(`${label}: a member sees no "Compare with Claude", no line, no setting and no Quality page, and the routes refuse them`, async () => {
+      await dev('/__dev/role?to=member')
+      await openDrawer()
+      await pg.getByRole('button', { name: 'New conversation' }).click()
+      await askAndWait('How many rows, as a member?')
+      await pg.waitForTimeout(800)
+      assert(!(await pg.locator('.drawer').getByRole('button', { name: 'Compare with Claude' }).count()) && !(await pg.locator('.compare-line').count()), 'a member sees the compare action')
+      assert(!(await pg.getByRole('link', { name: 'Quality' }).count()), 'a member sees Quality')
+      await pg.goto(`${d.url}#/settings`)
+      await pg.waitForSelector('#settings-title')
+      await pg.waitForTimeout(500)
+      assert(!(await pg.locator('.compare-setting').count()), 'a member sees the compare setting')
+      const st = await post('/api/compare/start', { conversation: 'ses_x', message: 'msg_x', mode: 'twin' })
+      const q = await pg.evaluate(() => fetch('/api/quality').then((r) => r.status))
+      await dev('/__dev/role?to=owner')
+      assert(st === 403 && q === 404, `start ${st}, quality ${q}`)
+      return 'nothing that sends'
+    })
+  } finally {
+    await c.close()
+    await b.close()
+    await d.stop()
+  }
+}
+{
+  const { webkit } = await import('playwright')
+  console.log('\nCompare with Claude, the page (the front desk’s routes, stood in):')
+  await compareChecks(chromium, 'compare-chromium')
+  await compareChecks(webkit, 'compare-webkit')
+}
+
 // ---------------------------------------------------------------- slash commands and reactions
 // README, "Slash commands and reactions (all surfaces)". The page against the stand-ins (Claude's
 // and the hosted model's, with the real opencode and gateway and the scripted models), in Chromium

@@ -25,6 +25,10 @@
 //                  the mode its owners give it, the ceiling, the month so far); changes are audited.
 //   node admin.mjs claude-grants                       writes the gateway's grants files (Claude, hosted) from the database again
 //   node admin.mjs hosted <workspace> [on|off] [--cap-usd 20]   Fallback to a hosted open model for one project
+//   node admin.mjs compare candidates                  the review queue: made-up copies Ola lost (evals/candidates)
+//   node admin.mjs compare show <id>                   one candidate's evidence: the copy, both results, the checks, the judge
+//   node admin.mjs compare promote <id>                copies it into the eval set (evals/tasks/t-<id>), after its selftest passes
+//   node admin.mjs compare weekly                      the weekly number, as JSON (also $OLA_HOME/compare/weekly.json)
 //   node admin.mjs audit [--workspace <slug>] [--limit 50] [--json]
 //   node admin.mjs list
 //   node admin.mjs data [--wake] [--json]              every project's database: its tables, rows, documents
@@ -44,6 +48,8 @@ import { config } from './server.mjs'
 import { AUTO, gatewayUsage, modeFor, writeGrants } from './claude.mjs'
 import { writeHostedGrants } from './hosted.mjs'
 import { writeBatchGrants } from './jobs.mjs'
+import { weekly } from './compare.mjs'
+import { cpSync, existsSync, readFileSync, readdirSync } from 'node:fs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const fail = (m) => {
@@ -306,6 +312,55 @@ switch (cmd) {
     const m = g?.hostedMonth.get(`ws-${w.slug}`)
     const used = m ? `$${(m.cost_micro_usd / 1e6).toFixed(2)} in ${m.requests} requests this month` : 'this month unknown (the gateway was not asked)'
     console.log(`${w.slug}: Fallback to a hosted open model ${now.hosted_enabled ? 'ON' : 'off'} (${g?.hosted?.provider ?? 'no provider set up'}), ceiling $${((now.hosted_cap_micro_usd ?? cfg.hosted.capMicroUsd) / 1e6).toFixed(2)} a month; ${used}; when a request looks like a stretch: ${now.stretch} (to ${now.stretch_to})`)
+    break
+  }
+  case 'compare': {
+    // The review queue of "Compare with Claude" (compare.mjs): nothing in it reaches the eval set
+    // until a person promotes it here, after reading the evidence.
+    const queue = cfg.compare.candidates
+    const sub = args[0]
+    const list = () => (existsSync(queue) ? readdirSync(queue).filter((d) => /^t-[0-9a-f]{12}$/.test(d) && existsSync(path.join(queue, d, 'task.json'))) : [])
+    if (sub === 'weekly') {
+      console.log(JSON.stringify(weekly(db), null, 1))
+      break
+    }
+    if (sub === 'candidates') {
+      const ids = list()
+      if (!ids.length) console.log(`no candidates in ${queue}`)
+      for (const d of ids) {
+        const t = JSON.parse(readFileSync(path.join(queue, d, 'task.json'), 'utf8'))
+        const ev = JSON.parse(readFileSync(path.join(queue, d, 'evidence.json'), 'utf8'))
+        const c = db.prepare('SELECT kind, label, created_at FROM comparisons WHERE id = ?').get(d.slice(2))
+        console.log(`${d}  ${t.family.padEnd(8)} ${String(ev.outcome).padEnd(13)} ${String(c?.label ?? '-').padEnd(22)} Ola ${ev.ola.score?.passed ?? '-'}/${ev.ola.score?.total ?? '-'}, Claude ${ev.claude.score?.passed ?? '-'}/${ev.claude.score?.total ?? '-'}  ${c ? new Date(c.created_at).toISOString().slice(0, 10) : ''}${existsSync(path.join(cfg.compare.candidates, '..', 'tasks', d)) ? '  (promoted)' : ''}`)
+      }
+      break
+    }
+    const id = String(args[1] ?? '').replace(/^t-/, '')
+    if (!/^[0-9a-f]{12}$/.test(id) || !list().includes(`t-${id}`)) fail('which candidate? (node admin.mjs compare candidates)')
+    const dir = path.join(queue, `t-${id}`)
+    if (sub === 'show') {
+      const ev = JSON.parse(readFileSync(path.join(dir, 'evidence.json'), 'utf8'))
+      console.log(`The made-up copy (${JSON.parse(readFileSync(path.join(dir, 'twin.json'), 'utf8')).kind}):\n  ${readFileSync(path.join(dir, 'instruction.md'), 'utf8').trim()}\n`)
+      for (const arm of ['ola', 'claude']) {
+        console.log(`${arm === 'ola' ? 'Ola' : 'Claude'}: ${ev[arm].score ? `${ev[arm].score.passed}/${ev[arm].score.total} checks` : 'no checks'}`)
+        for (const c of ev[arm].score?.checks ?? []) console.log(`  ${c.ok ? 'pass' : 'FAIL'}  ${c.name}  (${c.label}${c.detail ? `: ${c.detail}` : ''})`)
+        console.log(`  said: ${String(ev[arm].final ?? '').replace(/\s+/g, ' ').slice(0, 600)}\n`)
+      }
+      console.log(`The judge (${ev.judge?.verdict}): ${ev.judge?.difference ?? ''}`)
+      for (const r of ev.judge?.runs ?? []) for (const p of r.points ?? []) console.log(`  ${p.criterion}: ${p.better}  A: "${p.evidence_a}"  B: "${p.evidence_b}"`)
+      if (existsSync(path.join(dir, 'skill-note.md'))) console.log(`\nNote for the lead:\n${readFileSync(path.join(dir, 'skill-note.md'), 'utf8')}`)
+      break
+    }
+    if (sub === 'promote') {
+      const st = spawnSync('python3', [path.join(HERE, '../evals/lib/task.py'), 'selftest', dir, '0'], { encoding: 'utf8' })
+      if (st.status !== 0) fail(`its selftest does not pass, so it was not promoted:\n${st.stdout}`)
+      const to = path.join(HERE, '../evals/tasks', `t-${id}`)
+      if (existsSync(to)) fail(`already in the eval set: ${to}`)
+      cpSync(dir, to, { recursive: true })
+      console.log(`promoted: ${to}\n${st.stdout.trim()}\nIt is in the eval set's folder now; commit it after reading it (git add ${path.relative(process.cwd(), to)}).`)
+      break
+    }
+    fail('compare candidates | show <id> | promote <id> | weekly')
     break
   }
   case 'claude-grants': {

@@ -11,6 +11,7 @@ import { claude, desk, DeskError, fallback, hosted } from '../lib/api.ts'
 import { bytes } from '../lib/format.ts'
 import { ProblemBox } from './Drawer.tsx'
 import { WebSetting } from './WebSetting.tsx'
+import { CompareSetting } from './Compare.tsx'
 
 export const CONSENT =
   'When this is on, you can hand a request to Claude Code, run with Anthropic’s Claude. Your request, and the parts of your files Claude reads to answer it, leave this machine and go to Anthropic. It is off unless you turn it on. Every use is marked, and you can turn it off at any time.'
@@ -253,6 +254,7 @@ export function SettingsView(props: { ola: Ola; titleRef?: (el: HTMLHeadingEleme
             </Show>
           </div>
         </Show>
+        <CompareSetting />
         <WebSetting canWrite={props.canWrite ?? false} />
         <DiskUseView />
       </div>

@@ -820,6 +820,15 @@ print(json.dumps({"mib": n, "stopped": why}))
     const ro = await sh(A, ['ola-db', 'query', 'DELETE FROM laws'])
     t('ola-db query is read-only by default', ro.code === 3 && /reads only/.test(ro.err) && (await ws.dbApi(A, ['tables'])).tables[0]?.rows === 200_000)
 
+    // "Compare with Claude" (2.3.0-18): ola-twin and its library are in the image, read-only, and the
+    // leak check and the generator's sandbox pass their tests inside the VM, with the VM's Python.
+    {
+      const tw = await sh(A, ['python3', '-I', '-'], { input: readFileSync(new URL('./twin_test.py', import.meta.url), 'utf8') })
+      const help = await sh(A, ['/opt/ola/bin/ola-twin'])
+      const ro = await sh(A, ['sh', '-c', 'echo x >> /opt/ola/lib/olatwin.py; echo $?'])
+      t('ola-twin in the VM: the leak check catches planted names, numbers, a phrase and a file name, passes a clean copy, and the generator cannot read the project or reach out (twin_test.py)', tw.code === 0 && /passed/.test(tw.out) && /usage: ola-twin make/.test(help.out) && ro.out.trim() !== '0', `${tw.out.trim().split('\n').pop()}${tw.code ? ` ${tw.out.split('\n').filter((l) => l.startsWith('FAIL')).slice(0, 3).join(' | ')} ${tw.err.slice(-300)}` : ''}`)
+    }
+
     // Reading real documents (2.3.0-17): reading order, OCR, the right-document check, charsets,
     // zips, an attached database, what Open shows, uploads in pieces (check-docs.mjs).
     await (await import('./check-docs.mjs')).docChecks({ ws, id: A, t, measured })
@@ -1057,6 +1066,13 @@ print(json.dumps({"mib": n, "stopped": why}))
   const fail = /# fail (\d+)/.exec(bt.stdout ?? '')?.[1]
   const why = bt.status === 0 ? '' : `; exit ${bt.status} ${bt.signal ?? ''} ${bt.error?.code ?? ''}: ${(bt.stdout ?? '').split('\n').filter((l) => /not ok|Error|expected|actual/.test(l)).slice(0, 4).join(' | ').slice(0, 400)} ${(bt.stderr ?? '').slice(-300)}`
   t('ola-batch: the quote check, a 60-document job with planted quotes, a kill mid-job, pause and cancel (batch.test.mjs)', bt.status === 0, `${pass ?? '?'} passed, ${fail ?? '?'} failed${why}`)
+}
+
+// ola-twin on the host against the scripted model (workspace/twin.test.mjs): a made-up copy made,
+// clean, scored right and wrong; a copy with a planted name refused; one with a rare word held.
+{
+  const tt = spawnSync(process.execPath, [path.join(path.dirname(fileURLToPath(import.meta.url)), 'twin.test.mjs')], { encoding: 'utf8', timeout: 300_000 })
+  t('ola-twin: a made-up copy of a made-up project is made, clean and scored; a planted name is refused, a rare word held (twin.test.mjs)', tt.status === 0, `${(tt.stdout ?? '').trim().split('\n').pop()}${tt.status ? ` ${(tt.stdout ?? '').split('\n').filter((l) => l.startsWith('FAIL')).slice(0, 3).join(' | ')}` : ''}`)
 }
 
 console.log(`\nmeasured: ${JSON.stringify(measured)}`)

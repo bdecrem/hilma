@@ -75,6 +75,9 @@ export function compareConfig(env = process.env) {
     claudeModel: env.OLA_FD_COMPARE_CLAUDE_MODEL || null,
     olaModelName: env.OLA_FD_MODEL_LABEL || 'general',
     prefix,
+    // For a live proof on someone's personal allowance: the most Claude requests one comparison may
+    // make (Claude Code's and the judge's together, by the gateway's count). Unset: no limit.
+    claudeRequestLimit: env.OLA_FD_COMPARE_CLAUDE_REQUESTS ? num('OLA_FD_COMPARE_CLAUDE_REQUESTS', 4, 1, 100) : null,
     // List prices in dollars per million tokens, for the budget in subscription mode too (an equivalent).
     priceIn: num('OLA_FD_COMPARE_PRICE_IN', 5, 0, 1000),
     priceOut: num('OLA_FD_COMPARE_PRICE_OUT', 25, 0, 1000),
@@ -817,7 +820,11 @@ export function makeCompare({ db, xc, cc, claude, hosted, workspaces, container,
       engines.claude = r
       // The judge sees the two results unlabeled, twice, the order swapped (judgeTwice).
       const view = (e) => ({ final: e.final, outputs: (e.outputs ?? []).filter((o) => !o.input) })
-      judged = await judgeTwice({ kind, request, x: view(engines.ola), y: view(engines.claude), names: { x: 'Ola', y: 'Claude' }, ask: (m) => judgeCall(cid, m) })
+      // With a request limit, the judge gets what Claude Code left of it; a call it cannot make is
+      // an unread judgement, and the comparison is "unsure" rather than over the limit.
+      let left = Infinity
+      if (xc.claudeRequestLimit) left = xc.claudeRequestLimit - ((await callerUsage(`ws-${cid}`))?.month?.requests ?? xc.claudeRequestLimit)
+      judged = await judgeTwice({ kind, request, x: view(engines.ola), y: view(engines.claude), names: { x: 'Ola', y: 'Claude' }, ask: (m) => (left-- > 0 ? judgeCall(cid, m) : Promise.resolve(null)) })
     } finally {
       ungrant(cid)
       await destroy(cid)

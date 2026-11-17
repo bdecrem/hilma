@@ -1,16 +1,17 @@
 // "Ask Ola": the conversation, in a drawer beside the things (a sheet on a phone).
 // A request, then the run in plain-word steps (details on request), then the answer. Approvals,
 // errors and a lost connection are said out loud, never swallowed.
-import { createEffect, createSignal, For, onCleanup, Show } from 'solid-js'
+import { createEffect, createResource, createSignal, For, onCleanup, Show } from 'solid-js'
 import type { Ola } from '../lib/ola.ts'
-import type { Fallback, Problem, Step, Turn } from '../lib/types.ts'
+import type { CompareInfo, CompareResultLine, Fallback, Problem, Step, Turn } from '../lib/types.ts'
 import { runSummary } from '../lib/conversation.ts'
 import { COMMANDS, commandMatches, parseCommand, reactionOnly, REACTIONS, shown, turnReaction, type CommandName } from '../lib/commands.ts'
 import { clock, when } from '../lib/format.ts'
 import { Answer } from './Answer.tsx'
 import { Icon } from './Icon.tsx'
 import { StretchCard } from './StretchCard.tsx'
-import { canOpen, desk, plainPath } from '../lib/api.ts'
+import { canOpen, compare, desk, plainPath } from '../lib/api.ts'
+import { CompareLine, CompareSheet } from './Compare.tsx'
 
 // Requests that work in any project, empty or not: nothing here names a file the person may not have.
 const STARTERS = ['Make a hello world web page', 'Make a one-page site that says what our group does and when we meet', 'Look at the files I uploaded and tell me what is in them']
@@ -47,6 +48,17 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
     const nearBottom = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < 160
     if (nearBottom) queueMicrotask(() => scroller && (scroller.scrollTop = scroller.scrollHeight))
   })
+
+  // "Compare with Claude" (Compare.tsx): the owner's only. The conversation's comparisons, asked
+  // again while one is under way and whenever a run finishes.
+  const [cmp, { refetch: refetchCompare }] = createResource(
+    () => (props.open ? `${s().sessionID ?? ''}|${working() ? 'w' : 'i'}|${s().turns.length}` : null),
+    (k) => compare.info(k.split('|')[0] || null).catch((): CompareInfo | null => null),
+  )
+  const pending = () => Object.values(cmp()?.results ?? {}).some((r) => ['making', 'running'].includes(r.state))
+  const poll = setInterval(() => props.open && pending() && void refetchCompare(), 4000)
+  onCleanup(() => clearInterval(poll))
+  const [sheet, setSheet] = createSignal<{ message: string | null; id: string | null } | null>(null)
 
   // "Ask … instead" under a finished Ola reply: one for each fallback that is switched on.
   const insteadOf = (): Fallback[] => (['hosted', 'claude'] as Fallback[]).filter((f) => (f === 'claude' ? s().claude?.enabled : s().hosted?.enabled))
@@ -163,13 +175,27 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
         >
           <ol class="turns">
             <For each={s().turns}>
-              {(t, i) => <TurnView turn={t} now={now()} last={i() === s().turns.length - 1} onStop={() => props.ola.stop()} instead={working() || s().suggestion ? [] : insteadOf()} onAsk={(f) => props.ola.askInstead(t.id, f)} />}
+              {(t, i) => (
+                <TurnView
+                  turn={t}
+                  now={now()}
+                  last={i() === s().turns.length - 1}
+                  onStop={() => props.ola.stop()}
+                  instead={working() || s().suggestion ? [] : insteadOf()}
+                  onAsk={(f) => props.ola.askInstead(t.id, f)}
+                  canCompare={!!cmp()?.canCompare && !working()}
+                  compared={cmp()?.results?.[t.id] ?? null}
+                  onCompare={() => setSheet({ message: t.id, id: null })}
+                  onOpenCompare={(id) => setSheet({ message: t.id, id })}
+                />
+              )}
             </For>
           </ol>
         </Show>
         <Show when={s().suggestion}>
           <StretchCard ola={props.ola} />
         </Show>
+        <CompareSheet open={!!sheet()} info={cmp() ?? null} conversation={s().sessionID ?? null} message={sheet()?.message ?? null} id={sheet()?.id ?? null} onClose={() => (setSheet(null), void refetchCompare())} onChanged={() => void refetchCompare()} />
         <Show when={s().help}>
           <section class="command-help" aria-label="Commands">
             <p class="command-help-title">Commands</p>
@@ -333,7 +359,7 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
   )
 }
 
-function TurnView(props: { turn: Turn; now: number; last: boolean; onStop: () => void; instead: Fallback[]; onAsk: (f: Fallback) => void }) {
+function TurnView(props: { turn: Turn; now: number; last: boolean; onStop: () => void; instead: Fallback[]; onAsk: (f: Fallback) => void; canCompare: boolean; compared: CompareResultLine | null; onCompare: () => void; onOpenCompare: (id: string) => void }) {
   const t = () => props.turn
   const byClaude = () => t().engine === 'claude'
   const byHosted = () => t().engine === 'hosted'
@@ -469,6 +495,16 @@ function TurnView(props: { turn: Turn; now: number; last: boolean; onStop: () =>
           <p class="meta stopped-line">You stopped this. Files {name()} already wrote stay as they are.</p>
         </Show>
         <Show when={t().error}>{(p) => <ProblemBox problem={p()} />}</Show>
+        <Show when={props.compared && !byClaude()}>
+          <CompareLine result={props.compared!} onOpen={() => props.onOpenCompare(props.compared!.id)} />
+        </Show>
+        <Show when={props.canCompare && !props.compared && !byClaude() && !byHosted() && t().status === 'done' && /^[A-Za-z0-9_-]{1,80}$/.test(t().id)}>
+          <p class="ask-claude compare-ask">
+            <button type="button" class="link-button on-paper" onClick={props.onCompare}>
+              Compare with Claude
+            </button>
+          </p>
+        </Show>
         <Show when={props.instead.length && !byClaude() && !byHosted() && !running()}>
           <p class="ask-claude">
             <For each={props.instead}>

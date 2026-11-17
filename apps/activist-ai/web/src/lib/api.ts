@@ -201,6 +201,18 @@ export const hosted = {
   run: (body: { request: string; conversation: string; once?: boolean }) => post<{ ok: true; run: string; provider: string }>('/api/hosted/run', body),
 }
 
+/** "Compare with Claude" (frontdesk/compare.mjs): owner only. */
+export const compare = {
+  info: (conversation?: string | null) => call<import('./types.ts').CompareInfo>(`/api/compare${conversation ? `?conversation=${encodeURIComponent(conversation)}` : ''}`),
+  item: (id: string) => call<import('./types.ts').CompareItem>(`/api/compare/item?id=${encodeURIComponent(id)}`),
+  settings: (body: { real?: boolean; consent?: boolean; auto?: 'ask' | 'daily'; perDay?: number; capUsd?: number }) => post<import('./types.ts').CompareInfo>('/api/compare/settings', body),
+  start: (body: { conversation: string; message: string; mode: 'twin' | 'real'; once?: boolean; consent?: boolean }) => post<{ id: string; state: string }>('/api/compare/start', body),
+  send: (id: string, release = false) => post<{ id: string; state: string }>('/api/compare/send', { id, release }),
+  discard: (id: string) => post<{ ok: true }>('/api/compare/discard', { id }),
+}
+/** The Quality page (admins only). */
+export const qualityApi = { get: () => call<import('./types.ts').Quality>('/api/quality') }
+
 export const desk: FrontDesk = {
   me: () => call<Me>('/api/me'),
   signOut: async () => {

@@ -14,12 +14,13 @@ import { ApprovalSheet } from './components/ApprovalSheet.tsx'
 import { SettingsView } from './components/Settings.tsx'
 import { DataView, FileTableView } from './components/DataView.tsx'
 import { JobsView } from './components/JobsView.tsx'
+import { QualityView } from './components/Compare.tsx'
 
-type Route = 'home' | 'files' | 'data' | 'settings' | 'jobs' | 'table'
-const routeOf = (hash: string): Route => (hash.startsWith('#/files') ? 'files' : hash.startsWith('#/data') ? 'data' : hash.startsWith('#/settings') ? 'settings' : hash.startsWith('#/jobs') ? 'jobs' : hash.startsWith('#/table') ? 'table' : 'home')
+type Route = 'home' | 'files' | 'data' | 'settings' | 'jobs' | 'table' | 'quality'
+const routeOf = (hash: string): Route => (hash.startsWith('#/files') ? 'files' : hash.startsWith('#/data') ? 'data' : hash.startsWith('#/settings') ? 'settings' : hash.startsWith('#/jobs') ? 'jobs' : hash.startsWith('#/table') ? 'table' : hash.startsWith('#/quality') ? 'quality' : 'home')
 // #/jobs/<id> opens one job.
 const jobOf = (hash: string): string | null => /^#\/jobs\/([0-9a-f]{12})$/.exec(hash)?.[1] ?? null
-const ROUTE_TITLE: Record<Route, string> = { home: '', files: 'What Ola has of yours', data: 'Data', settings: 'Settings', jobs: 'Jobs', table: 'Table' }
+const ROUTE_TITLE: Record<Route, string> = { home: '', files: 'What Ola has of yours', data: 'Data', settings: 'Settings', jobs: 'Jobs', table: 'Table', quality: 'Quality' }
 /** `#/table?path=<file>`: Open on a CSV or Excel file (frontdesk/views.mjs sends it here). */
 const tableOf = (hash: string): string | null => (hash.startsWith('#/table') ? new URLSearchParams(hash.split('?')[1] ?? '').get('path') : null)
 /** `#/?ask=<conversation id>` opens the drawer on that conversation. */
@@ -100,7 +101,7 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
   // A new view moves focus to its heading, so a screen reader hears where it is.
   createEffect((prev: Route | undefined) => {
     const r = route()
-    if (prev && prev !== r) queueMicrotask(() => (r === 'home' ? heading : r === 'settings' ? settingsTitle : document.getElementById(r === 'files' ? 'files-title' : r === 'jobs' ? 'jobs-title' : 'data-title'))?.focus())
+    if (prev && prev !== r) queueMicrotask(() => (r === 'home' ? heading : r === 'settings' ? settingsTitle : document.getElementById(r === 'files' ? 'files-title' : r === 'jobs' ? 'jobs-title' : r === 'quality' ? 'quality-title' : 'data-title'))?.focus())
     if (r === 'settings') void ola.loadClaude()
     return r
   })
@@ -223,6 +224,10 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
               <Show when={route() === 'settings'}>
                 <SettingsView ola={ola} titleRef={(el) => (settingsTitle = el)} canWrite={canRun()} />
               </Show>
+              {/* Bart's own page (admins only; the front desk answers 404 to anyone else). */}
+              <Show when={route() === 'quality' && props.me.person.admin}>
+                <QualityView />
+              </Show>
             </>
           }
         >
@@ -261,6 +266,11 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
               <a class="ghost-button on-room" href="#/settings">
                 <Icon name="settings" size={18} /> Settings
               </a>
+              <Show when={props.me.person.admin}>
+                <a class="ghost-button on-room" href="#/quality">
+                  <Icon name="table" size={18} /> Quality
+                </a>
+              </Show>
             </div>
           </section>
           <Show when={project()} fallback={<p class="loading" role="status">{waking() ? 'Waking your workspace…' : 'Opening your project…'}</p>}>

@@ -66,6 +66,12 @@ const env = {
   OLA_FD_GATEWAY_USAGE_TOKEN: randomBytes(24).toString('hex'), // Fallback to Claude: the front desk asks the gateway with it
   OLA_FD_JOB_TICK_MS: '1000', // batch jobs: looked after every second here (10 s by default)
   OLA_FD_JOB_STALE_S: '10',
+  // Compare with Claude: this suite's scratch VMs are named <tag or fd>c-<hex>; the candidates queue in
+  // the run's folder; an engine stopped after 3 minutes; the sampler left to its unit test.
+  OLA_FD_COMPARE_PREFIX: `${TAG || 'fd'}c`,
+  OLA_FD_CANDIDATES_DIR: path.join(run, 'candidates'),
+  OLA_FD_COMPARE_ENGINE_MIN: '3',
+  OLA_FD_COMPARE_TICK_MS: '3600000',
 }
 const node = (script, argv, opts = {}) => spawnSync(process.execPath, [path.join(AI, script), ...argv], { env, encoding: 'utf8', ...opts })
 const admin = (...a) => {
@@ -1295,6 +1301,124 @@ await check('a role change that leaves only admins as owners moves the project t
   assert(refused.status === 403 && auditRows(FA).some((r) => r.action === 'claude_disabled'), `run after off: ${refused.status}`)
   return line.split(';')[0]
 })
+
+// ---------------------------------------------------------------- Compare with Claude
+// README, "Compare with Claude". In alice's sealed VM (image 2.3.0-18, ola-twin) with the scripted
+// model making the made-up copy (web/server/fake-twin.mjs), then two scratch sealed VMs: Ola's
+// (opencode, the scripted model) and Claude's (Claude Code against the scripted Anthropic, through
+// the gateway with a grant for that VM alone), the copy's checks scored in each, the scripted judge
+// twice with the order swapped. Asserted at the gateway's upstream: nothing of alice's project
+// reached the Claude route. Skipped with a live model (the copy is then the model's own).
+{
+  // Without a VM (test/compare.test.mjs): the judge's order swap and evidence rule, outcomes, the
+  // sampler stopped by its budgets, a member and the real-task switch, a candidate the eval runner runs.
+  const u = spawnSync(process.execPath, ['--test', path.join(HERE, 'test/compare.test.mjs')], { encoding: 'utf8', timeout: 300_000 })
+  ok('Compare with Claude without a VM: order swap, evidence, outcomes, budgets stop the sampler, a member, the real-task switch, a candidate run by the eval runner (test/compare.test.mjs)', u.status === 0, `${/ℹ pass (\d+)/.exec(u.stdout)?.[1] ?? '?'} passed${u.status ? `: ${u.stdout.split('\n').filter((l) => /not ok|Error/.test(l)).slice(0, 3).join(' | ')}` : ''}`)
+}
+if (!LIVE) {
+  const PLANTED =['Quennell', 'Vashkin', 'Brandvold', 'Ostrander', 'harbor_roster']
+  const cpost = (who, p, body) => api(p, { method: 'POST', cookie: who.cookie, csrf: who.csrf, ws: FA, body: JSON.stringify(body), headers: { 'content-type': 'application/json' } })
+  /** A conversation in alice's project through the front desk's door, run to its end: its id and the person's message id. */
+  async function conversation(text) {
+    const s = await cpost(a, '/oc/api/session', { title: 'compare check', metadata: { autonomy: 'go' } })
+    const sid = (s.json?.data ?? s.json)?.id
+    assert(sid, `session: ${s.status} ${s.text.slice(0, 200)}`)
+    const p = await cpost(a, `/oc/api/session/${sid}/prompt`, { text })
+    assert(p.status < 300, `prompt: ${p.status}`)
+    let list = []
+    await until(async () => {
+      const m = await api(`/oc/api/session/${sid}/message?limit=200`, { cookie: a.cookie, ws: FA })
+      list = Array.isArray(m.json?.data) ? m.json.data : Array.isArray(m.json) ? m.json : []
+      return list.some((x) => x.type === 'idle')
+    }, 120_000, 'the conversation to end')
+    return { conversation: sid, message: list.find((x) => x.type === 'user').id }
+  }
+  const item = async (id) => (await api(`/api/compare/item?id=${id}`, { cookie: a.cookie, ws: FA })).json
+  const scratchLeft = () => spawnSync(CTR, ['list', '--all', '--format', 'json'], { encoding: 'utf8' }).stdout.includes(`ola-${env.OLA_FD_COMPARE_PREFIX}-`)
+  // The one VM the machine lets this suite run beside alice's is the scratch VM's: bob's is stopped.
+  spawnSync(process.execPath, [path.join(AI, 'workspace/ws.mjs'), 'stop', FB], { env, encoding: 'utf8' })
+  inVm(`test -f /work/survey.csv || printf 'name,joined\\nAna,2026-01-02\\nBo,2026-02-03\\n' > /work/survey.csv; printf 'volunteer,shift,notes\\nMarisol Quennell,Harbor kitchen,until the thaw\\nTeodor Vashkin,Harbor kitchen,\\nIlse Brandvold,Night patrol,Ostrander memo\\n' > /work/harbor_roster.csv`)
+  let cmpId = null
+  let conv = null
+  const bodies0 = fakeClaude.st.bodies.length
+  await check('Compare with Claude: off for everyone but the owner; the real task with its switch off is refused and nothing reaches Claude', async () => {
+    const vi = await api('/api/compare', { cookie: v.cookie, ws: FA })
+    assert(vi.status === 200 && vi.json.canCompare === false && Object.keys(vi.json).length === 1, `viewer: ${vi.text}`)
+    assert((await cpost(v, '/api/compare/start', { conversation: 'ses_x', message: 'msg_x', mode: 'twin' })).status === 403, 'the viewer started one')
+    const i = await api('/api/compare', { cookie: a.cookie, ws: FA })
+    assert(i.json.canCompare === true && i.json.configured === true && i.json.real === false && i.json.auto === 'ask', i.text)
+    conv = await conversation('How many rows does survey.csv have?')
+    const calls = fakeClaude.st.calls
+    const lines = gateway.log.split('\n').filter((l) => l.includes('"route":"claude"')).length
+    const off = await cpost(a, '/api/compare/start', { ...conv, mode: 'real' })
+    assert(off.status === 403 && off.json.error === 'real_off', `real with the switch off: ${off.status} ${off.text}`)
+    assert((await cpost(a, '/api/compare/start', { ...conv, mode: 'real', once: true })).status === 400, 'just this once without the confirming click')
+    assert(fakeClaude.st.calls === calls && gateway.log.split('\n').filter((l) => l.includes('"route":"claude"')).length === lines, 'something reached the Claude route')
+    return 'viewer: nothing; real task: refused, no request to Claude'
+  })
+  await check('a made-up copy is made in the sealed VM, clean, kept for the owner to read before it goes, and holds nothing of the project', async () => {
+    const r = await cpost(a, '/api/compare/start', { ...conv, mode: 'twin' })
+    assert(r.status === 200 && r.json.state === 'ready', `start: ${r.status} ${r.text}`)
+    cmpId = r.json.id
+    const it = await item(cmpId)
+    assert(it.verdict === 'clean' && it.twin?.request && it.twin.files?.[0]?.name === 'data.csv' && it.twin.checks?.length >= 4, JSON.stringify(it).slice(0, 300))
+    const kept = readFileSync(path.join(env.OLA_HOME, 'compare', cmpId, 'twin.json'), 'utf8')
+    assert(!PLANTED.some((w) => kept.includes(w)), 'a planted word in the copy on the host')
+    assert(auditRows(FA).some((x) => x.action === 'compare_twin_made'), 'not audited')
+    return `${it.twin.files[0].size} bytes of made-up data, ${it.twin.checks.length} checks`
+  })
+  await check('sent: Ola and Claude each do the copy in a scratch sealed VM; checks, then the judge twice; Claude did better, and why', async () => {
+    const s = await cpost(a, '/api/compare/send', { id: cmpId })
+    assert(s.status === 200, `send: ${s.status} ${s.text}`)
+    let it = null
+    await until(async () => ((it = await item(cmpId)), ['done', 'failed'].includes(it?.state)), 420_000, 'the comparison to finish')
+    assert(it.state === 'done' && it.outcome === 'claude_better', `${it.state} ${it.outcome} ${JSON.stringify(it.result?.engines?.claude?.score ?? null)}`)
+    const e = it.result.engines
+    assert(e.claude.score.all && !e.ola.score.all && e.claude.outputs.some((o) => o.name === 'clean.csv'), JSON.stringify({ ola: e.ola.score, claude: e.claude.score }))
+    assert(it.result.judge.verdict === 'y' && /^Claude /.test(it.result.judge.difference), JSON.stringify(it.result.judge))
+    assert(fakeClaude.st.judged >= 2, `the judge ran ${fakeClaude.st.judged} times`)
+    const line = (await api(`/api/compare?conversation=${conv.conversation}`, { cookie: a.cookie, ws: FA })).json.results[conv.message]
+    assert(line?.outcome === 'claude_better' && line.sentence, JSON.stringify(line))
+    return `Ola ${e.ola.score.passed}/${e.ola.score.total}, Claude ${e.claude.score.passed}/${e.claude.score.total}; "${line.sentence}"`
+  })
+  await check('at the gateway: every Claude request came from the scratch VM, none from the project, and no planted word of the project reached Anthropic', async () => {
+    const lines = gateway.log.split('\n').filter((l) => l.includes('"route":"claude"'))
+    const mine = lines.filter((l) => l.includes(`"caller":"ws-${env.OLA_FD_COMPARE_PREFIX}-`))
+    assert(mine.length >= 3 && !lines.slice(-mine.length).some((l) => l.includes(`"caller":"ws-${FA}"`)), `${mine.length} scratch lines`)
+    const sent = fakeClaude.st.bodies.slice(bodies0).join('\n')
+    const found = PLANTED.filter((w) => sent.includes(w))
+    assert(sent.length > 0 && !found.length, `planted words that reached Anthropic: ${found}`)
+    assert(!scratchLeft(), 'a scratch VM is left')
+    assert(!Object.keys(grantsFile()).some((k) => k.startsWith(`ws-${env.OLA_FD_COMPARE_PREFIX}-`)), 'a scratch grant is left')
+    return `${mine.length} requests from scratch VMs, ${fakeClaude.st.bodies.length - bodies0} bodies read for planted words`
+  })
+  await check('the lost copy is a candidate eval task (its selftest passes Claude’s result and fails Ola’s), with a note for the lead; the audit has numbers only', async () => {
+    const cand = path.join(env.OLA_FD_CANDIDATES_DIR, `t-${cmpId}`)
+    const st = spawnSync('python3', [path.join(AI, 'evals/lib/task.py'), 'selftest', cand, '0'], { encoding: 'utf8' })
+    assert(st.status === 0 && /solve/.test(st.stdout), st.stdout + st.stderr)
+    assert(/Not applied: queued for the lead\./.test(readFileSync(path.join(cand, 'skill-note.md'), 'utf8')), 'no note')
+    const listed = admin('compare', 'candidates')
+    assert(listed.includes(`t-${cmpId}`), listed)
+    const row = new DatabaseSync(path.join(env.OLA_FD_DATA, 'platform.db'), { readOnly: true }).prepare("SELECT tokens_in, cost_micro_usd, name_ref FROM audit WHERE action = 'compare_done' ORDER BY id DESC LIMIT 1").get()
+    assert(row && row.tokens_in > 0 && row.cost_micro_usd > 0 && row.name_ref === null, JSON.stringify(row))
+    return listed.split('\n').find((l) => l.includes(cmpId))
+  })
+  await check('a copy that carries a name from the project stays in the VM; one that carries a rare word is held, its findings shown to the owner, refused if it changed, and not sent on "Don’t send"', async () => {
+    const leak = await cpost(a, '/api/compare/start', { ...(await conversation('Count the rows. PLANT-LEAK:Quennell')), mode: 'twin' })
+    assert(leak.json?.state === 'refused' && !existsSync(path.join(env.OLA_HOME, 'compare', leak.json.id)), `leak: ${leak.text}`)
+    const held = await cpost(a, '/api/compare/start', { ...(await conversation('Count the rows. PLANT-UNSURE:thaw')), mode: 'twin' })
+    assert(held.json?.state === 'held', `held: ${held.text}`)
+    const it = await item(held.json.id)
+    assert(it.findings?.some((f) => f.text === 'thaw') && it.twin?.request.includes('thaw'), JSON.stringify(it.findings))
+    assert((await cpost(a, '/api/compare/send', { id: held.json.id })).status === 400, 'sent without the owner’s yes')
+    inVm(`sed -i 's/Note: thaw/Note: thaw Quennell/' /work/.ola/twins/${held.json.id}/copy.json`)
+    const changed = await cpost(a, '/api/compare/send', { id: held.json.id, release: true })
+    assert(changed.status === 409 && changed.json.error === 'changed', `a changed copy: ${changed.status} ${changed.text}`)
+    assert((await cpost(a, '/api/compare/discard', { id: held.json.id })).status === 200, 'discard')
+    assert(!existsSync(path.join(env.OLA_HOME, 'compare', held.json.id)), 'a held copy reached the host')
+    return 'refused, held, changed refused, not sent'
+  })
+}
 
 // ---------------------------------------------------------------- Fallback to a hosted open model
 // The same opencode in alice's sealed VM, the model name `hosted` through her door and this suite's

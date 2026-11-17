@@ -29,6 +29,7 @@ import { startFakeModel } from './server/fake-model.mjs'
 import { fixture } from './server/fixture.mjs'
 import { makeClaudeStandin } from './server/claude-standin.mjs'
 import { makeHostedStandin } from './server/hosted-standin.mjs'
+import { makeCompareStandin } from './server/compare-standin.mjs'
 import { openDb } from '../frontdesk/db.mjs'
 import { makeJobs } from '../frontdesk/jobs.mjs'
 const fixtureName = fixture.project.name
@@ -260,6 +261,8 @@ const json = (res, status, body) => res.writeHead(status, { 'content-type': 'app
 // The signed-in person's role in the dev workspace (the checks make them a member with /__dev/role).
 let devRole = 'owner'
 const claudeStandin = makeClaudeStandin({ work, role: () => devRole })
+// "Compare with Claude" and the admins' Quality page, stood in for (server/compare-standin.mjs).
+const compareStandin = makeCompareStandin({ dir: path.join(run, 'compare-standin'), role: () => devRole })
 // One request to opencode from the stand-in itself (the hosted run), as the front desk's workspaces.oc.
 function oc(method, pathname, body = null) {
   return fetch(`http://127.0.0.1:${ocPort}${pathname}`, { method, headers: { authorization, accept: 'application/json', ...(body ? { 'content-type': 'application/json' } : {}) }, body: body ? JSON.stringify(body) : undefined })
@@ -321,6 +324,7 @@ const server = http.createServer(async (req, res) => {
     if ((p === '/api/claude' || p.startsWith('/api/claude/')) && (await claudeStandin(req, res, p, url))) return
     // Both fallbacks and the hosted open model, stood in for (server/hosted-standin.mjs).
     if ((p.startsWith('/api/fallback') || p.startsWith('/api/hosted/') || p === '/__dev/hosted') && (await hostedStandin(req, res, p, url))) return
+    if ((p === '/api/compare' || p.startsWith('/api/compare/') || p.startsWith('/api/quality') || p === '/__dev/compare') && (await compareStandin(req, res, p, url))) return
     if (process.env.OLA_DEV_CONTROLS === '1' && p === '/__dev/role' && req.method === 'POST') {
       devRole = url.searchParams.get('to') === 'member' ? 'member' : 'owner'
       return json(res, 200, { role: devRole, claudeOnce: claudeStandin.st.onceRuns ?? 0 })
@@ -352,7 +356,7 @@ const server = http.createServer(async (req, res) => {
     // server has no sign-in; the real one is ../frontdesk/server.mjs.
     if (p === '/api/me' && req.method === 'GET')
       return json(res, 200, {
-        person: { handle: 'dev', name: 'You' },
+        person: { handle: 'dev', name: 'You', ...(devRole === 'owner' ? { admin: true } : {}) },
         csrf: 'dev',
         workspaces: [{ slug: 'dev', name: fixtureName, team: 'Dev', role: devRole === 'member' ? 'member' : 'owner' }],
         machine: { working: 1, capacity: 4 },

@@ -117,7 +117,7 @@ export interface ProjectPayload {
 
 /** GET /api/me: the signed-in person, their workspaces, and the front desk's wording. */
 export interface Me {
-  person: { handle: string; name: string }
+  person: { handle: string; name: string; admin?: boolean }
   csrf: string
   workspaces: { slug: string; name: string; team: string; role: Role }[]
   machine: { working: number; capacity: number }
@@ -394,4 +394,77 @@ export interface JobPage {
   results: { columns: string[]; rows: (string | number | null)[][]; total: number; offset: number }
   options: JobOption[]
   role: string
+}
+
+// ---------------------------------------------------------------- "Compare with Claude"
+export type CompareOutcome = 'both_right' | 'claude_better' | 'ola_better' | 'both_wrong' | 'unsure'
+export type CompareState = 'making' | 'held' | 'refused' | 'ready' | 'running' | 'done' | 'failed' | 'declined'
+export interface CompareResultLine {
+  id: string
+  mode: 'twin' | 'real'
+  state: CompareState
+  verdict: 'clean' | 'unsure' | 'leak' | null
+  outcome: CompareOutcome | null
+  sentence: string | null
+}
+export interface CompareInfo {
+  canCompare: boolean
+  configured?: boolean
+  unavailable?: string | null
+  mode?: 'oauth' | 'api_key'
+  real?: boolean
+  consent?: string
+  auto?: 'ask' | 'daily'
+  perDay?: number
+  month?: { usedUsd: number; capUsd: number }
+  /** By the person's message id in this conversation. */
+  results?: Record<string, CompareResultLine>
+}
+export interface CompareCheck {
+  name: string
+  type: string
+  path?: string
+  column?: string
+  any?: string[]
+}
+export interface CompareFile {
+  name: string
+  size: number
+  text: string | null
+  input?: boolean
+}
+export interface CompareEngine {
+  final: string
+  end: string
+  ms: number | null
+  model: string
+  score: { passed: number; total: number; all: boolean; checks: { name: string; ok: boolean; label: string }[] } | null
+  outputs: CompareFile[]
+}
+export interface CompareItem {
+  id: string
+  mode: 'twin' | 'real'
+  state: CompareState
+  verdict: 'clean' | 'unsure' | 'leak' | null
+  kind: string | null
+  outcome: CompareOutcome | null
+  twin: { request: string; kind: string; checks: CompareCheck[]; files: CompareFile[] } | null
+  findings: { severity: 'leak' | 'unsure'; kind: string; text: string; where: string }[] | null
+  result: { engines: { ola: CompareEngine; claude: CompareEngine; hosted?: CompareEngine }; judge: { verdict: string; difference: string }; outcome: CompareOutcome; label: string | null } | null
+}
+export interface WinTieLoss {
+  ola: number
+  tie: number
+  claude: number
+  unsure: number
+}
+export interface Quality {
+  total: WinTieLoss
+  overTime: ({ day: string } & WinTieLoss)[]
+  byKind: ({ name: string } & WinTieLoss)[]
+  byModel: ({ name: string } & WinTieLoss)[]
+  reasons: { label: string; n: number }[]
+  cost: { micro_usd: number; month_micro_usd: number }
+  weekly: { overall: { compared: number; decided: number; matched_or_beat: number; share: number | null; unsure: number } }
+  list: { id: string; at: number; mode: string; trigger: string; state: string; verdict: string | null; kind: string | null; outcome: CompareOutcome | null; label: string | null; model: string | null; claudeModel: string | null; olaPassed: number | null; olaTotal: number | null; claudePassed: number | null; claudeTotal: number | null; cost: number | null; project: string; request: string | null; difference: string | null }[]
 }
