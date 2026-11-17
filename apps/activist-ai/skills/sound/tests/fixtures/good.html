@@ -1,0 +1,15 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Good sounds</title></head><body>
+<h1>Good sounds</h1>
+<button id="sound" type="button">Sound on</button>
+<button id="msg" type="button">New message</button>
+<button id="done" type="button">Done</button>
+<button id="win" type="button">Signed</button>
+<button id="tune" type="button">Our tune</button>
+<script src="olasound.js"></script>
+<script>
+OlaSound.toggleButton(document.getElementById('sound'))
+document.getElementById('msg').addEventListener('click', () => OlaSound.play('message'))
+document.getElementById('done').addEventListener('click', () => OlaSound.play('success'))
+document.getElementById('win').addEventListener('click', () => OlaSound.play('celebrate'))
+document.getElementById('tune').addEventListener('click', () => OlaSound.melody('D4 q, F#4 e, A4 e, B4 h, D4 q, F#4 e, A4 e, D5 h, B4 q, A4 e, F#4 e, G4 q, E4 q, D4 w', { bpm: 112, chords: 'D | G | Bm | D' }))
+</script></body></html>

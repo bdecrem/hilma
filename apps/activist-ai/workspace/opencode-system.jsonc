@@ -17,6 +17,7 @@
     { "action": "skill.use", "resource": "report", "effect": "allow" },
     { "action": "skill.use", "resource": "designer", "effect": "allow" },
     { "action": "skill.use", "resource": "app-designer", "effect": "allow" },
+    { "action": "skill.use", "resource": "sound", "effect": "allow" },
     { "action": "skill.use", "resource": "batch-quotes", "effect": "allow" }
   ]
 }

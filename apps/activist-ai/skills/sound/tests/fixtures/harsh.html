@@ -1,0 +1,15 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Harsh sounds</title></head><body>
+<h1>Harsh sounds</h1>
+<button id="beep" type="button">Beep</button>
+<button id="buzz" type="button">Buzz</button>
+<script>
+const early = new AudioContext()
+function beep(f, type) {
+  const c = new AudioContext(); const o = c.createOscillator(); const g = c.createGain()
+  o.type = type; o.frequency.value = f; g.gain.value = 0.9
+  o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime + 0.3)
+}
+const o0 = early.createOscillator(); o0.connect(early.destination); o0.start(); o0.stop(early.currentTime + 0.2)
+document.getElementById('beep').onclick = () => beep(2200, 'square')
+document.getElementById('buzz').onclick = () => { for (let i = 0; i < 4; i++) beep(1800 + i * 300, 'sawtooth') }
+</script></body></html>

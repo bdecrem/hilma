@@ -28,6 +28,8 @@
   "design_slop",
   "weak_hierarchy",
   "not_accessible",
+  "harsh_sound",
+  "not_musical",
   "unknown"
  ],
  "end_reasons": [

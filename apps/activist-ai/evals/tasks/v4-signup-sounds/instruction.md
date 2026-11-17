@@ -1,0 +1,1 @@
+signup.html is our volunteer sign-up: three steps and a thank-you. Add sounds: a soft one for each Next, a gentle one when someone forgets a required field, and a happy one when they finish signing up. Keep the form working as it is.

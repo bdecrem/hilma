@@ -144,7 +144,7 @@ public enum AgentNotes {
   /// For opencode only: Ola's own skills, which both of Bart's servers install (skills/README.md). In step
   /// with workspace/AGENTS.md, "Ola's skills"; bart/ola-bart.sh writes the same line.
   public static let skills = """
-  Skills. Load the matching skill with the skill tool before you start, and follow it: `designer` for any web page or site (a landing or event page, a results or report page, a dashboard, a form or sign-up flow), whether you are making, redesigning or fixing it; `app-designer` for the screens of a phone or Mac app; `chart` for a chart; `workbook` for an Excel file; `report` for a Word or PDF report. For a page or app screen, do this before you write or change any .html file, every time.
+  Skills. Load the matching skill with the skill tool before you start, and follow it: `designer` for any web page or site (a landing or event page, a results or report page, a dashboard, a form or sign-up flow), whether you are making, redesigning or fixing it; `app-designer` for the screens of a phone or Mac app; `sound` for any sound or music in a page or app (chimes, button sounds, a melody, a background loop, fixing harsh sounds); `chart` for a chart; `workbook` for an Excel file; `report` for a Word or PDF report. For a page or app screen, do this before you write or change any .html file, every time; for sound or music, load `sound` before you write any sound code (only `sound` when the request is only about a page's sounds).
   """
   /// For the agent on opencode: when the person asks for Claude (README, "Fallback to Claude").
   /// In step with workspace/AGENTS.md and bart/ola-bart.sh.

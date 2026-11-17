@@ -1,0 +1,1 @@
+app.html is the web version of our organizing app. Add sounds to it: a chime when a new message arrives, a different one for a reminder, and a soft click when someone presses Save. The two Simulate buttons are there to test them. Keep everything else on the page as it is.

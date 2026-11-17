@@ -1,0 +1,7 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Calm loop</title></head><body>
+<h1>Open day</h1><button id="sound" type="button">Music</button>
+<script src="olasound.js"></script>
+<script>
+let bed = null
+document.getElementById('sound').addEventListener('click', () => { if (bed && bed.playing) { bed.stop(); bed = null } else bed = OlaSound.loop(location.hash === '#dub' ? 'dub' : 'pad') })
+</script></body></html>
