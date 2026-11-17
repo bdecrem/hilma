@@ -244,9 +244,31 @@ node workspace/ws.mjs destroy alice            # asks for the id; --confirm alic
 **Rotating a workspace's secrets** (`ws.mjs rotate`, run by `admin.mjs remove-member` and
 `admin.mjs rotate`): both secrets reach the VM only through `--env-file` at `container create`, so
 the container is made again from the same volume with new ones (the root is read-only, so nothing
-outside `/work` is lost; its old config, which held the old secrets, goes with it). The tokens file
-is rewritten and the gateway reloads it: the old token is refused at once, through the door too. A
-workspace that was running is started again, which ends every open connection to it.
+outside `/work` is lost; its old config, which held the old secrets, goes with it). Two phases, so
+revocation never needs a free VM slot. **Revoke** (`ws.mjs revoke`; file writes, stop and rm only):
+the new secrets go to `secrets.env.next`, the tokens file is rewritten from it and the gateway's
+refusal of the old token is confirmed through the workspace's door socket, the VM is stopped and its
+desk and door closed, the old container removed, then `.next` renamed to `secrets.env`. **Restore**
+(`ws.mjs restore`, best effort): the container is made again and started if it was running. A full
+machine leaves it stopped with its new secrets (`deferred`); the front desk's wake starts it on the
+next request once a slot is free, and makes the container first if it is missing. If the old
+container cannot be removed, the workspace is **closed** (`~/.ola/ws/<id>/closed`): nothing starts
+it until `ws.mjs reopen <id>` (a fresh rotation). A `kill -9` between any two steps resumes: while
+`.next` exists the gateway gets its token whoever rewrites the tokens file, and `start` finishes the
+revocation before it runs anything, so a wake never boots the old container; running the command
+again carries on (the reasoning is at "rotation" in `ws.mjs`). `ws.mjs start` exits 3 when the
+machine is full and 4 when the workspace is closed.
+
+What went wrong before (measured 2026-11-16 on the mini, `rot-` workspaces, the old code): with the
+machine at its cap, `rotate` failed at its last step, the restart, after the new secrets were
+already in force (old token 401, old password reaching nothing, container recreated and stopped),
+so the admin CLI's "its old secrets may still work" was wrong, and it then stopped (`process.exit`)
+without rotating the team's other workspaces. The workspace answered 503 (`machine_busy` on the
+project, `server_error` on everything else) until a slot freed, then woke. Two real holes came out
+of the same reading: a `container rm` that fails aborted before anything was written, so the old
+gateway token stayed valid (200) and the old container stayed for the next wake; and a container
+removed but not made again (a failed create, or a crash between the two) made `start` and `rotate`
+refuse "no workspace" for good.
 
 **Doors and desks as launchd jobs.** With `OLA_LAUNCHD=1` (the installed front desk sets it),
 `start` loads the door and the desk as user agents (`cx.ola.door.<id>`, `cx.ola.desk.<id>`, KeepAlive,
@@ -286,7 +308,14 @@ workspaces under `~/.ola-check`, and checks from inside the VMs:
   `/work` fails at once, nothing outside `/work` survives a stop, no setuid or setgid file is in the
   image, the runtime's folders are mode 700, every command refuses a malformed id (36 cases), upload
   refuses a host symlink and an option-like name on the host, and the door holds 32 of 48
-  connections at once, refuses the rest and answers again after.
+  connections at once, refuses the rest and answers again after;
+- from the rotation fix (2026-11-16): a rotation with the machine at its cap (`OLA_MAX_RUNNING=1`
+  for the rotation) puts the new secrets in force, the gateway refuses the old token and the old
+  password reaches nothing, the workspace is left stopped, `start` exits 3 while the machine is full
+  and wakes it once a slot is free; a container that cannot be removed closes the workspace (old
+  token still refused, `start` refuses it) and `reopen` makes it safe; a container that cannot be
+  made again is made by the next `start`; and a `kill -9` after each of the six steps, then the
+  command again (after the stop: a wake), completes with both old secrets refused.
 
 **Measured 2026-11-16 on the mini** (Mac mini, Apple M4, 16 GB, macOS 26.3.1, container 1.7.1),
 three full runs of the check, the last 55 of 55:
@@ -553,6 +582,7 @@ node admin.mjs invite maria --add-device          # another passkey for someone 
 node admin.mjs remove-passkey maria 7             # passkey ids in `list`
 node admin.mjs remove-member ndtu dana            # cuts her open streams, then new secrets for the team's workspaces
 node admin.mjs rotate eviction | revoke-sessions maria | suspend maria
+node admin.mjs reopen eviction                    # a workspace a rotation closed: rotated again, opened
 node admin.mjs shown-to-cloud eviction --by maria # record a cloud agent's look, with her yes
 node admin.mjs audit --workspace eviction | list
 node server.mjs                                   # serves http://localhost:4700 on 127.0.0.1 only
@@ -561,9 +591,16 @@ node server.mjs                                   # serves http://localhost:4700
 `create-workspace` calls `ws.mjs create`; the gateway picks up the new token by itself.
 **Removing a member** deletes the membership (the front desk's per-second recheck cuts their open
 streams on that alone; the check proves it was cut while another member's stream was still open),
-waits two seconds, then rotates every workspace of the team (`secrets_rotated` in the audit log),
-because the person may have seen both secrets from inside: every other open connection to those
-workspaces ends with the restart, and the page reconnects. Settings: `OLA_FD_ORIGIN`, `OLA_FD_PORT`,
+waits two seconds, then rotates every workspace of the team, closed ones too, because the person may
+have seen both secrets from inside: first every workspace is revoked, then each is restored, and a
+failure in one never stops the others. It prints one line per workspace (its state, and the exact
+command when a person is needed) and exits 1 only then. In the audit log, `secrets_rotated` means
+the new secrets are in force, `restart_deferred` that the workspace was left stopped to start on
+its next request, `workspace_closed` that it could not be made safe (the database marks it closed;
+its members get 423 `closed` with a plain sentence, and `admin.mjs reopen` is the way back,
+`workspace_reopened`). Every other open connection to a restarted workspace ends, and the page
+reconnects. A start the front desk could not make says why: 503 `machine_busy` (on every route, with
+`Retry-After`), 423 `closed`, or 503 `start_failed`. Settings: `OLA_FD_ORIGIN`, `OLA_FD_PORT`,
 `OLA_FD_BIND`, `OLA_FD_DATA` (`~/.ola-frontdesk`), `OLA_FD_DIST`, `OLA_FD_MAX_UPLOAD_MB`,
 `OLA_FD_SESSION_HOURS`, `OLA_FD_IDLE_HOURS`, `OLA_FD_SIGNIN_BURST`, `OLA_FD_SIGNIN_PER_MIN`,
 `OLA_FD_PROXY_PROTOCOL`, `OLA_FD_CONNECTIONS_PER_ADDRESS`, `OLA_FD_INFLIGHT_MB`,
@@ -696,8 +733,17 @@ desk and the gateway through the door from inside the VM. First measured from `~
 5 of 5, each back within 0.7 to 1.0 s. `stage-a` is left stopped. The mini was not rebooted.
 
 After an unattended reboot no workspace runs until someone opens it. The checks
-(`workspace/check.mjs`, `frontdesk/check.mjs`) count running workspaces machine-wide against their
-own limit of 2, so leave `stage-a` stopped while they run (a deploy runs them).
+(`workspace/check.mjs`, `frontdesk/check.mjs`) hold their limit of 2 against their own workspaces
+only (`OLA_RUNNING_SCOPE=home`, never honored for `~/.ola`), and the machine's 4 against every VM,
+so `stage-a` or a person's workspace may run meanwhile.
+
+**Scratch checkouts on the mini.** `~/ola-rot` (2026-11-16, the rotation fix) is a sparse clone of
+this repo (`apps/activist-ai` only) with its own `node_modules` and `web/dist`; nothing runs from it
+when no one is working there. Its suites run beside staging's without touching it:
+`OLA_CHECK_TAG=rot` gives `rot-` workspace ids and `~/.ola-check-rot` / `~/.ola-fdcheck-rot`, with
+`OLA_CHECK_GW_PORT` (4281 for the workspace check, 4282 for the front desk's) and
+`OLA_CHECK_FD_PORT=4890`. `~/ola-rot-scratch` holds its reproduction scripts. Delete both when no
+longer wanted.
 
 ## Deploying staging
 

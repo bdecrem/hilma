@@ -4,7 +4,9 @@
 //   node ws.mjs image                      build the workspace image from the Containerfile
 //   node ws.mjs create <id> [--memory 6g] [--disk 50g] [--cpus 4]   (limits can only go down)
 //   node ws.mjs start <id> | stop <id> | status [id]
-//   node ws.mjs rotate <id>                new opencode password and gateway token (restarts it if running)
+//   node ws.mjs rotate <id> [--json]       new opencode password and gateway token: revoke, then restore
+//   node ws.mjs revoke <id> | restore <id> the two phases (see "rotation" below); the admin CLI runs them
+//   node ws.mjs close <id> | reopen <id>   a workspace that could not be made safe; reopen rotates again
 //   node ws.mjs upload <id> <file>... [--replace]
 //   node ws.mjs files <id> [--json]
 //   (the front desk also uses putStream / getStream / removeFile / filesAsync, below: ola-put,
@@ -56,7 +58,12 @@ const GIB = 1024 ** 3
 // The ceilings (arch, section B). `create` may set less, never more.
 export const LIMITS = { cpus: 4, memory: 6 * GIB, disk: 50 * GIB }
 // At most this many workspaces running on the machine at once (arch: 4 on the Studio).
-const MAX_RUNNING = Math.min(4, Number(process.env.OLA_MAX_RUNNING || 4))
+const MACHINE_MAX = 4
+const MAX_RUNNING = Math.min(MACHINE_MAX, Number(process.env.OLA_MAX_RUNNING || MACHINE_MAX))
+// OLA_RUNNING_SCOPE=home (the checks, never the machine's own ~/.ola): OLA_MAX_RUNNING counts only
+// this OLA_HOME's workspaces, so a check's own limit does not depend on who else runs a VM; the
+// machine's 4 still counts every one.
+const SCOPE_HOME = process.env.OLA_RUNNING_SCOPE === 'home' && (process.env.OLA_HOME || '') !== '' && path.resolve(process.env.OLA_HOME) !== path.join(homedir(), '.ola')
 const ID = /^[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$/
 // The container's data root, where volume images live (checked by destroy).
 const DATA_ROOT = path.join(homedir(), 'Library/Application Support/com.apple.container')
@@ -74,20 +81,33 @@ export function runtimeDirs(id) {
 }
 export function paths(id) {
   const dir = path.join(HOME, 'ws', id)
-  return { dir, secrets: path.join(dir, 'secrets.env'), meta: path.join(dir, 'meta.json'), door: path.join(dir, 'gateway.sock'), opencode: path.join(dir, 'opencode.sock'), doorPid: path.join(dir, 'door.pid'), doorLog: path.join(dir, 'door.log'), deskPid: path.join(dir, 'desk.pid'), deskLog: path.join(dir, 'desk.log') }
+  return {
+    dir, secrets: path.join(dir, 'secrets.env'), meta: path.join(dir, 'meta.json'), door: path.join(dir, 'gateway.sock'), opencode: path.join(dir, 'opencode.sock'), doorPid: path.join(dir, 'door.pid'), doorLog: path.join(dir, 'door.log'), deskPid: path.join(dir, 'desk.pid'), deskLog: path.join(dir, 'desk.log'),
+    // A rotation under way: the new secrets, written first (see revoke). While it exists, it is
+    // the token the gateway gets, and nothing starts the workspace before the rotation is finished.
+    next: path.join(dir, 'secrets.env.next'),
+    // The workspace could not be brought to a safe state: nothing starts it until `reopen`.
+    closed: path.join(dir, 'closed'),
+    // It was running when its secrets were revoked; restore starts it again.
+    restart: path.join(dir, 'restart-after-rotation'),
+    lock: path.join(dir, 'lock'),
+  }
 }
 
 export class Refusal extends Error {}
-const refuse = (m) => {
-  throw new Refusal(m)
+const refuse = (m, code) => {
+  throw Object.assign(new Refusal(m), code ? { code } : {})
 }
+// `ws.mjs start` exits with these, so the front desk can tell a full machine and a closed
+// workspace from a failure.
+export const EXIT = { MACHINE_FULL: 3, CLOSED: 4 }
 
 // ---------------------------------------------------------------- container, quietly
 
 // Runs the container CLI. Arguments never carry a secret. Output is returned, not printed.
-export function ctr(args, { input, allowFail = false } = {}) {
-  const r = spawnSync(CONTAINER, args, { encoding: 'utf8', input, maxBuffer: 64 * 1024 * 1024 })
-  if (r.error) refuse(`could not run ${CONTAINER}: ${r.error.code}`)
+export function ctr(args, { input, allowFail = false, timeout } = {}) {
+  const r = spawnSync(CONTAINER, args, { encoding: 'utf8', input, maxBuffer: 64 * 1024 * 1024, timeout })
+  if (r.error && !(allowFail && r.error.code === 'ETIMEDOUT')) refuse(`could not run ${CONTAINER}: ${r.error.code}`)
   if (r.status !== 0 && !allowFail) refuse(`container ${args[0]} ${args[1] && !args[1].startsWith('-') ? args[1] : ''} failed: ${(r.stderr || '').trim().split('\n').pop()}`)
   return r
 }
@@ -126,8 +146,11 @@ export function writeGatewayTokens() {
   const dir = path.join(HOME, 'ws')
   const entries = []
   for (const id of existsSync(dir) ? readdirSync(dir).sort() : []) {
-    const f = paths(id).secrets
-    if (ID.test(id) && existsSync(f)) entries.push(`${names(id).caller}:${readEnvFile(f).BOX_API_KEY}`)
+    if (!ID.test(id)) continue
+    // A rotation under way: its new token, never the old one (another workspace's create or destroy
+    // rewrites this file too, and must not bring a revoked token back).
+    const f = [paths(id).next, paths(id).secrets].find((x) => existsSync(x))
+    if (f) entries.push(`${names(id).caller}:${readEnvFile(f).BOX_API_KEY}`)
   }
   const file = path.join(HOME, 'gateway-tokens')
   // Written beside and renamed into place, so the gateway (which reloads it on a change) never
@@ -328,45 +351,245 @@ function createArgs(id, { cpus, memory }) {
 
 const newSecrets = () => `OPENCODE_PASSWORD=${randomBytes(24).toString('base64url')}\nBOX_API_KEY=${randomBytes(32).toString('hex')}\n`
 
-/**
- * New secrets for a workspace: a new opencode password and gateway token. Both reach the VM only
- * through --env-file at `container create`, so the container is made again from the same volume
- * (nothing outside /work survives a stop anyway: the root is read-only). The old container's
- * config, which held the old secrets, goes with it. The gateway picks up the new token from
- * ~/.ola/gateway-tokens without a restart, and the old one stops working at once.
- * A workspace that was running is started again; open connections to it end.
- */
-export async function rotate(id) {
+// ---------------------------------------------------------------- rotation
+//
+// New secrets for a workspace (a member was removed: they may have read both from inside). Both
+// reach the VM only through --env-file at `container create`, so the container is made again
+// from the same volume (nothing outside /work survives a stop anyway: the root is read-only).
+//
+// Two phases, so revocation never waits on a free VM slot (2026-11-16: with the machine at its
+// cap, the old rotate failed at its last step, the restart, and the admin CLI stopped there, so
+// the team's other workspaces were never rotated):
+//
+//   revoke (file writes, stop and rm only; none needs a slot)
+//     1. write secrets.env.next          the new secrets; also the "rotation under way" marker
+//     2. write gateway-tokens from it    the gateway reloads: the old token is refused (and confirmed)
+//     3. stop the VM, close desk + door  the old password reaches nothing
+//     4. rm the old container            its config held the old secrets. If it cannot be removed,
+//                                        the workspace is closed: it never runs on that container
+//     5. rename .next to secrets.env     the new secrets are the workspace's
+//   restore (best effort)
+//     6. create the container from the new secrets
+//     7. start it, if it was running     a full machine leaves it stopped; the next request wakes it
+//
+// Why this order survives a kill -9 between any two steps: .next is written before anything else
+// and removed only after the old container is gone, so "a .next exists" means exactly "the old
+// container may still exist". While it exists, writeGatewayTokens hands the gateway the NEW
+// token (whoever rewrites the file), and start() finishes the revocation before it runs anything,
+// so a wake never boots the old container. Once .next is gone, any container there was made from
+// the new secrets, and a missing one is made again by start(). Running the command again picks up
+// the .next it finds (its token may already be the one in force) and carries on. The token goes
+// before the stop because the token is the one the gateway itself can refuse, whatever the
+// container runtime does; a kill between 2 and 3 leaves the VM running on the old password for
+// that moment, reachable only through the host's desk socket, and the next start() or rerun stops it.
+// Killed before step 2 finishes, nothing in force has changed yet: run it again.
+
+const KILL_AT = HOME !== path.join(homedir(), '.ola') ? process.env.OLA_TEST_KILL_AT : undefined
+// The checks' way to kill -9 a rotation between two steps (never honored for the machine's own ~/.ola).
+const step = (name) => KILL_AT === name && process.kill(process.pid, 'SIGKILL')
+
+// One rotation, start or reopen at a time per workspace (the front desk's wake can arrive in the
+// middle of an admin's rotation). A lock left by a killed process is taken over.
+async function withLock(id, fn) {
+  const { lock } = paths(id)
+  for (let i = 0; ; i++) {
+    try {
+      writeFileSync(lock, String(process.pid), { flag: 'wx', mode: 0o600 })
+      break
+    } catch (e) {
+      if (e.code !== 'EEXIST') throw e
+      let pid = 0
+      let age = 0
+      try {
+        pid = Number(readFileSync(lock, 'utf8')) || 0
+        age = Date.now() - statSync(lock).mtimeMs
+      } catch {
+        continue // it went away meanwhile
+      }
+      // No pid yet is a lock being written this instant, unless it is old.
+      if (pid ? !alive(pid) : age > 5000) {
+        rmSync(lock, { force: true })
+        continue
+      }
+      if (i >= 1800) refuse(`workspace ${id} is busy with another rotation or start (pid ${pid})`)
+      await new Promise((r) => setTimeout(r, 100))
+    }
+  }
+  try {
+    return await fn()
+  } finally {
+    rmSync(lock, { force: true })
+  }
+}
+
+// The gateway's answer to the old token through this workspace's own door socket (the only place
+// a workspace token is accepted). 401: refused. 0: nothing listens (no gateway, or it runs without
+// this door), so nothing accepts it either. Waits for the gateway's reload (a watch, or its 3 s stat).
+async function confirmRefused(id, token) {
+  const sock = path.join(GATEWAY_DOORS, `${names(id).caller}.sock`)
+  const ask = () =>
+    new Promise((resolve) => {
+      const req = http.request({ socketPath: sock, path: '/v1/models', headers: { authorization: `Bearer ${token}` }, timeout: 3000 }, (res) => (res.resume(), resolve(res.statusCode)))
+      req.on('error', () => resolve(0))
+      req.on('timeout', () => (req.destroy(), resolve(-1)))
+      req.end()
+    })
+  for (let i = 0; i < 100; i++) {
+    if (!existsSync(sock)) return 'no gateway'
+    const s = await ask()
+    if (s === 401) return 'refused'
+    if (s === 0) return 'no gateway'
+    await new Promise((r) => setTimeout(r, 100))
+  }
+  return 'unconfirmed'
+}
+
+/** Marks a workspace closed (it could not be made safe): nothing starts it until `reopen`. */
+export function close(id) {
   validId(id)
-  const c = inspect(id) || refuse(`no workspace ${id}`)
-  const meta = JSON.parse(readFileSync(paths(id).meta, 'utf8'))
-  const wasRunning = stateOf(c) === 'running'
-  ctr(['stop', names(id).container], { allowFail: true })
+  existsSync(paths(id).dir) || refuse(`no workspace ${id}`)
+  writeFileSync(paths(id).closed, 'closed: it could not be brought to a safe state after a rotation; see ws.mjs reopen\n', { mode: 0o600 })
   closeRelay('desk', id)
   closeDoor(id)
-  ctr(['rm', '--force', names(id).container])
+}
+export const isClosed = (id) => existsSync(paths(id).closed)
+const known = (id) => (validId(id), existsSync(paths(id).meta) || refuse(`no workspace ${id}`))
+
+/**
+ * Phase 1: the old opencode password and gateway token stop working. Needs no VM slot.
+ * Resolves to { state: 'revoked' | 'closed', gateway: 'refused' | 'no gateway' | 'unconfirmed', wasRunning }.
+ */
+export async function revoke(id) {
+  known(id)
+  return withLock(id, () => revokeLocked(id))
+}
+async function revokeLocked(id) {
   const p = paths(id)
-  writeFileSync(`${p.secrets}.tmp`, newSecrets(), { mode: 0o600 })
-  renameSync(`${p.secrets}.tmp`, p.secrets)
+  const n = names(id)
+  const c = inspect(id)
+  const wasRunning = stateOf(c) === 'running'
+  const old = existsSync(p.secrets) ? readEnvFile(p.secrets).BOX_API_KEY : null
+  // 1. (An interrupted rotation's .next is kept: its token may already be the gateway's.)
+  if (!existsSync(p.next)) {
+    writeFileSync(`${p.next}.tmp`, newSecrets(), { mode: 0o600 })
+    renameSync(`${p.next}.tmp`, p.next)
+  }
+  if (wasRunning) writeFileSync(p.restart, '', { mode: 0o600 })
+  step('pending')
+  // 2.
   writeGatewayTokens()
-  await openDoor(id)
-  ctr(createArgs(id, { cpus: meta.cpus, memory: meta.memory }))
+  step('tokens')
+  const gateway = old && old !== readEnvFile(p.next).BOX_API_KEY ? await confirmRefused(id, old) : 'refused'
+  // 3. Bounded: a stuck runtime must not hold the revocation of the team's other workspaces.
+  if (c) ctr(['stop', n.container], { allowFail: true, timeout: 120_000 })
+  closeRelay('desk', id)
   closeDoor(id)
+  step('stopped')
+  // 4.
+  if (inspect(id)) ctr(['rm', '--force', n.container], { allowFail: true, timeout: 120_000 })
+  if (inspect(id)) {
+    close(id)
+    return { id, state: 'closed', gateway, wasRunning, why: 'the old container could not be removed' }
+  }
+  step('removed')
+  // 5.
+  renameSync(p.next, p.secrets)
+  step('renamed')
+  return { id, state: 'revoked', gateway, wasRunning }
+}
+
+// The container, made from the current secrets if it is missing (after a rotation, or a crash in one).
+async function ensureContainer(id) {
+  if (inspect(id)) return
+  volumeOf(id) || refuse(`workspace ${id} has no volume`)
+  const meta = JSON.parse(readFileSync(paths(id).meta, 'utf8'))
+  await openDoor(id) // the mount source must exist when the container is created
+  try {
+    ctr(createArgs(id, { cpus: meta.cpus, memory: meta.memory }))
+  } finally {
+    closeDoor(id)
+  }
   for (const dir of runtimeDirs(id)) chmodSync(dir, 0o700)
-  if (wasRunning) await start(id)
-  return { id, restarted: wasRunning }
+  step('created')
+}
+
+/**
+ * Phase 2, best effort: the container made again from the new secrets, and started if it was
+ * running. Resolves to { state: 'running' | 'stopped' | 'deferred' | 'closed' | 'pending', why? }:
+ * 'deferred' means it was meant to run but is left stopped (or not yet made); the front desk's
+ * wake makes and starts it on the next request.
+ */
+export async function restore(id) {
+  known(id)
+  return withLock(id, () => restoreLocked(id))
+}
+async function restoreLocked(id) {
+  const p = paths(id)
+  if (isClosed(id)) return { id, state: 'closed' }
+  if (existsSync(p.next)) return { id, state: 'pending', why: 'its revocation is not finished' }
+  // The "was running" mark goes only when restore is done with it, so a kill -9 in here keeps it.
+  const want = existsSync(p.restart)
+  const done = (r) => (rmSync(p.restart, { force: true }), r)
+  try {
+    await ensureContainer(id)
+  } catch (e) {
+    return done({ id, state: want ? 'deferred' : 'stopped', container: false, why: e.message })
+  }
+  if (!want) return done({ id, state: 'stopped', container: true })
+  try {
+    await startLocked(id)
+    return done({ id, state: 'running', container: true })
+  } catch (e) {
+    stopQuietly(id)
+    return done({ id, state: 'deferred', container: true, busy: e.code === 'MACHINE_FULL', why: e.message })
+  }
+}
+
+/** Both phases: `ws.mjs rotate`. */
+export async function rotate(id) {
+  const r = await revoke(id)
+  if (r.state !== 'revoked') return r
+  return { ...r, ...(await restore(id)), gateway: r.gateway }
+}
+
+/** A closed workspace, made safe again: a fresh rotation (new secrets), its container made, left stopped. */
+export async function reopen(id) {
+  known(id)
+  return withLock(id, async () => {
+    const r = await revokeLocked(id)
+    if (r.state !== 'revoked') return r
+    rmSync(paths(id).restart, { force: true })
+    await ensureContainer(id)
+    rmSync(paths(id).closed, { force: true })
+    return { id, state: 'stopped', gateway: r.gateway }
+  })
+}
+
+function stopQuietly(id) {
+  if (inspect(id)) ctr(['stop', names(id).container], { allowFail: true, timeout: 120_000 })
+  closeDoor(id)
+  closeRelay('desk', id)
 }
 
 export async function start(id) {
-  validId(id)
+  known(id)
+  return withLock(id, () => startLocked(id))
+}
+async function startLocked(id) {
+  if (isClosed(id)) refuse(`workspace ${id} is closed; see: ws.mjs reopen ${id}`, 'CLOSED')
+  // A rotation that did not finish is finished first: the old container never runs again.
+  if (existsSync(paths(id).next) && (await revokeLocked(id)).state !== 'revoked') refuse(`workspace ${id} is closed; see: ws.mjs reopen ${id}`, 'CLOSED')
+  rmSync(paths(id).restart, { force: true })
+  await ensureContainer(id)
   const c = inspect(id) || refuse(`no workspace ${id}`)
   const t0 = Date.now()
   await openDoor(id) // also reopens a door that died while the VM ran
   if (stateOf(c) !== 'running') {
     const others = running().filter((x) => (x.configuration?.id || x.id) !== names(id).container)
-    if (others.length >= MAX_RUNNING) {
+    const counted = SCOPE_HOME ? others.filter((x) => existsSync(paths((x.configuration?.id || x.id).slice(4)).meta)) : others
+    if (counted.length >= MAX_RUNNING || others.length >= MACHINE_MAX) {
       closeDoor(id)
-      refuse(`${others.length} workspaces are already running; the machine runs at most ${MAX_RUNNING}`)
+      refuse(`${Math.max(counted.length, others.length)} workspaces are already running; the machine runs at most ${counted.length >= MAX_RUNNING ? MAX_RUNNING : MACHINE_MAX}`, 'MACHINE_FULL')
     }
     ctr(['start', names(id).container])
   }
@@ -380,24 +603,29 @@ export async function start(id) {
 }
 
 export function stop(id) {
-  validId(id)
-  inspect(id) || refuse(`no workspace ${id}`)
-  ctr(['stop', names(id).container], { allowFail: true })
+  known(id)
+  // A container a rotation removed and has not made again is already stopped.
+  if (inspect(id)) ctr(['stop', names(id).container], { allowFail: true })
   closeDoor(id)
   closeRelay('desk', id)
 }
 
 export async function status(id) {
   if (id !== undefined) validId(id)
-  const ids = id ? [id] : listOla().map((c) => (c.configuration?.id || c.id).slice(4))
+  const dir = path.join(HOME, 'ws')
+  const ids = id ? [id] : [...new Set([...listOla().map((c) => (c.configuration?.id || c.id).slice(4)), ...(existsSync(dir) ? readdirSync(dir).filter((x) => ID.test(x) && existsSync(paths(x).meta)) : [])])]
   const stats = new Map()
   const up = running()
   if (up.length) for (const s of json(['stats', '--no-stream', ...up.map((c) => c.configuration?.id || c.id)])) stats.set(s.id, s)
   const rows = []
   for (const w of ids) {
     const c = inspect(w)
+    // closed: refused until reopen; rotation 'pending': a revocation not finished (start finishes it).
+    const marks = existsSync(paths(w).dir) ? { closed: isClosed(w), rotation: existsSync(paths(w).next) ? 'pending' : null } : {}
     if (!c) {
-      rows.push({ id: w, state: 'missing' })
+      // A workspace whose container a rotation removed is not gone: its volume and state are here,
+      // and start makes the container again.
+      rows.push(existsSync(paths(w).meta) && volumeOf(w) ? { id: w, state: 'no container', ...marks } : { id: w, state: 'missing' })
       continue
     }
     const cfg = c.configuration
@@ -416,6 +644,7 @@ export async function status(id) {
       door: doorPid(w) ? 'open' : 'closed',
       desk: deskPid(w) ? 'open' : 'closed',
       opencode: stateOf(c) === 'running' ? await opencodeRequest(w, '/api/info') : null,
+      ...marks,
     })
   }
   return rows
@@ -717,10 +946,19 @@ async function main(argv) {
       const { ms } = await start(need())
       return console.log(`${id} is running; opencode answered after ${(ms / 1000).toFixed(1)} s`)
     }
-    case 'rotate': {
-      const r = await rotate(need())
-      return console.log(`${id}: new opencode password and gateway token${r.restarted ? '; restarted' : ''}`)
+    // rotate = revoke, then restore. With --json, one JSON line (the admin CLI reads it); the exit
+    // code is 0 whatever the state, which the line says, and 1 only if the command itself failed.
+    case 'rotate':
+    case 'revoke':
+    case 'restore':
+    case 'reopen': {
+      const r = await { rotate, revoke, restore, reopen }[cmd](need())
+      if (flags.json) return console.log(JSON.stringify(r))
+      return console.log(`${id}: ${stateLine(r)}`)
     }
+    case 'close':
+      close(need())
+      return console.log(`${id} closed; nothing starts it until: ws.mjs reopen ${id}`)
     case 'stop':
       stop(need())
       return console.log(`${id} stopped`)
@@ -730,9 +968,10 @@ async function main(argv) {
       if (!rows.length) return console.log('no workspaces')
       for (const r of rows) {
         if (r.state === 'missing') console.log(`${r.id}: no such workspace`)
+        else if (r.state === 'no container') console.log(`${r.id}: no container (start makes it from the current secrets)${r.closed ? ' (CLOSED)' : ''}${r.rotation ? ' (rotation pending)' : ''}`)
         else
           console.log(
-            `${r.id}: ${r.state}, ${r.cpus} CPUs, memory ${r.memory_used == null ? '-' : human(r.memory_used)} of ${human(r.memory_limit)}, volume ${r.disk_on_host == null ? '-' : human(r.disk_on_host)} on disk of ${human(r.disk_limit)}, network ${r.network}, door ${r.door}, desk ${r.desk}${r.opencode == null ? '' : `, opencode ${r.opencode}`}`,
+            `${r.id}: ${r.state}${r.closed ? ' (CLOSED)' : ''}${r.rotation ? ' (rotation pending)' : ''}, ${r.cpus} CPUs, memory ${r.memory_used == null ? '-' : human(r.memory_used)} of ${human(r.memory_limit)}, volume ${r.disk_on_host == null ? '-' : human(r.disk_on_host)} on disk of ${human(r.disk_limit)}, network ${r.network}, door ${r.door}, desk ${r.desk}${r.opencode == null ? '' : `, opencode ${r.opencode}`}`,
           )
       }
       return
@@ -754,14 +993,33 @@ async function main(argv) {
       await destroy(need(), flags)
       return console.log(`${id} destroyed; nothing of it is left on this machine`)
     default:
-      console.error('usage: ws.mjs image | create <id> | start <id> | stop <id> | status [id] | upload <id> <file>... | files <id> | destroy <id>')
+      console.error('usage: ws.mjs image | create <id> | start <id> | stop <id> | status [id] | rotate | revoke | restore | reopen | close <id> [--json] | upload <id> <file>... | files <id> | destroy <id>')
       process.exit(2)
+  }
+}
+
+/** One plain sentence for a rotation's result (also the admin CLI's, per workspace). */
+export function stateLine(r) {
+  const gw = r.gateway === 'unconfirmed' ? '; THE GATEWAY DID NOT CONFIRM the old token is refused (is it running? node ops/ola.mjs status)' : ''
+  switch (r.state) {
+    case 'running':
+      return `new secrets in force, old ones refused; running again${gw}`
+    case 'stopped':
+      return `new secrets in force, old ones refused; stopped, starts on its next request${gw}`
+    case 'deferred':
+      return `new secrets in force, old ones refused; left stopped (${r.busy ? 'the machine is running as many workspaces as it may' : r.why}); it starts on its next request${gw}`
+    case 'revoked':
+      return `new secrets in force, old ones refused; not restarted yet (finish: ws.mjs restore ${r.id})${gw}`
+    case 'closed':
+      return `CLOSED (${r.why ?? 'it could not be brought to a safe state'}); the old gateway token is refused and nothing starts it. Fix the container runtime, then: ws.mjs reopen ${r.id}`
+    default:
+      return `${r.state}${r.why ? ` (${r.why})` : ''}${gw}`
   }
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   main(process.argv.slice(2)).catch((e) => {
     console.error(e instanceof Refusal ? `ws: ${e.message}` : `ws: ${e?.name || 'error'}: ${e?.message}`)
-    process.exit(1)
+    process.exit(EXIT[e?.code] ?? 1)
   })
 }

@@ -248,9 +248,10 @@ if (cmd === 'container-up') {
   for (const r of rows.filter((r) => ids.has(r.id))) {
     const d = job(`cx.ola.door.${r.id}`)
     const k = job(`cx.ola.desk.${r.id}`)
-    const good = r.state !== 'running' || (r.door === 'open' && r.desk === 'open' && r.opencode === 200)
+    // A closed workspace (a rotation could not make it safe) or an unfinished rotation needs a person.
+    const good = !r.closed && !r.rotation && (r.state !== 'running' || (r.door === 'open' && r.desk === 'open' && r.opencode === 200))
     if (!good) bad++
-    console.log(`${good ? 'ok  ' : 'DOWN'}  workspace ${r.id.padEnd(10)} ${r.state}${r.state === 'running' ? `, opencode ${r.opencode}, door ${r.door} (${d.loaded ? `job pid ${d.pid}` : 'no job'}), desk ${r.desk} (${k.loaded ? `job pid ${k.pid}` : 'no job'})` : ''}, network ${r.network}`)
+    console.log(`${good ? 'ok  ' : 'DOWN'}  workspace ${r.id.padEnd(10)} ${r.state}${r.closed ? ' CLOSED (node frontdesk/admin.mjs reopen ' + r.id + ')' : ''}${r.rotation ? ' rotation pending (node frontdesk/admin.mjs rotate ' + r.id + ')' : ''}${r.state === 'running' ? `, opencode ${r.opencode}, door ${r.door} (${d.loaded ? `job pid ${d.pid}` : 'no job'}), desk ${r.desk} (${k.loaded ? `job pid ${k.pid}` : 'no job'})` : ''}${r.network ? `, network ${r.network}` : ''}`)
   }
   console.log(`logs: ${LOGS}/`)
   process.exit(bad ? 1 : 0)

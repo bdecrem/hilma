@@ -30,6 +30,7 @@ export const ceilingMessage = (minutes) =>
 export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCeilingMs = 120 * 60_000, cancelGraceMs = CANCEL_GRACE_MS }) {
   const ready = new Map() // slug -> time it last answered
   const starting = new Map() // slug -> Promise
+  const refused = new Map() // slug -> { e, at }: the last start refused, for 2 s
   const stopping = new Map() // slug -> Promise
   const agents = new Map()
   const proxies = new Map()
@@ -53,16 +54,20 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
       const child = spawn(process.execPath, [WS_CLI, cmd, slug], { stdio: ['ignore', 'ignore', 'pipe'], env: process.env })
       let err = ''
       child.stderr.on('data', (d) => (err = (err + d).slice(-500)))
-      child.on('close', (code) => (code === 0 ? resolve() : reject(Object.assign(new Error(err.trim() || `ws ${cmd} exited ${code}`), { code: 'START_FAILED' }))))
+      // A full machine and a closed workspace are told apart (ws.mjs EXIT), so the page can say so.
+      const why = (code) => (code === ws.EXIT.MACHINE_FULL ? 'MACHINE_BUSY' : code === ws.EXIT.CLOSED ? 'CLOSED' : 'START_FAILED')
+      child.on('close', (code) => (code === 0 ? resolve() : reject(Object.assign(new Error(err.trim() || `ws ${cmd} exited ${code}`), { code: why(code) }))))
     })
 
-  // After `ws.mjs rotate` (a member removed) the password changed and the container was made
-  // again: drop the pooled connections and the watcher made with the old one.
+  // After a rotation (a member removed) the password changed and the container was made again:
+  // drop the pooled connections and the watcher made with the old one. A rotation under way
+  // (secrets.env.next) counts as a change too, so nothing is reused across it.
   function fresh(slug) {
     let m = 0
-    try {
-      m = statSync(ws.paths(slug).secrets).mtimeMs
-    } catch {}
+    for (const f of [ws.paths(slug).secrets, ws.paths(slug).next])
+      try {
+        m += statSync(f).mtimeMs
+      } catch {}
     if (secretsSeen.has(slug) && secretsSeen.get(slug) !== m) reset(slug)
     secretsSeen.set(slug, m)
   }
@@ -81,9 +86,13 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
     asleep.delete(slug)
     if (Date.now() - (ready.get(slug) ?? 0) < 30_000) return
     if (stopping.has(slug)) await stopping.get(slug).catch(() => {})
+    // A start refused a moment ago (a full machine, a closed workspace) is the answer for the next
+    // ask too: a wake that took longer than the page waits was only ever heard as "waking".
+    const f = refused.get(slug)
+    if (!starting.has(slug) && f && Date.now() - f.at < 2000) throw f.e
     if (!starting.has(slug)) {
       const p = run('start', slug)
-        .then(() => ready.set(slug, Date.now()))
+        .then(() => (ready.set(slug, Date.now()), refused.delete(slug)), (e) => (refused.set(slug, { e, at: Date.now() }), Promise.reject(e)))
         .finally(() => starting.delete(slug))
       starting.set(slug, p)
     }

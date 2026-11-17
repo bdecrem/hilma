@@ -114,6 +114,14 @@ const json = (res, status, body, extra = {}) => {
   res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', ...extra }).end(JSON.stringify(body))
 }
 const NOT_FOUND = { error: 'not_found', message: 'That is not here, or it is not yours to open.' }
+const CLOSED = { error: 'closed', message: 'This project is closed for now: Ola’s computer could not finish changing its keys safely, so no one can use it until Ola’s team has checked it. Your files are kept.' }
+// A workspace that could not be started: the machine is full (it starts once a slot frees, on the
+// next request), it is closed, or something else failed. Each says so, with a time to try again.
+function startRefused(res, e) {
+  if (e?.code === 'CLOSED') return json(res, 423, CLOSED)
+  if (e?.code === 'MACHINE_BUSY') return json(res, 503, { error: 'machine_busy', message: 'Ola’s computer is running as many projects as it can just now. Try again in a few minutes.' }, { 'retry-after': '60' })
+  return json(res, 503, { error: 'start_failed', message: 'Ola’s computer could not start your project just now. Nothing was changed. Try again in a minute.' }, { 'retry-after': '30' })
+}
 
 async function readJson(req, max = 64 * 1024, ms = 10_000) {
   // A small JSON body, whole within ms, or nothing: a trickled body does not hold the socket.
@@ -200,8 +208,8 @@ export function makeFrontDesk(cfg = config()) {
     typeof slug === 'string' && /^[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$/.test(slug)
       ? db
           .prepare(
-            `SELECT w.id, w.slug, w.name, t.name AS team, m.role FROM workspaces w JOIN teams t ON t.id = w.team_id
-             JOIN memberships m ON m.team_id = w.team_id WHERE m.person_id = ? AND w.slug = ? AND w.status = 'active'`,
+            `SELECT w.id, w.slug, w.name, w.status, t.name AS team, m.role FROM workspaces w JOIN teams t ON t.id = w.team_id
+             JOIN memberships m ON m.team_id = w.team_id WHERE m.person_id = ? AND w.slug = ?`,
           )
           .get(personId, slug)
       : undefined
@@ -249,6 +257,8 @@ export function makeFrontDesk(cfg = config()) {
     const slug = req.headers['x-ola-workspace'] ?? (req.method === 'GET' ? url.searchParams.get('w') : null)
     const ws = membership(sess.personId, slug)
     if (!ws) return json(res, 404, NOT_FOUND)
+    // Closed by the admin CLI (a rotation could not make it safe): refused, to its members only.
+    if (ws.status !== 'active') return json(res, 423, CLOSED)
     const canRun = ws.role === 'owner' || ws.role === 'member'
     const readOnly = { error: 'read_only', message: 'You can read this project, but not change it or ask Ola to work in it. Ask its owner if you need more.' }
 
@@ -258,7 +268,7 @@ export function makeFrontDesk(cfg = config()) {
     // thief's open stream kept receiving every event of the workspace (review of 2026-11-16, H1).
     const hold = () => {
       const timer = setInterval(() => {
-        if (auth.stillValid(sess) && membership(sess.personId, ws.slug)) return
+        if (auth.stillValid(sess) && membership(sess.personId, ws.slug)?.status === 'active') return
         clearInterval(timer)
         res.destroy()
       }, RECHECK_MS)
@@ -285,7 +295,7 @@ export function makeFrontDesk(cfg = config()) {
         waking.catch(() => {})
         const done = await Promise.race([waking.then(() => true, (e) => e), new Promise((r) => setTimeout(() => r(false), cfg.wakeWaitMs))])
         if (done === false) return json(res, 503, { error: 'waking', message: 'Waking your workspace…' }, { 'retry-after': '1' })
-        if (done !== true) return json(res, 503, { error: 'machine_busy', message: 'Ola’s computer is running as many projects as it can just now. Try again in a few minutes.' }, { 'retry-after': '60' })
+        if (done !== true) return startRefused(res, done)
       }
       const slot = takeSlot(sess.personId, ws.slug)
       if (!slot) return json(res, 429, tooMany, { 'retry-after': '5' })
@@ -528,8 +538,9 @@ export function makeFrontDesk(cfg = config()) {
   const server = http.createServer({ requestTimeout: 15 * 60_000, headersTimeout: 5_000, keepAliveTimeout: 5_000, maxHeaderSize: 8 * 1024, connectionsCheckingInterval: 1_000 }, (req, res) => {
     handle(req, res).catch((e) => {
       log(`error (${e?.code ?? e?.name ?? 'error'})`)
-      if (!res.headersSent) json(res, e?.code === 'START_FAILED' ? 503 : 500, { error: 'server_error', message: 'Ola’s computer could not do that just now. Nothing was changed.' })
-      else res.destroy()
+      if (res.headersSent) res.destroy()
+      else if (['MACHINE_BUSY', 'CLOSED', 'START_FAILED'].includes(e?.code)) startRefused(res, e)
+      else json(res, 500, { error: 'server_error', message: 'Ola’s computer could not do that just now. Nothing was changed.' })
     })
   })
   server.maxConnections = 512

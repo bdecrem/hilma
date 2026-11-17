@@ -20,11 +20,19 @@ const ACTIONS_V1 = [
   'workspace_created', 'member_added', 'member_removed', 'role_changed',
   'file_uploaded', 'file_downloaded', 'file_deleted', 'run_started', 'file_read_by_run', 'shown_to_cloud_agent',
 ]
-/** What the audit log may say. A row with any other action is refused by the table itself. */
-export const ACTIONS = [
+// Migration 2's list (frozen too).
+const ACTIONS_V2 = [
   ...ACTIONS_V1,
   // migration 2: invitations and devices, secrets
   'invitations_voided', 'device_invited', 'device_added', 'passkey_removed', 'secrets_rotated',
+]
+/** What the audit log may say. A row with any other action is refused by the table itself. */
+export const ACTIONS = [
+  ...ACTIONS_V2,
+  // migration 3: a rotation's outcome. secrets_rotated is written only once the new secrets are in
+  // force; restart_deferred when the workspace was left stopped (the machine was full), to start on
+  // its next request; workspace_closed when it could not be made safe; workspace_reopened by the admin.
+  'restart_deferred', 'workspace_closed', 'workspace_reopened',
 ]
 
 const sqlList = (xs) => xs.map((x) => `'${x}'`).join(', ')
@@ -143,7 +151,7 @@ const MIGRATIONS = [
     at INTEGER NOT NULL,
     actor_kind TEXT NOT NULL CHECK (actor_kind IN ('person', 'admin', 'run', 'system')),
     actor_person_id INTEGER REFERENCES people(id),
-    action TEXT NOT NULL CHECK (action IN (${sqlList(ACTIONS)})),
+    action TEXT NOT NULL CHECK (action IN (${sqlList(ACTIONS_V2)})),
     workspace_id INTEGER REFERENCES workspaces(id),
     subject_person_id INTEGER REFERENCES people(id),
     name_ref BLOB,
@@ -155,6 +163,27 @@ const MIGRATIONS = [
   INSERT INTO audit_v2 SELECT id, at, actor_kind, actor_person_id, action, workspace_id, subject_person_id, name_ref, sha256, size, role, ok FROM audit;
   DROP TABLE audit;
   ALTER TABLE audit_v2 RENAME TO audit;
+  CREATE INDEX audit_workspace ON audit(workspace_id, at);
+  `,
+  // 3: a rotation's outcomes in the audit log (the table rebuilt again for its CHECK).
+  `
+  CREATE TABLE audit_v3 (
+    id INTEGER PRIMARY KEY,
+    at INTEGER NOT NULL,
+    actor_kind TEXT NOT NULL CHECK (actor_kind IN ('person', 'admin', 'run', 'system')),
+    actor_person_id INTEGER REFERENCES people(id),
+    action TEXT NOT NULL CHECK (action IN (${sqlList(ACTIONS)})),
+    workspace_id INTEGER REFERENCES workspaces(id),
+    subject_person_id INTEGER REFERENCES people(id),
+    name_ref BLOB,
+    sha256 TEXT CHECK (sha256 IS NULL OR length(sha256) = 64),
+    size INTEGER,
+    role TEXT CHECK (role IS NULL OR role IN (${sqlList(ROLES)})),
+    ok INTEGER NOT NULL DEFAULT 1 CHECK (ok IN (0, 1))
+  ) STRICT;
+  INSERT INTO audit_v3 SELECT id, at, actor_kind, actor_person_id, action, workspace_id, subject_person_id, name_ref, sha256, size, role, ok FROM audit;
+  DROP TABLE audit;
+  ALTER TABLE audit_v3 RENAME TO audit;
   CREATE INDEX audit_workspace ON audit(workspace_id, at);
   `,
 ]

@@ -10,6 +10,10 @@
 // workspaces (fd-a, fd-b under ~/.ola-fdcheck), starts the front desk on 127.0.0.1:4790 (origin
 // http://localhost:4790), and drives it with Chromium, whose virtual authenticator holds each
 // person's passkey. Only made-up data. One line per check; exits 0 only if all pass.
+//
+// OLA_CHECK_TAG=<word> (a scratch copy run beside a deploy's suites): workspaces <word>-fd-a and
+// <word>-fd-b under ~/.ola-fdcheck-<word>, and the front desk and gateway ports from
+// OLA_CHECK_FD_PORT (4790; it also uses the next two) and OLA_CHECK_GW_PORT (4182).
 import { spawn, spawnSync } from 'node:child_process'
 import { createHash, randomBytes } from 'node:crypto'
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
@@ -30,15 +34,21 @@ const args = process.argv.slice(2)
 const LIVE = !args.includes('--no-live')
 const KEEP = args.includes('--keep')
 const SHOTS = args.includes('--shots') ? args[args.indexOf('--shots') + 1] : null
-const PORT = 4790
+const TAG = process.env.OLA_CHECK_TAG ?? ''
+if (TAG && !/^[a-z][a-z0-9]{0,7}$/.test(TAG)) throw new Error('OLA_CHECK_TAG is 1 to 8 lowercase letters or digits')
+const FA = `${TAG ? `${TAG}-` : ''}fd-a`
+const FB = `${TAG ? `${TAG}-` : ''}fd-b`
+const FC = `${TAG ? `${TAG}-` : ''}fd-c` // team-a's second workspace, made for the rotation checks at the end
+const PORT = Number(process.env.OLA_CHECK_FD_PORT || 4790)
 const ORIGIN = `http://localhost:${PORT}`
-const GW_PORT = 4182
+const GW_PORT = Number(process.env.OLA_CHECK_GW_PORT || 4182)
 const run = mkdtempSync(path.join(tmpdir(), 'ola-fdcheck-'))
 const env = {
   ...process.env,
-  OLA_HOME: path.join(homedir(), '.ola-fdcheck'),
+  OLA_HOME: path.join(homedir(), `.ola-fdcheck${TAG ? `-${TAG}` : ''}`),
   OLA_GATEWAY_PORT: String(GW_PORT),
   OLA_MAX_RUNNING: '2',
+  OLA_RUNNING_SCOPE: 'home', // the 2 counts this check's workspaces only (a person's may run meanwhile)
   OLA_FD_DATA: path.join(run, 'frontdesk'),
   OLA_FD_ORIGIN: ORIGIN,
   OLA_FD_PORT: String(PORT),
@@ -135,19 +145,19 @@ async function until(fn, ms, what) {
 }
 function cleanup() {
   for (const p of children) p.kill('SIGTERM')
-  if (!KEEP) for (const id of ['fd-a', 'fd-b']) node('workspace/ws.mjs', ['destroy', id, '--confirm', id])
+  if (!KEEP) for (const id of [FA, FB, FC]) node('workspace/ws.mjs', ['destroy', id, '--confirm', id])
   rmSync(run, { recursive: true, force: true })
 }
 
 console.log('setting up: two workspaces, three people, the gateway, the front desk')
-for (const id of ['fd-a', 'fd-b']) node('workspace/ws.mjs', ['destroy', id, '--confirm', id]) // leftovers from an earlier run
+for (const id of [FA, FB, FC]) node('workspace/ws.mjs', ['destroy', id, '--confirm', id]) // leftovers from an earlier run
 const IMAGE = (await import('../workspace/ws.mjs')).IMAGE
 if (spawnSync('/usr/local/bin/container', ['image', 'inspect', IMAGE]).status !== 0) node('workspace/ws.mjs', ['image'], { stdio: 'inherit' })
 admin('add-person', 'alice', '--name', 'Alice A.')
 admin('add-person', 'bob', '--name', 'Bob B.')
 admin('add-person', 'vera', '--name', 'Vera V.')
-admin('create-workspace', 'fd-a', '--name', 'Made-up eviction report', '--team', 'team-a', '--team-name', 'Made-up Tenants’ Union', '--owner', 'alice', '--memory', '1g', '--disk', '1g', '--cpus', '1')
-admin('create-workspace', 'fd-b', '--name', 'Made-up wage survey', '--team', 'team-b', '--team-name', 'Made-up Workers’ Center', '--owner', 'bob', '--memory', '1g', '--disk', '1g', '--cpus', '1')
+admin('create-workspace', FA, '--name', 'Made-up eviction report', '--team', 'team-a', '--team-name', 'Made-up Tenants’ Union', '--owner', 'alice', '--memory', '1g', '--disk', '1g', '--cpus', '1')
+admin('create-workspace', FB, '--name', 'Made-up wage survey', '--team', 'team-b', '--team-name', 'Made-up Workers’ Center', '--owner', 'bob', '--memory', '1g', '--disk', '1g', '--cpus', '1')
 admin('add-member', 'team-a', 'vera', 'viewer')
 const fake = await startFakeModel()
 fake.server.unref()
@@ -244,8 +254,8 @@ await check('alice: invitation link → passkey made → her project opens', asy
   if (SHOTS) await A.page.screenshot({ path: path.join(SHOTS, 'invite-1280.png') })
   await register(A, invites.alice)
   a = await signedIn(A)
-  assert(a.me.status === 200 && a.me.json.workspaces.length === 1 && a.me.json.workspaces[0].slug === 'fd-a', JSON.stringify(a.me.json))
-  assert(new URL(A.page.url()).search === '?w=fd-a', A.page.url())
+  assert(a.me.status === 200 && a.me.json.workspaces.length === 1 && a.me.json.workspaces[0].slug === FA, JSON.stringify(a.me.json))
+  assert(new URL(A.page.url()).search === `?w=${FA}`, A.page.url())
   await A.page.waitForFunction(() => document.querySelector('.project-title')?.textContent !== 'Your project')
   return `project "${await A.page.locator('.project-title').innerText()}"`
 })
@@ -254,8 +264,8 @@ await check('bob and vera register from their own invitations', async () => {
   await register(V, invites.vera)
   b = await signedIn(B)
   v = await signedIn(V)
-  assert(b.me.json.workspaces.map((w) => w.slug).join() === 'fd-b', 'bob sees ' + JSON.stringify(b.me.json.workspaces))
-  assert(v.me.json.workspaces.map((w) => `${w.slug}:${w.role}`).join() === 'fd-a:viewer', 'vera sees ' + JSON.stringify(v.me.json.workspaces))
+  assert(b.me.json.workspaces.map((w) => w.slug).join() === FB, 'bob sees ' + JSON.stringify(b.me.json.workspaces))
+  assert(v.me.json.workspaces.map((w) => `${w.slug}:${w.role}`).join() === `${FA}:viewer`, 'vera sees ' + JSON.stringify(v.me.json.workspaces))
 })
 await check('an invitation works once', async () => {
   const token = invites.alice.split('/').pop()
@@ -313,7 +323,7 @@ await check('invitations: a new one voids the older; a person with a passkey get
   // Alice's own browser hears of it on its next load, once. (about:blank first: a goto to the
   // address the page is already on is only a hash change, not a load.)
   await A.page.goto('about:blank')
-  await A.page.goto(`${ORIGIN}/?w=fd-a#/`)
+  await A.page.goto(`${ORIGIN}/?w=${FA}#/`)
   await A.page.waitForSelector('.notice-bar', { timeout: 15_000 })
   const text = await A.page.locator('.notice-bar p').first().innerText()
   await A.page.getByRole('button', { name: 'I have read this' }).click()
@@ -332,33 +342,33 @@ const sampleRoutes = ALLOWED.map(([m, re]) => {
 })
 const deskRoutes = [
   ['GET', '/api/project'], ['GET', '/api/files'], ['GET', '/api/activity'], ['GET', '/api/runs'], ['POST', '/api/files?name=planted.txt'],
-  ['GET', '/api/files/survey.csv?w=fd-a'], ['DELETE', '/api/files/survey.csv'], ...sampleRoutes,
+  ['GET', `/api/files/survey.csv?w=${FA}`], ['DELETE', '/api/files/survey.csv'], ...sampleRoutes,
 ]
 await check(`bob cannot reach alice's workspace: ${deskRoutes.length} routes by API, all 404`, async () => {
   const bad = []
   for (const [m, p] of deskRoutes) {
-    const r = await api(p, { method: m, cookie: b.cookie, csrf: b.csrf, ws: 'fd-a', body: m === 'GET' ? undefined : '{}' })
+    const r = await api(p, { method: m, cookie: b.cookie, csrf: b.csrf, ws: FA, body: m === 'GET' ? undefined : '{}' })
     if (r.status !== 404) bad.push(`${m} ${p} ${r.status}`)
   }
   // The same with no workspace named, and with a name that does not exist.
-  for (const ws of [undefined, 'fd-zz', '../fd-a', 'FD-A']) {
+  for (const ws of [undefined, 'fd-zz', `../${FA}`, 'FD-A']) {
     const r = await api('/api/files', { cookie: b.cookie, ws })
     if (r.status !== 404) bad.push(`ws=${ws} ${r.status}`)
   }
   assert(!bad.length, bad.join(', '))
 })
 await check("bob cannot reach alice's workspace by direct URL in his browser", async () => {
-  await B.page.goto(`${ORIGIN}/?w=fd-a#/files`)
+  await B.page.goto(`${ORIGIN}/?w=${FA}#/files`)
   await B.page.waitForSelector('.gate-problem')
   const text = await B.page.locator('main').innerText()
   assert(text.includes('not one of yours') && !text.includes('Made-up eviction report'), text.slice(0, 200))
-  const dl = await B.page.evaluate(() => fetch('/api/files/survey.csv?w=fd-a').then((r) => r.status))
+  const dl = await B.page.evaluate((w) => fetch(`/api/files/survey.csv?w=${w}`).then((r) => r.status), FA)
   assert(dl === 404, `download ${dl}`)
 })
 await check('the opencode door refuses routes the page does not use, for an owner too', async () => {
   const bad = []
   for (const [m, p] of [['GET', '/oc/api/config'], ['POST', '/oc/api/session/x/shell'], ['GET', '/oc/api/credential'], ['POST', '/oc/api/pty'], ['GET', '/oc/api/provider'], ['GET', '/oc/api/file?path=/etc/passwd']]) {
-    const r = await api(p, { method: m, cookie: a.cookie, csrf: a.csrf, ws: 'fd-a', body: m === 'GET' ? undefined : '{}' })
+    const r = await api(p, { method: m, cookie: a.cookie, csrf: a.csrf, ws: FA, body: m === 'GET' ? undefined : '{}' })
     if (r.status !== 403) bad.push(`${m} ${p} ${r.status}`)
   }
   assert(!bad.length, bad.join(', '))
@@ -369,28 +379,28 @@ const made = { name: 'made-up notes.csv', bytes: Buffer.from(`id,city,hours\n${A
 const tmpFile = path.join(run, made.name)
 writeFileSync(tmpFile, made.bytes)
 await check('alice uploads, lists, downloads (same bytes) and deletes through the page', async () => {
-  await A.page.goto(`${ORIGIN}/?w=fd-a#/files`)
+  await A.page.goto(`${ORIGIN}/?w=${FA}#/files`)
   await A.page.waitForSelector('#files-title')
   await A.page.setInputFiles('#file-picker', tmpFile)
   await A.page.locator('table.files', { hasText: made.name }).first().waitFor({ timeout: 30_000 })
-  const list = await api('/api/files', { cookie: a.cookie, ws: 'fd-a' })
+  const list = await api('/api/files', { cookie: a.cookie, ws: FA })
   const entry = list.json.files.find((f) => f.path === made.name)
   assert(entry?.origin === 'uploaded' && entry.size === made.bytes.length, JSON.stringify(entry))
-  const back = await A.page.evaluate(async (n) => {
-    const r = await fetch(`/api/files/${encodeURIComponent(n)}?w=fd-a`)
+  const back = await A.page.evaluate(async ([n, w]) => {
+    const r = await fetch(`/api/files/${encodeURIComponent(n)}?w=${w}`)
     return [r.status, r.headers.get('content-disposition'), Array.from(new Uint8Array(await r.arrayBuffer()))]
-  }, made.name)
+  }, [made.name, FA])
   assert(back[0] === 200 && back[1].startsWith('attachment') && sha(Buffer.from(back[2])) === sha(made.bytes), `download ${back[0]} ${back[1]}`)
   const row = A.page.locator('tr', { hasText: made.name })
   await row.getByRole('button', { name: /Delete/ }).click()
   const lede = await A.page.locator('dialog.confirm .sheet-lede').innerText()
   assert(lede.includes('14 days'), `the confirmation says: ${lede}`)
   await A.page.locator('dialog.confirm').getByRole('button', { name: /^Delete/ }).click()
-  await until(async () => !(await api('/api/files', { cookie: a.cookie, ws: 'fd-a' })).json.files.some((f) => f.path === made.name), 15_000, 'the delete')
+  await until(async () => !(await api('/api/files', { cookie: a.cookie, ws: FA })).json.files.some((f) => f.path === made.name), 15_000, 'the delete')
   return `confirmation: "${lede.slice(0, 70)}…"`
 })
 await check('upload, download and delete are in the audit log, with no file name in the database', async () => {
-  const rows = auditRows('fd-a')
+  const rows = auditRows(FA)
   const want = sha(made.bytes)
   const has = (action) => rows.find((r) => r.action === action && r.sha256 === want && r.ok === 1 && r.actor === 'alice')
   assert(has('file_uploaded') && has('file_downloaded') && has('file_deleted'), rows.map((r) => `${r.action}:${r.sha256?.slice(0, 6)}`).join(' '))
@@ -408,7 +418,7 @@ await check('uploads are limited: size, names, and a planted symlink is not foll
   // read the 413 and its sentence; the page refuses a larger file before sending it, in words.
   const size = 3 * 1024 * 1024
   const want = 'That file is larger than 2 MB, the most Ola accepts.'
-  const headers = { host: `localhost:${PORT}`, origin: ORIGIN, cookie: `__Host-ola=${a.cookie}`, 'x-ola-csrf': a.csrf, 'x-ola-workspace': 'fd-a', 'content-type': 'application/octet-stream' }
+  const headers = { host: `localhost:${PORT}`, origin: ORIGIN, cookie: `__Host-ola=${a.cookie}`, 'x-ola-csrf': a.csrf, 'x-ola-workspace': FA, 'content-type': 'application/octet-stream' }
   const viaHttp = () =>
     new Promise((resolve) => {
       const r = http.request({ host: '127.0.0.1', port: PORT, method: 'POST', path: '/api/files?name=big.bin', headers: { ...headers, 'content-length': size } }, (res) => {
@@ -440,20 +450,20 @@ await check('uploads are limited: size, names, and a planted symlink is not foll
   assert(me.json?.policy?.maxUpload === 2 * 1024 * 1024, `/api/me policy ${JSON.stringify(me.json?.policy)}`)
   const bigFile = path.join(run, 'too big.bin')
   writeFileSync(bigFile, randomBytes(size))
-  await A.page.goto(`${ORIGIN}/?w=fd-a#/files`)
+  await A.page.goto(`${ORIGIN}/?w=${FA}#/files`)
   await A.page.waitForSelector('#files-title')
   await A.page.setInputFiles('#file-picker', bigFile)
   const shown = await A.page.locator('.problem[role=alert] p').first().innerText({ timeout: 15_000 })
   assert(shown === `too big.bin was not sent. ${want}`, `the page says: ${shown}`)
   for (const name of ['../escape.txt', '.hidden', 'a/b.txt', '--replace', 'x'.repeat(240)]) {
-    const r = await api(`/api/files?name=${encodeURIComponent(name)}`, { method: 'POST', cookie: a.cookie, csrf: a.csrf, ws: 'fd-a', body: 'x' })
+    const r = await api(`/api/files?name=${encodeURIComponent(name)}`, { method: 'POST', cookie: a.cookie, csrf: a.csrf, ws: FA, body: 'x' })
     assert(r.status === 400, `${name} answered ${r.status}`)
   }
   // The agent plants a link to the VM's environment (which holds its secrets) and asks for it by name.
-  spawnSync('/usr/local/bin/container', ['exec', 'ola-fd-a', 'ln', '-sf', '/proc/1/environ', '/work/env.txt'])
-  const r = await api('/api/files/env.txt?w=fd-a', { cookie: a.cookie })
+  spawnSync('/usr/local/bin/container', ['exec', `ola-${FA}`, 'ln', '-sf', '/proc/1/environ', '/work/env.txt'])
+  const r = await api(`/api/files/env.txt?w=${FA}`, { cookie: a.cookie })
   assert(r.status === 404 && !r.text.includes('OPENCODE_PASSWORD'), `the link answered ${r.status}`)
-  spawnSync('/usr/local/bin/container', ['exec', 'ola-fd-a', 'rm', '-f', '/work/env.txt'])
+  spawnSync('/usr/local/bin/container', ['exec', `ola-${FA}`, 'rm', '-f', '/work/env.txt'])
   return `3 MiB: 413 and its sentence 30 of 30 with node:http, 30 of 30 with fetch; the page: "${shown}"`
 })
 
@@ -470,20 +480,20 @@ await check('a refused request with an unread body is closed at once; slow heade
 })
 await check('the project view reads at most 12 documents, in one exec, and caches them', async () => {
   // The agent writes 200 small documents (review: 13.6 s and 200 execs per page load).
-  spawnSync(CTR, ['exec', 'ola-fd-a', 'python3', '-I', '-c', 'for i in range(200):\n    open(f"/work/note-{i:03}.md", "w").write(f"# Made-up note {i}\\n\\nLine {i}.\\n")'])
+  spawnSync(CTR, ['exec', `ola-${FA}`, 'python3', '-I', '-c', 'for i in range(200):\n    open(f"/work/note-{i:03}.md", "w").write(f"# Made-up note {i}\\n\\nLine {i}.\\n")'])
   try {
     let t0 = Date.now()
-    const first = await api('/api/project', { cookie: a.cookie, ws: 'fd-a' })
+    const first = await api('/api/project', { cookie: a.cookie, ws: FA })
     const ms1 = Date.now() - t0
     t0 = Date.now()
-    const again = await api('/api/project', { cookie: a.cookie, ws: 'fd-a' })
+    const again = await api('/api/project', { cookie: a.cookie, ws: FA })
     const ms2 = Date.now() - t0
     const notes = (first.json?.things ?? []).filter((t) => String(t.id).startsWith('file:note-'))
     assert(first.status === 200 && notes.length === 12 && notes.every((t) => /^Made-up note \d+$/.test(t.title)), `${first.status}, ${notes.length} things`)
     assert(ms1 < 6000 && again.json.things.length === first.json.things.length, `${ms1} ms`)
     return `200 files: ${notes.length} things in ${ms1} ms, ${ms2} ms again (cached)`
   } finally {
-    spawnSync(CTR, ['exec', 'ola-fd-a', 'python3', '-I', '-c', 'import glob, os\nfor f in glob.glob("/work/note-*.md"):\n    os.remove(f)'])
+    spawnSync(CTR, ['exec', `ola-${FA}`, 'python3', '-I', '-c', 'import glob, os\nfor f in glob.glob("/work/note-*.md"):\n    os.remove(f)'])
   }
 })
 await check("one person's concurrent uploads are capped at 3; the rest are refused at once, and uploads work again after", async () => {
@@ -491,7 +501,7 @@ await check("one person's concurrent uploads are capped at 3; the rest are refus
     new Promise((resolve) => {
       let done = false
       const end = (v) => !done && ((done = true), resolve(v))
-      const r = http.request({ host: '127.0.0.1', port: PORT, method: 'POST', path: `/api/files?name=slow-${i}.bin`, headers: { host: `localhost:${PORT}`, origin: ORIGIN, cookie: `__Host-ola=${a.cookie}`, 'x-ola-csrf': a.csrf, 'x-ola-workspace': 'fd-a', 'content-length': String(1024 * 1024) } }, (res) => (res.resume(), end(res.statusCode)))
+      const r = http.request({ host: '127.0.0.1', port: PORT, method: 'POST', path: `/api/files?name=slow-${i}.bin`, headers: { host: `localhost:${PORT}`, origin: ORIGIN, cookie: `__Host-ola=${a.cookie}`, 'x-ola-csrf': a.csrf, 'x-ola-workspace': FA, 'content-length': String(1024 * 1024) } }, (res) => (res.resume(), end(res.statusCode)))
       r.on('error', () => end('closed'))
       r.write(Buffer.alloc(1000))
       setTimeout(() => (end('held'), r.destroy()), 5000)
@@ -500,51 +510,51 @@ await check("one person's concurrent uploads are capped at 3; the rest are refus
   const held = codes.filter((c) => c === 'held').length
   const refused = codes.filter((c) => c === 429).length
   assert(held === 3 && refused === 5, codes.join(' '))
-  await until(async () => (await api('/api/files?name=after-cap.txt', { method: 'POST', cookie: a.cookie, csrf: a.csrf, ws: 'fd-a', body: 'x' })).status === 201, 15_000, 'an upload after the slow ones ended')
-  await api('/api/files/after-cap.txt', { method: 'DELETE', cookie: a.cookie, csrf: a.csrf, ws: 'fd-a' })
+  await until(async () => (await api('/api/files?name=after-cap.txt', { method: 'POST', cookie: a.cookie, csrf: a.csrf, ws: FA, body: 'x' })).status === 201, 15_000, 'an upload after the slow ones ended')
+  await api('/api/files/after-cap.txt', { method: 'DELETE', cookie: a.cookie, csrf: a.csrf, ws: FA })
   return `8 at once: ${held} held, ${refused} refused with 429`
 })
 await check('a download of a FIFO the agent made fails at once and leaves no process behind', async () => {
-  spawnSync(CTR, ['exec', 'ola-fd-a', 'mkfifo', '/work/pipe.csv'])
+  spawnSync(CTR, ['exec', `ola-${FA}`, 'mkfifo', '/work/pipe.csv'])
   try {
     const t0 = Date.now()
-    const r = await api('/api/files/pipe.csv?w=fd-a', { cookie: a.cookie })
+    const r = await api(`/api/files/pipe.csv?w=${FA}`, { cookie: a.cookie })
     const ms = Date.now() - t0
     await sleep(500)
     const host = spawnSync('pgrep', ['-f', 'ola-get pipe.csv'], { encoding: 'utf8' }).stdout.trim()
-    const vm = spawnSync(CTR, ['exec', 'ola-fd-a', 'python3', '-I', '-c', 'import os\nn = b"ola" + b"-get"\nprint(sum(1 for p in os.listdir("/proc") if p.isdigit() and n in open(f"/proc/{p}/cmdline", "rb").read()))'], { encoding: 'utf8' }).stdout.trim()
+    const vm = spawnSync(CTR, ['exec', `ola-${FA}`, 'python3', '-I', '-c', 'import os\nn = b"ola" + b"-get"\nprint(sum(1 for p in os.listdir("/proc") if p.isdigit() and n in open(f"/proc/{p}/cmdline", "rb").read()))'], { encoding: 'utf8' }).stdout.trim()
     assert(r.status === 404 && ms < 3000 && host === '' && vm === '0', `${r.status} after ${ms} ms; host processes [${host}], in the VM ${vm}`)
     return `404 after ${ms} ms; no ola-get on the host or in the VM`
   } finally {
-    spawnSync(CTR, ['exec', 'ola-fd-a', 'rm', '-f', '/work/pipe.csv'])
+    spawnSync(CTR, ['exec', `ola-${FA}`, 'rm', '-f', '/work/pipe.csv'])
   }
 })
 
 await check("one person's unread downloads are cut, and cannot hold every other customer's transfers", async () => {
   // Second review (2026-11-16): a viewer's 4 unread downloads of a 128 MiB file held all 512 MiB in
   // flight and 4 execs for good; every other customer's uploads answered 429.
-  spawnSync(CTR, ['exec', '--user', '1000', 'ola-fd-a', 'sh', '-c', 'head -c 134217728 /dev/zero > /work/big.bin'])
+  spawnSync(CTR, ['exec', '--user', '1000', `ola-${FA}`, 'sh', '-c', 'head -c 134217728 /dev/zero > /work/big.bin'])
   const held = []
   try {
     const codes = []
     for (let i = 0; i < 4; i++) {
       const sock = net.connect(PORT, '127.0.0.1')
-      sock.write(`GET /api/files/big.bin?w=fd-a HTTP/1.1\r\nHost: localhost:${PORT}\r\nCookie: __Host-ola=${a.cookie}\r\n\r\n`)
+      sock.write(`GET /api/files/big.bin?w=${FA} HTTP/1.1\r\nHost: localhost:${PORT}\r\nCookie: __Host-ola=${a.cookie}\r\n\r\n`)
       const first = await new Promise((resolve) => (sock.once('data', (d) => resolve(String(d).slice(9, 12))), setTimeout(() => resolve('none'), 5000)))
       sock.pause()
       codes.push(first)
       held.push(sock)
     }
-    const bobUp = await api('/api/files?name=bob-while.txt', { method: 'POST', cookie: b.cookie, csrf: b.csrf, ws: 'fd-b', body: 'x' })
+    const bobUp = await api('/api/files?name=bob-while.txt', { method: 'POST', cookie: b.cookie, csrf: b.csrf, ws: FB, body: 'x' })
     const ogets = () => spawnSync('pgrep', ['-f', 'ola-get big.bin'], { encoding: 'utf8' }).stdout.trim().split('\n').filter(Boolean).length
     const during = ogets()
     await until(async () => ogets() === 0, 20_000, 'the unread downloads cut')
-    await api('/api/files/bob-while.txt', { method: 'DELETE', cookie: b.cookie, csrf: b.csrf, ws: 'fd-b' })
+    await api('/api/files/bob-while.txt', { method: 'DELETE', cookie: b.cookie, csrf: b.csrf, ws: FB })
     assert(codes[0] === '200' && codes.slice(1).every((c) => c === '503') && bobUp.status === 201 && during === 1, `alice's downloads ${codes.join(' ')}, bob's upload ${bobUp.status}, ola-get ${during}`)
     return `alice: ${codes.join(' ')} (one at a time beyond her share); bob's upload ${bobUp.status} meanwhile; the unread one cut, no ola-get left`
   } finally {
     for (const s of held) s.destroy()
-    spawnSync(CTR, ['exec', 'ola-fd-a', 'rm', '-f', '/work/big.bin'])
+    spawnSync(CTR, ['exec', `ola-${FA}`, 'rm', '-f', '/work/big.bin'])
   }
 })
 
@@ -567,10 +577,10 @@ await check('a workspace that forges "read by a run" events cannot flood the aud
   // And the activity view: 500 run rows (what a flood before the cap left) do not push out people's rows.
   const db = new DatabaseSync(path.join(env.OLA_FD_DATA, 'platform.db'))
   db.exec('PRAGMA busy_timeout = 5000')
-  const wsId = db.prepare("SELECT id FROM workspaces WHERE slug = 'fd-a'").get().id
+  const wsId = db.prepare(`SELECT id FROM workspaces WHERE slug = '${FA}'`).get().id
   const ins = db.prepare("INSERT INTO audit (at, actor_kind, action, workspace_id, name_ref) VALUES (?, 'run', 'file_read_by_run', ?, ?)")
   for (let i = 0; i < 500; i++) ins.run(Date.now(), wsId, randomBytes(32))
-  const act = await api('/api/activity', { cookie: a.cookie, ws: 'fd-a' })
+  const act = await api('/api/activity', { cookie: a.cookie, ws: FA })
   db.prepare("DELETE FROM audit WHERE workspace_id = ? AND actor_kind = 'run' AND actor_person_id IS NULL").run(wsId)
   db.close()
   const people = (act.json?.activity ?? []).filter((x) => !x.viaRun).map((x) => x.action)
@@ -580,7 +590,7 @@ await check('a workspace that forges "read by a run" events cannot flood the aud
 
 // ---------------------------------------------------------------- roles
 await check('a viewer reads but cannot upload, delete or run', async () => {
-  const base = { cookie: v.cookie, csrf: v.csrf, ws: 'fd-a' }
+  const base = { cookie: v.cookie, csrf: v.csrf, ws: FA }
   const reads = await Promise.all(['/api/project', '/api/files', '/oc/api/session'].map((p) => api(p, base)))
   assert(reads.every((r) => r.status === 200), `reads ${reads.map((r) => r.status)}`)
   const bad = []
@@ -589,16 +599,16 @@ await check('a viewer reads but cannot upload, delete or run', async () => {
     if (r.status !== 403) bad.push(`${m} ${p} ${r.status}`)
   }
   assert(!bad.length, bad.join(', '))
-  await V.page.goto(`${ORIGIN}/?w=fd-a#/`)
+  await V.page.goto(`${ORIGIN}/?w=${FA}#/`)
   await V.page.waitForSelector('.viewer-note')
   assert(!(await V.page.locator('#askbar-input').isVisible()) && !(await V.page.getByRole('button', { name: 'Add files' }).count()), 'the viewer sees Ask Ola or Add files')
   return `${sampleRoutes.filter(([m]) => m !== 'GET').length + 2} writes refused`
 })
 
 await check("removing a member: their open stream is cut by the recheck, then the workspace gets new secrets", async () => {
-  const old = secretsOf('fd-a')
-  const gone = openStream(v.cookie, 'fd-a')
-  const stays = openStream(a.cookie, 'fd-a')
+  const old = secretsOf(FA)
+  const gone = openStream(v.cookie, FA)
+  const stays = openStream(a.cookie, FA)
   await until(() => gone.status === 200 && stays.status === 200, 30_000, 'both streams opening')
   const t0 = Date.now()
   const removal = adminAsync('remove-member', 'team-a', 'vera')
@@ -610,22 +620,22 @@ await check("removing a member: their open stream is cut by the recheck, then th
     const r = await removal
     assert(r.code === 0, `remove-member: ${r.err.trim().split('\n').pop()}`)
     assert(memberOpen, "the member's stream had closed too: the cut came from the restart, not the recheck")
-    const now = secretsOf('fd-a')
+    const now = secretsOf(FA)
     assert(now.OPENCODE_PASSWORD !== old.OPENCODE_PASSWORD && now.BOX_API_KEY !== old.BOX_API_KEY, 'the secrets did not change')
     // The gateway (not restarted) picks up the new token from its file; the old one is refused.
-    await until(() => insideToken('fd-a', now.BOX_API_KEY) === '200', 15_000, 'the new token working through the door')
-    const oldToken = insideToken('fd-a', old.BOX_API_KEY)
-    const pw = [await deskStatus('fd-a', old.OPENCODE_PASSWORD), await deskStatus('fd-a', now.OPENCODE_PASSWORD)]
+    await until(() => insideToken(FA, now.BOX_API_KEY) === '200', 15_000, 'the new token working through the door')
+    const oldToken = insideToken(FA, old.BOX_API_KEY)
+    const pw = [await deskStatus(FA, old.OPENCODE_PASSWORD), await deskStatus(FA, now.OPENCODE_PASSWORD)]
     assert(oldToken === '401' && pw[0] === 401 && pw[1] === 200, `old token ${oldToken}, old password ${pw[0]}, new password ${pw[1]}`)
     // Alice carries on through the front desk; the removed viewer's stream saw nothing after.
-    const again = openStream(a.cookie, 'fd-a')
+    const again = openStream(a.cookie, FA)
     await until(() => again.status === 200, 30_000, "alice's stream after the restart")
     const mark = `made-up after removal ${Date.now()}`
-    const made = await api('/oc/api/session', { method: 'POST', cookie: a.cookie, csrf: a.csrf, ws: 'fd-a', body: JSON.stringify({ title: mark }), headers: { 'content-type': 'application/json' } })
+    const made = await api('/oc/api/session', { method: 'POST', cookie: a.cookie, csrf: a.csrf, ws: FA, body: JSON.stringify({ title: mark }), headers: { 'content-type': 'application/json' } })
     await until(() => again.text.includes(mark), 15_000, "alice's stream getting the new session")
     again.stop()
     assert(made.status === 200 && !gone.text.includes(mark), 'the removed viewer saw a later event')
-    assert(auditRows('fd-a').some((x) => x.action === 'secrets_rotated'), 'no secrets_rotated row')
+    assert(auditRows(FA).some((x) => x.action === 'secrets_rotated'), 'no secrets_rotated row')
     return `cut ${ms} ms after the removal with the member's stream still open; then old token ${oldToken} and old password ${pw[0]}, the new ones 200, gateway not restarted`
   } finally {
     gone.stop()
@@ -636,8 +646,8 @@ await check("removing a member: their open stream is cut by the recheck, then th
 })
 await check('the query to opencode cannot pick another folder (?directory=)', async () => {
   const ids = (r) => (r.json?.data ?? []).map((x) => x.id).join()
-  const plain = await api('/oc/api/session', { cookie: v.cookie, ws: 'fd-a' })
-  const other = await api('/oc/api/session?directory=/opt/ola', { cookie: v.cookie, ws: 'fd-a' })
+  const plain = await api('/oc/api/session', { cookie: v.cookie, ws: FA })
+  const other = await api('/oc/api/session?directory=/opt/ola', { cookie: v.cookie, ws: FA })
   assert(plain.status === 200 && ids(plain) && ids(other) === ids(plain), `plain ${plain.status} [${ids(plain)}], directory=/opt/ola ${other.status} [${ids(other)}]`)
   return `${plain.json.data.length} session(s), the same list either way`
 })
@@ -646,17 +656,17 @@ await check('the query to opencode cannot pick another folder (?directory=)', as
 await check('CSRF: a write without our Origin and token is refused', async () => {
   const p = '/api/files?name=csrf.txt'
   const cases = {
-    'no token': await api(p, { method: 'POST', cookie: a.cookie, ws: 'fd-a', body: 'x' }),
-    'wrong token': await api(p, { method: 'POST', cookie: a.cookie, csrf: 'x'.repeat(43), ws: 'fd-a', body: 'x' }),
-    "bob's token": await api(p, { method: 'POST', cookie: a.cookie, csrf: b.csrf, ws: 'fd-a', body: 'x' }),
-    'other origin': await api(p, { method: 'POST', cookie: a.cookie, csrf: a.csrf, ws: 'fd-a', origin: 'http://127.0.0.1:4791', body: 'x' }),
-    'no origin': await api(p, { method: 'POST', cookie: a.cookie, csrf: a.csrf, ws: 'fd-a', origin: null, body: 'x' }),
+    'no token': await api(p, { method: 'POST', cookie: a.cookie, ws: FA, body: 'x' }),
+    'wrong token': await api(p, { method: 'POST', cookie: a.cookie, csrf: 'x'.repeat(43), ws: FA, body: 'x' }),
+    "bob's token": await api(p, { method: 'POST', cookie: a.cookie, csrf: b.csrf, ws: FA, body: 'x' }),
+    'other origin': await api(p, { method: 'POST', cookie: a.cookie, csrf: a.csrf, ws: FA, origin: `http://127.0.0.1:${PORT + 1}`, body: 'x' }),
+    'no origin': await api(p, { method: 'POST', cookie: a.cookie, csrf: a.csrf, ws: FA, origin: null, body: 'x' }),
     'cross-site fetch': await api('/api/me', { cookie: a.cookie, headers: { 'sec-fetch-site': 'cross-site' } }),
     'same-site fetch': await api('/api/me', { cookie: a.cookie, headers: { 'sec-fetch-site': 'same-site' } }),
   }
   const bad = Object.entries(cases).filter(([, r]) => r.status !== 403).map(([k, r]) => `${k} ${r.status}`)
   assert(!bad.length, bad.join(', '))
-  const files = (await api('/api/files', { cookie: a.cookie, ws: 'fd-a' })).json.files
+  const files = (await api('/api/files', { cookie: a.cookie, ws: FA })).json.files
   assert(!files.some((f) => f.path === 'csrf.txt'), 'a refused write landed')
   return `${Object.keys(cases).length} cases`
 })
@@ -682,15 +692,15 @@ await check("another site's page cannot act as alice (form post and fetch)", asy
 // ---------------------------------------------------------------- sessions
 await check('a stolen cookie works until revoked, then fails', async () => {
   const thief = { cookie: a.cookie, csrf: a.csrf }
-  assert((await api('/api/files', { cookie: thief.cookie, ws: 'fd-a' })).status === 200, 'the cookie did not work before revocation')
-  const open = openStream(thief.cookie, 'fd-a')
+  assert((await api('/api/files', { cookie: thief.cookie, ws: FA })).status === 200, 'the cookie did not work before revocation')
+  const open = openStream(thief.cookie, FA)
   await until(() => open.status === 200, 30_000, "the thief's event stream opening")
   admin('revoke-sessions', 'alice')
   await until(() => !open.open, 10_000, "the thief's open event stream closing after revocation")
-  const after = await Promise.all([api('/api/me', thief), api('/api/files', { ...thief, ws: 'fd-a' }), api('/api/files?name=t.txt', { ...thief, method: 'POST', ws: 'fd-a', body: 'x' }), api('/oc/api/session', { ...thief, ws: 'fd-a' })])
+  const after = await Promise.all([api('/api/me', thief), api('/api/files', { ...thief, ws: FA }), api('/api/files?name=t.txt', { ...thief, method: 'POST', ws: FA, body: 'x' }), api('/oc/api/session', { ...thief, ws: FA })])
   assert(after.every((r) => r.status === 401), `after: ${after.map((r) => r.status)}`)
   // The open page notices on its next request and goes back to the sign-in screen.
-  await A.page.goto(`${ORIGIN}/?w=fd-a#/`)
+  await A.page.goto(`${ORIGIN}/?w=${FA}#/`)
   await A.page.evaluate(() => (location.hash = '#/files'))
   await A.page.getByRole('button', { name: 'Sign in with your passkey' }).waitFor({ timeout: 15_000 })
   await signInWithPasskey(A)
@@ -718,7 +728,7 @@ await check('strict headers on the page, the API and a download; wrong Host refu
   const problems = []
   if (!/default-src 'none'/.test(csp) || !/script-src 'self'(;|$)/.test(csp) || /unsafe-|https?:|\*/.test(csp) || !/frame-ancestors 'none'/.test(csp)) problems.push(`csp ${csp}`)
   if (/<script(?![^>]*\bsrc=)[^>]*>/i.test(html)) problems.push('an inline script in index.html')
-  for (const r of [page, await api('/api/me'), await api('/api/project', { cookie: a.cookie, ws: 'fd-a' })]) {
+  for (const r of [page, await api('/api/me'), await api('/api/project', { cookie: a.cookie, ws: FA })]) {
     const h = (k) => r.headers.get(k) ?? ''
     if (!h('strict-transport-security').includes('max-age=')) problems.push('hsts')
     if (h('referrer-policy') !== 'no-referrer') problems.push('referrer')
@@ -746,7 +756,7 @@ await check('"people working" is one number per whole window, all teams, never w
   await api('/api/me', { cookie: b.cookie }) // bob, from another team, mid-window
   const n2 = (await api('/api/me', { cookie: a.cookie })).json.machine.working
   await boundary()
-  const m = (await api('/api/project', { cookie: a.cookie, ws: 'fd-a' })).json.machine
+  const m = (await api('/api/project', { cookie: a.cookie, ws: FA })).json.machine
   assert(n1 === 3 && n2 === 3 && m.working === 2 && Object.keys(m).sort().join() === 'capacity,working' && m.capacity === 4, `windows: ${n1}, then ${n2} after bob's request, then ${JSON.stringify(m)}`)
   return `${n1} for the window of three people; still ${n2} after bob's request mid-window; ${m.working} at the next window`
 })
@@ -756,9 +766,9 @@ if (LIVE) {
   await check('a real request runs in the drawer, inside the sealed workspace, through the gateway', async () => {
     const survey = path.join(run, 'survey')
     const truth = JSON.parse(spawnSync('python3', [path.join(AI, 'spike/make-survey.py'), survey], { encoding: 'utf8' }).stdout)
-    const up = await api('/api/files?name=survey.csv', { method: 'POST', cookie: a.cookie, csrf: a.csrf, ws: 'fd-a', body: readFileSync(path.join(survey, 'survey.csv')), headers: { 'content-type': 'application/octet-stream' } })
+    const up = await api('/api/files?name=survey.csv', { method: 'POST', cookie: a.cookie, csrf: a.csrf, ws: FA, body: readFileSync(path.join(survey, 'survey.csv')), headers: { 'content-type': 'application/octet-stream' } })
     assert(up.status === 201, `upload ${up.status}`)
-    await A.page.goto(`${ORIGIN}/?w=fd-a#/`)
+    await A.page.goto(`${ORIGIN}/?w=${FA}#/`)
     await A.page.waitForSelector('.project-title')
     await A.page.fill('#askbar-input', 'Read survey.csv. Write summary.md: a heading "Volunteer survey", then one short paragraph saying how many respondents there are and which cities appear. Then tell me the number of respondents in one sentence.')
     await A.page.press('#askbar-input', 'Enter')
@@ -773,19 +783,19 @@ if (LIVE) {
     const st = await last.getAttribute('data-status')
     const answer = (await last.locator('.answer').allInnerTexts()).pop() ?? ''
     assert(st === 'done', `ended ${st}`)
-    const files = (await api('/api/files', { cookie: a.cookie, ws: 'fd-a' })).json.files
+    const files = (await api('/api/files', { cookie: a.cookie, ws: FA })).json.files
     const n = truth.respondents ?? truth.rows ?? truth.count
-    const rows = auditRows('fd-a')
+    const rows = auditRows(FA)
     assert(rows.some((r) => r.action === 'run_started' && r.actor === 'alice'), 'no run_started in the audit log')
     const reads = rows.filter((r) => r.action === 'file_read_by_run').length
-    const gw = gateway.log.split('\n').filter((l) => l.includes('"caller":"ws-fd-a"')).length
-    assert(gw > 0, 'the gateway saw no request from ws-fd-a')
-    return `answer: ${answer.slice(0, 90).replace(/\s+/g, ' ')}; truth ${n}; summary.md ${files.some((f) => f.path === 'summary.md' && f.origin === 'made') ? 'made' : 'not made'}; ${gw} gateway requests from ws-fd-a; ${reads} read-by-run rows`
+    const gw = gateway.log.split('\n').filter((l) => l.includes(`"caller":"ws-${FA}"`)).length
+    assert(gw > 0, `the gateway saw no request from ws-${FA}`)
+    return `answer: ${answer.slice(0, 90).replace(/\s+/g, ' ')}; truth ${n}; summary.md ${files.some((f) => f.path === 'summary.md' && f.origin === 'made') ? 'made' : 'not made'}; ${gw} gateway requests from ws-${FA}; ${reads} read-by-run rows`
   })
 }
 if (SHOTS) {
   // A fresh load of the home (the drawer closed), with what the run made among the things.
-  await A.page.goto(`${ORIGIN}/?w=fd-a`)
+  await A.page.goto(`${ORIGIN}/?w=${FA}`)
   await A.page.waitForSelector('.thing')
   for (const [w, h] of [[1440, 900], [390, 844]]) {
     await A.page.setViewportSize({ width: w, height: h })
@@ -806,7 +816,7 @@ await check('sign-in routes are rate-limited', async () => {
 })
 
 await check('behind the relay (PROXY protocol): an attacker hammering sign-in from one address cannot keep a real person out', async () => {
-  const PP = 4792
+  const PP = PORT + 2
   const PORIGIN = `http://localhost:${PP}`
   const fdp = start('frontdesk-proxy', 'frontdesk/server.mjs', { OLA_FD_PORT: String(PP), OLA_FD_ORIGIN: PORIGIN, OLA_FD_PROXY_PROTOCOL: '1', OLA_FD_SIGNIN_BURST: '10', OLA_FD_SIGNIN_PER_MIN: '10', OLA_FD_IDLE_STOP_MIN: '0' })
   const via = (from, method, p, body, cookie) =>
@@ -944,14 +954,14 @@ async function restartForLongRuns() {
 }
 async function ask(text) {
   await A.page.goto('about:blank')
-  await A.page.goto(`${ORIGIN}/?w=fd-a#/`)
+  await A.page.goto(`${ORIGIN}/?w=${FA}#/`)
   await A.page.waitForFunction(() => document.querySelector('.project-title')?.textContent === 'Made-up eviction report', null, { timeout: 60_000 })
   await A.page.locator('.ask-new, button:has-text("New conversation")').first().click({ timeout: 2000 }).catch(() => {})
   await A.page.fill('#askbar-input', text)
   await A.page.press('#askbar-input', 'Enter')
   const t0 = Date.now()
-  await until(async () => (await executing('fd-a')).length > 0, 20_000, 'the run starting')
-  return { t0, sid: (await executing('fd-a'))[0] }
+  await until(async () => (await executing(FA)).length > 0, 20_000, 'the run starting')
+  return { t0, sid: (await executing(FA))[0] }
 }
 
 await check('a run longer than the idle limit finishes with no request from the browser, and the workspace stops only after it ends', async () => {
@@ -963,20 +973,20 @@ await check('a run longer than the idle limit finishes with no request from the 
   let lastSeen = Date.now()
   // The workspace's state, sampled only between two sightings of the run executing.
   while (Date.now() - t0 < 90_000) {
-    if (!(await executing('fd-a')).length) break
-    const st = wsState('fd-a')
-    if (!(await executing('fd-a')).length) break
+    if (!(await executing(FA)).length) break
+    const st = wsState(FA)
+    if (!(await executing(FA)).length) break
     states.add(st)
     lastSeen = Date.now()
     await sleep(500)
   }
   const ran = lastSeen - t0
-  const msgs = JSON.stringify(await deskGet('fd-a', `/api/session/${sid}/message`))
+  const msgs = JSON.stringify(await deskGet(FA, `/api/session/${sid}/message`))
   assert(states.size && [...states].every((s) => s === 'running'), `states during the run: ${[...states].join(', ')} (ran ${ran} ms)`)
   assert(ran > 6000, `the run lasted only ${ran} ms (idle limit 3 s)`)
   assert(msgs.includes('Done after 4 slow steps'), `the run did not reach its answer after ${ran} ms, ${fake.calls() - calls0} calls: ${msgs.slice(0, 900)}`)
   const ended = Date.now()
-  await until(() => wsState('fd-a') !== 'running', 30_000, 'the idle stop after the run')
+  await until(() => wsState(FA) !== 'running', 30_000, 'the idle stop after the run')
   return `ran ${(ran / 1000).toFixed(1)} s past a 3 s idle limit, running throughout, ${fake.calls() - calls0} model calls, answered; stopped ${((Date.now() - ended) / 1000).toFixed(1)} s after it ended`
 })
 
@@ -988,11 +998,11 @@ await check('the run ceiling interrupts a run cleanly and the page says why', as
   await A.page.waitForFunction(() => /longest one request may run/.test(document.querySelector('.drawer .turn:last-of-type')?.textContent ?? ''), null, { timeout: 10_000 })
   const text = (await last.innerText()).replace(/\s+/g, ' ')
   assert(at >= 23_000 && at < 50_000, `stopped after ${at} ms (ceiling 24 s)`)
-  assert(!(await executing('fd-a')).length, 'the session is still executing')
+  assert(!(await executing(FA)).length, 'the session is still executing')
   const c1 = fake.calls()
   await sleep(3000)
   assert(fake.calls() === c1, 'the model is still being called after the stop')
-  const runs = await api('/api/runs', { cookie: a.cookie, ws: 'fd-a' })
+  const runs = await api('/api/runs', { cookie: a.cookie, ws: FA })
   const stops = runs.json?.stopped ?? []
   assert(stops.length === 1 && stops[0].session === sid && stops[0].minutes === 0.4, `/api/runs: ${stops.length} stops (${stops.map((x) => x.session === sid ? 'this run' : 'another').join(', ')})`)
   const m = /Ola stopped this after[^.]*\./.exec(text)?.[0] ?? text.slice(0, 80)
@@ -1004,22 +1014,138 @@ await check('an idle workspace stops, its event stream does not wake it, and ope
   await until(() => fd.exitCode !== null, 10_000, 'the front desk stopping')
   fd = start('frontdesk', 'frontdesk/server.mjs', { OLA_FD_IDLE_STOP_MIN: '0.05', OLA_FD_WAKE_WAIT_MS: '0' })
   await until(async () => (await fetch(`${ORIGIN}/api/health`)).ok, 10_000, 'the front desk start')
-  const state = () => JSON.parse(node('workspace/ws.mjs', ['status', 'fd-a', '--json']).stdout)[0]?.state
-  assert((await api('/api/files', { cookie: a.cookie, ws: 'fd-a' })).status === 200, 'a request to fd-a')
+  const state = () => JSON.parse(node('workspace/ws.mjs', ['status', FA, '--json']).stdout)[0]?.state
+  assert((await api('/api/files', { cookie: a.cookie, ws: FA })).status === 200, `a request to ${FA}`)
   const t0 = Date.now()
   await until(() => state() !== 'running', 30_000, 'the idle stop')
   const after = Date.now() - t0
-  const ev = await fetch(`${ORIGIN}/oc/api/event`, { headers: { cookie: `__Host-ola=${a.cookie}`, 'x-ola-workspace': 'fd-a' }, signal: AbortSignal.timeout(5000) }).then(async (r) => [r.status, (await r.json()).error], () => ['no answer'])
+  const ev = await fetch(`${ORIGIN}/oc/api/event`, { headers: { cookie: `__Host-ola=${a.cookie}`, 'x-ola-workspace': FA }, signal: AbortSignal.timeout(5000) }).then(async (r) => [r.status, (await r.json()).error], () => ['no answer'])
   await sleep(1500)
   assert(ev[0] === 503 && ev[1] === 'asleep' && state() !== 'running', `event stream: ${ev.join(' ')}, state ${state()}`)
   await A.page.goto('about:blank')
-  await A.page.goto(`${ORIGIN}/?w=fd-a#/`)
+  await A.page.goto(`${ORIGIN}/?w=${FA}#/`)
   await A.page.getByText('Waking your workspace…').waitFor({ timeout: 10_000 })
   await A.page.waitForFunction(() => document.querySelector('.project-title')?.textContent === 'Made-up eviction report', null, { timeout: 60_000 })
   const back = state()
   assert(back === 'running', `after opening: ${back}`)
   return `stopped ${(after / 1000).toFixed(1)} s after its last request (limit 3 s, swept each second); event stream 503 asleep; the page said "Waking your workspace…", then opened it`
 })
+
+// ---------------------------------------------------------------- rotation with a full machine (2026-11-16)
+// A member removed from a team of two workspaces while the machine runs as many VMs as it may: every
+// workspace is revoked before any is restored, a restart that cannot happen leaves the workspace
+// stopped and wakeable, and one that cannot be made safe is closed and refused in plain words.
+{
+  const gwAnswer = (id, token) =>
+    new Promise((resolve) => {
+      const r = http.request({ socketPath: path.join(env.OLA_HOME, 'gw', `ws-${id}.sock`), path: '/v1/models', headers: { authorization: `Bearer ${token}` }, timeout: 10_000 }, (res) => (res.resume(), resolve(res.statusCode)))
+      r.on('error', () => resolve(0))
+      r.on('timeout', () => (r.destroy(), resolve(-1)))
+      r.end()
+    })
+  const wsRow = (id) => JSON.parse(node('workspace/ws.mjs', ['status', id, '--json']).stdout)[0]
+  // /api/project until it is no longer "waking" (the wake answers within OLA_FD_WAKE_WAIT_MS, or says waking).
+  // With busyToo, also past "machine busy" (a slot was just freed: the next ask starts it).
+  async function project(ws, { busyToo = false, ms = 60_000 } = {}) {
+    const end = Date.now() + ms
+    let r
+    do r = await api('/api/project', { cookie: a.cookie, ws })
+    while (r.status === 503 && (r.json?.error === 'waking' || (busyToo && r.json?.error === 'machine_busy')) && Date.now() < end && (await sleep(500), true))
+    return r
+  }
+  const since = (id, t0) => auditRows(id).filter((x) => x.at >= t0).map((x) => x.action)
+  const removeVera = (extra) => spawnSync(process.execPath, [path.join(AI, 'frontdesk/admin.mjs'), 'remove-member', 'team-a', 'vera'], { env: { ...env, ...extra }, encoding: 'utf8' })
+  const lineOf = (out, id) => out.split('\n').find((l) => l.startsWith(`${id}: `)) ?? ''
+  const failing = path.join(run, 'container-failing')
+  writeFileSync(failing, `#!/bin/sh\nif [ "$1" = "$FAIL_ON" ]; then for a in "$@"; do [ "$a" = "$FAIL_NAME" ] && { echo "Error: injected failure" >&2; exit 1; }; done; fi\nexec ${CTR} "$@"\n`, { mode: 0o700 })
+  // The previous check left a 3 s idle stop; these want the workspaces to stay as they are put, so
+  // no open tab's event stream wakes one meanwhile, and the front desk may run ONE of the check's
+  // VMs: whatever else runs (bob's, or one started here with the check's own limit of 2) fills it.
+  for (const p of [A, B, V]) await p.page.goto('about:blank')
+  fd.kill('SIGTERM')
+  await until(() => fd.exitCode !== null, 10_000, 'the front desk stopping')
+  fd = start('frontdesk', 'frontdesk/server.mjs', { OLA_FD_IDLE_STOP_MIN: '0', OLA_MAX_RUNNING: '1' })
+  await until(async () => (await fetch(`${ORIGIN}/api/health`)).ok, 10_000, 'the front desk start')
+  admin('create-workspace', FC, '--name', 'Made-up second report', '--team', 'team-a', '--memory', '1g', '--disk', '1g', '--cpus', '1')
+
+  await check(`removing a member at the VM cap: both of the team's workspaces get new secrets, the old ones refused; the one that ran waits stopped ("machine busy"), and wakes once a slot frees`, async () => {
+    const t0 = Date.now()
+    // FB (bob's, through the front desk) and FA running: the check's two VMs, a full machine for this front desk.
+    node('workspace/ws.mjs', ['stop', FA])
+    let opened
+    for (let i = 0; i < 120 && (opened = await api('/api/project', { cookie: b.cookie, ws: FB })).status !== 200; i++) await sleep(500)
+    assert(opened.status === 200, `${FB} did not open: ${opened.status} ${opened.json?.error}`)
+    assert(node('workspace/ws.mjs', ['start', FA]).status === 0, `${FA} did not start`)
+    const old = { [FA]: secretsOf(FA), [FC]: secretsOf(FC) }
+    // The admin's ws.mjs may run one VM (OLA_MAX_RUNNING=1): bob's workspace holds it, so FA cannot start again.
+    const r = removeVera({ OLA_MAX_RUNNING: '1' })
+    try {
+      assert(r.status === 0, `remove-member exited ${r.status}: ${r.stderr.trim().split('\n').pop()}`)
+      assert(/left stopped/.test(lineOf(r.stdout, FA)) && /stopped, it starts on its next request/.test(lineOf(r.stdout, FC)), r.stdout.trim().replace(/\n/g, ' | '))
+      for (const id of [FA, FC]) {
+        const now = secretsOf(id)
+        const got = [await gwAnswer(id, old[id].BOX_API_KEY), await deskStatus(id, old[id].OPENCODE_PASSWORD)]
+        assert(now.BOX_API_KEY !== old[id].BOX_API_KEY && now.OPENCODE_PASSWORD !== old[id].OPENCODE_PASSWORD && got[0] === 401 && got[1] === 0, `${id}: old token ${got[0]}, old password ${got[1]}`)
+      }
+      const rows = { [FA]: since(FA, t0), [FC]: since(FC, t0) }
+      assert(rows[FA].includes('secrets_rotated') && rows[FA].includes('restart_deferred') && rows[FC].includes('secrets_rotated') && !rows[FC].includes('restart_deferred'), JSON.stringify(rows))
+      assert(wsRow(FA).state === 'stopped', `${FA} is ${wsRow(FA).state}`)
+      // Bob's workspace holds the front desk's one slot: it says the machine is busy, and keeps FA stopped.
+      const busy = [await project(FA), await api('/oc/api/session', { cookie: a.cookie, ws: FA })]
+      assert(busy.every((x) => x.status === 503 && x.json?.error === 'machine_busy' && x.headers.get('retry-after')) && wsRow(FA).state === 'stopped', `while full: ${busy.map((x) => `${x.status} ${x.json?.error}`).join(', ')}, ${FA} ${wsRow(FA).state}`)
+      node('workspace/ws.mjs', ['stop', FB]) // the slot frees
+      const back = await project(FA, { busyToo: true })
+      const now = secretsOf(FA)
+      const after = { project: back.status, session: (await api('/oc/api/session', { cookie: a.cookie, ws: FA })).status, newPw: await deskStatus(FA, now.OPENCODE_PASSWORD), oldPw: await deskStatus(FA, old[FA].OPENCODE_PASSWORD), newToken: insideToken(FA, now.BOX_API_KEY), oldToken: insideToken(FA, old[FA].BOX_API_KEY) }
+      assert(after.project === 200 && after.session === 200 && after.newPw === 200 && after.oldPw === 401 && after.newToken === '200' && after.oldToken === '401', JSON.stringify(after))
+      return `old tokens 401 and old passwords unanswered for both; audit ${rows[FA].join('+')} / ${rows[FC].join('+')}; while full ${busy.map((x) => `${x.status} ${x.json.error}`).join(', ')}; a slot freed: project 200, opencode 200, new password and token 200, old 401`
+    } finally {
+      admin('add-member', 'team-a', 'vera', 'viewer')
+    }
+  })
+
+  await check(`a workspace that cannot be made safe is closed and refused in plain words, the team's other one still gets new secrets, and reopen brings it back`, async () => {
+    const t0 = Date.now()
+    const old = { [FA]: secretsOf(FA), [FC]: secretsOf(FC) }
+    const r = removeVera({ OLA_CONTAINER_BIN: failing, FAIL_ON: 'rm', FAIL_NAME: `ola-${FA}` })
+    try {
+      assert(r.status === 1, `remove-member exited ${r.status} (a person is needed: 1)`)
+      assert(/CLOSED/.test(lineOf(r.stdout, FA)) && lineOf(r.stdout, FA).includes(`node admin.mjs reopen ${FA}`) && /new secrets in force/.test(lineOf(r.stdout, FC)), r.stdout.trim().replace(/\n/g, ' | '))
+      const got = { aToken: await gwAnswer(FA, old[FA].BOX_API_KEY), aPw: await deskStatus(FA, old[FA].OPENCODE_PASSWORD), cToken: await gwAnswer(FC, old[FC].BOX_API_KEY), cNew: secretsOf(FC).BOX_API_KEY !== old[FC].BOX_API_KEY }
+      assert(got.aToken === 401 && got.aPw === 0 && got.cToken === 401 && got.cNew, JSON.stringify(got))
+      const rows = { [FA]: since(FA, t0), [FC]: since(FC, t0) }
+      assert(rows[FA].includes('workspace_closed') && !rows[FA].includes('secrets_rotated') && rows[FC].includes('secrets_rotated'), JSON.stringify(rows))
+      const refused = await api('/api/project', { cookie: a.cookie, ws: FA })
+      assert(refused.status === 423 && refused.json?.error === 'closed' && /closed/.test(refused.json.message), `${refused.status} ${refused.text.slice(0, 100)}`)
+      assert(wsRow(FA).closed === true, 'the workspace is not marked closed on the machine')
+      admin('reopen', FA)
+      const back = await project(FA)
+      const now = secretsOf(FA)
+      assert(back.status === 200 && (await deskStatus(FA, now.OPENCODE_PASSWORD)) === 200 && (await deskStatus(FA, old[FA].OPENCODE_PASSWORD)) === 401 && since(FA, t0).includes('workspace_reopened'), `after reopen: ${back.status}`)
+      return `closed: 423 "${refused.json.message.slice(0, 60)}…"; its old token 401; ${FC} rotated; reopened, opens with the new password`
+    } finally {
+      admin('add-member', 'team-a', 'vera', 'viewer')
+    }
+  })
+
+  await check(`the first workspace's container cannot be made again: the other is still rotated, and the next request makes the missing container`, async () => {
+    const t0 = Date.now()
+    const old = { [FA]: secretsOf(FA), [FC]: secretsOf(FC) }
+    const r = removeVera({ OLA_CONTAINER_BIN: failing, FAIL_ON: 'create', FAIL_NAME: `ola-${FA}` })
+    try {
+      assert(r.status === 0, `remove-member exited ${r.status}: ${r.stdout.trim().replace(/\n/g, ' | ')}`)
+      const got = { aToken: await gwAnswer(FA, old[FA].BOX_API_KEY), cToken: await gwAnswer(FC, old[FC].BOX_API_KEY), aState: wsRow(FA).state, cState: wsRow(FC).state }
+      assert(got.aToken === 401 && got.cToken === 401 && got.aState === 'no container' && got.cState === 'stopped', JSON.stringify(got))
+      const rows = { [FA]: since(FA, t0), [FC]: since(FC, t0) }
+      assert(rows[FA].includes('secrets_rotated') && rows[FA].includes('restart_deferred') && rows[FC].includes('secrets_rotated'), JSON.stringify(rows))
+      const back = await project(FA)
+      assert(back.status === 200 && (await deskStatus(FA, secretsOf(FA).OPENCODE_PASSWORD)) === 200 && (await deskStatus(FA, old[FA].OPENCODE_PASSWORD)) === 401, `after: ${back.status}`)
+      return `old tokens 401; ${FA} had no container, the next request made it and opened (200)`
+    } finally {
+      admin('add-member', 'team-a', 'vera', 'viewer')
+    }
+  })
+}
 
 await browser.close()
 ok('no request left the origin', foreign.size === 0, [...foreign].slice(0, 3).join(' '))

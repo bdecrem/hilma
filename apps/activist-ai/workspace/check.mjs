@@ -15,7 +15,8 @@
 //   5. destroy leaves nothing behind
 // Only made-up data. Prints one line per check, the measurements, and exits 0 only if all pass.
 import { spawn, spawnSync } from 'node:child_process'
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs'
+import http from 'node:http'
 import net from 'node:net'
 import { homedir, tmpdir } from 'node:os'
 import path from 'node:path'
@@ -23,10 +24,17 @@ import { fileURLToPath } from 'node:url'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const spike = path.join(here, '../spike')
-const GW_PORT = 4181
-process.env.OLA_HOME = path.join(homedir(), '.ola-check')
+// OLA_CHECK_TAG=<word> (a scratch copy run beside a deploy's suites): workspaces <word>-chk-*,
+// state in ~/.ola-check-<word>, the gateway on OLA_CHECK_GW_PORT (4181).
+const TAG = process.env.OLA_CHECK_TAG ?? ''
+if (TAG && !/^[a-z][a-z0-9]{0,7}$/.test(TAG)) throw new Error('OLA_CHECK_TAG is 1 to 8 lowercase letters or digits')
+const PRE = TAG ? `${TAG}-` : ''
+const GW_PORT = Number(process.env.OLA_CHECK_GW_PORT || 4181)
+process.env.OLA_HOME = path.join(homedir(), `.ola-check${TAG ? `-${TAG}` : ''}`)
 process.env.OLA_GATEWAY_PORT = String(GW_PORT)
 process.env.OLA_MAX_RUNNING = '2'
+// The 2 counts this check's own workspaces (a person's workspace may run on the machine meanwhile).
+process.env.OLA_RUNNING_SCOPE = 'home'
 // --no-live skips the one real task (a live model run on the stand-in); everything else runs.
 const LIVE = !process.argv.includes('--no-live')
 const ws = await import('./ws.mjs')
@@ -40,9 +48,9 @@ const t = (name, ok, detail = '') => {
   console.log(`${ok ? 'pass' : 'FAIL'}  ${name}${detail ? `  (${detail})` : ''}`)
 }
 const GIB = 1024 ** 3
-const A = 'chk-a'
-const B = 'chk-b'
-const C = 'chk-c'
+const A = `${PRE}chk-a`
+const B = `${PRE}chk-b`
+const C = `${PRE}chk-c`
 
 // Runs python inside a workspace (as its user `work`) and returns { code, out, err }.
 function inside(id, code, { timeout = 120_000 } = {}) {
@@ -114,10 +122,10 @@ except OSError:
 targets = {
   "internet 1.1.1.1:443": ("1.1.1.1", 443), "internet 8.8.8.8:53": ("8.8.8.8", 53),
   "internet 17.253.144.10:80 (apple)": ("17.253.144.10", 80),
-  "vmnet host 192.168.64.1:22": ("192.168.64.1", 22), "vmnet host 192.168.64.1:4181 (gateway)": ("192.168.64.1", 4181),
+  "vmnet host 192.168.64.1:22": ("192.168.64.1", 22), "vmnet host 192.168.64.1:${GW_PORT} (gateway)": ("192.168.64.1", ${GW_PORT}),
   "host-only 10.77.1.1:22": ("10.77.1.1", 22), "mini LAN 171.66.240.175:22": ("171.66.240.175", 22),
   "mini LAN 171.66.240.175:1234 (BlueBubbles)": ("171.66.240.175", 1234), "tailnet 100.95.51.98:1234": ("100.95.51.98", 1234),
-  "tailnet 100.95.51.98:4181 (gateway)": ("100.95.51.98", 4181), "default-network peer 192.168.64.3:22": ("192.168.64.3", 22),
+  "tailnet 100.95.51.98:${GW_PORT} (gateway)": ("100.95.51.98", ${GW_PORT}), "default-network peer 192.168.64.3:22": ("192.168.64.3", 22),
 }
 out["tcp"] = {k: tcp(*v) for k, v in targets.items()}
 out["tcp6 2606:4700:4700::1111:443"] = tcp("2606:4700:4700::1111", 443, socket.AF_INET6)
@@ -261,8 +269,8 @@ try {
   await ws.create(B, { memory: '1g', disk: '1g', cpus: 1 })
   await ws.create(C, { memory: '512m', disk: '1g', cpus: 1 })
   for (const [flag, value] of [['memory', '7g'], ['disk', '60g'], ['cpus', 5]]) {
-    const r = await ws.create('chk-over', { [flag]: value }).then(() => 'created', (e) => e.message)
-    t(`create refuses --${flag} ${value} (above the ceiling)`, r !== 'created' && !ws.inspect('chk-over'), r)
+    const r = await ws.create(`${PRE}chk-over`, { [flag]: value }).then(() => 'created', (e) => e.message)
+    t(`create refuses --${flag} ${value} (above the ceiling)`, r !== 'created' && !ws.inspect(`${PRE}chk-over`), r)
   }
   await startGateway()
 
@@ -441,11 +449,88 @@ print(json.dumps({"mib": n, "stopped": why}))
   t('the survey task, run by opencode inside the VM through the gateway, passes its checks', !taskError && checked.status === 0, taskError || lastLine)
   if (checked.status !== 0) console.log(checked.stdout.split('\n').filter((l) => l.startsWith('FAIL')).join('\n'))
   bridge.close()
-  const lines = gatewayLog.split('\n').filter((l) => l.includes('"caller":"ws-chk-a"') && l.includes('"route":"chat"')).map((l) => JSON.parse(l))
+  const lines = gatewayLog.split('\n').filter((l) => l.includes(`"caller":"ws-${A}"`) && l.includes('"route":"chat"')).map((l) => JSON.parse(l))
   measured.task_model_requests = lines.length
   measured.task_tokens = lines.reduce((s, l) => s + (l.tokens_in || 0) + (l.tokens_out || 0), 0)
   measured.events = Object.fromEntries(events)
   }
+  // -------- rotation (2026-11-16): revocation needs no VM slot, a failure closes, a kill -9 resumes
+  {
+    const cli = (args, extra = {}) => spawnSync(process.execPath, [path.join(here, 'ws.mjs'), ...args], { env: { ...process.env, ...extra }, encoding: 'utf8' })
+    const line = (r) => {
+      try {
+        return JSON.parse(r.stdout.trim().split('\n').pop())
+      } catch {
+        return { state: `no answer (${(r.stderr || '').trim().split('\n').pop()})` }
+      }
+    }
+    const ask = (socketPath, p, auth) =>
+      new Promise((resolve) => {
+        const req = http.request({ socketPath, path: p, headers: { authorization: auth }, timeout: 5000 }, (res) => (res.resume(), resolve(res.statusCode)))
+        req.on('error', () => resolve(0))
+        req.on('timeout', () => (req.destroy(), resolve(-1)))
+        req.end()
+      })
+    // The running gateway's answer to a token, through that workspace's own door socket (the only
+    // place a workspace token is accepted); opencode's to a password, through the desk (0: nothing answers).
+    const gwAnswer = (id, token) => ask(path.join(ws.GATEWAY_DOORS, `ws-${id}.sock`), '/v1/models', `Bearer ${token}`)
+    const deskAnswer = (id, pw) => ask(ws.paths(id).opencode, '/api/info', `Basic ${Buffer.from(`opencode:${pw}`).toString('base64')}`)
+    const insideToken = (id, token) => spawnSync(ws.CONTAINER, ['exec', '-i', ws.names(id).container, 'python3', '-I', '-c', 'import sys, urllib.request\nreq = urllib.request.Request("http://127.0.0.1:4180/v1/models", headers={"Authorization": "Bearer " + sys.stdin.read().strip()})\ntry:\n    print(urllib.request.urlopen(req, timeout=10).status)\nexcept urllib.error.HTTPError as e:\n    print(e.code)\n'], { input: token, encoding: 'utf8' }).stdout.trim()
+    const envHolds = (id, token) => (ws.inspect(id)?.configuration?.initProcess?.environment ?? []).includes(`BOX_API_KEY=${token}`)
+    // A container CLI that fails one subcommand for one container (FAIL_ON, FAIL_NAME), as a stuck runtime would.
+    const fake = path.join(run, 'container-failing')
+    writeFileSync(fake, `#!/bin/sh\nif [ "$1" = "$FAIL_ON" ]; then for a in "$@"; do [ "$a" = "$FAIL_NAME" ] && { echo "Error: injected failure" >&2; exit 1; }; done; fi\nexec ${ws.CONTAINER} "$@"\n`, { mode: 0o700 })
+
+    // At the cap: A and B run; the rotation of B may run only one (OLA_MAX_RUNNING=1), so B cannot start again.
+    let old = ws.secrets(B)
+    const r = line(cli(['rotate', B, '--json'], { OLA_MAX_RUNNING: '1' }))
+    let now = ws.secrets(B)
+    const st = (await ws.status(B))[0]
+    const got = { state: r.state, gateway: r.gateway, oldToken: await gwAnswer(B, old.BOX_API_KEY), oldPassword: await deskAnswer(B, old.OPENCODE_PASSWORD), container: st.state }
+    t(`rotate ${B} with the machine at its cap: new secrets in force, the old token refused by the gateway, the old password reaches nothing, left stopped`, r.state === 'deferred' && r.busy && r.gateway === 'refused' && now.BOX_API_KEY !== old.BOX_API_KEY && now.OPENCODE_PASSWORD !== old.OPENCODE_PASSWORD && got.oldToken === 401 && got.oldPassword === 0 && st.state === 'stopped' && !envHolds(B, old.BOX_API_KEY), JSON.stringify(got))
+    const busy = cli(['start', B], { OLA_MAX_RUNNING: '1' })
+    await ws.start(B) // a slot is free under this process's cap of 2: what the front desk's wake does
+    const woke = { atCap: busy.status, newPassword: await deskAnswer(B, now.OPENCODE_PASSWORD), oldPassword: await deskAnswer(B, old.OPENCODE_PASSWORD), newInside: insideToken(B, now.BOX_API_KEY), oldInside: insideToken(B, old.BOX_API_KEY) }
+    t(`${B}: start refuses with exit 3 while the machine is full; with a slot free it wakes, the new password and token work and the old ones are refused`, woke.atCap === ws.EXIT.MACHINE_FULL && woke.newPassword === 200 && woke.oldPassword === 401 && woke.newInside === '200' && woke.oldInside === '401', JSON.stringify(woke))
+
+    // The old container cannot be removed: closed, its old token still refused, nothing starts it; reopen makes it safe.
+    old = ws.secrets(C)
+    const c1 = line(cli(['rotate', C, '--json'], { OLA_CONTAINER_BIN: fake, FAIL_ON: 'rm', FAIL_NAME: ws.names(C).container }))
+    const closedRow = (await ws.status(C))[0]
+    const refusedStart = await ws.start(C).then(() => 'started', (e) => e.code ?? e.message)
+    const c1got = { state: c1.state, oldToken: await gwAnswer(C, old.BOX_API_KEY), closed: closedRow.closed, start: refusedStart }
+    t(`${C}: a container that cannot be removed leaves the workspace closed, its old token refused, and start refusing it`, c1.state === 'closed' && c1got.oldToken === 401 && closedRow.closed === true && refusedStart === 'CLOSED', JSON.stringify(c1got))
+    const re = line(cli(['reopen', C, '--json']))
+    const reRow = (await ws.status(C))[0]
+    t(`${C}: reopen rotates again, removes the old container and leaves it stopped and open`, re.state === 'stopped' && !reRow.closed && reRow.state === 'stopped' && ws.secrets(C).BOX_API_KEY !== old.BOX_API_KEY && !envHolds(C, old.BOX_API_KEY) && (await gwAnswer(C, old.BOX_API_KEY)) === 401, `${re.state}, ${reRow.state}`)
+    // The container cannot be made again: the revocation stands, and start makes it.
+    old = ws.secrets(C)
+    const c2 = line(cli(['rotate', C, '--json'], { OLA_CONTAINER_BIN: fake, FAIL_ON: 'create', FAIL_NAME: ws.names(C).container }))
+    const gone = (await ws.status(C))[0].state
+    t(`${C}: a container that cannot be made again: the old token is refused, and the workspace waits with no container for start to make it`, c2.state === 'stopped' && c2.container === false && gone === 'no container' && (await gwAnswer(C, old.BOX_API_KEY)) === 401, `${c2.state}, ${gone}`)
+    ws.stop(B) // C needs B's slot to show the wake
+    await ws.start(C)
+    t(`${C}: start makes the missing container from the new secrets and opencode answers to the new password only`, (await deskAnswer(C, ws.secrets(C).OPENCODE_PASSWORD)) === 200 && (await deskAnswer(C, old.OPENCODE_PASSWORD)) === 401)
+    ws.stop(C)
+    await ws.start(B)
+
+    // kill -9 after each step of a running workspace's rotation; then run it again (after "stopped": a wake instead).
+    for (const s of ['pending', 'tokens', 'stopped', 'removed', 'renamed', 'created']) {
+      old = ws.secrets(B)
+      const k = cli(['rotate', B, '--json'], { OLA_TEST_KILL_AT: s })
+      // From "tokens" on the gateway refuses the old token; from "stopped" on the old password reaches nothing.
+      let tok = 0
+      for (let i = 0; i < 50 && (tok = await gwAnswer(B, old.BOX_API_KEY)) !== 401 && s !== 'pending'; i++) await new Promise((res) => setTimeout(res, 100))
+      const pw = await deskAnswer(B, old.OPENCODE_PASSWORD)
+      const between = { killed: k.signal, oldToken: tok, oldPassword: pw }
+      const safe = k.signal === 'SIGKILL' && (s === 'pending' || tok === 401) && (['pending', 'tokens'].includes(s) || pw === 0)
+      const again = s === 'stopped' ? await ws.start(B).then(() => ({ state: 'running' }), (e) => ({ state: e.message })) : line(cli(['rotate', B, '--json']))
+      now = ws.secrets(B)
+      const after = { state: again.state, oldToken: await gwAnswer(B, old.BOX_API_KEY), oldPassword: await deskAnswer(B, old.OPENCODE_PASSWORD), newPassword: await deskAnswer(B, now.OPENCODE_PASSWORD), pending: existsSync(ws.paths(B).next) }
+      t(`kill -9 after "${s}", then ${s === 'stopped' ? 'a wake' : 'rotate again'}: ${s === 'pending' ? 'nothing in force had changed' : s === 'tokens' ? 'the old token was refused' : 'both old secrets were refused'}, and it completes`, safe && after.state === 'running' && after.oldToken === 401 && after.oldPassword === 401 && after.newPassword === 200 && !after.pending && !envHolds(B, old.BOX_API_KEY), `${JSON.stringify(between)} then ${JSON.stringify(after)}`)
+    }
+  }
+
   const st = (await ws.status(A))[0]
   measured.memory_after_task_mib = Math.round(st.memory_used / 1024 ** 2)
   measured.volume_on_host_after_task_mib = Math.round(st.disk_on_host / 1024 ** 2)
@@ -459,7 +544,7 @@ print(json.dumps({"mib": n, "stopped": why}))
   }
   const doors = spawnSync('pgrep', ['-f', `(door|desk).mjs ${ws.HOME}`], { encoding: 'utf8' }).stdout.trim()
   t('destroy: no door or desk process left', doors === '', doors)
-  const leftovers = ws.listOla().filter((c) => /ola-chk-/.test(c.configuration?.id || c.id))
+  const leftovers = ws.listOla().filter((c) => (c.configuration?.id || c.id).startsWith(`ola-${PRE}chk-`))
   t('destroy: no ola-chk container or volume left', leftovers.length === 0 && [A, B, C].every((id) => !ws.volumeOf(id)))
 } catch (e) {
   t('the check ran to the end', false, `${e?.name}: ${e?.message}`)

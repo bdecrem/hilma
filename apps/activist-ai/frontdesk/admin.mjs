@@ -10,11 +10,13 @@
 //                  logged, and the person is told on their next sign-in from another device
 //   node admin.mjs remove-passkey <handle> <passkey id>  (ids in `list`); ends its sessions
 //   node admin.mjs rotate <workspace>                    new opencode password and gateway token
+//   node admin.mjs reopen <workspace>                    a workspace a rotation closed: rotated again, opened
 //   node admin.mjs create-workspace <slug> --name "Spring eviction report" --team <team-slug>
 //                  [--team-name "North District Tenants' Union"] [--owner <handle>]
 //                  [--memory 6g --disk 50g --cpus 4]    calls workspace/ws.mjs create
 //   node admin.mjs add-member <team-slug> <handle> <owner|member|viewer>   (also changes a role)
-//   node admin.mjs remove-member <team-slug> <handle>   then rotates every workspace of the team
+//   node admin.mjs remove-member <team-slug> <handle>   then rotates every workspace of the team: all
+//                  revoked first, then each restored; exits 1 only if one needs a person (its line says what to run)
 //   node admin.mjs revoke-sessions <handle>             every session of that person ends now
 //   node admin.mjs suspend <handle>                      no sign-in, sessions revoked
 //   node admin.mjs shown-to-cloud <workspace> --by <handle>   record a cloud agent's look (with the customer's yes)
@@ -53,12 +55,63 @@ const person = (handle) => db.prepare('SELECT * FROM people WHERE handle = ?').g
 const team = (slug) => db.prepare('SELECT * FROM teams WHERE slug = ?').get(slug) ?? fail(`no team ${slug}`)
 const workspace = (slug) => db.prepare('SELECT * FROM workspaces WHERE slug = ?').get(slug) ?? fail(`no workspace ${slug}`)
 const admin = (row) => audit(db, { actorKind: 'admin', ...row })
-/** New secrets for one workspace (ws.mjs rotate): the old opencode password and gateway token stop working. */
-function rotate(w) {
-  const r = spawnSync(process.execPath, [path.join(HERE, '../workspace/ws.mjs'), 'rotate', w.slug], { stdio: ['ignore', 'pipe', 'inherit'], env: process.env, encoding: 'utf8' })
-  if (r.status !== 0) fail(`rotating ${w.slug} failed; its old secrets may still work. Run again: node admin.mjs rotate ${w.slug}`)
-  admin({ action: 'secrets_rotated', workspace: w.id })
-  console.log(r.stdout.trim())
+
+// ---------------------------------------------------------------- rotation
+//
+// New secrets for workspaces (ws.mjs revoke, then ws.mjs restore; see "rotation" in ws.mjs). Every
+// workspace is revoked first, before any is made again or started, so a full machine or one stuck
+// container never leaves another workspace on its old secrets; a failure is recorded and the next
+// workspace is done all the same. Prints one line per workspace: its state, and what to run if it
+// needs a person. Returns true if any does.
+const wsCli = (cmd, slug) => {
+  const r = spawnSync(process.execPath, [path.join(HERE, '../workspace/ws.mjs'), cmd, slug, '--json'], { stdio: ['ignore', 'pipe', 'pipe'], env: process.env, encoding: 'utf8' })
+  try {
+    return JSON.parse(r.stdout.trim().split('\n').pop())
+  } catch {
+    return { state: 'failed', why: (r.stderr || `ws.mjs ${cmd} exited ${r.status}`).trim().split('\n').pop().replace(/^ws: /, '') }
+  }
+}
+function closeWorkspace(w, why) {
+  db.prepare("UPDATE workspaces SET status = 'closed' WHERE id = ?").run(w.id)
+  admin({ action: 'workspace_closed', workspace: w.id })
+  // Also on the machine, so ws.mjs itself refuses to start it (best effort: the database already says closed).
+  spawnSync(process.execPath, [path.join(HERE, '../workspace/ws.mjs'), 'close', w.slug], { stdio: 'ignore', env: process.env })
+  return `${w.slug}: CLOSED (${why}); the front desk refuses it and nothing starts it. Fix the container runtime, then: node admin.mjs reopen ${w.slug}`
+}
+async function rotateAll(list) {
+  const lines = new Map()
+  let human = false
+  const revoked = []
+  for (const w of list) {
+    const r = wsCli('revoke', w.slug)
+    if (r.state === 'revoked') {
+      admin({ action: 'secrets_rotated', workspace: w.id }) // the new secrets are in force, the old container gone
+      revoked.push(w)
+      if (r.gateway === 'unconfirmed') {
+        human = true
+        lines.set(w.slug, `${w.slug}: new secrets written, but THE GATEWAY DID NOT CONFIRM it refuses the old token. Check it (node ops/ola.mjs status), then run again: node admin.mjs rotate ${w.slug}`)
+      }
+    } else {
+      human = true
+      lines.set(w.slug, closeWorkspace(w, r.why ?? (r.state === 'closed' ? 'the old container could not be removed' : 'its revocation did not finish')))
+    }
+  }
+  for (const w of revoked) {
+    const r = wsCli('restore', w.slug)
+    const closedBefore = w.status === 'closed' ? ' It was closed before and stays closed: node admin.mjs reopen ' + w.slug : ''
+    if (r.state === 'deferred') admin({ action: 'restart_deferred', workspace: w.id })
+    if (lines.has(w.slug)) continue
+    if (r.state === 'running') lines.set(w.slug, `${w.slug}: new secrets in force, old ones refused; running again.${closedBefore}`)
+    else if (r.state === 'stopped') lines.set(w.slug, `${w.slug}: new secrets in force, old ones refused; stopped, it starts on its next request.${closedBefore}`)
+    else if (r.state === 'deferred') lines.set(w.slug, `${w.slug}: new secrets in force, old ones refused; left stopped (${r.busy ? 'the machine is running as many workspaces as it may' : r.why}). It starts on its next request; nothing to do.${closedBefore}`)
+    else if (r.state === 'closed') lines.set(w.slug, `${w.slug}: new secrets in force, old ones refused; it was closed before and stays closed: node admin.mjs reopen ${w.slug}`)
+    else {
+      // Revoked (the old secrets are refused) but not made again: ws.mjs start makes it on the next request.
+      lines.set(w.slug, `${w.slug}: new secrets in force, old ones refused; not restored (${r.why ?? r.state}). It is made again on its next request, or now: node admin.mjs rotate ${w.slug}`)
+    }
+  }
+  for (const w of list) console.log(lines.get(w.slug))
+  return human
 }
 const now = Date.now()
 
@@ -104,7 +157,18 @@ switch (cmd) {
     break
   }
   case 'rotate': {
-    rotate(workspace(args[0]))
+    if (await rotateAll([workspace(args[0])])) process.exitCode = 1
+    break
+  }
+  case 'reopen': {
+    // A closed workspace made safe again: a fresh rotation, its container made, left stopped; then open.
+    const w = workspace(args[0])
+    const r = wsCli('reopen', w.slug)
+    if (r.state !== 'stopped') fail(`${w.slug} stays closed: ${r.why ?? r.state}`)
+    db.prepare("UPDATE workspaces SET status = 'active' WHERE id = ?").run(w.id)
+    admin({ action: 'secrets_rotated', workspace: w.id })
+    admin({ action: 'workspace_reopened', workspace: w.id })
+    console.log(`${w.slug}: reopened with new secrets; stopped, it starts on its next request${r.gateway === 'unconfirmed' ? ' (the gateway did not confirm it refuses the old token: node ops/ola.mjs status)' : ''}`)
     break
   }
   case 'create-workspace': {
@@ -153,9 +217,10 @@ switch (cmd) {
     // They may have seen the workspaces' opencode password and gateway token from inside (the
     // agent can read both). Give the front desk two of its one-second rechecks to cut their open
     // streams on membership alone, then make new secrets; each workspace restarts if it ran.
-    const list = db.prepare("SELECT * FROM workspaces WHERE team_id = ? AND status = 'active'").all(t.id)
+    // Closed workspaces too: they may still hold the secrets the person saw.
+    const list = db.prepare('SELECT * FROM workspaces WHERE team_id = ? ORDER BY slug').all(t.id)
     if (list.length) Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 2000)
-    for (const w of list) rotate(w)
+    if (await rotateAll(list)) process.exitCode = 1
     break
   }
   case 'revoke-sessions':
@@ -206,7 +271,7 @@ switch (cmd) {
     break
   }
   default:
-    console.error('usage: admin.mjs add-person | invite | remove-passkey | create-workspace | add-member | remove-member | rotate | revoke-sessions | suspend | shown-to-cloud | audit | list  (see the top of this file)')
+    console.error('usage: admin.mjs add-person | invite | remove-passkey | create-workspace | add-member | remove-member | rotate | reopen | revoke-sessions | suspend | shown-to-cloud | audit | list  (see the top of this file)')
     process.exit(2)
 }
 db.close()
