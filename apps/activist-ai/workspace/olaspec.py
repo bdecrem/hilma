@@ -306,7 +306,7 @@ def translate(argv):
     path = argv[0]
     ext = os.path.splitext(path)[1].lower()
     if ext == ".pdf":
-        r = subprocess.run(["pdftotext", "-layout", path, "-"], capture_output=True, text=True, timeout=300)
+        r = subprocess.run(["pdftotext", path, "-"], capture_output=True, text=True, timeout=300)
         text = r.stdout
     elif ext in (".txt", ".md", ".csv", ".html", ".xml", ".json", ""):
         text = read_file(cmd, path, 20 * 1024 * 1024).decode("utf-8", "replace")
