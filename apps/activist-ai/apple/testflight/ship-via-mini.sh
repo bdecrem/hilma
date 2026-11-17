@@ -201,7 +201,9 @@ PLIST
   hdiutil create -quiet -volname "Ola $VERSION" -srcfolder "$stage" -ov -format UDZO "$dmg"
   notarize "$dmg"
   xcrun stapler staple -q "$dmg"
-  spctl -a -t open --context context:primary-signature "$dmg" 2>/dev/null || { echo "error: Gatekeeper refuses the disk image" >&2; exit 1; }
+  # The disk image has no code signature of its own (the cloud certificate signs only through an
+  # export), so Gatekeeper judges the app inside, accepted above; the image's ticket is checked here.
+  xcrun stapler validate -q "$dmg" || { echo "error: the disk image carries no valid notarization ticket" >&2; exit 1; }
   echo "   $(du -h "$dmg" | cut -f1) $dmg"
 
   local desk=${OLA_DESKTOP_ZIP:-$HOME/Desktop/Ola/mac-download/Ola.zip}
