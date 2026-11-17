@@ -12,6 +12,8 @@ import {
   turnMessages,
   type ElevenTranscriptMessage,
 } from '@/lib/f2/eleven'
+import { isKitVoiceId, kitTurn } from '@/lib/venture/phone'
+import { phoneDeps } from '@/lib/venture/phone-deps'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
@@ -47,6 +49,11 @@ export async function POST(req: Request) {
   }
   if (!body.voice_session_id || !Array.isArray(body.transcript)) {
     return NextResponse.json({ error: 'voice_session_id and transcript required' }, { status: 400 })
+  }
+  // Kit's voice meetings from the Ola iPhone app ride the same bridge path. Their ids start with
+  // "kit-", which no Dodo session id (a UUID) can, so nothing below changes for Dodo.
+  if (isKitVoiceId(body.voice_session_id)) {
+    return kitTurn(body, req.signal, phoneDeps)
   }
 
   const session = await getElevenSession(body.voice_session_id)

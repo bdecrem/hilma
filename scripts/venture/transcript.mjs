@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-// Read the founding interview back (apps/venture/README.md).
+// Read the voice calls back (apps/venture/README.md): the interview, the talk page, the checkin,
+// and Kit meetings from the phone app (call "phone").
 //   node scripts/venture/transcript.mjs            the latest session, as text
 //   node scripts/venture/transcript.mjs --list     every session, one line each
 //   node scripts/venture/transcript.mjs <session>  one session

@@ -46,8 +46,9 @@ export async function ventureNotes(): Promise<string> {
   return notesText(pickNotes((data ?? []) as Doc[]))
 }
 
-export async function talkSystem(): Promise<string> {
-  return PERSONA + (await ventureNotes())
+// `lead` goes before the persona: the phone meeting (phone.ts) says where the call is.
+export async function talkSystem(lead = ''): Promise<string> {
+  return lead + PERSONA + (await ventureNotes())
 }
 
 // The stored turns as a Messages conversation. Claude speaks first on the
@@ -70,16 +71,31 @@ export function talkMessages(turns: Turn[]): Anthropic.MessageParam[] {
 // Claude's reply as a stream of text. Effort is low because a person is
 // waiting on the line; the system prompt is cached between turns.
 export async function* talkReply(turns: Turn[]): AsyncGenerator<string> {
-  const stream = ventureAnthropic().beta.messages.stream({
+  yield* talkStream(await talkSystem(), talkMessages(turns))
+}
+
+// The request both calls make (the page's and the phone's). max_tokens is small only for
+// warmCache, which wants the system prompt cached and nothing else.
+function talkRequest(system: string, messages: Anthropic.MessageParam[], maxTokens = 8000) {
+  return {
     model: VENTURE_MODEL,
-    max_tokens: 8000,
+    max_tokens: maxTokens,
     output_config: { effort: 'low' },
     // A declined request is re-run on a fallback model in the same call.
     betas: ['server-side-fallback-2026-07-01'],
     fallbacks: 'default',
-    system: [{ type: 'text', text: await talkSystem(), cache_control: { type: 'ephemeral' } }],
-    messages: talkMessages(turns),
-  } as never)
+    system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],
+    messages,
+  }
+}
+
+/// Write the system prompt into the prompt cache before the first turn needs it.
+export async function warmCache(system: string): Promise<void> {
+  await ventureAnthropic().beta.messages.create(talkRequest(system, [{ role: 'user', content: '(The call just connected.)' }], 64) as never)
+}
+
+export async function* talkStream(system: string, messages: Anthropic.MessageParam[], signal?: AbortSignal): AsyncGenerator<string> {
+  const stream = ventureAnthropic().beta.messages.stream(talkRequest(system, messages) as never, signal ? { signal } : undefined)
   let said = false
   for await (const event of stream) {
     if (event.type === 'content_block_delta' && event.delta.type === 'text_delta' && event.delta.text) {

@@ -175,6 +175,32 @@ source `private/JOURNAL.md` ("## Now", "## Waiting on you", then one "## day"
 section per day with `- **time** what`), so it changes with a `sync.mjs push`
 and no deploy.
 
+## Kit in the Ola iPhone app: voice meetings and notes (2026-11-17)
+
+Bart: "proper full duplex voice meetings with you or leave you voice notes",
+in the Ola app, admins only, "like the voice mode in the dodo app". The app's
+Kit tab signs in with the page's accounts (`/api/kochito/app-token`) and calls
+`/api/venture/phone/*` with that token; the code is `src/lib/venture/phone.ts`.
+
+- **A meeting** is Dodo's ElevenLabs + Claude engine with Kit's words: the
+  ElevenLabs Speech Engine **"Kit"** (Angela, calm; `KIT_ENGINE_ID`, made by
+  `node scripts/venture/kit-engine.mjs`, which touches that engine only; one
+  conversation at a time, a token required, ends after four minutes of
+  silence or forty in all) points at the voice bridge's existing `/ws/prod`
+  path, so its turns reach `/api/f2/eleven/turn` like Dodo's; ids that start
+  with `kit-` are handed to `kitTurn()` before anything of Dodo's runs. No
+  bridge deploy or Railway variable. Claude answers with the talk page's
+  persona and notes (`talkSystem`), the greeting is fixed so it is instant,
+  and the system prompt is cached while the call connects. Turns are stored as
+  they happen under `call = 'phone'`: `node scripts/venture/transcript.mjs`
+  shows them and the runner wakes on them like any call. A token is minted
+  only by a start (a person pressing Talk to Kit), at most one every 15 s and
+  ten an hour.
+- **A note** is the memo page's path: the phone records AAC (up to five
+  minutes, 4 MB), the server transcribes it (`transcribe` in `memo.ts`) and
+  stores it as a voice note in `venture_messages`; the audio is not kept.
+- Tests with stand-ins for everything: `npx tsx --test scripts/venture/phone-test.ts`.
+
 ## Independence: the steer count and the replay suite
 
 Bart, 2026-11-16: "each time i steer, that's a failure of sorts, and you then
