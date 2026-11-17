@@ -150,7 +150,7 @@ public enum ClaudeTurns {
   /// The conversation so far, as text, for Claude's context.
   public static func context(_ turns: [Turn]) -> String {
     turns.suffix(12).map { t in
-      let who = t.engine == .claude ? "Claude" : "Ola"
+      let who = t.engine == .claude ? "Claude" : t.engine == .hosted ? "The hosted open model" : "Ola"
       let answer = t.answer.count > 4000 ? String(t.answer.prefix(4000)) + "\u{2026}" : t.answer
       return "Bart: \(t.request)\n\(who): \(answer.isEmpty ? "(no answer)" : answer)"
     }.joined(separator: "\n\n")

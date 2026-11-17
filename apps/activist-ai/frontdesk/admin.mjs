@@ -38,6 +38,9 @@
 //   node admin.mjs app-allowance <handle> <tokens|default>   their weekly allowance on Ola from the Mac app and
 //                  the command line (all their computers together); default: the gateway's own number.
 //                  (allow-devices and disallow-devices are no longer needed: every active account may.)
+//   node admin.mjs app-hosted <handle> [on|off] [--cap-usd 20]   whether their own Macs (the Mac app and
+//                  the `ola` command, signed in) may hand a request to the hosted open model when they
+//                  ask, and its monthly ceiling for them; off by default; audited
 //   node admin.mjs devices [<handle>]                  signed-in devices: id, person, name, kind, dates
 //   node admin.mjs revoke-device <id>                  one device signed out now
 //   node admin.mjs add-device <handle> --name "Bart's MacBook Air" --kind mac|cli
@@ -342,6 +345,27 @@ switch (cmd) {
     console.log(tokens === null ? `${p.handle}: back to the default weekly allowance` : `${p.handle}: ${tokens.toLocaleString('en-US')} tokens a week on Ola, all their computers together; the gateway takes it within seconds`)
     break
   }
+  case 'app-hosted': {
+    // A person's own Macs and the hosted open model (hosted.mjs writeHostedGrants): off by default.
+    const p = person(args[0])
+    const to = args[1]
+    if (to !== undefined && !['on', 'off'].includes(to)) fail('say on or off (or nothing, to see it)')
+    const usd = flags['cap-usd'] === undefined ? undefined : Number(flags['cap-usd'])
+    if (usd !== undefined && !(usd >= 0 && usd <= 10_000)) fail('--cap-usd is from 0 to 10000 dollars a month')
+    if (to === 'on' && !(await gatewayUsage(cfg.claude))?.hosted) fail('the gateway has no hosted open model set up (HOSTED_* in its env), or could not be asked; nothing changed')
+    if (to && (to === 'on') !== (p.app_hosted === 1)) {
+      db.prepare('UPDATE people SET app_hosted = ? WHERE id = ?').run(to === 'on' ? 1 : 0, p.id)
+      admin({ action: to === 'on' ? 'hosted_enabled' : 'hosted_disabled', subject: p.id })
+    }
+    if (usd !== undefined) db.prepare('UPDATE people SET app_hosted_cap_micro_usd = ? WHERE id = ?').run(Math.round(usd * 1e6), p.id)
+    grants()
+    const now = person(p.handle)
+    const g = await gatewayUsage(cfg.claude)
+    const m = g?.hostedMonth.get(`p-${p.id}`)
+    const used = m ? `$${(m.cost_micro_usd / 1e6).toFixed(2)} in ${m.requests} requests this month` : 'this month unknown (no computer signed in, or the gateway was not asked)'
+    console.log(`${p.handle}: the hosted open model from their own Macs ${now.app_hosted ? 'ON' : 'off'} (${g?.hosted?.provider ?? 'no provider set up'}), ceiling $${((now.app_hosted_cap_micro_usd ?? cfg.hosted.capMicroUsd) / 1e6).toFixed(2)} a month; ${used}`)
+    break
+  }
   case 'devices': {
     const who = args[0] ? person(args[0]) : null
     const rows = db.prepare(`SELECT d.*, p.handle FROM devices d JOIN people p ON p.id = d.person_id ${who ? 'WHERE d.person_id = ?' : ''} ORDER BY d.id`).all(...(who ? [who.id] : []))
@@ -570,7 +594,7 @@ switch (cmd) {
     break
   }
   default:
-    console.error('usage: admin.mjs add-person | invite | remove-passkey | create-workspace | add-member | remove-member | rotate | reopen | revoke-sessions | suspend | app-allowance | devices | revoke-device | add-device | claude | hosted | claude-grants | shown-to-cloud | audit | list | data  (see the top of this file)')
+    console.error('usage: admin.mjs add-person | invite | remove-passkey | create-workspace | add-member | remove-member | rotate | reopen | revoke-sessions | suspend | app-allowance | app-hosted | devices | revoke-device | add-device | claude | hosted | claude-grants | shown-to-cloud | audit | list | data  (see the top of this file)')
     process.exit(2)
 }
 db.close()

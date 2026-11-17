@@ -90,7 +90,7 @@ public final class OlaStore {
   public var selected: SessionInfo? { sessions.first { $0.id == selectedID } }
   public var conversation: Conversation? { selectedID.flatMap { conversations[$0] } }
   public func needsYou(_ id: String) -> Bool { conversations[id]?.approval != nil }
-  public var gatewayModels: [ModelInfo] { models.filter { $0.providerID == "ola" } }
+  public var gatewayModels: [ModelInfo] { models.filter { $0.providerID == "ola" && $0.modelID != "hosted" } }
 
   // MARK: connecting
 
@@ -277,6 +277,8 @@ public final class OlaStore {
       }
       if type.hasPrefix("session.execution."), type != "session.execution.started", let s = sessions.first(where: { $0.id == sid }), let t = conversations[sid]!.turns.last {
         if !isActive || sid != selectedID { onRunEnded?(s, t) }
+        if hostedRuns[sid] != nil { Task { await self.finishHosted(sid) } }
+        else if t.engine == .ola { Task { await self.afterOlaRun(sid, t) } }
       }
       if type == "permission.asked", let s = sessions.first(where: { $0.id == sid }), let a = conversations[sid]!.approval {
         if !isActive || sid != selectedID { onApproval?(s, a) }
@@ -323,6 +325,7 @@ public final class OlaStore {
       c.turns = ClaudeTurns.merge(c.turns, await storedClaudeTurns(id))
       if let live = conversations[id]?.turns.filter({ $0.engine == .claude && $0.isRunning }) { c.turns = ClaudeTurns.merge(c.turns, live) }
       conversations[id] = c
+      if hostedRuns[id] != nil, !c.isRunning, !running.contains(id) { await finishHosted(id) }
     } catch {
       note(error, "That session could not be opened.")
     }
@@ -339,16 +342,63 @@ public final class OlaStore {
       problem = Problem(text: "No such command. Type / to see the commands.")
     case .command(let c, let rest):
       switch c {
-      case .claude: await askClaude(rest.isEmpty ? (conversation?.turns.last?.request ?? "") : rest)
-      case .ola: await sendToOla(rest)
-      case .hosted: problem = Problem(text: "Not set up in this app yet.")
+      // Alone: the previous request again with it; in a new conversation, the next message goes to it.
+      case .claude:
+        if rest.isEmpty, conversation?.turns.last == nil { nextOnce(.claude) } else { await askClaude(rest.isEmpty ? (conversation?.turns.last?.request ?? "") : rest) }
+      case .ola: if rest.isEmpty { nextEngine = .ola; nextOnly = false } else { await sendToOla(rest) }
+      case .hosted:
+        if rest.isEmpty, conversation?.turns.last == nil { nextOnce(.hosted) } else { await askHosted(rest.isEmpty ? (conversation?.turns.last?.request ?? "") : rest) }
       case .new: newSession()
       case .stop: await stop()
       case .files: onFiles?()
       case .help: problem = Problem(text: SlashCommand.allCases.map { "/\($0.rawValue): \($0.summary)" }.joined(separator: "\n"))
       }
     case .none:
-      if claudeOn, nextEngine == .claude { await askClaude(typed) } else { await sendToOla(typed) }
+      let engine = nextEngine
+      if nextOnly { nextOnly = false; nextEngine = .ola }
+      switch engine {
+      case .claude: await askClaude(typed)
+      case .hosted: await askHosted(typed)
+      case .ola:
+        // Before a run: does the request alone look like a stretch? (the web app's precheck)
+        if let r = Stretch.precheck(typed, files: localFiles?() ?? []) {
+          switch plan(r, sessionID: selectedID) {
+          case .handover(let f): await handOver(f, typed, reason: r); return
+          case .suggest(let target, let offers):
+            suggestion = StretchSuggestion(sessionID: selectedID, request: typed, reason: r, target: target, offers: offers, turnID: nil)
+            return
+          case .nothing: break
+          }
+        }
+        await sendToOla(typed)
+      }
+    }
+  }
+
+  /// `/claude` or `/hosted` alone in a new conversation: the next message goes there, once.
+  func nextOnce(_ e: Turn.Engine) {
+    nextEngine = e
+    nextOnly = true
+    problem = Problem(text: e == .claude ? "Your next message goes to Claude." : "Your next message goes to the hosted open model.")
+  }
+  /// The next message only (`/claude` alone), then back to Ola.
+  public private(set) var nextOnly = false
+
+  /// The session on screen, or a new one titled after the request (made with the first request).
+  func sessionFor(_ request: String) async -> String? {
+    if let id = selectedID { return id }
+    guard let client else { return nil }
+    do {
+      let title = request.count > 60 ? String(request.prefix(57)) + "\u{2026}" : request
+      let s = try await client.createSession(title: title.replacingOccurrences(of: "\n", with: " "))
+      if !sessions.contains(where: { $0.id == s.id }) { sessions.insert(s, at: 0) }
+      conversations[s.id] = Conversation(sessionID: s.id, directory: s.directory)
+      selectedID = s.id
+      if let model, model != (try? await client.defaultModel()) { try? await client.switchModel(s.id, to: model) }
+      return s.id
+    } catch {
+      note(error, "The session could not be started. Nothing was sent.")
+      return nil
     }
   }
 
@@ -356,22 +406,7 @@ public final class OlaStore {
     let request = text.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !request.isEmpty, let client else { return }
     problem = nil
-    var id = selectedID
-    if id == nil {
-      do {
-        let title = request.count > 60 ? String(request.prefix(57)) + "\u{2026}" : request
-        let s = try await client.createSession(title: title.replacingOccurrences(of: "\n", with: " "))
-        if !sessions.contains(where: { $0.id == s.id }) { sessions.insert(s, at: 0) }
-        conversations[s.id] = Conversation(sessionID: s.id, directory: s.directory)
-        selectedID = s.id
-        id = s.id
-        if let model, model != (try? await client.defaultModel()) { try? await client.switchModel(s.id, to: model) }
-      } catch {
-        note(error, "The session could not be started. Nothing was sent.")
-        return
-      }
-    }
-    guard let id else { return }
+    guard let id = await sessionFor(request) else { return }
     if conversations[id] == nil { conversations[id] = Conversation(sessionID: id) }
     conversations[id]!.startTurn(request)
     running.insert(id)
@@ -515,21 +550,8 @@ public final class OlaStore {
     guard !request.isEmpty else { problem = Problem(text: "There is no request to hand to Claude yet."); return }
     guard let launcher = claudeLauncher, let client else { problem = Problem(text: claudeUnavailable ?? "Claude is not available here."); return }
     problem = nil
-    var id = selectedID
-    if id == nil {
-      do {
-        let title = request.count > 60 ? String(request.prefix(57)) + "\u{2026}" : request
-        let s = try await client.createSession(title: title.replacingOccurrences(of: "\n", with: " "))
-        if !sessions.contains(where: { $0.id == s.id }) { sessions.insert(s, at: 0) }
-        conversations[s.id] = Conversation(sessionID: s.id, directory: s.directory)
-        selectedID = s.id
-        id = s.id
-      } catch {
-        note(error, "The session could not be started. Nothing was sent.")
-        return
-      }
-    }
-    guard let id, let session = sessions.first(where: { $0.id == id }) else { return }
+    _ = client
+    guard let id = await sessionFor(request), let session = sessions.first(where: { $0.id == id }) else { return }
     guard claudeRuns[id] == nil else { problem = Problem(text: "Claude is already working in this session. Wait for it, or stop it."); return }
     if conversations[id] == nil { conversations[id] = Conversation(sessionID: id, directory: session.directory) }
     let context = ClaudeTurns.context(conversations[id]!.turns)
@@ -594,6 +616,137 @@ public final class OlaStore {
         conversations[id]!.turns[i].error = Problem(text: "Claude could not start here.", detail: error.localizedDescription)
       }
     }
+  }
+
+  // MARK: Fallback to a hosted open model, and the stretch card
+
+  /// The folder's two switches and "When a request looks like a stretch" (the app keeps them per folder).
+  public var fallbacks = FallbackSettings()
+  /// Called when the card's "Always in this folder" changes them (the app saves them).
+  public var onFallbacksChanged: ((FallbackSettings) -> Void)?
+  /// The switch in Settings (off by default). `/hosted` works without it.
+  public var hostedOn = false
+  /// Whether a request can be handed to the hosted open model here, and to whom.
+  public var hosted = HostedStatus(unavailable: HostedStatus.notSetUp)
+  /// The door lets a request for the hosted model through only while the app hands one over.
+  public var hostedArm: ((Bool) -> Void)?
+  /// The folder's files and sizes, for the before-run check (On this Mac only).
+  public var localFiles: (() -> [(path: String, size: Int)])?
+  /// The card on screen, if any.
+  public var suggestion: StretchSuggestion?
+  public static let hostedModel = ModelInfo(providerID: "ola", modelID: "hosted", name: "Hosted open model")
+  /// Sessions where the hosted model is working, and the model to go back to after.
+  private var hostedRuns: [String: ModelInfo] = [:]
+  /// "Not now": not asked again for the same reason in that conversation.
+  private var declined: [String: Set<StretchReason>] = [:]
+
+  public func hostedRunning(_ session: String) -> Bool { hostedRuns[session] != nil }
+
+  /// What is set up here, the hosted open model first (as on the web).
+  public var fallbacksHere: [Fallback] {
+    var out: [Fallback] = []
+    if hosted.unavailable == nil { out.append(.hosted) }
+    if claudeLauncher != nil, claudeUnavailable == nil { out.append(.claude) }
+    return out
+  }
+
+  enum Plan: Equatable { case nothing, handover(Fallback), suggest(Fallback, [Fallback]) }
+
+  /// What to do about a stretch: nothing, hand it over without asking, or show the card.
+  func plan(_ r: StretchReason, sessionID: String?) -> Plan {
+    let offers = fallbacksHere
+    guard !offers.isEmpty, fallbacks.stretch != .never, !(declined[sessionID ?? ""]?.contains(r) ?? false) else { return .nothing }
+    if fallbacks.stretch == .handover {
+      let on = offers.filter { fallbacks.isOn($0) }
+      if let f = on.contains(fallbacks.stretchTo) ? fallbacks.stretchTo : on.first { return .handover(f) }
+    }
+    return .suggest(offers[0], offers)
+  }
+
+  /// After an Ola run: did it get stuck, by what can be seen?
+  func afterOlaRun(_ id: String, _ t: Turn) async {
+    guard t.engine == .ola, let r = Stretch.stuck(t) else { return }
+    switch plan(r, sessionID: id) {
+    case .handover(let f): await handOver(f, t.request, reason: r)
+    case .suggest(let target, let offers): suggestion = StretchSuggestion(sessionID: id, request: t.request, reason: r, target: target, offers: offers, turnID: t.id)
+    case .nothing: break
+    }
+  }
+
+  func handOver(_ f: Fallback, _ request: String, reason: StretchReason, sentence: Bool = true) async {
+    let note = FallbackWords.handoff(reason, to: f, provider: hosted.provider)
+    if f == .claude { await askClaude(request) } else { await askHosted(request) }
+    if sentence, let id = selectedID, let i = conversations[id]?.turns.indices.last, conversations[id]?.turns[i].engine == f.engine {
+      conversations[id]?.turns[i].notes.insert(note, at: 0)
+    }
+  }
+
+  /// The card's three answers. "Always in this folder" turns the switch on (the app asked first,
+  /// with the consent text, when it was off) and hands such requests over from then on.
+  public func answerSuggestion(_ a: StretchSuggestion.Answer) async {
+    guard let s = suggestion else { return }
+    suggestion = nil
+    switch a {
+    case .once:
+      if s.target == .claude { await askClaude(s.request) } else { await askHosted(s.request) }
+    case .always:
+      if s.target == .claude { fallbacks.claude = true; claudeOn = claudeLauncher != nil } else { fallbacks.hosted = true; hostedOn = true }
+      fallbacks.stretch = .handover
+      fallbacks.stretchTo = s.target
+      onFallbacksChanged?(fallbacks)
+      if s.target == .claude { await askClaude(s.request) } else { await askHosted(s.request) }
+    case .notNow:
+      declined[s.sessionID ?? "", default: []].insert(s.reason)
+      if s.turnID == nil { await sendToOla(s.request) }
+    }
+  }
+
+  /// "or Claude" / "or the hosted open model" on the card.
+  public func switchSuggestion() {
+    guard var s = suggestion, let o = s.other else { return }
+    s.target = o
+    suggestion = s
+  }
+
+  /// Hands one request to the hosted open model ("Ask the hosted model instead", the Hosted choice,
+  /// `/hosted`): the same opencode and the same session, with the model `hosted` for this request,
+  /// then back to the model it had. The reply is marked, by the model each step names.
+  public func askHosted(_ text: String) async {
+    let request = text.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !request.isEmpty else { problem = Problem(text: "There is no request to hand to the hosted open model yet."); return }
+    if let why = hosted.unavailable { problem = Problem(text: why); return }
+    guard let client else { return }
+    problem = nil
+    guard let id = await sessionFor(request) else { return }
+    if conversations[id]?.isRunning == true || claudeRuns[id] != nil { problem = Problem(text: "Ola is still working in this session. Wait for it, or stop it."); return }
+    let back = model ?? gatewayModels.first ?? ModelInfo(providerID: "ola", modelID: "general", name: "General")
+    hostedArm?(true)
+    do {
+      try await client.switchModel(id, to: Self.hostedModel)
+    } catch {
+      hostedArm?(false)
+      note(error, "The hosted open model could not be chosen here. Nothing was sent.")
+      return
+    }
+    hostedRuns[id] = back
+    if conversations[id] == nil { conversations[id] = Conversation(sessionID: id) }
+    conversations[id]!.startTurn(request)
+    if let i = conversations[id]!.turns.indices.last { conversations[id]!.turns[i].engine = .hosted }
+    running.insert(id)
+    do {
+      try await client.prompt(id, text: request)
+    } catch {
+      running.remove(id)
+      await finishHosted(id)
+      conversations[id]?.failLastSend(Problem(text: "Your request did not reach Ola. Nothing was done; send it again when it answers.", detail: (error as? OlaError)?.detail))
+    }
+  }
+
+  /// The hosted run ended: the session goes back to Ola's own model, and the door closes again.
+  func finishHosted(_ id: String) async {
+    guard let back = hostedRuns.removeValue(forKey: id) else { return }
+    hostedArm?(false)
+    try? await client?.switchModel(id, to: back)
   }
 
   public var projectFolder: String {

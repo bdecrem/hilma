@@ -14,6 +14,11 @@ public final class ModelDoor: @unchecked Sendable {
   let token: @Sendable () -> String?
   /// Called once per 401 from the server: the device was signed out or its sign-in ran out.
   public var onSignedOut: (@Sendable () -> Void)?
+  /// Whether a request for the hosted open model may pass now. The app opens it only while it hands
+  /// a request over (the person said so: /hosted, the card, the switch), so nothing else on this Mac
+  /// that holds the door's key (a command the agent runs) can reach the outside model. The `ola`
+  /// command sets it to always: there the person's own /hosted is the only way the model is chosen.
+  public var allowHosted: @Sendable () -> Bool = { false }
   private var server: MiniHTTPServer?
   public private(set) var port: UInt16 = 0
   let upstream = Upstream()
@@ -76,6 +81,9 @@ public final class ModelDoor: @unchecked Sendable {
     guard !rest.isEmpty, !rest.contains(".."), let base = api.gateway(rest),
           let target = URL(string: base.absoluteString + (req.query.map { "?\($0)" } ?? "")) else {
       return await res.send(404, Self.error("Nothing here."))
+    }
+    if rest == "v1/chat/completions", JSON.parse(req.body)?["model"].string == "hosted", !allowHosted() {
+      return await res.send(403, Self.error("The hosted open model is used only for a request you hand to it."))
     }
     guard let token = token(), !token.isEmpty else {
       markSignedOut()

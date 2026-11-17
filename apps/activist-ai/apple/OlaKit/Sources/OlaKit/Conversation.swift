@@ -81,8 +81,9 @@ public struct Approval: Identifiable, Equatable, Sendable {
 
 public struct Turn: Identifiable, Equatable, Sendable, Codable {
   public enum Status: String, Sendable, Codable { case sending, working, done, failed, stopped }
-  /// Who did the work: Ola (opencode on open models) or Claude (Claude Code, Fallback to Claude).
-  public enum Engine: String, Sendable, Codable { case ola, claude }
+  /// Who did the work: Ola (opencode on open models), Claude (Claude Code, Fallback to Claude) or
+  /// the hosted open model (the same opencode with the model `hosted`, Fallback to a hosted open model).
+  public enum Engine: String, Sendable, Codable { case ola, claude, hosted }
   public var id: String
   public var request: String
   public var at: Date
@@ -290,6 +291,8 @@ public struct Conversation: Equatable, Sendable {
       return true
     case "session.step.started":
       turn.notice = nil
+      // Each step names its model: a step by the hosted open model marks the reply as outside Ola.
+      if d["model"]["id"].str == "hosted" { turn.engine = .hosted }
       return true
     case "session.step.failed":
       turn.error = Plain.runProblem(d["error"])
@@ -340,6 +343,7 @@ public struct Conversation: Equatable, Sendable {
       guard !turns.isEmpty else { continue }
       var turn = turns.removeLast()
       if type == "assistant" {
+        if m["model"]["id"].str == "hosted" { turn.engine = .hosted }
         var text = ""
         for part in m["content"].array {
           if part["type"].str == "text" { text += part["text"].str }

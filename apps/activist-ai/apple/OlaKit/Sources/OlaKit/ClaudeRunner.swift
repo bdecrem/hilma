@@ -41,7 +41,7 @@ public final class ClaudeRunner: ClaudeRun, @unchecked Sendable {
   }
 
   static let systemNote = """
-  You are working for Bart in his own app, Ola, as "Claude", the fallback beside Ola's open-model agent. \
+  You are working for the person using Ola, in their own app, as "Claude", the fallback beside Ola's open-model agent. \
   Work in the current folder. Say plainly what you did and what you found.
 
   """ + AgentNotes.all

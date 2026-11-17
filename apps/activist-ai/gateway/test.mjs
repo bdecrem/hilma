@@ -1018,6 +1018,10 @@ test('the hosted open model: refused unless granted; its own upstream, key and m
     const one = usage.json.data.find((u) => u.caller === 'ws-one').hosted_month
     assert.deepEqual([one.granted, one.requests, one.cost_micro_usd], [true, 1, 1000])
     assert.equal(usage.json.hosted.provider, 'Made-up Cloud')
+    // A caller's own usage: its own hosted month and the provider's name, nothing of the others.
+    const mine = await call(g, k.one, null, { method: 'GET', path: '/v1/usage' })
+    assert.deepEqual([mine.json.hosted_month.granted, mine.json.hosted_month.cost_micro_usd, mine.json.hosted.provider, mine.json.hosted.prices, mine.json.data], [true, 1000, 'Made-up Cloud', undefined, undefined])
+    assert.equal((await call(g, k.two, null, { method: 'GET', path: '/v1/usage' })).json.hosted_month.granted, false)
     assert.ok(!g.out.includes(HKEY) && !g.err.includes(HKEY), 'the hosted key is in the log')
     const line = g.logs().find((l) => l.model === 'hosted' && l.status === 200)
     assert.equal(line.cost_micro_usd, 1000)

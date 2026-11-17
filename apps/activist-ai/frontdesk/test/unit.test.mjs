@@ -147,6 +147,31 @@ test('the hosted and Claude grants files: a project is in them only while a run 
   db.close()
 })
 
+test('the hosted grants file: a person’s own Macs only when the admin let them, while active with a computer signed in, at their own ceiling; standing callers from the env', async () => {
+  const { writeHostedGrants, hostedConfig } = await import('../hosted.mjs')
+  const d = dir()
+  const db = openDb(path.join(d, 'fd'))
+  for (const h of ['ann', 'ben']) db.prepare("INSERT INTO people (handle, display_name, status, webauthn_user_id, created_at) VALUES (?, 'X', 'active', randomblob(32), 0)").run(h)
+  const pid = (h) => db.prepare('SELECT id FROM people WHERE handle = ?').get(h).id
+  const device = (h, revoked = null, expires = Date.now() + 86_400_000) => db.prepare("INSERT INTO devices (person_id, name, kind, token_sha256, created_at, expires_at, revoked_at) VALUES (?, 'Made-up Mac', 'mac', randomblob(32), 0, ?, ?)").run(pid(h), expires, revoked)
+  const hc = { ...hostedConfig({ OLA_HOME: d }), file: path.join(d, 'gateway-hosted') }
+  device('ann')
+  assert.deepEqual(writeHostedGrants(db, hc), {}, 'nobody is let in by default')
+  db.prepare("UPDATE people SET app_hosted = 1 WHERE handle IN ('ann', 'ben')").run()
+  assert.deepEqual(writeHostedGrants(db, hc), { [`p-${pid('ann')}`]: { cap_micro_usd: 20_000_000 } }, 'ben has no computer signed in')
+  device('ben', Date.now())
+  device('ben', null, Date.now() - 1)
+  assert.equal(writeHostedGrants(db, hc)[`p-${pid('ben')}`], undefined, 'a revoked or expired computer does not count')
+  db.prepare("UPDATE people SET app_hosted_cap_micro_usd = 5000000 WHERE handle = 'ann'").run()
+  assert.deepEqual(writeHostedGrants(db, hc)[`p-${pid('ann')}`], { cap_micro_usd: 5_000_000 })
+  db.prepare("UPDATE people SET status = 'suspended' WHERE handle = 'ann'").run()
+  assert.deepEqual(writeHostedGrants(db, hc), {}, 'a suspended person')
+  const standing = { ...hostedConfig({ OLA_HOME: d, OLA_FD_HOSTED_CALLERS: 'bart' }), file: hc.file }
+  assert.deepEqual(writeHostedGrants(db, standing), { bart: { cap_micro_usd: 20_000_000 } })
+  for (const bad of ['ws-one', 'p-1', 'usage', 'a b']) assert.throws(() => hostedConfig({ OLA_HOME: d, OLA_FD_HOSTED_CALLERS: bad }), /OLA_FD_HOSTED_CALLERS/)
+  db.close()
+})
+
 test('a job the agent set going before anyone said yes is still a proposal (first-user pass)', async () => {
   const { unapproved } = await import('../jobs.mjs')
   const vmSays = { id: 'a', state: 'paused', note: 'Paused: No job is approved to run for this project now.', progress: { done: 0 } }

@@ -43,7 +43,12 @@ export function hostedConfig(env = process.env) {
   const home = env.OLA_HOME || path.join(homedir(), '.ola')
   const usd = env.OLA_FD_HOSTED_CAP_USD === undefined ? 20 : Number(env.OLA_FD_HOSTED_CAP_USD)
   if (!Number.isFinite(usd) || usd < 0 || usd > 10_000) throw new Error('OLA_FD_HOSTED_CAP_USD must be a number from 0 to 10000')
-  return { file: env.OLA_FD_HOSTED_FILE || path.join(home, 'gateway-hosted'), capMicroUsd: Math.round(usd * 1e6) }
+  // Gateway callers that are not projects and hold a standing grant, set by the admin in the front
+  // desk's env: the owner's own `bart` (his Mac app's "On this Mac" with the pasted token, through
+  // the machine's forwarder). Empty by default.
+  const callers = (env.OLA_FD_HOSTED_CALLERS || '').split(',').map((s) => s.trim()).filter(Boolean)
+  for (const c of callers) if (!/^[A-Za-z0-9._-]{1,64}$/.test(c) || /^(ws|p)-/.test(c) || c === 'usage') throw new Error(`OLA_FD_HOSTED_CALLERS: ${c} is not a standing caller's name (not ws-…, p-… or usage)`)
+  return { file: env.OLA_FD_HOSTED_FILE || path.join(home, 'gateway-hosted'), capMicroUsd: Math.round(usd * 1e6), callers }
 }
 
 /** The gateway's hosted grants file, from the database: each active project with a hosted run going on (its lease), or a hosted job running (its runner's key). */
@@ -57,6 +62,13 @@ export function writeHostedGrants(db, hc) {
     grants[`ws-${w.slug}`] = { cap_micro_usd: w.usd ?? hc.capMicroUsd, ...(lease.has(w.id) ? { until: lease.get(w.id) } : { key_sha256: job }) }
   }
   for (const g of scratchGrants(db, 'hosted')) grants[`ws-${g.slug}`] = { cap_micro_usd: g.cap_micro_usd, until: g.until }
+  // A person's own Macs (the Mac app and the `ola` command, signed in): only when the admin let them
+  // (people.app_hosted, admin.mjs app-hosted), while they are active and have a computer signed in,
+  // within their own monthly ceiling. The app hands a request over only when the person says so.
+  for (const p of db.prepare("SELECT p.id, p.app_hosted_cap_micro_usd AS usd FROM people p WHERE p.app_hosted = 1 AND p.status = 'active' AND EXISTS (SELECT 1 FROM devices d WHERE d.person_id = p.id AND d.revoked_at IS NULL AND d.expires_at > ?) ORDER BY p.id").all(Date.now())) {
+    grants[`p-${p.id}`] = { cap_micro_usd: p.usd ?? hc.capMicroUsd }
+  }
+  for (const c of hc.callers ?? []) grants[c] = { cap_micro_usd: hc.capMicroUsd }
   return writeGrantsFile(hc.file, grants)
 }
 

@@ -846,6 +846,36 @@ await check('devices: the token reaches the gateway as the person’s own caller
   return `models 200, usage as p-${pid}, search 200 (standing grant), ${chat}; refused ${JSON.stringify(refused)}; outside /api/device/ all 401`
 })
 
+await check('devices and the hosted open model: refused until the admin lets the person (app-hosted), then served as their own caller, on their weekly allowance and their own ceiling; their usage names the provider; off again refuses', async () => {
+  assert(gwDevice, 'no device from the check before')
+  const pid = dbRowDevices(`SELECT id FROM people WHERE handle = 'dina'`).id
+  const ask = () => asDevice('/api/device/gw/v1/chat/completions', gwDevice, { method: 'POST', body: { model: 'hosted', messages: [{ role: 'user', content: 'Count the rows in survey.csv' }] } })
+  const before = fakeHosted.calls()
+  const off = await ask()
+  assert(off.status === 403 && /hosted open model is off/.test(off.json?.error?.message ?? ''), `off: ${off.status} ${off.text.slice(0, 160)}`)
+  assert(fakeHosted.calls() === before, 'a refused request reached the hosted model')
+  const u0 = await asDevice('/api/device/gw/v1/usage', gwDevice)
+  assert(u0.json?.hosted?.provider === HOSTED_UP.HOSTED_PROVIDER && u0.json?.hosted_month?.granted === false, `usage before: ${u0.text.slice(0, 200)}`)
+  const said = admin('app-hosted', 'dina', 'on', '--cap-usd', '3')
+  assert(/ON/.test(said) && /\$3\.00/.test(said), said)
+  await until(async () => (await asDevice('/api/device/gw/v1/usage', gwDevice)).json?.hosted_month?.granted === true, 8000, 'the gateway taking dina’s hosted grant')
+  let served = 'skipped (the live run points the hosted model outside)'
+  if (!HOSTED_LIVE) {
+    const ok = await ask()
+    assert(ok.status === 200 && ok.json?.model === 'hosted' && fakeHosted.calls() > before, `on: ${ok.status} ${ok.text.slice(0, 160)}`)
+    const u1 = await asDevice('/api/device/gw/v1/usage', gwDevice)
+    assert(u1.json.hosted_month.requests >= 1 && u1.json.hosted_month.cap_micro_usd === 3_000_000 && u1.json.tokens_used > u0.json.tokens_used, `usage after: ${u1.text.slice(0, 260)}`)
+    served = `served (${u1.json.hosted_month.requests} request, weekly tokens ${u0.json.tokens_used} -> ${u1.json.tokens_used})`
+  }
+  const audited = JSON.parse(admin('audit', '--limit', '50', '--json')).filter((r) => r.action === 'hosted_enabled' && r.subject === 'dina' && r.workspace == null).length
+  assert(audited >= 1, 'app-hosted on was not audited')
+  admin('app-hosted', 'dina', 'off')
+  await until(async () => (await asDevice('/api/device/gw/v1/usage', gwDevice)).json?.hosted_month?.granted === false, 8000, 'the gateway dropping dina’s hosted grant')
+  const again = await ask()
+  assert(again.status === 403, `off again: ${again.status}`)
+  return `off 403, p-${pid} ${served}, off again 403`
+})
+
 await check('devices, as in production: behind the real TLS front (https, the door passcode, the PROXY protocol) the code and the token pass the door as X-Ola-Pass and nowhere else; a bearer sent straight to the front desk is not read; Chromium and WebKit approve on https and land on http://127.0.0.1', async () => {
   // A second front desk on the same database, on the PROXY protocol, behind ops/tls.mjs serving
   // app.localhost with a made-up CA: the same path a device takes from outside.

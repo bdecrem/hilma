@@ -9,8 +9,8 @@ public enum SlashCommand: String, CaseIterable, Sendable {
   public var summary: String {
     switch self {
     case .claude: "Hand this request to Claude Code"
-    case .ola: "Use Ola's own model for this request"
-    case .hosted: "Use the hosted open model (not set up yet)"
+    case .ola: "Use Ola\u{2019}s own model for this request"
+    case .hosted: "Hand this request to the hosted open model"
     case .new: "Start a new session"
     case .stop: "Stop the run"
     case .files: "Show the project's files"

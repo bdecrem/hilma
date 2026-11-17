@@ -206,11 +206,21 @@ public final class LocalServer: @unchecked Sendable {
           "package": "@opencode/ai/providers/openai-compatible",
           "settings": { "baseURL": "\(modelURL)" },
           "models": {
-            "general": { "modelID": "general", "name": "General", "capabilities": { "tools": true, "input": ["text"], "output": ["text"] }, "limit": { "context": 131072, "output": 16000 } }
+            "general": { "modelID": "general", "name": "General", "capabilities": { "tools": true, "input": ["text"], "output": ["text"] }, "limit": { "context": 131072, "output": 16000 } },
+            // Fallback to a hosted open model: chosen only for a request handed to it (the app's
+            // /hosted and the card, the terminal's /hosted command below), never as the default.
+            "hosted": { "modelID": "hosted", "name": "Hosted open model", "capabilities": { "tools": true, "input": ["text"], "output": ["text"] }, "limit": { "context": 1000000, "output": 16000 } }
           }
         }
       },
       "model": "ola/general",
+      // The slash commands in the terminal's conversation (the `ola` command): /hosted hands that one
+      // request to the hosted open model, /ola to Ola's own; /claude says how to reach Claude Code.
+      "commands": {
+        "hosted": { "template": "$ARGUMENTS", "description": "Hand this request to the hosted open model", "model": "ola/hosted" },
+        "ola": { "template": "$ARGUMENTS", "description": "Use Ola's own model for this request", "model": "ola/general" },
+        "claude": { "template": "Reply with exactly this one line and nothing else: To hand a request to Claude Code, leave this conversation (Ctrl-C twice) and type: ola /claude followed by your request", "description": "Hand a request to Claude Code (from the shell: ola /claude and your request)", "model": "ola/general" }
+      },
       "update": "disable",
       "share": "disabled",
       "instructions": ["\(instructionsPath)"],
