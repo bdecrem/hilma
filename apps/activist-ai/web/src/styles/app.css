@@ -2624,10 +2624,13 @@ code {
 .command-none {
   padding: var(--s3) var(--s4);
 }
+/* A refusal is said plainly, not shouted: ink on the lamp's wash, the vermilion mark at its edge. */
 .command-note {
   padding: var(--s2) var(--s3);
   border-left: 3px solid var(--vermilion);
-  background: #fbf7ee;
+  background: var(--lamp-wash);
+  color: var(--ink);
+  font-weight: 500;
 }
 .command-help {
   margin-top: var(--s5);
