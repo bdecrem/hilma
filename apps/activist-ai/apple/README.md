@@ -104,7 +104,7 @@ delete` undoes it. A rare special beat every 20 to 40 s; a new step gets a small
 waiting for a yes, it stops and looks down at the approval; done and failed get a short goodbye. After
 20 s with nothing new, a 120-point version comes out under the run and tucks back when something
 arrives. Reduce Motion gets a still pose that breathes slowly (`defaults write cx.ola.mac
-OlaWorkingMotion full` animates anyway). Paused when scrolled away, in the background, and once a wait
+OlaWorkingMotion full` animates anyway). 30 fps on the run line, 60 for the large one. Paused when scrolled away, in the background, and once a wait
 has settled. Numbers for the web: `MOTION.md`. Videos: `tools/motion.sh <dir>` (frames rendered off
 screen by `Ola -OlaMotion`, encoded with ffmpeg); CPU: `Ola -OlaMotionCPU <figure|plain|lamp> <s>
 [-OlaLarge] [-OlaCalm]`.

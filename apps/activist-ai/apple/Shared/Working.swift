@@ -105,7 +105,7 @@ struct WorkingFigure: View {
           WorkingCanvas(scene: calmScene(), t: 0, size: size)
         }
       } else {
-        TimelineView(.animation(minimumInterval: 1.0 / 60, paused: paused)) { ctx in
+        TimelineView(.animation(minimumInterval: 1.0 / Self.fps(size), paused: paused)) { ctx in
           let t = ctx.date.timeIntervalSince(turn.at)
           WorkingCanvas(scene: WorkingBook.shared.scene(turn, at: t), t: t, size: size)
         }
@@ -131,6 +131,9 @@ struct WorkingFigure: View {
     s.calm = true
     return s
   }
+
+  /// 30 frames a second on the run line (battery first), 60 for the large figure.
+  static func fps(_ size: CGFloat) -> Double { size < 60 ? 30 : 60 }
 
   /// The CPU probe draws in a window no display shows; it counts as on screen there.
   nonisolated(unsafe) static var probeOnScreen = false

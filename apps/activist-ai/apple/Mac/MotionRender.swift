@@ -87,7 +87,7 @@ enum MotionRender {
         WorkingCanvas(scene: scene, t: t, size: 140)
         Spacer(minLength: 0)
         HStack(spacing: Space.s) {
-          Color.clear.frame(width: 7, height: 7).overlay { WorkingCanvas(scene: scene, t: t, size: Metrics.workingSmall).offset(x: -1) }
+          Color.clear.frame(width: 7, height: 7).overlay { WorkingCanvas(scene: scene, t: (t * 30).rounded(.down) / 30, size: Metrics.workingSmall).offset(x: -1) }
             .frame(width: Metrics.youColumn - Space.s, alignment: .leading)
           Text("Working for \(Int(t)) s \u{00B7} 3 steps").font(OlaFont.sans(Metrics.ui, .medium)).foregroundStyle(Ola.ink2)
           Spacer()

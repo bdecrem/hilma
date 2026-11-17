@@ -39,6 +39,8 @@ struct WorkingScene: Sendable {
   var specialKind: Int?
   /// Reduce Motion: a still pose.
   var calm = false
+  /// Drawn small, on the run line.
+  var compact = false
 }
 
 // MARK: motion helpers
@@ -145,15 +147,19 @@ enum WorkingArt {
     c.scaleBy(x: size / 100, y: size / 100)
     let small = size < 60
     let t = scene.calm ? calmTime(scene) : t
+    var scene = scene
+    scene.compact = small
     // On the run line each figure is zoomed to fill its box (anchor, zoom).
     if small {
       let (a, z): (CGPoint, Double) = switch scene.character {
       case .hop: (CGPoint(x: 50, y: 50), 1)  // Hop zooms itself, from its foot
-      case .swing: (CGPoint(x: 45, y: 10), 1.22)
+      case .swing: (CGPoint(x: 45, y: 10), 1.12)
       case .machine: (CGPoint(x: 50, y: 86), 1.2)
       case .eyes: (CGPoint(x: 50, y: 52), 1.45)
       }
       c.translateBy(x: a.x, y: a.y); c.scaleBy(x: z, y: z); c.translateBy(x: -a.x, y: -a.y)
+      // The tag swings further right than left at its stall: give it the room on that side.
+      if scene.character == .swing { c.translateBy(x: -2, y: 0) }
     }
     switch scene.character {
     case .hop: Hop.draw(&c, small: small, s: scene, t: t)
@@ -182,7 +188,9 @@ enum WorkingArt {
 
 enum Hop {
   static let period = 0.74
-  static let contact = 0.2
+  static let contact = 0.24
+  /// The deepest squash, in the loop's phase.
+  static let squash = 0.12
   static let R = 8.6
   static let ground = 91.0
   static let footX = 45.0
@@ -197,10 +205,10 @@ enum Hop {
   // The comma of the icon in head radii, head at the origin: start, c1, c2, tip, c3, c4, end.
   static let tailPoints: [CGPoint] = [CGPoint(x: 0.833, y: 0.467), CGPoint(x: 1.033, y: 1.9), CGPoint(x: 0.467, y: 3.0), CGPoint(x: -0.667, y: 3.667), CGPoint(x: 0, y: 2.733), CGPoint(x: 0.2, y: 1.8), CGPoint(x: -0.2, y: 0.933)]
 
-  static let stretchKeys: [(Double, Double)] = [(0, 1.0), (0.1, 0.74), (0.2, 1.14), (0.42, 1.0), (0.78, 1.0), (0.96, 1.07), (1, 1.0)]
-  static let bendKeys: [(Double, Double)] = [(0, 0.12), (0.1, 0.24), (0.2, -0.16), (0.45, -0.04), (0.75, 0.14), (0.96, 0.16), (1, 0.12)]
-  static let syKeys: [(Double, Double)] = [(0, 1.0), (0.1, 0.84), (0.2, 1.07), (0.4, 1.0), (0.9, 1.03), (1, 1.0)]
-  static let leanKeys: [(Double, Double)] = [(0, 0), (0.1, -0.05), (0.32, 0.06), (0.62, -0.03), (0.9, 0.02), (1, 0)]
+  static let stretchKeys: [(Double, Double)] = [(0, 1.0), (0.12, 0.72), (0.24, 1.14), (0.44, 1.0), (0.78, 1.0), (0.96, 1.07), (1, 1.0)]
+  static let bendKeys: [(Double, Double)] = [(0, 0.12), (0.12, 0.24), (0.24, -0.16), (0.47, -0.04), (0.75, 0.14), (0.96, 0.16), (1, 0.12)]
+  static let syKeys: [(Double, Double)] = [(0, 1.0), (0.12, 0.84), (0.24, 1.07), (0.42, 1.0), (0.9, 1.03), (1, 1.0)]
+  static let leanKeys: [(Double, Double)] = [(0, 0), (0.12, -0.05), (0.34, 0.06), (0.62, -0.03), (0.9, 0.02), (1, 0)]
 
   /// One hop of the loop at phase u, with height h.
   static func loop(_ u: Double, h: Double) -> Pose {
@@ -213,7 +221,7 @@ enum Hop {
   /// From the deepest squash (u = 0.1) to standing still, with a wobble.
   static func recover(_ p: inout Pose, _ s: Double) {
     let k = M.spring(s, f: 2.6, z: 0.32)
-    p.stretch = M.mix(0.74, 1, k); p.bend = M.mix(0.24, 0.05, k); p.sy = M.mix(0.84, 1, k); p.lean = M.mix(-0.05, 0, k); p.hop = 0
+    p.stretch = M.mix(0.72, 1, k); p.bend = M.mix(0.24, 0.05, k); p.sy = M.mix(0.84, 1, k); p.lean = M.mix(-0.05, 0, k); p.hop = 0
   }
 
   static func working(_ s: WorkingScene, _ t: Double) -> Pose {
@@ -247,8 +255,8 @@ enum Hop {
     // The missed bounce: it lands and the bounce does not come. It stands, looks left, looks right,
     // winds up and takes a big hop with a backflip to catch up.
     var p = Pose()
-    if s < 0.1 * P { return loop(s / P, h: 0) }
-    recover(&p, s - 0.1 * P)
+    if s < squash * P { return loop(s / P, h: 0) }
+    recover(&p, s - squash * P)
     let look = -0.26 * (M.spring(s - 1.0, f: 2.2, z: 0.5) - M.spring(s - 1.45, f: 2.2, z: 0.5)) + 0.26 * (M.spring(s - 1.45, f: 2.2, z: 0.5) - M.spring(s - 1.9, f: 2.4, z: 0.55))
     p.lean += look
     let wind = M.inOut(M.seg(s, 2.15, 2.5))
@@ -270,9 +278,9 @@ enum Hop {
     let e = s.exit(period: period, kinds: 2, length: length, finishSpecial: s.mood == .waiting)
     if t < e { var w = s; w.mood = .working; return working(w, t) }
     let x = t - e
-    if x < 0.1 * period { return loop(x / period, h: 0) }
+    if x < squash * period { return loop(x / period, h: 0) }
     var p = Pose()
-    recover(&p, x - 0.1 * period)
+    recover(&p, x - squash * period)
     switch s.mood {
     case .waiting:
       // It stands and leans toward the approval, the tail curling under like a bow.
@@ -363,17 +371,18 @@ enum Swing {
       var a = amp(s, tau)
       if s.previous == .waiting { a *= 1 - exp(-1.6 * max(0, tau)) }
       // A new step tugs the string: the swing grows for a moment.
-      if t > s.beat { let b = t - s.beat; a *= 1 + 0.7 * (1 - exp(-6 * b)) * exp(-1.1 * b) }
+      if t > s.beat { let b = t - s.beat; a *= 1 + (s.compact ? 0.4 : 0.7) * (1 - exp(-6 * b)) * exp(-1.1 * b) }
       return a * sin(w * tau)
     }
     func working(_ t: Double) -> Double {
       guard let sp = s.special(at: t, period: period, kinds: 2, length: length), sp.kind == 0 else { return loopTheta(t) }
       // The swing grows, stalls at the top (a tremble), drops and settles back into the loop.
       let x = t - sp.start, peak = 1.25 * period, hang = 0.42
+      let top = s.compact ? 12.0 : 36.0  // how far the swing grows above its 14 degrees (on the run line it must stay in its box)
       var th: Double
-      if x < peak { th = (14 + 36 * M.inn(x / peak)) * sin(w * x) }
-      else if x < peak + hang { th = 50 + 0.9 * sin(2 * .pi * 11 * (x - peak)) * (1 - M.seg(x, peak, peak + hang)) }
-      else { let y = x - peak - hang; th = (14 + 36 * exp(-1.7 * y)) * cos(w * y) }
+      if x < peak { th = (14 + top * M.inn(x / peak)) * sin(w * x) }
+      else if x < peak + hang { th = 14 + top + 0.9 * sin(2 * .pi * 11 * (x - peak)) * (1 - M.seg(x, peak, peak + hang)) }
+      else { let y = x - peak - hang; th = (14 + top * exp(-1.7 * y)) * cos(w * y) }
       let blend = M.inOut(M.seg(x, sp.length - 0.8, sp.length))
       return M.mix(th, loopTheta(t), blend)
     }
@@ -398,7 +407,7 @@ enum Swing {
         if sp.kind == 0 {
           // At the stall the tag flops over past the string, then springs back.
           let peak = 1.25 * period
-          p.psi += 20 * M.kick(x - peak, f: 1.3, z: 0.35)
+          p.psi += (s.compact ? 4 : 20) * M.kick(x - peak, f: 1.3, z: 0.35)
           p.bob = -1.5 * M.hump(x, peak - 0.3, peak + 0.5)
         } else {
           // The twirl: two turns on the string, showing its blank back, and a wobble.
