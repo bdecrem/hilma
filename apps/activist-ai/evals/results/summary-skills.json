@@ -1,0 +1,384 @@
+{
+ "name": "glm-5.3-flash-ws-sk",
+ "made": "2026-11-17T08:44:16.190Z",
+ "tasks": [
+  {
+   "key": "s1-chart-db",
+   "on": {
+    "runs": 3,
+    "passed": 3,
+    "pass_rate": 1,
+    "check_rate": 1,
+    "median_tokens": 98591,
+    "median_seconds": 20.1,
+    "labels": {
+     "success": 3
+    },
+    "skill_calls": 3
+   },
+   "off": {
+    "runs": 3,
+    "passed": 3,
+    "pass_rate": 1,
+    "check_rate": 1,
+    "median_tokens": 150308,
+    "median_seconds": 33.3,
+    "labels": {
+     "success": 3
+    },
+    "skill_calls": 0
+   },
+   "check_points": 0,
+   "pass_diff": 0
+  },
+  {
+   "key": "s2-chart-gaps",
+   "on": {
+    "runs": 3,
+    "passed": 3,
+    "pass_rate": 1,
+    "check_rate": 1,
+    "median_tokens": 195151,
+    "median_seconds": 45.4,
+    "labels": {
+     "success": 3
+    },
+    "skill_calls": 4
+   },
+   "off": {
+    "runs": 3,
+    "passed": 2,
+    "pass_rate": 0.667,
+    "check_rate": 0.952,
+    "median_tokens": 284824,
+    "median_seconds": 87.2,
+    "labels": {
+     "success": 2,
+     "assumed_silently": 1
+    },
+    "skill_calls": 0
+   },
+   "check_points": 5,
+   "pass_diff": 1
+  },
+  {
+   "key": "s3-workbook-summary",
+   "on": {
+    "runs": 3,
+    "passed": 2,
+    "pass_rate": 0.667,
+    "check_rate": 0.917,
+    "median_tokens": 146885,
+    "median_seconds": 29.2,
+    "labels": {
+     "success": 2,
+     "numbers_wrong": 1
+    },
+    "skill_calls": 3
+   },
+   "off": {
+    "runs": 3,
+    "passed": 3,
+    "pass_rate": 1,
+    "check_rate": 1,
+    "median_tokens": 166476,
+    "median_seconds": 62.3,
+    "labels": {
+     "success": 3
+    },
+    "skill_calls": 0
+   },
+   "check_points": -8,
+   "pass_diff": -1
+  },
+  {
+   "key": "s4-workbook-safe-text",
+   "on": {
+    "runs": 3,
+    "passed": 3,
+    "pass_rate": 1,
+    "check_rate": 1,
+    "median_tokens": 114222,
+    "median_seconds": 44.8,
+    "labels": {
+     "success": 3
+    },
+    "skill_calls": 3
+   },
+   "off": {
+    "runs": 3,
+    "passed": 3,
+    "pass_rate": 1,
+    "check_rate": 1,
+    "median_tokens": 119073,
+    "median_seconds": 51,
+    "labels": {
+     "success": 3
+    },
+    "skill_calls": 0
+   },
+   "check_points": 0,
+   "pass_diff": 0
+  },
+  {
+   "key": "s5-report-brief",
+   "on": {
+    "runs": 3,
+    "passed": 3,
+    "pass_rate": 1,
+    "check_rate": 1,
+    "median_tokens": 431786,
+    "median_seconds": 82.5,
+    "labels": {
+     "success": 3
+    },
+    "skill_calls": 6
+   },
+   "off": {
+    "runs": 3,
+    "passed": 1,
+    "pass_rate": 0.333,
+    "check_rate": 0.429,
+    "median_tokens": 406767,
+    "median_seconds": 118.3,
+    "labels": {
+     "success": 1,
+     "token_limit": 2
+    },
+    "skill_calls": 0
+   },
+   "check_points": 57,
+   "pass_diff": 2
+  },
+  {
+   "key": "s6-report-quotes",
+   "on": {
+    "runs": 3,
+    "passed": 3,
+    "pass_rate": 1,
+    "check_rate": 1,
+    "median_tokens": 152631,
+    "median_seconds": 42.6,
+    "labels": {
+     "success": 3
+    },
+    "skill_calls": 3
+   },
+   "off": {
+    "runs": 3,
+    "passed": 3,
+    "pass_rate": 1,
+    "check_rate": 1,
+    "median_tokens": 202294,
+    "median_seconds": 54.4,
+    "labels": {
+     "success": 3
+    },
+    "skill_calls": 0
+   },
+   "check_points": 0,
+   "pass_diff": 0
+  },
+  {
+   "key": "s7-design-report-page",
+   "on": {
+    "runs": 3,
+    "passed": 3,
+    "pass_rate": 1,
+    "check_rate": 1,
+    "median_tokens": 117171,
+    "median_seconds": 109.2,
+    "labels": {
+     "success": 3
+    },
+    "skill_calls": 3
+   },
+   "off": {
+    "runs": 1,
+    "passed": 1,
+    "pass_rate": 1,
+    "check_rate": 1,
+    "median_tokens": 305612,
+    "median_seconds": 89.7,
+    "labels": {
+     "success": 1
+    },
+    "skill_calls": 0
+   },
+   "check_points": 0,
+   "pass_diff": 2
+  },
+  {
+   "key": "s8-design-dashboard",
+   "on": {
+    "runs": 3,
+    "passed": 3,
+    "pass_rate": 1,
+    "check_rate": 1,
+    "median_tokens": 174514,
+    "median_seconds": 84.7,
+    "labels": {
+     "success": 3
+    },
+    "skill_calls": 3
+   },
+   "check_points": null,
+   "pass_diff": null
+  }
+ ],
+ "skills": [
+  {
+   "key": "chart",
+   "on": {
+    "runs": 6,
+    "passed": 6,
+    "pass_rate": 1,
+    "check_rate": 1,
+    "median_tokens": 120495,
+    "median_seconds": 29.9,
+    "labels": {
+     "success": 6
+    },
+    "skill_calls": 7
+   },
+   "off": {
+    "runs": 6,
+    "passed": 5,
+    "pass_rate": 0.833,
+    "check_rate": 0.974,
+    "median_tokens": 221176,
+    "median_seconds": 38.5,
+    "labels": {
+     "success": 5,
+     "assumed_silently": 1
+    },
+    "skill_calls": 0
+   },
+   "check_points": 3,
+   "pass_diff": 1
+  },
+  {
+   "key": "design-pass",
+   "on": {
+    "runs": 6,
+    "passed": 6,
+    "pass_rate": 1,
+    "check_rate": 1,
+    "median_tokens": 117171,
+    "median_seconds": 85.2,
+    "labels": {
+     "success": 6
+    },
+    "skill_calls": 6
+   },
+   "off": {
+    "runs": 1,
+    "passed": 1,
+    "pass_rate": 1,
+    "check_rate": 1,
+    "median_tokens": 305612,
+    "median_seconds": 89.7,
+    "labels": {
+     "success": 1
+    },
+    "skill_calls": 0
+   },
+   "check_points": 0,
+   "pass_diff": 5
+  },
+  {
+   "key": "report",
+   "on": {
+    "runs": 6,
+    "passed": 6,
+    "pass_rate": 1,
+    "check_rate": 1,
+    "median_tokens": 182178,
+    "median_seconds": 49.3,
+    "labels": {
+     "success": 6
+    },
+    "skill_calls": 9
+   },
+   "off": {
+    "runs": 6,
+    "passed": 4,
+    "pass_rate": 0.667,
+    "check_rate": 0.733,
+    "median_tokens": 203174,
+    "median_seconds": 69.1,
+    "labels": {
+     "success": 4,
+     "token_limit": 2
+    },
+    "skill_calls": 0
+   },
+   "check_points": 27,
+   "pass_diff": 2
+  },
+  {
+   "key": "workbook",
+   "on": {
+    "runs": 6,
+    "passed": 5,
+    "pass_rate": 0.833,
+    "check_rate": 0.961,
+    "median_tokens": 114222,
+    "median_seconds": 34.1,
+    "labels": {
+     "success": 5,
+     "numbers_wrong": 1
+    },
+    "skill_calls": 6
+   },
+   "off": {
+    "runs": 6,
+    "passed": 6,
+    "pass_rate": 1,
+    "check_rate": 1,
+    "median_tokens": 124060,
+    "median_seconds": 51,
+    "labels": {
+     "success": 6
+    },
+    "skill_calls": 0
+   },
+   "check_points": -4,
+   "pass_diff": -1
+  }
+ ],
+ "total": [
+  {
+   "key": "all",
+   "on": {
+    "runs": 24,
+    "passed": 23,
+    "pass_rate": 0.958,
+    "check_rate": 0.99,
+    "median_tokens": 146885,
+    "median_seconds": 45.4,
+    "labels": {
+     "success": 23,
+     "numbers_wrong": 1
+    },
+    "skill_calls": 28
+   },
+   "off": {
+    "runs": 19,
+    "passed": 16,
+    "pass_rate": 0.842,
+    "check_rate": 0.91,
+    "median_tokens": 221176,
+    "median_seconds": 69.1,
+    "labels": {
+     "success": 16,
+     "assumed_silently": 1,
+     "token_limit": 2
+    },
+    "skill_calls": 0
+   },
+   "check_points": 8,
+   "pass_diff": 7
+  }
+ ]
+}

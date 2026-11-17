@@ -98,6 +98,54 @@ without such a negation) instead of a list of ways to say "cannot". Both fixes w
 one's 12 real outputs: f1 v3 passes all 8 (one false failure, "unknown from this data", fixed before any
 run); e1 v2 fails the old outputs only because the old instruction did not ask for named elements.
 
+## Round three: the skills tasks, with and without (2026-11-17)
+
+Eight tasks, two per skill in `../skills` (code in `lib/r3_skills.py`, folders written by `lib/mk_r3.py`;
+each `task.json` names its `skill`; Office files are read by `lib/office.py` with the standard library;
+the design tasks load the page through `lib/page.mjs` with `audit: true`, the same measurements as the
+image's `ola-page`). Every task: a reference solution and two wrong outputs, proved by `task.py selftest`.
+
+| Skill | Tasks | What the checker holds it to |
+|---|---|---|
+| chart | `s1-chart-db`, `s2-chart-gaps` | PNG and SVG that open; a data file with the right numbers; missing months not drawn as numbers; the caption names the source; says how many rows had no region, and which months are missing |
+| workbook | `s3-workbook-summary`, `s4-workbook-safe-text` | summary totals per program; duplicates and blanks out, and said in a notes sheet; frozen header and filter; no formulas; `=`, `+`, `-`, `@` text, phone numbers, ids and ZIP codes kept exactly |
+| report | `s5-report-brief`, `s6-report-quotes` | a .docx with a heading, a table and a picture, and a PDF; each town's figure in a paragraph citing its report and page; no citation past a report's last page; four quotes, each word for word on its cited page |
+| design-pass | `s7-design-report-page`, `s8-design-dashboard` | at 390 and 1280 px: no sideways scroll or element past the edge, text contrast AA, nothing under 12 px, one or two fonts, nothing clipped, nothing from another address, every number kept |
+
+`run.mjs --skills on|off` (opencode-ws only) runs the same configuration with Ola's skills offered, or
+with the session's permissions denying every skill; the arms are two configurations
+(`<name>-skills-on`, `-off`) whose settings carry the skill set's hash. `--tasks skill:<name>` picks one
+skill's tasks. `run-skills.sh` runs every skill, both arms, 3 seeds, one skill and arm per take of the
+suite lock. `skills-report.mjs --db results/skills.db --name <name>` writes the side-by-side readout
+(`results/summary-skills.json`). Both arms have the same image, libraries and `ola-page`; the only
+difference is the skills.
+
+**First measurement (2026-11-17, GLM-5.3-Flash on Together through the evals' own gateway, image
+`ola-workspace:2.3.0-15`, skills hash `44b5874b45d2f131`, 3 seeds, 600 s and 400,000 tokens a run):**
+
+| Skill | With the skill | Without | Checks, points | Median tokens with / without |
+|---|---|---|---|---|
+| chart | 6/6 | 5/6 | +3 | 120k / 221k |
+| workbook | 5/6 | 6/6 | -4 | 114k / 124k |
+| report | 6/6 | 4/6 | +27 | 182k / 203k |
+| design-pass | 6/6 | 1/1 (5 runs lost, see below) | n/a | 117k / 306k |
+| all | 23/24 (99% of checks) | 16/19 (91%) | +8 | 147k / 221k |
+
+Said plainly: on these tasks the open model already does most of the work without the skills. The
+clearest gain is the report: without the skill, two of three briefs ran into the token cap before
+finishing; with it, all three were done and every figure cited to its page. With the skills the
+agent used about a third fewer tokens overall. One run got worse with a skill: `s3` seed 3, where
+the agent's own cleaning script dropped both copies of each duplicated grant and its notes said
+"each is counted once" (`numbers_wrong`); the next workbook version should make the agent reconcile
+rows in, rows dropped and rows out by identifier before building (not changed tonight: a change ships
+with its measurement). The off arm loaded no skill (0 calls to the skill tool, 28 with). The
+**design-pass off arm is incomplete**: the gateway's weekly quota (the spending ceiling, 4.5M tokens
+per slot, 9.0M in all) ran out during it, five runs got no model answers and were removed from the
+database, so its one remaining run says nothing. Rerun with
+`run-skills.sh design-pass` after the quota resets (Monday 00:00 UTC) or with a higher one. The
+tasks are easy for this model, like the rest of the set; harder twins (longer reports, messier
+workbooks, pages with more to fix) are needed before these numbers can steer.
+
 ## The runner
 
 `run.mjs --config <file>`: for every task and seed not yet in the database for this configuration, a
