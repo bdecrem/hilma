@@ -1112,7 +1112,7 @@ reads configuration from it: Claude Code gets a fresh, empty settings folder per
 after it) with `--setting-sources user --strict-mcp-config` and hooks off (a
 `/work/.claude/settings.local.json` had let every write skip the person's yes under "Ask me first",
 and a hook in `/work/.claude/settings.json` ran a command no one approved), and opencode runs with
-`OPENCODE_DISABLE_PROJECT_CONFIG=1` (image 2.3.0-9, and `--env` at `container create`).
+`OPENCODE_DISABLE_PROJECT_CONFIG=1` (image 2.3.0-11, and `--env` at `container create`).
 Proof: `node frontdesk/review/rev4.mjs claude` and `rev4.mjs config` on the mini.
 
 **opencode's "always" is never sent** (review of 2026-11-17, H2). opencode 2.3.0 keeps an "always"
@@ -1405,7 +1405,7 @@ says "Query Data is used to improve our products and technology, including by tr
 fine-tuning models". Tavily (1,000 free credits, no card) states nothing about retention on its
 pricing page; Kagi publishes no current API terms we could find.
 
-**In the workspace** (image `2.3.0-8`; 2.3.0-9 since review 4): `ola-search [--count N] <words>` and `ola-fetch <address>
+**In the workspace** (image `2.3.0-8`; 2.3.0-11 since review 4): `ola-search [--count N] <words>` and `ola-fetch <address>
 [--as name]`. A refusal is a plain sentence the agent relays ("This search was not approved…").
 `ola-fetch` saves the original under `/work/sources/` (a safe name; the same document twice is not
 written twice; another one gets `-2`), records it in the project database with its address and date,
