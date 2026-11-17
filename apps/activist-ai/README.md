@@ -1106,6 +1106,22 @@ with a message) on its stdin. The page shows it in the same sheet as opencode's,
 answers ("Yes, this once", "Yes, for the rest of this conversation", "No, don’t"); "for the rest of
 this conversation" is kept by the front desk per conversation and kind (file writes; commands).
 
+**No settings from the project** (review of 2026-11-17, H1). `/work` is written by the agent, by
+Claude Code itself under "go", and by whatever a downloaded page talks either into, so neither agent
+reads configuration from it: Claude Code gets a fresh, empty settings folder per run (`/tmp`, gone
+after it) with `--setting-sources user --strict-mcp-config` and hooks off (a
+`/work/.claude/settings.local.json` had let every write skip the person's yes under "Ask me first",
+and a hook in `/work/.claude/settings.json` ran a command no one approved), and opencode runs with
+`OPENCODE_DISABLE_PROJECT_CONFIG=1` (image 2.3.0-9, and `--env` at `container create`).
+Proof: `node frontdesk/review/rev4.mjs claude` and `rev4.mjs config` on the mini.
+
+**opencode's "always" is never sent** (review of 2026-11-17, H2). opencode 2.3.0 keeps an "always"
+as a durable, project-wide allow rule: measured, a new conversation and one after a restart never
+asked again (`rev4.mjs always`). So the front desk sends opencode "once" for every answer, and keeps
+"Yes, for the rest of this conversation" itself (`frontdesk/workspaces.mjs` forConversation): its
+event watcher answers a later question of the same kind in the same conversation "once", never a
+web search or download. In memory only: after a front desk restart the person is asked again.
+
 **The setting** (`frontdesk/claude.mjs`, platform migration 5): `workspaces.claude_enabled` (off by
 default), `claude_auto` (`ask`: only when the person asks; `stuck`: when Ola gets stuck; `always`),
 optional ceilings. Read by any member (`GET /api/claude`), changed only by an owner of the team
@@ -1362,7 +1378,11 @@ allowlist (HTML, text, Markdown, PDF, CSV, JSON, XML, RSS/Atom, RTF, Word, Excel
 OpenDocument); 120 s in all. Per project: 30 a minute, 2 at once, 2,000 a week, counted in the usage
 table (`model` `web-search` / `web-fetch`) and shown in `/v1/usage` as `web_week`. The log line
 says that a search or fetch happened, the status, the number of results or bytes, and for a fetch the
-**host**; never the words or the path. `gateway/test.mjs` has a test for every refusal (29 tests).
+**host**; never the words or the path. Review of 2026-11-17: the networks the machine sits on are
+refused too, not only its addresses (M3: at CASBS the mini is on a public /24), IPv6 is reached only
+in global unicast (L1), a grant follows only a question that is exactly one web command (M1: a
+second search behind the first got its own grant), and the Claude route takes at most 2 requests at
+once per project (M2: 20 overlapping requests all passed a ceiling one of them nearly filled). `gateway/test.mjs` has a test for every refusal (29 tests).
 
 | Setting (gateway env file) | What |
 |---|---|
@@ -1385,7 +1405,7 @@ says "Query Data is used to improve our products and technology, including by tr
 fine-tuning models". Tavily (1,000 free credits, no card) states nothing about retention on its
 pricing page; Kagi publishes no current API terms we could find.
 
-**In the workspace** (image `2.3.0-8`): `ola-search [--count N] <words>` and `ola-fetch <address>
+**In the workspace** (image `2.3.0-8`; 2.3.0-9 since review 4): `ola-search [--count N] <words>` and `ola-fetch <address>
 [--as name]`. A refusal is a plain sentence the agent relays ("This search was not approved…").
 `ola-fetch` saves the original under `/work/sources/` (a safe name; the same document twice is not
 written twice; another one gets `-2`), records it in the project database with its address and date,

@@ -64,8 +64,27 @@ for (const [a, p] of [
   ['0.0.0.0', 8], ['10.0.0.0', 8], ['100.64.0.0', 10], ['127.0.0.0', 8], ['169.254.0.0', 16], ['172.16.0.0', 12], ['192.0.0.0', 24], ['192.0.2.0', 24],
   ['192.88.99.0', 24], ['192.168.0.0', 16], ['198.18.0.0', 15], ['198.51.100.0', 24], ['203.0.113.0', 24], ['224.0.0.0', 4], ['240.0.0.0', 4],
 ]) blocked.addSubnet(a, p, 'ipv4')
-for (const [a, p] of [['::', 128], ['::1', 128], ['100::', 64], ['2001::', 32], ['2001:db8::', 32], ['fc00::', 7], ['fe80::', 10], ['fec0::', 10], ['ff00::', 8]]) blocked.addSubnet(a, p, 'ipv6')
+for (const [a, p] of [['::', 128], ['::1', 128], ['100::', 64], ['2001::', 32], ['2001:db8::', 32], ['2001:10::', 28], ['2001:20::', 28], ['3fff::', 20], ['5f00::', 16], ['fc00::', 7], ['fe80::', 10], ['fec0::', 10], ['ff00::', 8]]) blocked.addSubnet(a, p, 'ipv6')
+// Only global unicast (2000::/3) is ever reached over IPv6; the forms that carry an IPv4 address
+// are judged by it first. Everything else (SIIT ::ffff:0:0/96, local-use NAT64 64:ff9b:1::/48,
+// whatever is assigned next) is refused (review 4, L1).
+const global6 = new net.BlockList()
+global6.addSubnet('2000::', 3, 'ipv6')
 const own = () => new Set(Object.values(os.networkInterfaces()).flat().filter(Boolean).map((i) => i.address.toLowerCase()))
+// The networks this machine sits on, not only its own addresses (review 4, M3): at CASBS the
+// mini's interface is 171.66.240.175/24, public addresses whose neighbors (printers, other
+// machines, anything that trusts "inside the building") the fetch route could otherwise reach.
+export function ownNetworks() {
+  const list = new net.BlockList()
+  for (const i of Object.values(os.networkInterfaces()).flat().filter(Boolean)) {
+    const [addr, bits] = String(i.cidr ?? '').split('/')
+    if (!addr || !bits) continue
+    try {
+      list.addSubnet(addr, Number(bits), i.family === 'IPv6' || i.family === 6 ? 'ipv6' : 'ipv4')
+    } catch {}
+  }
+  return list
+}
 
 /** Expands an IPv6 address to 8 groups of 16 bits. */
 function v6groups(ip) {
@@ -89,7 +108,7 @@ export function refusedAddress(ip, ownSet = own()) {
   if (g.slice(0, 5).every((x) => x === 0) && (g[5] === 0xffff || g[5] === 0)) return refusedAddress(v4of(g[6], g[7]), ownSet) && 'a private or reserved address'
   if (g[0] === 0x64 && g[1] === 0xff9b && g.slice(2, 6).every((x) => x === 0)) return refusedAddress(v4of(g[6], g[7]), ownSet) && 'a private or reserved address'
   if (g[0] === 0x2002) return refusedAddress(v4of(g[1], g[2]), ownSet) && 'a private or reserved address' // 6to4
-  return blocked.check(ip, 'ipv6') ? 'a private or reserved address' : null
+  return blocked.check(ip, 'ipv6') || !global6.check(ip, 'ipv6') ? 'a private or reserved address' : null
 }
 
 // Names that are never on the public internet, whatever they resolve to today.
@@ -346,7 +365,7 @@ export function makeWeb({ cfg, db, readBody, send, fail }) {
   async function resolveChecked(host) {
     const bare = host.replace(/^\[|\]$/g, '')
     if (net.isIP(bare)) {
-      const why = refusedAddress(bare)
+      const why = refusedAddress(bare) ?? (ownNetworks().check(bare, net.isIP(bare) === 6 ? 'ipv6' : 'ipv4') ? "this machine's own network" : null)
       return why ? { why } : { addrs: [{ address: bare, family: net.isIP(bare), port: 443 }], servername: undefined }
     }
     if (LOCAL_NAMES.test(host) || !host.includes('.')) return { why: 'a name that is not on the public internet' }
@@ -365,9 +384,10 @@ export function makeWeb({ cfg, db, readBody, send, fail }) {
     }
     if (!addrs.length) return { why: 'a name that does not resolve', status: 502 }
     // EVERY address must be public: a name that also answers a private one is refused whole.
+    const nets = ownNetworks()
     for (const a of addrs) {
       if (a.loop && a.address === '127.0.0.1') continue
-      const why = refusedAddress(a.address)
+      const why = refusedAddress(a.address) ?? (nets.check(a.address, net.isIP(a.address) === 6 ? 'ipv6' : 'ipv4') ? "this machine's own network" : null)
       if (why) return { why }
     }
     return { addrs, servername: host, test: !!test }
