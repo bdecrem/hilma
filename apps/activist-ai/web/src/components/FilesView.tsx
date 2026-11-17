@@ -7,7 +7,7 @@ import { bytes, cap, count, when } from '../lib/format.ts'
 import { Icon } from './Icon.tsx'
 import { ProblemBox } from './Drawer.tsx'
 
-export function FilesView(props: { onChanged: () => void; uploadRef?: (el: HTMLButtonElement) => void; canWrite?: boolean; deleteNotice?: string; claudeOn?: boolean }) {
+export function FilesView(props: { onChanged: () => void; uploadRef?: (el: HTMLButtonElement) => void; canWrite?: boolean; deleteNotice?: string; claudeOn?: boolean; hostedOn?: boolean }) {
   const canWrite = () => props.canWrite !== false
   const [files, { refetch }] = createResource(() => desk.files())
   const [problem, setProblem] = createSignal<Problem | null>(null)
@@ -94,7 +94,7 @@ export function FilesView(props: { onChanged: () => void; uploadRef?: (el: HTMLB
             <button type="button" class="primary-button" ref={props.uploadRef} disabled={busy()} onClick={() => picker?.click()}>
               <Icon name="plus" size={18} /> Upload files
             </button>
-            <p class="upload-line">A file you upload is copied to Ola’s computer, the Mac in Bart’s office. {props.claudeOn ? "It goes to no AI company, unless someone hands a request about it to Claude." : "It does not go to any AI company."}</p>
+            <p class="upload-line">A file you upload is copied to Ola’s computer, the Mac in Bart’s office. {props.claudeOn || props.hostedOn ? `It goes to no AI company, unless someone hands a request about it to ${props.claudeOn && props.hostedOn ? "Claude or the hosted open model" : props.claudeOn ? "Claude" : "the hosted open model"}.` : "It does not go to any AI company."}</p>
           </div>
           </Show>
         </div>
@@ -114,7 +114,7 @@ export function FilesView(props: { onChanged: () => void; uploadRef?: (el: HTMLB
           </div>
           <div>
             <dt>What left the machine</dt>
-            <dd>{props.claudeOn ? "Only what Claude read for a request handed to it (Fallback to Claude is on for this project). A web search or download sends only its words or its address, and asks you first unless your project said Always (Settings)." : "None of these files. A web search or download sends only its words or its address, and asks you first unless your project said Always (Settings)."}</dd>
+            <dd>{props.claudeOn || props.hostedOn ? `Only what ${props.claudeOn && props.hostedOn ? "Claude or the hosted open model" : props.claudeOn ? "Claude" : "the hosted open model"} read for a request handed to it (${props.claudeOn && props.hostedOn ? "both fallbacks are" : props.claudeOn ? "Fallback to Claude is" : "Fallback to a hosted open model is"} on for this project). A web search or download sends only its words or its address, and asks you first unless your project said Always (Settings).` : "None of these files. A web search or download sends only its words or its address, and asks you first unless your project said Always (Settings)."}</dd>
           </div>
           <div>
             <dt>How long they stay</dt>

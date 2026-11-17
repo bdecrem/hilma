@@ -11,7 +11,10 @@
 //
 // Who may use it is decided by the front desk and written to GATEWAY_CLAUDE_FILE (mode 600, one
 // JSON object, by rename; reloaded when it changes): { "ws-<id>": { "mode": "oauth" | "api_key",
-// "cap_micro_usd": n, "cap_tokens": n } }. A caller not listed is refused with a plain sentence.
+// "cap_micro_usd": n, "cap_tokens": n, "until": ms? } }. A caller not listed is refused with a plain
+// sentence. An entry with `until` is a one-time grant (one run the owner handed to Claude without
+// turning the setting on): honored only until that moment (epoch ms), and taken back by the front
+// desk when the run ends.
 //
 // Two credentials, one per mode:
 //   api_key  CLAUDE_API_KEY (an Anthropic API key), sent as x-api-key. Any owner's project.
@@ -115,7 +118,7 @@ export function makeClaude({ cfg, db, readBody, send, fail }) {
       const next = new Map()
       for (const [name, g] of Object.entries(raw ?? {})) {
         if (!/^ws-[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$/.test(name) || !g || !['oauth', 'api_key'].includes(g.mode)) continue
-        next.set(name, { mode: g.mode, capMicroUsd: Number.isSafeInteger(g.cap_micro_usd) && g.cap_micro_usd >= 0 ? g.cap_micro_usd : 20_000_000, capTokens: Number.isSafeInteger(g.cap_tokens) && g.cap_tokens >= 0 ? g.cap_tokens : 20_000_000 })
+        next.set(name, { mode: g.mode, capMicroUsd: Number.isSafeInteger(g.cap_micro_usd) && g.cap_micro_usd >= 0 ? g.cap_micro_usd : 20_000_000, capTokens: Number.isSafeInteger(g.cap_tokens) && g.cap_tokens >= 0 ? g.cap_tokens : 20_000_000, until: g.until === undefined ? null : Number.isSafeInteger(g.until) ? g.until : 0 })
       }
       const added = [...next.keys()].filter((k) => !grants.has(k)).length
       const removed = [...grants.keys()].filter((k) => !next.has(k)).length
@@ -142,10 +145,15 @@ export function makeClaude({ cfg, db, readBody, send, fail }) {
     cache_write = cache_write + excluded.cache_write, cache_read = cache_read + excluded.cache_read, cost_micro_usd = cost_micro_usd + excluded.cost_micro_usd`)
   const read = db.prepare(`SELECT coalesce(sum(requests), 0) AS requests, coalesce(sum(tokens_in + tokens_out + cache_write + cache_read), 0) AS tokens, coalesce(sum(cost_micro_usd), 0) AS cost FROM claude_usage WHERE month = ? AND caller = ?`)
   const costOf = (u) => Math.round(u.in * cfg.prices.in + u.out * cfg.prices.out + u.cw * cfg.prices.cache_write + u.cr * cfg.prices.cache_read) // tokens × $/MTok = micro-dollars
+  // A one-time grant (`until`) counts only until its moment: after it, as if it were not there.
+  const live = (caller) => {
+    const g = grants.get(caller)
+    return g && (g.until === null || Date.now() <= g.until) ? g : null
+  }
   const monthOf = (caller) => {
     const r = read.get(MONTH(), caller)
-    const g = grants.get(caller)
-    return { month: MONTH(), mode: g?.mode ?? null, requests: r.requests, tokens: r.tokens, cost_micro_usd: r.cost, cap_micro_usd: g?.capMicroUsd ?? null, cap_tokens: g?.capTokens ?? null }
+    const g = live(caller)
+    return { month: MONTH(), mode: g?.mode ?? null, once: Boolean(g && g.until !== null), requests: r.requests, tokens: r.tokens, cost_micro_usd: r.cost, cap_micro_usd: g?.capMicroUsd ?? null, cap_tokens: g?.capTokens ?? null }
   }
   const credentialFor = (mode) => (mode === 'api_key' ? cfg.key : oauth)
 
@@ -156,8 +164,8 @@ export function makeClaude({ cfg, db, readBody, send, fail }) {
       fail(res, status, message, type, headers)
     }
     if (req.method !== 'POST') return no(404, 'not found', 'not found')
-    const g = grants.get(who)
-    if (!g) return no(403, 'fallback to Claude is off for this caller', 'Fallback to Claude is off for this project. Its owner can turn it on in Settings.', 'permission_error')
+    const g = live(who)
+    if (!g) return no(403, grants.has(who) ? 'the one-time Claude grant has ended' : 'fallback to Claude is off for this caller', 'Fallback to Claude is off for this project. Its owner can turn it on in Settings.', 'permission_error')
     rec.mode = g.mode
     const cred = credentialFor(g.mode)
     if (!cred) return no(503, 'no credential for this mode', g.mode === 'oauth' ? 'Claude is not set up on this machine yet (no subscription token).' : 'Claude is not set up on this machine yet (no API key).', 'api_error')
@@ -253,7 +261,7 @@ export function makeClaude({ cfg, db, readBody, send, fail }) {
 
   // Which modes have a credential, for the front desk (through the usage token): true or false only.
   const modes = () => ({ oauth: Boolean(oauth), api_key: Boolean(cfg.key) })
-  return { handle, monthOf, modes, scrub, has: (who) => grants.has(who), close: () => timers.forEach(clearInterval) }
+  return { handle, monthOf, modes, scrub, has: (who) => Boolean(live(who)), close: () => timers.forEach(clearInterval) }
 }
 
 /** Token counts from one SSE data line or a whole reply (message_start, message_delta, usage). */

@@ -15,6 +15,15 @@
           "name": "general",
           "capabilities": { "tools": true, "input": ["text"], "output": ["text"] },
           "limit": { "context": 131072, "output": 16000 }
+        },
+        // Fallback to a hosted open model: the gateway serves `hosted` only to a project whose owner
+        // turned it on, or for the one run they handed over; the front desk switches a session to it
+        // for that run and back after. Its limits are the provider model's (gateway HOSTED_MODEL).
+        "hosted": {
+          "modelID": "hosted",
+          "name": "hosted",
+          "capabilities": { "tools": true, "input": ["text"], "output": ["text"] },
+          "limit": { "context": 262144, "output": 32000 }
         }
       }
     }

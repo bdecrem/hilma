@@ -164,16 +164,62 @@ export interface Turn {
   /** Set while opencode is retrying the model: "Trying again in 5 s". */
   notice: string | null
   ended: number | null
-  /** Who answered: Ola (opencode, on this machine; the default) or Claude (Claude Code, outside it). */
+  /**
+   * Who answered: Ola (opencode with Ola's own model, on this machine; the default), the hosted open
+   * model (the same opencode, its model at an outside company), or Claude (Claude Code, outside it).
+   */
   engine?: Engine
   /** A Claude turn: its run id, for Stop and for following it again. */
   run?: string | null
-  /** Why Claude took over by itself, in one sentence (null when the person asked). */
+  /** Why the request was handed over, in one sentence (null when the person asked). */
   handoff?: string | null
 }
 
-export type Engine = 'ola' | 'claude'
+export type Engine = 'ola' | 'claude' | 'hosted'
+/** The two ways out of this machine, each its own switch. */
+export type Fallback = 'hosted' | 'claude'
 export type ClaudeAuto = 'ask' | 'stuck' | 'always'
+/** "When a request looks like a stretch": suggest it and let me decide; hand it over without asking; never suggest. */
+export type Stretch = 'suggest' | 'handover' | 'never'
+/** What Ola saw that makes a request look like a stretch (observable signals only, never a score). */
+export type StretchReason = 'error' | 'budget' | 'tools' | 'big_files' | 'long_build'
+
+/** GET /api/fallback: the hosted open model for this project. */
+export interface HostedInfo {
+  enabled: boolean
+  canChange: boolean
+  /** The machine has a hosted provider set up. */
+  configured: boolean
+  /** The provider's name as people read it ("Together AI"), or null. */
+  provider: string | null
+  unavailable: string | null
+  month: { unit: 'usd'; used: number; cap: number; reported: boolean }
+  running: { conversation: string } | null
+}
+
+/** GET /api/fallback: both fallbacks and the setting they share. */
+export interface FallbackInfo {
+  claude: ClaudeInfo
+  hosted: HostedInfo
+  stretch: Stretch
+  stretchTo: Fallback
+  canChange: boolean
+}
+
+/** The stretch card: Ola suggests handing one request over, and the person decides. */
+export interface Suggestion {
+  id: string
+  request: string
+  /** The Ola turn that got stuck (kept, with what Ola did so far), or null: asked before a run. */
+  turnId: string | null
+  reason: StretchReason
+  /** What it may go to, the first offered first (the hosted open model before Claude). */
+  offers: Fallback[]
+  /** The one shown now (the person can switch to the other offer). */
+  target: Fallback
+  /** The person can send it (an owner, or the target's switch is on); else the card only says who can turn it on. */
+  canAct: boolean
+}
 
 /** GET /api/claude: Fallback to Claude for this project. */
 export interface ClaudeInfo {

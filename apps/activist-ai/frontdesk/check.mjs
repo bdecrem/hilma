@@ -115,7 +115,9 @@ async function check(name, fn) {
     const d = await fn()
     ok(name, true, d ?? '')
   } catch (e) {
-    ok(name, false, String(e?.message ?? e).split('\n')[0].slice(0, 300))
+    // A "fetch failed" says nothing alone: its cause (ECONNREFUSED, a reset, a timeout) says who failed.
+    const cause = e?.cause ? ` [cause: ${e.cause.code ?? e.cause.name ?? ''} ${String(e.cause.message ?? '').slice(0, 120)}]` : ''
+    ok(name, false, String(e?.message ?? e).split('\n')[0].slice(0, 300) + cause)
   }
 }
 const assert = (c, m) => {
@@ -169,6 +171,14 @@ fake.server.unref()
 const fakeClaude = await startFakeAnthropic()
 fakeClaude.server.unref()
 const FAKE_UP = { UPSTREAM_BASE_URL: `http://127.0.0.1:${fake.port}/v1`, UPSTREAM_API_KEY: 'fake-model-key-not-a-secret', GATEWAY_MODELS: 'general=fake' }
+// Fallback to a hosted open model: a second scripted model (web/server/fake-model.mjs, hosted), or
+// with OLA_CHECK_HOSTED_LIVE=<model id> that model on Together (the one live hosted run; cents).
+const HOSTED_LIVE = process.env.OLA_CHECK_HOSTED_LIVE || null
+const fakeHosted = await startFakeModel({ hosted: true })
+fakeHosted.server.unref()
+const HOSTED_UP = HOSTED_LIVE
+  ? { HOSTED_BASE_URL: 'https://api.together.xyz/v1', HOSTED_API_KEY: together(), HOSTED_MODEL: HOSTED_LIVE, HOSTED_PROVIDER: 'Together AI', GATEWAY_HOSTED_PRICES: process.env.OLA_CHECK_HOSTED_PRICES || 'in=1.4,out=4.4' }
+  : { HOSTED_BASE_URL: `http://127.0.0.1:${fakeHosted.port}/v1`, HOSTED_API_KEY: 'fake-hosted-key-not-a-secret', HOSTED_MODEL: 'fake-hosted', HOSTED_PROVIDER: 'Made-up Cloud' }
 const gwEnv = {
   HOME: homedir(),
   ...(LIVE ? { UPSTREAM_BASE_URL: 'https://api.together.xyz/v1', UPSTREAM_API_KEY: together(), GATEWAY_MODELS: 'general=zai-org/GLM-5.3-Flash' } : FAKE_UP),
@@ -187,6 +197,9 @@ const gwEnv = {
   // the made-up search provider.
   GATEWAY_WEB_FILE: path.join(env.OLA_HOME, 'gateway-web'),
   GATEWAY_SEARCH_PROVIDER: 'mock',
+  // the hosted open model, and the grants file the front desk writes for it
+  ...HOSTED_UP,
+  GATEWAY_HOSTED_FILE: path.join(env.OLA_HOME, 'gateway-hosted'),
 }
 let gateway = start('gateway', 'gateway/server.mjs', gwEnv)
 await until(() => gateway.log.includes('"event":"start"'), 10_000, 'the gateway start')
@@ -1213,6 +1226,107 @@ await check('a role change that leaves only admins as owners moves the project t
   return line.split(';')[0]
 })
 
+// ---------------------------------------------------------------- Fallback to a hosted open model
+// The same opencode in alice's sealed VM, the model name `hosted` through her door and this suite's
+// gateway, to a second scripted model (or, with OLA_CHECK_HOSTED_LIVE, the real one on Together).
+const hostedFile = () => JSON.parse(readFileSync(path.join(env.OLA_HOME, 'gateway-hosted'), 'utf8'))
+const jpost = (who, p, body) => api(p, { method: 'POST', cookie: who.cookie, csrf: who.csrf, ws: FA, body: JSON.stringify(body), headers: { 'content-type': 'application/json' } })
+const dbRow = (sql) => new DatabaseSync(path.join(env.OLA_FD_DATA, 'platform.db'), { readOnly: true }).prepare(sql).get()
+/** A new conversation in alice's project, a hosted run in it, and its end (the front desk's word). */
+async function hostedRun(who, request, extra = {}) {
+  const s = await jpost(who, '/oc/api/session', { title: 'hosted check', metadata: { autonomy: 'go' } })
+  const id = s.json?.id
+  const r = await jpost(who, '/api/hosted/run', { request, conversation: id, ...extra })
+  if (r.status !== 200) return { status: r.status, json: r.json, id }
+  await until(async () => (await api('/api/fallback', { cookie: who.cookie, ws: FA })).json?.hosted?.running === null, HOSTED_LIVE ? 300_000 : 120_000, 'the hosted run ending')
+  const msgs = (await api(`/oc/api/session/${id}/message?limit=200`, { cookie: who.cookie, ws: FA })).json
+  const list = msgs?.data ?? msgs ?? []
+  return { status: 200, id, list, models: [...new Set(list.filter((m) => m.type === 'assistant').map((m) => m.model?.id))], idle: list.filter((m) => m.type === 'idle').map((m) => m.outcome) }
+}
+// A chat request with model `hosted` from inside the VM, with its own token (from stdin): the gateway's answer.
+const HOSTED_PROBE = 'import sys, json, urllib.request\nbody = json.dumps({"model": "hosted", "messages": [{"role": "user", "content": "hi"}]}).encode()\nreq = urllib.request.Request("http://127.0.0.1:4180/v1/chat/completions", data=body, headers={"Authorization": "Bearer " + sys.stdin.read().strip(), "Content-Type": "application/json"})\ntry:\n    print(urllib.request.urlopen(req, timeout=30).status)\nexcept urllib.error.HTTPError as e:\n    print(e.code)\n'
+const hostedFromInside = () => spawnSync(CTR, ['exec', '-i', `ola-${FA}`, 'python3', '-I', '-c', HOSTED_PROBE], { input: secretsOf(FA).BOX_API_KEY, encoding: 'utf8' }).stdout.trim()
+
+await check('the hosted open model is off by default and independent of Claude; only the owner turns it on, with consent; the grants file follows', async () => {
+  const f = await api('/api/fallback', { cookie: a.cookie, ws: FA })
+  assert(f.status === 200 && f.json.hosted.enabled === false && f.json.hosted.configured === true && f.json.hosted.provider === HOSTED_UP.HOSTED_PROVIDER && f.json.stretch === 'suggest' && f.json.stretchTo === 'hosted' && f.json.claude.enabled === false, JSON.stringify(f.json).slice(0, 300))
+  assert(!hostedFile()[`ws-${FA}`], 'a hosted grant before anyone turned it on')
+  assert((await jpost(v, '/api/hosted/settings', { enabled: true, consent: true })).status === 403, 'the viewer turned it on')
+  assert((await jpost(a, '/api/hosted/settings', { enabled: true })).status === 400, 'on without consent')
+  const on = await jpost(a, '/api/hosted/settings', { enabled: true, consent: true })
+  assert(on.status === 200 && on.json.enabled === true, `on: ${on.status}`)
+  assert(hostedFile()[`ws-${FA}`]?.cap_micro_usd === 20_000_000 && hostedFile()[`ws-${FA}`].until === undefined, `hosted grant: ${JSON.stringify(hostedFile())}`)
+  assert(!grantsFile()[`ws-${FA}`], 'turning the hosted model on gave a Claude grant')
+  assert((await jpost(v, '/api/fallback/settings', { stretch: 'never' })).status === 403, 'the viewer changed "when a request looks like a stretch"')
+  const s = await jpost(a, '/api/fallback/settings', { stretch: 'handover', stretchTo: 'claude' })
+  assert(s.status === 200 && s.json.stretch === 'handover' && s.json.stretchTo === 'claude', JSON.stringify(s.json))
+  await jpost(a, '/api/fallback/settings', { stretch: 'suggest', stretchTo: 'hosted' })
+  assert(auditRows(FA).some((r) => r.action === 'hosted_enabled' && r.actor === 'alice'), 'no hosted_enabled row')
+  assert((await jpost(v, '/api/hosted/run', { request: 'x', conversation: 'ses_x' })).status === 403, 'the viewer may run it')
+  return `on, $20.00 ceiling, provider ${f.json.hosted.provider}`
+})
+const HOSTED_ASK = HOSTED_LIVE ? 'How many respondents are in survey.csv? Count the data rows with a short program (not the header), then write just that number to hosted-count.txt.' : 'Count the rows in survey.csv'
+await check(`a request handed to the hosted model runs in the same sealed VM and conversation, marked by its model, audited with numbers only, and the conversation goes back to Ola's model${HOSTED_LIVE ? ` (LIVE: ${HOSTED_LIVE})` : ''}`, async () => {
+  const before = HOSTED_LIVE ? 0 : fakeHosted.calls()
+  const t0 = Date.now()
+  const r = await hostedRun(a, HOSTED_ASK)
+  assert(r.status === 200, `run: ${r.status} ${JSON.stringify(r.json)}`)
+  assert(JSON.stringify(r.models) === '["hosted"]' && r.idle.at(-1) === 'succeeded', `models ${r.models}, outcome ${r.idle}`)
+  const file = HOSTED_LIVE ? inVm('cat /work/hosted-count.txt') : inVm('test -e /work/rows.md && echo there')
+  const real = inVm("python3 -c \"import csv; print(sum(1 for _ in csv.reader(open('/work/survey.csv'))) - 1)\"")
+  assert(HOSTED_LIVE ? file.trim() === real : file === 'there', `the file: ${file} (the survey has ${real})`)
+  if (!HOSTED_LIVE) assert(fakeHosted.calls() > before, 'the hosted model was not asked')
+  const row = dbRow("SELECT tokens_in, tokens_out, cost_micro_usd, name_ref FROM audit WHERE action = 'hosted_used' ORDER BY id DESC LIMIT 1")
+  assert(row && row.tokens_in > 0 && row.name_ref === null && row.cost_micro_usd !== null, `audit: ${JSON.stringify(row)}`)
+  const lines = gateway.log.split('\n').filter((l) => l.includes('"model":"hosted"') && l.includes(`"caller":"ws-${FA}"`))
+  assert(lines.length >= 2 && lines.every((l) => !l.includes('survey') && !l.includes('rows.md')), `${lines.length} gateway lines`)
+  // Back to Ola's own model: the next request in the same conversation runs on it.
+  await jpost(a, `/oc/api/session/${r.id}/prompt`, { text: 'Say hello' })
+  await until(async () => {
+    const m = (await api(`/oc/api/session/${r.id}/message?limit=200`, { cookie: a.cookie, ws: FA })).json
+    return (m?.data ?? m ?? []).filter((x) => x.type === 'idle').length >= 2
+  }, 120_000, 'the next request')
+  const m2 = (await api(`/oc/api/session/${r.id}/message?limit=200`, { cookie: a.cookie, ws: FA })).json
+  const models = (m2?.data ?? m2 ?? []).filter((x) => x.type === 'assistant').map((x) => x.model?.id)
+  assert(models.at(-1) === 'general', `after the hosted run the conversation runs on ${models.at(-1)}`)
+  return `${Math.round((Date.now() - t0) / 1000)} s, ${lines.length} hosted requests; ${row.tokens_in} tokens in, ${row.tokens_out} out, $${(row.cost_micro_usd / 1e6).toFixed(4)}; ${HOSTED_LIVE ? `wrote ${file} (the survey has ${real})` : 'wrote rows.md'}; then Ola's model again`
+})
+await check('"Just this once": with the switches off the owner hands one request over; the gateway honors it for that run only, the next is refused from inside the VM; a member cannot; the same for Claude', async () => {
+  const off = await jpost(a, '/api/hosted/settings', { enabled: false })
+  assert(off.status === 200 && !hostedFile()[`ws-${FA}`] && auditRows(FA).some((r) => r.action === 'hosted_disabled'), 'not off')
+  assert(hostedFromInside() === '403', 'the hosted model answered from inside with the switch off')
+  const plain = await jpost(a, '/api/hosted/run', { request: 'x', conversation: 'ses_x' })
+  assert(plain.status === 403 && plain.json.error === 'hosted_off', `a run with it off: ${plain.status}`)
+  admin('add-member', 'team-a', 'vera', 'member')
+  try {
+    const member = await jpost(v, '/api/hosted/run', { request: 'x', conversation: 'ses_x', once: true })
+    const memberClaude = await claudeRun(v, { request: 'x', once: true })
+    assert(member.status === 403 && member.json.error === 'owner_only' && memberClaude.status === 403, `a member's just this once: ${member.status} / ${memberClaude.status}`)
+  } finally {
+    admin('add-member', 'team-a', 'vera', 'viewer')
+  }
+  const r = await hostedRun(a, 'Count the rows in survey.csv', { once: true })
+  assert(r.status === 200 && JSON.stringify(r.models) === '["hosted"]' && r.idle.at(-1) === 'succeeded', `once: ${r.status} ${r.models} ${r.idle}`)
+  const after = { file: hostedFile()[`ws-${FA}`] ?? null, on: (await api('/api/fallback', { cookie: a.cookie, ws: FA })).json.hosted.enabled, rows: dbRow("SELECT count(*) AS n FROM fallback_once").n }
+  assert(after.file === null && after.on === false && after.rows === 0, `after the run: ${JSON.stringify(after)}`)
+  await sleep(2500) // the gateway reloads the grants file within 2 s
+  const inside = hostedFromInside()
+  assert(inside === '403', `a second request from inside the VM: ${inside}`)
+  const once = dbRow("SELECT tokens_in, cost_micro_usd, name_ref FROM audit WHERE action = 'hosted_once' ORDER BY id DESC LIMIT 1")
+  assert(once && once.tokens_in > 0 && once.name_ref === null, `hosted_once: ${JSON.stringify(once)}`)
+  // Claude, the same: one run with the switch left off, then nothing.
+  const c = await claudeRun(a, { request: 'write claude-once.txt saying once', once: true })
+  assert(c.status === 200 && c.ended?.reason === 'done' && inVm('cat /work/claude-once.txt') === 'once', `Claude once: ${c.status} ${JSON.stringify(c.ended ?? c.json)}`)
+  const claudeOff = (await api('/api/fallback', { cookie: a.cookie, ws: FA })).json.claude.enabled
+  assert(!grantsFile()[`ws-${FA}`] && claudeOff === false && auditRows(FA).some((x) => x.action === 'claude_once'), `after Claude once: ${JSON.stringify(grantsFile())}, on ${claudeOff}`)
+  const again = await claudeRun(a, { request: 'write x.txt saying x' })
+  assert(again.status === 403, `the next Claude request: ${again.status}`)
+  return 'hosted: one run, then 403 from inside; Claude: one run, then 403'
+})
+// The hosted grants are kept right by the admin CLI through a rotation and a close (the checks at the
+// VM cap, at the end): turned on here, with a stale entry planted for the CLI to drop.
+await jpost(a, '/api/hosted/settings', { enabled: true, consent: true })
+
 // ---------------------------------------------------------------- one real request
 if (LIVE) {
   await check('a real request runs in the drawer, inside the sealed workspace, through the gateway', async () => {
@@ -1584,10 +1698,14 @@ await check('an idle workspace stops, its event stream does not wake it, and ope
     assert(opened.status === 200, `${FB} did not open: ${opened.status} ${opened.json?.error}`)
     assert(node('workspace/ws.mjs', ['start', FA]).status === 0, `${FA} did not start`)
     const old = { [FA]: secretsOf(FA), [FC]: secretsOf(FC) }
+    // A stale hosted grant (a project that is not open, say): the admin CLI rewrites the file from the database.
+    writeFileSync(path.join(env.OLA_HOME, 'gateway-hosted'), JSON.stringify({ ...hostedFile(), 'ws-gone-zz': { cap_micro_usd: 1 } }), { mode: 0o600 })
     // The admin's ws.mjs may run one VM (OLA_MAX_RUNNING=1): bob's workspace holds it, so FA cannot start again.
     const r = removeVera({ OLA_MAX_RUNNING: '1' })
     try {
       assert(r.status === 0, `remove-member exited ${r.status}: ${r.stderr.trim().split('\n').pop()}`)
+      const hg = hostedFile()
+      assert(hg[`ws-${FA}`]?.cap_micro_usd === 20_000_000 && !hg['ws-gone-zz'], `the hosted grants after the removal: ${JSON.stringify(hg)}`)
       assert(/left stopped/.test(lineOf(r.stdout, FA)) && /stopped, it starts on its next request/.test(lineOf(r.stdout, FC)), r.stdout.trim().replace(/\n/g, ' | '))
       for (const id of [FA, FC]) {
         const now = secretsOf(id)
@@ -1625,7 +1743,9 @@ await check('an idle workspace stops, its event stream does not wake it, and ope
       const refused = await api('/api/project', { cookie: a.cookie, ws: FA })
       assert(refused.status === 423 && refused.json?.error === 'closed' && /closed/.test(refused.json.message), `${refused.status} ${refused.text.slice(0, 100)}`)
       assert(wsRow(FA).closed === true, 'the workspace is not marked closed on the machine')
+      assert(!hostedFile()[`ws-${FA}`], 'a closed project kept its hosted grant')
       admin('reopen', FA)
+      assert(hostedFile()[`ws-${FA}`], 'the reopened project lost its hosted grant (it is still on)')
       const back = await project(FA)
       const now = secretsOf(FA)
       assert(back.status === 200 && (await deskStatus(FA, now.OPENCODE_PASSWORD)) === 200 && (await deskStatus(FA, old[FA].OPENCODE_PASSWORD)) === 401 && since(FA, t0).includes('workspace_reopened'), `after reopen: ${back.status}`)

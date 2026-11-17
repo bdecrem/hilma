@@ -68,17 +68,37 @@ export function modeFor(db, workspaceId) {
   return r.n > 0 && r.admins === r.n ? 'oauth' : 'api_key'
 }
 
-/** The gateway's grants file, from the database: every active project with Claude on. */
-export function writeGrants(db, cc) {
-  const grants = {}
-  for (const w of db.prepare("SELECT id, slug, claude_cap_micro_usd AS usd, claude_cap_tokens AS tokens FROM workspaces WHERE status = 'active' AND claude_enabled = 1 ORDER BY slug").all()) {
-    grants[`ws-${w.slug}`] = { mode: modeFor(db, w.id), cap_micro_usd: w.usd ?? cc.capMicroUsd, cap_tokens: w.tokens ?? cc.capTokens }
-  }
-  const tmp = `${cc.file}.tmp`
+/**
+ * The one-time grants in force for an engine ("Just this once" on the stretch card): workspace id ->
+ * until (epoch ms). Rows past their moment are left out (and cleared by the server at the run's end).
+ */
+export function onceGrants(db, engine) {
+  const out = new Map()
+  for (const r of db.prepare('SELECT workspace_id AS id, max(until) AS until FROM fallback_once WHERE engine = ? AND until > ? GROUP BY workspace_id').all(engine, Date.now())) out.set(r.id, r.until)
+  return out
+}
+
+/** Writes a grants file for the gateway: one JSON object, mode 600, by rename. */
+export function writeGrantsFile(file, grants) {
+  const tmp = `${file}.tmp`
   writeFileSync(tmp, JSON.stringify(grants) + '\n', { mode: 0o600 })
   chmodSync(tmp, 0o600)
-  renameSync(tmp, cc.file)
+  renameSync(tmp, file)
   return grants
+}
+
+/** How long a one-time grant may last at most: the run ceiling and a minute (two hours with no ceiling). */
+export const onceUntil = (runCeilingMs) => Date.now() + (runCeilingMs > 0 ? runCeilingMs : 2 * 3600_000) + 60_000
+
+/** The gateway's grants file, from the database: every active project with Claude on, and the one-time grants in force. */
+export function writeGrants(db, cc) {
+  const grants = {}
+  const once = onceGrants(db, 'claude')
+  for (const w of db.prepare("SELECT id, slug, claude_enabled AS enabled, claude_cap_micro_usd AS usd, claude_cap_tokens AS tokens FROM workspaces WHERE status = 'active' ORDER BY slug").all()) {
+    if (w.enabled !== 1 && !once.has(w.id)) continue
+    grants[`ws-${w.slug}`] = { mode: modeFor(db, w.id), cap_micro_usd: w.usd ?? cc.capMicroUsd, cap_tokens: w.tokens ?? cc.capTokens, ...(w.enabled === 1 ? {} : { until: once.get(w.id) }) }
+  }
+  return writeGrantsFile(cc.file, grants)
 }
 
 /** The gateway's word on Claude: which modes have a credential, and each caller's month. Null if it cannot be asked. */
@@ -90,8 +110,13 @@ export async function gatewayUsage(cc) {
     const j = await r.json()
     const modes = j?.claude_modes
     if (!modes || typeof modes.oauth !== 'boolean' || typeof modes.api_key !== 'boolean') return null
-    const month = new Map((Array.isArray(j.data) ? j.data : []).filter((d) => typeof d?.caller === 'string' && d.claude_month).map((d) => [d.caller, d.claude_month]))
-    return { modes, month }
+    const data = Array.isArray(j.data) ? j.data : []
+    const month = new Map(data.filter((d) => typeof d?.caller === 'string' && d.claude_month).map((d) => [d.caller, d.claude_month]))
+    // Fallback to a hosted open model (gateway/hosted.mjs): whether it is set up (the provider's
+    // name as people read it, or null), and each caller's month.
+    const hosted = j.hosted && typeof j.hosted.provider === 'string' ? { provider: j.hosted.provider.slice(0, 40) } : null
+    const hostedMonth = new Map(data.filter((d) => typeof d?.caller === 'string' && d.hosted_month).map((d) => [d.caller, d.hosted_month]))
+    return { modes, month, hosted, hostedMonth }
   } catch {
     return null
   }
@@ -221,7 +246,11 @@ export function makeClaude({ db, cc, container, workspaces, runCeilingMs, log })
   /** POST /api/claude/run: starts a run and streams it to this response (NDJSON). */
   async function start(ws, personId, body, res, req) {
     const r = row(ws.id)
-    if (r.enabled !== 1) return { status: 403, body: { error: 'claude_off', message: 'Fallback to Claude is off for this project. Its owner can turn it on in Settings.' } }
+    // "Just this once" (the stretch card): the owner hands this one request over with the switch
+    // left off. The gateway gets a one-time grant for this run only, taken back when it ends.
+    const once = r.enabled !== 1 && body?.once === true
+    if (r.enabled !== 1 && !once) return { status: 403, body: { error: 'claude_off', message: 'Fallback to Claude is off for this project. Its owner can turn it on in Settings.' } }
+    if (once && ws.role !== 'owner') return { status: 403, body: { error: 'owner_only', message: 'Only the project’s owner can hand a request to Claude while it is off.' } }
     const request = typeof body?.request === 'string' ? body.request.trim() : ''
     const context = typeof body?.context === 'string' ? body.context : ''
     const conv = body?.conversation
@@ -233,6 +262,11 @@ export function makeClaude({ db, cc, container, workspaces, runCeilingMs, log })
     if (bySlug.has(ws.slug)) return { status: 409, body: { error: 'claude_busy', message: 'Claude is already working on a request in this project. Wait for it to finish, or stop it.' } }
     await workspaces.ensureRunning(ws.slug)
     const id = `c${Date.now().toString(36)}${randomBytes(6).toString('hex')}`
+    let onceId = null
+    if (once) {
+      onceId = Number(db.prepare("INSERT INTO fallback_once (workspace_id, engine, person_id, until) VALUES (?, 'claude', ?, ?)").run(ws.id, personId, onceUntil(runCeilingMs)).lastInsertRowid)
+      writeGrants(db, cc)
+    }
     // The gateway reloads the grants file within about 2 s: a run started right after the switch was
     // turned on waits (up to 6 s) until the gateway lists this project's grant, or Claude Code's first
     // request would be refused as "off".
@@ -242,7 +276,7 @@ export function makeClaude({ db, cc, container, workspaces, runCeilingMs, log })
       before = await usage(true)
     }
     const child = spawn(container, ['exec', '-i', `ola-${ws.slug}`, '/opt/ola/bin/ola-claude', autonomy, conv, id, why], { stdio: ['pipe', 'pipe', 'pipe'] })
-    const run = { id, slug: ws.slug, wsId: ws.id, conv, personId, autonomy, child, clients: new Set(), events: [], pending: new Map(), ended: null, at: Date.now(), result: null, before, release: workspaces.holdBusy(ws.slug), timers: [] }
+    const run = { id, onceId, slug: ws.slug, wsId: ws.id, conv, personId, autonomy, child, clients: new Set(), events: [], pending: new Map(), ended: null, at: Date.now(), result: null, before, release: workspaces.holdBusy(ws.slug), timers: [] }
     runs.set(id, run)
     bySlug.set(ws.slug, id)
     child.stdin.on('error', () => {})
@@ -348,6 +382,11 @@ export function makeClaude({ db, cc, container, workspaces, runCeilingMs, log })
     run.timers.forEach(clearTimeout)
     bySlug.delete(run.slug)
     run.release()
+    // A one-time grant ends with its run: the next request is refused at the gateway.
+    if (run.onceId !== null) {
+      db.prepare('DELETE FROM fallback_once WHERE id = ?').run(run.onceId)
+      writeGrants(db, cc)
+    }
     // The gateway's own count, before and after: numbers only.
     const after = await usage(true)
     const caller = `ws-${run.slug}`
@@ -357,7 +396,7 @@ export function makeClaude({ db, cc, container, workspaces, runCeilingMs, log })
     const cost = a && b && a.month === b.month ? Math.max(0, a.cost_micro_usd - b.cost_micro_usd) : a && !b ? a.cost_micro_usd : null
     const out = total === null ? null : Math.min(total, run.result?.usage?.output_tokens ?? 0)
     const mode = modeFor(db, run.wsId)
-    audit(db, { actor: run.personId, action: 'claude_used', workspace: run.wsId, ok: Boolean(run.result && !run.result.is_error && !run.stopping), tokensIn: total === null ? null : total - out, tokensOut: out, costMicroUsd: mode === 'api_key' ? cost : null })
+    audit(db, { actor: run.personId, action: run.onceId !== null ? 'claude_once' : 'claude_used', workspace: run.wsId, ok: Boolean(run.result && !run.result.is_error && !run.stopping), tokensIn: total === null ? null : total - out, tokensOut: out, costMicroUsd: mode === 'api_key' ? cost : null })
     const reason = run.stopping === 'ceiling' ? 'ceiling' : run.stopping ? 'stopped' : run.result && !run.result.is_error ? 'done' : 'failed'
     const minutes = Math.round((runCeilingMs / 60_000) * 100) / 100
     send(run, { ola: 'ended', reason, ...(reason === 'ceiling' ? { message: ceilingMessage(minutes).replace(/^Ola stopped this/, 'Claude was stopped') } : {}), ...(reason === 'failed' && !run.result ? { message: code === 0 ? 'Claude stopped before it answered.' : 'Claude could not run in your project just now. Nothing else was changed.' } : {}) })

@@ -3,8 +3,8 @@
 // websearch). A new tool falls through to "Used <name>", so nothing is hidden, only less
 // well said. Verbs come from the design's fixed table: Looked through, Read, Wrote, Changed,
 // Ran, Checked, Searched.
-import type { Problem, StepIcon } from './types.ts'
 import { webRequestOf } from '../../server/webask.mjs'
+import type { Problem, StepIcon, StretchReason } from './types.ts'
 
 export interface Words {
   icon: StepIcon
@@ -273,10 +273,56 @@ export function stuckReason(t: { status: string; error: Problem | null; steps: {
   if (t.status === 'failed') return 'error'
   return null
 }
-/** The one sentence the person reads when Claude takes over by itself. */
+/** The one sentence the person reads when Claude takes over by itself (kept for the record's older runs). */
 export const STUCK_WORDS: Record<Stuck | 'always', string> = {
   error: 'Ola ran into an error, so Claude is trying the same request.',
   budget: 'Ola reached the most it may do for one request, so Claude is trying the same request.',
   tools: 'Three of Ola’s steps in a row did not work, so Claude is trying the same request.',
   always: 'This project hands every request to Claude.',
+}
+
+// ---------------------------------------------------------------- "a stretch for Ola's own model"
+//
+// Before a run, a few cheap checks on the request alone, kept small and conservative: they should
+// almost never fire on an ordinary request. Every threshold is here, in one object.
+export const STRETCH_CHECKS = {
+  /** Ola's own model's context, in tokens (workspace/opencode.jsonc, ola/general). */
+  contextTokens: 131_072,
+  /** A rough count for text: bytes per token. */
+  bytesPerToken: 4,
+  /** The files a request names, together, count as far larger than the context past this many contexts. */
+  overContext: 3,
+  /** Only files that are read as text count (a PDF's bytes are not its words). */
+  textLike: /\.(txt|md|markdown|csv|tsv|json|jsonl|ndjson|html?|xml|ya?ml|log|py|js|ts|sql|tex|rtf)$/i,
+  /** A long multi-part build: at least this many listed parts… */
+  buildParts: 8,
+  /** …in a request at least this long… */
+  buildMinChars: 800,
+  /** …that asks for something to be made. */
+  buildVerb: /\b(build|make|create|write|set up|develop|implement|design)\b/i,
+}
+
+/** Before a run: does the request alone look like a stretch? 'big_files', 'long_build', or null. */
+export function precheck(request: string, files: { path: string; size: number }[], c = STRETCH_CHECKS): StretchReason | null {
+  const text = request.toLowerCase()
+  const named = files.filter((f) => c.textLike.test(f.path) && (text.includes(f.path.toLowerCase()) || text.includes(f.path.split('/').pop()!.toLowerCase())))
+  const bytes = named.reduce((n, f) => n + f.size, 0)
+  if (bytes / c.bytesPerToken > c.overContext * c.contextTokens) return 'big_files'
+  const parts = request.split('\n').filter((l) => /^\s*(\d{1,3}[.)]|[-*•])\s+\S/.test(l)).length
+  if (request.length >= c.buildMinChars && parts >= c.buildParts && c.buildVerb.test(request)) return 'long_build'
+  return null
+}
+
+/** Why Ola suggests handing the request over, in one sentence. */
+export const STRETCH_WHY: Record<StretchReason, string> = {
+  error: 'Ola’s own model ran into an error on this request.',
+  budget: 'Ola’s own model reached the most it may do for one request.',
+  tools: 'Three of Ola’s steps in a row did not work.',
+  big_files: 'The files this request names are much larger than Ola’s own model can read at once.',
+  long_build: 'This is a long build in many parts.',
+}
+
+/** The sentence on a reply that was handed over without asking ("Hand it over without asking"). */
+export function handoffWords(reason: StretchReason, to: string): string {
+  return `${STRETCH_WHY[reason]} This project hands such requests to ${to}, so it is working on it.`
 }

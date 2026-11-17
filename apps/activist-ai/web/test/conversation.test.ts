@@ -4,7 +4,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import { applyEvent, emptyConversation, runSummary, startTurn, turnsFromMessages } from '../src/lib/conversation.ts'
-import { describeCommand, describeTool, runProblem, shortPath } from '../src/lib/steps.ts'
+import { describeCommand, describeTool, precheck, runProblem, shortPath, STRETCH_CHECKS } from '../src/lib/steps.ts'
 
 function replay(file: string) {
   const lines = readFileSync(new URL(`./fixtures/${file}`, import.meta.url), 'utf8').trim().split('\n').map((l) => JSON.parse(l))
@@ -92,4 +92,29 @@ test('words for common commands and tools', () => {
   assert.equal(describeTool('mystery', {}, null).verb, 'Used')
   assert.equal(shortPath('/w/x/notes/a.md', '/w/x'), 'notes/a.md')
   assert.match(runProblem({ status: 429, message: 'insufficient_quota' }).text, /share/)
+})
+
+test('before a run, the stretch checks fire only on far-too-large named files and long multi-part builds', () => {
+  const files = [{ path: 'survey.csv', size: 40_000 }, { path: 'archive/minutes-2019-2026.txt', size: 3 * 1024 * 1024 }, { path: 'scan.pdf', size: 90 * 1024 * 1024 }]
+  assert.equal(precheck('How many people answered survey.csv?', files), null)
+  assert.equal(precheck('Summarize minutes-2019-2026.txt by year', files), 'big_files', 'a 3 MiB text file is ~6 contexts')
+  assert.equal(precheck('What is in scan.pdf?', files), null, 'a PDF’s bytes are not its words')
+  assert.equal(precheck('Summarize minutes-2019-2026.txt', [{ path: 'archive/minutes-2019-2026.txt', size: 1024 * 1024 }]), null, 'one MiB is two contexts: not "far larger"')
+  const parts = Array.from({ length: 8 }, (_, i) => `${i + 1}. a page about part ${i + 1} of our campaign, with its own photo, sources and a short summary`).join('\n')
+  const long = `Build a website for the campaign with:\n${parts}\nMake it readable on a phone, with large type, and write the words in a plain, warm voice for new members.`
+  assert.ok(long.length >= STRETCH_CHECKS.buildMinChars)
+  assert.equal(precheck(long, []), 'long_build')
+  assert.equal(precheck(parts.split('\n').slice(0, 7).join('\n') + '\n' + 'x'.repeat(900) + ' build it', []), null, 'seven parts are not many')
+})
+
+test('a step by the hosted open model marks the turn; so does its stored message', () => {
+  const state = emptyConversation()
+  state.sessionID = 'ses_1'
+  const turn = startTurn(state, 'hi', 1)
+  applyEvent(state, { type: 'session.step.started', data: { sessionID: 'ses_1', model: { id: 'general', providerID: 'ola' } } })
+  assert.equal(turn.engine, undefined)
+  applyEvent(state, { type: 'session.step.started', data: { sessionID: 'ses_1', model: { id: 'hosted', providerID: 'ola' } } })
+  assert.equal(state.turns[0].engine, 'hosted')
+  const turns = turnsFromMessages([{ type: 'user', id: 'u1', text: 'hi', time: { created: 1 } }, { type: 'assistant', model: { id: 'hosted', providerID: 'ola' }, content: [{ type: 'text', text: 'hello' }], time: { created: 2 } }], null)
+  assert.equal(turns[0].engine, 'hosted')
 })

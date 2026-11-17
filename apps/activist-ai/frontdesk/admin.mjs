@@ -23,7 +23,8 @@
 //   node admin.mjs claude <workspace> [on|off] [--auto ask|stuck|always] [--cap-usd 25] [--cap-tokens 20000000]
 //                  Fallback to Claude for one project: with no change, prints its state (on or off,
 //                  the mode its owners give it, the ceiling, the month so far); changes are audited.
-//   node admin.mjs claude-grants                       writes the gateway's grants file from the database again
+//   node admin.mjs claude-grants                       writes the gateway's grants files (Claude, hosted) from the database again
+//   node admin.mjs hosted <workspace> [on|off] [--cap-usd 20]   Fallback to a hosted open model for one project
 //   node admin.mjs audit [--workspace <slug>] [--limit 50] [--json]
 //   node admin.mjs list
 //   node admin.mjs data [--wake] [--json]              every project's database: its tables, rows, documents
@@ -41,6 +42,7 @@ import { audit, openDb } from './db.mjs'
 import { makeInvite } from './auth.mjs'
 import { config } from './server.mjs'
 import { AUTO, gatewayUsage, modeFor, writeGrants } from './claude.mjs'
+import { writeHostedGrants } from './hosted.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const fail = (m) => {
@@ -65,8 +67,9 @@ const team = (slug) => db.prepare('SELECT * FROM teams WHERE slug = ?').get(slug
 const workspace = (slug) => db.prepare('SELECT * FROM workspaces WHERE slug = ?').get(slug) ?? fail(`no workspace ${slug}`)
 const admin = (row) => audit(db, { actorKind: 'admin', ...row })
 // The gateway's grants file follows the database: after anything that changes who owns a project,
-// whether it is open, or its Claude setting (claude.mjs writeGrants).
-const grants = () => writeGrants(db, cfg.claude)
+// whether it is open, or a fallback setting: Claude's (claude.mjs writeGrants) and the hosted open
+// model's (hosted.mjs writeHostedGrants). Returns the Claude grants.
+const grants = () => (writeHostedGrants(db, cfg.hosted), writeGrants(db, cfg.claude))
 
 // ---------------------------------------------------------------- rotation
 //
@@ -283,6 +286,26 @@ switch (cmd) {
     console.log(`${w.slug}: Fallback to Claude ${now.claude_enabled ? 'ON' : 'off'}, ${mode === 'oauth' ? 'subscription (every owner is an admin)' : 'API key'}, automatic: ${now.claude_auto}, ceiling ${cap}; ${used}; in the grants file: ${g[`ws-${w.slug}`] ? 'yes' : 'no'}`)
     break
   }
+  case 'hosted': {
+    const w = workspace(args[0])
+    const to = args[1]
+    if (to !== undefined && !['on', 'off'].includes(to)) fail('say on or off (or nothing, to see it)')
+    const usd = flags['cap-usd'] === undefined ? undefined : Number(flags['cap-usd'])
+    if (usd !== undefined && !(usd >= 0 && usd <= 10_000)) fail('--cap-usd is from 0 to 10000 dollars a month')
+    if (to === 'on' && !(await gatewayUsage(cfg.claude))?.hosted) fail('the gateway has no hosted open model set up (HOSTED_* in its env), or could not be asked; nothing changed')
+    if (to && (to === 'on') !== (w.hosted_enabled === 1)) {
+      db.prepare('UPDATE workspaces SET hosted_enabled = ? WHERE id = ?').run(to === 'on' ? 1 : 0, w.id)
+      admin({ action: to === 'on' ? 'hosted_enabled' : 'hosted_disabled', workspace: w.id })
+    }
+    if (usd !== undefined) db.prepare('UPDATE workspaces SET hosted_cap_micro_usd = ? WHERE id = ?').run(Math.round(usd * 1e6), w.id)
+    grants()
+    const now = workspace(w.slug)
+    const g = await gatewayUsage(cfg.claude)
+    const m = g?.hostedMonth.get(`ws-${w.slug}`)
+    const used = m ? `$${(m.cost_micro_usd / 1e6).toFixed(2)} in ${m.requests} requests this month` : 'this month unknown (the gateway was not asked)'
+    console.log(`${w.slug}: Fallback to a hosted open model ${now.hosted_enabled ? 'ON' : 'off'} (${g?.hosted?.provider ?? 'no provider set up'}), ceiling $${((now.hosted_cap_micro_usd ?? cfg.hosted.capMicroUsd) / 1e6).toFixed(2)} a month; ${used}; when a request looks like a stretch: ${now.stretch} (to ${now.stretch_to})`)
+    break
+  }
   case 'claude-grants': {
     console.log(`grants file written: ${Object.keys(grants()).length} project(s) with Claude on`)
     break
@@ -367,7 +390,7 @@ switch (cmd) {
     break
   }
   default:
-    console.error('usage: admin.mjs add-person | invite | remove-passkey | create-workspace | add-member | remove-member | rotate | reopen | revoke-sessions | suspend | claude | claude-grants | shown-to-cloud | audit | list | data  (see the top of this file)')
+    console.error('usage: admin.mjs add-person | invite | remove-passkey | create-workspace | add-member | remove-member | rotate | reopen | revoke-sessions | suspend | claude | hosted | claude-grants | shown-to-cloud | audit | list | data  (see the top of this file)')
     process.exit(2)
 }
 db.close()

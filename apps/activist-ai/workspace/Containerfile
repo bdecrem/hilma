@@ -11,7 +11,7 @@
 # gateway). The host reaches opencode through `container exec` (workspace/desk.mjs), and the
 # root file system is read-only (ws.mjs creates the container with --read-only).
 #
-#   node ws.mjs image   (builds ola-workspace:2.3.0-8 under a temporary tag, then names it)
+#   node ws.mjs image   (builds ola-workspace:2.3.0-9 under a temporary tag, then names it)
 #
 # 2.3.0-6 adds Claude Code (Fallback to Claude, workspace/ola-claude): the Linux arm64 build from
 # npm, pinned by npm's integrity like opencode. It reaches only the door, like opencode.
@@ -25,6 +25,9 @@
 # search and one-document downloads through the gateway's /web routes, only with the person's
 # yes). Adds the sqlite3 command line, poppler-utils (pdftotext, pdfinfo) and python3-openpyxl
 # (Excel in and out). Still no CA bundle and no network: the gateway makes every web request.
+# 2.3.0-9: opencode.jsonc names a second model, `ola/hosted` (Fallback to a hosted open model): the
+# same door and gateway, which serves it only to a project whose owner turned it on or handed one
+# request over (gateway/hosted.mjs). Everything of 2.3.0-8 is in it too.
 
 ARG DEBIAN=docker.io/library/debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc
 

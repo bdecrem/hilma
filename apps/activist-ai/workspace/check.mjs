@@ -76,6 +76,24 @@ function together() {
   if (!line) throw new Error('no TOGETHER_API_KEY in the environment or in ~/Documents/code/hilma/.env.local')
   return line.slice('TOGETHER_API_KEY='.length).replace(/^["']|["']$/g, '').trim()
 }
+// Fallback to a hosted open model: a stand-in provider on this host's loopback (the gateway reaches
+// it; the VMs cannot), and the grants file the front desk would write.
+const hostedSeen = []
+const hostedUp = http.createServer((req, res) => {
+  let raw = ''
+  req.on('data', (c) => (raw += c))
+  req.on('end', () => {
+    try {
+      hostedSeen.push(JSON.parse(raw).model)
+    } catch {}
+    res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ id: 'h1', object: 'chat.completion', created: 1, model: 'x', choices: [{ index: 0, finish_reason: 'stop', message: { role: 'assistant', content: 'hello from the stand-in provider' } }], usage: { prompt_tokens: 5, completion_tokens: 5, total_tokens: 10 } }))
+  })
+})
+await new Promise((r) => hostedUp.listen(0, '127.0.0.1', r))
+hostedUp.unref()
+const hostedGrants = path.join(run, 'gateway-hosted')
+const writeHosted = (g) => (writeFileSync(`${hostedGrants}.tmp`, JSON.stringify(g), { mode: 0o600 }), renameSync(`${hostedGrants}.tmp`, hostedGrants))
+writeHosted({})
 let gateway = null
 let gatewayLog = ''
 const WEB_FILE = path.join(run, 'gateway-web')
@@ -121,6 +139,11 @@ async function startGateway() {
       GATEWAY_WEB_FILE: WEB_FILE,
       GATEWAY_SEARCH_PROVIDER: 'mock',
       ...(site ? { GATEWAY_FETCH_TEST_HOSTS: `hostile.test=127.0.0.1:${site.port}!,docs.test=127.0.0.1:${site.port}!`, GATEWAY_FETCH_TEST_CA: site.ca } : {}),
+      HOSTED_BASE_URL: `http://127.0.0.1:${hostedUp.address().port}/v1`,
+      HOSTED_API_KEY: 'stand-in-hosted-key-not-a-secret',
+      HOSTED_MODEL: 'Made-up/Open-Model',
+      HOSTED_PROVIDER: 'Made-up Cloud',
+      GATEWAY_HOSTED_FILE: hostedGrants,
     },
     stdio: ['ignore', 'pipe', 'pipe'],
   })
@@ -363,6 +386,31 @@ try {
     const theirs = tryToken(ws.secrets(B).BOX_API_KEY)
     const own = tryToken(ws.secrets(A).BOX_API_KEY)
     t(`inside: ${B}'s token through ${A}'s door is refused; ${A}'s own works`, theirs === '401' && own === '200', `theirs ${theirs}, own ${own}`)
+  }
+  // Fallback to a hosted open model: the image's opencode names `ola/hosted`; the gateway serves it
+  // to this VM only while the project has a grant, a one-time grant only until its moment, and the
+  // provider's model id (never the caller's) goes upstream.
+  {
+    const conf = spawnSync(ws.CONTAINER, ['exec', ws.names(A).container, 'cat', '/opt/ola/config/opencode/opencode.jsonc'], { encoding: 'utf8' }).stdout
+    const named = /"hosted":\s*\{[^}]*"modelID":\s*"hosted"/.test(conf)
+    const probe = 'import sys, json, urllib.request\nbody = json.dumps({"model": "hosted", "messages": [{"role": "user", "content": "hi"}]}).encode()\nreq = urllib.request.Request("http://127.0.0.1:4180/v1/chat/completions", data=body, headers={"Authorization": "Bearer " + sys.stdin.read().strip(), "Content-Type": "application/json"})\ntry:\n    print(urllib.request.urlopen(req, timeout=30).status)\nexcept urllib.error.HTTPError as e:\n    print(e.code)\n'
+    const ask = () => spawnSync(ws.CONTAINER, ['exec', '-i', ws.names(A).container, 'python3', '-I', '-c', probe], { input: ws.secrets(A).BOX_API_KEY, encoding: 'utf8' }).stdout.trim()
+    const reload = () => new Promise((r) => setTimeout(r, 2600)) // the gateway reloads the grants within 2 s
+    const off = ask()
+    writeHosted({ [`ws-${A}`]: { cap_micro_usd: 1_000_000 } })
+    await reload()
+    const on = ask()
+    writeHosted({ [`ws-${A}`]: { until: Date.now() + 60_000 } })
+    await reload()
+    const once = ask()
+    writeHosted({ [`ws-${A}`]: { until: Date.now() - 1 } })
+    await reload()
+    const ended = ask()
+    writeHosted({})
+    await reload()
+    const back = ask()
+    const upstream = [...new Set(hostedSeen)]
+    t('inside: the image names the model `hosted`; the gateway serves it only with a grant, a one-time grant only until its moment', named && off === '403' && on === '200' && once === '200' && ended === '403' && back === '403' && JSON.stringify(upstream) === '["Made-up/Open-Model"]', `named ${named}; off ${off}, on ${on}, once ${once}, ended ${ended}, taken back ${back}; upstream saw ${upstream}`)
   }
   for (const k of ['proxy_request', 'host_header']) t(`inside: a ${k.replace('_', ' ')} through the door still lands on the gateway`, /^HTTP\/1\.1 (401|404)/.test(g[k] || ''), g[k])
   // Node's server drops a CONNECT it has no handler for: no tunnel, the connection just closes.

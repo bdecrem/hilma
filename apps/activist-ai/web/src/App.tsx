@@ -65,6 +65,7 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
   let heading: HTMLHeadingElement | undefined
   let settingsTitle: HTMLHeadingElement | undefined
   const claudeOn = () => !!ola.state.claude?.enabled
+  const hostedOn = () => !!ola.state.hosted?.enabled
   let promiseDialog: HTMLDialogElement | undefined
 
   const openDrawer = () => {
@@ -194,7 +195,7 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
                 <Icon name="back" size={16} /> Back to {project() ? count(project()!.things.length, 'thing') : 'the things'}
               </a>
               <Show when={route() === 'files'}>
-                <FilesView onChanged={() => void refetch()} uploadRef={(el) => (uploadButton = el)} canWrite={canRun()} deleteNotice={props.me.policy.deleteNotice} claudeOn={claudeOn()} />
+                <FilesView onChanged={() => void refetch()} uploadRef={(el) => (uploadButton = el)} canWrite={canRun()} deleteNotice={props.me.policy.deleteNotice} claudeOn={claudeOn()} hostedOn={hostedOn()} />
               </Show>
               <Show when={route() === 'data'}>
                 <DataView />
@@ -311,12 +312,19 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
           <p class="sheet-lede">Everything you do here runs on one Mac that Bart owns, in his office. The model that reads your files runs on it too.</p>
           <ul class="promise-list">
             <Show
-              when={claudeOn()}
+              when={claudeOn() || hostedOn()}
               fallback={<li>Your files and requests are not sent to any AI company or cloud service.</li>}
             >
-              <li>
-                This project’s owner turned on Fallback to Claude. A request you hand to Claude, and the parts of your files Claude reads to answer it, go to Anthropic; each such reply is marked “Claude, outside this machine”. Everything you ask Ola stays here.
-              </li>
+              <Show when={hostedOn()}>
+                <li>
+                  {`This project’s owner turned on Fallback to a hosted open model. A request you hand to it, this conversation so far, and the parts of your files it reads go to ${ola.state.hosted?.provider ?? 'an outside company'}; each such reply is marked “Hosted open model, outside this machine”. Everything you ask Ola stays here.`}
+                </li>
+              </Show>
+              <Show when={claudeOn()}>
+                <li>
+                  This project’s owner turned on Fallback to Claude. A request you hand to Claude, and the parts of your files Claude reads to answer it, go to Anthropic; each such reply is marked “Claude, outside this machine”. Everything you ask Ola stays here.
+                </li>
+              </Show>
             </Show>
             <li>Ola can read only the files you upload, listed under “What Ola has of yours”.</li>
             <li>Your conversations stay in your project until you delete them. Bart, who runs the machine, could read a session while it runs; he does not keep logs of what you ask.</li>

@@ -169,6 +169,8 @@ export function applyEvent(state: ConversationState, ev: LooseEvent): boolean {
     }
     case 'session.step.started':
       if (turn.notice) turn.notice = null
+      // Each step names its model: a step by the hosted open model marks the reply as outside this machine.
+      if (d.model?.id === 'hosted') turn.engine = 'hosted'
       return true
     case 'session.step.failed':
       turn.error = runProblem(d.error)
@@ -230,6 +232,7 @@ export function turnsFromMessages(messages: any[], directory: string | null): Tu
     }
     if (!turn) continue
     if (m.type === 'assistant') {
+      if (m.model?.id === 'hosted') turn.engine = 'hosted'
       let text = ''
       for (const part of m.content ?? []) {
         if (part.type === 'text') text += part.text ?? ''
@@ -390,7 +393,7 @@ export function turnFromClaudeRun(r: { run: string; at: number; request: string;
 export function contextOf(turns: Turn[], max = 24_000): string {
   const parts = turns
     .filter((t) => t.status !== 'sending' && t.status !== 'working')
-    .map((t) => `The person asked: ${t.request}\n${t.engine === 'claude' ? 'Claude' : 'Ola'} answered: ${t.answer.trim() || (t.error ? `(it stopped: ${t.error.text})` : '(no answer)')}`)
+    .map((t) => `The person asked: ${t.request}\n${t.engine === 'claude' ? 'Claude' : t.engine === 'hosted' ? 'The hosted open model' : 'Ola'} answered: ${t.answer.trim() || (t.error ? `(it stopped: ${t.error.text})` : '(no answer)')}`)
   let out = ''
   for (let i = parts.length - 1; i >= 0; i--) {
     if (out.length + parts[i].length + 2 > max) break

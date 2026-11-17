@@ -546,7 +546,7 @@ async function deploy(ref, { unsigned = false } = {}) {
   const b = await runLogged('/opt/homebrew/bin/npm', ['run', 'build'], { cwd: path.join(code, 'web'), out })
   if (b.code !== 0 || !existsSync(path.join(code, 'web/dist/index.html'))) return refuse('the web build failed')
 
-  // The workspace image, if this machine does not have the release's yet (2.3.0-7 downloads
+  // The workspace image, if this machine does not have the release's yet (2.3.0-9; 2.3.0-7 downloaded
   // Claude Code, about 370 MB): its own step, before the suites, with its own retries, built under
   // a temporary tag (ws.mjs buildImage), so a slow download only makes this step longer and never
   // leaves a half-built image or fails a suite on time.

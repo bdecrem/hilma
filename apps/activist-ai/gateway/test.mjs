@@ -1201,3 +1201,52 @@ test('web settings are checked at start: an unknown provider, brave with no key,
     assert.equal(g.code, 1, JSON.stringify(extra))
   }
 })
+
+test('a one-time grant ("Just this once") is honored until its moment and while listed, then refused; for the hosted model and for Claude', async () => {
+  const up = await fakeUpstream()
+  const hostedUp = await fakeUpstream()
+  const an = await fakeAnthropic()
+  const dir = mkdtempSync(path.join(TMP, 'once-'))
+  const hostedFile = path.join(dir, 'gateway-hosted')
+  const claudeFile = path.join(dir, 'gateway-claude')
+  writeGrants(hostedFile, {})
+  writeGrants(claudeFile, {})
+  const k = { one: tok(), two: tok() }
+  const env = {
+    ...baseEnv(up.url),
+    GATEWAY_TOKENS: `ws-one:${k.one},ws-two:${k.two}`,
+    HOSTED_BASE_URL: hostedUp.url, HOSTED_API_KEY: `hosted-key-${tok()}`, HOSTED_MODEL: 'Big/Open-Model-1', HOSTED_PROVIDER: 'Made-up Cloud', GATEWAY_HOSTED_FILE: hostedFile,
+    GATEWAY_CLAUDE_FILE: claudeFile, GATEWAY_CLAUDE_UPSTREAM: an.url, CLAUDE_API_KEY: `sk-ant-api-${tok()}`,
+    GATEWAY_USAGE_TOKEN: T.usage + T.usage,
+  }
+  const g = await gateway(env)
+  try {
+    // One run, the next 30 s: ws-one may use both; ws-two (expired a second ago) may not.
+    const until = Date.now() + 30_000
+    writeGrants(hostedFile, { 'ws-one': { until }, 'ws-two': { until: Date.now() - 1000 } })
+    writeGrants(claudeFile, { 'ws-one': { mode: 'api_key', until }, 'ws-two': { mode: 'api_key', until: Date.now() - 1000 } })
+    await waitFor(() => g.lines.some((l) => l.includes('"event":"hosted_grants"') && l.includes('"callers":2')) && g.lines.some((l) => l.includes('"event":"claude_grants"') && l.includes('"callers":2')), 5000, 'both reloads')
+    assert.equal((await call(g, k.one, chat({ tag: 'o1' }, 'hosted'))).status, 200, 'the one-time hosted grant was not honored')
+    assert.equal((await claudeCall(g, k.one, msg('hi'))).status, 200, 'the one-time Claude grant was not honored')
+    assert.equal((await call(g, k.two, chat({ tag: 'o2' }, 'hosted'))).status, 403, 'an expired one-time hosted grant was honored')
+    assert.equal((await claudeCall(g, k.two, msg('hi'))).status, 403, 'an expired one-time Claude grant was honored')
+    const usage = await call(g, T.usage + T.usage, null, { method: 'GET', path: '/v1/usage' })
+    const one = usage.json.data.find((u) => u.caller === 'ws-one')
+    const two = usage.json.data.find((u) => u.caller === 'ws-two')
+    assert.deepEqual([one.hosted_month.granted, one.hosted_month.once, two.hosted_month.granted], [true, true, false])
+    assert.deepEqual([one.claude_month.mode, one.claude_month.once, two.claude_month.mode], ['api_key', true, null])
+    // The run ended: the front desk takes the grant back, and the next request is refused.
+    writeGrants(hostedFile, {})
+    writeGrants(claudeFile, {})
+    await waitFor(() => g.lines.some((l) => l.includes('"event":"hosted_grants"') && l.includes('"callers":0')) && g.lines.some((l) => l.includes('"event":"claude_grants"') && l.includes('"removed":2')), 5000, 'the take-back')
+    const after = await call(g, k.one, chat({ tag: 'o3' }, 'hosted'))
+    assert.equal(after.status, 403)
+    assert.match(after.json.error.message, /hosted open model is off for this project/)
+    assert.equal((await claudeCall(g, k.one, msg('again'))).status, 403)
+    assert.equal(hostedUp.st.seen.length, 1, 'only the one granted hosted request reached the provider')
+    const refused = g.logs().filter((l) => l.model === 'hosted' && l.status === 403).map((l) => l.why)
+    assert.ok(refused.includes('the one-time hosted grant has ended') && refused.includes('the hosted model is off for this caller'), JSON.stringify(refused))
+  } finally {
+    await g.stop()
+  }
+})

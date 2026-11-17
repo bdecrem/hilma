@@ -143,13 +143,25 @@ export const claude = {
   info: () => call<import('./types.ts').ClaudeInfo>('/api/claude'),
   settings: (body: { enabled?: boolean; consent?: boolean; auto?: string }) => post<import('./types.ts').ClaudeInfo>('/api/claude/settings', body),
   /** Starts a run and reads it until it ends; each line goes to onEvent. */
-  run: (body: { request: string; context: string; conversation: string; autonomy: 'go' | 'ask'; why: 'asked' | 'stuck' | 'always' }, onEvent: (e: any) => void, signal?: AbortSignal) =>
+  run: (body: { request: string; context: string; conversation: string; autonomy: 'go' | 'ask'; why: 'asked' | 'stuck' | 'always'; once?: boolean }, onEvent: (e: any) => void, signal?: AbortSignal) =>
     stream('/api/claude/run', { method: 'POST', body: JSON.stringify(body), headers: { 'content-type': 'application/json' }, signal }, onEvent),
   /** A run already going (after a lost connection): its lines so far, then the rest. */
   follow: (run: string, onEvent: (e: any) => void, signal?: AbortSignal) => stream(`/api/claude/follow?run=${encodeURIComponent(run)}`, { signal }, onEvent),
   answer: (run: string, requestId: string, decision: 'once' | 'always' | 'reject') => post('/api/claude/answer', { run, request_id: requestId, decision }),
   stop: (run: string) => post('/api/claude/stop', { run }),
   turns: async (conversation: string) => (await call<{ runs: ClaudeRunRecord[] }>(`/api/claude/turns?conversation=${encodeURIComponent(conversation)}`)).runs,
+}
+
+// ---------------------------------------------------------------- both fallbacks, and the hosted open model
+export const fallback = {
+  info: () => call<import('./types.ts').FallbackInfo>('/api/fallback'),
+  /** "When a request looks like a stretch", and where a handover goes (owner only). */
+  settings: (body: { stretch?: string; stretchTo?: string }) => post<{ stretch: string; stretchTo: string }>('/api/fallback/settings', body),
+}
+export const hosted = {
+  settings: (body: { enabled?: boolean; consent?: boolean }) => post<import('./types.ts').HostedInfo>('/api/hosted/settings', body),
+  /** One request with the hosted open model, in this conversation; its run is followed on opencode's own stream. */
+  run: (body: { request: string; conversation: string; once?: boolean }) => post<{ ok: true; run: string; provider: string }>('/api/hosted/run', body),
 }
 
 export const desk: FrontDesk = {

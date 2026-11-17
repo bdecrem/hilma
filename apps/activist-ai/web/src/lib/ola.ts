@@ -5,9 +5,14 @@
 import { OpenCode } from '@opencode/client'
 import { createStore, produce, reconcile } from 'solid-js/store'
 import { applyClaudeEvent, applyEvent, contextOf, emptyConversation, startClaudeTurn, startTurn, turnFromClaudeRun, turnsFromMessages, type ConversationState } from './conversation.ts'
-import { describeApproval, STUCK_WORDS, stuckReason, type Stuck } from './steps.ts'
-import type { Autonomy, ClaudeInfo, Connection, Engine, Problem, Turn } from './types.ts'
-import { claude, desk, deskHeaders } from './api.ts'
+import { describeApproval, handoffWords, precheck, stuckReason, type Stuck } from './steps.ts'
+import type { Autonomy, ClaudeInfo, Connection, Engine, Fallback, HostedInfo, Problem, Stretch, StretchReason, Suggestion, Turn } from './types.ts'
+import { claude, desk, deskHeaders, fallback, hosted } from './api.ts'
+
+/** How a fallback is named to the person: "the hosted open model" (at its provider), "Claude". */
+export const fallbackName = (f: Fallback) => (f === 'claude' ? 'Claude' : 'the hosted open model')
+/** Where a request handed to it goes: the provider's name, or Anthropic. */
+export const fallbackPlace = (f: Fallback, provider: string | null | undefined) => (f === 'claude' ? 'Anthropic' : provider || 'an outside company')
 
 export interface EarlierConversation {
   id: string
@@ -25,8 +30,19 @@ export interface OlaState extends ConversationState {
   earlier: EarlierConversation[]
   /** Fallback to Claude for this project (null until known). */
   claude: ClaudeInfo | null
-  /** Who the next request goes to: Ola (the default) or Claude (only while Claude is on). */
+  /** Fallback to a hosted open model for this project (null until known). */
+  hosted: HostedInfo | null
+  /** "When a request looks like a stretch", and where a handover goes. */
+  stretch: Stretch
+  stretchTo: Fallback
+  /** The signed-in person owns the project (may change the fallbacks, or hand one request over while one is off). */
+  owner: boolean
+  /** Who the next request goes to: Ola (the default), or a fallback that is switched on. */
   engine: Engine
+  /** The stretch card, when Ola suggests handing a request over. */
+  suggestion: Suggestion | null
+  /** Reasons the person answered "Not now" to in this conversation: not asked again for them. */
+  declined: StretchReason[]
 }
 
 const QUIET_MS = 60_000
@@ -40,15 +56,22 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 export function createOla({ baseUrl = new URL('/oc', location.origin).href, live = true }: { baseUrl?: string; live?: boolean } = {}) {
   // The workspace and the CSRF token ride on every request; the front desk checks both.
   const client = OpenCode.make({ baseUrl, headers: deskHeaders() })
-  const [state, setState] = createStore<OlaState>({ ...emptyConversation(), connection: 'connecting', lostSince: null, autonomy: 'go', problem: null, earlier: [], claude: null, engine: 'ola' })
+  const [state, setState] = createStore<OlaState>({ ...emptyConversation(), connection: 'connecting', lostSince: null, autonomy: 'go', problem: null, earlier: [], claude: null, hosted: null, stretch: 'suggest', stretchTo: 'hosted', owner: false, engine: 'ola', suggestion: null, declined: [] })
   let disposed = false
   let streamAbort: AbortController | null = null
 
   const fold = (ev: any) => {
     setState(produce((s) => void applyEvent(s, ev)))
     if (ev?.type === 'session.execution.interrupted') void noteCeiling(ev.data?.sessionID ?? null)
-    watchStuck()
+    watchStretch()
+    // A hosted run that just ended changed this month's use.
+    const t = state.turns[state.turns.length - 1]
+    if (t?.engine === 'hosted' && (t.status === 'done' || t.status === 'failed' || t.status === 'stopped') && !counted.has(t.id)) {
+      counted.add(t.id)
+      void loadFallback()
+    }
   }
+  const counted = new Set<string>()
   /**
    * A run the front desk interrupted at the run ceiling ends like a Stop in opencode's events; the
    * front desk says which runs it stopped (GET /api/runs), and the turn shows why.
@@ -157,7 +180,21 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
   async function send(text: string) {
     const request = text.trim()
     if (!request) return
-    if (state.claude?.enabled && state.engine === 'claude') return sendClaude(request, state.claude.auto === 'always' ? 'always' : 'asked')
+    setState('suggestion', null) // a new request answers an open card by moving on
+    if (state.claude?.enabled && state.engine === 'claude') return sendClaude(request, 'asked')
+    if (state.hosted?.enabled && state.engine === 'hosted') return sendHosted(request)
+    // Before a run: a few cheap checks on the request alone (steps.ts precheck). The project's
+    // files are asked for only when the request seems to name one, and only if a card could follow.
+    if (planFor('big_files').kind !== 'none' || planFor('long_build').kind !== 'none') {
+      let files: { path: string; size: number }[] = []
+      if (/\.[A-Za-z0-9]{2,8}\b/.test(request)) files = await Promise.race([desk.files().catch(() => []), sleep(3000).then(() => [])])
+      const reason = precheck(request, files)
+      if (reason && stretch(reason, request, null)) return
+    }
+    return sendOla(request)
+  }
+
+  async function sendOla(request: string) {
     setState('problem', null)
     let sessionID: string
     const at = Date.now()
@@ -233,18 +270,108 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
 
   // ------------------------------------------------------------ Fallback to Claude
 
-  async function loadClaude() {
+  /** Both fallbacks and the stretch setting (GET /api/fallback). */
+  async function loadFallback() {
     try {
-      const info = await claude.info()
-      setState('claude', info)
-      if (!info.enabled) setState('engine', 'ola')
-      else if (info.auto === 'always') setState('engine', 'claude')
+      const f = await fallback.info()
+      setState({ claude: f.claude, hosted: f.hosted, stretch: f.stretch, stretchTo: f.stretchTo, owner: f.canChange })
+      if ((state.engine === 'claude' && !f.claude.enabled) || (state.engine === 'hosted' && !f.hosted.enabled)) setState('engine', 'ola')
     } catch {
-      setState('claude', null)
+      setState({ claude: null, hosted: null })
     }
   }
+  const isOn = (f: Fallback) => (f === 'claude' ? !!(state.claude?.enabled && state.claude.configured) : !!(state.hosted?.enabled && state.hosted.configured))
+  const isSetUp = (f: Fallback) => (f === 'claude' ? !!state.claude?.configured : !!state.hosted?.configured)
   function setEngine(engine: Engine) {
-    setState('engine', engine === 'claude' && state.claude?.enabled ? 'claude' : 'ola')
+    setState('engine', engine !== 'ola' && isOn(engine) ? engine : 'ola')
+  }
+
+  // ------------------------------------------------------------ "a stretch for Ola's own model"
+  //
+  // What Ola does when a request looks like a stretch (before a run: precheck; during one:
+  // stuckReason). Nothing, when neither fallback is set up on this machine, when the project says
+  // "Never suggest", or when the person said "Not now" to this reason in this conversation. A
+  // handover, when the project says "Hand it over without asking" and a fallback is on. Else the
+  // card: the owner can hand it over (just this once, or always); a member can when a switch is
+  // on, and otherwise reads who can turn it on.
+  type Plan = { kind: 'none' } | { kind: 'handover'; target: Fallback } | { kind: 'card'; offers: Fallback[]; canAct: boolean }
+  function planFor(reason: StretchReason): Plan {
+    const setUp = (['hosted', 'claude'] as Fallback[]).filter(isSetUp)
+    if (!setUp.length || state.stretch === 'never' || state.declined.includes(reason)) return { kind: 'none' }
+    const on = setUp.filter(isOn)
+    if (state.stretch === 'handover' && on.length) return { kind: 'handover', target: on.includes(state.stretchTo) ? state.stretchTo : on[0] }
+    if (state.owner) return { kind: 'card', offers: setUp, canAct: true }
+    if (on.length) return { kind: 'card', offers: on, canAct: true }
+    return { kind: 'card', offers: setUp, canAct: false }
+  }
+  /** Acts on a stretch: a card or a handover. False when nothing is done (the caller goes on with Ola). */
+  function stretch(reason: StretchReason, request: string, turnId: string | null): boolean {
+    const plan = planFor(reason)
+    if (plan.kind === 'none') return false
+    if (plan.kind === 'handover') {
+      const to = plan.target === 'claude' ? 'Claude' : 'the hosted open model'
+      void runOn(plan.target, request, { why: 'stuck', handoff: handoffWords(reason, to), once: false })
+      return true
+    }
+    setState('suggestion', { id: `s${Date.now()}`, request, turnId, reason, offers: plan.offers, target: plan.offers[0], canAct: plan.canAct })
+    return true
+  }
+  /** Hands one request to a fallback: on (its switch), or just this once (the owner, the switch left off). */
+  function runOn(target: Fallback, request: string, o: { why: 'asked' | 'stuck'; handoff: string | null; once: boolean }) {
+    return target === 'claude' ? sendClaude(request, o.why, o.handoff, o.once) : sendHosted(request, o.handoff, o.once)
+  }
+  /** The card's answers. "Always" comes here after the person confirmed the consent text (when the switch was off). */
+  async function answerSuggestion(answer: 'once' | 'always' | 'not_now') {
+    const s = state.suggestion
+    if (!s) return
+    if (answer === 'not_now' || !s.canAct) {
+      setState(produce((st) => void ((st.suggestion = null), st.declined.includes(s.reason) || st.declined.push(s.reason))))
+      if (s.turnId === null) void sendOla(s.request)
+      return
+    }
+    if (answer === 'always') {
+      try {
+        if (!isOn(s.target)) await (s.target === 'claude' ? claude.settings({ enabled: true, consent: true }) : hosted.settings({ enabled: true, consent: true }))
+        await fallback.settings({ stretch: 'handover', stretchTo: s.target })
+        await loadFallback()
+      } catch (e) {
+        setState('problem', (e as any)?.problem ?? { text: 'The change did not reach Ola’s computer. Nothing was changed.', detail: String(e) })
+        return
+      }
+    }
+    setState('suggestion', null)
+    void runOn(s.target, s.request, { why: s.turnId ? 'stuck' : 'asked', handoff: null, once: answer === 'once' && !isOn(s.target) })
+  }
+  /** The card offers both: show the other one ("or Claude"). */
+  function switchSuggestion() {
+    const s = state.suggestion
+    if (s && s.offers.length > 1) setState('suggestion', 'target', s.offers.find((o) => o !== s.target) ?? s.target)
+  }
+
+  /** One request with the hosted open model, in this conversation (the front desk switches the model for that run). */
+  async function sendHosted(request: string, handoff: string | null = null, once = false) {
+    setState('problem', null)
+    const at = Date.now()
+    setState(
+      produce((s) => {
+        const t = startTurn(s, request, at)
+        t.engine = 'hosted'
+        t.handoff = handoff
+      }),
+    )
+    const update = (f: (t: Turn) => void) =>
+      setState(
+        produce((s) => {
+          const t = s.turns.find((x) => x.engine === 'hosted' && x.at === at)
+          if (t) f(t)
+        }),
+      )
+    try {
+      const conversation = await ensureSession(request)
+      await hosted.run({ request, conversation, once })
+    } catch (e) {
+      update((t) => Object.assign(t, { status: 'failed', ended: Date.now(), error: (e as any)?.problem ?? { text: 'The hosted open model could not start just now. Nothing was done.', detail: String((e as any)?.message ?? e) } }))
+    }
   }
 
   /** The conversation's Claude runs, kept in the project, put among opencode's turns by time. */
@@ -287,7 +414,7 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
   }
 
   /** Hands a request to Claude Code in the project. why: the person asked, Ola got stuck, or every request goes to Claude. */
-  async function sendClaude(request: string, why: 'asked' | 'stuck' | 'always', handoff: string | null = why === 'always' ? STUCK_WORDS.always : null) {
+  async function sendClaude(request: string, why: 'asked' | 'stuck' | 'always', handoff: string | null = null, once = false) {
     setState('problem', null)
     const context = contextOf(state.turns)
     const at = Date.now()
@@ -306,7 +433,7 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
       return update((_, t) => Object.assign(t, { status: 'failed', ended: Date.now(), error: { text: 'Your request did not reach Ola’s computer. Nothing was done; send it again when the connection is back.', detail: String((e as any)?.message ?? e) } }))
     }
     try {
-      await claude.run({ request, context, conversation, autonomy: state.autonomy, why }, (e) => update((s, t) => void applyClaudeEvent(s, t, e)))
+      await claude.run({ request, context, conversation, autonomy: state.autonomy, why, ...(once ? { once: true } : {}) }, (e) => update((s, t) => void applyClaudeEvent(s, t, e)))
       update((s, t) => {
         if (t.status !== 'working' && t.status !== 'sending') return
         // The reply ended without its last line: the run may still be going on Ola's computer.
@@ -317,28 +444,28 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
       update((_, t) => Object.assign(t, { status: 'failed', ended: Date.now(), error: (e as any)?.problem ?? { text: 'Claude could not start just now.', detail: String((e as any)?.message ?? e) } }))
     }
     void refreshEarlier()
-    void loadClaude() // this month's use changed
+    void loadFallback() // this month's use changed
   }
-  /** "Ask Claude instead" on a finished reply: the same request again, by Claude. */
-  function askClaudeInstead(turnId: string) {
+  /** "Ask Claude instead" / "Ask the hosted model instead" on a finished Ola reply: the same request again. */
+  function askInstead(turnId: string, target: Fallback) {
     const t = state.turns.find((x) => x.id === turnId)
-    if (t && state.claude?.enabled) void sendClaude(t.request, 'asked')
+    if (t && isOn(target)) void runOn(target, t.request, { why: 'asked', handoff: null, once: false })
   }
 
-  // "When Ola gets stuck": only what can be seen. The run ended in an error, hit its step or token
-  // budget, or made three failed tool calls in a row (then Ola is stopped). Then the same request
-  // goes to Claude once, marked, with one sentence of why.
+  // During a run, only what can be seen (stuckReason): the run ended in an error, hit its step or
+  // token budget, or made three failed tool calls in a row. Then Ola pauses (on the third failed
+  // step it is stopped, keeping what it did so far) and the card is shown, or with "Hand it over
+  // without asking" the same request goes to the fallback, marked, with one sentence of why.
   const loadedAt = Date.now()
-  const handedOver = new Set<string>()
+  const flagged = new Set<string>()
   let stopping: { turn: string; why: Stuck } | null = null
-  function watchStuck() {
-    if (state.claude?.enabled !== true || state.claude.auto !== 'stuck') return
+  function watchStretch() {
     const t = state.turns[state.turns.length - 1]
-    if (!t || t.engine === 'claude' || handedOver.has(t.id) || t.at < loadedAt) return
+    if (!t || t.engine === 'claude' || t.engine === 'hosted' || flagged.has(t.id) || t.at < loadedAt || state.suggestion) return
     const running = t.status === 'working' || t.status === 'sending'
     const why = stuckReason(t)
     if (running) {
-      if (why === 'tools' && !stopping) {
+      if (why === 'tools' && !stopping && planFor('tools').kind !== 'none') {
         stopping = { turn: t.id, why }
         void stop()
       }
@@ -347,20 +474,20 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
     const reason = stopping?.turn === t.id ? stopping.why : t.status === 'stopped' ? null : why
     stopping = null
     if (!reason) return
-    handedOver.add(t.id)
-    void sendClaude(t.request, 'stuck', STUCK_WORDS[reason])
+    flagged.add(t.id)
+    stretch(reason, t.request, t.id)
   }
 
   function newConversation() {
     if (state.sessionID) void refreshEarlier()
-    setState({ ...emptyConversation(), problem: null })
+    setState({ ...emptyConversation(), problem: null, suggestion: null, declined: [] })
   }
 
   async function open(id: string) {
     try {
       const session = await client.session.get({ sessionID: id })
       const list = await client.message.list({ sessionID: id, limit: 200 })
-      setState({ ...emptyConversation(), sessionID: id, directory: session.location?.directory ?? null, problem: null, autonomy: (session.metadata as any)?.autonomy === 'ask' ? 'ask' : 'go' })
+      setState({ ...emptyConversation(), suggestion: null, declined: [], sessionID: id, directory: session.location?.directory ?? null, problem: null, autonomy: (session.metadata as any)?.autonomy === 'ask' ? 'ask' : 'go' })
       setState('turns', await withClaude(id, turnsFromMessages((list as any).data ?? [], session.location?.directory ?? null)))
       void noteCeiling(id)
       const pending = (await client.permission.list({ sessionID: id })) as any[]
@@ -379,7 +506,7 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
   const onOnline = () => streamAbort?.abort()
   window.addEventListener('offline', onOffline)
   window.addEventListener('online', onOnline)
-  void loadClaude()
+  void loadFallback()
   if (live) void listen()
   else {
     setState('connection', 'open')
@@ -390,9 +517,12 @@ export function createOla({ baseUrl = new URL('/oc', location.origin).href, live
     state,
     send,
     sendClaude,
-    askClaudeInstead,
+    askInstead,
+    answerSuggestion,
+    switchSuggestion,
     setEngine,
-    loadClaude,
+    loadClaude: loadFallback,
+    loadFallback,
     stop,
     answer,
     setAutonomy,

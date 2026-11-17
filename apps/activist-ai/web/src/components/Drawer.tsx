@@ -3,11 +3,12 @@
 // errors and a lost connection are said out loud, never swallowed.
 import { createEffect, createSignal, For, onCleanup, Show } from 'solid-js'
 import type { Ola } from '../lib/ola.ts'
-import type { Problem, Step, Turn } from '../lib/types.ts'
+import type { Fallback, Problem, Step, Turn } from '../lib/types.ts'
 import { runSummary } from '../lib/conversation.ts'
 import { clock, when } from '../lib/format.ts'
 import { Answer } from './Answer.tsx'
 import { Icon } from './Icon.tsx'
+import { StretchCard } from './StretchCard.tsx'
 import { desk } from '../lib/api.ts'
 
 // Requests that work in any project, empty or not: nothing here names a file the person may not have.
@@ -30,6 +31,12 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
     if (n && n !== prev && scroller) queueMicrotask(() => scroller?.querySelector('.turn:last-child')?.scrollIntoView({ block: 'start' }))
     return n
   })
+  // The stretch card, when it appears, is brought into view: it waits for the person.
+  createEffect((prev: string | undefined) => {
+    const id = s().suggestion?.id
+    if (id && id !== prev && scroller) queueMicrotask(() => scroller?.querySelector('.stretch-card')?.scrollIntoView({ block: 'nearest' }))
+    return id
+  })
   // While a run works, keep its newest step in view, unless the person scrolled up to read.
   createEffect(() => {
     const t = s().turns[s().turns.length - 1]
@@ -39,6 +46,9 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
     const nearBottom = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < 160
     if (nearBottom) queueMicrotask(() => scroller && (scroller.scrollTop = scroller.scrollHeight))
   })
+
+  // "Ask … instead" under a finished Ola reply: one for each fallback that is switched on.
+  const insteadOf = (): Fallback[] => (['hosted', 'claude'] as Fallback[]).filter((f) => (f === 'claude' ? s().claude?.enabled : s().hosted?.enabled))
 
   const submit = (e: Event) => {
     e.preventDefault()
@@ -94,26 +104,41 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
         >
           <ol class="turns">
             <For each={s().turns}>
-              {(t, i) => <TurnView turn={t} now={now()} last={i() === s().turns.length - 1} onStop={() => props.ola.stop()} claudeOn={!!s().claude?.enabled && !working()} onAskClaude={() => props.ola.askClaudeInstead(t.id)} />}
+              {(t, i) => <TurnView turn={t} now={now()} last={i() === s().turns.length - 1} onStop={() => props.ola.stop()} instead={working() || s().suggestion ? [] : insteadOf()} onAsk={(f) => props.ola.askInstead(t.id, f)} />}
             </For>
           </ol>
+        </Show>
+        <Show when={s().suggestion}>
+          <StretchCard ola={props.ola} />
         </Show>
       </div>
 
       <form class="composer" onSubmit={submit}>
-        <Show when={s().claude?.enabled}>
+        <Show when={s().claude?.enabled || s().hosted?.enabled}>
           <fieldset class="autonomy engine">
             <legend class="engine-legend">Who works on this</legend>
             <label classList={{ on: s().engine === 'ola' }}>
               <input type="radio" name="engine" value="ola" checked={s().engine === 'ola'} onChange={() => props.ola.setEngine('ola')} />
               Ola
             </label>
-            <label classList={{ on: s().engine === 'claude' }}>
-              <input type="radio" name="engine" value="claude" checked={s().engine === 'claude'} onChange={() => props.ola.setEngine('claude')} />
-              Claude
-            </label>
+            <Show when={s().hosted?.enabled}>
+              <label classList={{ on: s().engine === 'hosted' }}>
+                <input type="radio" name="engine" value="hosted" checked={s().engine === 'hosted'} onChange={() => props.ola.setEngine('hosted')} />
+                Hosted open model
+              </label>
+            </Show>
+            <Show when={s().claude?.enabled}>
+              <label classList={{ on: s().engine === 'claude' }}>
+                <input type="radio" name="engine" value="claude" checked={s().engine === 'claude'} onChange={() => props.ola.setEngine('claude')} />
+                Claude
+              </label>
+            </Show>
             <span class="autonomy-hint">
-              {s().engine === 'claude' ? 'Claude works in your project too, but your request and the parts of your files it reads go to Anthropic.' : 'Ola works on this machine. Nothing you ask leaves it.'}
+              {s().engine === 'claude'
+                ? 'Claude works in your project too, but your request and the parts of your files it reads go to Anthropic.'
+                : s().engine === 'hosted'
+                  ? `The hosted open model works in your project too, but your request, this conversation and the parts of your files it reads go to ${s().hosted?.provider ?? 'an outside company'}.`
+                  : 'Ola works on this machine. Nothing you ask leaves it.'}
             </span>
           </fieldset>
         </Show>
@@ -132,7 +157,11 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
               ? s().autonomy === 'ask'
                 ? 'Claude asks before it runs code or writes a file.'
                 : 'Claude works inside this project without asking. It cannot reach the internet from here.'
-              : s().autonomy === 'ask'
+              : s().engine === 'hosted' && s().hosted?.enabled
+                ? s().autonomy === 'ask'
+                  ? 'The hosted open model asks before it runs code or writes a file.'
+                  : 'The hosted open model works inside this project without asking. It cannot reach the internet from here.'
+                : s().autonomy === 'ask'
                 ? 'Ola asks before it runs code or writes a file.'
                 : 'Ola works inside this project without asking. A web search or download still asks you first.'}
           </span>
@@ -146,7 +175,7 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
             ref={props.inputRef}
             rows={2}
             value={props.draft}
-            placeholder={working() ? 'Work is under way. You can write your next request.' : s().engine === 'claude' && s().claude?.enabled ? 'Ask Claude to make or change something…' : 'Make something new, or change one of your things…'}
+            placeholder={working() ? 'Work is under way. You can write your next request.' : s().engine === 'claude' && s().claude?.enabled ? 'Ask Claude to make or change something…' : s().engine === 'hosted' && s().hosted?.enabled ? 'Ask the hosted open model to make or change something…' : 'Make something new, or change one of your things…'}
             onInput={(e) => props.setDraft(e.currentTarget.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) submit(e)
@@ -155,7 +184,7 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
           <Show
             when={working()}
             fallback={
-              <button type="submit" class="send-button" disabled={!props.draft.trim() || s().connection === 'lost'} aria-label={s().engine === 'claude' && s().claude?.enabled ? 'Send to Claude' : 'Send to Ola'}>
+              <button type="submit" class="send-button" disabled={!props.draft.trim() || s().connection === 'lost'} aria-label={s().engine === 'claude' && s().claude?.enabled ? 'Send to Claude' : s().engine === 'hosted' && s().hosted?.enabled ? 'Send to the hosted open model' : 'Send to Ola'}>
                 <Icon name="up" />
               </button>
             }
@@ -192,10 +221,11 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
   )
 }
 
-function TurnView(props: { turn: Turn; now: number; last: boolean; onStop: () => void; claudeOn: boolean; onAskClaude: () => void }) {
+function TurnView(props: { turn: Turn; now: number; last: boolean; onStop: () => void; instead: Fallback[]; onAsk: (f: Fallback) => void }) {
   const t = () => props.turn
   const byClaude = () => t().engine === 'claude'
-  const name = () => (byClaude() ? 'Claude' : 'Ola')
+  const byHosted = () => t().engine === 'hosted'
+  const name = () => (byClaude() ? 'Claude' : byHosted() ? 'the hosted open model' : 'Ola')
   const running = () => t().status === 'working' || t().status === 'sending'
   // The newest run stays open when it finishes, so the person sees what was done; older ones fold.
   const [open, setOpen] = createSignal(props.last)
@@ -214,9 +244,9 @@ function TurnView(props: { turn: Turn; now: number; last: boolean; onStop: () =>
         </p>
         <p class="request">{t().request}</p>
       </div>
-      <div class="said-ola" classList={{ 'said-claude': byClaude() }}>
+      <div class="said-ola" classList={{ 'said-claude': byClaude(), 'said-hosted': byHosted() }}>
         <Show
-          when={byClaude()}
+          when={byClaude() || byHosted()}
           fallback={
             <p class="who">
               <span class="ola-dot" aria-hidden="true" /> Ola
@@ -224,9 +254,10 @@ function TurnView(props: { turn: Turn; now: number; last: boolean; onStop: () =>
           }
         >
           <p class="who">
-            <span class="claude-dot" aria-hidden="true" />
+            <span class={byClaude() ? 'claude-dot' : 'hosted-dot'} aria-hidden="true" />
             <span>
-              Claude<span class="outside">, outside this machine</span>
+              {byClaude() ? 'Claude' : 'Hosted open model'}
+              <span class="outside">, outside this machine</span>
             </span>
           </p>
           <Show when={t().handoff}>
@@ -288,11 +319,15 @@ function TurnView(props: { turn: Turn; now: number; last: boolean; onStop: () =>
           <p class="meta stopped-line">You stopped this. Files {name()} already wrote stay as they are.</p>
         </Show>
         <Show when={t().error}>{(p) => <ProblemBox problem={p()} />}</Show>
-        <Show when={props.claudeOn && !byClaude() && !running()}>
+        <Show when={props.instead.length && !byClaude() && !byHosted() && !running()}>
           <p class="ask-claude">
-            <button type="button" class="link-button on-paper" onClick={props.onAskClaude}>
-              Ask Claude instead
-            </button>
+            <For each={props.instead}>
+              {(f) => (
+                <button type="button" class="link-button on-paper" onClick={() => props.onAsk(f)}>
+                  {f === 'claude' ? 'Ask Claude instead' : 'Ask the hosted model instead'}
+                </button>
+              )}
+            </For>
           </p>
         </Show>
       </div>

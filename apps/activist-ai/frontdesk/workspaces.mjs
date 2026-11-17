@@ -294,17 +294,57 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
     return proxies.get(slug)
   }
 
+  /** What is recorded for a person's prompt: who started the run, its clock, the audit row. */
+  function notePrompt(slug, workspaceId, personId, sessionID) {
+    runBy.set(`${slug}:${sessionID}`, personId)
+    prompted.set(`${slug}:${sessionID}`, Date.now())
+    lastPrompt.set(slug, Date.now())
+    audit(db, { actor: personId, action: 'run_started', workspace: workspaceId })
+  }
+
   /** Forwards one page request to the workspace's opencode; records who started a run. */
   async function forward(slug, workspaceId, personId, req, res, pathname, search) {
     fresh(slug)
     const m = /^\/api\/session\/([A-Za-z0-9_-]{1,80})\/prompt$/.exec(pathname)
-    if (req.method === 'POST' && m) {
-      runBy.set(`${slug}:${m[1]}`, personId)
-      prompted.set(`${slug}:${m[1]}`, Date.now())
-      lastPrompt.set(slug, Date.now())
-      audit(db, { actor: personId, action: 'run_started', workspace: workspaceId })
-    }
+    if (req.method === 'POST' && m) notePrompt(slug, workspaceId, personId, m[1])
     return proxyFor(slug, workspaceId)(req, res, pathname, search)
+  }
+
+  /**
+   * One request to the workspace's opencode from the front desk itself, never from the page (the
+   * hosted model's run: switching a session's model, its prompt). Resolves { status, json }; the
+   * reply is the workspace's word, capped and only parsed.
+   */
+  function oc(slug, method, pathname, body = null) {
+    return new Promise((resolve) => {
+      let auth
+      try {
+        auth = authorization(slug)()
+      } catch {
+        return resolve({ status: 0, json: null })
+      }
+      const data = body === null ? null : Buffer.from(JSON.stringify(body))
+      const headers = { authorization: auth, accept: 'application/json', ...(data ? { 'content-type': 'application/json', 'content-length': String(data.length) } : { 'content-length': '0' }) }
+      const req = http.request({ socketPath: ws.paths(slug).opencode, agent: agentFor(slug), method, path: pathname, headers, timeout: 20_000 }, (res) => {
+        let t = ''
+        res.setEncoding('utf8')
+        res.on('data', (d) => {
+          t += d
+          if (t.length > 256 * 1024) req.destroy()
+        })
+        res.on('end', () => {
+          let json = null
+          try {
+            json = t ? JSON.parse(t) : null
+          } catch {}
+          resolve({ status: res.statusCode ?? 0, json })
+        })
+        res.on('error', () => resolve({ status: 0, json: null }))
+      })
+      req.on('error', () => resolve({ status: 0, json: null }))
+      req.on('timeout', () => req.destroy())
+      req.end(data ?? undefined)
+    })
   }
 
   // -------------------------------------------------------------- "read by a run"
@@ -397,6 +437,11 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
     dbAdd: ws.dbAdd,
     dbRemove: ws.dbRemove,
     isDocument: ws.isDocument,
+    oc,
+    /** The sessions opencode says are executing (a Set), or null when it does not answer. */
+    executing: active,
+    /** A prompt the front desk sent itself, recorded as a person's (who, the run's clock, the audit). */
+    notePrompt: (slug, workspaceId, personId, sessionID) => (fresh(slug), notePrompt(slug, workspaceId, personId, sessionID), watch(slug, workspaceId)),
     putStream: ws.putStream,
     getStream: ws.getStream,
     removeFile: ws.removeFile,

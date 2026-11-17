@@ -28,6 +28,7 @@ import { projectPayload } from './server/project.mjs'
 import { startFakeModel } from './server/fake-model.mjs'
 import { fixture } from './server/fixture.mjs'
 import { makeClaudeStandin } from './server/claude-standin.mjs'
+import { makeHostedStandin } from './server/hosted-standin.mjs'
 const fixtureName = fixture.project.name
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
@@ -126,22 +127,46 @@ if (FAKE) {
   upstreamModel = MODEL
 }
 
-// The gateway, with one caller: this workspace.
+// The hosted open model (Fallback to a hosted open model): a second scripted model with --fake-model,
+// else OLA_DEV_HOSTED_MODEL on Together. OLA_DEV_HOSTED=unset: none (the switch shows disabled).
+let hostedEnv = {}
+const HOSTED_PROVIDER = FAKE ? 'Made-up Cloud' : 'Together AI'
+if (process.env.OLA_DEV_HOSTED !== 'unset' && (FAKE || process.env.OLA_DEV_HOSTED_MODEL)) {
+  const h = FAKE ? await startFakeModel({ hosted: true }) : null
+  hostedEnv = {
+    HOSTED_BASE_URL: FAKE ? `http://127.0.0.1:${h.port}/v1` : 'https://api.together.xyz/v1',
+    HOSTED_API_KEY: FAKE ? 'fake-hosted-key-not-a-secret' : upstreamKey,
+    HOSTED_MODEL: FAKE ? 'fake-hosted' : process.env.OLA_DEV_HOSTED_MODEL,
+    HOSTED_PROVIDER,
+    GATEWAY_HOSTED_FILE: path.join(run, 'gateway-hosted'),
+    ...(process.env.OLA_DEV_HOSTED_PRICES ? { GATEWAY_HOSTED_PRICES: process.env.OLA_DEV_HOSTED_PRICES } : {}),
+  }
+  fs.writeFileSync(hostedEnv.GATEWAY_HOSTED_FILE, '{}', { mode: 0o600 })
+}
+
+// The gateway, with one caller: this workspace (named as a workspace is, so the hosted grants apply).
 const gwPort = await freePort()
 const gwToken = randomBytes(24).toString('hex')
+const usageToken = randomBytes(24).toString('hex')
 child('gateway', process.execPath, [path.join(AI, 'gateway/server.mjs')], {
   env: {
     PATH: process.env.PATH,
     HOME: home,
     UPSTREAM_BASE_URL: upstream,
     UPSTREAM_API_KEY: upstreamKey,
-    GATEWAY_TOKENS: `web:${gwToken}`,
+    GATEWAY_TOKENS: `ws-dev:${gwToken}`,
     GATEWAY_MODELS: `general=${upstreamModel}`,
     GATEWAY_PORT: String(gwPort),
     GATEWAY_DB: path.join(run, 'gateway-usage.db'),
+    GATEWAY_USAGE_TOKEN: usageToken,
+    ...hostedEnv,
   },
-}, [upstreamKey, gwToken])
+}, [upstreamKey, gwToken, usageToken])
 await waitFor(`http://127.0.0.1:${gwPort}/v1/models`, { authorization: `Bearer ${gwToken}` })
+const gatewayUsage = () =>
+  fetch(`http://127.0.0.1:${gwPort}/v1/usage`, { headers: { authorization: `Bearer ${usageToken}` } })
+    .then((r) => r.json())
+    .catch(() => null)
 
 // opencode's config, as the workspace image has it, but pointed at this gateway.
 fs.writeFileSync(
@@ -155,7 +180,10 @@ fs.writeFileSync(
           env: ['BOX_API_KEY'],
           package: '@opencode/ai/providers/openai-compatible',
           settings: { baseURL: `http://127.0.0.1:${gwPort}/v1` },
-          models: { general: { modelID: 'general', name: 'general', capabilities: { tools: true, input: ['text'], output: ['text'] }, limit: { context: 131072, output: 16000 } } },
+          models: {
+            general: { modelID: 'general', name: 'general', capabilities: { tools: true, input: ['text'], output: ['text'] }, limit: { context: 131072, output: 16000 } },
+            hosted: { modelID: 'hosted', name: 'hosted', capabilities: { tools: true, input: ['text'], output: ['text'] }, limit: { context: 262144, output: 32000 } },
+          },
         },
       },
       model: 'ola/general',
@@ -211,7 +239,16 @@ const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '
 const CSP = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
 const json = (res, status, body) => res.writeHead(status, { 'content-type': 'application/json', 'cache-control': 'no-store' }).end(JSON.stringify(body))
 
-const claudeStandin = makeClaudeStandin({ work })
+// The signed-in person's role in the dev workspace (the checks make them a member with /__dev/role).
+let devRole = 'owner'
+const claudeStandin = makeClaudeStandin({ work, role: () => devRole })
+// One request to opencode from the stand-in itself (the hosted run), as the front desk's workspaces.oc.
+function oc(method, pathname, body = null) {
+  return fetch(`http://127.0.0.1:${ocPort}${pathname}`, { method, headers: { authorization, accept: 'application/json', ...(body ? { 'content-type': 'application/json' } : {}) }, body: body ? JSON.stringify(body) : undefined })
+    .then(async (r) => ({ status: r.status, json: await r.json().catch(() => null) }))
+    .catch(() => ({ status: 0, json: null }))
+}
+const hostedStandin = makeHostedStandin({ oc, grantsFile: hostedEnv.GATEWAY_HOSTED_FILE ?? path.join(run, 'gateway-hosted-unused'), provider: hostedEnv.HOSTED_BASE_URL ? HOSTED_PROVIDER : null, usage: gatewayUsage, claudeInfo: () => claudeStandin.info(), role: () => devRole })
 let pagePort = PORT
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url ?? '/', 'http://x')
@@ -228,6 +265,12 @@ const server = http.createServer(async (req, res) => {
     if (p.startsWith('/oc/')) return await proxy(req, res, p.slice(3), url.search)
     // Fallback to Claude, stood in for (server/claude-standin.mjs; the real one is the front desk's).
     if ((p === '/api/claude' || p.startsWith('/api/claude/')) && (await claudeStandin(req, res, p, url))) return
+    // Both fallbacks and the hosted open model, stood in for (server/hosted-standin.mjs).
+    if ((p.startsWith('/api/fallback') || p.startsWith('/api/hosted/') || p === '/__dev/hosted') && (await hostedStandin(req, res, p, url))) return
+    if (process.env.OLA_DEV_CONTROLS === '1' && p === '/__dev/role' && req.method === 'POST') {
+      devRole = url.searchParams.get('to') === 'member' ? 'member' : 'owner'
+      return json(res, 200, { role: devRole, claudeOnce: claudeStandin.st.onceRuns ?? 0 })
+    }
     if (p === '/api/project' && req.method === 'GET') return json(res, 200, await projectPayload(files))
     if (p === '/api/files' && req.method === 'GET') return json(res, 200, { files: await files.list() })
     if (p === '/api/files' && req.method === 'POST') {
@@ -257,7 +300,7 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, {
         person: { handle: 'dev', name: 'You' },
         csrf: 'dev',
-        workspaces: [{ slug: 'dev', name: fixtureName, team: 'Dev', role: 'owner' }],
+        workspaces: [{ slug: 'dev', name: fixtureName, team: 'Dev', role: devRole === 'member' ? 'member' : 'owner' }],
         machine: { working: 1, capacity: 4 },
         policy: { maxUpload: MAX_UPLOAD_BYTES, searchProvider: 'Brave Search', deleteNotice: 'It is removed from Ola’s computer, and Ola can no longer read it. This cannot be undone. Your own copy, if you have one, is not touched.' },
       })

@@ -49,7 +49,10 @@ function plan(tools, count) {
   return steps
 }
 
-export function startFakeModel() {
+// startFakeModel({ hosted: true }) plays the hosted open model instead: the same task, its answers
+// say so ("the hosted open model"), and "please fail" does not fail there (a request Ola's own
+// model could not do is the one handed to it).
+export function startFakeModel({ hosted = false } = {}) {
   let calls = 0
   const server = http.createServer(async (req, res) => {
     let raw = ''
@@ -65,7 +68,7 @@ export function startFakeModel() {
     }
     calls++
     const messages = body.messages ?? []
-    if (/please fail/i.test(lastUserText(messages))) return send(400, { error: { message: 'The model refused this request (scripted failure).', type: 'invalid_request_error' } })
+    if (!hosted && /please fail/i.test(lastUserText(messages))) return send(400, { error: { message: 'The model refused this request (scripted failure).', type: 'invalid_request_error' } })
     // Titles and other side calls carry no tools: answer them briefly.
     if (!body.tools?.length) return send(200, reply({ content: 'Counting the survey rows' }))
     const slow = /\bslow (\d{1,3})x(\d{1,6})\b/.exec(lastUserText(messages))
@@ -102,7 +105,7 @@ export function startFakeModel() {
       const [name, args] = steps[done]
       return send(200, reply({ tool: { id: `call_${calls}_${done}`, name, args } }))
     }
-    return send(200, reply({ content: `I counted the rows in survey.csv with a short program: there are ${count}, not counting the header. I wrote that down in rows.md.` }))
+    return send(200, reply({ content: `${hosted ? 'The hosted open model here. ' : ''}I counted the rows in survey.csv with a short program: there are ${count}, not counting the header. I wrote that down in rows.md.` }))
   })
   return new Promise((ok) => server.listen(0, '127.0.0.1', () => ok({ server, port: server.address().port, calls: () => calls })))
 }

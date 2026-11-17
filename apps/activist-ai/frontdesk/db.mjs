@@ -40,12 +40,19 @@ const ACTIONS_V4 = [
   // migration 4: a page opened from the project ("Open"), and Fallback to Claude
   'page_opened', 'claude_enabled', 'claude_disabled', 'claude_used',
 ]
-/** What the audit log may say. A row with any other action is refused by the table itself. */
-export const ACTIONS = [
+// Migration 6's list (frozen too).
+const ACTIONS_V6 = [
   ...ACTIONS_V4,
   // migration 6: web search and downloads turned on for a project ("Always in this project") and
   // off again. No search words and no addresses: those are content.
   'web_allowed', 'web_revoked',
+]
+/** What the audit log may say. A row with any other action is refused by the table itself. */
+export const ACTIONS = [
+  ...ACTIONS_V6,
+  // migration 7: Fallback to a hosted open model turned on, off, used; and one request handed to
+  // either fallback "just this once" (the owner's yes on the stretch card, the switch left off)
+  'hosted_enabled', 'hosted_disabled', 'hosted_used', 'hosted_once', 'claude_once',
 ]
 
 const sqlList = (xs) => xs.map((x) => `'${x}'`).join(', ')
@@ -249,7 +256,7 @@ const MIGRATIONS = [
     at INTEGER NOT NULL,
     actor_kind TEXT NOT NULL CHECK (actor_kind IN ('person', 'admin', 'run', 'system')),
     actor_person_id INTEGER REFERENCES people(id),
-    action TEXT NOT NULL CHECK (action IN (${sqlList(ACTIONS)})),
+    action TEXT NOT NULL CHECK (action IN (${sqlList(ACTIONS_V6)})),
     workspace_id INTEGER REFERENCES workspaces(id),
     subject_person_id INTEGER REFERENCES people(id),
     name_ref BLOB,
@@ -264,6 +271,48 @@ const MIGRATIONS = [
   INSERT INTO audit_v6 SELECT * FROM audit;
   DROP TABLE audit;
   ALTER TABLE audit_v6 RENAME TO audit;
+  CREATE INDEX audit_workspace ON audit(workspace_id, at);
+  `,
+  // 7: Fallback to a hosted open model, per project (frontdesk/hosted.mjs): off by default, its own
+  // ceiling if the admin set one. "When a request looks like a stretch" (stretch: suggest, the
+  // default; handover; never) and where a handover goes (stretch_to: hosted or claude), replacing
+  // claude_auto (its "when Ola gets stuck" and "always" become a handover to Claude). One-time
+  // grants ("Just this once"): a row per run in fallback_once, so the gateway's grants files, written
+  // from the database alone by the server and the admin CLI, keep them while the run lasts. New
+  // audit words, so the table is rebuilt for the CHECK, as in 2, 3, 4 and 6.
+  `
+  ALTER TABLE workspaces ADD COLUMN hosted_enabled INTEGER NOT NULL DEFAULT 0 CHECK (hosted_enabled IN (0, 1));
+  ALTER TABLE workspaces ADD COLUMN hosted_cap_micro_usd INTEGER CHECK (hosted_cap_micro_usd IS NULL OR hosted_cap_micro_usd >= 0);
+  ALTER TABLE workspaces ADD COLUMN stretch TEXT NOT NULL DEFAULT 'suggest' CHECK (stretch IN ('suggest', 'handover', 'never'));
+  ALTER TABLE workspaces ADD COLUMN stretch_to TEXT NOT NULL DEFAULT 'hosted' CHECK (stretch_to IN ('hosted', 'claude'));
+  UPDATE workspaces SET stretch = 'handover', stretch_to = 'claude' WHERE claude_auto IN ('stuck', 'always');
+  CREATE TABLE fallback_once (
+    id INTEGER PRIMARY KEY,
+    workspace_id INTEGER NOT NULL REFERENCES workspaces(id),
+    engine TEXT NOT NULL CHECK (engine IN ('hosted', 'claude')),
+    person_id INTEGER REFERENCES people(id),
+    until INTEGER NOT NULL
+  ) STRICT;
+  CREATE TABLE audit_v7 (
+    id INTEGER PRIMARY KEY,
+    at INTEGER NOT NULL,
+    actor_kind TEXT NOT NULL CHECK (actor_kind IN ('person', 'admin', 'run', 'system')),
+    actor_person_id INTEGER REFERENCES people(id),
+    action TEXT NOT NULL CHECK (action IN (${sqlList(ACTIONS)})),
+    workspace_id INTEGER REFERENCES workspaces(id),
+    subject_person_id INTEGER REFERENCES people(id),
+    name_ref BLOB,
+    sha256 TEXT CHECK (sha256 IS NULL OR length(sha256) = 64),
+    size INTEGER,
+    role TEXT CHECK (role IS NULL OR role IN (${sqlList(ROLES)})),
+    ok INTEGER NOT NULL DEFAULT 1 CHECK (ok IN (0, 1)),
+    tokens_in INTEGER CHECK (tokens_in IS NULL OR tokens_in >= 0),
+    tokens_out INTEGER CHECK (tokens_out IS NULL OR tokens_out >= 0),
+    cost_micro_usd INTEGER CHECK (cost_micro_usd IS NULL OR cost_micro_usd >= 0)
+  ) STRICT;
+  INSERT INTO audit_v7 SELECT id, at, actor_kind, actor_person_id, action, workspace_id, subject_person_id, name_ref, sha256, size, role, ok, tokens_in, tokens_out, cost_micro_usd FROM audit;
+  DROP TABLE audit;
+  ALTER TABLE audit_v7 RENAME TO audit;
   CREATE INDEX audit_workspace ON audit(workspace_id, at);
   `,
 ]

@@ -100,3 +100,40 @@ test('the session cookie: __Host-, Secure, SameSite=Strict on https; a cookie Sa
   assert.ok(!/Secure/.test(local.clearCookie) && /HttpOnly; SameSite=Strict/.test(local.clearCookie))
   db.close()
 })
+
+test('the hosted and Claude grants files: off by default, independent, one-time grants only until their moment', async () => {
+  const { writeHostedGrants } = await import('../hosted.mjs')
+  const { writeGrants } = await import('../claude.mjs')
+  const { readFileSync } = await import('node:fs')
+  const d = dir()
+  const db = openDb(path.join(d, 'fd'))
+  db.prepare("INSERT INTO teams (slug, name, created_at) VALUES ('team-one', 'T', 0)").run()
+  const team = db.prepare("SELECT id FROM teams WHERE slug = 'team-one'").get().id
+  for (const slug of ['p-one', 'p-two']) db.prepare("INSERT INTO workspaces (slug, name, team_id, status, created_at) VALUES (?, 'P', ?, 'active', 0)").run(slug, team)
+  const id = (slug) => db.prepare('SELECT id FROM workspaces WHERE slug = ?').get(slug).id
+  const hc = { file: path.join(d, 'gateway-hosted'), capMicroUsd: 20_000_000 }
+  const cc = { file: path.join(d, 'gateway-claude'), capMicroUsd: 25_000_000, capTokens: 20_000_000 }
+  const read = (f) => JSON.parse(readFileSync(f, 'utf8'))
+  writeHostedGrants(db, hc)
+  writeGrants(db, cc)
+  assert.deepEqual([read(hc.file), read(cc.file)], [{}, {}], 'both off by default')
+  assert.equal(statSync(hc.file).mode & 0o777, 0o600)
+  const row = db.prepare('SELECT hosted_enabled, claude_enabled, stretch, stretch_to FROM workspaces WHERE slug = ?').get('p-one')
+  assert.deepEqual({ ...row }, { hosted_enabled: 0, claude_enabled: 0, stretch: 'suggest', stretch_to: 'hosted' })
+  db.prepare("UPDATE workspaces SET hosted_enabled = 1 WHERE slug = 'p-one'").run()
+  assert.deepEqual(writeHostedGrants(db, hc), { 'ws-p-one': { cap_micro_usd: 20_000_000 } })
+  assert.deepEqual(writeGrants(db, cc), {}, 'turning the hosted model on does not turn Claude on')
+  // A one-time grant for p-two, both engines: listed with its moment; a past one is not listed.
+  const until = Date.now() + 60_000
+  db.prepare("INSERT INTO fallback_once (workspace_id, engine, until) VALUES (?, 'hosted', ?), (?, 'claude', ?), (?, 'hosted', ?)").run(id('p-two'), until, id('p-two'), until, id('p-one'), Date.now() - 1)
+  assert.deepEqual(writeHostedGrants(db, hc)['ws-p-two'], { cap_micro_usd: 20_000_000, until })
+  assert.equal(writeHostedGrants(db, hc)['ws-p-one'].until, undefined, 'a project with the switch on has no moment')
+  assert.equal(writeGrants(db, cc)['ws-p-two'].until, until)
+  db.prepare("DELETE FROM fallback_once WHERE engine = 'hosted'").run()
+  assert.equal(writeHostedGrants(db, hc)['ws-p-two'], undefined, 'the run ended: the grant is gone')
+  // A closed project has no grant, on or not.
+  db.prepare("UPDATE workspaces SET status = 'closed' WHERE slug = 'p-one'").run()
+  assert.deepEqual(writeHostedGrants(db, hc), {})
+  for (const action of ['hosted_enabled', 'hosted_disabled', 'hosted_used', 'hosted_once', 'claude_once']) audit(db, { action, workspace: id('p-two'), tokensIn: 1, tokensOut: 2, costMicroUsd: 3 })
+  db.close()
+})

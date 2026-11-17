@@ -15,7 +15,7 @@ import path from 'node:path'
 // a blank line of 1 KiB first lets every later line through at once. Blank lines are skipped.
 export const PAD = ' '.repeat(1024) + '\n'
 
-export function makeClaudeStandin({ work }) {
+export function makeClaudeStandin({ work, role = () => 'owner' }) {
   const st = { enabled: false, auto: 'ask', used: 0 }
   const runs = new Map()
   const history = new Map() // conversation -> records
@@ -23,7 +23,7 @@ export function makeClaudeStandin({ work }) {
   const info = () => ({
     enabled: st.enabled,
     auto: st.auto,
-    canChange: true,
+    canChange: role() === 'owner',
     mode: 'api_key',
     configured,
     unavailable: configured ? null : 'Claude is not set up on this machine yet: there is no Anthropic account to use. Bart can set it up.',
@@ -95,7 +95,10 @@ export function makeClaudeStandin({ work }) {
     end('done')
   }
 
-  return async function handle(req, res, p, url) {
+  handle.info = info
+  handle.st = st
+  return handle
+  async function handle(req, res, p, url) {
     if (p === '/api/claude' && req.method === 'GET') return json(res, 200, info()), true
     if (!p.startsWith('/api/claude/')) return false
     const what = p.slice('/api/claude/'.length)
@@ -113,12 +116,15 @@ export function makeClaudeStandin({ work }) {
     if (!body) return json(res, 400, { error: 'bad_json' }), true
     if (what === 'settings') {
       if (body.enabled === true && (body.consent !== true || !configured)) return json(res, 400, { error: 'consent', message: 'Read the note and confirm to turn this on.' }), true
+      if (role() !== 'owner') return json(res, 403, { error: 'owner_only', message: 'Only the project’s owner can change this.' }), true
       if (typeof body.enabled === 'boolean') st.enabled = body.enabled
       if (['ask', 'stuck', 'always'].includes(body.auto)) st.auto = body.auto
       return json(res, 200, info()), true
     }
     if (what === 'run') {
-      if (!st.enabled) return json(res, 403, { error: 'claude_off', message: 'Fallback to Claude is off for this project. Its owner can turn it on in Settings.' }), true
+      // "Just this once" (the stretch card): the owner, with the switch left off.
+      if (!st.enabled && !(body.once === true && role() === 'owner')) return json(res, 403, { error: 'claude_off', message: 'Fallback to Claude is off for this project. Its owner can turn it on in Settings.' }), true
+      if (body.once === true && !st.enabled) st.onceRuns = (st.onceRuns ?? 0) + 1
       const id = `c${Date.now().toString(36)}`
       const run = { id, at: Date.now(), events: [], clients: new Set([res]), ended: false, answer: null, stop: false }
       runs.set(id, run)

@@ -5,8 +5,11 @@
 // the caller's model string never goes upstream (HOSTED_MODEL does), and the same request-field
 // allowlist and reply rebuild apply. What differs: the upstream and its key (HOSTED_BASE_URL,
 // HOSTED_API_KEY), a per-project grant read from GATEWAY_HOSTED_FILE (mode 600, written by the
-// front desk: { "ws-<id>": { "cap_micro_usd": n } }, reloaded within 2 s; a caller not listed is
-// refused with a plain sentence), and a monthly dollar ceiling per project (token counts times
+// front desk: { "ws-<id>": { "cap_micro_usd": n, "until": ms? } }, reloaded within 2 s; a caller not
+// listed is refused with a plain sentence; an entry with `until` is a one-time grant, for one run
+// the owner handed over without turning the setting on: honored until that moment (epoch ms) even
+// if the front desk never takes it back, and the front desk takes it back when the run ends), and
+// a monthly dollar ceiling per project (token counts times
 // GATEWAY_HOSTED_PRICES, $/MTok, default in=2,out=2; set them to the provider's list prices).
 //
 //   HOSTED_BASE_URL       e.g. https://api.together.xyz/v1 (https; plain http only to 127.0.0.1)
@@ -68,7 +71,7 @@ export function makeHosted({ cfg, db }) {
       const next = new Map()
       for (const [name, g] of Object.entries(raw ?? {})) {
         if (!/^ws-[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$/.test(name) || !g || typeof g !== 'object') continue
-        next.set(name, { capMicroUsd: Number.isSafeInteger(g.cap_micro_usd) && g.cap_micro_usd >= 0 ? g.cap_micro_usd : 20_000_000 })
+        next.set(name, { capMicroUsd: Number.isSafeInteger(g.cap_micro_usd) && g.cap_micro_usd >= 0 ? g.cap_micro_usd : 20_000_000, until: g.until === undefined ? null : Number.isSafeInteger(g.until) ? g.until : 0 })
       }
       grants = next
       process.stdout.write(JSON.stringify({ t: new Date().toISOString(), event: 'hosted_grants', ok: true, callers: grants.size }) + '\n')
@@ -85,10 +88,15 @@ export function makeHosted({ cfg, db }) {
   const add = db.prepare(`INSERT INTO hosted_usage (month, caller, requests, tokens_in, tokens_out, cost_micro_usd) VALUES (?, ?, 1, ?, ?, ?)
     ON CONFLICT (month, caller) DO UPDATE SET requests = requests + 1, tokens_in = tokens_in + excluded.tokens_in, tokens_out = tokens_out + excluded.tokens_out, cost_micro_usd = cost_micro_usd + excluded.cost_micro_usd`)
   const read = db.prepare('SELECT requests, tokens_in, tokens_out, cost_micro_usd FROM hosted_usage WHERE month = ? AND caller = ?')
+  // A one-time grant (`until`) counts only until its moment: after it, as if it were not there.
+  const live = (caller) => {
+    const g = grants.get(caller)
+    return g && (g.until === null || Date.now() <= g.until) ? g : null
+  }
   const monthOf = (caller) => {
     const r = read.get(MONTH(), caller) ?? { requests: 0, tokens_in: 0, tokens_out: 0, cost_micro_usd: 0 }
-    const g = grants.get(caller)
-    return { month: MONTH(), granted: Boolean(g), requests: r.requests, tokens: r.tokens_in + r.tokens_out, cost_micro_usd: r.cost_micro_usd, cap_micro_usd: g?.capMicroUsd ?? null }
+    const g = live(caller)
+    return { month: MONTH(), granted: Boolean(g), once: Boolean(g && g.until !== null), requests: r.requests, tokens: r.tokens_in + r.tokens_out, tokens_in: r.tokens_in, tokens_out: r.tokens_out, cost_micro_usd: r.cost_micro_usd, cap_micro_usd: g?.capMicroUsd ?? null }
   }
   return {
     target,
@@ -97,8 +105,8 @@ export function makeHosted({ cfg, db }) {
     monthOf,
     /** Null if the caller may use `hosted` now, else the refusal (status, why for the log, message). */
     refusal(caller) {
-      const g = grants.get(caller)
-      if (!g) return { status: 403, why: 'the hosted model is off for this caller', message: 'The hosted open model is off for this project. Its owner can turn it on in Settings.', type: 'permission_error' }
+      const g = live(caller)
+      if (!g) return { status: 403, why: grants.has(caller) ? 'the one-time hosted grant has ended' : 'the hosted model is off for this caller', message: 'The hosted open model is off for this project. Its owner can turn it on in Settings.', type: 'permission_error' }
       const m = monthOf(caller)
       if (m.cost_micro_usd >= g.capMicroUsd) return { status: 429, why: 'the monthly hosted ceiling was reached', message: `This project has used its budget for the hosted open model this month ($${(g.capMicroUsd / 1e6).toFixed(2)}). It starts again on the first of next month.`, type: 'insufficient_quota' }
       return null

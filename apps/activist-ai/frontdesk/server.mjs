@@ -33,6 +33,7 @@ import { makeViews } from './views.mjs'
 import { claudeConfig, makeClaude } from './claude.mjs'
 import { CONTAINER, HOME as WS_HOME } from '../workspace/ws.mjs'
 import { makeWeb } from './web.mjs'
+import { hostedConfig, makeHosted } from './hosted.mjs'
 import { routeNeed } from '../web/server/proxy.mjs'
 import { tooLargeMessage, validName } from '../web/server/files.mjs'
 import { closeAfter, lingering, readUpTo } from '../web/server/linger.mjs'
@@ -80,6 +81,8 @@ export function config(env = process.env) {
     // the provider's name for the line under the approval ("The words of the search go to …").
     webFile: env.OLA_FD_WEB_FILE ?? path.join(WS_HOME, 'gateway-web'),
     searchProvider: env.OLA_FD_SEARCH_PROVIDER ?? 'Brave Search',
+    // Fallback to a hosted open model (hosted.mjs): the gateway's hosted grants file, the ceiling.
+    hosted: hostedConfig(env),
     // Shown in the delete confirmation. The product decision: a deleted file leaves the workspace
     // at once and stays in encrypted backups for up to 14 days.
     deleteNotice:
@@ -229,6 +232,7 @@ export function makeFrontDesk(cfg = config()) {
 
   const views = makeViews({ cfg, db, keys, auth, membership, workspaces })
   const claude = makeClaude({ db, cc: cfg.claude, container: CONTAINER, workspaces, runCeilingMs: cfg.runCeilingMs, log })
+  const hosted = makeHosted({ db, hc: cfg.hosted, cc: cfg.claude, workspaces, runCeilingMs: cfg.runCeilingMs, log })
 
   const shas = new Map() // `${slug}\0${path}` -> sha256, as ola-files last said
   const MAX_LISTED = 1000
@@ -301,6 +305,10 @@ export function makeFrontDesk(cfg = config()) {
       // An open tab's event stream does not wake a workspace stopped for idleness; opening the
       // project (or any other request) does.
       if (p === '/oc/api/event' && workspaces.isAsleep(ws.slug)) return json(res, 503, { error: 'asleep', message: 'Your workspace is resting. Open the project to wake it.' }, { 'retry-after': '30' })
+      // While the hosted open model works on a request in a conversation, that conversation runs on
+      // it: a prompt the page sends there meanwhile would too, so it waits (hosted.mjs).
+      const prompt = req.method === 'POST' ? /^\/oc\/api\/session\/([A-Za-z0-9_-]{1,80})\/prompt$/.exec(p) : null
+      if (prompt && hosted.busy(ws.slug, prompt[1])) return json(res, 409, { error: 'hosted_busy', message: 'The hosted open model is still working on a request in this conversation. Wait for it to finish, or stop it.' })
       await workspaces.ensureRunning(ws.slug)
       // An answer to a permission request: a web search or download in it becomes a grant for the
       // gateway first (web.mjs), and "Always in this project" is kept for the project.
@@ -362,6 +370,26 @@ export function makeFrontDesk(cfg = config()) {
     // Fallback to Claude (claude.mjs). Reading the setting: any member. Changing it: an owner.
     // Running Claude, answering its questions, stopping it: owners and members.
     if (p === '/api/claude' && req.method === 'GET') return json(res, 200, await claude.info(ws))
+    // Both fallbacks at once (hosted.mjs, claude.mjs), and "When a request looks like a stretch".
+    if (p === '/api/fallback' && req.method === 'GET') {
+      const [c, h] = await Promise.all([claude.info(ws), hosted.info(ws)])
+      return json(res, 200, { claude: c, hosted: h, ...hosted.stretchOf(ws), canChange: ws.role === 'owner' })
+    }
+    if ((p === '/api/fallback/settings' || p === '/api/hosted/settings' || p === '/api/hosted/run') && req.method === 'POST') {
+      const body = await readJson(req, 64 * 1024)
+      if (!body) return json(res, 400, { error: 'bad_json' })
+      if (p === '/api/fallback/settings') {
+        const r = hosted.setStretch(ws, body)
+        return json(res, r.status, r.body)
+      }
+      if (p === '/api/hosted/settings') {
+        const r = await hosted.setSettings(ws, sess.personId, body)
+        return json(res, r.status, r.body)
+      }
+      if (!canRun) return json(res, 403, readOnly)
+      const r = await hosted.start(ws, sess.personId, body)
+      return json(res, r.status, r.body)
+    }
     if (p.startsWith('/api/claude/')) {
       const what = p.slice('/api/claude/'.length)
       if (what === 'turns' && req.method === 'GET') {
@@ -748,7 +776,7 @@ export function makeFrontDesk(cfg = config()) {
     if (!server.listeners('listening').some((f) => f.name === 'setupConnectionsTracking')) throw new Error('this Node does not start HTTP timeouts on listening; the PROXY protocol mode needs review')
     listener.once('listening', () => server.emit('listening'))
   } else server.on('connection', (sock) => admit(sock, addressKey(sock.remoteAddress)))
-  return { server, listener, db, cfg, workspaces, views, claude, close: () => (claude.close(), workspaces.close(), web.close(), listener.close(), listener !== server && server.close(), db.close()) }
+  return { server, listener, db, cfg, workspaces, views, claude, hosted, close: () => (claude.close(), hosted.close(), workspaces.close(), web.close(), listener.close(), listener !== server && server.close(), db.close()) }
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
