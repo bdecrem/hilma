@@ -194,7 +194,7 @@ print(json.dumps(ok))`)
   const d = json(await sh(['ola-db', 'api', 'disk'])) ?? {}
   t('the project’s disk, as Settings shows it: the volume, its use, and the room taken by files, data and Ola’s own records, with no file names',
     d.total > 0 && d.used > 0 && d.free > 0 && d.files > 1_000_000 && d.data > 0 && d.ola >= 0 && Object.keys(d).length === 6, JSON.stringify(d))
-  await sh(['sh', '-c', 'rm -rf /work/dx /work/papers /work/*.db /work/pieces.bin /work/papers.zip; ola-db init'])
+  await sh(['sh', '-c', 'rm -rf /work/dx /work/papers /work/library.db /work/corrupt.db /work/hostile.db /work/not-a-db.db /work/pieces.bin /work/papers.zip; ola-db init'])
 }
 
 // ---------------------------------------------------------------- alone
