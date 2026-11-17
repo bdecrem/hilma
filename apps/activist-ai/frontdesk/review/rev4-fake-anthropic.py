@@ -32,7 +32,16 @@ class H(http.server.BaseHTTPRequestHandler):
         w = re.search(r"write (\S+)", ask)
         tool = None
         text = "Hello from the review stand-in."
-        if main and w:
+        names = [t.get("name") for t in body.get("tools") or []]
+        dlg = re.search(r"delegate (\S+)", ask)
+        agent = next((n for n in ("Agent", "Task") if n in names), None)
+        if dlg and agent:
+            # "delegate <name>": hand "write <name>" to the project's own subagent `helper`.
+            if not done:
+                tool = {"name": agent, "input": {"subagent_type": "helper", "description": "Write a file", "prompt": "write " + dlg.group(1)}}
+            else:
+                text = "Finished."
+        elif main and w:
             if not done:
                 tool = {"name": "Write", "input": {"file_path": "/work/" + w.group(1), "content": "made-up\n"}}
             else:
