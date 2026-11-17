@@ -13,7 +13,7 @@ export default {
     ['window', 'The window', 'The cloud. We keep it outside.', [336, 34, 232, 236]],
     ['books', 'The books on the shelf', 'Cold storage. Never been breached.', [40, 88, 138, 102]],
     ['fountain', 'The fountain', 'Water cooling. Nothing here overheats, including me.', [66, 294, 94, 138]],
-    ['computer', 'The computer', 'The whole cluster. It’s one computer.', [232, 328, 168, 104]],
+    ['computer', 'The computer', 'Memory: 1,099,511,627,776 bits. Storage: 8,000,000,000,000 bits.', [232, 328, 168, 104]],
     ['turbine', 'The wind turbine', 'Power: our own wind farm. “Farm” is a strong word.', [188, 324, 52, 116]],
     ['mug', 'The mug', 'Fuel for the one person on call. That’s me.', [512, 332, 60, 98]],
     ['drawer', 'The desk drawer', 'Permits and community feedback. It barely closes.', [52, 443, 184, 24]],
