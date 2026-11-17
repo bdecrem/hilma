@@ -61,6 +61,7 @@ function leaf(dir, days) {
 // ------------------------------------------------------------------ fakes on loopback
 const up = { fd: true, gw: true, almanac: true, prompt: true, imsg: 200 }
 const texts = []
+const statuses = [] // what the board push sent
 const listen = (srv) => new Promise((r) => srv.listen(0, '127.0.0.1', () => r(srv.address().port)))
 const servers = []
 let PORTS = {}
@@ -90,6 +91,7 @@ before(async () => {
     req.on('end', () => {
       const j = JSON.parse(b)
       assert.equal(j.key, SECRET) // the key arrives, read from KEY_FROM
+      if (req.url === '/api/venture/status') return (statuses.push(j.status), res.writeHead(200), res.end('{}'))
       if (up.imsg === 200) texts.push(j.text)
       res.writeHead(up.imsg)
       res.end('{}')
@@ -151,6 +153,7 @@ const ENV = () => ({
   OLA_WATCH_SUITE_LOCK: path.join(T, 'suite.lock'),
   OLA_WATCH_KEY_FROM: path.join(T, 'venture.env'),
   OLA_WATCH_SEND_BASE: `http://127.0.0.1:${PORTS.imsg}`,
+  OLA_WATCH_PUSH_EVERY_MIN: '0', // the board push is off except in its own test
 })
 /** One run at a Pacific wall-clock time on 2026-11-17 (PST, UTC-8), e.g. at('14:00'). */
 const at = (hhmm, day = 17) => {
@@ -445,6 +448,26 @@ test('status line: ok after a run, DOWN when stale or when a text did not go out
   const l = line(at('14:13'))
   assert.equal(l.ok, false)
   assert.match(l.text, /ALARM disk; last text NOT sent: the text service answered 500/)
+})
+
+test('the board: a compact status every 10 minutes, with the key, and nothing that names a project', async () => {
+  fakes({})
+  up.imsg = 200
+  const board = { OLA_WATCH_PUSH_EVERY_MIN: '10' }
+  const before = statuses.length
+  const r = await watch(at('16:00'), [], board)
+  assert.match(r.out, /status pushed to the board/)
+  assert.equal(statuses.length, before + 1)
+  const s = statuses.at(-1)
+  assert.deepEqual(Object.keys(s).sort(), ['alarm', 'deployed', 'disk', 'host', 'memory', 'parts', 'projects'])
+  assert.equal(typeof s.alarm.state, 'string')
+  assert.ok(!JSON.stringify(s).includes('ola-'), 'a project id reached the board')
+  await watch(at('16:02'), [], board)
+  assert.equal(statuses.length, before + 1, 'pushed again before 10 minutes')
+  await watch(at('16:04'), ['--only', 'disk'], board)
+  assert.equal(statuses.length, before + 1, 'a partial run pushed')
+  await watch(at('16:10'), [], board)
+  assert.equal(statuses.length, before + 2)
 })
 
 test('no secret in any output, state or log; no engineer words in any text', async () => {

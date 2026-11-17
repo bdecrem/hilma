@@ -64,6 +64,18 @@ differences because you are unattended:
   needs nothing from Bart and nothing you may not do here, and do a real piece
   of it. If there is none, improve what exists: reread a sample against its
   original, check a fact on a page against its source, tighten a draft.
+- **The board is stale** (the journal was last written more than three hours
+  ago, in the day): bring app.kochitolabs.com up to date before anything else,
+  in about ten minutes. Read `node scripts/venture/issues.mjs plate`,
+  `issues.mjs list --day today`, `issues.mjs unsorted` and `git log` since the
+  journal's Now. Place each unsorted commit (`issues.mjs place <sha> <OLA-n>`,
+  or `add` an issue for real work that has none, `none` for chores); mark what
+  is finished `done` with its proof and commits, what started `start`. Then
+  rewrite JOURNAL.md's Now (one first sentence that says where Ola stands,
+  with the time from `date`) and add a line to today's section. Titles and
+  sentences in plain words for Bart: never gateway, front desk, VM,
+  workspace or staging (say the model connection, sign-in, a project's sealed
+  box, the practice copy on the mini).
 - **Checkpoint before you stop** (you have about 25 minutes): NOW.md,
   JOURNAL.md (a line he can read, with the time from `date`, marked "while you
   were away"), LOG.md (a line starting "runner:"), INDEPENDENCE.md, LESSONS.md

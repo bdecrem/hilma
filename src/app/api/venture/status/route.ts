@@ -1,0 +1,48 @@
+import { NextResponse } from 'next/server'
+import { keyOk } from '@/lib/venture/interview'
+import { f2Supabase } from '@/lib/f2/supabase'
+
+export const runtime = 'nodejs'
+
+// POST /api/venture/status  { key, status }
+// The Ola machine's live status for the board at app.kochitolabs.com, pushed every 10 minutes by
+// the alarm on the Mac mini (apps/activist-ai/ops/watch.mjs, launchd cx.ola.watch) with the same
+// Venture key it texts with. Stored in venture_state "ola_status"; the board marks it stale after
+// 30 minutes. Only the fields below are kept, each a number, a short string or a flag.
+const str = (v: unknown, n = 200) => (typeof v === 'string' ? v.slice(0, n) : null)
+const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : null)
+const iso = (v: unknown) => (typeof v === 'string' && !Number.isNaN(Date.parse(v)) ? new Date(v).toISOString() : null)
+
+export async function POST(req: Request) {
+  const body = (await req.json().catch(() => null)) as { key?: unknown; status?: Record<string, unknown> } | null
+  if (!body || !keyOk(body.key)) return NextResponse.json({ error: 'not found' }, { status: 404 })
+  const s = body.status
+  if (!s || typeof s !== 'object' || JSON.stringify(s).length > 20000) return NextResponse.json({ error: 'bad status' }, { status: 400 })
+  const dep = s.deployed as Record<string, unknown> | null | undefined
+  const suites: Record<string, string> = {}
+  if (dep && typeof dep.suites === 'object' && dep.suites) for (const [k, v] of Object.entries(dep.suites as Record<string, unknown>).slice(0, 12)) if (typeof v === 'string') suites[k.slice(0, 40)] = v.slice(0, 40)
+  let passed = 0
+  let total = 0
+  for (const v of Object.values(suites)) {
+    const m = v.match(/^(\d+) of (\d+)$/)
+    if (m) (passed += Number(m[1]), (total += Number(m[2])))
+  }
+  const alarm = (s.alarm ?? {}) as Record<string, unknown>
+  const list = (v: unknown) => (Array.isArray(v) ? v.map((x) => str(x)).filter((x): x is string => !!x).slice(0, 12) : [])
+  const parts: Record<string, boolean> = {}
+  if (s.parts && typeof s.parts === 'object') for (const [k, v] of Object.entries(s.parts as Record<string, unknown>).slice(0, 12)) if (typeof v === 'boolean') parts[k.slice(0, 40)] = v
+  const value = {
+    at: new Date().toISOString(),
+    from: str(s.host, 60),
+    deployed: dep && str(dep.commit, 64) ? { commit: str(dep.commit, 64), at: iso(dep.at), suites } : null,
+    checks: total ? { passed, total } : null,
+    alarm: { state: ['ok', 'warn', 'alarm'].includes(String(alarm.state)) ? alarm.state : 'ok', says: list(alarm.says), warns: list(alarm.warns), runAt: iso(alarm.runAt) },
+    disk: num((s.disk as Record<string, unknown> | undefined)?.freeGB) !== null ? { freeGB: num((s.disk as Record<string, unknown>).freeGB) } : null,
+    memory: str(s.memory, 80),
+    projects: num((s.projects as Record<string, unknown> | undefined)?.running) !== null ? { running: num((s.projects as Record<string, unknown>).running) } : null,
+    parts,
+  }
+  const { error } = await f2Supabase().from('venture_state').upsert({ key: 'ola_status', value, at: value.at })
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ ok: true })
+}

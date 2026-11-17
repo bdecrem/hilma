@@ -8,8 +8,12 @@
 //      last ten minutes)                                    → do nothing.
 //   2. A run is already going                               → do nothing.
 //   3. Nothing new (no text or voice note from Bart, no mail from a customer,
-//      no sign-up, no finished voice conversation) and no work block due
-//                                                           → do nothing.
+//      no sign-up, no finished voice conversation), no work block due and the
+//      board not stale                                      → do nothing.
+//      (The board is stale when the journal behind app.kochitolabs.com was last
+//      written more than three hours ago, between 7 am and 11 pm Pacific; Bart,
+//      2026-11-17: "make sure it is updated at least every few hours". The run
+//      then refreshes it from the issue tracker, the commits and the status.)
 //   4. Otherwise: pull the code and the private state, start Claude Code
 //      headless with apps/venture/runner/PROMPT.md and the reasons it was
 //      woken, give it thirty minutes, push the state back.
@@ -48,6 +52,9 @@ const SESSION_FRESH = 10 * MIN // a heartbeat younger than this = someone is at 
 const RUN_LIMIT = 30 * MIN // one unattended run
 const WORK_EVERY = 3 * 60 * MIN // with nothing new, still take the next action this often
 const WORK_HOURS = [6, 22] // local time on the machine; no work blocks at night
+const BOARD_STALE = 3 * 60 * MIN // the journal older than this, in the day, wakes a refresh
+const BOARD_HOURS = [7, 23] // Pacific
+const pacificHour = () => Number(new Date().toLocaleString('en-US', { hour: 'numeric', hourCycle: 'h23', timeZone: 'America/Los_Angeles' }))
 const logDir = `${homedir()}/Library/Logs/venture-runner`
 const [cmd = 'tick', flag] = process.argv.slice(2)
 const say = (s) => console.log(`${new Date().toISOString().slice(0, 19)}Z ${s}`)
@@ -86,8 +93,12 @@ async function look() {
   // What the last run left unread does not wake the next tick again for an hour
   // (a run that could not deal with something must not loop every five minutes).
   const left = age(lastEnd) < 60 * MIN ? (runner?.value?.left ?? {}) : {}
+  const { data: journal, error: jErr } = await db.from('venture_docs').select('updated_at').eq('slug', 'journal').maybeSingle()
+  if (jErr) throw new Error(`venture_docs: ${jErr.message}`)
+  const ph = pacificHour()
+  const stale = ph >= BOARD_HOURS[0] && ph < BOARD_HOURS[1] && age(journal?.updated_at) > BOARD_STALE && age(lastEnd) > 60 * MIN
   const fresh = (n, k) => n > (left[k] ?? 0)
-  const why = [fresh(texts, 'texts') && `${texts} unread text(s) or voice note(s) from Bart`, fresh(mail, 'mail') && `${mail} unread message(s) to the company's addresses`, fresh(leads, 'leads') && `${leads} new sign-up(s)`, voice && `${voice} voice conversation(s) ended since anyone looked`, fresh(minutes.length, 'minutes') && `${minutes.length} new minutes of a voice call or note`, block && 'a work block is due: take the next action in NOW.md that needs nothing from Bart'].filter(Boolean)
+  const why = [fresh(texts, 'texts') && `${texts} unread text(s) or voice note(s) from Bart`, fresh(mail, 'mail') && `${mail} unread message(s) to the company's addresses`, fresh(leads, 'leads') && `${leads} new sign-up(s)`, voice && `${voice} voice conversation(s) ended since anyone looked`, fresh(minutes.length, 'minutes') && `${minutes.length} new minutes of a voice call or note`, stale && `the board is stale (the journal was last written ${mins(age(journal?.updated_at))}): refresh it first, as PROMPT.md says under "The board is stale"`, block && 'a work block is due: take the next action in NOW.md that needs nothing from Bart'].filter(Boolean)
   return { session, runner, why, minutes, counts: { texts, mail, leads, minutes: minutes.length } }
 }
 

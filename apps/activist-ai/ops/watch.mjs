@@ -30,6 +30,13 @@
 //   7 nightly   the certificate's days left as served (warn at 21 or fewer: renewal is failing) and
 //               each status file that exists (cert.json, backup.json ... {at, ok}); read, never run
 //
+// The board: every PUSH_EVERY_MIN minutes (10; 0 turns it off) a run also posts a compact status to
+// <base>/api/venture/status for app.kochitolabs.com (Bart, 2026-11-17: "make sure it is updated at
+// least every few hours"): the deployed version, when and its suites' counts (~/ola-staging/
+// deployed.json), the alarm's state in the words of its texts, free disk, memory, how many projects
+// run, and which parts answer. No file names, no project names, no keys; the board marks it stale
+// after 30 minutes. A failed push is retried at the next run and noted in `show`.
+//
 // Noise: an alarm is texted once when it starts, again at most every 2 hours while it lasts, and a
 // short "back to normal" once when it clears. Warnings are not texted one by one: they go into one
 // daily note (at 9 am Pacific, only on a day there were any). Between 11 pm and 7 am Pacific nothing
@@ -96,6 +103,8 @@ export const DEFAULTS = {
   DIGEST_HOUR: 9,
   TZ: 'America/Los_Angeles',
   OFF: '', // ids not to check at all, e.g. OFF=public,almanac
+  // the board
+  PUSH_EVERY_MIN: 10,
   // the text
   KEY_FROM: path.join(HOME, 'hilma-venture/.env.local'),
   SEND_BASE: '', // default: VENTURE_BASE from KEY_FROM, else https://ola.cx
@@ -508,6 +517,44 @@ async function send(S, text) {
   }
 }
 
+// ---------------------------------------------------------------- the board
+/** The compact status the board shows; nothing in it names a person, a project or a file. */
+export function boardStatus(S, state, r, conds, now) {
+  let deployed = null
+  try {
+    const d = JSON.parse(readFileSync(path.join(S.STAGING, 'deployed.json'), 'utf8'))
+    deployed = { commit: String(d.commit ?? ''), at: d.at ?? null, suites: d.suites ?? {} }
+  } catch {}
+  const alarms = Object.values(state.active ?? {}).filter((a) => a.say)
+  const warns = conds.filter((c) => c.level === 'warn').map((c) => c.note).filter(Boolean)
+  const parts = {}
+  const names = { fd: 'web app', gw: 'model connection', tls: 'secure front', tunnel: 'tunnel' }
+  for (const [k, v] of Object.entries(r.web ?? {})) parts[names[k] ?? k] = !!v.ok
+  if (r.public) parts['public address'] = r.public.status === 401 && !!r.public.basic
+  if (r.almanac) parts['Almanac'] = r.almanac.status === 200
+  return {
+    host: 'mini',
+    deployed,
+    alarm: { state: alarms.length ? 'alarm' : warns.length ? 'warn' : 'ok', says: alarms.map((a) => a.say), warns, runAt: new Date(now).toISOString() },
+    disk: r.disk && !r.disk.error ? { freeGB: r.disk.freeGB } : null,
+    memory: r.memory ? `${r.memory.pressure}, swap ${r.memory.swapPct}%` : null,
+    projects: Array.isArray(r.vms?.running) ? { running: r.vms.running.length } : null,
+    parts,
+  }
+}
+async function pushStatus(S, status) {
+  if (!existsSync(S.KEY_FROM)) return { ok: false, why: `no ${S.KEY_FROM} to read the key from` }
+  const env = readEnv(S.KEY_FROM)
+  if (!env.VENTURE_KEY) return { ok: false, why: `no VENTURE_KEY in ${S.KEY_FROM}` }
+  const base = S.SEND_BASE || env.VENTURE_BASE || 'https://ola.cx'
+  try {
+    const res = await fetch(`${base}/api/venture/status`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: env.VENTURE_KEY, status }), signal: AbortSignal.timeout(20_000) })
+    return res.ok ? { ok: true } : { ok: false, why: `the board answered ${res.status}` }
+  } catch (e) {
+    return { ok: false, why: `the board did not answer (${e.cause?.code || e.name})` }
+  }
+}
+
 // ---------------------------------------------------------------- state
 export function loadState() {
   try {
@@ -603,11 +650,18 @@ export async function runOnce({ dry = false, only = null, force = [] } = {}) {
   const warns = conds.filter((c) => c.level === 'warn').map((c) => c.id)
   const line = conds.map((c) => c.detail).filter(Boolean).join('; ')
   state.lastRun = { at: new Date(now).toISOString(), ms: Date.now() - t0, alarms, warns, line, ...(sent && !sent.ok ? { sendFailed: sent.why } : {}) }
+  // The board, every PUSH_EVERY_MIN minutes, from full runs only (not --only, --force or --dry).
+  let pushed = null
+  if (!dry && !only && !force.length && S.PUSH_EVERY_MIN > 0 && (!state.push?.okAt || now - Date.parse(state.push.okAt) >= S.PUSH_EVERY_MIN * 60_000)) {
+    pushed = await pushStatus(S, boardStatus(S, state, r, conds, now))
+    state.push = { ...(state.push ?? {}), triedAt: new Date(now).toISOString(), ...(pushed.ok ? { okAt: new Date(now).toISOString(), failed: undefined } : { failed: pushed.why }) }
+  }
   if (!dry) saveState(state)
   const out = [`${new Date(now).toISOString()} ${alarms.length ? `ALARM ${alarms.join(',')}` : 'ok'}${warns.length ? `; warn ${warns.join(',')}` : ''}${muted ? `; muted until ${state.muteUntil}` : ''}: ${line || 'nothing checked'}`]
   if (state.sizes?.gb && sizesDue && !dry) out.push(`  sizes (GB): ${Object.entries(state.sizes.gb).map(([k, v]) => `${k} ${v}`).join(', ')}`)
   if (drop?.evidence) out.push(`  every VM stopped at once; evidence in ${drop.evidence}`)
   if (text) out.push(dry ? `  would send: ${text}` : sent.ok ? `  sent: ${text}` : `  NOT SENT (${sent.why}), will retry: ${text}`)
+  if (pushed) out.push(pushed.ok ? '  status pushed to the board' : `  status NOT pushed to the board (${pushed.why}), will retry`)
   return { out: out.join('\n'), state, text, sent, conds }
 }
 

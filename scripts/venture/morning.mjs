@@ -5,9 +5,11 @@
 //   node scripts/venture/morning.mjs          send today's text, once a day (the guard is in venture_state)
 //   node scripts/venture/morning.mjs --dry    print it without sending
 // Runs at 10:00 on the Mac mini (launchd sh.venture.morning, apps/venture/launchd/).
-// The agenda comes from the journal's "On my plate" (P0 and P1 items) and "Waiting on you",
-// so the text is only as fresh as the journal: keep it current. No model call, so it cannot
-// fail on a model; if the journal cannot be read it sends nothing and exits non-zero.
+// The agenda comes from the issue tracker since 2026-11-17 (venture_issues, schema 011;
+// scripts/venture/issues.mjs): the plate is what is in progress, then what is next, P0 and P1
+// first, and "Waiting on you" is the issues waiting on Bart. The journal is read only to fail
+// loudly when it is gone. No model call, so it cannot fail on a model; if the tracker or the
+// journal cannot be read it sends nothing and exits non-zero.
 import { readFileSync } from 'node:fs'
 import { createClient } from '@supabase/supabase-js'
 import { getState, setState } from './_state.mjs'
@@ -32,17 +34,15 @@ if (!dry && sent?.value?.date === today) {
 
 const { data: doc, error } = await db.from('venture_docs').select('body').eq('slug', 'journal').maybeSingle()
 if (error || !doc?.body) throw new Error(`cannot read the journal: ${error?.message ?? 'empty'}`)
-const section = (title) => {
-  const m = doc.body.split(/\n(?=## )/).find((s) => s.startsWith(`## ${title}\n`))
-  return m ? m.split('\n').filter((l) => l.startsWith('- ')).map((l) => l.slice(2)) : []
-}
-const plain = (s) => s.replace(/\*\*([^*]+)\*\*/g, '$1').replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-const plate = section('On my plate')
-  .map((l) => l.match(/^\*\*(P\d)\*\*\s*(.*)$/))
-  .filter((m) => m && (m[1] === 'P0' || m[1] === 'P1'))
+const { data: open, error: iErr } = await db.from('venture_issues').select('id, title, priority, status, num').eq('project', 'ola').in('status', ['in_progress', 'open', 'waiting'])
+if (iErr) throw new Error(`cannot read the issue tracker: ${iErr.message}`)
+const order = { in_progress: 0, open: 1 }
+const plate = open
+  .filter((i) => i.status !== 'waiting' && i.priority !== 'P2')
+  .sort((a, b) => order[a.status] - order[b.status] || a.priority.localeCompare(b.priority) || a.num - b.num)
   .slice(0, 3)
-  .map((m) => `${m[1]} ${plain(m[2]).split(/(?<=\.)\s/)[0]}`)
-const waiting = section('Waiting on you').map((l) => (l.match(/^\*\*([^*]+?):?\*\*/)?.[1] ?? plain(l).split(/[:.,]/)[0]).replace(/[:,.]+$/, '').trim())
+  .map((i) => `${i.priority} ${i.title} (${i.id}${i.status === 'in_progress' ? ', doing' : ''})`)
+const waiting = open.filter((i) => i.status === 'waiting').map((i) => i.title)
 
 // Fable usage (Bart, 2026-11-16: "send me a USAGE update - the correct numbers are 70% this time
 // tomorrow, 80% this time Wed, 90% this time Thu. if not, we need to increase the percentage of tasks

@@ -25,6 +25,10 @@
       "schedule": "*/5 * * * *"
     },
     {
+      "path": "/api/venture/commits/sync",
+      "schedule": "*/30 * * * *"
+    },
+    {
       "path": "/api/f2/knowledge/backfill",
       "schedule": "20 10 * * *"
     }
