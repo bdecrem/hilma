@@ -34,13 +34,19 @@ enum KitShots {
 
   static func screens() -> [(String, AnyView)] {
     let now = Date.now
+    let recap = KitMinutes(
+      source: "meeting", ref: "a", summary: "Where the PDF offer stands, and the Mac app for others.",
+      decided: [KitMinutes.Line(id: "d1", text: "Quote a price on the next call", quote: "Yes, decided. Quote it.")],
+      toDecide: [KitMinutes.Line(id: "t1", text: "Offer the Mac app to others, as a choice"), KitMinutes.Line(id: "t2", text: "Whether an outside review comes first")],
+      kitWillDo: [KitMinutes.Line(id: "k1", text: "Send both drafts tonight")])
     let overview = KitOverview(
       meetings: [
-        KitMeetingSummary(id: "a", at: now.addingTimeInterval(-50 * 60), seconds: 742, firstLine: "Where are we on the PDF offer, and what do you need from me this week?", turns: 18),
+        KitMeetingSummary(id: "a", at: now.addingTimeInterval(-50 * 60), seconds: 742, firstLine: "Where are we on the PDF offer, and what do you need from me this week?", turns: 18, minutes: recap),
         KitMeetingSummary(id: "b", at: now.addingTimeInterval(-26 * 3600), seconds: 305, firstLine: "Quick one about the pricing page.", turns: 8),
       ],
       notes: [
-        KitNote(id: 1, text: "Move the call with the clerk's office to Thursday, and send me the draft first.", at: now.addingTimeInterval(-3 * 3600), read: true),
+        KitNote(id: 1, text: "Move the call with the clerk's office to Thursday, and send me the draft first.", at: now.addingTimeInterval(-3 * 3600), read: true,
+                minutes: KitMinutes(source: "note", ref: "1", summary: "Move the clerk call.", decided: [], toDecide: [], kitWillDo: [KitMinutes.Line(id: "k1", text: "Move the clerk's call to Thursday"), KitMinutes.Line(id: "k2", text: "Send Bart the draft first")])),
         KitNote(id: 2, text: "Idea for the landing page: lead with the before and after.", at: now.addingTimeInterval(-3 * 86400), read: true),
       ])
     let lines = [
@@ -54,6 +60,8 @@ enum KitShots {
     levels[31] = 0.4
     return [
       ("home", AnyView(KitScreen(api: api, fixture: overview).padding(.top, 47).background(Ola.paper))),
+      ("home-writing", AnyView(KitScreen(api: api, fixture: KitOverview(meetings: [KitMeetingSummary(id: "c", at: now.addingTimeInterval(-70), seconds: 60, firstLine: "One more thing about the Mac app.", turns: 4)] + overview.meetings, notes: overview.notes)).padding(.top, 47).background(Ola.paper))),
+      ("home-corrected", AnyView(KitScreen(api: api, fixture: KitOverview(meetings: [{ var m = overview.meetings[0]; m.minutes = KitMinutes(source: "meeting", ref: "a", summary: "", decided: recap.decided + [KitMinutes.Line(id: "t1", text: "Offer the Mac app to others, as a choice", byBart: true)], toDecide: [recap.toDecide[1]], kitWillDo: recap.kitWillDo); return m }()], notes: [])).padding(.top, 47).background(Ola.paper))),
       ("home-empty", AnyView(KitScreen(api: api, fixture: KitOverview(meetings: [], notes: [])).padding(.top, 47).background(Ola.paper))),
       ("meeting-connecting", meeting(.fixture(phase: .connecting))),
       ("meeting-speaking", meeting(.fixture(phase: .live, activity: .speaking, lines: lines, seconds: 74, kitLevel: 0.8))),
@@ -74,6 +82,7 @@ enum KitShots {
       ("note-failed", note(KitNoteRecorder(state: .failed("No connection. Try again when you have signal."), elapsed: 96))),
       ("note-denied", note(KitNoteRecorder(state: .denied))),
       ("read-meeting", AnyView(KitReadScreen(item: .meeting(overview.meetings[0]), api: api, fixtureLines: lines).padding(.top, 10).background(Ola.paper))),
+      ("read-meeting-plain", AnyView(KitReadScreen(item: .meeting(overview.meetings[1]), api: api, fixtureLines: lines).padding(.top, 10).background(Ola.paper))),
       ("read-note", AnyView(KitReadScreen(item: .note(overview.notes[0]), api: api).padding(.top, 10).background(Ola.paper))),
     ]
   }

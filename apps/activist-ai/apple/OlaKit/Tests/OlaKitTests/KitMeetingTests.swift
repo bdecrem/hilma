@@ -55,7 +55,11 @@ final class KitMeetingTests: XCTestCase {
   }
 
   /// Lets the Tasks the meeting starts run.
-  func settle() async { for _ in 0..<20 { await Task.yield() } }
+  func settle() async {
+    for _ in 0..<20 { await Task.yield() }
+    try? await Task.sleep(for: .milliseconds(30))
+    for _ in 0..<20 { await Task.yield() }
+  }
 
   func live() async -> KitMeeting {
     let m = meeting()
@@ -205,9 +209,8 @@ final class KitMeetingTests: XCTestCase {
     m.readyTimeout = .milliseconds(20)
     await m.start()
     // never ready: the timeout counts as a lost connection, then the reconnect never gets ready
-    try? await Task.sleep(for: .milliseconds(80))
-    await settle()
-    try? await Task.sleep(for: .milliseconds(80))
+    // (polled, not a fixed wait: a busy machine runs the timers late)
+    for _ in 0..<200 where m.phase != .ended { try? await Task.sleep(for: .milliseconds(10)) }
     await settle()
     XCTAssertEqual(m.phase, .ended)
     XCTAssertEqual(m.endReason, .dropped)
@@ -235,6 +238,18 @@ final class KitMeetingTests: XCTestCase {
     XCTAssertEqual(transports[0].muted.last, true)
     transports[0].emit(.levels(kit: 0, you: 0.8))
     XCTAssertEqual(m.youLevel, 0)
+  }
+
+  /// The server's minutes (src/lib/venture/minutes.ts) as the phone reads them, a correction mark included.
+  func testMinutesFromTheServer() {
+    let j = JSON.parse(#"{"source":"meeting","ref":"s-1","summary":"Two lines.","decided":[{"id":"d1","text":"Ship on Friday","quote":"Yes, decided."},{"id":"t1","text":"Offer the app","by":"bart"}],"to_decide":[{"id":"t2","text":"An outside review"}],"kit_will_do":[{"id":"k1","text":"Send the draft"}],"facts":[]}"#)!
+    let m = KitAPI.minutes(j)!
+    XCTAssertEqual(m.decided.map(\.text), ["Ship on Friday", "Offer the app"])
+    XCTAssertEqual(m.decided[0].quote, "Yes, decided.")
+    XCTAssertTrue(m.decided[1].byBart)
+    XCTAssertEqual(m.toDecide.map(\.id), ["t2"])
+    XCTAssertEqual(m.kitWillDo.map(\.text), ["Send the draft"])
+    XCTAssertNil(KitAPI.minutes(.null), "no minutes yet")
   }
 
   func testPostgresDates() {

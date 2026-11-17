@@ -29,6 +29,11 @@ struct KitScreen: View {
             noting = true
           }
         }
+        if let latest = recent.first, latest.minutes != nil || isWriting(latest) {
+          KitRecap(title: latest.isMeeting ? "From this call" : "From this note", when: kitWhen(latest.at), minutes: latest.minutes, writing: isWriting(latest)) { m, line, to in
+            await correct(m, line, to)
+          }
+        }
         KitRecentList(items: recent, loaded: (fixture ?? overview) != nil, error: error, open: { reading = $0 }, retry: { Task { await load() } })
       }
       .padding(.horizontal, Space.l)
@@ -36,6 +41,16 @@ struct KitScreen: View {
     }
     .background(Ola.paper.ignoresSafeArea())
     .task { if fixture == nil { await load() } }
+    .task(id: waitingFor) {
+      // Kit writes up a call or a note a few seconds after it ends: look again until it is there.
+      guard fixture == nil, waitingFor != nil else { return }
+      for _ in 0..<30 {
+        try? await Task.sleep(for: .seconds(4))
+        if Task.isCancelled { return }
+        await load()
+        if waitingFor == nil { return }
+      }
+    }
     .refreshable { await load() }
     .fullScreenCover(item: $meeting, onDismiss: { Task { await load() } }) { open in
       KitMeetingScreen(meeting: open.meeting, close: { meeting = nil })
@@ -43,7 +58,7 @@ struct KitScreen: View {
     .sheet(isPresented: $noting, onDismiss: { Task { await load() } }) {
       KitNoteScreen(api: api, close: { noting = false })
     }
-    .sheet(item: $reading) { item in
+    .sheet(item: $reading, onDismiss: { Task { await load() } }) { item in
       KitReadScreen(item: item, api: api)
     }
   }
@@ -55,12 +70,31 @@ struct KitScreen: View {
     return (m + n).sorted { $0.at > $1.at }.prefix(8).map { $0 }
   }
 
+  /// The newest call or note ended in the last few minutes and its notes are not written yet.
+  func isWriting(_ r: KitRecent) -> Bool { r.minutes == nil && Date.now.timeIntervalSince(r.end) < 180 }
+  var waitingFor: String? { recent.first.flatMap { isWriting($0) ? $0.id : nil } }
+
   func load() async {
     do {
       overview = try await api.overview()
       error = nil
     } catch {
       self.error = (error as? KitError)?.errorDescription ?? "Kit's list did not load."
+    }
+  }
+
+  func correct(_ m: KitMinutes, _ line: String, _ to: KitMinutes.Move) async {
+    guard fixture == nil else { return }
+    do {
+      let fixed = try await api.correct(m, line: line, to: to)
+      overview = overview.map { o in
+        var o = o
+        o.meetings = o.meetings.map { var x = $0; if x.minutes?.ref == fixed.ref && fixed.source == "meeting" { x.minutes = fixed }; return x }
+        o.notes = o.notes.map { var x = $0; if x.minutes?.ref == fixed.ref && fixed.source == "note" { x.minutes = fixed }; return x }
+        return o
+      }
+    } catch {
+      self.error = (error as? KitError)?.errorDescription ?? "That did not save."
     }
   }
 }
@@ -85,6 +119,95 @@ enum KitRecent: Identifiable, Equatable {
     case .meeting(let m): m.at
     case .note(let n): n.at
     }
+  }
+  var end: Date {
+    switch self {
+    case .meeting(let m): m.at.addingTimeInterval(TimeInterval(m.seconds))
+    case .note(let n): n.at
+    }
+  }
+  var minutes: KitMinutes? {
+    switch self {
+    case .meeting(let m): m.minutes
+    case .note(let n): n.minutes
+    }
+  }
+  var isMeeting: Bool { if case .meeting = self { return true }; return false }
+}
+
+// MARK: what Kit took from a call
+
+/// "From this call": Decided, To be decided, Kit will do. A tap on a line moves it between Decided
+/// and To be decided, or removes it; the server keeps the change, marked as his.
+struct KitRecap: View {
+  var title: String
+  var when: String? = nil
+  var minutes: KitMinutes?
+  var writing = false
+  var correct: (KitMinutes, String, KitMinutes.Move) async -> Void
+  @Environment(\.kitStill) private var still
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: Space.m) {
+      HStack(alignment: .firstTextBaseline) {
+        Text(title).font(OlaFont.sans(Metrics.ui, .semibold)).foregroundStyle(Ola.ink)
+        Spacer()
+        if let when { Text(when).font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.ink3) }
+      }
+      if let m = minutes {
+        if m.isEmpty {
+          Text("Nothing decided, open or to do.").font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.ink3)
+        } else {
+          group("Decided", m.decided, m, move: .toDecide, moveLabel: "Not decided yet", mark: "checkmark.circle.fill", markColor: Ola.leaf)
+          group("To be decided", m.toDecide, m, move: .decided, moveLabel: "It's decided", mark: "circle.dashed", markColor: Ola.ink3)
+          group("Kit will do", m.kitWillDo, m, move: nil, moveLabel: "", mark: "arrow.right.circle", markColor: Ola.blue)
+        }
+      } else if writing {
+        Text("Kit is writing it up.").font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.ink3)
+      }
+    }
+    .padding(Space.l)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .background(RoundedRectangle(cornerRadius: 14).fill(Ola.field))
+    .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(Ola.ruleStrong, lineWidth: 1))
+  }
+
+  @ViewBuilder
+  func group(_ name: String, _ lines: [KitMinutes.Line], _ m: KitMinutes, move: KitMinutes.Move?, moveLabel: String, mark: String, markColor: Color) -> some View {
+    if !lines.isEmpty {
+      VStack(alignment: .leading, spacing: Space.s) {
+        Text(name).font(OlaFont.sans(Metrics.meta, .semibold)).foregroundStyle(Ola.ink3)
+        ForEach(lines) { line in
+          if still {
+            label(line, mark: mark, markColor: markColor)
+          } else {
+            Menu {
+              if let move { Button(moveLabel) { Task { await correct(m, line.id, move) } } }
+              Button("Remove", role: .destructive) { Task { await correct(m, line.id, .delete) } }
+            } label: {
+              label(line, mark: mark, markColor: markColor)
+            }
+            .buttonStyle(.plain)
+          }
+        }
+      }
+    }
+  }
+
+  func label(_ line: KitMinutes.Line, mark: String, markColor: Color) -> some View {
+    HStack(alignment: .firstTextBaseline, spacing: Space.s) {
+      Image(systemName: mark).font(.system(size: 12, weight: .semibold)).foregroundStyle(markColor)
+      VStack(alignment: .leading, spacing: 2) {
+        Text(line.text).font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.ink).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
+        if line.byBart {
+          Text("Set by you").font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.ink3)
+        } else if let q = line.quote, !q.isEmpty {
+          Text("You said \u{201C}\(q)\u{201D}").font(OlaFont.serif(Metrics.meta, .italic)).foregroundStyle(Ola.ink3).lineLimit(2)
+        }
+      }
+      Spacer(minLength: 0)
+    }
+    .contentShape(Rectangle())
   }
 }
 
@@ -173,7 +296,7 @@ struct KitRecentRow: View {
     .contentShape(Rectangle())
   }
 
-  var isMeeting: Bool { if case .meeting = item { return true }; return false }
+  var isMeeting: Bool { item.isMeeting }
   var line: String {
     switch item {
     case .meeting(let m): m.firstLine.isEmpty ? "A meeting" : m.firstLine
@@ -522,6 +645,7 @@ struct KitReadScreen: View {
   var api: KitAPI
   var fixtureLines: [KitLine]? = nil
   @State private var lines: [KitLine]?
+  @State private var minutes: KitMinutes?
   @State private var error: String?
   @Environment(\.dismiss) private var dismiss
 
@@ -539,6 +663,13 @@ struct KitReadScreen: View {
       Rectangle().fill(Ola.rule).frame(height: 1)
       KitScroll {
         VStack(alignment: .leading, spacing: Space.l) {
+          if let m = minutes ?? item.minutes {
+            KitRecap(title: item.isMeeting ? "From this call" : "From this note", minutes: m) { m, line, to in
+              guard fixtureLines == nil else { return }
+              do { minutes = try await api.correct(m, line: line, to: to) } catch { self.error = (error as? KitError)?.errorDescription }
+            }
+            .padding(.bottom, Space.s)
+          }
           switch item {
           case .note(let n):
             Text(n.text).font(OlaFont.serif(Metrics.reading)).foregroundStyle(Ola.ink).lineSpacing(Metrics.readingLeading)
@@ -564,7 +695,11 @@ struct KitReadScreen: View {
     .background(Ola.paper.ignoresSafeArea())
     .task {
       guard fixtureLines == nil, case .meeting(let m) = item else { return }
-      do { lines = try await api.meeting(m.id).1 } catch { self.error = (error as? KitError)?.errorDescription ?? "It did not load." }
+      do {
+        let got = try await api.meeting(m.id)
+        lines = got.2
+        if let fresh = got.1 { minutes = fresh }
+      } catch { self.error = (error as? KitError)?.errorDescription ?? "It did not load." }
     }
   }
 

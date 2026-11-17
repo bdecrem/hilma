@@ -11,8 +11,33 @@ public struct KitMeetingSummary: Identifiable, Equatable, Sendable {
   public var seconds: Int
   public var firstLine: String
   public var turns: Int
-  public init(id: String, at: Date, seconds: Int, firstLine: String, turns: Int) {
-    self.id = id; self.at = at; self.seconds = seconds; self.firstLine = firstLine; self.turns = turns
+  public var minutes: KitMinutes?
+  public init(id: String, at: Date, seconds: Int, firstLine: String, turns: Int, minutes: KitMinutes? = nil) {
+    self.id = id; self.at = at; self.seconds = seconds; self.firstLine = firstLine; self.turns = turns; self.minutes = minutes
+  }
+}
+
+/// What Kit took from a call or a note (hilma's src/lib/venture/minutes.ts): what Bart decided (only
+/// what he confirmed), what is still to decide, what Kit will do. He can correct it.
+public struct KitMinutes: Equatable, Sendable {
+  public struct Line: Identifiable, Equatable, Sendable {
+    public var id: String
+    public var text: String
+    public var quote: String?
+    /// Bart set this line himself (moved it on the phone).
+    public var byBart: Bool
+    public init(id: String, text: String, quote: String? = nil, byBart: Bool = false) { self.id = id; self.text = text; self.quote = quote; self.byBart = byBart }
+  }
+  public enum Move: String, Sendable { case decided, toDecide = "to_decide", delete }
+  public var source: String
+  public var ref: String
+  public var summary: String
+  public var decided: [Line]
+  public var toDecide: [Line]
+  public var kitWillDo: [Line]
+  public var isEmpty: Bool { decided.isEmpty && toDecide.isEmpty && kitWillDo.isEmpty }
+  public init(source: String, ref: String, summary: String, decided: [Line], toDecide: [Line], kitWillDo: [Line]) {
+    self.source = source; self.ref = ref; self.summary = summary; self.decided = decided; self.toDecide = toDecide; self.kitWillDo = kitWillDo
   }
 }
 
@@ -22,7 +47,8 @@ public struct KitNote: Identifiable, Equatable, Sendable {
   public var at: Date
   /// Kit's session has read it.
   public var read: Bool
-  public init(id: Int, text: String, at: Date, read: Bool) { self.id = id; self.text = text; self.at = at; self.read = read }
+  public var minutes: KitMinutes?
+  public init(id: Int, text: String, at: Date, read: Bool, minutes: KitMinutes? = nil) { self.id = id; self.text = text; self.at = at; self.read = read; self.minutes = minutes }
 }
 
 public struct KitOverview: Equatable, Sendable {
@@ -104,13 +130,20 @@ public struct KitAPI: KitService {
     _ = try await call("POST", "api/venture/phone/meeting/\(id)", json: .object(["seconds": .number(Double(seconds)), "reason": .string(reason.rawValue)]))
   }
 
-  public func meeting(_ id: String) async throws -> (KitMeetingSummary?, [KitLine]) {
+  /// Bart moves a line between Decided and To be decided, or removes it.
+  public func correct(_ m: KitMinutes, line: String, to: KitMinutes.Move) async throws -> KitMinutes {
+    let j = try await call("POST", "api/venture/phone/minutes", json: .object(["source": .string(m.source), "ref": .string(m.ref), "id": .string(line), "to": .string(to.rawValue)]))
+    guard let out = Self.minutes(j["minutes"]) else { throw KitError.refused("That did not save. Try again.") }
+    return out
+  }
+
+  public func meeting(_ id: String) async throws -> (KitMeetingSummary?, KitMinutes?, [KitLine]) {
     let j = try await call("GET", "api/venture/phone/meeting/\(id)")
     let lines = j["turns"].array.enumerated().compactMap { i, t -> KitLine? in
       guard let who = t["who"].string.flatMap(KitLine.Who.init), let text = t["text"].string else { return nil }
       return KitLine(id: i, who: who, text: text)
     }
-    return (Self.summary(j["meeting"]), lines)
+    return (Self.summary(j["meeting"]), Self.minutes(j["minutes"]), lines)
   }
 
   /// One recorded note (AAC in an .m4a file, what AVAudioRecorder writes).
@@ -152,12 +185,23 @@ public struct KitAPI: KitService {
 
   static func summary(_ j: JSON) -> KitMeetingSummary? {
     guard let id = j["id"].string, let at = j["at"].string.flatMap(kitDate) else { return nil }
-    return KitMeetingSummary(id: id, at: at, seconds: j["seconds"].int ?? 0, firstLine: j["first_line"].str, turns: j["turns"].int ?? 0)
+    return KitMeetingSummary(id: id, at: at, seconds: j["seconds"].int ?? 0, firstLine: j["first_line"].str, turns: j["turns"].int ?? 0, minutes: minutes(j["minutes"]))
   }
 
   static func note(_ j: JSON) -> KitNote? {
     guard let id = j["id"].int, let text = j["text"].string, let at = j["at"].string.flatMap(kitDate) else { return nil }
-    return KitNote(id: id, text: text, at: at, read: j["read"].bool ?? false)
+    return KitNote(id: id, text: text, at: at, read: j["read"].bool ?? false, minutes: minutes(j["minutes"]))
+  }
+
+  static func minutes(_ j: JSON) -> KitMinutes? {
+    guard let source = j["source"].string, let ref = j["ref"].string else { return nil }
+    func lines(_ k: String) -> [KitMinutes.Line] {
+      j[k].array.compactMap { x in
+        guard let id = x["id"].string, let text = x["text"].string else { return nil }
+        return KitMinutes.Line(id: id, text: text, quote: x["quote"].string, byBart: x["by"].string == "bart")
+      }
+    }
+    return KitMinutes(source: source, ref: ref, summary: j["summary"].str, decided: lines("decided"), toDecide: lines("to_decide"), kitWillDo: lines("kit_will_do"))
   }
 }
 
