@@ -1,0 +1,94 @@
+# Bart's Ola apps. `xcodegen generate` makes Ola.xcodeproj (not committed); this file is the truth.
+name: Ola
+options:
+  bundleIdPrefix: cx.ola
+  deploymentTarget:
+    macOS: "14.0"
+    iOS: "17.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    DEVELOPMENT_TEAM: 274T5WCVD2
+    MARKETING_VERSION: "0.1"
+    CURRENT_PROJECT_VERSION: "1"
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS: NO
+packages:
+  OlaKit:
+    path: OlaKit
+targets:
+  OlaMac:
+    type: application
+    platform: macOS
+    sources:
+      - Mac
+      - path: Shared
+        excludes: ["Fonts/*.txt"]
+    dependencies:
+      - package: OlaKit
+    info:
+      path: Mac/Info.plist
+      properties:
+        CFBundleDisplayName: Ola
+        CFBundleName: Ola
+        LSApplicationCategoryType: public.app-category.developer-tools
+        NSHumanReadableCopyright: Made for Bart, 2026.
+        # The machine is reached over Tailscale by plain HTTP (the tailnet encrypts it).
+        # Plain HTTP is allowed only to local addresses and to Tailscale names (*.ts.net).
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+          NSExceptionDomains:
+            ts.net:
+              NSIncludesSubdomains: true
+              NSExceptionAllowsInsecureHTTPLoads: true
+    settings:
+      base:
+        PRODUCT_NAME: Ola
+        PRODUCT_BUNDLE_IDENTIFIER: cx.ola.mac
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CODE_SIGN_STYLE: Automatic
+        ENABLE_HARDENED_RUNTIME: NO
+        COMBINE_HIDPI_IMAGES: YES
+  OlaPhone:
+    type: application
+    platform: iOS
+    sources:
+      - iOS
+      - path: Shared
+        excludes: ["Fonts/*.txt"]
+    dependencies:
+      - package: OlaKit
+    info:
+      path: iOS/Info.plist
+      properties:
+        CFBundleDisplayName: Ola
+        UILaunchScreen:
+          UIColorName: ""
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        UISupportedInterfaceOrientations~ipad: [UIInterfaceOrientationPortrait, UIInterfaceOrientationPortraitUpsideDown, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        NSLocalNetworkUsageDescription: Ola talks to your own machine over your private network.
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+          NSExceptionDomains:
+            ts.net:
+              NSIncludesSubdomains: true
+              NSExceptionAllowsInsecureHTTPLoads: true
+    settings:
+      base:
+        PRODUCT_NAME: Ola
+        PRODUCT_BUNDLE_IDENTIFIER: cx.ola.phone
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CODE_SIGN_STYLE: Automatic
+        TARGETED_DEVICE_FAMILY: "1"
+schemes:
+  OlaMac:
+    build:
+      targets:
+        OlaMac: all
+  OlaPhone:
+    build:
+      targets:
+        OlaPhone: all
