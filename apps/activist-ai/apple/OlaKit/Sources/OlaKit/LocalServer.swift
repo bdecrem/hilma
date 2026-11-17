@@ -27,6 +27,8 @@ public final class LocalServer: @unchecked Sendable {
   public private(set) var port: Int
   /// Where opencode keeps its config, sessions and caches (default: Application Support/Ola/local).
   public var stateBase: URL?
+  /// For checks: a different HOME and the like for the child only.
+  public var extraEnvironment: [String: String] = [:]
   private var process: Process?
   private var pidFile: URL?
   public private(set) var log = ""
@@ -112,6 +114,7 @@ public final class LocalServer: @unchecked Sendable {
         { "action": "webfetch", "resource": "*", "effect": "ask" },
         { "action": "websearch", "resource": "*", "effect": "ask" },
         { "action": "external_directory", "resource": "*", "effect": "deny" },
+        { "action": "skill", "resource": "*", "effect": "deny" },
     \(deny)
       ]
     }
@@ -150,6 +153,13 @@ public final class LocalServer: @unchecked Sendable {
     env["XDG_STATE_HOME"] = base.appendingPathComponent("state").path
     env["XDG_CACHE_HOME"] = base.appendingPathComponent("cache").path
     env["OPENCODE_PASSWORD"] = password
+    // Nothing from other tools: opencode otherwise reads Claude Code's skills, agents and
+    // CLAUDE.md from the home folder (2026-11-16: it loaded the algorithmic-art and
+    // web-artifacts-builder skills from ~/.claude/skills/synced into a run on Bart's Mac), and a
+    // project's own opencode config could loosen the permissions. The project's AGENTS.md stays.
+    env["OPENCODE_DISABLE_CLAUDE_CODE"] = "1"
+    env["OPENCODE_DISABLE_PROJECT_CONFIG"] = "1"
+    for (k, v) in extraEnvironment { env[k] = v }
     env["OLA_GATEWAY_TOKEN"] = modelToken
     p.environment = env
     let pipe = Pipe()

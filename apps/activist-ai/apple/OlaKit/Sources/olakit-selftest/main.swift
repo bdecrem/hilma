@@ -40,6 +40,17 @@ if env["OLA_PUSH_SEND"] == "1" {
   exit(ok ? 0 : 1)
 }
 
+if env["OLA_SKILLS_CHECK"] == "1" {
+  guard let tf = env["OLA_MODEL_TOKEN_FILE"], let token = try? String(contentsOfFile: tf, encoding: .utf8).trimmingCharacters(in: .whitespacesAndNewlines) else { print("set OLA_MODEL_TOKEN_FILE"); exit(2) }
+  var bad = 0
+  await SkillsCheck.go(token: token) { ok, what, note in
+    if !ok { bad += 1 }
+    print("\(ok ? "PASS" : "FAIL")  \(what)\(note.isEmpty ? "" : "  (\(note))")")
+  }
+  print(bad == 0 ? "ALL PASSED" : "\(bad) FAILED")
+  exit(bad == 0 ? 0 : 1)
+}
+
 if env["OLA_CLAUDE"] == "1" {
   var bad = 0
   _ = await ClaudeCheck.go { ok, what, note in

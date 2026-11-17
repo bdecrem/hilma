@@ -191,6 +191,19 @@ with no scripts or loads), then name, kind and View for the rest (four, then "an
 pages in the page viewer, websites in the in-app browser (phone) or the browser (Mac), pictures full
 size with zoom, tables as a table, Markdown and text rendered, anything else in Quick Look.
 
+## Ola ignores other tools' skills (2026-11-16)
+
+On Bart's Mac, a request for an abstract painting loaded Claude's `algorithmic-art` and
+`web-artifacts-builder` skills from `~/.claude/skills/synced/…` (read from the local session database):
+opencode 2.3.0 reads Claude Code's skills, agents and `CLAUDE.md` unless `OPENCODE_DISABLE_CLAUDE_CODE`
+is set, and a project's own opencode config unless `OPENCODE_DISABLE_PROJECT_CONFIG` is. Both servers
+(the local one the Mac app starts, and `bart/ola-bart.sh` on the machine) now set both, run with their
+own config folder (`XDG_CONFIG_HOME`, so no `~/.config/opencode` agents, commands or AGENTS.md), and
+deny the `skill` tool. What stays: the project's own `AGENTS.md` and its files. Proof:
+`OLA_SKILLS_CHECK=1 OLA_MODEL_TOKEN_FILE=<file> swift run olakit-selftest` plants skills that say
+"write HIJACKED" where Bart's are, in a temporary home folder, and asks once for "a simple abstract
+painting": no skill offered or loaded, no HIJACKED, `abstract-painting.svg` made (4 of 4).
+
 ## Where Ola works (Mac Settings)
 
 One setting for the whole app:

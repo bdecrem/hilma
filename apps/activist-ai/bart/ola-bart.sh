@@ -132,6 +132,8 @@ MD
     { "action": "websearch", "resource": "*", "effect": "ask" },
     // Nothing outside ~/ola-bart through the agent's own file tools, for now.
     { "action": "external_directory", "resource": "*", "effect": "deny" },
+    // No skills: opencode can find other tools' skills on the machine.
+    { "action": "skill", "resource": "*", "effect": "deny" },
     // What serves real people on this machine. A command naming any of these is refused
     // before it is even asked about.
     { "action": "shell", "resource": "*GAMI*", "effect": "deny" },
@@ -166,6 +168,9 @@ set -euo pipefail
 export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
 [ "\$(stat -f %Lp "$ENVF")" = 600 ] || { echo "the env file must be mode 600" >&2; exit 1; }
 set -a; . "$ENVF"; set +a
+# Nothing from other tools' skills, agents or CLAUDE.md, and no project config that could loosen
+# the permissions (see apple/README.md, "Ola ignores other tools' skills").
+export OPENCODE_DISABLE_CLAUDE_CODE=1 OPENCODE_DISABLE_PROJECT_CONFIG=1
 export XDG_CONFIG_HOME="$STATE/config" XDG_DATA_HOME="$STATE/data" XDG_STATE_HOME="$STATE/state" XDG_CACHE_HOME="$STATE/cache"
 cd "$PROJECT"
 # Two processes, one job: the forwarder for "On this Mac" mode (model requests from Bart's Mac to
