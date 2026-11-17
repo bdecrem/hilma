@@ -1,8 +1,11 @@
-// Checks the sign-in at app.kochitolabs.com (Kit's page for Bart): the door is
-// shut without a cookie, a wrong passcode is refused, the right one opens the
-// page, the cookie survives a new tab and lasts a year, Sign out shuts it
-// again, and the old address sends you to the new one. Takes pictures of the
-// door and the page at desktop and phone width.
+// Checks app.kochitolabs.com (the board for Bart): the door is shut without a
+// cookie, a wrong passcode is refused, the right one opens the page, the cookie
+// survives a new tab and lasts a year, Sign out shuts it again, and the old
+// address sends you to the new one. Signed in, the board itself (2026-11-17):
+// the project's name, the plate with work in progress, Independence, the plan,
+// Done with today's and yesterday's work (a row opens to its proof), and a
+// status from the mini younger than 30 minutes. Takes pictures of the door and
+// the page at desktop and phone width.
 // Usage: node scripts/venture/app-check.mjs <out-dir> [url]
 //          url defaults to http://localhost:3277/kochito/kit (a dev server);
 //          for the live site pass https://app.kochitolabs.com
@@ -77,6 +80,24 @@ const cookie = (await ctx.cookies()).find((c) => c.name === 'kl_app')
 const days = cookie ? (cookie.expires - Date.now() / 1000) / 86400 : 0
 check(cookie?.httpOnly && days > 360 && (!live || cookie.secure), `the cookie is http-only${live ? ', secure' : ''} and lasts ${Math.round(days)} days`)
 check((await p.locator('a[href*="/venture/memo?k="]').count()) === 1, 'signed in, the voice links carry the key')
+// the board
+check(/\S/.test((await p.locator('h1#project').textContent()) ?? ''), `the project is named at the top: ${(await p.locator('h1#project').textContent())?.trim()}`)
+const plate = await p.locator('#plate .kb-row').count()
+check(plate > 0, `the plate shows ${plate} issue(s)`)
+check((await p.locator('#independence .ko-ind-big').count()) === 1, 'Independence shows today\'s number')
+check((await p.locator('#plan .kb-road-days li').count()) >= 28, 'the plan shows its road')
+for (const day of ['Today', 'Yesterday']) {
+  const box = p.locator('#done details.kb-day', { has: p.locator('.kb-day-name', { hasText: new RegExp(`^${day}`) }) })
+  const n = Number((await box.locator('.kb-day-n').first().textContent().catch(() => '0')) ?? 0)
+  check(n > 0 && (await box.first().getAttribute('open')) !== null, `Done: ${day.toLowerCase()} is open with ${n} item(s)`)
+}
+const first = p.locator('#done .kb-row summary').first()
+await first.click()
+check(await p.locator('#done .kb-row details[open] .kb-detail').first().isVisible(), 'a Done row opens in place to its detail')
+await first.click()
+const fresh = (await p.locator('.kb-live-at dd').textContent())?.trim()
+check((await p.locator('.kb-live.stale').count()) === 0, `the mini's status is fresh (${fresh})`)
+await p.evaluate(() => window.scrollTo(0, 0))
 await shoot(p, 'page')
 
 const tab = await ctx.newPage()

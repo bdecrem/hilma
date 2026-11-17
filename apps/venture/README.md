@@ -175,6 +175,65 @@ source `private/JOURNAL.md` ("## Now", "## Waiting on you", then one "## day"
 section per day with `- **time** what`), so it changes with a `sync.mjs push`
 and no deploy.
 
+### The board, built around Ola, and the issue tracker (2026-11-17)
+
+Bart: "reorganize app.kochitolabs.com, to center the project, OLA ... make it a
+better more useful dashboard", "make sure it is updated at least every few
+hours", and "there should be the equivalent of an issue tracker so i can see
+everything that was done yesterday". The page now reads, top to bottom: the
+project (its name, the first sentence of the journal's Now, when Kit last wrote,
+and the mini's live readout), **On the plate** (doing, next up, waiting on you),
+**Independence**, **The plan** (the 30-day plan as a road of days, with what was
+done each day), **Done** (the tracker by day, today and yesterday open, search
+and filters, each item opens to its proof and commits, Kit's day notes folded
+under each day), Decided and To be decided, Numbers and the live status, and
+the voice links. Code: `src/lib/venture/board.ts` (everything it reads),
+`src/app/kochito/kit/Board.tsx`, `Done.tsx`, `IssueRow.tsx`; the design note is
+the board's section in `src/app/kochito/company.css`. To design with made-up
+data, `next dev` and `/kochito/kit/mock` (`?v=b` is the front-page layout that
+lost to the rail), pictures with `node scripts/venture/board-shots.mjs`.
+
+**The issue tracker** is the record of work and the source of the plate (the
+journal's "On my plate" is no longer read by anything; the journal keeps Now,
+Decided, To be decided, Check-in list and the day notes). Tables
+`venture_issues` and `venture_commits`, `schema/011_issues.sql`, applied
+2026-11-17 through the Supabase management API with the ops vault's token:
+
+    ( set -a; . ~/.config/ops/vault.env; set +a; python3 -c 'import json,sys; print(json.dumps({"query": open(sys.argv[1]).read()}))' apps/venture/schema/011_issues.sql | curl -s -X POST https://api.supabase.com/v1/projects/tqniseocczttrfwtpbdr/database/query -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" -H 'Content-Type: application/json' --data-binary @- )
+
+The lead and every builder keep it current with `scripts/venture/issues.mjs`:
+
+    node scripts/venture/issues.mjs add "The web app's sign-in fails in Safari" --area web --pri P0 --what "why" --start
+    node scripts/venture/issues.mjs start OLA-142 --who builder-2
+    node scripts/venture/issues.mjs done OLA-142 --proof "402 checks" --commit 1a2b3c4
+    node scripts/venture/issues.mjs wait OLA-143          # waiting on Bart
+    node scripts/venture/issues.mjs list --day yesterday   # or today, 2026-11-16; --status, --area
+    node scripts/venture/issues.mjs plate | unsorted | show OLA-142 | place <sha> <OLA-n|none>
+
+Titles are for Bart, in plain words, never internal names (say the model
+connection, sign-in, a project's sealed box, the practice copy on the mini).
+Areas: web, apps, model, security, ops, voice, design, board. **Commits find
+their issue by themselves**: put `[OLA-142]` in the subject or body. The cron
+`/api/venture/commits/sync` (Vercel, every 30 minutes, no token: the repo is
+public) files new commits on main; an Ola commit that names no issue shows on
+the board as "Unsorted commits" until the lead places it. November 15 to 17
+were backfilled from the commits and the journal (OLA-1 to OLA-76 done, OLA-77
+onward the plate as of that morning).
+
+**Freshness.** The mini's alarm (`apps/activist-ai/ops/watch.mjs`) also pushes
+a compact status every 10 minutes to `/api/venture/status` (venture_state
+`ola_status`); the board marks it stale after 30 minutes. It goes live on the
+mini with the next deploy of the practice copy (`node ops/ola.mjs deploy`, from
+`~/ola-staging`). The narrative is Kit's: the header says when Kit last wrote,
+and when that is more than three hours ago between 7 am and 11 pm Pacific, the
+runner wakes with "the board is stale" and refreshes the journal from the
+tracker, the commits and the status (`runner.mjs`, `runner/PROMPT.md`). The
+runner picks this up after its checkout pulls; to load it at once:
+`ssh admin@100.95.51.98 'cd ~/hilma-venture && git pull --ff-only && launchctl kickstart -k gui/501/sh.venture.runner'`.
+`node scripts/venture/app-check.mjs <dir> https://app.kochitolabs.com` checks
+the sign-in and the board (plate, Independence, the road, today's and
+yesterday's Done, a fresh status).
+
 ## Kit in the Ola iPhone app: voice meetings and notes (2026-11-17)
 
 Bart: "proper full duplex voice meetings with you or leave you voice notes",
