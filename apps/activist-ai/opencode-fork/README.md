@@ -54,10 +54,9 @@ the app (self-tests, `swift run`).
 - **The signed download.** Under the hardened runtime a Bun program needs entitlements of its own
   (`apple/Mac/OlaOpencode.entitlements`: JIT, unsigned executable memory, library validation off). The ship
   script signs each program with them before it signs the app, and after the Developer ID export checks that
-  each still has the hardened runtime and the entitlements and that this Mac's one starts. Signed that way
-  by hand with the development identity the program starts and draws (2026-11-17); the Developer ID export
-  and notarization with the programs inside have not been run yet: the first `ship-via-mini.sh mac` is the
-  proof.
+  each still has the hardened runtime and the entitlements and that this Mac's one starts. Proven with
+  0.1 (3) on 2026-11-17: the Developer ID export kept the entitlements, Apple notarized and stapled the app
+  and the disk image, no workaround. The disk image is 233 MB with the two programs inside.
 - `apple/tools/cli-selftest.sh <Ola.app>` passes against a build that carries it (21 of 21, 2026-11-17).
 
 ## The daily check
