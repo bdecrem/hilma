@@ -3,7 +3,7 @@
 // code runs in the page (inside a Solid store's `produce`) and in the tests against recorded
 // events (test/fixtures/*.jsonl). The event shapes are opencode 2.3.0's V2 events.
 import type { Approval, Problem, Step, Turn } from './types.ts'
-import { describeApproval, describeResult, describeTool, runProblem, shellFailed, stepProblem } from './steps.ts'
+import { claudeTool, describeApproval, describeClaudeApproval, describeClaudeTool, describeResult, describeTool, runProblem, shellFailed, stepProblem, STUCK_WORDS } from './steps.ts'
 
 export interface ConversationState {
   sessionID: string | null
@@ -90,7 +90,8 @@ export function applyEvent(state: ConversationState, ev: LooseEvent): boolean {
     return true
   }
   const turn = current(state)
-  if (!turn || !d.sessionID) return false
+  // A Claude turn is fed by its own run (applyClaudeEvent), never by opencode's stream.
+  if (!turn || !d.sessionID || turn.engine === 'claude') return false
   switch (ev.type) {
     case 'session.inbox.delivered':
     case 'session.execution.started':
@@ -265,6 +266,137 @@ export function turnsFromMessages(messages: any[], directory: string | null): Tu
     }
   }
   return turns
+}
+
+// ---------------------------------------------------------------- Claude Code (Fallback to Claude)
+//
+// A Claude turn is fed by the front desk's NDJSON (frontdesk/claude.mjs): its own lines
+// ({ola: 'started' | 'approval' | 'answered' | 'ended'}) and Claude Code's stream-json events,
+// typed and capped there (system/init, system/api_retry, assistant, user, result). The same Turn
+// and Step shapes as Ola's, so the drawer draws both alike; the turn is marked engine 'claude'.
+
+export interface ClaudeEvent {
+  ola?: string
+  type?: string
+  [k: string]: any
+}
+
+export function startClaudeTurn(state: ConversationState, request: string, at = Date.now(), handoff: string | null = null): Turn {
+  const turn = startTurn(state, request, at)
+  turn.id = `claude-${at}`
+  turn.engine = 'claude'
+  turn.run = null
+  turn.handoff = handoff
+  return turn
+}
+
+/** Folds one line of a Claude run into its turn (and the conversation's approval). */
+export function applyClaudeEvent(state: ConversationState, turn: Turn, ev: ClaudeEvent, at = Date.now()): boolean {
+  if (ev.ola === 'started') {
+    turn.run = typeof ev.run === 'string' ? ev.run : turn.run
+    if (turn.status === 'sending') turn.status = 'working'
+    return true
+  }
+  if (ev.ola === 'approval') {
+    const words = describeClaudeApproval(String(ev.tool_name ?? ''), ev.input ?? {}, '/work')
+    state.approval = { id: String(ev.request_id), sessionID: turn.run ?? '', engine: 'claude', run: turn.run ?? undefined, action: words.action, title: words.title, items: words.items, stepID: ev.tool_use_id ?? null }
+    const step = ev.tool_use_id ? stepFor(turn, ev.tool_use_id) : undefined
+    if (step) step.status = 'waiting'
+    return true
+  }
+  if (ev.ola === 'answered') {
+    if (state.approval?.id === ev.request_id) state.approval = null
+    const step = turn.steps.find((s) => s.status === 'waiting')
+    if (step) {
+      if (ev.decision === 'reject') {
+        step.status = 'failed'
+        step.error = 'You said no, so Claude did not do this.'
+        step.ended = at
+      } else step.status = 'running'
+    }
+    return true
+  }
+  if (ev.ola === 'ended') {
+    if (state.approval?.engine === 'claude') state.approval = null
+    turn.ended = at
+    turn.notice = null
+    if (ev.reason === 'done') turn.status = 'done'
+    else if (ev.reason === 'stopped') turn.status = 'stopped'
+    else if (ev.reason === 'ceiling') {
+      turn.status = 'stopped'
+      turn.error = { text: String(ev.message ?? 'Claude was stopped at the longest one request may run.'), detail: 'stopped at the run limit' }
+    } else {
+      turn.status = 'failed'
+      if (!turn.error) turn.error = { text: String(ev.message ?? 'Claude stopped before it finished.'), detail: `ended: ${ev.reason}` }
+    }
+    settleSteps(turn, at)
+    return true
+  }
+  if (turn.status === 'sending') turn.status = 'working'
+  if (ev.type === 'system' && ev.subtype === 'api_retry') {
+    const secs = Math.round((Number(ev.retry_delay_ms) || 0) / 1000)
+    turn.notice = `Claude did not answer. Trying again${secs ? ` in ${secs} s` : ''} (attempt ${(Number(ev.attempt) || 1) + 1}).`
+    return true
+  }
+  if (ev.type === 'assistant') {
+    turn.notice = null
+    for (const c of ev.message?.content ?? []) {
+      if (c.type === 'text' && String(c.text ?? '').trim()) {
+        if (turn.answer.trim()) turn.notes.push(turn.answer.trim())
+        turn.answer = String(c.text)
+      } else if (c.type === 'tool_use' && !stepFor(turn, c.id)) {
+        const input = c.input ?? {}
+        const tool = claudeTool(String(c.name ?? ''))
+        turn.steps.push({ id: String(c.id), tool, ...describeClaudeTool(String(c.name ?? ''), input, '/work'), result: null, status: 'running', error: null, detail: { input: tool === 'shell' ? String(input.command ?? '') : pretty(input), output: '' }, started: at, ended: null })
+      }
+    }
+    return true
+  }
+  if (ev.type === 'user') {
+    for (const c of ev.message?.content ?? []) {
+      if (c.type !== 'tool_result') continue
+      const step = stepFor(turn, c.tool_use_id)
+      if (!step || step.status === 'done' || (step.status === 'failed' && step.ended)) continue
+      const output = String(c.content ?? '')
+      finishStep(step, !c.is_error, at, output, undefined, c.is_error ? stepProblem({ message: output }) : null)
+    }
+    return true
+  }
+  if (ev.type === 'result') {
+    if (ev.is_error && !turn.error) turn.error = { text: firstSentence(String(ev.result ?? '')) || 'Claude stopped before it finished.', detail: `result: ${ev.subtype ?? ''}` }
+    else if (!turn.answer.trim() && ev.result) turn.answer = String(ev.result)
+    return true
+  }
+  return false
+}
+const firstSentence = (s: string) => (s.split('\n').find((l) => l.trim()) ?? '').slice(0, 200)
+
+/** A Claude run from its record in the project (GET /api/claude/turns), as a turn. */
+export function turnFromClaudeRun(r: { run: string; at: number; request: string; why: string; events: ClaudeEvent[]; active: boolean }): Turn {
+  const s = emptyConversation()
+  const turn = startClaudeTurn(s, r.request, r.at, r.why === 'stuck' ? 'Ola got stuck, so Claude tried the same request.' : r.why === 'always' ? STUCK_WORDS.always : null)
+  turn.id = `claude-${r.run}`
+  turn.run = r.run
+  turn.status = 'working'
+  for (const e of r.events) applyClaudeEvent(s, turn, e, r.at)
+  if (!r.active) {
+    const result = [...r.events].reverse().find((e) => e.type === 'result')
+    applyClaudeEvent(s, turn, { ola: 'ended', reason: result ? (result.is_error ? 'failed' : 'done') : 'stopped' }, r.at)
+  }
+  return turn
+}
+
+/** The conversation so far, as plain text for Claude (newest kept when it is long). */
+export function contextOf(turns: Turn[], max = 24_000): string {
+  const parts = turns
+    .filter((t) => t.status !== 'sending' && t.status !== 'working')
+    .map((t) => `The person asked: ${t.request}\n${t.engine === 'claude' ? 'Claude' : 'Ola'} answered: ${t.answer.trim() || (t.error ? `(it stopped: ${t.error.text})` : '(no answer)')}`)
+  let out = ''
+  for (let i = parts.length - 1; i >= 0; i--) {
+    if (out.length + parts[i].length + 2 > max) break
+    out = `${parts[i]}\n\n${out}`
+  }
+  return out.trim()
 }
 
 /** "Worked for 1 min 48 s · 6 steps · changed 3 files" */

@@ -25,6 +25,7 @@ import { DatabaseSync } from 'node:sqlite'
 import { fileURLToPath } from 'node:url'
 import { chromium } from 'playwright'
 import { startFakeModel } from '../web/server/fake-model.mjs'
+import { startFakeAnthropic } from '../web/server/fake-anthropic.mjs'
 import { ALLOWED } from '../web/server/proxy.mjs'
 import { SoftAuthn } from './review/softauthn.mjs'
 
@@ -60,6 +61,7 @@ const env = {
   OLA_FD_MAX_UPLOAD_MB: '2',
   OLA_FD_WORKING_WINDOW_S: '4', // "people working" changes once per window; 4 s so the check can watch it
   OLA_FD_SLOW_MS: '4000', // a download must move 32 KiB per window; 4 s here (30 s by default) so the check can watch it
+  OLA_FD_GATEWAY_USAGE_TOKEN: randomBytes(24).toString('hex'), // Fallback to Claude: the front desk asks the gateway with it
 }
 const node = (script, argv, opts = {}) => spawnSync(process.execPath, [path.join(AI, script), ...argv], { env, encoding: 'utf8', ...opts })
 const admin = (...a) => {
@@ -164,6 +166,8 @@ admin('create-workspace', FB, '--name', 'Made-up wage survey', '--team', 'team-b
 admin('add-member', 'team-a', 'vera', 'viewer')
 const fake = await startFakeModel()
 fake.server.unref()
+const fakeClaude = await startFakeAnthropic()
+fakeClaude.server.unref()
 const FAKE_UP = { UPSTREAM_BASE_URL: `http://127.0.0.1:${fake.port}/v1`, UPSTREAM_API_KEY: 'fake-model-key-not-a-secret', GATEWAY_MODELS: 'general=fake' }
 const gwEnv = {
   HOME: homedir(),
@@ -173,6 +177,12 @@ const gwEnv = {
   GATEWAY_DOOR_DIR: path.join(env.OLA_HOME, 'gw'),
   GATEWAY_PORT: String(GW_PORT),
   GATEWAY_DB: path.join(run, 'usage.db'),
+  // Fallback to Claude against a scripted Anthropic (web/server/fake-anthropic.mjs): the grants
+  // file the front desk writes, a made-up API key, and the usage token the front desk asks with.
+  GATEWAY_CLAUDE_FILE: path.join(env.OLA_HOME, 'gateway-claude'),
+  GATEWAY_CLAUDE_UPSTREAM: fakeClaude.url,
+  CLAUDE_API_KEY: 'sk-made-up-key-for-the-stand-in-0000',
+  GATEWAY_USAGE_TOKEN: env.OLA_FD_GATEWAY_USAGE_TOKEN,
 }
 let gateway = start('gateway', 'gateway/server.mjs', gwEnv)
 await until(() => gateway.log.includes('"event":"start"'), 10_000, 'the gateway start')
@@ -973,6 +983,123 @@ await check('"people working" is one number per whole window, all teams, never w
   const m = (await api('/api/project', { cookie: a.cookie, ws: FA })).json.machine
   assert(n1 === 3 && n2 === 3 && m.working === 2 && Object.keys(m).sort().join() === 'capacity,working' && m.capacity === 4, `windows: ${n1}, then ${n2} after bob's request, then ${JSON.stringify(m)}`)
   return `${n1} for the window of three people; still ${n2} after bob's request mid-window; ${m.working} at the next window`
+})
+
+// ---------------------------------------------------------------- Fallback to Claude
+// Claude Code itself, inside alice's sealed VM, through her door and this suite's gateway, to a
+// scripted Anthropic (no model call, no credential). alice owns team-a and is not an admin, so her
+// project is in API-key mode; olga (an admin) shows the subscription mode.
+const grantsFile = () => JSON.parse(readFileSync(path.join(env.OLA_HOME, 'gateway-claude'), 'utf8'))
+/** POST /api/claude/run as a person, read to its end: the NDJSON lines; answers approvals with `decide`. */
+async function claudeRun(who, body, { decide = null, onStarted = null } = {}) {
+  const r = await fetch(`${ORIGIN}/api/claude/run`, { method: 'POST', headers: { cookie: `${CK}=${who.cookie}`, 'x-ola-csrf': who.csrf, 'x-ola-workspace': FA, origin: ORIGIN, 'content-type': 'application/json' }, body: JSON.stringify({ context: '', conversation: 'ses_check1', autonomy: 'go', why: 'asked', ...body }) })
+  if (r.status !== 200) return { status: r.status, json: await r.json().catch(() => null), lines: [] }
+  const lines = []
+  let buf = ''
+  for await (const c of r.body) {
+    buf += Buffer.from(c).toString('utf8')
+    let nl
+    while ((nl = buf.indexOf('\n')) >= 0) {
+      const line = buf.slice(0, nl).trim()
+      buf = buf.slice(nl + 1)
+      if (!line) continue
+      const e = JSON.parse(line)
+      lines.push(e)
+      if (e.ola === 'started' && onStarted) onStarted(e)
+      if (e.ola === 'approval' && decide) await api('/api/claude/answer', { method: 'POST', cookie: who.cookie, csrf: who.csrf, ws: FA, body: JSON.stringify({ run: lines[0].run, request_id: e.request_id, decision: decide }), headers: { 'content-type': 'application/json' } })
+    }
+  }
+  return { status: 200, lines, ended: lines.find((e) => e.ola === 'ended') }
+}
+const inVm = (cmd) => spawnSync(CTR, ['exec', `ola-${FA}`, 'sh', '-c', cmd], { encoding: 'utf8' }).stdout.trim()
+
+await check('Fallback to Claude is off by default; only the owner may turn it on, with consent; the grants file follows', async () => {
+  const i = await api('/api/claude', { cookie: a.cookie, ws: FA })
+  assert(i.status === 200 && i.json.enabled === false && i.json.mode === 'api_key' && i.json.configured === true && i.json.canChange === true, JSON.stringify(i.json))
+  assert(!grantsFile()[`ws-${FA}`], 'a grant before anyone turned it on')
+  const vi = await api('/api/claude', { cookie: v.cookie, ws: FA })
+  assert(vi.json.canChange === false, 'the viewer may change it')
+  const post = (who, body) => api('/api/claude/settings', { method: 'POST', cookie: who.cookie, csrf: who.csrf, ws: FA, body: JSON.stringify(body), headers: { 'content-type': 'application/json' } })
+  assert((await post(v, { enabled: true, consent: true })).status === 403, 'the viewer turned it on')
+  assert((await post(a, { enabled: true })).status === 400, 'on without consent')
+  const on = await post(a, { enabled: true, consent: true })
+  assert(on.status === 200 && on.json.enabled === true, `on: ${on.status}`)
+  const g = grantsFile()[`ws-${FA}`]
+  assert(g?.mode === 'api_key' && g.cap_micro_usd === 25_000_000, `grant: ${JSON.stringify(g)}`)
+  assert((await api('/api/claude/run', { method: 'POST', cookie: v.cookie, csrf: v.csrf, ws: FA, body: '{}', headers: { 'content-type': 'application/json' } })).status === 403, 'the viewer may run Claude')
+  assert(auditRows(FA).some((r) => r.action === 'claude_enabled' && r.actor === 'alice'), 'no claude_enabled row')
+  return 'api_key mode, $25.00 ceiling'
+})
+await check('a request handed to Claude runs Claude Code inside the sealed VM through the gateway, writes its file, and is audited with numbers only', async () => {
+  const r = await claudeRun(a, { request: 'write claude-go.txt saying hi', context: 'The person asked: hello\nOla answered: hello' })
+  assert(r.status === 200 && r.ended?.reason === 'done', `ended: ${JSON.stringify(r.ended ?? r.json)}`)
+  const tools = r.lines.filter((e) => e.type === 'assistant').flatMap((e) => e.message.content.filter((c) => c.type === 'tool_use').map((c) => c.name))
+  assert(tools.includes('Write'), `tools: ${tools}`)
+  assert(inVm('cat /work/claude-go.txt') === 'hi', 'the file is not in /work')
+  const used = auditRows(FA).find((x) => x.action === 'claude_used')
+  const row = new DatabaseSync(path.join(env.OLA_FD_DATA, 'platform.db'), { readOnly: true }).prepare("SELECT tokens_in, tokens_out, cost_micro_usd, name_ref FROM audit WHERE action = 'claude_used' ORDER BY id DESC LIMIT 1").get()
+  assert(used && row.tokens_in > 0 && row.cost_micro_usd > 0 && row.name_ref === null, `audit: ${JSON.stringify(row)}`)
+  const log = gateway.log.split('\n').filter((l) => l.includes('"route":"claude"'))
+  assert(log.length >= 2 && log.every((l) => l.includes(`"caller":"ws-${FA}"`) && !l.includes('claude-go')), `${log.length} gateway lines`)
+  return `${r.lines.length} lines; ${row.tokens_in} tokens in, ${row.tokens_out} out, $${(row.cost_micro_usd / 1e6).toFixed(4)}; ${log.length} gateway requests`
+})
+await check('under "Ask me first" Claude Code stops for a yes: no means no file, yes means the file', async () => {
+  const no = await claudeRun(a, { request: 'write claude-no.txt saying no', autonomy: 'ask' }, { decide: 'reject' })
+  const asked = no.lines.find((e) => e.ola === 'approval')
+  assert(asked?.tool_name === 'Write' && no.ended?.reason === 'done', `no: ${JSON.stringify(asked)} ${JSON.stringify(no.ended)}`)
+  assert(inVm('test -e /work/claude-no.txt && echo there || echo absent') === 'absent', 'the refused file was written')
+  const yes = await claudeRun(a, { request: 'write claude-yes.txt saying yes', autonomy: 'ask' }, { decide: 'once' })
+  assert(yes.lines.some((e) => e.ola === 'answered' && e.decision === 'once') && inVm('cat /work/claude-yes.txt') === 'yes', 'yes did not write the file')
+})
+await check('Stop ends a Claude run inside the VM, and nothing of it keeps running', async () => {
+  let run = null
+  setTimeout(async () => run && (await api('/api/claude/stop', { method: 'POST', cookie: a.cookie, csrf: a.csrf, ws: FA, body: JSON.stringify({ run }), headers: { 'content-type': 'application/json' } })), 6000)
+  const t0 = Date.now()
+  const r = await claudeRun(a, { request: 'slow 40x1000' }, { onStarted: (e) => (run = e.run) })
+  const ms = Date.now() - t0
+  await sleep(1000)
+  const left = inVm(`ls /tmp/ola-claude-${run}.pid 2>/dev/null; for p in /proc/[0-9]*; do tr '\\0' ' ' < $p/cmdline 2>/dev/null | grep -q '^claude ' && echo $p; done`)
+  assert(r.ended?.reason === 'stopped' && ms < 25_000 && !left, `ended ${r.ended?.reason} after ${ms} ms; left: ${left}`)
+  return `stopped after ${Math.round(ms / 1000)} s`
+})
+await check('in the page: the drawer hands a request to Claude, marks the reply, and shows it again after a reload', async () => {
+  await A.page.goto(`${ORIGIN}/?w=${FA}#/`)
+  await A.page.waitForSelector('.project-title', { timeout: 60_000 })
+  await A.page.locator('.askbar-open').click()
+  await A.page.waitForSelector('fieldset.engine', { timeout: 20_000 }).catch(async (e) => {
+    if (SHOTS) await A.page.screenshot({ path: path.join(SHOTS, 'claude-no-engine.png') })
+    const info = await A.page.evaluate(() => fetch('/api/claude', { headers: { 'x-ola-workspace': new URLSearchParams(location.search).get('w') } }).then((r) => r.status + ' ' + r.statusText))
+    throw new Error(`no Ola / Claude choice in the drawer (GET /api/claude from the page: ${info})`)
+  })
+  await A.page.locator('fieldset.engine label', { hasText: 'Claude' }).click()
+  await A.page.fill('#ask-input', 'write page-claude.txt saying yes')
+  await A.page.press('#ask-input', 'Enter')
+  await A.page.waitForFunction(() => ['done', 'failed', 'stopped'].includes([...document.querySelectorAll('.drawer .turn')].pop()?.dataset.status), null, { timeout: 120_000 })
+  const who = (await A.page.locator('.drawer .turn').last().locator('.said-ola .who').innerText()).replace(/\s+/g, ' ').trim()
+  assert(who === 'Claude, outside this machine', `marked: ${who}`)
+  const conv = await A.page.evaluate(() => [...document.querySelectorAll('.earlier button')].length)
+  if (SHOTS) await A.page.screenshot({ path: path.join(SHOTS, 'claude-drawer.png') })
+  // Opening the conversation again (a reload): the Claude turn comes back from its record in the VM.
+  const sessions = await api('/oc/api/session?limit=5&order=desc', { cookie: a.cookie, ws: FA })
+  const id = (sessions.json?.data ?? sessions.json ?? [])[0]?.id
+  await A.page.goto(`${ORIGIN}/?w=${FA}#/?ask=${id}`)
+  await A.page.waitForFunction(() => /outside this machine/.test(document.querySelector('.drawer .turn:last-child .said-ola .who')?.textContent ?? ''), null, { timeout: 30_000 })
+  return `conversation ${id ? 'reopened' : '?'} (${conv} earlier listed)`
+})
+await check('a role change that leaves only admins as owners moves the project to the subscription mode; turning it off removes the grant', async () => {
+  admin('add-person', 'olga', '--name', 'Olga O.', '--admin')
+  admin('add-member', 'team-a', 'olga', 'owner')
+  assert(grantsFile()[`ws-${FA}`]?.mode === 'api_key', 'one owner is not an admin, yet oauth')
+  admin('add-member', 'team-a', 'alice', 'member')
+  assert(grantsFile()[`ws-${FA}`]?.mode === 'oauth', `after alice became a member: ${JSON.stringify(grantsFile())}`)
+  const line = admin('claude', FA)
+  assert(/ON, subscription/.test(line), line)
+  admin('add-member', 'team-a', 'alice', 'owner')
+  const off = await api('/api/claude/settings', { method: 'POST', cookie: a.cookie, csrf: a.csrf, ws: FA, body: JSON.stringify({ enabled: false }), headers: { 'content-type': 'application/json' } })
+  assert(off.status === 200 && !grantsFile()[`ws-${FA}`], 'the grant stayed after it was turned off')
+  const refused = await claudeRun(a, { request: 'write x.txt saying x' })
+  assert(refused.status === 403 && auditRows(FA).some((r) => r.action === 'claude_disabled'), `run after off: ${refused.status}`)
+  return line.split(';')[0]
 })
 
 // ---------------------------------------------------------------- one real request

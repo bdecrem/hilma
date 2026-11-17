@@ -30,6 +30,8 @@ import { audit, nameRef, openDb, loadKeys } from './db.mjs'
 import { addressKey, makeAuth } from './auth.mjs'
 import { makeWorkspaces } from './workspaces.mjs'
 import { makeViews } from './views.mjs'
+import { claudeConfig, makeClaude } from './claude.mjs'
+import { CONTAINER } from '../workspace/ws.mjs'
 import { routeNeed } from '../web/server/proxy.mjs'
 import { tooLargeMessage, validName } from '../web/server/files.mjs'
 import { closeAfter, lingering, readUpTo } from '../web/server/linger.mjs'
@@ -71,6 +73,8 @@ export function config(env = process.env) {
     wakeWaitMs: num('OLA_FD_WAKE_WAIT_MS', 1500, 0, 30_000),
     workingWindowMs: num('OLA_FD_WORKING_WINDOW_S', 300, 2, 3600) * 1000,
     capacity: 4, // workspaces the machine runs at once (ws.mjs MAX_RUNNING)
+    // Fallback to Claude (claude.mjs): the gateway's grants file, its usage token, the ceilings.
+    claude: claudeConfig(env),
     // Shown in the delete confirmation. The product decision: a deleted file leaves the workspace
     // at once and stays in encrypted backups for up to 14 days.
     deleteNotice:
@@ -218,6 +222,7 @@ export function makeFrontDesk(cfg = config()) {
       : undefined
 
   const views = makeViews({ cfg, db, keys, auth, membership, workspaces })
+  const claude = makeClaude({ db, cc: cfg.claude, container: CONTAINER, workspaces, runCeilingMs: cfg.runCeilingMs, log })
 
   const shas = new Map() // `${slug}\0${path}` -> sha256, as ola-files last said
   const MAX_LISTED = 1000
@@ -323,6 +328,35 @@ export function makeFrontDesk(cfg = config()) {
         otherTotal: otherCount(entries, made),
         role: ws.role,
       })
+    }
+    // Fallback to Claude (claude.mjs). Reading the setting: any member. Changing it: an owner.
+    // Running Claude, answering its questions, stopping it: owners and members.
+    if (p === '/api/claude' && req.method === 'GET') return json(res, 200, await claude.info(ws))
+    if (p.startsWith('/api/claude/')) {
+      const what = p.slice('/api/claude/'.length)
+      if (what === 'turns' && req.method === 'GET') {
+        const r = await claude.turns(ws, url.searchParams.get('conversation'))
+        return json(res, r.status, r.body)
+      }
+      if (what === 'follow' && req.method === 'GET') {
+        hold()
+        return claude.follow(ws, url.searchParams.get('run'), res) || json(res, 404, NOT_FOUND)
+      }
+      if (req.method !== 'POST' || !['settings', 'run', 'answer', 'stop'].includes(what)) return json(res, 404, NOT_FOUND)
+      const body = await readJson(req, 160 * 1024)
+      if (!body) return json(res, 400, { error: 'bad_json' })
+      if (what === 'settings') {
+        const r = await claude.setSettings(ws, sess.personId, body)
+        return json(res, r.status, r.body)
+      }
+      if (!canRun) return json(res, 403, readOnly)
+      if (what === 'run') {
+        hold()
+        const r = await claude.start(ws, sess.personId, body, res, req)
+        return r ? json(res, r.status, r.body) : undefined
+      }
+      const r = what === 'answer' ? claude.answer(ws, body) : claude.stop(ws, body.run)
+      return json(res, r.status, r.body)
     }
     // Runs stopped at the ceiling (the page asks when a run is interrupted, to say why), from the
     // front desk's memory: no exec, does not wake the workspace, is not use.
@@ -613,7 +647,7 @@ export function makeFrontDesk(cfg = config()) {
     if (!server.listeners('listening').some((f) => f.name === 'setupConnectionsTracking')) throw new Error('this Node does not start HTTP timeouts on listening; the PROXY protocol mode needs review')
     listener.once('listening', () => server.emit('listening'))
   } else server.on('connection', (sock) => admit(sock, addressKey(sock.remoteAddress)))
-  return { server, listener, db, cfg, workspaces, views, close: () => (workspaces.close(), listener.close(), listener !== server && server.close(), db.close()) }
+  return { server, listener, db, cfg, workspaces, views, claude, close: () => (claude.close(), workspaces.close(), listener.close(), listener !== server && server.close(), db.close()) }
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

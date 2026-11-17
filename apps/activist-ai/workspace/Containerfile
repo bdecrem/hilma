@@ -11,10 +11,14 @@
 # gateway). The host reaches opencode through `container exec` (workspace/desk.mjs), and the
 # root file system is read-only (ws.mjs creates the container with --read-only).
 #
-#   container build -t ola-workspace:2.3.0-6 -f Containerfile .
+#   node ws.mjs image   (builds ola-workspace:2.3.0-7 under a temporary tag, then names it)
 #
 # 2.3.0-6 adds Claude Code (Fallback to Claude, workspace/ola-claude): the Linux arm64 build from
 # npm, pinned by npm's integrity like opencode. It reaches only the door, like opencode.
+# 2.3.0-7: ola-claude speaks stream-json both ways, asks the front desk before a write or a
+# command under "Ask me first" (--permission-prompt-tool stdio), keeps each run's record in
+# /work/.ola/claude-runs, and has `stop` and `log`. The downloads retry and give up on a stalled
+# connection instead of hanging (curl --retry, --speed-limit).
 
 ARG DEBIAN=docker.io/library/debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc
 
@@ -23,7 +27,7 @@ ARG OPENCODE_VERSION=2.3.0
 # npm's own integrity for @opencode/cli-linux-arm64@2.3.0 (registry.npmjs.org, 2026-11-16)
 ARG OPENCODE_SHA512=1IF1NQFD5mdZ7NcU81UifdYAVKEDAP/J07ylbgE4ZATminS7pOn5SOXVzyOkuN1WLcDzXunkju0hw8hug48wTg==
 RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates openssl && rm -rf /var/lib/apt/lists/*
-RUN curl -fsSL -o /tmp/oc.tgz "https://registry.npmjs.org/@opencode/cli-linux-arm64/-/cli-linux-arm64-${OPENCODE_VERSION}.tgz" \
+RUN curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors --connect-timeout 30 --speed-limit 20000 --speed-time 60 -o /tmp/oc.tgz "https://registry.npmjs.org/@opencode/cli-linux-arm64/-/cli-linux-arm64-${OPENCODE_VERSION}.tgz" \
  && got="$(openssl dgst -sha512 -binary /tmp/oc.tgz | openssl base64 -A)" \
  && [ "$got" = "$OPENCODE_SHA512" ] || { echo "opencode tarball integrity mismatch" >&2; exit 1; } \
  && mkdir /tmp/oc && tar -xzf /tmp/oc.tgz -C /tmp/oc \
@@ -31,7 +35,7 @@ RUN curl -fsSL -o /tmp/oc.tgz "https://registry.npmjs.org/@opencode/cli-linux-ar
 ARG CLAUDE_CODE_VERSION=2.1.326
 # npm's own integrity for @anthropic-ai/claude-code-linux-arm64@2.1.326 (registry.npmjs.org, 2026-11-16)
 ARG CLAUDE_CODE_SHA512=lZCCWXarB/1IeHkotI937eEdN4BCbVdWDdmejtlkbUO9M29rHjITtXW9BWCDFlxvo0GXsFogN0SFIJWgMelKLw==
-RUN curl -fsSL -o /tmp/cc.tgz "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-arm64/-/claude-code-linux-arm64-${CLAUDE_CODE_VERSION}.tgz" \
+RUN curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors --connect-timeout 30 --speed-limit 20000 --speed-time 60 -o /tmp/cc.tgz "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-arm64/-/claude-code-linux-arm64-${CLAUDE_CODE_VERSION}.tgz" \
  && got="$(openssl dgst -sha512 -binary /tmp/cc.tgz | openssl base64 -A)" \
  && [ "$got" = "$CLAUDE_CODE_SHA512" ] || { echo "claude code tarball integrity mismatch" >&2; exit 1; } \
  && mkdir /tmp/cc && tar -xzf /tmp/cc.tgz -C /tmp/cc \

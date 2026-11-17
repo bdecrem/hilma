@@ -251,7 +251,9 @@ export function makeClaude({ cfg, db, readBody, send, fail }) {
     if (tally.bytes) add.run(MONTH(), who, g.mode, tally.in, tally.out, tally.cw, tally.cr, cost)
   }
 
-  return { handle, monthOf, scrub, has: (who) => grants.has(who), close: () => timers.forEach(clearInterval) }
+  // Which modes have a credential, for the front desk (through the usage token): true or false only.
+  const modes = () => ({ oauth: Boolean(oauth), api_key: Boolean(cfg.key) })
+  return { handle, monthOf, modes, scrub, has: (who) => grants.has(who), close: () => timers.forEach(clearInterval) }
 }
 
 /** Token counts from one SSE data line or a whole reply (message_start, message_delta, usage). */

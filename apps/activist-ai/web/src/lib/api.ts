@@ -72,6 +72,72 @@ export interface FrontDesk {
 
 const filePath = (path: string) => `/api/files/${path.split('/').map(encodeURIComponent).join('/')}`
 
+// ---------------------------------------------------------------- Fallback to Claude
+export interface ClaudeRunRecord {
+  run: string
+  at: number
+  autonomy: 'go' | 'ask'
+  why: 'asked' | 'stuck' | 'always'
+  request: string
+  events: any[]
+  active: boolean
+}
+
+/** Reads an NDJSON reply line by line until it ends (or the signal aborts). */
+async function ndjson(res: Response, onEvent: (e: any) => void): Promise<void> {
+  const reader = res.body!.pipeThrough(new TextDecoderStream()).getReader()
+  let buf = ''
+  for (;;) {
+    const { value, done } = await reader.read()
+    if (done) break
+    buf += value
+    let nl
+    while ((nl = buf.indexOf('\n')) >= 0) {
+      const line = buf.slice(0, nl)
+      buf = buf.slice(nl + 1)
+      if (!line.trim()) continue
+      let e
+      try {
+        e = JSON.parse(line)
+      } catch {
+        continue // a line that is not JSON is not ours
+      }
+      try {
+        onEvent(e)
+      } catch (err) {
+        console.error('ola: a Claude event could not be shown', err)
+      }
+    }
+  }
+}
+async function stream(path: string, init: RequestInit, onEvent: (e: any) => void): Promise<void> {
+  let res: Response
+  try {
+    res = await fetch(path, { ...init, credentials: 'same-origin', headers: { accept: 'application/x-ndjson', ...deskHeaders(), ...(init.headers ?? {}) } })
+  } catch (e) {
+    throw new DeskError({ ...UNREACHABLE, detail: String(e) }, 0)
+  }
+  if (res.status === 401) window.dispatchEvent(new Event('ola:signed-out'))
+  if (!res.ok) {
+    const body = await res.json().catch(() => null)
+    throw new DeskError({ text: typeof body?.message === 'string' ? body.message : 'Claude could not start just now.', detail: `${res.status} ${body?.error ?? ''}`.trim() }, res.status)
+  }
+  await ndjson(res, onEvent)
+}
+
+export const claude = {
+  info: () => call<import('./types.ts').ClaudeInfo>('/api/claude'),
+  settings: (body: { enabled?: boolean; consent?: boolean; auto?: string }) => post<import('./types.ts').ClaudeInfo>('/api/claude/settings', body),
+  /** Starts a run and reads it until it ends; each line goes to onEvent. */
+  run: (body: { request: string; context: string; conversation: string; autonomy: 'go' | 'ask'; why: 'asked' | 'stuck' | 'always' }, onEvent: (e: any) => void, signal?: AbortSignal) =>
+    stream('/api/claude/run', { method: 'POST', body: JSON.stringify(body), headers: { 'content-type': 'application/json' }, signal }, onEvent),
+  /** A run already going (after a lost connection): its lines so far, then the rest. */
+  follow: (run: string, onEvent: (e: any) => void, signal?: AbortSignal) => stream(`/api/claude/follow?run=${encodeURIComponent(run)}`, { signal }, onEvent),
+  answer: (run: string, requestId: string, decision: 'once' | 'always' | 'reject') => post('/api/claude/answer', { run, request_id: requestId, decision }),
+  stop: (run: string) => post('/api/claude/stop', { run }),
+  turns: async (conversation: string) => (await call<{ runs: ClaudeRunRecord[] }>(`/api/claude/turns?conversation=${encodeURIComponent(conversation)}`)).runs,
+}
+
 export const desk: FrontDesk = {
   me: () => call<Me>('/api/me'),
   signOut: async () => {

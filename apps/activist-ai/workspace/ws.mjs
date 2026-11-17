@@ -44,7 +44,7 @@ import { fileURLToPath } from 'node:url'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 export const CONTAINER = process.env.OLA_CONTAINER_BIN || '/usr/local/bin/container'
-export const IMAGE = 'ola-workspace:2.3.0-6'
+export const IMAGE = 'ola-workspace:2.3.0-7'
 export const HOME = process.env.OLA_HOME || path.join(homedir(), '.ola')
 export const GATEWAY_PORT = Number(process.env.OLA_GATEWAY_PORT || 4180)
 // The gateway's door sockets, one per workspace (the gateway's GATEWAY_DOOR_DIR): each door
@@ -958,9 +958,28 @@ export async function destroy(id, { confirm } = {}) {
   return { id, removed: true }
 }
 
-export function buildImage() {
-  const r = spawnSync(CONTAINER, ['build', '--progress', 'plain', '-t', IMAGE, '-f', path.join(here, 'Containerfile'), here], { stdio: 'inherit' })
-  if (r.status !== 0) refuse('the image build failed')
+// Built under a temporary tag and named IMAGE only once the build finished, so a build that is cut
+// off (a slow or stalled download, a killed deploy) never leaves something called IMAGE that is
+// half made; the next build starts again. The downloads in the Containerfile retry and give up on
+// a stalled connection. Up to three tries in all.
+export function buildImage({ tries = 3 } = {}) {
+  const tmp = `${IMAGE}-building`
+  for (let i = 1; i <= tries; i++) {
+    ctr(['image', 'delete', tmp], { allowFail: true })
+    const r = spawnSync(CONTAINER, ['build', '--progress', 'plain', '-t', tmp, '-f', path.join(here, 'Containerfile'), here], { stdio: 'inherit' })
+    if (r.status === 0) {
+      ctr(['image', 'tag', tmp, IMAGE])
+      ctr(['image', 'delete', tmp], { allowFail: true })
+      return
+    }
+    console.error(`ws: the image build failed (try ${i} of ${tries})`)
+  }
+  ctr(['image', 'delete', tmp], { allowFail: true })
+  refuse('the image build failed')
+}
+/** Builds IMAGE if this machine does not have it yet. */
+export function ensureImage() {
+  if (ctr(['image', 'inspect', IMAGE], { allowFail: true }).status !== 0) buildImage()
 }
 
 // ---------------------------------------------------------------- the command line
@@ -970,7 +989,7 @@ async function main(argv) {
   const flags = {}
   const args = []
   for (let i = 0; i < rest.length; i++) {
-    if (rest[i] === '--replace' || rest[i] === '--json') flags[rest[i].slice(2)] = true
+    if (rest[i] === '--replace' || rest[i] === '--json' || rest[i] === '--missing') flags[rest[i].slice(2)] = true
     else if (rest[i].startsWith('--')) flags[rest[i].slice(2)] = rest[++i]
     else args.push(rest[i])
   }
@@ -978,7 +997,7 @@ async function main(argv) {
   const need = () => id || refuse(`usage: ws.mjs ${cmd} <id>`)
   switch (cmd) {
     case 'image':
-      return buildImage()
+      return flags.missing ? ensureImage() : buildImage()
     case 'create': {
       const w = await create(need(), flags)
       return console.log(`created ${w.id}: ${w.cpus} CPUs, ${human(w.memory)} memory, ${human(w.disk)} volume, no network`)

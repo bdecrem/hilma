@@ -63,6 +63,13 @@ const PATHS: Record<string, () => JSX.Element> = {
   ),
   other: () => <circle cx="10" cy="10" r="2" />,
   stop: () => <rect x="5.5" y="5.5" width="9" height="9" rx="1" />,
+  settings: () => (
+    <>
+      <path d="M3.5 6.5h13M3.5 13.5h13" />
+      <circle cx="7.5" cy="6.5" r="2" />
+      <circle cx="12.5" cy="13.5" r="2" />
+    </>
+  ),
   file: () => <path d="M5.5 2.75h6.5l3 3v11.5h-9.5zM12 2.75v3h3" />,
   machine: () => (
     <>

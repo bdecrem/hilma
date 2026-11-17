@@ -49,6 +49,7 @@ import { homedir } from 'node:os'
 import { basename, dirname, join, resolve } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
 import { CLAUDE_SETTINGS, claudeConfig, makeClaude } from './claude.mjs'
+import { HOSTED_SETTINGS, hostedConfig, makeHosted } from './hosted.mjs'
 
 // ---------------------------------------------------------------- config
 
@@ -69,7 +70,7 @@ const SETTINGS = {
   GATEWAY_READ_TIMEOUT_MS: [30_000, 1_000, 600_000],
   GATEWAY_WEEKLY_TOKENS: [20_000_000, 1, 1e12],
 }
-const OTHER_GATEWAY_SETTINGS = ['GATEWAY_TOKENS', 'GATEWAY_TOKENS_FILE', 'GATEWAY_DOOR_DIR', 'GATEWAY_MODELS', 'GATEWAY_HOST', 'GATEWAY_DB', 'GATEWAY_QUOTAS', 'GATEWAY_USAGE_TOKEN', ...CLAUDE_SETTINGS]
+const OTHER_GATEWAY_SETTINGS = ['GATEWAY_TOKENS', 'GATEWAY_TOKENS_FILE', 'GATEWAY_DOOR_DIR', 'GATEWAY_MODELS', 'GATEWAY_HOST', 'GATEWAY_DB', 'GATEWAY_QUOTAS', 'GATEWAY_USAGE_TOKEN', ...CLAUDE_SETTINGS, ...HOSTED_SETTINGS]
 const NAME = /^[a-z0-9][a-z0-9._-]{0,63}$/i
 const TOKEN = /^[\x21-\x2b\x2d-\x7e]{24,512}$/ // printable ASCII, no space, no comma
 
@@ -165,6 +166,8 @@ function loadConfig(env) {
   if (!['drop', 'keep'].includes(textWithCalls)) bad('TEXT_WITH_CALLS must be drop or keep')
   // Fallback to Claude (claude.mjs): its own upstream, credentials and grants file.
   const claude = claudeConfig(env, bad)
+  // Fallback to a hosted open model (hosted.mjs): the model name `hosted`, its own upstream and grants.
+  const hosted = hostedConfig(env, bad)
 
   if (problems.length) {
     for (const p of problems) console.error(`config: ${p}`)
@@ -185,6 +188,7 @@ function loadConfig(env) {
     db,
     keepText: textWithCalls === 'keep',
     claude,
+    hosted,
     port: num.GATEWAY_PORT,
     maxBody: num.GATEWAY_MAX_BODY_BYTES,
     maxTotalBody: num.GATEWAY_MAX_TOTAL_BODY_BYTES,
@@ -254,6 +258,7 @@ const TRIES = 3
 function redact(s) {
   if (typeof s !== 'string') return s
   if (s.includes(C.key)) s = s.split(C.key).join('[redacted]')
+  if (C.hosted?.key && s.includes(C.hosted.key)) s = s.split(C.hosted.key).join('[redacted]')
   return claude ? claude.scrub(s) : s
 }
 // The fields a caller may send on to the model server. Anything else is dropped: `n` would
@@ -277,6 +282,7 @@ db.exec(`PRAGMA journal_mode = WAL; PRAGMA synchronous = NORMAL; PRAGMA busy_tim
 const addUsage = db.prepare(`INSERT INTO usage (week, caller, model, requests, tokens_in, tokens_out) VALUES (?, ?, ?, 1, ?, ?)
   ON CONFLICT (week, caller, model) DO UPDATE SET requests = requests + 1, tokens_in = tokens_in + excluded.tokens_in, tokens_out = tokens_out + excluded.tokens_out`)
 const claude = makeClaude({ cfg: C.claude, db, readBody: (req, max) => readBody(req, max), send: (...a) => send(...a), fail: (...a) => fail(...a) })
+const hosted = C.hosted ? makeHosted({ cfg: C.hosted, db }) : null
 const readUsage = db.prepare(`SELECT coalesce(sum(requests), 0) AS requests, coalesce(sum(tokens_in), 0) AS tokens_in, coalesce(sum(tokens_out), 0) AS tokens_out FROM usage WHERE week = ? AND caller = ?`)
 
 const WEEK_MS = 7 * 24 * 3600 * 1000
@@ -404,15 +410,16 @@ const agent = new (isTls ? https : http).Agent({ keepAlive: true, maxSockets: C.
 // response headers in firstByteMs after connecting), total_timeout (deadline passed),
 // reply_too_large, unreachable, aborted (the caller went away; the socket is destroyed,
 // which is how the model server learns to stop).
-function post(body, signal, deadline) {
+function post(body, signal, deadline, target = null) {
   return new Promise((resolve, reject) => {
     const data = Buffer.from(JSON.stringify(body))
     let settled = false
     let tFirst
-    const req = (isTls ? https : http).request(C.upstream, {
+    // The everyday model server, or (model `hosted`) the hosted provider's (hosted.mjs).
+    const req = (target ? target.lib : isTls ? https : http).request(target ? target.url : C.upstream, {
       method: 'POST',
-      agent,
-      headers: { Authorization: `Bearer ${C.key}`, 'Content-Type': 'application/json', 'Content-Length': data.length, Accept: 'application/json' },
+      agent: target ? target.agent : agent,
+      headers: { Authorization: `Bearer ${target ? target.key : C.key}`, 'Content-Type': 'application/json', 'Content-Length': data.length, Accept: 'application/json' },
     })
     const end = (err, value) => {
       if (settled) return
@@ -522,7 +529,7 @@ function fault(message, offered) {
 // Asks the model server for one whole reply, retrying what is worth retrying. `tally` gets
 // the tokens of every try that reported them: a rejected reply was still work done.
 // Returns { status, json } or { status, error (for the caller), why (for the log, fixed) }.
-async function complete(body, offered, signal, deadline, tally, overQuota) {
+async function complete(body, offered, signal, deadline, tally, overQuota, target = null) {
   let last = 'no attempt made'
   let lastStatus = 502
   for (let attempt = 1; attempt <= TRIES; attempt++) {
@@ -534,7 +541,7 @@ async function complete(body, offered, signal, deadline, tally, overQuota) {
     tally.tries = attempt
     let r
     try {
-      r = await post(body, signal, deadline)
+      r = await post(body, signal, deadline, target)
     } catch (e) {
       if (e.code === 'aborted') return { status: 499, why: 'the caller went away' }
       if (e.code === 'total_timeout') return { status: 504, error: 'the model server took longer than the gateway allows', why: 'the total timeout passed' }
@@ -749,7 +756,7 @@ async function handle(req, res, rec, signal) {
 
   if (rec.route === 'usage' && req.method === 'GET') {
     rec.status = 200
-    if (who === 'usage') return send(res, 200, { object: 'list', data: C.tokens.map((t) => ({ ...usageOf(t.name), claude_month: claude.monthOf(t.name) })), inflight: queue.inflight, queued: queue.queued })
+    if (who === 'usage') return send(res, 200, { object: 'list', data: C.tokens.map((t) => ({ ...usageOf(t.name), claude_month: claude.monthOf(t.name), ...(hosted ? { hosted_month: hosted.monthOf(t.name) } : {}) })), inflight: queue.inflight, queued: queue.queued, claude_modes: claude.modes(), hosted: hosted ? { provider: hosted.provider } : null })
     return send(res, 200, { ...usageOf(who), claude_month: claude.monthOf(who) })
   }
   if (who === 'usage') return no(403, 'the usage token only reads usage', 'this token can only read /v1/usage', 'permission_error')
@@ -757,7 +764,7 @@ async function handle(req, res, rec, signal) {
   if (rec.route === 'claude' || rec.route === 'claude_count') return claude.handle(req, res, rec, who, signal)
   if (rec.route === 'models' && req.method === 'GET') {
     rec.status = 200
-    return send(res, 200, { object: 'list', data: [...C.models.keys()].map((id) => ({ id, object: 'model', owned_by: 'ola' })) })
+    return send(res, 200, { object: 'list', data: [...C.models.keys(), ...(hosted ? ['hosted'] : [])].map((id) => ({ id, object: 'model', owned_by: 'ola' })) })
   }
   if (rec.route !== 'chat' || req.method !== 'POST') return no(404, 'not found', 'not found', 'invalid_request_error')
 
@@ -784,10 +791,16 @@ async function handle(req, res, rec, signal) {
     return no(400, 'the request is not JSON', 'the request is not JSON', 'invalid_request_error')
   }
   if (!body || typeof body !== 'object' || Array.isArray(body)) return no(400, 'the request is not a JSON object', 'the request is not a JSON object', 'invalid_request_error')
-  if (typeof body.model !== 'string' || !C.models.has(body.model)) {
-    return no(400, 'an unknown model name', `unknown model; this gateway serves: ${[...C.models.keys()].join(', ')}`, 'invalid_request_error')
+  const isHosted = body.model === 'hosted' && hosted !== null
+  if (typeof body.model !== 'string' || !(C.models.has(body.model) || isHosted)) {
+    return no(400, 'an unknown model name', `unknown model; this gateway serves: ${[...C.models.keys(), ...(hosted ? ['hosted'] : [])].join(', ')}`, 'invalid_request_error')
   }
   rec.model = body.model
+  // The hosted open model: only for a project whose owner turned it on, within its month's budget.
+  if (isHosted) {
+    const r = hosted.refusal(who)
+    if (r) return no(r.status, r.why, r.message, r.type)
+  }
   if (!Array.isArray(body.messages) || !body.messages.length) return no(400, 'no messages', 'messages must be a non-empty list', 'invalid_request_error')
 
   // Over quota counting what is already committed to the store plus `pending`, the tokens the
@@ -829,9 +842,9 @@ async function handle(req, res, rec, signal) {
     const wantStream = body.stream === true
     const wantUsage = body.stream_options?.include_usage === true
     const offered = new Set((Array.isArray(body.tools) ? body.tools : []).map((t) => t?.function?.name).filter((n) => typeof n === 'string'))
-    const upstreamBody = { model: C.models.get(body.model), stream: false }
+    const upstreamBody = { model: isHosted ? hosted.model : C.models.get(body.model), stream: false }
     for (const k of PASS) if (k in body) upstreamBody[k] = body[k]
-    out = await complete(upstreamBody, offered, signal, Date.now() + C.totalMs, tally, overQuota)
+    out = await complete(upstreamBody, offered, signal, Date.now() + C.totalMs, tally, overQuota, isHosted ? hosted.target : null)
     rec.status = out.status
     if (out.status === 200) {
       const clean = sanitizeCompletion(out.json, body.model)
@@ -848,6 +861,7 @@ async function handle(req, res, rec, signal) {
     rec.tokens_out = tally.out
     rec.estimated = tally.estimated ? 'bytes' : null
     if (tally.tries) addUsage.run(weekKey(weekStart()), who, body.model, tally.in, tally.out)
+    if (isHosted && tally.tries) rec.cost_micro_usd = hosted.record(who, tally.in, tally.out)
   }
 }
 

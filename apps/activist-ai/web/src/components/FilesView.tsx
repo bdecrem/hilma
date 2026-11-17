@@ -7,7 +7,7 @@ import { bytes, cap, count, when } from '../lib/format.ts'
 import { Icon } from './Icon.tsx'
 import { ProblemBox } from './Drawer.tsx'
 
-export function FilesView(props: { onChanged: () => void; uploadRef?: (el: HTMLButtonElement) => void; canWrite?: boolean; deleteNotice?: string }) {
+export function FilesView(props: { onChanged: () => void; uploadRef?: (el: HTMLButtonElement) => void; canWrite?: boolean; deleteNotice?: string; claudeOn?: boolean }) {
   const canWrite = () => props.canWrite !== false
   const [files, { refetch }] = createResource(() => desk.files())
   const [problem, setProblem] = createSignal<Problem | null>(null)
@@ -94,7 +94,7 @@ export function FilesView(props: { onChanged: () => void; uploadRef?: (el: HTMLB
             <button type="button" class="primary-button" ref={props.uploadRef} disabled={busy()} onClick={() => picker?.click()}>
               <Icon name="plus" size={18} /> Upload files
             </button>
-            <p class="upload-line">A file you upload is copied to Ola’s computer, the Mac in Bart’s office. It does not go to any AI company.</p>
+            <p class="upload-line">A file you upload is copied to Ola’s computer, the Mac in Bart’s office. {props.claudeOn ? "It goes to no AI company, unless someone hands a request about it to Claude." : "It does not go to any AI company."}</p>
           </div>
           </Show>
         </div>
@@ -114,7 +114,7 @@ export function FilesView(props: { onChanged: () => void; uploadRef?: (el: HTMLB
           </div>
           <div>
             <dt>What left the machine</dt>
-            <dd>None of these files. Web searches are off for this project.</dd>
+            <dd>{props.claudeOn ? "Only what Claude read for a request handed to it (Fallback to Claude is on for this project). Web searches are off." : "None of these files. Web searches are off for this project."}</dd>
           </div>
           <div>
             <dt>How long they stay</dt>

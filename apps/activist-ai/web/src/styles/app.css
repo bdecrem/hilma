@@ -1957,3 +1957,170 @@ code {
   outline: 3px solid var(--lamp);
   outline-offset: 2px;
 }
+
+/* ------------------------------------------------------------ Fallback to Claude
+   A Claude reply is marked where Ola's name would be: a square mark in ink (not Ola's lamp
+   ring), the words "Claude, outside this machine", and a thin dashed rule down its side. */
+.engine-legend {
+  font-weight: 700;
+  margin-right: var(--s1);
+}
+.claude-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  border: 2.5px solid var(--ink);
+  transform: rotate(45deg);
+}
+.who .outside {
+  font-weight: 500;
+  color: var(--ink-2);
+}
+.said-claude {
+  border-left: 2px dashed var(--rule);
+  padding-left: var(--s4);
+}
+.handoff {
+  margin-top: var(--s2);
+  padding: var(--s2) var(--s3);
+  background: var(--lamp-wash);
+  border-radius: 6px;
+  color: var(--ink);
+  font-size: var(--fs-ui);
+  line-height: 1.45;
+}
+.ask-claude {
+  margin-top: var(--s3);
+}
+.settings .setting {
+  margin-top: var(--s6);
+  max-width: 760px;
+}
+.setting-row {
+  display: flex;
+  gap: var(--s5);
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: var(--s5) 0;
+  border-top: 3px solid var(--ink);
+}
+.setting-name {
+  font-size: var(--fs-section);
+  font-weight: 700;
+}
+.setting-name.small {
+  font-size: 17px;
+  margin-bottom: var(--s3);
+}
+.setting-say {
+  margin-top: var(--s1);
+  font-family: var(--font-read);
+  font-size: var(--fs-read);
+  line-height: var(--lh-read);
+  color: var(--ink-2);
+}
+.setting-note {
+  margin: 0 0 var(--s4);
+  color: var(--ink-2);
+  font-size: var(--fs-ui);
+}
+.switch {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  min-height: 44px;
+  padding: 0 var(--s3) 0 6px;
+  border: 1.5px solid var(--rule);
+  border-radius: 999px;
+  background: var(--paper-2);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.switch-knob {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--paper);
+  border: 1.5px solid var(--ink-3);
+}
+.switch[aria-checked='true'] {
+  background: var(--room);
+  border-color: var(--room);
+  color: var(--on-room);
+  flex-direction: row-reverse;
+  padding: 0 6px 0 var(--s3);
+}
+.switch[aria-checked='true'] .switch-knob {
+  background: var(--lamp);
+  border-color: var(--lamp);
+}
+.switch:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.switch:focus-visible {
+  outline: 3px solid var(--lamp);
+  outline-offset: 2px;
+}
+.setting-stops {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+/* A legend floated to full width is laid out like a heading, not drawn into a border. */
+.setting-stops legend {
+  float: left;
+  width: 100%;
+  padding: var(--s4) 0 0;
+  border-top: 1px solid var(--rule);
+}
+.stops {
+  clear: both;
+  display: grid;
+  gap: var(--s2);
+}
+.stop {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  column-gap: var(--s2);
+  padding: var(--s3);
+  border: 1.5px solid var(--rule);
+  border-radius: 10px;
+  cursor: pointer;
+}
+.stop.on {
+  border-color: var(--room);
+  background: var(--paper-2);
+}
+.stop input {
+  margin: 3px 0 0;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--room);
+}
+.stop-label {
+  font-weight: 700;
+}
+.stop-hint {
+  grid-column: 2;
+  color: var(--ink-2);
+  font-size: var(--fs-ui);
+  line-height: 1.45;
+}
+.stop:has(input:focus-visible) {
+  outline: 3px solid var(--lamp);
+  outline-offset: 2px;
+}
+@media (max-width: 760px) {
+  .setting-row {
+    flex-direction: column;
+    gap: var(--s3);
+  }
+  .settings .facts {
+    grid-template-columns: 1fr;
+  }
+}

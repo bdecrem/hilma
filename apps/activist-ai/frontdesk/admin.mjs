@@ -20,6 +20,10 @@
 //   node admin.mjs revoke-sessions <handle>             every session of that person ends now
 //   node admin.mjs suspend <handle>                      no sign-in, sessions revoked
 //   node admin.mjs shown-to-cloud <workspace> --by <handle>   record a cloud agent's look (with the customer's yes)
+//   node admin.mjs claude <workspace> [on|off] [--auto ask|stuck|always] [--cap-usd 25] [--cap-tokens 20000000]
+//                  Fallback to Claude for one project: with no change, prints its state (on or off,
+//                  the mode its owners give it, the ceiling, the month so far); changes are audited.
+//   node admin.mjs claude-grants                       writes the gateway's grants file from the database again
 //   node admin.mjs audit [--workspace <slug>] [--limit 50] [--json]
 //   node admin.mjs list
 //
@@ -32,6 +36,7 @@ import { fileURLToPath } from 'node:url'
 import { audit, openDb } from './db.mjs'
 import { makeInvite } from './auth.mjs'
 import { config } from './server.mjs'
+import { AUTO, gatewayUsage, modeFor, writeGrants } from './claude.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const fail = (m) => {
@@ -55,6 +60,9 @@ const person = (handle) => db.prepare('SELECT * FROM people WHERE handle = ?').g
 const team = (slug) => db.prepare('SELECT * FROM teams WHERE slug = ?').get(slug) ?? fail(`no team ${slug}`)
 const workspace = (slug) => db.prepare('SELECT * FROM workspaces WHERE slug = ?').get(slug) ?? fail(`no workspace ${slug}`)
 const admin = (row) => audit(db, { actorKind: 'admin', ...row })
+// The gateway's grants file follows the database: after anything that changes who owns a project,
+// whether it is open, or its Claude setting (claude.mjs writeGrants).
+const grants = () => writeGrants(db, cfg.claude)
 
 // ---------------------------------------------------------------- rotation
 //
@@ -76,6 +84,7 @@ function closeWorkspace(w, why) {
   admin({ action: 'workspace_closed', workspace: w.id })
   // Also on the machine, so ws.mjs itself refuses to start it (best effort: the database already says closed).
   spawnSync(process.execPath, [path.join(HERE, '../workspace/ws.mjs'), 'close', w.slug], { stdio: 'ignore', env: process.env })
+  grants()
   return `${w.slug}: CLOSED (${why}); the front desk refuses it and nothing starts it. Fix the container runtime, then: node admin.mjs reopen ${w.slug}`
 }
 async function rotateAll(list) {
@@ -111,6 +120,7 @@ async function rotateAll(list) {
     }
   }
   for (const w of list) console.log(lines.get(w.slug))
+  grants()
   return human
 }
 const now = Date.now()
@@ -168,6 +178,7 @@ switch (cmd) {
     db.prepare("UPDATE workspaces SET status = 'active' WHERE id = ?").run(w.id)
     admin({ action: 'secrets_rotated', workspace: w.id })
     admin({ action: 'workspace_reopened', workspace: w.id })
+    grants()
     console.log(`${w.slug}: reopened with new secrets; stopped, it starts on its next request${r.gateway === 'unconfirmed' ? ' (the gateway did not confirm it refuses the old token: node ops/ola.mjs status)' : ''}`)
     break
   }
@@ -203,6 +214,7 @@ switch (cmd) {
     const had = db.prepare('SELECT role FROM memberships WHERE team_id = ? AND person_id = ?').get(t.id, p.id)
     db.prepare('INSERT INTO memberships (team_id, person_id, role, added_at) VALUES (?, ?, ?, ?) ON CONFLICT (team_id, person_id) DO UPDATE SET role = excluded.role').run(t.id, p.id, role, now)
     admin({ action: had ? 'role_changed' : 'member_added', subject: p.id, role })
+    grants()
     console.log(`${handle} is ${role} of ${teamSlug}`)
     break
   }
@@ -213,6 +225,7 @@ switch (cmd) {
     const r = db.prepare('DELETE FROM memberships WHERE team_id = ? AND person_id = ?').run(t.id, p.id)
     if (!r.changes) fail(`${handle} was not in ${teamSlug}`)
     admin({ action: 'member_removed', subject: p.id })
+    grants()
     console.log(`${handle} removed from ${teamSlug}; their next request to its workspaces is refused.`)
     // They may have seen the workspaces' opencode password and gateway token from inside (the
     // agent can read both). Give the front desk two of its one-second rechecks to cut their open
@@ -230,9 +243,44 @@ switch (cmd) {
     admin({ action: 'sessions_revoked', subject: p.id })
     if (cmd === 'suspend') {
       db.prepare("UPDATE people SET status = 'suspended' WHERE id = ?").run(p.id)
+      grants()
       admin({ action: 'person_suspended', subject: p.id })
     }
     console.log(`${r.changes} session(s) of ${p.handle} revoked${cmd === 'suspend' ? '; suspended' : ''}`)
+    break
+  }
+  case 'claude': {
+    const w = workspace(args[0])
+    const to = args[1]
+    if (to !== undefined && !['on', 'off'].includes(to)) fail('say on or off (or nothing, to see it)')
+    if (flags.auto !== undefined && !AUTO.includes(flags.auto)) fail(`--auto is ${AUTO.join(', ')}`)
+    const usd = flags['cap-usd'] === undefined ? undefined : Number(flags['cap-usd'])
+    const tokens = flags['cap-tokens'] === undefined ? undefined : Number(flags['cap-tokens'])
+    if (usd !== undefined && !(usd >= 0 && usd <= 10_000)) fail('--cap-usd is from 0 to 10000 dollars a month')
+    if (tokens !== undefined && !(Number.isSafeInteger(tokens) && tokens >= 0)) fail('--cap-tokens is a whole number of tokens a month')
+    const mode = modeFor(db, w.id)
+    if (to === 'on') {
+      const g = await gatewayUsage(cfg.claude)
+      if (!g) fail('the gateway could not be asked whether Claude is set up (OLA_FD_GATEWAY_USAGE_TOKEN in the front desk env, the gateway running); nothing changed')
+      if (!g.modes[mode]) fail(`this project needs ${mode === 'oauth' ? 'the subscription token (CLAUDE_OAUTH_TOKEN_FILE)' : 'an API key (CLAUDE_API_KEY)'} in the gateway's env, and it has none; nothing changed`)
+    }
+    if (to && (to === 'on') !== (w.claude_enabled === 1)) {
+      db.prepare('UPDATE workspaces SET claude_enabled = ? WHERE id = ?').run(to === 'on' ? 1 : 0, w.id)
+      admin({ action: to === 'on' ? 'claude_enabled' : 'claude_disabled', workspace: w.id })
+    }
+    if (flags.auto) db.prepare('UPDATE workspaces SET claude_auto = ? WHERE id = ?').run(flags.auto, w.id)
+    if (usd !== undefined) db.prepare('UPDATE workspaces SET claude_cap_micro_usd = ? WHERE id = ?').run(Math.round(usd * 1e6), w.id)
+    if (tokens !== undefined) db.prepare('UPDATE workspaces SET claude_cap_tokens = ? WHERE id = ?').run(tokens, w.id)
+    const g = grants()
+    const now = workspace(w.slug)
+    const m = (await gatewayUsage(cfg.claude))?.month.get(`ws-${w.slug}`)
+    const cap = mode === 'api_key' ? `$${((now.claude_cap_micro_usd ?? cfg.claude.capMicroUsd) / 1e6).toFixed(2)} a month` : `${(now.claude_cap_tokens ?? cfg.claude.capTokens).toLocaleString('en-US')} tokens a month`
+    const used = m ? (mode === 'api_key' ? `$${(m.cost_micro_usd / 1e6).toFixed(2)}` : `${m.tokens.toLocaleString('en-US')} tokens`) + ` in ${m.requests} requests this month` : 'this month unknown (the gateway was not asked)'
+    console.log(`${w.slug}: Fallback to Claude ${now.claude_enabled ? 'ON' : 'off'}, ${mode === 'oauth' ? 'subscription (every owner is an admin)' : 'API key'}, automatic: ${now.claude_auto}, ceiling ${cap}; ${used}; in the grants file: ${g[`ws-${w.slug}`] ? 'yes' : 'no'}`)
+    break
+  }
+  case 'claude-grants': {
+    console.log(`grants file written: ${Object.keys(grants()).length} project(s) with Claude on`)
     break
   }
   case 'shown-to-cloud': {
@@ -271,7 +319,7 @@ switch (cmd) {
     break
   }
   default:
-    console.error('usage: admin.mjs add-person | invite | remove-passkey | create-workspace | add-member | remove-member | rotate | reopen | revoke-sessions | suspend | shown-to-cloud | audit | list  (see the top of this file)')
+    console.error('usage: admin.mjs add-person | invite | remove-passkey | create-workspace | add-member | remove-member | rotate | reopen | revoke-sessions | suspend | claude | claude-grants | shown-to-cloud | audit | list  (see the top of this file)')
     process.exit(2)
 }
 db.close()

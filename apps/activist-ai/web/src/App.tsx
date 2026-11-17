@@ -11,9 +11,10 @@ import { EmptyProject, OtherFiles, ThingCard } from './components/Things.tsx'
 import { Drawer, ProblemBox } from './components/Drawer.tsx'
 import { FilesView } from './components/FilesView.tsx'
 import { ApprovalSheet } from './components/ApprovalSheet.tsx'
+import { SettingsView } from './components/Settings.tsx'
 
-type Route = 'home' | 'files'
-const routeOf = (hash: string): Route => (hash.startsWith('#/files') ? 'files' : 'home')
+type Route = 'home' | 'files' | 'settings'
+const routeOf = (hash: string): Route => (hash.startsWith('#/files') ? 'files' : hash.startsWith('#/settings') ? 'settings' : 'home')
 /** `#/?ask=<conversation id>` opens the drawer on that conversation. */
 const askOf = (hash: string): string | null => new URLSearchParams(hash.split('?')[1] ?? '').get('ask')
 /** `?still` in the address: no live stream (screenshots, printing). */
@@ -60,9 +61,12 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
   let barInput: HTMLInputElement | undefined
   let uploadButton: HTMLButtonElement | undefined
   let heading: HTMLHeadingElement | undefined
+  let settingsTitle: HTMLHeadingElement | undefined
+  const claudeOn = () => !!ola.state.claude?.enabled
   let promiseDialog: HTMLDialogElement | undefined
 
   const openDrawer = () => {
+    void ola.loadClaude() // the owner may have turned a fallback on or off since this page opened
     setDrawer(true)
     queueMicrotask(() => drawerInput?.focus())
   }
@@ -87,12 +91,13 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
   // A new view moves focus to its heading, so a screen reader hears where it is.
   createEffect((prev: Route | undefined) => {
     const r = route()
-    if (prev && prev !== r) queueMicrotask(() => (r === 'files' ? document.getElementById('files-title') : heading)?.focus())
+    if (prev && prev !== r) queueMicrotask(() => (r === 'files' ? document.getElementById('files-title') : r === 'settings' ? settingsTitle : heading)?.focus())
+    if (r === 'settings') void ola.loadClaude()
     return r
   })
   createEffect(() => {
     const p = project()?.project
-    document.title = p ? `${route() === 'files' ? 'What Ola has of yours · ' : ''}${p.name} · Ola` : 'Ola'
+    document.title = p ? `${route() === 'files' ? 'What Ola has of yours · ' : route() === 'settings' ? 'Settings · ' : ''}${p.name} · Ola` : 'Ola'
   })
   createEffect(() => {
     if (!promiseDialog) return
@@ -142,14 +147,14 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
         </a>
         <nav class="crumbs" aria-label="Where you are">
           <Show when={p()}>
-            <Show when={route() === 'files'} fallback={<span class="crumb-muted">{p()!.group}</span>}>
+            <Show when={route() !== 'home'} fallback={<span class="crumb-muted">{p()!.group}</span>}>
               <a href="#/">{p()!.name}</a>
             </Show>
             <span class="crumb-sep" aria-hidden="true">
               /
             </span>
             <span class="crumb-here" aria-current="page">
-              {route() === 'files' ? 'What Ola has of yours' : p()!.name}
+              {route() === 'files' ? 'What Ola has of yours' : route() === 'settings' ? 'Settings' : p()!.name}
             </span>
           </Show>
         </nav>
@@ -186,7 +191,9 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
               <a class="back-link" href="#/">
                 <Icon name="back" size={16} /> Back to {project() ? count(project()!.things.length, 'thing') : 'the things'}
               </a>
-              <FilesView onChanged={() => void refetch()} uploadRef={(el) => (uploadButton = el)} canWrite={canRun()} deleteNotice={props.me.policy.deleteNotice} />
+              <Show when={route() === 'settings'} fallback={<FilesView onChanged={() => void refetch()} uploadRef={(el) => (uploadButton = el)} canWrite={canRun()} deleteNotice={props.me.policy.deleteNotice} claudeOn={claudeOn()} />}>
+                <SettingsView ola={ola} titleRef={(el) => (settingsTitle = el)} />
+              </Show>
             </>
           }
         >
@@ -216,6 +223,9 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
                   <Icon name="plus" size={18} /> Add files
                 </button>
               </Show>
+              <a class="ghost-button on-room" href="#/settings">
+                <Icon name="settings" size={18} /> Settings
+              </a>
             </div>
           </section>
           <Show when={project()} fallback={<p class="loading" role="status">{waking() ? 'Waking your workspace…' : 'Opening your project…'}</p>}>
@@ -289,7 +299,14 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
           </h2>
           <p class="sheet-lede">Everything you do here runs on one Mac that Bart owns, in his office. The model that reads your files runs on it too.</p>
           <ul class="promise-list">
-            <li>Your files and requests are not sent to any AI company or cloud service.</li>
+            <Show
+              when={claudeOn()}
+              fallback={<li>Your files and requests are not sent to any AI company or cloud service.</li>}
+            >
+              <li>
+                This project’s owner turned on Fallback to Claude. A request you hand to Claude, and the parts of your files Claude reads to answer it, go to Anthropic; each such reply is marked “Claude, outside this machine”. Everything you ask Ola stays here.
+              </li>
+            </Show>
             <li>Ola can read only the files you upload, listed under “What Ola has of yours”.</li>
             <li>Your conversations stay in your project until you delete them. Bart, who runs the machine, could read a session while it runs; he does not keep logs of what you ask.</li>
             <li>Anything that would leave the machine, like a web search, is off unless you turn it on, and asks first.</li>

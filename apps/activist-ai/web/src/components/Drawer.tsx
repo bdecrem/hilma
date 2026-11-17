@@ -93,12 +93,30 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
           }
         >
           <ol class="turns">
-            <For each={s().turns}>{(t, i) => <TurnView turn={t} now={now()} last={i() === s().turns.length - 1} onStop={() => props.ola.stop()} />}</For>
+            <For each={s().turns}>
+              {(t, i) => <TurnView turn={t} now={now()} last={i() === s().turns.length - 1} onStop={() => props.ola.stop()} claudeOn={!!s().claude?.enabled && !working()} onAskClaude={() => props.ola.askClaudeInstead(t.id)} />}
+            </For>
           </ol>
         </Show>
       </div>
 
       <form class="composer" onSubmit={submit}>
+        <Show when={s().claude?.enabled}>
+          <fieldset class="autonomy engine">
+            <legend class="engine-legend">Who works on this</legend>
+            <label classList={{ on: s().engine === 'ola' }}>
+              <input type="radio" name="engine" value="ola" checked={s().engine === 'ola'} onChange={() => props.ola.setEngine('ola')} />
+              Ola
+            </label>
+            <label classList={{ on: s().engine === 'claude' }}>
+              <input type="radio" name="engine" value="claude" checked={s().engine === 'claude'} onChange={() => props.ola.setEngine('claude')} />
+              Claude
+            </label>
+            <span class="autonomy-hint">
+              {s().engine === 'claude' ? 'Claude works in your project too, but your request and the parts of your files it reads go to Anthropic.' : 'Ola works on this machine. Nothing you ask leaves it.'}
+            </span>
+          </fieldset>
+        </Show>
         <fieldset class="autonomy">
           <legend class="sr-only">How Ola works</legend>
           <label classList={{ on: s().autonomy === 'go' }}>
@@ -109,7 +127,15 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
             <input type="radio" name="autonomy" value="ask" checked={s().autonomy === 'ask'} onChange={() => props.ola.setAutonomy('ask')} />
             Ask me first
           </label>
-          <span class="autonomy-hint">{s().autonomy === 'ask' ? 'Ola asks before it runs code or writes a file.' : 'Ola works inside this project without asking. Anything that would leave the machine is blocked.'}</span>
+          <span class="autonomy-hint">
+            {s().engine === 'claude' && s().claude?.enabled
+              ? s().autonomy === 'ask'
+                ? 'Claude asks before it runs code or writes a file.'
+                : 'Claude works inside this project without asking. It cannot reach the internet from here.'
+              : s().autonomy === 'ask'
+                ? 'Ola asks before it runs code or writes a file.'
+                : 'Ola works inside this project without asking. Anything that would leave the machine is blocked.'}
+          </span>
         </fieldset>
         <div class="composer-row">
           <label for="ask-input" class="sr-only">
@@ -120,7 +146,7 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
             ref={props.inputRef}
             rows={2}
             value={props.draft}
-            placeholder={working() ? 'Ola is working. You can write your next request.' : 'Make something new, or change one of your things…'}
+            placeholder={working() ? 'Work is under way. You can write your next request.' : s().engine === 'claude' && s().claude?.enabled ? 'Ask Claude to make or change something…' : 'Make something new, or change one of your things…'}
             onInput={(e) => props.setDraft(e.currentTarget.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) submit(e)
@@ -129,7 +155,7 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
           <Show
             when={working()}
             fallback={
-              <button type="submit" class="send-button" disabled={!props.draft.trim() || s().connection === 'lost'} aria-label="Send to Ola">
+              <button type="submit" class="send-button" disabled={!props.draft.trim() || s().connection === 'lost'} aria-label={s().engine === 'claude' && s().claude?.enabled ? 'Send to Claude' : 'Send to Ola'}>
                 <Icon name="up" />
               </button>
             }
@@ -166,8 +192,10 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
   )
 }
 
-function TurnView(props: { turn: Turn; now: number; last: boolean; onStop: () => void }) {
+function TurnView(props: { turn: Turn; now: number; last: boolean; onStop: () => void; claudeOn: boolean; onAskClaude: () => void }) {
   const t = () => props.turn
+  const byClaude = () => t().engine === 'claude'
+  const name = () => (byClaude() ? 'Claude' : 'Ola')
   const running = () => t().status === 'working' || t().status === 'sending'
   // The newest run stays open when it finishes, so the person sees what was done; older ones fold.
   const [open, setOpen] = createSignal(props.last)
@@ -186,10 +214,25 @@ function TurnView(props: { turn: Turn; now: number; last: boolean; onStop: () =>
         </p>
         <p class="request">{t().request}</p>
       </div>
-      <div class="said-ola">
-        <p class="who">
-          <span class="ola-dot" aria-hidden="true" /> Ola
-        </p>
+      <div class="said-ola" classList={{ 'said-claude': byClaude() }}>
+        <Show
+          when={byClaude()}
+          fallback={
+            <p class="who">
+              <span class="ola-dot" aria-hidden="true" /> Ola
+            </p>
+          }
+        >
+          <p class="who">
+            <span class="claude-dot" aria-hidden="true" />
+            <span>
+              Claude<span class="outside">, outside this machine</span>
+            </span>
+          </p>
+          <Show when={t().handoff}>
+            <p class="handoff">{t().handoff}</p>
+          </Show>
+        </Show>
         <Show when={t().steps.length || running()}>
           <div class="run" classList={{ running: running() }}>
             <div class="run-head">
@@ -242,9 +285,16 @@ function TurnView(props: { turn: Turn; now: number; last: boolean; onStop: () =>
           </p>
         </Show>
         <Show when={t().status === 'stopped' && !t().error}>
-          <p class="meta stopped-line">You stopped this. Files Ola already wrote stay as they are.</p>
+          <p class="meta stopped-line">You stopped this. Files {name()} already wrote stay as they are.</p>
         </Show>
         <Show when={t().error}>{(p) => <ProblemBox problem={p()} />}</Show>
+        <Show when={props.claudeOn && !byClaude() && !running()}>
+          <p class="ask-claude">
+            <button type="button" class="link-button on-paper" onClick={props.onAskClaude}>
+              Ask Claude instead
+            </button>
+          </p>
+        </Show>
       </div>
     </li>
   )
@@ -288,7 +338,7 @@ function StepRow(props: { step: Step; current: boolean }) {
           <Show when={details()}>
             <div class="step-details" id={id()}>
               <Show when={s().detail.input}>
-                <p class="details-label">{s().tool === 'shell' ? 'The command' : 'What Ola asked for'}</p>
+                <p class="details-label">{s().tool === 'shell' ? 'The command' : 'What was asked for'}</p>
                 <pre>{s().detail.input}</pre>
               </Show>
               <Show when={s().detail.output}>

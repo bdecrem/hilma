@@ -993,21 +993,75 @@ the Mac itself in a chosen folder, with only the model on the machine. See `bart
 - Until the Mac Studio is the model server, every file a test touches is made up. `make-survey.py`
   is the pattern: invented people, known answers, the answers never placed in the workspace.
 - A workspace gets a gateway token, never the model server's key.
-- A workspace never reaches a cloud model, unless the project's owner turns on Fallback to Claude;
-  then only through the gateway (which holds the credential and replaces the workspace's token with
-  it), marked and logged, with a monthly ceiling.
+- A workspace never reaches a cloud model unless the project's owner turns on Fallback to Claude;
+  then only Claude Code inside the sealed VM, only through the gateway (which holds the credential
+  and replaces the workspace's token with it), marked and logged, with a monthly ceiling.
 
-## Fallback to Claude (2026-11-16, first part)
+## Fallback to Claude (2026-11-16)
 
-Claude Code itself, headless, **inside the project's sealed VM** (image `ola-workspace:2.3.0-6`
-adds the Linux arm64 build from npm, pinned by integrity), in the same `/work` as opencode, so its
-shell and file tools are sealed exactly like opencode's. `workspace/ola-claude <go|ask>` runs it
-(`claude -p --output-format stream-json`), with `ANTHROPIC_BASE_URL` on the door bridge
-(`http://127.0.0.1:4180/anthropic`), the workspace's own gateway token as `ANTHROPIC_AUTH_TOKEN`,
-nonessential traffic, telemetry, error reports and updates off, WebFetch and WebSearch refused.
-"go" may read, write and run in `/work` (bypassPermissions, as opencode's "Go ahead"); "ask" may only
-read (a headless run cannot stop for a person's yes). `workspace/claude-ola.md` is its standing note
-(sealed box, Files and Open).
+Claude Code itself, headless, **inside the project's sealed VM** (image `ola-workspace:2.3.0-7`;
+2.3.0-6 added the Linux arm64 build of Claude Code 2.1.326 from npm, pinned by integrity), in the
+same `/work` as opencode, so its shell and file tools are sealed exactly like opencode's.
+`workspace/ola-claude <go|ask> <conversation> <run> <asked|stuck|always>` runs it (`claude -p
+--input-format stream-json --output-format stream-json`), with `ANTHROPIC_BASE_URL` on the door
+bridge (`http://127.0.0.1:4180/anthropic`), the workspace's own gateway token as
+`ANTHROPIC_AUTH_TOKEN`, nonessential traffic, telemetry, error reports, updates and background tasks
+off, and WebFetch, WebSearch, AskUserQuestion, the cron and wakeup tools, worktrees, Monitor and
+messaging refused. `workspace/claude-ola.md` is its standing note (sealed box, Files and Open).
+Each run's input and output are kept in `/work/.ola/claude-runs/<conversation>/` (the project's own
+volume, like opencode's history); `ola-claude log <conversation>` prints them for the page and
+`ola-claude stop <run>` ends one (INT, then TERM).
+
+**Approvals are real** (measured in the image, 2026-11-16): "go" is `--permission-mode
+bypassPermissions`, as opencode's "Go ahead". "ask" is Manual mode with `--permission-prompt-tool
+stdio`: every call that needs a yes (a file write, a command that is not read-only) comes out on
+stdout as a `control_request` of subtype `can_use_tool` (tool name, input, tool_use_id), and Claude
+Code waits until the front desk writes the `control_response` (`allow` with the input, or `deny`
+with a message) on its stdin. The page shows it in the same sheet as opencode's, with the same three
+answers ("Yes, this once", "Yes, for the rest of this conversation", "No, don’t"); "for the rest of
+this conversation" is kept by the front desk per conversation and kind (file writes; commands).
+
+**The setting** (`frontdesk/claude.mjs`, platform migration 5): `workspaces.claude_enabled` (off by
+default), `claude_auto` (`ask`: only when the person asks; `stuck`: when Ola gets stuck; `always`),
+optional ceilings. Read by any member (`GET /api/claude`), changed only by an owner of the team
+(`POST /api/claude/settings`; turning it on needs `consent: true`, which the page sends only after
+the person confirms the note), audited `claude_enabled` / `claude_disabled`. The front desk writes
+the gateway's grants file (`GATEWAY_CLAUDE_FILE`) from the database alone, at its start and after
+every change; the admin CLI does too after `add-member` (a role change), `remove-member`,
+`suspend`, `rotate`, closing and `reopen`, so the file is right whoever changed what. **Mode:**
+subscription (`oauth`) only when every owner of the project's team is an admin (Bart: it is his own
+subscription), API key otherwise. Whether the gateway holds a credential for that mode is asked of
+the gateway itself (`GET /v1/usage` with the usage token now also answers `claude_modes: {oauth,
+api_key}`, true or false only); with no answer, or no credential, the switch is disabled with a
+plain sentence. Ceilings: `OLA_FD_CLAUDE_CAP_USD` (25 a month) and `OLA_FD_CLAUDE_CAP_TOKENS`
+(20,000,000) unless `admin.mjs claude <ws> --cap-usd n | --cap-tokens n` sets one.
+
+**A run** (`POST /api/claude/run`, owners and members): the front desk runs `container exec -i
+ola-<id> /opt/ola/bin/ola-claude …` (never Claude Code on the host), writes one user message (the
+conversation so far as context, then the request), and streams NDJSON to the page: its own lines
+(`started`, `approval`, `answered`, `ended`) and Claude Code's events, typed and capped (`pageEvent`:
+`system/init`, `system/api_retry`, `assistant` and `user` content of the main thread, `result`), the
+VM's word like everything from a workspace. One Claude run per project at a time. The page that
+loses its connection follows the run again (`GET /api/claude/follow?run=`); a reopened conversation
+gets its Claude turns from the record in the VM (`GET /api/claude/turns?conversation=`). **Stop**
+(`POST /api/claude/stop`): an `interrupt` control request, open approvals denied, the input closed,
+then `ola-claude stop` inside the VM, then the exec. The **run ceiling** (`OLA_FD_RUN_CEILING_MIN`)
+stops a Claude run the same way and says so in the ceiling's words; while a run lasts, the workspace
+counts as busy, so the idle stop waits for it. Each run is audited `claude_used` with numbers only:
+the gateway's own count before and after (tokens in and out; cost in API-key mode), no content, no
+file names.
+
+**The page.** Settings (`#/settings`, a button beside "Add files"): the switch, which asks for the
+confirming click with the consent text; with it on, "When Claude takes over by itself" (Only when I
+ask, the default; When Ola gets stuck; Always use Claude) and this month's use against the ceiling
+(dollars in API-key mode; a share of the month in subscription mode). With it on, the drawer offers
+"Who works on this: Ola / Claude" per request, "Ask Claude instead" under Ola's finished replies,
+and marks every Claude reply "Claude, outside this machine". "When Ola gets stuck" uses only what
+can be seen (`stuckReason` in `web/src/lib/steps.ts`): the Ola run ended in an error; it hit its
+step or token budget (a 429, a quota, a step or context limit in its error); or three tool calls in
+a row failed (Ola is stopped first). Then the same request goes to Claude once, marked, with one
+sentence of why. "On this machine" and the files view say what may leave when it is on. With it off,
+none of these controls exist.
 
 **The gateway** (`gateway/claude.mjs`): `POST /anthropic/v1/messages` and `.../count_tokens`,
 streamed or not, to `api.anthropic.com` only. Only `anthropic-version`, `anthropic-beta`,
@@ -1032,7 +1086,7 @@ and `cost_micro_usd`; `/v1/usage` adds each caller's `claude_month`. Other setti
 5.5), `GATEWAY_CLAUDE_MAX_BODY_BYTES` (16 MiB). Tested in `gateway/test.mjs` against a fake
 Anthropic; live by hand with `workspace/claude-smoke.mjs api_key oauth`.
 
-**Not built yet** (next round): the front desk's per-project setting (owner only, off by default,
+**Not built yet** (from the first part's list, now done above): the front desk's per-project setting (owner only, off by default,
 audit words `claude_enabled`/`claude_disabled`/`claude_used` already in the schema), its writer of
 `GATEWAY_CLAUDE_FILE`, the run route that starts `ola-claude` and turns its stream-json into the
 page's steps, the Settings view with the consent text, "Ask Claude instead", the marking, and the

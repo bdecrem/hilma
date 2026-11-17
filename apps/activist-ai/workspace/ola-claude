@@ -1,33 +1,88 @@
 #!/bin/sh
 # Claude Code, headless, inside this sealed workspace: "Fallback to Claude". The front desk runs
-#   container exec -i ola-<id> /opt/ola/bin/ola-claude <go|ask>
-# and sends the request on stdin; Claude Code's stream-json events come back on stdout.
+#
+#   container exec -i ola-<id> /opt/ola/bin/ola-claude <go|ask> <conversation> <run> <asked|stuck|always>
+#       Claude Code with stream-json in and out: the front desk writes the request (and, in "ask",
+#       its answers to permission questions) on stdin and reads Claude Code's events on stdout.
+#   container exec ola-<id> /opt/ola/bin/ola-claude stop <run>      ends that run (INT, then TERM)
+#   container exec ola-<id> /opt/ola/bin/ola-claude log <conversation>   the conversation's runs
 #
 # Its only way out is the door, like opencode's: ANTHROPIC_BASE_URL is the bridge ola-init keeps
 # on 127.0.0.1:4180, and the credential it sends is this workspace's own gateway token
 # (BOX_API_KEY, from the container's environment). The gateway checks that this project's owner
 # turned Claude on, drops that token and adds the real credential, which never enters the VM.
 #
-# Permissions match Ola's opencode: "go" may read, write and run code in /work without asking;
-# "ask" may only read and look (a headless run cannot stop for a person's yes, so it writes and
-# runs nothing and says what it would do). Never the web: WebFetch and WebSearch are refused in
-# both, and the VM has no network anyway.
+# Permissions match Ola's opencode:
+#   go   may read, write and run code in /work without asking (bypassPermissions), as "Go ahead".
+#   ask  "Ask me first": Manual mode, and every call that needs a yes (a file write, a command
+#        that is not read-only) is sent to the front desk as a can_use_tool control request
+#        (--permission-prompt-tool stdio). Claude Code waits for the person's answer.
+# Never the web: WebFetch and WebSearch are refused in both, and the VM has no network anyway.
+# Tools that need a person at a terminal or schedule work for later are refused too.
+#
+# Each run's input and output are kept in /work/.ola/claude-runs/<conversation>/ (the project's
+# own volume, like opencode's history), so the page can show the conversation again.
 set -eu
-mode="${1:-ask}"
-export ANTHROPIC_BASE_URL=http://127.0.0.1:4180/anthropic
-export ANTHROPIC_AUTH_TOKEN="$BOX_API_KEY"
-unset ANTHROPIC_API_KEY CLAUDE_CODE_OAUTH_TOKEN OPENCODE_PASSWORD
-export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1 DISABLE_TELEMETRY=1 DISABLE_ERROR_REPORTING=1 DISABLE_AUTOUPDATER=1
-export CLAUDE_CONFIG_DIR=/work/.ola/claude
-mkdir -p "$CLAUDE_CONFIG_DIR"
-cd /work
-model="${OLA_CLAUDE_MODEL:-claude-opus-5-5}"
-case "$mode" in
-  go) perms="--permission-mode bypassPermissions" ;;
-  ask) perms="--permission-mode default --allowedTools Read Glob Grep" ;;
-  *) echo "ola-claude: mode is go or ask" >&2; exit 2 ;;
+cmd="${1:-}"
+RUNS=/work/.ola/claude-runs
+okid() {
+  case "$1" in "" | *[!A-Za-z0-9_-]*) return 1 ;; esac
+  [ "${#1}" -le 80 ]
+}
+case "$cmd" in
+  go | ask)
+    conv="${2:-}"
+    run="${3:-}"
+    why="${4:-asked}"
+    okid "$conv" && okid "$run" || { echo "ola-claude: a conversation and a run id are letters, digits, _ and -" >&2; exit 2; }
+    case "$why" in asked | stuck | always) ;; *) echo "ola-claude: why is asked, stuck or always" >&2; exit 2 ;; esac
+    export ANTHROPIC_BASE_URL=http://127.0.0.1:4180/anthropic
+    export ANTHROPIC_AUTH_TOKEN="$BOX_API_KEY"
+    unset ANTHROPIC_API_KEY CLAUDE_CODE_OAUTH_TOKEN OPENCODE_PASSWORD
+    export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1 DISABLE_TELEMETRY=1 DISABLE_ERROR_REPORTING=1 DISABLE_AUTOUPDATER=1 CLAUDE_CODE_DISABLE_BACKGROUND_TASKS=1
+    export CLAUDE_CONFIG_DIR=/work/.ola/claude
+    mkdir -p "$CLAUDE_CONFIG_DIR" "$RUNS/$conv"
+    cd /work
+    model="${OLA_CLAUDE_MODEL:-claude-opus-5-5}"
+    if [ "$cmd" = go ]; then perms="--permission-mode bypassPermissions"; else perms="--permission-mode manual --permission-prompt-tool stdio"; fi
+    dir="$RUNS/$conv"
+    printf '{"run":"%s","mode":"%s","why":"%s","at":%s}\n' "$run" "$cmd" "$why" "$(date +%s)" > "$dir/$run.meta"
+    # The inner sh writes its own pid and becomes claude (exec), so `stop` signals claude itself.
+    # shellcheck disable=SC2086
+    tee "$dir/$run.in" | sh -c 'echo $$ > "/tmp/ola-claude-$0.pid"; exec "$@"' "$run" \
+      claude -p --input-format stream-json --output-format stream-json --verbose --no-session-persistence --model "$model" $perms \
+      --disallowedTools WebFetch WebSearch AskUserQuestion CronCreate CronDelete CronList ScheduleWakeup Monitor EnterWorktree ExitWorktree Workflow SendMessage ListAgents RemoteTrigger \
+      --append-system-prompt "$(cat /opt/ola/config/claude/ola.md)" | tee "$dir/$run.out"
+    rm -f "/tmp/ola-claude-$run.pid"
+    ;;
+  stop)
+    run="${2:-}"
+    okid "$run" || exit 2
+    f="/tmp/ola-claude-$run.pid"
+    [ -f "$f" ] || exit 0
+    pid="$(cat "$f")"
+    kill -INT "$pid" 2>/dev/null || exit 0
+    i=0
+    while kill -0 "$pid" 2>/dev/null && [ "$i" -lt 30 ]; do sleep 0.1; i=$((i + 1)); done
+    kill -TERM "$pid" 2>/dev/null || true
+    ;;
+  log)
+    # The newest 30 runs, oldest first: "M <meta>", "I <the request line>", "O <each event>".
+    conv="${2:-}"
+    okid "$conv" || exit 2
+    dir="$RUNS/$conv"
+    [ -d "$dir" ] || exit 0
+    cd "$dir"
+    ls -1t | grep -E '^[A-Za-z0-9_-]{1,80}\.meta$' | head -n 30 | tac | while read -r m; do
+      r="${m%.meta}"
+      [ -f "$m" ] && [ ! -L "$m" ] || continue
+      printf 'M %s\n' "$(head -c 400 "$m" | head -n 1)"
+      if [ -f "$r.in" ] && [ ! -L "$r.in" ]; then head -c 262144 "$r.in" | head -n 1 | sed 's/^/I /'; fi
+      if [ -f "$r.out" ] && [ ! -L "$r.out" ]; then head -c 4194304 "$r.out" | sed 's/^/O /'; fi
+    done
+    ;;
+  *)
+    echo "ola-claude: go, ask, stop or log" >&2
+    exit 2
+    ;;
 esac
-# shellcheck disable=SC2086
-exec claude -p --output-format stream-json --verbose --model "$model" $perms \
-  --disallowedTools WebFetch WebSearch \
-  --append-system-prompt "$(cat /opt/ola/config/claude/ola.md)"

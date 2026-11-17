@@ -27,6 +27,7 @@ import { makeProxy } from './server/proxy.mjs'
 import { projectPayload } from './server/project.mjs'
 import { startFakeModel } from './server/fake-model.mjs'
 import { fixture } from './server/fixture.mjs'
+import { makeClaudeStandin } from './server/claude-standin.mjs'
 const fixtureName = fixture.project.name
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
@@ -209,6 +210,7 @@ const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '
 const CSP = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
 const json = (res, status, body) => res.writeHead(status, { 'content-type': 'application/json', 'cache-control': 'no-store' }).end(JSON.stringify(body))
 
+const claudeStandin = makeClaudeStandin({ work })
 let pagePort = PORT
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url ?? '/', 'http://x')
@@ -223,6 +225,8 @@ const server = http.createServer(async (req, res) => {
   }
   try {
     if (p.startsWith('/oc/')) return await proxy(req, res, p.slice(3), url.search)
+    // Fallback to Claude, stood in for (server/claude-standin.mjs; the real one is the front desk's).
+    if ((p === '/api/claude' || p.startsWith('/api/claude/')) && (await claudeStandin(req, res, p, url))) return
     if (p === '/api/project' && req.method === 'GET') return json(res, 200, await projectPayload(files))
     if (p === '/api/files' && req.method === 'GET') return json(res, 200, { files: await files.list() })
     if (p === '/api/files' && req.method === 'POST') {

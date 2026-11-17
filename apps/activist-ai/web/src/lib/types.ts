@@ -164,6 +164,29 @@ export interface Turn {
   /** Set while opencode is retrying the model: "Trying again in 5 s". */
   notice: string | null
   ended: number | null
+  /** Who answered: Ola (opencode, on this machine; the default) or Claude (Claude Code, outside it). */
+  engine?: Engine
+  /** A Claude turn: its run id, for Stop and for following it again. */
+  run?: string | null
+  /** Why Claude took over by itself, in one sentence (null when the person asked). */
+  handoff?: string | null
+}
+
+export type Engine = 'ola' | 'claude'
+export type ClaudeAuto = 'ask' | 'stuck' | 'always'
+
+/** GET /api/claude: Fallback to Claude for this project. */
+export interface ClaudeInfo {
+  enabled: boolean
+  auto: ClaudeAuto
+  /** Only the project's owner may change the setting. */
+  canChange: boolean
+  mode: 'oauth' | 'api_key'
+  configured: boolean
+  /** Why it cannot be turned on, in a plain sentence; null when it can. */
+  unavailable: string | null
+  month: { unit: 'usd' | 'tokens'; used: number; cap: number; reported: boolean }
+  running: { run: string; conversation: string | null } | null
 }
 
 export interface Approval {
@@ -176,6 +199,9 @@ export interface Approval {
   items: { label: string; detail: string | null }[]
   /** The step it belongs to, if any. */
   stepID: string | null
+  /** A question from Claude Code (answered through the front desk), not from opencode. */
+  engine?: Engine
+  run?: string
 }
 
 export type Connection = 'connecting' | 'open' | 'lost'

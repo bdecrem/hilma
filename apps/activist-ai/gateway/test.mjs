@@ -847,6 +847,11 @@ test('Fallback to Claude: refused unless granted; the credential is replaced, ne
     assert.deepEqual([two.mode, two.requests, two.tokens, two.cost_micro_usd], ['oauth', 1, 15, 0], 'oauth counts tokens, no dollars')
     const one = usage.json.data.find((u) => u.caller === 'ws-one').claude_month
     assert.deepEqual([one.requests, one.cost_micro_usd], [2, 3500])
+    // The front desk learns which modes have a credential (true or false, never the credential).
+    assert.deepEqual(usage.json.claude_modes, { oauth: true, api_key: true })
+    assert.ok(!usage.text.includes(KEY) && !usage.text.includes(OAUTH))
+    // A caller's own usage does not list the modes.
+    assert.equal((await call(g, k.one, null, { path: '/v1/usage', method: 'GET' })).json.claude_modes, undefined)
 
     // count_tokens passes; a model not offered is refused before it goes anywhere.
     assert.equal((await claudeCall(g, k.two, msg('count'), { p: '/anthropic/v1/messages/count_tokens?beta=true' })).json.input_tokens, 12)
@@ -875,6 +880,7 @@ test('Fallback to Claude: refused unless granted; the credential is replaced, ne
     const unset = await claudeCall(g, k.three, msg('hi'))
     assert.equal(unset.status, 503)
     assert.match(unset.json.error.message, /not set up/)
+    assert.equal((await call(g, T.usage + T.usage, null, { path: '/v1/usage', method: 'GET' })).json.claude_modes.oauth, false, 'a token file others can read counts as no credential')
 
     // The log: no credential, no content; the Claude lines say the mode and the numbers.
     for (const secret of [KEY, OAUTH, k.one, k.two, 'hello from claude', 'sk-evil']) assert.ok(!g.out.includes(secret) && !g.err.includes(secret), `the log has ${secret.slice(0, 10)}`)
@@ -883,6 +889,49 @@ test('Fallback to Claude: refused unless granted; the credential is replaced, ne
     assert.equal(lines[0].tokens_in, 100)
     assert.equal(lines[0].tokens_out, 50)
     assert.equal(lines[0].cost_micro_usd, 1750)
+  } finally {
+    await g.stop()
+  }
+})
+
+test('the hosted open model: refused unless granted; its own upstream, key and model id; the month ceiling holds', async () => {
+  const up = await fakeUpstream()
+  const hostedUp = await fakeUpstream()
+  const dir = mkdtempSync(path.join(TMP, 'hosted-'))
+  const grants = path.join(dir, 'gateway-hosted')
+  writeGrants(grants, {})
+  const HKEY = `hosted-key-${tok()}`
+  const k = { one: tok(), two: tok() }
+  const env = { ...baseEnv(up.url), GATEWAY_TOKENS: `ws-one:${k.one},ws-two:${k.two}`, HOSTED_BASE_URL: hostedUp.url, HOSTED_API_KEY: HKEY, HOSTED_MODEL: 'Big/Open-Model-1', HOSTED_PROVIDER: 'Made-up Cloud', GATEWAY_HOSTED_FILE: grants, GATEWAY_HOSTED_PRICES: 'in=1000,out=1000', GATEWAY_USAGE_TOKEN: T.usage + T.usage }
+  const g = await gateway(env)
+  try {
+    const models = await call(g, k.one, null, { method: 'GET', path: '/v1/models' })
+    assert.ok(models.json.data.some((m) => m.id === 'hosted'), 'hosted is not listed')
+    const off = await call(g, k.one, chat({ tag: 'h0' }, 'hosted'))
+    assert.equal(off.status, 403)
+    assert.match(off.json.error.message, /hosted open model is off for this project/)
+    assert.equal(hostedUp.st.seen.length, 0, 'a refused request reached the provider')
+    writeGrants(grants, { 'ws-one': { cap_micro_usd: 1000 } })
+    await waitFor(() => g.lines.some((l) => l.includes('"event":"hosted_grants"') && l.includes('"callers":1')), 5000, 'the hosted grants reload')
+    const ok = await call(g, k.one, chat({ tag: 'h1', usage: [1, 0] }, 'hosted'))
+    assert.equal(ok.status, 200)
+    const seen = hostedUp.st.seen.at(-1)
+    assert.equal(seen.model, 'Big/Open-Model-1', 'the caller’s model string went upstream')
+    assert.equal(seen.auth, `Bearer ${HKEY}`, 'the provider did not get its own key')
+    assert.equal(up.st.seen.length, 0, 'the everyday model server saw a hosted request')
+    assert.equal(ok.json.model, 'hosted')
+    assert.equal((await call(g, k.two, chat({ tag: 'h2' }, 'hosted'))).status, 403, 'another project without a grant')
+    // 1 token at $1000/MTok is 1000 micro-dollars: the $0.001 ceiling is reached.
+    const capped = await call(g, k.one, chat({ tag: 'h3' }, 'hosted'))
+    assert.equal(capped.status, 429)
+    assert.match(capped.json.error.message, /budget for the hosted open model/)
+    const usage = await call(g, T.usage + T.usage, null, { method: 'GET', path: '/v1/usage' })
+    const one = usage.json.data.find((u) => u.caller === 'ws-one').hosted_month
+    assert.deepEqual([one.granted, one.requests, one.cost_micro_usd], [true, 1, 1000])
+    assert.equal(usage.json.hosted.provider, 'Made-up Cloud')
+    assert.ok(!g.out.includes(HKEY) && !g.err.includes(HKEY), 'the hosted key is in the log')
+    const line = g.logs().find((l) => l.model === 'hosted' && l.status === 200)
+    assert.equal(line.cost_micro_usd, 1000)
   } finally {
     await g.stop()
   }

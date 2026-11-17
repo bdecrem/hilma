@@ -31,7 +31,9 @@ export function ApprovalSheet(props: { ola: Ola }) {
               {ap().title}
             </h2>
             <p id="approval-why" class="sheet-lede">
-              You asked Ola to check with you first. Nothing happens until you answer; it all stays on Ola’s computer.
+              {ap().engine === 'claude'
+                ? 'You asked to be checked with first. Nothing happens until you answer; the work itself is done here, in your project.'
+                : 'You asked Ola to check with you first. Nothing happens until you answer; it all stays on Ola’s computer.'}
             </p>
             <ul class="approval-items">
               <For each={ap().items}>{(item) => <ApprovalItem label={item.label} detail={item.detail} action={ap().action} />}</For>

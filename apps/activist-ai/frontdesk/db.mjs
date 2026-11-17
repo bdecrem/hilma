@@ -219,6 +219,15 @@ const MIGRATIONS = [
   ALTER TABLE audit_v4 RENAME TO audit;
   CREATE INDEX audit_workspace ON audit(workspace_id, at);
   `,
+  // 5: Fallback to Claude, per project (frontdesk/claude.mjs): off by default; when to hand a
+  // request over by itself (ask: only when the person asks; stuck: when Ola gets stuck; always);
+  // and the month's ceiling if the admin set one (else the front desk's default).
+  `
+  ALTER TABLE workspaces ADD COLUMN claude_enabled INTEGER NOT NULL DEFAULT 0 CHECK (claude_enabled IN (0, 1));
+  ALTER TABLE workspaces ADD COLUMN claude_auto TEXT NOT NULL DEFAULT 'ask' CHECK (claude_auto IN ('ask', 'stuck', 'always'));
+  ALTER TABLE workspaces ADD COLUMN claude_cap_micro_usd INTEGER CHECK (claude_cap_micro_usd IS NULL OR claude_cap_micro_usd >= 0);
+  ALTER TABLE workspaces ADD COLUMN claude_cap_tokens INTEGER CHECK (claude_cap_tokens IS NULL OR claude_cap_tokens >= 0);
+  `,
 ]
 
 /** Opens (and creates, and migrates) the platform database in `dir`. */

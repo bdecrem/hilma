@@ -157,3 +157,24 @@ opencode for this mode: `tools/install-local-opencode.sh` (the pinned 2.3.0, use
 each file the page asks for is read from the project on the machine with the saved password. A
 content rule blocks every other load (http, https, websockets, file URLs) and navigation away is
 refused; the page's own JavaScript runs.
+
+## Keeping OlaKit in step with the web app (Fallback to Claude, 2026-11-16)
+
+`web/src/lib/steps.ts` and `conversation.ts` gained Claude Code's side; the Swift ports in
+`OlaKit/Sources/OlaKit/Steps.swift` and `Conversation.swift` were not changed and do not have it yet:
+
+- `steps.ts`: `claudeTool` / `claudeInput` / `describeClaudeTool` (Claude Code's tool names, such as
+  `Read`, `Write`, `Edit`, `Bash`, `Glob`, `Grep`, and its `file_path` argument, said with Ola's own
+  verbs), `describeClaudeApproval` (titles "Claude wants to write a file", "Claude wants to run code
+  in your project"), and `stuckReason` / `STUCK_WORDS` (the observable "Ola got stuck" signals and
+  the one sentence the person reads).
+- `conversation.ts`: `Turn` has `engine` (`ola` or `claude`), `run` and `handoff`;
+  `startClaudeTurn`, `applyClaudeEvent` (folds the front desk's NDJSON: its `ola` lines `started`,
+  `approval`, `answered`, `ended`, and Claude Code's `assistant`, `user`, `result`,
+  `system/api_retry`), `turnFromClaudeRun` (a run from `GET /api/claude/turns`) and `contextOf`
+  (the conversation so far, sent to Claude as context). `applyEvent` now leaves a Claude turn alone.
+- A Claude reply is marked "Claude, outside this machine"; its approvals use the same three
+  answers as Ola's.
+
+The apps talk to Bart's own opencode, not the front desk, so they have no Claude runs today; port
+these when they do.

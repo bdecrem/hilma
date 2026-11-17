@@ -176,3 +176,81 @@ export function describeApproval(action: string, resources: string[], metadata: 
   }
   return { title: `Ola wants to ${action.replace(/_/g, ' ')}`, items: resources.map((r) => ({ label: r, detail: null })) }
 }
+
+// ---------------------------------------------------------------- Claude Code (Fallback to Claude)
+//
+// Claude Code names its tools differently (Read, Write, Edit, Bash, Glob, Grep, …) and calls the
+// file argument file_path. They are said with the same fixed verbs as Ola's, by mapping each to
+// its opencode counterpart; an unknown one falls through to "Used <name>", as for opencode.
+const CLAUDE_TOOLS: Record<string, string> = {
+  Read: 'read',
+  Write: 'write',
+  Edit: 'edit',
+  MultiEdit: 'multiedit',
+  NotebookEdit: 'edit',
+  Bash: 'shell',
+  Glob: 'glob',
+  Grep: 'grep',
+  LS: 'list',
+  Task: 'task',
+  Agent: 'task',
+  TodoWrite: 'todowrite',
+  Skill: 'skill',
+  ToolSearch: 'skill',
+  WebFetch: 'webfetch',
+  WebSearch: 'websearch',
+}
+/** opencode's name for a Claude Code tool (unknown ones keep their own name). */
+export const claudeTool = (name: string): string => CLAUDE_TOOLS[name] ?? name
+/** Claude Code's arguments, with the file argument where describeTool looks for it. */
+export function claudeInput(input: Input): Input {
+  const out: Input = { ...input }
+  if (typeof input.file_path === 'string' && !out.path) out.path = input.file_path
+  if (typeof input.notebook_path === 'string' && !out.path) out.path = input.notebook_path
+  return out
+}
+export function describeClaudeTool(name: string, input: Input, dir: string | null): Words {
+  if (name === 'EnterPlanMode' || name === 'ExitPlanMode') return { icon: 'think', verb: 'Planned the next steps', object: '' }
+  return describeTool(claudeTool(name), claudeInput(input), dir)
+}
+
+/** Claude Code's permission question (can_use_tool) as a question the person can answer. */
+export function describeClaudeApproval(name: string, input: Input, dir: string | null): { title: string; action: string; items: { label: string; detail: string | null }[] } {
+  const tool = claudeTool(name)
+  const a = claudeInput(input)
+  if (tool === 'shell') {
+    const cmd = str(a.command)
+    const w = describeCommand(cmd)
+    return { title: 'Claude wants to run code in your project', action: 'shell', items: [{ label: `${present(w.verb)}${w.object ? ` ${w.object}` : ''}`, detail: cmd }] }
+  }
+  if (tool === 'write' || tool === 'edit' || tool === 'multiedit') {
+    const file = shortPath(str(a.path), dir) || 'a file'
+    const edits = Array.isArray(a.edits) ? (a.edits as Input[]).map((e) => `- ${str(e?.old_string)}\n+ ${str(e?.new_string)}`).join('\n\n') : ''
+    const detail = tool === 'write' ? str(a.content) : edits || (str(a.old_string) || str(a.new_string) ? `- ${str(a.old_string)}\n+ ${str(a.new_string)}` : '')
+    return { title: 'Claude wants to write a file', action: 'edit', items: [{ label: `${tool === 'write' ? 'Write' : 'Change'} ${file}`, detail: detail || null }] }
+  }
+  const w = describeClaudeTool(name, input, dir)
+  return { title: `Claude wants to ${present(w.verb).toLowerCase()}${w.object ? ` ${w.object}` : ''}`, action: tool, items: [{ label: name, detail: JSON.stringify(input, null, 2) }] }
+}
+
+/**
+ * Did an Ola run get stuck, by what can be seen? Only these three, never a score: the run ended
+ * in an error; it hit its step or token budget; or three tool calls in a row did not work.
+ */
+export type Stuck = 'error' | 'budget' | 'tools'
+export function stuckReason(t: { status: string; error: Problem | null; steps: { status: string }[] }): Stuck | null {
+  const detail = `${t.error?.text ?? ''} ${t.error?.detail ?? ''}`
+  if (/429|quota|used up|max(imum)? ?steps|step limit|context length|too long|max_tokens/i.test(detail)) return 'budget'
+  let row = 0
+  for (const s of t.steps) row = s.status === 'failed' ? row + 1 : 0
+  if (row >= 3) return 'tools'
+  if (t.status === 'failed') return 'error'
+  return null
+}
+/** The one sentence the person reads when Claude takes over by itself. */
+export const STUCK_WORDS: Record<Stuck | 'always', string> = {
+  error: 'Ola ran into an error, so Claude is trying the same request.',
+  budget: 'Ola reached the most it may do for one request, so Claude is trying the same request.',
+  tools: 'Three of Ola’s steps in a row did not work, so Claude is trying the same request.',
+  always: 'This project hands every request to Claude.',
+}
