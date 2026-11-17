@@ -1290,6 +1290,8 @@ await check('the hosted open model is off by default and independent of Claude; 
 })
 const HOSTED_ASK = HOSTED_LIVE ? 'How many respondents are in survey.csv? Count the data rows with a short program (not the header), then write just that number to hosted-count.txt.' : 'Count the rows in survey.csv'
 await check(`a request handed to the hosted model runs in the same sealed VM and conversation, marked by its model, audited with numbers only, and the conversation goes back to Ola's model${HOSTED_LIVE ? ` (LIVE: ${HOSTED_LIVE})` : ''}`, async () => {
+  // The live run counts a made-up survey of 37 respondents (written in the VM, as the work user).
+  if (HOSTED_LIVE) spawnSync(CTR, ['exec', '--user', '1000', `ola-${FA}`, 'python3', '-c', "import csv\nw = csv.writer(open('/work/survey.csv', 'w', newline=''))\nw.writerow(['respondent', 'building', 'rent_burden'])\nfor i in range(37): w.writerow([f'R{i + 1:03d}', ['North', 'Elm', 'Park'][i % 3], ['high', 'medium', 'low'][i % 3]])"], { encoding: 'utf8' })
   const before = HOSTED_LIVE ? 0 : fakeHosted.calls()
   const t0 = Date.now()
   const r = await hostedRun(a, HOSTED_ASK)
@@ -1297,7 +1299,7 @@ await check(`a request handed to the hosted model runs in the same sealed VM and
   assert(JSON.stringify(r.models) === '["hosted"]' && r.idle[0] === 'succeeded', `models ${r.models}, outcome ${r.idle}; gateway: ${hostedLog()}`)
   const file = HOSTED_LIVE ? inVm('cat /work/hosted-count.txt') : inVm('test -e /work/rows.md && echo there')
   const real = inVm("python3 -c \"import csv; print(sum(1 for _ in csv.reader(open('/work/survey.csv'))) - 1)\"")
-  assert(HOSTED_LIVE ? file.trim() === real : file === 'there', `the file: ${file} (the survey has ${real})`)
+  assert(HOSTED_LIVE ? real === '37' && file.trim() === real : file === 'there', `the file: ${file} (the survey has ${real})`)
   if (!HOSTED_LIVE) assert(fakeHosted.calls() > before, 'the hosted model was not asked')
   const row = dbRow("SELECT tokens_in, tokens_out, cost_micro_usd, name_ref FROM audit WHERE action = 'hosted_used' ORDER BY id DESC LIMIT 1")
   assert(row && row.tokens_in > 0 && row.name_ref === null && row.cost_micro_usd !== null, `audit: ${JSON.stringify(row)}`)

@@ -1272,6 +1272,18 @@ hosted grants kept right through a member's removal, a close and a reopen;
 `OLA_CHECK_HOSTED_LIVE=zai-org/GLM-5.3` makes its hosted run live); `workspace/check.mjs` (the image
 names `hosted`; from inside the VM the gateway serves it only with a grant).
 
+**Measured 2026-11-17 on the mini.** All four suites `--no-live` (gateway 31/31, front desk 55/55,
+web 71/71 in Chromium and WebKit, workspace 91/91), and once live: GLM-5.3 as `hosted`, in the
+sealed VM, counted a made-up survey of 37 rows with a short program and wrote 37, in 9 s, 4 requests,
+22,873 tokens in and 423 out, $0.034; the conversation was back on Ola's model after. Three things
+learned on the way: a parallel branch rebuilt `ola-workspace:2.3.0-9` on the mini from its own tree,
+and opencode then answered `provider.no-route` ("Model unavailable: ola/hosted"), so an image tag
+names whatever tree built it last (hence 2.3.0-10; two branches should never share a number); opencode
+lists a conversation's messages newest first; and inside the VM the scripted model's folder listings
+fail ("ripgrep execution failed"), which is three failed steps in a row, a stretch: the front desk
+check's long-run checks therefore say "Never suggest" (with a fallback set up, the card would rightly
+stop Ola before the ceiling). Why `glob` fails in the VM is open: it is the image's, not this feature's.
+
 **After deploying** (the deploy builds image 2.3.0-10 before the suites):
 
 ```bash
