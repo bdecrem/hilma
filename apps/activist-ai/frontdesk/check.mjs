@@ -825,6 +825,8 @@ await check('devices, as in production: behind the real TLS front (https, the do
     }
     return `through the front: grant 200, token 200 with no passcode, ${JSON.stringify(got)}; from ${O2}: ${engines.join(' and ')} landed on http://127.0.0.1 and redeemed`
   } finally {
+    // The computers this check signed in are signed out again, so the checks after it start clean.
+    for (const x of JSON.parse(admin('devices', 'dina', '--json'))) if (!x.revoked && /production path|^Made-up (Chromium|WebKit)$/.test(x.name)) admin('revoke-device', String(x.id))
     for (const a2 of apps) a2.close()
     fd2.kill('SIGTERM')
     front.kill('SIGTERM')
@@ -836,7 +838,7 @@ await check('devices: an open model request is cut within two seconds when the d
   // dina has no project: her devices are on the projects page.
   await dina.page.goto(`${ORIGIN}/#/`)
   await dina.page.reload()
-  await dina.page.locator('.your-devices .device-row-name', { hasText: 'Made-up Mac' }).waitFor({ timeout: 15_000 })
+  await dina.page.locator('.your-devices .device-row-name', { hasText: /^Made-up Mac$/ }).waitFor({ timeout: 15_000 })
   const rows = await dina.page.locator('.your-devices .device-row-name').allInnerTexts()
   assert(rows.includes('Made-up Mac'), `the list: ${rows}`)
   if (SHOTS) {
@@ -852,7 +854,7 @@ await check('devices: an open model request is cut within two seconds when the d
     // A request the model holds 8 s, then Remove: the stream must end within two seconds.
     const ctl = new AbortController()
     const st = { status: null, ended: null }
-    fetch(`${ORIGIN}/api/device/gw/v1/chat/completions`, { method: 'POST', signal: ctl.signal, headers: { authorization: `Bearer ${gwDevice}`, 'content-type': 'application/json' }, body: JSON.stringify({ model: 'general', stream: true, messages: [{ role: 'user', content: 'slow 1x8000' }] }) })
+    fetch(`${ORIGIN}/api/device/gw/v1/chat/completions`, { method: 'POST', signal: ctl.signal, headers: { authorization: `Bearer ${gwDevice}`, 'content-type': 'application/json' }, body: JSON.stringify({ model: 'general', stream: true, messages: [{ role: 'user', content: 'slow 1x8000' }], tools: [{ type: 'function', function: { name: 'noop', description: 'nothing', parameters: { type: 'object', properties: {} } } }] }) })
       .then(async (r) => {
         st.status = r.status
         for await (const _ of r.body);
@@ -862,12 +864,12 @@ await check('devices: an open model request is cut within two seconds when the d
     await sleep(1500)
     assert(st.ended === null, 'the request ended before the removal')
     const t0 = Date.now()
-    await dina.page.getByRole('button', { name: 'Remove Made-up Mac' }).click()
+    await dina.page.getByRole('button', { name: 'Remove Made-up Mac', exact: true }).click()
     await until(() => st.ended !== null, 5000, 'the cut')
     assert(st.ended - t0 < 2500, `cut after ${st.ended - t0} ms`)
     cut = `cut ${st.ended - t0} ms after Remove`
-  } else await dina.page.getByRole('button', { name: 'Remove Made-up Mac' }).click()
-  await until(async () => !(await dina.page.locator('.your-devices .device-row-name', { hasText: 'Made-up Mac' }).count()), 5000, 'the row gone')
+  } else await dina.page.getByRole('button', { name: 'Remove Made-up Mac', exact: true }).click()
+  await until(async () => !(await dina.page.locator('.your-devices .device-row-name', { hasText: /^Made-up Mac$/ }).count()), 5000, 'the row gone')
   assert((await asDevice('/api/device/me', gwDevice)).status === 401, 'the removed device still works')
   shots.push(cut)
   // In a project, the list is under Settings: alice, allowed for this check, a device added by the admin.

@@ -3165,6 +3165,9 @@ code {
   border-color: rgba(201, 210, 234, 0.28);
 }
 @media (max-width: 560px) {
+  .device-actions {
+    align-self: stretch;
+  }
   .device-actions > * {
     flex: 1 1 100%;
     justify-content: center;
