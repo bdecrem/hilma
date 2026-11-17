@@ -87,7 +87,14 @@ const LAMP = (() => {
   return { B, E, H, d, q, Bc, L, r0, r1, Mc, edgeL: add(Mc, q, r1), edgeR: add(Mc, q, -r1) }
 })()
 
-function scene(T) {
+// `V` is for alternates of the drawing (src/alt/*.mjs, built to public/ola-site/alt/): `omit` leaves
+// things out ('shelf', 'socket', 'basket', 'deskBooks', 'plant', 'papers', 'mug', 'lampCord'), and
+// `layers` adds drawing at four depths, each a function of the kit below that returns SVG: `back`
+// (against the wall, under the lamp's light), `desk` (on the desk, behind the computer),
+// `front` (in front of the computer, behind the lamp) and `top` (in front of everything).
+// With no `V` the drawing is the approved one, byte for byte.
+function scene(T, V = {}) {
+  const omit = new Set(V.omit ?? []), layers = V.layers ?? {}
   const PEN = { base: 3.3, min: 1.3, dirMix: 0.4, wob: 0.1, tin: 0.02, tout: 0.02, w0: 0.85, w1: 0.85 }
   const pen = (pts, o = {}) => `<path fill="${T.line}" d="${brush(pts, { ...PEN, ...o })}"/>`
   const fill = (pts, c, off = true) => `<path fill="${c}" d="${D(pts)}"${off ? ' transform="translate(2.6 2.2)"' : ''}/>`
@@ -99,6 +106,8 @@ function scene(T) {
     const pts = chain(P, [[at(0.15, 0.55), at(0.75, 0.5), at(1, 0)], [at(0.75, -0.5), at(0.15, -0.55), P]], 10)
     return fill(pts, seed % 3 ? T.plant : T.plantDark) + pen(pts, { base: 2.2, seed }) + pen(wl(at(0.1, 0), at(0.75, 0), { j: 0.3, seed }), { base: 1.4 })
   }
+  const kit = { T, pen, fill, shape, box, leaf, wl, ring, R, ell, D, add, unit, chain, brush, f1, LAMP, PEN }
+  const layer = (name) => (layers[name] ? layers[name](kit) : '')
   let s = ''
 
   // window, with what is outside it
@@ -118,6 +127,7 @@ function scene(T) {
   s += box(R(W.x - 12, W.y + W.h, W.w + 24, 11), T.frame, { seed: 8 })
 
   // shelf, books, a jar of pencils
+  if (!omit.has('shelf')) {
   const books = [[46, 98, 20, T.b1], [66, 106, 16, T.b2], [82, 92, 22, T.b3], [104, 102, 15, T.b4]]
   books.forEach(([x, top, w, c], i) => { s += box(R(x, top, w, 176 - top), c, { seed: 10 + i }); s += pen(wl([x + 4, top + 14], [x + w - 4, top + 14], { j: 0.2 }), { base: 1.5 }) })
   s += box([[122, 176], [138, 176], [170, 110], [155, 104]], T.b5, { seed: 15 })
@@ -126,11 +136,15 @@ function scene(T) {
   s += box(R(30, 176, 232, 10), T.wood, { seed: 17 })
   s += box([[52, 186], [68, 186], [52, 202]], T.wood, { seed: 18 })
   s += box([[224, 186], [240, 186], [240, 202]], T.wood, { seed: 19 })
+  }
 
   // the wall socket and the cable: it is plugged in, here
+  if (!omit.has('socket')) {
   s += box(R(562, 360, 22, 28), T.frame, { seed: 20 })
   s += `<circle cx="570" cy="374" r="1.8" fill="${T.line}"/><circle cx="577" cy="374" r="1.8" fill="${T.line}"/>`
   s += pen(chain([392, 400], [[[440, 412], [520, 404], [572, 378]]], 30), { base: 2.4, dirMix: 0 })
+  }
+  s += layer('back')
 
   // the lamp's light, from the mouth of the shade down onto the desk
   const { edgeL, edgeR } = LAMP
@@ -144,18 +158,23 @@ function scene(T) {
   s += box(R(38, 470, 20, 132), T.woodDark, { seed: 24 })
   s += box(R(548, 470, 20, 132), T.woodDark, { seed: 25 })
   // under the desk: the wastepaper basket and one draft that missed it
+  if (!omit.has('basket')) {
   s += box([[318, 536], [376, 536], [370, 602], [324, 602]], T.frame, { seed: 27, bow: 0.5 })
   s += pen(wl([321, 552], [373, 552], { j: 0.3, seed: 2 }), { base: 1.6, dirMix: 0 })
   s += pen(wl([323, 586], [371, 586], { j: 0.3, seed: 3 }), { base: 1.6, dirMix: 0 })
   s += box([[332, 536], [346, 518], [362, 524], [358, 536]], T.paper, { seed: 28, off: false })
   s += box(ell(400, 594, 11, 9, 14), T.paper, { smooth: true, off: false, base: 2.2 })
   s += pen(chain([394, 590], [[[400, 586], [404, 596], [408, 590]]], 8), { base: 1.3, dirMix: 0 })
+  }
   s += pen(wl([6, 604], [600, 604], { j: 0.4, seed: 26 }), { base: 2.4 })
 
   // books on the desk, a plant on them, trailing
+  if (!omit.has('deskBooks')) {
   s += box(R(46, 404, 126, 24), T.b1, { seed: 30 }) + pen(wl([54, 422], [166, 422], { j: 0.2 }), { base: 1.4 })
   s += box(R(56, 386, 108, 18), T.b2, { seed: 31 }) + pen(wl([62, 399], [158, 399], { j: 0.2 }), { base: 1.4 })
   s += box(R(50, 370, 116, 16), T.b3, { seed: 32 })
+  }
+  if (!omit.has('plant')) {
   const stems = [
     [[114, 312], [[[108, 280], [92, 262], [84, 236]]]],
     [[116, 312], [[[120, 280], [124, 246], [128, 222]]]],
@@ -171,10 +190,14 @@ function scene(T) {
   s += box([[80, 318], [150, 318], [142, 370], [88, 370]], T.pot, { seed: 33 })
   s += `<path fill="${T.potBand}" d="${D([[83, 334], [147, 334], [146, 344], [84, 344]])}"/>`
   s += box(R(74, 308, 82, 11), T.pot, { seed: 34 })
+  }
+  s += layer('desk')
 
   // papers, then the computer
+  if (!omit.has('papers')) {
   s += box([[180, 428], [228, 428], [232, 421], [184, 421]], T.paper, { seed: 35 })
   s += box([[178, 422], [226, 422], [232, 415], [186, 415]], T.paper, { seed: 36 })
+  }
   s += box([[234, 346], [248, 330], [398, 330], [384, 346]], T.pcTop, { seed: 37 })
   s += box([[384, 346], [398, 330], [398, 414], [384, 430]], T.pcSide, { seed: 38 })
   s += box(R(234, 346, 150, 84), T.pc, { seed: 39 })
@@ -185,6 +208,7 @@ function scene(T) {
   const tag = [[258, 368], [272, 356], [336, 356], [336, 404], [272, 404], [258, 392]]
   s += `<g transform="rotate(-8 296 380)">${fill(ring(tag, { seed: 41, bow: 0.4 }), T.tag)}${pen(ring(tag, { seed: 41, bow: 0.4 }), { base: 2.4 })}<circle cx="268" cy="380" r="3.2" fill="${T.pc}" stroke="${T.line}" stroke-width="1.6"/>`
   s += `<svg x="276" y="360" width="58" height="40" viewBox="0 0 430 250">${wmPaths('compact', T.tagInk, T.comma)}</svg></g>`
+  s += layer('front')
 
   // the lamp
   const { B, E, H, d, q, Bc, L, r0, r1, Mc } = LAMP
@@ -206,7 +230,7 @@ function scene(T) {
     return pen(pts, { base: 1.5, min: 1, dirMix: 0, wob: 0 })
   }
   // cord: out of the back of the base, over the desk edge
-  s += pen(chain([506, 420], [[[534, 428], [570, 420], [590, 440]], [[600, 456], [596, 500], [598, 540]]], 24), { base: 2.2, dirMix: 0, seed: 58 })
+  if (!omit.has('lampCord')) s += pen(chain([506, 420], [[[534, 428], [570, 420], [590, 440]], [[600, 456], [596, 500], [598, 540]]], 24), { base: 2.2, dirMix: 0, seed: 58 })
   // base: a weighted dome on a foot
   s += box(ell(B[0], 423, 30, 6.5, 30), T.shade, { smooth: true, off: false, base: 2.6, seed: 50 })
   s += box(chain([B[0] - 17, 422], [[[B[0] - 15, 409], [B[0] + 15, 409], [B[0] + 17, 422]]], 14), T.shade, { smooth: true, off: false, base: 2.4, seed: 59 })
@@ -233,11 +257,14 @@ function scene(T) {
   s += knuckle(H, 5.6, 63)
 
   // the mug
+  if (!omit.has('mug')) {
   s += pen(chain([550, 392], [[[566, 390], [568, 412], [548, 412]]], 14), { base: 3.2, dirMix: 0 })
   s += box([[516, 384], [552, 384], [550, 426], [518, 426]], T.paper, { seed: 55 })
   s += `<path fill="${T.comma}" d="${D([[517, 394], [551, 394], [551, 402], [517, 402]])}"/>`
   s += pen(chain([530, 374], [[[522, 362], [538, 352], [530, 338]]], 14), { base: 2, dirMix: 0, seed: 56 })
   s += pen(chain([542, 374], [[[534, 360], [550, 352], [542, 336]]], 14), { base: 2, dirMix: 0, seed: 57 })
+  }
+  s += layer('top')
   return s
 }
 

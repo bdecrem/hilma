@@ -158,8 +158,10 @@ figcaption{font-style:italic;font-size:14.5px;color:var(--text2);margin-top:4px;
   .paint{min-width:262px}
 }`
 
-function landing() {
-  return `${head({ title: TITLE, description: DESCRIPTION, base: BASE, canonical: `${SITE_URL}/`, fonts: ['literata', 'literata-italic', 'bricolage'], css: LANDING_CSS, extra: `<meta property="og:type" content="website">
+// `alt` is an alternate of the drawing (src/alt/<slug>.mjs): the same page with that drawing, not
+// indexed, written to alt/<slug>.html to be looked at beside the live one.
+function landing(alt) {
+  return `${head({ title: TITLE, description: DESCRIPTION, base: BASE, canonical: `${SITE_URL}/`, fonts: ['literata', 'literata-italic', 'bricolage'], css: LANDING_CSS, extra: `${alt ? '<meta name="robots" content="noindex">\n' : ''}<meta property="og:type" content="website">
 <meta property="og:site_name" content="Ola">
 <meta property="og:url" content="${SITE_URL}/">
 <meta property="og:title" content="${TITLE}">
@@ -185,7 +187,7 @@ function landing() {
     ${signature()}
     <div class="act">${btn('Ask to join', MAILTO)}<small>or write to <a href="${MAILTO}">bart@ola.cx</a></small></div>
   </div>
-  <figure class="art"><svg viewBox="0 26 600 586" role="img" aria-label="${SCENE_LABEL}">${scene(T)}</svg><figcaption>Our datacenter.</figcaption></figure>
+  <figure class="art"><svg viewBox="0 26 600 586" role="img" aria-label="${alt?.label ?? SCENE_LABEL}">${scene(T, alt)}</svg><figcaption>${alt?.caption ?? 'Our datacenter.'}</figcaption></figure>
 </main>
 </body>
 </html>
@@ -252,6 +254,47 @@ const manifest = {
 fs.mkdirSync(OUT, { recursive: true })
 fs.writeFileSync(path.join(OUT, 'index.html'), landing())
 fs.writeFileSync(path.join(OUT, '404.html'), notFound())
+// alternates of the drawing: each src/alt/<slug>.mjs default-exports { name, label, omit, layers, caption? }
+const ALT = path.join(HERE, 'src', 'alt')
+if (fs.existsSync(ALT)) {
+  fs.mkdirSync(path.join(OUT, 'alt'), { recursive: true })
+  const alts = []
+  for (const f of fs.readdirSync(ALT).filter((f) => f.endsWith('.mjs')).sort()) {
+    const slug = f.replace(/\.mjs$/, '')
+    try {
+      const alt = (await import(pathToFileURL(path.join(ALT, f)).href + `?t=${Date.now()}`)).default
+      fs.writeFileSync(path.join(OUT, 'alt', `${slug}.html`), landing(alt))
+      console.log(`alt/${slug}.html`, alt.name ?? '')
+      alts.push({ slug, alt })
+    } catch (e) {
+      console.error(`alt/${slug}: NOT built: ${e.stack ?? e}`)
+    }
+  }
+  // the alternates beside today's drawing, on one page
+  const fig = (title, href, svg, label) => `<figure><a href="${href}"><svg viewBox="0 26 600 586" role="img" aria-label="${label}">${svg}</svg></a><figcaption><b>${title}</b><a href="${href}">See it on the page</a></figcaption></figure>`
+  fs.writeFileSync(path.join(OUT, 'alt', 'index.html'), `${head({ title: 'Ola: the drawing, and its alternates', description: 'Alternates of the drawing on ola.cx.', base: BASE, fonts: ['literata', 'bricolage'], extra: '<meta name="robots" content="noindex">\n', css: `
+main{max-width:1680px;margin:0 auto;padding:clamp(20px,4vw,56px)}
+h1{font-family:var(--grot);font-weight:700;font-size:clamp(22px,2.4vw,30px);letter-spacing:-.02em;margin:0 0 6px}
+main>p{margin:0 0 clamp(18px,3vw,40px);color:var(--text2)}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));gap:clamp(20px,3vw,48px)}
+figure{margin:0}
+figure svg{display:block;width:100%;height:auto}
+figcaption{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-top:8px;padding:0 3%}
+figcaption b{font-family:var(--grot);font-weight:650;font-size:17px}
+figcaption a{color:var(--link);font-size:15px}` })}
+<body>
+<main>
+  <h1>Our datacenter, with its own power and water</h1>
+  <p>Today’s drawing, then the alternates. Each opens on the full page.</p>
+  <div class="row">
+    ${fig('Today', BASE, scene(T), SCENE_LABEL)}
+    ${alts.map(({ slug, alt }) => fig(alt.title ?? alt.name ?? slug, `${BASE}alt/${slug}.html`, scene(T, alt), alt.label ?? SCENE_LABEL)).join('\n    ')}
+  </div>
+</main>
+</body>
+</html>
+`)
+}
 fs.writeFileSync(path.join(OUT, 'favicon.svg'), favicon + '\n')
 fs.writeFileSync(path.join(OUT, 'site.webmanifest'), JSON.stringify(manifest, null, 2) + '\n')
 
