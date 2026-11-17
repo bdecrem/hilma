@@ -9,25 +9,29 @@ import SwiftUI
 @MainActor
 @Observable
 final class PhonePush {
-  static let service = "cx.ola.apns"
   static let teamID = "274T5WCVD2"
   static let topic = "cx.ola.phone"
+  /// Set when the key went into the Keychain, so Settings can say so without reading it.
+  static let readyKey = "ola.push.ready"
   let link: PhoneLink
   let filter = NotifyFilter()
-  private(set) var ready = PhonePush.loadKey() != nil
+  private(set) var ready = LocalSettings.defaults.bool(forKey: PhonePush.readyKey)
   var problem: String?
 
   init(link: PhoneLink) { self.link = link }
 
-  /// (p8 text, key id) from the Keychain.
+  /// (p8 text, key id) from the Keychain: read when the first notification is sent, not before.
   static func loadKey() -> (String, String)? {
-    let q: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service, kSecReturnData as String: true,
-                            kSecReturnAttributes as String: true, kSecMatchLimit as String: kSecMatchLimitOne]
-    var out: CFTypeRef?
-    guard SecItemCopyMatching(q as CFDictionary, &out) == errSecSuccess, let d = out as? [String: Any],
-          let data = d[kSecValueData as String] as? Data, let kid = d[kSecAttrAccount as String] as? String,
-          let p8 = String(data: data, encoding: .utf8) else { return nil }
-    return (p8, kid)
+    guard let item = SecretStore.item(.pushKey), let kid = item.note, !kid.isEmpty else { return nil }
+    return (item.value, kid)
+  }
+
+  /// Keeps the key (Set Up, and `Ola --import-secret push-key --key-id <id>`).
+  @discardableResult
+  static func keep(p8: String, keyID: String) -> Bool {
+    let ok = SecretStore.save(.pushKey, p8, note: keyID)
+    LocalSettings.defaults.set(ok, forKey: readyKey)
+    return ok
   }
 
   /// Set up: the open panel, prefilled to the key's file; read once, checked, kept in the Keychain.
@@ -44,10 +48,7 @@ final class PhonePush {
     guard name.hasPrefix("AuthKey_"), let p8 = try? String(contentsOf: url, encoding: .utf8) else { problem = "That is not an Apple key file (AuthKey_….p8)."; return }
     let kid = String(name.dropFirst("AuthKey_".count))
     guard (try? APNs(p8: p8, keyID: kid, teamID: Self.teamID, topic: Self.topic, host: APNs.sandbox)) != nil else { problem = "That file is not a key Ola can use."; return }
-    SecItemDelete([kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: Self.service] as CFDictionary)
-    let status = SecItemAdd([kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: Self.service, kSecAttrAccount as String: kid,
-                             kSecValueData as String: Data(p8.utf8), kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly] as CFDictionary, nil)
-    ready = status == errSecSuccess
+    ready = Self.keep(p8: p8, keyID: kid)
     if !ready { problem = "The Keychain did not take the key." }
   }
 

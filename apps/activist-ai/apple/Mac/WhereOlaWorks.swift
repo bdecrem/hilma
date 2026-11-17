@@ -317,7 +317,10 @@ struct WhereSettings: View {
     Task { await controller.apply() }
   }
 
-  func loadTokenState() { tokenSaved = tokenKnown ?? (LocalSettings.token != nil) }
+  /// Never reads the Keychain just to draw Settings: a flag says a token was saved.
+  func loadTokenState() {
+    tokenSaved = tokenKnown ?? (LocalSettings.defaults.bool(forKey: LocalSettings.tokenSavedKey) || (SecretStore.isKnown(.modelToken) && LocalSettings.token != nil))
+  }
 
   func choose() {
     let panel = NSOpenPanel()

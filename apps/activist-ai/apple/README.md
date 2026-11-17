@@ -12,7 +12,7 @@ apple/
     Conversation.swift the event stream folded into turns, steps and approvals (port of web/src/lib/conversation.ts)
     Steps.swift        the plain words for each step and approval (port of web/src/lib/steps.ts)
     Store.swift        the live state both apps show (@Observable)
-    Keychain.swift     the address (defaults) and password (Keychain, this device only)
+    Keychain.swift     every secret (SecretStore: read once per launch, never a dialog) and the machine's address
     Fixture.swift      made-up sessions for screenshots
     olakit-selftest    a command-line check against the real server
   Shared/            SwiftUI used by both apps: theme, Markdown, the conversation, approvals, connect, pages
@@ -28,13 +28,60 @@ web app's recorded runs (`web/test/fixtures/*.jsonl`) and checks the result.
 ## Build
 
 ```bash
-apps/activist-ai/apple/tools/build.sh mac [shots-dir]   # Mac app, ad-hoc signed; with a dir, renders its views to PNGs off screen
+apps/activist-ai/apple/tools/build.sh mac [shots-dir]   # Mac app, signed with a stable identity; with a dir, renders its views to PNGs off screen
 apps/activist-ai/apple/tools/build.sh install-mac       # copies it to /Applications/Ola.app (does not open it)
 apps/activist-ai/apple/tools/build.sh sim               # iPhone app for the simulator
 apps/activist-ai/apple/tools/build.sh device            # iPhone app for a device (automatic signing)
 cd apps/activist-ai/apple/OlaKit && swift test          # the fold, on the web app's recordings
 OLA_PASSWORD_FILE=<file> swift run olakit-selftest      # against the real server (see below)
 ```
+
+## Why macOS used to ask again after every build (fixed 2026-11-17)
+
+Bart: the "Ola wants to use your confidential information stored in "cx.ola.opencode"" dialog came
+twice after every new build, then a folder permission question. **Cause:** `build.sh mac` signed ad
+hoc, so the app's designated requirement was its cdhash, which changes with every build. The login
+keychain's "Always Allow" and macOS's folder permissions (TCC) both remember the app by that
+requirement, so each build was a stranger. The question came twice for one read: once to let the
+new build read the item, and once more to add it to the item's list of allowed apps (Always Allow).
+The app also read that item at every launch, even in "On this Mac", which does not use it.
+
+**The fix.** `build.sh mac` signs with `OLA_SIGN_IDENTITY`, else the first "Apple Development"
+identity on the Mac (here `Apple Development: Bart Decrem (D94XEN3QQU)`), with no provisioning
+profile and no new entitlements, prints the designated requirement (`identifier "cx.ola.mac" and
+anchor apple generic and certificate leaf[subject.CN] = …`), and fails if a signed build's
+requirement still names a cdhash. Measured with throwaway items: a rebuilt binary with the same
+identity reads an item silently; a rebuilt ad-hoc binary is refused; deleting another build's item
+is refused (it would ask), changing its value is not. So `OlaKit/Keychain.swift` (`SecretStore`):
+every secret is read at most once per launch, only when the current mode needs it (no machine
+password in "On this Mac", no push key until a notification is sent, Settings never reads one to
+draw), always with `kSecUseAuthenticationUIFail` (a read macOS would ask about counts as no item);
+items have the account `ola`, so items older ad-hoc builds made are never touched; writes change the
+value in place.
+
+**Putting a secret in without a dialog** (right after installing the first signed build, so the items
+belong to the new signature): the app's own executable, the value on standard input, one line out,
+never the value, no window:
+
+```bash
+ssh admin@100.95.51.98 'bash ~/.ola-bart/src/apps/activist-ai/bart/ola-bart.sh password' | /Applications/Ola.app/Contents/MacOS/Ola --import-secret machine-password
+ssh admin@100.95.51.98 'bash ~/.ola-bart/src/apps/activist-ai/bart/ola-bart.sh model-token' | /Applications/Ola.app/Contents/MacOS/Ola --import-secret model-token
+/Applications/Ola.app/Contents/MacOS/Ola --import-secret push-key --key-id <ID> < AuthKey_<ID>.p8
+/Applications/Ola.app/Contents/MacOS/Ola --secret-status      # saved / not saved, per kind, never a dialog
+/Applications/Ola.app/Contents/MacOS/Ola --forget-secret <kind>
+```
+
+Kinds: `machine-password`, `model-token`, `account` (the sign-in, JSON), `push-key`. The old items
+(`cx.ola.opencode` and so on with other account names) stay in the login keychain unused; Keychain
+Access can delete them. An unknown `--option` makes the executable exit with a line, never open the
+window.
+
+**Folder permission:** with a stable signature macOS keeps the answer across builds. The one change
+of signature (ad hoc to signed) makes it ask once more for a protected folder (Documents, Desktop,
+iCloud Drive); that cannot be avoided. The app asks only in "On this Mac", right after a folder is
+picked (and at launch for that folder, silently once answered). **A Mac with no signing identity**
+gets an ad-hoc build and a printed warning: macOS will ask after every build until one exists (Xcode,
+Settings, Accounts, add the Apple ID, Manage Certificates, +, Apple Development).
 
 ## The self-test (against the real server)
 

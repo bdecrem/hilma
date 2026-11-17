@@ -5,6 +5,9 @@ import UserNotifications
 @main
 enum Main {
   static func main() {
+    // Modes that never start the interface come first, before anything from AppKit or SwiftUI.
+    refuseUnknownOptions()
+    SecretImport.runIfRequested()
     OlaFont.register()
     if LocalSelfTest.requested { LocalSelfTest.run() }
     if SettingsSelfTest.requested { SettingsSelfTest.run() }
@@ -16,10 +19,24 @@ enum Main {
     }
     OlaMacApp.main()
   }
+
+  /// The options the executable knows. Anything else that starts with "--" (a typo, or a flag an
+  /// older build does not have) exits with a line instead of opening the app's window.
+  static let knownOptions: Set<String> = ["--local-selftest", "--settings-selftest", "--import-secret", "--secret-status", "--forget-secret",
+                                          "--token-file", "--folder", "--fresh", "--key-id"]
+
+  static func refuseUnknownOptions() {
+    let args = Array(CommandLine.arguments.dropFirst())
+    for a in args where a.hasPrefix("--") && !knownOptions.contains(a) {
+      FileHandle.standardError.write(Data("Ola: unknown option \(a); the app was not opened.\n".utf8))
+      exit(2)
+    }
+  }
 }
 
 struct OlaMacApp: App {
-  @State private var store = OlaStore(config: Credentials.load())
+  /// The machine's password is read only when Ola works on the machine (once per launch).
+  @State private var store = OlaStore(config: LocalSettings.onThisMac ? nil : Credentials.load())
   @State private var whereOla: WhereOlaWorks?
   @State private var phoneLink: PhoneLink?
   @State private var phonePush: PhonePush?

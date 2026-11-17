@@ -34,7 +34,6 @@ public struct AdminLink: Equatable, Sendable, Identifiable {
 
 public enum AdminAuth {
   public static let site = URL(string: "https://app.kochitolabs.com")!
-  static let service = "cx.ola.admin"
 
   public enum Failure: Error, Equatable, LocalizedError {
     case refused(String), unreachable, badReply
@@ -86,19 +85,14 @@ public enum AdminAuth {
   // MARK: the Keychain
 
   public static func load() -> AdminToken? {
-    let q: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service, kSecReturnData as String: true, kSecMatchLimit as String: kSecMatchLimitOne]
-    var out: CFTypeRef?
-    guard SecItemCopyMatching(q as CFDictionary, &out) == errSecSuccess, let d = out as? Data, let s = String(data: d, encoding: .utf8) else { return nil }
-    return AdminToken(s)
+    SecretStore.value(.admin).flatMap(AdminToken.init)
   }
 
   public static func save(_ t: AdminToken) {
-    signOut()
-    SecItemAdd([kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service, kSecAttrAccount as String: t.user,
-                kSecValueData as String: Data(t.token.utf8), kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly] as CFDictionary, nil)
+    SecretStore.save(.admin, t.token)
   }
 
   public static func signOut() {
-    SecItemDelete([kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service] as CFDictionary)
+    SecretStore.remove(.admin)
   }
 }

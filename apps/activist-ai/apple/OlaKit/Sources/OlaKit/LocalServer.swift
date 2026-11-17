@@ -265,7 +265,6 @@ public final class LocalServer: @unchecked Sendable {
 
 /// The gateway token for "On this Mac", in the Keychain, and the folder, in defaults.
 public enum LocalSettings {
-  static let service = "cx.ola.gateway-token"
   public static let modeKey = "ola.where"
   public static let folderKey = "ola.localFolder"
 
@@ -276,18 +275,20 @@ public enum LocalSettings {
   public static var onThisMac: Bool { defaults.string(forKey: modeKey) == "mac" }
   public static var folder: URL? { defaults.string(forKey: folderKey).map { URL(fileURLWithPath: $0) } }
 
+  /// The pasted gateway token (before account sign-in), read once per launch and only when needed.
+  /// DELETE once account sign-in is live: this, `saveToken`, Settings' Model token row and
+  /// `SecretKind.modelToken` are the pasted-token path.
   public static var token: String? {
     if let tokenOverride { return tokenOverride }
-    let q: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service, kSecReturnData as String: true, kSecMatchLimit as String: kSecMatchLimitOne]
-    var out: CFTypeRef?
-    guard SecItemCopyMatching(q as CFDictionary, &out) == errSecSuccess, let d = out as? Data else { return nil }
-    return String(data: d, encoding: .utf8)
+    return SecretStore.value(.modelToken)
   }
 
   public static func saveToken(_ t: String) {
-    SecItemDelete([kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service] as CFDictionary)
-    SecItemAdd([kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service, kSecAttrAccount as String: "bart",
-                kSecValueData as String: Data(t.utf8), kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly] as CFDictionary, nil)
+    SecretStore.save(.modelToken, t)
+    defaults.set(true, forKey: tokenSavedKey)
   }
+
+  /// Whether a pasted token was saved, without reading the Keychain (Settings shows "Saved").
+  public static let tokenSavedKey = "ola.modelTokenSaved"
 }
 #endif
