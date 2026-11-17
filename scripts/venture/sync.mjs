@@ -90,6 +90,10 @@ if (cmd === 'push') {
   const have = new Map((await rows()).map((r) => [r.slug, r]))
   for (const f of files()) {
     const body = readFileSync(new URL(f, dir), 'utf8').trim()
+    if (!body) {
+      console.log(`skipped ${f}: empty (a report still being written?)`) // an agent's placeholder must not block every other note
+      continue
+    }
     const title = body.match(/^# (.+)\n/)?.[1].trim()
     if (!title) throw new Error(`${f} must start with "# Title"`)
     const slug = slugOf(f)
