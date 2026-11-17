@@ -70,6 +70,18 @@ class H(BaseHTTPRequestHandler):
         if path == "/stub/seen":
             with LOCK:
                 return self.send(200, SEEN)
+        if path == "/api/device/login":
+            # The normal sign-in: bart / "right password here"; dana asks for her passkey too.
+            b = json.loads(raw or b"{}")
+            who = (b.get("handle"), b.get("password"))
+            if who == ("dana", "right password here"):
+                return self.send(200, {"passkey": True, "ceremony": "cer-1", "options": {"challenge": "Y2hhbGxlbmdl", "rpId": "app.ola.cx", "allowCredentials": [{"id": "Y3JlZA", "type": "public-key"}]}})
+            if who != ("bart", "right password here"):
+                return self.send(401, {"error": "sign_in_refused", "message": "That name and password did not match."})
+            t = "olap1." + secrets.token_urlsafe(80) + "." + secrets.token_urlsafe(32)
+            with LOCK:
+                TOKENS.add(t)
+            return self.send(200, dict(session(t), known="1.known-token", has_passkey=False))
         if path == "/api/device/token":
             code, verifier = self.bearer(), json.loads(raw or b"{}").get("verifier", "")
             with LOCK:

@@ -31,6 +31,9 @@ public struct AccountSession: Codable, Equatable, Sendable {
   public var device: Device
   /// The known-device token the server gave with this sign-in (kept apart, in AccountKeeper.known).
   public var known: String?
+  /// Whether the account had a passkey when this sign-in was made (the app offers to add one if not).
+  /// Not kept in the Keychain.
+  public var hasPasskey: Bool?
 
   public init(token: String, expiresAt: Date?, person: Person, device: Device) {
     self.token = token
@@ -63,6 +66,7 @@ public struct AccountSession: Codable, Equatable, Sendable {
     guard let j = JSON.parse(data), !j["token"].str.isEmpty, !j["person"]["handle"].str.isEmpty else { return nil }
     var s = AccountSession(token: j["token"].str, expiresAt: date(j["expires_at"]), person: person(j["person"]), device: device(j["device"]))
     s.known = j["known"].string
+    s.hasPasskey = j["has_passkey"].bool
     return s
   }
 
@@ -90,11 +94,7 @@ public struct AccountSession: Codable, Equatable, Sendable {
 public enum AccountError: Error, Hashable, LocalizedError {
   /// The device was signed out (or its sign-in ran out): sign in again.
   case signedOut
-  /// The browser step did not finish in time.
-  case timedOut
   case cancelled
-  /// The person pressed Cancel on the account's page (`/?error=cancelled`).
-  case cancelledInBrowser
   /// Ola's sign-in does not exist at this address yet (the server is not deployed).
   case notAvailableYet
   case tooManyTries
@@ -104,8 +104,15 @@ public enum AccountError: Error, Hashable, LocalizedError {
   case badReply
   /// The name and password did not match (the server does not say which).
   case wrongPassword
-  /// The account asks for its passkey too: finish in the browser.
+  /// The account asks for its passkey too, and this place cannot show the passkey sheet (the
+  /// command line; an app built without the passkey permission).
   case passkeyRequired
+  /// The passkey did not open Ola (the server refused its answer).
+  case passkeyRefused
+  /// This build of the app cannot use passkeys (Apple's permission for app.ola.cx is not in it yet).
+  case passkeysNotInThisVersion
+  /// Too long after signing in on this Mac to add a passkey with its key alone.
+  case notFresh
   /// Ola answered, but its service is down or overloaded just now.
   case serviceDown
   /// The server's own sentence (a wait after too many tries, say).
@@ -114,13 +121,14 @@ public enum AccountError: Error, Hashable, LocalizedError {
   public var errorDescription: String? {
     switch self {
     case .wrongPassword: return "That name and password didn\u{2019}t match. Check both and try again."
-    case .passkeyRequired: return "Your account asks for your passkey too. Ola opens your browser to finish signing in."
+    case .passkeyRequired: return "This account asks for a passkey; sign in from the Ola app."
+    case .passkeyRefused: return "That passkey didn\u{2019}t open Ola. Try again, or use another passkey."
+    case .passkeysNotInThisVersion: return "Your account asks for your passkey too, and this version of Ola can\u{2019}t use passkeys yet. That arrives with the next update. Until then, turn off \u{201C}Ask for my passkey too\u{201D} in your account on the web."
+    case .notFresh: return "A passkey can be added only in the first 15 minutes after signing in. Sign out and in again, then add it."
     case .serviceDown: return "Ola isn\u{2019}t answering just now. Try again in a few minutes."
     case .said(let s): return s
     case .signedOut: return "You\u{2019}ve been signed out on this Mac. Sign in again to keep working."
-    case .timedOut: return "Signing in took too long, so it was stopped. Try again when you\u{2019}re ready."
     case .cancelled: return "Signing in was stopped."
-    case .cancelledInBrowser: return "Sign-in was cancelled."
     case .notAvailableYet: return "Signing in with an Ola account isn\u{2019}t open yet. It will be soon."
     case .tooManyTries: return "Too many tries in a short time. Wait a few minutes, then try again."
     case .refused: return "That sign-in didn\u{2019}t go through. Try again."
@@ -160,52 +168,96 @@ public struct AccountAPI: Sendable {
     return URL(string: s + "/api/device/gw/" + rest)
   }
 
-  /// Before the browser opens: is device sign-in there at all? Asks who-am-I with no credential
-  /// (nothing that could count as a wrong try): 401 means yes, 404 means not deployed yet.
-  public func checkOpen() async throws {
-    var r = URLRequest(url: url("/api/device/me"))
-    r.timeoutInterval = 15
-    do { _ = try await send(r, signedIn: true) } catch AccountError.signedOut { return }
+  /// This Mac's name, as the person sees it in their list of computers.
+  public static var thisMacName: String {
+    #if os(macOS)
+    return Host.current().localizedName ?? "Mac"
+    #else
+    return "iPhone"
+    #endif
   }
 
-  /// Exchanges the code the browser brought back for this device's token.
-  public func redeem(code: String, verifier: String) async throws -> AccountSession {
-    var r = URLRequest(url: url("/api/device/token"))
-    r.httpMethod = "POST"
-    r.setValue("Bearer \(code)", forHTTPHeaderField: "Authorization")
-    r.setValue("application/json", forHTTPHeaderField: "Content-Type")
-    r.httpBody = JSON.object(["verifier": .string(verifier)]).data
-    let (d, status) = try await send(r, signedIn: false)
-    guard status == 200, let s = AccountSession.decode(d) else { throw AccountError.badReply }
-    return s
-  }
-
-  /// Signs this Mac (or the `ola` command) in with a name and password: the normal way (2026-11-17).
-  /// The server gives this device its own key, shown once, kept in the Keychain. `known` is the
-  /// token an earlier sign-in from this Mac got back: it lets this Mac sign in even while a stranger
-  /// is guessing at the same name (the server holds unknown devices back then), never without the
-  /// password. A person who asks for their passkey too gets `.passkeyRequired`: the browser way.
+  /// Signs this Mac (or the `ola` command) in with a name and password: the normal way (2026-11-17),
+  /// never a browser. The server gives this device its own key, shown once, kept in the Keychain.
+  /// `known` is the token an earlier sign-in from this Mac got back: it lets this Mac sign in even
+  /// while a stranger is guessing at the same name (the server holds unknown devices back then),
+  /// never without the password. A person who asks for their passkey too gets `PasskeyNeeded` with a
+  /// ceremony for their own passkeys, which the app answers with `loginPasskey` (NativePasskey).
   public func login(handle: String, password: String, deviceName: String, kind: String = "mac", known: String? = nil) async throws -> AccountSession {
-    var r = URLRequest(url: url("/api/device/login"))
-    r.httpMethod = "POST"
-    r.timeoutInterval = 30
-    r.setValue("application/json", forHTTPHeaderField: "Content-Type")
-    if let known, !known.isEmpty { r.setValue(known, forHTTPHeaderField: "X-Ola-Known") }
-    r.httpBody = JSON.object(["handle": .string(handle), "password": .string(password), "name": .string(String(deviceName.prefix(60))), "kind": .string(kind)]).data
-    let d: Data, res: URLResponse
-    do { (d, res) = try await session.data(for: r) } catch is CancellationError { throw AccountError.cancelled } catch { throw AccountError.unreachable }
-    guard let h = res as? HTTPURLResponse else { throw AccountError.badReply }
-    let j = JSON.parse(d)
-    switch h.statusCode {
+    var headers: [String: String] = [:]
+    if let known, !known.isEmpty { headers["X-Ola-Known"] = known }
+    let (d, status, j) = try await post("/api/device/login", ["handle": .string(handle), "password": .string(password), "name": .string(String(deviceName.prefix(60))), "kind": .string(kind)], headers: headers)
+    switch status {
     case 200:
+      if j?["passkey"].bool == true { throw PasskeyNeeded(ceremony: try PasskeyCeremony(j)) }
       guard let s = AccountSession.decode(d) else { throw AccountError.badReply }
       return s
     case 401: throw AccountError.wrongPassword
-    case 403 where j?["error"].string == "passkey_required": throw AccountError.passkeyRequired
-    case 404, 405: throw AccountError.notAvailableYet
-    case 429: throw j?["message"].string.map { AccountError.said($0) } ?? AccountError.tooManyTries
-    case 500...599: throw AccountError.serviceDown
-    default: throw AccountError.refused(j?["error"].string ?? "refused")
+    default: throw Self.failure(status, j)
+    }
+  }
+
+  /// A sign-in with a passkey alone (no name or password): a ceremony for any of the person's passkeys.
+  public func passkeyCeremony(deviceName: String, kind: String = "mac") async throws -> PasskeyCeremony {
+    let (_, status, j) = try await post("/api/device/login", ["passkey": true, "name": .string(String(deviceName.prefix(60))), "kind": .string(kind)])
+    guard status == 200 else { throw Self.failure(status, j) }
+    return try PasskeyCeremony(j)
+  }
+
+  /// The passkey's answer to a sign-in ceremony: this device's key.
+  public func loginPasskey(_ ceremony: PasskeyCeremony, _ assertion: PasskeyAssertion) async throws -> AccountSession {
+    let (d, status, j) = try await post("/api/device/login/passkey", ["ceremony": .string(ceremony.id), "response": assertion.json])
+    switch status {
+    case 200:
+      guard let s = AccountSession.decode(d) else { throw AccountError.badReply }
+      return s
+    case 401: throw AccountError.passkeyRefused
+    default: throw Self.failure(status, j)
+    }
+  }
+
+  /// Adding a passkey with this device's key, soon after it signed in: what the passkey sheet needs.
+  public func addPasskeyOptions(_ s: AccountSession) async throws -> PasskeyRegistration {
+    let (_, status, j) = try await post("/api/device/passkey/options", [:], bearer: s.token)
+    guard status == 200 else { throw Self.failure(status, j, signedIn: true) }
+    return try PasskeyRegistration(j)
+  }
+
+  /// The new passkey, saved on the account.
+  public func addPasskeyVerify(_ s: AccountSession, _ registration: PasskeyRegistration, _ credential: PasskeyCredential) async throws {
+    let (_, status, j) = try await post("/api/device/passkey/verify", ["ceremony": .string(registration.ceremony), "response": credential.json], bearer: s.token)
+    guard status == 200 else { throw Self.failure(status, j, signedIn: true) }
+  }
+
+  /// One JSON POST: the body, the status and the parsed reply. No credential is ever offered for the
+  /// door's challenge (NoCredentials), and nothing is retried.
+  func post(_ path: String, _ body: [String: JSON], headers: [String: String] = [:], bearer: String? = nil) async throws -> (Data, Int, JSON?) {
+    var r = URLRequest(url: url(path))
+    r.httpMethod = "POST"
+    r.timeoutInterval = 30
+    r.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    for (k, v) in headers { r.setValue(v, forHTTPHeaderField: k) }
+    if let bearer { r.setValue("Bearer \(bearer)", forHTTPHeaderField: "Authorization") }
+    r.httpBody = JSON.object(body).data
+    var d = Data(), res: URLResponse
+    let watch = NoCredentials()
+    do { (d, res) = try await session.data(for: r, delegate: watch) } catch {
+      if let refusal = watch.refusal { res = refusal } else if error is CancellationError { throw AccountError.cancelled } else { throw AccountError.unreachable }
+    }
+    guard let h = res as? HTTPURLResponse else { throw AccountError.badReply }
+    return (d, h.statusCode, JSON.parse(d))
+  }
+
+  /// A refusal in plain words.
+  static func failure(_ status: Int, _ j: JSON?, signedIn: Bool = false) -> AccountError {
+    switch status {
+    case 401: return signedIn ? .signedOut : .refused(j?["error"].string ?? "unauthorized")
+    case 403 where j?["error"].string == "not_fresh": return .notFresh
+    case 404, 405: return .notAvailableYet
+    case 409 where j?["message"].string != nil: return .said(j!["message"].str)
+    case 429: return j?["message"].string.map { AccountError.said($0) } ?? .tooManyTries
+    case 500...599: return .serviceDown
+    default: return .refused(j?["error"].string ?? "refused")
     }
   }
 

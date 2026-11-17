@@ -49,7 +49,7 @@ public enum OlaCLI {
     ola                  talk with Ola here, in this terminal
     ola "a request"      ask once and print the reply (the same as: ola run "a request")
     ola -c               pick up the last conversation
-    ola login            sign in to your Ola account (your browser opens)
+    ola login            sign in to your Ola account with your name and password
     ola logout           sign out on this Mac
     ola whoami           who is signed in
     ola status           signed in or not, this folder, whether the model answers, Ola's skills
@@ -109,6 +109,39 @@ public enum OlaCLI {
   /// Says things on the terminal: plain words on standard error, the reply on standard output.
   static func say(_ s: String) { FileHandle.standardError.write(Data((s + "\n").utf8)) }
 
+  /// One line typed at the terminal after `prompt` (on standard error); with `secret`, nothing is
+  /// shown while it is typed, and the terminal is put back even on Ctrl-C. Without a terminal, one
+  /// line of standard input. nil at the end of input.
+  static func ask(_ prompt: String, secret: Bool = false) -> String? {
+    FileHandle.standardError.write(Data(prompt.utf8))
+    let tty = isatty(STDIN_FILENO) == 1
+    var saved = termios()
+    let hide = secret && tty && tcgetattr(STDIN_FILENO, &saved) == 0
+    if hide {
+      echoSaved = saved
+      var quiet = saved
+      quiet.c_lflag &= ~tcflag_t(ECHO)
+      quiet.c_lflag |= tcflag_t(ECHONL)
+      signal(SIGINT) { _ in
+        if var t = OlaCLI.echoSaved { tcsetattr(STDIN_FILENO, TCSANOW, &t) }
+        FileHandle.standardError.write(Data("\n".utf8))
+        exit(130)
+      }
+      tcsetattr(STDIN_FILENO, TCSAFLUSH, &quiet)
+    }
+    let line = readLine(strippingNewline: true)
+    if hide {
+      tcsetattr(STDIN_FILENO, TCSAFLUSH, &saved)
+      signal(SIGINT, SIG_DFL)
+      echoSaved = nil
+    } else if secret, !tty, line != nil {
+      FileHandle.standardError.write(Data("\n".utf8))
+    }
+    return line
+  }
+
+  nonisolated(unsafe) static var echoSaved: termios?
+
   final class Runner: @unchecked Sendable {
     let api = AccountAPI()
     var door: ModelDoor?
@@ -149,32 +182,25 @@ public enum OlaCLI {
 
     var notSignedIn: String { "You\u{2019}re not signed in to Ola on this Mac. Sign in with: ola login" }
 
+    /// `ola login`: "Name:", then "Password:" with nothing shown as it is typed, then "Signed in as
+    /// bart." Never a browser (2026-11-17). Without a terminal (a script), the two lines come from
+    /// standard input. An account that asks for its passkey too is told to sign in from the Ola app,
+    /// which shows the passkey sheet; this command shares the app's sign-in.
     func login() async -> Int32 {
-      let s = DeviceSignIn(api: api, kind: "cli")
+      guard let name = OlaCLI.ask("Name: ")?.trimmingCharacters(in: .whitespacesAndNewlines), !name.isEmpty else { say("No name given, so nothing was done."); return 1 }
+      guard let password = OlaCLI.ask("Password: ", secret: true), !password.isEmpty else { say("No password given, so nothing was done."); return 1 }
       do {
-        let url = try await s.start()
-        openBrowser(url)
-        say("Your browser opened Ola\u{2019}s sign-in page. Approve this Mac there with your passkey.")
-        say("Waiting for your browser\u{2026} (Ctrl-C stops)")
-        let session = try await s.finish()
+        let session = try await api.login(handle: name, password: password, deviceName: AccountAPI.thisMacName, kind: "cli", known: AccountKeeper.known)
         guard AccountKeeper.keep(session) else { say("This Mac\u{2019}s Keychain didn\u{2019}t take the sign-in. Try again."); return 1 }
-        say("Signed in as \(session.person.name). You can use ola in any folder now.")
+        say("Signed in as \(session.person.handle).")
         return 0
+      } catch is PasskeyNeeded {
+        say(AccountError.passkeyRequired.errorDescription!)
+        return 1
       } catch {
         say((error as? LocalizedError)?.errorDescription ?? "That didn\u{2019}t work. Try again.")
         return 1
       }
-    }
-
-    /// The default browser, through /usr/bin/open. Checks put a stand-in browser here
-    /// (OLA_OPEN_BROWSER, a program that is given the page).
-    func openBrowser(_ url: URL) {
-      let p = Process()
-      p.executableURL = URL(fileURLWithPath: ProcessInfo.processInfo.environment["OLA_OPEN_BROWSER"] ?? "/usr/bin/open")
-      p.arguments = [url.absoluteString]
-      p.standardOutput = FileHandle.nullDevice
-      p.standardError = FileHandle.nullDevice
-      try? p.run()
     }
 
     func logout() async -> Int32 {

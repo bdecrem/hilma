@@ -21,7 +21,7 @@ public final class ModelDoor: @unchecked Sendable {
   public init(api: AccountAPI = AccountAPI(), token: @escaping @Sendable () -> String?) {
     self.api = api
     self.token = token
-    key = "oladoor-" + DeviceSignIn.base64url(DeviceSignIn.random(32))
+    key = "oladoor-" + Base64URL.encode(Base64URL.random(32))
   }
 
   /// `http://127.0.0.1:<port>`: what opencode's provider and the web commands are pointed at.

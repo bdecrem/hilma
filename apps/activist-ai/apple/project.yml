@@ -74,6 +74,12 @@ targets:
             ts.net:
               NSIncludesSubdomains: true
               NSExceptionAllowsInsecureHTTPLoads: true
+    # Passkeys in the app (OlaKit NativePasskey, 2026-11-17): Mac/Ola.entitlements carries the
+    # associated domain webcredentials:app.ola.cx, which signing accepts only with a provisioning
+    # profile whose App ID has Associated Domains. Until Bart accepts Apple's latest Program License
+    # Agreement, Xcode cannot add that capability, so the passkey build is opt-in, like the phone's
+    # push: tools/build.sh mac with OLA_PASSKEY=1. Without it the app says passkeys arrive with the
+    # next update, and never opens a browser.
     settings:
       base:
         PRODUCT_NAME: Ola

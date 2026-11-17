@@ -3,10 +3,9 @@
 # scratch Application Support, throwaway Keychain names; never a window):
 #
 #   tools/cli-selftest.sh <Ola.app>                 against tools/stub-ola.py (a stand-in for app.ola.cx with
-#                                                   a fake model) and tools/stub-browser.sh (a stand-in browser)
-#   tools/cli-selftest.sh <Ola.app> https://app.ola.cx   live, once the server is deployed: your real browser opens
-#                                                   once and you approve with your passkey; the checks that need
-#                                                   the stand-in (fake model, tool call) are skipped
+#                                                   a fake model); ola login takes the name and password on stdin
+#   tools/cli-selftest.sh <Ola.app> <base>          against another server: OLA_HANDLE and OLA_ACCOUNT_PASSWORD_FILE
+#                                                   (a made-up account); the checks that need the stand-in are skipped
 #
 # One PASS or FAIL line per check; exits 0 only if all passed.
 set -uo pipefail
@@ -30,11 +29,14 @@ if [ -z "$BASE" ]; then
   STUB=$!
   for _ in $(seq 1 50); do grep -q '^port' "$SCRATCH/stub.out" && break; sleep 0.1; done
   BASE="http://127.0.0.1:$(sed -n 's/^port //p' "$SCRATCH/stub.out")"
-  export OLA_OPEN_BROWSER="$TOOLS/stub-browser.sh"
   echo "against a stand-in at $BASE"
+  HANDLE=bart; PWFILE="$SCRATCH/pw"; printf 'right password here\n' > "$PWFILE"
 else
-  echo "live against $BASE: approve this Mac in the browser when it opens"
+  HANDLE="${OLA_HANDLE:?OLA_HANDLE}"; PWFILE="${OLA_ACCOUNT_PASSWORD_FILE:?OLA_ACCOUNT_PASSWORD_FILE}"
+  echo "against $BASE as $HANDLE"
 fi
+# ola login reads the name and password from standard input when there is no terminal.
+login() { { echo "$1"; cat "$2"; } | (cd "$WORK" && lim 90 "$OLA" --cli login); }
 export OLA_ACCOUNT_BASE="$BASE"
 cleanup() {
   [ -n "$STUB" ] && kill "$STUB" 2>/dev/null
@@ -48,12 +50,17 @@ out=$(ola whoami 2>&1); rc=$?
 [ $rc = 1 ] && [[ "$out" == *"ola login"* ]]; check $? "before sign-in, ola whoami says so and offers ola login" "$out"
 out=$(ola "Say hello" 2>&1); rc=$?
 [ $rc = 1 ] && [[ "$out" == *"not signed in"* ]]; check $? "before sign-in, a request is refused plainly" "$out"
+printf 'not the password\n' > "$SCRATCH/wrong"
+out=$(login "$HANDLE" "$SCRATCH/wrong" 2>&1); rc=$?
+[ $rc = 1 ] && [[ "$out" == *"didn’t match"* ]]; check $? "ola login with a wrong password: one plain line, exit 1" "$(echo "$out" | tail -1)"
 if [ -n "$STUB" ]; then
-  out=$(OLA_STUB_CANCEL=1 ola login 2>&1); rc=$?
-  [ $rc = 1 ] && [ "$(echo "$out" | tail -1)" = "Sign-in was cancelled." ]; check $? "Cancel in the browser: one plain line, exit 1" "$(echo "$out" | tail -1)"
+  out=$(login dana "$PWFILE" 2>&1); rc=$?
+  [ $rc = 1 ] && [[ "$out" == *"This account asks for a passkey; sign in from the Ola app."* ]]; check $? "an account that asks for its passkey: sent to the Ola app, never a browser" "$(echo "$out" | tail -1)"
 fi
-out=$(ola login 2>&1); rc=$?
-check $rc "ola login (kind cli) signs in through the browser step" "$(echo "$out" | tail -1)"
+out=$(login "$HANDLE" "$PWFILE" 2>&1); rc=$?
+[ $rc = 0 ] && [[ "$out" == *"Signed in as $HANDLE."* ]]; check $? "ola login: Name, Password, Signed in as $HANDLE." "$(echo "$out" | tr '\n' '|')"
+out=$(cd "$WORK" && python3 "$TOOLS/login-pty.py" "$HANDLE" "$PWFILE" -- "$OLA" --cli login 2>&1); rc=$?
+check $rc "ola login in a terminal: Name:, Password: (nothing shown as it is typed), Signed in as $HANDLE." "$(echo "$out" | tr '\n' '|')"
 out=$(ola whoami 2>&1); rc=$?
 [ $rc = 0 ] && [[ "$out" == *"signed in on this Mac"* ]]; check $? "ola whoami" "$out"
 out=$(ola status 2>&1); rc=$?
@@ -96,7 +103,7 @@ out=$(ola whoami 2>&1); rc=$?
 if [ -n "$STUB" ]; then
   # Signed out by the server (every computer revoked): never a retry loop. Ten refused passes in
   # 15 minutes block the person's whole address at the real door.
-  ola login >/dev/null 2>&1
+  login "$HANDLE" "$PWFILE" >/dev/null 2>&1
   curl -s "$BASE/stub/revoke-all" >/dev/null
   n0=$(curl -s "$BASE/stub/count" | python3 -c 'import json,sys; print(json.load(sys.stdin)["requests"])')
   out=$(ola "Say hello" 2>&1 < /dev/null); rc=$?

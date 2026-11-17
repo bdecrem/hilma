@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Passkeys for app.ola.cx in the app's own window (OlaKit NativePasskey). Signing accepts this
+	     only with a provisioning profile whose App ID has Associated Domains, so it is used only by
+	     tools/build.sh mac with OLA_PASSKEY=1 (project.yml, "Passkeys"). -->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>webcredentials:app.ola.cx</string>
+	</array>
+</dict>
+</plist>

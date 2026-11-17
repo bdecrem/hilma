@@ -151,8 +151,10 @@ The first screen on a Mac with nothing set up is **Sign in to Ola**: the account
 straight in the app (`AccountAPI.login`, `POST /api/device/login`), which gives this Mac its own key
 (the server's side: `../README.md`, "The Mac app for anyone with a login"). Words for every refusal:
 wrong name or password (one sentence for both), the server's own wait after too many tries, "Ola isn't
-answering just now", and an account that asks for its passkey too goes on to the browser below (the
-window says so). Under the form: "Sign in with your browser instead", and **"Use my own Ola machine
+answering just now", each one plain line under the fields. An account that asks for its passkey too
+gets the system's passkey sheet in this window (below, "Passkeys in the app"); nothing ever opens a
+browser (2026-11-17: "normal means you'd never leave the app"). Under the form: "Sign in with a
+passkey" (only in a build that can use passkeys), and **"Use my own Ola machine
 instead"**: the owner's setup (the machine's address and password, the pasted model token over his
 private network, the phone's pairing), which is untouched: a Mac that already has a machine address or
 a pasted token never sees this screen, and its settings are not changed by the update. After signing
@@ -170,22 +172,44 @@ door with Ola's model, the share sentence, then Sign Out and the door's next req
 key works nowhere. Run 2026-11-17 against a front desk and gateway of this branch on the mini
 (GLM-5.3-Flash on Together): 7 of 7.
 
-## Sign in with an Ola account in the browser (2026-11-17, now the passkey way)
+## Passkeys in the app (2026-11-17)
 
-Bart: "do the new login system for macos app ... so i can use the app on my other computer by
-logging in as bart (or any user)". Each person signs in with their own Ola account and reaches the
-model through `https://app.ola.cx` (one constant, `AccountAPI.address`; `OLA_ACCOUNT_BASE` or the
-`ola.accountBase` default points checks at a stand-in, never shown). No Tailscale, no pasted token.
+Bart: "i was expecting a normal login experience with the option at the end to add a passkey ...
+normal means you'd never leave the app." The browser way (`SignIn.swift`, the loopback listener) is
+gone from the app and the `ola` command; the server keeps `/api/device/grant` and `/token` for older
+builds.
 
-- **Sign-in** (`OlaKit/SignIn.swift`): a random secret S; a listener on 127.0.0.1, a free port; first a
-  credential-free `GET /api/device/me` (401 means sign-in exists, 404 "not open yet", so the browser
-  never opens on a missing page); then the default browser at
-  `<base>/#/device?challenge=<b64url(sha256(S))>&port=<port>&name=<this Mac, ≤60>&kind=mac|cli`. The
-  listener answers one well-formed code (`[A-Za-z0-9._~-]{8,512}`) with a small page in the app's
-  look and no outside loads, then closes; 5 minutes, then "took too long" and Try Again.
-  `POST /api/device/token` (code as bearer, `{"verifier": S}`) gives the sign-in, kept as one
-  Keychain item (`SecretKind.account`); the name is also in plain settings so the app can say who is
-  signed in without reading the Keychain.
+- **Signing in** (`OlaKit/NativePasskey.swift`, `AccountAPI.login`, `loginPasskey`, `passkeyCeremony`):
+  for an account with "Ask for my passkey too", a right password gives a ceremony for that person's
+  passkeys; the app shows the system's passkey sheet (ASAuthorizationPlatformPublicKeyCredentialProvider
+  for app.ola.cx) and sends the answer to `POST /api/device/login/passkey`. "Sign in with a passkey"
+  does the same for any of the person's passkeys, with no name or password.
+- **"Add a passkey?"** right after a sign-in whose account has no passkey: "Next time, sign in with
+  Touch ID instead of typing your password." Add Passkey / Not Now (asked once per name). The new
+  passkey is made by the sheet and saved with this Mac's key (`/api/device/passkey/options`,
+  `/verify`, only in the first 15 minutes after this Mac signed in).
+- **What Apple must allow first.** An app may use a site's passkeys only when it is signed with the
+  associated domain `webcredentials:app.ola.cx` (`Mac/Ola.entitlements`) and the site serves
+  `/.well-known/apple-app-site-association` naming it (the front desk does, `274T5WCVD2.cx.ola.mac`).
+  That permission needs a provisioning profile with Associated Domains, which Xcode cannot make until
+  Bart accepts Apple's latest Program License Agreement. Until then builds go without it:
+  `NativePasskey.available` is false (read from the app's own signature), "Sign in with a passkey" is
+  hidden, an account that asks for its passkey says "this version of Ola can't use passkeys yet ...
+  turn off Ask for my passkey too in your account on the web", and "Add a passkey?" says "Adding a
+  passkey in the app arrives with the next update" with Continue. Never a browser.
+- **After the agreement**, in order: (1) `OLA_PASSKEY=1 tools/build.sh mac` (automatic signing with
+  `-allowProvisioningUpdates`; Xcode adds Associated Domains to the App ID and makes the profile);
+  (2) the front desk and TLS front deployed with this change, then from any Mac
+  `curl -s https://app.ola.cx/.well-known/apple-app-site-association` prints the JSON (no passcode);
+  (3) `swcutil dl -d app.ola.cx` (or `sudo swcutil show` after a launch) shows the app approved for
+  webcredentials; Apple's CDN may take up to a day to fetch the file; (4) one live sign-in on the
+  built app: Add Passkey after a password sign-in, sign out, "Sign in with a passkey" with Touch ID.
+  Ship that build as the download (`../../../Desktop/Ola/mac-download/Ola.zip`).
+
+Each person signs in with their own Ola account and reaches the model through `https://app.ola.cx`
+(one constant, `AccountAPI.address`; `OLA_ACCOUNT_BASE` or the `ola.accountBase` default points checks
+at a stand-in, never shown). The sign-in is kept as one Keychain item (`SecretKind.account`); the name
+is also in plain settings so the app can say who is signed in without reading the Keychain.
 - **The model door** (`OlaKit/ModelDoor.swift`): the agent never holds the account token. The app (or
   the `ola` command) listens on loopback with a random key for this launch, forwards `/<rest>` to
   `<base>/api/device/gw/<rest>` with the account token, streams the answer chunk by chunk, closes
@@ -204,9 +228,10 @@ model through `https://app.ola.cx` (one constant, `AccountAPI.address`; `OLA_ACC
   works with the Ola machine or a pasted token is not asked to sign in. The pasted model token keeps
   working only when not signed in; it is marked "DELETE once account sign-in is live" in
   `LocalServer.swift`, `WhereOlaWorks.swift` and `Keychain.swift`. "On the Ola machine" is unchanged.
-- **Screens**: `OLA_ONLY=signin tools/build.sh mac <dir>` (signed out, waiting for the browser, not
-  open yet, took too long, failed, signed out by the server, choose a folder, getting ready, its
-  failure, Settings signed in and out; light and dark): `~/Desktop/ola-brand/apple-shots/signin/`.
+- **Screens**: `OLA_ONLY=signin tools/build.sh mac <dir>` (signed out, wrong password, the passkey
+  sheet, passkeys not in this version, "Add a passkey?" both ways, adding, not open yet, failed,
+  signed out by the server, choose a folder, getting ready, its failure, Settings signed in and out;
+  light and dark).
 
 Matched to the server as built (`../README.md`, "Signing in from the Mac app and the command line"):
 
@@ -218,10 +243,7 @@ Matched to the server as built (`../README.md`, "Signing in from the Mac app and
   `Upstream`); no credential store is consulted. The door then answers every later request itself
   (`ModelDoor.isSignedOut`), the app forgets the sign-in and shows "You've been signed out on this Mac",
   and the `ola` command forgets it at once. `swift test` proves one request per 401 for the door (four
-  requests in, one out), who-am-I, usage and the probe.
-- **Cancel** on the account's page lands on `/?error=cancelled`: the listener answers "Sign-in was
-  cancelled. You can close this window.", the app goes back to its signed-out screen with no error
-  tone, and `ola login` prints one line, "Sign-in was cancelled.", and exits 1.
+  requests in, one out), who-am-I and usage.
 - **Usage** is the gateway's own reply: `fraction_used` (0 to 1) of the week's share and `resets_at`,
   said as "You've used 42% of this week's share. It starts again Monday."
 - `device.id` is a number (a string is taken too); codes and tokens are passes (`olap1.…`, about 150
@@ -265,16 +287,19 @@ ola login | logout | whoami | status | --help
   into the first writable folder among `~/.local/bin`, `/opt/homebrew/bin`, `/usr/local/bin` that a
   login shell has on its PATH (never over someone else's `ola`) and prints where; Settings, Account,
   The ola command, Install does the same.
+- **`ola login`** asks "Name:" then "Password:" (nothing shown as it is typed; Ctrl-C puts the
+  terminal back), then "Signed in as bart." Without a terminal it reads the two lines from standard
+  input. An account that asks for its passkey too: "This account asks for a passkey; sign in from the
+  Ola app." (the command shares the app's sign-in). Never a browser.
 - **Check**: `tools/cli-selftest.sh <Ola.app>` runs it end to end against `tools/stub-ola.py` (a
-  stand-in for app.ola.cx with a fake model) and `tools/stub-browser.sh`, beside the real app without
-  touching it (own settings suite, scratch Application Support, throwaway Keychain names): 19 checks,
-  from "not signed in" through login, whoami, status, a printed reply, the account token upstream and
-  never the door key, a refused command in a one-shot run, the shared store, the interface in a
-  pseudo-terminal (draws, redraws on resize, Ctrl-C ends it, a command asks and waits), a SIGKILL
-  that leaves nothing running, logout, Cancel in the browser, and a sign-in the server ended: at most
-  one request there, then forgotten. **Live, once the server is deployed:**
-  `tools/cli-selftest.sh /Applications/Ola.app https://app.ola.cx` (the browser opens once for a
-  passkey; the stand-in-only checks are skipped).
+  stand-in for app.ola.cx with a fake model), beside the real app without touching it (own settings
+  suite, scratch Application Support, throwaway Keychain names): from "not signed in" through a wrong
+  password, the passkey account sent to the app, login on standard input and in a pseudo-terminal
+  (`tools/login-pty.py`: the password never on screen), whoami, status, a printed reply, the account
+  token upstream and never the door key, a refused command in a one-shot run, the shared store, the
+  interface in a pseudo-terminal, a SIGKILL that leaves nothing running, logout, and a sign-in the
+  server ended: at most one request there, then forgotten. Against another server:
+  `OLA_HANDLE=<made-up> OLA_ACCOUNT_PASSWORD_FILE=<file> tools/cli-selftest.sh <Ola.app> <base>`.
 
 ## The self-test (against the real server)
 

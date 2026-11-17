@@ -2,7 +2,8 @@
 # Builds Bart's Ola apps and draws the screenshots, without touching the screen.
 #
 #   tools/build.sh mac [shots-dir]     the Mac app, signed with a stable identity (see below); with a dir,
-#                                      renders its views to PNGs
+#                                      renders its views to PNGs. OLA_PASSKEY=1 adds passkeys in the app
+#                                      (the associated domain; needs Apple's agreement, see project.yml)
 #   tools/build.sh sim                 the iPhone app for the simulator
 #   tools/build.sh device              the iPhone app for a device (automatic signing, team 274T5WCVD2);
 #                                      OLA_PUSH=1 adds Apple push (needs Push on the App ID, see project.yml)
@@ -31,7 +32,11 @@ sign_identity() {
 case "${1:-}" in
   mac)
     ID="$(sign_identity)"
-    if [ -n "$ID" ]; then
+    if [ -n "${OLA_PASSKEY:-}" ]; then
+      # Passkeys in the app: the associated domain needs a provisioning profile, so automatic signing
+      # with the team (project.yml, "Passkeys"). Refused until Apple's agreement is accepted.
+      SIGN=(CODE_SIGN_STYLE=Automatic DEVELOPMENT_TEAM=274T5WCVD2 CODE_SIGN_ENTITLEMENTS=Mac/Ola.entitlements -allowProvisioningUpdates)
+    elif [ -n "$ID" ]; then
       TEAM="$(security find-certificate -c "$ID" -p 2>/dev/null | openssl x509 -noout -subject 2>/dev/null | sed -n 's/.*OU=\([A-Z0-9]*\).*/\1/p')"
       SIGN=(CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="$ID" DEVELOPMENT_TEAM="${TEAM:-}" PROVISIONING_PROFILE_SPECIFIER="" OTHER_CODE_SIGN_FLAGS="--timestamp=none")
     else
