@@ -229,7 +229,7 @@ VM's memory, so bounded by it) are the only places anything can be written. Befo
 512 GiB sparse image on the host, outside the volume's limit, invisible to `files`, and kept across
 `stop`. The agent runs as `work` (uid 1000) with no capabilities (`--cap-drop ALL`), no sudo, and no
 setuid or setgid program in the image (Debian's `su`, `passwd`, `mount` and the rest are stripped). Image: Debian bookworm-slim pinned by digest, opencode 2.3.0 checked
-against npm's sha512, python3, socat, nothing else (no curl, no CA bundle, no ssh). Image tag `ola-workspace:2.3.0-17` (2.3.0-17 also: the specialist commands and `ola-lookup`, see [Specialists](#specialists-and-paper-lookup-2026-11-17); 2.3.0-17: Tesseract, olatext and the document tools, see "Reading real documents"; 2.3.0-16: `ola-batch`, batch jobs, see [Batch jobs](#batch-jobs-the-same-question-for-every-document-2026-11-17); 2.3.0-15: Ola's skills at `/opt/ola/skills`, a system config that makes them the only ones, their libraries, and `ola-page`, see [Skills and seeing pages](#skills-and-seeing-pages-image-230-15); 2.3.0-13: no project config, review 4; 2.3.0-12: the reactions rule in `AGENTS.md`; 2.3.0-10: the model `hosted`; 2.3.0-8: the project database and the web tools; 2.3.0-7 and 2.3.0-6: Claude Code and `ola-claude`, see [Fallback to Claude](#fallback-to-claude-2026-11-16); 2.3.0-5: Ola's standing instructions to the agent, `workspace/AGENTS.md`, say it is in a sealed box with no browser, preview pane or desktop app and that people see its pages under Files with Open; the desktop app's `browser` tool is denied; a stopped workspace made from an older image is made again from the current one at its next start, same volume and secrets. 2.3.0-3 added `ola-get` and `ola-rm` for the front desk's downloads and deletes, and a file's mtime in `ola-files`; 2.3.0-4: `ola-get` opens with `O_NONBLOCK` and refuses anything but a regular file at once, so a FIFO the agent makes cannot hold a download).
+against npm's sha512, python3, socat, nothing else (no curl, no CA bundle, no ssh). Image tag `ola-workspace:2.3.0-20` (2.3.0-20: review 5's follow-up, the users `twin` and group `olarun`, see [Compare with Claude](#compare-with-claude-scoring-real-work-against-claude-2026-11-17-image-2300-18) and [Batch jobs](#batch-jobs-the-same-question-for-every-document-2026-11-17); 2.3.0-19: the copy's generator jailed, review 5; 2.3.0-17 also: the specialist commands and `ola-lookup`, see [Specialists](#specialists-and-paper-lookup-2026-11-17); 2.3.0-17: Tesseract, olatext and the document tools, see "Reading real documents"; 2.3.0-16: `ola-batch`, batch jobs, see [Batch jobs](#batch-jobs-the-same-question-for-every-document-2026-11-17); 2.3.0-15: Ola's skills at `/opt/ola/skills`, a system config that makes them the only ones, their libraries, and `ola-page`, see [Skills and seeing pages](#skills-and-seeing-pages-image-230-15); 2.3.0-13: no project config, review 4; 2.3.0-12: the reactions rule in `AGENTS.md`; 2.3.0-10: the model `hosted`; 2.3.0-8: the project database and the web tools; 2.3.0-7 and 2.3.0-6: Claude Code and `ola-claude`, see [Fallback to Claude](#fallback-to-claude-2026-11-16); 2.3.0-5: Ola's standing instructions to the agent, `workspace/AGENTS.md`, say it is in a sealed box with no browser, preview pane or desktop app and that people see its pages under Files with Open; the desktop app's `browser` tool is denied; a stopped workspace made from an older image is made again from the current one at its next start, same volume and secrets. 2.3.0-3 added `ola-get` and `ola-rm` for the front desk's downloads and deletes, and a file's mtime in `ola-files`; 2.3.0-4: `ola-get` opens with `O_NONBLOCK` and refuses anything but a regular file at once, so a FIFO the agent makes cannot hold a download).
 
 ```bash
 node workspace/ws.mjs image                    # build ola-workspace:2.3.0-17 (about an 810 MB download the first time; --missing: only if absent)
@@ -1234,6 +1234,26 @@ asked again (`rev4.mjs always`). So the front desk sends opencode "once" for eve
 event watcher answers a later question of the same kind in the same conversation "once", never a
 web search or download. In memory only: after a front desk restart the person is asked again.
 
+**A grant only while a run goes on** (review 5 follow-up, 2026-11-17). The switch means "Claude runs
+may be started without asking each time", not "the VM may call Claude": before, a project with it on
+was in the grants file for good, so Ola's own agent, or anything in the VM, could send content to
+Anthropic, logged by the gateway but not marked in the conversation. Now every run the front desk
+starts (switch on or "Just this once") holds a **lease**, a `fallback_once` row: its moment plus 90 s,
+renewed every 30 s while the run lives, deleted when it ends, stops or fails; every lease is dropped
+when the front desk starts, so a killed front desk's run loses its grant at the next start, or 90 s
+later at most. The same for the hosted open model. A batch job on Claude or the hosted model holds the
+project's grant while it runs, bound to its runner's key (see Batch jobs). Proof:
+`frontdesk/check.mjs` ("the Claude grant lives only while a run…": from inside the VM 403 with the
+switch on and no run, 200 during a run, 403 after Stop and after `kill -9` of the front desk; the
+hosted checks: 403 from inside with the switch on, and after a hosted run), `frontdesk/test/unit.test.mjs`
+(fails on the code before). **Not bound to the run inside the VM:** during a run, any process of the
+agent's user can use the grant (its token is the VM's); it is counted in the run's own audit numbers.
+
+**Subscription mode needs an owner** (review 4, open): in `oauth` mode (Bart's own subscription) only
+an owner of the project may start a Claude run; a member gets 403 "This project uses Bart’s own Claude
+subscription, so only its owner can hand a request to Claude." (`frontdesk/check.mjs`, the role-change
+check).
+
 **The setting** (`frontdesk/claude.mjs`, platform migration 5): `workspaces.claude_enabled` (off by
 default), `claude_auto` (`ask`: only when the person asks; `stuck`: when Ola gets stuck; `always`),
 optional ceilings. Read by any member (`GET /api/claude`), changed only by an owner of the team
@@ -1286,7 +1306,9 @@ and a file of the account by id are refused with a 400 before anything goes upst
 (`outsideReach`); what Claude Code sends (its own tools, base64 pictures) passes, measured in a VM by
 `frontdesk/review/rev5.mjs claudebody`. A caller may use it only when it is listed in `GATEWAY_CLAUDE_FILE` (mode 600,
 `{"ws-<id>": {"mode": "oauth"|"api_key", "cap_micro_usd": n, "cap_tokens": n}}`, reloaded within 2
-s), else 403 "Fallback to Claude is off for this project". Credentials, per mode:
+s), else 403 "Fallback to Claude is off for this project". A grants file (Claude, hosted, batch) that is
+missing, unreadable, not mode 600 or not JSON means **no grants** (review 4, open: a deleted file had
+left the old grants in force; `gateway/test.mjs` "a grants file that is deleted…"). Credentials, per mode:
 
 | Mode | Setting (gateway env file) | Sent as | For |
 |---|---|---|---|
@@ -1792,6 +1814,21 @@ Embeddings and reranking on Together (BAAI/bge-base-en-v1.5, Salesforce/Llama-Ra
 mixedbread-ai/mxbai-rerank-large-v2) are all dedicated-only, so `embed` and `rerank` stay unset on
 the rehearsal and say so. `transcribe` and `draw` are unset too (not asked for).
 
+## Pages, PDFs and pictures under load (review 5 follow-up, 2026-11-17)
+
+A page a model wrote, a PDF or a scan is someone else's: `ola-page` gives the whole look a deadline
+(`OLA_PAGE_DEADLINE_S`, 150 s; the browser is stopped then), caps the browser's written memory
+(`OLA_PAGE_MEM_MB`, 2048 MiB of `RLIMIT_DATA`, and V8's heap at 512 MiB) and runs one renderer; the
+page is served only from its own folder (no symlink out), and it reaches nothing a script of the agent
+could not already reach (no network; the gateway wants the VM's token, which a page does not have).
+poppler and Tesseract (`ola-view`, `ola-db`, the specialists' commands) run with an address-space cap
+(`OLA_TOOL_MEM_MB`, 1536 MiB), a CPU-time cap of their timeout and 512 MiB files at most, so a hostile
+file fails alone instead of taking the VM's memory and opencode with it. Proof: `workspace/check.mjs`
+(a page that loops for ever and one that eats memory end within the deadline, leave no browser, and
+opencode lives on). Jobs restarting a project after a reboot: only jobs the platform database says
+are in their trial or running, in an open project, are started again, through the same `ensureRunning`
+as a person's request (the machine's cap and a closed project hold); not attacked further.
+
 ## Where the data lives (for someone who knows Supabase)
 
 **One project = one database file plus its files.** Where Supabase gives you one Postgres with more
@@ -1844,7 +1881,9 @@ node workspace/ws.mjs load-snapshot <new project> <dir>/<project>   # a restore,
 ```
 
 The copy is checked before it replaces the last one (`PRAGMA integrity_check`, the core tables
-present). `workspace/check.mjs` takes a snapshot, loads it into a new project and compares the files,
+present), **inside the VM** since review 5's follow-up (`ola-db api snapshot-check`, then
+`snapshot-send`): this machine never opens a project's database; it keeps the bytes only if their
+sha256 is the one the VM's check reported. `workspace/check.mjs` takes a snapshot, loads it into a new project and compares the files,
 the tables, their rows and a document search. Not restored into a running project: the agent's
 history (`.ola`, in `files.tar`), because opencode holds its database open; put it back by hand with the
 project stopped. Encryption and where the copies go are the backup job's (being built separately).
@@ -1889,6 +1928,18 @@ every job that was going in the platform database and starts its runner again, w
 unattended reboot this is the one thing that starts a workspace by itself); a full machine makes it
 wait and say so. The runner saves after every document, so a restart loses at most the call in flight,
 and a lock in the VM keeps two runners off one job.
+
+**The grant is the runner's** (review 5 follow-up, low). Each time the front desk starts a job's runner
+it makes a 32-byte key, hands it to that runner alone on its input, and keeps its sha256
+(`batch_jobs.runner_key_sha256`, migration 10); the batch grant (and a Claude or hosted grant of a job
+on those models) carries it, and the gateway serves the job's requests only with `X-Ola-Job-Key`. The
+runner runs as the agent's user in a group of its own (`--user 1000:1001`, group `olarun`, image
+2.3.0-20): the kernel's ptrace check wants the same uid and gid, so the agent's processes cannot read
+its environment, open pipes or memory; and it talks to the door's socket itself, never to the loopback
+bridge the agent's user runs. The agent can still end the runner (signals go by uid); its key goes with
+it and the front desk starts a new one. Proofs: `gateway/test.mjs` (no key, a wrong key: 403; a grant
+without a key is no grant), `frontdesk/check.mjs` (during the job, from inside: the lane with the job id
+403, the runner's environ, fd, mem and maps refused), `frontdesk/review/rev5fx.mjs runner [--before]`.
 
 **The model's budget, and the person waiting in a conversation.** A project's two slots and its
 weekly quota (20 million tokens) were sized for conversations; one real job is about a week of it.
@@ -2015,7 +2066,17 @@ task", "Ola", "Claude", "this machine".
 
 **1. The made-up copy (the default; nothing of the person's leaves this machine).** `ola-twin make`
 (in the image; `workspace/lib/olatwin.py`), run by the front desk in the project's own sealed VM with
-the finished request, the conversation before it and the files the run read: Ola's own model, through
+the finished request, the conversation before it and the files the run read. Since review 5's
+follow-up it is made by a user of its own (`twin`, uid 1002, image 2.3.0-20): `ola-twin gather`, as the
+agent's user, hands over the bytes of the files the run read and the project's text for the index;
+`make` works only from that, in a `/tmp` folder of its own (mode 700, removed after), talks to the
+door's socket directly, and prints the copy; the front desk takes its digest on the host. A process the
+agent left running can neither signal, trace nor write to it (before, the copy was made and checked as
+the agent's user in `/work`, so such a process could change it after it passed). A held or refused
+copy is then stored in the project (`ola-twin store`) and is refused, to show and to send, if its
+digest changed. Proofs: `frontdesk/check.mjs` (an attacker left running while the copy is made: it
+sees the maker, cannot stop it, writes nothing), `frontdesk/review/rev5fx.mjs twin [--before]`.
+ Ola's own model, through
 the door, sees the request and each file's structure (kind, size, column types, blanks, repeated rows,
 date formats; no values) and writes back the request in general terms, a generator `make(out, rng)`
 and checks a program runs (`file`, `csv_rows`, `csv_columns`, `csv_unique`, `csv_sum`, `says_number`,
@@ -2083,6 +2144,13 @@ alone scores (there is no truth). The record stays in the project's VM (`ola-twi
 switch off, the sheet offers the made-up copy first and **Just this once: the real task**, which
 shows the same text and needs its confirming click (audited `compare_real_once`). Members and
 viewers get `{ canCompare: false }` from `GET /api/compare` and 403 from every route that sends.
+
+**After a crash** (review 5 follow-up): at its start the front desk marks "making" and "running"
+comparisons failed (no exec outlives it), takes back every scratch grant, removes made-up files on
+their way (`$OLA_HOME/compare/tmp`) and destroys its prefix's scratch VMs (a real task's files live in
+one); `node frontdesk/admin.mjs compare status` lists what is under way and what the last start
+cleaned (`cleanup.json`). A zip killed while unpacking leaves no folder in the project, and its hidden
+half-unpacked folder is removed by the next `ola-unzip` and at every start (`workspace/check.mjs`).
 
 **4. Where it shows.** Under a compared reply, for the owner: "How did Ola do? Claude did better:
 <one sentence>." (or both right, Ola did better, neither fully right, too close to call), opening the
