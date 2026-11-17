@@ -55,26 +55,28 @@ const admin = (...a) => {
   if (r.status !== 0) throw new Error(`admin ${a[0]}: ${r.stderr.trim().split('\n').pop()}`)
   return r.stdout.trim()
 }
+// The project first: its token is in the gateway's tokens file before the gateway reads it.
+if (!existsSync(path.join(HOME, 'fd', 'platform.db'))) admin('add-person', 'cqlive', '--name', 'Made-up Admin', '--admin')
+admin('create-workspace', ID, '--name', 'Made-up volunteer roster', '--team', 'cqlive-team', '--team-name', 'Made-up Food Bank', '--owner', 'cqlive', '--memory', '1g', '--disk', '1g', '--cpus', '1')
+let made = true
 let gwLog = ''
 const gw = spawn(process.execPath, [path.join(AI, 'gateway/server.mjs')], {
-  env: { HOME: homedir(), PATH: process.env.PATH, UPSTREAM_BASE_URL: 'https://api.together.xyz/v1', UPSTREAM_API_KEY: together(), GATEWAY_MODELS: 'general=zai-org/GLM-5.3-Flash', GATEWAY_PORT: '4686', GATEWAY_TOKENS_FILE: path.join(HOME, 'gateway-tokens'), GATEWAY_DOOR_DIR: path.join(HOME, 'gw'), GATEWAY_DB: path.join(HOME, 'usage.db'), GATEWAY_CLAUDE_FILE: path.join(HOME, 'gateway-claude'), CLAUDE_OAUTH_TOKEN_FILE: tokenFile, GATEWAY_USAGE_TOKEN: usageToken, GATEWAY_HOSTED_FILE: path.join(HOME, 'gateway-hosted') },
+  env: { HOME: homedir(), PATH: process.env.PATH, UPSTREAM_BASE_URL: 'https://api.together.xyz/v1', UPSTREAM_API_KEY: together(), GATEWAY_MODELS: 'general=zai-org/GLM-5.3-Flash', GATEWAY_PORT: '4686', GATEWAY_TOKENS_FILE: path.join(HOME, 'gateway-tokens'), GATEWAY_DOOR_DIR: path.join(HOME, 'gw'), GATEWAY_DB: path.join(HOME, 'usage.db'), GATEWAY_CLAUDE_FILE: path.join(HOME, 'gateway-claude'), CLAUDE_OAUTH_TOKEN_FILE: tokenFile, GATEWAY_USAGE_TOKEN: usageToken },
   stdio: ['ignore', 'pipe', 'pipe'],
 })
 gw.stdout.on('data', (d) => (gwLog += d))
 gw.stderr.on('data', (d) => (gwLog += d))
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 for (let i = 0; i < 40 && !gwLog.includes('"event":"start"'); i++) await sleep(250)
-if (!gwLog.includes('"event":"start"')) throw new Error('the gateway did not start')
+if (!gwLog.includes('"event":"start"')) {
+  console.log(gwLog.split('\n').slice(-5).join('\n')) // its complaints name settings, never values
+  node('workspace/ws.mjs', ['destroy', ID, '--confirm', ID])
+  throw new Error('the gateway did not start')
+}
 
 let fd = null
-let made = false
 const claudeLines = () => gwLog.split('\n').filter((l) => l.includes('"route":"claude"'))
 try {
-  if (!existsSync(path.join(HOME, 'fd', 'platform.db'))) {
-    admin('add-person', 'cqlive', '--name', 'Made-up Admin', '--admin')
-  }
-  admin('create-workspace', ID, '--name', 'Made-up volunteer roster', '--team', 'cqlive-team', '--team-name', 'Made-up Food Bank', '--owner', 'cqlive', '--memory', '1g', '--disk', '1g', '--cpus', '1')
-  made = true
   const { makeFrontDesk } = await import('./server.mjs')
   fd = makeFrontDesk()
   const db = fd.db

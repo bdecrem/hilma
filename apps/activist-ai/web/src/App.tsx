@@ -307,7 +307,7 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
           You can read this project. Asking Ola and adding or deleting files are for its owner and members.
         </p>
       </Show>
-      <div class="askdock" classList={{ hidden: drawer() || !canRun() }}>
+      <div class="askdock" classList={{ hidden: drawer() || !canRun() || route() === 'quality' }}>
         <form class="askbar" onSubmit={sendFromBar} aria-label="Ask Ola">
           <button type="button" class="askbar-open" onClick={openDrawer} aria-expanded={drawer()} aria-controls="ask-drawer" aria-label="Ask Ola">
             <span class="drawer-mark" classList={{ working: working() }} aria-hidden="true" />
