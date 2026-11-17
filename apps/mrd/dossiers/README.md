@@ -61,3 +61,14 @@ is one Opus call on the API key (cents) in the style of the MRD's own write-ups.
 - Brave's search plan returned 402 on 2026-11-06; the API-key path in `compile.py` (`main()` with the
   manual tool loop) picks Brave when the key works and Anthropic's web search otherwise. It is kept
   for the record; the Claude Code runner is the live path.
+- **A court ruling known from the press does not carry a Yes** (2026-11-17, from a review of Costa Rica's
+  indicator 55, advised of asylum before expulsion). The agent coded Yes on Sala Constitucional Voto
+  2025-019485, read only as a press summary, and treated it as a general binding rule. The full text
+  (Nexus PJ has it: `POST nexuspj.poder-judicial.go.cr/api/search` returns the whole judgment in
+  `content`) is a three-sentence finding about one group admitted on humanitarian grounds, with no order
+  to inform anyone. Recoded No by editing `work/costa_rica-expulsion_b.json`, `--ingest-chunk`, then
+  `score.py` (which sets the run's status to `laws`; set it back to `done`). The coding rules in
+  `compile.py` now say a decision counts only when read in full and only when it states a general rule.
+  Still resting on court material that was not read, to check before anyone relies on them: Costa Rica 123
+  (housing, a 2023 Sala judgment known from the press), Philippines 67 (a Supreme Court Rule known from
+  its press release).
