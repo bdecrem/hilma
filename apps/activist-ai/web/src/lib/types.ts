@@ -417,6 +417,7 @@ export interface CompareInfo {
   auto?: 'ask' | 'daily'
   perDay?: number
   month?: { usedUsd: number; capUsd: number }
+  realSent?: { at: number; state: CompareState; outcome: CompareOutcome | null }[]
   /** By the person's message id in this conversation. */
   results?: Record<string, CompareResultLine>
 }

@@ -81,16 +81,16 @@ export function judgeAnswer(body) {
   const a = part('A')
   const b = part('B')
   const good = (t) => /removed \d+ repeated rows/i.test(t) && /clean\.csv/.test(t)
-  const quote = (t) => (/I removed \d+ repeated rows/.exec(t)?.[0] ?? t.replace(/\s+/g, ' ').trim().split(' ').slice(0, 8).join(' ')).slice(0, 120)
+  // A quote from the result's own final message (the material labels it "Final message:").
+  const quote = (t) => (/I removed \d+ repeated rows/.exec(t)?.[0] ?? (/Final message:\n([^\n]*)/.exec(t)?.[1] ?? '').replace(/\s+/g, ' ').trim().split(' ').slice(0, 6).join(' ')).slice(0, 120)
   let better = good(a) && !good(b) ? 'A' : good(b) && !good(a) ? 'B' : 'same'
   if (/JUDGE-BIAS/.test(user)) better = 'A'
-  const winner = better === 'A' ? a : b
   return JSON.stringify({
     points: [
       { criterion: 'correct', better, evidence_a: quote(a), evidence_b: quote(b) },
       { criterion: 'complete', better, evidence_a: quote(a), evidence_b: quote(b) },
     ],
     overall: better,
-    difference: better === 'same' ? 'Both did the same.' : `${better === 'A' ? 'A' : 'B'} removed the repeated rows into clean.csv and said how many; the other did not.${winner ? '' : ''}`,
+    difference: better === 'same' ? 'Both did the same.' : `Result ${better} removed the repeated rows into clean.csv and said how many; the other did not.`,
   })
 }

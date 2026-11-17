@@ -366,6 +366,8 @@ export function makeCompare({ db, xc, cc, claude, hosted, workspaces, container,
       auto: r.auto,
       perDay: r.perDay,
       month: { usedUsd: spentThisMonth(db, ws.id) / 1e6, capUsd: capOf(ws.id) / 1e6 },
+      // "Every time is shown here": each real task sent to Claude, newest first (when, how it went).
+      realSent: db.prepare("SELECT created_at AS at, state, outcome FROM comparisons WHERE workspace_id = ? AND mode = 'real' ORDER BY created_at DESC LIMIT 50").all(ws.id),
       results,
     }
   }

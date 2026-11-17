@@ -373,6 +373,18 @@ export function CompareSetting() {
               <span class="switch-word">{info()!.real ? 'On' : 'Off'}</span>
             </button>
           </div>
+          <Show when={info()!.realSent?.length}>
+            <p class="compare-label">Real tasks sent to Claude</p>
+            <ul class="compare-sent">
+              <For each={info()!.realSent}>
+                {(r) => (
+                  <li>
+                    {new Date(r.at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}: {r.state === 'done' && r.outcome ? OUTCOME_LINE[r.outcome].replace(/\.$/, '') : r.state === 'failed' ? 'did not finish' : 'under way'}
+                  </li>
+                )}
+              </For>
+            </ul>
+          </Show>
           <Show when={asking()}>
             <div class="compare-once" role="group" aria-label="Turn on comparing the real task">
               <p class="sheet-lede">{info()!.consent}</p>
@@ -387,7 +399,7 @@ export function CompareSetting() {
             </div>
           </Show>
         </div>
-        <fieldset class="setting-stops" disabled={busy()}>
+        <fieldset class="compare-stops" disabled={busy()}>
           <legend class="setting-name small">When made-up copies are made</legend>
           <div class="stops two">
             <For each={[{ value: 'ask' as const, label: 'Only when I ask', hint: 'Under a finished reply, choose Compare with Claude.' }, { value: 'daily' as const, label: 'A few each day, on their own', hint: 'Ola picks finished requests at random, only while no one is working, within the month’s budget.' }]}>

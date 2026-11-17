@@ -59,6 +59,7 @@ export function makeCompareStandin({ dir, role }) {
     auto: st.auto,
     perDay: st.perDay,
     month: { usedUsd: used(), capUsd: st.cap },
+    realSent: [...st.items.values()].filter((x) => x.mode === 'real').reverse().map((x) => ({ at: Date.now(), state: x.state, outcome: x.state === 'done' ? 'claude_better' : null })),
     results: Object.fromEntries([...st.items.values()].filter((x) => x.conversation === conversation).map((x) => [x.message, { id: x.id, mode: x.mode, state: x.state, verdict: x.verdict, outcome: x.state === 'done' ? 'claude_better' : null, sentence: x.state === 'done' ? RESULT(x.mode).judge.difference : null }])),
   })
   const later = (ms, f) => setTimeout(f, ms).unref()

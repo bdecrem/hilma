@@ -1205,6 +1205,7 @@ async function compareChecks(engine, label) {
       assert((await post('/api/compare/settings', { real: true })) === 400, 'turned on without consent')
       await consent.getByRole('button', { name: 'Turn it on' }).click()
       await pg.waitForFunction(() => document.querySelector('[role=switch][aria-labelledby=compare-real]')?.getAttribute('aria-checked') === 'true')
+      assert(/Real tasks sent to Claude/.test(await pg.locator('.compare-setting').innerText()), 'the real task sent once is not shown in Settings')
       await pg.locator('.compare-setting label', { hasText: 'A few each day, on their own' }).click()
       await pg.locator('#compare-per-day').waitFor()
       await shot('compare-settings', pg.locator('.compare-setting'))
@@ -1247,8 +1248,9 @@ async function compareChecks(engine, label) {
     })
     await check(`${label}: a member sees no "Compare with Claude", no line, no setting and no Quality page, and the routes refuse them`, async () => {
       await dev('/__dev/role?to=member')
+      await pg.goto('about:blank') // a fresh load: the page reads who it is again
       await openDrawer()
-      await pg.getByRole('button', { name: 'New conversation' }).click()
+      if (await pg.getByRole('button', { name: 'New conversation' }).count()) await pg.getByRole('button', { name: 'New conversation' }).click()
       await askAndWait('How many rows, as a member?')
       await pg.waitForTimeout(800)
       assert(!(await pg.locator('.drawer').getByRole('button', { name: 'Compare with Claude' }).count()) && !(await pg.locator('.compare-line').count()), 'a member sees the compare action')

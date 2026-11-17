@@ -62,6 +62,12 @@
 .compare-files li {
   min-width: 0;
 }
+.compare-sent {
+  margin-top: var(--s2);
+  padding-left: var(--s4);
+  font-size: var(--fs-small);
+  color: var(--ink-2);
+}
 .compare-checks li::before {
   content: '·';
   margin-right: var(--s2);
@@ -81,7 +87,7 @@
   padding: var(--s2) var(--s3);
   background: var(--paper-2);
   font-family: var(--font-mono);
-  font-size: 12.5px;
+  font-size: var(--fs-mono);
   line-height: 1.45;
   overflow-x: auto;
   max-width: 100%;
@@ -131,9 +137,24 @@
 .compare-setting .setting-block {
   margin-top: var(--s4);
 }
-.compare-setting select {
+.compare-setting select,
+.compare-setting option {
   font: inherit;
+  font-size: var(--fs-ui);
   padding: 2px var(--s2);
+}
+/* As .setting-stops (app.css), under its own name: the Settings checks read that one's choices. */
+.compare-stops {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.compare-stops legend {
+  float: left;
+  width: 100%;
+  padding: var(--s4) 0 0;
+  border-top: 1px solid var(--rule);
 }
 @media (max-width: 700px) {
   .compare-sides {
@@ -172,8 +193,16 @@
   padding: var(--s2);
   border-bottom: 1px solid var(--rule);
 }
-.quality-table td {
+.quality-table td,
+.quality-table thead th:not(:first-child) {
   text-align: right;
+}
+.quality-table thead th {
+  font-weight: 600;
+  color: var(--ink-3);
+}
+.quality-table td.wide {
+  padding-left: var(--s4);
 }
 .quality-table .wide {
   width: 34%;
