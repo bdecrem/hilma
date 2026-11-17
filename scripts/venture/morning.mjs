@@ -53,7 +53,14 @@ const usage = (await getState(db, 'usage'))?.value
 const fw = (await getState(db, 'fable_week'))?.value
 let usageLine = ''
 const fresh = usage && Date.now() - Date.parse(usage.at) < 6 * 3600_000
-if (fw && fresh && fw.est_date !== today) {
+// A reading Bart gave from /usage within the last 18 h beats any estimate (fw.real_pct, fw.real_at).
+const realAge = fw?.real_at ? Date.now() - Date.parse(fw.real_at) : Infinity
+if (fw && realAge < 18 * 3600_000) {
+  const target = fw.targets?.[today]
+  const when = new Date(fw.real_at).toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles' })
+  usageLine = `Usage: Fable ${fw.real_pct}% of the week at your reading (${when})${target ? `, target for today ${target}%` : ''}.${target ? (fw.real_pct > target ? ' Over: I am moving more work to Opus agents today.' : ' On track.') : ''}`
+  if (!dry) await setState(db, 'fable_week', { ...fw, est_pct: fw.real_pct, est_date: today })
+} else if (fw && fresh && fw.est_date !== today) {
   const est = Math.round(fw.est_pct + (usage.fable_out / fw.cap_est) * 100)
   const target = fw.targets?.[today]
   const k = (x) => `${Math.round(x / 1000)}k`
