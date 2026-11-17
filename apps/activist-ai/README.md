@@ -1892,3 +1892,144 @@ for now); the law mode of the check (a quote inside the cited article); a page-l
 two-column PDFs, without which a quote that wraps a column cannot be found (intake's work); measured
 speeds on the Studio for the estimate (until then: 1,000 tokens a second reading and 40 writing for
 Ola's own model, replaced by the trial's measurement for the whole job).
+
+## Compare with Claude: scoring real work against Claude (2026-11-17, image 2.3.0-18)
+
+Bart: "Do you have a system in place for reviewing work and scoring it against how Claude would do
+this so we can keep improving? Maybe with user permission and/or protection of user info/data?" The
+eval set (`evals/`) is the made-up half; this is the half from actual use. The owner of a project
+sees **Compare with Claude** under a finished reply; Bart sees a **Quality** page. Our words for the
+parts (twin, judge, eval) appear only in code and here; the person reads "a made-up copy of this
+task", "Ola", "Claude", "this machine".
+
+**1. The made-up copy (the default; nothing of the person's leaves this machine).** `ola-twin make`
+(in the image; `workspace/lib/olatwin.py`), run by the front desk in the project's own sealed VM with
+the finished request, the conversation before it and the files the run read: Ola's own model, through
+the door, sees the request and each file's structure (kind, size, column types, blanks, repeated rows,
+date formats; no values) and writes back the request in general terms, a generator `make(out, rng)`
+and checks a program runs (`file`, `csv_rows`, `csv_columns`, `csv_unique`, `csv_sum`, `says_number`,
+`says`, `says_none`, `quotes_verbatim`, `inputs_unchanged`; each with a failure label from
+`evals/lib/labels.json`). The generator runs under a Python audit hook that nothing can remove: it may
+write only its own folder and read only the standard library, and every process, socket and library
+load is refused (with CPU, memory and file-size limits). Then **the leak check**, mechanical, against an
+index built in the VM of the project's own text and numbers (the request, the conversation, the files
+read, every file name in `/work`, the text files in it, the database's document text), after
+normalizing case, spacing and digits ("4,817", "4 817" and "4817.0" are one number):
+
+| Finding | Severity |
+|---|---|
+| three words in a row carried over, one of them a rare word; a number of 3+ significant digits (not round); three numbers in the same order; a word not on the fixed list written with a capital in the project (a name); a file or column name of the project that is not a plain word | leak: the copy stays in the VM (two more tries are made, told what leaked) |
+| any other shared word not on the fixed list (`workspace/lib/common-words.txt`); a shared year; eight common words in a row; a long run of letters and digits (encoded text) | unsure: held until the owner reads it and says yes |
+
+The check covers the request, the checks, the generator's source, every file name, column name and
+file's text. A clean copy is kept by the front desk under `$OLA_HOME/compare/<id>/` (made-up content
+only); a held or refused one stays in the VM (`/work/.ola/twins/<id>/`), shown to the owner from
+there with what was found ("a word from your files: thaw"). The owner's yes is for the copy they
+read: its digest is taken when it is made, and a copy changed since is refused ("This copy changed
+since it was made, so it stays here").
+
+**2. Both do the copy, then the scoring.** `frontdesk/compare.mjs`, one comparison at a time on the
+machine. Ola does it in a scratch sealed VM (`<prefix>-<hex>`, 2 CPUs, 3 GB, made from the image,
+holding only the copy's files; opencode unattended, web denied, any question answered no); Claude
+does it in another (Claude Code through `ola-claude go`, its gateway grant for that scratch VM alone:
+`compare_scratch` rows, written into the Claude grants file from the database like every grant, the
+project's mode, what is left of the comparison budget as its ceiling, gone when the run ends); the
+hosted open model in a third, where it is set up and on for the project. Scratch VMs are destroyed
+after each engine. Scoring, in order of trust: the copy's own checks (`ola-twin score` in each scratch
+VM after its run, so an engine never sees them); the eval families' rules for the kind (inputs left
+as they were; quotes word for word for coding, legal and PDF work); then the **judged comparison**:
+Opus 5.5 through the Claude scratch VM's own door (its token, its grant, its ceiling), a rubric per
+kind, both results unlabeled in random order, evidence quoted for each point (a quote not found in
+that result drops the point; an overall call no kept point supports becomes "same"), run twice with
+the order swapped; a disagreement is "unsure", never averaged. The checks decide when they differ;
+the judge decides otherwise. Recorded per comparison (`comparisons`, migration 9, numbers and fixed
+words only): who passed what, the outcome (`both_right`, `claude_better`, `ola_better`, `both_wrong`,
+`unsure`), a failure label for Ola's result when it lost (its first failed check, else the judge's),
+tokens, time, cost; the one or two sentences of difference in the record file (made-up copy) or in
+the project's VM (real task).
+
+**3. The real task, only with the owner's yes.** A second switch in Settings, "Compare the real
+task", off by default, owner only, with its own consent text: "Let Claude redo finished work in this
+project so we can compare. Your request and the files Ola read for it go to Anthropic. Off unless you
+turn it on. Every time is shown here." When on, Claude redoes the request in a scratch VM holding
+copies of exactly the files Ola read (piped from the project's VM into the scratch VM; never on the
+host's disk; the person's files are never changed), Ola's result is the reply it gave, and the judge
+alone scores (there is no truth). The record stays in the project's VM (`ola-twin keep`). With the
+switch off, the sheet offers the made-up copy first and **Just this once: the real task**, which
+shows the same text and needs its confirming click (audited `compare_real_once`). Members and
+viewers get `{ canCompare: false }` from `GET /api/compare` and 403 from every route that sends.
+
+**4. Where it shows.** Under a compared reply, for the owner: "How did Ola do? Claude did better:
+<one sentence>." (or both right, Ola did better, neither fully right, too close to call), opening the
+side-by-side (both answers, what each got right, the files each made, the copy). **Quality**
+(`#/quality`, admins only; `GET /api/quality`, 404 for anyone else): compared, how often Ola matched or
+beat Claude, the last 7 days, spent on Claude; win, tie and loss by kind of work, by Ola's model
+(`OLA_FD_MODEL_LABEL`) and by day; why Ola lost (the failure labels); the list of comparisons with
+their made-up requests. Settings, "When made-up copies are made": **Only when I ask** (the default) or
+**A few each day, on their own**: a sampler (every `OLA_FD_COMPARE_TICK_MS`, 5 minutes) picks a
+finished request at random in a project that is up and has nothing executing (a sample never wakes a
+project or runs beside a person's work), at most the owner's number a day, within the month's budget
+(default `OLA_FD_COMPARE_CAP_USD` $3, the owner's choice in Settings); a clean copy is sent by itself,
+an unsure one waits for the owner.
+
+**5. How it makes Ola better.** Every copy Ola lost, or that was unsure, becomes a **candidate eval
+task** in the eval set's own format in the review queue `evals/candidates/t-<id>/` (on the machine;
+`candidates/` is in `evals/.gitignore`): `task.json`, `instruction.md`, `twin.json` (the generator and
+checks), `task.py` (generate: seed 0 is the copy as compared, any other seed new data of the same
+shape; check: the copy's checks; solve and wrong replay Claude's and Ola's recorded results),
+`reference/`, `evidence.json`, and for a loss `skill-note.md`, one paragraph in the form of the
+skills' "How to improve a skill from a failed run" (the label, the failed checks, the judge's
+sentence, the skill or standing instruction that would have prevented it, a proposed change, the test;
+"Not applied: queued for the lead"). `node frontdesk/admin.mjs compare candidates | show <id> |
+promote <id> | weekly`: promote copies a candidate into `evals/tasks/` only after its `task.py selftest
+<dir> 0` passes, for a person to read and commit. The eval runner takes the queue as it is: `node
+evals/run.mjs --config configs/replay-ola.json --tasks-dir candidates --seeds 0` (harness `replay`:
+the recorded result of one arm, checked like any run), or any real configuration. **The weekly number**
+(how often Ola matched or beat Claude on the last 7 days of made-up copies, by kind and by model) is
+`$OLA_HOME/compare/weekly.json`, rewritten after each comparison, and `GET /api/quality/weekly`.
+
+**6. Credentials and money.** Exactly the fallback's rules: the subscription only when every owner of
+the project is an admin, an API key otherwise; with no credential for that mode the sheet says so in
+one sentence and offers nothing that sends. Each comparison's Claude run and judge calls count against
+the project's comparison budget (in subscription mode as tokens times list price, an equivalent:
+`OLA_FD_COMPARE_PRICE_IN`/`_OUT`, 5 and 25 dollars per million). `OLA_FD_COMPARE_CLAUDE_REQUESTS`
+caps the Claude requests of one comparison (for a live proof on a personal allowance: a judge call
+over it is not made, and the comparison is "unsure"). Audit words (migration 9): `compare_real_enabled`,
+`compare_real_disabled`, `compare_real_once`, `compare_twin_made` (ok = it may leave; Ola's tokens),
+`compare_twin_released`, `compare_sent`, `compare_done` (Claude's and the judge's tokens and cost).
+
+**Proofs.** `workspace/twin_test.py` (the leak check catches a planted name, a number written another
+way, a sequence of numbers, a distinctive phrase, the project's file name and a column; passes a clean
+copy; holds a rare word, a year, encoded text; the sandbox refuses reading a project file, listing
+the project, running a program, opening a socket, writing outside its folder; the checks score right
+and wrong), run on the host and inside the VM by `workspace/check.mjs`, with `workspace/twin.test.mjs`
+(`ola-twin make` against the scripted model of `web/server/fake-twin.mjs`: clean, mirroring nothing,
+scored; a planted name refused; a rare word held). `frontdesk/test/compare.test.mjs` (the order swap,
+with a judge that always picks the first result marked unsure; the evidence rule; the outcomes; the
+sampler stopped by a spent month, a full day and "Only when I ask"; a member refused everywhere and
+the real task with its switch off reading and sending nothing; a lost copy as a candidate whose
+selftest passes Claude's result and fails Ola's, run by `evals/run.mjs` with both replay arms; the
+weekly number). `frontdesk/check.mjs` (in the sealed VMs: the viewer sees nothing, the real task
+refused with no request at the Claude route; a clean copy made in the project's VM and kept with no
+planted word; Ola and Claude in scratch VMs, Claude better on the copy's checks, the judge twice; at
+the gateway every Claude request from a scratch VM and no planted word of the project in any body that
+reached the scripted Anthropic; no scratch VM or grant left; the candidate's selftest; a planted name
+refused, a rare word held with its finding, a copy changed in the VM refused, "Don't send").
+`web/check.mjs` (Chromium and WebKit against `web/server/compare-standin.mjs`: the action, the copy
+before it goes, the side-by-side and its line, a held copy, the real task just this once with its
+consent text, the Settings switches, a member with nothing, the Quality page, 390 px, none of our own
+words). Live once: `frontdesk/compare-live.mjs` (below, "Measured").
+
+**After deploying** (the deploy builds image 2.3.0-18; projects take it at their next start): nothing
+is required. Optional in `~/.ola/frontdesk.env`: `OLA_FD_COMPARE_CAP_USD` (3), `OLA_FD_MODEL_LABEL`
+(what `general` is, for Quality, e.g. `GLM-5.3-Flash`), `OLA_FD_COMPARE_TICK_MS`,
+`OLA_FD_COMPARE_ENGINE_MIN` (15), `OLA_FD_CANDIDATES_DIR` (default `apps/activist-ai/evals/candidates`
+of the running checkout). A comparison needs one free VM slot for its scratch VMs; on a full machine
+it waits.
+
+**Not done yet.** The family checks are the eval families' general rules, not their task checkers
+(those need the eval's own generator); the hosted open model's scratch run is wired but was not run in
+the suites; the sampler does not yet go through the batch lane (it runs only when the project has
+nothing executing, one comparison at a time on the machine, which is what the lane would buy until the
+priority lane exists); real-task comparisons have no checks (judge only); a copy of a PDF-heavy task
+gets text stand-ins only (the generator may write .txt, .csv, .md, .json and .xlsx).

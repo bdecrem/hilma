@@ -7,6 +7,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { randomBytes } from 'node:crypto'
+import { DatabaseSync } from 'node:sqlite'
 import { openDb } from '../../frontdesk/db.mjs'
 import { CONSENT_REAL, compareConfig, quality, weekly } from '../../frontdesk/compare.mjs'
 
@@ -78,6 +79,17 @@ export function makeCompareStandin({ dir, role }) {
     }
     if (p === '/api/quality' || p === '/api/quality/weekly') {
       if (role() !== 'owner') return json(res, 404, { error: 'not_found' }), true
+      // OLA_DEV_QUALITY_FROM=<a front desk's data folder> (and OLA_DEV_QUALITY_DIR, its compare
+      // folder): the page shows that machine's real records, read-only (the live proof's).
+      if (process.env.OLA_DEV_QUALITY_FROM) {
+        const real = new DatabaseSync(path.join(process.env.OLA_DEV_QUALITY_FROM, 'platform.db'), { readOnly: true })
+        try {
+          const rxc = { ...xc, dir: process.env.OLA_DEV_QUALITY_DIR ?? xc.dir }
+          return json(res, 200, p === '/api/quality' ? quality(real, rxc) : weekly(real)), true
+        } finally {
+          real.close()
+        }
+      }
       return json(res, 200, p === '/api/quality' ? quality(db, xc) : weekly(db)), true
     }
     if (role() !== 'owner') return json(res, p === '/api/compare' ? 200 : 403, p === '/api/compare' ? { canCompare: false } : { error: 'owner_only', message: 'Only the project’s owner can compare with Claude.' }), true
