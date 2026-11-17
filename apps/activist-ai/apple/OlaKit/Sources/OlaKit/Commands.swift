@@ -143,7 +143,7 @@ public enum AgentNotes {
   /// For opencode only: Ola's own skills, which both of Bart's servers install (skills/README.md). In step
   /// with workspace/AGENTS.md, "Ola's skills"; bart/ola-bart.sh writes the same line.
   public static let skills = """
-  Skills. Load the matching skill with the skill tool before you start, and follow it: `designer` for any web page or site (a landing or event page, a results or report page, a dashboard, a form or sign-up flow), whether you are making, redesigning or fixing it; `app-designer` for the screens of a phone or Mac app; `chart` for a chart; `workbook` for an Excel file; `report` for a Word or PDF report.
+  Skills. Load the matching skill with the skill tool before you start, and follow it: `designer` for any web page or site (a landing or event page, a results or report page, a dashboard, a form or sign-up flow), whether you are making, redesigning or fixing it; `app-designer` for the screens of a phone or Mac app; `chart` for a chart; `workbook` for an Excel file; `report` for a Word or PDF report. For a page or app screen, do this before you write or change any .html file, every time.
   """
   public static var all: String { Reaction.instruction + "\n\n" + drawing }
   /// What the agent on opencode is told (the local server, and the machine's through ola-bart.sh).
