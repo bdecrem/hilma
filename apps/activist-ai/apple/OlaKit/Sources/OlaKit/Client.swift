@@ -291,7 +291,7 @@ public final class OpenCodeClient: @unchecked Sendable {
   /// opencode's events as they happen (`GET /api/event`, server-sent events). Ends or throws when
   /// the connection goes; the caller reconnects. `onHeartbeat` sees every line, events or not.
   public func events(onHeartbeat: @escaping @Sendable () -> Void = {}) -> AsyncThrowingStream<JSON, Error> {
-    let req = request("GET", "/api/event", timeout: 75)
+    let req = request("GET", "/api/event", timeout: config.viaMac ? 45 : 75)
     let session = streamSession
     return AsyncThrowingStream { continuation in
       let task = Task {

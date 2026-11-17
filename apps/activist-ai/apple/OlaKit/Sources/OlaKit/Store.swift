@@ -39,7 +39,13 @@ public final class OlaStore {
     }
   }
   /// The app is in front (notifications only when it is not).
-  public var isActive = true
+  public var isActive = true {
+    didSet { if isActive && !oldValue { Task { await self.catchUp() } } }
+  }
+  /// How often a session shown as working is compared with the server (a missed event can never
+  /// leave it stuck on "Working"). Tests shorten it.
+  public var watchInterval: TimeInterval = 12
+  private var watchdog: Task<Void, Never>?
   public var onRunEnded: ((_ session: SessionInfo, _ turn: Turn) -> Void)?
   public var onApproval: ((_ session: SessionInfo, _ approval: Approval) -> Void)?
   /// Every finish and every wait for Bart, wherever he is looking (the Mac app sends them to the phone).
@@ -124,6 +130,15 @@ public final class OlaStore {
   public func start() {
     guard live, let client, stream == nil || stream!.isCancelled else { return }
     stream = Task { [weak self] in await self?.listen(client) }
+    if watchdog == nil {
+      watchdog = Task { [weak self] in
+        while !Task.isCancelled {
+          let wait = self?.watchInterval ?? 12
+          try? await Task.sleep(nanoseconds: UInt64(wait * 1_000_000_000))
+          await self?.watch()
+        }
+      }
+    }
   }
 
   /// Retry now (after the Mac wakes, or when Bart presses Try Again).
@@ -166,6 +181,27 @@ public final class OlaStore {
       }
     }
   }
+
+  /// Re-reads every open session from the server and reconciles: what the server says is
+  /// finished is shown finished, with its steps and results (foreground, reconnect, stream error).
+  public func catchUp() async {
+    guard client != nil else { return }
+    for id in conversations.keys where !claudeRunning(id) { await open(id) }
+    if let a = try? await client?.active() { running = a.union(Set(claudeRuns.keys)) }
+  }
+
+  /// The light check: a session shown as working is compared with the server's own state.
+  func watch() async {
+    guard let client else { return }
+    let shownWorking = conversations.filter { $0.value.isRunning && !claudeRunning($0.key) }.map(\.key)
+    guard !shownWorking.isEmpty else { return }
+    guard let active = try? await client.active() else { return }
+    for id in shownWorking where !active.contains(id) { await open(id) }
+    // Still running on the server: refresh its steps now and then, in case events were missed.
+    watchTick += 1
+    if watchTick % 3 == 0 { for id in shownWorking where active.contains(id) { await open(id) } }
+  }
+  private var watchTick = 0
 
   /// Sessions, what is running, the models, and (after an outage) the open conversation again.
   public func refresh(resync: Bool = false) async {

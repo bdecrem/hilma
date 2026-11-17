@@ -143,6 +143,14 @@ public final class MiniHTTPServer: @unchecked Sendable {
   }
 }
 
+/// When a stream last heard from its upstream.
+final class LastSeen: @unchecked Sendable {
+  private let lock = NSLock()
+  private var at = Date()
+  func touch() { lock.withLock { at = Date() } }
+  var age: TimeInterval { lock.withLock { Date().timeIntervalSince(at) } }
+}
+
 // MARK: the paired phones
 
 /// Paired phones: an id, a label, when paired and last seen, and the SHA-256 of the secret (the
@@ -402,11 +410,29 @@ public final class MacRelay: @unchecked Sendable {
     if req.path == "/api/event" {
       let id = UUID()
       let task = Task { [streamSession] in
+        let last = LastSeen()
+        let beat = Task {
+          // Both ways: our heartbeat to the phone, and a check that the upstream still talks.
+          while !Task.isCancelled {
+            try? await Task.sleep(nanoseconds: 15_000_000_000)
+            if Task.isCancelled { break }
+            let sent = await withTaskGroup(of: Bool.self) { g -> Bool in
+              g.addTask { await res.write(Data(": ola\n\n".utf8)) }
+              g.addTask { try? await Task.sleep(nanoseconds: 20_000_000_000); return false }
+              let first = await g.next() ?? false
+              g.cancelAll()
+              return first
+            }
+            if !sent || last.age > 60 { res.end(); break }
+          }
+        }
+        defer { beat.cancel() }
         do {
           let (bytes, response) = try await streamSession.bytes(for: r)
           let status = (response as? HTTPURLResponse)?.statusCode ?? 502
           guard await res.head(status == 401 ? 502 : status, ["Content-Type": "text/event-stream"]) else { return }
           for try await line in bytes.lines {
+            last.touch()
             if Task.isCancelled || !book.isPaired(phone) { break }
             guard await res.write(Data((line + "\n\n").utf8)) else { break }
           }
