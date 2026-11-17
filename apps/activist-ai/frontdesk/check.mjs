@@ -958,6 +958,52 @@ if (!LIVE) {
     const dbText = readFileSync(path.join(env.OLA_FD_DATA, 'platform.db')).toString('latin1') + (existsSync(path.join(env.OLA_FD_DATA, 'platform.db-wal')) ? readFileSync(path.join(env.OLA_FD_DATA, 'platform.db-wal')).toString('latin1') : '')
     assert(!dbText.includes('flood maps') && !readFileSync(webFile, 'utf8').includes('flood') && !gateway.log.includes('flood maps'), 'the search words were written down')
   })
+  // Review 4, H2: opencode 2.3.0's own "always" is a durable project-wide rule (it outlived the
+  // conversation and a restart). The front desk keeps "for the rest of this conversation" itself.
+  await check('"Yes, for the rest of this conversation" lasts that conversation only: the next request in it is not asked again, a new conversation is', async () => {
+    const dialogs = async (answers) => {
+      const seen = []
+      const last = A.page.locator('.drawer .turn').last()
+      const end = Date.now() + 90_000
+      while (Date.now() < end) {
+        const st = await last.getAttribute('data-status').catch(() => null)
+        if (st && ['done', 'failed', 'stopped'].includes(st)) break
+        const d = A.page.locator('dialog.approval[open]')
+        if (await d.count()) {
+          const title = await d.locator('h2').innerText().catch(() => '')
+          const n = seen.push(title)
+          await d.getByRole('button', { name: answers[n - 1] ?? 'Yes, this once' }).click().catch(() => {})
+          await A.page.waitForTimeout(800)
+        }
+        await A.page.waitForTimeout(300)
+      }
+      return seen
+    }
+    const ask = async (fresh) => {
+      if (fresh) {
+        await A.page.goto('about:blank')
+        await A.page.goto(`${ORIGIN}/?w=${FA}#/`)
+        await A.page.waitForSelector('.project-title')
+        await A.page.getByRole('button', { name: 'Ask Ola' }).first().click()
+        await A.page.locator('button:has-text("New conversation")').first().click({ timeout: 2000 }).catch(() => {})
+        await A.page.locator('.autonomy label', { hasText: 'Ask me first' }).click()
+      }
+      await A.page.fill('#ask-input', 'Count the rows of survey.csv (made up)')
+      await A.page.press('#ask-input', 'Enter')
+    }
+    const csv = 'name,city\nAnn,Springfield\nBo,Shelbyville\n'
+    spawnSync(CTR, ['exec', '-i', '--user', '1000', `ola-${FA}`, 'sh', '-c', 'cat > /work/survey.csv'], { input: csv })
+    await ask(true)
+    const first = await dialogs(['Yes, for the rest of this conversation', 'Yes, this once'])
+    assert(first.length >= 2 && /run code/.test(first[0]), `conversation 1: ${JSON.stringify(first)}`)
+    await ask(false)
+    const again = await dialogs(['Yes, this once'])
+    assert(!again.some((t) => /run code/.test(t)), `the same conversation asked about code again: ${JSON.stringify(again)}`)
+    await ask(true)
+    const other = await dialogs(['No, don’t', 'No, don’t'])
+    assert(other.length >= 1 && /run code/.test(other[0]), `a new conversation did not ask first: ${JSON.stringify(other)}`)
+    return `conversation 1 asked ${first.length}, its next request ${again.length} (no code question), a new one ${other.length}`
+  })
 }
 
 await check("removing a member: their open stream is cut by the recheck, then the workspace gets new secrets", async () => {

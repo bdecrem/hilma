@@ -13,6 +13,7 @@ import { fileURLToPath } from 'node:url'
 import * as ws from '../workspace/ws.mjs'
 import { makeProxy, opencodeCall } from '../web/server/proxy.mjs'
 import { audit, nameRef } from './db.mjs'
+import { webRequests } from '../web/server/webask.mjs'
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const WS_CLI = path.join(HERE, '../workspace/ws.mjs')
@@ -43,6 +44,12 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
   const runs = new Map() // slug -> Map(sessionID -> { since, cancelledAt }): sessions seen executing
   const lastRun = new Map() // slug -> the last time a session in it was seen executing
   const prompted = new Map() // `${slug}:${sessionID}` -> when a person's prompt for it last went through
+  // "Yes, for the rest of this conversation", kept here: `${slug}:${sessionID}` -> Set of opencode
+  // actions the person allowed for that conversation. opencode 2.3.0's own "always" saves a durable
+  // project-wide allow rule (it outlived the conversation and a restart: review 4, H2), so opencode
+  // is only ever told "once", and the watcher answers a later question of the same action in the
+  // same conversation "once" by itself. Never a web search or download (web.mjs has its own).
+  const forConversation = new Map()
   const ended = new Map() // `${slug}:${sessionID}` -> when its event stream last said a run ended
   const ceilingStops = new Map() // `${slug}:${sessionID}` -> { at, minutes }, for the page (24 h)
   // slug -> when a person's prompt in it last went through. From the audit log at start, so a front
@@ -397,6 +404,11 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
         return
       }
       if (!d || typeof d.id !== 'string' || d.id.length > 120) return
+      if (ev.type === 'permission.asked' && typeof d.sessionID === 'string' && /^[A-Za-z0-9_-]{1,80}$/.test(d.sessionID) && /^[A-Za-z0-9_-]{1,80}$/.test(d.id)) {
+        const allowed = forConversation.get(`${slug}:${d.sessionID}`)
+        if (allowed?.has(d.action) && !webRequests(d.action, d.resources).length) opencodeCall({ socketPath: ws.paths(slug).opencode, agent: agentFor(slug), authorization: authorization(slug) }, 'POST', `/api/session/${d.sessionID}/permission/${d.id}/reply`, { decision: 'once' }).catch(() => {})
+        return
+      }
       if (ev.type === 'session.tool.input.started' && typeof d.name === 'string') {
         if (state.names.size > 5000) state.names.clear()
         state.names.set(d.id, d.name)
@@ -431,6 +443,14 @@ export function makeWorkspaces({ db, keys, log, idleStopMs = 30 * 60_000, runCei
     sweep,
     forward,
     /** One JSON request from the front desk itself to the workspace's opencode, through its desk. */
+    /** The person said "for the rest of this conversation" to `action` in `sessionID`. */
+    allowForConversation(slug, sessionID, action) {
+      if (typeof action !== 'string' || action.length > 60) return
+      const k = `${slug}:${sessionID}`
+      if (!forConversation.has(k)) forConversation.set(k, new Set())
+      forConversation.get(k).add(action)
+      if (forConversation.size > 5000) forConversation.delete(forConversation.keys().next().value)
+    },
     ocCall: (slug, method, pathname, body) => opencodeCall({ socketPath: ws.paths(slug).opencode, agent: agentFor(slug), authorization: authorization(slug) }, method, pathname, body),
     dbApi: ws.dbApi,
     dbStream: ws.dbStream,

@@ -317,7 +317,17 @@ export function makeFrontDesk(cfg = config()) {
         const body = await readJson(req, 16 * 1024)
         if (!body || typeof body.decision !== 'string') return json(res, 400, { error: 'bad_json' })
         const ask = (m, pathname, b) => workspaces.ocCall(ws.slug, m, pathname, b)
-        const decision = await web.onReply(ws, sess.personId, reply[1], reply[2], body.decision, ask)
+        let decision = await web.onReply(ws, sess.personId, reply[1], reply[2], body.decision, ask)
+        // Never opencode's own "always": it saves a durable project-wide rule, which is not what
+        // "Yes, for the rest of this conversation" says (review 4, H2). The front desk keeps it for
+        // this conversation (workspaces.mjs forConversation) and opencode hears "once".
+        if (decision === 'always') {
+          const pending = await ask('GET', `/api/session/${reply[1]}/permission`)
+          const list = Array.isArray(pending.json) ? pending.json : Array.isArray(pending.json?.data) ? pending.json.data : []
+          const q = list.find((x) => x?.id === reply[2])
+          if (q) workspaces.allowForConversation(ws.slug, reply[1], q.action)
+          decision = 'once'
+        }
         const r = await ask('POST', `/api/session/${reply[1]}/permission/${reply[2]}/reply`, { decision, ...(typeof body.message === 'string' ? { message: body.message.slice(0, 2000) } : {}) })
         if (r.status >= 400) return json(res, r.status === 404 ? 404 : 502, { error: 'reply_failed', message: 'Your answer did not reach Ola. Try again.' })
         return res.writeHead(204, { 'cache-control': 'no-store' }).end()
