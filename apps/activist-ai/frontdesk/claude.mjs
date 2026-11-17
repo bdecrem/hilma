@@ -38,7 +38,9 @@ eyes (you are on it), thanks (they thanked or complimented you), ok (noted: an i
 preference that needs no work), done (you finished what they asked), party (they share a win),
 think (you need something from them first), oops (they caught your mistake).
 Use at most one reaction, only on that first line, and never explain it or mention it.
-If the message is only thanks or a compliment, reply with the marker line alone and nothing else.`
+If the message is only thanks or a compliment, reply with the marker line alone and nothing else.
+
+Drawings. When asked for a drawing, diagram or illustration, draw it in code as an SVG file (clean shapes, a viewBox, no outside fonts or images) and save it in the project; say its file name. Use a chart library only for charts of data.`
 import { ceilingMessage } from './workspaces.mjs'
 
 export const AUTO = ['ask', 'stuck', 'always']
