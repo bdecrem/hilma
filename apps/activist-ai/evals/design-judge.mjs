@@ -94,7 +94,7 @@ img.phone{width:45%}img.solo{width:100%}</style><main>${cells}</main>`)
 }
 
 async function ask(png, rubric) {
-  const body = { model: 'see', max_tokens: 500, messages: [{ role: 'user', content: [{ type: 'text', text: rubric }, { type: 'image_url', image_url: { url: `data:image/png;base64,${png}` } }] }] }
+  const body = { model: 'see', max_tokens: 2000, messages: [{ role: 'user', content: [{ type: 'text', text: rubric }, { type: 'image_url', image_url: { url: `data:image/png;base64,${png}` } }] }] }
   const r = await fetch(`http://127.0.0.1:${args.port}/v1/chat/completions`, { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
   const j = await r.json().catch(() => ({}))
   const text = j?.choices?.[0]?.message?.content || JSON.stringify(j).slice(0, 200)
