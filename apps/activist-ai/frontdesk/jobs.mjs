@@ -345,7 +345,10 @@ export function makeJobs({ db, jc, cc, workspaces, hostedInfo, claudeInfo, log, 
         // The VM's record says otherwise (a restart between two steps, a VM made again): ours wins.
         if (s.state !== r.state) await tool.api(r.slug, ['set', '--job', r.job, '--state', r.state, '--budget', String(r.budget)], { ms: 15_000 }).catch(() => {})
         const fresh = s.heartbeatAge !== null && s.heartbeatAge * 1000 < jc.staleMs
-        if (!runners.has(`${r.slug}:${r.job}`) && !fresh) startRunner(r.slug, r.job)
+        // A runner still beating that this front desk did not start (one of a killed front desk,
+        // its exec orphaned) holds a key that is no longer granted: a new one is started at once,
+        // with a new key, and ends it (ola-batch run --key-stdin takes the job's lock over).
+        if (!runners.has(`${r.slug}:${r.job}`) && (!fresh || !r.runner_key_sha256)) startRunner(r.slug, r.job)
       }
       for (const [slug, release] of holds) if (!live.has(slug)) holds.delete(slug), release()
     } finally {
