@@ -136,26 +136,22 @@ profile_installed() {
 ship_mac() {
   archive OlaMac "generic/platform=macOS" ola-mac
   local app="$OUT/ola-mac.xcarchive/Products/Applications/Ola.app"
-  node tools/skills.mjs verify "$app/Contents/Resources/OlaSkills" >/dev/null || { echo "error: the archived app's skills are not apps/activist-ai/skills at HEAD" >&2; exit 1; }
   node tools/skills.mjs verify "$app/Contents/Resources/OlaSkills" || { echo "error: not shipping: the archived Mac app's skills are not apps/activist-ai/skills at HEAD" >&2; exit 1; }
-  local devid; devid=$(security find-identity -v -p codesigning | sed -n 's/.*"\(Developer ID Application: [^"]*\)".*/\1/p' | head -1)
-  if [ -n "$devid" ]; then
-    echo "== signing the Mac app with $devid (hardened runtime, timestamp)"
-    find "$app/Contents" \( -name "*.framework" -o -name "*.dylib" \) -prune 2>/dev/null | while read -r f; do
-      codesign -f -s "$devid" -o runtime --timestamp "$f" >/dev/null 2>&1
-    done
-    codesign -f -s "$devid" -o runtime --timestamp "$app" >/dev/null 2>&1
-  elif [ -n "$DRY" ]; then
-    # No Developer ID on this Mac yet: prove the rest with Apple Distribution's sibling, the
-    # development identity (same hardened runtime; notarization is what it cannot do).
+  # Passkeys in the app (README, "Passkeys in the app") need webcredentials:app.ola.cx, which only a
+  # provisioning profile allows; the export makes a Developer ID one. OLA_PASSKEY=0 ships without.
+  local ent=() want_wc=1
+  [ "${OLA_PASSKEY:-1}" = 0 ] && want_wc="" || ent=(--entitlements Mac/Ola.entitlements)
+  if [ -n "$DRY" ]; then
     local dev; dev=$(security find-identity -v -p codesigning | sed -n 's/.*"\(Apple Development: [^"]*\)".*/\1/p' | head -1)
-    echo "== dry run: no Developer ID Application identity here; signing with $dev to check the bundle"
+    echo "== dry run: signing with $dev to check the bundle (no Developer ID export, no entitlements)"
     codesign -f -s "$dev" -o runtime --timestamp=none "$app" >/dev/null 2>&1
+    want_wc=""
   else
-    # Xcode's cloud-managed Developer ID (Bart's Apple ID in Xcode, Account Holder): the export
-    # signs. The ad-hoc signature first carries the hardened-runtime flag into the export.
-    echo "== signing the Mac app with Xcode's cloud-managed Developer ID (export)"
-    codesign -f -s - -o runtime "$app" >/dev/null 2>&1
+    # Xcode's cloud-managed Developer ID certificate (Bart's Apple ID is in Xcode here; nothing to
+    # click). An unsigned archive carries no entitlements and no hardened-runtime flag, and the
+    # export keeps what the app is signed with, so an ad-hoc signature puts both in first.
+    echo "== signing the Mac app with Developer ID (Xcode's cloud certificate, export)"
+    codesign -f -s - -o runtime "${ent[@]}" "$app" >/dev/null 2>&1
     cat > "$OUT/mac-export.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -168,35 +164,47 @@ ship_mac() {
 PLIST
     xcodebuild -exportArchive -archivePath "$OUT/ola-mac.xcarchive" -exportOptionsPlist "$OUT/mac-export.plist" \
       -exportPath "$OUT/mac-export" -allowProvisioningUpdates > "$OUT/mac-export.log" 2>&1 \
-      || { grep -iE "error" "$OUT/mac-export.log" | sort -u | head -15
-           echo "Developer ID signing failed ($OUT/mac-export.log). Once: Xcode, Settings, Accounts, Manage Certificates, +, Developer ID Application; then rerun." >&2; exit 1; }
+      || { grep -iE "error" "$OUT/mac-export.log" | sort -u | head -15; echo "Developer ID signing failed: $OUT/mac-export.log" >&2; exit 1; }
     app="$OUT/mac-export/Ola.app"
   fi
   codesign --verify --deep --strict "$app" || { echo "error: the signed Mac app does not verify" >&2; exit 1; }
   # Read first, then match: grep -q closing the pipe early fails the line under pipefail.
-  local sig; sig=$(codesign -dv "$app" 2>&1)
+  local sig; sig=$(codesign -dvv "$app" 2>&1)
   [[ "$sig" == *"flags="*"runtime"* ]] || { echo "error: the Mac app is not signed with the hardened runtime" >&2; exit 1; }
-  echo "   signed: $(codesign -dvv "$app" 2>&1 | sed -n 's/^Authority=//p' | head -1), hardened runtime"
+  if [ -n "$want_wc" ]; then
+    local ents; ents=$(codesign -d --entitlements - --xml "$app" 2>/dev/null)
+    [[ "$ents" == *"webcredentials:app.ola.cx"* ]] || { echo "error: the signed Mac app lacks webcredentials:app.ola.cx (passkeys)" >&2; exit 1; }
+  fi
+  echo "   signed: $(sed -n 's/^Authority=//p' <<<"$sig" | head -1), hardened runtime${want_wc:+, passkeys}"
 
-  echo "== the disk image"
+  if [ -n "$DRY" ]; then
+    local stage="$OUT/dmg" dmg="$OUT/Ola-$VERSION-$BUILD.dmg"
+    mkdir -p "$stage" && ditto "$app" "$stage/Ola.app" && ln -s /Applications "$stage/Applications"
+    hdiutil create -quiet -volname "Ola $VERSION" -srcfolder "$stage" -ov -format UDZO "$dmg"
+    echo "   $(du -h "$dmg" | cut -f1) $dmg; dry run: not notarized, not published"; return
+  fi
+
+  echo "== notarizing the app (usually 2 to 10 minutes)"
+  local zip="$OUT/Ola-$VERSION-$BUILD.zip"
+  ditto -c -k --keepParent "$app" "$OUT/notarize-app.zip"
+  notarize "$OUT/notarize-app.zip"
+  xcrun stapler staple -q "$app"
+  spctl -a -t exec "$app" 2>/dev/null || { echo "error: Gatekeeper refuses the notarized app" >&2; exit 1; }
+  ditto -c -k --keepParent "$app" "$zip"   # the stapled app, for the Desktop copy
+
+  echo "== the disk image, notarized too"
   local stage="$OUT/dmg" dmg="$OUT/Ola-$VERSION-$BUILD.dmg"
   mkdir -p "$stage" && ditto "$app" "$stage/Ola.app" && ln -s /Applications "$stage/Applications"
   hdiutil create -quiet -volname "Ola $VERSION" -srcfolder "$stage" -ov -format UDZO "$dmg"
-  echo "   $(du -h "$dmg" | cut -f1) $dmg"
-  if [ -n "$DRY" ]; then echo "   dry run: not notarized, not published"; return; fi
-
-  echo "== notarizing (usually 2 to 10 minutes)"
-  xcrun notarytool submit "$dmg" --key "$KEYS/AuthKey_$KEY_ID.p8" --key-id "$KEY_ID" --issuer "$ISSUER" --wait \
-    --output-format json > "$OUT/notary.json" 2> "$OUT/notary.err" || true
-  grep -q '"status" *: *"Accepted"' "$OUT/notary.json" || {
-    cat "$OUT/notary.err" "$OUT/notary.json" | grep -vi 'key' | head -10
-    local id; id=$(sed -n 's/.*"id" *: *"\([^"]*\)".*/\1/p' "$OUT/notary.json" | head -1)
-    [ -n "$id" ] && xcrun notarytool log "$id" --key "$KEYS/AuthKey_$KEY_ID.p8" --key-id "$KEY_ID" --issuer "$ISSUER" "$OUT/notary-log.json" >/dev/null 2>&1 && echo "Apple's notes: $OUT/notary-log.json"
-    echo "error: notarization was not accepted" >&2; exit 1; }
+  notarize "$dmg"
   xcrun stapler staple -q "$dmg"
-  spctl -a -t open --context context:primary-signature "$dmg" || { echo "error: Gatekeeper refuses the disk image" >&2; exit 1; }
+  spctl -a -t open --context context:primary-signature "$dmg" 2>/dev/null || { echo "error: Gatekeeper refuses the disk image" >&2; exit 1; }
+  echo "   $(du -h "$dmg" | cut -f1) $dmg"
 
-  echo "== publishing to ola.cx/ola-site/mac/"
+  local desk=${OLA_DESKTOP_ZIP:-$HOME/Desktop/Ola/mac-download/Ola.zip}
+  if [ -d "$(dirname "$desk")" ]; then cp "$zip" "$desk"; echo "   copied the stapled app to $desk"; fi
+
+  echo "== publishing to ola.cx/ola-site/mac/ (unlisted; the app's update check reads latest.json)"
   local root; root=$(git rev-parse --show-toplevel)
   local pub="$root/public/ola-site/mac"
   mkdir -p "$pub" && git -C "$root" rm -q --ignore-unmatch "public/ola-site/mac/Ola-*.dmg" >/dev/null
@@ -205,11 +213,22 @@ PLIST
 {"version":"$VERSION","build":"$BUILD","url":"https://ola.cx/ola-site/mac/Ola-$VERSION-$BUILD.dmg","notes":"${OLA_NOTES:-}"}
 JSON
   git -C "$root" add "public/ola-site/mac"
-  git -C "$root" commit -q -m "ola apple: TestFlight, the Mac download $VERSION ($BUILD)" \
+  git -C "$root" commit -q -m "ola apple: TestFlight, the Mac download $VERSION ($BUILD) [${OLA_ISSUE:-OLA-118}]" \
     -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" \
     -m "Claude-Session: https://claude.ai/code/session_012SXcnn2YuX2WXNrf6GerJQ"
   git -C "$root" fetch -q origin && git -C "$root" rebase -q origin/main && git -C "$root" push -q origin HEAD:main
   echo "   published: https://ola.cx/ola-site/mac/Ola-$VERSION-$BUILD.dmg (live in about 3 minutes)"
+}
+notarize() { # $1 a zip or dmg; exits unless Apple accepts it
+  local f="$1" j="$1.notary.json"
+  xcrun notarytool submit "$f" --key "$KEYS/AuthKey_$KEY_ID.p8" --key-id "$KEY_ID" --issuer "$ISSUER" --wait \
+    --output-format json > "$j" 2> "$j.err" || true
+  local st; st=$(cat "$j")
+  [[ "$st" =~ \"status\"[[:space:]]*:[[:space:]]*\"Accepted\" ]] && { echo "   notarized: $(basename "$f")"; return; }
+  sed 's/AuthKey_[^ ]*//' "$j.err" | head -5; echo "$st" | head -c 400; echo
+  local id; id=$(sed -n 's/.*"id" *: *"\([^"]*\)".*/\1/p' "$j" | head -1)
+  [ -n "$id" ] && xcrun notarytool log "$id" --key "$KEYS/AuthKey_$KEY_ID.p8" --key-id "$KEY_ID" --issuer "$ISSUER" "$j.log" >/dev/null 2>&1 && echo "Apple's notes: $j.log"
+  echo "error: notarization of $(basename "$f") was not accepted" >&2; exit 1
 }
 
 [ "$WHAT" = mac ] || ship_ios

@@ -35,7 +35,7 @@ case "${1:-}" in
     if [ -n "${OLA_PASSKEY:-}" ]; then
       # Passkeys in the app: the associated domain needs a provisioning profile, so automatic signing
       # with the team (project.yml, "Passkeys"). Refused until Apple's agreement is accepted.
-      SIGN=(CODE_SIGN_STYLE=Automatic DEVELOPMENT_TEAM=274T5WCVD2 CODE_SIGN_ENTITLEMENTS=Mac/Ola.entitlements -allowProvisioningUpdates)
+      SIGN=(CODE_SIGN_STYLE=Automatic DEVELOPMENT_TEAM=274T5WCVD2 CODE_SIGN_ENTITLEMENTS=Mac/Ola.entitlements -allowProvisioningUpdates -allowProvisioningDeviceRegistration)
     elif [ -n "$ID" ]; then
       TEAM="$(security find-certificate -c "$ID" -p 2>/dev/null | openssl x509 -noout -subject 2>/dev/null | sed -n 's/.*OU=\([A-Z0-9]*\).*/\1/p')"
       SIGN=(CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="$ID" DEVELOPMENT_TEAM="${TEAM:-}" PROVISIONING_PROFILE_SPECIFIER="" OTHER_CODE_SIGN_FLAGS="--timestamp=none")
