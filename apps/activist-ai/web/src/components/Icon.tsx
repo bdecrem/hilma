@@ -16,6 +16,19 @@ const PATHS: Record<string, () => JSX.Element> = {
     </>
   ),
   chart: () => <path d="M3.5 3.5v13h13M7 13.5V10M10 13.5V7M13 13.5V9.5" />,
+  image: () => (
+    <>
+      <rect x="3" y="4" width="14" height="12" rx="1.5" />
+      <path d="m3.5 14 4-4 3 3 2-2 4 4" />
+      <circle cx="13" cy="7.75" r="1.25" />
+    </>
+  ),
+  filedoc: () => (
+    <>
+      <path d="M5.5 2.75h6.5l3 3v11.5h-9.5z" />
+      <path d="M12 2.75v3h3M8 10h5M8 13h5" />
+    </>
+  ),
   table: () => (
     <>
       <rect x="3" y="4" width="14" height="12" rx="1" />

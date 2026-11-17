@@ -4,10 +4,11 @@
 // ceiling; and the setting they share, "When a request looks like a stretch" (suggest it and let me
 // decide, the default; hand it over without asking, only while a switch is on; never suggest).
 // Below them, web search and downloads (WebSetting.tsx).
-import { createEffect, createSignal, For, Show, type JSX } from 'solid-js'
+import { createEffect, createResource, createSignal, For, Show, type JSX } from 'solid-js'
 import type { Ola } from '../lib/ola.ts'
 import type { Fallback, Problem, Stretch } from '../lib/types.ts'
-import { claude, DeskError, fallback, hosted } from '../lib/api.ts'
+import { claude, desk, DeskError, fallback, hosted } from '../lib/api.ts'
+import { bytes } from '../lib/format.ts'
 import { ProblemBox } from './Drawer.tsx'
 import { WebSetting } from './WebSetting.tsx'
 
@@ -58,6 +59,62 @@ const STRETCH: { value: Stretch; label: string; hint: (to: string) => string }[]
   { value: 'handover', label: 'Hand it over without asking', hint: (to) => `The request goes to ${to}, marked, with one sentence of why.` },
   { value: 'never', label: 'Never suggest', hint: () => 'Ola keeps working on its own and never asks.' },
 ]
+
+/** How much room this project takes on this machine, and what takes it (GET /api/disk). */
+function DiskUseView() {
+  const [d] = createResource(() => desk.disk())
+  const pct = (n: number) => (d()?.total ? Math.max(n > 0 ? 0.5 : 0, Math.round((n / d()!.total) * 1000) / 10) : 0)
+  return (
+    <div class="setting disk-use" aria-labelledby="disk-title">
+      <h2 class="setting-name" id="disk-title">
+        Room for this project
+      </h2>
+      <Show when={d()} fallback={<p class="setting-say">{d.error ? 'Not known just now.' : 'Measuring…'}</p>}>
+        {(x) => (
+          <>
+            <p class="setting-say">
+              <strong>{bytes(x().files + x().data + x().ola)}</strong> used of {bytes(x().total)}. {bytes(x().free)} free.
+            </p>
+            <div class="disk-bar" role="img" aria-label={`Files ${bytes(x().files)}, data ${bytes(x().data)}, Ola’s own notes ${bytes(x().ola)}, of ${bytes(x().total)}`}>
+              <span class="disk-files" style={{ width: `${pct(x().files)}%` }} />
+              <span class="disk-data" style={{ width: `${pct(x().data)}%` }} />
+              <span class="disk-ola" style={{ width: `${pct(x().ola)}%` }} />
+            </div>
+            <dl class="facts disk-facts">
+              <div>
+                <dt>
+                  <span class="disk-key disk-files" aria-hidden="true" />
+                  Files
+                </dt>
+                <dd>
+                  {bytes(x().files)}, of which you uploaded {bytes(x().uploaded)}
+                </dd>
+              </div>
+              <div>
+                <dt>
+                  <span class="disk-key disk-data" aria-hidden="true" />
+                  Data
+                </dt>
+                <dd>{bytes(x().data)}: the project’s database, with the text of every document</dd>
+              </div>
+              <div>
+                <dt>
+                  <span class="disk-key disk-ola" aria-hidden="true" />
+                  Ola’s own notes
+                </dt>
+                <dd>{bytes(x().ola)}: conversations, pages it has shown you, unfinished uploads</dd>
+              </div>
+              <div>
+                <dt>Largest upload</dt>
+                <dd>{bytes(x().maxUpload)} at once; a large file goes in pieces and can carry on after a dropped connection</dd>
+              </div>
+            </dl>
+          </>
+        )}
+      </Show>
+    </div>
+  )
+}
 
 export function SettingsView(props: { ola: Ola; titleRef?: (el: HTMLHeadingElement) => void; canWrite?: boolean }) {
   const st = () => props.ola.state
@@ -197,6 +254,7 @@ export function SettingsView(props: { ola: Ola; titleRef?: (el: HTMLHeadingEleme
           </div>
         </Show>
         <WebSetting canWrite={props.canWrite ?? false} />
+        <DiskUseView />
       </div>
 
       <ConsentDialog

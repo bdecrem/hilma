@@ -3,12 +3,105 @@
 # not starting with a dot) through a temporary file and a rename, then prints
 # {"name","size","sha256"} so the host can compare with what it sent.
 # Run by `ws.mjs upload` through `container exec -i`.
+#
+# A large file comes in pieces (the front desk's resumable upload, 2026-11-17), kept in
+# /work/.ola/uploads/<id>.part until it is whole:
+#   ola-put --chunk <id> --offset N    stdin appended, only if the part holds exactly N bytes now
+#                                      (else exit 5 and {"have": size}, so the sender resumes there);
+#                                      prints {"have": size, "sha256": <sha of this piece>}
+#   ola-put --status <id>              {"have": size}
+#   ola-put --finish <id> <name> [--replace]
+#                                      the part renamed to /work/<name>; prints {"name","size","sha256"}
+#   ola-put --abort <id>               the part removed
+# Parts not touched for two days are removed by ola-init.
 import hashlib, json, os, re, sys, tempfile
+
+NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9 ._()+,-]{0,199}")
+UID = re.compile(r"[0-9a-f]{32}")
+PARTS = "/work/.ola/uploads"
+
+
+def fail(code, msg, extra=None):
+    if extra is not None:
+        print(json.dumps(extra))
+    sys.stderr.write("ola-put: " + msg + "\n")
+    sys.exit(code)
+
+
+def part_of(uid):
+    if not UID.fullmatch(uid or ""):
+        fail(2, "an upload id is 32 hex characters")
+    os.makedirs(PARTS, mode=0o700, exist_ok=True)
+    return os.path.join(PARTS, uid + ".part")
+
+
+def size_of(p):
+    try:
+        st = os.lstat(p)
+    except FileNotFoundError:
+        return 0
+    if not os.path.isfile(p) or os.path.islink(p):
+        fail(2, "the upload's part is not a plain file")
+    return st.st_size
+
 
 args = sys.argv[1:]
 replace = "--replace" in args
-names = [a for a in args if a != "--replace"]
-if len(names) != 1 or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9 ._()+,-]{0,199}", names[0]):
+args = [a for a in args if a != "--replace"]
+
+if args[:1] == ["--chunk"] and len(args) == 4 and args[2] == "--offset" and args[3].isdigit():
+    p = part_of(args[1])
+    have = size_of(p)
+    if have != int(args[3]):
+        fail(5, "the upload holds %d bytes, not %s" % (have, args[3]), {"have": have})
+    h = hashlib.sha256()
+    fd = os.open(p, os.O_WRONLY | os.O_CREAT | os.O_APPEND | os.O_NOFOLLOW, 0o600)
+    try:
+        with os.fdopen(fd, "ab") as f:
+            for chunk in iter(lambda: sys.stdin.buffer.read(1 << 20), b""):
+                h.update(chunk)
+                f.write(chunk)
+            f.flush()
+            os.fsync(f.fileno())
+    except BaseException:
+        # A piece cut off midway is cut back, so the part always ends at a piece's end.
+        os.truncate(p, have)
+        raise
+    print(json.dumps({"have": size_of(p), "sha256": h.hexdigest()}))
+    sys.exit(0)
+if args[:1] == ["--status"] and len(args) == 2:
+    print(json.dumps({"have": size_of(part_of(args[1]))}))
+    sys.exit(0)
+if args[:1] == ["--abort"] and len(args) == 2:
+    try:
+        os.unlink(part_of(args[1]))
+    except FileNotFoundError:
+        pass
+    print(json.dumps({"aborted": True}))
+    sys.exit(0)
+if args[:1] == ["--finish"] and len(args) == 3:
+    p = part_of(args[1])
+    name = args[2]
+    if not NAME.fullmatch(name):
+        fail(2, "the name must be a plain file name (letters, digits, space . _ ( ) + , -), at most 200")
+    dest = os.path.join("/work", name)
+    if os.path.lexists(dest) and not replace:
+        fail(3, "a file with that name is already in the workspace")
+    if not os.path.isfile(p):
+        fail(4, "no such upload")
+    h = hashlib.sha256()
+    size = 0
+    with open(p, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+            size += len(chunk)
+    os.chmod(p, 0o644)
+    os.replace(p, dest)
+    print(json.dumps({"name": name, "size": size, "sha256": h.hexdigest()}))
+    sys.exit(0)
+
+names = args
+if len(names) != 1 or not NAME.fullmatch(names[0]):
     sys.stderr.write("ola-put: the name must be a plain file name (letters, digits, space . _ ( ) + , -), at most 200\n")
     sys.exit(2)
 name = names[0]

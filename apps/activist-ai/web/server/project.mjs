@@ -67,8 +67,11 @@ export function pageTitle(html) {
   return t ? t.slice(0, 80) : null
 }
 export const isPageFile = (rel) => /\.html?$/i.test(rel)
-/** A file the home shows as a thing: any page, or a .csv/.md Ola wrote at the top of the folder. */
-export const isThingFile = (f) => isPageFile(f.path) || (f.origin === 'made' && !f.path.includes('/') && /\.(csv|md)$/.test(f.path))
+const isImage = (rel) => /\.(png|jpe?g|gif|webp|svg)$/i.test(rel)
+const isFileDoc = (rel) => /\.(pdf|docx)$/i.test(rel)
+/** A file the home shows as a thing: any page, or a .csv/.md, a picture, a PDF or a Word file Ola
+ * wrote at the top of the folder (pictures inside a page's folder belong to the page). */
+export const isThingFile = (f) => isPageFile(f.path) || (f.origin === 'made' && !f.path.includes('/') && (/\.(csv|md|xlsx)$/.test(f.path) || isImage(f.path) || isFileDoc(f.path)))
 
 /** Things made from what is in the workspace. */
 export async function derivedThings(files) {
@@ -76,6 +79,25 @@ export async function derivedThings(files) {
   const things = []
   for (const f of list) {
     if (!isThingFile(f)) continue
+    if (f.path.endsWith('.xlsx')) {
+      // An Excel file Ola made: a table on the home, its rows and sheets behind Open (not read here).
+      things.push({ kind: 'table', id: `file:${f.path}`, title: f.path, byline: { madeBy: 'ola', when: f.modified, from: [] }, state: 'ready', file: f.path, openable: true, columns: [], rows: [], note: 'An Excel file Ola made. Open shows its rows, sheet by sheet; Download has the file.' })
+      continue
+    }
+    if (isImage(f.path) || isFileDoc(f.path)) {
+      const image = isImage(f.path)
+      things.push({
+        kind: image ? 'image' : 'filedoc',
+        id: `file:${f.path}`,
+        title: f.path,
+        byline: { madeBy: 'ola', when: f.modified, from: [] },
+        state: 'ready',
+        file: f.path,
+        openable: true,
+        ...(image ? { alt: `${f.path}, a picture Ola made` } : { format: /\.pdf$/i.test(f.path) ? 'PDF' : 'Word' }),
+      })
+      continue
+    }
     if (isPageFile(f.path)) {
       const name = f.path.split('/').pop()
       const where = f.path.includes('/') ? f.path.slice(0, f.path.lastIndexOf('/')) : null
@@ -104,6 +126,7 @@ export async function derivedThings(files) {
         byline: { madeBy: 'ola', when: f.modified, from: [] },
         state: 'ready',
         file: f.path,
+        openable: true,
         columns: head.map((label) => ({ label })),
         rows: body.slice(0, 6),
         note: body.length > 6 ? 'The first six rows.' : null,
@@ -118,6 +141,7 @@ export async function derivedThings(files) {
         byline: { madeBy: 'ola', when: f.modified, from: [] },
         state: 'ready',
         file: f.path,
+        openable: true,
         heading: heading ?? f.path,
         dek: null,
         sections,

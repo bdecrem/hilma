@@ -75,10 +75,10 @@ export function makeFiles({ work, manifestPath }) {
   }
 
   /** Streams the request body into the workspace through a temp file and a rename. */
-  async function upload(name, req, { replace = false } = {}) {
+  async function upload(name, req, { replace = false, maxBytes = MAX_UPLOAD_BYTES } = {}) {
     if (!validName(name)) return { status: 400, body: { error: 'bad_name', message: 'The file name has characters Ola does not accept. Rename it with letters, digits and spaces.' } }
-    const declared = Number(req.headers['content-length'] ?? NaN)
-    if (Number.isFinite(declared) && declared > MAX_UPLOAD_BYTES) return { status: 413, body: { error: 'too_large', message: tooLargeMessage(MAX_UPLOAD_BYTES) } }
+    const declared = Number(req.headers?.['content-length'] ?? NaN)
+    if (Number.isFinite(declared) && declared > maxBytes) return { status: 413, body: { error: 'too_large', message: tooLargeMessage(MAX_UPLOAD_BYTES) } }
     const dest = path.join(work, name)
     const exists = await fs.lstat(dest).then(() => true, () => false)
     if (exists && !replace) return { status: 409, body: { error: 'exists', message: `There is already a file called ${name}.` } }
@@ -91,7 +91,7 @@ export function makeFiles({ work, manifestPath }) {
         async function* (source) {
           for await (const chunk of source) {
             size += chunk.length
-            if (size > MAX_UPLOAD_BYTES) throw Object.assign(new Error('too large'), { code: 'TOO_LARGE' })
+            if (size > maxBytes) throw Object.assign(new Error('too large'), { code: 'TOO_LARGE' })
             hash.update(chunk)
             yield chunk
           }

@@ -1,5 +1,5 @@
 #!/usr/bin/python3 -I
-# ola-fetch <https address> [--as <file name>]: downloads one document through the gateway (the
+# ola-fetch <https address> [--as <file name>] [--expect-title T] [--expect-doi D] [--expect-cite C]: downloads one document through the gateway (the
 # only way out of this sealed computer), after the person's yes in the app. Saves the original
 # under /work/sources/ (never over another file), records it in the project database with its
 # address and date, indexes its text (ola-db add), and prints where it is and how to cite it.
@@ -73,18 +73,27 @@ def safe_name(final, mime, wanted):
 def main(argv):
     want = None
     args = []
+    # What the document should be (ola-db's right-document check): a title, a DOI, authors or a citation.
+    expect = []
     i = 0
     while i < len(argv):
         if argv[i] == "--as" and i + 1 < len(argv):
             want = argv[i + 1]
             i += 2
             continue
+        if argv[i] in ("--expect-title", "--expect-doi", "--expect-authors", "--expect-cite") and i + 1 < len(argv):
+            expect += [argv[i], argv[i + 1]]
+            i += 2
+            continue
         args.append(argv[i])
         i += 1
     if len(args) != 1 or not args[0].startswith("https://"):
-        fail("usage: ola-fetch <https address> [--as <file name>]", 2)
+        fail("usage: ola-fetch <https address> [--as <file name>] [--expect-title T] [--expect-doi D] [--expect-authors A] [--expect-cite C]", 2)
     data, h = fetch(args[0].strip())
     mime = (h.get("content-type") or "").split(";")[0].strip().lower()
+    # The charset the server declared goes to the decoder first (before 2026-11-17 it was ignored).
+    m = re.search(r"charset=\s*\"?([A-Za-z0-9_.:-]{2,40})", h.get("content-type") or "", re.I)
+    charset = ["--charset", m.group(1)] if m else []
     final = h.get("x-ola-final-url") or args[0]
     fetched = h.get("x-ola-fetched-at") or time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     os.makedirs(os.path.join(WORK, "sources"), exist_ok=True)
@@ -111,10 +120,16 @@ def main(argv):
     day = fetched[:10]
     print("Saved %s (downloaded %s) as %s, %d bytes." % (final, day, rel, len(data)))
     if os.path.splitext(rel)[1].lower() in INDEXED:
-        r = subprocess.run([os.path.join(HERE, "ola-db"), "add", rel, "--source", final, "--fetched", fetched, "--by", "web"], capture_output=True, text=True, timeout=600)
+        r = subprocess.run([os.path.join(HERE, "ola-db"), "add", rel, "--source", final, "--fetched", fetched, "--by", "web", *charset, *expect], capture_output=True, text=True, timeout=900)
         if r.returncode == 0:
             d = json.loads(r.stdout.strip().splitlines()[-1])
-            print("In the project database as document %d, \"%s\": %d %s%s, searchable with ola-db search." % (d["id"], d["title"], d["pages"], d["unit"] + ("s" if d["pages"] != 1 else ""), " (no text could be read from it)" if d.get("empty") else ""))
+            print("In the project database as document %d, \"%s\": %d %s%s%s, searchable with ola-db search." % (d["id"], d["title"], d["pages"], d["unit"] + ("s" if d["pages"] != 1 else ""), " (no text could be read from it)" if d.get("empty") else "",
+                  " (%d read from scanned pages, so words may be wrong)" % d["ocr_pages"] if d.get("ocr_pages") else ""))
+            c = d.get("check")
+            if c and c["result"] == "mismatch":
+                print("WARNING: this may not be the document you wanted: %s. Say so to the person; do not use it as if it were." % c["detail"])
+            elif c:
+                print("Checked against what was expected: %s." % c["detail"])
             preview = subprocess.run([os.path.join(HERE, "ola-db"), "query", "SELECT text FROM doc_text WHERE doc_id = %d ORDER BY page LIMIT 1" % d["id"], "--json"], capture_output=True, text=True, timeout=60)
             try:
                 first = (json.loads(preview.stdout)["rows"] or [[""]])[0][0] or ""

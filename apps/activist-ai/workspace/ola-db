@@ -9,36 +9,61 @@ For the agent (and the person, through it):
   ola-db search "<words>" [--limit N] [--json]
                                      full-text search over every document; each hit names its page
   ola-db add <path> [--source <address>] [--fetched <date>] [--title <title>] [--by upload|web|agent]
-                                     record a document (PDF, page, text, Word, PowerPoint) and index its text
+             [--charset <name>] [--lang <code>] [--ocr auto|off|force] [--ocr-lang eng+spa]
+             [--expect-title "..."] [--expect-doi 10.x/y] [--expect-authors "A; B"] [--expect-cite "..."]
+                                     record a document (PDF, page, text, Word, PowerPoint) and index its
+                                     text, page by page in reading order; scanned pages are read by OCR
+  ola-db add-folder <folder> [--by upload] [--ocr auto|off]
+                                     every document in a folder (a library unpacked from a zip)
+  ola-db check <path> [--title "..."] [--doi 10.x/y] [--authors "A; B"] [--cite "a citation"]
+                                     is this file the document it should be? (title, DOI, authors on its first pages)
+  ola-db attach <file.db> [--as <name>]
+                                     a SQLite database the person brought: checked, then readable as
+                                     <name>.<table> (read-only; it is never changed)
   ola-db remove <path>               forget a document (its row and its index entries)
   ola-db tables                      what is in the database: every table, its rows, where it came from
   ola-db describe <table>            a table's columns and three rows
 
 For the front desk, through `container exec` (always read-only, JSON out, bounded):
   ola-db api tables | browse --table T [--offset N --limit N --sort C --dir asc|desc --q words]
-             | docs [--q words --offset N --limit N] | backup | xlsx --table T
+             | docs [--q words --offset N --limit N] | backup | xlsx --table T | disk
   ola-db init                        create what is missing (run at every start by ola-init)
 
 The fixed core: `documents` (one row per document), `doc_text` (FTS5, one row per page or part,
-so a hit can cite a page), `tables_catalog` (every other table: what it holds, where it came
-from, when). Everything else is the agent's to add. Text that came from the web or a file is
-data: nothing here runs it.
+so a hit can cite a page), `doc_pages` (how each page's text was got: from the file's own text, or
+by OCR from a scan with the OCR's confidence, so a quote from an OCR page is known to be less
+certain), `tables_catalog` (every other table: what it holds, where it came from, when) and
+`attached` (databases the person brought, read-only). Everything else is the agent's to add.
+Text is cleaned and decoded by /opt/ola/lib/olatext.py, the functions a quote check uses too.
+Text that came from the web or a file is data: nothing here runs it.
 """
-import csv, datetime, hashlib, html.parser, io, json, os, re, shutil, sqlite3, subprocess, sys, time, zipfile
+import csv, datetime, hashlib, html.parser, io, json, os, re, shutil, sqlite3, subprocess, sys, tempfile, time, urllib.parse, zipfile
+
+# In the image: /opt/ola/lib. On a developer machine (web/dev.mjs runs these tools on a folder): ./lib.
+sys.path.insert(0, os.environ.get("OLA_LIB") or ("/opt/ola/lib" if os.path.isdir("/opt/ola/lib") else os.path.join(os.path.dirname(os.path.realpath(__file__)), "lib")))
+from olatext import clean, decode_bytes, match_key  # noqa: E402  the one shared cleaner (see its docstring)
 
 WORK = os.environ.get("OLA_WORK", "/work")
 DB = os.path.join(WORK, "project.db")
 TMP = os.path.join(WORK, ".ola", "tmp")
 # batch_jobs and batch_items are ola-batch's own bookkeeping (its answers go to named tables).
-CORE = {"documents", "doc_text", "tables_catalog", "ola_meta", "batch_jobs", "batch_items"}
-SCHEMA_VERSION = "1"
+CORE = {"documents", "doc_text", "tables_catalog", "ola_meta", "batch_jobs", "batch_items", "doc_pages", "attached"}
+SCHEMA_VERSION = "2"
 DOC_TYPES = {".pdf": "application/pdf", ".txt": "text/plain", ".md": "text/markdown", ".html": "text/html", ".htm": "text/html",
              ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
              ".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
              ".odt": "application/vnd.oasis.opendocument.text", ".xml": "application/xml", ".json": "application/json", ".rtf": "application/rtf"}
+DOC_EXT = (".pdf", ".txt", ".md", ".html", ".htm", ".docx", ".pptx", ".odt", ".rtf")
 PART_CHARS = 4000
 MAX_TEXT = 40 * 1024 * 1024  # characters indexed from one document
 MAX_UNZIPPED = 64 * 1024 * 1024  # bytes read from one part of an office file (no zip bombs)
+# A page with fewer characters than this, and a picture on it, is a scan: it is read by OCR.
+SCAN_CHARS = 40
+MAX_OCR_PAGES = int(os.environ.get("OLA_MAX_OCR_PAGES", "400"))
+# Which Tesseract languages read a page, by the script Tesseract sees on it (its OSD). Latin script
+# gets the European languages the first projects need; Norwegian (nor) and Filipino (fil) are
+# installed too, for --ocr-lang. All of them are Debian's tesseract-ocr-* packs (the "fast" models).
+OCR_LANGS = {"Latin": "eng+spa+fra+por+deu", "Cyrillic": "rus+eng", "Arabic": "ara", "Hebrew": "heb", "Han": "chi_sim+chi_tra", "Greek": "eng"}
 
 
 def fail(msg, code=2):
@@ -50,18 +75,43 @@ def now():
     return datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
-def connect(write):
+def uri(path, mode=None):
+    return "file:" + urllib.parse.quote(path) + ("?mode=" + mode if mode else "")
+
+
+def connect(write, attach=True):
     if write:
-        con = sqlite3.connect(DB, timeout=10)
+        if not os.path.exists(DB):
+            init()
+        con = sqlite3.connect(uri(DB), uri=True, timeout=10)
         con.execute("PRAGMA journal_mode = WAL")
         con.execute("PRAGMA busy_timeout = 10000")
     else:
         if not os.path.exists(DB):
             init()
-        con = sqlite3.connect("file:" + DB + "?mode=ro", uri=True, timeout=10)
+        con = sqlite3.connect(uri(DB, "ro"), uri=True, timeout=10)
         con.execute("PRAGMA query_only = 1")
+    # A database the person brought is someone else's file: its views and triggers may not call
+    # functions with side effects (load_extension and the like), and a damaged page is caught.
+    con.execute("PRAGMA trusted_schema = OFF")
+    con.execute("PRAGMA cell_size_check = ON")
     con.row_factory = sqlite3.Row
+    if attach:
+        for alias, path in attachments(con):
+            full = os.path.join(WORK, path)
+            if os.path.isfile(full) and not os.path.islink(full):
+                try:
+                    con.execute("ATTACH DATABASE ? AS " + qi(alias), (uri(full, "ro"),))
+                except sqlite3.Error:
+                    pass
     return con
+
+
+def attachments(con):
+    try:
+        return [(r[0], r[1]) for r in con.execute("SELECT alias, path FROM main.attached ORDER BY alias")]
+    except sqlite3.Error:
+        return []
 
 
 def init():
@@ -91,12 +141,34 @@ def init():
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
       );
+      CREATE TABLE IF NOT EXISTS doc_pages (
+        doc_id INTEGER NOT NULL,
+        page INTEGER NOT NULL,
+        method TEXT NOT NULL CHECK (method IN ('text', 'ocr', 'ocr-model', 'empty')),  -- ocr: read from a scan, may have errors
+        confidence REAL,                 -- the OCR's own mean word confidence, 0 to 100
+        lang TEXT,                       -- the OCR languages used
+        PRIMARY KEY (doc_id, page)
+      );
+      CREATE TABLE IF NOT EXISTS attached (
+        alias TEXT PRIMARY KEY,          -- its tables are read as <alias>.<table>
+        path TEXT NOT NULL UNIQUE,       -- the file, relative to /work
+        sha256 TEXT, size INTEGER, tables INTEGER,
+        checked_at TEXT NOT NULL
+      );
     """)
+    have = {r[1] for r in con.execute("SELECT * FROM pragma_table_info('documents')")}
+    # Schema 2 (2026-11-17): OCR pages, the right-document check and what was expected.
+    for col, decl in (("ocr_pages", "INTEGER NOT NULL DEFAULT 0"), ("check_result", "TEXT"), ("check_detail", "TEXT"), ("expect", "TEXT")):
+        if col not in have:
+            con.execute("ALTER TABLE documents ADD COLUMN %s %s" % (col, decl))
     con.execute("INSERT OR REPLACE INTO ola_meta (key, value) VALUES ('schema', ?)", (SCHEMA_VERSION,))
     # A document whose file is gone (deleted from Files, or by the agent) is forgotten.
     for row in con.execute("SELECT id, path FROM documents").fetchall():
         if not os.path.isfile(os.path.join(WORK, row[1])):
             forget(con, row[0])
+    for alias, path in attachments(con):
+        if not os.path.isfile(os.path.join(WORK, path)):
+            con.execute("DELETE FROM attached WHERE alias = ?", (alias,))
     sync_catalog(con)
     con.commit()
     con.close()
@@ -108,16 +180,29 @@ def init():
 
 def forget(con, doc_id):
     con.execute("DELETE FROM doc_text WHERE doc_id = ?", (doc_id,))
+    con.execute("DELETE FROM doc_pages WHERE doc_id = ?", (doc_id,))
     con.execute("DELETE FROM documents WHERE id = ?", (doc_id,))
 
 
 def user_tables(con):
     out = []
-    for r in con.execute("SELECT name, type FROM sqlite_master WHERE type IN ('table', 'view') ORDER BY name"):
+    for r in con.execute("SELECT name, type FROM main.sqlite_master WHERE type IN ('table', 'view') ORDER BY name"):
         n = r[0]
         if n in CORE or n.startswith("sqlite_") or n.startswith("doc_text_"):
             continue
         out.append((n, r[1]))
+    return out
+
+
+def attached_tables(con):
+    """(alias.table, kind) for every table and view of every attached database."""
+    out = []
+    for alias, _ in attachments(con):
+        try:
+            for r in con.execute("SELECT name, type FROM %s.sqlite_master WHERE type IN ('table', 'view') AND name NOT LIKE 'sqlite_%%' ORDER BY name" % qi(alias)):
+                out.append((alias + "." + r[0], r[1]))
+        except sqlite3.Error:
+            pass
     return out
 
 
@@ -135,8 +220,23 @@ def qi(name):
     return '"' + name.replace('"', '""') + '"'
 
 
+def split_name(con, name):
+    """'alias.table' of an attached database -> (alias, table); anything else -> ('main', name)."""
+    if "." in name:
+        alias, rest = name.split(".", 1)
+        if alias in {a for a, _ in attachments(con)}:
+            return alias, rest
+    return "main", name
+
+
+def qt(con, name):
+    alias, t = split_name(con, name)
+    return qi(t) if alias == "main" else qi(alias) + "." + qi(t)
+
+
 def columns(con, table):
-    return [(r[1], r[2] or "") for r in con.execute("SELECT * FROM pragma_table_info(?)", (table,))]
+    alias, t = split_name(con, table)
+    return [(r[1], r[2] or "") for r in con.execute("SELECT * FROM pragma_table_info(?, ?)", (t, alias))]
 
 
 def deadline(con, seconds):
@@ -185,13 +285,11 @@ def html_text(raw):
     return re.sub(r"\s+", " ", p.title).strip() or None, text
 
 
-def decode(data):
-    for enc in ("utf-8", "cp1252", "latin-1"):
-        try:
-            return data.decode(enc)
-        except UnicodeDecodeError:
-            pass
-    return data.decode("utf-8", "replace")
+def decode(data, declared=None, lang=None):
+    """Bytes to text: the declared charset first, then UTF-8, UTF-16, the language's code page
+    (olatext.decode_bytes; before 2026-11-17 a declared charset was ignored, so a Windows-1255
+    Hebrew page came out as Windows-1252 garble)."""
+    return decode_bytes(data, declared, lang)[0]
 
 
 def parts(text):
@@ -230,40 +328,150 @@ def _unescape(s):
     return s.replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", '"').replace("&apos;", "'").replace("&amp;", "&")
 
 
-def extract(full, mime):
-    """(title, [page texts], unit) for a document file."""
+def run(args, timeout, **kw):
+    return subprocess.run(args, capture_output=True, timeout=timeout, **kw)
+
+
+def pdf_image_pages(full):
+    """The pages that have a picture on them (pdfimages -list), as a set of page numbers."""
+    try:
+        r = run(["pdfimages", "-list", full], 120)
+    except (OSError, subprocess.TimeoutExpired):
+        return set()
+    pages = set()
+    for line in r.stdout.decode("utf-8", "replace").splitlines()[2:]:
+        f = line.split()
+        if f and f[0].isdigit():
+            pages.add(int(f[0]))
+    return pages
+
+
+def tesseract_langs():
+    try:
+        out = run(["tesseract", "--list-langs"], 30).stdout.decode("utf-8", "replace")
+    except (OSError, subprocess.TimeoutExpired):
+        return set()
+    return {l.strip() for l in out.splitlines()[1:] if l.strip()}
+
+
+def ocr_page(full, n, lang=None):
+    """(text, confidence, langs, method) for page n of a PDF, read from its picture.
+
+    The local engine is Tesseract, inside this sealed computer. Where a model would read the page
+    instead: with OLA_OCR_ENGINE=model and an `ola-ocr` command in the image (a vision model
+    reached through the gateway, built separately), the page image is handed to `ola-ocr <png>`
+    here, its text on stdout, and the page is marked 'ocr-model'. When that command is missing or
+    fails, Tesseract reads it. Either way the page is marked as OCR, so a reader knows the text
+    may have errors."""
+    with tempfile.TemporaryDirectory(prefix="ola-ocr-") as d:
+        r = run(["pdftoppm", "-f", str(n), "-l", str(n), "-r", "300", "-gray", "-png", "-singlefile", full, os.path.join(d, "p")], 180)
+        img = os.path.join(d, "p.png")
+        if r.returncode != 0 or not os.path.isfile(img):
+            return "", None, None, "empty"
+        if os.environ.get("OLA_OCR_ENGINE") == "model" and shutil.which("ola-ocr"):
+            try:
+                m = run(["ola-ocr", img], 300)
+                if m.returncode == 0 and m.stdout.strip():
+                    return clean(m.stdout.decode("utf-8", "replace")), None, "model", "ocr-model"
+            except (OSError, subprocess.TimeoutExpired):
+                pass
+        have = tesseract_langs()
+        if not have:
+            return "", None, None, "empty"
+        langs = lang
+        if not langs:
+            osd = run(["tesseract", img, "-", "--psm", "0"], 120).stdout.decode("utf-8", "replace")
+            m = re.search(r"^Script:\s*(\w+)", osd, re.M)
+            langs = OCR_LANGS.get(m.group(1) if m else "Latin", "eng")
+        langs = "+".join(l for l in langs.split("+") if l in have) or "eng"
+        r = run(["tesseract", img, os.path.join(d, "out"), "-l", langs, "--psm", "3", "txt", "tsv"], 600, env={**os.environ, "OMP_THREAD_LIMIT": "2"})
+        try:
+            text = open(os.path.join(d, "out.txt"), encoding="utf-8", errors="replace").read()
+        except OSError:
+            return "", None, langs, "empty"
+        confs = []
+        try:
+            for row in open(os.path.join(d, "out.tsv"), encoding="utf-8", errors="replace").read().splitlines()[1:]:
+                f = row.split("\t")
+                if len(f) >= 12 and f[11].strip():
+                    try:
+                        c = float(f[10])
+                    except ValueError:
+                        continue
+                    if c >= 0:
+                        confs.append(c)
+        except OSError:
+            pass
+        conf = round(sum(confs) / len(confs), 1) if confs else None
+        return clean(text), conf, langs, "ocr"
+
+
+def pdf_pages(full, ocr="auto", ocr_lang=None):
+    """(title, [page texts], [(method, confidence, langs)]) for a PDF, page by page in reading order.
+
+    Reading order: poppler's default mode, not -layout. Measured 2026-11-17 on the made-up papers
+    of testdata/mkdocs.py (testdata/measure-order.py): of 14 sentences in a two-column paper,
+    -layout kept 0 whole (it sets the two columns side by side on each line), the default mode 14,
+    -raw 14; a one-column paper 7 of 7 in every mode."""
+    if not shutil.which("pdftotext"):
+        fail("pdftotext is not installed here", 5)
+    r = run(["pdftotext", "-enc", "UTF-8", full, "-"], 300)
+    pages = r.stdout.decode("utf-8", "replace").split("\f")
+    if pages and not pages[-1].strip():
+        pages = pages[:-1]
+    title = None
+    count = len(pages)
+    if shutil.which("pdfinfo"):
+        info = run(["pdfinfo", full], 60).stdout.decode("utf-8", "replace")
+        m = re.search(r"^Title:\s*(.+)$", info, re.M)
+        title = m.group(1).strip() if m and m.group(1).strip() else None
+        m = re.search(r"^Pages:\s*(\d+)", info, re.M)
+        if m:
+            count = int(m.group(1))
+    while len(pages) < count:
+        pages.append("")
+    pages = [clean(p) for p in pages] or [""]
+    methods = [("text" if p else "empty", None, None) for p in pages]
+    if ocr != "off" and shutil.which("tesseract"):
+        thin = [i for i, p in enumerate(pages) if len(p) < SCAN_CHARS or ocr == "force"]
+        if thin:
+            pictured = pdf_image_pages(full) if ocr != "force" else set(range(1, len(pages) + 1))
+            done = 0
+            for i in thin:
+                if i + 1 not in pictured or done >= MAX_OCR_PAGES:
+                    continue
+                done += 1
+                text, conf, langs, method = ocr_page(full, i + 1, ocr_lang)
+                if text and len(text) > len(pages[i]):
+                    pages[i] = text
+                    methods[i] = (method, conf, langs)
+    return title, pages, methods
+
+
+def extract(full, mime, charset=None, lang=None, ocr="auto", ocr_lang=None):
+    """(title, [page texts], unit, [(method, confidence, langs)] or None) for a document file."""
     ext = os.path.splitext(full)[1].lower()
     if ext == ".pdf" or mime == "application/pdf":
-        if not shutil.which("pdftotext"):
-            fail("pdftotext is not installed here", 5)
-        r = subprocess.run(["pdftotext", "-layout", "-enc", "UTF-8", full, "-"], capture_output=True, timeout=300)
-        pages = r.stdout.decode("utf-8", "replace").split("\f")
-        if pages and not pages[-1].strip():
-            pages = pages[:-1]
-        title = None
-        if shutil.which("pdfinfo"):
-            info = subprocess.run(["pdfinfo", full], capture_output=True, timeout=60).stdout.decode("utf-8", "replace")
-            m = re.search(r"^Title:\s*(.+)$", info, re.M)
-            title = m.group(1).strip() if m and m.group(1).strip() else None
-        return title, [re.sub(r"[ \t]+", " ", p).strip() for p in pages] or [""], "page"
+        title, pages, methods = pdf_pages(full, ocr, ocr_lang)
+        return title, pages, "page", methods
     if ext in (".docx", ".odt", ".pptx"):
         with zipfile.ZipFile(full) as z:
             if ext == ".docx":
-                return None, parts(xml_paras(zip_part(z, "word/document.xml"), "w:p", "w:t")), "part"
+                return None, parts(clean(xml_paras(zip_part(z, "word/document.xml"), "w:p", "w:t"))), "part", None
             if ext == ".odt":
                 xml = zip_part(z, "content.xml")
                 text = _unescape(re.sub(r"<[^>]+>", "", re.sub(r"</text:(p|h)>", "\n", xml)))
-                return None, parts(text), "part"
+                return None, parts(clean(text)), "part", None
             slides = sorted((n for n in z.namelist() if re.fullmatch(r"ppt/slides/slide\d+\.xml", n)), key=lambda n: int(re.search(r"\d+", n.split("/")[-1]).group()))
-            return None, [xml_paras(zip_part(z, n), "a:p", "a:t") for n in slides[:2000]] or [""], "slide"
+            return None, [clean(xml_paras(zip_part(z, n), "a:p", "a:t")) for n in slides[:2000]] or [""], "slide", None
     with open(full, "rb") as f:
-        raw = decode(f.read(MAX_TEXT))
+        raw = decode(f.read(MAX_TEXT), charset, lang)
     if ext in (".html", ".htm") or (mime or "").startswith("text/html") or (mime or "") == "application/xhtml+xml":
         title, text = html_text(raw)
-        return title, parts(text), "part"
+        return title, parts(clean(text)), "part", None
     if ext == ".rtf":
         raw = re.sub(r"\\[a-z]+-?\d* ?|[{}]", "", raw)
-    return None, parts(raw), "part"
+    return None, parts(clean(raw)), "part", None
 
 
 def sha_of(full):
@@ -281,29 +489,35 @@ def rel_path(p):
     return full, os.path.relpath(full, os.path.realpath(WORK))
 
 
-def add(path, source=None, fetched=None, title=None, by="agent", mime=None, quiet=False):
+def add(path, source=None, fetched=None, title=None, by="agent", mime=None, quiet=False, charset=None, lang=None, ocr="auto", ocr_lang=None, expect=None):
     full, rel = rel_path(path)
     if not os.path.isfile(full):
         fail("no such file: " + rel, 4)
     mime = mime or DOC_TYPES.get(os.path.splitext(full)[1].lower()) or "text/plain"
-    found_title, pages, unit = extract(full, mime)
+    found_title, pages, unit, methods = extract(full, mime, charset, lang, ocr, ocr_lang)
     total = 0
     kept = []
     for p in pages:
         p = p[: max(0, MAX_TEXT - total)]
         total += len(p)
         kept.append(p)
-    con = connect(True)
+    ocr_pages = sum(1 for m in (methods or []) if m[0].startswith("ocr"))
+    con = connect(True, attach=False)
     old = con.execute("SELECT id FROM documents WHERE path = ?", (rel,)).fetchone()
     if old:
         forget(con, old[0])
     cur = con.execute(
-        "INSERT INTO documents (title, source_url, fetched_at, path, sha256, mime, pages, unit, chars, added_by, added_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        (title or found_title or os.path.basename(rel), source, fetched, rel, sha_of(full), mime, len(kept), unit, total, by, now()))
+        "INSERT INTO documents (title, source_url, fetched_at, path, sha256, mime, pages, unit, chars, added_by, added_at, ocr_pages) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (title or found_title or os.path.basename(rel), source, fetched, rel, sha_of(full), mime, len(kept), unit, total, by, now(), ocr_pages))
     doc_id = cur.lastrowid
     con.executemany("INSERT INTO doc_text (text, doc_id, page) VALUES (?, ?, ?)", [(t, doc_id, i + 1) for i, t in enumerate(kept)])
+    if methods:
+        con.executemany("INSERT INTO doc_pages (doc_id, page, method, confidence, lang) VALUES (?, ?, ?, ?, ?)", [(doc_id, i + 1, m[0], m[1], m[2]) for i, m in enumerate(methods)])
     con.commit()
-    out = {"id": doc_id, "path": rel, "title": title or found_title or os.path.basename(rel), "pages": len(kept), "unit": unit, "chars": total, "empty": total == 0}
+    out = {"id": doc_id, "path": rel, "title": title or found_title or os.path.basename(rel), "pages": len(kept), "unit": unit, "chars": total, "empty": total == 0, "ocr_pages": ocr_pages}
+    if expect and any(expect.values()):
+        out["check"] = check_doc(con, doc_id, expect)
+    con.close()
     if not quiet:
         print(json.dumps(out))
     return out, kept
@@ -311,12 +525,199 @@ def add(path, source=None, fetched=None, title=None, by="agent", mime=None, quie
 
 def remove(path):
     rel = path[len(WORK) + 1:] if path.startswith(WORK + "/") else path
-    con = connect(True)
+    con = connect(True, attach=False)
     row = con.execute("SELECT id FROM documents WHERE path = ?", (rel,)).fetchone()
     if row:
         forget(con, row[0])
+    con.execute("DELETE FROM attached WHERE path = ?", (rel,))
     con.commit()
     print(json.dumps({"removed": bool(row)}))
+
+
+def add_folder(folder, by, ocr):
+    """Every document under a folder, one JSON line each, then a summary. One failure stops nothing."""
+    full, rel = rel_path(folder)
+    if not os.path.isdir(full):
+        fail("no such folder: " + rel, 4)
+    n = ok = ocr_total = 0
+    for root, dirs, files in os.walk(full):
+        dirs[:] = sorted(d for d in dirs if not d.startswith(".") and not os.path.islink(os.path.join(root, d)))
+        for f in sorted(files):
+            p = os.path.join(root, f)
+            if f.startswith(".") or os.path.islink(p) or not f.lower().endswith(DOC_EXT):
+                continue
+            n += 1
+            r = os.path.relpath(p, os.path.realpath(WORK))
+            try:
+                d, _ = add(r, by=by, quiet=True, ocr=ocr)
+                ok += 1
+                ocr_total += d["ocr_pages"]
+                print(json.dumps({"path": r, "pages": d["pages"], "ocr_pages": d["ocr_pages"], "ok": True}), flush=True)
+            except SystemExit:
+                print(json.dumps({"path": r, "ok": False}), flush=True)
+            except Exception as e:  # a damaged file is noted, the rest go on
+                print(json.dumps({"path": r, "ok": False, "why": type(e).__name__}), flush=True)
+    print(json.dumps({"done": True, "documents": n, "indexed": ok, "ocr_pages": ocr_total}))
+
+
+# ------------------------------------------------------------------ is this the right document?
+
+STOP = set("a an and are as at by de del der des die du el en et for from in into is la las le les los of on or the to und with van von".split())
+DOI = re.compile(r"\b(10\.\d{4,9}/[^\s\"<>]+)", re.I)
+
+
+def norm_doi(d):
+    d = (d or "").strip().lower()
+    d = re.sub(r"^(https?://(dx\.)?doi\.org/|doi:\s*)", "", d)
+    return d.rstrip(".,;)]")
+
+
+def parse_cite(cite):
+    """Title, DOI and authors' surnames from a citation in the usual shapes (APA, Chicago, plain)."""
+    out = {"doi": None, "title": None, "authors": None}
+    m = DOI.search(cite or "")
+    if m:
+        out["doi"] = norm_doi(m.group(1))
+    m = re.search(r"\((\d{4}[a-z]?|n\.d\.)\)\.?\s*(.+?)(?:\.\s|\?\s|$)", cite or "")
+    if m:
+        out["title"] = m.group(2).strip()
+        names = re.findall(r"([A-Z][\w'\u00c0-\u024f-]+),\s+(?:[A-Z]\.|[A-Z][a-z]+)", cite[: m.start()])
+        out["authors"] = "; ".join(names) or None
+    else:
+        m = re.search(r"[\"\u201c](.+?)[\"\u201d]", cite or "")
+        if m:
+            out["title"] = m.group(1)
+    return out
+
+
+def words(s):
+    return [w for w in re.findall(r"\w+", match_key(s or "")) if len(w) > 2 and w not in STOP]
+
+
+def check_doc(con, doc_id, expect):
+    """Compares a document's first pages with what was expected; stores and returns the result.
+
+    result: 'match' (what was checked is there), 'mismatch' (something expected is missing or
+    contradicted: a wrong document), 'unsure' (nothing could be checked, e.g. no text)."""
+    if expect.get("cite"):
+        c = parse_cite(expect["cite"])
+        for k in ("title", "doi", "authors"):
+            expect[k] = expect.get(k) or c[k]
+    rows = con.execute("SELECT page, text FROM doc_text WHERE doc_id = ? AND page <= 3 ORDER BY page", (doc_id,)).fetchall()
+    doc = con.execute("SELECT title, pages FROM documents WHERE id = ?", (doc_id,)).fetchone()
+    first = match_key(" ".join(r[1] for r in rows if r[0] <= 2) + " " + (doc[0] or ""))
+    first3 = re.sub(r"\s+", "", " ".join(r[1] for r in rows).lower())
+    found_words = set(re.findall(r"\w+", first))
+    notes, good, bad = [], 0, 0
+    if not first.strip():
+        notes.append("no text could be read from the first pages")
+    if expect.get("title") and first.strip():
+        want = words(expect["title"])
+        if want:
+            share = sum(1 for w_ in want if w_ in found_words) / len(want)
+            whole = match_key(expect["title"]).strip(" .") in first
+            if whole or share >= 0.8:
+                good += 1
+                notes.append("the title is on the first pages")
+            elif share < 0.5:
+                bad += 1
+                notes.append("the title is not on the first pages (%d of %d of its words)" % (round(share * len(want)), len(want)))
+            else:
+                notes.append("only part of the title is on the first pages (%d of %d words)" % (round(share * len(want)), len(want)))
+    if expect.get("doi"):
+        want = re.sub(r"\s+", "", norm_doi(expect["doi"]))
+        if want and want in first3:
+            good += 1
+            notes.append("the DOI is on the first pages")
+        else:
+            others = sorted({norm_doi(x) for x in DOI.findall(" ".join(r[1] for r in rows))} - {want})
+            if others:
+                bad += 1
+                notes.append("the first pages name another DOI: " + others[0][:80])
+            else:
+                notes.append("no DOI on the first pages")
+    if expect.get("authors") and first.strip():
+        names = [n.strip() for n in re.split(r"[;\n]| and ", expect["authors"]) if n.strip()]
+        surnames = [words(n.split(",")[0])[-1:] for n in names]
+        surnames = [s[0] for s in surnames if s]
+        if surnames:
+            hit = sum(1 for s in surnames if s in found_words)
+            if hit == len(surnames):
+                good += 1
+                notes.append("the authors are named")
+            elif hit == 0:
+                bad += 1
+                notes.append("none of the authors is named on the first pages")
+            else:
+                notes.append("%d of %d authors named" % (hit, len(surnames)))
+    if expect.get("pages") and doc[1] and doc[1] < int(expect["pages"]) and doc[1] <= 2:
+        bad += 1
+        notes.append("it has %d page%s, so it may be a preview" % (doc[1], "" if doc[1] == 1 else "s"))
+    result = "mismatch" if bad else "match" if good else "unsure"
+    con.execute("UPDATE documents SET check_result = ?, check_detail = ?, expect = ? WHERE id = ?", (result, "; ".join(notes), json.dumps({k: v for k, v in expect.items() if v}), doc_id))
+    con.commit()
+    return {"result": result, "detail": "; ".join(notes)}
+
+
+def check(path, expect):
+    full, rel = rel_path(path)
+    con = connect(True, attach=False)
+    row = con.execute("SELECT id FROM documents WHERE path = ?", (rel,)).fetchone()
+    con.close()
+    if not row:
+        if not os.path.isfile(full):
+            fail("no such file: " + rel, 4)
+        add(rel, quiet=True)
+        con = connect(True, attach=False)
+        row = con.execute("SELECT id FROM documents WHERE path = ?", (rel,)).fetchone()
+    else:
+        con = connect(True, attach=False)
+    r = check_doc(con, row[0], expect)
+    print(json.dumps({"path": rel, **r}))
+    if r["result"] == "mismatch":
+        sys.stderr.write("ola-db: %s may not be the document you wanted: %s\n" % (rel, r["detail"]))
+        sys.exit(6)
+
+
+# ------------------------------------------------------------------ a database the person brought
+
+def attach(path, alias):
+    full, rel = rel_path(path)
+    if not os.path.isfile(full) or os.path.islink(full):
+        fail("no such file: " + rel, 4)
+    with open(full, "rb") as f:
+        if f.read(16) != b"SQLite format 3\x00":
+            fail("%s is not a SQLite database" % rel, 3)
+    alias = alias or re.sub(r"[^a-z0-9_]+", "_", os.path.splitext(os.path.basename(rel))[0].lower()).strip("_") or "db"
+    if alias[0].isdigit():
+        alias = "db_" + alias
+    alias = alias[:30]
+    if not re.fullmatch(r"[a-z][a-z0-9_]{0,29}", alias) or alias in ("main", "temp") or alias in CORE:
+        fail("--as takes a short name: lower-case letters, digits and _", 2)
+    con = connect(True, attach=False)
+    taken = dict(attachments(con))
+    if alias in taken and taken[alias] != rel:
+        fail("there is already an attached database called %s; give another name with --as" % alias, 3)
+    other = sqlite3.connect(uri(full, "ro"), uri=True, timeout=10)
+    other.execute("PRAGMA trusted_schema = OFF")
+    other.execute("PRAGMA cell_size_check = ON")
+    deadline(other, 900)
+    try:
+        res = [r[0] for r in other.execute("PRAGMA integrity_check(20)")]
+        tabs = other.execute("SELECT count(*) FROM sqlite_master WHERE type IN ('table', 'view') AND name NOT LIKE 'sqlite_%'").fetchone()[0]
+    except sqlite3.Error as e:
+        fail("%s could not be read as a database (%s); it is kept as a file, not attached" % (rel, "it took too long" if "interrupted" in str(e) else "it is damaged"), 3)
+    finally:
+        other.close()
+    if res != ["ok"]:
+        fail("%s failed its integrity check (%s); it is kept as a file, not attached" % (rel, re.sub(r"\s+", " ", res[0] if res else "no answer")[:120]), 3)
+    if not tabs:
+        fail("%s has no tables" % rel, 3)
+    con.execute("INSERT INTO attached (alias, path, sha256, size, tables, checked_at) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT (alias) DO UPDATE SET sha256 = excluded.sha256, size = excluded.size, tables = excluded.tables, checked_at = excluded.checked_at",
+                (alias, rel, sha_of(full), os.path.getsize(full), tabs, now()))
+    con.commit()
+    con.close()
+    print(json.dumps({"alias": alias, "path": rel, "tables": tabs, "size": os.path.getsize(full)}))
 
 
 # ------------------------------------------------------------------ tables
@@ -372,6 +773,14 @@ def convert(v, k):
     return str(v)
 
 
+def text_encoding(full):
+    """The encoding of a text data file, from its first 64 KiB (olatext.decode_bytes)."""
+    with open(full, "rb") as f:
+        sample = f.read(64 * 1024)
+    enc = decode_bytes(sample)[1]
+    return "utf-8-sig" if enc == "utf-8" else enc
+
+
 def read_rows(full, sheet):
     ext = os.path.splitext(full)[1].lower()
     if ext in (".xlsx", ".xlsm"):
@@ -397,15 +806,15 @@ def read_rows(full, sheet):
                 if k not in head:
                     head.append(k)
         return head, ([json.dumps(x.get(k)) if isinstance(x.get(k), (dict, list)) else x.get(k) for k in head] for x in data)
-    f = open(full, "r", encoding="utf-8-sig", errors="replace", newline="")
-    sample = f.read(64 * 1024)
+    f = open(full, "r", encoding=text_encoding(full), errors="replace", newline="")
+    sample = f.read(64 * 1024).replace("\x00", "")
     f.seek(0)
     delim = "\t" if ext == ".tsv" else ","
     try:
         delim = csv.Sniffer().sniff(sample, delimiters=",;\t|").delimiter
     except csv.Error:
         pass
-    reader = csv.reader(f, delimiter=delim)
+    reader = csv.reader((line.replace("\x00", "") for line in f), delimiter=delim)
     head = next(reader, [])
     return head, reader
 
@@ -428,7 +837,7 @@ def load(path, table, note, mode, sheet):
         if len(first) >= 5000:
             break
     kinds = [kind_of([r[i] if i < len(r) else None for r in first]) for i in range(len(names))]
-    con = connect(True)
+    con = connect(True, attach=False)
     exists = con.execute("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?", (table,)).fetchone()
     if exists and mode is None:
         fail("there is already a table called %s: add --replace or --append" % table, 3)
@@ -469,25 +878,27 @@ def load(path, table, note, mode, sheet):
 
 # ------------------------------------------------------------------ queries and search
 
-def fts_query(words, any_word=False):
-    toks = re.findall(r"[\w'-]+", words, re.U)
+def fts_query(words_, any_word=False):
+    toks = re.findall(r"[\w'-]+", words_, re.U)
     toks = [t.replace('"', "") for t in toks if t.strip("'-")][:40]
     if not toks:
         return None
     return (" OR " if any_word else " ").join('"%s"' % t for t in toks)
 
 
-def search(words, limit, offset=0, mark=("[", "]")):
-    con = connect(False)
+def search(words_, limit, offset=0, mark=("[", "]")):
+    con = connect(False, attach=False)
     deadline(con, 10)
     out = []
     for any_word in (False, True):
-        q = fts_query(words, any_word)
+        q = fts_query(words_, any_word)
         if not q:
             return [], 0, False
         rows = con.execute(
-            """SELECT d.id, d.title, d.path, d.source_url, d.fetched_at, d.unit, t.page, snippet(doc_text, 0, ?, ?, ' … ', 40) AS snip
-               FROM doc_text t JOIN documents d ON d.id = t.doc_id WHERE doc_text MATCH ? ORDER BY bm25(doc_text) LIMIT ? OFFSET ?""",
+            """SELECT d.id, d.title, d.path, d.source_url, d.fetched_at, d.unit, t.page, snippet(doc_text, 0, ?, ?, ' … ', 40) AS snip,
+                      coalesce(p.method, 'text') AS method, p.confidence AS confidence
+               FROM doc_text t JOIN documents d ON d.id = t.doc_id LEFT JOIN doc_pages p ON p.doc_id = d.id AND p.page = t.page
+               WHERE doc_text MATCH ? ORDER BY bm25(doc_text) LIMIT ? OFFSET ?""",
             (mark[0], mark[1], q, limit, offset)).fetchall()
         total = con.execute("SELECT count(*) FROM doc_text WHERE doc_text MATCH ?", (q,)).fetchone()[0]
         if rows or any_word:
@@ -533,7 +944,7 @@ def query(sql, write, as_json, limit):
     except sqlite3.OperationalError as e:
         msg = str(e)
         if "readonly" in msg or "query_only" in msg or "attempt to write" in msg:
-            fail("this command reads only; to change the database use: ola-db query --write \"...\"", 3)
+            fail("this command reads only (and a database the person brought is never changed); to change the project database use: ola-db query --write \"...\"", 3)
         if "interrupted" in msg:
             fail("the query took too long and was stopped", 3)
         fail("SQL: " + msg, 3)
@@ -553,11 +964,52 @@ def tables_info(con):
         out.append({"name": n, "kind": kind, "rows": con.execute("SELECT count(*) FROM " + qi(n)).fetchone()[0],
                     "columns": [{"name": a, "type": b} for a, b in columns(con, n)],
                     "description": c.get("description"), "source": c.get("source"), "created": c.get("created_at"), "updated": c.get("updated_at")})
+    src = {a: p for a, p in attachments(con)}
+    for n, kind in attached_tables(con):
+        # A view in someone else's database may not compile here (one that calls load_extension,
+        # say, under trusted_schema OFF): it is listed with no rows or columns, never run.
+        try:
+            rows = con.execute("SELECT count(*) FROM " + qt(con, n)).fetchone()[0]
+        except sqlite3.Error:
+            rows = None
+        try:
+            cols = columns(con, n)
+        except sqlite3.Error:
+            cols = []
+        out.append({"name": n, "kind": kind, "rows": rows, "columns": [{"name": a, "type": b} for a, b in cols],
+                    "description": None, "source": src.get(n.split(".", 1)[0]), "created": None, "updated": None, "attached": True})
     return out
 
 
 def db_size():
     return sum(os.path.getsize(DB + s) for s in ("", "-wal") if os.path.exists(DB + s))
+
+
+def disk():
+    """This project's disk: the volume's size and use, and what takes the room (no file names)."""
+    st = os.statvfs(WORK)
+    total, free = st.f_blocks * st.f_frsize, st.f_bavail * st.f_frsize
+    used = total - st.f_bfree * st.f_frsize
+    sizes = {"files": 0, "data": 0, "ola": 0}
+    count = 0
+    for root, dirs, files in os.walk(WORK):
+        dirs[:] = [d for d in dirs if not os.path.islink(os.path.join(root, d)) and d != "lost+found"]
+        top = os.path.relpath(root, WORK).split(os.sep)[0]
+        for f in files:
+            count += 1
+            if count > 500000:
+                break
+            try:
+                size = os.lstat(os.path.join(root, f)).st_size
+            except OSError:
+                continue
+            if top == ".ola":
+                sizes["ola"] += size
+            elif top == "." and re.fullmatch(r"project\.db(-wal|-shm|-journal)?", f):
+                sizes["data"] += size
+            else:
+                sizes["files"] += size
+    return {"total": total, "used": used, "free": free, **sizes}
 
 
 # ------------------------------------------------------------------ the front desk's view
@@ -572,16 +1024,19 @@ def api(argv):
             i += 2
         else:
             i += 1
+    if sub == "disk":
+        print(json.dumps(disk()))
+        return
     con = connect(False)
     deadline(con, 8)
     try:
         if sub == "tables":
-            d = con.execute("SELECT count(*) AS n, coalesce(sum(pages), 0) AS pages FROM documents").fetchone()
+            d = con.execute("SELECT count(*) AS n, coalesce(sum(pages), 0) AS pages, coalesce(sum(ocr_pages), 0) AS ocr, coalesce(sum(check_result = 'mismatch'), 0) AS wrong FROM documents").fetchone()
             by = {r[0]: r[1] for r in con.execute("SELECT added_by, count(*) FROM documents GROUP BY added_by")}
-            print(json.dumps({"tables": tables_info(con), "documents": {"count": d["n"], "pages": d["pages"], "web": by.get("web", 0), "upload": by.get("upload", 0), "agent": by.get("agent", 0)}, "size": db_size()}))
+            print(json.dumps({"tables": tables_info(con), "documents": {"count": d["n"], "pages": d["pages"], "ocrPages": d["ocr"], "mismatches": d["wrong"], "web": by.get("web", 0), "upload": by.get("upload", 0), "agent": by.get("agent", 0)}, "size": db_size()}))
         elif sub == "browse":
             t = opt.get("table", "")
-            allowed = {n for n, _ in user_tables(con)} | {"documents"}
+            allowed = {n for n, _ in user_tables(con)} | {"documents"} | {n for n, _ in attached_tables(con)}
             if t not in allowed:
                 fail("no such table", 4)
             cols = [c for c, _ in columns(con, t)]
@@ -595,8 +1050,8 @@ def api(argv):
             order = ""
             if opt.get("sort") in cols:
                 order = " ORDER BY %s %s" % (qi(opt["sort"]), "DESC" if opt.get("dir") == "desc" else "ASC")
-            total = con.execute("SELECT count(*) FROM %s%s" % (qi(t), where), params).fetchone()[0]
-            rows = con.execute("SELECT * FROM %s%s%s LIMIT ? OFFSET ?" % (qi(t), where, order), params + [limit, offset]).fetchall()
+            total = con.execute("SELECT count(*) FROM %s%s" % (qt(con, t), where), params).fetchone()[0]
+            rows = con.execute("SELECT * FROM %s%s%s LIMIT ? OFFSET ?" % (qt(con, t), where, order), params + [limit, offset]).fetchall()
             print(json.dumps({"table": t, "columns": [{"name": a, "type": b} for a, b in columns(con, t)], "rows": [[cell(v) for v in r] for r in rows], "total": total, "offset": offset, "limit": limit}, default=str))
         elif sub == "docs":
             offset = max(0, int(opt.get("offset", 0)))
@@ -606,7 +1061,7 @@ def api(argv):
                 print(json.dumps({"q": True, "hits": hits, "total": total, "anyWord": loose, "offset": offset}))
             else:
                 total = con.execute("SELECT count(*) FROM documents").fetchone()[0]
-                rows = con.execute("SELECT id, title, path, source_url, fetched_at, mime, pages, unit, chars, added_by, added_at FROM documents ORDER BY added_at DESC, id DESC LIMIT ? OFFSET ?", (limit, offset)).fetchall()
+                rows = con.execute("SELECT id, title, path, source_url, fetched_at, mime, pages, unit, chars, added_by, added_at, ocr_pages, check_result, check_detail FROM documents ORDER BY added_at DESC, id DESC LIMIT ? OFFSET ?", (limit, offset)).fetchall()
                 print(json.dumps({"q": False, "documents": [dict(r) for r in rows], "total": total, "offset": offset}))
         elif sub in ("backup", "xlsx"):
             os.makedirs(TMP, exist_ok=True)
@@ -619,7 +1074,7 @@ def api(argv):
                     dst.close()
                 else:
                     t = opt.get("table", "")
-                    if t not in {n for n, _ in user_tables(con)} | {"documents"}:
+                    if t not in {n for n, _ in user_tables(con)} | {"documents"} | {n for n, _ in attached_tables(con)}:
                         fail("no such table", 4)
                     try:
                         import openpyxl
@@ -627,7 +1082,7 @@ def api(argv):
                         fail("Excel files need openpyxl, which is not installed here", 5)
                     con.set_progress_handler(None, 0)
                     wb = openpyxl.Workbook(write_only=True)
-                    ws = wb.create_sheet(t[:31])
+                    ws = wb.create_sheet(t.replace(".", " ")[:31])
                     cols = [c for c, _ in columns(con, t)]
                     ws.append(cols)
                     from openpyxl.cell import WriteOnlyCell
@@ -640,7 +1095,7 @@ def api(argv):
                             return c
                         return v
 
-                    for n, r in enumerate(con.execute("SELECT * FROM " + qi(t))):
+                    for n, r in enumerate(con.execute("SELECT * FROM " + qt(con, t))):
                         if n >= 1048575:
                             break
                         ws.append([xcell(v) for v in r])
@@ -653,7 +1108,7 @@ def api(argv):
                 except OSError:
                     pass
         else:
-            fail("api: tables, browse, docs, backup or xlsx")
+            fail("api: tables, browse, docs, backup, xlsx or disk")
     except sqlite3.OperationalError as e:
         fail("interrupted" if "interrupted" in str(e) else "SQL: " + str(e), 3)
 
@@ -704,15 +1159,35 @@ def main(argv):
         for h in hits:
             where = "%s %d" % (h["unit"], h["page"])
             src = h["source_url"] or "uploaded"
-            print("\n- %s, %s (file %s; %s%s)\n  %s" % (h["title"], where, h["path"], src, ", fetched " + h["fetched_at"][:10] if h["fetched_at"] else "", re.sub(r"\s+", " ", h["snip"])))
+            scan = "; read from a scan, so words may be wrong" if h.get("method", "text").startswith("ocr") else ""
+            print("\n- %s, %s (file %s; %s%s%s)\n  %s" % (h["title"], where, h["path"], src, ", fetched " + h["fetched_at"][:10] if h["fetched_at"] else "", scan, re.sub(r"\s+", " ", h["snip"])))
         print("\nRead the whole page with: ola-db query \"SELECT text FROM doc_text WHERE doc_id = <id> AND page = <n>\"  (ids: ola-db query \"SELECT id, title FROM documents\")")
+        print("Cite a page as [file, p. N](doc:file#page=N), for example [%s, p. %d](doc:%s#page=%d)." % (hits[0]["path"], hits[0]["page"], hits[0]["path"], hits[0]["page"]))
     elif cmd == "add":
         if len(args) != 1:
-            fail("usage: ola-db add <path> [--source <address>] [--fetched <date>] [--title <title>] [--by upload|web|agent]")
+            fail("usage: ola-db add <path> [--source <address>] [--fetched <date>] [--title <title>] [--by upload|web|agent] [--charset C] [--lang L] [--ocr auto|off|force] [--ocr-lang L] [--expect-title T] [--expect-doi D] [--expect-authors A] [--expect-cite C]")
         by = flags.get("by", "agent")
         if by not in ("upload", "web", "agent"):
             fail("--by is upload, web or agent")
-        add(args[0], flags.get("source"), flags.get("fetched"), flags.get("title"), by)
+        ocr = flags.get("ocr", "auto")
+        if ocr not in ("auto", "off", "force"):
+            fail("--ocr is auto, off or force")
+        expect = {"title": flags.get("expect-title"), "doi": flags.get("expect-doi"), "authors": flags.get("expect-authors"), "cite": flags.get("expect-cite"), "pages": flags.get("expect-pages")}
+        out, _ = add(args[0], flags.get("source"), flags.get("fetched"), flags.get("title"), by, charset=flags.get("charset"), lang=flags.get("lang"), ocr=ocr, ocr_lang=flags.get("ocr-lang"), expect=expect)
+        if out.get("check", {}).get("result") == "mismatch":
+            sys.stderr.write("ola-db: %s may not be the document you wanted: %s\n" % (out["path"], out["check"]["detail"]))
+    elif cmd == "add-folder":
+        if len(args) != 1:
+            fail("usage: ola-db add-folder <folder> [--by upload|web|agent] [--ocr auto|off]")
+        add_folder(args[0], flags.get("by", "agent") if flags.get("by", "agent") in ("upload", "web", "agent") else "agent", flags.get("ocr", "auto"))
+    elif cmd == "check":
+        if len(args) != 1 or not any(flags.get(k) for k in ("title", "doi", "authors", "cite")):
+            fail('usage: ola-db check <path> [--title "..."] [--doi 10.x/y] [--authors "A; B"] [--cite "a citation"] [--pages N]')
+        check(args[0], {"title": flags.get("title"), "doi": flags.get("doi"), "authors": flags.get("authors"), "cite": flags.get("cite"), "pages": flags.get("pages")})
+    elif cmd == "attach":
+        if len(args) != 1:
+            fail("usage: ola-db attach <file.db> [--as <name>]")
+        attach(args[0], flags.get("as"))
     elif cmd == "remove":
         if len(args) != 1:
             fail("usage: ola-db remove <path>")
@@ -720,19 +1195,19 @@ def main(argv):
     elif cmd == "tables":
         con = connect(False)
         t = tables_info(con)
-        d = con.execute("SELECT count(*), coalesce(sum(pages), 0) FROM documents").fetchone()
-        print("Documents: %d (%d pages or parts), searchable with: ola-db search \"words\"" % (d[0], d[1]))
+        d = con.execute("SELECT count(*), coalesce(sum(pages), 0), coalesce(sum(ocr_pages), 0) FROM documents").fetchone()
+        print("Documents: %d (%d pages or parts%s), searchable with: ola-db search \"words\"" % (d[0], d[1], ", %d read from scans" % d[2] if d[2] else ""))
         if not t:
             print("No tables yet. Load one with: ola-db load <file> --table <name> --note \"what it holds\"")
         for x in t:
-            print("- %s: %d rows, from %s%s" % (x["name"], x["rows"], x["source"] or "?", "; " + x["description"] if x["description"] else ""))
+            print("- %s: %s rows, from %s%s%s" % (x["name"], x["rows"], x["source"] or "?", " (a database the person brought; read-only)" if x.get("attached") else "", "; " + x["description"] if x["description"] else ""))
     elif cmd == "describe":
         con = connect(False)
-        if len(args) != 1 or args[0] not in {n for n, _ in user_tables(con)} | CORE:
+        if len(args) != 1 or args[0] not in {n for n, _ in user_tables(con)} | CORE | {n for n, _ in attached_tables(con)}:
             fail("usage: ola-db describe <table>")
         for c, k in columns(con, args[0]):
             print("  %s %s" % (c, k))
-        query("SELECT * FROM %s LIMIT 3" % qi(args[0]), False, False, 3)
+        query("SELECT * FROM %s LIMIT 3" % qt(con, args[0]), False, False, 3)
     else:
         fail("unknown command %s; see ola-db --help" % cmd)
 

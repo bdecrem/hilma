@@ -51,6 +51,13 @@
 # the person starts it in the app, and the front desk runs `ola-batch run` here, one document per
 # model call through the door, every quote checked against the stored text. AGENTS.md says when to
 # use it. Everything of 2.3.0-15 is in it too. (Not 2.3.0-14: another builder's.)
+# 2.3.0-17: reading real documents and Open for every kind (README, "Reading real documents").
+# Tesseract 5 with Debian's language packs (English, Spanish, French, Portuguese, German, Russian,
+# Arabic, Chinese simplified and traditional, Hebrew, Norwegian, Filipino, and the script detector)
+# reads scanned pages, inside the VM; the shared text cleaner /opt/ola/lib/olatext.py; ola-unzip
+# (a library as one zip, unpacked safely), ola-view (what Open shows, made here: PDF pages as
+# pictures, Word and Markdown as plain HTML, spreadsheets as rows), ola-put in pieces. PDF text in
+# reading order (pdftotext's default mode, not -layout). Builds on 2.3.0-16 (everything of it is in it). (Not 2.3.0-14: another builder's.)
 
 ARG DEBIAN=docker.io/library/debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc
 
@@ -78,6 +85,8 @@ FROM ${DEBIAN}
 RUN apt-get update \
  && apt-get install -y --no-install-recommends python3 socat sqlite3 poppler-utils python3-openpyxl \
       python3-matplotlib python3-docx python3-reportlab fonts-dejavu-core fonts-dejavu-extra chromium-headless-shell \
+      tesseract-ocr tesseract-ocr-osd tesseract-ocr-eng tesseract-ocr-spa tesseract-ocr-fra tesseract-ocr-por tesseract-ocr-deu \
+      tesseract-ocr-rus tesseract-ocr-ara tesseract-ocr-chi-sim tesseract-ocr-chi-tra tesseract-ocr-heb tesseract-ocr-nor tesseract-ocr-fil \
  && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*.deb \
  && useradd --create-home --uid 1000 --shell /bin/bash work \
  && mkdir -p /work /ola/gw \
@@ -90,7 +99,8 @@ COPY --from=fetch /opencode /usr/local/bin/opencode
 COPY --from=fetch /claude /usr/local/bin/claude
 COPY opencode.jsonc AGENTS.md /opt/ola/config/opencode/
 COPY claude-ola.md /opt/ola/config/claude/ola.md
-COPY ola-init ola-files ola-put ola-get ola-rm ola-claude ola-db ola-search ola-fetch ola-page ola-batch /opt/ola/bin/
+COPY ola-init ola-files ola-put ola-get ola-rm ola-claude ola-db ola-search ola-fetch ola-page ola-batch ola-unzip ola-view /opt/ola/bin/
+COPY lib/olatext.py /opt/ola/lib/
 # Ola's skills, and the system config that makes them the only ones (see the header).
 COPY opencode-system.jsonc /etc/opencode/opencode.jsonc
 COPY skills /opt/ola/skills

@@ -17,5 +17,8 @@ mkdir -p "$HOME" "$XDG_DATA_HOME" "$XDG_STATE_HOME" "$XDG_CACHE_HOME"
 # The project database, /work/project.db: made at the first start, brought up to date at every
 # start (a project made before it existed gets it here). Not fatal: opencode starts regardless.
 /opt/ola/bin/ola-db init || echo "ola-init: the project database could not be prepared" >&2
+# Pieces of an upload left for two days, and views not used for a week, are cleared.
+find /work/.ola/uploads -maxdepth 1 -name "*.part" -mtime +2 -delete 2>/dev/null || true
+find /work/.ola/cache/views -maxdepth 1 -type f -mtime +7 -delete 2>/dev/null || true
 socat TCP-LISTEN:4180,bind=127.0.0.1,fork,reuseaddr UNIX-CONNECT:/ola/gw/gateway.sock &
 exec opencode serve --hostname 127.0.0.1 --port 4096

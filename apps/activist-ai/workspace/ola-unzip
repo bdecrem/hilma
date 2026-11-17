@@ -1,0 +1,172 @@
+#!/usr/bin/python3 -I
+"""ola-unzip <file.zip> [--into <folder>] [--max-bytes N] [--max-files N]: a library of documents
+brought as one zip, unpacked safely into a new folder of /work (by default the zip's own name).
+
+Run by the front desk after an upload (inside the sealed computer, never on the host), and by the
+agent. The zip is someone else's file, so it is read as hostile:
+
+  refused whole, nothing written:  an entry that climbs out (".." or an absolute path, either
+                                   slash), a symbolic link, an encrypted entry, more than
+                                   --max-files entries (10,000), more than --max-bytes unpacked
+                                   (8 GiB, and never more than 90% of the free space), an entry
+                                   that expands more than 200 times past 10 MB (a zip bomb), an
+                                   entry that holds more than its header says, deeper than 5 folders
+  left out, and counted:           the Mac's __MACOSX folder and names starting with a dot
+  renamed, and listed:             names with characters Ola does not take in file names
+                                   ("Résumé [draft].pdf" -> "Resume -draft-.pdf"), the same rule as ola-put
+
+It is unpacked into a hidden folder first and moved into place in one step, so a refusal leaves
+nothing behind. Files are written as plain data (mode 644): nothing in the zip is run or made
+runnable. A zip inside the zip stays a file. Prints one JSON object: the folder, the files
+(path, size, sha256), what was renamed and left out. Exit 3 on a refusal, with the reason.
+"""
+import hashlib, json, os, re, shutil, stat, sys, unicodedata, zipfile
+
+WORK = os.environ.get("OLA_WORK", "/work")
+NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9 ._()+,-]{0,199}")
+MAX_FILES = 10000
+MAX_BYTES = 8 << 30
+MAX_DEPTH = 5
+RATIO, RATIO_FLOOR = 200, 10 << 20
+
+
+def refuse(msg, code=3):
+    sys.stderr.write("ola-unzip: " + msg + "\n")
+    sys.exit(code)
+
+
+def safe_part(p):
+    """A path part as a plain name: accents dropped, other characters made '-'."""
+    a = unicodedata.normalize("NFKD", p).encode("ascii", "ignore").decode("ascii")
+    a = re.sub(r"[^A-Za-z0-9 ._()+,-]", "-", a)
+    a = re.sub(r"-{2,}", "-", a).strip(" .")
+    a = re.sub(r"^[^A-Za-z0-9]+", "", a)[:200].rstrip(" .")
+    return a or "file"
+
+
+def main(argv):
+    args, opt = [], {}
+    i = 0
+    while i < len(argv):
+        if argv[i].startswith("--") and i + 1 < len(argv):
+            opt[argv[i][2:]] = argv[i + 1]
+            i += 2
+        else:
+            args.append(argv[i])
+            i += 1
+    if len(args) != 1:
+        refuse("usage: ola-unzip <file.zip> [--into <folder>]", 2)
+    src = os.path.realpath(os.path.join(WORK, args[0]))
+    if not src.startswith(os.path.realpath(WORK) + "/") or not os.path.isfile(src) or os.path.islink(os.path.join(WORK, args[0])):
+        refuse("no such zip in the project folder", 4)
+    max_files = min(MAX_FILES, int(opt.get("max-files", MAX_FILES)))
+    st = os.statvfs(WORK)
+    room = int(st.f_bavail * st.f_frsize * 0.9)
+    max_bytes = min(MAX_BYTES, int(opt.get("max-bytes", MAX_BYTES)), room)
+    into = opt.get("into") or safe_part(os.path.splitext(os.path.basename(src))[0])
+    if not NAME.fullmatch(into) or ".." in into:
+        refuse("--into takes a plain folder name", 2)
+    dest = os.path.join(WORK, into)
+    if os.path.lexists(dest):
+        refuse("there is already something called %s in the project; pick another name with --into" % into, 3)
+    try:
+        z = zipfile.ZipFile(src)
+    except (zipfile.BadZipFile, OSError):
+        refuse("this is not a zip file, or it is damaged")
+    infos = z.infolist()
+    if len(infos) > max_files:
+        refuse("the zip holds %d entries; at most %d are unpacked at once" % (len(infos), max_files))
+    plan, renamed, skipped, total, seen = [], [], 0, 0, set()
+    for info in infos:
+        raw = info.filename
+        name = raw.replace("\\", "/")
+        if name.startswith("/") or re.match(r"^[A-Za-z]:", name) or any(p == ".." for p in name.split("/")):
+            refuse("an entry tries to leave the folder it is unpacked in (%s); nothing was unpacked" % json.dumps(raw[:80]))
+        mode = info.external_attr >> 16
+        if stat.S_ISLNK(mode):
+            refuse("the zip holds a link to another place (%s); links are not unpacked, so nothing was" % json.dumps(raw[:80]))
+        if info.flag_bits & 0x1:
+            refuse("the zip is locked with a password")
+        parts = [p for p in name.split("/") if p not in ("", ".")]
+        if not parts or info.is_dir():
+            continue
+        if parts[0] == "__MACOSX" or any(p.startswith(".") for p in parts):
+            skipped += 1
+            continue
+        if len(parts) > MAX_DEPTH + 1:
+            refuse("the zip's folders are nested more than %d deep" % MAX_DEPTH)
+        if info.file_size > RATIO_FLOOR and info.file_size > RATIO * max(1, info.compress_size):
+            refuse("an entry would grow from %d bytes to %d: a zip bomb, refused" % (info.compress_size, info.file_size))
+        total += info.file_size
+        if total > max_bytes:
+            refuse("unpacked, the zip would take more than %d MB, more than this project has room for" % (max_bytes >> 20))
+        clean = [p if NAME.fullmatch(p) else safe_part(p) for p in parts]
+        rel = "/".join(clean)
+        k = rel.lower()
+        n = 2
+        while k in seen:
+            stem, ext = os.path.splitext(clean[-1])
+            clean[-1] = "%s (%d)%s" % (stem, n, ext)
+            rel = "/".join(clean)
+            k = rel.lower()
+            n += 1
+        seen.add(k)
+        if clean != parts:
+            renamed.append({"from": "/".join(parts)[:300], "to": rel})
+        plan.append((info, rel))
+    if not plan:
+        refuse("the zip holds no files")
+    # A zip of one folder (the usual way a folder is zipped) unpacks as that folder, not inside
+    # another of the same name.
+    tops = {rel.split("/", 1)[0] for _, rel in plan}
+    if not opt.get("into") and len(tops) == 1 and all("/" in rel for _, rel in plan):
+        top = tops.pop()
+        into = top
+        dest = os.path.join(WORK, into)
+        if os.path.lexists(dest):
+            refuse("there is already something called %s in the project; pick another name with --into" % into, 3)
+        plan = [(info, rel.split("/", 1)[1]) for info, rel in plan]
+        renamed = [{"from": r["from"], "to": r["to"].split("/", 1)[1]} for r in renamed if "/" in r["to"]]
+    tmp = os.path.join(WORK, ".ola", "tmp", "unzip-%d" % os.getpid())
+    shutil.rmtree(tmp, ignore_errors=True)
+    os.makedirs(tmp, mode=0o755)
+    files, written = [], 0
+    try:
+        for info, rel in plan:
+            out = os.path.join(tmp, rel)
+            os.makedirs(os.path.dirname(out), mode=0o755, exist_ok=True)
+            h = hashlib.sha256()
+            size = 0
+            # Counted as it is written: the header's size is the zip's word, not a limit it keeps.
+            fd = os.open(out, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o644)
+            with os.fdopen(fd, "wb") as f, z.open(info) as r:
+                while True:
+                    chunk = r.read(1 << 20)
+                    if not chunk:
+                        break
+                    size += len(chunk)
+                    written += len(chunk)
+                    if size > info.file_size or written > max_bytes:
+                        refuse("an entry holds more than its header says; nothing was unpacked")
+                    h.update(chunk)
+                    f.write(chunk)
+            files.append({"path": into + "/" + rel, "size": size, "sha256": h.hexdigest()})
+        os.rename(tmp, dest)
+    except zipfile.BadZipFile:
+        refuse("the zip is damaged (an entry did not match its checksum); nothing was unpacked")
+    except (RuntimeError, NotImplementedError, EOFError, OSError, ValueError) as e:
+        refuse("the zip could not be unpacked (%s); nothing was unpacked" % type(e).__name__)
+    except zlib_error():
+        refuse("the zip is damaged; nothing was unpacked")
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    print(json.dumps({"folder": into, "files": files, "renamed": renamed, "skipped": skipped, "bytes": written}))
+
+
+def zlib_error():
+    import zlib
+    return zlib.error
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

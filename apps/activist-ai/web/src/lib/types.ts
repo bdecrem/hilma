@@ -77,7 +77,19 @@ export interface SiteThing extends ThingBase {
   summary: string
 }
 
-export type Thing = DashboardThing | DocumentThing | ChartThing | TableThing | SiteThing
+/** A picture Ola made (a chart it drew, a photo): shown as itself, from /api/thumb. */
+export interface ImageThing extends ThingBase {
+  kind: 'image'
+  alt: string
+}
+
+/** A PDF or Word file Ola made: its first page as a picture (a PDF), Open shows the rest. */
+export interface FileDocThing extends ThingBase {
+  kind: 'filedoc'
+  format: 'PDF' | 'Word'
+}
+
+export type Thing = DashboardThing | DocumentThing | ChartThing | TableThing | SiteThing | ImageThing | FileDocThing
 export type ThingKind = Thing['kind']
 
 export interface Project {
@@ -268,10 +280,12 @@ export interface DataTable {
   source: string | null
   created: string | null
   updated: string | null
+  /** A table of a database the person brought (ola-db attach): read-only, named <file>.<table>. */
+  attached?: boolean
 }
 export interface DataSummary {
   tables: DataTable[]
-  documents: { count: number; pages: number; web: number; upload: number; agent: number }
+  documents: { count: number; pages: number; web: number; upload: number; agent: number; ocrPages?: number; mismatches?: number }
   size: number
 }
 export interface TablePage {
@@ -294,6 +308,11 @@ export interface DocumentRow {
   chars?: number
   added_by: 'upload' | 'web' | 'agent'
   added_at: string
+  /** Pages read from a scan by OCR: their words may be wrong. */
+  ocr_pages?: number
+  /** The right-document check (ola-db check): a 'mismatch' may not be the document wanted. */
+  check_result?: 'match' | 'mismatch' | 'unsure' | null
+  check_detail?: string | null
 }
 export interface DocumentHit {
   id: number
@@ -305,6 +324,8 @@ export interface DocumentHit {
   page: number
   /** The passage, with the matched words between \u0002 and \u0003. */
   snip: string
+  /** 'ocr' when the page was read from a scan. */
+  method?: string
 }
 export type DocsPage = { q: false; documents: DocumentRow[]; total: number; offset: number } | { q: true; hits: DocumentHit[]; total: number; anyWord: boolean; offset: number }
 

@@ -714,6 +714,10 @@ print(json.dumps({"mib": n, "stopped": why}))
     const ro = await sh(A, ['ola-db', 'query', 'DELETE FROM laws'])
     t('ola-db query is read-only by default', ro.code === 3 && /reads only/.test(ro.err) && (await ws.dbApi(A, ['tables'])).tables[0]?.rows === 200_000)
 
+    // Reading real documents (2.3.0-17): reading order, OCR, the right-document check, charsets,
+    // zips, an attached database, what Open shows, uploads in pieces (check-docs.mjs).
+    await (await import('./check-docs.mjs')).docChecks({ ws, id: A, t, measured })
+
     // Deleting a file takes its document row and index entries with it.
     await ws.removeFile(A, 'sources/page.html')
     await ws.dbRemove(A, 'sources/page.html')

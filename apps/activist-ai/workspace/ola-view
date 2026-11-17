@@ -1,0 +1,493 @@
+#!/usr/bin/python3 -I
+"""ola-view: what "Open" shows of a file, made inside the sealed computer (never in the browser).
+
+Run by the front desk through `container exec`. The file is someone else's (a model's, a
+stranger's), so it is read as hostile and nothing in it is run: a PDF meets poppler here and
+reaches the browser only as page pictures; a Word, Markdown or text file comes out as our own
+plain HTML with every character of the file escaped, no address of the file's kept as a link,
+no remote template or picture fetched (there is no network here anyway); a spreadsheet's cells
+come out as values, its formulas as text, never evaluated, its external links never followed.
+
+  ola-view pdf-info <path>            JSON: pages, each page's size, and (if the project database
+                                      holds it) each page's text and whether it came from a scan
+  ola-view pdf-page <path> <n> [--width 1000]
+                                      one header line {"size": N}, then a PNG of page n
+  ola-view doc <path>                 one header line {"size": N}, then the HTML of a .docx, .md,
+                                      .markdown, .txt or .odt
+  ola-view table <path> [--sheet S] [--offset N --limit N --sort C --dir asc|desc --q words]
+                                      JSON: a page of a CSV, TSV or Excel file's rows, like the
+                                      Data tab's tables, and the file's sheets
+Paths are relative to /work, plain names, no symlink followed. Results are cached in
+/work/.ola/cache/views by the file's sha256.
+"""
+import csv, hashlib, html, json, os, re, sqlite3, stat, subprocess, sys, time, zipfile
+import xml.etree.ElementTree as ET
+
+# In the image: /opt/ola/lib. On a developer machine (web/dev.mjs runs these tools on a folder): ./lib.
+sys.path.insert(0, os.environ.get("OLA_LIB") or ("/opt/ola/lib" if os.path.isdir("/opt/ola/lib") else os.path.join(os.path.dirname(os.path.realpath(__file__)), "lib")))
+from olatext import clean, decode_bytes  # noqa: E402
+
+WORK = os.environ.get("OLA_WORK", "/work")
+CACHE = os.path.join(WORK, ".ola", "cache", "views")
+NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9 ._()+,-]{0,199}")
+MAX_IN = 64 << 20
+MAX_ROWS = 1_000_000
+MAX_COLS = 300
+
+
+def fail(code, msg):
+    sys.stderr.write("ola-view: " + msg + "\n")
+    sys.exit(code)
+
+
+def open_plain(rel):
+    """An fd for /work/<rel>: every part a plain name, opened with O_NOFOLLOW (ola-get's walk)."""
+    parts = rel.split("/")
+    if not 1 <= len(parts) <= 6 or not all(NAME.fullmatch(p) and ".." not in p for p in parts):
+        fail(2, "not a plain path")
+    fd = os.open(WORK, os.O_RDONLY | os.O_DIRECTORY)
+    for i, part in enumerate(parts):
+        last = i == len(parts) - 1
+        try:
+            nfd = os.open(part, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK | (0 if last else os.O_DIRECTORY), dir_fd=fd)
+        except OSError:
+            fail(4, "no such file")
+        os.close(fd)
+        fd = nfd
+    if not stat.S_ISREG(os.fstat(fd).st_mode):
+        fail(4, "not a file")
+    os.set_blocking(fd, True)
+    return fd
+
+
+def sha_fd(fd):
+    h = hashlib.sha256()
+    os.lseek(fd, 0, 0)
+    while True:
+        b = os.read(fd, 1 << 20)
+        if not b:
+            break
+        h.update(b)
+    os.lseek(fd, 0, 0)
+    return h.hexdigest()
+
+
+FDS = []
+
+
+def snapshot(rel):
+    """(a path to the file as opened, sha256): tools are given /proc/self/fd/<n> of the file this
+    walk opened, never the agent's path, so a file swapped for a link after the check is not
+    what they read (subprocesses get the fd through pass_fds)."""
+    fd = open_plain(rel)
+    os.set_inheritable(fd, True)
+    FDS.append(fd)
+    os.makedirs(CACHE, mode=0o700, exist_ok=True)
+    # /proc/self/fd in the VM (a fresh open of the same file); /dev/fd where there is no /proc (a Mac running web/dev.mjs).
+    return ("/proc/self/fd/%d" if os.path.isdir("/proc/self/fd") else "/dev/fd/%d") % fd, sha_fd(fd)
+
+
+def tool(args, timeout):
+    return subprocess.run(args, capture_output=True, timeout=timeout, pass_fds=tuple(FDS))
+
+
+def emit(data):
+    out = sys.stdout.buffer
+    out.write((json.dumps({"size": len(data)}) + "\n").encode())
+    out.write(data)
+    out.flush()
+
+
+# ------------------------------------------------------------------ PDFs
+
+def pdf_info(rel):
+    copy, sha = snapshot(rel)
+    r = tool(["pdfinfo", "-f", "1", "-l", "3000", copy], 120)
+    info = r.stdout.decode("utf-8", "replace")
+    m = re.search(r"^Pages:\s*(\d+)", info, re.M)
+    if r.returncode != 0 or not m:
+        fail(3, "this PDF could not be read")
+    pages = int(m.group(1))
+    sizes = {}
+    for pm in re.finditer(r"^Page\s+(\d+) size:\s*([\d.]+) x ([\d.]+)", info, re.M):
+        sizes[int(pm.group(1))] = [float(pm.group(2)), float(pm.group(3))]
+    default = re.search(r"^Page size:\s*([\d.]+) x ([\d.]+)", info, re.M)
+    default = [float(default.group(1)), float(default.group(2))] if default else [612.0, 792.0]
+    out = {"pages": pages, "sizes": [sizes.get(i, default) for i in range(1, min(pages, 3000) + 1)], "texts": None, "methods": None}
+    db = os.path.join(WORK, "project.db")
+    if os.path.isfile(db):
+        try:
+            con = sqlite3.connect("file:%s?mode=ro" % db, uri=True, timeout=5)
+            row = con.execute("SELECT id FROM documents WHERE path = ? AND sha256 = ?", (rel, sha)).fetchone()
+            if row:
+                budget = 1_500_000
+                texts = {}
+                for page, text in con.execute("SELECT page, text FROM doc_text WHERE doc_id = ? ORDER BY page", (row[0],)):
+                    t = (text or "")[:max(0, budget)]
+                    budget -= len(t)
+                    texts[int(page)] = t
+                out["texts"] = [texts.get(i, "") for i in range(1, min(pages, 3000) + 1)]
+                methods = {int(p): (m_, c) for p, m_, c in con.execute("SELECT page, method, confidence FROM doc_pages WHERE doc_id = ?", (row[0],))}
+                out["methods"] = [methods.get(i, ("text", None))[0] for i in range(1, min(pages, 3000) + 1)]
+            con.close()
+        except sqlite3.Error:
+            pass
+    print(json.dumps(out))
+
+
+def pdf_page(rel, n, width):
+    copy, sha = snapshot(rel)
+    width = max(200, min(2000, width))
+    png = os.path.join(CACHE, "%s-p%d-w%d.png" % (sha, n, width))
+    if not os.path.isfile(png):
+        base = png[:-4] + ".%d" % os.getpid()
+        r = tool(["pdftoppm", "-f", str(n), "-l", str(n), "-scale-to-x", str(width), "-scale-to-y", "-1", "-png", "-singlefile", copy, base], 120)
+        if r.returncode != 0 or not os.path.isfile(base + ".png"):
+            fail(4, "no such page")
+        os.replace(base + ".png", png)
+    with open(png, "rb") as f:
+        emit(f.read())
+
+
+# ------------------------------------------------------------------ documents as our own HTML
+
+STYLE = """
+:root{color-scheme:light}
+html{background:#fbf8f1}
+body{margin:0 auto;max-width:44rem;padding:2.5rem 1.25rem 4rem;font:18px/1.6 Georgia,'Iowan Old Style','Times New Roman',serif;color:#1d1a16;background:#fbf8f1;overflow-wrap:anywhere}
+h1,h2,h3,h4{font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;line-height:1.25;color:#25407a;margin:1.6em 0 .5em}
+h1{font-size:1.7rem}h2{font-size:1.3rem}h3{font-size:1.1rem}h4{font-size:1rem}
+p{margin:0 0 .9em}ul,ol{padding-left:1.4em}li{margin:.2em 0}
+table{border-collapse:collapse;margin:1em 0;font:15px/1.4 ui-sans-serif,system-ui,sans-serif}
+td,th{border:1px solid #d8cfbd;padding:.35em .6em;vertical-align:top}
+pre{white-space:pre-wrap;font:15px/1.5 ui-monospace,Menlo,monospace}
+code{font:.9em ui-monospace,Menlo,monospace;background:#efe8da;padding:0 .2em;border-radius:3px}
+.note{font:14px/1.4 ui-sans-serif,system-ui,sans-serif;color:#6b6152;border-left:3px solid #d8cfbd;padding:.2em .7em;margin:1em 0}
+.link{color:#25407a;text-decoration:underline dotted}
+@media (max-width:480px){body{font-size:17px;padding:1.5rem 1rem 3rem}}
+"""
+
+
+def page_html(title, body, notes=()):
+    note = "".join('<p class="note">%s</p>' % html.escape(n) for n in notes)
+    return ("<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
+            "<title>%s</title><style>%s</style></head><body>%s%s</body></html>" % (html.escape(title), STYLE, note, body)).encode("utf-8")
+
+
+W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
+
+
+def docx_html(path):
+    with zipfile.ZipFile(path) as z:
+        info = z.getinfo("word/document.xml")
+        if info.file_size > MAX_IN:
+            fail(3, "the document is too large to show")
+        with z.open(info) as f:
+            xml = f.read(MAX_IN + 1)
+    root = ET.fromstring(xml)  # expat: no external entities, and entity expansion is bounded
+    body = root.find(W + "body")
+    out = []
+    notes = set()
+    list_open = [False]
+
+    def runs(el):
+        bits = []
+        for node in el.iter():
+            tag = node.tag
+            if tag == W + "r":
+                rpr = node.find(W + "rPr")
+                bold = rpr is not None and rpr.find(W + "b") is not None
+                ital = rpr is not None and rpr.find(W + "i") is not None
+                txt = []
+                for c in node:
+                    if c.tag == W + "t" and c.text:
+                        txt.append(html.escape(c.text))
+                    elif c.tag == W + "tab":
+                        txt.append(" ")
+                    elif c.tag in (W + "br", W + "cr"):
+                        txt.append("<br>")
+                    elif c.tag == W + "drawing" or c.tag == W + "pict":
+                        notes.add("Pictures in this document are not shown here. Download has the original.")
+                        txt.append("<span class=\"note\">[a picture]</span>")
+                s = "".join(txt)
+                if bold and s:
+                    s = "<strong>%s</strong>" % s
+                if ital and s:
+                    s = "<em>%s</em>" % s
+                bits.append(s)
+        return "".join(bits)
+
+    def para(p):
+        ppr = p.find(W + "pPr")
+        style = ""
+        is_list = False
+        if ppr is not None:
+            ps = ppr.find(W + "pStyle")
+            style = (ps.get(W + "val") or "") if ps is not None else ""
+            is_list = ppr.find(W + "numPr") is not None or style.lower().startswith("list")
+        text = runs(p)
+        if not text.strip():
+            return None
+        m = re.match(r"(?i)heading\s*(\d)", style)
+        if style.lower() == "title":
+            return ("h1", text)
+        if m:
+            return ("h%d" % min(4, int(m.group(1)) + 1), text)
+        if is_list:
+            return ("li", text)
+        return ("p", text)
+
+    def close_list():
+        if list_open[0]:
+            out.append("</ul>")
+            list_open[0] = False
+
+    for el in list(body) if body is not None else []:
+        if el.tag == W + "p":
+            r = para(el)
+            if not r:
+                continue
+            if r[0] == "li":
+                if not list_open[0]:
+                    out.append("<ul>")
+                    list_open[0] = True
+                out.append("<li>%s</li>" % r[1])
+            else:
+                close_list()
+                out.append("<%s>%s</%s>" % (r[0], r[1], r[0]))
+        elif el.tag == W + "tbl":
+            close_list()
+            rows = []
+            for tr in el.iter(W + "tr"):
+                cells = ["<td>%s</td>" % " ".join(x for x in (runs(p) for p in tc.iter(W + "p")) if x) for tc in tr.iter(W + "tc")]
+                rows.append("<tr>%s</tr>" % "".join(cells))
+                if len(rows) > 2000:
+                    break
+            out.append("<table>%s</table>" % "".join(rows))
+    close_list()
+    if not out:
+        out.append("<p>This document has no text that can be shown.</p>")
+    return out, sorted(notes)
+
+
+def md_inline(s):
+    s = html.escape(s)
+    s = re.sub(r"!\[([^\]]*)\]\([^)]*\)", lambda m: '<span class="note">[a picture: %s]</span>' % m.group(1), s)
+    s = re.sub(r"\[([^\]]+)\]\(([^)]*)\)", lambda m: '<span class="link">%s</span> (%s)' % (m.group(1), m.group(2)), s)
+    s = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", s)
+    s = re.sub(r"(?<![\w*])\*([^*]+)\*(?![\w*])", r"<em>\1</em>", s)
+    s = re.sub(r"`([^`]+)`", r"<code>\1</code>", s)
+    return s
+
+
+def md_html(text):
+    out, para, lst, code = [], [], None, None
+    def flush():
+        nonlocal para, lst
+        if para:
+            out.append("<p>%s</p>" % md_inline(" ".join(para)))
+            para = []
+        if lst:
+            out.append("<%s>%s</%s>" % (lst[0], "".join("<li>%s</li>" % md_inline(i) for i in lst[1]), lst[0]))
+            lst = None
+    for raw in text.splitlines():
+        if code is not None:
+            if raw.strip().startswith("```"):
+                out.append("<pre>%s</pre>" % html.escape("\n".join(code)))
+                code = None
+            else:
+                code.append(raw)
+            continue
+        line = raw.strip()
+        if line.startswith("```"):
+            flush()
+            code = []
+            continue
+        h = re.match(r"^(#{1,6})\s+(.*)$", line)
+        b = re.match(r"^[-*+]\s+(.*)$", line)
+        n = re.match(r"^\d+[.)]\s+(.*)$", line)
+        if not line:
+            flush()
+        elif h:
+            flush()
+            lvl = min(4, len(h.group(1)))
+            out.append("<h%d>%s</h%d>" % (lvl, md_inline(h.group(2)), lvl))
+        elif b or n:
+            kind = "ul" if b else "ol"
+            if para:
+                out.append("<p>%s</p>" % md_inline(" ".join(para)))
+                para = []
+            if lst and lst[0] != kind:
+                flush()
+            lst = lst or (kind, [])
+            lst[1].append((b or n).group(1))
+        else:
+            para.append(line)
+    if code is not None:
+        out.append("<pre>%s</pre>" % html.escape("\n".join(code)))
+    flush()
+    return out
+
+
+def doc(rel):
+    copy, sha = snapshot(rel)
+    cached = os.path.join(CACHE, sha + ".html")
+    if os.path.isfile(cached):
+        with open(cached, "rb") as f:
+            return emit(f.read())
+    ext = os.path.splitext(rel)[1].lower()
+    name = rel.split("/")[-1]
+    notes = []
+    if ext == ".docx":
+        body, notes = docx_html(copy)
+    elif ext == ".odt":
+        with zipfile.ZipFile(copy) as z:
+            xml = z.open("content.xml").read(MAX_IN)
+        text = re.sub(r"<[^>]+>", "", re.sub(rb"</text:(p|h)>", b"\n", xml).decode("utf-8", "replace"))
+        body = ["<p>%s</p>" % html.escape(html.unescape(p)) for p in clean(text).split("\n") if p.strip()]
+    else:
+        with open(copy, "rb") as f:
+            text = clean(decode_bytes(f.read(MAX_IN))[0])
+        body = md_html(text) if ext in (".md", ".markdown") else ["<pre>%s</pre>" % html.escape(text)]
+    data = page_html(name, "".join(body), notes)
+    with open(cached + ".%d" % os.getpid(), "wb") as f:
+        f.write(data)
+    os.replace(cached + ".%d" % os.getpid(), cached)
+    emit(data)
+
+
+# ------------------------------------------------------------------ tables
+
+def table_rows(path, ext, sheet):
+    """(sheets, header, rows) of a CSV, TSV or Excel file: values, formulas as their text."""
+    if ext in (".xlsx", ".xlsm"):
+        import openpyxl
+        # Cached values; nothing is evaluated and no external link followed. Opened as file
+        # objects: openpyxl judges a path by its extension, and ours is /proc/self/fd/<n>.
+        wb = openpyxl.load_workbook(open(path, "rb"), read_only=True, data_only=True)
+        wf = openpyxl.load_workbook(open(path, "rb"), read_only=True, data_only=False)
+        sheets = wb.sheetnames
+        name = sheet if sheet in sheets else sheets[0]
+        vals, forms = wb[name].iter_rows(values_only=True), wf[name].iter_rows(values_only=True)
+
+        def gen():
+            for v, f in zip(vals, forms):
+                yield [x if x is not None else (y if isinstance(y, str) else None) for x, y in zip(v, f)]
+        rows = gen()
+        head = next(rows, None) or []
+        return sheets, name, head, rows
+    with open(path, "rb") as f:
+        enc = decode_bytes(f.read(64 << 10))[1]
+    f = open(path, "r", encoding="utf-8-sig" if enc == "utf-8" else enc, errors="replace", newline="")
+    sample = f.read(64 << 10).replace("\x00", "")
+    f.seek(0)
+    delim = "\t" if ext == ".tsv" else ","
+    try:
+        delim = csv.Sniffer().sniff(sample, delimiters=",;\t|").delimiter
+    except csv.Error:
+        pass
+    rows = csv.reader((l.replace("\x00", "") for l in f), delimiter=delim)
+    return None, None, next(rows, []), rows
+
+
+NUMBER = re.compile(r"[+-]?(\d{1,15}(\.\d+)?|\.\d+)")
+
+
+def num(v):
+    if v is None:
+        return ""
+    if isinstance(v, bool) or not isinstance(v, (int, float, str)):
+        return str(v)
+    if isinstance(v, str) and NUMBER.fullmatch(v.strip()):
+        s = v.strip()
+        return float(s) if "." in s else int(s)
+    return v
+
+
+def table(rel, opt):
+    copy, sha = snapshot(rel)
+    ext = os.path.splitext(rel)[1].lower()
+    sheet = opt.get("sheet")
+    key = hashlib.sha256((sha + "\0" + (sheet or "")).encode()).hexdigest()[:32]
+    cdb = os.path.join(CACHE, key + ".db")
+    if not os.path.isfile(cdb):
+        sheets, name, head, rows = table_rows(copy, ext, sheet)
+        head = [("" if h is None else str(h)) for h in list(head)[:MAX_COLS]]
+        cols = [h.strip() or "Column %d" % (i + 1) for i, h in enumerate(head)]
+        tmp = cdb + ".%d" % os.getpid()
+        con = sqlite3.connect(tmp)
+        con.execute("CREATE TABLE t (%s)" % ", ".join('c%d' % i for i in range(len(cols))) if cols else "CREATE TABLE t (c0)")
+        con.execute("CREATE TABLE meta (k TEXT PRIMARY KEY, v TEXT)")
+        con.execute("INSERT INTO meta VALUES ('columns', ?), ('sheets', ?), ('sheet', ?)", (json.dumps(cols), json.dumps(sheets), name))
+        n = max(1, len(cols))
+        buf, count = [], 0
+        for r in rows:
+            # Numbers as numbers, so a column sorts 9 before 10; everything else as text.
+            r = [num(v) for v in list(r)[:n]]
+            buf.append(r + [None] * (n - len(r)))
+            count += 1
+            if len(buf) >= 5000:
+                con.executemany("INSERT INTO t VALUES (%s)" % ",".join("?" * n), buf)
+                buf = []
+            if count >= MAX_ROWS:
+                break
+        con.executemany("INSERT INTO t VALUES (%s)" % ",".join("?" * n), buf)
+        con.commit()
+        con.close()
+        os.replace(tmp, cdb)
+    con = sqlite3.connect("file:%s?mode=ro" % cdb, uri=True)
+    meta = dict(con.execute("SELECT k, v FROM meta"))
+    cols = json.loads(meta["columns"]) or ["Column 1"]
+    offset = max(0, int(opt.get("offset", 0)))
+    limit = min(200, max(1, int(opt.get("limit", 50))))
+    where, params = "", []
+    if opt.get("q"):
+        like = "%" + opt["q"].replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
+        where = " WHERE " + " OR ".join("CAST(c%d AS TEXT) LIKE ? ESCAPE '\\'" % i for i in range(len(cols)))
+        params = [like] * len(cols)
+    order = ""
+    if opt.get("sort") in cols:
+        i = cols.index(opt["sort"])
+        order = " ORDER BY (typeof(c%d) = 'text'), c%d %s" % (i, i, "DESC" if opt.get("dir") == "desc" else "ASC")
+    total = con.execute("SELECT count(*) FROM t" + where, params).fetchone()[0]
+    rows = con.execute("SELECT * FROM t%s%s LIMIT ? OFFSET ?" % (where, order), params + [limit, offset]).fetchall()
+    cell = lambda v: v[:2000] + "…" if isinstance(v, str) and len(v) > 2000 else v
+    print(json.dumps({"table": rel, "columns": [{"name": c, "type": ""} for c in cols], "rows": [[cell(v) for v in r] for r in rows], "total": total, "offset": offset, "limit": limit,
+                      "sheets": json.loads(meta.get("sheets") or "null"), "sheet": meta.get("sheet")}))
+
+
+def main(argv):
+    if not argv or argv[0] in ("-h", "--help"):
+        print(__doc__.strip())
+        return
+    cmd, rest = argv[0], argv[1:]
+    args, opt = [], {}
+    i = 0
+    while i < len(rest):
+        if rest[i].startswith("--") and i + 1 < len(rest):
+            opt[rest[i][2:]] = rest[i + 1]
+            i += 2
+        else:
+            args.append(rest[i])
+            i += 1
+    if not args:
+        fail(2, "a path")
+    if cmd == "pdf-info":
+        pdf_info(args[0])
+    elif cmd == "pdf-page" and len(args) == 2 and args[1].isdigit():
+        pdf_page(args[0], int(args[1]), int(opt.get("width", 1000)))
+    elif cmd == "doc":
+        doc(args[0])
+    elif cmd == "table":
+        table(args[0], opt)
+    else:
+        fail(2, "pdf-info, pdf-page, doc or table")
+
+
+if __name__ == "__main__":
+    try:
+        main(sys.argv[1:])
+    except BrokenPipeError:
+        pass
+    except Exception as e:  # a hostile or damaged file: one plain line, never a traceback of its contents
+        fail(3, "the file could not be shown (%s)" % type(e).__name__)

@@ -115,6 +115,24 @@ export function startFakeModel({ hosted = false } = {}) {
       if (bash && done === 0) return send(200, reply({ tool: { id: `call_${calls}_0`, name: bash, args: { command: `ola-search "${web[1].replace(/["\\$`]/g, '')}"`, description: 'Search the web' } } }))
       return send(200, reply({ content: 'I did not search the web, so I worked from your files only.' }))
     }
+    // "draw the delta": the drawing run (Open for every kind). Writes two SVG drawings (one of them
+    // hostile: a script, an onload, an outside picture), a table and a note, then answers with a
+    // citation in the agreed form, so the page shows the pictures inline, Open for the rest, and
+    // a citation link that opens report.pdf at page 2.
+    if (/draw the delta/i.test(lastUserText(messages))) {
+      let since = -1
+      messages.forEach((m, i) => m.role === 'user' && (since = i))
+      const done = messages.slice(since + 1).filter((m) => m.role === 'tool').length
+      const write = pick(body.tools, 'write')
+      const files = [
+        ['delta.svg', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 220"><rect width="400" height="220" fill="#f7f0e3"/><path d="M0 160 C120 120 200 200 400 150 V220 H0 Z" fill="#25407a"/><circle cx="320" cy="60" r="28" fill="#e9a23b"/><text x="24" y="48" font-size="22" font-family="sans-serif" fill="#1d1a16">A made-up delta</text></svg>\n'],
+        ['hostile-drawing.svg', '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 300 120" onload="fetch(\'http://127.0.0.1:9/svg-onload\')"><script>fetch("http://127.0.0.1:9/svg-script"); new Image().src = "http://127.0.0.1:9/svg-img"</script><image href="http://127.0.0.1:9/svg-image.png" width="10" height="10"/><rect width="300" height="120" fill="#c85a2b"/></svg>\n'],
+        ['totals.csv', 'district,households\nNorth,100\nSouth,137\n'],
+        ['notes.md', '# Notes\n\nThe drawings are made up.\n'],
+      ]
+      if (write && done < files.length) return send(200, reply({ tool: { id: `call_${calls}_${done}`, name: write, args: { [pathKey(body.tools, write)]: files[done][0], content: files[done][1] } } }))
+      return send(200, reply({ content: 'I drew the delta in delta.svg and a second drawing, and put the numbers in totals.csv. The money for the dikes is on page 2 of the report: [report.pdf, p. 2](doc:report.pdf#page=2).' }))
+    }
     // Where are we in the script? Count the tool results since the last user message.
     let lastUser = -1
     messages.forEach((m, i) => m.role === 'user' && (lastUser = i))

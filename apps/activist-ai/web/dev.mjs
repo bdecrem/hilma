@@ -240,6 +240,11 @@ await waitFor(`http://127.0.0.1:${ocPort}/api/info`, { authorization })
 
 // ---------------------------------------------------------------- the page's server
 let devWeb = { always: false, changedAt: null, changedBy: null, provider: 'Brave Search' }
+// Uploads in pieces (the dev stand-in of the front desk's /api/uploads): small pieces, each held a
+// moment (OLA_DEV_PIECE_MS), so the page's progress can be seen.
+const pieces = new Map()
+const DEV_CHUNK = 1024 * 1024
+const DEV_PIECE_MS = Number(process.env.OLA_DEV_PIECE_MS) || 0
 const proxy = makeProxy({ target: `http://127.0.0.1:${ocPort}`, authorization, work, log, webMode: () => (devWeb.always ? 'always' : 'ask') })
 let vite = null
 if (!DIST) {
@@ -426,6 +431,62 @@ const server = http.createServer(async (req, res) => {
         return json(res, 200, { job: /Proposed job ([0-9a-f]{12})/.exec(out)?.[1] ?? null, out })
       }
       return json(res, 200, { planted: fakeModel?.batch.planted ?? [], calls: fakeModel?.batch.calls ?? 0, maxInflight: fakeModel?.batch.maxInflight ?? 0 })
+    }
+    // Open for every kind and uploads in pieces, stood in for (the real ones are the front desk's,
+    // which run these tools inside the VM): a table's rows through the real ola-view, the disk
+    // through ola-db, a picture for <img> only, and pieces gathered in memory into the dev folder.
+    if (p === '/api/view/table' && req.method === 'GET') {
+      const q = url.searchParams
+      const opt = (k, flag) => (q.get(k) ? [flag, q.get(k)] : [])
+      const child = spawn('python3', [path.join(AI, 'workspace/ola-view'), 'table', q.get('path') ?? '', ...opt('offset', '--offset'), ...opt('limit', '--limit'), ...opt('sort', '--sort'), ...opt('dir', '--dir'), ...opt('q', '--q'), ...opt('sheet', '--sheet')], { env: { ...process.env, OLA_WORK: work }, stdio: ['ignore', 'pipe', 'pipe'] })
+      let out = ''
+      child.stdout.on('data', (d) => (out += d))
+      const code = await new Promise((r) => child.on('close', r))
+      return code === 0 ? json(res, 200, JSON.parse(out)) : json(res, 404, { error: 'not_shown', message: 'That table could not be shown. Download the file instead.' })
+    }
+    if (p === '/api/disk' && req.method === 'GET') {
+      const child = spawn('python3', [path.join(AI, 'workspace/ola-db'), 'api', 'disk'], { env: { ...process.env, OLA_WORK: work }, stdio: ['ignore', 'pipe', 'pipe'] })
+      let out = ''
+      child.stdout.on('data', (d) => (out += d))
+      await new Promise((r) => child.on('close', r))
+      const d = JSON.parse(out)
+      return json(res, 200, { ...d, uploaded: Math.min(d.files, (await files.list()).filter((f) => f.origin === 'uploaded').reduce((n, f) => n + f.size, 0)), maxUpload: 4096 * 1024 * 1024 })
+    }
+    if (p === '/api/thumb' && req.method === 'GET') {
+      const rel = url.searchParams.get('path') ?? ''
+      const type = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml' }[rel.split('.').pop().toLowerCase()]
+      const f = type && req.headers['sec-fetch-dest'] === 'image' ? await files.open(rel) : null
+      if (!f) return json(res, 404, { error: 'not_found' })
+      res.writeHead(200, { 'content-type': type, 'content-length': String(f.size), 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'content-security-policy': "sandbox; default-src 'none'; style-src 'unsafe-inline'" })
+      return f.stream().pipe(res)
+    }
+    if (p.startsWith('/api/uploads')) {
+      const m = /^\/api\/uploads\/([0-9a-f]{32})(\/finish)?$/.exec(p)
+      if (p === '/api/uploads' && req.method === 'POST') {
+        let raw = ''
+        for await (const c of req) raw += c
+        const { name, size } = JSON.parse(raw || '{}')
+        for (const [id, u] of pieces) if (u.name === name && u.size === size) return json(res, 200, { id, have: u.have, chunk: DEV_CHUNK })
+        const id = randomBytes(16).toString('hex')
+        pieces.set(id, { name, size, have: 0, bufs: [] })
+        return json(res, 201, { id, have: 0, chunk: DEV_CHUNK })
+      }
+      const u = m && pieces.get(m[1])
+      if (!u) return json(res, 404, { error: 'no_upload' })
+      if (!m[2] && req.method === 'GET') return json(res, 200, { id: m[1], have: u.have, size: u.size })
+      if (!m[2] && req.method === 'PUT') {
+        if (Number(url.searchParams.get('offset')) !== u.have) return json(res, 409, { error: 'offset', have: u.have })
+        for await (const c of req) u.bufs.push(c), (u.have += c.length)
+        if (DEV_PIECE_MS) await new Promise((r) => setTimeout(r, DEV_PIECE_MS))
+        return json(res, 200, { have: u.have })
+      }
+      if (m[2] && req.method === 'POST') {
+        pieces.delete(m[1])
+        const { Readable } = await import('node:stream')
+        const r = await files.upload(u.name, Readable.from(u.bufs), { replace: false, maxBytes: Infinity })
+        return json(res, r.status, { ...r.body, path: u.name, size: u.size })
+      }
+      return json(res, 404, { error: 'not_found' })
     }
     // Dev-only switches for the checks: stop and start the workspace's opencode.
     if (process.env.OLA_DEV_CONTROLS === '1' && p === '/__dev/opencode' && req.method === 'POST') {

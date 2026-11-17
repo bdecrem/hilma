@@ -59,6 +59,8 @@ const env = {
   OLA_FD_SIGNIN_BURST: '40',
   OLA_FD_SIGNIN_PER_MIN: '40',
   OLA_FD_MAX_UPLOAD_MB: '2',
+  OLA_FD_CHUNK_MB: '1', // uploads in pieces: 1 MiB pieces, so a 2.6 MB zip goes in three
+  // OLA_CHECK_ONLY=<regex>: only the checks whose names match (and the sign-ups they need), while working on them.
   OLA_FD_WORKING_WINDOW_S: '4', // "people working" changes once per window; 4 s so the check can watch it
   OLA_FD_SLOW_MS: '4000', // a download must move 32 KiB per window; 4 s here (30 s by default) so the check can watch it
   OLA_FD_GATEWAY_USAGE_TOKEN: randomBytes(24).toString('hex'), // Fallback to Claude: the front desk asks the gateway with it
@@ -112,7 +114,9 @@ const ok = (name, pass, detail = '') => {
   results.push(pass)
   console.log(`${pass ? 'pass' : 'FAIL'}  ${name}${detail ? `  (${detail})` : ''}`)
 }
+const ONLY = process.env.OLA_CHECK_ONLY ? new RegExp(process.env.OLA_CHECK_ONLY) : null
 async function check(name, fn) {
+  if (ONLY && !ONLY.test(name) && !/^alice: invitation|^bob and vera register/.test(name)) return
   try {
     const d = await fn()
     ok(name, true, d ?? '')
@@ -844,6 +848,9 @@ await check('"Open": page files given up on, or left unread, hold no exec (third
 })
 
 // ---------------------------------------------------------------- roles
+// Reading real documents and Open for every kind (check-docs.mjs), in Chromium and WebKit.
+await (await import('./check-docs.mjs')).docChecks({ check, assert, api, A, a, v, FA, CTR, ORIGIN, CK, SHOTS, sleep, until, auditRows, dataDir: env.OLA_FD_DATA, live: LIVE })
+
 await check('a viewer reads but cannot upload, delete or run', async () => {
   const base = { cookie: v.cookie, csrf: v.csrf, ws: FA }
   const reads = await Promise.all(['/api/project', '/api/files', '/oc/api/session'].map((p) => api(p, base)))

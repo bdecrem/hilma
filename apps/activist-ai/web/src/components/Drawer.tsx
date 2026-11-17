@@ -10,7 +10,7 @@ import { clock, when } from '../lib/format.ts'
 import { Answer } from './Answer.tsx'
 import { Icon } from './Icon.tsx'
 import { StretchCard } from './StretchCard.tsx'
-import { desk } from '../lib/api.ts'
+import { canOpen, desk, plainPath } from '../lib/api.ts'
 
 // Requests that work in any project, empty or not: nothing here names a file the person may not have.
 const STARTERS = ['Make a hello world web page', 'Make a one-page site that says what our group does and when we meet', 'Look at the files I uploaded and tell me what is in them']
@@ -351,7 +351,11 @@ function TurnView(props: { turn: Turn; now: number; last: boolean; onStop: () =>
   const only = () => reactionOnly(t())
   const shownNotes = () => t().notes.map((n) => shown(n, running())).filter(Boolean)
   const shownAnswer = () => shown(t().answer, running())
-  const madePages = () => [...new Set(t().steps.filter((st) => (st.icon === 'write' || st.icon === 'change') && st.status === 'done' && /\.html?$/i.test(st.object) && !st.object.startsWith('/')).map((st) => st.object))].slice(0, 4)
+  // Every kind Open shows (a page, a picture, a PDF, a table, a document), not only pages.
+  const madePages = () => [...new Set(t().steps.filter((st) => (st.icon === 'write' || st.icon === 'change') && st.status === 'done' && canOpen(st.object) && plainPath(st.object.replace(/^\/work\//, ''))).map((st) => st.object.replace(/^\/work\//, '')))].slice(0, 8)
+  const isPicture = (p: string) => /\.(png|jpe?g|gif|webp|svg)$/i.test(p)
+  const madePictures = () => madePages().filter(isPicture).slice(0, 3)
+  const madeOthers = () => madePages().filter((p) => !madePictures().includes(p))
   return (
     <li class="turn" data-status={t().status}>
       <div class="said-you" classList={{ reacted: !!reaction() }}>
@@ -431,9 +435,27 @@ function TurnView(props: { turn: Turn; now: number; last: boolean; onStop: () =>
         <Show when={shownAnswer()}>
           <Answer text={shownAnswer()} />
         </Show>
-        <Show when={!running() && madePages().length}>
+        {/* A drawing or picture the run made is shown itself, up to three (Bart: "if it makes a
+            drawing, show it inline"). Only ever as an <img> from /api/thumb, which answers image
+            requests only, under a sandbox CSP: an SVG's scripts never run and it loads nothing. */}
+        <Show when={!running() && madePictures().length}>
+          <div class="made-pictures">
+            <For each={madePictures()}>
+              {(pg) => (
+                <a class="made-picture" href={desk.openUrl(pg)} target="_blank" rel="noopener noreferrer">
+                  <img src={desk.thumbUrl(pg)} alt={`${pg}, a picture made in this request`} loading="lazy" />
+                  <span class="made-picture-name">
+                    {pg}
+                    <span class="sr-only"> (opens full size in a new tab)</span>
+                  </span>
+                </a>
+              )}
+            </For>
+          </div>
+        </Show>
+        <Show when={!running() && madeOthers().length}>
           <p class="made-pages">
-            <For each={madePages()}>
+            <For each={madeOthers()}>
               {(pg) => (
                 <a class="open-page" href={desk.openUrl(pg)} target="_blank" rel="noopener noreferrer">
                   Open {pg}

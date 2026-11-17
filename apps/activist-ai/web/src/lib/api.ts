@@ -63,10 +63,18 @@ export interface FrontDesk {
   runs(): Promise<RunsPayload>
   files(): Promise<FileEntry[]>
   /** Sends one file to the workspace. Rejects with a DeskError (409 when the name is taken). */
-  upload(file: File, opts?: { replace?: boolean }): Promise<{ path: string; size: number }>
+  upload(file: File, opts?: { replace?: boolean }): Promise<UploadResult>
   downloadUrl(path: string): string
-  /** Where "Open" on a page goes: the front desk shows it, sandboxed, in a new tab. */
-  openUrl(path: string): string
+  /** Where "Open" goes, for every kind it shows (canOpen): a page, picture, PDF (at a page) or
+   * document in the front desk's sandboxed wrapper, a table in this app's own table view. */
+  openUrl(path: string, page?: number): string
+  /** A file that comes in pieces (resumable), with progress; what happened after (unpacked, attached). */
+  uploadLarge(file: File, opts: { replace?: boolean; onProgress?: (sent: number, total: number) => void; signal?: AbortSignal }): Promise<UploadResult>
+  /** A table file's rows, as the Data tab shows a table (GET /api/view/table). */
+  viewTable(path: string, opts: { offset?: number; limit?: number; sort?: string; dir?: 'asc' | 'desc'; q?: string; sheet?: string; first?: boolean }): Promise<TablePage & { sheets?: string[] | null; sheet?: string | null }>
+  /** A small picture of a thing (an image, a PDF's first page). */
+  thumbUrl(path: string): string
+  disk(): Promise<DiskUse>
   remove(path: string): Promise<void>
   settings(): Promise<Settings>
   /** "Always in this project" for web search and downloads, on or off. */
@@ -85,6 +93,35 @@ const qs = (o: Record<string, string | number | undefined>) =>
     .join('&')
 
 const filePath = (path: string) => `/api/files/${path.split('/').map(encodeURIComponent).join('/')}`
+
+/** What Open does with a file (frontdesk/views.mjs kindOf): null when it only downloads. */
+export const openKind = (path: string): 'page' | 'image' | 'pdf' | 'doc' | 'table' | null =>
+  /\.html?$/i.test(path) ? 'page' : /\.(png|jpe?g|gif|webp|avif|svg)$/i.test(path) ? 'image' : /\.pdf$/i.test(path) ? 'pdf' : /\.(docx|md|markdown|txt|odt)$/i.test(path) ? 'doc' : /\.(csv|tsv|xlsx|xlsm)$/i.test(path) ? 'table' : null
+export const canOpen = (path: string) => openKind(path) !== null
+/** A path as a citation or a step names it: plain parts, no dot names, at most 6 (validRel). */
+export const plainPath = (p: string) => p.length <= 1300 && p.split('/').length <= 6 && p.split('/').every((x) => /^[A-Za-z0-9][A-Za-z0-9 ._()+,-]{0,199}$/.test(x) && !x.includes('..'))
+/** Files above this size go in pieces (resumable); so do zips and databases, which are unpacked or attached. */
+export const PIECE_THRESHOLD = 8 * 1024 * 1024
+export const goesInPieces = (file: File) => file.size > PIECE_THRESHOLD || /\.(zip|db|sqlite|sqlite3)$/i.test(file.name)
+
+export interface UploadResult {
+  path: string
+  size: number
+  unpacked?: { folder: string; files: number; renamed: number; skipped: number }
+  attached?: { alias: string; tables: number }
+  refused?: string
+}
+export interface DiskUse {
+  total: number
+  used: number
+  free: number
+  files: number
+  data: number
+  ola: number
+  uploaded: number
+  maxUpload: number
+}
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 // ---------------------------------------------------------------- Fallback to Claude
 export interface ClaudeRunRecord {
@@ -182,7 +219,41 @@ export const desk: FrontDesk = {
     }),
   // A download is a plain link (no custom headers), so it names the workspace in the address.
   downloadUrl: (path) => `${filePath(path)}?w=${encodeURIComponent(workspace() ?? '')}`,
-  openUrl: (path) => `/api/open?w=${encodeURIComponent(workspace() ?? '')}&path=${encodeURIComponent(path)}`,
+  openUrl: (path, page) =>
+    openKind(path) === 'table'
+      ? `/?w=${encodeURIComponent(workspace() ?? '')}#/table?path=${encodeURIComponent(path)}`
+      : `/api/open?w=${encodeURIComponent(workspace() ?? '')}&path=${encodeURIComponent(path)}${page && openKind(path) === 'pdf' ? `&page=${page}#page-${page}` : ''}`,
+  uploadLarge: async (file, opts) => {
+    const start = await post<{ id: string; have: number; chunk: number }>('/api/uploads', { name: file.name, size: file.size, replace: !!opts.replace })
+    let have = start.have
+    opts.onProgress?.(have, file.size)
+    let tries = 0
+    while (have < file.size) {
+      if (opts.signal?.aborted) throw new DeskError({ text: 'The upload was stopped. Choose the file again to carry on where it stopped.', detail: 'aborted' }, 0)
+      const piece = file.slice(have, Math.min(file.size, have + start.chunk))
+      try {
+        const r = await call<{ have: number }>(`/api/uploads/${start.id}?offset=${have}`, { method: 'PUT', body: piece, headers: { 'content-type': 'application/octet-stream' }, signal: opts.signal })
+        have = r.have
+        tries = 0
+      } catch (e) {
+        // A dropped connection or a busy machine: ask how much arrived, and go on from there.
+        if (e instanceof DeskError && (e.status === 0 || e.status === 409 || e.status === 429 || e.status >= 500) && tries < 8 && !opts.signal?.aborted) {
+          tries++
+          await sleep(Math.min(30_000, 1000 * 2 ** tries))
+          try {
+            have = (await call<{ have: number }>(`/api/uploads/${start.id}`)).have
+          } catch {}
+          continue
+        }
+        throw e
+      }
+      opts.onProgress?.(have, file.size)
+    }
+    return call<UploadResult>(`/api/uploads/${start.id}/finish`, { method: 'POST', body: '{}', headers: { 'content-type': 'application/json' } })
+  },
+  viewTable: (path, o) => call(`/api/view/table?${qs({ path, offset: o.offset, limit: o.limit, sort: o.sort, dir: o.dir, q: o.q, sheet: o.sheet, first: o.first ? 1 : undefined })}`),
+  thumbUrl: (path) => `/api/thumb?${qs({ w: workspace() ?? '', path })}`,
+  disk: () => call<DiskUse>('/api/disk'),
   remove: async (path) => {
     await call(filePath(path), { method: 'DELETE' })
   },

@@ -47,7 +47,7 @@ import { fileURLToPath } from 'node:url'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 export const CONTAINER = process.env.OLA_CONTAINER_BIN || '/usr/local/bin/container'
-export const IMAGE = 'ola-workspace:2.3.0-16'
+export const IMAGE = 'ola-workspace:2.3.0-17'
 export const HOME = process.env.OLA_HOME || path.join(homedir(), '.ola')
 export const GATEWAY_PORT = Number(process.env.OLA_GATEWAY_PORT || 4180)
 // The gateway's door sockets, one per workspace (the gateway's GATEWAY_DOOR_DIR): each door
@@ -800,7 +800,22 @@ export async function putStream(id, name, source, { replace = false, maxBytes = 
 export async function getStream(id, rel, { headerMs = 15_000, signal } = {}) {
   validId(id)
   if (!validRel(rel)) return null
-  const child = execTool(id, 'ola-get', [rel])
+  return headed(execTool(id, 'ola-get', [rel]), { headerMs, signal })
+}
+
+/**
+ * What "Open" shows of a file, made inside the VM by ola-view (README, "Open for every kind"):
+ * `pdf-page <rel> <n>` (a PNG) and `doc <rel>` (our HTML) as { size, stream, kill } like
+ * getStream; null when the VM made nothing. The bytes are the VM's word: the front desk serves
+ * them only under a sandbox CSP, as an image or in a frame that runs no script.
+ */
+export async function viewStream(id, args, { headerMs = 120_000, signal } = {}) {
+  validId(id)
+  if (!['pdf-page', 'doc'].includes(args[0]) || !validRel(args[1])) return null
+  return headed(execTool(id, 'ola-view', args.map(String)), { headerMs, signal })
+}
+
+function headed(child, { headerMs, signal }) {
   child.stderr.resume()
   return new Promise((resolve) => {
     let head = Buffer.alloc(0)
@@ -1004,6 +1019,125 @@ export async function dbRemove(id, rel) {
   if (!validRel(rel)) return false
   const r = await collect(execTool(id, 'ola-db', ['remove', rel]), 64 * 1024)
   return r.code === 0
+}
+
+// ---------------------------------------------------------------- reading real documents (2026-11-17)
+//
+// Everything below runs a tool inside the VM and parses its one JSON answer strictly; a refusal
+// comes back as { refused: <the tool's own sentence> } (exit 3), never as a host error. The
+// sentence is the VM's word: the front desk shows it as text only.
+
+async function toolJson(id, tool, args, { ms = 60_000, max = 16 * 1024 * 1024, input } = {}) {
+  validId(id)
+  const child = execTool(id, tool, args.map(String), { stdin: input !== undefined })
+  if (input !== undefined) {
+    child.stdin.on('error', () => {})
+    child.stdin.end(input)
+  }
+  const timer = setTimeout(() => child.kill('SIGKILL'), ms)
+  const r = await collect(child, max)
+  clearTimeout(timer)
+  let x = null
+  try {
+    x = JSON.parse(lastLine(r.out))
+  } catch {}
+  return { code: r.code, json: x && typeof x === 'object' && !Array.isArray(x) ? x : null, err: lastLine(r.err).replace(/^ola-[a-z]+: /, '').slice(0, 300) }
+}
+
+/** `ola-view pdf-info|table ...`: JSON, or null when the file is not there or cannot be shown. */
+export async function viewJson(id, args, opts) {
+  if (!['pdf-info', 'table'].includes(args[0]) || !validRel(args[1])) return null
+  const r = await toolJson(id, 'ola-view', args, { ms: 120_000, ...opts })
+  return r.code === 0 ? r.json : null
+}
+
+/** A zip unpacked inside the VM (ola-unzip). { folder, files, renamed, skipped } or { refused }. */
+export async function unzip(id, rel, { maxBytes } = {}) {
+  if (!validRel(rel)) return { refused: 'not a plain path' }
+  const r = await toolJson(id, 'ola-unzip', [rel, ...(maxBytes ? ['--max-bytes', maxBytes] : [])], { ms: 30 * 60_000, max: 64 * 1024 * 1024 })
+  if (r.code === 0 && r.json && Array.isArray(r.json.files) && r.json.files.every((f) => validRel(f?.path) && Number.isSafeInteger(f.size) && /^[0-9a-f]{64}$/.test(f.sha256))) return r.json
+  return { refused: r.err || 'the zip could not be unpacked' }
+}
+
+/** A SQLite file attached read-only to the project database after its integrity check. */
+export async function dbAttach(id, rel) {
+  if (!validRel(rel)) return { refused: 'not a plain path' }
+  const r = await toolJson(id, 'ola-db', ['attach', rel], { ms: 20 * 60_000 })
+  if (r.code === 0 && r.json && typeof r.json.alias === 'string' && /^[a-z][a-z0-9_]{0,29}$/.test(r.json.alias)) return { alias: r.json.alias, tables: Number(r.json.tables) || 0 }
+  return { refused: r.err || 'the database could not be attached' }
+}
+
+/** Every document in a folder indexed (OCR included); resolves when done, true when it ran. */
+export async function dbAddFolder(id, folder, { by = 'upload', ms = 6 * 3600_000 } = {}) {
+  if (!validRel(folder)) return false
+  const child = execTool(id, 'ola-db', ['add-folder', folder, '--by', by])
+  const timer = setTimeout(() => child.kill('SIGKILL'), ms)
+  const r = await collect(child, 64 * 1024 * 1024)
+  clearTimeout(timer)
+  return r.code === 0
+}
+
+/** The project's disk: volume size, use, and what takes the room (ola-db api disk). */
+export async function disk(id) {
+  const r = await toolJson(id, 'ola-db', ['api', 'disk'], { ms: 30_000 })
+  const x = r.json
+  if (r.code !== 0 || !x || !['total', 'used', 'free', 'files', 'data', 'ola'].every((k) => Number.isSafeInteger(x[k]) && x[k] >= 0)) refuse('the workspace did not report its disk', 'DB_FAILED')
+  return { total: x.total, used: x.used, free: x.free, files: x.files, data: x.data, ola: x.ola }
+}
+
+// A large upload in pieces (ola-put --chunk): resumable, each piece hashed on both sides.
+const UID = /^[0-9a-f]{32}$/
+export async function putChunk(id, uid, offset, source, { maxBytes = Infinity } = {}) {
+  validId(id)
+  if (!UID.test(uid) || !Number.isSafeInteger(offset) || offset < 0) refuse('bad upload piece')
+  const child = execTool(id, 'ola-put', ['--chunk', uid, '--offset', String(offset)], { stdin: true })
+  const done = collect(child, 64 * 1024)
+  child.stdin.on('error', () => {})
+  const sha = createHash('sha256')
+  let size = 0
+  let broken = false
+  try {
+    for await (const chunk of source) {
+      size += chunk.length
+      if (size > maxBytes) {
+        broken = true
+        break
+      }
+      sha.update(chunk)
+      if (!child.stdin.write(chunk)) await new Promise((r) => (child.stdin.once('drain', r), child.once('close', r)))
+      if (child.exitCode !== null) break
+    }
+  } catch {
+    broken = true
+  } finally {
+    if (broken) child.kill('SIGKILL')
+    else child.stdin.end()
+  }
+  const r = await done
+  let x = null
+  try {
+    x = JSON.parse(lastLine(r.out))
+  } catch {}
+  if (r.code === 5 && Number.isSafeInteger(x?.have)) return { have: x.have, mismatch: true }
+  if (broken) throw Object.assign(new Refusal('the piece did not arrive whole'), { code: 'ABORTED' })
+  if (r.code !== 0 || !Number.isSafeInteger(x?.have) || x.sha256 !== sha.digest('hex') || x.have !== offset + size) refuse('the workspace did not take the piece')
+  return { have: x.have }
+}
+export async function uploadStatus(id, uid) {
+  if (!UID.test(uid)) return null
+  const r = await toolJson(id, 'ola-put', ['--status', uid], { ms: 15_000 })
+  return r.code === 0 && Number.isSafeInteger(r.json?.have) ? r.json.have : null
+}
+export async function finishUpload(id, uid, name, { replace = false } = {}) {
+  if (!UID.test(uid) || !UPLOAD_NAME.test(name)) refuse('bad upload')
+  const r = await toolJson(id, 'ola-put', ['--finish', uid, name, ...(replace ? ['--replace'] : [])], { ms: 10 * 60_000 })
+  if (r.code === 3) throw Object.assign(new Refusal(`${name}: a file with that name is already in the workspace`), { code: 'EXISTS' })
+  if (r.code !== 0 || r.json?.name !== name || !Number.isSafeInteger(r.json?.size) || !/^[0-9a-f]{64}$/.test(r.json?.sha256 ?? '')) refuse('the workspace did not finish the upload')
+  return { name, size: r.json.size, sha256: r.json.sha256 }
+}
+export async function abortUpload(id, uid) {
+  if (!UID.test(uid)) return false
+  return (await toolJson(id, 'ola-put', ['--abort', uid], { ms: 15_000 })).code === 0
 }
 
 // ---------------------------------------------------------------- snapshots (backups)

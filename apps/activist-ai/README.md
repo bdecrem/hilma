@@ -228,10 +228,10 @@ VM's memory, so bounded by it) are the only places anything can be written. Befo
 512 GiB sparse image on the host, outside the volume's limit, invisible to `files`, and kept across
 `stop`. The agent runs as `work` (uid 1000) with no capabilities (`--cap-drop ALL`), no sudo, and no
 setuid or setgid program in the image (Debian's `su`, `passwd`, `mount` and the rest are stripped). Image: Debian bookworm-slim pinned by digest, opencode 2.3.0 checked
-against npm's sha512, python3, socat, nothing else (no curl, no CA bundle, no ssh). Image tag `ola-workspace:2.3.0-16` (2.3.0-16: `ola-batch`, batch jobs, see [Batch jobs](#batch-jobs-the-same-question-for-every-document-2026-11-17); 2.3.0-15: Ola's skills at `/opt/ola/skills`, a system config that makes them the only ones, their libraries, and `ola-page`, see [Skills and seeing pages](#skills-and-seeing-pages-image-230-15); 2.3.0-13: no project config, review 4; 2.3.0-12: the reactions rule in `AGENTS.md`; 2.3.0-10: the model `hosted`; 2.3.0-8: the project database and the web tools; 2.3.0-7 and 2.3.0-6: Claude Code and `ola-claude`, see [Fallback to Claude](#fallback-to-claude-2026-11-16); 2.3.0-5: Ola's standing instructions to the agent, `workspace/AGENTS.md`, say it is in a sealed box with no browser, preview pane or desktop app and that people see its pages under Files with Open; the desktop app's `browser` tool is denied; a stopped workspace made from an older image is made again from the current one at its next start, same volume and secrets. 2.3.0-3 added `ola-get` and `ola-rm` for the front desk's downloads and deletes, and a file's mtime in `ola-files`; 2.3.0-4: `ola-get` opens with `O_NONBLOCK` and refuses anything but a regular file at once, so a FIFO the agent makes cannot hold a download).
+against npm's sha512, python3, socat, nothing else (no curl, no CA bundle, no ssh). Image tag `ola-workspace:2.3.0-17` (2.3.0-17: Tesseract, olatext and the document tools, see "Reading real documents"; 2.3.0-16: `ola-batch`, batch jobs, see [Batch jobs](#batch-jobs-the-same-question-for-every-document-2026-11-17); 2.3.0-15: Ola's skills at `/opt/ola/skills`, a system config that makes them the only ones, their libraries, and `ola-page`, see [Skills and seeing pages](#skills-and-seeing-pages-image-230-15); 2.3.0-13: no project config, review 4; 2.3.0-12: the reactions rule in `AGENTS.md`; 2.3.0-10: the model `hosted`; 2.3.0-8: the project database and the web tools; 2.3.0-7 and 2.3.0-6: Claude Code and `ola-claude`, see [Fallback to Claude](#fallback-to-claude-2026-11-16); 2.3.0-5: Ola's standing instructions to the agent, `workspace/AGENTS.md`, say it is in a sealed box with no browser, preview pane or desktop app and that people see its pages under Files with Open; the desktop app's `browser` tool is denied; a stopped workspace made from an older image is made again from the current one at its next start, same volume and secrets. 2.3.0-3 added `ola-get` and `ola-rm` for the front desk's downloads and deletes, and a file's mtime in `ola-files`; 2.3.0-4: `ola-get` opens with `O_NONBLOCK` and refuses anything but a regular file at once, so a FIFO the agent makes cannot hold a download).
 
 ```bash
-node workspace/ws.mjs image                    # build ola-workspace:2.3.0-16 (a 600 MB download the first time; --missing: only if absent)
+node workspace/ws.mjs image                    # build ola-workspace:2.3.0-17 (a 600 MB download the first time; --missing: only if absent)
 node workspace/ws.mjs create alice             # 4 CPUs, 6 GiB, 50 GiB: the ceilings
 node workspace/ws.mjs create test --memory 1g --disk 1g --cpus 1   # lower only; higher is refused
 node workspace/ws.mjs start alice              # opens the door, boots, waits for opencode
@@ -1450,6 +1450,108 @@ measurements.
 **With and without:** `evals/run.mjs --skills on|off` runs a task with the skills offered or with the
 session denied every skill, and `evals/skills-report.mjs` puts the two side by side, per skill, over
 eight tasks (`s1` to `s8`, two per skill). Numbers in `evals/results/summary-skills.json`.
+
+## Reading real documents (2026-11-17, image 2.3.0-17)
+
+Everything here runs inside the project's sealed VM; the host only moves bytes and parses one
+strict JSON answer per tool (`ws.mjs`: `unzip`, `dbAttach`, `dbAddFolder`, `disk`, `putChunk`,
+`viewJson`, `viewStream`). Proofs: `workspace/check-docs.mjs` (part of `workspace/check.mjs`; also
+runs alone on a small workspace of its own) on files `workspace/testdata/mkdocs.py` makes up inside
+the VM.
+
+- **One shared text cleaner: `workspace/lib/olatext.py`** (in the image at `/opt/ola/lib/olatext.py`).
+  `clean()` is how text is stored (NUL and control characters gone, ligatures unfolded by NFKC, a
+  word broken by a hyphen at a line end joined, spaces collapsed); `match_key()` and
+  `find_quote(quote, text)` compare a quote with a page the same way (case, curly quotes, dashes,
+  any line-end hyphen, whitespace; `...` gaps in order); `decode_bytes()` is the charset repair.
+  **The batch runner's quote check imports these and nothing else**: `sys.path.insert(0,
+  "/opt/ola/lib"); from olatext import find_quote` (our tools run `python3 -I`, so the path is set by
+  hand; on a developer machine `ola-db` and `ola-view` fall back to `workspace/lib`).
+- **Text in reading order.** `ola-db` reads PDFs with poppler's default mode, no longer `-layout`.
+  Measured on made-up papers (`testdata/measure-order.py`, run by the check): of 14 sentences in a
+  two-column paper, `-layout` kept **0** whole (it sets the columns side by side on each line), the
+  default mode **14**, `-raw` 14; a one-column paper 7 of 7 in every mode. Page numbers are the PDF's
+  own pages (`doc_text.page`, from page 1), so a citation names the page a reader sees. Made-up
+  papers are simpler than real ones: measure on real ones before trusting the number further.
+- **Scanned pages.** A page with under 40 characters of text and a picture on it (`pdfimages`) is
+  rendered at 300 dpi and read by **Tesseract 5.3** (Debian's packs: English, Spanish, French,
+  Portuguese, German, Russian, Arabic, Chinese simplified and traditional, Hebrew, Norwegian,
+  Filipino, and the script detector, which picks the languages per page; `--ocr-lang` overrides).
+  At most 400 OCR pages per document (`OLA_MAX_OCR_PAGES`). Each page's method is in the new
+  `doc_pages` table (`text`, `ocr`, `ocr-model`, `empty`, with Tesseract's mean confidence), and
+  `documents.ocr_pages` counts them; `ola-db search` says "read from a scan, so words may be wrong",
+  the Data tab marks those documents, Open marks those pages. Measured: two scanned pages in 3 s,
+  confidence 96, every sentence quotable. **The image grew by 27 MB** (370 to 397 MB). **Where a
+  model would read the page instead:** `ocr_page()` in `ola-db` calls `ola-ocr <page.png>` (text on
+  stdout) when `OLA_OCR_ENGINE=model` and the command is in the image, marks the page `ocr-model`,
+  and falls back to Tesseract when it fails; Tesseract is the default.
+- **Is this the right document?** `ola-db check <file> --title … --doi … --authors … | --cite "a
+  citation"` (and `ola-db add`/`ola-fetch` with `--expect-title`, `--expect-doi`, `--expect-cite`):
+  the title's words on the first two pages, the DOI on the first three (another DOI there is a
+  mismatch), the authors' surnames, and a one- or two-page file where more were expected (a
+  preview). Result `match`, `mismatch` (exit 6, and a warning the agent must pass on) or `unsure`,
+  kept in `documents.check_result`/`check_detail` and shown in the Data tab.
+- **Charset repair.** Byte order mark, then the declared charset (HTTP header from `ola-fetch`,
+  `<meta charset>`, `<?xml encoding?>`; Latin-1 and ASCII read as Windows-1252, as browsers do),
+  then valid UTF-8, then UTF-16 without a mark, then the language's code page (`--lang`), else the
+  code page whose letters make words. Proved on Latin-1, Windows-1252 with no declaration, UTF-16
+  with no mark, Hebrew in Windows-1255 (declared) and ISO-8859-8 (not declared). CSV and TSV loads
+  use it too; NUL characters are dropped.
+- **A library at once.** Uploads over 8 MiB, and every zip and database, go **in pieces**
+  (`POST /api/uploads` {name, size} → `PUT /api/uploads/<id>?offset=N` pieces of `OLA_FD_CHUNK_MB`
+  (8) → `POST /api/uploads/<id>/finish`): each piece must start where the VM's part ends (409 with
+  what it has otherwise), is hashed on both sides, and the same file again (name and size) carries on
+  where it stopped; the page shows the progress and retries a dropped piece. Up to
+  `OLA_FD_MAX_LIBRARY_MB` (4096) and never past 90% of the project's free space (507 says how much
+  room is left). The parts wait in `/work/.ola/uploads` (cleared after two days); a front desk
+  restart forgets the uploads under way, and the page starts again.
+  A **zip** is unpacked by `ola-unzip` into a new folder (a zip of one folder becomes that folder):
+  refused whole, with nothing written, on an entry that climbs out (`..`, an absolute path, either
+  slash), a symbolic link, a password, more than 10,000 entries, more than 8 GiB or 90% of the free
+  space unpacked, an entry that grows more than 200 times past 10 MB, an entry that holds more than
+  its header says, folders more than 5 deep; `__MACOSX` and dot files left out; odd names made plain
+  (`Résumé [draft].pdf` → `Resume -draft-.pdf`); files mode 644; a zip inside stays a file. A refused
+  zip is kept as inert bytes and the page says why. The unpacked files count as the person's uploads
+  and every document in them is indexed (`ola-db add-folder`, OCR included) in the background.
+  A **SQLite database** (`.db`, `.sqlite`) is attached read-only (`ola-db attach`) after `PRAGMA
+  integrity_check`: its tables are in the Data tab as `<name>.<table>` (browsable, downloadable as
+  Excel), every connection opens it `mode=ro` with `trusted_schema=OFF` (a view that calls
+  `load_extension` fails) and `cell_size_check=ON`; a damaged file or one that is not a database is
+  refused and kept as a file. Nothing a file contains is ever treated as an instruction.
+- **The project's room**, in Settings (`GET /api/disk`, `ola-db api disk`): the volume's size, use and
+  free space, and what takes it: files (of which uploaded), Data, and Ola's own notes. No names.
+
+## Open for every kind (2026-11-17)
+
+Open, in the web app, for everything Ola makes or holds (`frontdesk/views.mjs`, which explains each
+layer; the Mac and iPhone apps are separate work). Every kind keeps the page's protections: a grant
+tied to the session and the membership (ends at sign-out, revocation, expiry, idle, removal), a
+wrapper of ours with no script, nothing of the file under our origin's rights, `page_opened` in the
+audit log with the keyed name hash only. What differs is that nothing of these kinds may run, so
+their grants are stricter than a page's (CSP `sandbox` with no `allow-scripts`) and serve only the
+one thing the wrapper shows, as what it is:
+
+| Kind | What Open shows | How |
+|---|---|---|
+| Picture (png, jpeg, gif, webp, svg) | the picture, fitted | `<img>` from `/v/<grant>/<file>`, images only (`Sec-Fetch-Dest: image`); an SVG is never a document, so its scripts and outside images do nothing |
+| PDF | every page, the cited one marked, with the text Ola has of each and a mark on scanned pages | **pages rendered to PNG in the VM** (`ola-view pdf-page`, poppler), never the PDF itself; `/api/open?…&page=N#page-N` scrolls to the page with no script |
+| Word, Markdown, text | a readable page | our own HTML written in the VM (`ola-view doc`), shown in a frame with `sandbox=""`; no template, picture or link of the file is fetched or kept as a link |
+| CSV, TSV, Excel | the Data tab's table browser, paged, sortable, searchable, sheets as tabs | `/?w=…#/table?path=` in the app; rows from `GET /api/view/table` (`ola-view table`, a cache per file); formulas shown as text, never evaluated |
+| HTML | as before | |
+
+**Why PDFs are pictures, not pdf.js:** the PDF parser then meets the hostile file only inside the
+sealed VM, the same in every browser, with no JavaScript in the PDF that could run and no 2 MB
+viewer to keep patched. The cost: no selecting text on the picture (the text of each page is under
+it instead). On the home and under a reply, `/api/thumb` answers image requests only (a PDF's first
+page, a picture as it is) under `sandbox` CSP.
+
+In the conversation, under each reply: the pictures the run made or changed, **shown inline**
+(up to three, fitted to the column, click for full size; an SVG only ever through `<img>`), then
+an **Open \<name\>** for every other kind. A citation in the agreed form, written in
+`workspace/AGENTS.md` as `[report.pdf, p. 14](doc:report.pdf#page=14)`, becomes a link that opens
+the file at that page (`web/src/lib/cite.ts`; any other link form stays text). The project home
+lists what Ola made in groups: Pages, Charts and images, Tables, Documents. AGENTS.md also asks for
+drawings to be drawn in code as SVG.
 
 ## Where the data lives (for someone who knows Supabase)
 

@@ -137,15 +137,45 @@ export function DataView() {
   )
 }
 
-function TableBrowser(props: { table: DataTable; onClose: () => void; headRef: (el: HTMLHeadingElement) => void }) {
+/** Open on a CSV or Excel file: the same table browser, its rows read from the file inside the
+ * VM (GET /api/view/table), its sheets as tabs. Cells are shown as text; formulas as written. */
+export function FileTableView(props: { path: string }) {
+  let head: HTMLHeadingElement | undefined
+  queueMicrotask(() => head?.focus())
+  const table = (): DataTable => ({ name: props.path, kind: 'table', rows: 0, columns: [], description: null, source: props.path, created: null, updated: null })
+  return (
+    <section class="files-sheet data-sheet" aria-label={props.path}>
+      <div class="files-inner">
+        <TableBrowser table={table()} file={props.path} headRef={(el) => (head = el)} />
+      </div>
+    </section>
+  )
+}
+
+function TableBrowser(props: { table: DataTable; onClose?: () => void; headRef: (el: HTMLHeadingElement) => void; file?: string }) {
   const [offset, setOffset] = createSignal(0)
   const [sort, setSort] = createSignal<{ col: string; dir: 'asc' | 'desc' } | null>(null)
   const [q, setQ] = createSignal('')
   const [typed, setTyped] = createSignal('')
+  const [sheet, setSheet] = createSignal<string | null>(null)
+  let first = true
   const [page] = createResource(
-    () => ({ name: props.table.name, offset: offset(), sort: sort(), q: q() }),
-    (k) => desk.table(k.name, { offset: k.offset, limit: PAGE, sort: k.sort?.col, dir: k.sort?.dir, q: k.q || undefined }),
+    () => ({ name: props.table.name, offset: offset(), sort: sort(), q: q(), sheet: sheet() }),
+    (k) => {
+      const o = { offset: k.offset, limit: PAGE, sort: k.sort?.col, dir: k.sort?.dir, q: k.q || undefined }
+      if (!props.file) return desk.table(k.name, o)
+      const once = first
+      first = false
+      return desk.viewTable(props.file, { ...o, sheet: k.sheet ?? undefined, first: once })
+    },
   )
+  const sheets = () => (shown() as (TablePage & { sheets?: string[] | null; sheet?: string | null }) | null)?.sheets ?? null
+  const currentSheet = () => (shown() as (TablePage & { sheet?: string | null }) | null)?.sheet ?? null
+  const pick = (s: string) => {
+    setSheet(s)
+    setSort(null)
+    setOffset(0)
+  }
   // Keep the last page on screen while the next one loads, so the table does not jump.
   const [shown, setShown] = createSignal<TablePage | null>(null)
   createEffect(() => {
@@ -165,23 +195,51 @@ function TableBrowser(props: { table: DataTable; onClose: () => void; headRef: (
   const numeric = (type: string) => /INT|REAL|NUM|FLOA|DOUB/i.test(type)
   return (
     <section class="table-browser" aria-labelledby="table-title">
-      <button type="button" class="link-button on-paper" onClick={props.onClose}>
-        <Icon name="back" size={16} /> All tables and documents
-      </button>
+      <Show when={props.onClose}>
+        <button type="button" class="link-button on-paper" onClick={() => props.onClose!()}>
+          <Icon name="back" size={16} /> All tables and documents
+        </button>
+      </Show>
       <div class="table-head">
         <div>
           <h2 id="table-title" class="table-title" ref={props.headRef} tabindex="-1">
             {props.table.name}
           </h2>
-          <p class="table-sub">
-            {props.table.description ? `${props.table.description} · ` : ''}
-            {num(props.table.rows)} rows · {machineCoded(props.table) ? 'machine-coded by a job Ola ran, not source data' : props.table.source === 'made by Ola' || !props.table.source ? 'made by Ola' : `from ${props.table.source}`}
-          </p>
+          <Show
+            when={!props.file}
+            fallback={<p class="table-sub">{shown() ? `${num(shown()!.total)} rows · ` : ''}a file in this project, shown as rows. Formulas are shown as they are written; nothing in the file runs.</p>}
+          >
+            <p class="table-sub">
+              {props.table.description ? `${props.table.description} · ` : ''}
+              {props.table.rows === null || props.table.rows === undefined ? 'rows not counted' : `${num(props.table.rows)} rows`} ·{' '}
+              {props.table.attached ? `from ${props.table.source}, a database you brought (read-only)` : machineCoded(props.table) ? 'machine-coded by a job Ola ran, not source data' : props.table.source === 'made by Ola' || !props.table.source ? 'made by Ola' : `from ${props.table.source}`}
+            </p>
+          </Show>
         </div>
-        <a class="ghost-button on-paper small" href={desk.excelUrl(props.table.name)} download={`${props.table.name}.xlsx`}>
-          <Icon name="down" size={16} /> Download as Excel
-        </a>
+        <Show
+          when={!props.file}
+          fallback={
+            <a class="ghost-button on-paper small" href={desk.downloadUrl(props.file!)} download={props.file!.split('/').pop()}>
+              <Icon name="down" size={16} /> Download the file
+            </a>
+          }
+        >
+          <a class="ghost-button on-paper small" href={desk.excelUrl(props.table.name)} download={`${props.table.name}.xlsx`}>
+            <Icon name="down" size={16} /> Download as Excel
+          </a>
+        </Show>
       </div>
+      <Show when={(sheets()?.length ?? 0) > 1}>
+        <div class="sheet-tabs" role="group" aria-label="Sheets">
+          <For each={sheets()!}>
+            {(s) => (
+              <button type="button" class="sheet-tab" aria-pressed={s === currentSheet()} onClick={() => pick(s)}>
+                {s}
+              </button>
+            )}
+          </For>
+        </div>
+      </Show>
       <form class="data-search" role="search" onSubmit={search}>
         <label for="table-q">Search this table</label>
         <div class="data-search-row">
@@ -305,6 +363,15 @@ function Documents(props: { total: number; pages: number }) {
                         <p class="hit-where">
                           <strong>{h.title}</strong>
                           {h.unit === 'part' ? (h.page > 1 ? ` · part ${h.page}` : '') : ` · ${h.unit} ${h.page}`}
+                          <Show when={/\.pdf$/i.test(h.path)}>
+                            {' · '}
+                            <a href={desk.openUrl(h.path, h.page)} target="_blank" rel="noopener noreferrer">
+                              Open at page {h.page}
+                            </a>
+                          </Show>
+                          <Show when={h.method?.startsWith('ocr')}>
+                            <span class="doc-flag scan inline">read from a scan: some words may be wrong</span>
+                          </Show>
                         </p>
                         <p class="hit-text">
                           <Marked text={h.snip} />
@@ -347,6 +414,12 @@ function Documents(props: { total: number; pages: number }) {
                             <span>{d.title}</span>
                           </span>
                           <span class="file-meta">{d.path}</span>
+                          <Show when={d.ocr_pages}>
+                            <span class="doc-flag scan">{d.ocr_pages === d.pages ? 'Read from a scan' : `${count(d.ocr_pages!, 'page')} read from a scan`}: some words may be wrong.</span>
+                          </Show>
+                          <Show when={d.check_result === 'mismatch'}>
+                            <span class="doc-flag wrong">May not be the document wanted: {d.check_detail}.</span>
+                          </Show>
                         </td>
                         <td class="num">{unitWord(d.unit, d.pages, d.chars ?? 0)}</td>
                         <td class="data-source">

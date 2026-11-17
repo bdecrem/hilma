@@ -1,9 +1,9 @@
 // The project's things, each as paper on the desk: a header band (icon, title, who made it and
 // when) and a body that shows the thing itself, never a thumbnail too small to read.
-import { For, Match, Show, Switch } from 'solid-js'
-import type { Byline, ChartThing, DashboardThing, DocumentThing, FileEntry, SiteThing, TableThing, Thing } from '../lib/types.ts'
+import { createSignal, For, Match, Show, Switch } from 'solid-js'
+import type { Byline, ChartThing, DashboardThing, DocumentThing, FileDocThing, FileEntry, ImageThing, SiteThing, TableThing, Thing } from '../lib/types.ts'
 import { bytes, count, when } from '../lib/format.ts'
-import { desk } from '../lib/api.ts'
+import { canOpen, desk } from '../lib/api.ts'
 import { Icon } from './Icon.tsx'
 
 function byline(b: Byline): string {
@@ -66,9 +66,45 @@ export function ThingCard(props: { thing: Thing }) {
           <Match when={t().kind === 'site'}>
             <Site thing={t() as SiteThing} />
           </Match>
+          <Match when={t().kind === 'image'}>
+            <Picture thing={t() as ImageThing} />
+          </Match>
+          <Match when={t().kind === 'filedoc'}>
+            <FileDoc thing={t() as FileDocThing} />
+          </Match>
         </Switch>
       </div>
     </article>
+  )
+}
+
+// A picture Ola made, as itself: loaded as an image only (/api/thumb answers nothing else), so an
+// SVG's scripts never run. Open shows it full size.
+function Picture(props: { thing: ImageThing }) {
+  const [failed, setFailed] = createSignal(false)
+  return (
+    <a class="pic-frame" href={desk.openUrl(props.thing.file!)} target="_blank" rel="noopener noreferrer">
+      <Show when={!failed()} fallback={<span class="pic-missing">This picture could not be shown here. Open or Download it.</span>}>
+        <img src={desk.thumbUrl(props.thing.file!)} alt={props.thing.alt} loading="lazy" onError={() => setFailed(true)} />
+      </Show>
+      <span class="sr-only">Open {props.thing.title} in a new tab</span>
+    </a>
+  )
+}
+
+// A PDF or a Word file Ola made: a PDF's first page as a picture; Open shows every page.
+function FileDoc(props: { thing: FileDocThing }) {
+  const [failed, setFailed] = createSignal(false)
+  return (
+    <div class="filedoc">
+      <Show when={props.thing.format === 'PDF' && !failed()}>
+        <a class="filedoc-page" href={desk.openUrl(props.thing.file!)} target="_blank" rel="noopener noreferrer">
+          <img src={desk.thumbUrl(props.thing.file!)} alt={`The first page of ${props.thing.title}`} loading="lazy" onError={() => setFailed(true)} />
+          <span class="sr-only">Open {props.thing.title} in a new tab</span>
+        </a>
+      </Show>
+      <p class="site-summary">{props.thing.format === 'PDF' ? 'A PDF Ola made. Open shows its pages here, one under the other.' : 'A Word document Ola made. Open shows it as a readable page; Download has the file to edit.'}</p>
+    </div>
   )
 }
 
@@ -176,6 +212,8 @@ function Chart(props: { thing: ChartThing }) {
 
 function Table(props: { thing: TableThing }) {
   const t = () => props.thing
+  // An Excel file is not read for the home: its note says Open shows it.
+  if (!props.thing.columns.length) return <p class="site-summary">{props.thing.note}</p>
   return (
     <div class="table-wrap" tabindex="0" role="region" aria-label={`${t().title}, table`}>
       <table class="data">
@@ -240,9 +278,16 @@ export function OtherFiles(props: { files: FileEntry[]; total: number; hasThings
               <span class="other-meta">
                 {bytes(f.size)} · {f.origin === 'uploaded' ? 'you uploaded' : 'Ola made'} · {when(f.uploaded ?? f.modified)}
               </span>
-              <a class="other-action" href={desk.downloadUrl(f.path)} download={f.path.split('/').pop()}>
-                Download<span class="sr-only"> {f.path}</span>
-              </a>
+              <span class="other-actions">
+                <Show when={canOpen(f.path)}>
+                  <a class="other-action" href={desk.openUrl(f.path)} target="_blank" rel="noopener noreferrer">
+                    Open<span class="sr-only"> {f.path} in a new tab</span>
+                  </a>
+                </Show>
+                <a class="other-action" href={desk.downloadUrl(f.path)} download={f.path.split('/').pop()}>
+                  Download<span class="sr-only"> {f.path}</span>
+                </a>
+              </span>
             </li>
           )}
         </For>
@@ -255,6 +300,15 @@ export function OtherFiles(props: { files: FileEntry[]; total: number; hasThings
     </section>
   )
 }
+
+/** The home's groups, in order: what Ola made, by kind. A kind with nothing in it is left out. */
+export const THING_GROUPS: { key: string; title: string; kinds: Thing['kind'][] }[] = [
+  { key: 'pages', title: 'Pages', kinds: ['site', 'dashboard'] },
+  { key: 'charts', title: 'Charts and images', kinds: ['chart', 'image'] },
+  { key: 'tables', title: 'Tables', kinds: ['table'] },
+  { key: 'documents', title: 'Documents', kinds: ['document', 'filedoc'] },
+]
+export const groupThings = (things: Thing[]) => THING_GROUPS.map((g) => ({ ...g, things: things.filter((t) => g.kinds.includes(t.kind)) })).filter((g) => g.things.length)
 
 /** A project with nothing in it yet says so, and points at Ask Ola. */
 export function EmptyProject(props: { canRun: boolean; onAsk: () => void; onAddFiles: () => void }) {

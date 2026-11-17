@@ -19,7 +19,7 @@
 // Pages the agent builds are never served as documents of this origin: "Open" shows them under
 // /v/<grant>/ with an opaque origin, a path-limited CSP and a wrapper that holds their navigation
 // (views.mjs, which says why); a separate origin per workspace comes later (README).
-import { createHash } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import fs from 'node:fs'
 import http from 'node:http'
 import net from 'node:net'
@@ -61,6 +61,10 @@ export function config(env = process.env) {
     data: env.OLA_FD_DATA ?? path.join(os.homedir(), '.ola-frontdesk'),
     dist: env.OLA_FD_DIST ?? path.join(HERE, '../web/dist'),
     maxUpload: num('OLA_FD_MAX_UPLOAD_MB', 50, 1, 1024) * 1024 * 1024,
+    // A file that comes in pieces (resumable; a library zip, a large database): up to this size,
+    // and never past the project's free space (2026-11-17).
+    maxLibrary: num('OLA_FD_MAX_LIBRARY_MB', 4096, 1, 65_536) * 1024 * 1024,
+    chunkBytes: num('OLA_FD_CHUNK_MB', 8, 1, 64) * 1024 * 1024,
     session: { absoluteMs: num('OLA_FD_SESSION_HOURS', 14 * 24, 1, 90 * 24) * 3600_000, idleMs: num('OLA_FD_IDLE_HOURS', 24, 0.01, 30 * 24) * 3600_000 },
     limits: signinLimits(num('OLA_FD_SIGNIN_BURST', 10, 1, 1000), num('OLA_FD_SIGNIN_PER_MIN', 10, 1, 1000)),
     // The client address: the socket's peer, or with the PROXY protocol (v1) the one the relay in
@@ -264,18 +268,35 @@ export function makeFrontDesk(cfg = config()) {
   // so an unchanged file is not read again (review of 2026-11-16, M4: one exec per file, every
   // page load, unbounded).
   const MAX_THINGS = 12
+  // A page's or a CSV's first bytes as text, by the charset it declares (a Windows-1252 or Hebrew
+  // page's <title> showed as "D�cision" read as UTF-8), else UTF-8, else Windows-1252: the order
+  // of workspace/lib/olatext.py, for the few bytes the home reads on the host.
+  function decodeText(buf) {
+    const head = buf.subarray(0, 4096).toString('latin1')
+    const declared = /<meta[^>]+charset\s*=\s*["']?\s*([A-Za-z0-9_:.-]{2,40})/i.exec(head)?.[1]
+    for (const enc of [declared, 'utf-8']) {
+      if (!enc) continue
+      try {
+        return new TextDecoder(/^(iso-8859-1|latin-?1|us-ascii|ascii)$/i.test(enc) ? 'windows-1252' : enc, { fatal: true }).decode(buf, { stream: true }) // stream: a character cut at the 32 KiB end is not an error
+      } catch {}
+    }
+    return new TextDecoder('windows-1252').decode(buf)
+  }
   const texts = new Map() // `${slug}\0${path}\0${sha}` -> text
   async function madeThings(ws, entries) {
+    // Pictures, PDFs and Word files Ola made are things too (2026-11-17); only pages, CSVs and
+    // Markdown are read (and so capped at 1 MiB).
+    const needsText = (f) => /\.(html?|csv|md)$/i.test(f.path)
     const picks = entries
-      .filter((f) => isThingFile(f) && f.size <= 1024 * 1024)
+      .filter((f) => isThingFile(f) && (!needsText(f) || f.size <= 1024 * 1024))
       .sort((a, b) => b.modified.localeCompare(a.modified) || a.path.localeCompare(b.path))
       .slice(0, MAX_THINGS)
     const key = (f) => `${ws.slug}\0${f.path}\0${shas.get(`${ws.slug}\0${f.path}`) ?? '?'}`
-    const missing = picks.filter((f) => !texts.has(key(f)))
+    const missing = picks.filter((f) => needsText(f) && !texts.has(key(f)))
     if (missing.length) {
       const got = await workspaces.peek(ws.slug, missing.map((f) => f.path), 32 * 1024)
       if (texts.size > 2000) texts.clear()
-      for (const f of missing) if (got.has(f.path)) texts.set(key(f), got.get(f.path).toString('utf8'))
+      for (const f of missing) if (got.has(f.path)) texts.set(key(f), decodeText(got.get(f.path)))
     }
     return derivedThings({ list: async () => picks, readText: async (rel) => texts.get(key(picks.find((f) => f.path === rel))) ?? null })
   }
@@ -473,6 +494,26 @@ export function makeFrontDesk(cfg = config()) {
       }
     }
 
+    // Reading real documents and Open for every kind (2026-11-17): a table's rows, a thumbnail,
+    // the project's disk, and uploads in pieces. Each holds one transfer slot while it runs.
+    if (p === '/api/view/table' || p === '/api/thumb' || p === '/api/disk' || p.startsWith('/api/uploads')) {
+      if (p.startsWith('/api/uploads') && !canRun) return json(res, 403, readOnly)
+      const piece = p.startsWith('/api/uploads/') && req.method === 'PUT'
+      const declared = Number(req.headers['content-length'] ?? NaN)
+      if (piece && (!Number.isSafeInteger(declared) || declared < 0)) return json(res, 411, { error: 'length_required', message: 'The upload did not say its size. Try again from the page.' })
+      if (piece && declared > cfg.chunkBytes) return json(res, 413, { error: 'too_large', message: 'That piece is larger than Ola takes at once. Reload the page and try again.' })
+      const slot = takeSlot(sess.personId, ws.slug, piece ? { upload: true, bytes: declared } : {})
+      if (!slot) return json(res, 429, tooMany, { 'retry-after': '5' })
+      const busy = workspaces.holdBusy(ws.slug)
+      try {
+        await workspaces.ensureRunning(ws.slug)
+        return await documentRoute(req, res, sess, ws, url, p, hold)
+      } finally {
+        slot.release()
+        busy()
+      }
+    }
+
     // Every other route runs at least one `container exec`: one transfer slot each.
     const upload = p === '/api/files' && req.method === 'POST'
     let slot = null
@@ -495,6 +536,175 @@ export function makeFrontDesk(cfg = config()) {
       slot.release()
       busy()
     }
+  }
+
+  // ---------------------------------------------------------------- documents (2026-11-17)
+  //
+  // What happens to a file once it is in the project, whichever way it came (one request or in
+  // pieces), all of it inside the VM: a zip is unpacked into a folder (ola-unzip: bombs, paths
+  // that climb out, links and absurd counts refused, with the zip kept as a plain file), a SQLite
+  // database is attached read-only to the project's data after its integrity check, a document
+  // is indexed (OCR for scanned pages). The answer says which, in words the page shows as text.
+  async function afterUpload(ws, sess, name) {
+    if (/\.zip$/i.test(name)) {
+      const z = await workspaces.unzip(ws.slug, name)
+      if (z.refused) return { refused: `${name} was not unpacked: ${z.refused}. It is kept as it is, as a file nothing opens.` }
+      const at = Date.now()
+      const ins = db.prepare('INSERT INTO uploads (workspace_id, name_ref, sha256, size, at) VALUES (?, ?, ?, ?, ?) ON CONFLICT (workspace_id, name_ref) DO UPDATE SET sha256 = excluded.sha256, size = excluded.size, at = excluded.at')
+      for (const f of z.files) {
+        ins.run(ws.id, nameRef(keys, ws.id, f.path), f.sha256, f.size, at)
+        audit(db, { actor: sess.personId, action: 'file_uploaded', workspace: ws.id, nameRef: nameRef(keys, ws.id, f.path), sha256: f.sha256, size: f.size })
+      }
+      // The zip itself goes: its files are in the folder now.
+      if (await workspaces.removeFile(ws.slug, name).catch(() => false)) db.prepare('DELETE FROM uploads WHERE workspace_id = ? AND name_ref = ?').run(ws.id, nameRef(keys, ws.id, name))
+      const done = workspaces.holdBusy(ws.slug)
+      workspaces.dbAddFolder(ws.slug, z.folder).then((ok) => ok || log(`${ws.slug}: an unpacked folder could not be indexed`)).finally(done)
+      return { unpacked: { folder: z.folder, files: z.files.length, renamed: z.renamed?.length ?? 0, skipped: z.skipped ?? 0 } }
+    }
+    if (/\.(db|sqlite|sqlite3)$/i.test(name)) {
+      const a = await workspaces.dbAttach(ws.slug, name)
+      if (a.refused) return { refused: `${name} was not added to Data: ${a.refused}.` }
+      return { attached: a }
+    }
+    if (workspaces.isDocument(name)) {
+      // Recorded and indexed in the project database, as one Ola downloads is. Not awaited: a
+      // long PDF takes seconds, a scanned one longer.
+      const done = workspaces.holdBusy(ws.slug)
+      workspaces.dbAdd(ws.slug, name, { by: 'upload', ms: 30 * 60_000 }).then((ok) => ok || log(`${ws.slug}: an upload could not be indexed`)).finally(done)
+    }
+    return {}
+  }
+
+  // Uploads in pieces: the front desk's memory says who started which, the VM holds the bytes
+  // (/work/.ola/uploads/<id>.part, ola-put). A piece must start where the last one ended, so a
+  // dropped connection resumes from what the VM really has. A front desk restart forgets the
+  // uploads; the page then starts again (the VM clears parts left for two days).
+  const pieces = new Map() // id -> { slug, wsId, personId, name, size, replace, at }
+  const PIECES_PER_PERSON = 8
+  function pieceOf(sess, ws, id) {
+    const u = /^[0-9a-f]{32}$/.test(id) ? pieces.get(id) : null
+    if (!u || u.personId !== sess.personId || u.slug !== ws.slug) return null
+    if (Date.now() - u.at > 24 * 3600_000) return pieces.delete(id), null
+    return u
+  }
+  async function documentRoute(req, res, sess, ws, url, p, hold) {
+    const rel = url.searchParams.get('path') ?? ''
+    const plain = workspaces.validRel(rel) && !rel.split('/').some((x) => x.startsWith('.'))
+    if (p === '/api/view/table' && req.method === 'GET') {
+      if (!plain || !/\.(csv|tsv|xlsx|xlsm)$/i.test(rel)) return json(res, 404, NOT_FOUND)
+      const args = ['table', rel, '--offset', String(intParam(url, 'offset', 0, 1e9)), '--limit', String(intParam(url, 'limit', 50, 200) || 50)]
+      const sheet = url.searchParams.get('sheet')
+      if (sheet && sheet.length <= 64) args.push('--sheet', sheet)
+      const sort = url.searchParams.get('sort')
+      if (sort && sort.length <= 128) args.push('--sort', sort, '--dir', url.searchParams.get('dir') === 'desc' ? 'desc' : 'asc')
+      const q = url.searchParams.get('q')
+      if (q && q.trim()) args.push('--q', q.slice(0, 200))
+      const t = await workspaces.viewJson(ws.slug, args)
+      if (!t || !Array.isArray(t.columns) || !Array.isArray(t.rows)) return json(res, 404, { error: 'not_shown', message: 'That table could not be shown. Download the file instead.' })
+      if (url.searchParams.get('first') === '1') audit(db, { actor: sess.personId, action: 'page_opened', workspace: ws.id, nameRef: nameRef(keys, ws.id, rel) })
+      return json(res, 200, { table: rel, columns: t.columns.slice(0, 300).map((c) => ({ name: String(c?.name ?? '').slice(0, 200), type: '' })), rows: t.rows.slice(0, 200), total: Number(t.total) || 0, offset: Number(t.offset) || 0, limit: Number(t.limit) || 50, sheets: Array.isArray(t.sheets) ? t.sheets.slice(0, 64).map(String) : null, sheet: typeof t.sheet === 'string' ? t.sheet : null })
+    }
+    if (p === '/api/thumb' && req.method === 'GET') {
+      // A small picture of a thing on the project home: an image as it is, a PDF's first page.
+      // Only as an image (never a document of this origin), with a sandbox CSP and nosniff.
+      if (!plain || req.headers['sec-fetch-dest'] !== 'image') return json(res, 404, NOT_FOUND)
+      const ext = rel.slice(rel.lastIndexOf('.') + 1).toLowerCase()
+      const type = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', svg: 'image/svg+xml', pdf: 'image/png' }[ext]
+      if (!type) return json(res, 404, NOT_FOUND)
+      const gone = new AbortController()
+      res.on('close', () => gone.abort())
+      const f = ext === 'pdf' ? await workspaces.viewStream(ws.slug, ['pdf-page', rel, 1, '--width', 480], { signal: gone.signal }) : await workspaces.getStream(ws.slug, rel, { signal: gone.signal })
+      if (!f) return res.destroyed ? undefined : json(res, 404, NOT_FOUND)
+      if (f.size > 8 * 1024 * 1024) return f.kill(), json(res, 413, { error: 'too_large' })
+      res.writeHead(200, { 'content-type': type, 'content-length': String(f.size), 'cache-control': 'private, max-age=60', 'content-security-policy': "sandbox; default-src 'none'; style-src 'unsafe-inline'" })
+      try {
+        for await (const c of f.stream) if (!res.write(c) && !res.destroyed) await new Promise((r) => (res.once('drain', r), res.once('close', r)))
+        res.end()
+      } catch {
+        res.destroy()
+      } finally {
+        f.kill()
+      }
+      return
+    }
+    if (p === '/api/disk' && req.method === 'GET') {
+      const d = await workspaces.disk(ws.slug)
+      const uploaded = db.prepare('SELECT coalesce(sum(size), 0) AS n FROM uploads WHERE workspace_id = ?').get(ws.id).n
+      return json(res, 200, { ...d, uploaded: Math.min(uploaded, d.files), maxUpload: cfg.maxLibrary })
+    }
+    if (p === '/api/uploads' && req.method === 'POST') {
+      const body = await readJson(req)
+      const name = typeof body?.name === 'string' ? body.name : ''
+      const size = body?.size
+      if (!validName(name)) return json(res, 400, { error: 'bad_name', message: 'The file name has characters Ola does not accept. Rename it with letters, digits and spaces.' })
+      if (!Number.isSafeInteger(size) || size < 0) return json(res, 400, { error: 'bad_size' })
+      if (size > cfg.maxLibrary) return json(res, 413, { error: 'too_large', message: tooLargeMessage(cfg.maxLibrary) })
+      const free = (await workspaces.disk(ws.slug)).free
+      if (size > free * 0.9) return json(res, 507, { error: 'no_room', message: `This project has room for about ${Math.floor((free * 0.9) / 1024 ** 2)} MB more, and the file is ${Math.ceil(size / 1024 ** 2)} MB. Delete something from Files, or ask Bart for more room.` })
+      // The same file again (same name and size, same person): carry on where it stopped.
+      for (const [id, u] of pieces) {
+        if (u.personId === sess.personId && u.slug === ws.slug && u.name === name && u.size === size) {
+          const have = await workspaces.uploadStatus(ws.slug, id)
+          if (have !== null && have <= size) return (u.at = Date.now()), json(res, 200, { id, have, chunk: cfg.chunkBytes })
+          pieces.delete(id)
+        }
+      }
+      if ([...pieces.values()].filter((u) => u.personId === sess.personId).length >= PIECES_PER_PERSON) return json(res, 429, tooMany, { 'retry-after': '30' })
+      const id = randomUUID().replace(/-/g, '')
+      pieces.set(id, { slug: ws.slug, wsId: ws.id, personId: sess.personId, name, size, replace: body.replace === true, at: Date.now() })
+      return json(res, 201, { id, have: 0, chunk: cfg.chunkBytes })
+    }
+    const m = /^\/api\/uploads\/([0-9a-f]{32})(\/finish)?$/.exec(p)
+    const u = m && pieceOf(sess, ws, m[1])
+    if (!u) return json(res, 404, { error: 'no_upload', message: 'That upload is no longer under way. Choose the file again to start over.' })
+    if (!m[2] && req.method === 'GET') return json(res, 200, { id: m[1], have: (await workspaces.uploadStatus(ws.slug, m[1])) ?? 0, size: u.size })
+    if (!m[2] && req.method === 'DELETE') {
+      pieces.delete(m[1])
+      await workspaces.abortUpload(ws.slug, m[1])
+      return json(res, 200, { aborted: true })
+    }
+    if (!m[2] && req.method === 'PUT') {
+      const offset = Number.parseInt(url.searchParams.get('offset') ?? '', 10)
+      const declared = Number(req.headers['content-length'])
+      if (!Number.isSafeInteger(offset) || offset < 0 || offset + declared > u.size) return json(res, 400, { error: 'bad_offset' })
+      let moved = 0
+      let mark = 0
+      const slow = setInterval(() => (moved - mark < 32 * 1024 && !req.complete ? req.destroy() : (mark = moved)), 30_000)
+      async function* counted() {
+        for await (const c of req) {
+          moved += c.length
+          yield c
+        }
+      }
+      try {
+        const r = await workspaces.putChunk(ws.slug, m[1], offset, counted(), { maxBytes: declared })
+        u.at = Date.now()
+        if (r.mismatch) return json(res, 409, { error: 'offset', have: r.have })
+        return json(res, 200, { have: r.have })
+      } catch (e) {
+        if (e.code === 'ABORTED') return json(res, 400, { error: 'aborted' }, { connection: 'close' })
+        return json(res, 502, { error: 'write_failed', message: 'A piece could not be written on Ola’s computer. Try again.' })
+      } finally {
+        clearInterval(slow)
+      }
+    }
+    if (m[2] && req.method === 'POST') {
+      const have = await workspaces.uploadStatus(ws.slug, m[1])
+      if (have !== u.size) return json(res, 409, { error: 'incomplete', have: have ?? 0, message: 'Not all of the file has arrived yet.' })
+      let got
+      try {
+        got = await workspaces.finishUpload(ws.slug, m[1], u.name, { replace: u.replace })
+      } catch (e) {
+        if (e.code === 'EXISTS') return json(res, 409, { error: 'exists', message: `There is already a file called ${u.name}.` })
+        return json(res, 502, { error: 'write_failed', message: 'The file could not be written on Ola’s computer. Nothing was kept.' })
+      }
+      pieces.delete(m[1])
+      const ref = nameRef(keys, ws.id, u.name)
+      db.prepare('INSERT INTO uploads (workspace_id, name_ref, sha256, size, at) VALUES (?, ?, ?, ?, ?) ON CONFLICT (workspace_id, name_ref) DO UPDATE SET sha256 = excluded.sha256, size = excluded.size, at = excluded.at').run(ws.id, ref, got.sha256, got.size, Date.now())
+      audit(db, { actor: sess.personId, action: 'file_uploaded', workspace: ws.id, nameRef: ref, sha256: got.sha256, size: got.size })
+      return json(res, 201, { path: u.name, size: got.size, sha256: got.sha256, ...(await afterUpload(ws, sess, u.name)) })
+    }
+    return json(res, 404, NOT_FOUND)
   }
 
   const TABLE = /^[A-Za-z0-9_][A-Za-z0-9_ .-]{0,127}$/
@@ -573,13 +783,7 @@ export function makeFrontDesk(cfg = config()) {
       const ref = nameRef(keys, ws.id, name)
       db.prepare('INSERT INTO uploads (workspace_id, name_ref, sha256, size, at) VALUES (?, ?, ?, ?, ?) ON CONFLICT (workspace_id, name_ref) DO UPDATE SET sha256 = excluded.sha256, size = excluded.size, at = excluded.at').run(ws.id, ref, got.sha256, got.size, Date.now())
       audit(db, { actor: sess.personId, action: 'file_uploaded', workspace: ws.id, nameRef: ref, sha256: got.sha256, size: got.size })
-      // A document (PDF, page, text, Word, PowerPoint) is recorded and indexed in the project
-      // database, as one Ola downloads is. Not awaited: a long PDF takes a few seconds.
-      if (workspaces.isDocument(name)) {
-        const done = workspaces.holdBusy(ws.slug)
-        workspaces.dbAdd(ws.slug, name, { by: 'upload' }).then((ok) => ok || log(`${ws.slug}: an upload could not be indexed`)).finally(done)
-      }
-      return json(res, 201, { path: name, size: got.size, sha256: got.sha256 })
+      return json(res, 201, { path: name, size: got.size, sha256: got.sha256, ...(await afterUpload(ws, sess, name)) })
     }
     if (p.startsWith('/api/files/')) {
       let rel

@@ -52,7 +52,7 @@ if (built.status !== 0) {
 async function startDev(extra) {
   const p = spawn(process.execPath, [path.join(HERE, 'dev.mjs'), '--dist', '--port', '0', ...extra], {
     cwd: HERE,
-    env: { ...process.env, OLA_DEV_CONTROLS: '1', OLA_DEV_DIR: fs.mkdtempSync(path.join(os.tmpdir(), 'ola-check-')) },
+    env: { ...process.env, OLA_DEV_CONTROLS: '1', OLA_DEV_PIECE_MS: '250', OLA_DEV_DIR: fs.mkdtempSync(path.join(os.tmpdir(), 'ola-check-')) },
     stdio: ['ignore', 'pipe', 'pipe'],
   })
   let out = ''
@@ -491,6 +491,74 @@ for (const [engine, launcher] of [['Chromium', null], ['WebKit', webkit]]) {
     const { small, low } = await textAudit(pg)
     assert(!small.length, `small: ${small.slice(0, 4).join('; ')}`)
     assert(!low.length, `low contrast: ${low.slice(0, 4).join('; ')}`)
+  })
+
+  // Open for every kind (2026-11-17): what the page does with it. The front desk's own routes and
+  // wrappers are proved in frontdesk/check-docs.mjs; here, the page against dev.mjs's stand-ins.
+  const DOCS_SHOTS = process.env.OLA_WEB_SHOTS || null
+  await check(`${engine}: the home groups what Ola made by kind: pages, charts and images, tables, documents`, async () => {
+    await pg.goto(dev.url)
+    await pg.waitForSelector('.thing-group')
+    const groups = await pg.locator('.thing-group .group-title').allInnerTexts()
+    const names = groups.map((g) => g.trim().replace(/\s+\d+$/, ''))
+    assert(JSON.stringify(names) === JSON.stringify(['Pages', 'Charts and images', 'Tables', 'Documents']), names.join(' | '))
+    return names.join(', ')
+  })
+  await check(`${engine}: a drawing run shows its two pictures inline (the hostile SVG runs and loads nothing), Open for its table and note, and its citation opens report.pdf at page 2`, async () => {
+    await pg.goto(dev.url)
+    await pg.waitForSelector('.thing')
+    const before = [...foreign].length
+    await send(pg, 'draw the delta')
+    await waitDone(pg)
+    const turn = lastTurn(pg)
+    await turn.locator('.made-picture img').first().waitFor({ timeout: 20_000 })
+    await pg.waitForFunction(() => [...document.querySelectorAll('.drawer .turn:last-child .made-picture img')].every((i) => i.complete), null, { timeout: 15_000 })
+    const pics = await turn.locator('.made-picture img').evaluateAll((xs) => xs.map((i) => [i.getAttribute('src'), i.naturalWidth]))
+    const opens = await turn.locator('.made-pages a').allInnerTexts()
+    const cite = await turn.locator('a.cite').getAttribute('href')
+    const svgInPage = await pg.evaluate(() => document.querySelectorAll('.drawer svg image, .drawer svg script').length)
+    if (DOCS_SHOTS && engine === 'Chromium') await pg.locator('.drawer').screenshot({ path: path.join(DOCS_SHOTS, 'dx-reply-pictures.png') })
+    await pg.waitForTimeout(1500)
+    const out = [...foreign].slice(before).filter((u) => /127\.0\.0\.1:9\//.test(u))
+    assert(pics.length === 2 && pics.every(([src, w]) => src.startsWith('/api/thumb?') && w > 0), `pictures ${JSON.stringify(pics)}`)
+    assert(opens.some((o) => /^Open totals\.csv/.test(o)) && opens.some((o) => /^Open notes\.md/.test(o)), `opens ${opens.join(' | ')}`)
+    assert(cite === '/api/open?w=dev&path=report.pdf&page=2#page-2', `citation ${cite}`)
+    assert(!svgInPage && !out.length, `the hostile SVG: ${svgInPage} nodes in the page, ${out.join(' ')}`)
+    return `${pics.length} pictures, ${opens.length} Open items, citation ${cite}`
+  })
+  await check(`${engine}: Open on a CSV opens the table view: rows, sort, search`, async () => {
+    await pg.goto(`${dev.url}#/table?path=laws.csv`)
+    await pg.waitForSelector('table.grid tbody tr', { timeout: 30_000 })
+    const n = await pg.locator('table.grid tbody tr').count()
+    await pg.locator('th button', { hasText: 'score' }).click()
+    await pg.locator('th button', { hasText: 'score' }).click()
+    await pg.waitForFunction(() => document.querySelector('table.grid tbody tr td:last-child')?.textContent === '99.99', null, { timeout: 30_000 })
+    const head = await pg.locator('#table-title').innerText()
+    if (DOCS_SHOTS && engine === 'Chromium') await pg.screenshot({ path: path.join(DOCS_SHOTS, 'dx-table-view.png') })
+    assert(n === 50 && head === 'laws.csv', `${n} rows, heading ${head}`)
+    return '50 rows, sorted by score, descending'
+  })
+  await check(`${engine}: a large file goes in pieces, with its progress shown, and is then in Files`, async () => {
+    await pg.goto(`${dev.url}#/files`)
+    await pg.waitForSelector('#file-picker', { state: 'attached' })
+    const name = `big-${engine.toLowerCase()}.bin`
+    await pg.setInputFiles('#file-picker', { name, mimeType: 'application/octet-stream', buffer: Buffer.alloc(9 * 1024 * 1024, 7) })
+    await pg.waitForSelector('.upload-progress progress', { timeout: 15_000 })
+    const said = await pg.locator('.upload-progress .meta').innerText()
+    if (DOCS_SHOTS && engine === 'Chromium') await pg.locator('.files-inner').screenshot({ path: path.join(DOCS_SHOTS, 'dx-upload-progress.png') })
+    await pg.waitForSelector(`text=${name}`, { timeout: 60_000 })
+    await pg.waitForSelector('.upload-progress', { state: 'detached', timeout: 60_000 })
+    assert(/of 9 MB|of 9\.0 MB|of 9 MiB/.test(said) || /%/.test(said), said)
+    return said.split('.')[0]
+  })
+  await check(`${engine}: Settings shows the project’s room`, async () => {
+    await pg.goto(`${dev.url}#/settings`)
+    await pg.waitForSelector('.disk-use .disk-bar', { timeout: 20_000 })
+    const say = await pg.locator('.disk-use .setting-say').innerText()
+    const { small, low } = await textAudit(pg)
+    assert(/used of .* free/.test(say), say)
+    assert(!small.length && !low.length, `small ${small.slice(0, 2)} low ${low.slice(0, 2)}`)
+    return say
   })
   await c.close()
   if (launcher) await b.close()

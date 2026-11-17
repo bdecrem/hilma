@@ -1,6 +1,8 @@
 // Ola's words, set in Literata. A small Markdown subset (paragraphs, lists, headings, **bold**,
 // `code`) built as elements: model text never becomes HTML, so it can never inject markup.
 import { For, Match, Switch, type JSX } from 'solid-js'
+import { desk } from '../lib/api.ts'
+import { citation, CITE_SPLIT } from '../lib/cite.ts'
 
 type Block = { kind: 'p' | 'h'; text: string } | { kind: 'ul' | 'ol'; items: string[] }
 
@@ -33,13 +35,18 @@ export function blocks(text: string): Block[] {
   return out
 }
 
-/** Inline **bold** and `code`; everything else is text. */
+/** Inline **bold**, `code` and citations (lib/cite.ts); everything else is text. */
 export function Inline(props: { text: string }): JSX.Element {
-  const parts = () => props.text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g).filter(Boolean)
+  const parts = () => props.text.split(new RegExp(`(\\*\\*[^*]+\\*\\*|\`[^\`]+\`|${CITE_SPLIT.source})`, 'g')).filter(Boolean)
   return (
     <For each={parts()}>
       {(part) =>
-        part.startsWith('**') && part.endsWith('**') && part.length > 4 ? (
+        citation(part) ? (
+          <a class="cite" href={desk.openUrl(citation(part)!.path, citation(part)!.page)} target="_blank" rel="noopener noreferrer">
+            {citation(part)!.label}
+            <span class="sr-only"> (opens {citation(part)!.path}{citation(part)!.page ? ` at page ${citation(part)!.page}` : ''} in a new tab)</span>
+          </a>
+        ) : part.startsWith('**') && part.endsWith('**') && part.length > 4 ? (
           <strong>{part.slice(2, -2)}</strong>
         ) : part.startsWith('`') && part.endsWith('`') && part.length > 2 ? (
           <code>{part.slice(1, -1)}</code>

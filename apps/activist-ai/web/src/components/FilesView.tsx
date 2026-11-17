@@ -1,7 +1,7 @@
 // "What Ola has of yours": every file in the workspace, who put it there, its size and date;
 // upload (with the plain line on where it goes), download, delete with a confirmation.
 import { createResource, createSignal, For, Show } from 'solid-js'
-import { desk, DeskError } from '../lib/api.ts'
+import { canOpen, desk, DeskError, goesInPieces, type UploadResult } from '../lib/api.ts'
 import type { FileEntry, Problem } from '../lib/types.ts'
 import { bytes, cap, count, when } from '../lib/format.ts'
 import { Icon } from './Icon.tsx'
@@ -21,21 +21,47 @@ export function FilesView(props: { onChanged: () => void; uploadRef?: (el: HTMLB
   const made = () => (files() ?? []).filter((f) => f.origin === 'made')
   const total = () => uploaded().reduce((n, f) => n + f.size, 0)
 
+  // A large file, a zip or a database goes in pieces (resumable, with progress); a zip is then
+  // unpacked into a folder and a database added to Data, both inside the project's own computer.
+  const [progress, setProgress] = createSignal<{ name: string; sent: number; total: number } | null>(null)
+  const [notes, setNotes] = createSignal<string[]>([])
+  const one = async (file: File, replace = false): Promise<UploadResult> => {
+    if (!goesInPieces(file)) return desk.upload(file, { replace })
+    setProgress({ name: file.name, sent: 0, total: file.size })
+    try {
+      return await desk.uploadLarge(file, { replace, onProgress: (sent, total) => setProgress({ name: file.name, sent, total }) })
+    } finally {
+      setProgress(null)
+    }
+  }
+  const noteOf = (r: UploadResult) =>
+    r.refused ??
+    (r.unpacked
+      ? `${r.path} was unpacked into the folder ${r.unpacked.folder}: ${count(r.unpacked.files, 'file')}${r.unpacked.renamed ? `, ${count(r.unpacked.renamed, 'name')} made plain` : ''}${r.unpacked.skipped ? `, ${r.unpacked.skipped} hidden ${r.unpacked.skipped === 1 ? 'file' : 'files'} left out` : ''}. Ola reads the documents in it now; scanned pages take longer.`
+      : r.attached
+        ? `${r.path} is now in Data as ${count(r.attached.tables, 'table')} named ${r.attached.alias}.…, read-only. It was checked and is whole.`
+        : null)
+
   async function send(list: FileList | null) {
     if (!list?.length) return
     setProblem(null)
+    setNotes([])
     setBusy(true)
     const done: string[] = []
     for (const file of Array.from(list)) {
       setStatus(`Sending ${file.name} to Ola’s computer…`)
       try {
-        await desk.upload(file)
+        const r = await one(file)
         done.push(file.name)
+        const n = noteOf(r)
+        if (n) setNotes([...notes(), n])
       } catch (e) {
         if (e instanceof DeskError && e.status === 409 && window.confirm(`There is already a file called ${file.name} on Ola’s computer. Replace it with this one?`)) {
           try {
-            await desk.upload(file, { replace: true })
+            const r = await one(file, true)
             done.push(file.name)
+            const n = noteOf(r)
+            if (n) setNotes([...notes(), n])
             continue
           } catch (e2) {
             setProblem(e2 instanceof DeskError ? e2.problem : { text: `${file.name} was not sent.`, detail: String(e2) })
@@ -102,6 +128,17 @@ export function FilesView(props: { onChanged: () => void; uploadRef?: (el: HTMLB
         <p class="files-status" role="status" aria-live="polite">
           {status()}
         </p>
+        <Show when={progress()}>
+          {(pr) => (
+            <div class="upload-progress">
+              <progress max={pr().total || 1} value={pr().sent} aria-label={`Sending ${pr().name}`} />
+              <span class="meta">
+                {bytes(pr().sent)} of {bytes(pr().total)} · {pr().total ? Math.floor((pr().sent / pr().total) * 100) : 100}%. If the connection drops, choose the file again and it carries on where it stopped.
+              </span>
+            </div>
+          )}
+        </Show>
+        <For each={notes()}>{(n) => <p class="upload-note">{n}</p>}</For>
         <Show when={problem()}>{(p) => <ProblemBox problem={p()} role="alert" />}</Show>
         <Show when={files.error}>
           <ProblemBox problem={files.error instanceof DeskError ? files.error.problem : { text: 'The list of files could not be loaded.', detail: String(files.error) }} role="alert" />
@@ -181,7 +218,7 @@ function FileTable(props: { title: string; files: FileEntry[]; empty: string; on
                   </td>
                   <td class="file-when">{when(f.uploaded ?? f.modified)}</td>
                   <td class="file-actions">
-                    <Show when={/\.html?$/i.test(f.path)}>
+                    <Show when={canOpen(f.path)}>
                       <a href={desk.openUrl(f.path)} target="_blank" rel="noopener noreferrer">
                         Open<span class="sr-only"> {f.path} in a new tab</span>
                       </a>

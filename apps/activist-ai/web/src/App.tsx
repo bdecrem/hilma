@@ -7,19 +7,21 @@ import { desk, DeskError } from './lib/api.ts'
 import { createOla } from './lib/ola.ts'
 import { count, people } from './lib/format.ts'
 import { Icon, Wordmark } from './components/Icon.tsx'
-import { EmptyProject, OtherFiles, ThingCard } from './components/Things.tsx'
+import { EmptyProject, groupThings, OtherFiles, ThingCard } from './components/Things.tsx'
 import { Drawer, ProblemBox } from './components/Drawer.tsx'
 import { FilesView } from './components/FilesView.tsx'
 import { ApprovalSheet } from './components/ApprovalSheet.tsx'
 import { SettingsView } from './components/Settings.tsx'
-import { DataView } from './components/DataView.tsx'
+import { DataView, FileTableView } from './components/DataView.tsx'
 import { JobsView } from './components/JobsView.tsx'
 
-type Route = 'home' | 'files' | 'data' | 'settings' | 'jobs'
-const routeOf = (hash: string): Route => (hash.startsWith('#/files') ? 'files' : hash.startsWith('#/data') ? 'data' : hash.startsWith('#/settings') ? 'settings' : hash.startsWith('#/jobs') ? 'jobs' : 'home')
+type Route = 'home' | 'files' | 'data' | 'settings' | 'jobs' | 'table'
+const routeOf = (hash: string): Route => (hash.startsWith('#/files') ? 'files' : hash.startsWith('#/data') ? 'data' : hash.startsWith('#/settings') ? 'settings' : hash.startsWith('#/jobs') ? 'jobs' : hash.startsWith('#/table') ? 'table' : 'home')
 // #/jobs/<id> opens one job.
 const jobOf = (hash: string): string | null => /^#\/jobs\/([0-9a-f]{12})$/.exec(hash)?.[1] ?? null
-const ROUTE_TITLE: Record<Route, string> = { home: '', files: 'What Ola has of yours', data: 'Data', settings: 'Settings', jobs: 'Jobs' }
+const ROUTE_TITLE: Record<Route, string> = { home: '', files: 'What Ola has of yours', data: 'Data', settings: 'Settings', jobs: 'Jobs', table: 'Table' }
+/** `#/table?path=<file>`: Open on a CSV or Excel file (frontdesk/views.mjs sends it here). */
+const tableOf = (hash: string): string | null => (hash.startsWith('#/table') ? new URLSearchParams(hash.split('?')[1] ?? '').get('path') : null)
 /** `#/?ask=<conversation id>` opens the drawer on that conversation. */
 const askOf = (hash: string): string | null => new URLSearchParams(hash.split('?')[1] ?? '').get('ask')
 /** `?still` in the address: no live stream (screenshots, printing). */
@@ -215,6 +217,9 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
               <Show when={route() === 'jobs'}>
                 <JobsView jobId={jobId()} />
               </Show>
+              <Show when={route() === 'table' && tableOf(location.hash)} keyed>
+                {(path) => <FileTableView path={path} />}
+              </Show>
               <Show when={route() === 'settings'}>
                 <SettingsView ola={ola} titleRef={(el) => (settingsTitle = el)} canWrite={canRun()} />
               </Show>
@@ -260,17 +265,25 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
           </section>
           <Show when={project()} fallback={<p class="loading" role="status">{waking() ? 'Waking your workspace…' : 'Opening your project…'}</p>}>
             <Show when={project()!.things.length || project()!.files?.length} fallback={<EmptyProject canRun={canRun()} onAsk={openDrawer} onAddFiles={addFiles} />}>
-              <Show when={project()!.things.length}>
-                <div class="things" role="list" aria-label="Your things">
-                  <For each={project()!.things}>
-                    {(t) => (
-                      <div role="listitem" class="thing-slot" data-kind={t.kind}>
-                        <ThingCard thing={t} />
-                      </div>
-                    )}
-                  </For>
-                </div>
-              </Show>
+              {/* What Ola made, by kind: pages, charts and images, tables, documents. */}
+              <For each={groupThings(project()!.things)}>
+                {(g) => (
+                  <section class="thing-group" aria-labelledby={`group-${g.key}`} data-group={g.key}>
+                    <h2 id={`group-${g.key}`} class="group-title">
+                      {g.title} <span class="group-count">{g.things.length}</span>
+                    </h2>
+                    <div class="things" role="list" aria-label={g.title}>
+                      <For each={g.things}>
+                        {(t) => (
+                          <div role="listitem" class="thing-slot" data-kind={t.kind}>
+                            <ThingCard thing={t} />
+                          </div>
+                        )}
+                      </For>
+                    </div>
+                  </section>
+                )}
+              </For>
               <Show when={project()!.files?.length}>
                 <OtherFiles files={project()!.files!} total={project()!.otherTotal ?? project()!.files!.length} hasThings={!!project()!.things.length} />
               </Show>
