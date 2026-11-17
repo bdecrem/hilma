@@ -1279,6 +1279,7 @@ await check('the Claude grant lives only while a run the front desk started goes
   const during = async () => {
     let run = null
     const p = claudeRun(a, { request: 'slow 40x1000' }, { onStarted: (e) => (run = e.run) })
+    p.catch(() => {}) // the second run's stream ends with the front desk killed under it
     await until(() => run !== null && grantsFile()[`ws-${FA}`]?.until > Date.now(), 20_000, 'the run and its lease')
     await sleep(2500)
     return { run, p, inside: await claudeFromInside(), lease: grantsFile()[`ws-${FA}`] }
@@ -1296,7 +1297,6 @@ await check('the Claude grant lives only while a run the front desk started goes
   assert(two.inside === '200', `the second run: ${two.inside}`)
   fd.kill('SIGKILL')
   await until(() => fd.exitCode !== null || fd.signalCode !== null, 10_000, 'the front desk dying')
-  two.p.catch(() => {})
   fd = start('frontdesk', 'frontdesk/server.mjs')
   await until(async () => (await fetch(`${ORIGIN}/api/health`).catch(() => ({ ok: false }))).ok, 15_000, 'the front desk start')
   await sleep(2500)
