@@ -490,13 +490,15 @@ await check('passwords: in Your account nell adds a passkey and turns on “Ask 
 })
 
 await check('the Mac app: nell signs in with her name and password (no browser); her computer’s pass reaches the model; signing it out refuses it at once', async () => {
-  admin('allow-devices', 'nell')
+  // No admin step: any active account may sign in a computer (2026-11-17).
   const login = (body, headers = {}) => fetch(`${ORIGIN}/api/device/login`, { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(body) })
   const wrong = await login({ handle: 'nell', password: 'not her password at all', name: 'Nell’s MacBook', kind: 'mac' })
   assert(wrong.status === 401, `a wrong password: ${wrong.status}`)
   const r = await login({ handle: 'nell', password: PIA_PW, name: 'Nell’s MacBook', kind: 'mac' })
-  // She turned on "Ask for my passkey too" above: the app is sent to the browser.
-  assert(r.status === 403 && (await r.json()).error === 'passkey_required', `with the switch on: ${r.status}`)
+  // She turned on "Ask for my passkey too" above: the app gets a passkey ceremony for her passkeys
+  // alone, to answer in its own passkey sheet (never a browser), and no key yet.
+  const rj = await r.json()
+  assert(r.status === 200 && rj.passkey === true && rj.ceremony && rj.options?.allowCredentials?.length >= 1 && !rj.token, `with the switch on: ${r.status} ${Object.keys(rj)}`)
   admin('require-passkey', 'nell', 'off')
   const ok = await login({ handle: 'nell', password: PIA_PW, name: 'Nell’s MacBook', kind: 'mac' })
   const s = await ok.json()
@@ -664,7 +666,6 @@ let dina = null
 let dinaToken = null
 await check('devices, in Chromium: from the app’s link a signed-out person signs in with their passkey, is asked "Sign in to Ola on <name>?" (the name as text), says yes, and lands on the app’s loopback with a code the app redeems', async () => {
   admin('add-person', 'dina', '--name', 'Dina D.')
-  admin('allow-devices', 'dina')
   dina = await chromiumContext()
   await dina.page.goto(admin('invite', 'dina'))
   const make = dina.page.getByRole('button', { name: 'Make my passkey' })
@@ -720,7 +721,6 @@ await check('devices, in WebKit: the same question, yes lands on the app’s loo
   const app2 = await madeUpApp()
   try {
     admin('add-person', 'wade', '--name', 'Wade W.')
-    admin('allow-devices', 'wade')
     const link = admin('invite', 'wade')
     const device = new SoftAuthn({ rpId: 'localhost', origin: ORIGIN })
     const ctx = await wk.newContext()
@@ -762,7 +762,7 @@ await check('devices, in WebKit: the same question, yes lands on the app’s loo
   }
 })
 
-await check('devices: refused: a grant without CSRF, cross-site or from another origin, from a person not allowed, with a bad request; a wrong verifier (and the code is then spent), an expired code, a code from another key, a person disallowed before the redeem', async () => {
+await check('devices: refused: a grant without CSRF, cross-site or from another origin, with a bad request; a wrong verifier (and the code is then spent), an expired code, a code from another key', async () => {
   const d = await signedIn(dina)
   const app = { S: randomBytes(32).toString('base64url') }
   app.challenge = createHash('sha256').update(app.S).digest('base64url')
@@ -773,9 +773,8 @@ await check('devices: refused: a grant without CSRF, cross-site or from another 
   seen.crossSite = (await grant({}, { headers: { 'sec-fetch-site': 'cross-site' } })).status
   seen.otherOrigin = (await grant({}, { origin: 'https://evil.example' })).status
   seen.signedOut = (await grant({}, { cookie: null, csrf: null })).status
-  seen.alice = (await grant({}, { cookie: a.cookie, csrf: a.csrf })).status
   for (const [k, o] of Object.entries({ shortChallenge: { challenge: 'abc' }, longName: { name: 'x'.repeat(61) }, controlName: { name: 'Mac\u0007' }, bidiName: { name: 'Mac‮niam' }, kind: { kind: 'ios' }, lowPort: { port: 80 }, textPort: { port: '5555' } })) seen[k] = (await grant(o)).status
-  const want = { noCsrf: 403, crossSite: 403, otherOrigin: 403, signedOut: 401, alice: 403, shortChallenge: 400, longName: 400, controlName: 400, bidiName: 400, kind: 400, lowPort: 400, textPort: 400 }
+  const want = { noCsrf: 403, crossSite: 403, otherOrigin: 403, signedOut: 401, shortChallenge: 400, longName: 400, controlName: 400, bidiName: 400, kind: 400, lowPort: 400, textPort: 400 }
   assert(JSON.stringify(seen) === JSON.stringify(want), `grants: ${JSON.stringify(seen)}`)
   // A wrong verifier spends the code: the right one after it is refused too.
   const c1 = (await grant()).json.code
@@ -790,23 +789,16 @@ await check('devices: refused: a grant without CSRF, cross-site or from another 
   const forged = await redeem(makePass(randomBytes(32), 'code', Math.floor(Date.now() / 1000) + 60).pass, app.S)
   const tokenAsCode = await redeem(dinaToken, app.S)
   const none = await redeem(null, app.S)
-  // Disallowed between the yes and the redeem.
-  const c3 = (await grant()).json.code
-  admin('disallow-devices', 'dina')
-  const disallowed = await redeem(c3, app.S)
-  admin('allow-devices', 'dina')
-  const got = [wrong, after, late, forged, tokenAsCode, none, disallowed].map((r) => `${r.status} ${r.json?.error}`)
-  assert(got.join(',') === '401 invalid_code,401 invalid_code,401 invalid_code,401 invalid_code,401 invalid_code,401 invalid_code,403 not_allowed', got.join(', '))
-  // dina was disallowed: her device from the first check was signed out with it.
-  assert((await asDevice('/api/device/me', dinaToken)).status === 401, 'a disallowed person’s device still works')
+  const got = [wrong, after, late, forged, tokenAsCode, none].map((r) => `${r.status} ${r.json?.error}`)
+  assert(got.join(',') === '401 invalid_code,401 invalid_code,401 invalid_code,401 invalid_code,401 invalid_code', got.join(', '))
   const refusedRows = JSON.parse(admin('audit', '--limit', '200', '--json')).filter((r) => r.action === 'device_refused').length
-  assert(refusedRows >= 3, `device_refused rows: ${refusedRows}`)
+  assert(refusedRows >= 1, `device_refused rows: ${refusedRows}`)
   return `grants ${Object.values(seen).join(' ')}; redeems ${got.join(', ')}; ${refusedRows} device_refused rows`
 })
 
 let gwDevice = null
 await check('devices: the token reaches the gateway as the person’s own caller (models, usage, web search under their standing grant, a streamed chat), only on the allowed routes, and works nowhere outside /api/device/', async () => {
-  // A fresh device for dina (the last one went with disallow-devices).
+  // A fresh device for dina.
   const out = node('frontdesk/admin.mjs', ['add-device', 'dina', '--name', 'Made-up Mac', '--kind', 'mac'])
   gwDevice = out.stdout.trim()
   const pid = dbRowDevices(`SELECT id FROM people WHERE handle = 'dina'`).id
@@ -1013,8 +1005,7 @@ await check('devices: an open model request is cut within two seconds when the d
   await until(async () => !(await dina.page.locator('.your-devices .device-row-name', { hasText: /^Made-up Mac$/ }).count()), 5000, 'the row gone')
   assert((await asDevice('/api/device/me', gwDevice)).status === 401, 'the removed device still works')
   shots.push(cut)
-  // In a project, the list is under Settings: alice, allowed for this check, a device added by the admin.
-  admin('allow-devices', 'alice')
+  // In a project, the list is under Settings: alice, a device added by the admin.
   const tok = node('frontdesk/admin.mjs', ['add-device', 'alice', '--name', 'Alice’s made-up Mac', '--kind', 'mac']).stdout.trim()
   try {
     await A.page.goto(`${ORIGIN}/?w=${FA}#/settings`)
@@ -1023,13 +1014,11 @@ await check('devices: an open model request is cut within two seconds when the d
     if (SHOTS) await A.page.locator('.settings .your-devices').screenshot({ path: path.join(SHOTS, 'devices-settings-1280.png') })
     await A.page.getByRole('button', { name: 'Remove Alice’s made-up Mac' }).click()
     await until(async () => (await asDevice('/api/device/me', tok)).status === 401, 5000, 'alice’s device signed out')
-  } finally {
-    admin('disallow-devices', 'alice')
-  }
+  } finally {}
   return `${cut}; the projects page and Settings list the devices; Remove signs one out`
 })
 
-await check('devices: add-device writes only the token to stdout; the people file is 600, replaced by rename, and untouched by ws.mjs rewriting the tokens file; revoke-device, revoke-sessions, disallow-devices and suspend sign devices out and take the person out of the file', async () => {
+await check('devices: add-device writes only the token to stdout; the people file is 600, replaced by rename, and untouched by ws.mjs rewriting the tokens file; revoke-device, revoke-sessions and suspend sign devices out and take the person out of the file', async () => {
   const add = node('frontdesk/admin.mjs', ['add-device', 'dina', '--name', 'Made-up CLI', '--kind', 'cli'])
   assert(add.status === 0 && /^olap1\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\n$/.test(add.stdout), `stdout is not exactly one token line (${add.stdout.split('\n').length - 1} lines)`)
   const tok = add.stdout.trim()
@@ -1053,12 +1042,11 @@ await check('devices: add-device writes only the token to stdout; the people fil
   assert((await asDevice('/api/device/me', tok)).status === 401, 'revoke-device')
   const st3 = statSync(PEOPLE_FILE)
   assert(st3.ino !== st1.ino && !readFileSync(PEOPLE_FILE, 'utf8').includes(`p-${pid}:`) && (st3.mode & 0o777) === 0o600, 'the person is still in the file')
-  // revoke-sessions and suspend end devices too; so does disallow-devices (proved in the refusals above).
+  // revoke-sessions and suspend end devices too.
   const t2 = node('frontdesk/admin.mjs', ['add-device', 'dina', '--name', 'Made-up CLI 2', '--kind', 'cli']).stdout.trim()
   admin('revoke-sessions', 'dina')
   const afterRevoke = (await asDevice('/api/device/me', t2)).status
   admin('add-person', 'sam', '--name', 'Sam S.')
-  admin('allow-devices', 'sam')
   dbRowDevices(`UPDATE people SET status = 'active' WHERE handle = 'sam' RETURNING id`)
   const t3 = node('frontdesk/admin.mjs', ['add-device', 'sam', '--name', 'Made-up Mac', '--kind', 'mac']).stdout.trim()
   const samOk = (await asDevice('/api/device/me', t3)).status

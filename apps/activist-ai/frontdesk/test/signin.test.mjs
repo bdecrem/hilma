@@ -12,6 +12,8 @@ import { after, before, test } from 'node:test'
 import { hashPassword, needsRehash, passwordProblem, verifyPassword, SCRYPT } from '../passwords.mjs'
 import { PasswordGuard, handleKey } from '../auth.mjs'
 import { validDeviceName } from '../devices.mjs'
+import { SoftAuthn } from '../review/softauthn.mjs'
+import { spawnSync } from 'node:child_process'
 
 // ---------------------------------------------------------------- the rules, alone
 test('a password: 15 characters, any kind, not common, not the name, not one character', () => {
@@ -241,11 +243,7 @@ test('the admin link sets a password; for someone who had one it signs them out 
 
 let key
 test('the Mac app: name and password give this computer its own pass, shown once; the database keeps its hash', async () => {
-  // Only people who may sign in computers (devices.mjs: devices_allowed, or an admin).
-  const no = await call('/api/device/login', { body: { handle: 'maria', password: 'she now has a newer password', name: 'x' }, origin: null, headers: { 'x-ola-known': mariaKnown } })
-  assert.equal(no.status, 403)
-  assert.equal(no.json.error, 'not_allowed')
-  db.prepare("UPDATE people SET devices_allowed = 1 WHERE handle IN ('maria', 'dana')").run()
+  // Anyone with an active account: no admin step per person (2026-11-17).
   const r = await call('/api/device/login', { body: { handle: 'maria', password: 'she now has a newer password', name: 'Maria’s MacBook Air', kind: 'mac' }, origin: null, headers: { 'x-ola-known': mariaKnown } })
   assert.equal(r.status, 200, r.text)
   key = r.json.token
@@ -253,6 +251,7 @@ test('the Mac app: name and password give this computer its own pass, shown once
   assert.equal(r.json.person.handle, 'maria')
   assert.equal(r.json.device.name, 'Maria’s MacBook Air')
   assert.ok(r.json.known)
+  assert.equal(r.json.has_passkey, false, 'the app offers to add a passkey')
   const row = db.prepare('SELECT token_sha256, name FROM devices ORDER BY id DESC').get()
   assert.deepEqual(Buffer.from(row.token_sha256), createHash('sha256').update(key).digest())
   assert.match(readFileSync(path.join(run, 'gateway-people'), 'utf8'), /^GATEWAY_TOKENS=p-1:[0-9a-f]{48}\n?$/)
@@ -266,14 +265,16 @@ test('the Mac app: name and password give this computer its own pass, shown once
   for (const p of ['/api/me', '/api/account', '/api/project', '/oc/api/session', '/api/files']) assert.equal((await call(p, { method: 'GET', bearer: key })).status, 401, p)
 })
 
-test('"ask for my passkey too": the app is sent to the browser; the web asks for that person\'s passkey', async () => {
+test('"ask for my passkey too": the app gets a ceremony for that person\'s passkeys (never a browser), and so does the web', async () => {
   // Turning it on needs a passkey: maria has none.
   assert.equal((await call('/api/account/require-passkey', { body: { on: true }, cookie: mariaCookie, csrf: mariaCsrf })).status, 409)
   db.prepare("INSERT INTO passkeys (person_id, credential_id, public_key, counter, created_at) VALUES (1, 'made-up-credential', x'00', 0, 0)").run()
   assert.equal((await call('/api/account/require-passkey', { body: { on: true }, cookie: mariaCookie, csrf: mariaCsrf })).status, 200)
   const app = await call('/api/device/login', { body: { handle: 'maria', password: 'she now has a newer password', name: 'x' }, origin: null, headers: { 'x-ola-known': mariaKnown } })
-  assert.equal(app.status, 403)
-  assert.equal(app.json.error, 'passkey_required')
+  assert.equal(app.status, 200)
+  assert.equal(app.json.passkey, true)
+  assert.equal(app.json.token, undefined, 'no key before the passkey')
+  assert.deepEqual(app.json.options.allowCredentials.map((c) => c.id), ['made-up-credential'])
   const web = await call('/api/auth/password', { body: { handle: 'maria', password: 'she now has a newer password' }, cookie: `ola-known-local=${mariaKnown}` })
   assert.equal(web.status, 200)
   assert.equal(web.json.passkey, true)
@@ -310,6 +311,106 @@ test('sign out everywhere; a suspended person cannot sign in or use a key', asyn
   db.prepare("UPDATE people SET status = 'suspended' WHERE handle = 'dana'").run()
   assert.equal((await call('/api/device/me', { method: 'GET', bearer: k2.json.token })).status, 401)
   assert.equal((await call('/api/auth/password', { body: { handle: 'dana', password: 'walking the long way home' } })).status, 401)
+})
+
+// ---------------------------------------------------------------- the app's passkeys, never a browser
+const PAT_PW = 'seven green ferries at dawn'
+const asApp = (p, body, bearer) => call(p, { body, origin: null, ...(bearer ? { bearer } : {}) })
+let patKey
+test('the apple-app-site-association file says the Ola Mac app may use this site’s passkeys, as JSON, with no cookie', async () => {
+  const r = await call('/.well-known/apple-app-site-association', { method: 'GET' })
+  assert.equal(r.status, 200)
+  assert.match(r.headers.get('content-type'), /^application\/json/)
+  assert.deepEqual(r.json, { webcredentials: { apps: ['274T5WCVD2.cx.ola.mac'] } })
+  assert.equal(r.cookies.length, 0)
+})
+
+test('the app adds a passkey with its own pass, only soon after signing in; a web session or no pass cannot', async () => {
+  const { raw } = makePasswordLink(db, 3, 3600_000)
+  assert.equal((await call('/api/auth/reset', { body: { token: raw, password: PAT_PW } })).status, 200)
+  const r = await asApp('/api/device/login', { handle: 'pat', password: PAT_PW, name: 'Pat’s iMac', kind: 'mac' })
+  assert.equal(r.status, 200, r.text)
+  assert.equal(r.json.has_passkey, false)
+  patKey = r.json.token
+  // Without the pass (or with a web cookie only): refused.
+  assert.equal((await asApp('/api/device/passkey/options', {})).status, 401)
+  const opts = await asApp('/api/device/passkey/options', {}, patKey)
+  assert.equal(opts.status, 200, opts.text)
+  assert.equal(opts.json.options.rp.id, 'localhost')
+  assert.equal(opts.json.options.user.name, 'pat')
+  const soft = new SoftAuthn({ rpId: 'localhost', origin: ORIGIN })
+  // An answer from another origin, or to another ceremony, saves nothing.
+  const bad = await asApp('/api/device/passkey/verify', { ceremony: opts.json.ceremony, response: soft.create(opts.json.options, { origin: 'https://evil.example' }) }, patKey)
+  assert.equal(bad.status, 400)
+  const opts2 = await asApp('/api/device/passkey/options', {}, patKey)
+  const ok = await asApp('/api/device/passkey/verify', { ceremony: opts2.json.ceremony, response: soft.create(opts2.json.options) }, patKey)
+  assert.equal(ok.status, 200, ok.text)
+  assert.equal(db.prepare('SELECT count(*) AS n FROM passkeys WHERE person_id = 3').get().n, 1)
+  patSoft = soft
+  // Fifteen minutes after this Mac signed in, its pass alone no longer adds one.
+  db.prepare('UPDATE devices SET created_at = created_at - 16 * 60000 WHERE token_sha256 = ?').run(createHash('sha256').update(patKey).digest())
+  const late = await asApp('/api/device/passkey/options', {}, patKey)
+  assert.equal(late.status, 403)
+  assert.equal(late.json.error, 'not_fresh')
+})
+
+let patSoft
+test('the app signs in with a passkey: after a right password when the account asks for it, or the passkey alone; ceremonies do not cross between the app and the web', async () => {
+  db.prepare("UPDATE people SET require_passkey = 1 WHERE handle = 'pat'").run()
+  const step = await asApp('/api/device/login', { handle: 'pat', password: PAT_PW, name: 'Pat’s MacBook', kind: 'mac' })
+  assert.equal(step.status, 200)
+  assert.equal(step.json.passkey, true)
+  assert.equal(step.json.token, undefined)
+  assert.deepEqual(step.json.options.allowCredentials.map((c) => c.id), [patSoft.id])
+  // The web's ceremony is not the app's, and the app's is not the web's.
+  const web = await call('/api/auth/password', { body: { handle: 'pat', password: PAT_PW } })
+  assert.equal((await asApp('/api/device/login/passkey', { ceremony: web.json.ceremony, response: patSoft.get(web.json.options) })).status, 401)
+  const crossed = await asApp('/api/device/login', { handle: 'pat', password: PAT_PW, name: 'x' })
+  assert.equal((await call('/api/auth/login/verify', { body: { ceremony: crossed.json.ceremony, response: patSoft.get(crossed.json.options) } })).status, 401)
+  // Another passkey (not hers) does not finish her sign-in.
+  const stranger = new SoftAuthn({ rpId: 'localhost', origin: ORIGIN })
+  stranger.userHandle = 'AAAA'
+  const s2 = await asApp('/api/device/login', { handle: 'pat', password: PAT_PW, name: 'x' })
+  assert.equal((await asApp('/api/device/login/passkey', { ceremony: s2.json.ceremony, response: stranger.get(s2.json.options) })).status, 401)
+  // Her passkey: this Mac is signed in, with the name it gave at the first step.
+  const done = await asApp('/api/device/login/passkey', { ceremony: step.json.ceremony, response: patSoft.get(step.json.options) })
+  assert.equal(done.status, 200, done.text)
+  assert.match(done.json.token, /^olap1\./)
+  assert.equal(done.json.device.name, 'Pat’s MacBook')
+  assert.equal(done.json.has_passkey, true)
+  assert.equal((await call('/api/device/me', { method: 'GET', bearer: done.json.token })).json.person.handle, 'pat')
+  // A ceremony is used once.
+  assert.equal((await asApp('/api/device/login/passkey', { ceremony: step.json.ceremony, response: patSoft.get(step.json.options) })).status, 401)
+  // The passkey alone, with no name or password.
+  const alone = await asApp('/api/device/login', { passkey: true, name: 'Pat’s iPad', kind: 'cli' })
+  assert.equal(alone.status, 200)
+  assert.deepEqual(alone.json.options.allowCredentials, [])
+  const in2 = await asApp('/api/device/login/passkey', { ceremony: alone.json.ceremony, response: patSoft.get(alone.json.options) })
+  assert.equal(in2.status, 200, in2.text)
+  assert.deepEqual([in2.json.person.handle, in2.json.device.kind], ['pat', 'cli'])
+  // A suspended person's passkey opens nothing.
+  db.prepare("UPDATE people SET status = 'suspended' WHERE handle = 'pat'").run()
+  const sus = await asApp('/api/device/login', { passkey: true })
+  assert.equal((await asApp('/api/device/login/passkey', { ceremony: sus.json.ceremony, response: patSoft.get(sus.json.options) })).status, 401)
+  db.prepare("UPDATE people SET status = 'active' WHERE handle = 'pat'").run()
+})
+
+test('a person’s weekly allowance: admin.mjs app-allowance writes the quotas file beside the people file (600, renamed in); default takes it out; allow-devices is no longer needed', async () => {
+  const adminCli = (...a) => spawnSync(process.execPath, [path.join(path.dirname(new URL(import.meta.url).pathname), '../admin.mjs'), ...a], { env: process.env, encoding: 'utf8' })
+  const quotas = path.join(run, 'gateway-people-quotas')
+  const set = adminCli('app-allowance', 'pat', '5000000')
+  assert.equal(set.status, 0, set.stderr)
+  assert.match(set.stdout, /5,000,000 tokens a week/)
+  const st = statSync(quotas)
+  assert.equal(st.mode & 0o777, 0o600)
+  assert.equal(readFileSync(quotas, 'utf8'), 'GATEWAY_QUOTAS=p-3=5000000\n')
+  assert.equal(adminCli('app-allowance', 'pat', 'lots').status, 1)
+  assert.equal(adminCli('app-allowance', 'pat', 'default').status, 0)
+  assert.equal(readFileSync(quotas, 'utf8'), 'GATEWAY_QUOTAS=\n')
+  assert.notEqual(statSync(quotas).ino, st.ino, 'replaced by rename')
+  const allow = adminCli('allow-devices', 'pat')
+  assert.equal(allow.status, 0)
+  assert.match(allow.stdout, /Not needed any more/)
 })
 
 test('nothing secret in the audit log; every new word is one the table allows', () => {

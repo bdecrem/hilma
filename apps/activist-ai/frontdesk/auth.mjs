@@ -322,6 +322,57 @@ export function makeAuth({ db, keys, origin, rpName = 'Ola', session: { absolute
     return { status: 403, body: { error: 'wrong_password', message: 'Your current password was not right.' } }
   }
 
+  /**
+   * A passkey sign-in ceremony: for one person's passkeys (after their right password, with "Ask for
+   * my passkey too"), or for any passkey (no person). `device` ({name, kind}) marks it as the Mac
+   * app's or the command line's (devices.mjs): it is answered only at /api/device/login/passkey, and
+   * a web ceremony only at /api/auth/login/verify.
+   */
+  async function passkeyOptions({ personId = undefined, device = undefined } = {}) {
+    let allowCredentials = []
+    if (personId !== undefined) {
+      const pks = db.prepare('SELECT credential_id, transports FROM passkeys WHERE person_id = ?').all(personId)
+      if (!pks.length) return { status: 409, body: { error: 'no_passkey', message: 'Your account asks for your passkey, and it has none now. Ask Bart to turn that off for you.' } }
+      allowCredentials = pks.map((k) => ({ id: k.credential_id, transports: JSON.parse(k.transports) }))
+    }
+    const options = await generateAuthenticationOptions({ rpID, userVerification: 'required', allowCredentials, timeout: 120_000 })
+    const ceremony = newCeremony({ kind: 'login', challenge: options.challenge, personId, device })
+    return { status: 200, body: { passkey: true, ceremony, options } }
+  }
+
+  /** Checks a passkey's answer to a sign-in ceremony: { ok: true, personId, passkeyId, device } or a refusal. */
+  async function passkeyAssert(ceremonyId, response, { device = false } = {}) {
+      const refused = { status: 401, body: { error: 'sign_in_refused', message: 'That passkey did not open Ola. If you have no passkey for this computer yet, ask Bart for an invitation.' } }
+      const c = takeCeremony(ceremonyId, 'login')
+      if (!c || !!c.device !== device || typeof response?.id !== 'string' || response.id.length > 1400) return refused
+      const pk = db.prepare('SELECT k.id, k.person_id, k.credential_id, k.public_key, k.counter, k.transports, p.status, p.webauthn_user_id FROM passkeys k JOIN people p ON p.id = k.person_id WHERE k.credential_id = ?').get(response.id)
+      if (!pk) return refused
+      // After a right password with "Ask for my passkey too": only that person's passkey finishes it.
+      if (c.personId !== undefined && pk.person_id !== c.personId) return refused
+      // A discoverable credential names its user: it must be the passkey's owner.
+      const handle = response?.response?.userHandle
+      if (handle && !same(handle, Buffer.from(pk.webauthn_user_id).toString('base64url'))) return refused
+      let v
+      try {
+        v = await verifyAuthenticationResponse({
+          response,
+          expectedChallenge: c.challenge,
+          expectedOrigin: origin,
+          expectedRPID: rpID,
+          requireUserVerification: true,
+          credential: { id: pk.credential_id, publicKey: new Uint8Array(pk.public_key), counter: pk.counter, transports: JSON.parse(pk.transports) },
+        })
+      } catch {
+        v = { verified: false }
+      }
+      if (!v.verified || pk.status !== 'active') {
+        if (perCredential.take(pk.credential_id)) audit(db, { actorKind: 'system', subject: pk.person_id, action: 'sign_in_refused', ok: false })
+        return refused
+      }
+      db.prepare('UPDATE passkeys SET counter = ?, last_used_on = ? WHERE id = ?').run(v.authenticationInfo.newCounter, today(), pk.id)
+      return { ok: true, personId: pk.person_id, passkeyId: pk.id, device: c.device ?? null }
+  }
+
   return {
     rpID,
     allow,
@@ -438,37 +489,14 @@ export function makeAuth({ db, keys, origin, rpName = 'Ola', session: { absolute
     },
 
     async loginVerify(ceremonyId, response) {
-      const refused = { status: 401, body: { error: 'sign_in_refused', message: 'That passkey did not open Ola. If you have no passkey for this computer yet, ask Bart for an invitation.' } }
-      const c = takeCeremony(ceremonyId, 'login')
-      if (!c || typeof response?.id !== 'string' || response.id.length > 1400) return refused
-      const pk = db.prepare('SELECT k.id, k.person_id, k.credential_id, k.public_key, k.counter, k.transports, p.status, p.webauthn_user_id FROM passkeys k JOIN people p ON p.id = k.person_id WHERE k.credential_id = ?').get(response.id)
-      if (!pk) return refused
-      // After a right password with "Ask for my passkey too": only that person's passkey finishes it.
-      if (c.personId !== undefined && pk.person_id !== c.personId) return refused
-      // A discoverable credential names its user: it must be the passkey's owner.
-      const handle = response?.response?.userHandle
-      if (handle && !same(handle, Buffer.from(pk.webauthn_user_id).toString('base64url'))) return refused
-      let v
-      try {
-        v = await verifyAuthenticationResponse({
-          response,
-          expectedChallenge: c.challenge,
-          expectedOrigin: origin,
-          expectedRPID: rpID,
-          requireUserVerification: true,
-          credential: { id: pk.credential_id, publicKey: new Uint8Array(pk.public_key), counter: pk.counter, transports: JSON.parse(pk.transports) },
-        })
-      } catch {
-        v = { verified: false }
-      }
-      if (!v.verified || pk.status !== 'active') {
-        if (perCredential.take(pk.credential_id)) audit(db, { actorKind: 'system', subject: pk.person_id, action: 'sign_in_refused', ok: false })
-        return refused
-      }
-      db.prepare('UPDATE passkeys SET counter = ?, last_used_on = ? WHERE id = ?').run(v.authenticationInfo.newCounter, today(), pk.id)
-      audit(db, { actor: pk.person_id, action: 'signed_in' })
-      return { status: 200, body: { ok: true }, cookie: startSession(pk.person_id, pk.id).cookie }
+      const r = await passkeyAssert(ceremonyId, response, { device: false })
+      if (!r.ok) return r
+      audit(db, { actor: r.personId, action: 'signed_in' })
+      return { status: 200, body: { ok: true }, cookie: startSession(r.personId, r.passkeyId).cookie }
     },
+
+    passkeyOptions,
+    passkeyAssert,
 
     // ------------------------------------------------ passwords (see the note at the top)
     knownCookieName: knownJar.name,
@@ -485,13 +513,7 @@ export function makeAuth({ db, keys, origin, rpName = 'Ola', session: { absolute
       const r = await passwordAttempt({ handle: body?.handle, password: body?.password, addr, known })
       if (!r.ok) return r
       const p = r.person
-      if (p.require_passkey) {
-        const pks = db.prepare('SELECT credential_id, transports FROM passkeys WHERE person_id = ?').all(p.id)
-        if (!pks.length) return { status: 409, body: { error: 'no_passkey', message: 'Your account asks for your passkey, and it has none now. Ask Bart to turn that off for you.' } }
-        const options = await generateAuthenticationOptions({ rpID, userVerification: 'required', allowCredentials: pks.map((k) => ({ id: k.credential_id, transports: JSON.parse(k.transports) })), timeout: 120_000 })
-        const ceremony = newCeremony({ kind: 'login', challenge: options.challenge, personId: p.id })
-        return { status: 200, body: { passkey: true, ceremony, options } }
-      }
+      if (p.require_passkey) return passkeyOptions({ personId: p.id })
       audit(db, { actor: p.id, action: 'signed_in' })
       return { status: 200, body: { ok: true }, cookies: [startSession(p.id, null).cookie, knownCookie(p.id)] }
     },
@@ -620,10 +642,23 @@ export function makeAuth({ db, keys, origin, rpName = 'Ola', session: { absolute
 
     /** Adding a passkey from Settings: the password first (or a fresh sign-in), then the browser's prompt. */
     async addPasskeyOptions(sess, body) {
-      const p = db.prepare('SELECT handle, display_name, password_hash, webauthn_user_id FROM people WHERE id = ?').get(sess.personId)
+      const p = db.prepare('SELECT handle, password_hash FROM people WHERE id = ?').get(sess.personId)
       const proof = await proveIt(sess, p, body?.current)
       if (proof) return proof
-      const existing = db.prepare('SELECT credential_id, transports FROM passkeys WHERE person_id = ?').all(sess.personId)
+      return this.addPasskeyOptionsFor(sess.personId)
+    },
+
+    async addPasskeyVerify(sess, ceremonyId, response) {
+      return this.addPasskeyVerifyFor(sess.personId, ceremonyId, response)
+    },
+
+    /**
+     * A new passkey for a person who has proved it is them: from Settings on the web (above), or
+     * from the Mac app soon after it signed in (devices.mjs, with the device's pass).
+     */
+    async addPasskeyOptionsFor(personId) {
+      const p = db.prepare('SELECT handle, display_name, webauthn_user_id FROM people WHERE id = ?').get(personId)
+      const existing = db.prepare('SELECT credential_id, transports FROM passkeys WHERE person_id = ?').all(personId)
       const options = await generateRegistrationOptions({
         rpName,
         rpID,
@@ -636,12 +671,12 @@ export function makeAuth({ db, keys, origin, rpName = 'Ola', session: { absolute
         supportedAlgorithmIDs: [-7, -257],
         timeout: 120_000,
       })
-      return { status: 200, body: { ceremony: newCeremony({ kind: 'add', challenge: options.challenge, personId: sess.personId }), options } }
+      return { status: 200, body: { ceremony: newCeremony({ kind: 'add', challenge: options.challenge, personId }), options } }
     },
 
-    async addPasskeyVerify(sess, ceremonyId, response) {
+    async addPasskeyVerifyFor(personId, ceremonyId, response) {
       const c = takeCeremony(ceremonyId, 'add')
-      if (!c || c.personId !== sess.personId) return { status: 400, body: { error: 'ceremony_invalid', message: 'That took too long. Start again.' } }
+      if (!c || c.personId !== personId) return { status: 400, body: { error: 'ceremony_invalid', message: 'That took too long. Start again.' } }
       let v
       try {
         v = await verifyRegistrationResponse({ response, expectedChallenge: c.challenge, expectedOrigin: origin, expectedRPID: rpID, requireUserVerification: true, supportedAlgorithmIDs: [-7, -257] })
@@ -653,11 +688,11 @@ export function makeAuth({ db, keys, origin, rpName = 'Ola', session: { absolute
       const transports = JSON.stringify((cred.transports ?? []).filter((t) => ['ble', 'cable', 'hybrid', 'internal', 'nfc', 'smart-card', 'usb'].includes(t)))
       try {
         // via 'device': the person's other devices are told once that a passkey was added.
-        db.prepare("INSERT INTO passkeys (person_id, credential_id, public_key, counter, transports, created_at, via) VALUES (?, ?, ?, ?, ?, ?, 'device')").run(sess.personId, cred.id, Buffer.from(cred.publicKey), cred.counter, transports, Date.now())
+        db.prepare("INSERT INTO passkeys (person_id, credential_id, public_key, counter, transports, created_at, via) VALUES (?, ?, ?, ?, ?, ?, 'device')").run(personId, cred.id, Buffer.from(cred.publicKey), cred.counter, transports, Date.now())
       } catch {
         return { status: 409, body: { error: 'passkey_exists', message: 'That passkey is already on your account.' } }
       }
-      audit(db, { actor: sess.personId, action: 'passkey_added' })
+      audit(db, { actor: personId, action: 'passkey_added' })
       return { status: 200, body: { ok: true } }
     },
 

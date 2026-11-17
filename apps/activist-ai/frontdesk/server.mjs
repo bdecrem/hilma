@@ -164,6 +164,10 @@ const json = (res, status, body, extra = {}) => {
   res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', ...extra }).end(JSON.stringify(body))
 }
 const NOT_FOUND = { error: 'not_found', message: 'That is not here, or it is not yours to open.' }
+// The apple-app-site-association file: the Ola Mac app (team 274T5WCVD2, cx.ola.mac) may use this
+// site's passkeys, so it signs in and adds a passkey in its own window (devices.mjs).
+export const AASA_PATH = '/.well-known/apple-app-site-association'
+export const AASA = { webcredentials: { apps: ['274T5WCVD2.cx.ola.mac'] } }
 const CLOSED = { error: 'closed', message: 'This project is closed for now: Ola’s computer could not finish changing its keys safely, so no one can use it until Ola’s team has checked it. Your files are kept.' }
 // A workspace that could not be started: the machine is full (it starts once a slot frees, on the
 // next request), it is closed, or something else failed. Each says so, with a time to try again.
@@ -956,6 +960,9 @@ export function makeFrontDesk(cfg = config()) {
     if (writes && req.headers.origin !== cfg.origin) return json(res, 403, { error: 'wrong_origin' })
 
     if (p === '/api/health') return json(res, 200, { ok: true })
+    // Apple's check that the Ola Mac app may use this site's passkeys (webcredentials): a fixed
+    // file, no cookie. The TLS front lets exactly this GET through without its passcode.
+    if (p === AASA_PATH && (req.method === 'GET' || req.method === 'HEAD')) return json(res, 200, AASA)
     // A page Ola built, under its grant (views.mjs): no cookie is needed or wanted here.
     if (p.startsWith('/v/')) return views.serve(req, res, p)
 

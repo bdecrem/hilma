@@ -75,7 +75,7 @@ const SETTINGS = {
   // devices together. 0: the same as GATEWAY_WEEKLY_TOKENS.
   GATEWAY_PEOPLE_WEEKLY_TOKENS: [0, 0, 1e12],
 }
-const OTHER_GATEWAY_SETTINGS = ['GATEWAY_TOKENS', 'GATEWAY_TOKENS_FILE', 'GATEWAY_PEOPLE_TOKENS_FILE','GATEWAY_DOOR_DIR', 'GATEWAY_MODELS', 'GATEWAY_HOST', 'GATEWAY_DB', 'GATEWAY_QUOTAS', 'GATEWAY_USAGE_TOKEN', ...CLAUDE_SETTINGS, ...HOSTED_SETTINGS, ...WEB_SETTINGS, ...BATCH_SETTINGS, ...SPECIALIST_SETTINGS]
+const OTHER_GATEWAY_SETTINGS = ['GATEWAY_TOKENS', 'GATEWAY_TOKENS_FILE', 'GATEWAY_PEOPLE_TOKENS_FILE', 'GATEWAY_PEOPLE_QUOTAS_FILE', 'GATEWAY_DOOR_DIR', 'GATEWAY_MODELS', 'GATEWAY_HOST', 'GATEWAY_DB', 'GATEWAY_QUOTAS', 'GATEWAY_USAGE_TOKEN', ...CLAUDE_SETTINGS, ...HOSTED_SETTINGS, ...WEB_SETTINGS, ...BATCH_SETTINGS, ...SPECIALIST_SETTINGS]
 const NAME = /^[a-z0-9][a-z0-9._-]{0,63}$/i
 const TOKEN = /^[\x21-\x2b\x2d-\x7e]{24,512}$/ // printable ASCII, no space, no comma
 
@@ -172,6 +172,7 @@ function loadConfig(env) {
   // GATEWAY_QUOTAS: "name=tokens per week" for callers who differ from GATEWAY_WEEKLY_TOKENS
   const peopleWeekly = num.GATEWAY_PEOPLE_WEEKLY_TOKENS || num.GATEWAY_WEEKLY_TOKENS
   const quotas = new Map([...names].map((n) => [n, isPersonName(n) ? peopleWeekly : num.GATEWAY_WEEKLY_TOKENS]))
+  const envPeopleQuotas = new Map()
   if (env.GATEWAY_QUOTAS) {
     env.GATEWAY_QUOTAS.split(',').forEach((pair, i) => {
       const [name, raw] = pair.split('=').map((s) => s?.trim())
@@ -179,8 +180,17 @@ function loadConfig(env) {
       if (!names.has(name) && !isPersonName(name ?? '')) return bad(`GATEWAY_QUOTAS entry ${i + 1}: not a caller in GATEWAY_TOKENS`)
       if (!/^\d+$/.test(raw || '') || Number(raw) < 1 || Number(raw) > 1e12) return bad(`GATEWAY_QUOTAS entry ${i + 1} (${name}): tokens must be a whole number from 1 to 10^12`)
       quotas.set(name, Number(raw))
+      if (isPersonName(name)) envPeopleQuotas.set(name, Number(raw))
     })
   }
+  // GATEWAY_PEOPLE_QUOTAS_FILE (default: the people file's name + "-quotas", which the front desk
+  // writes beside it): each person's own weekly allowance on Ola, set by the admin (admin.mjs
+  // app-allowance). It wins over GATEWAY_QUOTAS and GATEWAY_PEOPLE_WEEKLY_TOKENS for that person,
+  // and is read again whenever it changes, like the people file. A file that does not check out is
+  // kept out (the allowances in force stay).
+  const peopleQuotasFile = env.GATEWAY_PEOPLE_QUOTAS_FILE ? resolve(env.GATEWAY_PEOPLE_QUOTAS_FILE) : peopleFile ? `${peopleFile}-quotas` : null
+  const peopleQuotas = peopleQuotasFile ? readPeopleQuotas(peopleQuotasFile, (m) => console.error(`people: ${m}`)) ?? new Map() : new Map()
+  for (const [n, q] of peopleQuotas) if (quotas.has(n)) quotas.set(n, q)
 
   const host = env.GATEWAY_HOST || '127.0.0.1'
   if (!/^[0-9a-z.:-]{1,253}$/i.test(host)) bad('GATEWAY_HOST is not a host name or address')
@@ -208,6 +218,9 @@ function loadConfig(env) {
     tokensFile,
     peopleFile,
     people: new Set(people.map((t) => t.name)),
+    peopleQuotasFile,
+    peopleQuotas,
+    envPeopleQuotas,
     doorDir,
     weekly: num.GATEWAY_WEEKLY_TOKENS,
     peopleWeekly,
@@ -335,6 +348,47 @@ function readPeople(file, others, bad) {
   return out
 }
 
+/**
+ * The people's quotas file: mode 600, one line GATEWAY_QUOTAS=p-<id>=<tokens>,... (tokens a whole
+ * number from 0 to 10^12; 0 is no allowance at all). A missing file is no one. On any problem: null,
+ * the problems to `bad` by name and entry number.
+ */
+function readPeopleQuotas(file, bad) {
+  let st = null
+  try {
+    st = statSync(file)
+  } catch {
+    return new Map()
+  }
+  if (!st.isFile()) return bad('GATEWAY_PEOPLE_QUOTAS_FILE is not a file'), null
+  if ((st.mode & 0o077) !== 0) return bad('GATEWAY_PEOPLE_QUOTAS_FILE must be readable by this account only (mode 600)'), null
+  const text = readFileSync(file, 'utf8').trim()
+  if (!/^GATEWAY_QUOTAS=[^\n]*$/.test(text)) return bad('GATEWAY_PEOPLE_QUOTAS_FILE must hold one line, GATEWAY_QUOTAS=p-<id>=<tokens>,...'), null
+  const out = new Map()
+  let ok = true
+  text
+    .slice('GATEWAY_QUOTAS='.length)
+    .split(',')
+    .filter((p) => p !== '')
+    .forEach((pair, i) => {
+      const m = /^(p-[1-9][0-9]{0,11})=(\d{1,13})$/.exec(pair.trim())
+      if (!m || Number(m[2]) > 1e12) return (ok = false), bad(`GATEWAY_PEOPLE_QUOTAS_FILE entry ${i + 1}: p-<number>=<tokens from 0 to 10^12>`)
+      if (out.has(m[1])) return (ok = false), bad(`GATEWAY_PEOPLE_QUOTAS_FILE: ${m[1]} appears twice`)
+      out.set(m[1], Number(m[2]))
+    })
+  return ok ? out : null
+}
+
+/** A person's weekly allowance: their own (the quotas file), else GATEWAY_QUOTAS, else GATEWAY_PEOPLE_WEEKLY_TOKENS. */
+function personQuota(name) {
+  return C.peopleQuotas.get(name) ?? C.envPeopleQuotas.get(name) ?? C.peopleWeekly
+}
+
+/** What a caller is told when the week's tokens are used up: a person in their own words. */
+function quotaWords(who, q) {
+  return isPersonName(who) ? 'Your weekly allowance on Ola is used up. It starts again on Monday.' : `this week's quota of ${q.quota} tokens is used up; it resets at ${q.resets_at}`
+}
+
 function sha(s) {
   return createHash('sha256').update(s, 'utf8').digest()
 }
@@ -405,7 +459,7 @@ function usageOf(name) {
     tokens_out: row.tokens_out,
     tokens_used: used,
     quota,
-    fraction_used: Math.round((used / quota) * 10000) / 10000,
+    fraction_used: quota > 0 ? Math.round((used / quota) * 10000) / 10000 : 1,
     by_model: Object.fromEntries(readByModel.all(weekKey(start), name).map((r) => [r.model, { requests: r.requests, tokens_in: r.tokens_in, tokens_out: r.tokens_out }])),
   }
 }
@@ -687,7 +741,7 @@ async function complete(body, offered, signal, deadline, tally, overQuota, targe
     // store by now, so a caller cannot keep retrying (or keep its queued requests going) past the
     // limit. The first try catches a caller that went over while it waited for a slot.
     const q = overQuota && overQuota(tally.in + tally.out)
-    if (q) return { status: 429, type: 'insufficient_quota', error: `this week's quota of ${q.quota} tokens is used up; it resets at ${q.resets_at}`, why: 'the weekly quota is used up', headers: { 'Retry-After': secondsUntil(Date.parse(q.resets_at)) } }
+    if (q) return { status: 429, type: 'insufficient_quota', error: quotaWords(q.caller, q), why: 'the weekly quota is used up', headers: { 'Retry-After': secondsUntil(Date.parse(q.resets_at)) } }
     tally.tries = attempt
     let r
     try {
@@ -996,7 +1050,7 @@ async function handle(req, res, rec, signal) {
   }
   const before = lane ? null : overQuota()
   if (before) {
-    return no(429, 'the weekly quota is used up', `this week's quota of ${before.quota} tokens is used up; it resets at ${before.resets_at}`, 'insufficient_quota', {
+    return no(429, 'the weekly quota is used up', quotaWords(who, before), 'insufficient_quota', {
       'Retry-After': secondsUntil(Date.parse(before.resets_at)),
     })
   }
@@ -1105,7 +1159,7 @@ async function specialist(req, res, rec, who, signal, name, no) {
     batchHold = batch.hold(who)
   }
   const before = job ? null : overQuota()
-  if (before) return no(429, 'the weekly quota is used up', `this week's quota of ${before.quota} tokens is used up; it resets at ${before.resets_at}`, 'insufficient_quota', { 'Retry-After': secondsUntil(Date.parse(before.resets_at)) })
+  if (before) return no(429, 'the weekly quota is used up', quotaWords(who, before), 'insufficient_quota', { 'Retry-After': secondsUntil(Date.parse(before.resets_at)) })
   rec.lane = lineOf(req, s)
   if (tooFast(who, s)) return no(429, 'the per-minute limit for this name', `Ola has asked ${name} ${s.perMinute} times in the last minute for this project; wait a minute.`, 'rate_limit_error', { 'Retry-After': '60' })
   const queuedAt = Date.now()
@@ -1128,7 +1182,7 @@ async function specialist(req, res, rec, who, signal, name, no) {
   let lastStatus = 502
   try {
     for (let attempt = 1; attempt <= TRIES; attempt++) {
-      if (attempt > 1 && (job ? batch.over(who, job, tally.in + tally.out) : overQuota(tally.in + tally.out))) return no(429, 'the weekly quota is used up', "this week's quota is used up", 'insufficient_quota')
+      if (attempt > 1 && (job ? batch.over(who, job, tally.in + tally.out) : overQuota(tally.in + tally.out))) return no(429, 'the weekly quota is used up', job ? "this week's quota is used up" : quotaWords(who, usageOf(who)), 'insufficient_quota')
       tally.tries = attempt
       let r
       try {
@@ -1255,7 +1309,19 @@ const stateOf = (tokens) => tokens.map((t) => `${t.name}:${t.digest.toString('he
 // used: the callers already in force stay, and the problems are printed by name, never value.
 // The two files are judged apart: a people file that does not check out keeps its own callers in
 // force and never holds back a workspace's new or revoked token (and the other way round).
+/** Reads the people's quotas file again; a file that does not check out keeps the allowances in force. */
+function reloadPeopleQuotas() {
+  if (!C.peopleQuotasFile) return true
+  const problems = []
+  const next = readPeopleQuotas(C.peopleQuotasFile, (m) => problems.push(m))
+  for (const p of problems) console.error(`people: ${p}`)
+  if (next) C.peopleQuotas = next
+  for (const n of C.people) C.quotas.set(n, personQuota(n))
+  return !!next
+}
+
 function reloadTokens(why) {
+  reloadPeopleQuotas()
   const problems = []
   const peopleProblems = []
   const main = readTokens(process.env.GATEWAY_TOKENS, C.tokensFile, (m) => problems.push(m))
@@ -1279,7 +1345,8 @@ function reloadTokens(why) {
   C.people = new Set(people.map((t) => t.name))
   tokenState = next
   for (const n of after) {
-    if (!C.quotas.has(n)) C.quotas.set(n, C.people.has(n) ? C.peopleWeekly : C.weekly)
+    if (C.people.has(n)) C.quotas.set(n, personQuota(n))
+    else if (!C.quotas.has(n)) C.quotas.set(n, C.weekly)
     queue.addCaller(n)
   }
   queue.prune(after)
@@ -1297,7 +1364,7 @@ process.on('SIGHUP', () => reloadTokens('signal'))
 {
   // A change to either file (ws.mjs and the front desk replace theirs by rename) is picked up at
   // once; a stat every few seconds catches what a watch can miss.
-  const files = [C.tokensFile, C.peopleFile].filter(Boolean)
+  const files = [C.tokensFile, C.peopleFile, C.peopleQuotasFile].filter(Boolean)
   let soon = null
   const later = () => (clearTimeout(soon), (soon = setTimeout(() => reloadTokens('file'), 100)))
   for (const dir of new Set(files.map((f) => dirname(f)))) {

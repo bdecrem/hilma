@@ -849,9 +849,9 @@ device rather than trusting one. The key, `OLA_GATE_PASS_KEY`, is in `tls.env` a
 the same value; without it device sign-in is off: the door takes only the passcode and the front desk
 answers 404 on `/api/device/*` and `/api/devices`.
 
-**Who may.** `people.devices_allowed` (migration 11), off by default; admins always may. Whether to
-offer this to customers is not decided; today only Bart has it. A person who may not gets "Your
-account cannot sign in to Ola on other computers yet. Ask Bart if you need it." and a 403.
+**Who may.** Anyone with an active account (2026-11-17: "it should work for anyone with a username and
+login"). `people.devices_allowed` (migration 11) is no longer read; `allow-devices` and
+`disallow-devices` only say so.
 
 **A caller per person, and what leaves the machine.** The first computer a person signs in makes them
 a gateway caller `p-<their id>` with its own random token, in `OLA_FD_PEOPLE_TOKENS_FILE`
@@ -890,8 +890,7 @@ was last used, and Remove (`GET /api/devices`, `DELETE /api/devices/<id>`, sessi
 own). Removal signs it out at once and cuts its open requests.
 
 ```bash
-node admin.mjs allow-devices <handle>      # may sign in computers (admins always may)
-node admin.mjs disallow-devices <handle>   # may not; every computer of theirs is signed out now
+node admin.mjs app-allowance <handle> <tokens|default>   # their weekly tokens from their computers
 node admin.mjs devices [<handle>] [--json] # id, person, kind, name, made, last used, ends or revoked
 node admin.mjs revoke-device <id>
 node admin.mjs add-device <handle> --name "Bart's MacBook Air" --kind mac|cli
@@ -1451,11 +1450,19 @@ the browser way stays, and the app gains a sign-in with a name and password.
   (`auth.mjs` `passwordAttempt`: per address, per name with the known-device exception, the global
   ceiling; one answer for every failure, after the same scrypt work). The answer is the same as
   `/api/device/token`'s (a device pass, shown once, kept in the Mac's Keychain; the database keeps its
-  sha256), plus this Mac's known-device token (`known`; the app sends it back as `X-Ola-Known`). A person
-  who asks for their passkey too gets 403 `passkey_required` (only after a right password) and the app
-  opens the browser way. A person who may not sign in computers (`allow-devices`, admins always may) gets
-  403 `not_allowed`.
-- **The door** (`ops/tls.mjs`): exactly `POST /api/device/login` (the raw request line, no query), with no
+  sha256), plus this Mac's known-device token (`known`; the app sends it back as `X-Ola-Known`) and
+  `has_passkey`. A person who asks for their passkey too gets, after a right password only, `{passkey:
+  true, ceremony, options}` for their own passkeys, which the app answers in the system's passkey sheet
+  (`apple/OlaKit/Sources/OlaKit/NativePasskey.swift`); `{passkey: true, name, kind}` with no name or
+  password asks for any passkey. Never a browser (2026-11-17: "normal means you'd never leave the app").
+- **`POST /api/device/login/passkey`** `{ceremony, response}`: the passkey's answer; the device, as above.
+  A device ceremony is answered only here, a web one only at `/api/auth/login/verify`.
+- **`POST /api/device/passkey/options`, `/verify`** with the device's pass, only in the first 15 minutes
+  after that device signed in (then 403 `not_fresh`): the app's "Add a passkey? Next time, sign in with
+  Touch ID." right after the first sign-in. **`GET /.well-known/apple-app-site-association`** says the
+  Mac app (`274T5WCVD2.cx.ola.mac`) may use app.ola.cx's passkeys.
+- **The door** (`ops/tls.mjs`): exactly `POST /api/device/login`, `POST /api/device/login/passkey` and
+  `GET /.well-known/apple-app-site-association` (each the raw request line, no query), with no
   Authorization, while device sign-in is on (`OLA_GATE_PASS_KEY` set), goes through without the door
   passcode: an app cannot answer a browser's password prompt. It stands on the front desk's own password
   check and limits and a 4 KiB body. Every other route still needs the passcode or a valid pass;
@@ -1463,7 +1470,10 @@ the browser way stays, and the app gains a sign-in with a name and password.
   `%2f`, uppercase, a neighbor, the grant) with no credential: each gets the gate's 401.
 - **What a computer's pass reaches** is the device module's list (the model routes, web search and
   fetch, the specialists; not Claude, not the hosted model, not a batch lane), counted against the
-  person's own weekly tokens at the gateway (`GATEWAY_PEOPLE_WEEKLY_TOKENS`, one number for everyone).
+  person's own weekly tokens at the gateway: `admin.mjs app-allowance <handle> <tokens|default>` sets
+  theirs (`people.app_weekly_tokens`, written to `gateway-people-quotas` beside the people file, mode
+  600, which the gateway reloads on change and prefers), else `GATEWAY_PEOPLE_WEEKLY_TOKENS`. Used up:
+  "Your weekly allowance on Ola is used up. It starts again on Monday."
   Removal (Your account, the app's Sign Out, `revoke-device`) is at once. A password change, a reset
   for someone who had a password, Sign out everywhere, `revoke-sessions` and `suspend` sign out every
   computer of theirs too.
@@ -1481,7 +1491,8 @@ the browser way stays, and the app gains a sign-in with a name and password.
 (the login route at the door). Bart's own password: `node admin.mjs reset-password bart` prints a
 one-time link for his existing account; he chooses a password there and keeps his passkey (he had no
 password, so nothing is signed out). For someone else to use the Mac app: `add-person … --link` (or
-`invite`), then `allow-devices <handle>`.
+`invite`); nothing more. Passkeys in the app after Apple's agreement: `apple/README.md`, "Passkeys in
+the app".
 
 ## Rules for this code
 

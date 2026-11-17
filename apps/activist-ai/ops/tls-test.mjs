@@ -46,7 +46,7 @@ const swap = (dir) => (rmSync(`${LIVE}.new`, { force: true }), symlinkSync(path.
 let stub, STUB_PORT
 const stubHttp = http.createServer((req, res) => {
   const client = req.socket.olaClient ?? null
-  if (req.url === '/who' || req.url === '/api/health' || req.url.startsWith('/api/device/')) return res.end(JSON.stringify({ client, host: req.headers.host, authorization: req.headers.authorization ?? null, pass: req.headers['x-ola-pass'] ?? null }))
+  if (req.url === '/who' || req.url === '/api/health' || req.url.startsWith('/api/device/') || req.url === '/.well-known/apple-app-site-association') return res.end(JSON.stringify({ client, host: req.headers.host, authorization: req.headers.authorization ?? null, pass: req.headers['x-ola-pass'] ?? null }))
   if (req.url === '/upload') {
     let n = 0
     req.on('data', (d) => (n += d.length))
@@ -443,6 +443,51 @@ test('the Mac app’s password sign-in: exactly POST /api/device/login with no c
   const basic = await get(on.port, '/api/device/login', { from: '100.64.30.3' }, body)
   assert.equal(basic.status, 200)
   assert.equal(JSON.parse(basic.body).authorization, null)
+})
+
+test('the Mac app’s passkey step: exactly POST /api/device/login/passkey with no credential passes the door, only while sign-in is on; nothing near it does', async () => {
+  const on = await startFront({ OLA_GATE_PASS_KEY: KEY })
+  const off = await startFront()
+  const body = Buffer.from('{"ceremony":"c","response":{}}')
+  const ok = await get(on.port, '/api/device/login/passkey', { auth: null, from: '100.64.32.1' }, body)
+  assert.equal(ok.status, 200)
+  assert.deepEqual([JSON.parse(ok.body).authorization, JSON.parse(ok.body).pass], [null, null])
+  assert.equal((await get(off.port, '/api/device/login/passkey', { auth: null, from: '100.64.32.2' }, body)).status, 401, 'with device sign-in off')
+  const near = [['/api/device/login/passkey?x=1', body], ['/api/device/login/passkey', null], ['/api/device/login/passkey/', body], ['/api/device/login//passkey', body], ['/api/device/login/passkeys', body], ['/api/device/login/passkey/../../me', body], ['/api/device/login/%70asskey', body], ['/api/device/passkey/options', body], ['/api/device/passkey/verify', body]]
+  for (const [i, [p, b]] of near.entries()) {
+    const r = await get(on.port, p, { auth: null, from: `100.64.33.${i + 1}` }, b)
+    assert.equal(r.status, 401, `${b ? 'POST' : 'GET'} ${p}`)
+    assert.equal(r.headers['www-authenticate'], challenge, p)
+  }
+})
+
+test('Apple’s site check: exactly GET /.well-known/apple-app-site-association with no credential passes the door; nothing else under it does', async () => {
+  for (const env of [{ OLA_GATE_PASS_KEY: KEY }, {}]) {
+    const f = await startFront(env)
+    const ok = await get(f.port, '/.well-known/apple-app-site-association', { auth: null, from: '100.64.34.1' })
+    assert.equal(ok.status, 200)
+    assert.deepEqual([JSON.parse(ok.body).authorization, JSON.parse(ok.body).pass], [null, null])
+    const near = [
+      ['/.well-known/apple-app-site-association?x=1'],
+      ['/.well-known/apple-app-site-association', Buffer.from('{}')],
+      ['/.well-known/apple-app-site-association/'],
+      ['/.well-known/apple-app-site-association.json'],
+      ['/.well-known//apple-app-site-association'],
+      ['/.well-known/apple-app-site-association/../../api/me'],
+      ['/.well-known/%61pple-app-site-association'],
+      ['/.WELL-KNOWN/apple-app-site-association'],
+      ['/.well-known/'],
+      ['/apple-app-site-association'],
+      ['/'],
+    ]
+    for (const [i, [p, b]] of near.entries()) {
+      const r = await get(f.port, p, { auth: null, from: `100.64.35.${i + 1}` }, b)
+      assert.equal(r.status, 401, `${b ? 'POST' : 'GET'} ${p}`)
+      assert.equal(r.headers['www-authenticate'], challenge, p)
+    }
+    // A bearer on it is still a wrong credential, never let through.
+    assert.equal((await get(f.port, '/.well-known/apple-app-site-association', { auth: null, headers: bearer('olap1.x.y'), from: '100.64.36.1' })).status, 401)
+  }
 })
 
 test('device passes: a bad MAC, an expired pass, a path outside /api/device/ and any pass with no key set are refused like a wrong passcode, and count toward the block', async () => {

@@ -28,8 +28,21 @@
 // Each person who signs in a device has one gateway caller, p-<person id>, with its own token, in
 // a file this module keeps (OLA_FD_PEOPLE_TOKENS_FILE, ~/.ola/gateway-people, mode 600, written by
 // rename) and the gateway reads beside its tokens file (GATEWAY_PEOPLE_TOKENS_FILE). The file
-// follows the database: a person with at least one live device, active and allowed, has an entry;
-// anyone else has none. workspace/ws.mjs never touches it.
+// follows the database: a person with at least one live device who is active has an entry; anyone
+// else has none. workspace/ws.mjs never touches it. Beside it, the quotas file (the people file's
+// name + "-quotas", the same mode and rename): each such person's own weekly allowance on Ola when
+// the admin set one (people.app_weekly_tokens, admin.mjs app-allowance), which the gateway prefers
+// over its GATEWAY_PEOPLE_WEEKLY_TOKENS.
+//
+// Signing in without a browser (2026-11-17, "normal means you'd never leave the app"):
+//   POST /api/device/login {handle, password, name, kind}   a name and password: the device; or, for
+//        a person who asks for their passkey too, {passkey: true, ceremony, options} limited to that
+//        person's passkeys, which the app answers with the system's own passkey sheet
+//   POST /api/device/login {passkey: true, name, kind}       a passkey alone (any of the person's)
+//   POST /api/device/login/passkey {ceremony, response}       the passkey's answer: the device
+// and with the device's pass, within 15 minutes of its sign-in (a Mac key taken later cannot add one):
+//   POST /api/device/passkey/options, POST /api/device/passkey/verify   a new passkey for the person
+// The TLS front lets exactly the two login paths through without its passcode (ops/tls.mjs).
 import { createHash, randomBytes } from 'node:crypto'
 import { chmodSync, existsSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 import http from 'node:http'
@@ -90,7 +103,11 @@ export function validDeviceName(name) {
   return n && [...n].length <= 60 && !/\p{C}/u.test(n) ? n : null
 }
 export const validChallenge = (c) => typeof c === 'string' && /^[A-Za-z0-9_-]{43}$/.test(c)
-export const mayUseDevices = (p) => !!p && p.status === 'active' && (p.devices_allowed === 1 || p.is_admin === 1)
+// Anyone with an active account may sign in the Mac app and the command line (2026-11-17: no admin
+// step per person; people.devices_allowed is no longer read).
+export const mayUseDevices = (p) => !!p && p.status === 'active'
+/** How soon after its sign-in a device may add a passkey to the account. */
+export const PASSKEY_ADD_MS = 15 * 60_000
 
 // ---------------------------------------------------------------- the people file
 
@@ -121,24 +138,34 @@ export function syncPeopleFile(db, file) {
   const want = db
     .prepare(
       `SELECT DISTINCT d.person_id AS id FROM devices d JOIN people p ON p.id = d.person_id
-       WHERE d.revoked_at IS NULL AND d.expires_at > ? AND p.status = 'active' AND (p.devices_allowed = 1 OR p.is_admin = 1) ORDER BY d.person_id`,
+       WHERE d.revoked_at IS NULL AND d.expires_at > ? AND p.status = 'active' ORDER BY d.person_id`,
     )
     .all(now)
     .map((r) => r.id)
   const have = readPeopleFile(file)
   const next = new Map(want.map((id) => [id, have.get(id) ?? randomBytes(24).toString('hex')]))
-  const line = `GATEWAY_TOKENS=${[...next].map(([id, t]) => `p-${id}:${t}`).join(',')}\n`
+  // The allowances first, so a person never reaches the gateway before their own number does.
+  const get = db.prepare('SELECT app_weekly_tokens AS t FROM people WHERE id = ?')
+  const own = want.map((id) => [id, get.get(id)?.t]).filter(([, t]) => Number.isSafeInteger(t) && t >= 0)
+  writeIfChanged(quotasFileOf(file), `GATEWAY_QUOTAS=${own.map(([id, t]) => `p-${id}=${t}`).join(',')}\n`, own.length > 0)
+  writeIfChanged(file, `GATEWAY_TOKENS=${[...next].map(([id, t]) => `p-${id}:${t}`).join(',')}\n`, next.size > 0)
+  return next
+}
+
+/** The quotas file beside a people file (the gateway finds it the same way: gateway/server.mjs). */
+export const quotasFileOf = (peopleFile) => `${peopleFile}-quotas`
+
+/** Written beside and renamed into place (no reader sees half a file), mode 600, only when it changes; never made while empty. */
+function writeIfChanged(file, line, any) {
   let before = null
   try {
     before = readFileSync(file, 'utf8')
   } catch {}
-  if (before !== line && (before !== null || next.size)) {
-    const tmp = `${file}.tmp-${process.pid}`
-    writeFileSync(tmp, line, { mode: 0o600 })
-    chmodSync(tmp, 0o600)
-    renameSync(tmp, file)
-  }
-  return next
+  if (before === line || (before === null && !any)) return
+  const tmp = `${file}.tmp-${process.pid}`
+  writeFileSync(tmp, line, { mode: 0o600 })
+  chmodSync(tmp, 0o600)
+  renameSync(tmp, file)
 }
 
 // ---------------------------------------------------------------- shared with the admin CLI
@@ -232,10 +259,6 @@ export function makeDevices({ db, cfg, gateway, auth, clientOf, json, readJson, 
     if (!body || !validChallenge(body.challenge) || !name || !KINDS.includes(body.kind) || (port !== undefined && !(Number.isInteger(port) && port >= 1024 && port <= 65535)))
       return json(res, 400, { error: 'bad_request', message: 'This sign-in link is not complete. Start again from Ola on that computer.' })
     const p = person(sess.personId)
-    if (!mayUseDevices(p)) {
-      refused(`p${p.id}`, p)
-      return json(res, 403, { error: 'not_allowed', message: 'Your account cannot sign in to Ola on other computers yet. Ask Bart if you need it.' })
-    }
     if (!perPersonGrants.take(p.id)) return json(res, 429, { error: 'slow_down', message: 'Too many tries. Wait a minute and try again.' }, { 'retry-after': '60' })
     const now = Date.now()
     for (const [k, c] of codes) if (c.exp <= now) codes.delete(k)
@@ -267,39 +290,77 @@ export function makeDevices({ db, cfg, gateway, auth, clientOf, json, readJson, 
   /** Is this a route a device uses with its pass (not the page's grant)? */
   const isDeviceRoute = (p) => PASS_PATH.test(p) && p !== '/api/device/grant'
 
+  /** A new device for a person who just proved it is them: the same answer as /api/device/token's, plus this Mac's known-device token. */
+  function signedIn(res, p0, body) {
+    const name = validDeviceName(body?.name) ?? 'A Mac'
+    const kind = KINDS.includes(body?.kind) ? body.kind : 'mac'
+    const d = createDevice(db, key, p0.id, name, kind)
+    audit(db, { actor: p0.id, action: 'signed_in' })
+    audit(db, { actor: p0.id, action: 'device_signed_in' })
+    sync()
+    const hasPasskey = db.prepare('SELECT count(*) AS n FROM passkeys WHERE person_id = ?').get(p0.id).n > 0
+    return json(res, 200, { token: d.token, expires_at: new Date(d.expiresAt).toISOString(), person: { handle: p0.handle, name: p0.display_name, admin: !!p0.is_admin }, device: { id: d.id, name, kind }, known: auth.knownToken(p0.id), has_passkey: hasPasskey })
+  }
+
   /**
-   * POST /api/device/login: the Mac app's normal sign-in (2026-11-17), a name and a password, with
-   * every limit of a web sign-in (auth.mjs passwordAttempt: per address, per name with the known-
-   * device exception (X-Ola-Known), the global ceiling; one answer for every failure). The door lets
-   * exactly this request through without its passcode (ops/tls.mjs). A person who asks for their
-   * passkey too is sent to the browser (403 passkey_required, after a right password only). The
-   * answer is the same as /api/device/token's, plus this Mac's known-device token.
+   * POST /api/device/login: the Mac app's and the command line's normal sign-in (2026-11-17), a name
+   * and a password, with every limit of a web sign-in (auth.mjs passwordAttempt: per address, per
+   * name with the known-device exception (X-Ola-Known), the global ceiling; one answer for every
+   * failure). The door lets exactly this request through without its passcode (ops/tls.mjs). For a
+   * person who asks for their passkey too, a right password gives a passkey ceremony for that person's
+   * passkeys alone (as the web's), which the app answers in its own passkey sheet and sends to
+   * /api/device/login/passkey; never a browser. `{passkey: true}` with no name: a passkey alone.
    */
   async function login(req, res) {
     if (req.method !== 'POST') return json(res, 405, { error: 'method' })
     const body = await readJson(req, 4 * 1024)
     if (!body) return json(res, 400, { error: 'bad_json' })
+    const device = { name: validDeviceName(body.name) ?? 'A Mac', kind: KINDS.includes(body.kind) ? body.kind : 'mac' }
+    if (body.passkey === true && body.handle === undefined && body.password === undefined) {
+      // A random challenge and nothing else: charged to the address, as the web's sign-in options.
+      if (!auth.allow('login/options', clientOf(req), null)) return json(res, 429, { error: 'slow_down', message: 'Too many tries. Wait a minute and try again.' }, { 'retry-after': '60' })
+      const r = await auth.passkeyOptions({ device })
+      return json(res, r.status, r.body)
+    }
     const known = typeof req.headers['x-ola-known'] === 'string' ? req.headers['x-ola-known'] : null
     const r = await auth.passwordAttempt({ handle: body.handle, password: body.password, addr: clientOf(req), known })
     if (!r.ok) return json(res, r.status, r.body, r.headers ?? {})
     const p0 = person(r.person.id)
-    if (r.person.require_passkey) return json(res, 403, { error: 'passkey_required', message: 'Your account asks for your passkey too. Ola opens your browser to finish signing in.' })
-    if (!mayUseDevices(p0)) {
-      refused(`p${p0.id}`, p0)
-      return json(res, 403, { error: 'not_allowed', message: 'Your account cannot sign in to Ola on other computers yet. Ask Bart if you need it.' })
+    if (r.person.require_passkey) {
+      const c = await auth.passkeyOptions({ personId: p0.id, device })
+      return json(res, c.status, c.body)
     }
-    const name = validDeviceName(body.name) ?? 'A Mac'
-    const kind = KINDS.includes(body.kind) ? body.kind : 'mac'
-    const d = createDevice(db, key, p0.id, name, kind)
-    audit(db, { actor: p0.id, action: 'signed_in' })
-    audit(db, { actor: p0.id, action: 'device_signed_in' })
-    sync()
-    return json(res, 200, { token: d.token, expires_at: new Date(d.expiresAt).toISOString(), person: { handle: p0.handle, name: p0.display_name, admin: !!p0.is_admin }, device: { id: d.id, name, kind }, known: auth.knownToken(p0.id) })
+    return signedIn(res, p0, device)
+  }
+
+  /** POST /api/device/login/passkey {ceremony, response}: the passkey's answer to a device ceremony. */
+  async function loginPasskey(req, res) {
+    if (req.method !== 'POST') return json(res, 405, { error: 'method' })
+    const body = await readJson(req, 16 * 1024)
+    if (!body) return json(res, 400, { error: 'bad_json' })
+    if (!auth.allow('login/verify', clientOf(req), body)) return json(res, 429, { error: 'slow_down', message: 'Too many tries. Wait a minute and try again.' }, { 'retry-after': '60' })
+    const r = await auth.passkeyAssert(body.ceremony, body.response, { device: true })
+    if (!r.ok) return json(res, r.status, r.body)
+    const p0 = person(r.personId)
+    if (!mayUseDevices(p0)) return json(res, 401, { error: 'sign_in_refused', message: 'That passkey did not open Ola.' })
+    return signedIn(res, p0, r.device)
+  }
+
+  /** POST /api/device/passkey/options | verify, with the pass: a new passkey for the person, soon after this device signed in. */
+  async function addPasskey(req, res, dev, p) {
+    if (req.method !== 'POST') return json(res, 405, { error: 'method' })
+    const body = await readJson(req, 16 * 1024)
+    if (!body) return json(res, 400, { error: 'bad_json' })
+    const made = db.prepare('SELECT created_at FROM devices WHERE id = ?').get(dev.id)?.created_at ?? 0
+    if (Date.now() - made > PASSKEY_ADD_MS) return json(res, 403, { error: 'not_fresh', message: 'For your safety, a passkey can be added only in the first 15 minutes after signing in. Sign out and sign in again on this Mac, then add it.' })
+    const r = p === '/api/device/passkey/options' ? await auth.addPasskeyOptionsFor(dev.personId) : await auth.addPasskeyVerifyFor(dev.personId, body.ceremony, body.response)
+    return json(res, r.status, r.body)
   }
 
   async function handle(req, res, p) {
     if (!enabled) return json(res, 404, { error: 'not_found' })
     if (p === '/api/device/login') return login(req, res)
+    if (p === '/api/device/login/passkey') return loginPasskey(req, res)
     const raw = passOf(req)
 
     if (p === '/api/device/token') {
@@ -316,7 +377,7 @@ export function makeDevices({ db, cfg, gateway, auth, clientOf, json, readJson, 
         refused(`p${c.personId}`, p0)
         return json(res, 401, { error: 'invalid_code' })
       }
-      if (!mayUseDevices(p0)) return refused(`p${c.personId}`, p0), json(res, 403, { error: 'not_allowed' })
+      if (!mayUseDevices(p0)) return refused(`p${c.personId}`, p0), json(res, 401, { error: 'invalid_code' }) // suspended between the yes and the redeem
       const d = createDevice(db, key, p0.id, c.name, c.kind)
       audit(db, { actor: p0.id, action: 'device_signed_in' })
       sync()
@@ -332,6 +393,7 @@ export function makeDevices({ db, cfg, gateway, auth, clientOf, json, readJson, 
       sync()
       return json(res, 200, { ok: true })
     }
+    if (p === '/api/device/passkey/options' || p === '/api/device/passkey/verify') return addPasskey(req, res, dev, p)
     if (p.startsWith('/api/device/gw/')) return toGateway(req, res, dev, p.slice('/api/device/gw'.length))
     return json(res, 404, { error: 'not_found' })
   }

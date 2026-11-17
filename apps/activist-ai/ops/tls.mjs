@@ -282,8 +282,17 @@ export function makeTlsFront(cfg = config()) {
     // while device sign-in is on. It goes through without the passcode, because an app cannot answer
     // a browser's password prompt; it stands on the front desk's own password check and its limits
     // (per address, per name, the global ceiling, a 4 KiB body). Nothing else is let through this way.
-    if (req.method === 'POST' && req.url === '/api/device/login' && req.headers.authorization === undefined && cfg.passKey) {
+    // Its passkey step (2026-11-17, never a browser): exactly `POST /api/device/login/passkey`, the
+    // same way, standing on the front desk's own check of the passkey's answer to a ceremony it made.
+    if (req.method === 'POST' && (req.url === '/api/device/login' || req.url === '/api/device/login/passkey') && req.headers.authorization === undefined && cfg.passKey) {
       counts.logins = (counts.logins ?? 0) + 1
+      return pipeUp(req, res, client)
+    }
+    // Apple's check that the Mac app may use this site's passkeys: exactly `GET
+    // /.well-known/apple-app-site-association` (no query, no credential). It reads a fixed file the
+    // front desk serves, and nothing else is let through this way.
+    if (req.method === 'GET' && req.url === '/.well-known/apple-app-site-association' && req.headers.authorization === undefined) {
+      counts.aasa = (counts.aasa ?? 0) + 1
       return pipeUp(req, res, client)
     }
     // A bearer is a device's pass, or a wrong credential: never the passcode, never let through.

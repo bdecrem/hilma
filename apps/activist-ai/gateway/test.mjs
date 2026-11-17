@@ -1912,6 +1912,54 @@ test('people: each p-<id> caller has its own weekly quota (GATEWAY_PEOPLE_WEEKLY
   }
 })
 
+test('people: the quotas file beside the people file (admin.mjs app-allowance) wins over GATEWAY_QUOTAS and the default, reloads on change, and its refusal reads in plain words; a bad file is kept out', async () => {
+  const up = await fakeUpstream()
+  const dir = mkdtempSync(path.join(TMP, 'pqf-'))
+  const people = path.join(dir, 'gateway-people')
+  const quotas = `${people}-quotas`
+  const P = { one: tok(), two: tok(), three: tok() }
+  const writeQuotas = (line, mode = 0o600) => {
+    writeFileSync(`${quotas}.tmp`, `GATEWAY_QUOTAS=${line}\n`, { mode })
+    chmodSync(`${quotas}.tmp`, mode)
+    renameSync(`${quotas}.tmp`, quotas)
+  }
+  writeTokens(people, `p-1:${P.one},p-2:${P.two},p-3:${P.three}`)
+  writeQuotas('p-1=20,p-2=0')
+  const g = await gateway({ ...baseEnv(up.url), GATEWAY_PEOPLE_TOKENS_FILE: people, GATEWAY_PEOPLE_WEEKLY_TOKENS: '1000', GATEWAY_QUOTAS: 'p-1=5000,p-3=700' })
+  try {
+    const q = async (t) => (await call(g, t, null, { path: '/v1/usage', method: 'GET' })).json
+    assert.equal((await q(P.one)).quota, 20, 'the file wins over GATEWAY_QUOTAS')
+    assert.deepEqual([(await q(P.two)).quota, (await q(P.two)).fraction_used], [0, 1], 'an allowance of 0: nothing, and all of it used')
+    assert.equal((await q(P.three)).quota, 700, 'not in the file: GATEWAY_QUOTAS')
+    // p-2 has none: refused at once, in the words a person reads; a workspace caller keeps the old words.
+    const none = await call(g, P.two, chat({ usage: [1, 1] }))
+    assert.equal(none.status, 429)
+    assert.equal(none.json.error.type, 'insufficient_quota')
+    assert.equal(none.json.error.message, 'Your weekly allowance on Ola is used up. It starts again on Monday.')
+    // p-1 uses up its 20.
+    assert.equal((await call(g, P.one, chat({ usage: [10, 5] }))).status, 200)
+    assert.equal((await call(g, P.one, chat({ usage: [10, 5] }))).status, 200)
+    const over = await call(g, P.one, chat({ usage: [10, 5] }))
+    assert.equal(over.status, 429)
+    assert.equal(over.json.error.message, 'Your weekly allowance on Ola is used up. It starts again on Monday.')
+    // The admin raises it, and removes p-2's line: picked up without a restart.
+    writeQuotas('p-1=100')
+    await waitFor(async () => (await q(P.one)).quota === 100, 8000, 'the new allowance')
+    assert.equal((await call(g, P.one, chat({ usage: [10, 5] }))).status, 200)
+    assert.equal((await q(P.two)).quota, 1000, 'back to the default')
+    // A file that does not check out is kept out: the allowances in force stay.
+    writeQuotas('p-1=lots')
+    await waitFor(() => g.err.includes('GATEWAY_PEOPLE_QUOTAS_FILE entry 1'), 8000, 'the problem said')
+    assert.equal((await q(P.one)).quota, 100)
+    writeQuotas('p-1=7', 0o644)
+    await waitFor(() => g.err.includes('GATEWAY_PEOPLE_QUOTAS_FILE must be readable by this account only'), 8000, 'the mode refused')
+    assert.equal((await q(P.one)).quota, 100)
+    assert.ok(!g.err.includes(P.one) && !g.out.includes(P.one), 'no token in the logs')
+  } finally {
+    await g.stop()
+  }
+})
+
 test('web: a person’s own caller (p-<id>) has a standing grant; a workspace still needs its project’s yes, whatever the people, grants or hosts files say', async () => {
   const dir = mkdtempSync(path.join(TMP, 'pweb-'))
   const people = path.join(dir, 'gateway-people')

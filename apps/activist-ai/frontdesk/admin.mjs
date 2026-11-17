@@ -35,8 +35,9 @@
 //   node admin.mjs compare promote <id>                copies it into the eval set (evals/tasks/t-<id>), after its selftest passes
 //   node admin.mjs compare status                      comparisons under way, scratch VMs, and what the last start cleaned up
 //   node admin.mjs compare weekly                      the weekly number, as JSON (also $OLA_HOME/compare/weekly.json)
-//   node admin.mjs allow-devices <handle>             may sign in the Mac app and the command line (admins always may)
-//   node admin.mjs disallow-devices <handle>          may not any more; every device of theirs is signed out now
+//   node admin.mjs app-allowance <handle> <tokens|default>   their weekly allowance on Ola from the Mac app and
+//                  the command line (all their computers together); default: the gateway's own number.
+//                  (allow-devices and disallow-devices are no longer needed: every active account may.)
 //   node admin.mjs devices [<handle>]                  signed-in devices: id, person, name, kind, dates
 //   node admin.mjs revoke-device <id>                  one device signed out now
 //   node admin.mjs add-device <handle> --name "Bart's MacBook Air" --kind mac|cli
@@ -325,10 +326,20 @@ switch (cmd) {
   }
   case 'allow-devices':
   case 'disallow-devices': {
+    // 2026-11-17: everyone with an active account may sign in from the Mac app and the command line.
+    console.log(`Not needed any more: anyone with an active account can sign in to Ola from the Mac app and the command line. Nothing was changed.${cmd === 'disallow-devices' ? ' To sign someone\'s computers out: node admin.mjs devices <handle>, then revoke-device <id>; or suspend <handle>.' : ''}`)
+    break
+  }
+  case 'app-allowance': {
+    // A person's own weekly allowance on Ola from the Mac app and the command line (all their
+    // computers together), in tokens; "default" goes back to the gateway's GATEWAY_PEOPLE_WEEKLY_TOKENS.
     const p = person(args[0])
-    db.prepare('UPDATE people SET devices_allowed = ? WHERE id = ?').run(cmd === 'allow-devices' ? 1 : 0, p.id)
-    const d = cmd === 'disallow-devices' ? endDevices(p) : 0
-    console.log(cmd === 'allow-devices' ? `${p.handle} may sign in to Ola from the Mac app and the command line${cfg.devices.key ? '' : ' (device sign-in is off on this machine: OLA_GATE_PASS_KEY is not set)'}` : `${p.handle} may not sign in devices${p.is_admin ? ' (but is an admin, and admins always may)' : ''}; ${d} device(s) signed out`)
+    const raw = args[1]
+    const tokens = raw === 'default' ? null : /^\d{1,13}$/.test(raw ?? '') && Number(raw) <= 1e12 ? Number(raw) : fail('say a whole number of tokens a week (0 to 1000000000000), or default')
+    db.prepare('UPDATE people SET app_weekly_tokens = ? WHERE id = ?').run(tokens, p.id)
+    admin({ action: 'app_allowance_set', subject: p.id })
+    syncPeopleFile(db, cfg.devices.peopleFile)
+    console.log(tokens === null ? `${p.handle}: back to the default weekly allowance` : `${p.handle}: ${tokens.toLocaleString('en-US')} tokens a week on Ola, all their computers together; the gateway takes it within seconds`)
     break
   }
   case 'devices': {
@@ -353,7 +364,7 @@ switch (cmd) {
     // Only the token goes to stdout, so it can be piped into the app without anyone seeing it.
     const p = person(args[0])
     if (!cfg.devices.key) fail('device sign-in is off on this machine (OLA_GATE_PASS_KEY is not set in the front desk env)')
-    if (!mayUseDevices(p)) fail(`${p.handle} may not sign in devices (${p.status !== 'active' ? p.status : 'first: node admin.mjs allow-devices ' + p.handle})`)
+    if (!mayUseDevices(p)) fail(`${p.handle} is ${p.status}: only an active account signs in devices`)
     const name = validDeviceName(flags.name) ?? fail('--name "the computer\'s name", 1 to 60 characters')
     if (!KINDS.includes(flags.kind)) fail('--kind mac or --kind cli')
     const d = createDevice(db, cfg.devices.key, p.id, name, flags.kind)
@@ -559,7 +570,7 @@ switch (cmd) {
     break
   }
   default:
-    console.error('usage: admin.mjs add-person | invite | remove-passkey | create-workspace | add-member | remove-member | rotate | reopen | revoke-sessions | suspend | allow-devices | disallow-devices | devices | revoke-device | add-device | claude | hosted | claude-grants | shown-to-cloud | audit | list | data  (see the top of this file)')
+    console.error('usage: admin.mjs add-person | invite | remove-passkey | create-workspace | add-member | remove-member | rotate | reopen | revoke-sessions | suspend | app-allowance | devices | revoke-device | add-device | claude | hosted | claude-grants | shown-to-cloud | audit | list | data  (see the top of this file)')
     process.exit(2)
 }
 db.close()
