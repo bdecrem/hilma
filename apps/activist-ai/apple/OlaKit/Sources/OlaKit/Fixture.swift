@@ -14,6 +14,14 @@ public struct Fixture: Sendable {
   public var files: [String: [FileEntry]] = [:]
   public var selected: String?
   public var claudeOn = false
+  /// The last reply's first line per session, for the sessions list.
+  public var previews: [String: String] = [
+    "s1": "48 people answered, and 31 of them want to keep volunteering next spring.",
+    "s2": "The page is ready in court-watch/index.html.",
+    "s3": "I listed 64 terms with a plain definition for each.",
+    "s4": "All 212 dates now use the same format.",
+    "s5": "The second draft is shorter and keeps every promise.",
+  ]
   /// Made-up file contents, for the pictures shown inline.
   public var fileData: [String: Data] = [:]
 
@@ -185,6 +193,10 @@ public struct Fixture: Sendable {
     case "approval": return approval
     case "empty": return empty
     case "unreachable": return unreachable
+    case "empty-list":
+      var f = Fixture(sessions: [])
+      f.selected = nil
+      return f
     case "notset":
       var f = Fixture(sessions: [])
       f.connection = .notSetUp

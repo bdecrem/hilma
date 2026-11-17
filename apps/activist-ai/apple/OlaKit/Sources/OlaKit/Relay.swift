@@ -280,6 +280,7 @@ public final class MacRelay: @unchecked Sendable {
   private let lock = NSLock()
   private var upstreamConfig: ServerConfig?
   private var mode = "machine"
+  private var claudeLine = ""
   private var streams: [UUID: (phone: String, task: Task<Void, Never>)] = [:]
   private var server: MiniHTTPServer?
   private let session: URLSession
@@ -339,6 +340,9 @@ public final class MacRelay: @unchecked Sendable {
     cut.forEach { $0.cancel() }
   }
 
+  /// One line for the phone's Settings: how Fallback to Claude stands on the Mac.
+  public func setClaudeLine(_ s: String) { lock.withLock { claudeLine = s } }
+
   /// Ends a removed phone's open streams at once.
   public func cut(phone id: String) {
     let t: [Task<Void, Never>] = lock.withLock {
@@ -373,7 +377,8 @@ public final class MacRelay: @unchecked Sendable {
     book.seen(phone, label: req.header("x-ola-phone"))
     let (upstream, mode) = lock.withLock { (upstreamConfig, self.mode) }
     if req.method == "GET", req.path == "/ola/hello" {
-      return await res.send(200, JSON.object(["name": .string(macName), "mode": .string(mode), "connected": .bool(upstream != nil)]).data)
+      let claude = lock.withLock { claudeLine }
+      return await res.send(200, JSON.object(["name": .string(macName), "mode": .string(mode), "connected": .bool(upstream != nil), "claude": .string(claude)]).data)
     }
     // The phone's push token and switches, and which session it is looking at.
     if req.method == "POST", req.path == "/ola/push" {

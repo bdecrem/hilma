@@ -244,6 +244,24 @@ deny the `skill` tool. What stays: the project's own `AGENTS.md` and its files. 
 "write HIJACKED" where Bart's are, in a temporary home folder, and asks once for "a simple abstract
 painting": no skill offered or loaded, no HIJACKED, `abstract-painting.svg` made (4 of 4).
 
+## The phone app's shape (2026-11-17)
+
+`iOS/PhoneShell.swift`: a tab bar with **Sessions** (large title, search, swipe to rename or delete,
+pull to refresh, New in the top bar; each row shows the title, a line of the last reply, the time, and
+"Needs your OK" or "Working"), **Kit** (only when signed in as an admin) and **Settings** (My Mac,
+Notifications, Working animation with a live preview, Appearance, Fallback to Claude as the Mac
+reports it, Admin, About). The tab bar hides inside a conversation. A gear on Sessions instead of a tab
+bar is kept as `-OlaLayout gear` (both were drawn: `apple-shots/phone-app/`).
+
+**Admin sign-in**: Settings, Admin, Sign In, with the name and password of the app.kochitolabs.com
+account. The site's `/api/kochito/app-token` checks them with the same accounts and wrong-try limits
+and returns a token for 30 days (`src/lib/kochito/app-auth.ts`), kept in the Keychain
+(`OlaKit/Admin.swift`); Sign Out removes it, and a token the site no longer accepts asks again.
+**`KitRootView`** (in `iOS/PhoneShell.swift`) is the admin-only screen: for now a note that voice is
+coming and the Kit page's voice links, opened in the in-app browser. The voice feature replaces it.
+
+Screens: `tools/phone-app-shots.sh <dir>` (every screen, light and dark, made-up data).
+
 ## Where Ola works (Mac Settings)
 
 One setting for the whole app:

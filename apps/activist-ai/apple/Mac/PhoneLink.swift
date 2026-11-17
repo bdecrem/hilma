@@ -69,6 +69,7 @@ final class PhoneLink {
   /// The phone follows whatever the Mac app uses, including a switch of "Where Ola works".
   func follow() {
     let c = store.config
+    relay.setClaudeLine(store.claudeOn ? "On" : (store.claudeUnavailable == nil ? "Off" : (store.claudeUnavailable!.hasPrefix("Not yet") ? "Not available on the Ola machine yet" : "Off")))
     guard c != last else { return }
     last = c
     relay.setUpstream(c, mode: c?.url.host() == "127.0.0.1" ? "mac" : "machine")

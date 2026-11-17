@@ -58,11 +58,7 @@ struct PhoneRoot: View {
       if store.connection == .notSetUp {
         PairScreen(store: store)
       } else {
-        NavigationStack(path: $path) {
-          SessionsScreen(store: store, open: { path = [$0] })
-            .navigationDestination(for: String.self) { id in ConversationScreen(store: store, id: id) }
-        }
-        .tint(Ola.onRoom)
+        PhoneShell(store: store, path: $path)
       }
     }
     .onAppear {
@@ -274,6 +270,10 @@ struct ConversationScreen: View {
       PhonePushState.shared.setViewing(store.selectedID)
     }
     .onDisappear { PhonePushState.shared.setViewing(nil) }
+    .toolbar(.hidden, for: .tabBar)
+    // Haptics where an iPhone app has them: an answer to an approval, a run done.
+    .sensoryFeedback(.success, trigger: store.conversation?.turns.last?.status == .done)
+    .sensoryFeedback(.selection, trigger: store.conversation?.turns.count)
     .onChange(of: store.selectedID) { _, id in PhonePushState.shared.setViewing(id) }
     .sheet(item: $viewed) { v in ResultViewer(store: store, item: v.item) }
     .sensoryFeedback(.warning, trigger: store.conversation?.approval?.id) { _, new in new != nil }

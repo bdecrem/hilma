@@ -65,7 +65,7 @@ public final class OlaStore {
   /// A still picture for screenshots and previews: no network at all.
   public init(fixture: Fixture) {
     live = false
-    config = ServerConfig(url: URL(string: ServerConfig.defaultAddress)!, password: "")
+    config = ServerConfig(url: URL(string: ServerConfig.defaultAddress)!, password: "", viaMac: true, macName: "Bart\u{2019}s iMac")
     connection = fixture.connection
     sessions = fixture.sessions
     running = fixture.running
@@ -76,6 +76,7 @@ public final class OlaStore {
     files = fixture.files
     selectedID = fixture.selected
     claudeOn = fixture.claudeOn
+    previews = fixture.previews
     fixtureFiles = fixture.fileData
   }
 
@@ -150,6 +151,7 @@ public final class OlaStore {
 
   /// Retry now (after the Mac wakes, or when Bart presses Try Again).
   public func reconnect() {
+    guard live else { return }  // a still picture stays as it is
     stream?.cancel()
     stream = nil
     connection = config == nil ? .notSetUp : .connecting
@@ -455,6 +457,10 @@ public final class OlaStore {
   /// Where Claude turns are kept (Application Support on the Mac); nil on the phone.
   public var claudeTurnsBase: URL?
   public var onFiles: (() -> Void)?
+  /// The first line of each session's last reply, for the sessions list (loaded as rows appear).
+  public private(set) var previews: [String: String] = [:]
+  /// What the Mac app says about itself (phone only): its mode and Fallback to Claude.
+  public private(set) var macHello: JSON?
   /// View on a result under a reply (each app opens it its own way).
   public var onView: ((ResultItem) -> Void)?
   private var claudeRuns: [String: ClaudeRun] = [:]
@@ -462,6 +468,28 @@ public final class OlaStore {
   private var claudeInputs: [String: JSON] = [:]
 
   public func claudeRunning(_ session: String) -> Bool { claudeRuns[session] != nil }
+
+  /// The last reply's first line, from the loaded conversation or a light read of the history.
+  public func loadPreview(_ id: String) async {
+    if let c = conversations[id], let t = c.turns.last(where: { !$0.shownAnswer.isEmpty }) {
+      previews[id] = Self.firstLine(t.shownAnswer)
+      return
+    }
+    guard previews[id] == nil, let client, let msgs = try? await client.messages(id, pages: 1) else { return }
+    let turns = Conversation.turns(fromMessages: msgs, directory: nil)
+    previews[id] = turns.last(where: { !$0.shownAnswer.isEmpty }).map { Self.firstLine($0.shownAnswer) } ?? ""
+  }
+
+  static func firstLine(_ s: String) -> String {
+    let line = s.split(separator: "\n").first { !$0.trimmingCharacters(in: .whitespaces).isEmpty }.map(String.init) ?? ""
+    return line.replacingOccurrences(of: "**", with: "").replacingOccurrences(of: "`", with: "").replacingOccurrences(of: #"^#+\s*"#, with: "", options: .regularExpression)
+  }
+
+  /// Asks the Mac app about itself (phone only).
+  public func loadMacHello() async {
+    guard config?.viaMac == true, let client else { return }
+    macHello = try? await client.hello()
+  }
 
   /// The phone tells the Mac app something (its push token, what is on screen). Only when paired.
   public func postToMac(_ path: String, _ body: JSON) async {
