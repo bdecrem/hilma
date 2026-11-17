@@ -387,31 +387,9 @@ struct AdminSignIn: View {
 
 /// The admin-only destination. The voice feature replaces this screen: start from here.
 struct KitRootView: View {
-  @Bindable private var admin = AdminState.shared
-  @State private var open: AdminLink?
-
   var body: some View {
-    List {
-      Section {
-        Label("Voice is coming to this app.", systemImage: "waveform").foregroundStyle(Ola.ink2)
-      }
-      Section("Today") {
-        if admin.links.isEmpty {
-          Text("No links yet.").foregroundStyle(Ola.ink3)
-        }
-        ForEach(admin.links) { l in
-          Button { open = l } label: {
-            VStack(alignment: .leading, spacing: 2) {
-              Text(l.name).font(.headline).foregroundStyle(Ola.ink)
-              Text(l.what).font(.subheadline).foregroundStyle(Ola.ink2)
-            }
-          }
-        }
-      }
-    }
-    .navigationTitle("Kit")
-    .refreshable { await admin.refresh() }
-    .task { if admin.links.isEmpty { await admin.refresh() } }
-    .sheet(item: $open) { l in SafariView(url: l.href).ignoresSafeArea() }
+    // Kit's voice: meetings and notes. The token is the admin sign-in's, read from the Keychain at each call.
+    KitScreen(api: KitAPI(token: { AdminAuth.load()?.token }))
+      .navigationTitle("Kit")
   }
 }
