@@ -54,7 +54,7 @@ final class WhereOlaWorks {
         return
       }
     } else if let token = LocalSettings.token, !token.isEmpty {
-      // The pasted-token path. DELETE once account sign-in is live.
+      // The pasted-token path: the owner's own setup, kept.
       route = .pasted(token: token)
     } else {
       problem = account == nil ? "Add the model token (on the machine: ola-bart.sh model-token)." : "Sign in to Ola (Settings, Account) to work on this Mac."
@@ -304,6 +304,7 @@ struct SettingsGroup<Content: View>: View {
 struct WhereSettings: View {
   var controller: WhereOlaWorks
   @AppStorage(LocalSettings.modeKey) private var mode = "machine"
+  @AppStorage("ola.serverAddress") private var machineAddress = ""
   @AppStorage(LocalSettings.folderKey) private var folder = ""
   /// Screenshots pass this, so drawing Settings never reads the Keychain.
   var tokenKnown: Bool? = nil
@@ -315,10 +316,19 @@ struct WhereSettings: View {
 
   var body: some View {
     SettingsGroup(title: "Where Ola works") {
-      ChoiceRow("On the Ola machine", detail: "The agent and your files are on the machine. Your phone can follow along.", selected: mode == "machine") {
-        DeskMark(lit: true, working: false)
-      } choose: { set("machine") }
-      .onAppear(perform: loadTokenState)
+      if signedIn && machineAddress.isEmpty {
+        // Someone signed in with their own account (not the owner's machine setup): not in this round.
+        ChoiceRow("On the Ola machine", detail: "Not yet. For now, Ola works in a folder on this Mac with your account.", selected: false) {
+          DeskMark(lit: false, working: false)
+        } choose: {}
+        .disabled(true)
+        .onAppear(perform: loadTokenState)
+      } else {
+        ChoiceRow("On the Ola machine", detail: "The agent and your files are on the machine. Your phone can follow along.", selected: mode == "machine") {
+          DeskMark(lit: true, working: false)
+        } choose: { set("machine") }
+        .onAppear(perform: loadTokenState)
+      }
       ChoiceRow("On this Mac", detail: signedIn ? "The agent works in a folder on this Mac. Only the model runs at Ola." : "The agent works in a folder on this Mac. Only the model runs on the machine.", selected: mode == "mac") {
         MacMark()
       } choose: { set("mac") }
@@ -330,7 +340,7 @@ struct WhereSettings: View {
             Button("Choose\u{2026}") { choose() }
           }
         }
-        // The pasted-token row, only when not signed in. DELETE once account sign-in is live.
+        // The pasted-token row (the owner's own setup), only when not signed in.
         if !signedIn { LabeledContent {
           HStack(spacing: Space.s) {
             SecureField("Model token", text: $token, prompt: Text(tokenSaved ? "Saved in the Keychain" : "ola-bart.sh model-token")).labelsHidden()

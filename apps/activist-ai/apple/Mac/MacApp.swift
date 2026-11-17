@@ -98,11 +98,15 @@ struct MacGate: View {
   @AppStorage(LocalSettings.folderKey) private var folder = ""
   @AppStorage(LocalSettings.tokenSavedKey) private var pastedToken = false
   @AppStorage("ola.serverAddress") private var machineAddress = ""
+  /// The owner chose his own setup on the first-run screen (before the machine's address was saved).
+  @AppStorage("ola.ownSetup") private var ownSetup = false
 
   var body: some View {
     Group {
       if needsSignIn {
-        SignInScreen(account: account)
+        // The first-run choice: the owner's own setup (the machine directly) is offered only while
+        // this Mac has no other way to work; it opens the machine's connect sheet, as before.
+        SignInScreen(account: account, useOwnSetup: account.wantsGate ? nil : { ownSetup = true; mode = "machine" })
       } else if mode == "mac", folder.isEmpty {
         FolderScreen { whereOla?.chooseFolder() }
       } else if mode == "mac", let w = whereOla, w.installing || w.installProblem != nil {
@@ -119,9 +123,13 @@ struct MacGate: View {
   var needsSignIn: Bool {
     if account.phase == .expired { return true }
     if account.signedIn { return false }
+    // Settings asked for it on a Mac that works another way (Cancel goes back).
+    if account.wantsGate { return true }
     // Started from this screen: it stays until the sign-in finishes or is cancelled.
     if account.fromGate, account.phase != .idle { return true }
-    return machineAddress.isEmpty && !pastedToken
+    // The owner's setup from before sign-in (the machine's address, or the pasted token) never
+    // asks: his app works exactly as it did, and his settings are untouched by this update.
+    return machineAddress.isEmpty && !pastedToken && !ownSetup
   }
 }
 

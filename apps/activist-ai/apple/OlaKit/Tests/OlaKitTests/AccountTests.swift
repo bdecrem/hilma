@@ -25,6 +25,8 @@ final class StubOla: @unchecked Sendable {
                             "web_week": ["used": 3, "limit": 200], "batch_job": .null]
   var slowClosed = false
   var slowOpen = false
+  /// What each password sign-in sent: handle, the Mac's name, kind, the known-device header, and any Authorization.
+  var logins: [(String, String, String, String?, String?)] = []
   var base: URL { URL(string: "http://127.0.0.1:\(port)")! }
 
   func start() async throws {
@@ -60,6 +62,23 @@ final class StubOla: @unchecked Sendable {
       return await res.send(200, Self.session(token).data)
     }
     lock.withLock { requests += 1 }
+    if req.method == "POST", req.path == "/api/device/login" {
+      // The normal sign-in: bart / "right password here"; dana asks for her passkey too; "busy"
+      // plays the service being down; "slow" plays too many tries.
+      let j = JSON.parse(req.body)
+      lock.withLock { logins.append((j?["handle"].str ?? "", j?["name"].str ?? "", j?["kind"].str ?? "", req.header("x-ola-known"), req.header("authorization"))) }
+      switch (j?["handle"].str ?? "", j?["password"].str ?? "") {
+      case ("bart", "right password here"):
+        let token = "olak_\(UUID().uuidString)"
+        lock.withLock { _ = issued.insert(token) }
+        let s: JSON = ["token": .string(token), "expires_at": "2030-01-01T00:00:00Z", "person": ["handle": "bart", "name": "Bart", "admin": true], "device": ["id": "dev2", "name": "Test Mac", "kind": "mac"], "known": "1.known-token"]
+        return await res.send(200, s.data)
+      case ("dana", "right password here"): return await res.send(403, JSON.object(["error": "passkey_required", "message": "Your account asks for your passkey too."]).data)
+      case ("busy", _): return await res.send(502, Data("<html>bad gateway</html>".utf8))
+      case ("slow", _): return await res.send(429, JSON.object(["error": "slow_down", "message": "Too many wrong tries for this name. Wait 4 minutes, or sign in with your passkey."]).data)
+      default: return await res.send(401, JSON.object(["error": "sign_in_refused", "message": "That name and password did not match."]).data)
+      }
+    }
     let valid = lock.withLock { issued.contains(bearer) && !revoked.contains(bearer) }
     // A pass the door does not know: its 401 page with a Basic challenge, as app.ola.cx's door does.
     if !bearer.isEmpty, lock.withLock({ !issued.contains(bearer) }) {
@@ -104,6 +123,73 @@ final class StubOla: @unchecked Sendable {
       }
     }
     await res.send(404, Data())
+  }
+}
+
+/// The normal sign-in (2026-11-17): a name and a password in the app, against the stand-in.
+final class PasswordSignInTests: XCTestCase {
+  func testRightPasswordGivesAKeyThatWorksTheDoorAndSignOutEndsIt() async throws {
+    let stub = StubOla()
+    try await stub.start()
+    defer { stub.stop() }
+    let api = AccountAPI(base: stub.base, session: URLSession(configuration: .ephemeral))
+    let s = try await api.login(handle: "bart", password: "right password here", deviceName: String(repeating: "Bart’s iMac ", count: 10), kind: "mac", known: "1.earlier")
+    XCTAssertTrue(s.token.hasPrefix("olak_"))
+    XCTAssertEqual(s.person.handle, "bart")
+    XCTAssertEqual(s.known, "1.known-token")
+    XCTAssertFalse(s.encoded().contains("known-token"), "the known token is not kept with the key")
+    let sent = try XCTUnwrap(stub.lock.withLock { stub.logins.first })
+    XCTAssertEqual(sent.0, "bart")
+    XCTAssertEqual(sent.1.count, 60, "the Mac's name is cut to 60")
+    XCTAssertEqual(sent.2, "mac")
+    XCTAssertEqual(sent.3, "1.earlier", "the known-device token goes as its header")
+    XCTAssertNil(sent.4, "no Authorization at sign-in")
+    // The key works the model door and who-am-I; signing out ends it.
+    let me = try await api.me(s)
+    XCTAssertEqual(me.person.name, "Bart")
+    let door = ModelDoor(api: api) { s.token }
+    try await door.start()
+    defer { door.stop() }
+    var r = URLRequest(url: door.url.appendingPathComponent("v1/usage"))
+    r.setValue("Bearer \(door.key)", forHTTPHeaderField: "Authorization")
+    let (_, res) = try await URLSession(configuration: .ephemeral).data(for: r)
+    XCTAssertEqual((res as? HTTPURLResponse)?.statusCode, 200)
+    XCTAssertEqual(stub.lock.withLock { stub.gatewayAuth.last }, s.token, "the server got the account key, never the door's")
+    try await api.signOut(s)
+    do {
+      _ = try await api.me(s)
+      XCTFail("still signed in")
+    } catch AccountError.signedOut {}
+  }
+
+  func testRefusalsInPlainWords() async throws {
+    let stub = StubOla()
+    try await stub.start()
+    defer { stub.stop() }
+    let api = AccountAPI(base: stub.base, session: URLSession(configuration: .ephemeral))
+    func refusal(_ h: String, _ p: String) async -> AccountError? {
+      do {
+        _ = try await api.login(handle: h, password: p, deviceName: "Mac")
+        return nil
+      } catch { return error as? AccountError }
+    }
+    let wrong = await refusal("bart", "not it")
+    XCTAssertEqual(wrong, .wrongPassword)
+    XCTAssertEqual(wrong?.errorDescription, "That name and password didn\u{2019}t match. Check both and try again.")
+    let unknown = await refusal("nobody", "right password here")
+    XCTAssertEqual(unknown, .wrongPassword, "an unknown name reads the same")
+    let dana = await refusal("dana", "right password here")
+    XCTAssertEqual(dana, .passkeyRequired)
+    let busy = await refusal("busy", "x")
+    XCTAssertEqual(busy, .serviceDown)
+    let slow = await refusal("slow", "x")
+    XCTAssertEqual(slow?.errorDescription, "Too many wrong tries for this name. Wait 4 minutes, or sign in with your passkey.")
+    // Nothing there at all: Ola is down, said so.
+    let gone = AccountAPI(base: URL(string: "http://127.0.0.1:9")!, session: URLSession(configuration: .ephemeral))
+    do {
+      _ = try await gone.login(handle: "bart", password: "x", deviceName: "Mac")
+      XCTFail("signed in to nothing")
+    } catch AccountError.unreachable {}
   }
 }
 

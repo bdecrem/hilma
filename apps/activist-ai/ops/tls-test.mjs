@@ -424,6 +424,27 @@ test('device passes: the apps’ probe (GET /api/device/me, no credential) gets 
   }
 })
 
+test('the Mac app’s password sign-in: exactly POST /api/device/login with no credential passes the door, only while sign-in is on; nothing near it does', async () => {
+  const on = await startFront({ OLA_GATE_PASS_KEY: KEY })
+  const off = await startFront()
+  const body = Buffer.from('{"handle":"maria","password":"x"}')
+  const ok = await get(on.port, '/api/device/login', { auth: null, from: '100.64.30.1' }, body)
+  assert.equal(ok.status, 200)
+  assert.deepEqual([JSON.parse(ok.body).authorization, JSON.parse(ok.body).pass], [null, null])
+  assert.equal((await get(off.port, '/api/device/login', { auth: null, from: '100.64.30.2' }, body)).status, 401, 'with device sign-in off')
+  // A query, a GET, another spelling, a neighbor, or a browser's passcode on the side: the gate's usual 401.
+  const near = [['/api/device/login?x=1', body], ['/api/device/login', null], ['/api/device/login/', body], ['/api/device//login', body], ['/api/device/../me', body], ['/api/device/login%2f', body], ['/API/device/login', body], ['/api/device/logins', body], ['/api/device/grant', body]]
+  for (const [i, [p, b]] of near.entries()) {
+    const r = await get(on.port, p, { auth: null, from: `100.64.31.${i + 1}` }, b)
+    assert.equal(r.status, 401, `${b ? 'POST' : 'GET'} ${p}`)
+    assert.equal(r.headers['www-authenticate'], challenge, p)
+  }
+  // With the door passcode it is an ordinary request (the passcode itself never arrives).
+  const basic = await get(on.port, '/api/device/login', { from: '100.64.30.3' }, body)
+  assert.equal(basic.status, 200)
+  assert.equal(JSON.parse(basic.body).authorization, null)
+})
+
 test('device passes: a bad MAC, an expired pass, a path outside /api/device/ and any pass with no key set are refused like a wrong passcode, and count toward the block', async () => {
   const f = await startFront({ OLA_GATE_PASS_KEY: KEY })
   const p = makePass(KEYBUF, 'device', soon()).pass

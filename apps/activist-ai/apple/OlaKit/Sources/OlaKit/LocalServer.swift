@@ -166,7 +166,7 @@ public final class LocalServer: @unchecked Sendable {
   }
 
   /// The pasted-token path: the machine's forwarder and the `bart` gateway token in the agent's
-  /// environment. DELETE once account sign-in is live (use `start(route: .door(…))`).
+  /// environment. Kept: the owner's own setup (his private network); his app must keep working exactly as it does (2026-11-17).
   public func start(modelToken: String, modelURL: String = LocalServer.defaultModelURL, timeout: TimeInterval = 45, trace: (@Sendable (String) -> Void)? = nil) async throws -> ServerConfig {
     try await start(route: .pasted(token: modelToken, modelURL: modelURL), timeout: timeout, trace: trace)
   }
@@ -331,7 +331,7 @@ public enum LocalSettings {
   public static var folder: URL? { defaults.string(forKey: folderKey).map { URL(fileURLWithPath: $0) } }
 
   /// The pasted gateway token (before account sign-in), read once per launch and only when needed.
-  /// DELETE once account sign-in is live: this, `saveToken`, Settings' Model token row and
+  /// The owner's own setup, kept (2026-11-17): this, `saveToken`, Settings' Model token row and
   /// `SecretKind.modelToken` are the pasted-token path.
   public static var token: String? {
     if let tokenOverride { return tokenOverride }
@@ -359,8 +359,8 @@ public struct ModelRoute: Equatable, Sendable {
     ModelRoute(baseURL: d.url.absoluteString + "/v1", hostPort: d.hostPort, token: d.key)
   }
 
-  /// The pasted `bart` gateway token through the machine's forwarder. DELETE once account sign-in
-  /// is live (the server side is not deployed yet).
+  /// The pasted `bart` gateway token through the machine's forwarder: the owner's own setup over his
+  /// private network, kept as it is (2026-11-17). Everyone else signs in (`door`).
   public static func pasted(token: String, modelURL: String = LocalServer.defaultModelURL) -> ModelRoute {
     let u = URL(string: modelURL)
     let hp = u.flatMap { u in u.host().map { "\($0):\(u.port ?? 80)" } } ?? ""

@@ -64,7 +64,10 @@ enum Snapshot {
     for (mode, appearance) in [("light", NSAppearance.Name.aqua), ("dark", .darkAqua)] {
       let window = CGSize(width: 1100, height: 720)
       let gates: [(String, AnyView)] = [
-        ("signin-1-signed-out", AnyView(SignInScreen(account: AccountController(preview: .idle)))),
+        ("signin-1-signed-out", AnyView(SignInScreen(account: AccountController(preview: .idle), useOwnSetup: {}))),
+        ("signin-1b-signing-in", AnyView(SignInScreen(account: AccountController(preview: .working), useOwnSetup: {}))),
+        ("signin-1c-wrong-password", AnyView(SignInScreen(account: AccountController(preview: .problem(AccountError.wrongPassword.errorDescription!)), useOwnSetup: {}))),
+        ("signin-1d-service-down", AnyView(SignInScreen(account: AccountController(preview: .problem(AccountError.serviceDown.errorDescription!)), useOwnSetup: {}))),
         ("signin-2-waiting", AnyView(SignInScreen(account: AccountController(preview: .waiting)))),
         ("signin-3-not-open-yet", AnyView(SignInScreen(account: AccountController(preview: .notice(AccountError.notAvailableYet.errorDescription!))))),
         ("signin-4-timed-out", AnyView(SignInScreen(account: AccountController(preview: .notice(AccountError.timedOut.errorDescription!))))),

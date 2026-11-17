@@ -29,6 +29,8 @@ public struct AccountSession: Codable, Equatable, Sendable {
   public var expiresAt: Date?
   public var person: Person
   public var device: Device
+  /// The known-device token the server gave with this sign-in (kept apart, in AccountKeeper.known).
+  public var known: String?
 
   public init(token: String, expiresAt: Date?, person: Person, device: Device) {
     self.token = token
@@ -59,7 +61,9 @@ public struct AccountSession: Codable, Equatable, Sendable {
 
   public static func decode(_ data: Data) -> AccountSession? {
     guard let j = JSON.parse(data), !j["token"].str.isEmpty, !j["person"]["handle"].str.isEmpty else { return nil }
-    return AccountSession(token: j["token"].str, expiresAt: date(j["expires_at"]), person: person(j["person"]), device: device(j["device"]))
+    var s = AccountSession(token: j["token"].str, expiresAt: date(j["expires_at"]), person: person(j["person"]), device: device(j["device"]))
+    s.known = j["known"].string
+    return s
   }
 
   static func person(_ j: JSON) -> Person { Person(handle: j["handle"].str, name: j["name"].str.isEmpty ? j["handle"].str : j["name"].str, admin: j["admin"].bool ?? false) }
@@ -98,9 +102,21 @@ public enum AccountError: Error, Hashable, LocalizedError {
   case refused(String)
   case unreachable
   case badReply
+  /// The name and password did not match (the server does not say which).
+  case wrongPassword
+  /// The account asks for its passkey too: finish in the browser.
+  case passkeyRequired
+  /// Ola answered, but its service is down or overloaded just now.
+  case serviceDown
+  /// The server's own sentence (a wait after too many tries, say).
+  case said(String)
 
   public var errorDescription: String? {
     switch self {
+    case .wrongPassword: return "That name and password didn\u{2019}t match. Check both and try again."
+    case .passkeyRequired: return "Your account asks for your passkey too. Ola opens your browser to finish signing in."
+    case .serviceDown: return "Ola isn\u{2019}t answering just now. Try again in a few minutes."
+    case .said(let s): return s
     case .signedOut: return "You\u{2019}ve been signed out on this Mac. Sign in again to keep working."
     case .timedOut: return "Signing in took too long, so it was stopped. Try again when you\u{2019}re ready."
     case .cancelled: return "Signing in was stopped."
@@ -162,6 +178,35 @@ public struct AccountAPI: Sendable {
     let (d, status) = try await send(r, signedIn: false)
     guard status == 200, let s = AccountSession.decode(d) else { throw AccountError.badReply }
     return s
+  }
+
+  /// Signs this Mac (or the `ola` command) in with a name and password: the normal way (2026-11-17).
+  /// The server gives this device its own key, shown once, kept in the Keychain. `known` is the
+  /// token an earlier sign-in from this Mac got back: it lets this Mac sign in even while a stranger
+  /// is guessing at the same name (the server holds unknown devices back then), never without the
+  /// password. A person who asks for their passkey too gets `.passkeyRequired`: the browser way.
+  public func login(handle: String, password: String, deviceName: String, kind: String = "mac", known: String? = nil) async throws -> AccountSession {
+    var r = URLRequest(url: url("/api/device/login"))
+    r.httpMethod = "POST"
+    r.timeoutInterval = 30
+    r.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    if let known, !known.isEmpty { r.setValue(known, forHTTPHeaderField: "X-Ola-Known") }
+    r.httpBody = JSON.object(["handle": .string(handle), "password": .string(password), "name": .string(String(deviceName.prefix(60))), "kind": .string(kind)]).data
+    let d: Data, res: URLResponse
+    do { (d, res) = try await session.data(for: r) } catch is CancellationError { throw AccountError.cancelled } catch { throw AccountError.unreachable }
+    guard let h = res as? HTTPURLResponse else { throw AccountError.badReply }
+    let j = JSON.parse(d)
+    switch h.statusCode {
+    case 200:
+      guard let s = AccountSession.decode(d) else { throw AccountError.badReply }
+      return s
+    case 401: throw AccountError.wrongPassword
+    case 403 where j?["error"].string == "passkey_required": throw AccountError.passkeyRequired
+    case 404, 405: throw AccountError.notAvailableYet
+    case 429: throw j?["message"].string.map { AccountError.said($0) } ?? AccountError.tooManyTries
+    case 500...599: throw AccountError.serviceDown
+    default: throw AccountError.refused(j?["error"].string ?? "refused")
+    }
   }
 
   /// Who this device is signed in as (also proves the token still works).
@@ -253,6 +298,13 @@ public struct AccountAPI: Sendable {
 public enum AccountKeeper {
   public static let nameKey = "ola.account.name"
   public static let handleKey = "ola.account.handle"
+  /// This Mac's known-device token (not a secret that signs anyone in: it only spares this Mac the
+  /// wait a stranger's wrong guesses put on the name). Kept across sign-outs, in plain settings.
+  public static let knownKey = "ola.account.known"
+  public static var known: String? {
+    get { defaults.string(forKey: knownKey) }
+    set { defaults.set(newValue, forKey: knownKey) }
+  }
   nonisolated(unsafe) public static var defaults: UserDefaults = .standard
 
   public static var signedIn: Bool { defaults.string(forKey: handleKey) != nil }
@@ -267,6 +319,7 @@ public enum AccountKeeper {
   @discardableResult
   public static func keep(_ s: AccountSession) -> Bool {
     guard SecretStore.save(.account, s.encoded()) else { return false }
+    if let k = s.known, !k.isEmpty { known = k }
     defaults.set(s.person.handle, forKey: handleKey)
     defaults.set(s.person.name, forKey: nameKey)
     return true

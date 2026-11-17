@@ -73,7 +73,7 @@ export function Gate() {
         </Room>
       </Match>
       <Match when={me() === null}>
-        <SignIn invite={inviteOf()} device={!!deviceAsk()} onSignedIn={signedIn} />
+        <SignIn invite={inviteOf()} device={deviceAsk()} onSignedIn={signedIn} />
       </Match>
       <Match when={me() && deviceAsk()}>
         <Room>
@@ -191,7 +191,7 @@ async function cookieKept(setProblem: (p: Problem) => void): Promise<boolean> {
   }
 }
 
-function SignIn(props: { invite: string | null; device: boolean; onSignedIn: () => void }) {
+function SignIn(props: { invite: string | null; device?: ReturnType<typeof deviceRequestOf>; onSignedIn: () => void }) {
   const [problem, setProblem] = createSignal<Problem | null>(null)
   const [busy, setBusy] = createSignal(false)
   const [handle, setHandle] = createSignal('')
@@ -260,7 +260,7 @@ function SignIn(props: { invite: string | null; device: boolean; onSignedIn: () 
   return (
     <Letter name={props.invite ? name() : undefined}>
       <p class="gate-lede">
-        {props.invite ? 'Bart invited you to the computer in his office. Choose a password, and you are in.' : props.device ? 'Sign in to let the Ola app on your Mac use your account.' : 'Sign in to the computer in Bart’s office.'}
+        {props.invite ? 'Bart invited you to the computer in his office. Choose a password, and you are in.' : props.device && props.device !== 'bad' ? `Sign in here first. Then you can let Ola on ${props.device.name} in.` : 'Sign in to the computer in Bart’s office.'}
       </p>
       <Show when={problem()}>{(p) => <GateProblem problem={p()} />}</Show>
       <Show
@@ -517,6 +517,9 @@ function Projects(props: { me: Me; unknown: boolean; onSignOut: () => void }) {
             )}
           </For>
         </ul>
+      </Show>
+      <Show when={props.me.devices && (props.me.devices.allowed || props.me.devices.count > 0)}>
+        <YourDevices tone="room" />
       </Show>
     </Room>
   )

@@ -61,6 +61,17 @@ if env["OLA_SKILLS_CHECK"] == "1" {
   exit(bad == 0 ? 0 : 1)
 }
 
+// "On this Mac" for anyone with a login: name and password, the door, a tiny request, sign-out.
+if env["OLA_ACCOUNT_CHECK"] == "1" {
+  var bad = 0
+  await AccountCheck.go(env: env) { ok, what, note in
+    if !ok { bad += 1 }
+    print("\(ok ? "PASS" : "FAIL")  \(what)\(note.isEmpty ? "" : "  (\(note))")")
+  }
+  print(bad == 0 ? "ALL PASSED" : "\(bad) FAILED")
+  exit(bad == 0 ? 0 : 1)
+}
+
 if env["OLA_CLAUDE"] == "1" {
   var bad = 0
   _ = await ClaudeCheck.go { ok, what, note in

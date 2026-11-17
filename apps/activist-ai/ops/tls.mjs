@@ -277,6 +277,15 @@ export function makeTlsFront(cfg = config()) {
       const on = !!cfg.passKey
       return refuse(res, on ? 401 : 404, on ? '{"error":"signed_out"}\n' : '{"error":"not_found"}\n', { 'content-type': 'application/json; charset=utf-8' })
     }
+    // Signing in from the Mac app with a name and password (2026-11-17): exactly `POST
+    // /api/device/login` (the raw request line, no query, nothing more), no Authorization, and only
+    // while device sign-in is on. It goes through without the passcode, because an app cannot answer
+    // a browser's password prompt; it stands on the front desk's own password check and its limits
+    // (per address, per name, the global ceiling, a 4 KiB body). Nothing else is let through this way.
+    if (req.method === 'POST' && req.url === '/api/device/login' && req.headers.authorization === undefined && cfg.passKey) {
+      counts.logins = (counts.logins ?? 0) + 1
+      return pipeUp(req, res, client)
+    }
     // A bearer is a device's pass, or a wrong credential: never the passcode, never let through.
     if (typeof req.headers.authorization === 'string' && /^bearer\s/i.test(req.headers.authorization)) {
       const key = addressKey(client.address)

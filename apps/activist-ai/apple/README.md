@@ -92,7 +92,32 @@ picked (and at launch for that folder, silently once answered). **A Mac with no 
 gets an ad-hoc build and a printed warning: macOS will ask after every build until one exists (Xcode,
 Settings, Accounts, add the Apple ID, Manage Certificates, +, Apple Development).
 
-## Sign in with an Ola account (2026-11-17; the server side is not deployed yet)
+## Sign in with a name and password (2026-11-17, the Mac app for anyone with a login)
+
+The first screen on a Mac with nothing set up is **Sign in to Ola**: the account's name and password,
+straight in the app (`AccountAPI.login`, `POST /api/device/login`), which gives this Mac its own key
+(the server's side: `../README.md`, "The Mac app for anyone with a login"). Words for every refusal:
+wrong name or password (one sentence for both), the server's own wait after too many tries, "Ola isn't
+answering just now", and an account that asks for its passkey too goes on to the browser below (the
+window says so). Under the form: "Sign in with your browser instead", and **"Use my own Ola machine
+instead"**: the owner's setup (the machine's address and password, the pasted model token over his
+private network, the phone's pairing), which is untouched: a Mac that already has a machine address or
+a pasted token never sees this screen, and its settings are not changed by the update. After signing
+in, "On this Mac" works through the model door with the Mac's key; "On the Ola machine" shows "Not
+yet" for anyone signed in without the owner's setup. Settings, Account, Sign In… opens the same screen
+(Cancel goes back). The Mac keeps a known-device token from the server in plain settings
+(`ola.account.known`): it signs nobody in, it only spares this Mac the wait a stranger's guesses put on
+the name. Screens: `OLA_ONLY=signin tools/build.sh mac <dir>` (signin-1 to 1d are new).
+
+**End to end against a front desk** (from this iMac, a made-up account; the password in a file, never
+printed): `OLA_ACCOUNT_CHECK=1 OLA_ACCOUNT_BASE=<front desk> OLA_HANDLE=<handle>
+OLA_ACCOUNT_PASSWORD_FILE=<file> OLA_LOCAL_FOLDER=<scratch> swift run olakit-selftest`: a wrong
+password refused, a right one gives a key, opencode on this Mac answers one tiny request through the
+door with Ola's model, the share sentence, then Sign Out and the door's next request is 401 and the
+key works nowhere. Run 2026-11-17 against a front desk and gateway of this branch on the mini
+(GLM-5.3-Flash on Together): 7 of 7.
+
+## Sign in with an Ola account in the browser (2026-11-17, now the passkey way)
 
 Bart: "do the new login system for macos app ... so i can use the app on my other computer by
 logging in as bart (or any user)". Each person signs in with their own Ola account and reaches the

@@ -10,6 +10,8 @@ import SwiftUI
 final class AccountController {
   enum Phase: Equatable {
     case idle
+    /// A name and password on their way to Ola.
+    case working
     /// The browser is open on the account's page; waiting for it to come back.
     case waiting
     /// The last try did not work (in plain words).
@@ -50,6 +52,41 @@ final class AccountController {
 
   /// The sign-in was started from the window's own sign-in screen (it stays on that screen).
   private(set) var fromGate = false
+  /// Settings asked for the sign-in screen on a Mac that already works another way (the owner's).
+  var wantsGate = false
+  /// The words under the browser wait when a right password was followed by "your passkey too".
+  private(set) var passkeyNote = false
+
+  /// The normal sign-in (2026-11-17): a name and password, straight from the app. A person who asks
+  /// for their passkey too is sent on to the browser, where the passkey finishes it.
+  func signIn(handle: String, password: String) {
+    attempt?.cancel()
+    attempt = nil
+    fromGate = true
+    passkeyNote = false
+    phase = .working
+    Task {
+      do {
+        let session = try await api.login(handle: handle.trimmingCharacters(in: .whitespacesAndNewlines), password: password, deviceName: DeviceSignIn.thisMacName, kind: "mac", known: AccountKeeper.known)
+        guard phase == .working else { return }
+        guard AccountKeeper.keep(session) else { phase = .problem("This Mac\u{2019}s Keychain didn\u{2019}t take the sign-in. Try again."); return }
+        name = session.person.name
+        signedIn = true
+        wantsGate = false
+        phase = .idle
+        onSignedIn?()
+        refreshUsage()
+      } catch AccountError.passkeyRequired {
+        guard phase == .working else { return }
+        passkeyNote = true
+        signIn(fromGate: true)
+      } catch {
+        guard phase == .working else { return }
+        if (error as? AccountError) == .cancelled { phase = .idle; return }
+        phase = .problem((error as? LocalizedError)?.errorDescription ?? "That didn\u{2019}t work. Try again.")
+      }
+    }
+  }
 
   func signIn(fromGate gate: Bool = false) {
     attempt?.cancel()
@@ -69,6 +106,8 @@ final class AccountController {
         attempt = nil
         name = session.person.name
         signedIn = true
+        wantsGate = false
+        passkeyNote = false
         phase = .idle
         onSignedIn?()
         refreshUsage()
@@ -90,7 +129,15 @@ final class AccountController {
   func cancel() {
     attempt?.cancel()
     attempt = nil
+    passkeyNote = false
     phase = .idle
+  }
+
+  /// Leaves the sign-in screen Settings opened (the Mac keeps working the way it did).
+  func closeGate() {
+    cancel()
+    wantsGate = false
+    fromGate = false
   }
 
   func signOut() async {
@@ -178,15 +225,26 @@ struct GateText: View {
   }
 }
 
+/// The first screen on a Mac with nothing set up: sign in with your Ola name and password (what
+/// everyone uses), or, for the owner, his own setup (the Ola machine directly). After a right password
+/// for an account that asks for its passkey too, the browser finishes it.
 struct SignInScreen: View {
   var account: AccountController
+  /// The owner's way: the Ola machine directly (its address and password, as before sign-in existed).
+  var useOwnSetup: (() -> Void)?
+  @State private var handle = AccountKeeper.defaults.string(forKey: "ola.account.lastHandle") ?? ""
+  @State private var password = ""
+  @FocusState private var focus: Field?
+  enum Field { case handle, password }
 
   var body: some View {
     GateSheet {
       switch account.phase {
       case .waiting:
         GateTitle(title: "Finish in your browser")
-        GateText("Your browser opened Ola\u{2019}s sign-in page. Approve this Mac there with your passkey, and this window moves on by itself.")
+        GateText(account.passkeyNote
+          ? "Your account asks for your passkey too. Your browser opened Ola\u{2019}s page: sign in there, use your passkey, and approve this Mac. This window moves on by itself."
+          : "Your browser opened Ola\u{2019}s sign-in page. Approve this Mac there, and this window moves on by itself.")
         HStack(spacing: Space.s) {
           ProgressView().controlSize(.small)
           Text("Waiting for your browser\u{2026}").font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.ink3)
@@ -195,35 +253,56 @@ struct SignInScreen: View {
         }
         .padding(.top, Space.xs)
         Button("Open the page again") { account.openPageAgain() }.buttonStyle(LinkButton())
-      case .expired:
-        GateTitle(title: "You\u{2019}ve been signed out on this Mac")
-        GateText("Sign in again to keep working. Your sessions on this Mac are still here.")
-        actions
-      case .notice(let words):
-        GateTitle(title: "Sign in to Ola")
-        GateText(words)
-        actions(try: true)
-      case .problem(let words):
-        GateTitle(title: "Sign in to Ola")
-        Label(words, systemImage: "exclamationmark.circle").font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.vermilionText)
-          .fixedSize(horizontal: false, vertical: true)
-        actions(try: true)
-      case .idle:
-        GateTitle(title: "Sign in to Ola")
-        GateText("Use your Ola account. Your browser opens so you can approve this Mac with your passkey.")
-        actions
+      default:
+        GateTitle(title: account.phase == .expired ? "You\u{2019}ve been signed out on this Mac" : "Sign in to Ola")
+        GateText(account.phase == .expired ? "Sign in again to keep working. Your sessions on this Mac are still here." : "Use the name and password of your Ola account. Ola then works in a folder you choose on this Mac.")
+        form
+        switch account.phase {
+        case .problem(let words):
+          Label(words, systemImage: "exclamationmark.circle").font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.vermilionText)
+            .fixedSize(horizontal: false, vertical: true)
+        case .notice(let words):
+          GateText(words)
+        default:
+          EmptyView()
+        }
+        HStack(spacing: Space.s) {
+          if account.phase == .working { ProgressView().controlSize(.small); Text("Signing in\u{2026}").font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.ink3) }
+          Spacer()
+          if account.wantsGate { Button("Cancel") { account.closeGate() }.buttonStyle(OlaButton(kind: .ghost)) }
+          Button("Sign In", action: submit).buttonStyle(OlaButton(kind: .primary)).keyboardShortcut(.defaultAction)
+            .disabled(account.phase == .working || handle.trimmingCharacters(in: .whitespaces).isEmpty || password.isEmpty)
+        }
+        .padding(.top, Space.xs)
+        Divider().overlay(Ola.rule).padding(.vertical, Space.xs)
+        VStack(alignment: .leading, spacing: Space.xs) {
+          Button("Sign in with your browser instead") { account.signIn(fromGate: true) }.buttonStyle(LinkButton())
+          if let useOwnSetup { Button("Use my own Ola machine instead", action: useOwnSetup).buttonStyle(LinkButton()) }
+          Text("Forgot your password? Ask Bart for a link to choose a new one.").font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.ink3)
+        }
       }
+    }
+    .onAppear { focus = handle.isEmpty ? .handle : .password }
+  }
+
+  var form: some View {
+    VStack(alignment: .leading, spacing: 6) {
+      Text("Your name for Ola").font(OlaFont.sans(Metrics.meta, .semibold)).foregroundStyle(Ola.ink2)
+      TextField("", text: $handle).textFieldStyle(.plain).font(OlaFont.sans(Metrics.ui)).textContentType(.username)
+        .autocorrectionDisabled().focused($focus, equals: .handle).field(focused: focus == .handle)
+        .onSubmit { focus = .password }
+      Text("Password").font(OlaFont.sans(Metrics.meta, .semibold)).foregroundStyle(Ola.ink2).padding(.top, Space.xs)
+      SecureField("", text: $password).textFieldStyle(.plain).font(OlaFont.sans(Metrics.ui)).textContentType(.password)
+        .focused($focus, equals: .password).field(focused: focus == .password).onSubmit(submit)
     }
   }
 
-  var actions: some View { actions(try: false) }
-
-  func actions(try again: Bool) -> some View {
-    HStack {
-      Spacer()
-      Button(again ? "Try Again" : "Sign In") { account.signIn(fromGate: true) }.buttonStyle(OlaButton(kind: .primary)).keyboardShortcut(.defaultAction)
-    }
-    .padding(.top, Space.xs)
+  func submit() {
+    let h = handle.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !h.isEmpty, !password.isEmpty, account.phase != .working else { return }
+    AccountKeeper.defaults.set(h, forKey: "ola.account.lastHandle")
+    account.signIn(handle: h, password: password)
+    password = ""
   }
 }
 
@@ -306,19 +385,21 @@ struct AccountSettings: View {
           VStack(alignment: .leading, spacing: 4) {
             switch account.phase {
             case .waiting: StatusLine(kind: .busy, text: "Finish signing in in your browser")
+            case .working: StatusLine(kind: .busy, text: "Signing in")
             case .expired: StatusLine(kind: .problem, text: "Signed out. Sign in again to keep working.")
             case .problem(let p): StatusLine(kind: .problem, text: p)
             case .notice(let p): StatusLine(kind: .off, text: p)
             case .idle: StatusLine(kind: .off, text: "Not signed in")
             }
-            SettingNote("Sign in with your Ola account to work on this Mac. Your browser opens so you can approve it with your passkey.")
+            SettingNote("Sign in with your Ola name and password to work on this Mac with your own account.")
               .padding(.leading, 18)
           }
           Spacer(minLength: Space.s)
           if account.phase == .waiting {
             Button("Cancel") { account.cancel() }
           } else {
-            Button("Sign In\u{2026}") { account.signIn() }
+            // The window shows the sign-in screen (name and password).
+            Button("Sign In\u{2026}") { account.wantsGate = true; NSApp.activate(); NSApp.windows.first { $0.identifier?.rawValue.hasPrefix("main") == true || $0.title == "Ola" }?.makeKeyAndOrderFront(nil) }
           }
         }
       }
