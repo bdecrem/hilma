@@ -204,7 +204,7 @@ builds.
   (3) `swcutil dl -d app.ola.cx` (or `sudo swcutil show` after a launch) shows the app approved for
   webcredentials; Apple's CDN may take up to a day to fetch the file; (4) one live sign-in on the
   built app: Add Passkey after a password sign-in, sign out, "Sign in with a passkey" with Touch ID.
-  Ship that build as the download (`../../../Desktop/Ola/mac-download/Ola.zip`).
+  Ship that build as the download (`~/Desktop/Ola/mac-download/Ola.zip`).
 
 Each person signs in with their own Ola account and reaches the model through `https://app.ola.cx`
 (one constant, `AccountAPI.address`; `OLA_ACCOUNT_BASE` or the `ola.accountBase` default points checks
