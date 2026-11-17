@@ -79,13 +79,31 @@ function together() {
 // Fallback to a hosted open model: a stand-in provider on this host's loopback (the gateway reaches
 // it; the VMs cannot), and the grants file the front desk would write.
 const hostedSeen = []
+// A request whose first words are FX-FILE-TOOLS is scripted: opencode's glob, grep and list tools,
+// one call each (whichever of those names it offers), then a one-line answer; each tool's result is
+// kept in fileToolsSeen (the file search check below).
+const fileToolsSeen = []
 const hostedUp = http.createServer((req, res) => {
   let raw = ''
   req.on('data', (c) => (raw += c))
   req.on('end', () => {
+    let body = null
     try {
-      hostedSeen.push(JSON.parse(raw).model)
+      body = JSON.parse(raw)
+      hostedSeen.push(body.model)
     } catch {}
+    const msgs = body?.messages ?? []
+    const first = msgs.find((m) => m.role === 'user')
+    const firstText = typeof first?.content === 'string' ? first.content : (first?.content ?? []).map((c) => c.text ?? '').join(' ')
+    if (/FX-FILE-TOOLS/.test(firstText) && Array.isArray(body.tools)) {
+      const names = body.tools.map((t) => t.function?.name)
+      const plan = [['glob', { pattern: '**/*.txt' }], ['grep', { pattern: 'harbor-fx' }], ['list', { path: '/work' }]].filter(([n]) => names.includes(n))
+      const results = msgs.filter((m) => m.role === 'tool').map((m) => (typeof m.content === 'string' ? m.content : JSON.stringify(m.content)))
+      if (results.length) fileToolsSeen[results.length - 1] = { tool: plan[results.length - 1]?.[0], result: results.at(-1).slice(0, 2000), offered: names.filter((n) => ['glob', 'grep', 'list', 'ls'].includes(n)) }
+      const next = plan[results.length]
+      const message = next ? { role: 'assistant', content: null, tool_calls: [{ id: `call_${results.length}`, type: 'function', function: { name: next[0], arguments: JSON.stringify(next[1]) } }] } : { role: 'assistant', content: 'Searched.' }
+      return res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ id: 'h1', object: 'chat.completion', created: 1, model: 'x', choices: [{ index: 0, finish_reason: next ? 'tool_calls' : 'stop', message }], usage: { prompt_tokens: 5, completion_tokens: 5, total_tokens: 10 } }))
+    }
     res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ id: 'h1', object: 'chat.completion', created: 1, model: 'x', choices: [{ index: 0, finish_reason: 'stop', message: { role: 'assistant', content: 'hello from the stand-in provider' } }], usage: { prompt_tokens: 5, completion_tokens: 5, total_tokens: 10 } }))
   })
 })
@@ -647,6 +665,49 @@ print(json.dumps(out))
     await reload()
     const back = await ask()
     const upstream = [...new Set(hostedSeen)]
+    // File search works inside the sealed box (2.3.0-20): opencode's glob, grep and list tools, each
+    // run once in a real conversation (the scripted stand-in on `hosted` calls them), succeed and
+    // find the file. Before, the image had no ripgrep and opencode's first search tried to download
+    // it from GitHub, so every one failed ("ripgrep execution failed").
+    {
+      const auth = `Basic ${Buffer.from(`opencode:${ws.secrets(A).OPENCODE_PASSWORD}`).toString('base64')}`
+      const oc = (method, p, body) =>
+        new Promise((resolve) => {
+          const data = body === undefined ? null : JSON.stringify(body)
+          const req = http.request({ socketPath: ws.paths(A).opencode, path: p, method, timeout: 15000, headers: { authorization: auth, ...(data ? { 'content-type': 'application/json', 'content-length': Buffer.byteLength(data) } : {}) } }, (res) => {
+            let r = ''
+            res.on('data', (d) => (r += d))
+            res.on('end', () => {
+              let json = null
+              try { json = r ? JSON.parse(r) : null } catch {}
+              resolve({ status: res.statusCode, json })
+            })
+          })
+          req.on('error', () => resolve({ status: 0, json: null }))
+          req.on('timeout', () => (req.destroy(), resolve({ status: -1, json: null })))
+          req.end(data ?? undefined)
+        })
+      inside(A, 'import os\nos.makedirs("/work/fx-search", exist_ok=True)\nopen("/work/fx-search/fx-tools.txt", "w").write("the harbor-fx line\\n")')
+      writeHosted({ [`ws-${A}`]: { cap_micro_usd: 1_000_000 } })
+      await reload()
+      const rg = inside(A, 'import shutil, subprocess\nr = shutil.which("rg")\nprint(r, subprocess.run([r, "--version"], capture_output=True, text=True).stdout.split()[1] if r else "")').out.trim()
+      const { permissionsFor } = await import('../web/server/proxy.mjs')
+      const sess = await oc('POST', '/api/session', { title: 'file tools', location: { directory: '/work' }, metadata: { autonomy: 'go' }, permissions: permissionsFor('go', 'ask') })
+      const sid = (sess.json?.data ?? sess.json)?.id
+      await oc('POST', `/api/session/${sid}/model`, { model: { id: 'hosted', providerID: 'ola' } })
+      const p = await oc('POST', `/api/session/${sid}/prompt`, { text: 'FX-FILE-TOOLS: find the file that mentions harbor-fx.' })
+      let idle = false
+      for (let i = 0; i < 60 && !idle; i++) {
+        await new Promise((r) => setTimeout(r, 1000))
+        const m = await oc('GET', `/api/session/${sid}/message?limit=200`)
+        idle = (m.json?.data ?? m.json ?? []).some?.((x) => x.type === 'idle')
+      }
+      writeHosted({})
+      await reload()
+      const seen = fileToolsSeen.filter(Boolean)
+      const bad = seen.filter((x) => /ripgrep|execution failed|error|not found/i.test(x.result) || !/fx-tools\.txt/.test(x.result))
+      t('file search works inside the sealed box: opencode’s glob, grep and list tools each run once and find the file (ripgrep from the image, nothing downloaded)', /^\/usr\/bin\/rg \d/.test(rg) && p.status < 300 && idle && seen.length >= 3 && ['glob', 'grep', 'list'].every((n) => seen.some((x) => x.tool === n)) && !bad.length, `rg: ${rg}; tools offered ${JSON.stringify(seen[0]?.offered)}; ${seen.map((x) => `${x.tool}: ${x.result.replace(/\s+/g, ' ').slice(0, 90)}`).join(' | ')}`)
+    }
     t('inside: the image names the model `hosted`; the gateway serves it only with a grant, a one-time grant only until its moment', named && off === '403' && on === '200' && once === '200' && ended === '403' && back === '403' && JSON.stringify(upstream) === '["Made-up/Open-Model"]', `named ${named}; off ${off}, on ${on}, once ${once}, ended ${ended}, taken back ${back}; upstream saw ${upstream}`)
   }
   for (const k of ['proxy_request', 'host_header']) t(`inside: a ${k.replace('_', ' ')} through the door still lands on the gateway`, /^HTTP\/1\.1 (401|404)/.test(g[k] || ''), g[k])

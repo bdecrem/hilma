@@ -74,6 +74,10 @@
 # / store), the batch runner runs as work:olarun with its key on its input and talks to the door's
 # socket itself (ola-batch), the snapshot's database is checked here (ola-db api snapshot-check), and
 # a killed ola-unzip's half-unpacked folder is cleared (ola-unzip, ola-init).
+# Also 2.3.0-20: ripgrep from Debian. opencode's grep, glob and list tools run `rg`; with none on
+# PATH opencode downloads ripgrep from GitHub at first use, which a sealed VM cannot, so every file
+# search failed ("ripgrep execution failed"). The one on PATH is found first, so an `rg` the agent
+# puts in opencode's own data folder is never used.
 
 ARG DEBIAN=docker.io/library/debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc
 
@@ -99,7 +103,7 @@ RUN curl -fsSL --retry 5 --retry-delay 5 --retry-all-errors --connect-timeout 30
 
 FROM ${DEBIAN}
 RUN apt-get update \
- && apt-get install -y --no-install-recommends python3 socat sqlite3 poppler-utils python3-openpyxl \
+ && apt-get install -y --no-install-recommends python3 socat sqlite3 poppler-utils python3-openpyxl ripgrep \
       python3-matplotlib python3-docx python3-reportlab fonts-dejavu-core fonts-dejavu-extra chromium-headless-shell \
       tesseract-ocr tesseract-ocr-osd tesseract-ocr-eng tesseract-ocr-spa tesseract-ocr-fra tesseract-ocr-por tesseract-ocr-deu \
       tesseract-ocr-rus tesseract-ocr-ara tesseract-ocr-chi-sim tesseract-ocr-chi-tra tesseract-ocr-heb tesseract-ocr-nor tesseract-ocr-fil \
