@@ -129,6 +129,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   var store: OlaStore?
   var whereOla: WhereOlaWorks?
   var phoneLink: PhoneLink?
+  func applicationDidFinishLaunching(_ notification: Notification) {
+    // Not in the snapshot, self-test or `ola` modes (they never show a window); not before the
+    // first download exists (the feed answers 404 and the quiet check says nothing).
+    let args = ProcessInfo.processInfo.arguments.dropFirst()
+    guard !args.contains(where: { $0.hasPrefix("-Ola") || $0.hasPrefix("--") }) else { return }
+    MainActor.assumeIsolated { UpdateCheck.atLaunch() }
+  }
   func applicationWillTerminate(_ notification: Notification) {
     MainActor.assumeIsolated { whereOla?.stop(); phoneLink?.stop() }
     // whereOla.stop() also closes the model door (AccountController.stop).
@@ -177,6 +184,9 @@ struct OlaCommands: Commands {
   @FocusedValue(\.olaDraft) private var draft
 
   var body: some Commands {
+    CommandGroup(after: .appInfo) {
+      Button("Check for Updates…") { Task { await UpdateCheck.check(userAsked: true) } }
+    }
     CommandGroup(replacing: .newItem) {
       Button("New Session") { store.newSession() }.keyboardShortcut("n")
     }

@@ -36,6 +36,15 @@ cd apps/activist-ai/apple/OlaKit && swift test          # the fold, on the web a
 OLA_PASSWORD_FILE=<file> swift run olakit-selftest      # against the real server (see below)
 ```
 
+## Shipping: TestFlight for the phone, a signed download for the Mac (2026-11-17)
+
+`testflight/README.md`: `bump-build.sh`, then `testflight/asc-setup.mjs` once and
+`testflight/ship-via-mini.sh [ios|mac|both]` (archived on the mini's release Xcode). The iPhone app
+goes to TestFlight's internal group; the Mac app cannot (TestFlight on the Mac needs the App Sandbox,
+and in it the agent cannot run git, Python, Node, scripts or Claude Code: measured, the table is in
+that README), so it ships as a Developer ID signed, notarized disk image on ola.cx with an update
+check (Ola, Check for Updates…). Both wait on Bart accepting Apple's updated Program License Agreement.
+
 ## Why macOS used to ask again after every build (fixed 2026-11-17)
 
 Bart: the "Ola wants to use your confidential information stored in "cx.ola.opencode"" dialog came

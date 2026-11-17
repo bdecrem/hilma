@@ -49,6 +49,11 @@ targets:
         CFBundleName: Ola
         LSApplicationCategoryType: public.app-category.developer-tools
         NSHumanReadableCopyright: Made for Bart, 2026.
+        # Export compliance: only HTTPS and the system's own encryption (TLS, Keychain, CryptoKit).
+        ITSAppUsesNonExemptEncryption: false
+        # The numbers bump-build.sh moves (xcodegen otherwise writes a fixed 1.0 (1)).
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         # The machine is reached over Tailscale by plain HTTP (the tailnet encrypts it).
         # Plain HTTP is allowed only to local addresses and to Tailscale names (*.ts.net).
         NSAppTransportSecurity:
@@ -65,6 +70,11 @@ targets:
         CODE_SIGN_STYLE: Automatic
         ENABLE_HARDENED_RUNTIME: NO
         COMBINE_HIDPI_IMAGES: YES
+      # The signed download (testflight/README.md): Developer ID and notarization need the hardened
+      # runtime. Release only, so the Debug builds Bart installs sign exactly as before.
+      configs:
+        Release:
+          ENABLE_HARDENED_RUNTIME: YES
   OlaPhone:
     type: application
     platform: iOS
@@ -83,6 +93,11 @@ targets:
       path: iOS/Info.plist
       properties:
         CFBundleDisplayName: Ola
+        # Export compliance: only HTTPS and the system's own encryption (TLS, Keychain, CryptoKit).
+        ITSAppUsesNonExemptEncryption: false
+        # The numbers bump-build.sh moves (xcodegen otherwise writes a fixed 1.0 (1)).
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         UILaunchScreen:
           UIColorName: LaunchRoom
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]

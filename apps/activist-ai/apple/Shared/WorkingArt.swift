@@ -315,11 +315,16 @@ enum Hop {
     // Small, on the run line: the comma fills its box and hops lower.
     if small { ctx.translateBy(x: footX + 4, y: ground); ctx.scaleBy(x: 1.55, y: 1.55); ctx.translateBy(x: -footX - 4, y: -ground); p.hop *= 0.5 }
     // The tail, bent and stretched more toward its tip.
-    let pts = tailPoints.map { q -> CGPoint in
-      let d = hypot(q.x, q.y)
-      let w = M.clamp((d - 0.85) / (3.72 - 0.85))
-      let a = p.bend * w, sc = 1 + (p.stretch - 1) * w
-      return CGPoint(x: (q.x * cos(a) - q.y * sin(a)) * sc, y: (q.x * sin(a) + q.y * cos(a)) * sc)
+    // In Doubles throughout: mixing CGFloat and Double here was past the release compiler's
+    // type-check limit (Xcode 26.3, the Mac archive for the signed download).
+    let bend: Double = p.bend, stretch: Double = p.stretch
+    let pts: [CGPoint] = tailPoints.map { (q: CGPoint) -> CGPoint in
+      let x = Double(q.x), y = Double(q.y)
+      let w: Double = M.clamp((hypot(x, y) - 0.85) / (3.72 - 0.85))
+      let a: Double = bend * w
+      let sc: Double = 1 + (stretch - 1) * w
+      let ca: Double = cos(a), sa: Double = sin(a)
+      return CGPoint(x: (x * ca - y * sa) * sc, y: (x * sa + y * ca) * sc)
     }
     let tip = pts[3]
     // Its shadow on the ground.
