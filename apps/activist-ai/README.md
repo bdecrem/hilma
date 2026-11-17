@@ -228,10 +228,10 @@ VM's memory, so bounded by it) are the only places anything can be written. Befo
 512 GiB sparse image on the host, outside the volume's limit, invisible to `files`, and kept across
 `stop`. The agent runs as `work` (uid 1000) with no capabilities (`--cap-drop ALL`), no sudo, and no
 setuid or setgid program in the image (Debian's `su`, `passwd`, `mount` and the rest are stripped). Image: Debian bookworm-slim pinned by digest, opencode 2.3.0 checked
-against npm's sha512, python3, socat, nothing else (no curl, no CA bundle, no ssh). Image tag `ola-workspace:2.3.0-5` (2.3.0-5: Ola's standing instructions to the agent, `workspace/AGENTS.md`, say it is in a sealed box with no browser, preview pane or desktop app and that people see its pages under Files with Open; the desktop app's `browser` tool is denied; a stopped workspace made from an older image is made again from the current one at its next start, same volume and secrets. 2.3.0-3 added `ola-get` and `ola-rm` for the front desk's downloads and deletes, and a file's mtime in `ola-files`; 2.3.0-4: `ola-get` opens with `O_NONBLOCK` and refuses anything but a regular file at once, so a FIFO the agent makes cannot hold a download).
+against npm's sha512, python3, socat, nothing else (no curl, no CA bundle, no ssh). Image tag `ola-workspace:2.3.0-7` (2.3.0-7 and 2.3.0-6: Claude Code and `ola-claude`, see [Fallback to Claude](#fallback-to-claude-2026-11-16); 2.3.0-5: Ola's standing instructions to the agent, `workspace/AGENTS.md`, say it is in a sealed box with no browser, preview pane or desktop app and that people see its pages under Files with Open; the desktop app's `browser` tool is denied; a stopped workspace made from an older image is made again from the current one at its next start, same volume and secrets. 2.3.0-3 added `ola-get` and `ola-rm` for the front desk's downloads and deletes, and a file's mtime in `ola-files`; 2.3.0-4: `ola-get` opens with `O_NONBLOCK` and refuses anything but a regular file at once, so a FIFO the agent makes cannot hold a download).
 
 ```bash
-node workspace/ws.mjs image                    # build ola-workspace:2.3.0-5 (about 25 s)
+node workspace/ws.mjs image                    # build ola-workspace:2.3.0-7 (a 370 MB download the first time; --missing: only if absent)
 node workspace/ws.mjs create alice             # 4 CPUs, 6 GiB, 50 GiB: the ceilings
 node workspace/ws.mjs create test --memory 1g --disk 1g --cpus 1   # lower only; higher is refused
 node workspace/ws.mjs start alice              # opens the door, boots, waits for opencode
@@ -1086,8 +1086,51 @@ and `cost_micro_usd`; `/v1/usage` adds each caller's `claude_month`. Other setti
 5.5), `GATEWAY_CLAUDE_MAX_BODY_BYTES` (16 MiB). Tested in `gateway/test.mjs` against a fake
 Anthropic; live by hand with `workspace/claude-smoke.mjs api_key oauth`.
 
-**Not built yet** (from the first part's list, now done above): the front desk's per-project setting (owner only, off by default,
-audit words `claude_enabled`/`claude_disabled`/`claude_used` already in the schema), its writer of
-`GATEWAY_CLAUDE_FILE`, the run route that starts `ola-claude` and turns its stream-json into the
-page's steps, the Settings view with the consent text, "Ask Claude instead", the marking, and the
-automatic stops.
+**Proofs.** `gateway/test.mjs` (the pass-through, the grants, both modes, the ceilings, the
+modes answer); `web/check.mjs` (the page against `web/server/claude-standin.mjs`, in Chromium and
+WebKit: no control while off, the consent text and its confirming click, the marked reply, a "no"
+honored in the approval sheet, "Ask Claude instead", Stop, the truthful promise and files wording,
+390 px, off again); `frontdesk/check.mjs` (Claude Code in the sealed VM against the scripted
+Anthropic of `web/server/fake-anthropic.mjs`: the owner-only switch and the grants file, a run that
+writes its file and is audited with numbers only, "Ask me first" no and yes, Stop leaving nothing
+running, the drawer and a reopened conversation, the role change that moves a project to the
+subscription mode, and off again); `frontdesk/claude-live.mjs` (once, live, in oauth mode: a made-up
+admin-owned project, Settings, one tiny request from the drawer, the marked reply, the file, no token
+anywhere). WebKit holds back a stream's newest bytes until more arrive, so the front desk sends a
+blank 1 KiB line first and a blank line every second while a question waits.
+
+**After deploying** (the deploy builds image 2.3.0-7 as its own step before the suites; workspaces
+are made again from it at their next start):
+
+```bash
+# ~/.ola/gateway.env (600): add
+GATEWAY_CLAUDE_FILE=/Users/admin/.ola/gateway-claude
+CLAUDE_OAUTH_TOKEN_FILE=/Users/admin/.ola/claude-oauth-token
+# CLAUDE_API_KEY=sk-ant-...     only when projects of non-admin owners may use Claude (API-key mode)
+# GATEWAY_USAGE_TOKEN=...       already there (ops status); the front desk now needs the same value
+# ~/.ola/frontdesk.env (600): add
+OLA_FD_GATEWAY_USAGE_TOKEN=<the same value as GATEWAY_USAGE_TOKEN in gateway.env>
+# optional: OLA_FD_CLAUDE_CAP_USD=25, OLA_FD_CLAUDE_CAP_TOKENS=20000000 (per project, a month)
+node ops/ola.mjs install                      # restarts the gateway and the front desk with them
+node frontdesk/admin.mjs claude <workspace>   # its state: off, mode, ceiling, this month
+```
+
+The front desk writes `~/.ola/gateway-claude` at its start; the owner turns Claude on in Settings
+(or `admin.mjs claude <workspace> on`). Leave `HOSTED_*` unset until the hosted fallback's front
+desk and page are built (below).
+
+## Fallback to a hosted open model (2026-11-16, the gateway only)
+
+`gateway/hosted.mjs`: the model name `hosted`, served by a second OpenAI-compatible upstream
+(`HOSTED_BASE_URL`, `HOSTED_API_KEY`, `HOSTED_MODEL`, `HOSTED_PROVIDER` as people read it), only for
+callers listed in `GATEWAY_HOSTED_FILE` (`{"ws-<id>": {"cap_micro_usd": n}}`, mode 600, reloaded within
+2 s; else 403 in a plain sentence), with a monthly dollar ceiling per project (default $20; prices
+`GATEWAY_HOSTED_PRICES`, $/MTok). The caller's model string never goes upstream (`HOSTED_MODEL`
+does), the same field allowlist and reply rebuild apply, the hosted key is scrubbed like the main
+one, and `/v1/usage` (usage token) adds each caller's `hosted_month` and the provider's name. Tested
+in `gateway/test.mjs`. **Not built yet:** the front desk's setting (`hosted_enabled`, its consent text,
+audit words `hosted_enabled` / `hosted_disabled` / `hosted_used`, the grants file writer), the model
+`hosted` in the workspace's `opencode.jsonc` (an image change), the opencode route that switches a
+session's model (`session.switchModel`) in the page's allowed list, the drawer's third choice and
+marking, and the choice of model and provider (a probe of Together's serverless models, and the
+provider's data-retention terms for real customers, are open).
