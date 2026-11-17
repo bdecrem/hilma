@@ -5,6 +5,7 @@ import { createEffect, createResource, createSignal, For, onCleanup, Show } from
 import type { Ola } from '../lib/ola.ts'
 import type { CompareInfo, CompareResultLine, Fallback, Problem, Step, Turn } from '../lib/types.ts'
 import { runSummary } from '../lib/conversation.ts'
+import { JOB_PROPOSED } from '../lib/steps.ts'
 import { COMMANDS, commandMatches, parseCommand, reactionOnly, REACTIONS, shown, turnReaction, type CommandName } from '../lib/commands.ts'
 import { clock, when } from '../lib/format.ts'
 import { Answer } from './Answer.tsx'
@@ -487,6 +488,14 @@ function TurnView(props: { turn: Turn; now: number; last: boolean; alsoMade: str
               </ol>
             </Show>
           </div>
+        </Show>
+        {/* A job Ola wrote down waits for the person's yes under Jobs. Said here at once, because the
+            model may keep the conversation going (checking, waiting) instead of saying so (first-user
+            pass: five minutes of "Checked on the job" and "Waited" with no word of where to go). */}
+        <Show when={t().steps.some((st) => st.verb === JOB_PROPOSED && st.status === 'done')}>
+          <p class="job-waits" role="status">
+            Ola wrote down a job. It runs only when you start it, under <a href="#/jobs">Jobs</a>: a trial on a few documents first, then the rest.
+          </p>
         </Show>
         <For each={shownNotes()}>{(n) => <Answer text={n} class="note" />}</For>
         <Show when={shownAnswer()}>

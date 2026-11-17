@@ -82,7 +82,9 @@ export async function moreJourneys(h) {
     })
     await step(run, 'C', 'the same question of every study, as a job: proposal, trial, the whole job', 600, async () => {
       await ask(run, 'For every study I uploaded, find who makes the decisions and the year the plan runs to. Run it as a job over all of them and put the answers in a table.')
-      const r = await finishRun(run, 300_000)
+      // A person goes to Jobs once the conversation says a job waits there (or the run ends).
+      await until(async () => (await page.locator('.drawer .turn').last().locator('.job-waits').count()) || !/working|sending/.test((await page.locator('.drawer .turn').last().getAttribute('data-status')) ?? ''), 300_000, 'a job written down')
+      const r = { status: await page.locator('.drawer .turn').last().getAttribute('data-status') }
       const said = (await lastTurnText()).slice(-400)
       await closeDrawer()
       await page.goto(`${ORIGIN}/?w=${run.id}#/jobs`)

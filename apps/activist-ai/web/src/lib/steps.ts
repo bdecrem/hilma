@@ -29,6 +29,9 @@ function pathOf(input: Input): string {
   return str(input.path) || str(input.filePath) || str(input.file)
 }
 
+/** The step that wrote a job down: the conversation then points at Jobs, where it is started. */
+export const JOB_PROPOSED = 'Wrote down a job'
+
 /** A shell command, said plainly. */
 export function describeCommand(command: string): Words {
   const c = command.trim()
@@ -50,12 +53,19 @@ export function describeCommand(command: string): Words {
     'ola-ocr': { icon: 'read', verb: 'Read the scanned pages of', object: file },
     'ola-translate': { icon: 'change', verb: 'Translated', object: file },
     'ola-draw': { icon: 'write', verb: 'Drew a picture', object: '' },
-    'ola-batch': { icon: 'run', verb: 'Set up a job', object: '' },
     'ola-embed': { icon: 'search', verb: 'Searched the documents', object: '' },
     'ola-rerank': { icon: 'search', verb: 'Searched the documents', object: '' },
     'ola-transcribe': { icon: 'read', verb: 'Wrote down what is said in', object: file },
     'ola-unzip': { icon: 'change', verb: 'Unpacked', object: file },
     'ola-files': { icon: 'look', verb: 'Looked through', object: 'the project folder' },
+  }
+  if (own?.[1] === 'ola-batch') {
+    const sub = c.split(/\s+/)[1] ?? ''
+    if (sub === 'propose') return { icon: 'write', verb: JOB_PROPOSED, object: '' }
+    if (sub === 'results') return { icon: 'read', verb: 'Read the job’s answers', object: '' }
+    if (sub === 'check') return { icon: 'check', verb: 'Checked a quote in', object: 'the document' }
+    if (sub === 'run') return { icon: 'run', verb: 'Tried to start the job', object: '' }
+    return { icon: 'look', verb: 'Checked on the job', object: '' }
   }
   if (own && OWN[own[1]]) return OWN[own[1]]
   if (own) return { icon: 'run', verb: 'Used one of Ola’s tools', object: '' }
@@ -71,6 +81,7 @@ export function describeCommand(command: string): Words {
   }
   if (/^(grep|rg)\b/.test(c)) return { icon: 'search', verb: 'Searched the files', object: '' }
   if (/\b(test|pytest|check)\b/.test(c)) return { icon: 'check', verb: 'Checked the work', object: '' }
+  if (/^sleep\b/.test(c)) return { icon: 'think', verb: 'Waited', object: '' }
   if (/^(mkdir|cp|mv|touch)\b/.test(c)) return { icon: 'change', verb: 'Arranged files', object: '' }
   const first = c.split(/\s+/)[0] ?? ''
   return first && first.length <= 24 ? { icon: 'run', verb: 'Ran', object: first } : { icon: 'run', verb: 'Ran a command', object: '' }

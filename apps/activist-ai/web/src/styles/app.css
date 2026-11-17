@@ -1061,6 +1061,14 @@ code {
 .answer-heading {
   font-weight: 700;
 }
+/* A job Ola wrote down: where to start it. */
+.job-waits {
+  margin-top: var(--s3);
+  padding: var(--s2) var(--s3);
+  border-left: 3px solid var(--lamp);
+  background: var(--lamp-wash);
+  font-size: 16px;
+}
 /* A table in Ola's reply: scrolls sideways inside itself on a phone, never the page. */
 .answer-table {
   margin-top: var(--s3);

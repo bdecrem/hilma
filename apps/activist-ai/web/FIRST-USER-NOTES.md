@@ -89,6 +89,11 @@ Status words: **fixed** (in this pass, with a check), **open** (written up, not 
 
 ## Still open (small)
 
+- Jobs speaks in tokens: "Model use: 2.1 million tokens", "Budget for this job, in tokens",
+  "I approve a budget of 1,000,000 tokens." A first person cannot judge a number of tokens. The
+  proposal already shows "Of a week of this project’s use: about 3%"; the budget could be set in
+  that unit (a share of the week, or a multiple of the estimate), with tokens under Show details.
+  Not changed here: the budget field's unit is the job's contract with the gateway.
 - "0 people working on the machine" while you are the one working: the count is the last whole
   5-minute window, so a first person always reads 0. Either count the viewer's own team now, or
   hide the line at 0.
