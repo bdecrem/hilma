@@ -28,7 +28,8 @@ does not fix the system; the checks below do.
    seekers, the other is the regulation itself, and the answer is about migrants generally (Bart's
    review, 2026-11-17).
 3. **Redo the shaky ones.** Any answer marked low confidence (25 of them), or that failed check 1 or
-   2, is redone by Fable 5.2 at xhigh effort, with no cap on reading. It reads every law and ruling
+   2, is redone by Fable 5.2 at high effort, with no cap on reading (xhigh at first; the first
+   answer cost $14, and Bart moved it to high the same afternoon). It reads every law and ruling
    in full, never a news story about it.
 4. **People settle disagreements.** Where the first coder, the second opinion and the redo do not
    agree, the answer goes on a review page with the question, the competing answers and the exact
@@ -78,7 +79,7 @@ all 25.
 | Search | Haiku 5.5 | |
 | Source check | Sonnet 5.5 | low |
 | Second opinion | Opus 5.5 | high |
-| Redo of shaky answers | Fable 5.2 | xhigh |
+| Redo of shaky answers | Fable 5.2 | high |
 
 All of it through Claude Code on the Max login, like the first run.
 

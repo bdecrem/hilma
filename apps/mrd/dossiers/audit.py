@@ -21,7 +21,7 @@ from compile import COUNTRIES, CODEBOOK, Q, YEAR   # noqa: E402
 
 WORK = os.path.join(HERE, "work")
 MODELS = {"sources": ("claude-sonnet-5-5", "low"), "sources2": ("claude-sonnet-5-5", "low"),
-          "verify": ("claude-opus-5-5", "high"), "redo": ("claude-fable-5-2", "xhigh")}
+          "verify": ("claude-opus-5-5", "high"), "redo": ("claude-fable-5-2", "high")}
 GROUPS = ["all_migrants", "regular_migrants", "irregular_migrants", "refugees_asylum_seekers"]
 IMPL = {o["answer"]: o["score"] for o in CODEBOOK["implementation_options"]}
 CHUNK_OF = {q: ch["key"] for ch in CODEBOOK["chunks"] for q in ch["questions"]}

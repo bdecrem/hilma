@@ -79,7 +79,7 @@ findings, status, before / after, reason), runs and their cost in `dossier_check
    indicators and the answers with their citations, never the coder's confidence or notes, reads the
    primary sources itself, looks for what would overturn the answer, and returns a verdict and its
    own answer for protection and for implementation.
-3. **redo** (Fable 5.2, xhigh): whatever was marked low confidence, failed the source check or drew
+3. **redo** (Fable 5.2, high; xhigh cost $14 for the first answer, 46 pages read): whatever was marked low confidence, failed the source check or drew
    an objection is coded again with all three in front of it and no reading limit; it labels each
    evidence source (practice / law only, which people). **sources2** runs the source check over the
    redo, against the pages the redo session opened (its reads are logged as `redo:<chunk>`).

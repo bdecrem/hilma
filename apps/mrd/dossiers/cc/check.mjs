@@ -1,7 +1,7 @@
 // Runs one phase of the due diligence (../PLAN.md, ../audit.py) through Claude Code on the Max login:
 //   sources   Sonnet 5.5, low: opens every cited source and reports what is there (read only)
 //   verify    Opus 5.5, high: the second reader, tries to overturn each answer
-//   redo      Fable 5.2, xhigh: codes the shaky answers again from the primary sources
+//   redo      Fable 5.2, high: codes the shaky answers again from the primary sources
 //   sources2  the source check over the redo
 // Prompts, schemas and models come from audit.py --emit; results go back through --ingest.
 //
