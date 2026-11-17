@@ -62,14 +62,15 @@ function inline(text: string) {
 }
 
 // The journal file: "## Now" (a paragraph), "## Numbers", "## Waiting on you" and
-// "## Parked, your call" (lists), then one "## <day>" per day of "- **time** what".
+// "## Parked, your call" (lists), "## Decided" and "## To be decided" ("- **date** what"), then
+// one "## <day>" per day of "- **time** what".
 function parse(body: string) {
   const sections: { title: string; lines: string[] }[] = []
   for (const line of body.split('\n')) {
     if (line.startsWith('## ')) sections.push({ title: line.slice(3).trim(), lines: [] })
     else if (sections.length && line.trim()) sections[sections.length - 1].lines.push(line.trim())
   }
-  const named = ['Now', 'Numbers', 'Waiting on you', 'Parked, your call', 'Active project', 'On my plate', 'Decided']
+  const named = ['Now', 'Numbers', 'Waiting on you', 'Parked, your call', 'Active project', 'On my plate', 'Decided', 'To be decided']
   const get = (t: string) => sections.find((s) => s.title === t)
   const items = (t: string) => (get(t)?.lines ?? []).filter((l) => l.startsWith('- ')).map((l) => l.slice(2))
   const days = sections
@@ -92,6 +93,7 @@ function parse(body: string) {
     project: { title: active.find((l) => l.startsWith('# '))?.slice(2) ?? '', text: active.filter((l) => !l.startsWith('# ') && !l.startsWith('- ')).join(' '), links: active.filter((l) => l.startsWith('- ')).map((l) => l.slice(2)) },
     plate: tagged('On my plate'),
     decided: tagged('Decided'),
+    toDecide: tagged('To be decided'),
     days,
   }
 }
@@ -386,6 +388,23 @@ export default async function Page() {
               </div>
               <ol className="ko-decided">
                 {j.decided.map((d, i) => (
+                  <li key={i}>
+                    <span className="ko-mono t">{d.tag}</span>
+                    <span>{inline(d.text)}</span>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )}
+
+          {j.toDecide.length > 0 && (
+            <section className="ko-sec" aria-labelledby="to-decide">
+              <div className="ko-sec-head">
+                <h2 id="to-decide">To be decided</h2>
+                <p>Ideas you said out loud and have not settled.</p>
+              </div>
+              <ol className="ko-decided">
+                {j.toDecide.map((d, i) => (
                   <li key={i}>
                     <span className="ko-mono t">{d.tag}</span>
                     <span>{inline(d.text)}</span>

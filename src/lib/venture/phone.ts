@@ -2,6 +2,7 @@ import type Anthropic from '@anthropic-ai/sdk'
 import { isSession, newSession, type Turn } from './interview'
 import { talkMessages } from './talk'
 import type { Memo } from './memo'
+import { correctMinutes, type Minutes, type MinutesDeps } from './minutes'
 
 // Kit in the Ola iPhone app (2026-11-17). Bart: "proper full duplex voice meetings with you or
 // leave you voice notes", inside the app, for admins only, "like the voice mode in the dodo app".
@@ -68,6 +69,10 @@ export type PhoneDeps = {
   saveMemo(text: string): Promise<Memo>
   memos(limit: number): Promise<Memo[]>
   now(): number
+  /// Writes the minutes of a meeting or a note (after the response; never throws).
+  minutesAfter(source: Minutes['source'], ref: string): Promise<void>
+  minutesFor(source: Minutes['source'], refs: string[]): Promise<Map<string, Minutes>>
+  minutes: MinutesDeps
 }
 
 const json = (body: unknown, status = 200) =>
@@ -113,7 +118,10 @@ export async function startMeeting(req: Request, d: PhoneDeps): Promise<Response
   if (starts.length >= STARTS_AN_HOUR) return json({ error: 'That is a lot of meetings this hour. Try again later, or leave a note.' }, 429)
   // A meeting the phone never closed (the app was killed) is closed now, so it reads as over.
   for (const [id, rows] of bySession(hour)) {
-    if (id !== session && !ended(rows)) await d.addTurn(id, 'event', 'ended: not closed by the phone')
+    if (id !== session && !ended(rows)) {
+      await d.addTurn(id, 'event', 'ended: not closed by the phone')
+      d.later(() => d.minutesAfter('meeting', id))
+    }
   }
   await d.addTurn(session, 'event', resumed ? 'resumed' : 'started')
 
@@ -305,6 +313,8 @@ export async function endMeeting(req: Request, session: string, d: PhoneDeps): P
   if (!isSession(session)) return json({ error: 'no such meeting' }, 404)
   const rows = await d.turns(session)
   if (!rows.length || rows[0].call !== PHONE) return json({ error: 'no such meeting' }, 404)
+  // Every way a meeting ends gets its minutes (written once; a second end changes nothing).
+  d.later(() => d.minutesAfter('meeting', session))
   if (ended(rows)) return json({ ok: true })
   const body = (await req.json().catch(() => ({}))) as { seconds?: unknown; reason?: unknown }
   const reason = (END_REASONS as readonly string[]).includes(String(body.reason)) ? String(body.reason) : 'you'
@@ -318,7 +328,8 @@ export async function readMeeting(req: Request, session: string, d: PhoneDeps): 
   if (!isSession(session)) return json({ error: 'no such meeting' }, 404)
   const rows = await d.turns(session)
   if (!rows.length || rows[0].call !== PHONE) return json({ error: 'no such meeting' }, 404)
-  return json({ meeting: summary(session, rows), turns: rows.filter((t) => t.role !== 'event').map((t) => ({ who: t.role === 'claude' ? 'kit' : 'bart', text: t.text, at: t.at })) })
+  const minutes = (await d.minutesFor('meeting', [session])).get(session) ?? null
+  return json({ meeting: summary(session, rows), minutes, turns: rows.filter((t) => t.role !== 'event').map((t) => ({ who: t.role === 'claude' ? 'kit' : 'bart', text: t.text, at: t.at })) })
 }
 
 function summary(id: string, rows: Row[]) {
@@ -344,8 +355,13 @@ export async function overview(req: Request, d: PhoneDeps): Promise<Response> {
     .map(([id, r]) => summary(id, r))
     .sort((a, b) => b.at.localeCompare(a.at))
     .slice(0, 8)
-  const notes = (await d.memos(8)).map((m) => ({ id: m.id, text: m.text, at: m.at, read: !!m.seen_at }))
-  return json({ meetings, notes })
+  const memos = await d.memos(8)
+  const mm = await d.minutesFor('meeting', meetings.map((m) => m.id))
+  const nm = await d.minutesFor('note', memos.map((m) => String(m.id)))
+  return json({
+    meetings: meetings.map((m) => ({ ...m, minutes: mm.get(m.id) ?? null })),
+    notes: memos.map((m) => ({ id: m.id, text: m.text, at: m.at, read: !!m.seen_at, minutes: nm.get(String(m.id)) ?? null })),
+  })
 }
 
 // MARK: A voice note
@@ -369,5 +385,21 @@ export async function leaveNote(req: Request, d: PhoneDeps): Promise<Response> {
   }
   if (!text) return json({ error: 'I could not make out any words. Try again.' }, 400)
   const memo = await d.saveMemo(text)
+  d.later(() => d.minutesAfter('note', String(memo.id)))
   return json({ note: { id: memo.id, text: memo.text, at: memo.at } })
+}
+
+// MARK: Bart corrects the minutes
+
+/// POST { source, ref, id, to: 'decided' | 'to_decide' | 'delete' } → { minutes }. The line is
+/// marked as his, and the minutes count as unread again, so the runner and the session see it.
+export async function correct(req: Request, d: PhoneDeps): Promise<Response> {
+  if (!d.user(bearer(req))) return json({ error: 'Sign in again.' }, 401)
+  const b = (await req.json().catch(() => ({}))) as { source?: unknown; ref?: unknown; id?: unknown; to?: unknown }
+  const source = b.source === 'meeting' || b.source === 'note' ? b.source : null
+  const to = b.to === 'decided' || b.to === 'to_decide' || b.to === 'delete' ? b.to : null
+  if (!source || !to || typeof b.ref !== 'string' || typeof b.id !== 'string') return json({ error: 'bad correction' }, 400)
+  const m = await correctMinutes(source, b.ref, { id: b.id, to }, d.minutes)
+  if (!m) return json({ error: 'That line is not there any more.' }, 404)
+  return json({ minutes: m })
 }

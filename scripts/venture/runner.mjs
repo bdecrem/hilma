@@ -32,6 +32,7 @@ import { homedir, hostname } from 'node:os'
 import { fileURLToPath } from 'node:url'
 import { createClient } from '@supabase/supabase-js'
 import { getState, setState } from './_state.mjs'
+import { markSeen, minutesText, unseenMinutes } from './_minutes.mjs'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 const env = Object.fromEntries(
@@ -78,14 +79,16 @@ async function look() {
   const mail = await count('kochito_mail', (q) => q.eq('direction', 'in').is('seen_at', null))
   const leads = await count('kochito_leads', (q) => q.is('seen_at', null))
   const voice = await voiceSince(looked)
+  // Minutes of a voice call or note (or Bart's correction of them) no one has acted on yet.
+  const minutes = await unseenMinutes(db)
   const hour = new Date().getHours()
   const block = hour >= WORK_HOURS[0] && hour < WORK_HOURS[1] && age(lastEnd) > WORK_EVERY && age(session?.at) > 30 * MIN
   // What the last run left unread does not wake the next tick again for an hour
   // (a run that could not deal with something must not loop every five minutes).
   const left = age(lastEnd) < 60 * MIN ? (runner?.value?.left ?? {}) : {}
   const fresh = (n, k) => n > (left[k] ?? 0)
-  const why = [fresh(texts, 'texts') && `${texts} unread text(s) or voice note(s) from Bart`, fresh(mail, 'mail') && `${mail} unread message(s) to the company's addresses`, fresh(leads, 'leads') && `${leads} new sign-up(s)`, voice && `${voice} voice conversation(s) ended since anyone looked`, block && 'a work block is due: take the next action in NOW.md that needs nothing from Bart'].filter(Boolean)
-  return { session, runner, why, counts: { texts, mail, leads } }
+  const why = [fresh(texts, 'texts') && `${texts} unread text(s) or voice note(s) from Bart`, fresh(mail, 'mail') && `${mail} unread message(s) to the company's addresses`, fresh(leads, 'leads') && `${leads} new sign-up(s)`, voice && `${voice} voice conversation(s) ended since anyone looked`, fresh(minutes.length, 'minutes') && `${minutes.length} new minutes of a voice call or note`, block && 'a work block is due: take the next action in NOW.md that needs nothing from Bart'].filter(Boolean)
+  return { session, runner, why, minutes, counts: { texts, mail, leads, minutes: minutes.length } }
 }
 
 function claude(prompt, { readOnly = false, limit = RUN_LIMIT } = {}) {
@@ -139,9 +142,16 @@ if (cmd === 'status') {
     if (git.status !== 0) say(`git pull failed (working from the checkout as it is): ${git.stderr.trim().split('\n')[0]}`)
     const pulled = run('node', ['scripts/venture/sync.mjs', 'pull'])
     if (pulled.status !== 0) throw new Error(`could not pull the private state: ${pulled.stderr}`)
-    const prompt = `${readFileSync(root + 'apps/venture/runner/PROMPT.md', 'utf8')}\n\n## This run\n\nIt is ${new Date().toString()}. You were woken because: ${why.join('; ')}.`
+    const minutes = seen.minutes ?? []
+    // Bart, 2026-11-17: "when we have voice mode I need those conversations to go into your memory
+    // and decisions to be acted on, always."
+    const voice = minutes.length
+      ? `\n\n## Minutes of voice calls and notes (act on these)\n\nPut each Decided line under "## Decided" and each To be decided line under "## To be decided" in apps/venture/private/JOURNAL.md, the board (dated, newest first; a line he set is his). Never move a To be decided line to Decided yourself: only his words do that. Do what Kit will do asks, within this prompt's limits, and say on the board what you did. Facts go in the notes they belong to.\n\n${minutes.map(minutesText).join('\n\n')}`
+      : ''
+    const prompt = `${readFileSync(root + 'apps/venture/runner/PROMPT.md', 'utf8')}\n\n## This run\n\nIt is ${new Date().toString()}. You were woken because: ${why.join('; ')}.${voice}`
     res = await claude(prompt)
     say(`claude finished, exit ${res.code}, log ${res.log}`)
+    if (res.code === 0) await markSeen(db, minutes.map((m) => m.id))
     const pushed = run('node', ['scripts/venture/sync.mjs', 'push'])
     if (pushed.status !== 0) say(`push failed: ${pushed.stderr}`)
   } catch (e) {

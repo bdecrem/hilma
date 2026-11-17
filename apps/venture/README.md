@@ -201,6 +201,26 @@ Kit tab signs in with the page's accounts (`/api/kochito/app-token`) and calls
   stores it as a voice note in `venture_messages`; the audio is not kept.
 - Tests with stand-ins for everything: `npx tsx --test scripts/venture/phone-test.ts`.
 
+### Every voice call becomes notes (2026-11-17)
+
+Bart: "when we have voice mode I need those conversations to go into your memory and decisions
+to be acted on, always." An idea he was exploring ("Make it a choice.") had been answered "Got
+it" and recorded as decided.
+
+- **In the call** (the persona in `talk.ts`, shared by the talk page and the phone): voice is where
+  he thinks out loud; Kit asks "Decided, or thinking out loud?" once when something sounds like a
+  decision, never says "got it, I'll do that" to an idea, and recaps when he says goodbye.
+- **Minutes** (`src/lib/venture/minutes.ts`, table `venture_minutes`, schema 010): one Claude call
+  after every meeting (every way it ends), every voice note (phone or memo page), and from a
+  five-minute cron (`/api/venture/minutes/sweep`) for anything missed, the talk page included.
+  `decided` holds only what he confirmed, with his words quoted (a quote that is not in his own
+  lines makes it `to_decide`), then `to_decide`, `kit_will_do`, `facts`, a summary. He corrects
+  them from the phone; a corrected line is marked his and the minutes count as unread again.
+- **Who reads them**: `transcript.mjs --minutes [session]`; `--wait phone` prints them after a call
+  or a note; the runner wakes on unread minutes, gets them in its prompt with the order to put
+  them on the board (`## Decided`, `## To be decided`) and do `kit_will_do`.
+  `npx tsx scripts/venture/minutes.ts --session <id> | --note <id> [--force] | --sweep` by hand.
+
 ## Independence: the steer count and the replay suite
 
 Bart, 2026-11-16: "each time i steer, that's a failure of sorts, and you then

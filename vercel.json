@@ -21,6 +21,10 @@
       "schedule": "5 * * * *"
     },
     {
+      "path": "/api/venture/minutes/sweep",
+      "schedule": "*/5 * * * *"
+    },
+    {
       "path": "/api/f2/knowledge/backfill",
       "schedule": "20 10 * * *"
     }

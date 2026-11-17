@@ -6,15 +6,34 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import * as P from '../../src/lib/venture/phone'
 import type { PhoneDeps } from '../../src/lib/venture/phone'
+import { writeMinutes, type Line, type Minutes, type MinutesDeps } from '../../src/lib/venture/minutes'
 type Row = Awaited<ReturnType<PhoneDeps['turns']>>[number]
 
-function fake(opts: { reply?: (signal?: AbortSignal) => AsyncIterable<string>; transcript?: string } = {}) {
+// A stand-in for the minutes call: Claude's JSON, decided by the test.
+type Draft = { summary: string; decided: { text: string; quote: string }[]; to_decide: { text: string }[]; kit_will_do: { text: string }[]; facts: { text: string }[] }
+const EMPTY: Draft = { summary: 'A short call.', decided: [], to_decide: [], kit_will_do: [], facts: [] }
+
+function fake(opts: { reply?: (signal?: AbortSignal) => AsyncIterable<string>; transcript?: string; draft?: Draft } = {}) {
   let id = 0
   let clock = Date.parse('2026-11-17T10:00:00Z')
   const rows: Row[] = []
   const memos: { id: number; text: string; at: string; seen_at: string | null }[] = []
   const calls = { mint: 0, warm: 0, reply: 0, transcribe: 0, systems: [] as string[], messages: [] as unknown[] }
   const later: (() => Promise<void>)[] = []
+  const minutes = new Map<string, Minutes>()
+  const asked: string[] = []
+  const md: MinutesDeps = {
+    get: async (source, ref) => minutes.get(`${source}:${ref}`) ?? null,
+    put: async (m) => void minutes.set(`${m.source}:${m.ref}`, structuredClone(m)),
+    ask: async (_system, user) => {
+      asked.push(user)
+      return JSON.stringify(opts.draft ?? EMPTY)
+    },
+  }
+  const linesOf = (source: Minutes['source'], ref: string): Line[] =>
+    source === 'meeting'
+      ? rows.filter((r) => r.session === ref && r.role !== 'event').map((r) => ({ who: r.role === 'bart' ? 'bart' : 'kit', text: r.text }))
+      : memos.filter((m) => String(m.id) === ref).map((m) => ({ who: 'bart', text: m.text }))
   const d: PhoneDeps = {
     user: (t) => (t === 'good' ? 'bart' : null),
     turns: async (s) => rows.filter((r) => r.session === s).map((r) => ({ ...r })),
@@ -54,8 +73,11 @@ function fake(opts: { reply?: (signal?: AbortSignal) => AsyncIterable<string>; t
       if (r) r.text = text
     },
     checkEvery: 5,
+    minutesAfter: async (source, ref) => void (await writeMinutes(source, ref, linesOf(source, ref), md)),
+    minutesFor: async (source, refs) => new Map(refs.flatMap((r) => (minutes.has(`${source}:${r}`) ? [[r, minutes.get(`${source}:${r}`)!] as const] : []))),
+    minutes: md,
   }
-  return { d, rows, memos, calls, later, tick: (s: number) => (clock += s * 1000) }
+  return { d, rows, memos, calls, later, minutes, asked, tick: (s: number) => (clock += s * 1000) }
 }
 
 const auth = (token = 'good') => ({ authorization: `Bearer ${token}`, 'content-type': 'application/json' })
@@ -318,4 +340,93 @@ test('an empty transcription is not stored', async () => {
   const r = await P.leaveNote(new Request('https://x.test/', { method: 'POST', headers: { authorization: 'Bearer good' }, body: form }), f.d)
   assert.equal(r.status, 400)
   assert.equal(f.memos.length, 0)
+})
+
+// MARK: minutes (2026-11-17: "I need those conversations to go into your memory and decisions to be
+// acted on, always"). Claude is a stand-in; these check the plumbing and the guard on decisions.
+
+async function meetingWith(f: ReturnType<typeof fake>, said: { who: 'bart' | 'kit'; text: string }[]) {
+  const start = await read(await P.startMeeting(post({}), f.d))
+  const session = start.body.session as string
+  for (const l of said) await f.d.addTurn(session, l.who === 'bart' ? 'bart' : 'claude', l.text)
+  return session
+}
+
+test('thinking out loud with an imperative is to be decided, even when Claude calls it decided', async () => {
+  // made-up words in the shape of the second meeting: an idea, an imperative inside it, Kit's "got it"
+  const f = fake({ draft: { ...EMPTY, decided: [{ text: 'Offer the Mac app as a choice', quote: 'Got it, I will scope it.' }], to_decide: [{ text: 'Whether to offer the Mac app to others' }] } })
+  const session = await meetingWith(f, [
+    { who: 'bart', text: 'I wonder if other people should get the Mac app too. Make it a choice.' },
+    { who: 'kit', text: 'Got it, I will scope it.' },
+  ])
+  await P.endMeeting(post({ seconds: 60, reason: 'you' }), session, f.d)
+  for (const fn of f.later) await fn()
+  const m = f.minutes.get(`meeting:${session}`)!
+  assert.deepEqual(m.decided, [], 'a quote that is not his own words does not make a decision')
+  assert.deepEqual(m.to_decide.map((x) => x.text), ['Whether to offer the Mac app to others', 'Offer the Mac app as a choice'])
+  assert.match(f.asked[0], /BART: I wonder if other people/)
+  assert.match(f.asked[0], /KIT: Got it/)
+})
+
+test('a confirmed decision is decided, with his words quoted', async () => {
+  const f = fake({ draft: { ...EMPTY, decided: [{ text: 'Ship the new page on Friday', quote: 'Yes, decided.' }], kit_will_do: [{ text: 'Send the draft tonight' }] } })
+  const session = await meetingWith(f, [
+    { who: 'bart', text: 'Should we ship the new page on Friday?' },
+    { who: 'kit', text: 'Decided, or thinking out loud?' },
+    { who: 'bart', text: 'Yes, decided. And send me the draft tonight.' },
+  ])
+  await P.endMeeting(post({ seconds: 40, reason: 'you' }), session, f.d)
+  for (const fn of f.later) await fn()
+  const m = f.minutes.get(`meeting:${session}`)!
+  assert.deepEqual(m.decided, [{ id: 'd1', text: 'Ship the new page on Friday', quote: 'Yes, decided.' }])
+  assert.deepEqual(m.kit_will_do.map((x) => x.text), ['Send the draft tonight'])
+})
+
+test('a meeting that ended by a drop still gets minutes, once', async () => {
+  const f = fake()
+  const session = await meetingWith(f, [{ who: 'bart', text: 'Quick thought about the pricing.' }])
+  await P.endMeeting(post({ seconds: 20, reason: 'dropped' }), session, f.d)
+  await P.endMeeting(post({ seconds: 20, reason: 'dropped' }), session, f.d)
+  for (const fn of f.later) await fn()
+  assert.ok(f.minutes.has(`meeting:${session}`))
+  assert.equal(f.asked.length, 1, 'written once')
+  // a meeting the phone never closed gets them when the next one starts
+  const g = fake()
+  const lost = await meetingWith(g, [{ who: 'bart', text: 'Something I said before the app was killed.' }])
+  g.tick(P.START_GAP_S + 1)
+  await P.startMeeting(post({}), g.d)
+  for (const fn of g.later) await fn()
+  assert.ok(g.minutes.has(`meeting:${lost}`))
+})
+
+test('a note gets minutes, and the list shows them', async () => {
+  const f = fake({ transcript: 'Look into the clinic idea and tell me what it costs.', draft: { ...EMPTY, kit_will_do: [{ text: 'Find out what the clinic idea costs' }] } })
+  const form = new FormData()
+  form.append('audio', new Blob([new Uint8Array(20_000)], { type: 'audio/mp4' }), 'note.m4a')
+  const r = await read(await P.leaveNote(new Request('https://x.test/', { method: 'POST', headers: { authorization: 'Bearer good' }, body: form }), f.d))
+  for (const fn of f.later) await fn()
+  const m = f.minutes.get(`note:${r.body.note.id}`)!
+  assert.deepEqual(m.kit_will_do.map((x) => x.text), ['Find out what the clinic idea costs'])
+  const list = await read(await P.overview(get(), f.d))
+  assert.deepEqual(list.body.notes[0].minutes.kit_will_do.map((x: { text: string }) => x.text), ['Find out what the clinic idea costs'])
+})
+
+test('a correction from the phone persists, is marked as his, and needs his token', async () => {
+  const f = fake({ draft: { ...EMPTY, to_decide: [{ text: 'Offer the Mac app as a choice' }, { text: 'Rename the board' }] } })
+  const session = await meetingWith(f, [{ who: 'bart', text: 'Offer the Mac app as a choice. And maybe rename the board.' }])
+  await P.endMeeting(post({ seconds: 30, reason: 'you' }), session, f.d)
+  for (const fn of f.later) await fn()
+  assert.equal((await P.correct(post({ source: 'meeting', ref: session, id: 't1', to: 'decided' }, 'bad'), f.d)).status, 401)
+  const moved = await read(await P.correct(post({ source: 'meeting', ref: session, id: 't1', to: 'decided' }), f.d))
+  assert.equal(moved.status, 200)
+  const gone = await read(await P.correct(post({ source: 'meeting', ref: session, id: 't2', to: 'delete' }), f.d))
+  assert.equal(gone.status, 200)
+  const m = f.minutes.get(`meeting:${session}`)!
+  assert.deepEqual(m.decided.map((x) => [x.text, x.by]), [['Offer the Mac app as a choice', 'bart']])
+  assert.deepEqual(m.to_decide, [])
+  assert.deepEqual(m.removed!.map((x) => [x.text, x.by]), [['Rename the board', 'bart']])
+  assert.ok(m.edited_at)
+  assert.equal((await P.correct(post({ source: 'meeting', ref: session, id: 't2', to: 'decided' }), f.d)).status, 404, 'a removed line cannot be moved')
+  const back = await read(await P.readMeeting(get(), session, f.d))
+  assert.equal(back.body.minutes.decided[0].by, 'bart')
 })
