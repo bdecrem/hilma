@@ -50,6 +50,7 @@ import { basename, dirname, join, resolve } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
 import { CLAUDE_SETTINGS, claudeConfig, makeClaude } from './claude.mjs'
 import { HOSTED_SETTINGS, hostedConfig, makeHosted } from './hosted.mjs'
+import { WEB_SETTINGS, webConfig, makeWeb } from './web.mjs'
 
 // ---------------------------------------------------------------- config
 
@@ -70,7 +71,7 @@ const SETTINGS = {
   GATEWAY_READ_TIMEOUT_MS: [30_000, 1_000, 600_000],
   GATEWAY_WEEKLY_TOKENS: [20_000_000, 1, 1e12],
 }
-const OTHER_GATEWAY_SETTINGS = ['GATEWAY_TOKENS', 'GATEWAY_TOKENS_FILE', 'GATEWAY_DOOR_DIR', 'GATEWAY_MODELS', 'GATEWAY_HOST', 'GATEWAY_DB', 'GATEWAY_QUOTAS', 'GATEWAY_USAGE_TOKEN', ...CLAUDE_SETTINGS, ...HOSTED_SETTINGS]
+const OTHER_GATEWAY_SETTINGS = ['GATEWAY_TOKENS', 'GATEWAY_TOKENS_FILE', 'GATEWAY_DOOR_DIR', 'GATEWAY_MODELS', 'GATEWAY_HOST', 'GATEWAY_DB', 'GATEWAY_QUOTAS', 'GATEWAY_USAGE_TOKEN', ...CLAUDE_SETTINGS, ...HOSTED_SETTINGS, ...WEB_SETTINGS]
 const NAME = /^[a-z0-9][a-z0-9._-]{0,63}$/i
 const TOKEN = /^[\x21-\x2b\x2d-\x7e]{24,512}$/ // printable ASCII, no space, no comma
 
@@ -168,6 +169,8 @@ function loadConfig(env) {
   const claude = claudeConfig(env, bad)
   // Fallback to a hosted open model (hosted.mjs): the model name `hosted`, its own upstream and grants.
   const hosted = hostedConfig(env, bad)
+  // Web search and downloads (web.mjs): the provider, the grants file, the fetch limits.
+  const web = webConfig(env, bad)
 
   if (problems.length) {
     for (const p of problems) console.error(`config: ${p}`)
@@ -189,6 +192,7 @@ function loadConfig(env) {
     keepText: textWithCalls === 'keep',
     claude,
     hosted,
+    web,
     port: num.GATEWAY_PORT,
     maxBody: num.GATEWAY_MAX_BODY_BYTES,
     maxTotalBody: num.GATEWAY_MAX_TOTAL_BODY_BYTES,
@@ -259,7 +263,8 @@ function redact(s) {
   if (typeof s !== 'string') return s
   if (s.includes(C.key)) s = s.split(C.key).join('[redacted]')
   if (C.hosted?.key && s.includes(C.hosted.key)) s = s.split(C.hosted.key).join('[redacted]')
-  return claude ? claude.scrub(s) : s
+  if (claude) s = claude.scrub(s)
+  return web ? web.scrub(s) : s
 }
 // The fields a caller may send on to the model server. Anything else is dropped: `n` would
 // multiply the work, `user` names a person, and unknown fields are untested surface.
@@ -283,7 +288,8 @@ const addUsage = db.prepare(`INSERT INTO usage (week, caller, model, requests, t
   ON CONFLICT (week, caller, model) DO UPDATE SET requests = requests + 1, tokens_in = tokens_in + excluded.tokens_in, tokens_out = tokens_out + excluded.tokens_out`)
 const claude = makeClaude({ cfg: C.claude, db, readBody: (req, max) => readBody(req, max), send: (...a) => send(...a), fail: (...a) => fail(...a) })
 const hosted = C.hosted ? makeHosted({ cfg: C.hosted, db }) : null
-const readUsage = db.prepare(`SELECT coalesce(sum(requests), 0) AS requests, coalesce(sum(tokens_in), 0) AS tokens_in, coalesce(sum(tokens_out), 0) AS tokens_out FROM usage WHERE week = ? AND caller = ?`)
+const web = makeWeb({ cfg: C.web, db, readBody: (req, max) => readBody(req, max), send: (...a) => send(...a), fail: (...a) => fail(...a) })
+const readUsage = db.prepare(`SELECT coalesce(sum(CASE WHEN model IN ('web-search', 'web-fetch') THEN 0 ELSE requests END), 0) AS requests, coalesce(sum(tokens_in), 0) AS tokens_in, coalesce(sum(tokens_out), 0) AS tokens_out FROM usage WHERE week = ? AND caller = ?`)
 
 const WEEK_MS = 7 * 24 * 3600 * 1000
 function weekStart(now = Date.now()) {
@@ -736,7 +742,7 @@ function identify(req) {
 }
 const known = (name) => name === 'usage' || C.tokens.some((t) => t.name === name)
 
-const ROUTES = { '/v1/chat/completions': 'chat', '/v1/models': 'models', '/v1/usage': 'usage', '/anthropic/v1/messages': 'claude', '/anthropic/v1/messages/count_tokens': 'claude_count' }
+const ROUTES = { '/v1/chat/completions': 'chat', '/v1/models': 'models', '/v1/usage': 'usage', '/anthropic/v1/messages': 'claude', '/anthropic/v1/messages/count_tokens': 'claude_count', '/web/search': 'search', '/web/fetch': 'fetch' }
 const secondsUntil = (ms) => String(Math.max(1, Math.ceil((ms - Date.now()) / 1000)))
 
 async function handle(req, res, rec, signal) {
@@ -756,12 +762,14 @@ async function handle(req, res, rec, signal) {
 
   if (rec.route === 'usage' && req.method === 'GET') {
     rec.status = 200
-    if (who === 'usage') return send(res, 200, { object: 'list', data: C.tokens.map((t) => ({ ...usageOf(t.name), claude_month: claude.monthOf(t.name), ...(hosted ? { hosted_month: hosted.monthOf(t.name) } : {}) })), inflight: queue.inflight, queued: queue.queued, claude_modes: claude.modes(), hosted: hosted ? { provider: hosted.provider } : null })
-    return send(res, 200, { ...usageOf(who), claude_month: claude.monthOf(who) })
+    if (who === 'usage') return send(res, 200, { object: 'list', data: C.tokens.map((t) => ({ ...usageOf(t.name), claude_month: claude.monthOf(t.name), ...(hosted ? { hosted_month: hosted.monthOf(t.name) } : {}), web_week: web.weekOf(t.name) })), inflight: queue.inflight, queued: queue.queued, claude_modes: claude.modes(), hosted: hosted ? { provider: hosted.provider } : null })
+    return send(res, 200, { ...usageOf(who), claude_month: claude.monthOf(who), web_week: web.weekOf(who) })
   }
   if (who === 'usage') return no(403, 'the usage token only reads usage', 'this token can only read /v1/usage', 'permission_error')
   // Claude Code in the workspace, through Anthropic's Messages API (claude.mjs).
   if (rec.route === 'claude' || rec.route === 'claude_count') return claude.handle(req, res, rec, who, signal)
+  // Web search and one-document downloads, only with the project's yes (web.mjs).
+  if (rec.route === 'search' || rec.route === 'fetch') return web.handle(req, res, rec, who, signal)
   if (rec.route === 'models' && req.method === 'GET') {
     rec.status = 200
     return send(res, 200, { object: 'list', data: [...C.models.keys(), ...(hosted ? ['hosted'] : [])].map((id) => ({ id, object: 'model', owned_by: 'ola' })) })
@@ -996,6 +1004,7 @@ process.on('SIGTERM', stop)
 process.on('SIGINT', stop)
 
 server.listen(C.port, C.host, () => {
+  console.log(JSON.stringify({ t: new Date().toISOString(), event: 'web', provider: C.web.provider, grants_file: !!C.web.file, weekly: C.web.weekly, per_minute: C.web.perMinute, test_hosts: C.web.testHosts.size }))
   console.log(
     JSON.stringify({
       t: new Date().toISOString(),
