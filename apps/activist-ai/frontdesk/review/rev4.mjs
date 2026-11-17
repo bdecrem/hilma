@@ -53,7 +53,9 @@ if (argv.includes('claude')) {
   const PORT = 4999
   sh('cat > /tmp/r4-fa.py', readFileSync(path.join(HERE, 'rev4-fake-anthropic.py'), 'utf8'))
   sh(`(nohup setsid python3 -I /tmp/r4-fa.py ${PORT} >/tmp/r4-fa.log 2>&1 &) ; sleep 1`)
-  const script = readFileSync(process.env.REV4_OLA_CLAUDE || path.join(AI, 'workspace/ola-claude'), 'utf8') // REV4_OLA_CLAUDE: an older copy, to see it fail.replace('http://127.0.0.1:4180/anthropic', `http://127.0.0.1:${PORT}`)
+  // REV4_OLA_CLAUDE: an older copy of the script, to see the proof fail before the fix.
+  const script = readFileSync(process.env.REV4_OLA_CLAUDE || path.join(AI, 'workspace/ola-claude'), 'utf8').replace('http://127.0.0.1:4180/anthropic', `http://127.0.0.1:${PORT}`)
+  if (!script.includes(`http://127.0.0.1:${PORT}`)) throw new Error('the script under test was not pointed at the stand-in')
   sh('cat > /tmp/r4-ola-claude', script)
 
   /** One run under "ask": was the person asked, did the file appear, did a hook run. Every question is answered no. */
