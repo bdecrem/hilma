@@ -735,14 +735,18 @@ desk and the gateway through the door from inside the VM. First measured from `~
 After an unattended reboot no workspace runs until someone opens it. The checks
 (`workspace/check.mjs`, `frontdesk/check.mjs`) hold their limit of 2 against their own workspaces
 only (`OLA_RUNNING_SCOPE=home`, never honored for `~/.ola`), and the machine's 4 against every VM,
-so `stage-a` or a person's workspace may run meanwhile.
+so `stage-a` or a person's workspace may run meanwhile. Before they start VMs they wait up to 3
+minutes for room beside every VM that is not theirs (one line says they wait), and if it never comes
+they fail with one line, `the machine is full: N VMs running that are not this suite's (names)`,
+instead of a run of knock-on failures (`waitForRoom` in `ws.mjs`).
 
 **Scratch checkouts on the mini.** `~/ola-rot` (2026-11-16, the rotation fix) is a sparse clone of
 this repo (`apps/activist-ai` only) with its own `node_modules` and `web/dist`; nothing runs from it
 when no one is working there. Its suites run beside staging's without touching it:
 `OLA_CHECK_TAG=rot` gives `rot-` workspace ids and `~/.ola-check-rot` / `~/.ola-fdcheck-rot`, with
-`OLA_CHECK_GW_PORT` (4281 for the workspace check, 4282 for the front desk's) and
-`OLA_CHECK_FD_PORT=4890`. `~/ola-rot-scratch` holds its reproduction scripts. Delete both when no
+`OLA_CHECK_GW_PORT` (4381 for the workspace check, 4382 for the front desk's) and
+`OLA_CHECK_FD_PORT=4990` (it uses the next two as well). Another copy (`~/ola-w`) took 4282 and 4890 on
+2026-11-16: pick ports with `lsof -nP -iTCP:<port> -sTCP:LISTEN` first. `~/ola-rot-scratch` holds its reproduction scripts. Delete both when no
 longer wanted.
 
 ## Deploying staging

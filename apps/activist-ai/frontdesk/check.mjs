@@ -178,6 +178,18 @@ await until(async () => (await fetch(`${ORIGIN}/api/health`)).ok, 10_000, 'the f
 // The invitations, printed once by the admin CLI.
 const invites = { alice: admin('invite', 'alice'), bob: admin('invite', 'bob'), vera: admin('invite', 'vera') }
 
+// The machine is shared (a person's workspace, another suite's): wait for the check's two VMs to fit.
+const wsLib = await import('../workspace/ws.mjs')
+const room = () => wsLib.waitForRoom([FA, FB, FC], 2).then(() => null, (e) => e.message)
+{
+  const full = await room()
+  if (full) {
+    ok('the machine has room for this suite', false, full)
+    cleanup()
+    process.exit(1)
+  }
+}
+
 // ---------------------------------------------------------------- helpers
 const browser = await chromium.launch()
 const foreign = new Set()
@@ -1067,7 +1079,9 @@ await check('an idle workspace stops, its event stream does not wake it, and ope
   fd = start('frontdesk', 'frontdesk/server.mjs', { OLA_FD_IDLE_STOP_MIN: '0', OLA_MAX_RUNNING: '1' })
   await until(async () => (await fetch(`${ORIGIN}/api/health`)).ok, 10_000, 'the front desk start')
   admin('create-workspace', FC, '--name', 'Made-up second report', '--team', 'team-a', '--memory', '1g', '--disk', '1g', '--cpus', '1')
-
+  const full = await room()
+  if (full) ok('the machine has room for the rotation checks', false, full)
+  else {
   await check(`removing a member at the VM cap: both of the team's workspaces get new secrets, the old ones refused; the one that ran waits stopped ("machine busy"), and wakes once a slot frees`, async () => {
     const t0 = Date.now()
     // FB (bob's, through the front desk) and FA running: the check's two VMs, a full machine for this front desk.
@@ -1145,6 +1159,7 @@ await check('an idle workspace stops, its event stream does not wake it, and ope
       admin('add-member', 'team-a', 'vera', 'viewer')
     }
   })
+  }
 }
 
 await browser.close()

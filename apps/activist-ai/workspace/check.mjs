@@ -274,6 +274,7 @@ try {
   }
   await startGateway()
 
+  await ws.waitForRoom([A, B, C], 2) // the check runs two VMs at a time
   t0 = Date.now()
   const startA = await ws.start(A)
   measured.start_s = startA.ms / 1000
@@ -456,6 +457,7 @@ print(json.dumps({"mib": n, "stopped": why}))
   }
   // -------- rotation (2026-11-16): revocation needs no VM slot, a failure closes, a kill -9 resumes
   {
+    await ws.waitForRoom([A, B, C], 2)
     const cli = (args, extra = {}) => spawnSync(process.execPath, [path.join(here, 'ws.mjs'), ...args], { env: { ...process.env, ...extra }, encoding: 'utf8' })
     const line = (r) => {
       try {

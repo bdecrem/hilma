@@ -125,6 +125,22 @@ export function listOla() {
 }
 const stateOf = (c) => c?.status?.state ?? c?.status ?? 'unknown'
 export const running = () => listOla().filter((c) => stateOf(c) === 'running')
+/**
+ * For the checks (the deploy runs them on a shared machine): waits up to `ms` until `need` VMs can
+ * run beside every running VM that is not one of `mine` (ids), saying once that it waits, and
+ * throws one plain line if the room never comes.
+ */
+export async function waitForRoom(mine, need, { ms = 180_000, say = console.log } = {}) {
+  const theirs = () => running().map((c) => c.configuration?.id || c.id).filter((n) => !mine.includes(n.slice(4)))
+  const end = Date.now() + ms
+  let told = false
+  for (let t = theirs(); t.length + need > MACHINE_MAX; t = theirs()) {
+    const what = `${t.length} VMs running that are not this suite's (${t.join(', ')})`
+    if (Date.now() > end) throw new Error(`the machine is full: ${what}`)
+    if (!told) (say(`waiting for a free VM slot: ${what}`), (told = true))
+    await new Promise((r) => setTimeout(r, 2000))
+  }
+}
 export function volumeOf(id) {
   return json(['volume', 'ls']).find((v) => v.configuration?.name === names(id).volume) || null
 }
