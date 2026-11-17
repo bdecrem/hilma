@@ -1,0 +1,250 @@
+{
+ "made": "2026-11-17T23:50:09.162Z",
+ "judge": "see (through the evals gateway)",
+ "pairs": 18,
+ "consistent_across_swap": "13 of 18",
+ "tally": {
+  "v1-app-chimes": {
+   "with": 2,
+   "without": 0,
+   "same": 0,
+   "split": 1,
+   "other": 0
+  },
+  "v2-signature-tune": {
+   "with": 2,
+   "without": 0,
+   "same": 0,
+   "split": 1,
+   "other": 0
+  },
+  "v3-calm-loop": {
+   "with": 0,
+   "without": 0,
+   "same": 0,
+   "split": 2,
+   "other": 1
+  },
+  "v4-signup-sounds": {
+   "with": 0,
+   "without": 1,
+   "same": 0,
+   "split": 1,
+   "other": 1
+  },
+  "v5-petition-win": {
+   "with": 1,
+   "without": 2,
+   "same": 0,
+   "split": 0,
+   "other": 0
+  },
+  "v6-fix-harsh": {
+   "with": 0,
+   "without": 0,
+   "same": 0,
+   "split": 0,
+   "other": 3
+  }
+ },
+ "results": [
+  {
+   "task": "v1-app-chimes",
+   "seed": 1,
+   "first": "with",
+   "swapped": "with",
+   "verdict": "with",
+   "why": [
+    "A: Quiet, low-band chimes with clean fading lines and no pre-click or high-frequency content, though attacks are a little fast.\nB: Only a harsh, very bright vertical click with 64.8% energy above 5 kHz and no audible message or reminder sounds.\nBetter: A",
+    "A offers only a harsh, broadband Save impulse with 64.8% energy above 5 kHz and no audible message or reminder sounds.\nB provides quiet, low-frequency chime-like message and reminder events with a soft Save click and no high-frequency hash.\nBetter: B"
+   ]
+  },
+  {
+   "task": "v1-app-chimes",
+   "seed": 2,
+   "first": "with",
+   "swapped": "with",
+   "verdict": "with",
+   "why": [
+    "A has chimes and a save click for all three moments but the save is slow-attack and long, the chimes are too long and fast-attack with broad vertical transients.  \nB is essentially silent for the two Simulate tests and its save is an ultra-fast 0.5 ms attack 20 ms blip with no message or reminder sounds at all.  \nBetter: A",
+    "A: Only a Save transient is present, with a 0.5 ms attack and no chimes for new message or reminder at all. \nB: It gives you chimes and a click for all three moments, but the Save is a 0.89 s slow-attack bloom and the chime attacks are too fast and too long for a restrained UI family. \nBetter: B"
+   ]
+  },
+  {
+   "task": "v1-app-chimes",
+   "seed": 3,
+   "first": "?",
+   "swapped": "without",
+   "verdict": "split",
+   "why": [
+    "{\"error\":{\"message\":\"the model produced an empty reply, 3 times\",\"type\":\"upstream_error\"}}",
+    "A is at the right level with no high-frequency content but attacks are ~0.2–0.5 ms and the spectrogram shows harsh dark vertical clicks instead of soft-fading thin lines.\nB makes Save far too quiet at –36 dBFS, adds an unwanted “sound on/off” sound with a 53 ms attack, and still uses sub-3 ms attacks with smeary decays.\n\nBetter: A"
+   ]
+  },
+  {
+   "task": "v2-signature-tune",
+   "seed": 1,
+   "first": "with",
+   "swapped": "with",
+   "verdict": "with",
+   "why": [
+    "A: The Play tune is too loud at -10.5 dBFS peak with a 1.5 ms attack, about 10 s long and smeary in the spectrogram.  \nB: No audible tune is produced after the Play click; the spectrogram and table are essentially empty.  \nBetter: A",
+    "A: No sound is produced after the Play click; the page stays silent.\nB: The Play button triggers a low, in-key D-major tune that sits under the page at ~-25 dBFS RMS, although its peak is too hot, attack too fast and the stated ending note is inconsistent.\nBetter: B"
+   ]
+  },
+  {
+   "task": "v2-signature-tune",
+   "seed": 2,
+   "first": "with",
+   "swapped": "with",
+   "verdict": "with",
+   "why": [
+    "A offers a dark, in-key D-major phrase at a calm RMS with no energy above 5 kHz, but the musical attack is too fast and the UI off blip is slow with a dark vertical smear.\nB is silent after the Play click, so no signature tune is produced at all.\nBetter: A",
+    "A produces no audible signature after the Play click, so the requested tune is missing entirely.\nB delivers a below-5 kHz, in-key D major phrase with about -24 dBFS RMS and no pre-click sound, but the peak is hot at -10.5 dBFS with a 1.7 ms attack and the written ending does not match the claimed home note.\nBetter: B"
+   ]
+  },
+  {
+   "task": "v2-signature-tune",
+   "seed": 3,
+   "first": "with",
+   "swapped": "?",
+   "verdict": "split",
+   "why": [
+    "A sits comfortably under the page at ~-23 dBFS RMS with a true C-major tune that returns home and a clean dark spectrogram.\nB is far too hot at -1.5 dBFS peak / -11.2 dBFS RMS with an instant-attack, loud interface blip and a pushed level.\n\nBetter: A",
+    "{\"error\":{\"message\":\"the model produced an empty reply, 3 times\",\"type\":\"upstream_error\"}}"
+   ]
+  },
+  {
+   "task": "v3-calm-loop",
+   "seed": 1,
+   "first": "without",
+   "swapped": "?",
+   "verdict": "split",
+   "why": [
+    "A has no background music at all, just two very soft UI clicks with a slow ~50 ms attack and no sustained material between clicks.\nB provides a dark low-frequency bed that only starts after the click, stays well below 5 kHz and quiet around -33 dB RMS, with a brief gentle off cue.\n\nBetter: B",
+    "{\"error\":{\"message\":\"the model produced an empty reply, 3 times\",\"type\":\"upstream_error\"}}"
+   ]
+  },
+  {
+   "task": "v3-calm-loop",
+   "seed": 2,
+   "first": "?",
+   "swapped": "?",
+   "verdict": "?",
+   "why": [
+    "{\"error\":{\"message\":\"the model produced an empty reply, 3 times\",\"type\":\"upstream_error\"}}",
+    "{\"error\":{\"message\":\"the model produced an empty reply, 3 times\",\"type\":\"upstream_error\"}}"
+   ]
+  },
+  {
+   "task": "v3-calm-loop",
+   "seed": 3,
+   "first": "with",
+   "swapped": "?",
+   "verdict": "split",
+   "why": [
+    "A is quietly leveled, dark and delayed music with a separate gentle stop cue and no high-frequency content.\nB is immediately loud, bright and vertically transient, with music too hot at -19.6 dBFS RMS and the same loud texture used for both on and off.\n\nBetter: A",
+    "{\"error\":{\"message\":\"the model produced an empty reply, 3 times\",\"type\":\"upstream_error\"}}"
+   ]
+  },
+  {
+   "task": "v4-signup-sounds",
+   "seed": 1,
+   "first": "?",
+   "swapped": "?",
+   "verdict": "?",
+   "why": [
+    "{\"error\":{\"message\":\"the model produced an empty reply, 3 times\",\"type\":\"upstream_error\"}}",
+    "{\"error\":{\"message\":\"the model produced an empty reply, 3 times\",\"type\":\"upstream_error\"}}"
+   ]
+  },
+  {
+   "task": "v4-signup-sounds",
+   "seed": 2,
+   "first": "without",
+   "swapped": "without",
+   "verdict": "without",
+   "why": [
+    "A is smeary and sloppy with too-fast and too-slow attacks, long Next blips and an abrupt, noodly sign-up.\nB is quiet, soft-started and short with clean thin pitches, no highs and a consistent family feel.\nBetter: B",
+    "A is quiet, softly attacked and low-band with tidy fading horizontal tones that stay in one restrained family.\nB shows smeary wideband bursts, wildly inconsistent attacks and lengths, and an extra sound-switch cue that reads harsh and unfocused.\nBetter: A"
+   ]
+  },
+  {
+   "task": "v4-signup-sounds",
+   "seed": 3,
+   "first": "with",
+   "swapped": "?",
+   "verdict": "split",
+   "why": [
+    "A has UI blips with sub-3 ms attacks, a smeary 0.7 s Next and an over-slow 77 ms sign-up flourish that reads noisy in the spectrogram. \nB is effectively silent after the clicks, offering no Next, error or finish feedback at all. \nBetter: A",
+    "A is completely silent, no interface sounds are triggered at all.\nB triggers sounds but with"
+   ]
+  },
+  {
+   "task": "v5-petition-win",
+   "seed": 1,
+   "first": "with",
+   "swapped": "with",
+   "verdict": "with",
+   "why": [
+    "A shows a quiet, sub-5 kHz 1.7 s celebratory phrase with a 6.2 ms soft start and a very soft UI toggle, staying in the intended low level family.\nB is effectively silent after the sign click, providing no celebratory feedback at all.\n\nBetter: A",
+    "A is completely silent after the Sign the petition click, so no celebratory cue is delivered at all.\nB gives a quiet, low-band 1.7 s figure with a 6.2 ms soft attack and no energy above 5 kHz, though the spectrogram is smudgy and the sound-switch blip has a slow 53 ms attack.\nBetter: B"
+   ]
+  },
+  {
+   "task": "v5-petition-win",
+   "seed": 2,
+   "first": "without",
+   "swapped": "without",
+   "verdict": "without",
+   "why": [
+    "A: slow 76 ms attack, smeared 1.68 s pad with a dark vertical switch blip, too long and unfocused for a small win.\nB: quiet –17.8 dBFS, 0.52 s stepwise figure under 5 kHz with a clean fade and no pre-click sound.\n\nBetter: B",
+    "A: A short, quiet four-note flourish with thin fading partials, near the target level and with no energy above 5 kHz.\nB: A slow-attack, smeared and long gesture with dark vertical transients, reads like noodling rather than a crisp, family-consistent UI hit.\n\nBetter: A"
+   ]
+  },
+  {
+   "task": "v5-petition-win",
+   "seed": 3,
+   "first": "without",
+   "swapped": "without",
+   "verdict": "without",
+   "why": [
+    "A is quiet and dark with no pre-click noise but the sign flourish attacks at 17.2 ms, a little slow for a restrained UI moment.\nB is identical in level and timbre but the sign flourish snaps in at 7.7 ms, sitting nicely in the 3–10 ms soft-start window.\nBetter: B",
+    "A: Quiet, dark celebratory cue with a proper 7.7 ms soft start, no energy above 5 kHz and no sound before the click.\nB: Identical tonal material but the 17.2 ms attack is sluggish, making the win feel late and less responsive.\nBetter: A"
+   ]
+  },
+  {
+   "task": "v6-fix-harsh",
+   "seed": 1,
+   "first": "?",
+   "swapped": "?",
+   "verdict": "?",
+   "why": [
+    "{\"error\":{\"message\":\"the model produced an empty reply, 3 times\",\"type\":\"upstream_error\"}}",
+    "{\"error\":{\"message\":\"the model produced an empty reply, 3 times\",\"type\":\"upstream_error\"}}"
+   ]
+  },
+  {
+   "task": "v6-fix-harsh",
+   "seed": 2,
+   "first": "?",
+   "swapped": "?",
+   "verdict": "?",
+   "why": [
+    "{\"error\":{\"message\":\"the model produced an empty reply, 3 times\",\"type\":\"upstream_error\"}}",
+    "{\"error\":{\"message\":\"the model produced an empty reply, 3 times\",\"type\":\"upstream_error\"}}"
+   ]
+  },
+  {
+   "task": "v6-fix-harsh",
+   "seed": 3,
+   "first": "?",
+   "swapped": "?",
+   "verdict": "?",
+   "why": [
+    "{\"error\":{\"message\":\"the model produced an empty reply, 3 times\",\"type\":\"upstream_error\"}}",
+    "{\"error\":{\"message\":\"the model produced an empty reply, 3 times\",\"type\":\"upstream_error\"}}"
+   ]
+  }
+ ]
+}

@@ -191,6 +191,53 @@ model, passed a two-task pilot with the skill (u1, u6: 2 of 2, 18/18 and 14/14).
 list price (Nemotron 16M tokens in, the pilot and checks on GLM 1.9M, `see` 0.3M).
 `results/summary-design.json` has the rows.
 
+## Round five: the sound skill, with and without (2026-11-17)
+
+Six tasks for `sound` (code in `lib/r5_sound.py`, folders by `lib/mk_r3.py`, proved by `task.py selftest`
+on seeds 1 to 3): `v1-app-chimes` (a chime for a new message, another for a reminder, a soft click for
+Save), `v2-signature-tune` (a four-bar campaign tune from a Play button), `v3-calm-loop` (background
+music people can turn off), `v4-signup-sounds` (Next, a mistake, the finish), `v5-petition-win` (a small
+celebration), `v6-fix-harsh` (a page whose square-wave beeps play on load: make them good, keep each
+moment). Every check is listening: the checker runs the skill's own `listen.py` on the host (every
+AudioContext replaced by an offline one on the page's clock, so what the page schedules is rendered
+exactly), and holds the page to: nothing before a click, no sound system made on load and never resumed
+(silent on phones), at most three sound systems, no clipping, interface sounds peak -12 dBFS at most and
+music under -14 dBFS RMS, little energy above 5 kHz, soft attacks, clean endings, no DC, a sound switch
+that silences everything; plus the task's moments, a tune in one key with a figure that comes back and
+an ending on the home note (labels `harsh_sound` and `not_musical` were added). Its files stay beside each
+run (`work-listen/`: report, spectrogram, one .wav per sound). `sound-judge.mjs` puts both arms'
+spectrograms and measurements side by side, unlabeled, without the pass and fail lines, and asks `see`
+twice with the order swapped.
+
+**Measured on Nemotron 3.5 Super VL** in sealed VMs, image `ola-workspace:2.3.0-26` (the skill as
+shipped), 3 seeds, 900 s and 500,000 tokens a run, configuration `nemotron-3.5-super-vl-ws-snd`, own
+gateway (`run-sound.sh`). Runs passed (all checks), and checks passed:
+
+| Task | Without | With | Judge (with / without / split) |
+|---|---|---|---|
+| v1 app chimes | 0/3, 29/42 | 2/3, 41/42 | 2 / 0 / 1 |
+| v2 signature tune | 0/3, 24/51 | 2/3, 50/51 | 2 / 0 / 1 |
+| v3 calm loop | 2/3, 44/45 | 2/3, 42/45 | 0 / 0 / 2, 1 unanswered |
+| v4 sign-up sounds | 1/3, 35/51 | 1/3, 49/51 | 0 / 1 / 1, 1 unanswered |
+| v5 petition win | 1/3, 31/42 | 3/3, 42/42 | 1 / 2 / 0 |
+| v6 fix harsh | 0/3, 26/39 | 2/3, 38/39 | 3 unanswered |
+| all | 4/18, 189/270 (70%) | 12/18, 262/270 (97%) | 5 / 3 / 5, 5 unanswered |
+
+Without the skill the model's sounds were mostly sines at sane levels, so the gap is not loudness
+alone: it left out the sound switch (11 of 18 runs), made the sound system on page load (silent on a
+phone), wrote code that threw (`gain.setValueAtTime` on a GainNode, so nothing played), cut sounds off
+with a click, kept v6's sound on page load in all three runs, and for v2, v4 and v5 sometimes made no
+sound at all. With it, the misses were: a start sharper than 1 ms in four runs (v1, v4 twice, v6: the
+next thing to fix in the kit or in what the skill tells the agent), one tune whose figure never came
+back (v2 seed 3), and one loop that stopped on its own (v3 seed 1). Tokens a run (median): without about
+50,000, with about 230,000; three with-skill runs went past the 500,000 budget (522,000 to 601,000) and still finished. Spend:
+6.6M tokens in and 0.26M out on Nemotron, and the judge's `see` calls; about $2 at list price.
+The judge (`see`, Muse-Glimmer-30B, reading spectrograms and numbers) agreed with itself across the
+swap in 13 of 18 pairs but gave empty replies for 5 (all of v6); where it preferred the plain arm (v4
+seed 2, v5 seeds 2 and 3) it named the kit's celebration: its soft chord swells over 76 ms and lasts
+1.7 s, which it read as smeared and long for a small win. Read it as a second opinion, and that point as
+worth a listen. `results/summary-sound.json` has the rows, `results/sound-judge.json` the verdicts; `sound-listen-page.py` builds the page to hear them.
+
 ## Standing instructions, measured (2026-11-17): none shipped
 
 Two eval rounds and the first-user walk agreed on five ways the open model goes wrong: it skips checks

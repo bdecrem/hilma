@@ -1,0 +1,399 @@
+[
+ {
+  "arm": "on",
+  "run": "v1-app-chimes-s1-20261117T214721",
+  "passed": 14,
+  "total": 14,
+  "failed": [],
+  "skill_loaded": false
+ },
+ {
+  "arm": "on",
+  "run": "v1-app-chimes-s2-20261117T215030",
+  "passed": 14,
+  "total": 14,
+  "failed": [],
+  "skill_loaded": false
+ },
+ {
+  "arm": "on",
+  "run": "v1-app-chimes-s3-20261117T215030",
+  "passed": 13,
+  "total": 14,
+  "failed": [
+   "soft_starts"
+  ],
+  "skill_loaded": false
+ },
+ {
+  "arm": "on",
+  "run": "v2-signature-tune-s1-20261117T221440",
+  "passed": 17,
+  "total": 17,
+  "failed": [],
+  "skill_loaded": false
+ },
+ {
+  "arm": "on",
+  "run": "v2-signature-tune-s2-20261117T221440",
+  "passed": 17,
+  "total": 17,
+  "failed": [],
+  "skill_loaded": false
+ },
+ {
+  "arm": "on",
+  "run": "v2-signature-tune-s3-20261117T221704",
+  "passed": 16,
+  "total": 17,
+  "failed": [
+   "not_random"
+  ],
+  "skill_loaded": false
+ },
+ {
+  "arm": "on",
+  "run": "v3-calm-loop-s1-20261117T222558",
+  "passed": 12,
+  "total": 15,
+  "failed": [
+   "music_keeps_playing",
+   "switch_stops_it",
+   "calm_level"
+  ],
+  "skill_loaded": false
+ },
+ {
+  "arm": "on",
+  "run": "v3-calm-loop-s2-20261117T222558",
+  "passed": 15,
+  "total": 15,
+  "failed": [],
+  "skill_loaded": false
+ },
+ {
+  "arm": "on",
+  "run": "v3-calm-loop-s3-20261117T222706",
+  "passed": 15,
+  "total": 15,
+  "failed": [],
+  "skill_loaded": false
+ },
+ {
+  "arm": "on",
+  "run": "v4-signup-sounds-s1-20261117T223729",
+  "passed": 16,
+  "total": 17,
+  "failed": [
+   "soft_starts"
+  ],
+  "skill_loaded": false
+ },
+ {
+  "arm": "on",
+  "run": "v4-signup-sounds-s2-20261117T223729",
+  "passed": 17,
+  "total": 17,
+  "failed": [],
+  "skill_loaded": false
+ },
+ {
+  "arm": "on",
+  "run": "v4-signup-sounds-s3-20261117T223842",
+  "passed": 16,
+  "total": 17,
+  "failed": [
+   "soft_starts"
+  ],
+  "skill_loaded": false
+ },
+ {
+  "arm": "on",
+  "run": "v5-petition-win-s1-20261117T225209",
+  "passed": 14,
+  "total": 14,
+  "failed": [],
+  "skill_loaded": false
+ },
+ {
+  "arm": "on",
+  "run": "v5-petition-win-s2-20261117T225209",
+  "passed": 14,
+  "total": 14,
+  "failed": [],
+  "skill_loaded": false
+ },
+ {
+  "arm": "on",
+  "run": "v5-petition-win-s3-20261117T225338",
+  "passed": 14,
+  "total": 14,
+  "failed": [],
+  "skill_loaded": false
+ },
+ {
+  "arm": "on",
+  "run": "v6-fix-harsh-s1-20261117T231557",
+  "passed": 13,
+  "total": 13,
+  "failed": [],
+  "skill_loaded": false
+ },
+ {
+  "arm": "on",
+  "run": "v6-fix-harsh-s2-20261117T231557",
+  "passed": 12,
+  "total": 13,
+  "failed": [
+   "soft_starts"
+  ],
+  "skill_loaded": false
+ },
+ {
+  "arm": "on",
+  "run": "v6-fix-harsh-s3-20261117T231703",
+  "passed": 13,
+  "total": 13,
+  "failed": [],
+  "skill_loaded": false
+ },
+ {
+  "arm": "off",
+  "run": "v1-app-chimes-s1-20261117T214903",
+  "passed": 7,
+  "total": 14,
+  "failed": [
+   "works_on_phones",
+   "not_harsh",
+   "soft_starts",
+   "clean_endings",
+   "has_a_sound_switch",
+   "each_moment_has_a_sound",
+   "message_and_reminder_differ"
+  ],
+  "skill_loaded": false
+ },
+ {
+  "arm": "off",
+  "run": "v1-app-chimes-s2-20261117T215328",
+  "passed": 10,
+  "total": 14,
+  "failed": [
+   "soft_starts",
+   "has_a_sound_switch",
+   "each_moment_has_a_sound",
+   "message_and_reminder_differ"
+  ],
+  "skill_loaded": false
+ },
+ {
+  "arm": "off",
+  "run": "v1-app-chimes-s3-20261117T215328",
+  "passed": 12,
+  "total": 14,
+  "failed": [
+   "soft_starts",
+   "has_a_sound_switch"
+  ],
+  "skill_loaded": false
+ },
+ {
+  "arm": "off",
+  "run": "v2-signature-tune-s1-20261117T221855",
+  "passed": 5,
+  "total": 17,
+  "failed": [
+   "listened",
+   "no_clipping",
+   "not_too_loud",
+   "not_harsh",
+   "soft_starts",
+   "clean_endings",
+   "no_dc_offset",
+   "a_tune_plays",
+   "in_one_key",
+   "not_random",
+   "resolves",
+   "singable_range"
+  ],
+  "skill_loaded": false
+ },
+ {
+  "arm": "off",
+  "run": "v2-signature-tune-s2-20261117T221855",
+  "passed": 4,
+  "total": 17,
+  "failed": [
+   "listened",
+   "no_clipping",
+   "not_too_loud",
+   "not_harsh",
+   "soft_starts",
+   "clean_endings",
+   "no_dc_offset",
+   "has_a_sound_switch",
+   "a_tune_plays",
+   "in_one_key",
+   "not_random",
+   "resolves",
+   "singable_range"
+  ],
+  "skill_loaded": false
+ },
+ {
+  "arm": "off",
+  "run": "v2-signature-tune-s3-20261117T221949",
+  "passed": 15,
+  "total": 17,
+  "failed": [
+   "not_too_loud",
+   "not_random"
+  ],
+  "skill_loaded": false
+ },
+ {
+  "arm": "off",
+  "run": "v3-calm-loop-s1-20261117T222858",
+  "passed": 15,
+  "total": 15,
+  "failed": [],
+  "skill_loaded": false
+ },
+ {
+  "arm": "off",
+  "run": "v3-calm-loop-s2-20261117T222858",
+  "passed": 15,
+  "total": 15,
+  "failed": [],
+  "skill_loaded": false
+ },
+ {
+  "arm": "off",
+  "run": "v3-calm-loop-s3-20261117T223007",
+  "passed": 14,
+  "total": 15,
+  "failed": [
+   "switch_stops_it"
+  ],
+  "skill_loaded": false
+ },
+ {
+  "arm": "off",
+  "run": "v4-signup-sounds-s1-20261117T224024",
+  "passed": 17,
+  "total": 17,
+  "failed": [],
+  "skill_loaded": false
+ },
+ {
+  "arm": "off",
+  "run": "v4-signup-sounds-s2-20261117T224024",
+  "passed": 16,
+  "total": 17,
+  "failed": [
+   "has_a_sound_switch"
+  ],
+  "skill_loaded": false
+ },
+ {
+  "arm": "off",
+  "run": "v4-signup-sounds-s3-20261117T224138",
+  "passed": 2,
+  "total": 17,
+  "failed": [
+   "listened",
+   "works_on_phones",
+   "no_clipping",
+   "not_too_loud",
+   "not_harsh",
+   "soft_starts",
+   "clean_endings",
+   "no_dc_offset",
+   "has_a_sound_switch",
+   "mistake_has_a_sound",
+   "next_has_a_sound",
+   "finish_has_a_sound",
+   "finish_differs_from_next",
+   "mistake_differs_from_next",
+   "form_still_works"
+  ],
+  "skill_loaded": false
+ },
+ {
+  "arm": "off",
+  "run": "v5-petition-win-s1-20261117T225534",
+  "passed": 4,
+  "total": 14,
+  "failed": [
+   "listened",
+   "no_clipping",
+   "not_too_loud",
+   "not_harsh",
+   "soft_starts",
+   "clean_endings",
+   "no_dc_offset",
+   "has_a_sound_switch",
+   "win_has_a_sound",
+   "short"
+  ],
+  "skill_loaded": false
+ },
+ {
+  "arm": "off",
+  "run": "v5-petition-win-s2-20261117T225534",
+  "passed": 13,
+  "total": 14,
+  "failed": [
+   "has_a_sound_switch"
+  ],
+  "skill_loaded": false
+ },
+ {
+  "arm": "off",
+  "run": "v5-petition-win-s3-20261117T225629",
+  "passed": 14,
+  "total": 14,
+  "failed": [],
+  "skill_loaded": false
+ },
+ {
+  "arm": "off",
+  "run": "v6-fix-harsh-s1-20261117T231752",
+  "passed": 9,
+  "total": 13,
+  "failed": [
+   "silent_until_a_click",
+   "clean_endings",
+   "has_a_sound_switch",
+   "switch_silences_everything"
+  ],
+  "skill_loaded": false
+ },
+ {
+  "arm": "off",
+  "run": "v6-fix-harsh-s2-20261117T231752",
+  "passed": 8,
+  "total": 13,
+  "failed": [
+   "silent_until_a_click",
+   "works_on_phones",
+   "clean_endings",
+   "has_a_sound_switch",
+   "switch_silences_everything"
+  ],
+  "skill_loaded": false
+ },
+ {
+  "arm": "off",
+  "run": "v6-fix-harsh-s3-20261117T231822",
+  "passed": 9,
+  "total": 13,
+  "failed": [
+   "silent_until_a_click",
+   "works_on_phones",
+   "has_a_sound_switch",
+   "switch_silences_everything"
+  ],
+  "skill_loaded": false
+ }
+]

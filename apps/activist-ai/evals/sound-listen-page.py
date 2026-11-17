@@ -91,7 +91,7 @@ def main():
     a = ap.parse_args()
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
-    tasks = sorted(json.loads(p.read_text()) for p in (HERE / "tasks").glob("v*/task.json"))
+    tasks = [json.loads(p.read_text()) for p in sorted((HERE / "tasks").glob("v*/task.json"))]
     tasks = [t for t in tasks if t.get("skill") == "sound"]
     cards = []
     for t in tasks:
@@ -108,7 +108,7 @@ def main():
             passed, negseed, rdir, j = r
             s, cut, names, rep = clip(rdir / "work-listen", music)
             rows, fails = numbers(rep)
-            name = f"{tid}-{'with' if 'With' in label else 'without'}.mp3"
+            name = f"{tid}-{'with' if label.startswith('With ') else 'without'}.mp3"
             player = "<p>It made no sound.</p>"
             if s is not None:
                 mp3(s, out / name)
