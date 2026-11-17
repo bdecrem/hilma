@@ -2020,6 +2020,19 @@ before it goes, the side-by-side and its line, a held copy, the real task just t
 consent text, the Settings switches, a member with nothing, the Quality page, 390 px, none of our own
 words). Live once: `frontdesk/compare-live.mjs` (below, "Measured").
 
+**Measured 2026-11-17 on the mini, live once** (`frontdesk/compare-live.mjs`; Ola's model GLM-5.3-Flash
+on Together, Claude through the subscription in a made-up admin-owned project, at most 4 Claude
+requests): Ola cleaned a made-up roster of 7 rows in the project (4 steps); the made-up copy came back
+"unsure" on two plain words shared with the request ("differ", "spaces"; added to the fixed list since)
+and was released as the made-up owner would; its request: "Count the distinct workers listed in
+crew.csv — a few rows are duplicates and a couple of names differ only in capitalization or extra
+spaces. Save the deduplicated list as cleaned.csv and give your answer as a single sentence." Ola 7 of 7
+checks, Claude 7 of 7: both right. Claude Code used all 4 requests of the limit (37,609 tokens, $0.20
+at list price, an equivalent on the subscription), so the judge was not called and the record says
+"unsure" for it: the limit held, and a live judged comparison is still to be seen. 9 requests to Ola's
+model, about a cent. The token appeared in no output, record or VM. Then the Quality page showed that one
+comparison (`web-shots/cq/quality-live.png`).
+
 **After deploying** (the deploy builds image 2.3.0-18; projects take it at their next start): nothing
 is required. Optional in `~/.ola/frontdesk.env`: `OLA_FD_COMPARE_CAP_USD` (3), `OLA_FD_MODEL_LABEL`
 (what `general` is, for Quality, e.g. `GLM-5.3-Flash`), `OLA_FD_COMPARE_TICK_MS`,

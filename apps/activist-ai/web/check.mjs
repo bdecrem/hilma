@@ -1205,7 +1205,7 @@ async function compareChecks(engine, label) {
       assert((await post('/api/compare/settings', { real: true })) === 400, 'turned on without consent')
       await consent.getByRole('button', { name: 'Turn it on' }).click()
       await pg.waitForFunction(() => document.querySelector('[role=switch][aria-labelledby=compare-real]')?.getAttribute('aria-checked') === 'true')
-      assert(/Real tasks sent to Claude/.test(await pg.locator('.compare-setting').innerText()), 'the real task sent once is not shown in Settings')
+      assert(/Real tasks sent to Claude/i.test(await pg.locator('.compare-setting').innerText()), 'the real task sent once is not shown in Settings')
       await pg.locator('.compare-setting label', { hasText: 'A few each day, on their own' }).click()
       await pg.locator('#compare-per-day').waitFor()
       await shot('compare-settings', pg.locator('.compare-setting'))
