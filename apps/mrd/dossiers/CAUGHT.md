@@ -22,7 +22,7 @@ confidence; 25 answers went to the recode.
 | Indicator | What was wrong | Caught by | Outcome |
 |---|---|---|---|
 | 13 implementation ratings (among them 5, 7, 27, 33, 63, 67, 71, 73) | No source the coder actually opened shows practice: the rating rested on the law itself, or on pages seen only in search results. | Source check | Still in the recode |
-| 9 and 11, force and lethal force at the border | The General Police Law was read on a law firm's website, not an official text. | Source check | 11: the recode found and read Decree 31463-SP art. 5 (firearms only against grave risk to life), which neither the first coder nor the second reader had; it proposes Yes where the dossier says No. Decision pending |
+| 11, lethal force at the border | The first coder and the second reader both answered No without having found Decree 31463-SP art. 5 (firearms only against grave risk to life or physical integrity). The recode found and read it and answers Yes. Whether a general police firearms rule counts for this indicator is a judgment call (the MRD coded Colombia Yes on police-code rules and Mexico No on a constitutional ban). | Recode | Waiting for a person |
 | 77, same-sex marriage in family reunification | Decree 41329-MGP cited from a newspaper article quoting it; the article number was never seen in the decree. | Source check | Still in the recode |
 | 131, discrimination on migrant status | Constitutional Chamber judgment 2023-030411 cited from a news report, the same mistake as indicator 55. | Source check | Still in the recode |
 | 133, regularization | DGME resolution DG-0064-05-2026 cited from a press report. | Source check | Still in the recode |
@@ -39,3 +39,4 @@ confidence; 25 answers went to the recode.
 | Date | What | Fix |
 |---|---|---|
 | 2026-11-17 | The source check matched evidence to answers by group labels alone, and failed every detention answer because evidence about detained irregular migrants was "not about all migrants". | The check now asks whether the evidence fits the people the right matters for. |
+| 2026-11-17 | The source check called a full-text reproduction of a law on a third-party site (a law firm's library, Justia, vLex) a "secondary account" and failed the answer: Costa Rica 9 and 11 on the first pass, 39 and 127 on their recodes. | The check now goes by what is on the page: the full text anywhere is the text itself; an article, guide or summary is a secondary account even when it quotes. 39 and 127 are being checked again. |

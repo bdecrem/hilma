@@ -105,7 +105,7 @@ SOURCES_SCHEMA = {"type": "object", "additionalProperties": False, "required": [
             "n": {"type": "integer", "description": "the L-number"},
             "opened": {"type": "boolean", "description": "the URL returned readable text"},
             "page_is": {"type": "string", "enum": ["the_text_itself", "official_summary", "secondary_account", "unrelated", "unreadable", "no_url"],
-                        "description": "the_text_itself = the law, regulation or court decision cited, on any site; official_summary = the issuing body's own summary or press release; secondary_account = press, NGO, law firm, encyclopedia, someone else's description"},
+                        "description": "the_text_itself = the full text of the law, regulation or court decision cited, on any site, official or a reproduction (vLex, Justia, a law firm's library); official_summary = the issuing body's own summary or press release; secondary_account = an article, commentary, guide or description by someone else, even one that quotes passages"},
             "quote_found": {"type": "string", "enum": ["yes", "partly", "no", "not_checked"],
                             "description": "the quoted words (a translation) are in the text at the cited article: yes = same meaning, partly = the article is there but says less or something different, no = not there"},
             "passage": {"type": ["string", "null"], "description": "the passage in the original language that corresponds to the quote, max 400 characters; null if not found"},
@@ -125,7 +125,7 @@ def sources_prompt(c, key, answers, redo):
 
 For each legal source (L1, L2, ...):
 - Open the URL with the `read` tool. The quote you are given is an English translation, so search with `find` for the article number in {c['lang']} ("Artículo 31", "Art. 31", "§ 31" and the like) or for distinctive original-language words, several terms at once separated by ' | '. Try a second `find` before reporting "no".
-- Say what the page is: the text itself (the law, regulation or court decision that is cited), the issuing body's own summary, or somebody else's account of it (press, NGO, law firm). A news article about a ruling is a secondary account even when it quotes the ruling.
+- Say what the page is: the text itself (the law, regulation or court decision that is cited), the issuing body's own summary, or somebody else's account of it (press, NGO, law firm). What matters is what is on the page, not whose site it is: the full text of the act or the judgment reproduced on a legal database, a law firm's library, a UN site or a university is the text itself. A news article, a commentary, a guide or a summary is a secondary account even when it quotes passages.
 - Say whether the quoted words are in the text at the cited article, and copy the matching passage in the original language.
 For each evidence source (E1, E2, ...):
 - Open it and say whether it reports practice (what authorities actually do) or only what the law says, which people it is about, and whether it contains what the Evidence paragraph attributes to it.
