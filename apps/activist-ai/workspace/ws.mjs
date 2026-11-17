@@ -47,7 +47,7 @@ import { fileURLToPath } from 'node:url'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 export const CONTAINER = process.env.OLA_CONTAINER_BIN || '/usr/local/bin/container'
-export const IMAGE = 'ola-workspace:2.3.0-12'
+export const IMAGE = 'ola-workspace:2.3.0-13'
 export const HOME = process.env.OLA_HOME || path.join(homedir(), '.ola')
 export const GATEWAY_PORT = Number(process.env.OLA_GATEWAY_PORT || 4180)
 // The gateway's door sockets, one per workspace (the gateway's GATEWAY_DOOR_DIR): each door
@@ -380,6 +380,10 @@ function createArgs(id, { cpus, memory }) {
     '--read-only',
     '--tmpfs', '/tmp',
     '--env-file', p.secrets,
+    // opencode reads no config from the project (/work/opencode.json, /work/.opencode/): a file
+    // the agent or an upload put there changed its instructions and permissions (review 3, open
+    // until review 4). Also in the image's ENV; here too so a container made by this ws.mjs has it.
+    '--env', 'OPENCODE_DISABLE_PROJECT_CONFIG=1',
     '-v', `${n.volume}:/work`,
     '-v', `${p.door}:/ola/gw/gateway.sock`,
     IMAGE,

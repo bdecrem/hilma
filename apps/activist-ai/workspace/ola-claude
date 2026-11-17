@@ -40,8 +40,17 @@ case "$cmd" in
     export ANTHROPIC_AUTH_TOKEN="$BOX_API_KEY"
     unset ANTHROPIC_API_KEY CLAUDE_CODE_OAUTH_TOKEN OPENCODE_PASSWORD
     export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1 DISABLE_TELEMETRY=1 DISABLE_ERROR_REPORTING=1 DISABLE_AUTOUPDATER=1 CLAUDE_CODE_DISABLE_BACKGROUND_TASKS=1
-    export CLAUDE_CONFIG_DIR=/work/.ola/claude
-    mkdir -p "$CLAUDE_CONFIG_DIR" "$RUNS/$conv"
+    # No settings from the project (review 4, H1): /work is written by the agent, by Claude Code
+    # itself in "go", and by what a downloaded page talks either into, so a settings file there
+    # (/work/.claude/settings.local.json, a config folder in the volume) let every write skip the
+    # person's yes under "Ask me first", and a hook in /work/.claude/settings.json ran a command no
+    # one approved. Claude Code reads its user settings from a fresh, empty folder made for this
+    # run (outside /work, gone after it), never the project's or local ones, no hooks, and only
+    # the MCP servers named here (none).
+    CLAUDE_CONFIG_DIR="$(mktemp -d /tmp/ola-claude-cfg.XXXXXXXX)"
+    export CLAUDE_CONFIG_DIR
+    trap 'rm -rf "$CLAUDE_CONFIG_DIR"' EXIT
+    mkdir -p "$RUNS/$conv"
     cd /work
     model="${OLA_CLAUDE_MODEL:-claude-opus-5-5}"
     if [ "$cmd" = go ]; then perms="--permission-mode bypassPermissions"; else perms="--permission-mode manual --permission-prompt-tool stdio"; fi
@@ -51,6 +60,7 @@ case "$cmd" in
     # shellcheck disable=SC2086
     tee "$dir/$run.in" | sh -c 'echo $$ > "/tmp/ola-claude-$0.pid"; exec "$@"' "$run" \
       claude -p --input-format stream-json --output-format stream-json --verbose --no-session-persistence --model "$model" $perms \
+      --setting-sources user --strict-mcp-config --settings '{"disableAllHooks":true}' \
       --disallowedTools WebFetch WebSearch AskUserQuestion CronCreate CronDelete CronList ScheduleWakeup Monitor EnterWorktree ExitWorktree Workflow SendMessage ListAgents RemoteTrigger \
       --append-system-prompt "$(cat /opt/ola/config/claude/ola.md)" | tee "$dir/$run.out"
     rm -f "/tmp/ola-claude-$run.pid"

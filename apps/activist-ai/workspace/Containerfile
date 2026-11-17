@@ -11,7 +11,7 @@
 # gateway). The host reaches opencode through `container exec` (workspace/desk.mjs), and the
 # root file system is read-only (ws.mjs creates the container with --read-only).
 #
-#   node ws.mjs image   (builds ola-workspace:2.3.0-12 under a temporary tag, then names it)
+#   node ws.mjs image   (builds ola-workspace:2.3.0-13 under a temporary tag, then names it)
 #
 # 2.3.0-6 adds Claude Code (Fallback to Claude, workspace/ola-claude): the Linux arm64 build from
 # npm, pinned by npm's integrity like opencode. It reaches only the door, like opencode.
@@ -32,6 +32,12 @@
 # 2.3.0-12: AGENTS.md carries the reactions rule (README, "Slash commands and reactions"): the agent
 # may put [[ola:react NAME]] alone on the first line of its reply, and the page draws the emoji on
 # the person's message. (Not 2.3.0-11: another branch's number.)
+#
+# 2.3.0-13 (review 4; 9 and 11 were this branch's earlier tags): neither agent reads settings from the project. opencode runs with
+# OPENCODE_DISABLE_PROJECT_CONFIG=1 (a /work/opencode.json changed its instructions and
+# permissions), and ola-claude gives Claude Code a fresh, empty settings folder per run, only user
+# settings from it, no hooks and no MCP servers but its own (a /work/.claude/settings.local.json
+# let every write skip the person's yes under "Ask me first", and a hook there ran a command).
 
 ARG DEBIAN=docker.io/library/debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc
 
@@ -80,6 +86,7 @@ ENV HOME=/work/.ola/home \
     XDG_DATA_HOME=/work/.ola/data \
     XDG_STATE_HOME=/work/.ola/state \
     XDG_CACHE_HOME=/work/.ola/cache \
+    OPENCODE_DISABLE_PROJECT_CONFIG=1 \
     PATH=/opt/ola/bin:/usr/local/bin:/usr/bin:/bin
 USER work
 WORKDIR /work
