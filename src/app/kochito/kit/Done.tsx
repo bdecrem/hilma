@@ -7,7 +7,7 @@ import { ago, dayLong, shiftDay } from './time'
 
 // Done: the tracker by day, newest first. Today and yesterday open, earlier days folded; a count by
 // area under each day; search and filters for area and done / dropped. Each item opens in place.
-export default function Done({ issues, unsorted, notes, today, now, q }: { issues: Issue[]; unsorted: Commit[]; notes: Record<string, { time: string; text: string }[]>; today: string; now: string; q: string }) {
+export default function Done({ issues, unsorted, notes, today, now, q, base }: { issues: Issue[]; unsorted: Commit[]; notes: Record<string, { time: string; text: string }[]>; today: string; now: string; q: string; base: string }) {
   const [text, setText] = useState('')
   const [area, setArea] = useState<Area | ''>('')
   const [status, setStatus] = useState<'done' | 'dropped' | 'all'>('done')
@@ -65,7 +65,7 @@ export default function Done({ issues, unsorted, notes, today, now, q }: { issue
             </summary>
             <ol className="kb-rows">
               {list.map((i) => (
-                <IssueRow key={i.id} i={i} now={now} q={q} mode="done" />
+                <IssueRow key={i.id} i={i} now={now} q={q} mode="done" base={base} />
               ))}
             </ol>
             {!filtering && notes[d]?.length > 0 && (

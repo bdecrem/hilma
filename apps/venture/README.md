@@ -193,6 +193,21 @@ the board's section in `src/app/kochito/company.css`. To design with made-up
 data, `next dev` and `/kochito/kit/mock` (`?v=b` is the front-page layout that
 lost to the rail), pictures with `node scripts/venture/board-shots.mjs`.
 
+**Round two (2026-11-17)**, Bart: "key links in the sidebar; a way to view
+closed / resolved issues ... think like a product manager". The plan is the
+private note `BOARD-PLAN-2026-11-17` (his jobs on the page, what each needs,
+what was cut). Every page now sits in one frame (`Shell.tsx`): a left column on
+a wide screen, Menu on a phone, with the health readout and every link he opens
+(public ones in `src/app/kochito/kit/links.ts`; the notes are the journal's
+"Active project" links plus the newest review and the builders' rules). The
+overview starts with **Needs you** (waiting on Bart, To be decided, the
+check-in list) and a count. The tracker is `app.kochitolabs.com/issues`
+(status tabs with counts, area / priority / who / week filters, search, sort;
+the filters are the address), each issue has its own page `/issues/OLA-n`
+(proof, dates, commits linked to GitHub), and a note opens inside the board at
+`/notes/<slug>`, behind the same sign-in (`next.config.ts` rewrites the three
+paths on that host).
+
 **The issue tracker** is the record of work and the source of the plate (the
 journal's "On my plate" is no longer read by anything; the journal keeps Now,
 Decided, To be decided, Check-in list and the day notes). Tables

@@ -157,7 +157,13 @@ if (cmd === 'add') {
   let q = db.from('venture_issues').select('*').eq('project', 'ola')
   const d = one('day')
   if (d) q = q.eq('day', d === 'today' ? pacificDay() : d === 'yesterday' ? shiftDay(pacificDay(), -1) : d)
-  if (one('status')) q = q.in('status', String(one('status')).split(','))
+  // the words the list prints are accepted too: doing = in_progress, next = open, waiting on Bart = waiting
+  const ALIAS = { doing: 'in_progress', 'in-progress': 'in_progress', next: 'open', 'next-up': 'open', bart: 'waiting' }
+  if (one('status')) {
+    const wanted = String(one('status')).split(',').map((x) => ALIAS[x.trim()] ?? x.trim())
+    for (const w of wanted) if (!STATUSES.includes(w)) die(`status must be one of: ${STATUSES.join(', ')} (or doing, next)`)
+    q = q.in('status', wanted)
+  }
   if (one('area')) q = q.eq('area', one('area'))
   const rows = check(await q.order('num'), 'list')
   for (const r of rows) console.log(line(r))

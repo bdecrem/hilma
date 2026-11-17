@@ -66,7 +66,7 @@ export function fixture(): BoardData {
         { tag: 'Nov 17', text: 'Backups and signed updates over the next week.' },
         { tag: 'Nov 16', text: 'The first users are two researchers, in December.' },
       ],
-      toDecide: [{ tag: 'Nov 18', text: 'Whether the phone app should work without the private network.' }],
+      toDecide: [{ tag: 'Nov 18', text: 'Whether the phone app should work without the private network.' }, { tag: 'Nov 17', text: 'Which outside company may host the fallback model for real customers.' }],
       parked: ['Two older product ideas, set aside for Ola.'],
       waiting: [],
       checkin: [],
@@ -101,5 +101,11 @@ export function fixture(): BoardData {
         { n: 4, title: 'The second user, and the review', from: '2026-12-07', to: '2026-12-11', items: ['The second user starts'], demo: '' },
       ],
     },
+    notes: [
+      { slug: 'plan', label: '30 days to the review', title: 'A made-up plan', at: T('2026-11-16', 17) },
+      { slug: 'scan', label: 'Who else does this', title: 'A made-up scan', at: T('2026-11-17', 7) },
+      { slug: 'review', label: 'The latest security review', title: 'A made-up review', at: T('2026-11-17', 3) },
+      { slug: 'rules', label: "The builders' rules", title: 'Made-up rules', at: T('2026-11-17', 5) },
+    ],
   }
 }

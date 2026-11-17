@@ -1,20 +1,22 @@
 import type { BoardData, Issue } from '@/lib/venture/board'
 import Done from './Done'
+import Shell, { Health, STATUS_STALE } from './Shell'
 import { inline } from './inline'
 import { IssueRow } from './IssueRow'
 import { ago, dayShort, shiftDay } from './time'
 
-// The board at app.kochitolabs.com, built around the project (Ola). Top to bottom: the project and
-// its state with how fresh everything is; on the plate now; Independence; the plan; Done (the issue
-// tracker by day); Decided and To be decided; Numbers and the mini's live status; the voice links.
+// The board's overview at app.kochitolabs.com, built around the project (Ola). Round two
+// (2026-11-17, the plan is the private note BOARD-PLAN-2026-11-17): the project and its state;
+// Needs you, pinned with a count; on the plate (doing, the next five); the plan as a road; Done
+// (today and yesterday, the rest in the tracker at /issues); Independence; Decided; Numbers and
+// the full live status. Key links and health live in the sidebar (Shell.tsx).
 // The design note is at the top of the board's section in company.css.
 
 const plain = (s: string) => s.replace(/\*\*([^*]+)\*\*/g, '$1').replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
 const MIN = 60e3
-const STATUS_STALE = 30 * MIN
 const LEAD_STALE = 3 * 60 * MIN
 
-export default function Board({ d, q, user, face, voices, variant = 'a' }: { d: BoardData; q: string; user: string; face: string; voices: { href: string; tag: string; name: string; what: string }[]; variant?: 'a' | 'b' }) {
+export default function Board({ d, q, user, face, base, variant = 'a' }: { d: BoardData; q: string; user: string; face: string; base: string; variant?: 'a' | 'b' }) {
   const now = d.now
   const age = (iso: string | null | undefined) => (iso ? Date.parse(now) - Date.parse(iso) : Infinity)
   const issues = d.issues ?? []
@@ -33,7 +35,6 @@ export default function Board({ d, q, user, face, voices, variant = 'a' }: { d: 
   const hour = Number(new Date(now).toLocaleString('en-US', { hour: 'numeric', hourCycle: 'h23', timeZone: 'America/Los_Angeles' }))
   const leadStale = age(d.journal.at) > LEAD_STALE && hour >= 7 && hour < 23
   const s = d.status
-  const statusStale = !s || age(s.at) > STATUS_STALE
   const projectName = d.journal.project.title.split(',')[0] || 'Ola'
   const projectWhat = d.journal.project.title.split(',').slice(1).join(',').trim()
 
@@ -73,32 +74,14 @@ export default function Board({ d, q, user, face, voices, variant = 'a' }: { d: 
   const decidedNew = d.journal.decided.filter((x) => x.tag.replace(/\s*\(.*$/, '') === latestTag)
   const decidedOld = d.journal.decided.slice(decidedNew.length)
 
-  const sections = [
-    ['plate', 'On the plate'],
-    ['independence', 'Independence'],
-    ['plan', 'The plan'],
-    ['done', 'Done'],
-    ['decided', 'Decided'],
-    ['numbers', 'Numbers'],
-    ['talk', 'Talk to Kit'],
-  ]
+  // Needs you: what only Bart can do or settle, pinned at the very top
+  const toDecide = d.journal.toDecide
+  const checkin = d.journal.checkin.filter((x) => !/^nothing/i.test(x))
+  const needs = waiting.length + toDecide.length + checkin.length
+  const weekStart = shiftDay(today, -((new Date(`${today}T12:00:00Z`).getUTCDay() + 6) % 7))
+  const weekDone = issues.filter((i) => i.status === 'done' && i.day && i.day >= weekStart).length
 
-  return (
-    <div className={`ko kb kb-${variant}`}>
-      <div className="ko-wrap kb-wrap">
-        <header className="ko-top kb-top">
-          <a className="ko-name" href="/">
-            Kochito Labs<span>.</span>
-          </a>
-          <nav aria-label="Sections" className="kb-toc">
-            {sections.map(([id, name]) => (
-              <a key={id} href={`#${id}`}>
-                {name}
-              </a>
-            ))}
-          </nav>
-        </header>
-
+  const head = (
         <section className="kb-head" aria-labelledby="project">
           <div className="kb-head-main">
             <p className="ko-sub">The project</p>
@@ -122,36 +105,48 @@ export default function Board({ d, q, user, face, voices, variant = 'a' }: { d: 
               </span>
             </p>
           </div>
-          <dl className={`kb-live ko-mono${statusStale ? ' stale' : ''}`} aria-label="Live from the mini">
-            <div>
-              <dt>web app</dt>
-              <dd>{s?.deployed ? `updated ${ago(s.deployed.at, now)}` : '–'}</dd>
-            </div>
-            <div>
-              <dt>checks</dt>
-              <dd>{s?.checks ? `${s.checks.passed} of ${s.checks.total} passed` : '–'}</dd>
-            </div>
-            <div>
-              <dt>alarm</dt>
-              <dd className={s?.alarm.state ?? ''}>{s ? (s.alarm.state === 'alarm' ? s.alarm.says.join(' ') || 'sounding' : s.alarm.state === 'warn' ? `quiet, ${s.alarm.warns.length} warning${s.alarm.warns.length === 1 ? '' : 's'}` : 'quiet') : '–'}</dd>
-            </div>
-            <div>
-              <dt>disk</dt>
-              <dd>{s?.disk ? `${s.disk.freeGB} GB free` : '–'}</dd>
-            </div>
-            <div className="kb-live-at">
-              <dt>status</dt>
-              <dd>{s ? `${ago(s.at, now)}${statusStale ? ', stale' : ''}` : 'never pushed'}</dd>
-            </div>
-          </dl>
         </section>
-
-        <main>
+  )
+  const health = <Health s={s} now={now} steer={latest} />
+  return (
+    <Shell base={base} q={q} user={user} notes={d.notes} open={doing.length + next.length + waiting.length} current="home" aside={<div className={`kb-aside-${variant}`}>{variant === 'b' && head}{health}</div>}>
+      <div className={`kb-home kb-${variant}`}>
+        {variant === 'a' && head}
+        <section className={`kb-sec kb-needs${needs ? '' : ' none'}`} id="needs" aria-labelledby="needs-h">
+          <div className="kb-sec-head">
+            <h2 id="needs-h">
+              Needs you <span className="kb-count">{needs}</span>
+            </h2>
+            <p>{needs ? 'Only you can do or settle these.' : 'Nothing needs you right now.'}</p>
+          </div>
+          {needs > 0 && (
+            <ol className="kb-rows">
+              {waiting.map((i) => (
+                <IssueRow key={i.id} i={i} now={now} q={q} mode="plate" base={base} />
+              ))}
+              {toDecide.map((x, n) => (
+                <li key={`d${n}`} className="kb-row kb-row-plain">
+                  <span className="ko-mono ko-pri p1">decide</span>
+                  <span className="kb-title">{inline(x.text)}</span>
+                  <span className="ko-mono kb-meta">{x.tag}</span>
+                </li>
+              ))}
+              {checkin.map((x, n) => (
+                <li key={`c${n}`} className="kb-row kb-row-plain">
+                  <span className="ko-mono ko-pri p2">check-in</span>
+                  <span className="kb-title">{inline(x)}</span>
+                  <span className="ko-mono kb-meta">for the next call</span>
+                </li>
+              ))}
+            </ol>
+          )}
+        </section>
+        <div className="kb-phone-health">{health}</div>
           <section className="kb-sec" id="plate" aria-labelledby="plate-h">
             <div className="kb-sec-head">
               <h2 id="plate-h">On the plate</h2>
               <p>
-                {doing.length} doing · {next.length} next · {waiting.length} waiting on you
+                {doing.length} doing · {next.length} next up
               </p>
             </div>
             {d.issues === null ? (
@@ -162,103 +157,30 @@ export default function Board({ d, q, user, face, voices, variant = 'a' }: { d: 
                   <h3 className="ko-sub">Doing now</h3>
                   <ol className="kb-rows">
                     {doing.map((i) => (
-                      <IssueRow key={i.id} i={i} now={now} q={q} mode="plate" />
+                      <IssueRow key={i.id} i={i} now={now} q={q} mode="plate" base={base} />
                     ))}
                   </ol>
                 </div>
                 <div>
                   <h3 className="ko-sub">Next up</h3>
                   <ol className="kb-rows">
-                    {next.slice(0, 6).map((i) => (
-                      <IssueRow key={i.id} i={i} now={now} q={q} mode="plate" />
+                    {next.slice(0, 5).map((i) => (
+                      <IssueRow key={i.id} i={i} now={now} q={q} mode="plate" base={base} />
                     ))}
                   </ol>
-                  {next.length > 6 && (
-                    <details className="kb-more">
-                      <summary>{next.length - 6} more, in order</summary>
-                      <ol className="kb-rows">
-                        {next.slice(6).map((i) => (
-                          <IssueRow key={i.id} i={i} now={now} q={q} mode="plate" />
-                        ))}
-                      </ol>
-                    </details>
-                  )}
+                  <a className="kb-all" href={`${base}/issues?tab=open`}>
+                    All {next.length} next up, and every closed issue →
+                  </a>
                 </div>
-                {waiting.length > 0 && (
-                  <div className="kb-wait">
-                    <h3 className="ko-sub">Waiting on you</h3>
-                    <ol className="kb-rows">
-                      {waiting.map((i) => (
-                        <IssueRow key={i.id} i={i} now={now} q={q} mode="plate" />
-                      ))}
-                    </ol>
-                  </div>
-                )}
               </div>
             )}
           </section>
-
-          {latest && (
-            <section className="kb-sec" id="independence" aria-labelledby="ind-h">
-              <div className="kb-sec-head">
-                <h2 id="ind-h">Independence</h2>
-                <p>How often you had to steer me, per 100 of your messages; a repeat counts twice. Lower is better.</p>
-              </div>
-              <div className="kb-ind">
-                <div className="kb-ind-num">
-                  <p className="ko-ind-big">{latest.rate ?? '–'}</p>
-                  <p className="ko-ind-what">
-                    {dayShort(latest.day)}: {latest.steers} {latest.steers === 1 ? 'steer' : 'steers'} in {latest.messages} messages, {latest.repeats} {latest.repeats === 1 ? 'repeat' : 'repeats'}
-                    {before ? `. ${dayShort(before.day)}: ${before.rate}.` : '.'}
-                    {weekAvg(7, 14) !== null && weekAvg(0, 7) !== null ? ` Last 7 days ${weekAvg(7, 14)}, the 7 before ${weekAvg(0, 7)}.` : ''}
-                  </p>
-                </div>
-                <ol className="ko-ind-bars" aria-label="Steer rate, last 14 days">
-                  {window14.map((w) => (
-                    <li key={w.day} title={w.row ? `${dayShort(w.day)}: ${w.row.rate}` : `${dayShort(w.day)}: not graded`}>
-                      <span className="ko-mono v">{w.row?.rate ?? ''}</span>
-                      <span className={`bar${w.row ? '' : ' none'}${w.day === latest.day ? ' last' : ''}`} style={{ height: w.row ? `${Math.max(3, Math.round(((w.row.rate ?? 0) / top) * 96))}px` : undefined }} />
-                      <span className="ko-mono d">{w.day.slice(8).replace(/^0/, '')}</span>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-              {latest.items.some((x) => x.label === 'steer') && (
-                <details className="kb-more">
-                  <summary>
-                    Your {latest.steers} {latest.steers === 1 ? 'steer' : 'steers'} on {dayShort(latest.day)}
-                  </summary>
-                  <ol className="ko-plate ko-steers">
-                    {latest.items
-                      .filter((x) => x.label === 'steer')
-                      .map((x, n) => (
-                        <li key={n}>
-                          <span className="ko-mono t">{x.time}</span>
-                          <span>
-                            “{x.quote}”
-                            <span className="ko-mono c">
-                              {x.class} <span className={`ko-pri ${x.repeat ? 'p0' : 'p2'}`}>{x.repeat ? 'repeat' : 'new'}</span>
-                            </span>
-                          </span>
-                        </li>
-                      ))}
-                  </ol>
-                </details>
-              )}
-              {ind.replay && (
-                <p className="kb-note">
-                  Replay: {ind.replay.prevented} of {ind.replay.cases} past mistakes are prevented by my rules when a fresh Claude replays them; {ind.replay.prevented_without} of {ind.replay.cases} without.
-                </p>
-              )}
-            </section>
-          )}
-
           {plan && curWeek && (
             <section className="kb-sec" id="plan" aria-labelledby="plan-h">
               <div className="kb-sec-head">
                 <h2 id="plan-h">The plan</h2>
                 <p>
-                  Day {dayOfPlan} of {road.length} to Startup Grade, {dayShort(plan.end)}. <a href={`https://ola.cx/venture/doc/${plan.slug}${q}`}>The plan →</a>
+                  Day {dayOfPlan} of {road.length} to Startup Grade, {dayShort(plan.end)}. <a href={`${base}/notes/${plan.slug}`}>The plan →</a>
                 </p>
               </div>
               <div className="kb-road" role="img" aria-label={`Work done each day from ${dayShort(plan.start)} to ${dayShort(plan.end)}; today is day ${dayOfPlan}.`}>
@@ -324,18 +246,70 @@ export default function Board({ d, q, user, face, voices, variant = 'a' }: { d: 
               </div>
             </section>
           )}
-
           <section className="kb-sec" id="done" aria-labelledby="done-h">
             <div className="kb-sec-head">
               <h2 id="done-h">Done</h2>
               <p>
-                {doneOn(today)} today · {doneOn(yesterday)} yesterday. Every piece of work with what proved it; tap one for the detail.
+                {doneOn(today)} today · {doneOn(yesterday)} yesterday · {weekDone} this week. <a href={`${base}/issues?tab=done`}>Every closed issue →</a>
                 {d.commitSync && !d.commitSync.ok && <span className="kb-warn"> Commits not read since {ago(d.commitSync.at, now)}: {d.commitSync.why}</span>}
               </p>
             </div>
-            {d.issues === null ? <p className="kb-empty">The tracker is not set up yet (schema 011).</p> : <Done issues={issues} unsorted={d.unsorted} notes={d.journal.days} today={today} now={now} q={q} />}
+            {d.issues === null ? <p className="kb-empty">The tracker is not set up yet (schema 011).</p> : <Done issues={issues} unsorted={d.unsorted} notes={d.journal.days} today={today} now={now} q={q} base={base} />}
           </section>
-
+          {latest && (
+            <section className="kb-sec" id="independence" aria-labelledby="ind-h">
+              <div className="kb-sec-head">
+                <h2 id="ind-h">Independence</h2>
+                <p>How often you had to steer me, per 100 of your messages; a repeat counts twice. Lower is better.</p>
+              </div>
+              <div className="kb-ind">
+                <div className="kb-ind-num">
+                  <p className="ko-ind-big">{latest.rate ?? '–'}</p>
+                  <p className="ko-ind-what">
+                    {dayShort(latest.day)}: {latest.steers} {latest.steers === 1 ? 'steer' : 'steers'} in {latest.messages} messages, {latest.repeats} {latest.repeats === 1 ? 'repeat' : 'repeats'}
+                    {before ? `. ${dayShort(before.day)}: ${before.rate}.` : '.'}
+                    {weekAvg(7, 14) !== null && weekAvg(0, 7) !== null ? ` Last 7 days ${weekAvg(7, 14)}, the 7 before ${weekAvg(0, 7)}.` : ''}
+                  </p>
+                </div>
+                <ol className="ko-ind-bars" aria-label="Steer rate, last 14 days">
+                  {window14.map((w) => (
+                    <li key={w.day} title={w.row ? `${dayShort(w.day)}: ${w.row.rate}` : `${dayShort(w.day)}: not graded`}>
+                      <span className="ko-mono v">{w.row?.rate ?? ''}</span>
+                      <span className={`bar${w.row ? '' : ' none'}${w.day === latest.day ? ' last' : ''}`} style={{ height: w.row ? `${Math.max(3, Math.round(((w.row.rate ?? 0) / top) * 96))}px` : undefined }} />
+                      <span className="ko-mono d">{w.day.slice(8).replace(/^0/, '')}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+              {latest.items.some((x) => x.label === 'steer') && (
+                <details className="kb-more">
+                  <summary>
+                    Your {latest.steers} {latest.steers === 1 ? 'steer' : 'steers'} on {dayShort(latest.day)}
+                  </summary>
+                  <ol className="ko-plate ko-steers">
+                    {latest.items
+                      .filter((x) => x.label === 'steer')
+                      .map((x, n) => (
+                        <li key={n}>
+                          <span className="ko-mono t">{x.time}</span>
+                          <span>
+                            “{x.quote}”
+                            <span className="ko-mono c">
+                              {x.class} <span className={`ko-pri ${x.repeat ? 'p0' : 'p2'}`}>{x.repeat ? 'repeat' : 'new'}</span>
+                            </span>
+                          </span>
+                        </li>
+                      ))}
+                  </ol>
+                </details>
+              )}
+              {ind.replay && (
+                <p className="kb-note">
+                  Replay: {ind.replay.prevented} of {ind.replay.cases} past mistakes are prevented by my rules when a fresh Claude replays them; {ind.replay.prevented_without} of {ind.replay.cases} without.
+                </p>
+              )}
+            </section>
+          )}
           <section className="kb-sec kb-two" id="decided" aria-labelledby="decided-h">
             <div>
               <div className="kb-sec-head">
@@ -364,21 +338,6 @@ export default function Board({ d, q, user, face, voices, variant = 'a' }: { d: 
               )}
             </div>
             <div>
-              <div className="kb-sec-head">
-                <h2>To be decided</h2>
-              </div>
-              {d.journal.toDecide.length ? (
-                <ol className="ko-decided">
-                  {d.journal.toDecide.map((x, n) => (
-                    <li key={n}>
-                      <span className="ko-mono t">{x.tag}</span>
-                      <span>{inline(x.text)}</span>
-                    </li>
-                  ))}
-                </ol>
-              ) : (
-                <p className="kb-empty">Nothing open.</p>
-              )}
               {d.journal.parked.length > 0 && (
                 <>
                   <h3 className="ko-sub kb-parked-h">Parked, your call</h3>
@@ -391,7 +350,6 @@ export default function Board({ d, q, user, face, voices, variant = 'a' }: { d: 
               )}
             </div>
           </section>
-
           <section className="kb-sec kb-two" id="numbers" aria-labelledby="numbers-h">
             <div>
               <div className="kb-sec-head">
@@ -410,9 +368,9 @@ export default function Board({ d, q, user, face, voices, variant = 'a' }: { d: 
               {s ? (
                 <dl className="kb-table">
                   <dt>Status pushed</dt>
-                  <dd className={statusStale ? 'bad' : ''}>
+                  <dd className={(!s || age(s.at) > STATUS_STALE) ? 'bad' : ''}>
                     {ago(s.at, now)}
-                    {statusStale && ' (stale: it should come every 10 minutes)'}
+                    {(!s || age(s.at) > STATUS_STALE) && ' (stale: it should come every 10 minutes)'}
                   </dd>
                   <dt>Web app</dt>
                   <dd>{s.deployed ? `${s.deployed.commit.slice(0, 7)}, updated ${ago(s.deployed.at, now)}` : 'not deployed'}</dd>
@@ -441,34 +399,7 @@ export default function Board({ d, q, user, face, voices, variant = 'a' }: { d: 
               )}
             </div>
           </section>
-
-          <section className="kb-sec" id="talk" aria-labelledby="talk-h">
-            <div className="kb-sec-head">
-              <h2 id="talk-h">Talk to Kit</h2>
-              <p>By voice; each one reaches the session that does the work.</p>
-            </div>
-            <ul className="kb-talk">
-              {voices.map((v) => (
-                <li key={v.tag}>
-                  <a href={v.href}>
-                    <b>{v.name} →</b>
-                    <span>{v.what}</span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </section>
-        </main>
-
-        <footer className="ko-foot">
-          <span>
-            Kochito Labs LLC · Wyoming · {issues.length} issues on the board
-          </span>
-          <form method="post" action="/api/kochito/app/logout" className="ko-out">
-            <span>Signed in as {user}.</span> <button>Sign out</button> <a href="https://ola.cx">ola.cx</a>
-          </form>
-        </footer>
       </div>
-    </div>
+    </Shell>
   )
 }

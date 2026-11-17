@@ -70,6 +70,7 @@ export type BoardData = {
   status: LiveStatus | null
   independence: { days: SteerDay[]; replay: Replay | null }
   plan: { slug: string; title: string; start: string; end: string; weeks: PlanWeek[] } | null
+  notes: NoteLink[]
 }
 
 export const PLAN_SLUG = 'ola-30-day-plan-2026-11-16'
@@ -190,5 +191,59 @@ export async function loadBoard(): Promise<BoardData> {
       replay: (st('steer_replay')?.value ?? null) as Replay | null,
     },
     plan: planRow ? parsePlan(PLAN_SLUG, planRow.title, planRow.body, planRow.updated_at) : null,
+    notes: await loadNotes(journalRow?.body ?? ''),
   }
+}
+
+// ---------------------------------------------------------------- the tracker and the notes (round two)
+/** Every issue of the project with its commits, for the tracker page and the permalinks. */
+export async function loadIssues(): Promise<Issue[] | null> {
+  const db = f2Supabase()
+  const [issuesR, commitsR] = await Promise.all([
+    db.from('venture_issues').select('*').eq('project', 'ola').order('num', { ascending: false }),
+    db.from('venture_commits').select('sha, subject, at, issue_id').not('issue_id', 'is', null).order('at'),
+  ])
+  if (issuesR.error) {
+    if (missing(issuesR.error)) return null
+    throw new Error(`venture_issues read failed: ${issuesR.error.message}`)
+  }
+  if (commitsR.error) throw new Error(`venture_commits read failed: ${commitsR.error.message}`)
+  const byIssue = new Map<string, Commit[]>()
+  for (const c of commitsR.data as Commit[]) byIssue.set(c.issue_id as string, [...(byIssue.get(c.issue_id as string) ?? []), c])
+  return (issuesR.data as Omit<Issue, 'commits'>[]).map((i) => ({ ...i, links: i.links ?? [], commits: byIssue.get(i.id) ?? [] }))
+}
+
+export type NoteLink = { slug: string; title: string; label: string; at: string }
+/** The notes the sidebar lists: the journal's "Active project" links that point at a note (the lead
+ *  edits that list in JOURNAL.md), then the newest security review and the builders' rules. Titles and
+ *  dates come from venture_docs; the notes are shown by /notes/<slug> behind the sign-in. */
+export async function loadNotes(journalBody: string): Promise<NoteLink[]> {
+  const db = f2Supabase()
+  const fromJournal = parseJournal(journalBody)
+    .project.links.map((l) => l.match(/^\[([^\]]+)\]\((?:https?:\/\/[^/]+)?\/venture\/doc\/([a-z0-9-]+)/))
+    .filter((m): m is RegExpMatchArray => !!m)
+    .map((m) => ({ slug: m[2], label: m[1] }))
+  const { data: reviews, error } = await db.from('venture_docs').select('slug').like('slug', 'ola-review-%').order('updated_at', { ascending: false }).limit(1)
+  if (error) throw new Error(`venture_docs read failed: ${error.message}`)
+  const wanted = [...fromJournal]
+  if (reviews[0] && !wanted.some((w) => w.slug === reviews[0].slug)) wanted.push({ slug: reviews[0].slug, label: 'The latest security review' })
+  if (!wanted.some((w) => w.slug === 'ola-builder-rules')) wanted.push({ slug: 'ola-builder-rules', label: "The builders' rules" })
+  const { data: docs, error: e2 } = await db.from('venture_docs').select('slug, title, updated_at').in('slug', wanted.map((w) => w.slug))
+  if (e2) throw new Error(`venture_docs read failed: ${e2.message}`)
+  return wanted.flatMap((w) => {
+    const d = docs.find((x) => x.slug === w.slug)
+    return d ? [{ slug: w.slug, label: w.label, title: d.title, at: d.updated_at }] : []
+  })
+}
+
+/** What every board page's frame needs: the notes for the sidebar and how many issues are open. */
+export async function loadFrame(): Promise<{ notes: NoteLink[]; open: number | null }> {
+  const db = f2Supabase()
+  const [journal, open] = await Promise.all([
+    db.from('venture_docs').select('body').eq('slug', 'journal').maybeSingle(),
+    db.from('venture_issues').select('id', { count: 'exact', head: true }).eq('project', 'ola').in('status', ['open', 'in_progress', 'waiting']),
+  ])
+  if (journal.error) throw new Error(`venture_docs read failed: ${journal.error.message}`)
+  if (open.error && !missing(open.error)) throw new Error(`venture_issues read failed: ${open.error.message}`)
+  return { notes: await loadNotes(journal.data?.body ?? ''), open: open.error ? null : (open.count ?? 0) }
 }

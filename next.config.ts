@@ -225,6 +225,10 @@ const nextConfig: NextConfig = {
           has: [{ type: 'host', value: 'app.kochitolabs.com' }],
           destination: '/kochito/kit',
         },
+        // the board's tracker, issue pages and notes (round two, 2026-11-17)
+        { source: '/issues', has: [{ type: 'host', value: 'app.kochitolabs.com' }], destination: '/kochito/kit/issues' },
+        { source: '/issues/:id', has: [{ type: 'host', value: 'app.kochitolabs.com' }], destination: '/kochito/kit/issues/:id' },
+        { source: '/notes/:slug', has: [{ type: 'host', value: 'app.kochitolabs.com' }], destination: '/kochito/kit/notes/:slug' },
         // kochitolabs.com root → /kochito (the company's site; /pdf and /apps below)
         {
           source: '/',

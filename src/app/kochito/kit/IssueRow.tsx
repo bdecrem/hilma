@@ -4,10 +4,10 @@ import { ago, clock, dayShort, pday, since } from './time'
 // One issue as a row that opens in place (a <details>, so it works without script, on a phone too):
 // the line shows what it is; the opened part says what and why, who, when, what proved it, the
 // links and the commits. Used by the plate (server) and by Done (client).
-const REPO = 'https://github.com/bdecrem/hilma/commit/'
-const STATUS: Record<Issue['status'], string> = { open: 'next up', in_progress: 'doing', waiting: 'waiting on you', done: 'done', dropped: 'dropped' }
+export const REPO = 'https://github.com/bdecrem/hilma/commit/'
+export const STATUS: Record<Issue['status'], string> = { open: 'next up', in_progress: 'doing', waiting: 'waiting on Bart', done: 'done', dropped: 'dropped' }
 
-export function IssueRow({ i, now, q, mode }: { i: Issue; now: string; q: string; mode: 'plate' | 'done' }) {
+export function IssueRow({ i, now, q, mode, base = '' }: { i: Issue; now: string; q: string; mode: 'plate' | 'done'; base?: string }) {
   const when = mode === 'plate' ? (i.status === 'in_progress' ? i.started_at : i.opened_at) : i.finished_at
   return (
     <li className={`kb-row ${i.status}`}>
@@ -37,7 +37,7 @@ export function IssueRow({ i, now, q, mode }: { i: Issue; now: string; q: string
           <dl className="ko-mono">
             <dt>issue</dt>
             <dd>
-              {i.id} · {STATUS[i.status]} · {AREAS[i.area]} · {i.priority}
+              <a href={`${base}/issues/${i.id}`}>{i.id}</a> · {STATUS[i.status]} · {AREAS[i.area]} · {i.priority}
               {i.week ? ` · plan week ${i.week}` : ''}
             </dd>
             <dt>who</dt>

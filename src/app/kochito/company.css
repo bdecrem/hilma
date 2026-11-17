@@ -231,11 +231,8 @@
    alarm). */
 .kb .ko-wrap { max-width: 1120px; }
 .kb-top { position: sticky; top: 0; z-index: 5; background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(6px); padding-block: 14px; }
-.kb-toc { display: flex; gap: 18px !important; font-size: 14.5px !important; overflow-x: auto; scrollbar-width: none; }
-.kb-toc a { white-space: nowrap; }
-@media (max-width: 820px) { .kb-toc { display: none !important; } }
 
-.kb-head { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 28px 56px; align-items: end; padding-block: 40px 36px; }
+.kb-head { padding-block: 28px 30px; }
 .kb-head .ko-sub { margin-bottom: 6px !important; }
 .kb .kb-head h1 { font-size: clamp(64px, 11vw, 132px); line-height: 0.9; letter-spacing: -0.045em; }
 .kb .kb-head h1 .u { position: relative; }
@@ -253,7 +250,7 @@
 .kb-live-at dd::before { content: ''; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--mark); box-shadow: 0 0 0 1.5px var(--ink); margin-right: 8px; vertical-align: 1px; }
 .kb-live.stale .kb-live-at dd::before { background: var(--ok); }
 .kb-live.stale .kb-live-at dd { color: #b3392f; }
-@media (max-width: 820px) { .kb-head { grid-template-columns: 1fr; padding-block: 18px 28px; gap: 24px; } }
+@media (max-width: 820px) { .kb-head { padding-block: 10px 22px; } }
 
 .kb-sec { border-top: 1.5px solid var(--edge); padding-block: 34px 44px; scroll-margin-top: 64px; }
 .kb-sec-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 24px; margin-bottom: 18px; }
@@ -287,7 +284,7 @@
 .kb-detail dd a { color: var(--acc); margin-right: 10px; }
 .kb-detail ul { list-style: none; margin: 0; padding: 0; }
 @media (max-width: 560px) {
-  .kb-row summary { grid-template-columns: 3.4em minmax(0, 1fr); }
+  .kb-row summary { grid-template-columns: 4.6em minmax(0, 1fr); }
   .kb-meta { grid-column: 2; text-align: left; white-space: normal; }
   .kb-detail { padding-left: 0; }
   .kb-detail dl { grid-template-columns: 5.5em minmax(0, 1fr); }
@@ -394,19 +391,114 @@
 .kb-talk span { display: block; color: var(--ink-2); font-size: 15px; margin-top: 4px; }
 @media (max-width: 820px) { .kb-talk { grid-template-columns: 1fr; } }
 
-/* The rail: on a wide screen the project, its state and the live readout stay in a left column
-   while the work scrolls on the right. Chosen over a front-page layout (the project as a band
-   across the top, the plate in two columns) by comparing both with made-up data side by side
-   (scripts/venture/board-shots.mjs): the band pushed the plate below the fold and wrapped every
-   title in two narrow columns; the rail keeps Ola and how fresh it is in view while you read, and
-   every row on one line. Below 1100px both are the same single column. */
-@media (min-width: 1100px) {
-  .kb-a .ko-wrap { max-width: 1320px; display: grid; grid-template-columns: 300px minmax(0, 1fr); column-gap: 64px; }
-  .kb-a .kb-top, .kb-a .ko-foot { grid-column: 1 / -1; }
-  .kb-a .kb-head { grid-column: 1; grid-template-columns: 1fr; align-self: start; position: sticky; top: 72px; padding-top: 34px; }
-  .kb-a .kb-head h1 { font-size: 96px; }
-  .kb-a .kb-state { font-size: 21px; }
-  .kb-a main { grid-column: 2; }
-  .kb-a .kb-toc { display: none !important; }
-  .kb-a main > .kb-sec:first-child { border-top: 0; }
+/* Round two (2026-11-17), the frame of every board page. Bart: "key links in the sidebar; a way
+   to view closed / resolved issues". The plan behind it (the private note BOARD-PLAN-2026-11-17)
+   starts from his jobs on the page: what needs me now, what is being worked on, what got done and
+   how it was proven, where do I find X, is everything healthy, where are we against the plan.
+   So: on a wide screen a left column that never scrolls away, holding the health readout and every
+   link he opens (the web app, the voice calls, the notes, the code, the projects that are Ola's by
+   link); on a phone the same links behind Menu in the top bar and the health readout under the
+   project's name. "Needs you" is the first section, with a coral count, because it is the one job
+   only he can do: right under the project's name and state, above the fold on a laptop, and on a
+   phone before the health readout. Compared side by side with a version that also moved the
+   project's name into the column (direction B, /kochito/kit/mock?v=b): there the column grew so
+   long that the links fell below the fold, and on a phone the name went away with the column; so
+   the name and state stay at the top of the page and the column holds health and links (A). */
+.kb-phone-health { margin: 0 0 4px; }
+.ko-top .kb-menu-panel nav.kb-nav { display: block; font-size: inherit; color: var(--ink); }
+.kb-filters-form button { height: 37px; }
+.kb .ko-wrap { max-width: 1280px; }
+.kb .ko-name small { font-family: var(--kl-mono), monospace; font-weight: 400; font-size: 12px; letter-spacing: 0; color: var(--ink-3); margin-left: 4px; }
+.kb-side { display: none; }
+.kb-menu { position: relative; }
+.kb-menu > summary { list-style: none; cursor: pointer; border: 1.5px solid var(--edge); border-radius: 9px; padding: 5px 12px; font-size: 15px; background: var(--card); }
+.kb-menu > summary::-webkit-details-marker { display: none; }
+.kb-menu[open] > summary { background: var(--ink); color: var(--bg); }
+.kb-menu-panel { position: absolute; right: 0; top: calc(100% + 8px); width: min(340px, calc(100vw - 40px)); max-height: calc(100dvh - 90px); overflow: auto; background: var(--bg); border: 1.5px solid var(--edge); border-radius: 12px; padding: 6px 16px 14px; box-shadow: 4px 4px 0 var(--ink); }
+.kb-phone-health { margin: 4px 0 6px; }
+@media (min-width: 1000px) {
+  .kb .kb-wrap { display: grid; grid-template-columns: 250px minmax(0, 1fr); column-gap: 56px; }
+  .kb .kb-top, .kb .ko-foot { grid-column: 1 / -1; }
+  .kb-menu, .kb-phone-health { display: none; }
+  .kb-side { display: block; grid-column: 1; align-self: start; position: sticky; top: 70px; max-height: calc(100dvh - 86px); overflow: auto; padding: 22px 4px 24px 0; scrollbar-width: thin; }
+  .kb-main { grid-column: 2; min-width: 0; }
+  .kb-side .kb-live { margin-bottom: 26px; }
+  .kb-side .kb-live > div { grid-template-columns: 56px minmax(0, 1fr); padding: 5px 0; font-size: 12px; }
+  .kb-aside-b .kb-head { padding-top: 0; }
+  .kb-aside-b .kb-head h1 { font-size: 84px; }
+  .kb-aside-b .kb-state { font-size: 19px; }
+  .kb-aside-b .kb-fresh { display: none; }
 }
+.kb-nav-group { padding: 12px 0 6px; border-top: 1px solid var(--line); }
+.kb-nav-group:first-child { border-top: 0; padding-top: 4px; }
+.kb-nav-group h2.ko-sub { font-size: 11.5px !important; margin: 0 0 4px !important; font-weight: 400; letter-spacing: 0.06em; }
+.kb-nav-group ul { list-style: none; margin: 0; padding: 0; }
+.kb-nav-group li a, .kb-nav-group li .soon { display: block; padding: 5px 0; font-size: 15px; line-height: 1.3; text-decoration: none; }
+.kb-nav-group li a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.kb-nav-group li a[aria-current='page'] { font-weight: 700; box-shadow: inset 3px 0 0 var(--acc); padding-left: 10px; }
+.kb-nav-group li .ko-mono { display: block; font-size: 11px; color: var(--ink-3); margin-top: 1px; }
+.kb-nav-group li .soon { color: var(--ink-3); }
+
+/* Needs you: pinned first, a coral count */
+.kb-sec.kb-needs { border-top: 3px solid var(--ok); }
+.kb-needs.none { border-top: 1.5px solid var(--edge); padding-block: 22px 20px; }
+.kb-needs.none .kb-count { background: var(--card); }
+.kb-count { display: inline-grid; place-items: center; min-width: 1.5em; height: 1.5em; padding: 0 0.3em; margin-left: 6px; border: 1.5px solid var(--edge); border-radius: 99px; background: var(--ok); font-size: 0.7em; vertical-align: 0.15em; letter-spacing: 0; font-variant-numeric: tabular-nums; }
+.kb-row-plain { display: grid; grid-template-columns: 4.6em minmax(0, 1fr) auto; gap: 4px 14px; align-items: baseline; padding: 10px 0; }
+.kb-row-plain .ko-pri { font-size: 11px; }
+@media (max-width: 560px) { .kb-row-plain { grid-template-columns: 4.6em minmax(0, 1fr); } .kb-row-plain .kb-meta { grid-column: 2; text-align: left; } }
+.kb-all { display: inline-block; margin-top: 12px; color: var(--acc); font-size: 15px; }
+.kb-home > .kb-sec:first-of-type, .kb-first { border-top: 0; }
+.kb-first { padding-top: 26px; }
+
+/* the tracker */
+.kb-h1 { font-family: var(--kl-display-grot), system-ui, sans-serif; font-weight: 700; font-size: clamp(26px, 3.4vw, 42px) !important; line-height: 1.1; letter-spacing: -0.035em; margin: 0; }
+.kb-h2 { font-family: var(--kl-display-grot), system-ui, sans-serif; font-weight: 700; font-size: 21px; letter-spacing: -0.02em; margin: 30px 0 8px; }
+.kb-tabs { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; margin: 4px 0 12px; }
+.kb-tabs a { flex: none; text-decoration: none; border: 1.5px solid var(--edge); border-radius: 9px; padding: 6px 11px; font-size: 14.5px; background: var(--card); white-space: nowrap; }
+.kb-tabs a .ko-mono { font-size: 11.5px; color: var(--ink-3); margin-left: 3px; }
+.kb-tabs a[aria-current='page'] { background: var(--ink); color: var(--bg); }
+.kb-tabs a[aria-current='page'] .ko-mono { color: var(--bg); }
+.kb-filters-form select { height: 37px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); font: inherit; font-size: 14px; color: var(--ink-2); padding: 0 8px; max-width: 100%; }
+.kb-filters-form button { height: 37px; border: 1.5px solid var(--edge); border-radius: 8px; background: var(--acc); color: var(--acc-ink); font: inherit; font-size: 14px; padding: 0 14px; cursor: pointer; }
+.kb-filters-form a { color: var(--acc); font-size: 14px; }
+.kb-list { list-style: none; margin: 6px 0 0; padding: 0; border-top: 1px solid var(--line); }
+.kb-list li { border-bottom: 1px solid var(--line); }
+.kb-list a { display: grid; grid-template-columns: 4.8em minmax(0, 1fr) 13.5em; gap: 4px 14px; align-items: baseline; padding: 11px 0; text-decoration: none; }
+.kb-list a:hover .kb-title { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.kb-list .kb-meta { white-space: normal; line-height: 1.6; }
+.kb-list .kb-meta .ko-pri { font-size: 10.5px; padding: 0 5px; }
+.kb-list li.dropped .kb-title { color: var(--ink-3); text-decoration: line-through; text-decoration-thickness: 1px; }
+.kb-list li.waiting .kb-title { font-weight: 600; }
+@media (max-width: 640px) { .kb-list a { grid-template-columns: 4.3em minmax(0, 1fr); } .kb-list .kb-meta { grid-column: 2; text-align: left; } }
+
+/* one issue */
+.kb-crumb { color: var(--ink-3); margin: 0 0 14px !important; }
+.kb-crumb a { color: var(--acc); }
+.kb-status-line { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; margin: 16px 0 18px !important; color: var(--ink-2); font-size: 15px; }
+.kb-status { border: 1.5px solid var(--edge); border-radius: 99px; padding: 1px 10px; font-weight: 600; background: var(--card); }
+.kb-status.done { background: var(--mark); }
+.kb-status.in_progress { background: var(--acc); color: var(--acc-ink); }
+.kb-status.waiting { background: var(--ok); }
+.kb-status.dropped { color: var(--ink-3); border-style: dashed; }
+.kb-issue-what { font-size: 18px; line-height: 1.5; max-width: 38em; }
+.kb-issue-proof { font-size: 16px; border-left: 3px solid var(--acc); padding: 4px 0 4px 12px; max-width: 40em; }
+.kb-issue-proof .ko-mono { color: var(--ink-3); margin-right: 6px; }
+.kb-issue .kb-table { margin-top: 18px; max-width: 46em; }
+.kb-links-dd a { color: var(--acc); margin-right: 14px; }
+
+/* a note */
+.kb-md { max-width: 44em; font-size: 16.5px; line-height: 1.6; }
+.kb-md h1 { font-family: var(--kl-display-grot), system-ui, sans-serif; font-size: clamp(30px, 4vw, 42px) !important; line-height: 1.05; margin: 0 0 18px; }
+.kb-md h2 { font-size: 24px !important; margin: 34px 0 10px; }
+.kb-md h3 { font-family: var(--kl-display-grot), sans-serif; font-size: 19px; margin: 24px 0 8px; letter-spacing: -0.02em; }
+.kb-md ul, .kb-md ol { padding-left: 22px; }
+.kb-md li { margin: 4px 0; }
+.kb-md a { color: var(--acc); }
+.kb-md code { font-family: var(--kl-mono), monospace; font-size: 0.85em; background: var(--card); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; }
+.kb-md pre { overflow-x: auto; background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+.kb-md pre code { border: 0; padding: 0; }
+.kb-md blockquote { margin: 0; border-left: 3px solid var(--mark); padding-left: 14px; color: var(--ink-2); }
+.kb-md-table { overflow-x: auto; }
+.kb-md table { border-collapse: collapse; font-size: 14.5px; }
+.kb-md th, .kb-md td { border-bottom: 1px solid var(--line); padding: 6px 10px 6px 0; text-align: left; vertical-align: top; }
