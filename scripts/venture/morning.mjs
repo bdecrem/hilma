@@ -11,6 +11,8 @@
 // loudly when it is gone. No model call, so it cannot fail on a model; if the tracker or the
 // journal cannot be read it sends nothing and exits non-zero.
 import { readFileSync } from 'node:fs'
+import { spawnSync } from 'node:child_process'
+import { fileURLToPath } from 'node:url'
 import { createClient } from '@supabase/supabase-js'
 import { getState, setState } from './_state.mjs'
 
@@ -78,6 +80,28 @@ const steerLine = y
   ? `Yesterday you steered me ${y.steers} ${y.steers === 1 ? 'time' : 'times'} in ${y.messages} messages (${y.repeats} ${y.repeats === 1 ? 'repeat' : 'repeats'}). Steer rate ${y.rate}${y2 ? `, the day before ${y2.rate}` : ''}.`
   : ''
 
+
+// Ola's branded opencode (apps/activist-ai/opencode-fork, OLA-114): is there a new opencode release,
+// and do Ola's changes still apply to it? check-upstream.sh prints one line; exit 0 up to date,
+// 1 new release and the changes apply, 2 new release and they no longer apply, 3 could not check.
+// Moving to a new release is the lead's call (README "Moving to a new release"). Skipped in --dry.
+let forkLine = ''
+if (!dry) {
+  const script = fileURLToPath(new URL('../../apps/activist-ai/opencode-fork/check-upstream.sh', import.meta.url))
+  const r = spawnSync('bash', [script], { encoding: 'utf8', timeout: 20 * 60e3, env: { ...process.env, PATH: `/opt/homebrew/bin:/usr/local/bin:${process.env.PATH}` } })
+  const line = (r.stdout || r.stderr || '').trim().split('\n').pop()?.slice(0, 240) || 'no output'
+  const prev = (await getState(db, 'opencode_fork'))?.value ?? {}
+  const code = r.status ?? 3
+  if (code === 1 || code === 2) {
+    const title = code === 1 ? 'Move Ola\'s opencode to the new release' : 'Ola\'s opencode changes no longer apply to the new release: fix rebrand.mjs first'
+    spawnSync('node', [fileURLToPath(new URL('./issues.mjs', import.meta.url)), 'add', title, '--area', 'apps', '--pri', code === 2 ? 'P0' : 'P1', '--what', line], { encoding: 'utf8' })
+    forkLine = `opencode: ${line} On my plate.`
+  } else if (code !== 0 && prev.last_code === 3 && prev.date !== today) {
+    forkLine = `opencode: the daily update check failed two days running (${line}).`
+  }
+  await setState(db, 'opencode_fork', { date: today, last_code: code, line })
+}
+
 const weekday = new Date().toLocaleDateString('en-US', { weekday: 'long', timeZone: 'America/Los_Angeles' })
 const text = [
   `Good morning. ${weekday}'s check-in: when works for you? Reply with a time, and "cli" or "voice".`,
@@ -85,6 +109,7 @@ const text = [
   waiting.length ? `Waiting on you: ${waiting.join('; ')}.` : '',
   usageLine,
   steerLine,
+  forkLine,
   `Voice, any time: https://ola.cx/venture/call/checkin?k=${encodeURIComponent(key)}`,
   'The board: https://app.kochitolabs.com',
 ]
