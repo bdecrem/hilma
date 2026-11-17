@@ -294,7 +294,7 @@ export default async function Page() {
                   <strong>
                     Replay: {ind.replay.prevented} of {ind.replay.cases} past mistakes prevented by the rules.
                   </strong>{' '}
-                  Each past mistake is replayed three times to a fresh Claude with my rules and three times without; without the rules, {ind.replay.prevented_without} of {ind.replay.cases}. Run {dayName(ind.replay.at.slice(0, 10))}.
+                  Each past mistake is replayed three times to a fresh Claude with my rules and three times without; without the rules, {ind.replay.prevented_without} of {ind.replay.cases}. Run {new Date(ind.replay.at).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'America/Los_Angeles' })}.
                 </p>
               )}
             </section>
