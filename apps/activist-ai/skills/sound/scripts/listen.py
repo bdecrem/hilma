@@ -413,8 +413,9 @@ def pitched_events(notes, t0=None, t1=None):
         if ev and at - ev[-1]["at"] < 0.025:
             ev[-1]["pitches"].add(m)
             ev[-1]["dur"] = max(ev[-1]["dur"], d)
+            ev[-1]["durs"].append(d)
         else:
-            ev.append({"at": at, "pitches": {m}, "dur": d})
+            ev.append({"at": at, "pitches": {m}, "dur": d, "durs": [d]})
     return ev
 
 
@@ -429,8 +430,8 @@ def music_of(ev):
     _, tonic, mode = best
     tot = sum(w) or 1
     inkey = sum(w[(tonic + s) % 12] for s in SCALE[mode]) / tot
-    top = [max(e["pitches"]) for e in ev]
     chords = sum(1 for e in ev if len(e["pitches"]) >= 3)
+    top = [max(e["pitches"]) for e in ev]
     iv = [b - a for a, b in zip(top, top[1:])]
     run, longest = 1, 1
     for a, b in zip(top, top[1:]):

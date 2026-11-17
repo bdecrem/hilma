@@ -219,7 +219,7 @@ def v2_solve(work, truth, wrong=False):
     js = f"""<p><button id="play" type="button">Play our tune</button> <button id="sound" type="button">Sound on</button></p>
 <script src="olasound.js"></script><script>
 OlaSound.toggleButton(document.getElementById('sound'))
-document.getElementById('play').addEventListener('click', () => OlaSound.melody('{WALK if wrong else TUNE}', {{ bpm: 100, chords: 'D | G | Bm | D' }}))
+document.getElementById('play').addEventListener('click', () => OlaSound.melody({repr(WALK) if wrong else repr(TUNE)}{'' if wrong else ", { bpm: 100, chords: 'D | G | Bm | D' }"}))
 </script>"""
     p.write_text(p.read_text().replace("</body>", js + "</body>"))
     return "Added the tune."

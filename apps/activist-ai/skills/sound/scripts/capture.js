@@ -204,7 +204,8 @@
     // how it starts: 10% to 90% of the first sound's own peak, on a 1 ms peak-hold envelope
     const H = Math.round(SR * 0.00025), P = Math.round(SR * 0.001)
     const env = []
-    for (let s = s0 - P; s < s1; s += H) { let m = 0; for (let i = Math.max(a, s); i < Math.min(s1, s + P); i++) m = Math.max(m, Math.abs(M[i])); env.push(m) }
+    const e1 = Math.min(b, s1 + Math.round(SR * 0.6)) // past the -60 dBFS point, so a quiet sound's fade is seen whole
+    for (let s = s0 - P; s < e1; s += H) { let m = 0; for (let i = Math.max(a, s); i < Math.min(e1, s + P); i++) m = Math.max(m, Math.abs(M[i])); env.push(m) }
     const firstPeakAt = (() => { let m = 0, k = 0; for (let i = 0; i < Math.min(env.length, Math.round(0.08 * SR / H)); i++) if (env[i] > m) { m = env[i]; k = i } return [m, k] })()
     const [fp, fk] = firstPeakAt
     let i10 = 0; while (i10 < fk && env[i10] < 0.1 * fp) i10++
