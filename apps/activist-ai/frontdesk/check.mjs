@@ -1858,7 +1858,8 @@ await check('batch jobs: the whole job runs past the 24 s run ceiling and the 3 
   assert(g.results.total === 60, `${g.results.total} rows`)
   assert([...states].every((x) => x === 'running'), `the workspace during the job: ${[...states].join(', ')}`)
   assert(ran > 30_000, `the job took only ${ran} ms`)
-  const firsts = fake.batch.planted.filter((x) => !x.retry).length
+  // Documents with a planted first answer (a call in flight at the kill may be asked again: counted once)
+  const firsts = new Set(fake.batch.planted.filter((x) => !x.retry).map((x) => x.title)).size
   await wake()
   const tries = (await pyInVm(`import sqlite3\nprint(*sqlite3.connect("/work/project.db").execute("SELECT sum(tries), count(*) FROM batch_items WHERE job = '${job60}'").fetchone())`)).out
   const sumTries = Number(tries.split(' ')[0])

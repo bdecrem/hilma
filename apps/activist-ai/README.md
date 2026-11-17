@@ -1642,6 +1642,16 @@ the proposal's words, the hosted option with its cost and a member unable to pic
 with quotes and checks and planted quotes marked, only the owner starting the whole job and only with
 the budget confirmed, running, pause, resume, done, Data's mark, 390 px).
 
+**Measured 2026-11-17.** In the sealed VM on the mini (`frontdesk/check.mjs`, scripted model, each answer
+held 0.7 s): the job of 60 ran 136 s against a 24 s ceiling and a 3 s idle stop with the workspace
+running throughout; 26 documents were done when the front desk was killed with `kill -9`, and the new
+front desk finished the rest with 70 model calls in all for 60 documents (10 planted wrong quotes
+retried, 5 planted again on the retry and marked, and only those); a conversation's request mid-job was
+answered at once. Live, once (`node workspace/batch-live.mjs`, GLM-5.3-Flash on Together, 20 made-up
+studies, a trial of 10 then the rest, through the gateway's batch lane): 39 quotes found on their stated
+page and 1 "not stated" (the study that states no horizon), 40 of 40 values right, 21 model calls
+(one retry), 29,594 tokens in and 6,278 out, 15 s for the trial and 20 s for the rest; about a cent.
+
 **After deploying:** add `GATEWAY_BATCH_FILE=/Users/admin/.ola/gateway-batch` to `~/.ola/gateway.env`
 (the front desk writes that file by default) and `node ops/ola.mjs install`; the deploy builds image
 2.3.0-16, and projects take it at their next start.

@@ -121,7 +121,8 @@ test('the full run: killed in the middle and started again, no document coded tw
   assert.equal(j.results.total, 60)
   // No document coded twice: one call per document, plus one retry for each planted quote (and at
   // most the one call in flight at the kill).
-  const firsts = fake.batch.planted.filter((x) => !x.retry).length
+  // Documents with a planted first answer (a call in flight at the kill may be asked again: counted once)
+  const firsts = new Set(fake.batch.planted.filter((x) => !x.retry).map((x) => x.title)).size
   const tries = JSON.parse(sqlite(`SELECT sum(tries) AS t FROM batch_items WHERE job = '${jid}'`))[0].t
   assert.ok(tries <= 60 + firsts + 1, `tries ${tries}`)
   assert.ok(fake.batch.calls - callsAtKill <= 60 - mid.progress.done + firsts + 1)
