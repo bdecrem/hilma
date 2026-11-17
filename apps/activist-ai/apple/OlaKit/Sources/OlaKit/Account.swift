@@ -77,3 +77,174 @@ public struct AccountSession: Codable, Equatable, Sendable {
     return nil
   }
 }
+
+/// What can go wrong with the account, in the words a person reads.
+public enum AccountError: Error, Hashable, LocalizedError {
+  /// The device was signed out (or its sign-in ran out): sign in again.
+  case signedOut
+  /// The browser step did not finish in time.
+  case timedOut
+  case cancelled
+  /// Ola's sign-in does not exist at this address yet (the server is not deployed).
+  case notAvailableYet
+  case tooManyTries
+  /// The server said no, with its one word.
+  case refused(String)
+  case unreachable
+  case badReply
+
+  public var errorDescription: String? {
+    switch self {
+    case .signedOut: return "You\u{2019}ve been signed out on this Mac. Sign in again to keep working."
+    case .timedOut: return "Signing in took too long, so it was stopped. Try again when you\u{2019}re ready."
+    case .cancelled: return "Signing in was stopped."
+    case .notAvailableYet: return "Signing in with an Ola account isn\u{2019}t open yet. It will be soon."
+    case .tooManyTries: return "Too many tries in a short time. Wait a few minutes, then try again."
+    case .refused: return "That sign-in didn\u{2019}t go through. Try again."
+    case .unreachable: return "Ola didn\u{2019}t answer. Check that this Mac is online, then try again."
+    case .badReply: return "Ola sent something this app didn\u{2019}t understand. Try again in a while."
+    }
+  }
+}
+
+/// The account's server: `https://app.ola.cx`, and nothing else in the shipped app. Checks point it
+/// at a stand-in (`OLA_ACCOUNT_BASE`, or the `ola.accountBase` default), never shown to anyone.
+public struct AccountAPI: Sendable {
+  public static let address = URL(string: "https://app.ola.cx")!
+  public static var configured: URL {
+    if let s = ProcessInfo.processInfo.environment["OLA_ACCOUNT_BASE"], let u = URL(string: s), u.host != nil { return u }
+    if let s = UserDefaults.standard.string(forKey: "ola.accountBase"), let u = URL(string: s), u.host != nil { return u }
+    return address
+  }
+
+  public var base: URL
+  public var session: URLSession
+  public init(base: URL = AccountAPI.configured, session: URLSession = .shared) {
+    self.base = base
+    self.session = session
+  }
+
+  func url(_ path: String) -> URL {
+    var s = base.absoluteString
+    if s.hasSuffix("/") { s.removeLast() }
+    return URL(string: s + path)!
+  }
+
+  /// Where the model door forwards `<rest>` to.
+  public func gateway(_ rest: String) -> URL? {
+    var s = base.absoluteString
+    if s.hasSuffix("/") { s.removeLast() }
+    return URL(string: s + "/api/device/gw/" + rest)
+  }
+
+  /// Before the browser opens: is device sign-in there at all? Asks who-am-I with no credential
+  /// (nothing that could count as a wrong try): 401 means yes, 404 means not deployed yet.
+  public func checkOpen() async throws {
+    var r = URLRequest(url: url("/api/device/me"))
+    r.timeoutInterval = 15
+    do { _ = try await send(r, signedIn: true) } catch AccountError.signedOut { return }
+  }
+
+  /// Exchanges the code the browser brought back for this device's token.
+  public func redeem(code: String, verifier: String) async throws -> AccountSession {
+    var r = URLRequest(url: url("/api/device/token"))
+    r.httpMethod = "POST"
+    r.setValue("Bearer \(code)", forHTTPHeaderField: "Authorization")
+    r.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    r.httpBody = JSON.object(["verifier": .string(verifier)]).data
+    let (d, status) = try await send(r, signedIn: false)
+    guard status == 200, let s = AccountSession.decode(d) else { throw AccountError.badReply }
+    return s
+  }
+
+  /// Who this device is signed in as (also proves the token still works).
+  public func me(_ s: AccountSession) async throws -> AccountSession {
+    var r = URLRequest(url: url("/api/device/me"))
+    r.setValue("Bearer \(s.token)", forHTTPHeaderField: "Authorization")
+    let (d, status) = try await send(r, signedIn: true)
+    guard status == 200, let j = JSON.parse(d), !j["person"]["handle"].str.isEmpty else { throw AccountError.badReply }
+    var out = s
+    out.person = AccountSession.person(j["person"])
+    if !j["device"]["id"].str.isEmpty { out.device = AccountSession.device(j["device"]) }
+    if let e = AccountSession.date(j["expires_at"]) { out.expiresAt = e }
+    return out
+  }
+
+  /// Ends this device's sign-in on the server.
+  public func signOut(_ s: AccountSession) async throws {
+    var r = URLRequest(url: url("/api/device/signout"))
+    r.httpMethod = "POST"
+    r.setValue("Bearer \(s.token)", forHTTPHeaderField: "Authorization")
+    _ = try await send(r, signedIn: true)
+  }
+
+  /// How much of the person's share has been used, as a plain sentence, or nil when the server
+  /// does not give a fraction.
+  public func usage(_ s: AccountSession) async throws -> String? {
+    guard let u = gateway("v1/usage") else { return nil }
+    var r = URLRequest(url: u)
+    r.setValue("Bearer \(s.token)", forHTTPHeaderField: "Authorization")
+    let (d, status) = try await send(r, signedIn: true)
+    guard status == 200, let j = JSON.parse(d) else { return nil }
+    return Self.usageSentence(j)
+  }
+
+  /// `{"fraction": 0.42, "period": "week"}` (or `used`, `share_used`) → "You've used 42% of this week's share."
+  public static func usageSentence(_ j: JSON) -> String? {
+    guard let f = j["fraction"].double ?? j["share_used"].double ?? j["used"].double, f >= 0, f <= 1.5 else { return nil }
+    let pct = Int((min(f, 1) * 100).rounded())
+    let period = j["period"].string.flatMap { ["day": "today\u{2019}s", "week": "this week\u{2019}s", "month": "this month\u{2019}s"][$0] } ?? "your"
+    if f >= 1 { return "You\u{2019}ve used all of \(period) share." }
+    if pct == 0 { return "You\u{2019}ve hardly used any of \(period) share yet." }
+    return "You\u{2019}ve used \(pct)% of \(period) share."
+  }
+
+  /// Sends and maps the contract's errors: 401 is signed out (or, before sign-in, a refused code),
+  /// 404 means the sign-in is not there yet, 429 too many tries.
+  func send(_ r: URLRequest, signedIn: Bool) async throws -> (Data, Int) {
+    let d: Data, res: URLResponse
+    do { (d, res) = try await session.data(for: r) } catch is CancellationError { throw AccountError.cancelled } catch { throw AccountError.unreachable }
+    guard let h = res as? HTTPURLResponse else { throw AccountError.badReply }
+    let word = JSON.parse(d)?["error"].string ?? ""
+    switch h.statusCode {
+    case 200..<300: return (d, h.statusCode)
+    case 401: throw signedIn ? AccountError.signedOut : AccountError.refused(word.isEmpty ? "unauthorized" : word)
+    case 404, 405: throw AccountError.notAvailableYet
+    case 429: throw AccountError.tooManyTries
+    case 400, 403: throw AccountError.refused(word.isEmpty ? "refused" : word)
+    default: throw AccountError.unreachable
+    }
+  }
+}
+
+/// This device's sign-in, kept in the Keychain (one item). Whether someone is signed in, and
+/// their name, are also kept in plain settings (not secret), so the app can say who is signed in
+/// without reading the Keychain; the token itself is read only when a request needs it.
+public enum AccountKeeper {
+  public static let nameKey = "ola.account.name"
+  public static let handleKey = "ola.account.handle"
+  nonisolated(unsafe) public static var defaults: UserDefaults = .standard
+
+  public static var signedIn: Bool { defaults.string(forKey: handleKey) != nil }
+  public static var name: String? { defaults.string(forKey: nameKey) }
+
+  /// The full sign-in, token included: reads the Keychain (once per launch).
+  public static var session: AccountSession? {
+    guard signedIn, let text = SecretStore.value(.account) else { return nil }
+    return AccountSession.decode(text)
+  }
+
+  @discardableResult
+  public static func keep(_ s: AccountSession) -> Bool {
+    guard SecretStore.save(.account, s.encoded()) else { return false }
+    defaults.set(s.person.handle, forKey: handleKey)
+    defaults.set(s.person.name, forKey: nameKey)
+    return true
+  }
+
+  public static func forget() {
+    SecretStore.remove(.account)
+    defaults.removeObject(forKey: handleKey)
+    defaults.removeObject(forKey: nameKey)
+  }
+}

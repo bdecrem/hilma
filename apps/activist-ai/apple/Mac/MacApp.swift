@@ -5,7 +5,9 @@ import UserNotifications
 @main
 enum Main {
   static func main() {
-    // Modes that never start the interface come first, before anything from AppKit or SwiftUI.
+    // Modes that never start the interface come first, before anything from AppKit or SwiftUI:
+    // the `ola` command (--cli, --install-cli), then the Keychain tools.
+    OlaCLI.runIfRequested()
     refuseUnknownOptions()
     SecretImport.runIfRequested()
     OlaFont.register()
@@ -23,7 +25,7 @@ enum Main {
   /// The options the executable knows. Anything else that starts with "--" (a typo, or a flag an
   /// older build does not have) exits with a line instead of opening the app's window.
   static let knownOptions: Set<String> = ["--local-selftest", "--settings-selftest", "--import-secret", "--secret-status", "--forget-secret",
-                                          "--token-file", "--folder", "--fresh", "--key-id"]
+                                          "--token-file", "--folder", "--fresh", "--key-id", "--cli", "--install-cli"]
 
   static func refuseUnknownOptions() {
     let args = Array(CommandLine.arguments.dropFirst())
@@ -40,16 +42,25 @@ struct OlaMacApp: App {
   @State private var whereOla: WhereOlaWorks?
   @State private var phoneLink: PhoneLink?
   @State private var phonePush: PhonePush?
+  /// Who is signed in comes from plain settings; the token is read only when a request needs it.
+  @State private var account = AccountController()
+  @State private var cli = CLIInstaller()
   @NSApplicationDelegateAdaptor private var delegate: AppDelegate
 
   var body: some Scene {
     WindowGroup("Ola", id: "main") {
-      MacRoot(store: store)
+      MacGate(store: store, account: account, whereOla: whereOla)
         .frame(minWidth: 860, minHeight: 560)
         .onAppear {
           guard whereOla == nil else { return }
-          let w = WhereOlaWorks(store: store)
+          let w = WhereOlaWorks(store: store, account: account)
           whereOla = w
+          account.onSignedIn = { [weak w] in
+            // A Mac set up for nothing else goes straight to working here.
+            if Credentials.savedAddress == nil { LocalSettings.defaults.set("mac", forKey: LocalSettings.modeKey) }
+            Task { await w?.apply() }
+          }
+          if account.signedIn { account.refreshUsage() }
           delegate.store = store
           delegate.whereOla = w
           Notifier.wire(store)
@@ -73,8 +84,44 @@ struct OlaMacApp: App {
     .defaultSize(width: 1000, height: 760)
 
     Settings {
-      SettingsView(store: store, whereOla: whereOla, phoneLink: phoneLink, phonePush: phonePush)
+      SettingsView(store: store, whereOla: whereOla, phoneLink: phoneLink, phonePush: phonePush, account: account, cli: cli)
     }
+  }
+}
+
+/// The window: sign in, choose a folder, get ready, or the conversation.
+struct MacGate: View {
+  var store: OlaStore
+  var account: AccountController
+  var whereOla: WhereOlaWorks?
+  @AppStorage(LocalSettings.modeKey) private var mode = "machine"
+  @AppStorage(LocalSettings.folderKey) private var folder = ""
+  @AppStorage(LocalSettings.tokenSavedKey) private var pastedToken = false
+  @AppStorage("ola.serverAddress") private var machineAddress = ""
+
+  var body: some View {
+    Group {
+      if needsSignIn {
+        SignInScreen(account: account)
+      } else if mode == "mac", folder.isEmpty {
+        FolderScreen { whereOla?.chooseFolder() }
+      } else if mode == "mac", let w = whereOla, w.installing || w.installProblem != nil {
+        InstallScreen(fraction: w.installFraction, problem: w.installProblem) { Task { await w.apply() } }
+      } else {
+        MacRoot(store: store)
+      }
+    }
+    .animation(.easeOut(duration: 0.18), value: needsSignIn)
+  }
+
+  /// Sign in first, unless this Mac already has another way to work (the Ola machine, or the
+  /// pasted model token, both from before sign-in existed). A sign-in the server ended asks again.
+  var needsSignIn: Bool {
+    if account.phase == .expired { return true }
+    if account.signedIn { return false }
+    // Started from this screen: it stays until the sign-in finishes or is cancelled.
+    if account.fromGate, account.phase != .idle { return true }
+    return machineAddress.isEmpty && !pastedToken
   }
 }
 
@@ -84,6 +131,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   var phoneLink: PhoneLink?
   func applicationWillTerminate(_ notification: Notification) {
     MainActor.assumeIsolated { whereOla?.stop(); phoneLink?.stop() }
+    // whereOla.stop() also closes the model door (AccountController.stop).
   }
   func applicationDidBecomeActive(_ notification: Notification) {
     MainActor.assumeIsolated {
@@ -170,6 +218,8 @@ struct SettingsView: View {
   var whereOla: WhereOlaWorks?
   var phoneLink: PhoneLink?
   var phonePush: PhonePush? = nil
+  var account: AccountController? = nil
+  var cli: CLIInstaller? = nil
   var tokenKnown: Bool? = nil
   var look: SettingsLook = .native
   @State private var connecting = false
@@ -192,6 +242,7 @@ struct SettingsView: View {
   }
 
   @ViewBuilder var groups: some View {
+    if let account { AccountSettings(account: account, cli: cli) }
     if let whereOla { WhereSettings(controller: whereOla, tokenKnown: tokenKnown) }
     if let whereOla { SettingsGroup(title: "Claude") { ClaudeSettings(controller: whereOla) } }
     if let phoneLink { PhoneSettings(link: phoneLink) }

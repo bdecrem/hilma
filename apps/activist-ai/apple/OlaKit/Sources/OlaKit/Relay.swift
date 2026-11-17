@@ -56,6 +56,45 @@ public final class HTTPResponder: @unchecked Sendable {
   }
 
   public func end() { connection.send(content: nil, contentContext: .finalMessage, isComplete: true, completion: .contentProcessed { [connection] _ in connection.cancel() }) }
+
+  /// Calls `f` once when the client closes its side or the connection fails (a request that is
+  /// still being answered can then stop its upstream).
+  public func onClose(_ f: @escaping @Sendable () -> Void) {
+    let once = Once(f)
+    func watch() {
+      connection.receive(minimumIncompleteLength: 1, maximumLength: 65536) { [connection] data, _, complete, error in
+        if complete || error != nil || data == nil { once.fire(); return }
+        _ = connection
+        watch()
+      }
+    }
+    watch()
+  }
+
+  /// A chunked body: `head` with this, then `chunk` any number of times, then `finish`.
+  public static let chunkedHeader = ["Transfer-Encoding": "chunked"]
+  public func chunk(_ d: Data) async -> Bool {
+    guard !d.isEmpty else { return true }
+    var out = Data((String(d.count, radix: 16) + "\r\n").utf8)
+    out.append(d)
+    out.append(Data("\r\n".utf8))
+    return await raw(out)
+  }
+  public func finish() async {
+    _ = await raw(Data("0\r\n\r\n".utf8))
+    end()
+  }
+}
+
+/// Runs a closure once, from any thread.
+final class Once: @unchecked Sendable {
+  private let lock = NSLock()
+  private var f: (@Sendable () -> Void)?
+  init(_ f: @escaping @Sendable () -> Void) { self.f = f }
+  func fire() {
+    let g: (@Sendable () -> Void)? = lock.withLock { defer { f = nil }; return f }
+    g?()
+  }
 }
 
 public final class MiniHTTPServer: @unchecked Sendable {
@@ -133,13 +172,37 @@ public final class MiniHTTPServer: @unchecked Sendable {
       guard let colon = line.firstIndex(of: ":") else { continue }
       headers[line[..<colon].lowercased()] = line[line.index(after: colon)...].trimmingCharacters(in: .whitespaces)
     }
-    let length = Int(headers["content-length"] ?? "0") ?? 0
     let bodyStart = end.upperBound
-    guard data.count - bodyStart >= length else { return nil }
+    let body: Data
+    if headers["transfer-encoding"]?.lowercased().contains("chunked") == true {
+      guard let b = dechunk(data.subdata(in: bodyStart..<data.count)) else { return nil }
+      body = b
+    } else {
+      let length = Int(headers["content-length"] ?? "0") ?? 0
+      guard data.count - bodyStart >= length else { return nil }
+      body = data.subdata(in: bodyStart..<bodyStart + length)
+    }
     let target = String(first[1])
     let q = target.firstIndex(of: "?")
     return HTTPRequest(method: String(first[0]), path: q.map { String(target[..<$0]) } ?? target, query: q.map { String(target[target.index(after: $0)...]) },
-                       headers: headers, body: data.subdata(in: bodyStart..<bodyStart + length), remote: remote)
+                       headers: headers, body: body, remote: remote)
+  }
+
+  /// A chunked body, or nil while its last chunk has not arrived.
+  static func dechunk(_ d: Data) -> Data? {
+    var out = Data()
+    var i = d.startIndex
+    let crlf = Data("\r\n".utf8)
+    while true {
+      guard let lineEnd = d.range(of: crlf, in: i..<d.endIndex) else { return nil }
+      let sizeText = String(decoding: d[i..<lineEnd.lowerBound], as: UTF8.self).split(separator: ";").first.map(String.init) ?? ""
+      guard let size = Int(sizeText.trimmingCharacters(in: .whitespaces), radix: 16) else { return nil }
+      let start = lineEnd.upperBound
+      if size == 0 { return out }
+      guard d.endIndex - start >= size + 2 else { return nil }
+      out.append(d[start..<start + size])
+      i = start + size + 2
+    }
   }
 }
 

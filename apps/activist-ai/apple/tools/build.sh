@@ -7,6 +7,7 @@
 #   tools/build.sh device              the iPhone app for a device (automatic signing, team 274T5WCVD2);
 #                                      OLA_PUSH=1 adds Apple push (needs Push on the App ID, see project.yml)
 #   tools/build.sh install-mac         copies the built Mac app to /Applications/Ola.app (does not open it)
+#                                      and installs the `ola` command, printing where
 #
 # The Mac app's signature must stay the same from build to build: the login keychain and macOS's
 # folder permissions remember the app by its signature, and an ad-hoc one changes with every build
@@ -63,6 +64,9 @@ case "${1:-}" in
     rm -rf /Applications/Ola.app
     cp -R "$APP" /Applications/Ola.app
     echo "copied to /Applications/Ola.app (not opened)"
+    # The `ola` command: a launcher for the app's own executable (--cli), in the first writable
+    # folder on a login shell's PATH among ~/.local/bin, /opt/homebrew/bin, /usr/local/bin.
+    /Applications/Ola.app/Contents/MacOS/Ola --install-cli
     ;;
   *) sed -n '2,10p' "$0"; exit 1 ;;
 esac

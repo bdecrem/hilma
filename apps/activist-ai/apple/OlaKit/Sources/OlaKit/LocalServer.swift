@@ -13,12 +13,13 @@ import Security
 public final class LocalServer: @unchecked Sendable {
   /// Application Support/Ola. A self-test points it at a scratch folder.
   nonisolated(unsafe) public static var support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("Ola")
-  /// Where tools/install-local-opencode.sh puts opencode 2.3.0.
+  /// opencode 2.3.0: where the app installs it itself (`OpencodeInstall`), else where
+  /// tools/install-local-opencode.sh put it. Always the real install, also when a self-test points
+  /// `support` at a scratch folder. (Not Homebrew's: another version would not read this config.)
   public static var binary: URL? {
-    // Always the real install, also when a self-test points `support` at a scratch folder.
-    let mine = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("Ola/opencode/node_modules/.bin/opencode")
-    if FileManager.default.isExecutableFile(atPath: mine.path) { return mine }
-    for p in ["/opt/homebrew/bin/opencode", "/usr/local/bin/opencode"] where FileManager.default.isExecutableFile(atPath: p) { return URL(fileURLWithPath: p) }
+    let fm = FileManager.default
+    let mine = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("Ola/opencode")
+    for c in [OpencodeInstall.destination, mine.appendingPathComponent("node_modules/.bin/opencode")] where fm.isExecutableFile(atPath: c.path) { return c }
     return nil
   }
   public static let defaultModelURL = "http://100.95.51.98:4311/v1"
@@ -56,9 +57,19 @@ public final class LocalServer: @unchecked Sendable {
   public private(set) var port: Int
   /// Where opencode keeps its config, sessions and caches (default: Application Support/Ola/local).
   public var stateBase: URL?
+  /// This server's own config folder (default: `<stateBase>/config`). The `ola` command keeps its
+  /// own, since the config names its launch's model door, and shares the sessions.
+  public var configBase: URL?
+  /// The pid file that lets a later run end a server this one left behind; nil keeps none.
+  public var pidFileName: String? = "opencode.pid"
+  /// opencode ends when this process does, however it ends (`--stdio`; the `ola` command).
+  public var tiedToThisProcess = false
+  /// The agent's environment from the last start (the `ola` command gives its interface the same).
+  public private(set) var environment: [String: String] = [:]
   /// For checks: a different HOME and the like for the child only.
   public var extraEnvironment: [String: String] = [:]
   private var process: Process?
+  private var lifeline: Pipe?
   private var pidFile: URL?
   public private(set) var log = ""
 
@@ -101,7 +112,7 @@ public final class LocalServer: @unchecked Sendable {
     case noOpencode, didNotStart(String)
     public var errorDescription: String? {
       switch self {
-      case .noOpencode: return "opencode is not installed on this Mac. Run apps/activist-ai/apple/tools/install-local-opencode.sh."
+      case .noOpencode: return "Ola isn\u{2019}t set up to work on this Mac yet."
       case .didNotStart(let s): return "The local agent did not start. \(s)"
       }
     }
@@ -154,42 +165,42 @@ public final class LocalServer: @unchecked Sendable {
     """
   }
 
-  /// Starts opencode and waits until it answers. Returns where to reach it.
+  /// The pasted-token path: the machine's forwarder and the `bart` gateway token in the agent's
+  /// environment. DELETE once account sign-in is live (use `start(route: .door(…))`).
   public func start(modelToken: String, modelURL: String = LocalServer.defaultModelURL, timeout: TimeInterval = 45, trace: (@Sendable (String) -> Void)? = nil) async throws -> ServerConfig {
-    guard let bin = Self.binary else { throw Failure.noOpencode }
-    stop()
+    try await start(route: .pasted(token: modelToken, modelURL: modelURL), timeout: timeout, trace: trace)
+  }
+
+  /// Only these reach the agent from whoever started it (a terminal's environment can hold other
+  /// tools' keys; the app's and the `ola` command's agents get the same, short list).
+  static let passedEnvironment = ["HOME", "USER", "LOGNAME", "SHELL", "TMPDIR", "LANG", "LC_ALL", "LC_CTYPE", "__CF_USER_TEXT_ENCODING", "SSH_AUTH_SOCK"]
+
+  /// Writes the config and the web commands, and makes the agent's environment: the one setup both
+  /// the app and the `ola` command use. `configBase` holds this server's own config (it names this
+  /// launch's model door); `base` holds the shared sessions, state and caches.
+  public func prepare(route: ModelRoute, password: String, trace: (@Sendable (String) -> Void)? = nil) throws -> [String: String] {
     let fm = FileManager.default
     let base = stateBase ?? Self.support.appendingPathComponent("local")
-    // A server left by an earlier run of the app (a crash or a force quit skips the clean stop)
-    // would hold the port and answer with another password; it is ended first.
-    let pf = base.appendingPathComponent("opencode.pid")
-    pidFile = pf
-    Self.endOrphan(pf, trace: trace)
-    // A free port each time, so nothing else on this Mac can be in the way.
-    if port == 0 { port = Self.freePort() }
-    for d in ["config/opencode", "data", "state", "cache"] { try fm.createDirectory(at: base.appendingPathComponent(d), withIntermediateDirectories: true) }
-    let instructions = base.appendingPathComponent("config/opencode/ola-reactions.md")
+    let config = configBase ?? base.appendingPathComponent("config")
+    try fm.createDirectory(at: config.appendingPathComponent("opencode"), withIntermediateDirectories: true)
+    for d in ["data", "state", "cache"] { try fm.createDirectory(at: base.appendingPathComponent(d), withIntermediateDirectories: true) }
+    let instructions = config.appendingPathComponent("opencode/ola-reactions.md")
     try AgentNotes.opencode.write(to: instructions, atomically: true, encoding: .utf8)
     let webTools = Self.support.appendingPathComponent("web-tools")
     let haveWeb = Self.installWebTools(into: webTools)
     trace?(haveWeb ? "web commands in \(webTools.path)" : "web commands NOT found (ola-search will be missing)")
-    try Self.config(modelURL: modelURL, instructionsPath: instructions.path).write(to: base.appendingPathComponent("config/opencode/opencode.jsonc"), atomically: true, encoding: .utf8)
-    var bytes = [UInt8](repeating: 0, count: 24)
-    _ = SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes)
-    let password = bytes.map { String(format: "%02x", $0) }.joined()
+    try Self.config(modelURL: route.baseURL, instructionsPath: instructions.path).write(to: config.appendingPathComponent("opencode/opencode.jsonc"), atomically: true, encoding: .utf8)
 
-    let p = Process()
-    p.executableURL = bin
-    p.arguments = ["serve", "--hostname", "127.0.0.1", "--port", String(port)]
-    p.currentDirectoryURL = folder
-    var env = ProcessInfo.processInfo.environment
+    var env: [String: String] = [:]
+    let mine = ProcessInfo.processInfo.environment
+    for k in Self.passedEnvironment { if let v = mine[k] { env[k] = v } }
     env["PATH"] = webTools.path + ":/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
-    // Where the web commands go: the forwarder on the machine (the model's way too), with the same
-    // bart caller token; downloads land in the project's sources/.
-    if let u = URL(string: modelURL), let h = u.host(), let p = u.port { env["OLA_GATEWAY_HOSTPORT"] = "\(h):\(p)" }
+    // Where the web commands go: the same way as the model (the door, or the machine's forwarder);
+    // downloads land in the project's sources/.
+    env["OLA_GATEWAY_HOSTPORT"] = route.hostPort
     env["OLA_WORK"] = folder.path
     env["OLA_LIB"] = webTools.path
-    env["XDG_CONFIG_HOME"] = base.appendingPathComponent("config").path
+    env["XDG_CONFIG_HOME"] = config.path
     env["XDG_DATA_HOME"] = base.appendingPathComponent("data").path
     env["XDG_STATE_HOME"] = base.appendingPathComponent("state").path
     env["XDG_CACHE_HOME"] = base.appendingPathComponent("cache").path
@@ -200,17 +211,55 @@ public final class LocalServer: @unchecked Sendable {
     // project's own opencode config could loosen the permissions. The project's AGENTS.md stays.
     env["OPENCODE_DISABLE_CLAUDE_CODE"] = "1"
     env["OPENCODE_DISABLE_PROJECT_CONFIG"] = "1"
+    env["OPENCODE_DISABLE_AUTOUPDATE"] = "1"
     for (k, v) in extraEnvironment { env[k] = v }
-    env["OLA_GATEWAY_TOKEN"] = modelToken
-    env["BOX_API_KEY"] = modelToken
+    // What the agent holds for the model and the web: the door's key for this launch when signed
+    // in (it works only on this Mac's loopback, only while the app or command runs).
+    env["OLA_GATEWAY_TOKEN"] = route.token
+    env["BOX_API_KEY"] = route.token
+    return env
+  }
+
+  /// Starts opencode and waits until it answers. Returns where to reach it.
+  public func start(route: ModelRoute, timeout: TimeInterval = 45, trace: (@Sendable (String) -> Void)? = nil) async throws -> ServerConfig {
+    guard let bin = Self.binary else { throw Failure.noOpencode }
+    stop()
+    let base = stateBase ?? Self.support.appendingPathComponent("local")
+    // A server left by an earlier run of the app (a crash or a force quit skips the clean stop)
+    // would hold the port and answer with another password; it is ended first. The `ola` command
+    // keeps no pid file (its server ends with it), so it can never be taken for, or end, this one.
+    if let name = pidFileName {
+      let pf = base.appendingPathComponent(name)
+      pidFile = pf
+      Self.endOrphan(pf, trace: trace)
+    }
+    // A free port each time, so nothing else on this Mac can be in the way.
+    if port == 0 { port = Self.freePort() }
+    var bytes = [UInt8](repeating: 0, count: 24)
+    _ = SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes)
+    let password = bytes.map { String(format: "%02x", $0) }.joined()
+    let env = try prepare(route: route, password: password, trace: trace)
+    environment = env
+
+    let p = Process()
+    p.executableURL = bin
+    // Tied to this process: with --stdio opencode ends when its standard input closes, which
+    // happens when this process ends in any way, a kill included.
+    p.arguments = ["serve", "--hostname", "127.0.0.1", "--port", String(port)] + (tiedToThisProcess ? ["--stdio"] : [])
+    p.currentDirectoryURL = folder
     p.environment = env
+    if tiedToThisProcess {
+      let input = Pipe()
+      p.standardInput = input
+      lifeline = input
+    }
     let pipe = Pipe()
     p.standardOutput = pipe
     p.standardError = pipe
     pipe.fileHandleForReading.readabilityHandler = { [weak self] h in
       let s = String(decoding: h.availableData, as: UTF8.self)
       if !s.isEmpty { trace?("opencode: \(s.trimmingCharacters(in: .newlines))") }
-      self?.log = String(((self?.log ?? "") + s).suffix(4000))
+      self?.appendLog(s)
     }
     trace?("starting \(bin.path) serve on 127.0.0.1:\(port) in \(folder.path)")
     try p.run()
@@ -248,10 +297,16 @@ public final class LocalServer: @unchecked Sendable {
   }
 
   public var isRunning: Bool { process?.isRunning ?? false }
+  public var pid: Int32? { process?.processIdentifier }
+
+  private let logLock = NSLock()
+  func appendLog(_ s: String) { logLock.withLock { log = String((log + s).suffix(4000)) } }
 
   public func stop() {
     guard let p = process else { return }
     if p.isRunning { p.terminate() }
+    try? lifeline?.fileHandleForWriting.close()
+    lifeline = nil
     p.waitUntilExit()
     process = nil
     // Only our own pid: another server of this app may have written the file since.
@@ -290,5 +345,26 @@ public enum LocalSettings {
 
   /// Whether a pasted token was saved, without reading the Keychain (Settings shows "Saved").
   public static let tokenSavedKey = "ola.modelTokenSaved"
+}
+
+/// How the agent on this Mac reaches the model and the web: where (opencode's provider base and the
+/// web commands' host:port) and with what it holds.
+public struct ModelRoute: Equatable, Sendable {
+  public var baseURL: String
+  public var hostPort: String
+  public var token: String
+
+  /// Signed in: this launch's model door and its key (the account token stays in the app).
+  public static func door(_ d: ModelDoor) -> ModelRoute {
+    ModelRoute(baseURL: d.url.absoluteString + "/v1", hostPort: d.hostPort, token: d.key)
+  }
+
+  /// The pasted `bart` gateway token through the machine's forwarder. DELETE once account sign-in
+  /// is live (the server side is not deployed yet).
+  public static func pasted(token: String, modelURL: String = LocalServer.defaultModelURL) -> ModelRoute {
+    let u = URL(string: modelURL)
+    let hp = u.flatMap { u in u.host().map { "\($0):\(u.port ?? 80)" } } ?? ""
+    return ModelRoute(baseURL: modelURL, hostPort: hp, token: token)
+  }
 }
 #endif

@@ -59,6 +59,39 @@ enum Snapshot {
       let view = SettingsView(store: store, whereOla: controller, phoneLink: PhoneLink(store: store), tokenKnown: true, look: look).defaultAppStorage(defaults)
       write(view, size: SettingsView.snapshotSize, appearance: appearance, to: dir.appendingPathComponent("\(name).png"), titled: false, fit: true)
     }
+    // Signing in and the first run (apple-shots/signin), light and dark: every screen before the
+    // window, and Settings with the Account section. Made-up names, no Keychain, no network.
+    for (mode, appearance) in [("light", NSAppearance.Name.aqua), ("dark", .darkAqua)] {
+      let window = CGSize(width: 1100, height: 720)
+      let gates: [(String, AnyView)] = [
+        ("signin-1-signed-out", AnyView(SignInScreen(account: AccountController(preview: .idle)))),
+        ("signin-2-waiting", AnyView(SignInScreen(account: AccountController(preview: .waiting)))),
+        ("signin-3-not-open-yet", AnyView(SignInScreen(account: AccountController(preview: .notice(AccountError.notAvailableYet.errorDescription!))))),
+        ("signin-4-timed-out", AnyView(SignInScreen(account: AccountController(preview: .notice(AccountError.timedOut.errorDescription!))))),
+        ("signin-4b-failed", AnyView(SignInScreen(account: AccountController(preview: .problem(AccountError.unreachable.errorDescription!))))),
+        ("signin-5-expired", AnyView(SignInScreen(account: AccountController(preview: .expired)))),
+        ("signin-6-choose-folder", AnyView(FolderScreen {})),
+        ("signin-7-installing", AnyView(InstallScreen(fraction: 0.42, problem: nil) {})),
+        ("signin-8-install-failed", AnyView(InstallScreen(fraction: nil, problem: OpencodeInstall.Failure.download.errorDescription) {})),
+      ]
+      for (name, view) in gates where only == nil || name.contains(only!) {
+        write(view, size: window, appearance: appearance, to: dir.appendingPathComponent("\(name)-\(mode).png"), titled: false)
+      }
+      let accounts: [(String, AccountController, CLIInstaller, String)] = [
+        ("signin-9-settings-signed-in", AccountController(preview: .idle, name: "Bart Decrem"), CLIInstaller(result: "Installed. In Terminal, go to a folder and type ola.", installed: true), "mac"),
+        ("signin-9-settings-signed-out", AccountController(preview: .idle), CLIInstaller(installed: false), "machine"),
+      ]
+      for (name, account, cli, where_) in accounts where only == nil || name.contains(only!) {
+        defaults.set(where_, forKey: LocalSettings.modeKey)
+        defaults.set(false, forKey: "ola.phone.enabled")
+        defaults.set(NSHomeDirectory() + "/Documents/court-watch", forKey: LocalSettings.folderKey)
+        let store = OlaStore(fixture: Fixture.main)
+        account.previewUsage = account.signedIn ? "You\u{2019}ve used 42% of this week\u{2019}s share." : nil
+        let controller = WhereOlaWorks(store: store, account: account)
+        let view = SettingsView(store: store, whereOla: controller, phoneLink: PhoneLink(store: store), account: account, cli: cli, tokenKnown: true).defaultAppStorage(defaults)
+        write(view, size: SettingsView.snapshotSize, appearance: appearance, to: dir.appendingPathComponent("\(name)-\(mode).png"), titled: false, fit: true)
+      }
+    }
     // The three palettes (design pass two), each on the conversation with an approval and on
     // Settings, dark and light: apple-shots/polish-2.
     let chosenPalette = Palette.current

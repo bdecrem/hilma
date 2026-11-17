@@ -41,6 +41,11 @@ public enum SecretImport {
       if defaults.string(forKey: "ola.serverAddress") == nil { defaults.set(ServerConfig.defaultAddress, forKey: "ola.serverAddress") }
     case .modelToken: defaults.set(true, forKey: LocalSettings.tokenSavedKey)
     case .pushKey: defaults.set(true, forKey: "ola.push.ready")
+    case .account:
+      if let s = AccountSession.decode(value) {
+        defaults.set(s.person.handle, forKey: AccountKeeper.handleKey)
+        defaults.set(s.person.name, forKey: AccountKeeper.nameKey)
+      }
     default: break
     }
     return (0, "Saved the \(label(kind)) in this Mac's Keychain (\(value.count) characters), readable by this app's signature without asking.")
@@ -72,6 +77,8 @@ public enum SecretImport {
   /// The app's entry point calls this before anything from AppKit or SwiftUI starts.
   public static func runIfRequested() {
     let args = CommandLine.arguments
+    guard args.contains("--secret-status") || args.contains("--forget-secret") || args.contains("--import-secret") else { return }
+    OlaCLI.isolateForChecks()
     if args.contains("--secret-status") {
       print(status())
       exit(0)

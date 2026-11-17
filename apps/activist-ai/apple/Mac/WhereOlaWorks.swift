@@ -10,11 +10,20 @@ import SwiftUI
 @Observable
 final class WhereOlaWorks {
   let store: OlaStore
+  /// Signed in, "On this Mac" reaches the model through the account's door.
+  let account: AccountController?
   private(set) var local: LocalServer?
   var problem: String?
   var starting = false
+  /// While opencode is being fetched on a Mac that has none: how far (nil before the first byte).
+  private(set) var installing = false
+  private(set) var installFraction: Double?
+  private(set) var installProblem: String?
 
-  init(store: OlaStore) { self.store = store }
+  init(store: OlaStore, account: AccountController? = nil) {
+    self.store = store
+    self.account = account
+  }
 
   /// The folder and token the running local server was started with.
   private var localKey: String?
@@ -37,9 +46,22 @@ final class WhereOlaWorks {
       return
     }
     guard let folder = LocalSettings.folder else { problem = "Choose the folder Ola should work in."; return }
-    guard let token = LocalSettings.token, !token.isEmpty else { problem = "Add the model token (on the machine: ola-bart.sh model-token)."; return }
     if let p = Self.touch(folder) { problem = p; return }
-    let key = "\(folder.path)\n\(token)"
+    let route: ModelRoute
+    if let account, account.signedIn {
+      do { route = try await account.route() } catch {
+        problem = "Ola couldn\u{2019}t open its way to the model on this Mac. Try again."
+        return
+      }
+    } else if let token = LocalSettings.token, !token.isEmpty {
+      // The pasted-token path. DELETE once account sign-in is live.
+      route = .pasted(token: token)
+    } else {
+      problem = account == nil ? "Add the model token (on the machine: ola-bart.sh model-token)." : "Sign in to Ola (Settings, Account) to work on this Mac."
+      return
+    }
+    guard await ensureOpencode(), mine == generation else { return }
+    let key = "\(folder.path)\n\(route.token)\n\(route.baseURL)"
     // Already running for this folder and token, and the app is using it: nothing to do.
     if let local, local.isRunning, localKey == key, store.config?.url.port == local.port, store.config?.url.host() == "127.0.0.1" { return }
     starting = true
@@ -49,7 +71,7 @@ final class WhereOlaWorks {
     localKey = nil
     let server = LocalServer(folder: folder)
     do {
-      let config = try await server.start(modelToken: token, timeout: 45)
+      let config = try await server.start(route: route, timeout: 45)
       guard mine == generation else {
         // A newer apply took over while this one started: this server is not wanted.
         server.stop()
@@ -63,6 +85,42 @@ final class WhereOlaWorks {
       problem = error.localizedDescription
       store.problem = Problem(text: "The agent on this Mac did not start. Settings has the details and Try again.", detail: error.localizedDescription)
     }
+  }
+
+  /// opencode is fetched the first time "On this Mac" needs it (a second Mac needs nothing else).
+  /// Returns whether it is there now.
+  func ensureOpencode() async -> Bool {
+    if LocalServer.binary != nil { return true }
+    guard !installing else { return false }
+    installing = true
+    installFraction = nil
+    installProblem = nil
+    defer { installing = false }
+    do {
+      try await OpencodeInstall.install { f in Task { @MainActor [weak self] in if self?.installing == true { self?.installFraction = f } } }
+      return true
+    } catch {
+      installProblem = (error as? LocalizedError)?.errorDescription ?? "Ola couldn\u{2019}t set itself up on this Mac. Try again."
+      problem = installProblem
+      return false
+    }
+  }
+
+  /// The folder Ola works in, from an open panel (the first-run screen and Settings).
+  func chooseFolder() {
+    let panel = NSOpenPanel()
+    panel.canChooseDirectories = true
+    panel.canChooseFiles = false
+    panel.canCreateDirectories = true
+    panel.prompt = "Work Here"
+    guard panel.runModal() == .OK, let url = panel.url else { return }
+    LocalSettings.defaults.set(url.path, forKey: LocalSettings.folderKey)
+    // The app reads the folder now, so a macOS question about it comes while Bart is looking.
+    if let p = Self.touch(url) {
+      problem = p
+      return
+    }
+    Task { await apply() }
   }
 
   /// Stops the local agent and starts it again.
@@ -92,7 +150,10 @@ final class WhereOlaWorks {
     }
   }
 
-  func stop() { local?.stop() }
+  func stop() {
+    local?.stop()
+    account?.stop()
+  }
 }
 
 // MARK: Settings, the pieces
@@ -250,6 +311,7 @@ struct WhereSettings: View {
   @State private var tokenSaved = false
 
   var shortFolder: String { (folder as NSString).abbreviatingWithTildeInPath }
+  var signedIn: Bool { controller.account?.signedIn ?? false }
 
   var body: some View {
     SettingsGroup(title: "Where Ola works") {
@@ -257,7 +319,7 @@ struct WhereSettings: View {
         DeskMark(lit: true, working: false)
       } choose: { set("machine") }
       .onAppear(perform: loadTokenState)
-      ChoiceRow("On this Mac", detail: "The agent works in a folder on this Mac. Only the model runs on the machine.", selected: mode == "mac") {
+      ChoiceRow("On this Mac", detail: signedIn ? "The agent works in a folder on this Mac. Only the model runs at Ola." : "The agent works in a folder on this Mac. Only the model runs on the machine.", selected: mode == "mac") {
         MacMark()
       } choose: { set("mac") }
       if mode == "mac" {
@@ -268,7 +330,8 @@ struct WhereSettings: View {
             Button("Choose\u{2026}") { choose() }
           }
         }
-        LabeledContent {
+        // The pasted-token row, only when not signed in. DELETE once account sign-in is live.
+        if !signedIn { LabeledContent {
           HStack(spacing: Space.s) {
             SecureField("Model token", text: $token, prompt: Text(tokenSaved ? "Saved in the Keychain" : "ola-bart.sh model-token")).labelsHidden()
               .textFieldStyle(.roundedBorder).frame(width: 200)
@@ -282,7 +345,7 @@ struct WhereSettings: View {
           }
         } label: {
           Text("Model token")
-        }
+        } }
         VStack(alignment: .leading, spacing: 6) {
           if controller.starting {
             StatusLine(kind: .busy, text: "Starting the agent on this Mac. This can take up to 45 seconds.")
@@ -322,21 +385,7 @@ struct WhereSettings: View {
     tokenSaved = tokenKnown ?? (LocalSettings.defaults.bool(forKey: LocalSettings.tokenSavedKey) || (SecretStore.isKnown(.modelToken) && LocalSettings.token != nil))
   }
 
-  func choose() {
-    let panel = NSOpenPanel()
-    panel.canChooseDirectories = true
-    panel.canChooseFiles = false
-    panel.canCreateDirectories = true
-    panel.prompt = "Work Here"
-    if panel.runModal() == .OK, let url = panel.url {
-      folder = url.path
-      if let p = WhereOlaWorks.touch(url) {
-        controller.problem = p
-        return
-      }
-      Task { await controller.apply() }
-    }
-  }
+  func choose() { controller.chooseFolder() }
 }
 
 // MARK: Fallback to Claude

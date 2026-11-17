@@ -83,6 +83,93 @@ picked (and at launch for that folder, silently once answered). **A Mac with no 
 gets an ad-hoc build and a printed warning: macOS will ask after every build until one exists (Xcode,
 Settings, Accounts, add the Apple ID, Manage Certificates, +, Apple Development).
 
+## Sign in with an Ola account (2026-11-17; the server side is not deployed yet)
+
+Bart: "do the new login system for macos app ... so i can use the app on my other computer by
+logging in as bart (or any user)". Each person signs in with their own Ola account and reaches the
+model through `https://app.ola.cx` (one constant, `AccountAPI.address`; `OLA_ACCOUNT_BASE` or the
+`ola.accountBase` default points checks at a stand-in, never shown). No Tailscale, no pasted token.
+
+- **Sign-in** (`OlaKit/SignIn.swift`): a random secret S; a listener on 127.0.0.1, a free port; first a
+  credential-free `GET /api/device/me` (401 means sign-in exists, 404 "not open yet", so the browser
+  never opens on a missing page); then the default browser at
+  `<base>/#/device?challenge=<b64url(sha256(S))>&port=<port>&name=<this Mac, ≤60>&kind=mac|cli`. The
+  listener answers one well-formed code (`[A-Za-z0-9._~-]{8,512}`) with a small page in the app's
+  look and no outside loads, then closes; 5 minutes, then "took too long" and Try Again.
+  `POST /api/device/token` (code as bearer, `{"verifier": S}`) gives the sign-in, kept as one
+  Keychain item (`SecretKind.account`); the name is also in plain settings so the app can say who is
+  signed in without reading the Keychain.
+- **The model door** (`OlaKit/ModelDoor.swift`): the agent never holds the account token. The app (or
+  the `ola` command) listens on loopback with a random key for this launch, forwards `/<rest>` to
+  `<base>/api/device/gw/<rest>` with the account token, streams the answer chunk by chunk, closes
+  the upstream request when opencode drops the connection (Stop), never follows a redirect, and
+  turns a 401 into "signed out" (the app shows "You've been signed out on this Mac"). opencode's
+  provider base and the web commands' `OLA_GATEWAY_HOSTPORT`/`BOX_API_KEY` point at the door and its
+  key. The agent's environment is now a short list (HOME, USER, SHELL, TMPDIR, LANG, …), not
+  whatever started it.
+- **The app**: a Mac with nothing set up shows one screen, "Sign in to Ola"; after signing in it goes
+  to "On this Mac": choose a folder, and on a Mac without opencode the app fetches it itself
+  (`OlaKit/OpencodeInstall.swift`: the pinned 2.3.0 package for this processor from the npm
+  registry, checked against the sha512 `package-lock.json` pins (a test keeps the two equal),
+  unpacked into `Application Support/Ola/opencode/bin`, asked for its version; no Node, no npm, no
+  admin password). Settings has an Account section (name, "Signed in on this Mac", the share used
+  as a sentence when the server gives a fraction, Sign Out, the `ola` command). A Mac that already
+  works with the Ola machine or a pasted token is not asked to sign in. The pasted model token keeps
+  working only when not signed in; it is marked "DELETE once account sign-in is live" in
+  `LocalServer.swift`, `WhereOlaWorks.swift` and `Keychain.swift`. "On the Ola machine" is unchanged.
+- **Screens**: `OLA_ONLY=signin tools/build.sh mac <dir>` (signed out, waiting for the browser, not
+  open yet, took too long, failed, signed out by the server, choose a folder, getting ready, its
+  failure, Settings signed in and out; light and dark): `~/Desktop/ola-brand/apple-shots/signin/`.
+
+What the server must do for this side (beyond the contract): answer `GET /api/device/me` with no
+credential with 401 (404 reads as "not open yet"); stream `gw` replies without buffering; give 401
+for a revoked or expired token on every route; let `gw` pass what Ola's commands call (`v1/chat/completions`,
+`v1/models`, `v1/usage`, `web/search`, `web/fetch`, `web/lookup`, and olaspec's `v1/embeddings`,
+`v1/rerank`, `v1/audio/transcriptions`, `v1/images/generations`). `expires_at` may be ISO 8601 or epoch
+seconds; `v1/usage` is shown when it has `fraction` (or `share_used`, `used`) from 0 to 1 and
+optionally `period` (`day`, `week`, `month`).
+
+## The `ola` command ("On this Mac" in a terminal)
+
+`ola` in any folder works there the way "On this Mac" does, with the same account, door,
+permissions (commands and edits ask), web commands and config, from the same OlaKit code
+(`OlaKit/OlaCLI.swift`): the app's own executable in a mode that never starts the interface
+(`Ola.app/Contents/MacOS/Ola --cli …`, checked before anything from AppKit or SwiftUI), so it has the
+app's signature and reads the Keychain with no question; `ola` itself is a three-line launcher.
+
+```bash
+ola                    # the conversation, in this terminal (opencode 2.3.0's own interface, on Ola's server)
+ola "a request"        # one request, the reply printed; also: ola run "…" (exit code: whether it worked)
+ola -c                 # pick up the last conversation
+ola login | logout | whoami | status | --help
+```
+
+- It starts its own `opencode serve --stdio` (it ends when the command does, a kill included) and a
+  door, then opencode's interface (`opencode --server <it>`) in the terminal's foreground group
+  (posix_spawn: Foundation's Process puts a child in a background group, where the interface stopped
+  at once), so keys, Ctrl-C and resizing go to it. A small watcher ends the interface and the agent
+  if the command itself is killed outright.
+- A one-shot run cannot ask, so opencode refuses commands and edits there and says so; the
+  conversation asks (Allow once / Always allow / Reject).
+- **Sessions are shared with the app**: two opencode servers on one data folder were measured (a
+  session made by one listed by the other; 40 writes from both at once, all kept), so the command
+  uses the app's "On this Mac" store and its own config folder (the config names its door). The app
+  refreshes its list when it comes to the front. The command keeps no pid file, so the app can never
+  take its server for one it left behind, or end it.
+- **Install**: `tools/build.sh install-mac` also runs `Ola --install-cli`, which writes the launcher
+  into the first writable folder among `~/.local/bin`, `/opt/homebrew/bin`, `/usr/local/bin` that a
+  login shell has on its PATH (never over someone else's `ola`) and prints where; Settings, Account,
+  The ola command, Install does the same.
+- **Check**: `tools/cli-selftest.sh <Ola.app>` runs it end to end against `tools/stub-ola.py` (a
+  stand-in for app.ola.cx with a fake model) and `tools/stub-browser.sh`, beside the real app without
+  touching it (own settings suite, scratch Application Support, throwaway Keychain names): 16 checks,
+  from "not signed in" through login, whoami, status, a printed reply, the account token upstream and
+  never the door key, a refused command in a one-shot run, the shared store, the interface in a
+  pseudo-terminal (draws, redraws on resize, Ctrl-C ends it, a command asks and waits), a SIGKILL
+  that leaves nothing running, and logout. **Live, once the server is deployed:**
+  `tools/cli-selftest.sh /Applications/Ola.app https://app.ola.cx` (the browser opens once for a
+  passkey; the stand-in-only checks are skipped).
+
 ## The self-test (against the real server)
 
 Connects (and checks a wrong password gets 401), checks the only models are Ola's gateway's, makes a
@@ -376,8 +463,9 @@ The server starts on a free port each time, ends a server an earlier run of the 
 says whether opencode was still running and its last lines, with Try Again. Right after the folder
 is picked the app reads it itself, so a macOS privacy question about that folder comes up then.
 
-opencode for this mode: `tools/install-local-opencode.sh` (the pinned 2.3.0, user-level, into
-`~/Library/Application Support/Ola/opencode`). Proved with
+opencode for this mode: the app fetches it itself the first time (see "Sign in with an Ola
+account"); `tools/install-local-opencode.sh` (npm, the same pinned 2.3.0, into
+`~/Library/Application Support/Ola/opencode`) still works and is found too. Proved with
 `OLA_LOCAL_FOLDER=<scratch> OLA_MODEL_TOKEN_FILE=<file> swift run olakit-selftest` (14 of 14).
 
 ## Pages the agent built

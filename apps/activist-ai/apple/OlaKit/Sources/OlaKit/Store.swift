@@ -195,6 +195,9 @@ public final class OlaStore {
   /// finished is shown finished, with its steps and results (foreground, reconnect, stream error).
   public func catchUp() async {
     guard client != nil else { return }
+    // The list too: a conversation started elsewhere on the same store (the `ola` command in a
+    // terminal) shows up when Bart comes back to the app.
+    if let s = try? await client?.sessions() { sessions = s }
     for id in conversations.keys where !claudeRunning(id) { await open(id) }
     if let a = try? await client?.active() { running = a.union(Set(claudeRuns.keys)) }
   }
