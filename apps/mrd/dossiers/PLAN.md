@@ -20,7 +20,12 @@ does not fix the system; the checks below do.
    "borderline" or "from the press". Sonnet 5.5, low effort.
 2. **Second opinion.** A fresh Opus 5.5 agent (high effort) takes each answer with the indicator and
    the citation, reads the laws itself, and tries to prove the answer wrong. It returns confirmed,
-   wrong, or not supported by what it read.
+   wrong, or not supported by what it read. It judges the implementation rating separately, on two
+   questions: is the evidence about practice (a regulation is not evidence that it is applied), and
+   is it about the same people the answer covers. Costa Rica's adult-education rating (indicator
+   127, "Sometimes") failed both: its one practice source is UNHCR's page for refugees and asylum
+   seekers, the other is the regulation itself, and the answer is about migrants generally (Bart's
+   review, 2026-11-17).
 3. **Redo the shaky ones.** Any answer marked low confidence (25 of them), or that failed check 1 or
    2, is redone by Fable 5.2 at xhigh effort, with no cap on reading. It reads every law and ruling
    in full, never a news story about it.
@@ -34,6 +39,7 @@ does not fix the system; the checks below do.
 
 Already done: Costa Rica's indicator 55 recoded to No from the full ruling (see README, "What the
 data taught us"). Known to rest on court material nobody read: Costa Rica 123, Philippines 67.
+Known to have an implementation rating its evidence does not support: Costa Rica 127.
 
 ## Part 2: the 25 new countries (1,600 answers)
 
