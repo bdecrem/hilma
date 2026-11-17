@@ -62,7 +62,11 @@ export const runnerKeyOk = (grant, req) => !grant.keySha || keyMatches(grant, St
  * force (before, a deleted file left every old grant working until the gateway restarted).
  * entry(name, g) returns the grant or null to skip it.
  */
-export function readGrants(file, setting, seen, entry) {
+// The callers a grants file may name: projects (ws-<slug>) for every engine; the hosted open model
+// also a person's own Macs (p-<id>, admin.mjs app-hosted) and the owner's standing caller (bart).
+export const PROJECT_CALLER = /^ws-[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$/
+export const ANY_CALLER = /^(?!usage$)(ws-[a-z0-9][a-z0-9-]{1,30}[a-z0-9]|p-[1-9][0-9]{0,11}|(?!ws-|p-)[A-Za-z0-9._-]{1,64})$/
+export function readGrants(file, setting, seen, entry, names = PROJECT_CALLER) {
   let st
   try {
     st = statSync(file)
@@ -78,7 +82,7 @@ export function readGrants(file, setting, seen, entry) {
     const raw = JSON.parse(readFileSync(file, 'utf8'))
     const grants = new Map()
     for (const [name, g] of Object.entries(raw && typeof raw === 'object' ? raw : {})) {
-      if (!/^ws-[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$/.test(name)) continue
+      if (!names.test(name)) continue
       const v = entry(name, g)
       if (v) grants.set(name, v)
     }

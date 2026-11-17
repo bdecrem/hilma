@@ -20,7 +20,7 @@
 //   GATEWAY_HOSTED_PRICES in=,out= dollars per million tokens
 import http from 'node:http'
 import https from 'node:https'
-import { jobKeyOf, readGrants, runnerKeyOk } from './batch.mjs'
+import { ANY_CALLER, jobKeyOf, readGrants, runnerKeyOk } from './batch.mjs'
 
 export const HOSTED_SETTINGS = ['GATEWAY_HOSTED_FILE', 'GATEWAY_HOSTED_PRICES']
 const MONTH = () => new Date().toISOString().slice(0, 7)
@@ -62,7 +62,7 @@ export function makeHosted({ cfg, db }) {
   let seen = ''
   const load = () => {
     const next = readGrants(cfg.file, 'GATEWAY_HOSTED_FILE', seen, (name, g) =>
-      !g || typeof g !== 'object' ? null : { capMicroUsd: Number.isSafeInteger(g.cap_micro_usd) && g.cap_micro_usd >= 0 ? g.cap_micro_usd : 20_000_000, until: g.until === undefined ? null : Number.isSafeInteger(g.until) ? g.until : 0, keySha: jobKeyOf(g) })
+      !g || typeof g !== 'object' ? null : { capMicroUsd: Number.isSafeInteger(g.cap_micro_usd) && g.cap_micro_usd >= 0 ? g.cap_micro_usd : 20_000_000, until: g.until === undefined ? null : Number.isSafeInteger(g.until) ? g.until : 0, keySha: jobKeyOf(g) }, ANY_CALLER)
     if (!next) return
     seen = next.stamp
     grants = next.grants
