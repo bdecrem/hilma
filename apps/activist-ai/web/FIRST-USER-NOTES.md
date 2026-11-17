@@ -71,6 +71,11 @@ Status words: **fixed** (in this pass, with a check), **open** (written up, not 
   such run shows two failed steps and ends "3 did not work". Probably ripgrep cannot run on the
   read-only root (a cache or temp path) or is missing from the image. Needs an image change, which
   this pass may not make.
+  **It now breaks journeys:** in the last run (Chromium at 390) the model searched three times
+  with `glob`, all three failed, and the stretch rule (three failed steps in a row) stopped the run
+  after 1.6 s with no answer. The final run: A and D whole in both browsers, B whole in WebKit and
+  stopped by this in Chromium (21 of 24 steps). Fix the image first; until then the stretch rule
+  could leave out steps that failed for this reason.
 - **B9, open (image).** The agent's own check screenshots (`shots/hello-390.png`, from `ola-page`,
   as `AGENTS.md` asks) show on the project home under "Other files" as things "Ola made". To a
   first person they are noise. Either `AGENTS.md` saves them under a hidden folder, or the home
