@@ -1933,7 +1933,13 @@ normalizing case, spacing and digits ("4,817", "4 817" and "4817.0" are one numb
 | any other shared word not on the fixed list (`workspace/lib/common-words.txt`); a shared year; eight common words in a row; a long run of letters and digits (encoded text) | unsure: held until the owner reads it and says yes |
 
 The check covers the request, the checks, the generator's source, every file name, column name and
-file's text. A clean copy is kept by the front desk under `$OLA_HOME/compare/<id>/` (made-up content
+everything each file carries (review 5: it read only what a person sees, so a name in a Word file, a
+workbook's properties, a PDF's compressed text, UTF-16 text, a zip or a file of unknown kind went out
+as "clean"): every part of a zip (Office and OpenDocument files are zips), a PDF's Flate streams with
+their text arrays joined, UTF-16, the readable runs of any bytes. A file it cannot read through (a
+picture, another compression or PDF filter) makes the copy unsure. Before comparing, invisible
+characters (zero-width, soft hyphens) are dropped, letters of other alphabets that look Latin are
+folded to Latin, and accents dropped, on both sides. A clean copy is kept by the front desk under `$OLA_HOME/compare/<id>/` (made-up content
 only); a held or refused one stays in the VM (`/work/.ola/twins/<id>/`), shown to the owner from
 there with what was found ("a word from your files: thaw"). The owner's yes is for the copy they
 read: its digest is taken when it is made, and a copy changed since is refused ("This copy changed

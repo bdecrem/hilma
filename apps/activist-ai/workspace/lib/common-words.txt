@@ -32,3 +32,5 @@ csv tsv xlsx xls md txt pdf docx json html htm db sqlite png svg jpg zip
 amount amounts category code comment comments cost costs count created_at currency email first_name last_name full_name notes phone postal_code status street zip_code
 file1 file2 file3 data1 data2 sheet1 sheet2 table1 table2 part1 part2 a1 b1
 survey surveys donation donations grant grants payment payments member members event events volunteer volunteers report reports response responses respondent respondents sale sales station stations reading readings measurement measurements vote votes minutes meeting meetings study studies law laws article articles case cases contact contacts site sites rainfall temperature budget budgets invoice invoices order orders entry entries
+# What the libraries a copy uses write into a file's parts (review 5: the leak check reads them now).
+excel microsoft openpyxl python normal default theme worksheet worksheets workbook spreadsheet reportlab docx xlsx pptx odt ods libreoffice

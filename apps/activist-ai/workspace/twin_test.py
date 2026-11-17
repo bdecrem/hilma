@@ -79,6 +79,55 @@ r = T.check_leaks(idx, variant(request="Ref Zm9vYmFyYmF6cXV4MTIzNDU2Nzg5MGFiY2Rl
 ok("a long encoded-looking run is unsure", r["verdict"] in ("unsure", "leak") and r["counts"].get("encoded"), r)
 ok("digits are normalized: '4 817' and '4,817' and '4817.0' are one number", T.normalize("4 817") == T.normalize("4,817") == T.normalize("4817.0") == "4817")
 
+# Review 5: the leak check read only the text it knew how to read. A copy's files in any other form
+# (a Word file, a PDF whose text is compressed, a spreadsheet's properties, UTF-16 text, a zip, a
+# file of an unknown kind) or a name broken by an invisible character or a letter from another
+# alphabet carried the project's words out as "clean". Each of these must be caught or held.
+import io, zipfile, zlib  # noqa: E402
+
+def _zip(members):
+    b = io.BytesIO()
+    with zipfile.ZipFile(b, "w", zipfile.ZIP_DEFLATED) as z:
+        for n, t in members.items():
+            z.writestr(n, t)
+    return b.getvalue()
+
+_pdf_stream = zlib.compress(b"BT /F1 12 Tf 72 700 Td [(Marisol) -250 (Quennell)] TJ ET")
+HIDDEN = {
+    "notes.docx": _zip({"[Content_Types].xml": "<Types/>", "word/document.xml": "<w:document><w:body><w:p><w:r><w:t>Marisol Quennell</w:t></w:r></w:p></w:body></w:document>"}),
+    "data.xlsx": _zip({"[Content_Types].xml": "<Types/>", "docProps/core.xml": "<cp:coreProperties><dc:title>Marisol Quennell</dc:title></cp:coreProperties>", "xl/workbook.xml": "<workbook/>"}),
+    "report.pdf": b"%PDF-1.4\n1 0 obj << /Length " + str(len(_pdf_stream)).encode() + b" /Filter /FlateDecode >>\nstream\n" + _pdf_stream + b"\nendstream\nendobj\n%%EOF\n",
+    "data16.csv": "name,hours\nMarisol Quennell,12\n".encode("utf-16"),
+    "bundle.zip": _zip({"inner.txt": "Marisol Quennell"}),
+    "blob.bin": b"\x00\x01Marisol Quennell\x00",
+    "zw.csv": "name,hours\nMari​sol Quen­nell,12\n".encode(),
+    "homoglyph.csv": "name,hours\nMаrisol Quеnnell,12\n".encode(),
+}
+with tempfile.TemporaryDirectory() as hd:
+    for fname, data in HIDDEN.items():
+        (Path(hd) / fname).write_bytes(data)
+        t = dict(CLEAN, files=T.twin_view(Path(hd), [fname]))
+        r = T.check_leaks(idx, t)
+        ok(f"the leak check does not pass a copy that hides a project name in {fname}", r["verdict"] != "clean", r["counts"])
+    # ...and a plain made-up workbook (openpyxl, in the VM) is still clean against a project that
+    # talks about Excel in 2026: the library's own words and the time it wrote the file do not count.
+    try:
+        import openpyxl
+    except ImportError:
+        openpyxl = None
+    if openpyxl:
+        wi = T.Index()
+        wi.add_text(REQUEST + " Send the Excel file back by Friday, 2026-11-20.")
+        wi.add_text(PROJECT_CSV)
+        wb = openpyxl.Workbook()
+        ws_ = wb.active
+        ws_.append(["name", "joined", "hours", "team"])
+        for row in (["Ada Lin", "2024-01-02", 5, "North"], ["Bo Reyes", "2024-02-01", 9, "South"]):
+            ws_.append(row)
+        wb.save(Path(hd) / "made.xlsx")
+        r = T.check_leaks(wi, dict(CLEAN, files=T.twin_view(Path(hd), ["made.xlsx"])))
+        ok("a plain made-up workbook stays clean once its parts are read too", r["verdict"] == "clean", r["findings"])
+
 # ------------------------------------------------------------------ the generator's sandbox
 GOOD = """
 import csv

@@ -77,8 +77,22 @@ def canon_number(s):
     return s
 
 
+# Letters of other alphabets that look like Latin ones (review 5: "M\u0430risol" with a Cyrillic a
+# passed as a new word), folded to the Latin letter before anything is compared.
+_LOOK = str.maketrans("аеорсухіјѕԁһкмтвнАВЕКМНОРСТХІЈЅαονρτικυχΑΒΕΖΗΙΚΜΝΟΡΤΥΧ", "aeopcyxijsdhkmtbhABEKMHOPCTXIJSaovptikuxABEZHIKMNOPTYX")
+
+
+def fold(text):
+    """Invisible characters (zero-width, soft hyphen, joiners: Unicode format) dropped, look-alike
+    letters made Latin, accents dropped. Both sides of the comparison go through it."""
+    t = unicodedata.normalize("NFKC", str(text))
+    t = "".join(c for c in t if unicodedata.category(c) != "Cf").translate(_LOOK)
+    t = unicodedata.normalize("NFKD", t)
+    return "".join(c for c in t if not unicodedata.combining(c))
+
+
 def normalize(text):
-    t = unicodedata.normalize("NFKC", str(text)).lower()
+    t = fold(text).lower()
     t = t.replace("’", "'").replace("‘", "'").replace("“", '"').replace("”", '"')
     t = re.sub(r"(?<=\d)[   ](?=\d{3}\b)", "", t)  # 1 234 -> 1234
     t = _NUM.sub(lambda m: canon_number(m.group(0)), t)
@@ -215,6 +229,8 @@ def check_leaks(index, twin, max_findings=60):
             for t in name_tokens(c):
                 if not is_number(t) and t not in COMMON and t in index.words:
                     add("leak", "column", t, where)
+        if f.get("unreadable"):
+            add("unsure", "unreadable", name, where)
         scan(f.get("text", ""), where)
     sev = {x["severity"] for x in findings}
     verdict = "leak" if "leak" in sev else "unsure" if "unsure" in sev else "clean"
@@ -452,17 +468,112 @@ def run_generator(source, out_dir, seed, timeout=90, python="/usr/bin/python3", 
     return truth, files
 
 
+# Review 5: the leak check read a file only as the person would (cells, paragraphs). A made-up copy is
+# read here for everything a file carries: every member of a zip (Word, Excel, PowerPoint and
+# OpenDocument files are zips: their properties, comments and parts too), a PDF's compressed streams,
+# text in UTF-16, and the readable runs of any other bytes. A kind this cannot read through (pictures,
+# other compression) makes the copy "unsure": the owner reads it before it leaves.
+READABLE = TEXT_EXT | {".tsv", ".xlsx", ".xlsm", ".docx", ".pptx", ".odt", ".ods", ".odp", ".zip", ".pdf"}
+
+
+def _runs(b):
+    """The readable text in bytes: UTF-16 when it looks like it, XML tags dropped, runs of 3+ characters."""
+    outs = []
+    if b[:2] in (b"\xff\xfe", b"\xfe\xff") or (len(b) > 16 and b.count(b"\x00") > len(b) // 4):
+        for enc in ("utf-16", "utf-16-le", "utf-16-be"):
+            try:
+                outs.append(b.decode(enc))
+                break
+            except UnicodeDecodeError:
+                continue
+    outs.append(b.replace(b"\x00", b"").decode("utf-8", "replace"))
+    text = " ".join(outs)
+    text = re.sub(r"<[^<>]{0,400}>", " ", text)
+    return " ".join(re.findall(r"[^\x00-\x08\x0b-\x1f\x7f\ufffd]{3,}", text))
+
+
+def _pdf_text(data, cap):
+    import zlib
+    out, odd = [], False
+    for m in re.finditer(rb"<<(.{0,2000}?)>>\s*stream\r?\n(.*?)\r?\nendstream", data, re.S):
+        head, body = m.group(1), m.group(2)
+        filters = re.findall(rb"/(\w+Decode|DCT|JPX|JBIG2)", head)
+        if any(f != b"FlateDecode" for f in filters):
+            odd = True
+            continue
+        if filters:
+            try:
+                body = zlib.decompressobj().decompress(body, cap)
+            except zlib.error:
+                odd = True
+                continue
+        out.append(body)
+        # the strings of a text-showing array, joined as words: [(Mari) -20 (sol)] TJ
+        for arr in re.findall(rb"\[(.*?)\]\s*TJ", body, re.S):
+            parts = re.findall(rb"\(((?:\\.|[^\\)])*)\)|<([0-9A-Fa-f\s]+)>", arr)
+            words = [a if a else bytes.fromhex(re.sub(rb"\s", b"", h).decode() + ("0" if len(re.sub(rb"\s", b"", h)) % 2 else "")) for a, h in parts]
+            out.append(b"".join(words) + b" " + b" ".join(words))
+        for h in re.findall(rb"<([0-9A-Fa-f\s]{4,})>", body):
+            hx = re.sub(rb"\s", b"", h)
+            out.append(bytes.fromhex(hx.decode() + ("0" if len(hx) % 2 else "")))
+    return b"\n".join(out), odd
+
+
+def deep_text(path, cap=16 * 1024 * 1024, depth=0):
+    """(text, readable): everything a file carries as text, and whether it could all be read."""
+    p = Path(path)
+    try:
+        data = p.read_bytes()[:cap]
+    except OSError:
+        return "", False
+    return _deep_bytes(data, p.suffix.lower(), cap, depth)
+
+
+def _deep_bytes(data, ext, cap, depth):
+    import io, zipfile
+    parts, readable = [], ext in READABLE
+    if data[:4] == b"PK\x03\x04" and depth < 3:
+        try:
+            with zipfile.ZipFile(io.BytesIO(data)) as z:
+                total = 0
+                for i in z.infolist()[:2000]:
+                    parts.append(i.filename)
+                    if i.is_dir():
+                        continue
+                    with z.open(i) as f:
+                        b = f.read(max(0, cap - total))
+                    total += len(b)
+                    if i.filename in ("docProps/core.xml", "meta.xml"):
+                        # the moment the library wrote the file is not content (every copy has one)
+                        b = re.sub(rb"<(dcterms:created|dcterms:modified|meta:creation-date|dc:date)\b[^>]*>[^<]{0,64}</\1>", b"", b)
+                    t, ok = _deep_bytes(b, Path(i.filename).suffix.lower(), cap, depth + 1)
+                    parts.append(t)
+                    readable = readable and (ok or Path(i.filename).suffix.lower() in (".xml", ".rels", "") or i.filename.endswith(".xml"))
+                    if total >= cap:
+                        readable = False
+                        break
+        except (zipfile.BadZipFile, RuntimeError, NotImplementedError, OSError, EOFError):
+            readable = False
+    elif data[:5] == b"%PDF-":
+        t, odd = _pdf_text(data, cap)
+        parts.append(_runs(t))
+        readable = readable and not odd
+    parts.append(_runs(data))
+    return "\n".join(x for x in parts if x), readable
+
+
 def twin_view(out_dir, files):
-    """The twin's files as the leak check reads them: name, columns, text."""
+    """The twin's files as the leak check reads them: name, columns, text (all of it, review 5)."""
     view = []
     for rel in files:
         p = Path(out_dir) / rel
         text = read_text(p)
+        deep, readable = deep_text(p)
         cols = []
         if p.suffix.lower() in (".csv", ".tsv") and text:
             first = text.splitlines()[0] if text.splitlines() else ""
             cols = re.split(r"[,\t;]", first)
-        view.append({"name": rel, "columns": cols, "text": text})
+        view.append({"name": rel, "columns": cols, "text": text + "\n" + deep, "unreadable": not readable})
     return view
 
 
