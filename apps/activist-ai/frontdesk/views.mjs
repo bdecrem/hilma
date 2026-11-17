@@ -186,15 +186,23 @@ iframe{flex:1;border:0;width:100%;background:#fff}
         return text(res, 404, 'That file is not here.')
       }
       if (!workspaces.validRel(rel) || rel.split('/').some((x) => x.startsWith('.')) || !rel.startsWith(g.scope)) return text(res, 404, 'That file is not here.')
-      const done = await turn(g.slug)
-      if (!done) return text(res, 503, 'Ola’s computer is busy. Reload the page in a moment.')
-      const busy = workspaces.holdBusy(g.slug)
+      // Listened for before the wait in line: a request given up on while it waited must not get
+      // an exec when its turn comes. Attached after, its 'close' had already passed, the exec's
+      // first write found the response destroyed and waited for a 'drain' or 'close' that never
+      // came: the exec, the turn and the busy mark were held for good, so a page's script that
+      // aborted a dozen fetches killed Open for the team and kept the workspace from ever
+      // stopping, until the front desk restarted (third review, 2026-11-16; rev3.mjs views).
       const gone = new AbortController()
       res.on('close', () => gone.abort())
+      const done = await turn(g.slug)
+      if (!done) return text(res, 503, 'Ola’s computer is busy. Reload the page in a moment.')
+      if (res.destroyed) return done()
+      const busy = workspaces.holdBusy(g.slug)
       try {
         await workspaces.ensureRunning(g.slug)
         const f = await workspaces.getStream(g.slug, rel, { signal: gone.signal })
         if (!f) return res.destroyed ? undefined : text(res, 404, 'That file is not here.')
+        if (res.destroyed) return f.kill()
         if (f.size > MAX_BYTES) return f.kill(), text(res, 413, 'That file is too large to show here. Download it instead.')
         const ext = rel.includes('.') ? rel.slice(rel.lastIndexOf('.') + 1).toLowerCase() : ''
         res.writeHead(200, {
@@ -217,7 +225,7 @@ iframe{flex:1;border:0;width:100%;background:#fff}
         try {
           for await (const c of f.stream) {
             sent += c.length
-            if (!res.write(c)) await new Promise((r) => (res.once('drain', r), res.once('close', r)))
+            if (!res.write(c) && !res.destroyed) await new Promise((r) => (res.once('drain', r), res.once('close', r)))
             if (res.destroyed) break
           }
           res.end()

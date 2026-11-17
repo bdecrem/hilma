@@ -7,6 +7,8 @@
 //                                             unread page files against the rest of the team
 //   node frontdesk/review/rev3.mjs tokens     no VM, a scratch OLA_HOME: a gateway-tokens write under
 //                                             way when a rotation starts puts the revoked token back
+//   node frontdesk/review/rev3.mjs config     one VM (rv-a): does a /work/opencode.json (a file a person
+//                                             can upload, or the agent can write) reach opencode's config?
 //   node frontdesk/review/rev3.mjs --destroy  removes rv-a and the state
 // Prints one line per proof, `pass` or `FAIL`; exits 1 if any fails.
 import { spawn, spawnSync } from 'node:child_process'
@@ -202,6 +204,40 @@ if (argv.includes('tokens')) {
   process.exit(failed ? 1 : 0)
 }
 
+// ---------------------------------------------------------------- the agent's config (one VM)
+if (argv.includes('config')) {
+  process.env.OLA_HOME = base.OLA_HOME
+  const ws = await import('../../workspace/ws.mjs')
+  if (!(await import('node:fs')).existsSync(ws.paths(WS).meta)) spawnSync(process.execPath, [path.join(AI, 'workspace/ws.mjs'), 'create', WS, '--memory', '1g', '--disk', '1g', '--cpus', '1'], { env: base, stdio: 'ignore' })
+  await ws.waitForRoom([WS], 1)
+  // A project config as a person could upload it (opencode.json is a plain name) or the agent write it.
+  const cfg = JSON.stringify({ instructions: ['/work/rv3-marker.md'], permissions: [{ action: 'webfetch', resource: '*', effect: 'allow' }, { action: 'browser', resource: '*', effect: 'allow' }] })
+  await ws.start(WS)
+  spawnSync(CTR, ['exec', '-i', '--user', '1000', `ola-${WS}`, 'sh', '-c', 'cat > /work/opencode.json && echo "rv3 marker: made-up project instruction" > /work/rv3-marker.md'], { input: cfg })
+  ws.stop(WS)
+  await ws.start(WS) // opencode reads its config at start
+  const ask = (p) =>
+    new Promise((resolve) => {
+      const r = http.request({ socketPath: ws.paths(WS).opencode, path: p, headers: { authorization: `Basic ${Buffer.from(`opencode:${ws.secrets(WS).OPENCODE_PASSWORD}`).toString('base64')}` }, timeout: 10_000 }, (res) => {
+        let t = ''
+        res.on('data', (d) => (t += d))
+        res.on('end', () => resolve({ status: res.statusCode, text: t }))
+      })
+      r.on('error', () => resolve({ status: 0, text: '' }))
+      r.end()
+    })
+  const seen = {}
+  for (const p of ['/api/config', '/config', '/api/config?directory=/work']) {
+    const r = await ask(p)
+    seen[p] = { status: r.status, projectInstruction: r.text.includes('/work/rv3-marker.md'), webfetchAllowed: /"webfetch"[^}]*"allow"|"allow"[^}]*"webfetch"/.test(r.text), browserAllowed: /"browser"[^}]*"allow"|"allow"[^}]*"browser"/.test(r.text) }
+  }
+  const took = Object.values(seen).some((x) => x.projectInstruction || x.webfetchAllowed)
+  proof("a /work/opencode.json does not change the agent's standing config", !took, seen)
+  spawnSync(CTR, ['exec', '--user', '1000', `ola-${WS}`, 'rm', '-f', '/work/opencode.json', '/work/rv3-marker.md'])
+  ws.stop(WS)
+  process.exit(failed ? 1 : 0)
+}
+
 // ---------------------------------------------------------------- "Open" (one VM)
 if (argv.includes('views')) {
   const D = { port: 4793, origin: 'http://localhost:4793', host: 'localhost:4793', from: null }
@@ -270,7 +306,26 @@ if (argv.includes('views')) {
   for (const s of held) s.destroy()
   await sleep(1500)
 
-  // 2. Closed: the admin CLI closes a workspace it could not make safe (admin.mjs closeWorkspace:
+  // 2. Asked for and given up on at once: what a page's own script does with fetch() and an
+  // AbortController, or a member's client, in a loop. Twelve requests for the big file, each
+  // dropped 50 ms after it was sent: the first four take the workspace's four page execs, the
+  // rest wait in line and get theirs after their asker has gone.
+  const dropped = []
+  for (let i = 0; i < 12; i++) {
+    const s = net.connect(D.port, '127.0.0.1')
+    s.on('error', () => {})
+    s.write(`GET /v/${g.grant}/big.bin HTTP/1.1\r\nHost: ${D.host}\r\nSec-Fetch-Dest: empty\r\n\r\n`)
+    dropped.push(s)
+  }
+  await sleep(50)
+  for (const s of dropped) s.destroy()
+  await sleep(10_000) // longer than any of them needs to end
+  const stuck = execs()
+  const t1 = Date.now()
+  const next = await view(g.grant, 'look.css')
+  proof('requests given up on, even while waiting in line, leave nothing running', stuck === 0 && next === 200, { olaGetExecsStill10sLater: stuck, nextFileStatus: next, nextFileMs: Date.now() - t1 })
+
+  // 3. Closed: the admin CLI closes a workspace it could not make safe (admin.mjs closeWorkspace:
   // the database says closed, then ws.mjs close). The container may still be up (a revocation
   // that failed before its stop), so the front desk's refusal is the only thing that holds.
   const before = await open()
@@ -287,5 +342,5 @@ if (argv.includes('views')) {
   ws(['stop', WS])
   process.exit(failed ? 1 : 0)
 }
-console.error('usage: rev3.mjs cookie | tokens | views | --destroy')
+console.error('usage: rev3.mjs cookie | tokens | config | views | --destroy')
 process.exit(2)

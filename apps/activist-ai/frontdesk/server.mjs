@@ -423,7 +423,10 @@ export function makeFrontDesk(cfg = config()) {
           for await (const c of f.stream) {
             sha.update(c)
             sent += c.length
-            if (!res.write(c)) await new Promise((r) => (res.once('drain', r), res.once('close', r)))
+            // A response already destroyed (the client left while the next chunk was on its way)
+            // never emits 'drain' or 'close' again: waiting for either held the download's exec,
+            // slot and bytes for good (third review, 2026-11-16; the same in views.mjs).
+            if (!res.write(c) && !res.destroyed) await new Promise((r) => (res.once('drain', r), res.once('close', r)))
             if (res.destroyed) break
           }
           res.end()

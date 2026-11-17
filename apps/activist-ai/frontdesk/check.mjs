@@ -764,6 +764,41 @@ await check('"Open": the headers, a top-level load refused, members only, and a 
   return `wrapper and page CSPs as designed; top-level 403; bob 404, signed out 401, a guessed grant 404; a grant ends with its session (${before} then ${after}); ${rows.length} page_opened rows, no names`
 })
 
+await check('"Open": page files given up on, or left unread, hold no exec (third review)', async () => {
+  // A page's script can abort a dozen fetches at once, or leave some unread. Before the fix the
+  // ones that waited in line got their exec after their asker had gone and held it for good: the
+  // workspace's four page execs, so Open was dead for the team and the workspace never idled.
+  const mk = spawnSync(CTR, ['exec', '--user', '1000', `ola-${FA}`, 'sh', '-c', 'head -c 31457280 /dev/zero > /work/rv3-big.bin'])
+  assert(mk.status === 0, 'could not write the big file')
+  const g = await grantOf(a)
+  const execs = () => spawnSync('/bin/ps', ['-axo', 'command='], { encoding: 'utf8' }).stdout.split('\n').filter((x) => x.includes(`ola-${FA}`) && x.includes('ola-get')).length
+  const socks = []
+  for (let i = 0; i < 12; i++) {
+    const s = net.connect(PORT, '127.0.0.1')
+    s.on('error', () => {})
+    s.write(`GET /v/${g.grant}/rv3-big.bin HTTP/1.1\r\nHost: localhost:${PORT}\r\nSec-Fetch-Dest: empty\r\n\r\n`)
+    socks.push(s)
+  }
+  await sleep(50)
+  for (const s of socks) s.destroy()
+  // Four more that read nothing: ended by the minimum rate (OLA_FD_SLOW_MS, 4 s here).
+  const unread = []
+  for (let i = 0; i < 4; i++) {
+    const s = net.connect(PORT, '127.0.0.1')
+    s.on('error', () => {})
+    s.write(`GET /v/${g.grant}/rv3-big.bin HTTP/1.1\r\nHost: localhost:${PORT}\r\nSec-Fetch-Dest: image\r\n\r\n`)
+    s.pause()
+    unread.push(s)
+  }
+  await sleep(14_000)
+  const held = execs()
+  const next = await viewGet(g.grant, 'look.css', 'style')
+  for (const s of unread) s.destroy()
+  spawnSync(CTR, ['exec', '--user', '1000', `ola-${FA}`, 'rm', '-f', '/work/rv3-big.bin'])
+  assert(held === 0 && next.status === 200, `ola-get execs still held ${held}, the next page file ${next.status}`)
+  return 'no exec held after 12 dropped and 4 unread requests; the next page file 200'
+})
+
 // ---------------------------------------------------------------- roles
 await check('a viewer reads but cannot upload, delete or run', async () => {
   const base = { cookie: v.cookie, csrf: v.csrf, ws: FA }
