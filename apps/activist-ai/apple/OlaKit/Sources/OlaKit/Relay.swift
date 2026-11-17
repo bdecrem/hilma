@@ -238,6 +238,8 @@ public final class PairingBook: @unchecked Sendable {
 public final class MacRelay: @unchecked Sendable {
   public let book: PairingBook
   public let macName: String
+  /// Where the Mac app keeps Claude turns: the phone reads them through `/ola/claude/<session>`.
+  public var claudeBase: URL?
   private let lock = NSLock()
   private var upstreamConfig: ServerConfig?
   private var mode = "machine"
@@ -335,6 +337,12 @@ public final class MacRelay: @unchecked Sendable {
     let (upstream, mode) = lock.withLock { (upstreamConfig, self.mode) }
     if req.method == "GET", req.path == "/ola/hello" {
       return await res.send(200, JSON.object(["name": .string(macName), "mode": .string(mode), "connected": .bool(upstream != nil)]).data)
+    }
+    if req.method == "GET", req.path.hasPrefix("/ola/claude/") {
+      let id = String(req.path.dropFirst("/ola/claude/".count))
+      guard id.range(of: #"^[A-Za-z0-9_-]{1,80}$"#, options: .regularExpression) != nil, let base = claudeBase else { return await res.send(200, Data("[]".utf8)) }
+      let data = (try? Data(contentsOf: ClaudeTurns.file(id, base: base))) ?? Data("[]".utf8)
+      return await res.send(200, data)
     }
     guard Self.allowed(req.method, req.path) else { return await res.json(403, "That is not something the phone may ask for.") }
     guard let upstream else { return await res.json(503, "The Mac app is not connected to a server right now.") }

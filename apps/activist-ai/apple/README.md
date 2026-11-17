@@ -143,6 +143,34 @@ the two do an end-to-end key exchange bound to the pairing code (for example Noi
 handshake keyed by the QR secret), so the relay only moves ciphertext and cannot read or forge
 anything; the relay authenticates both by keys made at pairing and holds no opencode credential.
 
+## Fallback to Claude, slash commands, reactions (2026-11-16, night)
+
+**Fallback to Claude** (Mac Settings, Claude, off by default) runs Claude Code itself, headless, in
+the session's folder, with Bart's own Claude login on this Mac (`OlaKit/ClaudeRunner.swift`: the
+binary found in `~/.local/bin`, `~/.claude/local`, Homebrew, npm or a login shell; any
+`ANTHROPIC_API_KEY` removed from its environment; `--setting-sources project --strict-mcp-config` so
+his own hooks and MCP servers stay out). Writes and commands pause in the same approval panel through
+Claude Code's own permission prompt (`--permission-mode manual --permission-prompt-tool stdio`), as in
+the web app's builder. Its stream is said in the same words as Ola's (`Claude.swift`, ported from
+`web/src/lib/steps.ts`). Stop interrupts it and then ends every process it started (they are tracked
+while it runs). Claude turns are kept per session in `~/Library/Application Support/Ola/claude/` and
+merged by time; the phone reads them through the relay (`/ola/claude/<session>`). With the switch on:
+"Ola | Claude" beside the composer, "Ask Claude instead" under a finished Ola reply, and a "Claude"
+mark on every Claude turn. **Only in "On this Mac" for now**; on the Ola machine the switch is
+disabled ("Not yet on the Ola machine"), and the phone shows Claude turns but cannot start one.
+
+**Slash commands and reactions** follow `../README.md`, "Slash commands and reactions (all
+surfaces)" (`OlaKit/Commands.swift`). The reaction rules reach opencode as an `instructions` file in
+both configs (machine and this Mac) and Claude Code through its system prompt.
+
+Proved: `swift test` 10 of 10 (commands, the marker on the first line only, unknown names,
+reaction-only replies, 👀 then ✅; Stop with a stand-in for Claude Code leaves nothing running);
+`OLA_CLAUDE=1 swift run olakit-selftest` against the real Claude Code, four tiny requests (a streamed
+reply; a write asked and allowed; a write asked and refused; Stop during a long command: in that run
+the command outlived Claude Code, which led to the process tracking proved by the stand-in test);
+the self-test on the machine, 14 of 14 including "a compliment gets a reaction and no reply" (🙏, no
+text); `tools/settings-selftest.sh` 15 of 15 including the Claude switch.
+
 ## Where Ola works (Mac Settings)
 
 One setting for the whole app:

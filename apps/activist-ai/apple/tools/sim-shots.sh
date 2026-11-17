@@ -37,5 +37,6 @@ else
   shot phone-approval light -OlaFixture approval -OlaOpen
   shot phone-approval-dark dark -OlaFixture approval -OlaOpen
   shot phone-connect light -OlaFixture notset
+  shot phone-reactions light -OlaFixture reactions -OlaOpen
 fi
 if [ -z "${OLA_KEEP:-}" ]; then xcrun simctl shutdown "$UDID"; fi

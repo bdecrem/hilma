@@ -5,18 +5,58 @@ import SwiftUI
 struct TurnView: View {
   var turn: Turn
   var isLast: Bool
+  /// "Ask Claude instead", under a finished Ola reply (only when Fallback to Claude is on).
+  var askClaude: (() -> Void)?
 
   var body: some View {
     VStack(alignment: .leading, spacing: Space.l) {
       RequestView(turn: turn)
-      if !turn.steps.isEmpty || !turn.notes.isEmpty || turn.isRunning { RunView(turn: turn, isLast: isLast) }
-      if let notice = turn.notice {
-        Label(notice, systemImage: "arrow.clockwise").font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.ink2)
+      // A thank-you gets only its reaction: no run line, no reply.
+      if !turn.reactionOnly {
+        if !turn.steps.isEmpty || !turn.notes.isEmpty || turn.isRunning { RunView(turn: turn, isLast: isLast) }
+        if let notice = turn.notice {
+          Label(notice, systemImage: "arrow.clockwise").font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.ink2)
+        }
+        if !turn.shownAnswer.isEmpty { MarkdownView(text: turn.shownAnswer) }
+        if let e = turn.error { ProblemView(problem: e) }
+        else if turn.status == .stopped { Text("Stopped. What it finished is in the folder.").font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.ink3) }
+        if let askClaude, turn.engine == .ola, !turn.isRunning {
+          Button(action: askClaude) { Label("Ask Claude instead", systemImage: "arrow.uturn.right") }
+            .buttonStyle(.plain).font(OlaFont.sans(Metrics.meta + 0.5, .medium)).foregroundStyle(Ola.blue)
+        }
       }
-      if !turn.answer.isEmpty { MarkdownView(text: turn.answer) }
-      if let e = turn.error { ProblemView(problem: e) }
-      else if turn.status == .stopped { Text("Stopped. What it finished is in the folder.").font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.ink3) }
     }
+  }
+}
+
+/// The agent's reaction on Bart's message: a small chip at its trailing edge.
+struct ReactionChip: View {
+  var reaction: Reaction
+  @Environment(\.accessibilityReduceMotion) private var reduce
+  @State private var shown = false
+  var body: some View {
+    Text(reaction.emoji)
+      .font(.system(size: Metrics.ui + 1))
+      .padding(.horizontal, 7).padding(.vertical, 2)
+      .background(Capsule().fill(Ola.details))
+      .overlay(Capsule().strokeBorder(Ola.rule, lineWidth: 1))
+      .scaleEffect(shown || reduce ? 1 : 0.4)
+      .opacity(shown || reduce ? 1 : 0)
+      .onAppear { withAnimation(reduce ? nil : .spring(response: 0.32, dampingFraction: 0.55)) { shown = true } }
+      .id(reaction)
+      .accessibilityLabel("Reaction \(reaction.rawValue)")
+  }
+}
+
+/// Every Claude turn says so: quiet, but there at a glance.
+struct ClaudeMark: View {
+  var body: some View {
+    Text("Claude")
+      .font(OlaFont.sans(Metrics.meta - 0.5, .semibold))
+      .foregroundStyle(Ola.blue)
+      .padding(.horizontal, 6).padding(.vertical, 1)
+      .overlay(Capsule().strokeBorder(Ola.blue.opacity(0.45), lineWidth: 1))
+      .accessibilityLabel("Answered by Claude")
   }
 }
 
@@ -31,10 +71,14 @@ struct RequestView: View {
       Text(turn.request).font(OlaFont.sans(Metrics.reading)).foregroundStyle(Ola.ink).lineSpacing(2)
         .fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
       Spacer(minLength: Space.s)
+      if turn.engine == .claude { ClaudeMark() }
       Text(turn.at.formatted(date: .omitted, time: .shortened)).font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.ink3).monospacedDigit()
     }
-    .padding(.bottom, Space.m)
+    .padding(.bottom, turn.reaction == nil ? Space.m : Space.m + 8)
     .overlay(alignment: .bottom) { Rectangle().fill(Ola.rule).frame(height: 1) }
+    .overlay(alignment: .bottomTrailing) {
+      if let r = turn.reaction { ReactionChip(reaction: r).offset(y: 11) }
+    }
   }
 }
 
@@ -366,7 +410,7 @@ struct ConversationPane: View {
         ScrollView {
           VStack(alignment: .leading, spacing: Space.xxl) {
             if let convo, !convo.turns.isEmpty {
-              ForEach(Array(convo.turns.enumerated()), id: \.element.id) { i, t in TurnView(turn: t, isLast: i == convo.turns.count - 1) }
+              ForEach(Array(convo.turns.enumerated()), id: \.element.id) { i, t in TurnView(turn: t, isLast: i == convo.turns.count - 1, askClaude: store.claudeOn ? { Task { await store.askClaude(t.request) } } : nil) }
             } else if store.selectedID == nil {
               EmptyConversation(folder: store.projectFolder)
             } else {
@@ -403,7 +447,21 @@ struct ConversationPane: View {
         }
         .frame(maxWidth: columnWidth).padding(.horizontal, sidePadding).padding(.top, Space.s)
       }
-      Composer(text: $draft, running: convo?.isRunning ?? false, enabled: store.connection == .open, send: send, stop: { Task { await store.stop() } })
+      SlashMenu(draft: $draft)
+        .frame(maxWidth: columnWidth)
+        .padding(.horizontal, sidePadding)
+      HStack(alignment: .bottom, spacing: 8) {
+        if store.claudeOn {
+          Picker("Who works on this", selection: $store.nextEngine) {
+            Text("Ola").tag(Turn.Engine.ola)
+            Text("Claude").tag(Turn.Engine.claude)
+          }
+          .pickerStyle(.segmented).labelsHidden().fixedSize()
+          .padding(.bottom, 10)
+          .help("Who works on your next message")
+        }
+        Composer(text: $draft, running: (convo?.isRunning ?? false) || store.claudeRunning(store.selectedID ?? ""), enabled: store.connection == .open, send: send, stop: { Task { await store.stop() } })
+      }
         .frame(maxWidth: columnWidth)
         .padding(.horizontal, sidePadding).padding(.top, Space.s).padding(.bottom, Space.l)
     }
@@ -412,6 +470,8 @@ struct ConversationPane: View {
 
   func send() {
     let t = draft
+    // An unknown command is not sent: the text stays, and the menu says so.
+    if case .unknown = SlashCommand.parse(t.trimmingCharacters(in: .whitespacesAndNewlines)) { return }
     draft = ""
     Task { await store.send(t) }
   }
@@ -570,5 +630,40 @@ struct ConnectionBar: View {
     .padding(.horizontal, Space.l).padding(.vertical, Space.s)
     .background(Ola.roomRaised)
     .overlay(alignment: .bottom) { Rectangle().fill(Ola.roomRule).frame(height: 1) }
+  }
+}
+
+
+/// Typing "/" shows the commands; an unknown one is named and not sent.
+struct SlashMenu: View {
+  @Binding var draft: String
+  var body: some View {
+    let typed = draft.trimmingCharacters(in: .whitespaces)
+    let matches = SlashCommand.matches(typed)
+    let unknown: Bool = { if case .unknown = SlashCommand.parse(typed), !typed.isEmpty, matches.isEmpty { return true }; return false }()
+    if typed.hasPrefix("/") && (!matches.isEmpty || unknown) {
+      VStack(alignment: .leading, spacing: 0) {
+        if unknown {
+          Text("No such command").font(OlaFont.sans(Metrics.ui, .medium)).foregroundStyle(Ola.vermilionText).padding(10)
+        }
+        ForEach(matches, id: \.self) { c in
+          Button {
+            draft = "/\(c.rawValue) "
+          } label: {
+            HStack(spacing: 10) {
+              Text("/\(c.rawValue)").font(OlaFont.mono(Metrics.ui)).foregroundStyle(Ola.ink)
+              Text(c.summary).font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.ink2)
+              Spacer()
+            }
+            .padding(.horizontal, 12).padding(.vertical, 7)
+            .contentShape(Rectangle())
+          }
+          .buttonStyle(.plain)
+        }
+      }
+      .background(RoundedRectangle(cornerRadius: 6).fill(Ola.details))
+      .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Ola.rule, lineWidth: 1))
+      .padding(.top, 6)
+    }
   }
 }

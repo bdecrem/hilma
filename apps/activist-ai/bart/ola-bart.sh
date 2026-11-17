@@ -73,6 +73,16 @@ write_config() {
   # Outside the project folder on purpose: the agent edits ~/ola-bart, and must not be able to
   # rewrite its own permissions there. Later rules win.
   mkdir -p "$STATE/config/opencode"
+  # The reaction rules, word for word from apps/activist-ai/README.md ("Slash commands and reactions").
+  cat > "$STATE/config/opencode/ola-reactions.md" <<'MD'
+Reactions. You may react to the person's message with one emoji, like a reaction in a chat app.
+To react, make the very first line of your reply exactly [[ola:react NAME]], with NAME one of:
+eyes (you are on it), thanks (they thanked or complimented you), ok (noted: an instruction or
+preference that needs no work), done (you finished what they asked), party (they share a win),
+think (you need something from them first), oops (they caught your mistake).
+Use at most one reaction, only on that first line, and never explain it or mention it.
+If the message is only thanks or a compliment, reply with the marker line alone and nothing else.
+MD
   cat > "$STATE/config/opencode/opencode.jsonc" <<JSON
 // Bart's opencode (apps/activist-ai/bart/ola-bart.sh writes this; edit the script, not this file).
 // These are the agent's defaults, not a wall: Bart approves every shell command, and a command
@@ -98,6 +108,7 @@ write_config() {
   "model": "ola/general",
   "update": "disable",
   "share": "disabled",
+  "instructions": ["$STATE/config/opencode/ola-reactions.md"],
   // Only Ola's gateway: opencode otherwise offers its own free hosted models (opencode.ai), which
   // would send the conversation to a third party.
   "policies": [

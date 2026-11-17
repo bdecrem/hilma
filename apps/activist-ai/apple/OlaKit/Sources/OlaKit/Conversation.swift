@@ -5,8 +5,8 @@ import Foundation
 // web page does not need: a request sent from the other app (the phone, the Mac) arrives as
 // `session.inbox.enqueued` and starts a turn here too, so both apps show the same conversation live.
 
-public struct Step: Identifiable, Equatable, Sendable {
-  public enum Status: String, Sendable { case preparing, running, waiting, done, failed }
+public struct Step: Identifiable, Equatable, Sendable, Codable {
+  public enum Status: String, Sendable, Codable { case preparing, running, waiting, done, failed }
   public var id: String
   public var tool: String
   public var icon: StepIcon
@@ -54,6 +54,7 @@ public struct ApprovalItem: Equatable, Sendable, Hashable {
 }
 
 public struct Approval: Identifiable, Equatable, Sendable {
+  public var engine: Turn.Engine = .ola
   public var id: String
   public var sessionID: String
   public var action: String
@@ -75,8 +76,10 @@ public struct Approval: Identifiable, Equatable, Sendable {
   }
 }
 
-public struct Turn: Identifiable, Equatable, Sendable {
-  public enum Status: String, Sendable { case sending, working, done, failed, stopped }
+public struct Turn: Identifiable, Equatable, Sendable, Codable {
+  public enum Status: String, Sendable, Codable { case sending, working, done, failed, stopped }
+  /// Who did the work: Ola (opencode on open models) or Claude (Claude Code, Fallback to Claude).
+  public enum Engine: String, Sendable, Codable { case ola, claude }
   public var id: String
   public var request: String
   public var at: Date
@@ -89,8 +92,10 @@ public struct Turn: Identifiable, Equatable, Sendable {
   /// Set while opencode is retrying the model.
   public var notice: String?
   public var ended: Date?
+  public var engine: Engine = .ola
 
-  public init(id: String, request: String, at: Date, status: Status, steps: [Step] = [], answer: String = "", notes: [String] = [], error: Problem? = nil, notice: String? = nil, ended: Date? = nil) {
+  public init(id: String, request: String, at: Date, status: Status, steps: [Step] = [], answer: String = "", notes: [String] = [], error: Problem? = nil, notice: String? = nil, ended: Date? = nil, engine: Engine = .ola) {
+    self.engine = engine
     self.id = id
     self.request = request
     self.at = at

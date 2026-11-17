@@ -102,7 +102,10 @@ struct MacRoot: View {
       ConnectForm(store: store) { connectShown = false }.frame(width: 400).interactiveDismissDisabled(store.connection == .notSetUp)
     }
     .onChange(of: store.connection) { _, c in if c == .refused { connectShown = true } }
-    .onAppear { if store.selectedID == nil, let s = savedSelection { store.selectedID = s } }
+    .onAppear {
+      if store.selectedID == nil, let s = savedSelection { store.selectedID = s }
+      store.onFiles = { filesShown.toggle() }
+    }
     .onChange(of: store.selectedID) { _, id in savedSelection = id }
   }
 

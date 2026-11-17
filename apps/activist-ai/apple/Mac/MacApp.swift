@@ -33,6 +33,7 @@ struct OlaMacApp: App {
           delegate.store = store
           delegate.whereOla = w
           Notifier.wire(store)
+          w.configureClaude()
           let link = PhoneLink(store: store)
           phoneLink = link
           delegate.phoneLink = link
@@ -168,6 +169,7 @@ struct SettingsView: View {
 
   @ViewBuilder var groups: some View {
     if let whereOla { WhereSettings(controller: whereOla, tokenKnown: tokenKnown) }
+    if let whereOla { SettingsGroup(title: "Claude") { ClaudeSettings(controller: whereOla) } }
     if let phoneLink { PhoneSettings(link: phoneLink) }
     // The machine's rows only when Ola works there; the local agent's state is under Where Ola works.
     if mode != "mac" {

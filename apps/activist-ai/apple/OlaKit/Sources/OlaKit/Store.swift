@@ -67,6 +67,7 @@ public final class OlaStore {
     model = fixture.models.first
     files = fixture.files
     selectedID = fixture.selected
+    claudeOn = fixture.claudeOn
   }
 
   public var selected: SessionInfo? { sessions.first { $0.id == selectedID } }
@@ -260,6 +261,8 @@ public final class OlaStore {
         last.status = .working
         c.turns[c.turns.count - 1] = last
       }
+      c.turns = ClaudeTurns.merge(c.turns, await storedClaudeTurns(id))
+      if let live = conversations[id]?.turns.filter({ $0.engine == .claude && $0.isRunning }) { c.turns = ClaudeTurns.merge(c.turns, live) }
       conversations[id] = c
     } catch {
       note(error, "That session could not be opened.")
@@ -269,7 +272,28 @@ public final class OlaStore {
   /// Starts a fresh conversation; the session is made with the first request.
   public func newSession() { selectedID = nil }
 
+  /// What Bart typed: a slash command, or a request for the engine chosen beside the composer.
   public func send(_ text: String) async {
+    let typed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+    switch SlashCommand.parse(typed) {
+    case .unknown:
+      problem = Problem(text: "No such command. Type / to see the commands.")
+    case .command(let c, let rest):
+      switch c {
+      case .claude: await askClaude(rest.isEmpty ? (conversation?.turns.last?.request ?? "") : rest)
+      case .ola: await sendToOla(rest)
+      case .hosted: problem = Problem(text: "Not set up in this app yet.")
+      case .new: newSession()
+      case .stop: await stop()
+      case .files: onFiles?()
+      case .help: problem = Problem(text: SlashCommand.allCases.map { "/\($0.rawValue): \($0.summary)" }.joined(separator: "\n"))
+      }
+    case .none:
+      if claudeOn, nextEngine == .claude { await askClaude(typed) } else { await sendToOla(typed) }
+    }
+  }
+
+  public func sendToOla(_ text: String) async {
     let request = text.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !request.isEmpty, let client else { return }
     problem = nil
@@ -301,12 +325,21 @@ public final class OlaStore {
   }
 
   public func stop() async {
+    if let id = selectedID, let run = claudeRuns[id] { run.stop(); return }
     guard let id = selectedID, let client else { return }
     do { try await client.interrupt(id) } catch { note(error, "The machine did not answer the Stop. It may still be working.") }
   }
 
   public func answer(_ decision: OpenCodeClient.Decision, in sessionID: String? = nil) async {
-    guard let id = sessionID ?? selectedID, let a = conversations[id]?.approval, let client else { return }
+    guard let id = sessionID ?? selectedID, let a = conversations[id]?.approval else { return }
+    if a.engine == .claude {
+      conversations[id]?.approval = nil
+      if decision == .always { claudeAlways[id, default: []].insert(Plain.claudeTool(a.action)) }
+      claudeRuns[id]?.answer(a.id, allow: decision != .reject, input: claudeInputs[a.id] ?? [:])
+      claudeInputs[a.id] = nil
+      return
+    }
+    guard let client else { return }
     do {
       try await client.reply(session: id, request: a.id, decision: decision)
     } catch {
@@ -352,6 +385,118 @@ public final class OlaStore {
   }
 
   /// The project folder as Bart says it: "~/ola-bart".
+  // MARK: Fallback to Claude
+
+  /// The switch in Settings (off by default). `/claude` works without it.
+  public var claudeOn = false
+  /// The choice beside the composer for the next message, when the switch is on.
+  public var nextEngine: Turn.Engine = .ola
+  /// Starts Claude Code for a session (the Mac app sets it; nil where Claude cannot run here).
+  public var claudeLauncher: ((_ session: SessionInfo, _ request: String, _ context: String) throws -> ClaudeRun)?
+  /// Why Claude cannot run here, in one sentence.
+  public var claudeUnavailable: String? = "Claude runs from Ola on your Mac."
+  /// Where Claude turns are kept (Application Support on the Mac); nil on the phone.
+  public var claudeTurnsBase: URL?
+  public var onFiles: (() -> Void)?
+  private var claudeRuns: [String: ClaudeRun] = [:]
+  private var claudeAlways: [String: Set<String>] = [:]
+  private var claudeInputs: [String: JSON] = [:]
+
+  public func claudeRunning(_ session: String) -> Bool { claudeRuns[session] != nil }
+
+  /// Claude turns stored for a session: the Mac's own file, or the Mac's through the relay.
+  func storedClaudeTurns(_ id: String) async -> [Turn] {
+    if let base = claudeTurnsBase { return ClaudeTurns.load(id, base: base) }
+    if config?.viaMac == true, let client, let data = try? await client.raw("/ola/claude/\(id)") {
+      return (try? JSONDecoder().decode([Turn].self, from: data)) ?? []
+    }
+    return []
+  }
+
+  /// Hands one request to Claude Code ("Ask Claude instead", the Claude choice, `/claude`).
+  public func askClaude(_ text: String) async {
+    let request = text.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !request.isEmpty else { problem = Problem(text: "There is no request to hand to Claude yet."); return }
+    guard let launcher = claudeLauncher, let client else { problem = Problem(text: claudeUnavailable ?? "Claude is not available here."); return }
+    problem = nil
+    var id = selectedID
+    if id == nil {
+      do {
+        let title = request.count > 60 ? String(request.prefix(57)) + "\u{2026}" : request
+        let s = try await client.createSession(title: title.replacingOccurrences(of: "\n", with: " "))
+        if !sessions.contains(where: { $0.id == s.id }) { sessions.insert(s, at: 0) }
+        conversations[s.id] = Conversation(sessionID: s.id, directory: s.directory)
+        selectedID = s.id
+        id = s.id
+      } catch {
+        note(error, "The session could not be started. Nothing was sent.")
+        return
+      }
+    }
+    guard let id, let session = sessions.first(where: { $0.id == id }) else { return }
+    guard claudeRuns[id] == nil else { problem = Problem(text: "Claude is already working in this session. Wait for it, or stop it."); return }
+    if conversations[id] == nil { conversations[id] = Conversation(sessionID: id, directory: session.directory) }
+    let context = ClaudeTurns.context(conversations[id]!.turns)
+    let turnID = "claude-\(UUID().uuidString)"
+    conversations[id]!.turns.append(Turn(id: turnID, request: request, at: .now, status: .working, engine: .claude))
+    running.insert(id)
+    var fold = ClaudeFold(directory: session.directory)
+    let update: @MainActor (JSON) -> Void = { [weak self] e in
+      guard let self, let i = self.conversations[id]?.turns.firstIndex(where: { $0.id == turnID }) else { return }
+      fold.apply(e, to: &self.conversations[id]!.turns[i])
+    }
+    do {
+      let run = try launcher(session, request, context)
+      claudeRuns[id] = run
+      run.onEvent = { e in Task { @MainActor in update(e) } }
+      run.onApproval = { [weak self] rid, tool, input in
+        Task { @MainActor in
+          guard let self else { return }
+          if self.claudeAlways[id]?.contains(Plain.claudeTool(tool)) == true { self.claudeRuns[id]?.answer(rid, allow: true, input: input); return }
+          let w = Plain.describeClaudeApproval(tool, input: input, dir: session.directory)
+          self.claudeInputs[rid] = input
+          var a = Approval(id: rid, sessionID: id, action: tool, title: w.title, items: w.items, stepID: nil)
+          a.engine = .claude
+          self.conversations[id]?.approval = a
+          if let i = self.conversations[id]?.turns.firstIndex(where: { $0.id == turnID }), let s = self.conversations[id]?.turns[i].steps.lastIndex(where: { $0.status == .running }) {
+            self.conversations[id]?.turns[i].steps[s].status = .waiting
+          }
+          if let s = self.sessions.first(where: { $0.id == id }) { self.onApproval?(s, a) }
+        }
+      }
+      run.onEnd = { [weak self] code in
+        Task { @MainActor in
+          guard let self else { return }
+          self.claudeRuns[id] = nil
+          self.running.remove(id)
+          if self.conversations[id]?.approval?.engine == .claude { self.conversations[id]?.approval = nil }
+          if let i = self.conversations[id]?.turns.firstIndex(where: { $0.id == turnID }) {
+            var t = self.conversations[id]!.turns[i]
+            if t.isRunning {
+              t.status = code == 0 ? .stopped : .failed
+              t.ended = .now
+              if code != 0 { t.error = Problem(text: "Claude stopped before it finished.", detail: "exit \(code)") }
+            }
+            for k in t.steps.indices where t.steps[k].status == .running || t.steps[k].status == .waiting { t.steps[k].status = .failed; t.steps[k].error = "This step did not finish." }
+            self.conversations[id]!.turns[i] = t
+            if let base = self.claudeTurnsBase {
+              ClaudeTurns.save(self.conversations[id]!.turns.filter { $0.engine == .claude }, session: id, base: base)
+            }
+            if let s = self.sessions.first(where: { $0.id == id }) { self.onRunEnded?(s, t) }
+          }
+        }
+      }
+      try run.begin()
+    } catch {
+      running.remove(id)
+      claudeRuns[id] = nil
+      if let i = conversations[id]?.turns.firstIndex(where: { $0.id == turnID }) {
+        conversations[id]!.turns[i].status = .failed
+        conversations[id]!.turns[i].error = Problem(text: "Claude could not start here.", detail: error.localizedDescription)
+      }
+    }
+  }
+
   public var projectFolder: String {
     guard let d = sessions.first?.directory else { return "~/ola-bart" }
     return d.replacingOccurrences(of: #"^/Users/[^/]+"#, with: "~", options: .regularExpression)

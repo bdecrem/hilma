@@ -114,10 +114,17 @@ enum SettingsSelfTest {
       check(store.connection == .open, "the app is connected to it", "\(store.connection)")
       check(whereOla.localState.hasPrefix("Running"), "Settings says the agent on this Mac is running, with no address", whereOla.problem ?? whereOla.localState)
 
-      // 3. Back to the machine: the agent stops.
+      // 2b. Fallback to Claude: off by default; on, the store offers Claude; no request is made.
+      whereOla.configureClaude()
+      check(!store.claudeOn && store.claudeLauncher != nil, "Fallback to Claude is off by default, and Claude Code is ready here", whereOla.claudeUnavailable ?? "ready")
+      d.set(true, forKey: WhereOlaWorks.claudeKey); whereOla.configureClaude()
+      check(store.claudeOn, "turning it on offers Claude beside the composer")
+
+      // 3. Back to the machine: the agent stops, and Claude is not offered there yet.
       d.set("machine", forKey: LocalSettings.modeKey); await whereOla.apply()
       settle(1)
       check(children().isEmpty, "switching to the Ola machine stops the local agent")
+      check(!store.claudeOn && whereOla.claudeUnavailable?.hasPrefix("Not yet on the Ola machine") == true, "on the Ola machine the switch is disabled, and says why", whereOla.claudeUnavailable ?? "")
 
       link.stop()
       UserDefaults.standard.removePersistentDomain(forName: suite)

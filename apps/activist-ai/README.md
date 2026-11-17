@@ -972,6 +972,70 @@ The platform database, tokens and `stage-a` were not moved or changed. Deploys c
 three jobs, and each workspace's door and desk in `~/.ola/launchd`) points outside `~/ola-staging`,
 and notes any Ola process running from elsewhere (a check or a dev run).
 
+## Slash commands and reactions (all surfaces)
+
+The web app, the Mac app and the iPhone app behave the same. This section is the rule; each surface
+implements it (the Mac and iPhone code is `apple/OlaKit/Sources/OlaKit/Commands.swift`).
+
+**Slash commands.** Typed at the start of a message. Typing `/` shows a small menu of the commands
+with a one-line description each (arrow keys and Return on the Mac and the web, tap on the phone).
+An unknown command is not sent: the menu says "No such command" and leaves the text in place.
+
+| Command | What it does |
+|---|---|
+| `/claude <request>` | Hands this one request to Claude Code. It just does it: typing the command is the yes, so it works even when "Fallback to Claude" is off (it does not turn the switch on). With no text after it, it runs the previous request again with Claude (the same as "Ask Claude instead"). If Claude Code is not available, say why in one sentence. |
+| `/ola <request>` | Uses Ola's own model for this one request (for when the choice beside the composer is set to Claude). |
+| `/hosted <request>` | Reserved for the hosted open model; where it is not set up it answers "Not set up in this app yet." |
+| `/new` | A new session. |
+| `/stop` | Stops the run. |
+| `/files` | Shows or hides the files panel (Mac, web), or opens the files list (phone). |
+| `/help` | Lists the commands. |
+
+The command word is never sent to the model as part of the request. The transcript shows the request
+without the command, with the "Claude" mark where it applies. A command is recognized only at the very
+start of the message, as `/` and a word, followed by a space, a line break or the end.
+
+**Reactions.** A small emoji on the person's own message, placed by the agent, like a reaction in a
+chat app. The set is fixed, by name:
+
+| Name | Emoji | Meaning |
+|---|---|---|
+| `eyes` | 👀 | on it |
+| `thanks` | 🙏 | for a compliment or thanks |
+| `ok` | 👍 | noted: an instruction or preference that needs no work |
+| `done` | ✅ | finished what was asked |
+| `party` | 🎉 | the person shares a win |
+| `think` | 🤔 | I need something from you first |
+| `oops` | 😅 | you caught my mistake |
+
+- **How the agent sets one:** the first line of its reply may be exactly `[[ola:react NAME]]` (one
+  name from the set; nothing else on that line but spaces). Every surface strips that line from what
+  it shows and draws the emoji on the person's message that the reply answers. An unknown name, or a
+  marker anywhere but the first line, is ignored and removed. The marker is part of the stored reply,
+  so the reaction survives reloads and shows the same on every surface, with no extra storage.
+- **`eyes` is also automatic and instant:** the moment a request is accepted and a run starts, the
+  surface shows 👀 on the message without waiting for the model. When the reply's own marker arrives
+  it replaces the 👀; if the reply has no marker, 👀 is replaced by ✅ when the run ends well, and
+  removed when it fails or is stopped.
+- **A message that is only thanks or a compliment** ("great job", "thank you", "wow") gets just the
+  reaction: the agent replies with only the marker line, and the surfaces show 🙏 on the message and no
+  reply at all (no empty bubble, no "Worked for 2 s" line).
+- **Drawing it:** a small rounded chip at the trailing edge under the person's message, the system
+  emoji, a gentle pop when it appears (none under reduced motion), no interaction.
+
+**The standing instruction**, word for word, wherever each engine reads its instructions (opencode's
+config on the machine and on the Mac, the context passed to Claude Code, `workspace/AGENTS.md`):
+
+```text
+Reactions. You may react to the person's message with one emoji, like a reaction in a chat app.
+To react, make the very first line of your reply exactly [[ola:react NAME]], with NAME one of:
+eyes (you are on it), thanks (they thanked or complimented you), ok (noted: an instruction or
+preference that needs no work), done (you finished what they asked), party (they share a win),
+think (you need something from them first), oops (they caught your mistake).
+Use at most one reaction, only on that first line, and never explain it or mention it.
+If the message is only thanks or a compliment, reply with the marker line alone and nothing else.
+```
+
 ## Bart's own apps (Part I)
 
 The other half of Ola: Bart himself, with full privileges on the machine, no sealed VM. `bart/`

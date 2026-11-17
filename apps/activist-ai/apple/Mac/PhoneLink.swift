@@ -29,6 +29,7 @@ final class PhoneLink {
     self.store = store
     let book = PairingBook(file: LocalServer.support.appendingPathComponent("phones.json"))
     relay = MacRelay(book: book, macName: Host.current().localizedName ?? "this Mac")
+    relay.claudeBase = LocalServer.support
     phones = book.list
   }
 

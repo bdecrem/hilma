@@ -14,6 +14,15 @@ import OlaKit
 //
 //   OLA_LOCAL_FOLDER=<scratch folder> OLA_MODEL_TOKEN_FILE=<file holding the bart gateway token> swift run olakit-selftest
 let env = ProcessInfo.processInfo.environment
+if env["OLA_CLAUDE"] == "1" {
+  var bad = 0
+  _ = await ClaudeCheck.go { ok, what, note in
+    if !ok { bad += 1 }
+    print("\(ok ? "PASS" : "FAIL")  \(what)\(note.isEmpty ? "" : "  (\(note))")")
+  }
+  print(bad == 0 ? "ALL PASSED" : "\(bad) FAILED")
+  exit(bad == 0 ? 0 : 1)
+}
 var address = env["OLA_SERVER"] ?? ServerConfig.defaultAddress
 var pw = ""
 var local: LocalServer?
@@ -140,6 +149,15 @@ let (c1, e1) = await watch.snapshot()
 let deltas = e1.filter { $0["type"].str == "session.text.delta" }.count
 line(replied && !(c1.turns.last?.answer ?? "").isEmpty, "a streamed reply", "\(deltas) pieces: \(c1.turns.last?.answer.replacingOccurrences(of: "\n", with: " ") ?? "")")
 
+// 1b. A compliment gets a reaction and no reply (README, "Slash commands and reactions").
+await watch.start("Great job, thank you!")
+try await client.prompt(session.id, text: "Great job, thank you!")
+_ = await wait(watch, seconds: 120) { c, _ in c.turns.last?.status == .done }
+let (cr, _) = await watch.snapshot()
+if let t = cr.turns.last {
+  line(t.reaction == .thanks && t.shownAnswer.isEmpty, "a compliment gets a reaction and no reply", "reaction \(t.reaction?.emoji ?? "none"), shown text \(t.shownAnswer.isEmpty ? "none" : "\u{201C}\(t.shownAnswer.prefix(60))\u{201D}")")
+}
+
 // 2. An approval: the agent writes a file, the write asks, we allow it once.
 let ask = "Use your file writing tool (not the shell) to create a file named olakit-check.txt that contains exactly the word ok and nothing else. Do nothing else."
 await watch.start(ask)
@@ -180,7 +198,7 @@ if let a = (await watch.snapshot()).0.approval { try? await client.reply(session
 
 // 4. History rebuilt from the server matches what the stream showed.
 let history = Conversation.turns(fromMessages: (try? await client.messages(session.id)) ?? [], directory: session.directory)
-line(history.count == 3 && history.first?.answer.isEmpty == false, "history from the server", "\(history.count) turns, \(history.flatMap(\.steps).count) steps")
+line(history.count == 4 && history.first?.answer.isEmpty == false, "history from the server", "\(history.count) turns, \(history.flatMap(\.steps).count) steps")
 
 // 5. Rename and delete.
 try await client.rename(session.id, to: "OlaKit self-test, renamed")

@@ -25,6 +25,7 @@ final class WhereOlaWorks {
 
   /// At launch and after every change of the setting. Safe to call any number of times, at once.
   func apply() async {
+    defer { configureClaude() }
     generation += 1
     let mine = generation
     problem = nil
@@ -331,6 +332,55 @@ struct WhereSettings: View {
         return
       }
       Task { await controller.apply() }
+    }
+  }
+}
+
+// MARK: Fallback to Claude
+
+extension WhereOlaWorks {
+  static let claudeKey = "ola.claude.enabled"
+
+  /// Why the switch cannot be used here, or nil.
+  var claudeUnavailable: String? {
+    if !LocalSettings.onThisMac { return "Not yet on the Ola machine. Switch Where Ola works to On this Mac to use Claude." }
+    return ClaudeRunner.unavailable()
+  }
+
+  /// Tells the store whether Claude can run, and how (Claude Code here, in the session's folder).
+  func configureClaude() {
+    store.claudeTurnsBase = LocalServer.support
+    let reason = claudeUnavailable
+    store.claudeUnavailable = reason
+    store.claudeOn = reason == nil && LocalSettings.defaults.bool(forKey: Self.claudeKey)
+    if !store.claudeOn { store.nextEngine = .ola }
+    guard reason == nil, let bin = ClaudeRunner.find() else { store.claudeLauncher = nil; return }
+    let fallback = LocalSettings.folder
+    store.claudeLauncher = { session, request, context in
+      let folder = session.directory.map { URL(fileURLWithPath: $0) } ?? fallback ?? FileManager.default.homeDirectoryForCurrentUser
+      return ClaudeRunner(binary: bin, folder: folder, request: request, context: context)
+    }
+  }
+}
+
+struct ClaudeSettings: View {
+  var controller: WhereOlaWorks
+  @AppStorage(WhereOlaWorks.claudeKey) private var on = false
+
+  var body: some View {
+    let reason = controller.claudeUnavailable
+    VStack(alignment: .leading, spacing: 6) {
+      Toggle("Fallback to Claude", isOn: $on)
+        .disabled(reason != nil)
+        .onChange(of: on) { _, _ in controller.configureClaude() }
+      if let reason {
+        Text(reason).font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+      } else {
+        Text("Hands a request to Claude Code, using your own Claude login on this Mac. What Claude reads goes to Anthropic.")
+          .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+      }
+      Text("Typing /claude before a request hands just that one to Claude, even with this off.")
+        .font(.caption).foregroundStyle(.secondary)
     }
   }
 }

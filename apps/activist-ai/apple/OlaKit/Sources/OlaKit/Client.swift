@@ -124,6 +124,9 @@ public final class OpenCodeClient: @unchecked Sendable {
     config.viaMac ? "Bearer \(config.password)" : "Basic " + Data("opencode:\(config.password)".utf8).base64EncodedString()
   }
 
+  /// The bytes of a GET (the Mac relay's own routes).
+  public func raw(_ path: String) async throws -> Data { try await send("GET", path).0 }
+
   /// Any GET, for checks.
   public func get(_ path: String) async throws -> JSON { try await json("GET", path) }
 

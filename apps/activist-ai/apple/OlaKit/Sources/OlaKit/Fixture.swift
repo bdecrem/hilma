@@ -11,6 +11,7 @@ public struct Fixture: Sendable {
   public var models: [ModelInfo] = [ModelInfo(providerID: "ola", modelID: "general", name: "General")]
   public var files: [String: [FileEntry]] = [:]
   public var selected: String?
+  public var claudeOn = false
 
   static let dir = "/Users/admin/ola-bart"
   static let t0 = Date(timeIntervalSince1970: 1_794_870_000)
@@ -110,8 +111,29 @@ public struct Fixture: Sendable {
     return f
   }
 
+  /// Reactions on Bart's messages: ✅ (finished, no marker), a Claude turn, 🙏 for a thank-you
+  /// (no reply at all), and 👀 on the one that is running.
+  public static var reactions: Fixture {
+    var f = main
+    var first = doneTurn()
+    first.answer = "[[ola:react done]]\n" + answer
+    let claude = Turn(id: "c1", request: "Add a line for Fresno's average hours per person.", at: t(140), status: .done, steps: [
+      Step(id: "k1", tool: "read", words: Words(icon: .read, verb: "Read", object: "summary.md"), result: "18 lines", status: .done, started: t(142), ended: t(143)),
+      Step(id: "k2", tool: "edit", words: Words(icon: .change, verb: "Changed", object: "summary.md"), status: .done, started: t(150), ended: t(152)),
+    ], answer: "Fresno's 15 people gave 98 hours, about **6.5 hours each**. I added that line under the table in `summary.md`.", ended: t(160), engine: .claude)
+    let thanks = Turn(id: "u3", request: "This is great, thank you!", at: t(200), status: .done, answer: "[[ola:react thanks]]", ended: t(203))
+    var working = workingTurn()
+    working.id = "u4"
+    working.at = t(260)
+    f.conversations["s1"] = Conversation(sessionID: "s1", directory: dir, turns: [first, claude, thanks, working])
+    f.running = ["s1"]
+    f.claudeOn = true
+    return f
+  }
+
   public static func named(_ name: String) -> Fixture {
     switch name {
+    case "reactions": return reactions
     case "approval": return approval
     case "empty": return empty
     case "unreachable": return unreachable
