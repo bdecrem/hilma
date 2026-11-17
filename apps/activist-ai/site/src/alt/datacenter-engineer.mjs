@@ -2,7 +2,8 @@
 // and the papers go; in their place, alone on the left of the desk, a zen fountain the size the
 // flowerpot was (a wide dark stone bowl, a tall bamboo upright and spout, a thread of water). A
 // model wind turbine stands in front of the computer's lower left corner, turning, with its own
-// power light, wired into a port on the computer's face.
+// power light. No cable to the computer (Bart, 2026-11-17: "too literal. it's more fun if there is
+// no cable!").
 
 const WATER = '#dce2ee' // between T.text2 #c9d2ea and the creams
 
@@ -46,9 +47,6 @@ function turbine(k) {
   const { T, pen, box, ell, chain, f1 } = k
   const [hx, hy] = HUB, footY = 435
   let s = ''
-  // the cable: out of the foot, one sag along the desk, into a port low on the computer's face
-  s += pen(chain([hx + 12, footY - 2], [[[250, 442], [288, 441], [306, 426]]], 22), { base: 2, dirMix: 0, seed: 88 })
-  s += box([[302, 419], [314, 419], [314, 427], [302, 427]], T.pcSide, { seed: 89, j: 0.15, bow: 0.1, base: 1.7 })
   // foot: a weighted dome on a plate, with its own power light
   s += box(ell(hx, footY - 2, 16, 4, 24), T.frame, { smooth: true, off: false, base: 2.3 })
   s += box(chain([hx - 11, footY - 3], [[[hx - 10, footY - 14], [hx + 10, footY - 14], [hx + 11, footY - 3]]], 14), T.frame, { smooth: true, off: false, base: 2.2 })
@@ -75,7 +73,7 @@ const STYLE = `<style>.dc-rotor{animation:dc-spin 12s linear infinite}@keyframes
 export default {
   title: 'The tidy engineer',
   name: 'the tidy engineer',
-  label: 'Drawing: a small computer on a desk in a study at night, with a paper tag reading Ola tied to it, and beside it its own power and water. A small wind turbine turns in front of it, wired into the computer, and a zen fountain, a dark stone bowl with a bamboo spout pouring a thread of water, stands at the other end of the desk. A desk lamp bends over the computer, its cable runs to the wall socket, and a mug steams beside the lamp. Above: books on a shelf and a window with the moon over the rooftops; under the desk, a wastepaper basket.',
+  label: 'Drawing: a small computer on a desk in a study at night, with a paper tag reading Ola tied to it, and beside it its own power and water. A small wind turbine turns in front of it, and a zen fountain, a dark stone bowl with a bamboo spout pouring a thread of water, stands at the other end of the desk. A desk lamp bends over the computer, its cable runs to the wall socket, and a mug steams beside the lamp. Above: books on a shelf and a window with the moon over the rooftops; under the desk, a wastepaper basket.',
   omit: ['plant', 'deskBooks', 'papers'],
   layers: {
     desk: (k) => fountain(k),

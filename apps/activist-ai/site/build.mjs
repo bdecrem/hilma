@@ -10,8 +10,9 @@ import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { word, mark, ulURI, BTN, scene, T, cr } from './src/drawing.mjs'
 // The drawing on the page since 2026-11-17: the datacenter with its own power and water (a wind
-// turbine wired into the computer, a stone-and-bamboo fountain where the plant stood).
-import HERO from './src/alt/datacenter-engineer.mjs'
+// turbine in front of the computer, a stone-and-bamboo fountain where the plant stood), with the tour:
+// point at a thing and the caption says what it does for the datacenter.
+import HERO from './src/alt/datacenter-tour.mjs'
 
 // The two places the address lives. SITE_URL is the public address (canonical, og:url, og:image);
 // BASE is the path the files are served from. Every asset URL is absolute under BASE, because the
@@ -161,6 +162,24 @@ figcaption{font-style:italic;font-size:14.5px;color:var(--text2);margin-top:4px;
   .paint{min-width:262px}
 }`
 
+// The drawing and its caption. An alternate with `spots` gets a tour: each spot is a transparent
+// target over the drawing (hover, tap or tab to it) and the caption swaps to that thing's line, by CSS
+// alone (:has on the figure). The caption's lines share one grid cell, so it never changes height.
+const esc = (t) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;')
+function artFigure(alt) {
+  const label = alt?.label ?? SCENE_LABEL, cap = alt?.caption ?? 'Our datacenter.', spots = alt?.spots ?? []
+  if (!spots.length) return `<figure class="art"><svg viewBox="0 26 600 586" role="img" aria-label="${label}">${scene(T, alt)}</svg><figcaption>${cap}</figcaption></figure>`
+  const targets = spots.map(([id, name, line, [x, y, w, h]]) => `<rect class="hs hs-${id}" x="${x}" y="${y}" width="${w}" height="${h}" rx="10" tabindex="0" role="img" aria-label="${esc(name)}: ${esc(line)}"/>`).join('')
+  const css = `.hs{fill:transparent;cursor:pointer;outline:none;-webkit-tap-highlight-color:transparent}
+.hs:focus-visible{stroke:var(--link);stroke-width:2;stroke-dasharray:5 5}
+.art figcaption.tour{display:grid}
+.art figcaption.tour>span{grid-area:1/1;visibility:hidden;opacity:0;transition:opacity .18s ease}
+.art figcaption.tour>.cap-0{visibility:visible;opacity:1}
+.art:has(.hs:is(:hover,:focus)) figcaption.tour>.cap-0{visibility:hidden;opacity:0}
+${spots.map(([id]) => `.art:has(.hs-${id}:is(:hover,:focus)) figcaption.tour>.cap-${id}{visibility:visible;opacity:1;color:var(--link)}`).join('\n')}`
+  return `<figure class="art"><style>${css}</style><svg viewBox="0 26 600 586" role="group" aria-label="${label} Each thing on the desk can be selected to hear what it does for the datacenter.">${scene(T, alt)}<g class="tour">${targets}</g></svg><figcaption class="tour" aria-live="polite"><span class="cap-0">${cap}</span>${spots.map(([id, , line]) => `<span class="cap-${id}" aria-hidden="true">${esc(line)}</span>`).join('')}</figcaption></figure>`
+}
+
 // `alt` is an alternate of the drawing (src/alt/<slug>.mjs): the same page with that drawing, not
 // indexed, written to alt/<slug>.html to be looked at beside the live one.
 function landing(alt = HERO) {
@@ -191,7 +210,7 @@ function landing(alt = HERO) {
     ${signature()}
     <div class="act">${btn('Ask to join', MAILTO)}<small>or write to <a href="${MAILTO}">bart@ola.cx</a></small></div>
   </div>
-  <figure class="art"><svg viewBox="0 26 600 586" role="img" aria-label="${alt?.label ?? SCENE_LABEL}">${scene(T, alt)}</svg><figcaption>${alt?.caption ?? 'Our datacenter.'}</figcaption></figure>
+  ${artFigure(alt)}
 </main>
 </body>
 </html>
