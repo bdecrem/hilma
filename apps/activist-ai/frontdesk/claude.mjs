@@ -89,7 +89,10 @@ export function onceGrants(db, engine) {
 
 /** Writes a grants file for the gateway: one JSON object, mode 600, by rename. */
 export function writeGrantsFile(file, grants) {
-  const tmp = `${file}.tmp`
+  // A name of its own per writer: the server and the admin CLI both write these files, and with
+  // one shared `.tmp` the slower writer's rename installed the faster one's older grants, or failed
+  // (review 4, L2; the same race review 3 found in gateway-tokens).
+  const tmp = `${file}.${process.pid}.${randomBytes(4).toString('hex')}.tmp`
   writeFileSync(tmp, JSON.stringify(grants) + '\n', { mode: 0o600 })
   chmodSync(tmp, 0o600)
   renameSync(tmp, file)

@@ -157,6 +157,11 @@ export function makeClaude({ cfg, db, readBody, send, fail }) {
   }
   const credentialFor = (mode) => (mode === 'api_key' ? cfg.key : oauth)
 
+  // At most 2 requests at once per project, 8 in all (review 4, M2): the ceiling is checked from
+  // what is already recorded, so without a limit 20 overlapping requests all passed a ceiling one
+  // of them nearly filled. With it, a month can run past its ceiling by one request at most.
+  const inflight = new Map()
+  let allInflight = 0
   async function handle(req, res, rec, who, signal) {
     const no = (status, why, message, type = 'invalid_request_error', headers) => {
       rec.status = status
@@ -166,6 +171,19 @@ export function makeClaude({ cfg, db, readBody, send, fail }) {
     if (req.method !== 'POST') return no(404, 'not found', 'not found')
     const g = live(who)
     if (!g) return no(403, grants.has(who) ? 'the one-time Claude grant has ended' : 'fallback to Claude is off for this caller', 'Fallback to Claude is off for this project. Its owner can turn it on in Settings.', 'permission_error')
+    if (rec.route === 'claude_count') return handleOne(req, res, rec, who, signal, no, g) // free, and Claude Code sends it beside a turn
+    if ((inflight.get(who) ?? 0) >= 2 || allInflight >= 8) return no(429, 'too many Claude requests at once', 'Claude is already answering two requests for this project; try again when one finishes.', 'rate_limit_error', { 'Retry-After': '5' })
+    inflight.set(who, (inflight.get(who) ?? 0) + 1)
+    allInflight++
+    try {
+      return await handleOne(req, res, rec, who, signal, no, g)
+    } finally {
+      inflight.set(who, inflight.get(who) - 1)
+      if (!inflight.get(who)) inflight.delete(who)
+      allInflight--
+    }
+  }
+  async function handleOne(req, res, rec, who, signal, no, g) {
     rec.mode = g.mode
     const cred = credentialFor(g.mode)
     if (!cred) return no(503, 'no credential for this mode', g.mode === 'oauth' ? 'Claude is not set up on this machine yet (no subscription token).' : 'Claude is not set up on this machine yet (no API key).', 'api_error')

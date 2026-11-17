@@ -749,6 +749,7 @@ async function fakeAnthropic() {
     if (text === 'say 401') return res.writeHead(401, { 'content-type': 'application/json' }).end(JSON.stringify({ error: { message: `bad key ${req.headers['x-api-key'] ?? req.headers.authorization}` } }))
     if (text === 'say 400') return res.writeHead(400, { 'content-type': 'application/json' }).end(JSON.stringify({ type: 'error', error: { type: 'invalid_request_error', message: 'Unexpected value(s) `x-beta` for the `anthropic-beta` header' } }))
     if (req.url.startsWith('/v1/messages/count_tokens')) return res.writeHead(200, { 'content-type': 'application/json' }).end('{"input_tokens":12}')
+    if (text === 'hold') await new Promise((r) => setTimeout(r, 400)) // review 4: requests that overlap
     if (body.stream) {
       res.writeHead(200, { 'content-type': 'text/event-stream', 'request-id': 'req_1', 'x-internal': 'drop me' })
       const ev = (type, data) => res.write(`event: ${type}\ndata: ${JSON.stringify({ type, ...data })}\n\n`)
@@ -889,6 +890,31 @@ test('Fallback to Claude: refused unless granted; the credential is replaced, ne
     assert.equal(lines[0].tokens_in, 100)
     assert.equal(lines[0].tokens_out, 50)
     assert.equal(lines[0].cost_micro_usd, 1750)
+  } finally {
+    await g.stop()
+  }
+})
+
+// Review 4, M2: the month ceiling is checked before a request goes upstream, from what is
+// already recorded, and the Claude route had no limit on requests at once: 20 overlapping
+// requests all passed a ceiling that one request nearly fills, so a workspace could spend many
+// times its month (and, in oauth mode, the subscription's) before any was counted.
+test('Fallback to Claude: overlapping requests cannot run past the month ceiling (at most 2 at once per project)', async () => {
+  const up = await fakeUpstream()
+  const an = await fakeAnthropic()
+  const dir = mkdtempSync(path.join(TMP, 'claude-par-'))
+  const grants = path.join(dir, 'gateway-claude')
+  writeGrants(grants, { 'ws-one': { mode: 'api_key', cap_micro_usd: 2000 } })
+  const k = tok()
+  const g = await gateway({ ...baseEnv(up.url), GATEWAY_TOKENS: `ws-one:${k}`, GATEWAY_CLAUDE_FILE: grants, GATEWAY_CLAUDE_UPSTREAM: an.url, CLAUDE_API_KEY: `sk-ant-api-${tok()}` })
+  try {
+    // One request costs 1,750 micro-dollars of a 2,000 cap: at most 2 may ever be in flight.
+    const all = await Promise.all(Array.from({ length: 20 }, () => claudeCall(g, k, msg('hold', { stream: true }))))
+    const ok = all.filter((r) => r.status === 200).length
+    assert.ok(ok <= 2, `${ok} of 20 overlapping requests went upstream (${an.st.seen.length} seen there)`)
+    assert.ok(all.filter((r) => r.status === 429).every((r) => /two requests|budget/.test(r.json?.error?.message ?? '')), 'the refusals say why')
+    // Afterwards the ceiling holds as before.
+    assert.equal((await claudeCall(g, k, msg('after'))).status, 429)
   } finally {
     await g.stop()
   }
