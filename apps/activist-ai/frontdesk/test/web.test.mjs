@@ -61,3 +61,23 @@ test('Not now, other questions and commands that are not simple write nothing', 
   assert.equal(await web.onReply(ws, 1, 's', 'per_9', 'once', asking('shell', ['ola-search x'])), 'once', 'an unknown request id')
   assert.deepEqual(read(), {})
 })
+
+// Review 4, M1: the page shows ONE web question (the first resource's words in its title, or the
+// "run code" sheet when the request mixes a web command with another), so a grant may only follow
+// a request that is exactly one web command. Before the fix, a second search hidden behind the
+// first got its own once-grant, and "Yes, for the rest of this conversation" on a "run code" sheet
+// that also held an ola-search turned on "Always in this project" for the web.
+test('a request with two searches: Allow once grants neither (the page showed only the first)', async () => {
+  const { web, ws, read, asking } = setup()
+  await web.onReply(ws, 1, 's', 'per_1', 'once', asking('shell', ['ola-search "made-up harmless words"', 'ola-search "made-up hidden words"']))
+  assert.deepEqual(read(), {}, JSON.stringify(read()))
+})
+test('a "run code" question that also holds a search: no web grant of any kind from its answers', async () => {
+  const { web, ws, read, asking, db } = setup()
+  assert.equal(await web.onReply(ws, 1, 's', 'per_1', 'always', asking('shell', ['python3 count.py', 'ola-search "made-up hidden words"'])), 'always', 'its own answer goes on (the front desk scopes it to the conversation)')
+  assert.deepEqual(read(), {}, JSON.stringify(read()))
+  assert.equal(web.modeBySlug('proj-a'), 'ask')
+  assert.equal(db.prepare("SELECT count(*) AS n FROM audit WHERE action = 'web_allowed'").get().n, 0)
+  await web.onReply(ws, 1, 's', 'per_1', 'once', asking('shell', ['python3 count.py', 'ola-search "made-up hidden words"']))
+  assert.deepEqual(read(), {}, JSON.stringify(read()))
+})

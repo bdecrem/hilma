@@ -77,6 +77,15 @@ export function makeWeb({ db, file, providerName, log = () => {} }) {
     const items = req ? webRequests(req.action, req.resources) : []
     if (!items.length) return decision
     if (decision === 'reject') return 'reject'
+    // The page shows one web question: the first command's words, or the "run code" sheet when the
+    // request mixes a web command with another. So only a request that is exactly one web command
+    // becomes a grant; anything else gets none (review 4, M1: a second search behind the first got
+    // its own grant, and "for the rest of this conversation" on a "run code" sheet turned on
+    // "Always in this project"). Its answer goes on as it was; the gateway refuses the web part.
+    if (items.length !== 1 || (Array.isArray(req.resources) ? req.resources.length : 0) !== 1) {
+      log(`${ws.slug}: a web approval inside a request of ${Array.isArray(req.resources) ? req.resources.length : 0} commands; no grant written`)
+      return decision
+    }
     if (decision === 'always') {
       setAlways(ws, personId, true)
       return 'once'
