@@ -133,7 +133,7 @@ public final class LocalServer: @unchecked Sendable {
     if port == 0 { port = Self.freePort() }
     for d in ["config/opencode", "data", "state", "cache"] { try fm.createDirectory(at: base.appendingPathComponent(d), withIntermediateDirectories: true) }
     let instructions = base.appendingPathComponent("config/opencode/ola-reactions.md")
-    try Reaction.instruction.write(to: instructions, atomically: true, encoding: .utf8)
+    try AgentNotes.all.write(to: instructions, atomically: true, encoding: .utf8)
     try Self.config(modelURL: modelURL, instructionsPath: instructions.path).write(to: base.appendingPathComponent("config/opencode/opencode.jsonc"), atomically: true, encoding: .utf8)
     var bytes = [UInt8](repeating: 0, count: 24)
     _ = SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes)

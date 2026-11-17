@@ -171,6 +171,26 @@ the command outlived Claude Code, which led to the process tracking proved by th
 the self-test on the machine, 14 of 14 including "a compliment gets a reaction and no reply" (🙏, no
 text); `tools/settings-selftest.sh` 15 of 15 including the Claude switch.
 
+## Phone notifications and inline View (2026-11-16, late)
+
+**Notifications** go to the phone for two things only: a run finished (done, or stopped by itself) and
+a run waiting for Bart (an approval). The Mac app sends them through Apple push (`OlaKit/Notify.swift`:
+an ES256 token from the team's key, `cx.ola.phone` as the topic, Apple's sandbox host for debug
+builds); the phone gives its push token and its two switches (Finished, Needs me) to the Mac through
+the relay, and says which session is on screen (that one does not notify). The key is imported once in
+Mac Settings, Phone notifications, Set Up (an open panel at the key file), and kept in the Keychain.
+They come only while Ola is open on the Mac. **Blocked by Apple, not code:** the push capability
+needs Push Notifications on the App ID `cx.ola.phone`, and Xcode cannot add it until Bart accepts the
+latest Program License Agreement at developer.apple.com. So the iPhone build signs without push by
+default; after he accepts, `OLA_PUSH=1 tools/build.sh device` builds it with push. A real test
+notification: `OLA_PUSH_SEND=1 swift run olakit-selftest` (only with Bart watching).
+
+**View**: under a reply, what the run made (from its own file steps, as the web app's "Open <page>"
+does, and the address a deploy command printed): pictures inline (up to three; SVG drawn as an image,
+with no scripts or loads), then name, kind and View for the rest (four, then "and N more"). View opens
+pages in the page viewer, websites in the in-app browser (phone) or the browser (Mac), pictures full
+size with zoom, tables as a table, Markdown and text rendered, anything else in Quick Look.
+
 ## Where Ola works (Mac Settings)
 
 One setting for the whole app:

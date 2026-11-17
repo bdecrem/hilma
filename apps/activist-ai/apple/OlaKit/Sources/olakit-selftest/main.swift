@@ -7,6 +7,7 @@
 // renames and deletes the session. The password is read from the file and never printed.
 import Foundation
 import OlaKit
+import Security
 
 //
 // Local mode ("On this Mac"), the way the Mac app runs it: starts opencode on 127.0.0.1 in a folder,
@@ -14,6 +15,31 @@ import OlaKit
 //
 //   OLA_LOCAL_FOLDER=<scratch folder> OLA_MODEL_TOKEN_FILE=<file holding the bart gateway token> swift run olakit-selftest
 let env = ProcessInfo.processInfo.environment
+// OLA_PUSH_SEND=1: one real notification to each paired phone with a push token, with the key the
+// Mac app keeps in the Keychain (Settings, Phone notifications). Only with this flag, and with Bart
+// watching his phone.
+if env["OLA_PUSH_SEND"] == "1" {
+  let q: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: "cx.ola.apns", kSecReturnData as String: true,
+                          kSecReturnAttributes as String: true, kSecMatchLimit as String: kSecMatchLimitOne]
+  var out: CFTypeRef?
+  guard SecItemCopyMatching(q as CFDictionary, &out) == errSecSuccess, let d = out as? [String: Any], let data = d[kSecValueData as String] as? Data,
+        let kid = d[kSecAttrAccount as String] as? String, let p8 = String(data: data, encoding: .utf8) else {
+    print("FAIL  no push key in the Keychain (Ola, Settings, Phone notifications, Set Up)"); exit(1)
+  }
+  let book = PairingBook(file: FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("Ola/phones.json"))
+  let phones = book.list.filter { $0.pushToken != nil }
+  if phones.isEmpty { print("FAIL  no paired phone has given its push token yet"); exit(1) }
+  var ok = true
+  for p in phones {
+    let apns = try APNs(p8: p8, keyID: kid, teamID: "274T5WCVD2", topic: "cx.ola.phone", host: p.pushSandbox == false ? APNs.production : APNs.sandbox)
+    let e = NotifyEvent(kind: .finished, session: "test", title: "Ola", body: "Done: notifications work.", key: "test:\(Date().timeIntervalSince1970)")
+    let (status, reason) = await apns.send(e, device: p.pushToken!)
+    print("\(status == 200 ? "PASS" : "FAIL")  a notification to \(p.label)  (\(status)\(reason.isEmpty ? "" : " \(reason)"))")
+    ok = ok && status == 200
+  }
+  exit(ok ? 0 : 1)
+}
+
 if env["OLA_CLAUDE"] == "1" {
   var bad = 0
   _ = await ClaudeCheck.go { ok, what, note in

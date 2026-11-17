@@ -7,6 +7,10 @@ struct TurnView: View {
   var isLast: Bool
   /// "Ask Claude instead", under a finished Ola reply (only when Fallback to Claude is on).
   var askClaude: (() -> Void)?
+  /// View on what the run made.
+  var view: ((ResultItem) -> Void)?
+  /// A file's bytes, for the pictures shown inline.
+  var load: ((String) async -> Data?)?
 
   var body: some View {
     VStack(alignment: .leading, spacing: Space.l) {
@@ -18,6 +22,13 @@ struct TurnView: View {
           Label(notice, systemImage: "arrow.clockwise").font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.ink2)
         }
         if !turn.shownAnswer.isEmpty { MarkdownView(text: turn.shownAnswer) }
+        if !turn.isRunning, let view {
+          let items = ResultItem.derive(turn)
+          let pictures = load == nil ? [] : Array(items.filter(InlinePictures.isPicture).prefix(3))
+          if let load, !pictures.isEmpty { InlinePictures(items: pictures, load: load, open: view) }
+          let rest = items.filter { i in !pictures.contains(where: { $0.id == i.id }) }
+          if !rest.isEmpty { ResultList(items: rest, view: view) }
+        }
         if let e = turn.error { ProblemView(problem: e) }
         else if turn.status == .stopped { Text("Stopped. What it finished is in the folder.").font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.ink3) }
         if let askClaude, turn.engine == .ola, !turn.isRunning {
@@ -410,7 +421,7 @@ struct ConversationPane: View {
         ScrollView {
           VStack(alignment: .leading, spacing: Space.xxl) {
             if let convo, !convo.turns.isEmpty {
-              ForEach(Array(convo.turns.enumerated()), id: \.element.id) { i, t in TurnView(turn: t, isLast: i == convo.turns.count - 1, askClaude: store.claudeOn ? { Task { await store.askClaude(t.request) } } : nil) }
+              ForEach(Array(convo.turns.enumerated()), id: \.element.id) { i, t in TurnView(turn: t, isLast: i == convo.turns.count - 1, askClaude: store.claudeOn ? { Task { await store.askClaude(t.request) } } : nil, view: store.onView ?? { _ in }, load: { try? await store.read($0) }) }
             } else if store.selectedID == nil {
               EmptyConversation(folder: store.projectFolder)
             } else {
@@ -664,6 +675,55 @@ struct SlashMenu: View {
       .background(RoundedRectangle(cornerRadius: 6).fill(Ola.details))
       .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Ola.rule, lineWidth: 1))
       .padding(.top, 6)
+    }
+  }
+}
+
+
+/// What a run made, right under its reply: name, kind, View. Four, then "and N more".
+struct ResultList: View {
+  var items: [ResultItem]
+  var view: (ResultItem) -> Void
+  @State private var all = false
+
+  var body: some View {
+    VStack(spacing: 0) {
+      ForEach(Array((all ? items : Array(items.prefix(4))).enumerated()), id: \.element.id) { i, item in
+        if i > 0 { Rectangle().fill(Ola.rule).frame(height: 1) }
+        HStack(spacing: 10) {
+          Image(systemName: symbol(item.kind)).font(.system(size: 13)).foregroundStyle(Ola.blue).frame(width: 18)
+          VStack(alignment: .leading, spacing: 1) {
+            Text(item.name).font(OlaFont.sans(Metrics.ui, .medium)).foregroundStyle(Ola.ink).lineLimit(1).truncationMode(.middle)
+            Text(item.kindLabel).font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.ink3)
+          }
+          Spacer(minLength: 8)
+          Button("View") { view(item) }
+            .buttonStyle(.plain).font(OlaFont.sans(Metrics.ui, .semibold)).foregroundStyle(Ola.blue)
+        }
+        .padding(.horizontal, 12).padding(.vertical, 8)
+        .contentShape(Rectangle())
+        .onTapGesture { view(item) }
+      }
+      if items.count > 4 && !all {
+        Rectangle().fill(Ola.rule).frame(height: 1)
+        Button("and \(items.count - 4) more") { all = true }
+          .buttonStyle(.plain).font(OlaFont.sans(Metrics.meta, .medium)).foregroundStyle(Ola.blue)
+          .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 12).padding(.vertical, 7)
+      }
+    }
+    .background(RoundedRectangle(cornerRadius: 6).fill(Ola.details))
+    .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Ola.rule, lineWidth: 1))
+  }
+
+  func symbol(_ k: ResultItem.Kind) -> String {
+    switch k {
+    case .page: "doc.richtext"
+    case .image: "photo"
+    case .table: "tablecells"
+    case .document: "doc.text"
+    case .text: "doc.plaintext"
+    case .file: "doc"
+    case .site: "globe"
     }
   }
 }

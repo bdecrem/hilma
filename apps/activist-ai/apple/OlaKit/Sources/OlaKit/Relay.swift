@@ -154,6 +154,16 @@ public final class PairingBook: @unchecked Sendable {
     public var paired: Date
     public var lastSeen: Date?
     var digest: String
+    /// Its Apple push token and its two switches (Finished, Needs me), sent by the phone.
+    public var pushToken: String?
+    public var notifyFinished: Bool?
+    public var notifyNeeds: Bool?
+    public var pushSandbox: Bool?
+    /// The session open on its screen, and when it last said so (not kept on disk).
+    public var viewing: String?
+    public var viewingAt: Date?
+
+    enum CodingKeys: String, CodingKey { case id, label, paired, lastSeen, digest, pushToken, notifyFinished, notifyNeeds, pushSandbox }
   }
 
   private let lock = NSLock()
@@ -209,6 +219,25 @@ public final class PairingBook: @unchecked Sendable {
       if let match { return .phone(match) }
       failures[remote] = recent + [now]
       return .wrong
+    }
+  }
+
+  public func setPush(_ id: String, token: String?, finished: Bool, needs: Bool, sandbox: Bool = true) {
+    lock.withLock {
+      guard let i = phones.firstIndex(where: { $0.id == id }) else { return }
+      phones[i].pushToken = token
+      phones[i].notifyFinished = finished
+      phones[i].notifyNeeds = needs
+      phones[i].pushSandbox = sandbox
+    }
+    save()
+  }
+
+  public func setViewing(_ id: String, session: String?) {
+    lock.withLock {
+      guard let i = phones.firstIndex(where: { $0.id == id }) else { return }
+      phones[i].viewing = session
+      phones[i].viewingAt = .now
     }
   }
 
@@ -337,6 +366,18 @@ public final class MacRelay: @unchecked Sendable {
     let (upstream, mode) = lock.withLock { (upstreamConfig, self.mode) }
     if req.method == "GET", req.path == "/ola/hello" {
       return await res.send(200, JSON.object(["name": .string(macName), "mode": .string(mode), "connected": .bool(upstream != nil)]).data)
+    }
+    // The phone's push token and switches, and which session it is looking at.
+    if req.method == "POST", req.path == "/ola/push" {
+      let j = JSON.parse(req.body) ?? .null
+      let token = j["token"].string.flatMap { $0.range(of: #"^[0-9a-f]{32,200}$"#, options: .regularExpression) != nil ? $0 : nil }
+      book.setPush(phone, token: token, finished: j["finished"].bool ?? true, needs: j["needs"].bool ?? true, sandbox: j["sandbox"].bool ?? true)
+      return await res.send(200, Data("{}".utf8))
+    }
+    if req.method == "POST", req.path == "/ola/viewing" {
+      let s = (JSON.parse(req.body) ?? .null)["session"].string
+      book.setViewing(phone, session: s.flatMap { $0.range(of: #"^[A-Za-z0-9_-]{1,80}$"#, options: .regularExpression) != nil ? $0 : nil })
+      return await res.send(200, Data("{}".utf8))
     }
     if req.method == "GET", req.path.hasPrefix("/ola/claude/") {
       let id = String(req.path.dropFirst("/ola/claude/".count))

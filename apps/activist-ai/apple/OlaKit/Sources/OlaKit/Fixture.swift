@@ -1,4 +1,6 @@
 import Foundation
+import CoreGraphics
+import ImageIO
 
 /// Made-up sessions for screenshots and previews (the `-OlaFixture <name>` launch argument).
 /// Everything here is invented: people, numbers, files.
@@ -12,6 +14,8 @@ public struct Fixture: Sendable {
   public var files: [String: [FileEntry]] = [:]
   public var selected: String?
   public var claudeOn = false
+  /// Made-up file contents, for the pictures shown inline.
+  public var fileData: [String: Data] = [:]
 
   static let dir = "/Users/admin/ola-bart"
   static let t0 = Date(timeIntervalSince1970: 1_794_870_000)
@@ -131,8 +135,52 @@ public struct Fixture: Sendable {
     return f
   }
 
+  static let catSVG = """
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 200"><rect width="320" height="200" fill="#f6e9cf"/>\
+  <circle cx="160" cy="120" r="56" fill="#2b3a6e"/><polygon points="112,86 124,40 146,74" fill="#2b3a6e"/><polygon points="208,86 196,40 174,74" fill="#2b3a6e"/>\
+  <circle cx="140" cy="112" r="8" fill="#f5efe4"/><circle cx="180" cy="112" r="8" fill="#f5efe4"/><path d="M150 138 q10 10 20 0" stroke="#e8704a" stroke-width="4" fill="none"/>\
+  <path d="M60 170 q20 -30 40 0 M220 170 q20 -30 40 0" stroke="#e9b44c" stroke-width="5" fill="none"/></svg>
+  """
+
+  /// What a run delivered: two pictures inline (a PNG chart and an SVG drawing), then a page, a
+  /// table and the deployed site as View items.
+  public static var results: Fixture {
+    var f = main
+    let t = Turn(id: "r1", request: "Draw the hours by city as a chart, draw a dancing cat for the page, and deploy it.", at: t(300), status: .done, steps: [
+      Step(id: "v1", tool: "write", words: Words(icon: .write, verb: "Wrote", object: "chart.png"), status: .done, started: t(301), ended: t(302)),
+      Step(id: "v2", tool: "write", words: Words(icon: .write, verb: "Wrote", object: "cat.svg"), status: .done, started: t(303), ended: t(304)),
+      Step(id: "v3", tool: "write", words: Words(icon: .write, verb: "Wrote", object: "site/index.html"), status: .done, started: t(305), ended: t(306)),
+      Step(id: "v4", tool: "edit", words: Words(icon: .change, verb: "Changed", object: "totals.csv"), status: .done, started: t(307), ended: t(308)),
+      Step(id: "v5", tool: "shell", words: Words(icon: .run, verb: "Ran", object: "npx"), result: "4 lines of output", status: .done, input: "npx vercel deploy --prod --yes", output: "Production: https://dancing-cat.vercel.app [4s]", started: t(309), ended: t(330)),
+    ], answer: "[[ola:react done]]\nThe chart and the cat are in the project, and the page is live.", ended: t(331))
+    f.conversations["s1"] = Conversation(sessionID: "s1", directory: dir, turns: [t])
+    f.running = []
+    f.fileData = ["cat.svg": Data(catSVG.utf8), "chart.png": chartPNG()]
+    return f
+  }
+
+  /// A small bar chart drawn with Core Graphics, as PNG.
+  static func chartPNG() -> Data {
+    let w = 640, h = 360
+    guard let ctx = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: 0, space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return Data() }
+    ctx.setFillColor(CGColor(red: 0.97, green: 0.94, blue: 0.89, alpha: 1))
+    ctx.fill(CGRect(x: 0, y: 0, width: w, height: h))
+    let bars: [(Double, CGColor)] = [(164, CGColor(red: 0.17, green: 0.23, blue: 0.43, alpha: 1)), (98, CGColor(red: 0.91, green: 0.71, blue: 0.30, alpha: 1)), (71, CGColor(red: 0.91, green: 0.44, blue: 0.29, alpha: 1))]
+    for (i, b) in bars.enumerated() {
+      ctx.setFillColor(b.1)
+      ctx.fill(CGRect(x: 80 + i * 180, y: 40, width: 120, height: Int(b.0 * 1.7)))
+    }
+    guard let img = ctx.makeImage() else { return Data() }
+    let out = NSMutableData()
+    guard let dest = CGImageDestinationCreateWithData(out, "public.png" as CFString, 1, nil) else { return Data() }
+    CGImageDestinationAddImage(dest, img, nil)
+    CGImageDestinationFinalize(dest)
+    return out as Data
+  }
+
   public static func named(_ name: String) -> Fixture {
     switch name {
+    case "results": return results
     case "reactions": return reactions
     case "approval": return approval
     case "empty": return empty

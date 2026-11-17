@@ -42,6 +42,8 @@ public final class OlaStore {
   public var isActive = true
   public var onRunEnded: ((_ session: SessionInfo, _ turn: Turn) -> Void)?
   public var onApproval: ((_ session: SessionInfo, _ approval: Approval) -> Void)?
+  /// Every finish and every wait for Bart, wherever he is looking (the Mac app sends them to the phone).
+  public var onNotify: ((NotifyEvent) -> Void)?
 
   private var client: OpenCodeClient?
   private var stream: Task<Void, Never>?
@@ -68,6 +70,7 @@ public final class OlaStore {
     files = fixture.files
     selectedID = fixture.selected
     claudeOn = fixture.claudeOn
+    fixtureFiles = fixture.fileData
   }
 
   public var selected: SessionInfo? { sessions.first { $0.id == selectedID } }
@@ -220,6 +223,10 @@ public final class OlaStore {
     }
     if conversations[sid] != nil {
       conversations[sid]!.apply(ev)
+      if let s = sessions.first(where: { $0.id == sid }) {
+        if type.hasPrefix("session.execution."), type != "session.execution.started", let t = conversations[sid]!.turns.last, let e = NotifyEvent.finished(t, session: s) { onNotify?(e) }
+        if type == "permission.asked", let a = conversations[sid]!.approval { onNotify?(NotifyEvent.needsYou(a, session: s)) }
+      }
       if type.hasPrefix("session.execution."), type != "session.execution.started", let s = sessions.first(where: { $0.id == sid }), let t = conversations[sid]!.turns.last {
         if !isActive || sid != selectedID { onRunEnded?(s, t) }
       }
@@ -231,7 +238,11 @@ public final class OlaStore {
       if sessions.contains(where: { $0.id == sid }) {
         Task {
           await open(sid)
-          if type == "permission.asked", let s = sessions.first(where: { $0.id == sid }), let a = conversations[sid]?.approval { onApproval?(s, a) }
+          if type == "permission.asked", let s = sessions.first(where: { $0.id == sid }), let a = conversations[sid]?.approval {
+            onApproval?(s, a)
+            onNotify?(NotifyEvent.needsYou(a, session: s))
+          }
+          if type.hasPrefix("session.execution."), type != "session.execution.started", let s = sessions.first(where: { $0.id == sid }), let t = conversations[sid]?.turns.last, let e = NotifyEvent.finished(t, session: s) { onNotify?(e) }
         }
       }
     }
@@ -379,7 +390,10 @@ public final class OlaStore {
     do { files[path] = try await client.files(in: path.isEmpty ? nil : path) } catch { note(error, "The project's files could not be listed.") }
   }
 
+  private var fixtureFiles: [String: Data] = [:]
+
   public func read(_ path: String) async throws -> Data {
+    if let d = fixtureFiles[path] { return d }
     guard let client else { throw OlaError.unreachable("not connected") }
     return try await client.read(path)
   }
@@ -398,11 +412,19 @@ public final class OlaStore {
   /// Where Claude turns are kept (Application Support on the Mac); nil on the phone.
   public var claudeTurnsBase: URL?
   public var onFiles: (() -> Void)?
+  /// View on a result under a reply (each app opens it its own way).
+  public var onView: ((ResultItem) -> Void)?
   private var claudeRuns: [String: ClaudeRun] = [:]
   private var claudeAlways: [String: Set<String>] = [:]
   private var claudeInputs: [String: JSON] = [:]
 
   public func claudeRunning(_ session: String) -> Bool { claudeRuns[session] != nil }
+
+  /// The phone tells the Mac app something (its push token, what is on screen). Only when paired.
+  public func postToMac(_ path: String, _ body: JSON) async {
+    guard config?.viaMac == true, let client else { return }
+    try? await client.post(path, body)
+  }
 
   /// Claude turns stored for a session: the Mac's own file, or the Mac's through the relay.
   func storedClaudeTurns(_ id: String) async -> [Turn] {
@@ -461,7 +483,7 @@ public final class OlaStore {
           if let i = self.conversations[id]?.turns.firstIndex(where: { $0.id == turnID }), let s = self.conversations[id]?.turns[i].steps.lastIndex(where: { $0.status == .running }) {
             self.conversations[id]?.turns[i].steps[s].status = .waiting
           }
-          if let s = self.sessions.first(where: { $0.id == id }) { self.onApproval?(s, a) }
+          if let s = self.sessions.first(where: { $0.id == id }) { self.onApproval?(s, a); self.onNotify?(NotifyEvent.needsYou(a, session: s)) }
         }
       }
       run.onEnd = { [weak self] code in
@@ -482,7 +504,10 @@ public final class OlaStore {
             if let base = self.claudeTurnsBase {
               ClaudeTurns.save(self.conversations[id]!.turns.filter { $0.engine == .claude }, session: id, base: base)
             }
-            if let s = self.sessions.first(where: { $0.id == id }) { self.onRunEnded?(s, t) }
+            if let s = self.sessions.first(where: { $0.id == id }) {
+              self.onRunEnded?(s, t)
+              if let e = NotifyEvent.finished(t, session: s) { self.onNotify?(e) }
+            }
           }
         }
       }

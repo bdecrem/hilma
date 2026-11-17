@@ -116,3 +116,13 @@ extension Turn {
     status == .done && shownAnswer.isEmpty && Reaction.split(answer).reaction != nil && steps.isEmpty
   }
 }
+
+/// Everything the agents are told, wherever each engine reads its instructions (README, "The
+/// standing instruction").
+public enum AgentNotes {
+  public static let drawing = """
+  Drawings. When asked for a drawing, diagram or illustration, draw it in code as an SVG file (clean shapes, a viewBox, \
+  no outside fonts or images) and save it in the project; say its file name. Use a chart library only for charts of data.
+  """
+  public static var all: String { Reaction.instruction + "\n\n" + drawing }
+}

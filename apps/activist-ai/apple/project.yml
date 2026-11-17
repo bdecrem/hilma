@@ -59,6 +59,9 @@ targets:
         excludes: ["Fonts/*.txt"]
     dependencies:
       - package: OlaKit
+    # Apple push needs iOS/Ola.entitlements (aps-environment), which signing accepts only once the
+    # team's App ID has Push Notifications. Until Bart accepts Apple's latest Program License
+    # Agreement, Xcode cannot add it, so the push build is opt-in: tools/build.sh device with OLA_PUSH=1.
     info:
       path: iOS/Info.plist
       properties:

@@ -1034,7 +1034,13 @@ preference that needs no work), done (you finished what they asked), party (they
 think (you need something from them first), oops (they caught your mistake).
 Use at most one reaction, only on that first line, and never explain it or mention it.
 If the message is only thanks or a compliment, reply with the marker line alone and nothing else.
+
+Drawings. When asked for a drawing, diagram or illustration, draw it in code as an SVG file (clean shapes, a viewBox, no outside fonts or images) and save it in the project; say its file name. Use a chart library only for charts of data.
 ```
+
+**Pictures a run makes** (PNG, JPEG, GIF, WebP, SVG; from its own file steps) are shown inline under
+the reply, fitted to the column, at most 380 points tall, up to three, then View items for the rest; a
+tap opens one full size with zoom. SVG is drawn as an image (no scripts, no outside loads).
 
 **The web app** (`web/src/lib/commands.ts`, the menu and the chip in `web/src/components/Drawer.tsx`).
 The drawer and the home's bar both go through `ola.typed`, so a command typed in either is never sent

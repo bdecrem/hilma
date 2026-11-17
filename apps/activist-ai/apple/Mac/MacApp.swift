@@ -20,6 +20,7 @@ struct OlaMacApp: App {
   @State private var store = OlaStore(config: Credentials.load())
   @State private var whereOla: WhereOlaWorks?
   @State private var phoneLink: PhoneLink?
+  @State private var phonePush: PhonePush?
   @NSApplicationDelegateAdaptor private var delegate: AppDelegate
 
   var body: some Scene {
@@ -36,6 +37,9 @@ struct OlaMacApp: App {
           w.configureClaude()
           let link = PhoneLink(store: store)
           phoneLink = link
+          let push = PhonePush(link: link)
+          phonePush = push
+          store.onNotify = { e in push.notify(e) }
           delegate.phoneLink = link
           Task { await link.apply() }
           if LocalSettings.onThisMac { Task { await w.apply() } } else { store.start() }
@@ -50,7 +54,7 @@ struct OlaMacApp: App {
     .defaultSize(width: 1000, height: 760)
 
     Settings {
-      SettingsView(store: store, whereOla: whereOla, phoneLink: phoneLink)
+      SettingsView(store: store, whereOla: whereOla, phoneLink: phoneLink, phonePush: phonePush)
     }
   }
 }
@@ -146,6 +150,7 @@ struct SettingsView: View {
   var store: OlaStore
   var whereOla: WhereOlaWorks?
   var phoneLink: PhoneLink?
+  var phonePush: PhonePush? = nil
   var tokenKnown: Bool? = nil
   var look: SettingsLook = .native
   @State private var connecting = false
@@ -171,6 +176,7 @@ struct SettingsView: View {
     if let whereOla { WhereSettings(controller: whereOla, tokenKnown: tokenKnown) }
     if let whereOla { SettingsGroup(title: "Claude") { ClaudeSettings(controller: whereOla) } }
     if let phoneLink { PhoneSettings(link: phoneLink) }
+    if let phonePush { SettingsGroup(title: "Phone notifications") { PushSettings(push: phonePush) } }
     // The machine's rows only when Ola works there; the local agent's state is under Where Ola works.
     if mode != "mac" {
       SettingsGroup(title: "Ola machine") {

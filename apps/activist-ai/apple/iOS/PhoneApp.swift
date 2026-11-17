@@ -4,6 +4,7 @@ import SwiftUI
 
 @main
 struct OlaPhoneApp: App {
+  @UIApplicationDelegateAdaptor(PhoneAppDelegate.self) private var appDelegate
   @State private var store: OlaStore
   @Environment(\.scenePhase) private var phase
 
@@ -35,6 +36,7 @@ struct OlaPhoneApp: App {
         }
         .onChange(of: phase) { _, p in
           store.isActive = p == .active
+          if p != .active { PhonePushState.shared.setViewing(nil) }
           if p == .active, case .lost = store.connection { store.reconnect() }
           if p == .active, store.connection == .connecting { store.start() }
         }
@@ -45,6 +47,8 @@ struct OlaPhoneApp: App {
 struct PhoneRoot: View {
   @Bindable var store: OlaStore
   @State private var path: [String] = []
+  @State private var askNotifications = false
+  @Bindable private var push = PhonePushState.shared
 
   var body: some View {
     Group {
@@ -62,6 +66,25 @@ struct PhoneRoot: View {
       // A fixture opens on its session, so the screenshot shows the conversation.
       if ProcessInfo.processInfo.arguments.contains("-OlaOpen") { path = [store.selectedID ?? ""] }
     }
+    .onAppear {
+      push.store = store
+      Task { await push.refreshAllowed() }
+    }
+    // After pairing, once: may Ola notify? (Not at first launch.)
+    .onChange(of: store.connection) { _, c in
+      if c == .open, store.config?.viaMac == true, !push.asked { askNotifications = true }
+    }
+    .alert("Get a notification when Ola is done or needs your OK?", isPresented: $askNotifications) {
+      Button("Allow") { Task { await push.requestPermission() } }
+      Button("Not now", role: .cancel) { push.asked = true }
+    }
+    // A tapped notification opens its session; an approval is right there.
+    .onChange(of: push.openSession) { _, id in
+      guard let id else { return }
+      store.selectedID = id
+      path = [id]
+      push.openSession = nil
+    }
     .onChange(of: store.sessions.first?.id) { _, id in
       // `-OlaOpenFirst`: open the newest session once the list arrives (a live screenshot).
       if let id, path.isEmpty, ProcessInfo.processInfo.arguments.contains("-OlaOpenFirst") { path = [id] }
@@ -78,6 +101,7 @@ struct SessionsScreen: View {
   @State private var newTitle = ""
   @State private var deleting: SessionInfo?
   @State private var reconnectShown = false
+  @State private var notificationsShown = false
   @Environment(\.colorScheme) private var scheme
 
   var body: some View {
@@ -123,6 +147,7 @@ struct SessionsScreen: View {
       }
       ToolbarItem(placement: .topBarLeading) {
         Menu {
+          Button("Notifications", systemImage: "bell") { notificationsShown = true }
           Button("Pair again", systemImage: "qrcode") { reconnectShown = true }
           Button("Forget this Mac", systemImage: "xmark.circle", role: .destructive) { store.forget() }
         } label: { Image(systemName: "ellipsis.circle") }
@@ -141,6 +166,7 @@ struct SessionsScreen: View {
     } message: {
       Text("It is deleted on the machine, for the Mac too. Files Ola made stay in the folder.")
     }
+    .sheet(isPresented: $notificationsShown) { NotificationSettingsSheet().presentationDetents([.medium]) }
     .sheet(isPresented: Binding(get: { reconnectShown || store.connection == .refused }, set: { reconnectShown = $0 })) {
       PairScreen(store: store) { reconnectShown = false }
     }
@@ -221,6 +247,7 @@ struct ConversationScreen: View {
   var id: String
   @State private var draft = ""
   @State private var filesShown = false
+  @State private var viewed: ViewedItem?
 
   var body: some View {
     VStack(spacing: 0) {
@@ -237,7 +264,15 @@ struct ConversationScreen: View {
         Button { filesShown = true } label: { Image(systemName: "folder") }.tint(Ola.blue).accessibilityLabel("Files")
       }
     }
-    .onAppear { if !id.isEmpty, store.selectedID != id { store.selectedID = id } }
+    .onAppear {
+      if !id.isEmpty, store.selectedID != id { store.selectedID = id }
+      store.onView = { viewed = ViewedItem(item: $0) }
+      store.onFiles = { filesShown = true }
+      PhonePushState.shared.setViewing(store.selectedID)
+    }
+    .onDisappear { PhonePushState.shared.setViewing(nil) }
+    .onChange(of: store.selectedID) { _, id in PhonePushState.shared.setViewing(id) }
+    .sheet(item: $viewed) { v in ResultViewer(store: store, item: v.item) }
     .sensoryFeedback(.warning, trigger: store.conversation?.approval?.id) { _, new in new != nil }
     .sheet(isPresented: $filesShown) { PhoneFiles(store: store) }
   }

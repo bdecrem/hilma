@@ -127,6 +127,9 @@ public final class OpenCodeClient: @unchecked Sendable {
   /// The bytes of a GET (the Mac relay's own routes).
   public func raw(_ path: String) async throws -> Data { try await send("GET", path).0 }
 
+  /// A POST to the Mac app's own routes (push token, what the phone is looking at).
+  public func post(_ path: String, _ body: JSON) async throws { try await send("POST", path, body: body) }
+
   /// Any GET, for checks.
   public func get(_ path: String) async throws -> JSON { try await json("GET", path) }
 

@@ -44,7 +44,7 @@ public final class ClaudeRunner: ClaudeRun, @unchecked Sendable {
   You are working for Bart in his own app, Ola, as "Claude", the fallback beside Ola's open-model agent. \
   Work in the current folder. Say plainly what you did and what you found.
 
-  """ + Reaction.instruction
+  """ + AgentNotes.all
 
   public let binary: URL
   public let folder: URL

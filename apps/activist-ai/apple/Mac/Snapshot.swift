@@ -28,6 +28,8 @@ enum Snapshot {
       ("mac-unreachable", "unreachable", chosen, .aqua, CGSize(width: 1200, height: 760)),
       ("mac-narrow", "approval", chosen, .aqua, CGSize(width: 900, height: 640)),
       ("mac-reactions-light", "reactions", chosen, .aqua, CGSize(width: 1440, height: 1100)),
+      ("mac-view-items-light", "results", chosen, .aqua, CGSize(width: 1440, height: 1100)),
+      ("mac-view-items-dark", "results", chosen, .darkAqua, CGSize(width: 1440, height: 1100)),
       ("mac-reactions-dark", "reactions", chosen, .darkAqua, CGSize(width: 1440, height: 1100)),
     ]
     let only = CommandLine.arguments.firstIndex(of: "-OlaOnly").map { CommandLine.arguments[$0 + 1] }

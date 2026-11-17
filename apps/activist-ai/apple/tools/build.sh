@@ -3,7 +3,8 @@
 #
 #   tools/build.sh mac [shots-dir]     the Mac app (ad-hoc signed); with a dir, renders its views to PNGs
 #   tools/build.sh sim                 the iPhone app for the simulator
-#   tools/build.sh device              the iPhone app for a device (automatic signing, team 274T5WCVD2)
+#   tools/build.sh device              the iPhone app for a device (automatic signing, team 274T5WCVD2);
+#                                      OLA_PUSH=1 adds Apple push (needs Push on the App ID, see project.yml)
 #   tools/build.sh install-mac         copies the built Mac app to /Applications/Ola.app (does not open it)
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -26,7 +27,8 @@ case "${1:-}" in
     ;;
   device)
     xcodebuild -project Ola.xcodeproj -scheme OlaPhone -configuration Debug -derivedDataPath "$DD" \
-      -destination 'generic/platform=iOS' -allowProvisioningUpdates DEVELOPMENT_TEAM=274T5WCVD2 build 2>&1 | grep -E "error:|BUILD|signing|Signing|provision" | sort -u
+      -destination 'generic/platform=iOS' -allowProvisioningUpdates DEVELOPMENT_TEAM=274T5WCVD2 \
+      ${OLA_PUSH:+CODE_SIGN_ENTITLEMENTS=iOS/Ola.entitlements} build 2>&1 | grep -E "error:|BUILD|signing|Signing|provision" | sort -u
     echo "$DD/Build/Products/Debug-iphoneos/Ola.app"
     ;;
   install-mac)

@@ -61,6 +61,8 @@ struct MacRoot: View {
   @SceneStorage("filesShown") private var filesShown = true
   @State private var draft = ""
   @State private var connectShown = false
+  @State private var viewed: URL?
+  @Environment(\.openWindow) private var openWindow
   @Environment(\.treatment) private var treatment
 
   var body: some View {
@@ -98,6 +100,7 @@ struct MacRoot: View {
     .toolbarBackground(Ola.room, for: .windowToolbar)
     .toolbarBackground(.visible, for: .windowToolbar)
     .focusedSceneValue(\.olaDraft, $draft)
+    .quickLookPreview($viewed)
     .sheet(isPresented: Binding(get: { (store.connection == .notSetUp && !LocalSettings.onThisMac) || connectShown }, set: { connectShown = $0 })) {
       ConnectForm(store: store) { connectShown = false }.frame(width: 400).interactiveDismissDisabled(store.connection == .notSetUp)
     }
@@ -105,6 +108,7 @@ struct MacRoot: View {
     .onAppear {
       if store.selectedID == nil, let s = savedSelection { store.selectedID = s }
       store.onFiles = { filesShown.toggle() }
+      store.onView = { item in MacViewer.open(item, store: store, openWindow: openWindow) { viewed = $0 } }
     }
     .onChange(of: store.selectedID) { _, id in savedSelection = id }
   }
