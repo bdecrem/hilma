@@ -220,6 +220,9 @@ public final class LocalServer: @unchecked Sendable {
         // search engine's results page, a guessed address). The web goes through Ola's gateway:
         // ola-search and ola-fetch, asked as web questions (README, "Web search in Bart's apps").
         { "action": "webfetch", "resource": "*", "effect": "deny" },
+        // opencode's code-mode tool ran code on the Mac without asking, and the model reached for
+        // fetch() in it instead of ola-search (M4, Nov 17): off; the shell (asked first) is the way.
+        { "action": "execute", "resource": "*", "effect": "deny" },
         { "action": "websearch", "resource": "*", "effect": "deny" },
         { "action": "external_directory", "resource": "*", "effect": "deny" },
         { "action": "skill", "resource": "*", "effect": "deny" },
