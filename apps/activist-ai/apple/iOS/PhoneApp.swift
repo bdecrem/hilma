@@ -10,6 +10,9 @@ struct OlaPhoneApp: App {
 
   init() {
     OlaFont.register()
+    #if DEBUG
+    KitShots.runIfAsked()
+    #endif
     // `-OlaFixture <name>`: made-up sessions, no network (for simulator screenshots).
     let args = ProcessInfo.processInfo.arguments
     if let i = args.firstIndex(of: "-OlaFixture"), i + 1 < args.count {

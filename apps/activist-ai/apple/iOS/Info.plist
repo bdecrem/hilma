@@ -39,11 +39,17 @@
 	<string>The camera reads the pairing code that Ola on your Mac shows.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Ola talks to Ola on your Mac over your private network.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>To talk with Kit and leave it voice notes.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
 		<false/>
 	</dict>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+	</array>
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIColorName</key>

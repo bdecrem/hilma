@@ -17,6 +17,15 @@ settings:
 packages:
   OlaKit:
     path: OlaKit
+  # Kit's voice meetings on the phone (iOS/Kit/ElevenKitTransport.swift): the same SDK and version
+  # as the Dodo app. It rides on LiveKit's WebRTC.
+  ElevenLabs:
+    url: https://github.com/elevenlabs/elevenlabs-swift-sdk.git
+    exactVersion: 3.3.1
+  # Pinned to what the Dodo app ships with this SDK (its Package.resolved), so the pair is the proven one.
+  LiveKit:
+    url: https://github.com/livekit/client-sdk-swift.git
+    exactVersion: 2.17.0
 targets:
   OlaMac:
     type: application
@@ -59,6 +68,8 @@ targets:
         excludes: ["Fonts/*.txt"]
     dependencies:
       - package: OlaKit
+      - package: ElevenLabs
+      - package: LiveKit
     # Apple push needs iOS/Ola.entitlements (aps-environment), which signing accepts only once the
     # team's App ID has Push Notifications. Until Bart accepts Apple's latest Program License
     # Agreement, Xcode cannot add it, so the push build is opt-in: tools/build.sh device with OLA_PUSH=1.
@@ -74,6 +85,10 @@ targets:
           UIApplicationSupportsMultipleScenes: false
         NSLocalNetworkUsageDescription: Ola talks to Ola on your Mac over your private network.
         NSCameraUsageDescription: The camera reads the pairing code that Ola on your Mac shows.
+        NSMicrophoneUsageDescription: To talk with Kit and leave it voice notes.
+        # A meeting with Kit keeps going with the screen locked or another app in front. This is
+        # a plain Info.plist key, not a capability, so it needs nothing from Apple's agreement.
+        UIBackgroundModes: [audio]
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
           NSExceptionDomains:

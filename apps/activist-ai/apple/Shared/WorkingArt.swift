@@ -623,7 +623,11 @@ enum Machine {
   }
 
   static func draw(_ ctx: inout GraphicsContext, small: Bool, s: WorkingScene, t: Double) {
-    let p = pose(s, t)
+    draw(&ctx, small: small, pose: pose(s, t))
+  }
+
+  /// One pose, drawn (Kit's voice on the phone poses the eyes itself).
+  static func draw(_ ctx: inout GraphicsContext, small: Bool, pose p: Pose) {
     guard p.opacity > 0.001 else { return }
     ctx.opacity = p.opacity
     let w = 64.0, h = 42.0, feet = 4.5
@@ -800,7 +804,11 @@ enum Eyes {
   }
 
   static func draw(_ ctx: inout GraphicsContext, small: Bool, s: WorkingScene, t: Double) {
-    let p = pose(s, t)
+    draw(&ctx, small: small, pose: pose(s, t))
+  }
+
+  /// One pose, drawn (Kit's voice on the phone poses the eyes itself).
+  static func draw(_ ctx: inout GraphicsContext, small: Bool, pose p: Pose) {
     guard p.opacity > 0.001 else { return }
     ctx.opacity = p.opacity
     let lw = small ? 3.6 : 2.4

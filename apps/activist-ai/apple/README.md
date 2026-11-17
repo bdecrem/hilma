@@ -207,6 +207,30 @@ with no scripts or loads), then name, kind and View for the rest (four, then "an
 pages in the page viewer, websites in the in-app browser (phone) or the browser (Mac), pictures full
 size with zoom, tables as a table, Markdown and text rendered, anything else in Quick Look.
 
+## Kit: voice meetings and notes (phone, admins only, 2026-11-17)
+
+Bart: "proper full duplex voice meetings with you or leave you voice notes", like Dodo's voice mode.
+`iOS/Kit/`: `KitScreen(api:)` is the whole tab (Talk to Kit, Leave a note, the last few of each,
+tap one to read it back), built to drop into the admin-only `KitRootView` with the app token:
+`KitScreen(api: KitAPI(token: { <the token from the Keychain> }))`. The server is hilma's
+`/api/venture/phone` (`src/lib/venture/phone.ts`); `OlaKit/KitAPI.swift` is its client.
+
+- **A meeting** (`KitMeetingScreen`) runs on ElevenLabs' Swift SDK 3.3.1 with LiveKit pinned at
+  2.17.0, the pair the Dodo app ships (`ElevenKitTransport.swift`). Its states and every way it ends
+  are `OlaKit/KitMeeting.swift`: connecting, live (listening, thinking, speaking), one reconnect into
+  the same meeting, then ended: by End, by four minutes of silence (the engine), the forty-minute cap,
+  a lost connection, a phone call (the audio interruption). Each exit closes the connection, which
+  frees the ElevenLabs slot, and tells the server once. Cutting in is ElevenLabs' barge-in; the
+  transcript keeps what Kit actually got to say. `UIBackgroundModes: audio` (a plain Info.plist key,
+  no capability) keeps a meeting going with the screen locked. Kit's voice is the eyes from "Ola is
+  working" (`KitVoiceFigure`), on a disc that lights and swells with Kit's voice.
+- **A note** (`KitNoteScreen`, `KitNoteRecorder`): tap to record, tap to stop (one-handed, no
+  holding), a level meter, five minutes with a countdown in the last thirty seconds, Send or Discard,
+  then "Kit has your note" with the words. AAC, 24 kHz mono; the file is deleted once sent.
+- Proof without a real call: `swift test --filter KitMeetingTests` (a fake connection and server;
+  every exit closes and reports once). Screens: `-KitShots <dir>` on a simulator debug build draws
+  every state, light and dark, with made-up words, and exits (`~/Desktop/ola-brand/apple-shots/kit-voice/`).
+
 ## Ola ignores other tools' skills (2026-11-16)
 
 On Bart's Mac, a request for an abstract painting loaded Claude's `algorithmic-art` and
