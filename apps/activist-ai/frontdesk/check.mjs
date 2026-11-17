@@ -790,7 +790,10 @@ await check('devices: refused: a grant without CSRF, cross-site or from another 
   const tokenAsCode = await redeem(dinaToken, app.S)
   const none = await redeem(null, app.S)
   const got = [wrong, after, late, forged, tokenAsCode, none].map((r) => `${r.status} ${r.json?.error}`)
-  assert(got.join(',') === '401 invalid_code,401 invalid_code,401 invalid_code,401 invalid_code,401 invalid_code', got.join(', '))
+  assert(got.join(',') === Array(6).fill('401 invalid_code').join(','), got.join(', '))
+  // dina signs her first computer out from the app (Sign Out), as the checks after this expect.
+  assert((await asDevice('/api/device/signout', dinaToken, { method: 'POST', body: {} })).status === 200, 'sign out')
+  assert((await asDevice('/api/device/me', dinaToken)).status === 401, 'a signed-out device still works')
   const refusedRows = JSON.parse(admin('audit', '--limit', '200', '--json')).filter((r) => r.action === 'device_refused').length
   assert(refusedRows >= 1, `device_refused rows: ${refusedRows}`)
   return `grants ${Object.values(seen).join(' ')}; redeems ${got.join(', ')}; ${refusedRows} device_refused rows`
