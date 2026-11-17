@@ -13,6 +13,7 @@ enum Main {
     OlaFont.register()
     if LocalSelfTest.requested { LocalSelfTest.run() }
     if SettingsSelfTest.requested { SettingsSelfTest.run() }
+    if RenderSelfTest.requested { MainActor.assumeIsolated { RenderSelfTest.run() } }
     if MotionRender.cpuRequested { MotionRender.measureCPU() }
     if let dir = MotionRender.outputDirectory { MotionRender.run(to: dir) }
     if let dir = Snapshot.outputDirectory {
@@ -53,6 +54,8 @@ struct OlaMacApp: App {
         .frame(minWidth: 860, minHeight: 560)
         .onAppear {
           guard whereOla == nil else { return }
+          // ola-page for the agent "On this Mac" (bart/ola-page-mac): rendered here, off screen.
+          PageRender.shared.start()
           let w = WhereOlaWorks(store: store, account: account)
           whereOla = w
           account.onSignedIn = { [weak w] in

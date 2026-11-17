@@ -11,6 +11,8 @@
 #   bart/ola-bart.sh web         give the bart caller its standing web grant, and check it (see README)
 #   bart/ola-bart.sh password    print the password ONCE, for the apps' Keychain (on the machine only)
 #   bart/ola-bart.sh uninstall   remove the job and the token; keeps ~/ola-bart and the password file
+#   bart/ola-bart.sh files       only (re)write the skills, the tools and the config (a check uses it with
+#                                OLA_BART_STATE and OLA_BART_PROJECT pointing at a scratch folder)
 #
 # Nothing here prints a secret, except `password`, which exists to do exactly that.
 set -euo pipefail
@@ -19,8 +21,8 @@ export PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
 HERE="$(cd "$(dirname "$0")" && pwd)"
 AI="$(cd "$HERE/.." && pwd)"                      # apps/activist-ai (package.json pins opencode)
 LABEL=cx.ola.bart
-PROJECT="$HOME/ola-bart"                          # what the agent works in
-STATE="$HOME/.ola-bart"                           # opencode's own install, config, data, logs
+PROJECT="${OLA_BART_PROJECT:-$HOME/ola-bart}"     # what the agent works in
+STATE="${OLA_BART_STATE:-$HOME/.ola-bart}"        # opencode's own install, config, data, logs, Ola's skills
 ENVF="$HOME/.ola/bart.env"                        # OPENCODE_PASSWORD, BOX_API_KEY (600)
 TOKENS="$HOME/.ola/gateway-tokens"                # the gateway reloads this by itself
 WEBHOSTS="${OLA_GATEWAY_WEB_FILE:-$HOME/.ola/gateway-web}-hosts"  # host callers' web grants (gateway/web.mjs)
@@ -125,9 +127,41 @@ write_web_tools() {
   # agent's PATH. They reach the gateway on 127.0.0.1:4180 with the bart caller token.
   rm -rf "$STATE/bin/web"
   mkdir -p "$STATE/bin/web"
-  for f in ola-search ola-fetch ola-lookup ola-db olaspec.py; do cp "$AI/workspace/$f" "$STATE/bin/web/$f"; done
+  # ola-see (a model that looks at a picture, through the gateway like the rest) and ola-page (a
+  # page rendered headless and measured) are what the designer skills look with.
+  for f in ola-search ola-fetch ola-lookup ola-db olaspec.py ola-see ola-page; do cp "$AI/workspace/$f" "$STATE/bin/web/$f"; done
   cp "$AI/workspace/lib/olatext.py" "$STATE/bin/web/olatext.py"
-  chmod 755 "$STATE/bin/web/ola-search" "$STATE/bin/web/ola-fetch" "$STATE/bin/web/ola-lookup" "$STATE/bin/web/ola-db"
+  chmod 755 "$STATE/bin/web/ola-search" "$STATE/bin/web/ola-fetch" "$STATE/bin/web/ola-lookup" "$STATE/bin/web/ola-db" "$STATE/bin/web/ola-see" "$STATE/bin/web/ola-page"
+}
+
+# The headless browser ola-page drives on this machine: Playwright's Chromium headless shell when it
+# is installed for this account, else Google Chrome. Empty when there is none (ola-page then says so).
+chromium() {
+  local c
+  for c in "$HOME"/Library/Caches/ms-playwright/chromium_headless_shell-*/chrome-headless-shell-mac-arm64/chrome-headless-shell \
+           "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"; do
+    [ -x "$c" ] && { echo "$c"; return; }
+  done
+  return 0
+}
+
+# Ola's own skills (apps/activist-ai/skills), copied fresh into $STATE/skills, read-only, with the
+# image's path rewritten to this one. Only this script writes there; the config names that folder and
+# allows exactly these skills, so other tools' skills on this machine are never offered.
+write_skills() {
+  python3 "$AI/skills/install.py" "$STATE/skills" > "$STATE/skills.list"
+  echo "skills: $(tr '\n' ' ' < "$STATE/skills.list")"
+}
+
+# One allow rule per Ola skill, for the config (action: skill.use in policies, skill in permissions).
+skill_rules() {
+  local first=1 n
+  while read -r n; do
+    [ -n "$n" ] || continue
+    [ $first = 1 ] || printf ',\n'
+    printf '    { "action": "%s", "resource": "%s", "effect": "allow" }' "$1" "$n"
+    first=0
+  done < "$STATE/skills.list"
 }
 
 write_config() {
@@ -175,11 +209,16 @@ MD
   "update": "disable",
   "share": "disabled",
   "instructions": ["$STATE/config/opencode/ola-reactions.md"],
+  // Ola's skills, and only them (write_skills): the folder is named here, every skill is denied by
+  // name except Ola's, and OPENCODE_DISABLE_CLAUDE_CODE keeps Claude Code's skills out.
+  "skills": ["$STATE/skills"],
   // Only Ola's gateway: opencode otherwise offers its own free hosted models (opencode.ai), which
   // would send the conversation to a third party.
   "policies": [
     { "action": "provider.use", "resource": "*", "effect": "deny" },
     { "action": "provider.use", "resource": "ola", "effect": "allow" },
+    { "action": "skill.use", "resource": "*", "effect": "deny" },
+$(skill_rules skill.use),
     { "action": "tool.use", "resource": "shell:*GAMI*", "effect": "deny" },
     { "action": "tool.use", "resource": "shell:*hilma-*", "effect": "deny" },
     { "action": "tool.use", "resource": "shell:*ola-staging*", "effect": "deny" },
@@ -199,8 +238,11 @@ MD
     { "action": "websearch", "resource": "*", "effect": "deny" },
     // Nothing outside ~/ola-bart through the agent's own file tools, for now.
     { "action": "external_directory", "resource": "*", "effect": "deny" },
-    // No skills: opencode can find other tools' skills on the machine.
+    // Ola's skills only (opencode can find other tools' skills on the machine), and the agent may
+    // read their files with its own tools.
     { "action": "skill", "resource": "*", "effect": "deny" },
+$(skill_rules skill),
+    { "action": "external_directory", "resource": "$STATE/skills/*", "effect": "allow" },
     // What serves real people on this machine. A command naming any of these is refused
     // before it is even asked about.
     { "action": "shell", "resource": "*GAMI*", "effect": "deny" },
@@ -241,6 +283,7 @@ export OPENCODE_DISABLE_CLAUDE_CODE=1 OPENCODE_DISABLE_PROJECT_CONFIG=1
 export XDG_CONFIG_HOME="$STATE/config" XDG_DATA_HOME="$STATE/data" XDG_STATE_HOME="$STATE/state" XDG_CACHE_HOME="$STATE/cache"
 # Ola's web commands first on the PATH; downloads land in the project's sources/.
 export PATH="$STATE/bin/web:\$PATH" OLA_WORK="$PROJECT" OLA_LIB="$STATE/bin/web" OLA_GATEWAY_HOSTPORT=127.0.0.1:4180
+export OLA_PAGE_CHROMIUM="$(chromium)"
 cd "$PROJECT"
 # Two processes, one job: the forwarder for "On this Mac" mode (model requests from Bart's Mac to
 # the gateway) and opencode. If either stops, both stop, and launchd starts the pair again.
@@ -306,6 +349,7 @@ case "${1:-}" in
     add_token
     add_web
     write_web_tools
+    write_skills
     write_config
     write_runner
     write_plist
@@ -316,6 +360,13 @@ case "${1:-}" in
     for _ in $(seq 1 40); do curl -s -o /dev/null -m 1 "http://$HOST:$PORT/api/info" && break; sleep 0.5; done
     probe
     check_web || true
+    ;;
+  files)
+    mkdir -p "$PROJECT" "$STATE/config/opencode"
+    write_web_tools
+    write_skills
+    write_config
+    echo "wrote $STATE/skills, $STATE/bin/web and $STATE/config/opencode/opencode.jsonc (browser for ola-page: $(chromium))"
     ;;
   start) launchctl bootstrap "gui/$UID_" "$PLIST" && echo started ;;
   stop) launchctl bootout "gui/$UID_/$LABEL" && echo stopped ;;

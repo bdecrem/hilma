@@ -97,6 +97,26 @@ ola-search says the search was not approved. `ola-bart.sh status` shows the gran
 The check (`apple/OlaKit`, `OLA_WEB_CHECK=1 swift run olakit-selftest`, both modes, see
 apple/README.md) asks the agent to search the web for the Ola test phrase and tell one result.
 
+## Ola's skills, and looking at pages (2026-11-17)
+
+`install` (and `files`, which writes only the skills, the commands and the config, for a check)
+copies `apps/activist-ai/skills` into `~/.ola-bart/skills` with `skills/install.py`: read-only, the
+image's path rewritten to this one. The config names that folder and allows exactly those skills
+(every other skill denied by name in `policies` and `permissions`); `OPENCODE_DISABLE_CLAUDE_CODE`
+keeps Claude Code's skills out. Before this the skill tool was off here, because the model was loading
+unrelated skills installed for other tools. The designer skills look at pages with `ola-page` (the
+image's, driving Playwright's Chromium headless shell for this account, or Google Chrome; `run.sh`
+sets `OLA_PAGE_CHROMIUM`) and `ola-see` (the `see` model, through the gateway with the bart token,
+like `ola-lookup`; the gateway must have `see` in `GATEWAY_MODELS`).
+
+Check, with a scratch state folder and any gateway that serves `general` and `see`:
+
+```bash
+OLA_BART_STATE=/tmp/ob/state OLA_BART_PROJECT=/tmp/ob/project bart/ola-bart.sh files
+node bart/skills-check.mjs --opencode $PWD/node_modules/.bin/opencode --state /tmp/ob/state --project /tmp/ob/project \
+     --gateway 127.0.0.1:<port> --token-file <file> --model-check
+```
+
 ## What the agent may do
 
 Later rules win. Everything is allowed, except:

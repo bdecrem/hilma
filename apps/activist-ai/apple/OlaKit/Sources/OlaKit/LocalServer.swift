@@ -28,7 +28,12 @@ public final class LocalServer: @unchecked Sendable {
   /// in the customers' sealed image (workspace/). The Mac app carries them in its Resources; a check
   /// run from the repo points this at workspace/. Copied next to opencode at each start and put
   /// first on the agent's PATH; they reach the gateway through the machine's forwarder.
-  public static let webToolNames = ["ola-search", "ola-fetch", "ola-lookup", "ola-db", "olaspec.py", "olatext.py"]
+  /// ola-see (a model that looks at a picture) and ola-page (a page rendered and measured, here by
+  /// this app's own web view: bart/ola-page-mac, with the sealed image's ola-page beside it as
+  /// olapage.py for its measurements and its words) are what Ola's designer skills look with.
+  public static let webToolNames = ["ola-search", "ola-fetch", "ola-lookup", "ola-db", "olaspec.py", "olatext.py", "ola-see", "ola-page", "olapage.py"]
+  /// The file each tool is copied from, when its name in the app's Resources or the repo differs.
+  static let webToolFrom = ["ola-page": "ola-page-mac", "olapage.py": "ola-page"]
   nonisolated(unsafe) public static var webToolsSource: URL? = Bundle.main.resourceURL.flatMap { r in
     FileManager.default.fileExists(atPath: r.appendingPathComponent("ola-search").path) ? r : nil
   }
@@ -43,7 +48,9 @@ public final class LocalServer: @unchecked Sendable {
     var ok = true
     for name in webToolNames {
       // In the repo, olatext.py is in workspace/lib/; in the app, everything is side by side.
-      guard let from = [src.appendingPathComponent(name), src.appendingPathComponent("lib/\(name)")].first(where: { fm.fileExists(atPath: $0.path) }) else { ok = false; continue }
+      let file = webToolFrom[name] ?? name
+      // In the repo the Mac's ola-page is bart/ola-page-mac, beside workspace/.
+      guard let from = [src.appendingPathComponent(file), src.appendingPathComponent("lib/\(file)"), src.appendingPathComponent("../bart/\(file)")].first(where: { fm.fileExists(atPath: $0.path) }) else { ok = false; continue }
       let to = dir.appendingPathComponent(name)
       do {
         try fm.copyItem(at: from, to: to)
@@ -51,6 +58,52 @@ public final class LocalServer: @unchecked Sendable {
       } catch { ok = false }
     }
     return ok
+  }
+
+  /// Ola's own skills (apps/activist-ai/skills): in the app's Resources, or the repo for a check.
+  nonisolated(unsafe) public static var skillsSource: URL? = Bundle.main.resourceURL.map { $0.appendingPathComponent("skills") }
+    .flatMap { FileManager.default.fileExists(atPath: $0.appendingPathComponent("designer/SKILL.md").path) ? $0 : nil }
+  /// Where they are installed for opencode: written fresh by this app at each start, read-only, and
+  /// named in the config as the only skills. No spaces in the path, so the commands in the skills
+  /// work as written (Application Support has one).
+  nonisolated(unsafe) public static var skillsHome = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Ola/skills")
+
+  /// Copies every skill folder into `dir` (made fresh), rewrites the sealed image's path
+  /// /opt/ola/skills to `dir` in the text files, and makes the copy read-only, as
+  /// skills/install.py does on the machine. Returns the skills' names (empty when none were found).
+  @discardableResult
+  public static func installSkills(into dir: URL) -> [String] {
+    let fm = FileManager.default
+    guard let src = skillsSource, !dir.path.contains(" ") else { return [] }
+    if let all = fm.enumerator(atPath: dir.path) {
+      for case let rel as String in all { try? fm.setAttributes([.posixPermissions: 0o755], ofItemAtPath: dir.appendingPathComponent(rel).path) }
+      try? fm.setAttributes([.posixPermissions: 0o755], ofItemAtPath: dir.path)
+    }
+    try? fm.removeItem(at: dir)
+    guard (try? fm.createDirectory(at: dir, withIntermediateDirectories: true)) != nil else { return [] }
+    let names = ((try? fm.contentsOfDirectory(atPath: src.path)) ?? []).filter { !$0.hasPrefix(".") && fm.fileExists(atPath: src.appendingPathComponent("\($0)/SKILL.md").path) }.sorted()
+    let text: Set<String> = ["md", "py", "html", "css", "js", "txt", "json", "jsonc"]
+    for n in names {
+      guard (try? fm.copyItem(at: src.appendingPathComponent(n), to: dir.appendingPathComponent(n))) != nil else { return [] }
+    }
+    var files: [String] = []
+    if let all = fm.enumerator(atPath: dir.path) { for case let rel as String in all { files.append(rel) } }
+    for rel in files {
+      let u = dir.appendingPathComponent(rel)
+      var isDir: ObjCBool = false
+      fm.fileExists(atPath: u.path, isDirectory: &isDir)
+      if !isDir.boolValue, text.contains(u.pathExtension), let t = try? String(contentsOf: u, encoding: .utf8), t.contains("/opt/ola/skills") {
+        try? t.replacingOccurrences(of: "/opt/ola/skills", with: dir.path).write(to: u, atomically: false, encoding: .utf8)
+      }
+    }
+    for rel in files.sorted(by: >) {
+      let u = dir.appendingPathComponent(rel)
+      var isDir: ObjCBool = false
+      fm.fileExists(atPath: u.path, isDirectory: &isDir)
+      try? fm.setAttributes([.posixPermissions: (isDir.boolValue || u.pathExtension == "py") ? 0o555 : 0o444], ofItemAtPath: u.path)
+    }
+    try? fm.setAttributes([.posixPermissions: 0o555], ofItemAtPath: dir.path)
+    return names
   }
 
   public let folder: URL
@@ -118,7 +171,8 @@ public final class LocalServer: @unchecked Sendable {
     }
   }
 
-  static func config(modelURL: String, instructionsPath: String) -> String {
+  static func config(modelURL: String, instructionsPath: String, skills: [String] = [], skillsPath: String = "") -> String {
+    let allow = { (action: String) in skills.map { #"    { "action": "\#(action)", "resource": "\#($0)", "effect": "allow" },"# }.joined(separator: "\n") }
     let deny = ["*GAMI*", "*hilma-*", "*ola-staging*", "*launchctl*", "*sudo *", "*.ola/*"]
       .map { #"    { "action": "shell", "resource": "\#($0)", "effect": "deny" }"# }.joined(separator: ",\n")
     return """
@@ -140,7 +194,12 @@ public final class LocalServer: @unchecked Sendable {
       "update": "disable",
       "share": "disabled",
       "instructions": ["\(instructionsPath)"],
+      // Ola's own skills and nothing else (installSkills): the folder is named here, and every
+      // skill is denied by name except Ola's. OPENCODE_DISABLE_CLAUDE_CODE keeps Claude's out.
+      "skills": [\(skills.isEmpty ? "" : "\"\(skillsPath)\"")],
       "policies": [
+        { "action": "skill.use", "resource": "*", "effect": "deny" },
+    \(allow("skill.use"))
         { "action": "provider.use", "resource": "*", "effect": "deny" },
         { "action": "provider.use", "resource": "ola", "effect": "allow" }
       ],
@@ -159,6 +218,8 @@ public final class LocalServer: @unchecked Sendable {
         { "action": "websearch", "resource": "*", "effect": "deny" },
         { "action": "external_directory", "resource": "*", "effect": "deny" },
         { "action": "skill", "resource": "*", "effect": "deny" },
+    \(allow("skill"))
+        { "action": "external_directory", "resource": "\(skillsPath.isEmpty ? "__ola_none__" : skillsPath)/*", "effect": "allow" },
     \(deny)
       ]
     }
@@ -189,7 +250,10 @@ public final class LocalServer: @unchecked Sendable {
     let webTools = Self.support.appendingPathComponent("web-tools")
     let haveWeb = Self.installWebTools(into: webTools)
     trace?(haveWeb ? "web commands in \(webTools.path)" : "web commands NOT found (ola-search will be missing)")
-    try Self.config(modelURL: route.baseURL, instructionsPath: instructions.path).write(to: config.appendingPathComponent("opencode/opencode.jsonc"), atomically: true, encoding: .utf8)
+    let skillsDir = Self.skillsHome
+    let skills = Self.installSkills(into: skillsDir)
+    trace?(skills.isEmpty ? "Ola's skills NOT found (none offered)" : "Ola's skills in \(skillsDir.path): \(skills.joined(separator: ", "))")
+    try Self.config(modelURL: route.baseURL, instructionsPath: instructions.path, skills: skills, skillsPath: skillsDir.path).write(to: config.appendingPathComponent("opencode/opencode.jsonc"), atomically: true, encoding: .utf8)
 
     var env: [String: String] = [:]
     let mine = ProcessInfo.processInfo.environment
@@ -200,6 +264,8 @@ public final class LocalServer: @unchecked Sendable {
     env["OLA_GATEWAY_HOSTPORT"] = route.hostPort
     env["OLA_WORK"] = folder.path
     env["OLA_LIB"] = webTools.path
+    // ola-page asks this app to render a page in its own web view (PageRender in the Mac app).
+    env["OLA_RENDER_DIR"] = Self.support.appendingPathComponent("render").path
     env["XDG_CONFIG_HOME"] = config.path
     env["XDG_DATA_HOME"] = base.appendingPathComponent("data").path
     env["XDG_STATE_HOME"] = base.appendingPathComponent("state").path

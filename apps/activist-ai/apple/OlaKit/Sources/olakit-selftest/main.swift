@@ -53,7 +53,7 @@ if env["OLA_WEB_CHECK"] == "1" {
 if env["OLA_SKILLS_CHECK"] == "1" {
   guard let tf = env["OLA_MODEL_TOKEN_FILE"], let token = try? String(contentsOfFile: tf, encoding: .utf8).trimmingCharacters(in: .whitespacesAndNewlines) else { print("set OLA_MODEL_TOKEN_FILE"); exit(2) }
   var bad = 0
-  await SkillsCheck.go(token: token) { ok, what, note in
+  await SkillsCheck.go(token: token, modelURL: env["OLA_MODEL_URL"] ?? LocalServer.defaultModelURL) { ok, what, note in
     if !ok { bad += 1 }
     print("\(ok ? "PASS" : "FAIL")  \(what)\(note.isEmpty ? "" : "  (\(note))")")
   }

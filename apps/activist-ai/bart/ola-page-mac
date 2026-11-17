@@ -1,0 +1,63 @@
+#!/usr/bin/env python3
+"""ola-page on Bart's Mac: the same command as in the sealed image, but the page is rendered by the
+Ola Mac app in its own web view, off screen, instead of a headless Chromium (this Mac has none to
+spare). The Mac app installs this as `ola-page`, with the image's ola-page beside it as olapage.py
+(the measurements and the words are shared, so a skill reads the same lines on both).
+
+    ola-page index.html [--width 390] [--height 900] --out shot.png [--json checks.json] [--viewport] [--dark] [--scale 2]
+
+How it asks: a request file in $OLA_RENDER_DIR/in (written beside and renamed into place); the app
+(Mac/PageRender.swift) renders the page from its own folder through a scheme that serves only that
+folder, with every other load blocked, runs the measurements, saves the picture, and answers in
+$OLA_RENDER_DIR/out. The app must be running (it is: it started the agent that runs this).
+"""
+import importlib.machinery, json, os, shutil, sys, time, uuid
+from pathlib import Path
+
+HERE = Path(os.path.realpath(__file__)).parent
+olapage = importlib.machinery.SourceFileLoader("olapage", str(HERE / "olapage.py")).load_module()
+
+
+def main():
+    a = olapage.arguments().parse_args()
+    page = Path(a.page).resolve()
+    if not page.is_file():
+        print(f"ola-page: no such page: {a.page}", file=sys.stderr)
+        return 2
+    if not 200 <= a.width <= 3000 or not 200 <= a.height <= 4000:
+        print("ola-page: --width and --height must be 200 to 3000 (4000 for height)", file=sys.stderr)
+        return 2
+    box = os.environ.get("OLA_RENDER_DIR")
+    if not box or not Path(box).is_dir():
+        print("ola-page: the Ola Mac app is not running here, so no page can be rendered (OLA_RENDER_DIR is not set)", file=sys.stderr)
+        return 1
+    rid = uuid.uuid4().hex
+    out = Path(a.out).resolve()
+    out.parent.mkdir(parents=True, exist_ok=True)
+    req = {"id": rid, "page": str(page), "root": str(page.parent), "width": a.width, "height": a.height, "viewport": a.viewport,
+           "scale": a.scale, "dark": a.dark, "wait": a.wait, "measure": olapage.MEASURE, "max_height": olapage.MAX_HEIGHT}
+    inbox, outbox = Path(box) / "in", Path(box) / "out"
+    inbox.mkdir(exist_ok=True)
+    tmp = inbox / f".{rid}.tmp"
+    tmp.write_text(json.dumps(req))
+    tmp.rename(inbox / f"{rid}.json")
+    answer = outbox / f"{rid}.json"
+    end = time.time() + int(os.environ.get("OLA_PAGE_DEADLINE_S", "150"))
+    while time.time() < end and not answer.exists():
+        time.sleep(0.2)
+    if not answer.exists():
+        (inbox / f"{rid}.json").unlink(missing_ok=True)
+        print("ola-page: the Ola Mac app did not render the page in time (is it open?)", file=sys.stderr)
+        return 1
+    r = json.loads(answer.read_text())
+    answer.unlink(missing_ok=True)
+    if not r.get("ok"):
+        print(f"ola-page: could not load the page ({r.get('error', 'unknown')[:200]})", file=sys.stderr)
+        return 1
+    shutil.move(r["png"], out)  # the app writes only into its own folder; the picture is moved here
+    report = {"page": a.page, "width": a.width, **r["report"], "shot": a.out, "shot_size": list(olapage.png_size(str(out)))}
+    return olapage.finish(a, report)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
