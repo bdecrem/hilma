@@ -595,7 +595,9 @@ export async function runOnce({ dry = false, only = null, force = [] } = {}) {
   if (text && !dry) sent = await send(S, text)
   if (!force.includes('test')) d.after(sent?.ok)
   // Remember this run.
-  if (r.vms && r.vms.running !== null) state.vms = { running: r.vms.running, at: new Date(now).toISOString(), deploying: r.vms.deploying, suite: r.vms.suite }
+  // A listing that failed (the container system not answering) counts as none running, so a drop
+  // it caused is recorded once, not at every run while it lasts.
+  if (r.vms) state.vms = { running: r.vms.running ?? [], at: new Date(now).toISOString(), deploying: r.vms.deploying, suite: r.vms.suite, listed: r.vms.running !== null }
   if (readings.memory) state.memory = `${readings.memory.pressure}, swap ${readings.memory.swapPct}%`
   const alarms = Object.keys(state.active)
   const warns = conds.filter((c) => c.level === 'warn').map((c) => c.id)

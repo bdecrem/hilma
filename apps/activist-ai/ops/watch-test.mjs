@@ -22,6 +22,14 @@ const LOGS = path.join(T, 'logs')
 const BIN = path.join(T, 'bin')
 const STAGING = path.join(T, 'staging')
 const SECRET = 'VK-fake-9f8e7d6c5b4a39281706f5e4d3c2b1a0'
+// The container CLI: running VMs from a file, a status, and a log tail with secrets in it.
+const CONTAINER_FAKE = [
+  'case "$1 $2" in',
+  `  "list -q") cat "${T}/vms";;`,
+  '  "system status") echo "status running"; echo "containers.running 0";;',
+  `  "system logs") echo "12:01 apiserver: vm ola-a exited, BOX_API_KEY=4e45112f802a4a6da67cb0beb5f823dd OPENCODE_PASSWORD=GB-K0Ma5rZE4kr"; echo "12:01 apiserver: memory pressure critical";;`,
+  'esac',
+].join('\n')
 const BANNED = /gateway|front desk|\bVMs?\b|TLS|tunnel|sandbox|workspace/i
 
 // ------------------------------------------------------------------ fakes on disk
@@ -67,13 +75,7 @@ before(async () => {
   script('sysctl', `case "$2" in kern.memorystatus_vm_pressure_level) cat "${T}/level";; vm.swapusage) cat "${T}/swap";; esac`)
   script('du', `for d in "$@"; do case "$d" in -*) ;; *) echo "1048576	$d";; esac; done`)
   script('launchctl', `if [ -s "${T}/tunnel" ]; then cat "${T}/tunnel"; else echo "Could not find service" >&2; exit 113; fi`)
-  script('container', [
-    'case "$1 $2" in',
-    `  "list -q") cat "${T}/vms";;`,
-    '  "system status") echo "status running"; echo "containers.running 0";;',
-    `  "system logs") echo "12:01 apiserver: vm ola-a exited, BOX_API_KEY=4e45112f802a4a6da67cb0beb5f823dd OPENCODE_PASSWORD=GB-K0Ma5rZE4kr"; echo "12:01 apiserver: memory pressure critical";;`,
-    'esac',
-  ].join('\n'))
+  script('container', CONTAINER_FAKE)
   ssl('ecparam', '-name', 'prime256v1', '-genkey', '-noout', '-out', 'ca.key')
   ssl('req', '-x509', '-sha256', '-new', '-key', 'ca.key', '-subj', '/CN=Ola watch test CA', '-days', '2', '-out', 'ca.pem')
   LONG = leaf('long', 90)
@@ -335,6 +337,22 @@ test('every VM stopping at once: evidence saved (no secrets in it), a warning, t
   assert.equal(m.sent.length, 1)
   assert.match(m.sent[0], /every running project stopped at once \(2 of them, at 2:02 pm\)/)
   assert.deepEqual((await watch(at('09:02', 18))).sent, [], 'the note goes once a day')
+})
+
+test('the container system not answering: every VM counts as stopped, recorded once', async () => {
+  fakes({ vms: 'ola-p\nola-q\n' })
+  await watch(at('14:00'))
+  script('container', 'echo "XPC connection error: Connection invalid" >&2; exit 1')
+  try {
+    const r = await watch(at('14:02'))
+    assert.match(r.out, /warn vms,vm-drop/)
+    assert.match(r.out, /vms: XPC connection error/)
+    const again = await watch(at('14:04'))
+    assert.doesNotMatch(again.out, /vm-drop/)
+    assert.equal(readdirSync(LOGS).filter((f) => f.startsWith('watch-vm-drop-')).length, 1)
+  } finally {
+    script('container', CONTAINER_FAKE)
+  }
 })
 
 test('every VM stopping during a deploy is explained: no warning', async () => {
