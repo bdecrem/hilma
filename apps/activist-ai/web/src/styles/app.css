@@ -2577,7 +2577,7 @@ code {
   left: 0;
   right: 0;
   bottom: calc(100% + var(--s2));
-  max-height: min(340px, 50dvh);
+  max-height: min(420px, 56dvh);
   overflow-y: auto;
   background: #fbf7ee;
   border: 1.5px solid var(--rule);
