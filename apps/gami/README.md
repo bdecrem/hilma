@@ -26,6 +26,12 @@ Status on 2026-10-21: 1,372 of 1,682 downloaded; 158 have no DOI anywhere, 122 n
 subscription (Inderscience, IWA, a few others), 2 Elsevier (Rangeland Ecology & Management) the API won't serve.
 The 32 Elsevier papers added on 2026-10-21 came through the Article Retrieval API (see `fetch/README.md`).
 
+Second sweep, 2026-11-16 (Fran asked for a last go before fetching by hand): 1,549 of 1,682; 133 missing (43 no DOI,
+78 no PDF found, 12 behind a bot check). `fetch/sweep.py` (DOIs from the GAMI Zotero group's public metadata, open
+copies) then `fetch/sweep-browser.mjs` on the mini (visible Chrome, Stanford IP, web search by title) — see
+`fetch/README.md`. The Zotero group (zotero.org/groups/5943294) lists 1,684 attachments but only 4 were ever
+uploaded to Zotero's servers; the PDFs are on the owner's (Siders) own disk, so ask for her `storage` folder.
+
 Reach it from the iMac with `ssh admin@171.66.240.175` (key auth). The mini has `python3` but no `uv`.
 
 ## How the PDFs were fetched
