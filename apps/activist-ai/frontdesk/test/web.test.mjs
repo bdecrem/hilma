@@ -38,6 +38,13 @@ test('Allow once: a grant for that exact search, bound by the gateway’s own ha
   const f = await web.onReply(ws, 1, 'ses_1', 'per_1', 'once', asking('shell', ['ola-fetch https://Example.org/a.pdf']))
   assert.equal(f, 'once')
   assert.equal(read()['ws-proj-a'].once.at(-1).h, itemHash('fetch', fetchItem('https://example.org/a.pdf')))
+  // A paper lookup: its own kind, bound to the reference as the gateway normalizes it.
+  const l = await web.onReply(ws, 1, 'ses_1', 'per_1', 'once', asking('shell', ['ola-lookup "Lindqvist A (2031)  Boilers and tenants"']))
+  assert.equal(l, 'once')
+  const last = read()['ws-proj-a'].once.at(-1)
+  assert.equal(last.kind, 'lookup')
+  assert.equal(last.h, itemHash('lookup', searchItem('Lindqvist A (2031) Boilers and tenants')))
+  assert.ok(!JSON.stringify(read()).includes('Boilers'), 'the reference is not in the file')
 })
 
 test('Always in this project: kept and audited, passed to opencode as once, shown in Settings, revoked there', async () => {
