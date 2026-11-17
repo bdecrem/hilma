@@ -935,7 +935,7 @@ if (!LIVE) {
     await dialog.waitFor({ timeout: 60_000 })
     const title = await dialog.locator('h2').innerText()
     assert(title.includes('Ola wants to search the web for:') && title.includes(Q), title)
-    assert((await dialog.locator('.web-leaves').innerText()).includes('The words of the search go to Brave Search. Nothing from your files is sent.'), 'the line under it')
+    assert((await dialog.locator('.web-leaves').innerText()).includes('The words of the search go to a made-up search (for checks). Nothing from your files is sent.'), 'the line under it names the gateway’s provider (mock here), not a fixed one')
     await dialog.getByRole('button', { name: 'Allow once' }).click()
     await done()
     await until(() => searchLines().length > n, 10_000, 'the search at the gateway')

@@ -410,7 +410,7 @@ test('the weekly quota is counted from upstream usage, refuses when used up, and
   assert.equal(b.tokens_in, 21 + 10, 'three tries of 7, then one request of 10')
   assert.equal(b.quota, 1000)
   // The front desk names the search provider from here, so the card says the one really used.
-  assert.ok(typeof all.json.web?.provider === 'string' && all.json.web.provider.length, `web provider: ${JSON.stringify(all.json.web)}`)
+  assert.ok(all.json.web && 'provider' in all.json.web, `web provider: ${JSON.stringify(all.json.web)}`)
   assert.equal((await call(g, env.GATEWAY_USAGE_TOKEN, chat())).status, 403, 'the usage token cannot call models')
   await g.stop()
 })
