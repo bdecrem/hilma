@@ -8,9 +8,9 @@ import UIKit
 typealias PlatformColor = UIColor
 #endif
 
-// "Paper under the lamp" (ola-brand/app/spec.md). Evening blue is the room: the sessions and the
-// machine live there. What you read is paper on the desk. Lamp yellow marks only what is happening
-// now. Vermilion asks for you, and is never decoration.
+// "Paper under the lamp" (ola-brand/app/spec.md). The frame is the room in shadow: the sessions and
+// the machine live there. What you read is paper on the desk, one tone lifted. Lamp yellow marks only
+// what is happening now. Vermilion asks for you, and is never decoration.
 
 extension Color {
   /// One color for light, one for dark.
@@ -26,29 +26,123 @@ extension Color {
   }
 }
 
-enum Ola {
-  // The room (navigation).
-  static let room = Color.ola(0x25407a, 0x14223f)
-  static let roomRaised = Color.ola(0x1f386d, 0x1d3160)
-  static let roomRule = Color.ola(0x34508b, 0x24365f)
-  static let mist = Color.ola(0xc9d2ea, 0xc3cce4)
-  static let dim = Color.ola(0x9fb0d6, 0x8b9cc4)
-  static let onRoom = Color.ola(0xf7f0e3, 0xf3ecdf)
-  // Paper (reading). At night the paper is lamp-lit: warm, dark, never blue.
-  static let paper = Color.ola(0xf7f0e3, 0x1e1c19)
-  static let details = Color.ola(0xefe6d3, 0x2a2723)
-  static let rule = Color.ola(0xdccfb6, 0x3b372f)
-  static let ink = Color.ola(0x141c33, 0xefe7d6)
-  static let ink2 = Color.ola(0x4b5268, 0xbfb7a6)
-  static let ink3 = Color.ola(0x5c6175, 0x9d9686)
-  static let blue = Color.ola(0x25407a, 0xa9bdf0)
+/// The palette (design pass two, 2026-11-16). Tone does the work, not hue: a small warm ramp per
+/// mode (the frame around the work, the page you read, hairlines, three levels of text), one accent,
+/// and one color that means "Ola needs you". Each value is named by its role. Three palettes were
+/// drawn side by side (apple-shots/polish-2/palettes.png); the chosen one is the default and the
+/// other two can be shown without a rebuild: `defaults write cx.ola.mac OlaPalette A|B|C`
+/// (on the phone, the same key in cx.ola.phone).
+struct Palette {
+  var id: String
+  // The frame: sidebar, title bar, the room around the page. One tonal step from the page.
+  var chrome: Color
+  var chromeHover: Color
+  var chromeSelected: Color
+  var chromeRule: Color
+  var chromeText: Color
+  var chromeText2: Color
+  var chromeText3: Color
+  // The page: what you read, and the files beside it.
+  var page: Color
+  var margin: Color
+  var code: Color
+  var field: Color
+  var separator: Color
+  var separatorStrong: Color
+  var hover: Color
+  var pressed: Color
+  var text: Color
+  var text2: Color
+  var text3: Color
+  // The one accent: the primary button, links, step icons.
+  var accent: Color
+  var onAccent: Color
+  var accentText: Color
   // Signals.
-  static let lamp = Color.ola(0xefcf82, 0xefcf82)
-  static let lampWash = Color.ola(0xf6e4ae, 0x3f3519)
-  static let vermilion = Color(red: 1, green: 0x6a / 255, blue: 0x3d / 255)
-  static let vermilionText = Color.ola(0xb93d17, 0xff8a62)
-  static let vermilionWash = Color.ola(0xfde0d4, 0x3d2219)
-  static let leaf = Color.ola(0x3c7334, 0x8cc47f)
+  var attention: Color
+  var attentionText: Color
+  var attentionWash: Color
+  var running: Color
+  var runningWash: Color
+  var ok: Color
+
+  /// The warm ramp all three share (light, dark).
+  static func base(id: String) -> Palette {
+    Palette(
+      id: id,
+      chrome: .ola(0xebe6dd, 0x1b1a18), chromeHover: .ola(0xe3ddd3, 0x242220), chromeSelected: .ola(0xdcd5c8, 0x2e2c29),
+      chromeRule: .ola(0xddd6ca, 0x2a2825), chromeText: .ola(0x1d1b18, 0xeee9e0), chromeText2: .ola(0x3b3732, 0xc7c0b5), chromeText3: .ola(0x69635a, 0x8f887d),
+      page: .ola(0xfbf8f2, 0x252320), margin: .ola(0xf4f0e8, 0x201e1c), code: .ola(0xf1ece2, 0x2f2c28), field: .ola(0xfffdf9, 0x2b2926),
+      separator: .ola(0xe6e0d5, 0x33302c), separatorStrong: .ola(0xd3cbbd, 0x46423c),
+      hover: .ola(0xf0ebe2, 0x2c2a26), pressed: .ola(0xe7e1d6, 0x34312d),
+      text: .ola(0x1d1b18, 0xf2ede4), text2: .ola(0x4d4841, 0xc6bfb3), text3: .ola(0x6b655c, 0x978f83),
+      accent: .ola(0x2b2824, 0xebe5da), onAccent: .ola(0xfbf8f2, 0x1d1b18), accentText: .ola(0x2b2824, 0xebe5da),
+      attention: .ola(0xd2532c, 0xe5734d), attentionText: .ola(0xad4220, 0xf09572), attentionWash: .ola(0xf8e9e1, 0x35271f),
+      running: .ola(0xd9a940, 0xe3c278), runningWash: .ola(0xf6eccf, 0x332d1f), ok: .ola(0x3f7a3a, 0x92c585))
+  }
+
+  /// A: ink and paper. Warm monochrome; the accent is the ink itself.
+  static let ink = base(id: "A")
+
+  /// B: the same paper, with the brand's evening blue kept as the accent only, never a surface.
+  static let blueInk: Palette = {
+    var p = base(id: "B")
+    p.accent = .ola(0x2f5597, 0x4369ad); p.onAccent = .ola(0xffffff, 0xffffff); p.accentText = .ola(0x2c5194, 0x98b4e6)
+    p.chromeSelected = .ola(0xdcdee3, 0x2b2e34)
+    return p
+  }()
+
+  /// C: dusk. The frame takes a trace of the evening blue at low chroma (slate), the page stays
+  /// warm, the accent is the blue.
+  static let dusk: Palette = {
+    var p = blueInk
+    p.id = "C"
+    p.chrome = .ola(0xe5e7eb, 0x181b20); p.chromeHover = .ola(0xdcdfe5, 0x20242a); p.chromeSelected = .ola(0xd4d9e1, 0x2a3039)
+    p.chromeRule = .ola(0xd5d9e0, 0x262a31); p.chromeText = .ola(0x1b1e24, 0xe8eaee); p.chromeText2 = .ola(0x363b44, 0xbcc2cc); p.chromeText3 = .ola(0x5f6673, 0x868d99)
+    return p
+  }()
+
+  static let all = [ink, blueInk, dusk]
+  /// The one in use: the hidden default `OlaPalette`, else the chosen one.
+  nonisolated(unsafe) static var current: Palette = all.first { $0.id == UserDefaults.standard.string(forKey: "OlaPalette") } ?? chosen
+  static let chosen = blueInk
+}
+
+/// The roles under the names the views use. The old names (room, paper, ink, vermilion) stay so
+/// the views read the same; their values come from the palette.
+enum Ola {
+  static var p: Palette { Palette.current }
+  // The frame.
+  static var room: Color { p.chrome }
+  static var roomRaised: Color { p.chromeSelected }
+  static var roomHover: Color { p.chromeHover }
+  static var roomRule: Color { p.chromeRule }
+  static var onRoom: Color { p.chromeText }
+  static var mist: Color { p.chromeText2 }
+  static var dim: Color { p.chromeText3 }
+  // The page.
+  static var paper: Color { p.page }
+  static var details: Color { p.code }
+  static var margin: Color { p.margin }
+  static var field: Color { p.field }
+  static var rule: Color { p.separator }
+  static var ruleStrong: Color { p.separatorStrong }
+  static var paperHover: Color { p.hover }
+  static var paperPressed: Color { p.pressed }
+  static var ink: Color { p.text }
+  static var ink2: Color { p.text2 }
+  static var ink3: Color { p.text3 }
+  // The accent.
+  static var action: Color { p.accent }
+  static var onAction: Color { p.onAccent }
+  static var blue: Color { p.accentText }
+  // Signals.
+  static var lamp: Color { p.running }
+  static var lampWash: Color { p.runningWash }
+  static var vermilion: Color { p.attention }
+  static var vermilionText: Color { p.attentionText }
+  static var vermilionWash: Color { p.attentionWash }
+  static var leaf: Color { p.ok }
 }
 
 /// Bricolage Grotesque for the interface, Literata for what Ola writes, IBM Plex Mono in details.
@@ -128,17 +222,6 @@ enum Space {
   static let l: CGFloat = 16
   static let xl: CGFloat = 24
   static let xxl: CGFloat = 32
-}
-
-extension Ola {
-  /// Hover and pressed fills: on paper a shade of the rule, on the room a lift toward the selection.
-  static let paperHover = Color.ola(0xece2cd, 0x2c2925)
-  static let paperPressed = Color.ola(0xe3d7be, 0x35312b)
-  static let roomHover = Color.ola(0x2b4886, 0x1a2b52)
-  /// The composer and text fields: paper a shade lighter than the page.
-  static let field = Color.ola(0xfcf8f0, 0x26241f)
-  /// The primary button's fill, the room's blue (lifted at night so it reads on dark paper).
-  static let action = Color.ola(0x25407a, 0x3a5aa0)
 }
 
 /// A fill that answers the pointer: hover, then pressed.

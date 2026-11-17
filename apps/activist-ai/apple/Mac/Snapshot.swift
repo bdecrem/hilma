@@ -19,11 +19,6 @@ enum Snapshot {
     try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
     let chosen = Treatment.desk
     let shots: [(String, String, Treatment, NSAppearance.Name, CGSize)] = [
-      // The two looks drawn for the window, side by side in apple-shots/polish.
-      ("dir-A-sheet-light", "main", .sheet, .aqua, CGSize(width: 1440, height: 900)),
-      ("dir-A-sheet-approval", "approval", .sheet, .aqua, CGSize(width: 1440, height: 900)),
-      ("dir-B-desk-light", "main", .desk, .aqua, CGSize(width: 1440, height: 900)),
-      ("dir-B-desk-approval", "approval", .desk, .aqua, CGSize(width: 1440, height: 900)),
       // The chosen look.
       ("mac-conversation-light", "main", chosen, .aqua, CGSize(width: 1440, height: 900)),
       ("mac-conversation-dark", "main", chosen, .darkAqua, CGSize(width: 1440, height: 900)),
@@ -60,9 +55,27 @@ enum Snapshot {
       let view = SettingsView(store: store, whereOla: controller, phoneLink: PhoneLink(store: store), tokenKnown: true, look: look).defaultAppStorage(defaults)
       write(view, size: SettingsView.snapshotSize, appearance: appearance, to: dir.appendingPathComponent("\(name).png"), titled: false, fit: true)
     }
+    // The three palettes (design pass two), each on the conversation with an approval and on
+    // Settings, dark and light: apple-shots/polish-2.
+    let chosenPalette = Palette.current
+    for palette in Palette.all where only == nil || "palette-\(palette.id)".contains(only!) {
+      Palette.current = palette
+      for (mode, appearance) in [("dark", NSAppearance.Name.darkAqua), ("light", .aqua)] {
+        NSApplication.shared.appearance = NSAppearance(named: appearance)
+        let store = OlaStore(fixture: Fixture.approval)
+        write(SnapshotFrame(store: store, treatment: chosen).environment(\.treatment, chosen), size: CGSize(width: 1440, height: 900), appearance: appearance, to: dir.appendingPathComponent("palette-\(palette.id)-conversation-\(mode).png"), titled: false)
+        defaults.set("mac", forKey: LocalSettings.modeKey)
+        defaults.set(true, forKey: "ola.phone.enabled")
+        let s2 = OlaStore(fixture: Fixture.main)
+        let view = SettingsView(store: s2, whereOla: WhereOlaWorks(store: s2), phoneLink: PhoneLink(store: s2), tokenKnown: true).defaultAppStorage(defaults)
+        write(view, size: SettingsView.snapshotSize, appearance: appearance, to: dir.appendingPathComponent("palette-\(palette.id)-settings-\(mode).png"), titled: false, fit: true)
+      }
+    }
+    Palette.current = chosenPalette
+    NSApplication.shared.appearance = nil
     // The real window: MacRoot itself (NavigationSplitView, inspector, toolbar) in a titled window
     // that is never ordered in. The system's glass does not draw into a bitmap; what Ola paints does.
-    let real: [(String, String, NSAppearance.Name)] = [("mac-real-light", "main", .aqua), ("mac-real-dark", "approval", .darkAqua)]
+    let real: [(String, String, NSAppearance.Name)] = [("mac-real-light", "main", .aqua), ("mac-real-dark", "approval", .darkAqua), ("mac-real-dark-main", "main", .darkAqua), ("mac-real-light-approval", "approval", .aqua)]
     for (name, fixture, appearance) in real where only == nil || name.contains(only!) {
       let store = OlaStore(fixture: Fixture.named(fixture))
       write(MacRoot(store: store), size: CGSize(width: 1280, height: 820), appearance: appearance, to: dir.appendingPathComponent("\(name).png"), titled: true)
@@ -112,6 +125,8 @@ enum Snapshot {
     let host = NSHostingView(rootView: view)
     host.sceneBridgingOptions = [.toolbars, .title]
     let far = CGPoint(x: -30_000, y: -30_000)
+    NSApplication.shared.appearance = NSAppearance(named: appearance)
+    defer { NSApplication.shared.appearance = nil }
     let window = SnapshotWindow(contentRect: NSRect(origin: far, size: size), styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView], backing: .buffered, defer: false)
     window.appearance = NSAppearance(named: appearance)
     window.contentView = host

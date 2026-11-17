@@ -21,12 +21,14 @@ extension View {
   @ViewBuilder func filesPaper(_ t: Treatment) -> some View {
     switch t {
     case .sheet:
-      clipShape(RoundedRectangle(cornerRadius: Sheet.radius)).shadow(color: .black.opacity(0.2), radius: 5, y: 1)
+      clipShape(RoundedRectangle(cornerRadius: Sheet.radius))
+        .overlay(RoundedRectangle(cornerRadius: Sheet.radius).strokeBorder(Ola.roomRule, lineWidth: 1)).shadow(color: .black.opacity(0.06), radius: 2, y: 1)
         .padding(.trailing, Sheet.gap).padding(.bottom, Sheet.gap).background(Ola.room)
     case .desk:
       overlay(alignment: .leading) { Rectangle().fill(Ola.rule).frame(width: 1) }
         .clipShape(UnevenRoundedRectangle(bottomTrailingRadius: Sheet.radius, topTrailingRadius: Sheet.radius))
-        .shadow(color: .black.opacity(0.2), radius: 5, y: 1)
+        .overlay(UnevenRoundedRectangle(bottomTrailingRadius: Sheet.radius, topTrailingRadius: Sheet.radius).strokeBorder(Ola.roomRule, lineWidth: 1))
+        .shadow(color: .black.opacity(0.06), radius: 2, y: 1)
         .padding(.trailing, Sheet.gap).padding(.bottom, Sheet.gap).background(Ola.room)
     }
   }
@@ -35,11 +37,13 @@ extension View {
   @ViewBuilder func conversationPaper(_ t: Treatment, filesShown: Bool) -> some View {
     switch t {
     case .sheet:
-      clipShape(RoundedRectangle(cornerRadius: Sheet.radius)).shadow(color: .black.opacity(0.2), radius: 5, y: 1)
+      clipShape(RoundedRectangle(cornerRadius: Sheet.radius))
+        .overlay(RoundedRectangle(cornerRadius: Sheet.radius).strokeBorder(Ola.roomRule, lineWidth: 1)).shadow(color: .black.opacity(0.06), radius: 2, y: 1)
         .padding(.horizontal, Sheet.gap).padding(.bottom, Sheet.gap)
     case .desk:
       clipShape(UnevenRoundedRectangle(topLeadingRadius: Sheet.radius, bottomLeadingRadius: Sheet.radius, bottomTrailingRadius: filesShown ? 0 : Sheet.radius, topTrailingRadius: filesShown ? 0 : Sheet.radius))
-        .shadow(color: .black.opacity(0.2), radius: 5, y: 1)
+        .overlay(UnevenRoundedRectangle(topLeadingRadius: Sheet.radius, bottomLeadingRadius: Sheet.radius, bottomTrailingRadius: filesShown ? 0 : Sheet.radius, topTrailingRadius: filesShown ? 0 : Sheet.radius).strokeBorder(Ola.roomRule, lineWidth: 1))
+        .shadow(color: .black.opacity(0.06), radius: 2, y: 1)
         .padding(.leading, Sheet.gap).padding(.trailing, filesShown ? 0 : Sheet.gap).padding(.bottom, Sheet.gap)
     }
   }
@@ -93,7 +97,6 @@ struct MacRoot: View {
     }
     .toolbarBackground(Ola.room, for: .windowToolbar)
     .toolbarBackground(.visible, for: .windowToolbar)
-    .toolbarColorScheme(.dark, for: .windowToolbar)
     .focusedSceneValue(\.olaDraft, $draft)
     .sheet(isPresented: Binding(get: { (store.connection == .notSetUp && !LocalSettings.onThisMac) || connectShown }, set: { connectShown = $0 })) {
       ConnectForm(store: store) { connectShown = false }.frame(width: 400).interactiveDismissDisabled(store.connection == .notSetUp)
@@ -234,12 +237,21 @@ struct MachineFooter: View {
         DeskMark(lit: store.connection == .open, working: !store.running.isEmpty)
         VStack(alignment: .leading, spacing: 1) {
           Text(title).font(OlaFont.sans(Metrics.ui, .medium)).foregroundStyle(Ola.onRoom).lineLimit(1)
-          Text(store.config?.url.host()?.components(separatedBy: ".").first ?? "").font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.dim).lineLimit(1)
+          Text(place).font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.dim).lineLimit(1).truncationMode(.middle)
         }
       }
       .padding(.horizontal, Space.l).padding(.vertical, Space.m)
     }
   }
+  /// Where the agent is: the machine's short name, or "This Mac" and the folder; never an address.
+  var place: String {
+    guard let host = store.config?.url.host() else { return "" }
+    if host == "127.0.0.1" || host == "localhost" {
+      return LocalSettings.folder.map { "This Mac \u{00B7} \($0.lastPathComponent)" } ?? "This Mac"
+    }
+    return host.components(separatedBy: ".").first ?? host
+  }
+
   var title: String {
     switch store.connection {
     case .open: store.running.isEmpty ? "The machine is idle" : store.running.count == 1 ? "Working on 1 session" : "Working on \(store.running.count) sessions"
@@ -257,7 +269,8 @@ struct DeskMark: View {
   var working: Bool
   var body: some View {
     ZStack(alignment: .bottomLeading) {
-      RoundedRectangle(cornerRadius: 2.5).fill(Ola.paper).frame(width: 28, height: 20)
+      RoundedRectangle(cornerRadius: 2.5).fill(Ola.field).frame(width: 28, height: 20)
+        .overlay(RoundedRectangle(cornerRadius: 2.5).strokeBorder(Ola.ruleStrong, lineWidth: 0.5))
       HStack(spacing: 2.5) {
         Circle().fill(lit ? Ola.leaf : Ola.ink3).frame(width: 3.5, height: 3.5)
         Circle().fill(working ? Ola.lamp : Ola.rule).frame(width: 3.5, height: 3.5)
@@ -310,7 +323,7 @@ struct FilesPanel: View {
         Label(problem, systemImage: "exclamationmark.circle").font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.vermilionText).padding(Space.m)
       }
     }
-    .background(Ola.details)
+    .background(Ola.margin)
     .quickLookPreview($preview)
     .task { if store.files[""] == nil { await reload() } }
     .onChange(of: store.running.count) { _, _ in Task { await reload() } }
@@ -355,7 +368,7 @@ struct FolderRows: View {
         if f.isDirectory {
           Image(systemName: "chevron.right").font(.system(size: 8, weight: .bold)).foregroundStyle(Ola.ink3).rotationEffect(.degrees(expanded.contains(f.path) ? 90 : 0)).frame(width: 10)
         } else { Color.clear.frame(width: 10) }
-        Image(systemName: f.isDirectory ? "folder" : icon(f.name)).font(.system(size: Metrics.ui - 2)).foregroundStyle(Ola.blue).frame(width: 16)
+        Image(systemName: f.isDirectory ? "folder" : icon(f.name)).font(.system(size: Metrics.ui - 2)).foregroundStyle(Ola.ink3).frame(width: 16)
         Text(f.name).font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.ink).lineLimit(1).truncationMode(.middle)
         Spacer(minLength: Space.xs)
         if loading == f.path { ProgressView().controlSize(.mini) }

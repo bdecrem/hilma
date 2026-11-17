@@ -184,7 +184,7 @@ struct Radio: View {
     ZStack {
       Circle().fill(on ? Ola.action : Color(nsColor: .controlBackgroundColor))
       Circle().strokeBorder(on ? Color.clear : Color(nsColor: .separatorColor), lineWidth: 1)
-      if on { Circle().fill(.white).frame(width: 5, height: 5) }
+      if on { Circle().fill(Ola.onAction).frame(width: 5, height: 5) }
     }
     .frame(width: 14, height: 14)
     .shadow(color: .black.opacity(on ? 0 : 0.08), radius: 0.5, y: 0.5)
@@ -197,7 +197,7 @@ struct MacMark: View {
     // A screen of paper with its one light, on a short foot: the same hand as the DeskMark.
     VStack(spacing: 0) {
       ZStack(alignment: .bottomLeading) {
-        RoundedRectangle(cornerRadius: 2.5).fill(Ola.paper).frame(width: 24, height: 16)
+        RoundedRectangle(cornerRadius: 2.5).fill(Ola.field).frame(width: 24, height: 16)
           .overlay(RoundedRectangle(cornerRadius: 2.5).strokeBorder(Ola.ruleStrong, lineWidth: 0.5))
         Circle().fill(Ola.leaf).frame(width: 3.5, height: 3.5).padding(4)
       }

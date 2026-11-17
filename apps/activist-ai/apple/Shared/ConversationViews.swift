@@ -103,7 +103,7 @@ struct StepRow: View {
     switch step.status {
     case .failed: Ola.vermilionText
     case .waiting: Ola.vermilionText
-    default: Ola.blue
+    default: Ola.ink3
     }
   }
 
@@ -180,7 +180,7 @@ struct ApprovalPanel: View {
     VStack(alignment: .leading, spacing: Space.m) {
       VStack(alignment: .leading, spacing: Space.xs) {
         HStack(spacing: 6) {
-          Circle().fill(Ola.vermilion).frame(width: 7, height: 7)
+          Circle().fill(Ola.vermilion).frame(width: 6, height: 6)
           Text("Ola asks").font(OlaFont.sans(Metrics.meta, .semibold)).foregroundStyle(Ola.vermilionText)
         }
         Text(approval.title).font(OlaFont.sans(Metrics.heading, .semibold)).foregroundStyle(Ola.ink)
@@ -224,11 +224,11 @@ struct ApprovalPanel: View {
     }
     .padding(Space.l)
     .frame(maxWidth: .infinity, alignment: .leading)
-    .background(Ola.paper)
-    .overlay(alignment: .top) { Rectangle().fill(Ola.vermilion).frame(height: 3) }
-    .clipShape(RoundedRectangle(cornerRadius: 6))
-    .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Ola.rule, lineWidth: 1))
-    .shadow(color: .black.opacity(0.16), radius: 14, y: 4)
+    .background(Ola.field)
+    .overlay(alignment: .top) { Rectangle().fill(Ola.vermilion).frame(height: 2) }
+    .clipShape(RoundedRectangle(cornerRadius: 8))
+    .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Ola.ruleStrong, lineWidth: 1))
+    .shadow(color: .black.opacity(0.14), radius: 18, y: 6)
     .onChange(of: approval.id) { _, _ in busy = false; shown = [0] }
   }
 
@@ -292,7 +292,7 @@ struct OlaButton: ButtonStyle {
         .font(OlaFont.sans(Metrics.ui, kind == .primary ? .semibold : .medium))
         .lineLimit(1)
         .padding(.horizontal, h).padding(.vertical, v)
-        .foregroundStyle(kind == .primary ? Ola.onRoom : kind == .danger ? Ola.vermilionText : kind == .onRoom ? Ola.onRoom : Ola.ink)
+        .foregroundStyle(kind == .primary ? Ola.onAction : kind == .danger ? Ola.vermilionText : kind == .onRoom ? Ola.onRoom : Ola.ink)
         .background(RoundedRectangle(cornerRadius: 6).fill(fill))
         .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(kind == .primary ? .clear : kind == .onRoom ? Ola.roomRule : Ola.ruleStrong, lineWidth: 1))
         .brightness(kind == .primary ? (configuration.isPressed ? -0.1 : over ? -0.05 : 0) : 0)
@@ -301,11 +301,6 @@ struct OlaButton: ButtonStyle {
         .onHover { over = $0 && enabled }
     }
   }
-}
-
-extension Ola {
-  /// A hairline that holds an edge on paper (buttons, fields): one step darker than the rule.
-  static let ruleStrong = Color.ola(0xcbbd9f, 0x4a453b)
 }
 
 /// Where Bart types. Return sends; the button turns into Stop while a run works.
@@ -337,11 +332,11 @@ struct Composer: View {
         .padding(.vertical, 3)
       if running {
         Button(action: stop) { Image(systemName: "stop.fill").font(.system(size: button * 0.38, weight: .bold)).frame(width: button, height: button) }
-          .buttonStyle(.plain).foregroundStyle(Ola.onRoom).background(Circle().fill(Ola.vermilion))
+          .buttonStyle(.plain).foregroundStyle(Ola.paper).background(Circle().fill(Ola.ink2))
           .help("Stop (\u{2318}.)").accessibilityLabel("Stop")
       } else {
         Button(action: send) { Image(systemName: "arrow.up").font(.system(size: button * 0.46, weight: .bold)).frame(width: button, height: button) }
-          .buttonStyle(.plain).foregroundStyle(empty ? Ola.ink3 : Ola.onRoom)
+          .buttonStyle(.plain).foregroundStyle(empty ? Ola.ink3 : Ola.onAction)
           .background(Circle().fill(empty ? Ola.rule : Ola.action))
           .disabled(empty || !enabled)
           .help("Send (Return)").accessibilityLabel("Send")
@@ -349,7 +344,7 @@ struct Composer: View {
     }
     .padding(.leading, Space.m).padding(.trailing, 6).padding(.vertical, 6)
     .background(RoundedRectangle(cornerRadius: 8).fill(Ola.field))
-    .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(focused ? Ola.blue.opacity(0.45) : Ola.ruleStrong, lineWidth: 1))
+    .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(focused ? Ola.ink3.opacity(0.6) : Ola.ruleStrong, lineWidth: 1))
     .shadow(color: .black.opacity(focused ? 0.06 : 0.03), radius: 3, y: 1)
     #if os(macOS)
     .onAppear { focused = true }
@@ -392,8 +387,6 @@ struct ConversationPane: View {
       .overlay(alignment: .bottom) {
         if let a = convo?.approval {
           ZStack(alignment: .bottom) {
-            // The conversation steps back under a wash of its own paper (no gray, no seam).
-            Ola.paper.opacity(0.5).allowsHitTesting(false)
             ApprovalPanel(approval: a) { d in Task { await store.answer(d) } }
               .frame(maxWidth: columnWidth + 2 * Space.l)
               .padding(.horizontal, max(Space.s, sidePadding - Space.l)).padding(.bottom, Space.m)

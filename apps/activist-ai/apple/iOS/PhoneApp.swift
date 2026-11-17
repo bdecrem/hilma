@@ -111,10 +111,9 @@ struct SessionsScreen: View {
     .refreshable { await store.refresh() }
     .navigationTitle("Ola")
     .navigationBarTitleDisplayMode(.inline)
-    // The bar is drawn in its dark scheme, so it gets the room's light-mode blue explicitly.
+    // The bar is the frame's tone in each mode, so the system draws its title in the right ink.
     .toolbarBackground(UIScheme.room(scheme), for: .navigationBar)
     .toolbarBackground(.visible, for: .navigationBar)
-    .toolbarColorScheme(.dark, for: .navigationBar)
     .toolbar {
       ToolbarItem(placement: .principal) {
         HStack(spacing: 8) {
@@ -300,6 +299,7 @@ struct PagePath: Identifiable { var path: String; var id: String { path } }
 
 enum UIScheme {
   static func room(_ scheme: ColorScheme) -> Color {
-    scheme == .dark ? Color(red: 0x14 / 255, green: 0x22 / 255, blue: 0x3f / 255) : Color(red: 0x25 / 255, green: 0x40 / 255, blue: 0x7a / 255)
+    _ = scheme
+    return Ola.room
   }
 }

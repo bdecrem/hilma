@@ -45,12 +45,25 @@ history from the server, renames and deletes the session. One PASS or FAIL line 
 
 ## Design
 
-"Paper under the lamp" (`~/Desktop/ola-brand/app/spec.md`): the window is the evening-blue room, and
-what you read is paper laid on it; lamp yellow only for what is running; vermilion only for what needs
-Bart (an approval, a failed step, a session that finished unseen). Bricolage Grotesque for the
-interface, Literata for what Ola writes, IBM Plex Mono for details, bundled from Google Fonts (OFL)
-as static instances (`tools/instance-fonts.py`). Dark mode keeps the room and turns the paper into
-lamp-lit dark paper.
+"Paper under the lamp" (`~/Desktop/ola-brand/app/spec.md`): what you read is paper laid on the room;
+lamp yellow only for what is running; vermilion only for what needs Bart (an approval, a failed step,
+a session that finished unseen). Bricolage Grotesque for the interface, Literata for what Ola writes,
+IBM Plex Mono for details, bundled from Google Fonts (OFL) as static instances
+(`tools/instance-fonts.py`).
+
+**The palette (design pass two, 2026-11-16, `Palette` in `Shared/Theme.swift`).** Bart, on the
+evening-blue room and black page: "the black and blue are unsophisticated". Tone now does the work,
+not hue: one warm, low-chroma ramp per mode (the frame: sidebar and title bar; the page one step
+lifted from it; hairlines; three levels of text), one accent, one "needs you" color, every value named
+by its role. Ola's text on the page is 16.2:1 in light, 13.4:1 in dark. The brand's blue survives as
+the accent only (the Yes button, links), never as a surface; vermilion is smaller and calmer. The
+title bar is the frame's tone in each mode, so the system draws the title in the right ink (the old
+dark-blue bar made it dark gray on blue in light mode). Three palettes were drawn
+(`~/Desktop/ola-brand/apple-shots/polish-2/palettes.png`): A ink and paper (the accent is the ink), B
+paper with the blue accent (chosen), C a slate frame with the blue accent. A and C stay selectable
+without a rebuild: `defaults write cx.ola.mac OlaPalette A` (or `C`; `defaults delete cx.ola.mac
+OlaPalette` for the chosen one), then relaunch; on the phone the same key in `cx.ola.phone`.
+Snapshot renders all three (`OLA_ONLY=palette`).
 
 **Scale (2026-11-16 design pass, `Shared/Theme.swift`).** On the Mac the interface is the system's
 own size and only what Ola writes sits a step above it. Type: title 20 (Bricolage display), heading
