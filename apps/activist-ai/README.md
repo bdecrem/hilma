@@ -94,6 +94,19 @@ token is also refused on the TCP port. The binding is which socket a connection 
 nothing the caller sends can choose. `GATEWAY_TOKENS` in the environment still works for callers
 that are not workspaces (the spike, the web check).
 
+**People, from a second file** (2026-11-17). `GATEWAY_PEOPLE_TOKENS_FILE` (optional;
+`~/.ola/gateway-people` on the mini) holds one caller per person who has signed in a device,
+`p-<their id in the platform database>`, in the same format, mode and reload behavior as the tokens
+file. The front desk keeps it (`frontdesk/devices.mjs`); `ws.mjs` never touches it. A missing file is
+no one yet. Every name in it must be `p-<number>`, and `p-<number>` is refused anywhere else, so a
+workspace can never hold a person's name. The two files are judged apart: a people file that does not
+check out (a bad entry, mode not 600, a name or token another caller holds) keeps the people in force
+and holds back nothing of the tokens file, and the other way round; at start a bad people file is kept
+out and the gateway starts. Each person has their own week of tokens, `GATEWAY_PEOPLE_WEEKLY_TOKENS`
+(0, the default: the same as `GATEWAY_WEEKLY_TOKENS`; `GATEWAY_QUOTAS` may name a `p-<n>` before they
+exist). A person's caller has a standing web grant (see [Web search and
+downloads](#web-search-and-downloads-2026-11-17)).
+
 **The reply is rebuilt, not relayed.** A successful reply is reconstructed from a fixed allowlist
 (`id`, `object`, `created`, `model` as the gateway's own name, `choices` with `role`/`content`/
 `tool_calls`/`finish_reason`, and `usage` trimmed to `prompt_tokens`/`completion_tokens`/
@@ -725,6 +738,159 @@ the prompt body is forwarded as sent (which opencode fields a member may set per
 mapped); a distributed attacker with dozens of addresses can still reach the global sign-in
 ceiling (it then refuses only anonymous requests; sign-ins with a known passkey still pass).
 
+## Signing in from the Mac app and the command line (2026-11-17)
+
+**What.** A person signs the Ola app for Mac, or Ola on the command line, in to their own Ola account
+through their browser, on any computer, and uses "On this Mac" (local folder mode): the agent
+(opencode) runs on their computer in a folder they pick, and only its model requests and Ola's web
+commands (`ola-search`, `ola-fetch`, `ola-lookup`) come to this machine, through
+`https://app.ola.cx/api/device/gw/…`. **Why:** before, this worked only for Bart, over his private
+Tailscale network, with one pasted gateway token (`bart/README.md`, "The model forwarder"). Now each
+person has their own sign-in, their own key per computer, and their own weekly cap, through the same
+public door as the web app. Code: `frontdesk/devices.mjs`, `ops/pass.mjs`, the page's
+`web/src/components/Device.tsx`.
+
+**The sign-in** is OAuth for native apps (RFC 8252), with a PKCE-style binding:
+
+1. The app makes a secret `S` (32 random bytes, base64url), listens on `127.0.0.1:<port>`, and opens
+   the browser at `https://app.ola.cx/#/device?challenge=<base64url(sha256(S))>&port=<port>&name=<the
+   computer's name>&kind=mac|cli` (in the fragment, so in no request line, like invitations).
+2. Signed out, the person signs in with their passkey first ("Sign in here first. Then you can let Ola
+   on <name> in."). Then: **"Sign in to Ola on <name>?"**, the computer as a card, one line, "Only
+   continue if you just asked Ola on that computer to sign in.", and **Sign in** / **Cancel**. The name
+   is shown as text, never as HTML. The page checks the request (a 43-character challenge, a port from
+   1024 to 65535, a name of 1 to 60 characters with no control or format characters, mac or cli); a
+   request that does not check out says so and offers nothing.
+3. Sign in: `POST /api/device/grant` `{challenge, name, kind, port?}` (session cookie, our Origin and
+   CSRF, as every write; the front desk checks the same things again) answers `{code}`: a one-time code
+   good for 120 seconds, held in the front desk's memory, bound to the challenge and the person. The
+   page then sends the browser to `http://127.0.0.1:<port>/?code=<code>` (a top-level navigation: the
+   page's CSP does not restrict it, and `upgrade-insecure-requests` upgrades only same-origin
+   navigations). Cancel sends it to `http://127.0.0.1:<port>/?error=cancelled`, so the app stops
+   waiting. Either way the request leaves the address first, so Back does not offer it again.
+4. The app redeems: `POST /api/device/token` with the code as its pass (below) and `{verifier: S}`
+   answers `200 {token, expires_at, person: {handle, name, admin}, device: {id, name, kind}}` when
+   `base64url(sha256(S))` is the challenge. A code is spent on its first redeem, right or wrong.
+   Errors are `{error: "<word>"}`: 400 `bad_request`, 401 `invalid_code`, 403 `not_allowed`, 429
+   `slow_down`. A refusal at the door itself (a pass that does not check out) is the door's 401 page.
+
+**What a signed-in computer can do**, with its token as the pass, all under `/api/device/` and nothing
+else (a token is refused on every other path, at the door and here):
+
+| Route | What |
+|---|---|
+| `GET /api/device/me` | `{person, device, expires_at}` |
+| `POST /api/device/signout` | this computer is signed out |
+| `POST /api/device/gw/v1/chat/completions`, `GET …/v1/models`, `GET …/v1/usage` | the model, as opencode on the Mac sends it (streams pass) |
+| `POST /api/device/gw/web/search`, `…/web/fetch`, `…/web/lookup` | Ola's web commands |
+
+Anything else under `/api/device/gw/` is 403, whatever the gateway would say. Only `Content-Type` and
+`Accept` go on to the gateway, with the person's own caller token in place of the device's; the
+device's other headers (its pass, cookies, a batch lane) never do. Back come the type, the size,
+`Retry-After` and a download's `X-Ola-Final-Url`, `X-Ola-Fetched-At`, `X-Ola-Redirects`.
+
+**Passes** (`ops/pass.mjs`): `olap1.<base64url(JSON payload)>.<base64url(HMAC-SHA256(key, "olap1." +
+payload part))>`, the payload `{"k": "code"|"device", "id": <256 random bits>, "exp": <unix
+seconds>}`. Both the one-time code and the computer's token are passes, so the TLS front lets them
+through the door without the passcode, only under `/api/device/`, and hands them on as `X-Ola-Pass`
+(see the TLS front's "Device passes"). The front desk checks the MAC and the expiry again, then looks
+the pass up: codes in memory, devices by the sha256 of the token. **Which header it reads** follows
+`OLA_FD_PROXY_PROTOCOL`: with it on (behind the TLS front, the only way in from outside) only
+`X-Ola-Pass`, which the front always removes from a client and sets itself; with it off (development,
+the check suites) only `Authorization: Bearer`, which the front always removes. So in production a
+header a client sends never stands in for the front's, and a front desk set up wrong refuses every
+device rather than trusting one. The key, `OLA_GATE_PASS_KEY`, is in `tls.env` and `frontdesk.env`,
+the same value; without it device sign-in is off: the door takes only the passcode and the front desk
+answers 404 on `/api/device/*` and `/api/devices`.
+
+**Who may.** `people.devices_allowed` (migration 11), off by default; admins always may. Whether to
+offer this to customers is not decided; today only Bart has it. A person who may not gets "Your
+account cannot sign in to Ola on other computers yet. Ask Bart if you need it." and a 403.
+
+**A caller per person, and what leaves the machine.** The first computer a person signs in makes them
+a gateway caller `p-<their id>` with its own random token, in `OLA_FD_PEOPLE_TOKENS_FILE`
+(`~/.ola/gateway-people`, mode 600, written by rename), which the gateway reads beside its tokens file
+(`GATEWAY_PEOPLE_TOKENS_FILE`; see the gateway's "People, from a second file"). The file follows the
+database: a person with at least one live computer who is active and allowed has an entry, anyone else
+has none (their last computer removed, disallowed, suspended). The platform database holds no secret:
+the file is the only copy of the people's tokens. The weekly cap and the usage log are per person, all
+their computers together. A person's caller has a standing web grant in the gateway itself, by where
+the caller came from (the people file), never by a file anyone writes: in local folder mode the person
+answers every web question in their own app, as Bart does today. What leaves the machine is what
+leaves for any web command: the words of a search to the search provider (Brave Search), a request for
+one address for a download, a reference to Crossref, Unpaywall and OpenAlex for a paper lookup; never
+anything from a project. A `ws-` caller is not helped by any of this (`gateway/test.mjs` proves a
+workspace still needs its project's grant).
+
+**Limits.** A code lives 120 seconds (`OLA_FD_DEVICE_CODE_SECONDS`, 2 to 600; the checks use 6), at
+most 1,000 at once (the oldest go). A person may ask for 10 a minute. `/api/device/token` is charged to
+the address key and the global ceiling like a sign-in verify with no ceremony. A computer's token
+lives 180 days. Model requests: a body of at most 4 MiB, the gateway's own cap
+(`OLA_FD_DEVICE_MAX_BODY_MB`), 4 in flight per computer and 8 per person, past that 429 `too_many`;
+the front desk's connection limits hold as for everyone. An open request is checked every second and
+cut when the computer is removed, the person is suspended or disallowed, or the pass expires. Refused
+device requests are audited, `device_refused`, at most 10 a minute per computer or person.
+
+**What is kept.** A `devices` row per computer: the person, its name as the app gave it (the one piece
+of text from a person the database keeps, shown back to them), mac or cli, the token's sha256, when it
+was made, last used (once a minute at most), when it ends, when it was revoked. No IP, no user agent.
+The audit log says `device_signed_in`, `device_signed_out`, `device_revoked`, `device_refused`.
+
+**Your devices.** A person who may sign computers in sees "Your devices" on their projects page and at
+the bottom of a project's Settings: each computer, the app or the command line, when it signed in and
+was last used, and Remove (`GET /api/devices`, `DELETE /api/devices/<id>`, session and CSRF; only their
+own). Removal signs it out at once and cuts its open requests.
+
+```bash
+node admin.mjs allow-devices <handle>      # may sign in computers (admins always may)
+node admin.mjs disallow-devices <handle>   # may not; every computer of theirs is signed out now
+node admin.mjs devices [<handle>] [--json] # id, person, kind, name, made, last used, ends or revoked
+node admin.mjs revoke-device <id>
+node admin.mjs add-device <handle> --name "Bart's MacBook Air" --kind mac|cli
+#   a computer made here, when the browser is not at hand: ONLY the token goes to stdout (one line),
+#   everything else to stderr, so it can be piped straight into the app's Keychain, never to a screen
+```
+
+`revoke-sessions` and `suspend` sign a person's computers out too (there is no command that removes a
+person; suspension is the way).
+
+**Turning it on** (the commit runs exactly as before with none of this set):
+
+```bash
+# on the mini, after the deploy; the key is made there and never printed
+umask 077; K=$(openssl rand -hex 32)
+printf 'OLA_GATE_PASS_KEY=%s\n' "$K" >> ~/.ola/frontdesk.env
+printf 'OLA_GATE_PASS_KEY=%s\n' "$K" >> ~/.ola/tls.env; unset K
+printf 'GATEWAY_PEOPLE_TOKENS_FILE=%s\n' "$HOME/.ola/gateway-people" >> ~/.ola/gateway.env
+for j in gateway frontdesk tls; do launchctl kickstart -k gui/$(id -u)/cx.ola.$j; done
+node ~/ola-staging/current/apps/activist-ai/ops/ola.mjs status   # "device sign-in  on"
+```
+
+`status` says DOWN, and why, when the key is in one file and not the other, differs between them, the
+front desk is not on the PROXY protocol behind the TLS front, or the gateway does not read the front
+desk's people file. **Undo:** remove the three lines and kickstart the three jobs (every computer is
+refused at once; the `devices` rows stay, harmless, and work again if the same key comes back). A new
+key signs every computer out.
+
+**How it was proved** (`--no-live`, the suites a deploy runs): `ops/tls-test.mjs` (a valid pass passes
+with no passcode and arrives as `X-Ola-Pass`; a client's `X-Ola-Pass` never arrives, with the
+passcode, with a pass or with the gate off; a bad or changed MAC, an expired pass, the web app, another
+API, dot segments and encoded dot segments out of `/api/device/`, and any pass with no key set are a
+wrong passcode, slow, and count toward the block; `Authorization` never arrives);
+`gateway/test.mjs` (the people file: load, reload, a bad file kept out without holding back the
+tokens file, duplicates across the files refused, p-names elsewhere refused at start; each person's
+own week; the standing web grant for `p-*`, and a workspace still refused without its project's yes
+whatever the people, grants or hosts files say); `frontdesk/check.mjs` (the whole sign-in in Chromium,
+signed out first, with a virtual authenticator; in WebKit with a software passkey made at
+registration, so WebKit's signed-out branch is not proved; both browsers land on a real listener on
+127.0.0.1 and the code redeems; Cancel; every refusal above; the gateway route against the check's
+gateway and fake model, streaming, cut within two seconds of Remove; the token refused outside
+`/api/device/`; `add-device` writes one line; the people file 600, by rename, untouched by a `ws.mjs`
+rewrite of the tokens file).
+
+**Not done.** A person may not yet see a computer's own week of use (the gateway counts per person).
+Signing in from the Mac app is the Mac side's (`apple/`), built against this contract.
+
 ## The address: app.ola.cx
 
 One name, `app.ola.cx`, in both stages, so a passkey made now stays good: WebAuthn binds a passkey
@@ -781,6 +947,16 @@ by its /64, the PROXY address) is answered after min(250 ms × 2^(n−1), 8 s), 
 minutes blocks the address for 15 minutes (429, the right passcode too). The check compares SHA-256
 digests in constant time. `Authorization` is removed before the front desk. `/api/health` passes
 without the passcode from loopback only. `OLA_TLS_GATE=0` turns the gate off.
+
+**Device passes** (2026-11-17, see [Signing in from the Mac app and the command
+line](#signing-in-from-the-mac-app-and-the-command-line-2026-11-17)). With `OLA_GATE_PASS_KEY` set (64
+hex characters, the same value as the front desk's), `Authorization: Bearer olap1.…` whose MAC checks
+out (constant time, over digests) and whose expiry is in the future passes without the passcode, but
+only on a path under `/api/device/` (the request line and the path as the URL parser resolves it, dot
+segments included). The front removes `Authorization`, always removes any `X-Ola-Pass` the client
+sent, and sends the pass on as `X-Ola-Pass`. Any other bearer (a bad MAC, expired, another path, no
+key set) is a wrong passcode: the same delays, the same block, the same reply. This holds with the
+gate on or off. Without the key every bearer is refused, as before any bearer was useless.
 
 Tested in browsers behind the gate, 2026-11-16, through the real path (tailnet, serve, the TLS front)
 with Playwright on the mini and the browser asking for the passcode the way a person's would:
@@ -1529,7 +1705,7 @@ once per project (M2: 20 overlapping requests all passed a ceiling one of them n
 
 | Setting (gateway env file) | What |
 |---|---|
-| `GATEWAY_WEB_FILE` | `~/.ola/gateway-web`, the front desk's grants (`OLA_FD_WEB_FILE` there, same default). Beside it, `<that file>-hosts` (600): standing grants for host callers that are not workspaces, `{"bart": {"always": true}}`, written by `bart/ola-bart.sh web` (the front desk rewrites its own file and keeps nothing else; a `ws-` name there is ignored) |
+| `GATEWAY_WEB_FILE` | `~/.ola/gateway-web`, the front desk's grants (`OLA_FD_WEB_FILE` there, same default). Beside it, `<that file>-hosts` (600): standing grants for host callers that are not workspaces, `{"bart": {"always": true}}`, written by `bart/ola-bart.sh web` (the front desk rewrites its own file and keeps nothing else; a `ws-` name there is ignored). A person's own caller (`p-<id>`, from `GATEWAY_PEOPLE_TOKENS_FILE` only) has a standing grant with no file at all: they answer every web question in their own app, on their own computer, as Bart does for `bart`. A `ws-` caller is never helped by it: a project still needs its own grant |
 | `GATEWAY_SEARCH_PROVIDER` | `brave` (needs `SEARCH_API_KEY`), or `mock` (made-up results, for checks) |
 | `SEARCH_API_KEY` | the Brave Search API key (only in `gateway.env`, never in a workspace) |
 | `GATEWAY_WEB_WEEKLY`, `GATEWAY_WEB_PER_MINUTE` | 2000, 30 |
