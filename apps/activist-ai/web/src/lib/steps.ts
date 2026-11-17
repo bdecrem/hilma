@@ -35,6 +35,7 @@ export function describeCommand(command: string): Words {
   const web = webRequestOf(c)
   if (web?.kind === 'search') return { icon: 'search', verb: 'Searched the web for', object: web.item ? `“${web.item}”` : 'something' }
   if (web?.kind === 'fetch') return { icon: 'read', verb: 'Downloaded', object: web.item ? hostOf(web.item) : 'a document' }
+  if (web?.kind === 'lookup') return { icon: 'search', verb: 'Looked up a paper:', object: web.item ? `“${web.item}”` : 'a reference' }
   if (/^ola-db\s+search\b/.test(c)) return { icon: 'search', verb: 'Searched the documents', object: '' }
   if (/^ola-db\s+load\b/.test(c)) return { icon: 'change', verb: 'Loaded a table into', object: 'the project’s data' }
   if (/^ola-db\s+(query|tables|describe)\b/.test(c)) return { icon: 'look', verb: 'Looked in', object: 'the project’s data' }
@@ -172,7 +173,7 @@ const hostOf = (u: string) => {
 }
 
 /** A permission request as a question the person can answer. */
-export function describeApproval(action: string, resources: string[], metadata: Record<string, unknown> | undefined, dir: string | null): { title: string; items: { label: string; detail: string | null }[]; web?: { kind: 'search' | 'fetch'; item: string | null } | null } {
+export function describeApproval(action: string, resources: string[], metadata: Record<string, unknown> | undefined, dir: string | null): { title: string; items: { label: string; detail: string | null }[]; web?: { kind: 'search' | 'fetch' | 'lookup'; item: string | null } | null } {
   const files = Array.isArray(metadata?.files) ? (metadata.files as { file?: string; patch?: string; status?: string }[]) : []
   // A web search or download: the question says exactly what would leave the machine.
   const webs = action === 'shell' || action === 'bash' ? resources.map((r) => webRequestOf(r)).filter((x) => !!x) : []
@@ -180,8 +181,8 @@ export function describeApproval(action: string, resources: string[], metadata: 
     const w = webs[0]!
     const what = w.item ?? 'something'
     return {
-      title: w.kind === 'search' ? `Ola wants to search the web for: ${what}` : `Ola wants to download: ${what}`,
-      items: resources.map((cmd, i) => ({ label: webs[i]!.kind === 'search' ? `Search for ${webs[i]!.item ? `“${webs[i]!.item}”` : 'this'}` : `Download ${webs[i]!.item ?? 'this'}`, detail: cmd })),
+      title: w.kind === 'search' ? `Ola wants to search the web for: ${what}` : w.kind === 'lookup' ? `Ola wants to look up this paper: ${what}` : `Ola wants to download: ${what}`,
+      items: resources.map((cmd, i) => ({ label: webs[i]!.kind === 'search' ? `Search for ${webs[i]!.item ? `“${webs[i]!.item}”` : 'this'}` : webs[i]!.kind === 'lookup' ? `Look up ${webs[i]!.item ? `“${webs[i]!.item}”` : 'this'}` : `Download ${webs[i]!.item ?? 'this'}`, detail: cmd })),
       web: w,
     }
   }

@@ -104,7 +104,8 @@ message per status class, and an upstream 401/403 is hidden as a 502 (its text c
 gateway's own `Authorization` header, i.e. the model key). As a last layer the configured upstream
 key is scrubbed from anything written to a reply or the log.
 
-**Routes.** `POST /v1/chat/completions` (streamed or not), `GET /v1/models` (the names in
+**Routes.** `POST /v1/chat/completions` (streamed or not), the specialists' routes (see
+[Specialists](#specialists-and-paper-lookup-2026-11-17)), `GET /v1/models` (the names in
 `GATEWAY_MODELS`), `GET /v1/usage` (with a caller token: that caller's week, e.g.
 `"fraction_used": 0.38`; with `GATEWAY_USAGE_TOKEN`: every caller plus requests in flight and
 waiting. That token can read usage and nothing else, so the web app never needs a caller token).
@@ -228,7 +229,7 @@ VM's memory, so bounded by it) are the only places anything can be written. Befo
 512 GiB sparse image on the host, outside the volume's limit, invisible to `files`, and kept across
 `stop`. The agent runs as `work` (uid 1000) with no capabilities (`--cap-drop ALL`), no sudo, and no
 setuid or setgid program in the image (Debian's `su`, `passwd`, `mount` and the rest are stripped). Image: Debian bookworm-slim pinned by digest, opencode 2.3.0 checked
-against npm's sha512, python3, socat, nothing else (no curl, no CA bundle, no ssh). Image tag `ola-workspace:2.3.0-17` (2.3.0-17: Tesseract, olatext and the document tools, see "Reading real documents"; 2.3.0-16: `ola-batch`, batch jobs, see [Batch jobs](#batch-jobs-the-same-question-for-every-document-2026-11-17); 2.3.0-15: Ola's skills at `/opt/ola/skills`, a system config that makes them the only ones, their libraries, and `ola-page`, see [Skills and seeing pages](#skills-and-seeing-pages-image-230-15); 2.3.0-13: no project config, review 4; 2.3.0-12: the reactions rule in `AGENTS.md`; 2.3.0-10: the model `hosted`; 2.3.0-8: the project database and the web tools; 2.3.0-7 and 2.3.0-6: Claude Code and `ola-claude`, see [Fallback to Claude](#fallback-to-claude-2026-11-16); 2.3.0-5: Ola's standing instructions to the agent, `workspace/AGENTS.md`, say it is in a sealed box with no browser, preview pane or desktop app and that people see its pages under Files with Open; the desktop app's `browser` tool is denied; a stopped workspace made from an older image is made again from the current one at its next start, same volume and secrets. 2.3.0-3 added `ola-get` and `ola-rm` for the front desk's downloads and deletes, and a file's mtime in `ola-files`; 2.3.0-4: `ola-get` opens with `O_NONBLOCK` and refuses anything but a regular file at once, so a FIFO the agent makes cannot hold a download).
+against npm's sha512, python3, socat, nothing else (no curl, no CA bundle, no ssh). Image tag `ola-workspace:2.3.0-17` (2.3.0-17 also: the specialist commands and `ola-lookup`, see [Specialists](#specialists-and-paper-lookup-2026-11-17); 2.3.0-17: Tesseract, olatext and the document tools, see "Reading real documents"; 2.3.0-16: `ola-batch`, batch jobs, see [Batch jobs](#batch-jobs-the-same-question-for-every-document-2026-11-17); 2.3.0-15: Ola's skills at `/opt/ola/skills`, a system config that makes them the only ones, their libraries, and `ola-page`, see [Skills and seeing pages](#skills-and-seeing-pages-image-230-15); 2.3.0-13: no project config, review 4; 2.3.0-12: the reactions rule in `AGENTS.md`; 2.3.0-10: the model `hosted`; 2.3.0-8: the project database and the web tools; 2.3.0-7 and 2.3.0-6: Claude Code and `ola-claude`, see [Fallback to Claude](#fallback-to-claude-2026-11-16); 2.3.0-5: Ola's standing instructions to the agent, `workspace/AGENTS.md`, say it is in a sealed box with no browser, preview pane or desktop app and that people see its pages under Files with Open; the desktop app's `browser` tool is denied; a stopped workspace made from an older image is made again from the current one at its next start, same volume and secrets. 2.3.0-3 added `ola-get` and `ola-rm` for the front desk's downloads and deletes, and a file's mtime in `ola-files`; 2.3.0-4: `ola-get` opens with `O_NONBLOCK` and refuses anything but a regular file at once, so a FIFO the agent makes cannot hold a download).
 
 ```bash
 node workspace/ws.mjs image                    # build ola-workspace:2.3.0-17 (a 600 MB download the first time; --missing: only if absent)
@@ -1552,6 +1553,133 @@ an **Open \<name\>** for every other kind. A citation in the agreed form, writte
 the file at that page (`web/src/lib/cite.ts`; any other link form stays text). The project home
 lists what Ola made in groups: Pages, Charts and images, Tables, Documents. AGENTS.md also asks for
 drawings to be drawn in code as SVG.
+
+## Specialists and paper lookup (2026-11-17)
+
+Ola's everyday model stays in charge; for one-shot jobs it calls a **specialist** by a fixed name,
+through the same door and the same gateway, with a small command in the sealed computer. On the
+Studio each name will be a local server; on the rehearsal, a hosted stand-in on made-up data.
+
+**The names** (`gateway/specialists.mjs`; the caller's string never goes upstream, every reply is
+rebuilt from an allowlist, the log has names and numbers only):
+
+| Name | Route | What it is for | Lane | Body cap | Pool | Per minute |
+|---|---|---|---|---|---|---|
+| `general`, `fast`, `code` | `/v1/chat/completions` | the everyday agent (as before) | interactive | `GATEWAY_MAX_BODY_BYTES` | shared | none |
+| `see` | same, pictures in | screenshots, charts, figures, photos | interactive | 12 MiB, 8 pictures | 2 | 30 |
+| `ocr` | same, pictures in | the text of a scanned page | interactive | 12 MiB, 8 pictures | 2 | 60 |
+| `read` | same | reading at volume, fixed-shape answers (`response_format` passes) | batch | 4 MiB | 2 | 120 |
+| `translate` | same, with the gateway's fixed instructions first | legal translation | interactive | 4 MiB | 2 | 60 |
+| `route` | same, with fixed instructions | a label from a fixed list | interactive | 1 MiB | 2 | 240 |
+| `embed` | `POST /v1/embeddings` `{input, dimensions?}` | passages to numbers | interactive | 4 MiB, 512 texts | 2 | 240 |
+| `rerank` | `POST /v1/rerank` `{query, documents, top_n?}` | reorder the best hits (never returns the documents) | interactive | 4 MiB, 512 texts | 2 | 240 |
+| `transcribe` | `POST /v1/audio/transcriptions` JSON `{audio: base64, format, language?, diarize?}`; the gateway sends multipart | speech to text with times and speakers | batch | 24 MiB | 1 | 10 |
+| `draw` | `POST /v1/images/generations` `{prompt, size?}` | an illustration; only a PNG, JPEG or WebP comes back, never a link | batch | 64 KiB | 1 | 6 |
+
+- **A name with no upstream** answers 503 `not_configured` with one plain sentence ("No model that
+  makes pictures is set up on this machine yet, so Ola cannot draw this. It can make diagrams and
+  charts with code instead."), and nothing is sent anywhere. `/v1/models` lists only the names that
+  are set up, with `kind` and whether they take pictures.
+- **Pictures** go in only as `data:image/(png|jpeg|gif|webp);base64` parts, and only to `see` and
+  `ocr`; a link is refused for every name, because the model server would fetch it from the internet
+  for the agent (a way out the agent could aim). The everyday names take text only. Any other part
+  type (audio, files) is refused.
+- **The quota** is the caller's one weekly count across all names: the server's own token counts,
+  or, when it reports none, a fixed estimate (4 characters a token for embed and rerank; 1,000 tokens
+  a minute of audio; 5,000 tokens a picture made). Every try that came back is charged.
+  `/v1/usage` now has `by_model` per name.
+
+**Lanes: a person first, batch work after.** Each caller has two lines. A request is **batch** when
+its name's lane is batch (`read`, `transcribe`, `draw`), or when it carries the header
+**`X-Ola-Lane: batch`**; everything else is interactive. Batch requests start only when no
+interactive request can, hold at most `GATEWAY_BATCH_MAX_INFLIGHT` slots (default 2, never more than
+`GATEWAY_MAX_INFLIGHT`), so a person always finds a slot, and may wait up to
+`GATEWAY_BATCH_MAX_QUEUE_WAIT_MS` (30 minutes) in a line of up to `GATEWAY_MAX_QUEUED_BATCH_PER_CALLER`
+(64). The header can only lower a request's priority: `X-Ola-Lane: interactive` on `read` is still
+batch. Each name also has its own pool (its own server on the Studio), so a thousand `read` calls
+cannot fill the slots the everyday model needs. The log line gains `"lane"`.
+
+> **For the batch runner:** send every request with `X-Ola-Lane: batch`, through the project's own
+> door with the project's own token (the same caller, so the same weekly quota and the same
+> per-project limits). There is no second token: a batch job is the project's work, counted as such.
+> Expect 429 `rate_limit_error` with `Retry-After` when a name's per-minute limit or the batch line is
+> full, and 503 `overloaded_error` after 30 minutes without a slot; back off and retry. Inside the
+> sealed computer the commands send the header themselves when `OLA_LANE=batch` is set, and for long
+> jobs (`ola-ocr` of more than 4 pages, `ola-translate` of more than 3 parts, more than 128 texts to
+> `ola-embed`).
+
+**Settings** (gateway env file; the gateway refuses to start on a bad one, naming the setting, never
+a value):
+
+| Setting | What |
+|---|---|
+| `GATEWAY_MODELS` | now takes every name above: `general=…,see=…,read=…,embed=…` |
+| `GATEWAY_UPSTREAMS` | a name's own server: `see=http://127.0.0.1:8081/v1,ocr=http://127.0.0.1:8082/v1` (https, or plain http only on this machine). Without an entry a name uses `UPSTREAM_BASE_URL` and `UPSTREAM_API_KEY` |
+| `UPSTREAM_API_KEY_<NAME>` | that server's key (`UPSTREAM_API_KEY_SEE`); required for https, none needed on 127.0.0.1; scrubbed from replies and the log |
+| `GATEWAY_LIMITS` | per name: `see:body=16m,images=4,pool=2,per_minute=30;draw:pool=1,lane=batch` |
+| `GATEWAY_BATCH_MAX_INFLIGHT`, `GATEWAY_BATCH_MAX_QUEUE_WAIT_MS`, `GATEWAY_MAX_QUEUED_BATCH_PER_CALLER` | the batch lane (2, 1,800,000, 64) |
+| `GATEWAY_SCHOLAR_CONTACT` | the address the paper catalogs ask for (Ola's own, never a person's); without it lookups say they are not set up |
+| `GATEWAY_SCHOLAR_UPSTREAMS` | tests only (stand-in catalogs on 127.0.0.1) |
+
+**The commands** (image `2.3.0-17`, `workspace/olaspec.py` and eight three-line entry points; plain
+text out, `--json` for data; exit 5 and the plain sentence when a name is not set up):
+`ola-see <picture or pdf> "question" [--pages 2]`, `ola-ocr <scan.pdf or picture> [--pages 1-3]
+[--out file.txt]` (PDF pages become pictures with `pdftoppm`), `ola-translate <file> --to <language>`
+(splits at article and section headings in a dozen languages, never across one; saves
+`<name>.<language>.txt`; checks that every number in each part is in its translation, asks once more
+if not, and lists any part that still lost one), `ola-embed "text" … | --file | stdin [--out
+vectors.json]`, `ola-rerank "question" "text" … [--top N]`, `ola-transcribe <recording> [--language
+en] [--speakers]` (saves `<name>.transcript.txt`), `ola-draw "brief" --out picture.png [--size
+1024x1024]`, `ola-lookup "citation or DOI"`. `workspace/AGENTS.md` says when to use them in six lines.
+
+**Paper lookup** (`POST /web/lookup {"q"}`, `gateway/web.mjs`; the lessons report's "gathering from
+a citation list", lookup only). A citation or a DOI in; up to three matches out (title, authors, year,
+DOI, where published, type, and for a citation how much of each title is in it), and for the best one
+where a free copy can be had (Unpaywall's best open location: the address, PDF or page, version,
+license, repository or publisher). Fixed public catalogs only, never an address the caller chooses:
+**Crossref** for the record (its polite pool: the contact goes in `mailto` and the User-Agent; 10
+requests a second and 3 at once in that pool, checked on crossref.org 2026-11-17), **Unpaywall** for
+free copies (`email`), **OpenAlex** only when Crossref has no record of a DOI (no key needed: 10
+requests a second without one, on help.openalex.org, 2026-11-17). Two requests a lookup as a rule,
+three at most; nothing is followed or downloaded (the agent saves a free copy with `ola-fetch`,
+asked separately). A DOI with `.` or `..` segments is not used as a path. It is a web request like a
+search: the person is asked ("Ola wants to look up this paper:", with "This reference goes to
+Crossref and Unpaywall, public catalogs of research papers. Nothing from your files is sent."),
+**Allow once** grants that exact reference, **Always in this project** is the same standing grant as
+for search and downloads, and the gateway refuses anything else (403, "run ola-lookup on its own").
+It counts in the project's web limits (`web-lookup` in the usage table). The log line says that a
+lookup happened, `"lookup":"doi"` or `"citation"`, the status and the number of results; never the
+reference.
+
+**Proofs.** `gateway/test.mjs` (36 tests; new: each name's own server and key, pictures only as data
+and only to `see`/`ocr`, links refused, unset names answer their sentence with nothing sent, embed /
+rerank / transcribe / draw built here and rebuilt on the way back, the quota estimates, lanes and
+pools in order, per-minute limits, every new setting checked at start, and the lookup refused without
+a grant, a search grant not a lookup grant, once is once, the polite contact, a rebuilt reply, no
+reference in the log); `web/test/webask.test.mjs` (the approval parser reads `ola-lookup`); and
+`workspace/check.mjs` from inside a sealed VM against a stand-in specialist server and stand-in
+catalogs: all eight commands, a PDF page through `ola-ocr`, `ola-draw` with no model, `ola-lookup`
+refused and then allowed. `OLA_CHECK_SEE_LIVE=<model>` adds the live run: the agent is given a
+made-up scanned page and a made-up chart and answers a question about each with `ola-see`.
+
+**The rehearsal's models** (probed 2026-11-17 through our own gateway on Together's serverless list,
+made-up data only). None of the report's Studio picks is serverless on Together today: Qwen3.6-35B-A3B,
+Qwen3.5-35B-A3B, Gemma 4 26B-A4B and 31B, Qwen3-Coder-Next and the Qwen3-VL models all answer
+"non-serverless model" (a paid dedicated endpoint); Qwen3.8-27B and Flint are not listed. Of the
+serverless models a Studio could hold, with opencode's real request (a write, a shell command and an
+answer, then the survey task, 16 checks) and two made-up pictures:
+
+| Model | Size | Tools, 3 steps | Survey task | Chart and scan | Notes |
+|---|---|---|---|---|---|
+| **nvidia/NVIDIA-Nemotron-3.5-Super-VL** | 120B-A12B, about 65 GB at 4-bit (MLX 4-bit builds exist) | right, 1.1 to 2.2 s | 16/16, 16/16, 16/16; 12 to 18 s | both right | the pick for `general` |
+| **meta-models/Muse-Glimmer-30B** | 30B, under 20 GB at 4-bit | right, 8.9 to 10.6 s | 16/16, 16/16, 16/16; 58 to 180 s on Together | both right; `ola-ocr` wrote the scan out word for word; `ola-translate` kept every number | the pick for `see`, `read`, `translate`, `route`, `ocr` |
+| ricursive-ai/Ripple-65B-Preview | 65B dense | right | 16/16, 124 s | takes no pictures | dense: slow on a Mac |
+| Qwen/Qwen3.5-9B | 9B | right | 15/16, 209 s | both right | too small for the everyday slot |
+| thinkingmachines/Inkling-2-Small, elorian-labs/glimpse-1.0 | not published | right | not run | both right | sizes unknown |
+
+Embeddings and reranking on Together (BAAI/bge-base-en-v1.5, Salesforce/Llama-Rank-V1,
+mixedbread-ai/mxbai-rerank-large-v2) are all dedicated-only, so `embed` and `rerank` stay unset on
+the rehearsal and say so. `transcribe` and `draw` are unset too (not asked for).
 
 ## Where the data lives (for someone who knows Supabase)
 

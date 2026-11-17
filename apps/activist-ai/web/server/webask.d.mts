@@ -1,5 +1,5 @@
 export interface WebRequest {
-  kind: 'search' | 'fetch'
+  kind: 'search' | 'fetch' | 'lookup'
   /** The search words or the https address; null when the command is not in a simple form. */
   item: string | null
 }

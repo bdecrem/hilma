@@ -61,7 +61,7 @@ export function WebSetting(props: { canWrite: boolean }) {
             <dl class="facts">
               <div>
                 <dt>What leaves this machine</dt>
-                <dd>The words of a search, sent to {w().provider}. For a download, a request for that one address. Nothing from your files is sent.</dd>
+                <dd>The words of a search, sent to {w().provider}. For a download, a request for that one address. To look up a paper, the reference, sent to Crossref and Unpaywall. Nothing from your files is sent.</dd>
               </div>
               <div>
                 <dt>What Ola keeps</dt>

@@ -9,6 +9,9 @@ test('simple commands give the search words or the address', () => {
   assert.deepEqual(webRequestOf("ola-search --count 5 'sea walls Kenya'"), { kind: 'search', item: 'sea walls Kenya' })
   assert.deepEqual(webRequestOf('/opt/ola/bin/ola-fetch https://www.ohchr.org/a%20b.pdf --as udhr.pdf'), { kind: 'fetch', item: 'https://www.ohchr.org/a%20b.pdf' })
   assert.deepEqual(webRequestOf('ola-fetch "https://Example.org/x?y=1"'), { kind: 'fetch', item: 'https://example.org/x?y=1' })
+  assert.deepEqual(webRequestOf('ola-lookup "Lindqvist A (2031) Boilers and   tenants" --json'), { kind: 'lookup', item: 'Lindqvist A (2031) Boilers and tenants' })
+  assert.deepEqual(webRequestOf('/opt/ola/bin/ola-lookup 10.5555/made.up.1'), { kind: 'lookup', item: '10.5555/made.up.1' })
+  assert.equal(webRequestOf('ola-lookup "$(cat /work/notes.txt)"')?.item ?? null, null, 'not a simple command: no grant')
   assert.deepEqual(shellWords(`a "b \\"c\\"" 'd e' f\\ g`), ['a', 'b "c"', 'd e', 'f g'])
 })
 

@@ -72,14 +72,14 @@ export function ApprovalSheet(props: { ola: Ola; provider?: string }) {
               {(w) => (
                 <>
                   <h2 id="approval-title" class="sheet-title web-title">
-                    {w().kind === 'search' ? 'Ola wants to search the web for:' : 'Ola wants to download:'}
+                    {w().kind === 'search' ? 'Ola wants to search the web for:' : w().kind === 'lookup' ? 'Ola wants to look up this paper:' : 'Ola wants to download:'}
                     <span class="web-item">{w().item ?? 'the command below'}</span>
                   </h2>
                   <p id="approval-why" class="sheet-lede">
                     Before anything leaves this machine, Ola needs your yes.
                   </p>
                   <p class="web-leaves">
-                    {w().kind === 'search' ? `The words of the search go to ${props.provider ?? 'the search service'}. Nothing from your files is sent.` : `Ola asks ${host(w().item)} for this one address. Nothing from your files is sent.`}
+                    {w().kind === 'search' ? `The words of the search go to ${props.provider ?? 'the search service'}. Nothing from your files is sent.` : w().kind === 'lookup' ? 'This reference goes to Crossref and Unpaywall, public catalogs of research papers. Nothing from your files is sent.' : `Ola asks ${host(w().item)} for this one address. Nothing from your files is sent.`}
                   </p>
                   <Show when={!w().item}>
                     <ul class="approval-items">

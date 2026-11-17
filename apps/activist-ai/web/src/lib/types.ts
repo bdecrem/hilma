@@ -261,7 +261,7 @@ export interface Approval {
   engine?: Engine
   run?: string
   /** A web search or download: what would be searched or fetched (null when the command is not simple). */
-  web?: { kind: 'search' | 'fetch'; item: string | null } | null
+  web?: { kind: 'search' | 'fetch' | 'lookup'; item: string | null } | null
 }
 
 /** The project's settings (GET /api/settings). */

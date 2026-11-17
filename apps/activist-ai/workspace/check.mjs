@@ -94,6 +94,54 @@ hostedUp.unref()
 const hostedGrants = path.join(run, 'gateway-hosted')
 const writeHosted = (g) => (writeFileSync(`${hostedGrants}.tmp`, JSON.stringify(g), { mode: 0o600 }), renameSync(`${hostedGrants}.tmp`, hostedGrants))
 writeHosted({})
+// Specialists (2026-11-17): a stand-in server for see, ocr, translate, embed, rerank and transcribe
+// on this host's loopback (the gateway reaches it; the VMs cannot), and stand-in scholarly indexes.
+// OLA_CHECK_SEE_LIVE=<Together model id> sends `see` to the real model instead (the one live run);
+// OLA_CHECK_GENERAL=<id> changes the everyday model (default GLM-5.3-Flash).
+const SEE_LIVE = process.env.OLA_CHECK_SEE_LIVE || null
+const GENERAL = process.env.OLA_CHECK_GENERAL || 'zai-org/GLM-5.3-Flash'
+const specSeen = []
+const specUp = http.createServer((req, res) => {
+  const chunks = []
+  req.on('data', (c) => chunks.push(c))
+  req.on('end', () => {
+    const raw = Buffer.concat(chunks)
+    const p = new URL(req.url, 'http://x').pathname
+    const json = (o, s = 200) => res.writeHead(s, { 'content-type': 'application/json' }).end(JSON.stringify(o))
+    if (p.startsWith('/scholar/')) {
+      specSeen.push({ path: p, q: req.url })
+      const work = { DOI: '10.5555/made.up.1', title: ['Boilers and tenants: a made-up study'], author: [{ given: 'Ana', family: 'Lindqvist' }], issued: { 'date-parts': [[2031]] }, 'container-title': ['Journal of Made-Up Housing'], type: 'journal-article' }
+      if (p === '/scholar/crossref/works') return json({ message: { items: [work] } })
+      if (p.startsWith('/scholar/unpaywall/v2/')) return json({ is_oa: true, best_oa_location: { url_for_pdf: 'https://repo.made-up.invalid/paper.pdf', version: 'acceptedVersion', host_type: 'repository' } })
+      return json({}, 404)
+    }
+    let body = null
+    try {
+      body = JSON.parse(raw.toString('utf8'))
+    } catch {}
+    specSeen.push({ path: p, model: body?.model ?? null, bytes: raw.length, images: JSON.stringify(body?.messages ?? []).split('data:image/').length - 1, multipart: !body })
+    if (p.endsWith('/chat/completions')) {
+      const user = body.messages.filter((m) => m.role === 'user').at(-1)
+      const text = typeof user.content === 'string' ? user.content : user.content.filter((c) => c.type === 'text').map((c) => c.text).join(' ')
+      const n = (user.content || []).filter?.((c) => c.type === 'image_url').length ?? 0
+      const reply = body.model === 'stand/translate' ? `[translated] ${(/<<<\n([\s\S]*)\n>>>/.exec(text) || [, text])[1]}` : `stand-in ${body.model} got ${n} picture${n === 1 ? '' : 's'}`
+      return json({ id: 'x', object: 'chat.completion', created: 1, model: body.model, choices: [{ index: 0, finish_reason: 'stop', message: { role: 'assistant', content: reply } }], usage: { prompt_tokens: 50, completion_tokens: 10, total_tokens: 60 } })
+    }
+    if (p.endsWith('/embeddings')) return json({ data: body.input.map((_, i) => ({ index: i, embedding: [0.5, i, -1] })), usage: { prompt_tokens: 4, total_tokens: 4 } })
+    if (p.endsWith('/rerank')) return json({ results: body.documents.map((d, i) => ({ index: i, relevance_score: d.includes('boiler') ? 0.9 : 0.1 })) })
+    if (p.endsWith('/audio/transcriptions')) return json({ text: 'Made-up words.', duration: 3, segments: [{ start: 0, end: 3, text: 'Made-up words.', speaker: 'SPEAKER_00' }] })
+    json({}, 404)
+  })
+})
+await new Promise((r) => specUp.listen(0, '127.0.0.1', r))
+specUp.unref()
+const specBase = `http://127.0.0.1:${specUp.address().port}`
+const specEnv = {
+  GATEWAY_MODELS: `general=${GENERAL},see=${SEE_LIVE ?? 'stand/see'},ocr=stand/ocr,translate=stand/translate,embed=stand/embed,rerank=stand/rerank,transcribe=stand/asr`,
+  GATEWAY_UPSTREAMS: [...(SEE_LIVE ? [] : [`see=${specBase}/v1`]), ...['ocr', 'translate', 'embed', 'rerank', 'transcribe'].map((n) => `${n}=${specBase}/v1`)].join(','),
+  GATEWAY_SCHOLAR_CONTACT: 'checks@ola.example',
+  GATEWAY_SCHOLAR_UPSTREAMS: `crossref=${specBase}/scholar/crossref,unpaywall=${specBase}/scholar/unpaywall,openalex=${specBase}/scholar/openalex`,
+}
 let gateway = null
 let gatewayLog = ''
 const WEB_FILE = path.join(run, 'gateway-web')
@@ -131,7 +179,8 @@ async function startGateway() {
       // The tokens file ws.mjs keeps, reloaded on a change; each workspace's door socket.
       GATEWAY_TOKENS_FILE: path.join(ws.HOME, 'gateway-tokens'),
       GATEWAY_DOOR_DIR: ws.GATEWAY_DOORS,
-      GATEWAY_MODELS: 'general=zai-org/GLM-5.3-Flash',
+      // The everyday model and the specialists (stand-ins unless OLA_CHECK_SEE_LIVE), scholarly lookup.
+      ...specEnv,
       GATEWAY_PORT: String(GW_PORT),
       GATEWAY_DB: path.join(run, 'usage.db'),
       // Web search and downloads: the made-up provider, the grants file the front desk would
@@ -701,6 +750,53 @@ print(json.dumps({"mib": n, "stopped": why}))
     const twice = await sh(A, ['ola-fetch', 'https://docs.test/report.pdf'])
     t('a fetched PDF is recorded with its address and date and indexed by page; a search cites page 2; the same document again is not written twice', pdf.code === 0 && /3 pages/.test(pdf.out) && /page 2 \(file sources\/report\.pdf; https:\/\/docs\.test\/report\.pdf, fetched 20\d\d-/.test(hit) && /already saved/.test(twice.out), hit.split('\n').find((l) => l.includes('page')) ?? pdf.err.trim())
 
+
+    // -------- specialists (2026-11-17): the commands, through the door, to the stand-in server
+    {
+      const cmds = ['ola-see', 'ola-ocr', 'ola-embed', 'ola-rerank', 'ola-translate', 'ola-transcribe', 'ola-draw', 'ola-lookup']
+      const has = await sh(A, ['sh', '-c', `for c in ${cmds.join(' ')} pdftoppm; do command -v $c >/dev/null || echo "missing $c"; done`])
+      t('image: the eight specialist commands and pdftoppm are in the workspace', has.code === 0 && has.out.trim() === '', has.out.trim())
+      await ws.upload(A, [path.join(here, 'testdata/chart-hours.png'), path.join(here, 'testdata/scan-minutes.png')], { replace: true }).catch(() => {})
+      const from = specSeen.length
+      const seen = await sh(A, ['ola-see', 'chart-hours.png', 'Which month has the most hours?'])
+      const chartB64 = readFileSync(path.join(here, 'testdata/chart-hours.png')).length
+      const got = specSeen.slice(from).find((s) => s.path.endsWith('/chat/completions'))
+      t('ola-see: the picture goes through the door to `see` as one data URL, and the answer comes back as plain text', SEE_LIVE ? seen.code === 0 : seen.code === 0 && /stand-in stand\/see got 1 picture/.test(seen.out) && got?.images === 1 && got.bytes > chartB64, (seen.out + seen.err).trim().split('\n').pop())
+      const pdfPage = await sh(A, ['ola-ocr', 'sources/report.pdf', '--pages', '2', '--json'])
+      let ocrJson = null
+      try {
+        ocrJson = JSON.parse(pdfPage.out)
+      } catch {}
+      t('ola-ocr: a PDF page becomes a picture (pdftoppm) and goes to `ocr`; --json gives data', pdfPage.code === 0 && ocrJson?.pages?.length === 1 && /page 2/.test(ocrJson.pages[0].page) && /stand\/ocr got 1 picture/.test(ocrJson.pages[0].text), (pdfPage.out + pdfPage.err).trim().slice(0, 160))
+      await sh(A, ['sh', '-c', 'cat > /work/statute.txt'], { input: 'Article 1\nThe group meets on 9 October 2031.\n\nArticle 2\nA motion passes with 11 of 14 votes, per Article 1(3).\n' })
+      const tr = await sh(A, ['ola-translate', 'statute.txt', '--to', 'Spanish'])
+      const trOut = await sh(A, ['cat', '/work/statute.spanish.txt'])
+      t('ola-translate: split at articles, sent to `translate`, saved beside the original, numbers checked', tr.code === 0 && /Every number/.test(tr.out) && /\[translated\] Article 1/.test(trOut.out) && /11 of 14/.test(trOut.out), (tr.out + tr.err).trim().split('\n')[0])
+      const em = await sh(A, ['ola-embed', 'boiler repairs', 'rent notice'])
+      const rr = await sh(A, ['ola-rerank', 'who fixes it', 'rent rises', 'the boiler is fixed', '--json'])
+      let rrJson = null
+      try {
+        rrJson = JSON.parse(rr.out)
+      } catch {}
+      t('ola-embed and ola-rerank: numbers back for each text; the ranking names the best text first', em.code === 0 && /2 texts into 3 numbers each/.test(em.out) && rrJson?.[0]?.text === 'the boiler is fixed', `${em.out.trim().split('\n')[0]} | ${rr.err.trim()}`)
+      await sh(A, ['sh', '-c', 'head -c 8000 /dev/zero > /work/talk.wav'])
+      const asr = await sh(A, ['ola-transcribe', 'talk.wav', '--speakers'])
+      const asrSeen = specSeen.slice(from).find((s) => s.path.endsWith('/audio/transcriptions'))
+      t('ola-transcribe: the recording goes as multipart to `transcribe`; a transcript with times and speakers is saved', asr.code === 0 && /\[0:00\] SPEAKER_00: Made-up words\./.test(asr.out) && /talk\.transcript\.txt/.test(asr.out) && asrSeen?.multipart, (asr.out + asr.err).trim().split('\n')[0])
+      const dr = await sh(A, ['ola-draw', 'a heron at dawn', '--out', 'heron.png'])
+      t('ola-draw with no picture model set up: one plain sentence, nothing made', dr.code === 5 && /No model that makes pictures is set up on this machine yet/.test(dr.err) && (await sh(A, ['test', '-e', '/work/heron.png'])).code !== 0, dr.err.trim())
+      // Scholarly lookup: a web request like any other, refused without the project's yes.
+      grantWeb({})
+      await new Promise((r) => setTimeout(r, 2500)) // the gateway rereads the grants file within a second or two
+      const scholarBefore = specSeen.filter((s) => s.path.startsWith('/scholar/')).length
+      const lkOff = await sh(A, ['ola-lookup', 'Lindqvist (2031) Boilers and tenants'])
+      t('ola-lookup without the project’s yes: refused with a plain sentence, no index asked', lkOff.code === 3 && /not approved/.test(lkOff.err) && specSeen.filter((s) => s.path.startsWith('/scholar/')).length === scholarBefore, `exit ${lkOff.code}: ${lkOff.err.trim()}`)
+      grantWeb({ [`ws-${A}`]: { always: true } })
+      const lk = await sh(A, ['ola-lookup', 'Lindqvist (2031) Boilers and tenants'])
+      t('ola-lookup with the project’s Always: title, authors, year, DOI and the free copy, framed as material to read', lk.code === 0 && /Boilers and tenants: a made-up study/.test(lk.out) && /DOI: 10\.5555\/made\.up\.1/.test(lk.out) && /Free copy .*repo\.made-up\.invalid/.test(lk.out) && /not instructions to follow/.test(lk.out), (lk.out + lk.err).trim().slice(0, 200))
+      t('the gateway log names each specialist and the lookup, and none of the words', ['"model":"see"', '"model":"ocr"', '"model":"translate"', '"model":"embed"', '"route":"lookup"'].every((s) => gatewayLog.includes(s)) && !/Boilers|Lindqvist|heron|boiler repairs/.test(gatewayLog))
+      grantWeb({ [`ws-${A}`]: { always: true } }) // as the web checks left it, for the live web run
+    }
     // A 200,000-row table, loaded by the agent's tool, browsed the way the Data view asks.
     const csv = ['id,country,year,title,score', ...Array.from({ length: 200_000 }, (_, i) => `${i},Country ${i % 46},${1950 + (i % 70)},"Made-up law ${i}, on rights",${((i * 7919) % 10000) / 100}`)].join('\n') + '\n'
     let t1 = Date.now()
@@ -811,6 +907,26 @@ print(json.dumps({"mib": n, "stopped": why}))
     measured.web_lines = webLines.map((l) => `${l.route} ${l.status}${l.host ? ` ${l.host}` : ''}${l.why ? ` (${l.why})` : ''}`)
     measured.web_task = { searches: webLines.filter((l) => l.route === 'search').length, fetches: webLines.filter((l) => l.route === 'fetch').length, hits: doc.hits?.length ?? 0 }
     t('live: the model searched (made-up provider), downloaded the real UDHR PDF through the gateway, it is indexed by page, and the answer cites it', !webError && webLines.some((l) => l.route === 'search' && l.status === 200) && fetched.length >= 1 && (doc.hits ?? []).some((h) => /ohchr/.test(h.source_url ?? '')) && /13/.test(last) && /ohchr/.test(last) && fetched.length <= 2, webError ?? `${JSON.stringify(measured.web_task)}; ${measured.web_lines.join(', ')}; answer: ${last.slice(0, 160).replace(/\s+/g, ' ')}`)
+  }
+  // The one live picture run (OLA_CHECK_SEE_LIVE=<model>): the agent is given a made-up scanned page
+  // and a made-up chart and answers a question about each with ola-see, the real model behind `see`.
+  if (SEE_LIVE) {
+    await ws.upload(A, [path.join(here, 'testdata/chart-hours.png'), path.join(here, 'testdata/scan-minutes.png')], { replace: true }).catch(() => {})
+    let seeError = null
+    const t3 = Date.now()
+    const logFrom = gatewayLog.length
+    try {
+      const session = await client.session.create({ location: { directory: '/work' } })
+      await client.session.prompt({ sessionID: session.id, text: 'Two pictures are in your folder: scan-minutes.png, a scanned page of meeting minutes, and chart-hours.png, a chart. Use ola-see to look at each one. Then write answers.md with exactly two lines: "Seconded by: <name>. Vote: <for> for, <against> against, <abstained> abstained." and "Most hours: <month>, <number>."' })
+      await Promise.race([client.session.wait({ sessionID: session.id }), new Promise((_, rej) => setTimeout(() => rej(new Error('no end after 300 s')), 300_000))])
+    } catch (e) {
+      seeError = e?.message || String(e)
+    }
+    measured.see_task_s = (Date.now() - t3) / 1000
+    const ans = spawnSync(ws.CONTAINER, ['exec', ws.names(A).container, 'cat', '/work/answers.md'], { encoding: 'utf8' }).stdout ?? ''
+    const seeLines = gatewayLog.slice(logFrom).split('\n').filter((l) => l.includes(`"caller":"ws-${A}"`) && l.includes('"model":"see"')).map((l) => JSON.parse(l))
+    measured.see_task = { see_requests: seeLines.length, see_ok: seeLines.filter((l) => l.status === 200).length, chat_requests: gatewayLog.slice(logFrom).split('\n').filter((l) => l.includes(`"caller":"ws-${A}"`) && l.includes('"model":"general"')).length, answers: ans.trim().slice(0, 300) }
+    t('live: the agent used ola-see on a made-up scan and a made-up chart and answered both questions right', !seeError && seeLines.filter((l) => l.status === 200).length >= 2 && /Okafor/i.test(ans) && /11 for/.test(ans) && /2 against/.test(ans) && /1 abstained/.test(ans) && /Mar(ch)?\b/i.test(ans) && /96/.test(ans), seeError ?? JSON.stringify(measured.see_task))
   }
   bridge.close()
   const lines = gatewayLog.split('\n').filter((l) => l.includes(`"caller":"ws-${A}"`) && l.includes('"route":"chat"')).map((l) => JSON.parse(l))

@@ -1,0 +1,6 @@
+#!/usr/bin/python3 -I
+# ola-embed: a specialist command; see olaspec.py beside it (python3 -I does not add this folder).
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
+import olaspec
+olaspec.main("embed")

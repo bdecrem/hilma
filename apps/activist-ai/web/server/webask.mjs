@@ -1,5 +1,5 @@
-// What a web approval is about: the search words or the address in an `ola-search` / `ola-fetch`
-// command the agent asked to run. One parser for the page (the question it shows) and the front
+// What a web approval is about: the search words, the address or the reference in an `ola-search` /
+// `ola-fetch` / `ola-lookup` command the agent asked to run. One parser for the page (the question it shows) and the front
 // desk (the one-time grant it writes for the gateway), so the person approves exactly what the
 // gateway will let through.
 //
@@ -45,7 +45,7 @@ export function shellWords(cmd) {
   return words
 }
 
-const TOOLS = { 'ola-search': 'search', '/opt/ola/bin/ola-search': 'search', 'ola-fetch': 'fetch', '/opt/ola/bin/ola-fetch': 'fetch' }
+const TOOLS = { 'ola-search': 'search', '/opt/ola/bin/ola-search': 'search', 'ola-fetch': 'fetch', '/opt/ola/bin/ola-fetch': 'fetch', 'ola-lookup': 'lookup', '/opt/ola/bin/ola-lookup': 'lookup' }
 
 /**
  * The web request in one command: { kind: 'search', item: words } or { kind: 'fetch', item: address },
@@ -61,9 +61,11 @@ export function webRequestOf(cmd) {
   for (let i = 1; i < w.length; i++) {
     if (kind === 'search' && w[i] === '--count') i++
     else if (kind === 'fetch' && w[i] === '--as') i++
+    else if (kind === 'lookup' && w[i] === '--json') continue
     else rest.push(w[i])
   }
-  if (kind === 'search') {
+  // A lookup is one reference (a citation or a DOI), normalized like a search (gateway/web.mjs).
+  if (kind === 'search' || kind === 'lookup') {
     const q = rest.join(' ').replace(/\s+/g, ' ').trim()
     return { kind, item: q || null }
   }
