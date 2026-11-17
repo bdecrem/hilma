@@ -6,7 +6,7 @@
   --font: -apple-system, BlinkMacSystemFont, "Instrument Sans", system-ui, sans-serif;
 }
 @media (prefers-color-scheme: dark) {
-  :root { --bg: #000000; --grouped: #000000; --group: #1c1c1e; --label: #ffffff; --label-2: #a1a1a6; --sep: #38383a; --fill: #7676803d; --red: #ff6961; }
+  :root { --tint: #5aa9ff; --on-tint: #000000; --bg: #000000; --grouped: #000000; --group: #1c1c1e; --label: #ffffff; --label-2: #a1a1a6; --sep: #38383a; --fill: #7676803d; --red: #ff6961; }
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; }

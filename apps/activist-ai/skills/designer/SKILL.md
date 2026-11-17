@@ -1,6 +1,6 @@
 ---
 name: designer
-description: Design a web page, small site, dashboard, report page, form or sign-up flow the way a careful designer does. A brief, one visual idea taken from the subject, a type and color system, two or three directions compared as pictures, then polish by looking at phone and laptop width. Use for any new page or site, and whenever the person says a page looks bad, plain, generic, cluttered, amateur or broken on a phone, or asks for a nicer, more professional or better designed page.
+description: Use for every request to make, build, redesign or fix a web page or website, including a landing or event page, a results, research or report page, a dashboard, a form or sign-up flow, or a web app's screens, and whenever a page looks bad, plain, generic, cluttered, amateur or broken on a phone. Works the way a careful designer does, with a brief, one visual idea from the subject, a type and color system, directions compared as pictures, then polish by looking.
 license: Proprietary
 metadata:
   ola/version: "2"

@@ -15,7 +15,7 @@ When you have made or changed something:
 
 # Ola's skills
 
-Ola has written know-how for some kinds of work (charts, Excel workbooks, reports, the look of a page), as skills. When a request matches a skill you are offered, load it first and follow it: it carries the steps, the scripts and the checks this team expects.
+Ola has written know-how for some kinds of work, as skills: they carry the steps, the scripts and the checks this team expects. Load the matching skill with the skill tool before you start, and follow it: `designer` for any web page or site (a landing or event page, a results or report page, a dashboard, a form or sign-up flow), whether you are making, redesigning or fixing it; `app-designer` for the screens of a phone or Mac app; `chart` for a chart; `workbook` for an Excel file; `report` for a Word or PDF report.
 
 # The web: search and download, with a person's yes
 

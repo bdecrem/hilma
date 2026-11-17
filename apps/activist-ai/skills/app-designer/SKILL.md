@@ -1,6 +1,6 @@
 ---
 name: app-designer
-description: Design the screens of an iPhone or Mac app as a clickable HTML prototype at real device sizes, and render each screen as a picture. Use when someone asks to design, mock up or sketch an app, phone screens, an iPhone or iOS app, a Mac app, app screens or an app prototype, or says an app looks unfinished or is missing normal app parts such as settings. It designs screens; it does not write Swift.
+description: Use for every request to design, mock up, sketch or fix the screens of a phone app, an iPhone or iOS app or a Mac app, or an app prototype, and when an app feels unfinished, like a web page, or is missing normal app parts such as settings. Makes a clickable HTML prototype at real device sizes and a picture of every screen; it does not write Swift.
 license: Proprietary
 metadata:
   ola/version: "1"

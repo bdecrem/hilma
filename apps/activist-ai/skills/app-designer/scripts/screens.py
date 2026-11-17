@@ -23,14 +23,22 @@ ASK = ("These are the screens of one {device} app prototype, side by side, label
        "text too big or too small. Do not praise.")
 
 
+VALUE = r"""=(?:"([^"]*)"|'([^']*)'|([^\s>"']+))"""
+
+
+def attr(tag, name):
+    """An attribute's value, quoted with " or ' or not at all; empty when absent."""
+    m = re.search(r"\b" + name + VALUE, tag)
+    return next((g for g in m.groups() if g is not None), "") if m else ""
+
+
 def screens_in(text):
     out = []
     for m in re.finditer(r"<section\b[^>]*>", text):
         tag = m.group(0)
-        cls = re.search(r'class="([^"]*)"', tag)
-        sid = re.search(r'id="([^"]+)"', tag)
-        if cls and sid and "screen" in cls.group(1).split():
-            out.append(sid.group(1))
+        cls, sid = attr(tag, "class"), attr(tag, "id")
+        if sid and "screen" in cls.split():
+            out.append(sid)
     return out
 
 
@@ -54,7 +62,7 @@ def main():
     out = proto.parent / "screens"
     out.mkdir(exist_ok=True)
     problems = []
-    targets = set(re.findall(r'data-(?:go|tab)="([^"]+)"', text))
+    targets = {next(g for g in m if g) for m in re.findall(r"data-(?:go|tab)" + VALUE, text) if any(m)}
     for t in sorted(targets - set(ids)):
         problems.append(f"a link or tab opens \"{t}\", which is not a screen")
     for s in ids[1:]:

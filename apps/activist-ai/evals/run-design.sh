@@ -20,7 +20,7 @@ for t in $tasks; do
   echo "design evals $t $(date)" > ~/ola-suite.lock/owner
   for arm in on off; do
     echo "== $t $arm $(date)" >> $log
-    node run.mjs --config ${DESIGN_CONFIG:-configs/nemotron-3.5-super-vl-ws-ds.json} --tasks $t --seeds ${DESIGN_SEEDS:-1,2,3} --skills $arm --db results/design.db \
+    node run.mjs --config ${DESIGN_CONFIG:-configs/nemotron-3.5-super-vl-ws-ds.json} --tasks $t --seeds ${DESIGN_SEEDS:-1,2,3} --skills $arm --db ${DESIGN_DB:-results/design.db} \
       --concurrency 2 --time ${DESIGN_TIME:-900} --tokens 500000 --max-load 9 --load-patience 10 >> $log 2>&1
   done
   rm -rf ~/ola-suite.lock
