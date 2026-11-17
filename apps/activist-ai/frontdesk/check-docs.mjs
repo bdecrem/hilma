@@ -279,6 +279,12 @@ export async function docChecks({ check, assert, api, A, a, v, FA, CTR, ORIGIN, 
       })
     }
   } finally {
+    // Leave alice's project as the later checks expect it: the uploads deleted through the page
+    // (their rows and documents go with them), the rest of what these checks made removed.
+    const csrf = { cookie: a?.cookie, csrf: a?.csrf, ws: FA }
+    for (const f of ['library/one-column.pdf', 'library/right-paper.pdf', 'library/padding.bin', 'bomb.zip', 'library.db', 'corrupt.db', 'water-board-scan.pdf'])
+      await api(`/api/files/${f.split('/').map(encodeURIComponent).join('/')}`, { ...csrf, method: 'DELETE' }).catch(() => {})
+    inside(['sh', '-c', 'rm -rf /work/dx /work/library /work/chart.png /work/drawing.svg /work/water-report.pdf /work/notes.docx /work/budget.xlsx; ola-db init'])
     beacon.close()
     await wk.close()
   }
