@@ -233,7 +233,7 @@ const probes = {
   async sizes(S) {
     const dirs = [S.CONTAINER_STORE]
     try {
-      for (const d of readdirSync(HOME)) if (/^ola-/.test(d) && statSync(path.join(HOME, d)).isDirectory()) dirs.push(path.join(HOME, d))
+      for (const d of readdirSync(HOME)) if (/^ola-/.test(d) && !d.endsWith(".lock") && statSync(path.join(HOME, d)).isDirectory()) dirs.push(path.join(HOME, d))
     } catch {}
     const there = dirs.filter(existsSync)
     if (!there.length) return {}
