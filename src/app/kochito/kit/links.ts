@@ -7,7 +7,7 @@ export const OPEN: SideLink[] = [
   { name: 'The web app', url: 'https://app.ola.cx', note: 'app.ola.cx' },
   { name: 'The landing page', url: 'https://ola.cx', note: 'ola.cx' },
   { name: 'The Mac app', url: null, note: 'download coming' },
-  { name: 'TestFlight', url: null, note: 'coming, after Apple’s agreement' },
+  { name: 'TestFlight', url: null, note: 'coming: Apple’s agreement is signed, the iPhone app is on its way' },
 ]
 export const CODE: SideLink[] = [{ name: 'The code', url: 'https://github.com/bdecrem/hilma', note: 'github.com/bdecrem/hilma' }]
 // Ola's by link only: never changed from here.
