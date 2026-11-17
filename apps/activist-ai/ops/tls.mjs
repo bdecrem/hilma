@@ -199,6 +199,12 @@ export function makeTlsFront(cfg = config()) {
   const pipeUp = (req, res, client) => {
     const headers = {}
     for (const [k, v] of Object.entries(req.headers)) if (!HOP.has(k) && k !== 'authorization') headers[k] = v
+    // A chunked body stays chunked. Node's client frames a GET, HEAD or DELETE body only when told:
+    // without this the body went up as raw bytes after the headers, where a request inside it was
+    // stopped only by the front desk's parser refusing bytes after a `Connection: close` request
+    // (third review, 2026-11-16; frontdesk/review/rev3-tls.mjs). Node's parser has already refused
+    // any Transfer-Encoding that does not end in chunked, and one sent with a Content-Length.
+    if (req.headers['transfer-encoding'] !== undefined) headers['transfer-encoding'] = 'chunked'
     const up = http.request({
       method: req.method,
       path: req.url,
