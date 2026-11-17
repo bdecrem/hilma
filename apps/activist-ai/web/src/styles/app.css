@@ -793,6 +793,16 @@ code {
   .app.drawer-open .thing-slot[data-kind='document'] {
     grid-row: span 1;
   }
+  /* With the drawer open the page is half as wide: the title keeps its line and the buttons go
+     under it, left-aligned, instead of a ragged stack beside a title broken in two. */
+  .app.drawer-open .project-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--s4);
+  }
+  .app.drawer-open .project-actions {
+    justify-content: flex-start;
+  }
 }
 .drawer-head {
   display: flex;
@@ -1050,6 +1060,33 @@ code {
 }
 .answer-heading {
   font-weight: 700;
+}
+/* A table in Ola's reply: scrolls sideways inside itself on a phone, never the page. */
+.answer-table {
+  margin-top: var(--s3);
+  max-width: 100%;
+  overflow-x: auto;
+}
+.answer-table table {
+  border-collapse: collapse;
+  font-size: 16px;
+  line-height: 1.4;
+}
+.answer-table th,
+.answer-table td {
+  padding: 6px 12px 6px 0;
+  border-bottom: 1px solid var(--rule, rgba(0, 0, 0, 0.12));
+  text-align: left;
+  vertical-align: top;
+}
+.answer-table th {
+  font-family: var(--font-ui, inherit);
+  font-weight: 700;
+}
+.answer-table td:not(:first-child),
+.answer-table th:not(:first-child) {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 .answer.note {
   font-size: 16px;
@@ -2389,10 +2426,12 @@ code {
 }
 
 @media (max-width: 760px) {
-  .data-tables th:nth-child(3),
-  .data-tables td:nth-child(3),
-  .data-docs th:nth-child(3),
-  .data-docs td:nth-child(3) {
+  /* On a phone the size column goes, not "Came from": where a document came from (a site and the
+     date it was downloaded) is what a person needs to cite it (first-user pass). */
+  .data-tables th:nth-child(2),
+  .data-tables td:nth-child(2),
+  .data-docs th:nth-child(2),
+  .data-docs td:nth-child(2) {
     display: none;
   }
   .data-tables th:nth-child(1),

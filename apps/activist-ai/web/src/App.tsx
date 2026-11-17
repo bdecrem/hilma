@@ -207,7 +207,8 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
           fallback={
             <>
               <a class="back-link" href="#/">
-                <Icon name="back" size={16} /> Back to {project() ? count(project()!.things.length, 'thing') : 'the things'}
+                {/* "Back to one thing" read oddly in a project full of files (first-user pass). */}
+                <Icon name="back" size={16} /> Back to the project
               </a>
               <Show when={route() === 'files'}>
                 <FilesView onChanged={() => void refetch()} uploadRef={(el) => (uploadButton = el)} canWrite={canRun()} deleteNotice={props.me.policy.deleteNotice} claudeOn={claudeOn()} hostedOn={hostedOn()} />
@@ -273,7 +274,7 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
               </Show>
             </div>
           </section>
-          <Show when={project()} fallback={<p class="loading" role="status">{waking() ? 'Waking your workspace…' : 'Opening your project…'}</p>}>
+          <Show when={project()} fallback={<p class="loading" role="status">{waking() ? 'Waking your project. This takes a few seconds…' : 'Opening your project…'}</p>}>
             <Show when={project()!.things.length || project()!.files?.length} fallback={<EmptyProject canRun={canRun()} onAsk={openDrawer} onAddFiles={addFiles} />}>
               {/* What Ola made, by kind: pages, charts and images, tables, documents. */}
               <For each={groupThings(project()!.things)}>
@@ -368,7 +369,7 @@ export function App(props: { me: Me; role: Role; onSignOut: () => void }) {
               </Show>
             </Show>
             <li>Ola can read only the files you upload, listed under “What Ola has of yours”.</li>
-            <li>Your conversations stay in your project until you delete them. Bart, who runs the machine, could read a session while it runs; he does not keep logs of what you ask.</li>
+            <li>Your conversations stay in your project until you delete them. Bart, who runs the machine, could read a conversation while it runs; he does not keep logs of what you ask.</li>
             <li>A web search or a download asks you first, unless your project said Always (Settings). Only the words of the search, or the one address, leave the machine; your files never do.</li>
           </ul>
           <div class="sheet-actions">

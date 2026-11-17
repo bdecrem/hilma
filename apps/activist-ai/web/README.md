@@ -90,6 +90,42 @@ no text under 15 px and AA contrast in the home, the drawer and the files view; 
 scroll at 390 px; reduced motion stops the lamp and the slides; one real request through
 Together; and, across all of it, no request to another origin.
 
+## The first-user check (`first-user.mjs`)
+
+The suites prove each piece with a scripted model. This one uses the app as a new person would,
+on a fresh copy of everything with the **real everyday model**, and is what the lead runs before
+telling the owner something is ready:
+
+```bash
+# on the Mac mini, from apps/activist-ai, under the suite lock (it starts two small projects)
+node web/first-user.mjs --shots ~/first-user-shots          # A, B and D in WebKit at 1280 and Chromium at 390
+node web/first-user.mjs --only A --runs webkit@390            # one journey, one browser and width
+OLA_FU_MODEL=<model id> node web/first-user.mjs               # another everyday model (default: Nemotron 3.5 Super VL)
+```
+
+- **A**: an invitation link, a passkey, the empty project, "a hello-world page", Open.
+- **B**: a messy spreadsheet uploaded, a question whose honest answer needs a caveat, a chart and an
+  Excel file under the reply, both opened, both on the project home after a reload.
+- **D**: a request that needs the web: the search card and the download card (Allow once), the
+  saved PDF in Files and in Data.
+
+It fails when a step fails, when a step takes longer than its limit (`OLA_FU_SLOW=2` doubles them
+on a busy machine), or when a forbidden word is on the screen (`FORBIDDEN` in the script:
+workspace, gateway, VM, sandbox, front desk, opencode, token, session, container, API, exit code
+and the like). The person's own requests are not scanned; Ola's replies are, and a hit there is
+named "in Ola's reply". Every step leaves a screenshot and the words on the screen in `--shots`.
+Its own ports (4891, 4893), state in `~/.ola-first-user`, the made-up search provider, a scripted
+Claude, one real download (the made-up search's UN PDF); everything is destroyed at the end. A run
+costs about 1 million tokens of the everyday model (about 20 cents on Together) and takes 5 minutes.
+The model's quality is printed, not failed on (did it name the duplicate row, did it quote Article 1).
+
+`--only C,E,F,G,H,I` adds the longer walk in `first-user-more.mjs` (six studies and a job, a
+site made to look better, a drawing and a translation, every switch in Settings and every `/`
+command, a second member removed mid-visit, reloads, two tabs, offline, a too-big file, a
+sleeping project with `OLA_FU_IDLE_MIN=1`); `OLA_FU_SPECIALISTS=<model>` and `OLA_FU_HOSTED=<model>`
+turn on the specialists and the hosted open model on Together for it. What the first pass found
+is in `FIRST-USER-NOTES.md`.
+
 ## Real and stubbed
 
 | Real | Stubbed |

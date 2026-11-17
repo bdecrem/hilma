@@ -90,6 +90,17 @@ function cleanJob(j) {
   }
 }
 
+/**
+ * A job the agent set going before any person said yes: the gateway refused it at its first document
+ * (nothing was read), and the VM calls it paused, "No job is approved…". With no row here no person
+ * ever approved it, so it is still a proposal: the page shows the trial button, not a Resume that could
+ * only be refused (first-user pass, 2026-11-17: the person was told to start it under Jobs, and Jobs
+ * offered nothing that worked).
+ */
+export function unapproved(j, row) {
+  return j && !row && j.state === 'paused' && !j.progress?.done ? { ...j, state: 'proposed', note: null } : j
+}
+
 // `tool` reaches ola-batch in a project's VM (ws.mjs: `container exec`); web/dev.mjs passes one that
 // runs it on its dev folder, so the page's checks drive this same code.
 export function makeJobs({ db, jc, cc, workspaces, hostedInfo, claudeInfo, log, tool = { api: ws.batchApi, runner: ws.batchRunner } }) {
@@ -141,7 +152,7 @@ export function makeJobs({ db, jc, cc, workspaces, hostedInfo, claudeInfo, log, 
   async function list(w) {
     const r = await vm(w.slug, ['list'])
     const rows = new Map(rowsOf(w.id).map((x) => [x.job, x]))
-    const jobs = (Array.isArray(r.jobs) ? r.jobs : []).slice(0, 50).map(cleanJob).filter(Boolean).map((j) => decorate(w, j, rows.get(j.id)))
+    const jobs = (Array.isArray(r.jobs) ? r.jobs : []).slice(0, 50).map(cleanJob).filter(Boolean).map((j) => decorate(w, unapproved(j, rows.get(j.id)), rows.get(j.id)))
     return { jobs, options: await options(w), role: w.role }
   }
 
@@ -157,7 +168,7 @@ export function makeJobs({ db, jc, cc, workspaces, hostedInfo, claudeInfo, log, 
       if (e?.code === 'NO_JOB') return { status: 404, body: { error: 'not_found', message: 'That job is not in this project.' } }
       throw e
     }
-    const j = cleanJob(r)
+    const j = unapproved(cleanJob(r), rowOf(w.id, job))
     if (!j) return { status: 502, body: { error: 'job_failed', message: 'The job could not be read just now.' } }
     const res = r.results && typeof r.results === 'object' ? r.results : {}
     const columns = Array.isArray(res.columns) ? res.columns.slice(0, 200).map((c) => str(c, 80)) : []
@@ -182,6 +193,7 @@ export function makeJobs({ db, jc, cc, workspaces, hostedInfo, claudeInfo, log, 
     }
     if (!j) return refuse(502, 'job_failed', 'The job could not be read just now.')
     const row = rowOf(w.id, job)
+    j = unapproved(j, row)
     const other = db.prepare("SELECT job FROM batch_jobs WHERE workspace_id = ? AND job != ? AND state IN ('trial', 'running')").get(w.id, job)
     const now = Date.now()
 

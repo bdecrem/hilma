@@ -4,9 +4,9 @@
 // made from model text.
 import { canOpen, plainPath } from './api.ts'
 
-export const CITE = /\[([^\]\n]{1,200})\]\(doc:([^)#\s]{1,1300})(?:#page=(\d{1,6}))?\)/
+export const CITE = /\[([^\]\n]{1,200})\]\(doc:([^)#\n]{1,1300})(?:#page=(\d{1,6}))?\)/
 /** The same, without capture groups, for splitting a line. */
-export const CITE_SPLIT = /\[[^\]\n]{1,200}\]\(doc:[^)#\s]{1,1300}(?:#page=\d{1,6})?\)/
+export const CITE_SPLIT = /\[[^\]\n]{1,200}\]\(doc:[^)#\n]{1,1300}(?:#page=\d{1,6})?\)/
 
 export function citation(part: string): { label: string; path: string; page?: number } | null {
   const m = new RegExp(`^${CITE.source}$`).exec(part)

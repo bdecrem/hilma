@@ -137,3 +137,13 @@ test('the hosted and Claude grants files: off by default, independent, one-time 
   for (const action of ['hosted_enabled', 'hosted_disabled', 'hosted_used', 'hosted_once', 'claude_once']) audit(db, { action, workspace: id('p-two'), tokensIn: 1, tokensOut: 2, costMicroUsd: 3 })
   db.close()
 })
+
+test('a job the agent set going before anyone said yes is still a proposal (first-user pass)', async () => {
+  const { unapproved } = await import('../jobs.mjs')
+  const vmSays = { id: 'a', state: 'paused', note: 'Paused: No job is approved to run for this project now.', progress: { done: 0 } }
+  assert.deepEqual(unapproved(vmSays, undefined), { ...vmSays, state: 'proposed', note: null })
+  // approved by a person, or with work done: as the VM says
+  assert.equal(unapproved(vmSays, { state: 'paused' }).state, 'paused')
+  assert.equal(unapproved({ ...vmSays, progress: { done: 3 } }, undefined).state, 'paused')
+  assert.equal(unapproved(null, undefined), null)
+})

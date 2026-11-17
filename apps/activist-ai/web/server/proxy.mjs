@@ -53,8 +53,14 @@ export function permissionsFor(autonomy, web = 'ask') {
   if (autonomy === 'ask') for (const action of ASK_FIRST) rules.push({ action, resource: '*', effect: 'ask' })
   rules.push(...webRules(web === 'always' && autonomy !== 'ask' ? 'allow' : 'ask'))
   for (const action of ALWAYS_DENY) rules.push({ action, resource: '*', effect: 'deny' })
+  // Ola's own skills are files in the image, read-only, outside the project folder: a skill tells the
+  // agent to read its references (design-pass: references/design.md), and the denial above refused
+  // every read, so "make it look better" stopped at once (first-user pass, 2026-11-17). Reading them
+  // gives nothing new: the agent can already print them with the shell. Last, so it wins.
+  rules.push(SKILLS_READ)
   return rules
 }
+export const SKILLS_READ = { action: 'external_directory', resource: '/opt/ola/skills/*', effect: 'allow' }
 
 /** The body opencode gets for PATCH /api/session/:id: a title and the autonomy, nothing else. */
 export function rewriteSessionUpdate(raw, web = 'ask') {

@@ -39,6 +39,26 @@ export function describeCommand(command: string): Words {
   if (/^ola-db\s+search\b/.test(c)) return { icon: 'search', verb: 'Searched the documents', object: '' }
   if (/^ola-db\s+load\b/.test(c)) return { icon: 'change', verb: 'Loaded a table into', object: 'the project’s data' }
   if (/^ola-db\s+(query|tables|describe)\b/.test(c)) return { icon: 'look', verb: 'Looked in', object: 'the project’s data' }
+  // Ola's own commands in the project, said as what they do (a person never needs their names).
+  const own = /^(?:\/opt\/ola\/bin\/)?(ola-[a-z-]+)(?=\s|$)/.exec(c)
+  // The first argument that names a file (has an extension and is not an option).
+  const file = (c.split(/\s+/).slice(1).map((a) => a.replace(/^["']|["']$/g, '')).find((a) => !a.startsWith('-') && /\.\w{1,5}$/.test(a)) ?? '').split('/').pop() ?? ''
+  const OWN: Record<string, Words> = {
+    'ola-page': { icon: 'check', verb: 'Looked at how the page shows', object: file },
+    'ola-view': { icon: 'look', verb: 'Looked at', object: file },
+    'ola-see': { icon: 'look', verb: 'Looked at the picture', object: file },
+    'ola-ocr': { icon: 'read', verb: 'Read the scanned pages of', object: file },
+    'ola-translate': { icon: 'change', verb: 'Translated', object: file },
+    'ola-draw': { icon: 'write', verb: 'Drew a picture', object: '' },
+    'ola-batch': { icon: 'run', verb: 'Set up a job', object: '' },
+    'ola-embed': { icon: 'search', verb: 'Searched the documents', object: '' },
+    'ola-rerank': { icon: 'search', verb: 'Searched the documents', object: '' },
+    'ola-transcribe': { icon: 'read', verb: 'Wrote down what is said in', object: file },
+    'ola-unzip': { icon: 'change', verb: 'Unpacked', object: file },
+    'ola-files': { icon: 'look', verb: 'Looked through', object: 'the project folder' },
+  }
+  if (own && OWN[own[1]]) return OWN[own[1]]
+  if (own) return { icon: 'run', verb: 'Used one of Ola’s tools', object: '' }
   const script = /^(?:python3?|node|Rscript|bash|sh)\s+(?!-)([\w./-]+\.(?:py|js|mjs|R|sh))/.exec(c)
   if (script) return { icon: 'run', verb: 'Ran', object: script[1].split('/').pop() ?? script[1] }
   if (/^(python3?|node|Rscript)\s+-[ce]\b/.test(c) || /^(python3?|node)\s*<</.test(c)) return { icon: 'run', verb: 'Ran a short program', object: '' }
@@ -137,7 +157,8 @@ export function stepProblem(error: { type?: string; message?: string } | undefin
   if (/rejected|denied|not allowed/i.test(message)) return { text: 'Not allowed here, so Ola did not do it.', detail: message }
   if (/no such file|ENOENT|not found/i.test(message)) return { text: 'The file was not there.', detail: message }
   if (/timed? ?out/i.test(message)) return { text: 'This took too long and was stopped.', detail: message }
-  return { text: firstLine(message) || 'This step did not work.', detail: message || null }
+  // The tool's own message ("ripgrep execution failed") is the machine's word: under Show details.
+  return { text: 'This step did not work. Ola can try another way.', detail: message || null }
 }
 
 /** Why a whole request failed, in plain words, from opencode's structured error. */
@@ -149,6 +170,8 @@ export function runProblem(error: { type?: string; message?: string; status?: nu
   if (status === 503 || status === 504 || /overloaded|timeout/i.test(message)) return { text: 'The model is busy or did not answer in time. Nothing was lost; try again in a minute.', detail }
   if (status && status >= 500) return { text: 'The model server had a problem. Nothing was lost; try again in a minute.', detail }
   if (status && status >= 400) return { text: 'The model could not take this request. Try saying it another way, or in smaller steps.', detail }
+  // "Step interrupted" and the like are the machine's words; the detail keeps them.
+  if (/interrupt|abort|cancel/i.test(message)) return { text: 'This stopped before it finished. What Ola did so far stays as it is.', detail }
   return { text: firstLine(message) ? `It stopped: ${firstLine(message, 120)}` : 'It stopped before it finished.', detail }
 }
 

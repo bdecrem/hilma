@@ -28,5 +28,8 @@ test('session rules: our tools ask, run when the project said always (not under 
   assert.equal(find(permissionsFor('go'), 'ola-search *'), 'ask')
   assert.equal(find(permissionsFor('go', 'always'), 'ola-fetch *'), 'allow')
   assert.equal(find(permissionsFor('ask', 'always'), 'ola-fetch *'), 'ask')
-  assert.deepEqual(permissionsFor('go', 'always').slice(-4).map((r) => r.effect), ['deny', 'deny', 'deny', 'deny'])
+  assert.deepEqual(permissionsFor('go', 'always').slice(-5).map((r) => r.effect), ['deny', 'deny', 'deny', 'deny', 'allow'])
+  // The one thing outside the project folder a session may read: Ola's own skills (first-user pass).
+  for (const a of ['go', 'ask']) assert.deepEqual(permissionsFor(a).at(-1), { action: 'external_directory', resource: '/opt/ola/skills/*', effect: 'allow' })
+  assert.equal(permissionsFor('go').filter((r) => r.action === 'external_directory' && r.effect === 'allow').length, 1)
 })

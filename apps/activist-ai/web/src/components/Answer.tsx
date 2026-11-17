@@ -1,39 +1,9 @@
-// Ola's words, set in Literata. A small Markdown subset (paragraphs, lists, headings, **bold**,
+// Ola's words, set in Literata. A small Markdown subset (paragraphs, lists, headings, tables, **bold**,
 // `code`) built as elements: model text never becomes HTML, so it can never inject markup.
 import { For, Match, Switch, type JSX } from 'solid-js'
 import { desk } from '../lib/api.ts'
 import { citation, CITE_SPLIT } from '../lib/cite.ts'
-
-type Block = { kind: 'p' | 'h'; text: string } | { kind: 'ul' | 'ol'; items: string[] }
-
-export function blocks(text: string): Block[] {
-  const out: Block[] = []
-  let para: string[] = []
-  const flush = () => {
-    if (para.length) out.push({ kind: 'p', text: para.join(' ') })
-    para = []
-  }
-  for (const raw of text.split('\n')) {
-    const line = raw.trim()
-    const bullet = /^[-*•]\s+(.*)$/.exec(line)
-    const numbered = /^\d+[.)]\s+(.*)$/.exec(line)
-    const heading = /^#{1,6}\s+(.*)$/.exec(line)
-    if (!line) flush()
-    else if (heading) {
-      flush()
-      out.push({ kind: 'h', text: heading[1] })
-    } else if (bullet || numbered) {
-      flush()
-      const kind = bullet ? 'ul' : 'ol'
-      const last = out[out.length - 1]
-      const item = (bullet ?? numbered)![1]
-      if (last && last.kind === kind) last.items.push(item)
-      else out.push({ kind, items: [item] })
-    } else para.push(line)
-  }
-  flush()
-  return out
-}
+import { blocks } from '../lib/blocks.ts'
 
 /** Inline **bold**, `code` and citations (lib/cite.ts); everything else is text. */
 export function Inline(props: { text: string }): JSX.Element {
@@ -47,7 +17,10 @@ export function Inline(props: { text: string }): JSX.Element {
             <span class="sr-only"> (opens {citation(part)!.path}{citation(part)!.page ? ` at page ${citation(part)!.page}` : ''} in a new tab)</span>
           </a>
         ) : part.startsWith('**') && part.endsWith('**') && part.length > 4 ? (
-          <strong>{part.slice(2, -2)}</strong>
+          // Bold may hold code or a citation (**`totals.xlsx`**): drawn too, never as raw backticks.
+          <strong>
+            <Inline text={part.slice(2, -2)} />
+          </strong>
         ) : part.startsWith('`') && part.endsWith('`') && part.length > 2 ? (
           <code>{part.slice(1, -1)}</code>
         ) : (
@@ -84,6 +57,38 @@ export function Answer(props: { text: string; class?: string }) {
                   )}
                 </For>
               </ul>
+            </Match>
+            <Match when={b.kind === 'table'}>
+              <div class="answer-table" tabindex="0" role="region" aria-label="Table">
+                <table>
+                  <thead>
+                    <tr>
+                      <For each={(b as { head: string[] }).head}>
+                        {(c) => (
+                          <th scope="col">
+                            <Inline text={c} />
+                          </th>
+                        )}
+                      </For>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <For each={(b as { rows: string[][] }).rows}>
+                      {(r) => (
+                        <tr>
+                          <For each={r}>
+                            {(c) => (
+                              <td>
+                                <Inline text={c} />
+                              </td>
+                            )}
+                          </For>
+                        </tr>
+                      )}
+                    </For>
+                  </tbody>
+                </table>
+              </div>
             </Match>
             <Match when={b.kind === 'ol'}>
               <ol>

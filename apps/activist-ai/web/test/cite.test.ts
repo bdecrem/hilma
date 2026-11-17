@@ -28,3 +28,9 @@ test('what Open does with each kind', () => {
   assert.equal(plainPath('papers/2021/a b.pdf'), true)
   assert.equal(plainPath('../a.pdf'), false)
 })
+
+test('a citation of a file whose name has spaces is a link (first-user pass: uploads keep their names)', () => {
+  assert.deepEqual(citation('[study 1 water board.pdf, p. 2](doc:study 1 water board.pdf#page=2)'), { label: 'study 1 water board.pdf, p. 2', path: 'study 1 water board.pdf', page: 2 })
+  assert.equal(citation('[x](doc:a.pdf\n b.pdf)'), null)
+  assert.equal(citation('[x](doc:../a b.pdf)'), null)
+})

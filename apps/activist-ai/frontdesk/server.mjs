@@ -381,7 +381,7 @@ export function makeFrontDesk(cfg = config()) {
         const waking = workspaces.ensureRunning(ws.slug)
         waking.catch(() => {})
         const done = await Promise.race([waking.then(() => true, (e) => e), new Promise((r) => setTimeout(() => r(false), cfg.wakeWaitMs))])
-        if (done === false) return json(res, 503, { error: 'waking', message: 'Waking your workspace…' }, { 'retry-after': '1' })
+        if (done === false) return json(res, 503, { error: 'waking', message: 'Waking your project…' }, { 'retry-after': '1' })
         if (done !== true) return startRefused(res, done)
       }
       const slot = takeSlot(sess.personId, ws.slug)

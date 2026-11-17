@@ -2044,7 +2044,7 @@ await check('batch jobs: cancel keeps what was coded and takes the grant away; a
   return `cancelled at ${d1} of 10; the third paused at ${j3.progress.done} of 12: "${j3.note}"`
 })
 
-await check('an idle workspace stops, its event stream does not wake it, and opening the project does ("Waking your workspace…")', async () => {
+await check('an idle workspace stops, its event stream does not wake it, and opening the project does ("Waking your project…")', async () => {
   fd.kill('SIGTERM')
   await until(() => fd.exitCode !== null, 10_000, 'the front desk stopping')
   fd = start('frontdesk', 'frontdesk/server.mjs', { OLA_FD_IDLE_STOP_MIN: '0.05', OLA_FD_WAKE_WAIT_MS: '0' })
@@ -2059,11 +2059,11 @@ await check('an idle workspace stops, its event stream does not wake it, and ope
   assert(ev[0] === 503 && ev[1] === 'asleep' && state() !== 'running', `event stream: ${ev.join(' ')}, state ${state()}`)
   await A.page.goto('about:blank')
   await A.page.goto(`${ORIGIN}/?w=${FA}#/`)
-  await A.page.getByText('Waking your workspace…').waitFor({ timeout: 10_000 })
+  await A.page.getByText("Waking your project. This takes a few seconds…").waitFor({ timeout: 10_000 })
   await A.page.waitForFunction(() => document.querySelector('.project-title')?.textContent === 'Made-up eviction report', null, { timeout: 60_000 })
   const back = state()
   assert(back === 'running', `after opening: ${back}`)
-  return `stopped ${(after / 1000).toFixed(1)} s after its last request (limit 3 s, swept each second); event stream 503 asleep; the page said "Waking your workspace…", then opened it`
+  return `stopped ${(after / 1000).toFixed(1)} s after its last request (limit 3 s, swept each second); event stream 503 asleep; the page said "Waking your project…", then opened it`
 })
 
 // ---------------------------------------------------------------- rotation with a full machine (2026-11-16)

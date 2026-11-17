@@ -4,7 +4,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import { applyEvent, emptyConversation, runSummary, startTurn, turnsFromMessages } from '../src/lib/conversation.ts'
-import { describeCommand, describeTool, precheck, runProblem, shortPath, STRETCH_CHECKS } from '../src/lib/steps.ts'
+import { describeCommand, describeTool, precheck, runProblem, stepProblem, shortPath, STRETCH_CHECKS } from '../src/lib/steps.ts'
 
 function replay(file: string) {
   const lines = readFileSync(new URL(`./fixtures/${file}`, import.meta.url), 'utf8').trim().split('\n').map((l) => JSON.parse(l))
@@ -86,6 +86,13 @@ test('words for common commands and tools', () => {
   assert.equal(describeCommand('python3 clean.py --in survey.csv').object, 'clean.py')
   assert.equal(describeCommand("python3 -c 'print(1)'").verb, 'Ran a short program')
   assert.equal(describeCommand('wc -l survey.csv').verb, 'Counted the lines in')
+  // Ola's own commands are said as what they do, never by name (first-user pass: "Ran ola-page").
+  assert.deepEqual(describeCommand('ola-page index.html --width 390 --out shot.png'), { icon: 'check', verb: 'Looked at how the page shows', object: 'index.html' })
+  assert.equal(describeCommand('/opt/ola/bin/ola-ocr --pages 2 scans/study-3.pdf').object, 'study-3.pdf')
+  assert.equal(describeCommand('ola-translate ley.md --to en').verb, 'Translated')
+  assert.equal(describeCommand('ola-something-new x').verb, 'Used one of Ola’s tools')
+  for (const c of ['ola-page a.html --out s.png', 'ola-see chart.png', 'ola-draw "a cat"', 'ola-batch start', 'ola-unzip lib.zip'])
+    assert.ok(!/ola-/.test(`${describeCommand(c).verb} ${describeCommand(c).object}`), c)
   assert.equal(describeCommand("awk 'END{print NR}' survey.csv").verb, 'Ran a short program')
   assert.equal(describeCommand('sort -u names.txt').object, 'sort')
   assert.equal(describeTool('grep', { pattern: 'eviction' }, null).object, '“eviction”')
@@ -117,4 +124,10 @@ test('a step by the hosted open model marks the turn; so does its stored message
   assert.equal(state.turns[0].engine, 'hosted')
   const turns = turnsFromMessages([{ type: 'user', id: 'u1', text: 'hi', time: { created: 1 } }, { type: 'assistant', model: { id: 'hosted', providerID: 'ola' }, content: [{ type: 'text', text: 'hello' }], time: { created: 2 } }], null)
   assert.equal(turns[0].engine, 'hosted')
+})
+
+test('a failed step is said in plain words; the machine’s message stays under Show details', () => {
+  const p = stepProblem({ message: 'ripgrep execution failed' })
+  assert.equal(p.text, 'This step did not work. Ola can try another way.')
+  assert.equal(p.detail, 'ripgrep execution failed')
 })

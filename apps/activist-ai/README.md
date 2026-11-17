@@ -570,7 +570,7 @@ executing in it**, is stopped (`ws.mjs stop`; its door and desk go too). An open
 does not count as use, and does not wake a stopped workspace (it gets 503 `asleep`), so a tab left
 open overnight does not hold a VM. Opening the project (or any other request) starts it again: if
 that takes longer than `OLA_FD_WAKE_WAIT_MS` (1.5 s), `/api/project` answers 503 `waking` and the
-page shows **"Waking your workspace…"** and asks again each second. A viewer's visit wakes it too
+page shows **"Waking your project. This takes a few seconds…"** and asks again each second. A viewer's visit wakes it too
 (they need the files). A full machine says so instead (503 `machine_busy`).
 
 **A run is activity** (2026-11-16; before, a run that outlasted the idle limit with no new request
@@ -675,7 +675,7 @@ refused; a FIFO download fails in 63 ms with no `ola-get` left on the host or in
 member cuts their stream while another member's stays open, then the old gateway token and the old
 opencode password are refused and the new ones work, without a gateway restart; an attacker behind
 the PROXY protocol cannot keep a real person out; an idle workspace stops, its event stream does
-not wake it, and opening the project shows "Waking your workspace…" and opens it. Since the
+not wake it, and opening the project shows "Waking your project…" and opens it. Since the
 long-run fix (same day), with a 3 s idle limit, a 24 s ceiling and the scripted fake model
 (`web/server/fake-model.mjs`, its `slow <steps>x<ms>` runs; `--no-live` now uses it for the whole
 suite, the live run keeps Together and the long-run checks switch the gateway to the fake): a run

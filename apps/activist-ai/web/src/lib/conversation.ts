@@ -59,7 +59,7 @@ function finishStep(step: Step, ok: boolean, at: number, output: string, metadat
     step.result = describeResult(step.tool, safeParse(step.detail.input), output, metadata)
   } else {
     step.status = 'failed'
-    step.error = exit !== null ? `The program stopped with an error (exit code ${exit}).` : (problem?.text ?? 'This step did not work.')
+    step.error = exit !== null ? 'The program stopped with an error. What it printed is under Show details.' : (problem?.text ?? 'This step did not work.')
   }
 }
 
@@ -196,7 +196,7 @@ export function applyEvent(state: ConversationState, ev: LooseEvent): boolean {
       turn.ended = at
       turn.notice = null
       state.approval = null
-      if (d.reason && d.reason !== 'user') turn.error = { text: d.reason === 'shutdown' ? 'Ola’s computer restarted the workspace, so this stopped.' : 'This stopped before it finished.', detail: `interrupted: ${d.reason}` }
+      if (d.reason && d.reason !== 'user') turn.error = { text: d.reason === 'shutdown' ? 'Ola’s computer restarted your project, so this stopped. Ask again to carry on.' : 'This stopped before it finished.', detail: `interrupted: ${d.reason}` }
       settleSteps(turn, at)
       return true
     default:

@@ -48,6 +48,35 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
     const nearBottom = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < 160
     if (nearBottom) queueMicrotask(() => scroller && (scroller.scrollTop = scroller.scrollHeight))
   })
+  // Files a run made with a program (a chart from Python, an Excel file) are not in its steps: when
+  // a run ends, the files Ola made since it started are asked for once and listed under its reply,
+  // with Open, beside the ones its own steps wrote (first-user pass: the chart and the .xlsx of a
+  // spreadsheet question had no Open under the reply).
+  const [madeByRun, setMadeByRun] = createSignal<{ turn: string; paths: string[] } | null>(null)
+  // When a run ends, what it made (Open, the pictures) appears under the reply: brought into view,
+  // unless the person scrolled up to read. Before, the Open button sat hidden under the composer.
+  const toEnd = () => {
+    if (!scroller) return
+    const nearBottom = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < 240
+    if (nearBottom) setTimeout(() => scroller && (scroller.scrollTop = scroller.scrollHeight), 60)
+  }
+  createEffect((prev: string | undefined) => {
+    const t = s().turns[s().turns.length - 1]
+    const status = t?.status
+    if (t && prev && (prev === 'working' || prev === 'sending') && status && status !== prev) {
+      toEnd()
+      const since = t.at - 2000
+      desk
+        .files()
+        .then((fs) => {
+          const paths = fs.filter((f) => f.origin === 'made' && Date.parse(f.modified) >= since && canOpen(f.path) && plainPath(f.path)).map((f) => f.path)
+          setMadeByRun({ turn: t.id, paths })
+          if (paths.length) toEnd()
+        })
+        .catch(() => {})
+    }
+    return status
+  })
 
   // "Compare with Claude" (Compare.tsx): the owner's only. The conversation's comparisons, asked
   // again while one is under way and whenever a run finishes.
@@ -180,6 +209,7 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
                   turn={t}
                   now={now()}
                   last={i() === s().turns.length - 1}
+                  alsoMade={madeByRun()?.turn === t.id ? madeByRun()!.paths : []}
                   onStop={() => props.ola.stop()}
                   instead={working() || s().suggestion ? [] : insteadOf()}
                   onAsk={(f) => props.ola.askInstead(t.id, f)}
@@ -359,7 +389,7 @@ export function Drawer(props: { ola: Ola; open: boolean; onClose: () => void; on
   )
 }
 
-function TurnView(props: { turn: Turn; now: number; last: boolean; onStop: () => void; instead: Fallback[]; onAsk: (f: Fallback) => void; canCompare: boolean; compared: CompareResultLine | null; onCompare: () => void; onOpenCompare: (id: string) => void }) {
+function TurnView(props: { turn: Turn; now: number; last: boolean; alsoMade: string[]; onStop: () => void; instead: Fallback[]; onAsk: (f: Fallback) => void; canCompare: boolean; compared: CompareResultLine | null; onCompare: () => void; onOpenCompare: (id: string) => void }) {
   const t = () => props.turn
   const byClaude = () => t().engine === 'claude'
   const byHosted = () => t().engine === 'hosted'
@@ -378,9 +408,10 @@ function TurnView(props: { turn: Turn; now: number; last: boolean; onStop: () =>
   const shownNotes = () => t().notes.map((n) => shown(n, running())).filter(Boolean)
   const shownAnswer = () => shown(t().answer, running())
   // Every kind Open shows (a page, a picture, a PDF, a table, a document), not only pages.
-  const madePages = () => [...new Set(t().steps.filter((st) => (st.icon === 'write' || st.icon === 'change') && st.status === 'done' && canOpen(st.object) && plainPath(st.object.replace(/^\/work\//, ''))).map((st) => st.object.replace(/^\/work\//, '')))].slice(0, 8)
+  const madePages = () => [...new Set([...t().steps.filter((st) => (st.icon === 'write' || st.icon === 'change') && st.status === 'done' && canOpen(st.object) && plainPath(st.object.replace(/^\/work\//, ''))).map((st) => st.object.replace(/^\/work\//, '')), ...props.alsoMade])].slice(0, 8)
   const isPicture = (p: string) => /\.(png|jpe?g|gif|webp|svg)$/i.test(p)
-  const madePictures = () => madePages().filter(isPicture).slice(0, 3)
+  // Ola's own screenshots of a page it checked (shots/) come after the pictures that were asked for.
+  const madePictures = () => madePages().filter(isPicture).sort((a, b) => Number(a.startsWith('shots/')) - Number(b.startsWith('shots/'))).slice(0, 3)
   const madeOthers = () => madePages().filter((p) => !madePictures().includes(p))
   return (
     <li class="turn" data-status={t().status}>
