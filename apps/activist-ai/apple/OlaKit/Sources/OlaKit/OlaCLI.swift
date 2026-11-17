@@ -152,7 +152,7 @@ public enum OlaCLI {
     func run(_ c: Command) -> Int32 {
       switch c {
       case .help: print(OlaCLI.help); return 0
-      case .version: print("ola \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "") (opencode \(OpencodeInstall.version))"); return 0
+      case .version: print("ola \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "") (built on opencode \(OpencodeInstall.version), MIT License, \u{00A9} 2025 opencode)"); return 0
       case .bad(let s): say(s); return 2
       case .installCommand:
         let r = CLIInstall.install(appExecutable: Bundle.main.executableURL)

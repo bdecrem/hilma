@@ -29,7 +29,9 @@ delete. `dist/` is not committed (a 220 MB binary per target). The build refuses
 one in `UPSTREAM`, and checks that the binary carries Ola's words.
 
 **License.** opencode is MIT. `dist/<target>/LICENSE` is its notice and travels with the binary; when the
-binary goes into the Mac app, the notice goes into the bundle and the app's credits.
+binary goes into the Mac app, the notice goes into the bundle and the app's credits: About Ola shows it
+(`apple/Mac/Credits.html`, opencode's text word for word; update it if their LICENSE changes), and `ola --version`
+names opencode and its license.
 
 Left as opencode on purpose: internal ids (`opencode.settings`, the theme named `opencode`), the provider
 names "OpenCode Go" / "OpenCode Console" (their products), the update dialog, the `opencode` binary name and
