@@ -197,9 +197,26 @@ def parse_json(text):
     return json.loads(text[a:b + 1])
 
 
+def hide_work(tid):
+    """In the VM, `make` reads nothing of /work but what `gather` handed it: it starts again in a
+    mount namespace of its own with an empty folder over /work and /home (the door's socket stays),
+    and refuses to go on if /work is not empty there. The same kernel features as the generator's
+    jail; the agent's files are still there for everyone else."""
+    if os.environ.get("OLA_TWIN_HIDDEN") == "1":
+        if os.path.isdir("/work") and os.listdir("/work"):
+            fail("the project folder is not hidden from the copy-maker", 5)
+        return
+    if not T.jail_available() or os.environ.get("OLA_TWIN_ALLOW_HOST") == "1":
+        return
+    os.chdir("/")
+    sh = 'mount -t tmpfs -o size=1m,mode=755 ola-twin /work && mount -t tmpfs -o size=1m,mode=755 ola-twin /home && exec env OLA_TWIN_HIDDEN=1 "$@"'
+    os.execv("/usr/bin/unshare", ["unshare", "--user", "--map-root-user", "--mount", "--", "/bin/sh", "-c", sh, "ola-twin-hide", sys.executable, "-I", os.path.realpath(__file__), "make", tid])
+
+
 def make(tid):
     if not ID.match(tid):
         fail("bad id")
+    hide_work(tid)
     spec = json.loads(sys.stdin.read() or "{}")
     request = str(spec.get("request", ""))[:20000]
     context = str(spec.get("context", ""))[:64 * 1024]
