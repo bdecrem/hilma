@@ -1,0 +1,1 @@
+pantry_visits.csv is our food bank's visit log for October, one row per visit, typed in by volunteers. Please write report.md with how many households each site served in October, and the total for all sites.
