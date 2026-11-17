@@ -116,7 +116,7 @@ and the like). The person's own requests are not scanned; Ola's replies are, and
 named "in Ola's reply". Every step leaves a screenshot and the words on the screen in `--shots`.
 Its own ports (4891, 4893), state in `~/.ola-first-user`, the made-up search provider, a scripted
 Claude, one real download (the made-up search's UN PDF); everything is destroyed at the end. A run
-costs about 1 million tokens of the everyday model (about 20 cents on Together) and takes 5 minutes.
+used 0.8 million tokens of the everyday model (12 cents on Together) and about 5 minutes.
 The model's quality is printed, not failed on (did it name the duplicate row, did it quote Article 1).
 
 `--only C,E,F,G,H,I` adds the longer walk in `first-user-more.mjs` (six studies and a job, a

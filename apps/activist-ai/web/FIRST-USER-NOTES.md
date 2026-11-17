@@ -43,10 +43,13 @@ Status words: **fixed** (in this pass, with a check), **open** (written up, not 
 |---|---|---|---|---|
 | A invite → hello page → Open | whole | whole | 3 to 7 s | |
 | B spreadsheet → chart + Excel | whole after fix 2 | whole after fix 2 | 13 to 15 s | the duplicate row missed both times |
-| C six studies → page 2 → job | answer right; citation fixed; job fixed (not yet rerun end to end) | not walked | 3 s answer, 83 s job setup | |
+| C six studies → page 2 → job | answer and citation whole after fix 4; the job: see B6 and B10 | not walked | 8 s answer | the job never ran end to end in this pass |
 | D web search → download → Files, Data | whole | whole | 38 to 86 s | |
-| E site → "make it look better" | broken before fix 1 | not walked | 9 s site | |
-| F drawing; translation | drawing whole | not walked | 18 s | |
+| E site → "make it look better" | whole after fix 1 | not walked | 9 s site, 217 s design pass | before and after shots shown in the conversation |
+| F drawing; translation | whole | not walked | 11 to 18 s; 8 s | the law kept all five article numbers |
+| G Settings, commands, compliment, Compare | switches whole; /help, /files whole; the rest not reached (the walk's own fault, fixed) | not walked | | |
+| H a second member, removed | whole, with B11 | not walked | | |
+| I reload, tabs, offline, too big, wrong passkey, sleep | broken at its first step by B12 | not walked | | |
 
 ## Bugs (exact steps)
 
@@ -74,6 +77,23 @@ Status words: **fixed** (in this pass, with a check), **open** (written up, not 
   leaves `shots/` out (the design-pass skill keeps before/after shots on purpose, so the second
   needs a decision).
 
+- **B10, fixed (feedback).** Asked to run a question over every study, the model wrote the job down
+  and then kept the conversation "Working" for five minutes, checking on the job and sleeping
+  ("Set up a job", "Ran sleep", fourteen times), never saying the person starts it under Jobs (its
+  instructions say to). The conversation now says it the moment a job is written down: "Ola wrote
+  down a job. It runs only when you start it, under Jobs: a trial on a few documents first, then
+  the rest." Job steps and `sleep` are said in plain words ("Checked on the job", "Waited").
+- **B11, fixed (words) and open.** A member removed while the project is open sees nothing change
+  until they reload; then "That project is not one of yours, or it is closed. Here are the ones you
+  can open." sat above "no project is shared with you yet". The sentence now stops at "closed"
+  when there is none to open. Saying it without a reload (the event stream is cut at once; the page
+  only retries) is open.
+- **B12, open.** Right after a member was removed (which gives the project new secrets and
+  restarts it), the owner sent a request in a new conversation: the drawer stayed empty and
+  "ready", with no error, and the request turned up only under "2 earlier conversations". The
+  request was taken; the page lost it from view. Steps: owner's project open; `admin.mjs
+  remove-member <team> <member>`; within 15 s, New conversation and send.
+
 ## Words rewritten (machine words and long sentences)
 
 | Where | Was | Now |
@@ -85,6 +105,8 @@ Status words: **fixed** (in this pass, with a check), **open** (written up, not 
 | A failed step | "ripgrep execution failed" (the tool's own message) | "This step did not work. Ola can try another way." (the message under Show details) |
 | A failed program | "The program stopped with an error (exit code 1)." | "The program stopped with an error. What it printed is under Show details." |
 | A run cut short | "It stopped: Step interrupted" | "This stopped before it finished. What Ola did so far stays as it is." |
+| Not your project, none left | "…or it is closed. Here are the ones you can open." above "no project is shared with you yet" | "That project is not one of yours, or it is closed." |
+| A job, its steps | "Set up a job" ×14, "Ran sleep" | "Wrote down a job", "Checked on the job", "Waited" |
 | Every other view | "Back to one thing" (the count of things, in a project of 20 files) | "Back to the project" |
 
 ## Still open (small)
@@ -106,12 +128,18 @@ Status words: **fixed** (in this pass, with a check), **open** (written up, not 
 
 ## The everyday model (Nemotron 3.5 Super VL, Together)
 
+Settings: the four switches turned on and off cleanly; both fallbacks ask first with their full
+consent text; a member sees the two fallback switches disabled and can change web access.
+
 Fast: a hello-world page in 3 to 7 s, a chart and an Excel file in 13 to 15 s, a web search and a
 PDF download in 38 to 86 s, a drawing in 18 s. Right where it could check itself (Article 1 quoted
 from the downloaded PDF, 4.2 million on page 2). Wrong on the caveat that mattered: it named the
 two blank counts but counted the duplicate row both times (North 15 households, not 11). It used
-the skills' scripts and `ola-page` unprompted. Writes em dashes in replies. Never needed the
-fallback in these journeys. Spend: about $0.40 in all on Together for the whole pass.
+the skills' scripts and `ola-page` unprompted. Writes em dashes in replies. It ignored one
+standing instruction (B10: it kept polling a job instead of handing it to the person). Never needed
+the fallback in these journeys. Spend: about $0.60 in all on Together for the whole pass (about 4.5
+million tokens in at $0.15 a million, 0.1 million out at $0.50; the specialists and the hosted model
+barely used).
 
 ## Could not test
 
@@ -119,4 +147,8 @@ fallback in these journeys. Spend: about $0.40 in all on Together for the whole 
   the cookie and everything after it are the browser's own).
 - A 60 MB upload on a slow connection (WebKit has no network throttling; Chromium's is per page);
   the size limit and its message were tested instead.
-- Closing a laptop: a sleeping project was forced with a one-minute idle limit instead.
+- Closing a laptop, two tabs, the back button, offline, a 60 MB file, a passkey this machine does
+  not know: written into `first-user-more.mjs` (journey I) but not reached in this pass (B12 stopped
+  it at its first step). The compliment, the remaining `/` commands and Compare with Claude (G) were
+  not reached either.
+- The hosted open model and Claude were only switched on and off, never used.

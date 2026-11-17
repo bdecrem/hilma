@@ -201,7 +201,7 @@ export async function moreJourneys(h) {
     for (const cmd of ['/help', '/files', '/new', '/claude say hello in one line', '/hosted say hello in one line', '/ola say hello in one line', '/stop', '/nope']) {
       await step(run, 'G', `the command ${cmd.split(' ')[0]}`, 120, async () => {
         await home()
-        await page.locator('.askbar-open').click()
+        if (!(await page.locator('.drawer.open').count())) await page.locator('.askbar-open').click()
         await page.locator('.drawer.open').waitFor()
         const before = await page.locator('.drawer .turn').count()
         await page.locator('#ask-input').fill(cmd)

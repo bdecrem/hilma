@@ -190,7 +190,9 @@ function Projects(props: { me: Me; unknown: boolean; onSignOut: () => void }) {
         </button>
       </div>
       <Show when={props.unknown}>
-        <GateProblem problem={{ text: 'That project is not one of yours, or it is closed. Here are the ones you can open.', detail: null }} />
+        {/* With no project left, "Here are the ones you can open" pointed at nothing (first-user pass:
+            a member removed mid-visit read it above "no project is shared with you yet"). */}
+        <GateProblem problem={{ text: props.me.workspaces.length ? 'That project is not one of yours, or it is closed. Here are the ones you can open.' : 'That project is not one of yours, or it is closed.', detail: null }} />
       </Show>
       <Show when={props.me.workspaces.length} fallback={<p class="gate-lede">You are signed in, but no project is shared with you yet. Bart will add you to one.</p>}>
         <ul class="gate-projects">
