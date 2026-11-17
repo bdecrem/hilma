@@ -121,7 +121,7 @@ enum MarkdownParser {
     for run in a.runs {
       guard let intent = run.inlinePresentationIntent else { continue }
       if intent.contains(.code) {
-        a[run.range].font = OlaFont.mono(size * 0.86)
+        a[run.range].font = OlaFont.mono(size * 0.84)
         a[run.range].backgroundColor = Ola.details
       } else if intent.contains(.stronglyEmphasized) {
         a[run.range].font = OlaFont.serif(size, .semibold)
@@ -143,7 +143,7 @@ struct MarkdownView: View {
 
   var body: some View {
     let blocks = MarkdownParser.blocks(text)
-    VStack(alignment: .leading, spacing: size * 0.8) {
+    VStack(alignment: .leading, spacing: size * 0.75) {
       ForEach(Array(blocks.enumerated()), id: \.offset) { _, b in block(b) }
     }
     .textSelection(.enabled)
@@ -152,32 +152,32 @@ struct MarkdownView: View {
   @ViewBuilder func block(_ b: MDBlock) -> some View {
     switch b {
     case .paragraph(let s):
-      Text(MarkdownParser.inline(s, size: size)).font(OlaFont.serif(size)).lineSpacing(size * 0.24).foregroundStyle(Ola.ink)
+      Text(MarkdownParser.inline(s, size: size)).font(OlaFont.serif(size)).lineSpacing(Metrics.readingLeading).foregroundStyle(Ola.ink)
         .fixedSize(horizontal: false, vertical: true)
     case .heading(let level, let s):
-      Text(MarkdownParser.inline(s, size: size)).font(level <= 1 ? OlaFont.sans(size * 1.3, .display) : level == 2 ? OlaFont.sans(size * 1.12, .semibold) : OlaFont.sans(size, .semibold))
-        .foregroundStyle(Ola.ink).padding(.top, size * 0.3)
+      Text(MarkdownParser.inline(s, size: size)).font(level <= 1 ? OlaFont.sans(Metrics.title, .display) : level == 2 ? OlaFont.sans(Metrics.heading, .semibold) : OlaFont.sans(Metrics.ui, .semibold))
+        .foregroundStyle(level <= 2 ? Ola.ink : Ola.ink2).padding(.top, Space.s)
     case .bullets(let items):
-      VStack(alignment: .leading, spacing: size * 0.35) {
+      VStack(alignment: .leading, spacing: size * 0.3) {
         ForEach(Array(items.enumerated()), id: \.offset) { _, it in
-          HStack(alignment: .firstTextBaseline, spacing: 10) {
+          HStack(alignment: .firstTextBaseline, spacing: Space.s) {
             Text("\u{2022}").font(OlaFont.serif(size)).foregroundStyle(Ola.ink3)
-            Text(MarkdownParser.inline(it, size: size)).font(OlaFont.serif(size)).lineSpacing(size * 0.2).foregroundStyle(Ola.ink).fixedSize(horizontal: false, vertical: true)
+            Text(MarkdownParser.inline(it, size: size)).font(OlaFont.serif(size)).lineSpacing(Metrics.readingLeading).foregroundStyle(Ola.ink).fixedSize(horizontal: false, vertical: true)
           }
         }
       }
     case .numbered(let start, let items):
-      VStack(alignment: .leading, spacing: size * 0.35) {
+      VStack(alignment: .leading, spacing: size * 0.3) {
         ForEach(Array(items.enumerated()), id: \.offset) { n, it in
-          HStack(alignment: .firstTextBaseline, spacing: 8) {
-            Text("\(start + n).").font(OlaFont.sans(size * 0.9, .medium)).foregroundStyle(Ola.ink3).monospacedDigit().frame(minWidth: 18, alignment: .trailing)
-            Text(MarkdownParser.inline(it, size: size)).font(OlaFont.serif(size)).lineSpacing(size * 0.2).foregroundStyle(Ola.ink).fixedSize(horizontal: false, vertical: true)
+          HStack(alignment: .firstTextBaseline, spacing: Space.s) {
+            Text("\(start + n).").font(OlaFont.sans(Metrics.ui, .medium)).foregroundStyle(Ola.ink3).monospacedDigit().frame(minWidth: 18, alignment: .trailing)
+            Text(MarkdownParser.inline(it, size: size)).font(OlaFont.serif(size)).lineSpacing(Metrics.readingLeading).foregroundStyle(Ola.ink).fixedSize(horizontal: false, vertical: true)
           }
         }
       }
     case .quote(let s):
-      Text(MarkdownParser.inline(s, size: size)).font(OlaFont.serif(size * 0.97, .italic)).lineSpacing(size * 0.22).foregroundStyle(Ola.ink2)
-        .padding(.leading, 14).overlay(alignment: .leading) { Rectangle().fill(Ola.vermilion).frame(width: 3) }
+      Text(MarkdownParser.inline(s, size: size)).font(OlaFont.serif(size, .italic)).lineSpacing(Metrics.readingLeading).foregroundStyle(Ola.ink2)
+        .padding(.leading, Space.m).overlay(alignment: .leading) { Rectangle().fill(Ola.vermilion).frame(width: 2) }
     case .code(let lang, let code):
       CodeBlock(lang: lang, code: code)
     case .table(let header, let right, let rows):
@@ -195,20 +195,20 @@ struct CodeBlock: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
-      HStack {
+      HStack(alignment: .firstTextBaseline) {
         Text(lang.isEmpty ? "Code" : lang).font(OlaFont.sans(Metrics.meta, .medium)).foregroundStyle(Ola.ink3)
         Spacer()
-        Button(copied ? "Copied" : "Copy") { copy() }
-          .buttonStyle(.plain).font(OlaFont.sans(Metrics.meta, .medium)).foregroundStyle(Ola.blue)
+        Button { copy() } label: { Label(copied ? "Copied" : "Copy", systemImage: copied ? "checkmark" : "doc.on.doc").labelStyle(.titleAndIcon) }
+          .buttonStyle(LinkButton()).help("Copy the code")
       }
-      .padding(.horizontal, 14).padding(.top, 9).padding(.bottom, 6)
+      .padding(.horizontal, Space.m).padding(.top, Space.s).padding(.bottom, 6)
       ScrollView(.horizontal, showsIndicators: false) {
-        Text(code).font(OlaFont.mono(Metrics.mono + 0.5)).foregroundStyle(Ola.ink).lineSpacing(3).fixedSize().textSelection(.enabled)
-          .padding(.horizontal, 14).padding(.bottom, 12)
+        Text(code).font(OlaFont.mono(Metrics.mono)).foregroundStyle(Ola.ink).lineSpacing(3).fixedSize().textSelection(.enabled)
+          .padding(.horizontal, Space.m).padding(.bottom, Space.m)
       }
     }
-    .background(Ola.details, in: RoundedRectangle(cornerRadius: 4))
-    .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(Ola.rule, lineWidth: 1))
+    .background(Ola.details, in: RoundedRectangle(cornerRadius: 5))
+    .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(Ola.rule, lineWidth: 1))
   }
 
   func copy() {
@@ -231,19 +231,19 @@ struct TableBlock: View {
 
   var body: some View {
     ScrollView(.horizontal, showsIndicators: false) {
-      Grid(alignment: .leading, horizontalSpacing: 22, verticalSpacing: 0) {
+      Grid(alignment: .leading, horizontalSpacing: Space.xl, verticalSpacing: 0) {
         GridRow {
           ForEach(header.indices, id: \.self) { c in
             cell(header[c], c, head: true)
           }
         }
-        .padding(.bottom, 7)
-        Rectangle().fill(Ola.ink).frame(height: 1.5).gridCellUnsizedAxes(.horizontal)
+        .padding(.bottom, 6)
+        Rectangle().fill(Ola.ink2).frame(height: 1).gridCellUnsizedAxes(.horizontal)
         ForEach(rows.indices, id: \.self) { r in
           GridRow {
             ForEach(header.indices, id: \.self) { c in cell(c < rows[r].count ? rows[r][c] : "", c, head: false) }
           }
-          .padding(.vertical, 7)
+          .padding(.vertical, 6)
           Rectangle().fill(Ola.rule).frame(height: 1).gridCellUnsizedAxes(.horizontal)
         }
       }
@@ -253,8 +253,8 @@ struct TableBlock: View {
 
   func cell(_ s: String, _ c: Int, head: Bool) -> some View {
     let r = c < right.count && right[c]
-    return Text(MarkdownParser.inline(s, size: size * 0.92))
-      .font(head ? OlaFont.sans(size * 0.84, .semibold) : OlaFont.sans(size * 0.92))
+    return Text(MarkdownParser.inline(s, size: Metrics.ui))
+      .font(head ? OlaFont.sans(Metrics.meta, .semibold) : OlaFont.sans(Metrics.ui))
       .foregroundStyle(head ? Ola.ink2 : Ola.ink)
       .monospacedDigit()
       .gridColumnAlignment(r ? .trailing : .leading)

@@ -94,53 +94,229 @@ final class WhereOlaWorks {
   func stop() { local?.stop() }
 }
 
+// MARK: Settings, the pieces
+
+/// Two looks were drawn for Settings (see apple/README.md): `native`, the system's grouped form with
+/// Ola's marks and status colors; `paper`, the same rows laid on Ola's paper in its own type.
+enum SettingsLook { case native, paper }
+private struct SettingsLookKey: EnvironmentKey { static let defaultValue = SettingsLook.native }
+extension EnvironmentValues {
+  var settingsLook: SettingsLook {
+    get { self[SettingsLookKey.self] }
+    set { self[SettingsLookKey.self] = newValue }
+  }
+}
+
+/// A line of explanation under a setting: secondary, 11 points, wraps, never truncates.
+struct SettingNote: View {
+  var text: String
+  init(_ text: String) { self.text = text }
+  @Environment(\.settingsLook) private var look
+  var body: some View {
+    Text(text).font(look == .paper ? OlaFont.sans(Metrics.meta) : .system(size: 11)).foregroundStyle(.secondary)
+      .fixedSize(horizontal: false, vertical: true)
+  }
+}
+
+/// Status shown as status: a dot in the signal's color and the words in the text color.
+struct StatusLine: View {
+  enum Kind { case ok, busy, problem, off }
+  var kind: Kind
+  var text: String
+  @Environment(\.settingsLook) private var look
+  var body: some View {
+    HStack(alignment: .firstTextBaseline, spacing: 6) {
+      Group {
+        if kind == .busy { ProgressView().controlSize(.mini) }
+        else { Circle().fill(color).frame(width: 7, height: 7) }
+      }
+      .frame(width: 12).alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + 4 }
+      Text(text).foregroundStyle(kind == .off ? .secondary : .primary).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
+    }
+  }
+  var color: Color {
+    switch kind {
+    case .ok: Ola.leaf
+    case .busy: Ola.lamp
+    case .problem: Ola.vermilion
+    case .off: Color.secondary.opacity(0.5)
+    }
+  }
+}
+
+/// One choice of a setting: a radio, a short label, a line of explanation under it, and a small
+/// drawing of where that is. The whole row is the target.
+struct ChoiceRow<Mark: View>: View {
+  var title: String
+  var detail: String
+  var selected: Bool
+  var mark: Mark
+  var choose: () -> Void
+  @Environment(\.settingsLook) private var look
+  @State private var over = false
+
+  init(_ title: String, detail: String, selected: Bool, @ViewBuilder mark: () -> Mark, choose: @escaping () -> Void) {
+    self.title = title; self.detail = detail; self.selected = selected; self.mark = mark(); self.choose = choose
+  }
+
+  var body: some View {
+    Button(action: choose) {
+      HStack(alignment: .top, spacing: 10) {
+        Radio(on: selected).padding(.top, 1)
+        VStack(alignment: .leading, spacing: 2) {
+          Text(title).font(look == .paper ? OlaFont.sans(Metrics.ui, .medium) : .system(size: 13))
+          SettingNote(detail)
+        }
+        Spacer(minLength: Space.s)
+        mark.frame(width: 32, height: 22)
+      }
+      .contentShape(Rectangle())
+    }
+    .buttonStyle(.plain)
+    .accessibilityAddTraits(selected ? [.isSelected] : [])
+  }
+}
+
+/// A radio button drawn as the system draws one, in Ola's blue.
+struct Radio: View {
+  var on: Bool
+  var body: some View {
+    ZStack {
+      Circle().fill(on ? Ola.action : Color(nsColor: .controlBackgroundColor))
+      Circle().strokeBorder(on ? Color.clear : Color(nsColor: .separatorColor), lineWidth: 1)
+      if on { Circle().fill(.white).frame(width: 5, height: 5) }
+    }
+    .frame(width: 14, height: 14)
+    .shadow(color: .black.opacity(on ? 0 : 0.08), radius: 0.5, y: 0.5)
+  }
+}
+
+/// This Mac, drawn like the machine's DeskMark: a small screen on a foot.
+struct MacMark: View {
+  var body: some View {
+    // A screen of paper with its one light, on a short foot: the same hand as the DeskMark.
+    VStack(spacing: 0) {
+      ZStack(alignment: .bottomLeading) {
+        RoundedRectangle(cornerRadius: 2.5).fill(Ola.paper).frame(width: 24, height: 16)
+          .overlay(RoundedRectangle(cornerRadius: 2.5).strokeBorder(Ola.ruleStrong, lineWidth: 0.5))
+        Circle().fill(Ola.leaf).frame(width: 3.5, height: 3.5).padding(4)
+      }
+      Rectangle().fill(Ola.ink3).frame(width: 6, height: 3)
+    }
+  }
+}
+
+/// A section of Settings in either look. Native: the grouped form's own Section. Paper: a
+/// heading and its rows on paper, with hairlines between rows.
+struct SettingsGroup<Content: View>: View {
+  var title: String
+  @ViewBuilder var content: Content
+  @Environment(\.settingsLook) private var look
+  var body: some View {
+    switch look {
+    case .native:
+      Section { content } header: { Text(title) }
+    case .paper:
+      VStack(alignment: .leading, spacing: 0) {
+        Text(title).font(OlaFont.sans(Metrics.ui, .semibold)).foregroundStyle(Ola.ink).padding(.bottom, Space.s)
+        VStack(alignment: .leading, spacing: 0) {
+          if #available(macOS 15, *) {
+            Group(subviews: content) { rows in
+              ForEach(Array(rows.enumerated()), id: \.offset) { i, row in
+                row.padding(.vertical, 10).frame(maxWidth: .infinity, alignment: .leading)
+                if i < rows.count - 1 { Rectangle().fill(Ola.rule).frame(height: 1) }
+              }
+            }
+          } else {
+            VStack(alignment: .leading, spacing: Space.m) { content }.padding(.vertical, Space.m)
+          }
+        }
+        .padding(.horizontal, Space.m)
+        .background(Ola.field, in: RoundedRectangle(cornerRadius: 6))
+        .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Ola.rule, lineWidth: 1))
+      }
+    }
+  }
+}
+
 struct WhereSettings: View {
   var controller: WhereOlaWorks
   @AppStorage(LocalSettings.modeKey) private var mode = "machine"
   @AppStorage(LocalSettings.folderKey) private var folder = ""
+  /// Screenshots pass this, so drawing Settings never reads the Keychain.
+  var tokenKnown: Bool? = nil
   @State private var token = ""
-  @State private var tokenSaved = LocalSettings.token != nil
+  @State private var tokenSaved = false
+
+  var shortFolder: String { (folder as NSString).abbreviatingWithTildeInPath }
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 10) {
-      Picker("Where Ola works", selection: $mode) {
-        Text("On the Ola machine: the agent and the files are there, and the phone can follow").tag("machine")
-        Text("On this Mac: the agent works in a folder here; only the model is on the machine").tag("mac")
-      }
-      .pickerStyle(.radioGroup)
-      .onChange(of: mode) { _, _ in Task { await controller.apply() } }
+    SettingsGroup(title: "Where Ola works") {
+      ChoiceRow("On the Ola machine", detail: "The agent and your files are on the machine. Your phone can follow along.", selected: mode == "machine") {
+        DeskMark(lit: true, working: false)
+      } choose: { set("machine") }
+      .onAppear(perform: loadTokenState)
+      ChoiceRow("On this Mac", detail: "The agent works in a folder on this Mac. Only the model runs on the machine.", selected: mode == "mac") {
+        MacMark()
+      } choose: { set("mac") }
       if mode == "mac" {
-        HStack {
-          Text(folder.isEmpty ? "No folder chosen" : (folder as NSString).abbreviatingWithTildeInPath).foregroundStyle(folder.isEmpty ? .secondary : .primary)
-          Spacer()
-          Button("Choose Folder\u{2026}") { choose() }
-        }
-        HStack {
-          SecureField(tokenSaved ? "Model token saved in the Keychain" : "Model token (ola-bart.sh model-token)", text: $token)
-          Button("Save") {
-            LocalSettings.saveToken(token.trimmingCharacters(in: .whitespacesAndNewlines))
-            token = ""
-            tokenSaved = true
-            Task { await controller.apply() }
+        LabeledContent("Folder") {
+          HStack(spacing: Space.s) {
+            Text(folder.isEmpty ? "None chosen" : shortFolder).foregroundStyle(folder.isEmpty ? .secondary : .primary)
+              .lineLimit(1).truncationMode(.middle).help(folder.isEmpty ? "No folder chosen yet" : shortFolder)
+            Button("Choose\u{2026}") { choose() }
           }
-          .disabled(token.isEmpty)
         }
-        Text("Commands and file changes still ask first. The conversations stay on this Mac, so the phone does not see them.")
-          .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-      }
-      if controller.starting {
-        HStack(spacing: 8) {
-          ProgressView().controlSize(.small)
-          Text("Starting the agent on this Mac\u{2026} This can take up to 45 seconds.").foregroundStyle(.secondary)
+        LabeledContent {
+          HStack(spacing: Space.s) {
+            SecureField("Model token", text: $token, prompt: Text(tokenSaved ? "Saved in the Keychain" : "ola-bart.sh model-token")).labelsHidden()
+              .textFieldStyle(.roundedBorder).frame(width: 200)
+            Button("Save") {
+              LocalSettings.saveToken(token.trimmingCharacters(in: .whitespacesAndNewlines))
+              token = ""
+              tokenSaved = true
+              Task { await controller.apply() }
+            }
+            .disabled(token.isEmpty)
+          }
+        } label: {
+          Text("Model token")
         }
-      } else if let p = controller.problem {
         VStack(alignment: .leading, spacing: 6) {
-          Text(p).foregroundStyle(.red).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
-          Button("Try Again") { Task { await controller.apply() } }
+          if controller.starting {
+            StatusLine(kind: .busy, text: "Starting the agent on this Mac. This can take up to 45 seconds.")
+          } else if let p = controller.problem {
+            StatusLine(kind: .problem, text: p)
+            Button("Try Again") { Task { await controller.apply() } }.padding(.leading, 18)
+          } else {
+            HStack(alignment: .firstTextBaseline) {
+              StatusLine(kind: agentKind, text: "Agent on this Mac: \(controller.localState)")
+              Spacer(minLength: Space.s)
+              Button("Restart the Agent") { Task { await controller.restart() } }.disabled(controller.starting)
+            }
+          }
+          SettingNote("Commands and file changes still ask first. Sessions here stay on this Mac.")
         }
       }
     }
   }
+
+  var agentKind: StatusLine.Kind {
+    switch controller.localState {
+    case "Running": .ok
+    case "Starting", "Running, connecting": .busy
+    case "Did not start": .problem
+    default: .off
+    }
+  }
+
+  func set(_ m: String) {
+    guard m != mode else { return }
+    mode = m
+    Task { await controller.apply() }
+  }
+
+  func loadTokenState() { tokenSaved = tokenKnown ?? (LocalSettings.token != nil) }
 
   func choose() {
     let panel = NSOpenPanel()

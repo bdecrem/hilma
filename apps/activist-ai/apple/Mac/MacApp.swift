@@ -139,38 +139,64 @@ extension FocusedValues {
   }
 }
 
+/// Settings: one pane in groups (where Ola works, the phone, and the machine when Ola works there).
+/// Short labels, a line of explanation under each choice, status as a colored dot and words.
 struct SettingsView: View {
   var store: OlaStore
   var whereOla: WhereOlaWorks?
   var phoneLink: PhoneLink?
+  var tokenKnown: Bool? = nil
+  var look: SettingsLook = .native
   @State private var connecting = false
   @AppStorage(LocalSettings.modeKey) private var mode = "machine"
+  static let width: CGFloat = 520
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 14) {
-      if let whereOla { WhereSettings(controller: whereOla) }
-      Divider()
-      Text("Phone").font(.headline)
-      if let phoneLink { PhoneSettings(link: phoneLink) }
-      Divider()
-      if mode == "mac" {
-        // The local server's address is the app's business, never shown.
-        LabeledContent("Agent on this Mac", value: whereOla?.localState ?? "Not running")
-        Button("Restart the Agent") { Task { await whereOla?.restart() } }
-          .disabled(whereOla?.starting ?? true)
-      } else {
-        LabeledContent("Ola machine", value: store.config?.url.host() ?? "Not connected")
-        LabeledContent("Status", value: statusText)
+    Group {
+      switch look {
+      case .native:
+        Form { groups }.formStyle(.grouped).scrollDisabled(true).fixedSize(horizontal: false, vertical: true)
+      case .paper:
+        VStack(alignment: .leading, spacing: Space.xl) { groups }
+          .font(OlaFont.sans(Metrics.ui)).padding(Space.xl).background(Ola.paper)
+      }
+    }
+    .environment(\.settingsLook, look)
+    .frame(width: Self.width)
+    .sheet(isPresented: $connecting) { ConnectForm(store: store) { connecting = false }.frame(width: 400) }
+  }
+
+  @ViewBuilder var groups: some View {
+    if let whereOla { WhereSettings(controller: whereOla, tokenKnown: tokenKnown) }
+    if let phoneLink { PhoneSettings(link: phoneLink) }
+    // The machine's rows only when Ola works there; the local agent's state is under Where Ola works.
+    if mode != "mac" {
+      SettingsGroup(title: "Ola machine") {
+        LabeledContent("Address") {
+          Text(store.config?.url.host() ?? "Not connected").foregroundStyle(.secondary)
+            .lineLimit(1).truncationMode(.middle).textSelection(.enabled).help(store.config?.url.absoluteString ?? "")
+        }
+        LabeledContent("Status") { StatusLine(kind: statusKind, text: statusText) }
         HStack {
-          Button("Connect Again\u{2026}") { connecting = true }
           Button("Forget This Machine", role: .destructive) { store.forget() }
+          Spacer()
+          Button("Connect Again\u{2026}") { connecting = true }
         }
       }
     }
-    .padding(24)
-    .frame(width: 580)
-    .sheet(isPresented: $connecting) { ConnectForm(store: store) { connecting = false }.frame(width: 440) }
   }
+
+  static let snapshotSize = CGSize(width: width, height: 300)
+
+  var statusKind: StatusLine.Kind {
+    switch store.connection {
+    case .open: .ok
+    case .connecting: .busy
+    case .lost, .refused: .problem
+    case .notSetUp: .off
+    }
+  }
+
   var statusText: String {
     switch store.connection {
     case .open: "Connected"

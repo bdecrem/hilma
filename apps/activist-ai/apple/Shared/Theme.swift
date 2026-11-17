@@ -92,19 +92,107 @@ enum OlaFont {
   }
 }
 
-/// Reading sizes differ on the phone (spec: 17 on a desktop, 16.5 on a phone).
+/// The type scale. Nothing outside it. On the Mac the interface is the system's own size (13 body,
+/// 11 secondary) and only what Ola writes sits a step above, at 15; the phone keeps its larger sizes.
 enum Metrics {
   #if os(macOS)
-  static let reading: CGFloat = 16
-  static let ui: CGFloat = 13.5
-  static let meta: CGFloat = 12
-  static let mono: CGFloat = 11.5
+  /// Sheet and empty-state titles (Bricolage display).
+  static let title: CGFloat = 20
+  /// The approval's question.
+  static let heading: CGFloat = 15
+  /// What Ola writes (Literata), and what you write to it.
+  static let reading: CGFloat = 15
+  /// Every control, row and label.
+  static let ui: CGFloat = 13
+  /// Times, counts, captions, section labels.
+  static let meta: CGFloat = 11
+  /// Code and command details (IBM Plex Mono).
+  static let mono: CGFloat = 12
   #else
+  static let title: CGFloat = 24
+  static let heading: CGFloat = 18
   static let reading: CGFloat = 16.5
   static let ui: CGFloat = 15.5
   static let meta: CGFloat = 13
   static let mono: CGFloat = 12.5
   #endif
+  /// Extra space between lines of reading text, on top of Literata's own (1.49 em): about 1.58 in all.
+  static var readingLeading: CGFloat { reading * 0.09 }
+}
+
+/// The spacing scale (points). Nothing outside it.
+enum Space {
+  static let xs: CGFloat = 4
+  static let s: CGFloat = 8
+  static let m: CGFloat = 12
+  static let l: CGFloat = 16
+  static let xl: CGFloat = 24
+  static let xxl: CGFloat = 32
+}
+
+extension Ola {
+  /// Hover and pressed fills: on paper a shade of the rule, on the room a lift toward the selection.
+  static let paperHover = Color.ola(0xece2cd, 0x2c2925)
+  static let paperPressed = Color.ola(0xe3d7be, 0x35312b)
+  static let roomHover = Color.ola(0x2b4886, 0x1a2b52)
+  /// The composer and text fields: paper a shade lighter than the page.
+  static let field = Color.ola(0xfcf8f0, 0x26241f)
+  /// The primary button's fill, the room's blue (lifted at night so it reads on dark paper).
+  static let action = Color.ola(0x25407a, 0x3a5aa0)
+}
+
+/// A fill that answers the pointer: hover, then pressed.
+struct HoverFill: ViewModifier {
+  var hover: Color
+  var radius: CGFloat = 5
+  var selected: Color? = nil
+  @State private var over = false
+  func body(content: Content) -> some View {
+    content
+      .background(RoundedRectangle(cornerRadius: radius).fill(selected ?? (over ? hover : .clear)))
+      .onHover { over = $0 }
+  }
+}
+
+extension View {
+  func hoverFill(_ hover: Color, radius: CGFloat = 5, selected: Color? = nil) -> some View {
+    modifier(HoverFill(hover: hover, radius: radius, selected: selected))
+  }
+}
+
+/// A small text button (Copy, Show details, Open, Dismiss): no box, underlined on hover, dimmed
+/// while pressed.
+struct LinkButton: ButtonStyle {
+  var color: Color = Ola.blue
+  var size: CGFloat = Metrics.meta
+  var weight: OlaFont.Weight = .medium
+  func makeBody(configuration: Configuration) -> some View { LinkLabel(configuration: configuration, color: color, size: size, weight: weight) }
+  struct LinkLabel: View {
+    var configuration: Configuration
+    var color: Color
+    var size: CGFloat
+    var weight: OlaFont.Weight
+    @State private var over = false
+    @Environment(\.isEnabled) private var enabled
+    var body: some View {
+      configuration.label.font(OlaFont.sans(size, weight)).foregroundStyle(color)
+        .underline(over && enabled, color: color.opacity(0.5))
+        .opacity(!enabled ? 0.45 : configuration.isPressed ? 0.6 : 1)
+        .contentShape(Rectangle())
+        .onHover { over = $0 }
+    }
+  }
+}
+
+extension Color {
+  /// The keyboard focus ring color the system uses (follows the user's accent color).
+  static var olaFocus: Color {
+    #if os(macOS)
+    Color(nsColor: .keyboardFocusIndicatorColor)
+    #else
+    Color.accentColor
+    #endif
+  }
 }
 
 extension StepIconName {

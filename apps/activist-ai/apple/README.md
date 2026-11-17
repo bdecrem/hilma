@@ -50,15 +50,35 @@ what you read is paper laid on it; lamp yellow only for what is running; vermili
 Bart (an approval, a failed step, a session that finished unseen). Bricolage Grotesque for the
 interface, Literata for what Ola writes, IBM Plex Mono for details, bundled from Google Fonts (OFL)
 as static instances (`tools/instance-fonts.py`). Dark mode keeps the room and turns the paper into
-lamp-lit dark paper. Two looks were drawn side by side (`mac-A-sheet-*` and `mac-B-flush-*` in
-`~/Desktop/ola-brand/apple-shots/`): A, paper sheets on the room, was chosen; B, a flush native split,
-is kept as `Treatment.flush` in `Mac/MacRoot.swift`.
+lamp-lit dark paper.
 
-The Mac screenshots come from `Ola -OlaSnapshot <dir>`: the app draws its own views (the sidebar,
-conversation and files panel, with a drawn title line in place of the real toolbar, since the system's
-glass sidebar and toolbar do not draw off screen) into PNGs, with made-up data, and exits; it never
-shows a window or becomes active. The iPhone app takes `-OlaFixture <main|approval|empty|unreachable>`
-and `-OlaOpen` for simulator screenshots.
+**Scale (2026-11-16 design pass, `Shared/Theme.swift`).** On the Mac the interface is the system's
+own size and only what Ola writes sits a step above it. Type: title 20 (Bricolage display), heading
+15, reading 15 (Literata, about 1.58 line height, a 620-point column, about 80 characters), interface
+13, secondary 11, mono 12. Space: 4, 8, 12, 16, 24, 32. Sidebar rows 28 points, buttons 26, file rows
+24. Nothing outside these (`Metrics`, `Space`); the phone keeps its own larger set under the same names.
+Text buttons (Copy, Show details, Open) underline on hover; rows and buttons have hover and pressed
+shades; fields draw the system's focus ring color.
+
+**The window: one sheet on the room.** The conversation and the files are one sheet of paper laid on
+the blue room, the files as its ruled right margin (`Treatment.desk`). Drawn against two sheets side
+by side (`Treatment.sheet`, kept): `~/Desktop/ola-brand/apple-shots/polish/compare-conversation.png`.
+**Settings** is the system's grouped form with Ola's marks and status colors (`SettingsLook.native`),
+drawn against the same rows on paper (`.paper`): `polish/compare-settings.png`. Each choice is a
+short label with a line of explanation under it, so nothing truncates; status is a colored dot and
+words. The Phone section uses the same pieces (`SettingsGroup`, `SettingNote`, `StatusLine`).
+
+The Mac screenshots come from `Ola -OlaSnapshot <dir>` (`tools/build.sh mac <dir>`, `OLA_ONLY=<part
+of a name>` for some): the app draws its own views (the sidebar, conversation and files panel, with a
+drawn title line in place of the real toolbar, since the system's glass sidebar and toolbar do not
+draw off screen) into PNGs, with made-up data, and exits; it never shows a window or becomes active.
+It also draws Settings in four states (its own defaults suite, never the Keychain) and the real
+`MacRoot` twice: `mac-real-*.png` with `cacheDisplay`, and `mac-real-*-composited.png` from the
+window's own Core Animation layer tree while it is ordered in far off every display (no screen
+capture, no permission). Neither shows the NavigationSplitView sidebar or the inspector (blank: they
+are drawn by the window server's glass), so the sidebar and files in the drawn frame are the app's own
+views but not proof of how the system frames them. The iPhone app takes
+`-OlaFixture <main|approval|empty|unreachable>` and `-OlaOpen` for simulator screenshots.
 
 ## Plain HTTP over Tailscale (App Transport Security)
 

@@ -4,19 +4,43 @@ import UniformTypeIdentifiers
 import SwiftUI
 import WebKit
 
-/// Two looks were drawn for the conversation (see apple/README.md): `sheet` lays the paper on the
-/// blue room like the web app; `flush` is a native split with the paper filling the pane.
-enum Treatment: String { case sheet, flush }
-private struct TreatmentKey: EnvironmentKey { static let defaultValue = Treatment.sheet }
+/// Two looks were drawn for the window (see apple/README.md), both "paper laid on the blue room":
+/// `sheet` lays the conversation and the files on the room as two sheets; `desk` lays one sheet,
+/// with the files as its ruled right margin.
+enum Treatment: String { case sheet, desk }
+private struct TreatmentKey: EnvironmentKey { static let defaultValue = Treatment.desk }
+
+/// The paper's edge on the room: a small radius and one soft shadow.
+enum Sheet {
+  static let radius: CGFloat = 5
+  static let gap: CGFloat = Space.s
+}
 
 extension View {
-  /// In the sheet look, a panel is a sheet of paper on the room.
-  @ViewBuilder func sheetted(_ t: Treatment) -> some View {
-    if t == .sheet {
-      clipShape(RoundedRectangle(cornerRadius: 3)).shadow(color: .black.opacity(0.25), radius: 10, y: 3)
-        .padding(.trailing, 12).padding(.bottom, 12).padding(.top, 2).background(Ola.room)
-    } else {
-      self
+  /// The files panel's paper: its own sheet, or the right margin of the one sheet.
+  @ViewBuilder func filesPaper(_ t: Treatment) -> some View {
+    switch t {
+    case .sheet:
+      clipShape(RoundedRectangle(cornerRadius: Sheet.radius)).shadow(color: .black.opacity(0.2), radius: 5, y: 1)
+        .padding(.trailing, Sheet.gap).padding(.bottom, Sheet.gap).background(Ola.room)
+    case .desk:
+      overlay(alignment: .leading) { Rectangle().fill(Ola.rule).frame(width: 1) }
+        .clipShape(UnevenRoundedRectangle(bottomTrailingRadius: Sheet.radius, topTrailingRadius: Sheet.radius))
+        .shadow(color: .black.opacity(0.2), radius: 5, y: 1)
+        .padding(.trailing, Sheet.gap).padding(.bottom, Sheet.gap).background(Ola.room)
+    }
+  }
+
+  /// The conversation's paper.
+  @ViewBuilder func conversationPaper(_ t: Treatment, filesShown: Bool) -> some View {
+    switch t {
+    case .sheet:
+      clipShape(RoundedRectangle(cornerRadius: Sheet.radius)).shadow(color: .black.opacity(0.2), radius: 5, y: 1)
+        .padding(.horizontal, Sheet.gap).padding(.bottom, Sheet.gap)
+    case .desk:
+      clipShape(UnevenRoundedRectangle(topLeadingRadius: Sheet.radius, bottomLeadingRadius: Sheet.radius, bottomTrailingRadius: filesShown ? 0 : Sheet.radius, topTrailingRadius: filesShown ? 0 : Sheet.radius))
+        .shadow(color: .black.opacity(0.2), radius: 5, y: 1)
+        .padding(.leading, Sheet.gap).padding(.trailing, filesShown ? 0 : Sheet.gap).padding(.bottom, Sheet.gap)
     }
   }
 }
@@ -38,16 +62,17 @@ struct MacRoot: View {
   var body: some View {
     NavigationSplitView {
       Sidebar(store: store)
-        .navigationSplitViewColumnWidth(min: 220, ideal: 260, max: 340)
+        .navigationSplitViewColumnWidth(min: 200, ideal: 232, max: 320)
     } detail: {
       VStack(spacing: 0) {
         ConnectionBar(store: store)
-        detail
+        ConversationPane(store: store, draft: $draft)
+          .conversationPaper(treatment, filesShown: filesShown)
       }
-      .background(treatment == .sheet ? Ola.room : Ola.paper)
+      .background(Ola.room)
       .inspector(isPresented: $filesShown) {
-        FilesPanel(store: store).sheetted(treatment)
-          .inspectorColumnWidth(min: 240, ideal: 290, max: 420)
+        FilesPanel(store: store).filesPaper(treatment)
+          .inspectorColumnWidth(min: 200, ideal: 248, max: 400)
       }
     }
     .navigationTitle(store.selected?.title ?? "New session")
@@ -63,34 +88,24 @@ struct MacRoot: View {
       }
       ToolbarItem {
         Button { filesShown.toggle() } label: { Label("Files", systemImage: "sidebar.right") }
-          .help("Show or hide the project's files")
+          .help(filesShown ? "Hide the project\u{2019}s files" : "Show the project\u{2019}s files")
       }
     }
-    .toolbarBackground(treatment == .sheet ? Ola.room : Ola.paper, for: .windowToolbar)
+    .toolbarBackground(Ola.room, for: .windowToolbar)
     .toolbarBackground(.visible, for: .windowToolbar)
-    .toolbarColorScheme(treatment == .sheet ? .dark : nil, for: .windowToolbar)
+    .toolbarColorScheme(.dark, for: .windowToolbar)
     .focusedSceneValue(\.olaDraft, $draft)
     .sheet(isPresented: Binding(get: { (store.connection == .notSetUp && !LocalSettings.onThisMac) || connectShown }, set: { connectShown = $0 })) {
-      ConnectForm(store: store) { connectShown = false }.frame(width: 440).interactiveDismissDisabled(store.connection == .notSetUp)
+      ConnectForm(store: store) { connectShown = false }.frame(width: 400).interactiveDismissDisabled(store.connection == .notSetUp)
     }
     .onChange(of: store.connection) { _, c in if c == .refused { connectShown = true } }
     .onAppear { if store.selectedID == nil, let s = savedSelection { store.selectedID = s } }
     .onChange(of: store.selectedID) { _, id in savedSelection = id }
   }
 
-  @ViewBuilder var detail: some View {
-    switch treatment {
-    case .flush:
-      ConversationPane(store: store, draft: $draft)
-    case .sheet:
-      ConversationPane(store: store, draft: $draft, sidePadding: 48)
-        .clipShape(RoundedRectangle(cornerRadius: 3))
-        .shadow(color: .black.opacity(0.25), radius: 10, y: 3)
-        .padding(.horizontal, 12).padding(.bottom, 12).padding(.top, 2)
-    }
-  }
+  var subtitle: String { Self.subtitle(store) }
 
-  var subtitle: String {
+  static func subtitle(_ store: OlaStore) -> String {
     switch store.connection {
     case .open:
       let place = store.config?.url.host() == "127.0.0.1" ? "On this Mac" : "On the machine"
@@ -105,6 +120,7 @@ struct MacRoot: View {
 
 // MARK: the room: sessions
 
+/// The sidebar, at the system's own density: 13-point rows 28 points tall, 11-point labels.
 struct Sidebar: View {
   @Bindable var store: OlaStore
   @State private var renaming: SessionInfo?
@@ -115,16 +131,23 @@ struct Sidebar: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
       ScrollView {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: 1) {
           Button { store.newSession() } label: {
-            Label("New session", systemImage: "plus").font(OlaFont.sans(Metrics.ui + 0.5, .medium)).foregroundStyle(Ola.onRoom)
-              .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 10).padding(.vertical, 7)
-              .background(RoundedRectangle(cornerRadius: 5).fill(store.selectedID == nil ? Ola.roomRaised : .clear))
-              .contentShape(Rectangle())
+            HStack(spacing: 6) {
+              Image(systemName: "square.and.pencil").font(.system(size: Metrics.ui - 1, weight: .medium)).frame(width: SessionRow.markColumn)
+              Text("New session").font(OlaFont.sans(Metrics.ui, .medium))
+              Spacer()
+              Text("\u{2318}N").font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.dim)
+            }
+            .foregroundStyle(Ola.onRoom)
+            .padding(.horizontal, Space.s).frame(height: SessionRow.height)
+            .contentShape(Rectangle())
+            .hoverFill(Ola.roomHover, radius: 6, selected: store.selectedID == nil ? Ola.roomRaised : nil)
           }
           .buttonStyle(.plain)
-          .padding(.bottom, 10)
-          Text("Sessions").font(OlaFont.sans(Metrics.meta, .semibold)).foregroundStyle(Ola.dim).padding(.horizontal, 10).padding(.bottom, 4)
+          .help("Start a new session (\u{2318}N)")
+          Text("Sessions").font(OlaFont.sans(Metrics.meta, .semibold)).foregroundStyle(Ola.dim)
+            .padding(.horizontal, Space.s).padding(.top, Space.l).padding(.bottom, Space.xs)
           ForEach(store.sessions) { s in
             SessionRow(session: s, selected: store.selectedID == s.id, running: store.running.contains(s.id), unseen: store.unseen.contains(s.id), needsYou: store.needsYou(s.id))
               .onTapGesture { store.selectedID = s.id }
@@ -134,10 +157,10 @@ struct Sidebar: View {
               }
           }
           if store.sessions.isEmpty, store.connection == .open {
-            Text("No sessions yet.").font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.dim).padding(10)
+            Text("No sessions yet.").font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.dim).padding(.horizontal, Space.s).padding(.vertical, 6)
           }
         }
-        .padding(.horizontal, 10).padding(.top, 6)
+        .padding(.horizontal, Space.s).padding(.top, Space.xs).padding(.bottom, Space.s)
       }
       MachineFooter(store: store)
     }
@@ -174,41 +197,47 @@ struct SessionRow: View {
   var running: Bool
   var unseen: Bool
   var needsYou: Bool
+  static let height: CGFloat = 28
+  static let markColumn: CGFloat = 14
 
   var body: some View {
-    HStack(spacing: 8) {
+    HStack(alignment: .firstTextBaseline, spacing: 6) {
       ZStack {
-        if needsYou { Circle().fill(Ola.vermilion).frame(width: 8, height: 8) }
+        if needsYou { Circle().fill(Ola.vermilion).frame(width: 7, height: 7) }
         else if running { LampDot() }
-        else if unseen { Circle().fill(Ola.vermilion).frame(width: 7, height: 7) }
+        else if unseen { Circle().fill(Ola.vermilion).frame(width: 6, height: 6) }
       }
-      .frame(width: 10)
+      .frame(width: Self.markColumn, height: 8)
+      .alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + 3.5 }
       VStack(alignment: .leading, spacing: 1) {
-        Text(session.title).font(OlaFont.sans(Metrics.ui + 0.5, selected ? .semibold : .regular)).foregroundStyle(selected ? Ola.onRoom : Ola.mist).lineLimit(1)
+        Text(session.title).font(OlaFont.sans(Metrics.ui, selected ? .medium : .regular)).foregroundStyle(selected ? Ola.onRoom : Ola.mist)
+          .lineLimit(1).truncationMode(.tail)
         if needsYou { Text("Needs your yes").font(OlaFont.sans(Metrics.meta, .medium)).foregroundStyle(Ola.vermilion) }
       }
-      Spacer(minLength: 4)
+      Spacer(minLength: Space.xs)
       Text(running ? "now" : shortTime(session.updated)).font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.dim).monospacedDigit()
     }
-    .padding(.horizontal, 10).padding(.vertical, 7)
-    .background(RoundedRectangle(cornerRadius: 5).fill(selected ? Ola.roomRaised : .clear))
+    .padding(.horizontal, Space.s).padding(.vertical, 6)
+    .frame(minHeight: Self.height)
     .contentShape(Rectangle())
+    .hoverFill(Ola.roomHover, radius: 6, selected: selected ? Ola.roomRaised : nil)
+    .help(session.title)
   }
 }
 
 struct MachineFooter: View {
   var store: OlaStore
   var body: some View {
-    VStack(alignment: .leading, spacing: 8) {
+    VStack(alignment: .leading, spacing: 0) {
       Rectangle().fill(Ola.roomRule).frame(height: 1)
-      HStack(spacing: 10) {
+      HStack(spacing: Space.s + 2) {
         DeskMark(lit: store.connection == .open, working: !store.running.isEmpty)
-        VStack(alignment: .leading, spacing: 2) {
-          Text(title).font(OlaFont.sans(Metrics.ui, .semibold)).foregroundStyle(Ola.onRoom)
+        VStack(alignment: .leading, spacing: 1) {
+          Text(title).font(OlaFont.sans(Metrics.ui, .medium)).foregroundStyle(Ola.onRoom).lineLimit(1)
           Text(store.config?.url.host()?.components(separatedBy: ".").first ?? "").font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.dim).lineLimit(1)
         }
       }
-      .padding(.horizontal, 16).padding(.bottom, 14).padding(.top, 4)
+      .padding(.horizontal, Space.l).padding(.vertical, Space.m)
     }
   }
   var title: String {
@@ -228,16 +257,16 @@ struct DeskMark: View {
   var working: Bool
   var body: some View {
     ZStack(alignment: .bottomLeading) {
-      RoundedRectangle(cornerRadius: 3).fill(Ola.paper).frame(width: 34, height: 24)
-      HStack(spacing: 3) {
-        Circle().fill(lit ? Ola.leaf : Ola.ink3).frame(width: 4, height: 4)
-        Circle().fill(working ? Ola.lamp : Ola.rule).frame(width: 4, height: 4)
+      RoundedRectangle(cornerRadius: 2.5).fill(Ola.paper).frame(width: 28, height: 20)
+      HStack(spacing: 2.5) {
+        Circle().fill(lit ? Ola.leaf : Ola.ink3).frame(width: 3.5, height: 3.5)
+        Circle().fill(working ? Ola.lamp : Ola.rule).frame(width: 3.5, height: 3.5)
       }
-      .padding(5)
-      HStack(spacing: 1.5) { ForEach(0..<4, id: \.self) { _ in Rectangle().fill(Ola.ink3).frame(width: 1, height: 7) } }
-        .offset(x: 21, y: -13)
+      .padding(4)
+      HStack(spacing: 1.5) { ForEach(0..<4, id: \.self) { _ in Rectangle().fill(Ola.ink3).frame(width: 1, height: 6) } }
+        .offset(x: 17, y: -11)
     }
-    .frame(width: 34, height: 24)
+    .frame(width: 28, height: 20)
   }
 }
 
@@ -250,28 +279,36 @@ struct FilesPanel: View {
   @State private var problem: String?
   @Environment(\.openWindow) private var openWindow
 
+  var folder: String { store.projectFolder.replacingOccurrences(of: "/Users/admin", with: "~") }
+
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
-      HStack {
-        VStack(alignment: .leading, spacing: 2) {
-          Text("Files").font(OlaFont.sans(Metrics.ui + 2, .semibold)).foregroundStyle(Ola.ink)
-          Text(store.projectFolder.replacingOccurrences(of: "/Users/admin", with: "~")).font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.ink3)
+      HStack(alignment: .center, spacing: Space.s) {
+        VStack(alignment: .leading, spacing: 1) {
+          Text("Files").font(OlaFont.sans(Metrics.ui, .semibold)).foregroundStyle(Ola.ink)
+          Text(folder).font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.ink3).lineLimit(1).truncationMode(.middle).help(folder)
         }
         Spacer()
-        Button { Task { await reload() } } label: { Image(systemName: "arrow.clockwise") }.buttonStyle(.plain).foregroundStyle(Ola.ink2).help("Reload")
+        Button { Task { await reload() } } label: {
+          Image(systemName: "arrow.clockwise").font(.system(size: Metrics.ui - 1, weight: .medium)).frame(width: 24, height: 22).contentShape(Rectangle())
+            .hoverFill(Ola.paperHover)
+        }
+        .buttonStyle(.plain).foregroundStyle(Ola.ink2).help("Reload the files")
       }
-      .padding(.horizontal, 16).padding(.vertical, 12)
+      .padding(.leading, Space.l).padding(.trailing, Space.s).padding(.vertical, Space.s + 2)
       Rectangle().fill(Ola.rule).frame(height: 1)
       ScrollView {
         VStack(alignment: .leading, spacing: 0) {
           FolderRows(store: store, path: "", depth: 0, open: open, page: { openWindow(id: "page", value: $0) }, loading: loading)
           if store.files[""]?.isEmpty == true {
-            Text("Nothing here yet. What Ola makes appears here.").font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.ink3).padding(16)
+            Text("Nothing here yet. What Ola makes appears here.").font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.ink3).padding(Space.s)
           }
         }
-        .padding(.vertical, 6)
+        .padding(.horizontal, Space.s).padding(.vertical, 6)
       }
-      if let problem { Text(problem).font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.vermilionText).padding(12) }
+      if let problem {
+        Label(problem, systemImage: "exclamationmark.circle").font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.vermilionText).padding(Space.m)
+      }
     }
     .background(Ola.details)
     .quickLookPreview($preview)
@@ -314,20 +351,22 @@ struct FolderRows: View {
 
   var body: some View {
     ForEach(store.files[path] ?? []) { f in
-      HStack(spacing: 7) {
+      HStack(spacing: 6) {
         if f.isDirectory {
-          Image(systemName: "chevron.right").font(.system(size: 9, weight: .bold)).foregroundStyle(Ola.ink3).rotationEffect(.degrees(expanded.contains(f.path) ? 90 : 0)).frame(width: 10)
+          Image(systemName: "chevron.right").font(.system(size: 8, weight: .bold)).foregroundStyle(Ola.ink3).rotationEffect(.degrees(expanded.contains(f.path) ? 90 : 0)).frame(width: 10)
         } else { Color.clear.frame(width: 10) }
-        Image(systemName: f.isDirectory ? "folder" : icon(f.name)).font(.system(size: 12)).foregroundStyle(Ola.blue).frame(width: 16)
+        Image(systemName: f.isDirectory ? "folder" : icon(f.name)).font(.system(size: Metrics.ui - 2)).foregroundStyle(Ola.blue).frame(width: 16)
         Text(f.name).font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.ink).lineLimit(1).truncationMode(.middle)
-        Spacer()
+        Spacer(minLength: Space.xs)
         if loading == f.path { ProgressView().controlSize(.mini) }
         if f.name.hasSuffix(".html") || f.name.hasSuffix(".htm") {
-          Button("Open") { page(f.path) }.buttonStyle(.plain).font(OlaFont.sans(Metrics.meta, .semibold)).foregroundStyle(Ola.blue)
+          Button("Open") { page(f.path) }.buttonStyle(LinkButton(weight: .semibold)).help("Open the page in its own window")
         }
       }
-      .padding(.leading, CGFloat(depth) * 14 + 12).padding(.trailing, 14).padding(.vertical, 5)
+      .padding(.leading, CGFloat(depth) * 14 + 4).padding(.trailing, Space.s)
+      .frame(height: 24)
       .contentShape(Rectangle())
+      .hoverFill(Ola.paperHover, radius: 4)
       .onTapGesture {
         if f.isDirectory {
           if expanded.contains(f.path) { expanded.remove(f.path) } else {

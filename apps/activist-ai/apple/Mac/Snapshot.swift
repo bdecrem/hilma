@@ -17,17 +17,21 @@ enum Snapshot {
     let app = NSApplication.shared
     app.setActivationPolicy(.prohibited)
     try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+    let chosen = Treatment.desk
     let shots: [(String, String, Treatment, NSAppearance.Name, CGSize)] = [
-      ("mac-A-sheet-light", "main", .sheet, .aqua, CGSize(width: 1440, height: 900)),
-      ("mac-B-flush-light", "main", .flush, .aqua, CGSize(width: 1440, height: 900)),
-      ("mac-B-flush-approval", "approval", .flush, .aqua, CGSize(width: 1440, height: 900)),
-      // The chosen look, A.
-      ("mac-conversation-light", "main", .sheet, .aqua, CGSize(width: 1440, height: 900)),
-      ("mac-conversation-dark", "main", .sheet, .darkAqua, CGSize(width: 1440, height: 900)),
-      ("mac-approval-light", "approval", .sheet, .aqua, CGSize(width: 1440, height: 900)),
-      ("mac-approval-dark", "approval", .sheet, .darkAqua, CGSize(width: 1440, height: 900)),
-      ("mac-new-session", "empty", .sheet, .aqua, CGSize(width: 1200, height: 760)),
-      ("mac-unreachable", "unreachable", .sheet, .aqua, CGSize(width: 1200, height: 760)),
+      // The two looks drawn for the window, side by side in apple-shots/polish.
+      ("dir-A-sheet-light", "main", .sheet, .aqua, CGSize(width: 1440, height: 900)),
+      ("dir-A-sheet-approval", "approval", .sheet, .aqua, CGSize(width: 1440, height: 900)),
+      ("dir-B-desk-light", "main", .desk, .aqua, CGSize(width: 1440, height: 900)),
+      ("dir-B-desk-approval", "approval", .desk, .aqua, CGSize(width: 1440, height: 900)),
+      // The chosen look.
+      ("mac-conversation-light", "main", chosen, .aqua, CGSize(width: 1440, height: 900)),
+      ("mac-conversation-dark", "main", chosen, .darkAqua, CGSize(width: 1440, height: 900)),
+      ("mac-approval-light", "approval", chosen, .aqua, CGSize(width: 1440, height: 900)),
+      ("mac-approval-dark", "approval", chosen, .darkAqua, CGSize(width: 1440, height: 900)),
+      ("mac-new-session", "empty", chosen, .aqua, CGSize(width: 1200, height: 760)),
+      ("mac-unreachable", "unreachable", chosen, .aqua, CGSize(width: 1200, height: 760)),
+      ("mac-narrow", "approval", chosen, .aqua, CGSize(width: 900, height: 640)),
     ]
     let only = CommandLine.arguments.firstIndex(of: "-OlaOnly").map { CommandLine.arguments[$0 + 1] }
     for (name, fixture, treatment, appearance, size) in shots where only == nil || name.contains(only!) {
@@ -35,18 +39,54 @@ enum Snapshot {
       let root = SnapshotFrame(store: store, treatment: treatment).environment(\.treatment, treatment)
       write(root, size: size, appearance: appearance, to: dir.appendingPathComponent("\(name).png"), titled: false)
     }
+    // Settings, in each of its states, at the window's own width. Its own defaults suite, so the
+    // app's real setting is never read or written.
+    let defaults = UserDefaults(suiteName: "cx.ola.mac.snapshot")!
+    let settings: [(String, String, String?, NSAppearance.Name, SettingsLook)] = [
+      ("dir-A-settings", "mac", nil, .aqua, .native),
+      ("dir-B-settings", "mac", nil, .aqua, .paper),
+      ("mac-settings-machine", "machine", nil, .aqua, .native),
+      ("mac-settings-mac", "mac", nil, .aqua, .native),
+      ("mac-settings-mac-problem", "mac", "Ola cannot read ~/Documents/court-watch. Allow it in System Settings, Privacy and Security, Files and Folders, then Try Again.", .aqua, .native),
+      ("mac-settings-mac-dark", "mac", nil, .darkAqua, .native),
+    ]
+    for (name, mode, problem, appearance, look) in settings where only == nil || name.contains(only!) {
+      defaults.set(mode, forKey: LocalSettings.modeKey)
+      defaults.set(mode == "mac", forKey: "ola.phone.enabled")
+      defaults.set(NSHomeDirectory() + "/Documents/court-watch", forKey: LocalSettings.folderKey)
+      let store = OlaStore(fixture: Fixture.main)
+      let controller = WhereOlaWorks(store: store)
+      controller.problem = problem
+      let view = SettingsView(store: store, whereOla: controller, phoneLink: PhoneLink(store: store), tokenKnown: true, look: look).defaultAppStorage(defaults)
+      write(view, size: SettingsView.snapshotSize, appearance: appearance, to: dir.appendingPathComponent("\(name).png"), titled: false, fit: true)
+    }
+    // The real window: MacRoot itself (NavigationSplitView, inspector, toolbar) in a titled window
+    // that is never ordered in. The system's glass does not draw into a bitmap; what Ola paints does.
+    let real: [(String, String, NSAppearance.Name)] = [("mac-real-light", "main", .aqua), ("mac-real-dark", "approval", .darkAqua)]
+    for (name, fixture, appearance) in real where only == nil || name.contains(only!) {
+      let store = OlaStore(fixture: Fixture.named(fixture))
+      write(MacRoot(store: store), size: CGSize(width: 1280, height: 820), appearance: appearance, to: dir.appendingPathComponent("\(name).png"), titled: true)
+    }
+    // The same, composited by the window server: the window is ordered in far off every display
+    // (it never appears), and only this app's own window is read back.
+    for (name, fixture, appearance) in real where only == nil || name.contains(only!) {
+      let store = OlaStore(fixture: Fixture.named(fixture))
+      writeLive(MacRoot(store: store), size: CGSize(width: 1280, height: 820), appearance: appearance, to: dir.appendingPathComponent("\(name)-composited.png"))
+    }
     // The connect sheet on its own.
-    let connect = ConnectForm(store: OlaStore(config: nil)).frame(width: 440)
-    write(connect, size: CGSize(width: 440, height: 470), appearance: .aqua, to: dir.appendingPathComponent("mac-connect.png"), titled: false)
+    let connect = ConnectForm(store: OlaStore(config: nil)).frame(width: 400)
+    write(connect, size: CGSize(width: 400, height: 330), appearance: .aqua, to: dir.appendingPathComponent("mac-connect.png"), titled: false)
     // The pairing sheet, with a made-up code.
     let sample = PairingCode(host: "imac-m1.tail1234.ts.net", port: 4330, secret: "ABCD-EFGH-JKLM-NPQR-STUV-WXYZ-23", name: "Bart\u{2019}s iMac")
-    write(PairingSheet(code: sample) {}, size: CGSize(width: 420, height: 640), appearance: .aqua, to: dir.appendingPathComponent("mac-pair-phone.png"), titled: false)
+    write(PairingSheet(code: sample) {}, size: CGSize(width: 400, height: 560), appearance: .aqua, to: dir.appendingPathComponent("mac-pair-phone.png"), titled: false)
     print("wrote \(dir.path)")
     exit(0)
   }
 
-  static func write<V: View>(_ view: V, size: CGSize, appearance: NSAppearance.Name, to url: URL, titled: Bool = true) {
+  static func write<V: View>(_ view: V, size: CGSize, appearance: NSAppearance.Name, to url: URL, titled: Bool = true, fit: Bool = false) {
     let host = NSHostingView(rootView: view)
+    var size = size
+    if fit { size.height = max(size.height, host.fittingSize.height) }
     host.sceneBridgingOptions = [.toolbars, .title]
     let window = NSWindow(contentRect: NSRect(origin: CGPoint(x: -20_000, y: -20_000), size: size), styleMask: titled ? [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView] : [.borderless], backing: .buffered, defer: false)
     window.appearance = NSAppearance(named: appearance)
@@ -65,4 +105,42 @@ enum Snapshot {
     try? rep.representation(using: .png, properties: [:])?.write(to: url)
     window.close()
   }
+
+  /// A titled window ordered in at a position no display shows, so the window server draws its
+  /// glass and toolbar, then read back by window number (the app's own window needs no permission).
+  static func writeLive<V: View>(_ view: V, size: CGSize, appearance: NSAppearance.Name, to url: URL) {
+    let host = NSHostingView(rootView: view)
+    host.sceneBridgingOptions = [.toolbars, .title]
+    let far = CGPoint(x: -30_000, y: -30_000)
+    let window = SnapshotWindow(contentRect: NSRect(origin: far, size: size), styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView], backing: .buffered, defer: false)
+    window.appearance = NSAppearance(named: appearance)
+    window.contentView = host
+    window.isReleasedWhenClosed = false
+    window.setFrame(NSRect(origin: far, size: size), display: false)
+    NSApplication.shared.setActivationPolicy(.accessory)
+    window.orderFrontRegardless()
+    window.setFrameOrigin(far)
+    for _ in 0..<15 {
+      host.layoutSubtreeIfNeeded()
+      RunLoop.main.run(until: Date().addingTimeInterval(0.1))
+    }
+    defer { window.orderOut(nil); window.close() }
+    guard window.frame.origin.x < -10_000 else { print("live shot skipped: the window was moved on screen"); return }
+    // The window's own layer tree, drawn by Core Animation into a bitmap: no screen capture, so no
+    // permission is involved. Backdrop effects (the glass blur) have nothing behind them to show.
+    guard let frameView = window.contentView?.superview, let layer = frameView.layer else { print("live shot: no layer"); return }
+    let scale: CGFloat = 2
+    let w = Int(frameView.bounds.width * scale), h = Int(frameView.bounds.height * scale)
+    guard let ctx = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8, bytesPerRow: 0, space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return }
+    ctx.scaleBy(x: scale, y: scale)
+    if !frameView.isFlipped {} else { ctx.translateBy(x: 0, y: frameView.bounds.height); ctx.scaleBy(x: 1, y: -1) }
+    layer.render(in: ctx)
+    guard let image = ctx.makeImage() else { return }
+    try? NSBitmapImageRep(cgImage: image).representation(using: .png, properties: [:])?.write(to: url)
+  }
+}
+
+/// Keeps its frame where it is put, even off every display.
+final class SnapshotWindow: NSWindow {
+  override func constrainFrameRect(_ frameRect: NSRect, to screen: NSScreen?) -> NSRect { frameRect }
 }

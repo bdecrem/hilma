@@ -7,7 +7,7 @@ struct TurnView: View {
   var isLast: Bool
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 16) {
+    VStack(alignment: .leading, spacing: Space.l) {
       RequestView(turn: turn)
       if !turn.steps.isEmpty || !turn.notes.isEmpty || turn.isRunning { RunView(turn: turn, isLast: isLast) }
       if let notice = turn.notice {
@@ -20,19 +20,27 @@ struct TurnView: View {
   }
 }
 
+/// Your words: set in the interface face at reading size, so they read as yours and Ola's answer
+/// (in Literata) as its. "You" and the time are small and out of the way.
 struct RequestView: View {
   var turn: Turn
   var body: some View {
-    HStack(alignment: .firstTextBaseline, spacing: 10) {
-      Text("You").font(OlaFont.sans(Metrics.ui, .semibold)).foregroundStyle(Ola.ink)
-      Text(turn.request).font(OlaFont.sans(Metrics.ui + 1)).foregroundStyle(Ola.ink).lineSpacing(3)
+    HStack(alignment: .firstTextBaseline, spacing: Space.m) {
+      Text("You").font(OlaFont.sans(Metrics.meta, .semibold)).foregroundStyle(Ola.ink3)
+        .frame(width: Metrics.youColumn, alignment: .leading)
+      Text(turn.request).font(OlaFont.sans(Metrics.reading)).foregroundStyle(Ola.ink).lineSpacing(2)
         .fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
-      Spacer(minLength: 8)
+      Spacer(minLength: Space.s)
       Text(turn.at.formatted(date: .omitted, time: .shortened)).font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.ink3).monospacedDigit()
     }
-    .padding(.bottom, 12)
+    .padding(.bottom, Space.m)
     .overlay(alignment: .bottom) { Rectangle().fill(Ola.rule).frame(height: 1) }
   }
+}
+
+extension Metrics {
+  /// The step icons and "You" share one left column, so the words after them line up.
+  static let youColumn: CGFloat = 24
 }
 
 /// The run: "Worked for 1 min 48 s · 6 steps · changed 3 files". Open while it works, folded once
@@ -41,31 +49,35 @@ struct RunView: View {
   var turn: Turn
   var isLast: Bool
   @State private var open: Bool?
+  @State private var over = false
 
   var isOpen: Bool { open ?? turn.isRunning }
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 2) {
+    VStack(alignment: .leading, spacing: 0) {
       Button {
         withAnimation(.easeOut(duration: 0.15)) { open = !isOpen }
       } label: {
-        HStack(spacing: 8) {
-          if turn.isRunning { LampDot() }
+        HStack(spacing: Space.s) {
+          ZStack { if turn.isRunning { LampDot() } else { Image(systemName: "chevron.right").font(.system(size: 9, weight: .bold)).foregroundStyle(Ola.ink3).rotationEffect(.degrees(isOpen ? 90 : 0)) } }
+            .frame(width: Metrics.youColumn - Space.s, alignment: .leading)
           TimelineView(.periodic(from: .now, by: 1)) { ctx in
-            Text(turn.summary(now: ctx.date)).font(OlaFont.sans(Metrics.ui, .medium)).foregroundStyle(Ola.ink2).monospacedDigit()
+            Text(turn.summary(now: ctx.date)).font(OlaFont.sans(Metrics.ui, .medium)).foregroundStyle(over ? Ola.ink : Ola.ink2).monospacedDigit()
           }
-          Image(systemName: "chevron.right").font(.system(size: 10, weight: .semibold)).foregroundStyle(Ola.ink3).rotationEffect(.degrees(isOpen ? 90 : 0))
           Spacer()
         }
+        .padding(.vertical, Space.xs)
         .contentShape(Rectangle())
+        .onHover { over = $0 }
       }
       .buttonStyle(.plain)
-      .padding(.bottom, 4)
+      .help(isOpen ? "Hide the steps" : "Show every step")
       let shown = isOpen ? turn.steps : turn.steps.filter { $0.status == .failed || $0.status == .waiting }
       ForEach(shown) { StepRow(step: $0).transition(.opacity.combined(with: .move(edge: .top))) }
       if isOpen, !turn.notes.isEmpty {
         ForEach(Array(turn.notes.enumerated()), id: \.offset) { _, n in
-          Text(n).font(OlaFont.serif(Metrics.reading - 1, .italic)).foregroundStyle(Ola.ink2).padding(.leading, 30).padding(.vertical, 4)
+          Text(n).font(OlaFont.serif(Metrics.ui, .italic)).foregroundStyle(Ola.ink2).lineSpacing(2)
+            .padding(.leading, Metrics.youColumn + Space.s).padding(.vertical, Space.xs)
             .fixedSize(horizontal: false, vertical: true)
         }
       }
@@ -77,8 +89,8 @@ struct LampDot: View {
   @State private var breathe = false
   @Environment(\.accessibilityReduceMotion) private var reduce
   var body: some View {
-    Circle().fill(Ola.lamp).frame(width: 8, height: 8)
-      .background(Circle().fill(Ola.lamp.opacity(0.35)).frame(width: 16, height: 16).scaleEffect(breathe ? 1 : 0.6).opacity(breathe ? 0.2 : 0.8))
+    Circle().fill(Ola.lamp).frame(width: 7, height: 7)
+      .background(Circle().fill(Ola.lamp.opacity(0.35)).frame(width: 14, height: 14).scaleEffect(breathe ? 1 : 0.6).opacity(breathe ? 0.2 : 0.8))
       .onAppear { if !reduce { withAnimation(.easeInOut(duration: 1).repeatForever(autoreverses: true)) { breathe = true } } }
   }
 }
@@ -96,45 +108,48 @@ struct StepRow: View {
   }
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 4) {
-      HStack(alignment: .firstTextBaseline, spacing: 10) {
+    VStack(alignment: .leading, spacing: 2) {
+      HStack(alignment: .firstTextBaseline, spacing: Space.s) {
         Image(systemName: step.status == .failed ? "xmark" : StepIconName.symbol(step.icon.rawValue))
-          .font(.system(size: 12, weight: .medium)).foregroundStyle(tint).frame(width: 18)
-        (Text(step.verb + (step.object.isEmpty ? "" : " ")).font(OlaFont.sans(Metrics.ui + 0.5)) + Text(step.object).font(OlaFont.sans(Metrics.ui + 0.5, .semibold)))
+          .font(.system(size: Metrics.ui - 2, weight: .medium)).foregroundStyle(tint).frame(width: Metrics.youColumn - Space.s, alignment: .leading)
+        (Text(step.verb + (step.object.isEmpty ? "" : " ")).font(OlaFont.sans(Metrics.ui)) + Text(step.object).font(OlaFont.sans(Metrics.ui, .semibold)))
           .foregroundStyle(Ola.ink).lineLimit(2)
-        Spacer(minLength: 8)
+        Spacer(minLength: Space.s)
         Group {
           switch step.status {
-          case .running, .preparing: ProgressView().controlSize(.small)
-          case .waiting: Text("Needs your yes").foregroundStyle(Ola.vermilionText)
+          case .running, .preparing: ProgressView().controlSize(.mini)
+          case .waiting: Text("Needs your yes").font(OlaFont.sans(Metrics.meta, .semibold)).foregroundStyle(Ola.vermilionText)
           default: Text(step.result ?? "").foregroundStyle(Ola.ink3)
           }
         }
-        .font(OlaFont.sans(Metrics.meta + 0.5)).monospacedDigit().lineLimit(1)
+        .font(OlaFont.sans(Metrics.meta)).monospacedDigit().lineLimit(1)
       }
-      if let e = step.error {
-        Text(e).font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.vermilionText).padding(.leading, 28)
-      }
-      if !step.input.isEmpty || !step.output.isEmpty {
-        Button(details ? "Hide details" : "Show details") { details.toggle() }
-          .buttonStyle(.plain).font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.ink3).underline(color: Ola.rule).padding(.leading, 28)
-        if details {
-          ScrollView(.horizontal, showsIndicators: false) {
-            VStack(alignment: .leading, spacing: 6) {
-              Text((step.tool == "shell" || step.tool == "bash" ? "$ " : "") + step.input).foregroundStyle(Ola.ink)
-              if !step.output.isEmpty { Text(String(step.output.prefix(4000))).foregroundStyle(Ola.ink2) }
+      Group {
+        if let e = step.error {
+          Text(e).font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.vermilionText).fixedSize(horizontal: false, vertical: true)
+        }
+        if !step.input.isEmpty || !step.output.isEmpty {
+          Button(details ? "Hide details" : "Show details") { details.toggle() }
+            .buttonStyle(LinkButton(color: Ola.ink3, weight: .regular))
+          if details {
+            ScrollView(.horizontal, showsIndicators: false) {
+              VStack(alignment: .leading, spacing: Space.xs) {
+                Text((step.tool == "shell" || step.tool == "bash" ? "$ " : "") + step.input).foregroundStyle(Ola.ink)
+                if !step.output.isEmpty { Text(String(step.output.prefix(4000))).foregroundStyle(Ola.ink2) }
+              }
+              .font(OlaFont.mono(Metrics.mono)).lineSpacing(2).textSelection(.enabled).padding(Space.m)
             }
-            .font(OlaFont.mono(Metrics.mono)).textSelection(.enabled).padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Ola.details, in: RoundedRectangle(cornerRadius: 4))
+            .padding(.top, Space.xs)
           }
-          .frame(maxWidth: .infinity, alignment: .leading)
-          .background(Ola.details, in: RoundedRectangle(cornerRadius: 3))
-          .padding(.leading, 28)
         }
       }
+      .padding(.leading, Metrics.youColumn)
     }
-    .padding(.vertical, 6).padding(.horizontal, 6)
-    .background(step.status == .running || step.status == .preparing ? Ola.lampWash : step.status == .waiting ? Ola.vermilionWash : .clear, in: RoundedRectangle(cornerRadius: 3))
-    .padding(.horizontal, -6)
+    .padding(.vertical, Space.xs).padding(.horizontal, Space.s)
+    .background(step.status == .running || step.status == .preparing ? Ola.lampWash : step.status == .waiting ? Ola.vermilionWash : .clear, in: RoundedRectangle(cornerRadius: 4))
+    .padding(.horizontal, -Space.s)
   }
 }
 
@@ -142,18 +157,19 @@ struct ProblemView: View {
   var problem: Problem
   @State private var details = false
   var body: some View {
-    VStack(alignment: .leading, spacing: 6) {
-      Label(problem.text, systemImage: "exclamationmark.circle").font(OlaFont.sans(Metrics.ui + 0.5)).foregroundStyle(Ola.vermilionText)
+    VStack(alignment: .leading, spacing: Space.xs) {
+      Label(problem.text, systemImage: "exclamationmark.circle").font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.vermilionText)
       if let d = problem.detail, !d.isEmpty {
-        Button(details ? "Hide details" : "Show details") { details.toggle() }.buttonStyle(.plain).font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.ink3)
+        Button(details ? "Hide details" : "Show details") { details.toggle() }.buttonStyle(LinkButton(color: Ola.ink3, weight: .regular))
         if details { Text(d).font(OlaFont.mono(Metrics.mono)).foregroundStyle(Ola.ink2).textSelection(.enabled) }
       }
     }
   }
 }
 
-/// The approval. Vermilion edge, the exact command or change, and three answers. It sits over the
-/// bottom of the conversation, above the composer, until Bart answers: it cannot scroll away.
+/// The approval. A vermilion edge, the exact command or change, and three answers. It sits over the
+/// bottom of the conversation, above the composer, until Bart answers: it cannot scroll away. It is
+/// the one raised thing on the page, and the only place vermilion fills a mark.
 struct ApprovalPanel: View {
   var approval: Approval
   var answer: (OpenCodeClient.Decision) -> Void
@@ -161,60 +177,81 @@ struct ApprovalPanel: View {
   @State private var busy = false
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 12) {
-      HStack(spacing: 7) {
-        Circle().fill(Ola.vermilion).frame(width: 8, height: 8)
-        Text("Ola asks").font(OlaFont.sans(Metrics.meta + 0.5, .semibold)).foregroundStyle(Ola.vermilionText)
+    VStack(alignment: .leading, spacing: Space.m) {
+      VStack(alignment: .leading, spacing: Space.xs) {
+        HStack(spacing: 6) {
+          Circle().fill(Ola.vermilion).frame(width: 7, height: 7)
+          Text("Ola asks").font(OlaFont.sans(Metrics.meta, .semibold)).foregroundStyle(Ola.vermilionText)
+        }
+        Text(approval.title).font(OlaFont.sans(Metrics.heading, .semibold)).foregroundStyle(Ola.ink)
       }
-      Text(approval.title).font(OlaFont.sans(Metrics.ui + 6, .display)).foregroundStyle(Ola.ink)
-      VStack(alignment: .leading, spacing: 8) {
+      VStack(alignment: .leading, spacing: Space.s) {
         ForEach(Array(approval.items.enumerated()), id: \.offset) { i, item in
           VStack(alignment: .leading, spacing: 6) {
-            HStack {
-              Text(item.label).font(OlaFont.sans(Metrics.ui + 0.5, .semibold)).foregroundStyle(Ola.ink)
+            HStack(alignment: .firstTextBaseline) {
+              Text(item.label).font(OlaFont.sans(Metrics.ui, .medium)).foregroundStyle(Ola.ink)
               Spacer()
               if item.detail != nil, !item.isCommand {
                 Button(shown.contains(i) ? "Hide" : "View") { if shown.contains(i) { shown.remove(i) } else { shown.insert(i) } }
-                  .buttonStyle(.plain).font(OlaFont.sans(Metrics.ui, .medium)).foregroundStyle(Ola.blue)
+                  .buttonStyle(LinkButton())
               }
             }
             if let d = item.detail, item.isCommand || shown.contains(i) {
               ScrollView([.horizontal, .vertical]) {
-                Text(d).font(OlaFont.mono(Metrics.mono)).foregroundStyle(Ola.ink).textSelection(.enabled).fixedSize().padding(10)
+                Text(d).font(OlaFont.mono(Metrics.mono)).foregroundStyle(Ola.ink).lineSpacing(2).textSelection(.enabled).fixedSize().padding(Space.m)
               }
-              .frame(maxWidth: .infinity, maxHeight: item.isCommand ? 90 : 160, alignment: .topLeading)
+              .frame(maxWidth: .infinity, maxHeight: item.isCommand ? 88 : 150, alignment: .topLeading)
               .fixedSize(horizontal: false, vertical: true)
-              .background(Ola.details, in: RoundedRectangle(cornerRadius: 3))
+              .background(Ola.details, in: RoundedRectangle(cornerRadius: 4))
             }
           }
         }
       }
+      // One row where it fits; on a narrow Mac window the two yeses stay together and No goes
+      // under them; on a phone, full width and stacked for the thumb.
       ViewThatFits(in: .horizontal) {
-        HStack(spacing: 10) { buttons }
-        VStack(alignment: .leading, spacing: 8) { buttonRow(stacked: true) }
+        HStack(spacing: Space.s) { buttons }
+        #if os(macOS)
+        VStack(alignment: .leading, spacing: Space.s) {
+          HStack(spacing: Space.s) { yesButtons(stacked: false) }
+          noButton(stacked: false)
+        }
+        #endif
+        VStack(alignment: .leading, spacing: Space.s) { buttonRow(stacked: true) }
       }
       .disabled(busy)
+      .padding(.top, Space.xs)
     }
-    .padding(18)
+    .padding(Space.l)
     .frame(maxWidth: .infinity, alignment: .leading)
     .background(Ola.paper)
-    .overlay(alignment: .top) { Rectangle().fill(Ola.vermilion).frame(height: 4) }
-    .clipShape(RoundedRectangle(cornerRadius: 4))
-    .shadow(color: .black.opacity(0.22), radius: 18, y: 6)
-    .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(Ola.rule, lineWidth: 1))
+    .overlay(alignment: .top) { Rectangle().fill(Ola.vermilion).frame(height: 3) }
+    .clipShape(RoundedRectangle(cornerRadius: 6))
+    .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Ola.rule, lineWidth: 1))
+    .shadow(color: .black.opacity(0.16), radius: 14, y: 4)
     .onChange(of: approval.id) { _, _ in busy = false; shown = [0] }
   }
 
   var buttons: some View { buttonRow(stacked: false) }
 
-  /// Side by side where they fit; on a phone, full-width and stacked for the thumb.
+  /// Side by side where they fit; on a phone, full-width and stacked for the thumb. Yes is the
+  /// filled button (Return), No is on the far right (Escape), as in a Mac alert read left to right.
   @ViewBuilder func buttonRow(stacked: Bool) -> some View {
+    yesButtons(stacked: stacked)
+    if !stacked { Spacer(minLength: Space.s) }
+    noButton(stacked: stacked)
+  }
+
+  @ViewBuilder func yesButtons(stacked: Bool) -> some View {
     let w: CGFloat? = stacked ? .infinity : nil
-    Button { reply(.once) } label: { Text("Yes, this once").padding(.horizontal, 4).frame(maxWidth: w) }
+    Button { reply(.once) } label: { Text("Yes, this once").frame(maxWidth: w) }
       .buttonStyle(OlaButton(kind: .primary)).keyboardShortcut(.defaultAction)
     Button { reply(.always) } label: { Text("Yes, for the rest of this session").frame(maxWidth: w) }
       .buttonStyle(OlaButton(kind: .ghost))
-    Button { reply(.reject) } label: { Text("No, don\u{2019}t").frame(maxWidth: w) }
+  }
+
+  func noButton(stacked: Bool) -> some View {
+    Button { reply(.reject) } label: { Text("No, don\u{2019}t").frame(maxWidth: stacked ? .infinity : nil) }
       .buttonStyle(OlaButton(kind: .danger)).keyboardShortcut(.cancelAction)
   }
 
@@ -224,22 +261,51 @@ struct ApprovalPanel: View {
   }
 }
 
+/// Buttons: primary is the room's blue, ghost a hairline on paper, danger vermilion words on a
+/// hairline, onRoom a hairline on the blue. Native height (26 on the Mac), hover and pressed shades.
 struct OlaButton: ButtonStyle {
   enum Kind { case primary, ghost, danger, onRoom }
   var kind: Kind
-  @Environment(\.isEnabled) private var enabled
+  func makeBody(configuration: Configuration) -> some View { Styled(configuration: configuration, kind: kind) }
 
-  func makeBody(configuration: Configuration) -> some View {
-    configuration.label
-      .font(OlaFont.sans(Metrics.ui + 0.5, .semibold))
-      .padding(.horizontal, 14).padding(.vertical, 8)
-      .foregroundStyle(kind == .primary ? Ola.onRoom : kind == .danger ? Ola.vermilionText : kind == .onRoom ? Ola.onRoom : Ola.ink)
-      .background(RoundedRectangle(cornerRadius: 4).fill(kind == .primary ? Color.ola(0x25407a, 0x3a5aa0) : .clear))
-      .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(kind == .primary ? .clear : kind == .onRoom ? Ola.roomRule : Ola.rule, lineWidth: 1.5))
-      .brightness(configuration.isPressed ? -0.08 : 0)
-      .opacity(enabled ? 1 : 0.5)
-      .contentShape(Rectangle())
+  struct Styled: View {
+    var configuration: Configuration
+    var kind: Kind
+    @Environment(\.isEnabled) private var enabled
+    @State private var over = false
+    #if os(macOS)
+    let h: CGFloat = 12, v: CGFloat = 5
+    #else
+    let h: CGFloat = 16, v: CGFloat = 10
+    #endif
+
+    var fill: Color {
+      switch kind {
+      case .primary: Ola.action
+      case .onRoom: configuration.isPressed ? Ola.roomRaised : over ? Ola.roomHover : .clear
+      default: configuration.isPressed ? Ola.paperPressed : over ? Ola.paperHover : Ola.field
+      }
+    }
+
+    var body: some View {
+      configuration.label
+        .font(OlaFont.sans(Metrics.ui, kind == .primary ? .semibold : .medium))
+        .lineLimit(1)
+        .padding(.horizontal, h).padding(.vertical, v)
+        .foregroundStyle(kind == .primary ? Ola.onRoom : kind == .danger ? Ola.vermilionText : kind == .onRoom ? Ola.onRoom : Ola.ink)
+        .background(RoundedRectangle(cornerRadius: 6).fill(fill))
+        .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(kind == .primary ? .clear : kind == .onRoom ? Ola.roomRule : Ola.ruleStrong, lineWidth: 1))
+        .brightness(kind == .primary ? (configuration.isPressed ? -0.1 : over ? -0.05 : 0) : 0)
+        .opacity(enabled ? 1 : 0.45)
+        .contentShape(Rectangle())
+        .onHover { over = $0 && enabled }
+    }
   }
+}
+
+extension Ola {
+  /// A hairline that holds an edge on paper (buttons, fields): one step darker than the rule.
+  static let ruleStrong = Color.ola(0xcbbd9f, 0x4a453b)
 }
 
 /// Where Bart types. Return sends; the button turns into Stop while a run works.
@@ -251,8 +317,16 @@ struct Composer: View {
   var stop: () -> Void
   @FocusState private var focused: Bool
 
+  var empty: Bool { text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+
+  #if os(macOS)
+  let button: CGFloat = 24
+  #else
+  let button: CGFloat = 32
+  #endif
+
   var body: some View {
-    HStack(alignment: .bottom, spacing: 10) {
+    HStack(alignment: .bottom, spacing: Space.s) {
       TextField("Ask, or tell it what to do next", text: $text, axis: .vertical)
         .textFieldStyle(.plain)
         .font(OlaFont.serif(Metrics.reading))
@@ -260,22 +334,23 @@ struct Composer: View {
         .lineLimit(1...8)
         .focused($focused)
         .onSubmit { if !running { send() } }
-        .padding(.vertical, 4)
+        .padding(.vertical, 3)
       if running {
-        Button(action: stop) { Image(systemName: "stop.fill").font(.system(size: 12, weight: .bold)).frame(width: 32, height: 32) }
+        Button(action: stop) { Image(systemName: "stop.fill").font(.system(size: button * 0.38, weight: .bold)).frame(width: button, height: button) }
           .buttonStyle(.plain).foregroundStyle(Ola.onRoom).background(Circle().fill(Ola.vermilion))
           .help("Stop (\u{2318}.)").accessibilityLabel("Stop")
       } else {
-        Button(action: send) { Image(systemName: "arrow.up").font(.system(size: 14, weight: .bold)).frame(width: 32, height: 32) }
-          .buttonStyle(.plain).foregroundStyle(Ola.onRoom)
-          .background(Circle().fill(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? Ola.ink3.opacity(0.45) : Color.ola(0x25407a, 0x3a5aa0)))
-          .disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !enabled)
+        Button(action: send) { Image(systemName: "arrow.up").font(.system(size: button * 0.46, weight: .bold)).frame(width: button, height: button) }
+          .buttonStyle(.plain).foregroundStyle(empty ? Ola.ink3 : Ola.onRoom)
+          .background(Circle().fill(empty ? Ola.rule : Ola.action))
+          .disabled(empty || !enabled)
           .help("Send (Return)").accessibilityLabel("Send")
       }
     }
-    .padding(.leading, 16).padding(.trailing, 8).padding(.vertical, 8)
-    .background(RoundedRectangle(cornerRadius: 6).fill(Color.ola(0xfbf7ef, 0x252320)))
-    .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(focused ? Ola.blue.opacity(0.6) : Ola.rule, lineWidth: focused ? 1.5 : 1))
+    .padding(.leading, Space.m).padding(.trailing, 6).padding(.vertical, 6)
+    .background(RoundedRectangle(cornerRadius: 8).fill(Ola.field))
+    .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(focused ? Ola.blue.opacity(0.45) : Ola.ruleStrong, lineWidth: 1))
+    .shadow(color: .black.opacity(focused ? 0.06 : 0.03), radius: 3, y: 1)
     #if os(macOS)
     .onAppear { focused = true }
     #endif
@@ -286,27 +361,27 @@ struct Composer: View {
 struct ConversationPane: View {
   @Bindable var store: OlaStore
   @Binding var draft: String
-  var columnWidth: CGFloat = 700
-  var sidePadding: CGFloat = 40
+  var columnWidth: CGFloat = Metrics.column
+  var sidePadding: CGFloat = Space.xxl
 
   var body: some View {
     let convo = store.conversation
     VStack(spacing: 0) {
       ScrollViewReader { proxy in
         ScrollView {
-          VStack(alignment: .leading, spacing: 36) {
+          VStack(alignment: .leading, spacing: Space.xxl) {
             if let convo, !convo.turns.isEmpty {
               ForEach(Array(convo.turns.enumerated()), id: \.element.id) { i, t in TurnView(turn: t, isLast: i == convo.turns.count - 1) }
             } else if store.selectedID == nil {
               EmptyConversation(folder: store.projectFolder)
             } else {
-              ProgressView().frame(maxWidth: .infinity).padding(.top, 60)
+              ProgressView().controlSize(.small).frame(maxWidth: .infinity).padding(.top, 60)
             }
             // Room under the last turn for the approval, so it never hides what it is about.
-            Color.clear.frame(height: convo?.approval == nil ? 1 : 320).id("end")
+            Color.clear.frame(height: convo?.approval == nil ? 1 : 300).id("end")
           }
           .frame(maxWidth: columnWidth, alignment: .leading)
-          .padding(.horizontal, sidePadding).padding(.top, 28).padding(.bottom, 24)
+          .padding(.horizontal, sidePadding).padding(.top, Space.xl).padding(.bottom, Space.l)
           .frame(maxWidth: .infinity)
         }
         .modifier(ChatAnchor())
@@ -317,26 +392,27 @@ struct ConversationPane: View {
       .overlay(alignment: .bottom) {
         if let a = convo?.approval {
           ZStack(alignment: .bottom) {
-            LinearGradient(colors: [Ola.paper.opacity(0), Ola.ink.opacity(0.28)], startPoint: .top, endPoint: .bottom).allowsHitTesting(false)
+            // The conversation steps back under a wash of its own paper (no gray, no seam).
+            Ola.paper.opacity(0.5).allowsHitTesting(false)
             ApprovalPanel(approval: a) { d in Task { await store.answer(d) } }
-              .frame(maxWidth: columnWidth + 24)
-              .padding(.horizontal, sidePadding - 12).padding(.bottom, 14)
+              .frame(maxWidth: columnWidth + 2 * Space.l)
+              .padding(.horizontal, max(Space.s, sidePadding - Space.l)).padding(.bottom, Space.m)
               .transition(.move(edge: .bottom).combined(with: .opacity))
           }
         }
       }
       .animation(.easeOut(duration: 0.18), value: convo?.approval?.id)
       if let p = store.problem {
-        HStack {
+        HStack(alignment: .firstTextBaseline) {
           ProblemView(problem: p)
           Spacer()
-          Button("Dismiss") { store.problem = nil }.buttonStyle(.plain).font(OlaFont.sans(Metrics.meta, .medium)).foregroundStyle(Ola.ink3)
+          Button("Dismiss") { store.problem = nil }.buttonStyle(LinkButton(color: Ola.ink3))
         }
-        .frame(maxWidth: columnWidth).padding(.horizontal, sidePadding).padding(.top, 8)
+        .frame(maxWidth: columnWidth).padding(.horizontal, sidePadding).padding(.top, Space.s)
       }
       Composer(text: $draft, running: convo?.isRunning ?? false, enabled: store.connection == .open, send: send, stop: { Task { await store.stop() } })
         .frame(maxWidth: columnWidth)
-        .padding(.horizontal, sidePadding).padding(.top, 10).padding(.bottom, 16)
+        .padding(.horizontal, sidePadding).padding(.top, Space.s).padding(.bottom, Space.l)
     }
     .background(Ola.paper)
   }
@@ -348,15 +424,26 @@ struct ConversationPane: View {
   }
 }
 
+extension Metrics {
+  /// The reading column: at 15 pt Literata about 80 characters a line, the measure of a good chat
+  /// pane (and room for a table or a code block).
+  #if os(macOS)
+  static let column: CGFloat = 620
+  #else
+  static let column: CGFloat = 640
+  #endif
+}
+
 struct EmptyConversation: View {
   var folder: String
   var body: some View {
-    VStack(alignment: .leading, spacing: 10) {
-      Text("What should Ola do?").font(OlaFont.sans(26, .display)).foregroundStyle(Ola.ink)
+    VStack(alignment: .leading, spacing: Space.s) {
+      Text("What should Ola do?").font(OlaFont.sans(Metrics.title, .display)).foregroundStyle(Ola.ink)
       Text("It works in \(folder) on the machine, and asks before it runs a command or changes a file. Sessions you start here are on your phone too.")
-        .font(OlaFont.serif(Metrics.reading)).foregroundStyle(Ola.ink2).lineSpacing(5).fixedSize(horizontal: false, vertical: true)
+        .font(OlaFont.serif(Metrics.reading)).foregroundStyle(Ola.ink2).lineSpacing(Metrics.readingLeading).fixedSize(horizontal: false, vertical: true)
+        .frame(maxWidth: 480, alignment: .leading)
     }
-    .padding(.top, 40)
+    .padding(.top, Space.xxl)
   }
 }
 
@@ -368,32 +455,41 @@ struct ConnectForm: View {
   @State private var password = ""
   @State private var busy = false
   @State private var problem: String?
+  @FocusState private var focus: Field?
+  enum Field { case address, password }
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 16) {
-      Image("Mark").resizable().frame(width: 44, height: 44).clipShape(RoundedRectangle(cornerRadius: 10))
-      Text("Connect to your machine").font(OlaFont.sans(24, .display)).foregroundStyle(Ola.ink)
+    VStack(alignment: .leading, spacing: Space.l) {
+      HStack(spacing: Space.m) {
+        Image("Mark").resizable().frame(width: 36, height: 36).clipShape(RoundedRectangle(cornerRadius: 8))
+        Text("Connect to your machine").font(OlaFont.sans(Metrics.title, .display)).foregroundStyle(Ola.ink)
+      }
       Text("Ola runs on your own machine, and this app talks to it over Tailscale. The password is on the machine; it goes into this device\u{2019}s Keychain.")
-        .font(OlaFont.serif(Metrics.reading - 0.5)).foregroundStyle(Ola.ink2).lineSpacing(4).fixedSize(horizontal: false, vertical: true)
+        .font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.ink2).lineSpacing(2).fixedSize(horizontal: false, vertical: true)
       VStack(alignment: .leading, spacing: 6) {
         Text("Address").font(OlaFont.sans(Metrics.meta, .semibold)).foregroundStyle(Ola.ink2)
-        TextField("http://admins-mac-mini.tailde799a.ts.net:4310", text: $address).textFieldStyle(.plain).font(OlaFont.mono(Metrics.ui)).field()
+        TextField("http://admins-mac-mini.tailde799a.ts.net:4310", text: $address).textFieldStyle(.plain).font(OlaFont.mono(Metrics.mono))
+          .focused($focus, equals: .address).field(focused: focus == .address)
           #if os(iOS)
           .keyboardType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled()
           #endif
-        Text("Password").font(OlaFont.sans(Metrics.meta, .semibold)).foregroundStyle(Ola.ink2).padding(.top, 6)
-        SecureField("From ola-bart.sh password", text: $password).textFieldStyle(.plain).font(OlaFont.sans(Metrics.ui)).field().onSubmit(connect)
+        Text("Password").font(OlaFont.sans(Metrics.meta, .semibold)).foregroundStyle(Ola.ink2).padding(.top, Space.xs)
+        SecureField("From ola-bart.sh password", text: $password).textFieldStyle(.plain).font(OlaFont.sans(Metrics.ui))
+          .focused($focus, equals: .password).field(focused: focus == .password).onSubmit(connect)
       }
-      if let problem { Text(problem).font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.vermilionText).fixedSize(horizontal: false, vertical: true) }
-      HStack {
-        if busy { ProgressView().controlSize(.small) }
+      if let problem {
+        Label(problem, systemImage: "exclamationmark.circle").font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.vermilionText).fixedSize(horizontal: false, vertical: true)
+      }
+      HStack(spacing: Space.s) {
+        if busy { ProgressView().controlSize(.small); Text("Connecting\u{2026}").font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.ink3) }
         Spacer()
         Button("Connect", action: connect).buttonStyle(OlaButton(kind: .primary)).keyboardShortcut(.defaultAction)
           .disabled(busy || password.isEmpty || URL(string: address)?.host == nil)
       }
     }
-    .padding(28)
+    .padding(Space.xl)
     .background(Ola.paper)
+    .onAppear { focus = .password }
   }
 
   func connect() {
@@ -415,10 +511,18 @@ struct ConnectForm: View {
 }
 
 extension View {
-  func field() -> some View {
-    padding(.horizontal, 12).padding(.vertical, 9)
-      .background(RoundedRectangle(cornerRadius: 4).fill(Color.ola(0xfbf7ef, 0x252320)))
-      .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(Ola.rule, lineWidth: 1))
+  /// A text field on paper: a lighter field, a hairline, and when focused the system's focus ring
+  /// (its color, about 3 pt, outside the edge).
+  func field(focused: Bool = false) -> some View {
+    #if os(macOS)
+    let h: CGFloat = 8, v: CGFloat = 5
+    #else
+    let h: CGFloat = 12, v: CGFloat = 10
+    #endif
+    return padding(.horizontal, h).padding(.vertical, v)
+      .background(RoundedRectangle(cornerRadius: 5).fill(Ola.field))
+      .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(focused ? Color.olaFocus : Ola.ruleStrong, lineWidth: 1))
+      .overlay(RoundedRectangle(cornerRadius: 7).stroke(Color.olaFocus.opacity(focused ? 0.4 : 0), lineWidth: 3).padding(-1.5))
   }
 }
 
@@ -433,34 +537,45 @@ struct ChatAnchor: ViewModifier {
   }
 }
 
-/// A line under the toolbar when the machine does not answer.
+/// A line under the toolbar when the machine does not answer: what is wrong, how long, and the one
+/// thing to do.
 struct ConnectionBar: View {
   var store: OlaStore
   var body: some View {
     switch store.connection {
     case .lost(let since, _):
-      HStack(spacing: 10) {
-        Image(systemName: "wifi.exclamationmark").foregroundStyle(Ola.vermilion)
+      bar(icon: "wifi.exclamationmark") {
         TimelineView(.periodic(from: .now, by: 5)) { ctx in
-          Text(store.config?.viaMac == true
-            ? "Your Mac is not reachable. Ola on your phone works through the Mac app."
-            : "The machine is not answering (\(Int(ctx.date.timeIntervalSince(since)))\u{2009}s). Is it on, and is this device on Tailscale? Trying again.")
+          (Text("The machine is not answering. ").font(OlaFont.sans(Metrics.ui, .semibold))
+           + Text("Is it on, and is this device on Tailscale? Trying again (\(waited(ctx.date.timeIntervalSince(since)))).").font(OlaFont.sans(Metrics.ui)))
+            .monospacedDigit().lineLimit(2)
         }
-        Spacer()
-        Button("Try again") { store.reconnect() }.buttonStyle(.plain).fontWeight(.semibold)
+      } action: {
+        Button("Try Now") { store.reconnect() }.buttonStyle(OlaButton(kind: .onRoom))
       }
-      .font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.onRoom)
-      .padding(.horizontal, 16).padding(.vertical, 9).background(Ola.roomRaised)
     case .refused:
-      HStack(spacing: 10) {
-        Image(systemName: "lock").foregroundStyle(Ola.vermilion)
-        Text("The machine refused the saved password. Connect again with the new one.")
-        Spacer()
-      }
-      .font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.onRoom)
-      .padding(.horizontal, 16).padding(.vertical, 9).background(Ola.roomRaised)
+      bar(icon: "lock") {
+        (Text("The machine refused the saved password. ").font(OlaFont.sans(Metrics.ui, .semibold)) + Text("Connect again with the new one.").font(OlaFont.sans(Metrics.ui)))
+      } action: { EmptyView() }
     default:
       EmptyView()
     }
+  }
+
+  /// "40 s", then "3 min": how long the machine has been quiet.
+  func waited(_ s: TimeInterval) -> String {
+    s < 60 ? "\(Int(s))\u{2009}s" : "\(Int(s / 60))\u{2009}min"
+  }
+
+  func bar<T: View, A: View>(icon: String, @ViewBuilder text: () -> T, @ViewBuilder action: () -> A) -> some View {
+    HStack(spacing: Space.m) {
+      Image(systemName: icon).font(.system(size: Metrics.ui, weight: .semibold)).foregroundStyle(Ola.vermilion)
+      text().foregroundStyle(Ola.onRoom)
+      Spacer(minLength: Space.s)
+      action()
+    }
+    .padding(.horizontal, Space.l).padding(.vertical, Space.s)
+    .background(Ola.roomRaised)
+    .overlay(alignment: .bottom) { Rectangle().fill(Ola.roomRule).frame(height: 1) }
   }
 }

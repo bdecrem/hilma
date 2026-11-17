@@ -3,10 +3,13 @@ import SwiftUI
 
 /// The window as the app lays it out (sidebar, conversation, files, the title line), drawn
 /// without NavigationSplitView: its glass sidebar and toolbar do not draw into an off-screen
-/// bitmap. The views inside are the app's own.
+/// bitmap. The views inside, and the paper modifiers, are the app's own; the title line and the
+/// window buttons are drawn to the system's sizes (13 semibold title, 11 subtitle, 52-point bar).
 struct SnapshotFrame: View {
   var store: OlaStore
   var treatment: Treatment
+  var sidebarWidth: CGFloat = 232
+  var filesWidth: CGFloat = 248
   @State private var draft = ""
 
   var body: some View {
@@ -16,42 +19,31 @@ struct SnapshotFrame: View {
           .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 20).frame(height: 52)
         Sidebar(store: store)
       }
-      .frame(width: 260)
+      .frame(width: sidebarWidth)
       .background(Ola.room)
       VStack(spacing: 0) {
         titleLine
         ConnectionBar(store: store)
-        if treatment == .sheet {
-          HStack(spacing: 12) {
-            ConversationPane(store: store, draft: $draft, sidePadding: 48).clipShape(RoundedRectangle(cornerRadius: 3)).shadow(color: .black.opacity(0.25), radius: 10, y: 3)
-            FilesPanel(store: store).frame(width: 290).clipShape(RoundedRectangle(cornerRadius: 3)).shadow(color: .black.opacity(0.25), radius: 10, y: 3)
-          }
-          .padding([.horizontal, .bottom], 12)
-        } else {
-          HStack(spacing: 0) {
-            ConversationPane(store: store, draft: $draft)
-            Rectangle().fill(Ola.rule).frame(width: 1)
-            FilesPanel(store: store).frame(width: 290)
-          }
+        HStack(spacing: 0) {
+          ConversationPane(store: store, draft: $draft).conversationPaper(treatment, filesShown: true)
+          FilesPanel(store: store).filesPaper(treatment).frame(width: filesWidth)
         }
       }
-      .background(treatment == .sheet ? Ola.room : Ola.paper)
+      .background(Ola.room)
     }
   }
 
   var titleLine: some View {
-    let onRoom = treatment == .sheet
-    return HStack(spacing: 10) {
+    HStack(spacing: 10) {
       VStack(alignment: .leading, spacing: 1) {
-        Text(store.selected?.title ?? "New session").font(.system(size: 13.5, weight: .semibold)).foregroundStyle(onRoom ? Ola.onRoom : Ola.ink)
-        Text(store.running.isEmpty ? "On the machine" : "On the machine \u{00B7} \(store.running.count) working").font(.system(size: 11)).foregroundStyle(onRoom ? Ola.dim : Ola.ink3)
+        Text(store.selected?.title ?? "New session").font(.system(size: 13, weight: .semibold)).foregroundStyle(Ola.onRoom)
+        Text(MacRoot.subtitle(store)).font(.system(size: 11)).foregroundStyle(Ola.dim)
       }
       Spacer()
-      Image(systemName: "sidebar.right").font(.system(size: 14)).foregroundStyle(onRoom ? Ola.mist : Ola.ink2)
-        .frame(width: 34, height: 28).background(RoundedRectangle(cornerRadius: 7).fill(onRoom ? Ola.roomRaised : Ola.details))
+      Image(systemName: "sidebar.right").font(.system(size: 13)).foregroundStyle(Ola.mist)
+        .frame(width: 32, height: 28).background(Capsule().fill(Ola.roomRaised))
     }
-    .padding(.horizontal, 18).frame(height: 52)
-    .background(onRoom ? Ola.room : Ola.paper)
-    .overlay(alignment: .bottom) { if !onRoom { Rectangle().fill(Ola.rule).frame(height: 1) } }
+    .padding(.leading, Sheet.gap + 8).padding(.trailing, 12).frame(height: 52)
+    .background(Ola.room)
   }
 }
