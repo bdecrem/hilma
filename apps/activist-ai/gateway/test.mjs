@@ -123,12 +123,12 @@ async function gateway(env) {
   return g
 }
 const chat = (cmd = {}, model = 'general', extra = {}) => ({ model, messages: [{ role: 'user', content: JSON.stringify(cmd) }], ...extra })
-async function call(g, token, body, { signal, path: p = '/v1/chat/completions', method = 'POST' } = {}) {
+async function call(g, token, body, { signal, path: p = '/v1/chat/completions', method = 'POST', headers = {} } = {}) {
   const t0 = Date.now()
   const res = await fetch(g.url + p, {
     method,
     signal,
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', ...headers },
     body: method === 'POST' ? (typeof body === 'string' ? body : JSON.stringify(body)) : undefined,
   })
   const text = await res.text()
@@ -174,7 +174,12 @@ test('refuses to start on bad config, without printing secrets', async () => {
 test('only the gateway names reach the model server, mapped; nothing of the caller passes upstream', async () => {
   const up = await fakeUpstream()
   const g = await gateway(baseEnv(up.url))
-  for (const bad of ['gpt-4', 'up/general-1', 'code', 'General', 'general\n', 42, null, ['general']]) {
+  // A known name with no server here answers one plain sentence, and nothing goes upstream.
+  const unset = await call(g, T.a, chat({}, 'code'))
+  assert.equal(unset.status, 503)
+  assert.equal(unset.json.error.type, 'not_configured')
+  assert.match(unset.json.error.message, /not set up on this machine/)
+  for (const bad of ['gpt-4', 'up/general-1', 'General', 'general\n', 42, null, ['general']]) {
     const r = await call(g, T.a, chat({}, bad))
     assert.equal(r.status, 400, `model ${JSON.stringify(bad)}`)
     assert.ok(!r.text.includes('gpt-4'), 'the caller string is not echoed')
@@ -490,7 +495,7 @@ test('log lines cannot be injected or carry content', async () => {
   await waitFor(() => g.logs().length >= 8, 3000, 'eight log lines')
   const raw = g.out
   for (const word of ['INJECTED', 'root', 'SECRET-PROMPT', 'SECRET-REPLY', 'xxxxxxxx', T.a, UPSTREAM_KEY]) assert.ok(!raw.includes(word), `the log contains ${word.slice(0, 12)}`)
-  const KEYS = ['caller', 'estimated', 'model', 'ms', 'route', 'status', 't', 'tokens_in', 'tokens_out', 'tries', 'wait_ms', 'why']
+  const KEYS = ['caller', 'estimated', 'lane', 'model', 'ms', 'route', 'status', 't', 'tokens_in', 'tokens_out', 'tries', 'wait_ms', 'why']
   for (const line of raw.split('\n').filter(Boolean)) {
     assert.ok(line.length < 400, 'a line stays short')
     const l = JSON.parse(line)
@@ -498,6 +503,7 @@ test('log lines cannot be injected or carry content', async () => {
     assert.deepEqual(Object.keys(l).sort(), KEYS)
     assert.ok(['-', 'a', 'b', 'c', 'usage'].includes(l.caller))
     assert.ok(['-', 'general', 'fast', 'code'].includes(l.model))
+    assert.ok([null, 'interactive', 'batch'].includes(l.lane))
     assert.ok(['chat', 'models', 'usage', 'other'].includes(l.route))
     for (const k of ['status', 'tries', 'ms']) assert.equal(typeof l[k], 'number')
     assert.ok(l.why === null || /^[a-z0-9 ,'-]+$/i.test(l.why), `why is from the fixed vocabulary: ${l.why}`)
@@ -1352,5 +1358,282 @@ test('batch jobs: refused without the job’s grant; their own budget, not the w
     await waitFor(async () => (await laneCall(g, k.one, chat({ tag: 'b10' }), JOB)).status === 403, 5000, 'the grant taken back')
   } finally {
     await g.stop()
+  }
+})
+
+// ---------------------------------------------------------------- specialists (2026-11-17)
+// A fake specialist server: chat (records the messages), embeddings, rerank, transcriptions and
+// images, each in its provider's shape with extras the gateway must drop.
+const PNG1 = Buffer.from('89504e470d0a1a0a0000000d4948445200000001000000010806000000', 'hex')
+async function fakeSpecialists() {
+  const st = { seen: [], gate: null }
+  const server = http.createServer(async (req, res) => {
+    const chunks = []
+    for await (const c of req) chunks.push(c)
+    const raw = Buffer.concat(chunks)
+    const p = new URL(req.url, 'http://x').pathname
+    const isJson = String(req.headers['content-type']).startsWith('application/json')
+    const body = isJson ? JSON.parse(raw.toString()) : null
+    st.seen.push({ path: p, auth: req.headers.authorization, type: req.headers['content-type'], body, raw: isJson ? null : raw.toString('latin1') })
+    if (st.gate) await st.gate
+    const json = (o) => res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify(o))
+    if (p.endsWith('/chat/completions')) return json({ id: 's1', choices: [{ index: 0, message: { role: 'assistant', content: `seen ${body.model}` }, finish_reason: 'stop' }], usage: { prompt_tokens: 100, completion_tokens: 10 } })
+    if (p.endsWith('/embeddings')) return json({ object: 'list', model: body.model, data: body.input.map((_, i) => ({ object: 'embedding', index: i, embedding: [0.1, -0.2, i], extra: 'x' })), usage: { prompt_tokens: 7, total_tokens: 7 }, secret: 'dropped' })
+    if (p.endsWith('/rerank')) return json({ model: body.model, results: [{ index: 1, relevance_score: 0.9, document: { text: 'leak' } }, { index: 0, relevance_score: 0.1 }, { index: 99, relevance_score: 1 }] })
+    if (p.endsWith('/audio/transcriptions')) return json({ text: 'Hello there.', language: 'en', duration: 120, segments: [{ start: 0, end: 1.5, text: 'Hello there.', speaker: 'SPEAKER_00', tokens: [1, 2] }] })
+    if (p.endsWith('/images/generations')) return json({ data: [{ b64_json: (body.prompt.includes('notapic') ? Buffer.from('<html>') : PNG1).toString('base64'), url: 'https://cdn.example/x.png' }] })
+    res.writeHead(404).end()
+  })
+  await new Promise((r) => server.listen(0, '127.0.0.1', r))
+  upstreams.push(server)
+  return { st, url: `http://127.0.0.1:${server.address().port}/v1` }
+}
+const IMG_URL = `data:image/png;base64,${PNG1.toString('base64')}`
+const seeMsg = (url = IMG_URL) => [{ role: 'user', content: [{ type: 'text', text: 'what is in it?' }, { type: 'image_url', image_url: { url } }] }]
+
+test('specialists: each name has its own server and key; pictures only as data, only to names that take them; unset names say so', async () => {
+  const up = await fakeUpstream()
+  const sp = await fakeSpecialists()
+  const SEEKEY = `see-${tok()}`
+  const g = await gateway({ ...baseEnv(up.url), GATEWAY_MODELS: `${MODELS},see=vl/see-1,translate=up/tr-1,ocr=vl/ocr-1`, GATEWAY_UPSTREAMS: `see=${sp.url},ocr=${sp.url}`, UPSTREAM_API_KEY_SEE: SEEKEY })
+  try {
+    const r = await call(g, T.a, { model: 'see', messages: seeMsg() })
+    assert.equal(r.status, 200)
+    assert.equal(r.json.model, 'see')
+    const s = sp.st.seen.at(-1)
+    assert.equal(s.body.model, 'vl/see-1', 'the upstream id, never the name')
+    assert.equal(s.auth, `Bearer ${SEEKEY}`, 'its own key')
+    assert.equal((await call(g, T.a, { model: 'ocr', messages: seeMsg() })).status, 200)
+    assert.equal(sp.st.seen.at(-1).auth, undefined, 'a loopback server with no key gets no Authorization header')
+    // A link would make the model server fetch from the internet: refused for every name.
+    for (const url of ['https://evil.example/x.png?leak=secret', 'http://127.0.0.1/x.png', 'data:text/html;base64,PGh0bWw+']) {
+      const bad = await call(g, T.a, { model: 'see', messages: seeMsg(url) })
+      assert.equal(bad.status, 400, url)
+      assert.match(bad.json.error.message, /data:image/)
+    }
+    const many = await call(g, T.a, { model: 'see', messages: [{ role: 'user', content: Array.from({ length: 9 }, () => ({ type: 'image_url', image_url: { url: IMG_URL } })) }] })
+    assert.equal(many.status, 400, 'at most 8 pictures')
+    const toGeneral = await call(g, T.a, { model: 'general', messages: seeMsg() })
+    assert.equal(toGeneral.status, 400, 'the everyday model takes no pictures')
+    assert.match(toGeneral.json.error.message, /use see/)
+    assert.equal((await call(g, T.a, { model: 'general', messages: [{ role: 'user', content: [{ type: 'input_audio', input_audio: {} }] }] })).status, 400, 'no other part types')
+    // translate: the gateway's own instructions go first; the everyday server, the everyday key.
+    const tr = await call(g, T.a, chat({ tag: 'tr' }, 'translate'))
+    assert.equal(tr.status, 200)
+    assert.equal(up.st.seen.at(-1).model, 'up/tr-1')
+    assert.equal(up.st.seen.at(-1).auth, `Bearer ${UPSTREAM_KEY}`)
+    // Names known but not set up here: one plain sentence each, nothing sent.
+    const before = sp.st.seen.length + up.st.seen.length
+    for (const [name, p, body] of [['read', '/v1/chat/completions', chat({}, 'read')], ['embed', '/v1/embeddings', { input: 'x' }], ['rerank', '/v1/rerank', { query: 'q', documents: ['a'] }], ['transcribe', '/v1/audio/transcriptions', {}], ['draw', '/v1/images/generations', { prompt: 'a heron' }]]) {
+      const x = await call(g, T.a, body, { path: p })
+      assert.equal(x.status, 503, name)
+      assert.equal(x.json.error.type, 'not_configured')
+      assert.match(x.json.error.message, /^No .* set up on this machine yet/, name)
+    }
+    assert.equal(sp.st.seen.length + up.st.seen.length, before, 'nothing went upstream')
+    const models = await call(g, T.a, null, { method: 'GET', path: '/v1/models' })
+    assert.deepEqual(models.json.data.map((m) => [m.id, m.images]), [['general', false], ['fast', false], ['see', true], ['translate', false], ['ocr', true]])
+    assert.ok(!g.out.includes(SEEKEY) && !g.err.includes(SEEKEY))
+  } finally {
+    await g.stop()
+  }
+})
+
+test('specialists: embed, rerank, transcribe and draw are built here, rebuilt on the way back, and counted', async () => {
+  const sp = await fakeSpecialists()
+  const g = await gateway({ ...baseEnv(sp.url), GATEWAY_MODELS: 'general=up/general-1,embed=e/emb-1,rerank=r/rr-1,transcribe=w/asr-1,draw=z/img-1' })
+  try {
+    const e = await call(g, T.a, { model: 'embed', input: ['one', 'two'], user: 'alice', encoding_format: 'base64' }, { path: '/v1/embeddings' })
+    assert.equal(e.status, 200)
+    assert.deepEqual(e.json, { object: 'list', model: 'embed', data: [{ object: 'embedding', index: 0, embedding: [0.1, -0.2, 0] }, { object: 'embedding', index: 1, embedding: [0.1, -0.2, 1] }], usage: { prompt_tokens: 7, total_tokens: 7 } })
+    assert.deepEqual(Object.keys(sp.st.seen.at(-1).body).sort(), ['input', 'model'], 'only the listed fields go upstream')
+    assert.equal(sp.st.seen.at(-1).body.model, 'e/emb-1')
+    assert.equal((await call(g, T.a, { model: 'general', input: 'x' }, { path: '/v1/embeddings' })).status, 400, 'another name on this route')
+    assert.equal((await call(g, T.a, { input: [] }, { path: '/v1/embeddings' })).status, 400)
+    const r = await call(g, T.a, { query: 'boilers', documents: ['a', 'b'], return_documents: true }, { path: '/v1/rerank' })
+    assert.equal(r.status, 200)
+    assert.deepEqual(r.json.results, [{ index: 1, relevance_score: 0.9 }, { index: 0, relevance_score: 0.1 }], 'no documents back, no index out of range')
+    assert.equal(sp.st.seen.at(-1).body.return_documents, false)
+    const t = await call(g, T.a, { audio: Buffer.alloc(4000, 7).toString('base64'), format: 'mp3', language: 'en' }, { path: '/v1/audio/transcriptions' })
+    assert.equal(t.status, 200)
+    assert.deepEqual(t.json.segments, [{ start: 0, end: 1.5, text: 'Hello there.', speaker: 'SPEAKER_00' }])
+    const tseen = sp.st.seen.at(-1)
+    assert.match(tseen.type, /^multipart\/form-data; boundary=/)
+    assert.ok(tseen.raw.includes('name="model"\r\n\r\nw/asr-1') && tseen.raw.includes('filename="audio.mp3"'))
+    assert.equal((await call(g, T.a, { audio: 'AAAA', format: 'exe' }, { path: '/v1/audio/transcriptions' })).status, 400)
+    const d = await call(g, T.a, { prompt: 'a heron at dawn', size: '512x512' }, { path: '/v1/images/generations' })
+    assert.equal(d.status, 200)
+    assert.deepEqual(d.json.data, [{ b64_json: PNG1.toString('base64'), type: 'png' }], 'the picture only, no link')
+    assert.equal(sp.st.seen.at(-1).body.response_format, 'b64_json')
+    assert.equal((await call(g, T.a, { prompt: 'notapic' }, { path: '/v1/images/generations' })).status, 502, 'anything but a picture is refused')
+    assert.equal((await call(g, T.a, { prompt: 'x', size: '99999x1' }, { path: '/v1/images/generations' })).status, 400)
+    // The quota: the server's counts, or the fixed estimates (1,000 a minute of audio, 5,000 a picture).
+    const u = await call(g, T.a, null, { method: 'GET', path: '/v1/usage' })
+    assert.equal(u.json.by_model.embed.tokens_in, 7)
+    assert.equal(u.json.by_model.transcribe.tokens_in, 2000)
+    assert.equal(u.json.by_model.draw.tokens_out, 5000 * 4, 'every try is charged, the refused picture too')
+    const lines = g.logs().filter((l) => ['embed', 'rerank', 'transcribe', 'draw'].includes(l.route))
+    assert.ok(lines.length >= 9 && lines.every((l) => l.route === l.model))
+    assert.ok(lines.filter((l) => l.route === 'transcribe' && l.status === 200).every((l) => l.lane === 'batch'), 'transcribe is batch work')
+    assert.ok(!g.out.includes('heron') && !g.out.includes('boilers') && !g.out.includes('Hello there'), 'no content in the log')
+  } finally {
+    await g.stop()
+  }
+})
+
+test('lanes: a person waiting is served before batch work; batch holds at most its share; each name has its own pool', async () => {
+  const sp = await fakeSpecialists()
+  const g = await gateway({ ...baseEnv(sp.url), GATEWAY_MODELS: 'general=up/general-1,read=up/read-1,see=up/see-1', GATEWAY_MAX_INFLIGHT: '2', GATEWAY_BATCH_MAX_INFLIGHT: '1', GATEWAY_LIMITS: 'see:pool=1' })
+  try {
+    let open
+    sp.st.gate = new Promise((r) => (open = r))
+    const go = (token, body, headers = {}) => fetch(`${g.url}/v1/chat/completions`, { method: 'POST', headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json', ...headers }, body: JSON.stringify(body) }).then((r) => r.status)
+    // Batch holds one slot at most, even with two free (read is batch work by its name).
+    const b1 = go(T.a, chat({}, 'read'))
+    await waitFor(() => sp.st.seen.length === 1, 3000, 'the first batch request upstream')
+    const b2 = go(T.a, { ...chat({}, 'read'), max_tokens: 7 })
+    await sleep(200)
+    assert.equal(sp.st.seen.length, 1, 'batch holds at most GATEWAY_BATCH_MAX_INFLIGHT')
+    // The other slot is a person's: served at once, while b2 still waits.
+    const i1 = go(T.b, { model: 'see', messages: seeMsg() })
+    await waitFor(() => sp.st.seen.length === 2, 3000, 'the interactive request upstream')
+    // Both slots busy. A batch request (b2) and then two interactive see requests wait; see's pool is 1.
+    const i2 = go(T.c, { model: 'see', messages: seeMsg() })
+    const i3 = go(T.c, chat({}, 'general'))
+    await sleep(200)
+    assert.equal(sp.st.seen.length, 2)
+    const gate2 = new Promise((r) => (open.next = r))
+    sp.st.gate = gate2
+    open() // the first two finish; the next two slots go to the people (i3; i2 after see frees), b2 last
+    await waitFor(() => sp.st.seen.length >= 4, 3000, 'the next two')
+    const third = sp.st.seen.slice(2, 4).map((s) => s.body.model).sort()
+    assert.deepEqual(third, ['up/general-1', 'up/see-1'], 'the people before the batch')
+    sp.st.gate = null
+    open.next()
+    assert.deepEqual(await Promise.all([b1, b2, i1, i2, i3]), [200, 200, 200, 200, 200])
+    assert.equal(sp.st.seen.at(-1).body.model, 'up/read-1', 'the waiting batch request went last')
+    await waitFor(() => g.logs().filter((l) => l.route === 'chat').length >= 5, 3000, 'five log lines')
+    const lanes = g.logs().filter((l) => l.route === 'chat').map((l) => `${l.model}:${l.lane}`)
+    assert.ok(lanes.filter((l) => l === 'read:batch').length === 2 && lanes.includes('general:interactive') && lanes.includes('see:interactive'))
+    // A caller cannot raise read out of the batch line; a batch header with no job's grant is refused (batch.mjs).
+    assert.equal((await call(g, T.a, chat({}, 'general'), { headers: { 'X-Ola-Lane': 'batch' } })).status, 403)
+    await call(g, T.a, chat({}, 'read'), { headers: { 'X-Ola-Lane': 'interactive' } })
+    assert.ok(g.logs().filter((l) => l.model === 'read').every((l) => l.lane === 'batch'))
+  } finally {
+    await g.stop()
+  }
+})
+
+test('specialists: per-minute limits per name, settings checked at start', async () => {
+  const sp = await fakeSpecialists()
+  const g = await gateway({ ...baseEnv(sp.url), GATEWAY_MODELS: 'general=up/general-1,route=up/r-1', GATEWAY_LIMITS: 'route:per_minute=2' })
+  try {
+    assert.equal((await call(g, T.a, chat({}, 'route'))).status, 200)
+    assert.equal((await call(g, T.a, chat({}, 'route'))).status, 200)
+    const third = await call(g, T.a, chat({}, 'route'))
+    assert.equal(third.status, 429)
+    assert.equal(third.headers.get('retry-after'), '60')
+    assert.equal((await call(g, T.b, chat({}, 'route'))).status, 200, 'another caller has its own minute')
+    assert.ok(sp.st.seen.some((s) => s.body.messages[0].role === 'system' && /exactly one label/.test(s.body.messages[0].content)), 'route gets its fixed instructions first')
+  } finally {
+    await g.stop()
+  }
+  for (const [extra, says] of [
+    [{ GATEWAY_UPSTREAMS: 'see=https://x.example/v1', GATEWAY_MODELS: 'general=a,see=b' }, /needs UPSTREAM_API_KEY_SEE/],
+    [{ GATEWAY_UPSTREAMS: 'see=http://10.0.0.5/v1', GATEWAY_MODELS: 'general=a,see=b' }, /plain http only on this machine/],
+    [{ GATEWAY_UPSTREAMS: 'see=http://127.0.0.1:9/v1', GATEWAY_MODELS: 'general=a' }, /model id in GATEWAY_MODELS/],
+    [{ UPSTREAM_API_KEY_SEE: 'k'.repeat(30) }, /no server of its own/],
+    [{ UPSTREAM_API_KEY_BOGUS: 'k'.repeat(30) }, /names no model/],
+    [{ GATEWAY_LIMITS: 'general:images=2' }, /only for names that take pictures/],
+    [{ GATEWAY_LIMITS: 'see:lane=fast' }, /lane is interactive or batch/],
+    [{ GATEWAY_MODELS: 'general=a,see=b', GATEWAY_LIMITS: 'see:body=64m' }, /more than GATEWAY_MAX_TOTAL_BODY_BYTES/],
+    [{ GATEWAY_BATCH_MAX_INFLIGHT: '9' }, /cannot be more than GATEWAY_MAX_INFLIGHT/],
+  ]) {
+    const x = run({ ...baseEnv('http://127.0.0.1:9/v1'), ...extra })
+    await waitFor(() => x.code !== undefined, 5000, 'the gateway to refuse')
+    assert.equal(x.code, 1)
+    assert.match(x.err, says)
+    assert.ok(!x.err.includes('k'.repeat(30)), 'no key printed')
+  }
+})
+
+// A fake Crossref, Unpaywall and OpenAlex on one port: paths tell them apart.
+async function fakeScholar() {
+  const st = { seen: [] }
+  const server = http.createServer((req, res) => {
+    const u = new URL(req.url, 'http://x')
+    st.seen.push({ path: decodeURIComponent(u.pathname), params: Object.fromEntries(u.searchParams), ua: req.headers['user-agent'] })
+    const json = (o, s = 200) => res.writeHead(s, { 'content-type': 'application/json' }).end(JSON.stringify(o))
+    const work = { DOI: '10.5555/made.up.1', title: ['Boilers and <i>tenants</i>: a made-up study'], author: [{ given: 'Ana', family: 'Lindqvist' }, { given: 'Ravi', family: 'Okafor' }], issued: { 'date-parts': [[2031, 3]] }, 'container-title': ['Journal of Made-Up Housing'], type: 'journal-article', reference: [{ secret: 'dropped' }] }
+    const p = decodeURIComponent(u.pathname)
+    if (p === '/crossref/works') return json({ message: { items: [{ ...work, DOI: '10.5555/other', title: ['Something else entirely'] }, work] } })
+    if (p === '/crossref/works/10.5555/made.up.1') return json({ message: work })
+    if (p.startsWith('/crossref/works/')) return json({ status: 'error' }, 404)
+    if (p === '/openalex/works/doi:10.5555/only.openalex') return json({ display_name: 'Only in OpenAlex', doi: 'https://doi.org/10.5555/only.openalex', publication_year: 2030, authorships: [{ author: { display_name: 'Tomas Brandt' } }], best_oa_location: { pdf_url: 'https://repo.example/oa.pdf', version: 'acceptedVersion' } })
+    if (p.startsWith('/openalex/')) return json({}, 404)
+    if (p === '/unpaywall/v2/10.5555/made.up.1') return json({ is_oa: true, best_oa_location: { url: 'https://repo.example/paper', url_for_pdf: 'https://repo.example/paper.pdf', url_for_landing_page: 'https://repo.example/paper', version: 'publishedVersion', license: 'cc-by', host_type: 'repository', evidence: 'dropped' } })
+    return json({}, 404)
+  })
+  await new Promise((r) => server.listen(0, '127.0.0.1', r))
+  upstreams.push(server)
+  const base = `http://127.0.0.1:${server.address().port}`
+  return { st, env: `crossref=${base}/crossref,unpaywall=${base}/unpaywall,openalex=${base}/openalex` }
+}
+
+test('scholarly lookup: refused without the project’s yes; with it, fixed indexes, a polite contact, a rebuilt reply, and no citation in the log', async () => {
+  const sch = await fakeScholar()
+  const { g, k, file } = await webGateway({ GATEWAY_SCHOLAR_CONTACT: 'lookups@ola.example', GATEWAY_SCHOLAR_UPSTREAMS: sch.env })
+  try {
+    const CIT = 'Lindqvist A, Okafor R (2031) Boilers and tenants: a made-up study. J Made-Up Housing'
+    const off = await webCall(g, k.one, 'lookup', { q: CIT })
+    assert.equal(off.status, 403)
+    assert.equal(off.json.error.type, 'web_not_approved')
+    assert.match(off.json.error.message, /run ola-lookup on its own/)
+    assert.equal(sch.st.seen.length, 0, 'nothing reached the indexes')
+    // A search grant is not a lookup grant.
+    writeGrants(file, { 'ws-one': { once: [{ id: 'c'.repeat(32), kind: 'search', h: itemHash('search', searchItem(CIT)), exp: Date.now() + 60_000 }] } })
+    assert.equal((await webCall(g, k.one, 'lookup', { q: CIT })).status, 403)
+    writeGrants(file, { 'ws-one': { once: [{ id: 'd'.repeat(32), kind: 'lookup', h: itemHash('lookup', searchItem(CIT)), exp: Date.now() + 60_000 }] } })
+    const on = await webCall(g, k.one, 'lookup', { q: CIT })
+    assert.equal(on.status, 200)
+    assert.equal(on.json.kind, 'citation')
+    const best = on.json.results[0]
+    assert.deepEqual({ ...best, open_copy: undefined }, { title: 'Boilers and tenants: a made-up study', authors: ['Ana Lindqvist', 'Ravi Okafor'], more_authors: 0, year: 2031, doi: '10.5555/made.up.1', venue: 'Journal of Made-Up Housing', type: 'journal-article', open_copy: undefined, match: 1, is_open: true })
+    assert.deepEqual(best.open_copy, { url: 'https://repo.example/paper.pdf', pdf: true, landing_page: 'https://repo.example/paper', version: 'publishedVersion', license: 'cc-by', host: 'repository', from: 'Unpaywall' })
+    assert.deepEqual(on.json.sources, ['Crossref', 'Unpaywall'])
+    assert.equal((await webCall(g, k.one, 'lookup', { q: CIT })).status, 403, 'once is once')
+    const cr = sch.st.seen.find((s) => s.path === '/crossref/works')
+    assert.equal(cr.params.mailto, 'lookups@ola.example')
+    assert.equal(cr.params['query.bibliographic'], CIT)
+    assert.match(cr.ua, /mailto:lookups@ola\.example/)
+    assert.equal(sch.st.seen.find((s) => s.path.startsWith('/unpaywall')).params.email, 'lookups@ola.example')
+    // A DOI: Crossref by DOI; one Crossref does not know goes to OpenAlex.
+    writeGrants(file, { 'ws-one': { always: true } })
+    const d = await webCall(g, k.one, 'lookup', { q: 'see doi:10.5555/made.up.1.' })
+    assert.equal(d.json.kind, 'doi')
+    assert.equal(d.json.results[0].doi, '10.5555/made.up.1')
+    const oa = await webCall(g, k.one, 'lookup', { q: '10.5555/only.openalex' })
+    assert.equal(oa.json.results[0].title, 'Only in OpenAlex')
+    assert.equal(oa.json.results[0].open_copy.url, 'https://repo.example/oa.pdf')
+    assert.equal((await webCall(g, k.one, 'lookup', { q: '10.5555/../../x' })).json.kind, 'citation', 'a DOI with dot segments is not used as a path')
+    assert.ok(!sch.st.seen.some((s) => s.path.includes('..') || s.path === '/x'))
+    // The log: that a lookup happened, never the citation.
+    await waitFor(() => g.logs().filter((l) => l.route === 'lookup').length >= 6, 3000, 'the log lines')
+    for (const s of ['Lindqvist', 'Boilers', 'made.up', 'only.openalex']) assert.ok(!g.out.includes(s), `the log has ${s}`)
+    assert.ok(g.logs().some((l) => l.route === 'lookup' && l.status === 200 && l.results >= 1 && ['doi', 'citation'].includes(l.lookup)))
+    const usage = await call(g, T.usage + T.usage, null, { method: 'GET', path: '/v1/usage' })
+    assert.ok(usage.json.data.find((x) => x.caller === 'ws-one').web_week.used >= 4, 'lookups count in the web week')
+  } finally {
+    await g.stop()
+  }
+  // No contact set: lookups say they are not set up.
+  const { g: g2, k: k2, file: f2 } = await webGateway()
+  try {
+    writeGrants(f2, { 'ws-one': { always: true } })
+    const r = await webCall(g2, k2.one, 'lookup', { q: 'anything' })
+    assert.equal(r.status, 503)
+    assert.match(r.json.error.message, /not set up on this machine/)
+  } finally {
+    await g2.stop()
   }
 })

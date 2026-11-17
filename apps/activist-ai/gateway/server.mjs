@@ -52,10 +52,10 @@ import { CLAUDE_SETTINGS, claudeConfig, makeClaude } from './claude.mjs'
 import { HOSTED_SETTINGS, hostedConfig, makeHosted } from './hosted.mjs'
 import { WEB_SETTINGS, webConfig, makeWeb } from './web.mjs'
 import { BATCH_SETTINGS, batchConfig, laneOf, makeBatch } from './batch.mjs'
+import { MODEL_NAMES, NOT_SET, ROUTE_NAME, SPECIALIST_SETTINGS, buildRequest, charge, checkChatContent, rebuild, specialistConfig, withInstructions } from './specialists.mjs'
 
 // ---------------------------------------------------------------- config
 
-const MODEL_NAMES = ['general', 'fast', 'code']
 const SETTINGS = {
   // name: [default, min, max]  (whole numbers)
   GATEWAY_PORT: [4180, 0, 65535],
@@ -72,7 +72,7 @@ const SETTINGS = {
   GATEWAY_READ_TIMEOUT_MS: [30_000, 1_000, 600_000],
   GATEWAY_WEEKLY_TOKENS: [20_000_000, 1, 1e12],
 }
-const OTHER_GATEWAY_SETTINGS = ['GATEWAY_TOKENS', 'GATEWAY_TOKENS_FILE', 'GATEWAY_DOOR_DIR', 'GATEWAY_MODELS', 'GATEWAY_HOST', 'GATEWAY_DB', 'GATEWAY_QUOTAS', 'GATEWAY_USAGE_TOKEN', ...CLAUDE_SETTINGS, ...HOSTED_SETTINGS, ...WEB_SETTINGS, ...BATCH_SETTINGS]
+const OTHER_GATEWAY_SETTINGS = ['GATEWAY_TOKENS', 'GATEWAY_TOKENS_FILE', 'GATEWAY_DOOR_DIR', 'GATEWAY_MODELS', 'GATEWAY_HOST', 'GATEWAY_DB', 'GATEWAY_QUOTAS', 'GATEWAY_USAGE_TOKEN', ...CLAUDE_SETTINGS, ...HOSTED_SETTINGS, ...WEB_SETTINGS, ...BATCH_SETTINGS, ...SPECIALIST_SETTINGS]
 const NAME = /^[a-z0-9][a-z0-9._-]{0,63}$/i
 const TOKEN = /^[\x21-\x2b\x2d-\x7e]{24,512}$/ // printable ASCII, no space, no comma
 
@@ -150,6 +150,15 @@ function loadConfig(env) {
     })
   }
 
+  // The specialist names (specialists.mjs): each one's own server, key, limits and lane.
+  const sp = specialistConfig(env, bad, { models, defaultBase: env.UPSTREAM_BASE_URL, defaultKey: key })
+  for (const s of Object.values(sp.spec)) {
+    if (!s.upstreamId || ['general', 'fast', 'code'].includes(s.name)) continue
+    if (s.body > num.GATEWAY_MAX_TOTAL_BODY_BYTES) bad(`GATEWAY_LIMITS ${s.name}: its body cap is more than GATEWAY_MAX_TOTAL_BODY_BYTES`)
+  }
+  if (env.GATEWAY_BATCH_MAX_INFLIGHT && sp.batchMax > num.GATEWAY_MAX_INFLIGHT) bad('GATEWAY_BATCH_MAX_INFLIGHT cannot be more than GATEWAY_MAX_INFLIGHT')
+  sp.batchMax = Math.min(sp.batchMax, num.GATEWAY_MAX_INFLIGHT)
+
   // GATEWAY_QUOTAS: "name=tokens per week" for callers who differ from GATEWAY_WEEKLY_TOKENS
   const quotas = new Map([...names].map((n) => [n, num.GATEWAY_WEEKLY_TOKENS]))
   if (env.GATEWAY_QUOTAS) {
@@ -193,6 +202,7 @@ function loadConfig(env) {
     host,
     db,
     keepText: textWithCalls === 'keep',
+    sp,
     claude,
     hosted,
     web,
@@ -267,6 +277,7 @@ function redact(s) {
   if (typeof s !== 'string') return s
   if (s.includes(C.key)) s = s.split(C.key).join('[redacted]')
   if (C.hosted?.key && s.includes(C.hosted.key)) s = s.split(C.hosted.key).join('[redacted]')
+  for (const k of C.sp.keys) if (s.includes(k)) s = s.split(k).join('[redacted]')
   if (claude) s = claude.scrub(s)
   return web ? web.scrub(s) : s
 }
@@ -294,7 +305,8 @@ const claude = makeClaude({ cfg: C.claude, db, readBody: (req, max) => readBody(
 const hosted = C.hosted ? makeHosted({ cfg: C.hosted, db }) : null
 const batch = makeBatch({ cfg: C.batch, db })
 const web = makeWeb({ cfg: C.web, db, readBody: (req, max) => readBody(req, max), send: (...a) => send(...a), fail: (...a) => fail(...a) })
-const readUsage = db.prepare(`SELECT coalesce(sum(CASE WHEN model IN ('web-search', 'web-fetch') THEN 0 ELSE requests END), 0) AS requests, coalesce(sum(tokens_in), 0) AS tokens_in, coalesce(sum(tokens_out), 0) AS tokens_out FROM usage WHERE week = ? AND caller = ?`)
+const readByModel = db.prepare(`SELECT model, requests, tokens_in, tokens_out FROM usage WHERE week = ? AND caller = ? AND model NOT LIKE 'web-%' ORDER BY model`)
+const readUsage = db.prepare(`SELECT coalesce(sum(CASE WHEN model IN ('web-search', 'web-fetch', 'web-lookup') THEN 0 ELSE requests END), 0) AS requests, coalesce(sum(tokens_in), 0) AS tokens_in, coalesce(sum(tokens_out), 0) AS tokens_out FROM usage WHERE week = ? AND caller = ?`)
 
 const WEEK_MS = 7 * 24 * 3600 * 1000
 function weekStart(now = Date.now()) {
@@ -319,97 +331,143 @@ function usageOf(name) {
     tokens_used: used,
     quota,
     fraction_used: Math.round((used / quota) * 10000) / 10000,
+    by_model: Object.fromEntries(readByModel.all(weekKey(start), name).map((r) => [r.model, { requests: r.requests, tokens_in: r.tokens_in, tokens_out: r.tokens_out }])),
   }
 }
 
 // ---------------------------------------------------------------- the fair queue
-// A request holds one of maxInflight slots while it talks to the model server, and a caller
-// holds at most perCaller of them. A request that cannot start waits in its caller's own
-// line; when a slot frees, the lines are served round-robin, one request per caller per
-// turn, so a caller with ten waiting does not starve a caller with one.
+// A request holds one of maxInflight slots while it talks to a model server, and a caller holds at
+// most perCaller of them. A request that cannot start waits in its caller's own line; when a slot
+// frees, the lines are served round-robin, one request per caller per turn, so a caller with ten
+// waiting does not starve a caller with one.
+//
+// Two lanes. A person waiting in a conversation is "interactive"; a batch job (a request with
+// `X-Ola-Lane: batch`, or a name whose lane is batch: read, transcribe, draw) waits in its caller's
+// second line, which is served only when no interactive request can start, holds at most batchMax
+// slots at once (so a person always finds one), and may wait longer (batchWait). Each specialist
+// name also has its own pool (GATEWAY_LIMITS pool=), so a thousand `read` calls cannot fill the
+// slots the everyday model needs.
 
 const refusal = (code) => Object.assign(new Error(code), { code })
+const newLine = () => ({ inflight: 0, queue: [], batch: [] })
 
 class FairQueue {
-  constructor(callers, { max, perCaller, perCallerQueue, maxWait }) {
-    Object.assign(this, { max, perCaller, perCallerQueue, maxWait })
+  constructor(callers, { max, perCaller, perCallerQueue, maxWait, batchMax = max, batchWait = maxWait, batchQueue = perCallerQueue }) {
+    Object.assign(this, { max, perCaller, perCallerQueue, maxWait, batchMax, batchWait, batchQueue })
     this.inflight = 0
-    this.lanes = new Map(callers.map((n) => [n, { inflight: 0, queue: [] }]))
+    this.batchInflight = 0
+    this.lanes = new Map(callers.map((n) => [n, newLine()]))
     this.ring = [...callers]
     this.cursor = 0
   }
   get queued() {
     let n = 0
-    for (const l of this.lanes.values()) n += l.queue.length
+    for (const l of this.lanes.values()) n += l.queue.length + l.batch.length
     return n
   }
   // A caller added by a token reload gets its own line; a removed one's line goes once empty.
   addCaller(name) {
-    if (!this.lanes.has(name)) this.lanes.set(name, { inflight: 0, queue: [] }), this.ring.push(name)
+    if (!this.lanes.has(name)) this.lanes.set(name, newLine()), this.ring.push(name)
     return this.lanes.get(name)
   }
   prune(keep) {
-    for (const [n, l] of this.lanes) if (!keep.has(n) && !l.inflight && !l.queue.length) this.lanes.delete(n)
+    for (const [n, l] of this.lanes) if (!keep.has(n) && !l.inflight && !l.queue.length && !l.batch.length) this.lanes.delete(n)
     this.ring = this.ring.filter((n) => this.lanes.has(n))
     this.cursor = this.ring.length ? this.cursor % this.ring.length : 0
   }
   // Resolves with a release function once the request may go upstream.
-  acquire(name, signal) {
+  acquire(name, signal, { batch = false, pool = null } = {}) {
     const lane = this.addCaller(name)
+    const line = batch ? lane.batch : lane.queue
     return new Promise((resolve, reject) => {
       if (signal.aborted) return reject(refusal('aborted'))
-      const now = this.inflight < this.max && lane.inflight < this.perCaller && lane.queue.length === 0
-      if (!now && lane.queue.length >= this.perCallerQueue) return reject(refusal('caller_busy'))
-      const w = {}
+      const now = this.inflight < this.max && lane.inflight < this.perCaller && line.length === 0 && (!pool || pool.inflight < pool.max) && (!batch || this.batchInflight < this.batchMax)
+      if (!now && line.length >= (batch ? this.batchQueue : this.perCallerQueue)) return reject(refusal('caller_busy'))
+      const w = { batch, pool }
       const leave = () => {
         clearTimeout(w.timer)
         signal.removeEventListener('abort', w.onAbort)
       }
       const drop = (code) => {
-        const i = lane.queue.indexOf(w)
-        if (i >= 0) lane.queue.splice(i, 1)
+        const i = line.indexOf(w)
+        if (i >= 0) line.splice(i, 1)
         leave()
         reject(refusal(code))
       }
-      w.timer = setTimeout(() => drop('wait_timeout'), this.maxWait)
+      w.timer = setTimeout(() => drop('wait_timeout'), batch ? this.batchWait : this.maxWait)
       w.onAbort = () => drop('aborted')
       w.grant = (release) => {
         leave()
         resolve(release)
       }
       signal.addEventListener('abort', w.onAbort, { once: true })
-      lane.queue.push(w)
+      line.push(w)
       this.dispatch()
     })
   }
+  // The next request that may start from one kind of line, round-robin between callers.
+  pick(kind) {
+    for (let i = 0; i < this.ring.length; i++) {
+      const at = (this.cursor + i) % this.ring.length
+      const l = this.lanes.get(this.ring[at])
+      if (!l || !l[kind].length || l.inflight >= this.perCaller) continue
+      const k = l[kind].findIndex((w) => !w.pool || w.pool.inflight < w.pool.max)
+      if (k < 0) continue
+      this.cursor = (at + 1) % this.ring.length
+      return { lane: l, w: l[kind].splice(k, 1)[0] }
+    }
+    return null
+  }
   dispatch() {
     while (this.inflight < this.max) {
-      let lane = null
-      for (let i = 0; i < this.ring.length; i++) {
-        const at = (this.cursor + i) % this.ring.length
-        const l = this.lanes.get(this.ring[at])
-        if (l && l.queue.length && l.inflight < this.perCaller) {
-          lane = l
-          this.cursor = (at + 1) % this.ring.length
-          break
-        }
-      }
-      if (!lane) return
-      const w = lane.queue.shift()
+      const p = this.pick('queue') ?? (this.batchInflight < this.batchMax ? this.pick('batch') : null)
+      if (!p) return
+      const { lane, w } = p
       lane.inflight++
       this.inflight++
+      if (w.batch) this.batchInflight++
+      if (w.pool) w.pool.inflight++
       let done = false
       w.grant(() => {
         if (done) return
         done = true
         lane.inflight--
         this.inflight--
+        if (w.batch) this.batchInflight--
+        if (w.pool) w.pool.inflight--
         this.dispatch()
       })
     }
   }
 }
-const queue = new FairQueue(C.tokens.map((t) => t.name), { max: C.maxInflight, perCaller: C.perCaller, perCallerQueue: C.perCallerQueue, maxWait: C.maxWait })
+const queue = new FairQueue(C.tokens.map((t) => t.name), { max: C.maxInflight, perCaller: C.perCaller, perCallerQueue: C.perCallerQueue, maxWait: C.maxWait, batchMax: C.sp.batchMax, batchWait: C.sp.batchWait, batchQueue: C.sp.batchQueue })
+// One pool per specialist name (its own server on the Studio), and that name's server.
+const pools = new Map(Object.values(C.sp.spec).filter((s) => s.pool > 0).map((s) => [s.name, { inflight: 0, max: s.pool }]))
+const targets = new Map()
+for (const s of Object.values(C.sp.spec)) {
+  if (!s.upstreamId) continue
+  if (s.kind === 'chat' && !s.base) continue // the everyday model server (C.upstream)
+  const base = s.base ?? C.sp.defaultBase.replace(/\/+$/, '')
+  const url = new URL(base + (s.kind === 'chat' ? '/chat/completions' : s.path))
+  const lib = url.protocol === 'https:' ? https : http
+  targets.set(s.name, { url, key: s.base ? s.key : C.key, lib, agent: new lib.Agent({ keepAlive: true, maxSockets: Math.max(2, s.pool + 1) }) })
+}
+// Requests a minute, per caller and name, for names with a per_minute limit.
+const perMinute = new Map()
+function tooFast(who, s) {
+  if (!s.perMinute) return false
+  const k = `${who} ${s.name}`
+  const now = Date.now()
+  const times = (perMinute.get(k) ?? []).filter((t) => t > now - 60_000)
+  perMinute.set(k, times)
+  if (times.length >= s.perMinute) return true
+  times.push(now)
+  return false
+}
+// The queue's line: batch for a batch job's request (X-Ola-Lane: batch with its X-Ola-Job, admitted
+// by batch.mjs) and for a name whose lane is batch (read, transcribe, draw); interactive otherwise.
+// Nothing a caller sends can raise a request out of the batch line.
+const lineOf = (req, s) => (laneOf(req) || s.lane === 'batch' ? 'batch' : 'interactive')
 
 // ---------------------------------------------------------------- the model server
 
@@ -423,14 +481,17 @@ const agent = new (isTls ? https : http).Agent({ keepAlive: true, maxSockets: C.
 // which is how the model server learns to stop).
 function post(body, signal, deadline, target = null) {
   return new Promise((resolve, reject) => {
-    const data = Buffer.from(JSON.stringify(body))
+    // A specialist's request arrives already built (specialists.mjs buildRequest): { raw, type }.
+    const data = body?.raw ? body.raw : Buffer.from(JSON.stringify(body))
+    const type = body?.raw ? body.type : 'application/json'
+    const key = target ? target.key : C.key
     let settled = false
     let tFirst
     // The everyday model server, or (model `hosted`) the hosted provider's (hosted.mjs).
     const req = (target ? target.lib : isTls ? https : http).request(target ? target.url : C.upstream, {
       method: 'POST',
       agent: target ? target.agent : agent,
-      headers: { Authorization: `Bearer ${target ? target.key : C.key}`, 'Content-Type': 'application/json', 'Content-Length': data.length, Accept: 'application/json' },
+      headers: { ...(key ? { Authorization: `Bearer ${key}` } : {}), 'Content-Type': type, 'Content-Length': data.length, Accept: 'application/json' },
     })
     const end = (err, value) => {
       if (settled) return
@@ -750,7 +811,7 @@ function identify(req) {
 }
 const known = (name) => name === 'usage' || C.tokens.some((t) => t.name === name)
 
-const ROUTES = { '/v1/chat/completions': 'chat', '/v1/models': 'models', '/v1/usage': 'usage', '/anthropic/v1/messages': 'claude', '/anthropic/v1/messages/count_tokens': 'claude_count', '/web/search': 'search', '/web/fetch': 'fetch' }
+const ROUTES = { '/v1/chat/completions': 'chat', '/v1/models': 'models', '/v1/usage': 'usage', '/anthropic/v1/messages': 'claude', '/anthropic/v1/messages/count_tokens': 'claude_count', '/web/search': 'search', '/web/fetch': 'fetch', '/web/lookup': 'lookup', '/v1/embeddings': 'embed', '/v1/rerank': 'rerank', '/v1/audio/transcriptions': 'transcribe', '/v1/images/generations': 'draw' }
 const secondsUntil = (ms) => String(Math.max(1, Math.ceil((ms - Date.now()) / 1000)))
 
 async function handle(req, res, rec, signal) {
@@ -777,16 +838,19 @@ async function handle(req, res, rec, signal) {
   // Claude Code in the workspace, through Anthropic's Messages API (claude.mjs).
   if (rec.route === 'claude' || rec.route === 'claude_count') return claude.handle(req, res, rec, who, signal)
   // Web search and one-document downloads, only with the project's yes (web.mjs).
-  if (rec.route === 'search' || rec.route === 'fetch') return web.handle(req, res, rec, who, signal)
+  // Scholarly lookup shares the web's approval and limits (web.mjs).
+  if (rec.route === 'search' || rec.route === 'fetch' || rec.route === 'lookup') return web.handle(req, res, rec, who, signal)
   if (rec.route === 'models' && req.method === 'GET') {
     rec.status = 200
-    return send(res, 200, { object: 'list', data: [...C.models.keys(), ...(hosted ? ['hosted'] : [])].map((id) => ({ id, object: 'model', owned_by: 'ola' })) })
+    return send(res, 200, { object: 'list', data: [...[...C.models.keys()].map((id) => ({ id, object: 'model', owned_by: 'ola', kind: C.sp.spec[id].kind, images: C.sp.spec[id].images > 0 })), ...(hosted ? [{ id: 'hosted', object: 'model', owned_by: 'ola', kind: 'chat', images: false }] : [])] })
   }
+  // The specialists that are not chat: embed, rerank, transcribe, draw (one name per route).
+  if (ROUTE_NAME[path]) return specialist(req, res, rec, who, signal, ROUTE_NAME[path], no)
   if (rec.route !== 'chat' || req.method !== 'POST') return no(404, 'not found', 'not found', 'invalid_request_error')
 
   let raw
   try {
-    raw = await readBody(req)
+    raw = await readBody(req, CHAT_READ_MAX)
   } catch (e) {
     if (e.code === 'too_large') {
       return no(413, 'the body was over the size cap', `the request is larger than ${C.maxBody} bytes`, 'invalid_request_error', { Connection: 'close' })
@@ -809,15 +873,29 @@ async function handle(req, res, rec, signal) {
   if (!body || typeof body !== 'object' || Array.isArray(body)) return no(400, 'the request is not a JSON object', 'the request is not a JSON object', 'invalid_request_error')
   const isHosted = body.model === 'hosted' && hosted !== null
   if (typeof body.model !== 'string' || !(C.models.has(body.model) || isHosted)) {
+    // A specialist name that this machine has no server for: one plain sentence, nothing sent.
+    if (typeof body.model === 'string' && NOT_SET[body.model] && body.model !== 'hosted') {
+      rec.model = body.model
+      return no(503, 'no upstream for this name', NOT_SET[body.model], 'not_configured')
+    }
     return no(400, 'an unknown model name', `unknown model; this gateway serves: ${[...C.models.keys(), ...(hosted ? ['hosted'] : [])].join(', ')}`, 'invalid_request_error')
   }
   rec.model = body.model
+  if (!isHosted && C.sp.spec[body.model].kind !== 'chat') return no(400, 'a name that is not a chat model', `${body.model} is not a chat model; it has its own route`, 'invalid_request_error')
+  const s = isHosted ? { ...C.sp.spec.general, name: 'hosted', pool: 0, perMinute: 0 } : C.sp.spec[body.model]
+  const cap = bodyCap(s)
+  if (raw.length > cap) return no(413, 'the body was over the size cap', `the request is larger than ${cap} bytes`, 'invalid_request_error')
   // The hosted open model: only for a project whose owner turned it on, within its month's budget.
   if (isHosted) {
     const r = hosted.refusal(who)
     if (r) return no(r.status, r.why, r.message, r.type)
   }
   if (!Array.isArray(body.messages) || !body.messages.length) return no(400, 'no messages', 'messages must be a non-empty list', 'invalid_request_error')
+  // Pictures only as data: URLs, only to a name that takes them; nothing but text and pictures.
+  const bad = checkChatContent(body.messages, s)
+  if (bad) return no(400, 'a message part that is not allowed', bad, 'invalid_request_error')
+  rec.lane = lineOf(req, s)
+  if (tooFast(who, s)) return no(429, 'the per-minute limit for this name', `Ola has asked ${s.name} ${s.perMinute} times in the last minute for this project; wait a minute.`, 'rate_limit_error', { 'Retry-After': '60' })
 
   // Over quota counting what is already committed to the store plus `pending`, the tokens the
   // current request has already spent on earlier tries (not yet written). This is what re-checks
@@ -851,7 +929,7 @@ async function handle(req, res, rec, signal) {
   const queuedAt = Date.now()
   let release
   try {
-    release = await queue.acquire(who, signal)
+    release = await queue.acquire(who, signal, { batch: rec.lane === 'batch', pool: pools.get(s.name) ?? null })
   } catch (e) {
     batchHold?.()
     rec.wait_ms = Date.now() - queuedAt
@@ -877,7 +955,8 @@ async function handle(req, res, rec, signal) {
     for (const k of PASS) if (k in body) upstreamBody[k] = body[k]
     // A job's retries are checked against its budget, a conversation's against the weekly quota.
     const jobOver = lane ? (pending) => (batch.over(who, lane, pending) ? { quota: batch.jobOf(who)?.budget ?? 0, resets_at: new Date(Date.now() + 3600_000).toISOString() } : null) : null
-    out = await complete(upstreamBody, offered, signal, Date.now() + C.totalMs, tally, lane ? jobOver : overQuota, isHosted ? hosted.target : null)
+    upstreamBody.messages = withInstructions(body.model, body.messages)
+    out = await complete(upstreamBody, offered, signal, Date.now() + C.totalMs, tally, lane ? jobOver : overQuota, isHosted ? hosted.target : (targets.get(body.model) ?? null))
     rec.status = out.status
     if (out.status === 200) {
       const clean = sanitizeCompletion(out.json, body.model)
@@ -900,6 +979,135 @@ async function handle(req, res, rec, signal) {
   }
 }
 
+// The body cap of a name: the everyday names keep GATEWAY_MAX_BODY_BYTES; a specialist has its own.
+const bodyCap = (s) => (['general', 'fast', 'code', 'hosted'].includes(s.name) ? C.maxBody : s.body)
+// The most a chat request may be before its model name is known: the largest cap of a configured name.
+const CHAT_READ_MAX = Math.max(C.maxBody, ...Object.values(C.sp.spec).filter((s) => s.upstreamId && s.kind === 'chat').map(bodyCap))
+
+// A specialist that is not chat (embed, rerank, transcribe, draw): the same who, size, quota,
+// lane and pool rules as chat, its own request shape (built here, never relayed), its own reply
+// rebuild, three tries on a busy or failing server, and its own way of counting the quota.
+async function specialist(req, res, rec, who, signal, name, no) {
+  const s = C.sp.spec[name]
+  rec.model = name
+  if (req.method !== 'POST') return no(404, 'not found', 'not found', 'invalid_request_error')
+  if (!s.upstreamId) return no(503, 'no upstream for this name', NOT_SET[name], 'not_configured')
+  let raw
+  try {
+    raw = await readBody(req, s.body)
+  } catch (e) {
+    if (e.code === 'too_large') return no(413, 'the body was over the size cap', `the request is larger than ${s.body} bytes`, 'invalid_request_error', { Connection: 'close' })
+    if (e.code === 'too_busy') return no(503, 'too many bodies in memory at once', 'the gateway is receiving too many requests at once; retry shortly', 'overloaded_error', { 'Retry-After': '5', Connection: 'close' })
+    rec.status = 499
+    rec.why = 'the caller went away'
+    return
+  }
+  if (!known(who)) return no(401, 'unknown caller', 'unknown caller', 'authentication_error', { Connection: 'close' })
+  let body
+  try {
+    body = JSON.parse(raw.toString('utf8'))
+  } catch {
+    return no(400, 'the request is not JSON', 'the request is not JSON', 'invalid_request_error')
+  }
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return no(400, 'the request is not a JSON object', 'the request is not a JSON object', 'invalid_request_error')
+  if (body.model !== undefined && body.model !== name) return no(400, 'a model name this route does not serve', `this route serves only the model ${name}`, 'invalid_request_error')
+  const built = buildRequest(s.kind, body, s.upstreamId)
+  if (built.error) return no(400, 'a request this route cannot take', built.error, 'invalid_request_error')
+  const overQuota = (pending = 0) => {
+    const u = usageOf(who)
+    return u.tokens_used + pending >= u.quota ? u : null
+  }
+  // A batch job's request (batch.mjs): admitted only with the job's grant, counted on its budget.
+  const job = laneOf(req)
+  let batchHold = null
+  if (job) {
+    const r = batch.admit(who, job)
+    if (r) {
+      rec.status = r.status
+      rec.why = r.why
+      return send(res, r.status, { error: { message: r.message, type: r.type, ...(r.code ? { code: r.code } : {}) } }, r.retryAfter ? { 'Retry-After': String(r.retryAfter) } : {})
+    }
+    batchHold = batch.hold(who)
+  }
+  const before = job ? null : overQuota()
+  if (before) return no(429, 'the weekly quota is used up', `this week's quota of ${before.quota} tokens is used up; it resets at ${before.resets_at}`, 'insufficient_quota', { 'Retry-After': secondsUntil(Date.parse(before.resets_at)) })
+  rec.lane = lineOf(req, s)
+  if (tooFast(who, s)) return no(429, 'the per-minute limit for this name', `Ola has asked ${name} ${s.perMinute} times in the last minute for this project; wait a minute.`, 'rate_limit_error', { 'Retry-After': '60' })
+  const queuedAt = Date.now()
+  let release
+  try {
+    release = await queue.acquire(who, signal, { batch: rec.lane === 'batch', pool: pools.get(name) ?? null })
+  } catch (e) {
+    batchHold?.()
+    rec.wait_ms = Date.now() - queuedAt
+    if (e.code === 'caller_busy') return no(429, 'the caller has too many requests waiting', 'too many requests at once from this caller; retry shortly', 'rate_limit_error', { 'Retry-After': '5' })
+    if (e.code === 'wait_timeout') return no(503, 'the queue wait passed its limit', 'the machine is busy; no free slot in time', 'overloaded_error', { 'Retry-After': '10' })
+    rec.status = 499
+    rec.why = 'the caller went away'
+    return
+  }
+  rec.wait_ms = Date.now() - queuedAt
+  const tally = { in: 0, out: 0, tries: 0, estimated: false }
+  const deadline = Date.now() + C.totalMs
+  let last = 'no attempt made'
+  let lastStatus = 502
+  try {
+    for (let attempt = 1; attempt <= TRIES; attempt++) {
+      if (attempt > 1 && (job ? batch.over(who, job, tally.in + tally.out) : overQuota(tally.in + tally.out))) return no(429, 'the weekly quota is used up', "this week's quota is used up", 'insufficient_quota')
+      tally.tries = attempt
+      let r
+      try {
+        r = await post({ raw: built.data, type: built.type }, signal, deadline, targets.get(name))
+      } catch (e) {
+        if (e.code === 'aborted') return void ((rec.status = 499), (rec.why = 'the caller went away'))
+        if (e.code === 'total_timeout' || e.code === 'first_byte_timeout') return no(504, `the ${e.code === 'total_timeout' ? 'total' : 'first-byte'} timeout passed`, 'the model server took longer than the gateway allows', 'upstream_error')
+        if (e.code === 'reply_too_large') return no(502, 'the reply was over the size cap', 'the model server sent a reply larger than the gateway accepts', 'upstream_error')
+        last = e.code === 'connect_timeout' ? 'the model server did not accept a connection in time' : 'the model server could not be reached'
+        lastStatus = e.code === 'connect_timeout' ? 504 : 502
+        if (attempt < TRIES) await pause(400 * attempt, signal)
+        continue
+      }
+      let json = null
+      try {
+        json = JSON.parse(r.text)
+      } catch {}
+      if (r.status === 429 || r.status >= 500) {
+        last = `the model server answered ${r.status}`
+        lastStatus = 502
+        if (attempt < TRIES) await pause(400 * attempt, signal)
+        continue
+      }
+      if (r.status < 200 || r.status > 299) {
+        const status = r.status === 401 || r.status === 403 ? 502 : r.status >= 400 && r.status <= 499 ? r.status : 502
+        return no(status, `the model server answered ${r.status}`, upstreamMessage(r.status), 'upstream_error')
+      }
+      // Charged on every try that came back: a reply the gateway refuses was still work done.
+      const c = charge(s.kind, json, built.info)
+      tally.in += c.in
+      tally.out += c.out
+      tally.estimated ||= c.estimated
+      const clean = rebuild(s.kind, json, name, built.info)
+      if (!clean) {
+        last = 'the model server sent a reply the gateway cannot use'
+        lastStatus = 502
+        continue
+      }
+      rec.status = 200
+      return send(res, 200, clean)
+    }
+    return no(lastStatus, `${last}, ${TRIES} times`, `${last}, ${TRIES} times`, 'upstream_error')
+  } finally {
+    release()
+    batchHold?.()
+    rec.tries = tally.tries
+    rec.tokens_in = tally.in
+    rec.tokens_out = tally.out
+    rec.estimated = tally.estimated ? 'fixed' : null
+    if (tally.tries && job) batch.record(who, job, tally.in, tally.out)
+    else if (tally.tries) addUsage.run(weekKey(weekStart()), who, name, tally.in, tally.out)
+  }
+}
+
 // The whole record of a request. Each field is a number, null, a caller name or model name
 // checked at start, or one of this file's own strings: no value a caller or the model server
 // chose. JSON.stringify escapes anything else, so a line stays one line regardless.
@@ -909,7 +1117,7 @@ async function onRequest(req, res) {
   // A request pipelined behind one already refused and closing is not answered.
   if (req.socket?.olaLinger) return req.socket.destroy()
   const started = Date.now()
-  const rec = { caller: '-', route: 'other', model: '-', status: 0, why: null, tries: 0, tokens_in: null, tokens_out: null, estimated: null, wait_ms: null, ms: 0 }
+  const rec = { caller: '-', route: 'other', model: '-', lane: null, status: 0, why: null, tries: 0, tokens_in: null, tokens_out: null, estimated: null, wait_ms: null, ms: 0 }
   const ac = new AbortController()
   res.on('close', () => {
     if (!res.writableFinished) ac.abort()
@@ -1031,6 +1239,7 @@ process.on('SIGTERM', stop)
 process.on('SIGINT', stop)
 
 server.listen(C.port, C.host, () => {
+  console.log(JSON.stringify({ t: new Date().toISOString(), event: 'specialists', configured: [...C.models.keys()].filter((n) => !['general', 'fast', 'code'].includes(n)), own_servers: [...targets.keys()], batch_inflight: C.sp.batchMax, batch_wait_ms: C.sp.batchWait }))
   console.log(JSON.stringify({ t: new Date().toISOString(), event: 'web', provider: C.web.provider, grants_file: !!C.web.file, weekly: C.web.weekly, per_minute: C.web.perMinute, test_hosts: C.web.testHosts.size }))
   console.log(
     JSON.stringify({

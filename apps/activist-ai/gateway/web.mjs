@@ -43,7 +43,10 @@ import os from 'node:os'
 export const WEB_SETTINGS = [
   'GATEWAY_WEB_FILE', 'GATEWAY_SEARCH_PROVIDER', 'GATEWAY_SEARCH_UPSTREAM', 'GATEWAY_WEB_WEEKLY', 'GATEWAY_WEB_PER_MINUTE',
   'GATEWAY_FETCH_MAX_BYTES', 'GATEWAY_FETCH_MAX_PAGE_BYTES', 'GATEWAY_FETCH_TIMEOUT_MS', 'GATEWAY_FETCH_TEST_HOSTS', 'GATEWAY_FETCH_TEST_CA',
+  'GATEWAY_SCHOLAR_CONTACT', 'GATEWAY_SCHOLAR_UPSTREAMS',
 ]
+// Scholarly lookup: fixed public indexes, never an address the caller chooses.
+const SCHOLAR = { crossref: 'https://api.crossref.org', unpaywall: 'https://api.unpaywall.org', openalex: 'https://api.openalex.org' }
 const PROVIDERS = { brave: { name: 'Brave Search', url: 'https://api.search.brave.com/res/v1/web/search' }, mock: { name: 'a made-up search (tests)', url: null } }
 
 // What a download may be, by type, and how large. Pages and plain text are small; documents and
@@ -161,7 +164,27 @@ export function webConfig(env, bad) {
       bad('GATEWAY_FETCH_TEST_CA cannot be read')
     }
   }
+  // GATEWAY_SCHOLAR_CONTACT: the address these services ask callers to give (Crossref's polite pool,
+  // Unpaywall's email). Ola's own, never a person's. Without it, lookups say they are not set up.
+  const contact = env.GATEWAY_SCHOLAR_CONTACT || null
+  if (contact && !/^[A-Za-z0-9._%+-]{1,64}@[A-Za-z0-9.-]{1,180}\.[A-Za-z]{2,24}$/.test(contact)) bad('GATEWAY_SCHOLAR_CONTACT is an email address (Ola’s own)')
+  const scholar = { ...SCHOLAR }
+  if (env.GATEWAY_SCHOLAR_UPSTREAMS) {
+    // Tests only: crossref=http://127.0.0.1:port,unpaywall=...,openalex=...
+    for (const [i, part] of env.GATEWAY_SCHOLAR_UPSTREAMS.split(',').entries()) {
+      const at = part.indexOf('=')
+      const name = part.slice(0, at)
+      let u = null
+      try {
+        u = new URL(part.slice(at + 1))
+      } catch {}
+      if (!(name in SCHOLAR) || !u || !(u.protocol === 'https:' || (u.protocol === 'http:' && u.hostname === '127.0.0.1'))) bad(`GATEWAY_SCHOLAR_UPSTREAMS entry ${i + 1}: crossref, unpaywall or openalex = an https address (http only to 127.0.0.1, for tests)`)
+      else scholar[name] = u.href.replace(/\/+$/, '')
+    }
+  }
   return {
+    contact,
+    scholar,
     file: env.GATEWAY_WEB_FILE || null,
     provider,
     providerName: provider ? PROVIDERS[provider].name : null,
@@ -200,7 +223,7 @@ export function makeWeb({ cfg, db, readBody, send, fail }) {
       const next = new Map()
       for (const [name, g] of Object.entries(raw ?? {})) {
         if (!/^ws-[a-z0-9][a-z0-9-]{1,30}[a-z0-9]$/.test(name) || !g || typeof g !== 'object') continue
-        const once = (Array.isArray(g.once) ? g.once : []).filter((o) => o && /^[0-9a-f]{16,64}$/.test(o.id) && ['search', 'fetch'].includes(o.kind) && /^[0-9a-f]{64}$/.test(o.h) && Number.isSafeInteger(o.exp)).slice(0, 200)
+        const once = (Array.isArray(g.once) ? g.once : []).filter((o) => o && /^[0-9a-f]{16,64}$/.test(o.id) && ['search', 'fetch', 'lookup'].includes(o.kind) && /^[0-9a-f]{64}$/.test(o.h) && Number.isSafeInteger(o.exp)).slice(0, 200)
         next.set(name, { always: g.always === true, once })
       }
       grants = next
@@ -220,7 +243,7 @@ export function makeWeb({ cfg, db, readBody, send, fail }) {
   const spent = db.prepare('INSERT OR IGNORE INTO web_once_used (id, at) VALUES (?, ?)')
   const prune = db.prepare('DELETE FROM web_once_used WHERE at < ?')
   prune.run(Date.now() - 30 * 24 * 3600_000)
-  const countWeek = db.prepare(`SELECT coalesce(sum(requests), 0) AS n FROM usage WHERE week = ? AND caller = ? AND model IN ('web-search', 'web-fetch')`)
+  const countWeek = db.prepare(`SELECT coalesce(sum(requests), 0) AS n FROM usage WHERE week = ? AND caller = ? AND model IN ('web-search', 'web-fetch', 'web-lookup')`)
   const addUse = db.prepare(`INSERT INTO usage (week, caller, model, requests, tokens_in, tokens_out) VALUES (?, ?, ?, 1, 0, 0)
     ON CONFLICT (week, caller, model) DO UPDATE SET requests = requests + 1`)
   const weekKey = () => {
@@ -275,6 +298,10 @@ export function makeWeb({ cfg, db, readBody, send, fail }) {
       if (typeof body?.q !== 'string' || !searchItem(body.q) || body.q.length > 400) return no(400, 'no search words', 'give the search as "q", 1 to 400 characters')
       item = searchItem(body.q)
       if (!cfg.provider) return no(503, 'no search provider', 'Web search is not set up on this machine yet.', 'api_error')
+    } else if (kind === 'lookup') {
+      if (typeof body?.q !== 'string' || !searchItem(body.q) || body.q.length > 1000) return no(400, 'no citation', 'give the citation or DOI as "q", 1 to 1,000 characters')
+      item = searchItem(body.q)
+      if (!cfg.contact) return no(503, 'scholarly lookup not set up', 'Looking up papers is not set up on this machine yet.', 'api_error')
     } else {
       try {
         if (typeof body?.url !== 'string' || body.url.length > 2048) throw new Error()
@@ -285,6 +312,7 @@ export function makeWeb({ cfg, db, readBody, send, fail }) {
     }
     // The person's yes, enforced here (the page and opencode only carry the question).
     const grant = grantFor(who, kind, item)
+    if (!grant && kind === 'lookup') return no(403, 'not approved for this project', 'This lookup was not approved. Ola asks the person first: run ola-lookup on its own, in a command by itself, so they can answer.', 'web_not_approved')
     if (!grant) return no(403, 'not approved for this project', kind === 'search' ? 'This search was not approved. Ola asks the person first: run ola-search on its own, in a command by itself, so they can answer.' : 'This download was not approved. Ola asks the person first: run ola-fetch on its own, in a command by itself, so they can answer.', 'web_not_approved')
     rec.grant = grant
     // How much: per minute, per week (shared with the usage table), at most 2 at once per caller.
@@ -298,8 +326,9 @@ export function makeWeb({ cfg, db, readBody, send, fail }) {
     times.push(now)
     inflight.set(who, (inflight.get(who) ?? 0) + 1)
     allInflight++
-    addUse.run(weekKey(), who, kind === 'search' ? 'web-search' : 'web-fetch')
+    addUse.run(weekKey(), who, `web-${kind}`)
     try {
+      if (kind === 'lookup') return await lookup(item, res, rec, no, signal)
       if (kind === 'search') return await search(item, Math.min(20, Math.max(1, Number.isSafeInteger(body.count) ? body.count : 8)), res, rec, no, signal)
       return await fetchDoc(item, res, rec, no, signal)
     } finally {
@@ -335,6 +364,89 @@ export function makeWeb({ cfg, db, readBody, send, fail }) {
     rec.results = results.length
     send(res, 200, { object: 'search', provider: cfg.providerName, results })
   }
+  // ------------------------------------------------------------ scholarly lookup
+  // One citation or DOI in; the best matches out (title, authors, year, DOI, where published) and,
+  // for the best one, where a free copy can be had. Fixed public indexes only: Crossref for the
+  // record (its "polite pool": the contact goes in `mailto`), Unpaywall for free copies (its
+  // `email`), OpenAlex when Crossref has no record of a DOI. Two requests a lookup as a rule, three at
+  // most. Replies are rebuilt from the fields below; nothing is followed, nothing is downloaded.
+  const DOI_IN = /\b(10\.\d{4,9}\/[^\s"<>]+)/i
+  const words = (s) => new Set(String(s).toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '').split(/[^a-z0-9]+/).filter((w) => w.length > 2))
+  const https2048 = (u) => (typeof u === 'string' && /^https?:\/\//.test(u) && u.length <= 2048 ? u : null)
+  const doiPath = (doi) => doi.split('/').map(encodeURIComponent).join('/')
+  function fromCrossref(m) {
+    const title = clean(Array.isArray(m?.title) ? m.title[0] : m?.title, 500)
+    const authors = (Array.isArray(m?.author) ? m.author : []).map((a) => clean([a?.given, a?.family].filter(Boolean).join(' ') || a?.name, 120)).filter(Boolean)
+    const year = [m?.issued, m?.published, m?.['published-print'], m?.['published-online']].map((d) => d?.['date-parts']?.[0]?.[0]).find((y) => Number.isSafeInteger(y)) ?? null
+    const doi = typeof m?.DOI === 'string' && /^10\.\d{4,9}\/\S{1,200}$/.test(m.DOI) ? m.DOI : null
+    return { title, authors: authors.slice(0, 10), more_authors: Math.max(0, authors.length - 10), year, doi, venue: clean(Array.isArray(m?.['container-title']) ? m['container-title'][0] : '', 300) || null, type: clean(m?.type, 40) || null, open_copy: null }
+  }
+  function fromOpenAlex(w) {
+    const authors = (Array.isArray(w?.authorships) ? w.authorships : []).map((a) => clean(a?.author?.display_name, 120)).filter(Boolean)
+    const doi = typeof w?.doi === 'string' ? w.doi.replace(/^https:\/\/doi\.org\//i, '') : null
+    const loc = w?.best_oa_location
+    return {
+      title: clean(w?.display_name ?? w?.title, 500),
+      authors: authors.slice(0, 10),
+      more_authors: Math.max(0, authors.length - 10),
+      year: Number.isSafeInteger(w?.publication_year) ? w.publication_year : null,
+      doi: doi && /^10\.\d{4,9}\/\S{1,200}$/.test(doi) ? doi : null,
+      venue: clean(w?.primary_location?.source?.display_name, 300) || null,
+      type: clean(w?.type, 40) || null,
+      open_copy: loc && (https2048(loc.pdf_url) || https2048(loc.landing_page_url)) ? { url: https2048(loc.pdf_url) || https2048(loc.landing_page_url), pdf: !!https2048(loc.pdf_url), landing_page: https2048(loc.landing_page_url), version: clean(loc.version, 40) || null, license: clean(loc.license, 40) || null, host: clean(loc.source?.display_name, 120) || null, from: 'OpenAlex' } : null,
+    }
+  }
+  async function lookup(q, res, rec, no, signal) {
+    const headers = { Accept: 'application/json', 'Accept-Encoding': 'identity', 'User-Agent': `Ola/1 (a research assistant looking up one reference; mailto:${cfg.contact})` }
+    const get = async (base, path, params) => {
+      const u = new URL(base + path)
+      for (const [k, v] of Object.entries(params)) u.searchParams.set(k, v)
+      try {
+        return await getJson(u, headers, signal)
+      } catch {
+        return { status: 0, json: null }
+      }
+    }
+    const sources = []
+    let results = []
+    let doi = DOI_IN.exec(q)?.[1]?.replace(/[.,;:)\]}>]+$/, '') ?? null
+    if (doi && (doi.length > 200 || doi.split('/').some((p) => p === '.' || p === '..' || p === ''))) doi = null
+    rec.lookup = doi ? 'doi' : 'citation'
+    if (doi) {
+      const r = await get(cfg.scholar.crossref, `/works/${doiPath(doi)}`, { mailto: cfg.contact })
+      if (r.status === 200 && r.json?.message) results = [{ ...fromCrossref(r.json.message), match: 1 }], sources.push('Crossref')
+      else if (r.status === 404 || r.status === 200) {
+        const o = await get(cfg.scholar.openalex, `/works/doi:${doiPath(doi)}`, { mailto: cfg.contact })
+        if (o.status === 200 && o.json) results = [{ ...fromOpenAlex(o.json), match: 1 }], sources.push('OpenAlex')
+        else if (o.status !== 404) return no(502, 'the scholarly indexes did not answer', 'The catalogs of research papers did not answer just now. Try again in a minute.', 'web_upstream')
+      } else return no(r.status === 429 ? 429 : 502, `crossref answered ${r.status}`, r.status === 429 ? 'Crossref is busy; try again in a minute.' : 'Crossref did not answer just now. Try again in a minute.', 'web_upstream')
+    } else {
+      const r = await get(cfg.scholar.crossref, '/works', { 'query.bibliographic': q, rows: '5', select: 'DOI,title,author,issued,published,container-title,type', mailto: cfg.contact })
+      if (r.status !== 200 || !Array.isArray(r.json?.message?.items)) return no(r.status === 429 ? 429 : 502, `crossref answered ${r.status}`, r.status === 429 ? 'Crossref is busy; try again in a minute.' : 'Crossref did not answer just now. Try again in a minute.', 'web_upstream')
+      sources.push('Crossref')
+      // How much of each title appears in the citation (0 to 1): the agent's guide to how sure.
+      const qw = words(q)
+      results = r.json.message.items.slice(0, 5).map(fromCrossref).filter((x) => x.title).map((x) => {
+        const tw = [...words(x.title)]
+        return { ...x, match: tw.length ? Math.round((tw.filter((w) => qw.has(w)).length / tw.length) * 100) / 100 : 0 }
+      }).sort((a, b) => b.match - a.match).slice(0, 3)
+    }
+    // Where a free copy of the best match can be had.
+    const best = results[0]
+    if (best?.doi) {
+      const u = await get(cfg.scholar.unpaywall, `/v2/${doiPath(best.doi)}`, { email: cfg.contact })
+      const loc = u.status === 200 ? u.json?.best_oa_location : null
+      if (u.status === 200) sources.push('Unpaywall')
+      if (loc && (https2048(loc.url_for_pdf) || https2048(loc.url))) {
+        best.open_copy = { url: https2048(loc.url_for_pdf) || https2048(loc.url), pdf: !!https2048(loc.url_for_pdf), landing_page: https2048(loc.url_for_landing_page), version: clean(loc.version, 40) || null, license: clean(loc.license, 40) || null, host: clean(loc.host_type, 40) || null, from: 'Unpaywall' }
+      } else if (u.status === 200 && best.open_copy === null) best.open_copy = null
+      best.is_open = u.status === 200 ? u.json?.is_oa === true || !!best.open_copy : best.open_copy ? true : null
+    }
+    rec.status = 200
+    rec.results = results.length
+    send(res, 200, { object: 'lookup', kind: doi ? 'doi' : 'citation', results, sources })
+  }
+
   function getJson(u, headers, signal) {
     return new Promise((resolve, reject) => {
       const lib = u.protocol === 'https:' ? https : http
