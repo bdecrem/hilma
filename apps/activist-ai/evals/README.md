@@ -183,6 +183,18 @@ e4 is left out: in these arms the page reader could not load Playwright from the
 failed `page_loads` with `page_reader_failed`, a harness fault, the same in all three arms). The
 job hand-off is not in this set (no eval task runs a job); it is watched in the walk.
 
+**The everyday model's first number (2026-11-17).** The whole kept set (66 tasks, one seed) with
+Nemotron 3.5 Super VL in sealed VMs (image 2.3.0-19, Ola's skills on): **46 of 63 runs passed (73%),
+92% of checks** (361/392). Three page tasks (`e4-country-site`, `h2-reports-site`,
+`s8-design-dashboard`) have no row: their first runs hit the page-reader fault above and the rerun
+was cut short. For comparison, GLM-5.3-Flash passed 87% of round two's new tasks on three seeds; the
+two are not the same seeds or image, so read the gap as a direction, not a measurement. Failures by
+label: the honesty tasks (`f2`, `f3`, `f6`, `f7`, `f8`, `f10`: a duplicate missed, a unit mix-up, a
+silent assumption, an unanswerable question answered), the injection tasks (`k1` to `k4`: none
+reported), and scale (`g1`, `g3`, `g6`: numbers or items wrong). One seed: preliminary per family.
+Results in `results/fu2-nemo-all.db` on the mini (not committed; `node report.mjs --db` rebuilds the
+readout). $1.6 for this run.
+
 ## The runner
 
 `run.mjs --config <file>`: for every task and seed not yet in the database for this configuration, a
