@@ -1,0 +1,1 @@
+Turn grants.csv into an Excel workbook I can send to the board: a summary sheet with the number of grants and the total amount for each program, a sheet with the cleaned data, and a notes sheet that says what you dropped or assumed. The header row should stay visible when scrolling. Values only, no formulas.

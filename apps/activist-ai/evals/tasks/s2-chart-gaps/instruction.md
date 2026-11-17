@@ -1,0 +1,1 @@
+rain.csv has monthly rainfall for three weather stations. Make a line chart of the monthly rainfall at Ostend for 2024 and 2025, saved as PNG and SVG, with the plotted numbers saved as a CSV. Months with no measurement should show as missing, not as zero. The caption should say which months are missing and that the data is from rain.csv.

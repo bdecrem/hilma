@@ -1,0 +1,1 @@
+studies.db is our database of adaptation studies. Make a chart of how many studies there are per region, for a slide. Save the chart as a PNG and an SVG, save the numbers behind it as a CSV file, and give it a caption that says what it shows and where the data came from. Some studies may have no region recorded: tell me how many.

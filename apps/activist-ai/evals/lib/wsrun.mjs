@@ -34,7 +34,7 @@ export async function makeWsHarness({ home, gatewayDb }) {
     return null
   }
 
-  async function run({ slot, gen, work, dir, prompts, timeLimit, tokenLimit, live }) {
+  async function run({ slot, gen, work, dir, prompts, timeLimit, tokenLimit, live, skills = null }) {
     const id = slot
     const caller = ws.names(id).caller
     const s = { final_text: '', all_text: '', requests: 0, tokens_in: 0, tokens_out: 0, cost_usd: 0, tools: {}, errors: 0, end_reason: 'done', turns: 0 }
@@ -99,7 +99,8 @@ export async function makeWsHarness({ home, gatewayDb }) {
           }
         } catch {}
       })()
-      const session = await client.session.create({ location: { directory: '/work' } })
+      // --skills off: the session may not load any skill (opencode then offers none); on: the image's own rules
+      const session = await client.session.create({ location: { directory: '/work' }, ...(skills === 'off' ? { permissions: [{ action: 'skill', resource: '*', effect: 'deny' }] } : {}) })
       sid = session.id
       const t0 = Date.now()
       let lastPromptAt = 0

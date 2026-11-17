@@ -1,0 +1,1 @@
+The four PDFs are records of what residents said about the new bus routes. Write a one-page memo as a Word document on what people said, with at least four direct quotes, each followed by its document and page, like (file.pdf, p. 2).

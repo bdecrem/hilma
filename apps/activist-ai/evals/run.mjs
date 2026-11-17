@@ -2,7 +2,8 @@
 // The runner: runs a task set against one named configuration, N seeds each, one fresh folder
 // per run, with a time limit and a token limit, and writes one result row per run to SQLite.
 //
-//   node evals/run.mjs --config configs/glm-5.3-flash.json [--tasks all|a1-survey,b*,easy] [--seeds 1,2]
+//   node evals/run.mjs --config configs/glm-5.3-flash.json [--tasks all|a1-survey,b*,easy,skills,skill:chart] [--seeds 1,2]
+//        [--skills on|off]  (opencode-ws: Ola's skills offered or denied; see skills/README.md)
 //        [--concurrency 3] [--time 600] [--tokens 1500000] [--max-usd 15] [--db results/evals.db] [--dry]
 //
 // Resumable: a (configuration, task, task version, seed) already in the database is skipped, so
@@ -36,6 +37,29 @@ if (!args.config) {
 }
 const cfgPath = path.resolve(here, args.config)
 const cfg = JSON.parse(readFileSync(cfgPath, 'utf8'))
+// --skills on|off (opencode-ws only): the same configuration with Ola's skills offered or denied for
+// the session, recorded as two configurations (<name>-skills-on, <name>-skills-off) whose settings
+// carry the hash of the skills folder, so a score always names the exact skills.
+const skillsMode = args.skills === undefined ? null : String(args.skills)
+if (skillsMode !== null) {
+  if (!['on', 'off'].includes(skillsMode) || cfg.harness !== 'opencode-ws') { console.error('--skills on|off needs an opencode-ws configuration'); process.exit(2) }
+  cfg.name = `${cfg.name}-skills-${skillsMode}`
+  cfg.skills = skillsMode
+  cfg.skills_hash = skillsHash(path.join(here, '../skills'))
+}
+function skillsHash(dir) {
+  const h = createHash('sha256')
+  const walk = (d, rel) => {
+    for (const e of readdirSync(d, { withFileTypes: true }).sort((a, b) => (a.name < b.name ? -1 : 1))) {
+      if (e.name.startsWith('.') || e.name === '__pycache__') continue
+      if (e.isDirectory()) walk(path.join(d, e.name), `${rel}${e.name}/`)
+      else if (e.isFile()) h.update(`${rel}${e.name}\0`).update(readFileSync(path.join(d, e.name))).update('\0')
+    }
+  }
+  // the skill folders only, as workspace/ws.mjs skillsHash (the folder's README and check.py are not in the image)
+  for (const e of readdirSync(dir, { withFileTypes: true }).filter((x) => x.isDirectory() && !/^[._]/.test(x.name)).sort((a, b) => (a.name < b.name ? -1 : 1))) walk(path.join(dir, e.name), `${e.name}/`)
+  return h.digest('hex').slice(0, 16)
+}
 const seeds = String(args.seeds || '1,2').split(',').map(Number)
 const concurrency = Number(args.concurrency || 3)
 const timeLimit = Number(args.time || 600)
@@ -54,7 +78,7 @@ const allTasks = readdirSync(path.join(here, 'tasks'))
   .map((d) => ({ dir: path.join(here, 'tasks', d), ...JSON.parse(readFileSync(path.join(here, 'tasks', d, 'task.json'), 'utf8')) }))
   .filter((t) => !t.retired || args['with-retired'])
 const want = String(args.tasks || 'all').split(',')
-const pick = (t) => want.some((w) => w === 'all' || w === t.id || w === t.level || w === t.family || (w.endsWith('*') && t.id.startsWith(w.slice(0, -1))))
+const pick = (t) => want.some((w) => w === 'all' || w === t.id || w === t.level || w === t.family || (t.skill && w === `skill:${t.skill}`) || (w.endsWith('*') && t.id.startsWith(w.slice(0, -1))))
 const tasks = allTasks.filter(pick).sort((a, b) => LEVELS.indexOf(a.level) - LEVELS.indexOf(b.level) || a.id.localeCompare(b.id))
 
 // ------------------------------------------------------------------ the configuration's identity
@@ -302,7 +326,7 @@ if (cfg.harness === 'opencode-ws') {
 const liveFlags = { get stopping() { return stopping } }
 async function runWs(run, prompts) {
   const slot = freeSlots.shift()
-  try { return await wsh.run({ slot, gen: run.gen, work: run.work, dir: run.dir, prompts, timeLimit, tokenLimit, live: liveFlags }) } finally { freeSlots.push(slot) }
+  try { return await wsh.run({ slot, gen: run.gen, work: run.work, dir: run.dir, prompts, timeLimit, tokenLimit, live: liveFlags, skills: skillsMode }) } finally { freeSlots.push(slot) }
 }
 const { loadavg } = await import('node:os')
 let loadStop = false

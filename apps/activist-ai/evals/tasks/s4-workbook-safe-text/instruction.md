@@ -1,0 +1,1 @@
+Make an Excel file of the volunteers in contacts.csv for the team: one sheet with every contact, sorted by last name, with a header that stays visible and a filter. Keep everything exactly as written in the file: volunteer ids, phone numbers, ZIP codes and the notes.

@@ -5,8 +5,11 @@
 //         override: { "data.json": "<replacement body>" } }
 // The site is served from a local HTTP server on a random loopback port (so fetch() works);
 // `override` swaps a file's body at serve time, which tells a page that reads its data at
-// run time from one with the numbers typed in. Prints one JSON line.
+// run time from one with the numbers typed in. `audit: true` adds the measurements the workspace's
+// own ola-page makes (contrast from the page's colors, text sizes, fonts, clipped text, things past
+// the right edge), from the same script, so a checker and the agent measure alike. Prints one JSON line.
 import http from 'node:http'
+import { readFileSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import path from 'node:path'
@@ -52,6 +55,11 @@ try {
   for (const sel of spec.read || []) out.values[sel] = await p.$$eval(sel, (els) => els.map((e) => e.innerText)).catch(() => [])
   out.links = await p.$$eval('a[href]', (as) => as.map((a) => a.getAttribute('href')))
   out.charts = await p.$$eval('svg, canvas', (els) => els.filter((e) => e.getBoundingClientRect().width > 50).length)
+  if (spec.audit) {
+    const src = readFileSync(path.join(here, '../../workspace/ola-page'), 'utf8')
+    const measure = /MEASURE = r"""([\s\S]*?)"""/.exec(src)[1]
+    out.audit = JSON.parse(await p.evaluate(measure))
+  }
   out.ok = out.status === 200
 } catch (e) {
   out.error = String(e.message).slice(0, 200)

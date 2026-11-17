@@ -1,0 +1,1 @@
+{"id": "s1-chart-db", "family": "skills", "skill": "chart", "level": "medium", "honesty": false, "version": 1, "round": 3, "outputs": ["*.png", "*.svg", "*.csv"]}

@@ -1,0 +1,1 @@
+{"id": "s2-chart-gaps", "family": "skills", "skill": "chart", "level": "medium", "honesty": false, "version": 1, "round": 3, "outputs": ["*.png", "*.svg", "*.csv"]}

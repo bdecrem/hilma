@@ -1,0 +1,1 @@
+index.html is our dashboard. It is cramped, hard to read and breaks on a phone. Redesign it so it looks professional and reads well on a phone and a laptop. Keep every number, the chart and the source line.

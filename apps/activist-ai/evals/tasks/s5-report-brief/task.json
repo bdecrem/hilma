@@ -1,0 +1,1 @@
+{"id": "s5-report-brief", "family": "skills", "skill": "report", "level": "hard", "honesty": false, "version": 1, "round": 3, "outputs": ["*.docx", "*.pdf"]}

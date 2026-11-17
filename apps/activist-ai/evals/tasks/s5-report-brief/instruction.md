@@ -1,0 +1,1 @@
+The three PDFs are reports on moving households away from the river. Write a two-page brief for the board as a Word document and a PDF: what the reports say about each town, with a table of households moved per town and a chart. Cite every number with its report and page, like (report.pdf, p. 3).
