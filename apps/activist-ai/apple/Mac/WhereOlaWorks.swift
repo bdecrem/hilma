@@ -16,30 +16,67 @@ final class WhereOlaWorks {
 
   init(store: OlaStore) { self.store = store }
 
-  /// At launch and after every change of the setting.
+  /// The folder and token the running local server was started with.
+  private var localKey: String?
+  /// Each apply gets a number; only the newest may attach a server (2026-11-16: two applies at
+  /// once started two servers, the second ended the first as an orphan, and the store kept the
+  /// dead one's address).
+  private var generation = 0
+
+  /// At launch and after every change of the setting. Safe to call any number of times, at once.
   func apply() async {
+    generation += 1
+    let mine = generation
     problem = nil
     guard LocalSettings.onThisMac else {
       local?.stop()
       local = nil
-      if store.config?.url.host() == "127.0.0.1" { store.attach(nil) }
+      localKey = nil
+      if store.config?.url.host() == "127.0.0.1" || store.config == nil { store.attach(nil) }
       return
     }
     guard let folder = LocalSettings.folder else { problem = "Choose the folder Ola should work in."; return }
     guard let token = LocalSettings.token, !token.isEmpty else { problem = "Add the model token (on the machine: ola-bart.sh model-token)."; return }
     if let p = Self.touch(folder) { problem = p; return }
+    let key = "\(folder.path)\n\(token)"
+    // Already running for this folder and token, and the app is using it: nothing to do.
+    if let local, local.isRunning, localKey == key, store.config?.url.port == local.port, store.config?.url.host() == "127.0.0.1" { return }
     starting = true
-    defer { starting = false }
+    defer { if mine == generation { starting = false } }
+    local?.stop()
+    local = nil
+    localKey = nil
     let server = LocalServer(folder: folder)
     do {
-      local?.stop()
       let config = try await server.start(modelToken: token, timeout: 45)
+      guard mine == generation else {
+        // A newer apply took over while this one started: this server is not wanted.
+        server.stop()
+        return
+      }
       local = server
+      localKey = key
       store.attach(config)
     } catch {
+      guard mine == generation else { return }
       problem = error.localizedDescription
       store.problem = Problem(text: "The agent on this Mac did not start. Settings has the details and Try again.", detail: error.localizedDescription)
     }
+  }
+
+  /// Stops the local agent and starts it again.
+  func restart() async {
+    local?.stop()
+    local = nil
+    localKey = nil
+    await apply()
+  }
+
+  /// For Settings: "Agent on this Mac: running", never an address.
+  var localState: String {
+    if starting { return "Starting" }
+    if let local, local.isRunning, store.config?.url.port == local.port { return store.connection == .open ? "Running" : "Running, connecting" }
+    return problem == nil ? "Not running" : "Did not start"
   }
 
   /// Right after the folder is picked, the app itself reads it, so that if macOS asks whether Ola

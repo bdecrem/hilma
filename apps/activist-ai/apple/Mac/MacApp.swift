@@ -7,6 +7,7 @@ enum Main {
   static func main() {
     OlaFont.register()
     if LocalSelfTest.requested { LocalSelfTest.run() }
+    if SettingsSelfTest.requested { SettingsSelfTest.run() }
     if let dir = Snapshot.outputDirectory {
       Snapshot.run(to: dir)
       return
@@ -143,6 +144,7 @@ struct SettingsView: View {
   var whereOla: WhereOlaWorks?
   var phoneLink: PhoneLink?
   @State private var connecting = false
+  @AppStorage(LocalSettings.modeKey) private var mode = "machine"
 
   var body: some View {
     VStack(alignment: .leading, spacing: 14) {
@@ -151,11 +153,18 @@ struct SettingsView: View {
       Text("Phone").font(.headline)
       if let phoneLink { PhoneSettings(link: phoneLink) }
       Divider()
-      LabeledContent("Machine", value: store.config?.url.absoluteString ?? "Not connected")
-      LabeledContent("Status", value: statusText)
-      HStack {
-        Button("Connect Again\u{2026}") { connecting = true }
-        Button("Forget This Machine", role: .destructive) { store.forget() }
+      if mode == "mac" {
+        // The local server's address is the app's business, never shown.
+        LabeledContent("Agent on this Mac", value: whereOla?.localState ?? "Not running")
+        Button("Restart the Agent") { Task { await whereOla?.restart() } }
+          .disabled(whereOla?.starting ?? true)
+      } else {
+        LabeledContent("Ola machine", value: store.config?.url.host() ?? "Not connected")
+        LabeledContent("Status", value: statusText)
+        HStack {
+          Button("Connect Again\u{2026}") { connecting = true }
+          Button("Forget This Machine", role: .destructive) { store.forget() }
+        }
       }
     }
     .padding(24)

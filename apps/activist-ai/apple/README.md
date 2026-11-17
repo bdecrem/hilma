@@ -124,6 +124,15 @@ One setting for the whole app:
   Shell commands and edits ask, as on the machine. These sessions live on the Mac; the phone does
   not see them.
 
+**The Settings check** (keep it): `tools/settings-selftest.sh <Ola.app> <folder> <token-file>` runs
+`--settings-selftest` in a hidden second instance with its own settings suite, scratch Application
+Support, relay port 4339 and no Keychain. It turns on Let my phone connect, checks the Mac's
+Tailscale name is known and no IP address is shown, presses Pair a Phone and checks the code carries
+the `*.ts.net` name and its window is open; then applies "Where Ola works" twice at once (launch and
+Settings), toggles the phone setting, switches modes twice and saves, and checks exactly one local
+agent is alive, the app uses it, it answers, the app is connected and Settings says "Running" with
+no address; then switches back and checks the agent stopped. 12 of 12 on 2026-11-16.
+
 **The check from the real app** (keep it; it is the proof for this mode):
 `tools/local-selftest.sh <Ola.app> <folder> [token-file]` launches a second, background instance of
 the app through LaunchServices (`open -n -g`, no window), so macOS treats it as when Bart opens it,

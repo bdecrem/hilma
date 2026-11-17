@@ -11,10 +11,12 @@ import Security
 /// could rewrite its own permissions there). The gateway token and the server password reach
 /// opencode through its environment, never a file.
 public final class LocalServer: @unchecked Sendable {
-  public static let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("Ola")
+  /// Application Support/Ola. A self-test points it at a scratch folder.
+  nonisolated(unsafe) public static var support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("Ola")
   /// Where tools/install-local-opencode.sh puts opencode 2.3.0.
   public static var binary: URL? {
-    let mine = support.appendingPathComponent("opencode/node_modules/.bin/opencode")
+    // Always the real install, also when a self-test points `support` at a scratch folder.
+    let mine = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("Ola/opencode/node_modules/.bin/opencode")
     if FileManager.default.isExecutableFile(atPath: mine.path) { return mine }
     for p in ["/opt/homebrew/bin/opencode", "/usr/local/bin/opencode"] where FileManager.default.isExecutableFile(atPath: p) { return URL(fileURLWithPath: p) }
     return nil
@@ -197,7 +199,10 @@ public final class LocalServer: @unchecked Sendable {
     if p.isRunning { p.terminate() }
     p.waitUntilExit()
     process = nil
-    if let pidFile { try? FileManager.default.removeItem(at: pidFile) }
+    // Only our own pid: another server of this app may have written the file since.
+    if let pidFile, (try? String(contentsOf: pidFile, encoding: .utf8))?.trimmingCharacters(in: .whitespacesAndNewlines) == String(p.processIdentifier) {
+      try? FileManager.default.removeItem(at: pidFile)
+    }
   }
 
   deinit { stop() }
@@ -209,10 +214,15 @@ public enum LocalSettings {
   public static let modeKey = "ola.where"
   public static let folderKey = "ola.localFolder"
 
-  public static var onThisMac: Bool { UserDefaults.standard.string(forKey: modeKey) == "mac" }
-  public static var folder: URL? { UserDefaults.standard.string(forKey: folderKey).map { URL(fileURLWithPath: $0) } }
+  /// The app's settings. A self-test uses its own suite, so it never changes Bart's.
+  nonisolated(unsafe) public static var defaults = UserDefaults.standard
+  /// A self-test passes the token in a file instead of the Keychain.
+  nonisolated(unsafe) public static var tokenOverride: String?
+  public static var onThisMac: Bool { defaults.string(forKey: modeKey) == "mac" }
+  public static var folder: URL? { defaults.string(forKey: folderKey).map { URL(fileURLWithPath: $0) } }
 
   public static var token: String? {
+    if let tokenOverride { return tokenOverride }
     let q: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service, kSecReturnData as String: true, kSecMatchLimit as String: kSecMatchLimitOne]
     var out: CFTypeRef?
     guard SecItemCopyMatching(q as CFDictionary, &out) == errSecSuccess, let d = out as? Data else { return nil }

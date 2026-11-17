@@ -406,7 +406,80 @@ public enum Tailnet {
   }
 
   /// This Mac's Tailscale name (`imac-m1.tailde799a.ts.net`), from the Tailscale app's own CLI.
-  public static func dnsName() -> String? {
+  /// Inside the app, the reverse lookup took 35 s and found nothing, and the Tailscale CLI answered
+  /// nothing (2026-11-16, measured by --settings-selftest). So: guess the name from this Mac's names
+  /// and the tailnet's suffix (from the Ola machine's address, `*.tailXXXX.ts.net`), and keep a
+  /// guess only if it resolves to this Mac's own Tailscale address. The slow ways come last.
+  public static func dnsName(suffixHint: String? = nil) -> String? {
+    guard let ip = address() else { return nil }
+    let suffixes = [suffixHint, UserDefaults.standard.string(forKey: "ola.serverAddress").flatMap { URL(string: $0)?.host() }]
+      .compactMap { $0 }
+      .compactMap { h -> String? in
+        guard h.hasSuffix(".ts.net") else { return nil }
+        let parts = h.split(separator: ".")
+        return parts.count >= 3 ? parts.suffix(3).joined(separator: ".") : nil
+      }
+    var labels: [String] = []
+    for raw in [Host.current().localizedName, SCDynamicStoreHostName()] {
+      guard let raw else { continue }
+      let l = raw.lowercased().replacingOccurrences(of: " ", with: "-").replacingOccurrences(of: "'", with: "").replacingOccurrences(of: "\u{2019}", with: "")
+      labels.append(l)
+      if let r = l.range(of: #"-\d+$"#, options: .regularExpression) { labels.append(String(l[..<r.lowerBound])) }
+    }
+    for s in Set(suffixes) {
+      for l in labels where resolves("\(l).\(s)", to: ip) { return "\(l).\(s)" }
+    }
+    return reverseName() ?? cliName()
+  }
+
+  static func SCDynamicStoreHostName() -> String? {
+    var buf = [CChar](repeating: 0, count: 256)
+    guard gethostname(&buf, buf.count) == 0 else { return nil }
+    return String(cString: buf).replacingOccurrences(of: ".local", with: "")
+  }
+
+  /// Does `name` resolve to `ip`? (MagicDNS answers forward lookups quickly.)
+  static func resolves(_ name: String, to ip: String) -> Bool {
+    var hints = addrinfo()
+    hints.ai_family = AF_INET
+    var res: UnsafeMutablePointer<addrinfo>?
+    guard getaddrinfo(name, nil, &hints, &res) == 0, let first = res else { return false }
+    defer { freeaddrinfo(res) }
+    var p: UnsafeMutablePointer<addrinfo>? = first
+    while let a = p {
+      if let sa = a.pointee.ai_addr {
+        var addr = sa.withMemoryRebound(to: sockaddr_in.self, capacity: 1) { $0.pointee.sin_addr }
+        var buf = [CChar](repeating: 0, count: Int(INET_ADDRSTRLEN))
+        inet_ntop(AF_INET, &addr, &buf, socklen_t(INET_ADDRSTRLEN))
+        if String(cString: buf) == ip { return true }
+      }
+      p = a.pointee.ai_next
+    }
+    return false
+  }
+
+  /// MagicDNS's answer for our own address.
+  public static func reverseName() -> String? {
+    // MagicDNS answers the reverse lookup of our own address. This works from inside the app; the
+    // Tailscale app's CLI, asked from a GUI app, returned nothing (2026-11-16: the code had no name).
+    if let ip = address() {
+      var sa = sockaddr_in()
+      sa.sin_family = sa_family_t(AF_INET)
+      sa.sin_len = UInt8(MemoryLayout<sockaddr_in>.size)
+      inet_pton(AF_INET, ip, &sa.sin_addr)
+      var host = [CChar](repeating: 0, count: Int(NI_MAXHOST))
+      let rc = withUnsafePointer(to: &sa) { $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { getnameinfo($0, socklen_t(MemoryLayout<sockaddr_in>.size), &host, socklen_t(host.count), nil, 0, NI_NAMEREQD) } }
+      if rc == 0 {
+        var name = String(cString: host)
+        if name.hasSuffix(".") { name.removeLast() }
+        if name.hasSuffix(".ts.net") { return name }
+      }
+    }
+    return nil
+  }
+
+  /// The Tailscale app's CLI (slow, and empty when asked from a GUI app; the fallback).
+  public static func cliName() -> String? {
     for path in ["/Applications/Tailscale.app/Contents/MacOS/Tailscale", "/opt/homebrew/bin/tailscale", "/usr/local/bin/tailscale"] where FileManager.default.isExecutableFile(atPath: path) {
       let p = Process()
       p.executableURL = URL(fileURLWithPath: path)

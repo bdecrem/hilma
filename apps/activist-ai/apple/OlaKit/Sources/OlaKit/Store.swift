@@ -133,10 +133,14 @@ public final class OlaStore {
   private func listen(_ client: OpenCodeClient) async {
     var backoff: UInt64 = 1
     var first = true
-    while !Task.isCancelled {
+    // A listener for a server the store has moved away from must not touch its state (2026-11-16:
+    // after several switches an old listener set "connecting" over the new one's "open", for good).
+    func current() -> Bool { !Task.isCancelled && self.client === client }
+    while current() {
       do {
         if case .lost = connection {} else { connection = .connecting }
         for try await ev in client.events() {
+          guard current() else { return }
           if ev["type"].str == "server.connected" {
             connection = .open
             backoff = 1
@@ -148,10 +152,10 @@ public final class OlaStore {
         }
         throw OlaError.unreachable("the event stream ended")
       } catch OlaError.unauthorized {
-        connection = .refused
+        if current() { connection = .refused }
         return
       } catch {
-        if Task.isCancelled { return }
+        if !current() { return }
         if case .lost = connection {} else { connection = .lost(since: .now, why: (error as? OlaError)?.detail ?? error.localizedDescription) }
         try? await Task.sleep(nanoseconds: backoff * 1_000_000_000)
         backoff = min(backoff * 2, 10)

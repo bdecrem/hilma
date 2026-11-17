@@ -6,7 +6,11 @@ public enum Credentials {
   static let service = "cx.ola.opencode"
   static let addressKey = "ola.serverAddress"
 
+  /// A self-test never reads the Keychain (another build of the app would make macOS ask).
+  nonisolated(unsafe) public static var disabled = false
+
   public static func load() -> ServerConfig? {
+    if disabled { return nil }
     guard let address = UserDefaults.standard.string(forKey: addressKey), let url = URL(string: address),
           let password = password(for: address) else { return nil }
     let d = UserDefaults.standard
