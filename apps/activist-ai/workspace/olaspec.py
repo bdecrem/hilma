@@ -21,8 +21,11 @@ def fail(cmd, msg, code=1):
 def call(cmd, path, body, timeout=600, tries=1, batch=False):
     """POST JSON to the gateway; returns (status, json). Exits on a closed door."""
     headers = {"Authorization": "Bearer " + os.environ.get("BOX_API_KEY", ""), "Content-Type": "application/json"}
-    if batch or os.environ.get("OLA_LANE") == "batch":
+    # Inside a batch job (ola-batch sets OLA_JOB), the job's headers: its budget, the batch line.
+    # Otherwise none: a batch header without the job's grant is refused (gateway/batch.mjs).
+    if os.environ.get("OLA_JOB"):
         headers["X-Ola-Lane"] = "batch"
+        headers["X-Ola-Job"] = os.environ["OLA_JOB"]
     data = json.dumps(body)
     for attempt in range(tries):
         c = http.client.HTTPConnection(GATEWAY, timeout=timeout)

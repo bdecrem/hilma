@@ -1593,24 +1593,24 @@ rebuilt from an allowlist, the log has names and numbers only):
   a minute of audio; 5,000 tokens a picture made). Every try that came back is charged.
   `/v1/usage` now has `by_model` per name.
 
-**Lanes: a person first, batch work after.** Each caller has two lines. A request is **batch** when
-its name's lane is batch (`read`, `transcribe`, `draw`), or when it carries the header
-**`X-Ola-Lane: batch`**; everything else is interactive. Batch requests start only when no
-interactive request can, hold at most `GATEWAY_BATCH_MAX_INFLIGHT` slots (default 2, never more than
-`GATEWAY_MAX_INFLIGHT`), so a person always finds a slot, and may wait up to
-`GATEWAY_BATCH_MAX_QUEUE_WAIT_MS` (30 minutes) in a line of up to `GATEWAY_MAX_QUEUED_BATCH_PER_CALLER`
-(64). The header can only lower a request's priority: `X-Ola-Lane: interactive` on `read` is still
-batch. Each name also has its own pool (its own server on the Studio), so a thousand `read` calls
-cannot fill the slots the everyday model needs. The log line gains `"lane"`.
+**Lanes: a person first, batch work after.** Each caller has two lines in the queue. A request
+waits in the **batch line** when it is a batch job's (`X-Ola-Lane: batch` with its `X-Ola-Job`,
+admitted by `gateway/batch.mjs` only with the job's grant and counted on the job's budget; see
+[Batch jobs](#batch-jobs-the-same-question-for-every-document-2026-11-17)) or when its name's lane is batch (`read`, `transcribe`,
+`draw`, counted on the weekly quota); everything else is interactive. The batch line is served only
+when no interactive request can start, holds at most `GATEWAY_BATCH_MAX_INFLIGHT` slots across all
+callers (default 2, never more than `GATEWAY_MAX_INFLIGHT`), so a person always finds a slot, and may
+wait up to `GATEWAY_BATCH_MAX_QUEUE_WAIT_MS` (30 minutes) in a line of up to
+`GATEWAY_MAX_QUEUED_BATCH_PER_CALLER` (64). Nothing a caller sends raises a request out of the batch
+line. The specialist routes (embed, rerank, transcribe, draw) take the job headers too, with the same
+grant and budget. Each name also has its own pool (its own server on the Studio), so a thousand
+`read` calls cannot fill the slots the everyday model needs. The log line gains `"lane"`.
 
-> **For the batch runner:** send every request with `X-Ola-Lane: batch`, through the project's own
-> door with the project's own token (the same caller, so the same weekly quota and the same
-> per-project limits). There is no second token: a batch job is the project's work, counted as such.
-> Expect 429 `rate_limit_error` with `Retry-After` when a name's per-minute limit or the batch line is
-> full, and 503 `overloaded_error` after 30 minutes without a slot; back off and retry. Inside the
-> sealed computer the commands send the header themselves when `OLA_LANE=batch` is set, and for long
-> jobs (`ola-ocr` of more than 4 pages, `ola-translate` of more than 3 parts, more than 128 texts to
-> `ola-embed`).
+> **For the batch runner:** keep sending `X-Ola-Lane: batch` and `X-Ola-Job` as `ola-batch` does;
+> those requests now wait behind people's. Expect 429 `rate_limit_error` with `Retry-After` when a
+> name's per-minute limit or the batch line is full, and 503 `overloaded_error` after 30 minutes
+> without a slot; back off and retry. The specialist commands send the job's headers when `OLA_JOB`
+> is set in their environment, and no lane header otherwise.
 
 **Settings** (gateway env file; the gateway refuses to start on a bad one, naming the setting, never
 a value):
