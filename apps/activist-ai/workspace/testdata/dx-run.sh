@@ -22,6 +22,10 @@ if [[ "$want" == *full* ]]; then
   OLA_CHECK_TAG=dx OLA_CHECK_FD_PORT=4890 OLA_CHECK_GW_PORT=4282 node frontdesk/check.mjs --no-live --shots ~/ola-dx/shots > ~/ola-dx/logs/full-fd.log 2>&1; echo "frontdesk $?"; grep -E "^FAIL|checks passed" ~/ola-dx/logs/full-fd.log | cut -c1-300
   (cd web && OLA_WEB_SHOTS=~/ola-dx/shots node check.mjs --no-live > ~/ola-dx/logs/full-web.log 2>&1); echo "web $?"; grep -E "FAIL|checks passed" ~/ola-dx/logs/full-web.log | cut -c1-300
 fi
+if [[ "$want" == *fdonly* ]]; then
+  (cd web && npm run build >/dev/null 2>&1; echo "web build $?")
+  OLA_CHECK_TAG=dx OLA_CHECK_FD_PORT=4890 OLA_CHECK_GW_PORT=4282 node frontdesk/check.mjs --no-live --shots ~/ola-dx/shots > ~/ola-dx/logs/full-fd.log 2>&1; echo "frontdesk $?"; grep -E "^FAIL|checks passed" ~/ola-dx/logs/full-fd.log | cut -c1-300
+fi
 if [[ "$want" == *live* ]]; then
   OLA_CHECK_TAG=dx OLA_CHECK_FD_PORT=4890 OLA_CHECK_GW_PORT=4282 OLA_CHECK_ONLY="^documents|^live: a scanned" node frontdesk/check.mjs --shots ~/ola-dx/shots > ~/ola-dx/logs/live-fd.log 2>&1; echo "live $?"; grep -E "^(pass|FAIL)|checks passed" ~/ola-dx/logs/live-fd.log | cut -c1-600
   grep -c '"caller":"ws-dx-fd-a"' ~/ola-dx/logs/live-fd.log
