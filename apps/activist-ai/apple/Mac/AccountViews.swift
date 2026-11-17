@@ -43,6 +43,8 @@ final class AccountController {
   private var task: Task<Void, Never>?
   private var door: ModelDoor?
   let api = AccountAPI()
+  /// Open only while the app hands a request to the hosted open model (the door refuses it otherwise).
+  let hostedGate = HostedGate()
 
   /// Screenshots: a still picture with no Keychain and no network.
   init(preview phase: Phase = .idle, name: String? = nil, passkeys: Bool = true, passkeyProblem: String? = nil) {
@@ -231,6 +233,7 @@ final class AccountController {
     if door == nil {
       let d = ModelDoor(api: api) { AccountKeeper.session?.token }
       d.onSignedOut = { Task { @MainActor [weak self] in self?.signedOutByServer() } }
+      d.allowHosted = { [g = hostedGate] in g.isOpen }
       door = d
     }
     try await door!.start()

@@ -111,7 +111,7 @@ struct PhoneSettings: View {
       VStack(alignment: .leading, spacing: 2) {
         Toggle("Let my phone connect", isOn: $enabled)
           .onChange(of: enabled) { _, _ in Task { await link.apply() } }
-        SettingNote("Ola on your iPhone works through this app: it shows these sessions, in either place Ola works. Your phone needs Tailscale, signed in to the same account.")
+        SettingNote("Your iPhone shows these sessions through this app. It needs Tailscale, on the same account.")
       }
       .onAppear { link.refresh() }
       .confirmationDialog("Remove this phone?", isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } })) {

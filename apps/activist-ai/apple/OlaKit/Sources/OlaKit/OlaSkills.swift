@@ -36,7 +36,7 @@ public enum OlaSkills {
       }
     }
     /// The pip package for a Python module.
-    var package: String? {
+    public var package: String? {
       guard case .python(let m) = self else { return nil }
       return ["PIL": "pillow", "docx": "python-docx", "yaml": "pyyaml", "bs4": "beautifulsoup4"][m] ?? m
     }

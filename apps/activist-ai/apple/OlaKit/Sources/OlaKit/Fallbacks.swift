@@ -52,6 +52,8 @@ public enum StretchMode: String, CaseIterable, Codable, Sendable {
 /// Why a request looks like a stretch: during a run (error, budget, tools) or before it (big_files, long_build).
 public enum StretchReason: String, Codable, Sendable {
   case error, budget, tools, bigFiles = "big_files", longBuild = "long_build"
+  /// The person asked for Claude or Claude Code in plain words ("use claude code for this").
+  case asked
 
   /// The one sentence of why (STRETCH_WHY in steps.ts).
   public var why: String {
@@ -61,6 +63,7 @@ public enum StretchReason: String, Codable, Sendable {
     case .tools: "Three of Ola\u{2019}s steps in a row did not work."
     case .bigFiles: "The files this request names are much larger than Ola\u{2019}s own model can read at once."
     case .longBuild: "This is a long build in many parts."
+    case .asked: "You asked for Claude Code."
     }
   }
 }
@@ -129,8 +132,9 @@ public enum FallbackWords {
     "If you hand it over, your request, this conversation so far, and the parts of your files it reads go to \(f.place(provider: provider))."
   }
   /// The card's question.
-  public static func question(_ f: Fallback, provider: String?) -> String {
-    "This may be a stretch for Ola\u{2019}s own model. Hand it to \(f.named(provider: provider))?"
+  public static func question(_ f: Fallback, provider: String?, reason: StretchReason? = nil) -> String {
+    if reason == .asked { return "Hand this to Claude Code?" }
+    return "This may be a stretch for Ola\u{2019}s own model. Hand it to \(f.named(provider: provider))?"
   }
 }
 
@@ -203,6 +207,9 @@ public struct StretchSuggestion: Equatable, Sendable, Identifiable {
   public var offers: [Fallback]
   /// The Ola turn that got stuck, or nil when the request has not been sent yet (before a run).
   public var turnID: String?
+  /// The person asked for Claude for the next thing ("use claude code for this next thing"):
+  /// Just this once applies to the next request, and nothing is sent now.
+  public var nextOnly = false
 
   public init(id: String = UUID().uuidString, sessionID: String?, request: String, reason: StretchReason, target: Fallback, offers: [Fallback], turnID: String?) {
     self.id = id
@@ -217,7 +224,11 @@ public struct StretchSuggestion: Equatable, Sendable, Identifiable {
   public var other: Fallback? { offers.first { $0 != target } }
 
   /// Its why line: the reason, then whether Ola started.
-  public var whyLine: String { "\(reason.why) \(turnID == nil ? "Ola has not started on it." : "What Ola did so far stays as it is.")" }
+  public var whyLine: String {
+    if reason == .asked { return nextOnly ? "You asked for Claude Code for your next request. Ola has not started on anything." : "You asked for Claude Code. Ola has not started on it." }
+    return "\(reason.why) \(turnID == nil ? "Ola has not started on it." : "What Ola did so far stays as it is.")"
+  }
+  public var question: String { FallbackWords.question(target, provider: nil, reason: reason) }
 
   public enum Answer: String, Sendable { case once, always, notNow }
 }
@@ -259,5 +270,43 @@ public struct HostedStatus: Equatable, Sendable {
   public var monthLine: String? {
     guard let usedUSD, let capUSD else { return nil }
     return "$\(String(format: "%.2f", usedUSD)) of $\(String(format: "%.2f", capUSD)) this month"
+  }
+
+  /// Asks the gateway as this Mac's caller (`<base>/usage` with the route's token: the account's
+  /// door, or the owner's forwarder) whether the hosted open model is there for it.
+  public static func check(baseURL: String, token: String) async -> HostedStatus {
+    guard let u = URL(string: baseURL.trimmingCharacters(in: CharacterSet(charactersIn: "/")) + "/usage") else { return HostedStatus(unavailable: unknown) }
+    var r = URLRequest(url: u)
+    r.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+    r.timeoutInterval = 15
+    guard let (d, res) = try? await URLSession(configuration: .ephemeral).data(for: r), (res as? HTTPURLResponse)?.statusCode == 200 else { return HostedStatus(unavailable: unknown) }
+    return from(usage: JSON.parse(d))
+  }
+}
+
+/// Whether the model door lets a request for the hosted model through now: open while the app hands
+/// one over (it may hand over in two sessions at once, so it counts).
+public final class HostedGate: @unchecked Sendable {
+  private let lock = NSLock()
+  private var open = 0
+  public init() {}
+  public var isOpen: Bool { lock.withLock { open > 0 } }
+  public func set(_ on: Bool) { lock.withLock { open = max(0, open + (on ? 1 : -1)) } }
+}
+
+/// The person asks for Claude in plain words: "hey can you use claude code for this next thing?",
+/// "ask claude", "have Claude do this". Then Ola does not send it to its own model (which would
+/// answer that it cannot); it offers the Claude card instead.
+public enum ClaudeAsk {
+  static let ask = try! NSRegularExpression(pattern: #"\b(use|ask|have|let|get|try|switch to|hand (it|this)( over)? to|give (it|this) to|with|via|through)\s+(the\s+)?claude(\s+code)?\b|\bclaude(\s+code)?\s*(please|,)?\s*(do|take|handle|try)\b"#, options: .caseInsensitive)
+  static let next = try! NSRegularExpression(pattern: #"\b(next (thing|one|request|task|message|question)|for the next|from now on|going forward)\b"#, options: .caseInsensitive)
+
+  /// nil when the message is not a request for Claude; else whether it only asks for the next thing.
+  public static func detect(_ text: String) -> Bool? {
+    let t = text.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard Stretch.has(ask, t) else { return nil }
+    // "use claude code for this next thing?" asks about what comes next and carries no task of its own.
+    let short = t.count <= 140
+    return short && Stretch.has(next, t)
   }
 }

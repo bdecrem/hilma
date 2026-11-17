@@ -1347,7 +1347,7 @@ An unknown command is not sent: the menu says "No such command" and leaves the t
 |---|---|
 | `/claude <request>` | Hands this one request to Claude Code. It just does it: typing the command is the yes, so it works even when "Fallback to Claude" is off (it does not turn the switch on). With no text after it, it runs the previous request again with Claude (the same as "Ask Claude instead"). If Claude Code is not available, say why in one sentence. |
 | `/ola <request>` | Uses Ola's own model for this one request (for when the choice beside the composer is set to Claude). |
-| `/hosted <request>` | Reserved for the hosted open model; where it is not set up it answers "Not set up in this app yet." |
+| `/hosted <request>` | Hands this one request to the hosted open model (Fallback to a hosted open model). Typing the command is the yes, as for `/claude`. Where it is not set up, or not allowed for the person, one sentence says so. |
 | `/new` | A new session. |
 | `/stop` | Stops the run. |
 | `/files` | Shows or hides the files panel (Mac, web), or opens the files list (phone). |
@@ -1413,7 +1413,7 @@ runs through the one-time grant of the stretch card's "Just this once" (no card,
 audited `claude_once` / `hosted_once`; the switch stays off), and with the switch on it is a plain
 Claude or hosted run. A **member** with the switch off sends nothing and reads "Claude is off for this
 project. The project’s owner can turn it on in Settings."; a fallback not set up on the machine says
-so in one sentence. `/hosted` is live here (the Mac app answers "Not set up in this app yet."). The
+so in one sentence. `/hosted` is live here and in the Mac app and `ola` (apple/README.md, "Both fallbacks on the Mac and in ola"). The
 transcript marks such a request "Claude" or "Hosted open model" beside the time. `/files` opens the
 files view, `/new` a new conversation, `/stop` stops the run (the only commands taken while a run
 works), `/help` lists the commands in the conversation. The reaction is read from the first line of

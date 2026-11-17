@@ -455,6 +455,55 @@ the command outlived Claude Code, which led to the process tracking proved by th
 the self-test on the machine, 14 of 14 including "a compliment gets a reaction and no reply" (🙏, no
 text); `tools/settings-selftest.sh` 15 of 15 including the Claude switch.
 
+## Both fallbacks on the Mac and in `ola`, and Settings as panes (2026-11-17)
+
+Bart: "in the cli and the mac app, can i now switch to claude code" and "do we have that setting for
+switching to open weight models if local inference is not good enough". The web app's rules, ported
+(`OlaKit/Fallbacks.swift`; keep the words and thresholds in step with `web/src/lib/steps.ts` and
+`StretchCard.tsx`):
+
+- **Commands, the same in both:** `/claude <request>` (Claude Code on this Mac, in the folder, its
+  steps in Ola's words, writes and commands asked first), `/hosted <request>` (the same opencode, with
+  the model `hosted` for that one request, then back; the reply is marked "Hosted open model" and
+  "Answered by the hosted open model at <provider>, outside Ola."), `/ola`, `/help`. Alone in a new
+  conversation, `/claude` or `/hosted` sends the next message there. In `ola`: `ola /claude "…"`,
+  `ola /hosted "…"`; in the terminal conversation, `/hosted` and `/ola` are opencode commands with
+  their own model, and `/claude` says how to reach Claude Code.
+- **Settings, Models:** "Fallback to Claude" and "Fallback to the hosted open model", both off,
+  **per folder** (`FallbackSettings`, keyed by the folder's path; "machine" for the Ola machine),
+  consent asked when one is turned on; "When a request looks like a stretch" (suggest, hand over
+  without asking, never) and where a handover goes. `ola settings` shows them; `ola settings hosted
+  on|off`, `claude on|off`, `stretch suggest|handover|never`, `stretch-to hosted|claude`.
+- **The stretch card:** before a run (`Stretch.precheck`: the text files the request names, against
+  On this Mac's folder) and after one (`Stretch.stuck`), with Just this once / Always in this folder /
+  Not now; in `ola`, a one-line question with the same three. Asking in plain words ("hey can you use
+  claude code for this next thing?", `ClaudeAsk`) shows the Claude card instead of sending it to the
+  everyday model; when it only asks for the next thing, Just this once applies to the next message.
+  The agents are told the same (`AgentNotes.claude`, `bart/ola-bart.sh`, `workspace/AGENTS.md`).
+- **Who may use the hosted model:** the gateway serves `hosted` to a person's own caller `p-<id>`
+  only when the admin let them (`admin.mjs app-hosted <handle> on [--cap-usd 20]`, people.app_hosted,
+  off by default), within their monthly ceiling and on their weekly allowance (the gateway counts
+  hosted tokens there too). The owner's own pasted-token setup is caller `bart`, listed by
+  `OLA_FD_HOSTED_CALLERS=bart` in the front desk's env. The app learns what is set up from the
+  caller's own `GET /v1/usage` (`hosted`, `hosted_month`). The model door refuses `"model":"hosted"`
+  unless the app opened it for a request it hands over (`HostedGate`); `ola` opens it for the
+  person's own `/hosted`. Claude on a Mac is the person's own Claude login, never Ola's.
+- **Not yet:** on the Ola machine (Bart's opencode in `~/ola-bart`) the hosted switch says "Not yet on
+  the Ola machine", as Claude's does; the phone shows hosted turns but does not start them.
+
+**Settings** is a standard Mac settings window: a toolbar of panes (General, Account, Models, Skills,
+Phone), each a short grouped form (`Mac/SettingsPanes.swift`); Skills shows one line per skill with a
+dot and one Get Python Libraries button, placeholders hidden. Two layouts were drawn and compared
+(`settings-A-toolbar-*`, `settings-B-sidebar-*` from `Ola -OlaSnapshot`); the toolbar was chosen, as
+most Mac apps' settings are.
+
+Proofs: `swift test` (FallbacksTests: the commands, the web app's rules, settings per folder, the
+gateway's answer read, the fold's hosted mark, a hosted run that switches the session's model for one
+request and back, the card's choices, Bart's sentence; DoorHostedGateTests); `gateway/test.mjs`
+(a caller's own usage names the provider); `frontdesk/test/unit.test.mjs` (the grants file for people
+and standing callers); `frontdesk/check.mjs` (a device refused until app-hosted, then served and
+counted, refused again after off).
+
 ## Phone notifications and inline View (2026-11-16, late)
 
 **Notifications** go to the phone for two things only: a run finished (done, or stopped by itself) and

@@ -14,6 +14,10 @@ public struct Fixture: Sendable {
   public var files: [String: [FileEntry]] = [:]
   public var selected: String?
   public var claudeOn = false
+  /// The hosted open model, set up and on (the provider's name), and the card on screen.
+  public var hostedOn = false
+  public var hostedProvider: String?
+  public var suggestion: StretchSuggestion?
   /// The last reply's first line per session, for the sessions list.
   public var previews: [String: String] = [
     "s1": "48 people answered, and 31 of them want to keep volunteering next spring.",
@@ -186,8 +190,34 @@ public struct Fixture: Sendable {
     return out as Data
   }
 
+  /// Both fallbacks: an Ola reply, the same request answered by the hosted open model, one by
+  /// Claude, and the stretch card for a long build Ola has not started on.
+  public static var fallbacks: Fixture {
+    var f = main
+    let ola = Turn(id: "f1", request: "How many people in survey.csv want to keep volunteering?", at: t(0), status: .done, steps: [
+      Step(id: "g1", tool: "read", words: Words(icon: .read, verb: "Read", object: "survey.csv"), result: "57 lines", status: .done, started: t(2), ended: t(3)),
+    ], answer: "[[ola:react done]]\n**31 of the 48 people** want to keep volunteering next spring.", ended: t(9))
+    let hosted = Turn(id: "f2", request: "Read all of minutes-2019-2026.txt and list every promise the board made, with the date.", at: t(60), status: .done, steps: [
+      Step(id: "h1", tool: "read", words: Words(icon: .read, verb: "Read", object: "minutes-2019-2026.txt"), result: "41,280 lines", status: .done, started: t(62), ended: t(70)),
+      Step(id: "h2", tool: "write", words: Words(icon: .write, verb: "Wrote", object: "promises.md"), status: .done, started: t(150), ended: t(152)),
+    ], answer: "[[ola:react done]]\nThe board made **23 promises** in those years; 9 were kept by their own date. The list, with dates and the meeting each came from, is in `promises.md`.", ended: t(160), engine: .hosted)
+    let claude = Turn(id: "f3", request: "Turn promises.md into a one-page handout.", at: t(220), status: .done, steps: [
+      Step(id: "k1", tool: "read", words: Words(icon: .read, verb: "Read", object: "promises.md"), result: "31 lines", status: .done, started: t(222), ended: t(223)),
+      Step(id: "k2", tool: "write", words: Words(icon: .write, verb: "Wrote", object: "handout.html"), status: .done, started: t(230), ended: t(236)),
+    ], answer: "[[ola:react done]]\nThe handout is in `handout.html`: the 23 promises in a table, the 14 not kept in bold.", ended: t(240), engine: .claude)
+    f.conversations["s1"] = Conversation(sessionID: "s1", directory: dir, turns: [ola, hosted, claude])
+    f.running = []
+    f.claudeOn = true
+    f.hostedOn = true
+    f.hostedProvider = "Made-up Cloud"
+    let build = "Build the tenants' union site: 1. a home page 2. a page per building 3. the survey results 4. a sign-up form 5. a calendar 6. a map 7. a page of rights 8. a contact page"
+    f.suggestion = StretchSuggestion(id: "st1", sessionID: "s1", request: build, reason: .longBuild, target: .hosted, offers: [.hosted, .claude], turnID: nil)
+    return f
+  }
+
   public static func named(_ name: String) -> Fixture {
     switch name {
+    case "fallbacks": return fallbacks
     case "results": return results
     case "reactions": return reactions
     case "approval": return approval

@@ -7,6 +7,10 @@ struct TurnView: View {
   var isLast: Bool
   /// "Ask Claude instead", under a finished Ola reply (only when Fallback to Claude is on).
   var askClaude: (() -> Void)?
+  /// "Ask the hosted model instead" (only when Fallback to the hosted open model is on).
+  var askHosted: (() -> Void)? = nil
+  /// The hosted model's provider, for the line under its replies.
+  var hostedProvider: String? = nil
   /// View on what the run made.
   var view: ((ResultItem) -> Void)?
   /// A file's bytes, for the pictures shown inline.
@@ -22,6 +26,9 @@ struct TurnView: View {
           Label(notice, systemImage: "arrow.clockwise").font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.ink2)
         }
         if !turn.shownAnswer.isEmpty { MarkdownView(text: turn.shownAnswer) }
+        if turn.engine == .hosted, !turn.isRunning, !turn.shownAnswer.isEmpty {
+          Text(FallbackWords.hostedAnswered(hostedProvider)).font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.ink3)
+        }
         if !turn.isRunning, let view {
           let items = ResultItem.derive(turn)
           let pictures = load == nil ? [] : Array(items.filter(InlinePictures.isPicture).prefix(3))
@@ -31,9 +38,16 @@ struct TurnView: View {
         }
         if let e = turn.error { ProblemView(problem: e) }
         else if turn.status == .stopped { Text("Stopped. What it finished is in the folder.").font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.ink3) }
-        if let askClaude, turn.engine == .ola, !turn.isRunning {
-          Button(action: askClaude) { Label("Ask Claude instead", systemImage: "arrow.uturn.right") }
-            .buttonStyle(.plain).font(OlaFont.sans(Metrics.meta + 0.5, .medium)).foregroundStyle(Ola.blue)
+        if turn.engine == .ola, !turn.isRunning, askClaude != nil || askHosted != nil {
+          HStack(spacing: Space.l) {
+            if let askHosted {
+              Button(action: askHosted) { Label("Ask the hosted model instead", systemImage: "arrow.uturn.right") }
+            }
+            if let askClaude {
+              Button(action: askClaude) { Label("Ask Claude instead", systemImage: "arrow.uturn.right") }
+            }
+          }
+          .buttonStyle(.plain).font(OlaFont.sans(Metrics.meta + 0.5, .medium)).foregroundStyle(Ola.blue)
         }
       }
     }
@@ -59,15 +73,16 @@ struct ReactionChip: View {
   }
 }
 
-/// Every Claude turn says so: quiet, but there at a glance.
+/// Every Claude turn says so, and every turn of the hosted open model: quiet, but there at a glance.
 struct ClaudeMark: View {
+  var text = "Claude"
   var body: some View {
-    Text("Claude")
+    Text(text)
       .font(OlaFont.sans(Metrics.meta - 0.5, .semibold))
       .foregroundStyle(Ola.blue)
       .padding(.horizontal, 6).padding(.vertical, 1)
       .overlay(Capsule().strokeBorder(Ola.blue.opacity(0.45), lineWidth: 1))
-      .accessibilityLabel("Answered by Claude")
+      .accessibilityLabel(text == "Claude" ? "Answered by Claude" : "Answered by the hosted open model")
   }
 }
 
@@ -83,6 +98,7 @@ struct RequestView: View {
         .fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
       Spacer(minLength: Space.s)
       if turn.engine == .claude { ClaudeMark() }
+      if turn.engine == .hosted { ClaudeMark(text: "Hosted open model") }
       Text(turn.at.formatted(date: .omitted, time: .shortened)).font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.ink3).monospacedDigit()
     }
     .padding(.bottom, turn.reaction == nil ? Space.m : Space.m + 8)
@@ -430,7 +446,8 @@ struct ConversationPane: View {
             if let convo, !convo.turns.isEmpty {
               ForEach(Array(convo.turns.enumerated()), id: \.element.id) { i, t in
                 VStack(alignment: .leading, spacing: 0) {
-                  TurnView(turn: t, isLast: i == convo.turns.count - 1, askClaude: store.claudeOn ? { Task { await store.askClaude(t.request) } } : nil, view: store.onView ?? { _ in }, load: { try? await store.read($0) })
+                  TurnView(turn: t, isLast: i == convo.turns.count - 1, askClaude: store.claudeOn ? { Task { await store.askClaude(t.request) } } : nil,
+                           askHosted: store.hostedOn ? { Task { await store.askHosted(t.request) } } : nil, hostedProvider: store.hosted.provider, view: store.onView ?? { _ in }, load: { try? await store.read($0) })
                   if i == convo.turns.count - 1, t.isRunning { WorkingStage(turn: t, waiting: convo.approval != nil, shown: $largeShown) }
                 }
               }
@@ -472,14 +489,20 @@ struct ConversationPane: View {
         }
         .frame(maxWidth: columnWidth).padding(.horizontal, sidePadding).padding(.top, Space.s)
       }
+      if let s = store.suggestion, s.sessionID == nil || s.sessionID == store.selectedID {
+        StretchCard(suggestion: s, store: store)
+          .frame(maxWidth: columnWidth)
+          .padding(.horizontal, sidePadding).padding(.top, Space.s)
+      }
       SlashMenu(draft: $draft)
         .frame(maxWidth: columnWidth)
         .padding(.horizontal, sidePadding)
       HStack(alignment: .bottom, spacing: 8) {
-        if store.claudeOn {
+        if store.claudeOn || store.hostedOn || store.nextEngine != .ola {
           Picker("Who works on this", selection: $store.nextEngine) {
             Text("Ola").tag(Turn.Engine.ola)
-            Text("Claude").tag(Turn.Engine.claude)
+            if store.hostedOn || store.nextEngine == .hosted { Text("Hosted").tag(Turn.Engine.hosted) }
+            if store.claudeOn || store.nextEngine == .claude { Text("Claude").tag(Turn.Engine.claude) }
           }
           .pickerStyle(.segmented).labelsHidden().fixedSize()
           .padding(.bottom, 10)
@@ -738,6 +761,45 @@ struct ResultList: View {
     case .text: "doc.plaintext"
     case .file: "doc"
     case .site: "globe"
+    }
+  }
+}
+
+/// The stretch card, in the conversation over the composer: Ola says a request may be a stretch
+/// for its own model, or that the person asked for Claude, and the person decides. The approval
+/// panel's sibling: the same paper and type, calm, three answers in a row.
+struct StretchCard: View {
+  var suggestion: StretchSuggestion
+  var store: OlaStore
+  @State private var consent = false
+
+  var provider: String? { store.hosted.provider }
+  var isOn: Bool { suggestion.target == .claude ? store.claudeOn : store.hostedOn }
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: Space.s) {
+      Text(suggestion.reason == .asked ? suggestion.question : FallbackWords.question(suggestion.target, provider: provider))
+        .font(OlaFont.sans(Metrics.ui + 1, .semibold)).foregroundStyle(Ola.ink)
+      Text(suggestion.whyLine + " " + FallbackWords.leaves(suggestion.target, provider: provider))
+        .font(OlaFont.sans(Metrics.ui)).foregroundStyle(Ola.ink2).fixedSize(horizontal: false, vertical: true)
+      HStack(spacing: Space.s) {
+        Button("Just this once") { Task { await store.answerSuggestion(.once) } }.buttonStyle(OlaButton(kind: .primary))
+        Button("Always in this folder") { if isOn { Task { await store.answerSuggestion(.always) } } else { consent = true } }.buttonStyle(OlaButton(kind: .ghost))
+        Button("Not now") { Task { await store.answerSuggestion(.notNow) } }.buttonStyle(OlaButton(kind: .ghost))
+        Spacer()
+        if let o = suggestion.other {
+          Button(o == .claude ? "or Claude" : "or the hosted open model") { store.switchSuggestion() }.buttonStyle(LinkButton(color: Ola.blue))
+        }
+      }
+    }
+    .padding(Space.l)
+    .background(RoundedRectangle(cornerRadius: 8).fill(Ola.field))
+    .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Ola.ruleStrong, lineWidth: 1))
+    .alert(suggestion.target == .claude ? "Turn on Fallback to Claude?" : "Turn on Fallback to the hosted open model?", isPresented: $consent) {
+      Button("Turn On") { Task { await store.answerSuggestion(.always) } }
+      Button("Cancel", role: .cancel) {}
+    } message: {
+      Text(suggestion.target == .claude ? FallbackWords.claudeConsent : FallbackWords.hostedConsent(provider))
     }
   }
 }

@@ -117,6 +117,40 @@ enum Snapshot {
         write(view, size: SettingsView.snapshotSize, appearance: appearance, to: dir.appendingPathComponent("\(name)-\(mode).png"), titled: false, fit: true)
       }
     }
+    // Settings as a Mac settings window (apple-shots/settings): every pane, in the two layouts
+    // compared (A, a toolbar of panes, chosen; B, a sidebar), light and dark; the Models pane with
+    // both fallbacks on. And the conversation with both fallbacks and the stretch card.
+    let savedDefaults = LocalSettings.defaults
+    LocalSettings.defaults = defaults
+    for (mode, appearance) in [("light", NSAppearance.Name.aqua), ("dark", .darkAqua)] {
+      for (name, fixture) in [("mac-fallbacks", "fallbacks")] where only == nil || name.contains(only!) {
+        let store = OlaStore(fixture: Fixture.named(fixture))
+        write(SnapshotFrame(store: store, treatment: chosen).environment(\.treatment, chosen), size: CGSize(width: 1440, height: 1100), appearance: appearance, to: dir.appendingPathComponent("\(name)-\(mode).png"), titled: false)
+      }
+      defaults.set("mac", forKey: LocalSettings.modeKey)
+      defaults.set(true, forKey: "ola.phone.enabled")
+      defaults.set(NSHomeDirectory() + "/Documents/court-watch", forKey: LocalSettings.folderKey)
+      let store = OlaStore(fixture: Fixture.main)
+      let account = AccountController(preview: .idle, name: "Maria L.")
+      account.previewUsage = "You\u{2019}ve used 42% of this week\u{2019}s share. It starts again Monday."
+      let controller = WhereOlaWorks(store: store, account: account)
+      controller.hostedStatus = HostedStatus(unavailable: nil, provider: "Made-up Cloud", usedUSD: 0.03, capUSD: 20)
+      let skillStates: [OlaSkills.State] = OlaSkills.read().map { s in
+        OlaSkills.State(skill: s, missing: ["report", "workbook", "chart"].contains(s.name) ? s.needs.filter { if case .python = $0 { return true } else { return false } } : [])
+      }
+      let info = SkillsInfo(preview: OlaSkills.version(), states: skillStates, machine: OlaSkills.compare(OlaSkills.version(), OlaSkills.version()))
+      for (tag, on) in [("off", FallbackSettings()), ("on", FallbackSettings(claude: true, hosted: true, stretch: .handover))] {
+        let settings = SettingsView(store: store, whereOla: controller, phoneLink: PhoneLink(store: store), account: account, cli: CLIInstaller(result: "Installed. In Terminal, go to a folder and type ola.", installed: true), tokenKnown: true, skills: info, fallbacksPreview: on)
+        for pane in SettingsPane.allCases where tag == "on" || pane == .models {
+          for (letter, layout) in [("A-toolbar", SettingsSnapshot.Layout.toolbar), ("B-sidebar", .sidebar)] {
+            let name = "settings-\(letter)-\(pane.rawValue)\(pane == .models ? "-\(tag)" : "")-\(mode)"
+            guard only == nil || name.contains(only!) || only == "settings" else { continue }
+            write(SettingsSnapshot(layout: layout, pane: pane, settings: settings).defaultAppStorage(defaults), size: CGSize(width: layout == .toolbar ? SettingsView.width : SettingsView.width + 171, height: 300), appearance: appearance, to: dir.appendingPathComponent("\(name).png"), titled: false, fit: true)
+          }
+        }
+      }
+    }
+    LocalSettings.defaults = savedDefaults
     // The three palettes (design pass two), each on the conversation with an approval and on
     // Settings, dark and light: apple-shots/polish-2.
     let chosenPalette = Palette.current

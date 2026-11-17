@@ -146,7 +146,12 @@ public enum AgentNotes {
   public static let skills = """
   Skills. Load the matching skill with the skill tool before you start, and follow it: `designer` for any web page or site (a landing or event page, a results or report page, a dashboard, a form or sign-up flow), whether you are making, redesigning or fixing it; `app-designer` for the screens of a phone or Mac app; `chart` for a chart; `workbook` for an Excel file; `report` for a Word or PDF report. For a page or app screen, do this before you write or change any .html file, every time.
   """
+  /// For the agent on opencode: when the person asks for Claude (README, "Fallback to Claude").
+  /// In step with workspace/AGENTS.md and bart/ola-bart.sh.
+  public static let claude = """
+  If the person asks for Claude or Claude Code, never say you can't: tell them to type /claude followed by the request (or turn on Fallback to Claude in Settings).
+  """
   public static var all: String { Reaction.instruction + "\n\n" + drawing }
   /// What the agent on opencode is told (the local server, and the machine's through ola-bart.sh).
-  public static var opencode: String { web + "\n\n" + skills + "\n\n" + all }
+  public static var opencode: String { web + "\n\n" + skills + "\n\n" + claude + "\n\n" + all }
 }

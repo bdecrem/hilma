@@ -178,6 +178,32 @@ final class FallbacksTests: XCTestCase {
 
   final class Armed { var log: [Bool] = [] }
 
+  /// Bart, 2026-11-17: "hey can you use claude code for this next thing?" got "I can't use Claude
+  /// Code" from the everyday model. Now it is the Claude card, and nothing goes to Ola.
+  func testAskingForClaudeInPlainWordsShowsTheCard() async throws {
+    XCTAssertEqual(ClaudeAsk.detect("hey can you use claude code for this next thing?"), true)
+    XCTAssertEqual(ClaudeAsk.detect("Ask Claude to rewrite the intro of letter.md"), false)
+    XCTAssertEqual(ClaudeAsk.detect("have Claude do this: count the rows"), false)
+    XCTAssertNil(ClaudeAsk.detect("Count the rows in survey.csv"))
+    XCTAssertNil(ClaudeAsk.detect("Write a note about Claude Monet's water lilies"))
+    let store = OlaStore(fixture: Fixture.main)
+    store.claudeUnavailable = "Claude Code is not installed on this Mac."
+    await store.send("hey can you use claude code for this next thing?")
+    XCTAssertEqual(store.problem?.text, "Claude Code is not installed on this Mac.", "not installed: one plain line")
+    XCTAssertNil(store.suggestion)
+    store.claudeUnavailable = nil
+    store.claudeLauncher = { _, _, _ in throw OlaError.unreachable("not in a test") }
+    let before = store.conversation?.turns.count
+    await store.send("hey can you use claude code for this next thing?")
+    let s = try XCTUnwrap(store.suggestion)
+    XCTAssertEqual([s.question, s.whyLine], ["Hand this to Claude Code?", "You asked for Claude Code for your next request. Ola has not started on anything."])
+    XCTAssertTrue(s.nextOnly)
+    XCTAssertEqual(store.conversation?.turns.count, before, "nothing went to Ola")
+    await store.answerSuggestion(.once)
+    XCTAssertEqual(store.nextEngine, .claude, "Just this once: the next request goes to Claude")
+    XCTAssertTrue(store.nextOnly)
+  }
+
   func testTheCardFollowsTheSetting() async throws {
     let store = OlaStore(fixture: Fixture.main)
     store.hosted = HostedStatus(unavailable: nil, provider: "Made-up Cloud")

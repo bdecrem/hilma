@@ -16,6 +16,8 @@ public enum OlaCLI {
     case login, logout, whoami, status, help, version
     /// Ola's skills here: their version and what each needs; `setup` installs the Python libraries.
     case skills(setup: Bool)
+    /// This folder's fallbacks: shown, or one of them changed (`ola settings hosted on`).
+    case settings([String])
     case installCommand
     case bad(String)
   }
@@ -34,6 +36,7 @@ public enum OlaCLI {
       let text = args.dropFirst().joined(separator: " ").trimmingCharacters(in: .whitespacesAndNewlines)
       return text.isEmpty ? .bad("Say what Ola should do: ola run \"your request\".") : .run(text)
     case "install-command": return .installCommand
+    case "settings": return .settings(Array(args.dropFirst()))
     case "skills":
       if args.count == 1 { return .skills(setup: false) }
       return args.count == 2 && args[1] == "setup" ? .skills(setup: true) : .bad("ola skills takes nothing after it, or setup.")
@@ -55,6 +58,12 @@ public enum OlaCLI {
     ola status           signed in or not, this folder, whether the model answers, Ola's skills
     ola skills           Ola's skills here: their version, and what each one needs
     ola skills setup     install the Python libraries the skills need (in Ola's own folder)
+
+    ola /hosted "a request"   hand this one request to the hosted open model (it leaves Ola)
+    ola /claude "a request"   hand this one request to Claude Code on this Mac, in this folder
+    ola /ola "a request"      Ola's own model (the same as ola "a request")
+    ola settings              this folder's fallbacks, and how to change them
+  In the conversation, /hosted and /ola work the same way; /claude says how to reach Claude Code.
 
   Ola asks before it runs a command or changes a file. Conversations here also show in the Ola
   app, in "On this Mac". Ctrl-C stops.
@@ -163,7 +172,8 @@ public enum OlaCLI {
       case .whoami: return blocking { await self.whoami() }
       case .status: return blocking { await self.status() }
       case .skills(let setup): return blocking { await self.skills(setup: setup) }
-      case .run(let text): return blocking { await self.work(.run(text)) }
+      case .settings(let a): return blocking { await self.settings(a) }
+      case .run(let text): return blocking { await self.request(text) }
       case .talk(let last): return blocking { await self.work(.talk(continueLast: last)) }
       }
     }
@@ -301,7 +311,8 @@ public enum OlaCLI {
 
     // MARK: working in this folder
 
-    func work(_ c: Command) async -> Int32 {
+    /// `model`: a model for this one request (`ola/hosted`, from /hosted); nil is Ola's own.
+    func work(_ c: Command, model: String? = nil) async -> Int32 {
       // Signed in: the account's door. Not signed in, on the owner's own setup (a gateway token
       // pasted in Settings, Where Ola works): that, through the machine's forwarder, as the app does.
       let pasted = AccountKeeper.session == nil ? LocalSettings.token : nil
@@ -336,6 +347,9 @@ public enum OlaCLI {
         server = s
         let route: ModelRoute
         if let pasted { route = .pasted(token: pasted) } else { route = .door(try await openDoor()) }
+        // The person's own /hosted is the only way the hosted model is chosen here (the app opens the
+        // door only while it hands a request over; in the terminal the typed command is the yes).
+        if model == "ola/hosted" || { if case .talk = c { return true }; return false }() { door?.allowHosted = { true } }
         config = try await s.start(route: route, timeout: 45, trace: OlaCLI.trace)
       } catch {
         say((error as? LocalizedError)?.errorDescription ?? "Ola didn\u{2019}t start here.")
@@ -345,7 +359,7 @@ public enum OlaCLI {
       guard let bin = LocalServer.binary else { cleanUp(); return 1 }
       var args: [String]
       switch c {
-      case .run(let text): args = ["run", "--server", config.url.absoluteString, text]
+      case .run(let text): args = ["run", "--server", config.url.absoluteString] + (model.map { ["--model", $0] } ?? []) + [text]
       case .talk(let last): args = ["--server", config.url.absoluteString] + (last ? ["--continue"] : []) + [folder.path]
       default: args = []
       }

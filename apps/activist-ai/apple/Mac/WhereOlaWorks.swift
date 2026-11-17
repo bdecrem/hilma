@@ -27,6 +27,10 @@ final class WhereOlaWorks {
 
   /// The folder and token the running local server was started with.
   private var localKey: String?
+  /// How the local agent reaches the model (for asking the gateway about the hosted open model).
+  private(set) var route: ModelRoute?
+  /// The hosted open model, as the gateway answers for this Mac's caller.
+  var hostedStatus = HostedStatus(unavailable: "Checking with Ola\u{2026}")
   /// Each apply gets a number; only the newest may attach a server (2026-11-16: two applies at
   /// once started two servers, the second ended the first as an orphan, and the store kept the
   /// dead one's address).
@@ -79,7 +83,9 @@ final class WhereOlaWorks {
       }
       local = server
       localKey = key
+      self.route = route
       store.attach(config)
+      Task { await refreshHosted() }
     } catch {
       guard mine == generation else { return }
       problem = error.localizedDescription
@@ -409,40 +415,51 @@ extension WhereOlaWorks {
     return ClaudeRunner.unavailable()
   }
 
-  /// Tells the store whether Claude can run, and how (Claude Code here, in the session's folder).
+  /// The folder the fallback settings belong to: the one On this Mac works in, or the machine's.
+  var fallbackFolder: String {
+    LocalSettings.onThisMac ? (LocalSettings.folder?.standardizedFileURL.path ?? FallbackSettings.machineFolder) : FallbackSettings.machineFolder
+  }
+
+  /// Why the hosted open model cannot be used here, or nil.
+  var hostedUnavailable: String? {
+    if !LocalSettings.onThisMac { return "Not yet on the Ola machine. Switch Where Ola works to On this Mac to use it." }
+    return hostedStatus.unavailable
+  }
+
+  /// Asks the gateway, as this Mac's caller, whether the hosted open model is there for it.
+  func refreshHosted() async {
+    guard LocalSettings.onThisMac, let route else { return }
+    hostedStatus = await HostedStatus.check(baseURL: route.baseURL, token: route.token)
+    configureClaude()
+  }
+
+  /// Saves one folder's fallbacks and tells the store.
+  func saveFallbacks(_ s: FallbackSettings) {
+    FallbackSettings.save(s, for: fallbackFolder)
+    configureClaude()
+  }
+
+  /// Tells the store about both fallbacks for this folder: whether each can run, whether it is on,
+  /// and how (Claude Code here, in the session's folder; the hosted open model through the door).
   func configureClaude() {
     store.claudeTurnsBase = LocalServer.support
     let reason = claudeUnavailable
+    let f = FallbackSettings.load(fallbackFolder)
+    store.fallbacks = f
     store.claudeUnavailable = reason
-    store.claudeOn = reason == nil && LocalSettings.defaults.bool(forKey: Self.claudeKey)
-    if !store.claudeOn { store.nextEngine = .ola }
+    store.claudeOn = reason == nil && f.claude
+    store.hosted = HostedStatus(unavailable: hostedUnavailable, provider: hostedStatus.provider, usedUSD: hostedStatus.usedUSD, capUSD: hostedStatus.capUSD)
+    store.hostedOn = f.hosted && store.hosted.unavailable == nil
+    if (!store.claudeOn && store.nextEngine == .claude && !store.nextOnly) || (!store.hostedOn && store.nextEngine == .hosted && !store.nextOnly) { store.nextEngine = .ola }
+    store.onFallbacksChanged = { [weak self] s in self?.saveFallbacks(s) }
+    let gate = account?.hostedGate
+    store.hostedArm = { on in gate?.set(on) }
+    if LocalSettings.onThisMac, let folder = LocalSettings.folder { store.localFiles = { Stretch.localFiles(folder) } } else { store.localFiles = nil }
     guard reason == nil, let bin = ClaudeRunner.find() else { store.claudeLauncher = nil; return }
     let fallback = LocalSettings.folder
     store.claudeLauncher = { session, request, context in
       let folder = session.directory.map { URL(fileURLWithPath: $0) } ?? fallback ?? FileManager.default.homeDirectoryForCurrentUser
       return ClaudeRunner(binary: bin, folder: folder, request: request, context: context)
-    }
-  }
-}
-
-struct ClaudeSettings: View {
-  var controller: WhereOlaWorks
-  @AppStorage(WhereOlaWorks.claudeKey) private var on = false
-
-  var body: some View {
-    let reason = controller.claudeUnavailable
-    VStack(alignment: .leading, spacing: 6) {
-      Toggle("Fallback to Claude", isOn: $on)
-        .disabled(reason != nil)
-        .onChange(of: on) { _, _ in controller.configureClaude() }
-      if let reason {
-        Text(reason).font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-      } else {
-        Text("Hands a request to Claude Code, using your own Claude login on this Mac. What Claude reads goes to Anthropic.")
-          .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-      }
-      Text("Typing /claude before a request hands just that one to Claude, even with this off.")
-        .font(.caption).foregroundStyle(.secondary)
     }
   }
 }

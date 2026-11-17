@@ -76,6 +76,10 @@ public final class OlaStore {
     files = fixture.files
     selectedID = fixture.selected
     claudeOn = fixture.claudeOn
+    hostedOn = fixture.hostedOn
+    if let p = fixture.hostedProvider { hosted = HostedStatus(unavailable: nil, provider: p, usedUSD: 0.03, capUSD: 20) }
+    suggestion = fixture.suggestion
+    if fixture.claudeOn { claudeUnavailable = nil }
     previews = fixture.previews
     fixtureFiles = fixture.fileData
   }
@@ -360,6 +364,14 @@ public final class OlaStore {
       case .claude: await askClaude(typed)
       case .hosted: await askHosted(typed)
       case .ola:
+        // Asked for Claude in plain words: the card, never the everyday model ("I can't use Claude Code").
+        if let nextOnly = ClaudeAsk.detect(typed) {
+          guard claudeLauncher != nil, claudeUnavailable == nil else { problem = Problem(text: claudeUnavailable ?? "Claude is not available here."); return }
+          var s = StretchSuggestion(sessionID: selectedID, request: typed, reason: .asked, target: .claude, offers: [.claude], turnID: nil)
+          s.nextOnly = nextOnly
+          suggestion = s
+          return
+        }
         // Before a run: does the request alone look like a stretch? (the web app's precheck)
         if let r = Stretch.precheck(typed, files: localFiles?() ?? []) {
           switch plan(r, sessionID: selectedID) {
@@ -688,14 +700,17 @@ public final class OlaStore {
     suggestion = nil
     switch a {
     case .once:
+      if s.nextOnly { nextOnce(.claude); return }
       if s.target == .claude { await askClaude(s.request) } else { await askHosted(s.request) }
     case .always:
       if s.target == .claude { fallbacks.claude = true; claudeOn = claudeLauncher != nil } else { fallbacks.hosted = true; hostedOn = true }
       fallbacks.stretch = .handover
       fallbacks.stretchTo = s.target
       onFallbacksChanged?(fallbacks)
+      if s.nextOnly { nextEngine = .claude; nextOnly = false; problem = Problem(text: "Your messages in this folder go to Claude now. Choose Ola beside the box to go back."); return }
       if s.target == .claude { await askClaude(s.request) } else { await askHosted(s.request) }
     case .notNow:
+      if s.reason == .asked { return }
       declined[s.sessionID ?? "", default: []].insert(s.reason)
       if s.turnID == nil { await sendToOla(s.request) }
     }

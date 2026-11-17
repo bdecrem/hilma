@@ -460,6 +460,8 @@ try {
     const inImage = spawnSync(ws.CONTAINER, ['exec', ws.names(A).container, 'cat', '/opt/ola/config/opencode/AGENTS.md'], { encoding: 'utf8' }).stdout
     const rule = /\*\*The standing instruction\*\*[\s\S]*?```text\n([\s\S]*?)\n```/.exec(readFileSync(new URL('../README.md', import.meta.url), 'utf8'))?.[1]
     t('inside: the instructions carry the reactions rule, word for word', !!rule && inImage.includes(rule), rule ? `${inImage.length} bytes` : 'no rule in the README')
+    // Asked for Claude (image 2.3.0-29): never "I can't use Claude Code"; /claude is the way.
+    t('inside: the instructions say what to do when the person asks for Claude (type /claude)', inImage.includes("If the person asks for Claude or Claude Code, never say you can't: tell them to type /claude followed by the request"), `${inImage.length} bytes`)
   }
   // Ola's skills (image 2.3.0-15, README "Skills"): opencode offers Ola's skills from /opt/ola/skills
   // and nothing else, and nothing put in /work (a skill with the same ID, new skills in any of the
