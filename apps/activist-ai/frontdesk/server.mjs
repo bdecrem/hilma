@@ -27,7 +27,8 @@ import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { audit, nameRef, openDb, loadKeys } from './db.mjs'
-import { addressKey, makeAuth } from './auth.mjs'
+import { addressKey, makeAuth, parseCookie } from './auth.mjs'
+import { minLength } from './passwords.mjs'
 import { makeWorkspaces } from './workspaces.mjs'
 import { makeViews } from './views.mjs'
 import { claudeConfig, makeClaude } from './claude.mjs'
@@ -97,6 +98,8 @@ export function config(env = process.env) {
     // Devices (devices.mjs): the Mac app and the command line signed in to an account. Off unless
     // OLA_GATE_PASS_KEY is set (the same value as the TLS front's).
     devices: devicesConfig(env, { home: WS_HOME, proxyProtocol: env.OLA_FD_PROXY_PROTOCOL === '1' }),
+    // Passwords (auth.mjs, passwords.mjs): the shortest allowed.
+    passwordMin: minLength(env),
     // Shown in the delete confirmation. The product decision: a deleted file leaves the workspace
     // at once and stays in encrypted backups for up to 14 days.
     deleteNotice:
@@ -172,7 +175,8 @@ export function makeFrontDesk(cfg = config()) {
   const https = cfg.origin.startsWith('https:')
   const originHost = new URL(cfg.origin).host
   const log = (m) => console.log(JSON.stringify({ t: new Date().toISOString(), event: 'frontdesk', msg: String(m).slice(0, 300) }))
-  const auth = makeAuth({ db, keys, origin: cfg.origin, session: cfg.session, limits: cfg.limits, log })
+  let devices = null
+  const auth = makeAuth({ db, keys, origin: cfg.origin, session: cfg.session, limits: cfg.limits, passwordMin: cfg.passwordMin, onAppKeysRevoked: () => devices?.sync(), log })
   const web = makeWeb({ db, file: cfg.webFile, providerName: () => cfg.searchProvider, log })
   // The search card names the provider the gateway really uses (first-user pass: it said "Brave
   // Search" on a machine set up with another). OLA_FD_SEARCH_PROVIDER, when set, still wins.
@@ -190,7 +194,7 @@ export function makeFrontDesk(cfg = config()) {
   }
   const workspaces = makeWorkspaces({ db, keys, log, idleStopMs: cfg.idleStopMs, runCeilingMs: cfg.runCeilingMs, webModeOf: (slug) => web.modeBySlug(slug) })
   const clientOf = (req) => req.socket.olaClient ?? addressKey(req.socket.remoteAddress)
-  const devices = makeDevices({ db, cfg: cfg.devices, gateway: cfg.claude.gateway, auth, clientOf, json, readJson, recheckMs: RECHECK_MS, log })
+  devices = makeDevices({ db, cfg: cfg.devices, gateway: cfg.claude.gateway, auth, clientOf, json, readJson, recheckMs: RECHECK_MS, log })
 
   // "People working": how many people made a request in the last whole window (5 minutes), all
   // teams together, in memory only, never who. The number changes only at a window's end, so
@@ -945,14 +949,20 @@ export function makeFrontDesk(cfg = config()) {
       else if (p === '/api/auth/register/verify') r = await auth.registerVerify(body.ceremony, body.response)
       else if (p === '/api/auth/login/options') r = await auth.loginOptions()
       else if (p === '/api/auth/login/verify') r = await auth.loginVerify(body.ceremony, body.response)
+      // Passwords: sign in, choose one from an invitation, set one from the admin's link.
+      else if (p === '/api/auth/password') r = await auth.passwordSignIn(body, clientOf(req), parseCookie(req.headers.cookie ?? '')[auth.knownCookieName] ?? null)
+      else if (p === '/api/auth/invite/password') r = await auth.invitePassword(body.invite, body.password)
+      else if (p === '/api/auth/reset/info') r = auth.resetInfo(body.token)
+      else if (p === '/api/auth/reset') r = await auth.reset(body.token, body.password)
       else return json(res, 404, NOT_FOUND)
-      return json(res, r.status, r.body, r.cookie ? { 'set-cookie': r.cookie } : {})
+      const cookies = r.cookies ?? (r.cookie ? [r.cookie] : [])
+      return json(res, r.status, r.body, { ...(r.headers ?? {}), ...(cookies.length ? { 'set-cookie': cookies } : {}) })
     }
 
     // ---------------------------------------------- signed in
     if (api) {
       const sess = auth.session(req)
-      if (!sess) return json(res, 401, { error: 'signed_out', message: 'You are signed out. Sign in again with your passkey.' }, { 'set-cookie': auth.clearCookie })
+      if (!sess) return json(res, 401, { error: 'signed_out', message: 'You are signed out. Sign in again.' }, { 'set-cookie': auth.clearCookie })
       if (writes && !auth.csrfOk(sess, req)) return json(res, 403, { error: 'csrf', message: 'Reload the page and try again.' })
       seen(sess.personId)
       if (p === '/api/me' && req.method === 'GET') {
@@ -987,6 +997,23 @@ export function makeFrontDesk(cfg = config()) {
       if (p === '/api/signout' && req.method === 'POST') {
         auth.signOut(sess)
         return json(res, 200, { ok: true }, { 'set-cookie': auth.clearCookie })
+      }
+      // The person's own account: password, passkeys, the "ask for my passkey" switch, their Macs.
+      if (p === '/api/account' && req.method === 'GET') return json(res, 200, auth.account(sess))
+      if (p.startsWith('/api/account/')) {
+        if (req.method !== 'POST') return json(res, 405, { error: 'method' })
+        const body = await readJson(req)
+        if (!body) return json(res, 400, { error: 'bad_json' })
+        let r
+        if (p === '/api/account/password') r = await auth.setPassword(sess, body)
+        else if (p === '/api/account/require-passkey') r = await auth.setRequirePasskey(sess, body)
+        else if (p === '/api/account/passkey/options') r = await auth.addPasskeyOptions(sess, body)
+        else if (p === '/api/account/passkey/verify') r = await auth.addPasskeyVerify(sess, body.ceremony, body.response)
+        else if (p === '/api/account/signout-everywhere') {
+          auth.signOutEverywhere(sess)
+          return json(res, 200, { ok: true }, { 'set-cookie': auth.clearCookie })
+        } else return json(res, 404, NOT_FOUND)
+        return json(res, r.status, r.body, r.headers ?? {})
       }
       return await workspaceRoute(req, res, sess, url, p)
     }

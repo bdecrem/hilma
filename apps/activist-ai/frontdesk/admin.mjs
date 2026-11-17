@@ -2,7 +2,12 @@
 // The front desk's admin CLI (no admin web page in this milestone). Runs as the account that
 // owns the platform database and the workspaces, on the machine itself.
 //
-//   node admin.mjs add-person <handle> --name "Maria L." [--admin]
+//   node admin.mjs add-person <handle> --name "Maria L." [--admin] [--link]   with --link, also prints
+//                  the one-time setup link (as invite): they choose a password, or make a passkey
+//   node admin.mjs reset-password <handle> [--hours 24]  prints a one-time link to set a password (no
+//                  outbound email yet: send it yourself). Someone with a password already is signed
+//                  out everywhere, their Macs too, when they use it. Their passkeys keep working.
+//   node admin.mjs require-passkey <handle> on|off      "Ask for my passkey too", for them
 //   node admin.mjs invite <handle> [--hours 72]          prints a single-use link, once; voids
 //                  the person's earlier unused invitations. Refused for a person who already has
 //                  a passkey, unless:
@@ -52,7 +57,7 @@ import { randomBytes } from 'node:crypto'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { audit, openDb } from './db.mjs'
-import { makeInvite } from './auth.mjs'
+import { makeInvite, makePasswordLink } from './auth.mjs'
 import { config } from './server.mjs'
 import { AUTO, gatewayUsage, modeFor, writeGrants } from './claude.mjs'
 import { writeHostedGrants } from './hosted.mjs'
@@ -72,7 +77,7 @@ const [cmd, ...rest] = argv
 const flags = {}
 const args = []
 for (let i = 0; i < rest.length; i++) {
-  if (['--admin', '--json', '--add-device', '--wake'].includes(rest[i])) flags[rest[i].slice(2)] = true
+  if (['--admin', '--json', '--add-device', '--wake', '--link'].includes(rest[i])) flags[rest[i].slice(2)] = true
   else if (rest[i].startsWith('--')) flags[rest[i].slice(2)] = rest[++i]
   else args.push(rest[i])
 }
@@ -165,7 +170,13 @@ switch (cmd) {
     if (name.length > 60) fail('--name is at most 60 characters')
     const r = db.prepare("INSERT INTO people (handle, display_name, status, is_admin, webauthn_user_id, created_at) VALUES (?, ?, 'invited', ?, ?, ?)").run(handle, name, flags.admin ? 1 : 0, randomBytes(32), now)
     admin({ action: 'person_added', subject: Number(r.lastInsertRowid) })
-    console.log(`added ${handle}; next: node admin.mjs invite ${handle}`)
+    if (flags.link) {
+      // The account and its one-time setup link at once (they choose a password, or a passkey).
+      const { raw } = makeInvite(db, Number(r.lastInsertRowid), 72 * 3600_000, 'first')
+      admin({ action: 'invited', subject: Number(r.lastInsertRowid) })
+      console.log(`${cfg.origin}/#/invite/${raw}`)
+      console.error(`added ${handle}; the link lets them choose a password (or make a passkey). Single use, expires in 72 h. Send it only to ${name}.`)
+    } else console.log(`added ${handle}; next: node admin.mjs invite ${handle}`)
     break
   }
   case 'invite': {
@@ -176,6 +187,8 @@ switch (cmd) {
     // An invitation for someone who already has a passkey would add a second one without them
     // seeing anything (review of 2026-11-16, M6): that is a separate, explicit act.
     if (keys && !device) fail(`${p.handle} already has ${keys} passkey(s). To let them add another device: invite ${p.handle} --add-device`)
+    // Someone who can sign in already gets a password link, not a second first invitation.
+    if (p.password_hash && !device) fail(`${p.handle} already has a password. To set a new one: reset-password ${p.handle}`)
     if (!keys && device) fail(`${p.handle} has no passkey yet; send a first invitation (without --add-device)`)
     const hours = Number(flags.hours ?? (device ? 24 : 72))
     const max = device ? 72 : 24 * 14
@@ -195,7 +208,35 @@ switch (cmd) {
     db.prepare('UPDATE sessions SET revoked_at = ? WHERE passkey_id = ? AND revoked_at IS NULL').run(now, k.id)
     db.prepare('DELETE FROM passkeys WHERE id = ?').run(k.id)
     admin({ action: 'passkey_removed', subject: p.id })
-    console.log(`passkey #${k.id} of ${p.handle} removed; the sessions it opened are ended`)
+    // The last passkey gone: "Ask for my passkey too" cannot be met, so it is turned off (said here).
+    const left = db.prepare('SELECT count(*) AS n FROM passkeys WHERE person_id = ?').get(p.id).n
+    if (!left && p.require_passkey) {
+      db.prepare('UPDATE people SET require_passkey = 0 WHERE id = ?').run(p.id)
+      admin({ action: 'passkey_required_off', subject: p.id })
+    }
+    console.log(`passkey #${k.id} of ${p.handle} removed; the sessions it opened are ended${!left && p.require_passkey ? '; it was their last, so their password alone signs them in again' : ''}`)
+    break
+  }
+  case 'reset-password': {
+    // A one-time link to set a password (no outbound email yet: send it by a channel you trust).
+    // For a person with a password already, using it signs them out everywhere, their Macs too.
+    const p = person(args[0])
+    if (p.status === 'suspended') fail(`${p.handle} is suspended`)
+    const hours = Number(flags.hours ?? 24)
+    if (!(hours > 0 && hours <= 72)) fail('--hours is more than 0 and at most 72')
+    const { raw, voided } = makePasswordLink(db, p.id, hours * 3600_000)
+    admin({ action: 'password_reset_issued', subject: p.id })
+    console.log(`${cfg.origin}/#/reset/${raw}`)
+    console.error(`sets ${p.handle}'s password; single use, expires in ${hours} h. Send it only to ${p.display_name}.${p.password_hash ? ' Using it signs them out everywhere, their Macs too.' : ' Their passkeys keep working.'}${voided ? ` ${voided} earlier unused link(s) no longer work.` : ''}`)
+    break
+  }
+  case 'require-passkey': {
+    const p = person(args[0])
+    const on = args[1] === 'on' ? true : args[1] === 'off' ? false : fail('require-passkey <handle> on|off')
+    if (on && !db.prepare('SELECT count(*) AS n FROM passkeys WHERE person_id = ?').get(p.id).n) fail(`${p.handle} has no passkey`)
+    db.prepare('UPDATE people SET require_passkey = ? WHERE id = ?').run(on ? 1 : 0, p.id)
+    admin({ action: on ? 'passkey_required_on' : 'passkey_required_off', subject: p.id })
+    console.log(`${p.handle}: ${on ? 'a password is followed by their passkey' : 'their password alone signs them in'}`)
     break
   }
   case 'rotate': {
@@ -461,10 +502,11 @@ switch (cmd) {
     break
   }
   case 'list': {
-    for (const p of db.prepare('SELECT id, handle, display_name, status, is_admin FROM people ORDER BY handle').all()) {
+    for (const p of db.prepare('SELECT id, handle, display_name, status, is_admin, password_set_at, require_passkey FROM people ORDER BY handle').all()) {
       const keys = db.prepare('SELECT id, created_at, last_used_on, via FROM passkeys WHERE person_id = ? ORDER BY id').all(p.id)
+      const macs = db.prepare('SELECT id, kind, label, created_at, last_used_at FROM (SELECT id, kind, name AS label, created_at, coalesce(last_used_at, created_at) AS last_used_at, revoked_at, expires_at, person_id FROM devices) WHERE person_id = ? AND revoked_at IS NULL AND expires_at > ? ORDER BY id').all(p.id, now)
       const day = (ms) => new Date(ms).toISOString().slice(0, 10)
-      console.log(`person ${p.handle} (${p.display_name}) ${p.status}${p.is_admin ? ' admin' : ''}, ${keys.length} passkey(s)${keys.length ? ': ' + keys.map((k) => `#${k.id} added ${day(k.created_at)}${k.via === 'device' ? ' (another device)' : ''}, last used ${k.last_used_on ?? 'never'}`).join('; ') : ''}`)
+      console.log(`person ${p.handle} (${p.display_name}) ${p.status}${p.is_admin ? ' admin' : ''}, ${p.password_set_at ? `password set ${day(p.password_set_at)}` : 'no password'}${p.require_passkey ? ' (asks for the passkey too)' : ''}, ${keys.length} passkey(s)${keys.length ? ': ' + keys.map((k) => `#${k.id} added ${day(k.created_at)}${k.via === 'device' ? ' (another device)' : ''}, last used ${k.last_used_on ?? 'never'}`).join('; ') : ''}${macs.length ? `; Macs: ${macs.map((m) => `#${m.id} ${m.kind} added ${day(m.created_at)}, last used ${day(m.last_used_at)}`).join('; ')}` : ''}`)
     }
     for (const w of db.prepare('SELECT w.slug, w.name, w.status, t.slug AS team FROM workspaces w JOIN teams t ON t.id = w.team_id ORDER BY w.slug').all()) {
       const members = db.prepare('SELECT p.handle, m.role FROM memberships m JOIN people p ON p.id = m.person_id JOIN teams t ON t.id = m.team_id WHERE t.slug = ?').all(w.team)

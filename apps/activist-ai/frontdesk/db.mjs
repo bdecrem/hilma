@@ -71,7 +71,16 @@ export const ACTIONS_V9 = [
 ]
 /** Migration 11's list: devices (devices.mjs), a computer signed in to Ola, out, removed, or refused. */
 export const ACTIONS_V11 = [...ACTIONS_V9, 'device_signed_in', 'device_signed_out', 'device_revoked', 'device_refused']
-export const ACTIONS = ACTIONS_V11
+/** Migration 12's list: what the audit log may say now. */
+export const ACTIONS_V12 = [
+  ...ACTIONS_V11,
+  // migration 12: passwords (set from an invitation or a reset link, changed in Your account; a reset
+  // link issued by the admin; a burst of wrong passwords for one person), the "ask for my passkey"
+  // switch, a passkey added from Your account, and a person's own Macs' weekly allowance set.
+  'password_set', 'password_changed', 'password_reset_issued', 'sign_in_burst',
+  'passkey_required_on', 'passkey_required_off', 'passkey_added', 'app_allowance_set',
+]
+export const ACTIONS = ACTIONS_V12
 
 // The comparisons' fixed words (frontdesk/compare.mjs; the labels are the eval set's own list).
 const COMPARE_KINDS = ['clean', 'sql', 'coding', 'legal', 'site', 'honesty', 'pdf', 'writing', 'chart', 'other']
@@ -495,6 +504,50 @@ const MIGRATIONS = [
   ALTER TABLE audit_v11 RENAME TO audit;
   CREATE INDEX audit_workspace ON audit(workspace_id, at);
   `,
+  // 12: a normal sign-in with a password, the passkey optional (2026-11-17). people: the password's
+  // scrypt hash (passwords.mjs; never the password), when it was set, whether the person asks for
+  // their passkey too, and their own Macs' weekly allowance (NULL: the front desk's default) and
+  // whether those may use the hosted open model, with its monthly ceiling. password_links: a one-time
+  // link the admin prints to set a password (sha256 of the token, as invitations). New audit words:
+  // the table is rebuilt for the CHECK, as in 2, 3, 4, 6, 7, 8, 9 and 11.
+  `
+  ALTER TABLE people ADD COLUMN password_hash TEXT CHECK (password_hash IS NULL OR (password_hash GLOB 'scrypt$*' AND length(password_hash) <= 300));
+  ALTER TABLE people ADD COLUMN password_set_at INTEGER;
+  ALTER TABLE people ADD COLUMN require_passkey INTEGER NOT NULL DEFAULT 0 CHECK (require_passkey IN (0, 1));
+  ALTER TABLE people ADD COLUMN app_weekly_tokens INTEGER CHECK (app_weekly_tokens IS NULL OR app_weekly_tokens >= 0);
+  ALTER TABLE people ADD COLUMN app_hosted INTEGER NOT NULL DEFAULT 0 CHECK (app_hosted IN (0, 1));
+  ALTER TABLE people ADD COLUMN app_hosted_cap_micro_usd INTEGER CHECK (app_hosted_cap_micro_usd IS NULL OR app_hosted_cap_micro_usd >= 0);
+  CREATE TABLE password_links (
+    id INTEGER PRIMARY KEY,
+    person_id INTEGER NOT NULL REFERENCES people(id),
+    token_hash BLOB NOT NULL UNIQUE,
+    created_at INTEGER NOT NULL,
+    expires_at INTEGER NOT NULL,
+    used_at INTEGER,
+    voided_at INTEGER
+  ) STRICT;
+  CREATE TABLE audit_v12 (
+    id INTEGER PRIMARY KEY,
+    at INTEGER NOT NULL,
+    actor_kind TEXT NOT NULL CHECK (actor_kind IN ('person', 'admin', 'run', 'system')),
+    actor_person_id INTEGER REFERENCES people(id),
+    action TEXT NOT NULL CHECK (action IN (${sqlList(ACTIONS_V12)})),
+    workspace_id INTEGER REFERENCES workspaces(id),
+    subject_person_id INTEGER REFERENCES people(id),
+    name_ref BLOB,
+    sha256 TEXT CHECK (sha256 IS NULL OR length(sha256) = 64),
+    size INTEGER,
+    role TEXT CHECK (role IS NULL OR role IN (${sqlList(ROLES)})),
+    ok INTEGER NOT NULL DEFAULT 1 CHECK (ok IN (0, 1)),
+    tokens_in INTEGER CHECK (tokens_in IS NULL OR tokens_in >= 0),
+    tokens_out INTEGER CHECK (tokens_out IS NULL OR tokens_out >= 0),
+    cost_micro_usd INTEGER CHECK (cost_micro_usd IS NULL OR cost_micro_usd >= 0)
+  ) STRICT;
+  INSERT INTO audit_v12 SELECT id, at, actor_kind, actor_person_id, action, workspace_id, subject_person_id, name_ref, sha256, size, role, ok, tokens_in, tokens_out, cost_micro_usd FROM audit;
+  DROP TABLE audit;
+  ALTER TABLE audit_v12 RENAME TO audit;
+  CREATE INDEX audit_workspace ON audit(workspace_id, at);
+  `,
 ]
 
 /** Opens (and creates, and migrates) the platform database in `dir`. */
@@ -535,7 +588,7 @@ export function loadKeys(dir) {
   const root = Buffer.from(readFileSync(file, 'utf8').trim(), 'hex')
   if (root.length !== 32) throw new Error('frontdesk.key is not 32 bytes of hex')
   const sub = (label) => createHmac('sha256', root).update(label).digest()
-  return { names: sub('ola names v1'), csrf: sub('ola csrf v1') }
+  return { names: sub('ola names v1'), csrf: sub('ola csrf v1'), known: sub('ola known device v1') }
 }
 
 /** The keyed hash of a file name within one workspace. */

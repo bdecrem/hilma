@@ -1,0 +1,225 @@
+/* Sign-in with a password, the Mac's approval, and Your account (2026-11-17).
+   On the room: fields are paper, like the paper button, so the form reads as one sheet of the same
+   stuff; labels in mist. On paper (Your account): the paper-2 field with a rule, as in Settings. */
+.gate-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s4);
+  width: 100%;
+  max-width: 420px;
+}
+.gate-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+.gate-field label {
+  font-size: 15px;
+  font-weight: 650;
+  color: var(--mist);
+}
+.gate-field > input,
+.gate-input-row {
+  min-height: 52px;
+  border-radius: 6px;
+  border: none;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 18px;
+}
+.gate-field > input {
+  padding: 0 var(--s4);
+}
+.gate-input-row {
+  display: flex;
+  align-items: stretch;
+}
+.gate-input-row input {
+  flex: 1;
+  min-width: 0;
+  min-height: 52px;
+  padding: 0 var(--s4);
+  border: none;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: inherit;
+}
+.gate-field > input:focus-visible,
+.gate-input-row:focus-within {
+  outline: 2px solid var(--on-room);
+  outline-offset: 2px;
+}
+.gate-input-row input:focus-visible {
+  outline: none;
+}
+.gate-show {
+  border: none;
+  background: transparent;
+  color: var(--ink-2);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  font-weight: 650;
+  padding: 0 var(--s4);
+  cursor: pointer;
+}
+.gate-show:hover {
+  color: var(--ink);
+  text-decoration: underline;
+}
+.gate-hint {
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--mist);
+}
+.gate-form .paper-button {
+  align-self: flex-start;
+}
+.gate-or {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  flex-wrap: wrap;
+  padding-top: var(--s4);
+  border-top: 1px solid rgba(201, 210, 234, 0.28);
+  width: 100%;
+  max-width: 420px;
+}
+.gate-or-word {
+  color: var(--mist);
+  font-size: 15px;
+}
+.gate-step {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s4);
+}
+.gate-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s5);
+}
+.gate-sheet .gate-lede {
+  max-width: 44ch;
+}
+.gate-actions,
+.gate-head-actions {
+  display: flex;
+  gap: var(--s3);
+  flex-wrap: wrap;
+  align-items: center;
+}
+.account-who {
+  font-size: 19px;
+  max-width: none;
+}
+.account-said {
+  color: var(--on-room);
+  border-left: 3px solid var(--on-room);
+  padding: var(--s2) var(--s4);
+  max-width: 60ch;
+}
+.account-cards {
+  display: grid;
+  gap: var(--s4);
+}
+.account-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  padding: var(--s5);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgba(10, 20, 45, 0.25);
+}
+.account-card h2 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+}
+.account-note {
+  color: var(--ink-2);
+  font-size: 15px;
+  line-height: 1.5;
+}
+.account-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  max-width: 420px;
+}
+.gate-field.on-paper label {
+  color: var(--ink-2);
+}
+.gate-field.on-paper .gate-input-row,
+.gate-field.on-paper > input {
+  background: var(--paper-2);
+  box-shadow: inset 0 0 0 1px var(--rule);
+  min-height: 46px;
+  font-size: 16px;
+}
+.gate-field.on-paper .gate-input-row input {
+  min-height: 46px;
+}
+.gate-field.on-paper .gate-hint {
+  color: var(--ink-3);
+}
+.gate-field.on-paper .gate-input-row:focus-within {
+  outline-color: var(--room);
+}
+.account-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: var(--s2);
+}
+.account-mac {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  padding: var(--s2) 0;
+  border-bottom: 1px solid var(--rule);
+}
+.account-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  flex-wrap: wrap;
+}
+.account-switch {
+  display: flex;
+  gap: var(--s3);
+  align-items: flex-start;
+  padding-top: var(--s3);
+  border-top: 1px solid var(--rule);
+  cursor: pointer;
+}
+.account-switch input {
+  margin-top: 4px;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--room);
+}
+.account-switch > span {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+}
+@media (max-width: 720px) {
+  .gate-form,
+  .gate-or {
+    max-width: none;
+  }
+  .account-card {
+    padding: var(--s4);
+  }
+  .account-mac {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

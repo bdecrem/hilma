@@ -19,10 +19,29 @@
 //   checked on every request, so a revoked cookie fails at once.
 // - CSRF: every state-changing request must come from our Origin (checked exactly) and carry
 //   X-Ola-CSRF, an HMAC of the session id under the front desk's key, compared in constant time.
+//
+// Passwords (2026-11-17: "a normal login with an optional passkey"). A person signs in with their
+// handle (the name the admin gave them, as in `admin.mjs add-person`) and a password, or with a
+// passkey; either works, unless they turned on "Ask for my passkey too", when a right password is
+// followed by their passkey. Hashing and the rules for a password are in passwords.mjs. Guessing
+// (see PasswordGuard and passwordAttempt below):
+//   - per address (an IPv6 /64), the sign-in rate, and for a device we do not know the global
+//     ceiling too, as for invitations;
+//   - per handle typed (whether or not such a person exists, so the answer says nothing about it):
+//     5 wrong tries free, then each next try waits 1 s, 2 s, 4 s, … up to 15 minutes, counted over a
+//     day. That per-name wait is what a stranger could use to keep a real person out (the fault the
+//     passkey review found), so it is skipped for a browser or Mac that has signed in to that
+//     account before: a "known device" token (an HMAC under the front desk's key, bound to the
+//     person, 400 days, in an HttpOnly cookie or the app's settings) that buys no password, only
+//     the right not to wait behind a stranger's wrong tries; it is limited per token (5 a minute).
+//     A person with a passkey can always use it instead.
+//   - "no such person", "no password", "suspended" and "wrong password" get one answer, after the
+//     same scrypt work (a made-up hash when there is no real one).
 import { createHash, randomBytes, timingSafeEqual, createHmac } from 'node:crypto'
 import { generateAuthenticationOptions, generateRegistrationOptions, verifyAuthenticationResponse, verifyRegistrationResponse } from '@simplewebauthn/server'
 import { isIP } from 'node:net'
 import { audit, today } from './db.mjs'
+import { hashPassword, needsRehash, passwordProblem, verifyPassword } from './passwords.mjs'
 
 export const COOKIE = '__Host-ola'
 /** The session cookie's name and attributes for an origin (see the note on sessions above). */
@@ -30,6 +49,11 @@ export function sessionCookie(origin) {
   const u = new URL(origin)
   const local = u.protocol === 'http:' && u.hostname === 'localhost'
   return local ? { name: 'ola-local', attrs: 'Path=/; HttpOnly; SameSite=Strict' } : { name: COOKIE, attrs: 'Path=/; HttpOnly; Secure; SameSite=Strict' }
+}
+/** The known-device cookie (see passwords above): the same rules as the session cookie, its own name. */
+export function knownCookieName(origin) {
+  const s = sessionCookie(origin)
+  return { name: s.name === COOKIE ? '__Host-ola-known' : 'ola-known-local', attrs: s.attrs }
 }
 const sha256 = (s) => createHash('sha256').update(s).digest()
 export const token = () => randomBytes(32).toString('base64url')
@@ -65,6 +89,49 @@ export class Limiter {
 }
 
 /**
+ * Wrong passwords per handle typed, in memory only. The first `free` in a day cost nothing; after
+ * that the next try must wait 1 s × 2^(n − free), at most `maxDelayMs`. A day after the last wrong
+ * try the count is forgotten; a right password clears it. The map is bounded (oldest dropped).
+ */
+export class PasswordGuard {
+  constructor({ free = 5, maxDelayMs = 15 * 60_000, forgetMs = 24 * 3600_000, maxKeys = 20_000 } = {}) {
+    Object.assign(this, { free, maxDelayMs, forgetMs, maxKeys, seen: new Map() })
+  }
+  #get(key, now) {
+    const f = this.seen.get(key)
+    if (f && now - f.last > this.forgetMs) return this.seen.delete(key), null
+    return f ?? null
+  }
+  delayFor(n) {
+    return n < this.free ? 0 : Math.min(1000 * 2 ** (n - this.free), this.maxDelayMs)
+  }
+  /** Milliseconds before this handle may be tried again (0: now). */
+  wait(key, now = Date.now()) {
+    const f = this.#get(key, now)
+    return f ? Math.max(0, f.last + this.delayFor(f.n) - now) : 0
+  }
+  /** Counts a wrong try; `burst` is true when the count reaches 5, 10, 20, 40, … (an audit row). */
+  fail(key, now = Date.now()) {
+    const f = this.#get(key, now) ?? { n: 0, last: now }
+    f.n++
+    f.last = now
+    this.seen.delete(key)
+    this.seen.set(key, f)
+    while (this.seen.size > this.maxKeys) this.seen.delete(this.seen.keys().next().value)
+    return { n: f.n, burst: f.n >= this.free && Number.isInteger(Math.log2(f.n / this.free)) }
+  }
+  success(key) {
+    this.seen.delete(key)
+  }
+}
+
+/** The handle as typed, in the one form it is looked up and limited under ('' if it cannot be one). */
+export const handleKey = (h) => {
+  const s = typeof h === 'string' ? h.normalize('NFKC').trim().toLowerCase() : ''
+  return s.length >= 1 && s.length <= 64 ? s : ''
+}
+
+/**
  * The key a client address is limited under: an IPv4 address as it is (an IPv4-mapped IPv6 one as
  * its IPv4), an IPv6 address as its /64, the block any one IPv6 client holds (second review,
  * 2026-11-16: 50 addresses of one /64 had 50 buckets, and the same client spelled two ways two).
@@ -86,9 +153,10 @@ export function addressKey(addr) {
 
 // ---------------------------------------------------------------- the auth service
 
-export function makeAuth({ db, keys, origin, rpName = 'Ola', session: { absoluteMs, idleMs }, limits, log = () => {} }) {
+export function makeAuth({ db, keys, origin, rpName = 'Ola', session: { absoluteMs, idleMs }, limits, passwordMin = 15, onAppKeysRevoked = () => {}, log = () => {} }) {
   const rpID = new URL(origin).hostname
   const jar = sessionCookie(origin)
+  const knownJar = knownCookieName(origin)
   const ceremonies = new Map() // id -> { kind, challenge, personId?, inviteId?, expires }
   // Each address (an IPv6 /64) can hold at most perAddress.capacity + 5 × perMinute of these at
   // once (they live 5 minutes); when the map is full the oldest goes, so a flood can at worst void
@@ -141,6 +209,8 @@ export function makeAuth({ db, keys, origin, rpName = 'Ola', session: { absolute
    */
   const allow = (route, addr, body) => {
     const key = addressKey(addr)
+    // A password sign-in is limited inside passwordAttempt (a known device skips the ceiling).
+    if (route === 'password') return true
     if (route === 'login/options') return perAddress.take(key)
     if (route === 'login/verify' && live(body?.ceremony, 'login')) return true
     if (route === 'register/verify' && live(body?.ceremony, 'register')) return true
@@ -179,6 +249,79 @@ export function makeAuth({ db, keys, origin, rpName = 'Ola', session: { absolute
   }
   const clearCookie = `${jar.name}=; ${jar.attrs}; Max-Age=0`
 
+  // ------------------------------------------------ passwords: limits, known devices, links
+  const guard = new PasswordGuard()
+  const stepGuard = new PasswordGuard({ free: 3 })
+  const pwAddress = new Limiter(limits.perAddress)
+  const perKnown = new Limiter({ capacity: 5, perMinute: 5 })
+  const KNOWN_MS = 400 * 24 * 3600_000
+  const knownMac = (personId, r) => createHmac('sha256', keys.known).update(`${personId}.${r}`).digest('base64url')
+  const knownMake = (personId) => {
+    const r = randomBytes(16).toString('base64url')
+    return `${personId}.${r}.${knownMac(personId, r)}`
+  }
+  const knownOk = (tok, personId) => {
+    const m = typeof tok === 'string' ? /^(\d{1,12})\.([A-Za-z0-9_-]{22})\.([A-Za-z0-9_-]{43})$/.exec(tok) : null
+    return !!m && Number(m[1]) === personId && same(m[3], knownMac(personId, m[2]))
+  }
+  const knownCookie = (personId) => `${knownJar.name}=${knownMake(personId)}; ${knownJar.attrs}; Max-Age=${KNOWN_MS / 1000}`
+  const ceiling = () => {
+    if (everyone.take('*')) return true
+    globalRefused++
+    if (Date.now() - globalNoted > 60_000) (globalNoted = Date.now()), log(`sign-in ceiling reached (${globalRefused} refused so far)`)
+    return false
+  }
+  const REFUSED_PW = { error: 'sign_in_refused', message: 'That name and password did not match. Check both and try again.' }
+  const minutes = (ms) => (ms < 90_000 ? `${Math.max(1, Math.ceil(ms / 1000))} seconds` : `${Math.ceil(ms / 60_000)} minutes`)
+
+  async function passwordAttempt({ handle, password, addr, known }) {
+    const h = handleKey(handle)
+    const p = h ? db.prepare('SELECT id, handle, display_name, status, is_admin, password_hash, require_passkey FROM people WHERE handle = ?').get(h) : null
+    const isKnown = !!p && knownOk(known, p.id) && perKnown.take(known)
+    const a = addressKey(addr)
+    if (!pwAddress.take(a) || (!isKnown && !ceiling())) return { status: 429, body: { error: 'slow_down', message: 'Too many tries. Wait a minute and try again.' }, headers: { 'retry-after': '60' } }
+    if (!isKnown) {
+      const w = guard.wait(h)
+      if (w > 0) return { status: 429, body: { error: 'slow_down', message: `Too many wrong tries for this name. Wait ${minutes(w)}, or sign in with your passkey.` }, headers: { 'retry-after': String(Math.ceil(w / 1000)) } }
+    }
+    const right = await verifyPassword(password, p?.status === 'active' ? p.password_hash : null)
+    if (!right) {
+      const f = guard.fail(h)
+      if (p) {
+        if (f.burst) audit(db, { actorKind: 'system', subject: p.id, action: 'sign_in_burst', ok: false, size: f.n })
+        if (perCredential.take(`pw:${p.id}`)) audit(db, { actorKind: 'system', subject: p.id, action: 'sign_in_refused', ok: false })
+      }
+      return { status: 401, body: REFUSED_PW }
+    }
+    guard.success(h)
+    if (needsRehash(p.password_hash)) db.prepare('UPDATE people SET password_hash = ? WHERE id = ?').run(await hashPassword(password), p.id)
+    return { ok: true, person: p }
+  }
+
+  const LINK_GONE = { error: 'link_invalid', message: 'This link has expired or was already used. Ask Bart for a new one.' }
+  function linkFor(raw) {
+    if (typeof raw !== 'string' || raw.length < 20 || raw.length > 100) return null
+    const row = db.prepare('SELECT l.id, l.person_id, l.expires_at, l.used_at, l.voided_at, p.handle, p.display_name, p.status, p.password_hash FROM password_links l JOIN people p ON p.id = l.person_id WHERE l.token_hash = ?').get(sha256(raw))
+    if (!row || row.used_at !== null || row.voided_at !== null || row.expires_at <= Date.now() || row.status === 'suspended') return null
+    return row
+  }
+  // A sign-in of the last 15 minutes stands in for the password when there is none yet.
+  const FRESH_MS = 15 * 60_000
+  const fresh = (sess) => Date.now() - (sess.createdAt ?? 0) <= FRESH_MS
+  /** Null if the person proved it is them (the current password, or a fresh sign-in with none), else the refusal. */
+  async function proveIt(sess, p, current) {
+    if (!p.password_hash) return fresh(sess) ? null : { status: 403, body: { error: 'not_fresh', message: 'For your safety, sign out, sign in again with your passkey, then do this within 15 minutes.' } }
+    // Its own count, by person (a session's holder guessing): a stranger's wrong sign-ins under the
+    // same name never slow the person down here.
+    const h = `session:${sess.personId}`
+    const w = stepGuard.wait(h)
+    if (w > 0) return { status: 429, body: { error: 'slow_down', message: `Too many wrong tries. Wait ${minutes(w)}.` }, headers: { 'retry-after': String(Math.ceil(w / 1000)) } }
+    if (await verifyPassword(current, p.password_hash)) return stepGuard.success(h), null
+    const f = stepGuard.fail(h)
+    if (f.burst) audit(db, { actorKind: 'system', subject: sess.personId, action: 'sign_in_burst', ok: false, size: f.n })
+    return { status: 403, body: { error: 'wrong_password', message: 'Your current password was not right.' } }
+  }
+
   return {
     rpID,
     allow,
@@ -191,10 +334,10 @@ export function makeAuth({ db, keys, origin, rpName = 'Ola', session: { absolute
       if (!raw || raw.length > 100) return null
       const id = sha256(raw)
       const now = Date.now()
-      const row = db.prepare('SELECT s.id, s.person_id, s.passkey_id, s.expires_at, s.last_used_at, s.revoked_at, p.handle, p.display_name, p.status, p.is_admin FROM sessions s JOIN people p ON p.id = s.person_id WHERE s.id = ?').get(id)
+      const row = db.prepare('SELECT s.id, s.person_id, s.passkey_id, s.created_at, s.expires_at, s.last_used_at, s.revoked_at, p.handle, p.display_name, p.status, p.is_admin FROM sessions s JOIN people p ON p.id = s.person_id WHERE s.id = ?').get(id)
       if (!row || row.revoked_at !== null || row.expires_at <= now || now - row.last_used_at > idleMs || row.status !== 'active') return null
       if (now - row.last_used_at > 60_000) db.prepare('UPDATE sessions SET last_used_at = ? WHERE id = ?').run(now, id)
-      return { id, personId: row.person_id, passkeyId: row.passkey_id, handle: row.handle, name: row.display_name, isAdmin: !!row.is_admin, csrf: createHmac('sha256', keys.csrf).update(id).digest('base64url') }
+      return { id, personId: row.person_id, passkeyId: row.passkey_id, createdAt: row.created_at, handle: row.handle, name: row.display_name, isAdmin: !!row.is_admin, csrf: createHmac('sha256', keys.csrf).update(id).digest('base64url') }
     },
 
     /**
@@ -252,7 +395,7 @@ export function makeAuth({ db, keys, origin, rpName = 'Ola', session: { absolute
       })
       const ceremony = newCeremony({ kind: 'register', challenge: options.challenge, inviteId: inv.id, inviteKind: inv.kind, personId: inv.person_id })
       if (!ceremony) return { status: 503, body: { error: 'busy', message: 'Too many sign-ins are under way. Try again in a minute.' } }
-      return { status: 200, body: { ceremony, options, name: inv.display_name } }
+      return { status: 200, body: { ceremony, options, name: inv.display_name, min: passwordMin, hasPassword: false } }
     },
 
     async registerVerify(ceremonyId, response) {
@@ -300,6 +443,8 @@ export function makeAuth({ db, keys, origin, rpName = 'Ola', session: { absolute
       if (!c || typeof response?.id !== 'string' || response.id.length > 1400) return refused
       const pk = db.prepare('SELECT k.id, k.person_id, k.credential_id, k.public_key, k.counter, k.transports, p.status, p.webauthn_user_id FROM passkeys k JOIN people p ON p.id = k.person_id WHERE k.credential_id = ?').get(response.id)
       if (!pk) return refused
+      // After a right password with "Ask for my passkey too": only that person's passkey finishes it.
+      if (c.personId !== undefined && pk.person_id !== c.personId) return refused
       // A discoverable credential names its user: it must be the passkey's owner.
       const handle = response?.response?.userHandle
       if (handle && !same(handle, Buffer.from(pk.webauthn_user_id).toString('base64url'))) return refused
@@ -324,6 +469,206 @@ export function makeAuth({ db, keys, origin, rpName = 'Ola', session: { absolute
       audit(db, { actor: pk.person_id, action: 'signed_in' })
       return { status: 200, body: { ok: true }, cookie: startSession(pk.person_id, pk.id).cookie }
     },
+
+    // ------------------------------------------------ passwords (see the note at the top)
+    knownCookieName: knownJar.name,
+    passwordMin,
+
+    /**
+     * Checks a handle and password, with every limit. Returns { ok: true, person } or a refusal
+     * ({ status, body, headers }). `known` is a known-device token (the cookie, or the app's).
+     */
+    passwordAttempt,
+
+    /** The web sign-in: a session, or (with "Ask for my passkey too") a passkey ceremony for that person alone. */
+    async passwordSignIn(body, addr, known) {
+      const r = await passwordAttempt({ handle: body?.handle, password: body?.password, addr, known })
+      if (!r.ok) return r
+      const p = r.person
+      if (p.require_passkey) {
+        const pks = db.prepare('SELECT credential_id, transports FROM passkeys WHERE person_id = ?').all(p.id)
+        if (!pks.length) return { status: 409, body: { error: 'no_passkey', message: 'Your account asks for your passkey, and it has none now. Ask Bart to turn that off for you.' } }
+        const options = await generateAuthenticationOptions({ rpID, userVerification: 'required', allowCredentials: pks.map((k) => ({ id: k.credential_id, transports: JSON.parse(k.transports) })), timeout: 120_000 })
+        const ceremony = newCeremony({ kind: 'login', challenge: options.challenge, personId: p.id })
+        return { status: 200, body: { passkey: true, ceremony, options } }
+      }
+      audit(db, { actor: p.id, action: 'signed_in' })
+      return { status: 200, body: { ok: true }, cookies: [startSession(p.id, null).cookie, knownCookie(p.id)] }
+    },
+
+    /** A known-device token for a person (the app keeps it; the browser gets it as a cookie). */
+    knownToken: (personId) => knownMake(personId),
+
+    /** Choosing a password from an invitation link (a first invitation only): the person is in. */
+    async invitePassword(raw, password) {
+      const inv = inviteFor(raw)
+      if (!inv) return { status: 404, body: { error: 'invite_invalid', message: 'This invitation has expired or was already used. Ask Bart for a new one.' } }
+      if (inv.kind !== 'first') return { status: 400, body: { error: 'invite_kind', message: 'This link adds a passkey for another device. Use the passkey button.' } }
+      const p = db.prepare('SELECT password_hash FROM people WHERE id = ?').get(inv.person_id)
+      if (p.password_hash || passkeyCount(inv.person_id)) return { status: 409, body: { error: 'has_account', message: 'You can already sign in to Ola. Use your password or your passkey.' } }
+      const problem = passwordProblem(password, { handle: inv.handle, min: passwordMin })
+      if (problem) return { status: 400, body: { error: 'weak_password', message: problem } }
+      const hash = await hashPassword(password)
+      db.exec('BEGIN IMMEDIATE')
+      try {
+        const spent = db.prepare('UPDATE invitations SET used_at = ? WHERE id = ? AND used_at IS NULL AND voided_at IS NULL AND expires_at > ?').run(Date.now(), inv.id, Date.now())
+        if (spent.changes !== 1) throw new Error('invite')
+        const set = db.prepare("UPDATE people SET password_hash = ?, password_set_at = ?, status = 'active' WHERE id = ? AND password_hash IS NULL AND status = 'invited'").run(hash, Date.now(), inv.person_id)
+        if (set.changes !== 1 || passkeyCount(inv.person_id)) throw new Error('has an account')
+        audit(db, { actor: inv.person_id, action: 'password_set' })
+        db.exec('COMMIT')
+      } catch {
+        db.exec('ROLLBACK')
+        return { status: 409, body: { error: 'invite_invalid', message: 'This invitation was already used. Ask Bart for a new one.' } }
+      }
+      audit(db, { actor: inv.person_id, action: 'signed_in' })
+      return { status: 200, body: { ok: true }, cookies: [startSession(inv.person_id, null).cookie, knownCookie(inv.person_id)] }
+    },
+
+    /** A reset link's person (for the greeting), or 404. */
+    resetInfo(raw) {
+      const l = linkFor(raw)
+      if (!l) return { status: 404, body: LINK_GONE }
+      return { status: 200, body: { name: l.display_name, handle: l.handle, hasPassword: l.password_hash !== null, min: passwordMin } }
+    },
+
+    /**
+     * A new password from the admin's one-time link. A person who had a password before: every
+     * session and every Mac of theirs is signed out (the old password may be known to someone else).
+     */
+    async reset(raw, password) {
+      const l = linkFor(raw)
+      if (!l) return { status: 404, body: LINK_GONE }
+      const problem = passwordProblem(password, { handle: l.handle, min: passwordMin })
+      if (problem) return { status: 400, body: { error: 'weak_password', message: problem } }
+      const hash = await hashPassword(password)
+      const now = Date.now()
+      let had = false
+      db.exec('BEGIN IMMEDIATE')
+      try {
+        const spent = db.prepare('UPDATE password_links SET used_at = ? WHERE id = ? AND used_at IS NULL AND voided_at IS NULL AND expires_at > ?').run(now, l.id, now)
+        if (spent.changes !== 1) throw new Error('link')
+        const before = db.prepare('SELECT password_hash, status FROM people WHERE id = ?').get(l.person_id)
+        if (before.status === 'suspended') throw new Error('suspended')
+        had = before.password_hash !== null
+        db.prepare("UPDATE people SET password_hash = ?, password_set_at = ?, status = CASE WHEN status = 'invited' THEN 'active' ELSE status END WHERE id = ?").run(hash, now, l.person_id)
+        if (had) {
+          db.prepare('UPDATE sessions SET revoked_at = ? WHERE person_id = ? AND revoked_at IS NULL').run(now, l.person_id)
+          db.prepare('UPDATE devices SET revoked_at = ? WHERE person_id = ? AND revoked_at IS NULL').run(now, l.person_id)
+          audit(db, { actor: l.person_id, action: 'sessions_revoked' })
+        }
+        audit(db, { actor: l.person_id, action: had ? 'password_changed' : 'password_set' })
+        db.exec('COMMIT')
+      } catch {
+        db.exec('ROLLBACK')
+        return { status: 404, body: LINK_GONE }
+      }
+      if (had) onAppKeysRevoked()
+      guard.success(handleKey(l.handle))
+      audit(db, { actor: l.person_id, action: 'signed_in' })
+      return { status: 200, body: { ok: true }, cookies: [startSession(l.person_id, null).cookie, knownCookie(l.person_id)] }
+    },
+
+    // ------------------------------------------------ the person's own account (signed in, CSRF)
+    account(sess) {
+      const p = db.prepare('SELECT password_hash, password_set_at, require_passkey FROM people WHERE id = ?').get(sess.personId)
+      const pks = db.prepare('SELECT id, created_at, last_used_on FROM passkeys WHERE person_id = ? ORDER BY id').all(sess.personId)
+      return {
+        hasPassword: p.password_hash !== null,
+        passwordSetAt: p.password_set_at ? new Date(p.password_set_at).toISOString() : null,
+        requirePasskey: !!p.require_passkey,
+        passkeys: pks.map((k) => ({ id: k.id, added: new Date(k.created_at).toISOString(), lastUsed: k.last_used_on ?? null })),
+        minLength: passwordMin,
+        fresh: fresh(sess),
+      }
+    },
+
+    /** Sets or changes the password: the current one, or (no password yet) a sign-in of the last 15 minutes. */
+    async setPassword(sess, body) {
+      const p = db.prepare('SELECT handle, password_hash FROM people WHERE id = ?').get(sess.personId)
+      const proof = await proveIt(sess, p, body?.current)
+      if (proof) return proof
+      const problem = passwordProblem(body?.password, { handle: p.handle, min: passwordMin })
+      if (problem) return { status: 400, body: { error: 'weak_password', message: problem } }
+      const hash = await hashPassword(body.password)
+      const now = Date.now()
+      db.prepare('UPDATE people SET password_hash = ?, password_set_at = ? WHERE id = ?').run(hash, now, sess.personId)
+      // Every other sign-in ends, the Ola app on their Macs included: whoever knew the old one is out.
+      const ended = Number(db.prepare('UPDATE sessions SET revoked_at = ? WHERE person_id = ? AND id != ? AND revoked_at IS NULL').run(now, sess.personId, sess.id).changes)
+      const macs = Number(db.prepare('UPDATE devices SET revoked_at = ? WHERE person_id = ? AND revoked_at IS NULL').run(now, sess.personId).changes)
+      audit(db, { actor: sess.personId, action: p.password_hash ? 'password_changed' : 'password_set' })
+      if (ended || macs) audit(db, { actor: sess.personId, action: 'sessions_revoked' })
+      if (macs) onAppKeysRevoked()
+      return { status: 200, body: { ok: true, signedOutElsewhere: ended, macsSignedOut: macs } }
+    },
+
+    /** "Ask for my passkey too": on needs a passkey; off needs the password (or a fresh sign-in). */
+    async setRequirePasskey(sess, body) {
+      const on = body?.on === true
+      const p = db.prepare('SELECT handle, password_hash, require_passkey FROM people WHERE id = ?').get(sess.personId)
+      if (on && !passkeyCount(sess.personId)) return { status: 409, body: { error: 'no_passkey', message: 'Add a passkey first, then turn this on.' } }
+      if (!on && p.require_passkey) {
+        const proof = await proveIt(sess, p, body?.current)
+        if (proof) return proof
+      }
+      if (!!p.require_passkey !== on) {
+        db.prepare('UPDATE people SET require_passkey = ? WHERE id = ?').run(on ? 1 : 0, sess.personId)
+        audit(db, { actor: sess.personId, action: on ? 'passkey_required_on' : 'passkey_required_off' })
+      }
+      return { status: 200, body: { ok: true, requirePasskey: on } }
+    },
+
+    /** Adding a passkey from Settings: the password first (or a fresh sign-in), then the browser's prompt. */
+    async addPasskeyOptions(sess, body) {
+      const p = db.prepare('SELECT handle, display_name, password_hash, webauthn_user_id FROM people WHERE id = ?').get(sess.personId)
+      const proof = await proveIt(sess, p, body?.current)
+      if (proof) return proof
+      const existing = db.prepare('SELECT credential_id, transports FROM passkeys WHERE person_id = ?').all(sess.personId)
+      const options = await generateRegistrationOptions({
+        rpName,
+        rpID,
+        userName: p.handle,
+        userDisplayName: p.display_name,
+        userID: new Uint8Array(p.webauthn_user_id),
+        attestationType: 'none',
+        excludeCredentials: existing.map((k) => ({ id: k.credential_id, transports: JSON.parse(k.transports) })),
+        authenticatorSelection: { residentKey: 'required', userVerification: 'required' },
+        supportedAlgorithmIDs: [-7, -257],
+        timeout: 120_000,
+      })
+      return { status: 200, body: { ceremony: newCeremony({ kind: 'add', challenge: options.challenge, personId: sess.personId }), options } }
+    },
+
+    async addPasskeyVerify(sess, ceremonyId, response) {
+      const c = takeCeremony(ceremonyId, 'add')
+      if (!c || c.personId !== sess.personId) return { status: 400, body: { error: 'ceremony_invalid', message: 'That took too long. Start again.' } }
+      let v
+      try {
+        v = await verifyRegistrationResponse({ response, expectedChallenge: c.challenge, expectedOrigin: origin, expectedRPID: rpID, requireUserVerification: true, supportedAlgorithmIDs: [-7, -257] })
+      } catch {
+        v = { verified: false }
+      }
+      if (!v.verified) return { status: 400, body: { error: 'passkey_refused', message: 'Your passkey could not be checked. Nothing was saved.' } }
+      const cred = v.registrationInfo.credential
+      const transports = JSON.stringify((cred.transports ?? []).filter((t) => ['ble', 'cable', 'hybrid', 'internal', 'nfc', 'smart-card', 'usb'].includes(t)))
+      try {
+        // via 'device': the person's other devices are told once that a passkey was added.
+        db.prepare("INSERT INTO passkeys (person_id, credential_id, public_key, counter, transports, created_at, via) VALUES (?, ?, ?, ?, ?, ?, 'device')").run(sess.personId, cred.id, Buffer.from(cred.publicKey), cred.counter, transports, Date.now())
+      } catch {
+        return { status: 409, body: { error: 'passkey_exists', message: 'That passkey is already on your account.' } }
+      }
+      audit(db, { actor: sess.personId, action: 'passkey_added' })
+      return { status: 200, body: { ok: true } }
+    },
+
+    /** Sign out everywhere: every session (this one too) and every Mac. */
+    signOutEverywhere(sess) {
+      const now = Date.now()
+      db.prepare('UPDATE sessions SET revoked_at = ? WHERE person_id = ? AND revoked_at IS NULL').run(now, sess.personId)
+      const macs = Number(db.prepare('UPDATE devices SET revoked_at = ? WHERE person_id = ? AND revoked_at IS NULL').run(now, sess.personId).changes)
+      audit(db, { actor: sess.personId, action: 'sessions_revoked' })
+      if (macs) onAppKeysRevoked()
+    },
   }
 }
 
@@ -342,6 +687,25 @@ export function parseCookie(header) {
  * Makes a single-use invitation for a person and voids their earlier unused ones, in one
  * transaction. Returns the raw token (shown once) and how many were voided.
  */
+/**
+ * A one-time link to set a password (admin.mjs reset-password): voids the person's earlier unused
+ * ones, in one transaction. Returns the raw token (shown once) and how many were voided.
+ */
+export function makePasswordLink(db, personId, ttlMs) {
+  const raw = token()
+  const now = Date.now()
+  db.exec('BEGIN IMMEDIATE')
+  try {
+    const voided = db.prepare('UPDATE password_links SET voided_at = ? WHERE person_id = ? AND used_at IS NULL AND voided_at IS NULL AND expires_at > ?').run(now, personId, now).changes
+    db.prepare('INSERT INTO password_links (person_id, token_hash, created_at, expires_at) VALUES (?, ?, ?, ?)').run(personId, sha256(raw), now, now + ttlMs)
+    db.exec('COMMIT')
+    return { raw, voided }
+  } catch (e) {
+    db.exec('ROLLBACK')
+    throw e
+  }
+}
+
 export function makeInvite(db, personId, ttlMs, kind = 'first') {
   if (!['first', 'device'].includes(kind)) throw new Error('an invitation is first or device')
   const raw = token()

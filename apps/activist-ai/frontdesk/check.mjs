@@ -388,6 +388,146 @@ await check('in WebKit, an invitation makes a passkey, the sign-in sticks, and a
     await wk.close()
   }
 })
+// ---------------------------------------------------------------- passwords (2026-11-17)
+// A normal sign-in with a password, the passkey optional. pia is invited and chooses a password;
+// signs out and in with her name and password in Chromium and in WebKit; adds a passkey in Your
+// account and turns on "Ask for my passkey too"; then approves the Ola app on a Mac (#/device), whose
+// key reaches the model through the front desk and stops working when she signs that Mac out. The
+// rules themselves (hash, limits, timing, resets) are proven in test/signin.test.mjs.
+const PIA_PW = 'paper lanterns over the river'
+async function passwordSignIn(page, handle, password) {
+  await page.goto(`${ORIGIN}/`)
+  await page.getByLabel('Your name for Ola').fill(handle)
+  await page.getByLabel('Password', { exact: true }).fill(password)
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click()
+}
+let P
+await check('passwords: pia’s invitation lets her choose a password (a weak one is refused in plain words), and she is in', async () => {
+  admin('add-person', 'pia', '--name', 'Pia P.')
+  const link = admin('invite', 'pia')
+  P = await person()
+  await P.page.goto(link)
+  await P.page.waitForSelector('.gate-name')
+  if (SHOTS) await P.page.screenshot({ path: path.join(SHOTS, 'invite-password-1280.png') })
+  await P.page.getByLabel('Choose a password').fill('password12345678')
+  await P.page.getByRole('button', { name: 'Make my account' }).click()
+  await P.page.waitForSelector('.gate-problem')
+  const said = await P.page.locator('.gate-problem').innerText()
+  assert(/most common/.test(said), said)
+  await P.page.getByLabel('Choose a password').fill(PIA_PW)
+  await P.page.getByRole('button', { name: 'Make my account' }).click()
+  await P.page.waitForSelector('.gate-title', { timeout: 30_000 })
+  const s = await signedIn(P)
+  assert(s.me.json.person.handle === 'pia', JSON.stringify(s.me.json))
+  return 'weak refused, then in'
+})
+
+await check('passwords: sign out, then in with name and password in Chromium and in WebKit; a wrong one says so, the same words as an unknown name', async () => {
+  const { webkit } = await import('playwright')
+  const wk = await webkit.launch()
+  try {
+    for (const [engine, ctx] of [['chromium', P.ctx], ['webkit', await wk.newContext()]]) {
+      const page = engine === 'chromium' ? P.page : await ctx.newPage()
+      if (engine === 'chromium') await api('/api/signout', { method: 'POST', cookie: (await cookieOf(ctx)).value, csrf: (await signedIn(P)).csrf })
+      await passwordSignIn(page, 'pia', 'not the password at all')
+      await page.waitForSelector('.gate-problem')
+      const wrong = await page.locator('.gate-problem').innerText()
+      await passwordSignIn(page, 'nobody-by-that-name', PIA_PW)
+      await page.waitForSelector('.gate-problem')
+      const nobody = await page.locator('.gate-problem').innerText()
+      assert(wrong === nobody && /did not match/.test(wrong), `${engine}: "${wrong}" / "${nobody}"`)
+      if (SHOTS && engine === 'webkit') await page.screenshot({ path: path.join(SHOTS, 'signin-wrong-webkit-1280.png') })
+      await passwordSignIn(page, 'pia', PIA_PW)
+      await page.waitForSelector('.gate-title', { timeout: 30_000 })
+      const c = (await ctx.cookies(ORIGIN)).find((k) => k.name === CK)
+      const me = await api('/api/me', { cookie: c?.value })
+      assert(me.status === 200 && me.json.person.handle === 'pia', `${engine}: ${me.status}`)
+    }
+  } finally {
+    await wk.close()
+  }
+  if (SHOTS) {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } })
+    const pg = await ctx.newPage()
+    await pg.goto(`${ORIGIN}/`)
+    await pg.waitForSelector('.gate-form')
+    await pg.screenshot({ path: path.join(SHOTS, 'signin-390.png'), fullPage: true })
+    await pg.setViewportSize({ width: 1280, height: 860 })
+    await pg.screenshot({ path: path.join(SHOTS, 'signin-1280.png') })
+    await ctx.close()
+  }
+  return 'chromium and webkit'
+})
+
+await check('passwords: in Your account pia adds a passkey and turns on “Ask for my passkey too”; then her password is followed by her passkey', async () => {
+  await P.page.goto(`${ORIGIN}/#/account`)
+  await P.page.waitForSelector('.account-card')
+  await P.page.getByLabel('Current password').fill(PIA_PW)
+  await P.page.getByRole('button', { name: 'Add a passkey on this device' }).click()
+  await P.page.waitForSelector('.account-said')
+  await P.page.waitForFunction(() => document.body.innerText.includes('A passkey added'))
+  await P.page.getByLabel('Ask for my passkey too').check()
+  await P.page.waitForFunction(() => document.querySelector('.account-said')?.textContent?.includes('followed by your passkey'))
+  if (SHOTS) await P.page.screenshot({ path: path.join(SHOTS, 'account-1280.png'), fullPage: true })
+  // Sign out, then the password alone is not enough: the page asks for the passkey, which lets her in.
+  await api('/api/signout', { method: 'POST', cookie: (await cookieOf(P.ctx)).value, csrf: (await signedIn(P)).csrf })
+  await passwordSignIn(P.page, 'pia', PIA_PW)
+  await P.page.getByRole('button', { name: 'Use my passkey' }).waitFor({ timeout: 10_000 })
+  assert(!(await cookieOf(P.ctx)) || (await api('/api/me', { cookie: (await cookieOf(P.ctx)).value })).status === 401, 'signed in before the passkey')
+  if (SHOTS) await P.page.screenshot({ path: path.join(SHOTS, 'signin-passkey-step-1280.png') })
+  await P.page.getByRole('button', { name: 'Use my passkey' }).click()
+  await P.page.waitForSelector('.gate-title', { timeout: 30_000 })
+  // And the passkey alone still works (the passkey path stays covered).
+  await api('/api/signout', { method: 'POST', cookie: (await cookieOf(P.ctx)).value, csrf: (await signedIn(P)).csrf })
+  await P.page.goto(`${ORIGIN}/`)
+  const pk = P.page.getByRole('button', { name: 'Sign in with your passkey' })
+  await until(() => pk.isEnabled(), 10_000, 'the passkey button')
+  await pk.click()
+  await P.page.waitForSelector('.gate-title', { timeout: 30_000 })
+  const rows = JSON.parse(admin('audit', '--limit', '500', '--json')).map((x) => x.action)
+  for (const w of ['password_set', 'passkey_added', 'passkey_required_on']) assert(rows.includes(w), `no ${w} row`)
+  return 'password, then passkey; passkey alone'
+})
+
+await check('the Mac app: pia signs in with her name and password (no browser); her computer’s pass reaches the model; signing it out refuses it at once', async () => {
+  admin('allow-devices', 'pia')
+  const login = (body, headers = {}) => fetch(`${ORIGIN}/api/device/login`, { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(body) })
+  const wrong = await login({ handle: 'pia', password: 'not her password at all', name: 'Pia’s MacBook', kind: 'mac' })
+  assert(wrong.status === 401, `a wrong password: ${wrong.status}`)
+  const r = await login({ handle: 'pia', password: PIA_PW, name: 'Pia’s MacBook', kind: 'mac' })
+  // She turned on "Ask for my passkey too" above: the app is sent to the browser.
+  assert(r.status === 403 && (await r.json()).error === 'passkey_required', `with the switch on: ${r.status}`)
+  admin('require-passkey', 'pia', 'off')
+  const ok = await login({ handle: 'pia', password: PIA_PW, name: 'Pia’s MacBook', kind: 'mac' })
+  const s = await ok.json()
+  assert(ok.status === 200 && /^olap1\./.test(s.token) && s.person.handle === 'pia' && s.known, `sign-in: ${ok.status}`)
+  const door = (p, init = {}) => fetch(`${ORIGIN}/api/device/gw/${p}`, { ...init, headers: { authorization: `Bearer ${s.token}`, 'content-type': 'application/json', ...(init.headers ?? {}) } })
+  await until(async () => (await door('v1/models')).status === 200, 8000, 'the gateway learning her caller')
+  const chat = await door('v1/chat/completions', { method: 'POST', body: JSON.stringify({ model: 'general', messages: [{ role: 'user', content: 'Say hello in five words.' }] }) })
+  assert(chat.status === 200, `chat through the door: ${chat.status}`)
+  for (const p of ['/api/me', '/api/files', '/oc/api/session', '/api/account']) assert((await fetch(`${ORIGIN}${p}`, { headers: { authorization: `Bearer ${s.token}`, 'x-ola-workspace': FA } })).status === 401, p)
+  // Your account lists the computer; signing it out refuses the pass on its next request.
+  await P.page.goto(`${ORIGIN}/#/account`)
+  await P.page.waitForFunction(() => document.body.innerText.includes('Pia’s MacBook'), null, { timeout: 10_000 })
+  if (SHOTS) await P.page.screenshot({ path: path.join(SHOTS, 'account-computer-1280.png'), fullPage: true })
+  const list = await api('/api/devices', { cookie: (await cookieOf(P.ctx)).value })
+  const dev = list.json.devices.find((d) => d.name === 'Pia’s MacBook')
+  const rm = await api(`/api/devices/${dev.id}`, { method: 'DELETE', cookie: (await cookieOf(P.ctx)).value, csrf: (await signedIn(P)).csrf })
+  assert(rm.status === 200, `remove: ${rm.status}`)
+  assert((await door('v1/models')).status === 401, 'the pass still works after sign-out')
+  // The browser way works for a person who signed in with a password too (the apps' existing path):
+  // her session approves a computer, the code and its verifier give a pass that reaches the model.
+  const verifier = randomBytes(32).toString('base64url')
+  const challenge = createHash('sha256').update(verifier).digest('base64url')
+  const g = await api('/api/device/grant', { method: 'POST', cookie: (await cookieOf(P.ctx)).value, csrf: (await signedIn(P)).csrf, body: JSON.stringify({ challenge, name: 'Pia’s iMac', kind: 'mac', port: 51999 }), headers: { 'content-type': 'application/json' } })
+  assert(g.status === 200 && g.json.code, `grant: ${g.status}`)
+  const t = await fetch(`${ORIGIN}/api/device/token`, { method: 'POST', headers: { authorization: `Bearer ${g.json.code}`, 'content-type': 'application/json' }, body: JSON.stringify({ verifier }) })
+  const tj = await t.json()
+  assert(t.status === 200 && /^olap1\./.test(tj.token), `token: ${t.status}`)
+  assert((await fetch(`${ORIGIN}/api/device/gw/v1/models`, { headers: { authorization: `Bearer ${tj.token}` } })).status === 200, 'the browser-way pass')
+  return 'password sign-in in the app and the browser way, chat 200, refused after sign-out'
+})
+
 await check('an expired invitation is refused', async () => {
   admin('add-person', 'evan', '--name', 'Evan E.')
   const link = admin('invite', 'evan', '--hours', '0.0003') // about a second

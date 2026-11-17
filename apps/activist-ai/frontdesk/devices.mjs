@@ -267,8 +267,39 @@ export function makeDevices({ db, cfg, gateway, auth, clientOf, json, readJson, 
   /** Is this a route a device uses with its pass (not the page's grant)? */
   const isDeviceRoute = (p) => PASS_PATH.test(p) && p !== '/api/device/grant'
 
+  /**
+   * POST /api/device/login: the Mac app's normal sign-in (2026-11-17), a name and a password, with
+   * every limit of a web sign-in (auth.mjs passwordAttempt: per address, per name with the known-
+   * device exception (X-Ola-Known), the global ceiling; one answer for every failure). The door lets
+   * exactly this request through without its passcode (ops/tls.mjs). A person who asks for their
+   * passkey too is sent to the browser (403 passkey_required, after a right password only). The
+   * answer is the same as /api/device/token's, plus this Mac's known-device token.
+   */
+  async function login(req, res) {
+    if (req.method !== 'POST') return json(res, 405, { error: 'method' })
+    const body = await readJson(req, 4 * 1024)
+    if (!body) return json(res, 400, { error: 'bad_json' })
+    const known = typeof req.headers['x-ola-known'] === 'string' ? req.headers['x-ola-known'] : null
+    const r = await auth.passwordAttempt({ handle: body.handle, password: body.password, addr: clientOf(req), known })
+    if (!r.ok) return json(res, r.status, r.body, r.headers ?? {})
+    const p0 = person(r.person.id)
+    if (r.person.require_passkey) return json(res, 403, { error: 'passkey_required', message: 'Your account asks for your passkey too. Ola opens your browser to finish signing in.' })
+    if (!mayUseDevices(p0)) {
+      refused(`p${p0.id}`, p0)
+      return json(res, 403, { error: 'not_allowed', message: 'Your account cannot sign in to Ola on other computers yet. Ask Bart if you need it.' })
+    }
+    const name = validDeviceName(body.name) ?? 'A Mac'
+    const kind = KINDS.includes(body.kind) ? body.kind : 'mac'
+    const d = createDevice(db, key, p0.id, name, kind)
+    audit(db, { actor: p0.id, action: 'signed_in' })
+    audit(db, { actor: p0.id, action: 'device_signed_in' })
+    sync()
+    return json(res, 200, { token: d.token, expires_at: new Date(d.expiresAt).toISOString(), person: { handle: p0.handle, name: p0.display_name, admin: !!p0.is_admin }, device: { id: d.id, name, kind }, known: auth.knownToken(p0.id) })
+  }
+
   async function handle(req, res, p) {
     if (!enabled) return json(res, 404, { error: 'not_found' })
+    if (p === '/api/device/login') return login(req, res)
     const raw = passOf(req)
 
     if (p === '/api/device/token') {

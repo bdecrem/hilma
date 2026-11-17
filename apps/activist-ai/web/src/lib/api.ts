@@ -332,7 +332,7 @@ export const passkeys = {
   prepareSignIn: () => post<Prepared>('/api/auth/login/options', {}),
 
   /** Makes the passkey (the browser's prompt) and registers it; the front desk then sets the session cookie. */
-  async finishRegister({ ceremony, options }: Prepared): Promise<void> {
+  async finishRegister({ ceremony, options }: Prepared, verifyPath = '/api/auth/register/verify'): Promise<void> {
     try {
       const cred = (await navigator.credentials.create({
         publicKey: {
@@ -343,7 +343,7 @@ export const passkeys = {
         },
       })) as PublicKeyCredential
       const r = cred.response as AuthenticatorAttestationResponse
-      await post('/api/auth/register/verify', {
+      await post(verifyPath, {
         ceremony,
         response: {
           id: cred.id,
@@ -381,4 +381,41 @@ export const passkeys = {
       throw passkeyProblem(e)
     }
   },
+}
+
+// ---------------------------------------------------------------- passwords and the account
+//
+// A normal sign-in: a name and a password (frontdesk/auth.mjs); a passkey as an option. When the
+// person asks for their passkey too, a right password comes back as a passkey ceremony for them.
+
+export interface AccountInfo {
+  hasPassword: boolean
+  passwordSetAt: string | null
+  requirePasskey: boolean
+  passkeys: { id: number; added: string; lastUsed: string | null }[]
+  minLength: number
+  fresh: boolean
+}
+
+export const account = {
+  /**
+   * Signs in with a password. Resolves to null when signed in, or, with "Ask for my passkey too", to
+   * the passkey step the person then starts with a click of their own (Safari asks for a passkey only
+   * straight from a click).
+   */
+  async signIn(handle: string, password: string): Promise<Prepared | null> {
+    const r = await post<{ ok?: boolean; passkey?: boolean; ceremony?: string; options?: any }>('/api/auth/password', { handle, password })
+    return r.passkey && r.ceremony ? { ceremony: r.ceremony, options: r.options } : null
+  },
+  invitePassword: (invite: string, password: string) => post<{ ok: boolean }>('/api/auth/invite/password', { invite, password }),
+  resetInfo: (token: string) => post<{ name: string; handle: string; hasPassword: boolean; min: number }>('/api/auth/reset/info', { token }),
+  reset: (token: string, password: string) => post<{ ok: boolean }>('/api/auth/reset', { token, password }),
+  get: () => call<AccountInfo>('/api/account'),
+  setPassword: (current: string, password: string) => post<{ ok: boolean; signedOutElsewhere: number; macsSignedOut: number }>('/api/account/password', { current, password }),
+  requirePasskey: (on: boolean, current = '') => post<{ ok: boolean }>('/api/account/require-passkey', { on, current }),
+  async addPasskey(current: string): Promise<void> {
+    const p = await post<Prepared>('/api/account/passkey/options', { current })
+    await passkeys.finishRegister(p, '/api/account/passkey/verify')
+  },
+  signOutEverywhere: () => post<{ ok: boolean }>('/api/account/signout-everywhere', {}),
 }

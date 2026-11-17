@@ -155,6 +155,9 @@ export function SettingsView(props: { ola: Ola; titleRef?: (el: HTMLHeadingEleme
               Settings
             </h1>
             <p class="files-lede">How this project works, and what may leave this machine.</p>
+            <p class="files-lede">
+              Your password, passkeys and Macs are in <a href="#/account">Your account</a>.
+            </p>
           </div>
         </div>
 

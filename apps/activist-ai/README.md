@@ -411,7 +411,49 @@ are numbers, fixed words (a CHECK constraint lists every action), keyed hashes a
 `file_read_by_run`, `shown_to_cloud_agent`. `GET /api/activity` shows a workspace's members its
 own log, with names matched back from the files still there.
 
-**Sign-in: passkeys only, by invitation** (`frontdesk/auth.mjs`, `@simplewebauthn/server`
+**Sign-in: a name and a password, the passkey optional (2026-11-17).** Bart: "we should have
+normal login with an optional passkey. That's normal." A person signs in with their **handle** (the
+name `admin.mjs add-person` gives them) and a password, or with a passkey; either works. Still by
+invitation only: the invitation link now lets the person choose a password (or make a passkey);
+`add-person <handle> --name … --link` makes the account and prints that link at once. Details:
+
+- **The hash** (`frontdesk/passwords.mjs`): scrypt from Node's own crypto (no new dependency),
+  N=2^17, r=8, p=1, 16-byte salt, 32-byte key: OWASP's Password Storage Cheat Sheet setting (128 MiB
+  per hash). Measured on the mini: 180 to 220 ms a hash. At most two hashes at once (256 MiB), the
+  rest wait. The stored string names its parameters, so they can be raised later.
+- **The rules** (NIST SP 800-63B-4): at least 15 characters (the floor for a password used alone;
+  `OLA_FD_PASSWORD_MIN`, 8 to 64), at most 256, any characters (NFKC-normalized), no composition
+  rules, not one of the bundled common passwords (`frontdesk/common-passwords.txt`) or such a word
+  repeated or wrapped in digits and signs, not a run of keys, not containing the handle. Refusals
+  are one plain sentence.
+- **One answer for every failure**: no such person, no password, suspended and wrong password get
+  the same 401 and the same words, after the same scrypt work (a made-up hash when there is none);
+  the test measures it.
+- **Guessing, without a lockout a stranger can use** (the passkey review's lesson, M3): per address
+  (an IPv6 /64) the sign-in rate; for an unknown device also the global ceiling. Per handle typed
+  (existing or not): 5 wrong tries free, then each next try waits 1 s, 2 s, 4 s … up to 15 minutes,
+  counted over a day. That wait is what a stranger could use to keep a real person out, so it is
+  skipped for a **known device**: a browser or Mac that signed in to that account before carries a
+  token (an HMAC under the front desk's key, bound to the person, 400 days; an HttpOnly cookie
+  `__Host-ola-known`, or the app's `X-Ola-Known`) that buys no password, only the right not to wait
+  behind a stranger's guesses, limited to 5 tries a minute per token. A passkey always works too.
+  Audit rows: `sign_in_refused` (10 a minute per person), `sign_in_burst` at 5, 10, 20, 40 … wrong
+  tries in a day, `password_set`, `password_changed`, `password_reset_issued`.
+- **Your account** (`#/account`, from the projects list and from Settings): change the password
+  (needs the current one; a person with none yet sets one within 15 minutes of a passkey sign-in),
+  add a passkey on this device (needs the current password), "Ask for my passkey too" (off by
+  default; on needs a passkey; off needs the password), the person's Macs with Sign out, and Sign
+  out everywhere (every session and every Mac). Changing the password ends every other session and
+  every Mac. With "Ask for my passkey too", a right password answers with a passkey ceremony limited
+  to that person's passkeys and no session; their passkey finishes it (a click of its own: Safari).
+- **Resets are admin-issued for now**: `admin.mjs reset-password <handle>` prints a one-time link
+  (`#/reset/<token>`, 24 h, voids earlier ones). **There is no outbound email yet**: Bart sends the
+  link himself. The seam for email later is `makePasswordLink` in `auth.mjs` (it returns the raw
+  token once); a "forgot password" route would call it and mail the link instead of printing it.
+  Using a link signs a person who had a password out everywhere (their Macs too); their passkeys
+  keep working.
+
+**Passkeys (since 2026-11-16, now the option)** (`frontdesk/auth.mjs`, `@simplewebauthn/server`
 14.0.3, pinned). `admin.mjs invite <handle>` prints a single-use link that expires (72 h by
 default); its token is in the fragment (`/#/invite/<token>`), so it is in no request line or
 Referer; the page posts it. Registration requires a resident key and user verification
@@ -621,7 +663,9 @@ stopped is in memory only, so a front desk restart forgets it (the turn then sho
 ```bash
 cd apps/activist-ai/frontdesk && npm ci
 export OLA_FD_ORIGIN=http://localhost:4700   # https://app.ola.cx on the Studio
-node admin.mjs add-person maria --name "Maria L."
+node admin.mjs add-person maria --name "Maria L." [--link]   # --link: the account and its setup link at once
+node admin.mjs reset-password maria               # a one-time link to choose a (new) password; send it yourself
+node admin.mjs require-passkey maria on|off       # "Ask for my passkey too", for her
 node admin.mjs create-workspace eviction --name "Spring eviction report" --team ndtu --team-name "North District Tenants’ Union" --owner maria
 node admin.mjs add-member ndtu dana member        # or viewer, owner; run again to change a role
 node admin.mjs invite maria                       # prints the link once; send it by a channel you trust
@@ -1395,6 +1439,49 @@ Mac is on the phone at once. `apple/OlaKit` ports `web/src/lib/steps.ts` and `co
 change the words in both places. The apps' Mac setting "Where Ola works" can instead run opencode on
 the Mac itself in a chosen folder, with only the model on the machine. See `bart/README.md` and
 `apple/README.md`. Made-up data only while the model behind the gateway is the hosted stand-in.
+
+## The Mac app for anyone with a login: a name and password (2026-11-17)
+
+Bart: "we are making the app work for more than one user, and we're doing that by adding normal
+login ... it should work for anyone with a username and login." Not on the website yet. This sits on
+the device sign-in above (`frontdesk/devices.mjs`, passes, the person's own gateway caller `p-<id>`):
+the browser way stays, and the app gains a sign-in with a name and password.
+
+- **`POST /api/device/login`** `{handle, password, name, kind}`: every limit of a web sign-in
+  (`auth.mjs` `passwordAttempt`: per address, per name with the known-device exception, the global
+  ceiling; one answer for every failure, after the same scrypt work). The answer is the same as
+  `/api/device/token`'s (a device pass, shown once, kept in the Mac's Keychain; the database keeps its
+  sha256), plus this Mac's known-device token (`known`; the app sends it back as `X-Ola-Known`). A person
+  who asks for their passkey too gets 403 `passkey_required` (only after a right password) and the app
+  opens the browser way. A person who may not sign in computers (`allow-devices`, admins always may) gets
+  403 `not_allowed`.
+- **The door** (`ops/tls.mjs`): exactly `POST /api/device/login` (the raw request line, no query), with no
+  Authorization, while device sign-in is on (`OLA_GATE_PASS_KEY` set), goes through without the door
+  passcode: an app cannot answer a browser's password prompt. It stands on the front desk's own password
+  check and limits and a 4 KiB body. Every other route still needs the passcode or a valid pass;
+  `ops/tls-test.mjs` sends nine near spellings (a query, a GET, a trailing or doubled slash, `..`,
+  `%2f`, uppercase, a neighbor, the grant) with no credential: each gets the gate's 401.
+- **What a computer's pass reaches** is the device module's list (the model routes, web search and
+  fetch, the specialists; not Claude, not the hosted model, not a batch lane), counted against the
+  person's own weekly tokens at the gateway (`GATEWAY_PEOPLE_WEEKLY_TOKENS`, one number for everyone).
+  Removal (Your account, the app's Sign Out, `revoke-device`) is at once. A password change, a reset
+  for someone who had a password, Sign out everywhere, `revoke-sessions` and `suspend` sign out every
+  computer of theirs too.
+- **Web search from a person's own Mac**: as the device module decided (the person's caller has a
+  standing web grant); the approval is the person's yes on their Mac, where the agent runs `ola-search`
+  and `ola-fetch` as shell commands that the app asks about first.
+- **Fallbacks**: "Fallback to Claude" is the person's own Claude Code on their own Mac. The hosted open
+  model is not reachable through the door (off, as the device module set it).
+- **Proved**: `frontdesk/test/signin.test.mjs` (13), `ops/tls-test.mjs` (the door), `frontdesk/check.mjs`
+  (pia signs in from the "app" with her password, is sent to the browser while she asks for her passkey,
+  chats through the door, is refused after Sign out in Your account), OlaKit `PasswordSignInTests`, and
+  end to end from the iMac (`OLA_ACCOUNT_CHECK=1 swift run olakit-selftest`, apple/README.md).
+
+**After deploying** (the lead): restart the front desk (migration 12 runs by itself) and the TLS front
+(the login route at the door). Bart's own password: `node admin.mjs reset-password bart` prints a
+one-time link for his existing account; he chooses a password there and keeps his passkey (he had no
+password, so nothing is signed out). For someone else to use the Mac app: `add-person … --link` (or
+`invite`), then `allow-devices <handle>`.
 
 ## Rules for this code
 

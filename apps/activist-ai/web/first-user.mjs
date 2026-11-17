@@ -2,7 +2,7 @@
 // The first-user check: a person who has never seen Ola, with no patience, walks three journeys
 // end to end on a fresh copy of everything, with the real everyday model:
 //
-//   A. invited by link: makes a passkey, lands in an empty project, asks for a hello-world page,
+//   A. invited by link: chooses a password, lands in an empty project, asks for a hello-world page,
 //      answers what Ola asks, sees the page and Opens it;
 //   B. uploads a small messy spreadsheet, asks a question whose honest answer needs a caveat,
 //      gets a chart and an Excel file, Opens both, finds them again on the project home;
@@ -316,10 +316,13 @@ try {
     if (ONLY.has('A')) {
       await step(run, 'A', 'the invitation link shows who it is for', 15, async () => {
         await page.goto(link)
-        await page.getByRole('button', { name: 'Make my passkey' }).waitFor({ timeout: 10_000 })
+        await page.getByRole('button', { name: 'Make my account' }).waitFor({ timeout: 10_000 })
       })
-      await step(run, 'A', 'make a passkey and land in the project', 30, async () => {
-        await page.getByRole('button', { name: 'Make my passkey' }).click()
+      // A normal sign-in since 2026-11-17: the person chooses a password (the passkey way is
+      // first-user-more.mjs's journey and frontdesk/check.mjs's).
+      await step(run, 'A', 'choose a password and land in the project', 30, async () => {
+        await page.getByLabel('Choose a password').fill('a kettle on the windowsill')
+        await page.getByRole('button', { name: 'Make my account' }).click()
         await page.waitForSelector('.project-title', { timeout: 30_000 })
         await page.waitForSelector('.empty-title, .thing', { timeout: 30_000 })
         return `"${await page.locator('.project-title').innerText()}"`
