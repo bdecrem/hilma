@@ -1174,7 +1174,12 @@ none of these controls exist.
 **The gateway** (`gateway/claude.mjs`): `POST /anthropic/v1/messages` and `.../count_tokens`,
 streamed or not, to `api.anthropic.com` only. Only `anthropic-version`, `anthropic-beta`,
 `content-type` and `accept` go upstream, plus our credential; the caller's `Authorization` and
-`x-api-key` never do. A caller may use it only when it is listed in `GATEWAY_CLAUDE_FILE` (mode 600,
+`x-api-key` never do. Nothing in the body may make Anthropic reach another address or file for the
+caller (review 5): the web fetch and web search server tools, any server tool not on the client-side
+list, an MCP connector (`mcp_servers`, `mcp_toolset`), a container, an image or document given by URL,
+and a file of the account by id are refused with a 400 before anything goes upstream
+(`outsideReach`); what Claude Code sends (its own tools, base64 pictures) passes, measured in a VM by
+`frontdesk/review/rev5.mjs claudebody`. A caller may use it only when it is listed in `GATEWAY_CLAUDE_FILE` (mode 600,
 `{"ws-<id>": {"mode": "oauth"|"api_key", "cap_micro_usd": n, "cap_tokens": n}}`, reloaded within 2
 s), else 403 "Fallback to Claude is off for this project". Credentials, per mode:
 
@@ -1398,6 +1403,7 @@ once per project (M2: 20 overlapping requests all passed a ceiling one of them n
 | `SEARCH_API_KEY` | the Brave Search API key (only in `gateway.env`, never in a workspace) |
 | `GATEWAY_WEB_WEEKLY`, `GATEWAY_WEB_PER_MINUTE` | 2000, 30 |
 | `GATEWAY_FETCH_MAX_BYTES`, `GATEWAY_FETCH_MAX_PAGE_BYTES`, `GATEWAY_FETCH_TIMEOUT_MS` | 50 MiB, 5 MiB, 120000 |
+| `GATEWAY_FETCH_REFUSE_NETS` | `171.64.0.0/14` (Stanford's range, where this machine is): more networks fetch refuses, CIDRs separated by commas, on top of every private range and the networks the machine sits on; set it empty, or to the new campus, when the machine moves (review 5) |
 | `GATEWAY_FETCH_TEST_HOSTS`, `GATEWAY_FETCH_TEST_CA`, `GATEWAY_SEARCH_UPSTREAM` | tests only (names under `.test`, which never resolve in real DNS) |
 
 **The provider: Brave Search API** (checked on its live pages, 2026-11-16). Its own index ("Every
@@ -1909,9 +1915,14 @@ the door, sees the request and each file's structure (kind, size, column types, 
 date formats; no values) and writes back the request in general terms, a generator `make(out, rng)`
 and checks a program runs (`file`, `csv_rows`, `csv_columns`, `csv_unique`, `csv_sum`, `says_number`,
 `says`, `says_none`, `quotes_verbatim`, `inputs_unchanged`; each with a failure label from
-`evals/lib/labels.json`). The generator runs under a Python audit hook that nothing can remove: it may
-write only its own folder and read only the standard library, and every process, socket and library
-load is refused (with CPU, memory and file-size limits). Then **the leak check**, mechanical, against an
+`evals/lib/labels.json`). The generator runs in a kernel jail (image 2.3.0-19, review 5: a generator
+could rewrite the Python audit hook's own rules and read `/work`, so the hook alone was not a sandbox):
+new user, mount, process and network namespaces, `/work`, `/home`, `/tmp`, `/var/tmp`, `/dev/shm`,
+`/run` and `/proc` replaced by empty folders with only its own output folder bound back in, no network
+at all (not even the gateway's loopback), every capability dropped. The audit hook stays inside it as
+a second wall (only its own folder written, the standard library read, no process, socket or library
+load), with CPU, memory and file-size limits. Where there is no jail (a Mac), a model's generator is
+never run. Then **the leak check**, mechanical, against an
 index built in the VM of the project's own text and numbers (the request, the conversation, the files
 read, every file name in `/work`, the text files in it, the database's document text), after
 normalizing case, spacing and digits ("4,817", "4 817" and "4817.0" are one number):
@@ -1982,7 +1993,9 @@ skills' "How to improve a skill from a failed run" (the label, the failed checks
 sentence, the skill or standing instruction that would have prevented it, a proposed change, the test;
 "Not applied: queued for the lead"). `node frontdesk/admin.mjs compare candidates | show <id> |
 promote <id> | weekly`: promote copies a candidate into `evals/tasks/` only after its `task.py selftest
-<dir> 0` passes, for a person to read and commit. The eval runner takes the queue as it is: `node
+<dir> 0` passes, for a person to read and commit. Seed 0 replays the copy's recorded files and answers
+(`twin.json`), so nothing a model wrote runs on this machine (review 5: before, the selftest ran the
+generator on the host as the admin user); another seed runs the generator, which only works inside a VM. The eval runner takes the queue as it is: `node
 evals/run.mjs --config configs/replay-ola.json --tasks-dir candidates --seeds 0` (harness `replay`:
 the recorded result of one arm, checked like any run), or any real configuration. **The weekly number**
 (how often Ola matched or beat Claude on the last 7 days of made-up copies, by kind and by model) is

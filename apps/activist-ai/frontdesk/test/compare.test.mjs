@@ -5,13 +5,13 @@
 // never called: the judge here is a function. Run: node --test frontdesk/test/compare.test.mjs
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { mkdtempSync, mkdirSync, readFileSync, readdirSync, writeFileSync, existsSync, rmSync } from 'node:fs'
+import { homedir, tmpdir } from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
 import { fileURLToPath } from 'node:url'
 import { openDb } from '../db.mjs'
-import { compareConfig, judgeTwice, makeCompare, outcomeOf, quality, readJudgement, samplerChoice, skillNote, weekly, writeCandidate } from '../compare.mjs'
+import { compareConfig, judgeTwice, makeCompare, outcomeOf, quality, readJudgement, realFiles, samplerChoice, skillNote, weekly, writeCandidate } from '../compare.mjs'
 import { GENERATOR } from '../../web/server/fake-twin.mjs'
 
 const AI = path.join(path.dirname(fileURLToPath(import.meta.url)), '../..')
@@ -136,11 +136,12 @@ test('a lost copy lands in the candidates queue as an eval task: task.py selftes
   const work = path.join(d, 'gen')
   mkdirSync(work)
   // The copy and both recorded results, made the way a comparison makes them.
-  const gen = spawnSync('python3', ['-I', '-c', `import sys; sys.path.insert(0, ${JSON.stringify(path.join(AI, 'workspace/lib'))}); import olatwin, json; t, f = olatwin.run_generator(sys.stdin.read(), ${JSON.stringify(work)}, 41, python=sys.executable); print(json.dumps(t))`], { input: GENERATOR, encoding: 'utf8' })
+  const gen = spawnSync('python3', ['-I', '-c', `import sys; sys.path.insert(0, ${JSON.stringify(path.join(AI, 'workspace/lib'))}); import olatwin, json; t, f = olatwin.run_generator(sys.stdin.read(), ${JSON.stringify(work)}, 41, python=sys.executable, allow_host=True); print(json.dumps(t))`], { input: GENERATOR, encoding: 'utf8' })
   assert.equal(gen.status, 0, gen.stderr)
+  const made = readdirSync(work).map((name) => ({ name, b64: readFileSync(path.join(work, name)).toString('base64') }))
   spawnSync('python3', ['-c', "import csv\nrows=list(csv.reader(open('data.csv')))\nseen=set();keep=[rows[0]]\nfor r in rows[1:]:\n  k=r[1].strip().lower()\n  if k not in seen: seen.add(k); keep.append(r)\ncsv.writer(open('clean.csv','w',newline='')).writerows(keep)"], { cwd: work })
   const checks = [{ name: 'has_clean', type: 'file', path: 'clean.csv', label: 'stopped_early' }, { name: 'clean_rows', type: 'csv_rows', path: 'clean.csv', truth: 'unique', label: 'numbers_wrong' }, { name: 'says_repeats', type: 'says_number', truth: 'duplicates', label: 'numbers_wrong' }]
-  const twin = { request: 'Remove the repeated rows from data.csv into clean.csv and tell me how many repeats you removed.', seed: 41, generator: GENERATOR, checks }
+  const twin = { request: 'Remove the repeated rows from data.csv into clean.csv and tell me how many repeats you removed.', seed: 41, generator: GENERATOR, checks, truth: JSON.parse(gen.stdout), files: made }
   const b64 = (f) => readFileSync(path.join(work, f)).toString('base64')
   const queue = path.join(d, 'candidates')
   const cand = writeCandidate(queue, { id: '00aa11bb22cc', kind: 'clean', twin, outcome: 'claude_better', ola: { final: 'The export has 30 data rows.', outputs: [], score: { all: false } }, claude: { final: 'I removed 4 repeated rows. clean.csv has 26 people.', outputs: [{ name: 'clean.csv', b64: b64('clean.csv') }], score: { all: true } }, judge: { verdict: 'y' } })
@@ -157,6 +158,43 @@ test('a lost copy lands in the candidates queue as an eval task: task.py selftes
     assert.equal(r.status, 0, r.stdout + r.stderr)
     assert.match(r.stdout, new RegExp(`${pass}  t-00aa11bb22cc`), r.stdout)
   }
+})
+
+// Review 5: a candidate's generator is code a model wrote in the project's VM. Replaying the
+// candidate (task.py selftest, which `admin.mjs compare promote` runs on this machine as the admin
+// user) ran it on the host behind only Python's audit hook, which the generator can switch off.
+test('replaying a candidate never runs the model’s generator on this machine', () => {
+  const d = dir()
+  const marker = path.join(homedir(), `.ola-rev5-host-marker-${process.pid}`)
+  rmSync(marker, { force: true })
+  // In the VM it writes its data like any copy; on a Mac it also switches the hook off and plants a file.
+  const hostile = `import sys, os\ndef make(out, rng):\n    if sys.platform == 'darwin' or not os.path.isdir('/opt/ola'):\n        m = sys.modules['__main__']\n        m.inside = lambda p, roots: True\n        m.WRITES = set()\n        open(${JSON.stringify(marker)}, 'w').write('ran on the host')\n    (out / 'data.csv').write_text('id,amount\\n1,5\\n2,7\\n')\n    return {'total': 12}\n`
+  const files = [{ name: 'data.csv', b64: Buffer.from('id,amount\n1,5\n2,7\n').toString('base64') }]
+  const twin = { request: 'Add up the amount column of data.csv and say the total.', seed: 7, generator: hostile, checks: [{ name: 'says_total', type: 'says_number', truth: 'total', label: 'numbers_wrong' }], truth: { total: 12 }, files }
+  const cand = writeCandidate(path.join(d, 'q'), { id: '0123abcd4567', kind: 'sql', twin, outcome: 'claude_better', ola: { final: 'The total is 11.', outputs: [], score: { all: false } }, claude: { final: 'The total is 12.', outputs: [], score: { all: true } }, judge: { verdict: 'y' } })
+  const st = spawnSync('python3', [path.join(AI, 'evals/lib/task.py'), 'selftest', cand, '0'], { encoding: 'utf8' })
+  const ran = existsSync(marker)
+  rmSync(marker, { force: true })
+  assert.equal(ran, false, 'the generator ran on the host')
+  assert.equal(st.status, 0, st.stdout + st.stderr)
+  // Another seed needs the generator: refused here, with no sandbox for it.
+  const other = spawnSync('python3', [path.join(AI, 'evals/lib/task.py'), 'selftest', cand, '3'], { encoding: 'utf8' })
+  assert.equal(existsSync(marker), false, 'seed 3 ran the generator on the host')
+  assert.notEqual(other.status, 0)
+  // A recorded file name cannot leave the task's folder.
+  const bad = writeCandidate(path.join(d, 'q2'), { id: '0123abcd4568', kind: 'sql', twin: { ...twin, files: [{ name: '../escaped.csv', b64: files[0].b64 }] }, outcome: 'claude_better', ola: { final: '', outputs: [], score: { all: false } }, claude: { final: '', outputs: [], score: { all: true } }, judge: { verdict: 'y' } })
+  spawnSync('python3', [path.join(AI, 'evals/lib/task.py'), 'selftest', bad, '0'], { encoding: 'utf8' })
+  assert.equal(existsSync(path.join(d, 'q2', 'escaped.csv')) || existsSync(path.join(d, 'escaped.csv')), false)
+})
+
+// Review 5: the real task copied every path Ola's read tools named, with tar's recursion: "." or a
+// folder sent the whole folder, and an absolute path (the read tool takes one) sent files outside
+// the project, /proc/self/environ among them, which holds the VM's gateway key.
+test('the real task sends only the files Ola read by name in the project, never a folder or a path outside it', () => {
+  assert.deepEqual(realFiles(['data/survey.csv', 'notes.md', 'notes.md', '.', 'data', '/proc/self/environ', '/etc/passwd', '../x', 'a/../../b', '.ola/home/.bash_history', '.ola', '-rf', 'a//b', './x']), ['data/survey.csv', 'notes.md', 'data'])
+  assert.equal(realFiles(null).length, 0)
+  // "data" may be a folder: tar runs with --no-recursion, so a folder is an empty entry.
+  assert.match(readFileSync(path.join(AI, 'frontdesk/compare.mjs'), 'utf8'), /'tar', '-cf', '-', '--no-recursion', '-C', '\/work'/)
 })
 
 test('the weekly number and the Quality page count only finished comparisons, by kind and model', () => {

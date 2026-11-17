@@ -51,6 +51,34 @@ const FORWARD = ['anthropic-version', 'anthropic-beta', 'content-type', 'accept'
 const BACK = ['content-type', 'request-id', 'retry-after', 'anthropic-organization-id']
 const MONTH = () => new Date().toISOString().slice(0, 7)
 
+// Review 5: what in a request body would make Anthropic's servers reach another address or another
+// file for the caller. The VM has no network, but the Messages API can fetch for it: the web fetch
+// and web search server tools, an MCP connector (mcp_servers, mcp_toolset), an image or a document
+// given by URL, and files of this machine's Anthropic account by id (other projects' uploads).
+// Allowed: tools with no type or type "custom" (Claude Code's own) and the client-side tool types the
+// caller runs itself; every other server tool is refused, so a new one is refused until listed here.
+const CLIENT_TOOL = /^(bash|text_editor|computer|memory|tool_search_tool_regex|tool_search_tool_bm25)_\d{8}$/
+export function outsideReach(body) {
+  if (body.mcp_servers !== undefined) return 'a connector to another server'
+  if (body.container !== undefined) return 'a container'
+  for (const t of Array.isArray(body.tools) ? body.tools : body.tools === undefined ? [] : [null]) {
+    if (!t || typeof t !== 'object') return 'a tool that is not an object'
+    if (t.type !== undefined && t.type !== 'custom' && !(typeof t.type === 'string' && CLIENT_TOOL.test(t.type))) return `the tool type ${String(t.type).slice(0, 40)}`
+  }
+  let found = null
+  const walk = (v, depth) => {
+    if (found || v === null || typeof v !== 'object') return
+    if (depth > 40) return (found = 'a request nested too deep')
+    if (Array.isArray(v)) return v.forEach((x) => walk(x, depth + 1))
+    if (v.type === 'container_upload') return (found = 'a file of the account')
+    if (v.source && typeof v.source === 'object' && v.source.type !== undefined && !['base64', 'text', 'content'].includes(v.source.type)) return (found = v.source.type === 'url' ? 'a file by its address' : 'a file of the account')
+    for (const x of Object.values(v)) walk(x, depth + 1)
+  }
+  walk(body.messages, 0)
+  walk(body.system, 0)
+  return found
+}
+
 export function claudeConfig(env, bad) {
   const file = env.GATEWAY_CLAUDE_FILE || null
   let upstream
@@ -205,6 +233,8 @@ export function makeClaude({ cfg, db, readBody, send, fail }) {
     }
     if (typeof body?.model !== 'string' || !cfg.models.has(body.model)) return no(400, 'a model this gateway does not offer', `Ola offers these Claude models: ${[...cfg.models].join(', ')}`)
     rec.model = body.model
+    const reach = outsideReach(body)
+    if (reach) return no(400, `the request asked Anthropic to reach outside (${reach})`, `Claude here cannot reach other addresses or files: ${reach} is not allowed. Work with what is in this project.`)
     const count = rec.route === 'claude_count'
     const target = new URL(count ? '/v1/messages/count_tokens' : '/v1/messages', cfg.upstream)
     const q = new URL(req.url, 'http://x').searchParams

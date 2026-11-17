@@ -28,7 +28,7 @@ writeFileSync(path.join(work, 'memo.md'), 'The Ostrander committee kept the thaw
 // Async: the scripted model answers from this same process.
 const twin = (id, request) =>
   new Promise((resolve) => {
-    const c = spawn('python3', ['-I', path.join(HERE, 'ola-twin'), 'make', id], { env: { PATH: process.env.PATH, OLA_TWIN_WORK: work, OLA_BATCH_GATEWAY: `http://127.0.0.1:${port}`, BOX_API_KEY: 'x'.repeat(32) } })
+    const c = spawn('python3', ['-I', path.join(HERE, 'ola-twin'), 'make', id], { env: { PATH: process.env.PATH, OLA_TWIN_WORK: work, OLA_BATCH_GATEWAY: `http://127.0.0.1:${port}`, BOX_API_KEY: 'x'.repeat(32), OLA_TWIN_ALLOW_HOST: '1' } })
     let out = ''
     c.stdout.on('data', (d) => (out += d))
     c.stderr.on('data', (d) => (out += d))

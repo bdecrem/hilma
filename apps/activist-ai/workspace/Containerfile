@@ -67,6 +67,9 @@
 # Ola's own model, its generator run in a sandbox, and the mechanical leak check against the
 # project's own text before anything leaves (lib/olatwin.py, lib/common-words.txt); and the
 # scoring of an engine's result against the copy's checks in a scratch VM.
+# 2.3.0-19 (review 5): the copy's generator runs in a kernel jail (lib/olatwin.py JAIL_SH: new user,
+# mount, process and network namespaces, /work and the other writable folders hidden, every
+# capability dropped), because a generator could switch off the Python audit hook and read /work.
 
 ARG DEBIAN=docker.io/library/debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc
 

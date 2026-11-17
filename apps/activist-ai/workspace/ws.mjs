@@ -47,7 +47,7 @@ import { fileURLToPath } from 'node:url'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 export const CONTAINER = process.env.OLA_CONTAINER_BIN || '/usr/local/bin/container'
-export const IMAGE = 'ola-workspace:2.3.0-18'
+export const IMAGE = 'ola-workspace:2.3.0-19'
 export const HOME = process.env.OLA_HOME || path.join(homedir(), '.ola')
 export const GATEWAY_PORT = Number(process.env.OLA_GATEWAY_PORT || 4180)
 // The gateway's door sockets, one per workspace (the gateway's GATEWAY_DOOR_DIR): each door
@@ -1174,12 +1174,25 @@ export async function snapshot(id, dir) {
     const tarFile = path.join(out, 'files.tar.part')
     const tar = await pipeTo(spawn(CONTAINER, ['exec', names(id).container, 'tar', '-C', '/work', ...TAR_EXCLUDE.map((x) => `--exclude=${x}`), '-cf', '-', '.'], { stdio: ['ignore', 'pipe', 'pipe'] }), tarFile)
     // The copy is checked before it replaces the last one: it opens, it is whole, it has the core.
+    // The file came out of the VM, which the agent controls (review 4, open; review 5): read on this
+    // machine with nothing in its schema trusted (no functions or virtual tables run from it), cell
+    // sizes checked, only real tables counted, and any error a refusal rather than a crash.
     const { DatabaseSync } = await import('node:sqlite')
-    const check = new DatabaseSync(dbFile, { readOnly: true })
-    const integrity = check.prepare('PRAGMA integrity_check').get()
-    const counts = Object.fromEntries(check.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE 'doc_text_%' ORDER BY name").all().map((r) => [r.name, check.prepare(`SELECT count(*) AS n FROM "${r.name.replace(/"/g, '""')}"`).get().n]))
-    check.close()
-    if (Object.values(integrity)[0] !== 'ok' || !('documents' in counts)) refuse('the database copy did not check out')
+    let integrity = null
+    let counts = {}
+    try {
+      const check = new DatabaseSync(dbFile, { readOnly: true })
+      try {
+        check.exec('PRAGMA trusted_schema = OFF; PRAGMA cell_size_check = ON;')
+        integrity = check.prepare('PRAGMA integrity_check').get()
+        counts = Object.fromEntries(check.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE 'doc_text_%' AND coalesce(sql, '') NOT LIKE 'CREATE VIRTUAL%' ORDER BY name").all().map((r) => [r.name, check.prepare(`SELECT count(*) AS n FROM "${r.name.replace(/"/g, '""')}"`).get().n]))
+      } finally {
+        check.close()
+      }
+    } catch {
+      integrity = null
+    }
+    if (!integrity || Object.values(integrity)[0] !== 'ok' || !('documents' in counts)) refuse('the database copy did not check out')
     renameSync(dbFile, path.join(out, 'project.db'))
     renameSync(tarFile, path.join(out, 'files.tar'))
     const manifest = { id, at, image: IMAGE, database: { ...db, tables: counts }, files: tar }

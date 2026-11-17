@@ -191,7 +191,9 @@ def make(tid):
             checks = T.valid_checks(j.get("checks"))
             if not treq or "def make" not in source:
                 raise ValueError("incomplete")
-            truth, names = T.run_generator(source, files_dir, seed)
+            # In the VM the generator is jailed (olatwin.JAIL_SH); OLA_TWIN_ALLOW_HOST is for the repo's
+            # tests on a Mac, against the scripted model's own generators.
+            truth, names = T.run_generator(source, files_dir, seed, allow_host=os.environ.get("OLA_TWIN_ALLOW_HOST") == "1")
         except (ValueError, RuntimeError, OSError) as e:
             note = "Your last answer could not be used (" + str(e)[:200] + "). Answer again with the JSON object only."
             continue

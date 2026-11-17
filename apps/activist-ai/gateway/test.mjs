@@ -901,6 +901,58 @@ test('Fallback to Claude: refused unless granted; the credential is replaced, ne
   }
 })
 
+// Review 5: the body went to Anthropic as sent, so anything with a Claude grant (a project with
+// Fallback to Claude on, a comparison's scratch VM) could have Anthropic's servers reach any address
+// for it: the web fetch and web search server tools, a connector to an outside MCP server, an image
+// or a document given by URL (Anthropic downloads it, the URL carrying whatever it likes), or a
+// file of this machine's Anthropic account by id. All refused before anything goes upstream.
+test('Fallback to Claude: nothing in a request can make Anthropic reach another address or read another file', async () => {
+  const up = await fakeUpstream()
+  const an = await fakeAnthropic()
+  const dir = mkdtempSync(path.join(TMP, 'claude-reach-'))
+  const grants = path.join(dir, 'gateway-claude')
+  writeGrants(grants, {})
+  const k = tok()
+  const g = await gateway({ ...baseEnv(up.url), GATEWAY_TOKENS: `ws-one:${k}`, GATEWAY_CLAUDE_FILE: grants, GATEWAY_CLAUDE_UPSTREAM: an.url, CLAUDE_API_KEY: `sk-ant-api-${tok()}` })
+  try {
+    writeGrants(grants, { 'ws-one': { mode: 'api_key', cap_micro_usd: 10_000_000 } })
+    await waitFor(() => g.lines.some((l) => l.includes('"event":"claude_grants"') && l.includes('"callers":1')), 5000, 'the grants reload')
+    const evil = 'https://collector.example/c?d=the-person-s-data'
+    const user = (content) => ({ model: 'claude-opus-5-5', max_tokens: 64, messages: [{ role: 'user', content }] })
+    const cases = {
+      'the web fetch tool': { ...msg(`read ${evil}`), tools: [{ type: 'web_fetch_20250910', name: 'web_fetch' }] },
+      'the web search tool': { ...msg('search'), tools: [{ type: 'web_search_20250305', name: 'web_search' }] },
+      'a server tool not on the list': { ...msg('x'), tools: [{ type: 'some_new_fetcher_20270101', name: 'f' }] },
+      'an MCP connector': { ...msg('x'), mcp_servers: [{ type: 'url', url: evil, name: 'c' }] },
+      'an MCP toolset': { ...msg('x'), tools: [{ type: 'mcp_toolset', mcp_server_name: 'c' }] },
+      'an image by URL': user([{ type: 'image', source: { type: 'url', url: evil } }, { type: 'text', text: 'what is this' }]),
+      'a document by URL in a tool result': user([{ type: 'tool_result', tool_use_id: 't1', content: [{ type: 'document', source: { type: 'url', url: evil } }] }]),
+      'a file of the account by id': user([{ type: 'document', source: { type: 'file', file_id: 'file_011' } }]),
+      'a file into a container': user([{ type: 'container_upload', file_id: 'file_011' }]),
+    }
+    for (const [name, body] of Object.entries(cases)) {
+      for (const p of ['/anthropic/v1/messages?beta=true', '/anthropic/v1/messages/count_tokens?beta=true']) {
+        const before = an.st.seen.length
+        const r = await claudeCall(g, k, body, { p })
+        assert.equal(r.status, 400, `${name} (${p}): ${r.status}`)
+        assert.equal(an.st.seen.length, before, `${name} (${p}) reached Anthropic`)
+        assert.match(r.json?.error?.message ?? '', /cannot reach/, name)
+      }
+    }
+    // What Claude Code sends still passes: its own tools (no type, or "custom"), images it read
+    // from a file in the VM (base64), and the client-side tool types it runs itself.
+    const fine = {
+      ...user([{ type: 'text', text: 'hi' }, { type: 'image', source: { type: 'base64', media_type: 'image/png', data: 'iVBORw0KGgo=' } }]),
+      system: [{ type: 'text', text: 'You are Claude Code.' }],
+      tools: [{ name: 'Bash', description: 'run', input_schema: { type: 'object' } }, { type: 'custom', name: 'Read', input_schema: { type: 'object' } }, { type: 'tool_search_tool_regex_20251119', name: 'tool_search_tool_regex' }],
+    }
+    const ok = await claudeCall(g, k, fine)
+    assert.equal(ok.status, 200, ok.text)
+  } finally {
+    await g.stop()
+  }
+})
+
 // Review 4, M2: the month ceiling is checked before a request goes upstream, from what is
 // already recorded, and the Claude route had no limit on requests at once: 20 overlapping
 // requests all passed a ceiling that one request nearly fills, so a workspace could spend many
@@ -1139,6 +1191,27 @@ test('web fetch: one document, no cookies or credentials sent, redirects followe
     assert.equal((await webCall(g, k.two, 'fetch', { url: 'https://good.test/page' })).status, 403, 'not another address')
     assert.equal((await webCall(g, k.two, 'fetch', { url: 'https://good.test/doc.pdf' })).status, 200)
     assert.equal((await webCall(g, k.two, 'fetch', { url: 'https://good.test/doc.pdf' })).status, 403, 'not twice')
+  } finally {
+    await g.stop()
+  }
+})
+
+// Review 4's open item, closed in review 5: the rest of the campus (171.64.0.0/14 by default, a
+// setting), and a neighbor's address written as NAT64 or 6to4, which slipped past the own-network check.
+test('web fetch refuses the networks set in GATEWAY_FETCH_REFUSE_NETS (the campus by default) and an IPv4 address hidden in IPv6', async () => {
+  const { refuseNets, inNets, DEFAULT_REFUSE_NETS } = await import('./web.mjs')
+  const campus = refuseNets(DEFAULT_REFUSE_NETS)
+  for (const ip of ['171.64.1.1', '171.67.255.254', '::ffff:171.66.240.10', '64:ff9b::ab42:f00a', '2002:ab42:f00a::1']) assert.ok(inNets(ip, campus), `${ip} should be refused`)
+  for (const ip of ['171.63.255.255', '171.68.0.1', '8.8.8.8', '2606:4700:4700::1111']) assert.ok(!inNets(ip, campus), `${ip} should pass`)
+  assert.ok(!inNets('171.64.1.1', refuseNets('')), 'an empty setting refuses nothing more')
+  assert.throws(() => refuseNets('171.64.0.0'), /a network like/)
+  const { g, k, file } = await webGateway({ GATEWAY_FETCH_TEST_HOSTS: 'campus.test=171.64.10.10,nat64.test=64:ff9b::ab42:f00a' })
+  try {
+    writeGrants(file, { 'ws-one': { always: true } })
+    for (const u of ['https://campus.test/doc.pdf', 'https://nat64.test/doc.pdf', 'https://171.65.2.3/doc.pdf', 'https://[64:ff9b::ab40:0101]/doc.pdf']) {
+      const r = await webCall(g, k.one, 'fetch', { url: u })
+      assert.equal(r.status, 403, `${u}: ${r.status} ${r.text?.slice(0, 120)}`)
+    }
   } finally {
     await g.stop()
   }

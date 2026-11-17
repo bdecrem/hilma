@@ -92,8 +92,8 @@ with tempfile.TemporaryDirectory() as d:
     secret = Path(d) / "project-file.txt"
     secret.write_text("Marisol Quennell")
     out = Path(d) / "copy"
-    truth, files = T.run_generator(GOOD, out, 7, python=sys.executable)
-    truth2, _ = T.run_generator(GOOD, Path(d) / "copy2", 7, python=sys.executable)
+    truth, files = T.run_generator(GOOD, out, 7, python=sys.executable, allow_host=True)
+    truth2, _ = T.run_generator(GOOD, Path(d) / "copy2", 7, python=sys.executable, allow_host=True)
     ok("a generator writes its files and returns its answers, the same for the same seed", files == ["data.csv"] and truth == truth2 and truth["rows"] == 20, truth)
     for label, src in [
         ("reading a project file", f"def make(out, rng):\n    (out / 'x.txt').write_text(open({str(secret)!r}).read())\n    return {{}}\n"),
@@ -103,11 +103,49 @@ with tempfile.TemporaryDirectory() as d:
         ("writing outside its folder", f"def make(out, rng):\n    open({str(Path(d) / 'planted.txt')!r}, 'w').write('x')\n    return {{}}\n"),
     ]:
         try:
-            T.run_generator(src, Path(d) / ("bad-" + label.split()[0]), 1, python=sys.executable)
+            T.run_generator(src, Path(d) / ("bad-" + label.split()[0]), 1, python=sys.executable, allow_host=True)
             refused = False
         except RuntimeError as e:
             refused = "PermissionError" in str(e) or "not allowed" in str(e) or "may only" in str(e)
         ok(f"the generator's sandbox refuses {label}", refused and not (Path(d) / "planted.txt").exists())
+
+    # Review 5: the audit hook alone is not a sandbox. A generator that rewrites the hook's rules
+    # (through sys.modules["__main__"]) or its code (through the garbage collector) gets past it;
+    # in the VM the kernel's jail (olatwin.JAIL_SH) must still keep the project, other processes,
+    # the network and the folders outside its own out of reach. On the host no model's generator
+    # runs at all.
+    if not T.jail_available():
+        try:
+            T.run_generator(GOOD, Path(d) / "nohost", 1, python=sys.executable)
+            refused = False
+        except RuntimeError as e:
+            refused = "only inside a project's VM" in str(e)
+        ok("on a machine with no jail, a model's generator is not run", refused)
+    else:
+        unhook = {
+            "main_globals": "import sys\n    m = sys.modules['__main__']\n    m.inside = lambda p, roots: True\n    m.WRITES = set()",
+            "hook_code": "import gc\n    for f in gc.get_objects():\n        if getattr(f, '__name__', '') == 'hook' and hasattr(f, '__code__'):\n            f.__code__ = (lambda ev, args: None).__code__",
+        }
+        for how, undo in unhook.items():
+            # Each act leaves "escaped" (or the secret) in x.txt only if it got through.
+            for label, act in [
+                ("read a file outside its folder", f"got = open({str(secret)!r}).read()"),
+                ("see the project folder", "import os\n    got = 'escaped' if os.path.isdir('/work/.ola') or os.listdir('/work') else ''"),
+                ("see another process", "import os\n    got = 'escaped' if [p for p in os.listdir('/proc') if p.isdigit() and int(p) > 1] else ''"),
+                ("reach the gateway's loopback", "import socket\n    socket.create_connection(('127.0.0.1', 4180), timeout=2)\n    got = 'escaped'"),
+                ("write outside its folder", f"open({str(Path(d) / 'planted.txt')!r}, 'w').write('x')\n    got = 'escaped'"),
+                ("undo the jail", "import os\n    os.system('umount /tmp/out /tmp /work 2>/dev/null')\n    got = 'escaped' if os.path.isdir('/work/.ola') else ''"),
+            ]:
+                body = act.replace("\n    ", "\n        ")
+                src = f"def make(out, rng):\n    {undo}\n    got = ''\n    try:\n        {body}\n    except Exception as e:\n        got = 'refused ' + type(e).__name__\n    (out / 'x.txt').write_text(str(got))\n    return {{}}\n"
+                o = Path(d) / f"esc-{how}-{label.split()[0]}-{label.split()[-1]}"
+                try:
+                    T.run_generator(src, o, 1, python=sys.executable)
+                    got = (o / "x.txt").read_text()
+                except RuntimeError as e:
+                    got = "refused " + str(e)[:80]
+                leaked = got.startswith("escaped") or "Marisol" in got
+                ok(f"the jail holds when the audit hook is undone ({how}): the generator cannot {label}", not leaked and not (Path(d) / "planted.txt").exists(), got[:120])
 
     # ------------------------------------------------------------------ the checks
     work = Path(d) / "work"

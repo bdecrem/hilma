@@ -217,7 +217,10 @@ export function writeCandidate(dir, { id, kind, twin, outcome, ola, claude, judg
   const family = { clean: 'clean', sql: 'sql', coding: 'coding', legal: 'legal', site: 'site', honesty: 'honesty', pdf: 'pdf' }[kind] ?? 'twin'
   writeFileSync(path.join(d, 'task.json'), JSON.stringify({ id: `t-${id}`, family, level: 'medium', honesty: kind === 'honesty', version: 1, outputs: twin.checks.filter((c) => c.type === 'file').map((c) => c.path), source: 'made-up copy of a real request (compare)', outcome, candidate: true }, null, 1) + '\n')
   writeFileSync(path.join(d, 'instruction.md'), twin.request + '\n')
-  writeFileSync(path.join(d, 'twin.json'), JSON.stringify({ kind, seed: twin.seed, generator: twin.generator, checks: twin.checks }, null, 1) + '\n')
+  // The copy's files and answers as compared (seed 0), so replaying it never runs the model's
+  // generator on this machine (review 5: it is code a model wrote, and only a VM's jail holds it).
+  const files = (twin.files ?? []).filter((f) => typeof f?.b64 === 'string').map((f) => ({ name: f.name, b64: f.b64 }))
+  writeFileSync(path.join(d, 'twin.json'), JSON.stringify({ kind, seed: twin.seed, generator: twin.generator, checks: twin.checks, truth: twin.truth ?? null, files }, null, 1) + '\n')
   writeFileSync(path.join(d, 'task.py'), CANDIDATE_TASK)
   for (const [arm, r] of [['claude', claude], ['ola', ola]]) {
     const a = path.join(d, 'reference', arm)
@@ -235,7 +238,7 @@ export function writeCandidate(dir, { id, kind, twin, outcome, ola, claude, judg
 const CANDIDATE_TASK = `"""A made-up copy of a real request that Ola lost to Claude (frontdesk/compare.mjs). Seed 0 is
 the copy as it was compared; other seeds are new data of the same shape. solve and wrong replay the
 two recorded results (Claude's, Ola's): they hold for seed 0 only."""
-import json, shutil, sys
+import base64, json, shutil, sys
 from pathlib import Path
 HERE = Path(__file__).resolve().parent
 TWIN = json.loads((HERE / "twin.json").read_text())
@@ -248,7 +251,21 @@ import olatwin  # noqa: E402
 
 
 def generate(work, seed, rng):
-    truth, files = olatwin.run_generator(TWIN["generator"], Path(work), TWIN["seed"] if int(seed) == 0 else rng.randrange(1 << 30), python=sys.executable)
+    # Seed 0 is the copy as compared, written from its recorded files: the generator is code a model
+    # wrote and never runs outside a VM's jail (olatwin.run_generator refuses where there is none).
+    if int(seed) == 0 and TWIN.get("files"):
+        files = []
+        for f in TWIN["files"]:
+            name = str(f["name"])
+            p = (Path(work) / name).resolve()
+            if Path(work).resolve() not in p.parents or ".." in Path(name).parts:
+                raise ValueError("a recorded file name leaves the task's folder")
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_bytes(base64.b64decode(f["b64"]))
+            files.append(name)
+        truth = dict(TWIN.get("truth") or {})
+    else:
+        truth, files = olatwin.run_generator(TWIN["generator"], Path(work), TWIN["seed"] if int(seed) == 0 else rng.randrange(1 << 30), python=sys.executable)
     truth["_inputs"] = {n: olatwin.sha256_file(Path(work) / n) for n in files}
     return truth
 
@@ -501,10 +518,11 @@ export function makeCompare({ db, xc, cc, claude, hosted, workspaces, container,
     }
   }
   /** The real task's files: from the project's VM straight into the scratch VM (never on the host's disk). */
-  async function putReal(id, slug, files) {
+  async function putReal(id, slug, read) {
+    const files = realFiles(read)
     if (!files.length) return
     await new Promise((resolve, reject) => {
-      const from = spawn(container, ['exec', `ola-${slug}`, 'tar', '-cf', '-', '-C', '/work', '--', ...files], { stdio: ['ignore', 'pipe', 'ignore'] })
+      const from = spawn(container, ['exec', `ola-${slug}`, 'tar', '-cf', '-', '--no-recursion', '-C', '/work', '--', ...files], { stdio: ['ignore', 'pipe', 'ignore'] })
       const to = spawn(container, ['exec', '-i', `ola-${id}`, 'tar', '-xf', '-', '-C', '/work', '--no-same-owner', '--no-same-permissions'], { stdio: ['pipe', 'ignore', 'ignore'] })
       from.stdout.pipe(to.stdin)
       to.on('close', (code) => (code === 0 ? resolve() : reject(new Error('put'))))
@@ -731,6 +749,9 @@ export function makeCompare({ db, xc, cc, claude, hosted, workspaces, container,
     } else if (x.state !== 'ready' || x.mode !== 'twin') return { status: 409, body: { error: 'state', message: 'This comparison is not waiting to be sent.' } }
     if (spentThisMonth(db, ws.id) >= capOf(ws.id)) return { status: 409, body: { error: 'budget', message: MSG.budget } }
     audit(db, { actor: personId, action: 'compare_sent', workspace: ws.id })
+    // Under way from here (review 5): a second go for the same copy while another comparison holds
+    // the queue would have queued it twice, and paid for Claude twice.
+    set(x.id, { state: 'running' })
     enqueue(x.id, { ws })
     return { status: 200, body: { id: x.id, state: 'queued' } }
   }
@@ -955,6 +976,16 @@ export function makeCompare({ db, xc, cc, claude, hosted, workspaces, container,
     weekly: () => weekly(db),
     close: () => clearInterval(tick),
   }
+}
+
+/**
+ * Which of the paths Ola's read tools named go to Claude's scratch VM for the real task (review 5):
+ * only files in the project folder by a plain relative path, never a folder's whole contents (tar
+ * runs with --no-recursion), never anything outside /work (/proc/self/environ holds the VM's own
+ * keys), never Ola's own .ola folder. A path the model read can be anything a hostile file talked it into.
+ */
+export function realFiles(read) {
+  return [...new Set((Array.isArray(read) ? read : []).filter((f) => typeof f === 'string' && f.length > 0 && f.length < 1024 && !f.startsWith('/') && !f.startsWith('-') && !/[\0\n]/.test(f) && f.split('/').every((p) => p !== '..' && p !== '.' && p !== '') && !/^\.ola(\/|$)/.test(f)))].slice(0, 40)
 }
 
 const sortKeys = (v) => (Array.isArray(v) ? v.map(sortKeys) : v && typeof v === 'object' ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, sortKeys(v[k])])) : v)

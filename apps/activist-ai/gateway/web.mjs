@@ -42,7 +42,7 @@ import os from 'node:os'
 
 export const WEB_SETTINGS = [
   'GATEWAY_WEB_FILE', 'GATEWAY_SEARCH_PROVIDER', 'GATEWAY_SEARCH_UPSTREAM', 'GATEWAY_WEB_WEEKLY', 'GATEWAY_WEB_PER_MINUTE',
-  'GATEWAY_FETCH_MAX_BYTES', 'GATEWAY_FETCH_MAX_PAGE_BYTES', 'GATEWAY_FETCH_TIMEOUT_MS', 'GATEWAY_FETCH_TEST_HOSTS', 'GATEWAY_FETCH_TEST_CA',
+  'GATEWAY_FETCH_MAX_BYTES', 'GATEWAY_FETCH_MAX_PAGE_BYTES', 'GATEWAY_FETCH_TIMEOUT_MS', 'GATEWAY_FETCH_TEST_HOSTS', 'GATEWAY_FETCH_TEST_CA', 'GATEWAY_FETCH_REFUSE_NETS',
   'GATEWAY_SCHOLAR_CONTACT', 'GATEWAY_SCHOLAR_UPSTREAMS',
 ]
 // Scholarly lookup: fixed public indexes, never an address the caller chooses.
@@ -87,6 +87,40 @@ export function ownNetworks() {
     } catch {}
   }
   return list
+}
+
+// Review 4's open item (review 5): the fetch route still reached the rest of the campus the machine
+// sits in, and anything that trusts a campus address. GATEWAY_FETCH_REFUSE_NETS lists more networks
+// to refuse, as CIDRs separated by commas; by default Stanford's 171.64.0.0/14, where this machine
+// is (set it to an empty value where the machine is somewhere else).
+export const DEFAULT_REFUSE_NETS = '171.64.0.0/14'
+export function refuseNets(spec, bad = (m) => { throw new Error(m) }) {
+  const list = new net.BlockList()
+  for (const [i, part] of String(spec ?? '').split(',').map((x) => x.trim()).filter(Boolean).entries()) {
+    const [addr, bits] = part.split('/')
+    const fam = net.isIP(addr)
+    const n = Number(bits)
+    if (!fam || !/^\d{1,3}$/.test(bits ?? '') || n > (fam === 4 ? 32 : 128)) {
+      bad(`GATEWAY_FETCH_REFUSE_NETS entry ${i + 1}: a network like 171.64.0.0/14`)
+      continue
+    }
+    list.addSubnet(addr, n, fam === 4 ? 'ipv4' : 'ipv6')
+  }
+  return list
+}
+/** The IPv4 address an IPv6 address carries (mapped, compatible, NAT64, 6to4), or null. */
+export function embeddedV4(ip) {
+  if (net.isIP(ip) !== 6) return null
+  const g = v6groups(ip.toLowerCase())
+  if (g.slice(0, 5).every((x) => x === 0) && (g[5] === 0xffff || g[5] === 0)) return v4of(g[6], g[7])
+  if (g[0] === 0x64 && g[1] === 0xff9b && g.slice(2, 6).every((x) => x === 0)) return v4of(g[6], g[7])
+  if (g[0] === 0x2002) return v4of(g[1], g[2])
+  return null
+}
+/** Whether an address, or the IPv4 address inside it, is in one of these networks. */
+export function inNets(ip, ...lists) {
+  const v4 = embeddedV4(ip)
+  return lists.some((l) => l.check(ip, net.isIP(ip) === 6 ? 'ipv6' : 'ipv4') || (v4 !== null && l.check(v4, 'ipv4')))
 }
 
 /** Expands an IPv6 address to 8 groups of 16 bits. */
@@ -197,6 +231,7 @@ export function webConfig(env, bad) {
     totalMs: num('GATEWAY_FETCH_TIMEOUT_MS', 120_000, 100, 600_000),
     testHosts,
     testCa,
+    refuse: refuseNets(env.GATEWAY_FETCH_REFUSE_NETS ?? DEFAULT_REFUSE_NETS, bad),
   }
 }
 
@@ -477,7 +512,7 @@ export function makeWeb({ cfg, db, readBody, send, fail }) {
   async function resolveChecked(host) {
     const bare = host.replace(/^\[|\]$/g, '')
     if (net.isIP(bare)) {
-      const why = refusedAddress(bare) ?? (ownNetworks().check(bare, net.isIP(bare) === 6 ? 'ipv6' : 'ipv4') ? "this machine's own network" : null)
+      const why = refusedAddress(bare) ?? (inNets(bare, ownNetworks()) ? "this machine's own network" : inNets(bare, cfg.refuse) ? 'a network this machine refuses' : null)
       return why ? { why } : { addrs: [{ address: bare, family: net.isIP(bare), port: 443 }], servername: undefined }
     }
     if (LOCAL_NAMES.test(host) || !host.includes('.')) return { why: 'a name that is not on the public internet' }
@@ -499,7 +534,7 @@ export function makeWeb({ cfg, db, readBody, send, fail }) {
     const nets = ownNetworks()
     for (const a of addrs) {
       if (a.loop && a.address === '127.0.0.1') continue
-      const why = refusedAddress(a.address) ?? (nets.check(a.address, net.isIP(a.address) === 6 ? 'ipv6' : 'ipv4') ? "this machine's own network" : null)
+      const why = refusedAddress(a.address) ?? (inNets(a.address, nets) ? "this machine's own network" : inNets(a.address, cfg.refuse) ? 'a network this machine refuses' : null)
       if (why) return { why }
     }
     return { addrs, servername: host, test: !!test }

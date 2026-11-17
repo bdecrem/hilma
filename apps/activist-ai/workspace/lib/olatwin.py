@@ -389,11 +389,44 @@ sys.stdout.write(json.dumps(truth, default=str))
 '''
 
 
-def run_generator(source, out_dir, seed, timeout=90, python="/usr/bin/python3"):
+# The audit hook alone is not a sandbox (review 5: a generator rewrote the hook's own rules through
+# sys.modules["__main__"], or its code through the garbage collector, and read /work). Inside a VM
+# the runner is jailed by the kernel first: new user, mount, process and network namespaces; /work,
+# /home, /tmp, /var/tmp, /dev/shm, /run and /proc replaced by empty memory folders (the copy's own folder
+# bound back in at /mnt/out), so no other process can be seen; no network at all, not even
+# the gateway's loopback; then every capability dropped and no new privileges, so the generator
+# cannot undo a mount. The audit hook stays as a second wall. Where no jail exists (the host, a Mac),
+# a generator runs only when the caller says it is the repo's own test code (allow_host=True): a
+# model's generator is never run there.
+JAIL_SH = r"""set -eu
+out=$1; py=$2; runner=$3; seed=$4
+mount -t tmpfs -o size=1m,mode=755 ola-twin /mnt
+mkdir /mnt/out
+mount --bind "$out" /mnt/out
+for d in /tmp /work /home /var/tmp /dev/shm /run /proc; do
+  if [ -d "$d" ]; then mount -t tmpfs -o size=1m,mode=755 ola-twin "$d"; fi
+done
+exec /usr/bin/setpriv --no-new-privs --inh-caps=-all --ambient-caps=-all --bounding-set=-all -- "$py" -I -c "$runner" /mnt/out "$seed"
+"""
+
+
+def jail_available():
+    return os.uname().sysname == "Linux" and os.path.exists("/usr/bin/unshare") and os.path.exists("/usr/bin/setpriv")
+
+
+def run_generator(source, out_dir, seed, timeout=90, python="/usr/bin/python3", allow_host=False):
     import subprocess
     os.makedirs(out_dir, exist_ok=True)
     py = python if os.path.exists(python) else "python3"
-    r = subprocess.run([py, "-I", "-c", RUNNER, str(out_dir), str(int(seed))], input=source, capture_output=True, text=True, timeout=timeout, env={"PATH": "/usr/bin:/bin", "LANG": "C.UTF-8"})
+    if jail_available():
+        py = py if os.path.isabs(py) else "/usr/bin/python3"
+        argv = ["/usr/bin/unshare", "--user", "--map-root-user", "--mount", "--pid", "--fork", "--kill-child", "--net", "--",
+                "/bin/sh", "-c", JAIL_SH, "ola-twin-jail", os.path.realpath(out_dir), py, RUNNER, str(int(seed))]
+    elif allow_host:
+        argv = [py, "-I", "-c", RUNNER, str(out_dir), str(int(seed))]
+    else:
+        raise RuntimeError("a made-up copy's generator runs only inside a project's VM (there is no sandbox for it here)")
+    r = subprocess.run(argv, input=source, capture_output=True, text=True, timeout=timeout, env={"PATH": "/usr/bin:/bin", "LANG": "C.UTF-8"})
     if r.returncode != 0:
         last = (r.stderr.strip().splitlines() or ["the generator failed"])[-1]
         raise RuntimeError(last[:300])
