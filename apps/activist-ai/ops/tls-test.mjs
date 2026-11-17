@@ -405,6 +405,25 @@ test('device passes: a valid pass passes with no passcode and arrives as X-Ola-P
   assert.match(f.out(), /"devicePasses":true/)
 })
 
+test('device passes: the apps’ probe (GET /api/device/me, no credential) gets a fixed 401 when sign-in is open and 404 when it is not, from the front itself; nothing else passes without a credential', async () => {
+  const on = await startFront({ OLA_GATE_PASS_KEY: KEY })
+  const off = await startFront()
+  const a = await get(on.port, '/api/device/me', { auth: null })
+  const b = await get(off.port, '/api/device/me', { auth: null })
+  assert.equal(a.status, 401)
+  assert.deepEqual(JSON.parse(a.body), { error: 'signed_out' }) // the front's own reply: the stub would add "client"
+  assert.equal(a.headers['www-authenticate'], undefined)
+  assert.match(a.headers['content-type'], /^application\/json/)
+  assert.equal(b.status, 404)
+  assert.deepEqual(JSON.parse(b.body), { error: 'not_found' })
+  // Exactly that method and path: a query, another path or a POST is the gate's usual 401 page.
+  for (const [p, body] of [['/api/device/me?x=1'], ['/api/device/token'], ['/api/device/me', Buffer.from('{}')]]) {
+    const r = await get(on.port, p, { auth: null }, body)
+    assert.equal(r.status, 401, p)
+    assert.equal(r.headers['www-authenticate'], challenge, `${p} ${body ? 'POST' : 'GET'}`)
+  }
+})
+
 test('device passes: a bad MAC, an expired pass, a path outside /api/device/ and any pass with no key set are refused like a wrong passcode, and count toward the block', async () => {
   const f = await startFront({ OLA_GATE_PASS_KEY: KEY })
   const p = makePass(KEYBUF, 'device', soon()).pass

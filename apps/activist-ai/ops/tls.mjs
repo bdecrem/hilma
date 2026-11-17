@@ -164,7 +164,7 @@ export function makeTlsFront(cfg = config()) {
   const log = (o) => console.log(JSON.stringify({ t: new Date().toISOString(), event: 'tls', ...o }))
   let current = loadCert(cfg.certDir, cfg.servername)
   let seen = stamp(cfg.certDir)
-  const counts = { noProxy: 0, handshake: 0, capped: 0, noPasscode: 0, wrongPasscode: 0, badPass: 0, passes: 0, blocked: 0, upgrade: 0, upstreamDown: 0 }
+  const counts = { noProxy: 0, handshake: 0, capped: 0, noPasscode: 0, wrongPasscode: 0, badPass: 0, passes: 0, probes: 0, blocked: 0, upgrade: 0, upstreamDown: 0 }
 
   // ------------------------------------------------------------ the gate
   const fails = new Map() // address key -> { n, last, blockedUntil }
@@ -268,6 +268,15 @@ export function makeTlsFront(cfg = config()) {
   async function handle(req, res) {
     const client = req.socket.olaClient
     if (!client) return req.socket.destroy()
+    // The apps' probe, before they open the browser: is device sign-in open here? Exactly
+    // `GET /api/device/me` with no Authorization, answered here with a fixed reply and nothing
+    // read or passed on: 401 {"error":"signed_out"} when the pass key is set, 404 when it is not
+    // (what the front desk itself answers a device with no pass). It says only that.
+    if (req.method === 'GET' && req.url === '/api/device/me' && req.headers.authorization === undefined) {
+      counts.probes++
+      const on = !!cfg.passKey
+      return refuse(res, on ? 401 : 404, on ? '{"error":"signed_out"}\n' : '{"error":"not_found"}\n', { 'content-type': 'application/json; charset=utf-8' })
+    }
     // A bearer is a device's pass, or a wrong credential: never the passcode, never let through.
     if (typeof req.headers.authorization === 'string' && /^bearer\s/i.test(req.headers.authorization)) {
       const key = addressKey(client.address)

@@ -628,10 +628,10 @@ await check('devices: refused: a grant without CSRF, cross-site or from another 
   const body = (o = {}) => JSON.stringify({ challenge: app.challenge, name: 'Made-up Mac', kind: 'mac', ...o })
   const grant = (o = {}, { cookie = d.cookie, csrf = d.csrf, headers = {}, origin } = {}) => api('/api/device/grant', { method: 'POST', cookie, csrf, body: body(o), headers: { 'content-type': 'application/json', ...headers }, ...(origin !== undefined ? { origin } : {}) })
   const seen = {}
-  seen.noCsrf = (await grant({}, { csrf: undefined })).status
+  seen.noCsrf = (await grant({}, { csrf: null })).status
   seen.crossSite = (await grant({}, { headers: { 'sec-fetch-site': 'cross-site' } })).status
   seen.otherOrigin = (await grant({}, { origin: 'https://evil.example' })).status
-  seen.signedOut = (await grant({}, { cookie: undefined, csrf: undefined })).status
+  seen.signedOut = (await grant({}, { cookie: null, csrf: null })).status
   seen.alice = (await grant({}, { cookie: a.cookie, csrf: a.csrf })).status
   for (const [k, o] of Object.entries({ shortChallenge: { challenge: 'abc' }, longName: { name: 'x'.repeat(61) }, controlName: { name: 'Mac\u0007' }, bidiName: { name: 'Mac‮niam' }, kind: { kind: 'ios' }, lowPort: { port: 80 }, textPort: { port: '5555' } })) seen[k] = (await grant(o)).status
   const want = { noCsrf: 403, crossSite: 403, otherOrigin: 403, signedOut: 401, alice: 403, shortChallenge: 400, longName: 400, controlName: 400, bidiName: 400, kind: 400, lowPort: 400, textPort: 400 }
@@ -683,14 +683,21 @@ await check('devices: the token reaches the gateway as the person’s own caller
     chat = 'streamed chat 200 (text/event-stream, [DONE])'
   }
   // Only the allowed routes, methods included; the device's own headers never reach the gateway's choice of lane.
+  const embed = await asDevice('/api/device/gw/v1/embeddings', gwDevice, { method: 'POST', body: { input: 'x' } })
   const refused = {
-    embeddings: (await asDevice('/api/device/gw/v1/embeddings', gwDevice, { method: 'POST', body: { input: 'x' } })).status,
+    // allowed, and passed on: this check's gateway has no embedding server, and says so
+    embeddings: `${embed.status} ${embed.json?.error?.type}`,
     anthropic: (await asDevice('/api/device/gw/anthropic/v1/messages', gwDevice, { method: 'POST', body: {} })).status,
+    files: (await asDevice('/api/device/gw/v1/files', gwDevice, { method: 'POST', body: {} })).status,
     getChat: (await asDevice('/api/device/gw/v1/chat/completions', gwDevice)).status,
     postModels: (await asDevice('/api/device/gw/v1/models', gwDevice, { method: 'POST', body: {} })).status,
+    bigSearch: (await asDevice('/api/device/gw/web/search', gwDevice, { method: 'POST', body: { q: 'x'.repeat(9000) } })).status,
     batchLane: (await asDevice('/api/device/gw/web/search', gwDevice, { method: 'POST', body: { q: 'x' }, headers: { 'x-ola-lane': 'batch', 'x-ola-job': 'abcdefabcdef' } })).status,
   }
-  assert(refused.embeddings === 403 && refused.anthropic === 403 && refused.getChat === 403 && refused.postModels === 403 && refused.batchLane === 200, JSON.stringify(refused))
+  assert(refused.embeddings === '503 not_configured' && refused.anthropic === 403 && refused.files === 403 && refused.getChat === 403 && refused.postModels === 403 && refused.bigSearch === 413 && refused.batchLane === 200, JSON.stringify(refused))
+  // The apps' probe with no credential: 401 while sign-in is open.
+  const probe = await api('/api/device/me')
+  assert(probe.status === 401 && probe.json?.error === 'signed_out', `probe ${probe.status}`)
   // The token outside /api/device/: as a bearer or an X-Ola-Pass, on the API, the opencode door and the page's own device list.
   const outside = []
   for (const p of ['/api/me', '/api/project', '/oc/api/session', '/api/devices', '/api/device/../me']) {
@@ -703,11 +710,133 @@ await check('devices: the token reaches the gateway as the person’s own caller
   return `models 200, usage as p-${pid}, search 200 (standing grant), ${chat}; refused ${JSON.stringify(refused)}; outside /api/device/ all 401`
 })
 
+await check('devices, as in production: behind the real TLS front (https, the door passcode, the PROXY protocol) the code and the token pass the door as X-Ola-Pass and nowhere else; a bearer sent straight to the front desk is not read; Chromium and WebKit approve on https and land on http://127.0.0.1', async () => {
+  // A second front desk on the same database, on the PROXY protocol, behind ops/tls.mjs serving
+  // app.localhost with a made-up CA: the same path a device takes from outside.
+  const dir = mkdtempSync(path.join(run, 'tls-'))
+  const ssl = (...x) => {
+    const r = spawnSync('openssl', x, { cwd: dir, encoding: 'utf8' })
+    if (r.status !== 0) throw new Error(`openssl ${x[0]}: ${r.stderr.trim().split('\n').pop()}`)
+  }
+  ssl('ecparam', '-name', 'prime256v1', '-genkey', '-noout', '-out', 'ca.key')
+  ssl('req', '-x509', '-new', '-sha256', '-key', 'ca.key', '-subj', '/CN=Made-up test CA', '-days', '2', '-out', 'ca.pem')
+  ssl('ecparam', '-name', 'prime256v1', '-genkey', '-noout', '-out', 'key.pem')
+  ssl('req', '-new', '-sha256', '-key', 'key.pem', '-subj', '/CN=app.localhost', '-out', 'csr.pem')
+  writeFileSync(path.join(dir, 'ext.cnf'), 'subjectAltName=DNS:app.localhost\nextendedKeyUsage=serverAuth\n')
+  ssl('x509', '-req', '-sha256', '-in', 'csr.pem', '-CA', 'ca.pem', '-CAkey', 'ca.key', '-CAcreateserial', '-days', '2', '-extfile', 'ext.cnf', '-out', 'leaf.pem')
+  writeFileSync(path.join(dir, 'cert.pem'), readFileSync(path.join(dir, 'leaf.pem'), 'utf8') + readFileSync(path.join(dir, 'ca.pem'), 'utf8'))
+  const FD2 = PORT + 1
+  const TLSP = PORT + 2
+  const O2 = `https://app.localhost:${TLSP}`
+  const door = randomBytes(18).toString('base64url') // a made-up door passcode for this run
+  const fd2 = start('frontdesk-tls', 'frontdesk/server.mjs', { OLA_FD_ORIGIN: O2, OLA_FD_PORT: String(FD2), OLA_FD_PROXY_PROTOCOL: '1', OLA_FD_IDLE_STOP_MIN: '0' })
+  const front = start('tls', 'ops/tls.mjs', { OLA_TLS_LISTEN: `127.0.0.1:${TLSP}`, OLA_TLS_UPSTREAM: `127.0.0.1:${FD2}`, OLA_TLS_CERT_DIR: dir, OLA_TLS_SERVERNAME: 'app.localhost', OLA_TLS_PROXY_IN: '0', OLA_TLS_GATE_PASSCODE: door })
+  const CA = readFileSync(path.join(dir, 'ca.pem'))
+  const { default: https } = await import('node:https')
+  const viaFront = (p, { method = 'GET', headers = {}, body } = {}) =>
+    new Promise((resolve, reject) => {
+      const r = https.request({ host: '127.0.0.1', port: TLSP, servername: 'app.localhost', ca: CA, path: p, method, headers: { host: `app.localhost:${TLSP}`, ...headers, ...(body ? { 'content-type': 'application/json', 'content-length': Buffer.byteLength(body) } : {}) } }, (res) => {
+        let t = ''
+        res.on('data', (d) => (t += d))
+        res.on('end', () => {
+          let j = null
+          try {
+            j = JSON.parse(t)
+          } catch {}
+          resolve({ status: res.statusCode, json: j, text: t })
+        })
+      })
+      r.on('error', reject)
+      r.end(body)
+    })
+  // Straight to the front desk's port with a PROXY line, as only the TLS front should.
+  const straight = (p, headers) =>
+    new Promise((resolve) => {
+      const s = net.connect(FD2, '127.0.0.1', () => s.write(`PROXY TCP4 100.64.9.9 127.0.0.1 5000 ${FD2}\r\nGET ${p} HTTP/1.1\r\nHost: app.localhost:${TLSP}\r\n${Object.entries(headers).map(([k, v]) => `${k}: ${v}\r\n`).join('')}Connection: close\r\n\r\n`))
+      let got = ''
+      s.on('data', (d) => (got += d))
+      s.on('close', () => resolve(Number(/^HTTP\/1\.1 (\d+)/.exec(got)?.[1] ?? 0)))
+      s.on('error', () => resolve(0))
+    })
+  const basic = { authorization: `Basic ${Buffer.from(`ola:${door}`).toString('base64')}` }
+  const apps = []
+  try {
+    await until(async () => (await viaFront('/api/health', { headers: basic }).catch(() => ({}))).status === 200, 15_000, 'the TLS front and its front desk')
+    // dina's session (the same database), with the https cookie's name.
+    const ck = (await import('./auth.mjs')).sessionCookie(O2).name
+    const cookie = `${ck}=${(await signedIn(dina)).cookie}`
+    const me = await viaFront('/api/me', { headers: { ...basic, cookie } })
+    assert(me.status === 200 && me.json?.devices?.allowed, `me through the front ${me.status}`)
+    const app = await madeUpApp()
+    apps.push(app)
+    const g = await viaFront('/api/device/grant', { method: 'POST', headers: { ...basic, cookie, origin: O2, 'x-ola-csrf': me.json.csrf }, body: JSON.stringify({ challenge: app.challenge, name: 'Made-up Mac (production path)', kind: 'mac' }) })
+    // The app's half carries no passcode: only its pass.
+    const t = await viaFront('/api/device/token', { method: 'POST', headers: { authorization: `Bearer ${g.json?.code}` }, body: JSON.stringify({ verifier: app.S }) })
+    assert(g.status === 200 && t.status === 200 && t.json.token, `grant ${g.status}, token ${t.status}`)
+    const tok = t.json.token
+    const got = {
+      me: (await viaFront('/api/device/me', { headers: { authorization: `Bearer ${tok}` } })).status,
+      apiMe: (await viaFront('/api/me', { headers: { authorization: `Bearer ${tok}` } })).status,
+      page: (await viaFront('/', { headers: { authorization: `Bearer ${tok}` } })).status,
+      forgedHeader: (await viaFront('/api/device/me', { headers: { ...basic, 'x-ola-pass': tok } })).status,
+      straightBearer: await straight('/api/device/me', { authorization: `Bearer ${tok}` }),
+      straightPass: await straight('/api/device/me', { 'x-ola-pass': tok }),
+    }
+    // With the passcode, the client's own X-Ola-Pass is removed at the door, so the front desk sees no pass.
+    assert(got.me === 200 && got.apiMe === 401 && got.page === 401 && got.forgedHeader === 401 && got.straightBearer === 401 && got.straightPass === 200, JSON.stringify(got))
+    // The browsers, on https, approving and landing on http://127.0.0.1.
+    const engines = []
+    const { webkit } = await import('playwright')
+    // WebKit uses the system's resolver, which does not know app.localhost: a tiny proxy on loopback
+    // tunnels it to the TLS front (Chromium resolves *.localhost to loopback itself).
+    const proxy = net.createServer((c) => {
+      c.once('data', (d) => {
+        const m = /^CONNECT app\.localhost:(\d+) HTTP\/1\.[01]\r\n/.exec(d.toString('latin1'))
+        if (!m || Number(m[1]) !== TLSP) return c.end('HTTP/1.1 403 Forbidden\r\n\r\n')
+        const up = net.connect(TLSP, '127.0.0.1', () => (c.write('HTTP/1.1 200 Connection Established\r\n\r\n'), c.pipe(up), up.pipe(c)))
+        up.on('error', () => c.destroy())
+      })
+      c.on('error', () => {})
+    })
+    await new Promise((r) => proxy.listen(0, '127.0.0.1', r))
+    try {
+      for (const [engine, launch] of [['Chromium', () => browser], ['WebKit', () => webkit.launch({ proxy: { server: `http://127.0.0.1:${proxy.address().port}`, bypass: '127.0.0.1' } })]]) {
+        const b = await launch()
+        const appB = await madeUpApp()
+        apps.push(appB)
+        const ctx = await b.newContext({ ignoreHTTPSErrors: true, httpCredentials: { username: 'ola', password: door } })
+        try {
+          await ctx.addCookies([{ name: ck, value: cookie.slice(ck.length + 1), url: O2, secure: true, httpOnly: true, sameSite: 'Strict' }])
+          const page = await ctx.newPage()
+          await page.goto(appB.link(`Made-up ${engine}`).replace(ORIGIN, O2))
+          await page.waitForSelector('.device-title', { timeout: 20_000 })
+          await page.getByRole('button', { name: 'Sign in', exact: true }).click()
+          await until(() => appB.hits.some((h) => h.includes('code=')), 15_000, `${engine} at the app’s loopback from https`)
+          const r = await viaFront('/api/device/token', { method: 'POST', headers: { authorization: `Bearer ${codeOf(appB.hits)}` }, body: JSON.stringify({ verifier: appB.S }) })
+          assert(r.status === 200, `${engine}: redeem ${r.status}`)
+          engines.push(engine)
+        } finally {
+          await ctx.close()
+          if (b !== browser) await b.close()
+        }
+      }
+    } finally {
+      proxy.close()
+    }
+    return `through the front: grant 200, token 200 with no passcode, ${JSON.stringify(got)}; from ${O2}: ${engines.join(' and ')} landed on http://127.0.0.1 and redeemed`
+  } finally {
+    for (const a2 of apps) a2.close()
+    fd2.kill('SIGTERM')
+    front.kill('SIGTERM')
+  }
+})
+
 await check('devices: an open model request is cut within two seconds when the device is removed in the page; the person sees their devices and removes one', async () => {
   const shots = []
   // dina has no project: her devices are on the projects page.
   await dina.page.goto(`${ORIGIN}/#/`)
-  await dina.page.waitForSelector('.your-devices .device-row', { timeout: 15_000 })
+  await dina.page.reload()
+  await dina.page.locator('.your-devices .device-row-name', { hasText: 'Made-up Mac' }).waitFor({ timeout: 15_000 })
   const rows = await dina.page.locator('.your-devices .device-row-name').allInnerTexts()
   assert(rows.includes('Made-up Mac'), `the list: ${rows}`)
   if (SHOTS) {

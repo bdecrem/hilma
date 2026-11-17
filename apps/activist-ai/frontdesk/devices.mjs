@@ -41,25 +41,41 @@ import { Limiter, same } from './auth.mjs'
 export const DEVICE_DAYS = 180
 export const CODE_SECONDS = 120
 export const KINDS = ['mac', 'cli']
-// The gateway routes a device may use: what opencode on the Mac sends (the chat, the model list,
-// the week's usage) and what Ola's own commands send (workspace/ola-search, ola-fetch, ola-lookup).
-// Everything else is 403, whatever the gateway would say.
-export const GW_ALLOWED = new Set(['POST /v1/chat/completions', 'GET /v1/models', 'GET /v1/usage', 'POST /web/search', 'POST /web/fetch', 'POST /web/lookup'])
+// The gateway routes a device may use, with the largest body each takes (the gateway's own default
+// caps, gateway/specialists.mjs: 12 MiB for a chat that carries pictures to `see`, 24 MiB for audio):
+// what opencode on the Mac sends (the chat, the model list, the week's usage), Ola's web commands
+// (workspace/ola-search, ola-fetch, ola-lookup) and its specialist commands (ola-embed, ola-rerank,
+// ola-transcribe, ola-draw; workspace/olaspec.py). Everything else is 403, whatever the gateway would
+// say: the Claude and hosted routes, a batch lane, anything new.
+const MIB = 1024 * 1024
+export const GW_ALLOWED = new Map([
+  ['POST /v1/chat/completions', 12 * MIB],
+  ['GET /v1/models', 0],
+  ['GET /v1/usage', 0],
+  ['POST /web/search', 8 * 1024],
+  ['POST /web/fetch', 8 * 1024],
+  ['POST /web/lookup', 8 * 1024],
+  ['POST /v1/embeddings', 4 * MIB],
+  ['POST /v1/rerank', 4 * MIB],
+  ['POST /v1/audio/transcriptions', 24 * MIB],
+  ['POST /v1/images/generations', 64 * 1024],
+])
 // What goes back from the gateway: the type, the size, when to try again, and a download's own facts.
 const GW_REPLY_HEADERS = ['content-type', 'content-length', 'retry-after', 'x-ola-final-url', 'x-ola-fetched-at', 'x-ola-redirects']
 
 const sha256 = (s) => createHash('sha256').update(s).digest()
 
 export function devicesConfig(env, { home, proxyProtocol }) {
-  const mb = env.OLA_FD_DEVICE_MAX_BODY_MB === undefined ? 4 : Number(env.OLA_FD_DEVICE_MAX_BODY_MB)
-  if (!Number.isFinite(mb) || mb < 0.01 || mb > 64) throw new Error('OLA_FD_DEVICE_MAX_BODY_MB must be a number from 0.01 to 64')
+  // One cap for every route instead of the gateway's defaults (when GATEWAY_LIMITS raises them).
+  const mb = env.OLA_FD_DEVICE_MAX_BODY_MB === undefined ? null : Number(env.OLA_FD_DEVICE_MAX_BODY_MB)
+  if (mb !== null && (!Number.isFinite(mb) || mb < 0.01 || mb > 256)) throw new Error('OLA_FD_DEVICE_MAX_BODY_MB must be a number from 0.01 to 256')
   const codeSeconds = env.OLA_FD_DEVICE_CODE_SECONDS === undefined ? CODE_SECONDS : Number(env.OLA_FD_DEVICE_CODE_SECONDS)
   if (!Number.isInteger(codeSeconds) || codeSeconds < 2 || codeSeconds > 600) throw new Error('OLA_FD_DEVICE_CODE_SECONDS must be a whole number from 2 to 600')
   return {
     key: passKey(env), // null: device sign-in is off
     codeSeconds, // how long a one-time code is good (120; the checks shorten it to watch one expire)
     peopleFile: env.OLA_FD_PEOPLE_TOKENS_FILE ?? path.join(home, 'gateway-people'),
-    maxBody: Math.round(mb * 1024 * 1024),
+    maxBody: mb === null ? null : Math.round(mb * 1024 * 1024),
     // Where the pass is read: behind the TLS front only the front's X-Ola-Pass, else a bearer.
     passFrom: proxyProtocol ? 'gate' : 'bearer',
     perDevice: 4,
@@ -293,9 +309,10 @@ export function makeDevices({ db, cfg, gateway, auth, clientOf, json, readJson, 
 
   function toGateway(req, res, dev, rest) {
     if (!GW_ALLOWED.has(`${req.method} ${rest}`)) return json(res, 403, { error: 'not_allowed' })
+    const maxBody = cfg.maxBody ?? GW_ALLOWED.get(`${req.method} ${rest}`)
     const declared = req.headers['content-length'] === undefined ? null : Number(req.headers['content-length'])
     if (declared !== null && !(Number.isSafeInteger(declared) && declared >= 0)) return json(res, 400, { error: 'bad_request' })
-    if (declared !== null && declared > cfg.maxBody) return json(res, 413, { error: 'too_large' })
+    if (declared !== null && declared > maxBody) return json(res, 413, { error: 'too_large' })
     if ((inflight.device.get(dev.id) ?? 0) >= cfg.perDevice || (inflight.person.get(dev.personId) ?? 0) >= cfg.perPerson) return json(res, 429, { error: 'too_many' }, { 'retry-after': '5' })
     let token = readPeopleFile(cfg.peopleFile).get(dev.personId)
     if (!token) token = sync().get(dev.personId) // the file lost the entry (a hand edit): made again; the gateway picks it up within seconds
@@ -344,7 +361,7 @@ export function makeDevices({ db, cfg, gateway, auth, clientOf, json, readJson, 
     req.on('data', (c) => {
       if (over) return
       seen += c.length
-      if (seen > cfg.maxBody) {
+      if (seen > maxBody) {
         over = true
         up.destroy()
         if (!res.headersSent) json(res, 413, { error: 'too_large' }, { connection: 'close' })

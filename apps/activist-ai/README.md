@@ -783,8 +783,10 @@ else (a token is refused on every other path, at the door and here):
 | `POST /api/device/signout` | this computer is signed out |
 | `POST /api/device/gw/v1/chat/completions`, `GET …/v1/models`, `GET …/v1/usage` | the model, as opencode on the Mac sends it (streams pass) |
 | `POST /api/device/gw/web/search`, `…/web/fetch`, `…/web/lookup` | Ola's web commands |
+| `POST /api/device/gw/v1/embeddings`, `…/v1/rerank`, `…/v1/audio/transcriptions`, `…/v1/images/generations` | Ola's specialist commands (`ola-embed`, `ola-rerank`, `ola-transcribe`, `ola-draw`); a name this machine has no server for answers 503 `not_configured`, as it does for a workspace |
 
-Anything else under `/api/device/gw/` is 403, whatever the gateway would say. Only `Content-Type` and
+Anything else under `/api/device/gw/` is 403, whatever the gateway would say (the Claude and hosted
+routes, a batch lane, anything new). Only `Content-Type` and
 `Accept` go on to the gateway, with the person's own caller token in place of the device's; the
 device's other headers (its pass, cookies, a batch lane) never do. Back come the type, the size,
 `Retry-After` and a download's `X-Ola-Final-Url`, `X-Ola-Fetched-At`, `X-Ola-Redirects`.
@@ -825,8 +827,10 @@ workspace still needs its project's grant).
 **Limits.** A code lives 120 seconds (`OLA_FD_DEVICE_CODE_SECONDS`, 2 to 600; the checks use 6), at
 most 1,000 at once (the oldest go). A person may ask for 10 a minute. `/api/device/token` is charged to
 the address key and the global ceiling like a sign-in verify with no ceremony. A computer's token
-lives 180 days. Model requests: a body of at most 4 MiB, the gateway's own cap
-(`OLA_FD_DEVICE_MAX_BODY_MB`), 4 in flight per computer and 8 per person, past that 429 `too_many`;
+lives 180 days. Model requests: a body no larger than the gateway's own default cap for that route
+(12 MiB for a chat, which may carry pictures; 24 MiB for audio; 4 MiB for embeddings and rerank; 8 KiB
+for a web command; 64 KiB for a drawing; `OLA_FD_DEVICE_MAX_BODY_MB` sets one cap for all, for when
+`GATEWAY_LIMITS` raises the gateway's), 4 in flight per computer and 8 per person, past that 429 `too_many`;
 the front desk's connection limits hold as for everyone. An open request is checked every second and
 cut when the computer is removed, the person is suspended or disallowed, or the pass expires. Refused
 device requests are audited, `device_refused`, at most 10 a minute per computer or person.
@@ -853,6 +857,32 @@ node admin.mjs add-device <handle> --name "Bart's MacBook Air" --kind mac|cli
 
 `revoke-sessions` and `suspend` sign a person's computers out too (there is no command that removes a
 person; suspension is the way).
+
+**What the Mac app and the `ola` command expect** (both sides keep to this list; change it in both):
+
+- **Is sign-in open here?** `GET /api/device/me` with no `Authorization` at all: 401
+  `{"error":"signed_out"}` when it is, 404 `{"error":"not_found"}` when it is not. Through the door this
+  exact request (that method, that path, no query, no credential) is answered by the TLS front itself
+  with that fixed reply, nothing read or passed on (`ops/tls-test.mjs`); anything else without a
+  credential gets the door's 401 page.
+- **Signed out** is any 401 on `/api/device/*`: a revoked, removed, disallowed or expired computer is
+  401 `{"error":"signed_out"}` from the front desk; a pass the door refuses (expired, a bad MAC) is the
+  door's 401 HTML page with `WWW-Authenticate: Basic`, after a growing delay. Both mean "sign in again";
+  never retry a 401 in a loop: ten refused passes from an address within 15 minutes block it for 15
+  minutes (429 for everything there, the web app too). 403 means a route not on the list or a person
+  not allowed; 404 means sign-in is off.
+- **Streams** pass through the TLS front and the front desk unbuffered (headers at once, then each chunk
+  as it comes). The gateway itself asks the model for a whole reply and then sends it as a well-formed
+  stream (see the gateway), so today a chat's chunks arrive together at the end.
+- **The one-time code** is a pass: `olap1.` then base64url, a dot, base64url; only `[A-Za-z0-9_.-]`,
+  about 150 characters. The token is the same shape.
+- **Usage**: `GET /api/device/gw/v1/usage` is the gateway's reply for the person's caller, unchanged:
+  `{object: "usage", caller: "p-<id>", week_start, resets_at, requests, tokens_in, tokens_out,
+  tokens_used, quota, fraction_used (0 to 1), by_model: {<name>: {requests, tokens_in, tokens_out}},
+  claude_month, web_week: {used, limit}, batch_job}`. The period is a week (Monday 00:00 UTC to the
+  next); there is no `fraction` or `period` field: read `fraction_used` and `resets_at`.
+- **The model's names** are the gateway's (`GET …/v1/models`): `general`, and the specialists this
+  machine has servers for.
 
 **Turning it on** (the commit runs exactly as before with none of this set):
 
