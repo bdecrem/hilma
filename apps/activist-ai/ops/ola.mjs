@@ -26,6 +26,9 @@
 //   cx.ola.frontdesk   ops/run.mjs ~/.ola/frontdesk.env frontdesk/server.mjs 127.0.0.1:4700
 //   cx.ola.tls         ops/run.mjs ~/.ola/tls.env ops/tls.mjs                127.0.0.1:4743 (only where tls.env exists)
 //   cx.ola.tunnel      ops/run.mjs ~/.ola/tunnel.env ops/tunnel.mjs          ngrok, stage 2 (only where tunnel.env exists)
+//   cx.ola.watch       ops/watch.mjs, every 2 minutes (StartInterval, not kept alive): the alarm
+//                      (disk, memory, the web app's parts, the public address, the Almanac, the
+//                      VMs, the nightly status files); texts the owner; settings ~/.ola/watch.env
 // and, while a workspace runs, its door and desk (cx.ola.door.<id>, cx.ola.desk.<id>), loaded and
 // unloaded by workspace/ws.mjs start/stop under OLA_LAUNCHD=1 (set in frontdesk.env), with their
 // plists in ~/.ola/launchd/ (not loaded at login: after a reboot no workspace runs).
@@ -100,6 +103,9 @@ const JOBS = [
   { label: 'cx.ola.tls', args: [NODE, path.join(SERVED, 'ops/run.mjs'), TLS_ENV, 'ops/tls.mjs'], keepAlive: true, log: 'tls', optional: TLS_ENV },
   // Stage 2 only: the public tunnel. Installed by `install` once ~/.ola/tunnel.env exists, never before.
   { label: 'cx.ola.tunnel', args: [NODE, path.join(SERVED, 'ops/run.mjs'), TUNNEL_ENV, 'ops/tunnel.mjs'], keepAlive: true, log: 'tunnel', optional: TUNNEL_ENV },
+  // The alarm: a short run every 2 minutes. Not kept alive and never kickstarted by a deploy (each
+  // run reads the code through `current`, so a deploy changes it without a restart).
+  { label: 'cx.ola.watch', args: [NODE, path.join(SERVED, 'ops/watch.mjs')], keepAlive: false, interval: 120, log: 'watch' },
 ]
 /** The jobs this machine runs: the TLS front and the tunnel only where their env files exist. */
 const jobsHere = () => JOBS.filter((j) => !j.optional || existsSync(j.optional))
@@ -114,7 +120,7 @@ function plist(job) {
   <key>EnvironmentVariables</key><dict><key>HOME</key><string>${xml(HOME)}</string><key>PATH</key><string>${PATH}</string></dict>
   <key>RunAtLoad</key><true/>
   <key>KeepAlive</key>${job.keepAlive ? '<true/>' : '<false/>'}
-  <key>ThrottleInterval</key><integer>5</integer>
+${job.interval ? `  <key>StartInterval</key><integer>${job.interval}</integer>\n` : ''}  <key>ThrottleInterval</key><integer>5</integer>
   <key>ProcessType</key><string>Standard</string>
   <key>StandardOutPath</key><string>${xml(log)}</string>
   <key>StandardErrorPath</key><string>${xml(log)}</string>
@@ -279,6 +285,14 @@ if (cmd === 'container-up') {
     const good = s.loaded && (j.keepAlive ? s.state === 'running' : true)
     if (!good) bad++
     console.log(`${good ? 'ok  ' : 'DOWN'}  ${j.label.padEnd(20)} ${s.loaded ? `${s.state}${s.pid ? `, pid ${s.pid}` : ''}, runs ${s.runs}, last exit ${s.lastExit}` : 'not loaded'}`)
+  }
+  // The alarm's last run, from its state file (DOWN when it has not run for 6 minutes or its last
+  // text did not go out).
+  if (existsSync(path.join(CODE, 'ops/watch.mjs'))) {
+    const { statusLine } = await import(path.join(CODE, 'ops/watch.mjs'))
+    const w = statusLine()
+    if (!w.ok) bad++
+    console.log(`${w.ok ? 'ok  ' : 'DOWN'}  alarm                ${w.text}`)
   }
   const fdEnv = existsSync(ENV.frontdesk) ? readEnv(ENV.frontdesk) : {}
   const origin = new URL(fdEnv.OLA_FD_ORIGIN || 'http://localhost:4700')
