@@ -857,3 +857,47 @@ and notes any Ola process running from elsewhere (a check or a dev run).
 - Until the Mac Studio is the model server, every file a test touches is made up. `make-survey.py`
   is the pattern: invented people, known answers, the answers never placed in the workspace.
 - A workspace gets a gateway token, never the model server's key.
+- A workspace never reaches a cloud model, unless the project's owner turns on Fallback to Claude;
+  then only through the gateway (which holds the credential and replaces the workspace's token with
+  it), marked and logged, with a monthly ceiling.
+
+## Fallback to Claude (2026-11-16, first part)
+
+Claude Code itself, headless, **inside the project's sealed VM** (image `ola-workspace:2.3.0-6`
+adds the Linux arm64 build from npm, pinned by integrity), in the same `/work` as opencode, so its
+shell and file tools are sealed exactly like opencode's. `workspace/ola-claude <go|ask>` runs it
+(`claude -p --output-format stream-json`), with `ANTHROPIC_BASE_URL` on the door bridge
+(`http://127.0.0.1:4180/anthropic`), the workspace's own gateway token as `ANTHROPIC_AUTH_TOKEN`,
+nonessential traffic, telemetry, error reports and updates off, WebFetch and WebSearch refused.
+"go" may read, write and run in `/work` (bypassPermissions, as opencode's "Go ahead"); "ask" may only
+read (a headless run cannot stop for a person's yes). `workspace/claude-ola.md` is its standing note
+(sealed box, Files and Open).
+
+**The gateway** (`gateway/claude.mjs`): `POST /anthropic/v1/messages` and `.../count_tokens`,
+streamed or not, to `api.anthropic.com` only. Only `anthropic-version`, `anthropic-beta`,
+`content-type` and `accept` go upstream, plus our credential; the caller's `Authorization` and
+`x-api-key` never do. A caller may use it only when it is listed in `GATEWAY_CLAUDE_FILE` (mode 600,
+`{"ws-<id>": {"mode": "oauth"|"api_key", "cap_micro_usd": n, "cap_tokens": n}}`, reloaded within 2
+s), else 403 "Fallback to Claude is off for this project". Credentials, per mode:
+
+| Mode | Setting (gateway env file) | Sent as | For |
+|---|---|---|---|
+| `api_key` | `CLAUDE_API_KEY` | `x-api-key` | any owner's project |
+| `oauth` | `CLAUDE_OAUTH_TOKEN_FILE=~/.ola/claude-oauth-token` (a file, mode 600, from `claude setup-token`) | `Authorization: Bearer`, with `oauth-2025-04-20` added to `anthropic-beta` (`GATEWAY_CLAUDE_OAUTH_BETA`) | projects of an admin-owned team only (Bart's subscription) |
+
+A mode with no credential answers 503 in plain words. The month ceiling (calendar month, UTC) is
+dollars in `api_key` mode (token counts × `GATEWAY_CLAUDE_PRICES`, $/MTok, default
+`in=5,out=25,cache_write=6.25,cache_read=0.5`: check these against Anthropic's current list prices)
+and tokens in `oauth` mode; 429 with a sentence when reached. An upstream 401/403 is a fixed 502;
+other upstream errors are relayed as Anthropic wrote them (Claude Code reads the 400 sentences to
+drop a beta), with both credentials scrubbed from every chunk and log line. The log line adds `mode`
+and `cost_micro_usd`; `/v1/usage` adds each caller's `claude_month`. Other settings:
+`GATEWAY_CLAUDE_UPSTREAM` (tests only), `GATEWAY_CLAUDE_MODELS` (default Opus, Sonnet and Haiku
+5.5), `GATEWAY_CLAUDE_MAX_BODY_BYTES` (16 MiB). Tested in `gateway/test.mjs` against a fake
+Anthropic; live by hand with `workspace/claude-smoke.mjs api_key oauth`.
+
+**Not built yet** (next round): the front desk's per-project setting (owner only, off by default,
+audit words `claude_enabled`/`claude_disabled`/`claude_used` already in the schema), its writer of
+`GATEWAY_CLAUDE_FILE`, the run route that starts `ola-claude` and turns its stream-json into the
+page's steps, the Settings view with the consent text, "Ask Claude instead", the marking, and the
+automatic stops.

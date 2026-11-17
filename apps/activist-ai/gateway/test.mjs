@@ -734,3 +734,156 @@ test("a workspace's token works only through its own door: not another workspace
     await g.stop()
   }
 })
+
+// ---------------------------------------------------------------- Fallback to Claude (claude.mjs)
+
+// A fake Anthropic: records what reached it; a stream or a whole reply with usage; a 401 on ask.
+async function fakeAnthropic() {
+  const st = { seen: [] }
+  const server = http.createServer(async (req, res) => {
+    const chunks = []
+    for await (const c of req) chunks.push(c)
+    const body = JSON.parse(Buffer.concat(chunks).toString())
+    st.seen.push({ path: req.url, headers: { ...req.headers }, body })
+    const text = body.messages?.at(-1)?.content ?? ''
+    if (text === 'say 401') return res.writeHead(401, { 'content-type': 'application/json' }).end(JSON.stringify({ error: { message: `bad key ${req.headers['x-api-key'] ?? req.headers.authorization}` } }))
+    if (text === 'say 400') return res.writeHead(400, { 'content-type': 'application/json' }).end(JSON.stringify({ type: 'error', error: { type: 'invalid_request_error', message: 'Unexpected value(s) `x-beta` for the `anthropic-beta` header' } }))
+    if (req.url.startsWith('/v1/messages/count_tokens')) return res.writeHead(200, { 'content-type': 'application/json' }).end('{"input_tokens":12}')
+    if (body.stream) {
+      res.writeHead(200, { 'content-type': 'text/event-stream', 'request-id': 'req_1', 'x-internal': 'drop me' })
+      const ev = (type, data) => res.write(`event: ${type}\ndata: ${JSON.stringify({ type, ...data })}\n\n`)
+      ev('message_start', { message: { id: 'm1', role: 'assistant', content: [], usage: { input_tokens: 100, cache_creation_input_tokens: 0, cache_read_input_tokens: 0, output_tokens: 1 } } })
+      ev('content_block_start', { index: 0, content_block: { type: 'text', text: '' } })
+      ev('content_block_delta', { index: 0, delta: { type: 'text_delta', text: 'hello from claude' } })
+      ev('content_block_stop', { index: 0 })
+      ev('message_delta', { delta: { stop_reason: 'end_turn' }, usage: { output_tokens: 50 } })
+      ev('message_stop', {})
+      return res.end()
+    }
+    res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ id: 'm2', type: 'message', role: 'assistant', content: [{ type: 'text', text: 'whole' }], usage: { input_tokens: 10, output_tokens: 5 } }))
+  })
+  await new Promise((r) => server.listen(0, '127.0.0.1', r))
+  upstreams.push(server)
+  return { st, url: `http://127.0.0.1:${server.address().port}` }
+}
+function writeGrants(file, grants) {
+  writeFileSync(`${file}.tmp`, JSON.stringify(grants), { mode: 0o600 })
+  chmodSync(`${file}.tmp`, 0o600)
+  renameSync(`${file}.tmp`, file)
+}
+const msg = (text, extra = {}) => ({ model: 'claude-opus-5-5', max_tokens: 64, messages: [{ role: 'user', content: text }], ...extra })
+async function claudeCall(g, token, body, { headers = {}, p = '/anthropic/v1/messages?beta=true' } = {}) {
+  const res = await fetch(g.url + p, { method: 'POST', headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json', 'anthropic-version': '2023-06-01', ...headers }, body: JSON.stringify(body) })
+  const text = await res.text()
+  let json = null
+  try {
+    json = JSON.parse(text)
+  } catch {}
+  return { status: res.status, text, json, headers: res.headers }
+}
+
+test('Fallback to Claude: refused unless granted; the credential is replaced, never relayed; streams pass; the month ceiling holds', async () => {
+  const up = await fakeUpstream()
+  const an = await fakeAnthropic()
+  const dir = mkdtempSync(path.join(TMP, 'claude-'))
+  const grants = path.join(dir, 'gateway-claude')
+  const oauthFile = path.join(dir, 'oauth-token')
+  const KEY = `sk-ant-api-${tok()}`
+  const OAUTH = `sk-ant-oat-${tok()}`
+  writeFileSync(oauthFile, OAUTH, { mode: 0o600 })
+  writeGrants(grants, {})
+  const k = { one: tok(), two: tok(), three: tok() }
+  const env = {
+    ...baseEnv(up.url),
+    GATEWAY_TOKENS: `ws-one:${k.one},ws-two:${k.two},ws-three:${k.three}`,
+    GATEWAY_CLAUDE_FILE: grants,
+    GATEWAY_CLAUDE_UPSTREAM: an.url,
+    CLAUDE_API_KEY: KEY,
+    CLAUDE_OAUTH_TOKEN_FILE: oauthFile,
+    GATEWAY_USAGE_TOKEN: T.usage + T.usage,
+  }
+  const g = await gateway(env)
+  try {
+    // Off: a plain sentence, and nothing reaches Anthropic.
+    const off = await claudeCall(g, k.one, msg('hi'))
+    assert.equal(off.status, 403)
+    assert.match(off.json.error.message, /Fallback to Claude is off for this project/)
+    assert.equal(an.st.seen.length, 0)
+    assert.equal((await claudeCall(g, 'not-a-caller-token-at-all-xx', msg('hi'))).status, 401)
+
+    // api_key for ws-one (a $0.002 cap), oauth for ws-two (a 400-token cap); reloaded, no restart.
+    writeGrants(grants, { 'ws-one': { mode: 'api_key', cap_micro_usd: 2000 }, 'ws-two': { mode: 'oauth', cap_tokens: 400 } })
+    await waitFor(() => g.lines.some((l) => l.includes('"event":"claude_grants"') && l.includes('"callers":2')), 5000, 'the grants reload')
+
+    // api_key: streamed, the caller's own credentials dropped, ours added, its betas kept.
+    const s = await claudeCall(g, k.one, msg('hello', { stream: true }), { headers: { 'x-api-key': 'sk-evil-caller-key', 'anthropic-beta': 'fine-grained-tool-streaming-2025-05-14', 'x-claude-code-session-id': 'S1' } })
+    assert.equal(s.status, 200)
+    assert.ok(s.text.includes('hello from claude') && s.text.includes('message_stop'), 'the stream came through whole')
+    assert.equal(s.headers.get('request-id'), 'req_1')
+    assert.equal(s.headers.get('x-internal'), null, 'only allowlisted reply headers')
+    const seen1 = an.st.seen.at(-1)
+    assert.equal(seen1.path, '/v1/messages?beta=true')
+    assert.equal(seen1.headers['x-api-key'], KEY)
+    assert.equal(seen1.headers.authorization, undefined, "the caller's gateway token never goes upstream")
+    assert.equal(seen1.headers['anthropic-beta'], 'fine-grained-tool-streaming-2025-05-14')
+    assert.equal(seen1.headers['x-claude-code-session-id'], undefined)
+    assert.ok(!JSON.stringify(seen1.headers).includes('sk-evil') && !JSON.stringify(seen1.headers).includes(k.one))
+    // Its cost: 100 in × $5 + 50 out × $25 per million = 1,750 micro-dollars, under the cap; the
+    // next request finds 1,750 < 2,000 and goes; after it the ceiling holds, with a sentence.
+    assert.equal((await claudeCall(g, k.one, msg('again', { stream: true }))).status, 200)
+    const capped = await claudeCall(g, k.one, msg('a third'))
+    assert.equal(capped.status, 429)
+    assert.match(capped.json.error.message, /used its Claude budget for the month \(\$0\.00\)/)
+
+    // oauth: Bearer with the subscription token, the OAuth capability added to the betas.
+    const o = await claudeCall(g, k.two, msg('hi'), { headers: { 'anthropic-beta': 'a-beta-2025-01-01' } })
+    assert.equal(o.status, 200)
+    const seen2 = an.st.seen.at(-1)
+    assert.equal(seen2.headers.authorization, `Bearer ${OAUTH}`)
+    assert.equal(seen2.headers['x-api-key'], undefined)
+    assert.equal(seen2.headers['anthropic-beta'], 'a-beta-2025-01-01,oauth-2025-04-20')
+    const usage = await call(g, T.usage + T.usage, null, { path: '/v1/usage', method: 'GET' })
+    const two = usage.json.data.find((u) => u.caller === 'ws-two').claude_month
+    assert.deepEqual([two.mode, two.requests, two.tokens, two.cost_micro_usd], ['oauth', 1, 15, 0], 'oauth counts tokens, no dollars')
+    const one = usage.json.data.find((u) => u.caller === 'ws-one').claude_month
+    assert.deepEqual([one.requests, one.cost_micro_usd], [2, 3500])
+
+    // count_tokens passes; a model not offered is refused before it goes anywhere.
+    assert.equal((await claudeCall(g, k.two, msg('count'), { p: '/anthropic/v1/messages/count_tokens?beta=true' })).json.input_tokens, 12)
+    const before = an.st.seen.length
+    assert.equal((await claudeCall(g, k.two, { ...msg('x'), model: 'claude-mythical-9' })).status, 400)
+    assert.equal(an.st.seen.length, before)
+    // An upstream 401 is a fixed 502, never Anthropic's words (which quote the credential).
+    const bad = await claudeCall(g, k.two, msg('say 401'))
+    assert.equal(bad.status, 502)
+    assert.ok(!bad.text.includes(OAUTH) && !bad.text.includes('bad key'))
+    // An upstream 400 is relayed as Anthropic wrote it: Claude Code reads it to drop a beta.
+    const four = await claudeCall(g, k.two, msg('say 400'))
+    assert.equal(four.status, 400)
+    assert.match(four.json.error.message, /Unexpected value\(s\)/)
+
+    // Turned off again: refused at once.
+    writeGrants(grants, { 'ws-two': { mode: 'oauth', cap_tokens: 400 } })
+    await waitFor(() => g.lines.some((l) => l.includes('"event":"claude_grants"') && l.includes('"removed":1')), 5000, 'the second reload')
+    assert.equal((await claudeCall(g, k.one, msg('hi'))).status, 403)
+
+    // A subscription token file others can read is not used: oauth mode says it is not set up.
+    chmodSync(oauthFile, 0o644)
+    writeGrants(grants, { 'ws-three': { mode: 'oauth' } })
+    await waitFor(() => g.lines.some((l) => l.includes('"event":"claude_grants"') && l.includes('"callers":1') && l.includes('"added":1')), 5000, 'the third reload')
+    await sleep(2200)
+    const unset = await claudeCall(g, k.three, msg('hi'))
+    assert.equal(unset.status, 503)
+    assert.match(unset.json.error.message, /not set up/)
+
+    // The log: no credential, no content; the Claude lines say the mode and the numbers.
+    for (const secret of [KEY, OAUTH, k.one, k.two, 'hello from claude', 'sk-evil']) assert.ok(!g.out.includes(secret) && !g.err.includes(secret), `the log has ${secret.slice(0, 10)}`)
+    const lines = g.logs().filter((l) => l.route === 'claude' && l.status === 200)
+    assert.ok(lines.length >= 3 && lines.every((l) => ['oauth', 'api_key'].includes(l.mode) && l.model === 'claude-opus-5-5' && typeof l.tokens_in === 'number'))
+    assert.equal(lines[0].tokens_in, 100)
+    assert.equal(lines[0].tokens_out, 50)
+    assert.equal(lines[0].cost_micro_usd, 1750)
+  } finally {
+    await g.stop()
+  }
+})

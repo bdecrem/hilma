@@ -48,6 +48,7 @@ import { chmodSync, mkdirSync, readFileSync, rmSync, statSync, watch } from 'nod
 import { homedir } from 'node:os'
 import { basename, dirname, join, resolve } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
+import { CLAUDE_SETTINGS, claudeConfig, makeClaude } from './claude.mjs'
 
 // ---------------------------------------------------------------- config
 
@@ -68,7 +69,7 @@ const SETTINGS = {
   GATEWAY_READ_TIMEOUT_MS: [30_000, 1_000, 600_000],
   GATEWAY_WEEKLY_TOKENS: [20_000_000, 1, 1e12],
 }
-const OTHER_GATEWAY_SETTINGS = ['GATEWAY_TOKENS', 'GATEWAY_TOKENS_FILE', 'GATEWAY_DOOR_DIR', 'GATEWAY_MODELS', 'GATEWAY_HOST', 'GATEWAY_DB', 'GATEWAY_QUOTAS', 'GATEWAY_USAGE_TOKEN']
+const OTHER_GATEWAY_SETTINGS = ['GATEWAY_TOKENS', 'GATEWAY_TOKENS_FILE', 'GATEWAY_DOOR_DIR', 'GATEWAY_MODELS', 'GATEWAY_HOST', 'GATEWAY_DB', 'GATEWAY_QUOTAS', 'GATEWAY_USAGE_TOKEN', ...CLAUDE_SETTINGS]
 const NAME = /^[a-z0-9][a-z0-9._-]{0,63}$/i
 const TOKEN = /^[\x21-\x2b\x2d-\x7e]{24,512}$/ // printable ASCII, no space, no comma
 
@@ -162,6 +163,8 @@ function loadConfig(env) {
   const db = resolve(env.GATEWAY_DB || `${homedir()}/.local/state/ola-gateway/usage.db`)
   const textWithCalls = env.TEXT_WITH_CALLS || 'drop'
   if (!['drop', 'keep'].includes(textWithCalls)) bad('TEXT_WITH_CALLS must be drop or keep')
+  // Fallback to Claude (claude.mjs): its own upstream, credentials and grants file.
+  const claude = claudeConfig(env, bad)
 
   if (problems.length) {
     for (const p of problems) console.error(`config: ${p}`)
@@ -181,6 +184,7 @@ function loadConfig(env) {
     host,
     db,
     keepText: textWithCalls === 'keep',
+    claude,
     port: num.GATEWAY_PORT,
     maxBody: num.GATEWAY_MAX_BODY_BYTES,
     maxTotalBody: num.GATEWAY_MAX_TOTAL_BODY_BYTES,
@@ -248,7 +252,9 @@ const TRIES = 3
 // written to a log, whatever path put it there. The key is fixed and non-empty, so this is a
 // plain substring replace; it runs on already-serialized strings only.
 function redact(s) {
-  return typeof s === 'string' && s.includes(C.key) ? s.split(C.key).join('[redacted]') : s
+  if (typeof s !== 'string') return s
+  if (s.includes(C.key)) s = s.split(C.key).join('[redacted]')
+  return claude ? claude.scrub(s) : s
 }
 // The fields a caller may send on to the model server. Anything else is dropped: `n` would
 // multiply the work, `user` names a person, and unknown fields are untested surface.
@@ -270,6 +276,7 @@ db.exec(`PRAGMA journal_mode = WAL; PRAGMA synchronous = NORMAL; PRAGMA busy_tim
     PRIMARY KEY (week, caller, model)) STRICT;`)
 const addUsage = db.prepare(`INSERT INTO usage (week, caller, model, requests, tokens_in, tokens_out) VALUES (?, ?, ?, 1, ?, ?)
   ON CONFLICT (week, caller, model) DO UPDATE SET requests = requests + 1, tokens_in = tokens_in + excluded.tokens_in, tokens_out = tokens_out + excluded.tokens_out`)
+const claude = makeClaude({ cfg: C.claude, db, readBody: (req, max) => readBody(req, max), send: (...a) => send(...a), fail: (...a) => fail(...a) })
 const readUsage = db.prepare(`SELECT coalesce(sum(requests), 0) AS requests, coalesce(sum(tokens_in), 0) AS tokens_in, coalesce(sum(tokens_out), 0) AS tokens_out FROM usage WHERE week = ? AND caller = ?`)
 
 const WEEK_MS = 7 * 24 * 3600 * 1000
@@ -663,10 +670,10 @@ let buffering = 0
 // Reads the body up to maxBody. Refuses on Content-Length before reading a byte, otherwise stops
 // the moment the per-request cap is passed, and refuses outright once the whole process is already
 // holding GATEWAY_MAX_TOTAL_BODY_BYTES of unread bodies.
-function readBody(req) {
+function readBody(req, max = C.maxBody) {
   return new Promise((resolve, reject) => {
     const declared = req.headers['content-length']
-    if (declared !== undefined && !(Number(declared) <= C.maxBody)) return reject(refusal('too_large'))
+    if (declared !== undefined && !(Number(declared) <= max)) return reject(refusal('too_large'))
     if (buffering >= C.maxTotalBody) return reject(refusal('too_busy'))
     const chunks = []
     let size = 0
@@ -690,7 +697,7 @@ function readBody(req) {
       size += c.length
       buffering += c.length
       held += c.length
-      if (size > C.maxBody) return end('too_large')
+      if (size > max) return end('too_large')
       if (buffering > C.maxTotalBody) return end('too_busy')
       chunks.push(c)
     })
@@ -722,7 +729,7 @@ function identify(req) {
 }
 const known = (name) => name === 'usage' || C.tokens.some((t) => t.name === name)
 
-const ROUTES = { '/v1/chat/completions': 'chat', '/v1/models': 'models', '/v1/usage': 'usage' }
+const ROUTES = { '/v1/chat/completions': 'chat', '/v1/models': 'models', '/v1/usage': 'usage', '/anthropic/v1/messages': 'claude', '/anthropic/v1/messages/count_tokens': 'claude_count' }
 const secondsUntil = (ms) => String(Math.max(1, Math.ceil((ms - Date.now()) / 1000)))
 
 async function handle(req, res, rec, signal) {
@@ -742,10 +749,12 @@ async function handle(req, res, rec, signal) {
 
   if (rec.route === 'usage' && req.method === 'GET') {
     rec.status = 200
-    if (who === 'usage') return send(res, 200, { object: 'list', data: C.tokens.map((t) => usageOf(t.name)), inflight: queue.inflight, queued: queue.queued })
-    return send(res, 200, usageOf(who))
+    if (who === 'usage') return send(res, 200, { object: 'list', data: C.tokens.map((t) => ({ ...usageOf(t.name), claude_month: claude.monthOf(t.name) })), inflight: queue.inflight, queued: queue.queued })
+    return send(res, 200, { ...usageOf(who), claude_month: claude.monthOf(who) })
   }
   if (who === 'usage') return no(403, 'the usage token only reads usage', 'this token can only read /v1/usage', 'permission_error')
+  // Claude Code in the workspace, through Anthropic's Messages API (claude.mjs).
+  if (rec.route === 'claude' || rec.route === 'claude_count') return claude.handle(req, res, rec, who, signal)
   if (rec.route === 'models' && req.method === 'GET') {
     rec.status = 200
     return send(res, 200, { object: 'list', data: [...C.models.keys()].map((id) => ({ id, object: 'model', owned_by: 'ola' })) })

@@ -1,0 +1,33 @@
+#!/bin/sh
+# Claude Code, headless, inside this sealed workspace: "Fallback to Claude". The front desk runs
+#   container exec -i ola-<id> /opt/ola/bin/ola-claude <go|ask>
+# and sends the request on stdin; Claude Code's stream-json events come back on stdout.
+#
+# Its only way out is the door, like opencode's: ANTHROPIC_BASE_URL is the bridge ola-init keeps
+# on 127.0.0.1:4180, and the credential it sends is this workspace's own gateway token
+# (BOX_API_KEY, from the container's environment). The gateway checks that this project's owner
+# turned Claude on, drops that token and adds the real credential, which never enters the VM.
+#
+# Permissions match Ola's opencode: "go" may read, write and run code in /work without asking;
+# "ask" may only read and look (a headless run cannot stop for a person's yes, so it writes and
+# runs nothing and says what it would do). Never the web: WebFetch and WebSearch are refused in
+# both, and the VM has no network anyway.
+set -eu
+mode="${1:-ask}"
+export ANTHROPIC_BASE_URL=http://127.0.0.1:4180/anthropic
+export ANTHROPIC_AUTH_TOKEN="$BOX_API_KEY"
+unset ANTHROPIC_API_KEY CLAUDE_CODE_OAUTH_TOKEN OPENCODE_PASSWORD
+export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1 DISABLE_TELEMETRY=1 DISABLE_ERROR_REPORTING=1 DISABLE_AUTOUPDATER=1
+export CLAUDE_CONFIG_DIR=/work/.ola/claude
+mkdir -p "$CLAUDE_CONFIG_DIR"
+cd /work
+model="${OLA_CLAUDE_MODEL:-claude-opus-5-5}"
+case "$mode" in
+  go) perms="--permission-mode bypassPermissions" ;;
+  ask) perms="--permission-mode default --allowedTools Read Glob Grep" ;;
+  *) echo "ola-claude: mode is go or ask" >&2; exit 2 ;;
+esac
+# shellcheck disable=SC2086
+exec claude -p --output-format stream-json --verbose --model "$model" $perms \
+  --disallowedTools WebFetch WebSearch \
+  --append-system-prompt "$(cat /opt/ola/config/claude/ola.md)"

@@ -11,7 +11,10 @@
 # gateway). The host reaches opencode through `container exec` (workspace/desk.mjs), and the
 # root file system is read-only (ws.mjs creates the container with --read-only).
 #
-#   container build -t ola-workspace:2.3.0-5 -f Containerfile .
+#   container build -t ola-workspace:2.3.0-6 -f Containerfile .
+#
+# 2.3.0-6 adds Claude Code (Fallback to Claude, workspace/ola-claude): the Linux arm64 build from
+# npm, pinned by npm's integrity like opencode. It reaches only the door, like opencode.
 
 ARG DEBIAN=docker.io/library/debian:bookworm-slim@sha256:734a72b3d6142a71993b4bc580ca01d8ca687f77a2c422d96a961d3376b179bc
 
@@ -25,6 +28,15 @@ RUN curl -fsSL -o /tmp/oc.tgz "https://registry.npmjs.org/@opencode/cli-linux-ar
  && [ "$got" = "$OPENCODE_SHA512" ] || { echo "opencode tarball integrity mismatch" >&2; exit 1; } \
  && mkdir /tmp/oc && tar -xzf /tmp/oc.tgz -C /tmp/oc \
  && install -m 0755 /tmp/oc/package/bin/opencode /opencode
+ARG CLAUDE_CODE_VERSION=2.1.326
+# npm's own integrity for @anthropic-ai/claude-code-linux-arm64@2.1.326 (registry.npmjs.org, 2026-11-16)
+ARG CLAUDE_CODE_SHA512=lZCCWXarB/1IeHkotI937eEdN4BCbVdWDdmejtlkbUO9M29rHjITtXW9BWCDFlxvo0GXsFogN0SFIJWgMelKLw==
+RUN curl -fsSL -o /tmp/cc.tgz "https://registry.npmjs.org/@anthropic-ai/claude-code-linux-arm64/-/claude-code-linux-arm64-${CLAUDE_CODE_VERSION}.tgz" \
+ && got="$(openssl dgst -sha512 -binary /tmp/cc.tgz | openssl base64 -A)" \
+ && [ "$got" = "$CLAUDE_CODE_SHA512" ] || { echo "claude code tarball integrity mismatch" >&2; exit 1; } \
+ && mkdir /tmp/cc && tar -xzf /tmp/cc.tgz -C /tmp/cc \
+ && bin="$(find /tmp/cc/package -maxdepth 2 -type f -name claude | head -1)" && [ -n "$bin" ] \
+ && install -m 0755 "$bin" /claude
 
 FROM ${DEBIAN}
 RUN apt-get update \
@@ -38,8 +50,10 @@ RUN apt-get update \
  && find / -xdev -type f -perm /6000 -exec chmod a-s {} + \
  && rm -f /etc/shadow- /etc/gshadow-
 COPY --from=fetch /opencode /usr/local/bin/opencode
+COPY --from=fetch /claude /usr/local/bin/claude
 COPY opencode.jsonc AGENTS.md /opt/ola/config/opencode/
-COPY ola-init ola-files ola-put ola-get ola-rm /opt/ola/bin/
+COPY claude-ola.md /opt/ola/config/claude/ola.md
+COPY ola-init ola-files ola-put ola-get ola-rm ola-claude /opt/ola/bin/
 RUN chmod 0755 /opt/ola/bin/* && chmod -R a+rX,go-w /opt/ola
 
 # Everything the agent keeps lives in /work, so `ws.mjs files` shows all of it and
