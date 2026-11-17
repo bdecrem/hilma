@@ -1084,6 +1084,9 @@ await check('in the page: the drawer hands a request to Claude, marks the reply,
   const id = (sessions.json?.data ?? sessions.json ?? [])[0]?.id
   await A.page.goto(`${ORIGIN}/?w=${FA}#/?ask=${id}`)
   await A.page.waitForFunction(() => /outside this machine/.test(document.querySelector('.drawer .turn:last-child .said-ola .who')?.textContent ?? ''), null, { timeout: 30_000 })
+  // An open page on a conversation resyncs (and so wakes the workspace) whenever its stream comes
+  // back: leave it, so the rotation checks at the VM cap below see only their own requests.
+  await A.page.goto('about:blank')
   return `conversation ${id ? 'reopened' : '?'} (${conv} earlier listed)`
 })
 await check('a role change that leaves only admins as owners moves the project to the subscription mode; turning it off removes the grant', async () => {
