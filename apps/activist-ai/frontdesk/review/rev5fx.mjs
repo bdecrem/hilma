@@ -80,7 +80,7 @@ if (argv.includes('twin')) {
     out = spawnSync(CTR, ['exec', '-i', '--user', '1002:1002', '-e', env, C, '/opt/ola/bin/ola-twin', 'make', id], { input: JSON.stringify({ request: 'Clean roster.csv: drop the repeated people and say how many there were.', context: '', gathered: JSON.parse(g.trim().split('\n').pop()) }), encoding: 'utf8', maxBuffer: 128 * 1024 * 1024 }).stdout
   }
   await sleep(1500)
-  sh('pkill -f /tmp/fx/attack.py; pkill -f /tmp/fx/model.py; true')
+  sh('for p in /proc/[0-9]*; do grep -q /tmp/fx/attack.py $p/cmdline 2>/dev/null && kill ${p#/proc/} 2>/dev/null; done; true; for p in /proc/[0-9]*; do grep -q /tmp/fx/model.py $p/cmdline 2>/dev/null && kill ${p#/proc/} 2>/dev/null; done; true')
   let copy = {}
   try {
     copy = JSON.parse(out.trim().split('\n').pop())
@@ -104,7 +104,7 @@ if (argv.includes('runner')) {
   const r = sh('python3 -I /tmp/fx/peek.py').stdout.trim()
   const env = sh(`for p in /proc/[0-9]*; do tr '\\0' '\\n' < $p/environ 2>/dev/null | grep -q OLA_RUNNER_PROBE=${KEY} && echo found; done; true`).stdout.trim()
   proof('the agent’s user cannot read the job runner’s key from its environment, its pipes or its memory', /^runner \d+: environ refused, fd refused, mem refused, maps refused$/.test(r) && !env, `${r}; the key in a readable environment: ${env ? 'yes' : 'no'}`)
-  sh('pkill -f /tmp/fx/ola-batch; true', '', '0')
+  sh('for p in /proc/[0-9]*; do grep -q /tmp/fx/ola-batch $p/cmdline 2>/dev/null && kill ${p#/proc/} 2>/dev/null; done; true', '', '1000:1001')
 }
 
 ws.stop(WS)

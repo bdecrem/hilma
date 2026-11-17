@@ -1418,7 +1418,7 @@ if (!LIVE) {
     assert(it.verdict === 'clean' && it.twin?.request && it.twin.files?.[0]?.name === 'data.csv' && it.twin.checks?.length >= 4, JSON.stringify(it).slice(0, 300))
     const kept = readFileSync(path.join(env.OLA_HOME, 'compare', cmpId, 'twin.json'), 'utf8')
     assert(!PLANTED.some((w) => kept.includes(w)), 'a planted word in the copy on the host')
-    inVm('pkill -f fx-attack.py; true')
+    inVm('for p in /proc/[0-9]*; do grep -q fx-attack.py $p/cmdline 2>/dev/null && kill ${p#/proc/} 2>/dev/null; done; true')
     const log = inVm('cat /tmp/fx-attack.log 2>/dev/null').split('\n').filter(Boolean)
     const touched = Buffer.from(JSON.parse(kept).files.map((f) => f.b64).join(''), 'base64').toString('latin1').includes('FXMARK') || kept.includes('FXMARK')
     const saw = log.filter((l) => l.startsWith('maker '))
