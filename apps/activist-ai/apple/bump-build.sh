@@ -17,5 +17,6 @@ next=$((current + 1))
 sed -i '' -E "s/^([[:space:]]*CURRENT_PROJECT_VERSION:).*/\1 \"$next\"/" "$YML"
 [ $# -ge 1 ] && sed -i '' -E "s/^([[:space:]]*MARKETING_VERSION:).*/\1 \"$1\"/" "$YML"
 version=$(grep -E '^[[:space:]]*MARKETING_VERSION:' "$YML" | head -1 | sed -E 's/.*"([^"]+)".*/\1/')
+node tools/skills.mjs stage build/OlaSkills >/dev/null   # the Mac target bundles them (README)
 xcodegen generate >/dev/null
 echo "Ola is now $version ($next), project regenerated. Commit project.yml."
