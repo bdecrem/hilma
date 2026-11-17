@@ -862,7 +862,7 @@ print(json.dumps({"mib": n, "stopped": why}))
       const tw = await sh(A, ['python3', '-I', '-'], { input: readFileSync(new URL('./twin_test.py', import.meta.url), 'utf8') })
       const help = await sh(A, ['/opt/ola/bin/ola-twin'])
       const ro = await sh(A, ['sh', '-c', 'echo x >> /opt/ola/lib/olatwin.py; echo $?'])
-      t('ola-twin in the VM: the leak check catches planted names, numbers, a phrase and a file name, passes a clean copy, and the generator cannot read the project or reach out (twin_test.py)', tw.code === 0 && /passed/.test(tw.out) && /usage: ola-twin make/.test(help.out) && ro.out.trim() !== '0', `${tw.out.trim().split('\n').pop()}${tw.code ? ` ${tw.out.split('\n').filter((l) => l.startsWith('FAIL')).slice(0, 3).join(' | ')} ${tw.err.slice(-300)}` : ''}`)
+      t('ola-twin in the VM: the leak check catches planted names, numbers, a phrase and a file name, passes a clean copy, and the generator cannot read the project or reach out (twin_test.py)', tw.code === 0 && /passed/.test(tw.out) && /usage: ola-twin gather \| make <id> \| store <id>/.test(help.out) && ro.out.trim() !== '0', `${tw.out.trim().split('\n').pop()}${tw.code ? ` ${tw.out.split('\n').filter((l) => l.startsWith('FAIL')).slice(0, 3).join(' | ')} ${tw.err.slice(-300)}` : ''}`)
     }
 
     // Reading real documents (2.3.0-17): reading order, OCR, the right-document check, charsets,

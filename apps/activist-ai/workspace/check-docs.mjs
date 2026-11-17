@@ -134,12 +134,13 @@ print(json.dumps(ok))`)
     `${JSON.stringify(refusals).slice(0, 300)}${escaped ? `; left: ${escaped}` : ''}`)
   // Killed partway (review 5 follow-up): a hard kill leaves its hidden half-unpacked folder and no
   // folder in the project; the next ola-unzip removes it (and ola-init at every start).
-  await sh(['python3', '-c', 'import zipfile, os\nz = zipfile.ZipFile("/work/slow.zip", "w")\nfor i in range(120): z.writestr("slow/f%d.bin" % i, os.urandom(1 << 20))\nz.close()'])
-  const killed = (await sh(['sh', '-c', 'ola-unzip slow.zip >/dev/null 2>&1 & p=$!; sleep 0.4; kill -9 $p; wait $p 2>/dev/null; ls -A /work/.ola/tmp | grep -c "^unzip-"; test -e /work/slow && echo folder || echo none; rm -f /work/slow.zip'])).out.trim().split('\n')
+  await sh(['python3', '-c', 'import zipfile, os\nz = zipfile.ZipFile("/work/slow.zip", "w")\nfor i in range(300): z.writestr("slow/f%d.bin" % i, os.urandom(1 << 20))\nz.close()'])
+  // Killed the moment its hidden folder holds a file: mid-unpack, whatever the machine's speed.
+  const killed = (await sh(['sh', '-c', 'ola-unzip slow.zip >/dev/null 2>&1 & p=$!; for i in $(seq 1 400); do ls /work/.ola/tmp/unzip-*/slow/f1.bin >/dev/null 2>&1 && break; sleep 0.01; done; kill -9 $p; wait $p 2>/dev/null; ls -A /work/.ola/tmp | grep -c "^unzip-"; test -e /work/slow && echo folder || echo none; rm -rf /work/slow.zip /work/slow'])).out.trim().split('\n')
   await sh(['cp', '/work/dx/papers.zip', '/work/papers.zip'])
   const unz = await sh(['ola-unzip', 'papers.zip'])
   const staleLeft = (await sh(['sh', '-c', 'ls -A /work/.ola/tmp 2>/dev/null | grep -c "^unzip-"; true'])).out.trim()
-  t('a zip killed partway leaves no folder in the project, and its hidden half-unpacked folder is gone after the next ola-unzip', killed[1] === 'none' && staleLeft === '0', `after the kill: ${killed[0]} hidden, project folder ${killed[1]}; after the next: ${staleLeft}`)
+  t('a zip killed partway leaves no folder in the project, and its hidden half-unpacked folder is gone after the next ola-unzip', killed[0] === '1' && killed[1] === 'none' && staleLeft === '0', `after the kill: ${killed[0]} hidden, project folder ${killed[1]}; after the next: ${staleLeft}`)
   const u = json(unz) ?? {}
   const modes = (await sh(['sh', '-c', 'find /work/papers -type f -perm /111 | wc -l'])).out.trim()
   const folder = json(await sh(['ola-db', 'add-folder', 'papers', '--by', 'upload']))
