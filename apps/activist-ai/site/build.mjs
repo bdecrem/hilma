@@ -165,6 +165,8 @@ figcaption{font-style:italic;font-size:14.5px;color:var(--text2);margin-top:4px;
 // The drawing and its caption. An alternate with `spots` gets a tour: each spot is a transparent
 // target over the drawing (hover, tap or tab to it) and the caption swaps to that thing's line, by CSS
 // alone (:has on the figure). The caption's lines share one grid cell, so it never changes height.
+// The thing under the pointer wins; a focused one shows only while nothing is hovered (Safari keeps
+// a clicked target focused, and once showed two lines on top of each other).
 const esc = (t) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;')
 function artFigure(alt) {
   const label = alt?.label ?? SCENE_LABEL, cap = alt?.caption ?? 'Our datacenter.', spots = alt?.spots ?? []
@@ -176,7 +178,7 @@ function artFigure(alt) {
 .art figcaption.tour>span{grid-area:1/1;visibility:hidden;opacity:0;transition:opacity .18s ease}
 .art figcaption.tour>.cap-0{visibility:visible;opacity:1}
 .art:has(.hs:is(:hover,:focus)) figcaption.tour>.cap-0{visibility:hidden;opacity:0}
-${spots.map(([id]) => `.art:has(.hs-${id}:is(:hover,:focus)) figcaption.tour>.cap-${id}{visibility:visible;opacity:1;color:var(--link)}`).join('\n')}`
+${spots.map(([id]) => `.art:has(.hs-${id}:hover) figcaption.tour>.cap-${id},.art:not(:has(.hs:hover)):has(.hs-${id}:focus) figcaption.tour>.cap-${id}{visibility:visible;opacity:1;color:var(--link)}`).join('\n')}`
   return `<figure class="art"><style>${css}</style><svg viewBox="0 26 600 586" role="group" aria-label="${label} Each thing on the desk can be selected to hear what it does for the datacenter.">${scene(T, alt)}<g class="tour">${targets}</g></svg><figcaption class="tour" aria-live="polite"><span class="cap-0">${cap}</span>${spots.map(([id, , line]) => `<span class="cap-${id}" aria-hidden="true">${esc(line)}</span>`).join('')}</figcaption></figure>`
 }
 
