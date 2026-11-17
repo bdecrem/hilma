@@ -240,6 +240,9 @@ struct ApprovalPanel: View {
           Text("Ola asks").font(OlaFont.sans(Metrics.meta, .semibold)).foregroundStyle(Ola.vermilionText)
         }
         Text(approval.title).font(OlaFont.sans(Metrics.heading, .semibold)).foregroundStyle(Ola.ink)
+        if let note = approval.note {
+          Text(note).font(OlaFont.sans(Metrics.meta)).foregroundStyle(Ola.ink2).fixedSize(horizontal: false, vertical: true)
+        }
       }
       VStack(alignment: .leading, spacing: Space.s) {
         ForEach(Array(approval.items.enumerated()), id: \.offset) { i, item in

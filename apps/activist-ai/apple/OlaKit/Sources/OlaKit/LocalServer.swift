@@ -23,6 +23,35 @@ public final class LocalServer: @unchecked Sendable {
   }
   public static let defaultModelURL = "http://100.95.51.98:4311/v1"
 
+  /// Ola's web commands (ola-search, ola-fetch, ola-lookup and what they need), the same files as
+  /// in the customers' sealed image (workspace/). The Mac app carries them in its Resources; a check
+  /// run from the repo points this at workspace/. Copied next to opencode at each start and put
+  /// first on the agent's PATH; they reach the gateway through the machine's forwarder.
+  public static let webToolNames = ["ola-search", "ola-fetch", "ola-lookup", "ola-db", "olaspec.py", "olatext.py"]
+  nonisolated(unsafe) public static var webToolsSource: URL? = Bundle.main.resourceURL.flatMap { r in
+    FileManager.default.fileExists(atPath: r.appendingPathComponent("ola-search").path) ? r : nil
+  }
+
+  /// Copies the web commands into `dir` (made fresh), executable. Returns false if any is missing.
+  @discardableResult
+  public static func installWebTools(into dir: URL) -> Bool {
+    let fm = FileManager.default
+    guard let src = webToolsSource else { return false }
+    try? fm.removeItem(at: dir)
+    try? fm.createDirectory(at: dir, withIntermediateDirectories: true)
+    var ok = true
+    for name in webToolNames {
+      // In the repo, olatext.py is in workspace/lib/; in the app, everything is side by side.
+      guard let from = [src.appendingPathComponent(name), src.appendingPathComponent("lib/\(name)")].first(where: { fm.fileExists(atPath: $0.path) }) else { ok = false; continue }
+      let to = dir.appendingPathComponent(name)
+      do {
+        try fm.copyItem(at: from, to: to)
+        try fm.setAttributes([.posixPermissions: name.hasSuffix(".py") ? 0o644 : 0o755], ofItemAtPath: to.path)
+      } catch { ok = false }
+    }
+    return ok
+  }
+
   public let folder: URL
   public private(set) var port: Int
   /// Where opencode keeps its config, sessions and caches (default: Application Support/Ola/local).
@@ -111,8 +140,12 @@ public final class LocalServer: @unchecked Sendable {
         { "action": "edit", "resource": "*", "effect": "ask" },
         { "action": "write", "resource": "*", "effect": "ask" },
         { "action": "apply_patch", "resource": "*", "effect": "ask" },
-        { "action": "webfetch", "resource": "*", "effect": "ask" },
-        { "action": "websearch", "resource": "*", "effect": "ask" },
+        // opencode's own web search has no provider here (it waits a minute, then says "Web search
+        // cancelled"); its page fetch works, but the model reached for it instead of searching (a
+        // search engine's results page, a guessed address). The web goes through Ola's gateway:
+        // ola-search and ola-fetch, asked as web questions (README, "Web search in Bart's apps").
+        { "action": "webfetch", "resource": "*", "effect": "deny" },
+        { "action": "websearch", "resource": "*", "effect": "deny" },
         { "action": "external_directory", "resource": "*", "effect": "deny" },
         { "action": "skill", "resource": "*", "effect": "deny" },
     \(deny)
@@ -136,7 +169,10 @@ public final class LocalServer: @unchecked Sendable {
     if port == 0 { port = Self.freePort() }
     for d in ["config/opencode", "data", "state", "cache"] { try fm.createDirectory(at: base.appendingPathComponent(d), withIntermediateDirectories: true) }
     let instructions = base.appendingPathComponent("config/opencode/ola-reactions.md")
-    try AgentNotes.all.write(to: instructions, atomically: true, encoding: .utf8)
+    try AgentNotes.opencode.write(to: instructions, atomically: true, encoding: .utf8)
+    let webTools = Self.support.appendingPathComponent("web-tools")
+    let haveWeb = Self.installWebTools(into: webTools)
+    trace?(haveWeb ? "web commands in \(webTools.path)" : "web commands NOT found (ola-search will be missing)")
     try Self.config(modelURL: modelURL, instructionsPath: instructions.path).write(to: base.appendingPathComponent("config/opencode/opencode.jsonc"), atomically: true, encoding: .utf8)
     var bytes = [UInt8](repeating: 0, count: 24)
     _ = SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes)
@@ -147,7 +183,12 @@ public final class LocalServer: @unchecked Sendable {
     p.arguments = ["serve", "--hostname", "127.0.0.1", "--port", String(port)]
     p.currentDirectoryURL = folder
     var env = ProcessInfo.processInfo.environment
-    env["PATH"] = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+    env["PATH"] = webTools.path + ":/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+    // Where the web commands go: the forwarder on the machine (the model's way too), with the same
+    // bart caller token; downloads land in the project's sources/.
+    if let u = URL(string: modelURL), let h = u.host(), let p = u.port { env["OLA_GATEWAY_HOSTPORT"] = "\(h):\(p)" }
+    env["OLA_WORK"] = folder.path
+    env["OLA_LIB"] = webTools.path
     env["XDG_CONFIG_HOME"] = base.appendingPathComponent("config").path
     env["XDG_DATA_HOME"] = base.appendingPathComponent("data").path
     env["XDG_STATE_HOME"] = base.appendingPathComponent("state").path
@@ -161,6 +202,7 @@ public final class LocalServer: @unchecked Sendable {
     env["OPENCODE_DISABLE_PROJECT_CONFIG"] = "1"
     for (k, v) in extraEnvironment { env[k] = v }
     env["OLA_GATEWAY_TOKEN"] = modelToken
+    env["BOX_API_KEY"] = modelToken
     p.environment = env
     let pipe = Pipe()
     p.standardOutput = pipe

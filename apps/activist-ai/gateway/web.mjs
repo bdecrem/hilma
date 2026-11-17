@@ -246,7 +246,44 @@ export function makeWeb({ cfg, db, readBody, send, fail }) {
   // ------------------------------------------------------------ grants, from the front desk's file
   let grants = new Map()
   let seen = ''
+  // Host callers (not workspaces: Bart's own opencode, caller `bart`) have no project for the front
+  // desk to ask in; their owner answers in his own apps. Their standing grant is in a file of its
+  // own beside the front desk's (the front desk rewrites its file from its database and keeps
+  // nothing else), `<GATEWAY_WEB_FILE>-hosts`, written by bart/ola-bart.sh: mode 600,
+  // { "<caller>": { "always": true } }, names that are not `ws-` (a workspace never gets one here).
+  let hostGrants = new Map()
+  let hostSeen = ''
+  const loadHostGrants = () => {
+    if (!cfg.file) return
+    const f = `${cfg.file}-hosts`
+    let st
+    try {
+      st = statSync(f)
+    } catch {
+      if (hostSeen !== 'missing' && hostGrants.size) process.stdout.write(JSON.stringify({ t: new Date().toISOString(), event: 'web_host_grants', ok: true, callers: 0 }) + '\n')
+      hostSeen = 'missing'
+      hostGrants = new Map()
+      return
+    }
+    const stamp = `${st.ino}:${st.mtimeMs}:${st.size}`
+    if (stamp === hostSeen) return
+    hostSeen = stamp
+    if ((st.mode & 0o077) !== 0) return console.error('GATEWAY_WEB_FILE-hosts must be mode 600: the host grants in force stay')
+    try {
+      const raw = JSON.parse(readFileSync(f, 'utf8'))
+      const next = new Map()
+      for (const [name, g] of Object.entries(raw ?? {})) {
+        if (name.startsWith('ws-') || !/^[a-z0-9][a-z0-9._-]{0,63}$/i.test(name) || g?.always !== true) continue
+        next.set(name, { always: true, once: [] })
+      }
+      hostGrants = next
+      process.stdout.write(JSON.stringify({ t: new Date().toISOString(), event: 'web_host_grants', ok: true, callers: next.size }) + '\n')
+    } catch {
+      console.error('GATEWAY_WEB_FILE-hosts could not be read: the host grants in force stay')
+    }
+  }
   const loadGrants = () => {
+    loadHostGrants()
     if (!cfg.file) return
     try {
       const st = statSync(cfg.file)
@@ -291,7 +328,7 @@ export function makeWeb({ cfg, db, readBody, send, fail }) {
   function grantFor(who, kind, item) {
     const h = itemHash(kind, item)
     for (let attempt = 0; attempt < 2; attempt++) {
-      const g = grants.get(who)
+      const g = grants.get(who) ?? hostGrants.get(who)
       if (g?.always) return 'always'
       const now = Date.now()
       for (const o of g?.once ?? []) {
@@ -299,6 +336,7 @@ export function makeWeb({ cfg, db, readBody, send, fail }) {
         if (spent.run(o.id, now).changes === 1) return 'once'
       }
       seen = '' // the front desk may have written the file a moment ago
+      hostSeen = ''
       loadGrants()
     }
     return null

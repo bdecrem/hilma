@@ -61,6 +61,8 @@ public struct Approval: Identifiable, Equatable, Sendable {
   public var title: String
   public var items: [ApprovalItem]
   public var stepID: String?
+  /// One line under the question (a web search: what leaves the machine).
+  public var note: String?
   public init(id: String, sessionID: String, action: String, title: String, items: [ApprovalItem], stepID: String?) {
     self.id = id
     self.sessionID = sessionID
@@ -73,6 +75,7 @@ public struct Approval: Identifiable, Equatable, Sendable {
   init(_ d: JSON, dir: String?) {
     let words = Plain.describeApproval(action: d["action"].str, resources: d["resources"].array.map(\.str), metadata: d["metadata"], dir: dir)
     self.init(id: d["id"].str, sessionID: d["sessionID"].str, action: d["action"].str, title: words.title, items: words.items, stepID: d["source"]["id"].string)
+    note = Plain.webNote(action: d["action"].str, resources: d["resources"].array.map(\.str))
   }
 }
 
@@ -110,11 +113,14 @@ public struct Turn: Identifiable, Equatable, Sendable, Codable {
 
   public var isRunning: Bool { status == .sending || status == .working }
 
+  /// How many files the run wrote or changed.
+  public var changedFiles: Int { Set(steps.filter { ($0.icon == .write || $0.icon == .change) && $0.status == .done }.map(\.object)).count }
+
   /// "Worked for 1 min 48 s · 6 steps · changed 3 files"
   public func summary(now: Date = .now) -> String {
     let secs = max(0, Int(((ended ?? now).timeIntervalSince(at)).rounded()))
     let time = secs < 60 ? "\(secs) s" : secs < 3600 ? "\(secs / 60) min \(secs % 60) s" : "\(secs / 3600) h \((secs % 3600) / 60) min"
-    let changed = Set(steps.filter { ($0.icon == .write || $0.icon == .change) && $0.status == .done }.map(\.object)).count
+    let changed = changedFiles
     var parts = ["\(isRunning ? "Working" : "Worked") for \(time)", "\(steps.count) \(steps.count == 1 ? "step" : "steps")"]
     if changed > 0 { parts.append("changed \(changed) \(changed == 1 ? "file" : "files")") }
     let failed = steps.filter { $0.status == .failed }.count

@@ -74,6 +74,29 @@ and pasted into the Mac app's Settings (it goes into the Keychain). If either pr
 stops both and launchd starts the pair again. Proved from the iMac: `/v1/models` through port 4311 is
 401 without the token and 200 with it.
 
+## Web search (2026-11-17)
+
+opencode's own web search tool has no provider in this setup: it waits about a minute and ends
+"Web search cancelled" (Bart's news-site run, 2026-11-17: four searches, all cancelled, after he had
+answered yes). It is turned off (`websearch` deny), and so is opencode's page fetch (`webfetch`
+deny: it works, but the open model reached for it instead of searching, a search engine's results
+page or a guessed address). The agent has Ola's own commands instead, the same files as the
+customers' sealed image: `ola-search`, `ola-fetch`, `ola-lookup` (with `ola-db` and what they need),
+copied from `workspace/` into `~/.ola-bart/bin/web` and first on the server's PATH; they reach the
+gateway on `127.0.0.1:4180` with the `bart` caller token, and `ola-fetch` saves into
+`~/ola-bart/sources/`. The standing instruction says, in two lines, to use them (the same words as
+OlaKit's `AgentNotes.web`). Bart is asked with the web app's words ("Ola wants to search the web
+for: …", Yes, this once / Yes, for the rest of this session / No).
+
+The gateway lets the `bart` caller through with a standing grant in `~/.ola/gateway-web-hosts`
+(`ola-bart.sh web`, also run by `install`; removed by `uninstall`): Bart answers every web question
+himself, in his apps. The gateway reads that file from the commit that added it on; until the
+staging gateway runs it, `ola-bart.sh web` and `install` end with "web check: NOT granted", and
+ola-search says the search was not approved. `ola-bart.sh status` shows the grant.
+
+The check (`apple/OlaKit`, `OLA_WEB_CHECK=1 swift run olakit-selftest`, both modes, see
+apple/README.md) asks the agent to search the web for the Ola test phrase and tell one result.
+
 ## What the agent may do
 
 Later rules win. Everything is allowed, except:

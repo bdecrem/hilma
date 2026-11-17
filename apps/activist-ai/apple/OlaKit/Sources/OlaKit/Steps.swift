@@ -54,6 +54,14 @@ public enum Plain {
   /// A shell command, said plainly.
   public static func describeCommand(_ command: String) -> Words {
     let c = command.trimmingCharacters(in: .whitespacesAndNewlines)
+    // Ola's own web commands read as what they do, not as "Ran ola-search".
+    if let w = WebAsk.request(WebAsk.stripRedirects(c)) {
+      switch w.kind {
+      case .search: return Words(icon: .search, verb: "Searched the web for", object: w.item.map { "\u{201C}\($0)\u{201D}" } ?? "")
+      case .lookup: return Words(icon: .search, verb: "Looked up", object: w.item.map { "\u{201C}\($0)\u{201D}" } ?? "a paper")
+      case .fetch: return Words(icon: .read, verb: "Downloaded", object: w.item ?? "a document")
+      }
+    }
     if let script = firstMatch(c, #"^(?:python3?|node|Rscript|bash|sh)\s+(?!-)([\w./-]+\.(?:py|js|mjs|R|sh))"#, group: 1) {
       return Words(icon: .run, verb: "Ran", object: script.split(separator: "/").last.map(String.init) ?? script)
     }
@@ -184,9 +192,23 @@ public enum Plain {
     return table.reduce(verb) { $0.replacingOccurrences(of: $1.0, with: $1.1, options: .regularExpression) }
   }
 
+  /// For a web question, the line under it: what leaves the machine. nil for anything else.
+  public static func webNote(action: String, resources: [String]) -> String? {
+    guard action == "shell" || action == "bash", let w = WebAsk.question(resources) else { return nil }
+    return WebAsk.leaves(w.first)
+  }
+
   /// A permission request as a question Bart can answer.
   public static func describeApproval(action: String, resources: [String], metadata: JSON, dir: String?) -> (title: String, items: [ApprovalItem]) {
     let files = metadata["files"].array
+    // A web search, download or lookup: the question says exactly what would leave the machine,
+    // as in the web app (web/src/lib/steps.ts).
+    // The exact command stays one tap away ("View") when it holds more than the web command.
+    if action == "shell" || action == "bash", let w = WebAsk.question(resources) {
+      return (WebAsk.title(w.first), w.webs.map { r in
+        ApprovalItem(label: WebAsk.label(r), detail: r.item == nil || w.extra ? resources.joined(separator: "\n") : nil, isCommand: r.item == nil)
+      })
+    }
     if action == "shell" || action == "bash" {
       return ("Ola wants to run a command", resources.map { cmd in
         let w = describeCommand(cmd)

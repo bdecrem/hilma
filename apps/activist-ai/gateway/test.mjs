@@ -1103,7 +1103,7 @@ async function webCall(g, token, route, body) {
   } catch {}
   return { status: res.status, headers: res.headers, buf, json }
 }
-async function webGateway(extra = {}) {
+async function webGateway(extra = {}, moreTokens = '') {
   const up = await fakeUpstream()
   const site = await fakeSite()
   const brave = await fakeBrave()
@@ -1115,7 +1115,7 @@ async function webGateway(extra = {}) {
   const P = site.port
   const env = {
     ...baseEnv(up.url),
-    GATEWAY_TOKENS: `ws-one:${k.one},ws-two:${k.two}`,
+    GATEWAY_TOKENS: `ws-one:${k.one},ws-two:${k.two}${moreTokens}`,
     GATEWAY_USAGE_TOKEN: T.usage + T.usage,
     GATEWAY_WEB_FILE: file,
     GATEWAY_SEARCH_PROVIDER: 'brave',
@@ -1161,6 +1161,31 @@ test('web search: refused without the project’s yes; with it, the provider get
     assert.ok(lines.some((l) => l.status === 200 && l.results === 1 && l.grant === 'always') && lines.some((l) => l.status === 403))
   } finally {
     await g.stop()
+  }
+})
+
+test('web: a host caller (bart) has a standing grant from the -hosts file, which the front desk’s rewrites never touch', async () => {
+  const bart = tok()
+  const { g: g2, k, file } = await webGateway({}, `,bart:${bart}`)
+  try {
+    assert.equal((await webCall(g2, bart, 'search', { q: 'flood maps' })).status, 403, 'no grant yet')
+    writeGrants(`${file}-hosts`, { bart: { always: true }, 'ws-two': { always: true }, nobody: { once: [] } })
+    assert.equal((await webCall(g2, bart, 'search', { q: 'flood maps' })).status, 200, 'the standing grant')
+    assert.equal((await webCall(g2, k.two, 'search', { q: 'flood maps' })).status, 403, 'a workspace is never granted from the hosts file')
+    // The front desk rewrites its own file: bart keeps the grant.
+    writeGrants(file, { 'ws-one': { always: true } })
+    assert.equal((await webCall(g2, bart, 'search', { q: 'sea walls' })).status, 200, 'after the front desk wrote its file')
+    assert.equal((await webCall(g2, k.one, 'search', { q: 'sea walls' })).status, 200)
+    // A file anyone could write is refused; the grants in force stay until it is fixed.
+    chmodSync(`${file}-hosts`, 0o644)
+    writeFileSync(`${file}-hosts`, JSON.stringify({}))
+    assert.equal((await webCall(g2, bart, 'search', { q: 'sea walls' })).status, 200, 'a 644 file changes nothing')
+    // Gone: off.
+    rmSync(`${file}-hosts`)
+    await sleep(1300) // the file is read again within a second
+    assert.equal((await webCall(g2, bart, 'search', { q: 'sea walls' })).status, 403, 'removed: off')
+  } finally {
+    await g2.stop()
   }
 })
 

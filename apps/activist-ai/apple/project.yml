@@ -34,6 +34,12 @@ targets:
       - Mac
       - path: Shared
         excludes: ["Fonts/*.txt"]
+      # Ola's web commands for "On this Mac" (OlaKit LocalServer.installWebTools), the same files
+      # as the customers' sealed image.
+      - path: ../workspace
+        includes: [ola-search, ola-fetch, ola-lookup, ola-db, olaspec.py, lib/olatext.py]
+        buildPhase: resources
+        group: WebTools
     dependencies:
       - package: OlaKit
     info:

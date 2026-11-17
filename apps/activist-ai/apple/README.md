@@ -262,6 +262,36 @@ coming and the Kit page's voice links, opened in the in-app browser. The voice f
 
 Screens: `tools/phone-app-shots.sh <dir>` (every screen, light and dark, made-up data).
 
+## Web search in Bart's apps (2026-11-17)
+
+Both servers (the machine's, `bart/README.md` "Web search", and "On this Mac") search through Ola's
+gateway with Ola's own commands, never opencode's built-in web search (no provider here: it
+waited a minute and said "Web search cancelled") or page fetch (both turned off). On this Mac the
+app carries `ola-search`, `ola-fetch`, `ola-lookup`, `ola-db`, `olaspec.py` and `olatext.py` from
+`../workspace` in its Resources (project.yml), copies them to `Application Support/Ola/web-tools`
+at each start (`LocalServer.installWebTools`) and puts that folder first on the agent's PATH, with
+`OLA_GATEWAY_HOSTPORT` set to the machine's forwarder (port 4311, which passes every route, `/web/*`
+too, byte for byte) and the same `bart` token; downloads land in the project's `sources/`. The two
+lines the agent is told are `AgentNotes.web`.
+
+The question reads as a web search, word for word the web app's (`OlaKit/WebAsk.swift`, a port of
+`web/server/webask.mjs`): "Ola wants to search the web for: …", a line saying what leaves the
+machine, and the usual three answers. The open model often wraps the command however it is told
+(`ola-search "…" 2>&1; head -50`, a `which ola-search` first); output plumbing like that is still
+asked as the web question, with the exact command under View. A step reads "Searched the web for
+“…”".
+
+**A failed run gets no ✅** (`Turn.endedWell`): no reaction when every step failed, or when some
+failed and the run neither replied nor changed a file (the README's reaction rule).
+
+**Check**, one real search each (Brave), both modes:
+`OLA_WEB_CHECK=1 OLA_MODEL_TOKEN_FILE=<bart token> swift run olakit-selftest` (On this Mac) and
+`OLA_WEB_CHECK=1 OLA_SERVER=http://100.95.51.98:4310 OLA_PASSWORD_FILE=<file> swift run olakit-selftest`
+(the machine); `OLA_WEB_GATEWAY=host:port` points the local commands at another gateway. On
+2026-11-17 both passed against a private copy of the gateway at this commit with the machine's
+search key (loopback on the mini, removed after), since the staging gateway reads the `bart`
+grant only once this commit is deployed.
+
 ## Where Ola works (Mac Settings)
 
 One setting for the whole app:

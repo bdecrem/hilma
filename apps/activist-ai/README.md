@@ -1122,7 +1122,8 @@ chat app. The set is fixed, by name:
 - **`eyes` is also automatic and instant:** the moment a request is accepted and a run starts, the
   surface shows 👀 on the message without waiting for the model. When the reply's own marker arrives
   it replaces the 👀; if the reply has no marker, 👀 is replaced by ✅ when the run ends well, and
-  removed when it fails or is stopped.
+  removed otherwise: when the run fails or is stopped, when every one of its steps failed, or when
+  some of its steps failed and it neither replied nor changed a file.
 - **A message that is only thanks or a compliment** ("great job", "thank you", "wow") gets just the
   reaction: the agent replies with only the marker line, and the surfaces show 🙏 on the message and no
   reply at all (no empty bubble, no "Worked for 2 s" line).
@@ -1525,7 +1526,7 @@ once per project (M2: 20 overlapping requests all passed a ceiling one of them n
 
 | Setting (gateway env file) | What |
 |---|---|
-| `GATEWAY_WEB_FILE` | `~/.ola/gateway-web`, the front desk's grants (`OLA_FD_WEB_FILE` there, same default) |
+| `GATEWAY_WEB_FILE` | `~/.ola/gateway-web`, the front desk's grants (`OLA_FD_WEB_FILE` there, same default). Beside it, `<that file>-hosts` (600): standing grants for host callers that are not workspaces, `{"bart": {"always": true}}`, written by `bart/ola-bart.sh web` (the front desk rewrites its own file and keeps nothing else; a `ws-` name there is ignored) |
 | `GATEWAY_SEARCH_PROVIDER` | `brave` (needs `SEARCH_API_KEY`), or `mock` (made-up results, for checks) |
 | `SEARCH_API_KEY` | the Brave Search API key (only in `gateway.env`, never in a workspace) |
 | `GATEWAY_WEB_WEEKLY`, `GATEWAY_WEB_PER_MINUTE` | 2000, 30 |
