@@ -79,6 +79,13 @@ public final class OlaStore {
     fixtureFiles = fixture.fileData
   }
 
+  /// A fixture store only: replaces a conversation, for frame-by-frame renders of a made-up run.
+  public func previewSet(_ id: String, _ conversation: Conversation, running: Bool) {
+    guard !live else { return }
+    conversations[id] = conversation
+    if running { self.running.insert(id) } else { self.running.remove(id) }
+  }
+
   public var selected: SessionInfo? { sessions.first { $0.id == selectedID } }
   public var conversation: Conversation? { selectedID.flatMap { conversations[$0] } }
   public func needsYou(_ id: String) -> Bool { conversations[id]?.approval != nil }

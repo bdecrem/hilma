@@ -8,6 +8,8 @@ enum Main {
     OlaFont.register()
     if LocalSelfTest.requested { LocalSelfTest.run() }
     if SettingsSelfTest.requested { SettingsSelfTest.run() }
+    if MotionRender.cpuRequested { MotionRender.measureCPU() }
+    if let dir = MotionRender.outputDirectory { MotionRender.run(to: dir) }
     if let dir = Snapshot.outputDirectory {
       Snapshot.run(to: dir)
       return

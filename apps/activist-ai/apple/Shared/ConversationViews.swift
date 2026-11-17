@@ -114,7 +114,7 @@ struct RunView: View {
         withAnimation(.easeOut(duration: 0.15)) { open = !isOpen }
       } label: {
         HStack(spacing: Space.s) {
-          ZStack { if turn.isRunning { LampDot() } else { Image(systemName: "chevron.right").font(.system(size: 9, weight: .bold)).foregroundStyle(Ola.ink3).rotationEffect(.degrees(isOpen ? 90 : 0)) } }
+          RunMark(turn: turn, isOpen: isOpen)
             .frame(width: Metrics.youColumn - Space.s, alignment: .leading)
           TimelineView(.periodic(from: .now, by: 1)) { ctx in
             Text(turn.summary(now: ctx.date)).font(OlaFont.sans(Metrics.ui, .medium)).foregroundStyle(over ? Ola.ink : Ola.ink2).monospacedDigit()
@@ -140,6 +140,7 @@ struct RunView: View {
   }
 }
 
+/// The lamp beside a working session in the session list.
 struct LampDot: View {
   @State private var breathe = false
   @Environment(\.accessibilityReduceMotion) private var reduce
@@ -413,6 +414,9 @@ struct ConversationPane: View {
   @Binding var draft: String
   var columnWidth: CGFloat = Metrics.column
   var sidePadding: CGFloat = Space.xxl
+  /// The larger working figure is out (a long quiet run).
+  @State private var largeShown = false
+  @Environment(\.workingLarge) private var forcedLarge
 
   var body: some View {
     let convo = store.conversation
@@ -421,7 +425,13 @@ struct ConversationPane: View {
         ScrollView {
           VStack(alignment: .leading, spacing: Space.xxl) {
             if let convo, !convo.turns.isEmpty {
-              ForEach(Array(convo.turns.enumerated()), id: \.element.id) { i, t in TurnView(turn: t, isLast: i == convo.turns.count - 1, askClaude: store.claudeOn ? { Task { await store.askClaude(t.request) } } : nil, view: store.onView ?? { _ in }, load: { try? await store.read($0) }) }
+              ForEach(Array(convo.turns.enumerated()), id: \.element.id) { i, t in
+                VStack(alignment: .leading, spacing: 0) {
+                  TurnView(turn: t, isLast: i == convo.turns.count - 1, askClaude: store.claudeOn ? { Task { await store.askClaude(t.request) } } : nil, view: store.onView ?? { _ in }, load: { try? await store.read($0) })
+                  if i == convo.turns.count - 1, t.isRunning { WorkingStage(turn: t, waiting: convo.approval != nil, shown: $largeShown) }
+                }
+              }
+              .environment(\.workingLargeShown, (forcedLarge ?? largeShown) && convo.approval == nil)
             } else if store.selectedID == nil {
               EmptyConversation(folder: store.projectFolder)
             } else {
@@ -438,6 +448,7 @@ struct ConversationPane: View {
         .onChange(of: convo?.turns.last?.answer.count) { _, _ in proxy.scrollTo("end", anchor: .bottom) }
         .onChange(of: convo?.turns.last?.steps.count) { _, _ in withAnimation(.easeOut(duration: 0.12)) { proxy.scrollTo("end", anchor: .bottom) } }
         .onChange(of: store.selectedID) { _, _ in proxy.scrollTo("end", anchor: .bottom) }
+        .onChange(of: forcedLarge ?? largeShown) { _, now in if now { withAnimation(.easeOut(duration: 0.3)) { proxy.scrollTo("end", anchor: .bottom) } } }
       }
       .overlay(alignment: .bottom) {
         if let a = convo?.approval {

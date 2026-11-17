@@ -93,6 +93,22 @@ are drawn by the window server's glass), so the sidebar and files in the drawn f
 views but not proof of how the system frames them. The iPhone app takes
 `-OlaFixture <main|approval|empty|unreachable>` and `-OlaOpen` for simulator screenshots.
 
+## Working animations (2026-11-17)
+
+While Ola works, the run line shows one of four small characters drawn in code in place of the lamp
+dot (`Shared/WorkingArt.swift`, placed by `Shared/Working.swift`): **swing** (the icon's tag on its
+string), **hop** (the coral comma hopping on its tail), **machine** (the sidebar's datacenter box), and
+**eyes** (the 👀, drawn). One per run, by the run's id, so the Mac and the phone show the same one in
+the same pose; `defaults write cx.ola.mac OlaWorking hop` (or `cx.ola.phone`) forces one, `defaults
+delete` undoes it. A rare special beat every 20 to 40 s; a new step gets a small acknowledging beat;
+waiting for a yes, it stops and looks down at the approval; done and failed get a short goodbye. After
+20 s with nothing new, a 120-point version comes out under the run and tucks back when something
+arrives. Reduce Motion gets a still pose that breathes slowly (`defaults write cx.ola.mac
+OlaWorkingMotion full` animates anyway). Paused when scrolled away, in the background, and once a wait
+has settled. Numbers for the web: `MOTION.md`. Videos: `tools/motion.sh <dir>` (frames rendered off
+screen by `Ola -OlaMotion`, encoded with ffmpeg); CPU: `Ola -OlaMotionCPU <figure|plain|lamp> <s>
+[-OlaLarge] [-OlaCalm]`.
+
 ## Plain HTTP over Tailscale (App Transport Security)
 
 The machine is reached by plain HTTP over the tailnet (WireGuard encrypts it). Both apps allow plain
