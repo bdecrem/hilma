@@ -111,7 +111,9 @@ export function makeViews({ cfg, db, keys, auth, membership, workspaces }) {
     const g = grants.get(grant)
     if (!g) return null
     const now = Date.now()
-    if (now - g.at > ABSOLUTE_MS || now - g.last > IDLE_MS || !auth.stillValid(g.sess) || !membership(g.personId, g.slug)) {
+    // A closed workspace (a rotation could not make it safe) ends its grants too, like a removal
+    // (third review, 2026-11-16: an earlier grant kept serving a closed workspace's files).
+    if (now - g.at > ABSOLUTE_MS || now - g.last > IDLE_MS || !auth.stillValid(g.sess) || membership(g.personId, g.slug)?.status !== 'active') {
       grants.delete(grant)
       return null
     }
@@ -141,6 +143,8 @@ export function makeViews({ cfg, db, keys, auth, membership, workspaces }) {
       const ws = membership(sess.personId, url.searchParams.get('w'))
       const rel = url.searchParams.get('path') ?? ''
       if (!ws || !isPage(rel) || !workspaces.validRel(rel) || rel.split('/').some((x) => x.startsWith('.'))) return text(res, 404, 'That page is not here, or it is not yours to open.')
+      // Closed by the admin CLI: refused here as on every other workspace route (third review).
+      if (ws.status !== 'active') return text(res, 423, 'This project is closed for now. Your files are kept.')
       await workspaces.ensureRunning(ws.slug)
       const grant = mint(sess, ws, rel)
       audit(db, { actor: sess.personId, action: 'page_opened', workspace: ws.id, nameRef: nameRef(keys, ws.id, rel) })
@@ -202,8 +206,17 @@ iframe{flex:1;border:0;width:100%;background:#fff}
           'cross-origin-resource-policy': 'cross-origin',
           'access-control-allow-origin': '*',
         })
+        // A page file must keep moving like a download (server.mjs): under 32 KiB taken in a window
+        // (30 s) ends it. Without this, four unread requests held this workspace's four execs, so
+        // every other page file of the team waited 20 s and got a 503, and kept the workspace busy,
+        // so it never stopped for idleness, for as long as the sockets stayed open (third review,
+        // 2026-11-16; frontdesk/review/rev3.mjs views).
+        let sent = 0
+        let mark = 0
+        const slow = setInterval(() => (sent - mark < 32 * 1024 ? res.destroy() : (mark = sent)), Number(process.env.OLA_FD_SLOW_MS) || 30_000)
         try {
           for await (const c of f.stream) {
+            sent += c.length
             if (!res.write(c)) await new Promise((r) => (res.once('drain', r), res.once('close', r)))
             if (res.destroyed) break
           }
@@ -211,6 +224,7 @@ iframe{flex:1;border:0;width:100%;background:#fff}
         } catch {
           res.destroy()
         } finally {
+          clearInterval(slow)
           f.kill()
         }
       } finally {
